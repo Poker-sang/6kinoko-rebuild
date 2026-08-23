@@ -49,6 +49,7 @@ target_link_libraries(kinoko_retdec_rebuild PRIVATE
     dxguid
     imm32
     ole32
+    dbghelp
 )
 
 add_executable(kinoko_archive_inspect
@@ -62,6 +63,16 @@ add_executable(kinoko_asset_probe
 )
 target_include_directories(kinoko_asset_probe PRIVATE include)
 target_link_libraries(kinoko_asset_probe PRIVATE kinoko_core)
+
+add_executable(kinoko_dump_inspect
+    tools/inspect_minidump.cpp
+)
+target_link_libraries(kinoko_dump_inspect PRIVATE dbghelp)
+
+add_executable(kinoko_process_dump
+    tools/capture_process_dump.cpp
+)
+target_link_libraries(kinoko_process_dump PRIVATE dbghelp)
 
 add_executable(kinoko_archive_smoke
     tests/archive_smoke.cpp
@@ -80,7 +91,7 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${config}" config_upper)
     set_target_properties(
         kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
-        kinoko_asset_probe kinoko_retdec_rebuild
+        kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_retdec_rebuild
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${CMAKE_SOURCE_DIR}/runtime"
     )

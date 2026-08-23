@@ -52,8 +52,9 @@ static FARPROC retdec_proc(const char *module_name, const char *proc_name)
     return module == NULL ? NULL : GetProcAddress(module, proc_name);
 }
 
-/* The original binary uses DirectInput8. RetDec retained only the first
-   DWORD of each adjacent GUID, so the wrapper supplies the complete values. */
+/* RetDec retained only the first DWORD of several adjacent GUID objects.
+   Supply complete values when one of those truncated objects is passed to
+   the COM wrapper, while preserving the caller's GUIDs for other interfaces. */
 static const GUID retdec_clsid_direct_input8 = {
     0x25e609e4, 0xb259, 0x11cf,
     { 0xbf, 0xc7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00 }
@@ -62,6 +63,16 @@ static const GUID retdec_clsid_direct_input8 = {
 static const GUID retdec_iid_direct_input8 = {
     0xbf798030, 0x483a, 0x4da2,
     { 0xaa, 0x99, 0x5d, 0x64, 0xed, 0x36, 0x97, 0x00 }
+};
+
+static const GUID retdec_clsid_direct_sound8 = {
+    0x3901cc3f, 0x84b5, 0x4fa4,
+    { 0xba, 0x35, 0xaa, 0x81, 0x72, 0xb8, 0xa0, 0x9b }
+};
+
+static const GUID retdec_iid_direct_sound8 = {
+    0xc50a7e93, 0xf395, 0x4834,
+    { 0x9e, 0xf6, 0x7f, 0xa9, 0x9d, 0xe5, 0x09, 0x66 }
 };
 
 int32_t *Direct3DCreate9(int32_t version)
@@ -99,18 +110,30 @@ int32_t CoCreateInstance(
 {
     retdec_co_create_instance_fn create_instance =
         (retdec_co_create_instance_fn)retdec_proc("ole32.dll", "CoCreateInstance");
-    (void)rclsid;
-    (void)outer;
-    (void)riid;
+    const GUID *actual_rclsid = (const GUID *)rclsid;
+    const GUID *actual_riid = (const GUID *)riid;
+    uint32_t clsid_data1 = rclsid == NULL ? 0 : *(const uint32_t *)rclsid;
+    uint32_t iid_data1 = riid == NULL ? 0 : *(const uint32_t *)riid;
+
     if (create_instance == NULL || result == NULL) {
         return (int32_t)E_FAIL;
     }
-    return (int32_t)create_instance(
-        &retdec_clsid_direct_input8,
-        NULL,
-        (DWORD)context,
-        &retdec_iid_direct_input8,
-        (LPVOID *)result);
+    *result = NULL;
+    if (clsid_data1 == retdec_clsid_direct_input8.Data1) {
+        actual_rclsid = &retdec_clsid_direct_input8;
+    } else if (clsid_data1 == retdec_clsid_direct_sound8.Data1) {
+        actual_rclsid = &retdec_clsid_direct_sound8;
+    }
+    if (iid_data1 == retdec_iid_direct_input8.Data1) {
+        actual_riid = &retdec_iid_direct_input8;
+    } else if (iid_data1 == retdec_iid_direct_sound8.Data1) {
+        actual_riid = &retdec_iid_direct_sound8;
+    }
+    if (actual_rclsid == NULL || actual_riid == NULL) {
+        return (int32_t)E_INVALIDARG;
+    }
+    return (int32_t)create_instance(actual_rclsid, outer, (DWORD)context,
+                                    actual_riid, (LPVOID *)result);
 }
 
 uint32_t timeGetTime(void)

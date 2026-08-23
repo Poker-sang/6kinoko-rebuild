@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <windows.h>
 #include <intrin.h>
@@ -21,6 +22,33 @@
 // compatibility translation unit.
 uint32_t timeGetTime(void);
 uint32_t timeBeginPeriod(uint32_t period);
+void retdec_trace(const char *message);
+void retdec_trace_hresult(const char *label, long value);
+
+// The Windows SDK's dsound.h is not usable with this generated C translation
+// unit under /TC and WIN32_LEAN_AND_MEAN. Keep the original COM calls through
+// the stable DirectSound vtable slots instead of pulling in its declarations.
+typedef HRESULT (WINAPI *retdec_dsound_initialize_fn)(void *self,
+    const GUID *guid);
+typedef HRESULT (WINAPI *retdec_direct_sound_create8_fn)(
+    const GUID *device_guid, void **direct_sound, void *outer);
+typedef HRESULT (WINAPI *retdec_dsound_set_cooperative_level_fn)(void *self,
+    HWND hwnd, DWORD level);
+typedef HRESULT (WINAPI *retdec_dsound_get_caps_fn)(void *self, void *caps);
+typedef HRESULT (WINAPI *retdec_dsound_create_buffer_fn)(void *self,
+    const void *description, void **buffer, void *outer);
+typedef HRESULT (WINAPI *retdec_dsound_query_interface_fn)(void *self,
+    const GUID *iid, void **result);
+typedef ULONG (WINAPI *retdec_dsound_release_fn)(void *self);
+
+typedef struct retdec_dsound_buffer_desc {
+    DWORD dwSize;
+    DWORD dwFlags;
+    DWORD dwBufferBytes;
+    DWORD dwReserved;
+    void *lpwfxFormat;
+    GUID guid3DAlgorithm;
+} retdec_dsound_buffer_desc;
 
 // ---------------- Integer Types Definitions -----------------
 
@@ -1982,7 +2010,7 @@ int32_t function_411aa0(int32_t a1, int32_t a2);
 int32_t function_411b90(int32_t a1);
 int32_t function_411d10(void);
 int32_t function_411d30(void);
-int32_t function_411d80(int32_t a1);
+int32_t function_411d80(HWND hwnd, int32_t options);
 int32_t function_411f90(void);
 int32_t function_411ff0(int32_t * a1, int32_t a2);
 int32_t function_412060(float80_t a1);
@@ -2002,7 +2030,7 @@ int32_t function_412680(char a1);
 int32_t function_412720(void);
 int32_t function_4127b0(int32_t a1, int32_t a2);
 int32_t function_412890(void);
-int32_t function_412ad0(void);
+uint32_t function_412ad0(void *lpThreadParameter);
 int32_t function_412b80(int32_t a1);
 int32_t function_412c10(int32_t hEvent);
 int32_t function_412ca0(void);
@@ -8780,7 +8808,10 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
 
     g688 = (int32_t)(intptr_t)hwnd;
     g696 = GetWindowLongA(hwnd, GWL_STYLE);
+    retdec_trace("4011b0:pre-d3d-create");
     d3d = (IDirect3D9 *)(uintptr_t)Direct3DCreate9(D3D_SDK_VERSION);
+    retdec_trace(d3d != NULL ? "4011b0:post-d3d-create" :
+                 "4011b0:d3d-create-failed");
     g677 = (int32_t)(intptr_t)d3d;
     if (d3d == NULL) {
         MessageBoxA(hwnd, "Direct3DCreate9 failed", "DirectX-Error", MB_OK);
@@ -8788,8 +8819,11 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
     }
 
     ZeroMemory(&g_retdec_display_mode, sizeof(g_retdec_display_mode));
+    retdec_trace("4011b0:pre-display-mode");
     hr = d3d->lpVtbl->GetAdapterDisplayMode(
         d3d, D3DADAPTER_DEFAULT, &g_retdec_display_mode);
+    retdec_trace(FAILED(hr) ? "4011b0:display-mode-failed" :
+                 "4011b0:post-display-mode");
     if (FAILED(hr)) {
         retdec_release_d3d_object(d3d);
         g677 = 0;
@@ -8804,10 +8838,10 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
     g685 = 1;
     g686 = 0;
     g687 = 1;
-    g689 = 0;
+    g689 = 1;
     g690 = 1;
     g691 = (int32_t)D3DFMT_D24S8;
-    g692 = (int32_t)D3DMULTISAMPLE_NONE;
+    g692 = 2;
     g693 = 0;
     g694 = 1;
 
@@ -8824,23 +8858,31 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
     g_retdec_present_parameters.Windowed = TRUE;
     g_retdec_present_parameters.EnableAutoDepthStencil = TRUE;
     g_retdec_present_parameters.AutoDepthStencilFormat = D3DFMT_D24S8;
+    g_retdec_present_parameters.Flags = (DWORD)g692;
     g_retdec_present_parameters.FullScreen_RefreshRateInHz = 0;
     g_retdec_present_parameters.PresentationInterval =
-        D3DPRESENT_INTERVAL_DEFAULT;
+        D3DPRESENT_INTERVAL_ONE;
 
+    retdec_trace("4011b0:pre-create-device");
     hr = d3d->lpVtbl->CreateDevice(
         d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 68,
         &g_retdec_present_parameters, &device);
+    retdec_trace(FAILED(hr) ? "4011b0:create-device-1-failed" :
+                 "4011b0:create-device-1-ok");
     if (FAILED(hr)) {
         hr = d3d->lpVtbl->CreateDevice(
             d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 36,
             &g_retdec_present_parameters, &device);
+        retdec_trace(FAILED(hr) ? "4011b0:create-device-2-failed" :
+                     "4011b0:create-device-2-ok");
     }
     if (FAILED(hr)) {
         device_type = D3DDEVTYPE_REF;
         hr = d3d->lpVtbl->CreateDevice(
             d3d, D3DADAPTER_DEFAULT, device_type, hwnd, 36,
             &g_retdec_present_parameters, &device);
+        retdec_trace(FAILED(hr) ? "4011b0:create-device-ref-failed" :
+                     "4011b0:create-device-ref-ok");
     }
     if (FAILED(hr) || device == NULL) {
         retdec_release_d3d_object(d3d);
@@ -8852,13 +8894,18 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
 
     g678 = (int32_t)(intptr_t)device;
     ZeroMemory(g680, sizeof(g680));
-    d3d->lpVtbl->GetDeviceCaps(d3d, D3DADAPTER_DEFAULT, device_type,
-                               (D3DCAPS9 *)g680);
+    retdec_trace("4011b0:pre-device-caps");
+    device->lpVtbl->GetDeviceCaps(device, (D3DCAPS9 *)g680);
+    retdec_trace("4011b0:post-device-caps");
+    retdec_trace("4011b0:pre-swap-chain");
     if (FAILED(device->lpVtbl->GetSwapChain(device, 0, &swap_chain))) {
         swap_chain = NULL;
     }
+    retdec_trace(swap_chain != NULL ? "4011b0:post-swap-chain" :
+                 "4011b0:swap-chain-failed");
     g679 = (int32_t)(intptr_t)swap_chain;
     g697 = 0;
+    retdec_trace("4011b0:done");
     return 1;
 }
 
@@ -8984,53 +9031,42 @@ int32_t function_401600(void) {
 
 // Address range: 0x401660 - 0x4016d7
 int32_t function_401660(int32_t * a1) {
-    int32_t v1 = (int32_t)a1;
-    int32_t v2 = v1;
-    int32_t v3; // 0x401660
-    int32_t v4 = v3 + 4; // 0x401668
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)v4; // 0x40166b
-    struct retdec_RTL_CRITICAL_SECTION * v5 = lpCriticalSection; // bp-16, 0x40166b
-    EnterCriticalSection(lpCriticalSection);
-    int32_t v6 = *(int32_t *)(v3 + 428); // 0x401672
-    int32_t v7 = *(int32_t *)v6; // 0x401678
-    int32_t v8 = v7; // 0x40167c
-    if (v7 != v6) {
-        while (*(int32_t *)(v8 + 8) != v1) {
-            // 0x401685
-            v8 = *(int32_t *)v8;
-            if (v8 == v6) {
-                // break -> 0x40168b
-                break;
-            }
-        }
-        // 0x40168b
-        if (v8 != v6) {
-            // 0x4016ca
-            *(int32_t *)((int32_t)&v5 - 4) = v4;
-            LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-            return &g1224;
-        }
+    int32_t target;
+    int32_t sentinel;
+    int32_t node;
+    int32_t new_node;
+
+    if (a1 == NULL || g699 == 0) {
+        return 0;
     }
-    int32_t * v9 = (int32_t *)(v6 + 4); // 0x401691
-    int32_t v10 = v6; // bp-28, 0x401699
-    int32_t v11 = function_4214a0(v6, *v9, &v2); // 0x40169a
-    int32_t * v12 = (int32_t *)(v3 + 432); // 0x40169f
-    int32_t v13 = *v12; // 0x40169f
-    int32_t v14 = &v10; // 0x4016af
-    int32_t v15 = v11; // 0x4016af
-    if (v13 == 0x3ffffffe) {
-        char * v16 = "list<T> too long"; // bp-32, 0x4016b1
-        v15 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
-        v14 = (int32_t)&v16;
+    target = (int32_t)(uintptr_t)a1;
+    sentinel = g699;
+    EnterCriticalSection((LPCRITICAL_SECTION)&g676);
+    node = *(int32_t *)(uintptr_t)sentinel;
+    while (node != sentinel) {
+        if (*(int32_t *)(uintptr_t)(node + 8) == target) {
+            LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
+            return 0;
+        }
+        node = *(int32_t *)(uintptr_t)node;
     }
-    int32_t v17 = v15;
-    *v12 = v13 + 1;
-    *v9 = v17;
-    *(int32_t *)*(int32_t *)(v17 + 4) = v17;
-    // 0x4016ca
-    *(int32_t *)(v14 - 4) = v4;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
+
+    new_node = function_4214a0(
+        sentinel,
+        *(int32_t *)(uintptr_t)(sentinel + 4),
+        &target);
+    if (new_node == 0) {
+        LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
+        return 0;
+    }
+    if (g700 == 0x3ffffffe) {
+        _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
+    }
+    g700 += 1;
+    *(int32_t *)(uintptr_t)(sentinel + 4) = new_node;
+    *(int32_t *)(uintptr_t)*(int32_t *)(uintptr_t)(new_node + 4) = new_node;
+    LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
+    return 1;
 }
 
 // Address range: 0x4016e0 - 0x40173c
@@ -9269,18 +9305,46 @@ int32_t function_401a30(void) {
 
 // Address range: 0x401ae0 - 0x401b9e
 int32_t function_401ae0(void) {
-    // 0x401ae0
+    IDirect3DDevice9 *device;
+    IDirect3DSurface9 *render_target = NULL;
+    IDirect3DSurface9 *depth_stencil = NULL;
+    HRESULT hr;
+
     if (g702 != 0) {
-        // 0x401ae9
-        int32_t v1; // 0x401ae0
-        return v1 & -256;
+        return 0;
     }
-    // 0x401aec
+    device = (IDirect3DDevice9 *)(uintptr_t)g678;
+    if (device == NULL) {
+        return 0;
+    }
     g702 = g678;
-    function_401660(&g701);
+    retdec_trace("401ae0:pre-list");
+    function_401660((int32_t *)(uintptr_t)&g701);
+    retdec_trace("401ae0:post-list");
     g714 = 0;
     g713 = 0;
-    return g702 & -256 | 1;
+    retdec_trace("401ae0:pre-clear-1");
+    hr = device->lpVtbl->Clear(device, 0, NULL, 3, 0, 1.0f, 0);
+    retdec_trace(FAILED(hr) ? "401ae0:clear-1-failed" :
+                 "401ae0:clear-1-ok");
+    hr = device->lpVtbl->SetRenderState(
+        device, (D3DRENDERSTATETYPE)58, 255);
+    retdec_trace(FAILED(hr) ? "401ae0:set-render-state-failed" :
+                 "401ae0:set-render-state-ok");
+    hr = device->lpVtbl->Clear(device, 0, NULL, 4, 0, 1.0f, 0);
+    retdec_trace(FAILED(hr) ? "401ae0:clear-2-failed" :
+                 "401ae0:clear-2-ok");
+    hr = device->lpVtbl->GetRenderTarget(
+        device, 0, &render_target);
+    g718 = (int32_t)(uintptr_t)render_target;
+    retdec_trace(FAILED(hr) ? "401ae0:get-render-target-failed" :
+                 "401ae0:get-render-target-ok");
+    hr = device->lpVtbl->GetDepthStencilSurface(
+        device, &depth_stencil);
+    g721 = (int32_t)(uintptr_t)depth_stencil;
+    retdec_trace(FAILED(hr) ? "401ae0:get-depth-stencil-failed" :
+                 "401ae0:get-depth-stencil-ok");
+    return 1;
 }
 
 // Address range: 0x401ba0 - 0x401d96
@@ -10559,6 +10623,25 @@ int32_t function_402670(int32_t * a1) {
 
 // Address range: 0x4026e0 - 0x402768
 int32_t function_4026e0(int32_t a1) {
+    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
+    HRESULT hr = S_OK;
+
+    /* RetDec lost the __thiscall ECX object; g704 is this + 0x10. */
+    if (g704 == a1) {
+        return 0;
+    }
+    g704 = a1;
+    if (device == NULL || (a1 != 1 && a1 != 2)) {
+        return 0;
+    }
+    hr = device->lpVtbl->SetSamplerState(
+        device, 0, (D3DSAMPLERSTATETYPE)5, (DWORD)a1);
+    hr = device->lpVtbl->SetSamplerState(
+        device, 0, (D3DSAMPLERSTATETYPE)6, (DWORD)a1);
+    hr = device->lpVtbl->SetSamplerState(
+        device, 0, (D3DSAMPLERSTATETYPE)7, (DWORD)a1);
+    return (int32_t)hr;
+#if 0
     // 0x4026e0
     int32_t v1; // 0x4026e0
     int32_t * v2 = (int32_t *)(v1 + 16); // 0x4026ea
@@ -10580,10 +10663,112 @@ int32_t function_4026e0(int32_t a1) {
     *v2 = a1;
     // 0x402762
     return *(int32_t *)(v1 + 4);
+#endif
 }
 
 // Address range: 0x402770 - 0x402873
 int32_t function_402770(int32_t result) {
+    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
+    HRESULT hr = S_OK;
+    int32_t key;
+
+    /* RetDec lost the __thiscall ECX object; g703 is this + 0x0c. */
+    if (g703 == result) {
+        return result;
+    }
+    key = result - 1 + 8 * g703;
+    if (device != NULL) {
+        switch (key) {
+        case 0:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 5);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 6);
+            break;
+        case 1:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 5);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 2);
+            break;
+        case 2:
+        case 34:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 3);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 5);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 2);
+            break;
+        case 3:
+        case 27:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 3);
+            break;
+        case 9:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 2);
+            break;
+        case 10:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 3);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 2);
+            break;
+        case 11:
+        case 19:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 3);
+            break;
+        case 16:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 6);
+            break;
+        case 18:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 3);
+            break;
+        case 24:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 6);
+            break;
+        case 25:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            break;
+        case 32:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)171, 1);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 5);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 6);
+            break;
+        case 33:
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)19, 5);
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)20, 2);
+            break;
+        default:
+            break;
+        }
+    }
+    g703 = result;
+    return (int32_t)hr;
+#if 0
     // 0x402770
     int32_t v1; // 0x402770
     int32_t * v2 = (int32_t *)(v1 + 12); // 0x402776
@@ -10748,10 +10933,38 @@ int32_t function_402770(int32_t result) {
     *v2 = result;
     // 0x40286d
     return result2;
+#endif
 }
 
 // Address range: 0x4028d0 - 0x40292f
 int32_t function_4028d0(int32_t a1, int32_t a2) {
+    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
+    HRESULT hr = S_OK;
+    unsigned char first = (unsigned char)a1;
+    unsigned char second = (unsigned char)a2;
+    unsigned char *state = (unsigned char *)&g709;
+
+    /* The original method stores byte flags at this + 0x24/+0x25. */
+    if (state[0] != first) {
+        state[0] = first;
+        if (device != NULL) {
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)27, first);
+        }
+    }
+    if (state[1] != second) {
+        state[1] = second;
+        if (device != NULL) {
+            hr = device->lpVtbl->SetRenderState(
+                device, (D3DRENDERSTATETYPE)15, second);
+        }
+    }
+    if (device != NULL) {
+        hr = device->lpVtbl->SetTextureStageState(
+            device, 0, (D3DTEXTURESTAGESTATETYPE)4, 4);
+    }
+    return (int32_t)hr;
+#if 0
     // 0x4028d0
     int32_t v1; // 0x4028d0
     char * v2 = (char *)(v1 + 36); // 0x4028da
@@ -10796,6 +11009,7 @@ int32_t function_4028d0(int32_t a1, int32_t a2) {
     *(int32_t *)(v14 - 12) = 0;
     *(int32_t *)(v14 - 16) = *v13;
     return result;
+#endif
 }
 
 // Address range: 0x402930 - 0x40296e
@@ -10809,6 +11023,20 @@ int32_t function_402930(int32_t a1, int32_t a2) {
 
 // Address range: 0x402970 - 0x4029af
 int32_t function_402970(int32_t a1) {
+    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
+    HRESULT hr = S_OK;
+
+    /* RetDec lost the __thiscall ECX object; g705 is this + 0x14. */
+    if (g705 == a1) {
+        return 0;
+    }
+    g705 = a1;
+    if (device != NULL && a1 >= 1 && a1 <= 3) {
+        hr = device->lpVtbl->SetRenderState(
+            device, (D3DRENDERSTATETYPE)22, (DWORD)a1);
+    }
+    return (int32_t)hr;
+#if 0
     // 0x402970
     int32_t v1; // 0x402970
     int32_t * v2 = (int32_t *)(v1 + 20); // 0x40297a
@@ -10830,6 +11058,7 @@ int32_t function_402970(int32_t a1) {
     *v2 = a1;
     // 0x4029a9
     return g678;
+#endif
 }
 
 // Address range: 0x4029b0 - 0x4029cc
@@ -12002,6 +12231,120 @@ static char *retdec_string_data(unsigned char *object)
         return *(char **)object;
     }
     return (char *)object;
+}
+
+static int retdec_page_is_readable(const MEMORY_BASIC_INFORMATION *info)
+{
+    DWORD protection;
+
+    if (info == NULL || info->State != MEM_COMMIT) {
+        return 0;
+    }
+    protection = info->Protect & 0xffu;
+    return protection != PAGE_NOACCESS && protection != PAGE_EXECUTE;
+}
+
+/* A large part of the RetDec output lost the third argument of
+   std::string::assign(const char *, size_t). Keep those old call sites
+   usable while the explicit-length callers are repaired incrementally. */
+static uint32_t retdec_safe_c_string_length(const char *source)
+{
+    const unsigned char *cursor = (const unsigned char *)source;
+    const uintptr_t limit = (uintptr_t)source + 0x100000u;
+    uint32_t length = 0;
+
+    if (source == NULL) {
+        return 0;
+    }
+    while ((uintptr_t)cursor < limit && length < 0x100000u) {
+        MEMORY_BASIC_INFORMATION info;
+        uintptr_t region_end;
+        size_t available;
+        size_t index;
+
+        if (VirtualQuery(cursor, &info, sizeof(info)) != sizeof(info) ||
+            !retdec_page_is_readable(&info)) {
+            return 0;
+        }
+        region_end = (uintptr_t)info.BaseAddress + info.RegionSize;
+        if (region_end <= (uintptr_t)cursor) {
+            return 0;
+        }
+        available = (size_t)(region_end - (uintptr_t)cursor);
+        if (available > (size_t)(limit - (uintptr_t)cursor)) {
+            available = (size_t)(limit - (uintptr_t)cursor);
+        }
+        for (index = 0; index < available; ++index) {
+            if (cursor[index] == 0) {
+                return length + (uint32_t)index;
+            }
+        }
+        cursor += available;
+        length += (uint32_t)available;
+    }
+    return 0;
+}
+
+static int32_t retdec_string_assign_n(int32_t *this_ptr,
+                                      const char *source,
+                                      uint32_t size)
+{
+    unsigned char *object = retdec_string_object((int32_t)(uintptr_t)this_ptr);
+    char *data;
+    char *temporary = NULL;
+    uint32_t old_length;
+    uint32_t old_capacity;
+
+    if (object == NULL) {
+        return 0;
+    }
+    if (size > 0xfffffffeu) {
+        return (int32_t)(uintptr_t)this_ptr;
+    }
+
+    old_length = *(uint32_t *)(object + 16);
+    old_capacity = *(uint32_t *)(object + 20);
+    data = retdec_string_data(object);
+
+    /* assign() permits a source range inside the destination string. Save it
+       before reserve() can release the old heap buffer. */
+    if (source != NULL && size != 0) {
+        uintptr_t source_address = (uintptr_t)source;
+        uintptr_t data_address = (uintptr_t)data;
+        uintptr_t data_end = data_address + (uintptr_t)old_length + 1u;
+        if (source_address >= data_address && source_address < data_end &&
+            source_address <= UINTPTR_MAX - (uintptr_t)size &&
+            source_address + (uintptr_t)size <= data_end) {
+            temporary = (char *)malloc(size);
+            if (temporary == NULL) {
+                return (int32_t)(uintptr_t)this_ptr;
+            }
+            memcpy(temporary, source, size);
+            source = temporary;
+        }
+    }
+
+    if (old_capacity < size && function_403ce0(
+            (int32_t)(uintptr_t)this_ptr, size, old_length) == 0) {
+        free(temporary);
+        return (int32_t)(uintptr_t)this_ptr;
+    }
+
+    data = retdec_string_data(object);
+    if (size != 0 && source != NULL) {
+        memmove(data, source, size);
+    }
+    *(uint32_t *)(object + 16) = size;
+    data[size] = 0;
+    free(temporary);
+    return (int32_t)(uintptr_t)this_ptr;
+}
+
+static int32_t retdec_string_assign_cstr(int32_t *this_ptr,
+                                         const char *source)
+{
+    return retdec_string_assign_n(this_ptr, source,
+                                  retdec_safe_c_string_length(source));
 }
 
 // Address range: 0x4038c0 - 0x4039d3
@@ -15199,87 +15542,9 @@ int32_t function_406690(void) {
 }
 
 // Address range: 0x4066f0 - 0x4067e5
-// Demangled:     public: __thiscall std::_Init_locks::_Init_locks(void)
+// The original function is std::string::assign(const char *, size_t).
 int32_t retdec_msvc_0_Init_locks_std__QAE_XZ(int32_t * this, int32_t * result) {
-    uint32_t v1 = (int32_t)result;
-    int32_t result2 = (int32_t)this;
-    int32_t v2 = result2; // 0x4066fc
-    char * v3; // bp-20, 0x4066f0
-    int32_t v4; // 0x4066f0
-    if (result != NULL) {
-        uint32_t v5 = *(int32_t *)(result2 + 20); // 0x4066fe
-        uint32_t v6 = v5 < 16 ? result2 : v5;
-        v2 = v5;
-        if (v6 <= v1) {
-            // 0x406710
-            v2 = v5;
-            if (*(int32_t *)(result2 + 16) + v6 > v1) {
-                if (v5 < 16) {
-                    int32_t v7 = v1 - result2; // 0x406746
-                    v3 = (char *)v7;
-                    return function_406cc0(result2, v7, v4);
-                }
-                int32_t v8 = v1 - v5; // 0x40672f
-                v3 = (char *)v8;
-                return function_406cc0(result2, v8, v4);
-            }
-        }
-    }
-    // 0x406757
-    int32_t v9; // bp-16, 0x4066f0
-    int32_t v10 = &v9; // 0x40675e
-    if (v4 == -1) {
-        // 0x406760
-        v3 = "string too long";
-        _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("string too long");
-        v10 = (int32_t)&v3;
-    }
-    int32_t * v11 = (int32_t *)(result2 + 20); // 0x40676a
-    uint32_t v12 = *v11; // 0x40676a
-    int32_t v13; // 0x4066f0
-    int32_t v14; // 0x4066f0
-    int32_t v15; // 0x4066f0
-    if (v12 >= v4) {
-        // 0x40678b
-        v13 = v12;
-        v14 = v2;
-        v15 = v10;
-        if (v4 == 0) {
-            if (v12 < 16) {
-                // 0x4067a5
-                *(char *)this = 0;
-                return result2;
-            }
-            // 0x406797
-            *(char *)v2 = 0;
-            return result2;
-        }
-    } else {
-        // 0x406771
-        *(int32_t *)(v10 - 4) = *(int32_t *)(result2 + 16);
-        function_403ce0(result2, v4, *(uint32_t *)(result2 + 16));
-        if (v4 == 0) {
-            // 0x4067dc
-            return result2;
-        }
-        // 0x406771
-        v13 = *v11;
-        v14 = result2;
-        v15 = v10 - 8;
-    }
-    // 0x406781
-    *(int32_t *)(v15 - 8) = v1;
-    *(int32_t *)(v15 - 12) = v13 < 16 ? result2 : v14;
-    _memcpy2();
-    if (*v11 >= 16) {
-        // 0x4067c7
-        *(char *)(v14 + v4) = 0;
-        return result2;
-    }
-    // 0x4067d6
-    *(char *)(v4 + result2) = 0;
-    // 0x4067dc
-    return result2;
+    return retdec_string_assign_cstr(this, (const char *)result);
 }
 
 // Address range: 0x4067f0 - 0x406872
@@ -19021,9 +19286,12 @@ int32_t function_408930(HWND hwnd, HINSTANCE instance) {
         return 1;
     }
     g768 = (char *)hwnd;
+    retdec_trace("408930:pre-cocreate");
     hr = (HRESULT)CoCreateInstance(
-        (const void *)&g64, NULL, CLSCTX_INPROC_SERVER,
-        (const void *)&g63, &direct_input);
+        &CLSID_DirectInput8, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IDirectInput8A, &direct_input);
+    retdec_trace(FAILED(hr) ? "408930:cocreate-failed" :
+                 "408930:post-cocreate");
     if (FAILED(hr) || direct_input == NULL) {
         g769 = NULL;
         MessageBoxA(hwnd, "DirectInput8Create failed", "DInput-Error", MB_OK);
@@ -19189,18 +19457,31 @@ int32_t function_408b30(void) {
     if (direct_input == NULL || g768 == NULL) {
         return 0;
     }
+    retdec_trace("408b30:pre-create-device");
     hr = direct_input->lpVtbl->CreateDevice(
         direct_input, &GUID_SysKeyboard, &keyboard, NULL);
+    retdec_trace_hresult("408b30:create-device-hr", hr);
+    retdec_trace(FAILED(hr) ? "408b30:create-device-failed" :
+                 "408b30:create-device-ok");
     if (FAILED(hr) || keyboard == NULL) {
         return 0;
     }
+    retdec_trace("408b30:pre-data-format");
     hr = keyboard->lpVtbl->SetDataFormat(keyboard, &c_dfDIKeyboard);
+    retdec_trace(FAILED(hr) ? "408b30:data-format-failed" :
+                 "408b30:data-format-ok");
     if (SUCCEEDED(hr)) {
+        retdec_trace("408b30:pre-cooperative-level");
         hr = keyboard->lpVtbl->SetCooperativeLevel(
             keyboard, (HWND)g768, 22);
+        retdec_trace(FAILED(hr) ? "408b30:cooperative-level-failed" :
+                     "408b30:cooperative-level-ok");
     }
     if (SUCCEEDED(hr)) {
+        retdec_trace("408b30:pre-acquire");
         hr = keyboard->lpVtbl->Acquire(keyboard);
+        retdec_trace(FAILED(hr) ? "408b30:acquire-failed" :
+                     "408b30:acquire-ok");
     }
     if (FAILED(hr)) {
         keyboard->lpVtbl->Release(keyboard);
@@ -24982,10 +25263,13 @@ int32_t function_40d790(int32_t *state, const void *config) {
     HANDLE resource_thread;
     HANDLE game_thread;
     HANDLE display_thread;
+    int32_t dinput_available;
 
     if (state == NULL || config == NULL) {
         return 0;
     }
+
+    retdec_trace("40d790:begin");
 
     memcpy((unsigned char *)state + 8, config, 0x28);
     *(int32_t *)((unsigned char *)state + 0) =
@@ -25008,7 +25292,9 @@ int32_t function_40d790(int32_t *state, const void *config) {
     timeBeginPeriod(1);
     timeGetTime();
     function_404230();
+    retdec_trace("40d790:pre-coinit");
     if (CoInitialize(NULL) < 0) {
+        retdec_trace("40d790:coinit-failed");
         return 0;
     }
     function_408650((void *)(uintptr_t)*(int32_t *)
@@ -25020,27 +25306,53 @@ int32_t function_40d790(int32_t *state, const void *config) {
     *(unsigned char *)((unsigned char *)state + 76) = 1;
 
     if (*(unsigned char *)((unsigned char *)state + 40) != 0) {
+        retdec_trace("40d790:d3d");
         if ((char)function_4011b0(
                 (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
                 *(int32_t *)((unsigned char *)state + 16),
                 *(int32_t *)((unsigned char *)state + 20)) == 0) {
+            retdec_trace("40d790:d3d-failed");
             return 0;
         }
         function_401ae0();
     }
     if (*(unsigned char *)((unsigned char *)state + 41) != 0) {
-        if ((char)function_408930(
+        retdec_trace("40d790:dinput");
+        retdec_trace("40d790:dinput-create");
+        dinput_available = function_408930(
                 (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-                (HINSTANCE)(uintptr_t)*(int32_t *)((unsigned char *)state + 4)) == 0 ||
-            (char)function_408b30() == 0 ||
-            (char)function_408bf0() == 0) {
-            return 0;
+                (HINSTANCE)(uintptr_t)*(int32_t *)((unsigned char *)state + 4));
+        if ((char)dinput_available == 0) {
+            retdec_trace("40d790:dinput-create-failed");
+            retdec_trace("40d790:dinput-degraded");
+        } else {
+            retdec_trace("40d790:dinput-keyboard");
+            if ((char)function_408b30() == 0) {
+                retdec_trace("40d790:dinput-keyboard-failed");
+                retdec_trace("40d790:dinput-degraded");
+            }
+            retdec_trace("40d790:dinput-controllers");
+            if ((char)function_408bf0() == 0) {
+                retdec_trace("40d790:dinput-controllers-failed");
+            }
+            retdec_trace("40d790:dinput-mouse");
+            if ((char)function_408d00() == 0) {
+                retdec_trace("40d790:dinput-mouse-failed");
+            }
+            retdec_trace("40d790:dinput-ready");
         }
-        function_408d00();
     }
-    if (*(unsigned char *)((unsigned char *)state + 42) != 0 &&
-        (char)function_411d80(*(int32_t *)((unsigned char *)state + 24)) == 0) {
-        return 0;
+    if (*(unsigned char *)((unsigned char *)state + 42) != 0) {
+        int32_t audio_available;
+        retdec_trace("40d790:audio");
+        audio_available = function_411d80(
+            (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
+            *(int32_t *)((unsigned char *)state + 24));
+        retdec_trace(audio_available != 0 ? "40d790:audio-ready" :
+                     "40d790:audio-failed");
+        if (audio_available == 0) {
+            retdec_trace("40d790:audio-degraded");
+        }
     }
     if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
         function_412ca0();
@@ -25055,16 +25367,30 @@ int32_t function_40d790(int32_t *state, const void *config) {
 
     scene_manager = (int32_t *)(uintptr_t)
         *(int32_t *)((unsigned char *)state + 116);
-    if (scene_manager == NULL) {
-        return 0;
+    if (scene_manager != NULL) {
+        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
+        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
+            retdec_call_thiscall0(
+                (void *)scene_manager,
+                (void *)(uintptr_t)scene_manager_vtable[0]);
+        }
     }
-    retdec_call_thiscall0(
-        (void *)scene_manager,
-        (void *)(uintptr_t)*(int32_t *)((uintptr_t)(*scene_manager) + 0));
+    scene_manager = (int32_t *)(uintptr_t)
+        *(int32_t *)((unsigned char *)state + 120);
+    if (scene_manager != NULL) {
+        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
+        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
+            retdec_call_thiscall0(
+                (void *)scene_manager,
+                (void *)(uintptr_t)scene_manager_vtable[0]);
+        }
+    }
+    retdec_trace("40d790:scene-init");
     scene = (int32_t *)(uintptr_t)function_45da50(config_value);
     *(int32_t *)((unsigned char *)state + 128) =
         (int32_t)(uintptr_t)scene;
     retdec_sync_runtime_state_to_globals((const unsigned char *)state);
+    retdec_trace("40d790:threads");
 
     resource_thread = CreateThread(NULL, 0, function_40e320, NULL, 0,
         (LPDWORD)((unsigned char *)state + 112));
@@ -25089,6 +25415,9 @@ int32_t function_40d790(int32_t *state, const void *config) {
         }
     }
     retdec_sync_runtime_state_to_globals((const unsigned char *)state);
+    retdec_trace(resource_thread != NULL && game_thread != NULL
+                     ? "40d790:success"
+                     : "40d790:thread-failed");
     return (resource_thread != NULL && game_thread != NULL) ? 1 : 0;
 }
 
@@ -30719,77 +31048,123 @@ int32_t function_411d30(void) {
 }
 
 // Address range: 0x411d80 - 0x411f89
-int32_t function_411d80(int32_t a1) {
-    int32_t v1 = CoCreateInstance((int32_t)&g62, NULL, 3, &g61, (int32_t **)&g877); // 0x411da9
-    if (v1 < 0) {
-        // 0x411db5
-        MessageBoxA(NULL, (char *)&g209, "DSound-Error", 0);
-        return ___report_gsfailure();
-    }
-    // 0x411dda
-    char * v2; // bp-192, 0x411d80
-    if (g877 < NULL) {
-        // 0x411deb
-        v2 = (char *)&g210;
-        MessageBoxA(NULL, (char *)&g210, "DSound-Error", 0);
-        return ___report_gsfailure();
-    }
-    // 0x411e12
-    v2 = g877;
-    int32_t v3 = (int32_t)&v2; // 0x411e1f
-    int32_t * v4 = (int32_t *)(v3 - 4); // 0x411e61
-    *v4 = 96;
-    int32_t * v5 = (int32_t *)(v3 - 8); // 0x411e69
-    *v5 = 0;
-    int32_t * v6 = (int32_t *)(v3 - 12); // 0x411e6b
-    int32_t hWnd; // bp-144, 0x411d80
-    int32_t v7 = &hWnd; // 0x411e6b
-    *v6 = v7;
-    int32_t v8; // 0x411d80
-    _memset((int32_t *)v2, v8, 2);
-    hWnd = 96;
-    *v4 = v7;
-    *v5 = (int32_t)g877;
-    *v6 = 0;
-    *(int32_t *)(v3 - 16) = (int32_t)&g876;
-    int32_t v9 = 36; // bp-48, 0x411ed6
-    *(int32_t *)(v3 - 20) = (int32_t)&v9;
-    int32_t v10 = v3 - 24; // 0x411ee3
-    *(int32_t *)v10 = (int32_t)g877;
-    if (g877 < NULL) {
-        // 0x411eea
-        *(int32_t *)(v3 - 28) = 0;
-        *(int32_t *)(v3 - 32) = (int32_t)"DSound-Error";
-        *(int32_t *)(v3 - 36) = (int32_t)&g211;
-        *(int32_t *)(v3 - 40) = 0;
-        MessageBoxA((int32_t *)hWnd, (char *)&g1224, (char *)&g1224, (int32_t)&g1224);
-        return ___report_gsfailure();
-    }
-    int32_t v11 = v10; // 0x411f13
-    if ((a1 & 1) != 0) {
-        // 0x411f15
-        *(int32_t *)(v3 - 28) = (int32_t)&g878;
-        *(int32_t *)(v3 - 32) = (int32_t)&g60;
-        *(int32_t *)(v3 - 36) = g876;
-        if (g876 < 0) {
-            // 0x411f2f
-            *(int32_t *)(v3 - 40) = 0;
-            *(int32_t *)(v3 - 44) = (int32_t)"DSound-Error";
-            *(int32_t *)(v3 - 48) = (int32_t)&g212;
-            *(int32_t *)(v3 - 52) = 0;
-            MessageBoxA((int32_t *)hWnd, (char *)&g1224, (char *)&g1224, (int32_t)&g1224);
-            return ___report_gsfailure();
+int32_t function_411d80(HWND hwnd, int32_t options) {
+    void *direct_sound = NULL;
+    void *primary_buffer = NULL;
+    void *listener = NULL;
+    HMODULE dsound_module = NULL;
+    retdec_direct_sound_create8_fn direct_sound_create8 = NULL;
+    int direct_sound_is_initialized = 0;
+    uint32_t caps[24];
+    retdec_dsound_buffer_desc buffer_desc;
+    void **direct_sound_vtable;
+    void **primary_buffer_vtable;
+    HRESULT hr;
+    static const GUID iid_direct_sound_3d_listener = {
+        0x279afa84, 0x4981, 0x11ce,
+        { 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60 }
+    };
+
+    g876 = 0;
+    g878 = 0;
+    g877 = NULL;
+    retdec_trace("411d80:pre-cocreate");
+    hr = (HRESULT)CoCreateInstance(
+        (const GUID *)&g62, NULL, CLSCTX_INPROC_SERVER,
+        (const GUID *)&g61, (void **)&direct_sound);
+    retdec_trace_hresult("411d80:cocreate-hr", hr);
+    if (FAILED(hr) || direct_sound == NULL) {
+        // CLSID_DirectSound8 is not registered on some current Windows
+        // installations even though dsound.dll is available. The exported
+        // factory is the documented equivalent creation path.
+        retdec_trace("411d80:pre-directsoundcreate8");
+        dsound_module = LoadLibraryA("dsound.dll");
+        if (dsound_module != NULL) {
+            direct_sound_create8 = (retdec_direct_sound_create8_fn)
+                GetProcAddress(dsound_module, "DirectSoundCreate8");
         }
-        // 0x411f56
-        v11 = v3 - 40;
-        *(int32_t *)v11 = g876;
+        if (direct_sound_create8 != NULL) {
+            hr = direct_sound_create8(NULL, &direct_sound, NULL);
+        } else {
+            hr = E_FAIL;
+        }
+        retdec_trace_hresult("411d80:directsoundcreate8-hr", hr);
+        if (SUCCEEDED(hr) && direct_sound != NULL) {
+            direct_sound_is_initialized = 1;
+        }
     }
-    // 0x411f63
-    *(int32_t *)(v11 - 4) = 1;
-    *(int32_t *)(v11 - 8) = 0;
-    *(int32_t *)(v11 - 12) = 0;
-    *(int32_t *)(v11 - 16) = g876;
-    return ___report_gsfailure();
+    if (FAILED(hr) || direct_sound == NULL) {
+        MessageBoxA(NULL, (char *)&g209, "DSound-Error", MB_OK);
+        return 0;
+    }
+    g877 = (char *)direct_sound;
+    direct_sound_vtable = *(void ***)direct_sound;
+
+    if (direct_sound_is_initialized == 0) {
+        retdec_trace("411d80:pre-initialize");
+        hr = ((retdec_dsound_initialize_fn)direct_sound_vtable[10])(
+            direct_sound, NULL);
+        retdec_trace_hresult("411d80:initialize-hr", hr);
+        if (FAILED(hr)) {
+            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
+            g877 = NULL;
+            return 0;
+        }
+    } else {
+        retdec_trace("411d80:initialize-skipped");
+    }
+
+    retdec_trace("411d80:pre-cooperative-level");
+    hr = ((retdec_dsound_set_cooperative_level_fn)direct_sound_vtable[6])(
+        direct_sound, hwnd, 2);
+    if (FAILED(hr)) {
+        hr = ((retdec_dsound_set_cooperative_level_fn)
+            direct_sound_vtable[6])(direct_sound, hwnd, 1);
+    }
+    retdec_trace_hresult("411d80:cooperative-level-hr", hr);
+    if (FAILED(hr)) {
+        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
+        g877 = NULL;
+        return 0;
+    }
+
+    ZeroMemory(&caps, sizeof(caps));
+    caps[0] = sizeof(caps);
+    ((retdec_dsound_get_caps_fn)direct_sound_vtable[4])(
+        direct_sound, &caps);
+
+    ZeroMemory(&buffer_desc, sizeof(buffer_desc));
+    buffer_desc.dwSize = sizeof(buffer_desc);
+    buffer_desc.dwFlags = (options & 1) != 0 ? 153u : 9u;
+    retdec_trace("411d80:pre-create-primary");
+    hr = ((retdec_dsound_create_buffer_fn)direct_sound_vtable[3])(
+        direct_sound, &buffer_desc, &primary_buffer, NULL);
+    retdec_trace_hresult("411d80:create-primary-hr", hr);
+    if (FAILED(hr) || primary_buffer == NULL) {
+        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
+        g877 = NULL;
+        return 0;
+    }
+    g876 = (int32_t)(uintptr_t)primary_buffer;
+    primary_buffer_vtable = *(void ***)primary_buffer;
+
+    if ((options & 1) != 0) {
+        hr = ((retdec_dsound_query_interface_fn)primary_buffer_vtable[0])(
+            primary_buffer, &iid_direct_sound_3d_listener,
+            (void **)&listener);
+        retdec_trace_hresult("411d80:listener-hr", hr);
+        if (FAILED(hr) || listener == NULL) {
+            ((retdec_dsound_release_fn)primary_buffer_vtable[2])(
+                primary_buffer);
+            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
+            g876 = 0;
+            g877 = NULL;
+            return 0;
+        }
+        g878 = (int32_t)(uintptr_t)listener;
+    }
+    retdec_trace("411d80:done");
+    return 1;
 }
 
 // Address range: 0x411f90 - 0x411fe2
@@ -31308,6 +31683,40 @@ int32_t function_4127b0(int32_t a1, int32_t a2) {
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
 int32_t function_412890(void) {
+    int32_t *sentinel;
+    HANDLE thread;
+    DWORD thread_id = 0;
+
+    /* IDA identifies this as the Common::CCriticalSection constructor. The
+       generated body below merged its destructor/error path and substituted
+       g1224 for several real globals, so keep the startup path explicit. */
+    g879 = (int32_t)(uintptr_t)&g190;
+    InitializeCriticalSection((LPCRITICAL_SECTION)&g880);
+    g881 = 0;
+    g882 = 0;
+    g886 = 0;
+    sentinel = (int32_t *)malloc(12);
+    if (sentinel == NULL) {
+        DeleteCriticalSection((LPCRITICAL_SECTION)&g880);
+        return 0;
+    }
+    sentinel[0] = (int32_t)(uintptr_t)sentinel;
+    sentinel[1] = (int32_t)(uintptr_t)sentinel;
+    sentinel[2] = 0;
+    g885 = (int32_t)(uintptr_t)sentinel;
+    g883 = 16;
+    g884 = 0;
+    g887 = 1;
+    timeBeginPeriod(1);
+    thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)function_412ad0,
+                          NULL, 0, &thread_id);
+    g881 = (int32_t)(uintptr_t)thread;
+    g882 = (int32_t)thread_id;
+    if (thread != NULL) {
+        SetThreadPriority(thread, 15);
+    }
+    return (int32_t)(uintptr_t)&g879;
+
     int32_t v1 = __readfsdword(0); // bp-16, 0x4128a0
     __writefsdword(0, (int32_t)&v1);
     g879 = (int32_t)&g190;
@@ -31467,7 +31876,39 @@ int32_t function_412890(void) {
 }
 
 // Address range: 0x412ad0 - 0x412b73
-int32_t function_412ad0(void) {
+uint32_t function_412ad0(void *lpThreadParameter) {
+    HANDLE event_handle;
+    int32_t *sentinel;
+
+    (void)lpThreadParameter;
+    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
+    if (event_handle == NULL) {
+        return 0;
+    }
+    while (g887 != 0) {
+        DWORD timeout = (DWORD)g883;
+        if (g884 != 0) {
+            timeout += (DWORD)g884;
+            g884 = 0;
+        }
+        WaitForSingleObject(event_handle, timeout);
+        EnterCriticalSection((LPCRITICAL_SECTION)&g880);
+        sentinel = (int32_t *)(uintptr_t)g885;
+        if (sentinel != NULL) {
+            int32_t *node = (int32_t *)(uintptr_t)sentinel[0];
+            while (node != sentinel) {
+                HANDLE wait_event = (HANDLE)(uintptr_t)node[2];
+                if (wait_event != NULL) {
+                    SetEvent(wait_event);
+                }
+                node = (int32_t *)(uintptr_t)node[0];
+            }
+        }
+        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
+    }
+    CloseHandle(event_handle);
+    return 0;
+
     struct retdec_SECURITY_ATTRIBUTES * v1 = NULL; // bp-20, 0x412ad7
     int32_t v2 = (int32_t)CreateEventA(NULL, false, false, NULL); // 0x412ad9
     if (g887 == 0) {
@@ -31664,14 +32105,20 @@ int32_t function_412c10(int32_t hEvent) {
 
 // Address range: 0x412ca0 - 0x412d30
 int32_t function_412ca0(void) {
-    // 0x412ca0
+    struct retdec_tagCANDIDATEFORM candidate = { 0 };
+    struct retdec_tagRECT rect = { 0 };
+
     g534 = ImmGetContext((int32_t *)g767);
     g535 = (int32_t)ImmGetDefaultIMEWnd((int32_t *)g767);
-    int32_t v1 = 0; // bp-56, 0x412cdd
-    int32_t lpRect; // bp-24, 0x412ca0
-    GetWindowRect((int32_t *)g767, (struct retdec_tagRECT *)&lpRect);
-    ImmSetCandidateWindow(g534, (struct retdec_tagCANDIDATEFORM *)&v1);
-    return ___report_gsfailure();
+    candidate.e0 = 0;
+    candidate.e1 = 128;
+    GetWindowRect((int32_t *)g767, &rect);
+    candidate.e3.e2 = rect.e2 - rect.e0;
+    candidate.e3.e0 = 0;
+    candidate.e3.e1 = 0;
+    candidate.e3.e3 = rect.e3 - rect.e1;
+    return ImmSetCandidateWindow(
+        g534, (struct retdec_tagCANDIDATEFORM *)&candidate);
 }
 
 // Address range: 0x412d30 - 0x412d9c
@@ -138175,7 +138622,7 @@ int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     UpdateWindow(windowHandle);
     config[0] = (int32_t)(intptr_t)windowHandle;
     config[1] = (int32_t)(intptr_t)hInstance;
-    config[8] = 0x00000101;
+    config[8] = 0x00010101;
     config[9] = 0x01000001;
 
     scene_manager_storage = (int32_t *)(uintptr_t)
@@ -138190,7 +138637,7 @@ int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     function_407360("6kinoko_a.dat");
     function_407360("6kinoko_b.dat");
     function_407360("6kinoko_c.dat");
-    retdec_msvc_0_Init_locks_std__QAE_XZ(&g554, (int32_t *)".cv4");
+    retdec_string_assign_n(&g554, ".cv4", 4);
     if ((char)function_40d790(
             (int32_t *)g_retdec_runtime_state, config) == 0) {
         // 0x473da6
