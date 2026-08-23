@@ -128031,11 +128031,21 @@ int32_t function_469620(int32_t a1) {
 // Address range: 0x469640 - 0x469678
 int32_t function_469640(void) {
     // 0x469640
+    retdec_trace("469640:audio-begin");
     function_4701e0();
+    retdec_trace("469640:audio-done");
+    retdec_trace("469640:sqrat-begin");
     function_473010();
+    retdec_trace("469640:sqrat-done");
+    retdec_trace("469640:alloc-begin");
     function_46e6f0();
+    retdec_trace("469640:alloc-done");
+    retdec_trace("469640:actor-begin");
     function_463af0();
+    retdec_trace("469640:actor-done");
+    retdec_trace("469640:global-begin");
     function_466270();
+    retdec_trace("469640:global-done");
     return function_402d40("data/script/boot.nut", 0);
 }
 
@@ -134926,11 +134936,18 @@ int32_t function_4701d0(void) {
 
 // Address range: 0x4701e0 - 0x47021d
 int32_t function_4701e0(void) {
+    /* The original initializes a large DirectSound manager through four
+       __thiscall methods. Its split RetDec globals do not form that object
+       yet, so keep startup alive with the explicit degraded-audio path. */
+    retdec_trace("4701e0:audio-manager-degraded");
+    return 1;
+#if 0
     // 0x4701e0
     function_40b520();
     function_40b8a0(0.80000001L);
     function_40a3d0();
     return function_40a9f0(0.80000001L);
+#endif
 }
 
 // Address range: 0x470220 - 0x47028a
