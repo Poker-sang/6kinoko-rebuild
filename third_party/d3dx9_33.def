@@ -1,0 +1,7 @@
+LIBRARY d3dx9_33.dll
+EXPORTS
+    D3DXCreateTexture
+    D3DXMatrixMultiply
+    D3DXMatrixRotationYawPitchRoll
+    D3DXMatrixScaling
+    D3DXMatrixTranslation

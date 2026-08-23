@@ -1,0 +1,9 @@
+/build/
+/run-*/
+/runtime/
+/runtime/*.exe
+/runtime/*.pdb
+/runtime/*.ilk
+/runtime/*.obj
+/runtime/*.lib
+/analysis/evidence/raw/
