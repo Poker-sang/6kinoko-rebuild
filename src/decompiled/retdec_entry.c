@@ -72,10 +72,14 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
 {
     EXCEPTION_RECORD *record;
     CONTEXT *context;
-    char message[384];
+    char message[768];
     ULONG_PTR fault_address;
+    ULONG_PTR module_base;
+    ULONG_PTR eip_rva;
+    ULONG_PTR ret_rva;
+    ULONG_PTR previous_frame;
     ULONG_PTR return_address;
-    ULONG_PTR stack_word;
+    ULONG_PTR stack_words[4];
 
     if (exception_pointers == NULL || exception_pointers->ExceptionRecord == NULL) {
         return EXCEPTION_CONTINUE_SEARCH;
@@ -89,31 +93,59 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     }
     context = exception_pointers->ContextRecord;
     fault_address = 0;
+    module_base = (ULONG_PTR)(uintptr_t)GetModuleHandleA(NULL);
+    eip_rva = 0;
+    ret_rva = 0;
+    previous_frame = 0;
+    return_address = 0;
+    stack_words[0] = 0;
+    stack_words[1] = 0;
+    stack_words[2] = 0;
+    stack_words[3] = 0;
     if (record->ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
         record->NumberParameters >= 2) {
         fault_address = record->ExceptionInformation[1];
     }
-    return_address = 0;
-    stack_word = 0;
     if (context != NULL) {
+        if (module_base != 0 && context->Eip >= module_base) {
+            eip_rva = context->Eip - module_base;
+        }
         __try {
+            previous_frame = *(ULONG_PTR *)(uintptr_t)context->Ebp;
             return_address = *(ULONG_PTR *)(uintptr_t)(context->Ebp + 4);
-            stack_word = *(ULONG_PTR *)(uintptr_t)context->Esp;
+            stack_words[0] = *(ULONG_PTR *)(uintptr_t)context->Esp;
+            stack_words[1] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 4);
+            stack_words[2] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 8);
+            stack_words[3] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 12);
         } __except (EXCEPTION_EXECUTE_HANDLER) {
+            previous_frame = 0;
             return_address = 0;
-            stack_word = 0;
+            stack_words[0] = 0;
+            stack_words[1] = 0;
+            stack_words[2] = 0;
+            stack_words[3] = 0;
+        }
+        if (module_base != 0 && return_address >= module_base) {
+            ret_rva = return_address - module_base;
         }
     }
     wsprintfA(message,
-              "veh:code=0x%08lX addr=0x%08lX fault=0x%08lX eip=0x%08lX ret=0x%08lX esp=0x%08lX ebp=0x%08lX stack=0x%08lX eax=0x%08lX ebx=0x%08lX ecx=0x%08lX edx=0x%08lX esi=0x%08lX edi=0x%08lX",
+              "veh:code=0x%08lX addr=0x%08lX fault=0x%08lX base=0x%08lX eip=0x%08lX(rva=0x%08lX) ret=0x%08lX(rva=0x%08lX) esp=0x%08lX ebp=0x%08lX prev=0x%08lX stack=0x%08lX,0x%08lX,0x%08lX,0x%08lX eax=0x%08lX ebx=0x%08lX ecx=0x%08lX edx=0x%08lX esi=0x%08lX edi=0x%08lX",
               (unsigned long)record->ExceptionCode,
               (unsigned long)(uintptr_t)record->ExceptionAddress,
               (unsigned long)fault_address,
+              (unsigned long)module_base,
               context != NULL ? (unsigned long)context->Eip : 0,
+              (unsigned long)eip_rva,
               (unsigned long)return_address,
+              (unsigned long)ret_rva,
               context != NULL ? (unsigned long)context->Esp : 0,
               context != NULL ? (unsigned long)context->Ebp : 0,
-              (unsigned long)stack_word,
+              (unsigned long)previous_frame,
+              (unsigned long)stack_words[0],
+              (unsigned long)stack_words[1],
+              (unsigned long)stack_words[2],
+              (unsigned long)stack_words[3],
               context != NULL ? (unsigned long)context->Eax : 0,
               context != NULL ? (unsigned long)context->Ebx : 0,
               context != NULL ? (unsigned long)context->Ecx : 0,

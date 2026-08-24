@@ -86,3 +86,8 @@ int64_t __asm_rep_stosd_memset(void *destination, int32_t value, int32_t count);
    These adapters preserve ECX=this and the callee-cleaned explicit args. */
 void retdec_call_thiscall0(void *object, void *method);
 void retdec_call_thiscall1(void *object, void *method, int32_t argument);
+int32_t retdec_call_thiscall0_result(void *object, void *method);
+int32_t retdec_call_thiscall1_result(
+    void *object, void *method, int32_t argument);
+int32_t retdec_call_thiscall2_result(
+    void *object, void *method, int32_t argument1, int32_t argument2);
