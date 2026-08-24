@@ -81,6 +81,8 @@ target_include_directories(kinoko_archive_smoke PRIVATE include)
 target_link_libraries(kinoko_archive_smoke PRIVATE kinoko_core)
 
 set(KINOKO_REFERENCE_DIR "D:/6kinoko" CACHE PATH "Directory containing the original DAT files")
+set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime" CACHE PATH
+    "Directory for built runtime executables")
 enable_testing()
 add_test(
     NAME archive_smoke
@@ -93,6 +95,6 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
         kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
         kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_retdec_rebuild
         PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${CMAKE_SOURCE_DIR}/runtime"
+        RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}"
     )
 endforeach()
