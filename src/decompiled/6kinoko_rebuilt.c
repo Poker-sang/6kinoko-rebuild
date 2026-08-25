@@ -29,7 +29,8 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src);
 uint32_t timeGetTime(void);
 uint32_t timeBeginPeriod(uint32_t period);
 void retdec_trace(const char *message);
-static void retdec_trace_i32(const char *label, int32_t value);
+static __declspec(noinline) void retdec_trace_i32(const char *label,
+                                                  int32_t value);
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
 
@@ -3564,6 +3565,7 @@ int32_t function_45da00(void);
 int32_t function_45da40(void);
 int32_t function_45da50(int32_t a1);
 int32_t function_45dac0(int32_t a1);
+static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_45db10(void);
 int32_t function_45db30(void);
 int32_t function_45db90(int32_t a1);
@@ -3579,6 +3581,7 @@ int32_t function_45e120(void);
 int32_t function_45e270(int32_t a1);
 int32_t function_45e300(void);
 int32_t function_45e410(int32_t * a1);
+static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair);
 int32_t function_45e460(void);
 int32_t function_45e5e0(int32_t a1);
 int32_t function_45eb00(void);
@@ -3620,6 +3623,7 @@ int32_t function_45ffd0(void);
 int32_t function_45ffe0(int32_t a1);
 int32_t function_460540(int32_t a1);
 int32_t function_4606d0(void);
+static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr);
 int32_t function_4607e0(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_460900(int32_t a1, int32_t a2);
 int32_t function_460920(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
@@ -3632,6 +3636,16 @@ int32_t function_460c10(int32_t a1);
 int32_t function_460c70(int32_t a1);
 int32_t function_460cc0(int32_t a1);
 int32_t function_460d10(char * a1, int32_t a2);
+static int32_t function_460d10_this(int32_t this_ptr, const char *name,
+                                    int32_t parent_ptr);
+static int32_t *function_460d10_actor(int32_t *object_ptr, const char *name,
+                                      int32_t parent_ptr);
+static void function_460e00_register_actor_method(int32_t vm,
+                                                  int32_t *object_ptr,
+                                                  const char *name,
+                                                  int32_t native_function,
+                                                  int32_t type_wrapper,
+                                                  int32_t argument_count);
 int32_t function_460de0(void);
 int32_t function_460e00(void);
 int32_t function_462250(int32_t a1);
@@ -3727,7 +3741,7 @@ int32_t function_468790(int32_t result, int32_t a2);
 int32_t function_4687d0(uint32_t a1);
 int32_t function_46889b(void);
 int32_t function_468950(int32_t * a1);
-int32_t function_4689d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8);
+int32_t function_4689d0(int32_t this_ptr, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8);
 int32_t function_4693a0(int32_t a1);
 int32_t function_469620(int32_t a1);
 int32_t function_469640(void);
@@ -4291,6 +4305,8 @@ static int32_t function_48d9f0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_48d220(uint32_t a1, int32_t * a2);
 int32_t function_48d310(uint32_t a1, int32_t * a2);
 int32_t function_48d390(int32_t a1, int32_t a2);
+static int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
+                                    int32_t count);
 int32_t function_48d430(void);
 int32_t function_48d450(char a1);
 int32_t function_48d4e0(int32_t a1, int32_t a2);
@@ -4775,6 +4791,7 @@ int32_t function_4a9730(int32_t a1, int32_t a2);
 static int32_t function_4a9730_this(int32_t this_ptr, int32_t a2,
                                     int32_t source_ptr);
 int32_t function_4a97b0(char a1, int32_t a2);
+static int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2, int32_t a3);
 int32_t function_4a9840(char * a1, int32_t * a2);
 static int32_t function_4a9840_this(int32_t this_ptr, const char *source_ptr,
                                     int32_t target_ptr);
@@ -4783,9 +4800,11 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
                         int32_t a3, int32_t a4);
 int32_t function_4a99f0(void);
 int32_t function_4a9a30(void);
+static int32_t function_4a9a30_this(int32_t object_ptr);
 int32_t function_4a9a40(int32_t a1);
 int32_t function_4a9ac0(int32_t a1);
 int32_t function_4a9b40(int32_t a1);
+static int32_t function_4a9b40_this(int32_t object_ptr, int32_t index);
 int32_t function_4a9bb0(int32_t a1);
 int32_t function_4a9c10(void);
 int32_t function_4a9c60(int32_t * a1, int32_t * a2);
@@ -7324,7 +7343,7 @@ char g642 = 0; // 0x5149d4
 int32_t g643 = 0; // 0x5149d8
 char * g644; // 0x5149dc
 int32_t g645 = 0; // 0x5149e0
-int32_t unk_5149EC[3] = { 0x01000001, 0, 0 }; // truncated SquirrelObject storage
+int32_t unk_5149EC[3] = { 0, 0, 0 }; // zero-initialized global SquirrelObject storage
 char * g646; // 0x5149f8
 char * g647; // 0x5151f9
 int32_t g648 = 0; // 0x5152fc
@@ -35382,6 +35401,11 @@ static int32_t function_415550_this(int32_t this_ptr, int32_t name,
         return 0;
     vm = *(int32_t *)(intptr_t)(this_ptr + 4);
     value_ptr = this_ptr + 8;
+    retdec_trace_i32("415550:this", this_ptr);
+    retdec_trace_i32("415550:vm", vm);
+    retdec_trace_i32("415550:value-type", *(int32_t *)(intptr_t)value_ptr);
+    retdec_trace_i32("415550:value-data",
+                     *(int32_t *)(intptr_t)(value_ptr + 4));
     function_48ab90(vm, *(int32_t *)(intptr_t)value_ptr,
                     *(int32_t *)(intptr_t)(value_ptr + 4));
     function_48a480(vm, name, -1);
@@ -35392,7 +35416,12 @@ static int32_t function_415550_this(int32_t this_ptr, int32_t name,
            (const void *)(intptr_t)src, (size_t)(uint32_t)size);
     function_48d850(vm, native_function, 1);
     function_48c950(vm, -3, arg_count & 255);
-    return function_48aa30(vm, 1);
+    destination = function_48aa30(vm, 1);
+    retdec_trace_i32("415550:after-pop-type",
+                     *(int32_t *)(intptr_t)value_ptr);
+    retdec_trace_i32("415550:after-pop-data",
+                     *(int32_t *)(intptr_t)(value_ptr + 4));
+    return destination;
 }
 
 // Address range: 0x4155d0 - 0x4156c7
@@ -116022,7 +116051,6 @@ int32_t function_45df10(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x45df20
     __writefsdword(0, (int32_t)&v1);
     retdec_msvc_0_Init_locks_std__QAE_XZ5();
-    retdec_msvc_0_Init_locks_std__QAE_XZ5();
     int32_t result; // 0x45df10
     *(int32_t *)result = (int32_t)g644;
     function_4a95c0(function_4a8cc0());
@@ -117206,11 +117234,22 @@ int32_t function_45f3e0(int32_t a1, int32_t a2, int32_t a3, int32_t *a4,
 static int32_t *function_45f3e0_this(int32_t *this_ptr, int32_t a1,
                                      int32_t a2, int32_t a3, int32_t *a4,
                                      int32_t a5, int32_t a6) {
-    int32_t v13[3];
-    int32_t v14[3];
-    int32_t v15[3];
+    int32_t temporary_object[3];
+    int32_t root_object[3];
+    int32_t sq_types[3];
     int32_t v8;
     int32_t v11 = 0;
+    int32_t vtable = 0;
+    int32_t method = 0;
+
+    retdec_trace("45f3e0:begin");
+    retdec_trace_i32("45f3e0:this", (int32_t)(intptr_t)this_ptr);
+    retdec_trace_i32("45f3e0:arg1", a1);
+    retdec_trace_i32("45f3e0:arg2", a2);
+    retdec_trace_i32("45f3e0:arg3", a3);
+    retdec_trace_i32("45f3e0:type-descriptor", (int32_t)(intptr_t)a4);
+    retdec_trace_i32("45f3e0:type-size", a5);
+    retdec_trace_i32("45f3e0:flags", a6);
 
     this_ptr[0] = a1;
     this_ptr[1] = a2;
@@ -117220,28 +117259,46 @@ static int32_t *function_45f3e0_this(int32_t *this_ptr, int32_t a1,
     *((int16_t *)&this_ptr[4] + 1) = (int16_t)a6;
 
     v8 = function_4a8cc0();
-    function_4aa3a0_this(v8, (int32_t)(intptr_t)v15, "__SqTypes");
-    if (function_4a96c0_this((int32_t)(intptr_t)v15)) {
+    retdec_trace_i32("45f3e0:root", v8);
+    function_4aa3a0_this(v8, (int32_t)(intptr_t)sq_types, "__SqTypes");
+    retdec_trace_i32("45f3e0:sq-types-type", sq_types[1]);
+    retdec_trace_i32("45f3e0:sq-types-data", sq_types[2]);
+    if (function_4a96c0_this((int32_t)(intptr_t)sq_types)) {
+        retdec_trace("45f3e0:sq-types-null");
         function_4a95c0_this(
-            (int32_t)(intptr_t)v15,
-            (int32_t)(intptr_t)function_4a91c0_this(v13));
-        function_4a9d70_this((int32_t)(intptr_t)v13);
+            (int32_t)(intptr_t)temporary_object,
+            (int32_t)(intptr_t)function_4a91c0_this(temporary_object));
+        function_4a9d70_this((int32_t)(intptr_t)temporary_object);
 
-        function_4a9500_this(v14, function_4a8cc0());
-        function_4a9840_this((int32_t)(intptr_t)v14, "__SqTypes",
-                             (int32_t)(intptr_t)v15);
-        function_4a9d70_this((int32_t)(intptr_t)v14);
+        function_4a9500_this(root_object, function_4a8cc0());
+        function_4a9840_this((int32_t)(intptr_t)root_object, "__SqTypes",
+                             (int32_t)(intptr_t)sq_types);
+        function_4a9d70_this((int32_t)(intptr_t)root_object);
     }
 
     if (a4 != 0 && *(int32_t *)a4 != 0) {
-        int32_t vtable = *(int32_t *)a4;
+        vtable = *(int32_t *)a4;
+        method = *(int32_t *)(intptr_t)(vtable + 4);
+        retdec_trace_i32("45f3e0:descriptor-vtable", vtable);
+        retdec_trace_i32("45f3e0:descriptor-method", method);
         v11 = retdec_call_thiscall0_result(
             (void *)(intptr_t)a4,
-            (void *)(intptr_t)*(int32_t *)(vtable + 4));
+            (void *)(intptr_t)method);
+        retdec_trace_i32("45f3e0:virtual-result", v11);
     }
-    function_4a9730_this((int32_t)(intptr_t)v15,
+    retdec_trace_i32("45f3e0:descriptor-after-virtual",
+                     a4 != 0 ? *(int32_t *)a4 : 0);
+    retdec_trace("45f3e0:before-4a9730");
+    function_4a9730_this((int32_t)(intptr_t)sq_types,
                          (int32_t)(intptr_t)a4, v11);
-    function_4a9d70_this((int32_t)(intptr_t)v15);
+    retdec_trace_i32("45f3e0:descriptor-after-4a9730",
+                     a4 != 0 ? *(int32_t *)a4 : 0);
+    retdec_trace("45f3e0:after-4a9730");
+    retdec_trace("45f3e0:before-sq-types-dtor");
+    function_4a9d70_this((int32_t)(intptr_t)sq_types);
+    retdec_trace_i32("45f3e0:descriptor-after-dtor",
+                     a4 != 0 ? *(int32_t *)a4 : 0);
+    retdec_trace("45f3e0:after-sq-types-dtor");
     return this_ptr;
 }
 
@@ -117498,11 +117555,33 @@ int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     return 0;
 }
 
+static void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
+    char message[512];
+
+    if (name_ptr == 0) {
+        wsprintfA(message, "%s:ptr=0x00000000", label);
+    } else {
+        wsprintfA(message, "%s:ptr=0x%08lX text=%s", label,
+                  (unsigned long)(uint32_t)name_ptr,
+                  (const char *)(intptr_t)name_ptr);
+    }
+    retdec_trace(message);
+}
+
 // Address range: 0x45fab0 - 0x45fb87
 int32_t function_45fab0(int32_t a1, int32_t a2) {
     char name[258]; // Src + i + v9, 0x45fad6..0x45fb08
     int32_t result = 0; // v6, 0x45facc
     int32_t length = 0; // v3, 0x45fac6
+    int32_t lookup_result;
+
+    retdec_trace("45fab0:begin");
+    retdec_trace_i32("45fab0:this", a1);
+    retdec_trace_i32("45fab0:source", a2);
+    if (a1 != 0) {
+        retdec_trace_i32("45fab0:this-type", *(int32_t *)(intptr_t)(a1 + 4));
+        retdec_trace_i32("45fab0:this-data", *(int32_t *)(intptr_t)(a1 + 8));
+    }
 
     // IDA shows Src=0x5f00 and i='v': the lookup name is "_v" + input.
     name[0] = '_';
@@ -117512,12 +117591,24 @@ int32_t function_45fab0(int32_t a1, int32_t a2) {
         ++length;
     }
     name[length + 2] = 0;
+    retdec_trace_squirrel_name("45fab0:name", (int32_t)(intptr_t)name);
 
-    if (function_4aa080(a1, (int32_t)(intptr_t)name,
-                        (int32_t)(intptr_t)&result, 0) == 0) {
-        function_4a9950(a1, (int32_t)(intptr_t)name, 20, 0);
-        if (function_4aa080(a1, (int32_t)(intptr_t)name,
-                            (int32_t)(intptr_t)&result, 0) == 0) {
+    retdec_trace("45fab0:lookup-1");
+    lookup_result = function_4aa080(a1, (int32_t)(intptr_t)name,
+                                    (int32_t)(intptr_t)&result, 0);
+    retdec_trace_i32("45fab0:lookup-1-result", lookup_result);
+    retdec_trace_i32("45fab0:lookup-1-data", result);
+    if (lookup_result == 0) {
+        retdec_trace("45fab0:create");
+        lookup_result = function_4a9950(a1, (int32_t)(intptr_t)name, 20, 0);
+        retdec_trace_i32("45fab0:create-result", lookup_result);
+        result = 0;
+        retdec_trace("45fab0:lookup-2");
+        lookup_result = function_4aa080(a1, (int32_t)(intptr_t)name,
+                                        (int32_t)(intptr_t)&result, 0);
+        retdec_trace_i32("45fab0:lookup-2-result", lookup_result);
+        retdec_trace_i32("45fab0:lookup-2-data", result);
+        if (lookup_result == 0) {
             __CxxThrowException_40_8();
         }
     }
@@ -118012,7 +118103,7 @@ int32_t function_4607e0(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
     __writefsdword(0, (int32_t)&v1);
     int32_t v4 = a2; // bp-48, 0x46080d
     int32_t v5 = function_48aa20(a2); // 0x460814
-    retdec_msvc_0_Init_locks_std__QAE_XZ5();
+    function_4a94e0_this((int32_t)(intptr_t)a1);
     if ((g581 & 1) == 0) {
         // 0x46083c
         g581 |= 1;
@@ -118066,7 +118157,9 @@ int32_t function_460920(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32
         g584 = "int";
     }
     int32_t v3[5];
+    retdec_trace_i32("460920:g582-before", g582);
     function_45f3e0_this(v3, a3, 0, (int32_t)a2, &g582, 4, a5);
+    retdec_trace_i32("460920:g582-after", g582);
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -118089,7 +118182,9 @@ int32_t function_4609c0(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32
         g590 = "float";
     }
     int32_t v3[5];
+    retdec_trace_i32("4609c0:g582-before", g582);
     function_45f3e0_this(v3, a3, 2, (int32_t)a2, &g588, 4, a5);
+    retdec_trace_i32("4609c0:g582-after", g582);
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -118112,7 +118207,9 @@ int32_t function_460a60(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32
         g596 = "bool";
     }
     int32_t v3[5];
+    retdec_trace_i32("460a60:g594-before", g594);
     function_45f3e0_this(v3, a3, 3, (int32_t)a2, &g594, 1, a5);
+    retdec_trace_i32("460a60:g594-after", g594);
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -118256,6 +118353,44 @@ int32_t function_460de0(void) {
 int32_t function_460e00(void) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x460e10
     __writefsdword(0, (int32_t)&v1);
+
+    int32_t v2[3] = {0, 0, 0};
+    function_460d10_actor(v2, "Actor", 0);
+    function_4a95c0_this((int32_t)(intptr_t)&g602,
+                         (int32_t)(intptr_t)v2);
+    int32_t v3 = (int32_t)(intptr_t)g644;
+    function_460e00_register_actor_method(v3, v2, "Release",
+                                          0x45dbc0, 0x460b00, 0);
+    function_460e00_register_actor_method(v3, v2, "Reset",
+                                          0x45eb00, 0x460b00, 0);
+    function_460e00_register_actor_method(v3, v2, "SetUpdateFunction",
+                                          0x45fcd0, 0x460b50, 0);
+    function_460e00_register_actor_method(
+        v3, v2, "SetCollisionCallbackFunction", 0x45fd80, 0x460b50, 0);
+    function_460e00_register_actor_method(
+        v3, v2, "InterrputCollisionCallback", 0x45f800, 0x460b00, 0);
+    function_460e00_register_actor_method(v3, v2, "SetTake",
+                                          0x462280, 0x460bc0, 0);
+    function_460e00_register_actor_method(v3, v2, "SetStep",
+                                          0x4606d0, 0x460b50, 0);
+    function_460e00_register_actor_method(v3, v2, "SetChipFlag",
+                                          0x45f760, 0x460bc0, 0);
+    function_460e00_register_actor_method(v3, v2, "SetChipBoundType",
+                                          0x45f780, 0x460bc0, 0);
+    function_460e00_register_actor_method(v3, v2, "GetChipID",
+                                          0x45f7a0, 0x460bc0, 0);
+    function_460e00_register_actor_method(v3, v2, "GetChipFlag",
+                                          0x45f810, 0x460c10, 0);
+    function_460e00_register_actor_method(v3, v2, "IsExistChip",
+                                          0x45f820, 0x460c70, 0);
+    function_460e00_register_actor_method(v3, v2, "ResetPriority",
+                                          0x45f7e0, 0x460bc0, 0);
+    function_460e00_register_actor_method(v3, v2, "SyncAnimation",
+                                          0x45fe80, 0x460b50, 0);
+    function_460e00_register_actor_method(v3, v2, "Move",
+                                          0x45dbd0, 0x460cc0, 0);
+
+#if 0
     function_460d10("Actor", 0);
     int32_t v2; // bp-80, 0x460e00
     function_4a95c0((int32_t)&v2);
@@ -118382,6 +118517,7 @@ int32_t function_460e00(void) {
     function_48d850(v3, 0x460cc0, 1);
     function_48c950(v3, -3, 0);
     function_48aa50(v3);
+#endif
     char v21 = g581; // 0x461302
     if ((v21 & 1) == 0) {
         // 0x461310
@@ -136333,21 +136469,34 @@ int32_t function_470d00(int32_t a1) {
     int32_t v2[3];
     int32_t v3[3];
 
+    retdec_trace_i32("470d00:enter-g582", g582);
     function_4aa210(a1, v3);
+    retdec_trace_i32("470d00:after-4aa210-g582", g582);
     if (function_4aa1a0((int32_t)(intptr_t)v3, "_set") == 0) {
+        retdec_trace_i32("470d00:after-4aa1a0-g582", g582);
         function_4a91c0_this(v2);
+        retdec_trace_i32("470d00:after-4a91c0-g582", g582);
         function_4a95c0_this((int32_t)(intptr_t)v3,
                              (int32_t)(intptr_t)v2);
+        retdec_trace_i32("470d00:after-4a95c0-g582", g582);
         function_4a9d70_this((int32_t)(intptr_t)v2);
+        retdec_trace_i32("470d00:after-first-dtor-g582", g582);
         function_4a9490(v2, (int32_t)(intptr_t)v3,
                         0x4aaf30, "_set", "sn|b|s");
+        retdec_trace_i32("470d00:after-set-binding-g582", g582);
         function_4a9d70_this((int32_t)(intptr_t)v2);
+        retdec_trace_i32("470d00:after-second-dtor-g582", g582);
         function_4a9490(v2, (int32_t)(intptr_t)v3,
                         0x4aab60, "_get", "s");
+        retdec_trace_i32("470d00:after-get-binding-g582", g582);
         function_4a9d70_this((int32_t)(intptr_t)v2);
+        retdec_trace_i32("470d00:after-third-dtor-g582", g582);
         function_4a9f60(a1, (int32_t)(intptr_t)v3);
+        retdec_trace_i32("470d00:after-4a9f60-g582", g582);
     }
-    return function_4a9d70_this((int32_t)(intptr_t)v3);
+    int32_t result = function_4a9d70_this((int32_t)(intptr_t)v3);
+    retdec_trace_i32("470d00:exit-g582", g582);
+    return result;
 }
 
 // Address range: 0x470df0 - 0x470ed8
@@ -137349,6 +137498,7 @@ int32_t function_472140(int32_t a1) {
 int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
     int32_t v1 = (int32_t)a1;
     int32_t v2 = function_45fab0(v1, (int32_t)a3); // 0x4721b0
+    retdec_trace_i32("4721a0:userdata", v2);
     if ((g587 & 1) == 0) {
         // 0x4721c9
         g587 |= 1;
@@ -137359,7 +137509,11 @@ int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
         g584 = "int";
     }
     int32_t v3[5];
+    retdec_trace_i32("4721a0:g582-before", g582);
     function_45f3e0_this(v3, (int32_t)a2, 0, 0, &g582, 4, a4);
+    retdec_trace_i32("4721a0:g582-after", g582);
+    retdec_trace_i32("4721a0:userdata-after-parse", v2);
+    retdec_trace_i32("4721a0:parsed-type", v3[0]);
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -137382,7 +137536,9 @@ int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
         g584 = "int";
     }
     int32_t v3[5];
+    retdec_trace_i32("472240:g582-before", g582);
     function_45f3e0_this(v3, a2, 0, 0, &g582, 4, 2);
+    retdec_trace_i32("472240:g582-after", g582);
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -181321,7 +181477,8 @@ static int32_t retdec_compare_with_vm(int32_t vm, int32_t left,
     return result;
 }
 
-static void retdec_trace_i32(const char *label, int32_t value) {
+static __declspec(noinline) void retdec_trace_i32(const char *label,
+                                                  int32_t value) {
     char message[128];
     wsprintfA(message, "%s:0x%08lX", label, (unsigned long)value);
     retdec_trace(message);
@@ -181367,6 +181524,231 @@ static uint32_t retdec_squirrel_key_hash(const int32_t *key) {
     if (type == 0x01000008 || type == 0x05000002)
         return data;
     return data >> 3;
+}
+
+/*
+ * Squirrel was built with the garbage collector enabled.  Its public
+ * sq_addref/sq_release pair therefore owns entries in SQSharedState's
+ * RefTable at +24; it does not directly modify the object at data + 4.
+ * RefTable is laid out as:
+ *   +0 slots, +4 used, +8 nodes, +12 freelist, +16 bucket array.
+ * Each node is [type, data, refs, next].
+ */
+static int32_t retdec_ref_table_resize(int32_t table_ptr, int32_t new_slots) {
+    int32_t old_slots;
+    int32_t old_nodes;
+    int32_t old_buckets;
+    int32_t old_block;
+    int32_t new_block;
+    int32_t new_nodes;
+    int32_t new_free;
+    int32_t used = 0;
+
+    if (table_ptr == 0)
+        return 0;
+    if (new_slots < 4)
+        new_slots = 4;
+    old_slots = *(int32_t *)(intptr_t)(table_ptr + 0);
+    old_nodes = *(int32_t *)(intptr_t)(table_ptr + 8);
+    old_buckets = *(int32_t *)(intptr_t)(table_ptr + 16);
+    old_block = old_buckets;
+    new_block = (int32_t)(intptr_t)function_498580(20 * new_slots);
+    if (new_block == 0)
+        return 0;
+
+    memset((void *)(intptr_t)new_block, 0, (size_t)(4 * new_slots));
+    new_nodes = new_block + 4 * new_slots;
+    for (int32_t i = 0; i < new_slots; ++i) {
+        int32_t *node = (int32_t *)(intptr_t)(new_nodes + 16 * i);
+        node[0] = g483;
+        node[1] = g484;
+        node[2] = 0;
+        node[3] = i + 1 < new_slots ?
+            new_nodes + 16 * (i + 1) : 0;
+    }
+    new_free = new_nodes;
+
+    if (old_nodes != 0 && old_slots > 0) {
+        for (int32_t i = 0; i < old_slots; ++i) {
+            int32_t *old_node =
+                (int32_t *)(intptr_t)(old_nodes + 16 * i);
+            int32_t *new_node;
+            uint32_t hash;
+            int32_t bucket_index;
+            int32_t *bucket;
+
+            if (old_node[0] == g483)
+                continue;
+            if (new_free == 0)
+                break;
+            new_node = (int32_t *)(intptr_t)new_free;
+            new_free = new_node[3];
+            hash = retdec_squirrel_key_hash(old_node);
+            bucket_index = (int32_t)(hash & (uint32_t)(new_slots - 1));
+            bucket = (int32_t *)(intptr_t)(new_block + 4 * bucket_index);
+            new_node[0] = old_node[0];
+            new_node[1] = old_node[1];
+            new_node[2] = old_node[2];
+            new_node[3] = *bucket;
+            *bucket = (int32_t)(intptr_t)new_node;
+            old_node[0] = g483;
+            old_node[1] = g484;
+            old_node[2] = 0;
+            ++used;
+        }
+    }
+
+    *(int32_t *)(intptr_t)(table_ptr + 0) = new_slots;
+    *(int32_t *)(intptr_t)(table_ptr + 4) = used;
+    *(int32_t *)(intptr_t)(table_ptr + 8) = new_nodes;
+    *(int32_t *)(intptr_t)(table_ptr + 12) = new_free;
+    *(int32_t *)(intptr_t)(table_ptr + 16) = new_block;
+    if (old_block != 0)
+        function_4985b0(old_block);
+    retdec_trace_i32("ref-table-resize", new_slots);
+    return 1;
+}
+
+static int32_t retdec_ref_table_addref(int32_t shared_state,
+                                       int32_t type, int32_t data) {
+    int32_t table_ptr;
+    int32_t slots;
+    int32_t nodes;
+    int32_t buckets;
+    int32_t bucket_index;
+    int32_t bucket;
+    int32_t node;
+    int32_t key[2];
+
+    if (shared_state == 0 || (type & 0x08000000) == 0 || data == 0)
+        return 0;
+    table_ptr = shared_state + 24;
+    slots = *(int32_t *)(intptr_t)(table_ptr + 0);
+    nodes = *(int32_t *)(intptr_t)(table_ptr + 8);
+    buckets = *(int32_t *)(intptr_t)(table_ptr + 16);
+    if (slots < 1 || nodes == 0 || buckets == 0)
+        return 0;
+
+    key[0] = type;
+    key[1] = data;
+    bucket_index = (int32_t)(retdec_squirrel_key_hash(key) &
+                             (uint32_t)(slots - 1));
+    bucket = buckets + 4 * bucket_index;
+    for (node = *(int32_t *)(intptr_t)bucket; node != 0;
+         node = *(int32_t *)(intptr_t)(node + 12)) {
+        if (*(int32_t *)(intptr_t)(node + 0) == type &&
+            *(int32_t *)(intptr_t)(node + 4) == data) {
+            ++*(int32_t *)(intptr_t)(node + 8);
+            return 1;
+        }
+    }
+
+    if (*(int32_t *)(intptr_t)(table_ptr + 4) >= slots ||
+        *(int32_t *)(intptr_t)(table_ptr + 12) == 0) {
+        if (!retdec_ref_table_resize(table_ptr, slots * 2))
+            return 0;
+        slots = *(int32_t *)(intptr_t)(table_ptr + 0);
+        buckets = *(int32_t *)(intptr_t)(table_ptr + 16);
+        bucket_index = (int32_t)(retdec_squirrel_key_hash(key) &
+                                 (uint32_t)(slots - 1));
+        bucket = buckets + 4 * bucket_index;
+    }
+
+    node = *(int32_t *)(intptr_t)(table_ptr + 12);
+    *(int32_t *)(intptr_t)(table_ptr + 12) =
+        *(int32_t *)(intptr_t)(node + 12);
+    *(int32_t *)(intptr_t)(node + 0) = type;
+    *(int32_t *)(intptr_t)(node + 4) = data;
+    *(int32_t *)(intptr_t)(node + 8) = 1;
+    *(int32_t *)(intptr_t)(node + 12) =
+        *(int32_t *)(intptr_t)bucket;
+    *(int32_t *)(intptr_t)bucket = node;
+    ++*(int32_t *)(intptr_t)(table_ptr + 4);
+    /* RefNode::obj is an SQObjectPtr and owns one internal object reference. */
+    retdec_squirrel_addref(type, data);
+    return 1;
+}
+
+static int32_t retdec_ref_table_release(int32_t shared_state,
+                                        int32_t type, int32_t data) {
+    int32_t table_ptr;
+    int32_t slots;
+    int32_t buckets;
+    int32_t bucket_index;
+    int32_t bucket;
+    int32_t node;
+    int32_t previous = 0;
+    int32_t key[2];
+
+    if (shared_state == 0 || (type & 0x08000000) == 0 || data == 0)
+        return 1;
+    table_ptr = shared_state + 24;
+    slots = *(int32_t *)(intptr_t)(table_ptr + 0);
+    buckets = *(int32_t *)(intptr_t)(table_ptr + 16);
+    if (slots < 1 || buckets == 0)
+        return 1;
+    key[0] = type;
+    key[1] = data;
+    bucket_index = (int32_t)(retdec_squirrel_key_hash(key) &
+                             (uint32_t)(slots - 1));
+    bucket = buckets + 4 * bucket_index;
+    node = *(int32_t *)(intptr_t)bucket;
+    while (node != 0) {
+        if (*(int32_t *)(intptr_t)(node + 0) == type &&
+            *(int32_t *)(intptr_t)(node + 4) == data)
+            break;
+        previous = node;
+        node = *(int32_t *)(intptr_t)(node + 12);
+    }
+    if (node == 0) {
+        retdec_trace("ref-table-release-miss");
+        return 0;
+    }
+    if (*(int32_t *)(intptr_t)(node + 8) > 1) {
+        --*(int32_t *)(intptr_t)(node + 8);
+        return 0;
+    }
+    if (previous != 0)
+        *(int32_t *)(intptr_t)(previous + 12) =
+            *(int32_t *)(intptr_t)(node + 12);
+    else
+        *(int32_t *)(intptr_t)bucket =
+            *(int32_t *)(intptr_t)(node + 12);
+    *(int32_t *)(intptr_t)(node + 0) = g483;
+    *(int32_t *)(intptr_t)(node + 1 * 4) = g484;
+    *(int32_t *)(intptr_t)(node + 2 * 4) = 0;
+    *(int32_t *)(intptr_t)(node + 3 * 4) =
+        *(int32_t *)(intptr_t)(table_ptr + 12);
+    *(int32_t *)(intptr_t)(table_ptr + 12) = node;
+    if (*(int32_t *)(intptr_t)(table_ptr + 4) > 0)
+        --*(int32_t *)(intptr_t)(table_ptr + 4);
+    retdec_squirrel_release(type, data);
+    return 1;
+}
+
+static int32_t retdec_squirrel_api_shared_state(int32_t receiver) {
+    if (retdec_primary_shared_state != 0)
+        return retdec_primary_shared_state;
+    if (receiver != 0)
+        return *(int32_t *)(intptr_t)(receiver + 140);
+    return 0;
+}
+
+static void retdec_squirrel_api_addref(int32_t receiver,
+                                       int32_t type, int32_t data) {
+    int32_t shared_state = retdec_squirrel_api_shared_state(receiver);
+    if (!retdec_ref_table_addref(shared_state, type, data) &&
+        shared_state == 0)
+        retdec_squirrel_addref(type, data);
+}
+
+static int32_t retdec_squirrel_api_release(int32_t receiver,
+                                            int32_t type, int32_t data) {
+    int32_t shared_state = retdec_squirrel_api_shared_state(receiver);
+    if (shared_state != 0)
+        return retdec_ref_table_release(shared_state, type, data);
+    retdec_squirrel_release(type, data);
+    return 1;
 }
 
 static int32_t retdec_table_bucket(int32_t table_ptr, uint32_t hash) {
@@ -181591,10 +181973,72 @@ static int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr) {
     return this_ptr;
 }
 
+// sub_460D10 is a constructor-like __thiscall routine.  RetDec lost its
+// hidden destination, so keep the original object layout explicit here.
+static int32_t function_460d10_this(int32_t this_ptr, const char *name,
+                                    int32_t parent_ptr) {
+    int32_t *state;
+    int32_t temporary[3] = {0, 0, 0};
+    int32_t constructed;
+
+    if (this_ptr == 0)
+        return 0;
+    state = (int32_t *)(intptr_t)this_ptr;
+    state[0] = (int32_t)(intptr_t)g644;
+    state[1] = (int32_t)(intptr_t)name;
+    function_4a94e0_this(this_ptr + 8);
+    state[5] = parent_ptr;
+    function_4a91c0_this(state + 6);
+    function_4a91c0_this(state + 9);
+
+    constructed = function_4607e0(temporary, state[0], state[1], state[5]);
+    function_4a95c0_this(this_ptr + 8, constructed);
+    function_4a9d70_this(constructed);
+    return this_ptr;
+}
+
+static int32_t *function_460d10_actor(int32_t *object_ptr, const char *name,
+                                      int32_t parent_ptr) {
+    int32_t state[12] = {0};
+
+    if (object_ptr == NULL)
+        return NULL;
+    function_460d10_this((int32_t)(intptr_t)state, name, parent_ptr);
+    function_4a95c0_this((int32_t)(intptr_t)object_ptr,
+                         (int32_t)(intptr_t)(state + 2));
+    function_4a9d70_this((int32_t)(intptr_t)(state + 2));
+    function_4a9d70_this((int32_t)(intptr_t)(state + 6));
+    function_4a9d70_this((int32_t)(intptr_t)(state + 9));
+    return object_ptr;
+}
+
+static void function_460e00_register_actor_method(int32_t vm,
+                                                  int32_t *object_ptr,
+                                                  const char *name,
+                                                  int32_t native_function,
+                                                  int32_t type_wrapper,
+                                                  int32_t argument_count) {
+    int32_t slot;
+
+    function_48ab90(vm, object_ptr[1], object_ptr[2]);
+    function_48a480(vm, (int32_t)(intptr_t)name, -1);
+    slot = function_48c2f0(vm, 8);
+    if (slot != 0) {
+        *(int32_t *)(intptr_t)slot = native_function;
+        *(int32_t *)(intptr_t)(slot + 4) = 0;
+    }
+    function_48d850(vm, type_wrapper, 1);
+    function_48c950(vm, -3, argument_count);
+    function_48aa50(vm);
+}
+
 static int32_t function_4a9660_this(int32_t this_ptr, int32_t index) {
     int32_t value[2] = { g483, g484 };
     int32_t destination;
 
+    retdec_trace("4a9660:this-begin");
+    retdec_trace_i32("4a9660:this", this_ptr);
+    retdec_trace_i32("4a9660:this-index", index);
     if (this_ptr == 0)
         return 0;
     destination = this_ptr + 4;
@@ -181639,6 +182083,15 @@ static int32_t *function_4a92e0_this(int32_t *this_ptr, int32_t a2) {
 }
 
 static int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr) {
+    retdec_trace("4a9500:this-begin");
+    retdec_trace_i32("4a9500:this", (int32_t)(intptr_t)this_ptr);
+    retdec_trace_i32("4a9500:source", source_ptr);
+    if (source_ptr != 0) {
+        retdec_trace_i32("4a9500:source-type",
+                         *(int32_t *)(source_ptr + 4));
+        retdec_trace_i32("4a9500:source-data",
+                         *(int32_t *)(source_ptr + 8));
+    }
     this_ptr[0] = (int32_t)(intptr_t)&g16;
     this_ptr[1] = *(int32_t *)(source_ptr + 4);
     this_ptr[2] = *(int32_t *)(source_ptr + 8);
@@ -181652,13 +182105,39 @@ static int32_t function_4a96c0_this(int32_t this_ptr) {
 
 static int32_t function_4a9730_this(int32_t this_ptr, int32_t a2,
                                     int32_t source_ptr) {
+    retdec_trace("4a9730:begin");
+    retdec_trace_i32("4a9730:this", this_ptr);
+    retdec_trace_i32("4a9730:a2", a2);
+    retdec_trace_i32("4a9730:a2-value",
+                     a2 != 0 ? *(int32_t *)a2 : 0);
+    retdec_trace_i32("4a9730:a2-ref",
+                     a2 != 0 ? *(int32_t *)(a2 + 4) : 0);
+    retdec_trace_i32("4a9730:source", source_ptr);
+    if (this_ptr != 0) {
+        retdec_trace_i32("4a9730:this-type", *(int32_t *)(this_ptr + 4));
+        retdec_trace_i32("4a9730:this-data", *(int32_t *)(this_ptr + 8));
+    }
     int32_t stack_base = function_48aa20((int32_t)g644);
+    retdec_trace_i32("4a9730:stack-base", stack_base);
     function_48ab90((int32_t)g644, *(int32_t *)(this_ptr + 4),
                     *(int32_t *)(this_ptr + 8));
+    retdec_trace("4a9730:after-ab90");
     function_48a4f0((int32_t)g644, a2);
+    retdec_trace_i32("4a9730:a2-after-a4f0",
+                     a2 != 0 ? *(int32_t *)a2 : 0);
+    retdec_trace_i32("4a9730:a2-ref-after-a4f0",
+                     a2 != 0 ? *(int32_t *)(a2 + 4) : 0);
+    retdec_trace("4a9730:after-a4f0");
     function_48a480((int32_t)g644, source_ptr, -1);
+    retdec_trace_i32("4a9730:a2-after-a480",
+                     a2 != 0 ? *(int32_t *)a2 : 0);
+    retdec_trace_i32("4a9730:a2-ref-after-a480",
+                     a2 != 0 ? *(int32_t *)(a2 + 4) : 0);
+    retdec_trace("4a9730:after-a480");
     int32_t result = function_48cb10((int32_t)g644, -3) >= 0;
+    retdec_trace_i32("4a9730:result", result);
     function_48c910((int32_t)g644, stack_base);
+    retdec_trace("4a9730:after-c910");
     return result;
 }
 
@@ -181722,6 +182201,9 @@ static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr) {
     int32_t value[2];
     int32_t result[2];
 
+    retdec_trace("4a9e30:begin");
+    retdec_trace_i32("4a9e30:this", this_ptr);
+    retdec_trace_i32("4a9e30:source", source_ptr);
     if (this_ptr == 0)
         return 0;
     if (source_ptr == 0) {
@@ -181743,11 +182225,26 @@ static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr) {
 
     value[0] = 0x08001000;
     value[1] = source_ptr;
+    retdec_trace_i32("4a9e30:source-ref-before",
+                     *(int32_t *)(source_ptr + 4));
     ++*(int32_t *)(source_ptr + 4);
     function_491820_this((int32_t)g644, (int32_t)value);
-    retdec_squirrel_release(value[0], value[1]);
+    /* Match sub_4A9E30's temporary SQObject cleanup exactly. */
+    if ((value[0] & 0x08000000) != 0 &&
+        --*(int32_t *)(source_ptr + 4) == 0) {
+        int32_t vtable = *(int32_t *)(source_ptr + 0);
+        if (vtable != 0 && *(int32_t *)(vtable + 4) != 0) {
+            retdec_call_thiscall0(
+                (void *)(intptr_t)source_ptr,
+                (void *)(intptr_t)*(int32_t *)(vtable + 4));
+        }
+    }
+    retdec_trace_i32("4a9e30:source-ref-after",
+                     *(int32_t *)(source_ptr + 4));
 
     function_48ab40((int32_t)g644, -1, result);
+    retdec_trace_i32("4a9e30:result-type", result[0]);
+    retdec_trace_i32("4a9e30:result-data", result[1]);
     function_48a400((int32_t)g644, (int32_t)result);
     function_48a430((int32_t)g644, this_ptr + 4);
     *(int32_t *)(this_ptr + 4) = result[0];
@@ -182635,6 +183132,8 @@ static int32_t function_49a8c0_this(int32_t this_ptr) {
 
 static int32_t function_49a8e0_this(int32_t this_ptr, int32_t src,
                                      int32_t size) {
+    int32_t trace_steps = 0;
+
     if (this_ptr == 0 || src == 0)
         return 0;
     int32_t length = size;
@@ -182648,19 +183147,19 @@ static int32_t function_49a8e0_this(int32_t this_ptr, int32_t src,
             return 0;
         capacity = *(int32_t *)(this_ptr + 4);
     }
-    uint32_t step = ((uint32_t)length | 0x20u) >> 5;
-    uint32_t hash = (uint32_t)length;
-    const unsigned char *text = (const unsigned char *)(intptr_t)src;
-    {
-        uint32_t remaining = (uint32_t)length;
-        while (remaining >= step) {
-            remaining -= step;
-            hash ^= (uint32_t)*text++ + (hash >> 2) + 32u * hash;
-        }
-    }
+    uint32_t hash = (uint32_t)function_499f80(src, length);
     uint32_t bucket_index = hash & (uint32_t)(capacity - 1);
     int32_t string_ptr = *(int32_t *)(*(int32_t *)this_ptr + 4 * bucket_index);
+    retdec_trace_i32("49a8e0:length", length);
+    retdec_trace_i32("49a8e0:hash", (int32_t)hash);
+    retdec_trace_i32("49a8e0:bucket", (int32_t)bucket_index);
+    retdec_trace_i32("49a8e0:head", string_ptr);
     while (string_ptr != 0) {
+        if (trace_steps++ >= 8) {
+            retdec_trace("49a8e0:chain-limit");
+            break;
+        }
+        retdec_trace_i32("49a8e0:node", string_ptr);
         if (*(int32_t *)(string_ptr + 20) == length &&
             *(int32_t *)(string_ptr + 24) == (int32_t)hash &&
             memcmp((void *)(intptr_t)(string_ptr + 28),
@@ -182669,22 +183168,29 @@ static int32_t function_49a8e0_this(int32_t this_ptr, int32_t src,
         string_ptr = *(int32_t *)(string_ptr + 16);
     }
     int32_t result = (int32_t)function_498580(length + 32);
+    retdec_trace_i32("49a8e0:allocated", result);
     if (result == 0)
         return 0;
     memset((void *)(intptr_t)result, 0, (size_t)(length + 32));
+    retdec_trace("49a8e0:after-memset");
     *(int32_t *)result = (int32_t)(intptr_t)&g78;
     *(int32_t *)(result + 4) = 0;
     *(int32_t *)(result + 20) = length;
     *(int32_t *)(result + 24) = (int32_t)hash;
+    retdec_trace("49a8e0:after-header");
     memcpy((void *)(intptr_t)(result + 28),
            (const void *)(intptr_t)src, (size_t)length);
+    retdec_trace("49a8e0:after-copy");
     *(char *)(result + 28 + length) = 0;
+    retdec_trace("49a8e0:after-terminator");
     int32_t *head = (int32_t *)(*(int32_t *)this_ptr + 4 * bucket_index);
     *(int32_t *)(result + 16) = *head;
     *head = result;
     ++*(int32_t *)(this_ptr + 8);
+    retdec_trace_i32("49a8e0:new-count", *(int32_t *)(this_ptr + 8));
     if (*(int32_t *)(this_ptr + 8) > capacity)
         function_49a430_this(this_ptr, 2 * capacity);
+    retdec_trace("49a8e0:return");
     return result;
 }
 
@@ -182885,15 +183391,29 @@ int32_t function_48a3e0(int32_t a1, int32_t a2) {
 
 // Address range: 0x48a400 - 0x48a422
 int32_t function_48a400(int32_t a1, int32_t a2) {
-    if (a2 != 0)
-        retdec_squirrel_addref(*(int32_t *)a2, *(int32_t *)(a2 + 4));
+    if (a2 != 0 && (*(int32_t *)a2 & 0x08000000) != 0) {
+        retdec_trace_i32("48a400:receiver", a1);
+        retdec_trace_i32("48a400:caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        retdec_trace_i32("48a400:type", *(int32_t *)a2);
+        retdec_trace_i32("48a400:data", *(int32_t *)(a2 + 4));
+        retdec_squirrel_api_addref(a1, *(int32_t *)a2,
+                                   *(int32_t *)(a2 + 4));
+    }
     return a2;
 }
 
 // Address range: 0x48a430 - 0x48a459
 int32_t function_48a430(int32_t a1, int32_t a2) {
-    if (a2 != 0)
-        retdec_squirrel_release(*(int32_t *)a2, *(int32_t *)(a2 + 4));
+    if (a2 != 0 && (*(int32_t *)a2 & 0x08000000) != 0) {
+        retdec_trace_i32("48a430:receiver", a1);
+        retdec_trace_i32("48a430:caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        retdec_trace_i32("48a430:type", *(int32_t *)a2);
+        retdec_trace_i32("48a430:data", *(int32_t *)(a2 + 4));
+        return retdec_squirrel_api_release(a1, *(int32_t *)a2,
+                                           *(int32_t *)(a2 + 4));
+    }
     return 1;
 }
 
@@ -182944,6 +183464,7 @@ int32_t function_48a480(int32_t a1, int32_t a2, int32_t a3) {
 // Address range: 0x48a4f0 - 0x48a52e
 int32_t function_48a4f0(int32_t a1, int32_t a2) {
     int32_t v1 = 0x5000002; // bp-12, 0x48a500
+    retdec_trace_i32("48a4f0:object", a2);
     int32_t result = function_491820_this(a1, (int32_t)&v1); // 0x48a50a
     if ((v1 & 0x8000000) == 0) {
         // 0x48a52a
@@ -183046,6 +183567,11 @@ int32_t function_48a600(int32_t a1) {
 // Address range: 0x48a670 - 0x48a681
 int32_t function_48a670(int32_t a1) {
     // 0x48a670
+    retdec_trace_i32("48a670:vm", a1);
+    if (a1 != 0) {
+        retdec_trace_i32("48a670:type", *(int32_t *)(a1 + 56));
+        retdec_trace_i32("48a670:data", *(int32_t *)(a1 + 60));
+    }
     return function_491820_this(a1, a1 + 56);
 }
 
@@ -183335,18 +183861,24 @@ int32_t function_48aa80(int32_t a1, int32_t a2, int32_t a3) {
 // Address range: 0x48ab40 - 0x48ab82
 int32_t function_48ab40(int32_t a1, int32_t a2, int32_t * a3) {
     int32_t v1 = (int32_t)a3;
+    int32_t v2;
     if (a2 < 0) {
         // IDA shows sub_491880 as __thiscall: sub_48AB40 loads the VM
         // into ECX before passing the index on the stack.
-        int32_t v2 = function_491880_this(a1, a2); // 0x48ab6c
+        v2 = function_491880_this(a1, a2); // 0x48ab6c
+    *a3 = *(int32_t *)v2;
+    *(int32_t *)(v1 + 4) = *(int32_t *)(v2 + 4);
+    }
+    else {
+        v2 = function_4918a0_this(
+        a1, a2 - 1 + *(int32_t *)(a1 + 52)); // 0x48ab55
         *a3 = *(int32_t *)v2;
         *(int32_t *)(v1 + 4) = *(int32_t *)(v2 + 4);
-        return 0;
     }
-    int32_t v3 = function_4918a0_this(
-        a1, a2 - 1 + *(int32_t *)(a1 + 52)); // 0x48ab55
-    *a3 = *(int32_t *)v3;
-    *(int32_t *)(v1 + 4) = *(int32_t *)(v3 + 4);
+    retdec_trace_i32("48ab40:vm", a1);
+    retdec_trace_i32("48ab40:index", a2);
+    retdec_trace_i32("48ab40:type", *a3);
+    retdec_trace_i32("48ab40:data", *(int32_t *)(v1 + 4));
     return 0;
 }
 
@@ -185854,6 +186386,33 @@ int32_t function_48d310(uint32_t a1, int32_t * a2) {
 // Address range: 0x48d390 - 0x48d425
 // From class:    .?AUSQArray@@
 // Type:          constructor
+static int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
+                                    int32_t count) {
+    int32_t v1 = __readfsdword(0);
+    __writefsdword(0, (int32_t)&v1);
+    if (this_ptr == 0) {
+        __writefsdword(0, v1);
+        return 0;
+    }
+
+    *(int32_t *)(this_ptr + 4) = 0;
+    *(int32_t *)(this_ptr + 8) = 0;
+    *(int32_t *)this_ptr = (int32_t)&g69;
+    *(int32_t *)(this_ptr + 24) = 0;
+    *(int32_t *)(this_ptr + 28) = 0;
+    *(int32_t *)(this_ptr + 32) = 0;
+
+    int32_t value[2] = { 0x01000001, 0 };
+    function_48d0f0_this(this_ptr + 24, (uint32_t)count, value);
+    *(int32_t *)(this_ptr + 20) = shared_state;
+    *(int32_t *)(this_ptr + 12) = 0;
+    *(int32_t *)(this_ptr + 16) = 0;
+    function_49a140(shared_state + 68, this_ptr);
+
+    __writefsdword(0, v1);
+    return this_ptr;
+}
+
 int32_t function_48d390(int32_t a1, int32_t a2) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x48d3a0
     __writefsdword(0, (int32_t)&v1);
@@ -186039,17 +186598,15 @@ int32_t function_48d770(int32_t a1, int32_t a2) {
     int32_t * v4 = &v3; // 0x48d790
     if (v2 != NULL) {
         int32_t v5 = v1; // bp-32, 0x48d796
-        function_48d390(v1, a2);
+        function_48d390_this((int32_t)(intptr_t)v2, v1, a2);
         v4 = &v5;
     }
     int32_t v6 = (int32_t)v2; // 0x48d784
-    int32_t v7; // bp-12, 0x48d770
-    *(int32_t *)((int32_t)v4 - 4) = (int32_t)&v7;
-    v7 = 0x8000040;
+    int32_t value[2] = { 0x08000040, v6 };
     int32_t * v8 = (int32_t *)(v6 + 4); // 0x48d7ac
     *v8 = *v8 + 1;
-    int32_t result = function_491820(v7); // 0x48d7c0
-    if ((v7 & 0x8000000) == 0) {
+    int32_t result = function_491820_this(a1, (int32_t)(intptr_t)value);
+    if ((value[0] & 0x08000000) == 0) {
         // 0x48d7d4
         return result;
     }
@@ -186058,7 +186615,11 @@ int32_t function_48d770(int32_t a1, int32_t a2) {
     int32_t result2 = v6; // 0x48d7c8
     if (v9 == 0) {
         // 0x48d7ca
-        result2 = *(int32_t *)(*v2 + 4);
+        int32_t vtable = *(int32_t *)v6;
+        if (vtable != 0 && *(int32_t *)(vtable + 4) != 0) {
+            retdec_call_thiscall0((void *)(intptr_t)v6,
+                                  (void *)(intptr_t)*(int32_t *)(vtable + 4));
+        }
     }
     // 0x48d7d4
     return result2;
@@ -186861,8 +187422,11 @@ int32_t function_48e480(int32_t a1, int32_t a2, int32_t a3) {
     }
     int32_t result = function_49a8e0_this(table, a2, a3);
     retdec_trace_i32("48e480:result", result);
-    if (result != 0)
+    if (result != 0) {
+        retdec_trace("48e480:before-owner");
         *(int32_t *)(result + 12) = a1;
+        retdec_trace("48e480:after-owner");
+    }
     return result;
 }
 
@@ -201603,28 +202167,25 @@ int32_t function_499df0(int32_t this_ptr, int32_t index,
 
 // Address range: 0x499f80 - 0x499fc3
 int32_t function_499f80(int32_t a1, int32_t result) {
-    uint32_t v1 = (uint32_t)result / 32 | 1; // 0x499f8b
-    int32_t v2 = result; // 0x499f92
-    if (v1 > result) {
+    uint32_t v1 = ((uint32_t)result | 0x20u) >> 5; // 0x499f8b
+    uint32_t v2 = (uint32_t)result; // 0x499f92
+    uint32_t result2 = (uint32_t)result; // 0x499f8e
+    if (v2 < v1) {
         // 0x499fc1
-        return result;
+        return (int32_t)result2;
     }
-    int32_t v3 = a1; // 0x499f92
-    uint32_t v4 = result;
-    char v5 = *(char *)v3; // 0x499fac
-    v2 -= v1;
-    int32_t result2 = 32 * v4 + v4 / 4 + ((int32_t)v5 & 0xffff) ^ v4; // 0x499fb7
-    v3++;
+    const char *v3 = (const char *)(intptr_t)a1; // 0x499f96
     while (v2 >= v1) {
         // 0x499fa0
-        v4 = result2;
-        v5 = *(char *)v3;
+        uint32_t v4 = result2;
+        int16_t v5 = *(const int8_t *)v3; // 0x499fac / movsx bx
         v2 -= v1;
-        result2 = 32 * v4 + v4 / 4 + ((int32_t)v5 & 0xffff) ^ v4;
-        v3++;
+        result2 ^= 32u * v4 + v4 / 4u +
+                   ((uint32_t)v5 & 0xffffu); // 0x499fb7
+        ++v3;
     }
     // 0x499fc1
-    return result2;
+    return (int32_t)result2;
 }
 
 // Address range: 0x499fd0 - 0x499ff7
@@ -217777,6 +218338,10 @@ int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void) {
 int32_t function_4a9500(int32_t a1) {
     // 0x4a9500
     int32_t result; // 0x4a9500
+    retdec_trace("4a9500:wrapper-begin");
+    retdec_trace_i32("4a9500:wrapper-source", a1);
+    retdec_trace_i32("4a9500:wrapper-caller",
+                     (int32_t)(uintptr_t)_ReturnAddress());
     *(int32_t *)result = (int32_t)&g16;
     int32_t v1 = result + 4; // 0x4a9512
     *(int32_t *)v1 = *(int32_t *)(a1 + 4);
@@ -217836,15 +218401,19 @@ int32_t function_4a9600(int32_t a1) {
 
 // Address range: 0x4a9660 - 0x4a96b2
 int32_t function_4a9660(int32_t a1) {
-    // 0x4a9660
-    int32_t result; // bp-12, 0x4a9660
-    function_48ab40((int32_t)g644, a1, &result);
-    function_48a400((int32_t)g644, (int32_t)&result);
-    int32_t v1; // 0x4a9660
-    int32_t v2 = v1 + 4; // 0x4a9693
-    function_48a430((int32_t)g644, v2);
-    *(int32_t *)v2 = result;
-    return result;
+    // The original routine is __thiscall and stores the value in ECX + 4.
+    // This legacy wrapper has no reliable ECX receiver, so keep the VM value
+    // in an owned temporary instead of indexing through an uninitialized
+    // decompiler local.
+    int32_t value[2]; // bp-12, 0x4a9660
+    retdec_trace("4a9660:begin");
+    retdec_trace_i32("4a9660:index", a1);
+    function_48ab40((int32_t)g644, a1, value);
+    retdec_trace_i32("4a9660:type", value[0]);
+    retdec_trace_i32("4a9660:data", value[1]);
+    function_48a400((int32_t)g644, (int32_t)(intptr_t)value);
+    function_48a430((int32_t)g644, (int32_t)(intptr_t)value);
+    return value[0];
 }
 
 // Address range: 0x4a96c0 - 0x4a96cd
@@ -217943,6 +218512,19 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
     int32_t stack_base = function_48aa20((int32_t)g644); // 0x4a996c
     int32_t result;
 
+    retdec_trace("4a9950:begin");
+    retdec_trace_i32("4a9950:this", this_ptr);
+    retdec_trace_i32("4a9950:name", src_ptr);
+    retdec_trace_i32("4a9950:size", a3);
+    retdec_trace_i32("4a9950:aux", a4);
+    retdec_trace_i32("4a9950:stack-before", stack_base);
+    if (this_ptr != 0) {
+        retdec_trace_i32("4a9950:this-type",
+                         *(int32_t *)(intptr_t)(this_ptr + 4));
+        retdec_trace_i32("4a9950:this-data",
+                         *(int32_t *)(intptr_t)(this_ptr + 8));
+    }
+
     function_48ab90((int32_t)g644,
                     *(int32_t *)(this_ptr + 4),
                     *(int32_t *)(this_ptr + 8));
@@ -217953,6 +218535,9 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
     }
     result = function_48cb10((int32_t)g644, -3) >= 0;
     function_48c910((int32_t)g644, stack_base);
+    retdec_trace_i32("4a9950:result", result);
+    retdec_trace_i32("4a9950:stack-after",
+                     function_48aa20((int32_t)g644));
     return result;
 }
 
@@ -218134,16 +218719,26 @@ int32_t function_4a9d70(void) {
 static int32_t function_4a9d70_this(int32_t this_ptr) {
     int32_t value_ptr = this_ptr + 4;
 
+    retdec_trace("4a9d70:begin");
+    retdec_trace_i32("4a9d70:this", this_ptr);
+    if (this_ptr != 0) {
+        retdec_trace_i32("4a9d70:type", *(int32_t *)value_ptr);
+        retdec_trace_i32("4a9d70:data", *(int32_t *)(this_ptr + 8));
+    }
     *(int32_t *)this_ptr = (int32_t)&g16;
     if (g644 != NULL) {
         function_48a430((int32_t)g644, value_ptr);
-        return function_48abe0(value_ptr);
+        int32_t result = function_48abe0(value_ptr);
+        retdec_trace("4a9d70:after-release");
+        return result;
     }
     if (*(int32_t *)value_ptr != 0x1000001 &&
         *(int32_t *)(this_ptr + 8) != 0) {
         _printf("SquirrelObject::~SquirrelObject - Cannot release\n");
     }
-    return function_48abe0(value_ptr);
+    int32_t result = function_48abe0(value_ptr);
+    retdec_trace("4a9d70:after-clear");
+    return result;
 }
 
 // Address range: 0x4a9dc0 - 0x4a9e2f
@@ -218206,17 +218801,42 @@ int32_t function_4aa000(int32_t * a1) {
 int32_t function_4aa080(int32_t this_ptr, int32_t src_ptr,
                         int32_t out_ptr, int32_t a4) {
     int32_t result = 0; // 0x4aa093
+    int32_t stack_base;
+    int32_t lookup_result;
+
+    retdec_trace("4aa080:begin");
+    retdec_trace_i32("4aa080:this", this_ptr);
+    retdec_trace_squirrel_name("4aa080:name", src_ptr);
+    retdec_trace_i32("4aa080:out", out_ptr);
+    retdec_trace_i32("4aa080:aux", a4);
+    if (this_ptr != 0) {
+        retdec_trace_i32("4aa080:this-type",
+                         *(int32_t *)(intptr_t)(this_ptr + 4));
+        retdec_trace_i32("4aa080:this-data",
+                         *(int32_t *)(intptr_t)(this_ptr + 8));
+    }
+    stack_base = function_48aa20((int32_t)g644);
+    retdec_trace_i32("4aa080:stack-before", stack_base);
 
     function_48ab90((int32_t)g644,
                     *(int32_t *)(this_ptr + 4),
                     *(int32_t *)(this_ptr + 8));
     function_48a480((int32_t)g644, src_ptr, -1);
-    if (function_48ce00((int32_t)g644, -2) >= 0) {
-        function_48a920((int32_t)g644, -1, (int32_t *)out_ptr, a4);
+    lookup_result = function_48ce00((int32_t)g644, -2);
+    retdec_trace_i32("4aa080:lookup", lookup_result);
+    if (lookup_result >= 0) {
+        lookup_result = function_48a920((int32_t)g644, -1,
+                                        (int32_t *)out_ptr, a4);
+        retdec_trace_i32("4aa080:read", lookup_result);
         function_48aa30((int32_t)g644, 1);
         result = 1;
     }
     function_48aa30((int32_t)g644, 1);
+    retdec_trace_i32("4aa080:result", result);
+    retdec_trace_i32("4aa080:out-value",
+                     out_ptr != 0 ? *(int32_t *)(intptr_t)out_ptr : 0);
+    retdec_trace_i32("4aa080:stack-after",
+                     function_48aa20((int32_t)g644));
     return result;
 }
 

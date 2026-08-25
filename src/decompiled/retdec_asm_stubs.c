@@ -85,7 +85,8 @@ __declspec(naked) void retdec_call_thiscall0(void *object, void *method)
         mov ecx, [esp + 4]
         mov eax, [esp + 8]
         call eax
-        ret 8
+        /* The adapter itself is cdecl; its caller owns object/method. */
+        ret
     }
 }
 
@@ -97,7 +98,7 @@ __declspec(naked) void retdec_call_thiscall1(
         mov eax, [esp + 8]
         push [esp + 12]
         call eax
-        ret 12
+        ret
     }
 }
 
@@ -108,7 +109,7 @@ __declspec(naked) int32_t retdec_call_thiscall0_result(
         mov ecx, [esp + 4]
         mov eax, [esp + 8]
         call eax
-        ret 8
+        ret
     }
 }
 
@@ -120,7 +121,7 @@ __declspec(naked) int32_t retdec_call_thiscall1_result(
         mov eax, [esp + 8]
         push [esp + 12]
         call eax
-        ret 12
+        ret
     }
 }
 
@@ -133,7 +134,7 @@ __declspec(naked) int32_t retdec_call_thiscall2_result(
         push [esp + 16]
         push [esp + 16]
         call eax
-        ret 16
+        ret
     }
 }
 #else
