@@ -3,6 +3,10 @@
 #include <windows.h>
 #include <dbghelp.h>
 
+#ifndef STATUS_HEAP_CORRUPTION
+#define STATUS_HEAP_CORRUPTION ((DWORD)0xC0000374L)
+#endif
+
 void retdec_trace(const char *message)
 {
     char path[MAX_PATH];
@@ -68,6 +72,43 @@ static int retdec_capture_exception(EXCEPTION_POINTERS *exception_pointers)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+static volatile LONG retdec_crash_dump_written;
+
+static void retdec_write_crash_dump(EXCEPTION_POINTERS *exception_pointers)
+{
+    char dump_path[MAX_PATH];
+    HANDLE dump_file;
+    MINIDUMP_EXCEPTION_INFORMATION exception_info;
+
+    if (exception_pointers == NULL ||
+        InterlockedCompareExchange(&retdec_crash_dump_written, 1, 0) != 0) {
+        return;
+    }
+    if (GetModuleFileNameA(NULL, dump_path, sizeof(dump_path)) == 0) {
+        return;
+    }
+    {
+        char *separator = strrchr(dump_path, '\\');
+        if (separator != NULL) {
+            separator[1] = '\0';
+        } else {
+            dump_path[0] = '\0';
+        }
+    }
+    lstrcatA(dump_path, "retdec_crash.dmp");
+    dump_file = CreateFileA(dump_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (dump_file == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    exception_info.ThreadId = GetCurrentThreadId();
+    exception_info.ExceptionPointers = exception_pointers;
+    exception_info.ClientPointers = FALSE;
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump_file,
+                      MiniDumpWithFullMemory, &exception_info, NULL, NULL);
+    CloseHandle(dump_file);
+}
+
 static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *exception_pointers)
 {
     EXCEPTION_RECORD *record;
@@ -88,7 +129,8 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION &&
         record->ExceptionCode != EXCEPTION_ILLEGAL_INSTRUCTION &&
         record->ExceptionCode != EXCEPTION_STACK_OVERFLOW &&
-        record->ExceptionCode != STATUS_STACK_BUFFER_OVERRUN) {
+        record->ExceptionCode != STATUS_STACK_BUFFER_OVERRUN &&
+        record->ExceptionCode != STATUS_HEAP_CORRUPTION) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
     context = exception_pointers->ContextRecord;
@@ -153,38 +195,15 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
               context != NULL ? (unsigned long)context->Esi : 0,
               context != NULL ? (unsigned long)context->Edi : 0);
     retdec_trace(message);
+    if (record->ExceptionCode == STATUS_HEAP_CORRUPTION) {
+        retdec_write_crash_dump(exception_pointers);
+    }
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
 static LONG WINAPI retdec_unhandled_exception_filter(EXCEPTION_POINTERS *exception_pointers)
 {
-    char dump_path[MAX_PATH];
-    HANDLE dump_file;
-    MINIDUMP_EXCEPTION_INFORMATION exception_info;
-
-    if (GetModuleFileNameA(NULL, dump_path, sizeof(dump_path)) == 0) {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
-    {
-        char *separator = strrchr(dump_path, '\\');
-        if (separator != NULL) {
-            separator[1] = '\0';
-        } else {
-            dump_path[0] = '\0';
-        }
-    }
-    lstrcatA(dump_path, "retdec_crash.dmp");
-    dump_file = CreateFileA(dump_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (dump_file == INVALID_HANDLE_VALUE) {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
-    exception_info.ThreadId = GetCurrentThreadId();
-    exception_info.ExceptionPointers = exception_pointers;
-    exception_info.ClientPointers = FALSE;
-    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump_file,
-                      MiniDumpWithFullMemory, &exception_info, NULL, NULL);
-    CloseHandle(dump_file);
+    retdec_write_crash_dump(exception_pointers);
     return EXCEPTION_CONTINUE_SEARCH;
 }
 

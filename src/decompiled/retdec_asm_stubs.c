@@ -137,6 +137,21 @@ __declspec(naked) int32_t retdec_call_thiscall2_result(
         ret
     }
 }
+
+__declspec(naked) int32_t retdec_call_thiscall3_result(
+    void *object, void *method, int32_t argument1, int32_t argument2,
+    int32_t argument3)
+{
+    __asm {
+        mov ecx, [esp + 4]
+        mov eax, [esp + 8]
+        push [esp + 20]
+        push [esp + 20]
+        push [esp + 20]
+        call eax
+        ret
+    }
+}
 #else
 void retdec_call_thiscall0(void *object, void *method)
 {
@@ -164,5 +179,13 @@ int32_t retdec_call_thiscall2_result(
 {
     return ((int32_t (*)(void *, int32_t, int32_t))method)(
         object, argument1, argument2);
+}
+
+int32_t retdec_call_thiscall3_result(
+    void *object, void *method, int32_t argument1, int32_t argument2,
+    int32_t argument3)
+{
+    return ((int32_t (*)(void *, int32_t, int32_t, int32_t))method)(
+        object, argument1, argument2, argument3);
 }
 #endif

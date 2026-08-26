@@ -23,6 +23,8 @@
 static void retdec_squirrel_addref(int32_t type, int32_t data);
 static void retdec_squirrel_release(int32_t type, int32_t data);
 static void retdec_squirrel_assign(int32_t *dst, const int32_t *src);
+static void retdec_release_squirrel_object(int32_t object_ptr);
+static void retdec_release_squirrel_value(int32_t *value_ptr);
 
 // These wrappers intentionally use the C calling convention in the
 // compatibility translation unit.
@@ -3586,6 +3588,7 @@ int32_t function_45e460(void);
 int32_t function_45e5e0(int32_t a1);
 int32_t function_45eb00(void);
 int32_t function_45ec60(void);
+static int32_t function_45ec60_this(int32_t this_ptr);
 int32_t function_45f0c0(char a1);
 int32_t function_45f0f0(int32_t a1);
 int32_t function_45f350(void);
@@ -3624,6 +3627,8 @@ int32_t function_45ffe0(int32_t a1);
 int32_t function_460540(int32_t a1);
 int32_t function_4606d0(void);
 static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr);
+static int32_t function_46cfb0_this(int32_t this_ptr, const char *name,
+                                    int32_t parent_ptr);
 int32_t function_4607e0(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_460900(int32_t a1, int32_t a2);
 int32_t function_460920(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32_t a5);
@@ -3696,6 +3701,7 @@ int32_t function_463cf0(int32_t a1);
 int32_t function_463d40(void);
 int32_t function_463e60(int32_t a1);
 int32_t function_4641d0(int32_t * a1);
+static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1);
 int32_t function_4645b0(int32_t a1, int32_t a2);
 int32_t function_4645f0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4646f0(uint32_t a1);
@@ -3737,6 +3743,7 @@ int32_t function_4684a0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_468540(int32_t a1, int32_t a2, int32_t result);
 int32_t function_468580(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_468620(void);
+static int32_t function_468620_this(int32_t this_ptr);
 int32_t function_468790(int32_t result, int32_t a2);
 int32_t function_4687d0(uint32_t a1);
 int32_t function_46889b(void);
@@ -4298,6 +4305,8 @@ int32_t function_48d0f0(uint32_t a1, int32_t * a2);
 int32_t function_48d1b0(int32_t * a1);
 static int32_t function_48d0f0_this(int32_t this_ptr, uint32_t count, int32_t * value);
 static int32_t function_48d940_this(int32_t this_ptr, int32_t source_ptr);
+static int32_t function_48ba20_this(int32_t this_ptr, int32_t shared_state,
+                                    int32_t base_ptr);
 static int32_t function_48d1b0_this(int32_t this_ptr, int32_t * value);
 static int32_t function_48d310_this(int32_t this_ptr, uint32_t count,
                                     int32_t * value);
@@ -4311,18 +4320,18 @@ int32_t function_48d430(void);
 int32_t function_48d450(char a1);
 int32_t function_48d4e0(int32_t a1, int32_t a2);
 int32_t function_48d550(void);
-int32_t function_48d5a0(int32_t a1);
+int32_t function_48d5a0(int32_t this_ptr, int32_t source_ptr);
 int32_t function_48d620(int32_t a1, int32_t a2);
 int32_t function_48d6d0(void);
 int32_t function_48d720(void);
 int32_t function_48d770(int32_t a1, int32_t a2);
 int32_t function_48d7e0(int32_t a1, int32_t a2);
 int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_48d940(int32_t a1);
+int32_t function_48d940(int32_t this_ptr, int32_t source_ptr);
 int32_t function_48d9f0(int32_t a1);
 int32_t function_48da60(int32_t a1, int32_t a2);
 int32_t function_48dac0(void);
-int32_t function_48db40(int32_t a1, int32_t a2);
+int32_t function_48db40(int32_t this_ptr);
 int32_t function_48dc10(int32_t a1);
 int32_t function_48dd10(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_48dda0(int32_t a1, int32_t a2, int32_t a3);
@@ -4444,7 +4453,12 @@ static int32_t function_498c60_this(int32_t this_ptr, int32_t shared_state,
 static int32_t function_498e90_this(int32_t this_ptr);
 static int32_t function_498440_this(int32_t source_ptr);
 static int32_t function_499610_this(int32_t this_ptr);
-int32_t function_492a80(int32_t a1, int32_t a2, int32_t a3);
+static int32_t function_497680_this(int32_t this_ptr, int32_t object_ptr,
+                                    int32_t a3, int32_t a4, int32_t a5,
+                                    int32_t a6);
+static int32_t function_497850_this(int32_t this_ptr, int32_t object_ptr,
+                                    int32_t a3, int32_t a4, int32_t a5);
+int32_t function_492a80(int32_t target_ptr, int32_t a3, int32_t a4);
 int32_t function_492c90(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_492d00(int32_t a1);
 int32_t function_492dc0(int32_t a1, int32_t a2);
@@ -4464,7 +4478,7 @@ int32_t function_4944b0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_494710(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_494770(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
-int32_t function_494990(int32_t a1, int32_t a2);
+int32_t function_494990(int32_t source_ptr, int32_t target_ptr);
 int32_t function_494bf0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6);
 int32_t function_494da0(int32_t * a1, int32_t * a2, int32_t * a3, int32_t a4, int32_t a5, int32_t a6, int32_t * a7);
 int32_t function_4950c0(int32_t a1, int32_t a2);
@@ -7312,6 +7326,8 @@ int32_t g611 = 0; // 0x513c88
 char * g612; // 0x513c98
 int32_t g613 = 0; // 0x513cb4
 int32_t g614 = 0; // 0x513cb8
+/* Original global_var_514300, used as the collision-list receiver. */
+static int32_t g_514300_storage[30] = { 0 };
 int32_t g615 = 0; // 0x514388
 int32_t g616 = 0; // 0x514394
 int32_t g617 = 0; // 0x5143e0
@@ -115593,25 +115609,37 @@ int32_t function_45da50(int32_t a1) {
 
 // Address range: 0x45dac0 - 0x45db04
 int32_t function_45dac0(int32_t a1) {
-    int32_t v1 = *(int32_t *)a1; // 0x45dac6
-    int32_t result; // 0x45dac0
-    int32_t * v2 = (int32_t *)result; // 0x45dac8
-    *v2 = v1;
-    if (v1 == 0) {
-        // 0x45dafe
-        return result;
+    static __declspec(thread) int32_t result;
+
+    return (int32_t)(intptr_t)function_45dac0_this(
+        (int32_t)(intptr_t)&result, a1);
+}
+
+/* SQObjectPtr copy helper. RetDec omitted the destination hidden in ECX. */
+static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr) {
+    int32_t value = *(int32_t *)(intptr_t)source_ptr;
+    volatile LONG *refcount;
+    LONG expected;
+
+    *(int32_t *)(intptr_t)this_ptr = value;
+    if (value == 0)
+        return (int32_t *)(intptr_t)this_ptr;
+
+    refcount = (volatile LONG *)(intptr_t)(value + 4);
+    expected = *refcount;
+    if (expected == 0) {
+        *(int32_t *)(intptr_t)this_ptr = 0;
+        return (int32_t *)(intptr_t)this_ptr;
     }
-    int32_t * v3 = (int32_t *)(v1 + 4); // 0x45dace
-    int32_t v4 = *v3; // 0x45dace
-    if (v4 == 0) {
-        // 0x45daf5
-        *v2 = 0;
-    } else {
-        // 0x45dafe
-        *v3 = v4 + 1;
+    while (_InterlockedCompareExchange(refcount, expected + 1, expected) !=
+           expected) {
+        expected = *refcount;
+        if (expected == 0) {
+            *(int32_t *)(intptr_t)this_ptr = 0;
+            break;
+        }
     }
-    // 0x45dafe
-    return result;
+    return (int32_t *)(intptr_t)this_ptr;
 }
 
 // Address range: 0x45db10 - 0x45db2b
@@ -116288,17 +116316,25 @@ int32_t function_45e300(void) {
 
 // Address range: 0x45e410 - 0x45e452
 int32_t function_45e410(int32_t * a1) {
-    int32_t result = (int32_t)a1;
-    int32_t v1 = result + 4; // 0x45e428
-    *a1 = 0;
-    int32_t v2; // 0x45e410
-    function_45dac0(v2 + 4);
-    if (*(int32_t *)v1 != 0) {
-        // 0x45e445
-        *a1 = v1;
+    /* The receiver is unavailable at this legacy call boundary. Keep the
+       fallback harmless; repaired call sites use the explicit helper below. */
+    if (a1 != NULL) {
+        a1[0] = 0;
+        a1[1] = 0;
     }
-    // 0x45e449
-    return result;
+    return (int32_t)(intptr_t)a1;
+}
+
+/* Actor/SquirrelObject pair extraction with the original hidden receiver. */
+static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair) {
+    if (out_pair == NULL)
+        return NULL;
+    out_pair[0] = 0;
+    out_pair[1] = 0;
+    function_45dac0_this((int32_t)(intptr_t)(out_pair + 1), this_ptr + 4);
+    if (out_pair[1] != 0)
+        out_pair[0] = *(int32_t *)(intptr_t)this_ptr;
+    return out_pair;
 }
 
 // Address range: 0x45e460 - 0x45e5d4
@@ -116610,9 +116646,14 @@ int32_t function_45eb00(void) {
 
 // Address range: 0x45ec60 - 0x45f0bc
 int32_t function_45ec60(void) {
+    /* Legacy callers without ECX cannot reconstruct the Actor receiver. */
+    return 0;
+}
+
+static int32_t function_45ec60_this(int32_t this_ptr) {
     // 0x45ec60
     int32_t v1; // 0x45ec60
-    int32_t v2 = v1;
+    int32_t v2 = this_ptr;
     int3_t v3; // 0x45ec60
     int3_t v4 = v3;
     int32_t v5 = __readfsdword(0); // bp-16, 0x45ec70
@@ -116634,16 +116675,16 @@ int32_t function_45ec60(void) {
     *(int32_t *)(v2 + 460) = *(int32_t *)v10;
     *(int32_t *)(v2 + 464) = *(int32_t *)v11;
     *(int32_t *)(v2 + 468) = *(int32_t *)v14;
-    int32_t v15; // bp-32, 0x45ec60
-    function_45e410(&v15);
+    int32_t v15[2] = { 0, 0 }; // bp-32, 0x45ec60
+    function_45e410_this(v2 + 32, v15);
     __frontend_reg_store_fpr(v9, 0.0L);
     float32_t v16; // bp-24, 0x45ec60
-    if (v15 == 0) {
+    if (v15[0] == 0) {
         goto lab_0x45ed3f;
     } else {
         // 0x45ecf7
         __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9));
-        v16 = (float32_t)*(int32_t *)v15;
+        v16 = (float32_t)*(int32_t *)(intptr_t)v15[0];
         int32_t v17 = function_471060(); // 0x45ecfe
         float32_t v18 = v16; // 0x45ed05
         if ((*(int32_t *)((int32_t)v18 + 232) & v17) == 0) {
@@ -116657,7 +116698,7 @@ int32_t function_45ec60(void) {
             float32_t v20 = *(float32_t *)((int32_t)v18 + 248); // 0x45ed19
             __frontend_reg_store_fpr(v9, v19 - (float80_t)v20);
             *(float32_t *)(v2 + 264) = (float32_t)__frontend_reg_load_fpr(v9);
-            int32_t v21 = *(int32_t *)v15; // 0x45ed25
+            int32_t v21 = *(int32_t *)(intptr_t)v15[0]; // 0x45ed25
             __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)(v21 + 244));
             float80_t v22 = __frontend_reg_load_fpr(v9); // 0x45ed2d
             __frontend_reg_store_fpr(v9, v22 - (float80_t)*(float32_t *)(v21 + 252));
@@ -116932,8 +116973,9 @@ int32_t function_45ec60(void) {
     *(int16_t *)(v2 + 388) = (int16_t)v92;
     *(int16_t *)(v2 + 390) = (int16_t)function_4ab9d0();
     int32_t result = 0; // 0x45f00c
-    if (v15 != 0) {
-        int32_t v94 = function_4045c0(*(int32_t *)v15 + 440, v6); // 0x45f018
+    if (v15[0] != 0) {
+        int32_t v94 = function_4045c0(
+            *(int32_t *)(intptr_t)v15[0] + 440, v6); // 0x45f018
         result = v94;
         if ((char)v94 == 0) {
             // 0x45f024
@@ -116951,31 +116993,9 @@ int32_t function_45ec60(void) {
         }
     }
     // 0x45f072
-    if (v1 == 0) {
-        // 0x45f0aa
-        __writefsdword(0, v5);
-        return result;
-    }
-    int32_t * v99 = (int32_t *)(v1 + 4); // 0x45f086
-    int32_t v100 = *v99 - 1; // 0x45f086
-    *v99 = v100;
-    if (v100 != 0) {
-        // 0x45f0aa
-        __writefsdword(0, v5);
-        return result;
-    }
-    int32_t v101 = v1 + 8; // 0x45f095
-    int32_t * v102 = (int32_t *)v101; // 0x45f09b
-    int32_t v103 = *v102 - 1; // 0x45f09b
-    *v102 = v103;
-    int32_t result2 = v101; // 0x45f09f
-    if (v103 == 0) {
-        // 0x45f0a1
-        result2 = *(int32_t *)(*(int32_t *)v1 + 8);
-    }
-    // 0x45f0aa
+    retdec_release_squirrel_object(v15[1]);
     __writefsdword(0, v5);
-    return result2;
+    return result;
   lab_0x45ee92:
     // 0x45ee92
     __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9));
@@ -118035,64 +118055,49 @@ int32_t function_460540(int32_t a1) {
 
 // Address range: 0x4606d0 - 0x4607dc
 int32_t function_4606d0(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4606e0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result; // 0x4607c3
-    int32_t v2; // 0x4606d0
-    if (function_4a9a30() != 0xa008000) {
-        // 0x46070e
-        if (function_4a9a30() != 0x8010000) {
-            // 0x46071d
-            *(int32_t *)(v2 + 32) = 0;
-            int32_t * v3 = (int32_t *)(v2 + 36); // 0x460720
-            int32_t v4 = *v3; // 0x460720
-            *v3 = 0;
-            if (v4 != 0) {
-                int32_t * v5 = (int32_t *)(v4 + 8); // 0x460730
-                *v5 = *v5 - 1;
+    return 0;
+}
+
+static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr) {
+    int32_t temporary[3] = {0, 0, 0};
+    int32_t value_ptr;
+    int32_t new_delegate;
+    int32_t old_delegate;
+
+    if (this_ptr == 0 || object_ptr == 0)
+        return 0;
+
+    if (function_4a9a30_this(object_ptr) != 0xa008000 &&
+        function_4a9a30_this(object_ptr) != 0x08010000) {
+        *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
+        old_delegate = *(int32_t *)(intptr_t)(this_ptr + 36);
+        *(int32_t *)(intptr_t)(this_ptr + 36) = 0;
+        retdec_release_squirrel_object(old_delegate);
+
+        function_4a94e0_this((int32_t)(intptr_t)temporary);
+        function_4a97b0_this(this_ptr + 44, (int32_t)(intptr_t)&g601,
+                             (int32_t)(intptr_t)temporary);
+        function_4a9d70_this((int32_t)(intptr_t)temporary);
+    } else {
+        value_ptr = function_4a9b40_this(object_ptr, 0);
+        if (value_ptr != 0) {
+            *(int32_t *)(intptr_t)(this_ptr + 32) =
+                *(int32_t *)(intptr_t)(value_ptr + 24);
+            new_delegate = *(int32_t *)(intptr_t)(value_ptr + 28);
+            old_delegate = *(int32_t *)(intptr_t)(this_ptr + 36);
+            if (new_delegate != old_delegate) {
+                if (new_delegate != 0) {
+                    _InterlockedExchangeAdd(
+                        (volatile LONG *)(intptr_t)(new_delegate + 8), 1);
+                }
+                retdec_release_squirrel_object(old_delegate);
+                *(int32_t *)(intptr_t)(this_ptr + 36) = new_delegate;
             }
-            int32_t v6 = retdec_msvc_0_Init_locks_std__QAE_XZ5(); // 0x460740
-            function_4a97b0((char)&g601, v6);
-            function_4a9d70();
-            // 0x4607b9
-            result = function_4a9d70();
-            __writefsdword(0, v1);
-            return result;
         }
+        function_4a97b0_this(this_ptr + 44, (int32_t)(intptr_t)&g601,
+                             object_ptr);
     }
-    int32_t v7 = function_4a9b40(0); // 0x460768
-    *(int32_t *)(v2 + 32) = *(int32_t *)(v7 + 24);
-    int32_t v8 = *(int32_t *)(v7 + 28); // 0x460773
-    int32_t * v9 = (int32_t *)(v2 + 36); // 0x460776
-    int32_t v10 = *v9;
-    int32_t v11; // 0x4606d0
-    if (v8 == v10) {
-        // 0x4607a8
-        function_4a97b0((char)&g601, (int32_t)&v11);
-        // 0x4607b9
-        result = function_4a9d70();
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t v12 = v10; // 0x46077d
-    if (v8 != 0) {
-        int32_t * v13 = (int32_t *)(v8 + 8); // 0x460787
-        *v13 = *v13 + 1;
-        v12 = *v9;
-    }
-    // 0x46078b
-    if (v12 != 0) {
-        int32_t * v14 = (int32_t *)(v12 + 8); // 0x460798
-        *v14 = *v14 - 1;
-    }
-    // 0x4607a5
-    *v9 = v8;
-    // 0x4607a8
-    function_4a97b0((char)&g601, (int32_t)&v11);
-    // 0x4607b9
-    result = function_4a9d70();
-    __writefsdword(0, v1);
-    return result;
+    return function_4a9d70_this(object_ptr);
 }
 
 // Address range: 0x4607e0 - 0x4608f1
@@ -118132,7 +118137,8 @@ int32_t function_4607e0(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
     int32_t v10 = (int32_t)v8;
     *(int32_t *)(v10 - 4) = v5;
     *(int32_t *)(v10 - 8) = a2;
-    function_48c910((int32_t)&g1224, (int32_t)&g1224);
+    /* The original passes the VM and the stack top returned by sq_gettop. */
+    function_48c910(a2, (uint32_t)v5);
     __writefsdword(0, v1);
     return result;
 }
@@ -122327,6 +122333,10 @@ int32_t function_463e60(int32_t a1) {
 
 // Address range: 0x4641d0 - 0x4645a6
 int32_t function_4641d0(int32_t * a1) {
+    return function_4641d0_this((int32_t)(intptr_t)&g617, a1);
+}
+
+static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1) {
     // 0x4641d0
     int32_t v1; // bp-4, 0x4641d0
     int32_t v2 = &v1; // 0x4641d1
@@ -122335,7 +122345,7 @@ int32_t function_4641d0(int32_t * a1) {
     __writefsdword(0, (int32_t)&v3);
     int32_t v5 = 12; // bp-68, 0x4641fc
     int32_t v6 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x464201
-    int32_t v7; // 0x4641d0
+    int32_t v7 = this_ptr; // 0x4641d0
     if (v6 == 0) {
         // 0x464388
         int32_t v8; // bp-24, 0x4641d0
@@ -122529,7 +122539,7 @@ int32_t function_4641d0(int32_t * a1) {
                 v60 = v58;
                 if ((*(int32_t *)(v7 + 64) & *(int32_t *)(v59 + 232)) != 0) {
                     // 0x4642b9
-                    function_45ec60();
+                    function_45ec60_this(v59);
                     v60 = *v43;
                 }
             }
@@ -122538,12 +122548,12 @@ int32_t function_4641d0(int32_t * a1) {
         }
         int32_t v61 = *v41; // 0x4642c4
         if (v61 != v6) {
-            function_45ec60();
+            function_45ec60_this(*(int32_t *)(intptr_t)(v61 + 8));
             int32_t v62 = *(int32_t *)v61; // 0x4642d8
             int32_t v63 = v62; // 0x4642dc
             while (v62 != v6) {
                 // 0x4642d0
-                function_45ec60();
+                function_45ec60_this(*(int32_t *)(intptr_t)(v63 + 8));
                 v62 = *(int32_t *)v63;
                 v63 = v62;
             }
@@ -126763,165 +126773,102 @@ int32_t function_468580(int32_t a1, int32_t a2, int32_t a3) {
 
 // Address range: 0x468620 - 0x468788
 int32_t function_468620(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x468630
-    int32_t v2; // bp-4, 0x468620
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-44, 0x46863e
-    int32_t v4 = &v3; // 0x46863e
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v5; // 0x468620
-    int32_t * v6 = (int32_t *)(v5 + 4); // 0x46864d
-    int32_t v7 = *(int32_t *)(v5 + 8) - *v6 >> 2; // 0x468652
-    int32_t v8 = v4; // 0x46865a
-    int32_t result; // 0x468620
-    if (v7 != 0) {
-        int32_t * v9 = (int32_t *)(v5 + 4);
-        int32_t v10 = v5 + 8;
-        int32_t * v11 = (int32_t *)v10;
-        int32_t v12 = v4; // 0x468669
-        int32_t v13 = 0;
-        v12 -= 4;
-        int32_t v14; // bp-28, 0x468620
-        *(int32_t *)v12 = (int32_t)&v14;
-        function_45e410(&g1224);
-        int32_t v15 = *(int32_t *)(v5 + 52) + 8 * v13; // 0x46867e
-        int32_t * v16; // 0x468680
-        int32_t v17; // 0x468680
-        int32_t v18; // 0x46868e
-        int32_t v19; // 0x46869f
-        int32_t v20; // 0x468620
-        if (v14 != 0) {
-            // 0x468680
-            v16 = (int32_t *)v14;
-            v17 = *v16;
-            *(int32_t *)(v17 + 248) = *(int32_t *)(v17 + 240);
-            v18 = *v16;
-            *(int32_t *)(v18 + 252) = *(int32_t *)(v18 + 244);
-            v19 = 4 * v13;
-            v20 = *(int32_t *)(*(int32_t *)(*(int32_t *)(*v6 + v19) + 312) + 144);
-            *(int32_t *)(*v16 + 240) = v20;
-            v15 = *(int32_t *)(*(int32_t *)(*v6 + v19) + 312);
-            *(int32_t *)(*v16 + 244) = *(int32_t *)(v15 + 148);
-        }
-        int32_t v21 = v15; // 0x4686d2
-        int32_t v22; // 0x4686da
-        int32_t v23; // 0x4686da
-        int32_t v24; // 0x4686ef
-        if (v5 != 0) {
-            // 0x4686d4
-            v22 = *v9;
-            v23 = v22 - 1;
-            *v9 = v23;
-            v21 = v22;
-            if (v23 == 0) {
-                // 0x4686e0
-                v24 = *v11 - 1;
-                *v11 = v24;
-                v21 = v24 != 0 ? v10 : v5;
-            }
-        }
-        int32_t v25 = v13 + 1; // 0x4686fe
-        result = v21;
-        v8 = v12;
-        while (v25 != v7) {
-            // 0x468660
-            v13 = v25;
-            v12 -= 4;
-            *(int32_t *)v12 = (int32_t)&v14;
-            function_45e410(&g1224);
-            v15 = *(int32_t *)(v5 + 52) + 8 * v13;
-            if (v14 != 0) {
-                // 0x468680
-                v16 = (int32_t *)v14;
-                v17 = *v16;
-                *(int32_t *)(v17 + 248) = *(int32_t *)(v17 + 240);
-                v18 = *v16;
-                *(int32_t *)(v18 + 252) = *(int32_t *)(v18 + 244);
-                v19 = 4 * v13;
-                v20 = *(int32_t *)(*(int32_t *)(*(int32_t *)(*v6 + v19) + 312) + 144);
-                *(int32_t *)(*v16 + 240) = v20;
-                v15 = *(int32_t *)(*(int32_t *)(*v6 + v19) + 312);
-                *(int32_t *)(*v16 + 244) = *(int32_t *)(v15 + 148);
-            }
-            // 0x4686d0
-            v21 = v15;
-            if (v5 != 0) {
-                // 0x4686d4
-                v22 = *v9;
-                v23 = v22 - 1;
-                *v9 = v23;
-                v21 = v22;
-                if (v23 == 0) {
-                    // 0x4686e0
-                    v24 = *v11 - 1;
-                    *v11 = v24;
-                    v21 = v24 != 0 ? v10 : v5;
+    return function_468620_this((int32_t)(intptr_t)g_514300_storage);
+}
+
+static int32_t function_468620_this(int32_t this_ptr) {
+    int32_t *source_pairs;
+    int32_t *items;
+    int32_t root;
+    uint32_t pair_count;
+    uint32_t i;
+
+    if (this_ptr == 0)
+        return 0;
+
+    source_pairs = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 52);
+    if (source_pairs != NULL) {
+        int32_t begin = *(int32_t *)(this_ptr + 4);
+        int32_t end = *(int32_t *)(this_ptr + 8);
+        pair_count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
+        for (i = 0; i < pair_count; ++i) {
+            int32_t pair[2] = { 0, 0 };
+            int32_t *member = (int32_t *)(intptr_t)(source_pairs + 2 * i);
+            int32_t *actor_slot;
+            int32_t actor;
+            int32_t config;
+
+            function_45e410_this((int32_t)(intptr_t)member, pair);
+            actor_slot = (int32_t *)(intptr_t)pair[0];
+            if (actor_slot != NULL) {
+                actor = *actor_slot;
+                if (actor != 0) {
+                    *(float32_t *)(intptr_t)(actor + 248) =
+                        *(float32_t *)(intptr_t)(actor + 240);
+                    *(float32_t *)(intptr_t)(actor + 252) =
+                        *(float32_t *)(intptr_t)(actor + 244);
+                    items = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 4);
+                    if (items != NULL) {
+                        int32_t item = items[i];
+                        config = item != 0
+                            ? *(int32_t *)(intptr_t)(item + 312) : 0;
+                        if (config != 0) {
+                            *(float32_t *)(intptr_t)(actor + 240) =
+                                *(float32_t *)(intptr_t)(config + 144);
+                            *(float32_t *)(intptr_t)(actor + 244) =
+                                *(float32_t *)(intptr_t)(config + 148);
+                        }
+                    }
                 }
             }
-            // 0x4686fe
-            v25 = v13 + 1;
-            result = v21;
-            v8 = v12;
+            retdec_release_squirrel_object(pair[1]);
         }
     }
-    // 0x468708
-    if (result == 0) {
-        // 0x468710
-        *(int32_t *)(v5 + 84) = 0;
-        __writefsdword(0, v1);
-        return result;
+
+    root = *(int32_t *)(this_ptr + 0);
+    if (root == 0) {
+        *(int32_t *)(this_ptr + 84) = 0;
+        return 0;
     }
-    uint32_t v26 = *(int32_t *)(result + 116); // 0x468725
-    int32_t * v27 = (int32_t *)(v5 + 84); // 0x468728
-    *v27 = 0;
-    if (v26 == 0) {
-        // 0x468776
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t * v28 = (int32_t *)(v5 + 68); // 0x468732
-    int32_t v29 = *v28; // 0x468732
-    int32_t v30 = v29; // 0x46873a
-    int32_t * v31 = (int32_t *)100; // 0x46873a
-    if (*(int32_t *)(v5 + 72) - v29 >> 2 < v26) {
-        // 0x46873c
-        *(int32_t *)(v8 - 4) = v26;
-        function_463820((int32_t)&g1224);
-        v30 = *v28;
-        v31 = (int32_t *)(v5 + 168);
-    }
-    // 0x468745
-    *v27 = 0;
-    int32_t v32 = 0; // 0x468771
-    int32_t v33 = 0; // 0x468768
-    int32_t v34 = *(int32_t *)(4 * v32 + *v31); // 0x46875c
-    int32_t v35 = v33; // 0x468766
-    if (*(int32_t *)(v34 + 312) != 0) {
-        // 0x468768
-        *(int32_t *)(4 * v33 + v30) = v34;
-        v35 = *v27 + 1;
-        *v27 = v35;
-    }
-    // 0x468771
-    v32++;
-    int32_t result2 = v34; // 0x468774
-    while (v32 < v26) {
-        // 0x468759
-        v33 = v35;
-        v34 = *(int32_t *)(4 * v32 + *v31);
-        v35 = v33;
-        if (*(int32_t *)(v34 + 312) != 0) {
-            // 0x468768
-            *(int32_t *)(4 * v33 + v30) = v34;
-            v35 = *v27 + 1;
-            *v27 = v35;
+
+    pair_count = (uint32_t)*(int32_t *)(root + 116);
+    *(int32_t *)(this_ptr + 84) = 0;
+    if (pair_count == 0)
+        return root;
+
+    {
+        int32_t vector_ptr = this_ptr + 68;
+        int32_t begin = *(int32_t *)(vector_ptr + 0);
+        int32_t end = *(int32_t *)(vector_ptr + 4);
+        uint32_t count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
+        if (count < pair_count) {
+            int32_t block = function_498590(begin, (int32_t)(4 * pair_count));
+            if (block == 0)
+                return root;
+            *(int32_t *)(vector_ptr + 0) = block;
+            *(int32_t *)(vector_ptr + 4) =
+                block + (int32_t)(4 * pair_count);
+            *(int32_t *)(vector_ptr + 8) =
+                block + (int32_t)(4 * pair_count);
+            begin = block;
         }
-        // 0x468771
-        v32++;
-        result2 = v34;
+
+        items = (int32_t *)(intptr_t)*(int32_t *)(root + 100);
+        if (items == NULL)
+            return root;
+        uint32_t written = 0;
+        int32_t last = root;
+        for (i = 0; i < pair_count; ++i) {
+            int32_t item = items[i];
+            if (item != 0 && *(int32_t *)(intptr_t)(item + 312) != 0) {
+                *(int32_t *)(intptr_t)(begin + 4 * written) = item;
+                last = item;
+                ++written;
+            }
+        }
+        *(int32_t *)(this_ptr + 84) = (int32_t)written;
+        return last;
     }
-    // 0x468776
-    __writefsdword(0, v1);
-    return result2;
 }
 
 // Address range: 0x468790 - 0x4687cb
@@ -128582,7 +128529,7 @@ int32_t function_469900(void) {
     if ((v2 & 0x1fffffff) != 0) {
         // 0x46997d
         g622 = v2;
-        v4 = function_4641d0(&g615);
+        v4 = function_4641d0_this((int32_t)(intptr_t)&g617, &g615);
     }
     int32_t v5 = v4; // 0x469994
     if (v2 < 0) {
@@ -133201,39 +133148,44 @@ int32_t function_46d8b0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4, int32_
 int32_t function_46d950(void) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x46d960
     __writefsdword(0, (int32_t)&v1);
-    function_4a9500(function_4a8cc0());
-    function_46cfb0("Input", 0);
-    int32_t v2; // 0x46d950
-    function_48ab90(v2, v2, v2);
-    function_48a480(v2, (int32_t)"Save", -1);
-    *(int32_t *)function_48c2f0(v2, 4) = 0x46b7c0;
-    function_48d850(v2, 0x46ce70, 1);
-    function_48c950(v2, -3, 0);
-    function_48aa50(v2);
-    function_48ab90(v2, v2, v2);
-    function_48a480(v2, (int32_t)"Load", -1);
-    *(int32_t *)function_48c2f0(v2, 4) = 0x46b880;
-    function_48d850(v2, 0x46ce70, 1);
-    function_48c950(v2, -3, 0);
-    function_48aa50(v2);
-    function_48ab90(v2, v2, v2);
-    function_48a480(v2, (int32_t)"SetAssign", -1);
-    *(int32_t *)function_48c2f0(v2, 4) = 0x46bbe0;
-    function_48d850(v2, 0x46cec0, 1);
-    function_48c950(v2, -3, 0);
-    function_48aa50(v2);
-    function_48ab90(v2, v2, v2);
-    function_48a480(v2, (int32_t)"WaitAssign", -1);
-    *(int32_t *)function_48c2f0(v2, 4) = 0x46bc90;
-    function_48d850(v2, 0x46cf10, 1);
-    function_48c950(v2, -3, 0);
-    function_48aa50(v2);
-    function_48ab90(v2, v2, v2);
-    function_48a480(v2, (int32_t)"GetAssign", -1);
-    *(int32_t *)function_48c2f0(v2, 4) = 0x46be40;
-    function_48d850(v2, 0x46cf60, 1);
-    function_48c950(v2, -3, 0);
-    function_48aa50(v2);
+    int32_t root_object[3] = {0, 0, 0};
+    int32_t input_class[12] = {0};
+    int32_t *field_object = input_class + 2;
+    int32_t vm;
+
+    function_4a9500_this(root_object, function_4a8cc0());
+    function_46cfb0_this((int32_t)(intptr_t)input_class, "Input", 0);
+    vm = input_class[0];
+    function_48ab90(vm, input_class[3], input_class[4]);
+    function_48a480(vm, (int32_t)"Save", -1);
+    *(int32_t *)function_48c2f0(vm, 4) = 0x46b7c0;
+    function_48d850(vm, 0x46ce70, 1);
+    function_48c950(vm, -3, 0);
+    function_48aa50(vm);
+    function_48ab90(vm, input_class[3], input_class[4]);
+    function_48a480(vm, (int32_t)"Load", -1);
+    *(int32_t *)function_48c2f0(vm, 4) = 0x46b880;
+    function_48d850(vm, 0x46ce70, 1);
+    function_48c950(vm, -3, 0);
+    function_48aa50(vm);
+    function_48ab90(vm, input_class[3], input_class[4]);
+    function_48a480(vm, (int32_t)"SetAssign", -1);
+    *(int32_t *)function_48c2f0(vm, 4) = 0x46bbe0;
+    function_48d850(vm, 0x46cec0, 1);
+    function_48c950(vm, -3, 0);
+    function_48aa50(vm);
+    function_48ab90(vm, input_class[3], input_class[4]);
+    function_48a480(vm, (int32_t)"WaitAssign", -1);
+    *(int32_t *)function_48c2f0(vm, 4) = 0x46bc90;
+    function_48d850(vm, 0x46cf10, 1);
+    function_48c950(vm, -3, 0);
+    function_48aa50(vm);
+    function_48ab90(vm, input_class[3], input_class[4]);
+    function_48a480(vm, (int32_t)"GetAssign", -1);
+    *(int32_t *)function_48c2f0(vm, 4) = 0x46be40;
+    function_48d850(vm, 0x46cf60, 1);
+    function_48c950(vm, -3, 0);
+    function_48aa50(vm);
     char v3 = g628; // 0x46db12
     if ((v3 & 1) == 0) {
         // 0x46db20
@@ -133245,8 +133197,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46db45
-    int32_t v4; // bp-80, 0x46d950
-    function_460920(&v4, &g623, 1436, "x", 0);
+    function_460920(field_object, &g623, 1436, "x", 0);
     char v5 = g628; // 0x46db61
     if ((v5 & 1) == 0) {
         // 0x46db6a
@@ -133258,7 +133209,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46db8f
-    function_460920(&v4, &g623, 1440, "y", 0);
+    function_460920(field_object, &g623, 1440, "y", 0);
     char v6 = g628; // 0x46dbab
     if ((v6 & 1) == 0) {
         // 0x46dbb4
@@ -133270,7 +133221,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dbd9
-    function_460a60(&v4, &g623, 1468, "br0", 0);
+    function_460a60(field_object, &g623, 1468, "br0", 0);
     char v7 = g628; // 0x46dbf5
     if ((v7 & 1) == 0) {
         // 0x46dbfe
@@ -133282,7 +133233,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dc23
-    function_460a60(&v4, &g623, 1469, "br1", 0);
+    function_460a60(field_object, &g623, 1469, "br1", 0);
     char v8 = g628; // 0x46dc3f
     if ((v8 & 1) == 0) {
         // 0x46dc48
@@ -133294,7 +133245,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dc6d
-    function_460a60(&v4, &g623, 1470, "br2", 0);
+    function_460a60(field_object, &g623, 1470, "br2", 0);
     char v9 = g628; // 0x46dc89
     if ((v9 & 1) == 0) {
         // 0x46dc92
@@ -133306,7 +133257,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dcb7
-    function_460a60(&v4, &g623, 1471, "br3", 0);
+    function_460a60(field_object, &g623, 1471, "br3", 0);
     char v10 = g628; // 0x46dcd3
     if ((v10 & 1) == 0) {
         // 0x46dcdc
@@ -133318,7 +133269,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dd01
-    function_460920(&v4, &g623, 1444, "b0", 0);
+    function_460920(field_object, &g623, 1444, "b0", 0);
     char v11 = g628; // 0x46dd1d
     if ((v11 & 1) == 0) {
         // 0x46dd26
@@ -133330,7 +133281,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dd4b
-    function_460920(&v4, &g623, 1448, "b1", 0);
+    function_460920(field_object, &g623, 1448, "b1", 0);
     char v12 = g628; // 0x46dd67
     if ((v12 & 1) == 0) {
         // 0x46dd70
@@ -133342,7 +133293,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dd95
-    function_460920(&v4, &g623, 1452, "b2", 0);
+    function_460920(field_object, &g623, 1452, "b2", 0);
     char v13 = g628; // 0x46ddb1
     if ((v13 & 1) == 0) {
         // 0x46ddba
@@ -133354,7 +133305,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dddf
-    function_460920(&v4, &g623, 1456, "b3", 0);
+    function_460920(field_object, &g623, 1456, "b3", 0);
     char v14 = g628; // 0x46ddfb
     if ((v14 & 1) == 0) {
         // 0x46de04
@@ -133366,7 +133317,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46de29
-    function_460920(&v4, &g623, 1460, "b4", 0);
+    function_460920(field_object, &g623, 1460, "b4", 0);
     char v15 = g628; // 0x46de45
     if ((v15 & 1) == 0) {
         // 0x46de4e
@@ -133378,7 +133329,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46de73
-    function_460a60(&v4, &g623, 1468, "kr0", 0);
+    function_460a60(field_object, &g623, 1468, "kr0", 0);
     char v16 = g628; // 0x46de8f
     if ((v16 & 1) == 0) {
         // 0x46de98
@@ -133390,7 +133341,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46debd
-    function_460a60(&v4, &g623, 1469, "kr1", 0);
+    function_460a60(field_object, &g623, 1469, "kr1", 0);
     char v17 = g628; // 0x46ded9
     if ((v17 & 1) == 0) {
         // 0x46dee2
@@ -133402,7 +133353,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46df07
-    function_460a60(&v4, &g623, 1470, "kr2", 0);
+    function_460a60(field_object, &g623, 1470, "kr2", 0);
     char v18 = g628; // 0x46df23
     if ((v18 & 1) == 0) {
         // 0x46df2c
@@ -133414,7 +133365,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46df51
-    function_460a60(&v4, &g623, 1471, "kr3", 0);
+    function_460a60(field_object, &g623, 1471, "kr3", 0);
     char v19 = g628; // 0x46df6d
     if ((v19 & 1) == 0) {
         // 0x46df76
@@ -133426,7 +133377,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46df9b
-    function_460920(&v4, &g623, 1444, "k0", 0);
+    function_460920(field_object, &g623, 1444, "k0", 0);
     char v20 = g628; // 0x46dfb7
     if ((v20 & 1) == 0) {
         // 0x46dfc0
@@ -133438,7 +133389,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46dfe5
-    function_460920(&v4, &g623, 1448, "k1", 0);
+    function_460920(field_object, &g623, 1448, "k1", 0);
     char v21 = g628; // 0x46e001
     if ((v21 & 1) == 0) {
         // 0x46e00a
@@ -133450,7 +133401,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e02f
-    function_460920(&v4, &g623, 1452, "k2", 0);
+    function_460920(field_object, &g623, 1452, "k2", 0);
     char v22 = g628; // 0x46e04b
     if ((v22 & 1) == 0) {
         // 0x46e054
@@ -133462,7 +133413,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e079
-    function_460920(&v4, &g623, 1456, "k3", 0);
+    function_460920(field_object, &g623, 1456, "k3", 0);
     char v23 = g628; // 0x46e095
     if ((v23 & 1) == 0) {
         // 0x46e09e
@@ -133474,7 +133425,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e0c3
-    function_460920(&v4, &g623, 1460, "k4", 0);
+    function_460920(field_object, &g623, 1460, "k4", 0);
     char v24 = g628; // 0x46e0df
     if ((v24 & 1) == 0) {
         // 0x46e0e8
@@ -133486,7 +133437,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e10d
-    function_460920(&v4, &g623, 1464, "k5", 0);
+    function_460920(field_object, &g623, 1464, "k5", 0);
     char v25 = g628; // 0x46e129
     if ((v25 & 1) == 0) {
         // 0x46e132
@@ -133498,7 +133449,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e157
-    function_460920(&v4, &g623, 1476, "s1", 0);
+    function_460920(field_object, &g623, 1476, "s1", 0);
     char v26 = g628; // 0x46e173
     if ((v26 & 1) == 0) {
         // 0x46e17c
@@ -133510,7 +133461,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e1a1
-    function_460920(&v4, &g623, 1480, "s2", 0);
+    function_460920(field_object, &g623, 1480, "s2", 0);
     char v27 = g628; // 0x46e1bd
     if ((v27 & 1) == 0) {
         // 0x46e1c6
@@ -133522,7 +133473,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e1eb
-    function_460920(&v4, &g623, 1484, "s3", 0);
+    function_460920(field_object, &g623, 1484, "s3", 0);
     char v28 = g628; // 0x46e207
     if ((v28 & 1) == 0) {
         // 0x46e210
@@ -133534,7 +133485,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e235
-    function_460920(&v4, &g623, 1488, "s4", 0);
+    function_460920(field_object, &g623, 1488, "s4", 0);
     char v29 = g628; // 0x46e251
     if ((v29 & 1) == 0) {
         // 0x46e25a
@@ -133546,7 +133497,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e27f
-    function_460920(&v4, &g623, 1492, "s5", 0);
+    function_460920(field_object, &g623, 1492, "s5", 0);
     char v30 = g628; // 0x46e29b
     if ((v30 & 1) == 0) {
         // 0x46e2a4
@@ -133558,7 +133509,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e2c9
-    function_460920(&v4, &g623, 1496, "s6", 0);
+    function_460920(field_object, &g623, 1496, "s6", 0);
     char v31 = g628; // 0x46e2e5
     if ((v31 & 1) == 0) {
         // 0x46e2ee
@@ -133570,7 +133521,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e313
-    function_460920(&v4, &g623, 1500, "s7", 0);
+    function_460920(field_object, &g623, 1500, "s7", 0);
     char v32 = g628; // 0x46e32f
     if ((v32 & 1) == 0) {
         // 0x46e338
@@ -133582,7 +133533,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e35d
-    function_460920(&v4, &g623, 1504, "s8", 0);
+    function_460920(field_object, &g623, 1504, "s8", 0);
     char v33 = g628; // 0x46e379
     if ((v33 & 1) == 0) {
         // 0x46e382
@@ -133594,7 +133545,7 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e3a7
-    function_460920(&v4, &g623, 1508, "s9", 0);
+    function_460920(field_object, &g623, 1508, "s9", 0);
     if ((g628 & 1) == 0) {
         // 0x46e3cc
         g628 |= 1;
@@ -133605,15 +133556,18 @@ int32_t function_46d950(void) {
         g625 = 0;
     }
     // 0x46e3f1
-    function_460920(&v4, &g623, 1472, "s0", 0);
-    int32_t v34; // bp-40, 0x46d950
-    int32_t v35 = function_4aa3a0(&v34, "Input"); // 0x46e419
-    function_4a95c0(v35);
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    int32_t result = function_4a9d70(); // 0x46e462
+    function_460920(field_object, &g623, 1472, "s0", 0);
+    int32_t v34[3] = {0, 0, 0}; // bp-40, 0x46d950
+    int32_t *v35 = function_4aa3a0_this(
+        (int32_t)(intptr_t)root_object, (int32_t)(intptr_t)v34, "Input");
+    function_4a95c0_this((int32_t)(intptr_t)&g629,
+                         (int32_t)(intptr_t)v35);
+    function_4a9d70_this((int32_t)(intptr_t)v34);
+    function_4a9d70_this((int32_t)(intptr_t)(input_class + 9));
+    function_4a9d70_this((int32_t)(intptr_t)(input_class + 6));
+    function_4a9d70_this((int32_t)(intptr_t)(input_class + 2));
+    int32_t result = function_4a9d70_this(
+        (int32_t)(intptr_t)root_object); // 0x46e462
     __writefsdword(0, v1);
     return result;
 }
@@ -181502,7 +181456,15 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
      * zero-count object is therefore retained until the runtime is complete;
      * this is a deliberate leak in the compatibility layer and prevents a
      * temporary SquirrelObject from calling an invalid decompiler stub.
-     */
+    */
+}
+
+static void retdec_release_squirrel_value(int32_t *value_ptr) {
+    if (value_ptr == NULL)
+        return;
+    retdec_squirrel_release(value_ptr[0], value_ptr[1]);
+    value_ptr[0] = g483;
+    value_ptr[1] = g484;
 }
 
 static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
@@ -181512,6 +181474,32 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
     dst[0] = src[0];
     dst[1] = src[1];
     retdec_squirrel_addref(dst[0], dst[1]);
+}
+
+/* Release the shared object held by Actor::m_parent/m_delegate. */
+static void retdec_release_squirrel_object(int32_t object_ptr) {
+    volatile LONG *refcount;
+    int32_t vtable;
+
+    if (object_ptr == 0)
+        return;
+    refcount = (volatile LONG *)(intptr_t)(object_ptr + 4);
+    if (_InterlockedExchangeAdd(refcount, -1) != 0)
+        return;
+
+    vtable = *(int32_t *)(intptr_t)object_ptr;
+    if (vtable != 0 && *(int32_t *)(intptr_t)(vtable + 4) != 0) {
+        retdec_call_thiscall0(
+            (void *)(intptr_t)object_ptr,
+            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 4));
+    }
+    if (_InterlockedExchangeAdd(
+            (volatile LONG *)(intptr_t)(object_ptr + 8), -1) == 0 &&
+        vtable != 0 && *(int32_t *)(intptr_t)(vtable + 8) != 0) {
+        retdec_call_thiscall0(
+            (void *)(intptr_t)object_ptr,
+            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
+    }
 }
 
 static uint32_t retdec_squirrel_key_hash(const int32_t *key) {
@@ -181573,6 +181561,8 @@ static int32_t retdec_ref_table_resize(int32_t table_ptr, int32_t new_slots) {
             int32_t *old_node =
                 (int32_t *)(intptr_t)(old_nodes + 16 * i);
             int32_t *new_node;
+            int32_t old_type;
+            int32_t old_data;
             uint32_t hash;
             int32_t bucket_index;
             int32_t *bucket;
@@ -181581,19 +181571,25 @@ static int32_t retdec_ref_table_resize(int32_t table_ptr, int32_t new_slots) {
                 continue;
             if (new_free == 0)
                 break;
+            old_type = old_node[0];
+            old_data = old_node[1];
             new_node = (int32_t *)(intptr_t)new_free;
             new_free = new_node[3];
             hash = retdec_squirrel_key_hash(old_node);
             bucket_index = (int32_t)(hash & (uint32_t)(new_slots - 1));
             bucket = (int32_t *)(intptr_t)(new_block + 4 * bucket_index);
-            new_node[0] = old_node[0];
-            new_node[1] = old_node[1];
+            /* RefTable::Add copies an SQObjectPtr, so the new node owns a
+             * temporary object reference until the old node is nulled. */
+            new_node[0] = old_type;
+            new_node[1] = old_data;
             new_node[2] = old_node[2];
             new_node[3] = *bucket;
             *bucket = (int32_t)(intptr_t)new_node;
+            retdec_squirrel_addref(old_type, old_data);
             old_node[0] = g483;
             old_node[1] = g484;
             old_node[2] = 0;
+            retdec_squirrel_release(old_type, old_data);
             ++used;
         }
     }
@@ -182099,6 +182095,51 @@ static int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr) {
     return this_ptr;
 }
 
+/* Recovered SqPlus::ClassType<Input> constructor.  RetDec dropped the
+ * destination object and the SquirrelObject returned by the VM stack. */
+static int32_t function_46cfb0_this(int32_t this_ptr, const char *name,
+                                    int32_t parent_ptr) {
+    int32_t *state = (int32_t *)(intptr_t)this_ptr;
+    int32_t temporary[3] = {0, 0, 0};
+    int32_t nested[3] = {0, 0, 0};
+    int32_t stack_base;
+
+    if (this_ptr == 0)
+        return 0;
+
+    state[0] = (int32_t)(intptr_t)g644;
+    state[1] = (int32_t)(intptr_t)name;
+    function_4a94e0_this(this_ptr + 8);
+    state[5] = parent_ptr;
+    function_4a91c0_this(state + 6);
+    function_4a91c0_this(state + 9);
+
+    stack_base = function_48aa20(state[0]);
+    function_4a94e0_this((int32_t)(intptr_t)temporary);
+    if ((g628 & 1) == 0) {
+        g628 |= 1;
+        g624 = 0;
+        g626 = 0;
+        g627 = -1;
+        g623 = (int32_t)(intptr_t)&g36;
+        g625 = 0;
+    }
+    if (function_4aa540(state[0], (int32_t)(intptr_t)temporary, &g623,
+                        state[1], state[5]) != 0) {
+        function_4a94e0_this((int32_t)(intptr_t)nested);
+        function_48ab90((int32_t)g644,
+                        *(int32_t *)(intptr_t)(temporary + 1),
+                        *(int32_t *)(intptr_t)(temporary + 2));
+        function_4a9660_this((int32_t)(intptr_t)nested, -1);
+        function_48aa50((int32_t)g644);
+        function_45f640(nested);
+    }
+    function_48c910(state[0], stack_base);
+    function_4a95c0_this(this_ptr + 8, (int32_t)(intptr_t)temporary);
+    function_4a9d70_this((int32_t)(intptr_t)temporary);
+    return this_ptr;
+}
+
 static int32_t function_4a96c0_this(int32_t this_ptr) {
     return *(int32_t *)(this_ptr + 4) == 0x01000001;
 }
@@ -182475,40 +182516,32 @@ static int32_t function_491820_this(int32_t this_ptr, int32_t value_ptr) {
         return 0;
     int32_t top = *(int32_t *)(this_ptr + 48);
     int32_t capacity = *(int32_t *)(this_ptr + 32);
-    retdec_trace("491820:begin");
-    retdec_trace_i32("491820:this", this_ptr);
-    retdec_trace_i32("491820:top", top);
-    retdec_trace_i32("491820:capacity", capacity);
-    retdec_trace_i32("491820:value", value_ptr);
-    retdec_trace_i32("491820:caller",
-                     (int32_t)(intptr_t)_ReturnAddress());
     if (top >= capacity) {
         int32_t null_value[2] = { g483, g484 };
-        if (function_48d0f0_this(this_ptr + 24, (uint32_t)(top + 1),
-                                  null_value) == 0)
+        uint32_t needed = (uint32_t)top + 1;
+        uint32_t target_capacity = capacity > 0 &&
+                                   (uint32_t)capacity <= 0x3fffffffU
+            ? (uint32_t)capacity * 2U
+            : needed;
+        if (target_capacity < needed)
+            target_capacity = needed;
+        if (function_48d0f0_this(this_ptr + 24, target_capacity,
+                                 null_value) == 0)
             return 0;
     }
     int32_t *slot = (int32_t *)(*(int32_t *)(this_ptr + 24) + 8 * top);
-    retdec_trace_i32("491820:slot", (int32_t)(intptr_t)slot);
     int32_t old_type = slot[0];
     int32_t old_data = slot[1];
-    retdec_trace_i32("491820:old-type", old_type);
-    retdec_trace_i32("491820:old-data", old_data);
     if (value_ptr != 0) {
         slot[0] = *(int32_t *)value_ptr;
         slot[1] = *(int32_t *)(value_ptr + 4);
-        retdec_trace_i32("491820:new-type", slot[0]);
-        retdec_trace_i32("491820:new-data", slot[1]);
         retdec_squirrel_addref(slot[0], slot[1]);
-        retdec_trace("491820:after-addref");
     } else {
         slot[0] = g483;
         slot[1] = g484;
     }
     *(int32_t *)(this_ptr + 48) = top + 1;
-    retdec_trace("491820:after-top");
     retdec_squirrel_release(old_type, old_data);
-    retdec_trace("491820:done");
     return (int32_t)slot;
 }
 
@@ -182795,6 +182828,8 @@ static int32_t function_497b10_this(int32_t this_ptr, int32_t key_ptr,
 
     if (this_ptr == 0 || key_ptr == 0 || value_ptr == 0)
         return 0;
+    retdec_trace_i32("497b10:caller",
+                     (int32_t)(uintptr_t)_ReturnAddress());
     retdec_trace_i32("497b10:table", this_ptr);
     retdec_trace_i32("497b10:key-type", *(int32_t *)(intptr_t)key_ptr);
     retdec_trace_i32("497b10:key-data", *(int32_t *)(intptr_t)(key_ptr + 4));
@@ -182879,11 +182914,11 @@ retry:
     retdec_squirrel_assign(
         (int32_t *)(intptr_t)(slot + 8),
         (const int32_t *)(intptr_t)key_ptr);
-    retdec_squirrel_assign(
-        (int32_t *)(intptr_t)slot,
-        (const int32_t *)(intptr_t)value_ptr);
+    retdec_trace("497b10:after-key");
 
-    /* Advance the original free-node cursor, growing when the table is full. */
+    /* Advance the free-node cursor before publishing the value.  The original
+     * routine retries from the key lookup after a grow, so the value must not
+     * be written into the old table before that decision. */
     for (;;) {
         free_slot = *(int32_t *)(this_ptr + 28);
         if (free_slot == 0) {
@@ -182901,8 +182936,14 @@ retry:
         }
         *(int32_t *)(this_ptr + 28) = free_slot - 20;
     }
+
+    retdec_squirrel_assign(
+        (int32_t *)(intptr_t)slot,
+        (const int32_t *)(intptr_t)value_ptr);
+    retdec_trace("497b10:after-value");
     ++*(int32_t *)(this_ptr + 40);
     retdec_trace_i32("497b10:count", *(int32_t *)(this_ptr + 40));
+    retdec_trace("497b10:return");
     return 1;
 }
 
@@ -183902,8 +183943,9 @@ int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3) {
     *v3 = v4;
     int32_t result2 = a3; // 0x48abc7
     if (v4 == 0) {
-        // 0x48abc9
-        result2 = *(int32_t *)(*(int32_t *)a3 + 4);
+        /* The current compatibility ownership layer intentionally retains
+         * zero-count objects; invoking the raw virtual release here causes
+         * heap corruption before the VM finishes initializing. */
     }
     // 0x48abd3
     return result2;
@@ -184728,45 +184770,44 @@ int32_t function_48ba10(void) {
 // Address range: 0x48ba20 - 0x48bb01
 // From class:    .?AUSQClosure@@
 // Type:          constructor
-int32_t function_48ba20(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x48ba30
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result; // 0x48ba20
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 8) = 0;
-    *(int32_t *)result = (int32_t)&g66;
-    *(int32_t *)(result + 24) = 0x1000001;
-    *(int32_t *)(result + 28) = 0;
-    int32_t * v2 = (int32_t *)(result + 32); // 0x48ba69
-    *v2 = 0x1000001;
-    int32_t * v3 = (int32_t *)(result + 36); // 0x48ba6c
-    *v3 = 0;
-    *(int32_t *)(result + 40) = 0;
-    *(int32_t *)(result + 44) = 0;
-    *(int32_t *)(result + 48) = 0;
-    *(int32_t *)(result + 52) = 0;
-    *(int32_t *)(result + 56) = 0;
-    *(int32_t *)(result + 60) = 0;
-    int32_t * v4 = (int32_t *)(a2 + 4); // 0x48ba89
-    *v4 = *v4 + 1;
-    *v3 = a2;
-    *v2 = 0x8002000;
-    int32_t v5 = *v4 + 1; // 0x48baa6
-    *v4 = v5;
-    int32_t v6 = v5; // 0x48bab2
-    if ((*v2 & 0x8000000) != 0) {
-        int32_t * v7 = (int32_t *)(*v3 + 4); // 0x48bab4
-        *v7 = *v7 - 1;
-        v6 = *v4;
+static int32_t function_48ba20_this(int32_t this_ptr, int32_t shared_state,
+                                    int32_t base_ptr) {
+    if (this_ptr == 0)
+        return 0;
+
+    *(int32_t *)this_ptr = (int32_t)(intptr_t)&g66;
+    *(int32_t *)(this_ptr + 4) = 0;
+    *(int32_t *)(this_ptr + 8) = 0;
+    *(int32_t *)(this_ptr + 12) = 0;
+    *(int32_t *)(this_ptr + 16) = 0;
+    *(int32_t *)(this_ptr + 20) = shared_state;
+    *(int32_t *)(this_ptr + 24) = g483;
+    *(int32_t *)(this_ptr + 28) = g484;
+    *(int32_t *)(this_ptr + 32) = g483;
+    *(int32_t *)(this_ptr + 36) = g484;
+    *(int32_t *)(this_ptr + 40) = 0;
+    *(int32_t *)(this_ptr + 44) = 0;
+    *(int32_t *)(this_ptr + 48) = 0;
+    *(int32_t *)(this_ptr + 52) = 0;
+    *(int32_t *)(this_ptr + 56) = 0;
+    *(int32_t *)(this_ptr + 60) = 0;
+
+    if (base_ptr != 0) {
+        *(int32_t *)(this_ptr + 32) = 0x08002000;
+        *(int32_t *)(this_ptr + 36) = base_ptr;
+        retdec_squirrel_addref(0x08002000, base_ptr);
     }
-    // 0x48bac0
-    *v4 = v6 - 1;
-    *(int32_t *)(result + 20) = a1;
-    *(int32_t *)(result + 12) = 0;
-    *(int32_t *)(result + 16) = 0;
-    function_49a140(a1 + 68, result);
-    __writefsdword(0, v1);
-    return result;
+    if (shared_state != 0)
+        function_49a140(shared_state + 68, this_ptr);
+    return this_ptr;
+}
+
+int32_t function_48ba20(int32_t a1, int32_t a2) {
+    /* Legacy callers lost the destination in ECX.  Repaired allocation
+       sites call function_48ba20_this with the real object instead. */
+    (void)a1;
+    (void)a2;
+    return 0;
 }
 
 // Address range: 0x48bb10 - 0x48bb28
@@ -184785,7 +184826,7 @@ int32_t function_48bb30(int32_t a1, int32_t a2) {
     int32_t * v2 = _malloc(64); // 0x48bb58
     if (v2 != NULL) {
         // 0x48bb73
-        function_48ba20(a1, a2);
+        function_48ba20_this((int32_t)(intptr_t)v2, a1, a2);
     }
     // 0x48bb82
     __writefsdword(0, v1);
@@ -185110,7 +185151,7 @@ int32_t function_48c1f0(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
     if (v8 != NULL) {
         // 0x48c260
         v5 = v7;
-        function_48ba20(v7, 0);
+        function_48ba20_this((int32_t)(intptr_t)v8, v7, 0);
         v9 = &v5;
     }
     // 0x48c26c
@@ -185607,6 +185648,8 @@ int32_t function_48c910(int32_t a1, uint32_t a2) {
 
 // Address range: 0x48c950 - 0x48ca01
 int32_t function_48c950(int32_t a1, int32_t a2, int32_t a3) {
+    retdec_trace_i32("48c950:caller",
+                     (int32_t)(uintptr_t)_ReturnAddress());
     int32_t shared_state = a1 != 0 ? *(int32_t *)(a1 + 140) : 0;
     if (shared_state != retdec_primary_shared_state) {
         retdec_trace_i32("48c950:foreign-vm", a1);
@@ -186475,7 +186518,7 @@ int32_t function_48d4e0(int32_t a1, int32_t a2) {
     int32_t * v2 = _malloc(36); // 0x48d508
     if (v2 != NULL) {
         // 0x48d523
-        function_48d390(a1, a2);
+        function_48d390_this((int32_t)(intptr_t)v2, a1, a2);
     }
     // 0x48d532
     __writefsdword(0, v1);
@@ -186495,7 +186538,7 @@ int32_t function_48d550(void) {
 }
 
 // Address range: 0x48d5a0 - 0x48d61e
-int32_t function_48d5a0(int32_t a1) {
+int32_t function_48d5a0(int32_t this_ptr, int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x48d5b0
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = *(int32_t *)a1; // 0x48d5ca
@@ -186503,14 +186546,14 @@ int32_t function_48d5a0(int32_t a1) {
     int32_t v4 = v2; // bp-24, 0x48d5cf
     if ((v2 & 0x8000000) == 0) {
         // 0x48d5e0
-        function_48d1b0(&v4);
+        function_48d1b0_this(this_ptr + 24, &v4);
         // 0x48d60b
         __writefsdword(0, v1);
         return -1;
     }
     int32_t * v5 = (int32_t *)(v3 + 4);
     *v5 = *v5 + 1;
-    function_48d1b0(&v4);
+    function_48d1b0_this(this_ptr + 24, &v4);
     int32_t v6 = *v5 - 1; // 0x48d5fd
     *v5 = v6;
     int32_t result = -1; // 0x48d600
@@ -186641,17 +186684,20 @@ int32_t function_48d7e0(int32_t a1, int32_t a2) {
         return -1;
     }
     // 0x48d826
-    function_48d5a0(function_491880(-1));
+    function_48d5a0(*(int32_t *)(v1 + 4), function_491880(-1));
     function_4917b0(1);
     return 0;
 }
 
 // Address range: 0x48d850 - 0x48d940
 int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3) {
+    retdec_trace_i32("48d850:caller",
+                     (int32_t)(uintptr_t)_ReturnAddress());
     int32_t shared_state = *(int32_t *)(a1 + 140); // 0x48d85c
     int32_t object = (int32_t)(intptr_t)function_498580(72); // 0x48d864
     if (object == 0)
         return 0;
+    retdec_trace_i32("48d850:object", object);
     function_48bca0(object, shared_state, a2);
     *(int32_t *)(object + 24) = 0;
 
@@ -186690,77 +186736,19 @@ int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3) {
     int32_t value[2] = { 0x8000200, object };
     ++*(int32_t *)(object + 4);
     int32_t result = function_491820_this(a1, (int32_t)(intptr_t)value); // 0x48d919
+    retdec_trace("48d850:after-push");
     if ((value[0] & 0x8000000) != 0) {
         int32_t count = --*(int32_t *)(object + 4);
         if (count == 0)
             return object;
     }
+    retdec_trace("48d850:return");
     return result;
 }
 
 // Address range: 0x48d940 - 0x48d9f0
-int32_t function_48d940(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x48d950
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2 = 0x1000001; // bp-24, 0x48d96c
-    int32_t * v3 = (int32_t *)(a1 + 4); // 0x48d979
-    int32_t result = function_48d0f0_this(0, (uint32_t)*v3, &v2); // 0x48d986
-    int32_t v4; // 0x48d940
-    if (*v3 == 0) {
-        // 0x48d9d6
-        *(int32_t *)(v4 + 4) = 0;
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t v5 = 0; // 0x48d9b6
-    int32_t v6 = 8 * v5; // 0x48d992
-    int32_t v7; // 0x48d940
-    int32_t v8 = v6 + v7; // 0x48d999
-    int32_t v9; // 0x48d99f
-    int32_t v10; // 0x48d9a1
-    int32_t v11; // 0x48d9a5
-    int32_t * v12; // 0x48d9b3
-    if (v8 != 0) {
-        // 0x48d99d
-        v9 = *(int32_t *)a1 + v6;
-        v10 = *(int32_t *)v9;
-        *(int32_t *)v8 = v10;
-        v11 = *(int32_t *)(v9 + 4);
-        *(int32_t *)(v8 + 4) = v11;
-        if ((v10 & 0x8000000) != 0) {
-            // 0x48d9b3
-            v12 = (int32_t *)(v11 + 4);
-            *v12 = *v12 + 1;
-        }
-    }
-    // 0x48d9b6
-    v5++;
-    uint32_t result2 = *v3; // 0x48d9b7
-    while (v5 < result2) {
-        // 0x48d990
-        v6 = 8 * v5;
-        v8 += v6;
-        if (v8 != 0) {
-            // 0x48d99d
-            v9 = *(int32_t *)a1 + v6;
-            v10 = *(int32_t *)v9;
-            *(int32_t *)v8 = v10;
-            v11 = *(int32_t *)(v9 + 4);
-            *(int32_t *)(v8 + 4) = v11;
-            if ((v10 & 0x8000000) != 0) {
-                // 0x48d9b3
-                v12 = (int32_t *)(v11 + 4);
-                *v12 = *v12 + 1;
-            }
-        }
-        // 0x48d9b6
-        v5++;
-        result2 = *v3;
-    }
-    // 0x48d9bc
-    *(int32_t *)(v4 + 4) = result2;
-    __writefsdword(0, v1);
-    return result2;
+int32_t function_48d940(int32_t this_ptr, int32_t source_ptr) {
+    return function_48d940_this(this_ptr, source_ptr);
 }
 
 // Address range: 0x48d9f0 - 0x48da57
@@ -186864,41 +186852,32 @@ int32_t function_48dac0(void) {
 }
 
 // Address range: 0x48db40 - 0x48dc01
-int32_t function_48db40(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x48db50
-    int32_t v2; // bp-4, 0x48db40
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-44, 0x48db5e
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v4; // 0x48db40
-    int32_t v5 = *(int32_t *)(v4 + 20); // 0x48db6a
-    int32_t * v6 = _malloc(64); // 0x48db75
-    int32_t * v7 = &v3; // 0x48db8e
-    if (v6 != NULL) {
-        int32_t v8 = v5; // bp-52, 0x48db94
-        function_48ba20(v5, *(int32_t *)(v4 + 36));
-        v7 = &v8;
-    }
-    int32_t result = (int32_t)v6; // 0x48db75
-    int32_t * v9 = (int32_t *)(result + 28); // 0x48db9f
-    int32_t * v10 = (int32_t *)(result + 24); // 0x48dba2
-    *v9 = *(int32_t *)(v4 + 28);
-    int32_t v11 = *(int32_t *)(v4 + 24); // 0x48dba8
-    *v10 = v11;
-    if ((v11 & 0x8000000) != 0) {
-        int32_t * v12 = (int32_t *)(*v9 + 4); // 0x48dbbe
-        *v12 = *v12 + 1;
-    }
-    if ((*v10 & 0x8000000) != 0) {
-        int32_t * v13 = (int32_t *)(*v9 + 4); // 0x48dbc9
-        *v13 = *v13 - 1;
-    }
-    int32_t v14 = (int32_t)v7;
-    *(int32_t *)(v14 - 4) = v4 + 40;
-    function_48d940(-1);
-    *(int32_t *)(v14 - 8) = v4 + 52;
-    function_48d940((int32_t)&g1224);
-    __writefsdword(0, v1);
-    return result;
+int32_t function_48db40(int32_t this_ptr) {
+    int32_t object;
+    int32_t old_type;
+    int32_t old_data;
+    int32_t new_type;
+    int32_t new_data;
+
+    if (this_ptr == 0)
+        return 0;
+    object = (int32_t)(intptr_t)function_498580(64);
+    if (object == 0)
+        return 0;
+
+    function_48ba20_this(object, *(int32_t *)(this_ptr + 20),
+                         *(int32_t *)(this_ptr + 36));
+    old_type = *(int32_t *)(object + 24);
+    old_data = *(int32_t *)(object + 28);
+    new_type = *(int32_t *)(this_ptr + 24);
+    new_data = *(int32_t *)(this_ptr + 28);
+    *(int32_t *)(object + 24) = new_type;
+    *(int32_t *)(object + 28) = new_data;
+    retdec_squirrel_addref(new_type, new_data);
+    retdec_squirrel_release(old_type, old_data);
+    function_48d940_this(object + 40, this_ptr + 40);
+    function_48d940_this(object + 52, this_ptr + 52);
+    return object;
 }
 
 // Address range: 0x48dc10 - 0x48dd10
@@ -187047,7 +187026,7 @@ int32_t function_48de90(int32_t a1, int32_t a2) {
                         v3 = v13;
                         v5 = 0x8000200;
                     } else {
-                        int32_t v14 = function_48db40(0x1000001, 0); // 0x48df49
+                        int32_t v14 = function_48db40(*(int32_t *)(v2 + 4)); // 0x48df49
                         int32_t * v15 = (int32_t *)(v14 + 24); // 0x48df50
                         int32_t * v16 = (int32_t *)(v14 + 28); // 0x48df53
                         *v16 = v8;
@@ -191586,7 +191565,7 @@ int32_t function_491340(int32_t a1, int32_t a2, int32_t a3) {
 int32_t function_491400(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x491410
     __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x491400
+    int32_t v2 = retdec_stack_vm(); // hidden __thiscall VM
     int32_t * v3 = (int32_t *)(v2 + 28); // 0x49142a
     int32_t v4 = *v3; // 0x49142a
     int32_t v5 = *(int32_t *)(v4 + 36); // 0x49142d
@@ -193235,8 +193214,7 @@ int32_t function_492890(int32_t a1, int32_t a2) {
 // Address range: 0x492a80 - 0x492c8d
 int32_t function_492a80(int32_t a1, int32_t a2, int32_t a3) {
     // 0x492a80
-    int32_t v1; // 0x492a80
-    int32_t v2 = v1;
+    int32_t v2 = retdec_stack_vm();
     int32_t v3 = __readfsdword(0); // bp-16, 0x492a90
     int32_t v4; // bp-4, 0x492a80
     int32_t v5 = g507 ^ (int32_t)&v4; // bp-48, 0x492a9e
@@ -193466,7 +193444,7 @@ int32_t function_492ed0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     int32_t v2; // bp-4, 0x492ed0
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-96, 0x492eee
     __writefsdword(0, (int32_t)&v1);
-    int32_t v4; // 0x492ed0
+    int32_t v4 = retdec_stack_vm(); // hidden __thiscall VM
     int32_t * v5 = (int32_t *)(v4 + 144); // 0x492efa
     uint32_t v6 = *v5 + 1; // 0x492f00
     if (v6 >= 101) {
@@ -194396,23 +194374,22 @@ int32_t function_493a40(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
             break;
         }
         case 0xa008000: {
-            // 0x493af4
-            v7 = 0x1000001;
+            int32_t new_slot_value[2] = { 0x1000001, 0 };
             function_491820(a1);
-            v8 = a2;
             function_491820(a2);
             function_491820(a3);
-            int32_t v23 = function_497850(*(int32_t *)(a1 + 4), 13, 3, (int32_t)&v7); // 0x493b2e
+            int32_t v23 = function_497850(
+                *(int32_t *)(a1 + 4), 13, 3,
+                (int32_t)(intptr_t)new_slot_value); // 0x493b2e
             if ((char)v23 != 0) {
-                int32_t v24 = function_489f30();
+                retdec_release_squirrel_value(new_slot_value);
                 __writefsdword(0, v1);
-                return v24 & -256 | 1;
+                return 1;
             }
-            // 0x493b37
             function_499a20(v4, "class instances do not support the new slot operator");
-            int32_t v25 = function_489f30(); // 0x493b4f
+            retdec_release_squirrel_value(new_slot_value);
             __writefsdword(0, v1);
-            return v25 & -256;
+            return 0;
         }
         default: {
             // 0x493abc
@@ -195404,7 +195381,7 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 // Address range: 0x494990 - 0x494bed
 int32_t function_494990(int32_t a1, int32_t a2) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x4949a0
-    int32_t v2; // bp-4, 0x494990
+    int32_t v2 = retdec_stack_vm(); // hidden __thiscall VM
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-68, 0x4949ae
     int32_t v4 = &v3; // 0x4949ae
     __writefsdword(0, (int32_t)&v1);
@@ -195424,12 +195401,14 @@ int32_t function_494990(int32_t a1, int32_t a2) {
             if (v14 != NULL) {
                 // 0x494b4a
                 v11 = v13;
-                function_48d390(v13, *(int32_t *)(v12 + 28));
+                function_48d390_this((int32_t)(intptr_t)v14, v13,
+                                     *(int32_t *)(v12 + 28));
                 v15 = &v11;
             }
             int32_t v16 = (int32_t)v14; // 0x494b32
             *(int32_t *)(v15 - 4) = v12 + 24;
-            function_48d940(1);
+            if (v16 != 0)
+                function_48d940(v16 + 24, v12 + 24);
             int32_t * v17 = (int32_t *)(v16 + 4); // 0x494b6b
             *v17 = *v17 + 1;
             v10 = 0x8000040;
@@ -195489,8 +195468,8 @@ int32_t function_494990(int32_t a1, int32_t a2) {
         }
         case 0xa008000: {
             // 0x494a0c
-            int32_t v29; // 0x494990
-            int32_t * v30 = (int32_t *)(function_491400(*(int32_t *)(v29 + 140)) + 4); // 0x494a1d
+            int32_t * v30 = (int32_t *)(
+                function_491400(*(int32_t *)(v2 + 140)) + 4); // 0x494a1d
             *v30 = *v30 + 1;
             v10 = 0xa008000;
             int32_t v31 = &v10; // 0x494a2d
@@ -195512,14 +195491,14 @@ int32_t function_494990(int32_t a1, int32_t a2) {
     if (*(int32_t *)(v8 + 24) != 0) {
         // 0x494a55
         *(int32_t *)(v9 - 4) = (int32_t)&v6;
-        function_491820(1);
+        function_491820((int32_t)(intptr_t)&v6);
         *(int32_t *)(v9 - 8) = a1;
-        function_491820((int32_t)&g1224);
+        function_491820(a1);
         *(int32_t *)(v9 - 12) = (int32_t)&v5;
         *(int32_t *)(v9 - 16) = 2;
         *(int32_t *)(v9 - 20) = 12;
         *(int32_t *)(v9 - 24) = v8;
-        function_497850((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        function_497850(v8, 12, 2, (int32_t)(intptr_t)&v5);
     }
     int32_t * v32 = (int32_t *)a2; // 0x494a7e
     int32_t * v33 = (int32_t *)(a2 + 4); // 0x494a80
@@ -196154,7 +196133,7 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     int32_t v5; // bp-4, 0x495360
     int32_t v6 = g507 ^ (int32_t)&v5; // bp-180, 0x495381
     __writefsdword(0, (int32_t)&v4);
-    int32_t v7; // 0x495360
+    int32_t v7 = retdec_stack_vm(); // hidden __thiscall VM
     int32_t v8 = v7 + 144; // 0x49538d
     int32_t * v9 = (int32_t *)v8; // 0x49538d
     uint32_t v10 = *v9 + 1; // 0x495399
@@ -197105,7 +197084,8 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                         *v343 = 0;
                         v346 = v82 - 8;
                         *(int32_t *)v346 = v342;
-                        function_48d390(v345, (int32_t)&g1224);
+                        function_48d390_this(
+                            v345, *v47, 0);
                     }
                     int32_t * v347 = (int32_t *)(v345 + 4); // 0x4964d0
                     *v347 = *v347 + 1;
@@ -199024,132 +199004,95 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 }
 
 // Address range: 0x497680 - 0x49784d
-int32_t function_497680(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x497690
-    __writefsdword(0, (int32_t)&v1);
-    char v2; // bp+19, 0x497680
-    int32_t v3; // bp-24, 0x497680
-    int32_t v4; // bp-32, 0x497680
-    int32_t v5; // 0x497704
-    switch (*(int32_t *)a1) {
-        case 0x8000100: {
-            // 0x497819
-            int32_t v6; // 0x497680
-            int32_t v7 = *(int32_t *)(v6 + 48); // 0x497826
-            int32_t result = function_495360(a1, v7 - a2, a2, a3, a4, a5, 0, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x497834
-            __writefsdword(0, v1);
+static int32_t function_497680_this(int32_t this_ptr, int32_t object_ptr,
+                                     int32_t a3, int32_t a4, int32_t a5,
+                                     int32_t a6) {
+    int32_t result;
+    int32_t value[2];
+    int32_t nested_value[2] = { g483, g484 };
+
+    if (object_ptr == 0)
+        return 0;
+
+    switch (*(int32_t *)(intptr_t)object_ptr) {
+        case 0x8000100:
+            result = function_495360(
+                object_ptr,
+                (this_ptr != 0 ? *(int32_t *)(intptr_t)(this_ptr + 48) : 0) - a3,
+                a3, a4, a5, a6, 0,
+                (int32_t)(intptr_t)&g1224,
+                (int32_t)(intptr_t)&g1224,
+                (int32_t)(intptr_t)&g1224);
+            return result;
+
+        case 0x8000200: {
+            unsigned char marker = 0;
+            result = function_492ed0(
+                *(int32_t *)(intptr_t)(object_ptr + 4), a3, a4, a5,
+                (int32_t)(intptr_t)&marker);
             return result;
         }
-        case 0x8000200: {
-            int32_t v8 = *(int32_t *)(a1 + 4); // 0x4977ed
-            int32_t result2 = function_492ed0(v8, a2, a3, a4, (int32_t)&v2); // 0x497800
-            __writefsdword(0, v1);
-            return result2;
-        }
-        case 0x8004000: {
-            // 0x4976e5
-            v3 = 0x1000001;
-            v4 = 0x1000001;
-            v5 = &v3;
-            int32_t v9 = function_4915b0(*(int32_t *)(a1 + 4), a4, v5); // 0x49770d
-            if (v3 == 0x1000001) {
-                // 0x4977d4
-                __writefsdword(0, v1);
-                return v9 & -256 | 1;
+
+        case 0x8004000:
+            value[0] = g483;
+            value[1] = g484;
+            if ((char)function_4915b0(
+                    *(int32_t *)(intptr_t)(object_ptr + 4), a5,
+                    (int32_t)(intptr_t)value) != 0 &&
+                value[0] == 0x1000001) {
+                return 1;
             }
-            // break -> 0x49771b
             break;
-        }
-        default: {
-            // 0x4976cf
-            __writefsdword(0, v1);
-            return a1 & -256;
-        }
+
+        default:
+            return *(int32_t *)(intptr_t)object_ptr & -256;
     }
-    // 0x49771b
-    function_489f50(a4);
-    int32_t v10 = function_497680(v5, a2, a3, (int32_t)&v4, a5); // 0x49773d
-    v2 = v10;
-    int32_t v11 = v10; // 0x497753
-    if ((v4 & 0x8000000) != 0) {
-        int32_t v12 = *(int32_t *)4 - 1; // 0x497758
-        *(int32_t *)4 = v12;
-        v11 = 0;
-        if (v12 == 0) {
-            // 0x49775d
-            abort();
-            // UNREACHABLE
-        }
-    }
-    // 0x497767
-    if ((v3 & 0x8000000) == 0) {
-        // 0x497781
-        __writefsdword(0, v1);
-        return v11 & -256 | v10 & 255;
-    }
-    int32_t v13 = *(int32_t *)4 - 1; // 0x497772
-    *(int32_t *)4 = v13;
-    if (v13 != 0) {
-        // 0x497781
-        __writefsdword(0, v1);
-        return v10 & 255;
-    }
-    // 0x497777
-    abort();
-    // UNREACHABLE
+
+    retdec_release_squirrel_value((int32_t *)(intptr_t)a5);
+    result = function_497680_this(this_ptr, (int32_t)(intptr_t)value,
+                                  a3, a4, (int32_t)(intptr_t)nested_value,
+                                  a6);
+    retdec_release_squirrel_value(nested_value);
+    retdec_release_squirrel_value(value);
+    return result;
+}
+
+int32_t function_497680(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                        int32_t a5) {
+    int32_t vm = retdec_stack_vm();
+    return function_497680_this(vm, a1, a2, a3, a4, a5);
 }
 
 // Address range: 0x497850 - 0x497940
-int32_t function_497850(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x497860
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2 = 0x1000001; // bp-24, 0x497879
-    int32_t v3; // bp-48, 0x497850
-    int32_t * v4 = &v3; // 0x4978a6
-    if ((char)*(int32_t *)(*(int32_t *)a1 + 16) != 0) {
-        int32_t v5 = &v2; // 0x4978b8
-        int32_t v6 = v5; // bp-68, 0x4978b8
-        int32_t v7; // 0x497850
-        int32_t v8 = function_497680(v5, a3, *(int32_t *)(v7 + 48) - a3, a4, 0); // 0x4978bb
-        v4 = &v6;
-        if ((char)v8 != 0) {
-            // 0x4978c4
-            function_4917b0(a3);
-            if ((v2 & 0x8000000) == 0) {
-                // 0x4978ed
-                __writefsdword(0, v1);
-                return -255;
-            }
-            int32_t v9 = *(int32_t *)4 - 1; // 0x4978de
-            *(int32_t *)4 = v9;
-            if (v9 != 0) {
-                // 0x4978ed
-                __writefsdword(0, v1);
-                return -255;
-            }
-            // 0x4978e3
-            abort();
-            // UNREACHABLE
+static int32_t function_497850_this(int32_t this_ptr, int32_t object_ptr,
+                                     int32_t a3, int32_t a4, int32_t a5) {
+    int32_t value[2] = { g483, g484 };
+    int32_t method;
+    int32_t result;
+
+    if (this_ptr == 0 || object_ptr == 0)
+        return 0;
+    method = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)object_ptr + 16);
+    if (method != 0) {
+        result = retdec_call_thiscall3_result(
+            (void *)(intptr_t)object_ptr, (void *)(intptr_t)method,
+            this_ptr, a3, (int32_t)(intptr_t)value);
+        if (result != 0 &&
+            function_497680_this(
+                this_ptr, (int32_t)(intptr_t)value, a4,
+                *(int32_t *)(intptr_t)(this_ptr + 48) - a4, a5, 0) != 0) {
+            function_4917b0_this(this_ptr, a4);
+            retdec_release_squirrel_value(value);
+            return 1;
         }
     }
-    // 0x497902
-    *(int32_t *)((int32_t)v4 - 4) = a3;
-    function_4917b0((int32_t)&g1224);
-    if ((v2 & 0x8000000) == 0) {
-        // 0x49792b
-        __writefsdword(0, v1);
-        return -256;
-    }
-    int32_t v10 = *(int32_t *)4 - 1; // 0x49791c
-    *(int32_t *)4 = v10;
-    if (v10 != 0) {
-        // 0x49792b
-        __writefsdword(0, v1);
-        return -256;
-    }
-    // 0x497921
-    abort();
-    // UNREACHABLE
+    function_4917b0_this(this_ptr, a4);
+    retdec_release_squirrel_value(value);
+    return 0;
+}
+
+int32_t function_497850(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
+    return function_497850_this(retdec_stack_vm(), a1, a2, a3, a4);
 }
 
 // Address range: 0x497940 - 0x497984
@@ -212670,7 +212613,7 @@ int32_t function_4a3a50(int32_t a1) {
         if (v37 != 0) {
             int32_t v40 = *v6; // 0x4a402f
             *v31 = 36;
-            int32_t * v41 = _malloc(v40); // 0x4a403a
+            int32_t * v41 = _malloc(36); // 0x4a403a
             int32_t v42 = (int32_t)v41; // 0x4a403a
             int32_t v43 = v29; // 0x4a4050
             if (v41 != NULL) {
@@ -212678,7 +212621,7 @@ int32_t function_4a3a50(int32_t a1) {
                 *v31 = v37;
                 v43 = v12 - 32;
                 *(int32_t *)v43 = v40;
-                function_48d390(v42, v42);
+                function_48d390_this(v42, v40, v37);
             }
             int32_t * v44 = (int32_t *)(v42 + 4); // 0x4a4061
             *v44 = *v44 + 1;
@@ -212785,7 +212728,7 @@ int32_t function_4a3a50(int32_t a1) {
         *v64 = 36;
         int32_t * v65 = (int32_t *)(v61 + 60); // 0x4a3af5
         int32_t v66 = *v65 + (int32_t)(*v63 != 0); // 0x4a3af5
-        int32_t * v67 = _malloc(v62); // 0x4a3afb
+        int32_t * v67 = _malloc(36); // 0x4a3afb
         int32_t v68 = (int32_t)v67; // 0x4a3afb
         int32_t v69 = v12; // 0x4a3b14
         if (v67 != NULL) {
@@ -212793,7 +212736,7 @@ int32_t function_4a3a50(int32_t a1) {
             *v64 = v66;
             v69 = v12 - 8;
             *(int32_t *)v69 = v62;
-            function_48d390(v68, v68);
+            function_48d390_this(v68, v62, 0);
         }
         // 0x4a3b25
         v16 = 0x8000040;
@@ -213063,7 +213006,7 @@ int32_t function_4a41a0(int32_t a1) {
         if (v13 != NULL) {
             // 0x4a4290
             v8 = v12;
-            function_48d390(v12, v11);
+            function_48d390_this(v14, v12, v11);
             v7 = &v8;
             v6 = v14;
         }
@@ -213074,7 +213017,7 @@ int32_t function_4a41a0(int32_t a1) {
         if (v16 != NULL) {
             // 0x4a420d
             v8 = v15;
-            function_48d390(v15, 0);
+            function_48d390_this((int32_t)(intptr_t)v16, v15, 0);
             v17 = &v8;
         }
         int32_t v18 = v5 + 4;
@@ -218464,18 +218407,32 @@ int32_t function_4a9730(int32_t a1, int32_t a2) {
 
 // Address range: 0x4a97b0 - 0x4a9839
 int32_t function_4a97b0(char a1, int32_t a2) {
-    int32_t v1 = a1;
-    int32_t v2 = function_48aa20((int32_t)g644); // 0x4a97c0
-    int32_t v3; // 0x4a97b0
-    int32_t v4 = *(int32_t *)(v3 + 4); // 0x4a97c8
-    function_48ab90((int32_t)g644, v4, *(int32_t *)(v3 + 8));
-    int32_t v5 = *(int32_t *)(v1 + 8); // 0x4a97dd
-    function_48ab90((int32_t)g644, *(int32_t *)(v1 + 4), v5);
-    int32_t v6 = *(int32_t *)(a2 + 4); // 0x4a97f6
-    function_48ab90((int32_t)g644, v6, *(int32_t *)(a2 + 8));
-    int32_t v7 = function_48cb10((int32_t)g644, -3); // 0x4a980f
-    function_48c910((int32_t)g644, v2);
-    return v7 > -1;
+    (void)a1;
+    (void)a2;
+    /* Repaired callers pass the lost __thiscall receiver explicitly. */
+    return 0;
+}
+
+static int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2,
+                                    int32_t a3) {
+    int32_t stack_base;
+    int32_t result;
+
+    if (this_ptr == 0 || a2 == 0 || a3 == 0)
+        return 0;
+    stack_base = function_48aa20((int32_t)g644);
+    function_48ab90((int32_t)g644,
+                    *(int32_t *)(intptr_t)(this_ptr + 4),
+                    *(int32_t *)(intptr_t)(this_ptr + 8));
+    function_48ab90((int32_t)g644,
+                    *(int32_t *)(intptr_t)(a2 + 4),
+                    *(int32_t *)(intptr_t)(a2 + 8));
+    function_48ab90((int32_t)g644,
+                    *(int32_t *)(intptr_t)(a3 + 4),
+                    *(int32_t *)(intptr_t)(a3 + 8));
+    result = function_48cb10((int32_t)g644, -3) > -1;
+    function_48c910((int32_t)g644, (uint32_t)stack_base);
+    return result;
 }
 
 // Address range: 0x4a9840 - 0x4a98c5
@@ -218556,9 +218513,14 @@ int32_t function_4a99f0(void) {
 // From class:    .?AUSQBlob@@
 // Type:          virtual member function
 int32_t function_4a9a30(void) {
-    // 0x4a9a30
-    int32_t v1; // 0x4a9a30
-    return *(int32_t *)(v1 + 4);
+    /* The generated no-argument wrapper has no valid ECX receiver. */
+    return 0;
+}
+
+static int32_t function_4a9a30_this(int32_t object_ptr) {
+    if (object_ptr == 0)
+        return 0;
+    return *(int32_t *)(intptr_t)(object_ptr + 4);
 }
 
 // Address range: 0x4a9a40 - 0x4a9ac0
@@ -218599,17 +218561,23 @@ int32_t function_4a9ac0(int32_t a1) {
 
 // Address range: 0x4a9b40 - 0x4a9ba4
 int32_t function_4a9b40(int32_t a1) {
-    // 0x4a9b40
-    int32_t v1; // 0x4a9b40
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4a9b47
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
-    int32_t result; // bp-8, 0x4a9b40
-    if (function_48c890((int32_t)g644, -1, &result, a1) < 0) {
-        // 0x4a9b75
+    (void)a1;
+    /* Repaired callers pass the lost __thiscall receiver explicitly. */
+    return 0;
+}
+
+static int32_t function_4a9b40_this(int32_t object_ptr, int32_t index) {
+    int32_t result = object_ptr;
+
+    if (object_ptr == 0)
+        return 0;
+    function_48ab90((int32_t)g644,
+                    *(int32_t *)(intptr_t)(object_ptr + 4),
+                    *(int32_t *)(intptr_t)(object_ptr + 8));
+    if (function_48c890((int32_t)g644, -1, &result, index) < 0) {
         function_48ac70((int32_t)g644);
         result = 0;
     }
-    // 0x4a9b8a
     function_48aa30((int32_t)g644, 1);
     return result;
 }
@@ -219020,7 +218988,7 @@ int32_t function_4aa540(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
         return 0;
     }
     // 0x4aa5ab
-    function_4a9660(-1);
+    function_4a9660_this(a2, -1);
     function_48c780(a1, -1, (int32_t)a3);
     function_48c950(a1, -3, 0);
     function_48aa30(a1, 1);
