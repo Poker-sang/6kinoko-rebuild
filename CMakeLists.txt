@@ -36,8 +36,19 @@ add_executable(kinoko_retdec_rebuild WIN32
 )
 target_include_directories(kinoko_retdec_rebuild PRIVATE src/decompiled)
 target_compile_definitions(kinoko_retdec_rebuild PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+option(KINOKO_RETDEC_DISABLE_TRACE
+    "Disable RetDec runtime trace file writes for differential startup tests"
+    OFF)
+set(KINOKO_RETDEC_MAP_FILE "" CACHE FILEPATH
+    "Optional linker map file for the RetDec runtime target")
+if(KINOKO_RETDEC_DISABLE_TRACE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_DISABLE_TRACE)
+endif()
 target_compile_options(kinoko_retdec_rebuild PRIVATE /TC /Gy /wd4100 /wd4244 /wd4267 /wd4706)
 target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF)
+if(KINOKO_RETDEC_MAP_FILE)
+    target_link_options(kinoko_retdec_rebuild PRIVATE "/MAP:${KINOKO_RETDEC_MAP_FILE}")
+endif()
 set(KINOKO_D3DX9_33_LIB "${CMAKE_SOURCE_DIR}/third_party/d3dx9_33.lib")
 target_link_libraries(kinoko_retdec_rebuild PRIVATE
     user32

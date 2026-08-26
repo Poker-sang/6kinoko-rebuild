@@ -4308,6 +4308,9 @@ static int32_t function_48d940_this(int32_t this_ptr, int32_t source_ptr);
 static int32_t function_48ba20_this(int32_t this_ptr, int32_t shared_state,
                                     int32_t base_ptr);
 static int32_t function_48d1b0_this(int32_t this_ptr, int32_t * value);
+static int32_t function_4a58b0_this(int32_t funcstate, int32_t * source);
+static int32_t function_4a5ba0_this(int32_t funcstate, int32_t * source);
+static int32_t function_49da60_this(int32_t compiler_ptr, int32_t * name);
 static int32_t function_48d310_this(int32_t this_ptr, uint32_t count,
                                     int32_t * value);
 static int32_t function_48d9f0_this(int32_t this_ptr, int32_t source_ptr);
@@ -4496,6 +4499,10 @@ static int32_t function_497e30_this(int32_t table_ptr, int32_t *key_ptr,
 int32_t function_497b10(int32_t a1, int32_t a2);
 static int32_t function_497b10_this(int32_t this_ptr, int32_t key_ptr, int32_t value_ptr);
 int32_t function_497d30(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+static int32_t function_497d30_this(int32_t this_ptr, int32_t register_arg,
+                                    char raw, int32_t index_ptr,
+                                    int32_t out_key_ptr,
+                                    int32_t out_value_ptr);
 int32_t function_497e30(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_497f10(void);
 int32_t function_497fd0(void);
@@ -4519,6 +4526,9 @@ int32_t function_4986b0(void);
 int32_t function_498730(int32_t a1);
 int32_t function_498770(int32_t a1);
 int32_t function_4987a0(int32_t a1, int32_t a2, int32_t a3);
+static int32_t function_4987a0_this(int32_t this_ptr, int32_t index_ptr,
+                                    int32_t out_key_ptr,
+                                    int32_t out_value_ptr);
 int32_t function_4988e0(int32_t a1, int32_t a2);
 int32_t function_498a30(int32_t a1, int32_t * a2);
 int32_t function_498b60(int32_t a1, int32_t a2, int32_t a3);
@@ -181447,10 +181457,20 @@ static void retdec_squirrel_addref(int32_t type, int32_t data) {
 }
 
 static void retdec_squirrel_release(int32_t type, int32_t data) {
+    int32_t before;
+
     if ((type & 0x08000000) == 0 || data == 0)
         return;
-    if (*(int32_t *)(data + 4) > 0)
+    before = *(int32_t *)(data + 4);
+    if (type == 0x08004000) {
+        retdec_trace_i32("sq-release-type", type);
+        retdec_trace_i32("sq-release-data", data);
+        retdec_trace_i32("sq-release-before", before);
+    }
+    if (before > 0)
         --*(int32_t *)(data + 4);
+    if (type == 0x08004000)
+        retdec_trace_i32("sq-release-after", *(int32_t *)(data + 4));
     /*
      * The generated virtual destructors still have lost this pointers.  A
      * zero-count object is therefore retained until the runtime is complete;
@@ -181699,6 +181719,11 @@ static int32_t retdec_ref_table_release(int32_t shared_state,
     if (node == 0) {
         retdec_trace("ref-table-release-miss");
         return 0;
+    }
+    if (type == 0x08004000) {
+        retdec_trace_i32("ref-release-node", node);
+        retdec_trace_i32("ref-release-refs",
+                         *(int32_t *)(intptr_t)(node + 8));
     }
     if (*(int32_t *)(intptr_t)(node + 8) > 1) {
         --*(int32_t *)(intptr_t)(node + 8);
@@ -182842,6 +182867,8 @@ retry:
         return 0;
     hash = retdec_squirrel_key_hash((const int32_t *)(intptr_t)key_ptr);
     bucket = data + 20 * (int32_t)(hash & (capacity - 1));
+    retdec_trace_i32("497b10:bucket", bucket);
+    retdec_trace_i32("497b10:free-before", *(int32_t *)(this_ptr + 28));
     entry = bucket;
     while (entry != 0) {
         if (*(int32_t *)(entry + 8) == *(int32_t *)key_ptr &&
@@ -182915,6 +182942,9 @@ retry:
         (int32_t *)(intptr_t)(slot + 8),
         (const int32_t *)(intptr_t)key_ptr);
     retdec_trace("497b10:after-key");
+    retdec_trace_i32("497b10:slot", slot);
+    retdec_trace_i32("497b10:slot-key-type", *(int32_t *)(slot + 8));
+    retdec_trace_i32("497b10:slot-key-data", *(int32_t *)(slot + 12));
 
     /* Advance the free-node cursor before publishing the value.  The original
      * routine retries from the key lookup after a grow, so the value must not
@@ -182941,10 +182971,87 @@ retry:
         (int32_t *)(intptr_t)slot,
         (const int32_t *)(intptr_t)value_ptr);
     retdec_trace("497b10:after-value");
+    retdec_trace_i32("497b10:slot-value-type", *(int32_t *)slot);
+    retdec_trace_i32("497b10:slot-value-data", *(int32_t *)(slot + 4));
+    retdec_trace_i32("497b10:free-after", *(int32_t *)(this_ptr + 28));
     ++*(int32_t *)(this_ptr + 40);
     retdec_trace_i32("497b10:count", *(int32_t *)(this_ptr + 40));
     retdec_trace("497b10:return");
     return 1;
+}
+
+/* Exact adapter for SQTable::Next().  IDA's prototype has two register
+ * arguments and two output SQObject pairs in addition to the stack args. */
+static int32_t function_497d30_this(int32_t this_ptr, int32_t register_arg,
+                                    char raw, int32_t index_ptr,
+                                    int32_t out_key_ptr,
+                                    int32_t out_value_ptr) {
+    int32_t index;
+    int32_t capacity;
+    int32_t data;
+    int32_t entry;
+    int32_t old_key[2];
+    int32_t old_value[2];
+    int32_t new_key[2];
+    int32_t new_value[2];
+    int32_t value_data;
+
+    (void)register_arg;
+    if (this_ptr == 0 || index_ptr == 0 ||
+        out_key_ptr == 0 || out_value_ptr == 0)
+        return -1;
+
+    index = function_48e4b0(index_ptr);
+    capacity = *(int32_t *)(intptr_t)(this_ptr + 36);
+    if (index < 0 || index >= capacity)
+        return -1;
+
+    data = *(int32_t *)(intptr_t)(this_ptr + 32);
+    if (data == 0)
+        return -1;
+
+    entry = data + 20 * index;
+    while (*(int32_t *)(intptr_t)(entry + 8) == g483) {
+        ++index;
+        if (index >= capacity)
+            return -1;
+        entry += 20;
+    }
+
+    old_key[0] = *(int32_t *)(intptr_t)out_key_ptr;
+    old_key[1] = *(int32_t *)(intptr_t)(out_key_ptr + 4);
+    old_value[0] = *(int32_t *)(intptr_t)out_value_ptr;
+    old_value[1] = *(int32_t *)(intptr_t)(out_value_ptr + 4);
+
+    new_key[0] = *(int32_t *)(intptr_t)(entry + 8);
+    new_key[1] = *(int32_t *)(intptr_t)(entry + 12);
+    *(int32_t *)(intptr_t)out_key_ptr = new_key[0];
+    *(int32_t *)(intptr_t)(out_key_ptr + 4) = new_key[1];
+    retdec_squirrel_addref(new_key[0], new_key[1]);
+    retdec_squirrel_release(old_key[0], old_key[1]);
+
+    if (raw != 0) {
+        new_value[0] = *(int32_t *)(intptr_t)entry;
+        new_value[1] = *(int32_t *)(intptr_t)(entry + 4);
+    } else if (*(int32_t *)(intptr_t)entry == 0x08010000) {
+        value_data = *(int32_t *)(intptr_t)(entry + 4);
+        if (value_data != 0) {
+            new_value[0] = *(int32_t *)(intptr_t)(value_data + 12);
+            new_value[1] = *(int32_t *)(intptr_t)(value_data + 16);
+        } else {
+            new_value[0] = g483;
+            new_value[1] = g484;
+        }
+    } else {
+        new_value[0] = *(int32_t *)(intptr_t)entry;
+        new_value[1] = *(int32_t *)(intptr_t)(entry + 4);
+    }
+
+    *(int32_t *)(intptr_t)out_value_ptr = new_value[0];
+    *(int32_t *)(intptr_t)(out_value_ptr + 4) = new_value[1];
+    retdec_squirrel_addref(new_value[0], new_value[1]);
+    retdec_squirrel_release(old_value[0], old_value[1]);
+    return index + 1;
 }
 
 static void retdec_table_set_delegate(int32_t table_ptr, int32_t delegate_ptr) {
@@ -183034,7 +183141,7 @@ static int32_t function_4980a0_this(int32_t this_ptr, char grow) {
     if (old_capacity < 4)
         old_capacity = 4;
     count = (uint32_t)*(int32_t *)(this_ptr + 40);
-    quarter = old_capacity / 4;
+    quarter = (old_capacity + 3) / 4;
     if (count < old_capacity - quarter) {
         if (count > quarter || old_capacity <= 4) {
             if (!grow)
@@ -195708,7 +195815,8 @@ int32_t function_494da0(int32_t * a1, int32_t * a2, int32_t * a3, int32_t a4, in
             case 0x8004000: {
                 // 0x494eb4
                 v9 = (char *)a4;
-                int32_t v14 = function_4987a0(a4, v3, v2); // 0x494ec3
+                int32_t v14 = function_4987a0_this(
+                    *(int32_t *)(a1 + 4), a4, v3, v2); // 0x494ec3
                 if (v14 == -1) {
                     // 0x494ed1
                     *a7 = a6;
@@ -200506,6 +200614,57 @@ int32_t function_498770(int32_t a1) {
     }
     // 0x498791
     return a1 & -256 | 1;
+}
+
+/* Exact adapter for SQArray::Next().  The decompiler lost the receiver in
+ * ECX and also omitted the post-processing of the temporary value returned
+ * by SQTable::Next(). */
+static int32_t function_4987a0_this(int32_t this_ptr, int32_t index_ptr,
+                                    int32_t out_key_ptr,
+                                    int32_t out_value_ptr) {
+    int32_t temporary_value[2] = { g483, g484 };
+    int32_t result;
+    int32_t value_data;
+    int32_t source_ptr;
+    int32_t source_value[2];
+
+    if (this_ptr == 0 || index_ptr == 0 ||
+        out_key_ptr == 0 || out_value_ptr == 0)
+        return -1;
+
+    result = function_497d30_this(
+        this_ptr + 0x18, 0, 0, index_ptr, out_key_ptr,
+        (int32_t)(intptr_t)temporary_value);
+    if (result != -1) {
+        value_data = temporary_value[1];
+        if ((value_data & 0x01000000) != 0) {
+            source_ptr = *(int32_t *)(intptr_t)(this_ptr + 0x2c);
+            if (source_ptr != 0) {
+                source_ptr += 16 * (value_data & 0x00ffffff);
+                retdec_squirrel_assign(
+                    (int32_t *)(intptr_t)out_value_ptr,
+                    (const int32_t *)(intptr_t)source_ptr);
+            }
+        } else {
+            source_ptr = *(int32_t *)(intptr_t)(this_ptr + 0x20);
+            if (source_ptr != 0) {
+                source_ptr += 16 * (value_data & 0x00ffffff);
+                if (*(int32_t *)(intptr_t)source_ptr == 0x08010000) {
+                    retdec_squirrel_assign(
+                        (int32_t *)(intptr_t)out_value_ptr,
+                        (const int32_t *)(intptr_t)(source_ptr + 12));
+                } else {
+                    source_value[0] = *(int32_t *)(intptr_t)source_ptr;
+                    source_value[1] = *(int32_t *)(intptr_t)(source_ptr + 4);
+                    retdec_squirrel_assign(
+                        (int32_t *)(intptr_t)out_value_ptr, source_value);
+                }
+            }
+        }
+    }
+
+    retdec_squirrel_release(temporary_value[0], temporary_value[1]);
+    return result;
 }
 
 // Address range: 0x4987a0 - 0x4988d2
@@ -206601,7 +206760,7 @@ int32_t function_49da60(int32_t a1) {
     int32_t v11 = &v10; // 0x49daeb
     int32_t v12 = function_4a47e0(v11, (int32_t)"this", -1); // 0x49daef
     int32_t v13 = v12; // bp-84, 0x49daf4
-    function_4a5ba0(v12);
+    function_4a5ba0_this(v3, (int32_t *)(intptr_t)v12);
     int32_t * v14 = (int32_t *)(v3 + 148); // 0x49daff
     int32_t v15 = *v14; // 0x49daff
     int32_t * v16 = (int32_t *)(v3 + 144); // 0x49db05
@@ -206652,7 +206811,7 @@ int32_t function_49da60(int32_t a1) {
             v26 = *(int32_t *)function_49cf80(&g1224, (int32_t)&g1224);
             int32_t v43 = v37 - 12; // 0x49db73
             *(int32_t *)v43 = v28;
-            function_4a5ba0(v26);
+            function_4a5ba0_this(v3, (int32_t *)(intptr_t)v26);
             int32_t v44; // 0x49da60
             int32_t v45; // 0x49da60
             int32_t v46; // 0x49da60
@@ -214384,8 +214543,7 @@ static int32_t function_4a58b0_legacy(int32_t * a1) {
 }
 
 /* Explicit receiver for SQFuncState::AddLocalVariable. */
-int32_t function_4a58b0(int32_t *source) {
-    int32_t funcstate = retdec_funcstate_this();
+static int32_t function_4a58b0_this(int32_t funcstate, int32_t *source) {
     int32_t record[5] = { 0, 0, 0, 0, 0 };
     int32_t source_type;
     int32_t source_data;
@@ -214410,6 +214568,10 @@ int32_t function_4a58b0(int32_t *source) {
         *(int32_t *)(funcstate + 28) = *(int32_t *)(funcstate + 8);
     retdec_squirrel_release(source_type, source_data);
     return previous_count;
+}
+
+int32_t function_4a58b0(int32_t *source) {
+    return function_4a58b0_this(retdec_funcstate_this(), source);
 }
 
 // Address range: 0x4a5960 - 0x4a5b9a
@@ -214574,34 +214736,31 @@ int32_t function_4a5960(int32_t a1) {
 }
 
 // Address range: 0x4a5ba0 - 0x4a5c28
-int32_t function_4a5ba0(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4a5bb0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t * v2 = (int32_t *)a1; // 0x4a5bce
-    function_4a58b0(v2);
-    int32_t v3 = *v2; // 0x4a5bd3
-    int32_t v4 = *(int32_t *)(a1 + 4); // 0x4a5bd5
-    int32_t v5 = v3; // bp-24, 0x4a5bd8
-    if ((v3 & 0x8000000) == 0) {
-        // 0x4a5be9
-        function_48d1b0(&v5);
-        // 0x4a5c14
-        __writefsdword(0, v1);
-        return -1;
-    }
-    int32_t * v6 = (int32_t *)(v4 + 4);
-    *v6 = *v6 + 1;
-    function_48d1b0(&v5);
-    int32_t v7 = *v6 - 1; // 0x4a5c06
-    *v6 = v7;
-    int32_t result = -1; // 0x4a5c09
-    if (v7 == 0) {
-        // 0x4a5c0b
-        result = *(int32_t *)(*(int32_t *)v4 + 4);
-    }
-    // 0x4a5c14
-    __writefsdword(0, v1);
+static int32_t function_4a5ba0_this(int32_t funcstate, int32_t *source) {
+    int32_t value[2];
+    int32_t source_type;
+    int32_t source_data;
+    int32_t result = -1;
+
+    if (funcstate == 0 || source == 0)
+        return 0;
+    function_4a58b0_this(funcstate, source);
+
+    source_type = source[0];
+    source_data = source[1];
+    value[0] = source_type;
+    value[1] = source_data;
+    if ((source_type & 0x08000000) != 0)
+        retdec_squirrel_addref(source_type, source_data);
+    function_48d1b0_this(funcstate + 72, value);
+    if ((source_type & 0x08000000) != 0)
+        retdec_squirrel_release(source_type, source_data);
     return result;
+}
+
+int32_t function_4a5ba0(int32_t a1) {
+    return function_4a5ba0_this(retdec_funcstate_this(),
+                                (int32_t *)(intptr_t)a1);
 }
 
 // Address range: 0x4a5c30 - 0x4a5e61

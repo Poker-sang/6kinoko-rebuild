@@ -9,6 +9,15 @@
 
 void retdec_trace(const char *message)
 {
+#if defined(RETDEC_DISABLE_TRACE)
+    /* Keep only crash diagnostics in the no-trace differential build. */
+    if (message == NULL ||
+        (strncmp(message, "veh:", 4) != 0 &&
+         strncmp(message, "veh-frame:", 10) != 0 &&
+         strncmp(message, "seh:", 4) != 0)) {
+        return;
+    }
+#endif
     char path[MAX_PATH];
     HANDLE file;
     DWORD written;
@@ -121,6 +130,10 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     ULONG_PTR previous_frame;
     ULONG_PTR return_address;
     ULONG_PTR stack_words[4];
+    ULONG_PTR frame_returns[8];
+    ULONG_PTR frame_cursor;
+    ULONG frame_count;
+    ULONG frame_index;
 
     if (exception_pointers == NULL || exception_pointers->ExceptionRecord == NULL) {
         return EXCEPTION_CONTINUE_SEARCH;
@@ -144,6 +157,11 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     stack_words[1] = 0;
     stack_words[2] = 0;
     stack_words[3] = 0;
+    for (frame_index = 0; frame_index < 8; ++frame_index) {
+        frame_returns[frame_index] = 0;
+    }
+    frame_count = 0;
+    frame_cursor = 0;
     if (record->ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
         record->NumberParameters >= 2) {
         fault_address = record->ExceptionInformation[1];
@@ -159,6 +177,20 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
             stack_words[1] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 4);
             stack_words[2] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 8);
             stack_words[3] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 12);
+            frame_cursor = context->Ebp;
+            for (frame_index = 0; frame_index < 8 && frame_cursor != 0;
+                 ++frame_index) {
+                ULONG_PTR next_frame = *(ULONG_PTR *)(uintptr_t)frame_cursor;
+                ULONG_PTR frame_return =
+                    *(ULONG_PTR *)(uintptr_t)(frame_cursor + 4);
+                frame_returns[frame_index] = frame_return;
+                ++frame_count;
+                if (next_frame <= frame_cursor ||
+                    next_frame - frame_cursor > 0x100000) {
+                    break;
+                }
+                frame_cursor = next_frame;
+            }
         } __except (EXCEPTION_EXECUTE_HANDLER) {
             previous_frame = 0;
             return_address = 0;
@@ -166,6 +198,7 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
             stack_words[1] = 0;
             stack_words[2] = 0;
             stack_words[3] = 0;
+            frame_count = 0;
         }
         if (module_base != 0 && return_address >= module_base) {
             ret_rva = return_address - module_base;
@@ -195,9 +228,15 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
               context != NULL ? (unsigned long)context->Esi : 0,
               context != NULL ? (unsigned long)context->Edi : 0);
     retdec_trace(message);
-    if (record->ExceptionCode == STATUS_HEAP_CORRUPTION) {
-        retdec_write_crash_dump(exception_pointers);
+    for (frame_index = 0; frame_index < frame_count; ++frame_index) {
+        wsprintfA(message, "veh-frame:%lu=0x%08lX",
+                  (unsigned long)frame_index,
+                  (unsigned long)frame_returns[frame_index]);
+        retdec_trace(message);
     }
+    /* MiniDumpWithFullMemory can fault again after heap corruption.  Keep the
+       first exception context intact; the outer filter may still attempt the
+       dump once the vectored handler returns. */
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
