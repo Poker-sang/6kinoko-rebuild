@@ -4358,6 +4358,8 @@ int32_t function_48e4b0(int32_t a1);
 int32_t function_48e4d0(void);
 int32_t function_48e4f0(void);
 int32_t function_48e520(int32_t a1);
+static int32_t function_48e4d0_this(int32_t this_ptr);
+static int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr);
 int32_t function_48e580(int32_t a1);
 int32_t function_48e600(int32_t a1);
 int32_t function_48e640(int32_t a1, int32_t a2, int32_t a3, int32_t * a4);
@@ -4514,6 +4516,13 @@ static int32_t function_4980a0_this(int32_t this_ptr, char grow);
 int32_t function_4981e0(void);
 int32_t function_498200(void);
 int32_t function_4982f0(char a1);
+static int32_t function_498200_this(int32_t this_ptr);
+static int32_t function_4982f0_this(int32_t this_ptr, char flags);
+#if defined(_MSC_VER) && defined(_M_IX86)
+static int32_t retdec_sqtable_delete_bridge(char flags);
+#else
+static int32_t retdec_sqtable_delete_bridge(char flags);
+#endif
 int32_t function_498320(int32_t a1, int32_t a2);
 static int32_t function_498320_this(int32_t table_ptr, int32_t key_ptr);
 int32_t function_498440(void);
@@ -8097,7 +8106,7 @@ struct vtable_4da554_type g73 = {
     .e3 = function_491c10
 }; // 0x4da554
 struct vtable_4da87c_type g74 = {
-    .e0 = function_4982f0,
+    .e0 = retdec_sqtable_delete_bridge,
     .e1 = function_498080,
     .e2 = function_48ef70,
     .e3 = function_497fd0,
@@ -181478,6 +181487,110 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
      * temporary SquirrelObject from calling an invalid decompiler stub.
     */
 }
+
+/* Explicit receivers for the Squirrel base/table methods whose ECX was
+ * dropped by RetDec.  These are kept beside the compatibility ref helpers so
+ * object cleanup uses the same direct SQObjectPtr reference semantics. */
+static int32_t function_48e4d0_this(int32_t this_ptr) {
+    int32_t weakref;
+
+    if (this_ptr == 0)
+        return 0;
+    weakref = *(int32_t *)(intptr_t)(this_ptr + 8);
+    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g65;
+    if (weakref != 0) {
+        *(int32_t *)(intptr_t)(weakref + 12) = 0x1000001;
+        *(int32_t *)(intptr_t)(weakref + 16) = 0;
+    }
+    return weakref;
+}
+
+static int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr) {
+    int32_t candidate;
+    int32_t old_delegate;
+    int32_t released_object;
+
+    if (this_ptr == 0)
+        return 0;
+    if (this_ptr == delegate_ptr)
+        return delegate_ptr & -256;
+
+    if (delegate_ptr != 0) {
+        candidate = *(int32_t *)(intptr_t)(delegate_ptr + 24);
+        while (candidate != 0 && candidate != this_ptr)
+            candidate = *(int32_t *)(intptr_t)(candidate + 24);
+        if (candidate == this_ptr)
+            return delegate_ptr & -256;
+        ++*(int32_t *)(intptr_t)(delegate_ptr + 4);
+    }
+
+    old_delegate = *(int32_t *)(intptr_t)(this_ptr + 24);
+    if (old_delegate == 0) {
+        *(int32_t *)(intptr_t)(this_ptr + 24) = delegate_ptr;
+        return 1;
+    }
+
+    --*(int32_t *)(intptr_t)(old_delegate + 4);
+    released_object = old_delegate;
+    if (*(int32_t *)(intptr_t)(old_delegate + 4) == 0)
+        released_object = *(int32_t *)(intptr_t)old_delegate;
+    *(int32_t *)(intptr_t)(this_ptr + 24) = 0;
+    *(int32_t *)(intptr_t)(this_ptr + 24) = delegate_ptr;
+    return (released_object & -256) | 1;
+}
+
+static int32_t function_498200_this(int32_t this_ptr) {
+    int32_t *nodes;
+    int32_t count;
+
+    if (this_ptr == 0)
+        return 0;
+    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g74;
+    function_48e520_this(this_ptr, 0);
+    if (*(int32_t *)(intptr_t)(this_ptr + 4) > -1) {
+        int32_t owner = *(int32_t *)(intptr_t)(this_ptr + 20);
+        if (owner != 0)
+            function_49a170(owner + 68, this_ptr);
+    }
+
+    nodes = (int32_t *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 32);
+    count = *(int32_t *)(intptr_t)(this_ptr + 36);
+    for (int32_t index = 0; nodes != NULL && index < count; ++index) {
+        int32_t *node = nodes + 5 * index;
+        retdec_squirrel_release(node[2], node[3]);
+        retdec_squirrel_release(node[0], node[1]);
+        node[0] = g483;
+        node[1] = g484;
+        node[2] = g483;
+        node[3] = g484;
+    }
+    function_4985b0((int32_t)(intptr_t)nodes);
+    return function_48e4d0_this(this_ptr);
+}
+
+static int32_t function_4982f0_this(int32_t this_ptr, char flags) {
+    function_498200_this(this_ptr);
+    if ((flags & 1) != 0)
+        function_4985b0(this_ptr);
+    return this_ptr;
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) static int32_t retdec_sqtable_delete_bridge(char flags) {
+    __asm {
+        mov edx, [esp + 4]
+        push edx
+        push ecx
+        call function_4982f0_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+static int32_t retdec_sqtable_delete_bridge(char flags) {
+    return function_4982f0_this(0, flags);
+}
+#endif
 
 static void retdec_release_squirrel_value(int32_t *value_ptr) {
     if (value_ptr == NULL)
