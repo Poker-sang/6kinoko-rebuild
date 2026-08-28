@@ -194645,61 +194645,37 @@ int32_t function_491f30(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 
 // Address range: 0x491fe0 - 0x492099
 int32_t function_491fe0(int32_t a1, int32_t a2) {
-    // 0x491fe0
-    int32_t v1; // bp-16, 0x491fe0
-    int32_t v2 = &v1; // 0x491fe5
-    int32_t v3 = *(int32_t *)a2; // 0x491fe9
-    int32_t v4; // 0x491fe0
-    if (v3 > 0xa000020) {
-        // 0x492033
-        v4 = v2;
-        if (v3 != 0xa000080 == (v3 != 0xa008000)) {
-            goto lab_0x49207b;
-        } else {
-            goto lab_0x492041;
-        }
-    } else {
-        if (v3 == 0xa000020) {
-            goto lab_0x492041;
-        } else {
-            int32_t v5 = v3 - 0x5000002; // 0x491ff6
-            if (v5 == 0) {
-                // 0x49201c
-                return function_48e0e0(-*(int32_t *)(a2 + 4)) & -256 | 1;
-            }
-            // 0x491ffd
-            v4 = v2;
-            if (v5 == 2) {
-                // 0x492002
-                return function_48e120((float80_t)-*(float32_t *)(a2 + 4)) & -256 | 1;
-            }
-            goto lab_0x49207b;
+    int32_t vm = retdec_stack_vm();
+    int32_t type;
+
+    if (a2 == 0 || vm == 0)
+        return 0;
+    type = *(int32_t *)(intptr_t)a2;
+    if (type == 0x05000002) {
+        function_48e0e0_this(a1, -*(int32_t *)(intptr_t)(a2 + 4));
+        return 1;
+    }
+    if (type == 0x05000004) {
+        float value;
+        memcpy(&value, (void *)(intptr_t)(a2 + 4), sizeof(value));
+        function_48e120_this(a1, -value);
+        return 1;
+    }
+
+    if ((type == 0x0a000020 || type == 0x0a000080 ||
+         type == 0x0a008000) &&
+        *(int32_t *)(intptr_t)(a2 + 4) != 0 &&
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(a2 + 4) + 24) != 0) {
+        int32_t object_ptr = *(int32_t *)(intptr_t)(a2 + 4);
+        function_491820_this(vm, a2);
+        if (function_497850_this(vm, object_ptr, 4, 1, vm + 88) != 0) {
+            function_489f50_this(a1, vm + 88);
+            return 1;
         }
     }
-  lab_0x49207b:
-    // 0x49207b
-    *(int32_t *)(v4 - 4) = a2;
-    *(int32_t *)(v4 - 8) = function_48e460((int32_t)&g1224);
-    *(int32_t *)(v4 - 12) = (int32_t)"attempt to negate a %s";
-    return function_499a20((int32_t)&g1224, (char *)&g1224) & -256;
-  lab_0x492041:;
-    int32_t * v6 = (int32_t *)(a2 + 4); // 0x492041
-    v4 = v2;
-    if (*(int32_t *)(*v6 + 24) != 0) {
-        // 0x49204a
-        function_491820(a2);
-        int32_t v7 = *v6; // 0x492052
-        int32_t v8; // 0x491fe0
-        int32_t v9 = v8 + 88; // 0x492055
-        int32_t v10 = v7; // bp-36, 0x49205d
-        int32_t v11 = function_497850(v7, 4, 1, v9); // 0x492060
-        v4 = &v10;
-        if ((char)v11 != 0) {
-            // 0x492069
-            return function_489f50(v9) & -256 | 1;
-        }
-    }
-    goto lab_0x49207b;
+
+    return function_499a20(
+        vm, "attempt to negate a %s", function_48e460(a2)) & -256;
 }
 
 // Address range: 0x4920a0 - 0x492365
@@ -200351,7 +200327,9 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     unsigned char v465 = *(char *)(v74 + 5); // 0x496b29
                     int32_t v466 = v82 - 8; // 0x496b32
                     *(int32_t *)v466 = 8 * (v463 + (int32_t)v465) + v464;
-                    int32_t v467 = function_491fe0((int32_t)&g1224, (int32_t)&g1224); // 0x496b35
+                    int32_t v467 = function_491fe0(
+                        *(int32_t *)(intptr_t)(v82 - 4),
+                        *(int32_t *)(intptr_t)v466); // 0x496b35
                     v64 = v92;
                     v65 = v466;
                     v86 = v466;
