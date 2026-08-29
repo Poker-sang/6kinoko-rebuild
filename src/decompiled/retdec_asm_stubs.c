@@ -131,8 +131,10 @@ __declspec(naked) int32_t retdec_call_thiscall2_result(
     __asm {
         mov ecx, [esp + 4]
         mov eax, [esp + 8]
-        push [esp + 16]
-        push [esp + 16]
+        mov edx, [esp + 16]
+        push edx
+        mov edx, [esp + 16]
+        push edx
         call eax
         ret
     }
@@ -145,9 +147,12 @@ __declspec(naked) int32_t retdec_call_thiscall3_result(
     __asm {
         mov ecx, [esp + 4]
         mov eax, [esp + 8]
-        push [esp + 20]
-        push [esp + 20]
-        push [esp + 20]
+        mov edx, [esp + 20]
+        push edx
+        mov edx, [esp + 20]
+        push edx
+        mov edx, [esp + 20]
+        push edx
         call eax
         ret
     }

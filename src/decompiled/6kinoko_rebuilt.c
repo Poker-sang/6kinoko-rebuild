@@ -457,7 +457,7 @@ struct vtable_4d5a94_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t);
+    int32_t (*e3)(int32_t, int32_t, int32_t);
     int32_t (*e4)();
     int32_t (*e5)(int32_t, int32_t);
     int32_t (*e6)();
@@ -684,10 +684,10 @@ struct vtable_4eb698_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t);
+    int32_t (*e3)(int32_t, int32_t, int32_t);
     int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t);
-    int32_t (*e6)();
+    int32_t (*e5)(int32_t, int32_t, int32_t);
+    int32_t (*e6)(int32_t);
 };
 
 struct vtable_4eb6f0_type {
@@ -1874,8 +1874,9 @@ int32_t function_407210(int32_t a1, int32_t a2);
 int32_t function_407250(void);
 int32_t function_407270(int32_t lpFileName);
 int32_t function_4072b0(int32_t a1);
-int32_t function_4072d0(int32_t lpBuffer, int32_t nNumberOfBytesToRead);
-int32_t function_407300(void);
+int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
+                        int32_t nNumberOfBytesToRead);
+int32_t function_407300(int32_t reader);
 int32_t function_407310(char a1);
 int32_t function_407340(void);
 int32_t function_407350(void);
@@ -2028,7 +2029,8 @@ int32_t function_40e460(char a1, int32_t a2, int32_t a3);
 int32_t function_40e540(int32_t result, const char * source, int32_t target);
 int32_t function_40e590(int32_t source, int32_t destination);
 int32_t function_40e5d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
-int32_t function_40e630(int32_t a1, int32_t a2, int32_t a3);
+int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
+                        uint32_t *a4, uint32_t *a5);
 int32_t function_40e850(int32_t a1, int32_t a2);
 int32_t function_40eae0(int32_t a1, uint32_t a2);
 int32_t function_40ebf0(void);
@@ -2061,8 +2063,9 @@ int32_t function_410500(char *file_name);
 int32_t function_410750(char *path, int32_t archive_index, int32_t offset, int32_t size);
 int32_t function_4109a0(void);
 int32_t function_4109d0(const char *path, uint32_t *offset, uint32_t *size);
-int32_t function_410b90(int32_t lpBuffer, int32_t a2);
-int32_t function_410c00(int32_t lDistanceToMove, int32_t a2);
+int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2);
+int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
+                        int32_t a2);
 int32_t function_410c80(void);
 int32_t function_410cb0(int32_t a1);
 int32_t function_410d90(int32_t * a1);
@@ -2122,7 +2125,7 @@ int32_t function_413470(char a1);
 int32_t function_4134e0(void);
 int32_t function_413500(int32_t a1);
 int32_t function_413f18(int32_t a1);
-int32_t function_414010(int32_t a1);
+int32_t function_414010(int32_t a1, const char *file_name);
 int32_t function_4141e0(int32_t result, int32_t a2);
 int32_t function_4145b0(int32_t a1, int32_t a2);
 int32_t function_4146a0(int32_t a1, int32_t a2, int32_t a3);
@@ -11794,6 +11797,9 @@ int32_t function_402d40(char * a1, int32_t a2) {
     if (a1 == NULL)
         return 0;
 
+    retdec_trace_squirrel_name("402d40:file",
+                               (int32_t)(intptr_t)a1);
+
     if (g874 != 0) {
         path_length = strlen(a1);
         if (path_length + 1 > sizeof(lookup_path))
@@ -15594,7 +15600,7 @@ int32_t function_405b30(int32_t result) {
     int32_t * v7 = &v3; // 0x405b65
     if (v6 < 0) {
         int32_t v8 = v2; // bp-40, 0x405b6b
-        int32_t v9 = function_40e630(v2, 0, 0); // 0x405b6e
+        int32_t v9 = function_40e630(0, NULL, v2, NULL, NULL); // 0x405b6e
         v7 = &v8;
         if (v9 < 0) {
             // 0x405b77
@@ -15615,7 +15621,7 @@ int32_t function_405bd0(int32_t result, int32_t a2, int32_t a3, int32_t a4) {
     // 0x405bd0
     int32_t v1; // 0x405bd0
     *(int32_t *)v1 = 0;
-    function_40e630(v1, a3, a4);
+    function_40e630(0, (const char *)(intptr_t)a3, v1, NULL, NULL);
     *(int32_t *)result = 0;
     return result;
 }
@@ -17120,29 +17126,41 @@ int32_t function_407270(int32_t lpFileName) {
 // Address range: 0x4072b0 - 0x4072ca
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072b0(int32_t a1) {
-    // 0x4072b0
-    int32_t v1; // 0x4072b0
-    return *(int32_t *)(v1 + 8);
+int32_t function_4072b0(int32_t reader) {
+    if (reader == 0)
+        return 0;
+    return *(int32_t *)(intptr_t)(reader + 8);
 }
 
 // Address range: 0x4072d0 - 0x4072f5
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072d0(int32_t lpBuffer, int32_t nNumberOfBytesToRead) {
-    // 0x4072d0
-    int32_t v1; // 0x4072d0
-    int32_t hFile = *(int32_t *)(v1 + 4); // 0x4072db
-    return ReadFile((int32_t *)hFile, (int32_t *)lpBuffer, nNumberOfBytesToRead, (int32_t *)(v1 + 8), NULL);
+int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
+                        int32_t nNumberOfBytesToRead) {
+    HANDLE file_handle;
+
+    if (reader == 0 || lpBuffer == 0 || nNumberOfBytesToRead < 0)
+        return 0;
+    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
+    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
+        return 0;
+    return ReadFile(file_handle, (void *)(intptr_t)lpBuffer,
+                    (DWORD)nNumberOfBytesToRead,
+                    (LPDWORD)(intptr_t)(reader + 8), NULL);
 }
 
 // Address range: 0x407300 - 0x40730d
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_407300(void) {
-    // 0x407300
-    int32_t v1; // 0x407300
-    return GetFileSize((int32_t *)*(int32_t *)(v1 + 4), NULL);
+int32_t function_407300(int32_t reader) {
+    HANDLE file_handle;
+
+    if (reader == 0)
+        return 0;
+    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
+    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
+        return 0;
+    return (int32_t)GetFileSize(file_handle, NULL);
 }
 
 // Address range: 0x407310 - 0x407340
@@ -17239,8 +17257,8 @@ int32_t function_407370(int32_t reader_slot_address, const char *file_name)
             file_handle = (HANDLE)(intptr_t)function_4109d0(
                 file_name, &resource_offset, &resource_size);
             reader[1] = (int32_t)(intptr_t)file_handle;
-            /* CPakReader stores size at +0x0c and the entry offset at
-               +0x10; +0x14 tracks the current absolute stream position. */
+            /* CPackageFileReader stores the entry size at +0x0c and the
+               entry offset at +0x10; +0x14 tracks the current position. */
             reader[3] = (int32_t)resource_size;
             reader[4] = (int32_t)resource_offset;
             reader[5] = (int32_t)resource_offset;
@@ -17258,6 +17276,54 @@ int32_t function_407370(int32_t reader_slot_address, const char *file_name)
     retdec_destroy_reader(reader);
     *reader_slot = 0;
     return 0;
+}
+
+/* Read through the same CFileReader/CPackageFileReader boundary used by the
+   original image and ACT loaders.  The package reader keeps the entry size
+   at +0x0c, the absolute archive offset at +0x10, and its current absolute
+   position at +0x14. */
+static int32_t retdec_reader_read_exact(int32_t reader_ptr, void *buffer,
+                                        uint32_t size)
+{
+    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
+    HANDLE file_handle;
+    DWORD bytes_read = 0;
+
+    if (reader == NULL || buffer == NULL || size == 0)
+        return 0;
+    file_handle = (HANDLE)(intptr_t)reader[1];
+    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
+        return 0;
+
+    if (g765 != 0) {
+        uint32_t entry_size = (uint32_t)reader[3];
+        uint32_t entry_offset = (uint32_t)reader[4];
+        uint32_t position = (uint32_t)reader[5];
+        uint32_t entry_end = entry_offset + entry_size;
+
+        if (position < entry_offset || position > entry_end ||
+            size > entry_end - position)
+            return 0;
+        if (SetFilePointer(file_handle, (LONG)position, NULL, FILE_BEGIN) ==
+                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+            return 0;
+        if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
+            bytes_read != size)
+            return 0;
+        for (uint32_t index = 0; index < size; ++index) {
+            ((unsigned char *)buffer)[index] ^=
+                ((unsigned char *)reader)[24];
+        }
+        reader[2] = (int32_t)bytes_read;
+        reader[5] = (int32_t)(position + bytes_read);
+        return 1;
+    }
+
+    if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
+        bytes_read != size)
+        return 0;
+    reader[2] = (int32_t)bytes_read;
+    return 1;
 }
 
 // Address range: 0x407450 - 0x40747a
@@ -27351,6 +27417,7 @@ int32_t function_40e5d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 }
 
 // Address range: 0x40e630 - 0x40e849
+#if 0
 int32_t function_40e630(int32_t a1, int32_t a2, int32_t a3) {
     // 0x40e630
     int32_t v1; // 0x40e630
@@ -27480,6 +27547,90 @@ int32_t function_40e630(int32_t a1, int32_t a2, int32_t a3) {
     // 0x40e830
     __writefsdword(0, *(int32_t *)(v12 + 64));
     return *(int32_t *)(v12 + 16);
+}
+#endif
+
+int32_t function_40e630(int32_t unused, const char *file_name,
+                        int32_t texture_out, uint32_t *width_out,
+                        uint32_t *height_out) {
+    unsigned char bitmap[32] = { 0 };
+    char lookup_path[MAX_PATH];
+    size_t path_length;
+    uint32_t width;
+    uint32_t height;
+    uint32_t bit_depth;
+    uint32_t source_pitch;
+    uint32_t row;
+    int32_t texture_value = 0;
+    int32_t result;
+    IDirect3DTexture9 *texture;
+    D3DLOCKED_RECT locked_rect;
+
+    (void)unused;
+    if (file_name == NULL || texture_out == 0 || g678 == 0)
+        return -0x7789f794;
+    path_length = strlen(file_name);
+    if (path_length < 3 || path_length + 1 > sizeof(lookup_path))
+        return -0x7789f794;
+    memcpy(lookup_path, file_name, path_length + 1);
+    lookup_path[path_length - 3] = 'c';
+    lookup_path[path_length - 2] = 'v';
+    lookup_path[path_length - 1] = '2';
+    if (!function_414010((int32_t)(intptr_t)bitmap, lookup_path))
+        return -0x7789f794;
+
+    bit_depth = bitmap[4];
+    width = *(uint32_t *)(bitmap + 8);
+    height = *(uint32_t *)(bitmap + 12);
+    source_pitch = bit_depth >= 24 ? width * 4u : width;
+    if (width == 0 || height == 0 || source_pitch == 0 ||
+        (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
+        free(*(void **)(bitmap + 28));
+        return -0x7789f794;
+    }
+    if (width_out != NULL)
+        *width_out = width;
+    if (height_out != NULL)
+        *height_out = height;
+
+    result = D3DXCreateTexture(g678, (int32_t)width, (int32_t)height, 1, 0,
+                               21, 1, &texture_value);
+    if (result < 0 || texture_value == 0) {
+        free(*(void **)(bitmap + 28));
+        return result;
+    }
+    texture = (IDirect3DTexture9 *)(intptr_t)texture_value;
+    memset(&locked_rect, 0, sizeof(locked_rect));
+    result = texture->lpVtbl->LockRect(texture, 0, &locked_rect, NULL, 0);
+    if (result < 0) {
+        texture->lpVtbl->Release(texture);
+        free(*(void **)(bitmap + 28));
+        return result;
+    }
+    for (row = 0; row < height; ++row) {
+        unsigned char *destination = (unsigned char *)locked_rect.pBits +
+            (size_t)row * (size_t)locked_rect.Pitch;
+        const unsigned char *source =
+            (const unsigned char *)(*(void **)(bitmap + 28)) +
+            (size_t)row * source_pitch;
+        if (bit_depth == 32) {
+            memcpy(destination, source, (size_t)width * 4u);
+        } else if (bit_depth == 24) {
+            memcpy(destination, source, (size_t)width * 4u);
+        } else {
+            for (uint32_t column = 0; column < width; ++column) {
+                unsigned char value = source[column];
+                destination[column * 4u + 0] = value;
+                destination[column * 4u + 1] = value;
+                destination[column * 4u + 2] = value;
+                destination[column * 4u + 3] = 0xff;
+            }
+        }
+    }
+    texture->lpVtbl->UnlockRect(texture, 0);
+    free(*(void **)(bitmap + 28));
+    *(int32_t *)(intptr_t)texture_out = texture_value;
+    return result;
 }
 
 // Address range: 0x40e850 - 0x40ead7
@@ -29895,73 +30046,84 @@ int32_t function_4109d0(const char *path, uint32_t *offset, uint32_t *size)
 // Address range: 0x410b90 - 0x410bf5
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410b90(int32_t lpBuffer, int32_t a2) {
-    // 0x410b90
-    int32_t v1; // 0x410b90
-    int32_t v2 = v1;
-    int32_t * v3 = (int32_t *)(v2 + 20); // 0x410b9d
-    int32_t v4 = *v3; // 0x410b9d
-    uint32_t v5 = *(int32_t *)(v2 + 12) + *(int32_t *)(v2 + 16);
-    int32_t nNumberOfBytesToRead = v5 >= v4 + a2 ? a2 : v5 - v4;
-    int32_t * lpNumberOfBytesRead = (int32_t *)(v2 + 8); // 0x410bc2
-    ReadFile((int32_t *)*(int32_t *)(v2 + 4), (int32_t *)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, NULL);
-    int32_t v6 = *lpNumberOfBytesRead; // 0x410bc8
-    if (v6 == 0) {
-        // 0x410bcf
-        return v6 & -256;
+int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2) {
+    HANDLE file_handle;
+    uint32_t offset;
+    uint32_t size;
+    uint32_t position;
+    uint32_t requested;
+    uint32_t readable;
+    DWORD bytes_read = 0;
+    uint32_t index;
+
+    if (reader == 0 || lpBuffer == 0 || a2 <= 0)
+        return 0;
+    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
+    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
+        return 0;
+
+    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
+    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
+    position = (uint32_t)*(int32_t *)(intptr_t)(reader + 20);
+    requested = (uint32_t)a2;
+    readable = position < offset + size ? offset + size - position : 0;
+    if (requested > readable)
+        requested = readable;
+    if (requested == 0)
+        return 0;
+
+    if (!ReadFile(file_handle, (void *)(intptr_t)lpBuffer, requested,
+                  &bytes_read, NULL) || bytes_read == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(reader + 8) = (int32_t)bytes_read;
+    *(int32_t *)(intptr_t)(reader + 20) =
+        (int32_t)(position + (uint32_t)bytes_read);
+    for (index = 0; index < bytes_read; ++index) {
+        ((unsigned char *)(intptr_t)lpBuffer)[index] ^=
+            ((unsigned char *)(intptr_t)reader)[24];
     }
-    // 0x410bd8
-    *v3 = *v3 + v6;
-    if (nNumberOfBytesToRead == 0) {
-        // 0x410bec
-        return 1;
-    }
-    int32_t v7 = 0; // 0x410be7
-    char * v8 = (char *)(v7 + lpBuffer); // 0x410be4
-    *v8 = *v8 ^ *(char *)(v2 + 24);
-    v7++;
-    while (v7 != nNumberOfBytesToRead) {
-        // 0x410be1
-        v8 = (char *)(v7 + lpBuffer);
-        *v8 = *v8 ^ *(char *)(v2 + 24);
-        v7++;
-    }
-    // 0x410bec
-    return nNumberOfBytesToRead & -256 | 1;
+    return 1;
 }
 
 // Address range: 0x410c00 - 0x410c7b
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410c00(int32_t lDistanceToMove, int32_t a2) {
-    // 0x410c00
-    int32_t v1; // 0x410c00
-    switch (a2) {
-        case 0: {
-            int32_t * v2 = (int32_t *)(v1 + 16); // 0x410c5b
-            int32_t v3 = SetFilePointer((int32_t *)*(int32_t *)(v1 + 4), *v2 + lDistanceToMove, NULL, 0); // 0x410c6a
-            int32_t result = v3 - *v2; // 0x410c70
-            *(int32_t *)(v1 + 20) = result;
-            return result;
-        }
-        case 1: {
-            int32_t v4 = SetFilePointer((int32_t *)*(int32_t *)(v1 + 4), lDistanceToMove, NULL, 1); // 0x410c4a
-            int32_t result2 = v4 - *(int32_t *)(v1 + 16); // 0x410c50
-            *(int32_t *)(v1 + 20) = result2;
-            return result2;
-        }
-        case 2: {
-            int32_t hFile = *(int32_t *)(v1 + 4); // 0x410c21
-            int32_t * v5 = (int32_t *)(v1 + 16); // 0x410c24
-            int32_t v6 = *v5; // 0x410c24
-            int32_t v7 = SetFilePointer((int32_t *)hFile, *(int32_t *)(v1 + 12) - lDistanceToMove + v6, NULL, 0); // 0x410c2d
-            int32_t result3 = v7 - *v5; // 0x410c33
-            *(int32_t *)(v1 + 20) = result3;
-            return result3;
-        }
+int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
+                        int32_t a2) {
+    HANDLE file_handle;
+    LONG absolute_position;
+    uint32_t offset;
+    uint32_t size;
+    DWORD position;
+
+    if (reader == 0)
+        return 0;
+    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
+    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
+        return 0;
+    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
+    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
+    if (a2 == 0) {
+        absolute_position = (LONG)(offset + (uint32_t)lDistanceToMove);
+    } else if (a2 == 1) {
+        position = SetFilePointer(file_handle, (LONG)lDistanceToMove,
+                                  NULL, FILE_CURRENT);
+        if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+            return 0;
+        absolute_position = (LONG)position;
+    } else if (a2 == 2) {
+        absolute_position = (LONG)(offset + size -
+                                   (uint32_t)lDistanceToMove);
+    } else {
+        return 0;
     }
-    // 0x410c14
-    return 0;
+    position = SetFilePointer(file_handle, absolute_position, NULL,
+                              FILE_BEGIN);
+    if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+        return 0;
+    *(int32_t *)(intptr_t)(reader + 20) =
+        (int32_t)((uint32_t)position - offset);
+    return *(int32_t *)(intptr_t)(reader + 20);
 }
 
 // Address range: 0x410c80 - 0x410cb0
@@ -34162,43 +34324,70 @@ int32_t function_413f18(int32_t a1) {
 }
 
 // Address range: 0x414010 - 0x4141d9
-int32_t function_414010(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x414020
-    __writefsdword(0, (int32_t)&v1);
-    int32_t retdec_reader_slot = 0;
-    int32_t v2 = function_407370((int32_t)(intptr_t)&retdec_reader_slot,
-                                 (const char *)(intptr_t)a1); // 0x414049
-    if ((char)v2 == 0) {
-        // 0x414068
-        __writefsdword(0, v1);
-        return v2 & -256;
+int32_t function_414010(int32_t this_ptr, const char *file_name) {
+    int32_t reader_slot = 0;
+    int32_t *reader;
+    uint8_t bit_depth;
+    uint32_t width;
+    uint32_t height;
+    uint32_t row_width;
+    uint32_t payload_size;
+    uint32_t allocation_size;
+    void *old_pixels;
+    void *pixels;
+
+    if (this_ptr == 0 || file_name == NULL)
+        return 0;
+    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name))
+        return 0;
+    reader = (int32_t *)(intptr_t)reader_slot;
+
+    if (!retdec_reader_read_exact(reader_slot, &bit_depth, 1) ||
+        !retdec_reader_read_exact(reader_slot, &width, sizeof(width)) ||
+        !retdec_reader_read_exact(reader_slot, &height, sizeof(height)) ||
+        !retdec_reader_read_exact(reader_slot, &row_width,
+                                  sizeof(row_width)) ||
+        !retdec_reader_read_exact(reader_slot, &payload_size,
+                                  sizeof(payload_size))) {
+        retdec_destroy_reader(reader);
+        return 0;
     }
-    // 0x41407e
-    int32_t v3; // 0x414010
-    int32_t * v4 = (int32_t *)(v3 + 28); // 0x4140db
-    int32_t v5 = *v4; // 0x4140db
-    if (*(int32_t *)(v3 + 20) != 0 || *(char *)(v3 + 4) < 24) {
-        if (v5 != 0) {
-            // 0x4140e4
-            function_4ab330();
-            *v4 = 0;
-        }
-        // 0x4140f4
-        *v4 = function_473ebb();
-        // 0x4141a9
-        abort();
-        // UNREACHABLE
+
+    *(uint8_t *)(intptr_t)(this_ptr + 4) = bit_depth;
+    *(uint32_t *)(intptr_t)(this_ptr + 8) = width;
+    *(uint32_t *)(intptr_t)(this_ptr + 12) = height;
+    *(uint32_t *)(intptr_t)(this_ptr + 16) = row_width;
+    *(uint32_t *)(intptr_t)(this_ptr + 20) = payload_size;
+
+    if (payload_size != 0) {
+        allocation_size = payload_size;
+    } else if (bit_depth < 24) {
+        uint64_t total_bits = (uint64_t)width * height * bit_depth;
+        allocation_size = (uint32_t)(total_bits / 8u);
+    } else {
+        uint64_t total_bytes = (uint64_t)width * height * 4u;
+        allocation_size = (uint32_t)total_bytes;
     }
-    if (v5 != 0) {
-        // 0x41411d
-        function_4ab330();
-        *v4 = 0;
+    if (allocation_size == 0 || allocation_size > 256u * 1024u * 1024u ||
+        (uint64_t)width * height > 64u * 1024u * 1024u) {
+        retdec_destroy_reader(reader);
+        return 0;
     }
-    // 0x41412d
-    *v4 = function_473ebb();
-    // 0x4141a9
-    abort();
-    // UNREACHABLE
+
+    old_pixels = *(void **)(intptr_t)(this_ptr + 28);
+    if (old_pixels != NULL)
+        free(old_pixels);
+    pixels = malloc(allocation_size);
+    if (pixels == NULL ||
+        !retdec_reader_read_exact(reader_slot, pixels, allocation_size)) {
+        free(pixels);
+        *(void **)(intptr_t)(this_ptr + 28) = NULL;
+        retdec_destroy_reader(reader);
+        return 0;
+    }
+    *(void **)(intptr_t)(this_ptr + 28) = pixels;
+    retdec_destroy_reader(reader);
+    return 1;
 }
 
 // Address range: 0x4141e0 - 0x414554
@@ -123779,6 +123968,7 @@ int32_t function_464e20(void) {
 // Address range: 0x464f80 - 0x465f70
 int32_t function_464f80(int32_t a1, int32_t * a2) {
     retdec_trace_i32("464f80:path", a1);
+    retdec_trace_squirrel_name("464f80:path-text", a1);
     retdec_trace_i32("464f80:directory", (int32_t)(intptr_t)a2);
     /* The generated body below still lacks the native resource receiver.
        Keep it disabled until its object graph is restored. */
@@ -183196,6 +183386,7 @@ static int32_t retdec_table_bucket(int32_t table_ptr, uint32_t hash) {
  * output value pair. */
 static int32_t function_497a00_this(int32_t table_ptr, int32_t *key_ptr,
                                     int32_t out_ptr) {
+    static int32_t trace_match_count;
     int32_t bucket;
     int32_t entry;
     int32_t source_value[2];
@@ -183203,6 +183394,16 @@ static int32_t function_497a00_this(int32_t table_ptr, int32_t *key_ptr,
 
     if (table_ptr == 0 || key_ptr == 0 || out_ptr == 0)
         return 0;
+
+    /* A SQTable receiver is a heap pointer.  0x0A000020 is the Squirrel
+       table type tag, which can reach this adapter when a generated caller
+       passes an SQObject pair instead of its data field. */
+    if (table_ptr == 0x0A000020) {
+        retdec_trace_i32("497a00:tag-as-table", table_ptr);
+        retdec_trace_i32("497a00:tag-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        return 0;
+    }
 
     retdec_trace_i32("497a00:table", table_ptr);
     retdec_trace_i32("497a00:key-type", key_ptr[0]);
@@ -183224,6 +183425,21 @@ static int32_t function_497a00_this(int32_t table_ptr, int32_t *key_ptr,
         if (*(int32_t *)(entry + 12) == key_ptr[1] &&
             *(int32_t *)(entry + 8) == key_ptr[0]) {
             retdec_trace("497a00:match");
+            if (trace_match_count < 32 ||
+                (key_ptr[0] == 0x08000010 && key_ptr[1] != 0 &&
+                 ((const char *)(intptr_t)(key_ptr[1] + 28))[0] != 0)) {
+                retdec_trace_i32("497a00:value-type",
+                                 *(int32_t *)(entry + 0));
+                retdec_trace_i32("497a00:value-data",
+                                 *(int32_t *)(entry + 4));
+                if (*(int32_t *)(entry + 0) == 0x08000200 &&
+                    *(int32_t *)(entry + 4) != 0) {
+                    retdec_trace_i32(
+                        "497a00:closure-function",
+                        *(int32_t *)(*(int32_t *)(entry + 4) + 60));
+                }
+                ++trace_match_count;
+            }
             if (*(int32_t *)entry == 0x08010000) {
                 int32_t value_data = *(int32_t *)(entry + 4);
                 if (value_data == 0)
@@ -183334,7 +183550,12 @@ static int32_t retdec_squirrel_lookup_state_table(int32_t state_offset,
     shared_state = *(int32_t *)(vm + 140);
     if (shared_state == 0)
         return 0;
-    table_ptr = *(int32_t *)(shared_state + state_offset);
+    /* SQSharedState stores each default delegate as an SQObject pair:
+       [type, data].  The generated lookup used the type word as the table
+       receiver, which made every default-delegate lookup miss. */
+    if (*(int32_t *)(shared_state + state_offset) != 0x0A000020)
+        return 0;
+    table_ptr = *(int32_t *)(shared_state + state_offset + 4);
     return function_497a00_this(table_ptr, (int32_t *)(intptr_t)key_ptr,
                                 out_ptr);
 }
@@ -188814,8 +189035,91 @@ int32_t function_48dda0(int32_t a1, int32_t a2, int32_t a3) {
     return 0;
 }
 
+/* Explicit implementation of sq_bindenv().  The generated body below lost
+ * several SQObjectPtr temporaries and consequently mixed the weakref, clone,
+ * and VM stack slots. */
+static int32_t retdec_bindenv_impl(int32_t vm, int32_t index) {
+    int32_t stack_block;
+    int32_t stackbase;
+    int32_t top;
+    int32_t target_slot;
+    int32_t env_slot;
+    int32_t target_type;
+    int32_t target_data;
+    int32_t env_type;
+    int32_t env_data;
+    int32_t weakref;
+    int32_t clone;
+    int32_t clone_type;
+    int32_t *clone_env;
+    int32_t env_value[2];
+    int32_t result_value[2];
+
+    if (vm == 0)
+        return -1;
+    stack_block = *(int32_t *)(intptr_t)(vm + 24);
+    stackbase = *(int32_t *)(intptr_t)(vm + 52);
+    top = *(int32_t *)(intptr_t)(vm + 48);
+    if (stack_block == 0 || top <= stackbase)
+        return function_48ac00(vm, "not enough params in the stack");
+
+    if (index < 0)
+        target_slot = function_491880_this(vm, index);
+    else
+        target_slot = function_4918a0_this(
+            vm, index - 1 + stackbase);
+    env_slot = function_491880_this(vm, -1);
+    if (target_slot == 0 || env_slot == 0)
+        return function_48ac00(vm, "not enough params in the stack");
+
+    target_type = *(int32_t *)(intptr_t)target_slot;
+    target_data = *(int32_t *)(intptr_t)(target_slot + 4);
+    env_type = *(int32_t *)(intptr_t)env_slot;
+    env_data = *(int32_t *)(intptr_t)(env_slot + 4);
+    if ((target_type != 0x08000100 && target_type != 0x08000200) ||
+        target_data == 0)
+        return function_48ac00(vm, "the target is not a closure");
+    if (env_type != 0x0A000020 && env_type != 0x08004000 &&
+        env_type != 0x0A008000)
+        return function_48ac00(vm, "invalid environment");
+    if (env_data == 0)
+        return function_48ac00(vm, "invalid environment");
+
+    weakref = function_490320_this(env_data, env_type);
+    if (weakref == 0)
+        return function_48ac00(vm, "invalid environment");
+
+    if (target_type == 0x08000100) {
+        clone = function_48db40(target_data);
+        clone_type = 0x08000100;
+        clone_env = clone != 0 ? (int32_t *)(intptr_t)(clone + 24) : 0;
+    } else {
+        clone = function_48dc10(target_data);
+        clone_type = 0x08000200;
+        clone_env = clone != 0 ? (int32_t *)(intptr_t)(clone + 52) : 0;
+    }
+    if (clone == 0 || clone_env == 0)
+        return function_48ac00(vm, "cannot clone closure");
+
+    env_value[0] = 0x08010000;
+    env_value[1] = weakref;
+    retdec_squirrel_assign(clone_env, env_value);
+
+    /* SQVM::Pop() removes the environment argument; Push() writes the
+       returned clone into that same slot and keeps one stack reference. */
+    result_value[0] = clone_type;
+    result_value[1] = clone;
+    retdec_squirrel_addref(result_value[0], result_value[1]);
+    function_491760_this(vm);
+    function_491820_this(vm, (int32_t)(intptr_t)result_value);
+    retdec_squirrel_release(result_value[0], result_value[1]);
+    return 0;
+}
+
 // Address range: 0x48de90 - 0x48e030
 int32_t function_48de90(int32_t a1, int32_t a2) {
+    return retdec_bindenv_impl(a1, a2);
+
     int32_t v1; // 0x48de90
     if (a2 < 0) {
         // 0x48deb3
@@ -188840,7 +189144,9 @@ int32_t function_48de90(int32_t a1, int32_t a2) {
                 case 0xa000020: {
                 }
                 case 0x8004000: {
-                    int32_t v8 = function_490320(v7); // 0x48df21
+                    int32_t v8 = function_490320_this(
+                        *(int32_t *)(function_491880(-1) + 4),
+                        v7); // 0x48df21
                     v6 = (int32_t *)(v8 + 4);
                     *v6 = *v6 + 1;
                     v4 = 0x1000001;
@@ -196266,7 +196572,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                 __writefsdword(0, v2);
                 return 0x8000400;
             }
-            int32_t result = retdec_squirrel_lookup_state_table(116, a2, a3); // 0x4934da
+            int32_t result = retdec_squirrel_lookup_state_table(112, a2, a3); // 0x4934da
             __writefsdword(0, v2);
             return result;
         }
@@ -196277,7 +196583,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                     // 0x49348b
                     v7 = 0x8000040;
                     if ((char)v1 == 0) {
-                        int32_t result2 = retdec_squirrel_lookup_state_table(92, a2, a3); // 0x4934a6
+                        int32_t result2 = retdec_squirrel_lookup_state_table(88, a2, a3); // 0x4934a6
                         __writefsdword(0, v2);
                         return result2;
                     }
@@ -196296,7 +196602,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                     // 0x493457
                     v7 = v6;
                     if ((char)v1 == 0) {
-                        int32_t result3 = retdec_squirrel_lookup_state_table(124, a2, a3); // 0x493472
+                        int32_t result3 = retdec_squirrel_lookup_state_table(120, a2, a3); // 0x493472
                         __writefsdword(0, v2);
                         return result3;
                     }
@@ -196319,7 +196625,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                         __writefsdword(0, v2);
                         return a2 & -256;
                     }
-                    int32_t result4 = retdec_squirrel_lookup_state_table(100, a2, a3); // 0x493425
+                    int32_t result4 = retdec_squirrel_lookup_state_table(96, a2, a3); // 0x493425
                     __writefsdword(0, v2);
                     return result4;
                 }
@@ -196366,7 +196672,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                     __writefsdword(0, v2);
                     return v8 & -256;
                 }
-                int32_t result5 = retdec_squirrel_lookup_state_table(108, a2, a3); // 0x49338f
+                int32_t result5 = retdec_squirrel_lookup_state_table(104, a2, a3); // 0x49338f
                 __writefsdword(0, v2);
                 return result5;
             }
@@ -196389,7 +196695,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                 __writefsdword(0, v2);
                 return v19 & -256 | 1;
             }
-            int32_t result6 = retdec_squirrel_lookup_state_table(148, a2, a3); // 0x493608
+            int32_t result6 = retdec_squirrel_lookup_state_table(144, a2, a3); // 0x493608
             __writefsdword(0, v2);
             return result6;
         }
@@ -196406,7 +196712,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                     __writefsdword(0, v2);
                     return 0x8001000;
                 }
-                int32_t result7 = retdec_squirrel_lookup_state_table(132, a2, a3); // 0x493596
+                int32_t result7 = retdec_squirrel_lookup_state_table(128, a2, a3); // 0x493596
                 __writefsdword(0, v2);
                 return result7;
             }
@@ -196426,7 +196732,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
                     __writefsdword(0, v2);
                     return v6 & -256;
                 }
-                int32_t result9 = retdec_squirrel_lookup_state_table(156, a2, a3); // 0x49353b
+                int32_t result9 = retdec_squirrel_lookup_state_table(152, a2, a3); // 0x49353b
                 __writefsdword(0, v2);
                 return result9;
             }
@@ -196490,7 +196796,7 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
     int32_t v33 = (int32_t)v24;
     *(int32_t *)(v33 - 4) = a3;
     *(int32_t *)(v33 - 8) = a2;
-    int32_t result10 = retdec_squirrel_lookup_state_table(84, a2, a3); // 0x4936d7
+    int32_t result10 = retdec_squirrel_lookup_state_table(80, a2, a3); // 0x4936d7
     __writefsdword(0, v2);
     return result10;
 }
@@ -198959,7 +199265,7 @@ static __declspec(noinline) int32_t retdec_execute_newslot(int32_t instruction_p
 
 // Address range: 0x495360 - 0x497580
 int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7) {
-    static int32_t trace_opcode_count;
+    int32_t trace_opcode_count = 0;
     int32_t v1 = a4;
     int32_t v2 = 0;
     int32_t v3 = a2;
@@ -200404,7 +200710,8 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     *(int32_t *)(v82 - 4) = v489;
                     int32_t v491 = v82 - 8; // 0x496c3e
                     *(int32_t *)v491 = 8 * (*v27 + (int32_t)v490) + *v28;
-                    int32_t v492 = function_4950c0((int32_t)&g1224, (int32_t)&g1224); // 0x496c41
+                    int32_t v492 = function_4950c0(
+                        *(int32_t *)v491, v489); // 0x496c41
                     v64 = v92;
                     v65 = v491;
                     v88 = v491;
@@ -200888,6 +201195,19 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     *(int32_t *)(v82 - 16) = v775;
     int32_t v795 = v82 - 20; // 0x495bf6
     *(int32_t *)v795 = v794;
+    retdec_trace_i32("495bfc:opcode", g1182);
+    retdec_trace_i32("495bfc:instruction", (int32_t)(intptr_t)v74);
+    retdec_trace_i32("495bfc:arg1", *(int32_t *)(intptr_t)v74);
+    retdec_trace_i32("495bfc:arg0",
+                     *(unsigned char *)(intptr_t)(v74 + 5));
+    retdec_trace_i32("495bfc:arg2",
+                     *(unsigned char *)(intptr_t)(v74 + 6));
+    retdec_trace_i32("495bfc:arg3",
+                     *(unsigned char *)(intptr_t)(v74 + 7));
+    retdec_trace_i32("495bfc:key-type", *(int32_t *)(intptr_t)v775);
+    retdec_trace_i32("495bfc:key-data", *(int32_t *)(intptr_t)(v775 + 4));
+    retdec_trace_i32("495bfc:object-type", *(int32_t *)(intptr_t)v794);
+    retdec_trace_i32("495bfc:object-data", *(int32_t *)(intptr_t)(v794 + 4));
     /* v104 is the instruction pointer fetched at the top of this VM step.
        RetDec reuses the v74 stack slot for unrelated temporaries, so read
        PREPCALL's destination register from the stable fetched instruction. */
@@ -206890,6 +207210,7 @@ static const retdec_native_entry retdec_native_table_weakref[] = {
 
 static int32_t function_49ad60_this(int32_t shared_state,
                                      int32_t native_table) {
+    static int32_t trace_native_table_count;
     if (shared_state == 0 || native_table == 0)
         return 0;
     int32_t table = (int32_t)function_498580(44);
@@ -206916,6 +207237,18 @@ static int32_t function_49ad60_this(int32_t shared_state,
                             (int32_t)(intptr_t)entries[i].type_mask) == 0) {
             function_4985b0(closure);
             return 0;
+        }
+        if (trace_native_table_count < 32 ||
+            strcmp(entries[i].name, "bindenv") == 0 ||
+            strcmp(entries[i].name, "clear") == 0) {
+            retdec_trace_squirrel_name("49ad60:name",
+                                       (int32_t)(intptr_t)entries[i].name);
+            retdec_trace_i32(
+                "49ad60:entry-function",
+                (int32_t)(intptr_t)entries[i].function_ptr);
+            retdec_trace_i32("49ad60:closure-function",
+                             *(int32_t *)(closure + 60));
+            ++trace_native_table_count;
         }
         function_49a140(shared_state + 68, closure);
 
