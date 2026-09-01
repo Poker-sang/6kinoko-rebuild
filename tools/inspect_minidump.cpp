@@ -151,6 +151,51 @@ static const char *symbol_for_address(HANDLE process, DWORD64 address,
     return symbol->Name;
 }
 
+static void print_thread_contexts(const MappedDump *dump)
+{
+    void *thread_data = nullptr;
+    ULONG thread_size = 0;
+
+    if (!stream_data(dump, ThreadListStream, &thread_data, &thread_size) ||
+        thread_size < sizeof(MINIDUMP_THREAD_LIST)) {
+        std::fprintf(stderr, "thread list stream unavailable\n");
+        return;
+    }
+
+    const MINIDUMP_THREAD_LIST *threads =
+        static_cast<const MINIDUMP_THREAD_LIST *>(thread_data);
+    std::printf("threads=%lu\n", threads->NumberOfThreads);
+    for (ULONG index = 0; index < threads->NumberOfThreads; ++index) {
+        const MINIDUMP_THREAD &thread = threads->Threads[index];
+        const void *raw_context = nullptr;
+        std::printf("thread id=%lu teb=0x%08llx stack=0x%08lx+0x%08lx\n",
+                    thread.ThreadId,
+                    static_cast<unsigned long long>(thread.Teb),
+                    thread.Stack.StartOfMemoryRange,
+                    thread.Stack.Memory.DataSize);
+        if (!dump_range(dump, thread.ThreadContext.Rva,
+                        thread.ThreadContext.DataSize, &raw_context) ||
+            thread.ThreadContext.DataSize < sizeof(CONTEXT)) {
+            std::printf("  context unavailable rva=0x%08lx size=0x%08lx\n",
+                        thread.ThreadContext.Rva,
+                        thread.ThreadContext.DataSize);
+            continue;
+        }
+        const CONTEXT *context = static_cast<const CONTEXT *>(raw_context);
+#if defined(_M_IX86)
+        std::printf("  context eip=0x%08lx esp=0x%08lx ebp=0x%08lx eax=0x%08lx ebx=0x%08lx ecx=0x%08lx edx=0x%08lx esi=0x%08lx edi=0x%08lx\n",
+                    context->Eip, context->Esp, context->Ebp, context->Eax,
+                    context->Ebx, context->Ecx, context->Edx, context->Esi,
+                    context->Edi);
+#else
+        std::printf("  context rip=0x%016llx rsp=0x%016llx rbp=0x%016llx\n",
+                    static_cast<unsigned long long>(context->Rip),
+                    static_cast<unsigned long long>(context->Rsp),
+                    static_cast<unsigned long long>(context->Rbp));
+#endif
+    }
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) {
@@ -181,8 +226,11 @@ int main(int argc, char **argv)
     ULONG exception_size = 0;
     if (!stream_data(&dump, ExceptionStream, &exception_data, &exception_size) ||
         exception_size < sizeof(MINIDUMP_EXCEPTION_STREAM)) {
-        std::fprintf(stderr, "exception stream unavailable\n");
-        return 1;
+        print_thread_contexts(&dump);
+        UnmapViewOfFile(dump.base);
+        CloseHandle(dump.mapping);
+        CloseHandle(dump.file);
+        return 0;
     }
     const MINIDUMP_EXCEPTION_STREAM *exception =
         static_cast<const MINIDUMP_EXCEPTION_STREAM *>(exception_data);

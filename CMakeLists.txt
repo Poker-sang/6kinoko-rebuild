@@ -75,6 +75,16 @@ add_executable(kinoko_asset_probe
 target_include_directories(kinoko_asset_probe PRIVATE include)
 target_link_libraries(kinoko_asset_probe PRIVATE kinoko_core)
 
+add_executable(kinoko_asset_extract
+    work/extract_asset.cpp
+)
+target_include_directories(kinoko_asset_extract PRIVATE include)
+target_link_libraries(kinoko_asset_extract PRIVATE kinoko_core)
+
+add_executable(kinoko_cv4_decode
+    work/decode_cv4.cpp
+)
+
 add_executable(kinoko_dump_inspect
     tools/inspect_minidump.cpp
 )
@@ -104,7 +114,7 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${config}" config_upper)
     set_target_properties(
         kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
-        kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_retdec_rebuild
+        kinoko_asset_probe kinoko_asset_extract kinoko_cv4_decode kinoko_dump_inspect kinoko_process_dump kinoko_retdec_rebuild
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}"
     )
