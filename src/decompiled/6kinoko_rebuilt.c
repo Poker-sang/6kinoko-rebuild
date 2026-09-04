@@ -23166,7 +23166,7 @@ static int retdec_bgm_write_buffer(retdec_bgm_track_state *track,
 }
 
 static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
-                                         int16_t *interleaved,
+                                         float *interleaved,
                                          DWORD requested_frames)
 {
     int sample_offset_result;
@@ -23192,7 +23192,7 @@ static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
         request_frames = track->loop_end_frame - sample_offset;
     if (request_frames == 0)
         return 0;
-    return stb_vorbis_get_samples_short_interleaved(
+    return stb_vorbis_get_samples_float_interleaved(
         track->decoder, track->channels, interleaved,
         (int)(request_frames * (DWORD)track->channels));
 }
@@ -23206,6 +23206,7 @@ static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
     DWORD requested_frames;
     DWORD written_frames = 0;
     int channels;
+    float *interleaved;
 
     if (track == NULL || track->decoder == NULL || output == NULL ||
         bytes == 0)
@@ -23213,17 +23214,17 @@ static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
     channels = track->channels;
     if (channels <= 0 || channels > RETDEC_BGM_MAX_CHANNELS)
         return 0;
+    interleaved = (float *)track->decode_scratch;
     requested_frames = bytes / ((DWORD)channels * sizeof(short));
     while (written_frames < requested_frames) {
         int got;
-        int16_t *interleaved = track->decode_scratch;
 
         if (track->looping && track->loop_end_frame >
                 track->loop_start_frame) {
             got = retdec_bgm_decode_loop_frames(
                 track, interleaved, requested_frames - written_frames);
         } else {
-            got = stb_vorbis_get_samples_short_interleaved(
+            got = stb_vorbis_get_samples_float_interleaved(
                 track->decoder, channels, interleaved,
                 (int)((requested_frames - written_frames) *
                       (DWORD)channels));
@@ -23239,10 +23240,22 @@ static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
             }
             continue;
         }
-        memcpy(output + (size_t)written_frames * (size_t)channels *
-                   sizeof(short),
-               interleaved,
-               (size_t)got * (size_t)channels * sizeof(short));
+        {
+            DWORD sample_count = (DWORD)got * (DWORD)channels;
+            DWORD sample_index;
+            int16_t *destination = (int16_t *)output +
+                (size_t)written_frames * (size_t)channels;
+
+            for (sample_index = 0; sample_index < sample_count;
+                 ++sample_index) {
+                int sample = (int)(interleaved[sample_index] * 32768.0f);
+                if (sample < -32768)
+                    sample = -32768;
+                else if (sample > 32767)
+                    sample = 32767;
+                destination[sample_index] = (int16_t)sample;
+            }
+        }
         written_frames += (DWORD)got;
     }
     return written_frames * (DWORD)channels * sizeof(short);
@@ -23700,6 +23713,8 @@ static void retdec_bgm_service_track(retdec_bgm_track_state *track)
     DWORD play_cursor;
     DWORD write_cursor;
     DWORD consumed;
+    DWORD write_boundary;
+    DWORD write_limit;
     int in_write_window;
 
     if (track == NULL || track->buffer == NULL)
@@ -23732,26 +23747,25 @@ static void retdec_bgm_service_track(retdec_bgm_track_state *track)
         consumed = track->buffered_bytes;
     track->buffered_bytes -= consumed;
     track->play_offset = play_cursor;
-    /* 4099C0 gates the next block with the play cursor.  The two fields at
-       1340/1344 are the previous and next 0x8000-byte write boundaries. */
-    if (track->write_window_start == track->write_offset) {
-        in_write_window = 1;
-    } else if (track->write_window_start < track->write_offset) {
-        in_write_window = play_cursor >= track->write_window_start &&
-                          play_cursor < track->write_offset;
-    } else {
-        in_write_window = play_cursor >= track->write_window_start ||
-                          play_cursor < track->write_offset;
+    /* 4099C0 gates the next block with DirectSound's write cursor.  The two
+       fields at 1340/1344 are the next and previous 0x8000-byte boundaries;
+       advancing the previous boundary is what prevents a fast worker from
+       repeatedly overwriting data ahead of the hardware cursor. */
+    in_write_window = 0;
+    if (write_cursor >= track->write_window_start) {
+        write_limit = track->write_offset;
+        if (write_limit <= track->write_window_start)
+            write_limit += track->buffer_bytes;
+        if (write_cursor < write_limit)
+            in_write_window = 1;
     }
-    (void)write_cursor;
     if (in_write_window &&
         !(track->source_ended && !track->looping)) {
+        write_boundary = track->write_offset;
         if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES))
             return;
         retdec_trace_i32("bgm:service-filled", (int32_t)track->handle);
-        track->write_window_start =
-            (track->write_offset - RETDEC_BGM_CHUNK_BYTES) &
-            (track->buffer_bytes - 1);
+        track->write_window_start = write_boundary;
         track->buffered_bytes += RETDEC_BGM_CHUNK_BYTES;
     }
 }
