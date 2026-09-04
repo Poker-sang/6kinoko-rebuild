@@ -193,7 +193,7 @@ target_include_directories(kinoko_archive_smoke PRIVATE include)
 target_link_libraries(kinoko_archive_smoke PRIVATE kinoko_core)
 
 set(KINOKO_REFERENCE_DIR "D:/6kinoko" CACHE PATH "Directory containing the original DAT files")
-set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime" CACHE PATH
+set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime-builds/default" CACHE PATH
     "Directory for built runtime executables")
 enable_testing()
 add_test(

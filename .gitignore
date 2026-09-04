@@ -2,6 +2,7 @@
 /build-runs/
 /run-*/
 /runtime/
+/runtime-builds/
 /runtime/*.exe
 /runtime/*.pdb
 /runtime/*.ilk

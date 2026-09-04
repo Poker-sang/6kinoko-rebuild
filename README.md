@@ -26,7 +26,7 @@ cmake --build build-runs/build --config Release --parallel 4
 ctest --test-dir build-runs/build -C Release --output-on-failure
 ```
 
-Outputs are placed in `runtime/`:
+Outputs are placed in `runtime-builds/default/`:
 
 - `kinoko_rebuild.exe`: Win32 host with the original class name, title encoding, 640x480 client area, and a replaceable renderer boundary.
 - `kinoko_archive_inspect.exe`: prints decoded DAT index entries.
@@ -36,7 +36,7 @@ Run a copied executable with a copied DAT set:
 
 ```powershell
 powershell -File .\tools\run_staged.ps1 `
-  -Executable .\runtime-current-x86-20260826d\kinoko_retdec_rebuild.exe `
+  -Executable .\runtime-builds\default\kinoko_retdec_rebuild.exe `
   -SourceDir D:\6kinoko -Wait
 ```
 
