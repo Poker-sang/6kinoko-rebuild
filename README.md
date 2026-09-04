@@ -21,9 +21,9 @@ Produce a 32-bit Windows build that preserves the original startup/window/resour
 The first target is an x86 Win32 executable. From a Visual Studio developer shell or a machine with the Visual Studio CMake generator installed:
 
 ```powershell
-cmake -S . -B build -G "Visual Studio 18 2026" -A Win32 -DKINOKO_REFERENCE_DIR=D:/6kinoko
-cmake --build build --config Release --parallel 4
-ctest --test-dir build -C Release --output-on-failure
+cmake -S . -B build-runs/build -G "Visual Studio 18 2026" -A Win32 -DKINOKO_REFERENCE_DIR=D:/6kinoko
+cmake --build build-runs/build --config Release --parallel 4
+ctest --test-dir build-runs/build -C Release --output-on-failure
 ```
 
 Outputs are placed in `runtime/`:
