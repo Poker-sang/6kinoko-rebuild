@@ -52,6 +52,19 @@ runtime test.
 
 The current renderer is an isolated GDI runtime view. It proves the Windows startup and archive boundary; it is not yet a reimplementation of the original Direct3D scene/gameplay. The next replacement point is `IRenderer` in `include/kinoko/renderer.hpp`.
 
+## Squirrel migration experiment
+
+The RetDec runtime remains a C translation unit because it contains generated
+C constructs and x86 inline assembly. Squirrel-specific C++ code is isolated
+in `src/squirrel/squirrel_vm_bridge.cpp` and uses the official Squirrel 2.2.2
+VM sources.
+
+The C++ backend is disabled by default. Configure it in a separate build with
+`-DKINOKO_ENABLE_SQUIRREL_CPP_VM=ON`. The bridge still falls back to the C
+dispatcher unless `KINOKO_SQUIRREL_CPP_EXECUTE=1` is set for the test process.
+This second switch is deliberate: the mixed C/C++ object ownership boundary
+is experimental and must not alter the known startup/title path accidentally.
+
 ## Analysis policy
 
 Use the decompiled C as the primary reference, validate uncertain control flow and imports against the original PE in IDA, and inspect DAT data only when the startup/resource path requires it.

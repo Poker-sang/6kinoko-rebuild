@@ -10,84 +10,40 @@
 void retdec_trace(const char *message)
 {
 #if defined(RETDEC_DISABLE_TRACE)
-    /* Keep the render-chain evidence while suppressing the VM's high-volume
-       startup trace in the fast diagnostic build. */
+    (void)message;
+    return;
+#endif
+    /* A filtered trace is useful for interactive runtime checks.  Keep this
+       opt-in so normal trace builds retain the existing evidence and release
+       builds can remove tracing entirely. */
+#if defined(RETDEC_TRACE_FILTER)
     if (message == NULL ||
-        (strncmp(message, "veh:", 4) != 0 &&
-         strncmp(message, "veh-frame:", 10) != 0 &&
-         strncmp(message, "seh:", 4) != 0 &&
-         strncmp(message, "act:", 4) != 0 &&
-         strncmp(message, "act-script", 10) != 0 &&
-         strncmp(message, "466100:", 7) != 0 &&
-         strncmp(message, "466050:", 7) != 0 &&
-         strncmp(message, "4660c0:", 7) != 0 &&
-         strncmp(message, "469900:", 7) != 0 &&
-         strncmp(message, "46f0b0:", 7) != 0 &&
-         strncmp(message, "451640:", 7) != 0 &&
-         strncmp(message, "415810:", 7) != 0 &&
-         strncmp(message, "469840:", 7) != 0 &&
-         strncmp(message, "map:", 4) != 0 &&
-         strncmp(message, "native-load-wrapper:", 21) != 0 &&
-         strncmp(message, "48d850:", 7) != 0 &&
-         strncmp(message, "450e30:", 7) != 0 &&
-         strncmp(message, "450950:", 7) != 0 &&
-         strncmp(message, "act:pair-", 9) != 0 &&
-         strncmp(message, "sqrat:player-", 13) != 0 &&
-         strncmp(message, "48b490:", 7) != 0 &&
-         strncmp(message, "48c840:", 7) != 0 &&
-         strncmp(message, "498730:", 7) != 0 &&
-         strncmp(message, "498b60:", 7) != 0 &&
-         strncmp(message, "499610:", 7) != 0 &&
-         strncmp(message, "layout:", 7) != 0 &&
-         strncmp(message, "texture:", 8) != 0 &&
-         strncmp(message, "4525d0:", 7) != 0 &&
-         strncmp(message, "405800:", 7) != 0 &&
-         strncmp(message, "401790:", 7) != 0 &&
-         strncmp(message, "401820:", 7) != 0 &&
+        (strncmp(message, "seh:", 4) != 0 &&
+         strncmp(message, "veh:", 4) != 0 &&
+         strncmp(message, "4011b0:", 7) != 0 &&
          strncmp(message, "4017b0:", 7) != 0 &&
-         strncmp(message, "scene:", 6) != 0 &&
-         strncmp(message, "game:", 5) != 0 &&
-         strncmp(message, "render:", 7) != 0 &&
+         strncmp(message, "render-target:", 14) != 0 &&
          strncmp(message, "c2d:", 4) != 0 &&
-         strncmp(message, "473010:", 7) != 0 &&
-         strncmp(message, "469640:", 7) != 0 &&
-         strncmp(message, "45da00:", 7) != 0 &&
+         strncmp(message, "4525d0:", 7) != 0 &&
          strncmp(message, "40d790:", 7) != 0 &&
-         strncmp(message, "4721a0:", 7) != 0 &&
-         strncmp(message, "470d00:", 7) != 0 &&
-         strncmp(message, "45fab0:", 7) != 0 &&
-         strncmp(message, "45f3e0:", 7) != 0 &&
-         strncmp(message, "4a9730:", 7) != 0 &&
-         strncmp(message, "4aa080:", 7) != 0 &&
-         strncmp(message, "4a9950:", 7) != 0 &&
-         strncmp(message, "draw:", 5) != 0 &&
-         strncmp(message, "402d40:", 7) != 0 &&
-         strncmp(message, "loadse:", 7) != 0 &&
-         strncmp(message, "48ace0:", 7) != 0 &&
-         strncmp(message, "493710:", 7) != 0 &&
-         strncmp(message, "494120:", 7) != 0 &&
-         strncmp(message, "494da0:", 7) != 0 &&
-         strncmp(message, "497d30:", 7) != 0 &&
-         strncmp(message, "get:", 4) != 0 &&
-         strncmp(message, "492a80:", 7) != 0 &&
-         strncmp(message, "493a40:", 7) != 0 &&
-         strncmp(message, "newslot-adapter:", 16) != 0 &&
-         strncmp(message, "missing:", 8) != 0 &&
+         strncmp(message, "408b30:", 7) != 0 &&
+         strncmp(message, "411d80:", 7) != 0 &&
+         strncmp(message, "40b520:", 7) != 0 &&
+         strncmp(message, "4701e0:", 7) != 0 &&
+         strncmp(message, "470220:", 7) != 0 &&
+         strncmp(message, "470290:", 7) != 0 &&
+         strncmp(message, "470300:", 7) != 0 &&
+         strncmp(message, "470320:", 7) != 0 &&
+         strncmp(message, "470360:", 7) != 0 &&
+         strncmp(message, "470980:", 7) != 0 &&
+         strncmp(message, "game:", 5) != 0 &&
+         strncmp(message, "scene:", 6) != 0 &&
+         strncmp(message, "stagevm:", 8) != 0 &&
          strncmp(message, "prepcall-beginstage-", 20) != 0 &&
-         strncmp(message, "prepcall-adapter-", 18) != 0 &&
-         strncmp(message, "call-closure-", 13) != 0 &&
-         strncmp(message, "return-adapter:", 15) != 0 &&
-         strncmp(message, "prepcall-actor-", 15) != 0 &&
-         strncmp(message, "getk-actor-", 11) != 0 &&
-         strncmp(message, "bindenv:", 8) != 0 &&
-         strncmp(message, "495bfc:", 7) != 0 &&
-         strncmp(message, "sq-meta:", 8) != 0 &&
-         strncmp(message, "slice-params-", 13) != 0 &&
-         strncmp(message, "string-slice-", 13) != 0 &&
-         strncmp(message, "array-slice-", 12) != 0 &&
-         strncmp(message, "arith-call-", 11) != 0 &&
-         strncmp(message, "arith-result-", 13) != 0 &&
-         strncmp(message, "savedata-", 9) != 0)) {
+         strncmp(message, "call-initstage-", 15) != 0 &&
+         strncmp(message, "bgm:", 4) != 0 &&
+         strncmp(message, "audio:", 6) != 0 &&
+         strncmp(message, "input:", 6) != 0)) {
         return;
     }
 #endif

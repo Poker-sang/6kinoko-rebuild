@@ -94,3 +94,6 @@ int32_t retdec_call_thiscall2_result(
 int32_t retdec_call_thiscall3_result(
     void *object, void *method, int32_t argument1, int32_t argument2,
     int32_t argument3);
+int32_t retdec_call_thiscall4_result(
+    void *object, void *method, int32_t argument1, int32_t argument2,
+    int32_t argument3, int32_t argument4);

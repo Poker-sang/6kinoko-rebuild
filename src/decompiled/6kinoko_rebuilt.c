@@ -20,9 +20,43 @@
 
 #include "retdec_asm_stubs.h"
 
+/* The original runtime embeds a Vorbis decoder.  Keep the decoder local to
+   this translation unit so packaged DAT playback has no external codec
+   dependency. */
+#define STB_VORBIS_NO_STDIO
+#include "stb_vorbis.c"
+
+#if defined(KINOKO_ENABLE_SQUIRREL_CPP_VM)
+#include "kinoko/squirrel_vm_bridge.h"
+#endif
+
 static void retdec_squirrel_addref(int32_t type, int32_t data);
 static void retdec_squirrel_release(int32_t type, int32_t data);
 static void retdec_squirrel_assign(int32_t *dst, const int32_t *src);
+static void retdec_trace_ref_watch(const char *label, int32_t shared_state,
+                                   int32_t type, int32_t data);
+static int32_t retdec_primary_shared_state;
+static int32_t retdec_release_watch_data[8];
+static int32_t retdec_release_watch_count;
+static volatile LONG retdec_release_watch_event_count;
+
+static int32_t retdec_is_release_watch_data(int32_t data) {
+    int32_t index;
+
+    if (data == 0)
+        return 0;
+    for (index = 0; index < retdec_release_watch_count && index < 8;
+         ++index) {
+        if (retdec_release_watch_data[index] == data)
+            return 1;
+    }
+    return 0;
+}
+
+static int32_t function_49a520_this(int32_t shared_state, int32_t vm);
+static void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head);
+static void retdec_gc_finalize_collectable(int32_t object_ptr,
+                                           int32_t object_type);
 static int32_t function_48e0e0_this(int32_t this_ptr, int32_t value);
 static int32_t function_48e120_this(int32_t this_ptr, float value);
 static int32_t function_48e680_sized(int32_t vm, int32_t callback,
@@ -75,9 +109,19 @@ static int32_t retdec_sqrat_raw_set_string(int32_t vm,
                                             const int32_t *object_pair,
                                             const char *name,
                                             const char *value);
+static int32_t retdec_sqrat_new_table(int32_t vm, int32_t out_pair[2]);
+static int32_t retdec_sqrat_set_native_closure(
+    int32_t vm, const int32_t *object_pair, const char *name,
+    int32_t native_function, const int32_t *free_pair,
+    int32_t free_count);
+static int32_t retdec_sqrat_set_offset_closure(
+    int32_t vm, const int32_t *table_pair, const char *name,
+    int32_t offset, int32_t getter, int32_t setter);
 static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t resource_ptr,
                                           int32_t *active_count);
+static int32_t retdec_publish_cact_resource2d_class(int32_t vm,
+                                                     int32_t root_object);
 static int32_t retdec_act_set_current_time_this(int32_t resource_ptr,
                                                  int32_t value);
 static int32_t retdec_act_increment_frame_this(int32_t resource_ptr);
@@ -139,6 +183,63 @@ static int32_t retdec_squirrel_pair_from_stack(int32_t vm, int32_t index,
 uint32_t timeGetTime(void);
 uint32_t timeBeginPeriod(uint32_t period);
 void retdec_trace(const char *message);
+static __declspec(noinline) void retdec_trace_direct_ref_decrement(
+    const char *label, int32_t data, int32_t before, int32_t after) {
+    static volatile LONG trace_count;
+    char message[256];
+
+    if (data == 0 || !retdec_is_release_watch_data(data))
+        return;
+    if (InterlockedIncrement(&trace_count) > 512)
+        return;
+    wsprintfA(message,
+              "sq-watch:direct-ref-dec label=%s data=0x%08lX before=%ld after=%ld caller=0x%08lX",
+              label != NULL ? label : "unknown",
+              (unsigned long)(uint32_t)data, (long)before, (long)after,
+              (unsigned long)(uintptr_t)_ReturnAddress());
+    retdec_trace(message);
+}
+
+static __declspec(noinline) void retdec_trace_watch_boundary(
+    const char *label, int32_t instruction, int32_t opcode) {
+    static int32_t initialized[8];
+    static int32_t previous[8];
+    static volatile LONG trace_count;
+    int32_t index;
+
+    for (index = 0; index < retdec_release_watch_count && index < 8;
+         ++index) {
+        int32_t data = retdec_release_watch_data[index];
+        int32_t current;
+        int32_t before;
+        char message[320];
+
+        if (data == 0)
+            continue;
+        __try {
+            current = *(int32_t *)(intptr_t)(data + 4);
+        } __except (EXCEPTION_EXECUTE_HANDLER) {
+            continue;
+        }
+        if (initialized[index] == 0) {
+            previous[index] = current;
+            initialized[index] = 1;
+            continue;
+        }
+        before = previous[index];
+        previous[index] = current;
+        if (before == current || InterlockedIncrement(&trace_count) > 512)
+            continue;
+        wsprintfA(message,
+                  "sq-watch:boundary-ref-change label=%s data=0x%08lX before=%ld after=%ld instruction=0x%08lX opcode=0x%08lX caller=0x%08lX",
+                  label != NULL ? label : "unknown",
+                  (unsigned long)(uint32_t)data, (long)before,
+                  (long)current, (unsigned long)(uint32_t)instruction,
+                  (unsigned long)(uint32_t)opcode,
+                  (unsigned long)(uintptr_t)_ReturnAddress());
+        retdec_trace(message);
+    }
+}
 static __declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value);
 static __declspec(noinline) void retdec_trace_vector_state(
@@ -156,6 +257,15 @@ static int32_t retdec_read_esi(void);
 #else
 static int32_t retdec_read_ebx(void);
 static int32_t retdec_read_esi(void);
+#endif
+static void retdec_destroy_cact_script(int32_t script_ptr);
+static void retdec_destroy_cact_object(int32_t object_ptr);
+static int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
+                                               unsigned char flags);
+#if defined(_MSC_VER) && defined(_M_IX86)
+static int32_t retdec_cact_destructor_bridge(unsigned char flags);
+#else
+static int32_t retdec_cact_destructor_bridge(unsigned char flags);
 #endif
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
@@ -194,6 +304,36 @@ typedef struct retdec_dsound_buffer_desc {
     void *lpwfxFormat;
     GUID guid3DAlgorithm;
 } retdec_dsound_buffer_desc;
+
+typedef HRESULT (WINAPI *retdec_dsound_buffer_lock_fn)(
+    void *self, DWORD offset, DWORD bytes, void **part1, DWORD *part1_bytes,
+    void **part2, DWORD *part2_bytes, DWORD flags);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_unlock_fn)(
+    void *self, void *part1, DWORD part1_bytes, void *part2,
+    DWORD part2_bytes);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_set_volume_fn)(
+    void *self, LONG volume);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_play_fn)(
+    void *self, DWORD reserved1, DWORD reserved2, DWORD flags);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_get_status_fn)(
+    void *self, DWORD *status);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_get_current_position_fn)(
+    void *self, DWORD *play_cursor, DWORD *write_cursor);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_stop_fn)(void *self);
+typedef HRESULT (WINAPI *retdec_dsound_buffer_set_position_fn)(
+    void *self, DWORD position);
+
+#pragma pack(push, 1)
+typedef struct retdec_wave_format {
+    WORD wFormatTag;
+    WORD nChannels;
+    DWORD nSamplesPerSec;
+    DWORD nAvgBytesPerSec;
+    WORD nBlockAlign;
+    WORD wBitsPerSample;
+    WORD cbSize;
+} retdec_wave_format;
+#pragma pack(pop)
 
 // ---------------- Integer Types Definitions -----------------
 
@@ -3429,8 +3569,11 @@ int32_t function_450950(uint32_t a1);
 int32_t function_450d80(void);
 int32_t function_450e30(int32_t a1, int32_t a2);
 int32_t function_450f30(int32_t a1);
-static int32_t retdec_publish_act_resource(int32_t player_ptr,
-                                            int32_t vm);
+static int32_t retdec_root_table_register_resource(int32_t root_object,
+                                                    int32_t resource_ptr);
+static int32_t retdec_root_table_construct_this(int32_t resource_ptr,
+                                                 int32_t vm,
+                                                 int32_t output_ptr);
 int32_t function_451270(int32_t result, int32_t a2, int32_t a3);
 int32_t function_4513f0(void);
 int32_t function_4514a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, float32_t a9);
@@ -3747,19 +3890,31 @@ int32_t function_45db90(int32_t a1);
 int32_t function_45dbc0(void);
 int32_t function_45dbd0(float32_t a1, float32_t a2);
 int32_t function_45de70(int32_t a1, int32_t * a2);
+static int32_t function_45de70_this(int32_t actor_ptr,
+                                    int32_t source_ptr);
 int32_t function_45de90(int32_t a1, int32_t a2);
 int32_t function_45df10(int32_t a1);
 int32_t function_45dfb0(void);
 int32_t function_45e020(char a1, int32_t a2);
 int32_t function_45e0e0(void);
 int32_t function_45e120(void);
-int32_t function_45e270(int32_t a1);
+int32_t function_45e270(int32_t holder_ptr, int32_t actor_ptr);
+static int32_t function_45e270_this(int32_t holder_ptr,
+                                    int32_t actor_ptr);
 int32_t function_45e300(void);
 static int32_t function_45e300_this(int32_t this_ptr);
 int32_t function_45e410(int32_t * a1);
 static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair);
 int32_t function_45e460(void);
 int32_t function_45e5e0(int32_t a1);
+static int32_t function_45e020_this(int32_t state_ptr,
+                                    int32_t temporary_ptr,
+                                    int32_t arg_type, int32_t arg_data);
+static int32_t function_45e5e0_this(
+    int32_t actor_ptr, int32_t manager_ptr,
+    int32_t first_vtable, int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data);
 int32_t function_45eb00(void);
 int32_t function_45ec60(void);
 static int32_t function_45ec60_this(int32_t this_ptr);
@@ -3783,9 +3938,12 @@ int32_t function_45f7e0(int32_t a1);
 int32_t function_45f800(void);
 int32_t function_45f810(void);
 int32_t function_45f820(float32_t a1, float32_t a2, float32_t a3, float32_t a4);
-int32_t function_45f850(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_45f8c0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+int32_t function_45f850(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5);
+int32_t function_45f8c0(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5);
+int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5);
 int32_t function_45fab0(int32_t a1, int32_t a2);
 int32_t function_45fb90(void);
 int32_t function_45fcd0(void);
@@ -3855,12 +4013,21 @@ int32_t function_462f30(int32_t a1);
 int32_t function_462f80(int32_t a1);
 int32_t function_462fe0(char * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_463210(int32_t a1);
+static int32_t function_463210_this(int32_t tree_ptr, int32_t source_ptr);
 int32_t function_463280(int32_t * a1, int32_t a2);
 int32_t function_4634d0(int32_t a1);
 int32_t function_463510(int32_t a1);
 int32_t function_463580(int32_t a1);
 int32_t function_4635e0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_463610(int32_t result, int32_t a2, int32_t a3);
+static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
+                                    int32_t node_ptr, int32_t insert_left);
+static int32_t function_463b40_this(
+    int32_t manager_ptr, int32_t first_vtable,
+    int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data,
+    int32_t init_source);
 int32_t function_463690(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4636e0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_463730(int32_t a1);
@@ -3955,7 +4122,11 @@ void function_469a03(int32_t nExitCode);
 int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5, int32_t a6);
 int32_t function_469b30(void);
-int32_t function_469b40(int32_t result, int32_t a2, int32_t a3, float32_t a4, float32_t a5, float32_t a6, int32_t a7, int32_t a8);
+int32_t function_469b40(
+    int32_t result,
+    int32_t first_vtable, int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data);
 int32_t function_469d10(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_469dd0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
 int32_t function_469ed0(void);
@@ -4077,14 +4248,18 @@ int32_t function_470100(int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
 int32_t function_4701d0(void);
 int32_t function_4701e0(void);
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
+int32_t function_470220(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4);
+int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                        int32_t a5);
 int32_t function_470300(void);
 int32_t function_470320(int32_t a1, int32_t a2);
 int32_t function_470360(void);
 int32_t function_470390(int32_t result);
 int32_t function_4703b0(char * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3);
+static int32_t function_4706c0_this(int32_t this_ptr,
+                                    int32_t *a1, int32_t *a2);
 int32_t function_4706c0(int32_t * a1, int32_t * a2);
 int32_t function_470730(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_470890(void);
@@ -4106,17 +4281,17 @@ int32_t function_471070(void);
 int32_t function_471080(void);
 int32_t function_4710a0(void);
 int32_t function_471100(void);
-int32_t function_471160(int32_t a1, int32_t a2);
+int32_t function_471160(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471240(int32_t a1, int32_t a2);
-int32_t function_471330(int32_t a1, int32_t a2);
+int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_4713b0(int32_t a1, int32_t a2);
 int32_t function_471510(int32_t a1, int32_t a2);
 int32_t function_4715e0(int32_t a1, int32_t a2);
-int32_t function_4716b0(int32_t a1, int32_t a2);
+int32_t function_4716b0(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471720(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471810(int32_t a1, int32_t a2);
-int32_t function_471880(int32_t a1, int32_t a2);
-int32_t function_471960(int32_t a1, int32_t a2);
+int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
+int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471a60(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471b30(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5);
 int32_t function_471bc0(int32_t a1);
@@ -4136,9 +4311,17 @@ int32_t function_4720e0(int32_t a1);
 int32_t function_472140(int32_t a1);
 int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
 int32_t function_472240(int32_t * a1, int32_t a2, char * a3);
-int32_t function_4722e0(int32_t a1);
-int32_t function_472820(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_472e50(int32_t a1, int32_t a2, int32_t a3);
+int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data);
+static int32_t function_4722e0_legacy(int32_t a1);
+int32_t function_472820(int32_t stream_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data);
+static int32_t function_472820_legacy(int32_t a1, int32_t a2, int32_t a3);
+int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data);
+int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data);
+static int32_t function_472e50_legacy(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_473010(void);
 LRESULT CALLBACK function_473af0(HWND a1, UINT a2, WPARAM a3, LPARAM a4);
 int32_t function_473b20(void);
@@ -4614,6 +4797,10 @@ int32_t function_491230(char a1);
 int32_t function_491260(uint32_t a1, int32_t a2);
 int32_t function_4912e0(uint32_t a1, int32_t a2);
 int32_t function_491340(int32_t a1, int32_t a2, int32_t a3);
+static int32_t function_491340_array_next(int32_t array_ptr,
+                                           int32_t refpos_ptr,
+                                           int32_t out_key_ptr,
+                                           int32_t out_value_ptr);
 int32_t function_491400(int32_t a1);
 int32_t function_4914a0(int32_t a1);
 static int32_t function_4914a0_this(int32_t this_ptr, int32_t value_ptr);
@@ -4629,6 +4816,8 @@ int32_t function_4918a0(int32_t a1);
 int32_t function_4918b0(void);
 int32_t function_491910(void);
 int32_t function_4919b0(void);
+static int32_t function_491910_this(int32_t this_ptr);
+static int32_t function_4919b0_this(int32_t this_ptr);
 int32_t function_491a50(int32_t a1);
 static int32_t function_491a50_this(int32_t this_ptr, int32_t shared_state);
 static int32_t function_491760_this(int32_t this_ptr);
@@ -4699,6 +4888,9 @@ static int32_t retdec_execute_return(int32_t vm, int32_t arg0,
 static int32_t retdec_execute_call_native(
     int32_t vm, int32_t native_closure, int32_t nargs,
     int32_t stackbase, int32_t retval_ptr, int32_t suspend_ptr);
+static int32_t retdec_execute_clean_vm(
+    int32_t closure_slot, int32_t target, int32_t nargs,
+    int32_t stackbase, int32_t outres, int32_t raiseerror);
 int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 int32_t function_497680(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
 int32_t function_497850(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
@@ -5022,6 +5214,7 @@ static int32_t *function_4a92e0_this(int32_t *this_ptr, int32_t a2);
 int32_t function_4a9370(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4a9490(int32_t * a1, int32_t a2, int32_t a3, char * a4, char * a5);
 static int32_t function_4a94e0_this(int32_t this_ptr);
+static int32_t function_4a9c10_this(int32_t this_ptr);
 int32_t function_4a9500(int32_t a1);
 static int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr);
 int32_t function_4a9540(int32_t a1, int32_t a2);
@@ -5077,7 +5270,10 @@ int32_t function_4aa000(int32_t * a1);
 static int32_t function_4aa000_this(int32_t this_ptr, int32_t a1);
 int32_t function_4aa080(int32_t this_ptr, int32_t src_ptr,
                         int32_t out_ptr, int32_t a4);
-int32_t function_4aa110(int32_t * a1, int32_t * a2, int32_t a3);
+int32_t function_4aa110(int32_t *a1, int32_t *a2, int32_t a3);
+static int32_t retdec_function_4aa110_this(int32_t this_ptr,
+                                           const char *source_ptr,
+                                           int32_t *out_ptr, int32_t a4);
 int32_t function_4aa1a0(int32_t this_ptr, const char *source_ptr);
 int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr);
 int32_t function_4aa2d0(int32_t result, int32_t a2);
@@ -5091,18 +5287,13 @@ int32_t function_4aa4b0(int32_t a1);
 int32_t function_4aa4d0(int32_t a1);
 int32_t function_4aa4f0(int32_t result, int32_t a2, int32_t a3);
 int32_t function_4aa540(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_t a5);
-int32_t function_4aa5e0(int32_t * a1);
+int32_t function_4aa5e0(int32_t *context, int32_t *out_varinfo);
 int32_t function_4aa750(int32_t * a1);
 int32_t function_4aa970(int32_t a1);
 int32_t function_4aab60(int32_t a1);
 int32_t function_4aabd0(int32_t a1);
 int32_t function_4aac40(int32_t a1);
 int32_t function_4aaf30(int32_t a1);
-static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context);
-static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
-                                    int32_t source_ptr);
-static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
-                                    int32_t source_ptr);
 int32_t function_4aafa0(int32_t a1);
 int32_t function_4ab010(void);
 int32_t function_4ab020(int32_t a1, int32_t * a2, int32_t a3);
@@ -7851,6 +8042,71 @@ int32_t g801 = 0; // 0x51b258
 int32_t g802 = 0; // 0x51b260
 int32_t g803 = 0; // 0x51b264
 float80_t g804 = 0.0L; // 0x51b278
+
+/* The audio manager is a single object at 0x51B1C0 in the original.  RetDec
+   split its fields into unrelated globals, so the recovered thiscall methods
+   could not safely address their documented offsets. */
+#define RETDEC_AUDIO_MANAGER_BYTES 0x140
+__declspec(align(8)) static unsigned char
+    g_retdec_audio_manager_state[RETDEC_AUDIO_MANAGER_BYTES];
+static int32_t g_retdec_audio_manager_initialized;
+
+typedef struct retdec_dsound_slot {
+    void *buffer;
+    DWORD buffer_bytes;
+    int in_use;
+} retdec_dsound_slot;
+
+typedef struct retdec_se_pool_state {
+    unsigned char object_prefix[0xd0];
+    retdec_dsound_slot stream_slots[32];
+    unsigned char object_tail[0x200];
+    float master_volume;
+    int initialized;
+} retdec_se_pool_state;
+
+typedef struct retdec_bgm_track_state {
+    void *buffer;
+    DWORD buffer_bytes;
+    unsigned char *encoded_data;
+    short *decoded_samples;
+    short *decode_scratch;
+    stb_vorbis *decoder;
+    DWORD encoded_bytes;
+    DWORD decoded_bytes;
+    DWORD sample_rate;
+    WORD channels;
+    uint32_t handle;
+    DWORD loop_start_frame;
+    DWORD loop_end_frame;
+    DWORD write_offset;
+    DWORD write_window_start;
+    DWORD play_offset;
+    DWORD buffered_bytes;
+    DWORD start_time;
+    int source_ended;
+    int looping;
+    int started;
+    float volume;
+    float fade_from;
+    float fade_to;
+    DWORD fade_started;
+    DWORD fade_duration;
+    int playing;
+} retdec_bgm_track_state;
+
+static retdec_se_pool_state g_retdec_se_pool;
+static retdec_bgm_track_state g_retdec_bgm_track;
+static retdec_bgm_track_state g_retdec_bgm_fading_tracks[31];
+static HANDLE g_retdec_audio_queue_event;
+static HANDLE g_retdec_audio_stop_event;
+static HANDLE g_retdec_audio_update_thread;
+static HANDLE g_retdec_audio_loader_thread;
+static float g_retdec_audio_master_volume = 1.0f;
+static volatile LONG g_retdec_audio_running;
+static int g_retdec_audio_threads_initialized;
+static CRITICAL_SECTION g_retdec_audio_lock;
+static int g_retdec_audio_lock_initialized;
 int32_t g805 = 0; // 0x51b27c
 int32_t g806 = 0; // 0x51b280
 int32_t g807 = 0; // 0x51b284
@@ -8710,7 +8966,7 @@ struct vtable_4ec1d4_type g285 = {
     .e1 = function_428150,
     .e2 = function_4461d0,
     .e3 = function_446210,
-    .e4 = function_417dd0,
+    .e4 = retdec_cact_destructor_bridge,
     .e5 = function_427950,
     .e6 = function_4289c0,
     .e7 = function_428af0,
@@ -9477,6 +9733,7 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
     IDirect3DDevice9 *device = NULL;
     IDirect3DSwapChain9 *swap_chain = NULL;
     D3DDEVTYPE device_type = D3DDEVTYPE_HAL;
+    WINDOWINFO window_info;
     HRESULT hr;
 
     if (hwnd == NULL) {
@@ -9508,6 +9765,18 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
         return 0;
     }
 
+    /* WinMain passes zero dimensions.  4011B0 then takes the actual client
+       rectangle, which keeps the swap chain aligned with the window. */
+    if (width <= 0 || height <= 0) {
+        ZeroMemory(&window_info, sizeof(window_info));
+        window_info.cbSize = sizeof(window_info);
+        if (GetWindowInfo(hwnd, &window_info)) {
+            width = window_info.rcClient.right - window_info.rcClient.left;
+            height = window_info.rcClient.bottom - window_info.rcClient.top;
+        }
+    }
+    retdec_trace_i32("4011b0:client-width", width);
+    retdec_trace_i32("4011b0:client-height", height);
     g695 = (int32_t)g_retdec_display_mode.Format;
     g682 = width > 0 ? width : 640;
     g683 = height > 0 ? height : 480;
@@ -9850,7 +10119,9 @@ static void retdec_capture_render_target(IDirect3DDevice9 *device)
     int can_write_bmp;
 
     index = InterlockedIncrement(&capture_count);
-    if (index > 2 || device == NULL || device->lpVtbl == NULL)
+    if ((index > 2 && index != 30 && index != 60 && index != 120 &&
+         (index < 600 || (index % 600) != 0)) ||
+        device == NULL || device->lpVtbl == NULL)
         return;
 
     ZeroMemory(&desc, sizeof(desc));
@@ -10921,19 +11192,19 @@ int32_t function_4021e0(int32_t a1, int32_t a2, int32_t a3) {
         int32_t v5 = &v4;
         int32_t v6 = v5 - 4; // 0x4021f3
         *(int32_t *)v6 = *(int32_t *)(v3 + 8);
-        function_4634d0((int32_t)&g1224);
+        function_4634d0(*(int32_t *)v6);
         int32_t v7 = *(int32_t *)v3; // 0x4021fb
         *(int32_t *)(v5 - 8) = v3;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+        _free((void *)(intptr_t)v3);
         while (*(char *)(v7 + 17) == 0) {
             int32_t v8 = v7;
             v5 = v6;
             v6 = v5 - 4;
             *(int32_t *)v6 = *(int32_t *)(v8 + 8);
-            function_4634d0((int32_t)&g1224);
+            function_4634d0(*(int32_t *)v6);
             v7 = *(int32_t *)v8;
             *(int32_t *)(v5 - 8) = v8;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+            _free((void *)(intptr_t)v8);
         }
     }
     int32_t v9 = *v2; // 0x40220e
@@ -13951,53 +14222,66 @@ int32_t function_404270(void) {
 // Address range: 0x404390 - 0x404429
 int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {
     // 0x404390
-    int32_t v1; // bp-64, 0x404390
-    int32_t v2; // 0x404390
-    if (function_477160(&v1, -1, "1.2.3", 56, v2) != 0) {
+    /* The stream object occupies the contiguous stack slots following the
+       first four public fields.  RetDec compressed those slots into one
+       scalar, so the inflate routine received unrelated stack data. */
+    int32_t stream[16] = { 0 };
+    int32_t remaining = a4;
+
+    if (function_477160(stream, -1, "1.2.3", 56, 0) != 0) {
         // 0x4043cc
         return 0;
     }
     // 0x4043d3
-    v1 = a1;
-    int32_t v3 = function_4757e0(&v1, 4); // 0x4043f6
-    if (v3 == 1) {
+    stream[0] = a1;
+    stream[1] = a2;
+    stream[3] = (int32_t)(intptr_t)a3;
+    stream[4] = remaining;
+    int32_t result = function_4757e0(stream, 4); // 0x4043f6
+    if (result == 1) {
         // 0x40440d
-        function_475fc0(&v1);
+        function_475fc0(stream);
         return 0;
     }
-    if (v3 == a4 || v3 != 0) {
+    if (result == remaining || result != 0) {
         // 0x4043cc
         return 0;
     }
     // 0x40440d
-    function_475fc0(&v1);
-    return 0;
+    if (function_475fc0(stream) != 0)
+        return 0;
+    return remaining - stream[4];
 }
 
 // Address range: 0x404430 - 0x4044c7
 int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     // 0x404430
-    int32_t v1; // bp-64, 0x404430
-    int32_t v2; // 0x404430
-    if (function_474000(&v1, "1.2.3", 56, v2) != 0) {
+    int32_t stream[16] = { 0 };
+    int32_t remaining = a4;
+
+    if (function_474000(stream, "1.2.3", 56, 0) != 0) {
         // 0x40446a
         return 0;
     }
     // 0x404471
-    v1 = a1;
-    int32_t v3 = function_474110(&v1); // 0x404494
-    if (v3 == 1) {
+    stream[0] = a1;
+    stream[1] = a2;
+    stream[3] = a3;
+    stream[4] = remaining;
+    int32_t result = function_474110(stream); // 0x404494
+    if (result == 1) {
         // 0x4044ab
-        function_475710(&v1);
+        function_475710(stream);
         return 0;
     }
-    if (v3 == a4 || v3 != 0) {
+    if (result == remaining || result != 0) {
         // 0x40446a
         return 0;
     }
     // 0x4044ab
-    function_475710(&v1);
-    return 0;
+    if (function_475710(stream) != 0)
+        return 0;
+    return remaining - stream[4];
 }
 
 // Address range: 0x4044d0 - 0x4045bd
@@ -18020,11 +18304,16 @@ static void retdec_poll_fallback_keyboard(void)
         { 0xcd, VK_RIGHT }, { 0xd0, VK_DOWN }
     };
     size_t index;
+    static int previous_z;
 
     memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
     for (index = 0; index < sizeof(key_map) / sizeof(key_map[0]); ++index) {
         if ((GetAsyncKeyState(key_map[index].virtual_key) & 0x8000) != 0)
             g_retdec_keyboard_state[key_map[index].scan_code] = 0x80;
+    }
+    if (previous_z != (g_retdec_keyboard_state[0x2c] != 0)) {
+        previous_z = g_retdec_keyboard_state[0x2c] != 0;
+        retdec_trace_i32("input:z", previous_z);
     }
 }
 
@@ -20999,6 +21288,11 @@ int32_t function_408c80(void) {
     HRESULT hr;
     unsigned char keyboard_state[256];
     DIMOUSESTATE2 mouse_state;
+    static volatile LONG poll_trace_count;
+    LONG poll_index = InterlockedIncrement(&poll_trace_count);
+
+    if (poll_index <= 5)
+        retdec_trace_i32("input:poll-keyboard", (int32_t)(intptr_t)keyboard);
 
     if (keyboard != NULL) {
         hr = keyboard->lpVtbl->GetDeviceState(
@@ -22410,10 +22704,1522 @@ int32_t function_409da0(int32_t a1) {
     return ___report_gsfailure();
 }
 
+/* The original has two adjacent audio objects: the sound-effect buffer pool
+   at 0x51B278 and the BGM worker manager at 0x51B1C0.  RetDec split both
+   objects into unrelated globals, so keep their recovered state explicit and
+   use the original DirectSound/reader boundaries for the live path. */
+
+static void retdec_trace_audio_text(const char *label, const char *value)
+{
+    char message[512];
+
+    if (label == NULL || value == NULL)
+        return;
+    wsprintfA(message, "%s:%s", label, value);
+    retdec_trace(message);
+}
+
+static LONG retdec_audio_volume_db(float gain)
+{
+    double value;
+
+    if (!(gain > 0.0020000001f))
+        return -10000;
+    value = 3322.0001220703125 * log10((double)gain);
+    if (value < -10000.0)
+        return -10000;
+    if (value > 0.0)
+        return 0;
+    return (LONG)value;
+}
+
+static void retdec_release_dsound_buffer(void *buffer)
+{
+    void **vtable;
+
+    if (buffer == NULL)
+        return;
+    vtable = *(void ***)buffer;
+    if (vtable != NULL && vtable[2] != NULL)
+        ((retdec_dsound_release_fn)vtable[2])(buffer);
+}
+
+static int retdec_create_secondary_buffer(const retdec_wave_format *format,
+                                          DWORD buffer_bytes, void **result)
+{
+    retdec_dsound_buffer_desc description;
+    void **vtable;
+    HRESULT hr;
+
+    if (result == NULL)
+        return 0;
+    *result = NULL;
+    if (g877 == NULL || format == NULL || buffer_bytes == 0)
+        return 0;
+    vtable = *(void ***)g877;
+    if (vtable == NULL || vtable[3] == NULL)
+        return 0;
+
+    ZeroMemory(&description, sizeof(description));
+    description.dwSize = sizeof(description);
+    description.dwFlags = 0x18088;
+    description.dwBufferBytes = buffer_bytes;
+    description.lpwfxFormat = (void *)format;
+    retdec_trace_i32("audio:create-bytes", (int32_t)buffer_bytes);
+    retdec_trace_i32("audio:create-rate", (int32_t)format->nSamplesPerSec);
+    retdec_trace_i32("audio:create-channels", (int32_t)format->nChannels);
+    hr = ((retdec_dsound_create_buffer_fn)vtable[3])(
+        (void *)g877, &description, result, NULL);
+    retdec_trace_hresult("audio:secondary-create-hr", hr);
+    if (FAILED(hr) || *result == NULL) {
+        *result = NULL;
+        return 0;
+    }
+    return 1;
+}
+
+static int retdec_read_asset_bytes(const char *path,
+                                   unsigned char **data,
+                                   DWORD *size)
+{
+    int32_t reader_slot = 0;
+    int32_t *reader;
+    DWORD asset_size;
+    DWORD file_size;
+    unsigned char *contents;
+
+    if (data == NULL || size == NULL || path == NULL)
+        return 0;
+    *data = NULL;
+    *size = 0;
+    if (!function_407370((int32_t)(intptr_t)&reader_slot, path))
+        return 0;
+
+    reader = (int32_t *)(intptr_t)reader_slot;
+    if (reader == NULL || reader[1] == 0) {
+        retdec_destroy_reader(reader);
+        return 0;
+    }
+    if (g765 != 0) {
+        asset_size = (DWORD)reader[3];
+    } else {
+        file_size = GetFileSize((HANDLE)(intptr_t)reader[1], NULL);
+        if (file_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
+            retdec_destroy_reader(reader);
+            return 0;
+        }
+        asset_size = file_size;
+    }
+    if (asset_size == 0) {
+        retdec_destroy_reader(reader);
+        return 0;
+    }
+
+    contents = (unsigned char *)malloc(asset_size);
+    if (contents == NULL ||
+        !retdec_reader_read_exact(reader_slot, contents, asset_size)) {
+        free(contents);
+        retdec_destroy_reader(reader);
+        return 0;
+    }
+    retdec_destroy_reader(reader);
+    *data = contents;
+    *size = asset_size;
+    return 1;
+}
+
+static uint32_t retdec_bgm_read_u32(const unsigned char *bytes)
+{
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8) |
+           ((uint32_t)bytes[2] << 16) |
+           ((uint32_t)bytes[3] << 24);
+}
+
+/* The original loader reads an optional RIFF/SFPL sidecar to obtain the
+   loop region.  The packaged reader has already removed its XOR layer here. */
+static int retdec_bgm_read_loop_points(const char *path,
+                                       DWORD *loop_start,
+                                       DWORD *loop_end)
+{
+    char sidecar[MAX_PATH];
+    unsigned char *data = NULL;
+    DWORD size = 0;
+    DWORD start = 0;
+    DWORD length = 0;
+    DWORD index;
+    size_t path_length;
+
+    if (path == NULL || loop_start == NULL || loop_end == NULL)
+        return 0;
+    path_length = strlen(path);
+    if (path_length < 4 || path_length >= sizeof(sidecar))
+        return 0;
+    memcpy(sidecar, path, path_length + 1);
+    sidecar[path_length - 3] = 's';
+    sidecar[path_length - 2] = 'f';
+    sidecar[path_length - 1] = 'l';
+    if (!retdec_read_asset_bytes(sidecar, &data, &size))
+        return 0;
+
+    for (index = 0; index + 8 <= size; ++index) {
+        const unsigned char *chunk = data + index;
+        DWORD chunk_size = retdec_bgm_read_u32(chunk + 4);
+
+        if (memcmp(chunk, "cue ", 4) == 0 && chunk_size >= 28 &&
+            chunk_size <= size - index - 8 &&
+            retdec_bgm_read_u32(chunk + 8) != 0) {
+            const unsigned char *cue_point = chunk + 12;
+            start = retdec_bgm_read_u32(cue_point + 20);
+        }
+        if (memcmp(chunk, "ltxt", 4) == 0 && chunk_size >= 8 &&
+            chunk_size <= size - index - 8)
+            length = retdec_bgm_read_u32(chunk + 12);
+    }
+    free(data);
+    if (length == 0 || start > UINT32_MAX - length)
+        return 0;
+    *loop_start = start;
+    *loop_end = start + length;
+    return *loop_end > *loop_start;
+}
+
+static int retdec_decode_bgm(const char *path,
+                             short **samples,
+                             DWORD *sample_bytes,
+                             DWORD *sample_rate,
+                             WORD *channels)
+{
+    unsigned char *encoded = NULL;
+    DWORD encoded_size = 0;
+    stb_vorbis *decoder;
+    stb_vorbis_info info;
+    unsigned int frame_count;
+    size_t short_count;
+    short *decoded = NULL;
+    int error = 0;
+    int frame_cursor = 0;
+    int frame_total;
+
+    if (samples == NULL || sample_bytes == NULL || sample_rate == NULL ||
+        channels == NULL)
+        return 0;
+    *samples = NULL;
+    *sample_bytes = 0;
+    *sample_rate = 0;
+    *channels = 0;
+    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size))
+        return 0;
+
+    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error, NULL);
+    if (decoder == NULL) {
+        free(encoded);
+        retdec_trace_i32("audio:vorbis-open-error", error);
+        return 0;
+    }
+    info = stb_vorbis_get_info(decoder);
+    frame_count = stb_vorbis_stream_length_in_samples(decoder);
+    if (info.channels <= 0 || info.channels > 8 || info.sample_rate == 0 ||
+        frame_count == 0) {
+        stb_vorbis_close(decoder);
+        free(encoded);
+        return 0;
+    }
+
+    short_count = (size_t)frame_count * (size_t)info.channels;
+    if (short_count > (size_t)0x7fffffff ||
+        short_count > (size_t)0xffffffffu / sizeof(short)) {
+        stb_vorbis_close(decoder);
+        free(encoded);
+        return 0;
+    }
+    decoded = (short *)malloc(short_count * sizeof(short));
+    if (decoded == NULL) {
+        stb_vorbis_close(decoder);
+        free(encoded);
+        return 0;
+    }
+
+    frame_total = (int)frame_count;
+    while (frame_cursor < frame_total) {
+        int remaining_frames = frame_total - frame_cursor;
+        int got = stb_vorbis_get_samples_short_interleaved(
+            decoder, info.channels, decoded +
+                (size_t)frame_cursor * (size_t)info.channels,
+            remaining_frames * info.channels);
+        if (got <= 0)
+            break;
+        frame_cursor += got;
+    }
+    stb_vorbis_close(decoder);
+    free(encoded);
+    if (frame_cursor <= 0) {
+        free(decoded);
+        return 0;
+    }
+
+    *samples = decoded;
+    *sample_bytes = (DWORD)((size_t)frame_cursor *
+                            (size_t)info.channels * sizeof(short));
+    *sample_rate = info.sample_rate;
+    *channels = (WORD)info.channels;
+    return 1;
+}
+
+static int retdec_fill_dsound_buffer(void *buffer,
+                                     const void *samples,
+                                     DWORD sample_bytes)
+{
+    void **vtable;
+    void *part1 = NULL;
+    void *part2 = NULL;
+    DWORD part1_bytes = 0;
+    DWORD part2_bytes = 0;
+    DWORD first_copy;
+    HRESULT hr;
+
+    if (buffer == NULL || samples == NULL || sample_bytes == 0)
+        return 0;
+    vtable = *(void ***)buffer;
+    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
+        return 0;
+    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
+        buffer, 0, sample_bytes, &part1, &part1_bytes,
+        &part2, &part2_bytes, 0);
+    if (FAILED(hr)) {
+        retdec_trace_hresult("audio:secondary-lock-hr", hr);
+        return 0;
+    }
+    first_copy = part1_bytes < sample_bytes ? part1_bytes : sample_bytes;
+    if (first_copy != 0)
+        memcpy(part1, samples, first_copy);
+    if (part2_bytes != 0 && first_copy < sample_bytes) {
+        DWORD second_copy = part2_bytes < sample_bytes - first_copy
+            ? part2_bytes : sample_bytes - first_copy;
+        memcpy(part2, (const unsigned char *)samples + first_copy,
+               second_copy);
+    }
+    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
+        buffer, part1, part1_bytes, part2, part2_bytes);
+    if (FAILED(hr)) {
+        retdec_trace_hresult("audio:secondary-unlock-hr", hr);
+        return 0;
+    }
+    return first_copy + part2_bytes >= sample_bytes;
+}
+
+static void retdec_set_dsound_volume(void *buffer, float gain)
+{
+    void **vtable;
+
+    if (buffer == NULL)
+        return;
+    vtable = *(void ***)buffer;
+    if (vtable != NULL && vtable[15] != NULL)
+        ((retdec_dsound_buffer_set_volume_fn)vtable[15])(
+            buffer, retdec_audio_volume_db(gain));
+}
+
+#define RETDEC_BGM_BUFFER_BYTES 0x100000u
+#define RETDEC_BGM_CHUNK_BYTES  0x8000u
+#define RETDEC_BGM_MAX_CHANNELS 8
+#define RETDEC_BGM_GUARD_BYTES 16u
+
+static void retdec_bgm_write_guard(void *memory, DWORD size)
+{
+    DWORD index;
+    unsigned char *bytes = (unsigned char *)memory;
+
+    if (bytes == NULL)
+        return;
+    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index)
+        bytes[size + index] = 0xA5u;
+}
+
+static int retdec_bgm_check_guard(const void *memory, DWORD size)
+{
+    DWORD index;
+    const unsigned char *bytes = (const unsigned char *)memory;
+
+    if (bytes == NULL)
+        return 0;
+    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index) {
+        if (bytes[size + index] != 0xA5u)
+            return 0;
+    }
+    return 1;
+}
+
+static void retdec_bgm_release_state(retdec_bgm_track_state *track)
+{
+    if (track == NULL)
+        return;
+    if (track->buffer != NULL) {
+        DWORD status = 0;
+        int wait_count;
+        retdec_trace_i32("bgm:release-handle", (int32_t)track->handle);
+        void **vtable = *(void ***)track->buffer;
+        if (vtable != NULL && vtable[18] != NULL)
+            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
+        if (vtable != NULL && vtable[9] != NULL) {
+            for (wait_count = 0; wait_count < 100; ++wait_count) {
+                if (FAILED(((retdec_dsound_buffer_get_status_fn)vtable[9])(
+                               track->buffer, &status)) ||
+                    (status & 1u) == 0)
+                    break;
+                Sleep(1);
+            }
+        }
+        retdec_release_dsound_buffer(track->buffer);
+    }
+    if (track->decoder != NULL)
+        stb_vorbis_close(track->decoder);
+    /* BGM owns the dynamically created DirectSound buffer and its decoder. */
+    free(track->encoded_data);
+    free(track->decoded_samples);
+    free(track->decode_scratch);
+    ZeroMemory(track, sizeof(*track));
+}
+
+static retdec_bgm_track_state *retdec_bgm_find_track(uint32_t handle)
+{
+    int index;
+
+    if (handle == 0)
+        return NULL;
+    if (g_retdec_bgm_track.buffer != NULL &&
+        g_retdec_bgm_track.handle == handle)
+        return &g_retdec_bgm_track;
+    for (index = 0; index < 31; ++index) {
+        if (g_retdec_bgm_fading_tracks[index].buffer != NULL &&
+            g_retdec_bgm_fading_tracks[index].handle == handle)
+            return &g_retdec_bgm_fading_tracks[index];
+    }
+    return NULL;
+}
+
+static void retdec_bgm_apply_state_volume(retdec_bgm_track_state *track,
+                                          float gain)
+{
+    float effective_gain;
+
+    if (track == NULL || track->buffer == NULL)
+        return;
+    if (gain < 0.0f)
+        gain = 0.0f;
+    if (gain > 1.0f)
+        gain = 1.0f;
+    track->volume = gain;
+    effective_gain = gain * g_retdec_audio_master_volume;
+    retdec_set_dsound_volume(track->buffer, effective_gain);
+}
+
+static int retdec_bgm_write_buffer(retdec_bgm_track_state *track,
+                                   const void *samples, DWORD bytes)
+{
+    void **vtable;
+    void *part1 = NULL;
+    void *part2 = NULL;
+    DWORD part1_bytes = 0;
+    DWORD part2_bytes = 0;
+    DWORD first_copy;
+    DWORD second_copy;
+    HRESULT hr;
+
+    if (track == NULL || track->buffer == NULL || samples == NULL ||
+        bytes == 0 || track->buffer_bytes == 0 ||
+        bytes > track->buffer_bytes)
+        return 0;
+    retdec_trace_i32("bgm:write-handle", (int32_t)track->handle);
+    retdec_trace_i32("bgm:write-offset", (int32_t)track->write_offset);
+    retdec_trace_i32("bgm:write-bytes", (int32_t)bytes);
+    vtable = *(void ***)track->buffer;
+    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
+        return 0;
+    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
+        track->buffer, track->write_offset, bytes, &part1, &part1_bytes,
+        &part2, &part2_bytes, 0);
+    if (FAILED(hr)) {
+        retdec_trace_hresult("audio:stream-lock-hr", hr);
+        return 0;
+    }
+    retdec_trace_i32("bgm:lock-part1", (int32_t)part1_bytes);
+    retdec_trace_i32("bgm:lock-part2", (int32_t)part2_bytes);
+    first_copy = part1_bytes < bytes ? part1_bytes : bytes;
+    second_copy = bytes - first_copy;
+    if (second_copy > part2_bytes)
+        second_copy = part2_bytes;
+    if (first_copy != 0)
+        memcpy(part1, samples, first_copy);
+    if (second_copy != 0)
+        memcpy(part2, (const unsigned char *)samples + first_copy,
+               second_copy);
+    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
+        track->buffer, part1, part1_bytes, part2, part2_bytes);
+    if (FAILED(hr)) {
+        retdec_trace_hresult("audio:stream-unlock-hr", hr);
+        return 0;
+    }
+    track->write_offset = (track->write_offset + bytes) &
+                          (track->buffer_bytes - 1);
+    return first_copy + second_copy == bytes;
+}
+
+static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
+                                         int16_t *interleaved,
+                                         DWORD requested_frames)
+{
+    int sample_offset_result;
+    DWORD sample_offset;
+    DWORD request_frames = requested_frames;
+
+    if (track == NULL || track->decoder == NULL || interleaved == NULL ||
+        requested_frames == 0)
+        return 0;
+
+    sample_offset_result = stb_vorbis_get_sample_offset(track->decoder);
+    sample_offset = sample_offset_result < 0
+        ? 0 : (DWORD)sample_offset_result;
+    if (sample_offset >= track->loop_end_frame) {
+        if (!stb_vorbis_seek_frame(track->decoder, track->loop_start_frame)) {
+            track->source_ended = 1;
+            return 0;
+        }
+        sample_offset = track->loop_start_frame;
+    }
+    if (sample_offset >= track->loop_start_frame &&
+        request_frames > track->loop_end_frame - sample_offset)
+        request_frames = track->loop_end_frame - sample_offset;
+    if (request_frames == 0)
+        return 0;
+    return stb_vorbis_get_samples_short_interleaved(
+        track->decoder, track->channels, interleaved,
+        (int)(request_frames * (DWORD)track->channels));
+}
+
+/* Decode only the amount that is about to be written.  BgmBuffer creates its
+   DirectSound buffer from the Vorbis stream format, so preserve the source
+   channel interleave exactly as the original decoder does. */
+static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
+                                     unsigned char *output, DWORD bytes)
+{
+    DWORD requested_frames;
+    DWORD written_frames = 0;
+    int channels;
+
+    if (track == NULL || track->decoder == NULL || output == NULL ||
+        bytes == 0)
+        return 0;
+    channels = track->channels;
+    if (channels <= 0 || channels > RETDEC_BGM_MAX_CHANNELS)
+        return 0;
+    requested_frames = bytes / ((DWORD)channels * sizeof(short));
+    while (written_frames < requested_frames) {
+        int got;
+        int16_t *interleaved = track->decode_scratch;
+
+        if (track->looping && track->loop_end_frame >
+                track->loop_start_frame) {
+            got = retdec_bgm_decode_loop_frames(
+                track, interleaved, requested_frames - written_frames);
+        } else {
+            got = stb_vorbis_get_samples_short_interleaved(
+                track->decoder, channels, interleaved,
+                (int)((requested_frames - written_frames) *
+                      (DWORD)channels));
+        }
+        if (got <= 0) {
+            if (!track->looping || track->source_ended) {
+                track->source_ended = 1;
+                break;
+            }
+            if (!stb_vorbis_seek_start(track->decoder)) {
+                track->source_ended = 1;
+                break;
+            }
+            continue;
+        }
+        memcpy(output + (size_t)written_frames * (size_t)channels *
+                   sizeof(short),
+               interleaved,
+               (size_t)got * (size_t)channels * sizeof(short));
+        written_frames += (DWORD)got;
+    }
+    return written_frames * (DWORD)channels * sizeof(short);
+}
+
+static int retdec_bgm_fill_chunk(retdec_bgm_track_state *track, DWORD bytes)
+{
+    DWORD decoded;
+
+    if (track == NULL || track->decoded_samples == NULL || bytes == 0 ||
+        bytes > RETDEC_BGM_CHUNK_BYTES)
+        return 0;
+    if (!retdec_bgm_check_guard(track->decode_scratch,
+                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
+                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
+        !retdec_bgm_check_guard(track->decoded_samples,
+                                RETDEC_BGM_CHUNK_BYTES)) {
+        retdec_trace("bgm:decode-guard-before-failed");
+        return 0;
+    }
+    decoded = retdec_bgm_decode_chunk(track, (unsigned char *)
+                                      track->decoded_samples, bytes);
+    if (decoded < bytes)
+        memset((unsigned char *)track->decoded_samples + decoded, 0,
+               bytes - decoded);
+    if (!retdec_bgm_check_guard(track->decode_scratch,
+                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
+                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
+        !retdec_bgm_check_guard(track->decoded_samples,
+                                RETDEC_BGM_CHUNK_BYTES)) {
+        retdec_trace("bgm:decode-guard-after-failed");
+        return 0;
+    }
+#if defined(RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
+    retdec_trace("bgm:write-skipped");
+    return 1;
+#else
+    if (!retdec_bgm_write_buffer(track, track->decoded_samples, bytes))
+        return 0;
+    return 1;
+#endif
+}
+
+static void retdec_bgm_release_track_locked(void)
+{
+    retdec_bgm_release_state(&g_retdec_bgm_track);
+}
+
+static void retdec_bgm_release_track(void)
+{
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_release_track_locked();
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_bgm_release_all_tracks_locked(void)
+{
+    int index;
+
+    retdec_bgm_release_state(&g_retdec_bgm_track);
+    for (index = 0; index < 31; ++index)
+        retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[index]);
+    g637 = 0;
+}
+
+static void retdec_bgm_release_all_tracks(void)
+{
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_release_all_tracks_locked();
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_se_pool_release(void)
+{
+    int index;
+
+    for (index = 0; index < 32; ++index) {
+        retdec_release_dsound_buffer(g_retdec_se_pool.stream_slots[index].buffer);
+        g_retdec_se_pool.stream_slots[index].buffer = NULL;
+        g_retdec_se_pool.stream_slots[index].buffer_bytes = 0;
+        g_retdec_se_pool.stream_slots[index].in_use = 0;
+    }
+    g_retdec_se_pool.initialized = 0;
+}
+
+static int retdec_se_pool_initialize(void)
+{
+    retdec_wave_format format;
+    int index;
+    int created = 0;
+
+    if (g_retdec_se_pool.initialized)
+        return 1;
+    ZeroMemory(&g_retdec_se_pool, sizeof(g_retdec_se_pool));
+    ZeroMemory(&format, sizeof(format));
+    format.wFormatTag = 1;
+    format.nChannels = 1;
+    format.nSamplesPerSec = 44100;
+    format.nAvgBytesPerSec = 88200;
+    format.nBlockAlign = 2;
+    format.wBitsPerSample = 16;
+
+    for (index = 0; index < 32; ++index) {
+        if (retdec_create_secondary_buffer(&format, 0x40000,
+                                            &g_retdec_se_pool.stream_slots[
+                                                index].buffer)) {
+            g_retdec_se_pool.stream_slots[index].buffer_bytes = 0x40000;
+            g_retdec_se_pool.stream_slots[index].in_use = 0;
+            ++created;
+        }
+    }
+    g_retdec_se_pool.master_volume = 1.0f;
+    g_retdec_se_pool.initialized = 1;
+    retdec_trace_i32("40b520:secondary-created", created);
+    return created != 0;
+}
+
+static void retdec_se_pool_set_volume(float gain)
+{
+    int index;
+
+    if (gain < 0.0f)
+        gain = 0.0f;
+    if (gain > 1.0f)
+        gain = 1.0f;
+    g_retdec_se_pool.master_volume = gain;
+    for (index = 0; index < 32; ++index)
+        retdec_set_dsound_volume(g_retdec_se_pool.stream_slots[index].buffer,
+                                 gain);
+}
+
+static void retdec_bgm_apply_track_volume(float gain)
+{
+    int index;
+
+    if (gain < 0.0f)
+        gain = 0.0f;
+    if (gain > 1.0f)
+        gain = 1.0f;
+    g_retdec_audio_master_volume = gain;
+    retdec_bgm_apply_state_volume(&g_retdec_bgm_track,
+                                  g_retdec_bgm_track.volume);
+    for (index = 0; index < 31; ++index)
+        retdec_bgm_apply_state_volume(&g_retdec_bgm_fading_tracks[index],
+                                      g_retdec_bgm_fading_tracks[index].volume);
+}
+
+static void retdec_bgm_update_fade_locked(void)
+{
+    DWORD now = timeGetTime();
+    int index;
+
+    for (index = -1; index < 31; ++index) {
+        retdec_bgm_track_state *track = index < 0
+            ? &g_retdec_bgm_track : &g_retdec_bgm_fading_tracks[index];
+        DWORD elapsed;
+        float ratio;
+
+        if (track->buffer == NULL || track->fade_duration == 0)
+            continue;
+        if ((int32_t)(now - track->fade_started) < 0)
+            continue;
+        elapsed = now - track->fade_started;
+        if (elapsed >= track->fade_duration) {
+            retdec_bgm_apply_state_volume(track, track->fade_to);
+            track->fade_duration = 0;
+            if (track->fade_to <= 0.0f) {
+                if (track == &g_retdec_bgm_track)
+                    g637 = 0;
+                retdec_bgm_release_state(track);
+            }
+            continue;
+        }
+        ratio = (float)elapsed / (float)track->fade_duration;
+        retdec_bgm_apply_state_volume(
+            track, track->fade_from +
+            (track->fade_to - track->fade_from) * ratio);
+    }
+}
+
+static void retdec_bgm_update_fade(void)
+{
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_update_fade_locked();
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_bgm_begin_fade_locked(retdec_bgm_track_state *track,
+                                         DWORD duration, float target,
+                                         DWORD start_delay)
+{
+    if (track == NULL || track->buffer == NULL)
+        return;
+    if (target < 0.0f)
+        target = 0.0f;
+    if (target > 1.0f)
+        target = 1.0f;
+    track->fade_from = track->volume;
+    track->fade_to = target;
+    track->fade_started = timeGetTime() + start_delay;
+    track->fade_duration = duration;
+    if (duration == 0)
+        retdec_bgm_apply_state_volume(track, target);
+}
+
+static void retdec_bgm_begin_fade(DWORD duration, float target)
+{
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_update_fade_locked();
+    retdec_bgm_begin_fade_locked(&g_retdec_bgm_track, duration, target, 0);
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
+                                             DWORD duration,
+                                             DWORD start_delay,
+                                             float target)
+{
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_update_fade_locked();
+    retdec_bgm_begin_fade_locked(retdec_bgm_find_track(handle), duration,
+                                 target, start_delay);
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_bgm_stop_for_handle(uint32_t handle)
+{
+    retdec_bgm_track_state *track;
+    void **vtable;
+
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    track = retdec_bgm_find_track(handle);
+    if (track != NULL && track->buffer != NULL) {
+        vtable = *(void ***)track->buffer;
+        if (vtable != NULL && vtable[18] != NULL)
+            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
+        if (vtable != NULL && vtable[13] != NULL)
+            ((retdec_dsound_buffer_set_position_fn)vtable[13])(
+                track->buffer, 0);
+        track->started = 0;
+        track->playing = 0;
+        track->play_offset = 0;
+    }
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static void retdec_bgm_release_for_handle(uint32_t handle)
+{
+    retdec_bgm_track_state *track;
+
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    track = retdec_bgm_find_track(handle);
+    if (track != NULL)
+        retdec_bgm_release_state(track);
+    if (handle == g637)
+        g637 = 0;
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+}
+
+static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
+                                    int looping, float32_t volume)
+{
+    unsigned char *encoded = NULL;
+    DWORD encoded_size = 0;
+    stb_vorbis *decoder = NULL;
+    stb_vorbis_info info;
+    int error = 0;
+    retdec_bgm_track_state *track = &g_retdec_bgm_track;
+    void *buffer;
+    unsigned char *scratch = NULL;
+    short *decoded_scratch = NULL;
+    retdec_wave_format format;
+
+    retdec_trace_audio_text("bgm:prepare-path", path);
+    retdec_trace_i32("bgm:prepare-handle", (int32_t)handle);
+    if (path == NULL || g877 == NULL || handle == 0 ||
+        track->buffer != NULL)
+        return 0;
+    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size)) {
+        retdec_trace("bgm:asset-read-failed");
+        return 0;
+    }
+    retdec_trace_i32("bgm:encoded-bytes", (int32_t)encoded_size);
+    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error,
+                                      NULL);
+    if (decoder == NULL) {
+        free(encoded);
+        retdec_trace_i32("audio:vorbis-open-error", error);
+        return 0;
+    }
+    info = stb_vorbis_get_info(decoder);
+    retdec_trace_i32("bgm:sample-rate", (int32_t)info.sample_rate);
+    retdec_trace_i32("bgm:channels", (int32_t)info.channels);
+    if (info.sample_rate != 44100 || info.channels <= 0 ||
+        info.channels > RETDEC_BGM_MAX_CHANNELS) {
+        stb_vorbis_close(decoder);
+        free(encoded);
+        retdec_trace("audio:unsupported-vorbis-format");
+        return 0;
+    }
+
+    ZeroMemory(&format, sizeof(format));
+    format.wFormatTag = 1;
+    format.nChannels = (WORD)info.channels;
+    format.nSamplesPerSec = info.sample_rate;
+    format.nBlockAlign = (WORD)(info.channels * sizeof(short));
+    format.nAvgBytesPerSec = info.sample_rate * format.nBlockAlign;
+    format.wBitsPerSample = 16;
+    if (!retdec_create_secondary_buffer(&format, RETDEC_BGM_BUFFER_BYTES,
+                                        &buffer)) {
+        retdec_trace("bgm:buffer-create-failed");
+        stb_vorbis_close(decoder);
+        free(encoded);
+        return 0;
+    }
+    scratch = (unsigned char *)malloc(
+        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
+        RETDEC_BGM_MAX_CHANNELS * sizeof(short) + RETDEC_BGM_GUARD_BYTES);
+    if (scratch != NULL)
+        decoded_scratch = (short *)malloc(RETDEC_BGM_CHUNK_BYTES +
+                                          RETDEC_BGM_GUARD_BYTES);
+    if (scratch == NULL || decoded_scratch == NULL) {
+        retdec_trace("bgm:scratch-alloc-failed");
+        retdec_release_dsound_buffer(buffer);
+        free(scratch);
+        free(decoded_scratch);
+        stb_vorbis_close(decoder);
+        free(encoded);
+        return 0;
+    }
+    retdec_bgm_write_guard(
+        scratch,
+        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
+        RETDEC_BGM_MAX_CHANNELS * sizeof(short));
+    retdec_bgm_write_guard(decoded_scratch, RETDEC_BGM_CHUNK_BYTES);
+    ZeroMemory(track, sizeof(*track));
+    track->handle = handle;
+    track->buffer = buffer;
+    track->buffer_bytes = RETDEC_BGM_BUFFER_BYTES;
+    track->encoded_data = encoded;
+    track->encoded_bytes = encoded_size;
+    track->decode_scratch = (short *)scratch;
+    track->decoded_samples = decoded_scratch;
+    track->decoder = decoder;
+    track->sample_rate = info.sample_rate;
+    track->channels = (WORD)info.channels;
+    track->looping = looping != 0;
+    if (track->looping)
+        retdec_bgm_read_loop_points(path, &track->loop_start_frame,
+                                    &track->loop_end_frame);
+    track->volume = volume;
+    track->write_offset = 0;
+    track->write_window_start = 0;
+    track->play_offset = 0;
+    track->buffered_bytes = 0;
+
+    /* 4096D0 creates the 1 MiB stream buffer and 4099C0 supplies one 0x8000
+       byte block before playback.  The worker keeps the ring filled after
+       that initial block. */
+    retdec_trace("bgm:initial-fill");
+    if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES)) {
+        retdec_trace("bgm:initial-fill-failed");
+        retdec_bgm_release_track_locked();
+        return 0;
+    }
+    track->buffered_bytes = RETDEC_BGM_CHUNK_BYTES;
+    retdec_bgm_apply_state_volume(track, track->volume);
+    retdec_trace("bgm:prepared");
+    return 1;
+}
+
+static void retdec_bgm_archive_current_track(void);
+static int32_t retdec_audio_manager_this(void);
+static void retdec_audio_list_push(int32_t list, int32_t value);
+static int retdec_audio_list_pop(int32_t list, int32_t *value);
+static const char *retdec_audio_buffer_path(int32_t buffer);
+static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle);
+
+static void retdec_bgm_process_pending_locked(void)
+{
+    int32_t list = *(int32_t *)(g_retdec_audio_manager_state + 0x94);
+    int32_t handle;
+
+    while (retdec_audio_list_pop(list, &handle)) {
+        int32_t buffer = retdec_audio_handle_lookup(
+            retdec_audio_manager_this() + 0x38, (uint32_t)handle);
+        const char *path;
+        float volume;
+        int looping;
+        retdec_bgm_track_state *track;
+
+        if (buffer == 0)
+            continue;
+        path = retdec_audio_buffer_path(buffer);
+        retdec_trace_audio_text("bgm:queued-path", path);
+        volume = *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368);
+        looping = *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c);
+        if (path == NULL)
+            continue;
+
+        retdec_bgm_update_fade_locked();
+        retdec_bgm_archive_current_track();
+        if (!retdec_bgm_prepare_track((uint32_t)handle, path, looping,
+                                      volume))
+            continue;
+        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
+        track = &g_retdec_bgm_track;
+        track->start_time = *(uint32_t *)(intptr_t)(uint32_t)
+            (buffer + 0x1350);
+        retdec_audio_list_push(
+            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
+    }
+}
+
+static void retdec_bgm_start_track(retdec_bgm_track_state *track)
+{
+    void **vtable;
+    HRESULT hr;
+
+    if (track == NULL || track->buffer == NULL || track->started)
+        return;
+    vtable = *(void ***)track->buffer;
+    if (vtable == NULL || vtable[12] == NULL)
+        return;
+    if (vtable[13] != NULL)
+        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
+            track->buffer, 0);
+    retdec_trace("bgm:play");
+    hr = ((retdec_dsound_buffer_play_fn)vtable[12])(track->buffer, 0, 0, 1);
+    retdec_trace_hresult("audio:stream-play-hr", hr);
+    if (SUCCEEDED(hr)) {
+        track->started = 1;
+        track->playing = 1;
+        track->play_offset = 0;
+    }
+}
+
+static void retdec_bgm_service_track(retdec_bgm_track_state *track)
+{
+    void **vtable;
+    DWORD play_cursor;
+    DWORD write_cursor;
+    DWORD consumed;
+    int in_write_window;
+
+    if (track == NULL || track->buffer == NULL)
+        return;
+    if (!track->started) {
+        if (track->start_time == 0 ||
+            (int32_t)(timeGetTime() - track->start_time) >= 0)
+            retdec_bgm_start_track(track);
+        if (!track->started)
+            return;
+    }
+    vtable = *(void ***)track->buffer;
+    if (vtable == NULL || vtable[4] == NULL)
+        return;
+    play_cursor = 0;
+    write_cursor = 0;
+    if (FAILED(((retdec_dsound_buffer_get_current_position_fn)vtable[4])(
+                   track->buffer, &play_cursor, &write_cursor)))
+        return;
+    if (track->started && track->play_offset == 0) {
+        retdec_trace_i32("bgm:play-cursor", (int32_t)play_cursor);
+        retdec_trace_i32("bgm:write-cursor", (int32_t)write_cursor);
+    }
+    play_cursor &= track->buffer_bytes - 1;
+    write_cursor &= track->buffer_bytes - 1;
+    consumed = play_cursor >= track->play_offset
+        ? play_cursor - track->play_offset
+        : track->buffer_bytes - track->play_offset + play_cursor;
+    if (consumed > track->buffered_bytes)
+        consumed = track->buffered_bytes;
+    track->buffered_bytes -= consumed;
+    track->play_offset = play_cursor;
+    /* 4099C0 gates the next block with the play cursor.  The two fields at
+       1340/1344 are the previous and next 0x8000-byte write boundaries. */
+    if (track->write_window_start == track->write_offset) {
+        in_write_window = 1;
+    } else if (track->write_window_start < track->write_offset) {
+        in_write_window = play_cursor >= track->write_window_start &&
+                          play_cursor < track->write_offset;
+    } else {
+        in_write_window = play_cursor >= track->write_window_start ||
+                          play_cursor < track->write_offset;
+    }
+    (void)write_cursor;
+    if (in_write_window &&
+        !(track->source_ended && !track->looping)) {
+        if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES))
+            return;
+        retdec_trace_i32("bgm:service-filled", (int32_t)track->handle);
+        track->write_window_start =
+            (track->write_offset - RETDEC_BGM_CHUNK_BYTES) &
+            (track->buffer_bytes - 1);
+        track->buffered_bytes += RETDEC_BGM_CHUNK_BYTES;
+    }
+}
+
+static void retdec_bgm_service_all_locked(void)
+{
+#if defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
+    return;
+#else
+    int index;
+
+    retdec_bgm_update_fade_locked();
+    retdec_bgm_service_track(&g_retdec_bgm_track);
+    for (index = 0; index < 31; ++index)
+        retdec_bgm_service_track(&g_retdec_bgm_fading_tracks[index]);
+
+    if (g_retdec_bgm_track.buffer != NULL &&
+        g_retdec_bgm_track.source_ended &&
+        !g_retdec_bgm_track.looping &&
+        g_retdec_bgm_track.buffered_bytes == 0) {
+        retdec_bgm_release_state(&g_retdec_bgm_track);
+        g637 = 0;
+    }
+    for (index = 0; index < 31; ++index) {
+        retdec_bgm_track_state *track = &g_retdec_bgm_fading_tracks[index];
+        if (track->buffer != NULL && track->source_ended &&
+            !track->looping && track->buffered_bytes == 0)
+            retdec_bgm_release_state(track);
+    }
+#endif
+}
+
+static void retdec_bgm_archive_current_track(void)
+{
+    int index;
+
+    if (g_retdec_bgm_track.buffer == NULL)
+        return;
+    for (index = 0; index < 31; ++index) {
+        if (g_retdec_bgm_fading_tracks[index].buffer == NULL) {
+            g_retdec_bgm_fading_tracks[index] = g_retdec_bgm_track;
+            ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
+            return;
+        }
+    }
+    /* The original manager is bounded by the 32 preallocated buffers.  If
+       callers replace tracks faster than the fade window, reclaim the oldest
+       fading slot so the new handle can still be created. */
+    retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[0]);
+    for (index = 1; index < 31; ++index)
+        g_retdec_bgm_fading_tracks[index - 1] =
+            g_retdec_bgm_fading_tracks[index];
+    g_retdec_bgm_fading_tracks[30] = g_retdec_bgm_track;
+    ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
+}
+
+static void retdec_bgm_stop(int reset_position)
+{
+    void **vtable;
+
+    if (g_retdec_bgm_track.buffer == NULL)
+        return;
+    vtable = *(void ***)g_retdec_bgm_track.buffer;
+    if (vtable != NULL && vtable[18] != NULL)
+        ((retdec_dsound_buffer_stop_fn)vtable[18])(g_retdec_bgm_track.buffer);
+    if (reset_position && vtable != NULL && vtable[13] != NULL)
+        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
+            g_retdec_bgm_track.buffer, 0);
+    g_retdec_bgm_track.playing = 0;
+}
+
+/* Restore the contiguous DirectSound manager that the original methods use.
+   The generated globals above retain their RetDec names for reference, but
+   calls through 0x51B1C0 must see the original offsets. */
+static int32_t retdec_audio_manager_this(void)
+{
+    return (int32_t)(intptr_t)g_retdec_audio_manager_state;
+}
+
+static int32_t retdec_audio_manager_list_init(uint32_t offset)
+{
+    int32_t node = (int32_t)(intptr_t)malloc(12);
+
+    if (node == 0) {
+        return 0;
+    }
+    *(int32_t *)(g_retdec_audio_manager_state + offset) = node;
+    *(int32_t *)(intptr_t)(uint32_t)node = node;
+    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = node;
+    return 1;
+}
+
+static void retdec_audio_list_push(int32_t list, int32_t value)
+{
+    int32_t node;
+    int32_t previous;
+
+    if (list == 0) {
+        return;
+    }
+    node = (int32_t)(intptr_t)malloc(12);
+    if (node == 0) {
+        return;
+    }
+    previous = *(int32_t *)(intptr_t)(uint32_t)(list + 4);
+    *(int32_t *)(intptr_t)(uint32_t)node = list;
+    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = previous;
+    *(int32_t *)(intptr_t)(uint32_t)(node + 8) = value;
+    *(int32_t *)(intptr_t)(uint32_t)(previous) = node;
+    *(int32_t *)(intptr_t)(uint32_t)(list + 4) = node;
+}
+
+static int retdec_audio_list_pop(int32_t list, int32_t *value)
+{
+    int32_t node;
+    int32_t next;
+    int32_t previous;
+
+    if (list == 0)
+        return 0;
+    node = *(int32_t *)(intptr_t)(uint32_t)list;
+    if (node == list)
+        return 0;
+    next = *(int32_t *)(intptr_t)(uint32_t)node;
+    previous = *(int32_t *)(intptr_t)(uint32_t)(node + 4);
+    *(int32_t *)(intptr_t)(uint32_t)previous = next;
+    *(int32_t *)(intptr_t)(uint32_t)(next + 4) = previous;
+    if (value != NULL)
+        *value = *(int32_t *)(intptr_t)(uint32_t)(node + 8);
+    free((void *)(intptr_t)(uint32_t)node);
+    return 1;
+}
+
+static const char *retdec_audio_buffer_path(int32_t buffer)
+{
+    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
+
+    if (object == NULL)
+        return NULL;
+    if (*(uint32_t *)(object + 20) < 16)
+        return (const char *)object;
+    return *(const char **)(object);
+}
+
+static void retdec_audio_buffer_initialize(int32_t buffer)
+{
+    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
+
+    memset(object, 0, 0x1378);
+    *(uint32_t *)(object + 0x14) = 15;
+    *(uint32_t *)(object + 0x24) = (uint32_t)(uintptr_t)&g208;
+    *(float32_t *)(object + 0x135c) = 1.0f;
+    *(uint32_t *)(object + 0x1c) = 3;
+}
+
+static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle)
+{
+    uint32_t index = handle & 0xffffu;
+    uint32_t generation = handle >> 16;
+    uint32_t *buffers;
+    uint32_t *generations;
+    uint32_t begin;
+    uint32_t end;
+
+    if (manager == 0) {
+        return 0;
+    }
+    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
+    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
+    generations = (uint32_t *)(intptr_t)(uint32_t)
+        (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14));
+    retdec_trace_i32("audio:lookup-manager", manager);
+    retdec_trace_i32("audio:lookup-handle", (int32_t)handle);
+    retdec_trace_i32("audio:lookup-begin", (int32_t)begin);
+    retdec_trace_i32("audio:lookup-end", (int32_t)end);
+    retdec_trace_i32("audio:lookup-generations", (int32_t)(intptr_t)generations);
+    if (begin == 0 || end < begin || index >= (end - begin) / 4) {
+        return 0;
+    }
+    if (generations == 0 || generations[index] != generation) {
+        retdec_trace_i32("audio:lookup-generation",
+                         generations == 0 ? 0 : (int32_t)generations[index]);
+        return 0;
+    }
+    buffers = (uint32_t *)(intptr_t)begin;
+    retdec_trace_i32("audio:lookup-buffer", (int32_t)buffers[index]);
+    return (int32_t)(intptr_t)(uintptr_t)buffers[index];
+}
+
+static int32_t retdec_audio_handle_create(int32_t manager, int32_t output)
+{
+    uint32_t *buffers;
+    uint32_t *generations;
+    uint32_t *new_buffers;
+    uint32_t *new_generations;
+    uint32_t begin;
+    uint32_t end;
+    uint32_t generation_begin;
+    uint32_t generation_end;
+    uint32_t count;
+    uint32_t generation;
+    uint32_t handle;
+    int32_t buffer;
+    int32_t list;
+
+    if (manager == 0 || output == 0) {
+        return 0;
+    }
+
+    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
+    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
+    generation_begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14);
+    generation_end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18);
+    if (begin == 0 || end < begin) {
+        count = 0;
+    } else {
+        count = (end - begin) / 4;
+    }
+    retdec_trace_i32("audio:create-manager", manager);
+    retdec_trace_i32("audio:create-count", (int32_t)count);
+
+    buffer = (int32_t)(intptr_t)malloc(0x1378);
+    if (buffer == 0) {
+        return 0;
+    }
+    retdec_audio_buffer_initialize(buffer);
+
+    new_buffers = (uint32_t *)malloc((count + 1) * sizeof(*new_buffers));
+    new_generations = (uint32_t *)malloc(
+        (count + 1) * sizeof(*new_generations));
+    if (new_buffers == 0 || new_generations == 0) {
+        free(new_buffers);
+        free(new_generations);
+        free((void *)(intptr_t)(uint32_t)buffer);
+        return 0;
+    }
+    if (count != 0) {
+        memcpy(new_buffers, (void *)(intptr_t)begin,
+               count * sizeof(*new_buffers));
+        if (generation_begin != 0 && generation_end >= generation_begin) {
+            memcpy(new_generations, (void *)(intptr_t)generation_begin,
+                   count * sizeof(*new_generations));
+        } else {
+            memset(new_generations, 0,
+                   count * sizeof(*new_generations));
+        }
+    }
+
+    generation = (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) + 1)
+                 & 0xffffu;
+    if (generation == 0) {
+        generation = 1;
+    }
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) = generation;
+    handle = count | (generation << 16);
+    new_buffers[count] = (uint32_t)(uintptr_t)buffer;
+    new_generations[count] = generation;
+    retdec_trace_i32("audio:create-handle", (int32_t)handle);
+    retdec_trace_i32("audio:create-buffer", buffer);
+    retdec_trace_i32("audio:create-buffer-table",
+                     (int32_t)(intptr_t)new_buffers);
+    retdec_trace_i32("audio:create-generation-table",
+                     (int32_t)(intptr_t)new_generations);
+
+    buffers = (uint32_t *)(intptr_t)begin;
+    generations = (uint32_t *)(intptr_t)generation_begin;
+    free(buffers);
+    free(generations);
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 4) =
+        (uint32_t)(uintptr_t)new_buffers;
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 8) =
+        (uint32_t)(uintptr_t)(new_buffers + count + 1);
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0xc) =
+        (uint32_t)(uintptr_t)(new_buffers + count + 1);
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14) =
+        (uint32_t)(uintptr_t)new_generations;
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18) =
+        (uint32_t)(uintptr_t)(new_generations + count + 1);
+    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x1c) =
+        (uint32_t)(uintptr_t)(new_generations + count + 1);
+
+    list = *(int32_t *)(intptr_t)(uint32_t)(manager + 0x24);
+    retdec_audio_list_push(list, (int32_t)handle);
+    *(uint32_t *)(intptr_t)(uint32_t)output = handle;
+    return 1;
+}
+
+static void retdec_audio_manager_construct(void)
+{
+    unsigned char *state = g_retdec_audio_manager_state;
+
+    if (g_retdec_audio_manager_initialized != 0) {
+        return;
+    }
+    memset(state, 0, sizeof(g_retdec_audio_manager_state));
+    *(uint32_t *)(state + 0x1c) = (uint32_t)(uintptr_t)&g190;
+    InitializeCriticalSection((LPCRITICAL_SECTION)(state + 0x20));
+    function_40adb0((int32_t *)(state + 0x38));
+    if (!retdec_audio_manager_list_init(0x88) ||
+        !retdec_audio_manager_list_init(0x94) ||
+        !retdec_audio_manager_list_init(0xa0)) {
+        return;
+    }
+    *(float32_t *)(state + 0xac) = 1.0f;
+    *(float32_t *)(state + 0xb0) = 1.0f;
+    g_retdec_audio_manager_initialized = 1;
+}
+
+static int32_t retdec_audio_method_40a5d0(int32_t this_ptr,
+                                          int32_t output)
+{
+    if (output == 0) {
+        return 0;
+    }
+    *(int32_t *)(intptr_t)(uint32_t)output = 0;
+    if (g_retdec_audio_manager_initialized == 0) {
+        retdec_audio_manager_construct();
+    }
+    if (g_retdec_audio_manager_initialized == 0) {
+        return output;
+    }
+    retdec_audio_handle_create(this_ptr + 0x38, output);
+    return output;
+}
+
+static int32_t retdec_audio_method_40a6c0(int32_t this_ptr,
+                                          int32_t handle,
+                                          int32_t source,
+                                          int32_t buffer_flag,
+                                          int32_t queue_mode,
+                                          float32_t volume)
+{
+    int32_t buffer;
+    const char *path = (const char *)(intptr_t)(uint32_t)source;
+    uint32_t path_length;
+    float32_t gain;
+    int prepared = 0;
+
+    retdec_trace_audio_text("470220:request-path", path);
+    retdec_trace_i32("470220:request-queue", queue_mode);
+    if (this_ptr == 0 || source == 0) {
+        return 1;
+    }
+    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
+                                        (uint32_t)handle);
+    retdec_trace_i32("470220:handle", handle);
+    retdec_trace_i32("470220:buffer", buffer);
+    if (buffer == 0) {
+        return 1;
+    }
+    path_length = retdec_safe_c_string_length(path);
+    retdec_trace_i32("470220:path-length", (int32_t)path_length);
+    retdec_string_assign_n((int32_t *)(intptr_t)(uint32_t)buffer,
+                           path, path_length);
+    retdec_trace("470220:path-assigned");
+    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 0;
+    gain = *(float32_t *)(this_ptr + 0xb0) *
+           *(float32_t *)(this_ptr + 0xac);
+    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x135c) = gain;
+    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368) = volume;
+    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1364) = gain;
+    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1360) = gain;
+    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c) =
+        (unsigned char)buffer_flag;
+    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x136c) = 0;
+    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 3;
+    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1354) = 0;
+    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1358) = 0;
+    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1370) = 0;
+
+    if (queue_mode != 0) {
+        retdec_audio_list_push(
+            *(int32_t *)(g_retdec_audio_manager_state + 0x94), handle);
+        if (g_retdec_audio_queue_event != NULL)
+            SetEvent(g_retdec_audio_queue_event);
+        return 1;
+    }
+
+    /* a5 == 0 is the original synchronous path: prepare the new buffer
+       before it is inserted into the active list. */
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_update_fade_locked();
+    retdec_bgm_archive_current_track();
+    prepared = retdec_bgm_prepare_track(
+        (uint32_t)handle, retdec_audio_buffer_path(buffer),
+        buffer_flag, volume);
+    if (prepared) {
+        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
+        retdec_audio_list_push(
+            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
+        retdec_trace("470220:prepared-sync");
+    } else {
+        retdec_trace("470220:prepare-failed");
+    }
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+    return 1;
+}
+
+static int32_t retdec_audio_method_40a7f0(int32_t this_ptr,
+                                          int32_t handle,
+                                          int32_t delay)
+{
+    int32_t buffer;
+    retdec_bgm_track_state *track;
+    DWORD start_time;
+
+    if (this_ptr == 0) {
+        return 0;
+    }
+    retdec_trace_i32("470220:start-delay", delay);
+    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
+                                        (uint32_t)handle);
+    if (buffer == 0) {
+        return 0;
+    }
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    track = retdec_bgm_find_track((uint32_t)handle);
+    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 0;
+    if (delay != 0) {
+        start_time = timeGetTime() + (uint32_t)delay;
+        *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
+        if (track != NULL)
+            track->start_time = start_time;
+    } else {
+        if (track != NULL &&
+            *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) != 0) {
+            track->start_time = 0;
+            retdec_bgm_start_track(track);
+        } else {
+            start_time = timeGetTime();
+            *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
+        }
+    }
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+    return 1;
+}
+
+static int32_t retdec_audio_method_40a950(int32_t this_ptr,
+                                          int32_t handle,
+                                          int32_t duration,
+                                          int32_t start_delay,
+                                          float32_t target)
+{
+    (void)this_ptr;
+    (void)target;
+    retdec_bgm_begin_fade_for_handle((uint32_t)handle,
+                                     duration > 0 ? (DWORD)duration : 0,
+                                     start_delay > 0 ? (DWORD)start_delay : 0,
+                                     0.0f);
+    return 1;
+}
+
 // Address range: 0x40a0f0 - 0x40a3c3
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
 int32_t function_40a0f0(void) {
+    /* The RetDec body below lost the constructor's this pointer.  The
+       recovered manager storage above is the live object used by the audio
+       methods, so construct it once and return without executing that stale
+       stack-based reconstruction. */
+    retdec_audio_manager_construct();
+    return retdec_audio_manager_this();
+#if 0
+    retdec_audio_manager_construct();
     int32_t v1 = __readfsdword(0); // bp-16, 0x40a100
     __writefsdword(0, (int32_t)&v1);
     g790 = 0.0L;
@@ -22595,10 +24401,63 @@ int32_t function_40a0f0(void) {
     int32_t result = function_412610(); // 0x40a3ae
     __writefsdword(0, *v23);
     return result;
+#endif
 }
 
 // Address range: 0x40a3d0 - 0x40a453
 int32_t function_40a3d0(void) {
+    if (g_retdec_audio_threads_initialized)
+        return (int32_t)(intptr_t)g_retdec_audio_queue_event;
+    if (!g_retdec_audio_lock_initialized) {
+        InitializeCriticalSection(&g_retdec_audio_lock);
+        g_retdec_audio_lock_initialized = 1;
+    }
+    g_retdec_audio_queue_event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    g_retdec_audio_stop_event = CreateEventA(NULL, TRUE, FALSE, NULL);
+    if (g_retdec_audio_queue_event == NULL ||
+        g_retdec_audio_stop_event == NULL) {
+        if (g_retdec_audio_queue_event != NULL)
+            CloseHandle(g_retdec_audio_queue_event);
+        if (g_retdec_audio_stop_event != NULL)
+            CloseHandle(g_retdec_audio_stop_event);
+        g_retdec_audio_queue_event = NULL;
+        g_retdec_audio_stop_event = NULL;
+        retdec_trace("40a3d0:audio-events-failed");
+        return 0;
+    }
+    InterlockedExchange(&g_retdec_audio_running, 1);
+    g_retdec_audio_update_thread = CreateThread(
+        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aaa0, NULL, 0, NULL);
+    if (g_retdec_audio_update_thread != NULL)
+        SetThreadPriority(g_retdec_audio_update_thread, 15);
+    g_retdec_audio_loader_thread = CreateThread(
+        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aac0, NULL, 0, NULL);
+    if (g_retdec_audio_update_thread == NULL ||
+        g_retdec_audio_loader_thread == NULL) {
+        InterlockedExchange(&g_retdec_audio_running, 0);
+        SetEvent(g_retdec_audio_stop_event);
+        SetEvent(g_retdec_audio_queue_event);
+        if (g_retdec_audio_update_thread != NULL) {
+            WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
+            CloseHandle(g_retdec_audio_update_thread);
+            g_retdec_audio_update_thread = NULL;
+        }
+        if (g_retdec_audio_loader_thread != NULL) {
+            WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
+            CloseHandle(g_retdec_audio_loader_thread);
+            g_retdec_audio_loader_thread = NULL;
+        }
+        CloseHandle(g_retdec_audio_queue_event);
+        CloseHandle(g_retdec_audio_stop_event);
+        g_retdec_audio_queue_event = NULL;
+        g_retdec_audio_stop_event = NULL;
+        retdec_trace("40a3d0:audio-threads-failed");
+        return 0;
+    }
+    g_retdec_audio_threads_initialized = 1;
+    retdec_trace("40a3d0:audio-threads-ready");
+    return (int32_t)(intptr_t)g_retdec_audio_queue_event;
+#if 0
     // 0x40a3d0
     int32_t v1; // 0x40a3d0
     *(char *)(v1 + 24) = 1;
@@ -22615,10 +24474,40 @@ int32_t function_40a3d0(void) {
     *(float32_t *)(v1 + 176) = 1.0f;
     *(float32_t *)(v1 + 172) = 1.0f;
     return result;
+#endif
 }
 
 // Address range: 0x40a460 - 0x40a5cf
 int32_t function_40a460(void) {
+    if (!g_retdec_audio_threads_initialized)
+        return 1;
+
+    InterlockedExchange(&g_retdec_audio_running, 0);
+    if (g_retdec_audio_stop_event != NULL)
+        SetEvent(g_retdec_audio_stop_event);
+    if (g_retdec_audio_queue_event != NULL)
+        SetEvent(g_retdec_audio_queue_event);
+    if (g_retdec_audio_update_thread != NULL) {
+        WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
+        CloseHandle(g_retdec_audio_update_thread);
+        g_retdec_audio_update_thread = NULL;
+    }
+    if (g_retdec_audio_loader_thread != NULL) {
+        WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
+        CloseHandle(g_retdec_audio_loader_thread);
+        g_retdec_audio_loader_thread = NULL;
+    }
+    if (g_retdec_audio_queue_event != NULL) {
+        CloseHandle(g_retdec_audio_queue_event);
+        g_retdec_audio_queue_event = NULL;
+    }
+    if (g_retdec_audio_stop_event != NULL) {
+        CloseHandle(g_retdec_audio_stop_event);
+        g_retdec_audio_stop_event = NULL;
+    }
+    g_retdec_audio_threads_initialized = 0;
+    return 1;
+#if 0
     // 0x40a460
     int32_t v1; // 0x40a460
     int32_t * v2 = (int32_t *)(v1 + 20); // 0x40a465
@@ -22768,6 +24657,7 @@ int32_t function_40a460(void) {
     }
     // 0x40a5cb
     return result2;
+#endif
 }
 
 // Address range: 0x40a5d0 - 0x40a5ef
@@ -23023,6 +24913,14 @@ int32_t function_40a9a0(int32_t a1, int32_t a2, int32_t a3, float80_t a4) {
 
 // Address range: 0x40a9f0 - 0x40aa95
 int32_t function_40a9f0(float80_t a1) {
+    if (g_retdec_audio_lock_initialized)
+        EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_update_fade_locked();
+    retdec_bgm_apply_track_volume((float)a1);
+    if (g_retdec_audio_lock_initialized)
+        LeaveCriticalSection(&g_retdec_audio_lock);
+    return 1;
+#if 0
     float32_t v1 = 0.0f; // 0x40aa05
     int32_t v2; // 0x40a9f0
     if ((v2 & 0x4100) != 0) {
@@ -23080,33 +24978,58 @@ int32_t function_40a9f0(float80_t a1) {
     *(int32_t *)(v11 - 4) = v3;
     LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
     return &g1224;
+#endif
 }
 
 // Address range: 0x40aaa0 - 0x40aabc
 int32_t function_40aaa0(void) {
-    // 0x40aaa0
     if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40aaac
-        function_40aae0();
+        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
+            if (g_retdec_audio_stop_event == NULL ||
+                WaitForSingleObject(g_retdec_audio_stop_event, 16) ==
+                    WAIT_OBJECT_0)
+                break;
+            function_40aae0();
+        }
         CoUninitialize();
     }
-    // 0x40aab7
     return 0;
 }
 
 // Address range: 0x40aac0 - 0x40aadc
 int32_t function_40aac0(void) {
-    // 0x40aac0
     if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40aacc
+        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
+            HANDLE handles[2];
+            DWORD wait_result;
+
+            handles[0] = g_retdec_audio_queue_event;
+            handles[1] = g_retdec_audio_stop_event;
+            if (handles[0] == NULL || handles[1] == NULL)
+                break;
+            wait_result = WaitForMultipleObjects(2, handles, FALSE,
+                                                 INFINITE);
+            if (wait_result != WAIT_OBJECT_0)
+                break;
+            EnterCriticalSection(&g_retdec_audio_lock);
+            if (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
+                retdec_bgm_process_pending_locked();
+            LeaveCriticalSection(&g_retdec_audio_lock);
+        }
         CoUninitialize();
     }
-    // 0x40aad7
     return 0;
 }
 
 // Address range: 0x40aae0 - 0x40adb0
 int32_t function_40aae0(void) {
+    if (!InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
+        return 0;
+    EnterCriticalSection(&g_retdec_audio_lock);
+    retdec_bgm_service_all_locked();
+    LeaveCriticalSection(&g_retdec_audio_lock);
+    return 0;
+#if 0
     // 0x40aae0
     int32_t result; // 0x40aae0
     if (g794 == 0) {
@@ -23425,6 +25348,7 @@ int32_t function_40aae0(void) {
     __asm_int3();
     __asm_int3();
     return __asm_int3();
+#endif
 }
 
 // Address range: 0x40adb0 - 0x40ae70
@@ -23883,6 +25807,11 @@ int32_t function_40b2d0(void) {
 
 // Address range: 0x40b3a0 - 0x40b516
 int32_t function_40b3a0(void) {
+    function_40a460();
+    retdec_bgm_release_all_tracks();
+    retdec_se_pool_release();
+    return 1;
+#if 0
     int32_t v1 = __readfsdword(0); // bp-16, 0x40b3b0
     int32_t v2; // bp-4, 0x40b3a0
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-36, 0x40b3bc
@@ -24005,10 +25934,13 @@ int32_t function_40b3a0(void) {
     int32_t result = function_40bb70(); // 0x40b4ff
     __writefsdword(0, v1);
     return result;
+#endif
 }
 
 // Address range: 0x40b520 - 0x40b6ef
 int32_t function_40b520(void) {
+    return retdec_se_pool_initialize();
+#if 0
     // 0x40b520
     __chkstk();
     int32_t v1; // 0x40b520
@@ -24185,6 +26117,7 @@ int32_t function_40b520(void) {
     *(float32_t *)(v1 + 1160) = 1.0f;
     *(int32_t *)(v1 + 1156) = 0;
     return ___report_gsfailure();
+#endif
 }
 
 // Address range: 0x40b6f0 - 0x40b75f
@@ -24346,6 +26279,9 @@ int32_t function_40b840(int32_t a1) {
 
 // Address range: 0x40b8a0 - 0x40b996
 int32_t function_40b8a0(float80_t a1) {
+    retdec_se_pool_set_volume((float)a1);
+    return 1;
+#if 0
     // 0x40b8a0
     int3_t v1; // 0x40b8a0
     int3_t v2 = v1;
@@ -24471,6 +26407,7 @@ int32_t function_40b8a0(float80_t a1) {
     }
     // 0x40b98f
     return result;
+#endif
 }
 
 // Address range: 0x40b9a0 - 0x40ba11
@@ -27198,6 +29135,7 @@ BOOL function_40db30(unsigned char *state) {
         return FALSE;
     }
     while (*(volatile unsigned char *)(state + 76) != 0) {
+        retdec_bgm_update_fade();
         if (PeekMessageA(&message, NULL, 0, 0, PM_NOREMOVE)) {
             if (!GetMessageA(&message, NULL, 0, 0)) {
                 break;
@@ -27826,12 +29764,21 @@ static void retdec_activate_pending_scene(void)
 static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
 {
     LONG frame_index = 0;
+    HANDLE frame_event;
 
     (void)parameter;
     retdec_trace("game:entry");
+    frame_event = (HANDLE)(intptr_t)function_412b80(0);
     while (g854 != 0) {
         int32_t *vtable;
         unsigned char can_draw;
+
+        if (frame_event != NULL) {
+            if (WaitForSingleObject(frame_event, INFINITE) != WAIT_OBJECT_0)
+                break;
+        } else {
+            Sleep(16);
+        }
 
         if (g843 != 0)
             function_408c80();
@@ -27903,8 +29850,9 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
         ++frame_index;
         if (frame_index <= 3 || (frame_index & 63) == 0)
             retdec_trace_i32("game:frame", frame_index);
-        Sleep(1);
     }
+    if (frame_event != NULL)
+        function_412c10((int32_t)(intptr_t)frame_event);
     retdec_trace("game:exit");
     return 0;
 }
@@ -50282,9 +52230,21 @@ int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
 // Address range: 0x41efb0 - 0x41eff0
 int32_t function_41efb0(int32_t object_ptr) {
     // 0x41efb0
+    static volatile LONG title_layer_trace_count;
     int32_t v2 = object_ptr;
     if (v2 == 0)
         return -1;
+    {
+        LONG trace_index = InterlockedIncrement(&title_layer_trace_count);
+        if (trace_index <= 160) {
+            retdec_trace_i32("41efb0:layer", v2);
+            retdec_trace_i32("41efb0:callback-vm", *(int32_t *)(v2 + 228));
+            retdec_trace_i32("41efb0:callback-env-type", *(int32_t *)(v2 + 232));
+            retdec_trace_i32("41efb0:callback-env-data", *(int32_t *)(v2 + 236));
+            retdec_trace_i32("41efb0:callback-type", *(int32_t *)(v2 + 240));
+            retdec_trace_i32("41efb0:callback-data", *(int32_t *)(v2 + 244));
+        }
+    }
     *(int32_t *)(v2 + 168) = *(int32_t *)(v2 + 144);
     *(int32_t *)(v2 + 172) = *(int32_t *)(v2 + 148);
     *(int32_t *)(v2 + 176) = *(int32_t *)(v2 + 152);
@@ -58713,6 +60673,221 @@ static int32_t retdec_construct_cact_script(int32_t this_ptr)
     return this_ptr;
 }
 
+/* The original CAct/CActLayer deleting destructors are reached through
+   virtual calls with ECX as the receiver.  RetDec emitted their receivers as
+   uninitialized locals, so keep the ownership teardown explicit. */
+static void retdec_destroy_cact_script(int32_t script_ptr)
+{
+    int32_t vm;
+
+    if (script_ptr == 0)
+        return;
+
+    *(int32_t *)(intptr_t)script_ptr = (int32_t)(intptr_t)&g231;
+    if (*(int32_t *)(intptr_t)(script_ptr + 56) != g483) {
+        vm = *(int32_t *)(intptr_t)(script_ptr + 44);
+        if (vm != 0) {
+            function_48a430(vm, script_ptr + 48);
+            function_48a430(vm, script_ptr + 56);
+        }
+        function_48abe0(script_ptr + 48);
+        function_48abe0(script_ptr + 56);
+    }
+    if (*(int32_t *)(intptr_t)(script_ptr + 36) != g483) {
+        vm = *(int32_t *)(intptr_t)(script_ptr + 24);
+        if (vm != 0) {
+            function_48a430(vm, script_ptr + 28);
+            function_48a430(vm, script_ptr + 36);
+        }
+        function_48abe0(script_ptr + 28);
+        function_48abe0(script_ptr + 36);
+    }
+    if (*(int32_t *)(intptr_t)(script_ptr + 16) != g483) {
+        vm = *(int32_t *)(intptr_t)(script_ptr + 4);
+        if (vm != 0) {
+            function_48a430(vm, script_ptr + 8);
+            function_48a430(vm, script_ptr + 16);
+        }
+        function_48abe0(script_ptr + 8);
+        function_48abe0(script_ptr + 16);
+    }
+
+    free((void *)(intptr_t)*(int32_t *)(intptr_t)(script_ptr + 92));
+    *(int32_t *)(intptr_t)(script_ptr + 92) = 0;
+    *(int32_t *)(intptr_t)(script_ptr + 96) = 0;
+    if (*(int32_t *)(intptr_t)(script_ptr + 84) >= 16)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(script_ptr + 80));
+    *(int32_t *)(intptr_t)(script_ptr + 80) = 0;
+    *(int32_t *)(intptr_t)(script_ptr + 84) = 15;
+    *(unsigned char *)(intptr_t)(script_ptr + 64) = 0;
+    *(unsigned char *)(intptr_t)(script_ptr + 100) = 0;
+    *(unsigned char *)(intptr_t)(script_ptr + 101) = 0;
+}
+
+static void retdec_destroy_cact_list(int32_t *list_slot)
+{
+    int32_t sentinel;
+    int32_t node;
+
+    if (list_slot == NULL || *list_slot == 0)
+        return;
+    sentinel = *list_slot;
+    node = *(int32_t *)(intptr_t)sentinel;
+    while (node != 0 && node != sentinel) {
+        int32_t next = *(int32_t *)(intptr_t)node;
+        int32_t value = *(int32_t *)(intptr_t)(node + 8);
+        if (value != 0) {
+            int32_t layout = *(int32_t *)(intptr_t)(value + 4);
+            if (layout != 0) {
+                if (*(int32_t *)(intptr_t)layout ==
+                        (int32_t)(intptr_t)&g327)
+                    free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 264));
+                free((void *)(intptr_t)layout);
+            }
+            if (*(int32_t *)(intptr_t)(value + 28) >= 16)
+                free((void *)(intptr_t)*(int32_t *)(intptr_t)(value + 24));
+            free((void *)(intptr_t)value);
+        }
+        free((void *)(intptr_t)node);
+        node = next;
+    }
+    free((void *)(intptr_t)sentinel);
+    *list_slot = 0;
+}
+
+static void retdec_destroy_cact_layer(int32_t layer)
+{
+    if (layer == 0)
+        return;
+
+    *(int32_t *)(intptr_t)layer = (int32_t)(intptr_t)&g252;
+    if (*(unsigned char *)(intptr_t)(layer + 344) != 0) {
+        int32_t vm = *(int32_t *)(intptr_t)(layer + 332);
+        if (vm != 0)
+            function_48a430(vm, layer + 336);
+        function_48abe0(layer + 336);
+        *(unsigned char *)(intptr_t)(layer + 344) = 0;
+    }
+    if (*(unsigned char *)(intptr_t)(layer + 324) != 0) {
+        int32_t vm = *(int32_t *)(intptr_t)(layer + 312);
+        if (vm != 0)
+            function_48a430(vm, layer + 316);
+        function_48abe0(layer + 316);
+        *(unsigned char *)(intptr_t)(layer + 324) = 0;
+    }
+    retdec_destroy_cact_script(layer + 204);
+    retdec_destroy_cact_list((int32_t *)(intptr_t)(layer + 180));
+    retdec_destroy_cact_list((int32_t *)(intptr_t)(layer + 192));
+    if (*(int32_t *)(intptr_t)(layer + 132) >= 16)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(layer + 112));
+    *(int32_t *)(intptr_t)(layer + 112) = 0;
+    *(int32_t *)(intptr_t)(layer + 128) = 0;
+    *(int32_t *)(intptr_t)(layer + 132) = 15;
+    free((void *)(intptr_t)*(int32_t *)(intptr_t)(layer + 72));
+    *(int32_t *)(intptr_t)(layer + 72) = 0;
+    *(int32_t *)(intptr_t)(layer + 76) = 0;
+    *(int32_t *)(intptr_t)(layer + 80) = 0;
+}
+
+static void retdec_destroy_cact_resource(int32_t resource)
+{
+    if (resource == 0)
+        return;
+    if (*(int32_t *)(intptr_t)(resource + 60) >= 16)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(resource + 40));
+    *(int32_t *)(intptr_t)(resource + 40) = 0;
+    *(int32_t *)(intptr_t)(resource + 56) = 15;
+    free((void *)(intptr_t)resource);
+}
+
+static void retdec_destroy_cact_object(int32_t object_ptr)
+{
+    int32_t begin;
+    int32_t end;
+    int32_t cursor;
+
+    if (object_ptr == 0)
+        return;
+    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g285;
+
+    begin = *(int32_t *)(intptr_t)(object_ptr + 208);
+    end = *(int32_t *)(intptr_t)(object_ptr + 212);
+    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
+         cursor += 4) {
+        int32_t layer = *(int32_t *)(intptr_t)cursor;
+        if (layer != 0) {
+            retdec_destroy_cact_layer(layer);
+            free((void *)(intptr_t)layer);
+        }
+    }
+    free((void *)(intptr_t)begin);
+    *(int32_t *)(intptr_t)(object_ptr + 208) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 212) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 216) = 0;
+
+    begin = *(int32_t *)(intptr_t)(object_ptr + 224);
+    end = *(int32_t *)(intptr_t)(object_ptr + 228);
+    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
+         cursor += 4)
+        retdec_destroy_cact_resource(*(int32_t *)(intptr_t)cursor);
+    free((void *)(intptr_t)begin);
+    *(int32_t *)(intptr_t)(object_ptr + 224) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 228) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 232) = 0;
+
+    retdec_destroy_cact_script(object_ptr + 100);
+    if (*(int32_t *)(intptr_t)(object_ptr + 64) >= 16)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(object_ptr + 44));
+    *(int32_t *)(intptr_t)(object_ptr + 44) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 60) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 64) = 15;
+    if (*(int32_t *)(intptr_t)(object_ptr + 36) >= 16)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(object_ptr + 16));
+    *(int32_t *)(intptr_t)(object_ptr + 16) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 32) = 0;
+    *(int32_t *)(intptr_t)(object_ptr + 36) = 15;
+}
+
+static int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
+                                               unsigned char flags)
+{
+    if (object_ptr == 0)
+        return 0;
+    if ((flags & 2) != 0) {
+        uint32_t count = *(uint32_t *)(intptr_t)(object_ptr - 4);
+        uint32_t index;
+        for (index = 0; index < count; ++index)
+            retdec_destroy_cact_object(object_ptr + (int32_t)index * 240);
+        if ((flags & 1) != 0)
+            free((void *)(intptr_t)(object_ptr - 4));
+        return object_ptr - 4;
+    }
+    retdec_destroy_cact_object(object_ptr);
+    if ((flags & 1) != 0)
+        free((void *)(intptr_t)object_ptr);
+    return object_ptr;
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) static int32_t retdec_cact_destructor_bridge(
+    unsigned char flags)
+{
+    __asm {
+        mov eax, [esp + 4]
+        push eax
+        push ecx
+        call retdec_destroy_cact_with_flags
+        add esp, 8
+        ret 4
+    }
+}
+#else
+static int32_t retdec_cact_destructor_bridge(unsigned char flags)
+{
+    return retdec_destroy_cact_with_flags(0, flags);
+}
+#endif
+
 // Address range: 0x427530 - 0x42760c
 int32_t function_427530(int32_t this_ptr) {
     if (this_ptr == 0)
@@ -64836,6 +67011,26 @@ static int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
         return -0x7fffbffb;
     *(int32_t *)(intptr_t)(layout + 0x130) = layer;
     *(uint8_t *)(intptr_t)(layout + 0x138) = 0;
+    /* CActLayerLayout is a pointer view over the active C2DLayout.  The
+       original 42BA50 writes these aliases before layer properties are
+       accessed through CActLayer's _get/_set tables. */
+    *(int32_t *)(intptr_t)(layer + 4) = layout + 236;
+    *(int32_t *)(intptr_t)(layer + 8) = layout + 240;
+    *(int32_t *)(intptr_t)(layer + 12) = layout + 244;
+    *(int32_t *)(intptr_t)(layer + 16) = layout + 248;
+    *(int32_t *)(intptr_t)(layer + 20) = layout + 252;
+    *(int32_t *)(intptr_t)(layer + 24) = layout + 256;
+    *(int32_t *)(intptr_t)(layer + 28) = layout + 260;
+    *(int32_t *)(intptr_t)(layer + 32) = layout + 264;
+    *(int32_t *)(intptr_t)(layer + 36) = layout + 268;
+    *(int32_t *)(intptr_t)(layer + 40) = layout + 272;
+    *(int32_t *)(intptr_t)(layer + 44) = layout + 276;
+    *(int32_t *)(intptr_t)(layer + 48) = layout + 280;
+    *(int32_t *)(intptr_t)(layer + 52) = layout + 284;
+    *(int32_t *)(intptr_t)(layer + 56) = layout + 288;
+    *(int32_t *)(intptr_t)(layer + 60) = layout + 292;
+    *(int32_t *)(intptr_t)(layer + 64) = layout + 296;
+    *(int32_t *)(intptr_t)(layer + 68) = layout + 300;
     resource = *(int32_t *)(intptr_t)(layer + 0x64);
     handle = resource == 0 ? 0 :
         *(int32_t *)(intptr_t)(resource + 0x44);
@@ -64846,10 +67041,9 @@ static int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
             *(float32_t *)(intptr_t)(resource + 88) * 0.5f;
         *(float32_t *)(intptr_t)(layout + 252) =
             *(float32_t *)(intptr_t)(resource + 92) * 0.5f;
-        *(float32_t *)(intptr_t)(layout + 272) =
-            *(float32_t *)(intptr_t)(resource + 88) * 0.5f;
-        *(float32_t *)(intptr_t)(layout + 276) =
-            *(float32_t *)(intptr_t)(resource + 92) * 0.5f;
+        /* cos_x/cos_y are serialized layout properties.  The original
+           binding path does not replace them when a resource is already
+           resolved; Fader relies on its zero origin for screen coverage. */
         *(uint8_t *)(intptr_t)(layout + 312) = 1;
     }
     retdec_trace_i32("layout:bind-layer", layer);
@@ -104486,7 +106680,9 @@ int32_t function_450d80(void) {
 // Address range: 0x450e30 - 0x450f2f
 // From class:    .?AVRootTable@Sqrat@@
 // Type:          constructor
-int32_t function_450e30(int32_t a1, int32_t a2) {
+// RetDec's body loses the ECX receiver.  Keep it as a reference only; the
+// live ABI-correct entry point is defined below the receiver-safe helpers.
+static int32_t retdec_unbound_function_450e30(int32_t a1, int32_t a2) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x450e40
     __writefsdword(0, (int32_t)&v1);
     int32_t v2; // bp-28, 0x450e30
@@ -104514,7 +106710,9 @@ int32_t function_450e30(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x450f30 - 0x45126c
-int32_t function_450f30(int32_t a1) {
+// RetDec's body loses the RootTable ECX receiver.  Keep it for comparison;
+// the live entry point is defined below the receiver-safe implementation.
+static int32_t retdec_unbound_function_450f30(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-20, 0x450f43
     int32_t v2; // bp-168, 0x450f30
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-172, 0x450f54
@@ -104691,17 +106889,40 @@ static int32_t retdec_sqrat_root_construct(int32_t object_ptr, int32_t vm)
     if (object_ptr == 0 || vm == 0)
         return 0;
 
+    retdec_trace_i32("450e30:construct-object", object_ptr);
+    retdec_trace_i32("450e30:construct-pair", object_ptr + 8);
+
     *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g39;
     *(int32_t *)(intptr_t)(object_ptr + 4) = vm;
     *(unsigned char *)(intptr_t)(object_ptr + 16) = 1;
     function_48abe0(object_ptr + 8);
+    retdec_trace_i32("450e30:after-init-type",
+                     *(int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-init-data",
+                     *(int32_t *)(intptr_t)(object_ptr + 12));
 
     /* RootTable::RootTable(vm): copy the VM root table into the object. */
     *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g40;
     function_48a670(vm);
+    retdec_trace_i32("450e30:after-push-type",
+                     *(int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-push-data",
+                     *(int32_t *)(intptr_t)(object_ptr + 12));
     function_48ab40(vm, -1, (int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-copy-type",
+                     *(int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-copy-data",
+                     *(int32_t *)(intptr_t)(object_ptr + 12));
     function_48a400(vm, object_ptr + 8);
+    retdec_trace_i32("450e30:after-addref-type",
+                     *(int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-addref-data",
+                     *(int32_t *)(intptr_t)(object_ptr + 12));
     function_48aa30(vm, 1);
+    retdec_trace_i32("450e30:after-pop-type",
+                     *(int32_t *)(intptr_t)(object_ptr + 8));
+    retdec_trace_i32("450e30:after-pop-data",
+                     *(int32_t *)(intptr_t)(object_ptr + 12));
     return object_ptr;
 }
 
@@ -104722,6 +106943,7 @@ static void retdec_sqrat_object_release(int32_t object_ptr)
 static int32_t retdec_sqrat_get(int32_t object_ptr, const char *name,
                                 int32_t out_ptr)
 {
+    static int32_t trace_sqrat_get_table_count;
     int32_t vm;
     int32_t base;
     int32_t result;
@@ -104731,6 +106953,17 @@ static int32_t retdec_sqrat_get(int32_t object_ptr, const char *name,
     vm = *(int32_t *)(intptr_t)(object_ptr + 4);
     if (vm == 0)
         return 0;
+
+    if (trace_sqrat_get_table_count < 16 &&
+        *(int32_t *)(intptr_t)(object_ptr + 8) == 0x0A000020 &&
+        *(int32_t *)(intptr_t)(object_ptr + 12) != 0 &&
+        (strcmp(name, "Init") == 0 || strcmp(name, "Update") == 0 ||
+         strcmp(name, "OnCreate") == 0)) {
+        retdec_trace_squirrel_table_entries(
+            "sq-meta:get-table",
+            *(int32_t *)(intptr_t)(object_ptr + 12));
+        ++trace_sqrat_get_table_count;
+    }
 
     *(int32_t *)(intptr_t)out_ptr = g483;
     *(int32_t *)(intptr_t)(out_ptr + 4) = g484;
@@ -104748,6 +106981,19 @@ static int32_t retdec_sqrat_get(int32_t object_ptr, const char *name,
     function_48a400(vm, out_ptr);
     retdec_sqrat_trim_stack(vm, base);
     return 1;
+}
+
+/* Sqrat::Object owns a returned pair through SQVM's RefTable, not through a
+   raw SQObjectPtr release.  Keep that ownership boundary explicit for the
+   receiver-safe paths below. */
+static void retdec_sqrat_release_pair(int32_t vm, int32_t pair[2])
+{
+    if (pair == NULL)
+        return;
+    if (pair[0] != g483 || pair[1] != g484)
+        function_48a430(vm, (int32_t)(intptr_t)pair);
+    pair[0] = g483;
+    pair[1] = g484;
 }
 
 static int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t *object_pair,
@@ -104804,7 +107050,7 @@ static int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t *object_pair,
                     retdec_trace_i32("sqrat:player-read-user",
                                      *(int32_t *)(intptr_t)(actual[1] + 32));
                 }
-                retdec_squirrel_release(actual[0], actual[1]);
+                retdec_sqrat_release_pair(vm, actual);
             } else {
                 retdec_trace("sqrat:player-read-failed");
             }
@@ -104884,6 +107130,73 @@ static int32_t retdec_sqrat_raw_set_string(int32_t vm,
     return result >= 0;
 }
 
+static int32_t retdec_sqrat_set_native_closure(
+    int32_t vm, const int32_t *object_pair, const char *name,
+    int32_t native_function, const int32_t *free_pair,
+    int32_t free_count)
+{
+    int32_t base;
+    int32_t result;
+
+    if (vm == 0 || object_pair == NULL || name == NULL ||
+        native_function == 0 || free_count < 0 ||
+        (free_count != 0 && free_pair == NULL))
+        return 0;
+    base = function_48aa20(vm);
+    function_48ab90(vm, object_pair[0], object_pair[1]);
+    function_48a480(vm, (int32_t)(intptr_t)name, -1);
+    if (free_count != 0)
+        function_48ab90(vm, free_pair[0], free_pair[1]);
+    function_48d850(vm, native_function, free_count);
+    result = function_48c950(vm, -3, 0);
+    retdec_sqrat_trim_stack(vm, base);
+    return result >= 0;
+}
+
+static int32_t retdec_sqrat_set_offset_closure(
+    int32_t vm, const int32_t *table_pair, const char *name,
+    int32_t offset, int32_t getter, int32_t setter)
+{
+    int32_t base;
+    int32_t payload;
+    int32_t result;
+
+    if (vm == 0 || table_pair == NULL || name == NULL ||
+        getter == 0 || setter == 0)
+        return 0;
+    base = function_48aa20(vm);
+    function_48ab90(vm, table_pair[0], table_pair[1]);
+    function_48a480(vm, (int32_t)(intptr_t)name, -1);
+    payload = function_48c2f0(vm, 4);
+    if (payload == 0) {
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
+    *(int32_t *)(intptr_t)payload = offset;
+    function_48d850(vm, getter, 1);
+    result = function_48c950(vm, -3, 0);
+    if (result < 0) {
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
+    function_48aa30(vm, 1);
+
+    function_48ab90(vm, table_pair[0], table_pair[1]);
+    function_48a480(vm, (int32_t)(intptr_t)name, -1);
+    payload = function_48c2f0(vm, 4);
+    if (payload == 0) {
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
+    *(int32_t *)(intptr_t)payload = offset;
+    function_48d850(vm, setter, 1);
+    result = function_48c950(vm, -3, 0);
+    if (result >= 0)
+        function_48aa30(vm, 1);
+    retdec_sqrat_trim_stack(vm, base);
+    return result >= 0;
+}
+
 static int32_t retdec_sqrat_set_int(int32_t vm, const int32_t *object_pair,
                                     const char *name, int32_t value)
 {
@@ -104915,56 +107228,554 @@ static int32_t retdec_sqrat_set_string(int32_t vm, const int32_t *object_pair,
     return result >= 0;
 }
 
+/* CActLayer's VarInfo callbacks receive the native object from the instance
+   and a four-byte userdata descriptor from the closure's free environment.
+   This is the same ABI used by the original 42E370/43E640/454C20 callback
+   families; keep the descriptor lookup in one place so direct and aliased
+   fields cannot diverge. */
+static int32_t retdec_cact_layer_property_offset(int32_t vm,
+                                                   int32_t *offset)
+{
+    static volatile LONG trace_count;
+    int32_t target = 0;
+    int32_t *descriptor = NULL;
+
+    if (vm == 0 || offset == NULL ||
+        function_48c890(vm, 1, &target, 0) < 0 || target == 0 ||
+        function_48a920(vm, -1, (int32_t *)&descriptor, 0) < 0 ||
+        descriptor == NULL)
+        return 0;
+    *offset = *descriptor;
+    if ((*offset == 0x8c || (*offset >= 0x34 && *offset <= 0x44)) &&
+        InterlockedIncrement(&trace_count) <= 256) {
+        retdec_trace_i32("cact:property-target", target);
+        retdec_trace_i32("cact:property-offset", *offset);
+        retdec_trace_i32("cact:property-vtable",
+                         *(int32_t *)(intptr_t)target);
+    }
+    return target;
+}
+
+static int32_t retdec_cact_layer_get_int(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+
+    if (target == 0)
+        return 0;
+    function_48a4f0(vm, *(int32_t *)(intptr_t)(target + offset));
+    return 1;
+}
+
+static int32_t retdec_cact_layer_set_int(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value = 0;
+
+    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
+        return 0;
+    *(int32_t *)(intptr_t)(target + offset) = value;
+    return 0;
+}
+
+static int32_t retdec_cact_layer_get_bool(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+
+    if (target == 0)
+        return 0;
+    function_48a530(vm,
+                    *(uint8_t *)(intptr_t)(target + offset));
+    return 1;
+}
+
+static int32_t retdec_cact_layer_set_bool(int32_t vm)
+{
+    static volatile LONG trace_set_count;
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value = 0;
+
+    if (target == 0 || function_48a790(vm, 2, &value) < 0)
+        return 0;
+    *(uint8_t *)(intptr_t)(target + offset) = (uint8_t)(value != 0);
+    if ((offset == 0x8c || offset == 0x8d) &&
+        InterlockedIncrement(&trace_set_count) <= 128) {
+        retdec_trace_i32("cact:set-bool-target", target);
+        retdec_trace_i32("cact:set-bool-offset", offset);
+        retdec_trace_i32("cact:set-bool-value", value != 0);
+    }
+    return 0;
+}
+
+static int32_t retdec_cact_layer_get_float(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_bits;
+
+    if (target == 0)
+        return 0;
+    memcpy(&value_bits, (const void *)(intptr_t)(target + offset),
+           sizeof(value_bits));
+    function_48a580(vm, value_bits);
+    return 1;
+}
+
+static int32_t retdec_cact_layer_set_float(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_bits = 0;
+
+    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
+        return 0;
+    memcpy((void *)(intptr_t)(target + offset), &value_bits,
+           sizeof(value_bits));
+    return 0;
+}
+
+static int32_t retdec_cact_layer_get_pointer_float(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_ptr;
+    int32_t value_bits;
+
+    if (target == 0)
+        return 0;
+    value_ptr = *(int32_t *)(intptr_t)(target + offset);
+    if (value_ptr == 0)
+        return 0;
+    memcpy(&value_bits, (const void *)(intptr_t)value_ptr,
+           sizeof(value_bits));
+    function_48a580(vm, value_bits);
+    return 1;
+}
+
+static int32_t retdec_cact_layer_set_pointer_float(int32_t vm)
+{
+    static volatile LONG trace_set_count;
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_ptr;
+    int32_t value_bits = 0;
+
+    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
+        return 0;
+    value_ptr = *(int32_t *)(intptr_t)(target + offset);
+    if (value_ptr != 0)
+        memcpy((void *)(intptr_t)value_ptr, &value_bits,
+               sizeof(value_bits));
+    if (offset >= 0x34 && offset <= 0x34 &&
+        InterlockedIncrement(&trace_set_count) <= 128) {
+        retdec_trace_i32("cact:set-pointer-float-target", target);
+        retdec_trace_i32("cact:set-pointer-float-offset", offset);
+        retdec_trace_i32("cact:set-pointer-float-value", value_bits);
+        retdec_trace_i32("cact:set-pointer-float-destination", value_ptr);
+    }
+    return 0;
+}
+
+static int32_t retdec_cact_layer_get_pointer_int(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_ptr;
+
+    if (target == 0)
+        return 0;
+    value_ptr = *(int32_t *)(intptr_t)(target + offset);
+    if (value_ptr == 0)
+        return 0;
+    function_48a4f0(vm, *(int32_t *)(intptr_t)value_ptr);
+    return 1;
+}
+
+static int32_t retdec_cact_layer_set_pointer_int(int32_t vm)
+{
+    static volatile LONG trace_set_count;
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value_ptr;
+    int32_t value = 0;
+
+    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
+        return 0;
+    value_ptr = *(int32_t *)(intptr_t)(target + offset);
+    if (value_ptr != 0)
+        *(int32_t *)(intptr_t)value_ptr = value;
+    if (offset >= 0x38 && offset <= 0x44 &&
+        InterlockedIncrement(&trace_set_count) <= 128) {
+        retdec_trace_i32("cact:set-pointer-int-target", target);
+        retdec_trace_i32("cact:set-pointer-int-offset", offset);
+        retdec_trace_i32("cact:set-pointer-int-value", value);
+        retdec_trace_i32("cact:set-pointer-int-destination", value_ptr);
+    }
+    return 0;
+}
+
+static int32_t retdec_cact_layer_get_string(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    const char *value;
+
+    if (target == 0)
+        return 0;
+    value = retdec_std_string_data(target + offset);
+    if (value == NULL)
+        value = "";
+    return function_48a480(vm, (int32_t)(intptr_t)value, -1) >= 0;
+}
+
+static int32_t retdec_cact_layer_set_string(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
+    int32_t value = 0;
+
+    if (target == 0 || function_48a8d0(vm, 2, &value) < 0)
+        return 0;
+    retdec_string_assign_cstr(
+        (int32_t *)(intptr_t)(target + offset),
+        (const char *)(intptr_t)value);
+    return 0;
+}
+
+static int32_t retdec_publish_cact_layer_property(
+    int32_t vm, const char *name, int32_t offset,
+    int32_t getter, int32_t setter)
+{
+    if (g1151 != 0x0A000020 || g1152 == 0 ||
+        g1153 != 0x0A000020 || g1154 == 0)
+        return 0;
+    if (!retdec_sqrat_set_offset_closure(
+            vm, (const int32_t *)&g1153, name, offset, getter, setter) ||
+        !retdec_sqrat_set_offset_closure(
+            vm, (const int32_t *)&g1151, name, offset, getter, setter))
+        return 0;
+    return 1;
+}
+
 static int32_t retdec_publish_cact_layer_members(
     int32_t vm, const int32_t *class_pair)
 {
-    static const char *const integer_names[] = {
-        "resourceID", "layerID", "parentID", "blend",
-        "colorR", "colorG", "colorB"
+    static const char *const direct_int_names[] = {
+        "resourceID", "layerID", "parentID"
     };
-    static const char *const boolean_names[] = {
-        "visible", "debugOnly"
-    };
-    static const char *const float_names[] = {
+    static const int32_t direct_int_offsets[] = { 0x60, 0x68, 0x6c };
+    static const char *const direct_float_names[] = {
         "dst_x", "dst_y", "dst_z", "x", "y", "z",
         "prev_x", "prev_y", "prev_z", "xPrev", "yPrev", "zPrev",
-        "ox", "oy", "oz", "roll_x", "roll_y", "roll_z",
-        "cor_x", "cor_y", "cor_z", "scale_x", "scale_y", "scale_z",
-        "cos_x", "cos_y", "cos_z", "alpha"
+        "ox", "oy", "oz"
     };
-    static const char *const null_names[] = {
+    static const int32_t direct_float_offsets[] = {
+        0x90, 0x94, 0x98, 0x90, 0x94, 0x98,
+        0xa8, 0xac, 0xb0, 0xa8, 0xac, 0xb0,
+        0x9c, 0xa0, 0xa4
+    };
+    static const char *const pointer_float_names[] = {
+        "roll_x", "roll_y", "roll_z", "cor_x", "cor_y", "cor_z",
+        "scale_x", "scale_y", "scale_z", "cos_x", "cos_y", "cos_z",
+        "alpha"
+    };
+    static const int32_t pointer_float_offsets[] = {
+        4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52
+    };
+    static const char *const pointer_int_names[] = {
+        "blend", "colorR", "colorG", "colorB"
+    };
+    static const int32_t pointer_int_offsets[] = { 56, 60, 64, 68 };
+    static const char *const object_names[] = {
         "script", "layout", "resource", "thisAct"
     };
+    int32_t empty_pair[2] = { g483, g484 };
+    int32_t table_pair[2] = { g483, g484 };
+    int32_t table_pair2[2] = { g483, g484 };
     int32_t null_pair[2] = { 0x01000001, 0 };
+    size_t index;
 
     if (vm == 0 || class_pair == NULL ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0)
         return 0;
-    for (size_t i = 0; i < sizeof(integer_names) / sizeof(integer_names[0]);
-         ++i) {
-        if (!retdec_sqrat_set_int(vm, class_pair, integer_names[i], 0))
+
+    if (g1151 != 0x0A000020 || g1152 == 0 ||
+        g1153 != 0x0A000020 || g1154 == 0) {
+        if (!retdec_sqrat_new_table(vm, table_pair) ||
+            !retdec_sqrat_new_table(vm, table_pair2)) {
+            retdec_sqrat_release_pair(vm, table_pair);
+            retdec_sqrat_release_pair(vm, table_pair2);
             return 0;
+        }
+        retdec_squirrel_assign(&g1151, table_pair);
+        retdec_squirrel_assign(&g1153, table_pair2);
+        retdec_sqrat_release_pair(vm, table_pair);
+        retdec_sqrat_release_pair(vm, table_pair2);
     }
-    for (size_t i = 0; i < sizeof(boolean_names) / sizeof(boolean_names[0]);
-         ++i) {
-        if (!retdec_sqrat_set_bool(vm, class_pair, boolean_names[i], 0))
-            return 0;
+
+    if (!retdec_sqrat_set_native_closure(
+            vm, class_pair, "constructor", (int32_t)(intptr_t)function_4a1760,
+            NULL, 0) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
+                               (const int32_t *)&g1151) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__getTable",
+                               (const int32_t *)&g1153) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "_set", (int32_t)(intptr_t)function_41e2c0,
+            (const int32_t *)&g1151, 1) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "_get", (int32_t)(intptr_t)function_41e260,
+            (const int32_t *)&g1153, 1) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "weakref", (int32_t)(intptr_t)function_431650,
+            NULL, 0))
+        goto failed;
+
+    if (!retdec_publish_cact_layer_property(
+            vm, "stName", 0x70,
+            (int32_t)(intptr_t)retdec_cact_layer_get_string,
+            (int32_t)(intptr_t)retdec_cact_layer_set_string))
+        goto failed;
+    for (index = 0; index < sizeof(direct_int_names) /
+                         sizeof(direct_int_names[0]); ++index) {
+        if (!retdec_publish_cact_layer_property(
+                vm, direct_int_names[index], direct_int_offsets[index],
+                (int32_t)(intptr_t)retdec_cact_layer_get_int,
+                (int32_t)(intptr_t)retdec_cact_layer_set_int))
+            goto failed;
     }
-    for (size_t i = 0; i < sizeof(float_names) / sizeof(float_names[0]);
-         ++i) {
-        int32_t value_pair[2] = { 0x05000004, 0 };
-        if (!retdec_sqrat_set_pair(vm, class_pair, float_names[i],
-                                   value_pair))
-            return 0;
+    if (!retdec_publish_cact_layer_property(
+            vm, "visible", 0x8c,
+            (int32_t)(intptr_t)retdec_cact_layer_get_bool,
+            (int32_t)(intptr_t)retdec_cact_layer_set_bool) ||
+        !retdec_publish_cact_layer_property(
+            vm, "debugOnly", 0x8d,
+            (int32_t)(intptr_t)retdec_cact_layer_get_bool,
+            (int32_t)(intptr_t)retdec_cact_layer_set_bool))
+        goto failed;
+    for (index = 0; index < sizeof(direct_float_names) /
+                         sizeof(direct_float_names[0]); ++index) {
+        if (!retdec_publish_cact_layer_property(
+                vm, direct_float_names[index], direct_float_offsets[index],
+                (int32_t)(intptr_t)retdec_cact_layer_get_float,
+                (int32_t)(intptr_t)retdec_cact_layer_set_float))
+            goto failed;
     }
-    if (!retdec_sqrat_set_string(vm, class_pair, "stName", ""))
-        return 0;
-    for (size_t i = 0; i < sizeof(null_names) / sizeof(null_names[0]);
-         ++i) {
-        if (!retdec_sqrat_set_pair(vm, class_pair, null_names[i], null_pair))
-            return 0;
+    for (index = 0; index < sizeof(pointer_float_names) /
+                         sizeof(pointer_float_names[0]); ++index) {
+        if (!retdec_publish_cact_layer_property(
+                vm, pointer_float_names[index], pointer_float_offsets[index],
+                (int32_t)(intptr_t)retdec_cact_layer_get_pointer_float,
+                (int32_t)(intptr_t)retdec_cact_layer_set_pointer_float))
+            goto failed;
+    }
+    for (index = 0; index < sizeof(pointer_int_names) /
+                         sizeof(pointer_int_names[0]); ++index) {
+        if (!retdec_publish_cact_layer_property(
+                vm, pointer_int_names[index], pointer_int_offsets[index],
+                (int32_t)(intptr_t)retdec_cact_layer_get_pointer_int,
+                (int32_t)(intptr_t)retdec_cact_layer_set_pointer_int))
+            goto failed;
+    }
+
+    /* These are the four SQObject members installed by the original
+       TypePropertyClass<string/object> helpers.  Their values are filled on
+       each instance with the same raw/newslot distinction as the ACT path. */
+    for (index = 0; index < sizeof(object_names) / sizeof(object_names[0]);
+         ++index) {
+        if (!retdec_sqrat_set_pair(vm, class_pair, object_names[index],
+                                   null_pair))
+            goto failed;
     }
     return 1;
+
+failed:
+    retdec_squirrel_assign(&g1151, empty_pair);
+    retdec_squirrel_assign(&g1153, empty_pair);
+    return 0;
+}
+
+static int32_t retdec_c2dlayout_property_offset(int32_t vm,
+                                                  int32_t *offset)
+{
+    int32_t target = 0;
+    int32_t *descriptor = NULL;
+
+    if (vm == 0 || offset == NULL ||
+        function_48c890(vm, 1, &target, 0) < 0 || target == 0 ||
+        function_48a920(vm, -1, (int32_t *)&descriptor, 0) < 0 ||
+        descriptor == NULL)
+        return 0;
+    *offset = *descriptor;
+    return target;
+}
+
+static int32_t retdec_c2dlayout_get_int(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
+
+    if (target == 0)
+        return 0;
+    function_48a4f0(vm, *(int32_t *)(intptr_t)(target + offset));
+    return 1;
+}
+
+static int32_t retdec_c2dlayout_get_float(int32_t vm)
+{
+    int32_t offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
+    int32_t value_bits;
+
+    if (target == 0)
+        return 0;
+    memcpy(&value_bits, (const void *)(intptr_t)(target + offset),
+           sizeof(value_bits));
+    function_48a580(vm, value_bits);
+    return 1;
+}
+
+static int32_t retdec_c2dlayout_set_int(int32_t vm)
+{
+    int32_t target_offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
+    int32_t value = 0;
+
+    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
+        return 0;
+    *(int32_t *)(intptr_t)(target + target_offset) = value;
+    return 0;
+}
+
+static int32_t retdec_c2dlayout_set_float(int32_t vm)
+{
+    int32_t target_offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
+    int32_t value_bits = 0;
+
+    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
+        return 0;
+    memcpy((void *)(intptr_t)(target + target_offset), &value_bits,
+           sizeof(value_bits));
+    return 0;
+}
+
+static int32_t retdec_c2dlayout_set_color(int32_t vm)
+{
+    int32_t target_offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
+    int32_t value = 0;
+
+    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
+        return 0;
+    if (value < 0)
+        value = 0;
+    if (value > 255)
+        value = 255;
+    *(int32_t *)(intptr_t)(target + target_offset) = value;
+    return 0;
+}
+
+static int32_t retdec_publish_c2dlayout_properties(
+    int32_t vm, const int32_t class_pair[2])
+{
+    static const char *const float_names[] = {
+        "roll_x", "roll_y", "roll_z", "cor_x", "cor_y", "cor_z",
+        "scale_x", "scale_y", "scale_z", "cos_x", "cos_y", "cos_z",
+        "alpha"
+    };
+    static const int32_t float_offsets[] = {
+        236, 240, 244, 248, 252, 256, 260, 264, 268, 272, 276, 280, 284
+    };
+    static const char *const color_names[] = { "colorR", "colorG", "colorB" };
+    static const int32_t color_offsets[] = { 292, 296, 300 };
+    int32_t empty_pair[2] = { g483, g484 };
+    int32_t table_pair[2] = { g483, g484 };
+    int32_t table_pair2[2] = { g483, g484 };
+    size_t index;
+
+    if (vm == 0 || class_pair == NULL ||
+        class_pair[0] != 0x08004000 || class_pair[1] == 0)
+        return 0;
+
+    if (g1141 != 0x0A000020 || g1142 == 0 ||
+        g1143 != 0x0A000020 || g1144 == 0) {
+        if (!retdec_sqrat_new_table(vm, table_pair) ||
+            !retdec_sqrat_new_table(vm, table_pair2)) {
+            retdec_sqrat_release_pair(vm, table_pair);
+            retdec_sqrat_release_pair(vm, table_pair2);
+            return 0;
+        }
+        retdec_squirrel_assign(&g1141, table_pair);
+        retdec_squirrel_assign(&g1143, table_pair2);
+        retdec_sqrat_release_pair(vm, table_pair);
+        retdec_sqrat_release_pair(vm, table_pair2);
+    }
+
+    if (!retdec_sqrat_set_native_closure(
+            vm, class_pair, "constructor", (int32_t)(intptr_t)function_4a1760,
+            NULL, 0) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
+                               (const int32_t *)&g1141) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__getTable",
+                               (const int32_t *)&g1143) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "_set", (int32_t)(intptr_t)function_41e2c0,
+            (const int32_t *)&g1141, 1) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "_get", (int32_t)(intptr_t)function_41e260,
+            (const int32_t *)&g1143, 1) ||
+        !retdec_sqrat_set_native_closure(
+            vm, class_pair, "weakref", (int32_t)(intptr_t)function_431650,
+            NULL, 0))
+        goto failed;
+
+    for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
+         ++index) {
+        if (!retdec_sqrat_set_offset_closure(
+                vm, (const int32_t *)&g1143, float_names[index],
+                float_offsets[index],
+                (int32_t)(intptr_t)retdec_c2dlayout_get_float,
+                (int32_t)(intptr_t)retdec_c2dlayout_set_float) ||
+            !retdec_sqrat_set_offset_closure(
+                vm, (const int32_t *)&g1141, float_names[index],
+                float_offsets[index],
+                (int32_t)(intptr_t)retdec_c2dlayout_get_float,
+                (int32_t)(intptr_t)retdec_c2dlayout_set_float))
+            goto failed;
+    }
+    if (!retdec_sqrat_set_offset_closure(
+            vm, (const int32_t *)&g1143, "blend", 288,
+            (int32_t)(intptr_t)retdec_c2dlayout_get_int,
+            (int32_t)(intptr_t)retdec_c2dlayout_set_int) ||
+        !retdec_sqrat_set_offset_closure(
+            vm, (const int32_t *)&g1141, "blend", 288,
+            (int32_t)(intptr_t)retdec_c2dlayout_get_int,
+            (int32_t)(intptr_t)retdec_c2dlayout_set_int))
+        goto failed;
+    for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
+         ++index) {
+        if (!retdec_sqrat_set_offset_closure(
+                vm, (const int32_t *)&g1143, color_names[index],
+                color_offsets[index],
+                (int32_t)(intptr_t)retdec_c2dlayout_get_int,
+                (int32_t)(intptr_t)retdec_c2dlayout_set_color) ||
+            !retdec_sqrat_set_offset_closure(
+                vm, (const int32_t *)&g1141, color_names[index],
+                color_offsets[index],
+                (int32_t)(intptr_t)retdec_c2dlayout_get_int,
+                (int32_t)(intptr_t)retdec_c2dlayout_set_color))
+            goto failed;
+    }
+    return 1;
+
+failed:
+    retdec_squirrel_assign(&g1141, empty_pair);
+    retdec_squirrel_assign(&g1143, empty_pair);
+    return 0;
 }
 
 /* Recreate the lazy 42B6D0 registration needed by CActLayer::Register.
@@ -104972,24 +107783,27 @@ static int32_t retdec_publish_cact_layer_members(
    through the normal Squirrel class/instance lookup path. */
 static int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
 {
-    static const char *const integer_names[] = {
-        "blend", "colorR", "colorG", "colorB"
-    };
-    static const char *const float_names[] = {
-        "alpha", "roll_x", "roll_y", "roll_z",
-        "cor_x", "cor_y", "cor_z",
-        "scale_x", "scale_y", "scale_z",
-        "cos_x", "cos_y", "cos_z"
-    };
     int32_t existing[2] = { g483, g484 };
     int32_t class_pair[2] = { g483, g484 };
+    int32_t empty_pair[2] = { g483, g484 };
+    int32_t existing_result;
     int32_t base;
 
     if (vm == 0 || root_object == 0)
         return 0;
-    if (retdec_sqrat_get(root_object, "C2DLayout", existing) &&
-        existing[0] == 0x08004000 && existing[1] != 0)
-        return 1;
+    existing_result = retdec_sqrat_get(root_object, "C2DLayout", existing);
+    if (existing_result && existing[0] == 0x08004000 && existing[1] != 0) {
+        retdec_squirrel_assign(&g1145, existing);
+        class_pair[0] = existing[0];
+        class_pair[1] = existing[1];
+        retdec_sqrat_release_pair(vm, existing);
+        if (g1141 == 0x0A000020 && g1142 != 0 &&
+            g1143 == 0x0A000020 && g1144 != 0)
+            return 1;
+        return retdec_publish_c2dlayout_properties(vm, class_pair);
+    }
+    if (existing_result)
+        retdec_sqrat_release_pair(vm, existing);
 
     base = function_48aa20(vm);
     if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
@@ -104999,36 +107813,29 @@ static int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
     function_48ab40(vm, -1, class_pair);
     function_48a400(vm, (int32_t)(intptr_t)class_pair);
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
 
-    for (size_t i = 0;
-         i < sizeof(integer_names) / sizeof(integer_names[0]); ++i) {
-        if (!retdec_sqrat_set_int(vm, class_pair, integer_names[i],
-                                  i == 0 ? 1 : 255)) {
-            retdec_sqrat_trim_stack(vm, base);
-            return 0;
-        }
-    }
-    for (size_t i = 0;
-         i < sizeof(float_names) / sizeof(float_names[0]); ++i) {
-        int32_t value_pair[2] = { 0x05000004, 0 };
-        if (!retdec_sqrat_set_pair(vm, class_pair, float_names[i],
-                                   value_pair)) {
-            retdec_sqrat_trim_stack(vm, base);
-            return 0;
-        }
-    }
+    retdec_squirrel_assign(&g1145, class_pair);
+    if (!retdec_publish_c2dlayout_properties(vm, class_pair))
+        goto publish_failed;
     if (!retdec_sqrat_set_pair(
             vm, (const int32_t *)(intptr_t)(root_object + 8),
             "C2DLayout", class_pair)) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
+        retdec_squirrel_assign(&g1145, empty_pair);
+        goto publish_failed;
     }
     retdec_trace_i32("act:c2dlayout-class", class_pair[1]);
+    retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_trim_stack(vm, base);
     return 1;
+
+publish_failed:
+    retdec_sqrat_release_pair(vm, class_pair);
+    retdec_sqrat_trim_stack(vm, base);
+    return 0;
 }
 
 static int32_t retdec_sqrat_new_table(int32_t vm, int32_t out_pair[2])
@@ -105133,6 +107940,92 @@ static int32_t retdec_cact_associate_resource(int32_t vm)
     return 1;
 }
 
+/* Recreate the lazy 446520 registration for CActResource2D.  The original
+   class is published once in the VM root and its pair is retained in
+   g1079/g1080 for the 448FB0 and 448910 binding helpers. */
+static int32_t retdec_publish_cact_resource2d_class(int32_t vm,
+                                                     int32_t root_object)
+{
+    static const char *const integer_names[] = {
+        "resourceID", "image_width", "image_height"
+    };
+    static const char *const float_names[] = {
+        "src_x", "src_y", "src_width", "src_height"
+    };
+    int32_t existing[2] = { g483, g484 };
+    int32_t class_pair[2] = { g483, g484 };
+    int32_t empty_pair[2] = { g483, g484 };
+    int32_t existing_result;
+    int32_t base;
+    size_t index;
+
+    if (vm == 0 || root_object == 0)
+        return 0;
+
+    existing_result = retdec_sqrat_get(root_object, "CActResource2D",
+                                       existing);
+    if (existing_result && existing[0] == 0x08004000 &&
+        existing[1] != 0) {
+        retdec_squirrel_assign(&g1079, existing);
+        g1037 = 1;
+        retdec_trace_i32("act:resource2d-class-existing", existing[1]);
+        retdec_sqrat_release_pair(vm, existing);
+        return 1;
+    }
+    if (existing_result)
+        retdec_sqrat_release_pair(vm, existing);
+
+    base = function_48aa20(vm);
+    if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
+    function_48ab40(vm, -1, class_pair);
+    function_48a400(vm, (int32_t)(intptr_t)class_pair);
+    if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
+        retdec_sqrat_release_pair(vm, class_pair);
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
+
+    for (index = 0; index < sizeof(integer_names) / sizeof(integer_names[0]);
+         ++index) {
+        int32_t value = index == 0 ? 0 : 256;
+        if (!retdec_sqrat_set_int(vm, class_pair, integer_names[index],
+                                  value))
+            goto publish_failed;
+    }
+    for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
+         ++index) {
+        int32_t value_pair[2] = { 0x05000004, 0 };
+        if (!retdec_sqrat_set_pair(vm, class_pair, float_names[index],
+                                   value_pair))
+            goto publish_failed;
+    }
+    if (!retdec_sqrat_set_string(vm, class_pair, "stName", "") ||
+        !retdec_sqrat_set_string(vm, class_pair, "stTextureName", ""))
+        goto publish_failed;
+
+    /* 447C60 retains the class object independently of the root slot. */
+    retdec_squirrel_assign(&g1079, class_pair);
+    g1037 = 1;
+    if (!retdec_sqrat_set_pair(
+            vm, (const int32_t *)(intptr_t)(root_object + 8),
+            "CActResource2D", class_pair)) {
+        retdec_squirrel_assign(&g1079, empty_pair);
+        goto publish_failed;
+    }
+    retdec_trace_i32("act:resource2d-class", class_pair[1]);
+    retdec_sqrat_release_pair(vm, class_pair);
+    retdec_sqrat_trim_stack(vm, base);
+    return 1;
+
+publish_failed:
+    retdec_sqrat_release_pair(vm, class_pair);
+    retdec_sqrat_trim_stack(vm, base);
+    return 0;
+}
+
 /* Recreate the lazy 41EFF0 registration with explicit Squirrel receivers.
    The original FlexibleClass wrapper is only needed to expose the ACT layer
    class and its native AssociateResource entry; layer state itself is filled
@@ -105146,13 +108039,19 @@ static int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     int32_t method_source[2] = {
         (int32_t)(intptr_t)function_4252e0, 0
     };
+    int32_t existing_result;
     int32_t base;
 
     if (vm == 0 || root_object == 0)
         return 0;
-    if (retdec_sqrat_get(root_object, "CActLayer", existing) &&
-        existing[0] == 0x08004000 && existing[1] != 0)
-        return 1;
+    existing_result = retdec_sqrat_get(root_object, "CActLayer", existing);
+    if (existing_result) {
+        int32_t already_published =
+            existing[0] == 0x08004000 && existing[1] != 0;
+        retdec_sqrat_release_pair(vm, existing);
+        if (already_published)
+            return 1;
+    }
 
     base = function_48aa20(vm);
     if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
@@ -105162,6 +108061,7 @@ static int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     function_48ab40(vm, -1, class_pair);
     function_48a400(vm, (int32_t)(intptr_t)class_pair);
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
@@ -105174,20 +108074,24 @@ static int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
             (int32_t)(intptr_t)"AssociateResource",
             (int32_t)(intptr_t)method_source, 8,
             (int32_t)(intptr_t)retdec_cact_associate_resource, 0) < 0) {
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (!retdec_publish_cact_layer_members(vm, class_pair)) {
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
     if (!retdec_sqrat_set_pair(
             vm, (const int32_t *)(intptr_t)(root_object + 8),
             "CActLayer", class_pair)) {
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
     retdec_trace_i32("act:cact-layer-class", class_pair[1]);
+    retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_trim_stack(vm, base);
     return 1;
 }
@@ -105198,15 +108102,22 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
     int32_t existing[2] = { g483, g484 };
     int32_t class_pair[2] = { g483, g484 };
     int32_t class_object[4] = { 0, vm, g483, g484 };
+    int32_t existing_result;
     int32_t base;
 
     if (vm == 0 || root_object == 0)
         return 0;
-    if (retdec_sqrat_get(root_object, "ActingPlayer", existing) &&
-        existing[0] == 0x08004000 && existing[1] != 0) {
-        g1049 = existing[0];
-        g1050 = existing[1];
-        return 1;
+    existing_result = retdec_sqrat_get(root_object, "ActingPlayer", existing);
+    if (existing_result) {
+        int32_t already_published =
+            existing[0] == 0x08004000 && existing[1] != 0;
+        if (already_published) {
+            g1049 = existing[0];
+            g1050 = existing[1];
+        }
+        retdec_sqrat_release_pair(vm, existing);
+        if (already_published)
+            return 1;
     }
 
     base = function_48aa20(vm);
@@ -105214,73 +108125,75 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
         return 0;
     function_48ab40(vm, -1, class_pair);
     function_48a400(vm, (int32_t)(intptr_t)class_pair);
-    if (class_pair[0] != 0x08004000 || class_pair[1] == 0)
+    if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
+        retdec_sqrat_release_pair(vm, class_pair);
         return 0;
+    }
 
     class_object[1] = vm;
     class_object[2] = class_pair[0];
     class_object[3] = class_pair[1];
-    function_460e00_register_actor_method(vm, class_object, "SetCurrentTime",
+    function_460e00_register_actor_method(vm, class_object + 1, "SetCurrentTime",
                                           (int32_t)(intptr_t)retdec_act_set_current_time_bridge,
                                           (int32_t)(intptr_t)function_455330, 0);
-    function_460e00_register_actor_method(vm, class_object, "IncrementFrame",
+    function_460e00_register_actor_method(vm, class_object + 1, "IncrementFrame",
                                           (int32_t)(intptr_t)retdec_act_increment_frame_bridge,
                                           (int32_t)(intptr_t)function_445530, 0);
-    function_460e00_register_actor_method(vm, class_object, "GetCurrentTime",
+    function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentTime",
                                           (int32_t)(intptr_t)retdec_act_get_current_time_bridge,
                                           (int32_t)(intptr_t)function_445530, 0);
-    function_460e00_register_actor_method(vm, class_object, "GetCurrentFrame",
+    function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentFrame",
                                           (int32_t)(intptr_t)retdec_act_get_current_frame_bridge,
                                           (int32_t)(intptr_t)function_445530, 0);
-    function_460e00_register_actor_method(vm, class_object, "BeginStage",
+    function_460e00_register_actor_method(vm, class_object + 1, "BeginStage",
                                           (int32_t)(intptr_t)function_450950,
                                           (int32_t)(intptr_t)function_455330, 0);
-    function_460e00_register_actor_method(vm, class_object, "EndStage",
+    function_460e00_register_actor_method(vm, class_object + 1, "EndStage",
                                           (int32_t)(intptr_t)retdec_act_end_stage_bridge,
                                           (int32_t)(intptr_t)function_445530, 0);
-    function_460e00_register_actor_method(vm, class_object, "CreateLayer2D",
+    function_460e00_register_actor_method(vm, class_object + 1, "CreateLayer2D",
                                           (int32_t)(intptr_t)function_4517c0,
                                           (int32_t)(intptr_t)function_455390, 0);
-    function_460e00_register_actor_method(vm, class_object, "CreateLayerString",
+    function_460e00_register_actor_method(vm, class_object + 1, "CreateLayerString",
                                           (int32_t)(intptr_t)function_451b70,
                                           (int32_t)(intptr_t)function_455390, 0);
-    function_460e00_register_actor_method(vm, class_object, "GetLayerOrder",
+    function_460e00_register_actor_method(vm, class_object + 1, "GetLayerOrder",
                                           (int32_t)(intptr_t)function_451f30,
                                           (int32_t)(intptr_t)function_4554b0, 0);
-    function_460e00_register_actor_method(vm, class_object, "SwapLayer",
+    function_460e00_register_actor_method(vm, class_object + 1, "SwapLayer",
                                           (int32_t)(intptr_t)function_451f80,
                                           (int32_t)(intptr_t)function_455520, 0);
-    function_460e00_register_actor_method(vm, class_object, "BitBlt",
+    function_460e00_register_actor_method(vm, class_object + 1, "BitBlt",
                                           (int32_t)(intptr_t)function_4514a0,
                                           (int32_t)(intptr_t)function_4555a0, 0);
-    function_460e00_register_actor_method(vm, class_object, "SetRenderTarget",
+    function_460e00_register_actor_method(vm, class_object + 1, "SetRenderTarget",
                                           (int32_t)(intptr_t)function_452010,
                                           (int32_t)(intptr_t)function_4556c0, 0);
-    function_460e00_register_actor_method(vm, class_object, "FindFirstFile",
+    function_460e00_register_actor_method(vm, class_object + 1, "FindFirstFile",
                                           (int32_t)(intptr_t)function_452150,
                                           (int32_t)(intptr_t)function_445650, 0);
-    function_460e00_register_actor_method(vm, class_object, "FindNextFile",
+    function_460e00_register_actor_method(vm, class_object + 1, "FindNextFile",
                                           (int32_t)(intptr_t)function_452220,
                                           (int32_t)(intptr_t)function_4455e0, 0);
-    function_460e00_register_actor_method(vm, class_object, "FindClose",
+    function_460e00_register_actor_method(vm, class_object + 1, "FindClose",
                                           (int32_t)(intptr_t)function_452270,
                                           (int32_t)(intptr_t)function_4455e0, 0);
-    function_460e00_register_actor_method(vm, class_object, "GetFindFileName",
+    function_460e00_register_actor_method(vm, class_object + 1, "GetFindFileName",
                                           (int32_t)(intptr_t)function_4522c0,
                                           (int32_t)(intptr_t)function_455730, 0);
-    function_460e00_register_actor_method(vm, class_object, "timeGetTime",
+    function_460e00_register_actor_method(vm, class_object + 1, "timeGetTime",
                                           (int32_t)(intptr_t)timeGetTime,
                                           (int32_t)(intptr_t)function_445530, 0);
-    function_460e00_register_actor_method(vm, class_object, "Sleep",
+    function_460e00_register_actor_method(vm, class_object + 1, "Sleep",
                                           (int32_t)(intptr_t)retdec_act_sleep_bridge,
                                           (int32_t)(intptr_t)function_445730, 0);
-    function_460e00_register_actor_method(vm, class_object, "SleepTo",
+    function_460e00_register_actor_method(vm, class_object + 1, "SleepTo",
                                           (int32_t)(intptr_t)retdec_act_sleep_to_bridge,
                                           (int32_t)(intptr_t)function_445730, 0);
-    function_460e00_register_actor_method(vm, class_object, "Suspend",
+    function_460e00_register_actor_method(vm, class_object + 1, "Suspend",
                                           (int32_t)(intptr_t)retdec_act_suspend_bridge,
                                           (int32_t)(intptr_t)function_4552e0, 0);
-    function_460e00_register_actor_method(vm, class_object, "Resume",
+    function_460e00_register_actor_method(vm, class_object + 1, "Resume",
                                           (int32_t)(intptr_t)retdec_act_resume_bridge,
                                           (int32_t)(intptr_t)function_4552e0, 0);
 
@@ -105300,6 +108213,7 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
     retdec_sqrat_set_pair(vm,
                           (const int32_t *)(intptr_t)(root_object + 8),
                           "ActingPlayer", class_pair);
+    retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_trim_stack(vm, base);
     return 1;
 }
@@ -105384,7 +108298,7 @@ static int32_t retdec_publish_acting_player(int32_t vm,
                 retdec_trace_i32("act:acting-read-user",
                                  *(int32_t *)(intptr_t)(actual[1] + 32));
             }
-            retdec_squirrel_release(actual[0], actual[1]);
+            retdec_sqrat_release_pair(vm, actual);
         } else {
             retdec_trace("act:acting-read-failed");
         }
@@ -105570,6 +108484,9 @@ static void retdec_copy_act_callback(int32_t vm, int32_t script_ptr,
         function_48a400(vm, destination + 4);
         function_48a400(vm, destination + 12);
     }
+    /* retdec_sqrat_get acquired one temporary RefTable handle.  The callback
+       slots acquired their own handles above, so release the temporary here. */
+    retdec_sqrat_release_pair(vm, value);
 }
 
 /* 415810 is the original CActScript callback invoker.  Keep the callback
@@ -105639,7 +108556,7 @@ static int32_t retdec_create_bound_instance(
     function_48a400(vm, out_pair);
     /* This is the sq_newslot(parent, name, instance) operation. */
     if (function_48c950(vm, -3, 0) < 0) {
-        retdec_release_squirrel_value(out_pair);
+        retdec_sqrat_release_pair(vm, out_pair);
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
@@ -105698,8 +108615,10 @@ static int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     function_48abe0(layer + 316);
     if (!retdec_sqrat_new_table(vm, table_pair))
         return 0;
-    retdec_squirrel_assign((int32_t *)(intptr_t)(layer + 316), table_pair);
-    retdec_release_squirrel_value(table_pair);
+    *(int32_t *)(intptr_t)(layer + 316) = table_pair[0];
+    *(int32_t *)(intptr_t)(layer + 320) = table_pair[1];
+    function_48a400(vm, layer + 316);
+    retdec_sqrat_release_pair(vm, table_pair);
     script_pair[0] = *(int32_t *)(intptr_t)(layer + 316);
     script_pair[1] = *(int32_t *)(intptr_t)(layer + 320);
 
@@ -105717,42 +108636,95 @@ static int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
 static void retdec_publish_c2dlayout_values(
     int32_t vm, const int32_t layout_pair[2], int32_t layout)
 {
-    if (vm == 0 || layout_pair == NULL || layout == 0)
-        return;
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "alpha", *(float *)(intptr_t)(layout + 0x11c));
-    (void)retdec_sqrat_raw_set_int(
-        vm, layout_pair, "blend", *(int32_t *)(intptr_t)(layout + 0x120));
-    (void)retdec_sqrat_raw_set_int(
-        vm, layout_pair, "colorR", *(int32_t *)(intptr_t)(layout + 0x124));
-    (void)retdec_sqrat_raw_set_int(
-        vm, layout_pair, "colorG", *(int32_t *)(intptr_t)(layout + 0x128));
-    (void)retdec_sqrat_raw_set_int(
-        vm, layout_pair, "colorB", *(int32_t *)(intptr_t)(layout + 0x12c));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "roll_x", *(float *)(intptr_t)(layout + 0xec));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "roll_y", *(float *)(intptr_t)(layout + 0xf0));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "roll_z", *(float *)(intptr_t)(layout + 0xf4));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cor_x", *(float *)(intptr_t)(layout + 0xf8));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cor_y", *(float *)(intptr_t)(layout + 0xfc));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cor_z", *(float *)(intptr_t)(layout + 0x100));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "scale_x", *(float *)(intptr_t)(layout + 0x104));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "scale_y", *(float *)(intptr_t)(layout + 0x108));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "scale_z", *(float *)(intptr_t)(layout + 0x10c));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cos_x", *(float *)(intptr_t)(layout + 0x110));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cos_y", *(float *)(intptr_t)(layout + 0x114));
-    (void)retdec_sqrat_raw_set_float(
-        vm, layout_pair, "cos_z", *(float *)(intptr_t)(layout + 0x118));
+    /* C2DLayout properties are native descriptor slots.  Writing mirrored
+       values into the instance would shadow _get/_set and leave animation
+       changes detached from the C2DLayout allocation. */
+    (void)vm;
+    (void)layout_pair;
+    (void)layout;
+}
+
+static int32_t retdec_publish_act_resource_values(
+    int32_t vm, const int32_t resource_pair[2], int32_t resource)
+{
+    const char *st_name;
+    const char *texture_name;
+
+    if (vm == 0 || resource_pair == NULL || resource == 0)
+        return 0;
+    st_name = retdec_std_string_data(resource + 8);
+    texture_name = retdec_std_string_data(resource + 40);
+    return retdec_sqrat_raw_set_int(
+               vm, resource_pair, "resourceID",
+               *(int32_t *)(intptr_t)(resource + 4)) &&
+           retdec_sqrat_raw_set_string(vm, resource_pair, "stName",
+                                       st_name != NULL ? st_name : "") &&
+           retdec_sqrat_raw_set_string(
+               vm, resource_pair, "stTextureName",
+               texture_name != NULL ? texture_name : "") &&
+           retdec_sqrat_raw_set_int(
+               vm, resource_pair, "image_width",
+               *(int32_t *)(intptr_t)(resource + 72)) &&
+           retdec_sqrat_raw_set_int(
+               vm, resource_pair, "image_height",
+               *(int32_t *)(intptr_t)(resource + 76)) &&
+           retdec_sqrat_raw_set_float(
+               vm, resource_pair, "src_x",
+               *(float *)(intptr_t)(resource + 80)) &&
+           retdec_sqrat_raw_set_float(
+               vm, resource_pair, "src_y",
+               *(float *)(intptr_t)(resource + 84)) &&
+           retdec_sqrat_raw_set_float(
+               vm, resource_pair, "src_width",
+               *(float *)(intptr_t)(resource + 88)) &&
+           retdec_sqrat_raw_set_float(
+               vm, resource_pair, "src_height",
+               *(float *)(intptr_t)(resource + 92));
+}
+
+static int32_t retdec_publish_act_resource_pairs(
+    int32_t vm, const int32_t layer_pair[2],
+    const int32_t script_pair[2], int32_t resource)
+{
+    int32_t outer_pair[2] = { g483, g484 };
+    int32_t script_resource_pair[2] = { g483, g484 };
+    int32_t resource_class_pair[2] = { g1079, g1080 };
+    int32_t null_pair[2] = { 0x01000001, 0 };
+
+    if (vm == 0 || layer_pair == NULL || script_pair == NULL)
+        return 0;
+    if (resource == 0) {
+        return retdec_sqrat_raw_set_pair(
+                   vm, layer_pair, "resource", null_pair) &&
+               retdec_sqrat_raw_set_pair(
+                   vm, script_pair, "resource", null_pair);
+    }
+    if (g1079 != 0x08004000 || g1080 == 0)
+        return 0;
+
+    /* 4467E0 -> 448FB0 uses sq_newslot on the outer layer object. */
+    if (!retdec_create_bound_instance(
+            vm, layer_pair, "resource", resource_class_pair,
+            resource, outer_pair) ||
+        !retdec_publish_act_resource_values(vm, outer_pair, resource)) {
+        retdec_sqrat_release_pair(vm, outer_pair);
+        return 0;
+    }
+    retdec_sqrat_release_pair(vm, outer_pair);
+
+    /* 446920 -> 448910 uses sq_rawset on the script table. */
+    if (!retdec_create_unbound_instance(
+            vm, resource_class_pair, resource,
+            script_resource_pair) ||
+        !retdec_publish_act_resource_values(
+            vm, script_resource_pair, resource) ||
+        !retdec_sqrat_raw_set_pair(
+            vm, script_pair, "resource", script_resource_pair)) {
+        retdec_sqrat_release_pair(vm, script_resource_pair);
+        return 0;
+    }
+    retdec_sqrat_release_pair(vm, script_resource_pair);
+    return 1;
 }
 
 static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
@@ -105779,6 +108751,7 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                           class_pair) ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_trace("act:layer-class-missing");
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
         return 0;
     }
@@ -105790,9 +108763,10 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     act_name = retdec_std_string_data(act + 16);
     if (resource_ptr == 0 || act_name == NULL || *act_name == 0 ||
         *(int32_t *)(intptr_t)(resource_ptr + 156) != 0x0A000020 ||
-        *(int32_t *)(intptr_t)(resource_ptr + 160) == 0) {
+         *(int32_t *)(intptr_t)(resource_ptr + 160) == 0) {
         retdec_trace("act:parent-root-invalid");
-        retdec_release_squirrel_value(parent_pair);
+        retdec_sqrat_release_pair(vm, parent_pair);
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
         return 0;
     }
@@ -105801,9 +108775,10 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     act_root_object[3] = *(int32_t *)(intptr_t)(resource_ptr + 160);
     if (!retdec_sqrat_get((int32_t)(intptr_t)act_root_object,
                           act_name, parent_pair) ||
-        parent_pair[0] != 0x0A000020 || parent_pair[1] == 0) {
+                          parent_pair[0] != 0x0A000020 || parent_pair[1] == 0) {
         retdec_trace("act:parent-table-missing");
-        retdec_release_squirrel_value(parent_pair);
+        retdec_sqrat_release_pair(vm, parent_pair);
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
         return 0;
     }
@@ -105822,7 +108797,9 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     if (layer_begin == 0 || layer_end < layer_begin ||
         ((layer_end - layer_begin) & 3) != 0) {
         retdec_trace("act:layer-vector-invalid");
-        retdec_release_squirrel_value(parent_pair);
+        retdec_sqrat_release_pair(vm, parent_pair);
+        retdec_sqrat_release_pair(vm, layout_class_pair);
+        retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
         return 0;
     }
@@ -105832,6 +108809,8 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         int32_t layer_pair[2] = { g483, g484 };
         int32_t script_pair[2] = { g483, g484 };
         int32_t layout_pair[2] = { g483, g484 };
+        int32_t script_layout_pair[2] = { g483, g484 };
+        int32_t inner_layer_pair[2] = { g483, g484 };
         int32_t script_wrapper[5] = { 0, 0, g483, g484, 1 };
         int32_t script_ptr;
         int32_t node;
@@ -105849,85 +108828,30 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                            class_pair, layer, layer_pair) ||
             !retdec_prepare_cact_layer_objects(vm, layer, script_pair)) {
             retdec_trace_i32("act:layer-publish-failed", index);
-            retdec_release_squirrel_value(layer_pair);
-            retdec_release_squirrel_value(script_pair);
-            retdec_release_squirrel_value(parent_pair);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
-        retdec_squirrel_assign((int32_t *)(intptr_t)(layer + 336),
-                               layer_pair);
+        *(int32_t *)(intptr_t)(layer + 336) = layer_pair[0];
+        *(int32_t *)(intptr_t)(layer + 340) = layer_pair[1];
+        function_48a400(vm, layer + 336);
 
-        if (!retdec_sqrat_raw_set_int(
-                vm, layer_pair, "resourceID",
-                *(int32_t *)(intptr_t)(layer + 0x60)) ||
-            !retdec_sqrat_raw_set_int(
-                vm, layer_pair, "layerID",
-                *(int32_t *)(intptr_t)(layer + 0x68)) ||
-            !retdec_sqrat_raw_set_string(vm, layer_pair, "stName",
-                                         layer_name) ||
-            !retdec_sqrat_raw_set_bool(
-                vm, layer_pair, "visible",
-                *(uint8_t *)(intptr_t)(layer + 0x8c)) ||
-            !retdec_sqrat_raw_set_int(
-                vm, layer_pair, "parentID",
-                *(int32_t *)(intptr_t)(layer + 0x6c)) ||
-            !retdec_sqrat_raw_set_bool(
-                vm, layer_pair, "debugOnly",
-                *(uint8_t *)(intptr_t)(layer + 0x8d)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "dst_x",
-                *(float *)(intptr_t)(layer + 0x90)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "dst_y",
-                *(float *)(intptr_t)(layer + 0x94)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "dst_z",
-                *(float *)(intptr_t)(layer + 0x98)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "x",
-                *(float *)(intptr_t)(layer + 0x90)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "y",
-                *(float *)(intptr_t)(layer + 0x94)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "z",
-                *(float *)(intptr_t)(layer + 0x98)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "prev_x",
-                *(float *)(intptr_t)(layer + 0xa8)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "prev_y",
-                *(float *)(intptr_t)(layer + 0xac)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "prev_z",
-                *(float *)(intptr_t)(layer + 0xb0)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "xPrev",
-                *(float *)(intptr_t)(layer + 0xa8)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "yPrev",
-                *(float *)(intptr_t)(layer + 0xac)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "zPrev",
-                *(float *)(intptr_t)(layer + 0xb0)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "ox",
-                *(float *)(intptr_t)(layer + 0x9c)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "oy",
-                *(float *)(intptr_t)(layer + 0xa0)) ||
-            !retdec_sqrat_raw_set_float(
-                vm, layer_pair, "oz",
-                *(float *)(intptr_t)(layer + 0xa4)) ||
-            !retdec_sqrat_raw_set_pair(vm, layer_pair, "script",
+        /* Scalar and visual fields are class descriptors in the original
+           CActLayer binding.  They must not be materialized as instance raw
+           slots: doing so shadows _get/_set and leaves animation detached
+           from the native layer. */
+        if (!retdec_sqrat_raw_set_pair(vm, layer_pair, "script",
                                        script_pair) ||
             !retdec_sqrat_raw_set_pair(vm, layer_pair, "thisAct",
                                        parent_pair)) {
             retdec_trace_i32("act:layer-fields-failed", index);
-            retdec_release_squirrel_value(layer_pair);
-            retdec_release_squirrel_value(script_pair);
-            retdec_release_squirrel_value(parent_pair);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
@@ -105938,9 +108862,10 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             !retdec_sqrat_raw_set_string(vm, script_pair, "filePath",
                                          script_path)) {
             retdec_trace_i32("act:layer-script-fields-failed", index);
-            retdec_release_squirrel_value(layer_pair);
-            retdec_release_squirrel_value(script_pair);
-            retdec_release_squirrel_value(parent_pair);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
@@ -105948,9 +108873,23 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                 vm, script_pair, "compiled",
                 *(uint8_t *)(intptr_t)(script_ptr + 101))) {
             retdec_trace_i32("act:layer-script-compiled-failed", index);
-            retdec_release_squirrel_value(layer_pair);
-            retdec_release_squirrel_value(script_pair);
-            retdec_release_squirrel_value(parent_pair);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
+            retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
+            return 0;
+        }
+
+        /* CActLayer::Register stores thisAct on the script table before
+           CActScript::Register captures the callback environment. */
+        if (!retdec_sqrat_set_pair(vm, script_pair, "thisAct",
+                                   parent_pair)) {
+            retdec_trace_i32("act:layer-script-thisact-failed", index);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
@@ -105986,13 +108925,72 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                  (int32_t)(intptr_t)script_wrapper, "Update");
         retdec_copy_act_callback(vm, script_ptr, 44,
                                  (int32_t)(intptr_t)script_wrapper, "OnCreate");
+        if (index < 96) {
+            int32_t raw_data = *(int32_t *)(intptr_t)(script_ptr + 92);
+            retdec_trace_i32("act:layer-native", layer);
+            retdec_trace_squirrel_name("act:layer-name",
+                                       (int32_t)(intptr_t)layer_name);
+            if (script_path != NULL)
+                retdec_trace_squirrel_name("act:layer-script-path",
+                                           (int32_t)(intptr_t)script_path);
+            retdec_trace_i32("act:layer-script-compiled",
+                             *(uint8_t *)(intptr_t)(script_ptr + 101));
+            retdec_trace_i32("act:layer-script-size",
+                             *(int32_t *)(intptr_t)(script_ptr + 96));
+            retdec_trace_i32("act:layer-script-first-word",
+                             raw_data != 0 ? *(int32_t *)(intptr_t)raw_data : 0);
+            retdec_trace_i32("act:layer-init-vm",
+                             *(int32_t *)(intptr_t)(layer + 208));
+            retdec_trace_i32("act:layer-init-env-type",
+                             *(int32_t *)(intptr_t)(layer + 212));
+            retdec_trace_i32("act:layer-init-env-data",
+                             *(int32_t *)(intptr_t)(layer + 216));
+            retdec_trace_i32("act:layer-init-type",
+                             *(int32_t *)(intptr_t)(layer + 220));
+            retdec_trace_i32("act:layer-init-data",
+                             *(int32_t *)(intptr_t)(layer + 224));
+            retdec_trace_i32("act:layer-update-vm",
+                             *(int32_t *)(intptr_t)(layer + 228));
+            retdec_trace_i32("act:layer-update-env-type",
+                             *(int32_t *)(intptr_t)(layer + 232));
+            retdec_trace_i32("act:layer-update-env-data",
+                             *(int32_t *)(intptr_t)(layer + 236));
+            retdec_trace_i32("act:layer-update-type",
+                             *(int32_t *)(intptr_t)(layer + 240));
+            retdec_trace_i32("act:layer-update-data",
+                             *(int32_t *)(intptr_t)(layer + 244));
+            retdec_trace_i32("act:layer-oncreate-vm",
+                             *(int32_t *)(intptr_t)(layer + 248));
+            retdec_trace_i32("act:layer-oncreate-env-type",
+                             *(int32_t *)(intptr_t)(layer + 252));
+            retdec_trace_i32("act:layer-oncreate-env-data",
+                             *(int32_t *)(intptr_t)(layer + 256));
+            retdec_trace_i32("act:layer-oncreate-type",
+                             *(int32_t *)(intptr_t)(layer + 260));
+            retdec_trace_i32("act:layer-oncreate-data",
+                             *(int32_t *)(intptr_t)(layer + 264));
+        }
 
         sentinel = *(int32_t *)(intptr_t)(layer + 0xb4);
         node = sentinel != 0 ? *(int32_t *)(intptr_t)sentinel : 0;
+        if (index < 16) {
+            retdec_trace_i32("act:publish-layer-list-sentinel", sentinel);
+            retdec_trace_i32("act:publish-layer-list-first", node);
+            retdec_trace_i32("act:publish-layer-list-count",
+                             *(int32_t *)(intptr_t)(layer + 0xb8));
+        }
         while (node != 0 && node != sentinel) {
             int32_t key = *(int32_t *)(intptr_t)(node + 8);
             int32_t candidate = key != 0
                 ? *(int32_t *)(intptr_t)(key + 4) : 0;
+            if (index < 16) {
+                retdec_trace_i32("act:publish-layer-list-node", node);
+                retdec_trace_i32("act:publish-layer-list-key", key);
+                retdec_trace_i32("act:publish-layer-list-value", candidate);
+                retdec_trace_i32("act:publish-layer-list-vtable",
+                                 candidate != 0
+                                     ? *(int32_t *)(intptr_t)candidate : 0);
+            }
             if (candidate != 0 &&
                 *(int32_t *)(intptr_t)candidate ==
                     (int32_t)(intptr_t)&g299) {
@@ -106002,6 +109000,10 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             }
             node = *(int32_t *)(intptr_t)node;
         }
+        if (index < 16) {
+            retdec_trace_i32("act:publish-layer-have-layout", have_layout);
+            retdec_trace_i32("act:publish-layer-layout", layout);
+        }
         if (have_layout && layout_class_pair[0] == 0x08004000 &&
             layout_class_pair[1] != 0 &&
             retdec_create_unbound_instance(vm, layout_class_pair, layout,
@@ -106009,7 +109011,25 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
                                              layout_pair);
             retdec_publish_c2dlayout_values(vm, layout_pair, layout);
-            retdec_release_squirrel_value(layout_pair);
+            retdec_sqrat_release_pair(vm, layout_pair);
+
+            /* C2DLayout::Register repeats the same native association for
+               the script table, producing a distinct C2DLayout instance. */
+            if (!retdec_create_unbound_instance(
+                    vm, layout_class_pair, layout, script_layout_pair) ||
+                !retdec_sqrat_set_pair(vm, script_pair, "layout",
+                                       script_layout_pair)) {
+                retdec_trace_i32("act:script-layout-publish-failed", index);
+                retdec_sqrat_release_pair(vm, script_layout_pair);
+                retdec_sqrat_release_pair(vm, layer_pair);
+                retdec_sqrat_release_pair(vm, parent_pair);
+                retdec_sqrat_release_pair(vm, layout_class_pair);
+                retdec_sqrat_release_pair(vm, class_pair);
+                retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
+                return 0;
+            }
+            retdec_publish_c2dlayout_values(vm, script_layout_pair, layout);
+            retdec_sqrat_release_pair(vm, script_layout_pair);
         } else {
             int32_t null_pair[2] = { g483, g484 };
             (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
@@ -106017,31 +109037,39 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             if (have_layout)
                 retdec_trace_i32("act:layout-instance-missing", index);
         }
-        {
-            int32_t null_pair[2] = { g483, g484 };
-            (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "resource",
-                                             null_pair);
-        }
-        /* CActLayer::Register publishes the native layer instance as
-           script.layer.  The callback's `this` is script_pair, so putting
-           this member on layer_pair itself makes TitleLogo.nut fail its
-           first GETK("layer"). */
-        if (!retdec_sqrat_raw_set_pair(vm, script_pair, "layer",
-                                       layer_pair)) {
-            retdec_trace_i32("act:layer-self-failed", index);
-            retdec_release_squirrel_value(layer_pair);
-            retdec_release_squirrel_value(script_pair);
-            retdec_release_squirrel_value(parent_pair);
+        if (!retdec_publish_act_resource_pairs(
+                vm, layer_pair, script_pair,
+                *(int32_t *)(intptr_t)(layer + 0x64))) {
+            retdec_trace_i32("act:layer-resource-publish-failed", index);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
+        /* CActLayer::Register creates a second native wrapper below the
+           script table.  It is distinct from the ACT table's layer entry. */
+        if (!retdec_create_bound_instance(vm, script_pair, "layer",
+                                          class_pair, layer,
+                                          inner_layer_pair)) {
+            retdec_trace_i32("act:layer-script-layer-failed", index);
+            retdec_sqrat_release_pair(vm, layer_pair);
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
+            retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
+            return 0;
+        }
+        retdec_sqrat_release_pair(vm, inner_layer_pair);
         retdec_trace_i32("act:layer-published", index);
         if (active_count != NULL)
             ++*active_count;
-        retdec_release_squirrel_value(layer_pair);
-        retdec_release_squirrel_value(script_pair);
+        retdec_sqrat_release_pair(vm, layer_pair);
     }
-    retdec_release_squirrel_value(parent_pair);
+    retdec_sqrat_release_pair(vm, parent_pair);
+    retdec_sqrat_release_pair(vm, layout_class_pair);
+    retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
     return 1;
 }
@@ -106081,23 +109109,35 @@ static int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
     int32_t link;
     int32_t old_link;
 
+    retdec_trace_i32("450950:bind-resource", resource_ptr);
     if (resource_ptr == 0)
         return 0;
     holder = *(int32_t *)(intptr_t)resource_ptr;
     act = holder != 0 ? *(int32_t *)(intptr_t)holder : 0;
+    retdec_trace_i32("450950:bind-holder", holder);
+    retdec_trace_i32("450950:bind-act", act);
     if (act == 0)
         return 0;
 
     link = _3f__3f_2_40_YAPAXI_40_Z(4);
+    retdec_trace_i32("450950:bind-new-link", link);
     if (link == 0)
         return 0;
     *(int32_t *)(intptr_t)link = act;
     old_link = *(int32_t *)(intptr_t)(resource_ptr + 16);
-    if (old_link != 0 && old_link != link)
-        _3f__3f_3_40_YAXPAX_40_Z(old_link);
+    retdec_trace_i32("450950:bind-old-link", old_link);
+    if (old_link != 0 && old_link != link) {
+        retdec_trace("450950:bind-old-link-free-before");
+        /* The generated operator-delete shim receives &g1224 at most call
+           sites because RetDec lost the original operand.  This call has a
+           recovered operand, so release the owned link directly. */
+        _free((void *)(intptr_t)old_link);
+        retdec_trace("450950:bind-old-link-free-after");
+    }
 
     *(int32_t *)(intptr_t)(resource_ptr + 12) = act;
     *(int32_t *)(intptr_t)(resource_ptr + 16) = link;
+    retdec_trace("450950:bind-link-stored");
 
     /* Exact field map from the original 44FF90(resource, act) call. */
     *(int32_t *)(intptr_t)(resource_ptr + 108) = act + 72;
@@ -106107,12 +109147,11 @@ static int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
     *(int32_t *)(intptr_t)(resource_ptr + 124) = act + 88;
     *(int32_t *)(intptr_t)(resource_ptr + 128) = act + 92;
     *(int32_t *)(intptr_t)(resource_ptr + 132) = act + 96;
-    /* The direct-object fallback remains a compatibility path until the
-       CAct clone used by the original 450950 is restored. */
-    *(int32_t *)(intptr_t)(resource_ptr + 136) = resource_ptr + 4;
-    *(int32_t *)(intptr_t)(resource_ptr + 140) = resource_ptr + 8;
-    *(int32_t *)(intptr_t)(resource_ptr + 144) = resource_ptr + 12;
-    *(int32_t *)(intptr_t)(resource_ptr + 148) = resource_ptr + 16;
+    *(int32_t *)(intptr_t)(resource_ptr + 136) = act + 4;
+    *(int32_t *)(intptr_t)(resource_ptr + 140) = act + 8;
+    *(int32_t *)(intptr_t)(resource_ptr + 144) = act + 12;
+    *(int32_t *)(intptr_t)(resource_ptr + 148) = act + 16;
+    retdec_trace("450950:bind-fields-stored");
     return 1;
 }
 
@@ -106198,9 +109237,11 @@ static int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
     return result;
 }
 
-static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
+/* Receiver-safe implementation of CActResource's RootTable registration.
+   The caller owns root_object, just as 450E30 owns its local RootTable. */
+static int32_t retdec_root_table_register_resource(int32_t root_object,
+                                                    int32_t resource_ptr)
 {
-    int32_t root_object[5] = { 0, 0, g483, g484, 1 };
     int32_t act_pair[2] = { g483, g484 };
     int32_t global_pair[2] = { g483, g484 };
     int32_t resource_pair[2] = { g483, g484 };
@@ -106213,37 +109254,60 @@ static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
     int32_t script_environment[3] = { 0, g483, g484 };
     int32_t script_ptr;
     int32_t result = 0;
+    int32_t vm;
 
-    if (player_ptr == 0 || vm == 0)
+    if (root_object == 0 || resource_ptr == 0)
         return 0;
-    retdec_trace_i32("450e30:player", player_ptr);
-    retdec_trace_i32("450e30:vm", vm);
+    vm = *(int32_t *)(intptr_t)(root_object + 4);
+    if (vm == 0)
+        return 0;
+    retdec_trace_i32("450f30:root", root_object);
+    retdec_trace_i32("450f30:resource", resource_ptr);
+    retdec_trace_i32("450f30:vm", vm);
 
-    retdec_sqrat_root_construct((int32_t)(intptr_t)root_object, vm);
-    /* Capture the root pair before the following Sqrat calls can reuse or
-       corrupt RetDec's stack-temporary object slots. */
-    if (!retdec_bind_act_resource_root(player_ptr, vm, root_object + 2)) {
-        retdec_trace("450e30:root-bind-failed");
+    if (!retdec_bind_act_resource_root(resource_ptr, vm, root_object + 8)) {
+        retdec_trace("450f30:root-bind-failed");
         goto cleanup;
     }
-    holder = *(int32_t *)(intptr_t)player_ptr;
+    if (!retdec_publish_cact_resource2d_class(
+            vm, (int32_t)(intptr_t)root_object)) {
+        retdec_trace("450f30:resource2d-class-failed");
+        goto cleanup;
+    }
+    holder = *(int32_t *)(intptr_t)resource_ptr;
     act = holder != 0 ? *(int32_t *)(intptr_t)holder : 0;
     if (act == 0)
         goto cleanup;
     act_name = retdec_std_string_data(act + 16);
     if (act_name == NULL || *act_name == 0)
         goto cleanup;
-    retdec_trace_squirrel_name("450e30:act-name", (int32_t)(intptr_t)act_name);
+    retdec_trace_squirrel_name("450f30:act-name", (int32_t)(intptr_t)act_name);
 
     if (!retdec_publish_cact_layer_class(vm, (int32_t)(intptr_t)root_object) ||
         !retdec_publish_acting_player_class(vm, (int32_t)(intptr_t)root_object) ||
         !retdec_sqrat_new_table(vm, act_pair) ||
         !retdec_sqrat_set_pair(vm,
-                               (const int32_t *)(intptr_t)(root_object + 2),
+                               (const int32_t *)(intptr_t)(root_object + 8),
                                act_name, act_pair) ||
         !retdec_sqrat_new_table(vm, global_pair) ||
         !retdec_sqrat_new_table(vm, resource_pair))
         goto cleanup;
+
+    if (strcmp(act_name, "Fader2") == 0 &&
+        global_pair[0] == 0x0A000020 && global_pair[1] != 0 &&
+        !retdec_is_release_watch_data(global_pair[1]) &&
+        retdec_release_watch_count < 8) {
+        retdec_release_watch_data[retdec_release_watch_count++] =
+            global_pair[1];
+        retdec_trace_squirrel_name("sq-watch:fader-global-name",
+                                   (int32_t)(intptr_t)act_name);
+        retdec_trace_i32("sq-watch:fader-global-data", global_pair[1]);
+        retdec_trace_i32("sq-watch:fader-global-internal",
+                         *(int32_t *)(intptr_t)(global_pair[1] + 4));
+        retdec_trace_ref_watch("fader-global-created",
+                               retdec_primary_shared_state,
+                               global_pair[0], global_pair[1]);
+    }
 
     retdec_sqrat_set_string(vm, act_pair, "stName", act_name);
     retdec_sqrat_set_int(vm, act_pair, "resolutionMs",
@@ -106258,18 +109322,14 @@ static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
         !retdec_sqrat_set_delegate(vm, global_pair, act_pair))
         goto cleanup;
 
-    if (!retdec_publish_acting_player(vm, act_pair, "pl", player_ptr,
+    if (!retdec_publish_acting_player(vm, act_pair, "pl", resource_ptr,
                                       player_pair))
         goto cleanup;
-    retdec_squirrel_release(player_pair[0], player_pair[1]);
-    player_pair[0] = g483;
-    player_pair[1] = g484;
-    if (!retdec_publish_acting_player(vm, act_pair, "player", player_ptr,
+    retdec_sqrat_release_pair(vm, player_pair);
+    if (!retdec_publish_acting_player(vm, act_pair, "player", resource_ptr,
                                       player_pair))
         goto cleanup;
-    retdec_squirrel_release(player_pair[0], player_pair[1]);
-    player_pair[0] = g483;
-    player_pair[1] = g484;
+    retdec_sqrat_release_pair(vm, player_pair);
 
     script_ptr = act + 100;
     script_path = retdec_std_string_data(script_ptr + 64);
@@ -106277,7 +109337,7 @@ static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
         script_environment[0] = (int32_t)(intptr_t)&g39;
         script_environment[1] = global_pair[0];
         script_environment[2] = global_pair[1];
-        retdec_trace_squirrel_name("450e30:script-path",
+        retdec_trace_squirrel_name("450f30:script-path",
                                    (int32_t)(intptr_t)script_path);
         function_402d40((int32_t)(intptr_t)script_path,
                         (int32_t)(intptr_t)script_environment);
@@ -106307,7 +109367,7 @@ static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
             script_result = retdec_execute_act_source_script(
                 vm, script_ptr, environment_pair);
         }
-        retdec_trace_i32("450e30:embedded-script-result", script_result);
+        retdec_trace_i32("450f30:embedded-script-result", script_result);
         if (script_result) {
             global_object[0] = (int32_t)(intptr_t)&g39;
             global_object[1] = vm;
@@ -106332,16 +109392,86 @@ static int32_t retdec_publish_act_resource(int32_t player_ptr, int32_t vm)
 
 cleanup:
     if (player_pair[0] != g483)
-        retdec_squirrel_release(player_pair[0], player_pair[1]);
+        retdec_sqrat_release_pair(vm, player_pair);
     if (resource_pair[0] != g483)
-        retdec_squirrel_release(resource_pair[0], resource_pair[1]);
+        retdec_sqrat_release_pair(vm, resource_pair);
     if (global_pair[0] != g483)
-        retdec_squirrel_release(global_pair[0], global_pair[1]);
+        retdec_sqrat_release_pair(vm, global_pair);
     if (act_pair[0] != g483)
-        retdec_squirrel_release(act_pair[0], act_pair[1]);
+        retdec_sqrat_release_pair(vm, act_pair);
+    return result;
+}
+
+/* Live ABI entry points for the two recovered Sqrat methods.  The original
+   caller passes the receiver in ECX and the generated RetDec bodies do not.
+   Keep the receiver handling at the boundary so the loader follows the
+   original 450E30 -> 450F30 call chain. */
+static int32_t retdec_root_table_construct_this(int32_t resource_ptr,
+                                                 int32_t vm,
+                                                 int32_t output_ptr)
+{
+    int32_t root_object[5] = { 0, 0, g483, g484, 0 };
+    int32_t result;
+
+    if (resource_ptr == 0 || vm == 0)
+        return (int32_t)0x80070057u;
+    if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root_object, vm))
+        return (int32_t)0x80004005u;
+
+    /* 450E30 accepts an optional pre-existing Sqrat object only to verify
+       that it belongs to the same VM.  The normal loader passes NULL. */
+    if (output_ptr != 0 &&
+        *(int32_t *)(intptr_t)(output_ptr + 4) != vm) {
+        retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
+        return (int32_t)0x80070057u;
+    }
+
+    result = retdec_root_table_register_resource(
+        (int32_t)(intptr_t)root_object, resource_ptr);
     retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
     return result;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_450e30(int32_t vm, int32_t output_ptr)
+{
+    __asm {
+        mov eax, [esp + 4]
+        mov edx, [esp + 8]
+        push edx
+        push eax
+        push ecx
+        call retdec_root_table_construct_this
+        add esp, 12
+        ret 8
+    }
+}
+
+__declspec(naked) int32_t function_450f30(int32_t resource_ptr)
+{
+    __asm {
+        mov eax, [esp + 4]
+        push eax
+        push ecx
+        call retdec_root_table_register_resource
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_450e30(int32_t vm, int32_t output_ptr)
+{
+    (void)vm;
+    (void)output_ptr;
+    return (int32_t)0x80070057u;
+}
+
+int32_t function_450f30(int32_t resource_ptr)
+{
+    (void)resource_ptr;
+    return (int32_t)0x80070057u;
+}
+#endif
 
 // Address range: 0x451270 - 0x4513e9
 int32_t function_451270(int32_t result, int32_t a2, int32_t a3) {
@@ -121866,10 +124996,17 @@ int32_t function_45dbd0(float32_t a1, float32_t a2) {
 
 // Address range: 0x45de70 - 0x45de8b
 int32_t function_45de70(int32_t a1, int32_t * a2) {
-    // 0x45de70
-    int32_t result; // 0x45de70
-    __asm_rep_movsd_memcpy((char *)(result + 376), (char *)a1, 12);
-    return result;
+    return function_45de70_this(a1, (int32_t)(intptr_t)a2);
+}
+
+/* Actor::SetInitData is a __thiscall memcpy into Actor + 0x178. */
+static int32_t function_45de70_this(int32_t actor_ptr, int32_t source_ptr)
+{
+    if (actor_ptr == 0 || source_ptr == 0)
+        return 0;
+    memcpy((void *)(intptr_t)(actor_ptr + 376),
+           (const void *)(intptr_t)source_ptr, 0x30u);
+    return actor_ptr;
 }
 
 // Address range: 0x45de90 - 0x45df04
@@ -122126,24 +125263,28 @@ int32_t function_45e120(void) {
 }
 
 // Address range: 0x45e270 - 0x45e2e9
-int32_t function_45e270(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45e280
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result; // 0x45e270
-    int32_t * v2 = (int32_t *)result; // 0x45e29d
-    *v2 = 0;
-    int32_t v3 = _3f__3f_2_40_YAPAXI_40_Z(16); // 0x45e2aa
-    if (v3 != 0) {
-        // 0x45e2b6
-        *(int32_t *)(v3 + 4) = 1;
-        *(int32_t *)(v3 + 8) = 1;
-        *(int32_t *)v3 = (int32_t)&g15;
-        *(int32_t *)(v3 + 12) = a1;
+int32_t function_45e270(int32_t holder_ptr, int32_t actor_ptr) {
+    return function_45e270_this(holder_ptr, actor_ptr);
+}
+
+/* boost::shared_ptr<Actor>'s control-block constructor. */
+static int32_t function_45e270_this(int32_t holder_ptr, int32_t actor_ptr)
+{
+    int32_t control_ptr;
+
+    if (holder_ptr == 0)
+        return 0;
+    *(int32_t *)(intptr_t)holder_ptr = 0;
+    control_ptr = _3f__3f_2_40_YAPAXI_40_Z(16);
+    if (control_ptr != 0) {
+        *(int32_t *)(intptr_t)(control_ptr + 0) =
+            (int32_t)(intptr_t)&g15;
+        *(int32_t *)(intptr_t)(control_ptr + 4) = 1;
+        *(int32_t *)(intptr_t)(control_ptr + 8) = 1;
+        *(int32_t *)(intptr_t)(control_ptr + 12) = actor_ptr;
     }
-    // 0x45e2d1
-    *v2 = v3;
-    __writefsdword(0, v1);
-    return result;
+    *(int32_t *)(intptr_t)holder_ptr = control_ptr;
+    return holder_ptr;
 }
 
 // Address range: 0x45e300 - 0x45e409
@@ -122300,6 +125441,218 @@ int32_t function_45e460(void) {
     return result3;
 }
 
+/* SquirrelFunction::operator() for the Actor initialization callback. */
+static int32_t function_45e020_this(int32_t state_ptr,
+                                    int32_t temporary_ptr,
+                                    int32_t arg_type, int32_t arg_data)
+{
+    int32_t vm;
+    int32_t result;
+
+    if (state_ptr == 0 || temporary_ptr == 0)
+        return -1;
+    vm = *(int32_t *)(intptr_t)state_ptr;
+    if (vm == 0)
+        return -1;
+
+    /* state + 8 and state + 20 are the two SquirrelObject members used by
+       the original templated call; the explicit pair is its second arg. */
+    function_48ab90(vm,
+                    *(int32_t *)(intptr_t)(state_ptr + 20),
+                    *(int32_t *)(intptr_t)(state_ptr + 24));
+    function_48ab90(vm,
+                    *(int32_t *)(intptr_t)(state_ptr + 8),
+                    *(int32_t *)(intptr_t)(state_ptr + 12));
+    function_48ab90(vm, arg_type, arg_data);
+    result = function_48ace0(vm, 2, 1, 1);
+    if (result >= 0)
+        function_48aa30(vm, 2);
+    function_4a9d70_this(temporary_ptr);
+    return result;
+}
+
+/* Actor initialization with the original __thiscall receiver and argument
+   layout restored. */
+static int32_t function_45e5e0_this(
+    int32_t actor_ptr, int32_t manager_ptr,
+    int32_t first_vtable, int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data)
+{
+    int32_t first_object[3] = { first_vtable, first_type, first_data };
+    int32_t second_object[3] = { second_vtable, second_type, second_data };
+    int32_t actor_type[3] = { 0, 0, 0 };
+    int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
+    int32_t shared_holder = 0;
+    int32_t control_ptr;
+    int32_t vm = (int32_t)(intptr_t)g644;
+    int32_t index;
+
+    if (actor_ptr == 0)
+        return 0;
+    if (first_vtable == 0)
+        first_object[0] = (int32_t)(intptr_t)&g16;
+    if (second_vtable == 0)
+        second_object[0] = (int32_t)(intptr_t)&g16;
+
+    *(int32_t *)(intptr_t)(actor_ptr + 224) =
+        *(uint16_t *)(intptr_t)(actor_ptr + 12);
+    *(int32_t *)(intptr_t)(actor_ptr + 148) = manager_ptr;
+
+    function_4a90c0_this((int32_t)(intptr_t)actor_type,
+                         (int32_t)(intptr_t)&g602);
+    function_4a95c0_this(actor_ptr + 44,
+                         (int32_t)(intptr_t)actor_type);
+    function_4a9d70_this((int32_t)(intptr_t)actor_type);
+    function_4a9bb0_this(actor_ptr + 44, actor_ptr);
+
+    function_45e270_this((int32_t)(intptr_t)&shared_holder, actor_ptr);
+    control_ptr = shared_holder;
+    if (control_ptr != 0) {
+        int32_t old_control;
+
+        old_control = *(int32_t *)(intptr_t)(actor_ptr + 24);
+        *(int32_t *)(intptr_t)(actor_ptr + 24) = control_ptr;
+        if (control_ptr != 0)
+            ++*(int32_t *)(intptr_t)(control_ptr + 4);
+        if (old_control != 0 &&
+            --*(int32_t *)(intptr_t)(old_control + 4) == 0)
+            *(int32_t *)(intptr_t)(old_control + 4) = 0;
+
+        old_control = *(int32_t *)(intptr_t)(actor_ptr + 28);
+        *(int32_t *)(intptr_t)(actor_ptr + 28) = control_ptr;
+        ++*(int32_t *)(intptr_t)(control_ptr + 4);
+        if (old_control != 0 &&
+            --*(int32_t *)(intptr_t)(old_control + 4) == 0)
+            *(int32_t *)(intptr_t)(old_control + 4) = 0;
+
+        /* Drop the constructor's local shared_ptr owner. */
+        --*(int32_t *)(intptr_t)(control_ptr + 4);
+    }
+
+    *(char *)(intptr_t)(actor_ptr + 40) =
+        (*(int32_t *)(intptr_t)(actor_ptr + 392) & 0x20000) == 0;
+    *(uint16_t *)(intptr_t)(actor_ptr + 20) = 256;
+    function_4a95c0_this(actor_ptr + 56,
+                         (int32_t)(intptr_t)first_object);
+    function_4a95c0_this(actor_ptr + 68,
+                         (int32_t)(intptr_t)second_object);
+
+    *(float32_t *)(intptr_t)(actor_ptr + 80) = x;
+    *(int32_t *)(intptr_t)(actor_ptr + 196) = 1;
+    *(int32_t *)(intptr_t)(actor_ptr + 228) = 0;
+    *(float32_t *)(intptr_t)(actor_ptr + 84) = y;
+    *(int32_t *)(intptr_t)(actor_ptr + 216) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 212) = 0;
+    *(float32_t *)(intptr_t)(actor_ptr + 88) = z;
+    *(int32_t *)(intptr_t)(actor_ptr + 220) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 312) = 0;
+
+    *(float32_t *)(intptr_t)(actor_ptr + 176) = 1.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 172) = 1.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 168) = 1.0f;
+    *(int32_t *)(intptr_t)(actor_ptr + 316) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 320) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 324) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 236) = 0;
+    *(float32_t *)(intptr_t)(actor_ptr + 164) = 0.0f;
+    *(int32_t *)(intptr_t)(actor_ptr + 472) = 0;
+    *(float32_t *)(intptr_t)(actor_ptr + 160) = 0.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 156) = 0.0f;
+
+    *(int32_t *)(intptr_t)(actor_ptr + 192) = 255;
+    *(int32_t *)(intptr_t)(actor_ptr + 188) = 255;
+    *(int32_t *)(intptr_t)(actor_ptr + 184) = 255;
+    *(int32_t *)(intptr_t)(actor_ptr + 180) = 255;
+    *(float32_t *)(intptr_t)(actor_ptr + 240) = x;
+    *(float32_t *)(intptr_t)(actor_ptr + 448) = x;
+    *(float32_t *)(intptr_t)(actor_ptr + 440) = x;
+    *(float32_t *)(intptr_t)(actor_ptr + 244) = y;
+    *(int32_t *)(intptr_t)(actor_ptr + 232) = -1;
+    *(float32_t *)(intptr_t)(actor_ptr + 452) = y;
+    *(int32_t *)(intptr_t)(actor_ptr + 476) = -1;
+    *(float32_t *)(intptr_t)(actor_ptr + 444) = y;
+    *(float32_t *)(intptr_t)(actor_ptr + 272) = z;
+    *(float32_t *)(intptr_t)(actor_ptr + 276) = 0.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 280) = 0.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 256) = 0.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 260) = 0.0f;
+
+    for (index = 480; index <= 540; index += 4)
+        *(int32_t *)(intptr_t)(actor_ptr + index) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 200) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 204) = 0;
+
+    retdec_function_45df10_impl((int32_t)(intptr_t)owner_state, 0);
+    *(int32_t *)(intptr_t)(actor_ptr + 92) = owner_state[0];
+    function_4a95c0_this(actor_ptr + 96,
+                         (int32_t)(intptr_t)(owner_state + 1));
+    function_4a95c0_this(actor_ptr + 108,
+                         (int32_t)(intptr_t)(owner_state + 4));
+    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
+    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
+
+    *(int16_t *)(intptr_t)(actor_ptr + 410) = -1;
+    *(int32_t *)(intptr_t)(actor_ptr + 284) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 288) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 292) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 296) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 424) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 428) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 432) = 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 436) = 0;
+    *(float32_t *)(intptr_t)(actor_ptr + 304) = 1000.0f;
+    *(float32_t *)(intptr_t)(actor_ptr + 308) = 1000.0f;
+    *(char *)(intptr_t)(actor_ptr + 300) = 0;
+
+    if (vm != 0 && function_4a9a30_this(
+            (int32_t)(intptr_t)first_object) == 0x08000100) {
+        int32_t callback_object[3] = { 0, 0, 0 };
+        int32_t call_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
+
+        function_4a9540_this(callback_object, second_type, second_data);
+        call_state[0] = vm;
+        function_4a9500_this(call_state + 1, actor_ptr + 44);
+        function_4a9500_this(call_state + 4,
+                             (int32_t)(intptr_t)first_object);
+        function_45e020_this((int32_t)(intptr_t)call_state,
+                             (int32_t)(intptr_t)callback_object,
+                             callback_object[1], callback_object[2]);
+        function_4a9d70_this((int32_t)(intptr_t)(call_state + 4));
+        function_4a9d70_this((int32_t)(intptr_t)(call_state + 1));
+    }
+
+    *(float32_t *)(intptr_t)(actor_ptr + 440) =
+        *(float32_t *)(intptr_t)(actor_ptr + 424) +
+        *(float32_t *)(intptr_t)(actor_ptr + 240);
+    *(float32_t *)(intptr_t)(actor_ptr + 448) =
+        *(float32_t *)(intptr_t)(actor_ptr + 432) +
+        *(float32_t *)(intptr_t)(actor_ptr + 240);
+    *(float32_t *)(intptr_t)(actor_ptr + 444) =
+        *(float32_t *)(intptr_t)(actor_ptr + 428) +
+        *(float32_t *)(intptr_t)(actor_ptr + 244);
+    *(float32_t *)(intptr_t)(actor_ptr + 452) =
+        *(float32_t *)(intptr_t)(actor_ptr + 436) +
+        *(float32_t *)(intptr_t)(actor_ptr + 244);
+    *(float32_t *)(intptr_t)(actor_ptr + 352) =
+        *(float32_t *)(intptr_t)(actor_ptr + 440);
+    *(int32_t *)(intptr_t)(actor_ptr + 456) =
+        *(int32_t *)(intptr_t)(actor_ptr + 440);
+    *(float32_t *)(intptr_t)(actor_ptr + 356) =
+        *(float32_t *)(intptr_t)(actor_ptr + 444);
+    *(int32_t *)(intptr_t)(actor_ptr + 460) =
+        *(int32_t *)(intptr_t)(actor_ptr + 444);
+    *(float32_t *)(intptr_t)(actor_ptr + 248) =
+        *(float32_t *)(intptr_t)(actor_ptr + 240);
+    *(int32_t *)(intptr_t)(actor_ptr + 464) =
+        *(int32_t *)(intptr_t)(actor_ptr + 448);
+    *(float32_t *)(intptr_t)(actor_ptr + 252) =
+        *(float32_t *)(intptr_t)(actor_ptr + 244);
+    *(int32_t *)(intptr_t)(actor_ptr + 468) =
+        *(int32_t *)(intptr_t)(actor_ptr + 452);
+    return 1;
+}
+
 // Address range: 0x45e5e0 - 0x45eaf3
 int32_t function_45e5e0(int32_t a1) {
     // 0x45e5e0
@@ -122315,7 +125668,7 @@ int32_t function_45e5e0(int32_t a1) {
     function_4a9d70();
     function_4a9bb0(v2);
     int32_t v6 = _3f__3f_2_40_YAPAXI_40_Z(4); // 0x45e65f
-    function_45e270(v6);
+    function_45e270(0, v6);
     function_43e100();
     if (v1 != 0) {
         int32_t * v7 = (int32_t *)(v1 + 4); // 0x45e69d
@@ -123213,9 +126566,13 @@ int32_t function_45f4f0(int32_t a1) {
     int32_t v2[3];
     int32_t result = function_4aa1a0(a1, "_set"); // 0x45f501
     if (result == 0) {
-        function_4a9490(v2, a1, 0x4aafa0, "_set", "sn|b|s|x");
+        function_4a9490(v2, a1,
+                        (int32_t)(intptr_t)&function_4aafa0,
+                        "_set", "sn|b|s|x");
         function_4a9d70_this((int32_t)(intptr_t)v2);
-        function_4a9490(v2, a1, 0x4aabd0, "_get", "s");
+        function_4a9490(v2, a1,
+                        (int32_t)(intptr_t)&function_4aabd0,
+                        "_get", "s");
         result = function_4a9d70_this((int32_t)(intptr_t)v2);
     }
     return result;
@@ -123269,6 +126626,29 @@ int32_t function_45f5e0(int32_t *target, int32_t unused, int32_t vm)
     (void)unused;
     return retdec_squirrel_pair_from_stack(vm, 2, target) ?
         (int32_t)(intptr_t)target : 0;
+}
+
+/* Exact form used by the native adapters.  The original fourth argument is
+ * the stack index; the legacy three-argument wrapper above remains for the
+ * generated call sites that were already recovered with index 2. */
+static int32_t function_45f5e0_at(int32_t *target, int32_t unused,
+                                   int32_t vm, int32_t index)
+{
+    int32_t value[2] = { g483, g484 };
+
+    (void)unused;
+    if (target == NULL || vm == 0 ||
+        function_48ab40(vm, index, value) < 0) {
+        const char *message = "sq_get*() failed (type error)";
+        (void)message;
+        __CxxThrowException_40_8();
+        return 0;
+    }
+    target[0] = (int32_t)(intptr_t)&g16;
+    target[1] = value[0];
+    target[2] = value[1];
+    function_48a400(vm, (int32_t)(intptr_t)(target + 1));
+    return (int32_t)(intptr_t)target;
 }
 
 // Address range: 0x45f640 - 0x45f760
@@ -123359,111 +126739,68 @@ int32_t function_45f820(float32_t a1, float32_t a2, float32_t a3, float32_t a4) 
 }
 
 // Address range: 0x45f850 - 0x45f8bf
-int32_t function_45f850(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    int32_t v1 = a3; // bp-28, 0x45f85f
-    if (function_48a6f0(a3, a4) != 0x5000002) {
-        // 0x45f86f
-        v1 = a3;
-        return function_48ac00(a3, "Incorrect function argument");
-    }
-    // 0x45f883
-    v1 = a4;
-    int32_t v2; // bp-12, 0x45f850
-    int32_t v3 = function_48a7d0(a3, a4, &v2); // 0x45f889
-    int32_t v4; // bp-20, 0x45f850
-    int32_t * v5 = &v4; // 0x45f893
-    if (v3 < 0) {
-        // 0x45f895
-        char * v6; // bp-8, 0x45f850
-        v1 = (int32_t)&v6;
-        v6 = "sq_get*() failed (type error)";
+int32_t function_45f850(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5) {
+    int32_t value;
+
+    if (function_48a6f0(a4, a5) != 0x5000002)
+        return function_48ac00(a4, "Incorrect function argument");
+    if (function_48a7d0(a4, a5, &value) < 0) {
+        const char *message = "sq_get*() failed (type error)";
+        (void)message;
         __CxxThrowException_40_8();
-        v5 = &v1;
     }
-    // 0x45f8aa
-    *(int32_t *)((int32_t)v5 - 4) = v2;
+    if (a2 != 0)
+        retdec_call_thiscall1(
+            (void *)(intptr_t)(a1 + a3),
+            (void *)(intptr_t)a2, value);
     return 0;
 }
 
 // Address range: 0x45f8c0 - 0x45f9c3
-int32_t function_45f8c0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x45f8c0
-    if (function_48a6f0(a3, a4) != 0x5000004 || function_48a6f0(a3, a4 + 1) != 0x5000004 || function_48a6f0(a3, a4 + 2) != 0x5000004) {
-        // 0x45f8df
-        int32_t v1; // bp-28, 0x45f8c0
-        int32_t v2 = &v1; // 0x45f8d5
-        *(int32_t *)(v2 - 4) = (int32_t)"Incorrect function argument";
-        *(int32_t *)(v2 - 8) = a3;
-        return function_48ac00((int32_t)&g1224, (char *)&g1224);
-    }
-    // 0x45f91b
-    if (function_48a6f0(a3, a4 + 3) != 0x5000004) {
-        // 0x45f930
-        return function_48ac00(a3, "Incorrect function argument");
-    }
-    // 0x45f945
-    function_45f5a0(0, a3);
-    function_45f5a0(0, a3);
-    function_45f5a0(0, a3);
-    function_48a530(a3, (int32_t)(float32_t)function_45f5a0(0, a3) & 255);
+int32_t function_45f8c0(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5) {
+    float32_t values[4];
+    int32_t value_bits[4];
+    int32_t result;
+
+    if (function_48a6f0(a4, a5) != 0x5000004 ||
+        function_48a6f0(a4, a5 + 1) != 0x5000004 ||
+        function_48a6f0(a4, a5 + 2) != 0x5000004 ||
+        function_48a6f0(a4, a5 + 3) != 0x5000004)
+        return function_48ac00(a4, "Incorrect function argument");
+
+    values[3] = (float32_t)function_45f5a0(a4, a5 + 3);
+    values[2] = (float32_t)function_45f5a0(a4, a5 + 2);
+    values[1] = (float32_t)function_45f5a0(a4, a5 + 1);
+    values[0] = (float32_t)function_45f5a0(a4, a5);
+    memcpy(value_bits, values, sizeof(value_bits));
+    result = retdec_call_thiscall4_result(
+        (void *)(intptr_t)(a1 + a3), (void *)(intptr_t)a2,
+        value_bits[0], value_bits[1], value_bits[2], value_bits[3]);
+    function_48a530(a4, result & 255);
     return 1;
 }
 
 // Address range: 0x45f9d0 - 0x45faa3
-int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    char * v1 = (char *)a4; // bp-32, 0x45f9de
-    if (function_48a6f0(a3, a4) != 0x5000004) {
-        // 0x45f9ef
-        v1 = "Incorrect function argument";
-        return function_48ac00(a3, "Incorrect function argument");
-    }
-    // 0x45fa03
-    int32_t v2; // 0x45f9d0
-    v1 = (char *)v2;
-    int32_t v3 = a4 + 1; // 0x45fa04
-    int32_t v4 = a3; // bp-40, 0x45fa08
-    if (function_48a6f0(a3, v3) != 0x5000004) {
-        // 0x45fa18
-        v4 = a3;
-        return function_48ac00(a3, "Incorrect function argument");
-    }
-    // 0x45fa2d
-    v4 = v3;
-    float32_t v5; // bp-12, 0x45f9d0
-    int32_t v6 = function_48a830(a3, v3, (int32_t *)&v5); // 0x45fa33
-    int32_t v7 = (int32_t)&v1; // 0x45fa3d
-    if (v6 < 0) {
-        // 0x45fa3f
-        char * v8; // bp-8, 0x45f9d0
-        v4 = (int32_t)&v8;
-        v8 = "sq_get*() failed (type error)";
-        __CxxThrowException_40_8();
-        v7 = &v4;
-    }
-    int32_t v9 = v7 - 4;
-    int32_t * v10 = (int32_t *)v9; // 0x45fa5a
-    float32_t v11; // bp-20, 0x45f9d0
-    *v10 = (int32_t)&v11;
-    char * v12 = (char *)(int32_t)v5; // bp-16, 0x45fa5b
-    int32_t * v13 = (int32_t *)(v7 - 8);
-    *v13 = a4;
-    *(int32_t *)(v7 - 12) = a3;
-    int32_t v14 = (int32_t)v12;
-    int32_t v15 = function_48a830(v14, (int32_t)&g1224, &g1224); // 0x45fa60
-    int32_t * v16 = v13; // 0x45fa6a
-    int32_t v17 = v14; // 0x45fa6a
-    if (v15 < 0) {
-        // 0x45fa6c
-        *v10 = (int32_t)&g440;
-        *v13 = (int32_t)&v12;
-        v12 = "sq_get*() failed (type error)";
-        __CxxThrowException_40_8();
-        v16 = (int32_t *)(v7 - 16);
-        v17 = (int32_t)v12;
-    }
-    // 0x45fa81
-    *(float32_t *)v9 = (float32_t)v17;
-    *v16 = (int32_t)v11;
+int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
+                        int32_t a4, int32_t a5) {
+    float32_t first;
+    float32_t second;
+    int32_t first_bits;
+    int32_t second_bits;
+
+    if (function_48a6f0(a4, a5) != 0x5000004 ||
+        function_48a6f0(a4, a5 + 1) != 0x5000004)
+        return function_48ac00(a4, "Incorrect function argument");
+    second = (float32_t)function_45f5a0(a4, a5 + 1);
+    first = (float32_t)function_45f5a0(a4, a5);
+    memcpy(&first_bits, &first, sizeof(first_bits));
+    memcpy(&second_bits, &second, sizeof(second_bits));
+    if (a2 != 0)
+        (void)retdec_call_thiscall2_result(
+            (void *)(intptr_t)(a1 + a3), (void *)(intptr_t)a2,
+            first_bits, second_bits);
     return 0;
 }
 
@@ -123584,98 +126921,172 @@ int32_t function_45fb90(void) {
 }
 
 // Address range: 0x45fcd0 - 0x45fd7e
-int32_t function_45fcd0(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45fce0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x45fcd0
-    function_4a9500(v2 + 44);
-    int32_t v3; // 0x45fcd0
-    function_4a9500((int32_t)&v3);
-    *(int32_t *)(v2 + 92) = (int32_t)g644;
-    int32_t v4; // bp-40, 0x45fcd0
-    function_4a95c0((int32_t)&v4);
-    int32_t v5; // bp-28, 0x45fcd0
-    function_4a95c0((int32_t)&v5);
-    function_4a9d70();
-    function_4a9d70();
-    int32_t result = function_4a9d70(); // 0x45fd67
-    __writefsdword(0, v1);
-    return result;
+/* The Actor native callback receives one SquirrelObject by value.  RetDec
+   dropped ECX and represented the three object words as unrelated locals. */
+static int32_t function_45fcd0_this(int32_t this_ptr,
+                                    int32_t argument_type,
+                                    int32_t argument_data,
+                                    int32_t argument_aux)
+{
+    int32_t actor_object[3];
+    int32_t callback_object[3];
+    int32_t incoming_object[3] = {
+        argument_type, argument_data, argument_aux
+    };
+
+    function_4a9500_this(actor_object, this_ptr + 44);
+    function_4a9500_this(callback_object,
+                         (int32_t)(intptr_t)incoming_object);
+    *(int32_t *)(intptr_t)(this_ptr + 92) = (int32_t)(intptr_t)g644;
+    function_4a95c0_this(this_ptr + 96,
+                         (int32_t)(intptr_t)actor_object);
+    function_4a95c0_this(this_ptr + 108,
+                         (int32_t)(intptr_t)callback_object);
+    function_4a9d70_this((int32_t)(intptr_t)callback_object);
+    function_4a9d70_this((int32_t)(intptr_t)actor_object);
+    return function_4a9d70_this((int32_t)(intptr_t)incoming_object);
 }
 
 // Address range: 0x45fd80 - 0x45fe75
-int32_t function_45fd80(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45fd90
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-28, 0x45fd80
-    int32_t v3; // bp-40, 0x45fd80
-    int32_t v4; // 0x45fd80
-    if (function_4a9a30() != 0x8000100) {
-        // 0x45fe0d
-        function_45df10(0);
-        char * v5; // 0x45fd80
-        *(int32_t *)(v4 + 120) = (int32_t)v5;
-        function_4a95c0((int32_t)&v3);
-        function_4a95c0((int32_t)&v2);
+static int32_t function_45fd80_this(int32_t this_ptr,
+                                    int32_t argument_type,
+                                    int32_t argument_data,
+                                    int32_t argument_aux)
+{
+    int32_t incoming_object[3] = {
+        argument_type, argument_data, argument_aux
+    };
+    int32_t first_object[3] = { 0, 0, 0 };
+    int32_t second_object[3] = { 0, 0, 0 };
+    int32_t default_function[7] = { 0, 0, 0, 0, 0, 0, 0 };
+
+    if (function_4a9a30_this((int32_t)(intptr_t)incoming_object) ==
+        0x8000100) {
+        function_4a9500_this(first_object, this_ptr + 44);
+        function_4a9500_this(second_object,
+                             (int32_t)(intptr_t)incoming_object);
+        *(int32_t *)(intptr_t)(this_ptr + 120) =
+            (int32_t)(intptr_t)g644;
+        function_4a95c0_this(this_ptr + 124,
+                             (int32_t)(intptr_t)first_object);
+        function_4a95c0_this(this_ptr + 136,
+                             (int32_t)(intptr_t)second_object);
     } else {
-        // 0x45fdbe
-        function_4a9500(v4 + 44);
-        int32_t v6; // 0x45fd80
-        function_4a9500((int32_t)&v6);
-        *(int32_t *)(v4 + 120) = (int32_t)g644;
-        function_4a95c0((int32_t)&v3);
-        function_4a95c0((int32_t)&v2);
+        retdec_function_45df10_impl(
+            (int32_t)(intptr_t)default_function, 0);
+        *(int32_t *)(intptr_t)(this_ptr + 120) = default_function[0];
+        function_4a95c0_this(this_ptr + 124,
+                             (int32_t)(intptr_t)(default_function + 1));
+        function_4a95c0_this(this_ptr + 136,
+                             (int32_t)(intptr_t)(default_function + 4));
+        function_4a9d70_this((int32_t)(intptr_t)(default_function + 4));
+        function_4a9d70_this((int32_t)(intptr_t)(default_function + 1));
     }
-    // 0x45fe40
-    function_4a9d70();
-    function_4a9d70();
-    int32_t result = function_4a9d70(); // 0x45fe5e
-    __writefsdword(0, v1);
-    return result;
+
+    function_4a9d70_this((int32_t)(intptr_t)second_object);
+    function_4a9d70_this((int32_t)(intptr_t)first_object);
+    return function_4a9d70_this((int32_t)(intptr_t)incoming_object);
 }
 
 // Address range: 0x45fe80 - 0x45ff73
-int32_t function_45fe80(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45fe90
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result; // 0x45ff5a
-    if (function_4a9a30() != 0xa008000) {
-        // 0x45ff53
-        result = function_4a9d70();
-        __writefsdword(0, v1);
-        return result;
+static int32_t function_45fe80_this(int32_t this_ptr,
+                                    int32_t argument_type,
+                                    int32_t argument_data,
+                                    int32_t argument_aux)
+{
+    int32_t incoming_object[3] = {
+        argument_type, argument_data, argument_aux
+    };
+    int32_t result;
+    int32_t current_animation;
+    int32_t current_index;
+    int32_t animation_count;
+    int32_t animation_table;
+
+    if (function_4a9a30_this((int32_t)(intptr_t)incoming_object) ==
+            0xa008000 &&
+        *(int32_t *)(intptr_t)(this_ptr + 200) != 0) {
+        current_animation = function_4a9b40_this(
+            (int32_t)(intptr_t)incoming_object, 0);
+        current_index = *(int32_t *)(intptr_t)(current_animation + 212);
+        *(int32_t *)(intptr_t)(this_ptr + 216) =
+            *(int32_t *)(intptr_t)(current_animation + 216);
+        *(int32_t *)(intptr_t)(this_ptr + 212) = current_index;
+        animation_table = *(int32_t *)(intptr_t)(this_ptr + 200);
+        animation_count =
+            (*(int32_t *)(intptr_t)(animation_table + 12) -
+             *(int32_t *)(intptr_t)(animation_table + 8)) / 248;
+        if (current_index >= animation_count) {
+            current_index = animation_count - 1;
+            if (current_index < 0)
+                current_index = 0;
+            *(int32_t *)(intptr_t)(this_ptr + 212) = current_index;
+        }
+
+        /* Inline the exact 462250 body while its old RetDec wrapper still
+           lacks the Actor receiver. */
+        if (animation_table != 0) {
+            result = *(int32_t *)(intptr_t)(animation_table + 8) +
+                     248 * current_index;
+            *(int32_t *)(intptr_t)(this_ptr + 204) = result;
+            *(int32_t *)(intptr_t)(this_ptr + 152) = result;
+        }
     }
-    // 0x45fec1
-    int32_t v2; // 0x45fe80
-    int32_t * v3 = (int32_t *)(v2 + 200); // 0x45fec1
-    if (*v3 == 0) {
-        // 0x45ff53
-        result = function_4a9d70();
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t v4 = function_4a9b40(0); // 0x45fed3
-    int32_t v5 = *v3; // 0x45fede
-    *(int32_t *)(v2 + 216) = *(int32_t *)(v4 + 216);
-    uint32_t v6 = *(int32_t *)(v4 + 212); // 0x45feea
-    int32_t * v7 = (int32_t *)(v2 + 212); // 0x45fef0
-    *v7 = v6;
-    int32_t v8 = *(int32_t *)(v5 + 12) - *(int32_t *)(v5 + 8); // 0x45fef9
-    uint32_t v9 = v8 + (int32_t)(-0x7bdef7bd * (int64_t)v8 / 0x100000000) >> 7; // 0x45ff05
-    int32_t v10 = v9 / 0x80000000 + v9;
-    int32_t v11 = v6; // 0x45ff11
-    if (v6 >= v10) {
-        // 0x45ff13
-        v11 = v10 >= 1 ? v10 - 1 : 0;
-        *v7 = v11;
-    }
-    // 0x45ff42
-    function_462250(v11);
-    // 0x45ff53
-    result = function_4a9d70();
-    __writefsdword(0, v1);
+
+    result = function_4a9d70_this((int32_t)(intptr_t)incoming_object);
     return result;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45fcd0(void) {
+    __asm {
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        push ecx
+        call function_45fcd0_this
+        add esp, 16
+        ret 12
+    }
+}
+
+__declspec(naked) int32_t function_45fd80(void) {
+    __asm {
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        push ecx
+        call function_45fd80_this
+        add esp, 16
+        ret 12
+    }
+}
+
+__declspec(naked) int32_t function_45fe80(void) {
+    __asm {
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        mov eax, [esp + 12]
+        push eax
+        push ecx
+        call function_45fe80_this
+        add esp, 16
+        ret 12
+    }
+}
+#else
+int32_t function_45fcd0(void) { return 0; }
+int32_t function_45fd80(void) { return 0; }
+int32_t function_45fe80(void) { return 0; }
+#endif
 
 // Address range: 0x45ff80 - 0x45ff8f
 int32_t function_45ff80(int32_t a1, int32_t result) {
@@ -123901,7 +127312,7 @@ int32_t function_45ffe0(int32_t a1) {
 }
 
 // Address range: 0x460540 - 0x4606c5
-int32_t function_460540(int32_t a1) {
+static int32_t function_460540_generated(int32_t a1) {
     int32_t v1 = a1;
     int32_t v2 = __readfsdword(0); // bp-16, 0x460550
     __writefsdword(0, (int32_t)&v2);
@@ -123967,6 +127378,122 @@ int32_t function_460540(int32_t a1) {
     function_4a9d70();
     __writefsdword(0, v2);
     return result;
+}
+
+/* SqPlus::ClassType<Actor>::GetInstance with its hidden output receiver
+   restored. */
+static int32_t function_460540_this(int32_t result_ptr, int32_t vm)
+{
+    static int32_t trace_get_instance_count;
+    int32_t stack_value[2] = { 0, 0 };
+    int32_t object[3] = { 0, 0, 0 };
+    int32_t object_type = 0;
+    int32_t instance_value = 0;
+    int32_t error_value = 0;
+    int32_t top;
+    int32_t status;
+
+    if (result_ptr == 0 || vm == 0)
+        return 0;
+
+    top = function_48aa20(vm);
+    if (trace_get_instance_count < 128) {
+        retdec_trace_i32("460540:vm", vm);
+        retdec_trace_i32("460540:result", result_ptr);
+        retdec_trace_i32("460540:top", top);
+        retdec_trace_i32("460540:stackbase", *(int32_t *)(intptr_t)(vm + 52));
+    }
+    status = function_48c890(vm, 1, &instance_value, 0);
+    if (trace_get_instance_count < 128) {
+        retdec_trace_i32("460540:instance-status", status);
+        retdec_trace_i32("460540:instance-value", instance_value);
+    }
+    *(int32_t *)(intptr_t)(result_ptr + 0) =
+        status < 0 ? 0 : instance_value;
+    *(int32_t *)(intptr_t)(result_ptr + 4) = 0;
+
+    if (top > 0 && function_48a920(vm, top, &instance_value,
+                                   (int32_t)(intptr_t)&error_value) >= 0 &&
+        error_value == 0) {
+        if (trace_get_instance_count < 128) {
+            retdec_trace_i32("460540:outer-value", instance_value);
+            retdec_trace_i32("460540:outer-typetag", error_value);
+        }
+        *(int32_t *)(intptr_t)(result_ptr + 4) = instance_value;
+        if (function_48ab40(vm, 1, stack_value) == 0) {
+            if (trace_get_instance_count < 128) {
+                retdec_trace_i32("460540:self-type", stack_value[0]);
+                retdec_trace_i32("460540:self-data", stack_value[1]);
+                retdec_trace_i32("460540:type-object", instance_value);
+            }
+            /* In the original frame, sq_getstackobj writes the pair at
+             * var_18 and var_14, so its data word aliases the previous
+             * sq_getuserdata temporary.  The constructor therefore receives
+             * the instance pointer, while result_ptr[1] keeps the payload
+             * captured before that call. */
+            function_4a9540_this(object, stack_value[0], stack_value[1]);
+            if (trace_get_instance_count < 128) {
+                retdec_trace_i32("460540:object-type", object[1]);
+                retdec_trace_i32("460540:object-data", object[2]);
+                if (instance_value != 0) {
+                    retdec_trace_i32("460540:type-word0",
+                                     *(int32_t *)(intptr_t)(instance_value + 0));
+                    retdec_trace_i32("460540:type-word1",
+                                     *(int32_t *)(intptr_t)(instance_value + 4));
+                    retdec_trace_i32("460540:type-word7",
+                                     *(int32_t *)(intptr_t)(instance_value + 28));
+                    retdec_trace_i32("460540:type-word9",
+                                     *(int32_t *)(intptr_t)(instance_value + 36));
+                }
+            }
+            function_4a9d30_this(object, &object_type);
+            if (trace_get_instance_count < 128)
+                retdec_trace_i32("460540:object-type-result", object_type);
+        }
+    }
+
+    if (trace_get_instance_count < 128) {
+        retdec_trace_i32("460540:typetag-after", error_value);
+        ++trace_get_instance_count;
+    }
+
+    if ((g581 & 1) == 0) {
+        g581 |= 1;
+        g577 = 0;
+        g579 = 0;
+        g580 = -1;
+        g576 = (int32_t)(intptr_t)&g18;
+        g578 = 0;
+    }
+
+    if (object_type != (int32_t)(intptr_t)&g576) {
+        int32_t object_type_value[3] = { 0, 0, 0 };
+
+        function_4aa3a0_this((int32_t)(intptr_t)object,
+                             (int32_t)(intptr_t)object_type_value,
+                             "__ot");
+        if ((g581 & 1) == 0) {
+            g581 |= 1;
+            g577 = 0;
+            g579 = 0;
+            g580 = -1;
+            g576 = (int32_t)(intptr_t)&g18;
+            g578 = 0;
+        }
+        *(int32_t *)(intptr_t)result_ptr = function_4aa000_this(
+            (int32_t)(intptr_t)object_type_value,
+            (int32_t)(intptr_t)&g576);
+        function_4a9d70_this((int32_t)(intptr_t)object_type_value);
+    }
+
+    function_4a9d70_this((int32_t)(intptr_t)object);
+    return result_ptr;
+}
+
+int32_t function_460540(int32_t vm)
+{
+    static int32_t legacy_result[2];
+    return function_460540_this((int32_t)(intptr_t)legacy_result, vm);
 }
 
 // Address range: 0x4606d0 - 0x4607dc
@@ -124142,86 +127669,88 @@ int32_t function_460a60(int32_t * a1, int32_t * a2, int32_t a3, char * a4, int32
 
 // Address range: 0x460b00 - 0x460b44
 int32_t function_460b00(int32_t a1) {
-    // 0x460b00
-    function_460540(a1);
-    int32_t v1; // 0x460b00
-    if (v1 == 0 || v1 == 0) {
-        // 0x460b31
+    int32_t result[2] = { 0, 0 };
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460b21
+    retdec_call_thiscall0(
+        (void *)(intptr_t)(*(int32_t *)(intptr_t)(result[1] + 4) + result[0]),
+        (void *)(intptr_t)*(int32_t *)(intptr_t)result[1]);
     return 0;
 }
 
 // Address range: 0x460b50 - 0x460bb9
 int32_t function_460b50(int32_t a1) {
-    // 0x460b50
-    function_460540(a1);
-    int32_t v1; // 0x460b50
-    if (v1 == 0 || v1 == 0) {
-        // 0x460ba4
+    int32_t result[2] = { 0, 0 };
+    int32_t arguments[3] = { 0, 0, 0 };
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460b72
-    int32_t v2; // bp-48, 0x460b50
-    function_45f5e0(&v2, 0, a1);
+    function_45f5e0_at(arguments, 0, a1, 2);
+    (void)retdec_call_thiscall3_result(
+        (void *)(intptr_t)(*(int32_t *)(intptr_t)(result[1] + 4) + result[0]),
+        (void *)(intptr_t)*(int32_t *)(intptr_t)result[1],
+        arguments[0], arguments[1], arguments[2]);
     return 0;
 }
 
 // Address range: 0x460bc0 - 0x460c0c
 int32_t function_460bc0(int32_t a1) {
-    // 0x460bc0
-    int32_t v1; // 0x460bc0
-    int32_t v2 = v1;
-    function_460540(a1);
-    if (v2 == 0 || v1 == 0) {
-        // 0x460bf9
+    int32_t result[2] = { 0, 0 };
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460be1
-    return function_45f850(v1, *(int32_t *)v2, *(int32_t *)(v2 + 4), a1);
+    return function_45f850(
+        result[0], *(int32_t *)(intptr_t)result[1],
+        *(int32_t *)(intptr_t)(result[1] + 4), a1, 2);
 }
 
 // Address range: 0x460c10 - 0x460c61
 int32_t function_460c10(int32_t a1) {
-    // 0x460c10
-    function_460540(a1);
-    int32_t v1; // 0x460c10
-    if (v1 == 0 || v1 == 0) {
-        // 0x460c4e
+    int32_t result[2] = { 0, 0 };
+    int32_t value;
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460c31
-    function_48a4f0(a1, *(int32_t *)(v1 + 4));
+    value = retdec_call_thiscall0_result(
+        (void *)(intptr_t)(*(int32_t *)(intptr_t)(result[1] + 4) + result[0]),
+        (void *)(intptr_t)*(int32_t *)(intptr_t)result[1]);
+    function_48a4f0(a1, value);
     return 1;
 }
 
 // Address range: 0x460c70 - 0x460cbc
 int32_t function_460c70(int32_t a1) {
-    // 0x460c70
-    int32_t v1; // 0x460c70
-    int32_t v2 = v1;
-    function_460540(a1);
-    if (v2 == 0 || v1 == 0) {
-        // 0x460ca9
+    int32_t result[2] = { 0, 0 };
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460c91
-    return function_45f8c0(v1, *(int32_t *)v2, *(int32_t *)(v2 + 4), a1);
+    return function_45f8c0(
+        result[0], *(int32_t *)(intptr_t)result[1],
+        *(int32_t *)(intptr_t)(result[1] + 4), a1, 2);
 }
 
 // Address range: 0x460cc0 - 0x460d0c
 int32_t function_460cc0(int32_t a1) {
-    // 0x460cc0
-    int32_t v1; // 0x460cc0
-    int32_t v2 = v1;
-    function_460540(a1);
-    if (v2 == 0 || v1 == 0) {
-        // 0x460cf9
+    int32_t result[2] = { 0, 0 };
+
+    function_460540_this((int32_t)(intptr_t)result, a1);
+    if (result[0] == 0 || result[1] == 0) {
         return function_48ac00(a1, "Invalid Instance Type");
     }
-    // 0x460ce1
-    return function_45f9d0(v1, *(int32_t *)v2, *(int32_t *)(v2 + 4), a1);
+    return function_45f9d0(
+        result[0], *(int32_t *)(intptr_t)result[1],
+        *(int32_t *)(intptr_t)(result[1] + 4), a1, 2);
 }
 
 // Address range: 0x460d10 - 0x460ddb
@@ -124282,35 +127811,65 @@ int32_t function_460e00(void) {
                          (int32_t)(intptr_t)v2);
     int32_t v3 = (int32_t)(intptr_t)g644;
     function_460e00_register_actor_method(v3, v2, "Release",
-                                          0x45dbc0, 0x460b00, 0);
+                                          (int32_t)(intptr_t)&function_45dbc0,
+                                          (int32_t)(intptr_t)&function_460b00,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "Reset",
-                                          0x45eb00, 0x460b00, 0);
+                                          (int32_t)(intptr_t)&function_45eb00,
+                                          (int32_t)(intptr_t)&function_460b00,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "SetUpdateFunction",
-                                          0x45fcd0, 0x460b50, 0);
+                                          (int32_t)(intptr_t)&function_45fcd0,
+                                          (int32_t)(intptr_t)&function_460b50,
+                                          0);
     function_460e00_register_actor_method(
-        v3, v2, "SetCollisionCallbackFunction", 0x45fd80, 0x460b50, 0);
+        v3, v2, "SetCollisionCallbackFunction",
+        (int32_t)(intptr_t)&function_45fd80,
+        (int32_t)(intptr_t)&function_460b50, 0);
     function_460e00_register_actor_method(
-        v3, v2, "InterrputCollisionCallback", 0x45f800, 0x460b00, 0);
+        v3, v2, "InterrputCollisionCallback",
+        (int32_t)(intptr_t)&function_45f800,
+        (int32_t)(intptr_t)&function_460b00, 0);
     function_460e00_register_actor_method(v3, v2, "SetTake",
-                                          0x462280, 0x460bc0, 0);
+                                          (int32_t)(intptr_t)&function_462280,
+                                          (int32_t)(intptr_t)&function_460bc0,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "SetStep",
-                                          0x4606d0, 0x460b50, 0);
+                                          (int32_t)(intptr_t)&function_4606d0,
+                                          (int32_t)(intptr_t)&function_460b50,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "SetChipFlag",
-                                          0x45f760, 0x460bc0, 0);
+                                          (int32_t)(intptr_t)&function_45f760,
+                                          (int32_t)(intptr_t)&function_460bc0,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "SetChipBoundType",
-                                          0x45f780, 0x460bc0, 0);
+                                          (int32_t)(intptr_t)&function_45f780,
+                                          (int32_t)(intptr_t)&function_460bc0,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "GetChipID",
-                                          0x45f7a0, 0x460bc0, 0);
+                                          (int32_t)(intptr_t)&function_45f7a0,
+                                          (int32_t)(intptr_t)&function_460bc0,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "GetChipFlag",
-                                          0x45f810, 0x460c10, 0);
+                                          (int32_t)(intptr_t)&function_45f810,
+                                          (int32_t)(intptr_t)&function_460c10,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "IsExistChip",
-                                          0x45f820, 0x460c70, 0);
+                                          (int32_t)(intptr_t)&function_45f820,
+                                          (int32_t)(intptr_t)&function_460c70,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "ResetPriority",
-                                          0x45f7e0, 0x460bc0, 0);
+                                          (int32_t)(intptr_t)&function_45f7e0,
+                                          (int32_t)(intptr_t)&function_460bc0,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "SyncAnimation",
-                                          0x45fe80, 0x460b50, 0);
+                                          (int32_t)(intptr_t)&function_45fe80,
+                                          (int32_t)(intptr_t)&function_460b50,
+                                          0);
     function_460e00_register_actor_method(v3, v2, "Move",
-                                          0x45dbd0, 0x460cc0, 0);
+                                          (int32_t)(intptr_t)&function_45dbd0,
+                                          (int32_t)(intptr_t)&function_460cc0,
+                                          0);
 
 #if 0
     function_460d10("Actor", 0);
@@ -125078,14 +128637,17 @@ int32_t function_462250(int32_t a1) {
 }
 
 // Address range: 0x462280 - 0x46247f
-int32_t function_462280(int32_t a1) {
+static int32_t function_462280_this(int32_t this_ptr, int32_t a1) {
     int32_t v1 = a1;
-    int32_t v2; // 0x462280
+    int32_t v2 = this_ptr; // 0x462280
     *(int32_t *)(v2 + 208) = a1;
     *(int32_t *)(v2 + 212) = 0;
     *(int32_t *)(v2 + 216) = 0;
     int32_t result; // bp-8, 0x462280
-    function_4706c0(&result, &v1);
+    /* Original 462280 passes the Actor's map/tree member (+0x94) plus
+       the embedded tree offset (+0x24) as ECX to 4706C0. */
+    function_4706c0_this(
+        *(int32_t *)(v2 + 148) + 36, &result, &v1);
     if (result == *(int32_t *)(*(int32_t *)(v2 + 148) + 40)) {
         // 0x462477
         return result;
@@ -125243,6 +128805,23 @@ int32_t function_462280(int32_t a1) {
     // 0x462477
     return result2;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_462280(int32_t a1) {
+    __asm {
+        mov edx, [esp + 4]
+        push edx
+        push ecx
+        call function_462280_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_462280(int32_t a1) {
+    return function_462280_this(0, a1);
+}
+#endif
 
 // Address range: 0x462480 - 0x46249e
 int32_t function_462480(void) {
@@ -126633,6 +130212,41 @@ int32_t function_463210(int32_t a1) {
     return __asm_int3();
 }
 
+/* std::_Tree_node allocation used by ActorManager's priority tree. */
+static int32_t function_463210_this(int32_t tree_ptr, int32_t source_ptr)
+{
+    int32_t sentinel;
+    int32_t node;
+
+    if (tree_ptr == 0 || source_ptr == 0)
+        return 0;
+
+    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
+    if (sentinel == 0) {
+        sentinel = _3f__3f_2_40_YAPAXI_40_Z(20);
+        if (sentinel == 0)
+            return 0;
+        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 12) = 0;
+        *(uint16_t *)(intptr_t)(sentinel + 16) = 1;
+        *(int32_t *)(intptr_t)(tree_ptr + 4) = sentinel;
+        *(int32_t *)(intptr_t)(tree_ptr + 8) = 0;
+    }
+
+    node = _3f__3f_2_40_YAPAXI_40_Z(20);
+    if (node == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(node + 0) = sentinel;
+    *(int32_t *)(intptr_t)(node + 4) = sentinel;
+    *(int32_t *)(intptr_t)(node + 8) = sentinel;
+    *(int32_t *)(intptr_t)(node + 12) =
+        *(int32_t *)(intptr_t)source_ptr;
+    *(uint16_t *)(intptr_t)(node + 16) = 0;
+    return node;
+}
+
 // Address range: 0x463280 - 0x4634cd
 int32_t function_463280(int32_t * a1, int32_t a2) {
     // 0x463280
@@ -126922,33 +130536,19 @@ int32_t function_463280(int32_t * a1, int32_t a2) {
 
 // Address range: 0x4634d0 - 0x463508
 int32_t function_4634d0(int32_t a1) {
-    // 0x4634d0
-    if (*(char *)(a1 + 17) != 0) {
-        // 0x463501
-        int32_t result; // 0x4634d0
-        return result;
+    int32_t current = a1;
+
+    /* sub_4634D0 receives the tree node on the stack and recursively frees
+       node[2] before advancing through node[0].  RetDec replaced both the
+       recursive node argument and operator-delete argument with g1224. */
+    while (current != 0 && *(char *)(current + 17) == 0) {
+        int32_t child = *(int32_t *)(current + 8);
+        int32_t next = *(int32_t *)current;
+        function_4634d0(child);
+        _free((void *)(intptr_t)current);
+        current = next;
     }
-    // 0x4634e3
-    int32_t v1; // bp-16, 0x4634d0
-    int32_t v2 = &v1;
-    int32_t v3 = v2 - 4; // 0x4634e6
-    *(int32_t *)v3 = *(int32_t *)(a1 + 8);
-    function_4634d0((int32_t)&g1224);
-    int32_t v4 = *(int32_t *)a1; // 0x4634ee
-    *(int32_t *)(v2 - 8) = a1;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (*(char *)(v4 + 17) == 0) {
-        int32_t v5 = v4;
-        v2 = v3;
-        v3 = v2 - 4;
-        *(int32_t *)v3 = *(int32_t *)(v5 + 8);
-        function_4634d0((int32_t)&g1224);
-        v4 = *(int32_t *)v5;
-        *(int32_t *)(v2 - 8) = v5;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x463501
-    return &g1224;
+    return current;
 }
 
 // Address range: 0x463510 - 0x46357a
@@ -127118,6 +130718,77 @@ int32_t function_463610(int32_t result, int32_t a2, int32_t a3) {
     return result;
 }
 
+/* Insert an Actor node into the priority tree.  The original uses an MSVC
+   red-black tree; retain the same sentinel/root/extrema layout and ordering
+   for the recovered startup and update iterators. */
+static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
+                                    int32_t node_ptr, int32_t insert_left)
+{
+    int32_t sentinel;
+    int32_t parent;
+    int32_t current;
+    int32_t actor;
+    int32_t key;
+    int32_t current_actor;
+    int32_t current_key;
+
+    (void)insert_left;
+    if (tree_ptr == 0 || result_ptr == 0 || node_ptr == 0)
+        return 0;
+
+    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
+    if (sentinel == 0) {
+        free((void *)(intptr_t)node_ptr);
+        *(int32_t *)(intptr_t)(result_ptr + 0) = 0;
+        *(int32_t *)(intptr_t)(result_ptr + 4) = 0;
+        return 0;
+    }
+
+    actor = *(int32_t *)(intptr_t)(node_ptr + 12);
+    key = actor != 0 ? *(int32_t *)(intptr_t)(actor + 228) : 0;
+    parent = sentinel;
+    current = *(int32_t *)(intptr_t)(sentinel + 4);
+    while (current != sentinel && current != 0) {
+        parent = current;
+        current_actor = *(int32_t *)(intptr_t)(current + 12);
+        current_key = current_actor != 0
+            ? *(int32_t *)(intptr_t)(current_actor + 228) : 0;
+        if (key < current_key)
+            current = *(int32_t *)(intptr_t)(current + 0);
+        else
+            current = *(int32_t *)(intptr_t)(current + 8);
+    }
+
+    *(int32_t *)(intptr_t)(node_ptr + 0) = sentinel;
+    *(int32_t *)(intptr_t)(node_ptr + 4) = parent;
+    *(int32_t *)(intptr_t)(node_ptr + 8) = sentinel;
+    *(uint16_t *)(intptr_t)(node_ptr + 16) = 0;
+
+    if (parent == sentinel) {
+        *(int32_t *)(intptr_t)(sentinel + 0) = node_ptr;
+        *(int32_t *)(intptr_t)(sentinel + 4) = node_ptr;
+        *(int32_t *)(intptr_t)(sentinel + 8) = node_ptr;
+    } else {
+        current_actor = *(int32_t *)(intptr_t)(parent + 12);
+        current_key = current_actor != 0
+            ? *(int32_t *)(intptr_t)(current_actor + 228) : 0;
+        if (key < current_key) {
+            *(int32_t *)(intptr_t)(parent + 0) = node_ptr;
+            if (*(int32_t *)(intptr_t)(sentinel + 0) == parent)
+                *(int32_t *)(intptr_t)(sentinel + 0) = node_ptr;
+        } else {
+            *(int32_t *)(intptr_t)(parent + 8) = node_ptr;
+            if (*(int32_t *)(intptr_t)(sentinel + 8) == parent)
+                *(int32_t *)(intptr_t)(sentinel + 8) = node_ptr;
+        }
+    }
+
+    ++*(int32_t *)(intptr_t)(tree_ptr + 8);
+    *(int32_t *)(intptr_t)(result_ptr + 0) = node_ptr;
+    *(int32_t *)(intptr_t)(result_ptr + 4) = 1;
+    return result_ptr;
+}
+
 // Address range: 0x463690 - 0x4636dd
 int32_t function_463690(int32_t a1, int32_t a2, int32_t a3) {
     // 0x463690
@@ -127134,20 +130805,20 @@ int32_t function_463690(int32_t a1, int32_t a2, int32_t a3) {
         int32_t v9 = &v8;
         int32_t v10 = v9 - 4; // 0x4636a6
         *(int32_t *)v10 = *(int32_t *)(v5 + 8);
-        function_4634d0((int32_t)&g1224);
+        function_4634d0(*(int32_t *)v10);
         int32_t v11 = *(int32_t *)v5; // 0x4636ae
         *(int32_t *)(v9 - 8) = v5;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+        _free((void *)(intptr_t)v5);
         while (*(char *)(v11 + 17) == 0) {
             // 0x4636a3
             v9 = v10;
             int32_t v12 = v11;
             v10 = v9 - 4;
             *(int32_t *)v10 = *(int32_t *)(v12 + 8);
-            function_4634d0((int32_t)&g1224);
+            function_4634d0(*(int32_t *)v10);
             v11 = *(int32_t *)v12;
             *(int32_t *)(v9 - 8) = v12;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+            _free((void *)(intptr_t)v12);
         }
         // 0x4636c1
         v7 = *v2;
@@ -127364,19 +131035,19 @@ int32_t function_463730(int32_t a1) {
     if (*(char *)(v29 + 17) == 0) {
         int32_t v32 = v7 - 4; // 0x4637b8
         *(int32_t *)v32 = *(int32_t *)(v29 + 8);
-        function_4634d0((int32_t)&g1224);
+        function_4634d0(*(int32_t *)v32);
         int32_t v33 = *(int32_t *)v29; // 0x4637c0
         *(int32_t *)(v7 - 8) = v29;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+        _free((void *)(intptr_t)v29);
         while (*(char *)(v33 + 17) == 0) {
             int32_t v34 = v33;
             int32_t v35 = v32;
             v32 = v35 - 4;
             *(int32_t *)v32 = *(int32_t *)(v34 + 8);
-            function_4634d0((int32_t)&g1224);
+            function_4634d0(*(int32_t *)v32);
             v33 = *(int32_t *)v34;
             *(int32_t *)(v35 - 8) = v34;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+            _free((void *)(intptr_t)v34);
         }
         // 0x4637d3
         v31 = *v1;
@@ -127703,6 +131374,50 @@ int32_t function_463b40(char a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5,
     function_4a9d70();
     __writefsdword(0, v1);
     return result;
+}
+
+/* ActorManager::CreateActor with the original ECX receiver made explicit. */
+static int32_t function_463b40_this(
+    int32_t manager_ptr, int32_t first_vtable,
+    int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data,
+    int32_t init_source)
+{
+    int32_t handle[2] = { 0, 0 };
+    int32_t actor;
+    int32_t node;
+    int32_t inserted[2] = { 0, 0 };
+    int32_t handle_manager;
+
+    if (manager_ptr == 0)
+        return 0;
+    handle_manager = *(int32_t *)(intptr_t)(manager_ptr + 4);
+    actor = function_46ab10_this(handle_manager,
+                                 (int32_t)(intptr_t)handle);
+    if (actor == 0)
+        return 0;
+
+    *(int32_t *)(intptr_t)(actor + 12) = handle[0];
+    *(int32_t *)(intptr_t)(actor + 8) = 1;
+    if (init_source != 0)
+        function_45de70_this(actor, init_source);
+
+    if (!function_45e5e0_this(actor, manager_ptr,
+                              first_vtable, first_type, first_data,
+                              x, y, z,
+                              second_vtable, second_type, second_data))
+        return 0;
+
+    node = function_463210_this(manager_ptr + 84,
+                                (int32_t)(intptr_t)&actor);
+    if (node == 0 || function_463610_this(manager_ptr + 84,
+                                          (int32_t)(intptr_t)inserted,
+                                          node, 0) == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(actor + 16) = inserted[0];
+    *(char *)(intptr_t)(manager_ptr + 120) = 1;
+    return actor;
 }
 
 // Address range: 0x463cf0 - 0x463d3c
@@ -129086,7 +132801,7 @@ int32_t function_464e20(int32_t this_ptr) {
         function_429c70(*(int32_t *)(v24 + 8));
         v21 = *(int32_t *)v24;
         *(int32_t *)(v23 - 8) = v24;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+        _free((void *)(intptr_t)v24);
         while (*(char *)(v21 + 21) == 0) {
             // 0x464ea0
             v23 = v22;
@@ -129096,7 +132811,7 @@ int32_t function_464e20(int32_t this_ptr) {
             function_429c70(*(int32_t *)(v24 + 8));
             v21 = *(int32_t *)v24;
             *(int32_t *)(v23 - 8) = v24;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+            _free((void *)(intptr_t)v24);
         }
         // 0x464ecf
         v20 = *v15;
@@ -129126,7 +132841,7 @@ int32_t function_464e20(int32_t this_ptr) {
         function_4634d0(*(int32_t *)(v36 + 8));
         v33 = *(int32_t *)v36;
         *(int32_t *)(v35 - 8) = v36;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+        _free((void *)(intptr_t)v36);
         while (*(char *)(v33 + 17) == 0) {
             // 0x464f00
             v35 = v34;
@@ -129136,7 +132851,7 @@ int32_t function_464e20(int32_t this_ptr) {
             function_4634d0(*(int32_t *)(v36 + 8));
             v33 = *(int32_t *)v36;
             *(int32_t *)(v35 - 8) = v36;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
+            _free((void *)(intptr_t)v36);
         }
         // 0x464f22
         v32 = *v27;
@@ -130877,12 +134592,13 @@ int32_t function_466100(int32_t a1) {
     retdec_trace_i32("466100:holder", holder);
     retdec_trace_i32("466100:resource", resource);
 
-    /* Original 466100 calls the RootTable constructor path here before the
-       CAct node is linked into the global list.  RetDec omitted that call. */
+    /* Original 466100 calls 450E30 before linking the CAct node. */
     if (resource != 0 && g644 != NULL) {
-        int32_t publish_result = retdec_publish_act_resource(
-            resource, (int32_t)(intptr_t)g644);
-        retdec_trace_i32("466100:publish-result", publish_result);
+        int32_t register_result = retdec_call_thiscall2_result(
+            (void *)(intptr_t)resource,
+            (void *)(intptr_t)function_450e30,
+            (int32_t)(intptr_t)g644, 0);
+        retdec_trace_i32("466100:450e30-result", register_result);
     }
 
     if (g603 == 0)
@@ -134884,39 +138600,38 @@ int32_t function_469b30(void) {
 // Address range: 0x469b40 - 0x469d0a
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-int32_t function_469b40(int32_t result, int32_t a2, int32_t a3, float32_t a4, float32_t a5, float32_t a6, int32_t a7, int32_t a8) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x469b50
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-48, 0x469b40
-    function_48abe0((int32_t)&v2);
-    function_48ab90((int32_t)g644, a7, a8);
-    function_4a9660(-1);
-    function_48aa50((int32_t)g644);
-    int32_t v3; // bp-76, 0x469b40
-    function_48abe0((int32_t)&v3);
-    function_48ab90((int32_t)g644, a2, a3);
-    function_4a9660(-1);
-    function_48aa50((int32_t)g644);
-    int32_t v4 = function_463b40(2, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x469c1f
-    *(int32_t *)result = (int32_t)&g16;
-    function_48abe0(result + 4);
-    if (v4 == 0) {
-        // 0x469c9d
-        function_48a4f0((int32_t)g644, 0);
-        function_4a9660(-1);
-        function_48aa50((int32_t)g644);
-        function_4a9d70();
-        function_4a9d70();
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t v5 = *(int32_t *)(v4 + 48); // 0x469c3f
-    function_48ab90((int32_t)g644, v5, *(int32_t *)(v4 + 52));
-    function_4a9660(-1);
-    function_48aa50((int32_t)g644);
-    function_4a9d70();
-    function_4a9d70();
-    __writefsdword(0, v1);
+int32_t function_469b40(
+    int32_t result,
+    int32_t first_vtable, int32_t first_type, int32_t first_data,
+    float32_t x, float32_t y, float32_t z,
+    int32_t second_vtable, int32_t second_type, int32_t second_data)
+{
+    int32_t actor;
+    int32_t manager = (int32_t)(intptr_t)g_retdec_actor_manager_state;
+    int32_t first_object[3] = {
+        first_vtable, first_type, first_data
+    };
+    int32_t second_object[3] = {
+        second_vtable, second_type, second_data
+    };
+
+    if (result == 0)
+        return 0;
+    if (first_object[0] == 0)
+        first_object[0] = (int32_t)(intptr_t)&g16;
+    if (second_object[0] == 0)
+        second_object[0] = (int32_t)(intptr_t)&g16;
+
+    actor = function_463b40_this(
+        manager,
+        first_object[0], first_object[1], first_object[2],
+        x, y, z,
+        second_object[0], second_object[1], second_object[2],
+        0);
+
+    function_4a94e0_this(result);
+    if (actor != 0)
+        function_4a95c0_this(result, actor + 44);
     return result;
 }
 
@@ -141194,7 +144909,7 @@ static int32_t retdec_map_bind_resource(int32_t resource_ptr, int32_t vm)
         return 0;
     if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root_object, vm))
         return 0;
-    result = retdec_bind_act_resource_root(resource_ptr, vm, root_object + 2);
+    result = retdec_bind_act_resource_root(resource_ptr, vm, root_object + 8);
     retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
     return result;
 }
@@ -141255,16 +144970,19 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     *(int32_t *)(intptr_t)(map_state + 16) = holder;
     function_455e40(holder, (int32_t)(intptr_t)&resource, 0);
     *(int32_t *)(intptr_t)(map_state + 20) = resource;
-    /* 46F6D0 calls the full 450E30 RootTable constructor here.  That call
-       publishes root[act.stName] and the nested global/resource tables;
-       binding only the root pair leaves stage.nut's `op` lookup null. */
-    if (resource == 0 || !retdec_publish_act_resource(resource, vm)) {
-        retdec_trace("map:resource-publish-failed");
+    /* Restore the original resource registration and immediate BeginStage. */
+    if (resource == 0 ||
+        retdec_call_thiscall2_result(
+            (void *)(intptr_t)resource,
+            (void *)(intptr_t)function_450e30, vm, 0) < 0) {
+        retdec_trace("map:450e30-failed");
         function_46f620_this(map_state);
         return 0;
     }
-    if (retdec_begin_stage_this(resource, 0) < 0) {
-        retdec_trace("map:begin-stage-failed");
+    if (retdec_call_thiscall1_result(
+            (void *)(intptr_t)resource,
+            (void *)(intptr_t)function_450950, 0) < 0) {
+        retdec_trace("map:450950-failed");
         function_46f620_this(map_state);
         return 0;
     }
@@ -142070,111 +145788,72 @@ int32_t function_4701d0(void) {
 
 // Address range: 0x4701e0 - 0x47021d
 int32_t function_4701e0(void) {
-    /* The original initializes a large DirectSound manager through four
-       __thiscall methods. Its split RetDec globals do not form that object
-       yet, so keep startup alive with the explicit degraded-audio path. */
-    retdec_trace("4701e0:audio-manager-degraded");
-    return 1;
-#if 0
-    // 0x4701e0
+    retdec_trace("4701e0:audio-begin");
     function_40b520();
     function_40b8a0(0.80000001L);
     function_40a3d0();
-    return function_40a9f0(0.80000001L);
-#endif
+    int32_t result = function_40a9f0(0.80000001L);
+    retdec_trace("4701e0:audio-ready");
+    return result;
 }
 
 // Address range: 0x470220 - 0x47028a
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3) {
-    // 0x470220
-    int32_t v1; // bp-8, 0x470220
-    int32_t v2 = &v1; // 0x470223
-    int32_t v3 = g637; // 0x470224
-    int32_t v4 = v2; // 0x47022b
-    if (v3 != 0) {
-        int32_t v5 = v3; // bp-24, 0x470236
-        function_40a950(v3, 1000, 0, 1);
-        v4 = &v5;
-    }
-    // 0x470241
-    *(int32_t *)(v4 - 4) = v2;
-    int32_t v6 = *(int32_t *)function_40a5d0((int32_t)&g1224); // 0x470254
-    int32_t v7 = v4 - 8; // 0x470256
-    *(int32_t *)v7 = (int32_t)&g790;
-    *(float32_t *)v7 = 1.0f;
-    *(int32_t *)(v4 - 12) = 0;
-    *(int32_t *)(v4 - 16) = a3;
-    *(int32_t *)(v4 - 20) = a1;
-    *(int32_t *)(v4 - 24) = v6;
-    g637 = v6;
-    function_40a6c0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-    *(int32_t *)(v4 - 28) = a2;
-    *(int32_t *)(v4 - 32) = g637;
-    return function_40a7f0((int32_t)&g1224, (int32_t)&g1224);
+int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
+    int32_t manager = retdec_audio_manager_this();
+    int32_t new_handle = 0;
+
+    (void)a3;
+    if (g637 != 0)
+        retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
+    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
+    g637 = new_handle;
+    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
+    retdec_audio_method_40a7f0(manager, g637, a2);
+    return 0;
 }
 
 // Address range: 0x470290 - 0x4702fc
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x470290
-    int32_t v1; // bp-8, 0x470290
-    int32_t v2 = &v1; // 0x470293
-    int32_t v3 = g637; // 0x470294
-    int32_t v4 = v2; // 0x47029b
-    if (v3 != 0) {
-        int32_t v5 = v3; // bp-24, 0x4702a8
-        function_40a950(v3, 1000, a3, 1);
-        v4 = &v5;
-    }
-    // 0x4702b3
-    *(int32_t *)(v4 - 4) = v2;
-    int32_t v6 = *(int32_t *)function_40a5d0((int32_t)&g1224); // 0x4702c6
-    int32_t v7 = v4 - 8; // 0x4702c8
-    *(int32_t *)v7 = (int32_t)&g790;
-    *(float32_t *)v7 = 1.0f;
-    *(int32_t *)(v4 - 12) = 0;
-    *(int32_t *)(v4 - 16) = a4;
-    *(int32_t *)(v4 - 20) = a1;
-    *(int32_t *)(v4 - 24) = v6;
-    g637 = v6;
-    function_40a6c0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-    *(int32_t *)(v4 - 28) = a2;
-    *(int32_t *)(v4 - 32) = g637;
-    return function_40a7f0((int32_t)&g1224, (int32_t)&g1224);
+int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+                        int32_t a5) {
+    int32_t manager = retdec_audio_manager_this();
+    int32_t new_handle = 0;
+
+    if (g637 != 0)
+        retdec_audio_method_40a950(manager, g637, 1000, a3, 1.0f);
+    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
+    g637 = new_handle;
+    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
+    retdec_audio_method_40a7f0(manager, g637, a2);
+    return 0;
 }
 
 // Address range: 0x470300 - 0x470315
 int32_t function_470300(void) {
-    int32_t result = 0; // 0x470307
     if (g637 != 0) {
-        // 0x470309
-        result = function_40a8d0(g637);
+        retdec_bgm_stop_for_handle((uint32_t)g637);
     }
-    // 0x470314
-    return result;
+    return 0;
 }
 
 // Address range: 0x470320 - 0x470355
 int32_t function_470320(int32_t a1, int32_t a2) {
-    int32_t result = 0; // 0x47032b
     if (g637 != 0) {
-        // 0x47032d
-        result = function_40a9a0(g637, a1, 0, (float80_t)a2 / 100.0L);
+        float target = (float)a2 / 100.0f;
+        retdec_bgm_begin_fade_for_handle((uint32_t)g637,
+                                         a1 > 0 ? (DWORD)a1 : 0, 0,
+                                         target);
     }
-    // 0x470351
-    return result;
+    return 0;
 }
 
 // Address range: 0x470360 - 0x47038f
 int32_t function_470360(void) {
-    int32_t result = 0; // 0x470367
     if (g637 != 0) {
-        // 0x470369
-        function_40a890(g637);
-        result = function_40a5f0(g637);
-        g637 = 0;
+        uint32_t handle = (uint32_t)g637;
+        retdec_bgm_stop_for_handle(handle);
+        retdec_bgm_release_for_handle(handle);
     }
-    // 0x47038e
-    return result;
+    return 0;
 }
 
 // Address range: 0x470390 - 0x4703ac
@@ -142567,9 +146246,10 @@ int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3) {
 }
 
 // Address range: 0x4706c0 - 0x470722
-int32_t function_4706c0(int32_t * a1, int32_t * a2) {
+static int32_t function_4706c0_this(int32_t this_ptr,
+                                    int32_t *a1, int32_t *a2) {
     int32_t result = (int32_t)a1;
-    int32_t v1 = retdec_map_tree_this(); // 0x4706c0
+    int32_t v1 = this_ptr; // 0x4706c0
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x4706c4
     int32_t v3 = *(int32_t *)(v2 + 4); // 0x4706c7
     if (*(char *)(v3 + 21) != 0) {
@@ -142598,6 +146278,12 @@ int32_t function_4706c0(int32_t * a1, int32_t * a2) {
     // 0x4706fd
     *a1 = v5;
     return result;
+}
+
+/* The standalone helper uses the original global tree object.  462280 has
+   a different receiver and calls the _this variant above directly. */
+int32_t function_4706c0(int32_t *a1, int32_t *a2) {
+    return function_4706c0_this(retdec_map_tree_this(), a1, a2);
 }
 
 // Address range: 0x470730 - 0x470883
@@ -142850,6 +146536,7 @@ int32_t function_470890(void) {
 
 // Address range: 0x470980 - 0x4709b3
 int32_t function_470980(int32_t a1) {
+    retdec_trace_i32("470980:se-id", a1);
     // 0x470980
     int32_t v2; // bp-8, 0x470980
     function_4706c0(&v2, &a1);
@@ -143316,77 +147003,30 @@ int32_t function_470d00(int32_t a1) {
 }
 
 // Address range: 0x470df0 - 0x470ed8
-int32_t function_470df0(int32_t a1, int32_t a2) {
-    int32_t v1 = a1; // bp-36, 0x470dff
-    int32_t v2 = function_48a6f0(a1, a2); // 0x470e00
-    int32_t v3 = v2; // 0x470e0d
-    int32_t v4; // bp-28, 0x470df0
-    int32_t * v5 = &v4; // 0x470e0d
-    float32_t v6; // bp-12, 0x470df0
-    if (v2 <= 0x5000002) {
-        switch (v2) {
-            case 0x5000002: {
-                // 0x470e5a
-                v1 = a2;
-                if (function_48a7d0(a1, a2, (int32_t *)&v6) >= 0) {
-                    // 0x470e44
-                    return (int32_t)v6 != 0;
-                }
-                // 0x470e6c
-                char * v7; // bp-16, 0x470df0
-                v1 = (int32_t)&v7;
-                v7 = "sq_get*() failed (type error)";
-                v3 = __CxxThrowException_40_8();
-                v5 = &v1;
-                // break -> 0x470e81
-                break;
-            }
-            case 0x1000001: {
-                // 0x470e52
-                return 0;
-            }
-            default: {
-                int32_t v8 = v2 - 0x1000008; // 0x470e18
-                if (v8 != 0) {
-                    // 0x470e88
-                    return v8 & -256 | 1;
-                }
-                // 0x470e1d
-                v1 = a2;
-                if (function_48a890(a1, a2, (int32_t *)&v6) < 0) {
-                    // 0x470e2f
-                    char * v9; // bp-8, 0x470df0
-                    v1 = (int32_t)&v9;
-                    v9 = "sq_get*() failed (type error)";
-                    __CxxThrowException_40_8();
-                }
-                // 0x470e44
-                return (int32_t)v6 != 0;
-            }
-        }
+int32_t function_470df0(int32_t vm, int32_t index) {
+    int32_t type = function_48a6f0(vm, index);
+    int32_t integer_value;
+    int32_t bool_value;
+    int32_t float_value;
+
+    if (type == 0x01000001)
+        return 0;
+    if (type == 0x01000008) {
+        if (function_48a890(vm, index, &bool_value) < 0)
+            return function_48ac00(vm, "sq_get*() failed (type error)");
+        return bool_value != 0;
     }
-    // 0x470e81
-    if (v3 != 0x5000004) {
-        // 0x470e88
-        return v3 & -256 | 1;
+    if (type == 0x05000002) {
+        if (function_48a7d0(vm, index, &integer_value) < 0)
+            return function_48ac00(vm, "sq_get*() failed (type error)");
+        return integer_value != 0;
     }
-    int32_t v10 = (int32_t)v5;
-    int32_t * v11 = (int32_t *)(v10 - 4); // 0x470e93
-    *v11 = (int32_t)&v6;
-    int32_t * v12 = (int32_t *)(v10 - 8); // 0x470e94
-    *v12 = a2;
-    *(int32_t *)(v10 - 12) = a1;
-    if (function_48a830((int32_t)&g1224, (int32_t)&g1224, &g1224) < 0) {
-        // 0x470ea2
-        *v11 = (int32_t)&g440;
-        char * v13; // bp-20, 0x470df0
-        *v12 = (int32_t)&v13;
-        v13 = "sq_get*() failed (type error)";
-        __CxxThrowException_40_8();
+    if (type == 0x05000004) {
+        if (function_48a830(vm, index, &float_value) < 0)
+            return function_48ac00(vm, "sq_get*() failed (type error)");
+        return float_value != 0;
     }
-    // 0x470eb7
-    int32_t v14; // 0x470df0
-    return (llvm_ctpop_i8((char)((uint32_t)v14 / 256) & 68) & 1) == 0;
+    return 1;
 }
 
 // Address range: 0x470ee0 - 0x470f05
@@ -143522,35 +147162,28 @@ int32_t function_471100(void) {
 }
 
 // Address range: 0x471160 - 0x471237
-int32_t function_471160(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x471170
-    __writefsdword(0, (int32_t)&v1);
-    if (function_48a6f0(a1, a2) != 0x8000010) {
-        int32_t result = function_48ac00(a1, "Incorrect function argument"); // 0x4711a4
-        __writefsdword(0, v1);
-        return result;
+int32_t function_471160(int32_t callback_ptr, int32_t vm, int32_t index) {
+    int32_t callback_object[3];
+    int32_t value;
+    int32_t result;
+
+    if (function_48a6f0(vm, index) != 0x08000010)
+        return function_48ac00(vm, "Incorrect function argument");
+
+    /* The original reserves a SquirrelObject below the callback argument.
+       LoadTable/SaveTable consume the three dwords as a by-value object. */
+    function_45f5e0_at(callback_object, 0, vm, index + 1);
+    if (function_48a8d0(vm, index, &value) < 0)
+        return function_48ac00(vm, "sq_get*() failed (type error)");
+    if (callback_ptr == 0) {
+        function_4a9d70_this((int32_t)(intptr_t)callback_object);
+        return 0;
     }
-    int32_t v2 = a1; // bp-64, 0x4711d0
-    int32_t v3; // bp-56, 0x471160
-    function_45f5e0(&v3, 0, a1);
-    int32_t v4; // bp-28, 0x471160
-    int32_t v5 = function_48a8d0(a1, a2, &v4); // 0x4711e5
-    int32_t v6 = v5; // 0x4711ef
-    int32_t * v7 = &v3; // 0x4711ef
-    if (v5 < 0) {
-        // 0x4711f1
-        char * v8; // bp-24, 0x471160
-        v2 = (int32_t)&v8;
-        v8 = "sq_get*() failed (type error)";
-        v6 = __CxxThrowException_40_8();
-        v7 = &v2;
-    }
-    int32_t v9 = (int32_t)v7;
-    *(int32_t *)(v9 - 4) = v4;
-    *(int32_t *)(v9 - 8) = v6 & 255;
-    *(int32_t *)(v9 - 12) = a1;
-    function_48a530(-1, (int32_t)&g1224);
-    __writefsdword(0, v1);
+
+    result = ((int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t))
+              (intptr_t)callback_ptr)(
+        value, callback_object[0], callback_object[1], callback_object[2]);
+    function_48a530(vm, (unsigned char)result);
     return 1;
 }
 
@@ -143586,33 +147219,18 @@ int32_t function_471240(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x471330 - 0x4713a9
-int32_t function_471330(int32_t a1, int32_t a2) {
-    int32_t v1 = a1; // bp-28, 0x47133f
-    if (function_48a6f0(a1, a2) != 0x8000010) {
-        // 0x47134f
-        v1 = a1;
-        return function_48ac00(a1, "Incorrect function argument");
+int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index) {
+    int32_t value;
+    int32_t result;
+
+    if (function_48a6f0(vm, index) != 0x08000010)
+        return function_48ac00(vm, "Incorrect function argument");
+    if (function_48a8d0(vm, index, &value) < 0)
+        return function_48ac00(vm, "sq_get*() failed (type error)");
+    if (callback_ptr != 0) {
+        result = ((int32_t (__cdecl *)(int32_t))(intptr_t)callback_ptr)(value);
+        function_48a530(vm, (unsigned char)result);
     }
-    // 0x471363
-    v1 = a2;
-    int32_t v2; // bp-12, 0x471330
-    int32_t v3 = function_48a8d0(a1, a2, &v2); // 0x471369
-    int32_t v4 = v3; // 0x471373
-    int32_t v5; // bp-20, 0x471330
-    int32_t * v6 = &v5; // 0x471373
-    if (v3 < 0) {
-        // 0x471375
-        char * v7; // bp-8, 0x471330
-        v1 = (int32_t)&v7;
-        v7 = "sq_get*() failed (type error)";
-        v4 = __CxxThrowException_40_8();
-        v6 = &v1;
-    }
-    int32_t v8 = (int32_t)v6;
-    *(int32_t *)(v8 - 4) = v2;
-    *(int32_t *)(v8 - 8) = v4 & 255;
-    *(int32_t *)(v8 - 12) = a1;
-    function_48a530((int32_t)&g1224, (int32_t)&g1224);
     return 1;
 }
 
@@ -143743,29 +147361,15 @@ int32_t function_4715e0(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x4716b0 - 0x47171c
-int32_t function_4716b0(int32_t a1, int32_t a2) {
-    int32_t v1 = a1; // bp-28, 0x4716bf
-    if (function_48a6f0(a1, a2) != 0x8000010) {
-        // 0x4716cf
-        v1 = a1;
-        return function_48ac00(a1, "Incorrect function argument");
-    }
-    // 0x4716e3
-    v1 = a2;
-    int32_t v2; // bp-12, 0x4716b0
-    int32_t v3 = function_48a8d0(a1, a2, &v2); // 0x4716e9
-    int32_t v4; // bp-20, 0x4716b0
-    int32_t * v5 = &v4; // 0x4716f3
-    if (v3 < 0) {
-        // 0x4716f5
-        char * v6; // bp-8, 0x4716b0
-        v1 = (int32_t)&v6;
-        v6 = "sq_get*() failed (type error)";
-        __CxxThrowException_40_8();
-        v5 = &v1;
-    }
-    // 0x47170a
-    *(int32_t *)((int32_t)v5 - 4) = v2;
+int32_t function_4716b0(int32_t callback_ptr, int32_t vm, int32_t index) {
+    int32_t value;
+
+    if (function_48a6f0(vm, index) != 0x08000010)
+        return function_48ac00(vm, "Incorrect function argument");
+    if (function_48a8d0(vm, index, &value) < 0)
+        return function_48ac00(vm, "sq_get*() failed (type error)");
+    if (callback_ptr != 0)
+        ((void (__cdecl *)(int32_t))(intptr_t)callback_ptr)(value);
     return 0;
 }
 
@@ -143814,42 +147418,53 @@ int32_t function_471810(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x471880 - 0x471953
-int32_t function_471880(int32_t a1, int32_t a2) {
-    // 0x471880
-    if (function_48a6f0(a1, a2) != 0x8000010 || function_48a6f0(a1, a2 + 1) != 0x5000002 || function_48a6f0(a1, a2 + 2) != 0x5000002) {
-        // 0x47189f
-        return function_48ac00(a1, "Incorrect function argument");
-    }
-    // 0x4718f1
-    function_470df0(0, a1);
-    function_45f560(0, a1);
-    function_45f560(0, a1);
-    function_46b450(0, a1);
+/* SqPlus's PlayBgm adapter receives the native callback separately from the
+   VM and one-based argument index.  RetDec collapsed those three values into
+   two parameters, so the old body validated a local address as a VM and never
+   invoked the registered callback. */
+int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index) {
+    int32_t first;
+    int32_t second;
+    int32_t third;
+    int32_t fourth;
+
+    if (function_48a6f0(vm, index) != 0x08000010 ||
+        function_48a6f0(vm, index + 1) != 0x05000002 ||
+        function_48a6f0(vm, index + 2) != 0x05000002)
+        return function_48ac00(vm, "Incorrect function argument");
+
+    fourth = function_470df0(vm, index + 3);
+    third = function_45f560(vm, index + 2);
+    second = function_45f560(vm, index + 1);
+    first = function_46b450(vm, index);
+    if (callback_ptr != 0)
+        ((void (__cdecl *)(int32_t, int32_t, int32_t, int32_t))
+            (intptr_t)callback_ptr)(first, second, third, fourth);
     return 0;
 }
 
 // Address range: 0x471960 - 0x471a5c
-int32_t function_471960(int32_t a1, int32_t a2) {
-    // 0x471960
-    if (function_48a6f0(a1, a2) != 0x8000010 || function_48a6f0(a1, a2 + 1) != 0x5000002 || function_48a6f0(a1, a2 + 2) != 0x5000002) {
-        // 0x47197f
-        int32_t v1; // bp-32, 0x471960
-        int32_t v2 = &v1; // 0x471975
-        *(int32_t *)(v2 - 4) = (int32_t)"Incorrect function argument";
-        *(int32_t *)(v2 - 8) = a1;
-        return function_48ac00((int32_t)&g1224, (char *)&g1224);
-    }
-    // 0x4719bb
-    if (function_48a6f0(a1, a2 + 3) != 0x5000002) {
-        // 0x4719d0
-        return function_48ac00(a1, "Incorrect function argument");
-    }
-    // 0x4719e5
-    function_470df0(0, a1);
-    function_45f560(0, a1);
-    function_45f560(0, a1);
-    function_45f560(0, a1);
-    function_46b450(0, a1);
+int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index) {
+    int32_t first;
+    int32_t second;
+    int32_t third;
+    int32_t fourth;
+    int32_t fifth;
+
+    if (function_48a6f0(vm, index) != 0x08000010 ||
+        function_48a6f0(vm, index + 1) != 0x05000002 ||
+        function_48a6f0(vm, index + 2) != 0x05000002 ||
+        function_48a6f0(vm, index + 3) != 0x05000002)
+        return function_48ac00(vm, "Incorrect function argument");
+
+    fifth = function_470df0(vm, index + 4);
+    fourth = function_45f560(vm, index + 3);
+    third = function_45f560(vm, index + 2);
+    second = function_45f560(vm, index + 1);
+    first = function_46b450(vm, index);
+    if (callback_ptr != 0)
+        ((void (__cdecl *)(int32_t, int32_t, int32_t, int32_t, int32_t))
+            (intptr_t)callback_ptr)(first, second, third, fourth, fifth);
     return 0;
 }
 
@@ -143919,6 +147534,22 @@ static int32_t retdec_native_target_from_userdata(int32_t vm) {
     if (lookup_result < 0 || userdata_payload == 0)
         return 0;
     return *(int32_t *)(intptr_t)userdata_payload;
+}
+
+/* Sqrat appends the native closure's userdata after the user arguments. */
+static int32_t retdec_native_callback_from_stack(int32_t vm) {
+    int32_t top;
+    int32_t callback_holder = 0;
+    int32_t type_tag = 0;
+
+    if (vm == 0)
+        return 0;
+    top = function_48aa20(vm);
+    if (top <= 0 ||
+        function_48a920(vm, top, &callback_holder, &type_tag) < 0 ||
+        type_tag != 0 || callback_holder == 0)
+        return 0;
+    return *(int32_t *)(intptr_t)callback_holder;
 }
 
 static int32_t retdec_native_string_arg(int32_t vm, int32_t index,
@@ -144010,15 +147641,7 @@ int32_t function_471bc0(int32_t a1) {
 
 // Address range: 0x471c10 - 0x471c6c
 int32_t function_471c10(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t value;
-    int32_t result;
-
-    if (target == 0 || !retdec_native_string_arg(a1, 2, &value))
-        return 0;
-    result = ((int32_t (__cdecl *)(int32_t))(intptr_t)target)(value);
-    function_48a530(a1, result);
-    return 1;
+    return function_471160(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x471c70 - 0x471d27
@@ -144054,29 +147677,7 @@ int32_t function_471d30(int32_t a1) {
 
 // Address range: 0x471d90 - 0x471dec
 int32_t function_471d90(int32_t a1) {
-    static int32_t trace_count;
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t value;
-    int32_t result;
-
-    if (trace_count < 64) {
-        retdec_trace("native-load-wrapper:entry");
-        retdec_trace_i32("native-load-wrapper:vm", a1);
-        retdec_trace_i32("native-load-wrapper:target", target);
-        retdec_trace_i32("native-load-wrapper:top", function_48aa20(a1));
-        retdec_trace_i32("native-load-wrapper:type2", function_48a6f0(a1, 2));
-    }
-    if (target == 0 || !retdec_native_string_arg(a1, 2, &value))
-        return 0;
-    if (trace_count < 64)
-        retdec_trace_squirrel_name("native-load-wrapper:value", value);
-    result = ((int32_t (__cdecl *)(int32_t))(intptr_t)target)(value);
-    if (trace_count < 64) {
-        retdec_trace_i32("native-load-wrapper:result", result);
-        ++trace_count;
-    }
-    function_48a530(a1, result);
-    return 1;
+    return function_471330(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x471df0 - 0x471e4c
@@ -144104,13 +147705,16 @@ int32_t function_471df0(int32_t a1) {
         !retdec_native_value_pair(a1, 6, second))
         return 0;
 
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t,
+    ((int32_t (__cdecl *)(int32_t,
+                          int32_t, int32_t, int32_t,
                           float32_t, float32_t, float32_t,
-                          int32_t, int32_t))(intptr_t)target)(
+                          int32_t, int32_t, int32_t))(intptr_t)target)(
         (int32_t)(intptr_t)result_object,
-        first[0], first[1], first_float, second_float, third_float,
-        second[0], second[1]);
+        (int32_t)(intptr_t)&g16, first[0], first[1],
+        first_float, second_float, third_float,
+        (int32_t)(intptr_t)&g16, second[0], second[1]);
     function_4029b0(a1, result_object);
+    function_4a9d70_this((int32_t)(intptr_t)result_object);
     return 1;
 }
 
@@ -144146,24 +147750,7 @@ int32_t function_471eb0(int32_t a1) {
 
 // Address range: 0x471f10 - 0x471f6c
 int32_t function_471f10(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t value;
-    static int32_t trace_count;
-
-    if (trace_count < 16) {
-        retdec_trace_i32("native-string-wrapper:target", target);
-        retdec_trace_i32("native-string-wrapper:top", function_48aa20(a1));
-        retdec_trace_i32("native-string-wrapper:type2", function_48a6f0(a1, 2));
-    }
-
-    if (target == 0 || !retdec_native_string_arg(a1, 2, &value))
-        return 0;
-    if (trace_count < 16) {
-        retdec_trace_squirrel_name("native-string-wrapper:value", value);
-        ++trace_count;
-    }
-    ((int32_t (__cdecl *)(int32_t))(intptr_t)target)(value);
-    return 0;
+    return function_4716b0(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x471f70 - 0x471fcc
@@ -144208,69 +147795,17 @@ int32_t function_472030(int32_t a1) {
 
 // Address range: 0x472080 - 0x4720dc
 int32_t function_472080(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2 = function_48aa20(a1); // 0x472089
-    if (v2 < 1) {
-        // 0x4720c7
-        abort();
-        // UNREACHABLE
-    }
-    int32_t v3 = &v1; // 0x472095
-    int32_t v4; // bp-8, 0x472080
-    if (function_48a920(a1, v2, &v4, v3) < 0) {
-        // 0x4720c7
-        abort();
-        // UNREACHABLE
-    }
-    // 0x4720ab
-    if (v1 == 0) {
-        // 0x4720b1
-        return function_471880(v3, a1);
-    }
-    // 0x4720c7
-    abort();
-    // UNREACHABLE
+    return function_471880(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x4720e0 - 0x47213c
 int32_t function_4720e0(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2 = function_48aa20(a1); // 0x4720e9
-    if (v2 < 1) {
-        // 0x472127
-        abort();
-        // UNREACHABLE
-    }
-    int32_t v3 = &v1; // 0x4720f5
-    int32_t v4; // bp-8, 0x4720e0
-    if (function_48a920(a1, v2, &v4, v3) < 0) {
-        // 0x472127
-        abort();
-        // UNREACHABLE
-    }
-    // 0x47210b
-    if (v1 == 0) {
-        // 0x472111
-        return function_471960(v3, a1);
-    }
-    // 0x472127
-    abort();
-    // UNREACHABLE
+    return function_471960(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x472140 - 0x47219c
 int32_t function_472140(int32_t a1) {
-    int32_t vm = a1;
-    int32_t top = function_48aa20(vm);
-    int32_t callback_holder = 0;
-    int32_t type_tag = 0;
-    int32_t callback = 0;
-
-    if (top > 0 &&
-        function_48a920(vm, top, &callback_holder, &type_tag) >= 0 &&
-        type_tag == 0 && callback_holder != 0)
-        callback = *(int32_t *)(intptr_t)callback_holder;
-    return function_471a60(callback, vm, 2);
+    return function_471a60(retdec_native_callback_from_stack(a1), a1, 2);
 }
 
 // Address range: 0x4721a0 - 0x47223b
@@ -144327,7 +147862,7 @@ int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
 }
 
 // Address range: 0x4722e0 - 0x47281e
-int32_t function_4722e0(int32_t a1) {
+static int32_t function_4722e0_legacy(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x4722f0
     int32_t v2; // bp-4, 0x4722e0
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-220, 0x472304
@@ -144494,7 +148029,7 @@ int32_t function_4722e0(int32_t a1) {
             *v61 = (int32_t)g644;
             function_48aa50((int32_t)&g1224);
             *v61 = a1;
-            function_4722e0((int32_t)&g1224);
+            function_4722e0_legacy((int32_t)&g1224);
             // 0x4727a0
             v54 = v60 + 16;
             goto lab_0x4727a3;
@@ -144524,7 +148059,7 @@ int32_t function_4722e0(int32_t a1) {
                 *v66 = (int32_t)g644;
                 function_48aa50((int32_t)&g1224);
                 *v66 = a1;
-                function_4722e0((int32_t)&g1224);
+                function_4722e0_legacy((int32_t)&g1224);
                 // 0x4727a0
                 v54 = v65 + 16;
                 goto lab_0x4727a3;
@@ -144669,7 +148204,7 @@ int32_t function_4722e0(int32_t a1) {
 // Address range: 0x472820 - 0x472e47
 // From class:    .?AVSquirrelObject@@
 // Type:          constructor
-int32_t function_472820(int32_t a1, int32_t a2, int32_t a3) {
+static int32_t function_472820_legacy(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x472830
     __writefsdword(0, (int32_t)&v1);
     int32_t v2; // bp-84, 0x472820
@@ -144939,7 +148474,7 @@ int32_t function_472820(int32_t a1, int32_t a2, int32_t a3) {
         *v80 = (int32_t)g644;
         function_48aa50((int32_t)&g1224);
         *v80 = v70;
-        function_4722e0((int32_t)&g1224);
+        function_4722e0_legacy((int32_t)&g1224);
         *v81 = *v71;
         *v68 = 0;
         function_4ab330();
@@ -145120,7 +148655,8 @@ int32_t function_472820(int32_t a1, int32_t a2, int32_t a3) {
     *v108 = (int32_t)g644;
     function_48aa50((int32_t)&g1224);
     *v108 = a1;
-    function_472820((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+            function_472820_legacy((int32_t)&g1224, (int32_t)&g1224,
+                                    (int32_t)&g1224);
     v17 = v86 - 4;
     v15 = v106;
     goto lab_0x472baa;
@@ -145133,7 +148669,7 @@ int32_t function_472820(int32_t a1, int32_t a2, int32_t a3) {
 // Address range: 0x472e50 - 0x47300f
 // From class:    .?AVCFileWriter@@
 // Type:          constructor
-int32_t function_472e50(int32_t a1, int32_t a2, int32_t a3) {
+static int32_t function_472e50_legacy(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x472e60
     __chkstk();
     __writefsdword(0, (int32_t)&v1);
@@ -145151,7 +148687,8 @@ int32_t function_472e50(int32_t a1, int32_t a2, int32_t a3) {
     function_48ab90((int32_t)g644, a2, a3);
     function_4a9660(-1);
     function_48aa50((int32_t)g644);
-    function_472820((int32_t)&v2, (int32_t)&g1224, (int32_t)&g1224);
+    function_472820_legacy((int32_t)&v2, (int32_t)&g1224,
+                            (int32_t)&g1224);
     int32_t lpBuffer; // bp-131092, 0x472e50
     int32_t nNumberOfBytesToWrite = function_404390(v2, 0, &lpBuffer, 0x20000); // 0x472f68
     int32_t v4 = nNumberOfBytesToWrite; // bp-131116, 0x472f76
@@ -145168,6 +148705,442 @@ int32_t function_472e50(int32_t a1, int32_t a2, int32_t a3) {
     // 0x472ff4
     __writefsdword(0, v1);
     return ___report_gsfailure();
+}
+
+static int32_t retdec_table_stream_write(int32_t *stream, const void *data,
+                                         uint32_t size) {
+    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0))
+        return 0;
+    if (size != 0) {
+        memcpy((void *)(intptr_t)(stream[0] + stream[1]), data, size);
+        stream[1] += (int32_t)size;
+    }
+    return 1;
+}
+
+static int32_t retdec_table_stream_read(int32_t *stream, void *data,
+                                        uint32_t size) {
+    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0))
+        return 0;
+    if (size != 0) {
+        memcpy(data, (const void *)(intptr_t)(stream[0] + stream[1]), size);
+        stream[1] += (int32_t)size;
+    }
+    return 1;
+}
+
+static int32_t retdec_squirrel_object_from_pair(int32_t *object,
+                                                int32_t type, int32_t data) {
+    if (object == NULL || g644 == 0)
+        return 0;
+    function_4a94e0_this((int32_t)(intptr_t)object);
+    function_48ab90((int32_t)g644, type, data);
+    function_4a9660_this((int32_t)(intptr_t)object, -1);
+    function_48aa50((int32_t)g644);
+    return 1;
+}
+
+static int32_t retdec_squirrel_object_string(int32_t *object,
+                                              const char **value) {
+    int32_t string_ptr;
+
+    if (object == NULL || value == NULL || g644 == 0)
+        return 0;
+    function_48ab90((int32_t)g644, object[1], object[2]);
+    if (function_48a8d0((int32_t)g644, -1, &string_ptr) < 0) {
+        function_48aa50((int32_t)g644);
+        return 0;
+    }
+    function_48aa50((int32_t)g644);
+    *value = (const char *)(intptr_t)string_ptr;
+    return *value != NULL;
+}
+
+static int32_t retdec_squirrel_object_copy(int32_t *destination,
+                                            const int32_t *source) {
+    if (destination == NULL || source == NULL)
+        return 0;
+    function_4a94e0_this((int32_t)(intptr_t)destination);
+    function_4a95c0_this((int32_t)(intptr_t)destination,
+                         (int32_t)(intptr_t)source);
+    return 1;
+}
+
+static int32_t retdec_squirrel_object_from_string(int32_t *object,
+                                                   const char *data,
+                                                   uint32_t length) {
+    char *copy;
+
+    if (object == NULL || data == NULL || g644 == 0 || length > 0x1000000u)
+        return 0;
+    copy = (char *)malloc((size_t)length + 1);
+    if (copy == NULL)
+        return 0;
+    memcpy(copy, data, length);
+    copy[length] = 0;
+    function_4a94e0_this((int32_t)(intptr_t)object);
+    function_48a480((int32_t)g644, (int32_t)(intptr_t)copy, -1);
+    function_4a9660_this((int32_t)(intptr_t)object, -1);
+    function_48aa50((int32_t)g644);
+    free(copy);
+    return 1;
+}
+
+static int32_t retdec_table_stream_read_string(int32_t *stream,
+                                               int32_t *object) {
+    uint32_t length;
+    char *data;
+    int32_t result;
+
+    if (!retdec_table_stream_read(stream, &length, sizeof(length)) ||
+        length > 0x1000000u)
+        return 0;
+    data = (char *)malloc((size_t)length + 1);
+    if (data == NULL)
+        return 0;
+    if (!retdec_table_stream_read(stream, data, length)) {
+        free(data);
+        return 0;
+    }
+    data[length] = 0;
+    result = retdec_squirrel_object_from_string(object, data, length);
+    free(data);
+    return result;
+}
+
+static int32_t retdec_table_stream_write_object_string(int32_t *stream,
+                                                       int32_t *object) {
+    const char *data;
+    uint32_t length;
+
+    if (!retdec_squirrel_object_string(object, &data))
+        return 0;
+    length = (uint32_t)strlen(data);
+    return retdec_table_stream_write(stream, &length, sizeof(length)) &&
+           retdec_table_stream_write(stream, data, length);
+}
+
+int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data) {
+    int32_t parent[3] = { object_vtable, object_type, object_data };
+    int32_t key[3];
+    int32_t value[3];
+    int32_t ok = 1;
+
+    if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
+        ok = 0;
+    function_4a94e0_this((int32_t)(intptr_t)key);
+    function_4a94e0_this((int32_t)(intptr_t)value);
+
+    while (ok) {
+        uint32_t value_type;
+        uint32_t key_type;
+
+        if (!retdec_table_stream_read(stream_ptr, &value_type,
+                                      sizeof(value_type))) {
+            ok = 0;
+            break;
+        }
+        if ((value_type & 0x7eu) == 0)
+            break;
+
+        if (!retdec_table_stream_read(stream_ptr, &key_type,
+                                      sizeof(key_type))) {
+            ok = 0;
+            break;
+        }
+        if (key_type == 0x05000002u) {
+            uint32_t raw_key;
+            if (!retdec_table_stream_read(stream_ptr, &raw_key,
+                                          sizeof(raw_key)) ||
+                !retdec_squirrel_object_from_pair(
+                    key, (int32_t)key_type, (int32_t)raw_key)) {
+                ok = 0;
+                break;
+            }
+        } else if (key_type == 0x08000010u) {
+            if (!retdec_table_stream_read_string(stream_ptr, key)) {
+                ok = 0;
+                break;
+            }
+        } else {
+            ok = 0;
+            break;
+        }
+
+        if (value_type == 0x05000002u) {
+            uint32_t raw_value;
+            if (!retdec_table_stream_read(stream_ptr, &raw_value,
+                                          sizeof(raw_value)) ||
+                !retdec_squirrel_object_from_pair(
+                    value, (int32_t)value_type, (int32_t)raw_value))
+                ok = 0;
+        } else if (value_type == 0x05000004u) {
+            uint32_t raw_value;
+            if (!retdec_table_stream_read(stream_ptr, &raw_value,
+                                          sizeof(raw_value)) ||
+                !retdec_squirrel_object_from_pair(
+                    value, (int32_t)value_type, (int32_t)raw_value))
+                ok = 0;
+        } else if (value_type == 0x01000008u) {
+            unsigned char bool_value;
+            if (!retdec_table_stream_read(stream_ptr, &bool_value, 1) ||
+                !retdec_squirrel_object_from_pair(
+                    value, (int32_t)value_type, (int32_t)bool_value))
+                ok = 0;
+        } else if (value_type == 0x08000010u) {
+            if (!retdec_table_stream_read_string(stream_ptr, value))
+                ok = 0;
+        } else if (value_type == 0x08000040u) {
+            uint32_t count;
+            int32_t nested[3];
+
+            if (!retdec_table_stream_read(stream_ptr, &count,
+                                          sizeof(count)) || count > 0x100000u ||
+                !function_4a92e0_this(value, (int32_t)count) ||
+                !function_4a97b0_this(
+                    (int32_t)(intptr_t)parent,
+                    (int32_t)(intptr_t)key,
+                    (int32_t)(intptr_t)value) ||
+                !retdec_squirrel_object_copy(nested, value)) {
+                ok = 0;
+            } else {
+                function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
+            }
+        } else if (value_type == 0x0A000020u) {
+            int32_t nested[3];
+
+            if (!function_4a91c0_this(value) ||
+                !function_4a97b0_this(
+                    (int32_t)(intptr_t)parent,
+                    (int32_t)(intptr_t)key,
+                    (int32_t)(intptr_t)value) ||
+                !retdec_squirrel_object_copy(nested, value)) {
+                ok = 0;
+            } else {
+                function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
+            }
+        } else {
+            ok = 0;
+        }
+
+        if (ok && value_type != 0x08000040u &&
+            value_type != 0x0A000020u) {
+            if (!function_4a97b0_this(
+                    (int32_t)(intptr_t)parent,
+                    (int32_t)(intptr_t)key,
+                    (int32_t)(intptr_t)value))
+                ok = 0;
+        }
+        function_4a9d70_this((int32_t)(intptr_t)value);
+        function_4a9d70_this((int32_t)(intptr_t)key);
+    }
+
+    function_4a9d70_this((int32_t)(intptr_t)value);
+    function_4a9d70_this((int32_t)(intptr_t)key);
+    function_4a9d70_this((int32_t)(intptr_t)parent);
+    return ok;
+}
+
+int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data) {
+    int32_t input_object[3] = { object_vtable, object_type, object_data };
+    int32_t container[3];
+    int32_t key[3];
+    int32_t value[3];
+    int32_t iterator_started = 0;
+    int32_t ok = 1;
+
+    if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
+        ok = 0;
+    function_4a94e0_this((int32_t)(intptr_t)container);
+    function_4a94e0_this((int32_t)(intptr_t)key);
+    function_4a94e0_this((int32_t)(intptr_t)value);
+
+    if (ok && !retdec_squirrel_object_from_pair(
+                   container, object_type, object_data))
+        ok = 0;
+    if (ok && function_4a9c10_this((int32_t)(intptr_t)container))
+        iterator_started = 1;
+
+    while (ok && iterator_started &&
+           function_4a9c60((int32_t *)(intptr_t)key,
+                           (int32_t *)(intptr_t)value)) {
+        uint32_t value_type = (uint32_t)value[1];
+        uint32_t key_type = (uint32_t)key[1];
+
+        if (!retdec_table_stream_write(stream_ptr, &value_type,
+                                       sizeof(value_type))) {
+            ok = 0;
+            break;
+        }
+        if (key_type == 0x05000002u) {
+            if (!retdec_table_stream_write(stream_ptr, &key_type,
+                                           sizeof(key_type)) ||
+                !retdec_table_stream_write(stream_ptr, &key[2],
+                                           sizeof(key[2]))) {
+                ok = 0;
+                break;
+            }
+        } else if (key_type == 0x08000010u) {
+            if (!retdec_table_stream_write(stream_ptr, &key_type,
+                                           sizeof(key_type)) ||
+                !retdec_table_stream_write_object_string(stream_ptr, key)) {
+                ok = 0;
+                break;
+            }
+        } else {
+            ok = 0;
+            break;
+        }
+
+        if (value_type == 0x05000002u || value_type == 0x05000004u) {
+            if (!retdec_table_stream_write(stream_ptr, &value[2],
+                                           sizeof(value[2])))
+                ok = 0;
+        } else if (value_type == 0x01000008u) {
+            unsigned char bool_value = (unsigned char)value[2];
+            if (!retdec_table_stream_write(stream_ptr, &bool_value, 1))
+                ok = 0;
+        } else if (value_type == 0x08000010u) {
+            if (!retdec_table_stream_write_object_string(stream_ptr, value))
+                ok = 0;
+        } else if (value_type == 0x08000040u) {
+            int32_t nested[3];
+            int32_t count = function_4a96d0_this(
+                (int32_t)(intptr_t)value);
+            if (count < 0 ||
+                !retdec_table_stream_write(stream_ptr, &count,
+                                            sizeof(count)) ||
+                !retdec_squirrel_object_copy(nested, value)) {
+                ok = 0;
+            } else {
+                function_472820(stream_ptr, nested[0], nested[1], nested[2]);
+            }
+        } else if (value_type == 0x0A000020u) {
+            int32_t nested[3];
+            if (!retdec_squirrel_object_copy(nested, value)) {
+                ok = 0;
+            } else {
+                function_472820(stream_ptr, nested[0], nested[1], nested[2]);
+            }
+        }
+
+        function_4a9d70_this((int32_t)(intptr_t)value);
+        function_4a9d70_this((int32_t)(intptr_t)key);
+    }
+
+    if (ok && iterator_started) {
+        uint32_t null_type = 0x01000001u;
+        if (!retdec_table_stream_write(stream_ptr, &null_type,
+                                       sizeof(null_type)))
+            ok = 0;
+        function_4a9d50();
+    }
+    function_4a9d70_this((int32_t)(intptr_t)value);
+    function_4a9d70_this((int32_t)(intptr_t)key);
+    function_4a9d70_this((int32_t)(intptr_t)container);
+    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    return ok;
+}
+
+int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data) {
+    int32_t input_object[3] = { object_vtable, object_type, object_data };
+    HANDLE file_handle = INVALID_HANDLE_VALUE;
+    unsigned char *encoded = NULL;
+    unsigned char *decoded = NULL;
+    DWORD encoded_size = 0;
+    DWORD bytes_read = 0;
+    int32_t stream[16] = { 0 };
+    int32_t table_object[3];
+    int32_t result = 0;
+
+    file_handle = CreateFileA(
+        (LPCSTR)(intptr_t)path_ptr, GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    encoded = (unsigned char *)malloc(0x20000u);
+    decoded = (unsigned char *)malloc(0x20000u);
+    if (encoded == NULL || decoded == NULL)
+        goto cleanup;
+    if (!ReadFile(file_handle, &encoded_size, sizeof(encoded_size),
+                  &bytes_read, NULL) || bytes_read != sizeof(encoded_size) ||
+        encoded_size > 0x20000u)
+        goto cleanup;
+    if (!ReadFile(file_handle, encoded, encoded_size, &bytes_read, NULL) ||
+        bytes_read != encoded_size)
+        goto cleanup;
+
+    (void)function_404430((int32_t)(intptr_t)encoded,
+                          (int32_t)encoded_size,
+                          (int32_t)(intptr_t)decoded, 0x20000);
+    stream[0] = (int32_t)(intptr_t)decoded;
+    stream[1] = 0;
+    if (!retdec_squirrel_object_from_pair(table_object, object_type,
+                                          object_data))
+        goto cleanup;
+    function_4722e0(stream, table_object[0], table_object[1], table_object[2]);
+    result = 1;
+
+cleanup:
+    if (file_handle != INVALID_HANDLE_VALUE)
+        CloseHandle(file_handle);
+    if (decoded != NULL)
+        free(decoded);
+    if (encoded != NULL)
+        free(encoded);
+    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    return result;
+}
+
+int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
+                        int32_t object_type, int32_t object_data) {
+    int32_t input_stream[16] = { 0 };
+    unsigned char *raw = NULL;
+    unsigned char *encoded = NULL;
+    HANDLE file_handle = INVALID_HANDLE_VALUE;
+    DWORD encoded_size;
+    DWORD bytes_written;
+    int32_t result = 0;
+
+    file_handle = CreateFileA(
+        (LPCSTR)(intptr_t)path_ptr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
+        goto cleanup;
+    raw = (unsigned char *)malloc(0x20000u);
+    encoded = (unsigned char *)malloc(0x20000u);
+    if (raw == NULL || encoded == NULL)
+        goto cleanup;
+
+    input_stream[0] = (int32_t)(intptr_t)raw;
+    input_stream[1] = 0;
+    if (!function_472820(input_stream, object_vtable, object_type,
+                         object_data))
+        goto cleanup;
+    encoded_size = (DWORD)function_404390(
+        (int32_t)(intptr_t)raw, input_stream[1],
+        (int32_t *)(intptr_t)encoded, 0x20000);
+    if (!WriteFile(file_handle, &encoded_size, sizeof(encoded_size),
+                   &bytes_written, NULL) ||
+        bytes_written != sizeof(encoded_size) ||
+        !WriteFile(file_handle, encoded, encoded_size, &bytes_written, NULL) ||
+        bytes_written != encoded_size)
+        goto cleanup;
+    result = 1;
+
+cleanup:
+    if (file_handle != INVALID_HANDLE_VALUE)
+        CloseHandle(file_handle);
+    if (encoded != NULL)
+        free(encoded);
+    if (raw != NULL)
+        free(raw);
+    return result;
 }
 
 // Address range: 0x473010 - 0x473ae5
@@ -145252,7 +149225,7 @@ int32_t function_473010(void) {
     v20 = (char *)(intptr_t)function_471c10;
     char * v24; // bp-176, 0x473010
     *(int32_t *)&v24 = v22;
-    *(int32_t *)v23 = (int32_t)(intptr_t)function_472820;
+    *(int32_t *)v23 = (int32_t)(intptr_t)function_472c90;
     function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
     *(int32_t *)&v8 = v22;
     function_48c950(v22, -3, 0);
@@ -188176,6 +192149,104 @@ int32_t function_489f30(void) {
     return 0;
 }
 
+/* FlexibleClass stores the public value in SQInstance while the renderer
+ * reads the native CActLayer/C2DLayout object.  The original VarInfo setter
+ * updates the latter; mirror that write at the recovered SQInstance::Set
+ * boundary so the existing DAT/Squirrel update path drives rendering. */
+static void retdec_sync_native_instance_field(int32_t instance_ptr,
+                                               int32_t key_ptr,
+                                               int32_t value_ptr) {
+    const char *name;
+    int32_t native_ptr;
+    int32_t type;
+    int32_t offset = 0;
+    int32_t field_kind = 0;
+    float float_value;
+
+    if (instance_ptr == 0 || key_ptr == 0 || value_ptr == 0 ||
+        *(int32_t *)(intptr_t)key_ptr != 0x08000010 ||
+        *(int32_t *)(intptr_t)(key_ptr + 4) == 0)
+        return;
+    name = (const char *)(intptr_t)(
+        *(int32_t *)(intptr_t)(key_ptr + 4) + 28);
+    native_ptr = *(int32_t *)(intptr_t)(instance_ptr + 32);
+    if (native_ptr == 0)
+        return;
+
+    /* CActLayer fields use the offsets from 41EFF0's Register calls. */
+    if (*(int32_t *)(intptr_t)native_ptr == (int32_t)(intptr_t)&g252) {
+        if (strcmp(name, "resourceID") == 0) { offset = 0x60; field_kind = 1; }
+        else if (strcmp(name, "layerID") == 0) { offset = 0x68; field_kind = 1; }
+        else if (strcmp(name, "parentID") == 0) { offset = 0x6c; field_kind = 1; }
+        else if (strcmp(name, "blend") == 0) { offset = 0x38; field_kind = 1; }
+        else if (strcmp(name, "colorR") == 0) { offset = 0x3c; field_kind = 1; }
+        else if (strcmp(name, "colorG") == 0) { offset = 0x40; field_kind = 1; }
+        else if (strcmp(name, "colorB") == 0) { offset = 0x44; field_kind = 1; }
+        else if (strcmp(name, "visible") == 0) { offset = 0x8c; field_kind = 2; }
+        else if (strcmp(name, "debugOnly") == 0) { offset = 0x8d; field_kind = 2; }
+        else if (strcmp(name, "dst_x") == 0 || strcmp(name, "x") == 0) {
+            offset = 0x90; field_kind = 3;
+        } else if (strcmp(name, "dst_y") == 0 || strcmp(name, "y") == 0) {
+            offset = 0x94; field_kind = 3;
+        } else if (strcmp(name, "dst_z") == 0 || strcmp(name, "z") == 0) {
+            offset = 0x98; field_kind = 3;
+        } else if (strcmp(name, "ox") == 0) { offset = 0x9c; field_kind = 3; }
+        else if (strcmp(name, "oy") == 0) { offset = 0xa0; field_kind = 3; }
+        else if (strcmp(name, "oz") == 0) { offset = 0xa4; field_kind = 3; }
+        else if (strcmp(name, "prev_x") == 0 || strcmp(name, "xPrev") == 0) {
+            offset = 0xa8; field_kind = 3;
+        } else if (strcmp(name, "prev_y") == 0 || strcmp(name, "yPrev") == 0) {
+            offset = 0xac; field_kind = 3;
+        } else if (strcmp(name, "prev_z") == 0 || strcmp(name, "zPrev") == 0) {
+            offset = 0xb0; field_kind = 3;
+        }
+    /* C2DLayout fields use the offsets from 42B6D0's Register calls. */
+    } else if (*(int32_t *)(intptr_t)native_ptr == (int32_t)(intptr_t)&g299) {
+        if (strcmp(name, "roll_x") == 0) { offset = 0xec; field_kind = 3; }
+        else if (strcmp(name, "roll_y") == 0) { offset = 0xf0; field_kind = 3; }
+        else if (strcmp(name, "roll_z") == 0) { offset = 0xf4; field_kind = 3; }
+        else if (strcmp(name, "cor_x") == 0) { offset = 0xf8; field_kind = 3; }
+        else if (strcmp(name, "cor_y") == 0) { offset = 0xfc; field_kind = 3; }
+        else if (strcmp(name, "cor_z") == 0) { offset = 0x100; field_kind = 3; }
+        else if (strcmp(name, "scale_x") == 0) { offset = 0x104; field_kind = 3; }
+        else if (strcmp(name, "scale_y") == 0) { offset = 0x108; field_kind = 3; }
+        else if (strcmp(name, "scale_z") == 0) { offset = 0x10c; field_kind = 3; }
+        else if (strcmp(name, "cos_x") == 0) { offset = 0x110; field_kind = 3; }
+        else if (strcmp(name, "cos_y") == 0) { offset = 0x114; field_kind = 3; }
+        else if (strcmp(name, "cos_z") == 0) { offset = 0x118; field_kind = 3; }
+        else if (strcmp(name, "alpha") == 0) { offset = 0x11c; field_kind = 3; }
+        else if (strcmp(name, "blend") == 0) { offset = 0x120; field_kind = 1; }
+        else if (strcmp(name, "colorR") == 0) { offset = 0x124; field_kind = 1; }
+        else if (strcmp(name, "colorG") == 0) { offset = 0x128; field_kind = 1; }
+        else if (strcmp(name, "colorB") == 0) { offset = 0x12c; field_kind = 1; }
+    }
+
+    if (field_kind == 0)
+        return;
+    type = *(int32_t *)(intptr_t)value_ptr;
+    if (field_kind == 1) {
+        if ((type & 0x04000000) == 0)
+            return;
+        *(int32_t *)(intptr_t)(native_ptr + offset) =
+            *(int32_t *)(intptr_t)(value_ptr + 4);
+    } else if (field_kind == 2) {
+        if (type != 0x01000008 && (type & 0x04000000) == 0)
+            return;
+        *(uint8_t *)(intptr_t)(native_ptr + offset) =
+            (uint8_t)(*(int32_t *)(intptr_t)(value_ptr + 4) != 0);
+    } else {
+        if (type == 0x05000004) {
+            memcpy(&float_value, (const void *)(intptr_t)(value_ptr + 4),
+                   sizeof(float_value));
+        } else if (type == 0x05000002) {
+            float_value = (float)*(int32_t *)(intptr_t)(value_ptr + 4);
+        } else {
+            return;
+        }
+        *(float *)(intptr_t)(native_ptr + offset) = float_value;
+    }
+}
+
 // Address range: 0x489fa0 - 0x48a09f
 // IDA: SQInstance::Set(this, key, value). RetDec omitted the receiver and
 // the value argument from the generated prototype.
@@ -188213,6 +192284,7 @@ int32_t function_489fa0(int32_t this_ptr, int32_t key_ptr,
     index = key_data & 0x00ffffffu;
     slot = (int32_t *)(intptr_t)(this_ptr + 44 + 8 * index);
     retdec_squirrel_assign(slot, (const int32_t *)(intptr_t)value_ptr);
+    retdec_sync_native_instance_field(this_ptr, key_ptr, value_ptr);
     retdec_squirrel_release(descriptor[0], descriptor[1]);
     return 1;
 }
@@ -188278,7 +192350,6 @@ int32_t function_48a0a0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4) {
  * object layout, which is also why the project remains an x86 build.
  */
 static int32_t retdec_active_vm;
-static int32_t retdec_primary_shared_state;
 /* RetDec removed the hidden ECX receiver from the native Squirrel classes.
  * The parser is entered through a single compiler object, so keep the active
  * object addresses explicit while preserving the generated function bodies. */
@@ -188583,6 +192654,14 @@ static __declspec(noinline) void retdec_trace_realloc_state(
 
 static void retdec_squirrel_addref(int32_t type, int32_t data) {
     static int32_t trace_closure_ref_count;
+    if (retdec_is_release_watch_data(data)) {
+        retdec_trace_i32("sq-watch:raw-addref-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        retdec_trace_ref_watch("raw-addref", retdec_primary_shared_state,
+                               type, data);
+        retdec_trace_i32("sq-watch:raw-addref-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    }
     if ((type & 0x08000000) != 0 && data != 0) {
         int32_t before = *(int32_t *)(intptr_t)(data + 4);
         if ((uint32_t)data < 0x02000000u)
@@ -188606,6 +192685,25 @@ static void retdec_squirrel_addref(int32_t type, int32_t data) {
                 (int32_t)(uintptr_t)_ReturnAddress());
         retdec_trace("sq-addref-done");
     }
+}
+
+static void retdec_trace_squirrel_release_event(int32_t type,
+                                                int32_t data,
+                                                int32_t before) {
+    static volatile LONG event_count;
+    char message[256];
+    LONG sequence;
+
+    sequence = InterlockedIncrement(&event_count);
+    if (sequence > 4096)
+        return;
+    wsprintfA(message,
+              "sq-release-event:%ld type=0x%08lX data=0x%08lX before=%ld vtable=0x%08lX caller=0x%08lX",
+              (long)sequence, (unsigned long)(uint32_t)type,
+              (unsigned long)(uint32_t)data, (long)before,
+              (unsigned long)(uint32_t)*(int32_t *)(intptr_t)data,
+              (unsigned long)(uintptr_t)_ReturnAddress());
+    retdec_trace(message);
 }
 
 /* SQObjectPtr::Release decrements the object reference and dispatches the
@@ -188643,6 +192741,14 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
 
     if ((type & 0x08000000) == 0 || data == 0)
         return;
+    if (retdec_is_release_watch_data(data)) {
+        retdec_trace_i32("sq-watch:raw-release-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        retdec_trace_ref_watch("raw-release-before",
+                               retdec_primary_shared_state, type, data);
+        retdec_trace_i32("sq-watch:raw-release-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    }
     if ((uint32_t)data < 0x00100000u) {
         retdec_trace_i32("sq-release-invalid-type", type);
         retdec_trace_i32("sq-release-invalid-data", data);
@@ -188651,6 +192757,8 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
         return;
     }
     before = *(int32_t *)(data + 4);
+    if (type == 0x0A000020 || type == 0x0A008000)
+        retdec_trace_squirrel_release_event(type, data, before);
     if (retdec_is_init_savedata_closure(type, data))
         retdec_trace_init_ref_event(
             "release", type, data, before, before - 1,
@@ -188671,6 +192779,12 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
         retdec_trace_i32("sq-release-before", before);
     }
     retdec_squirrel_release_object_ref(data);
+    if (retdec_is_release_watch_data(data)) {
+        retdec_trace_ref_watch("raw-release-after",
+                               retdec_primary_shared_state, type, data);
+        retdec_trace_i32("sq-watch:raw-release-after-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    }
     if (type == 0x08004000)
         retdec_trace_i32("sq-release-after", *(int32_t *)(data + 4));
 }
@@ -188816,6 +192930,14 @@ static int32_t function_498200_this(int32_t this_ptr) {
 
     if (this_ptr == 0)
         return 0;
+    if (retdec_is_release_watch_data(this_ptr)) {
+        retdec_trace_ref_watch("table-destructor-before",
+                               retdec_primary_shared_state,
+                               0x0A000020, this_ptr);
+        retdec_trace_ref_watch("table-destructor-caller",
+                               retdec_primary_shared_state,
+                               0x0A000020, this_ptr);
+    }
     *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g74;
     function_48e520_this(this_ptr, 0);
     if (*(int32_t *)(intptr_t)(this_ptr + 4) > -1) {
@@ -188836,6 +192958,10 @@ static int32_t function_498200_this(int32_t this_ptr) {
         node[3] = g484;
     }
     function_4985b0((int32_t)(intptr_t)nodes);
+    if (retdec_is_release_watch_data(this_ptr))
+        retdec_trace_ref_watch("table-destructor-after",
+                               retdec_primary_shared_state,
+                               0x0A000020, this_ptr);
     return function_48e4d0_this(this_ptr);
 }
 
@@ -188988,6 +193114,7 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
     int32_t old_type;
     int32_t old_data;
     static int32_t trace_assign_ref_count;
+    static int32_t trace_assign_watch_count;
 
     if (dst == src)
         return;
@@ -188996,6 +193123,25 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
        different pairs, so reversing this order can release it prematurely. */
     old_type = dst[0];
     old_data = dst[1];
+    if (trace_assign_watch_count < 512 &&
+        (retdec_is_release_watch_data(src[1]) ||
+         retdec_is_release_watch_data(old_data))) {
+        retdec_trace_i32("sq-watch:assign-dst", (int32_t)(intptr_t)dst);
+        retdec_trace_i32("sq-watch:assign-src", (int32_t)(intptr_t)src);
+        retdec_trace_i32("sq-watch:assign-old-type", old_type);
+        retdec_trace_i32("sq-watch:assign-old-data", old_data);
+        retdec_trace_i32("sq-watch:assign-new-type", src[0]);
+        retdec_trace_i32("sq-watch:assign-new-data", src[1]);
+        if (retdec_is_release_watch_data(src[1]))
+            retdec_trace_i32("sq-watch:assign-new-before",
+                             *(int32_t *)(intptr_t)(src[1] + 4));
+        if (retdec_is_release_watch_data(old_data))
+            retdec_trace_i32("sq-watch:assign-old-before",
+                             *(int32_t *)(intptr_t)(old_data + 4));
+        retdec_trace_i32("sq-watch:assign-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++trace_assign_watch_count;
+    }
     if (retdec_is_init_savedata_closure(src[0], src[1])) {
         retdec_trace_i32("sq-assign-init-dst", (int32_t)(intptr_t)dst);
         retdec_trace_i32("sq-assign-init-src", (int32_t)(intptr_t)src);
@@ -189041,6 +193187,10 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
     dst[0] = src[0];
     dst[1] = src[1];
     retdec_squirrel_release(old_type, old_data);
+    if (trace_assign_watch_count <= 512 &&
+        retdec_is_release_watch_data(dst[1]))
+        retdec_trace_i32("sq-watch:assign-dst-after",
+                         *(int32_t *)(intptr_t)(dst[1] + 4));
 }
 
 /* SQObjectPtr::operator=(SQInteger/SQFloat) keeps the destination in ECX.
@@ -189249,6 +193399,23 @@ static uint32_t retdec_squirrel_key_hash(const int32_t *key) {
     return data >> 3;
 }
 
+static int32_t retdec_is_lookup_trace_name(const char *name) {
+    if (name == NULL)
+        return 0;
+    return strcmp(name, "TYPE_1HEAD") == 0 ||
+        strcmp(name, "TYPE_2HEAD") == 0 ||
+        strcmp(name, "TYPE_4HEAD") == 0 ||
+        strcmp(name, "TYPE_8HEAD") == 0 ||
+        strcmp(name, "TAKE_WALK") == 0 ||
+        strcmp(name, "TAKE_DASH1") == 0 ||
+        strcmp(name, "PR_HAND") == 0 ||
+        strcmp(name, "PR_PLAYER") == 0 ||
+        strcmp(name, "PR_ENEMY") == 0 ||
+        strcmp(name, "PR_BACK") == 0 ||
+        strcmp(name, "updateFunc") == 0 ||
+        strcmp(name, "SetTake") == 0;
+}
+
 /* Snapshot the actual SQTable buckets without assuming which bindings were
  * registered.  This is intentionally bounded because a malformed table must
  * not turn diagnostics into another crash. */
@@ -189405,6 +193572,61 @@ static int32_t retdec_ref_table_resize(int32_t table_ptr, int32_t new_slots) {
     return 1;
 }
 
+static void retdec_trace_ref_watch(const char *label, int32_t shared_state,
+                                   int32_t type, int32_t data) {
+    int32_t table_ptr = 0;
+    int32_t slots = 0;
+    int32_t buckets = 0;
+    int32_t node = 0;
+    int32_t refs = 0;
+    int32_t internal = 0;
+    int32_t vtable = 0;
+    LONG sequence;
+    char message[256];
+
+    if (!retdec_is_release_watch_data(data))
+        return;
+    sequence = InterlockedIncrement(&retdec_release_watch_event_count);
+    if (sequence > 4096)
+        return;
+
+    __try {
+        internal = *(int32_t *)(intptr_t)(data + 4);
+        vtable = *(int32_t *)(intptr_t)data;
+        if (shared_state != 0) {
+            table_ptr = shared_state + 24;
+            slots = *(int32_t *)(intptr_t)(table_ptr + 0);
+            buckets = *(int32_t *)(intptr_t)(table_ptr + 16);
+            if (slots > 0 && slots <= 0x100000 && buckets != 0) {
+                int32_t key[2] = { type, data };
+                int32_t bucket = buckets + 4 *
+                    (int32_t)(retdec_squirrel_key_hash(key) &
+                              (uint32_t)(slots - 1));
+                node = *(int32_t *)(intptr_t)bucket;
+                while (node != 0) {
+                    if (*(int32_t *)(intptr_t)(node + 0) == type &&
+                        *(int32_t *)(intptr_t)(node + 4) == data) {
+                        refs = *(int32_t *)(intptr_t)(node + 8);
+                        break;
+                    }
+                    node = *(int32_t *)(intptr_t)(node + 12);
+                }
+            }
+        }
+        wsprintfA(message,
+                  "sq-watch:%ld %s type=0x%08lX data=0x%08lX internal=%ld vtable=0x%08lX node=0x%08lX refs=%ld caller=0x%08lX",
+                  (long)sequence, label != NULL ? label : "event",
+                  (unsigned long)(uint32_t)type,
+                  (unsigned long)(uint32_t)data, (long)internal,
+                  (unsigned long)(uint32_t)vtable,
+                  (unsigned long)(uint32_t)node, (long)refs,
+                  (unsigned long)(uintptr_t)_ReturnAddress());
+        retdec_trace(message);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        retdec_trace("sq-watch:fault");
+    }
+}
+
 static int32_t retdec_ref_table_addref(int32_t shared_state,
                                        int32_t type, int32_t data) {
     int32_t table_ptr;
@@ -189554,17 +193776,32 @@ static int32_t retdec_squirrel_api_shared_state(int32_t receiver) {
 static void retdec_squirrel_api_addref(int32_t receiver,
                                        int32_t type, int32_t data) {
     int32_t shared_state = retdec_squirrel_api_shared_state(receiver);
+    retdec_trace_ref_watch("api-addref-before", shared_state, type, data);
+    if (retdec_is_release_watch_data(data))
+        retdec_trace_i32("sq-watch:api-addref-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
     if (!retdec_ref_table_addref(shared_state, type, data) &&
         shared_state == 0)
         retdec_squirrel_addref(type, data);
+    retdec_trace_ref_watch("api-addref-after", shared_state, type, data);
 }
 
 static int32_t retdec_squirrel_api_release(int32_t receiver,
                                             int32_t type, int32_t data) {
     int32_t shared_state = retdec_squirrel_api_shared_state(receiver);
-    if (shared_state != 0)
-        return retdec_ref_table_release(shared_state, type, data);
+    int32_t result;
+
+    retdec_trace_ref_watch("api-release-before", shared_state, type, data);
+    if (retdec_is_release_watch_data(data))
+        retdec_trace_i32("sq-watch:api-release-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    if (shared_state != 0) {
+        result = retdec_ref_table_release(shared_state, type, data);
+        retdec_trace_ref_watch("api-release-after", shared_state, type, data);
+        return result;
+    }
     retdec_squirrel_release(type, data);
+    retdec_trace_ref_watch("api-release-after", shared_state, type, data);
     return 1;
 }
 
@@ -189609,7 +193846,8 @@ static int32_t function_497a00_this(int32_t table_ptr, int32_t *key_ptr,
             strcmp(key_text, "_get") == 0 ||
             strcmp(key_text, "FadeIn") == 0 ||
             strcmp(key_text, "SetFade") == 0 ||
-            strcmp(key_text, "Resume") == 0)
+            strcmp(key_text, "Resume") == 0 ||
+            retdec_is_lookup_trace_name(key_text))
             interesting_key = 1;
     }
 
@@ -189651,6 +193889,11 @@ static int32_t function_497a00_this(int32_t table_ptr, int32_t *key_ptr,
                              *(int32_t *)(entry + 8));
             retdec_trace_i32("497a00:entry-key-data",
                              *(int32_t *)(entry + 12));
+            if (*(int32_t *)(entry + 8) == 0x08000010 &&
+                *(int32_t *)(entry + 12) != 0)
+                retdec_trace_squirrel_name(
+                    "497a00:entry-key-name",
+                    *(int32_t *)(entry + 12) + 28);
         }
         if (*(int32_t *)(entry + 12) == key_ptr[1] &&
             *(int32_t *)(entry + 8) == key_ptr[0]) {
@@ -189815,6 +194058,21 @@ static int32_t function_4a94e0_this(int32_t this_ptr) {
     return this_ptr;
 }
 
+static int32_t function_4a9c10_this(int32_t this_ptr) {
+    int32_t type;
+
+    if (this_ptr == 0 || g644 == 0)
+        return 0;
+    type = *(int32_t *)(intptr_t)(this_ptr + 4);
+    if (type != 0x0A000020 && type != 0x08000040 &&
+        type != 0x08004000)
+        return 0;
+    function_48ab90((int32_t)g644, type,
+                    *(int32_t *)(intptr_t)(this_ptr + 8));
+    function_48a460((int32_t)g644);
+    return 1;
+}
+
 static int32_t function_4a9570_this(int32_t this_ptr) {
     int32_t value_ptr;
 
@@ -189941,11 +194199,22 @@ static void function_460e00_register_actor_method(int32_t vm,
                                                   int32_t native_function,
                                                   int32_t type_wrapper,
                                                   int32_t argument_count) {
+    static int32_t trace_registration_count;
     int32_t slot;
 
-    /* The VM is separate from the Sqrat::Object pair.  The pair starts at
-       +8: [vftable, vm, type, data, owns-value]. */
-    function_48ab90(vm, object_ptr[2], object_ptr[3]);
+    /* object_ptr is the copied SquirrelObject, not the enclosing
+       Sqrat::Object.  Its value pair is [type, data] at +4/+8. */
+    if (trace_registration_count < 32) {
+        retdec_trace_i32("460e00:register-vm", vm);
+        retdec_trace_i32("460e00:register-object", (int32_t)(intptr_t)object_ptr);
+        retdec_trace_i32("460e00:register-object-0", object_ptr[0]);
+        retdec_trace_i32("460e00:register-object-1", object_ptr[1]);
+        retdec_trace_i32("460e00:register-object-2", object_ptr[2]);
+        retdec_trace_i32("460e00:register-native", native_function);
+        retdec_trace_i32("460e00:register-wrapper", type_wrapper);
+        ++trace_registration_count;
+    }
+    function_48ab90(vm, object_ptr[1], object_ptr[2]);
     function_48a480(vm, (int32_t)(intptr_t)name, -1);
     slot = function_48c2f0(vm, 8);
     if (slot != 0) {
@@ -190494,6 +194763,7 @@ static int32_t function_491a50_this(int32_t this_ptr, int32_t shared_state) {
 
 static int32_t function_491760_this(int32_t this_ptr) {
     static int32_t underflow_trace_count;
+    static int32_t pop_trace_count;
 
     if (this_ptr == 0)
         return 0;
@@ -190513,6 +194783,20 @@ static int32_t function_491760_this(int32_t this_ptr) {
     int32_t *slot = (int32_t *)(*(int32_t *)(this_ptr + 24) + 8 * (top - 1));
     int32_t old_type = slot[0];
     int32_t old_data = slot[1];
+    if (pop_trace_count < 512 && retdec_is_release_watch_data(old_data)) {
+        retdec_trace_i32("491760:pop-vm", this_ptr);
+        retdec_trace_i32("491760:pop-stack-block",
+                         *(int32_t *)(this_ptr + 24));
+        retdec_trace_i32("491760:pop-index", top - 1);
+        retdec_trace_i32("491760:pop-slot", (int32_t)(intptr_t)slot);
+        retdec_trace_i32("491760:pop-type", old_type);
+        retdec_trace_i32("491760:pop-data", old_data);
+        retdec_trace_i32("491760:pop-ref-before",
+                         *(int32_t *)(intptr_t)(old_data + 4));
+        retdec_trace_i32("491760:pop-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++pop_trace_count;
+    }
     slot[0] = g483;
     slot[1] = g484;
     *(int32_t *)(this_ptr + 48) = top - 1;
@@ -190534,6 +194818,7 @@ static int32_t function_4917b0_this(int32_t this_ptr, int32_t count) {
 }
 
 static int32_t function_491820_this(int32_t this_ptr, int32_t value_ptr) {
+    static int32_t trace_push_watch_count;
     int32_t top = *(int32_t *)(this_ptr + 48);
     if (top < 0)
         return 0;
@@ -190567,6 +194852,20 @@ static int32_t function_491820_this(int32_t this_ptr, int32_t value_ptr) {
     int32_t old_data = slot[1];
     int32_t new_data = *(int32_t *)(value_ptr + 4);
     int32_t new_type = *(int32_t *)value_ptr;
+
+    if (trace_push_watch_count < 512 &&
+        retdec_is_release_watch_data(new_data)) {
+        retdec_trace_i32("sq-watch:491820-vm", this_ptr);
+        retdec_trace_i32("sq-watch:491820-slot", (int32_t)(intptr_t)slot);
+        retdec_trace_i32("sq-watch:491820-top", top);
+        retdec_trace_i32("sq-watch:491820-type", new_type);
+        retdec_trace_i32("sq-watch:491820-data", new_data);
+        retdec_trace_i32("sq-watch:491820-before",
+                         *(int32_t *)(intptr_t)(new_data + 4));
+        retdec_trace_i32("sq-watch:491820-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++trace_push_watch_count;
+    }
 
     if ((old_type & 0x08000000) != 0 && old_data != 0 &&
         (uint32_t)old_data < 0x1000u) {
@@ -190621,6 +194920,10 @@ static int32_t function_491820_this(int32_t this_ptr, int32_t value_ptr) {
     if ((new_type & 0x08000000) != 0)
         ++*(int32_t *)(new_data + 4);
     retdec_squirrel_release(old_type, old_data);
+    if (trace_push_watch_count <= 512 &&
+        retdec_is_release_watch_data(new_data))
+        retdec_trace_i32("sq-watch:491820-after",
+                         *(int32_t *)(intptr_t)(new_data + 4));
     return (int32_t)slot;
 }
 
@@ -191187,6 +195490,13 @@ static void retdec_table_finalize(int32_t table_ptr) {
 
     if (table_ptr == 0)
         return;
+    if (retdec_is_release_watch_data(table_ptr)) {
+        retdec_trace_ref_watch("table-finalize-before",
+                               retdec_primary_shared_state,
+                               0x0A000020, table_ptr);
+        retdec_trace_i32("sq-watch:table-finalize-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    }
     data = *(int32_t *)(intptr_t)(table_ptr + 32);
     capacity = *(int32_t *)(intptr_t)(table_ptr + 36);
     if (data != 0 && capacity > 0) {
@@ -191198,6 +195508,10 @@ static void retdec_table_finalize(int32_t table_ptr) {
         }
     }
     retdec_table_set_delegate(table_ptr, 0);
+    if (retdec_is_release_watch_data(table_ptr))
+        retdec_trace_ref_watch("table-finalize-after",
+                               retdec_primary_shared_state,
+                               0x0A000020, table_ptr);
 }
 
 /* SQTable::Clone(), with the lost ECX table made explicit. */
@@ -192108,8 +196422,20 @@ int32_t function_48ab40(int32_t a1, int32_t a2, int32_t * a3) {
 // Address range: 0x48ab90 - 0x48abd7
 int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3) {
     int32_t value[2]; // bp-8, matches the original SQObject pair
+    static int32_t trace_push_watch_count;
     value[0] = a2; // 0x48ab9c
     value[1] = a3; // 0x48ab9f
+    if (trace_push_watch_count < 512 &&
+        retdec_is_release_watch_data(a3)) {
+        retdec_trace_i32("sq-watch:48ab90-vm", a1);
+        retdec_trace_i32("sq-watch:48ab90-type", a2);
+        retdec_trace_i32("sq-watch:48ab90-data", a3);
+        retdec_trace_i32("sq-watch:48ab90-before",
+                         *(int32_t *)(intptr_t)(a3 + 4));
+        retdec_trace_i32("sq-watch:48ab90-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++trace_push_watch_count;
+    }
     if ((a2 & 0x8000000) != 0) {
         int32_t * v2 = (int32_t *)(a3 + 4); // 0x48aba9
         *v2 = *v2 + 1;
@@ -192129,6 +196455,9 @@ int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3) {
          * zero-count objects; invoking the raw virtual release here causes
          * heap corruption before the VM finishes initializing. */
     }
+    if (trace_push_watch_count <= 512 &&
+        retdec_is_release_watch_data(a3))
+        retdec_trace_i32("sq-watch:48ab90-after", *v3);
     // 0x48abd3
     return result2;
 }
@@ -192519,8 +196848,14 @@ int32_t function_48b160(int32_t a1, int32_t a2) {
 
 // Address range: 0x48b180 - 0x48b194
 int32_t function_48b180(int32_t a1, int32_t a2, int32_t a3) {
-    // 0x48b180
-    return function_49a520();
+    /* sub_48B180 forwards both the VM receiver and its shared state to
+       SQSharedState::CollectGarbage.  RetDec dropped that __thiscall
+       receiver from sub_49A520. */
+    (void)a2;
+    (void)a3;
+    if (a1 == 0)
+        return 0;
+    return function_49a520_this(*(int32_t *)(a1 + 140), a1);
 }
 
 // Address range: 0x48b1a0 - 0x48b31c
@@ -192801,7 +197136,64 @@ int32_t function_48b5a0(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x48b630 - 0x48b83e
+/* sq_next is still used by the SqPlus variable/type helpers even when the
+ * optional C++ VM executes the script bytecode.  The translated body below
+ * lost the three output object receivers after nested calls; keep the API
+ * boundary explicit and let the recovered FOREACH adapter own the outputs. */
+static int32_t retdec_sq_next_safe(int32_t vm, int32_t index) {
+    int32_t stack_data;
+    int32_t top;
+    int32_t stackbase;
+    int32_t object_slot;
+    int32_t refpos_slot;
+    int32_t object_value[2];
+    int32_t key_value[2] = { g483, g484 };
+    int32_t out_value[2] = { g483, g484 };
+    int32_t jump = 666;
+    int32_t result;
+
+    if (vm == 0)
+        return -1;
+    stack_data = *(int32_t *)(intptr_t)(vm + 24);
+    top = *(int32_t *)(intptr_t)(vm + 48);
+    stackbase = *(int32_t *)(intptr_t)(vm + 52);
+    if (stack_data == 0 || top <= 0 || top > *(int32_t *)(intptr_t)(vm + 28))
+        return -1;
+    object_slot = index < 0
+        ? function_491880_this(vm, index)
+        : function_4918a0_this(vm, index - 1 + stackbase);
+    refpos_slot = function_491880_this(vm, -1);
+    if (object_slot == 0 || refpos_slot == 0)
+        return -1;
+
+    object_value[0] = *(int32_t *)(intptr_t)object_slot;
+    object_value[1] = *(int32_t *)(intptr_t)(object_slot + 4);
+    retdec_squirrel_addref(object_value[0], object_value[1]);
+    result = function_494da0(
+        object_value,
+        key_value,
+        out_value,
+        refpos_slot,
+        0,
+        666,
+        &jump);
+    retdec_squirrel_release(object_value[0], object_value[1]);
+    if (result == 0 || jump == 666) {
+        retdec_release_squirrel_value(key_value);
+        retdec_release_squirrel_value(out_value);
+        return -1;
+    }
+
+    function_491820_this(vm, key_value);
+    retdec_release_squirrel_value(key_value);
+    function_491820_this(vm, out_value);
+    retdec_release_squirrel_value(out_value);
+    return 0;
+}
+
 int32_t function_48b630(int32_t a1, int32_t a2) {
+    return retdec_sq_next_safe(a1, a2);
+#if 0
     int32_t v1 = a2;
     int32_t v2; // 0x48b630
     if (a2 < 0) {
@@ -192902,6 +197294,7 @@ int32_t function_48b630(int32_t a1, int32_t a2) {
     int32_t * v14 = (int32_t *)(v5 + 4); // 0x48b7d3
     *v14 = *v14 - 1;
     return 0;
+#endif
 }
 
 // Address range: 0x48b840 - 0x48b862
@@ -194486,14 +198879,13 @@ int32_t function_48ce70(int32_t a1, int32_t a2) {
             return function_48ac00(a1, "rawget works only on array/table/instance and class");
         }
         // 0x48cf57
-                function_491880_this(a1, -1);
-                int32_t v5 = function_491880_this(a1, -1); // 0x48cf65
-        int32_t lookup_value[2] = { g483, g484 };
+        /* SQVM::RawGet uses the current top slot for both the key and the
+           result.  Keeping that alias is required by 4AA110, which reads
+           the user data back from -1 after this call. */
+        int32_t v5 = function_491880_this(a1, -1); // 0x48cf65
         v4 = v5;
         int32_t v6 = function_48c080_this(
-            *(int32_t *)(v1 + 4), v5,
-            (int32_t)(intptr_t)lookup_value); // 0x48cf6e
-        retdec_squirrel_release(lookup_value[0], lookup_value[1]);
+            *(int32_t *)(v1 + 4), v5, v5); // 0x48cf6e
         v3 = &v4;
         if ((char)v6 != 0) {
             // 0x48cedf
@@ -194575,7 +198967,10 @@ int32_t function_48ce70(int32_t a1, int32_t a2) {
             ++trace_sq_rawget_failure_count;
         }
     }
-    return function_48ac00((int32_t)&g1224, (char *)&g1224);
+    /* The raw-get failure still belongs to this VM.  The decompiler lost
+       the receiver and substituted the shared scratch object here, which
+       corrupts _lasterror before the caller can propagate the failure. */
+    return function_48ac00(a1, "the index doesn't exist");
 }
 
 // Address range: 0x48cfa0 - 0x48d0a2
@@ -199348,30 +203743,12 @@ int32_t function_490370(int32_t generator_ptr, int32_t a1) {
         int32_t v14 = *(int32_t *)(v2 + 32) + 8 * v13; // 0x49044b
         int32_t v15 = *v12 + 8 * (*v7 + v13); // 0x49044e
         int32_t * v16 = (int32_t *)v14; // 0x490451
-        /* Yield moves each VM slot into the generator.  This is a normal
-           SQObjectPtr assignment followed by clearing the source slot; the
-           assignment helper uses the old destination type for release. */
+        /* Yield moves each VM slot into the generator, then assigns null to
+           the source slot.  The second assignment performs the source
+           release exactly once, matching SQObjectPtr::Null(). */
         retdec_squirrel_assign(v16, (const int32_t *)(intptr_t)v15);
-        retdec_release_squirrel_value((int32_t *)(intptr_t)v15);
-        int32_t v23 = 8 * (*v7 + v13) + *v12; // 0x490493
-        int32_t * v24 = (int32_t *)v23; // 0x490496
-        int32_t * v25 = (int32_t *)(v23 + 4); // 0x4904a1
-        int32_t v26 = *v25; // 0x4904a1
-        *v25 = g484;
-        int32_t v27 = (int32_t)g483; // 0x4904a7
-        *v24 = v27;
-        int32_t * v28; // 0x4904ba
-        if ((v27 & 0x8000000) != 0) {
-            // 0x4904b7
-            v28 = (int32_t *)(*v25 + 4);
-            *v28 = *v28 + 1;
-        }
-        int32_t * v29; // 0x4904c6
-        if ((*v24 & 0x8000000) != 0) {
-            // 0x4904c6
-            v29 = (int32_t *)(v26 + 4);
-            *v29 = *v29 - 1;
-        }
+        retdec_squirrel_assign((int32_t *)(intptr_t)v15,
+                               v10);
         // 0x4904d2
         v13++;
         while (v13 != v8) {
@@ -199380,10 +203757,8 @@ int32_t function_490370(int32_t generator_ptr, int32_t a1) {
             v15 = *v12 + 8 * (*v7 + v13);
             v16 = (int32_t *)v14;
             retdec_squirrel_assign(v16, (const int32_t *)(intptr_t)v15);
-            retdec_release_squirrel_value((int32_t *)(intptr_t)v15);
-            // 0x49048b
-            v23 = 8 * (*v7 + v13) + *v12;
-            retdec_release_squirrel_value((int32_t *)(intptr_t)v23);
+            retdec_squirrel_assign((int32_t *)(intptr_t)v15,
+                                   v10);
             // 0x4904d2
             v13++;
         }
@@ -199409,7 +203784,7 @@ int32_t function_490370(int32_t generator_ptr, int32_t a1) {
             *(int32_t *)(v30 - 4) = 8 * v41;
             *(int32_t *)(v30 - 8) = 8 * v38;
             *(int32_t *)(v30 - 12) = *v36;
-            *v36 = function_498590(v37, v33);
+            *v36 = function_498590(*v36, 8 * v41);
             *v34 = v41;
             v40 = *v35;
         }
@@ -199447,7 +203822,7 @@ int32_t function_490370(int32_t generator_ptr, int32_t a1) {
                 *(int32_t *)(v30 - 4) = 8 * v41;
                 *(int32_t *)(v30 - 8) = 8 * v38;
                 *(int32_t *)(v30 - 12) = *v36;
-                *v36 = function_498590(v37, v50);
+                *v36 = function_498590(*v36, 8 * v41);
                 *v34 = v41;
                 v40 = *v35;
             }
@@ -199498,7 +203873,7 @@ int32_t function_490370(int32_t generator_ptr, int32_t a1) {
             *(int32_t *)(v30 - 4) = 16 * v62;
             *(int32_t *)(v30 - 8) = 16 * v59;
             *(int32_t *)(v30 - 12) = *v55;
-            *v55 = function_498590(v58, (int32_t)&g1224);
+            *v55 = function_498590(*v55, 16 * v62);
             *v54 = v62;
             v60 = *v53;
         }
@@ -199527,10 +203902,11 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
     // 0x490630
     static volatile LONG trace_resume_count;
     LONG trace_resume_index = InterlockedIncrement(&trace_resume_count);
+    int32_t null_value[2] = { g483, g484 };
     int32_t v1 = generator_ptr; // hidden this pointer
     int32_t a1 = vm;
     int32_t a2 = resume_value;
-    if (trace_resume_index <= 128) {
+    if (trace_resume_index <= 4096) {
         retdec_trace_i32("sq-meta:generator-resume-generator", generator_ptr);
         retdec_trace_i32("sq-meta:generator-resume-vm", vm);
         retdec_trace_i32("sq-meta:generator-resume-value", resume_value);
@@ -199551,16 +203927,27 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
     int32_t v3 = *v2; // 0x49063f
     if (v3 == 2) {
         // 0x490647
+        if (trace_resume_index <= 4096) {
+            retdec_trace_i32("sq-meta:generator-resume-error-state", v3);
+            retdec_trace_i32("sq-meta:generator-resume-error-caller",
+                             (int32_t)(uintptr_t)_ReturnAddress());
+        }
         return function_499a20(a1, "resuming dead generator") & -256;
     }
     if (v3 == 0) {
         // 0x490665
+        if (trace_resume_index <= 4096) {
+            retdec_trace_i32("sq-meta:generator-resume-error-state", v3);
+            retdec_trace_i32("sq-meta:generator-resume-error-caller",
+                             (int32_t)(uintptr_t)_ReturnAddress());
+        }
         return function_499a20(a1, "resuming active generator") & -256;
     }
     uint32_t v4 = *(int32_t *)(v1 + 36); // 0x490639
     int32_t * v5 = (int32_t *)(a1 + 48); // 0x490683
     int32_t * v6 = (int32_t *)(a1 + 52); // 0x490686
     int32_t * v7 = (int32_t *)(a1 + 100); // 0x49068c
+    int32_t old_stackbase = *v6;
     int32_t v8 = *v7; // 0x49068c
     int32_t v9 = v8; // 0x490692
     if (v8 == *(int32_t *)(a1 + 104)) {
@@ -199612,62 +203999,19 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
     }
     // 0x49070e
     if (v4 >= 1) {
-        int32_t * v20 = (int32_t *)(v1 + 32); // 0x490726
-        int32_t v21 = 0; // 0x4907aa
-        int32_t v22 = 8 * (*v6 + v21) + *(int32_t *)(a1 + 24); // 0x49072b
-        int32_t * v23 = (int32_t *)v22; // 0x49072e
-        int32_t v26 = *v20 + 8 * v21; // 0x490736
-        /* This is SQObjectPtr assignment from the generator's saved stack
-           into the resumed VM frame.  Keep acquisition/release in one place
-           so a stale empty reference cannot become `--NULL` during resume. */
-        retdec_squirrel_assign(v23, (const int32_t *)(intptr_t)v26);
-        int32_t v31 = *v20; // 0x49076b
-        int32_t * v32 = (int32_t *)v31; // 0x49076e
-        int32_t * v33 = (int32_t *)(v31 + 4); // 0x490779
-        int32_t v34 = *v33; // 0x490779
-        *v33 = g484;
-        int32_t v35 = (int32_t)g483; // 0x49077f
-        *v32 = v35;
-        int32_t * v36; // 0x490792
-        if ((v35 & 0x8000000) != 0) {
-            // 0x49078f
-            v36 = (int32_t *)(*v33 + 4);
-            *v36 = *v36 + 1;
-        }
-        int32_t * v37; // 0x49079e
-        if ((*v32 & 0x8000000) != 0) {
-            // 0x49079e
-            v37 = (int32_t *)(v34 + 4);
-            *v37 = *v37 - 1;
-        }
-        // 0x4907aa
-        v21++;
-        while (v21 != v4) {
-            // 0x490720
-            v22 = 8 * (*v6 + v21) + *(int32_t *)(a1 + 24);
-            v23 = (int32_t *)v22;
-            v26 = *v20 + 8 * v21;
-            retdec_squirrel_assign(v23, (const int32_t *)(intptr_t)v26);
-            // 0x49076b
-            v31 = *v20;
-            v32 = (int32_t *)v31;
-            v33 = (int32_t *)(v31 + 4);
-            v34 = *v33;
-            *v33 = g484;
-            v35 = (int32_t)g483;
-            *v32 = v35;
-            if ((v35 & 0x8000000) != 0) {
-                // 0x49078f
-                v36 = (int32_t *)(*v33 + 4);
-                *v36 = *v36 + 1;
-            }
-            if ((*v32 & 0x8000000) != 0) {
-                // 0x49079e
-                v37 = (int32_t *)(v34 + 4);
-                *v37 = *v37 - 1;
-            }
-            // 0x4907aa
-            v21++;
+        int32_t source_block = *(int32_t *)(v1 + 32);
+        int32_t destination_block = *(int32_t *)(a1 + 24);
+        int32_t destination_base = *v6;
+        for (int32_t index = 0; index < (int32_t)v4; ++index) {
+            int32_t *destination = (int32_t *)(intptr_t)(
+                destination_block + 8 * (destination_base + index));
+            int32_t *source = (int32_t *)(intptr_t)(source_block + 8 * index);
+
+            /* Resume moves each saved slot into the VM, then clears that
+               exact source slot. */
+            retdec_squirrel_assign(destination, source);
+            retdec_squirrel_assign(source,
+                                   null_value);
         }
     }
     int32_t * v38 = (int32_t *)v13; // 0x4907b4
@@ -199695,7 +204039,7 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
             *(int32_t *)(v15 - 4) = 8 * v50;
             *(int32_t *)(v15 - 8) = 8 * v47;
             *(int32_t *)(v15 - 12) = *v45;
-            *v45 = function_498590(v46, (int32_t)&g1224);
+            *v45 = function_498590(*v45, 8 * v50);
             *v42 = v50;
             v49 = *v44;
         }
@@ -199742,7 +204086,7 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
                 *(int32_t *)(v15 - 4) = 8 * v50;
                 *(int32_t *)(v15 - 8) = 8 * v47;
                 *(int32_t *)(v15 - 12) = *v45;
-                *v45 = function_498590(v46, (int32_t)&g1224);
+                *v45 = function_498590(*v45, 8 * v50);
                 *v42 = v50;
                 v49 = *v44;
             }
@@ -199783,11 +204127,11 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
     *v5 = *v6 + v4;
     *(int32_t *)(*v12 + 28) = *v5 - *v6;
     int32_t v63 = *v12; // 0x490892
-    *(int32_t *)(v63 + 24) = *v6 - *v6;
+    *(int32_t *)(v63 + 24) = *v6 - old_stackbase;
     *v2 = 0;
     if (*(int32_t *)(a1 + 80) == 0x1000001 || *(int32_t *)(a1 + 84) == *(int32_t *)(*v12 + 12)) {
         // 0x4908c4
-        if (trace_resume_index <= 128)
+        if (trace_resume_index <= 4096)
             retdec_trace_i32("sq-meta:generator-resume-result", 1);
         return v63 & -256 | 1;
     }
@@ -199798,7 +204142,7 @@ int32_t function_490630(int32_t generator_ptr, int32_t vm,
     {
         int32_t result = function_492dc0((int32_t)&g1224,
                                           (int32_t)&g1224);
-        if (trace_resume_index <= 128)
+        if (trace_resume_index <= 4096)
             retdec_trace_i32("sq-meta:generator-resume-result", result);
         return result & -256 | 1;
     }
@@ -200722,6 +205066,35 @@ int32_t function_491340(int32_t a1, int32_t a2, int32_t a3) {
     return v1 + 1;
 }
 
+/* SQArray::Next(refpos, outkey, outval), with the array receiver restored.
+ * RetDec emitted the original member body without ECX, so the old
+ * three-argument symbol cannot recover the array's vector. */
+static int32_t function_491340_array_next(int32_t array_ptr,
+                                           int32_t refpos_ptr,
+                                           int32_t out_key_ptr,
+                                           int32_t out_value_ptr) {
+    int32_t index;
+    int32_t count;
+    int32_t values;
+    int32_t *source;
+
+    if (array_ptr == 0 || refpos_ptr == 0 ||
+        out_key_ptr == 0 || out_value_ptr == 0)
+        return -1;
+    index = function_48e4b0((int32_t *)(intptr_t)refpos_ptr);
+    count = *(int32_t *)(intptr_t)(array_ptr + 28);
+    values = *(int32_t *)(intptr_t)(array_ptr + 24);
+    if (index < 0 || index >= count || values == 0)
+        return -1;
+
+    function_48e0e0_this(out_key_ptr, index);
+    source = (int32_t *)(intptr_t)(values + 8 * index);
+    if (source[0] == 0x08010000 && source[1] != 0)
+        source = (int32_t *)(intptr_t)(source[1] + 12);
+    retdec_squirrel_assign((int32_t *)(intptr_t)out_value_ptr, source);
+    return index + 1;
+}
+
 // Address range: 0x491400 - 0x491492
 /* SQInstance::Clone() keeps the source instance in ECX and receives the
  * shared state as its only stack argument.  RetDec dropped that receiver;
@@ -200924,8 +205297,9 @@ int32_t function_4915b0(int32_t a1, int32_t a2, int32_t a3) {
     if ((char)v10 != 0) {
         // 0x491686
         __writefsdword(0, v1);
-        return v10 & -256 | 1;
-    }
+    return v10 & -256 | 1;
+}
+
     int32_t * v11 = (int32_t *)(a3 + 4); // 0x491655
     int32_t v12 = *v11; // 0x491655
     int32_t * v13 = (int32_t *)a3; // 0x491658
@@ -201167,10 +205541,27 @@ int32_t function_4918b0(void) {
 }
 
 // Address range: 0x491910 - 0x4919ac
-int32_t function_491910(void) {
+static int32_t function_491910_this(int32_t this_ptr) {
+    static volatile LONG trace_kill_count;
     int32_t v1 = __readfsdword(0); // bp-16, 0x491920
     __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x491910
+    int32_t v2 = this_ptr; // hidden __thiscall receiver
+    if (v2 == 0) {
+        __writefsdword(0, v1);
+        return 0;
+    }
+    LONG kill_index = InterlockedIncrement(&trace_kill_count);
+    if (kill_index <= 256) {
+        retdec_trace_i32("sq-meta:generator-kill", v2);
+        retdec_trace_i32("sq-meta:generator-kill-state-before",
+                         *(int32_t *)(v2 + 116));
+        retdec_trace_i32("sq-meta:generator-kill-closure-type",
+                         *(int32_t *)(v2 + 24));
+        retdec_trace_i32("sq-meta:generator-kill-closure-data",
+                         *(int32_t *)(v2 + 28));
+        retdec_trace_i32("sq-meta:generator-kill-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+    }
     *(int32_t *)(v2 + 116) = 2;
     int32_t v3 = 0x1000001; // bp-24, 0x491942
     function_48d0f0_this((int32_t)v2 + 32, 0, &v3);
@@ -201204,13 +205595,32 @@ int32_t function_491910(void) {
     return result2;
 }
 
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_491910(void) {
+    __asm {
+        push ecx
+        call function_491910_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_491910(void) {
+    return 0;
+}
+#endif
+
 // Address range: 0x4919b0 - 0x491a45
 // From class:    .?AUSQGenerator@@
 // Type:          virtual member function
-int32_t function_4919b0(void) {
+static int32_t function_4919b0_this(int32_t this_ptr) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x4919c0
     __writefsdword(0, (int32_t)&v1);
-    int32_t v3; // 0x4919b0
+    int32_t v3 = this_ptr; // hidden __thiscall receiver
+    if (v3 == 0) {
+        __writefsdword(0, v1);
+        return 0;
+    }
     int32_t v2 = 0x1000001; // bp-24, 0x4919db
     function_48d0f0_this((int32_t)v3 + 32, 0, &v2);
     int32_t * v4 = (int32_t *)(v3 + 28); // 0x4919fb
@@ -201242,6 +205652,21 @@ int32_t function_4919b0(void) {
     __writefsdword(0, v1);
     return result2;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_4919b0(void) {
+    __asm {
+        push ecx
+        call function_4919b0_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_4919b0(void) {
+    return 0;
+}
+#endif
 
 // Address range: 0x491a50 - 0x491be5
 // From class:    .?AUSQVM@@
@@ -201604,8 +206029,110 @@ int32_t function_491fe0(int32_t a1, int32_t a2) {
         vm, "attempt to negate a %s", function_48e460(a2)) & -256;
 }
 
+/* Squirrel 2.2.2's SQVM::ObjCmp, kept outside the RetDec floating-point
+ * temporaries that lost their register assignments. */
+static int32_t retdec_squirrel_compare_values(int32_t left_ptr,
+                                                int32_t right_ptr,
+                                                int32_t *result_ptr)
+{
+    int32_t left_type;
+    int32_t right_type;
+    uint32_t left_raw;
+    uint32_t right_raw;
+    int32_t vm;
+
+    if (left_ptr == 0 || right_ptr == 0 || result_ptr == NULL)
+        return 0;
+    left_type = *(int32_t *)(intptr_t)left_ptr;
+    right_type = *(int32_t *)(intptr_t)right_ptr;
+    left_raw = (uint32_t)left_type & 0x00ffffffu;
+    right_raw = (uint32_t)right_type & 0x00ffffffu;
+
+    if (left_type == right_type) {
+        int32_t left_data = *(int32_t *)(intptr_t)(left_ptr + 4);
+        int32_t right_data = *(int32_t *)(intptr_t)(right_ptr + 4);
+
+        if (left_data == right_data) {
+            *result_ptr = 0;
+            return 1;
+        }
+        if (left_raw == 0x10u && left_data != 0 && right_data != 0) {
+            const char *left_text = (const char *)(intptr_t)(left_data + 28);
+            const char *right_text =
+                (const char *)(intptr_t)(right_data + 28);
+            int32_t compare = strcmp(left_text, right_text);
+            *result_ptr = compare < 0 ? -1 : compare > 0 ? 1 : 0;
+            return 1;
+        }
+        if (left_raw == 0x02u) {
+            *result_ptr = left_data < right_data ? -1 : 1;
+            return 1;
+        }
+        if (left_raw == 0x04u) {
+            float left_value;
+            float right_value;
+            memcpy(&left_value, &left_data, sizeof(left_value));
+            memcpy(&right_value, &right_data, sizeof(right_value));
+            if (left_value == right_value)
+                *result_ptr = 0;
+            else
+                *result_ptr = left_value < right_value ? -1 : 1;
+            return 1;
+        }
+
+        /* Tables, userdata and instances use __cmp when a delegate provides
+         * it.  The title scripts compare their identity values here; retain
+         * the VM's ordinary pointer ordering for the no-delegate case. */
+        if (left_raw == 0x20u || left_raw == 0x80u ||
+            left_raw == 0x8000u) {
+            *result_ptr = (uint32_t)left_data < (uint32_t)right_data
+                ? -1 : 1;
+            return 1;
+        }
+        *result_ptr = (uint32_t)left_data < (uint32_t)right_data ? -1 : 1;
+        return 1;
+    }
+
+    if ((left_raw == 0x02u || left_raw == 0x04u) &&
+        (right_raw == 0x02u || right_raw == 0x04u)) {
+        float left_value;
+        float right_value;
+        if (left_raw == 0x02u) {
+            left_value = (float)*(int32_t *)(intptr_t)(left_ptr + 4);
+        } else {
+            memcpy(&left_value, (const void *)(intptr_t)(left_ptr + 4),
+                   sizeof(left_value));
+        }
+        if (right_raw == 0x02u) {
+            right_value = (float)*(int32_t *)(intptr_t)(right_ptr + 4);
+        } else {
+            memcpy(&right_value, (const void *)(intptr_t)(right_ptr + 4),
+                   sizeof(right_value));
+        }
+        if (left_value == right_value)
+            *result_ptr = 0;
+        else
+            *result_ptr = left_value < right_value ? -1 : 1;
+        return 1;
+    }
+    if (left_raw == 0x01u) {
+        *result_ptr = -1;
+        return 1;
+    }
+    if (right_raw == 0x01u) {
+        *result_ptr = 1;
+        return 1;
+    }
+
+    vm = retdec_stack_vm();
+    if (vm != 0)
+        (void)function_499d30(vm, left_ptr, right_ptr);
+    return 0;
+}
+
 // Address range: 0x4920a0 - 0x492365
 int32_t function_4920a0(int32_t a1, int32_t a2, int32_t * a3) {
+    return retdec_squirrel_compare_values(a1, a2, a3);
     // 0x4920a0
     int32_t v1; // 0x4920a0
     uint32_t v2 = v1;
@@ -202740,6 +207267,12 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
     int32_t native_value[2] = { 0x08000200, native_closure };
     int32_t index;
     int32_t trace_savedata_call;
+    static int32_t trace_invalid_native_count;
+    static int32_t trace_native_call_count;
+    static int32_t trace_native_typecheck_count;
+    static int32_t trace_var_set_typecheck_count;
+    MEMORY_BASIC_INFORMATION native_memory;
+    int32_t native_pointer_executable;
 
     if (suspend_ptr != 0)
         *(char *)(intptr_t)suspend_ptr = 0;
@@ -202775,6 +207308,37 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
     }
 
     if (typecheck_count > 0 && typecheck_block != 0) {
+        int32_t is_var_set = *(int32_t *)(intptr_t)(native_closure + 60) ==
+            (int32_t)(intptr_t)function_4aaf30;
+        if (is_var_set || trace_native_typecheck_count < 128) {
+            retdec_trace("native-adapter:typecheck-frame");
+            retdec_trace_i32("native-adapter:typecheck-closure",
+                             native_closure);
+            retdec_trace_i32("native-adapter:typecheck-function",
+                             *(int32_t *)(intptr_t)(native_closure + 60));
+            retdec_trace_i32("native-adapter:typecheck-nargs", nargs);
+            retdec_trace_i32("native-adapter:typecheck-stackbase", stackbase);
+            retdec_trace_i32("native-adapter:typecheck-top",
+                             *(int32_t *)(intptr_t)(vm + 48));
+            retdec_trace_i32("native-adapter:typecheck-nparams",
+                             nparams_check);
+            retdec_trace_i32("native-adapter:typecheck-count", typecheck_count);
+            retdec_trace_i32("native-adapter:typecheck-block", typecheck_block);
+            for (index = 0; index < nargs && index < 8; ++index) {
+                slot = (int32_t *)(intptr_t)(
+                    stack_data + 8 * (stackbase + index));
+                retdec_trace_i32("native-adapter:typecheck-arg-index", index);
+                retdec_trace_i32("native-adapter:typecheck-arg-type", slot[0]);
+                retdec_trace_i32("native-adapter:typecheck-arg-data", slot[1]);
+                if (is_var_set && slot[0] == 0x08000010 && slot[1] != 0)
+                    retdec_trace_squirrel_name(
+                        "native-adapter:typecheck-arg-name", slot[1] + 28);
+            }
+            if (is_var_set)
+                ++trace_var_set_typecheck_count;
+            else
+                ++trace_native_typecheck_count;
+        }
         for (index = 0; index < nargs && index < typecheck_count; ++index) {
             int32_t expected_mask = *(int32_t *)(intptr_t)(
                 typecheck_block + 4 * index);
@@ -202908,6 +207472,52 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
             retdec_trace_i32("savedata-native-arg-type", slot[0]);
             retdec_trace_i32("savedata-native-arg-data", slot[1]);
         }
+    }
+
+    native_pointer_executable = 0;
+    if (VirtualQuery((const void *)(uintptr_t)(uint32_t)native_function_ptr,
+                     &native_memory, sizeof(native_memory)) != 0 &&
+        native_memory.State == MEM_COMMIT &&
+        (native_memory.Protect == PAGE_EXECUTE ||
+         native_memory.Protect == PAGE_EXECUTE_READ ||
+         native_memory.Protect == PAGE_EXECUTE_READWRITE ||
+         native_memory.Protect == PAGE_EXECUTE_WRITECOPY)) {
+        native_pointer_executable = 1;
+    }
+    if ((!native_pointer_executable ||
+         ((uint32_t)native_function_ptr & 0xffffu) == 0xde0cu ||
+         ((uint32_t)native_function_ptr & 0xffffu) == 0xfe0cu ||
+         ((uint32_t)native_function_ptr & 0xffffu) == 0xee0cu) &&
+        trace_invalid_native_count < 8) {
+        int32_t name_type =
+            *(int32_t *)(intptr_t)(native_closure + 68);
+        int32_t name_data =
+            *(int32_t *)(intptr_t)(native_closure + 72);
+        retdec_trace_i32("48ace0:invalid-closure", native_closure);
+        retdec_trace_i32("48ace0:invalid-function",
+                         native_function_ptr);
+        retdec_trace_i32("48ace0:invalid-vtable",
+                         *(int32_t *)(intptr_t)native_closure);
+        retdec_trace_i32("48ace0:invalid-nparams",
+                         nparams_check);
+        retdec_trace_i32("48ace0:invalid-name-type", name_type);
+        retdec_trace_i32("48ace0:invalid-name-data", name_data);
+        retdec_trace_i32("48ace0:invalid-callsite",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        retdec_trace_i32("48ace0:invalid-protect",
+                         native_memory.Protect);
+        if (name_type == 0x08000010 && name_data != 0)
+            retdec_trace_squirrel_name(
+                "48ace0:invalid-name", name_data + 28);
+        ++trace_invalid_native_count;
+    }
+
+    if (trace_native_call_count < 20000) {
+        retdec_trace_i32("48ace0:call-closure", native_closure);
+        retdec_trace_i32("48ace0:call-function", native_function_ptr);
+        retdec_trace_i32("48ace0:call-site",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++trace_native_call_count;
     }
 
     return_code = ((int32_t (__cdecl *)(int32_t))(intptr_t)
@@ -204420,6 +209030,7 @@ static int32_t retdec_squirrel_arith_op(
     int32_t vm, int32_t op, int32_t target,
     int32_t left, int32_t right) {
     static int32_t trace_arith_call_count;
+    static int32_t trace_arith_nonnumeric_count;
     int32_t left_type;
     int32_t right_type;
     int32_t result[2];
@@ -204507,6 +209118,17 @@ static int32_t retdec_squirrel_arith_op(
             (const int32_t *)(intptr_t)right,
             (int32_t *)(intptr_t)target);
 
+    if (trace_arith_nonnumeric_count < 128) {
+        retdec_trace_i32("arith-nonnumeric-op", op);
+        retdec_trace_i32("arith-nonnumeric-left-type", left_type);
+        retdec_trace_i32("arith-nonnumeric-left-data",
+                         *(int32_t *)(intptr_t)(left + 4));
+        retdec_trace_i32("arith-nonnumeric-right-type", right_type);
+        retdec_trace_i32("arith-nonnumeric-right-data",
+                         *(int32_t *)(intptr_t)(right + 4));
+        retdec_trace_i32("arith-nonnumeric-target", target);
+        ++trace_arith_nonnumeric_count;
+    }
     if (function_491f30(op, left, right, target) != 0)
         return 1;
     function_499a20(vm, "arith op %c on between '%s' and '%s'", op,
@@ -204775,7 +209397,10 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 if ((*v16 & 0x8000000) != 0) {
                     // 0x4941e6
                     v23 = (int32_t *)(v18 + 4);
-                    *v23 = *v23 - 1;
+                    int32_t old_ref = *v23;
+                    *v23 = old_ref - 1;
+                    retdec_trace_direct_ref_decrement(
+                        "494120:copy-old", v18, old_ref, *v23);
                 }
                 // 0x4941f5
                 v14++;
@@ -204801,7 +209426,10 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     if ((*v16 & 0x8000000) != 0) {
                         // 0x4941e6
                         v23 = (int32_t *)(v18 + 4);
-                        *v23 = *v23 - 1;
+                        int32_t old_ref = *v23;
+                        *v23 = old_ref - 1;
+                        retdec_trace_direct_ref_decrement(
+                            "494120:copy-old-loop", v18, old_ref, *v23);
                     }
                     // 0x4941f5
                     v14++;
@@ -204847,7 +209475,10 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 if ((*v31 & 0x8000000) != 0) {
                     // 0x494287
                     v36 = (int32_t *)(v33 + 4);
-                    *v36 = *v36 - 1;
+                    int32_t old_ref = *v36;
+                    *v36 = old_ref - 1;
+                    retdec_trace_direct_ref_decrement(
+                        "494120:fill-old", v33, old_ref, *v36);
                 }
                 // 0x494293
                 v27--;
@@ -204876,7 +209507,10 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     if ((*v31 & 0x8000000) != 0) {
                         // 0x494287
                         v36 = (int32_t *)(v33 + 4);
-                        *v36 = *v36 - 1;
+                        int32_t old_ref = *v36;
+                        *v36 = old_ref - 1;
+                        retdec_trace_direct_ref_decrement(
+                            "494120:fill-old-loop", v33, old_ref, *v36);
                     }
                     // 0x494293
                     v27--;
@@ -204893,18 +209527,16 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
         int32_t v38 = *(int32_t *)(v10 + 24) + 8 * a4; // 0x4942b0
         int32_t * v39 = (int32_t *)v38; // 0x4942b3
         int32_t * v40 = (int32_t *)(v38 + 4); // 0x4942b8
-        int32_t v41 = *(int32_t *)(v37 + 16); // 0x4942be
-        *v40 = v41;
-        int32_t v42 = *(int32_t *)(v37 + 12); // 0x4942c4
-        *v39 = v42;
-        if ((v42 & 0x8000000) != 0) {
-            int32_t * v43 = (int32_t *)(v41 + 4); // 0x4942d8
-            *v43 = *v43 + 1;
-        }
-        if ((*v39 & 0x8000000) != 0) {
-            int32_t * v44 = (int32_t *)(*v40 + 4); // 0x4942ee
-            *v44 = *v44 - 1;
-        }
+        int32_t bound_value[2] = {
+            *(int32_t *)(v37 + 12),
+            *(int32_t *)(v37 + 16)
+        };
+
+        /* SQObjectPtr::operator= must release the previous stack value.
+           The flattened body overwrote v40/v39 first and then decremented
+           the newly bound receiver, which could consume the RefTable's last
+           object reference when the two values differed. */
+        retdec_squirrel_assign(v39, bound_value);
     }
     if (trace_bound_receiver && v10 != 0) {
         retdec_trace_squirrel_name("494120:bound-name",
@@ -205168,6 +209800,13 @@ static __declspec(noinline) int32_t retdec_execute_return(
         /* Match the original stack cleanup, which calls SQObjectPtr::Null. */
         for (int32_t index = last_top; index >= new_top; --index) {
             slot = (int32_t *)(intptr_t)(stack_data + 8 * index);
+            if (retdec_is_release_watch_data(slot[1])) {
+                retdec_trace_i32("sq-watch:return-cleanup-index", index);
+                retdec_trace_i32("sq-watch:return-cleanup-slot",
+                                 (int32_t)(intptr_t)slot);
+                retdec_trace_i32("sq-watch:return-cleanup-type", slot[0]);
+                retdec_trace_i32("sq-watch:return-cleanup-data", slot[1]);
+            }
             retdec_release_squirrel_value(slot);
         }
     }
@@ -205477,8 +210116,11 @@ int32_t function_494710(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
         return v5 & -256 | 1;
     }
     int32_t * v7 = (int32_t *)(v3 + 4); // 0x494758
-    int32_t v8 = *v7 - 1; // 0x494758
+    int32_t v8_before = *v7; // 0x494758
+    int32_t v8 = v8_before - 1; // 0x494758
     *v7 = v8;
+    retdec_trace_direct_ref_decrement(
+        "494710:old", v3, v8_before, v8);
     int32_t v9 = v5; // 0x49475b
     if (v8 == 0) {
         // 0x49475d
@@ -205526,7 +210168,11 @@ int32_t function_494770(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     }
     if ((*v7 & 0x8000000) != 0) {
         int32_t * v11 = (int32_t *)(*v6 + 4); // 0x494822
-        *v11 = *v11 - 1;
+        int32_t old_ref = *v11;
+        int32_t direct_data = *v6;
+        *v11 = old_ref - 1;
+        retdec_trace_direct_ref_decrement(
+            "494770:old", direct_data, old_ref, *v11);
     }
     // 0x49482e
     *v5 = 0;
@@ -205537,7 +210183,11 @@ int32_t function_494770(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     }
     if ((*v8 & 0x8000000) != 0) {
         int32_t * v12 = (int32_t *)(*v5 + 4); // 0x494854
-        *v12 = *v12 - 1;
+        int32_t old_ref = *v12;
+        int32_t direct_data = *v5;
+        *v12 = old_ref - 1;
+        retdec_trace_direct_ref_decrement(
+            "494770:temporary", direct_data, old_ref, *v12);
     }
     // 0x494863
     if ((v2 & 0x8000000) == 0) {
@@ -205595,7 +210245,8 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                  strcmp(key_text, "thisAct") == 0 ||
                  strcmp(key_text, "FadeIn") == 0 ||
                  strcmp(key_text, "SetFade") == 0 ||
-                 strcmp(key_text, "Resume") == 0))
+                 strcmp(key_text, "Resume") == 0 ||
+                 retdec_is_lookup_trace_name(key_text)))
                 interesting_key = 1;
             interesting_key_text = key_text;
         }
@@ -205666,9 +210317,14 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
         int32_t table_ptr = *(int32_t *)(intptr_t)(a1 + 4);
         int32_t direct_result;
         if (interesting_key) {
-            retdec_trace("4948a0:table-branch");
-            retdec_trace_i32("4948a0:table", table_ptr);
-            retdec_trace_i32("4948a0:table-delegate",
+            retdec_trace("sq-meta:4948a0-table-branch");
+            retdec_trace_i32("sq-meta:4948a0-table", table_ptr);
+            retdec_trace_i32("sq-meta:4948a0-key-type", a2 != 0 ? *(int32_t *)(intptr_t)a2 : 0);
+            retdec_trace_i32("sq-meta:4948a0-key-data", a2 != 0 ? *(int32_t *)(intptr_t)(a2 + 4) : 0);
+            retdec_trace_i32("sq-meta:4948a0-key-hash",
+                             a2 != 0 ? (int32_t)retdec_squirrel_key_hash(
+                                 (const int32_t *)(intptr_t)a2) : 0);
+            retdec_trace_i32("sq-meta:4948a0-table-delegate",
                              table_ptr != 0
                                  ? *(int32_t *)(intptr_t)(table_ptr + 24)
                                  : 0);
@@ -205676,7 +210332,18 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
         direct_result = function_497a00_this(
             table_ptr, (int32_t *)(intptr_t)a2, a3);
         if (interesting_key)
-            retdec_trace_i32("4948a0:table-direct-result", direct_result);
+            retdec_trace_i32("sq-meta:4948a0-table-direct-result", direct_result);
+        if (interesting_key && direct_result == 0 &&
+            a2 != 0 && *(int32_t *)(intptr_t)(a2 + 4) != 0 &&
+            strcmp((const char *)(intptr_t)(*(int32_t *)(intptr_t)(a2 + 4) + 28),
+                   "updateFunc") == 0) {
+            static int32_t trace_update_func_miss_count;
+            if (trace_update_func_miss_count < 8 && table_ptr != 0) {
+                retdec_trace_squirrel_table_entries(
+                    "sq-meta:update-func-miss-table", table_ptr);
+                ++trace_update_func_miss_count;
+            }
+        }
         if ((char)direct_result != 0)
             return 1;
     } else if (object_type == 0x0A008000) {
@@ -205685,7 +210352,11 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
             return 1;
     }
 
+    if (interesting_key)
+        retdec_trace("sq-meta:4948a0-before-fallback");
     int32_t result = function_493310(vm, a1, a2, a3, a4);
+    if (interesting_key)
+        retdec_trace_i32("sq-meta:4948a0-fallback-result", result);
     if ((char)result != 0)
         return 1;
 
@@ -205697,9 +210368,12 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
             *(int32_t *)(intptr_t)(vm + 24) + 8 * top_index);
         if (top[1] == *(int32_t *)(intptr_t)(a1 + 4) &&
             top[0] == object_type) {
-            return function_497a00_this(
+            int32_t root_result = function_497a00_this(
                 *(int32_t *)(intptr_t)(vm + 60),
                 (int32_t *)(intptr_t)a2, a3);
+            if (interesting_key)
+                retdec_trace_i32("sq-meta:4948a0-root-result", root_result);
+            return root_result;
         }
     }
     return 0;
@@ -205879,6 +210553,7 @@ int32_t function_494990(int32_t a1, int32_t a2) {
 
 // Address range: 0x494bf0 - 0x494d9f
 int32_t function_494bf0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6) {
+    static int32_t trace_deref_watch_count;
     int32_t vm = retdec_stack_vm();
     int32_t self_value[2];
     int32_t key_value[2];
@@ -205887,6 +210562,28 @@ int32_t function_494bf0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 
     if (vm == 0 || a2 == 0 || a3 == 0 || a4 == 0 || a5 == 0)
         return 0;
+
+    if (trace_deref_watch_count < 512 &&
+        (retdec_is_release_watch_data(*(int32_t *)(intptr_t)(a2 + 4)) ||
+         retdec_is_release_watch_data(*(int32_t *)(intptr_t)(a3 + 4)) ||
+         retdec_is_release_watch_data(*(int32_t *)(intptr_t)(a4 + 4)) ||
+         retdec_is_release_watch_data(*(int32_t *)(intptr_t)(a5 + 4)))) {
+        retdec_trace_i32("sq-watch:494bf0-op", a1);
+        retdec_trace_i32("sq-watch:494bf0-target", a2);
+        retdec_trace_i32("sq-watch:494bf0-self", a3);
+        retdec_trace_i32("sq-watch:494bf0-key", a4);
+        retdec_trace_i32("sq-watch:494bf0-incr", a5);
+        retdec_trace_i32("sq-watch:494bf0-postfix", a6);
+        retdec_trace_i32("sq-watch:494bf0-target-data",
+                         *(int32_t *)(intptr_t)(a2 + 4));
+        retdec_trace_i32("sq-watch:494bf0-self-data",
+                         *(int32_t *)(intptr_t)(a3 + 4));
+        retdec_trace_i32("sq-watch:494bf0-key-data",
+                         *(int32_t *)(intptr_t)(a4 + 4));
+        retdec_trace_i32("sq-watch:494bf0-caller",
+                         (int32_t)(uintptr_t)_ReturnAddress());
+        ++trace_deref_watch_count;
+    }
 
     /* DerefInc receives SQObjectPtr references.  Keep each pair contiguous;
        the generated body used addresses of unrelated scalar locals, which
@@ -205925,7 +210622,23 @@ int32_t function_494bf0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     retdec_squirrel_release(temporary_value[0], temporary_value[1]);
     retdec_squirrel_release(key_value[0], key_value[1]);
     retdec_squirrel_release(self_value[0], self_value[1]);
+    if (trace_deref_watch_count <= 512 &&
+        (retdec_is_release_watch_data(a2 != 0 ? *(int32_t *)(intptr_t)(a2 + 4) : 0) ||
+         retdec_is_release_watch_data(a3 != 0 ? *(int32_t *)(intptr_t)(a3 + 4) : 0) ||
+         retdec_is_release_watch_data(a4 != 0 ? *(int32_t *)(intptr_t)(a4 + 4) : 0)))
+        retdec_trace_i32("sq-watch:494bf0-done", 1);
     return (char)result != 0 ? 1 : 0;
+}
+
+/* Keep the SQObjectPtr temporary for _OP_PINC out of the large translated
+ * dispatcher.  This mirrors SQVM::DerefInc while avoiding changes to the
+ * dispatcher's recovered stack-temporary layout. */
+static __declspec(noinline) int32_t retdec_execute_pinc(
+    int32_t target, int32_t self, int32_t key, int32_t delta) {
+    int32_t increment[2] = { 0x05000002, delta };
+
+    return function_494bf0(43, target, self, key,
+                           (int32_t)(intptr_t)increment, 1);
 }
 
 // Address range: 0x494da0 - 0x4950bf
@@ -206011,12 +210724,17 @@ int32_t function_494da0(int32_t * a1, int32_t * a2, int32_t * a3, int32_t a4, in
                 if (v22 == 0) {
                     // 0x494e5b
                     v9 = (char *)a4;
-                    int32_t v23 = function_491340(a4, v3, v2); // 0x494e6a
+                    int32_t v23 = function_491340_array_next(
+                    a1[1], a4, v3, v2); // 0x494e6a
                     v7 = -1;
                     if (v23 != -1) {
                         // 0x494e74
-                        v10 = v23;
-                        function_48e0e0(v23);
+                        /* SQVM::FOREACH_OP writes SQArray::Next's return
+                           value back to the refpos object before the next
+                           iteration. */
+                        function_48e0e0_this(a4, v23);
+                        /* function_491340_array_next already assigned the
+                           key and value outputs. */
                         *a7 = 1;
                         // 0x4950a9
                         __writefsdword(0, v5);
@@ -206950,6 +211668,7 @@ static __declspec(noinline) int32_t retdec_execute_getk(int32_t instruction_ptr)
     int32_t *key;
     int32_t *out;
     int32_t result;
+    int32_t trace_lookup_key;
 
     if (vm == 0 || instruction_ptr == 0)
         return 0;
@@ -206968,6 +211687,8 @@ static __declspec(noinline) int32_t retdec_execute_getk(int32_t instruction_ptr)
     key = (int32_t *)(intptr_t)(
         literal_base + 8 * *(int32_t *)(intptr_t)instruction_ptr);
     out = (int32_t *)(intptr_t)(vm + 88);
+    trace_lookup_key = key[0] == 0x08000010 && key[1] != 0 &&
+        retdec_is_lookup_trace_name((const char *)(intptr_t)(key[1] + 28));
     if (trace_getk_count < 256 || object[0] == 0x01000001) {
         int32_t closure_pair = callinfo + 8;
         int32_t closure_type = *(int32_t *)(intptr_t)closure_pair;
@@ -207013,6 +211734,19 @@ static __declspec(noinline) int32_t retdec_execute_getk(int32_t instruction_ptr)
     result = function_4948a0((int32_t)(intptr_t)object,
                              (int32_t)(intptr_t)key,
                              (int32_t)(intptr_t)out, 0, 1);
+    if (trace_lookup_key) {
+        int32_t target_index = *(unsigned char *)(instruction_ptr + 5);
+        int32_t *target = (int32_t *)(intptr_t)(stack_data +
+            8 * (stackbase + target_index));
+        retdec_trace_squirrel_name("getk:lookup-key", key[1] + 28);
+        retdec_trace_i32("getk:lookup-instruction", instruction_ptr);
+        retdec_trace_i32("getk:lookup-result", result);
+        retdec_trace_i32("getk:lookup-out-type", out[0]);
+        retdec_trace_i32("getk:lookup-out-data", out[1]);
+        retdec_trace_i32("getk:lookup-target", (int32_t)(intptr_t)target);
+        retdec_trace_i32("getk:lookup-target-type", target[0]);
+        retdec_trace_i32("getk:lookup-target-data", target[1]);
+    }
     if ((char)result == 0) {
         static int32_t trace_getk_failure_count;
         if (trace_getk_failure_count < 64) {
@@ -207122,11 +211856,18 @@ static __declspec(noinline) int32_t retdec_execute_newslot(int32_t instruction_p
             const char *key_name = (const char *)(intptr_t)(key[1] + 28);
             if (strcmp(key_name, "genEnd") == 0 ||
                 strcmp(key_name, "logoEnd") == 0 ||
-                strcmp(key_name, "gen") == 0) {
+                strcmp(key_name, "gen") == 0 ||
+                strcmp(key_name, "maxFrame") == 0 ||
+                strcmp(key_name, "direction") == 0 ||
+                strcmp(key_name, "frameCount") == 0 ||
+                strcmp(key_name, "updateFunc") == 0) {
                 retdec_trace_squirrel_name("sq-meta:newslot-key", key[1] + 28);
                 retdec_trace_i32("sq-meta:newslot-value-type", value[0]);
                 retdec_trace_i32("sq-meta:newslot-value-data", value[1]);
                 retdec_trace_i32("sq-meta:newslot-result", newslot_result);
+                if (object[0] == 0x0A000020 && object[1] != 0)
+                    retdec_trace_squirrel_table_entries(
+                        "sq-meta:newslot-table", object[1]);
             }
         }
         if ((char)newslot_result == 0)
@@ -207461,6 +212202,9 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 }
             }
             if (trace_opcode_count < 640) {
+                retdec_trace_watch_boundary(
+                    "495360:opcode-boundary",
+                    (int32_t)(intptr_t)v74, g1182);
                 retdec_trace_i32("495360:opcode", g1182);
                 retdec_trace_i32("495360:instruction",
                                  (int32_t)(intptr_t)v74);
@@ -208099,6 +212843,44 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     int32_t arith_vm = retdec_stack_vm();
                     int32_t arith_left = *(int32_t *)(v82 - 8);
                     int32_t arith_right = *(int32_t *)(v82 - 4);
+                    static int32_t trace_dispatch_arith_count;
+                    if (trace_dispatch_arith_count < 128) {
+                        int32_t direct_stack = arith_vm != 0
+                            ? *(int32_t *)(intptr_t)(arith_vm + 24) : 0;
+                        int32_t direct_base = arith_vm != 0
+                            ? *(int32_t *)(intptr_t)(arith_vm + 52) : 0;
+                        int32_t direct_left = direct_stack != 0
+                            ? direct_stack + 8 * (direct_base +
+                                (int32_t)*(unsigned char *)(v74 + 6)) : 0;
+                        int32_t direct_right = direct_stack != 0
+                            ? direct_stack + 8 * (direct_base +
+                                (int32_t)*(unsigned char *)(v74 + 5)) : 0;
+                        retdec_trace_i32("dispatch-arith-vm", arith_vm);
+                        retdec_trace_i32("dispatch-arith-v27", (int32_t)(intptr_t)v27);
+                        retdec_trace_i32("dispatch-arith-v28", (int32_t)(intptr_t)v28);
+                        retdec_trace_i32("dispatch-arith-v82", v82);
+                        retdec_trace_i32("dispatch-arith-holder-left", v82 - 8);
+                        retdec_trace_i32("dispatch-arith-holder-right", v82 - 4);
+                        retdec_trace_i32("dispatch-arith-holder-left-value", arith_left);
+                        retdec_trace_i32("dispatch-arith-holder-right-value", arith_right);
+                        retdec_trace_i32("dispatch-arith-direct-stack", direct_stack);
+                        retdec_trace_i32("dispatch-arith-direct-base", direct_base);
+                        retdec_trace_i32("dispatch-arith-direct-left", direct_left);
+                        retdec_trace_i32("dispatch-arith-direct-right", direct_right);
+                        if (direct_left != 0) {
+                            retdec_trace_i32("dispatch-arith-direct-left-type",
+                                             *(int32_t *)(intptr_t)direct_left);
+                            retdec_trace_i32("dispatch-arith-direct-left-data",
+                                             *(int32_t *)(intptr_t)(direct_left + 4));
+                        }
+                        if (direct_right != 0) {
+                            retdec_trace_i32("dispatch-arith-direct-right-type",
+                                             *(int32_t *)(intptr_t)direct_right);
+                            retdec_trace_i32("dispatch-arith-direct-right-data",
+                                             *(int32_t *)(intptr_t)(direct_right + 4));
+                        }
+                        ++trace_dispatch_arith_count;
+                    }
                     int32_t savedata_arith_trace =
                         retdec_is_named_closure(v7, "InitStageSaveData") &&
                         trace_savedata_arith_count < 64;
@@ -208204,9 +212986,11 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 }
                 case 19: {
                     // 0x4960be
-                    if (*(int32_t *)(*v12 + 16) != 0) {
+                    int32_t return_generator = *v12 != NULL
+                        ? *(int32_t *)(*v12 + 16) : 0;
+                    if (return_generator != 0) {
                         // 0x4960cb
-                        function_491910();
+                        function_491910_this(return_generator);
                     }
                     // 0x4960d0
                     *(int32_t *)(v82 - 4) = v30;
@@ -208699,30 +213483,21 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     }
                 }
                 case 38: {
-                    int32_t v409 = (int32_t)*(char *)(v74 + 7); // 0x4967ea
-                    v39 = 0x5000002;
-                    int32_t v410 = *v27; // 0x4967f8
-                    int32_t v411 = *v28; // 0x4967fb
-                    *(int32_t *)(v82 - 4) = 1;
-                    *(int32_t *)(v82 - 8) = v40;
-                    unsigned char v412 = *(char *)(v74 + 6); // 0x496804
-                    *(int32_t *)(v82 - 12) = 8 * (v410 + (int32_t)v412) + v411;
-                    *(int32_t *)(v82 - 16) = 8 * (*(int32_t *)v74 + v410) + v411;
-                    unsigned char v413 = *(char *)(v74 + 5); // 0x496816
-                    *(int32_t *)(v82 - 20) = 8 * (v410 + (int32_t)v413) + v411;
-                    int32_t v414 = v82 - 24; // 0x496820
+                    int32_t v414 = v82 - 24;
                     *(int32_t *)v414 = 43;
-                    int32_t v415 = function_494bf0(v39, v409, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x496828
+                    /* SQVM::_OP_PINC is DerefInc with the same three
+                       stack operands as _OP_INC, but postfix=true. */
+                    int32_t v415 = retdec_execute_pinc(
+                        *v28 + 8 * (*v27 +
+                                    (int32_t)*(unsigned char *)(v74 + 5)),
+                        *v28 + 8 * (*v27 + *(int32_t *)v74),
+                        *v28 + 8 * (*v27 +
+                                    (int32_t)*(unsigned char *)(v74 + 6)),
+                        (int32_t)*(char *)(v74 + 7)); // 0x496828
                     if ((char)v415 != 0) {
                         // 0x496868
                         v64 = v92;
                         v65 = v414;
-                        if ((v39 & 0x8000000) != 0) {
-                            int32_t * v416 = (int32_t *)(v409 + 4); // 0x49687c
-                            *v416 = *v416 - 1;
-                            v64 = v92;
-                            v65 = v414;
-                        }
                         goto lab_0x495474_2;
                     } else {
                         int32_t v417 = v82 - 28; // 0x496834
@@ -208730,11 +213505,6 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                         function_499b00(retdec_stack_vm(),
                                         retdec_stack_vm() + 64);
                         v88 = v417;
-                        if ((v39 & 0x8000000) != 0) {
-                            int32_t * v418 = (int32_t *)(v409 + 4); // 0x496850
-                            *v418 = *v418 - 1;
-                            v88 = v417;
-                        }
                         goto lab_0x4970d4;
                     }
                 }
@@ -210640,6 +215410,1081 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     }
 }
 
+/*
+ * The generated 0x495360 body is too register-shaped to be a reliable C
+ * interpreter: its stack holders alias one another after nested calls.  Keep
+ * the original opcode numbering and frame operations, but derive every
+ * SQObject address from the live VM for each instruction.  This is the same
+ * ownership/order model used by the repaired Squirrel adapters above.
+ */
+static int32_t retdec_clean_vm_slot(int32_t vm, int32_t index) {
+    int32_t stack;
+    int32_t size;
+    int32_t base;
+    int32_t absolute;
+
+    if (vm == 0 || index < 0 || index > 0x100000)
+        return 0;
+    stack = *(int32_t *)(intptr_t)(vm + 24);
+    size = *(int32_t *)(intptr_t)(vm + 28);
+    base = *(int32_t *)(intptr_t)(vm + 52);
+    absolute = base + index;
+    if (stack == 0 || base < 0 || absolute < 0 || absolute >= size)
+        return 0;
+    return stack + 8 * absolute;
+}
+
+static int32_t retdec_clean_vm_literal(int32_t vm, int32_t index) {
+    int32_t ci;
+    int32_t closure;
+    int32_t proto;
+    int32_t literals;
+    int32_t count;
+
+    if (vm == 0 || index < 0)
+        return 0;
+    ci = *(int32_t *)(intptr_t)(vm + 132);
+    if (ci == 0)
+        return 0;
+    literals = *(int32_t *)(intptr_t)(ci + 4);
+    closure = *(int32_t *)(intptr_t)(ci + 12);
+    proto = closure != 0 ? *(int32_t *)(intptr_t)(closure + 36) : 0;
+    count = proto != 0 ? *(int32_t *)(intptr_t)(proto + 52) : 0;
+    if (literals == 0 || index >= count)
+        return 0;
+    return literals + 8 * index;
+}
+
+static int32_t retdec_clean_vm_assign_literal(int32_t vm, int32_t target,
+                                               int32_t literal) {
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t src = retdec_clean_vm_literal(vm, literal);
+
+    if (dst == NULL || src == 0)
+        return 0;
+    retdec_squirrel_assign(dst, (const int32_t *)(intptr_t)src);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_assign_bool(int32_t vm, int32_t target,
+                                           int32_t value) {
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t pair[2] = { 0x01000008, value != 0 ? 1 : 0 };
+
+    if (dst == NULL)
+        return 0;
+    retdec_squirrel_assign(dst, pair);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_assign_integer(int32_t vm, int32_t target,
+                                              int32_t value) {
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t pair[2] = { 0x05000002, value };
+
+    if (dst == NULL)
+        return 0;
+    retdec_squirrel_assign(dst, pair);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_assign_float_bits(int32_t vm, int32_t target,
+                                                 int32_t bits) {
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t pair[2] = { 0x05000004, bits };
+
+    if (dst == NULL)
+        return 0;
+    retdec_squirrel_assign(dst, pair);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_assign_null(int32_t vm, int32_t target) {
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t null_value[2] = { g483, g484 };
+
+    if (dst == NULL)
+        return 0;
+    retdec_squirrel_assign(dst, null_value);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_call_meta(int32_t vm, int32_t *callee,
+                                         int32_t nargs, int32_t args_index,
+                                         int32_t target, int32_t raiseerror) {
+    int32_t saved_values[512];
+    int32_t count = nargs + 1;
+    int32_t meta_result[2] = { g483, g484 };
+    int32_t call_result;
+    int32_t target_slot;
+    int32_t index;
+
+    if (vm == 0 || callee == NULL || count < 1 || count > 256)
+        return 0;
+
+    /* Copy before Push can grow and relocate the VM stack. */
+    saved_values[0] = callee[0];
+    saved_values[1] = callee[1];
+    for (index = 0; index < nargs; ++index) {
+        int32_t *source = (int32_t *)(intptr_t)
+            retdec_clean_vm_slot(vm, args_index + index);
+        if (source == NULL)
+            return 0;
+        saved_values[index * 2 + 2] = source[0];
+        saved_values[index * 2 + 3] = source[1];
+    }
+
+    for (index = 0; index < count; ++index)
+        function_491820_this(vm, saved_values + index * 2);
+
+    call_result = function_497850_this(
+        vm, callee[1], 11, count,
+        (int32_t)(intptr_t)meta_result);
+    if (call_result != 0 && target != 0xff) {
+        target_slot = retdec_clean_vm_slot(vm, target);
+        if (target_slot == 0)
+            call_result = 0;
+        else
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)target_slot, meta_result);
+    }
+    retdec_release_squirrel_value(meta_result);
+    (void)raiseerror;
+    return call_result != 0;
+}
+
+static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
+                                    int32_t arg0, int32_t arg1,
+                                    int32_t arg2, int32_t arg3,
+                                    int32_t raiseerror) {
+    int32_t *callee = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+    int32_t call_base = *(int32_t *)(intptr_t)(vm + 52) + arg2;
+    int32_t target = retdec_clean_vm_slot(vm, arg0);
+    int32_t native_result[2] = { g483, g484 };
+    int32_t constructor[2] = { g483, g484 };
+    int32_t instance[2] = { g483, g484 };
+    int32_t constructor_result[2] = { g483, g484 };
+    int32_t suspend = 0;
+    int32_t call_result;
+
+    if (vm == 0 || callee == NULL || call_base < 0 ||
+        call_base > *(int32_t *)(intptr_t)(vm + 28))
+        return 0;
+
+    switch (callee[0]) {
+        case 0x08000100:
+            call_result = retdec_execute_call_closure(instruction_ptr);
+            if (call_result == 2)
+                return 2;
+            return call_result < 0 ? 0 : call_result;
+
+        case 0x08000200:
+            call_result = function_492ed0(
+                callee[1], arg3, call_base,
+                (int32_t)(intptr_t)native_result,
+                (int32_t)(intptr_t)&suspend);
+            if (call_result == 0)
+                return 0;
+            if (suspend != 0) {
+                *(int32_t *)(intptr_t)(vm + 148) = 1;
+                *(int32_t *)(intptr_t)(vm + 152) = arg0;
+                *(int32_t *)(intptr_t)(vm + 156) = 0;
+            }
+            if (arg0 != 0xff && target != 0)
+                retdec_squirrel_assign(
+                    (int32_t *)(intptr_t)target, native_result);
+            retdec_release_squirrel_value(native_result);
+            return suspend != 0 ? 1 : 1;
+
+        case 0x08004000:
+            call_result = function_4915b0(
+                callee[1], (int32_t)(intptr_t)instance,
+                (int32_t)(intptr_t)constructor);
+            if (call_result == 0)
+                return 0;
+            if (arg0 != 0xff && target != 0)
+                retdec_squirrel_assign(
+                    (int32_t *)(intptr_t)target, instance);
+            if (constructor[0] != g483 && constructor[1] != 0) {
+                int32_t *constructor_slot =
+                    (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, call_base);
+                if (constructor_slot != NULL) {
+                    retdec_squirrel_assign(constructor_slot, instance);
+                    (void)function_497680(
+                        (int32_t)(intptr_t)constructor, arg3, call_base,
+                        (int32_t)(intptr_t)constructor_result, 0);
+                }
+            }
+            retdec_release_squirrel_value(constructor_result);
+            retdec_release_squirrel_value(constructor);
+            retdec_release_squirrel_value(instance);
+            return 1;
+
+        case 0x0a000020:
+        case 0x0a000080:
+        case 0x0a008000:
+            return retdec_clean_vm_call_meta(
+                vm, callee, arg3, call_base, arg0, raiseerror) ? 1 : 0;
+
+        default:
+            function_499a20(
+                vm, "attempt to call '%s'",
+                (const char *)(intptr_t)function_48e2e0(callee[0]));
+            return 0;
+    }
+}
+
+static int32_t retdec_clean_vm_typeof(int32_t vm, int32_t source,
+                                      int32_t target) {
+    int32_t *slot = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, source);
+    int32_t *dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, target);
+    int32_t string_object;
+    int32_t string_value[2];
+    int32_t shared_state;
+    int32_t type_name;
+
+    if (slot == NULL || dst == NULL)
+        return 0;
+    shared_state = *(int32_t *)(intptr_t)(vm + 140);
+    type_name = function_48e2e0(slot[0]);
+    if (shared_state == 0 || type_name == 0)
+        return 0;
+    string_object = function_48e480(shared_state, type_name, -1);
+    if (string_object == 0)
+        return 0;
+    string_value[0] = 0x08000010;
+    string_value[1] = string_object;
+    retdec_squirrel_assign(dst, string_value);
+    return 1;
+}
+
+static int32_t retdec_clean_vm_instanceof(int32_t vm, int32_t class_index,
+                                          int32_t instance_index,
+                                          int32_t target) {
+    int32_t *class_value = (int32_t *)(intptr_t)
+        retdec_clean_vm_slot(vm, class_index);
+    int32_t *instance_value = (int32_t *)(intptr_t)
+        retdec_clean_vm_slot(vm, instance_index);
+    int32_t current_class;
+    int32_t result = 0;
+
+    if (class_value == NULL || instance_value == NULL ||
+        class_value[0] != 0x08004000 ||
+        instance_value[0] != 0x0a008000 ||
+        class_value[1] == 0 || instance_value[1] == 0)
+        return 0;
+    current_class = *(int32_t *)(intptr_t)(instance_value[1] + 28);
+    while (current_class != 0) {
+        if (current_class == class_value[1]) {
+            result = 1;
+            break;
+        }
+        current_class = *(int32_t *)(intptr_t)(current_class + 28);
+    }
+    return retdec_clean_vm_assign_bool(vm, target, result);
+}
+
+static int32_t retdec_execute_clean_vm(
+    int32_t closure_slot, int32_t target, int32_t nargs,
+    int32_t stackbase, int32_t outres, int32_t raiseerror) {
+    static int32_t trace_clean_entry_count;
+    static int32_t trace_clean_failure_count;
+    int32_t vm = retdec_stack_vm();
+    int32_t *closure = (int32_t *)(intptr_t)closure_slot;
+    int32_t current_ci;
+    int32_t instruction_ptr;
+    int32_t opcode;
+    int32_t arg1;
+    int32_t arg0;
+    int32_t arg2;
+    int32_t arg3;
+    int32_t *dst;
+    int32_t *src;
+    int32_t *left;
+    int32_t *right;
+    int32_t *object;
+    int32_t *key;
+    int32_t *value;
+    int32_t *temp;
+    int32_t pair[2];
+    int32_t result_pair[2] = { g483, g484 };
+    int32_t result;
+    int32_t compare_result;
+    int32_t jump;
+    int32_t index;
+    int32_t increment[2];
+    int32_t shared_state;
+    int32_t array_ptr;
+    int32_t array_value[2];
+    int32_t clone_result;
+    int32_t *trap_block;
+    int32_t trap_count;
+    int32_t trap_capacity;
+
+    if (trace_clean_entry_count < 64) {
+        retdec_trace_i32("clean-execute:entry", closure_slot);
+        retdec_trace_i32("clean-execute:vm", vm);
+        retdec_trace_i32("clean-execute:closure-type",
+                         closure_slot != 0 ? *(int32_t *)(intptr_t)closure_slot : 0);
+        retdec_trace_i32("clean-execute:closure-data",
+                         closure_slot != 0 ? *(int32_t *)(intptr_t)(closure_slot + 4) : 0);
+        retdec_trace_i32("clean-execute:target", target);
+        retdec_trace_i32("clean-execute:nargs", nargs);
+        retdec_trace_i32("clean-execute:stackbase", stackbase);
+        ++trace_clean_entry_count;
+    }
+
+    if (vm == 0 || closure == NULL || closure[0] != 0x08000100 ||
+        closure[1] == 0 || nargs < 0 || stackbase < 0)
+        return 0;
+    if (*(int32_t *)(intptr_t)(vm + 144) >= 100)
+        return 0;
+
+    *(int32_t *)(intptr_t)(vm + 144) += 1;
+    result = function_494120(closure[1], target, nargs, stackbase, 0);
+    if ((char)result == 0) {
+        if (*(int32_t *)(intptr_t)(vm + 132) == 0)
+            function_492d00(vm + 64);
+        *(int32_t *)(intptr_t)(vm + 144) -= 1;
+        return 0;
+    }
+    current_ci = *(int32_t *)(intptr_t)(vm + 132);
+    if (current_ci == 0) {
+        *(int32_t *)(intptr_t)(vm + 144) -= 1;
+        return 0;
+    }
+    *(int32_t *)(intptr_t)(current_ci + 40) = 1;
+
+    for (;;) {
+        vm = retdec_stack_vm();
+        if (vm == 0 || *(int32_t *)(intptr_t)(vm + 132) == 0) {
+            *(int32_t *)(intptr_t)(vm + 144) -= 1;
+            return 0;
+        }
+        current_ci = *(int32_t *)(intptr_t)(vm + 132);
+        instruction_ptr = *(int32_t *)(intptr_t)current_ci;
+        if (instruction_ptr == 0) {
+            *(int32_t *)(intptr_t)(vm + 144) -= 1;
+            return 0;
+        }
+        *(int32_t *)(intptr_t)current_ci = instruction_ptr + 8;
+        opcode = *(unsigned char *)(intptr_t)(instruction_ptr + 4);
+        arg1 = *(int32_t *)(intptr_t)instruction_ptr;
+        arg0 = *(unsigned char *)(intptr_t)(instruction_ptr + 5);
+        arg2 = *(unsigned char *)(intptr_t)(instruction_ptr + 6);
+        arg3 = *(unsigned char *)(intptr_t)(instruction_ptr + 7);
+
+        switch (opcode) {
+            case 0:
+                break;
+
+            case 1:
+                if (!retdec_clean_vm_assign_literal(vm, arg0, arg1))
+                    goto clean_execute_failure;
+                break;
+
+            case 2:
+                if (!retdec_clean_vm_assign_integer(vm, arg0, arg1))
+                    goto clean_execute_failure;
+                break;
+
+            case 3:
+                if (!retdec_clean_vm_assign_float_bits(vm, arg0, arg1))
+                    goto clean_execute_failure;
+                break;
+
+            case 4:
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_literal(vm, arg1);
+                if (dst == NULL || src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_literal(vm, arg3);
+                if (dst == NULL || src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                break;
+
+            case 5: { /* TAILCALL */
+                int32_t *callee = (int32_t *)(intptr_t)
+                    retdec_clean_vm_slot(vm, arg1);
+                if (callee != NULL && callee[0] == 0x08000100) {
+                    for (index = 0; index < arg3; ++index) {
+                        dst = (int32_t *)(intptr_t)
+                            retdec_clean_vm_slot(vm, index);
+                        src = (int32_t *)(intptr_t)
+                            retdec_clean_vm_slot(vm, arg2 + index);
+                        if (dst == NULL || src == NULL)
+                            goto clean_execute_failure;
+                        retdec_squirrel_assign(dst, src);
+                    }
+                    if ((char)function_494120(
+                            callee[1], *(int32_t *)(intptr_t)(current_ci + 32),
+                            arg3, *(int32_t *)(intptr_t)(vm + 52), 1) == 0)
+                        goto clean_execute_failure;
+                    break;
+                }
+                /* The original falls through to the ordinary call path. */
+                result = retdec_clean_vm_call(
+                    vm, instruction_ptr, arg0, arg1, arg2, arg3, raiseerror);
+                if (result == 2)
+                    break;
+                if (result == 0)
+                    goto clean_execute_failure;
+                break;
+            }
+
+            case 6:
+                result = retdec_clean_vm_call(
+                    vm, instruction_ptr, arg0, arg1, arg2, arg3, raiseerror);
+                if (result == 2 || result == 1)
+                    break;
+                goto clean_execute_failure;
+
+            case 7:
+            case 8:
+                if (!retdec_execute_prepcall(instruction_ptr))
+                    goto clean_execute_failure;
+                break;
+
+            case 9:
+                if (!retdec_execute_getk(instruction_ptr))
+                    goto clean_execute_failure;
+                break;
+
+            case 10:
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (dst == NULL || src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                break;
+
+            case 11:
+                if (!retdec_execute_newslot(instruction_ptr))
+                    goto clean_execute_failure;
+                break;
+
+            case 12:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                temp = (int32_t *)(intptr_t)(vm + 88);
+                if (object == NULL || key == NULL ||
+                    !function_493cd0_this(vm, (int32_t)(intptr_t)object,
+                                           (int32_t)(intptr_t)key,
+                                           (int32_t)(intptr_t)temp))
+                    goto clean_execute_failure;
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, temp);
+                break;
+
+            case 13:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                value = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg3);
+                if (object == NULL || key == NULL || value == NULL ||
+                    !function_493710(vm, (int32_t)(intptr_t)object,
+                                     (int32_t)(intptr_t)key,
+                                     (int32_t)(intptr_t)value, 1))
+                    goto clean_execute_failure;
+                if (arg0 != arg3) {
+                    dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                    if (dst == NULL)
+                        goto clean_execute_failure;
+                    retdec_squirrel_assign(dst, value);
+                }
+                break;
+
+            case 14:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                temp = (int32_t *)(intptr_t)(vm + 88);
+                if (object == NULL || key == NULL ||
+                    !function_4948a0((int32_t)(intptr_t)object,
+                                     (int32_t)(intptr_t)key,
+                                     (int32_t)(intptr_t)temp, 0, 1))
+                    goto clean_execute_failure;
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, temp);
+                break;
+
+            case 15:
+            case 16:
+                left = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                right = arg3 != 0
+                    ? (int32_t *)(intptr_t)retdec_clean_vm_literal(vm, arg1)
+                    : (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (left == NULL || right == NULL)
+                    goto clean_execute_failure;
+                compare_result = 0;
+                result = function_492c90(
+                    (int32_t)(intptr_t)left, (int32_t)(intptr_t)right,
+                    (int32_t)(intptr_t)&compare_result);
+                if ((char)result == 0)
+                    goto clean_execute_failure;
+                if (opcode == 16)
+                    compare_result = !compare_result;
+                if (!retdec_clean_vm_assign_bool(vm, arg0,
+                                                 compare_result))
+                    goto clean_execute_failure;
+                break;
+
+            case 17:
+                left = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                right = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                temp = (int32_t *)(intptr_t)(vm + 88);
+                if (left == NULL || right == NULL ||
+                    !function_493e70(vm, arg3,
+                                     (int32_t)(intptr_t)temp,
+                                     (int32_t)(intptr_t)left,
+                                     (int32_t)(intptr_t)right))
+                    goto clean_execute_failure;
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, temp);
+                break;
+
+            case 18:
+                left = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                right = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (left == NULL || right == NULL || dst == NULL ||
+                    !function_490b60(arg3, (int32_t)(intptr_t)dst,
+                                     (int32_t)(intptr_t)left,
+                                     (int32_t)(intptr_t)right))
+                    goto clean_execute_failure;
+                break;
+
+            case 19:
+                if ((char)retdec_execute_return(
+                        vm, arg0, arg1, outres) != 0) {
+                    *(int32_t *)(intptr_t)(vm + 144) -= 1;
+                    return 1;
+                }
+                break;
+
+            case 20:
+                for (index = 0; index < arg1; ++index)
+                    if (!retdec_clean_vm_assign_null(vm, arg0 + index))
+                        goto clean_execute_failure;
+                break;
+
+            case 21:
+                pair[0] = *(int32_t *)(intptr_t)(vm + 56);
+                pair[1] = *(int32_t *)(intptr_t)(vm + 60);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, pair);
+                break;
+
+            case 22:
+                if (!retdec_clean_vm_assign_bool(vm, arg0, arg1))
+                    goto clean_execute_failure;
+                break;
+
+            case 23: /* DMOVE */
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (dst == NULL || src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg3);
+                if (dst == NULL || src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                break;
+
+            case 24: /* JMP */
+                *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                    8 * arg1;
+                break;
+
+            case 25: /* JNZ */
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL)
+                    goto clean_execute_failure;
+                if (function_490d50((int32_t)(intptr_t)src) == 0)
+                    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                        8 * arg1;
+                break;
+
+            case 26: /* JZ */
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL)
+                    goto clean_execute_failure;
+                if (function_490d50((int32_t)(intptr_t)src) != 0)
+                    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                        8 * arg1;
+                break;
+
+            case 27: { /* LOADFREEVAR */
+                int32_t outer_values;
+                current_ci = *(int32_t *)(intptr_t)(vm + 132);
+                src = current_ci != 0
+                    ? (int32_t *)(intptr_t)*(int32_t *)(current_ci + 12)
+                    : NULL;
+                outer_values = src != NULL ? *(int32_t *)(intptr_t)(
+                    (int32_t)(intptr_t)src + 40) : 0;
+                src = outer_values != 0
+                    ? (int32_t *)(intptr_t)(outer_values + 8 * arg1) : NULL;
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL || dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                break;
+            }
+
+            case 28: /* VARGC */
+                if (!retdec_clean_vm_assign_integer(
+                        vm, arg0, *(uint16_t *)(intptr_t)(
+                            *(int32_t *)(intptr_t)(vm + 132) + 44)))
+                    goto clean_execute_failure;
+                break;
+
+            case 29: { /* GETVARGV */
+                int32_t *ci = (int32_t *)(intptr_t)
+                    *(int32_t *)(intptr_t)(vm + 132);
+                int32_t *vargs = (int32_t *)(intptr_t)
+                    *(int32_t *)(intptr_t)(vm + 36);
+                int32_t idx = 0;
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (src == NULL || vargs == NULL ||
+                    (src[0] != 0x05000002 && src[0] != 0x05000004) ||
+                    ci == NULL || *(uint16_t *)(intptr_t)(ci + 44) == 0)
+                    goto clean_execute_failure;
+                if (src[0] == 0x05000002)
+                    idx = src[1];
+                else {
+                    float f;
+                    memcpy(&f, &src[1], sizeof(f));
+                    idx = (int32_t)f;
+                }
+                if (idx < 0 || idx >= *(uint16_t *)(intptr_t)(ci + 44) ||
+                    (int32_t)*(uint16_t *)(intptr_t)(ci + 46) + idx >=
+                        *(int32_t *)(intptr_t)(vm + 40))
+                    goto clean_execute_failure;
+                src = (int32_t *)(intptr_t)(vargs + 8 *
+                    (*(uint16_t *)(intptr_t)(ci + 46) + idx));
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, src);
+                break;
+            }
+
+            case 30:
+                shared_state = *(int32_t *)(intptr_t)(vm + 140);
+                array_ptr = (int32_t)(intptr_t)function_498580(44);
+                pair[0] = g483;
+                pair[1] = g484;
+                if (array_ptr != 0 && function_497ff0_this(
+                        array_ptr, shared_state, (uint32_t)arg1) != 0) {
+                    pair[0] = 0x0a000020;
+                    pair[1] = array_ptr;
+                }
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, pair);
+                break;
+
+            case 31:
+                shared_state = *(int32_t *)(intptr_t)(vm + 140);
+                array_ptr = (int32_t)(intptr_t)function_498580(36);
+                array_value[0] = g483;
+                array_value[1] = g484;
+                if (array_ptr != 0) {
+                    int32_t *vector;
+                    int32_t capacity;
+                    int32_t requested = arg1 > 0 ? arg1 : 4;
+                    function_48d390_this(array_ptr, shared_state, 0);
+                    vector = (int32_t *)(intptr_t)(array_ptr + 24);
+                    capacity = vector[2];
+                    if (capacity < requested) {
+                        int32_t block = function_498590(
+                            vector[0], 8 * requested);
+                        if (block != 0) {
+                            vector[0] = block;
+                            vector[2] = requested;
+                        }
+                    }
+                    array_value[0] = 0x08000040;
+                    array_value[1] = array_ptr;
+                }
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(dst, array_value);
+                break;
+
+            case 32:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                src = arg3 != 0
+                    ? (int32_t *)(intptr_t)retdec_clean_vm_literal(vm, arg1)
+                    : (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (object == NULL || src == NULL ||
+                    object[0] != 0x08000040 || object[1] == 0)
+                    goto clean_execute_failure;
+                function_48d1b0_this(object[1] + 24, src);
+                break;
+
+            case 33:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (object == NULL || dst == NULL)
+                    goto clean_execute_failure;
+                pair[0] = g483;
+                pair[1] = g484;
+                if (object[0] == 0x0a000020 && object[1] != 0 &&
+                    *(int32_t *)(intptr_t)(object[1] + 24) != 0) {
+                    pair[0] = 0x0a000020;
+                    pair[1] = *(int32_t *)(intptr_t)(object[1] + 24);
+                } else if (object[0] == 0x08004000 && object[1] != 0 &&
+                           *(int32_t *)(intptr_t)(object[1] + 28) != 0) {
+                    pair[0] = 0x08004000;
+                    pair[1] = *(int32_t *)(intptr_t)(object[1] + 28);
+                } else if (object[0] != 0x0a000020 &&
+                           object[0] != 0x08004000) {
+                    goto clean_execute_failure;
+                }
+                retdec_squirrel_assign(dst, pair);
+                break;
+
+            case 34: {
+                int32_t self_index = (int16_t)((uint32_t)arg1 >> 16);
+                int32_t key_index = (uint16_t)arg1;
+                int32_t self_slot = retdec_clean_vm_slot(vm, self_index);
+                int32_t key_slot = retdec_clean_vm_slot(vm, key_index);
+                int32_t increment_slot = retdec_clean_vm_slot(vm, arg2);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (self_slot == 0 || key_slot == 0 || increment_slot == 0 ||
+                    dst == NULL || !function_494bf0(
+                        arg3, (int32_t)(intptr_t)dst, self_slot, key_slot,
+                        increment_slot, 0))
+                    goto clean_execute_failure;
+                break;
+            }
+
+            case 35:
+                left = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                right = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (left == NULL || right == NULL || dst == NULL ||
+                    !function_493e70(vm, arg3,
+                                     (int32_t)(intptr_t)dst,
+                                     (int32_t)(intptr_t)left,
+                                     (int32_t)(intptr_t)right))
+                    goto clean_execute_failure;
+                retdec_squirrel_assign(left, dst);
+                break;
+
+            case 36:
+            case 38: {
+                int32_t self_slot = retdec_clean_vm_slot(vm, arg1);
+                int32_t key_slot = retdec_clean_vm_slot(vm, arg2);
+                int32_t delta = (int8_t)arg3;
+                increment[0] = 0x05000002;
+                increment[1] = delta;
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (self_slot == 0 || key_slot == 0 || dst == NULL ||
+                    !function_494bf0(43, (int32_t)(intptr_t)dst,
+                                     self_slot, key_slot,
+                                     (int32_t)(intptr_t)increment,
+                                     opcode == 38))
+                    goto clean_execute_failure;
+                break;
+            }
+
+            case 37:
+            case 39: {
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                increment[0] = 0x05000002;
+                increment[1] = (int8_t)arg3;
+                if (src == NULL || dst == NULL ||
+                    !function_493e70(vm, 43,
+                                     (int32_t)(intptr_t)result_pair,
+                                     (int32_t)(intptr_t)src,
+                                     (int32_t)(intptr_t)increment))
+                    goto clean_execute_failure;
+                if (opcode == 37) {
+                    retdec_squirrel_assign(dst, result_pair);
+                    retdec_squirrel_assign(src, dst);
+                } else {
+                    retdec_squirrel_assign(dst, src);
+                    retdec_squirrel_assign(src, result_pair);
+                }
+                retdec_release_squirrel_value(result_pair);
+                break;
+            }
+
+            case 40: { /* CMP */
+                left = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                right = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (left == NULL || right == NULL ||
+                    !function_4920a0((int32_t)(intptr_t)left,
+                                     (int32_t)(intptr_t)right,
+                                     &compare_result))
+                    goto clean_execute_failure;
+                switch (arg3) {
+                    case 0: compare_result = compare_result > 0; break;
+                    case 2: compare_result = compare_result >= 0; break;
+                    case 3: compare_result = compare_result < 0; break;
+                    case 4: compare_result = compare_result <= 0; break;
+                    default: goto clean_execute_failure;
+                }
+                if (!retdec_clean_vm_assign_bool(vm, arg0, compare_result))
+                    goto clean_execute_failure;
+                break;
+            }
+
+            case 41: { /* EXISTS */
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                temp = (int32_t *)(intptr_t)(vm + 88);
+                if (object == NULL || key == NULL)
+                    goto clean_execute_failure;
+                result = function_4948a0(
+                    (int32_t)(intptr_t)object, (int32_t)(intptr_t)key,
+                    (int32_t)(intptr_t)temp, 1, 0);
+                if (!retdec_clean_vm_assign_bool(vm, arg0, result != 0))
+                    goto clean_execute_failure;
+                break;
+            }
+
+            case 42:
+                if (!retdec_clean_vm_instanceof(vm, arg1, arg2, arg0))
+                    goto clean_execute_failure;
+                break;
+
+            case 43: { /* AND */
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                if (src == NULL)
+                    goto clean_execute_failure;
+                if (function_490d50((int32_t)(intptr_t)src) != 0) {
+                    dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                    if (dst == NULL)
+                        goto clean_execute_failure;
+                    retdec_squirrel_assign(dst, src);
+                    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                        8 * arg1;
+                }
+                break;
+            }
+
+            case 44: { /* OR */
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                if (src == NULL)
+                    goto clean_execute_failure;
+                if (function_490d50((int32_t)(intptr_t)src) == 0) {
+                    dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                    if (dst == NULL)
+                        goto clean_execute_failure;
+                    retdec_squirrel_assign(dst, src);
+                    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                        8 * arg1;
+                }
+                break;
+            }
+
+            case 45:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL || dst == NULL ||
+                    !function_491fe0((int32_t)(intptr_t)dst,
+                                     (int32_t)(intptr_t)src))
+                    goto clean_execute_failure;
+                break;
+
+            case 46:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (src == NULL || !retdec_clean_vm_assign_bool(
+                        vm, arg0, function_490d50((int32_t)(intptr_t)src) != 0))
+                    goto clean_execute_failure;
+                break;
+
+            case 47:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL || dst == NULL || src[0] != 0x05000002)
+                    goto clean_execute_failure;
+                pair[0] = 0x05000002;
+                pair[1] = ~src[1];
+                retdec_squirrel_assign(dst, pair);
+                break;
+
+            case 48:
+                if (!retdec_execute_closure(instruction_ptr, &result))
+                    goto clean_execute_failure;
+                break;
+
+            case 49: {
+                current_ci = *(int32_t *)(intptr_t)(vm + 132);
+                if (current_ci == 0 ||
+                    *(int32_t *)(intptr_t)(current_ci + 16) == 0)
+                    goto clean_execute_failure;
+                if (arg1 != 0xff) {
+                    src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                    if (src == NULL)
+                        goto clean_execute_failure;
+                    retdec_squirrel_assign((int32_t *)(intptr_t)(vm + 88), src);
+                } else {
+                    retdec_squirrel_assign(
+                        (int32_t *)(intptr_t)(vm + 88),
+                        (const int32_t *)(intptr_t)&g483);
+                }
+                if (!function_490370(
+                        *(int32_t *)(intptr_t)(current_ci + 16), vm))
+                    goto clean_execute_failure;
+                result = retdec_execute_return(vm, arg0, arg1, outres);
+                if (result != 0) {
+                    *(int32_t *)(intptr_t)(vm + 144) -= 1;
+                    return 1;
+                }
+                break;
+            }
+
+            case 50:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                if (src == NULL || src[0] != 0x08000400 || src[1] == 0 ||
+                    !function_490630(src[1], vm, arg0))
+                    goto clean_execute_failure;
+                break;
+
+            case 51:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2 + 1);
+                value = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2 + 2);
+                jump = 0;
+                if (object == NULL || src == NULL || key == NULL ||
+                    value == NULL || !function_494da0(
+                        object, src, key, value, arg2, arg1, &jump))
+                    goto clean_execute_failure;
+                *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                    8 * jump;
+                break;
+
+            case 52:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL || src[0] != 0x08000400 || src[1] == 0)
+                    goto clean_execute_failure;
+                if (*(int32_t *)(intptr_t)(src[1] + 116) == 2)
+                    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132)) +=
+                        8 * (arg1 - 1);
+                break;
+
+            case 53:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (object == NULL || key == NULL || dst == NULL ||
+                    !function_490c80((int32_t)(intptr_t)dst,
+                                     (int32_t)(intptr_t)object,
+                                     (int32_t)(intptr_t)key))
+                    goto clean_execute_failure;
+                break;
+
+            case 54:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL || dst == NULL ||
+                    !function_494990((int32_t)(intptr_t)src,
+                                     (int32_t)(intptr_t)dst))
+                    goto clean_execute_failure;
+                break;
+
+            case 55:
+                if (!retdec_clean_vm_typeof(vm, arg1, arg0))
+                    goto clean_execute_failure;
+                break;
+
+            case 56:
+                trap_block = (int32_t *)(intptr_t)(vm + 120);
+                trap_count = *(int32_t *)(intptr_t)(vm + 124);
+                trap_capacity = *(int32_t *)(intptr_t)(vm + 128);
+                if (trap_count >= trap_capacity) {
+                    int32_t new_capacity = trap_capacity != 0
+                        ? trap_capacity * 2 : 4;
+                    int32_t block = function_498590(
+                        trap_block[0], 16 * new_capacity);
+                    if (block == 0)
+                        goto clean_execute_failure;
+                    trap_block[0] = block;
+                    trap_block[2] = new_capacity;
+                }
+                trap_block = (int32_t *)(intptr_t)trap_block[0] +
+                    4 * trap_count;
+                trap_block[0] = *(int32_t *)(intptr_t)(vm + 48);
+                trap_block[1] = *(int32_t *)(intptr_t)(vm + 52);
+                trap_block[2] = *(int32_t *)(intptr_t)(
+                    *(int32_t *)(intptr_t)(vm + 132)) + 8 * arg1;
+                trap_block[3] = arg0;
+                *(int32_t *)(intptr_t)(vm + 124) = trap_count + 1;
+                *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132) + 20) += 1;
+                break;
+
+            case 57:
+                trap_count = *(int32_t *)(intptr_t)(vm + 124);
+                if (arg0 > trap_count)
+                    goto clean_execute_failure;
+                *(int32_t *)(intptr_t)(vm + 124) = trap_count - arg0;
+                *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132) + 20) -= arg0;
+                break;
+
+            case 58:
+                src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (src == NULL)
+                    goto clean_execute_failure;
+                retdec_squirrel_assign((int32_t *)(intptr_t)(vm + 64), src);
+                goto clean_execute_failure;
+
+            case 59:
+                dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
+                if (dst == NULL || !function_492a80(
+                        (int32_t)(intptr_t)dst, arg1, arg2))
+                    goto clean_execute_failure;
+                break;
+
+            case 60:
+                object = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
+                key = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg2);
+                value = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg3);
+                if (object == NULL || key == NULL || value == NULL ||
+                    !function_493a40((int32_t)(intptr_t)object,
+                                     (int32_t)(intptr_t)key,
+                                     (int32_t)(intptr_t)value,
+                                     (arg0 & 2) != 0))
+                    goto clean_execute_failure;
+                break;
+
+            default:
+                goto clean_execute_failure;
+        }
+    }
+
+clean_execute_failure:
+    if (trace_clean_failure_count < 64) {
+        retdec_trace_i32("clean-execute:failure-opcode", opcode);
+        retdec_trace_i32("clean-execute:failure-instruction", instruction_ptr);
+        retdec_trace_i32("clean-execute:failure-vm", vm);
+        retdec_trace_i32("clean-execute:failure-ci",
+                         *(int32_t *)(intptr_t)(vm + 132));
+        ++trace_clean_failure_count;
+    }
+    (void)raiseerror;
+    *(int32_t *)(intptr_t)(vm + 144) -= 1;
+    return 0;
+}
+
 // Address range: 0x497680 - 0x49784d
 static int32_t function_497680_this(int32_t this_ptr, int32_t object_ptr,
                                      int32_t a3, int32_t a4, int32_t a5,
@@ -210655,14 +216500,28 @@ static int32_t function_497680_this(int32_t this_ptr, int32_t object_ptr,
 
     switch (*(int32_t *)(intptr_t)object_ptr) {
         case 0x8000100:
-            result = function_495360(
+#if defined(KINOKO_ENABLE_SQUIRREL_CPP_VM)
+            {
+                int32_t cpp_result = retdec_squirrel_execute_cpp(
+                    this_ptr,
+                    object_ptr,
+                    this_ptr != 0
+                        ? *(int32_t *)(intptr_t)(this_ptr + 48) - a3
+                        : 0,
+                    a3,
+                    a4,
+                    a5,
+                    a6,
+                    0);
+                if (cpp_result != RETDEC_SQUIRREL_CPP_UNSUPPORTED)
+                    return cpp_result;
+            }
+#endif
+            result = retdec_execute_clean_vm(
                 object_ptr,
-                (this_ptr != 0 ? *(int32_t *)(intptr_t)(this_ptr + 48) : 0) - a3,
-                a3,
-                a4,
-                a5,
-                a6,
-                0);
+                this_ptr != 0
+                    ? *(int32_t *)(intptr_t)(this_ptr + 48) - a3 : 0,
+                a3, a4, a5, a6);
             /* function_495360 is a recovered VM dispatcher and does not
              * reliably preserve RetDec's register-backed locals.  Reload the
              * active VM after the call before touching its frame fields. */
@@ -213076,63 +218935,43 @@ static int32_t retdec_delete_squirrel_instance_this(int32_t this_ptr,
 // stack and must be included in the callee cleanup.
 static int32_t function_498e30_this(int32_t this_ptr, int32_t index,
                                      int32_t out_ptr) {
+    int32_t class_ptr;
+    int32_t metamethod_block;
+    int32_t metamethod_size;
+    int32_t *value;
+
     retdec_trace_i32("sq-meta:instance-this", this_ptr);
     retdec_trace_i32("sq-meta:instance-index", index);
     retdec_trace_i32("sq-meta:instance-out", out_ptr);
     if (this_ptr == 0 || out_ptr == 0)
         return 0;
-    int32_t v2 = *(int32_t *)(this_ptr + 28);
-    int32_t metamethod_block = v2 != 0 ? *(int32_t *)(v2 + 56) : 0;
-    int32_t v3;
+    class_ptr = *(int32_t *)(this_ptr + 28);
+    metamethod_block = class_ptr != 0
+        ? *(int32_t *)(class_ptr + 56) : 0;
+    metamethod_size = class_ptr != 0
+        ? *(int32_t *)(class_ptr + 60) : 0;
 
-    /* SQClass normally sizes this vector in its constructor.  Keep the
-       original false result if a partially initialized class reaches here. */
+    /* SQInstance::GetMetaMethod returns false when the class has no
+       metamethod or the requested index is outside its vector. */
     if (metamethod_block == 0) {
-        retdec_trace_i32("sq-meta:instance-null-class", v2);
-        return v2 & -256;
+        retdec_trace_i32("sq-meta:instance-null-class", class_ptr);
+        return 0;
     }
-    retdec_trace_i32("sq-meta:instance-class", v2);
+    retdec_trace_i32("sq-meta:instance-class", class_ptr);
     retdec_trace_i32("sq-meta:instance-block", metamethod_block);
-    retdec_trace_i32("sq-meta:instance-size",
-                     *(int32_t *)(v2 + 60));
-    if (index < 0 || index >= *(int32_t *)(v2 + 60))
-        return v2 & -256;
-    v3 = metamethod_block + 8 * index;
-    int32_t * v4 = (int32_t *)v3; // 0x498e3c
-    retdec_trace_i32("sq-meta:instance-value-type", v4[0]);
-    retdec_trace_i32("sq-meta:instance-value-data", v4[1]);
+    retdec_trace_i32("sq-meta:instance-size", metamethod_size);
+    if (index < 0 || index >= metamethod_size)
+        return 0;
+    value = (int32_t *)(intptr_t)(metamethod_block + 8 * index);
+    retdec_trace_i32("sq-meta:instance-value-type", value[0]);
+    retdec_trace_i32("sq-meta:instance-value-data", value[1]);
     retdec_trace_i32("sq-meta:instance-out-type", *(int32_t *)out_ptr);
     retdec_trace_i32("sq-meta:instance-out-data",
                      *(int32_t *)(out_ptr + 4));
-    if (*v4 == 0x1000001) {
-        // 0x498e85
-        return v2 & -256;
-    }
-    int32_t * v5 = (int32_t *)(out_ptr + 4); // 0x498e4b
-    int32_t v6 = *v5; // 0x498e4b
-    int32_t * v7 = (int32_t *)out_ptr; // 0x498e4f
-    *v5 = *(int32_t *)(v3 + 4);
-    int32_t v8 = *v4; // 0x498e58
-    *v7 = v8;
-    if ((v8 & 0x8000000) != 0) {
-        int32_t * v9 = (int32_t *)(out_ptr + 4); // 0x498e66
-        *v9 = *v9 + 1;
-    }
-    // 0x498e69
-    if ((*v7 & 0x8000000) == 0 || v6 == 0) {
-        // 0x498e7f
-        return out_ptr & -256 | 1;
-    }
-    int32_t * v10 = (int32_t *)(v6 + 4); // 0x498e73
-    int32_t v11 = *v10 - 1; // 0x498e73
-    *v10 = v11;
-    int32_t v12 = out_ptr; // 0x498e76
-    if (v11 == 0) {
-        // 0x498e78
-        v12 = *(int32_t *)v6;
-    }
-    // 0x498e7f
-    return v12 & -256 | 1;
+    if (value[0] == 0x1000001)
+        return 0;
+    retdec_squirrel_assign((int32_t *)(intptr_t)out_ptr, value);
+    return 1;
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
@@ -213142,7 +218981,8 @@ __declspec(naked) static int32_t function_498e30(
         /* Entry is ECX=this, [esp+4]=SQVM*, [esp+8]=index,
            [esp+12]=out SQObjectPtr. */
         push [esp + 12]
-        push [esp + 8]
+        /* The first push moved the original index to [esp+12]. */
+        push [esp + 12]
         push ecx
         call function_498e30_this
         add esp, 12
@@ -215052,8 +220892,530 @@ int32_t function_49a4b0(int32_t a1) {
     return result;
 }
 
+/* The original GC entry points were emitted without their ECX receivers.
+   Keep the object graph walk here in the same order as Squirrel 2.2.2. */
+static int32_t retdec_gc_watch_table;
+static int32_t retdec_gc_watch_cycle;
+
+static int32_t retdec_gc_table_has_key(int32_t table_ptr,
+                                       const char *wanted) {
+    int32_t nodes;
+    int32_t capacity;
+    int32_t bucket;
+    int32_t entry;
+    int32_t key_type;
+    int32_t key_data;
+    int32_t chain_length;
+
+    if (table_ptr == 0 || wanted == NULL)
+        return 0;
+
+    __try {
+        nodes = *(int32_t *)(intptr_t)(table_ptr + 32);
+        capacity = *(int32_t *)(intptr_t)(table_ptr + 36);
+        if (nodes == 0 || capacity <= 0 || capacity > 4096)
+            return 0;
+        for (bucket = 0; bucket < capacity; ++bucket) {
+            entry = nodes + 20 * bucket;
+            chain_length = 0;
+            while (entry != 0 && chain_length++ < capacity) {
+                key_type = *(int32_t *)(intptr_t)(entry + 8);
+                key_data = *(int32_t *)(intptr_t)(entry + 12);
+                if (key_type == 0x08000010 && key_data != 0 &&
+                    strcmp((const char *)(intptr_t)(key_data + 28), wanted) == 0)
+                    return 1;
+                entry = *(int32_t *)(intptr_t)(entry + 16);
+            }
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return 0;
+    }
+    return 0;
+}
+
+static int32_t retdec_gc_is_fader_table(int32_t table_ptr) {
+    return retdec_gc_table_has_key(table_ptr, "UpdateSingleFade") &&
+           retdec_gc_table_has_key(table_ptr, "FadeIn") &&
+           retdec_gc_table_has_key(table_ptr, "FadeOut") &&
+           retdec_gc_table_has_key(table_ptr, "frameCount");
+}
+
+static void retdec_gc_trace_watch(const char *label, int32_t table_ptr) {
+    char message[192];
+
+    if (label == NULL || table_ptr == 0)
+        return;
+    __try {
+        wsprintfA(message,
+                  "%s:table=0x%08lX flags=0x%08lX prev=0x%08lX next=0x%08lX nodes=0x%08lX capacity=%ld used=%ld",
+                  label, (unsigned long)(uint32_t)table_ptr,
+                  (unsigned long)(uint32_t)*(int32_t *)(intptr_t)(table_ptr + 4),
+                  (unsigned long)(uint32_t)*(int32_t *)(intptr_t)(table_ptr + 16),
+                  (unsigned long)(uint32_t)*(int32_t *)(intptr_t)(table_ptr + 12),
+                  (unsigned long)(uint32_t)*(int32_t *)(intptr_t)(table_ptr + 32),
+                  (long)*(int32_t *)(intptr_t)(table_ptr + 36),
+                  (long)*(int32_t *)(intptr_t)(table_ptr + 40));
+        retdec_trace(message);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        retdec_trace("gc:watch-fault");
+    }
+}
+
+static void retdec_gc_mark_vector(int32_t values, int32_t count,
+                                  int32_t *chain_head) {
+    if (values == 0 || count <= 0 || count > 0x01000000)
+        return;
+    for (int32_t index = 0; index < count; ++index)
+        retdec_gc_mark_value((const int32_t *)(intptr_t)(values + 8 * index),
+                             chain_head);
+}
+
+static void retdec_gc_mark_members(int32_t members, int32_t count,
+                                   int32_t *chain_head) {
+    if (members == 0 || count <= 0 || count > 0x01000000)
+        return;
+    for (int32_t index = 0; index < count; ++index) {
+        int32_t member = members + 16 * index;
+        retdec_gc_mark_value((const int32_t *)(intptr_t)member, chain_head);
+        retdec_gc_mark_value((const int32_t *)(intptr_t)(member + 8),
+                             chain_head);
+    }
+}
+
+static void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head) {
+    int32_t type;
+    int32_t data;
+    uint32_t flags;
+
+    if (value == NULL || chain_head == NULL)
+        return;
+    type = value[0];
+    data = value[1];
+    if (data == 0 || (type & 0x08000000) == 0)
+        return;
+
+    /* Strings, function prototypes, and weak references are ref-counted but
+       are not part of SQSharedState's collectable chain. */
+    if (type != 0x0A000020 && type != 0x08000040 &&
+        type != 0x0A000080 && type != 0x08000100 &&
+        type != 0x08000200 && type != 0x08000400 &&
+        type != 0x08001000 && type != 0x08004000 &&
+        type != 0x0A008000)
+        return;
+
+    flags = (uint32_t)*(int32_t *)(intptr_t)(data + 4);
+    if ((flags & 0x80000000u) != 0)
+        return;
+    *(uint32_t *)(intptr_t)(data + 4) = flags | 0x80000000u;
+
+    switch (type) {
+        case 0x0A000020: { /* SQTable */
+            int32_t delegate = *(int32_t *)(intptr_t)(data + 24);
+            int32_t table_value[2] = { 0x0A000020, delegate };
+            int32_t nodes = *(int32_t *)(intptr_t)(data + 32);
+            int32_t count = *(int32_t *)(intptr_t)(data + 36);
+            retdec_gc_mark_value(table_value, chain_head);
+            if (nodes != 0 && count > 0 && count <= 0x01000000) {
+                for (int32_t index = 0; index < count; ++index) {
+                    int32_t node = nodes + 20 * index;
+                    retdec_gc_mark_value(
+                        (const int32_t *)(intptr_t)node, chain_head);
+                    retdec_gc_mark_value(
+                        (const int32_t *)(intptr_t)(node + 8), chain_head);
+                }
+            }
+            break;
+        }
+        case 0x08000040: /* SQArray */
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 24),
+                *(int32_t *)(intptr_t)(data + 28), chain_head);
+            break;
+        case 0x0A000080: { /* SQUserData */
+            int32_t delegate = *(int32_t *)(intptr_t)(data + 24);
+            int32_t table_value[2] = { 0x0A000020, delegate };
+            retdec_gc_mark_value(table_value, chain_head);
+            break;
+        }
+        case 0x08000100: /* SQClosure */
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 40),
+                *(int32_t *)(intptr_t)(data + 44), chain_head);
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 52),
+                *(int32_t *)(intptr_t)(data + 56), chain_head);
+            break;
+        case 0x08000200: /* SQNativeClosure */
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 40),
+                *(int32_t *)(intptr_t)(data + 44), chain_head);
+            break;
+        case 0x08000400: /* SQGenerator */
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 24), chain_head);
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 32),
+                *(int32_t *)(intptr_t)(data + 36), chain_head);
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 44),
+                *(int32_t *)(intptr_t)(data + 48), chain_head);
+            break;
+        case 0x08001000: { /* SQVM */
+            int32_t stack = *(int32_t *)(intptr_t)(data + 24);
+            int32_t stack_count = *(int32_t *)(intptr_t)(data + 28);
+            int32_t vargs = *(int32_t *)(intptr_t)(data + 36);
+            int32_t vargs_count = *(int32_t *)(intptr_t)(data + 40);
+            int32_t calls = *(int32_t *)(intptr_t)(data + 96);
+            int32_t call_count = *(int32_t *)(intptr_t)(data + 100);
+
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 56), chain_head);
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 64), chain_head);
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 72), chain_head);
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 80), chain_head);
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 88), chain_head);
+            retdec_gc_mark_vector(stack, stack_count, chain_head);
+            retdec_gc_mark_vector(vargs, vargs_count, chain_head);
+            if (calls != 0 && call_count > 0 && call_count <= 0x10000) {
+                for (int32_t index = 0; index < call_count; ++index)
+                    retdec_gc_mark_value(
+                        (const int32_t *)(intptr_t)(calls + 48 * index + 8),
+                        chain_head);
+            }
+            break;
+        }
+        case 0x08004000: { /* SQClass */
+            int32_t members = *(int32_t *)(intptr_t)(data + 24);
+            int32_t base = *(int32_t *)(intptr_t)(data + 28);
+            int32_t members_value[2] = { 0x0A000020, members };
+            int32_t base_value[2] = { 0x08004000, base };
+            retdec_gc_mark_value(members_value, chain_head);
+            retdec_gc_mark_value(base_value, chain_head);
+            retdec_gc_mark_members(
+                *(int32_t *)(intptr_t)(data + 32),
+                *(int32_t *)(intptr_t)(data + 36), chain_head);
+            retdec_gc_mark_members(
+                *(int32_t *)(intptr_t)(data + 44),
+                *(int32_t *)(intptr_t)(data + 48), chain_head);
+            retdec_gc_mark_vector(
+                *(int32_t *)(intptr_t)(data + 56),
+                *(int32_t *)(intptr_t)(data + 60), chain_head);
+            retdec_gc_mark_value(
+                (const int32_t *)(intptr_t)(data + 68), chain_head);
+            break;
+        }
+        case 0x0A008000: { /* SQInstance */
+            int32_t class_ptr = *(int32_t *)(intptr_t)(data + 28);
+            int32_t class_value[2] = { 0x08004000, class_ptr };
+            int32_t count = class_ptr != 0
+                ? *(int32_t *)(intptr_t)(class_ptr + 36) : 0;
+            retdec_gc_mark_value(class_value, chain_head);
+            retdec_gc_mark_vector(data + 44, count, chain_head);
+            break;
+        }
+        default:
+            break;
+    }
+
+    {
+        int32_t shared_state = *(int32_t *)(intptr_t)(data + 20);
+        if (shared_state != 0)
+            function_49a170(shared_state + 68, data);
+    }
+    function_49a140((int32_t)(intptr_t)&chain_head, data);
+}
+
+static void retdec_gc_clear_vector(int32_t values, int32_t *size_ptr) {
+    int32_t count;
+
+    if (size_ptr == NULL)
+        return;
+    count = *size_ptr;
+    if (values != 0 && count > 0 && count <= 0x01000000) {
+        for (int32_t index = 0; index < count; ++index)
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(values + 8 * index),
+                (const int32_t *)(intptr_t)&g483);
+    }
+    *size_ptr = 0;
+}
+
+static void retdec_gc_clear_members(int32_t members, int32_t *size_ptr) {
+    int32_t count;
+
+    if (size_ptr == NULL)
+        return;
+    count = *size_ptr;
+    if (members != 0 && count > 0 && count <= 0x01000000) {
+        for (int32_t index = 0; index < count; ++index) {
+            int32_t member = members + 16 * index;
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)member,
+                (const int32_t *)(intptr_t)&g483);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(member + 8),
+                (const int32_t *)(intptr_t)&g483);
+        }
+    }
+    *size_ptr = 0;
+}
+
+static void retdec_gc_finalize_collectable(int32_t object_ptr,
+                                            int32_t object_type) {
+    if (object_ptr == 0)
+        return;
+
+    switch (object_type) {
+        case 0x0A000020: /* SQTable */
+            retdec_table_finalize(object_ptr);
+            break;
+        case 0x08000040: /* SQArray */
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 24),
+                (int32_t *)(intptr_t)(object_ptr + 28));
+            break;
+        case 0x0A000080: { /* SQUserData */
+            int32_t delegate = *(int32_t *)(intptr_t)(object_ptr + 24);
+            if (delegate != 0)
+                retdec_squirrel_release(0x0A000020, delegate);
+            *(int32_t *)(intptr_t)(object_ptr + 24) = 0;
+            break;
+        }
+        case 0x08000100: /* SQClosure */
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 40),
+                (int32_t *)(intptr_t)(object_ptr + 44));
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 52),
+                (int32_t *)(intptr_t)(object_ptr + 56));
+            break;
+        case 0x08000200: /* SQNativeClosure */
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 40),
+                (int32_t *)(intptr_t)(object_ptr + 44));
+            break;
+        case 0x08000400: /* SQGenerator */
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 32),
+                (int32_t *)(intptr_t)(object_ptr + 36));
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 24),
+                (const int32_t *)(intptr_t)&g483);
+            break;
+        case 0x08001000: { /* SQVM */
+            int32_t stack = *(int32_t *)(intptr_t)(object_ptr + 24);
+            int32_t stack_count = *(int32_t *)(intptr_t)(object_ptr + 28);
+            int32_t calls = *(int32_t *)(intptr_t)(object_ptr + 96);
+            int32_t call_count = *(int32_t *)(intptr_t)(object_ptr + 100);
+
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 56),
+                (const int32_t *)(intptr_t)&g483);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 64),
+                (const int32_t *)(intptr_t)&g483);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 72),
+                (const int32_t *)(intptr_t)&g483);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 80),
+                (const int32_t *)(intptr_t)&g483);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 88),
+                (const int32_t *)(intptr_t)&g483);
+            if (calls != 0 && call_count > 0 && call_count <= 0x10000) {
+                for (int32_t index = 0; index < call_count; ++index)
+                    retdec_squirrel_assign(
+                        (int32_t *)(intptr_t)(calls + 48 * index + 8),
+                        (const int32_t *)(intptr_t)&g483);
+            }
+            *(int32_t *)(intptr_t)(object_ptr + 112) = 0;
+            if (stack != 0 && stack_count > 0 && stack_count <= 0x01000000) {
+                for (int32_t index = 0; index < stack_count; ++index)
+                    retdec_squirrel_assign(
+                        (int32_t *)(intptr_t)(stack + 8 * index),
+                        (const int32_t *)(intptr_t)&g483);
+            }
+            break;
+        }
+        case 0x08004000: { /* SQClass */
+            int32_t members = *(int32_t *)(intptr_t)(object_ptr + 24);
+            int32_t base = *(int32_t *)(intptr_t)(object_ptr + 28);
+            retdec_squirrel_assign(
+                (int32_t *)(intptr_t)(object_ptr + 68),
+                (const int32_t *)(intptr_t)&g483);
+            retdec_gc_clear_members(
+                *(int32_t *)(intptr_t)(object_ptr + 32),
+                (int32_t *)(intptr_t)(object_ptr + 36));
+            retdec_gc_clear_members(
+                *(int32_t *)(intptr_t)(object_ptr + 44),
+                (int32_t *)(intptr_t)(object_ptr + 48));
+            retdec_gc_clear_vector(
+                *(int32_t *)(intptr_t)(object_ptr + 56),
+                (int32_t *)(intptr_t)(object_ptr + 60));
+            if (members != 0)
+                retdec_squirrel_release(0x0A000020, members);
+            if (base != 0)
+                retdec_squirrel_release(0x08004000, base);
+            *(int32_t *)(intptr_t)(object_ptr + 24) = 0;
+            *(int32_t *)(intptr_t)(object_ptr + 28) = 0;
+            break;
+        }
+        case 0x0A008000: { /* SQInstance */
+            int32_t class_ptr = *(int32_t *)(intptr_t)(object_ptr + 28);
+            int32_t count = class_ptr != 0
+                ? *(int32_t *)(intptr_t)(class_ptr + 36) : 0;
+            retdec_gc_clear_vector(object_ptr + 44, &count);
+            if (class_ptr != 0)
+                retdec_squirrel_release(0x08004000, class_ptr);
+            *(int32_t *)(intptr_t)(object_ptr + 28) = 0;
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+static int32_t retdec_gc_object_type(int32_t object_ptr) {
+    int32_t vtable;
+
+    if (object_ptr == 0)
+        return 0;
+    vtable = *(int32_t *)(intptr_t)object_ptr;
+    if (vtable == (int32_t)(intptr_t)&g66)
+        return 0x08000100;
+    if (vtable == (int32_t)(intptr_t)&g67)
+        return 0x08000200;
+    if (vtable == (int32_t)(intptr_t)&g68)
+        return 0x0A000080;
+    if (vtable == (int32_t)(intptr_t)&g69)
+        return 0x08000040;
+    if (vtable == (int32_t)(intptr_t)&g72)
+        return 0x08000400;
+    if (vtable == (int32_t)(intptr_t)&g73)
+        return 0x08001000;
+    if (vtable == (int32_t)(intptr_t)&g74)
+        return 0x0A000020;
+    if (vtable == (int32_t)(intptr_t)&g75)
+        return 0x0A008000;
+    if (vtable == (int32_t)(intptr_t)&g76)
+        return 0x08004000;
+    return 0;
+}
+
+static int32_t function_49a520_this(int32_t shared_state, int32_t vm) {
+    int32_t chain_head = 0;
+    int32_t root_value[2];
+    int32_t nodes;
+    int32_t count;
+    int32_t current;
+    int32_t collected = 0;
+    int32_t scan;
+    int32_t scan_count;
+    int32_t root_vm;
+
+    if (shared_state == 0 || vm == 0)
+        return 0;
+
+    if (retdec_gc_watch_cycle < 8) {
+        root_vm = *(int32_t *)(intptr_t)(shared_state + 76);
+        retdec_trace_i32("gc:shared-state", shared_state);
+        retdec_trace_i32("gc:vm", vm);
+        retdec_trace_i32("gc:root-vm", root_vm);
+        retdec_trace_i32("gc:root-table-type",
+                         root_vm != 0 ? *(int32_t *)(intptr_t)(root_vm + 56) : 0);
+        retdec_trace_i32("gc:root-table-data",
+                         root_vm != 0 ? *(int32_t *)(intptr_t)(root_vm + 60) : 0);
+        retdec_trace_i32("gc:chain-before", *(int32_t *)(intptr_t)(shared_state + 68));
+        scan = *(int32_t *)(intptr_t)(shared_state + 68);
+        scan_count = 0;
+        while (scan != 0 && scan_count++ < 100000) {
+            if (retdec_gc_object_type(scan) == 0x0A000020 &&
+                retdec_gc_is_fader_table(scan)) {
+                retdec_gc_watch_table = scan;
+                retdec_gc_trace_watch("gc:fader-before", scan);
+                break;
+            }
+            scan = *(int32_t *)(intptr_t)(scan + 12);
+        }
+    }
+
+    root_value[0] = 0x08001000;
+    root_value[1] = *(int32_t *)(intptr_t)(shared_state + 76);
+    retdec_gc_mark_value(root_value, &chain_head);
+
+    nodes = *(int32_t *)(intptr_t)(shared_state + 32);
+    count = *(int32_t *)(intptr_t)(shared_state + 24);
+    if (nodes != 0 && count > 0 && count <= 0x01000000) {
+        for (int32_t index = 0; index < count; ++index) {
+            int32_t node = nodes + 16 * index;
+            if (*(int32_t *)(intptr_t)node != g483)
+                retdec_gc_mark_value(
+                    (const int32_t *)(intptr_t)node, &chain_head);
+        }
+    }
+
+    retdec_gc_mark_value(
+        (const int32_t *)(intptr_t)(shared_state + 44), &chain_head);
+    retdec_gc_mark_value(
+        (const int32_t *)(intptr_t)(shared_state + 52), &chain_head);
+    retdec_gc_mark_value(
+        (const int32_t *)(intptr_t)(shared_state + 4), &chain_head);
+    for (int32_t offset = 80; offset <= 152; offset += 8)
+        retdec_gc_mark_value(
+            (const int32_t *)(intptr_t)(shared_state + offset),
+            &chain_head);
+
+    if (retdec_gc_watch_cycle < 8 && retdec_gc_watch_table != 0)
+        retdec_gc_trace_watch("gc:fader-after-mark", retdec_gc_watch_table);
+
+    current = *(int32_t *)(intptr_t)(shared_state + 68);
+    while (current != 0) {
+        int32_t next = *(int32_t *)(intptr_t)(current + 12);
+        int32_t object_type = retdec_gc_object_type(current);
+
+        if (retdec_gc_watch_cycle < 8 && current == retdec_gc_watch_table)
+            retdec_gc_trace_watch("gc:fader-finalize-before", current);
+
+        ++*(int32_t *)(intptr_t)(current + 4);
+        if (object_type != 0)
+            retdec_gc_finalize_collectable(current, object_type);
+        if (--*(int32_t *)(intptr_t)(current + 4) == 0 && object_type != 0) {
+            int32_t vtable = *(int32_t *)(intptr_t)current;
+            int32_t release = vtable != 0
+                ? *(int32_t *)(intptr_t)(vtable + 4) : 0;
+            if (release != 0)
+                retdec_call_thiscall0((void *)(intptr_t)current,
+                                      (void *)(intptr_t)release);
+            ++collected;
+        }
+        current = next;
+    }
+
+    current = chain_head;
+    while (current != 0) {
+        int32_t next = *(int32_t *)(intptr_t)(current + 12);
+        *(uint32_t *)(intptr_t)(current + 4) &= ~0x80000000u;
+        current = next;
+    }
+    if (retdec_gc_watch_cycle < 8 && retdec_gc_watch_table != 0)
+        retdec_gc_trace_watch("gc:fader-after-sweep", retdec_gc_watch_table);
+    ++retdec_gc_watch_cycle;
+    return collected;
+}
+
 // Address range: 0x49a520 - 0x49a66d
 int32_t function_49a520(void) {
+    if (g644 == NULL)
+        return 0;
+    return function_49a520_this(
+        *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 140),
+        (int32_t)(intptr_t)g644);
+#if 0
     int32_t v1 = 0; // bp-8, 0x49a530
     function_49a2a0(&v1);
     int32_t v2 = &v1; // 0x49a550
@@ -215103,6 +221465,7 @@ int32_t function_49a520(void) {
     // 0x49a64e
     *v4 = v1;
     return result;
+#endif
 }
 
 // Address range: 0x49a670 - 0x49a67e
@@ -222958,8 +229321,34 @@ int32_t function_4a15b0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     return result;
 }
 
+static int32_t retdec_parse_number(const char *text, int32_t *out) {
+    char *end = NULL;
+
+    if (text == NULL || out == NULL)
+        return 0;
+    if (strstr(text, ".") != NULL) {
+        float value = (float)_strtod(text, &end);
+        if (end == text)
+            return 0;
+        retdec_squirrel_release(out[0], out[1]);
+        out[0] = 0x05000004;
+        memcpy(&out[1], &value, sizeof(value));
+        return 1;
+    }
+
+    long value = strtol(text, &end, 10);
+    if (end == text)
+        return 0;
+    retdec_squirrel_release(out[0], out[1]);
+    out[0] = 0x05000002;
+    out[1] = (int32_t)value;
+    return 1;
+}
+
 // Address range: 0x4a16a0 - 0x4a1755
 int32_t function_4a16a0(int32_t a1, int32_t * a2) {
+    return retdec_parse_number((const char *)(intptr_t)a1, a2);
+#if 0
     int32_t v1 = (int32_t)a2;
     retdec_trace_i32("4a16a0:string", a1);
     retdec_trace_i32("4a16a0:out", (int32_t)(intptr_t)a2);
@@ -223020,6 +229409,7 @@ int32_t function_4a16a0(int32_t a1, int32_t * a2) {
     *a2 = 0x5000004;
     *v12 = (int32_t)v11;
     return v16 & -256 | 1;
+ #endif
 }
 
 // Address range: 0x4a1760 - 0x4a1763
@@ -223414,8 +229804,125 @@ int32_t function_4a1e20(int32_t a1) {
     return 1;
 }
 
+static void retdec_push_squirrel_null(int32_t vm) {
+    function_491820_this(vm, (int32_t)(intptr_t)&g483);
+}
+
+static void retdec_push_squirrel_integer(int32_t vm, int32_t value) {
+    int32_t result[2] = { 0x05000002, value };
+    function_491820_this(vm, (int32_t)(intptr_t)result);
+}
+
+static void retdec_push_squirrel_float(int32_t vm, float value) {
+    int32_t result[2] = { 0x05000004, 0 };
+    memcpy(&result[1], &value, sizeof(value));
+    function_491820_this(vm, (int32_t)(intptr_t)result);
+}
+
+static int32_t retdec_base_tofloat(int32_t vm) {
+    int32_t *slot;
+    int32_t parsed[2] = { g483, g484 };
+    float value;
+
+    if (vm == 0)
+        return 0;
+    slot = (int32_t *)(intptr_t)function_4918a0_this(
+        vm, *(int32_t *)(intptr_t)(vm + 52));
+    if (slot == NULL) {
+        retdec_push_squirrel_null(vm);
+        return 1;
+    }
+
+    switch (slot[0]) {
+        case 0x05000004:
+            memcpy(&value, &slot[1], sizeof(value));
+            retdec_push_squirrel_float(vm, value);
+            return 1;
+        case 0x05000002:
+            retdec_push_squirrel_float(vm, (float)slot[1]);
+            return 1;
+        case 0x01000008:
+            retdec_push_squirrel_float(vm, slot[1] != 0 ? 1.0f : 0.0f);
+            return 1;
+        case 0x08000010:
+            if (slot[1] != 0 && function_4a16a0(
+                    slot[1] + 28, parsed) != 0) {
+                if (parsed[0] == 0x05000002) {
+                    retdec_push_squirrel_float(vm, (float)parsed[1]);
+                } else if (parsed[0] == 0x05000004) {
+                    memcpy(&value, &parsed[1], sizeof(value));
+                    retdec_push_squirrel_float(vm, value);
+                } else {
+                    retdec_push_squirrel_null(vm);
+                }
+                retdec_squirrel_release(parsed[0], parsed[1]);
+                return 1;
+            }
+            retdec_push_squirrel_null(vm);
+            return 1;
+        default:
+            retdec_push_squirrel_null(vm);
+            return 1;
+    }
+}
+
+static int32_t retdec_base_tointeger(int32_t vm) {
+    int32_t *slot;
+    int32_t parsed[2] = { g483, g484 };
+    int32_t value;
+
+    if (vm == 0)
+        return 0;
+    slot = (int32_t *)(intptr_t)function_4918a0_this(
+        vm, *(int32_t *)(intptr_t)(vm + 52));
+    if (slot == NULL) {
+        retdec_push_squirrel_null(vm);
+        return 1;
+    }
+
+    switch (slot[0]) {
+        case 0x05000004: {
+            float number;
+            memcpy(&number, &slot[1], sizeof(number));
+            retdec_push_squirrel_integer(vm, (int32_t)number);
+            return 1;
+        }
+        case 0x05000002:
+            retdec_push_squirrel_integer(vm, slot[1]);
+            return 1;
+        case 0x01000008:
+            retdec_push_squirrel_integer(vm, slot[1] != 0 ? 1 : 0);
+            return 1;
+        case 0x08000010:
+            if (slot[1] != 0 && function_4a16a0(
+                    slot[1] + 28, parsed) != 0) {
+                if (parsed[0] == 0x05000004) {
+                    float number;
+                    memcpy(&number, &parsed[1], sizeof(number));
+                    value = (int32_t)number;
+                } else if (parsed[0] == 0x05000002) {
+                    value = parsed[1];
+                } else {
+                    retdec_push_squirrel_null(vm);
+                    retdec_squirrel_release(parsed[0], parsed[1]);
+                    return 1;
+                }
+                retdec_push_squirrel_integer(vm, value);
+                retdec_squirrel_release(parsed[0], parsed[1]);
+                return 1;
+            }
+            retdec_push_squirrel_null(vm);
+            return 1;
+        default:
+            retdec_push_squirrel_null(vm);
+            return 1;
+    }
+}
+
 // Address range: 0x4a1eb0 - 0x4a2113
 int32_t function_4a1eb0(int32_t a1) {
+    return retdec_base_tofloat(a1);
+#if 0
     int32_t v1 = __readfsdword(0); // bp-16, 0x4a1ec0
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = function_4918a0(*(int32_t *)(a1 + 52)); // 0x4a1ee0
@@ -223513,10 +230020,13 @@ int32_t function_4a1eb0(int32_t a1) {
     // 0x4a20c0
     __writefsdword(0, v1);
     return 1;
+ #endif
 }
 
 // Address range: 0x4a2120 - 0x4a235c
 int32_t function_4a2120(int32_t a1) {
+    return retdec_base_tointeger(a1);
+#if 0
     int32_t v1 = __readfsdword(0); // bp-16, 0x4a2130
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = function_4918a0(*(int32_t *)(a1 + 52)); // 0x4a2150
@@ -223625,6 +230135,7 @@ int32_t function_4a2120(int32_t a1) {
     // 0x4a2309
     __writefsdword(0, v1);
     return 1;
+ #endif
 }
 
 // Address range: 0x4a2360 - 0x4a2378
@@ -231129,7 +237640,8 @@ static int32_t function_4a9d30_this(int32_t this_ptr, int32_t *a1) {
     static int32_t trace_count;
     if (this_ptr == 0 || a1 == NULL)
         return 0;
-    if (trace_count < 32) {
+    if (trace_count < 128 ||
+        *(int32_t *)(intptr_t)(this_ptr + 4) == 0x08004000) {
         retdec_trace_i32("4a9d30:this", this_ptr);
         retdec_trace_i32("4a9d30:type",
                          *(int32_t *)(intptr_t)(this_ptr + 4));
@@ -231139,7 +237651,8 @@ static int32_t function_4a9d30_this(int32_t this_ptr, int32_t *a1) {
     }
     int32_t result =
         function_48a980(this_ptr + 4, (int32_t)(intptr_t)a1) >= 0;
-    if (trace_count < 32) {
+    if (trace_count < 128 ||
+        *(int32_t *)(intptr_t)(this_ptr + 4) == 0x08004000) {
         retdec_trace_i32("4a9d30:result", result);
         retdec_trace_i32("4a9d30:value",
                          *(int32_t *)(intptr_t)a1);
@@ -231321,22 +237834,49 @@ int32_t function_4aa080(int32_t this_ptr, int32_t src_ptr,
 }
 
 // Address range: 0x4aa110 - 0x4aa194
-int32_t function_4aa110(int32_t * a1, int32_t * a2, int32_t a3) {
-    // 0x4aa110
-    int32_t v1; // 0x4aa110
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4aa116
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
-    function_48a480((int32_t)g644, (int32_t)a1, -1);
-    int32_t result = 0; // 0x4aa14f
-    if (function_48ce70((int32_t)g644, -2) >= 0) {
-        // 0x4aa151
-        function_48a920((int32_t)g644, -1, a2, a3);
-        function_48aa30((int32_t)g644, 1);
+// The original routine is a __thiscall helper.  RetDec lost its receiver,
+// which is the temporary SquirrelObject containing the lookup target.
+static int32_t retdec_function_4aa110_this(int32_t this_ptr,
+                                           const char *source_ptr,
+                                           int32_t *out_ptr, int32_t a4) {
+    int32_t vm = (int32_t)(intptr_t)g644;
+    int32_t result = 0;
+
+    if (this_ptr == 0 || vm == 0)
+        return 0;
+
+    function_48ab90(vm,
+                    *(int32_t *)(intptr_t)(this_ptr + 4),
+                    *(int32_t *)(intptr_t)(this_ptr + 8));
+    function_48a480(vm, (int32_t)(intptr_t)source_ptr, -1);
+    if (function_48ce70(vm, -2) >= 0) {
+        function_48a920(vm, -1, out_ptr, a4);
+        function_48aa30(vm, 1);
         result = 1;
     }
-    // 0x4aa17c
-    function_48aa30((int32_t)g644, 1);
+    function_48aa30(vm, 1);
     return result;
+}
+
+/* Keep the generated entry point's original three-argument C shape for the
+   still-unrecovered 4AA750 caller.  Recovered callers use the helper above. */
+int32_t function_4aa110(int32_t *a1, int32_t *a2, int32_t a3) {
+    int32_t v1;
+    int32_t vm = (int32_t)(intptr_t)g644;
+
+    if (vm == 0 || a1 == NULL || a2 == NULL)
+        return 0;
+    function_48ab90(vm, *(int32_t *)(intptr_t)((int32_t)(intptr_t)a1 + 4),
+                    *(int32_t *)(intptr_t)((int32_t)(intptr_t)a1 + 8));
+    function_48a480(vm, (int32_t)(intptr_t)a1, -1);
+    v1 = 0;
+    if (function_48ce70(vm, -2) >= 0) {
+        function_48a920(vm, -1, a2, a3);
+        function_48aa30(vm, 1);
+        v1 = 1;
+    }
+    function_48aa30(vm, 1);
+    return v1;
 }
 
 // Address range: 0x4aa1a0 - 0x4aa20e
@@ -231508,71 +238048,49 @@ int32_t function_4aa540(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
 }
 
 // Address range: 0x4aa5e0 - 0x4aa744
-int32_t function_4aa5e0(int32_t * a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4aa5f0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x4aa5e0
-    char * v3; // bp-288, 0x4aa5e0
-    int32_t v4; // 0x4aa5e0
-    if (v4 < 1) {
-        // 0x4aa63c
-        function_4a9540(v4, v4);
-        v3 = NULL;
-        v2 = 0;
-    } else {
-        // 0x4aa63c
-        int32_t v5; // bp-300, 0x4aa5e0
-        function_48abe0((int32_t)&v5);
-        int32_t * v6 = (int32_t *)(v4 + 4); // 0x4aa627
-        function_48ab40(*v6, 1, &v5);
-        function_4a9540(v5, v4);
-        v3 = NULL;
-        v2 = 0;
-        if (v4 != 1) {
-            // 0x4aa667
-            function_48a8d0(*v6, 2, (int32_t *)&v3);
-            v2 = (int32_t)v3;
+// context is the pair used by the original __usercall: [stack top, VM].
+// out_varinfo is the caller's temporary slot which the original routine
+// overwrote with the VarInfo pointer.
+int32_t function_4aa5e0(int32_t *context, int32_t *out_varinfo) {
+    int32_t vm;
+    int32_t object[2] = { g483, g484 };
+    int32_t temporary[3] = { 0, 0, 0 };
+    int32_t key_data = 0;
+    int32_t varinfo = 0;
+    char key[258];
+    int32_t length = 0;
+
+    if (context == NULL || out_varinfo == NULL)
+        return -1;
+
+    vm = context[1];
+    if (context[0] >= 1)
+        function_48ab40(vm, 1, object);
+    function_4a9540_this((int32_t)(intptr_t)temporary,
+                         object[0], object[1]);
+
+    key[0] = '_';
+    key[1] = 'v';
+    if (context[0] >= 2 && function_48a8d0(vm, 2, &key_data) >= 0 &&
+        key_data != 0) {
+        while (length < 255 &&
+               ((char *)(intptr_t)key_data)[length] != '\0') {
+            key[length + 2] = ((char *)(intptr_t)key_data)[length];
+            ++length;
         }
     }
-    char v7 = *(char *)v2; // 0x4aa694
-    int32_t v8 = 0; // 0x4aa696
-    if (v7 != 0) {
-        char v9 = v7; // 0x4aa69e
-        int32_t v10 = v2; // 0x4aa69e
-        int32_t v11 = 0; // 0x4aa69e
-        v8 = 255;
-        while (v11 <= 254) {
-            // 0x4aa6a8
-            int32_t v12; // bp-277, 0x4aa5e0
-            *(char *)((int32_t)&v12 - v2 + v10) = v9;
-            v10++;
-            v11++;
-            v9 = *(char *)v10;
-            v8 = v11;
-            if (v9 == 0) {
-                // break -> 0x4aa6b3
-                break;
-            }
-            v8 = 255;
-        }
+    key[length + 2] = '\0';
+
+    if (retdec_function_4aa110_this((int32_t)(intptr_t)temporary, key,
+                                    &varinfo, 0) == 0) {
+        function_48ac00(vm, "getVarInfo: Could not retrieve UserData");
+        function_4a9d70_this((int32_t)(intptr_t)temporary);
+        return -1;
     }
-    // 0x4aa6b3
-    int32_t v13; // bp-4, 0x4aa5e0
-    *(char *)((int32_t)&v13 - 273 + v8) = 0;
-    int32_t v14 = 0; // bp-284, 0x4aa6cf
-    int32_t v15; // bp-279, 0x4aa5e0
-    if (function_4aa110(&v15, &v14, 0) != 0) {
-        // 0x4aa707
-        *a1 = v14;
-        function_4a9d70();
-    } else {
-        // 0x4aa6de
-        function_48ac00(*(int32_t *)(v4 + 4), "getVarInfo: Could not retrieve UserData");
-        function_4a9d70();
-    }
-    // 0x4aa729
-    __writefsdword(0, v1);
-    return ___report_gsfailure();
+
+    *out_varinfo = varinfo;
+    function_4a9d70_this((int32_t)(intptr_t)temporary);
+    return 0;
 }
 
 // Address range: 0x4aa750 - 0x4aa96d
@@ -232100,6 +238618,54 @@ static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
     }
 }
 
+/* Resolve the native storage behind a SqPlus VarInfo.  The original
+ * 4AA750 receives the VM stack context in EDI and the VarInfo/source
+ * temporaries through ECX/EAX; the generated C prototype cannot express
+ * those registers.  Keep the same lookup and use SQInstance::_userpointer
+ * (+32) with the offset stored in the VarInfo payload. */
+static int32_t retdec_resolve_instance_var(int32_t vm, int32_t top,
+                                           int32_t *out_varinfo,
+                                           int32_t *out_source) {
+    int32_t context[2];
+    int32_t instance_pair[2] = { g483, g484 };
+    int32_t varinfo = 0;
+    int32_t native_ptr;
+    int32_t offset;
+    uint16_t flags;
+
+    if (out_varinfo != NULL)
+        *out_varinfo = 0;
+    if (out_source != NULL)
+        *out_source = 0;
+    if (vm == 0 || top < 2 || out_varinfo == NULL || out_source == NULL)
+        return 0;
+
+    context[0] = top;
+    context[1] = vm;
+    function_48ab40(vm, 1, instance_pair);
+    if (instance_pair[0] != 0x0A008000 || instance_pair[1] == 0)
+        return 0;
+    if (function_4aa5e0(context, &varinfo) != 0 || varinfo == 0)
+        return 0;
+
+    native_ptr = *(int32_t *)(intptr_t)(instance_pair[1] + 32);
+    offset = *(int32_t *)(intptr_t)varinfo;
+    flags = *(uint16_t *)(intptr_t)(varinfo + 18);
+    if ((flags & 6) != 0) {
+        *out_source = offset;
+    } else {
+        if (native_ptr == 0)
+            return 0;
+        *out_source = native_ptr + offset;
+    }
+    *out_varinfo = varinfo;
+    retdec_trace_i32("get:varinfo", varinfo);
+    retdec_trace_i32("get:native", native_ptr);
+    retdec_trace_i32("get:offset", offset);
+    retdec_trace_i32("get:source", *out_source);
+    return 1;
+}
+
 // Address range: 0x4aab60 - 0x4aabc9
 int32_t function_4aab60(int32_t a1) {
     int32_t context[2];
@@ -232111,7 +238677,9 @@ int32_t function_4aab60(int32_t a1) {
     context[1] = a1;
     if (context[0] < 1 || function_48a6f0(a1, 1) != 0xa000020)
         return -1;
-    result = retdec_get_var_info(&varinfo, context);
+    /* Keep the original SqPlus VarInfo lookup.  It is also responsible for
+       installing the native error before the VM propagates a failed _get. */
+    result = function_4aa5e0(context, &varinfo);
     if (result != 0)
         return result;
     return retdec_get_var_value(
@@ -232120,19 +238688,43 @@ int32_t function_4aab60(int32_t a1) {
 
 // Address range: 0x4aabd0 - 0x4aac3d
 int32_t function_4aabd0(int32_t a1) {
-    int32_t v1 = a1;
+    static int32_t trace_instance_get_count;
+    int32_t context[2];
+    int32_t varinfo = 0;
+    int32_t source = 0;
+    int32_t top;
+    int32_t name_slot;
+
     function_4a8db0(a1);
-    if (function_48aa20(a1) < 1 || function_48a6f0(a1, 1) != 0xa008000) {
+    top = function_48aa20(a1);
+    if (trace_instance_get_count < 32) {
+        retdec_trace_i32("sq-meta:var-get-vm", a1);
+        retdec_trace_i32("sq-meta:var-get-top", top);
+        retdec_trace_i32("sq-meta:var-get-slot1-type", function_48a6f0(a1, 1));
+        retdec_trace_i32("sq-meta:var-get-slot1-data",
+                         *(int32_t *)(intptr_t)(
+                             function_491880_this(a1, 1) + 4));
+        name_slot = top >= 2 ? function_491880_this(a1, 2) : 0;
+        if (name_slot != 0 && *(int32_t *)(intptr_t)name_slot == 0x08000010 &&
+            *(int32_t *)(intptr_t)(name_slot + 4) != 0)
+            retdec_trace_squirrel_name(
+                "sq-meta:var-get-name",
+                *(int32_t *)(intptr_t)(name_slot + 4) + 28);
+        ++trace_instance_get_count;
+    }
+    if (top < 1 || function_48a6f0(a1, 1) != 0xa008000) {
         // 0x4aac38
         return -1;
     }
-    int32_t result = function_4aa750(&v1); // 0x4aac11
-    if (result != 0) {
+    if (!retdec_resolve_instance_var(a1, top, &varinfo, &source))
+        return -1;
+    context[0] = top;
+    context[1] = a1;
+    if (varinfo != 0) {
         // 0x4aac38
-        return result;
+        return retdec_get_var_value(context, varinfo, source);
     }
-    // 0x4aac1e
-    return function_4aa970(v1);
+    return -1;
 }
 
 // Address range: 0x4aac40 - 0x4aaf05
@@ -232441,21 +239033,22 @@ int32_t function_4aaf30(int32_t a1) {
 
 // Address range: 0x4aafa0 - 0x4ab00d
 int32_t function_4aafa0(int32_t a1) {
-    // 0x4aafa0
+    int32_t context[2];
+    int32_t varinfo = 0;
+    int32_t source = 0;
+    int32_t top;
+
     function_4a8db0(a1);
-    if (function_48aa20(a1) < 1 || function_48a6f0(a1, 1) != 0xa008000) {
+    top = function_48aa20(a1);
+    if (top < 1 || function_48a6f0(a1, 1) != 0xa008000) {
         // 0x4ab008
         return -1;
     }
-    // 0x4aafd6
-    int32_t v1; // bp-8, 0x4aafa0
-    int32_t result = function_4aa750(&v1); // 0x4aafe1
-    if (result != 0) {
-        // 0x4ab008
-        return result;
-    }
-    // 0x4aafee
-    return function_4aac40(a1);
+    if (!retdec_resolve_instance_var(a1, top, &varinfo, &source))
+        return -1;
+    context[0] = top;
+    context[1] = a1;
+    return retdec_set_var_value(context, varinfo, source);
 }
 
 // Address range: 0x4ab010 - 0x4ab016

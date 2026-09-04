@@ -34,15 +34,96 @@ add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/retdec_asm_stubs.c
     src/decompiled/retdec_entry.c
 )
-target_include_directories(kinoko_retdec_rebuild PRIVATE src/decompiled)
+target_include_directories(kinoko_retdec_rebuild PRIVATE
+    src/decompiled
+    include
+)
 target_compile_definitions(kinoko_retdec_rebuild PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+option(KINOKO_ENABLE_SQUIRREL_CPP_VM
+    "Use the C++ Squirrel 2.2.2 Execute backend from the RetDec runtime"
+    OFF)
+set(KINOKO_SQUIRREL2_ROOT
+    "${CMAKE_SOURCE_DIR}/../squirrel-2.2.2/SQUIRREL2"
+    CACHE PATH
+    "Squirrel 2.2.2 source root used by the optional C++ VM backend")
 option(KINOKO_RETDEC_DISABLE_TRACE
     "Disable RetDec runtime trace file writes for differential startup tests"
+    OFF)
+option(KINOKO_RETDEC_TRACE_FILTER
+    "Keep only graphics/audio/input markers in RetDec diagnostic traces"
+    OFF)
+option(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_SERVICE
+    "Disable background BGM ring-buffer service for diagnosis"
+    OFF)
+option(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE
+    "Skip BGM DirectSound writes for diagnosis"
     OFF)
 set(KINOKO_RETDEC_MAP_FILE "" CACHE FILEPATH
     "Optional linker map file for the RetDec runtime target")
 if(KINOKO_RETDEC_DISABLE_TRACE)
     target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_DISABLE_TRACE)
+endif()
+if(KINOKO_RETDEC_TRACE_FILTER)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_TRACE_FILTER)
+endif()
+if(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE
+        RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
+endif()
+if(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE
+        RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
+endif()
+
+if(KINOKO_ENABLE_SQUIRREL_CPP_VM)
+    if(NOT EXISTS "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp")
+        message(FATAL_ERROR
+            "KINOKO_ENABLE_SQUIRREL_CPP_VM requires Squirrel 2.2.2 at "
+            "${KINOKO_SQUIRREL2_ROOT}")
+    endif()
+
+    add_library(kinoko_squirrel_cpp_vm STATIC
+        src/squirrel/squirrel_vm_bridge.cpp
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqcompiler.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqdebug.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqfuncstate.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqlexer.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqmem.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqobject.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqstate.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
+    )
+    target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
+        "${KINOKO_SQUIRREL2_ROOT}/include"
+        "${KINOKO_SQUIRREL2_ROOT}/squirrel"
+        include
+    )
+    target_compile_definitions(kinoko_squirrel_cpp_vm PRIVATE
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+    if(MSVC)
+        target_compile_options(kinoko_squirrel_cpp_vm PRIVATE
+            /permissive
+            /Gy
+            /wd4100
+            /wd4244
+            /wd4267
+            /wd4706
+        )
+    endif()
+
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE
+        KINOKO_ENABLE_SQUIRREL_CPP_VM=1
+    )
+    target_link_libraries(kinoko_retdec_rebuild PRIVATE
+        kinoko_squirrel_cpp_vm
+    )
 endif()
 target_compile_options(kinoko_retdec_rebuild PRIVATE /TC /Gy /wd4100 /wd4244 /wd4267 /wd4706)
 target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF)
@@ -94,6 +175,16 @@ add_executable(kinoko_process_dump
     tools/capture_process_dump.cpp
 )
 target_link_libraries(kinoko_process_dump PRIVATE dbghelp)
+
+add_executable(break_original_titleenv
+    work/break_original_titleenv.cpp
+)
+target_link_libraries(break_original_titleenv PRIVATE user32)
+
+add_executable(break_original_cact
+    work/break_original_cact.cpp
+)
+target_link_libraries(break_original_cact PRIVATE user32)
 
 add_executable(kinoko_archive_smoke
     tests/archive_smoke.cpp
