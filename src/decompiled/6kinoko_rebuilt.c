@@ -62549,17 +62549,15 @@ static void retdec_act_free_map_records(int32_t layout)
 {
     int32_t begin;
     int32_t end;
-    int32_t cursor;
 
     if (layout == 0)
         return;
     begin = *(int32_t *)(intptr_t)(layout + 264);
     end = *(int32_t *)(intptr_t)(layout + 268);
-    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
-         cursor += 4) {
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)cursor);
-    }
-    free((void *)(intptr_t)begin);
+    (void)end;
+    /* C2DMapLayout stores CActMapChip records inline in one vector. */
+    if (begin != 0)
+        free((void *)(intptr_t)begin);
     *(int32_t *)(intptr_t)(layout + 264) = 0;
     *(int32_t *)(intptr_t)(layout + 268) = 0;
     *(int32_t *)(intptr_t)(layout + 272) = 0;
@@ -62572,7 +62570,7 @@ static int32_t retdec_act_read_map_records(int32_t layout,
     uint32_t serialized_size;
     uint32_t read_size;
     uint32_t index;
-    int32_t *records;
+    unsigned char *records;
 
     if (layout == 0 ||
         !retdec_act_read_u32(reader_ptr, &count) ||
@@ -62586,43 +62584,29 @@ static int32_t retdec_act_read_map_records(int32_t layout,
         return 1;
 
     if (serialized_size > 0x20u ||
-        count > UINT32_MAX / (uint32_t)sizeof(*records))
+        count > UINT32_MAX / 0x20u)
         return 0;
-    records = (int32_t *)calloc((size_t)count, sizeof(*records));
+    records = (unsigned char *)calloc((size_t)count, 0x20u);
     if (records == NULL)
         return 0;
     read_size = serialized_size;
     for (index = 0; index < count; ++index) {
-        unsigned char *record = (unsigned char *)calloc(1u, 0x20u);
-        if (record == NULL) {
-            uint32_t cleanup;
-            for (cleanup = 0; cleanup < index; ++cleanup)
-                free((void *)(intptr_t)records[cleanup]);
-            free(records);
-            return 0;
-        }
+        unsigned char *record = records + (size_t)index * 0x20u;
         if (read_size != 0 &&
             !retdec_reader_read_exact(reader_ptr, record, read_size)) {
-            free(record);
-            {
-                uint32_t cleanup;
-                for (cleanup = 0; cleanup < index; ++cleanup)
-                    free((void *)(intptr_t)records[cleanup]);
-            }
             free(records);
             return 0;
         }
         *(uint32_t *)(void *)(record + 0x14) = index;
         *(uint8_t *)(void *)(record + 0x18) = 1;
         *(float *)(void *)(record + 0x1c) = 1.0f;
-        records[index] = (int32_t)(intptr_t)record;
     }
     *(int32_t *)(intptr_t)(layout + 264) =
         (int32_t)(intptr_t)records;
     *(int32_t *)(intptr_t)(layout + 268) =
-        (int32_t)(intptr_t)(records + count);
+        (int32_t)(intptr_t)(records + (size_t)count * 0x20u);
     *(int32_t *)(intptr_t)(layout + 272) =
-        (int32_t)(intptr_t)(records + count);
+        (int32_t)(intptr_t)(records + (size_t)count * 0x20u);
     retdec_trace_i32("act:map-record-count", (int32_t)count);
     retdec_trace_i32("act:map-record-size", (int32_t)serialized_size);
     return 1;
@@ -62741,7 +62725,7 @@ static int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
             int32_t key_end = *(int32_t *)(intptr_t)(key_layout + 268);
             retdec_trace_i32("act:key-map-record-count",
                              key_begin != 0 && key_end >= key_begin
-                                 ? (int32_t)((key_end - key_begin) / 4)
+                                 ? (int32_t)((key_end - key_begin) / 0x20)
                                  : 0);
         }
         ++*(int32_t *)(intptr_t)(layer + 0xb8);
@@ -63049,6 +63033,8 @@ static int32_t retdec_c2dmaplayout_update_impl(
     float layer_x;
     float layer_y;
     float layer_z;
+    int32_t position_layer;
+    uint32_t position_guard;
     float scale;
     static volatile LONG trace_count;
     static volatile LONG sample_layer_count;
@@ -63056,8 +63042,6 @@ static int32_t retdec_c2dmaplayout_update_impl(
     LONG trace_index;
     LONG sample_layer_index;
     LONG entry_sample_index;
-    (void)view_left;
-    (void)view_top;
     (void)view_right;
     (void)view_bottom;
 
@@ -63087,16 +63071,13 @@ static int32_t retdec_c2dmaplayout_update_impl(
                          *(int32_t *)(intptr_t)(layout + 268) >=
                          *(int32_t *)(intptr_t)(layout + 264)
                              ? (int32_t)((*(int32_t *)(intptr_t)(layout + 268) -
-                                          *(int32_t *)(intptr_t)(layout + 264)) / 4)
+                                          *(int32_t *)(intptr_t)(layout + 264)) / 0x20)
                              : 0);
     }
     if (layer == 0 || resource == 0)
         return -0x7fffbffb;
-    while (layer != 0) {
-        if (*(uint8_t *)(intptr_t)(layer + 0x8c) == 0)
-            return 0;
-        layer = *(int32_t *)(intptr_t)(layer + 0x58);
-    }
+    if (*(uint8_t *)(intptr_t)(layer + 0x8c) == 0)
+        return 0;
     data = (struct retdec_mcd_data *)(intptr_t)
         *(int32_t *)(intptr_t)(resource + 64);
     if (data == NULL)
@@ -63113,19 +63094,24 @@ static int32_t retdec_c2dmaplayout_update_impl(
     end = *(int32_t *)(intptr_t)(layout + 268);
     if (begin == 0 || end < begin)
         return 0;
-    map_count = (uint32_t)((end - begin) / 4);
+    map_count = (uint32_t)((end - begin) / 0x20);
     if (map_count == 0 || map_count > UINT32_MAX / 232u)
         return 0;
     render_block = (int32_t)(intptr_t)calloc((size_t)map_count, 232u);
     if (render_block == 0)
         return -0x7fffbffb;
 
-    layer_x = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
-                                   0x90);
-    layer_y = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
-                                   0x94);
-    layer_z = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
-                                   0x98);
+    layer_x = 0.0f;
+    layer_y = 0.0f;
+    layer_z = 0.0f;
+    position_layer = *(int32_t *)(intptr_t)(layout + 312);
+    position_guard = 0;
+    while (position_layer != 0 && position_guard++ < 64u) {
+        layer_x += *(float *)(intptr_t)(position_layer + 0x90);
+        layer_y += *(float *)(intptr_t)(position_layer + 0x94);
+        layer_z += *(float *)(intptr_t)(position_layer + 0x98);
+        position_layer = *(int32_t *)(intptr_t)(position_layer + 0x58);
+    }
     scale = *(float *)(intptr_t)(layout + 324);
     if (scale == 0.0f)
         scale = 1.0f;
@@ -63153,8 +63139,7 @@ static int32_t retdec_c2dmaplayout_update_impl(
         for (sample_index = 0;
              sample_index < map_count;
              ++sample_index) {
-            int32_t sample_record = *(int32_t *)(intptr_t)
-                (begin + sample_index * 4);
+            int32_t sample_record = begin + (int32_t)sample_index * 0x20;
             struct retdec_mcd_chip *sample_chip = NULL;
             struct retdec_mcd_texture *sample_texture = NULL;
 
@@ -63198,7 +63183,7 @@ static int32_t retdec_c2dmaplayout_update_impl(
     }
 
     for (index = 0; index < map_count; ++index) {
-        int32_t record = *(int32_t *)(intptr_t)(begin + index * 4);
+        int32_t record = begin + (int32_t)index * 0x20;
         struct retdec_mcd_chip *chip;
         struct retdec_mcd_texture *texture;
         int32_t sprite;
@@ -63223,8 +63208,10 @@ static int32_t retdec_c2dmaplayout_update_impl(
         sprite = render_block + (int32_t)output_count * 232;
         if (!retdec_map_sprite_init(sprite, texture->handle, chip->bytes))
             continue;
-        x = (float)*(int32_t *)(intptr_t)(record + 4) + layer_x;
-        y = (float)*(int32_t *)(intptr_t)(record + 8) + layer_y;
+        x = (float)*(int32_t *)(intptr_t)(record + 4) -
+            (float)view_left + layer_x;
+        y = (float)*(int32_t *)(intptr_t)(record + 8) -
+            (float)view_top + layer_y;
         z = layer_z;
         *(float *)(intptr_t)(sprite + 176) = x * scale;
         *(float *)(intptr_t)(sprite + 180) = y * scale;
