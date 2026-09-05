@@ -21,6 +21,8 @@
 
 #include "retdec_asm_stubs.h"
 
+static volatile LONG retdec_actor_step_trace_active;
+
 /* The original runtime embeds a Vorbis decoder.  Keep the decoder local to
    this translation unit so packaged DAT playback has no external codec
    dependency. */
@@ -130147,43 +130149,141 @@ static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
     }
 }
 
+/* 45E120 is Actor::Step.  The callback is a SquirrelFunction stored at
+   Actor+0x5c; invoking it is what lets title actors update their own y
+   coordinates before the frame timer advances. */
+static int32_t retdec_actor_step_callback(int32_t state_ptr)
+{
+    int32_t vm;
+    int32_t result;
+
+    if (state_ptr == 0)
+        return -1;
+    vm = *(int32_t *)(intptr_t)state_ptr;
+    if (vm == 0)
+        return -1;
+
+    /* SquirrelFunction<> pushes its bound environment and callable, then
+       calls with one argument and removes the two temporary stack entries. */
+    function_48ab90(vm,
+                    *(int32_t *)(intptr_t)(state_ptr + 20),
+                    *(int32_t *)(intptr_t)(state_ptr + 24));
+    function_48ab90(vm,
+                    *(int32_t *)(intptr_t)(state_ptr + 8),
+                    *(int32_t *)(intptr_t)(state_ptr + 12));
+    InterlockedExchange(&retdec_actor_step_trace_active, 1);
+    result = function_48ace0(vm, 1, 1, 1);
+    InterlockedExchange(&retdec_actor_step_trace_active, 0);
+    if (result < 0) {
+        retdec_trace_i32("actor:step-call-failed", result);
+        return result;
+    }
+    return function_48aa30(vm, 2);
+}
+
 static void retdec_actor_tick(int32_t actor)
 {
+    int32_t animation_key;
+    int32_t callback_type;
     int32_t node;
     int32_t frame;
     int32_t frame_count;
     int32_t frame_index;
     int32_t duration;
     int32_t timer;
+    static volatile LONG step_trace_count;
+    LONG step_trace_index;
+    int32_t step_result;
 
     if (actor == 0)
         return;
-    node = *(int32_t *)(intptr_t)(actor + 200);
-    frame = *(int32_t *)(intptr_t)(actor + 204);
-    if (node == 0 || frame == 0)
-        return;
-    duration = (int32_t)*(int16_t *)(intptr_t)(frame + 240);
-    timer = *(int32_t *)(intptr_t)(actor + 216) + 1;
-    if (duration <= 0 || timer < duration) {
-        *(int32_t *)(intptr_t)(actor + 216) = timer;
-        return;
+
+    /* Actor::Step runs the script callback first.  A callback may replace
+       the selected animation, so the original compares the key captured
+       before the call with the key still stored afterwards. */
+    animation_key = *(int32_t *)(intptr_t)(actor + 208);
+    callback_type = function_4a9a30_this(actor + 108);
+    step_trace_index = InterlockedIncrement(&step_trace_count);
+    if (step_trace_index <= 64 &&
+        *(int32_t *)(intptr_t)(actor + 224) >= 0x200 &&
+        *(int32_t *)(intptr_t)(actor + 224) <= 0x207) {
+        int32_t y_bits;
+
+        memcpy(&y_bits, (const void *)(intptr_t)(actor + 244),
+               sizeof(y_bits));
+        retdec_trace_i32("actor:step-id",
+                         *(int32_t *)(intptr_t)(actor + 224));
+        retdec_trace_i32("actor:step-type", callback_type);
+        retdec_trace_i32("actor:step-data",
+                         *(int32_t *)(intptr_t)(actor + 116));
+        retdec_trace_i32("actor:step-state-vm",
+                         *(int32_t *)(intptr_t)(actor + 92));
+        retdec_trace_i32("actor:step-state-type",
+                         *(int32_t *)(intptr_t)(actor + 100));
+        retdec_trace_i32("actor:step-state-data",
+                         *(int32_t *)(intptr_t)(actor + 104));
+        retdec_trace_i32("actor:step-callback-data",
+                         *(int32_t *)(intptr_t)(actor + 32));
+        retdec_trace_i32("actor:step-callback-delegate",
+                         *(int32_t *)(intptr_t)(actor + 36));
+        retdec_trace_i32("actor:step-y-before", y_bits);
+    }
+    if (callback_type == 0x08000100) {
+        step_result = retdec_actor_step_callback(actor + 92);
+        if (step_trace_index <= 64)
+            retdec_trace_i32("actor:step-result", step_result);
+        if (step_trace_index <= 64 &&
+            *(int32_t *)(intptr_t)(actor + 224) >= 0x200 &&
+            *(int32_t *)(intptr_t)(actor + 224) <= 0x207) {
+            int32_t y_bits;
+
+            memcpy(&y_bits, (const void *)(intptr_t)(actor + 244),
+                   sizeof(y_bits));
+            retdec_trace_i32("actor:step-y-after", y_bits);
+        }
     }
 
+    frame = *(int32_t *)(intptr_t)(actor + 204);
+    if (frame == 0 || animation_key !=
+            *(int32_t *)(intptr_t)(actor + 208))
+        return;
+
+    timer = *(int32_t *)(intptr_t)(actor + 216) + 1;
+    *(int32_t *)(intptr_t)(actor + 216) = timer;
+    duration = (int32_t)*(int16_t *)(intptr_t)(frame + 240);
+    /* The original compares timer directly with the signed int16 duration;
+       zero and negative durations therefore advance immediately. */
+    if (timer < duration)
+        return;
+
+    node = *(int32_t *)(intptr_t)(actor + 200);
+    if (node == 0)
+        return;
     frame_count = (*(int32_t *)(intptr_t)(node + 12) -
                    *(int32_t *)(intptr_t)(node + 8)) / 248;
     if (frame_count <= 0)
         return;
-    frame_index = *(int32_t *)(intptr_t)(actor + 212) + 1;
-    if (frame_index >= frame_count) {
-        if (*(unsigned char *)(intptr_t)(node + 24) != 0)
-            frame_index = 0;
-        else
-            frame_index = frame_count - 1;
-    }
+
+    frame_index = *(int32_t *)(intptr_t)(actor + 212);
+    ++frame_index;
     *(int32_t *)(intptr_t)(actor + 212) = frame_index;
-    *(int32_t *)(intptr_t)(actor + 216) = 0;
+    if (frame_index == frame_count) {
+        if (*(unsigned char *)(intptr_t)(node + 24) != 0) {
+            frame_index = 0;
+            *(int32_t *)(intptr_t)(actor + 212) = 0;
+        } else {
+            /* Non-looping animations keep the current (last) frame. */
+            *(int32_t *)(intptr_t)(actor + 212) = frame_index - 1;
+            *(int32_t *)(intptr_t)(actor + 216) = 0;
+            return;
+        }
+    }
+
     *(int32_t *)(intptr_t)(actor + 204) =
         *(int32_t *)(intptr_t)(node + 8) + frame_index * 248;
+    *(int32_t *)(intptr_t)(actor + 152) =
+        *(int32_t *)(intptr_t)(actor + 204);
+    *(int32_t *)(intptr_t)(actor + 216) = 0;
 }
 
 /* Actor::Update (45EC60), reduced to the branch used by actors without a
@@ -210030,8 +210130,41 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
         ++trace_native_call_count;
     }
 
+    if (retdec_actor_step_trace_active) {
+        int32_t name_type = *(int32_t *)(intptr_t)(native_closure + 64);
+        int32_t name_data = *(int32_t *)(intptr_t)(native_closure + 68);
+
+        retdec_trace_i32("actor:script-native-function", native_function_ptr);
+        retdec_trace_i32("actor:script-native-closure", native_closure);
+        retdec_trace_i32("actor:script-native-nargs", nargs);
+        retdec_trace_i32("actor:script-native-stackbase", stackbase);
+        retdec_trace_i32("actor:script-native-name-type", name_type);
+        retdec_trace_i32("actor:script-native-name-data", name_data);
+        if (name_type == 0x08000010 && name_data != 0)
+            retdec_trace_squirrel_name(
+                "actor:script-native-name", name_data + 28);
+        for (index = 0; index < nargs && index < 8; ++index) {
+            slot = (int32_t *)(intptr_t)(
+                stack_data + 8 * (stackbase + index));
+            retdec_trace_i32("actor:script-native-arg-type", slot[0]);
+            retdec_trace_i32("actor:script-native-arg-data", slot[1]);
+        }
+    }
+
     return_code = ((int32_t (__cdecl *)(int32_t))(intptr_t)
                    native_function_ptr)(vm);
+    if (retdec_actor_step_trace_active) {
+        int32_t native_top = *(int32_t *)(intptr_t)(vm + 48);
+
+        retdec_trace_i32("actor:script-native-return-code", return_code);
+        retdec_trace_i32("actor:script-native-top-after", native_top);
+        if (native_top > 0) {
+            slot = (int32_t *)(intptr_t)(
+                *(int32_t *)(intptr_t)(vm + 24) + 8 * (native_top - 1));
+            retdec_trace_i32("actor:script-native-result-type", slot[0]);
+            retdec_trace_i32("actor:script-native-result-data", slot[1]);
+        }
+    }
     if (trace_savedata_call) {
         int32_t post_stack_data = *(int32_t *)(intptr_t)(vm + 24);
         int32_t post_top = *(int32_t *)(intptr_t)(vm + 48);
@@ -211585,6 +211718,17 @@ static int32_t retdec_squirrel_arith_op(
         result[0] = 0x05000002;
         result[1] = integer_result;
         retdec_squirrel_assign((int32_t *)(intptr_t)target, result);
+        if (retdec_actor_step_trace_active) {
+            retdec_trace_i32("actor:script-arith-op", op);
+            retdec_trace_i32("actor:script-arith-left-type", left_type);
+            retdec_trace_i32("actor:script-arith-left-data",
+                             *(int32_t *)(intptr_t)(left + 4));
+            retdec_trace_i32("actor:script-arith-right-type", right_type);
+            retdec_trace_i32("actor:script-arith-right-data",
+                             *(int32_t *)(intptr_t)(right + 4));
+            retdec_trace_i32("actor:script-arith-result-type", result[0]);
+            retdec_trace_i32("actor:script-arith-result-data", result[1]);
+        }
         if (trace_arith_call_count <= 256) {
             retdec_trace_i32("arith-result-type", result[0]);
             retdec_trace_i32("arith-result-data", result[1]);
@@ -211619,6 +211763,17 @@ static int32_t retdec_squirrel_arith_op(
         result[0] = 0x05000004;
         memcpy(&result[1], &float_result, sizeof(float_result));
         retdec_squirrel_assign((int32_t *)(intptr_t)target, result);
+        if (retdec_actor_step_trace_active) {
+            retdec_trace_i32("actor:script-arith-op", op);
+            retdec_trace_i32("actor:script-arith-left-type", left_type);
+            retdec_trace_i32("actor:script-arith-left-data",
+                             *(int32_t *)(intptr_t)(left + 4));
+            retdec_trace_i32("actor:script-arith-right-type", right_type);
+            retdec_trace_i32("actor:script-arith-right-data",
+                             *(int32_t *)(intptr_t)(right + 4));
+            retdec_trace_i32("actor:script-arith-result-type", result[0]);
+            retdec_trace_i32("actor:script-arith-result-data", result[1]);
+        }
         return 1;
     }
     if (op == '+' &&
@@ -218199,6 +218354,7 @@ static int32_t retdec_execute_clean_vm(
     int32_t stackbase, int32_t outres, int32_t raiseerror) {
     static int32_t trace_clean_entry_count;
     static int32_t trace_clean_failure_count;
+    static volatile LONG trace_actor_instruction_count;
     int32_t vm = retdec_stack_vm();
     int32_t *closure = (int32_t *)(intptr_t)closure_slot;
     int32_t current_ci;
@@ -218283,6 +218439,38 @@ static int32_t retdec_execute_clean_vm(
         arg0 = *(unsigned char *)(intptr_t)(instruction_ptr + 5);
         arg2 = *(unsigned char *)(intptr_t)(instruction_ptr + 6);
         arg3 = *(unsigned char *)(intptr_t)(instruction_ptr + 7);
+
+        if (retdec_actor_step_trace_active &&
+            InterlockedIncrement(&trace_actor_instruction_count) <= 320) {
+            int32_t *trace_slot;
+
+            retdec_trace_i32("actor:script-instruction", instruction_ptr);
+            retdec_trace_i32("actor:script-opcode", opcode);
+            retdec_trace_i32("actor:script-arg1", arg1);
+            retdec_trace_i32("actor:script-arg0", arg0);
+            retdec_trace_i32("actor:script-arg2", arg2);
+            retdec_trace_i32("actor:script-arg3", arg3);
+            retdec_trace_i32("actor:script-stackbase",
+                             *(int32_t *)(intptr_t)(vm + 52));
+            trace_slot = (int32_t *)(intptr_t)
+                retdec_clean_vm_slot(vm, arg0);
+            if (trace_slot != NULL) {
+                retdec_trace_i32("actor:script-arg0-type", trace_slot[0]);
+                retdec_trace_i32("actor:script-arg0-data", trace_slot[1]);
+            }
+            trace_slot = (int32_t *)(intptr_t)
+                retdec_clean_vm_slot(vm, arg2);
+            if (trace_slot != NULL) {
+                retdec_trace_i32("actor:script-arg2-type", trace_slot[0]);
+                retdec_trace_i32("actor:script-arg2-data", trace_slot[1]);
+            }
+            trace_slot = (int32_t *)(intptr_t)
+                retdec_clean_vm_slot(vm, arg3);
+            if (trace_slot != NULL) {
+                retdec_trace_i32("actor:script-arg3-type", trace_slot[0]);
+                retdec_trace_i32("actor:script-arg3-data", trace_slot[1]);
+            }
+        }
 
         switch (opcode) {
             case 0:
@@ -240910,7 +241098,6 @@ int32_t function_4aa970(int32_t a1) {
  * pointer in ESI.  Keeping them explicit avoids depending on volatile
  * registers after helper calls. */
 static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context) {
-    static int32_t trace_var_info_count;
     int32_t vm;
     int32_t top;
     int32_t object_pair[2] = { g483, g484 };
@@ -240947,15 +241134,8 @@ static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context) {
     /* Use the table adapter directly here.  The original path uses rawget;
      * the generated 48CE70 failure epilogue is not safe when the slot is
      * absent and the caller is about to create it. */
-    if (object_pair[0] != 0xa000020) {
-        if (trace_var_info_count < 96) {
-            retdec_trace("sq-varinfo:object-not-table");
-            retdec_trace_i32("sq-varinfo:object-type", object_pair[0]);
-            retdec_trace_i32("sq-varinfo:object-data", object_pair[1]);
-            ++trace_var_info_count;
-        }
+    if (object_pair[0] != 0xa000020)
         return -1;
-    }
     function_48ab90(vm, object_pair[0], object_pair[1]);
     function_48a480(vm, (int32_t)(intptr_t)name, -1);
     {
@@ -240963,26 +241143,11 @@ static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context) {
         int32_t *value_slot;
         key_pair[0] = key_slot[0];
         key_pair[1] = key_slot[1];
-        {
-            int32_t lookup_result = function_497a00_this(
-                object_pair[1], key_pair, (int32_t)(intptr_t)value_pair);
-            if (trace_var_info_count < 96) {
-                retdec_trace("sq-varinfo:lookup");
-                retdec_trace_squirrel_name(
-                    "sq-varinfo:key",
-                    key_pair[0] == 0x08000010 && key_pair[1] != 0
-                        ? key_pair[1] + 28 : 0);
-                retdec_trace_i32("sq-varinfo:object", object_pair[1]);
-                retdec_trace_i32("sq-varinfo:result", lookup_result);
-                retdec_trace_i32("sq-varinfo:value-type", value_pair[0]);
-                retdec_trace_i32("sq-varinfo:value-data", value_pair[1]);
-                ++trace_var_info_count;
-            }
-            if (!lookup_result) {
-                function_48aa30(vm, 1);
-                function_48aa30(vm, 1);
-                return -1;
-            }
+        if (!function_497a00_this(
+                object_pair[1], key_pair, (int32_t)(intptr_t)value_pair)) {
+            function_48aa30(vm, 1);
+            function_48aa30(vm, 1);
+            return -1;
         }
         value_slot = value_pair;
         if (value_slot[0] != 0xa000080 || value_slot[1] == 0) {
@@ -241003,7 +241168,6 @@ static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context) {
 
 static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
                                     int32_t source_ptr) {
-    static volatile LONG camera_trace_count;
     int32_t vm;
     int32_t category;
     uint16_t size;
@@ -241049,14 +241213,6 @@ static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
             }
             memcpy(&numeric_bits, &numeric, sizeof(numeric_bits));
             function_48a580(vm, numeric_bits);
-            if (source_ptr >= (int32_t)(intptr_t)g_retdec_camera_state &&
-                source_ptr < (int32_t)(intptr_t)g_retdec_camera_state + 0x80 &&
-                InterlockedIncrement(&camera_trace_count) <= 96) {
-                retdec_trace_i32("actor:camera-get-offset",
-                                 source_ptr -
-                                     (int32_t)(intptr_t)g_retdec_camera_state);
-                retdec_trace_i32("actor:camera-get-value", numeric_bits);
-            }
         }
         return 1;
     case 3:
@@ -241096,7 +241252,6 @@ static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
 
 static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
                                     int32_t source_ptr) {
-    static volatile LONG camera_trace_count;
     int32_t vm;
     int32_t top;
     int32_t category;
@@ -241137,14 +241292,6 @@ static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
         *(float32_t *)(intptr_t)source_ptr = converted;
         memcpy(&float_bits, &converted, sizeof(float_bits));
         function_48a580(vm, float_bits);
-        if (source_ptr >= (int32_t)(intptr_t)g_retdec_camera_state &&
-            source_ptr < (int32_t)(intptr_t)g_retdec_camera_state + 0x80 &&
-            InterlockedIncrement(&camera_trace_count) <= 128) {
-            retdec_trace_i32("actor:camera-set-offset",
-                             source_ptr -
-                                 (int32_t)(intptr_t)g_retdec_camera_state);
-            retdec_trace_i32("actor:camera-set-value", float_bits);
-        }
         return 1;
     }
     case 3:
@@ -241199,10 +241346,6 @@ static int32_t retdec_resolve_instance_var(int32_t vm, int32_t top,
         *out_source = native_ptr + offset;
     }
     *out_varinfo = varinfo;
-    retdec_trace_i32("get:varinfo", varinfo);
-    retdec_trace_i32("get:native", native_ptr);
-    retdec_trace_i32("get:offset", offset);
-    retdec_trace_i32("get:source", *out_source);
     return 1;
 }
 
@@ -241228,30 +241371,13 @@ int32_t function_4aab60(int32_t a1) {
 
 // Address range: 0x4aabd0 - 0x4aac3d
 int32_t function_4aabd0(int32_t a1) {
-    static int32_t trace_instance_get_count;
     int32_t context[2];
     int32_t varinfo = 0;
     int32_t source = 0;
     int32_t top;
-    int32_t name_slot;
 
     function_4a8db0(a1);
     top = function_48aa20(a1);
-    if (trace_instance_get_count < 32) {
-        retdec_trace_i32("sq-meta:var-get-vm", a1);
-        retdec_trace_i32("sq-meta:var-get-top", top);
-        retdec_trace_i32("sq-meta:var-get-slot1-type", function_48a6f0(a1, 1));
-        retdec_trace_i32("sq-meta:var-get-slot1-data",
-                         *(int32_t *)(intptr_t)(
-                             function_491880_this(a1, 1) + 4));
-        name_slot = top >= 2 ? function_491880_this(a1, 2) : 0;
-        if (name_slot != 0 && *(int32_t *)(intptr_t)name_slot == 0x08000010 &&
-            *(int32_t *)(intptr_t)(name_slot + 4) != 0)
-            retdec_trace_squirrel_name(
-                "sq-meta:var-get-name",
-                *(int32_t *)(intptr_t)(name_slot + 4) + 28);
-        ++trace_instance_get_count;
-    }
     if (top < 1 || function_48a6f0(a1, 1) != 0xa008000) {
         // 0x4aac38
         return -1;
@@ -246947,6 +247073,14 @@ int32_t function_4c67f0(int32_t a1) {
     return 1;
 }
 
+static int32_t retdec_float_bits(float32_t value)
+{
+    int32_t bits;
+
+    memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
 // Address range: 0x4c6820 - 0x4c685e
 int32_t function_4c6820(int32_t a1) {
     // 0x4c6820
@@ -246963,29 +247097,35 @@ int32_t function_4c6860(int32_t a1) {
     // 0x4c6860
     float32_t v1; // bp-8, 0x4c6860
     function_48a830(a1, 2, (int32_t *)&v1);
-    function_48a580(a1, (int32_t)fabsf(v1));
+    function_48a580(a1, retdec_float_bits(fabsf(v1)));
     return 1;
 }
 
 // Address range: 0x4c68a0 - 0x4c68de
 int32_t function_4c68a0(int32_t a1) {
     // 0x4c68a0
-    int32_t v1; // bp-8, 0x4c68a0
-    function_48a830(a1, 2, &v1);
-    __CIsin();
-    float80_t v2; // 0x4c68a0
-    function_48a580(a1, (int32_t)(float32_t)v2);
+    float32_t input = 0.0f;
+    float32_t output;
+    int32_t output_bits;
+
+    function_48a830(a1, 2, (int32_t *)&input);
+    output = (float32_t)sin((double)input);
+    memcpy(&output_bits, &output, sizeof(output_bits));
+    function_48a580(a1, output_bits);
     return 1;
 }
 
 // Address range: 0x4c68e0 - 0x4c691e
 int32_t function_4c68e0(int32_t a1) {
     // 0x4c68e0
-    int32_t v1; // bp-8, 0x4c68e0
-    function_48a830(a1, 2, &v1);
-    __CIcos();
-    float80_t v2; // 0x4c68e0
-    function_48a580(a1, (int32_t)(float32_t)v2);
+    float32_t input = 0.0f;
+    float32_t output;
+    int32_t output_bits;
+
+    function_48a830(a1, 2, (int32_t *)&input);
+    output = (float32_t)cos((double)input);
+    memcpy(&output_bits, &output, sizeof(output_bits));
+    function_48a580(a1, output_bits);
     return 1;
 }
 
@@ -247218,7 +247358,7 @@ int32_t function_4c6c20(int32_t a1) {
     function_48a4f0(a1, 0x7fff);
     function_48c950(a1, -3, 0);
     function_48a480(a1, (int32_t)"PI", -1);
-    function_48a580(a1, (int32_t)(float32_t)3.14159274f);
+    function_48a580(a1, retdec_float_bits(3.14159274f));
     function_48c950(a1, -3, 0);
     return 0;
 }
