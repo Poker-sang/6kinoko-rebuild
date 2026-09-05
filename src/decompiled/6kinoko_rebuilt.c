@@ -130605,10 +130605,23 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
     translate_y = *(float32_t *)(intptr_t)(actor + 244) - pivot_y +
         *(float32_t *)(intptr_t)(actor + 160) + camera_offset_y;
     for (index = 0; index < 4; ++index) {
+        float x_coordinate = x[index] + translate_x;
+        float y_coordinate = y[index] + translate_y;
+        int32_t x_integral = (int32_t)x_coordinate;
+        int32_t y_integral = (int32_t)y_coordinate;
+        float computed_x;
+        float computed_y;
+
+        if ((float)x_integral > x_coordinate)
+            --x_integral;
+        if ((float)y_integral < y_coordinate)
+            ++y_integral;
+        computed_x = (float)x_integral;
+        computed_y = (float)y_integral;
         *(float32_t *)(intptr_t)(frame + 176 + index * 12) =
-            floorf(x[index] + translate_x);
+            computed_x;
         *(float32_t *)(intptr_t)(frame + 180 + index * 12) =
-            ceilf(y[index] + translate_y);
+            computed_y;
         *(float32_t *)(intptr_t)(frame + 184 + index * 12) = z[index];
     }
 
@@ -130620,16 +130633,24 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
     *(int32_t *)(intptr_t)(frame + 52) = color;
     *(int32_t *)(intptr_t)(frame + 80) = color;
     *(int32_t *)(intptr_t)(frame + 108) = color;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:render-x0", *(int32_t *)(intptr_t)(frame + 176));
-        retdec_trace_i32("actor:render-y0", *(int32_t *)(intptr_t)(frame + 180));
-        retdec_trace_i32("actor:render-x3", *(int32_t *)(intptr_t)(frame + 212));
-        retdec_trace_i32("actor:render-y3", *(int32_t *)(intptr_t)(frame + 216));
-        retdec_trace_i32("actor:render-u0", *(int32_t *)(intptr_t)(frame + 28));
-        retdec_trace_i32("actor:render-v3", *(int32_t *)(intptr_t)(frame + 116));
-    }
     {
-        int32_t result = retdec_layout_submit_impl(frame, 0.0f, 0.0f);
+        int32_t blend_mode = *(int32_t *)(intptr_t)(actor + 196);
+        int32_t render_state = 1;
+        int32_t result;
+
+        /* 4627C0 calls Actor::Render, then Actor::Draw.  The latter selects
+           the actor blend mode, submits the prepared quad, and restores the
+           normal state for the next actor. */
+        if (blend_mode == 2)
+            render_state = 2;
+        else if (blend_mode == 3)
+            render_state = 3;
+        else if (blend_mode == 4)
+            render_state = 4;
+
+        function_402770(render_state);
+        result = retdec_layout_submit_impl(frame, 0.0f, 0.0f);
+        function_402770(1);
         if (trace_index <= 16)
             retdec_trace_i32("actor:render-submit", result);
     }
@@ -134680,6 +134701,11 @@ static int32_t retdec_pat_build_frame(
         *(float32_t *)(intptr_t)(frame + 156) = source_height;
         *(float32_t *)(intptr_t)(frame + 164) = source_width;
         *(float32_t *)(intptr_t)(frame + 168) = source_height;
+
+        /* sub_464F80 initializes the working quad, applies the PAT frame
+           transform, then copies the result back to the base quad. */
+        memcpy((void *)(intptr_t)(frame + 176),
+               (const void *)(intptr_t)(frame + 128), 48u);
     }
 
     if (fields->type == 2) {
@@ -134706,6 +134732,98 @@ static int32_t retdec_pat_build_frame(
         *(float32_t *)(intptr_t)(auxiliary + 24) =
             (float)fields->auxiliary_values[4];
         *(int32_t *)(intptr_t)(frame + 244) = auxiliary;
+    }
+
+    if (handle != 0 && texture_width != 0 && texture_height != 0) {
+        float *x0 = (float *)(intptr_t)(frame + 176);
+        float *y0 = (float *)(intptr_t)(frame + 180);
+        float *z0 = (float *)(intptr_t)(frame + 184);
+        float *x1 = (float *)(intptr_t)(frame + 188);
+        float *y1 = (float *)(intptr_t)(frame + 192);
+        float *z1 = (float *)(intptr_t)(frame + 196);
+        float *x2 = (float *)(intptr_t)(frame + 200);
+        float *y2 = (float *)(intptr_t)(frame + 204);
+        float *z2 = (float *)(intptr_t)(frame + 208);
+        float *x3 = (float *)(intptr_t)(frame + 212);
+        float *y3 = (float *)(intptr_t)(frame + 216);
+        float *z3 = (float *)(intptr_t)(frame + 220);
+        float *x_values[4] = { x0, x1, x2, x3 };
+        float *y_values[4] = { y0, y1, y2, y3 };
+        float *z_values[4] = { z0, z1, z2, z3 };
+        int index;
+
+        if (fields->type == 0) {
+            for (index = 0; index < 4; ++index) {
+                *x_values[index] *= 2.0f;
+                *y_values[index] *= 2.0f;
+            }
+        } else if (fields->type == 2 && *(int32_t *)(intptr_t)(frame + 244) != 0) {
+            int32_t auxiliary_ptr =
+                *(int32_t *)(intptr_t)(frame + 244);
+            float scale_x = *(float *)(intptr_t)(auxiliary_ptr + 8);
+            float scale_y = *(float *)(intptr_t)(auxiliary_ptr + 12);
+            float roll_x = *(float *)(intptr_t)(auxiliary_ptr + 16);
+            float roll_y = *(float *)(intptr_t)(auxiliary_ptr + 20);
+            float roll_z = *(float *)(intptr_t)(auxiliary_ptr + 24);
+            float pivot_x = (float)fields->offset_x;
+            float pivot_y = (float)fields->offset_y;
+            float cosine;
+            float sine;
+
+            for (index = 0; index < 4; ++index)
+                *x_values[index] =
+                    (*x_values[index] - pivot_x) * scale_x + pivot_x;
+            for (index = 0; index < 4; ++index)
+                *y_values[index] =
+                    (*y_values[index] - pivot_y) * scale_y + pivot_y;
+
+            if (roll_z != 0.0f) {
+                cosine = function_404130(roll_z);
+                sine = function_4040d0(roll_z);
+                for (index = 0; index < 4; ++index) {
+                    float old_x = *x_values[index] - pivot_x;
+                    float old_y = *y_values[index] - pivot_y;
+                    *x_values[index] = old_x * cosine + pivot_x -
+                        old_y * sine;
+                    *y_values[index] = old_x * sine + pivot_y +
+                        old_y * cosine;
+                }
+            }
+            if (roll_y != 0.0f) {
+                cosine = function_404130(roll_y);
+                sine = function_4040d0(roll_y);
+                for (index = 0; index < 4; ++index) {
+                    float old_x = *x_values[index] - pivot_x;
+                    float old_z = *z_values[index];
+                    *x_values[index] = old_x * cosine + pivot_x -
+                        old_z * sine;
+                    *z_values[index] = old_x * sine + old_z * cosine;
+                }
+            }
+            if (roll_x != 0.0f) {
+                cosine = function_404130(roll_x);
+                sine = function_4040d0(roll_x);
+                for (index = 0; index < 4; ++index) {
+                    float old_y = *y_values[index] - pivot_y;
+                    float old_z = *z_values[index];
+                    *y_values[index] = old_y * cosine + pivot_y -
+                        old_z * sine;
+                    *z_values[index] = old_y * sine + old_z * cosine;
+                }
+            }
+
+            memcpy((void *)(intptr_t)(frame + 24),
+                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
+            memcpy((void *)(intptr_t)(frame + 52),
+                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
+            memcpy((void *)(intptr_t)(frame + 80),
+                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
+            memcpy((void *)(intptr_t)(frame + 108),
+                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
+        }
+
+        memcpy((void *)(intptr_t)(frame + 128),
+               (const void *)(intptr_t)(frame + 176), 48u);
     }
     return 1;
 }
