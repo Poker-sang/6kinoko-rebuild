@@ -156,15 +156,19 @@ add_executable(kinoko_asset_probe
 target_include_directories(kinoko_asset_probe PRIVATE include)
 target_link_libraries(kinoko_asset_probe PRIVATE kinoko_core)
 
-add_executable(kinoko_asset_extract
-    work/extract_asset.cpp
-)
-target_include_directories(kinoko_asset_extract PRIVATE include)
-target_link_libraries(kinoko_asset_extract PRIVATE kinoko_core)
+if(EXISTS "${CMAKE_SOURCE_DIR}/work/extract_asset.cpp")
+    add_executable(kinoko_asset_extract
+        work/extract_asset.cpp
+    )
+    target_include_directories(kinoko_asset_extract PRIVATE include)
+    target_link_libraries(kinoko_asset_extract PRIVATE kinoko_core)
+endif()
 
-add_executable(kinoko_cv4_decode
-    work/decode_cv4.cpp
-)
+if(EXISTS "${CMAKE_SOURCE_DIR}/work/decode_cv4.cpp")
+    add_executable(kinoko_cv4_decode
+        work/decode_cv4.cpp
+    )
+endif()
 
 add_executable(kinoko_dump_inspect
     tools/inspect_minidump.cpp
@@ -176,15 +180,19 @@ add_executable(kinoko_process_dump
 )
 target_link_libraries(kinoko_process_dump PRIVATE dbghelp)
 
-add_executable(break_original_titleenv
-    work/break_original_titleenv.cpp
-)
-target_link_libraries(break_original_titleenv PRIVATE user32)
+if(EXISTS "${CMAKE_SOURCE_DIR}/work/break_original_titleenv.cpp")
+    add_executable(break_original_titleenv
+        work/break_original_titleenv.cpp
+    )
+    target_link_libraries(break_original_titleenv PRIVATE user32)
+endif()
 
-add_executable(break_original_cact
-    work/break_original_cact.cpp
-)
-target_link_libraries(break_original_cact PRIVATE user32)
+if(EXISTS "${CMAKE_SOURCE_DIR}/work/break_original_cact.cpp")
+    add_executable(break_original_cact
+        work/break_original_cact.cpp
+    )
+    target_link_libraries(break_original_cact PRIVATE user32)
+endif()
 
 add_executable(kinoko_archive_smoke
     tests/archive_smoke.cpp
@@ -201,11 +209,22 @@ add_test(
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
 )
 
+set(KINOKO_RUNTIME_TARGETS
+    kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
+    kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump
+    kinoko_retdec_rebuild
+)
+foreach(optional_target kinoko_asset_extract kinoko_cv4_decode
+                         break_original_titleenv break_original_cact)
+    if(TARGET ${optional_target})
+        list(APPEND KINOKO_RUNTIME_TARGETS ${optional_target})
+    endif()
+endforeach()
+
 foreach(config Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${config}" config_upper)
     set_target_properties(
-        kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
-        kinoko_asset_probe kinoko_asset_extract kinoko_cv4_decode kinoko_dump_inspect kinoko_process_dump kinoko_retdec_rebuild
+        ${KINOKO_RUNTIME_TARGETS}
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}"
     )
