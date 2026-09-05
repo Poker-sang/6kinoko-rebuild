@@ -104,3 +104,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run_staged.ps1 `
 EXE。不得把参考目录作为 `WorkingDirectory`，也不得依赖 `-SourceDir`、
 `-RunsRoot`、`-RunName` 或另一个 staging EXE；资源必须由 EXE 从自身目录加载。
 普通运行不要使用 `--data-dir` 或 `KINOKO_DATA_DIR` 绕过这个规则。
+
+## 反编译 Squirrel 经验
+
+- RetDec 生成的 C 函数若出现“未初始化局部变量通过固定偏移访问”（例如
+  `v1 + 24`、`v1 + 28`），优先判定为原始 `__thiscall` 的 ECX 接收者丢失；必须从
+  原版汇编和调用点恢复显式 `this`，不能依赖偶然的栈布局。
+- Squirrel 的复合算术指令要按 VM 字节码格式解码操作数。`COMPARITH` 中高 16
+  位是左值/接收者索引，`arg2` 是键索引，低 16 位是增量索引；不要按 RetDec
+  临时变量名称猜测。
+- 关闭诊断时只在输出端静默日志并停用截图；不要把整个 VM 的 trace 调用编译掉，
+  否则会改变栈形状和时序，掩盖或暴露与诊断无关的生命周期错误。
+- 相关修复必须同时做诊断构建和无日志构建的启动冒烟测试，并确认 DAT 仍从 EXE
+  自身目录加载、窗口响应且第二阶段画面存在。
