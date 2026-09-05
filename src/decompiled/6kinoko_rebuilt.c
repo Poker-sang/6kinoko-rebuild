@@ -88,6 +88,9 @@ static void retdec_release_squirrel_value(int32_t *value_ptr);
 static void retdec_destroy_reader(int32_t *reader);
 static int32_t retdec_reader_seek_relative(int32_t reader_ptr,
                                             uint32_t offset);
+struct retdec_mcd_data;
+static void retdec_mcd_free(struct retdec_mcd_data *data);
+static void retdec_act_free_map_records(int32_t layout);
 static int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
 static int32_t retdec_cact_load_bridge(int32_t reader_ptr, int32_t version);
@@ -174,6 +177,7 @@ static int32_t retdec_c2dlayout_update_impl(int32_t layout);
 static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_act_bind_layouts(int32_t act);
+static int32_t retdec_construct_actor_manager(int32_t this_ptr);
 static int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr);
 static int32_t retdec_squirrel_pair_from_stack(int32_t vm, int32_t index,
@@ -9613,12 +9617,11 @@ static void retdec_initialize_runtime_objects(void)
     }
 
     /* This global is normally constructed by the MSVC CRT before WinMain.
-       Keep its real field offsets in a backing block before startup methods
-       begin using ECX as the ActorManager receiver. */
-    memset(g_retdec_actor_manager_state, 0,
-           sizeof(g_retdec_actor_manager_state));
-    retdec_msvc_0_Init_locks_std__QAE_XZ3(
-        (int32_t *)(intptr_t)g_retdec_actor_manager_state);
+       Recreate the complete object before boot.nut can call CreateActor. */
+    if (!retdec_construct_actor_manager(
+            (int32_t)(intptr_t)g_retdec_actor_manager_state)) {
+        retdec_trace("actor-manager:construct-failed");
+    }
 
     /* RetDec split these four ActorManager fields into standalone globals.
        The original addresses are object offsets +0x14..+0x20, so mirror the
@@ -10130,9 +10133,14 @@ static void retdec_capture_render_target(IDirect3DDevice9 *device)
     int can_write_bmp;
 
     index = InterlockedIncrement(&capture_count);
+#if defined(RETDEC_CAPTURE_EVERY_10)
+    if ((index > 2 && (index % 10) != 0) ||
+        device == NULL || device->lpVtbl == NULL)
+#else
     if ((index > 2 && index != 30 && index != 60 && index != 120 &&
          (index < 600 || (index % 600) != 0)) ||
         device == NULL || device->lpVtbl == NULL)
+#endif
         return;
 
     ZeroMemory(&desc, sizeof(desc));
@@ -30550,6 +30558,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     uint32_t row;
     int32_t texture_value = 0;
     int32_t result;
+    D3DFORMAT texture_format;
     IDirect3DTexture9 *texture;
     D3DLOCKED_RECT locked_rect;
 
@@ -30569,7 +30578,15 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     bit_depth = bitmap[4];
     width = *(uint32_t *)(bitmap + 8);
     height = *(uint32_t *)(bitmap + 12);
-    source_pitch = bit_depth >= 24 ? width * 4u : width;
+    /* CV2's 16-bit branch is the native A1R5G5B5 texture path used by
+       CBitmapData::Load.  It is not an 8-bit grayscale stream. */
+    if (bit_depth == 16) {
+        source_pitch = width * 2u;
+        texture_format = D3DFMT_A1R5G5B5;
+    } else {
+        source_pitch = bit_depth >= 24 ? width * 4u : width;
+        texture_format = D3DFMT_A8R8G8B8;
+    }
     if (width == 0 || height == 0 || source_pitch == 0 ||
         (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
         free(*(void **)(bitmap + 28));
@@ -30581,7 +30598,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
         *height_out = height;
 
     result = D3DXCreateTexture(g678, (int32_t)width, (int32_t)height, 1, 0,
-                               21, 1, &texture_value);
+                               texture_format, 1, &texture_value);
     retdec_trace_hresult("texture:create-hr", result);
     retdec_trace_i32("texture:create-object", texture_value);
     if (result < 0 || texture_value == 0) {
@@ -30619,9 +30636,9 @@ int32_t function_40e630(int32_t unused, const char *file_name,
         const unsigned char *source =
             (const unsigned char *)(*(void **)(bitmap + 28)) +
             (size_t)row * source_pitch;
-        if (bit_depth == 32) {
-            memcpy(destination, source, (size_t)width * 4u);
-        } else if (bit_depth == 24) {
+        if (bit_depth == 16) {
+            memcpy(destination, source, (size_t)width * 2u);
+        } else if (bit_depth == 32 || bit_depth == 24) {
             memcpy(destination, source, (size_t)width * 4u);
         } else {
             for (uint32_t column = 0; column < width; ++column) {
@@ -60950,8 +60967,15 @@ static void retdec_destroy_cact_list(int32_t *list_slot)
             int32_t layout = *(int32_t *)(intptr_t)(value + 4);
             if (layout != 0) {
                 if (*(int32_t *)(intptr_t)layout ==
-                        (int32_t)(intptr_t)&g327)
-                    free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 264));
+                        (int32_t)(intptr_t)&g327) {
+                    retdec_act_free_map_records(layout);
+                    if (*(int32_t *)(intptr_t)(layout + 332) != 0)
+                        free((void *)(intptr_t)
+                             *(int32_t *)(intptr_t)(layout + 332));
+                    *(int32_t *)(intptr_t)(layout + 332) = 0;
+                    *(int32_t *)(intptr_t)(layout + 336) = 0;
+                    *(int32_t *)(intptr_t)(layout + 340) = 0;
+                }
                 free((void *)(intptr_t)layout);
             }
             if (*(int32_t *)(intptr_t)(value + 28) >= 16)
@@ -61003,6 +61027,24 @@ static void retdec_destroy_cact_resource(int32_t resource)
 {
     if (resource == 0)
         return;
+    if (*(int32_t *)(intptr_t)resource ==
+            (int32_t)(intptr_t)&g313) {
+        retdec_mcd_free((struct retdec_mcd_data *)(intptr_t)
+                        *(int32_t *)(intptr_t)(resource + 64));
+        *(int32_t *)(intptr_t)(resource + 64) = 0;
+        if (*(int32_t *)(intptr_t)(resource + 56) >= 16)
+            free((void *)(intptr_t)*(int32_t *)(intptr_t)(resource + 36));
+        *(int32_t *)(intptr_t)(resource + 36) = 0;
+        *(int32_t *)(intptr_t)(resource + 52) = 0;
+        *(int32_t *)(intptr_t)(resource + 56) = 15;
+        if (*(int32_t *)(intptr_t)(resource + 92) >= 16)
+            free((void *)(intptr_t)*(int32_t *)(intptr_t)(resource + 72));
+        *(int32_t *)(intptr_t)(resource + 72) = 0;
+        *(int32_t *)(intptr_t)(resource + 88) = 0;
+        *(int32_t *)(intptr_t)(resource + 92) = 15;
+        free((void *)(intptr_t)resource);
+        return;
+    }
     if (*(int32_t *)(intptr_t)(resource + 60) >= 16)
         free((void *)(intptr_t)*(int32_t *)(intptr_t)(resource + 40));
     *(int32_t *)(intptr_t)(resource + 40) = 0;
@@ -62337,7 +62379,7 @@ static void retdec_act_apply_chip_resource(
         else if (strcmp(property->name, "stName") == 0)
             retdec_act_assign_string(object_ptr, 8, property);
         else if (strcmp(property->name, "stChipFile") == 0)
-            retdec_act_assign_string(object_ptr, 52, property);
+            retdec_act_assign_string(object_ptr, 36, property);
     }
 }
 
@@ -62505,9 +62547,19 @@ static int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 
 static void retdec_act_free_map_records(int32_t layout)
 {
+    int32_t begin;
+    int32_t end;
+    int32_t cursor;
+
     if (layout == 0)
         return;
-    free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 264));
+    begin = *(int32_t *)(intptr_t)(layout + 264);
+    end = *(int32_t *)(intptr_t)(layout + 268);
+    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
+         cursor += 4) {
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)cursor);
+    }
+    free((void *)(intptr_t)begin);
     *(int32_t *)(intptr_t)(layout + 264) = 0;
     *(int32_t *)(intptr_t)(layout + 268) = 0;
     *(int32_t *)(intptr_t)(layout + 272) = 0;
@@ -62520,7 +62572,7 @@ static int32_t retdec_act_read_map_records(int32_t layout,
     uint32_t serialized_size;
     uint32_t read_size;
     uint32_t index;
-    unsigned char *records;
+    int32_t *records;
 
     if (layout == 0 ||
         !retdec_act_read_u32(reader_ptr, &count) ||
@@ -62533,29 +62585,44 @@ static int32_t retdec_act_read_map_records(int32_t layout,
     if (count == 0)
         return 1;
 
-    if (count > UINT32_MAX / 0x20u)
+    if (serialized_size > 0x20u ||
+        count > UINT32_MAX / (uint32_t)sizeof(*records))
         return 0;
-    records = (unsigned char *)calloc((size_t)count, 0x20u);
+    records = (int32_t *)calloc((size_t)count, sizeof(*records));
     if (records == NULL)
         return 0;
     read_size = serialized_size;
     for (index = 0; index < count; ++index) {
-        unsigned char *record = records + index * 0x20u;
+        unsigned char *record = (unsigned char *)calloc(1u, 0x20u);
+        if (record == NULL) {
+            uint32_t cleanup;
+            for (cleanup = 0; cleanup < index; ++cleanup)
+                free((void *)(intptr_t)records[cleanup]);
+            free(records);
+            return 0;
+        }
         if (read_size != 0 &&
             !retdec_reader_read_exact(reader_ptr, record, read_size)) {
+            free(record);
+            {
+                uint32_t cleanup;
+                for (cleanup = 0; cleanup < index; ++cleanup)
+                    free((void *)(intptr_t)records[cleanup]);
+            }
             free(records);
             return 0;
         }
         *(uint32_t *)(void *)(record + 0x14) = index;
         *(uint8_t *)(void *)(record + 0x18) = 1;
         *(float *)(void *)(record + 0x1c) = 1.0f;
+        records[index] = (int32_t)(intptr_t)record;
     }
     *(int32_t *)(intptr_t)(layout + 264) =
         (int32_t)(intptr_t)records;
     *(int32_t *)(intptr_t)(layout + 268) =
-        (int32_t)(intptr_t)(records + count * 0x20u);
+        (int32_t)(intptr_t)(records + count);
     *(int32_t *)(intptr_t)(layout + 272) =
-        (int32_t)(intptr_t)(records + count * 0x20u);
+        (int32_t)(intptr_t)(records + count);
     retdec_trace_i32("act:map-record-count", (int32_t)count);
     retdec_trace_i32("act:map-record-size", (int32_t)serialized_size);
     return 1;
@@ -62644,6 +62711,9 @@ static int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
     }
     retdec_act_apply_layer(layer, properties, property_count);
     retdec_act_free_properties(properties, property_count);
+    retdec_trace_squirrel_name("act:layer-name",
+                               (int32_t)(intptr_t)retdec_std_string_data(
+                                   layer + 112));
     if (!retdec_act_read_u32(reader_ptr, &count) || count > 0x10000u) {
         retdec_trace("act:layer-key-count-failed");
         return 0;
@@ -62659,6 +62729,21 @@ static int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
             retdec_trace("act:layer-key-load-failed");
             return 0;
         }
+        retdec_trace_squirrel_name(
+            "act:key-script", (int32_t)(intptr_t)retdec_std_string_data(
+                key + 8));
+        retdec_trace_i32("act:key-layout", *(int32_t *)(intptr_t)(key + 4));
+        if (*(int32_t *)(intptr_t)(key + 4) != 0 &&
+            *(int32_t *)(intptr_t)*(int32_t *)(intptr_t)(key + 4) ==
+                (int32_t)(intptr_t)&g327) {
+            int32_t key_layout = *(int32_t *)(intptr_t)(key + 4);
+            int32_t key_begin = *(int32_t *)(intptr_t)(key_layout + 264);
+            int32_t key_end = *(int32_t *)(intptr_t)(key_layout + 268);
+            retdec_trace_i32("act:key-map-record-count",
+                             key_begin != 0 && key_end >= key_begin
+                                 ? (int32_t)((key_end - key_begin) / 4)
+                                 : 0);
+        }
         ++*(int32_t *)(intptr_t)(layer + 0xb8);
     }
     if (!retdec_act_read_u32(reader_ptr, &count) || count > 0x10000u) {
@@ -62672,6 +62757,606 @@ static int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         return 0;
     }
     return retdec_act_load_script(layer + 0xcc, reader_ptr);
+}
+
+/* CActResourceChip owns the decoded CChipData table.  The ACT file only
+   names this object; its chip records and texture-name table live in the
+   referenced MCD entry and are loaded by CActResourceChip::Load. */
+struct retdec_mcd_chip {
+    uint32_t chip_id;
+    unsigned char bytes[48];
+};
+
+struct retdec_mcd_texture {
+    uint32_t texture_id;
+    int32_t handle;
+};
+
+struct retdec_mcd_data {
+    uint32_t chip_count;
+    struct retdec_mcd_chip *chips;
+    uint32_t texture_count;
+    struct retdec_mcd_texture *textures;
+};
+
+static uint32_t retdec_mcd_u32(const unsigned char *bytes)
+{
+    uint32_t value;
+
+    memcpy(&value, bytes, sizeof(value));
+    return value;
+}
+
+static int16_t retdec_mcd_i16(const unsigned char *bytes)
+{
+    int16_t value;
+
+    memcpy(&value, bytes, sizeof(value));
+    return value;
+}
+
+static struct retdec_mcd_chip *retdec_mcd_find_chip(
+    struct retdec_mcd_data *data, uint32_t chip_id)
+{
+    uint32_t index;
+
+    if (data == NULL)
+        return NULL;
+    for (index = 0; index < data->chip_count; ++index) {
+        if (data->chips[index].chip_id == chip_id)
+            return &data->chips[index];
+    }
+    return NULL;
+}
+
+static struct retdec_mcd_texture *retdec_mcd_find_texture(
+    struct retdec_mcd_data *data, uint32_t texture_id)
+{
+    uint32_t index;
+
+    if (data == NULL)
+        return NULL;
+    for (index = 0; index < data->texture_count; ++index) {
+        if (data->textures[index].texture_id == texture_id)
+            return &data->textures[index];
+    }
+    return NULL;
+}
+
+static void retdec_mcd_free(struct retdec_mcd_data *data)
+{
+    if (data == NULL)
+        return;
+    free(data->chips);
+    free(data->textures);
+    free(data);
+}
+
+static int32_t retdec_act_load_mcd(int32_t resource,
+                                   const char *file_name)
+{
+    int32_t reader_slot = 0;
+    struct retdec_mcd_data *data = NULL;
+    uint32_t magic;
+    uint32_t version;
+    uint32_t payload_offset;
+    uint32_t chip_count;
+    uint32_t record_size;
+    uint32_t texture_count;
+    uint32_t index;
+    uint32_t loaded_texture_count = 0;
+
+    if (resource == 0 || file_name == NULL || *file_name == 0)
+        return 0;
+    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name)) {
+        retdec_trace_squirrel_name("mcd:open-failed",
+                                   (int32_t)(intptr_t)file_name);
+        return 0;
+    }
+
+    if (!retdec_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
+        magic != 0x434d4432u ||
+        !retdec_reader_read_exact(reader_slot, &version, sizeof(version)) ||
+        version > 1u ||
+        !retdec_reader_read_exact(reader_slot, &payload_offset,
+                                  sizeof(payload_offset)) ||
+        (payload_offset != 0 &&
+         !retdec_reader_seek_relative(reader_slot, payload_offset)) ||
+        !retdec_reader_read_exact(reader_slot, &chip_count,
+                                  sizeof(chip_count)) ||
+        !retdec_reader_read_exact(reader_slot, &record_size,
+                                  sizeof(record_size)) ||
+        chip_count > 0x10000u || record_size > 48u) {
+        retdec_trace("mcd:header-failed");
+        retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
+        return 0;
+    }
+
+    data = (struct retdec_mcd_data *)calloc(1u, sizeof(*data));
+    if (data == NULL) {
+        retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
+        return 0;
+    }
+    data->chip_count = chip_count;
+    if (chip_count != 0) {
+        data->chips = (struct retdec_mcd_chip *)calloc(
+            (size_t)chip_count, sizeof(*data->chips));
+        if (data->chips == NULL)
+            goto load_failed;
+    }
+
+    for (index = 0; index < chip_count; ++index) {
+        unsigned char record[48] = { 0 };
+        uint32_t next_record;
+
+        if ((record_size != 0 &&
+             !retdec_reader_read_exact(reader_slot, record, record_size)) ||
+            !retdec_reader_read_exact(reader_slot, &next_record,
+                                      sizeof(next_record)))
+            goto load_failed;
+        data->chips[index].chip_id = retdec_mcd_u32(record);
+        memcpy(data->chips[index].bytes, record, sizeof(record));
+        if (data->chips[index].chip_id >= 0x8d0u &&
+            data->chips[index].chip_id <= 0x920u) {
+            retdec_trace_i32("mcd:chip-index", (int32_t)index);
+            retdec_trace_i32("mcd:chip-id",
+                             (int32_t)data->chips[index].chip_id);
+        }
+    }
+
+    if (!retdec_reader_read_exact(reader_slot, &texture_count,
+                                  sizeof(texture_count)) ||
+        texture_count > 0x10000u)
+        goto load_failed;
+    data->texture_count = texture_count;
+    if (texture_count != 0) {
+        data->textures = (struct retdec_mcd_texture *)calloc(
+            (size_t)texture_count, sizeof(*data->textures));
+        if (data->textures == NULL)
+            goto load_failed;
+    }
+
+    for (index = 0; index < texture_count; ++index) {
+        uint32_t texture_id;
+        uint32_t name_length;
+        char *name;
+        int32_t handle;
+
+        if (!retdec_reader_read_exact(reader_slot, &texture_id,
+                                      sizeof(texture_id)) ||
+            !retdec_reader_read_exact(reader_slot, &name_length,
+                                      sizeof(name_length)) ||
+            name_length > 0x100000u)
+            goto load_failed;
+        name = (char *)malloc((size_t)name_length + 1u);
+        if (name == NULL)
+            goto load_failed;
+        if (name_length != 0 &&
+            !retdec_reader_read_exact(reader_slot, name, name_length)) {
+            free(name);
+            goto load_failed;
+        }
+        name[name_length] = 0;
+        handle = retdec_load_act_texture(name);
+        retdec_trace_squirrel_name("mcd:texture-name",
+                                   (int32_t)(intptr_t)name);
+        retdec_trace_i32("mcd:texture-id", (int32_t)texture_id);
+        retdec_trace_i32("mcd:texture-handle", handle);
+        if (handle > 0 && (uint32_t)handle < RETDEC_ACT_TEXTURE_SLOT_COUNT) {
+            retdec_trace_i32("mcd:texture-width",
+                             (int32_t)g_retdec_act_texture_slots[
+                                 (uint32_t)handle].width);
+            retdec_trace_i32("mcd:texture-height",
+                             (int32_t)g_retdec_act_texture_slots[
+                                 (uint32_t)handle].height);
+        }
+        free(name);
+        data->textures[index].texture_id = texture_id;
+        data->textures[index].handle = handle;
+        if (handle != 0)
+            ++loaded_texture_count;
+    }
+
+    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
+    *(int32_t *)(intptr_t)(resource + 64) =
+        (int32_t)(intptr_t)data;
+    retdec_string_assign_cstr(
+        (int32_t *)(intptr_t)(resource + 72), file_name);
+    retdec_trace_i32("mcd:chip-count", (int32_t)chip_count);
+    retdec_trace_i32("mcd:texture-count", (int32_t)texture_count);
+    retdec_trace_i32("mcd:texture-loaded", (int32_t)loaded_texture_count);
+    return 1;
+
+load_failed:
+    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
+    retdec_mcd_free(data);
+    retdec_trace("mcd:load-failed");
+    return 0;
+}
+
+static int32_t retdec_map_sprite_init(int32_t sprite, int32_t handle,
+                                      const unsigned char *chip_bytes)
+{
+    uint32_t texture_width;
+    uint32_t texture_height;
+    int16_t left;
+    int16_t top;
+    int16_t width;
+    int16_t height;
+    float u0;
+    float v0;
+    float u1;
+    float v1;
+    uint32_t color = 0xffffffffu;
+
+    if (sprite == 0 || chip_bytes == NULL || handle <= 0 ||
+        (uint32_t)handle >= RETDEC_ACT_TEXTURE_SLOT_COUNT)
+        return 0;
+    texture_width = g_retdec_act_texture_slots[(uint32_t)handle].width;
+    texture_height = g_retdec_act_texture_slots[(uint32_t)handle].height;
+    if (texture_width == 0 || texture_height == 0)
+        return 0;
+    left = retdec_mcd_i16(chip_bytes + 8);
+    top = retdec_mcd_i16(chip_bytes + 10);
+    width = retdec_mcd_i16(chip_bytes + 12);
+    height = retdec_mcd_i16(chip_bytes + 14);
+    if (width <= 0 || height <= 0)
+        return 0;
+
+    memset((void *)(intptr_t)sprite, 0, 232u);
+    *(int32_t *)(intptr_t)(sprite + 4) = handle;
+    *(float *)(intptr_t)(sprite + 120) = (float)texture_width;
+    *(float *)(intptr_t)(sprite + 124) = (float)texture_height;
+    u0 = (float)left / (float)texture_width;
+    v0 = (float)top / (float)texture_height;
+    u1 = (float)(left + width) / (float)texture_width;
+    v1 = (float)(top + height) / (float)texture_height;
+    *(float *)(intptr_t)(sprite + 28) = u0;
+    *(float *)(intptr_t)(sprite + 32) = v0;
+    *(float *)(intptr_t)(sprite + 56) = u1;
+    *(float *)(intptr_t)(sprite + 60) = v0;
+    *(float *)(intptr_t)(sprite + 84) = u0;
+    *(float *)(intptr_t)(sprite + 88) = v1;
+    *(float *)(intptr_t)(sprite + 112) = u1;
+    *(float *)(intptr_t)(sprite + 116) = v1;
+
+    *(float *)(intptr_t)(sprite + 140) = (float)width;
+    *(float *)(intptr_t)(sprite + 156) = (float)height;
+    *(float *)(intptr_t)(sprite + 164) = (float)width;
+    *(float *)(intptr_t)(sprite + 168) = (float)height;
+    memcpy((void *)(intptr_t)(sprite + 176),
+           (const void *)(intptr_t)(sprite + 128), 48u);
+    *(uint32_t *)(intptr_t)(sprite + 24) = color;
+    *(uint32_t *)(intptr_t)(sprite + 52) = color;
+    *(uint32_t *)(intptr_t)(sprite + 80) = color;
+    *(uint32_t *)(intptr_t)(sprite + 108) = color;
+    return 1;
+}
+
+static int32_t retdec_c2dmaplayout_update_impl(
+    int32_t layout, int32_t view_left, int32_t view_top,
+    int32_t view_right, int32_t view_bottom)
+{
+    int32_t layer;
+    int32_t resource;
+    struct retdec_mcd_data *data;
+    int32_t begin;
+    int32_t end;
+    uint32_t map_count;
+    uint32_t index;
+    uint32_t output_count = 0;
+    int32_t render_block;
+    float layer_x;
+    float layer_y;
+    float layer_z;
+    float scale;
+    static volatile LONG trace_count;
+    static volatile LONG sample_layer_count;
+    static volatile LONG entry_sample_count;
+    LONG trace_index;
+    LONG sample_layer_index;
+    LONG entry_sample_index;
+    (void)view_left;
+    (void)view_top;
+    (void)view_right;
+    (void)view_bottom;
+
+    if (layout == 0)
+        return -0x7fffbffb;
+    trace_index = InterlockedIncrement(&trace_count);
+    layer = *(int32_t *)(intptr_t)(layout + 312);
+    resource = *(int32_t *)(intptr_t)(layout + 316);
+    entry_sample_index = InterlockedIncrement(&entry_sample_count);
+    if (entry_sample_index <= 8) {
+        retdec_trace_i32("map:entry-layout", layout);
+        retdec_trace_i32("map:entry-layer", layer);
+        retdec_trace_i32("map:entry-resource", resource);
+        if (layer != 0) {
+            retdec_trace_squirrel_name(
+                "map:entry-layer-name", (int32_t)(intptr_t)
+                    retdec_std_string_data(layer + 112));
+            retdec_trace_i32("map:entry-visible",
+                             *(int32_t *)(intptr_t)(layer + 0x8c));
+        }
+        retdec_trace_i32("map:entry-record-begin",
+                         layout != 0 ? *(int32_t *)(intptr_t)(layout + 264) : 0);
+        retdec_trace_i32("map:entry-record-end",
+                         layout != 0 ? *(int32_t *)(intptr_t)(layout + 268) : 0);
+        retdec_trace_i32("map:entry-record-count",
+                         layout != 0 &&
+                         *(int32_t *)(intptr_t)(layout + 268) >=
+                         *(int32_t *)(intptr_t)(layout + 264)
+                             ? (int32_t)((*(int32_t *)(intptr_t)(layout + 268) -
+                                          *(int32_t *)(intptr_t)(layout + 264)) / 4)
+                             : 0);
+    }
+    if (layer == 0 || resource == 0)
+        return -0x7fffbffb;
+    while (layer != 0) {
+        if (*(uint8_t *)(intptr_t)(layer + 0x8c) == 0)
+            return 0;
+        layer = *(int32_t *)(intptr_t)(layer + 0x58);
+    }
+    data = (struct retdec_mcd_data *)(intptr_t)
+        *(int32_t *)(intptr_t)(resource + 64);
+    if (data == NULL)
+        return -0x7fffbffb;
+
+    if (*(int32_t *)(intptr_t)(layout + 332) != 0)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 332));
+    *(int32_t *)(intptr_t)(layout + 332) = 0;
+    *(int32_t *)(intptr_t)(layout + 336) = 0;
+    *(int32_t *)(intptr_t)(layout + 340) = 0;
+    *(int32_t *)(intptr_t)(layout + 380) = 0;
+
+    begin = *(int32_t *)(intptr_t)(layout + 264);
+    end = *(int32_t *)(intptr_t)(layout + 268);
+    if (begin == 0 || end < begin)
+        return 0;
+    map_count = (uint32_t)((end - begin) / 4);
+    if (map_count == 0 || map_count > UINT32_MAX / 232u)
+        return 0;
+    render_block = (int32_t)(intptr_t)calloc((size_t)map_count, 232u);
+    if (render_block == 0)
+        return -0x7fffbffb;
+
+    layer_x = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
+                                   0x90);
+    layer_y = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
+                                   0x94);
+    layer_z = *(float *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) +
+                                   0x98);
+    scale = *(float *)(intptr_t)(layout + 324);
+    if (scale == 0.0f)
+        scale = 1.0f;
+    sample_layer_index = InterlockedIncrement(&sample_layer_count);
+
+    if (sample_layer_index <= 4) {
+        int32_t layer_x_bits;
+        int32_t layer_y_bits;
+        int32_t layer_z_bits;
+        int32_t scale_bits;
+        uint32_t sample_index;
+
+        memcpy(&layer_x_bits, &layer_x, sizeof(layer_x_bits));
+        memcpy(&layer_y_bits, &layer_y, sizeof(layer_y_bits));
+        memcpy(&layer_z_bits, &layer_z, sizeof(layer_z_bits));
+        memcpy(&scale_bits, &scale, sizeof(scale_bits));
+        retdec_trace_squirrel_name(
+            "map:sample-layer", (int32_t)(intptr_t)
+                retdec_std_string_data(
+                    *(int32_t *)(intptr_t)(layout + 312) + 112));
+        retdec_trace_i32("map:sample-layer-x", layer_x_bits);
+        retdec_trace_i32("map:sample-layer-y", layer_y_bits);
+        retdec_trace_i32("map:sample-layer-z", layer_z_bits);
+        retdec_trace_i32("map:sample-scale", scale_bits);
+        for (sample_index = 0;
+             sample_index < map_count;
+             ++sample_index) {
+            int32_t sample_record = *(int32_t *)(intptr_t)
+                (begin + sample_index * 4);
+            struct retdec_mcd_chip *sample_chip = NULL;
+            struct retdec_mcd_texture *sample_texture = NULL;
+
+            retdec_trace_i32("map:sample-index", (int32_t)sample_index);
+            if (sample_record == 0) {
+                retdec_trace("map:sample-null-record");
+                continue;
+            }
+            retdec_trace_i32("map:sample-chip-id",
+                             (int32_t)retdec_mcd_u32(
+                                 (unsigned char *)(intptr_t)sample_record));
+            retdec_trace_i32("map:sample-x",
+                             *(int32_t *)(intptr_t)(sample_record + 4));
+            retdec_trace_i32("map:sample-y",
+                             *(int32_t *)(intptr_t)(sample_record + 8));
+            retdec_trace_i32("map:sample-active",
+                             *(int32_t *)(intptr_t)(sample_record + 24));
+            retdec_trace_i32("map:sample-opacity-bits",
+                             *(int32_t *)(intptr_t)(sample_record + 28));
+            sample_chip = retdec_mcd_find_chip(
+                data, retdec_mcd_u32((unsigned char *)(intptr_t)sample_record));
+            if (sample_chip == NULL) {
+                retdec_trace("map:sample-chip-miss");
+                continue;
+            }
+            retdec_trace_i32("map:sample-texture-id",
+                             (int32_t)retdec_mcd_u32(sample_chip->bytes + 4));
+            retdec_trace_i32("map:sample-left",
+                             (int32_t)retdec_mcd_i16(sample_chip->bytes + 8));
+            retdec_trace_i32("map:sample-top",
+                             (int32_t)retdec_mcd_i16(sample_chip->bytes + 10));
+            retdec_trace_i32("map:sample-width",
+                             (int32_t)retdec_mcd_i16(sample_chip->bytes + 12));
+            retdec_trace_i32("map:sample-height",
+                             (int32_t)retdec_mcd_i16(sample_chip->bytes + 14));
+            sample_texture = retdec_mcd_find_texture(
+                data, retdec_mcd_u32(sample_chip->bytes + 4));
+            retdec_trace_i32("map:sample-handle",
+                             sample_texture != NULL ? sample_texture->handle : 0);
+        }
+    }
+
+    for (index = 0; index < map_count; ++index) {
+        int32_t record = *(int32_t *)(intptr_t)(begin + index * 4);
+        struct retdec_mcd_chip *chip;
+        struct retdec_mcd_texture *texture;
+        int32_t sprite;
+        float x;
+        float y;
+        float z;
+        float opacity;
+        int32_t alpha;
+        uint32_t color;
+
+        if (record == 0)
+            continue;
+        chip = retdec_mcd_find_chip(data,
+                                    retdec_mcd_u32((unsigned char *)
+                                                   (intptr_t)record));
+        if (chip == NULL)
+            continue;
+        texture = retdec_mcd_find_texture(
+            data, retdec_mcd_u32(chip->bytes + 4));
+        if (texture == NULL || texture->handle == 0)
+            continue;
+        sprite = render_block + (int32_t)output_count * 232;
+        if (!retdec_map_sprite_init(sprite, texture->handle, chip->bytes))
+            continue;
+        x = (float)*(int32_t *)(intptr_t)(record + 4) + layer_x;
+        y = (float)*(int32_t *)(intptr_t)(record + 8) + layer_y;
+        z = layer_z;
+        *(float *)(intptr_t)(sprite + 176) = x * scale;
+        *(float *)(intptr_t)(sprite + 180) = y * scale;
+        *(float *)(intptr_t)(sprite + 184) = z * scale;
+        *(float *)(intptr_t)(sprite + 188) =
+            (x + *(float *)(intptr_t)(sprite + 140)) * scale;
+        *(float *)(intptr_t)(sprite + 192) = y * scale;
+        *(float *)(intptr_t)(sprite + 196) = z * scale;
+        *(float *)(intptr_t)(sprite + 200) = x * scale;
+        *(float *)(intptr_t)(sprite + 204) =
+            (y + *(float *)(intptr_t)(sprite + 156)) * scale;
+        *(float *)(intptr_t)(sprite + 208) = z * scale;
+        *(float *)(intptr_t)(sprite + 212) =
+            (x + *(float *)(intptr_t)(sprite + 164)) * scale;
+        *(float *)(intptr_t)(sprite + 216) =
+            (y + *(float *)(intptr_t)(sprite + 168)) * scale;
+        *(float *)(intptr_t)(sprite + 220) = z * scale;
+        opacity = *(float *)(intptr_t)(record + 28) *
+            *(float *)(intptr_t)(layout + 320);
+        alpha = (int32_t)(opacity * 255.0f);
+        if (alpha < 0)
+            alpha = 0;
+        if (alpha > 255)
+            alpha = 255;
+        color = ((uint32_t)alpha << 24) | 0x00ffffffu;
+        *(uint32_t *)(intptr_t)(sprite + 24) = color;
+        *(uint32_t *)(intptr_t)(sprite + 52) = color;
+        *(uint32_t *)(intptr_t)(sprite + 80) = color;
+        *(uint32_t *)(intptr_t)(sprite + 108) = color;
+        if (sample_layer_index <= 4 && output_count < 8u) {
+            retdec_trace_i32("map:sample-output-index",
+                             (int32_t)output_count);
+            retdec_trace_i32("map:sample-output-record", record);
+            retdec_trace_i32("map:sample-output-handle", texture->handle);
+            retdec_trace_i32("map:sample-output-x", *(int32_t *)(intptr_t)
+                             (record + 4));
+            retdec_trace_i32("map:sample-output-y", *(int32_t *)(intptr_t)
+                             (record + 8));
+        }
+        ++output_count;
+    }
+    if (output_count == 0) {
+        free((void *)(intptr_t)render_block);
+        return 0;
+    }
+    *(int32_t *)(intptr_t)(layout + 332) = render_block;
+    *(int32_t *)(intptr_t)(layout + 336) =
+        render_block + (int32_t)output_count * 232;
+    *(int32_t *)(intptr_t)(layout + 340) =
+        render_block + (int32_t)map_count * 232;
+    *(int32_t *)(intptr_t)(layout + 380) = (int32_t)output_count;
+    if (trace_index <= 48) {
+        retdec_trace_squirrel_name(
+            "map:update-layer", (int32_t)(intptr_t)retdec_std_string_data(
+                *(int32_t *)(intptr_t)(layout + 312) + 112));
+        retdec_trace_i32("map:update-records", (int32_t)map_count);
+        retdec_trace_i32("map:update-draw-records", (int32_t)output_count);
+    }
+    return 0;
+}
+
+static int32_t retdec_c2dmaplayout_draw_impl(int32_t layout,
+                                             float x, float y)
+{
+    IDirect3DDevice9 *device;
+    DWORD old_src_blend = 0;
+    DWORD old_dest_blend = 0;
+    DWORD old_blend_op = 0;
+    DWORD old_alpha_blend = 0;
+    int states_saved = 0;
+    int32_t begin;
+    int32_t count;
+    int32_t index;
+    int32_t result = 0;
+
+    if (layout == 0 || *(int32_t *)(intptr_t)(layout + 312) == 0)
+        return -0x7fffbffb;
+#if defined(RETDEC_DIAGNOSTIC_SKIP_BG2)
+    {
+        const char *map_layer_name = retdec_std_string_data(
+            *(int32_t *)(intptr_t)(layout + 312) + 112);
+        if (map_layer_name != NULL && strcmp(map_layer_name, "bg2") == 0)
+            return 0;
+    }
+#endif
+    device = (IDirect3DDevice9 *)(uintptr_t)(uint32_t)g678;
+    if (device != NULL && device->lpVtbl != NULL &&
+        SUCCEEDED(device->lpVtbl->GetRenderState(
+            device, D3DRS_SRCBLEND, &old_src_blend)) &&
+        SUCCEEDED(device->lpVtbl->GetRenderState(
+            device, D3DRS_DESTBLEND, &old_dest_blend)) &&
+        SUCCEEDED(device->lpVtbl->GetRenderState(
+            device, D3DRS_BLENDOP, &old_blend_op)) &&
+        SUCCEEDED(device->lpVtbl->GetRenderState(
+            device, D3DRS_ALPHABLENDENABLE, &old_alpha_blend))) {
+        states_saved = 1;
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_ALPHABLENDENABLE, TRUE);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_BLENDOP, D3DBLENDOP_ADD);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    }
+    /* C2DMapLayout::Draw enters the 2D pass with depth testing and depth
+       writes disabled, so layers compose in their linked-list order. */
+    if (device != NULL && device->lpVtbl != NULL) {
+        device->lpVtbl->SetRenderState(device, D3DRS_ZENABLE, FALSE);
+        device->lpVtbl->SetRenderState(device, D3DRS_ZWRITEENABLE, FALSE);
+    }
+    begin = *(int32_t *)(intptr_t)(layout + 332);
+    count = *(int32_t *)(intptr_t)(layout + 380);
+    if (begin != 0 && count > 0) {
+        for (index = 0; index < count; ++index) {
+            result = retdec_layout_submit_impl(begin + index * 232, x, y);
+            if (result < 0)
+                break;
+        }
+    }
+    retdec_set_texture_stage(0, 0);
+    if (states_saved) {
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_SRCBLEND, old_src_blend);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_DESTBLEND, old_dest_blend);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_BLENDOP, old_blend_op);
+        device->lpVtbl->SetRenderState(
+            device, D3DRS_ALPHABLENDENABLE, old_alpha_blend);
+    }
+    return result;
 }
 
 static int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
@@ -62704,6 +63389,9 @@ static int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
     } else {
         *(int32_t *)(intptr_t)(resource + 52) = 0;
         *(int32_t *)(intptr_t)(resource + 56) = 15;
+        *(uint8_t *)(intptr_t)(resource + 36) = 0;
+        *(int32_t *)(intptr_t)(resource + 64) = 0;
+        *(int32_t *)(intptr_t)(resource + 68) = 0;
         *(int32_t *)(intptr_t)(resource + 88) = 0;
         *(int32_t *)(intptr_t)(resource + 92) = 15;
         *(uint8_t *)(intptr_t)(resource + 72) = 0;
@@ -62727,7 +63415,15 @@ static int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         *(int32_t *)(intptr_t)(resource + 0x44) = texture_handle;
         retdec_trace_i32("act:resource-handle", texture_handle);
     } else {
-        retdec_trace("act:chip-resource");
+        const char *chip_file = retdec_std_string_data(resource + 36);
+        if (!retdec_act_load_mcd(resource, chip_file)) {
+            retdec_trace("act:chip-resource-load-failed");
+            retdec_destroy_cact_resource(resource);
+            return 0;
+        }
+        retdec_trace_squirrel_name(
+            "act:chip-resource-file", (int32_t)(intptr_t)chip_file);
+        retdec_trace("act:chip-resource-loaded");
     }
     return resource;
 }
@@ -62740,10 +63436,18 @@ static int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     if (layout == 0 || layer == 0)
         return -0x7fffbffb;
     resource = *(int32_t *)(intptr_t)(layer + 0x64);
-    *(int32_t *)(intptr_t)(layout + 0x138) = layer;
-    *(int32_t *)(intptr_t)(layout + 0x13c) = resource;
+    *(int32_t *)(intptr_t)(layout + 312) = layer;
+    *(int32_t *)(intptr_t)(layout + 316) = resource;
+    if (*(int32_t *)(intptr_t)(layout + 332) != 0)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 332));
+    *(int32_t *)(intptr_t)(layout + 332) = 0;
+    *(int32_t *)(intptr_t)(layout + 336) = 0;
+    *(int32_t *)(intptr_t)(layout + 340) = 0;
+    *(int32_t *)(intptr_t)(layout + 380) = 0;
     retdec_trace_i32("map-layout:bind-layer", layer);
     retdec_trace_i32("map-layout:bind-resource", resource);
+    retdec_trace_i32("map-layout:mcd", resource != 0
+                     ? *(int32_t *)(intptr_t)(resource + 64) : 0);
     return 0;
 }
 
@@ -129385,6 +130089,566 @@ int32_t function_462600(int32_t * a1, float80_t a2, float80_t a3) {
     return result;
 }
 
+static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
+                                          float32_t dx, float32_t dy)
+{
+    int32_t actors;
+    int32_t count;
+    int32_t index;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+
+    if (manager == 0 || camera == 0)
+        return;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:move-dx", *(int32_t *)(intptr_t)&dx);
+        retdec_trace_i32("actor:move-dy", *(int32_t *)(intptr_t)&dy);
+        retdec_trace_i32("actor:move-camera-left-before",
+                         *(int32_t *)(intptr_t)(camera + 72));
+        retdec_trace_i32("actor:move-camera-right-before",
+                         *(int32_t *)(intptr_t)(camera + 80));
+    }
+    actors = *(int32_t *)(intptr_t)(manager + 100);
+    count = *(int32_t *)(intptr_t)(manager + 116);
+    for (index = 0; actors != 0 && index < count; ++index) {
+        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
+
+        if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 40) == 0 ||
+            *(unsigned char *)(intptr_t)(actor + 20) != 0 ||
+            *(int32_t *)(intptr_t)(actor + 232) == 0 ||
+            *(float32_t *)(intptr_t)(camera + 80) + 64.0f <
+                *(float32_t *)(intptr_t)(actor + 440) ||
+            *(float32_t *)(intptr_t)(camera + 72) - 64.0f >
+                *(float32_t *)(intptr_t)(actor + 448) ||
+            *(float32_t *)(intptr_t)(camera + 84) + 64.0f <
+                *(float32_t *)(intptr_t)(actor + 444) ||
+            *(float32_t *)(intptr_t)(camera + 76) - 64.0f >
+                *(float32_t *)(intptr_t)(actor + 452))
+            continue;
+
+        *(float32_t *)(intptr_t)(actor + 240) += dx;
+        *(float32_t *)(intptr_t)(actor + 244) += dy;
+        *(float32_t *)(intptr_t)(actor + 440) += dx;
+        *(float32_t *)(intptr_t)(actor + 448) += dx;
+        *(float32_t *)(intptr_t)(actor + 444) += dy;
+        *(float32_t *)(intptr_t)(actor + 452) += dy;
+        *(float32_t *)(intptr_t)(actor + 248) =
+            *(float32_t *)(intptr_t)(actor + 240);
+        *(float32_t *)(intptr_t)(actor + 252) =
+            *(float32_t *)(intptr_t)(actor + 244);
+        *(float32_t *)(intptr_t)(actor + 456) =
+            *(float32_t *)(intptr_t)(actor + 440);
+        *(float32_t *)(intptr_t)(actor + 460) =
+            *(float32_t *)(intptr_t)(actor + 444);
+        *(float32_t *)(intptr_t)(actor + 464) =
+            *(float32_t *)(intptr_t)(actor + 448);
+        *(float32_t *)(intptr_t)(actor + 468) =
+            *(float32_t *)(intptr_t)(actor + 452);
+    }
+
+    *(float32_t *)(intptr_t)(camera + 40) += dx;
+    *(float32_t *)(intptr_t)(camera + 44) += dy;
+    *(float32_t *)(intptr_t)(camera + 72) += dx;
+    *(float32_t *)(intptr_t)(camera + 76) += dy;
+    *(float32_t *)(intptr_t)(camera + 80) += dx;
+    *(float32_t *)(intptr_t)(camera + 84) += dy;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:move-camera-left-after",
+                         *(int32_t *)(intptr_t)(camera + 72));
+        retdec_trace_i32("actor:move-camera-right-after",
+                         *(int32_t *)(intptr_t)(camera + 80));
+    }
+}
+
+static void retdec_actor_tick(int32_t actor)
+{
+    int32_t node;
+    int32_t frame;
+    int32_t frame_count;
+    int32_t frame_index;
+    int32_t duration;
+    int32_t timer;
+
+    if (actor == 0)
+        return;
+    node = *(int32_t *)(intptr_t)(actor + 200);
+    frame = *(int32_t *)(intptr_t)(actor + 204);
+    if (node == 0 || frame == 0)
+        return;
+    duration = (int32_t)*(int16_t *)(intptr_t)(frame + 240);
+    timer = *(int32_t *)(intptr_t)(actor + 216) + 1;
+    if (duration <= 0 || timer < duration) {
+        *(int32_t *)(intptr_t)(actor + 216) = timer;
+        return;
+    }
+
+    frame_count = (*(int32_t *)(intptr_t)(node + 12) -
+                   *(int32_t *)(intptr_t)(node + 8)) / 248;
+    if (frame_count <= 0)
+        return;
+    frame_index = *(int32_t *)(intptr_t)(actor + 212) + 1;
+    if (frame_index >= frame_count) {
+        if (*(unsigned char *)(intptr_t)(node + 24) != 0)
+            frame_index = 0;
+        else
+            frame_index = frame_count - 1;
+    }
+    *(int32_t *)(intptr_t)(actor + 212) = frame_index;
+    *(int32_t *)(intptr_t)(actor + 216) = 0;
+    *(int32_t *)(intptr_t)(actor + 204) =
+        *(int32_t *)(intptr_t)(node + 8) + frame_index * 248;
+}
+
+/* Actor::Update (45EC60), reduced to the branch used by actors without a
+   collision controller.  This is the normal movement path for the title
+   animation actors: preserve previous positions, apply velocity plus any
+   parent delta, then rebuild the cached bounds consumed by visibility and
+   rendering. */
+static int32_t retdec_actor_update_motion(int32_t actor)
+{
+    float parent_dx = 0.0f;
+    float parent_dy = 0.0f;
+    float width_scale;
+    float height_scale;
+    float left;
+    float right;
+    float top;
+    float bottom;
+    int32_t parent_pair[2] = { 0, 0 };
+    int32_t parent_slot;
+    int32_t parent;
+    static volatile LONG trace_count;
+    LONG trace_index;
+
+    if (actor == 0)
+        return 0;
+
+    *(float32_t *)(intptr_t)(actor + 248) =
+        *(float32_t *)(intptr_t)(actor + 240);
+    *(float32_t *)(intptr_t)(actor + 252) =
+        *(float32_t *)(intptr_t)(actor + 244);
+    *(float32_t *)(intptr_t)(actor + 456) =
+        *(float32_t *)(intptr_t)(actor + 440);
+    *(float32_t *)(intptr_t)(actor + 460) =
+        *(float32_t *)(intptr_t)(actor + 444);
+    *(float32_t *)(intptr_t)(actor + 464) =
+        *(float32_t *)(intptr_t)(actor + 448);
+    *(float32_t *)(intptr_t)(actor + 468) =
+        *(float32_t *)(intptr_t)(actor + 452);
+
+    function_45e410_this(actor + 32, parent_pair);
+    parent_slot = parent_pair[0];
+    parent = parent_slot != 0
+        ? *(int32_t *)(intptr_t)parent_slot : 0;
+    if (parent != 0 &&
+        (*(int32_t *)(intptr_t)(parent + 232) &
+         (int32_t)function_471060()) != 0) {
+        parent_dx = *(float32_t *)(intptr_t)(parent + 240) -
+            *(float32_t *)(intptr_t)(parent + 248);
+        parent_dy = *(float32_t *)(intptr_t)(parent + 244) -
+            *(float32_t *)(intptr_t)(parent + 252);
+    }
+    *(float32_t *)(intptr_t)(actor + 264) = parent_dx;
+    *(float32_t *)(intptr_t)(actor + 268) = parent_dy;
+
+    /* 45EC60 enters this branch when no collision controller is attached. */
+    if (*(int32_t *)(intptr_t)(actor + 316) == 0) {
+        *(float32_t *)(intptr_t)(actor + 240) +=
+            *(float32_t *)(intptr_t)(actor + 256) + parent_dx;
+        *(float32_t *)(intptr_t)(actor + 244) +=
+            *(float32_t *)(intptr_t)(actor + 260) + parent_dy;
+        *(float32_t *)(intptr_t)(actor + 284) = 0.0f;
+        *(float32_t *)(intptr_t)(actor + 288) = 0.0f;
+        *(float32_t *)(intptr_t)(actor + 292) = 0.0f;
+        *(float32_t *)(intptr_t)(actor + 296) = 0.0f;
+    }
+
+    width_scale = *(float32_t *)(intptr_t)(actor + 168) *
+        *(float32_t *)(intptr_t)(actor + 172);
+    height_scale = *(float32_t *)(intptr_t)(actor + 168) *
+        *(float32_t *)(intptr_t)(actor + 176);
+    if (0.0f >= *(float32_t *)(intptr_t)(actor + 272)) {
+        left = *(float32_t *)(intptr_t)(actor + 424) * width_scale +
+            *(float32_t *)(intptr_t)(actor + 240);
+        right = *(float32_t *)(intptr_t)(actor + 432) * width_scale +
+            *(float32_t *)(intptr_t)(actor + 240);
+    } else {
+        left = *(float32_t *)(intptr_t)(actor + 240) -
+            *(float32_t *)(intptr_t)(actor + 432) * width_scale;
+        right = *(float32_t *)(intptr_t)(actor + 240) -
+            *(float32_t *)(intptr_t)(actor + 424) * width_scale;
+    }
+    top = *(float32_t *)(intptr_t)(actor + 428) * height_scale +
+        *(float32_t *)(intptr_t)(actor + 244);
+    bottom = *(float32_t *)(intptr_t)(actor + 436) * height_scale +
+        *(float32_t *)(intptr_t)(actor + 244);
+    *(float32_t *)(intptr_t)(actor + 440) = left;
+    *(float32_t *)(intptr_t)(actor + 444) = top;
+    *(float32_t *)(intptr_t)(actor + 448) = right;
+    *(float32_t *)(intptr_t)(actor + 452) = bottom;
+    *(float32_t *)(intptr_t)(actor + 352) = left;
+    *(float32_t *)(intptr_t)(actor + 356) = top;
+    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(right - left);
+    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
+
+    trace_index = InterlockedIncrement(&trace_count);
+    if (trace_index <= 16) {
+        int32_t before_x;
+        int32_t after_x;
+        memcpy(&before_x, (const void *)(intptr_t)(actor + 248),
+               sizeof(before_x));
+        memcpy(&after_x, (const void *)(intptr_t)(actor + 240),
+               sizeof(after_x));
+        retdec_trace_i32("actor:motion-id",
+                         *(int32_t *)(intptr_t)(actor + 224));
+        retdec_trace_i32("actor:motion-before-x", before_x);
+        retdec_trace_i32("actor:motion-after-x", after_x);
+    }
+    retdec_release_squirrel_object(parent_pair[1]);
+    return 0;
+}
+
+static void retdec_actor_collect_tree(int32_t node, int32_t sentinel,
+                                      int32_t *actors, int32_t capacity,
+                                      int32_t *count)
+{
+    int32_t actor;
+
+    if (node == 0 || node == sentinel || actors == NULL || count == NULL)
+        return;
+    retdec_actor_collect_tree(
+        *(int32_t *)(intptr_t)(node + 0), sentinel,
+        actors, capacity, count);
+    actor = *(int32_t *)(intptr_t)(node + 12);
+    if (actor != 0 && *count < capacity)
+        actors[(*count)++] = actor;
+    retdec_actor_collect_tree(
+        *(int32_t *)(intptr_t)(node + 8), sentinel,
+        actors, capacity, count);
+}
+
+static int32_t retdec_actor_manager_refresh(int32_t manager)
+{
+    int32_t sentinel;
+    int32_t count;
+    int32_t capacity;
+    int32_t *actors;
+    int32_t index;
+    int32_t active_count;
+    int32_t back_count;
+    int32_t middle_count;
+    int32_t front_count;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+
+    if (manager == 0)
+        return 0;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor-manager:refresh-dirty",
+                         *(int32_t *)(intptr_t)(manager + 120));
+        retdec_trace_i32("actor-manager:refresh-tree-count",
+                         *(int32_t *)(intptr_t)(manager + 92));
+    }
+    if (*(unsigned char *)(intptr_t)(manager + 120) == 0)
+        return *(int32_t *)(intptr_t)(manager + 116);
+    sentinel = *(int32_t *)(intptr_t)(manager + 88);
+    count = *(int32_t *)(intptr_t)(manager + 92);
+    if (sentinel == 0 || count <= 0) {
+        *(int32_t *)(intptr_t)(manager + 116) = 0;
+        *(unsigned char *)(intptr_t)(manager + 120) = 0;
+        return 0;
+    }
+    capacity = count;
+    actors = (int32_t *)realloc(
+        (void *)(intptr_t)*(int32_t *)(intptr_t)(manager + 100),
+        (size_t)capacity * sizeof(*actors));
+    if (actors == NULL)
+        return 0;
+    *(int32_t *)(intptr_t)(manager + 100) = (int32_t)(intptr_t)actors;
+    *(int32_t *)(intptr_t)(manager + 104) =
+        (int32_t)(intptr_t)(actors + capacity);
+    *(int32_t *)(intptr_t)(manager + 108) =
+        (int32_t)(intptr_t)(actors + capacity);
+    active_count = 0;
+    retdec_actor_collect_tree(
+        *(int32_t *)(intptr_t)(sentinel + 4), sentinel,
+        actors, capacity, &active_count);
+
+    back_count = 0;
+    middle_count = 0;
+    front_count = 0;
+    for (index = 0; index < active_count; ++index) {
+        int32_t actor = actors[index];
+        int32_t priority;
+
+        if (*(unsigned char *)(intptr_t)(actor + 22) != 0)
+            continue;
+        priority = *(int32_t *)(intptr_t)(actor + 228);
+        if (priority == -1)
+            ++back_count;
+        if (priority < 0xffff)
+            ++middle_count;
+        if (priority < 0x10000)
+            ++front_count;
+    }
+    *(int32_t *)(intptr_t)(manager + 116) = active_count;
+    if (*(int32_t *)(intptr_t)(manager + 20) != 0) {
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 12) = 0;
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 16) =
+            back_count;
+    }
+    if (*(int32_t *)(intptr_t)(manager + 24) != 0) {
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 12) =
+            back_count;
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 16) =
+            middle_count;
+    }
+    if (*(int32_t *)(intptr_t)(manager + 28) != 0) {
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 12) =
+            middle_count;
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 16) =
+            front_count;
+    }
+    if (*(int32_t *)(intptr_t)(manager + 32) != 0) {
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 12) =
+            front_count;
+        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 16) =
+            active_count;
+    }
+    *(unsigned char *)(intptr_t)(manager + 120) = 0;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor-manager:refresh-active-count", active_count);
+        retdec_trace_i32("actor-manager:refresh-back-count", back_count);
+        retdec_trace_i32("actor-manager:refresh-middle-count", middle_count);
+        retdec_trace_i32("actor-manager:refresh-front-count", front_count);
+    }
+    return active_count;
+}
+
+static int32_t retdec_actor_activate_if_visible(int32_t actor,
+                                                int32_t camera,
+                                                float extent)
+{
+    if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 20) != 0)
+        return 0;
+    if (camera == 0 ||
+        (*(float32_t *)(intptr_t)(actor + 440) <=
+             *(float32_t *)(intptr_t)(camera + 80) + extent &&
+         *(float32_t *)(intptr_t)(camera + 72) - extent <=
+             *(float32_t *)(intptr_t)(actor + 448) &&
+         *(float32_t *)(intptr_t)(camera + 84) + extent >=
+             *(float32_t *)(intptr_t)(actor + 444) &&
+         *(float32_t *)(intptr_t)(actor + 452) >=
+             *(float32_t *)(intptr_t)(camera + 76) - extent)) {
+        *(unsigned char *)(intptr_t)(actor + 40) = 1;
+        return 1;
+    }
+    return 0;
+}
+
+/* ActorManager::Update keeps animation advancement and resource movement in
+   the same order as the original 4641D0 call. */
+static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
+{
+    int32_t actors;
+    int32_t count;
+    int32_t update_mask;
+    int32_t index;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+
+    if (trace_index <= 16)
+        retdec_trace_i32("actor-manager:update-entry", manager);
+    retdec_actor_manager_refresh(manager);
+    if (manager == 0)
+        return 0;
+
+    actors = *(int32_t *)(intptr_t)(manager + 100);
+    count = *(int32_t *)(intptr_t)(manager + 116);
+    update_mask = *(int32_t *)(intptr_t)(manager + 64);
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor-manager:update-count", count);
+        retdec_trace_i32("actor-manager:update-mask", update_mask);
+    }
+    for (index = 0; actors != 0 && index < count; ++index) {
+        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
+
+        if (actor != 0 &&
+            (*(unsigned char *)(intptr_t)(actor + 40) != 0 ||
+             retdec_actor_activate_if_visible(actor, camera, 64.0f)) &&
+            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
+            retdec_actor_tick(actor);
+    }
+
+    function_469740();
+    for (index = 0; actors != 0 && index < count; ++index) {
+        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
+
+        if (actor != 0 &&
+            *(unsigned char *)(intptr_t)(actor + 40) != 0 &&
+            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
+            retdec_actor_update_motion(actor);
+    }
+    return count;
+}
+
+static int32_t retdec_actor_render(int32_t actor, int32_t camera)
+{
+    int32_t frame;
+    float half_extent;
+    float camera_left;
+    float camera_top;
+    float camera_right;
+    float camera_bottom;
+    float depth_scale;
+    float pivot_x;
+    float pivot_y;
+    float scale_x;
+    float scale_y;
+    float angle;
+    float translate_x;
+    float translate_y;
+    float camera_offset_x = 0.0f;
+    float camera_offset_y = 0.0f;
+    float x[4];
+    float y[4];
+    float z[4];
+    int32_t color;
+    int32_t index;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+
+    if (actor == 0)
+        return 0;
+    frame = *(int32_t *)(intptr_t)(actor + 204);
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:render-actor", actor);
+        retdec_trace_i32("actor:render-id",
+                         *(int32_t *)(intptr_t)(actor + 224));
+        retdec_trace_i32("actor:render-frame", frame);
+        retdec_trace_i32("actor:render-node",
+                         *(int32_t *)(intptr_t)(actor + 200));
+        retdec_trace_i32("actor:render-handle",
+                         frame != 0 ? *(int32_t *)(intptr_t)(frame + 4) : 0);
+        retdec_trace_i32("actor:render-active",
+                         *(int32_t *)(intptr_t)(actor + 40));
+        retdec_trace_i32("actor:render-visible",
+                         *(int32_t *)(intptr_t)(actor + 21));
+        retdec_trace_i32("actor:render-left",
+                         *(int32_t *)(intptr_t)(actor + 440));
+        retdec_trace_i32("actor:render-top",
+                         *(int32_t *)(intptr_t)(actor + 444));
+        retdec_trace_i32("actor:render-right",
+                         *(int32_t *)(intptr_t)(actor + 448));
+        retdec_trace_i32("actor:render-bottom",
+                         *(int32_t *)(intptr_t)(actor + 452));
+        retdec_trace_i32("actor:render-camera-left",
+                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 72) : 0);
+        retdec_trace_i32("actor:render-camera-top",
+                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 76) : 0);
+        retdec_trace_i32("actor:render-camera-right",
+                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 80) : 0);
+        retdec_trace_i32("actor:render-camera-bottom",
+                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 84) : 0);
+    }
+    if (*(unsigned char *)(intptr_t)(actor + 40) == 0 ||
+        *(unsigned char *)(intptr_t)(actor + 21) == 0 || frame == 0 ||
+        *(int32_t *)(intptr_t)(frame + 4) == 0)
+        return 0;
+
+    half_extent = *(float32_t *)(intptr_t)(actor + 168) * 256.0f;
+    if (camera != 0) {
+        camera_left = *(float32_t *)(intptr_t)(camera + 72);
+        camera_top = *(float32_t *)(intptr_t)(camera + 76);
+        camera_right = *(float32_t *)(intptr_t)(camera + 80);
+        camera_bottom = *(float32_t *)(intptr_t)(camera + 84);
+        if (*(float32_t *)(intptr_t)(actor + 440) >
+                camera_right + half_extent ||
+            camera_left - half_extent >
+                *(float32_t *)(intptr_t)(actor + 448) ||
+            camera_bottom + half_extent <
+                *(float32_t *)(intptr_t)(actor + 444) ||
+            *(float32_t *)(intptr_t)(actor + 452) <
+                camera_top - half_extent)
+            return 0;
+        camera_offset_x = *(float32_t *)(intptr_t)(camera + 48) -
+            *(float32_t *)(intptr_t)(camera + 40) -
+            *(float32_t *)(intptr_t)(camera + 56);
+        camera_offset_y = *(float32_t *)(intptr_t)(camera + 52) -
+            *(float32_t *)(intptr_t)(camera + 44) -
+            *(float32_t *)(intptr_t)(camera + 60);
+    }
+
+    for (index = 0; index < 4; ++index) {
+        x[index] = *(float32_t *)(intptr_t)(frame + 128 + index * 12);
+        y[index] = *(float32_t *)(intptr_t)(frame + 132 + index * 12);
+        z[index] = *(float32_t *)(intptr_t)(frame + 136 + index * 12);
+    }
+
+    depth_scale = -*(float32_t *)(intptr_t)(actor + 272);
+    pivot_x = depth_scale *
+        (float)*(int16_t *)(intptr_t)(frame + 236);
+    pivot_y = (float)*(int16_t *)(intptr_t)(frame + 238);
+    for (index = 0; index < 4; ++index)
+        x[index] *= depth_scale;
+
+    scale_x = *(float32_t *)(intptr_t)(actor + 172) *
+        *(float32_t *)(intptr_t)(actor + 168);
+    scale_y = *(float32_t *)(intptr_t)(actor + 176) *
+        *(float32_t *)(intptr_t)(actor + 168);
+    for (index = 0; index < 4; ++index) {
+        x[index] = (x[index] - pivot_x) * scale_x + pivot_x;
+        y[index] = (y[index] - pivot_y) * scale_y + pivot_y;
+    }
+
+    angle = *(float32_t *)(intptr_t)(actor + 164) * depth_scale;
+    if (angle != 0.0f) {
+        float cosine = cosf(angle);
+        float sine = sinf(angle);
+        for (index = 0; index < 4; ++index) {
+            float old_x = x[index] - pivot_x;
+            float old_y = y[index] - pivot_y;
+            x[index] = old_x * cosine + pivot_x - old_y * sine;
+            y[index] = old_x * sine + pivot_y + old_y * cosine;
+        }
+    }
+
+    translate_x = *(float32_t *)(intptr_t)(actor + 156) * depth_scale +
+        *(float32_t *)(intptr_t)(actor + 240) - pivot_x + camera_offset_x;
+    translate_y = *(float32_t *)(intptr_t)(actor + 244) - pivot_y +
+        *(float32_t *)(intptr_t)(actor + 160) + camera_offset_y;
+    for (index = 0; index < 4; ++index) {
+        *(float32_t *)(intptr_t)(frame + 176 + index * 12) =
+            floorf(x[index] + translate_x);
+        *(float32_t *)(intptr_t)(frame + 180 + index * 12) =
+            ceilf(y[index] + translate_y);
+        *(float32_t *)(intptr_t)(frame + 184 + index * 12) = z[index];
+    }
+
+    color = *(int32_t *)(intptr_t)(actor + 192) |
+        ((*(int32_t *)(intptr_t)(actor + 188) |
+          ((*(int32_t *)(intptr_t)(actor + 184) |
+            (*(int32_t *)(intptr_t)(actor + 180) << 8)) << 8)) << 8);
+    *(int32_t *)(intptr_t)(frame + 24) = color;
+    *(int32_t *)(intptr_t)(frame + 52) = color;
+    *(int32_t *)(intptr_t)(frame + 80) = color;
+    *(int32_t *)(intptr_t)(frame + 108) = color;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:render-x0", *(int32_t *)(intptr_t)(frame + 176));
+        retdec_trace_i32("actor:render-y0", *(int32_t *)(intptr_t)(frame + 180));
+        retdec_trace_i32("actor:render-x3", *(int32_t *)(intptr_t)(frame + 212));
+        retdec_trace_i32("actor:render-y3", *(int32_t *)(intptr_t)(frame + 216));
+        retdec_trace_i32("actor:render-u0", *(int32_t *)(intptr_t)(frame + 28));
+        retdec_trace_i32("actor:render-v3", *(int32_t *)(intptr_t)(frame + 116));
+    }
+    {
+        int32_t result = retdec_layout_submit_impl(frame, 0.0f, 0.0f);
+        if (trace_index <= 16)
+            retdec_trace_i32("actor:render-submit", result);
+    }
+    return 1;
+}
+
 // Address range: 0x4627c0 - 0x462804
 /* ActorManager::UpdateLayer.  RetDec dropped ECX and emitted an unbound
    local for the ActorManager receiver.  Keep the implementation explicit so
@@ -129398,7 +130662,15 @@ static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
     int32_t actors;
     int32_t actor;
     int32_t result = 0;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
 
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-update:manager", this_ptr);
+        retdec_trace_i32("actor-update:layer-index", layer_index);
+        retdec_trace_i32("actor-update:dirty", this_ptr != 0
+                         ? *(int32_t *)(intptr_t)(this_ptr + 116) : 0);
+    }
     if (this_ptr == 0 || layer_index < 0 ||
         *(int32_t *)(intptr_t)(this_ptr + 116) == 0)
         return 0;
@@ -129409,18 +130681,21 @@ static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
     begin = *(int32_t *)(intptr_t)(layer + 12);
     end = *(int32_t *)(intptr_t)(layer + 16);
     actors = *(int32_t *)(intptr_t)(this_ptr + 100);
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-update:layer", layer);
+        retdec_trace_i32("actor-update:begin", begin);
+        retdec_trace_i32("actor-update:end", end);
+        retdec_trace_i32("actor-update:actors", actors);
+    }
     if (actors == 0 || begin < 0 || end < begin)
         return 0;
 
     while (begin < end) {
         actor = *(int32_t *)(intptr_t)(actors + 4 * begin);
         if (actor != 0) {
-            /* These two calls are themselves thiscall methods.  The active
-               title path normally has no Actor records, but preserve the
-               original receiver at the boundary for populated scenes. */
-            result = function_45f0f0(update_arg);
-            if ((char)result != 0)
-                result = function_45f350();
+            result = retdec_actor_render(actor, update_arg);
+            if (trace_index <= 32)
+                retdec_trace_i32("actor-update:actor", actor);
         }
         ++begin;
     }
@@ -130994,6 +132269,10 @@ static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
     }
 
     ++*(int32_t *)(intptr_t)(tree_ptr + 8);
+    retdec_trace_i32("actor:tree-ptr", tree_ptr);
+    retdec_trace_i32("actor:tree-sentinel", sentinel);
+    retdec_trace_i32("actor:tree-count-after",
+                     *(int32_t *)(intptr_t)(tree_ptr + 8));
     *(int32_t *)(intptr_t)(result_ptr + 0) = node_ptr;
     *(int32_t *)(intptr_t)(result_ptr + 4) = 1;
     return result_ptr;
@@ -131599,12 +132878,30 @@ static int32_t function_463b40_this(
     int32_t node;
     int32_t inserted[2] = { 0, 0 };
     int32_t handle_manager;
+    static volatile LONG trace_count;
+    LONG trace_index;
 
+    trace_index = InterlockedIncrement(&trace_count);
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-create:manager", manager_ptr);
+        retdec_trace_i32("actor-create:handle-manager",
+                         manager_ptr != 0
+                             ? *(int32_t *)(intptr_t)(manager_ptr + 4) : 0);
+        retdec_trace_i32("actor-create:first-type", first_type);
+        retdec_trace_i32("actor-create:first-data", first_data);
+        retdec_trace_i32("actor-create:second-type", second_type);
+        retdec_trace_i32("actor-create:second-data", second_data);
+    }
     if (manager_ptr == 0)
         return 0;
     handle_manager = *(int32_t *)(intptr_t)(manager_ptr + 4);
     actor = function_46ab10_this(handle_manager,
                                  (int32_t)(intptr_t)handle);
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-create:handle-index", handle[0]);
+        retdec_trace_i32("actor-create:handle-generation", handle[1]);
+        retdec_trace_i32("actor-create:actor", actor);
+    }
     if (actor == 0)
         return 0;
 
@@ -131618,15 +132915,38 @@ static int32_t function_463b40_this(
                               x, y, z,
                               second_vtable, second_type, second_data))
         return 0;
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:post-init-node",
+                         *(int32_t *)(intptr_t)(actor + 200));
+        retdec_trace_i32("actor:post-init-frame",
+                         *(int32_t *)(intptr_t)(actor + 204));
+        retdec_trace_i32("actor:post-init-active",
+                         *(int32_t *)(intptr_t)(actor + 40));
+        retdec_trace_i32("actor:post-init-id",
+                         *(int32_t *)(intptr_t)(actor + 224));
+    }
 
     node = function_463210_this(manager_ptr + 84,
                                 (int32_t)(intptr_t)&actor);
+    if (trace_index <= 32)
+        retdec_trace_i32("actor-create:priority-node", node);
     if (node == 0 || function_463610_this(manager_ptr + 84,
                                           (int32_t)(intptr_t)inserted,
                                           node, 0) == 0)
         return 0;
     *(int32_t *)(intptr_t)(actor + 16) = inserted[0];
     *(char *)(intptr_t)(manager_ptr + 120) = 1;
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-create:priority-index", inserted[0]);
+        retdec_trace_i32("actor-create:tree-count",
+                         *(int32_t *)(intptr_t)(manager_ptr + 92));
+        retdec_trace_i32("actor-create:tree-sentinel",
+                         *(int32_t *)(intptr_t)(manager_ptr + 88));
+        retdec_trace_i32("actor-create:tree-root",
+                         *(int32_t *)(intptr_t)
+                             (*(int32_t *)(intptr_t)(manager_ptr + 88) + 4));
+        retdec_trace_i32("actor-create:success", actor);
+    }
     return actor;
 }
 
@@ -132238,6 +133558,8 @@ int32_t function_4641d0(int32_t * a1) {
 }
 
 static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1) {
+    return retdec_actor_manager_update(this_ptr, (int32_t)(intptr_t)a1);
+#if 0
     // 0x4641d0
     /* With no registered Actor records the original temporary-list work is
        observationally empty.  RetDec's generated cleanup for that list
@@ -132512,6 +133834,7 @@ static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1) {
         goto lab_0x464283;
     }
     goto lab_0x464244;
+#endif
 }
 
 // Address range: 0x4645b0 - 0x4645e9
@@ -133081,14 +134404,539 @@ int32_t function_464e20(int32_t this_ptr) {
     return result;
 }
 
+/* The generated 0x464F80 body lost every indirect reader call, several
+   vector receivers, and the texture-manager receiver.  Rebuild the same
+   stream directly at this boundary so the native objects consumed by Actor
+   and the renderer are populated from the original .pat records. */
+struct retdec_pat_frame_fields {
+    uint32_t resource_index;
+    int16_t sprite_x;
+    int16_t sprite_y;
+    int16_t source_width;
+    int16_t source_height;
+    int16_t offset_x;
+    int16_t offset_y;
+    int16_t duration;
+    unsigned char type;
+    int16_t auxiliary_mode;
+    unsigned short auxiliary_values[5];
+    unsigned char auxiliary_bytes[4];
+};
+
+static int32_t retdec_pat_read_u8(int32_t reader, unsigned char *value)
+{
+    return retdec_reader_read_exact(reader, value, 1);
+}
+
+static int32_t retdec_pat_read_u16(int32_t reader, unsigned short *value)
+{
+    return retdec_reader_read_exact(reader, value, 2);
+}
+
+static int32_t retdec_pat_read_i16(int32_t reader, int16_t *value)
+{
+    unsigned short raw;
+
+    if (!retdec_pat_read_u16(reader, &raw))
+        return 0;
+    memcpy(value, &raw, sizeof(raw));
+    return 1;
+}
+
+static int32_t retdec_pat_read_u32(int32_t reader, uint32_t *value)
+{
+    return retdec_reader_read_exact(reader, value, 4);
+}
+
+static int32_t retdec_pat_skip_bytes(int32_t reader, uint32_t size)
+{
+    unsigned char buffer[256];
+
+    while (size != 0) {
+        uint32_t chunk = size < sizeof(buffer) ? size : sizeof(buffer);
+        if (!retdec_reader_read_exact(reader, buffer, chunk))
+            return 0;
+        size -= chunk;
+    }
+    return 1;
+}
+
+/* ActorManager's animation tree is a std::_Tree<int, CAnimationNode*>.
+   Search only needs the sentinel/root/extrema layout; insertion balancing is
+   not observable until the tree is modified again, so keep the recovered
+   node layout and ordered links here. */
+static int32_t retdec_pat_tree_put(int32_t manager, int32_t key,
+                                   int32_t value)
+{
+    int32_t tree = manager + 36;
+    int32_t sentinel = *(int32_t *)(intptr_t)(tree + 4);
+    int32_t current;
+    int32_t parent;
+    int32_t node;
+    int32_t direction;
+
+    if (sentinel == 0) {
+        sentinel = (int32_t)(intptr_t)calloc(1u, 24u);
+        if (sentinel == 0)
+            return 0;
+        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
+        *(unsigned char *)(intptr_t)(sentinel + 20) = 1;
+        *(unsigned char *)(intptr_t)(sentinel + 21) = 1;
+        *(int32_t *)(intptr_t)(tree + 4) = sentinel;
+        *(int32_t *)(intptr_t)(tree + 8) = 0;
+    }
+
+    current = *(int32_t *)(intptr_t)(sentinel + 4);
+    parent = sentinel;
+    direction = 0;
+    while (current != sentinel && current != 0) {
+        int32_t current_key = *(int32_t *)(intptr_t)(current + 12);
+        if (key == current_key) {
+            *(int32_t *)(intptr_t)(current + 16) = value;
+            return current + 16;
+        }
+        parent = current;
+        direction = key < current_key ? 0 : 1;
+        current = *(int32_t *)(intptr_t)(current + (direction != 0 ? 8 : 0));
+    }
+
+    node = (int32_t)(intptr_t)calloc(1u, 24u);
+    if (node == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(node + 0) = sentinel;
+    *(int32_t *)(intptr_t)(node + 4) = parent;
+    *(int32_t *)(intptr_t)(node + 8) = sentinel;
+    *(int32_t *)(intptr_t)(node + 12) = key;
+    *(int32_t *)(intptr_t)(node + 16) = value;
+
+    if (parent == sentinel) {
+        *(int32_t *)(intptr_t)(sentinel + 0) = node;
+        *(int32_t *)(intptr_t)(sentinel + 4) = node;
+        *(int32_t *)(intptr_t)(sentinel + 8) = node;
+    } else if (direction == 0) {
+        *(int32_t *)(intptr_t)(parent + 0) = node;
+        if (*(int32_t *)(intptr_t)(sentinel + 0) == parent)
+            *(int32_t *)(intptr_t)(sentinel + 0) = node;
+    } else {
+        *(int32_t *)(intptr_t)(parent + 8) = node;
+        if (*(int32_t *)(intptr_t)(sentinel + 8) == parent)
+            *(int32_t *)(intptr_t)(sentinel + 8) = node;
+    }
+    ++*(int32_t *)(intptr_t)(tree + 8);
+    return node + 16;
+}
+
+static int32_t retdec_pat_append_resource(int32_t manager, int32_t handle)
+{
+    int32_t *begin = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 68);
+    int32_t *end = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 72);
+    int32_t *capacity_end = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 76);
+    size_t count = begin != NULL && end >= begin
+        ? (size_t)(end - begin) : 0;
+    size_t capacity = begin != NULL && capacity_end >= begin
+        ? (size_t)(capacity_end - begin) : 0;
+
+    if (count == capacity) {
+        size_t new_capacity = capacity != 0 ? capacity * 2u : 4u;
+        int32_t *new_begin;
+
+        if (new_capacity <= count ||
+            new_capacity > (size_t)0x3fffffff)
+            return 0;
+        new_begin = (int32_t *)realloc(begin,
+                                       new_capacity * sizeof(*new_begin));
+        if (new_begin == NULL)
+            return 0;
+        begin = new_begin;
+        *(int32_t *)(intptr_t)(manager + 68) = (int32_t)(intptr_t)begin;
+        *(int32_t *)(intptr_t)(manager + 76) =
+            (int32_t)(intptr_t)(begin + new_capacity);
+    }
+    begin[count] = handle;
+    *(int32_t *)(intptr_t)(manager + 72) =
+        (int32_t)(intptr_t)(begin + count + 1u);
+    return 1;
+}
+
+static int32_t retdec_pat_load_texture(const char *directory,
+                                       const char *resource_name)
+{
+    char path[MAX_PATH];
+    size_t length;
+    int32_t texture_value = 0;
+    int32_t handle;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    IDirect3DBaseTexture9 *texture;
+
+    if (directory == NULL || resource_name == NULL)
+        return 0;
+    retdec_trace_squirrel_name("actor:pat-texture", (int32_t)(intptr_t)
+                               resource_name);
+    path[0] = 0;
+    if (strcpy_s(path, sizeof(path), directory) != 0)
+        return 0;
+    length = strlen(path);
+    if (length != 0 && path[length - 1] != '/' && path[length - 1] != '\\') {
+        if (length + 1 >= sizeof(path))
+            return 0;
+        path[length++] = '\\';
+        path[length] = 0;
+    }
+    if (strcat_s(path, sizeof(path), resource_name) != 0)
+        return 0;
+    if (function_40e630(0, path, (int32_t)(intptr_t)&texture_value,
+                        &width, &height) < 0 || texture_value == 0)
+        return 0;
+    texture = (IDirect3DBaseTexture9 *)(uintptr_t)(uint32_t)texture_value;
+    handle = retdec_register_act_texture(texture, width, height);
+    if (handle == 0) {
+        if (texture->lpVtbl != NULL)
+            texture->lpVtbl->Release(texture);
+        return 0;
+    }
+    retdec_trace_i32("actor:pat-texture-handle", handle);
+    retdec_trace_i32("actor:pat-texture-width", (int32_t)width);
+    retdec_trace_i32("actor:pat-texture-height", (int32_t)height);
+    return handle;
+}
+
+static int32_t retdec_pat_build_frame(
+    int32_t manager, int32_t frame, const struct retdec_pat_frame_fields *fields,
+    uint32_t resource_base)
+{
+    int32_t *resource_begin;
+    int32_t *resource_end;
+    uint32_t resource_count;
+    int32_t handle = 0;
+    uint32_t texture_width = 0;
+    uint32_t texture_height = 0;
+    float source_width;
+    float source_height;
+    static volatile LONG trace_count;
+    LONG trace_index;
+
+    if (manager == 0 || frame == 0 || fields == NULL)
+        return 0;
+    trace_index = InterlockedIncrement(&trace_count);
+    memset((void *)(intptr_t)frame, 0, 248u);
+    *(int32_t *)(intptr_t)frame = (int32_t)(intptr_t)&g407;
+    *(int16_t *)(intptr_t)(frame + 232) = fields->sprite_x;
+    *(int16_t *)(intptr_t)(frame + 234) = fields->sprite_y;
+    *(int16_t *)(intptr_t)(frame + 236) = fields->offset_x;
+    *(int16_t *)(intptr_t)(frame + 238) = fields->offset_y;
+    *(int16_t *)(intptr_t)(frame + 240) = fields->duration;
+    *(uint32_t *)(intptr_t)(frame + 24) = 0xffffffffu;
+    *(uint32_t *)(intptr_t)(frame + 52) = 0xffffffffu;
+    *(uint32_t *)(intptr_t)(frame + 80) = 0xffffffffu;
+    *(uint32_t *)(intptr_t)(frame + 108) = 0xffffffffu;
+
+    resource_begin = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 68);
+    resource_end = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 72);
+    resource_count = resource_begin != NULL && resource_end >= resource_begin
+        ? (uint32_t)(resource_end - resource_begin) : 0;
+    if (fields->resource_index < resource_count &&
+        resource_base <= resource_count - fields->resource_index)
+        handle = resource_begin[resource_base + fields->resource_index];
+    if (trace_index <= 48) {
+        retdec_trace_i32("actor:pat-frame-resource", (int32_t)
+                         fields->resource_index);
+        retdec_trace_i32("actor:pat-frame-sprite-x", fields->sprite_x);
+        retdec_trace_i32("actor:pat-frame-sprite-y", fields->sprite_y);
+        retdec_trace_i32("actor:pat-frame-width", fields->source_width);
+        retdec_trace_i32("actor:pat-frame-height", fields->source_height);
+        retdec_trace_i32("actor:pat-frame-offset-x", fields->offset_x);
+        retdec_trace_i32("actor:pat-frame-offset-y", fields->offset_y);
+        retdec_trace_i32("actor:pat-frame-handle", handle);
+    }
+    if (handle > 0 && (uint32_t)handle < RETDEC_ACT_TEXTURE_SLOT_COUNT) {
+        texture_width = g_retdec_act_texture_slots[(uint32_t)handle].width;
+        texture_height = g_retdec_act_texture_slots[(uint32_t)handle].height;
+    }
+
+    if (handle != 0 && texture_width != 0 && texture_height != 0) {
+        source_width = (float)fields->source_width;
+        source_height = (float)fields->source_height;
+        *(int32_t *)(intptr_t)(frame + 4) = handle;
+        *(float32_t *)(intptr_t)(frame + 120) = (float)texture_width;
+        *(float32_t *)(intptr_t)(frame + 124) = (float)texture_height;
+        *(float32_t *)(intptr_t)(frame + 224) =
+            source_width / (float)texture_width;
+        *(float32_t *)(intptr_t)(frame + 228) =
+            source_height / (float)texture_height;
+        *(float32_t *)(intptr_t)(frame + 28) =
+            (float)fields->sprite_x / (float)texture_width;
+        *(float32_t *)(intptr_t)(frame + 32) =
+            (float)fields->sprite_y / (float)texture_height;
+        *(float32_t *)(intptr_t)(frame + 56) =
+            *(float32_t *)(intptr_t)(frame + 28) +
+            *(float32_t *)(intptr_t)(frame + 224);
+        *(float32_t *)(intptr_t)(frame + 60) =
+            *(float32_t *)(intptr_t)(frame + 32);
+        *(float32_t *)(intptr_t)(frame + 84) =
+            *(float32_t *)(intptr_t)(frame + 28);
+        *(float32_t *)(intptr_t)(frame + 88) =
+            *(float32_t *)(intptr_t)(frame + 32) +
+            *(float32_t *)(intptr_t)(frame + 228);
+        *(float32_t *)(intptr_t)(frame + 112) =
+            *(float32_t *)(intptr_t)(frame + 56);
+        *(float32_t *)(intptr_t)(frame + 116) =
+            *(float32_t *)(intptr_t)(frame + 88);
+        *(float32_t *)(intptr_t)(frame + 140) = source_width;
+        *(float32_t *)(intptr_t)(frame + 156) = source_height;
+        *(float32_t *)(intptr_t)(frame + 164) = source_width;
+        *(float32_t *)(intptr_t)(frame + 168) = source_height;
+    }
+
+    if (fields->type == 2) {
+        int32_t auxiliary = (int32_t)(intptr_t)calloc(1u, 28u);
+        int32_t mode = fields->auxiliary_mode;
+        int index;
+
+        if (auxiliary == 0)
+            return 0;
+        if (mode >= 0 && mode <= 2)
+            mode += 1;
+        *(int32_t *)(intptr_t)auxiliary = mode;
+        for (index = 0; index < 4; ++index)
+            *(unsigned char *)(intptr_t)(auxiliary + 4 + index) =
+                fields->auxiliary_bytes[index];
+        *(float32_t *)(intptr_t)(auxiliary + 8) =
+            (float)fields->auxiliary_values[0] / 100.0f;
+        *(float32_t *)(intptr_t)(auxiliary + 12) =
+            (float)fields->auxiliary_values[1] / 100.0f;
+        *(float32_t *)(intptr_t)(auxiliary + 16) =
+            (float)fields->auxiliary_values[2];
+        *(float32_t *)(intptr_t)(auxiliary + 20) =
+            (float)fields->auxiliary_values[3];
+        *(float32_t *)(intptr_t)(auxiliary + 24) =
+            (float)fields->auxiliary_values[4];
+        *(int32_t *)(intptr_t)(frame + 244) = auxiliary;
+    }
+    return 1;
+}
+
+static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
+                                      int32_t node, int32_t frame,
+                                      uint32_t frame_index,
+                                      int32_t *duration_total,
+                                      uint32_t resource_base)
+{
+    struct retdec_pat_frame_fields fields;
+    unsigned char first_block_flag;
+    unsigned char first_block[16];
+    unsigned char block_count;
+    unsigned char plain_block_count;
+    unsigned char has_extra;
+    unsigned char byte_value;
+    uint32_t value32;
+    uint32_t index;
+
+    memset(&fields, 0, sizeof(fields));
+    if (!retdec_pat_read_u32(reader, &fields.resource_index) ||
+        !retdec_pat_read_i16(reader, &fields.sprite_x) ||
+        !retdec_pat_read_i16(reader, &fields.sprite_y) ||
+        !retdec_pat_read_i16(reader, &fields.source_width) ||
+        !retdec_pat_read_i16(reader, &fields.source_height) ||
+        !retdec_pat_read_i16(reader, &fields.offset_x) ||
+        !retdec_pat_read_i16(reader, &fields.offset_y) ||
+        !retdec_pat_read_i16(reader, &fields.duration) ||
+        !retdec_pat_read_u8(reader, &fields.type))
+        return 0;
+    if (fields.type == 2) {
+        if (!retdec_pat_read_i16(reader, &fields.auxiliary_mode))
+            return 0;
+        for (index = 0; index < 4; ++index) {
+            if (!retdec_pat_read_u8(reader, &fields.auxiliary_bytes[3 - index]))
+                return 0;
+        }
+        for (index = 0; index < 5; ++index) {
+            if (!retdec_pat_read_u16(reader, &fields.auxiliary_values[index]))
+                return 0;
+        }
+    }
+    for (index = 0; index < 20; ++index) {
+        unsigned short value16;
+        if (!retdec_pat_read_u16(reader, &value16))
+            return 0;
+    }
+    if (!retdec_pat_read_u8(reader, &byte_value) ||
+        !retdec_pat_read_u32(reader, &value32) ||
+        !retdec_pat_read_u32(reader, &value32) ||
+        !retdec_pat_read_u8(reader, &first_block_flag))
+        return 0;
+    if (first_block_flag != 0) {
+        if (!retdec_reader_read_exact(reader, first_block, sizeof(first_block)))
+            return 0;
+        if (frame_index == 0 && *(unsigned char *)(intptr_t)(node + 25) == 0) {
+            *(unsigned char *)(intptr_t)(node + 25) = 1;
+            memcpy((void *)(intptr_t)(node + 28), first_block,
+                   sizeof(first_block));
+        }
+    }
+    if (!retdec_pat_read_u8(reader, &plain_block_count) ||
+        !retdec_pat_skip_bytes(reader, (uint32_t)plain_block_count * 16u) ||
+        !retdec_pat_read_u8(reader, &block_count))
+        return 0;
+    for (index = 0; index < block_count; ++index) {
+        if (!retdec_pat_skip_bytes(reader, 16) ||
+            !retdec_pat_read_u8(reader, &has_extra))
+            return 0;
+        if (has_extra != 0 && !retdec_pat_skip_bytes(reader, 16))
+            return 0;
+    }
+    for (index = 0; index < 3; ++index) {
+        if (!retdec_pat_read_u32(reader, &value32) ||
+            !retdec_pat_read_u32(reader, &value32))
+            return 0;
+    }
+    for (index = 0; index < 3; ++index) {
+        unsigned short value16;
+        if (!retdec_pat_read_u16(reader, &value16))
+            return 0;
+    }
+    if (!retdec_pat_build_frame(manager, frame, &fields, resource_base))
+        return 0;
+    if (duration_total != NULL)
+        *duration_total += fields.duration;
+    return 1;
+}
+
+static int32_t retdec_pat_load_file(int32_t manager, const char *file_name,
+                                    const char *directory)
+{
+    int32_t reader_slot = 0;
+    uint32_t resource_count;
+    uint32_t item_count;
+    uint32_t index;
+    uint32_t base_resource_count;
+    int32_t *resource_begin;
+    int32_t *resource_end;
+    int32_t result = 0;
+    unsigned char header_byte;
+    unsigned short resource_count16;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+
+    if (manager == 0 || file_name == NULL || directory == NULL)
+        return 0;
+    if (trace_index <= 32) {
+        retdec_trace_squirrel_name("actor:pat-path", (int32_t)(intptr_t)file_name);
+        retdec_trace_squirrel_name("actor:pat-directory", (int32_t)(intptr_t)directory);
+    }
+    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name))
+        return 0;
+    if (!retdec_pat_read_u8(reader_slot, &header_byte) ||
+        !retdec_pat_read_u16(reader_slot, &resource_count16))
+        goto cleanup;
+    resource_count = resource_count16;
+    base_resource_count = 0;
+    resource_begin = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 68);
+    resource_end = (int32_t *)(intptr_t)
+        *(int32_t *)(intptr_t)(manager + 72);
+    if (resource_begin != NULL && resource_end >= resource_begin)
+        base_resource_count = (uint32_t)(resource_end - resource_begin);
+    if (resource_count > 4096u)
+        goto cleanup;
+    for (index = 0; index < resource_count; ++index) {
+        char resource_name[129];
+        int32_t handle;
+
+        memset(resource_name, 0, sizeof(resource_name));
+        if (!retdec_reader_read_exact(reader_slot, resource_name, 128))
+            goto cleanup;
+        resource_name[128] = 0;
+        handle = retdec_pat_load_texture(directory, resource_name);
+        if (!retdec_pat_append_resource(manager, handle))
+            goto cleanup;
+    }
+    if (!retdec_pat_read_u32(reader_slot, &item_count) ||
+        item_count > 4096u)
+        goto cleanup;
+    for (index = 0; index < item_count; ++index) {
+        int32_t control;
+
+        if (!retdec_reader_read_exact(reader_slot, &control, 4))
+            goto cleanup;
+        if (control == -1) {
+            int32_t reference;
+            if (!retdec_reader_read_exact(reader_slot, &reference, 4) ||
+                !retdec_reader_read_exact(reader_slot, &reference, 4))
+                goto cleanup;
+            continue;
+        } else {
+            unsigned short header0;
+            unsigned short header1;
+            unsigned char loop_flag;
+            uint32_t frame_count;
+            uint32_t frame_index;
+            int32_t node;
+            int32_t frames;
+            int32_t duration_total = 0;
+
+            if (!retdec_pat_read_u16(reader_slot, &header0) ||
+                !retdec_pat_read_u16(reader_slot, &header1) ||
+                !retdec_pat_read_u8(reader_slot, &loop_flag) ||
+                !retdec_pat_read_u32(reader_slot, &frame_count) ||
+                frame_count > 4096u)
+                goto cleanup;
+            node = (int32_t)(intptr_t)calloc(1u, 56u);
+            if (node == 0)
+                goto cleanup;
+            *(unsigned char *)(intptr_t)(node + 24) = loop_flag;
+            frames = frame_count != 0
+                ? (int32_t)(intptr_t)calloc((size_t)frame_count, 248u) : 0;
+            if (frame_count != 0 && frames == 0)
+                goto cleanup;
+            *(int32_t *)(intptr_t)(node + 8) = frames;
+            *(int32_t *)(intptr_t)(node + 12) =
+                frames + (int32_t)((size_t)frame_count * 248u);
+            *(int32_t *)(intptr_t)(node + 16) =
+                *(int32_t *)(intptr_t)(node + 12);
+            for (frame_index = 0; frame_index < frame_count; ++frame_index) {
+                if (!retdec_pat_read_frame(
+                        reader_slot, manager, node,
+                        frames + (int32_t)((size_t)frame_index * 248u),
+                        frame_index, &duration_total,
+                        base_resource_count))
+                    goto cleanup;
+            }
+            *(int32_t *)(intptr_t)(node + 44) = duration_total;
+            if (control != -2 &&
+                retdec_pat_tree_put(manager, control, node) == 0)
+                goto cleanup;
+        }
+    }
+    retdec_trace_i32("animation:header", header_byte);
+    retdec_trace_i32("animation:resources", (int32_t)resource_count);
+    retdec_trace_i32("animation:items", (int32_t)item_count);
+    retdec_trace_i32("animation:resource-base",
+                     (int32_t)base_resource_count);
+    result = 1;
+
+cleanup:
+    if (trace_index <= 32)
+        retdec_trace_i32("actor:pat-result", result);
+    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
+    return result;
+}
+
 // Address range: 0x464f80 - 0x465f70
 int32_t function_464f80(int32_t a1, int32_t * a2) {
     retdec_trace_i32("464f80:path", a1);
     retdec_trace_squirrel_name("464f80:path-text", a1);
     retdec_trace_i32("464f80:directory", (int32_t)(intptr_t)a2);
-    /* The generated body below still lacks the native resource receiver.
-       Keep it disabled until its object graph is restored. */
-    return 1;
+    return retdec_pat_load_file(
+        (int32_t)(intptr_t)g_retdec_actor_manager_state,
+        (const char *)(intptr_t)a1, (const char *)(intptr_t)a2);
 #if 0
     int32_t v1 = __readfsdword(0); // bp-16, 0x464f90
     __writefsdword(0, (int32_t)&v1);
@@ -134868,6 +136716,10 @@ static int32_t function_466270_this(int32_t this_ptr) {
     *(float32_t *)(intptr_t)(this_ptr + 72) = 0.0f;
     *(float32_t *)(intptr_t)(this_ptr + 56) = 0.0f;
     *(float32_t *)(intptr_t)(this_ptr + 60) = 0.0f;
+    retdec_trace_i32("actor:camera-init-left",
+                     *(int32_t *)(intptr_t)(this_ptr + 72));
+    retdec_trace_i32("actor:camera-init-right",
+                     *(int32_t *)(intptr_t)(this_ptr + 80));
     return result;
 }
 
@@ -138477,11 +140329,31 @@ static int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
 {
     int32_t actor_manager;
     int32_t layer_index;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
 
     if (this_ptr == 0)
         return 0;
     actor_manager = *(int32_t *)(intptr_t)(this_ptr + 4);
     layer_index = *(int32_t *)(intptr_t)(this_ptr + 8);
+    if (trace_index <= 16) {
+        retdec_trace_i32("actor:layer-render-this", this_ptr);
+        retdec_trace_i32("actor:layer-render-arg", update_arg);
+        retdec_trace_i32("actor:layer-render-camera",
+                         (int32_t)(intptr_t)g_retdec_camera_state);
+        retdec_trace_i32("actor:camera-x",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 40));
+        retdec_trace_i32("actor:camera-y",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 44));
+        retdec_trace_i32("actor:camera-cx",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 48));
+        retdec_trace_i32("actor:camera-cy",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 52));
+        retdec_trace_i32("actor:camera-width",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 64));
+        retdec_trace_i32("actor:camera-height",
+                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 68));
+    }
     return function_4627c0_this(actor_manager, update_arg, layer_index);
 }
 
@@ -138554,8 +140426,16 @@ int32_t function_469680(void) {
 // Address range: 0x4696b0 - 0x4696fc
 int32_t function_4696b0(int32_t a1) {
     char path_buffer[260] = { 0 };
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor:load-animation-entry", a1);
+        retdec_trace_squirrel_name("actor:load-animation-path", a1);
+    }
     function_4086e0(a1, (int32_t *)(intptr_t)path_buffer, 0);
-    function_464f80(a1, (int32_t *)(intptr_t)path_buffer);
+    int32_t result = function_464f80(a1, (int32_t *)(intptr_t)path_buffer);
+    if (trace_index <= 32)
+        retdec_trace_i32("actor:load-animation-result", result);
     return 0;
 }
 
@@ -138569,9 +140449,10 @@ int32_t function_469700(void) {
 
 // Address range: 0x469710 - 0x469734
 int32_t function_469710(float32_t a1, float32_t a2) {
-    // 0x469710
-    return function_462600((int32_t *)g_retdec_camera_state,
-                           (float80_t)a1, (float80_t)a2);
+    retdec_actor_move_camera_impl(
+        (int32_t)(intptr_t)g_retdec_actor_manager_state,
+        (int32_t)(intptr_t)g_retdec_camera_state, a1, a2);
+    return 0;
 }
 
 // Address range: 0x469740 - 0x46974a
@@ -138818,6 +140699,8 @@ int32_t function_469b40(
 {
     int32_t actor;
     int32_t manager = (int32_t)(intptr_t)g_retdec_actor_manager_state;
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
     int32_t first_object[3] = {
         first_vtable, first_type, first_data
     };
@@ -138827,6 +140710,14 @@ int32_t function_469b40(
 
     if (result == 0)
         return 0;
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor-create:result-object", result);
+        retdec_trace_i32("actor-create:manager-state", manager);
+        retdec_trace_i32("actor-create:first-type", first_type);
+        retdec_trace_i32("actor-create:first-data", first_data);
+        retdec_trace_i32("actor-create:second-type", second_type);
+        retdec_trace_i32("actor-create:second-data", second_data);
+    }
     if (first_object[0] == 0)
         first_object[0] = (int32_t)(intptr_t)&g16;
     if (second_object[0] == 0)
@@ -138838,6 +140729,8 @@ int32_t function_469b40(
         x, y, z,
         second_object[0], second_object[1], second_object[2],
         0);
+    if (trace_index <= 32)
+        retdec_trace_i32("actor-create:callback-result", actor);
 
     function_4a94e0_this(result);
     if (actor != 0)
@@ -139304,8 +141197,22 @@ int32_t function_46a210(int32_t * a1) {
     node[0] = (int32_t)(uintptr_t)sentinel;
     node[1] = (int32_t)(uintptr_t)tail;
     node[2] = *a1;
+#if defined(RETDEC_DIAGNOSTIC_MAP_LAYERS_FRONT)
+    if (*a1 != 0 && *(int32_t *)(intptr_t)*a1 ==
+            (int32_t)(intptr_t)&g37) {
+        int32_t *head = (int32_t *)(uintptr_t)sentinel[0];
+        node[0] = (int32_t)(uintptr_t)head;
+        node[1] = (int32_t)(uintptr_t)sentinel;
+        head[1] = (int32_t)(uintptr_t)node;
+        sentinel[0] = (int32_t)(uintptr_t)node;
+    } else {
+        tail[0] = (int32_t)(uintptr_t)node;
+        sentinel[1] = (int32_t)(uintptr_t)node;
+    }
+#else
     tail[0] = (int32_t)(uintptr_t)node;
     sentinel[1] = (int32_t)(uintptr_t)node;
+#endif
     ++g614;
     return (int32_t)(uintptr_t)node;
 }
@@ -139432,6 +141339,84 @@ static int32_t function_46a2d0_this(int32_t this_ptr) {
 
     function_4087e0_this(this_ptr + 52);
     *(int32_t *)(intptr_t)(this_ptr + 48) = 0;
+    return this_ptr;
+}
+
+/* ActorManager's CRT constructor (0x46B0A0) builds several independent
+   intrusive-list sentinels around the handle manager.  RetDec split the
+   global object into unrelated scalar globals, so the normal constructor
+   cannot be called on the generated storage directly. */
+static int32_t retdec_construct_actor_manager(int32_t this_ptr)
+{
+    int32_t handle_manager;
+    int32_t actor_list;
+    int32_t render_list;
+    int32_t resource_list;
+    int32_t priority_tree;
+    int32_t index;
+
+    if (this_ptr == 0)
+        return 0;
+
+    memset((void *)(intptr_t)this_ptr, 0,
+           sizeof(g_retdec_actor_manager_state));
+    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g31;
+
+    actor_list = (int32_t)(intptr_t)calloc(1u, 12u);
+    if (actor_list == 0)
+        return 0;
+    *(int32_t *)(intptr_t)actor_list = actor_list;
+    *(int32_t *)(intptr_t)(actor_list + 4) = actor_list;
+    *(int32_t *)(intptr_t)(this_ptr + 8) = actor_list;
+
+    handle_manager = (int32_t)(intptr_t)calloc(1u, 80u);
+    if (handle_manager == 0 ||
+        function_46a2d0_this(handle_manager) == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(this_ptr + 4) = handle_manager;
+
+    /* TObjectManagerBase's render-layer list sentinel. */
+    render_list = (int32_t)(intptr_t)calloc(1u, 24u);
+    if (render_list == 0)
+        return 0;
+    *(int32_t *)(intptr_t)render_list = render_list;
+    *(int32_t *)(intptr_t)(render_list + 4) = render_list;
+    *(int32_t *)(intptr_t)(render_list + 8) = render_list;
+    *(unsigned char *)(intptr_t)(render_list + 20) = 1;
+    *(unsigned char *)(intptr_t)(render_list + 21) = 1;
+    *(int32_t *)(intptr_t)(this_ptr + 40) = render_list;
+
+    /* ActorManager's second intrusive list is constructed empty. */
+    resource_list = (int32_t)(intptr_t)calloc(1u, 56u);
+    if (resource_list == 0)
+        return 0;
+    *(int32_t *)(intptr_t)resource_list = resource_list;
+    *(int32_t *)(intptr_t)(resource_list + 4) = resource_list;
+    *(int32_t *)(intptr_t)(this_ptr + 52) = resource_list;
+
+    /* Priority tree sentinel used by CreateActor's ordered insertion. */
+    priority_tree = (int32_t)(intptr_t)calloc(1u, 20u);
+    if (priority_tree == 0)
+        return 0;
+    *(int32_t *)(intptr_t)priority_tree = priority_tree;
+    *(int32_t *)(intptr_t)(priority_tree + 4) = priority_tree;
+    *(int32_t *)(intptr_t)(priority_tree + 8) = priority_tree;
+    *(unsigned char *)(intptr_t)(priority_tree + 16) = 1;
+    *(unsigned char *)(intptr_t)(priority_tree + 17) = 1;
+    *(int32_t *)(intptr_t)(this_ptr + 88) = priority_tree;
+
+    /* The four ActorManagerRenderLayer instances are the objects returned by
+       CreateRenderLayer("actor_back"/"actor_middle"/...). */
+    for (index = 0; index < 4; ++index) {
+        int32_t layer = (int32_t)(intptr_t)calloc(1u, 20u);
+        if (layer == 0)
+            return 0;
+        *(int32_t *)(intptr_t)layer = (int32_t)(intptr_t)&g27;
+        *(int32_t *)(intptr_t)(layer + 4) = this_ptr;
+        *(int32_t *)(intptr_t)(layer + 8) = index;
+        *(int32_t *)(intptr_t)(this_ptr + 20 + 4 * index) = layer;
+    }
+
     return this_ptr;
 }
 
@@ -140057,6 +142042,32 @@ int32_t function_46a7e0(char a1) {
     }
     // 0x46a821
     return result;
+}
+
+/* CreateRenderLayer is a plain Squirrel callback.  Keep its layer-name
+   dispatch explicit; the generated body lost the comparison temporaries in
+   the actor_back/actor_middle branches and never reached MapManager for the
+   six map layers. */
+static int32_t retdec_create_render_layer_fixed(int32_t name_ptr)
+{
+    const char *name = (const char *)(intptr_t)name_ptr;
+    int32_t value = 0;
+
+    if (name == NULL)
+        return 0;
+    if (strcmp(name, "actor_back") == 0)
+        value = g618;
+    else if (strcmp(name, "actor_middle") == 0)
+        value = g619;
+    else if (strcmp(name, "actor_front") == 0)
+        value = g620;
+    else if (strcmp(name, "actor_water") == 0)
+        value = g621;
+    else
+        value = function_470030(name_ptr);
+    if (value == 0)
+        return 0;
+    return function_46a210(&value);
 }
 
 // Address range: 0x46a830 - 0x46a9ba
@@ -144627,15 +146638,53 @@ int32_t function_46ee20(char a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
 // Address range: 0x46eed0 - 0x46ef39
 // From class:    .?AVMapManagerRenderLayer@MapManager@NamespaceGlobal@@
 // Type:          virtual member function
-int32_t function_46eed0(int32_t a1) {
-    // 0x46eed0
-    function_4ab9d0();
-    function_4ab9d0();
-    function_4ab9d0();
-    function_4ab9d0();
-    int32_t v1; // 0x46eed0
-    return *(int32_t *)(*(int32_t *)*(int32_t *)(v1 + 4) + 32);
+static int32_t retdec_map_render_layer_draw_this(int32_t this_ptr,
+                                                   int32_t camera_ptr)
+{
+    int32_t layout;
+    int32_t view_left = 0;
+    int32_t view_top = 0;
+    int32_t view_right = 0;
+    int32_t view_bottom = 0;
+    float draw_x = 0.0f;
+    float draw_y = 0.0f;
+
+    if (this_ptr == 0)
+        return 0;
+    layout = *(int32_t *)(intptr_t)(this_ptr + 4);
+    if (layout == 0)
+        return 0;
+    if (camera_ptr != 0) {
+        view_left = (int32_t)*(float *)(intptr_t)(camera_ptr + 72);
+        view_top = (int32_t)*(float *)(intptr_t)(camera_ptr + 76);
+        view_right = (int32_t)*(float *)(intptr_t)(camera_ptr + 80) + 32;
+        view_bottom = (int32_t)*(float *)(intptr_t)(camera_ptr + 84) + 32;
+        draw_x = -*(float *)(intptr_t)(camera_ptr + 56);
+        draw_y = -*(float *)(intptr_t)(camera_ptr + 60);
+    }
+    retdec_c2dmaplayout_update_impl(
+        layout, view_left, view_top, view_right, view_bottom);
+    return retdec_c2dmaplayout_draw_impl(layout, draw_x, draw_y);
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_46eed0(int32_t camera_ptr)
+{
+    __asm {
+        mov eax, [esp + 4]
+        push eax
+        push ecx
+        call retdec_map_render_layer_draw_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_46eed0(int32_t camera_ptr)
+{
+    return retdec_map_render_layer_draw_this(0, camera_ptr);
+}
+#endif
 
 // Address range: 0x46ef40 - 0x46efc4
 int32_t function_46ef40(int32_t a1, int32_t a2, uint32_t result, int32_t a4) {
@@ -145899,31 +147948,83 @@ int32_t function_46ff60(int32_t a1, int32_t result, int32_t result2) {
 }
 
 // Address range: 0x470030 - 0x4700a4
-int32_t function_470030(int32_t a1) {
-    // 0x470030
-    if (function_46f140(a1) == 0) {
-        // 0x47009b
+static int32_t retdec_map_find_layout(int32_t map_state,
+                                      const char *layer_name)
+{
+    int32_t act;
+    int32_t begin;
+    int32_t end;
+    int32_t cursor;
+
+    if (map_state == 0 || layer_name == NULL || *layer_name == 0)
         return 0;
+    act = *(int32_t *)(intptr_t)(map_state + 12);
+    if (act == 0)
+        return 0;
+    begin = *(int32_t *)(intptr_t)(act + 208);
+    end = *(int32_t *)(intptr_t)(act + 212);
+    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
+         cursor += 4) {
+        int32_t layer = *(int32_t *)(intptr_t)cursor;
+        int32_t sentinel;
+        int32_t node;
+
+        if (layer == 0)
+            continue;
+        sentinel = *(int32_t *)(intptr_t)(layer + 180);
+        if (sentinel == 0)
+            continue;
+        node = *(int32_t *)(intptr_t)sentinel;
+        while (node != 0 && node != sentinel) {
+            int32_t key = *(int32_t *)(intptr_t)(node + 8);
+            int32_t layout = key == 0
+                ? 0 : *(int32_t *)(intptr_t)(key + 4);
+            if (layout != 0 && *(int32_t *)(intptr_t)layout ==
+                    (int32_t)(intptr_t)&g327) {
+                const char *name = retdec_std_string_data(layer + 112);
+                if (name != NULL && strcmp(name, layer_name) == 0)
+                    return layout;
+            }
+            node = *(int32_t *)(intptr_t)node;
+        }
     }
-    // 0x470046
-    int32_t v1; // 0x470030
-    int32_t * v2 = (int32_t *)(v1 + 24); // 0x470047
-    int32_t v3 = *v2; // 0x470047
-    int32_t * v4 = (int32_t *)(v3 + 4); // 0x47004a
-    int32_t v5 = (int32_t)&g37; // bp-12, 0x470056
-    int32_t v6 = function_46f450(v3, *v4, (int32_t)&v5); // 0x470060
-    int32_t * v7 = (int32_t *)(v1 + 28); // 0x470065
-    int32_t v8 = *v7; // 0x470065
-    int32_t v9 = v6; // 0x470072
-    if (v8 == 0x1ffffffe) {
-        // 0x470074
-        v9 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
-    }
-    int32_t v10 = v9;
-    *v7 = v8 + 1;
-    *v4 = v10;
-    *(int32_t *)*(int32_t *)(v10 + 4) = v10;
-    return *(int32_t *)(*v2 + 4) + 8;
+    return 0;
+}
+
+static int32_t retdec_map_render_layer_create(const char *layer_name)
+{
+    int32_t map_state = (int32_t)(intptr_t)g_retdec_map_manager_state;
+    int32_t layout;
+    int32_t sentinel;
+    int32_t previous;
+    int32_t node;
+
+    layout = retdec_map_find_layout(map_state, layer_name);
+    if (layout == 0)
+        return 0;
+    sentinel = *(int32_t *)(intptr_t)(map_state + 24);
+    if (sentinel == 0)
+        return 0;
+    previous = *(int32_t *)(intptr_t)(sentinel + 4);
+    node = (int32_t)(intptr_t)calloc(1u, 16u);
+    if (node == 0)
+        return 0;
+    *(int32_t *)(intptr_t)node = sentinel;
+    *(int32_t *)(intptr_t)(node + 4) = previous;
+    *(int32_t *)(intptr_t)(node + 8) = (int32_t)(intptr_t)&g37;
+    *(int32_t *)(intptr_t)(node + 12) = layout;
+    *(int32_t *)(intptr_t)previous = node;
+    *(int32_t *)(intptr_t)(sentinel + 4) = node;
+    ++*(int32_t *)(intptr_t)(map_state + 28);
+    retdec_trace_squirrel_name(
+        "map:render-layer", (int32_t)(intptr_t)layer_name);
+    retdec_trace_i32("map:render-layout", layout);
+    return node + 8;
+}
+
+int32_t function_470030(int32_t a1)
+{
+    return retdec_map_render_layer_create((const char *)(intptr_t)a1);
 }
 
 // Address range: 0x4700b0 - 0x4700fe
@@ -146012,12 +148113,12 @@ int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     int32_t manager = retdec_audio_manager_this();
     int32_t new_handle = 0;
 
-    (void)a3;
+    (void)a4;
     if (g637 != 0)
         retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
     retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
     g637 = new_handle;
-    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
+    retdec_audio_method_40a6c0(manager, g637, a1, a3, 0, 1.0f);
     retdec_audio_method_40a7f0(manager, g637, a2);
     return 0;
 }
@@ -147969,7 +150070,15 @@ int32_t function_471d30(int32_t a1) {
 
 // Address range: 0x471d90 - 0x471dec
 int32_t function_471d90(int32_t a1) {
-    return function_471330(retdec_native_callback_from_stack(a1), a1, 2);
+    static volatile LONG trace_count;
+    LONG trace_index = InterlockedIncrement(&trace_count);
+    int32_t callback = retdec_native_callback_from_stack(a1);
+    if (trace_index <= 32) {
+        retdec_trace_i32("actor:load-wrapper-top", function_48aa20(a1));
+        retdec_trace_i32("actor:load-wrapper-callback", callback);
+        retdec_trace_i32("actor:load-wrapper-arg-type", function_48a6f0(a1, 2));
+    }
+    return function_471330(callback, a1, 2);
 }
 
 // Address range: 0x471df0 - 0x471e4c
@@ -149732,7 +151841,7 @@ int32_t function_473010(void) {
     int32_t v50 = function_48c2f0(v49, 4); // 0x473505
     v16 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v17 = v49;
-    *(int32_t *)v50 = (int32_t)(intptr_t)function_46a830;
+    *(int32_t *)v50 = (int32_t)(intptr_t)retdec_create_render_layer_fixed;
     function_48d850((int32_t)v17, (int32_t)v16, 1);
     *(int32_t *)&v19 = v49;
     function_48c950(v49, -3, 0);
@@ -196539,14 +198648,18 @@ int32_t function_48a830(int32_t a1, int32_t a2, int32_t * a3) {
         // 0x48a888
         return -1;
     }
-    int32_t v3 = *(int32_t *)(v1 + 4);
+    /* The original destination is a float*.  RetDec expressed it as an
+       integer pointer, but the integer-to-float branch still writes the
+       IEEE-754 representation into that destination. */
     if (v2 != 0x5000002) {
         // 0x48a876
-        *a3 = v3;
+        *(float32_t *)(intptr_t)a3 =
+            *(float32_t *)(intptr_t)(v1 + 4);
         return 0;
     }
     // 0x48a864
-    *a3 = (int32_t)(float32_t)(float80_t)v3;
+    *(float32_t *)(intptr_t)a3 =
+        (float32_t)*(int32_t *)(intptr_t)(v1 + 4);
     return 0;
 }
 
@@ -238260,7 +240373,11 @@ int32_t function_4aa470(int32_t a1) {
 int32_t function_4aa490(float80_t a1) {
     // 0x4aa490
     int32_t v1; // 0x4aa490
-    function_48a580(*(int32_t *)(v1 + 4), (int32_t)(float32_t)a1);
+    float32_t value = (float32_t)a1;
+    int32_t value_bits;
+
+    memcpy(&value_bits, &value, sizeof(value_bits));
+    function_48a580(*(int32_t *)(v1 + 4), value_bits);
     return 1;
 }
 
@@ -238781,6 +240898,7 @@ static int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context) {
 
 static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
                                     int32_t source_ptr) {
+    static volatile LONG camera_trace_count;
     int32_t vm;
     int32_t category;
     uint16_t size;
@@ -238813,14 +240931,28 @@ static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
         function_48a4f0(vm, value);
         return 1;
     case 2:
-        if ((flags & 2) != 0) {
-            value = source_ptr;
-        } else if (source_ptr == 0) {
-            return -1;
-        } else {
-            value = *(int32_t *)(intptr_t)source_ptr;
+        {
+            float32_t numeric;
+            int32_t numeric_bits;
+
+            if ((flags & 2) != 0) {
+                numeric = (float32_t)source_ptr;
+            } else if (source_ptr == 0) {
+                return -1;
+            } else {
+                numeric = *(float32_t *)(intptr_t)source_ptr;
+            }
+            memcpy(&numeric_bits, &numeric, sizeof(numeric_bits));
+            function_48a580(vm, numeric_bits);
+            if (source_ptr >= (int32_t)(intptr_t)g_retdec_camera_state &&
+                source_ptr < (int32_t)(intptr_t)g_retdec_camera_state + 0x80 &&
+                InterlockedIncrement(&camera_trace_count) <= 96) {
+                retdec_trace_i32("actor:camera-get-offset",
+                                 source_ptr -
+                                     (int32_t)(intptr_t)g_retdec_camera_state);
+                retdec_trace_i32("actor:camera-get-value", numeric_bits);
+            }
         }
-        function_48a580(vm, value);
         return 1;
     case 3:
         if ((flags & 2) != 0) {
@@ -238859,6 +240991,7 @@ static int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,
 
 static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
                                     int32_t source_ptr) {
+    static volatile LONG camera_trace_count;
     int32_t vm;
     int32_t top;
     int32_t category;
@@ -238891,12 +241024,22 @@ static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
         function_48a4f0(vm, value);
         return 1;
     case 2: {
-        int32_t numeric = 0;
-        float converted;
-        function_48a830(vm, 3, &numeric);
-        converted = (float)numeric;
-        *(float *)(intptr_t)source_ptr = converted;
-        function_48a580(vm, *(int32_t *)(intptr_t)&converted);
+        float32_t converted = 0.0f;
+        int32_t float_bits;
+
+        if (function_48a830(vm, 3, (int32_t *)&converted) < 0)
+            return -1;
+        *(float32_t *)(intptr_t)source_ptr = converted;
+        memcpy(&float_bits, &converted, sizeof(float_bits));
+        function_48a580(vm, float_bits);
+        if (source_ptr >= (int32_t)(intptr_t)g_retdec_camera_state &&
+            source_ptr < (int32_t)(intptr_t)g_retdec_camera_state + 0x80 &&
+            InterlockedIncrement(&camera_trace_count) <= 128) {
+            retdec_trace_i32("actor:camera-set-offset",
+                             source_ptr -
+                                 (int32_t)(intptr_t)g_retdec_camera_state);
+            retdec_trace_i32("actor:camera-set-value", float_bits);
+        }
         return 1;
     }
     case 3:

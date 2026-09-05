@@ -23,6 +23,16 @@ void retdec_trace(const char *message)
          strncmp(message, "4011b0:", 7) != 0 &&
          strncmp(message, "4017b0:", 7) != 0 &&
          strncmp(message, "render-target:", 14) != 0 &&
+         strncmp(message, "map:", 4) != 0 &&
+         strncmp(message, "mcd:", 4) != 0 &&
+         strncmp(message, "draw:", 5) != 0 &&
+         strncmp(message, "act:", 4) != 0 &&
+         strncmp(message, "actor:", 6) != 0 &&
+         strncmp(message, "actor-create:", 13) != 0 &&
+         strncmp(message, "actor-update:", 13) != 0 &&
+         strncmp(message, "actor-manager:", 14) != 0 &&
+         strncmp(message, "native-471df0:", 14) != 0 &&
+         strncmp(message, "native-userdata:", 16) != 0 &&
          strncmp(message, "c2d:", 4) != 0 &&
          strncmp(message, "4525d0:", 7) != 0 &&
          strncmp(message, "40d790:", 7) != 0 &&
