@@ -9,6 +9,10 @@
 
 void retdec_trace(const char *message)
 {
+#if defined(RETDEC_TRACE_OUTPUT_DISABLED)
+    (void)message;
+    return;
+#endif
 #if defined(RETDEC_DISABLE_TRACE)
     (void)message;
     return;

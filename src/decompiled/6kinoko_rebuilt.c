@@ -4801,8 +4801,8 @@ int32_t function_4910c0(void);
 int32_t function_4910e0(int32_t a1, int32_t a2);
 int32_t function_491150(void);
 int32_t function_491230(char a1);
-int32_t function_491260(uint32_t a1, int32_t a2);
-int32_t function_4912e0(uint32_t a1, int32_t a2);
+int32_t function_491260(int32_t array_ptr, uint32_t a1, int32_t a2);
+int32_t function_4912e0(int32_t array_ptr, uint32_t a1, int32_t a2);
 int32_t function_491340(int32_t a1, int32_t a2, int32_t a3);
 static int32_t function_491340_array_next(int32_t array_ptr,
                                            int32_t refpos_ptr,
@@ -10110,7 +10110,9 @@ int32_t function_401790(void) {
     if (device != NULL && device->lpVtbl != NULL) {
         HRESULT hr = device->lpVtbl->EndScene(device);
         retdec_trace_hresult("401790:endscene-hr", hr);
+#if !defined(RETDEC_DISABLE_RENDER_CAPTURE)
         retdec_capture_render_target(device);
+#endif
     }
     LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
     return 0;
@@ -207551,84 +207553,86 @@ int32_t function_491230(char flags) {
 #endif
 
 // Address range: 0x491260 - 0x4912de
-int32_t function_491260(uint32_t a1, int32_t a2) {
-    // 0x491260
-    int32_t v1; // 0x491260
-    if (a1 < 0 || *(int32_t *)(v1 + 28) <= a1) {
-        // 0x4912d6
-        return a1 & -256;
+/* SQArray::Get(index, out), with the __thiscall receiver restored. */
+int32_t function_491260(int32_t array_ptr, uint32_t a1, int32_t a2) {
+    int32_t count;
+    int32_t values;
+    int32_t slot_address;
+    int32_t source_address;
+    int32_t *output;
+    int32_t old_data;
+    int32_t source_type;
+    int32_t result;
+
+    if (array_ptr == 0 || a2 == 0)
+        return (int32_t)(a1 & 0xffffff00u);
+    count = *(int32_t *)(intptr_t)(array_ptr + 28);
+    if (count <= 0 || a1 >= (uint32_t)count)
+        return (int32_t)(a1 & 0xffffff00u);
+    values = *(int32_t *)(intptr_t)(array_ptr + 24);
+    if (values == 0)
+        return (int32_t)(a1 & 0xffffff00u);
+
+    slot_address = values + 8 * (int32_t)a1;
+    source_type = *(int32_t *)(intptr_t)slot_address;
+    if (source_type == 0x08010000)
+        source_address = *(int32_t *)(intptr_t)(slot_address + 4) + 12;
+    else {
+        source_address = (int32_t)(intptr_t)&source_type;
     }
-    int32_t v2 = *(int32_t *)(v1 + 24) + 8 * a1; // 0x491275
-    int32_t v3 = *(int32_t *)v2; // 0x491275
-    int32_t v4; // 0x491260
-    if (v3 == 0x8010000) {
-        // 0x491291
-        v4 = *(int32_t *)(v2 + 4) + 12;
-    } else {
-        int32_t v5 = v3; // bp-12, 0x491286
-        v4 = &v5;
-    }
-    int32_t * v6 = (int32_t *)(a2 + 4); // 0x49129a
-    int32_t v7 = *v6; // 0x49129a
-    int32_t * v8 = (int32_t *)a2; // 0x49129e
-    *v6 = *(int32_t *)(v4 + 4);
-    int32_t v9 = *(int32_t *)v4; // 0x4912a7
-    *v8 = v9;
-    if ((v9 & 0x8000000) != 0) {
-        int32_t * v10 = (int32_t *)(a2 + 4); // 0x4912b5
-        *v10 = *v10 + 1;
-    }
-    // 0x4912b8
-    if ((*v8 & 0x8000000) == 0) {
-        // 0x4912ce
-        return a2 & -256 | 1;
-    }
-    int32_t * v11 = (int32_t *)(v7 + 4); // 0x4912c2
-    int32_t v12 = *v11 - 1; // 0x4912c2
-    *v11 = v12;
-    int32_t v13 = a2; // 0x4912c5
-    if (v12 == 0) {
-        // 0x4912c7
-        v13 = *(int32_t *)(*(int32_t *)v7 + 4);
-    }
-    // 0x4912ce
-    return v13 & -256 | 1;
+
+    output = (int32_t *)(intptr_t)a2;
+    old_data = output[1];
+    output[1] = *(int32_t *)(intptr_t)(source_address + 4);
+    output[0] = *(int32_t *)(intptr_t)source_address;
+    if ((output[0] & 0x08000000) != 0)
+        ++output[1];
+
+    if ((output[0] & 0x08000000) == 0)
+        return (a2 & -256) | 1;
+
+    result = a2;
+    if (--*(int32_t *)(intptr_t)(old_data + 4) == 0)
+        result = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)old_data + 4);
+    return (result & -256) | 1;
 }
 
 // Address range: 0x4912e0 - 0x491339
-int32_t function_4912e0(uint32_t a1, int32_t a2) {
-    // 0x4912e0
-    int32_t v1; // 0x4912e0
-    if (a1 < 0 || *(int32_t *)(v1 + 28) <= a1) {
-        // 0x491333
-        return a1 & -256;
-    }
-    int32_t v2 = *(int32_t *)(v1 + 24) + 8 * a1; // 0x4912f6
-    int32_t * v3 = (int32_t *)v2; // 0x4912f6
-    int32_t * v4 = (int32_t *)(v2 + 4); // 0x4912fc
-    int32_t v5 = *v4; // 0x4912fc
-    *v4 = *(int32_t *)(a2 + 4);
-    int32_t v6 = *(int32_t *)a2; // 0x491306
-    *v3 = v6;
-    if ((v6 & 0x8000000) != 0) {
-        int32_t * v7 = (int32_t *)(v2 + 4); // 0x491314
-        *v7 = *v7 + 1;
-    }
-    // 0x491317
-    if ((*v3 & 0x8000000) == 0) {
-        // 0x49132d
-        return v2 & -256 | 1;
-    }
-    int32_t * v8 = (int32_t *)(v5 + 4); // 0x491321
-    int32_t v9 = *v8 - 1; // 0x491321
-    *v8 = v9;
-    int32_t v10 = v2; // 0x491324
-    if (v9 == 0) {
-        // 0x491326
-        v10 = *(int32_t *)(*(int32_t *)v5 + 4);
-    }
-    // 0x49132d
-    return v10 & -256 | 1;
+/* SQArray::Set(index, value), with the __thiscall receiver restored. */
+int32_t function_4912e0(int32_t array_ptr, uint32_t a1, int32_t a2) {
+    int32_t count;
+    int32_t values;
+    int32_t slot_address;
+    int32_t *slot;
+    int32_t old_data;
+    int32_t new_type;
+    int32_t result;
+
+    if (array_ptr == 0 || a2 == 0)
+        return (int32_t)(a1 & 0xffffff00u);
+    count = *(int32_t *)(intptr_t)(array_ptr + 28);
+    if (count <= 0 || a1 >= (uint32_t)count)
+        return (int32_t)(a1 & 0xffffff00u);
+    values = *(int32_t *)(intptr_t)(array_ptr + 24);
+    if (values == 0)
+        return (int32_t)(a1 & 0xffffff00u);
+
+    slot_address = values + 8 * (int32_t)a1;
+    slot = (int32_t *)(intptr_t)slot_address;
+    old_data = slot[1];
+    slot[1] = *(int32_t *)(intptr_t)(a2 + 4);
+    new_type = *(int32_t *)(intptr_t)a2;
+    slot[0] = new_type;
+    if ((new_type & 0x08000000) != 0)
+        ++*(int32_t *)(intptr_t)(slot_address + 4);
+
+    if ((new_type & 0x08000000) == 0)
+        return (slot_address & -256) | 1;
+
+    result = slot_address;
+    if (--*(int32_t *)(intptr_t)(old_data + 4) == 0)
+        result = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)old_data + 4);
+    return (result & -256) | 1;
 }
 
 // Address range: 0x491340 - 0x4913f7
@@ -211148,7 +211152,9 @@ int32_t function_493710(int32_t this_ptr, int32_t object_ptr,
                 numeric_value = function_4ab9d0();
             else
                 numeric_value = *(int32_t *)(intptr_t)(key_ptr + 4);
-            return function_4912e0((uint32_t)numeric_value, value_ptr);
+            return function_4912e0(
+                *(int32_t *)(intptr_t)(object_ptr + 4),
+                (uint32_t)numeric_value, value_ptr);
         }
         function_499a20(this_ptr, "indexing value with non-integer key");
         return 0;
@@ -212976,7 +212982,8 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
             int32_t key_data = key_type == 0x05000004
                 ? function_4ab9d0()
                 : *(int32_t *)(intptr_t)(a2 + 4);
-            return function_491260(key_data, a3);
+            return function_491260(
+                *(int32_t *)(intptr_t)(a1 + 4), key_data, a3);
         }
     } else if (object_type == 0x0A000020) {
         int32_t table_ptr = *(int32_t *)(intptr_t)(a1 + 4);
@@ -234031,7 +234038,8 @@ int32_t function_4a36d0(int32_t a1) {
     v6 = v10;
     int32_t v13 = &v7; // 0x4a376f
     char * v14; // bp-60, 0x4a36d0
-    if ((char)function_491260(v10, v13) == 0) {
+    if ((char)function_491260(
+            *(int32_t *)(intptr_t)(v3 + 4), v10, v13) == 0) {
         // 0x4a37ed
         v14 = "idx out of range";
         int32_t result2 = function_48ac00(a1, "idx out of range"); // 0x4a37f3
