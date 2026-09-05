@@ -216016,31 +216016,37 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     }
                 }
                 case 34: {
-                    int32_t v373 = *v27; // 0x496612
-                    int32_t v374 = *v28; // 0x496615
-                    int32_t v375 = *(int32_t *)v74; // 0x496618
-                    *(int32_t *)(v82 - 4) = 0;
-                    *(int32_t *)(v82 - 8) = 8 * ((v375 & 0xffff) + v373) + v374;
-                    unsigned char v376 = *(char *)(v74 + 6); // 0x496628
-                    *(int32_t *)(v82 - 12) = 8 * (v373 + (int32_t)v376) + v374;
-                    uint16_t v377 = *(int16_t *)(v74 + 2); // 0x496632
-                    *(int32_t *)(v82 - 16) = 8 * (v373 + (int32_t)v377) + v374;
-                    unsigned char v378 = *(char *)(v74 + 5); // 0x49663c
-                    *(int32_t *)(v82 - 20) = 8 * (v373 + (int32_t)v378) + v374;
+                    int32_t arith_vm = retdec_stack_vm();
+                    int32_t arith_stack = arith_vm != 0
+                        ? *(int32_t *)(intptr_t)(arith_vm + 24) : 0;
+                    int32_t arith_base = arith_vm != 0
+                        ? *(int32_t *)(intptr_t)(arith_vm + 52) : 0;
+                    int32_t arith_packed = *(int32_t *)v74;
+                    int32_t arith_target = 0;
+                    int32_t arith_self = 0;
+                    int32_t arith_key = 0;
+                    int32_t arith_increment = 0;
                     int32_t v379 = v82 - 24; // 0x49664a
+
+                    /* SQVM::_OP_COMPARITH calls DerefInc with addresses in
+                       the current VM stack.  The generated version reused
+                       stale scratch-register aliases here, shifting the
+                       key and increment slots by one. */
+                    if (arith_stack != 0) {
+                        arith_target = arith_stack + 8 * (arith_base +
+                            (int32_t)*(unsigned char *)(v74 + 5));
+                        arith_self = arith_stack + 8 * (arith_base +
+                            (int32_t)(uint16_t)(arith_packed >> 16));
+                        arith_key = arith_stack + 8 * (arith_base +
+                            (int32_t)*(unsigned char *)(v74 + 6));
+                        arith_increment = arith_stack + 8 * (arith_base +
+                            (int32_t)(uint16_t)arith_packed);
+                    }
                     *(int32_t *)v379 = (int32_t)*(char *)(v74 + 7);
-                    /* SQVM::_OP_COMPARITH packs the left-hand slot in the
-                       high half of arg1 and the increment slot in the low
-                       half.  RetDec collapsed the six call arguments into
-                       the scratch global; restore the original DerefInc
-                       receiver/operand layout. */
                     int32_t v380 = function_494bf0(
                         (int32_t)*(char *)(v74 + 7),
-                        *(int32_t *)(v82 - 20),
-                        *(int32_t *)(v82 - 16),
-                        *(int32_t *)(v82 - 12),
-                        *(int32_t *)(v82 - 8),
-                        *(int32_t *)(v82 - 4)); // 0x49664d
+                        arith_target, arith_self, arith_key,
+                        arith_increment, 0); // 0x49664d
                     v64 = v92;
                     v65 = v379;
                     if ((char)v380 != 0) {
@@ -218858,10 +218864,11 @@ static int32_t retdec_execute_clean_vm(
 
             case 34: {
                 int32_t self_index = (int16_t)((uint32_t)arg1 >> 16);
-                int32_t key_index = (uint16_t)arg1;
+                int32_t increment_index = (uint16_t)arg1;
                 int32_t self_slot = retdec_clean_vm_slot(vm, self_index);
-                int32_t key_slot = retdec_clean_vm_slot(vm, key_index);
-                int32_t increment_slot = retdec_clean_vm_slot(vm, arg2);
+                int32_t key_slot = retdec_clean_vm_slot(vm, arg2);
+                int32_t increment_slot = retdec_clean_vm_slot(
+                    vm, increment_index);
                 dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
                 if (self_slot == 0 || key_slot == 0 || increment_slot == 0 ||
                     dst == NULL || !function_494bf0(
