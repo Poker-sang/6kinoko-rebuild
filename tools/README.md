@@ -22,6 +22,12 @@ The archive tools share `include/kinoko/archive.hpp`,
 Those files are retained because asset extraction and the archive tests use
 them independently of the game runtime.
 
+The runtime now requires the Squirrel 2.2.2 source tree at
+`KINOKO_SQUIRREL2_ROOT` when building, to compile original inline ACT scripts.
+Compilation uses a separate C++ VM and transfers bytecode to the reconstructed
+VM; `KINOKO_ENABLE_SQUIRREL_CPP_VM` still controls only experimental execution.
+zlib 1.2.3 is vendored and linked statically for original save-file compatibility.
+
 ## Examples
 
 Run these from the repository root; replace `<run-dir>` and `<build-tree>`.
@@ -38,3 +44,5 @@ runtime-builds/<run-dir>/tools/kinoko_dump_inspect.exe capture.dmp runtime-build
 inspection. `ida_query.ps1` queries an existing IDA MCP database.
 `capture_loopback.py` records Windows playback audio through PyAudioWPatch.
 These scripts are development tools and are not bundled into the game.
+`x64dbg_query.py` accesses debugger tools that are exposed only while a target
+is loaded, using the configured local MCP connection without displaying secrets.

@@ -21,6 +21,7 @@
 #include <zlib.h>
 
 #include "retdec_asm_stubs.h"
+#include "kinoko/squirrel_compile_bridge.h"
 
 static volatile LONG retdec_actor_step_trace_active;
 
@@ -62329,10 +62330,10 @@ static void retdec_act_apply_map_layout(
             *(int32_t *)(intptr_t)(object_ptr + 248) =
                 retdec_act_property_integer(property);
         else if (strcmp(property->name, "mapChipRight") == 0)
-            *(int32_t *)(intptr_t)(object_ptr + 252) =
+            *(int32_t *)(intptr_t)(object_ptr + 256) =
                 retdec_act_property_integer(property);
         else if (strcmp(property->name, "mapChipTop") == 0)
-            *(int32_t *)(intptr_t)(object_ptr + 256) =
+            *(int32_t *)(intptr_t)(object_ptr + 252) =
                 retdec_act_property_integer(property);
         else if (strcmp(property->name, "mapChipBottom") == 0)
             *(int32_t *)(intptr_t)(object_ptr + 260) =
@@ -63214,7 +63215,7 @@ static int32_t retdec_c2dmaplayout_update_impl(
         int32_t alpha;
         uint32_t color;
 
-        if (record == 0)
+        if (record == 0 || *(uint8_t *)(intptr_t)(record + 24) == 0)
             continue;
         chip = retdec_mcd_find_chip(data,
                                     retdec_mcd_u32((unsigned char *)
@@ -63309,6 +63310,8 @@ static int32_t retdec_c2dmaplayout_draw_impl(int32_t layout,
 
     if (layout == 0 || *(int32_t *)(intptr_t)(layout + 312) == 0)
         return -0x7fffbffb;
+    if (*(uint8_t *)(intptr_t)(*(int32_t *)(intptr_t)(layout + 312) + 140) == 0)
+        return 0;
 #if defined(RETDEC_DIAGNOSTIC_SKIP_BG2)
     {
         const char *map_layer_name = retdec_std_string_data(
@@ -63445,6 +63448,9 @@ static int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     resource = *(int32_t *)(intptr_t)(layer + 0x64);
     *(int32_t *)(intptr_t)(layout + 312) = layer;
     *(int32_t *)(intptr_t)(layout + 316) = resource;
+    /* 4341F0 exposes alpha/blend through CActLayer's pointer properties. */
+    *(int32_t *)(intptr_t)(layer + 52) = layout + 320;
+    *(int32_t *)(intptr_t)(layer + 56) = layout + 328;
     if (*(int32_t *)(intptr_t)(layout + 332) != 0)
         free((void *)(intptr_t)*(int32_t *)(intptr_t)(layout + 332));
     *(int32_t *)(intptr_t)(layout + 332) = 0;
@@ -68868,7 +68874,7 @@ __declspec(naked) int32_t function_42c100(void)
     __asm {
         mov eax, ecx
         push eax
-        call retdec_c2dlayout_update_impl
+        call retdec_c2dlayout_update_faithful_impl
         add esp, 4
         ret
     }
@@ -77639,11 +77645,22 @@ int32_t function_434a50(int32_t a1) {
 // Address range: 0x434b40 - 0x434b56
 // From class:    .?AVC2DMapLayout@@
 // Type:          virtual member function
-int32_t function_434b40(void) {
-    // 0x434b40
-    int32_t result; // 0x434b40
-    return result;
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_434b40(void) {
+    __asm {
+        push 7fffffffh
+        push 7fffffffh
+        push 0
+        push 0
+        push ecx
+        call retdec_c2dmaplayout_update_impl
+        add esp, 20
+        ret
+    }
 }
+#else
+int32_t function_434b40(void) { return (int32_t)E_FAIL; }
+#endif
 
 // Address range: 0x434b60 - 0x434f3c
 // From class:    .?AVC2DMapLayout@@
@@ -77970,7 +77987,22 @@ int32_t function_434b60(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 // Address range: 0x434f40 - 0x4351b8
 // From class:    .?AVC2DMapLayout@@
 // Type:          virtual member function
-int32_t function_434f40(float32_t a1, float32_t a2) {
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_434f40(float32_t a1, float32_t a2) {
+    __asm {
+        push [esp + 8]
+        push [esp + 8]
+        push ecx
+        call retdec_c2dmaplayout_draw_impl
+        add esp, 12
+        ret 8
+    }
+}
+#else
+int32_t function_434f40(float32_t a1, float32_t a2) { return (int32_t)E_FAIL; }
+#endif
+
+static int32_t retdec_unbound_function_434f40(float32_t a1, float32_t a2) {
     // 0x434f40
     int32_t v1; // 0x434f40
     int32_t v2 = *(int32_t *)(v1 + 312); // 0x434f4b
@@ -108837,7 +108869,20 @@ static const char *retdec_std_string_data(int32_t string_ptr)
    while later ACT users can be wired to the recovered virtual call. */
 static int32_t retdec_cact_associate_resource(int32_t vm)
 {
-    (void)vm;
+    int32_t layer = 0, resource = 0;
+    int32_t result = (int32_t)E_FAIL;
+    if (function_48c890(vm, 1, &layer, 0) >= 0 && layer != 0 &&
+        function_48c890(vm, 2, &resource, 0) >= 0 && resource != 0) {
+        /* 424210 -> 4252E0 -> 41EF20: change only the resource and its ID. */
+        *(int32_t *)(intptr_t)(layer + 100) = resource;
+        *(int32_t *)(intptr_t)(layer + 96) = *(int32_t *)(intptr_t)(resource + 4);
+        retdec_trace_squirrel_name("act:associate-layer",
+            (int32_t)(intptr_t)retdec_std_string_data(layer + 112));
+        retdec_trace_squirrel_name("act:associate-resource",
+            (int32_t)(intptr_t)retdec_std_string_data(resource + 8));
+        result = 0;
+    }
+    function_48a4f0(vm, result);
     return 1;
 }
 
@@ -108997,6 +109042,82 @@ static int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     return 1;
 }
 
+static int32_t retdec_acting_player_property(int32_t vm, int32_t *offset) {
+    int32_t target = retdec_c2dlayout_property_offset(vm, offset);
+    if (target == 0)
+        return 0;
+    return *offset == 8 ? target + 8 : *(int32_t *)(intptr_t)(target + *offset);
+}
+
+static int32_t retdec_acting_player_get_property(int32_t vm) {
+    int32_t offset = 0;
+    int32_t field = retdec_acting_player_property(vm, &offset);
+    if (field == 0)
+        return 0;
+    if (offset == 8 || offset == 132)
+        function_48a530(vm, *(uint8_t *)(intptr_t)field);
+    else if (offset == 124 || offset == 128)
+        function_48a580(vm, *(int32_t *)(intptr_t)field);
+    else if (offset == 148)
+        function_48a480(vm, (int32_t)(intptr_t)retdec_std_string_data(field), -1);
+    else
+        function_48a4f0(vm, *(int32_t *)(intptr_t)field);
+    return 1;
+}
+
+static int32_t retdec_acting_player_set_property(int32_t vm) {
+    int32_t offset = 0;
+    int32_t field = retdec_acting_player_property(vm, &offset);
+    int32_t value = 0;
+    if (field == 0)
+        return 0;
+    if (offset == 8 || offset == 132) {
+        function_48a790(vm, 2, &value);
+        *(uint8_t *)(intptr_t)field = (uint8_t)(value != 0);
+    } else if (offset == 148) {
+        if (function_48a8d0(vm, 2, &value) >= 0)
+            retdec_msvc_0_Init_locks_std__QAE_XZ(
+                (int32_t *)(intptr_t)field, (int32_t *)(intptr_t)value);
+    } else if ((offset == 124 || offset == 128
+        ? function_48a830(vm, 2, &value) : function_48a7d0(vm, 2, &value)) >= 0) {
+        *(int32_t *)(intptr_t)field = value;
+    }
+    return 0;
+}
+
+static int32_t retdec_publish_acting_player_properties(int32_t vm,
+                                                        const int32_t class_pair[2]) {
+    static const char *names[] = { "staging", "marginLeft", "marginRight",
+        "marginTop", "marginBottom", "offsetX", "offsetY", "visible",
+        "resolutionMs", "screenWidth", "screenHeight", "stName" };
+    static const int32_t offsets[] = { 8, 108, 112, 116, 120, 124, 128,
+        132, 136, 140, 144, 148 };
+    int32_t get_table[2] = { g483, g484 };
+    int32_t set_table[2] = { g483, g484 };
+    int32_t ok = 0;
+    if (!retdec_sqrat_new_table(vm, get_table) ||
+        !retdec_sqrat_new_table(vm, set_table) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__getTable", get_table) ||
+        !retdec_sqrat_set_pair(vm, class_pair, "__setTable", set_table) ||
+        !retdec_sqrat_set_native_closure(vm, class_pair, "_get",
+            (int32_t)(intptr_t)function_41e260, get_table, 1) ||
+        !retdec_sqrat_set_native_closure(vm, class_pair, "_set",
+            (int32_t)(intptr_t)function_41e2c0, set_table, 1))
+        goto cleanup;
+    for (size_t i = 0; i < sizeof(offsets) / sizeof(offsets[0]); ++i) {
+        if (!retdec_sqrat_set_offset_closure(vm, get_table, names[i], offsets[i],
+                (int32_t)(intptr_t)retdec_acting_player_get_property) ||
+            !retdec_sqrat_set_offset_closure(vm, set_table, names[i], offsets[i],
+                (int32_t)(intptr_t)retdec_acting_player_set_property))
+            goto cleanup;
+    }
+    ok = 1;
+cleanup:
+    retdec_sqrat_release_pair(vm, get_table);
+    retdec_sqrat_release_pair(vm, set_table);
+    return ok;
+}
+
 static int32_t retdec_publish_acting_player_class(int32_t vm,
                                                    int32_t root_object)
 {
@@ -109098,16 +109219,11 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
                                           (int32_t)(intptr_t)retdec_act_resume_bridge,
                                           (int32_t)(intptr_t)function_4552e0, 0);
 
-    retdec_sqrat_set_int(vm, class_pair, "marginLeft", 0);
-    retdec_sqrat_set_int(vm, class_pair, "marginRight", 0);
-    retdec_sqrat_set_int(vm, class_pair, "marginTop", 0);
-    retdec_sqrat_set_int(vm, class_pair, "marginBottom", 0);
-    retdec_sqrat_set_int(vm, class_pair, "resolutionMs", 0);
-    retdec_sqrat_set_int(vm, class_pair, "screenWidth", 0);
-    retdec_sqrat_set_int(vm, class_pair, "screenHeight", 0);
-    retdec_sqrat_set_bool(vm, class_pair, "visible", 0);
-    retdec_sqrat_set_bool(vm, class_pair, "staging", 0);
-    retdec_sqrat_set_string(vm, class_pair, "stName", "");
+    if (!retdec_publish_acting_player_properties(vm, class_pair)) {
+        retdec_sqrat_release_pair(vm, class_pair);
+        retdec_sqrat_trim_stack(vm, base);
+        return 0;
+    }
 
     g1049 = class_pair[0];
     g1050 = class_pair[1];
@@ -109266,68 +109382,36 @@ cleanup:
     return load_result >= 0 && execute_result >= 0;
 }
 
-/* Non-compiled ACT scripts contain a small source wrapper.  The shipped
-   files use that wrapper to call CompileFile(path, this); preserve the
-   original path and this table, then let the normal DAT bytecode loader run
-   the referenced script. */
+/* 416268 compiles inline ACT source, including classes and callback bodies.
+   Transfer only its closure stream from the source compiler into this VM. */
 static int32_t retdec_execute_act_source_script(
     int32_t vm, int32_t script_ptr, const int32_t *environment_pair)
 {
-    int32_t raw_data;
-    int32_t raw_size;
-    char *source;
-    const char *call;
-    const char *quote;
-    const char *end;
-    char path[MAX_PATH];
-    size_t path_length;
-    int32_t script_environment[3];
+    unsigned char *bytecode = NULL;
+    int32_t bytecode_size = 0;
+    int32_t compiled_script[26] = { 0 };
+    const char *source;
+    const char *name;
+    int32_t size;
     int32_t result;
 
     if (vm == 0 || script_ptr == 0 || environment_pair == NULL)
         return 0;
-    raw_data = *(int32_t *)(intptr_t)(script_ptr + 92);
-    raw_size = *(int32_t *)(intptr_t)(script_ptr + 96);
-    if (raw_data == 0 || raw_size <= 0 || raw_size > 0x1000000)
+    source = *(const char **)(intptr_t)(script_ptr + 92);
+    size = *(int32_t *)(intptr_t)(script_ptr + 96);
+    name = retdec_std_string_data(script_ptr + 64);
+    if (source == NULL || size <= 0 || size > 0x1000000)
         return 0;
-
-    source = (char *)malloc((size_t)raw_size + 1u);
-    if (source == NULL)
+    if (!retdec_squirrel_compile_source(source, size,
+            name != NULL && *name != 0 ? name : "ACT inline",
+            &bytecode, &bytecode_size))
         return 0;
-    memcpy(source, (const void *)(intptr_t)raw_data, (size_t)raw_size);
-    source[raw_size] = 0;
-
-    call = strstr(source, "CompileFile");
-    quote = call != NULL ? strchr(call, '"') : NULL;
-    if (quote == NULL && call != NULL)
-        quote = strchr(call, '\'');
-    if (quote == NULL) {
-        free(source);
-        return 0;
-    }
-    ++quote;
-    end = strchr(quote, * (quote - 1) == '"' ? '"' : '\'');
-    if (end == NULL || end == quote) {
-        free(source);
-        return 0;
-    }
-    path_length = (size_t)(end - quote);
-    if (path_length >= sizeof(path)) {
-        free(source);
-        return 0;
-    }
-    memcpy(path, quote, path_length);
-    path[path_length] = 0;
-    free(source);
-
-    retdec_trace_squirrel_name("act-script:source-path",
-                               (int32_t)(intptr_t)path);
-    script_environment[0] = (int32_t)(intptr_t)&g39;
-    script_environment[1] = environment_pair[0];
-    script_environment[2] = environment_pair[1];
-    result = function_402d40(path, (int32_t)(intptr_t)script_environment);
-    retdec_trace_i32("act-script:source-result", result);
-    return result != 0;
+    compiled_script[23] = (int32_t)(intptr_t)bytecode;
+    compiled_script[24] = bytecode_size;
+    result = retdec_execute_embedded_act_script(
+        vm, (int32_t)(intptr_t)compiled_script, environment_pair);
+    free(bytecode);
+    return result;
 }
 
 static void retdec_copy_act_callback(int32_t vm, int32_t script_ptr,
@@ -109561,6 +109645,374 @@ static void retdec_publish_c2dlayout_values(
     (void)layout;
 }
 
+struct retdec_native_view_property {
+    const char *name;
+    int32_t offset;
+    int32_t kind;
+};
+
+static int32_t retdec_native_view_get_short(int32_t vm) {
+    int32_t offset = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
+    if (target == 0)
+        return 0;
+    function_48a4f0(vm, *(int16_t *)(intptr_t)(target + offset));
+    return 1;
+}
+
+static int32_t retdec_native_view_set_short(int32_t vm) {
+    int32_t offset = 0, value = 0;
+    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
+    if (target != 0 && function_48a7d0(vm, 2, &value) >= 0)
+        *(int16_t *)(intptr_t)(target + offset) = (int16_t)value;
+    return 0;
+}
+
+static int32_t retdec_map_chip_count(int32_t vm) {
+    int32_t layout = 0;
+    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0)
+        return 0;
+    function_48a4f0(vm, (*(int32_t *)(intptr_t)(layout + 268) -
+                         *(int32_t *)(intptr_t)(layout + 264)) / 32);
+    return 1;
+}
+
+static int32_t retdec_map_get_chip_layout(int32_t vm) {
+    int32_t layout = 0;
+    int32_t index = -1;
+    int32_t begin;
+    int32_t count;
+    int32_t root[5];
+    int32_t chip_class[2] = { g483, g484 };
+    int32_t instance[2] = { g483, g484 };
+    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0 ||
+        function_48a7d0(vm, 2, &index) < 0)
+        return 0;
+    begin = *(int32_t *)(intptr_t)(layout + 264);
+    count = (*(int32_t *)(intptr_t)(layout + 268) - begin) / 32;
+    if (index < 0 || index >= count) {
+        function_48a460(vm);
+        return 1;
+    }
+    if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root, vm))
+        return 0;
+    if (retdec_sqrat_get((int32_t)(intptr_t)root, "ChipLayout", chip_class) &&
+        retdec_create_unbound_instance(vm, chip_class, begin + 32 * index, instance))
+        function_48ab90(vm, instance[0], instance[1]);
+    else
+        function_48a460(vm);
+    retdec_sqrat_release_pair(vm, instance);
+    retdec_sqrat_release_pair(vm, chip_class);
+    retdec_sqrat_object_release((int32_t)(intptr_t)root);
+    return 1;
+}
+
+static int32_t retdec_map_layout_argument(int32_t vm, int32_t *index) {
+    int32_t layout = 0;
+    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0 ||
+        (index != NULL && function_48a7d0(vm, 2, index) < 0))
+        return 0;
+    return layout;
+}
+
+static int32_t retdec_map_record_at(int32_t layout, int32_t index) {
+    int32_t begin = layout ? *(int32_t *)(intptr_t)(layout + 264) : 0;
+    int32_t end = layout ? *(int32_t *)(intptr_t)(layout + 268) : 0;
+    return index >= 0 && index < (end - begin) / 32 ? begin + index * 32 : 0;
+}
+
+static struct retdec_mcd_data *retdec_map_chip_data(int32_t layout) {
+    int32_t resource = layout ? *(int32_t *)(intptr_t)(layout + 316) : 0;
+    return resource ? *(struct retdec_mcd_data **)(intptr_t)(resource + 64) : NULL;
+}
+
+/* 435720/435220 enumerate layouts in vector order and use the MCD rectangle. */
+static int32_t retdec_map_get_chip_by_position(int32_t vm) {
+    int32_t x = 0, y = 0;
+    int32_t layout = retdec_map_layout_argument(vm, &x);
+    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
+    int32_t found = -1;
+    if (layout != 0 && data != NULL && function_48a7d0(vm, 3, &y) >= 0) {
+        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
+        for (int32_t index = 0, record; (record = retdec_map_record_at(layout, index)) != 0; ++index) {
+            struct retdec_mcd_chip *chip = retdec_mcd_find_chip(data, *(uint32_t *)(intptr_t)record);
+            int32_t left = *(int32_t *)(intptr_t)(record + 4);
+            int32_t top = *(int32_t *)(intptr_t)(record + 8);
+            *(float *)(intptr_t)(record + 12) = (float)left +
+                (layer ? *(float *)(intptr_t)(layer + 144) : 0.0f);
+            *(float *)(intptr_t)(record + 16) = (float)top +
+                (layer ? *(float *)(intptr_t)(layer + 148) : 0.0f);
+            if (chip != NULL && left <= x && top <= y &&
+                (int64_t)left + retdec_mcd_i16(chip->bytes + 12) > x &&
+                (int64_t)top + retdec_mcd_i16(chip->bytes + 14) > y) {
+                found = index;
+                break;
+            }
+        }
+    }
+    function_48a4f0(vm, found);
+    return 1;
+}
+
+static int32_t retdec_map_set_chip_rect(int32_t vm) {
+    int32_t id = 0, rectangle[4];
+    int32_t layout = retdec_map_layout_argument(vm, &id);
+    struct retdec_mcd_chip *chip = retdec_mcd_find_chip(retdec_map_chip_data(layout), (uint32_t)id);
+    if (chip != NULL) {
+        for (int32_t i = 0; i < 4; ++i) {
+            if (function_48a7d0(vm, i + 3, rectangle + i) < 0) {
+                function_48a530(vm, 0);
+                return 1;
+            }
+        }
+        for (int32_t i = 0; i < 4; ++i) {
+            int16_t component = (int16_t)rectangle[i];
+            memcpy(chip->bytes + 8 + i * 2, &component, sizeof(component));
+        }
+    }
+    function_48a530(vm, chip != NULL);
+    return 1;
+}
+
+static int32_t retdec_map_set_chip_layout(int32_t vm) {
+    int32_t index = -1, left = 0, top = 0;
+    int32_t layout = retdec_map_layout_argument(vm, &index);
+    int32_t record = retdec_map_record_at(layout, index);
+    int32_t ok = record != 0 && function_48a7d0(vm, 3, &left) >= 0 &&
+                 function_48a7d0(vm, 4, &top) >= 0;
+    if (ok) {
+        *(int32_t *)(intptr_t)(record + 4) = left;
+        *(int32_t *)(intptr_t)(record + 8) = top;
+    }
+    function_48a530(vm, ok);
+    return 1;
+}
+
+static int32_t retdec_map_set_chip_id(int32_t vm) {
+    int32_t index = -1, id = 0;
+    int32_t layout = retdec_map_layout_argument(vm, &index);
+    int32_t record = retdec_map_record_at(layout, index);
+    int32_t ok = record != 0 && function_48a7d0(vm, 3, &id) >= 0;
+    if (ok)
+        *(int32_t *)(intptr_t)record = id;
+    function_48a530(vm, ok);
+    return 1;
+}
+
+static int32_t retdec_map_get_chip_id(int32_t vm) {
+    int32_t index = -1;
+    int32_t layout = retdec_map_layout_argument(vm, &index);
+    int32_t record = retdec_map_record_at(layout, index);
+    function_48a4f0(vm, record ? *(int32_t *)(intptr_t)record : -1);
+    return 1;
+}
+
+static int retdec_map_compare_records(const void *a, const void *b) {
+    const int32_t *left = (const int32_t *)a;
+    const int32_t *right = (const int32_t *)b;
+    if (left[1] != right[1])
+        return left[1] < right[1] ? -1 : 1;
+    return left[2] < right[2] ? -1 : left[2] != right[2];
+}
+
+/* 435860 sorts by left/top, rebuilds chip lookup, then derives map bounds. */
+static int32_t retdec_map_prearrangement(int32_t vm) {
+    int32_t layout = retdec_map_layout_argument(vm, NULL);
+    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
+    int32_t begin, count;
+    if (layout == 0 || data == NULL) {
+        function_48a4f0(vm, (int32_t)E_FAIL);
+        return 1;
+    }
+    begin = *(int32_t *)(intptr_t)(layout + 264);
+    count = (*(int32_t *)(intptr_t)(layout + 268) - begin) / 32;
+    if (count > 1)
+        qsort((void *)(intptr_t)begin, (size_t)count, 32, retdec_map_compare_records);
+    *(int32_t *)(intptr_t)(layout + 240) = INT32_MIN;
+    *(int32_t *)(intptr_t)(layout + 244) = INT32_MIN;
+    memset((void *)(intptr_t)(layout + 248), 0, 16);
+    if (count != 0) {
+        *(int32_t *)(intptr_t)(layout + 248) = *(int32_t *)(intptr_t)(begin + 4);
+        *(int32_t *)(intptr_t)(layout + 252) = *(int32_t *)(intptr_t)(begin + 8);
+        *(int32_t *)(intptr_t)(layout + 256) = *(int32_t *)(intptr_t)(begin + 32 * (count - 1) + 4);
+        *(int32_t *)(intptr_t)(layout + 260) = *(int32_t *)(intptr_t)(layout + 256);
+    }
+    for (int32_t i = 0; i < count; ++i) {
+        int32_t *record = (int32_t *)(intptr_t)(begin + i * 32);
+        struct retdec_mcd_chip *chip = retdec_mcd_find_chip(data, (uint32_t)record[0]);
+        if (chip != NULL) {
+            int32_t width = retdec_mcd_i16(chip->bytes + 12);
+            int32_t height = retdec_mcd_i16(chip->bytes + 14);
+            if (*(int32_t *)(intptr_t)(layout + 240) < width)
+                *(int32_t *)(intptr_t)(layout + 240) = width;
+            if (*(int32_t *)(intptr_t)(layout + 244) < height)
+                *(int32_t *)(intptr_t)(layout + 244) = height;
+            if (*(int32_t *)(intptr_t)(layout + 256) < record[1] + width)
+                *(int32_t *)(intptr_t)(layout + 256) = record[1] + width;
+            if (*(int32_t *)(intptr_t)(layout + 260) < record[2] + height)
+                *(int32_t *)(intptr_t)(layout + 260) = record[2] + height;
+        }
+        if (*(int32_t *)(intptr_t)(layout + 248) > record[1])
+            *(int32_t *)(intptr_t)(layout + 248) = record[1];
+        if (*(int32_t *)(intptr_t)(layout + 252) > record[2])
+            *(int32_t *)(intptr_t)(layout + 252) = record[2];
+    }
+    function_48a4f0(vm, 0);
+    return 1;
+}
+
+/* 433C90 registers two pointer views. Descriptors keep script writes attached
+   to the ACT's original 32-byte records rather than detached table copies. */
+static int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
+    const char *name, const struct retdec_native_view_property *properties,
+    int32_t property_count, int32_t is_map, int32_t out[2]) {
+    int32_t get_table[2] = { g483, g484 };
+    int32_t set_table[2] = { g483, g484 };
+    int32_t base = function_48aa20(vm);
+    int32_t ok = 0;
+    if (retdec_sqrat_get(root, name, out) && out[0] == 0x08004000)
+        return 1;
+    retdec_sqrat_release_pair(vm, out);
+    if (function_48c350(vm, 0) < 0)
+        goto cleanup;
+    function_48ab40(vm, -1, out);
+    function_48a400(vm, (int32_t)(intptr_t)out);
+    if (!retdec_sqrat_new_table(vm, get_table) ||
+        !retdec_sqrat_new_table(vm, set_table) ||
+        !retdec_sqrat_set_pair(vm, out, "__getTable", get_table) ||
+        !retdec_sqrat_set_pair(vm, out, "__setTable", set_table) ||
+        !retdec_sqrat_set_native_closure(vm, out, "_get",
+            (int32_t)(intptr_t)function_41e260, get_table, 1) ||
+        !retdec_sqrat_set_native_closure(vm, out, "_set",
+            (int32_t)(intptr_t)function_41e2c0, set_table, 1) ||
+        !retdec_sqrat_set_native_closure(vm, out, "weakref",
+            (int32_t)(intptr_t)function_431650, NULL, 0))
+        goto cleanup;
+    for (int32_t i = 0; i < property_count; ++i) {
+        const struct retdec_native_view_property *p = properties + i;
+        int32_t getter = p->kind == 1 ? (int32_t)(intptr_t)retdec_c2dlayout_get_float :
+            p->kind == 2 ? (int32_t)(intptr_t)retdec_cact_layer_get_bool :
+            p->kind == 3 ? (int32_t)(intptr_t)retdec_native_view_get_short :
+            p->kind == 4 ? (int32_t)(intptr_t)retdec_cact_layer_get_string :
+                          (int32_t)(intptr_t)retdec_c2dlayout_get_int;
+        int32_t setter = p->kind == 1 ? (int32_t)(intptr_t)retdec_c2dlayout_set_float :
+            p->kind == 2 ? (int32_t)(intptr_t)retdec_cact_layer_set_bool :
+            p->kind == 3 ? (int32_t)(intptr_t)retdec_native_view_set_short :
+            p->kind == 4 ? (int32_t)(intptr_t)retdec_cact_layer_set_string :
+                          (int32_t)(intptr_t)retdec_c2dlayout_set_int;
+        if (!retdec_sqrat_set_offset_closure(vm, get_table, p->name, p->offset, getter) ||
+            !retdec_sqrat_set_offset_closure(vm, set_table, p->name, p->offset, setter))
+            goto cleanup;
+    }
+    if (is_map &&
+        (!retdec_sqrat_set_native_closure(vm, out, "PreArrangement",
+            (int32_t)(intptr_t)retdec_map_prearrangement, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, get_table, "chipCount",
+            (int32_t)(intptr_t)retdec_map_chip_count, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "GetChipLayout",
+            (int32_t)(intptr_t)retdec_map_get_chip_layout, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "GetChipByPosition",
+            (int32_t)(intptr_t)retdec_map_get_chip_by_position, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "SetChipRect",
+            (int32_t)(intptr_t)retdec_map_set_chip_rect, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "SetChipLayout",
+            (int32_t)(intptr_t)retdec_map_set_chip_layout, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "SetChipID",
+            (int32_t)(intptr_t)retdec_map_set_chip_id, NULL, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "GetChipID",
+            (int32_t)(intptr_t)retdec_map_get_chip_id, NULL, 0)))
+        goto cleanup;
+    ok = retdec_sqrat_set_pair(vm, (const int32_t *)(intptr_t)(root + 8), name, out);
+cleanup:
+    retdec_sqrat_release_pair(vm, get_table);
+    retdec_sqrat_release_pair(vm, set_table);
+    retdec_sqrat_trim_stack(vm, base);
+    return ok;
+}
+
+static int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
+                                                int32_t out[2]) {
+    static const struct retdec_native_view_property map_properties[] = {
+        { "layerType", 236, 0 }, { "maxChipWidth", 240, 0 },
+        { "maxChipHeight", 244, 0 }, { "mapChipLeft", 248, 0 },
+        { "mapChipRight", 256, 0 }, { "mapChipTop", 252, 0 },
+        { "mapChipBottom", 260, 0 }, { "alpha", 320, 1 },
+        { "scale", 324, 1 }, { "blend", 328, 0 }
+    };
+    static const struct retdec_native_view_property chip_properties[] = {
+        { "chipID", 0, 0 }, { "left", 4, 0 }, { "top", 8, 0 },
+        { "f_left", 12, 1 }, { "f_top", 16, 1 }, { "layoutID", 20, 0 },
+        { "visible", 24, 2 }, { "alpha", 28, 1 }
+    };
+    int32_t chip_class[2] = { g483, g484 };
+    int32_t ok = retdec_publish_map_view_class(vm, root, "ChipLayout",
+        chip_properties, sizeof(chip_properties) / sizeof(chip_properties[0]), 0, chip_class);
+    retdec_sqrat_release_pair(vm, chip_class);
+    return ok && retdec_publish_map_view_class(vm, root, "C2DMapLayout",
+        map_properties, sizeof(map_properties) / sizeof(map_properties[0]), 1, out);
+}
+
+static int32_t retdec_resource_get_chip_info(int32_t vm) {
+    int32_t resource = 0, id = 0;
+    int32_t root[5];
+    int32_t klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
+    struct retdec_mcd_chip *chip;
+    if (function_48c890(vm, 1, &resource, 0) < 0 || resource == 0 ||
+        function_48a7d0(vm, 2, &id) < 0)
+        return 0;
+    chip = retdec_mcd_find_chip(*(struct retdec_mcd_data **)(intptr_t)(resource + 64), (uint32_t)id);
+    if (chip == NULL || !retdec_sqrat_root_construct((int32_t)(intptr_t)root, vm)) {
+        function_48a460(vm);
+        return 1;
+    }
+    if (retdec_sqrat_get((int32_t)(intptr_t)root, "ChipInfo", klass) &&
+        retdec_create_unbound_instance(vm, klass, (int32_t)(intptr_t)chip->bytes, instance))
+        function_48ab90(vm, instance[0], instance[1]);
+    else
+        function_48a460(vm);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_release_pair(vm, instance);
+    retdec_sqrat_object_release((int32_t)(intptr_t)root);
+    return 1;
+}
+
+static int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[2]) {
+    static const struct retdec_native_view_property info_properties[] = {
+        { "chipID", 0, 0 }, { "textureID", 4, 0 },
+        { "left", 8, 3 }, { "top", 10, 3 }, { "width", 12, 3 }, { "height", 14, 3 },
+        { "flag0", 16, 0 }, { "flag1", 20, 0 }, { "visible", 32, 2 },
+        { "boundType", 34, 3 }, { "boundLeft", 36, 3 }, { "boundTop", 38, 3 },
+        { "boundWidth", 40, 3 }, { "boundHeight", 42, 3 }
+    };
+    static const struct retdec_native_view_property resource_properties[] = {
+        { "resourceID", 4, 0 }, { "stName", 8, 4 }
+    };
+    int32_t root[5], info[2] = { g483, g484 };
+    int32_t ok;
+    if (*(int32_t *)(intptr_t)resource != (int32_t)(intptr_t)&g313) {
+        out[0] = g1079;
+        out[1] = g1080;
+        function_48a400(vm, (int32_t)(intptr_t)out);
+        return out[0] == 0x08004000;
+    }
+    if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root, vm))
+        return 0;
+    if (retdec_sqrat_get((int32_t)(intptr_t)root, "CActResourceChip", out) && out[0] == 0x08004000) {
+        retdec_sqrat_object_release((int32_t)(intptr_t)root);
+        return 1;
+    }
+    retdec_sqrat_release_pair(vm, out);
+    ok = retdec_publish_map_view_class(vm, (int32_t)(intptr_t)root, "ChipInfo",
+        info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
+        retdec_publish_map_view_class(vm, (int32_t)(intptr_t)root, "CActResourceChip",
+            resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
+        retdec_sqrat_set_native_closure(vm, out, "GetChipInfo",
+            (int32_t)(intptr_t)retdec_resource_get_chip_info, NULL, 0);
+    retdec_sqrat_release_pair(vm, info);
+    retdec_sqrat_object_release((int32_t)(intptr_t)root);
+    return ok;
+}
+
 static int32_t retdec_publish_act_resource_values(
     int32_t vm, const int32_t resource_pair[2], int32_t resource)
 {
@@ -109569,6 +110021,8 @@ static int32_t retdec_publish_act_resource_values(
 
     if (vm == 0 || resource_pair == NULL || resource == 0)
         return 0;
+    if (*(int32_t *)(intptr_t)resource == (int32_t)(intptr_t)&g313)
+        return 1;
     st_name = retdec_std_string_data(resource + 8);
     texture_name = retdec_std_string_data(resource + 40);
     return retdec_sqrat_raw_set_int(
@@ -109605,7 +110059,7 @@ static int32_t retdec_publish_act_resource_pairs(
 {
     int32_t outer_pair[2] = { g483, g484 };
     int32_t script_resource_pair[2] = { g483, g484 };
-    int32_t resource_class_pair[2] = { g1079, g1080 };
+    int32_t resource_class_pair[2] = { g483, g484 };
     int32_t null_pair[2] = { 0x01000001, 0 };
 
     if (vm == 0 || layer_pair == NULL || script_pair == NULL)
@@ -109616,7 +110070,7 @@ static int32_t retdec_publish_act_resource_pairs(
                retdec_sqrat_raw_set_pair(
                    vm, script_pair, "resource", null_pair);
     }
-    if (g1079 != 0x08004000 || g1080 == 0)
+    if (!retdec_get_act_resource_class(vm, resource, resource_class_pair))
         return 0;
 
     /* 4467E0 -> 448FB0 uses sq_newslot on the outer layer object. */
@@ -109625,6 +110079,7 @@ static int32_t retdec_publish_act_resource_pairs(
             resource, outer_pair) ||
         !retdec_publish_act_resource_values(vm, outer_pair, resource)) {
         retdec_sqrat_release_pair(vm, outer_pair);
+        retdec_sqrat_release_pair(vm, resource_class_pair);
         return 0;
     }
     retdec_sqrat_release_pair(vm, outer_pair);
@@ -109638,9 +110093,11 @@ static int32_t retdec_publish_act_resource_pairs(
         !retdec_sqrat_raw_set_pair(
             vm, script_pair, "resource", script_resource_pair)) {
         retdec_sqrat_release_pair(vm, script_resource_pair);
+        retdec_sqrat_release_pair(vm, resource_class_pair);
         return 0;
     }
     retdec_sqrat_release_pair(vm, script_resource_pair);
+    retdec_sqrat_release_pair(vm, resource_class_pair);
     return 1;
 }
 
@@ -109727,19 +110184,21 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
             return 0;
         }
-        resource_class[0] = g1079;
-        resource_class[1] = g1080;
         for (int32_t slot = begin; slot != 0 && slot < end; slot += 4) {
             int32_t resource = *(int32_t *)(intptr_t)slot;
             int32_t value[2] = { g483, g484 };
             const char *name = retdec_std_string_data(resource + 8);
+            resource_class[0] = g483;
+            resource_class[1] = g484;
             if (name != NULL && *name != 0 &&
+                retdec_get_act_resource_class(vm, resource, resource_class) &&
                 retdec_create_bound_instance(vm, resources, name, resource_class,
                                                resource, value)) {
                 retdec_publish_act_resource_values(vm, value, resource);
                 retdec_trace_squirrel_name("act:resource-published", (int32_t)(intptr_t)name);
             }
             retdec_sqrat_release_pair(vm, value);
+            retdec_sqrat_release_pair(vm, resource_class);
         }
         retdec_sqrat_release_pair(vm, resources);
     }
@@ -109948,8 +110407,8 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                      ? *(int32_t *)(intptr_t)candidate : 0);
             }
             if (candidate != 0 &&
-                *(int32_t *)(intptr_t)candidate ==
-                    (int32_t)(intptr_t)&g299) {
+                (*(int32_t *)(intptr_t)candidate == (int32_t)(intptr_t)&g299 ||
+                 *(int32_t *)(intptr_t)candidate == (int32_t)(intptr_t)&g327)) {
                 layout = candidate;
                 have_layout = 1;
                 break;
@@ -109960,6 +110419,11 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             retdec_trace_i32("act:publish-layer-have-layout", have_layout);
             retdec_trace_i32("act:publish-layer-layout", layout);
         }
+        retdec_sqrat_release_pair(vm, layout_class_pair);
+        if (have_layout && *(int32_t *)(intptr_t)layout == (int32_t)(intptr_t)&g327)
+            retdec_publish_c2dmaplayout_class(vm, (int32_t)(intptr_t)root_object, layout_class_pair);
+        else
+            retdec_sqrat_get((int32_t)(intptr_t)root_object, "C2DLayout", layout_class_pair);
         if (have_layout && layout_class_pair[0] == 0x08004000 &&
             layout_class_pair[1] != 0 &&
             retdec_create_unbound_instance(vm, layout_class_pair, layout,
@@ -111936,9 +112400,13 @@ int32_t function_4522f0(int32_t self)
         for (int32_t i = (end - begin) / 4 - 1; i >= 0; --i) {
             int32_t key = function_452040(self, i);
             int32_t layout = key ? *(int32_t *)(intptr_t)(key + 4) : 0;
-            if (layout != 0 && *(int32_t *)(intptr_t)layout == (int32_t)(intptr_t)&g299 &&
-                retdec_c2dlayout_update_faithful_impl(layout) < 0)
-                result = (int32_t)E_FAIL;
+            if (layout != 0) {
+                int32_t *methods = *(int32_t **)(intptr_t)layout;
+                if (methods != NULL && methods[7] != 0 &&
+                    retdec_call_thiscall0_result((void *)(intptr_t)layout,
+                        (void *)(intptr_t)methods[7]) < 0)
+                    result = (int32_t)E_FAIL;
+            }
         }
         begin = *(int32_t *)(intptr_t)(self + 44);
         end = *(int32_t *)(intptr_t)(self + 48);
@@ -141854,28 +142322,20 @@ int32_t function_46a140(void) {
 
 // Address range: 0x46a1d0 - 0x46a20d
 int32_t function_46a1d0(void) {
-    int32_t * v1 = (int32_t *)g613; // 0x46a1d6
-    int32_t result = *v1; // 0x46a1d6
-    *v1 = g613;
-    int32_t v2 = g613; // 0x46a1da
-    *(int32_t *)(v2 + 4) = v2;
+    int32_t sentinel = g613;
+    int32_t node;
+    if (sentinel == 0)
+        return 0;
+    node = *(int32_t *)(intptr_t)sentinel;
+    *(int32_t *)(intptr_t)sentinel = sentinel;
+    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
     g614 = 0;
-    if (result == g613) {
-        // 0x46a20c
-        return result;
+    while (node != sentinel) {
+        int32_t next = *(int32_t *)(intptr_t)node;
+        _3f__3f_3_40_YAXPAX_40_Z((int32_t *)(intptr_t)node);
+        node = next;
     }
-    int32_t result2 = *(int32_t *)result; // 0x46a1f6
-    int32_t v3; // bp-4, 0x46a1d0
-    *(int32_t *)((int32_t)&v3 - 4) = result;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (result2 != g613) {
-        int32_t v4 = result2;
-        result2 = *(int32_t *)v4;
-        *(int32_t *)((int32_t)&v3 - 4) = v4;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x46a20c
-    return result2;
+    return sentinel;
 }
 
 // Address range: 0x46a210 - 0x46a254
@@ -197181,12 +197641,39 @@ static int32_t function_498320_this(int32_t table_ptr, int32_t key_ptr) {
 static int32_t function_493cd0_this(int32_t this_ptr, int32_t object_ptr,
                                      int32_t key_ptr, int32_t out_ptr) {
     int32_t previous_vm = retdec_active_vm;
-    int32_t result;
+    int32_t value[2] = { g483, g484 };
+    int32_t *object = (int32_t *)(intptr_t)object_ptr;
+    int32_t handled = 0;
+    int32_t result = 0;
 
-    if (this_ptr != 0)
-        retdec_active_vm = this_ptr;
-    result = function_493cd0(object_ptr, key_ptr,
-                             (int32_t *)(intptr_t)out_ptr);
+    if (this_ptr == 0 || object == NULL || key_ptr == 0 || out_ptr == 0)
+        return 0;
+    retdec_active_vm = this_ptr;
+    if (object[0] != 0x0A000020 && object[0] != 0x0A008000 && object[0] != 0x0A000080) {
+        function_499a20(this_ptr, "attempt to delete a slot from a %s", function_48e460(object_ptr));
+        goto cleanup;
+    }
+    if (*(int32_t *)(intptr_t)(object[1] + 24) != 0) {
+        function_491820_this(this_ptr, object_ptr);
+        function_491820_this(this_ptr, key_ptr);
+        handled = function_497850_this(this_ptr, object[1], 14, 2, (int32_t)(intptr_t)value);
+    }
+    if (!handled) {
+        if (object[0] != 0x0A000020) {
+            function_499a20(this_ptr, "cannot delete a slot from %s", function_48e460(object_ptr));
+            goto cleanup;
+        }
+        if (!function_497a00_this(object[1], (int32_t *)(intptr_t)key_ptr, (int32_t)(intptr_t)value)) {
+            function_499ca0(this_ptr, key_ptr);
+            goto cleanup;
+        }
+        function_498320_this(object[1], key_ptr);
+    }
+    /* SQVM::DeleteSlot returns an owned SQObjectPtr, including its data word. */
+    retdec_squirrel_assign((int32_t *)(intptr_t)out_ptr, value);
+    result = 1;
+cleanup:
+    retdec_release_squirrel_value(value);
     retdec_active_vm = previous_vm;
     return result;
 }
@@ -199388,10 +199875,10 @@ int32_t function_48a7d0(int32_t a1, int32_t a2, int32_t * a3) {
     int32_t v1; // 0x48a7d0
     if (a2 < 0) {
         // 0x48a7ec
-        v1 = function_491880(a2);
+        v1 = function_491880_this(a1, a2);
     } else {
         // 0x48a7dd
-        v1 = function_4918a0(a2 - 1 + *(int32_t *)(a1 + 52));
+        v1 = function_4918a0_this(a1, a2 - 1 + *(int32_t *)(a1 + 52));
     }
     int32_t v2 = *(int32_t *)v1; // 0x48a7f2
     if ((v2 & 0x4000000) == 0) {
@@ -199404,7 +199891,7 @@ int32_t function_48a7d0(int32_t a1, int32_t a2, int32_t * a3) {
         return 0;
     }
     // 0x48a804
-    *a3 = function_4ab9d0();
+    *a3 = (int32_t)*(float32_t *)(intptr_t)(v1 + 4);
     return 0;
 }
 
@@ -211805,6 +212292,8 @@ int32_t function_493a40(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 
 // Address range: 0x493cd0 - 0x493e65
 int32_t function_493cd0(int32_t a1, int32_t a2, int32_t * a3) {
+    return function_493cd0_this(retdec_stack_vm(), a1, a2, (int32_t)(intptr_t)a3);
+#if 0
     int32_t v1 = __readfsdword(0); // bp-16, 0x493ce0
     int32_t v2; // bp-4, 0x493cd0
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-40, 0x493cee
@@ -211933,6 +212422,7 @@ int32_t function_493cd0(int32_t a1, int32_t a2, int32_t * a3) {
     // 0x493e2e
     abort();
     // UNREACHABLE
+#endif
 }
 
 static int32_t retdec_squirrel_to_string_value(
@@ -242247,8 +242737,7 @@ int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 // Address range: 0x4ab2a6 - 0x4ab2b1
 // Demangled:     void __cdecl operator delete(void *)
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
-    // 0x4ab2a6
-    _free(&g1224);
+    _free(a1);
 }
 
 // Address range: 0x4ab302 - 0x4ab306

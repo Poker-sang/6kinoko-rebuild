@@ -85,58 +85,51 @@ if(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
         RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
 endif()
 
+if(NOT EXISTS "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp")
+    message(FATAL_ERROR
+        "ACT source compilation requires Squirrel 2.2.2 at "
+        "${KINOKO_SQUIRREL2_ROOT}")
+endif()
+
+# Inline ACT source is compiled in a separate VM; bytecode runs in the rebuild.
+add_library(kinoko_squirrel_cpp_vm STATIC
+    src/squirrel/squirrel_vm_bridge.cpp
+    src/squirrel/squirrel_compile_bridge.cpp
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqcompiler.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqdebug.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqfuncstate.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqlexer.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqmem.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqobject.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqstate.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
+)
+target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
+    "${KINOKO_SQUIRREL2_ROOT}/include"
+    "${KINOKO_SQUIRREL2_ROOT}/squirrel"
+    include
+)
+target_compile_definitions(kinoko_squirrel_cpp_vm PRIVATE
+    WIN32_LEAN_AND_MEAN NOMINMAX _CRT_SECURE_NO_WARNINGS
+)
+if(MSVC)
+    target_compile_options(kinoko_squirrel_cpp_vm PRIVATE
+        /permissive /Gy /wd4100 /wd4244 /wd4267 /wd4706
+    )
+endif()
 if(KINOKO_ENABLE_SQUIRREL_CPP_VM)
-    if(NOT EXISTS "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp")
-        message(FATAL_ERROR
-            "KINOKO_ENABLE_SQUIRREL_CPP_VM requires Squirrel 2.2.2 at "
-            "${KINOKO_SQUIRREL2_ROOT}")
-    endif()
-
-    add_library(kinoko_squirrel_cpp_vm STATIC
-        src/squirrel/squirrel_vm_bridge.cpp
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqcompiler.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqdebug.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqfuncstate.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqlexer.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqmem.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqobject.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqstate.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
-    )
-    target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
-        "${KINOKO_SQUIRREL2_ROOT}/include"
-        "${KINOKO_SQUIRREL2_ROOT}/squirrel"
-        include
-    )
-    target_compile_definitions(kinoko_squirrel_cpp_vm PRIVATE
-        WIN32_LEAN_AND_MEAN
-        NOMINMAX
-        _CRT_SECURE_NO_WARNINGS
-    )
-    if(MSVC)
-        target_compile_options(kinoko_squirrel_cpp_vm PRIVATE
-            /permissive
-            /Gy
-            /wd4100
-            /wd4244
-            /wd4267
-            /wd4706
-        )
-    endif()
-
     target_compile_definitions(kinoko_retdec_rebuild PRIVATE
         KINOKO_ENABLE_SQUIRREL_CPP_VM=1
     )
-    target_link_libraries(kinoko_retdec_rebuild PRIVATE
-        kinoko_squirrel_cpp_vm
-    )
 endif()
+target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
 target_compile_options(kinoko_retdec_rebuild PRIVATE /TC /Gy /wd4100 /wd4244 /wd4267 /wd4706)
-target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF)
+# Match the original PE subsystem version and its non-client frame metrics.
+target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF /SUBSYSTEM:WINDOWS,5.01)
 if(KINOKO_RETDEC_MAP_FILE)
     target_link_options(kinoko_retdec_rebuild PRIVATE "/MAP:${KINOKO_RETDEC_MAP_FILE}")
 endif()

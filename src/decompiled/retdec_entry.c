@@ -231,7 +231,7 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     ULONG_PTR previous_frame;
     ULONG_PTR return_address;
     ULONG_PTR stack_words[4];
-    ULONG_PTR frame_returns[8];
+    ULONG_PTR frame_returns[32];
     ULONG_PTR frame_cursor;
     ULONG frame_count;
     ULONG frame_index;
@@ -258,7 +258,7 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
     stack_words[1] = 0;
     stack_words[2] = 0;
     stack_words[3] = 0;
-    for (frame_index = 0; frame_index < 8; ++frame_index) {
+    for (frame_index = 0; frame_index < 32; ++frame_index) {
         frame_returns[frame_index] = 0;
     }
     frame_count = 0;
@@ -279,7 +279,7 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
             stack_words[2] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 8);
             stack_words[3] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 12);
             frame_cursor = context->Ebp;
-            for (frame_index = 0; frame_index < 8 && frame_cursor != 0;
+            for (frame_index = 0; frame_index < 32 && frame_cursor != 0;
                  ++frame_index) {
                 ULONG_PTR next_frame = *(ULONG_PTR *)(uintptr_t)frame_cursor;
                 ULONG_PTR frame_return =
@@ -330,7 +330,7 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
               context != NULL ? (unsigned long)context->Edi : 0);
     retdec_trace(message);
     for (frame_index = 0; frame_index < frame_count; ++frame_index) {
-        wsprintfA(message, "veh-frame:%lu=0x%08lX",
+        wsprintfA(message, "veh:frame:%lu=0x%08lX",
                   (unsigned long)frame_index,
                   (unsigned long)frame_returns[frame_index]);
         retdec_trace(message);
