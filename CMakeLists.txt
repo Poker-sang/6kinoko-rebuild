@@ -185,9 +185,25 @@ add_test(
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
 )
 
+add_executable(kinoko_stage_contract
+    tests/stage_contract.c
+    src/decompiled/retdec_runtime_compat.c
+    src/decompiled/retdec_asm_stubs.c
+)
+target_include_directories(kinoko_stage_contract PRIVATE
+    $<TARGET_PROPERTY:kinoko_retdec_rebuild,INCLUDE_DIRECTORIES>)
+target_compile_definitions(kinoko_stage_contract PRIVATE
+    RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
+target_compile_options(kinoko_stage_contract PRIVATE
+    $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_OPTIONS>)
+target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF)
+target_link_libraries(kinoko_stage_contract PRIVATE
+    $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
+add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
-    kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump
+    kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
 )
 
 foreach(config Debug Release RelWithDebInfo MinSizeRel)
