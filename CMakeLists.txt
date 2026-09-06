@@ -21,19 +21,13 @@ add_library(kinoko_core STATIC
 )
 target_include_directories(kinoko_core PUBLIC include)
 
-add_executable(kinoko_rebuild WIN32
-    src/reconstructed/win_main.cpp
-    src/reconstructed/gdi_renderer.cpp
-)
-target_include_directories(kinoko_rebuild PRIVATE include)
-target_link_libraries(kinoko_rebuild PRIVATE kinoko_core user32 gdi32)
-
 add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
     src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
     src/decompiled/retdec_entry.c
 )
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT kinoko_retdec_rebuild)
 target_include_directories(kinoko_retdec_rebuild PRIVATE
     src/decompiled
     include
@@ -157,20 +151,6 @@ add_executable(kinoko_asset_probe
 target_include_directories(kinoko_asset_probe PRIVATE include)
 target_link_libraries(kinoko_asset_probe PRIVATE kinoko_core)
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/work/extract_asset.cpp")
-    add_executable(kinoko_asset_extract
-        work/extract_asset.cpp
-    )
-    target_include_directories(kinoko_asset_extract PRIVATE include)
-    target_link_libraries(kinoko_asset_extract PRIVATE kinoko_core)
-endif()
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/work/decode_cv4.cpp")
-    add_executable(kinoko_cv4_decode
-        work/decode_cv4.cpp
-    )
-endif()
-
 add_executable(kinoko_dump_inspect
     tools/inspect_minidump.cpp
 )
@@ -180,20 +160,6 @@ add_executable(kinoko_process_dump
     tools/capture_process_dump.cpp
 )
 target_link_libraries(kinoko_process_dump PRIVATE dbghelp)
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/work/break_original_titleenv.cpp")
-    add_executable(break_original_titleenv
-        work/break_original_titleenv.cpp
-    )
-    target_link_libraries(break_original_titleenv PRIVATE user32)
-endif()
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/work/break_original_cact.cpp")
-    add_executable(break_original_cact
-        work/break_original_cact.cpp
-    )
-    target_link_libraries(break_original_cact PRIVATE user32)
-endif()
 
 add_executable(kinoko_archive_smoke
     tests/archive_smoke.cpp
@@ -210,23 +176,22 @@ add_test(
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
 )
 
-set(KINOKO_RUNTIME_TARGETS
-    kinoko_rebuild kinoko_archive_inspect kinoko_archive_smoke
+set(KINOKO_TOOL_TARGETS
+    kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump
-    kinoko_retdec_rebuild
 )
-foreach(optional_target kinoko_asset_extract kinoko_cv4_decode
-                         break_original_titleenv break_original_cact)
-    if(TARGET ${optional_target})
-        list(APPEND KINOKO_RUNTIME_TARGETS ${optional_target})
-    endif()
-endforeach()
 
 foreach(config Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${config}" config_upper)
     set_target_properties(
-        ${KINOKO_RUNTIME_TARGETS}
+        kinoko_retdec_rebuild
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}"
+    )
+    set_target_properties(
+        ${KINOKO_TOOL_TARGETS}
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}/tools"
+        PDB_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}/tools"
     )
 endforeach()
