@@ -184,6 +184,8 @@ static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_act_bind_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
+static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
+                                          uint32_t stride);
 static int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr);
 static int32_t retdec_squirrel_pair_from_stack(int32_t vm, int32_t index,
@@ -14398,39 +14400,10 @@ int32_t function_4044d0(void) {
 
 // Address range: 0x4045c0 - 0x40460b
 int32_t function_4045c0(int32_t a1, int32_t a2) {
-    // 0x4045c0
-    int3_t v1; // 0x4045c0
-    int3_t v2 = v1 - 1; // 0x4045c6
-    __frontend_reg_store_fpr(v2, (float80_t)*(float32_t *)a1);
-    int3_t v3 = v1 - 2; // 0x4045cb
-    __frontend_reg_store_fpr(v3, (float80_t)*(float32_t *)(a2 + 8));
-    __frontend_reg_load_fpr(v3);
-    __frontend_reg_load_fpr(v2);
-    int32_t v4; // 0x4045c0
-    int32_t v5 = v4 & 0xffff | v4 & -0x10000; // 0x4045d0
-    if ((llvm_ctpop_i8((char)(v4 / 256) & 5) & 1) != 0) {
-        // 0x4045d7
-        return v5 & -256;
-    }
-    // 0x4045ea
-    __frontend_reg_store_fpr(v2, (float80_t)*(float32_t *)(a1 + 4));
-    __frontend_reg_store_fpr(v3, (float80_t)*(float32_t *)(a2 + 12));
-    __frontend_reg_load_fpr(v3);
-    __frontend_reg_load_fpr(v2);
-    __frontend_reg_store_fpr(v2, (float80_t)*(float32_t *)(a1 + 8));
-    __frontend_reg_store_fpr(v3, (float80_t)*(float32_t *)a2);
-    __frontend_reg_load_fpr(v3);
-    __frontend_reg_load_fpr(v2);
-    if ((v4 & 0x4100) == 0) {
-        // 0x4045d7
-        return v5 & -256;
-    }
-    // 0x404607
-    __frontend_reg_store_fpr(v2, (float80_t)*(float32_t *)(a1 + 12));
-    __frontend_reg_store_fpr(v3, (float80_t)*(float32_t *)(a2 + 4));
-    __frontend_reg_load_fpr(v3);
-    __frontend_reg_load_fpr(v2);
-    return v5 & -256 | 1;
+    const float *first = (const float *)(intptr_t)a1;
+    const float *second = (const float *)(intptr_t)a2;
+    return second[2] >= first[0] && second[3] >= first[1] &&
+           second[0] <= first[2] && second[1] <= first[3];
 }
 
 // Address range: 0x404610 - 0x404636
@@ -126323,13 +126296,25 @@ int32_t function_45db90(int32_t a1) {
 }
 
 // Address range: 0x45dbc0 - 0x45dbcf
-int32_t function_45dbc0(void) {
-    // 0x45dbc0
-    int32_t v1; // 0x45dbc0
-    *(char *)(v1 + 22) = 1;
-    *(char *)(*(int32_t *)(v1 + 148) + 120) = 1;
-    return v1 & -256 | 1;
+static int32_t function_45dbc0_this(int32_t actor) {
+    *(unsigned char *)(intptr_t)(actor + 22) = 1;
+    *(unsigned char *)(intptr_t)(
+        *(int32_t *)(intptr_t)(actor + 148) + 120) = 1;
+    return 1;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45dbc0(void) {
+    __asm {
+        push ecx
+        call function_45dbc0_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_45dbc0(void) { return 0; }
+#endif
 
 // Address range: 0x45dbd0 - 0x45de6d
 int32_t function_45dbd0(float32_t a1, float32_t a2) {
@@ -131125,34 +131110,38 @@ static void retdec_actor_collect_tree(int32_t manager, int32_t node,
                                       int32_t sentinel, int32_t *actors,
                                       int32_t capacity, int32_t *count)
 {
-    int32_t actor;
-    int32_t left;
-    int32_t right;
-
     if (manager == 0 || node == 0 || node == sentinel ||
         actors == NULL || count == NULL)
         return;
-    left = *(int32_t *)(intptr_t)(node + 0);
-    right = *(int32_t *)(intptr_t)(node + 8);
-    retdec_actor_collect_tree(
-        manager, left, sentinel, actors, capacity, count);
-    actor = *(int32_t *)(intptr_t)(node + 12);
-    if (actor != 0 && *(unsigned char *)(intptr_t)(actor + 22) == 0) {
-        if (*count < capacity)
-            actors[(*count)++] = actor;
-    } else {
-        int32_t removed_node = 0;
-
-        /* 463D40 erases actors marked for destruction from the priority
-           tree while it rebuilds the update vector. */
-        function_463280_this(manager + 84,
-                             (int32_t)(intptr_t)&removed_node, node);
-        if (actor != 0 &&
-            *(int32_t *)(intptr_t)(actor + 16) == node)
-            *(int32_t *)(intptr_t)(actor + 16) = 0;
+    while (*(int32_t *)(intptr_t)node != sentinel)
+        node = *(int32_t *)(intptr_t)node;
+    while (node != sentinel) {
+        int32_t actor = *(int32_t *)(intptr_t)(node + 12);
+        int32_t next = *(int32_t *)(intptr_t)(node + 8);
+        if (next != sentinel) {
+            while (*(int32_t *)(intptr_t)next != sentinel)
+                next = *(int32_t *)(intptr_t)next;
+        } else {
+            int32_t child = node;
+            next = *(int32_t *)(intptr_t)(child + 4);
+            while (next != sentinel &&
+                   child == *(int32_t *)(intptr_t)(next + 8)) {
+                child = next;
+                next = *(int32_t *)(intptr_t)(next + 4);
+            }
+        }
+        if (*(unsigned char *)(intptr_t)(actor + 22) == 0) {
+            if (*count < capacity)
+                actors[(*count)++] = actor;
+        } else {
+            int32_t removed = 0;
+            uint32_t handle = *(uint32_t *)(intptr_t)(actor + 12);
+            /* 463DC2..463DD5 erases the tree node and releases its pooled actor. */
+            function_463280_this(manager + 84, (int32_t)(intptr_t)&removed, node);
+            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4), handle);
+        }
+        node = next;
     }
-    retdec_actor_collect_tree(
-        manager, right, sentinel, actors, capacity, count);
 }
 
 static int32_t retdec_actor_manager_refresh(int32_t manager)
@@ -131186,17 +131175,21 @@ static int32_t retdec_actor_manager_refresh(int32_t manager)
         *(unsigned char *)(intptr_t)(manager + 120) = 0;
         return 0;
     }
-    capacity = count;
-    actors = (int32_t *)realloc(
-        (void *)(intptr_t)*(int32_t *)(intptr_t)(manager + 100),
-        (size_t)capacity * sizeof(*actors));
-    if (actors == NULL)
-        return 0;
-    *(int32_t *)(intptr_t)(manager + 100) = (int32_t)(intptr_t)actors;
-    *(int32_t *)(intptr_t)(manager + 104) =
-        (int32_t)(intptr_t)(actors + capacity);
-    *(int32_t *)(intptr_t)(manager + 108) =
-        (int32_t)(intptr_t)(actors + capacity);
+    /* 463D77/463D85 grow the update and collision-candidate vectors together. */
+    for (int32_t offset = 100; offset <= 124; offset += 24) {
+        int32_t begin = *(int32_t *)(intptr_t)(manager + offset);
+        int32_t end = *(int32_t *)(intptr_t)(manager + offset + 4);
+        if (begin == 0 || (end - begin) / 4 < count) {
+            if (count > INT32_MAX / 8 ||
+                !retdec_collision_reserve(manager + offset, (uint32_t)count * 2, 4))
+                return 0;
+            begin = *(int32_t *)(intptr_t)(manager + offset);
+            *(int32_t *)(intptr_t)(manager + offset + 4) = begin + count * 8;
+        }
+    }
+    actors = *(int32_t **)(intptr_t)(manager + 100);
+    capacity = (*(int32_t *)(intptr_t)(manager + 104) -
+                *(int32_t *)(intptr_t)(manager + 100)) / 4;
     active_count = 0;
     retdec_actor_collect_tree(
         manager, *(int32_t *)(intptr_t)(sentinel + 4), sentinel,
@@ -131374,6 +131367,10 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
         retdec_trace_actor_window_state(2, actor, update_mask);
     }
 
+    /* 464285 refreshes after callbacks, which can create or release actors. */
+    retdec_actor_manager_refresh(manager);
+    actors = *(int32_t *)(intptr_t)(manager + 100);
+    count = *(int32_t *)(intptr_t)(manager + 116);
     function_469740();
     for (index = 0; actors != 0 && index < count; ++index) {
         int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
@@ -132056,61 +132053,42 @@ int32_t function_462bf0(int32_t a1, int32_t a2, int32_t result) {
 }
 
 // Address range: 0x462ce0 - 0x462e3e
-int32_t function_462ce0(int32_t a1, int32_t a2) {
-    // 0x462ce0
-    int32_t v1; // 0x462ce0
-    char * v2 = (char *)v1; // bp-4, 0x462ce0
-    int32_t v3 = __readfsdword(0); // bp-16, 0x462cf0
-    int32_t v4 = g507 ^ (int32_t)&v2; // bp-96, 0x462cfe
-    __writefsdword(0, (int32_t)&v3);
-    int32_t * v5 = (int32_t *)(a1 + 320); // 0x462d11
-    int32_t * v6 = (int32_t *)(a1 + 324); // 0x462d17
-    int32_t * v7 = (int32_t *)(a2 + 324); // 0x462d1d
-    int32_t * v8 = (int32_t *)(a2 + 320); // 0x462d23
-    if ((*v8 & *v6 | *v7 & *v5) == 0) {
-        // 0x462e2a
-        __writefsdword(0, v3);
+static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
+    int32_t argument[3];
+    int32_t vm = *(int32_t *)(intptr_t)(actor + 120);
+    int32_t base = function_48aa20(vm);
+    int32_t result;
+    function_4a9500_this(argument, other + 44);
+    result = function_45e020_this(actor + 120, (int32_t)(intptr_t)argument,
+                                  argument[1], argument[2]);
+    if (result < 0) {
+        retdec_trace("actor:collision-callback-failed");
+        function_48c910(vm, base);
+        /* Original 462D9C/462E3E clears a failing callback before continuing. */
+        function_45fd80_this(actor, (int32_t)(intptr_t)&g16, g483, g484);
+    }
+    return result;
+}
+
+int32_t function_462ce0(int32_t first, int32_t second) {
+    int32_t result = 0;
+    if ((*(int32_t *)(intptr_t)(second + 320) &
+         *(int32_t *)(intptr_t)(first + 324) |
+         *(int32_t *)(intptr_t)(second + 324) &
+         *(int32_t *)(intptr_t)(first + 320)) == 0 ||
+        !function_4045c0(first + 440, second + 440))
         return 0;
-    }
-    int32_t result = function_4045c0(a1 + 440, a2 + 440); // 0x462d3f
-    if ((char)result == 0) {
-        // 0x462e2a
-        __writefsdword(0, v3);
-        return result;
-    }
-    int32_t v9 = &v4; // 0x462cfe
-    int32_t v10 = v9; // 0x462d5b
-    int32_t result2 = result; // 0x462d5b
-    if ((*v8 & *v6) != 0) {
-        int32_t v11 = function_4a9a30(); // 0x462d67
-        v10 = v9;
-        result2 = v11;
-        if (v11 == 0x8000100) {
-            int32_t v12 = a2 + 44; // 0x462d76
-            int32_t v13 = v12; // bp-112, 0x462d7e
-            function_404040(v12);
-            int32_t v14 = function_45e020((char)&g1224, (int32_t)&g1224); // 0x462d8e
-            v10 = &v13;
-            result2 = v14;
-        }
-    }
-    // 0x462dea
-    if ((*v7 & *v5) == 0) {
-        // 0x462e2a
-        __writefsdword(0, v3);
-        return result2;
-    }
-    int32_t v15 = function_4a9a30(); // 0x462dfe
-    int32_t result3 = v15; // 0x462e08
-    if (v15 == 0x8000100) {
-        // 0x462e0a
-        *(int32_t *)(v10 - 16) = a1 + 44;
-        function_404040(3);
-        result3 = function_45e020((char)&g1224, (int32_t)&g1224);
-    }
-    // 0x462e2a
-    __writefsdword(0, v3);
-    return result3;
+
+    if ((*(int32_t *)(intptr_t)(first + 324) &
+         *(int32_t *)(intptr_t)(second + 320)) != 0 &&
+        function_4a9a30_this(first + 136) == 0x08000100)
+        result = retdec_actor_collision_callback(first, second);
+    /* The first callback may change masks; original 462DEA reads them again. */
+    if ((*(int32_t *)(intptr_t)(first + 320) &
+         *(int32_t *)(intptr_t)(second + 324)) != 0 &&
+        function_4a9a30_this(second + 136) == 0x08000100)
+        result = retdec_actor_collision_callback(second, first);
+    return result;
 }
 
 // Address range: 0x462e3e - 0x462e7f
@@ -132128,111 +132106,22 @@ int32_t function_462e3e(void) {
 }
 
 // Address range: 0x462e80 - 0x462f21
-int32_t function_462e80(int32_t this_ptr) {
-    // 0x462e80
-    int32_t v1 = this_ptr;
-    int32_t * v2 = (int32_t *)(v1 + 116); // 0x462e86
-    if (*v2 == 0) {
-        // 0x462f1d
-        int32_t result; // 0x462e80
-        return result;
+int32_t function_462e80(int32_t manager) {
+    int32_t count = *(int32_t *)(intptr_t)(manager + 116);
+    int32_t *actors = *(int32_t **)(intptr_t)(manager + 100);
+    int32_t *candidates = *(int32_t **)(intptr_t)(manager + 124);
+    int32_t candidate_count = 0;
+    for (int32_t index = 0; index < count; ++index) {
+        int32_t actor = actors[index];
+        if (*(unsigned char *)(intptr_t)(actor + 40) != 0 &&
+            (*(int32_t *)(intptr_t)(actor + 320) |
+             *(int32_t *)(intptr_t)(actor + 324)) != 0)
+            candidates[candidate_count++] = actor;
     }
-    int32_t * v3 = (int32_t *)(v1 + 124); // 0x462e94
-    int32_t v4 = 0;
-    int32_t i;
-    for (i = 0; i < *v2; i++) {
-        int32_t v5 = v4;
-        int32_t v6 = *(int32_t *)(4 * i + *(int32_t *)(v1 + 100)); // 0x462eb3
-        int32_t v7 = v5; // 0x462eba
-        if (*(char *)(v6 + 40) != 0) {
-            // 0x462ebc
-            v7 = v5;
-            if ((*(int32_t *)(v6 + 320) | *(int32_t *)(v6 + 324)) != 0) {
-                // 0x462ecc
-                *(int32_t *)(4 * v5 + *v3) = v6;
-                v7 = v5 + 1;
-            }
-        }
-        // 0x462ed3
-        v4 = v7;
-    }
-    int32_t v8 = *v3; // 0x462ed9
-    if (v4 == 0) {
-        // 0x462f1d
-        return i;
-    }
-    int32_t v9 = v4; // 0x462f12
-    int32_t v10; // bp-32, 0x462e80
-    int32_t v11 = &v10;
-    int32_t v12 = 1;
-    int32_t v13 = i; // 0x462ef2
-    int32_t v14 = v11; // 0x462ef2
-    int32_t v15; // 0x462efd
-    int32_t v16; // 0x462efe
-    int32_t v17; // 0x462f06
-    if (v12 < v4) {
-        // 0x462ef4
-        v15 = v11;
-        v17 = v12;
-        *(int32_t *)(v15 - 4) = *(int32_t *)(4 * v17 + v8);
-        v15 -= 8;
-        *(int32_t *)v15 = *(int32_t *)v8;
-        v16 = function_462ce0((int32_t)&g1224, (int32_t)&g1224);
-        v17++;
-        v13 = v16;
-        v14 = v15;
-        while (v17 < v4) {
-            // 0x462ef4
-            *(int32_t *)(v15 - 4) = *(int32_t *)(4 * v17 + v8);
-            v15 -= 8;
-            *(int32_t *)v15 = *(int32_t *)v8;
-            v16 = function_462ce0((int32_t)&g1224, (int32_t)&g1224);
-            v17++;
-            v13 = v16;
-            v14 = v15;
-        }
-    }
-    int32_t result2 = v13;
-    v9--;
-    int32_t v18 = v12 + 1; // 0x462f18
-    int32_t v19 = v8 + 4; // 0x462f18
-    while (v9 != 0) {
-        // 0x462ef0
-        v11 = v14;
-        int32_t v20 = v19;
-        v12 = v18;
-        v13 = result2;
-        v14 = v11;
-        if (v12 < v4) {
-            // 0x462ef4
-            v15 = v11;
-            v17 = v12;
-            *(int32_t *)(v15 - 4) = *(int32_t *)(4 * v17 + v8);
-            v15 -= 8;
-            *(int32_t *)v15 = *(int32_t *)v20;
-            v16 = function_462ce0((int32_t)&g1224, (int32_t)&g1224);
-            v17++;
-            v13 = v16;
-            v14 = v15;
-            while (v17 < v4) {
-                // 0x462ef4
-                *(int32_t *)(v15 - 4) = *(int32_t *)(4 * v17 + v8);
-                v15 -= 8;
-                *(int32_t *)v15 = *(int32_t *)v20;
-                v16 = function_462ce0((int32_t)&g1224, (int32_t)&g1224);
-                v17++;
-                v13 = v16;
-                v14 = v15;
-            }
-        }
-        // 0x462f0e
-        result2 = v13;
-        v9--;
-        v18 = v12 + 1;
-        v19 = v20 + 4;
-    }
-    // 0x462f1d
-    return result2;
+    for (int32_t first = 0; first < candidate_count; ++first)
+        for (int32_t second = first + 1; second < candidate_count; ++second)
+            function_462ce0(candidates[first], candidates[second]);
+    return candidate_count;
 }
 
 // Address range: 0x462f30 - 0x462f76

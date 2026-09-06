@@ -11,7 +11,8 @@ separate console regression tests.
 - [x] Reproduce missing cleanup in the console contract test.
 - [x] Restore cleanup and recycled-handle lifetime.
 - [x] Build/test both configurations, stage DATs; included in this backup commit.
-- [ ] User verifies world-map entry and subsequent stage behavior.
+- [x] User confirms the world-map crash is resolved.
+- [ ] Subsequent stage-entry crash: tracked in ../stage-collision-update-20260907/report.md.
 
 E-imports/scope: carry forward ../stage-entities-20260907/report.md.
 IDA skill start.ps1/open.ps1 opened original session 73953b36 and rebuilt

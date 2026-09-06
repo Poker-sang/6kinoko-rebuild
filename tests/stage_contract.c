@@ -268,6 +268,69 @@ int main(int argc, char **argv) {
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         CHECK(VirtualFree(retired_layout, 0, MEM_RELEASE));
     }
-    puts("PASS: stage creation and retired-map collision lifecycle");
+    CHECK(execute_source(vm, root + 2,
+        "probe <- [];\nhits <- [];\n"
+        "function Contact(other) { ::hits.append(user * 10 + other.user); }\n"
+        "function InitContact(id) { user = id; callbackGroup = 1; callbackMask = 1; "
+        "SetCollisionCallbackFunction(::Contact); ::probe.append(this); }\n"));
+    function_4aa3a0_this(PTR(root + 1), PTR(closure), "InitContact");
+    {
+        int32_t pair_actors[3];
+        for (int i = 0; i < 3; ++i) {
+            pair_actors[i] = function_463b40_this(manager,
+                closure[0], closure[1], closure[2], 0, 0, -1,
+                PTR(&g16), 0x05000002, i + 1, 0);
+            CHECK(pair_actors[i] != 0);
+            for (int j = 0; j < 4; ++j)
+                *(float *)(intptr_t)(pair_actors[i] + 440 + j * 4) =
+                    (float)(10 * i + (j >= 2 ? 10 : 0));
+        }
+        CHECK(retdec_actor_manager_refresh(manager) == 3);
+        CHECK(*(int32_t *)(intptr_t)(manager + 124) != 0);
+        CHECK(*(int32_t *)(intptr_t)(manager + 128) -
+              *(int32_t *)(intptr_t)(manager + 124) >= 3 * 4);
+        function_462e80(manager);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len() != 4 || hits[0] != 12 || hits[1] != 21 || "
+            "hits[2] != 23 || hits[3] != 32) throw \"collision pair order\";"));
+        CHECK(function_48aa20(vm) == top);
+        CHECK(execute_source(vm, root + 2,
+            "hits.clear();\nprobe[0].callbackMask = 0;\n"));
+        function_462e80(manager);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len() != 3 || hits[0] != 21 || hits[1] != 23 || hits[2] != 32) "
+            "throw \"directional masks\";\nhits.clear();\n"));
+        *(unsigned char *)(intptr_t)(pair_actors[1] + 40) = 0;
+        function_462e80(manager);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len() != 0) throw \"inactive/disjoint pair\";"));
+        *(unsigned char *)(intptr_t)(pair_actors[1] + 40) = 1;
+        CHECK(execute_source(vm, root + 2,
+            "probe[0].callbackMask = 1;\n"
+            "probe[0].SetCollisionCallbackFunction(function(other) { "
+            "::hits.append(user * 10 + other.user); callbackGroup = 0; });\n"));
+        function_462e80(manager);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len() != 3 || hits[0] != 12 || hits[1] != 23 || hits[2] != 32) "
+            "throw \"callback mask mutation\";\n"
+            "foreach (actor in probe) { actor.callbackGroup = 0; actor.callbackMask = 0; }\n"
+            "child <- null;\nchildSteps <- 0;\n"
+            "function InitChild(id) { vx = 5; ::child = this; "
+            "SetUpdateFunction(function() { ::childSteps++; }); }\n"
+            "probe[0].SetUpdateFunction(function() { "
+            "::CreateActor(::InitChild, 100.0, 0.0, -1.0, 4); "
+            "::probe[1].Release(); SetUpdateFunction(null); });\n"));
+        target = PTR(function_469b40);
+        CHECK(function_415550_this(PTR(root), PTR("CreateActor"),
+            PTR(&target), 4, PTR(function_471df0), 0) >= 0);
+        *(int32_t *)(intptr_t)(manager + 64) = -1;
+        CHECK(retdec_actor_manager_update(manager, PTR(g_retdec_camera_state)) == 3);
+        CHECK(execute_source(vm, root + 2,
+            "if (child.x != 105.0 || childSteps != 0) throw \"post-step refresh\";"));
+        CHECK(*(int32_t *)(intptr_t)(pair_actors[1] + 28) == 0);
+        CHECK(function_48aa20(vm) == top);
+    }
+    function_4a9d70_this(PTR(closure));
+    puts("PASS: stage creation, collision lifecycle and pair dispatch");
     return 0;
 }
