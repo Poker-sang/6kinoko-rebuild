@@ -8102,6 +8102,7 @@ typedef struct retdec_bgm_track_state {
     uint32_t handle;
     DWORD loop_start_frame;
     DWORD loop_end_frame;
+    DWORD source_frame;
     DWORD write_offset;
     DWORD write_window_start;
     DWORD play_offset;
@@ -22901,14 +22902,14 @@ static int retdec_bgm_read_loop_points(const char *path,
             chunk_size <= size - index - 8 &&
             retdec_bgm_read_u32(chunk + 8) != 0) {
             const unsigned char *cue_point = chunk + 12;
-            start = retdec_bgm_read_u32(cue_point + 20);
+            start = retdec_bgm_read_u32(cue_point + 4);
         }
         if (memcmp(chunk, "ltxt", 4) == 0 && chunk_size >= 8 &&
             chunk_size <= size - index - 8)
             length = retdec_bgm_read_u32(chunk + 12);
     }
     free(data);
-    if (length == 0 || start > UINT32_MAX - length)
+    if (start == 0 || length == 0 || start > UINT32_MAX - length)
         return 0;
     *loop_start = start;
     *loop_end = start + length;
@@ -23200,32 +23201,36 @@ static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
                                          short *output,
                                          DWORD requested_frames)
 {
-    int sample_offset_result;
-    DWORD sample_offset;
-    DWORD request_frames = requested_frames;
+    DWORD request_frames;
+    DWORD seek_frame;
+    int got;
 
     if (track == NULL || track->decoder == NULL || output == NULL ||
         requested_frames == 0)
         return 0;
 
-    sample_offset_result = stb_vorbis_get_sample_offset(track->decoder);
-    sample_offset = sample_offset_result < 0
-        ? 0 : (DWORD)sample_offset_result;
-    if (sample_offset >= track->loop_end_frame) {
-        if (!stb_vorbis_seek_frame(track->decoder, track->loop_start_frame)) {
-            track->source_ended = 1;
-            return 0;
-        }
-        sample_offset = track->loop_start_frame;
-    }
-    if (sample_offset >= track->loop_start_frame &&
-        request_frames > track->loop_end_frame - sample_offset)
-        request_frames = track->loop_end_frame - sample_offset;
-    if (request_frames == 0)
-        return 0;
-    return stb_vorbis_get_samples_short_interleaved(
+    /* 412240 reads at most 4096 PCM bytes, then seeks past the loop start
+       by any overshoot.  Track delivered samples, not decoder read-ahead. */
+    request_frames = 4096u / ((DWORD)track->channels * sizeof(short));
+    if (request_frames > requested_frames)
+        request_frames = requested_frames;
+    got = stb_vorbis_get_samples_short_interleaved(
         track->decoder, track->channels, output,
         (int)(request_frames * (DWORD)track->channels));
+    if (got > 0) {
+        track->source_frame += (DWORD)got;
+        if (track->source_frame <= track->loop_end_frame)
+            return got;
+        seek_frame = track->source_frame - track->loop_end_frame +
+                     track->loop_start_frame;
+        if (!stb_vorbis_seek(track->decoder, seek_frame)) {
+            track->source_ended = 1;
+            return got;
+        }
+        track->source_frame = seek_frame;
+        retdec_trace_i32("bgm:loop-seek-frame", (int32_t)seek_frame);
+    }
+    return got;
 }
 
 /* Decode only the amount that is about to be written.  BgmBuffer creates its
@@ -23266,6 +23271,8 @@ static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
         }
         if (got <= 0) {
             if (!track->looping || track->source_ended) {
+                if (!track->source_ended)
+                    retdec_trace_i32("bgm:source-ended", (int32_t)track->handle);
                 track->source_ended = 1;
                 break;
             }
@@ -23273,6 +23280,7 @@ static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
                 track->source_ended = 1;
                 break;
             }
+            track->source_frame = 0;
             continue;
         }
         written_frames += (DWORD)got;
@@ -23825,9 +23833,14 @@ static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
     track->sample_rate = info.sample_rate;
     track->channels = (WORD)info.channels;
     track->looping = looping != 0;
-    if (track->looping)
-        retdec_bgm_read_loop_points(path, &track->loop_start_frame,
-                                    &track->loop_end_frame);
+    /* 412203 always loads SFL markers, overriding the whole-file fallback
+       selected by the PlayBgm argument, including when that argument is 0. */
+    if (retdec_bgm_read_loop_points(path, &track->loop_start_frame,
+                                    &track->loop_end_frame))
+        track->looping = 1;
+    retdec_trace_i32("bgm:looping", track->looping);
+    retdec_trace_i32("bgm:loop-start-frame", (int32_t)track->loop_start_frame);
+    retdec_trace_i32("bgm:loop-end-frame", (int32_t)track->loop_end_frame);
     track->volume = volume;
     track->write_offset = 0;
     track->write_window_start = 0;
@@ -23927,6 +23940,15 @@ static void retdec_bgm_service_track(retdec_bgm_track_state *track)
 
     if (track == NULL || track->buffer == NULL)
         return;
+    /* 409A11 stops a non-looping stream on the update after a short read.
+       Waiting for the ring to drain can let the hardware read stale PCM. */
+    if (track->source_ended && !track->looping) {
+        retdec_trace_i32("bgm:stop-at-eof", (int32_t)track->handle);
+        if (track == &g_retdec_bgm_track)
+            g637 = 0;
+        retdec_bgm_release_state(track);
+        return;
+    }
     if (!track->started) {
         if (track->start_time == 0 ||
             (int32_t)(timeGetTime() - track->start_time) >= 0)
@@ -24728,6 +24750,9 @@ int32_t function_40a460(void) {
         g_retdec_audio_stop_event = NULL;
     }
     g_retdec_audio_threads_initialized = 0;
+    /* 40A4A8 releases the manager's active, pending and retired buffers
+       after joining its workers, rather than waiting for CRT destruction. */
+    retdec_bgm_release_all_tracks();
     return 1;
 #if 0
     // 0x40a460
@@ -148556,12 +148581,13 @@ int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     int32_t manager = retdec_audio_manager_this();
     int32_t new_handle = 0;
 
-    (void)a4;
+    (void)a3;
     if (g637 != 0)
         retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
     retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
     g637 = new_handle;
-    retdec_audio_method_40a6c0(manager, g637, a1, a3, 0, 1.0f);
+    /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
+    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
     retdec_audio_method_40a7f0(manager, g637, a2);
     return 0;
 }
