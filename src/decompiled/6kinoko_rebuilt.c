@@ -5259,6 +5259,7 @@ int32_t function_4a98d0(int32_t * a1, int32_t a2);
 int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
                         int32_t a3, int32_t a4);
 int32_t function_4a99f0(void);
+static int32_t function_4a99f0_this(int32_t this_ptr);
 int32_t function_4a9a30(void);
 static int32_t function_4a9a30_this(int32_t object_ptr);
 int32_t function_4a9a40(int32_t a1);
@@ -141665,22 +141666,9 @@ int32_t function_46a210(int32_t * a1) {
     node[0] = (int32_t)(uintptr_t)sentinel;
     node[1] = (int32_t)(uintptr_t)tail;
     node[2] = *a1;
-#if defined(RETDEC_DIAGNOSTIC_MAP_LAYERS_FRONT)
-    if (*a1 != 0 && *(int32_t *)(intptr_t)*a1 ==
-            (int32_t)(intptr_t)&g37) {
-        int32_t *head = (int32_t *)(uintptr_t)sentinel[0];
-        node[0] = (int32_t)(uintptr_t)head;
-        node[1] = (int32_t)(uintptr_t)sentinel;
-        head[1] = (int32_t)(uintptr_t)node;
-        sentinel[0] = (int32_t)(uintptr_t)node;
-    } else {
-        tail[0] = (int32_t)(uintptr_t)node;
-        sentinel[1] = (int32_t)(uintptr_t)node;
-    }
-#else
+    /* 46A224 appends every layer at the tail, preserving script order. */
     tail[0] = (int32_t)(uintptr_t)node;
     sentinel[1] = (int32_t)(uintptr_t)node;
-#endif
     ++g614;
     return (int32_t)(uintptr_t)node;
 }
@@ -142535,6 +142523,7 @@ static int32_t retdec_create_render_layer_fixed(int32_t name_ptr)
         value = function_470030(name_ptr);
     if (value == 0)
         return 0;
+    retdec_trace_squirrel_name("map:render-order-layer", name_ptr);
     return function_46a210(&value);
 }
 
@@ -147757,6 +147746,8 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
             }
         }
     }
+    /* 46F923 reverses the collected names before publishing them. */
+    function_4a99f0_this((int32_t)(intptr_t)layer_names);
     function_4a9840_this(map_state, "layer_name", layer_names);
     function_4a9d70_this((int32_t)(intptr_t)layer_names);
 
@@ -200992,149 +200983,32 @@ int32_t function_48c350(int32_t a1, int32_t a2) {
 
 // Address range: 0x48c400 - 0x48c572
 int32_t function_48c400(int32_t a1, int32_t a2) {
-    // 0x48c400
-    if ((uint32_t)function_48aa20(a1) <= 0) {
-        // 0x48c417
+    int32_t object_ptr;
+    int32_t array;
+    int32_t count;
+    int32_t index;
+    int32_t temporary[2] = { g483, g484 };
+
+    if (function_48aa20(a1) < 1) {
         function_499a20(a1, "not enough params in the stack");
-        // 0x48c425
         return -1;
     }
-    // 0x48c42c
-    int32_t v1; // bp-16, 0x48c400
-    if ((char)function_48a0a0(a1, a2, 0x8000040, &v1) == 0) {
-        // 0x48c425
+    if ((char)function_48a0a0(a1, a2, 0x08000040, &object_ptr) == 0)
         return -1;
+    array = *(int32_t *)(intptr_t)(object_ptr + 4);
+    count = *(int32_t *)(intptr_t)(array + 28);
+    /* Squirrel 2.2.2 sq_arrayreverse: three SQObjectPtr assignments per
+       swap.  Each must retain its source before releasing the old target. */
+    for (index = 0; index < count / 2; ++index) {
+        int32_t *values = (int32_t *)(intptr_t)
+            *(int32_t *)(intptr_t)(array + 24);
+        int32_t *left = values + 2 * index;
+        int32_t *right = values + 2 * (count - 1 - index);
+        retdec_squirrel_assign(temporary, left);
+        retdec_squirrel_assign(left, right);
+        retdec_squirrel_assign(right, temporary);
     }
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x48c449
-    uint32_t v3 = *(int32_t *)(v2 + 28); // 0x48c44c
-    if (v3 < 1) {
-        // 0x48c425
-        return 0;
-    }
-    // 0x48c45a
-    v1 = 0;
-    if (v3 == 1) {
-        // 0x48c425
-        return 0;
-    }
-    int32_t * v4 = (int32_t *)(v2 + 24); // 0x48c488
-    int32_t v5 = 8 * v3;
-    int32_t v6 = 0; // 0x48c48f
-    int32_t v7 = *v4 + v6;
-    int32_t v8 = *(int32_t *)v7; // 0x48c494
-    int32_t v9 = *(int32_t *)(v7 + 4); // 0x48c499
-    int32_t * v10; // 0x48c4a9
-    if ((v8 & 0x8000000) != 0) {
-        // 0x48c4a9
-        v10 = (int32_t *)(v9 + 4);
-        *v10 = *v10 + 1;
-    }
-    int32_t * v11; // 0x48c4b5
-    int32_t v12 = v5 - 8;
-    int32_t v13 = *v4; // 0x48c4c4
-    int32_t * v14 = (int32_t *)(v13 + v6); // 0x48c4c7
-    int32_t * v15 = (int32_t *)(v13 + (v6 | 4)); // 0x48c4cd
-    int32_t v16 = *v15; // 0x48c4cd
-    *v15 = *(int32_t *)(v5 - 4 + v13);
-    int32_t v17 = *(int32_t *)(v13 + v12); // 0x48c4e4
-    *v14 = v17;
-    int32_t * v18; // 0x48c4f4
-    if ((v17 & 0x8000000) != 0) {
-        // 0x48c4f2
-        v18 = (int32_t *)(*v15 + 4);
-        *v18 = *v18 + 1;
-    }
-    int32_t * v19; // 0x48c503
-    if ((*v14 & 0x8000000) != 0) {
-        // 0x48c500
-        v19 = (int32_t *)(v16 + 4);
-        *v19 = *v19 - 1;
-    }
-    int32_t v20 = *v4 + v12; // 0x48c515
-    int32_t * v21 = (int32_t *)v20; // 0x48c51c
-    int32_t * v22 = (int32_t *)(v20 + 4); // 0x48c51e
-    int32_t v23 = *v22; // 0x48c51e
-    *v22 = v9;
-    *v21 = v8;
-    int32_t * v24; // 0x48c528
-    if ((v8 & 0x8000000) != 0) {
-        // 0x48c528
-        v24 = (int32_t *)(v9 + 4);
-        *v24 = *v24 + 1;
-    }
-    int32_t * v25; // 0x48c533
-    if ((*v21 & 0x8000000) != 0) {
-        // 0x48c533
-        v25 = (int32_t *)(v23 + 4);
-        *v25 = *v25 - 1;
-    }
-    int32_t v26 = v1 + 1; // 0x48c546
-    v1 = v26;
-    while (v26 < v3 / 2) {
-        int32_t v27 = v9;
-        int32_t v28 = v8;
-        v5 = v12;
-        v6 = 8 * v26;
-        v7 = *v4 + v6;
-        v8 = *(int32_t *)v7;
-        v9 = *(int32_t *)(v7 + 4);
-        if ((v8 & 0x8000000) != 0) {
-            // 0x48c4a9
-            v10 = (int32_t *)(v9 + 4);
-            *v10 = *v10 + 1;
-        }
-        if ((v28 & 0x8000000) != 0) {
-            // 0x48c4b5
-            v11 = (int32_t *)(v27 + 4);
-            *v11 = *v11 - 1;
-        }
-        // 0x48c4c4
-        v12 = v5 - 8;
-        v13 = *v4;
-        v14 = (int32_t *)(v13 + v6);
-        v15 = (int32_t *)(v13 + (v6 | 4));
-        v16 = *v15;
-        *v15 = *(int32_t *)(v5 - 4 + v13);
-        v17 = *(int32_t *)(v13 + v12);
-        *v14 = v17;
-        if ((v17 & 0x8000000) != 0) {
-            // 0x48c4f2
-            v18 = (int32_t *)(*v15 + 4);
-            *v18 = *v18 + 1;
-        }
-        if ((*v14 & 0x8000000) != 0) {
-            // 0x48c500
-            v19 = (int32_t *)(v16 + 4);
-            *v19 = *v19 - 1;
-        }
-        // 0x48c50f
-        v20 = *v4 + v12;
-        v21 = (int32_t *)v20;
-        v22 = (int32_t *)(v20 + 4);
-        v23 = *v22;
-        *v22 = v9;
-        *v21 = v8;
-        if ((v8 & 0x8000000) != 0) {
-            // 0x48c528
-            v24 = (int32_t *)(v9 + 4);
-            *v24 = *v24 + 1;
-        }
-        if ((*v21 & 0x8000000) != 0) {
-            // 0x48c533
-            v25 = (int32_t *)(v23 + 4);
-            *v25 = *v25 - 1;
-        }
-        // 0x48c53f
-        v26 = v1 + 1;
-        v1 = v26;
-    }
-    // 0x48c554
-    if ((v8 & 0x8000000) == 0) {
-        // 0x48c425
-        return 0;
-    }
-    int32_t * v29 = (int32_t *)(v9 + 4); // 0x48c55c
-    *v29 = *v29 - 1;
+    retdec_release_squirrel_value(temporary);
     return 0;
 }
 
@@ -240421,13 +240295,19 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
 
 // Address range: 0x4a99f0 - 0x4a9a2c
 int32_t function_4a99f0(void) {
-    // 0x4a99f0
-    int32_t v1; // 0x4a99f0
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4a99f3
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
-    int32_t v3 = function_48c400((int32_t)g644, -1); // 0x4a9a0d
-    function_48aa30((int32_t)g644, 1);
-    return v3 == 0;
+    /* Recovered callers pass the original ECX receiver explicitly. */
+    return 0;
+}
+
+static int32_t function_4a99f0_this(int32_t this_ptr) {
+    int32_t vm = (int32_t)(intptr_t)g644;
+    int32_t result;
+
+    function_48ab90(vm, *(int32_t *)(intptr_t)(this_ptr + 4),
+                    *(int32_t *)(intptr_t)(this_ptr + 8));
+    result = function_48c400(vm, -1);
+    function_48aa30(vm, 1);
+    return result == 0;
 }
 
 // Address range: 0x4a9a30 - 0x4a9a34
