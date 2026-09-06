@@ -122,7 +122,7 @@ static int32_t retdec_sqrat_set_native_closure(
     int32_t free_count);
 static int32_t retdec_sqrat_set_offset_closure(
     int32_t vm, const int32_t *table_pair, const char *name,
-    int32_t offset, int32_t getter, int32_t setter);
+    int32_t offset, int32_t callback);
 static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t resource_ptr,
                                           int32_t *active_count);
@@ -108098,14 +108098,14 @@ static int32_t retdec_sqrat_set_native_closure(
 
 static int32_t retdec_sqrat_set_offset_closure(
     int32_t vm, const int32_t *table_pair, const char *name,
-    int32_t offset, int32_t getter, int32_t setter)
+    int32_t offset, int32_t callback)
 {
     int32_t base;
     int32_t payload;
     int32_t result;
 
     if (vm == 0 || table_pair == NULL || name == NULL ||
-        getter == 0 || setter == 0)
+        callback == 0)
         return 0;
     base = function_48aa20(vm);
     function_48ab90(vm, table_pair[0], table_pair[1]);
@@ -108116,23 +108116,9 @@ static int32_t retdec_sqrat_set_offset_closure(
         return 0;
     }
     *(int32_t *)(intptr_t)payload = offset;
-    function_48d850(vm, getter, 1);
-    result = function_48c950(vm, -3, 0);
-    if (result < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    function_48aa30(vm, 1);
-
-    function_48ab90(vm, table_pair[0], table_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    payload = function_48c2f0(vm, 4);
-    if (payload == 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    *(int32_t *)(intptr_t)payload = offset;
-    function_48d850(vm, setter, 1);
+    /* 422A60/422D00 install one callback in each of the distinct
+       __getTable and __setTable objects. */
+    function_48d850(vm, callback, 1);
     result = function_48c950(vm, -3, 0);
     if (result >= 0)
         function_48aa30(vm, 1);
@@ -108396,9 +108382,9 @@ static int32_t retdec_publish_cact_layer_property(
         g1153 != 0x0A000020 || g1154 == 0)
         return 0;
     if (!retdec_sqrat_set_offset_closure(
-            vm, (const int32_t *)&g1153, name, offset, getter, setter) ||
+            vm, (const int32_t *)&g1153, name, offset, getter) ||
         !retdec_sqrat_set_offset_closure(
-            vm, (const int32_t *)&g1151, name, offset, getter, setter))
+            vm, (const int32_t *)&g1151, name, offset, setter))
         return 0;
     return 1;
 }
@@ -108681,22 +108667,18 @@ static int32_t retdec_publish_c2dlayout_properties(
         if (!retdec_sqrat_set_offset_closure(
                 vm, (const int32_t *)&g1143, float_names[index],
                 float_offsets[index],
-                (int32_t)(intptr_t)retdec_c2dlayout_get_float,
-                (int32_t)(intptr_t)retdec_c2dlayout_set_float) ||
+                (int32_t)(intptr_t)retdec_c2dlayout_get_float) ||
             !retdec_sqrat_set_offset_closure(
                 vm, (const int32_t *)&g1141, float_names[index],
                 float_offsets[index],
-                (int32_t)(intptr_t)retdec_c2dlayout_get_float,
                 (int32_t)(intptr_t)retdec_c2dlayout_set_float))
             goto failed;
     }
     if (!retdec_sqrat_set_offset_closure(
             vm, (const int32_t *)&g1143, "blend", 288,
-            (int32_t)(intptr_t)retdec_c2dlayout_get_int,
-            (int32_t)(intptr_t)retdec_c2dlayout_set_int) ||
+            (int32_t)(intptr_t)retdec_c2dlayout_get_int) ||
         !retdec_sqrat_set_offset_closure(
             vm, (const int32_t *)&g1141, "blend", 288,
-            (int32_t)(intptr_t)retdec_c2dlayout_get_int,
             (int32_t)(intptr_t)retdec_c2dlayout_set_int))
         goto failed;
     for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
@@ -108704,12 +108686,10 @@ static int32_t retdec_publish_c2dlayout_properties(
         if (!retdec_sqrat_set_offset_closure(
                 vm, (const int32_t *)&g1143, color_names[index],
                 color_offsets[index],
-                (int32_t)(intptr_t)retdec_c2dlayout_get_int,
-                (int32_t)(intptr_t)retdec_c2dlayout_set_color) ||
+                (int32_t)(intptr_t)retdec_c2dlayout_get_int) ||
             !retdec_sqrat_set_offset_closure(
                 vm, (const int32_t *)&g1141, color_names[index],
                 color_offsets[index],
-                (int32_t)(intptr_t)retdec_c2dlayout_get_int,
                 (int32_t)(intptr_t)retdec_c2dlayout_set_color))
             goto failed;
     }
@@ -109536,6 +109516,20 @@ static int32_t retdec_create_unbound_instance(
     return out_pair[0] == 0x0a008000 && out_pair[1] != 0;
 }
 
+static int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environment)
+{
+    static const char *const names[] = {
+        "BLEND_NORMAL", "BLEND_ALPHA", "BLEND_ADD", "BLEND_SUB",
+        "BLEND_MULTI", "BLEND_INVERT"
+    };
+    /* 415FD0:4160DC installs these in the script environment before loading. */
+    for (int32_t value = 0; value < 6; ++value) {
+        if (!retdec_sqrat_set_int(vm, environment, names[value], value))
+            return 0;
+    }
+    return 1;
+}
+
 static int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
                                                  int32_t script_pair[2])
 {
@@ -109564,6 +109558,8 @@ static int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     retdec_sqrat_release_pair(vm, table_pair);
     script_pair[0] = *(int32_t *)(intptr_t)(layer + 316);
     script_pair[1] = *(int32_t *)(intptr_t)(layer + 320);
+    if (!retdec_publish_act_script_constants(vm, script_pair))
+        return 0;
 
     old_vm = *(int32_t *)(intptr_t)(layer + 332);
     if (*(uint8_t *)(intptr_t)(layer + 344) != 0 && old_vm != 0) {
@@ -109735,6 +109731,41 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     retdec_trace_i32("act:layout-class-type", layout_class_pair[0]);
     retdec_trace_i32("act:layout-class-data", layout_class_pair[1]);
 
+    /* 450950:450BB0 publishes every resource before registering layers,
+       including font atlases that have no visible layer of their own. */
+    {
+        int32_t parent_object[5] = {
+            (int32_t)(intptr_t)&g39, vm, parent_pair[0], parent_pair[1], 0
+        };
+        int32_t resources[2] = { g483, g484 };
+        int32_t resource_class[2];
+        int32_t begin = *(int32_t *)(intptr_t)(act + 224);
+        int32_t end = *(int32_t *)(intptr_t)(act + 228);
+        if (!retdec_publish_cact_resource2d_class(vm, (int32_t)(intptr_t)root_object) ||
+            !retdec_sqrat_get((int32_t)(intptr_t)parent_object, "resource", resources)) {
+            retdec_sqrat_release_pair(vm, parent_pair);
+            retdec_sqrat_release_pair(vm, layout_class_pair);
+            retdec_sqrat_release_pair(vm, class_pair);
+            retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
+            return 0;
+        }
+        resource_class[0] = g1079;
+        resource_class[1] = g1080;
+        for (int32_t slot = begin; slot != 0 && slot < end; slot += 4) {
+            int32_t resource = *(int32_t *)(intptr_t)slot;
+            int32_t value[2] = { g483, g484 };
+            const char *name = retdec_std_string_data(resource + 8);
+            if (name != NULL && *name != 0 &&
+                retdec_create_bound_instance(vm, resources, name, resource_class,
+                                               resource, value)) {
+                retdec_publish_act_resource_values(vm, value, resource);
+                retdec_trace_squirrel_name("act:resource-published", (int32_t)(intptr_t)name);
+            }
+            retdec_sqrat_release_pair(vm, value);
+        }
+        retdec_sqrat_release_pair(vm, resources);
+    }
+
     layer_begin = *(int32_t *)(intptr_t)(act + 208);
     layer_end = *(int32_t *)(intptr_t)(act + 212);
     if (layer_begin == 0 || layer_end < layer_begin ||
@@ -109765,6 +109796,10 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
 
         if (layer == 0)
             continue;
+        /* 41F580 saves the loaded position before publishing the layer.
+           Scripts use this origin when moving a cursor or restoring a logo. */
+        memcpy((void *)(intptr_t)(layer + 156),
+               (const void *)(intptr_t)(layer + 144), 3 * sizeof(float32_t));
         layer_name = retdec_std_string_data(layer + 112);
         if (layer_name == NULL || *layer_name == 0 ||
             !retdec_create_bound_instance(vm, parent_pair, layer_name,
@@ -110262,7 +110297,8 @@ static int32_t retdec_root_table_register_resource(int32_t root_object,
     if (!retdec_sqrat_set_pair(vm, act_pair, "global", global_pair) ||
         !retdec_sqrat_set_pair(vm, act_pair, "resource", resource_pair) ||
         !retdec_sqrat_set_pair(vm, global_pair, "thisAct", act_pair) ||
-        !retdec_sqrat_set_delegate(vm, global_pair, act_pair))
+        !retdec_sqrat_set_delegate(vm, global_pair, act_pair) ||
+        !retdec_publish_act_script_constants(vm, global_pair))
         goto cleanup;
 
     if (!retdec_publish_acting_player(vm, act_pair, "pl", resource_ptr,
@@ -110526,7 +110562,7 @@ int32_t function_4513f0(void) {
 }
 
 // Address range: 0x4514a0 - 0x45158b
-int32_t function_4514a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, float32_t a9) {
+static int32_t retdec_unbound_function_4514a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, float32_t a9) {
     // 0x4514a0
     if (a5 == 0) {
         // 0x4514ae
@@ -110573,6 +110609,82 @@ int32_t function_4514a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     *(float32_t *)(v6 - 24) = (float32_t)(float80_t)a2;
     return 0;
 }
+
+static int32_t retdec_act_bitblt_this(int32_t self, int32_t x, int32_t y,
+    int32_t width, int32_t height, int32_t resource, int32_t sx, int32_t sy,
+    int32_t blend, float32_t alpha)
+{
+    int32_t *vector;
+    int32_t *entry;
+    size_t count, capacity;
+    int32_t type;
+    static LONG trace_count;
+
+    if (self == 0 || resource == 0)
+        return (int32_t)E_FAIL;
+    /* 4514A0 queries the two concrete texture resource types by RTTI.
+       Their reconstructed vtables identify the same native objects. */
+    type = *(int32_t *)(intptr_t)resource;
+    if (type != (int32_t)(intptr_t)&g365 &&
+        type != (int32_t)(intptr_t)&g379)
+        return (int32_t)E_FAIL;
+    vector = (int32_t *)(intptr_t)(self + 44);
+    count = vector[0] ? (size_t)(vector[1] - vector[0]) / 36u : 0;
+    capacity = vector[0] ? (size_t)(vector[2] - vector[0]) / 36u : 0;
+    if (count == capacity) {
+        size_t next = capacity ? capacity + capacity / 2 + 1 : 1;
+        void *replacement = realloc((void *)(intptr_t)vector[0], next * 36u);
+        if (replacement == NULL)
+            return (int32_t)E_OUTOFMEMORY;
+        vector[0] = (int32_t)(intptr_t)replacement;
+        vector[2] = vector[0] + (int32_t)(next * 36u);
+    }
+    entry = (int32_t *)(intptr_t)(vector[0] + count * 36u);
+    vector[1] = (int32_t)(intptr_t)(entry + 9);
+    entry[0] = blend;
+    ((float32_t *)entry)[1] = alpha < 0.0f ? 0.0f : alpha > 1.0f ? 1.0f : alpha;
+    ((float32_t *)entry)[2] = (float32_t)x;
+    ((float32_t *)entry)[3] = (float32_t)y;
+    entry[4] = sx;
+    entry[5] = sy;
+    entry[6] = width;
+    entry[7] = height;
+    entry[8] = *(int32_t *)(intptr_t)(resource + 68);
+    if (InterlockedIncrement(&trace_count) <= 12) {
+        retdec_trace_i32("act:bitblt-texture", entry[8]);
+        retdec_trace_i32("act:bitblt-x", x);
+        retdec_trace_i32("act:bitblt-y", y);
+    }
+    return 0;
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_4514a0(int32_t x, int32_t y,
+    int32_t width, int32_t height, int32_t resource, int32_t sx, int32_t sy,
+    int32_t blend, float32_t alpha)
+{
+    __asm {
+        mov eax, esp
+        push [eax + 36]
+        push [eax + 32]
+        push [eax + 28]
+        push [eax + 24]
+        push [eax + 20]
+        push [eax + 16]
+        push [eax + 12]
+        push [eax + 8]
+        push [eax + 4]
+        push ecx
+        call retdec_act_bitblt_this
+        add esp, 40
+        ret 36
+    }
+}
+#else
+int32_t function_4514a0(int32_t x, int32_t y, int32_t width, int32_t height,
+    int32_t resource, int32_t sx, int32_t sy, int32_t blend, float32_t alpha)
+{ return retdec_act_bitblt_this(0, x, y, width, height, resource, sx, sy, blend, alpha); }
+#endif
 
 static int32_t retdec_act_set_current_time_this(int32_t resource_ptr,
                                                  int32_t value)
@@ -111532,7 +111644,7 @@ int32_t function_4522c0(void) {
 }
 
 // Address range: 0x4522f0 - 0x4525cc
-int32_t function_4522f0(int32_t this_ptr) {
+static int32_t retdec_unbound_function_4522f0(int32_t this_ptr) {
     // 0x4522f0
     int32_t v1 = this_ptr; // 0x4522f0
     int32_t v2 = v1;
@@ -111787,6 +111899,86 @@ int32_t function_4522f0(int32_t this_ptr) {
     *(int32_t *)(v7 - 4) = v4;
     LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
     __writefsdword(0, v3);
+    return result;
+}
+
+/* CSprite::SetRect (404610 -> 404640) and IColor::SetColor (42B280). */
+static int32_t retdec_act_prepare_blit_sprite(int32_t item, const int32_t *command)
+{
+    int32_t sprite = item + 36;
+    int32_t handle = command[8];
+    uint32_t width, height, color;
+    float32_t u0, v0, u1, v1;
+
+    if (handle <= 0 || (uint32_t)handle >= RETDEC_ACT_TEXTURE_SLOT_COUNT)
+        return (int32_t)E_FAIL;
+    width = g_retdec_act_texture_slots[handle].width;
+    height = g_retdec_act_texture_slots[handle].height;
+    if (width == 0 || height == 0)
+        return (int32_t)E_FAIL;
+    memcpy((void *)(intptr_t)item, command, 36);
+    memset((void *)(intptr_t)sprite, 0, 148);
+    *(int32_t *)(intptr_t)sprite = (int32_t)(intptr_t)&g407;
+    *(int32_t *)(intptr_t)(sprite + 4) = handle;
+    *(float32_t *)(intptr_t)(sprite + 120) = (float32_t)command[6];
+    *(float32_t *)(intptr_t)(sprite + 124) = (float32_t)command[7];
+    *(float32_t *)(intptr_t)(sprite + 136) = 1.0f;
+    *(float32_t *)(intptr_t)(sprite + 140) = 1.0f;
+    u0 = (float32_t)command[4] / width;
+    v0 = (float32_t)command[5] / height;
+    u1 = (float32_t)(command[4] + command[6]) / width;
+    v1 = (float32_t)(command[5] + command[7]) / height;
+    color = ((uint32_t)(((const float32_t *)command)[1] * 255.0f) << 24) | 0xffffffu;
+    for (int32_t i = 0; i < 4; ++i) {
+        int32_t vertex = sprite + 8 + i * 28;
+        *(float32_t *)(intptr_t)(vertex + 8) = 0.5f;
+        *(float32_t *)(intptr_t)(vertex + 12) = 1.0f;
+        *(uint32_t *)(intptr_t)(vertex + 16) = color;
+        *(float32_t *)(intptr_t)(vertex + 20) = (i & 1) ? u1 : u0;
+        *(float32_t *)(intptr_t)(vertex + 24) = (i & 2) ? v1 : v0;
+    }
+    return 0;
+}
+
+int32_t function_4522f0(int32_t self)
+{
+    int32_t act, begin, end, count, result = 0;
+    struct retdec_RTL_CRITICAL_SECTION *lock;
+    if (self == 0)
+        return (int32_t)E_FAIL;
+    if (*(uint8_t *)(intptr_t)(self + 104) != 0)
+        return 0;
+    lock = (struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(self + 20);
+    EnterCriticalSection(lock);
+    act = *(int32_t *)(intptr_t)(self + 12);
+    if (*(uint8_t *)(intptr_t)(self + 8) != 0 && act != 0 &&
+        *(uint8_t *)(intptr_t)(act + 96) != 0) {
+        begin = *(int32_t *)(intptr_t)(act + 208);
+        end = *(int32_t *)(intptr_t)(act + 212);
+        for (int32_t i = (end - begin) / 4 - 1; i >= 0; --i) {
+            int32_t key = function_452040(self, i);
+            int32_t layout = key ? *(int32_t *)(intptr_t)(key + 4) : 0;
+            if (layout != 0 && *(int32_t *)(intptr_t)layout == (int32_t)(intptr_t)&g299 &&
+                retdec_c2dlayout_update_faithful_impl(layout) < 0)
+                result = (int32_t)E_FAIL;
+        }
+        begin = *(int32_t *)(intptr_t)(self + 44);
+        end = *(int32_t *)(intptr_t)(self + 48);
+        count = (end - begin) / 36;
+        function_452c20(self + 60, (uint32_t)count);
+        if ((*(int32_t *)(intptr_t)(self + 64) -
+             *(int32_t *)(intptr_t)(self + 60)) / 184 != count) {
+            result = (int32_t)E_OUTOFMEMORY;
+        } else {
+            for (int32_t i = 0; i < count; ++i) {
+                int32_t item = *(int32_t *)(intptr_t)(self + 60) + i * 184;
+                if (retdec_act_prepare_blit_sprite(item,
+                        (const int32_t *)(intptr_t)(begin + i * 36)) < 0)
+                    result = (int32_t)E_FAIL;
+            }
+        }
+    }
+    LeaveCriticalSection(lock);
     return result;
 }
 
@@ -112362,6 +112554,8 @@ static int32_t retdec_unbound_function_4525d0(int32_t this_ptr,
 int32_t function_4525d0(int32_t this_ptr, float32_t x, float32_t y)
 {
     struct retdec_RTL_CRITICAL_SECTION *critical_section;
+    IDirect3DDevice9 *sampler_device = (IDirect3DDevice9 *)(intptr_t)g678;
+    DWORD address_u = D3DTADDRESS_WRAP, address_v = D3DTADDRESS_WRAP;
     int32_t act;
     int32_t layer_begin;
     int32_t layer_end;
@@ -112445,6 +112639,13 @@ int32_t function_4525d0(int32_t this_ptr, float32_t x, float32_t y)
        unrelated state and produced the 0x00000004 Y argument seen in trace. */
     draw_x = x + *(float32_t *)(intptr_t)(act + 88);
     draw_y = y + *(float32_t *)(intptr_t)(act + 92);
+    /* 45265B saves and clamps both axes for this ACT render pass. */
+    if (sampler_device != NULL) {
+        sampler_device->lpVtbl->GetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, &address_u);
+        sampler_device->lpVtbl->GetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, &address_v);
+        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+    }
     layer_count = (layer_end - layer_begin) / 4;
     for (index = layer_count - 1; index >= 0; --index) {
         int32_t key = function_452040(this_ptr, index);
@@ -112481,6 +112682,50 @@ int32_t function_4525d0(int32_t this_ptr, float32_t x, float32_t y)
             result = draw_result;
     }
 
+    /* 4529A7 draws the prepared BitBlt sprites after the ACT layers. */
+    if (*(uint8_t *)(intptr_t)(act + 96) != 0) {
+        IDirect3DDevice9 *device = (IDirect3DDevice9 *)(intptr_t)g678;
+        DWORD saved[4];
+        const D3DRENDERSTATETYPE states[4] = {
+            D3DRS_SRCBLEND, D3DRS_DESTBLEND, D3DRS_BLENDOP, D3DRS_ALPHABLENDENABLE
+        };
+        if (device != NULL) {
+            for (int i = 0; i < 4; ++i)
+                device->lpVtbl->GetRenderState(device, states[i], &saved[i]);
+            device->lpVtbl->SetRenderState(device, D3DRS_ALPHABLENDENABLE, TRUE);
+            for (int32_t item = *(int32_t *)(intptr_t)(this_ptr + 60);
+                 item != *(int32_t *)(intptr_t)(this_ptr + 64); item += 184) {
+                int32_t blend = *(int32_t *)(intptr_t)item;
+                DWORD src = D3DBLEND_ONE, dest = D3DBLEND_ZERO, op = D3DBLENDOP_ADD;
+                int32_t sprite = item + 36;
+                int32_t *methods = *(int32_t **)(intptr_t)sprite;
+                float32_t bx = draw_x + *(float32_t *)(intptr_t)(item + 8);
+                float32_t by = draw_y + *(float32_t *)(intptr_t)(item + 12);
+                int32_t bx_bits, by_bits;
+                if (blend == 1) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_INVSRCALPHA; }
+                else if (blend == 2) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_ONE; }
+                else if (blend == 3) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_ONE; op = D3DBLENDOP_REVSUBTRACT; }
+                else if (blend == 4) { src = D3DBLEND_ZERO; dest = D3DBLEND_SRCCOLOR; }
+                else if (blend == 5) { src = D3DBLEND_DESTCOLOR; dest = D3DBLEND_ONE; }
+                device->lpVtbl->SetRenderState(device, D3DRS_SRCBLEND, src);
+                device->lpVtbl->SetRenderState(device, D3DRS_DESTBLEND, dest);
+                device->lpVtbl->SetRenderState(device, D3DRS_BLENDOP, op);
+                memcpy(&bx_bits, &bx, sizeof(bx_bits));
+                memcpy(&by_bits, &by, sizeof(by_bits));
+                if (methods != NULL && methods[7] != 0 &&
+                    retdec_call_thiscall2_result((void *)(intptr_t)sprite,
+                        (void *)(intptr_t)methods[7], bx_bits, by_bits) < 0)
+                    result = (int32_t)E_FAIL;
+            }
+            retdec_set_texture_stage(0, 0);
+            for (int i = 0; i < 4; ++i)
+                device->lpVtbl->SetRenderState(device, states[i], saved[i]);
+        }
+    }
+    if (sampler_device != NULL) {
+        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, address_u);
+        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, address_v);
+    }
     LeaveCriticalSection(critical_section);
     return result;
 }
@@ -112611,8 +112856,10 @@ int32_t function_452c20(int32_t vector_ptr, uint32_t requested) {
     capacity = (begin != 0 && capacity_end >= begin) ?
         (uint32_t)((capacity_end - begin) / 184) : 0;
 
-    if (requested <= capacity)
+    if (requested <= capacity) {
+        *(int32_t *)(intptr_t)(vector_ptr + 4) = begin + (int32_t)(requested * 184u);
         return (int32_t)capacity;
+    }
     if (requested > 0x1642c85u || requested > (SIZE_MAX / 184u))
         return 0;
 
@@ -112625,15 +112872,14 @@ int32_t function_452c20(int32_t vector_ptr, uint32_t requested) {
         memcpy((void *)(intptr_t)replacement, (const void *)(intptr_t)begin,
                (size_t)size * 184u);
     *(int32_t *)(intptr_t)(vector_ptr + 0) = replacement;
-    *(int32_t *)(intptr_t)(vector_ptr + 4) = replacement +
-        (int32_t)((size_t)size * 184u);
+    *(int32_t *)(intptr_t)(vector_ptr + 4) = replacement + (int32_t)bytes;
     *(int32_t *)(intptr_t)(vector_ptr + 8) = replacement +
         (int32_t)bytes;
     /* Preserve the element vtable expected by the IColor cleanup path for
        slots that have not yet been populated by the sprite builder. */
     for (uint32_t index = size; index < requested; ++index)
         *(int32_t *)(intptr_t)(replacement + index * 184u + 36) =
-            (int32_t)(intptr_t)&g23;
+            (int32_t)(intptr_t)&g407;
     if (begin != 0)
         free((void *)(intptr_t)begin);
     retdec_trace_i32("452c20:vector", vector_ptr);
@@ -115808,30 +116054,41 @@ int32_t function_455520(int32_t a1) {
 
 // Address range: 0x4555a0 - 0x4556be
 int32_t function_4555a0(int32_t a1) {
-    // 0x4555a0
-    int32_t v1; // bp-16, 0x4555a0
-    function_48a920(a1, -1, &v1, 0);
-    int32_t v2 = 0; // bp-12, 0x4555c8
-    function_48c890(a1, 1, &v2, 0);
-    float32_t v3; // bp-20, 0x4555a0
-    function_48a830(a1, 10, (int32_t *)&v3);
-    int32_t v4; // bp-24, 0x4555a0
-    function_48a7d0(a1, 9, &v4);
-    int32_t v5; // bp-28, 0x4555a0
-    function_48a7d0(a1, 8, &v5);
-    int32_t v6; // bp-32, 0x4555a0
-    function_48a7d0(a1, 7, &v6);
-    int32_t v7 = 0; // bp-8, 0x455625
-    function_48c890(a1, 6, &v7, 0);
-    int32_t v8; // bp-36, 0x4555a0
-    function_48a7d0(a1, 5, &v8);
-    int32_t v9; // bp-40, 0x4555a0
-    function_48a7d0(a1, 4, &v9);
-    int32_t v10; // bp-44, 0x4555a0
-    function_48a7d0(a1, 3, &v10);
-    int32_t v11; // bp-76, 0x4555a0
-    function_48a7d0(a1, 2, &v11);
-    function_48a4f0(a1, v11);
+    int32_t *descriptor = NULL;
+    int32_t self = 0, resource = 0;
+    int32_t x = 0, y = 0, width = 0, height = 0, sx = 0, sy = 0, blend = 0;
+    float32_t alpha = 0.0f;
+    int32_t result, method;
+
+    if (function_48a920(a1, -1, (int32_t *)&descriptor, 0) < 0 ||
+        descriptor == NULL || descriptor[0] == 0 ||
+        function_48c890(a1, 1, &self, 0) < 0 || self == 0)
+        return -1;
+    function_48a830(a1, 10, (int32_t *)&alpha);
+    function_48a7d0(a1, 9, &blend);
+    function_48a7d0(a1, 8, &sy);
+    function_48a7d0(a1, 7, &sx);
+    function_48c890(a1, 6, &resource, 0);
+    function_48a7d0(a1, 5, &height);
+    function_48a7d0(a1, 4, &width);
+    function_48a7d0(a1, 3, &y);
+    function_48a7d0(a1, 2, &x);
+    method = descriptor[0];
+    __asm {
+        push alpha
+        push blend
+        push sy
+        push sx
+        push resource
+        push height
+        push width
+        push y
+        push x
+        mov ecx, self
+        call method
+        mov result, eax
+    }
+    function_48a4f0(a1, result);
     return 1;
 }
 
@@ -212839,41 +213096,15 @@ int32_t function_4944b0(int32_t a1, int32_t a2, int32_t a3) {
 
 // Address range: 0x494710 - 0x49476c
 int32_t function_494710(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x494710
     int32_t result = function_493e70(
         retdec_stack_vm(), a1, a2, a3, a4); // 0x494725
-    if ((char)result == 0) {
-        // 0x49472e
-        return result;
-    }
-    int32_t * v2 = (int32_t *)(a3 + 4); // 0x494737
-    int32_t v3 = *v2; // 0x494737
-    int32_t * v4 = (int32_t *)a3; // 0x49473a
-    *v2 = *(int32_t *)(a2 + 4);
-    int32_t v5 = *(int32_t *)a2; // 0x49473f
-    *v4 = v5;
-    if ((v5 & 0x8000000) != 0) {
-        int32_t * v6 = (int32_t *)(*v2 + 4); // 0x49474d
-        *v6 = *v6 + 1;
-    }
-    // 0x494750
-    if ((*v4 & 0x8000000) == 0) {
-        // 0x494764
-        return v5 & -256 | 1;
-    }
-    int32_t * v7 = (int32_t *)(v3 + 4); // 0x494758
-    int32_t v8_before = *v7; // 0x494758
-    int32_t v8 = v8_before - 1; // 0x494758
-    *v7 = v8;
-    retdec_trace_direct_ref_decrement(
-        "494710:old", v3, v8_before, v8);
-    int32_t v9 = v5; // 0x49475b
-    if (v8 == 0) {
-        // 0x49475d
-        v9 = *(int32_t *)(*(int32_t *)v3 + 4);
-    }
-    // 0x494764
-    return v9 & -256 | 1;
+    if ((char)result == 0)
+        return 0;
+    /* SQVM::LOCAL_INC assigns the result to the original local, releasing
+       the previous value according to its saved type (49473A/494750). */
+    retdec_squirrel_assign((int32_t *)(intptr_t)a3,
+                           (const int32_t *)(intptr_t)a2);
+    return 1;
 }
 
 // Address range: 0x494770 - 0x494894
@@ -216167,7 +216398,11 @@ int32_t function_495360(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     *(int32_t *)(v82 - 12) = 8 * (v382 + (int32_t)v385) + v384;
                     int32_t v386 = v82 - 16; // 0x496689
                     *(int32_t *)v386 = (int32_t)*(char *)(v74 + 7);
-                    int32_t v387 = function_494710((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x49668c
+                    int32_t v387 = function_494710(
+                        (int32_t)*(unsigned char *)(v74 + 7),
+                        v384 + 8 * (v382 + (int32_t)v385),
+                        v384 + 8 * (v382 + *(int32_t *)v74),
+                        v384 + 8 * (v382 + (int32_t)v383)); // 0x49668c
                     v64 = v92;
                     v65 = v386;
                     if ((char)v387 != 0) {
@@ -261843,29 +262078,12 @@ static int32_t retdec_sprite_draw_impl(
     }
 
     texture_id = *(int32_t *)(sprite + 4);
-    if (texture_id != g746) {
-        IDirect3DBaseTexture9 *texture = NULL;
-
-        if (texture_id != 0 && g724 != 0) {
-            int32_t *manager_vtable = *(int32_t **)(uintptr_t)(uint32_t)g724;
-            if (manager_vtable != NULL && manager_vtable[3] != 0) {
-                int32_t texture_slot = retdec_call_thiscall1_result(
-                    (void *)(uintptr_t)(uint32_t)g724,
-                    (void *)(uintptr_t)(uint32_t)manager_vtable[3],
-                    texture_id);
-                if (texture_slot != 0) {
-                    texture = *(IDirect3DBaseTexture9 **)(uintptr_t)
-                        (uint32_t)texture_slot;
-                }
-            }
-        }
-        device->lpVtbl->SetTexture(device, 0, texture);
-        g746 = texture_id;
-    }
-
-    device->lpVtbl->SetVertexShader(device, vertex_shader);
-    return (int32_t)device->lpVtbl->DrawPrimitive(
-        device, D3DPT_TRIANGLESTRIP, 2, 28);
+    if (retdec_set_texture_stage(0, texture_id) < 0)
+        return (int32_t)E_FAIL;
+    /* Original vtable offsets +356/+332 are SetFVF/DrawPrimitiveUP. */
+    device->lpVtbl->SetFVF(device, vertex_shader);
+    return (int32_t)device->lpVtbl->DrawPrimitiveUP(
+        device, D3DPT_TRIANGLESTRIP, 2, vertices, 28);
 }
 
 static int32_t retdec_sprite_method_404770_impl(
