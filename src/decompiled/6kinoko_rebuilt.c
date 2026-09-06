@@ -209955,7 +209955,11 @@ int32_t function_492440(int32_t a1, int32_t * a2, int32_t * a3) {
         return 0;
 
     input_type = a2[0];
-    if (input_type == 0x01000008) {
+    if (input_type == 0x08000010) {
+        /* 492505 / SQVM::ToString: strings retain their value and ownership. */
+        retdec_squirrel_assign(a3, a2);
+        return 1;
+    } else if (input_type == 0x01000008) {
         buffer = (char *)(intptr_t)function_49a1b0(6);
         if (buffer == NULL)
             return 0;
