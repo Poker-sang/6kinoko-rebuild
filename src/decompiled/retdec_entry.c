@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <windows.h>
 #include <dbghelp.h>
@@ -6,6 +7,39 @@
 #ifndef STATUS_HEAP_CORRUPTION
 #define STATUS_HEAP_CORRUPTION ((DWORD)0xC0000374L)
 #endif
+
+static SRWLOCK retdec_trace_lock = SRWLOCK_INIT;
+static HANDLE retdec_trace_file = INVALID_HANDLE_VALUE;
+static char retdec_trace_buffer[65536];
+static DWORD retdec_trace_used;
+
+static void retdec_trace_flush_locked(void)
+{
+    DWORD offset = 0;
+    while (offset < retdec_trace_used) {
+        DWORD written = 0;
+        if (!WriteFile(retdec_trace_file, retdec_trace_buffer + offset,
+                       retdec_trace_used - offset, &written, NULL) || written == 0)
+            break;
+        offset += written;
+    }
+    if (offset != 0) {
+        retdec_trace_used -= offset;
+        memmove(retdec_trace_buffer, retdec_trace_buffer + offset,
+                retdec_trace_used);
+    }
+}
+
+static void retdec_trace_close(void)
+{
+    AcquireSRWLockExclusive(&retdec_trace_lock);
+    if (retdec_trace_file != INVALID_HANDLE_VALUE) {
+        retdec_trace_flush_locked();
+        CloseHandle(retdec_trace_file);
+        retdec_trace_file = INVALID_HANDLE_VALUE;
+    }
+    ReleaseSRWLockExclusive(&retdec_trace_lock);
+}
 
 void retdec_trace(const char *message)
 {
@@ -17,9 +51,7 @@ void retdec_trace(const char *message)
     (void)message;
     return;
 #endif
-    /* A filtered trace is useful for interactive runtime checks.  Keep this
-       opt-in so normal trace builds retain the existing evidence and release
-       builds can remove tracing entirely. */
+    /* Silence only the output; VM trace call sites remain identical. */
 #if defined(RETDEC_TRACE_FILTER)
     if (message == NULL ||
         (strncmp(message, "seh:", 4) != 0 &&
@@ -62,32 +94,57 @@ void retdec_trace(const char *message)
     }
 #endif
     char path[MAX_PATH];
-    HANDLE file;
     DWORD written;
     size_t length;
 
-    if (message == NULL || GetModuleFileNameA(NULL, path, sizeof(path)) == 0) {
+    if (message == NULL)
         return;
-    }
-    {
+    length = strlen(message);
+    AcquireSRWLockExclusive(&retdec_trace_lock);
+    if (retdec_trace_file == INVALID_HANDLE_VALUE) {
+        if (GetModuleFileNameA(NULL, path, sizeof(path)) == 0) {
+            ReleaseSRWLockExclusive(&retdec_trace_lock);
+            return;
+        }
         char *separator = strrchr(path, '\\');
         if (separator != NULL) {
             separator[1] = '\0';
         } else {
             path[0] = '\0';
         }
+        if (strlen(path) + sizeof("retdec_trace.log") > sizeof(path)) {
+            ReleaseSRWLockExclusive(&retdec_trace_lock);
+            return;
+        }
+        lstrcatA(path, "retdec_trace.log");
+        retdec_trace_file = CreateFileA(path, FILE_APPEND_DATA,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL, NULL);
+        if (retdec_trace_file == INVALID_HANDLE_VALUE) {
+            ReleaseSRWLockExclusive(&retdec_trace_lock);
+            return;
+        }
+        atexit(retdec_trace_close);
     }
-    lstrcatA(path, "retdec_trace.log");
-    file = CreateFileA(path, FILE_APPEND_DATA,
-                       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                       OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file == INVALID_HANDLE_VALUE) {
-        return;
+    /* Thousands of VM diagnostics per frame must not become synchronous
+       file opens.  Serialize whole lines, flushing at frame/crash boundaries. */
+    if (length + 2 > sizeof(retdec_trace_buffer) - retdec_trace_used)
+        retdec_trace_flush_locked();
+    if (length + 2 <= sizeof(retdec_trace_buffer) - retdec_trace_used) {
+        memcpy(retdec_trace_buffer + retdec_trace_used, message, length);
+        retdec_trace_used += (DWORD)length;
+        memcpy(retdec_trace_buffer + retdec_trace_used, "\r\n", 2);
+        retdec_trace_used += 2;
+    } else {
+        WriteFile(retdec_trace_file, message, (DWORD)length, &written, NULL);
+        WriteFile(retdec_trace_file, "\r\n", 2, &written, NULL);
     }
-    length = strlen(message);
-    WriteFile(file, message, (DWORD)length, &written, NULL);
-    WriteFile(file, "\r\n", 2, &written, NULL);
-    CloseHandle(file);
+    if (strncmp(message, "game:frame", 10) == 0 ||
+        strcmp(message, "render-target:bmp-ok") == 0 ||
+        strncmp(message, "stagevm:failure", 15) == 0 ||
+        strncmp(message, "seh:", 4) == 0 || strncmp(message, "veh:", 4) == 0)
+        retdec_trace_flush_locked();
+    ReleaseSRWLockExclusive(&retdec_trace_lock);
 }
 
 void retdec_trace_hresult(const char *label, long value)

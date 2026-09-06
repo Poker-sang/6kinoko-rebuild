@@ -33,11 +33,11 @@ This is an observation from the previous run, pending fresh reproduction.
 
 - [x] Read project instructions, IDA and reverse-engineering skills.
 - [x] Verify original binary and record imports.
-- [ ] Reproduce the second-stage failure and identify the original behavior.
-- [ ] Restore the responsible implementation from assembly / Squirrel source.
-- [ ] Verify the remaining animation in diagnostic and no-log builds.
-- [ ] Stage and hash-check the three DAT files beside each executable.
-- [ ] Record final evidence and commit a backup.
+- [x] Reproduce the second-stage failure and identify the original behavior.
+- [x] Restore the responsible implementation from assembly / Squirrel source.
+- [x] Verify the remaining animation in diagnostic and no-log builds.
+- [x] Stage and hash-check the three DAT files beside each executable.
+- [x] Record final evidence and commit a backup (implementation: 54aed69).
 
 ## E-class-lifetime
 
@@ -88,7 +88,7 @@ its callback increments rotate by 4.0 degrees each frame. Original Actor::Render
 45F272 calls 405320 -> 404130/4040D0 (degree helpers). Restored those calls
 in the actor renderer instead of interpreting degrees as radians.
 
-## Validation In Progress
+## Validation
 
 Use Release: RelWithDebInfo exposes an existing translated-code dependency
 and produced diagonal shading/missing actors even before these changes.
@@ -97,3 +97,58 @@ the class/environment fixes, before the row-stride and rotation fixes.
 The Computer Use native pipe is unavailable after retry/reset; FFmpeg gdigrab
 is used to inspect the actual no-log window. Only one game instance may run
 at a time because the original-compatible named mutex rejects another.
+
+Final artifacts are in `analysis/evidence/raw/phase2-20260906/` (ignored by
+Git): `diag-final.mkv`, `diag-final.log`, `notrace-final-repeat.mkv`, contact
+sheets, intermediate evidence, original op.cv4, and `original-annotated.i64`.
+
+- Release diagnostic and Release no-log builds both pass `archive_smoke`
+  (1/1 each). Both use the three hash-checked DATs beside the executable,
+  launched via `tools/run_staged.ps1` from the workspace, without a resource
+  working-directory override.
+- Final diagnostic log: 26 sound-83/flying-object emissions; zero VEH/SEH
+  entries; zero opening-script or world-map Effect execution errors.
+- Both final full-playback recordings show first-stage fade, walking/entry,
+  correct door image, indoor pause, smoke, gradual flying-object rotation,
+  Marisa's exit and the automatic title handoff. No-log process remains
+  responsive and creates no `.log`, `.bmp` or `.dmp` files.
+- A separate no-log recording (`notrace-final.mkv`) shows an early title skip.
+  Keyboard input was not isolated; its cause is unverified. An unchanged-binary
+  repeat (`notrace-final-repeat.mkv`) shows the full sequence and is the
+  no-log full-playback evidence. The existing async-key fallback reads keys
+  globally; input-focus behavior was not expanded in this change.
+- Existing `block.nut` initialization and TitleLogo errors are recorded but
+  remain outside this second-stage repair. Exact pixel identity and all
+  translated VM paths are not claimed; validation covers the observed
+  opening sequence in Release.
+
+Final executable SHA256:
+
+- Diagnostic: `AE6EE8F847423F9023D1ADFDC4C8B27290873D3720D33F70DB97E277FBA94587`.
+- No-log: `4C6E92C8FA4E6FEEAAA9F47B2B6FD4BF9525F15471F8FB6AE9D30E804F85ADE9`.
+
+## E-diagnostic-timing
+
+The original script measures waits against `timeGetTime()` captured at BGM
+start. Per-message file open/write/close made the diagnostic walking segment
+take longer than the later absolute deadlines, compressing the indoor wait.
+`retdec_entry.c` now buffers trace output behind a lock, preserving every VM
+trace call and flushing at frame/error/exit boundaries. Whole lines from audio
+and game threads no longer interleave. No animation time or trajectory is
+hardcoded in the runtime. Disabling trace also disables render capture only.
+
+Rebuild/replay (PowerShell):
+
+```powershell
+cmake --build build-runs/p2-repair-diag --config Release --parallel 4
+cmake --build build-runs/p2-repair-notrace --config Release --parallel 4
+ctest --test-dir build-runs/p2-repair-diag -C Release --output-on-failure
+ctest --test-dir build-runs/p2-repair-notrace -C Release --output-on-failure
+.\tools\stage_dat.ps1 -Executable runtime-builds/p2-repair-notrace/kinoko_retdec_rebuild.exe -SourceDir C:/WorkSpace/6kinoko
+.\tools\run_staged.ps1 -Executable runtime-builds/p2-repair-notrace/kinoko_retdec_rebuild.exe
+```
+
+Reverse-engineering checklist: scope/imports recorded; static claims matched
+to original assembly and Squirrel source/object disassembly; failures reproduced
+under x32dbg; findings tested dynamically; original IDA comments saved; unrelated
+worktree changes preserved. Stage-two fixes validated; title work deferred.
