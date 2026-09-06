@@ -85,6 +85,7 @@ void retdec_trace(const char *message)
          strncmp(message, "game:", 5) != 0 &&
          strncmp(message, "scene:", 6) != 0 &&
          strncmp(message, "stagevm:", 8) != 0 &&
+         strncmp(message, "savedata:", 9) != 0 &&
          strncmp(message, "prepcall-beginstage-", 20) != 0 &&
          strncmp(message, "call-initstage-", 15) != 0 &&
          strncmp(message, "bgm:", 4) != 0 &&

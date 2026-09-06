@@ -18,6 +18,7 @@
 #include <intrin.h>
 #include <d3d9.h>
 #include <dinput.h>
+#include <zlib.h>
 
 #include "retdec_asm_stubs.h"
 
@@ -14254,67 +14255,44 @@ int32_t function_404270(void) {
 
 // Address range: 0x404390 - 0x404429
 int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {
-    // 0x404390
-    /* The stream object occupies the contiguous stack slots following the
-       first four public fields.  RetDec compressed those slots into one
-       scalar, so the inflate routine received unrelated stack data. */
-    int32_t stream[16] = { 0 };
-    int32_t remaining = a4;
-
-    if (function_477160(stream, -1, "1.2.3", 56, 0) != 0) {
-        // 0x4043cc
+    z_stream stream = { 0 };
+    int status;
+    int32_t written;
+    if (a1 == 0 || a2 < 0 || a3 == NULL || a4 <= 0 ||
+        deflateInit(&stream, Z_DEFAULT_COMPRESSION) != Z_OK)
+        return 0;
+    stream.next_in = (Bytef *)(intptr_t)a1;
+    stream.avail_in = (uInt)a2;
+    stream.next_out = (Bytef *)a3;
+    stream.avail_out = (uInt)a4;
+    status = deflate(&stream, Z_FINISH);
+    written = a4 - (int32_t)stream.avail_out;
+    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
+        deflateEnd(&stream);
         return 0;
     }
-    // 0x4043d3
-    stream[0] = a1;
-    stream[1] = a2;
-    stream[3] = (int32_t)(intptr_t)a3;
-    stream[4] = remaining;
-    int32_t result = function_4757e0(stream, 4); // 0x4043f6
-    if (result == 1) {
-        // 0x40440d
-        function_475fc0(stream);
-        return 0;
-    }
-    if (result == remaining || result != 0) {
-        // 0x4043cc
-        return 0;
-    }
-    // 0x40440d
-    if (function_475fc0(stream) != 0)
-        return 0;
-    return remaining - stream[4];
+    return deflateEnd(&stream) == Z_OK ? written : 0;
 }
 
 // Address range: 0x404430 - 0x4044c7
 int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x404430
-    int32_t stream[16] = { 0 };
-    int32_t remaining = a4;
-
-    if (function_474000(stream, "1.2.3", 56, 0) != 0) {
-        // 0x40446a
+    z_stream stream = { 0 };
+    int status;
+    int32_t written;
+    if (a1 == 0 || a2 <= 0 || a3 == 0 || a4 <= 0 ||
+        inflateInit(&stream) != Z_OK)
+        return 0;
+    stream.next_in = (Bytef *)(intptr_t)a1;
+    stream.avail_in = (uInt)a2;
+    stream.next_out = (Bytef *)(intptr_t)a3;
+    stream.avail_out = (uInt)a4;
+    status = inflate(&stream, Z_NO_FLUSH);
+    written = a4 - (int32_t)stream.avail_out;
+    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
+        inflateEnd(&stream);
         return 0;
     }
-    // 0x404471
-    stream[0] = a1;
-    stream[1] = a2;
-    stream[3] = a3;
-    stream[4] = remaining;
-    int32_t result = function_474110(stream); // 0x404494
-    if (result == 1) {
-        // 0x4044ab
-        function_475710(stream);
-        return 0;
-    }
-    if (result == remaining || result != 0) {
-        // 0x40446a
-        return 0;
-    }
-    // 0x4044ab
-    if (function_475710(stream) != 0)
-        return 0;
-    return remaining - stream[4];
+    return inflateEnd(&stream) == Z_OK ? written : 0;
 }
 
 // Address range: 0x4044d0 - 0x4045bd
@@ -151868,7 +151846,9 @@ static int32_t function_472e50_legacy(int32_t a1, int32_t a2, int32_t a3) {
 
 static int32_t retdec_table_stream_write(int32_t *stream, const void *data,
                                          uint32_t size) {
-    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0))
+    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0) ||
+        stream[1] < 0 || stream[1] > stream[2] ||
+        size > (uint32_t)(stream[2] - stream[1]))
         return 0;
     if (size != 0) {
         memcpy((void *)(intptr_t)(stream[0] + stream[1]), data, size);
@@ -151879,7 +151859,9 @@ static int32_t retdec_table_stream_write(int32_t *stream, const void *data,
 
 static int32_t retdec_table_stream_read(int32_t *stream, void *data,
                                         uint32_t size) {
-    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0))
+    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0) ||
+        stream[1] < 0 || stream[1] > stream[2] ||
+        size > (uint32_t)(stream[2] - stream[1]))
         return 0;
     if (size != 0) {
         memcpy(data, (const void *)(intptr_t)(stream[0] + stream[1]), size);
@@ -152064,7 +152046,7 @@ int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
                 !retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
-                function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
+                ok = function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
             }
         } else if (value_type == 0x0A000020u) {
             int32_t nested[3];
@@ -152077,7 +152059,7 @@ int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
                 !retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
-                function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
+                ok = function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
             }
         } else {
             ok = 0;
@@ -152128,6 +152110,9 @@ int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
         uint32_t value_type = (uint32_t)value[1];
         uint32_t key_type = (uint32_t)key[1];
 
+        /* Original 4728E9 skips null/non-serializable values before the tag. */
+        if ((value_type & 0x7eu) == 0)
+            continue;
         if (!retdec_table_stream_write(stream_ptr, &value_type,
                                        sizeof(value_type))) {
             ok = 0;
@@ -152174,14 +152159,14 @@ int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
                 !retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
-                function_472820(stream_ptr, nested[0], nested[1], nested[2]);
+                ok = function_472820(stream_ptr, nested[0], nested[1], nested[2]);
             }
         } else if (value_type == 0x0A000020u) {
             int32_t nested[3];
             if (!retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
-                function_472820(stream_ptr, nested[0], nested[1], nested[2]);
+                ok = function_472820(stream_ptr, nested[0], nested[1], nested[2]);
             }
         }
 
@@ -152189,9 +152174,9 @@ int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
         function_4a9d70_this((int32_t)(intptr_t)key);
     }
 
-    if (ok && iterator_started) {
+    if (iterator_started) {
         uint32_t null_type = 0x01000001u;
-        if (!retdec_table_stream_write(stream_ptr, &null_type,
+        if (ok && !retdec_table_stream_write(stream_ptr, &null_type,
                                        sizeof(null_type)))
             ok = 0;
         function_4a9d50();
@@ -152215,6 +152200,8 @@ int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
     int32_t table_object[3];
     int32_t result = 0;
 
+    retdec_trace("savedata:load-begin");
+    retdec_trace((const char *)(intptr_t)path_ptr);
     file_handle = CreateFileA(
         (LPCSTR)(intptr_t)path_ptr, GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
@@ -152234,16 +152221,19 @@ int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
         bytes_read != encoded_size)
         goto cleanup;
 
-    (void)function_404430((int32_t)(intptr_t)encoded,
+    stream[2] = function_404430((int32_t)(intptr_t)encoded,
                           (int32_t)encoded_size,
                           (int32_t)(intptr_t)decoded, 0x20000);
+    retdec_trace_i32("savedata:decoded-size", stream[2]);
+    if (stream[2] <= 0)
+        goto cleanup;
     stream[0] = (int32_t)(intptr_t)decoded;
     stream[1] = 0;
     if (!retdec_squirrel_object_from_pair(table_object, object_type,
                                           object_data))
         goto cleanup;
-    function_4722e0(stream, table_object[0], table_object[1], table_object[2]);
-    result = 1;
+    result = function_4722e0(stream, table_object[0], table_object[1], table_object[2]);
+    retdec_trace_i32("savedata:decoded-consumed", stream[1]);
 
 cleanup:
     if (file_handle != INVALID_HANDLE_VALUE)
@@ -152253,11 +152243,14 @@ cleanup:
     if (encoded != NULL)
         free(encoded);
     function_4a9d70_this((int32_t)(intptr_t)input_object);
+    retdec_trace_i32("savedata:load-result", result);
     return result;
 }
 
 int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data) {
+    int32_t input_object[3] = { object_vtable, object_type, object_data };
+    int32_t table_object[3];
     int32_t input_stream[16] = { 0 };
     unsigned char *raw = NULL;
     unsigned char *encoded = NULL;
@@ -152266,6 +152259,8 @@ int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
     DWORD bytes_written;
     int32_t result = 0;
 
+    retdec_trace("savedata:save-begin");
+    retdec_trace((const char *)(intptr_t)path_ptr);
     file_handle = CreateFileA(
         (LPCSTR)(intptr_t)path_ptr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, NULL);
@@ -152278,12 +152273,18 @@ int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
 
     input_stream[0] = (int32_t)(intptr_t)raw;
     input_stream[1] = 0;
-    if (!function_472820(input_stream, object_vtable, object_type,
-                         object_data))
+    input_stream[2] = 0x20000;
+    if (!retdec_squirrel_object_from_pair(table_object, object_type, object_data) ||
+        !function_472820(input_stream, table_object[0], table_object[1],
+                         table_object[2]))
         goto cleanup;
+    retdec_trace_i32("savedata:raw-size", input_stream[1]);
     encoded_size = (DWORD)function_404390(
         (int32_t)(intptr_t)raw, input_stream[1],
         (int32_t *)(intptr_t)encoded, 0x20000);
+    retdec_trace_i32("savedata:encoded-size", (int32_t)encoded_size);
+    if (encoded_size == 0 || encoded_size > 0x20000)
+        goto cleanup;
     if (!WriteFile(file_handle, &encoded_size, sizeof(encoded_size),
                    &bytes_written, NULL) ||
         bytes_written != sizeof(encoded_size) ||
@@ -152299,6 +152300,8 @@ cleanup:
         free(encoded);
     if (raw != NULL)
         free(raw);
+    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    retdec_trace_i32("savedata:save-result", result);
     return result;
 }
 
@@ -240709,18 +240712,18 @@ int32_t function_4a9c60(int32_t * a1, int32_t * a2) {
         return 0;
     }
     // 0x4a9c7e
-    int32_t v1; // bp-12, 0x4a9c60
-    function_48ab40((int32_t)g644, -2, &v1);
-    int32_t v2 = &v1; // 0x4a9c9a
+    int32_t pair[2];
+    function_48ab40((int32_t)g644, -2, pair);
+    int32_t v2 = (int32_t)(intptr_t)pair;
     function_48a400((int32_t)g644, v2);
     int32_t v3 = (int32_t)a1 + 4; // 0x4a9caa
     function_48a430((int32_t)g644, v3);
-    *(int32_t *)v3 = v1;
-    function_48ab40((int32_t)g644, -1, &v1);
+    memcpy((void *)(intptr_t)v3, pair, sizeof(pair));
+    function_48ab40((int32_t)g644, -1, pair);
     function_48a400((int32_t)g644, v2);
     int32_t v4 = (int32_t)a2 + 4; // 0x4a9ce8
     function_48a430((int32_t)g644, v4);
-    *(int32_t *)v4 = v1;
+    memcpy((void *)(intptr_t)v4, pair, sizeof(pair));
     function_48aa30((int32_t)g644, 2);
     return 1;
 }
