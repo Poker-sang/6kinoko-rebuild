@@ -40,8 +40,9 @@ class Input(c.Structure):
 
 
 user32.SendInput.argtypes = [w.UINT, c.POINTER(Input), c.c_int]
-KEYS = {"z": 0x5A, "x": 0x58, "up": 0x26, "down": 0x28,
-        "left": 0x25, "right": 0x27, "escape": 0x1B}
+KEYS = {chr(key): ord(chr(key).upper()) for key in range(ord("a"), ord("z") + 1)}
+KEYS.update({"up": 0x26, "down": 0x28,
+             "left": 0x25, "right": 0x27, "escape": 0x1B})
 
 
 def window_for(pid):

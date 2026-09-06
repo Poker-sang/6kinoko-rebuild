@@ -9,9 +9,12 @@ completed opening stages. No replacement title scripts or animation constants.
 - [x] Read project, reverse-engineering, IDA and computer-use skills.
 - [x] Survey original executable and readable imports.
 - [x] Identify the first title script failure and compare native bindings.
-- [ ] Restore title animation and save selection behavior.
-- [ ] Verify diagnostic and no-log Win32 Release builds with staged DATs.
-- [ ] Record final evidence and commit a backup.
+- [x] Restore title animation, menu display and cursor navigation.
+- [x] Restore keyboard remapping and original-compatible config persistence.
+- [x] Verify diagnostic and no-log Win32 Release builds with staged DATs.
+- [x] Record evidence and commit rendering backup 64fc41a.
+- [x] Commit final keyboard-mapping backup (this report's commit).
+- [ ] Deferred by user: original save-progress loading/restoration.
 
 ## E-imports / triage
 
@@ -99,3 +102,74 @@ Implement keyboard mapping next. Existing reference keyconfig.dat is 68 bytes
 The supplied marisaA/B/C.dat are 1012/1010/668 bytes, with a size prefix and
 zlib-looking payload. User explicitly deferred difficult save-progress work.
 Keep original files intact; use independent runtime copies for persistence tests.
+
+## E-keyboard mapping and defaults
+
+Original IDA 46BC90 scans the keyboard in DIK order, excluding 148, 58 and 112,
+then stores the chosen scan code in the 68-byte keyboard record at field+1.
+The rebuild's WaitAssign was a startup stub returning false. Restore the scan
+and assignment; GetAssign must also use field+1 for keyboard, field+5 for pads.
+Existing Load/Save adapters already invoke the native methods. Save now uses
+CREATE_ALWAYS, matching 46B813, rather than leaving trailing bytes with OPEN_ALWAYS.
+
+46E895..46E8D3 initializes raw record fields as up/down/left/right/Z/A/C/X,
+with DIK values 200,208,203,205,44,30,46,45. The original title script's
+keyIndexMap is [0,1,2,3,4,7,6,5,...], so the UI order is arrows then Z/X/C/A.
+These defaults were already correct and were kept. Config records override
+them only when loaded; the user's first sample changed the left field to Z.
+The user subsequently edited the reference config during testing, so its
+earlier hash/values should be treated as observations, not immutable fixtures.
+
+The DirectInput fallback previously sampled a small fixed key list. It now
+samples the keyboard's scan codes and respects the original foreground-only
+cooperative mode (408BBE passes 22). On this machine, MapVirtualKeyExW with
+MAPVK_VK_TO_VSC_EX returns 0x48/0x50 for arrows without E0, which initially
+broke up/down. Restore their DIK extended bit explicitly, as well as other
+extended keys, Pause and PrintScreen. User retested movement, remapping,
+saved files, and successfully loaded the rebuilt file with the original EXE.
+Diagnostic traces independently record config load, multiple assignments and
+config-saved events. No gamepad hardware was available for a physical pad test.
+
+## Final runtime validation and limits
+
+Both Release configurations pass archive_smoke (1/1) and use hash-checked
+6kinoko_a/b/c.dat beside their EXE, launched through run_staged.ps1 without a
+working-directory or data-directory override. Trace calls remain compiled in;
+the no-log build silences only the output and disables capture.
+
+notrace-final-opening.mkv contains 25.6 seconds of the no-log build, including
+the logo fade, second-stage animation, title handoff, menu and configuration
+screen with correctly displayed arrows/Z/X/C/A. The user operated the menu
+and confirmed normal operation. The window disappeared before the requested
+28-second final screenshot, so FFmpeg reported capture error 8; the preceding
+recording is readable. The final title image was extracted from that recording.
+No .log/.bmp/.dmp files were produced in the no-log runtime directory.
+Other automated input runs stopped on foreground loss rather than sending
+keys to a different application. The user's interactive compatibility test
+is the persistence evidence; no unattended full remap round trip is claimed.
+
+Known earlier faults outside this completed increment: block.nut initialization,
+some stage-start/fader paths and recursive shutdown faults. Original save
+progress restoration was explicitly deferred. The supplied save files have
+a little-endian compressed-length prefix (1008/1006/664) followed by zlib;
+inflated sizes are 14105/14105/6332 and the payload contains typed Squirrel
+values. The B file internally names marisaC.dat, so filenames must not be
+assumed to equal serialized identity. No save-progress parser was added here.
+
+IDA comments/save were attempted at the end, but session 45ad8981's worker
+had expired. No annotated IDB is claimed. Static findings above preserve the
+addresses and instructions; runtime evidence includes logs, recordings,
+x32dbg parameters and user confirmation. P0 synthesis: findings grounded in
+static plus dynamic evidence; save-progress and untested hardware remain
+explicit scope limits. Original binaries, DATs and user config files were not
+patched by the agent.
+
+Final rebuild after the PrintScreen scan-code correction passed archive_smoke
+in both configurations and fresh launch checks. diag-final-smoke.png records
+the deletion submenu; notrace-final-smoke.png records second-stage playback.
+The no-log runtime still produced no diagnostic files. User modifications to
+keyconfig.dat in either runtime/reference directory were preserved.
+
+Final EXE SHA256:
+- Diagnostic: B6C9F34DA3FA06A3BE7D930B0C6DA11068B334C365479BADA026AF3F77BC99E5
+- No-log: 4E5C0C1A9BCA5AB04712D6BE74C0598CB65A62CD27BD3F773E038AD1A0630571

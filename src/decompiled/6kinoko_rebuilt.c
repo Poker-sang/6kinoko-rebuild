@@ -18325,24 +18325,37 @@ int32_t function_4074c0(int32_t * a1) {
    the same DIK scan codes as the original device record. */
 static void retdec_poll_fallback_keyboard(void)
 {
-    static const struct {
-        unsigned char scan_code;
-        int virtual_key;
-    } key_map[] = {
-        { 0x1e, 'A' }, { 0x1f, 'S' },
-        { 0x2a, VK_LSHIFT }, { 0x2c, 'Z' }, { 0x2d, 'X' },
-        { 0x2e, 'C' }, { 0x2f, 'V' }, { 0x39, VK_SPACE },
-        { 0x1c, VK_RETURN }, { 0x01, VK_ESCAPE },
-        { 0xc8, VK_UP }, { 0xcb, VK_LEFT },
-        { 0xcd, VK_RIGHT }, { 0xd0, VK_DOWN }
-    };
-    size_t index;
     static int previous_z;
+    HKL keyboard_layout = GetKeyboardLayout(0);
 
     memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
-    for (index = 0; index < sizeof(key_map) / sizeof(key_map[0]); ++index) {
-        if ((GetAsyncKeyState(key_map[index].virtual_key) & 0x8000) != 0)
-            g_retdec_keyboard_state[key_map[index].scan_code] = 0x80;
+    /* 408B30 uses DISCL_FOREGROUND. Keep that contract in the fallback,
+       and expose the full keyboard to the original WaitAssign scan. */
+    if (g768 != NULL && GetForegroundWindow() == (HWND)g768) {
+        for (UINT virtual_key = VK_BACK; virtual_key < 256; ++virtual_key) {
+            UINT scan;
+            if (virtual_key == VK_SHIFT || virtual_key == VK_CONTROL || virtual_key == VK_MENU ||
+                (GetAsyncKeyState((int)virtual_key) & 0x8000) == 0)
+                continue;
+            scan = MapVirtualKeyExW(virtual_key, MAPVK_VK_TO_VSC_EX, keyboard_layout);
+            if (scan == 0)
+                continue;
+            scan = (scan & 0xffu) | ((scan & 0xff00u) ? 0x80u : 0);
+            /* Some IME layouts omit E0 even for MAPVK_VK_TO_VSC_EX.
+               DirectInput always distinguishes these from keypad keys. */
+            switch (virtual_key) {
+            case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
+            case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
+            case VK_INSERT: case VK_DELETE: case VK_RCONTROL: case VK_RMENU:
+            case VK_DIVIDE: case VK_SNAPSHOT: case VK_LWIN: case VK_RWIN:
+            case VK_APPS:
+                scan |= 0x80u;
+                break;
+            }
+            if (virtual_key == VK_PAUSE) scan = DIK_PAUSE;
+            if (virtual_key == VK_SNAPSHOT) scan = DIK_SYSRQ;
+            g_retdec_keyboard_state[scan] = 0x80;
+        }
     }
     if (previous_z != (g_retdec_keyboard_state[0x2c] != 0)) {
         previous_z = g_retdec_keyboard_state[0x2c] != 0;
@@ -21494,26 +21507,13 @@ int32_t function_408d00(void) {
 
 // Address range: 0x408e60 - 0x408e73
 int32_t function_408e60(int32_t a1) {
-    // 0x408e60
-    int32_t v1; // 0x408e60
-    return (int32_t)(*(char *)((a1 & 255) + 32 + v1) >> 7);
+    return g_retdec_keyboard_state[(unsigned char)a1] >> 7;
 }
 
 // Address range: 0x408e80 - 0x408ea8
 int32_t function_408e80(int32_t a1) {
-    // 0x408e80
-    if (a1 < 0) {
-        // 0x408ea2
-        return 0;
-    }
-    // 0x408e8a
-    int32_t v1; // 0x408e80
-    if (*(int32_t *)(v1 + 288) > a1) {
-        // 0x408e92
-        return *(int32_t *)(v1 + 292) + 80 * a1;
-    }
-    // 0x408ea2
-    return 0;
+    return a1 >= 0 && a1 < g782 && g783 != NULL
+        ? (int32_t)(intptr_t)(g783 + 80 * a1) : 0;
 }
 
 // Address range: 0x408eb0 - 0x409026
@@ -143948,7 +143948,7 @@ int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName) {
     retdec_trace_i32("46b7c0:this", this_ptr);
     retdec_trace_i32("46b7c0:path", lpFileName);
     HANDLE file_handle = CreateFileA((LPCSTR)(intptr_t)lpFileName,
-                                      GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
+                                      GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                                       FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_handle == INVALID_HANDLE_VALUE)
         return 0;
@@ -143962,7 +143962,7 @@ int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName) {
         WriteFile(file_handle, (LPCVOID)(intptr_t)(begin + 4), 0x44,
                   &transferred, NULL);
     CloseHandle(file_handle);
-    retdec_trace("46b7c0:done");
+    retdec_trace_squirrel_name("input:config-saved", lpFileName);
     return 0;
 }
 
@@ -143972,6 +143972,7 @@ int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName) {
 int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
     retdec_trace_i32("46b880:this", this_ptr);
     retdec_trace_i32("46b880:path", lpFileName);
+    retdec_trace_squirrel_name("input:config-load", lpFileName);
     HANDLE file_handle = CreateFileA((LPCSTR)(intptr_t)lpFileName,
                                       GENERIC_READ,
                                       FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -143985,6 +143986,7 @@ int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
     if (ReadFile(file_handle, record, sizeof(record), &transferred, NULL) &&
         transferred == sizeof(record)) {
         memcpy((void *)(intptr_t)(this_ptr + 0x10), record, sizeof(record));
+        retdec_trace("input:config-keyboard-loaded");
         if ((int32_t)(int8_t)record[0] >= g782) {
             memset((void *)(intptr_t)(this_ptr + 0x10), 0, sizeof(record));
             *(unsigned char *)(intptr_t)(this_ptr + 0x10) = 0xfe;
@@ -144213,10 +144215,40 @@ int32_t function_46bbe0(int32_t this_ptr, int32_t device,
 
 // Address range: 0x46bc90 - 0x46be37
 int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t field) {
-    (void)this_ptr;
-    (void)device;
-    (void)field;
-    /* No buffered DirectInput event is pending during startup. */
+    int32_t record[17];
+    int32_t begin, end;
+    if (this_ptr == 0 || field < 0 || field >= 12)
+        return 0;
+    if (device == -1) {
+        for (int32_t scan = 0; scan < 256; ++scan) {
+            /* The original excludes Kanji, Caps Lock and Kana. */
+            if (scan == 148 || scan == 58 || scan == 112 || !function_408e60(scan))
+                continue;
+            memcpy(record, (const void *)(intptr_t)(this_ptr + 16), sizeof(record));
+            record[field + 1] = scan;
+            memcpy((void *)(intptr_t)(this_ptr + 16), record, sizeof(record));
+            retdec_trace_i32("input:assign-keyboard-field", field);
+            retdec_trace_i32("input:assign-keyboard-scan", scan);
+            return 1;
+        }
+        return 0;
+    }
+    begin = *(int32_t *)(intptr_t)(this_ptr + 180);
+    end = *(int32_t *)(intptr_t)(this_ptr + 184);
+    if (device >= 0 && device < (end - begin) / 168) {
+        for (int32_t index = 0; index < (end - begin) / 168; ++index) {
+            int32_t state = function_408e80(index);
+            if (state == 0) continue;
+            for (int32_t button = 0; button < 32; ++button) {
+                if (*(uint8_t *)(intptr_t)(state + 48 + button) == 0) continue;
+                memcpy(record, (const void *)(intptr_t)(begin + 4), sizeof(record));
+                record[field + 5] = button;
+                for (int32_t target = begin; target < end; target += 168)
+                    memcpy((void *)(intptr_t)(target + 4), record, sizeof(record));
+                return 1;
+            }
+        }
+    }
     return 0;
 #if 0
     // 0x46bc90
@@ -144361,7 +144393,8 @@ int32_t function_46be40(int32_t this_ptr, int32_t device, int32_t field) {
     } else {
         return -1;
     }
-    return record[field + 5];
+    /* 46BE83: keyboard indexes include the four direction assignments. */
+    return record[field + (device == -1 ? 1 : 5)];
 #if 0
     // 0x46be40
     int32_t v1; // 0x46be40
