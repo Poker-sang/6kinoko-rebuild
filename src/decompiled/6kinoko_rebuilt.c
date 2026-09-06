@@ -184,6 +184,7 @@ static int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr);
 static int32_t retdec_squirrel_pair_from_stack(int32_t vm, int32_t index,
                                                 int32_t *target);
+static int32_t retdec_actor_step_callback(int32_t state_ptr);
 
 // These wrappers intentionally use the C calling convention in the
 // compatibility translation unit.
@@ -3941,6 +3942,7 @@ int32_t function_45f640(int32_t *root_object);
 int32_t function_45f760(int32_t result);
 int32_t function_45f780(uint16_t a1);
 int32_t function_45f7a0(int32_t a1);
+static int32_t function_45f7e0_this(int32_t this_ptr, int32_t value);
 int32_t function_45f7e0(int32_t a1);
 int32_t function_45f800(void);
 int32_t function_45f810(void);
@@ -4027,8 +4029,11 @@ int32_t function_463510(int32_t a1);
 int32_t function_463580(int32_t a1);
 int32_t function_4635e0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_463610(int32_t result, int32_t a2, int32_t a3);
+static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
+                                    int32_t node_ptr);
 static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
                                     int32_t node_ptr, int32_t insert_left);
+static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr);
 static int32_t function_463b40_this(
     int32_t manager_ptr, int32_t first_vtable,
     int32_t first_type, int32_t first_data,
@@ -7835,7 +7840,9 @@ int32_t g608 = 0; // 0x513c7c
 int32_t g609 = 0; // 0x513c80
 char g610 = 0; // 0x513c84
 int32_t g611[3] = { 0, 0, 0 }; // 0x513c88, global SquirrelObject
-char * g612; // 0x513c98
+/* SetGlobalUpdateFunction stores a VM pointer and two SquirrelObject values
+   in this 28-byte SquirrelFunction object. */
+int32_t g612[7] = { 0 }; // 0x513c98
 int32_t g613 = 0; // 0x513cb4
 int32_t g614 = 0; // 0x513cb8
 /* Original global_var_514300, used as the collision-list receiver. */
@@ -126008,30 +126015,7 @@ int32_t function_45df10(int32_t source_ptr)
 
 // Address range: 0x45dfb0 - 0x45e013
 int32_t function_45dfb0(void) {
-    // 0x45dfb0
-    int32_t v1; // 0x45dfb0
-    char * v2 = (char *)v1; // bp-8, 0x45dfb3
-    int32_t v3 = *(int32_t *)(v1 + 20); // 0x45dfba
-    int32_t v4 = v3; // bp-20, 0x45dfc0
-    function_48ab90(v3, v3, *(int32_t *)(v1 + 24));
-    int32_t v5 = *(int32_t *)(v1 + 8); // 0x45dfca
-    function_48ab90(v5, v5, *(int32_t *)(v1 + 12));
-    int32_t v6 = function_48ace0(v5, 1, 1, 1); // 0x45dfe0
-    int32_t v7; // bp-12, 0x45dfb0
-    int32_t * v8 = &v7; // 0x45dfea
-    int32_t v9 = v5; // 0x45dfea
-    if (v6 < 0) {
-        // 0x45dfec
-        v9 = (int32_t)&v2;
-        v4 = v9;
-        v2 = "SquirrelFunction<> call failed";
-        __CxxThrowException_40_8();
-        v8 = &v4;
-    }
-    int32_t v10 = (int32_t)v8;
-    *(int32_t *)(v10 - 4) = 2;
-    *(int32_t *)(v10 - 8) = v9;
-    return function_48aa30((int32_t)&g1224, (int32_t)&g1224);
+    return retdec_actor_step_callback((int32_t)(intptr_t)g612);
 }
 
 // Address range: 0x45e020 - 0x45e0d5
@@ -127615,12 +127599,30 @@ int32_t function_45f7a0(int32_t a1) {
 }
 
 // Address range: 0x45f7e0 - 0x45f7f9
-int32_t function_45f7e0(int32_t a1) {
-    // 0x45f7e0
-    int32_t v1; // 0x45f7e0
-    *(int32_t *)(v1 + 228) = a1;
-    return function_469780(v1, v1);
+/* The original ResetPriority method is __thiscall(this, value). */
+static int32_t function_45f7e0_this(int32_t this_ptr, int32_t value) {
+    if (this_ptr == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(this_ptr + 228) = value;
+    return function_469780(this_ptr, this_ptr);
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45f7e0(int32_t value) {
+    __asm {
+        mov edx, [esp + 4]
+        push edx
+        push ecx
+        call function_45f7e0_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_45f7e0(int32_t value) {
+    return function_45f7e0_this(0, value);
+}
+#endif
 
 // Address range: 0x45f800 - 0x45f808
 int32_t function_45f800(void) {
@@ -130397,23 +130399,38 @@ static int32_t retdec_actor_update_motion(int32_t actor)
     return 0;
 }
 
-static void retdec_actor_collect_tree(int32_t node, int32_t sentinel,
-                                      int32_t *actors, int32_t capacity,
-                                      int32_t *count)
+static void retdec_actor_collect_tree(int32_t manager, int32_t node,
+                                      int32_t sentinel, int32_t *actors,
+                                      int32_t capacity, int32_t *count)
 {
     int32_t actor;
+    int32_t left;
+    int32_t right;
 
-    if (node == 0 || node == sentinel || actors == NULL || count == NULL)
+    if (manager == 0 || node == 0 || node == sentinel ||
+        actors == NULL || count == NULL)
         return;
+    left = *(int32_t *)(intptr_t)(node + 0);
+    right = *(int32_t *)(intptr_t)(node + 8);
     retdec_actor_collect_tree(
-        *(int32_t *)(intptr_t)(node + 0), sentinel,
-        actors, capacity, count);
+        manager, left, sentinel, actors, capacity, count);
     actor = *(int32_t *)(intptr_t)(node + 12);
-    if (actor != 0 && *count < capacity)
-        actors[(*count)++] = actor;
+    if (actor != 0 && *(unsigned char *)(intptr_t)(actor + 22) == 0) {
+        if (*count < capacity)
+            actors[(*count)++] = actor;
+    } else {
+        int32_t removed_node = 0;
+
+        /* 463D40 erases actors marked for destruction from the priority
+           tree while it rebuilds the update vector. */
+        function_463280_this(manager + 84,
+                             (int32_t)(intptr_t)&removed_node, node);
+        if (actor != 0 &&
+            *(int32_t *)(intptr_t)(actor + 16) == node)
+            *(int32_t *)(intptr_t)(actor + 16) = 0;
+    }
     retdec_actor_collect_tree(
-        *(int32_t *)(intptr_t)(node + 8), sentinel,
-        actors, capacity, count);
+        manager, right, sentinel, actors, capacity, count);
 }
 
 static int32_t retdec_actor_manager_refresh(int32_t manager)
@@ -130460,7 +130477,7 @@ static int32_t retdec_actor_manager_refresh(int32_t manager)
         (int32_t)(intptr_t)(actors + capacity);
     active_count = 0;
     retdec_actor_collect_tree(
-        *(int32_t *)(intptr_t)(sentinel + 4), sentinel,
+        manager, *(int32_t *)(intptr_t)(sentinel + 4), sentinel,
         actors, capacity, &active_count);
 
     back_count = 0;
@@ -130535,6 +130552,65 @@ static int32_t retdec_actor_activate_if_visible(int32_t actor,
     return 0;
 }
 
+/* Keep a narrow state snapshot for the opening actors while comparing the
+ * manager update path with the original.  The range and cadence are only
+ * diagnostic; this helper does not participate in the update decision. */
+static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
+                                             int32_t update_mask)
+{
+    int32_t id;
+    int32_t frame;
+    int32_t node;
+    int32_t value;
+
+    if (actor == 0 || g848 < 540 || g848 > 820 || (g848 % 10) != 0)
+        return;
+    id = *(int32_t *)(intptr_t)(actor + 224);
+    if (id < 0x200 || id > 0x207)
+        return;
+
+    frame = *(int32_t *)(intptr_t)(actor + 204);
+    node = *(int32_t *)(intptr_t)(actor + 200);
+    retdec_trace_i32("actor:diag-frame-counter", g848);
+    retdec_trace_i32("actor:diag-phase", phase);
+    retdec_trace_i32("actor:diag-id", id);
+    retdec_trace_i32("actor:diag-address", actor);
+    retdec_trace_i32("actor:diag-animation-key",
+                     *(int32_t *)(intptr_t)(actor + 208));
+    retdec_trace_i32("actor:diag-frame-pointer", frame);
+    retdec_trace_i32("actor:diag-node-pointer", node);
+    retdec_trace_i32("actor:diag-frame-index",
+                     *(int32_t *)(intptr_t)(actor + 212));
+    retdec_trace_i32("actor:diag-timer",
+                     *(int32_t *)(intptr_t)(actor + 216));
+    value = frame != 0
+        ? (int32_t)*(int16_t *)(intptr_t)(frame + 240) : 0;
+    retdec_trace_i32("actor:diag-duration", value);
+    retdec_trace_i32("actor:diag-active",
+                     *(unsigned char *)(intptr_t)(actor + 40));
+    retdec_trace_i32("actor:diag-visible",
+                     *(unsigned char *)(intptr_t)(actor + 20));
+    retdec_trace_i32("actor:diag-removable",
+                     *(unsigned char *)(intptr_t)(actor + 22));
+    retdec_trace_i32("actor:diag-update-flags",
+                     *(int32_t *)(intptr_t)(actor + 232));
+    retdec_trace_i32("actor:diag-update-mask", update_mask);
+    retdec_trace_i32("actor:diag-mask-hit",
+                     (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0);
+    memcpy(&value, (const void *)(intptr_t)(actor + 240), sizeof(value));
+    retdec_trace_i32("actor:diag-x", value);
+    memcpy(&value, (const void *)(intptr_t)(actor + 244), sizeof(value));
+    retdec_trace_i32("actor:diag-y", value);
+    memcpy(&value, (const void *)(intptr_t)(actor + 440), sizeof(value));
+    retdec_trace_i32("actor:diag-left", value);
+    memcpy(&value, (const void *)(intptr_t)(actor + 444), sizeof(value));
+    retdec_trace_i32("actor:diag-top", value);
+    memcpy(&value, (const void *)(intptr_t)(actor + 448), sizeof(value));
+    retdec_trace_i32("actor:diag-right", value);
+    memcpy(&value, (const void *)(intptr_t)(actor + 452), sizeof(value));
+    retdec_trace_i32("actor:diag-bottom", value);
+}
+
 /* ActorManager::Update keeps animation advancement and resource movement in
    the same order as the original 4641D0 call. */
 static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
@@ -130552,6 +130628,11 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
     if (manager == 0)
         return 0;
 
+    /* The original 4641D0 refreshes the vector, updates controller-owned
+       actors, then refreshes once more before stepping the visible actors. */
+    function_462e80(manager);
+    retdec_actor_manager_refresh(manager);
+
     actors = *(int32_t *)(intptr_t)(manager + 100);
     count = *(int32_t *)(intptr_t)(manager + 116);
     update_mask = *(int32_t *)(intptr_t)(manager + 64);
@@ -130562,11 +130643,13 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
     for (index = 0; actors != 0 && index < count; ++index) {
         int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
 
+        retdec_trace_actor_window_state(1, actor, update_mask);
         if (actor != 0 &&
             (*(unsigned char *)(intptr_t)(actor + 40) != 0 ||
              retdec_actor_activate_if_visible(actor, camera, 64.0f)) &&
             (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
             retdec_actor_tick(actor);
+        retdec_trace_actor_window_state(2, actor, update_mask);
     }
 
     function_469740();
@@ -130577,6 +130660,7 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
             *(unsigned char *)(intptr_t)(actor + 40) != 0 &&
             (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
             retdec_actor_update_motion(actor);
+        retdec_trace_actor_window_state(3, actor, update_mask);
     }
     return count;
 }
@@ -132388,6 +132472,132 @@ static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
     return result_ptr;
 }
 
+/* Remove one node from the same priority tree representation used by
+ * function_463610_this.  The original erase routine is a __thiscall and the
+ * generated body lost that receiver, so its tree accesses are unusable. */
+static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
+                                    int32_t node_ptr)
+{
+    int32_t sentinel;
+    int32_t left;
+    int32_t right;
+    int32_t replacement;
+    int32_t parent;
+    int32_t root;
+    int32_t minimum;
+    int32_t maximum;
+
+    if (tree_ptr == 0 || result_ptr == 0 || node_ptr == 0)
+        return 0;
+    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
+    if (sentinel == 0 || node_ptr == sentinel)
+        return 0;
+
+    left = *(int32_t *)(intptr_t)(node_ptr + 0);
+    right = *(int32_t *)(intptr_t)(node_ptr + 8);
+    replacement = sentinel;
+    parent = *(int32_t *)(intptr_t)(node_ptr + 4);
+
+    if (left == sentinel) {
+        replacement = right;
+        if (right != sentinel)
+            *(int32_t *)(intptr_t)(right + 4) = parent;
+        if (parent == sentinel)
+            *(int32_t *)(intptr_t)(sentinel + 4) = right;
+        else if (*(int32_t *)(intptr_t)parent == node_ptr)
+            *(int32_t *)(intptr_t)(parent + 0) = right;
+        else
+            *(int32_t *)(intptr_t)(parent + 8) = right;
+    } else if (right == sentinel) {
+        replacement = left;
+        if (left != sentinel)
+            *(int32_t *)(intptr_t)(left + 4) = parent;
+        if (parent == sentinel)
+            *(int32_t *)(intptr_t)(sentinel + 4) = left;
+        else if (*(int32_t *)(intptr_t)parent == node_ptr)
+            *(int32_t *)(intptr_t)(parent + 0) = left;
+        else
+            *(int32_t *)(intptr_t)(parent + 8) = left;
+    } else {
+        replacement = right;
+        while (*(int32_t *)(intptr_t)(replacement + 0) != sentinel)
+            replacement = *(int32_t *)(intptr_t)(replacement + 0);
+
+        parent = *(int32_t *)(intptr_t)(replacement + 4);
+        if (parent != node_ptr) {
+            int32_t successor_right =
+                *(int32_t *)(intptr_t)(replacement + 8);
+            *(int32_t *)(intptr_t)(parent + 0) = successor_right;
+            if (successor_right != sentinel)
+                *(int32_t *)(intptr_t)(successor_right + 4) = parent;
+            *(int32_t *)(intptr_t)(replacement + 8) = right;
+            *(int32_t *)(intptr_t)(right + 4) = replacement;
+        }
+
+        parent = *(int32_t *)(intptr_t)(node_ptr + 4);
+        *(int32_t *)(intptr_t)(replacement + 4) = parent;
+        *(int32_t *)(intptr_t)(replacement + 0) = left;
+        *(int32_t *)(intptr_t)(left + 4) = replacement;
+        if (parent == sentinel)
+            *(int32_t *)(intptr_t)(sentinel + 4) = replacement;
+        else if (*(int32_t *)(intptr_t)parent == node_ptr)
+            *(int32_t *)(intptr_t)(parent + 0) = replacement;
+        else
+            *(int32_t *)(intptr_t)(parent + 8) = replacement;
+    }
+
+    root = *(int32_t *)(intptr_t)(sentinel + 4);
+    if (root == 0 || root == sentinel) {
+        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
+        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
+    } else {
+        minimum = root;
+        while (*(int32_t *)(intptr_t)(minimum + 0) != sentinel)
+            minimum = *(int32_t *)(intptr_t)(minimum + 0);
+        maximum = root;
+        while (*(int32_t *)(intptr_t)(maximum + 8) != sentinel)
+            maximum = *(int32_t *)(intptr_t)(maximum + 8);
+        *(int32_t *)(intptr_t)(sentinel + 0) = minimum;
+        *(int32_t *)(intptr_t)(sentinel + 8) = maximum;
+    }
+    if (*(int32_t *)(intptr_t)(tree_ptr + 8) > 0)
+        --*(int32_t *)(intptr_t)(tree_ptr + 8);
+    *(int32_t *)(intptr_t)result_ptr = replacement;
+    _free((void *)(intptr_t)node_ptr);
+    return result_ptr;
+}
+
+/* ActorManager::ResetPriority removes the old node and inserts it again
+ * using the changed actor priority. */
+static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
+{
+    int32_t old_node;
+    int32_t erased;
+    int32_t actor_source;
+    int32_t node;
+    int32_t inserted[2] = { 0, 0 };
+
+    if (manager_ptr == 0 || actor_ptr == 0)
+        return 0;
+    old_node = *(int32_t *)(intptr_t)(actor_ptr + 16);
+    if (old_node != 0) {
+        erased = 0;
+        function_463280_this(manager_ptr + 84,
+                             (int32_t)(intptr_t)&erased, old_node);
+        *(int32_t *)(intptr_t)(actor_ptr + 16) = 0;
+    }
+    actor_source = actor_ptr;
+    node = function_463210_this(manager_ptr + 84,
+                                (int32_t)(intptr_t)&actor_source);
+    if (node == 0 || function_463610_this(
+            manager_ptr + 84, (int32_t)(intptr_t)inserted, node, 0) == 0)
+        return 0;
+    *(int32_t *)(intptr_t)(actor_ptr + 16) = inserted[0];
+    *(char *)(intptr_t)(manager_ptr + 120) = 1;
+    return (int32_t)(intptr_t)inserted;
+}
+
 // Address range: 0x463690 - 0x4636dd
 int32_t function_463690(int32_t a1, int32_t a2, int32_t a3) {
     // 0x463690
@@ -133062,17 +133272,8 @@ static int32_t function_463b40_this(
 
 // Address range: 0x463cf0 - 0x463d3c
 int32_t function_463cf0(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t * v2 = (int32_t *)(a1 + 16); // 0x463cfa
-    int32_t v3; // bp-8, 0x463cf0
-    function_463280(&v3, *v2);
-    int32_t v4 = function_463210((int32_t)&v1); // 0x463d17
-    int32_t v5; // bp-12, 0x463cf0
-    int32_t result = function_463610((int32_t)&v5, v4, (int32_t)&g1224); // 0x463d24
-    *v2 = v5;
-    int32_t v6; // 0x463cf0
-    *(char *)(v6 + 120) = 1;
-    return result;
+    return function_463cf0_this(
+        (int32_t)(intptr_t)g_retdec_actor_manager_state, a1);
 }
 
 // Address range: 0x463d40 - 0x463e57
@@ -140506,7 +140707,7 @@ int32_t function_4693a0(int32_t a1) {
     *(char *)(v60 + 40) = 0;
     *(float32_t *)(v60 + 452) = 65535.0f;
     *(char *)(v60 + 20) = 1;
-    function_45f7e0((int32_t)&g1224);
+    function_45f7e0_this(v60, (int32_t)&g1224);
     *(int32_t *)(v43 - 48) = v60 + 24;
     int32_t v61 = *(int32_t *)(v37 + 56); // 0x4695c8
     int32_t v62 = *(int32_t *)(v37 + 52); // 0x4695cb
@@ -140676,8 +140877,11 @@ int32_t function_469750(float80_t a1, int32_t a2, int32_t a3, int32_t a4, int32_
 
 // Address range: 0x469780 - 0x469793
 int32_t function_469780(int32_t a1, int32_t a2) {
-    // 0x469780
-    return function_463cf0(a1);
+    /* The original thunk receives the actor on the stack and loads the
+       ActorManager global into ECX before calling ResetPriority. */
+    (void)a2;
+    return function_463cf0_this(
+        (int32_t)(intptr_t)g_retdec_actor_manager_state, a1);
 }
 
 // Address range: 0x4697a0 - 0x4697b3
@@ -140786,9 +140990,18 @@ int32_t function_469900(void) {
                          *(int32_t *)(g_retdec_map_manager_state + 20));
     }
     function_46b9a0((int32_t)(intptr_t)g_retdec_input_manager_state);
-    if (function_4a9a30() == 0x8000100) {
+    if (function_4a9a30_this((int32_t)(intptr_t)(g612 + 4)) ==
+        0x08000100) {
         // 0x46994b
-        function_45dfb0();
+        retdec_trace("stagevm:global-callback");
+        if (trace_index <= 16) {
+            retdec_trace_i32("stagevm:global-state-vm", g612[0]);
+            retdec_trace_i32("stagevm:global-env-type", g612[2]);
+            retdec_trace_i32("stagevm:global-env-data", g612[3]);
+            retdec_trace_i32("stagevm:global-func-type", g612[5]);
+            retdec_trace_i32("stagevm:global-func-data", g612[6]);
+        }
+        retdec_actor_step_callback((int32_t)(intptr_t)g612);
     }
     int32_t v2 = function_471060(); // 0x46995c
     int32_t v3 = v2; // 0x469969
@@ -140855,27 +141068,36 @@ void function_469a03(int32_t nExitCode) {
 int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5, int32_t a6)
 {
+    static volatile LONG trace_count;
     int32_t first[3] = { a1, a2, a3 };
     int32_t second[3] = { a4, a5, a6 };
     int32_t first_copy[3] = { 0, 0, 0 };
     int32_t second_copy[3] = { 0, 0, 0 };
     int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
 
+    if (InterlockedIncrement(&trace_count) <= 8) {
+        retdec_trace("stagevm:set-global-update");
+        retdec_trace_i32("stagevm:set-global-first-type", first[1]);
+        retdec_trace_i32("stagevm:set-global-first-data", first[2]);
+        retdec_trace_i32("stagevm:set-global-second-type", second[1]);
+        retdec_trace_i32("stagevm:set-global-second-data", second[2]);
+    }
+
     if (first[1] == 0x08000100) {
         function_4a9500_this(second_copy, (int32_t)(intptr_t)second);
         function_4a9500_this(first_copy, (int32_t)(intptr_t)first);
         *(int32_t *)&g612 = (int32_t)(intptr_t)g644;
-        function_4a95c0_this((int32_t)(intptr_t)g600,
+        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
                              (int32_t)(intptr_t)second_copy);
-        function_4a95c0_this((int32_t)(intptr_t)g601,
+        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
                              (int32_t)(intptr_t)first_copy);
     } else {
         retdec_function_45df10_impl(
             (int32_t)(intptr_t)owner_state, 0);
         *(int32_t *)&g612 = owner_state[0];
-        function_4a95c0_this((int32_t)(intptr_t)g600,
+        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
                              (int32_t)(intptr_t)(owner_state + 1));
-        function_4a95c0_this((int32_t)(intptr_t)g601,
+        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
                              (int32_t)(intptr_t)(owner_state + 4));
         function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
         function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
@@ -140885,6 +141107,13 @@ int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
     function_4a9d70_this((int32_t)(intptr_t)first_copy);
     function_4a9d70_this((int32_t)(intptr_t)first);
     function_4a9d70_this((int32_t)(intptr_t)second);
+    if (trace_count <= 8) {
+        retdec_trace_i32("stagevm:set-global-vm", g612[0]);
+        retdec_trace_i32("stagevm:set-global-env-type", g612[2]);
+        retdec_trace_i32("stagevm:set-global-env-data", g612[3]);
+        retdec_trace_i32("stagevm:set-global-func-type", g612[5]);
+        retdec_trace_i32("stagevm:set-global-func-data", g612[6]);
+    }
     return 0;
 }
 
@@ -150255,12 +150484,13 @@ int32_t function_471c70(int32_t a1) {
         !retdec_squirrel_pair_from_stack(a1, 2, second))
         return 0;
 
-    /* 469A20 is registered behind this generic wrapper but consumes two
-       SquirrelObject values by value, i.e. six consecutive dwords. */
+    /* 469A20 receives the closure first and its environment second.  The
+       original 471C70 builds the two by-value temporaries from stack slots
+       3 and 2 respectively, so the raw extraction order is reversed here. */
     ((int32_t (__cdecl *)(int32_t, int32_t, int32_t,
                           int32_t, int32_t, int32_t))(intptr_t)target)(
-        first[0], first[1], first[2],
-        second[0], second[1], second[2]);
+        second[0], second[1], second[2],
+        first[0], first[1], first[2]);
     return 0;
 }
 
@@ -157911,6 +158141,7 @@ int32_t function_4764d0(int32_t a1) {
 //  - Zlib_length_code (8-bit)
 int32_t function_4766b0(int32_t a1) {
     // 0x4766b0
+    static volatile LONG trace_entry_count;
     int32_t v1; // bp-16, 0x4766b0
     int32_t v2 = &v1; // 0x4766b7
     int32_t * v3 = (int32_t *)(a1 + 116); // 0x4766c0
@@ -157944,6 +158175,19 @@ int32_t function_4766b0(int32_t a1) {
     int32_t v31; // 0x4766d7
     uint32_t v32; // 0x476745
     int32_t v33; // 0x4769be
+
+    if (InterlockedIncrement(&trace_entry_count) <= 8) {
+        retdec_trace("stagevm:zlib-entry");
+        retdec_trace_i32("stagevm:zlib-state", a1);
+        retdec_trace_i32("stagevm:zlib-avail-in",
+                         a1 != 0 ? *(int32_t *)(intptr_t)(a1 + 116) : 0);
+        retdec_trace_i32("stagevm:zlib-input",
+                         a1 != 0 ? *(int32_t *)(intptr_t)(a1 + 92) : 0);
+        retdec_trace_i32("stagevm:zlib-output",
+                         a1 != 0 ? *(int32_t *)(intptr_t)(a1 + 68) : 0);
+        retdec_trace_i32("stagevm:zlib-mode",
+                         a1 != 0 ? *(int32_t *)(intptr_t)(a1 + 136) : 0);
+    }
     while (true) {
       lab_0x4766c0:;
         uint32_t v34 = *v3; // 0x4766c0
@@ -207558,11 +207802,9 @@ int32_t function_491260(int32_t array_ptr, uint32_t a1, int32_t a2) {
     int32_t count;
     int32_t values;
     int32_t slot_address;
-    int32_t source_address;
     int32_t *output;
-    int32_t old_data;
-    int32_t source_type;
-    int32_t result;
+    const int32_t *source;
+    int32_t source_value[2];
 
     if (array_ptr == 0 || a2 == 0)
         return (int32_t)(a1 & 0xffffff00u);
@@ -207574,27 +207816,26 @@ int32_t function_491260(int32_t array_ptr, uint32_t a1, int32_t a2) {
         return (int32_t)(a1 & 0xffffff00u);
 
     slot_address = values + 8 * (int32_t)a1;
-    source_type = *(int32_t *)(intptr_t)slot_address;
-    if (source_type == 0x08010000)
-        source_address = *(int32_t *)(intptr_t)(slot_address + 4) + 12;
-    else {
-        source_address = (int32_t)(intptr_t)&source_type;
+    if (*(int32_t *)(intptr_t)slot_address == 0x08010000) {
+        /* SQArray::Get returns _realval(o), so a weakref is replaced by
+         * the embedded SQObjectPtr pair at +12. */
+        source = (const int32_t *)(intptr_t)(
+            *(int32_t *)(intptr_t)(slot_address + 4) + 12);
+    } else {
+        /* RetDec lost the second word of this temporary.  Keeping both
+         * words contiguous is required for ordinary array elements. */
+        source_value[0] = *(int32_t *)(intptr_t)slot_address;
+        source_value[1] = *(int32_t *)(intptr_t)(slot_address + 4);
+        source = source_value;
     }
 
     output = (int32_t *)(intptr_t)a2;
-    old_data = output[1];
-    output[1] = *(int32_t *)(intptr_t)(source_address + 4);
-    output[0] = *(int32_t *)(intptr_t)source_address;
-    if ((output[0] & 0x08000000) != 0)
-        ++output[1];
-
-    if ((output[0] & 0x08000000) == 0)
-        return (a2 & -256) | 1;
-
-    result = a2;
-    if (--*(int32_t *)(intptr_t)(old_data + 4) == 0)
-        result = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)old_data + 4);
-    return (result & -256) | 1;
+    /* SQArray::Get assigns into the output SQObjectPtr.  The generic
+     * adapter performs the required addref-before-release ordering and
+     * increments the pointed-to object's refcount, rather than the pair's
+     * data word. */
+    retdec_squirrel_assign(output, source);
+    return (a2 & -256) | 1;
 }
 
 // Address range: 0x4912e0 - 0x491339
@@ -207604,9 +207845,6 @@ int32_t function_4912e0(int32_t array_ptr, uint32_t a1, int32_t a2) {
     int32_t values;
     int32_t slot_address;
     int32_t *slot;
-    int32_t old_data;
-    int32_t new_type;
-    int32_t result;
 
     if (array_ptr == 0 || a2 == 0)
         return (int32_t)(a1 & 0xffffff00u);
@@ -207619,20 +207857,8 @@ int32_t function_4912e0(int32_t array_ptr, uint32_t a1, int32_t a2) {
 
     slot_address = values + 8 * (int32_t)a1;
     slot = (int32_t *)(intptr_t)slot_address;
-    old_data = slot[1];
-    slot[1] = *(int32_t *)(intptr_t)(a2 + 4);
-    new_type = *(int32_t *)(intptr_t)a2;
-    slot[0] = new_type;
-    if ((new_type & 0x08000000) != 0)
-        ++*(int32_t *)(intptr_t)(slot_address + 4);
-
-    if ((new_type & 0x08000000) == 0)
-        return (slot_address & -256) | 1;
-
-    result = slot_address;
-    if (--*(int32_t *)(intptr_t)(old_data + 4) == 0)
-        result = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)old_data + 4);
-    return (result & -256) | 1;
+    retdec_squirrel_assign(slot, (const int32_t *)(intptr_t)a2);
+    return (slot_address & -256) | 1;
 }
 
 // Address range: 0x491340 - 0x4913f7
@@ -214117,6 +214343,7 @@ static __declspec(noinline) int32_t retdec_execute_call_closure(
     int32_t trace_init_savedata_table;
     int32_t proto;
     const char *name;
+    static volatile LONG trace_stage_closure_count;
 
     if (vm == 0 || instruction_ptr == 0)
         return 0;
@@ -214145,6 +214372,22 @@ static __declspec(noinline) int32_t retdec_execute_call_closure(
         trace_init_stage = 1;
     trace_init_savedata_table = name != NULL &&
         strcmp(name, "InitSaveDataTable") == 0;
+    if (name != NULL &&
+        (strcmp(name, "Update") == 0 ||
+         strcmp(name, "Generator") == 0 ||
+         strcmp(name, "InitMarisa") == 0 ||
+         strcmp(name, "InitMarisaOut") == 0 ||
+         strcmp(name, "InitMarisaHand") == 0 ||
+         strcmp(name, "InitKinoko") == 0 ||
+         strcmp(name, "InitFlying") == 0) &&
+        InterlockedIncrement(&trace_stage_closure_count) <= 256) {
+        retdec_trace_squirrel_name("stagevm:closure-name",
+                                   (int32_t)(intptr_t)name);
+        retdec_trace_i32("stagevm:closure-proto", proto);
+        retdec_trace_i32("stagevm:closure-instruction", instruction_ptr);
+        retdec_trace_i32("stagevm:closure-nargs", nargs);
+        retdec_trace_i32("stagevm:closure-stackbase", stackbase);
+    }
     if (name != NULL &&
         (strcmp(name, "FadeIn") == 0 ||
          strcmp(name, "SetFade") == 0)) {
