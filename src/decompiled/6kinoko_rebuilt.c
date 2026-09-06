@@ -686,7 +686,7 @@ struct vtable_4d5a68_type {
 struct vtable_4d5a04_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
-    int32_t (*e2)(int16_t, int16_t);
+    int32_t (*e2)(uint32_t);
     int32_t (*e3)(int16_t, int16_t);
     int32_t (*e4)();
 };
@@ -4163,7 +4163,8 @@ int32_t function_46a550(char a1);
 int32_t function_46a580(int32_t a1, int32_t a2);
 int32_t function_46a5b0(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_46a650(int32_t * a1, int32_t a2, int32_t a3);
-int32_t function_46a6f0(int16_t a1, uint16_t a2);
+int32_t function_46a6f0(uint32_t handle);
+static int32_t function_46a6f0_this(int32_t manager, uint32_t handle);
 int32_t function_46a7a0(void);
 int32_t function_46a7e0(char a1);
 int32_t function_46a830(int32_t a1);
@@ -126993,84 +126994,71 @@ static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair) {
 // Address range: 0x45e460 - 0x45e5d4
 // From class:    .?AVActor@@
 // Type:          constructor
-int32_t function_45e460(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45e470
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x45e460
-    *(int32_t *)v2 = (int32_t)&g17;
-    function_4a9570();
-    function_45fb90();
-    *(int32_t *)(v2 + 32) = 0;
-    int32_t * v3 = (int32_t *)(v2 + 36); // 0x45e4b6
-    int32_t v4 = *v3; // 0x45e4b6
-    *v3 = 0;
-    if (v4 != 0) {
-        int32_t * v5 = (int32_t *)(v4 + 8); // 0x45e4c6
-        *v5 = *v5 - 1;
-    }
-    // 0x45e4d5
-    *(int32_t *)(v2 + 24) = 0;
-    int32_t * v6 = (int32_t *)(v2 + 28); // 0x45e4d8
-    int32_t v7 = *v6; // 0x45e4d8
-    *v6 = 0;
-    if (v7 != 0) {
-        int32_t * v8 = (int32_t *)(v7 + 4); // 0x45e4e8
-        int32_t v9 = *v8 - 1; // 0x45e4e8
-        *v8 = v9;
-        if (v9 == 0) {
-            int32_t * v10 = (int32_t *)(v7 + 8); // 0x45e4fd
-            *v10 = *v10 - 1;
-        }
-    }
-    // 0x45e50c
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    function_4a9d70();
-    int32_t v11 = function_4a9d70(); // 0x45e567
-    int32_t v12 = *v3; // 0x45e56c
-    int32_t result = v11; // 0x45e575
-    if (v12 != 0) {
-        int32_t v13 = v12 + 8; // 0x45e577
-        int32_t * v14 = (int32_t *)v13; // 0x45e57d
-        int32_t v15 = *v14 - 1; // 0x45e57d
-        *v14 = v15;
-        result = v13;
-        if (v15 == 0) {
-            // 0x45e583
-            result = *(int32_t *)v12;
-        }
-    }
-    int32_t v16 = *v6; // 0x45e58a
-    if (v16 == 0) {
-        // 0x45e5c2
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t result2 = v16 + 4; // 0x45e598
-    int32_t * v17 = (int32_t *)result2; // 0x45e59e
-    int32_t v18 = *v17 - 1; // 0x45e59e
-    *v17 = v18;
-    if (v18 != 0) {
-        // 0x45e5c2
-        __writefsdword(0, v1);
-        return result2;
-    }
-    int32_t * v19 = (int32_t *)v16; // 0x45e5a4
-    int32_t * v20 = (int32_t *)(v16 + 8); // 0x45e5b3
-    int32_t v21 = *v20 - 1; // 0x45e5b3
-    *v20 = v21;
-    int32_t result3 = *(int32_t *)(*v19 + 4); // 0x45e5b7
-    if (v21 == 0) {
-        // 0x45e5b9
-        result3 = *v19;
-    }
-    // 0x45e5c2
-    __writefsdword(0, v1);
-    return result3;
+static void retdec_actor_release_weak(int32_t control) {
+    int32_t vtable;
+    if (control == 0 ||
+        InterlockedDecrement((volatile LONG *)(intptr_t)(control + 8)) != 0)
+        return;
+    vtable = *(int32_t *)(intptr_t)control;
+    if (vtable == (int32_t)(intptr_t)&g15)
+        free((void *)(intptr_t)control);
+    else if (vtable != 0 && *(int32_t *)(intptr_t)(vtable + 8) != 0)
+        retdec_call_thiscall0((void *)(intptr_t)control,
+            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
 }
+
+/* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
+static int32_t function_45e460_this(int32_t actor) {
+    int32_t parent_control, owner_control;
+    int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
+    static const int32_t object_offsets[] = {136, 124, 108, 96, 68, 56, 44};
+    if (actor == 0)
+        return 0;
+    function_4a9570_this(actor + 56);
+    function_4a9570_this(actor + 68);
+    if (function_4a9a30_this(actor + 44) == 0x0A008000) {
+        int32_t state[7] = {0};
+        /* 45FB90 resets both callbacks and the instance's step/user slots. */
+        retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
+        *(int32_t *)(intptr_t)(actor + 92) = state[0];
+        function_4a95c0_this(actor + 96, (int32_t)(intptr_t)(state + 1));
+        function_4a95c0_this(actor + 108, (int32_t)(intptr_t)(state + 4));
+        *(int32_t *)(intptr_t)(actor + 120) = state[0];
+        function_4a95c0_this(actor + 124, (int32_t)(intptr_t)(state + 1));
+        function_4a95c0_this(actor + 136, (int32_t)(intptr_t)(state + 4));
+        function_4a9d70_this((int32_t)(intptr_t)(state + 4));
+        function_4a9d70_this((int32_t)(intptr_t)(state + 1));
+        function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g601,
+                            (int32_t)(intptr_t)empty);
+        function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g600,
+                            (int32_t)(intptr_t)empty);
+    }
+    function_4a9570_this(actor + 44);
+    parent_control = *(int32_t *)(intptr_t)(actor + 36);
+    *(int32_t *)(intptr_t)(actor + 32) = 0;
+    *(int32_t *)(intptr_t)(actor + 36) = 0;
+    retdec_actor_release_weak(parent_control);
+    owner_control = *(int32_t *)(intptr_t)(actor + 28);
+    *(int32_t *)(intptr_t)(actor + 24) = 0;
+    *(int32_t *)(intptr_t)(actor + 28) = 0;
+    retdec_release_squirrel_object(owner_control);
+    for (size_t i = 0; i < sizeof(object_offsets) / sizeof(object_offsets[0]); ++i)
+        function_4a9d70_this(actor + object_offsets[i]);
+    return actor;
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45e460(void) {
+    __asm {
+        push ecx
+        call function_45e460_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_45e460(void) { return 0; }
+#endif
 
 /* SquirrelFunction::operator() for the Actor initialization callback. */
 static int32_t function_45e020_this(int32_t state_ptr,
@@ -133425,187 +133413,41 @@ int32_t function_4636e0(int32_t a1, int32_t a2, int32_t a3) {
 }
 
 // Address range: 0x463730 - 0x4637f2
-int32_t function_463730(int32_t a1) {
-    int32_t * v1 = (int32_t *)(a1 + 4); // 0x463737
-    int32_t v2 = *v1; // 0x463737
-    int32_t v3 = *(int32_t *)v2; // 0x46373b
-    int32_t v4; // bp-16, 0x463730
-    int32_t v5 = &v4; // 0x46373d
-    int32_t v6; // 0x463730
-    int32_t v7; // 0x463730
-    if (v3 == v2) {
-        // 0x463730
-        v6 = *v1;
-        v7 = v5;
-    } else {
-        int32_t * v8 = (int32_t *)(v3 + 12); // 0x463744
-        int32_t * v9 = (int32_t *)(*v8 + 8); // 0x463747
-        int32_t v10 = *v9 - 1; // 0x463747
-        *v9 = v10;
-        int32_t v11 = v5; // 0x46374a
-        if (v10 == 0) {
-            // 0x46374c
-            v11 = v5 - 4;
-            *(int32_t *)v11 = *(int32_t *)(*v8 + 12);
-        }
-        int32_t v12 = v11;
-        int32_t v13 = v3; // 0x463761
-        int32_t v14; // 0x463730
-        int32_t v15; // 0x463730
-        int32_t v16; // 0x463730
-        int32_t v17; // 0x463730
-        int32_t v18; // 0x463730
-        int32_t v19; // 0x463763
-        int32_t v20; // 0x463782
-        int32_t v21; // 0x46376e
-        int32_t v22; // 0x463778
-        int32_t v23; // 0x463797
-        if (*(char *)(v3 + 17) == 0) {
-            // 0x463763
-            v19 = *(int32_t *)(v3 + 8);
-            if (*(char *)(v19 + 17) != 0) {
-                // 0x463782
-                v20 = *(int32_t *)(v3 + 4);
-                v16 = v20;
-                v18 = v3;
-                v13 = v20;
-                if (*(char *)(v20 + 17) == 0) {
-                    v17 = v16;
-                    v13 = v17;
-                    while (v18 == *(int32_t *)(v17 + 8)) {
-                        // 0x463795
-                        v23 = *(int32_t *)(v17 + 4);
-                        v16 = v23;
-                        v18 = v17;
-                        v13 = v23;
-                        if (*(char *)(v23 + 17) != 0) {
-                            // break -> 0x4637a2
-                            break;
-                        }
-                        v17 = v16;
-                        v13 = v17;
-                    }
-                }
-            } else {
-                // 0x46376c
-                v21 = *(int32_t *)v19;
-                v14 = v21;
-                v13 = v19;
-                if (*(char *)(v21 + 17) == 0) {
-                    v22 = *(int32_t *)v14;
-                    v13 = v14;
-                    while (*(char *)(v22 + 17) == 0) {
-                        // 0x463776
-                        v15 = v22;
-                        v22 = *(int32_t *)v15;
-                        v13 = v15;
-                    }
-                }
+int32_t function_463730(int32_t tree) {
+    int32_t manager = tree - 84;
+    int32_t sentinel = *(int32_t *)(intptr_t)(tree + 4);
+    int32_t node, root;
+    if (sentinel == 0)
+        return 0;
+    node = *(int32_t *)(intptr_t)sentinel;
+    while (node != sentinel) {
+        int32_t actor = *(int32_t *)(intptr_t)(node + 12);
+        int32_t next = *(int32_t *)(intptr_t)(node + 8);
+        if (next != sentinel) {
+            while (*(int32_t *)(intptr_t)next != sentinel)
+                next = *(int32_t *)(intptr_t)next;
+        } else {
+            int32_t child = node;
+            next = *(int32_t *)(intptr_t)(child + 4);
+            while (next != sentinel &&
+                   child == *(int32_t *)(intptr_t)(next + 8)) {
+                child = next;
+                next = *(int32_t *)(intptr_t)(next + 4);
             }
         }
-        int32_t v24 = v13;
-        int32_t v25 = *v1; // 0x4637a2
-        v6 = v25;
-        v7 = v12;
-        while (v24 != v25) {
-            int32_t v26 = v24;
-            int32_t v27 = v12;
-            v8 = (int32_t *)(v26 + 12);
-            v9 = (int32_t *)(*v8 + 8);
-            v10 = *v9 - 1;
-            *v9 = v10;
-            v11 = v27;
-            if (v10 == 0) {
-                // 0x46374c
-                v11 = v27 - 4;
-                *(int32_t *)v11 = *(int32_t *)(*v8 + 12);
-            }
-            // 0x46375d
-            v12 = v11;
-            v13 = v26;
-            if (*(char *)(v26 + 17) == 0) {
-                // 0x463763
-                v19 = *(int32_t *)(v26 + 8);
-                if (*(char *)(v19 + 17) != 0) {
-                    // 0x463782
-                    v20 = *(int32_t *)(v26 + 4);
-                    v16 = v20;
-                    v18 = v26;
-                    v13 = v20;
-                    if (*(char *)(v20 + 17) == 0) {
-                        v17 = v16;
-                        v13 = v17;
-                        while (v18 == *(int32_t *)(v17 + 8)) {
-                            // 0x463795
-                            v23 = *(int32_t *)(v17 + 4);
-                            v16 = v23;
-                            v18 = v17;
-                            v13 = v23;
-                            if (*(char *)(v23 + 17) != 0) {
-                                // break -> 0x4637a2
-                                break;
-                            }
-                            v17 = v16;
-                            v13 = v17;
-                        }
-                    }
-                } else {
-                    // 0x46376c
-                    v21 = *(int32_t *)v19;
-                    v14 = v21;
-                    v13 = v19;
-                    if (*(char *)(v21 + 17) == 0) {
-                        v22 = *(int32_t *)v14;
-                        v13 = v14;
-                        while (*(char *)(v22 + 17) == 0) {
-                            // 0x463776
-                            v15 = v22;
-                            v22 = *(int32_t *)v15;
-                            v13 = v15;
-                        }
-                    }
-                }
-            }
-            // 0x4637a2
-            v24 = v13;
-            v25 = *v1;
-            v6 = v25;
-            v7 = v12;
-        }
+        /* 463747..46375B releases the handle when the tree drops its last owner. */
+        if (actor != 0 && --*(int32_t *)(intptr_t)(actor + 8) == 0)
+            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4),
+                                 (uint32_t)*(int32_t *)(intptr_t)(actor + 12));
+        node = next;
     }
-    int32_t * v28 = (int32_t *)(v6 + 4);
-    int32_t v29 = *v28; // 0x4637aa
-    int32_t * v30 = v28; // 0x4637b3
-    int32_t v31 = v6; // 0x4637b3
-    if (*(char *)(v29 + 17) == 0) {
-        int32_t v32 = v7 - 4; // 0x4637b8
-        *(int32_t *)v32 = *(int32_t *)(v29 + 8);
-        function_4634d0(*(int32_t *)v32);
-        int32_t v33 = *(int32_t *)v29; // 0x4637c0
-        *(int32_t *)(v7 - 8) = v29;
-        _free((void *)(intptr_t)v29);
-        while (*(char *)(v33 + 17) == 0) {
-            int32_t v34 = v33;
-            int32_t v35 = v32;
-            v32 = v35 - 4;
-            *(int32_t *)v32 = *(int32_t *)(v34 + 8);
-            function_4634d0(*(int32_t *)v32);
-            v33 = *(int32_t *)v34;
-            *(int32_t *)(v35 - 8) = v34;
-            _free((void *)(intptr_t)v34);
-        }
-        // 0x4637d3
-        v31 = *v1;
-        v30 = (int32_t *)(v31 + 4);
-    }
-    // 0x4637d3
-    *v30 = v31;
-    int32_t v36 = *v1; // 0x4637d9
-    *(int32_t *)v36 = v36;
-    int32_t result = *v1; // 0x4637de
-    *(int32_t *)(result + 8) = result;
-    *(int32_t *)(a1 + 8) = 0;
-    return result;
+    root = *(int32_t *)(intptr_t)(sentinel + 4);
+    function_4634d0(root);
+    *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
+    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
+    *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
+    *(int32_t *)(intptr_t)(tree + 8) = 0;
+    return sentinel;
 }
 
 // Address range: 0x463800 - 0x463819
@@ -139754,8 +139596,7 @@ static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr)
     pair_end = *(int32_t *)(intptr_t)(this_ptr + 56);
     for (int32_t cursor = pair_begin; cursor != pair_end; cursor += 8) {
         int32_t control = *(int32_t *)(intptr_t)(cursor + 4);
-        if (control != 0)
-            InterlockedDecrement((volatile LONG *)(intptr_t)(control + 8));
+        retdec_actor_release_weak(control);
     }
     *(int32_t *)(intptr_t)(this_ptr + 56) = pair_begin;
     *(int32_t *)(intptr_t)this_ptr = actor_ptr;
@@ -142596,54 +142437,50 @@ int32_t function_46a650(int32_t * a1, int32_t a2, int32_t a3) {
 // Address range: 0x46a6f0 - 0x46a793
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-int32_t function_46a6f0(int16_t a1, uint16_t a2) {
-    // 0x46a6f0
-    int32_t v1; // 0x46a6f0
-    int32_t v2 = v1;
-    int16_t v3 = v2; // bp-8, 0x46a6f3
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)v1; // 0x46a6f5
-    struct retdec_RTL_CRITICAL_SECTION * v4 = lpCriticalSection; // bp-16, 0x46a6f5
-    EnterCriticalSection(lpCriticalSection);
-    uint32_t v5 = (int32_t)a1; // 0x46a700
-    int32_t * v6 = (int32_t *)(*(int32_t *)(v2 + 20) + 4 * v5); // 0x46a70b
-    if (*v6 != (int32_t)a2) {
-        // 0x46a783
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-        return &g1224;
+static int32_t function_46a6f0_this(int32_t manager, uint32_t handle) {
+    uint32_t index = handle & 0xffffu;
+    uint32_t generation = handle >> 16;
+    int32_t begin, generations, sentinel, node, actor;
+    int32_t result = 0;
+    if (manager == 0)
+        return 0;
+    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(manager + 52));
+    begin = *(int32_t *)(intptr_t)(manager + 4);
+    generations = *(int32_t *)(intptr_t)(manager + 20);
+    if (generation != 0 && begin != 0 && generations != 0 &&
+        index < (uint32_t)(*(int32_t *)(intptr_t)(manager + 8) - begin) / 4 &&
+        index < (uint32_t)(*(int32_t *)(intptr_t)(manager + 24) - generations) / 4 &&
+        *(uint32_t *)(intptr_t)(generations + index * 4) == generation) {
+        *(int32_t *)(intptr_t)(generations + index * 4) = 0;
+        actor = *(int32_t *)(intptr_t)(begin + index * 4);
+        function_45e460_this(actor);
+        sentinel = *(int32_t *)(intptr_t)(manager + 36);
+        node = function_4214a0(sentinel,
+            *(int32_t *)(intptr_t)(sentinel + 4), (int32_t *)&index);
+        if (node != 0) {
+            *(int32_t *)(intptr_t)(sentinel + 4) = node;
+            *(int32_t *)(intptr_t)*(int32_t *)(intptr_t)(node + 4) = node;
+            ++*(int32_t *)(intptr_t)(manager + 40);
+            result = 1;
+        }
     }
-    // 0x46a713
-    *v6 = 0;
-    struct retdec_RTL_CRITICAL_SECTION ** v7 = &v4; // 0x46a72a
-    if (*(int32_t *)(v2 + 8) - *(int32_t *)(v2 + 4) >> 2 <= v5) {
-        struct retdec_RTL_CRITICAL_SECTION * v8 = (struct retdec_RTL_CRITICAL_SECTION *)"invalid vector<T> subscript"; // bp-20, 0x46a72c
-        retdec_Xinvalid_argument("invalid vector<T> subscript");
-        v7 = &v8;
-    }
-    int32_t v9 = (int32_t)v7;
-    *(int32_t *)(v9 - 8) = 0;
-    int32_t v10 = *(int32_t *)(v2 + 36); // 0x46a742
-    int32_t * v11 = (int32_t *)(v10 + 4); // 0x46a745
-    *(int32_t *)(v9 - 12) = (int32_t)&v3;
-    *(int32_t *)(v9 - 16) = *v11;
-    *(int32_t *)(v9 - 20) = v10;
-    v3 = a1;
-    int32_t v12 = function_4214a0((int32_t)a1, (int32_t)&g1224, &g1224); // 0x46a758
-    int32_t * v13 = (int32_t *)(v2 + 40); // 0x46a75d
-    int32_t v14 = *v13; // 0x46a75d
-    int32_t v15 = v12; // 0x46a76a
-    if (v14 == 0x3ffffffe) {
-        // 0x46a76c
-        *(int32_t *)(v9 - 24) = (int32_t)"list<T> too long";
-        v15 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z((char *)&g1224);
-    }
-    int32_t v16 = v15;
-    *v13 = v14 + 1;
-    *v11 = v16;
-    *(int32_t *)*(int32_t *)(v16 + 4) = v16;
-    // 0x46a783
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
+    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(manager + 52));
+    return result;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_46a6f0(uint32_t handle) {
+    __asm {
+        push dword ptr [esp + 4]
+        push ecx
+        call function_46a6f0_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_46a6f0(uint32_t handle) { return 0; }
+#endif
 
 // Address range: 0x46a7a0 - 0x46a7d1
 int32_t function_46a7a0(void) {
@@ -143175,6 +143012,8 @@ static int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
             --*(int32_t *)(intptr_t)(this_ptr + 40);
             actor = *(int32_t *)(intptr_t)(
                 *(int32_t *)(intptr_t)(this_ptr + 4) + 4 * (int32_t)index);
+            if (actor != 0)
+                function_45e300_this(actor);
         } else {
             actor = 0;
             index = 0;
@@ -143195,10 +143034,13 @@ static int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
     }
 
     if (actor != 0) {
-        if (retdec_actor_vector_push_i32(this_ptr + 20,
-                                         (int32_t)generation) == 0) {
+        int32_t generations = *(int32_t *)(intptr_t)(this_ptr + 20);
+        uint32_t generation_count = generations != 0
+            ? (uint32_t)(*(int32_t *)(intptr_t)(this_ptr + 24) - generations) / 4 : 0;
+        if (index < generation_count)
+            *(int32_t *)(intptr_t)(generations + index * 4) = (int32_t)generation;
+        else if (retdec_actor_vector_push_i32(this_ptr + 20, (int32_t)generation) == 0)
             actor = 0;
-        }
         *(uint16_t *)(intptr_t)out_ptr = (uint16_t)index;
         *(uint16_t *)(intptr_t)(out_ptr + 2) = (uint16_t)generation;
         ++g_retdec_actor_init_count;
@@ -196314,17 +196156,24 @@ static void retdec_release_squirrel_object(int32_t object_ptr) {
     if (object_ptr == 0)
         return;
     refcount = (volatile LONG *)(intptr_t)(object_ptr + 4);
-    if (_InterlockedExchangeAdd(refcount, -1) != 0)
+    if (_InterlockedExchangeAdd(refcount, -1) != 1)
         return;
 
     vtable = *(int32_t *)(intptr_t)object_ptr;
+    if (vtable == (int32_t)(intptr_t)&g15) {
+        /* 43E850 disposes the Actor* slot; 415220 destroys the control block. */
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(object_ptr + 12));
+        *(int32_t *)(intptr_t)(object_ptr + 12) = 0;
+        retdec_actor_release_weak(object_ptr);
+        return;
+    }
     if (vtable != 0 && *(int32_t *)(intptr_t)(vtable + 4) != 0) {
         retdec_call_thiscall0(
             (void *)(intptr_t)object_ptr,
             (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 4));
     }
     if (_InterlockedExchangeAdd(
-            (volatile LONG *)(intptr_t)(object_ptr + 8), -1) == 0 &&
+            (volatile LONG *)(intptr_t)(object_ptr + 8), -1) == 1 &&
         vtable != 0 && *(int32_t *)(intptr_t)(vtable + 8) != 0) {
         retdec_call_thiscall0(
             (void *)(intptr_t)object_ptr,

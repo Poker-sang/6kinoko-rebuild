@@ -138,6 +138,11 @@ Final EXE SHA256:
 
 ## User test
 
+Follow-up: user reported a world-map entry crash in b6b6bac. Its missing
+Actor cleanup and the corrective regression tests are documented in
+../worldmap-collision-lifetime-20260907/report.md. The EXE hashes above describe
+that earlier checkpoint, not the corrected binaries.
+
 Start runtime-builds/p3-save-worldmap-diag/kinoko_retdec_rebuild.exe.
 1. Enter the same simple stage: check the player, enemies, blocks and items.
 2. Test movement, jumping, attacking, landing and hitting a block.

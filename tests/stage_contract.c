@@ -219,6 +219,55 @@ int main(int argc, char **argv) {
             "if (seen.len() != 603) throw \"lost actors in large map\";"));
         free(many);
     }
-    puts("PASS: registration, map creation, spawn data, collision lists, events, 600-actor growth");
+    {
+        int32_t *retired_layout = (int32_t *)VirtualAlloc(NULL, 4096,
+            MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        int32_t proxy, control, pair[2];
+        DWORD old_protection;
+        CHECK(retired_layout != NULL);
+        memcpy(retired_layout, layout, sizeof(layout));
+        retired_layout[66] = PTR(records);
+        retired_layout[67] = PTR(records + 2);
+        proxy = function_4693a0(PTR(retired_layout));
+        CHECK(proxy != 0);
+        control = *(int32_t *)(intptr_t)(proxy + 28);
+        CHECK(*(int32_t *)(intptr_t)(control + 4) == 1);
+        function_469700();
+        CHECK(*(int32_t *)(intptr_t)(manager + 92) == 0);
+        CHECK(*(int32_t *)(intptr_t)(control + 4) == 0);
+        function_45e410_this(g_514300_storage[13], pair);
+        CHECK(pair[0] == 0 && pair[1] == 0);
+        CHECK(VirtualProtect(retired_layout, 4096, PAGE_NOACCESS, &old_protection));
+        function_468620_this(PTR(g_514300_storage));
+        {
+            int32_t pool = *(int32_t *)(intptr_t)(manager + 4);
+            int32_t pool_bytes = *(int32_t *)(intptr_t)(pool + 8) -
+                                 *(int32_t *)(intptr_t)(pool + 4);
+            int32_t (*reused)[8] = (int32_t (*)[8])calloc(600, 32);
+            CHECK(reused != NULL);
+            for (int i = 0; i < 600; ++i)
+                reused[i][0] = 0x443;
+            layout[66] = PTR(reused);
+            layout[67] = PTR(reused + 600);
+            for (int round = 0; round < 4; ++round) {
+                CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
+                CHECK(retdec_actor_manager_refresh(manager) == 600);
+                CHECK(*(int32_t *)(intptr_t)(pool + 8) -
+                      *(int32_t *)(intptr_t)(pool + 4) == pool_bytes);
+                CHECK(*(int32_t *)(intptr_t)(pool + 24) -
+                      *(int32_t *)(intptr_t)(pool + 20) == pool_bytes);
+                function_45e410_this(g_514300_storage[13], pair);
+                CHECK(pair[0] == 0 && pair[1] == 0);
+                function_468620_this(PTR(g_514300_storage));
+                function_469700();
+                CHECK(retdec_actor_manager_refresh(manager) == 0);
+                CHECK(function_48aa20(vm) == top);
+            }
+            free(reused);
+        }
+        CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        CHECK(VirtualFree(retired_layout, 0, MEM_RELEASE));
+    }
+    puts("PASS: stage creation and retired-map collision lifecycle");
     return 0;
 }
