@@ -61,7 +61,8 @@ option(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_WRITE
 set(KINOKO_RETDEC_MAP_FILE "" CACHE FILEPATH
     "Optional linker map file for the RetDec runtime target")
 if(KINOKO_RETDEC_DISABLE_TRACE)
-    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_DISABLE_TRACE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE
+        RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
 endif()
 if(KINOKO_RETDEC_TRACE_FILTER)
     target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_TRACE_FILTER)

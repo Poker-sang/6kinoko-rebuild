@@ -4305,7 +4305,8 @@ int32_t function_471810(int32_t a1, int32_t a2);
 int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471a60(int32_t callback_ptr, int32_t vm, int32_t index);
-int32_t function_471b30(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5);
+int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
+                       int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
 int32_t function_471c70(int32_t a1);
@@ -30565,6 +30566,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     uint32_t width;
     uint32_t height;
     uint32_t bit_depth;
+    uint32_t row_width;
     uint32_t source_pitch;
     uint32_t row;
     int32_t texture_value = 0;
@@ -30589,16 +30591,17 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     bit_depth = bitmap[4];
     width = *(uint32_t *)(bitmap + 8);
     height = *(uint32_t *)(bitmap + 12);
+    row_width = *(uint32_t *)(bitmap + 16);
     /* CV2's 16-bit branch is the native A1R5G5B5 texture path used by
        CBitmapData::Load.  It is not an 8-bit grayscale stream. */
     if (bit_depth == 16) {
-        source_pitch = width * 2u;
+        source_pitch = (row_width / 2u) * 4u;
         texture_format = D3DFMT_A1R5G5B5;
     } else {
-        source_pitch = bit_depth >= 24 ? width * 4u : width;
+        source_pitch = bit_depth >= 24 ? row_width * 4u : row_width;
         texture_format = D3DFMT_A8R8G8B8;
     }
-    if (width == 0 || height == 0 || source_pitch == 0 ||
+    if (width == 0 || height == 0 || row_width < width || source_pitch == 0 ||
         (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
         free(*(void **)(bitmap + 28));
         return -0x7789f794;
@@ -30648,7 +30651,9 @@ int32_t function_40e630(int32_t unused, const char *file_name,
             (const unsigned char *)(*(void **)(bitmap + 28)) +
             (size_t)row * source_pitch;
         if (bit_depth == 16) {
-            memcpy(destination, source, (size_t)width * 2u);
+            /* 414482 copies pairs of A1R5G5B5 pixels and advances by the
+               stored row width.  CV2 rows can be wider than the image. */
+            memcpy(destination, source, (size_t)(width / 2u) * 4u);
         } else if (bit_depth == 32 || bit_depth == 24) {
             memcpy(destination, source, (size_t)width * 4u);
         } else {
@@ -37453,10 +37458,10 @@ int32_t function_414010(int32_t this_ptr, const char *file_name) {
     if (payload_size != 0) {
         allocation_size = payload_size;
     } else if (bit_depth < 24) {
-        uint64_t total_bits = (uint64_t)width * height * bit_depth;
+        uint64_t total_bits = (uint64_t)row_width * height * bit_depth;
         allocation_size = (uint32_t)(total_bits / 8u);
     } else {
-        uint64_t total_bytes = (uint64_t)width * height * 4u;
+        uint64_t total_bytes = (uint64_t)row_width * height * 4u;
         allocation_size = (uint32_t)total_bytes;
     }
     if (allocation_size == 0 || allocation_size > 256u * 1024u * 1024u ||
@@ -130776,8 +130781,10 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
 
     angle = *(float32_t *)(intptr_t)(actor + 164) * depth_scale;
     if (angle != 0.0f) {
-        float cosine = cosf(angle);
-        float sine = sinf(angle);
+        /* Actor::Render calls 405320, whose trigonometric helpers take
+           degrees.  The script's rotate property uses the same units. */
+        float cosine = function_404130((float80_t)angle);
+        float sine = function_4040d0((float80_t)angle);
         for (index = 0; index < 4; ++index) {
             float old_x = x[index] - pivot_x;
             float old_y = y[index] - pivot_y;
@@ -150318,21 +150325,21 @@ int32_t function_471a60(int32_t callback_ptr, int32_t vm, int32_t index) {
 }
 
 // Address range: 0x471b30 - 0x471bbe
-int32_t function_471b30(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5) {
-    int32_t v1 = a3;
-    int32_t v2 = __readfsdword(0); // bp-16, 0x471b40
-    __writefsdword(0, (int32_t)&v2);
-    function_4a9540(a3, a4);
-    int32_t v3; // bp-28, 0x471b30
-    int32_t v4 = function_402d40((char *)a1, (int32_t)&v3); // 0x471b79
-    int32_t v5 = function_4a9d70(); // 0x471b9a
-    if (a5 != 0) {
-        // 0x471b9c
-        v5 = function_48a430(a2, (int32_t)&v1);
-    }
-    // 0x471bac
-    __writefsdword(0, v2);
-    return v5 & -256 | v4 & 255;
+int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
+                       int32_t type, int32_t data, char owns_reference) {
+    int32_t environment[3] = { (int32_t)(intptr_t)&g16, type, data };
+    int32_t result;
+
+    (void)object_vtable;
+    /* 419E60 passes a Sqrat::Object by value.  471B30 copies its value
+       into the SquirrelObject consumed by the DAT script loader. */
+    function_48a400(vm, (int32_t)(intptr_t)(environment + 1));
+    result = function_402d40((char *)(intptr_t)path,
+                             (int32_t)(intptr_t)environment);
+    function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
+    if (owns_reference)
+        function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
+    return (unsigned char)result;
 }
 
 static int32_t retdec_native_target_from_userdata(int32_t vm) {
@@ -150404,10 +150411,17 @@ static int32_t retdec_native_string_arg(int32_t vm, int32_t index,
 static int32_t retdec_compile_file_native(int32_t vm) {
     int32_t path;
     int32_t result;
+    int32_t environment[2] = { g483, g484 };
 
     if (!retdec_native_string_arg(vm, 2, &path))
         return 0;
-    result = function_402d40((char *)(intptr_t)path, 0);
+    /* The final stack entry is the native closure's userdata.  The optional
+       script environment is argument 3, before that entry (419EA2). */
+    if (function_48aa20(vm) > 3 &&
+        function_48ab40(vm, 3, environment) < 0)
+        return -1;
+    result = function_471b30(path, (int32_t)(intptr_t)&g39, vm,
+                             environment[0], environment[1], 0);
     function_48a530(vm, result);
     return 1;
 }
@@ -208106,28 +208120,19 @@ int32_t function_4915b0(int32_t a1, int32_t a2, int32_t a3) {
         ++instance_create_trace_count;
     }
     int32_t v2 = function_499610_this(a1); // 0x4915df
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x4915e6
-    *v3 = *v3 + 1;
-    int32_t * v4 = (int32_t *)a2; // 0x4915f6
-    int32_t * v5 = (int32_t *)(a2 + 4); // 0x4915f8
-    *v5 = v2;
-    *v4 = 0xa008000;
+    int32_t instance_value[2] = { 0x0a008000, v2 };
+    if (v2 == 0) {
+        __writefsdword(0, v1);
+        return 0;
+    }
+    /* 4915F6 saves the old destination before assigning the new instance.
+       SQObjectPtr assignment retains the new value and releases the old. */
+    retdec_squirrel_assign((int32_t *)(intptr_t)a2, instance_value);
     if (instance_create_trace_count <= 128) {
         retdec_trace_i32("4915b0:instance", v2);
         retdec_trace_i32("4915b0:instance-class",
                          *(int32_t *)(v2 + 28));
     }
-    int32_t v6 = *v3 + 1; // 0x491604
-    *v3 = v6;
-    int32_t v7 = v6; // 0x491614
-    if ((*v4 & 0x8000000) != 0) {
-        int32_t * v8 = (int32_t *)(*v5 + 4); // 0x491616
-        *v8 = *v8 - 1;
-        v7 = *v3;
-    }
-    // 0x491622
-    *v3 = v7 - 1;
-    int32_t v9; // 0x4915b0
     /* Original ECX is the VM, arg0 is the class, and the class lookup
        resolves the constructor through shared_state + 0x3c. */
     int32_t v10 = function_48bfe0(
@@ -208140,34 +208145,9 @@ int32_t function_4915b0(int32_t a1, int32_t a2, int32_t a3) {
     return v10 & -256 | 1;
 }
 
-    int32_t * v11 = (int32_t *)(a3 + 4); // 0x491655
-    int32_t v12 = *v11; // 0x491655
-    int32_t * v13 = (int32_t *)a3; // 0x491658
-    int32_t v14 = *v13; // 0x491658
-    *v11 = g484;
-    int32_t v15 = (int32_t)g483; // 0x49165d
-    *v13 = v15;
-    if ((v15 & 0x8000000) != 0) {
-        int32_t * v16 = (int32_t *)(*v11 + 4); // 0x491670
-        *v16 = *v16 + 1;
-    }
-    // 0x491673
-    if ((v14 & 0x8000000) == 0) {
-        // 0x491686
-        __writefsdword(0, v1);
-        return v14 & -256 | 1;
-    }
-    int32_t * v17 = (int32_t *)(v12 + 4); // 0x49167a
-    int32_t v18 = *v17 - 1; // 0x49167a
-    *v17 = v18;
-    int32_t v19 = v14; // 0x49167d
-    if (v18 == 0) {
-        // 0x49167f
-        v19 = *(int32_t *)v12;
-    }
-    // 0x491686
+    retdec_release_squirrel_value((int32_t *)(intptr_t)a3);
     __writefsdword(0, v1);
-    return v19 & -256 | 1;
+    return 1;
 }
 
 // Address range: 0x4916a0 - 0x491758
@@ -209861,25 +209841,19 @@ int32_t function_492a80(int32_t a1, int32_t a2, int32_t a3) {
         v18 = &v8;
     }
     int32_t v19 = (int32_t)v17; // 0x492b3d
-    int32_t * v20 = (int32_t *)(v19 + 4); // 0x492b61
-    *v20 = *v20 + 1;
-    int32_t v21 = 0x8004000; // bp-24, 0x492b64
+    int32_t class_value[2] = { 0x08004000, v19 };
     int32_t * v22 = (int32_t *)a1; // 0x492b71
     int32_t * v23 = (int32_t *)(a1 + 4); // 0x492b73
-    *v23 = v19;
-    *v22 = 0x8004000;
+    if (v19 == 0) {
+        retdec_release_squirrel_value(attributes_value);
+        __writefsdword(0, v3);
+        return 0;
+    }
+    /* 492B71/492B73 capture the old target.  The generated code instead
+       decremented the newly assigned class, leaving its stack ref unowned. */
+    retdec_squirrel_assign(v22, class_value);
     retdec_trace_i32("492a80:output-type", *v22);
     retdec_trace_i32("492a80:output-data", *v23);
-    int32_t v24 = *v20 + 1; // 0x492b7f
-    *v20 = v24;
-    int32_t v25 = v24; // 0x492b8b
-    if ((*v22 & 0x8000000) != 0) {
-        int32_t * v26 = (int32_t *)(*v23 + 4); // 0x492b8d
-        *v26 = *v26 - 1;
-        v25 = *v20;
-    }
-    // 0x492b99
-    *v20 = v25 - 1;
     if (*(int32_t *)(*(int32_t *)(*v23 + 56) + 136) != 0x1000001) {
         int32_t v27 = (int32_t)v18;
         inherited_result[0] = g483;
@@ -209904,36 +209878,11 @@ int32_t function_492a80(int32_t a1, int32_t a2, int32_t a3) {
         function_4917b0_this(v2, 2);
         retdec_release_squirrel_value(inherited_result);
     }
-    int32_t v28 = *v23; // 0x492c29
-    int32_t * v29 = (int32_t *)(v28 + 68); // 0x492c32
-    int32_t * v30 = (int32_t *)(v28 + 72); // 0x492c35
-    *v30 = v11;
-    *v29 = v6;
-    if ((v6 & 0x8000000) != 0) {
-        int32_t * v31 = (int32_t *)(v11 + 4); // 0x492c48
-        *v31 = *v31 + 1;
-    }
-    if ((*v29 & 0x8000000) != 0) {
-        int32_t * v32 = (int32_t *)(*v30 + 4); // 0x492c53
-        *v32 = *v32 - 1;
-    }
-    // 0x492c5f
-    if ((v6 & 0x8000000) == 0) {
-        // 0x492c77
-        __writefsdword(0, v3);
-        return -255;
-    }
-    int32_t * v33 = (int32_t *)(v11 + 4); // 0x492c69
-    int32_t v34 = *v33 - 1; // 0x492c69
-    *v33 = v34;
-    int32_t result = -255; // 0x492c6c
-    if (v34 == 0) {
-        // 0x492c6e
-        result = *(int32_t *)(*(int32_t *)v11 + 4) & -256 | 1;
-    }
-    // 0x492c77
+    retdec_squirrel_assign((int32_t *)(intptr_t)(*v23 + 68),
+                           attributes_value);
+    retdec_release_squirrel_value(attributes_value);
     __writefsdword(0, v3);
-    return result;
+    return 1;
 }
 
 // Address range: 0x492c90 - 0x492cff
@@ -218528,10 +218477,11 @@ static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
                     (int32_t *)(intptr_t)target, instance);
             if (constructor[0] != g483 && constructor[1] != 0) {
                 int32_t *constructor_slot =
-                    (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, call_base);
+                    (int32_t *)(intptr_t)(
+                        *(int32_t *)(intptr_t)(vm + 24) + 8 * call_base);
                 if (constructor_slot != NULL) {
                     retdec_squirrel_assign(constructor_slot, instance);
-                    (void)function_497680(
+                    call_result = function_497680(
                         (int32_t)(intptr_t)constructor, arg3, call_base,
                         (int32_t)(intptr_t)constructor_result, 0);
                 }
@@ -218539,7 +218489,7 @@ static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
             retdec_release_squirrel_value(constructor_result);
             retdec_release_squirrel_value(constructor);
             retdec_release_squirrel_value(instance);
-            return 1;
+            return (char)call_result != 0 ? 1 : 0;
 
         case 0x0a000020:
         case 0x0a000080:
@@ -219428,6 +219378,22 @@ static int32_t retdec_execute_clean_vm(
 
 clean_execute_failure:
     if (trace_clean_failure_count < 64) {
+        int32_t failed_ci = *(int32_t *)(intptr_t)(vm + 132);
+        int32_t failed_closure = failed_ci != 0
+            ? *(int32_t *)(intptr_t)(failed_ci + 12) : 0;
+        int32_t failed_proto = failed_closure != 0
+            ? *(int32_t *)(intptr_t)(failed_closure + 36) : 0;
+        retdec_trace_i32("stagevm:failure-opcode", opcode);
+        retdec_trace_i32("stagevm:failure-instruction", instruction_ptr);
+        if (failed_proto != 0) {
+            retdec_trace_squirrel_name("stagevm:failure-source",
+                *(int32_t *)(intptr_t)(failed_proto + 16) + 28);
+            retdec_trace_squirrel_name("stagevm:failure-function",
+                *(int32_t *)(intptr_t)(failed_proto + 24) + 28);
+        }
+        if (*(int32_t *)(intptr_t)(vm + 64) == 0x08000010)
+            retdec_trace_squirrel_name("stagevm:failure-error",
+                *(int32_t *)(intptr_t)(vm + 68) + 28);
         retdec_trace_i32("clean-execute:failure-opcode", opcode);
         retdec_trace_i32("clean-execute:failure-instruction", instruction_ptr);
         retdec_trace_i32("clean-execute:failure-vm", vm);

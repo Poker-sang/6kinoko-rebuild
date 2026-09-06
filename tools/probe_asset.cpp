@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -38,8 +39,8 @@ std::string ascii_prefix(const std::vector<std::uint8_t>& bytes) {
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::cerr << "usage: kinoko_asset_probe <data-directory> <asset-path>\n";
+    if (argc != 3 && argc != 4) {
+        std::cerr << "usage: kinoko_asset_probe <data-directory> <asset-path> [output-file]\n";
         return 2;
     }
 
@@ -60,6 +61,15 @@ int main(int argc, char** argv) {
         std::cerr << error << '\n';
         return 1;
     }
+    if (argc == 4) {
+        std::ofstream output(argv[3], std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()),
+                     static_cast<std::streamsize>(bytes.size()));
+        if (!output) {
+            std::cerr << "cannot write asset: " << argv[3] << '\n';
+            return 1;
+        }
+    }
 
     std::cout << "path=" << entry->path << '\n'
               << "archive=" << entry->archive_index << '\n'
@@ -69,4 +79,3 @@ int main(int argc, char** argv) {
               << "ascii=" << ascii_prefix(bytes) << '\n';
     return 0;
 }
-
