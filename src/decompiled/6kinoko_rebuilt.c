@@ -185,6 +185,7 @@ static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_act_bind_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
+static void retdec_trace_star_state(const char *phase, int32_t actor);
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
                                           uint32_t stride);
 static int32_t retdec_function_45df10_impl(int32_t this_ptr,
@@ -126364,6 +126365,7 @@ int32_t function_45db90(int32_t a1) {
 
 // Address range: 0x45dbc0 - 0x45dbcf
 static int32_t function_45dbc0_this(int32_t actor) {
+    retdec_trace_star_state("release", actor);
     *(unsigned char *)(intptr_t)(actor + 22) = 1;
     *(unsigned char *)(intptr_t)(
         *(int32_t *)(intptr_t)(actor + 148) + 120) = 1;
@@ -130983,6 +130985,64 @@ static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
    Actor+0x5c; invoking it is what lets title actors update their own y
    coordinates before the frame timer advances. */
 /* Observe the first invalid numeric state without changing gameplay or the VM. */
+static void retdec_trace_star_state(const char *phase, int32_t actor) {
+    static struct { uint32_t handle; int hits, samples; } observed[32];
+    uint32_t handle;
+    int32_t sprite, proto=0;
+    int release, hits, index;
+    char message[768];
+    if (!actor || *(int32_t *)(intptr_t)(actor+208)!=1060) return;
+    release=strcmp(phase,"release")==0;
+    if (*(int32_t *)(intptr_t)(actor+112)==0x08000100)
+        proto=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actor+116)+36);
+    if (!release && (!proto || *(int32_t *)(intptr_t)(proto+20)!=0x08000010 ||
+        strcmp((const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto+24)+28),"UpdateWalk")!=0)) return;
+    handle=*(uint32_t *)(intptr_t)(actor+12);
+    index=(int)(handle%32);
+    hits=*(int32_t *)(intptr_t)(actor+296);
+    if(observed[index].handle!=handle) {
+        observed[index].handle=handle;
+        observed[index].samples=0;
+        observed[index].hits=-1;
+    }
+    if(!release && ((observed[index].hits==hits && g848%10!=0) || observed[index].samples>=256)) return;
+    observed[index].hits=hits;
+    ++observed[index].samples;
+    sprite=*(int32_t *)(intptr_t)(actor+204);
+    sprintf_s(message,sizeof(message),
+        "actor:star frame=%d phase=%s handle=%08X xy=(%.6g,%.6g) v=(%.6g,%.6g) "
+        "hits=(%d,%d,%d,%d) bounds=(%.6g,%.6g,%.6g,%.6g) "
+        "active=%d visible=%d release=%d priority=%d alpha=%d texture=%d spriteY=(%.6g,%.6g) "
+        "mapHeight=%d camera=(%.6g,%.6g,%.6g,%.6g)",
+        g848,phase,handle,*(float *)(intptr_t)(actor+240),*(float *)(intptr_t)(actor+244),
+        *(float *)(intptr_t)(actor+256),*(float *)(intptr_t)(actor+260),
+        *(int32_t *)(intptr_t)(actor+284),*(int32_t *)(intptr_t)(actor+288),
+        *(int32_t *)(intptr_t)(actor+292),hits,
+        *(float *)(intptr_t)(actor+440),*(float *)(intptr_t)(actor+444),
+        *(float *)(intptr_t)(actor+448),*(float *)(intptr_t)(actor+452),
+        *(uint8_t *)(intptr_t)(actor+40),*(uint8_t *)(intptr_t)(actor+21),
+        *(uint8_t *)(intptr_t)(actor+22),*(int32_t *)(intptr_t)(actor+228),
+        *(int32_t *)(intptr_t)(actor+180),sprite ? *(int32_t *)(intptr_t)(sprite+4) : 0,
+        sprite ? *(float *)(intptr_t)(sprite+180) : 0,sprite ? *(float *)(intptr_t)(sprite+216) : 0,
+        *(int32_t *)(g_retdec_map_manager_state+80),
+        *(float *)(g_retdec_camera_state+72),*(float *)(g_retdec_camera_state+76),
+        *(float *)(g_retdec_camera_state+80),*(float *)(g_retdec_camera_state+84));
+    retdec_trace(message);
+    if(release && g644) {
+        int32_t vm=(int32_t)(intptr_t)g644;
+        int32_t frames=*(int32_t *)(intptr_t)(vm+100);
+        for(int i=frames-1;i>=0 && i>=frames-5;--i) {
+            int32_t ci=*(int32_t *)(intptr_t)(vm+96)+48*i;
+            if(*(int32_t *)(intptr_t)(ci+8)==0x08000100) {
+                int32_t caller=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(ci+12)+36);
+                retdec_trace_proto_metadata("actor:star-release-source",caller,12);
+                retdec_trace_proto_metadata("actor:star-release-function",caller,20);
+                retdec_trace_i32("actor:star-release-instruction",(*(int32_t *)(intptr_t)ci-caller-96)/8-1);
+            }
+        }
+    }
+}
+
 static void retdec_trace_invalid_actor(const char *phase, int32_t actor) {
     static volatile LONG count;
     static const int32_t offsets[]={240,244,256,260,264,268,304,308,440,444,448,452};
@@ -131387,6 +131447,7 @@ static int32_t retdec_actor_update_motion(int32_t actor)
         return 0;
 
     retdec_trace_invalid_actor("before-motion",actor);
+    retdec_trace_star_state("before-motion",actor);
 
     *(float32_t *)(intptr_t)(actor + 248) =
         *(float32_t *)(intptr_t)(actor + 240);
@@ -131460,6 +131521,7 @@ static int32_t retdec_actor_update_motion(int32_t actor)
     }
     retdec_release_squirrel_object(parent_pair[1]);
     retdec_trace_invalid_actor("after-motion",actor);
+    retdec_trace_star_state("after-motion",actor);
     return 0;
 }
 
@@ -131855,6 +131917,7 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
         retdec_trace_i32("actor:render-camera-bottom",
                          camera != 0 ? *(int32_t *)(intptr_t)(camera + 84) : 0);
     }
+    retdec_trace_star_state("render-entry",actor);
     if (*(unsigned char *)(intptr_t)(actor + 40) == 0 ||
         *(unsigned char *)(intptr_t)(actor + 21) == 0 || frame == 0 ||
         *(int32_t *)(intptr_t)(frame + 4) == 0)
@@ -131952,6 +132015,7 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
     *(int32_t *)(intptr_t)(frame + 52) = color;
     *(int32_t *)(intptr_t)(frame + 80) = color;
     *(int32_t *)(intptr_t)(frame + 108) = color;
+    retdec_trace_star_state("draw",actor);
     {
         int32_t blend_mode = *(int32_t *)(intptr_t)(actor + 196);
         int32_t render_state = 1;

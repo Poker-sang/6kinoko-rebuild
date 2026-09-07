@@ -858,6 +858,150 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t scripts[3], init[3];
+    int32_t layout[100]={0}, layer[80]={0}, resource[20]={0};
+    int32_t records[1][8]={{1,0,400}};
+    struct retdec_mcd_chip chip={0};
+    struct retdec_mcd_data data={1,&chip,0,NULL};
+    int32_t reader=0;
+    unsigned char version;
+    unsigned short texture_count;
+    int32_t resource_base=(*(int32_t *)(intptr_t)(manager+72)-*(int32_t *)(intptr_t)(manager+68))/4;
+    CHECK(function_407370(PTR(&reader),"data/actor/item/item.pat"));
+    CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&texture_count));
+    CHECK(retdec_pat_skip_bytes(reader,texture_count*128u));
+    g_retdec_act_texture_slots[1].width=1024;
+    g_retdec_act_texture_slots[1].height=1024;
+    for(int i=0;i<texture_count;++i) CHECK(retdec_pat_append_resource(manager,1));
+    CHECK(retdec_pat_read_animations(reader,manager,resource_base));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    float native_camera[24]={0};
+    native_camera[20]=2000;
+    native_camera[21]=1200;
+    int failures=vm_failures;
+    CHECK(execute_source(vm,root+2,
+        "map <- {height=2000,width=2000};\n"
+        "camera <- {left=0.0,top=0.0,right=2000.0,bottom=1200.0};\n"
+        "stageWaterLevel=10000;\n"));
+    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_item");
+    CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    layout[0]=PTR(&g327); layout[60]=2000; layout[61]=32;
+    layout[66]=PTR(records); layout[67]=PTR(records+1);
+    layout[78]=PTR(layer); layout[79]=PTR(resource);
+    *((uint8_t *)layer+140)=1;
+    resource[16]=PTR(&data);
+    chip.chip_id=1;
+    *(int16_t *)(chip.bytes+12)=2000;
+    *(int16_t *)(chip.bytes+14)=32;
+    CHECK(function_4693a0(PTR(layout)));
+    int32_t actual_map[60];
+    const char *names[]={"InitStarC","InitStarD"};
+    for(int kind=0;kind<6;++kind) {
+        if(kind==2) {
+            function_469700();
+            function_468950_this(PTR(g_514300_storage),manager);
+            function_427530(PTR(actual_map));
+            CHECK(function_428000(PTR(actual_map),"data/map/w1-c01a.act"));
+            for(int32_t slot=actual_map[52];slot!=actual_map[53];slot+=4) {
+                int32_t actual_layer=*(int32_t *)(intptr_t)slot;
+                const char *name=retdec_std_string_data(actual_layer+112);
+                if(strncmp(name,"te",2) && strncmp(name,"wa",2)) continue;
+                int32_t head=*(int32_t *)(intptr_t)(actual_layer+180);
+                for(int32_t n=*(int32_t *)(intptr_t)head;n!=head;n=*(int32_t *)(intptr_t)n) {
+                    int32_t key=*(int32_t *)(intptr_t)(n+8);
+                    CHECK(function_4693a0(*(int32_t *)(intptr_t)(key+4)));
+                }
+            }
+            char setup[160];
+            sprintf_s(setup,sizeof(setup),"map.height=%d; map.width=%d;",actual_map[3],actual_map[2]);
+            CHECK(execute_source(vm,root+2,setup));
+        }
+        function_4aa3a0_this(PTR(scripts),PTR(init),names[kind%2]);
+        CHECK(init[1]==0x08000100);
+        int32_t block=0, bumper=0, actor=0;
+        if(kind<4) {
+            actor=function_463b40_this(manager,init[0],init[1],init[2],
+                512,kind<2 ? 160.0f : 768.0f,1,PTR(&g16),g483,g484,0);
+        } else {
+            int32_t enemy[3], block_init[3], bumper_init[3];
+            CHECK(execute_source(vm,root+2,
+                "function InitStarBumper(v) { user={type=TYPE_2HEAD,ball=null};\n"
+                " SetTake(100); callbackGroup=GP_PLAYER; ::player=this; }\n"
+                "starRewards <- 0;\nfunction AddStar() { ::starRewards++; }\n"));
+            function_4aa3a0_this(PTR(root+1),PTR(enemy),"t_enemy");
+            function_4aa3a0_this(PTR(enemy),PTR(block_init),"Init0436");
+            function_4aa3a0_this(PTR(root+1),PTR(bumper_init),"InitStarBumper");
+            bumper=function_463b40_this(manager,bumper_init[0],bumper_init[1],bumper_init[2],
+                kind==4 ? 500.0f : 524.0f,820,-1,PTR(&g16),g483,g484,0);
+            block=function_463b40_this(manager,block_init[0],block_init[1],block_init[2],
+                512,768,-1,PTR(&g16),0x05000002,0x436,0);
+            CHECK(block && bumper && vm_failures==failures);
+            function_4a9840_this(PTR(root+1),"starBlock",block+44);
+            CHECK(execute_source(vm,root+2,"starBlock.user.SetDamage(player);"));
+            retdec_actor_manager_refresh(manager);
+            for(int n=0;n<*(int32_t *)(intptr_t)(manager+116);++n) {
+                int32_t candidate=(*(int32_t **)(intptr_t)(manager+100))[n];
+                if(*(int32_t *)(intptr_t)(candidate+208)==1060) actor=candidate;
+            }
+            CHECK(actor);
+            CHECK(execute_source(vm,root+2,"player.x=0;"));
+            retdec_actor_refresh_bounds(bumper);
+            function_4a9d70_this(PTR(enemy)); function_4a9d70_this(PTR(block_init));
+            function_4a9d70_this(PTR(bumper_init));
+        }
+        int contacts=0, bounces=0;
+        CHECK(actor && vm_failures==failures);
+        CHECK(*(int32_t *)(intptr_t)(actor+208)==1060);
+        CHECK(retdec_actor_manager_refresh(manager)>0);
+        for(int frame=0;frame<300;++frame) {
+            int grounded=*(int32_t *)(intptr_t)(actor+296);
+            retdec_actor_manager_update(manager,PTR(native_camera));
+            CHECK(vm_failures==failures);
+            float vy=*(float *)(intptr_t)(actor+260);
+            if(grounded && vy<0) ++bounces;
+            CHECK(retdec_actor_render(actor,PTR(native_camera))==1);
+            float x=*(float *)(intptr_t)(actor+240),y=*(float *)(intptr_t)(actor+244);
+            if(!_finite(x) || !_finite(y) || *(uint8_t *)(intptr_t)(actor+22))
+                fprintf(stderr,"star invalid kind=%d frame=%d xy=(%g,%g) vy=%g ground=%d contacts=%d\n",
+                    kind,frame,x,y,vy,grounded,contacts);
+            CHECK(_finite(x) && _finite(y));
+            CHECK(!*(uint8_t *)(intptr_t)(actor+22));
+            if(*(int32_t *)(intptr_t)(actor+296)) {
+                ++contacts;
+                int32_t sprite=*(int32_t *)(intptr_t)(actor+204);
+                float sprite_top=*(float *)(intptr_t)(sprite+180);
+                float sprite_bottom=*(float *)(intptr_t)(sprite+216);
+                if(contacts==1) fprintf(stderr,"star land kind=%d xy=(%g,%g) bounds=(%g,%g) spriteY=(%g,%g)\n",
+                    kind,x,y,*(float *)(intptr_t)(actor+444),*(float *)(intptr_t)(actor+452),sprite_top,sprite_bottom);
+                CHECK(_finite(sprite_top) && _finite(sprite_bottom) && sprite_bottom>sprite_top);
+                CHECK(sprite_top<*(float *)(intptr_t)(actor+452));
+            }
+        }
+        CHECK(contacts>0 && bounces>0);
+        if(bumper) {
+            CHECK(execute_source(vm,root+2,"if(starRewards!=0) throw \"star rewarded before pickup\";"));
+            *(float *)(intptr_t)(bumper+240)=*(float *)(intptr_t)(actor+240);
+            *(float *)(intptr_t)(bumper+244)=*(float *)(intptr_t)(actor+244);
+            retdec_actor_refresh_bounds(bumper);
+            function_462ce0(actor,bumper);
+            CHECK(vm_failures==failures && *(uint8_t *)(intptr_t)(actor+22));
+            CHECK(execute_source(vm,root+2,"if(starRewards!=1) throw \"star pickup reward\";"));
+        }
+        function_45dbc0_this(actor);
+        if(block) function_45dbc0_this(block);
+        if(bumper) function_45dbc0_this(bumper);
+        retdec_actor_manager_refresh(manager);
+        function_4a9d70_this(PTR(init));
+    }
+    function_469700();
+    function_468950_this(PTR(g_514300_storage),manager);
+    retdec_destroy_cact_object(PTR(actual_map));
+    function_4a9d70_this(PTR(scripts));
+    puts("PASS: original moving stars land, bounce and remain collectible");
+    return 0;
+}
+
 static int test_hidden_layer(int32_t vm, int32_t *root) {
     int32_t act[60], resource[48] = {0}, parent[2] = {g483,g484};
     int32_t hidden = 0, active = 0, layout = 0, script[3];
@@ -2336,6 +2480,8 @@ int main(int argc, char **argv) {
         CHECK(test_enemy_scripts(manager, vm, root) == 0);
     if (argc > 8)
         CHECK(test_stone_block(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_star_landing(manager, vm, root) == 0);
     if (argc > 8)
         CHECK(test_branch_motion(manager) == 0);
     if (argc > 8)

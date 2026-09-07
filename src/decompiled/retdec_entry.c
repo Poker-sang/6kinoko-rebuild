@@ -51,6 +51,17 @@ void retdec_trace(const char *message)
     (void)message;
     return;
 #endif
+#if defined(RETDEC_TRACE_STAR_FILTER)
+    if (message == NULL ||
+        (strncmp(message, "actor:star", 10) != 0 &&
+         strncmp(message, "actor:invalid", 13) != 0 &&
+         strncmp(message, "actor:update-failed", 19) != 0 &&
+         strncmp(message, "stagevm:failure", 15) != 0 &&
+         strncmp(message, "map:path", 8) != 0 &&
+         strncmp(message, "veh:", 4) != 0 &&
+         strncmp(message, "seh:", 4) != 0))
+        return;
+#endif
     /* Silence only the output; VM trace call sites remain identical. */
 #if defined(RETDEC_TRACE_FILTER)
     if (message == NULL ||
@@ -141,6 +152,7 @@ void retdec_trace(const char *message)
         WriteFile(retdec_trace_file, "\r\n", 2, &written, NULL);
     }
     if (strncmp(message, "game:frame", 10) == 0 ||
+        strncmp(message, "actor:star", 10) == 0 ||
         strcmp(message, "render-target:bmp-ok") == 0 ||
         strncmp(message, "stagevm:failure", 15) == 0 ||
         strncmp(message, "seh:", 4) == 0 || strncmp(message, "veh:", 4) == 0)
