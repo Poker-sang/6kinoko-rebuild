@@ -3904,6 +3904,7 @@ int32_t function_45db30(void);
 int32_t function_45db90(int32_t a1);
 int32_t function_45dbc0(void);
 int32_t function_45dbd0(float32_t a1, float32_t a2);
+static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
 int32_t function_45de70(int32_t a1, int32_t * a2);
 static int32_t function_45de70_this(int32_t actor_ptr,
                                     int32_t source_ptr);
@@ -126323,6 +126324,21 @@ int32_t function_45dbc0(void) { return 0; }
 #endif
 
 // Address range: 0x45dbd0 - 0x45de6d
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45dbd0(float32_t dx, float32_t dy) {
+    __asm {
+        push [esp + 8]
+        push [esp + 8]
+        push ecx
+        call function_45dbd0_this
+        add esp, 12
+        ret 8
+    }
+}
+#else
+int32_t function_45dbd0(float32_t dx, float32_t dy) { return 0; }
+#endif
+#if 0
 int32_t function_45dbd0(float32_t a1, float32_t a2) {
     // 0x45dbd0
     int3_t v1; // 0x45dbd0
@@ -126639,6 +126655,8 @@ int32_t function_45dbd0(float32_t a1, float32_t a2) {
     v33 = v36;
     goto lab_0x45dbf3;
 }
+
+#endif
 
 // Address range: 0x45de70 - 0x45de8b
 int32_t function_45de70(int32_t a1, int32_t * a2) {
@@ -126998,33 +127016,36 @@ static void retdec_actor_release_weak(int32_t control) {
             (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
 }
 
-/* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
-static int32_t function_45e460_this(int32_t actor) {
-    int32_t parent_control, owner_control;
+/* 45FB90 clears the script instance and its callbacks, not the saved initializer. */
+static int32_t function_45fb90_this(int32_t actor) {
     int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    static const int32_t object_offsets[] = {136, 124, 108, 96, 68, 56, 44};
-    if (actor == 0)
-        return 0;
-    function_4a9570_this(actor + 56);
-    function_4a9570_this(actor + 68);
     if (function_4a9a30_this(actor + 44) == 0x0A008000) {
-        int32_t state[7] = {0};
-        /* 45FB90 resets both callbacks and the instance's step/user slots. */
-        retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
-        *(int32_t *)(intptr_t)(actor + 92) = state[0];
-        function_4a95c0_this(actor + 96, (int32_t)(intptr_t)(state + 1));
-        function_4a95c0_this(actor + 108, (int32_t)(intptr_t)(state + 4));
-        *(int32_t *)(intptr_t)(actor + 120) = state[0];
-        function_4a95c0_this(actor + 124, (int32_t)(intptr_t)(state + 1));
-        function_4a95c0_this(actor + 136, (int32_t)(intptr_t)(state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(state + 1));
+        for (int32_t offset = 92; offset <= 120; offset += 28) {
+            int32_t state[7] = {0};
+            retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
+            *(int32_t *)(intptr_t)(actor + offset) = state[0];
+            function_4a95c0_this(actor + offset + 4, (int32_t)(intptr_t)(state + 1));
+            function_4a95c0_this(actor + offset + 16, (int32_t)(intptr_t)(state + 4));
+            function_4a9d70_this((int32_t)(intptr_t)(state + 4));
+            function_4a9d70_this((int32_t)(intptr_t)(state + 1));
+        }
         function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g601,
                             (int32_t)(intptr_t)empty);
         function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g600,
                             (int32_t)(intptr_t)empty);
     }
-    function_4a9570_this(actor + 44);
+    return function_4a9570_this(actor + 44);
+}
+
+/* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
+static int32_t function_45e460_this(int32_t actor) {
+    int32_t parent_control, owner_control;
+    static const int32_t object_offsets[] = {136, 124, 108, 96, 68, 56, 44};
+    if (actor == 0)
+        return 0;
+    function_4a9570_this(actor + 56);
+    function_4a9570_this(actor + 68);
+    function_45fb90_this(actor);
     parent_control = *(int32_t *)(intptr_t)(actor + 36);
     *(int32_t *)(intptr_t)(actor + 32) = 0;
     *(int32_t *)(intptr_t)(actor + 36) = 0;
@@ -127433,6 +127454,45 @@ int32_t function_45e5e0(int32_t a1) {
 // Address range: 0x45eb00 - 0x45ec5d
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
+static int32_t function_45eb00_this(int32_t actor) {
+    int32_t initial_function[3], initial_argument[3];
+    int32_t parent_control = *(int32_t *)(intptr_t)(actor + 36);
+    int32_t owner_control;
+    *(int32_t *)(intptr_t)(actor + 32) = 0;
+    *(int32_t *)(intptr_t)(actor + 36) = 0;
+    retdec_actor_release_weak(parent_control);
+    owner_control = *(int32_t *)(intptr_t)(actor + 28);
+    *(int32_t *)(intptr_t)(actor + 24) = 0;
+    *(int32_t *)(intptr_t)(actor + 28) = 0;
+    retdec_release_squirrel_object(owner_control);
+    function_45fb90_this(actor);
+
+    /* Init replaces these same fields, so retain both saved SquirrelObjects across the call. */
+    function_4a9500_this(initial_argument, actor + 68);
+    function_4a9500_this(initial_function, actor + 56);
+    function_45e5e0_this(actor, *(int32_t *)(intptr_t)(actor + 148),
+        initial_function[0], initial_function[1], initial_function[2],
+        *(float *)(intptr_t)(actor + 80), *(float *)(intptr_t)(actor + 84),
+        *(float *)(intptr_t)(actor + 88),
+        initial_argument[0], initial_argument[1], initial_argument[2]);
+    function_4a9d70_this((int32_t)(intptr_t)initial_function);
+    function_4a9d70_this((int32_t)(intptr_t)initial_argument);
+    return function_45f7e0_this(actor, *(int32_t *)(intptr_t)(actor + 228));
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45eb00(void) {
+    __asm {
+        push ecx
+        call function_45eb00_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_45eb00(void) { return 0; }
+#endif
+#if 0
 int32_t function_45eb00(void) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x45eb10
     __writefsdword(0, (int32_t)&v1);
@@ -127478,6 +127538,8 @@ int32_t function_45eb00(void) {
     __writefsdword(0, v1);
     return result;
 }
+
+#endif
 
 // Address range: 0x45ec60 - 0x45f0bc
 int32_t function_45ec60(void) {
@@ -128537,6 +128599,19 @@ int32_t function_45fab0(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x45fb90 - 0x45fcc6
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45fb90(void) {
+    __asm {
+        push ecx
+        call function_45fb90_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_45fb90(void) { return 0; }
+#endif
+#if 0
 int32_t function_45fb90(void) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x45fba0
     __writefsdword(0, (int32_t)&v1);
@@ -128567,6 +128642,8 @@ int32_t function_45fb90(void) {
     __writefsdword(0, v1);
     return result;
 }
+
+#endif
 
 // Address range: 0x45fcd0 - 0x45fd7e
 /* The Actor native callback receives one SquirrelObject by value.  RetDec
@@ -131070,17 +131147,74 @@ static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
     return 1;
 }
 
-/* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
-static int32_t retdec_actor_update_motion(int32_t actor)
-{
-    float parent_dx = 0.0f;
-    float parent_dy = 0.0f;
+/* Shared by original Actor::Move (45DBD0) and Actor::Update (45EC60). */
+static void retdec_actor_refresh_bounds(int32_t actor) {
     float width_scale;
     float height_scale;
     float left;
     float right;
     float top;
     float bottom;
+    width_scale = *(float32_t *)(intptr_t)(actor + 168) *
+        *(float32_t *)(intptr_t)(actor + 172);
+    height_scale = *(float32_t *)(intptr_t)(actor + 168) *
+        *(float32_t *)(intptr_t)(actor + 176);
+    if (0.0f >= *(float32_t *)(intptr_t)(actor + 272)) {
+        left = *(float32_t *)(intptr_t)(actor + 424) * width_scale +
+            *(float32_t *)(intptr_t)(actor + 240);
+        right = *(float32_t *)(intptr_t)(actor + 432) * width_scale +
+            *(float32_t *)(intptr_t)(actor + 240);
+    } else {
+        left = *(float32_t *)(intptr_t)(actor + 240) -
+            *(float32_t *)(intptr_t)(actor + 432) * width_scale;
+        right = *(float32_t *)(intptr_t)(actor + 240) -
+            *(float32_t *)(intptr_t)(actor + 424) * width_scale;
+    }
+    top = *(float32_t *)(intptr_t)(actor + 428) * height_scale +
+        *(float32_t *)(intptr_t)(actor + 244);
+    bottom = *(float32_t *)(intptr_t)(actor + 436) * height_scale +
+        *(float32_t *)(intptr_t)(actor + 244);
+    *(float32_t *)(intptr_t)(actor + 440) = left;
+    *(float32_t *)(intptr_t)(actor + 444) = top;
+    *(float32_t *)(intptr_t)(actor + 448) = right;
+    *(float32_t *)(intptr_t)(actor + 452) = bottom;
+    *(float32_t *)(intptr_t)(actor + 352) = left;
+    *(float32_t *)(intptr_t)(actor + 356) = top;
+    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(right - left);
+    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
+}
+
+static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
+    while (dx != 0.0f || dy != 0.0f) {
+        int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
+        memcpy((void *)(intptr_t)(actor + 248), (const void *)(intptr_t)(actor + 240), 8);
+        memcpy((void *)(intptr_t)(actor + 456), (const void *)(intptr_t)(actor + 440), 16);
+        if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
+            *(uint8_t *)(intptr_t)(animation + 25) != 0) {
+            float step_x, step_y;
+            if (dx > 8.0f) { step_x = 8.0f; dx -= 8.0f; }
+            else if (dx < -8.0f) { step_x = -8.0f; dx += 8.0f; }
+            else { step_x = dx; dx = 0.0f; }
+            if (dy > 8.0f) { step_y = 8.0f; dy -= 8.0f; }
+            else if (dy < -8.0f) { step_y = -8.0f; dy += 8.0f; }
+            else { step_y = dy; dy = 0.0f; }
+            retdec_actor_collide_move(actor, step_x, step_y);
+        } else {
+            *(float *)(intptr_t)(actor + 240) += dx;
+            *(float *)(intptr_t)(actor + 244) += dy;
+            memset((void *)(intptr_t)(actor + 284), 0, 16);
+            dx = dy = 0.0f;
+        }
+        retdec_actor_refresh_bounds(actor);
+    }
+    return 0;
+}
+
+/* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
+static int32_t retdec_actor_update_motion(int32_t actor)
+{
+    float parent_dx = 0.0f;
+    float parent_dy = 0.0f;
     int32_t parent_pair[2] = { 0, 0 };
     int32_t parent_slot;
     int32_t parent;
@@ -131142,34 +131276,7 @@ static int32_t retdec_actor_update_motion(int32_t actor)
         *(float32_t *)(intptr_t)(actor + 296) = 0.0f;
     }
 
-    width_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 172);
-    height_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 176);
-    if (0.0f >= *(float32_t *)(intptr_t)(actor + 272)) {
-        left = *(float32_t *)(intptr_t)(actor + 424) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-        right = *(float32_t *)(intptr_t)(actor + 432) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-    } else {
-        left = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 432) * width_scale;
-        right = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 424) * width_scale;
-    }
-    top = *(float32_t *)(intptr_t)(actor + 428) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    bottom = *(float32_t *)(intptr_t)(actor + 436) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    *(float32_t *)(intptr_t)(actor + 440) = left;
-    *(float32_t *)(intptr_t)(actor + 444) = top;
-    *(float32_t *)(intptr_t)(actor + 448) = right;
-    *(float32_t *)(intptr_t)(actor + 452) = bottom;
-    *(float32_t *)(intptr_t)(actor + 352) = left;
-    *(float32_t *)(intptr_t)(actor + 356) = top;
-    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(right - left);
-    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
-
+    retdec_actor_refresh_bounds(actor);
     trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 16) {
         int32_t before_x;

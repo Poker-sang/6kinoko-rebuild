@@ -499,6 +499,140 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     return 0;
 }
 
+static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t init[3], seed[3], actor, parent, parent_object[3], parent_control;
+    int32_t stack_top = function_48aa20(vm);
+    CHECK(execute_source(vm, root + 2,
+        "resetCalls <- 0; resetTicks <- 0; resetSeed <- { priority = 7 };\n"
+        "function ResetInit(value) {\n"
+        "  if (value != ::resetSeed) throw \"reset argument changed\";\n"
+        "  ::resetCalls++; user = { generation = ::resetCalls };\n"
+        "  priority = value.priority; vx = 3.0;\n"
+        "  SetUpdateFunction(function() { ::resetTicks++; });\n"
+        "  SetCollisionCallbackFunction(function(other) {});\n"
+        "  ::resetProbe <- this;\n"
+        "}"));
+    function_4aa3a0_this(PTR(root + 1), PTR(init), "ResetInit");
+    function_4aa3a0_this(PTR(root + 1), PTR(seed), "resetSeed");
+    actor = function_463b40_this(manager, init[0], init[1], init[2],
+        100, 200, -1, seed[0], seed[1], seed[2], 0);
+    CHECK(actor);
+    parent = function_463b40_this(manager, PTR(&g16), g483, g484,
+        0, 0, -1, PTR(&g16), g483, g484, 0);
+    CHECK(parent);
+    parent_control = *(int32_t *)(intptr_t)(parent + 28);
+    for (int round = 0; round < 32; ++round) {
+        int32_t old_weak[2], locked[2];
+        int32_t parent_weak_count = *(int32_t *)(intptr_t)(parent_control + 8);
+        int32_t argument_refs = *(int32_t *)(intptr_t)(seed[2] + 4);
+        int32_t original_handle = *(int32_t *)(intptr_t)(actor + 12);
+        old_weak[0] = *(int32_t *)(intptr_t)(actor + 24);
+        old_weak[1] = *(int32_t *)(intptr_t)(actor + 28);
+        InterlockedIncrement((volatile LONG *)(intptr_t)(old_weak[1] + 8));
+        function_4a9500_this(parent_object, parent + 44);
+        function_4606d0_this(actor, PTR(parent_object));
+        CHECK(execute_source(vm, root + 2,
+            "oldReset <- resetProbe; resetProbe.x = 700; resetProbe.y = 800;\n"
+            "resetProbe.direction = 1; resetProbe.priority = 123;\n"
+            "resetProbe.SetChipFlag(32); resetProbe.Reset();\n"
+            "if (resetProbe == oldReset || oldReset.user != null || oldReset.step != null) "
+            "throw \"old reset instance retained state\";\n"
+            "if (resetProbe.x != 100 || resetProbe.y != 200 || resetProbe.direction != -1 || "
+            "resetProbe.priority != 7 || resetProbe.user.generation != resetCalls) "
+            "throw \"reset initializer not replayed\";"));
+        function_45e410_this(PTR(old_weak), locked);
+        CHECK(locked[0] == 0 && locked[1] == 0);
+        retdec_actor_release_weak(old_weak[1]);
+        CHECK(*(int32_t *)(intptr_t)(parent_control + 8) == parent_weak_count);
+        CHECK(*(int32_t *)(intptr_t)(seed[2] + 4) == argument_refs);
+        CHECK(*(int32_t *)(intptr_t)(actor + 12) == original_handle);
+        CHECK(*(int64_t *)(intptr_t)(actor + 392) == 32);
+        CHECK(*(int32_t *)(intptr_t)(actor + 36) == 0);
+        CHECK(*(int32_t *)(intptr_t)(actor + 112) == 0x08000100);
+        CHECK(*(int32_t *)(intptr_t)(actor + 140) == 0x08000100);
+        retdec_actor_tick(actor);
+        CHECK(retdec_actor_manager_refresh(manager) == 2);
+        CHECK(function_48aa20(vm) == stack_top);
+    }
+    CHECK(execute_source(vm, root + 2,
+        "if (resetCalls != 33 || resetTicks != 32) throw \"reset callback counts\";"));
+    function_469700();
+    function_4a9d70_this(PTR(init));
+    function_4a9d70_this(PTR(seed));
+    puts("PASS: Reset replays initialization and retires old references across 32 resets");
+    return 0;
+}
+
+static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t reader = 0, script[26] = {0}, scripts[3], init[3];
+    unsigned char version;
+    unsigned short textures;
+    unsigned char *bytes;
+    CHECK(g765 != 0 && g678 == 0);
+    CHECK(function_407370(PTR(&reader), "data/actor/item/item.pat"));
+    CHECK(retdec_pat_read_u8(reader, &version));
+    CHECK(retdec_pat_read_u16(reader, &textures));
+    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
+    CHECK(retdec_pat_read_animations(reader, manager, 0));
+    CHECK(*(int32_t *)(intptr_t)(reader + 20) - *(int32_t *)(intptr_t)(reader + 16) ==
+        *(int32_t *)(intptr_t)(reader + 12));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    reader = 0;
+    CHECK(pat_lookup(manager, 1130));
+    CHECK(execute_source(vm, root + 2,
+        "t_item <- {};\nstoneSounds <- [];\nstoneEffects <- [];\n"
+        "player <- { direction = 1.0, user = { stone = null } };\n"
+        "function PlaySE(id) { ::stoneSounds.append(id); }\n"
+        "function CreateEffect(x,y,z,id) { ::stoneEffects.append(id); return {}; }"));
+    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
+    CHECK(function_407370(PTR(&reader), "data/script/bullet.cv4"));
+    script[24] = *(int32_t *)(intptr_t)(reader + 12);
+    bytes = (unsigned char *)malloc((size_t)script[24]);
+    CHECK(bytes);
+    CHECK(retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]));
+    script[23] = PTR(bytes);
+    CHECK(retdec_execute_embedded_act_script(vm, PTR(script), scripts + 1));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    free(bytes);
+    function_4aa3a0_this(PTR(scripts), PTR(init), "InitStone");
+    CHECK(init[1] == 0x08000100);
+    for (int round = 0; round < 8; ++round) {
+        int direction = (round & 1) ? -1 : 1;
+        int32_t top = function_48aa20(vm);
+        int failures = vm_failures;
+        CHECK(execute_source(vm, root + 2, direction == 1 ?
+            "player.direction = 1.0;" : "player.direction = -1.0;"));
+        int32_t stone = function_463b40_this(manager, init[0], init[1], init[2],
+            100, 200, -1, PTR(&g16), g483, g484, 0);
+        CHECK(stone && vm_failures == failures);
+        CHECK(*(float *)(intptr_t)(stone + 240) == 100.0f + 40.0f * direction);
+        CHECK(*(float *)(intptr_t)(stone + 244) == 200);
+        CHECK(*(float *)(intptr_t)(stone + 256) == 0);
+        CHECK(*(float *)(intptr_t)(stone + 260) == 0);
+        CHECK(*(int32_t *)(intptr_t)(stone + 208) == 1130);
+        CHECK(*(int64_t *)(intptr_t)(stone + 392) == 32);
+        CHECK(*(int32_t *)(intptr_t)(stone + 236) == 0x800000);
+        function_4a9840_this(PTR(root + 1), "stoneProbe", stone + 44);
+        CHECK(execute_source(vm, root + 2,
+            "if (player.user.stone != stoneProbe || stoneProbe.collisionGroup != GP_LIFT || "
+            "stoneProbe.collisionMask != GP_TERRAIN || stoneProbe.user.time != 0) "
+            "throw \"stone initialization incomplete\";\n"
+            "stoneProbe = null;"));
+        CHECK(function_48aa20(vm) == top);
+        function_469700();
+        CHECK(execute_source(vm, root + 2,
+            "if (player.user.stone != null) throw \"stone weak reference retained\";"));
+    }
+    CHECK(execute_source(vm, root + 2,
+        "if (stoneSounds.len() != 8 || stoneEffects.len() != 8) throw \"stone media calls\";\n"
+        "foreach (id in stoneSounds) if (id != 33) throw \"stone sound id\";\n"
+        "foreach (id in stoneEffects) if (id != 1960) throw \"stone effect id\";"));
+    function_4a9d70_this(PTR(init));
+    function_4a9d70_this(PTR(scripts));
+    puts("PASS: original InitStone and item PAT, both directions, eight placements/releases");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -830,6 +964,10 @@ int main(int argc, char **argv) {
         retdec_actor_update_motion(actor);
         CHECK(*(float *)(intptr_t)(actor + 240) == 102);
         CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
+        function_45dbd0_this(actor, 40, 0);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 102);
+        CHECK(*(float *)(intptr_t)(actor + 248) == 102);
+        CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
         records[0][1] = 0;
         records[0][2] = 20;
         *(int16_t *)(chips[0].bytes + 12) = 256;
@@ -991,6 +1129,66 @@ int main(int argc, char **argv) {
         function_469700();
     }
     CHECK(test_pat_records(manager) == 0);
+    CHECK(test_actor_reset(manager, vm, root) == 0);
+    {
+        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+            100, 200, -1, PTR(&g16), g483, g484, 0);
+        float dx = -40.0f, dy = 0.0f;
+        int32_t dx_bits, dy_bits;
+        int fault = 0;
+        CHECK(actor);
+        memcpy(&dx_bits, &dx, sizeof(dx_bits));
+        memcpy(&dy_bits, &dy, sizeof(dy_bits));
+        __try {
+            retdec_call_thiscall2_result((void *)(intptr_t)actor, function_45dbd0, dx_bits, dy_bits);
+        } __except(EXCEPTION_EXECUTE_HANDLER) {
+            fault = 1;
+        }
+        CHECK(fault == 0);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 60);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 200);
+        __try {
+            retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45eb00);
+        } __except(EXCEPTION_EXECUTE_HANDLER) {
+            fault = 1;
+        }
+        CHECK(fault == 0);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 100);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 200);
+        {
+            int32_t animation[7] = {0};
+            unsigned char unchanged[544];
+            *(int32_t *)(intptr_t)(actor + 200) = PTR(animation);
+            *((uint8_t *)animation + 25) = 1;
+            *(int32_t *)(intptr_t)(actor + 316) = 1;
+            *(float *)(intptr_t)(actor + 424) = -8;
+            *(float *)(intptr_t)(actor + 428) = -16;
+            *(float *)(intptr_t)(actor + 432) = 8;
+            *(float *)(intptr_t)(actor + 436) = 0;
+            *(float *)(intptr_t)(actor + 256) = 12;
+            *(float *)(intptr_t)(actor + 260) = -4;
+            *(float *)(intptr_t)(actor + 264) = 7;
+            *(float *)(intptr_t)(actor + 268) = 9;
+            retdec_actor_refresh_bounds(actor);
+            function_45dbd0_this(actor, 21, -18);
+            CHECK(*(float *)(intptr_t)(actor + 240) == 121);
+            CHECK(*(float *)(intptr_t)(actor + 244) == 182);
+            CHECK(*(float *)(intptr_t)(actor + 248) == 116);
+            CHECK(*(float *)(intptr_t)(actor + 252) == 184);
+            CHECK(*(float *)(intptr_t)(actor + 256) == 12);
+            CHECK(*(float *)(intptr_t)(actor + 260) == -4);
+            CHECK(*(float *)(intptr_t)(actor + 264) == 7);
+            CHECK(*(float *)(intptr_t)(actor + 268) == 9);
+            memcpy(unchanged, (const void *)(intptr_t)actor, sizeof(unchanged));
+            function_45dbd0_this(actor, 0, 0);
+            CHECK(memcmp(unchanged, (const void *)(intptr_t)actor, sizeof(unchanged)) == 0);
+            *((uint8_t *)animation + 25) = 0;
+            function_45dbd0_this(actor, -40, 0);
+            CHECK(*(float *)(intptr_t)(actor + 240) == 81);
+            CHECK(*(float *)(intptr_t)(actor + 248) == 121);
+        }
+        function_469700();
+    }
     {
         int32_t constructed[136];
         function_45e300_this(PTR(constructed));
@@ -1086,6 +1284,8 @@ int main(int argc, char **argv) {
         CHECK(test_player_walking(manager, vm, root, argv[5], argv[6], argv[7],
             argc > 8 ? argv[8] : NULL,
             argc > 9 ? argv[9] : "data/map/w1-c01a.act") == 0);
+    if (argc > 8)
+        CHECK(test_stone_placement(manager, vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
