@@ -3946,7 +3946,7 @@ int32_t function_45f560(int32_t a1, int32_t a2);
 float80_t function_45f5a0(int32_t a1, int32_t a2);
 int32_t function_45f5e0(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_45f640(int32_t *root_object);
-int32_t function_45f760(int32_t result);
+int64_t function_45f760(int32_t result);
 int32_t function_45f780(uint16_t a1);
 int32_t function_45f7a0(int32_t a1);
 static int32_t function_45f7e0_this(int32_t this_ptr, int32_t value);
@@ -126945,7 +126945,7 @@ static int32_t function_45e300_this(int32_t this_ptr) {
 
     *(int32_t *)(intptr_t)(this_ptr + 92) = 0;
     function_4a94e0_this(this_ptr + 96);
-    function_4a94e0_this(this_ptr + 112);
+    function_4a94e0_this(this_ptr + 108);
 
     *(int32_t *)(intptr_t)(this_ptr + 120) = 0;
     function_4a94e0_this(this_ptr + 124);
@@ -128286,21 +128286,42 @@ int32_t function_45f640(int32_t *root_object) {
 }
 
 // Address range: 0x45f760 - 0x45f777
-int32_t function_45f760(int32_t result) {
-    // 0x45f760
-    int32_t v1; // 0x45f760
-    *(int32_t *)(v1 + 392) = result;
-    *(int32_t *)(v1 + 396) = result >> 31;
-    return result;
+static int64_t function_45f760_this(int32_t actor, int32_t flags) {
+    int64_t value = flags;
+    memcpy((void *)(intptr_t)(actor + 392), &value, sizeof(value));
+    return value;
 }
 
 // Address range: 0x45f780 - 0x45f792
-int32_t function_45f780(uint16_t a1) {
-    // 0x45f780
-    int32_t v1; // 0x45f780
-    *(int16_t *)(v1 + 410) = a1;
-    return v1 & -0x10000 | (int32_t)a1;
+static int32_t function_45f780_this(int32_t actor, uint16_t shape) {
+    *(uint16_t *)(intptr_t)(actor + 410) = shape;
+    return shape;
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int64_t function_45f760(int32_t flags) {
+    __asm {
+        push [esp + 4]
+        push ecx
+        call function_45f760_this
+        add esp, 8
+        ret 4
+    }
+}
+
+__declspec(naked) int32_t function_45f780(uint16_t shape) {
+    __asm {
+        push [esp + 4]
+        push ecx
+        call function_45f780_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int64_t function_45f760(int32_t flags) { return 0; }
+int32_t function_45f780(uint16_t shape) { return 0; }
+#endif
 
 // Address range: 0x45f7a0 - 0x45f7d7
 int32_t function_45f7a0(int32_t a1) {
@@ -128345,11 +128366,18 @@ int32_t function_45f800(void) {
 }
 
 // Address range: 0x45f810 - 0x45f81a
-int32_t function_45f810(void) {
-    // 0x45f810
-    int32_t v1; // 0x45f810
-    return function_4697c0(v1);
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_45f810(void) {
+    __asm {
+        push ecx
+        call function_4697c0
+        add esp, 4
+        ret
+    }
 }
+#else
+int32_t function_45f810(void) { return 0; }
+#endif
 
 // Address range: 0x45f820 - 0x45f84e
 int32_t function_45f820(float32_t a1, float32_t a2, float32_t a3, float32_t a4) {
@@ -130897,37 +130925,32 @@ static void retdec_actor_tick(int32_t actor)
     *(int32_t *)(intptr_t)(actor + 216) = 0;
 }
 
-static int32_t retdec_collision_append(int32_t *count,
+static int32_t retdec_collision_append(int32_t state, int32_t *count,
     const unsigned char *chip, const void *layout, int32_t index)
 {
-    int32_t state = (int32_t)(intptr_t)g_514300_storage;
     KinokoCollisionRecord *records;
     if (!retdec_collision_reserve(state + 36, (uint32_t)*count + 1, 12))
         return 0;
-    records = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
+    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
     records[*count].chip = chip;
     records[*count].layout = layout;
     records[*count].index = index;
     ++*count;
-    if (g_514300_storage[10] < g_514300_storage[9] + *count * 12)
-        g_514300_storage[10] = g_514300_storage[9] + *count * 12;
+    if (*(int32_t *)(intptr_t)(state + 40) < (int32_t)(intptr_t)(records + *count))
+        *(int32_t *)(intptr_t)(state + 40) = (int32_t)(intptr_t)(records + *count);
     return 1;
 }
 
 /* 435220/436290/4362F0: resume at the cached index, scan forward, then backward. */
-static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
-                                           int32_t layer_index, int32_t *count)
+static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
+    int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,
+    int32_t *count)
 {
     struct retdec_mcd_data *data = retdec_map_chip_data(layout);
     int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
     int32_t total = (*(int32_t *)(intptr_t)(layout + 268) -
                      *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    int32_t *cached = (int32_t *)(intptr_t)(actor + 480 + 4 * layer_index);
     int32_t start = *cached, forward = 1, backward = 0;
-    int32_t left = (int32_t)(*(float *)(intptr_t)(actor + 440) - 24.0f);
-    int32_t top = (int32_t)(*(float *)(intptr_t)(actor + 444) - 24.0f);
-    int32_t right = (int32_t)(*(float *)(intptr_t)(actor + 448) + 24.0f);
-    int32_t bottom = (int32_t)(*(float *)(intptr_t)(actor + 452) + 24.0f);
     int32_t max_width = *(int32_t *)(intptr_t)(layout + 240);
     int32_t max_height = *(int32_t *)(intptr_t)(layout + 244);
     float offset_x, offset_y;
@@ -130969,7 +130992,7 @@ static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
                 (float)*(int32_t *)(intptr_t)(record + 4) + offset_x;
             *(float *)(intptr_t)(record + 16) =
                 (float)*(int32_t *)(intptr_t)(record + 8) + offset_y;
-            if (!retdec_collision_append(count, chip->bytes, (void *)(intptr_t)record, index))
+            if (!retdec_collision_append(state, count, chip->bytes, (void *)(intptr_t)record, index))
                 return 0;
             if (pass != 0 || first)
                 *cached = index;
@@ -130977,6 +131000,17 @@ static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
         }
     }
     return 1;
+}
+
+static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
+                                           int32_t layer_index, int32_t *count)
+{
+    return retdec_collision_query_rect((int32_t)(intptr_t)g_514300_storage,
+        layout, (int32_t *)(intptr_t)(actor + 480 + 4 * layer_index),
+        (int32_t)(*(float *)(intptr_t)(actor + 440) - 24.0f),
+        (int32_t)(*(float *)(intptr_t)(actor + 444) - 24.0f),
+        (int32_t)(*(float *)(intptr_t)(actor + 448) + 24.0f),
+        (int32_t)(*(float *)(intptr_t)(actor + 452) + 24.0f), count);
 }
 
 static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
@@ -131007,7 +131041,7 @@ static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
             (*(int32_t *)(intptr_t)(other + 312) & *(int32_t *)(intptr_t)(actor + 316)) &&
             *(float *)(intptr_t)(other + 448) + 24 >= *(float *)(intptr_t)(actor + 440) &&
             *(float *)(intptr_t)(other + 440) - 24 <= *(float *)(intptr_t)(actor + 448)) {
-            if (!retdec_collision_append(&count,
+            if (!retdec_collision_append((int32_t)(intptr_t)g_514300_storage, &count,
                 *(const unsigned char **)(intptr_t)(other + 328),
                 *(const void **)(intptr_t)(other + 332),
                 *(int32_t *)(intptr_t)(other + 336)))
@@ -131380,7 +131414,9 @@ static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
 static void retdec_trace_player_state(const char *phase, int32_t actor,
                                        int32_t camera) {
     static volatile LONG count;
-    int32_t closure, proto;
+    static int32_t last_actor, last_take;
+    int32_t closure, proto, take, transition;
+    uint32_t xy_bits[2];
     const char *source, *name;
     char message[896];
     if (actor == 0 || *(int32_t *)(intptr_t)(actor + 112) != 0x08000100)
@@ -131394,18 +131430,23 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
     name = (const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 24) + 28);
     if (_stricmp(source, "data/script/player.nut") != 0 || strcmp(name, "Update") != 0)
         return;
-    if (*(float *)(intptr_t)(actor + 256) == 0 && *(float *)(intptr_t)(actor + 260) == 0 &&
+    take = *(int32_t *)(intptr_t)(actor + 208);
+    transition = last_actor != actor || last_take != take;
+    last_actor = actor;
+    last_take = take;
+    if (!transition && *(float *)(intptr_t)(actor + 256) == 0 && *(float *)(intptr_t)(actor + 260) == 0 &&
         *(float *)(intptr_t)(actor + 304) >= 12 &&
         !(*(int32_t *)(intptr_t)(actor + 288) && *(int32_t *)(intptr_t)(actor + 296)) &&
         g848 % 60 != 0)
         return;
-    if (InterlockedIncrement(&count) > 6000)
+    if (InterlockedIncrement(&count) > 6000 && !transition)
         return;
+    memcpy(xy_bits, (const void *)(intptr_t)(actor + 240), sizeof(xy_bits));
     /* Observe the inputs to the unchanged script death checks without touching the VM stack. */
     sprintf_s(message, sizeof(message),
         "actor:player-state frame=%d phase=%s actor=%08X take=%d xy=(%.3f,%.3f) "
         "v=(%.3f,%.3f) free=(%.3f,%.3f) hits=(%d,%d,%d,%d) flags=%08X "
-        "bounds=(%.3f,%.3f,%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f)",
+        "bounds=(%.3f,%.3f,%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f) xyBits=%08X,%08X",
         g848, phase, (uint32_t)actor, *(int32_t *)(intptr_t)(actor + 208),
         *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
         *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
@@ -131418,7 +131459,7 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
         camera ? *(float *)(intptr_t)(camera + 72) : 0,
         camera ? *(float *)(intptr_t)(camera + 76) : 0,
         camera ? *(float *)(intptr_t)(camera + 80) : 0,
-        camera ? *(float *)(intptr_t)(camera + 84) : 0);
+        camera ? *(float *)(intptr_t)(camera + 84) : 0, xy_bits[0], xy_bits[1]);
     retdec_trace(message);
 }
 
@@ -138637,6 +138678,51 @@ int32_t function_467cd0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 }
 
 // Address range: 0x4681e0 - 0x468297
+static int32_t function_4681e0_this(int32_t state, int32_t actor) {
+    int32_t count = 0;
+    int32_t begin = *(int32_t *)(intptr_t)(state + 4);
+    int32_t end = *(int32_t *)(intptr_t)(state + 8);
+    uint32_t flags = 0;
+    KinokoCollisionRecord *records;
+
+    for (int32_t entry = begin; entry != end; entry += 4) {
+        int32_t layout = *(int32_t *)(intptr_t)entry;
+        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
+        if (*(uint8_t *)(intptr_t)(layer + 140)) {
+            /* GetChipFlag uses the unexpanded actor rectangle, unlike motion's 24-pixel query. */
+            if (!retdec_collision_query_rect(state, layout,
+                (int32_t *)(intptr_t)(actor + 480 + entry - begin),
+                (int32_t)*(float *)(intptr_t)(actor + 440),
+                (int32_t)*(float *)(intptr_t)(actor + 444),
+                (int32_t)*(float *)(intptr_t)(actor + 448),
+                (int32_t)*(float *)(intptr_t)(actor + 452), &count))
+                return 0;
+        }
+    }
+    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
+    for (int32_t i = 0; i < count; ++i) {
+        if (records[i].chip != NULL)
+            flags |= *(const uint32_t *)(records[i].chip + 16);
+    }
+    return (int32_t)flags;
+}
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_4681e0(int32_t actor) {
+    __asm {
+        push [esp + 4]
+        push ecx
+        call function_4681e0_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_4681e0(int32_t actor) {
+    return function_4681e0_this((int32_t)(intptr_t)g_514300_storage, actor);
+}
+#endif
+#if 0
 int32_t function_4681e0(int32_t a1) {
     // 0x4681e0
     int32_t v1; // 0x4681e0
@@ -138746,6 +138832,8 @@ int32_t function_4681e0(int32_t a1) {
     // 0x46828f
     return result;
 }
+
+#endif
 
 // Address range: 0x4682a0 - 0x4683b2
 int32_t function_4682a0(int32_t a1, float80_t a2, float80_t a3, float80_t a4, float80_t a5) {
@@ -141020,8 +141108,7 @@ int32_t function_4697a0(int32_t a1) {
 
 // Address range: 0x4697c0 - 0x4697d3
 int32_t function_4697c0(int32_t a1) {
-    // 0x4697c0
-    return function_4681e0(a1);
+    return function_4681e0_this((int32_t)(intptr_t)g_514300_storage, a1);
 }
 
 // Address range: 0x4697e0 - 0x469811
@@ -214197,6 +214284,30 @@ static __declspec(noinline) int32_t retdec_execute_call_closure(
             *(int32_t *)(intptr_t)(proto + 24) + 28);
     if (name != NULL && strcmp(name, "InitStage") == 0)
         trace_init_stage = 1;
+    if (name != NULL && (strcmp(name, "SetDead") == 0 || strcmp(name, "SetDamage") == 0) &&
+        *(int32_t *)(intptr_t)(proto + 12) == 0x08000010 &&
+        _stricmp((const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 16) + 28),
+                 "data/script/player.nut") == 0) {
+        static volatile LONG event_count;
+        if (InterlockedIncrement(&event_count) <= 512) {
+            int32_t caller_ci = *(int32_t *)(intptr_t)(vm + 132);
+            int32_t caller = caller_ci ? *(int32_t *)(intptr_t)(caller_ci + 12) : 0;
+            int32_t caller_proto = caller ? *(int32_t *)(intptr_t)(caller + 36) : 0;
+            int32_t *arguments = (int32_t *)(intptr_t)(stack_data + 8 * (stackbase + args_index));
+            retdec_trace_squirrel_name("actor:player-event", (int32_t)(intptr_t)name);
+            retdec_trace_i32("actor:player-event-frame", g848);
+            if (caller_proto != 0) {
+                retdec_trace_squirrel_name("actor:player-event-source",
+                    *(int32_t *)(intptr_t)(caller_proto + 16) + 28);
+                retdec_trace_squirrel_name("actor:player-event-caller",
+                    *(int32_t *)(intptr_t)(caller_proto + 24) + 28);
+            }
+            if (nargs > 1) {
+                retdec_trace_i32("actor:player-event-arg-type", arguments[2]);
+                retdec_trace_i32("actor:player-event-arg-data", arguments[3]);
+            }
+        }
+    }
     trace_init_savedata_table = name != NULL &&
         strcmp(name, "InitSaveDataTable") == 0;
     if (name != NULL &&

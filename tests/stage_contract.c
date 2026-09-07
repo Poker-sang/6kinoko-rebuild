@@ -303,7 +303,8 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
 
 static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                                const char *ground_path, const char *player_path,
-                               const char *constant_path, const char *reference_dir) {
+                               const char *constant_path, const char *reference_dir,
+                               const char *stage_path) {
     int32_t scripts[3], init[3], actor;
     int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
     int32_t records[1][8] = {{0x443, 0, 240}};
@@ -398,6 +399,8 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     function_468950_this(PTR(g_514300_storage), manager);
     if (reference_dir != NULL) {
         int32_t act[60];
+        float entry_x = 0, entry_y = 0;
+        int found_entry = 0;
         char path[MAX_PATH];
         for (char archive = 'a'; archive <= 'c'; ++archive) {
             sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", reference_dir, archive);
@@ -405,7 +408,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         }
         CHECK(g678 == 0);
         function_427530(PTR(act));
-        CHECK(function_428000(PTR(act), "data/map/w1-c01a.act"));
+        CHECK(function_428000(PTR(act), stage_path));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
@@ -423,6 +426,20 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                     CHECK(function_4693a0(actual_layout));
                 int32_t begin = *(int32_t *)(intptr_t)(actual_layout + 264);
                 int32_t end = *(int32_t *)(intptr_t)(actual_layout + 268);
+                if (strncmp(layer_name, "ev", 2) == 0) {
+                    for (int32_t record = begin; record != end; record += 32) {
+                        if (*(int32_t *)(intptr_t)record == 1) {
+                            struct retdec_mcd_chip *marker = retdec_mcd_find_chip(
+                                retdec_map_chip_data(actual_layout), 1);
+                            CHECK(marker);
+                            entry_x = *(int32_t *)(intptr_t)(record + 4) +
+                                *(int16_t *)(marker->bytes + 12) * 0.5f;
+                            entry_y = (float)(*(int32_t *)(intptr_t)(record + 8) +
+                                *(int16_t *)(marker->bytes + 14) - 1);
+                            found_entry = 1;
+                        }
+                    }
+                }
                 printf("  records=%d max=(%d,%d)\n", (end - begin) / 32,
                     *(int32_t *)(intptr_t)(actual_layout + 240),
                     *(int32_t *)(intptr_t)(actual_layout + 244));
@@ -439,8 +456,9 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 }
             }
         }
+        CHECK(found_entry);
         actor = function_463b40_this(manager, init[0], init[1], init[2],
-            192, 895, -1, PTR(&g16), g483, g484, 0);
+            entry_x, entry_y, -1, PTR(&g16), g483, g484, 0);
         CHECK(actor);
         retdec_actor_manager_refresh(manager);
         function_468620_this(PTR(g_514300_storage));
@@ -450,6 +468,9 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             CHECK(execute_source(vm, root + 2, direction == 1 ? "input.x = 1;" : "input.x = -1;"));
             for (int frame = 0; frame < 60; ++frame) {
                 int failures_before = vm_failures;
+                CHECK(execute_source(vm, root + 2,
+                    "if (typeof walkingProbe.GetChipFlag() != \"integer\") "
+                    "throw \"invalid chip flag result\";"));
                 retdec_actor_tick(actor);
                 function_468620_this(PTR(g_514300_storage));
                 retdec_actor_update_motion(actor);
@@ -470,7 +491,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         function_469700();
         function_468950_this(PTR(g_514300_storage), manager);
         retdec_destroy_cact_object(PTR(act));
-        puts("PASS: original w1-c01a terrain walking in both directions");
+        printf("PASS: original %s terrain walking in both directions (TYPE_2HEAD)\n", stage_path);
     }
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(scripts));
@@ -971,6 +992,75 @@ int main(int argc, char **argv) {
     }
     CHECK(test_pat_records(manager) == 0);
     {
+        int32_t constructed[136];
+        function_45e300_this(PTR(constructed));
+        CHECK(constructed[27] == PTR(&g16));
+        CHECK(constructed[28] == g483 && constructed[29] == g484);
+    }
+    {
+        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int fault = 0;
+        CHECK(actor);
+        __try {
+            retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, 0x20);
+        } __except(EXCEPTION_EXECUTE_HANDLER) {
+            fault = 1;
+        }
+        CHECK(fault == 0);
+        CHECK(*(int64_t *)(intptr_t)(actor + 392) == 0x20);
+        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, -1);
+        CHECK(*(int64_t *)(intptr_t)(actor + 392) == -1);
+        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f780, 2);
+        CHECK(*(int16_t *)(intptr_t)(actor + 410) == 2);
+        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, 0);
+        {
+            int32_t query_layout[100] = {0}, query_layer[80] = {0}, query_resource[24] = {0};
+            int32_t query_records[3][8] = {{1,80,180}, {2,120,180}, {3,136,180}};
+            struct retdec_mcd_chip query_chips[3] = {{0}};
+            struct retdec_mcd_data query_data = {3, query_chips, 0, NULL};
+            query_layout[0] = PTR(&g327);
+            query_layout[60] = 16;
+            query_layout[61] = 32;
+            query_layout[66] = PTR(query_records);
+            query_layout[67] = PTR(query_records + 3);
+            query_layout[78] = PTR(query_layer);
+            query_layout[79] = PTR(query_resource);
+            *((uint8_t *)query_layer + 140) = 1;
+            query_resource[16] = PTR(&query_data);
+            for (int i = 0; i < 3; ++i) {
+                query_chips[i].chip_id = i + 1;
+                *(int16_t *)(query_chips[i].bytes + 12) = 16;
+                *(int16_t *)(query_chips[i].bytes + 14) = 32;
+                *(uint32_t *)(query_chips[i].bytes + 16) = 1u << i;
+            }
+            CHECK(function_468950_this(PTR(g_514300_storage), manager));
+            CHECK(function_4693a0(PTR(query_layout)));
+            position_actor(actor, 100, 200);
+            *(uint32_t *)(intptr_t)(actor + 472) = 0x8000;
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(*(uint32_t *)(intptr_t)(actor + 472) == 0x8000);
+            position_actor(actor, 128, 200);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 6);
+            position_actor(actor, 100, 200);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            *((uint8_t *)query_layer + 140) = 0;
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            *((uint8_t *)query_layer + 140) = 1;
+            position_actor(actor, 200, 200);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            *(float *)((char *)query_layer + 144) = 32.5f;
+            position_actor(actor, 132, 200);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(function_468950_this(PTR(g_514300_storage), manager));
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            CHECK(function_4693a0(PTR(query_layout)));
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        }
+        function_469700();
+    }
+    {
         int32_t camera[128] = {0}, callback[3];
         CHECK(execute_source(vm, root + 2,
             "cameraProbeCount <- 0;\n"
@@ -994,7 +1084,8 @@ int main(int argc, char **argv) {
         CHECK(test_player_pat(manager, argv[3], strtoul(argv[4], NULL, 0)) == 0);
     if (argc > 7)
         CHECK(test_player_walking(manager, vm, root, argv[5], argv[6], argv[7],
-            argc > 8 ? argv[8] : NULL) == 0);
+            argc > 8 ? argv[8] : NULL,
+            argc > 9 ? argv[9] : "data/map/w1-c01a.act") == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
