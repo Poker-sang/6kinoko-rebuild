@@ -16,6 +16,10 @@ static LONG CALLBACK contract_exception(PEXCEPTION_POINTERS info) {
             info->ExceptionRecord->ExceptionCode,
             info->ContextRecord->Eip - (DWORD)(uintptr_t)GetModuleHandleA(NULL),
             info->ExceptionRecord->ExceptionAddress);
+        void *stack[20];
+        USHORT count=CaptureStackBackTrace(0,20,stack,NULL);
+        for(USHORT i=0;i<count;++i)
+            fprintf(stderr,"  stack rva=%08lx\n",(DWORD)(uintptr_t)stack[i]-(DWORD)(uintptr_t)GetModuleHandleA(NULL));
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -1374,6 +1378,69 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static char aux_output[16384];
+static void __cdecl capture_aux_output(int32_t vm, const char *format, ...) {
+    va_list arguments;
+    size_t used = strlen(aux_output);
+    (void)vm;
+    va_start(arguments, format);
+    vsnprintf(aux_output + used, sizeof(aux_output) - used, format, arguments);
+    va_end(arguments);
+}
+
+static int test_standard_error_handler(int32_t vm, int32_t *root) {
+    int32_t shared = *(int32_t *)(intptr_t)(vm + 140);
+    int32_t old_handler[2] = {g483, g484};
+    int32_t old_print = function_48b8d0(vm);
+    int32_t old_compiler = *(int32_t *)(intptr_t)(shared + 160);
+    int32_t top = function_48aa20(vm);
+    retdec_squirrel_assign(old_handler, (int32_t *)(intptr_t)(vm + 72));
+    function_48b8b0(vm, PTR(capture_aux_output));
+    function_4c5c80(vm);
+    CHECK(*(int32_t *)(intptr_t)(shared + 160) == PTR(function_4c5c40));
+    CHECK(*(int32_t *)(intptr_t)(vm + 72) == 0x08000200);
+    CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm+76)+60) == PTR(function_4c5bc0));
+    CHECK(execute_source(vm, root+2,
+        "function AuxOuter() {\n"
+        " local outerValue=31;\n"
+        " local callback=function(arg):(outerValue) {\n"
+        "  local fraction=1.25;\n"
+        "  local enabled=true;\n"
+        "  local captured=outerValue;\n"
+        "  throw \"aux failure\";\n"
+        " };\n"
+        " callback(9);\n"
+        "}"));
+    expected_vm_error = 1;
+    CHECK(!execute_source(vm, root+2, "AuxOuter();"));
+    expected_vm_error = 0;
+    if (!strstr(aux_output, "AN ERROR HAS OCCURED [aux failure]"))
+        fprintf(stderr, "aux output: %s\n", aux_output);
+    CHECK(strstr(aux_output, "AN ERROR HAS OCCURED [aux failure]"));
+    CHECK(strstr(aux_output, "*FUNCTION [unknown()] stage contract line [7]"));
+    CHECK(strstr(aux_output, "*FUNCTION [AuxOuter()]"));
+    CHECK(strstr(aux_output, "[outerValue] 31"));
+    CHECK(strstr(aux_output, "[fraction] 1.25"));
+    CHECK(strstr(aux_output, "[enabled] true"));
+    CHECK(strstr(aux_output, "[arg] 9"));
+    CHECK(function_48aa20(vm) == top);
+    aux_output[0] = 0;
+    expected_vm_error = 1;
+    CHECK(!execute_source(vm, root+2, "throw 17;"));
+    expected_vm_error = 0;
+    CHECK(strstr(aux_output, "AN ERROR HAS OCCURED [unknown]"));
+    CHECK(function_48aa20(vm) == top);
+    aux_output[0] = 0;
+    function_4c5c40(vm, PTR("bad token"), PTR("example.nut"), 4, 7);
+    CHECK(strstr(aux_output, "example.nut line = (4) column = (7) : error bad token"));
+    function_48b8b0(vm, old_print);
+    function_48afa0(vm, old_compiler);
+    retdec_squirrel_assign((int32_t *)(intptr_t)(vm+72), old_handler);
+    retdec_release_squirrel_value(old_handler);
+    puts("PASS: relocated standard error handlers, anonymous call stack, captured locals and stack balance");
+    return 0;
+}
+
 static int test_vm_error_unwind(int32_t vm, int32_t *root) {
     int32_t top = function_48aa20(vm), base = *(int32_t *)(intptr_t)(vm + 52);
     int32_t frames = *(int32_t *)(intptr_t)(vm + 100);
@@ -1726,8 +1793,33 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_map_camera_fpu(void) {
+    int32_t manager[8] = {0}, layer[32] = {0}, camera[24] = {0};
+    __declspec(align(16)) unsigned char before[512], after[512];
+    manager[3] = PTR(layer);
+    *(float *)(camera + 10) = 100.0f;
+    *(float *)(camera + 11) = 200.0f;
+    *(float *)(camera + 12) = 98.75f;
+    *(float *)(camera + 13) = 203.5f;
+    _fxsave(before);
+    for (int frame = 0; frame < 600; ++frame) {
+        function_46edc0_this(PTR(manager), camera);
+        _fxsave(after);
+        if (before[4] != after[4])
+            fprintf(stderr, "map camera leaked x87 stack at frame %d: tag %02X -> %02X\n",
+                frame, before[4], after[4]);
+        CHECK(before[4] == after[4]);
+        CHECK((*(uint16_t *)(before+2) & 0x3800) == (*(uint16_t *)(after+2) & 0x3800));
+        CHECK(*(float *)(layer + 22) == -2.0f);
+        CHECK(*(float *)(layer + 23) == 3.0f);
+    }
+    puts("PASS: map camera floor results and balanced x87 stack over 600 rendered frames");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     AddVectoredExceptionHandler(1, contract_exception);
+    CHECK(test_map_camera_fpu() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -2487,6 +2579,7 @@ int main(int argc, char **argv) {
     if (argc > 8)
         CHECK(test_map_transition(vm, root) == 0);
     CHECK(test_vm_error_unwind(vm, root) == 0);
+    CHECK(test_standard_error_handler(vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;

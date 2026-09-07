@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "retdec_math_compat.h"
 
 #if defined(_MSC_VER)
 #define RETDEC_NOINLINE __declspec(noinline)

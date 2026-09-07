@@ -168,10 +168,10 @@ static void print_thread_contexts(const MappedDump *dump)
     for (ULONG index = 0; index < threads->NumberOfThreads; ++index) {
         const MINIDUMP_THREAD &thread = threads->Threads[index];
         const void *raw_context = nullptr;
-        std::printf("thread id=%lu teb=0x%08llx stack=0x%08lx+0x%08lx\n",
+        std::printf("thread id=%lu teb=0x%08llx stack=0x%08llx+0x%08lx\n",
                     thread.ThreadId,
                     static_cast<unsigned long long>(thread.Teb),
-                    thread.Stack.StartOfMemoryRange,
+                    static_cast<unsigned long long>(thread.Stack.StartOfMemoryRange),
                     thread.Stack.Memory.DataSize);
         if (!dump_range(dump, thread.ThreadContext.Rva,
                         thread.ThreadContext.DataSize, &raw_context) ||
@@ -187,6 +187,11 @@ static void print_thread_contexts(const MappedDump *dump)
                     context->Eip, context->Esp, context->Ebp, context->Eax,
                     context->Ebx, context->Ecx, context->Edx, context->Esi,
                     context->Edi);
+        std::printf("  x87 control=%04lx status=%04lx tag=%04lx last_ip=%08lx last_data=%08lx mxcsr=%08lx\n",
+                    context->FloatSave.ControlWord, context->FloatSave.StatusWord,
+                    context->FloatSave.TagWord, context->FloatSave.ErrorOffset,
+                    context->FloatSave.DataOffset,
+                    *reinterpret_cast<const DWORD *>(context->ExtendedRegisters + 24));
 #else
         std::printf("  context rip=0x%016llx rsp=0x%016llx rbp=0x%016llx\n",
                     static_cast<unsigned long long>(context->Rip),
