@@ -5,9 +5,9 @@ description: 6kinoko简单的逆向skill
 
 ..\6kinoko\6kinoko.exe是一个将近20年前的老游戏，我想加点新的内容：即用自己编写的exe，读取原版的6kinoko_*.dat。但第一版确实只需要还原windows上的运行效果即可。
 
-逆向6kinoko项目以提供的C反编译源码为基础，使用IDA MCP，并且不要忘记使用 ..\squirrel-2.2.2 源码的反汇编结果作为辅助。但若确定是squirrel相关的函数，你可以选择直接引入源码。生成后必须复制 6kinoko_*.dat 文件到 exe 所在目录，不能直接指定工作目录。
+逆向6kinoko项目以提供的C反编译源码为基础，使用IDA MCP，并且不要忘记使用 ..\squirrel-2.2.2 源码的反汇编结果作为辅助。但若确定是squirrel相关的函数，你可以选择直接引入源码。生成后必须复制 6kinoko_*.dat 文件到 exe 所在目录，不能直接指定工作目录。在原版目录中还有 marisa[A-C].dat 是存档文件。
 
-主要逻辑在 .\src\decompiled\6kinoko_rebuilt.c 里，你尽量做到经过的函数完全相同（可以通过x64dbg MCP保证）
+主要逻辑在 .\src\decompiled\6kinoko_rebuilt.c 里，你尽量做到经过的函数完全相同（可以通过x64dbg MCP保证）。
 
 x32dbg/x64dbg 在 C:\Users\poker\AppData\Local\Microsoft\WinGet\Packages\x64dbg.x64dbg_Microsoft.Winget.Source_8wekyb3d8bbwe\release\x32\x32dbg.exe 里，使若丢失可以手动拉起进程。
 
@@ -117,3 +117,8 @@ EXE。不得把参考目录作为 `WorkingDirectory`，也不得依赖 `-SourceD
   否则会改变栈形状和时序，掩盖或暴露与诊断无关的生命周期错误。
 - 相关修复必须同时做诊断构建和无日志构建的启动冒烟测试，并确认 DAT 仍从 EXE
   自身目录加载、窗口响应且第二阶段画面存在。
+- 每次游戏运行验证限于：进入第一关、尝试跳跃、看到怪物后退出。达到这三个
+  条件就结束本次验证，不继续延长游玩或重复排查迁移前已有的崩溃。
+- 每批测试前先提交当时代码，并记录测试产物对应的 commit。新的测试批次使用
+  独立的构建和运行目录，不覆盖旧 EXE、日志、截图或其他构建产物。
+- 所有测试产物均保留，不删除旧版本或清理构建目录，便于用户协助回查问题。

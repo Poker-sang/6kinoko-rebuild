@@ -31,6 +31,7 @@ neither setting changes runtime resource resolution. Saves are separate files.
 | `src/reconstructed/legacy_abi.cpp` | Compiler-generated x86 virtual calls |
 | `src/reconstructed/actor_collision.cpp` | Recovered actor collision methods |
 | `src/reconstructed/actor_methods.cpp` | Actor chip queries, flags and priority |
+| `src/reconstructed/act_resource.cpp` | ACT clock, wake deadline and stage cleanup |
 | `src/reconstructed/sprite.cpp` | Typed sprite geometry and Direct3D drawing |
 | `src/squirrel/squirrel_compile_bridge.cpp` | ACT source to original bytecode |
 | `src/squirrel/squirrel_value_bridge.cpp` | Source-based object/error ownership |
@@ -64,3 +65,7 @@ crash dumps replace the previous dump. `KINOKO_TRACE=0` forces quiet output.
 For a diagnostic build use `KINOKO_RETDEC_DISABLE_TRACE=OFF` and
 `KINOKO_RETDEC_TRACE_FILTER=ON`. External window capture, process dump and
 debugger tools are documented in [tools/README.md](tools/README.md).
+
+Before validation, commit the source and select fresh build/runtime directories.
+Keep all artifacts and record their source commit. Game smoke checks end after
+entering stage one, attempting a jump and seeing an enemy.

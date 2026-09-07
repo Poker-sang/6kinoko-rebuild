@@ -26,6 +26,7 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
 #include "kinoko/actor_methods.h"
+#include "kinoko/act_resource.h"
 #include "kinoko/sprite.h"
 
 static volatile LONG retdec_actor_step_trace_active;
@@ -137,41 +138,8 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t *active_count);
 static int32_t retdec_publish_cact_resource2d_class(int32_t vm,
                                                      int32_t root_object);
-static int32_t retdec_act_set_current_time_this(int32_t resource_ptr,
-                                                 int32_t value);
-static int32_t retdec_act_increment_frame_this(int32_t resource_ptr);
-static int32_t retdec_act_get_current_time_this(int32_t resource_ptr);
-static int32_t retdec_act_get_current_frame_this(int32_t resource_ptr);
-static int32_t retdec_act_end_stage_this(int32_t resource_ptr);
-static int32_t retdec_act_sleep(int32_t milliseconds);
-static int32_t retdec_act_sleep_to_this(int32_t resource_ptr,
-                                         int32_t milliseconds);
-static int32_t retdec_act_suspend_this(int32_t resource_ptr);
-static int32_t retdec_act_resume_this(int32_t resource_ptr);
-#if defined(_MSC_VER) && defined(_M_IX86)
-static int32_t retdec_act_set_current_time_bridge(void);
-static int32_t retdec_act_increment_frame_bridge(void);
-static int32_t retdec_act_get_current_time_bridge(void);
-static int32_t retdec_act_get_current_frame_bridge(void);
-static int32_t retdec_act_end_stage_bridge(void);
-static int32_t retdec_act_sleep_bridge(void);
-static int32_t retdec_act_sleep_to_bridge(void);
-static int32_t retdec_act_suspend_bridge(void);
-static int32_t retdec_act_resume_bridge(void);
-#else
-static int32_t retdec_act_set_current_time_bridge(int32_t resource_ptr,
-                                                  int32_t value);
-static int32_t retdec_act_increment_frame_bridge(int32_t resource_ptr);
-static int32_t retdec_act_get_current_time_bridge(int32_t resource_ptr);
-static int32_t retdec_act_get_current_frame_bridge(int32_t resource_ptr);
-static int32_t retdec_act_end_stage_bridge(int32_t resource_ptr);
-static int32_t retdec_act_sleep_bridge(int32_t unused,
-                                       int32_t milliseconds);
-static int32_t retdec_act_sleep_to_bridge(int32_t resource_ptr,
-                                          int32_t milliseconds);
-static int32_t retdec_act_suspend_bridge(int32_t resource_ptr);
-static int32_t retdec_act_resume_bridge(int32_t resource_ptr);
-#endif
+int32_t retdec_act_suspend_this(int32_t resource_ptr);
+int32_t retdec_act_resume_this(int32_t resource_ptr);
 static int32_t function_415810_this(int32_t self_ptr);
 static const char *retdec_std_string_data(int32_t string_ptr);
 static int32_t retdec_load_act_texture(const char *texture_name);
@@ -259,7 +227,7 @@ static __declspec(noinline) void retdec_trace_watch_boundary(
         retdec_trace(message);
     }
 }
-static __declspec(noinline) void retdec_trace_i32(const char *label,
+__declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value);
 static __declspec(noinline) void retdec_trace_vector_state(
     const char *label, int32_t vector_ptr);
@@ -106523,22 +106491,22 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
     class_object[2] = class_pair[0];
     class_object[3] = class_pair[1];
     function_460e00_register_actor_method(vm, class_object + 1, "SetCurrentTime",
-                                          (int32_t)(intptr_t)retdec_act_set_current_time_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_set_current_time,
                                           (int32_t)(intptr_t)function_455330, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "IncrementFrame",
-                                          (int32_t)(intptr_t)retdec_act_increment_frame_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_increment_frame,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentTime",
-                                          (int32_t)(intptr_t)retdec_act_get_current_time_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_get_current_time,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentFrame",
-                                          (int32_t)(intptr_t)retdec_act_get_current_frame_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_get_current_frame,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "BeginStage",
                                           (int32_t)(intptr_t)function_450950,
                                           (int32_t)(intptr_t)function_455330, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "EndStage",
-                                          (int32_t)(intptr_t)retdec_act_end_stage_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_end_stage,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "CreateLayer2D",
                                           (int32_t)(intptr_t)function_4517c0,
@@ -106574,16 +106542,16 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
                                           (int32_t)(intptr_t)timeGetTime,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "Sleep",
-                                          (int32_t)(intptr_t)retdec_act_sleep_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_sleep,
                                           (int32_t)(intptr_t)function_445730, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "SleepTo",
-                                          (int32_t)(intptr_t)retdec_act_sleep_to_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_sleep_to,
                                           (int32_t)(intptr_t)function_445730, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "Suspend",
-                                          (int32_t)(intptr_t)retdec_act_suspend_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_suspend,
                                           (int32_t)(intptr_t)function_4552e0, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "Resume",
-                                          (int32_t)(intptr_t)retdec_act_resume_bridge,
+                                          (int32_t)(intptr_t)kinoko_act_resume,
                                           (int32_t)(intptr_t)function_4552e0, 0);
 
     if (!retdec_publish_acting_player_properties(vm, class_pair)) {
@@ -108505,79 +108473,8 @@ int32_t function_4514a0(int32_t x, int32_t y, int32_t width, int32_t height,
 { return retdec_act_bitblt_this(0, x, y, width, height, resource, sx, sy, blend, alpha); }
 #endif
 
-static int32_t retdec_act_set_current_time_this(int32_t resource_ptr,
-                                                 int32_t value)
-{
-    if (resource_ptr != 0)
-        *(int32_t *)(intptr_t)(resource_ptr + 4) = value;
-    return 0;
-}
 
-static int32_t retdec_act_increment_frame_this(int32_t resource_ptr)
-{
-    int32_t holder;
-    int32_t act;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (resource_ptr == 0)
-        return 0;
-    trace_index = InterlockedIncrement(&trace_count);
-    holder = *(int32_t *)(intptr_t)resource_ptr;
-    act = holder != 0 ? *(int32_t *)(intptr_t)holder : 0;
-    if (trace_index <= 64) {
-        retdec_trace_i32("451620:resource", resource_ptr);
-        retdec_trace_i32("451620:before", *(int32_t *)(intptr_t)(resource_ptr + 4));
-        retdec_trace_i32("451620:holder", holder);
-        retdec_trace_i32("451620:act", act);
-        retdec_trace_i32("451620:resolution", act != 0
-                         ? *(int32_t *)(intptr_t)(act + 4) : 0);
-    }
-    if (act != 0)
-        *(int32_t *)(intptr_t)(resource_ptr + 4) +=
-            *(int32_t *)(intptr_t)(act + 4);
-    if (trace_index <= 64)
-        retdec_trace_i32("451620:after", *(int32_t *)(intptr_t)(resource_ptr + 4));
-    return 0;
-}
-
-static int32_t retdec_act_get_current_time_this(int32_t resource_ptr)
-{
-    return resource_ptr != 0 ?
-        *(int32_t *)(intptr_t)(resource_ptr + 4) : 0;
-}
-
-static int32_t retdec_act_get_current_frame_this(int32_t resource_ptr)
-{
-    int32_t holder;
-    int32_t act;
-    int32_t resolution;
-
-    if (resource_ptr == 0)
-        return 0;
-    holder = *(int32_t *)(intptr_t)resource_ptr;
-    act = holder != 0 ? *(int32_t *)(intptr_t)holder : 0;
-    resolution = act != 0 ? *(int32_t *)(intptr_t)(act + 4) : 0;
-    return resolution != 0 ?
-        *(int32_t *)(intptr_t)(resource_ptr + 4) / resolution : 0;
-}
-
-static int32_t retdec_act_sleep(int32_t milliseconds)
-{
-    Sleep((DWORD)milliseconds);
-    return 0;
-}
-
-static int32_t retdec_act_sleep_to_this(int32_t resource_ptr,
-                                         int32_t milliseconds)
-{
-    int32_t result = (int32_t)timeGetTime() + milliseconds;
-    if (resource_ptr != 0)
-        *(int32_t *)(intptr_t)(resource_ptr + 100) = result;
-    return result;
-}
-
-static int32_t retdec_act_suspend_this(int32_t resource_ptr)
+int32_t retdec_act_suspend_this(int32_t resource_ptr)
 {
     int32_t act;
 
@@ -108587,30 +108484,30 @@ static int32_t retdec_act_suspend_this(int32_t resource_ptr)
     retdec_trace_i32("450950:suspend-before",
                      *(int32_t *)(intptr_t)(resource_ptr + 104));
     act = *(int32_t *)(intptr_t)(resource_ptr + 12);
-    /* Exact 4515C0 behavior: this only marks the CActResource suspended and
-       returns the ACT's field at +0x1c.  The generated vtable calls below
-       were a different operation and changed the title state prematurely. */
+    /* Compatibility behavior retained during the C++ migration. Original
+       4515C0 also dispatches virtual methods on the resource's ACT objects;
+       those receivers still require reconstruction. */
     *(uint8_t *)(intptr_t)(resource_ptr + 104) = 1;
     retdec_trace_i32("450950:suspend-after",
                      *(int32_t *)(intptr_t)(resource_ptr + 104));
     return act != 0 ? *(int32_t *)(intptr_t)(act + 28) : 0;
 }
 
-static int32_t retdec_act_resume_this(int32_t resource_ptr)
+int32_t retdec_act_resume_this(int32_t resource_ptr)
 {
     int32_t act;
 
     if (resource_ptr == 0)
         return 0;
-    /* Exact 4515F0 behavior: clear the resource gate and return the ACT's
-       vtable value.  Resuming the ACT itself is handled by later updates. */
+    /* Compatibility behavior retained; original 4515F0 calls the optional
+       ACT object's virtual resume method after clearing this gate. */
     *(int32_t *)(intptr_t)(resource_ptr + 100) = 0;
     *(uint8_t *)(intptr_t)(resource_ptr + 104) = 0;
     act = *(int32_t *)(intptr_t)(resource_ptr + 12);
     return act != 0 ? *(int32_t *)(intptr_t)act : 0;
 }
 
-static int32_t retdec_act_clear_layout_vector(int32_t vector_ptr)
+int32_t retdec_act_clear_layout_vector(int32_t vector_ptr)
 {
     int32_t begin;
     int32_t end;
@@ -108633,154 +108530,15 @@ static int32_t retdec_act_clear_layout_vector(int32_t vector_ptr)
     return begin;
 }
 
-static int32_t retdec_act_end_stage_this(int32_t resource_ptr)
-{
-    struct retdec_RTL_CRITICAL_SECTION *critical_section;
-    int32_t begin;
-    int32_t *vtable;
-
-    if (resource_ptr == 0 ||
-        *(uint8_t *)(intptr_t)(resource_ptr + 8) == 0)
-        return (int32_t)E_FAIL;
-    critical_section = (struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)
-        (resource_ptr + 20);
-    EnterCriticalSection(critical_section);
-    *(uint8_t *)(intptr_t)(resource_ptr + 8) = 0;
-    memset((void *)(intptr_t)(resource_ptr + 108), 0, 44u);
-    begin = *(int32_t *)(intptr_t)(resource_ptr + 44);
-    if (begin != *(int32_t *)(intptr_t)(resource_ptr + 48))
-        *(int32_t *)(intptr_t)(resource_ptr + 48) = begin;
-    retdec_act_clear_layout_vector(resource_ptr + 60);
-    LeaveCriticalSection(critical_section);
-    return 0;
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t retdec_act_set_current_time_bridge(void)
-{
-    __asm {
-        mov eax, [esp + 4]
-        push eax
-        push ecx
-        call retdec_act_set_current_time_this
-        add esp, 8
-        ret 4
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_increment_frame_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_increment_frame_this
-        add esp, 4
-        ret
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_get_current_time_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_get_current_time_this
-        add esp, 4
-        ret
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_get_current_frame_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_get_current_frame_this
-        add esp, 4
-        ret
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_end_stage_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_end_stage_this
-        add esp, 4
-        ret
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_sleep_bridge(void)
-{
-    __asm {
-        mov eax, [esp + 4]
-        push eax
-        call retdec_act_sleep
-        add esp, 4
-        ret 4
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_sleep_to_bridge(void)
-{
-    __asm {
-        mov eax, [esp + 4]
-        push eax
-        push ecx
-        call retdec_act_sleep_to_this
-        add esp, 8
-        ret 4
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_suspend_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_suspend_this
-        add esp, 4
-        ret
-    }
-}
-
-__declspec(naked) static int32_t retdec_act_resume_bridge(void)
-{
-    __asm {
-        push ecx
-        call retdec_act_resume_this
-        add esp, 4
-        ret
-    }
-}
-#else
-static int32_t retdec_act_set_current_time_bridge(int32_t resource_ptr,
-                                                  int32_t value)
-{ return retdec_act_set_current_time_this(resource_ptr, value); }
-static int32_t retdec_act_increment_frame_bridge(int32_t resource_ptr)
-{ return retdec_act_increment_frame_this(resource_ptr); }
-static int32_t retdec_act_get_current_time_bridge(int32_t resource_ptr)
-{ return retdec_act_get_current_time_this(resource_ptr); }
-static int32_t retdec_act_get_current_frame_bridge(int32_t resource_ptr)
-{ return retdec_act_get_current_frame_this(resource_ptr); }
-static int32_t retdec_act_end_stage_bridge(int32_t resource_ptr)
-{ return retdec_act_end_stage_this(resource_ptr); }
-static int32_t retdec_act_sleep_bridge(int32_t unused, int32_t milliseconds)
-{ (void)unused; return retdec_act_sleep(milliseconds); }
-static int32_t retdec_act_sleep_to_bridge(int32_t resource_ptr,
-                                          int32_t milliseconds)
-{ return retdec_act_sleep_to_this(resource_ptr, milliseconds); }
-static int32_t retdec_act_suspend_bridge(int32_t resource_ptr)
-{ return retdec_act_suspend_this(resource_ptr); }
-static int32_t retdec_act_resume_bridge(int32_t resource_ptr)
-{ return retdec_act_resume_this(resource_ptr); }
-#endif
 
 // Address range: 0x451590 - 0x451599
 int32_t function_451590(void) {
-    return retdec_act_sleep(0);
+    return kinoko_act_sleep(0, NULL, 0);
 }
 
 // Address range: 0x4515a0 - 0x4515b7
 int32_t function_4515a0(int32_t a1) {
-    return retdec_act_sleep_to_this(0, a1);
+    return kinoko_act_sleep_to(0, NULL, a1);
 }
 
 // Address range: 0x4515c0 - 0x4515e1
@@ -108795,17 +108553,17 @@ int32_t function_4515f0(void) {
 
 // Address range: 0x451610 - 0x45161f
 int32_t function_451610(int32_t a1) {
-    return retdec_act_set_current_time_this(0, a1);
+    return kinoko_act_set_current_time(0, NULL, a1);
 }
 
 // Address range: 0x451620 - 0x45162d
 int32_t function_451620(int32_t this_ptr) {
-    return retdec_act_increment_frame_this(this_ptr);
+    return kinoko_act_increment_frame(this_ptr, NULL);
 }
 
 // Address range: 0x451630 - 0x45163e
 int32_t function_451630(void) {
-    return retdec_act_get_current_frame_this(0);
+    return kinoko_act_get_current_frame(0, NULL);
 }
 
 // Address range: 0x451640 - 0x4517b2
@@ -109774,7 +109532,7 @@ static void retdec_destroy_act_runtime(int32_t resource_ptr) {
     int32_t *resource = (int32_t *)(intptr_t)resource_ptr;
     int32_t vm = resource[38];
     int32_t source_act = resource[0] ? *(int32_t *)(intptr_t)resource[0] : 0;
-    retdec_act_end_stage_this(resource_ptr);
+    kinoko_act_end_stage(resource_ptr, NULL);
     if (vm != 0 && resource[39] == 0x0a000020 && resource[45] != 0) {
         int32_t top = function_48aa20(vm);
         function_48ab90(vm, resource[39], resource[40]);
@@ -189535,7 +189293,7 @@ static __declspec(noinline) void retdec_watch_g644(void) {
     retdec_g644_watch_busy = 0;
 }
 
-static __declspec(noinline) void retdec_trace_i32(const char *label,
+__declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value) {
     char message[128];
     retdec_watch_g594();

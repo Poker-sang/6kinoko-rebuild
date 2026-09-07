@@ -1854,7 +1854,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     *(int32_t *)(intptr_t)(runtime+60)=sprites;
     *(int32_t *)(intptr_t)(runtime+64)=sprites+2*184;
     *(int32_t *)(intptr_t)(runtime+68)=sprites+2*184;
-    CHECK(retdec_act_end_stage_this(runtime)==0);
+    CHECK(kinoko_act_end_stage(runtime, NULL)==0);
     CHECK(*(int32_t *)(intptr_t)(runtime+64)==sprites);
     CHECK(*(int32_t *)(intptr_t)(runtime+68)==sprites+2*184);
     function_469860();
@@ -1887,6 +1887,53 @@ static int test_map_camera_fpu(void) {
         CHECK(*(float *)(layer + 23) == 3.0f);
     }
     puts("PASS: map camera floor results and balanced x87 stack over 600 rendered frames");
+    return 0;
+}
+
+static int test_act_resource_methods(void) {
+    unsigned char resource[192] = {0};
+    int32_t act[8] = {0}, holder = PTR(act);
+    int32_t *words = (int32_t *)resource;
+    int32_t address = PTR(resource);
+    words[0] = PTR(&holder);
+    act[1] = 10;
+    CHECK(retdec_call_thiscall1_result(resource, kinoko_act_set_current_time, 37) == 0);
+    CHECK(retdec_call_thiscall0_result(resource, kinoko_act_get_current_time) == 37);
+    CHECK(retdec_call_thiscall0_result(resource, kinoko_act_get_current_frame) == 3);
+    CHECK(retdec_call_thiscall0_result(resource, kinoko_act_increment_frame) == 0);
+    CHECK(words[1] == 47);
+    kinoko_act_set_current_time(address, NULL, -31);
+    CHECK(kinoko_act_get_current_frame(address, NULL) == -3);
+    words[1] = INT32_MAX - 4;
+    kinoko_act_increment_frame(address, NULL);
+    CHECK(words[1] == INT32_MIN + 5);
+    act[1] = 0;
+    CHECK(kinoko_act_get_current_frame(address, NULL) == 0);
+    words[0] = 0;
+    CHECK(kinoko_act_increment_frame(address, NULL) == 0);
+    CHECK(words[1] == INT32_MIN + 5);
+
+    uint32_t before = timeGetTime();
+    int32_t deadline = retdec_call_thiscall1_result(resource, kinoko_act_sleep_to, 50);
+    uint32_t after = timeGetTime();
+    CHECK(words[25] == deadline);
+    CHECK((uint32_t)deadline - before - 50u <= after - before);
+    CHECK(retdec_call_thiscall1_result(resource, kinoko_act_sleep, 0) == 0);
+
+    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
+    resource[8] = 1;
+    memset(resource + 108, 0x7f, 44);
+    words[11] = 1234;
+    words[12] = 5678;
+    words[13] = 9000;
+    words[38] = 4321;
+    CHECK(retdec_call_thiscall0_result(resource, kinoko_act_end_stage) == 0);
+    CHECK(resource[8] == 0 && words[12] == 1234 && words[13] == 9000);
+    for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
+    CHECK(words[38] == 4321);
+    CHECK(kinoko_act_end_stage(address, NULL) == (int32_t)E_FAIL);
+    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
+    puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");
     return 0;
 }
 
@@ -2046,6 +2093,7 @@ int main(int argc, char **argv) {
     CHECK(vm != 0);
     g644 = (char *)(intptr_t)vm;
     CHECK(test_error_value_ownership(vm) == 0);
+    CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     {
         int32_t anonymous[3];
