@@ -15,6 +15,8 @@ kernel32 = c.WinDLL("kernel32", use_last_error=True)
 kernel32.OpenProcess.argtypes = [w.DWORD, w.BOOL, w.DWORD]
 kernel32.OpenProcess.restype = w.HANDLE
 kernel32.GetExitCodeProcess.argtypes = [w.HANDLE, c.POINTER(w.DWORD)]
+kernel32.WaitForSingleObject.argtypes = [w.HANDLE, w.DWORD]
+kernel32.WaitForSingleObject.restype = w.DWORD
 kernel32.CloseHandle.argtypes = [w.HANDLE]
 user32.SetProcessDPIAware()
 user32.GetWindow.argtypes = [w.HWND, w.UINT]
@@ -156,7 +158,17 @@ def main():
     if args.capture:
         subprocess.run(command + ["-frames:v", "1", str(args.capture)], check=True)
     if args.close:
-        user32.PostMessageW(hwnd, 0x10, 0, 0)
+        process = kernel32.OpenProcess(0x100000, False, args.pid)
+        if not process:
+            raise c.WinError(c.get_last_error())
+        try:
+            if not user32.PostMessageW(hwnd, 0x10, 0, 0):
+                raise c.WinError(c.get_last_error())
+            if kernel32.WaitForSingleObject(process, 10000) != 0:
+                raise RuntimeError("Game did not finish exiting; no process was terminated")
+        finally:
+            kernel32.CloseHandle(process)
+        print(json.dumps({"pid": args.pid, "closed": True}), flush=True)
 
 
 if __name__ == "__main__":

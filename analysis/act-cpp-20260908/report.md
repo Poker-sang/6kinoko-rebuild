@@ -58,3 +58,25 @@ The focused contract exercises real thiscall-compatible entries, signed frame
 division, counter wraparound, missing ACT/resolution guards, deferred wake time
 and active-stage cleanup. Run the existing CTest suite after building, then one
 bounded game smoke check per variant. Retain all successful and failed outputs.
+
+## Validation Progress
+
+Source checkpoint: 653715053f5c1152e910ae8c4939d8492c049fc9. Both Release builds
+completed and pass CTest 3/3; build.log and ctest.log are retained in each tree.
+All DAT copies pass size/SHA256 checks (stage-dat.log).
+The quiet process entered the first stage, received a jump input, moved right
+until an enemy was visible in smoke-08-enemy.png, and was sent WM_CLOSE.
+It was alive and responding before closing; no further play was performed.
+
+The first diagnostic launch produced no window and exited after runtime-object
+initialization. The preceding close command only posted WM_CLOSE without waiting.
+This is consistent with the original single-instance guard at 473B30, which
+returns before creating a window when the mutex already exists. No exit code
+was collected for that launch, so this remains a startup observation rather
+than a confirmed game defect. Preserve smoke-01.log and its four-line trace.
+
+Before the next diagnostic attempt, commit the tool change that waits for a
+requested close to finish (without force-terminating anything). The engine EXEs
+remain the binaries from 6537150; use new log/capture names for the next attempt.
+The original IDA worker expired before comment/save requests; function evidence
+is retained above, but no new saved IDB annotation is claimed for this batch.
