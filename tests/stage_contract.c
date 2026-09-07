@@ -1045,12 +1045,39 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(*(int32_t *)(intptr_t)(actors[i]+140)==0x08000100);
         }
     }
+    records[0][1] = -200;
+    *(int16_t *)(chip.bytes + 12) = 400;
+    CHECK(execute_source(vm,root+2,
+        "camera.left=-8000; camera.right=8000;\n"
+        "enemyA.direction=1.0; enemyB.direction=1.0; enemyC.direction=1.0;"));
+    int landed[3]={0}, fell[3]={0};
+    for(int i=0;i<3;++i) {
+        *(float *)(intptr_t)(actors[i]+240)=-120.0f+100.0f*i;
+        *(float *)(intptr_t)(actors[i]+244)=160.0f;
+        *(float *)(intptr_t)(actors[i]+260)=0;
+        retdec_actor_refresh_bounds(actors[i]);
+    }
+    for(int frame=0;frame<600;++frame) {
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        CHECK(vm_failures==failures);
+        for(int i=0;i<3;++i) {
+            float x=*(float *)(intptr_t)(actors[i]+240);
+            float y=*(float *)(intptr_t)(actors[i]+244);
+            if(!_finite(x) || !_finite(y))
+                fprintf(stderr,"ledge invalid actor=%d frame=%d xy=(%g,%g)\n",i,frame,x,y);
+            CHECK(_finite(x) && _finite(y));
+            if(*(int32_t *)(intptr_t)(actors[i]+296)) landed[i]=1;
+            if(landed[i] && x>200 && y>220 && y<600) fell[i]=1;
+        }
+    }
+    CHECK(landed[0] && landed[1] && landed[2]);
+    CHECK(fell[0] && fell[1] && fell[2]);
     memcpy(g_retdec_camera_state+72,saved_camera,sizeof(saved_camera));
     function_469700();
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(scripts));
-    puts("PASS: fairy/white kedama, 16560 actor frames, collisions and 48 offscreen resets");
+    puts("PASS: fairy/white kedama walking, ledge falling, collisions and 48 offscreen resets");
     return 0;
 }
 
@@ -1459,6 +1486,102 @@ static int test_branch_motion(int32_t manager) {
     return 0;
 }
 
+static int test_map_transition(int32_t vm, int32_t *root) {
+    const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
+    int32_t map_state=PTR(g_retdec_map_manager_state);
+    int32_t render_head[3]={0};
+    render_head[0]=render_head[1]=PTR(render_head);
+    g613=PTR(render_head);
+    function_4a94e0_this(PTR(g722));
+    function_4a95c0_this(PTR(g722),PTR(root+1));
+    CHECK(function_46f4c0_this(map_state));
+    function_46fac0();
+    function_4669d0();
+    {
+        int32_t class_environment[3];
+        CHECK(execute_source(vm,root+2,"classFixture <- {Actor={},Camera=Camera};"));
+        function_4aa3a0_this(PTR(root+1),PTR(class_environment),"classFixture");
+        CHECK(execute_asset(vm,class_environment+1,"data/script/class_def.cv4"));
+        function_4a9d70_this(PTR(class_environment));
+    }
+    function_466270();
+    CHECK(execute_asset(vm,root+2,"data/script/camera.cv4"));
+    int32_t targets[]={PTR(function_469840),PTR(function_469700),PTR(function_469870),
+        PTR(function_46a1d0),PTR(retdec_create_render_layer_fixed),PTR(function_469880),PTR(function_469d10)};
+    int32_t adapters[]={PTR(function_471d90),PTR(function_471bc0),PTR(function_471bc0),
+        PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};
+    const char *names[]={"LoadMap","ClearActor","ClearCollision","ClearRenderLayer", "CreateRenderLayer",
+        "CreateCollision","CreateActorFromMap"};
+    for(int i=0;i<7;++i)
+        CHECK(function_415550_this(PTR(root),PTR(names[i]),PTR(targets+i),4,
+            adapters[i],0)>=0);
+    CHECK(execute_source(vm,root+2,"PlayerStatus <- {time=120};"));
+    CHECK(execute_source(vm,root+2,"stageName=\"previous.act\";"));
+    CHECK(execute_source(vm,root+2,
+        "stageActorFlagTable <- {};\nstageVal <- {};\nloop <- [];\nloopPosition <- [];\n"
+        "t_lift <- {};\nt_boss <- {};\nt_boss_ex <- {};\n"
+        "function PlayBgm(a,b,c,d) {}\n"
+        "function EventCallback(id,x1,y1,x2,y2) {}\n"
+        "stageNoIntro=true;"));
+    for(int i=0;i<3;++i) {
+        fprintf(stderr,"map transition %s\n",paths[i]);
+        CHECK(execute_source(vm,root+2,i==1 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
+        CHECK(*(int32_t *)(intptr_t)(map_state+12));
+        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),g614);
+        CHECK(execute_source(vm,root+2,
+            "player <- {x=800.0,y=850.0,vx=2.5,vy=0.0,direction=1.0,hitBottom=1,\n"
+            " left=792.0,right=808.0,top=818.0,bottom=850.0,take=100,\n"
+            " user={hold=null,water=false,deadCount=0,take=0}};\nInitCamera(player);\n"));
+        for(int frame=0;frame<180;++frame) {
+            CHECK(execute_source(vm,root+2,"player.x+=2.5; player.left+=2.5; player.right+=2.5;"));
+            CHECK(function_466470_this(PTR(g_retdec_camera_state))>=0);
+            retdec_actor_manager_update(PTR(g_retdec_actor_manager_state),PTR(g_retdec_camera_state));
+            CHECK(function_46f0b0(map_state)>=0);
+            int32_t manager=PTR(g_retdec_actor_manager_state);
+            int32_t *actors=*(int32_t **)(intptr_t)(manager+100);
+            for(int n=0;n<*(int32_t *)(intptr_t)(manager+116);++n) {
+                int32_t actor=actors[n];
+                int32_t animation_frame=*(int32_t *)(intptr_t)(actor+204);
+                if(animation_frame) {
+                    int32_t handle=*(int32_t *)(intptr_t)(animation_frame+4);
+                    *(int32_t *)(intptr_t)(animation_frame+4)=1;
+                    retdec_actor_render(actor,PTR(g_retdec_camera_state));
+                    *(int32_t *)(intptr_t)(animation_frame+4)=handle;
+                }
+                if(!_finite(*(float *)(intptr_t)(actor+240)) || !_finite(*(float *)(intptr_t)(actor+244)) ||
+                    !_finite(*(float *)(intptr_t)(actor+308))) {
+                    fprintf(stderr,"scene invalid round=%d frame=%d id=%x take=%d xy=(%g,%g) pitch=%g\n",
+                        i,frame,*(int32_t *)(intptr_t)(actor+224),*(int32_t *)(intptr_t)(actor+208),
+                        *(float *)(intptr_t)(actor+240),*(float *)(intptr_t)(actor+244),*(float *)(intptr_t)(actor+276));
+                    CHECK(0);
+                }
+            }
+        }
+    }
+    function_469700();
+    function_469870();
+    char retired_name[256];
+    strcpy_s(retired_name,sizeof(retired_name),retdec_std_string_data(
+        *(int32_t *)(intptr_t)(map_state+12)+16));
+    int32_t runtime=*(int32_t *)(intptr_t)(map_state+20);
+    CHECK(strcmp(retdec_std_string_data(runtime+164),retired_name)==0);
+    int32_t sprites=PTR(calloc(2,184));
+    CHECK(sprites);
+    *(int32_t *)(intptr_t)(runtime+60)=sprites;
+    *(int32_t *)(intptr_t)(runtime+64)=sprites+2*184;
+    *(int32_t *)(intptr_t)(runtime+68)=sprites+2*184;
+    CHECK(retdec_act_end_stage_this(runtime)==0);
+    CHECK(*(int32_t *)(intptr_t)(runtime+64)==sprites);
+    CHECK(*(int32_t *)(intptr_t)(runtime+68)==sprites+2*184);
+    function_469860();
+    int32_t retired_environment[2]={g483,g484};
+    CHECK(!retdec_sqrat_get(PTR(root),retired_name,retired_environment));
+    function_46a1d0();
+    g613=0;
+    puts("PASS: first-stage passage load/release/reload, camera, actors, ACT update and draw transforms");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     AddVectoredExceptionHandler(1, contract_exception);
     int32_t vm = function_48a170(1024);
@@ -1480,6 +1603,19 @@ int main(int argc, char **argv) {
     CHECK(vm != 0);
     g644 = (char *)(intptr_t)vm;
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    {
+        int32_t anonymous[3];
+        CHECK(execute_source(vm,root+2,"anonymousError <- function() { throw 17; };"));
+        function_4aa3a0_this(PTR(root+1),PTR(anonymous),"anonymousError");
+        int32_t proto=*(int32_t *)(intptr_t)(anonymous[2]+36);
+        CHECK(*(int32_t *)(intptr_t)(proto+20)==g483);
+        *(int32_t *)(intptr_t)(proto+24)=0;
+        expected_vm_error=1;
+        CHECK(!execute_source(vm,root+2,"anonymousError();"));
+        expected_vm_error=0;
+        function_4a9d70_this(PTR(anonymous));
+        puts("PASS: anonymous script failure diagnostics and unwind");
+    }
     CHECK(test_native_stack_relocation(vm, root) == 0);
     function_48ab90(vm, root[2], root[3]);
     CHECK(function_4c6c20(vm) == 0);
@@ -2202,6 +2338,8 @@ int main(int argc, char **argv) {
         CHECK(test_stone_block(manager, vm, root) == 0);
     if (argc > 8)
         CHECK(test_branch_motion(manager) == 0);
+    if (argc > 8)
+        CHECK(test_map_transition(vm, root) == 0);
     CHECK(test_vm_error_unwind(vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");

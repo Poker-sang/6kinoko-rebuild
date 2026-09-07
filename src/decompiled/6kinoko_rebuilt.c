@@ -110694,6 +110694,8 @@ static int32_t retdec_root_table_register_resource(int32_t root_object,
     act_name = retdec_std_string_data(act + 16);
     if (act_name == NULL || *act_name == 0)
         goto cleanup;
+    /* 451022..45104A retains the registration key for 4513F0 teardown. */
+    retdec_string_assign_cstr((int32_t *)(intptr_t)(resource_ptr + 164), act_name);
     retdec_trace_squirrel_name("450f30:act-name", (int32_t)(intptr_t)act_name);
 
     if (!retdec_publish_cact_layer_class(vm, (int32_t)(intptr_t)root_object) ||
@@ -111245,8 +111247,8 @@ static int32_t retdec_act_clear_layout_vector(int32_t vector_ptr)
         *(int32_t *)(intptr_t)(result + 36) = (int32_t)(intptr_t)&g23;
         result += 184;
     }
-    *(int32_t *)(intptr_t)(vector_ptr + 4) = result;
-    return result;
+    *(int32_t *)(intptr_t)(vector_ptr + 4) = begin;
+    return begin;
 }
 
 static int32_t retdec_act_end_stage_this(int32_t resource_ptr)
@@ -112373,6 +112375,55 @@ static int32_t retdec_act_prepare_blit_sprite(int32_t item, const int32_t *comma
         *(float32_t *)(intptr_t)(vertex + 24) = (i & 2) ? v1 : v0;
     }
     return 0;
+}
+
+static void retdec_act_release_find_tree(int32_t node) {
+    while (*(uint8_t *)(intptr_t)(node + 341) == 0) {
+        int32_t left = *(int32_t *)(intptr_t)node;
+        retdec_act_release_find_tree(*(int32_t *)(intptr_t)(node + 8));
+        FindClose((HANDLE)(intptr_t)*(int32_t *)(intptr_t)(node + 16));
+        free((void *)(intptr_t)node);
+        node = left;
+    }
+}
+
+/* 450020/4513F0: stop the resource, unregister its environment, then release owners. */
+static void retdec_destroy_act_runtime(int32_t resource_ptr) {
+    int32_t *resource = (int32_t *)(intptr_t)resource_ptr;
+    int32_t vm = resource[38];
+    int32_t source_act = resource[0] ? *(int32_t *)(intptr_t)resource[0] : 0;
+    retdec_act_end_stage_this(resource_ptr);
+    if (vm != 0 && resource[39] == 0x0a000020 && resource[45] != 0) {
+        int32_t top = function_48aa20(vm);
+        function_48ab90(vm, resource[39], resource[40]);
+        function_48a480(vm, (int32_t)(intptr_t)retdec_std_string_data(resource_ptr + 164), -1);
+        function_48ca10(vm, -2, 0);
+        function_48c910(vm, top);
+    }
+    if (resource[21] != 0) {
+        retdec_act_release_find_tree(*(int32_t *)(intptr_t)(resource[21] + 4));
+        free((void *)(intptr_t)resource[21]);
+        resource[21] = resource[22] = 0;
+    }
+    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 5));
+    if ((uint32_t)resource[46] >= 16u)
+        free((void *)(intptr_t)resource[41]);
+    resource[41] = resource[45] = 0;
+    resource[46] = 15;
+    free((void *)(intptr_t)resource[15]);
+    resource[15] = resource[16] = resource[17] = 0;
+    free((void *)(intptr_t)resource[11]);
+    resource[11] = resource[12] = resource[13] = 0;
+    free((void *)(intptr_t)resource[4]);
+    resource[4] = 0;
+    /* The restored BeginStage currently shares the source ACT with its owner. */
+    if (resource[3] != 0 && resource[3] != source_act)
+        retdec_destroy_cact_with_flags(resource[3], 1);
+    resource[3] = 0;
+    if (vm != 0 && (resource[39] & 0x08000000) != 0)
+        function_48a430(vm, resource_ptr + 156);
+    function_48abe0(resource_ptr + 156);
+    resource[38] = 0;
 }
 
 int32_t function_4522f0(int32_t self)
@@ -128571,6 +128622,13 @@ static void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
     retdec_trace(message);
 }
 
+static void retdec_trace_proto_metadata(const char *label, int32_t proto, int32_t offset) {
+    int32_t *value = (int32_t *)(intptr_t)(proto + offset);
+    retdec_trace_squirrel_name(label,
+        value[0] == 0x08000010 && value[1] != 0 ? value[1] + 28 :
+        (int32_t)(intptr_t)(offset == 20 ? "<anonymous>" : "<unknown>"));
+}
+
 #if defined(_MSC_VER) && defined(_M_IX86)
 __declspec(naked) static int32_t retdec_read_ebx(void) {
     __asm {
@@ -131033,8 +131091,23 @@ static void retdec_actor_tick(int32_t actor)
         step_result = retdec_actor_step_callback(actor + 92);
         retdec_trace_invalid_actor("after-script",actor);
         /* 45E180..45E1B6 replaces a failing update with an empty SquirrelFunction. */
-        if (step_result < 0)
+        if (step_result < 0) {
+            static volatile LONG failure_count;
+            if (InterlockedIncrement(&failure_count) <= 64) {
+                char message[384];
+                sprintf_s(message, sizeof(message),
+                    "actor:update-failed frame=%d actor=%08X id=%X take=%d "
+                    "xy=(%.3f,%.3f) v=(%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f)",
+                    g848, (uint32_t)actor, *(uint32_t *)(intptr_t)(actor + 224),
+                    *(int32_t *)(intptr_t)(actor + 208),
+                    *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
+                    *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
+                    *(float *)(g_retdec_camera_state + 72), *(float *)(g_retdec_camera_state + 76),
+                    *(float *)(g_retdec_camera_state + 80), *(float *)(g_retdec_camera_state + 84));
+                retdec_trace(message);
+            }
             retdec_clear_script_callback(actor + 92);
+        }
         if (step_trace_index <= 64)
             retdec_trace_i32("actor:step-result", step_result);
         if (step_trace_index <= 64 &&
@@ -148041,6 +148114,7 @@ static int32_t function_46f620_this(int32_t this_ptr) {
     }
 
     if (*(int32_t *)(intptr_t)(this_ptr + 20) != 0) {
+        retdec_destroy_act_runtime(*(int32_t *)(intptr_t)(this_ptr + 20));
         free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 20));
         *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
     }
@@ -219845,17 +219919,18 @@ clean_execute_loop:
 clean_execute_failure:
     if (trace_clean_failure_count < 64) {
         int32_t failed_ci = *(int32_t *)(intptr_t)(vm + 132);
-        int32_t failed_closure = failed_ci != 0
+        int32_t failed_closure = failed_ci != 0 &&
+            *(int32_t *)(intptr_t)(failed_ci + 8) == 0x08000100
             ? *(int32_t *)(intptr_t)(failed_ci + 12) : 0;
         int32_t failed_proto = failed_closure != 0
             ? *(int32_t *)(intptr_t)(failed_closure + 36) : 0;
         retdec_trace_i32("stagevm:failure-opcode", opcode);
+        retdec_trace_i32("stagevm:failure-frame", g848);
         retdec_trace_i32("stagevm:failure-instruction", instruction_ptr);
         if (failed_proto != 0) {
-            retdec_trace_squirrel_name("stagevm:failure-source",
-                *(int32_t *)(intptr_t)(failed_proto + 16) + 28);
-            retdec_trace_squirrel_name("stagevm:failure-function",
-                *(int32_t *)(intptr_t)(failed_proto + 24) + 28);
+            retdec_trace_i32("stagevm:failure-instruction-index", (instruction_ptr - failed_proto - 96) / 8);
+            retdec_trace_proto_metadata("stagevm:failure-source", failed_proto, 12);
+            retdec_trace_proto_metadata("stagevm:failure-function", failed_proto, 20);
         }
         if (*(int32_t *)(intptr_t)(vm + 64) == 0x08000010)
             retdec_trace_squirrel_name("stagevm:failure-error",
@@ -242009,10 +242084,8 @@ static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
                     int32_t ci=stack+48*i;
                     if(*(int32_t *)(intptr_t)(ci+8)==0x08000100) {
                         int32_t proto=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(ci+12)+36);
-                        retdec_trace_squirrel_name("actor:invalid-float-source",
-                            *(int32_t *)(intptr_t)(proto+16)+28);
-                        retdec_trace_squirrel_name("actor:invalid-float-function",
-                            *(int32_t *)(intptr_t)(proto+24)+28);
+                        retdec_trace_proto_metadata("actor:invalid-float-source",proto,12);
+                        retdec_trace_proto_metadata("actor:invalid-float-function",proto,20);
                         retdec_trace_i32("actor:invalid-float-instruction-index",
                             (*(int32_t *)(intptr_t)ci-proto-96)/8-1);
                     }
