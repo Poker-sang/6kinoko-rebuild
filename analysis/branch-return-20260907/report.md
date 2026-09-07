@@ -39,7 +39,7 @@ Latest trace is 2946527754 bytes, last modified 2026-09-07 14:06:19.
 - [x] Restore VM error recovery and retire failed global updates; test reentry once.
 - [x] Check fairy and white-kedama walking, collision and wait/reset paths offline.
 - [x] Build/test both variants and stage DATs.
-- [ ] Commit source, regression tests and final evidence.
+- [x] Commit source, regression tests and final evidence (b466bc1).
 - [ ] User gameplay verification.
 
 ## E-exception-unwind
