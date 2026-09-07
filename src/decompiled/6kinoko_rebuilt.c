@@ -129222,9 +129222,21 @@ int32_t function_460540(int32_t vm)
 }
 
 // Address range: 0x4606d0 - 0x4607dc
-int32_t function_4606d0(void) {
-    return 0;
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_4606d0(void) {
+    __asm {
+        /* The original consumes the by-value SquirrelObject and returns with ret 12. */
+        lea eax, [esp + 4]
+        push eax
+        push ecx
+        call function_4606d0_this
+        add esp, 8
+        ret 12
+    }
 }
+#else
+int32_t function_4606d0(void) { return 0; }
+#endif
 
 static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr) {
     int32_t temporary[3] = {0, 0, 0};

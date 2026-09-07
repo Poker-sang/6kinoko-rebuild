@@ -499,6 +499,75 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     return 0;
 }
 
+/* Recover ESP even for the broken entry, so an ABI regression reports a failure. */
+static __declspec(naked) int32_t probe_set_step_stack(int32_t actor, int32_t object) {
+    __asm {
+        push ebp
+        mov ebp, esp
+        mov ecx, [ebp + 8]
+        mov edx, [ebp + 12]
+        push [edx + 8]
+        push [edx + 4]
+        push [edx]
+        call function_4606d0
+        mov eax, esp
+        sub eax, ebp
+        mov esp, ebp
+        pop ebp
+        ret
+    }
+}
+
+static int test_actor_step(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t actors[3], object[3], controls[2], weak_counts[2], refs[2];
+    int32_t top = function_48aa20(vm);
+    for (int i = 0; i < 3; ++i) {
+        actors[i] = function_463b40_this(manager, PTR(&g16), g483, g484,
+            0, 0, -1, PTR(&g16), g483, g484, 0);
+        CHECK(actors[i]);
+    }
+    function_4a9840_this(PTR(root + 1), "stepRider", actors[0] + 44);
+    function_4a9840_this(PTR(root + 1), "stepFirst", actors[1] + 44);
+    function_4a9840_this(PTR(root + 1), "stepSecond", actors[2] + 44);
+    for (int i = 0; i < 2; ++i) {
+        controls[i] = *(int32_t *)(intptr_t)(actors[i + 1] + 28);
+        weak_counts[i] = *(int32_t *)(intptr_t)(controls[i] + 8);
+        refs[i] = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actors[i + 1] + 52) + 4);
+    }
+    function_4a9500_this(object, actors[1] + 44);
+    int32_t stack_delta = probe_set_step_stack(actors[0], PTR(object));
+    if (stack_delta != 0) fprintf(stderr, "SetStep ESP delta: %d (expected 0)\n", stack_delta);
+    CHECK(stack_delta == 0);
+    CHECK(*(int32_t *)(intptr_t)(actors[0] + 32) == *(int32_t *)(intptr_t)(actors[1] + 24));
+    CHECK(execute_source(vm, root + 2,
+        "if (stepRider.step != stepFirst) throw \"native step binding missing\";\n"
+        "stepRider.SetStep(null);"));
+    for (int round = 0; round < 64; ++round) {
+        CHECK(execute_source(vm, root + 2,
+            "stepRider.SetStep(stepFirst);\nstepRider.SetStep(stepFirst);\n"
+            "if (stepRider.step != stepFirst) throw \"first step binding\";\n"
+            "stepRider.SetStep(stepSecond);\n"
+            "if (stepRider.step != stepSecond) throw \"replacement step binding\";"));
+        CHECK(*(int32_t *)(intptr_t)(actors[0] + 36) == controls[1]);
+        CHECK(*(int32_t *)(intptr_t)(controls[0] + 8) == weak_counts[0]);
+        CHECK(*(int32_t *)(intptr_t)(controls[1] + 8) == weak_counts[1] + 1);
+        CHECK(execute_source(vm, root + 2,
+            "stepRider.SetStep(null);\n"
+            "if (stepRider.step != null) throw \"step detach\";"));
+        CHECK(*(int32_t *)(intptr_t)(actors[0] + 32) == 0);
+        CHECK(*(int32_t *)(intptr_t)(actors[0] + 36) == 0);
+        for (int i = 0; i < 2; ++i) {
+            CHECK(*(int32_t *)(intptr_t)(controls[i] + 8) == weak_counts[i]);
+            CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actors[i + 1] + 52) + 4) == refs[i]);
+        }
+        CHECK(function_48aa20(vm) == top);
+    }
+    function_469700();
+    CHECK(execute_source(vm, root + 2, "stepRider = null;\nstepFirst = null;\nstepSecond = null;"));
+    puts("PASS: SetStep thiscall stack and 64 native bind/rebind/replace/detach cycles");
+    return 0;
+}
+
 static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
     int32_t init[3], seed[3], actor, parent, parent_object[3], parent_control;
     int32_t stack_top = function_48aa20(vm);
@@ -564,7 +633,7 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
 }
 
 static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
-    int32_t reader = 0, script[26] = {0}, scripts[3], init[3];
+    int32_t reader = 0, script[26] = {0}, scripts[3], init[3], rider_init[3];
     unsigned char version;
     unsigned short textures;
     unsigned char *bytes;
@@ -581,9 +650,16 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(pat_lookup(manager, 1130));
     CHECK(execute_source(vm, root + 2,
         "t_item <- {};\nstoneSounds <- [];\nstoneEffects <- [];\n"
-        "player <- { direction = 1.0, user = { stone = null } };\n"
+        "player <- null;\n"
+        "camera <- { left = -1000, right = 1000, top = -1000, bottom = 1000 };\n"
+        "function InitStoneRider(v) {\n"
+        "  user = { stone = null }; SetTake(0);\n"
+        "  collisionGroup = GP_PLAYER; callbackGroup = GP_PLAYER;\n"
+        "  collisionMask = GP_LIFT; ::player = this;\n"
+        "}\n"
         "function PlaySE(id) { ::stoneSounds.append(id); }\n"
         "function CreateEffect(x,y,z,id) { ::stoneEffects.append(id); return {}; }"));
+    function_4aa3a0_this(PTR(root + 1), PTR(rider_init), "InitStoneRider");
     function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
     CHECK(function_407370(PTR(&reader), "data/script/bullet.cv4"));
     script[24] = *(int32_t *)(intptr_t)(reader + 12);
@@ -600,6 +676,9 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         int direction = (round & 1) ? -1 : 1;
         int32_t top = function_48aa20(vm);
         int failures = vm_failures;
+        int32_t rider = function_463b40_this(manager, rider_init[0], rider_init[1], rider_init[2],
+            100, 200, -1, PTR(&g16), g483, g484, 0);
+        CHECK(rider);
         CHECK(execute_source(vm, root + 2, direction == 1 ?
             "player.direction = 1.0;" : "player.direction = -1.0;"));
         int32_t stone = function_463b40_this(manager, init[0], init[1], init[2],
@@ -617,19 +696,66 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             "if (player.user.stone != stoneProbe || stoneProbe.collisionGroup != GP_LIFT || "
             "stoneProbe.collisionMask != GP_TERRAIN || stoneProbe.user.time != 0) "
             "throw \"stone initialization incomplete\";\n"
-            "stoneProbe = null;"));
+            "player.x = stoneProbe.x;\n"
+            "player.y = stoneProbe.top + 2 - (player.bottom - player.y);\n"
+            "player.vy = 1.0;"));
+        retdec_actor_refresh_bounds(rider);
+        CHECK(function_462ce0(stone, rider) >= 0);
+        CHECK(vm_failures == failures);
+        CHECK(*(int32_t *)(intptr_t)(rider + 32) == *(int32_t *)(intptr_t)(stone + 24));
+        CHECK(*(int32_t *)(intptr_t)(rider + 36) == *(int32_t *)(intptr_t)(stone + 28));
+        CHECK(execute_source(vm, root + 2,
+            "if (!stoneProbe.user.ride || player.step != stoneProbe) "
+            "throw \"original stone callback did not bind rider\";\n"
+            "player.vy = 0.0; stoneProbe.vx = player.direction * 2.0;"));
+        CHECK(retdec_actor_manager_refresh(manager) == 2);
+        for (int frame = 0; frame < 8; ++frame) {
+            float old_x = *(float *)(intptr_t)(rider + 240);
+            retdec_actor_tick(stone);
+            function_468620_this(PTR(g_514300_storage));
+            retdec_actor_update_motion(stone);
+            retdec_actor_update_motion(rider);
+            CHECK(vm_failures == failures);
+            CHECK(*(float *)(intptr_t)(rider + 240) == old_x + direction * 2.0f);
+            CHECK(*(int32_t *)(intptr_t)(rider + 36) == *(int32_t *)(intptr_t)(stone + 28));
+        }
+        if (round & 1) {
+            CHECK(execute_source(vm, root + 2, "stoneProbe.Release();\nstoneProbe = null;"));
+            CHECK(retdec_actor_manager_refresh(manager) == 1);
+            int32_t locked[2];
+            function_45e410_this(rider + 32, locked);
+            CHECK(locked[0] == 0 && locked[1] == 0);
+            retdec_actor_update_motion(rider);
+            CHECK(*(float *)(intptr_t)(rider + 264) == 0);
+            CHECK(execute_source(vm, root + 2, "player.SetStep(null);"));
+        } else {
+            CHECK(execute_source(vm, root + 2, "player.x = stoneProbe.right + 64;"));
+            retdec_actor_update_motion(rider);
+            CHECK(*(int32_t *)(intptr_t)(rider + 36) == 0);
+            CHECK(execute_source(vm, root + 2,
+                "if (player.step != null) throw \"walk-off did not detach\";"));
+            retdec_actor_tick(stone);
+            CHECK(vm_failures == failures);
+            CHECK(execute_source(vm, root + 2,
+                "if (stoneProbe.user.time != 0 || stoneSounds[stoneSounds.len()-1] != 35) "
+                "throw \"original stone falling transition\";\n"
+                "stoneProbe = null;"));
+        }
         CHECK(function_48aa20(vm) == top);
+        CHECK(execute_source(vm, root + 2, "stoneOwner <- player.user;"));
         function_469700();
         CHECK(execute_source(vm, root + 2,
-            "if (player.user.stone != null) throw \"stone weak reference retained\";"));
+            "if (stoneOwner.stone != null || player.user != null) "
+            "throw \"stone or rider retained state after clear\";"));
     }
     CHECK(execute_source(vm, root + 2,
-        "if (stoneSounds.len() != 8 || stoneEffects.len() != 8) throw \"stone media calls\";\n"
-        "foreach (id in stoneSounds) if (id != 33) throw \"stone sound id\";\n"
+        "if (stoneSounds.len() != 12 || stoneEffects.len() != 8) throw \"stone media calls\";\n"
+        "foreach (id in stoneSounds) if (id != 33 && id != 35) throw \"stone sound id\";\n"
         "foreach (id in stoneEffects) if (id != 1960) throw \"stone effect id\";"));
+    function_4a9d70_this(PTR(rider_init));
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(scripts));
-    puts("PASS: original InitStone and item PAT, both directions, eight placements/releases");
+    puts("PASS: original stone callbacks/PAT, eight placements/rides, walk-off and bound release");
     return 0;
 }
 
@@ -1129,6 +1255,7 @@ int main(int argc, char **argv) {
         function_469700();
     }
     CHECK(test_pat_records(manager) == 0);
+    CHECK(test_actor_step(manager, vm, root) == 0);
     CHECK(test_actor_reset(manager, vm, root) == 0);
     {
         int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
