@@ -131377,6 +131377,51 @@ static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
     retdec_trace_i32("actor:diag-bottom", value);
 }
 
+static void retdec_trace_player_state(const char *phase, int32_t actor,
+                                       int32_t camera) {
+    static volatile LONG count;
+    int32_t closure, proto;
+    const char *source, *name;
+    char message[896];
+    if (actor == 0 || *(int32_t *)(intptr_t)(actor + 112) != 0x08000100)
+        return;
+    closure = *(int32_t *)(intptr_t)(actor + 116);
+    proto = *(int32_t *)(intptr_t)(closure + 36);
+    if (proto == 0 || *(int32_t *)(intptr_t)(proto + 12) != 0x08000010 ||
+        *(int32_t *)(intptr_t)(proto + 20) != 0x08000010)
+        return;
+    source = (const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 16) + 28);
+    name = (const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 24) + 28);
+    if (_stricmp(source, "data/script/player.nut") != 0 || strcmp(name, "Update") != 0)
+        return;
+    if (*(float *)(intptr_t)(actor + 256) == 0 && *(float *)(intptr_t)(actor + 260) == 0 &&
+        *(float *)(intptr_t)(actor + 304) >= 12 &&
+        !(*(int32_t *)(intptr_t)(actor + 288) && *(int32_t *)(intptr_t)(actor + 296)) &&
+        g848 % 60 != 0)
+        return;
+    if (InterlockedIncrement(&count) > 6000)
+        return;
+    /* Observe the inputs to the unchanged script death checks without touching the VM stack. */
+    sprintf_s(message, sizeof(message),
+        "actor:player-state frame=%d phase=%s actor=%08X take=%d xy=(%.3f,%.3f) "
+        "v=(%.3f,%.3f) free=(%.3f,%.3f) hits=(%d,%d,%d,%d) flags=%08X "
+        "bounds=(%.3f,%.3f,%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f)",
+        g848, phase, (uint32_t)actor, *(int32_t *)(intptr_t)(actor + 208),
+        *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
+        *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
+        *(float *)(intptr_t)(actor + 304), *(float *)(intptr_t)(actor + 308),
+        *(int32_t *)(intptr_t)(actor + 284), *(int32_t *)(intptr_t)(actor + 288),
+        *(int32_t *)(intptr_t)(actor + 292), *(int32_t *)(intptr_t)(actor + 296),
+        *(uint32_t *)(intptr_t)(actor + 472),
+        *(float *)(intptr_t)(actor + 440), *(float *)(intptr_t)(actor + 444),
+        *(float *)(intptr_t)(actor + 448), *(float *)(intptr_t)(actor + 452),
+        camera ? *(float *)(intptr_t)(camera + 72) : 0,
+        camera ? *(float *)(intptr_t)(camera + 76) : 0,
+        camera ? *(float *)(intptr_t)(camera + 80) : 0,
+        camera ? *(float *)(intptr_t)(camera + 84) : 0);
+    retdec_trace(message);
+}
+
 /* ActorManager::Update keeps animation advancement and resource movement in
    the same order as the original 4641D0 call. */
 static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
@@ -131410,12 +131455,14 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
         int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
 
         retdec_trace_actor_window_state(1, actor, update_mask);
+        retdec_trace_player_state("before-script", actor, camera);
         if (actor != 0 &&
             (*(unsigned char *)(intptr_t)(actor + 40) != 0 ||
              retdec_actor_activate_if_visible(actor, camera, 64.0f)) &&
             (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
             retdec_actor_tick(actor);
         retdec_trace_actor_window_state(2, actor, update_mask);
+        retdec_trace_player_state("after-script", actor, camera);
     }
 
     /* 464285 refreshes after callbacks, which can create or release actors. */
@@ -131431,6 +131478,7 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
             (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
             retdec_actor_update_motion(actor);
         retdec_trace_actor_window_state(3, actor, update_mask);
+        retdec_trace_player_state("after-motion", actor, camera);
     }
     return count;
 }
@@ -137425,15 +137473,27 @@ int32_t function_4663c0(void) {
 #endif
 
 // Address range: 0x466470 - 0x46648d
-int32_t function_466470(void) {
-    int32_t result = function_4a9a30(); // 0x466476
-    if (result != 0x8000100) {
-        // 0x46648b
+static int32_t function_466470_this(int32_t camera) {
+    int32_t result = function_4a9a30_this(camera + 28);
+    if (result != 0x08000100)
         return result;
-    }
-    // 0x466482
-    return function_45dfb0();
+    return retdec_actor_step_callback(camera + 12);
 }
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_466470(void) {
+    __asm {
+        push ecx
+        call function_466470_this
+        add esp, 4
+        ret
+    }
+}
+#else
+int32_t function_466470(void) {
+    return function_466470_this((int32_t)(intptr_t)g_retdec_camera_state);
+}
+#endif
 
 // Address range: 0x466490 - 0x466494
 // From class:    .?AU?$ClassType@M@SqPlus@@
@@ -141075,7 +141135,7 @@ int32_t function_469900(void) {
     int32_t v3 = v2; // 0x469969
     if ((v2 & 0x20000000) != 0) {
         // 0x46996b
-        v3 = function_466470();
+        v3 = function_466470_this((int32_t)(intptr_t)g_retdec_camera_state);
     }
     int32_t v4 = v3; // 0x46997b
     if ((v2 & 0x1fffffff) != 0) {

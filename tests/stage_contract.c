@@ -7,6 +7,7 @@
 #define PTR(value) ((int32_t)(intptr_t)(value))
 
 static int draw_count;
+static int vm_failures;
 static int32_t __fastcall count_draw(void *self, void *unused, int32_t x, int32_t y) {
     (void)self; (void)unused; (void)x; (void)y;
     ++draw_count;
@@ -23,6 +24,7 @@ static void position_actor(int32_t actor, float x, float y) {
 }
 
 void retdec_trace(const char *message) {
+    if (message && strstr(message, "stagevm:failure-error")) ++vm_failures;
     if (message && (strstr(message, "stagevm:compile-error") ||
                     strstr(message, "stagevm:failure")))
         fprintf(stderr, "%s\n", message);
@@ -299,6 +301,183 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
     return 0;
 }
 
+static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
+                               const char *ground_path, const char *player_path,
+                               const char *constant_path, const char *reference_dir) {
+    int32_t scripts[3], init[3], actor;
+    int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
+    int32_t records[1][8] = {{0x443, 0, 240}};
+    struct retdec_mcd_chip chip = {0};
+    struct retdec_mcd_data data = {1, &chip, 0, NULL};
+    CHECK(execute_file(vm, root + 2, constant_path));
+    CHECK(execute_source(vm, root + 2, "t_player <- {};"));
+    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_player");
+    CHECK(execute_file(vm, scripts + 1, player_path));
+    CHECK(execute_file(vm, scripts + 1, ground_path));
+    /* Isolate ground input from ladder/swim and the rest of the game scene. */
+    CHECK(execute_source(vm, root + 2,
+        "t_player.SetLaddar <- function() { return false; };\n"
+        "input <- { x = 0, y = 0, b0 = 0, b2 = 0, b3 = 0 };\n"
+        "camera <- { top = -1000, bottom = 1000 };\n"
+        "time = 1000; stageWaterLevel = 10000; stageWaterType = 0;\n"
+        "stageLayerVector = -1; stageIce = false; stageTimeStop = false;\n"
+        "function InitWalkingProbe(id) {\n"
+        "  user = { type = TYPE_2HEAD, take = 0, hold = null, water = false,\n"
+        "           rolling = false, pitch = 1.0, dash_count = 0, hover = 0,\n"
+        "           deadCount = 0, clearCount = 0, moveCount = 0, goalCount = 0,\n"
+        "           changingCount = 0, invincibleCount = 0, count8head = 0,\n"
+        "           countUFO = 0, inertia = 0.0, hitblock = false, slide = false,\n"
+        "           hand = null, swim = false, ladder = false, hitCount = 0,\n"
+        "           vx = 0.0, vector = false };\n"
+        "  user.SetTake <- ::t_player.SetTake.bindenv(this);\n"
+        "  user.SetDead <- function(value) { throw \"unexpected player death\"; };\n"
+        "  user.SetTake(TAKE_STAND); collisionMask = 1;\n"
+        "  funcUpdate = ::t_player.Stand.bindenv(this);\n"
+        "  SetUpdateFunction(::t_player.Update);\n"
+        "  ::walkingProbe <- this;\n"
+        "}\n"));
+    CHECK(function_468950_this(PTR(g_514300_storage), manager));
+    layout[0] = PTR(&g327);
+    layout[60] = 256;
+    layout[61] = 32;
+    layout[66] = PTR(records);
+    layout[67] = PTR(records + 1);
+    layout[78] = PTR(layer);
+    layout[79] = PTR(resource);
+    *((uint8_t *)layer + 140) = 1;
+    resource[16] = PTR(&data);
+    chip.chip_id = 0x443;
+    *(int16_t *)(chip.bytes + 12) = 256;
+    *(int16_t *)(chip.bytes + 14) = 32;
+    *(int16_t *)(chip.bytes + 34) = 0;
+    CHECK(function_4693a0(PTR(layout)));
+    function_4aa3a0_this(PTR(root + 1), PTR(init), "InitWalkingProbe");
+    actor = function_463b40_this(manager, init[0], init[1], init[2],
+        100, 239, -1, PTR(&g16), g483, g484, 0);
+    CHECK(actor);
+    CHECK(execute_source(vm, root + 2,
+        "if (typeof walkingProbe.funcUpdate != \"function\") throw \"missing walking callback\";"));
+    retdec_actor_manager_refresh(manager);
+    function_468620_this(PTR(g_514300_storage));
+    retdec_actor_update_motion(actor);
+    CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+    for (int phase = 0; phase < 3; ++phase) {
+        float start_x = *(float *)(intptr_t)(actor + 240);
+        CHECK(execute_source(vm, root + 2, phase == 0 ? "input.x = 1;" :
+            phase == 1 ? "input.x = -1;" : "input.x = 0;"));
+        for (int frame = 0; frame < 30; ++frame) {
+            float old_x = *(float *)(intptr_t)(actor + 240);
+            int failures_before = vm_failures;
+            retdec_actor_tick(actor);
+            CHECK(vm_failures == failures_before);
+            function_468620_this(PTR(g_514300_storage));
+            retdec_actor_update_motion(actor);
+            if (*(float *)(intptr_t)(actor + 304) < 12 ||
+                *(float *)(intptr_t)(actor + 452) != 240)
+                fprintf(stderr, "walk phase=%d frame=%d x=%g -> %g bottom=%g width=%g "
+                    "vx=%g direction=%g take=%d\n", phase, frame, old_x,
+                    *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 452),
+                    *(float *)(intptr_t)(actor + 304), *(float *)(intptr_t)(actor + 256),
+                    *(float *)(intptr_t)(actor + 272), *(int32_t *)(intptr_t)(actor + 208));
+            CHECK(*(float *)(intptr_t)(actor + 304) >= 12);
+            CHECK(*(float *)(intptr_t)(actor + 452) == 240);
+            CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
+            CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+            CHECK(execute_source(vm, root + 2,
+                "if (walkingProbe.freeWidth < 12 || walkingProbe.hitTop || "
+                "walkingProbe.bottom != 240) throw \"invalid script-visible bounds\";"));
+        }
+        printf("walk phase=%d x=%g -> %g vx=%g take=%d\n", phase, start_x,
+            *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 256),
+            *(int32_t *)(intptr_t)(actor + 208));
+        if (phase == 0) CHECK(*(float *)(intptr_t)(actor + 240) > start_x + 30);
+        if (phase == 1) CHECK(*(float *)(intptr_t)(actor + 240) < start_x);
+        if (phase == 2) CHECK(*(float *)(intptr_t)(actor + 256) == 0);
+    }
+    function_469700();
+    function_468950_this(PTR(g_514300_storage), manager);
+    if (reference_dir != NULL) {
+        int32_t act[60];
+        char path[MAX_PATH];
+        for (char archive = 'a'; archive <= 'c'; ++archive) {
+            sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", reference_dir, archive);
+            CHECK(function_410500(path));
+        }
+        CHECK(g678 == 0);
+        function_427530(PTR(act));
+        CHECK(function_428000(PTR(act), "data/map/w1-c01a.act"));
+        for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
+            int32_t actual_layer = *(int32_t *)(intptr_t)entry;
+            int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
+            printf("stage layer=%s mask=%d offset=(%g,%g)\n",
+                retdec_std_string_data(actual_layer + 112),
+                *(uint8_t *)(intptr_t)(actual_layer + 140),
+                *(float *)(intptr_t)(actual_layer + 144), *(float *)(intptr_t)(actual_layer + 148));
+            for (int32_t item = *(int32_t *)(intptr_t)sentinel; item != sentinel;
+                 item = *(int32_t *)(intptr_t)item) {
+                int32_t key = *(int32_t *)(intptr_t)(item + 8);
+                int32_t actual_layout = *(int32_t *)(intptr_t)(key + 4);
+                if (!retdec_map_chip_data(actual_layout)) continue;
+                const char *layer_name = retdec_std_string_data(actual_layer + 112);
+                if (strncmp(layer_name, "te", 2) == 0 || strncmp(layer_name, "wa", 2) == 0)
+                    CHECK(function_4693a0(actual_layout));
+                int32_t begin = *(int32_t *)(intptr_t)(actual_layout + 264);
+                int32_t end = *(int32_t *)(intptr_t)(actual_layout + 268);
+                printf("  records=%d max=(%d,%d)\n", (end - begin) / 32,
+                    *(int32_t *)(intptr_t)(actual_layout + 240),
+                    *(int32_t *)(intptr_t)(actual_layout + 244));
+                for (int32_t record = begin; record < end && record < begin + 5 * 32; record += 32) {
+                    struct retdec_mcd_chip *actual_chip = retdec_mcd_find_chip(
+                        retdec_map_chip_data(actual_layout), *(uint32_t *)(intptr_t)record);
+                    printf("  id=%x xy=(%d,%d) size=(%d,%d) flags=%x shape=%d\n",
+                        *(int32_t *)(intptr_t)record, *(int32_t *)(intptr_t)(record + 4),
+                        *(int32_t *)(intptr_t)(record + 8),
+                        actual_chip ? *(int16_t *)(actual_chip->bytes + 12) : 0,
+                        actual_chip ? *(int16_t *)(actual_chip->bytes + 14) : 0,
+                        actual_chip ? *(int32_t *)(actual_chip->bytes + 16) : 0,
+                        actual_chip ? *(int16_t *)(actual_chip->bytes + 34) : 0);
+                }
+            }
+        }
+        actor = function_463b40_this(manager, init[0], init[1], init[2],
+            192, 895, -1, PTR(&g16), g483, g484, 0);
+        CHECK(actor);
+        retdec_actor_manager_refresh(manager);
+        function_468620_this(PTR(g_514300_storage));
+        retdec_actor_update_motion(actor);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+        for (int direction = 1; direction >= -1; direction -= 2) {
+            CHECK(execute_source(vm, root + 2, direction == 1 ? "input.x = 1;" : "input.x = -1;"));
+            for (int frame = 0; frame < 60; ++frame) {
+                int failures_before = vm_failures;
+                retdec_actor_tick(actor);
+                function_468620_this(PTR(g_514300_storage));
+                retdec_actor_update_motion(actor);
+                if (failures_before != vm_failures || *(float *)(intptr_t)(actor + 304) < 12 ||
+                    *(float *)(intptr_t)(actor + 452) > 896)
+                    fprintf(stderr, "actual stage dir=%d frame=%d xy=(%g,%g) free=(%g,%g) "
+                        "flags=%x hits=(%d,%d,%d,%d) vx=%g\n", direction, frame,
+                        *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
+                        *(float *)(intptr_t)(actor + 304), *(float *)(intptr_t)(actor + 308),
+                        *(int32_t *)(intptr_t)(actor + 472), *(int32_t *)(intptr_t)(actor + 284),
+                        *(int32_t *)(intptr_t)(actor + 288), *(int32_t *)(intptr_t)(actor + 292),
+                        *(int32_t *)(intptr_t)(actor + 296), *(float *)(intptr_t)(actor + 256));
+                CHECK(failures_before == vm_failures);
+                CHECK(*(float *)(intptr_t)(actor + 304) >= 12);
+                CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
+            }
+        }
+        function_469700();
+        function_468950_this(PTR(g_514300_storage), manager);
+        retdec_destroy_cact_object(PTR(act));
+        puts("PASS: original w1-c01a terrain walking in both directions");
+    }
+    function_4a9d70_this(PTR(init));
+    function_4a9d70_this(PTR(scripts));
+    puts("PASS: original ground scripts walking, turning and stopping on a flat floor");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -347,6 +526,8 @@ int main(int argc, char **argv) {
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
+    /* Declare the isolated fixture's script-managed callback slot before creating instances. */
+    CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
     layout[0] = PTR(&g327);
     layout[66] = PTR(records);
     layout[67] = PTR(records + 4);
@@ -789,8 +970,32 @@ int main(int argc, char **argv) {
         function_469700();
     }
     CHECK(test_pat_records(manager) == 0);
+    {
+        int32_t camera[128] = {0}, callback[3];
+        CHECK(execute_source(vm, root + 2,
+            "cameraProbeCount <- 0;\n"
+            "function CameraProbeUpdate() { ::cameraProbeCount++; }"));
+        function_4a9500_this(camera, PTR(root + 1));
+        function_4aa3a0_this(PTR(root + 1), PTR(callback), "CameraProbeUpdate");
+        function_4663c0_this(PTR(camera), callback[0], callback[1], callback[2]);
+        int32_t camera_top = function_48aa20(vm);
+        retdec_call_thiscall0_result(camera, function_466470);
+        CHECK(function_48aa20(vm) == camera_top);
+        CHECK(execute_source(vm, root + 2,
+            "if (cameraProbeCount != 1) throw \"camera update callback skipped\";"));
+        function_4a9d70_this(PTR(camera + 7));
+        CHECK(function_466470_this(PTR(camera)) == g483);
+        CHECK(execute_source(vm, root + 2,
+            "if (cameraProbeCount != 1) throw \"empty camera callback executed\";"));
+        function_4a9d70_this(PTR(camera + 4));
+        function_4a9d70_this(PTR(camera));
+    }
     if (argc > 4)
         CHECK(test_player_pat(manager, argv[3], strtoul(argv[4], NULL, 0)) == 0);
+    if (argc > 7)
+        CHECK(test_player_walking(manager, vm, root, argv[5], argv[6], argv[7],
+            argc > 8 ? argv[8] : NULL) == 0);
+    CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
