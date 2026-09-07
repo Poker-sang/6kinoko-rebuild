@@ -130257,173 +130257,67 @@ int32_t function_462250(int32_t a1) {
 }
 
 // Address range: 0x462280 - 0x46247f
-static int32_t function_462280_this(int32_t this_ptr, int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2 = this_ptr; // 0x462280
-    *(int32_t *)(v2 + 208) = a1;
-    *(int32_t *)(v2 + 212) = 0;
-    *(int32_t *)(v2 + 216) = 0;
-    int32_t result; // bp-8, 0x462280
-    /* Original 462280 passes the Actor's map/tree member (+0x94) plus
-       the embedded tree offset (+0x24) as ECX to 4706C0. */
-    function_4706c0_this(
-        *(int32_t *)(v2 + 148) + 36, &result, &v1);
-    if (result == *(int32_t *)(*(int32_t *)(v2 + 148) + 40)) {
-        // 0x462477
-        return result;
-    }
-    int32_t v3 = *(int32_t *)(result + 16); // 0x4622c7
-    int3_t v4; // 0x462280
-    int3_t v5 = v4 - 1; // 0x4622ca
-    __frontend_reg_store_fpr(v5, 0.0L);
-    int32_t * v6 = (int32_t *)(v2 + 200); // 0x4622cc
-    *v6 = v3;
-    *(int32_t *)(v2 + 220) = *(int32_t *)(v3 + 44);
-    int32_t v7 = *v6; // 0x4622db
-    int3_t v8; // 0x462280
-    if (*(char *)(v7 + 25) == 0) {
-        // 0x46233f
-        *(int32_t *)(v2 + 424) = 0;
-        *(int32_t *)(v2 + 428) = 0;
-        *(int32_t *)(v2 + 432) = 0;
-        *(int32_t *)(v2 + 436) = 0;
-        *(float32_t *)(v2 + 352) = (float32_t)__frontend_reg_load_fpr(v5);
-        *(float32_t *)(v2 + 356) = (float32_t)__frontend_reg_load_fpr(v5);
-        *(int32_t *)(v2 + 388) = 0;
-        v8 = v5;
+static int32_t function_462280_this(int32_t actor, int32_t take) {
+    int32_t manager = *(int32_t *)(intptr_t)(actor + 148);
+    int32_t entry = 0;
+    int32_t animation;
+    float scale, scale_x, scale_y, x, y;
+    float left, top, right, bottom;
+
+    *(int32_t *)(intptr_t)(actor + 208) = take;
+    *(int32_t *)(intptr_t)(actor + 212) = 0;
+    *(int32_t *)(intptr_t)(actor + 216) = 0;
+    function_4706c0_this(manager + 36, &entry, &take);
+    if (entry == *(int32_t *)(intptr_t)(manager + 40))
+        return entry;
+
+    animation = *(int32_t *)(intptr_t)(entry + 16);
+    *(int32_t *)(intptr_t)(actor + 200) = animation;
+    *(int32_t *)(intptr_t)(actor + 220) =
+        *(int32_t *)(intptr_t)(animation + 44);
+    x = *(float *)(intptr_t)(actor + 240);
+    y = *(float *)(intptr_t)(actor + 244);
+    if (*(uint8_t *)(intptr_t)(animation + 25)) {
+        /* 4622E7..462337 reads signed integer bounds, not float register temporaries. */
+        *(float *)(intptr_t)(actor + 424) =
+            (float)((double)*(int32_t *)(intptr_t)(animation + 28) - 0.5);
+        *(float *)(intptr_t)(actor + 428) =
+            (float)*(int32_t *)(intptr_t)(animation + 32);
+        *(float *)(intptr_t)(actor + 432) =
+            (float)((double)*(int32_t *)(intptr_t)(animation + 36) + 0.5);
+        *(float *)(intptr_t)(actor + 436) =
+            (float)((double)*(int32_t *)(intptr_t)(animation + 40) + 1.0);
+        *(float *)(intptr_t)(actor + 352) =
+            (float)((double)*(int32_t *)(intptr_t)(animation + 28) + x);
+        *(float *)(intptr_t)(actor + 356) =
+            (float)((double)*(int32_t *)(intptr_t)(animation + 32) + y);
     } else {
-        int32_t * v9 = (int32_t *)(v7 + 28); // 0x4622e7
-        int3_t v10 = v4 - 2; // 0x4622e7
-        __frontend_reg_store_fpr(v10, (float80_t)*v9);
-        int3_t v11 = v4 - 3; // 0x4622ec
-        __frontend_reg_store_fpr(v11, 0.5L);
-        __frontend_reg_store_fpr(v10, __frontend_reg_load_fpr(v10) - __frontend_reg_load_fpr(v11));
-        float80_t v12 = __frontend_reg_load_fpr(v11); // 0x4622f6
-        __frontend_reg_store_fpr(v11, __frontend_reg_load_fpr(v10));
-        __frontend_reg_store_fpr(v10, v12);
-        *(float32_t *)(v2 + 424) = (float32_t)__frontend_reg_load_fpr(v11);
-        int32_t * v13 = (int32_t *)(v7 + 32); // 0x4622fe
-        __frontend_reg_store_fpr(v11, (float80_t)*v13);
-        *(float32_t *)(v2 + 428) = (float32_t)__frontend_reg_load_fpr(v11);
-        float80_t v14 = __frontend_reg_load_fpr(v10); // 0x462307
-        __frontend_reg_store_fpr(v10, v14 + (float80_t)*(int32_t *)(v7 + 36));
-        *(float32_t *)(v2 + 432) = (float32_t)__frontend_reg_load_fpr(v10);
-        __frontend_reg_store_fpr(v10, (float80_t)*(int32_t *)(v7 + 40));
-        __frontend_reg_store_fpr(v10, __frontend_reg_load_fpr(v10) + 1.0L);
-        *(float32_t *)(v2 + 436) = (float32_t)__frontend_reg_load_fpr(v5);
-        __frontend_reg_store_fpr(v5, (float80_t)*v9);
-        float80_t v15 = __frontend_reg_load_fpr(v5); // 0x462322
-        __frontend_reg_store_fpr(v5, v15 + (float80_t)*(float32_t *)(v2 + 240));
-        *(float32_t *)(v2 + 352) = (float32_t)__frontend_reg_load_fpr(v4);
-        __frontend_reg_store_fpr(v4, (float80_t)*v13);
-        float80_t v16 = __frontend_reg_load_fpr(v4); // 0x462331
-        __frontend_reg_store_fpr(v4, v16 + (float80_t)*(float32_t *)(v2 + 244));
-        *(float32_t *)(v2 + 356) = (float32_t)__frontend_reg_load_fpr(v4 + 1);
-        v8 = v4 + 2;
+        memset((void *)(intptr_t)(actor + 424), 0, 16);
+        *(float *)(intptr_t)(actor + 352) = 0;
+        *(float *)(intptr_t)(actor + 356) = 0;
+        *(int32_t *)(intptr_t)(actor + 388) = 0;
     }
-    int3_t v17 = v8;
-    __frontend_reg_load_fpr(v17);
-    int3_t v18 = v17 + 1;
-    float32_t * v19; // 0x462280
-    int3_t v20; // 0x462280
-    float32_t * v21; // 0x462280
-    int3_t v22; // 0x462280
-    if ((llvm_ctpop_i8((char)(v2 / 256) & 5) & 1) == 0) {
-        float32_t * v23 = (float32_t *)(v2 + 168);
-        __frontend_reg_store_fpr(v17, (float80_t)*v23);
-        float80_t v24 = __frontend_reg_load_fpr(v17); // 0x4623ba
-        __frontend_reg_store_fpr(v17, v24 * (float80_t)*(float32_t *)(v2 + 424));
-        float80_t v25 = __frontend_reg_load_fpr(v17); // 0x4623c0
-        float32_t * v26 = (float32_t *)(v2 + 172); // 0x4623c0
-        __frontend_reg_store_fpr(v17, v25 * (float80_t)*v26);
-        float80_t v27 = __frontend_reg_load_fpr(v17); // 0x4623c6
-        float32_t * v28 = (float32_t *)(v2 + 240); // 0x4623c6
-        __frontend_reg_store_fpr(v17, v27 + (float80_t)*v28);
-        float80_t v29 = __frontend_reg_load_fpr(v18); // 0x4623cc
-        float32_t * v30 = (float32_t *)(v2 + 440);
-        *v30 = (float32_t)v29;
-        __frontend_reg_store_fpr(v18, (float80_t)*(float32_t *)(v2 + 432));
-        __frontend_reg_store_fpr(v18, __frontend_reg_load_fpr(v18) * (float80_t)*v23);
-        __frontend_reg_store_fpr(v18, __frontend_reg_load_fpr(v18) * (float80_t)*v26);
-        __frontend_reg_store_fpr(v18, __frontend_reg_load_fpr(v18) + (float80_t)*v28);
-        v21 = v30;
-        v20 = v17 + 3;
-        v19 = v23;
-        v22 = v17 + 2;
+    scale = *(float *)(intptr_t)(actor + 168);
+    scale_x = *(float *)(intptr_t)(actor + 172);
+    scale_y = *(float *)(intptr_t)(actor + 176);
+    if (*(float *)(intptr_t)(actor + 272) <= 0) {
+        left = (float)((double)*(float *)(intptr_t)(actor + 424) * scale * scale_x + x);
+        right = (float)((double)*(float *)(intptr_t)(actor + 432) * scale * scale_x + x);
     } else {
-        float32_t * v31 = (float32_t *)(v2 + 240); // 0x462378
-        __frontend_reg_store_fpr(v17, (float80_t)*v31);
-        int3_t v32 = v17 - 1; // 0x46237e
-        __frontend_reg_store_fpr(v32, (float80_t)*(float32_t *)(v2 + 432));
-        float80_t v33 = __frontend_reg_load_fpr(v32); // 0x462384
-        float32_t * v34 = (float32_t *)(v2 + 168);
-        __frontend_reg_store_fpr(v32, v33 * (float80_t)*v34);
-        float80_t v35 = __frontend_reg_load_fpr(v32); // 0x46238a
-        float32_t * v36 = (float32_t *)(v2 + 172); // 0x46238a
-        __frontend_reg_store_fpr(v32, v35 * (float80_t)*v36);
-        float80_t v37 = __frontend_reg_load_fpr(v32); // 0x462390
-        __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v17) - v37);
-        float80_t v38 = __frontend_reg_load_fpr(v17); // 0x462392
-        float32_t * v39 = (float32_t *)(v2 + 440);
-        *v39 = (float32_t)v38;
-        __frontend_reg_store_fpr(v17, (float80_t)*v31);
-        __frontend_reg_store_fpr(v32, (float80_t)*v34);
-        float80_t v40 = __frontend_reg_load_fpr(v32); // 0x4623a4
-        __frontend_reg_store_fpr(v32, v40 * (float80_t)*(float32_t *)(v2 + 424));
-        __frontend_reg_store_fpr(v32, __frontend_reg_load_fpr(v32) * (float80_t)*v36);
-        float80_t v41 = __frontend_reg_load_fpr(v32); // 0x4623b0
-        __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v17) - v41);
-        v21 = v39;
-        v20 = v18;
-        v19 = v34;
-        v22 = v17;
+        left = (float)(x - (double)*(float *)(intptr_t)(actor + 432) * scale * scale_x);
+        right = (float)(x - (double)*(float *)(intptr_t)(actor + 424) * scale * scale_x);
     }
-    int3_t v42 = v20;
-    float80_t v43 = __frontend_reg_load_fpr(v22); // 0x4623ea
-    float32_t * v44 = (float32_t *)(v2 + 448); // 0x4623ea
-    *v44 = (float32_t)v43;
-    __frontend_reg_store_fpr(v22, (float80_t)*(float32_t *)(v2 + 428));
-    float80_t v45 = __frontend_reg_load_fpr(v22); // 0x4623f6
-    __frontend_reg_store_fpr(v22, v45 * (float80_t)*v19);
-    float80_t v46 = __frontend_reg_load_fpr(v22); // 0x4623fc
-    float32_t * v47 = (float32_t *)(v2 + 176); // 0x4623fc
-    __frontend_reg_store_fpr(v22, v46 * (float80_t)*v47);
-    float80_t v48 = __frontend_reg_load_fpr(v22); // 0x462402
-    float32_t * v49 = (float32_t *)(v2 + 244); // 0x462402
-    __frontend_reg_store_fpr(v22, v48 + (float80_t)*v49);
-    float80_t v50 = __frontend_reg_load_fpr(v42); // 0x462408
-    v1 = (float32_t)v50;
-    __frontend_reg_store_fpr(v42, v50);
-    *(float32_t *)(v2 + 444) = (float32_t)__frontend_reg_load_fpr(v42);
-    __frontend_reg_store_fpr(v22, (float80_t)*(float32_t *)(v2 + 436));
-    float80_t v51 = __frontend_reg_load_fpr(v22); // 0x46241a
-    __frontend_reg_store_fpr(v22, v51 * (float80_t)*v19);
-    float80_t v52 = __frontend_reg_load_fpr(v22); // 0x462420
-    __frontend_reg_store_fpr(v22, v52 * (float80_t)*v47);
-    float80_t v53 = __frontend_reg_load_fpr(v22); // 0x462426
-    __frontend_reg_store_fpr(v22, v53 + (float80_t)*v49);
-    float80_t v54 = __frontend_reg_load_fpr(v42); // 0x46242c
-    v1 = (float32_t)v54;
-    __frontend_reg_store_fpr(v42, v54);
-    *(float32_t *)(v2 + 452) = (float32_t)__frontend_reg_load_fpr(v42);
-    __frontend_reg_store_fpr(v22, (float80_t)*v44);
-    float80_t v55 = __frontend_reg_load_fpr(v22); // 0x46243e
-    __frontend_reg_store_fpr(v22, v55 - (float80_t)*v21);
-    int32_t v56 = function_4ab9d0(); // 0x462444
-    float80_t v57 = __frontend_reg_load_fpr(v22); // 0x462449
-    __frontend_reg_store_fpr(v42, v57 - __frontend_reg_load_fpr(v42));
-    *(int16_t *)(v2 + 388) = (int16_t)v56;
-    *(int16_t *)(v2 + 390) = (int16_t)function_4ab9d0();
-    int32_t v58 = *v6; // 0x46245e
-    int32_t result2 = 0; // 0x462466
-    if (v58 != 0) {
-        // 0x462468
-        result2 = *(int32_t *)(v58 + 8);
-        *(int32_t *)(v2 + 204) = result2;
-        *(int32_t *)(v2 + 152) = result2;
-    }
-    // 0x462477
-    return result2;
+    top = (float)((double)*(float *)(intptr_t)(actor + 428) * scale * scale_y + y);
+    bottom = (float)((double)*(float *)(intptr_t)(actor + 436) * scale * scale_y + y);
+    *(float *)(intptr_t)(actor + 440) = left;
+    *(float *)(intptr_t)(actor + 444) = top;
+    *(float *)(intptr_t)(actor + 448) = right;
+    *(float *)(intptr_t)(actor + 452) = bottom;
+    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(int32_t)(right - left);
+    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(int32_t)(bottom - top);
+    *(int32_t *)(intptr_t)(actor + 204) = *(int32_t *)(intptr_t)(animation + 8);
+    *(int32_t *)(intptr_t)(actor + 152) = *(int32_t *)(intptr_t)(animation + 8);
+    return *(int32_t *)(intptr_t)(actor + 204);
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
@@ -135365,7 +135259,6 @@ static int32_t retdec_pat_build_frame(
 
 static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
                                       int32_t node, int32_t frame,
-                                      uint32_t frame_index,
                                       int32_t *duration_total,
                                       uint32_t resource_base)
 {
@@ -135415,7 +135308,7 @@ static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
     if (first_block_flag != 0) {
         if (!retdec_reader_read_exact(reader, first_block, sizeof(first_block)))
             return 0;
-        if (frame_index == 0 && *(unsigned char *)(intptr_t)(node + 25) == 0) {
+        if (*(unsigned char *)(intptr_t)(node + 25) == 0) {
             *(unsigned char *)(intptr_t)(node + 25) = 1;
             memcpy((void *)(intptr_t)(node + 28), first_block,
                    sizeof(first_block));
@@ -135449,12 +135342,128 @@ static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
     return 1;
 }
 
+static void retdec_pat_free_node(int32_t node)
+{
+    int32_t frames = *(int32_t *)(intptr_t)(node + 8);
+    int32_t end = *(int32_t *)(intptr_t)(node + 12);
+
+    for (int32_t frame = frames; frame != end; frame += 248)
+        free((void *)(intptr_t)*(int32_t *)(intptr_t)(frame + 244));
+    free((void *)(intptr_t)frames);
+    free((void *)(intptr_t)node);
+}
+
+/* Shared by the packaged loader and the graphics-free PAT contract test. */
+static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
+                                          uint32_t base_resource_count)
+{
+    uint32_t item_count, index, alias_count = 0;
+    int32_t (*aliases)[2] = NULL;
+    int32_t head = 0, tail = 0, pending_node = 0;
+    int32_t result = 0;
+
+    if (!retdec_pat_read_u32(reader_slot, &item_count) ||
+        item_count > 4096u)
+        goto cleanup;
+    if (item_count != 0) {
+        aliases = (int32_t (*)[2])calloc(item_count, sizeof(*aliases));
+        if (aliases == NULL)
+            goto cleanup;
+    }
+    for (index = 0; index < item_count; ++index) {
+        int32_t control;
+
+        if (!retdec_reader_read_exact(reader_slot, &control, 4))
+            goto cleanup;
+        if (control == -1) {
+            if (!retdec_reader_read_exact(reader_slot, aliases[alias_count],
+                                          sizeof(*aliases)))
+                goto cleanup;
+            ++alias_count;
+            continue;
+        } else {
+            unsigned short header0;
+            unsigned short header1;
+            unsigned char loop_flag;
+            uint32_t frame_count;
+            uint32_t frame_index;
+            int32_t node;
+            int32_t frames;
+            int32_t duration_total = 0;
+
+            if (!retdec_pat_read_u16(reader_slot, &header0) ||
+                !retdec_pat_read_u16(reader_slot, &header1) ||
+                !retdec_pat_read_u8(reader_slot, &loop_flag) ||
+                !retdec_pat_read_u32(reader_slot, &frame_count) ||
+                frame_count > 4096u)
+                goto cleanup;
+            node = (int32_t)(intptr_t)calloc(1u, 56u);
+            if (node == 0)
+                goto cleanup;
+            pending_node = node;
+            *(unsigned char *)(intptr_t)(node + 24) = loop_flag;
+            frames = frame_count != 0
+                ? (int32_t)(intptr_t)calloc((size_t)frame_count, 248u) : 0;
+            if (frame_count != 0 && frames == 0)
+                goto cleanup;
+            *(int32_t *)(intptr_t)(node + 8) = frames;
+            *(int32_t *)(intptr_t)(node + 12) =
+                frames + (int32_t)((size_t)frame_count * 248u);
+            *(int32_t *)(intptr_t)(node + 16) =
+                *(int32_t *)(intptr_t)(node + 12);
+            for (frame_index = 0; frame_index < frame_count; ++frame_index) {
+                if (!retdec_pat_read_frame(
+                        reader_slot, manager, node,
+                        frames + (int32_t)((size_t)frame_index * 248u),
+                        &duration_total,
+                        base_resource_count))
+                    goto cleanup;
+            }
+            *(int32_t *)(intptr_t)(node + 44) = duration_total;
+            if (control == -2) {
+                if (tail == 0)
+                    goto cleanup;
+                /* 46537A..465382 links the previous tail back through the head. */
+                *(int32_t *)(intptr_t)tail = node;
+                *(int32_t *)(intptr_t)node = head;
+                *(int32_t *)(intptr_t)(node + 4) = tail;
+            } else {
+                if (retdec_pat_tree_put(manager, control, node) == 0)
+                    goto cleanup;
+                head = node;
+                *(int32_t *)(intptr_t)node = node;
+            }
+            tail = node;
+            pending_node = 0;
+        }
+    }
+    /* 465DA9..465E7B pops both alias lists from the back after reading all nodes. */
+    while (alias_count != 0) {
+        int32_t entry = 0;
+        --alias_count;
+        if (*(int32_t *)(intptr_t)(manager + 40) == 0)
+            continue;
+        function_4706c0_this(manager + 36, &entry, &aliases[alias_count][1]);
+        if (entry != *(int32_t *)(intptr_t)(manager + 40) &&
+            retdec_pat_tree_put(manager, aliases[alias_count][0],
+                *(int32_t *)(intptr_t)(entry + 16)) == 0)
+            goto cleanup;
+    }
+    retdec_trace_i32("animation:items", (int32_t)item_count);
+    result = 1;
+
+cleanup:
+    if (pending_node != 0)
+        retdec_pat_free_node(pending_node);
+    free(aliases);
+    return result;
+}
+
 static int32_t retdec_pat_load_file(int32_t manager, const char *file_name,
                                     const char *directory)
 {
     int32_t reader_slot = 0;
     uint32_t resource_count;
-    uint32_t item_count;
     uint32_t index;
     uint32_t base_resource_count;
     int32_t *resource_begin;
@@ -135498,66 +135507,10 @@ static int32_t retdec_pat_load_file(int32_t manager, const char *file_name,
         if (!retdec_pat_append_resource(manager, handle))
             goto cleanup;
     }
-    if (!retdec_pat_read_u32(reader_slot, &item_count) ||
-        item_count > 4096u)
+    if (!retdec_pat_read_animations(reader_slot, manager, base_resource_count))
         goto cleanup;
-    for (index = 0; index < item_count; ++index) {
-        int32_t control;
-
-        if (!retdec_reader_read_exact(reader_slot, &control, 4))
-            goto cleanup;
-        if (control == -1) {
-            int32_t reference;
-            if (!retdec_reader_read_exact(reader_slot, &reference, 4) ||
-                !retdec_reader_read_exact(reader_slot, &reference, 4))
-                goto cleanup;
-            continue;
-        } else {
-            unsigned short header0;
-            unsigned short header1;
-            unsigned char loop_flag;
-            uint32_t frame_count;
-            uint32_t frame_index;
-            int32_t node;
-            int32_t frames;
-            int32_t duration_total = 0;
-
-            if (!retdec_pat_read_u16(reader_slot, &header0) ||
-                !retdec_pat_read_u16(reader_slot, &header1) ||
-                !retdec_pat_read_u8(reader_slot, &loop_flag) ||
-                !retdec_pat_read_u32(reader_slot, &frame_count) ||
-                frame_count > 4096u)
-                goto cleanup;
-            node = (int32_t)(intptr_t)calloc(1u, 56u);
-            if (node == 0)
-                goto cleanup;
-            *(unsigned char *)(intptr_t)(node + 24) = loop_flag;
-            frames = frame_count != 0
-                ? (int32_t)(intptr_t)calloc((size_t)frame_count, 248u) : 0;
-            if (frame_count != 0 && frames == 0)
-                goto cleanup;
-            *(int32_t *)(intptr_t)(node + 8) = frames;
-            *(int32_t *)(intptr_t)(node + 12) =
-                frames + (int32_t)((size_t)frame_count * 248u);
-            *(int32_t *)(intptr_t)(node + 16) =
-                *(int32_t *)(intptr_t)(node + 12);
-            for (frame_index = 0; frame_index < frame_count; ++frame_index) {
-                if (!retdec_pat_read_frame(
-                        reader_slot, manager, node,
-                        frames + (int32_t)((size_t)frame_index * 248u),
-                        frame_index, &duration_total,
-                        base_resource_count))
-                    goto cleanup;
-            }
-            *(int32_t *)(intptr_t)(node + 44) = duration_total;
-            if (control != -2 &&
-                retdec_pat_tree_put(manager, control, node) == 0)
-                goto cleanup;
-        }
-    }
     retdec_trace_i32("animation:header", header_byte);
     retdec_trace_i32("animation:resources", (int32_t)resource_count);
-    retdec_trace_i32("animation:items", (int32_t)item_count);
     retdec_trace_i32("animation:resource-base",
                      (int32_t)base_resource_count);
     result = 1;

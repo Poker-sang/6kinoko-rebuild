@@ -76,6 +76,229 @@ static int execute_file(int32_t vm, const int32_t *environment, const char *path
     return result;
 }
 
+struct pat_fixture {
+    unsigned char bytes[4096];
+    uint32_t size;
+};
+
+static void pat_value(struct pat_fixture *pat, int32_t value, uint32_t width) {
+    if (pat->size + width > sizeof(pat->bytes)) abort();
+    memcpy(pat->bytes + pat->size, &value, width);
+    pat->size += width;
+}
+
+static void pat_alias(struct pat_fixture *pat, int32_t to, int32_t from) {
+    pat_value(pat, -1, 4);
+    pat_value(pat, to, 4);
+    pat_value(pat, from, 4);
+}
+
+static void pat_node(struct pat_fixture *pat, int32_t take, uint32_t frames) {
+    pat_value(pat, take, 4);
+    pat_value(pat, 0, 2);
+    pat_value(pat, 0, 2);
+    pat_value(pat, 1, 1);
+    pat_value(pat, frames, 4);
+}
+
+static void pat_frame(struct pat_fixture *pat, int16_t duration,
+                      const int32_t *bounds) {
+    pat_value(pat, 0, 4);
+    for (int i = 0; i < 6; ++i) pat_value(pat, 0, 2);
+    pat_value(pat, duration, 2);
+    pat_value(pat, 1, 1);
+    for (int i = 0; i < 20; ++i) pat_value(pat, 0, 2);
+    pat_value(pat, 0, 1);
+    pat_value(pat, 0, 4);
+    pat_value(pat, 0, 4);
+    pat_value(pat, bounds != NULL, 1);
+    if (bounds != NULL)
+        for (int i = 0; i < 4; ++i) pat_value(pat, bounds[i], 4);
+    pat_value(pat, 0, 1);
+    pat_value(pat, 0, 1);
+    for (int i = 0; i < 6; ++i) pat_value(pat, 0, 4);
+    for (int i = 0; i < 3; ++i) pat_value(pat, 0, 2);
+}
+
+static int32_t pat_lookup(int32_t manager, int32_t take) {
+    int32_t entry = 0;
+    function_4706c0_this(manager + 36, &entry, &take);
+    return entry == *(int32_t *)(intptr_t)(manager + 40) ? 0 :
+        *(int32_t *)(intptr_t)(entry + 16);
+}
+
+static int test_pat_records(int32_t manager) {
+    struct pat_fixture pat = {{0}, 0};
+    const int32_t base = 0x60000100;
+    const int32_t bounds[4] = {-6, -20, 10, -1};
+    const int32_t later_bounds[4] = {-4, -8, 7, -1};
+    int32_t reader[7] = {0}, head, second, third, blank, actor;
+    int32_t initial_count = *(int32_t *)(intptr_t)(manager + 44);
+    char directory[MAX_PATH], path[MAX_PATH];
+    HANDLE file;
+    DWORD written;
+
+    pat_value(&pat, 13, 4);
+    pat_alias(&pat, base, base + 1);
+    pat_alias(&pat, base + 1, base + 2);
+    pat_alias(&pat, base + 3, base + 999);
+    pat_node(&pat, base + 2, 3);
+    pat_frame(&pat, 2, NULL);
+    pat_frame(&pat, 3, bounds);
+    pat_frame(&pat, 4, later_bounds);
+    pat_node(&pat, -2, 1);
+    pat_frame(&pat, 5, later_bounds);
+    pat_alias(&pat, base + 4, base + 2);
+    pat_node(&pat, -2, 1);
+    pat_frame(&pat, 6, NULL);
+    pat_node(&pat, base + 5, 1);
+    pat_frame(&pat, 7, NULL);
+    pat_alias(&pat, base + 6, base + 2);
+    pat_alias(&pat, base + 6, base + 5);
+    pat_alias(&pat, base + 5, base + 999);
+    pat_alias(&pat, base + 7, base + 8);
+    pat_alias(&pat, base + 8, base + 7);
+    CHECK(GetTempPathA(sizeof(directory), directory));
+    CHECK(GetTempFileNameA(directory, "pat", 0, path));
+    file = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    CHECK(file != INVALID_HANDLE_VALUE);
+    CHECK(WriteFile(file, pat.bytes, pat.size, &written, NULL) && written == pat.size);
+    reader[1] = PTR(file);
+    reader[3] = pat.size;
+    g765 = 1;
+    CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
+    CHECK(reader[5] == reader[3]);
+    CHECK(CloseHandle(file));
+    g765 = 0;
+
+    head = pat_lookup(manager, base + 2);
+    CHECK(head);
+    CHECK(pat_lookup(manager, base) == head);
+    CHECK(pat_lookup(manager, base + 1) == head);
+    CHECK(pat_lookup(manager, base + 4) == head);
+    CHECK(pat_lookup(manager, base + 6) == head);
+    CHECK(!pat_lookup(manager, base + 3));
+    CHECK(!pat_lookup(manager, base + 7));
+    CHECK(!pat_lookup(manager, base + 8));
+    CHECK(*(int32_t *)(intptr_t)(manager + 44) == initial_count + 6);
+    CHECK(*(uint8_t *)(intptr_t)(head + 25) == 1);
+    CHECK(memcmp((void *)(intptr_t)(head + 28), bounds, sizeof(bounds)) == 0);
+    CHECK(*(int32_t *)(intptr_t)(head + 44) == 9);
+    CHECK(*(int32_t *)(intptr_t)(head + 4) == 0);
+    second = *(int32_t *)(intptr_t)head;
+    CHECK(second && second != head);
+    third = *(int32_t *)(intptr_t)second;
+    CHECK(third && third != head && third != second);
+    CHECK(*(int32_t *)(intptr_t)third == head);
+    CHECK(*(int32_t *)(intptr_t)(second + 4) == head);
+    CHECK(*(int32_t *)(intptr_t)(third + 4) == second);
+    CHECK(memcmp((void *)(intptr_t)(second + 28), later_bounds, sizeof(bounds)) == 0);
+    CHECK(*(int32_t *)(intptr_t)(second + 44) == 5);
+    CHECK(*(int32_t *)(intptr_t)(third + 44) == 6);
+    CHECK(*(uint8_t *)(intptr_t)(third + 25) == 0);
+    blank = pat_lookup(manager, base + 5);
+    CHECK(blank && blank != head && *(int32_t *)(intptr_t)blank == blank);
+    CHECK(*(int32_t *)(intptr_t)(blank + 4) == 0);
+
+    actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+        100, 200, -1, PTR(&g16), g483, g484, 0);
+    CHECK(actor);
+    function_462280_this(actor, base);
+    CHECK(*(int32_t *)(intptr_t)(actor + 200) == head);
+    CHECK(*(float *)(intptr_t)(actor + 440) == 93.5f);
+    CHECK(*(float *)(intptr_t)(actor + 444) == 180.0f);
+    CHECK(*(float *)(intptr_t)(actor + 448) == 110.5f);
+    CHECK(*(float *)(intptr_t)(actor + 452) == 200.0f);
+    for (int i = 0; i < 18; ++i) retdec_actor_tick(actor);
+    CHECK(*(int32_t *)(intptr_t)(actor + 200) == head);
+    CHECK(*(int32_t *)(intptr_t)(actor + 204) == *(int32_t *)(intptr_t)(head + 8));
+    CHECK(*(int32_t *)(intptr_t)(actor + 212) == 0);
+    function_462280_this(actor, base + 5);
+    CHECK(*(float *)(intptr_t)(actor + 440) == 100.0f);
+    CHECK(*(float *)(intptr_t)(actor + 444) == 200.0f);
+    CHECK(*(float *)(intptr_t)(actor + 448) == 100.0f);
+    CHECK(*(float *)(intptr_t)(actor + 452) == 200.0f);
+    CHECK(*(int32_t *)(intptr_t)(actor + 388) == 0);
+    function_469700();
+    return 0;
+}
+
+static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
+    HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    int32_t reader[7] = {0}, actor;
+    int32_t seen[4096], unique = 0, takes = 0, aliases = 0;
+    unsigned char version;
+    unsigned short textures;
+    CHECK(file != INVALID_HANDLE_VALUE);
+    reader[1] = PTR(file);
+    reader[3] = GetFileSize(file, NULL);
+    ((unsigned char *)reader)[24] = (unsigned char)((offset >> 1) | 0x23);
+    g765 = 1;
+    CHECK(retdec_pat_read_u8(PTR(reader), &version) && version == 5);
+    CHECK(retdec_pat_read_u16(PTR(reader), &textures));
+    CHECK(retdec_pat_skip_bytes(PTR(reader), textures * 128u));
+    CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
+    CHECK(reader[5] == reader[3]);
+    CHECK(CloseHandle(file));
+    g765 = 0;
+    actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+        100, 200, -1, PTR(&g16), g483, g484, 0);
+    CHECK(actor);
+    for (int32_t take = 0; take < 10000; ++take) {
+        int32_t node = pat_lookup(manager, take);
+        int32_t index;
+        if (!node) continue;
+        ++takes;
+        for (index = 0; index < unique && seen[index] != node; ++index) {}
+        if (index == unique) {
+            CHECK(unique < 4096);
+            seen[unique++] = node;
+        } else {
+            ++aliases;
+        }
+        for (int direction = -1; direction <= 1; direction += 2) {
+            *(float *)(intptr_t)(actor + 272) = (float)direction;
+            function_462280_this(actor, take);
+            CHECK(*(int32_t *)(intptr_t)(actor + 200) == node);
+            CHECK(*(int32_t *)(intptr_t)(actor + 204) == *(int32_t *)(intptr_t)(node + 8));
+            CHECK(*(int32_t *)(intptr_t)(actor + 204) != 0);
+            CHECK(*(float *)(intptr_t)(actor + 440) <= *(float *)(intptr_t)(actor + 448));
+            CHECK(*(float *)(intptr_t)(actor + 444) <= *(float *)(intptr_t)(actor + 452));
+        }
+    }
+    printf("PAT textures=%u takes=%d unique=%d aliases=%d bytes=%d\n",
+        textures, takes, unique, aliases, reader[5]);
+    CHECK(takes > 0);
+    function_462280_this(actor, 0);
+    CHECK(*(float *)(intptr_t)(actor + 440) == 89.5f);
+    CHECK(*(float *)(intptr_t)(actor + 444) == 170.0f);
+    CHECK(*(float *)(intptr_t)(actor + 448) == 110.5f);
+    CHECK(*(float *)(intptr_t)(actor + 452) == 201.0f);
+    CHECK(*(int16_t *)(intptr_t)(actor + 388) == 21);
+    CHECK(*(int16_t *)(intptr_t)(actor + 390) == 31);
+    {
+        unsigned char chip[48] = {0};
+        float floor_layout[8] = {0};
+        KinokoCollisionRecord floor = {chip, floor_layout, 0};
+        *(int16_t *)(chip + 12) = 256;
+        *(int16_t *)(chip + 14) = 32;
+        floor_layout[4] = 240;
+        CHECK(kinoko_actor_collision_move((void *)(intptr_t)actor, &floor, 1, 4, 50) == 0);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 104);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 239);
+        CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+        CHECK(*(float *)(intptr_t)(actor + 304) == 21);
+        function_462280_this(actor, 0);
+        CHECK(*(float *)(intptr_t)(actor + 452) == 240);
+    }
+    function_469700();
+    puts("PASS: original player PAT consumed through the runtime parser");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -522,6 +745,52 @@ int main(int argc, char **argv) {
         CHECK(draw_count == 1);
         DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(act_resource + 5));
     }
-    puts("PASS: stage creation, collision lifecycle, terrain motion, cached queries and start visibility");
+    {
+        int32_t animation[14] = {0};
+        int32_t frames[62] = {0};
+        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+            100, 200, -1, PTR(&g16), g483, g484, 0);
+        CHECK(actor);
+        animation[2] = PTR(frames);
+        animation[3] = PTR(frames + 62);
+        animation[7] = -6;
+        animation[8] = -20;
+        animation[9] = 10;
+        animation[10] = -1;
+        animation[11] = 7;
+        *((uint8_t *)animation + 25) = 1;
+        CHECK(retdec_pat_tree_put(manager, 0x60000001, PTR(animation)));
+        for (int i = 0; i < 8; ++i)
+            __frontend_reg_store_fpr(i, 700.0L + i);
+        function_462280_this(actor, 0x60000001);
+        CHECK(*(float *)(intptr_t)(actor + 424) == -6.5f);
+        CHECK(*(float *)(intptr_t)(actor + 428) == -20.0f);
+        CHECK(*(float *)(intptr_t)(actor + 432) == 10.5f);
+        CHECK(*(float *)(intptr_t)(actor + 436) == 0.0f);
+        CHECK(*(float *)(intptr_t)(actor + 440) == 93.5f);
+        CHECK(*(float *)(intptr_t)(actor + 444) == 180.0f);
+        CHECK(*(float *)(intptr_t)(actor + 448) == 110.5f);
+        CHECK(*(float *)(intptr_t)(actor + 452) == 200.0f);
+        CHECK(*(int16_t *)(intptr_t)(actor + 388) == 17);
+        CHECK(*(int16_t *)(intptr_t)(actor + 390) == 20);
+        CHECK(*(int32_t *)(intptr_t)(actor + 204) == PTR(frames));
+        CHECK(*(int32_t *)(intptr_t)(actor + 220) == 7);
+        *(float *)(intptr_t)(actor + 168) = 2.0f;
+        *(float *)(intptr_t)(actor + 172) = 1.5f;
+        *(float *)(intptr_t)(actor + 176) = 0.5f;
+        *(float *)(intptr_t)(actor + 272) = 1.0f;
+        function_462280_this(actor, 0x60000001);
+        CHECK(*(float *)(intptr_t)(actor + 440) == 68.5f);
+        CHECK(*(float *)(intptr_t)(actor + 448) == 119.5f);
+        CHECK(*(int16_t *)(intptr_t)(actor + 388) == 51);
+        function_462280_this(actor, 0x60000002);
+        CHECK(*(int32_t *)(intptr_t)(actor + 200) == PTR(animation));
+        CHECK(*(float *)(intptr_t)(actor + 440) == 68.5f);
+        function_469700();
+    }
+    CHECK(test_pat_records(manager) == 0);
+    if (argc > 4)
+        CHECK(test_player_pat(manager, argv[3], strtoul(argv[4], NULL, 0)) == 0);
+    puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
