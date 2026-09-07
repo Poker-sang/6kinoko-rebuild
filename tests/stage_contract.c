@@ -83,6 +83,21 @@ struct pat_fixture {
     uint32_t size;
 };
 
+static int execute_asset(int32_t vm, const int32_t *environment, const char *path) {
+    int32_t reader = 0, script[26] = {0};
+    unsigned char *bytes;
+    int result;
+    if (!function_407370(PTR(&reader), path)) return 0;
+    script[24] = *(int32_t *)(intptr_t)(reader + 12);
+    bytes = (unsigned char *)malloc((size_t)script[24]);
+    result = bytes && retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]);
+    script[23] = PTR(bytes);
+    if (result) result = retdec_execute_embedded_act_script(vm, PTR(script), environment);
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    free(bytes);
+    return result;
+}
+
 static void pat_value(struct pat_fixture *pat, int32_t value, uint32_t width) {
     if (pat->size + width > sizeof(pat->bytes)) abort();
     memcpy(pat->bytes + pat->size, &value, width);
@@ -409,6 +424,11 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         CHECK(g678 == 0);
         function_427530(PTR(act));
         CHECK(function_428000(PTR(act), stage_path));
+        printf("ACT script path=%s compiled=%d text=%.1600s\n",
+            retdec_std_string_data(PTR(act) + 164),
+            *(uint8_t *)((char *)act + 201),
+            *(uint8_t *)((char *)act + 201) ? "(bytecode)" :
+                *(const char **)((char *)act + 192));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
@@ -416,6 +436,12 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 retdec_std_string_data(actual_layer + 112),
                 *(uint8_t *)(intptr_t)(actual_layer + 140),
                 *(float *)(intptr_t)(actual_layer + 144), *(float *)(intptr_t)(actual_layer + 148));
+            if (strncmp(retdec_std_string_data(actual_layer + 112), "hi", 2) == 0)
+                printf("hidden script path=%s compiled=%d text=%.1600s\n",
+                    retdec_std_string_data(actual_layer + 268),
+                    *(uint8_t *)(intptr_t)(actual_layer + 305),
+                    *(uint8_t *)(intptr_t)(actual_layer + 305) ? "(bytecode)" :
+                        *(const char **)(intptr_t)(actual_layer + 296));
             for (int32_t item = *(int32_t *)(intptr_t)sentinel; item != sentinel;
                  item = *(int32_t *)(intptr_t)item) {
                 int32_t key = *(int32_t *)(intptr_t)(item + 8);
@@ -759,6 +785,79 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
+    const char *initializers[] = {"InitPoint", "InitSave", "Init1up"};
+    int32_t scripts[3], init[3];
+    int32_t stack_top = function_48aa20(vm);
+    CHECK(execute_source(vm, root + 2,
+        "PR_FRONT <- 65535;\nt_item <- {};\nt_effect <- { InitNumber = function(v) {} };\n"
+        "player <- { x = 100.0, top = 160.0, bottom = 200.0 };\n"
+        "floatRewards <- [0,0,0];\nfloatNumbers <- [];\n"
+        "function AddPoint() { ::floatRewards[0]++; }\n"
+        "function WriteCurrentSaveData() { ::floatRewards[1]++; }\n"
+        "function AddLife() { ::floatRewards[2]++; }\n"
+        "function CreateActor(init,x,y,z,value) { ::floatNumbers.append(value); return {}; }\n"
+        "function PlaySE(id) {}\nsrand(12345);"));
+    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
+    CHECK(execute_asset(vm, scripts + 1, "data/script/item.cv4"));
+    for (int kind = 0; kind < 3; ++kind) {
+        function_4aa3a0_this(PTR(scripts), PTR(init), initializers[kind]);
+        CHECK(init[1] == 0x08000100);
+        for (int round = 0; round < 4; ++round) {
+            int init_failures = vm_failures;
+            int32_t actor = function_463b40_this(manager, init[0], init[1], init[2],
+                100, 180, -1, PTR(&g16), g483, g484, 0);
+            int homing_frames = 0, released = 0;
+            float max_distance = 0;
+            CHECK(actor && vm_failures == init_failures &&
+                *(int32_t *)(intptr_t)(actor + 208) == 1101 + kind);
+            for (int frame = 0; frame < 180; ++frame) {
+                float dx = 100.0f - *(float *)(intptr_t)(actor + 240);
+                float dy = 180.0f - *(float *)(intptr_t)(actor + 244);
+                float distance = sqrtf(dx * dx + dy * dy);
+                if (distance > max_distance) max_distance = distance;
+                int failures = vm_failures;
+                retdec_actor_tick(actor);
+                CHECK(vm_failures == failures);
+                if (*(uint8_t *)(intptr_t)(actor + 22)) {
+                    CHECK(distance < 16.0f && homing_frames > 0 && max_distance > 40.0f);
+                    released = 1;
+                    break;
+                }
+                float vx = *(float *)(intptr_t)(actor + 256);
+                float vy = *(float *)(intptr_t)(actor + 260);
+                if (fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f) {
+                    if (!(vx * dx + vy * dy > 0.0f)) {
+                        int32_t user[3], count[3];
+                        function_4aa3a0_this(actor + 44, PTR(user), "user");
+                        function_4aa3a0_this(PTR(user), PTR(count), "count");
+                        fprintf(stderr, "float kind=%d round=%d frame=%d delta=(%g,%g) v=(%g,%g) count=%d\n",
+                            kind, round, frame, dx, dy, vx, vy, count[2]);
+                        function_4a9d70_this(PTR(count));
+                        function_4a9d70_this(PTR(user));
+                    }
+                    CHECK(vx * dx + vy * dy > 0.0f);
+                    CHECK(fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f);
+                    ++homing_frames;
+                }
+                retdec_actor_update_motion(actor);
+            }
+            CHECK(released);
+            CHECK(retdec_actor_manager_refresh(manager) == 0);
+            CHECK(function_48aa20(vm) == stack_top);
+        }
+        function_4a9d70_this(PTR(init));
+    }
+    CHECK(execute_source(vm, root + 2,
+        "if (floatRewards[0]!=4 || floatRewards[1]!=4 || floatRewards[2]!=4 || "
+        "floatNumbers.len()!=12) throw \"floating reward count\";\n"
+        "foreach (i,n in floatNumbers) if (n != (i<4 ? 100 : (i<8 ? 0 : 10000))) "
+        "throw \"floating reward value\";"));
+    function_4a9d70_this(PTR(scripts));
+    puts("PASS: original point/save/1up scripts return to player before reward/release (12 flights)");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -779,6 +878,17 @@ int main(int argc, char **argv) {
     CHECK(vm != 0);
     g644 = (char *)(intptr_t)vm;
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    function_48ab90(vm, root[2], root[3]);
+    CHECK(function_4c6c20(vm) == 0);
+    function_48aa50(vm);
+    CHECK(execute_source(vm, root + 2,
+        "if (sqrt(10000.0) != 100.0 || sqrt(25) != 5.0) throw \"sqrt distance\";\n"
+        "if (floor(-1.25) != -2.0 || ceil(-1.25) != -1.0) throw \"rounding\";\n"
+        "if (fabs(asin(0.5)-PI/6)>0.00001 || fabs(acos(0.5)-PI/3)>0.00001) throw \"inverse trig\";\n"
+        "if (fabs(tan(PI/4)-1.0)>0.00001 || fabs(atan(1.0)-PI/4)>0.00001) throw \"trig\";\n"
+        "if (fabs(atan2(1.0,-1.0)-PI*0.75)>0.00001 || pow(2.0,3.0)!=8.0) throw \"binary math\";\n"
+        "if (fabs(log(exp(2.0))-2.0)>0.00001 || fabs(log10(100.0)-2.0)>0.00001) throw \"log math\";\n"
+        "if (typeof sqrt(25) != \"float\" || typeof floor(2.5) != \"float\") throw \"math type\";"));
     CHECK(function_415550_this(PTR(root), PTR("SetInitFunctionByID"),
         PTR(&target), 4, PTR(function_471d30), 0) >= 0);
     top = function_48aa20(vm);
@@ -905,6 +1015,33 @@ int main(int argc, char **argv) {
         "events.bounds[1][4] != 447) throw \"event bounds/environment mismatch\";"));
     CHECK(function_48aa20(vm) == top);
     {
+        int32_t map_state = PTR(g_retdec_map_manager_state);
+        int32_t query_actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+            110, 210, -1, PTR(&g16), g483, g484, 0);
+        CHECK(query_actor);
+        function_4a9840_this(PTR(root + 1), "eventProbe", query_actor + 44);
+        layout[60] = 32;
+        layout[61] = 48;
+        CHECK(*(int32_t *)(intptr_t)(map_state + 40) -
+            *(int32_t *)(intptr_t)(map_state + 36) == 4);
+        CHECK(execute_source(vm, root + 2, "eventProbe.GetChipID(0);"));
+        CHECK(*(int32_t *)(intptr_t)(map_state + 56) == 0x443);
+        CHECK(*(float *)(intptr_t)(map_state + 60) == 100);
+        CHECK(*(float *)(intptr_t)(map_state + 72) == 248);
+        CHECK(execute_source(vm, root + 2,
+            "CreateEvent(\"en\",null,null);\neventProbe.x=300; eventProbe.y=400;\n"
+            "eventProbe.GetChipID(1);"));
+        CHECK(*(int32_t *)(intptr_t)(map_state + 56) == 0xc8a);
+        CHECK(*(float *)(intptr_t)(map_state + 68) == 331);
+        CHECK(execute_source(vm, root + 2,
+            "CreateEvent(\"absent\",null,null);\neventProbe.GetChipID(2);"));
+        CHECK(*(int32_t *)(intptr_t)(map_state + 56) == -1);
+        CHECK(execute_source(vm, root + 2, "eventProbe.x=331; eventProbe.GetChipID(0);"));
+        CHECK(*(int32_t *)(intptr_t)(map_state + 56) == -1);
+        CHECK(execute_source(vm, root + 2, "eventProbe.Release();"));
+        CHECK(retdec_actor_manager_refresh(manager) == 5);
+    }
+    {
         int32_t (*many)[8] = (int32_t (*)[8])calloc(600, 32);
         CHECK(many != NULL);
         for (int i = 0; i < 600; ++i) {
@@ -994,6 +1131,10 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 4 || hits[0] != 12 || hits[1] != 21 || "
             "hits[2] != 23 || hits[3] != 32) throw \"collision pair order\";"));
+        CHECK(execute_source(vm, root + 2,
+            "hits.clear();\nprobe[1].InterrputCollisionCallback();\n"
+            "if (hits.len()!=4 || hits[0]!=21 || hits[1]!=12 || hits[2]!=23 || hits[3]!=32) "
+            "throw \"immediate collision callback order\";"));
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2,
             "hits.clear();\nprobe[0].callbackMask = 0;\n"));
@@ -1361,6 +1502,13 @@ int main(int argc, char **argv) {
             }
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
             CHECK(function_4693a0(PTR(query_layout)));
+            function_4a9840_this(PTR(root + 1), "queryProbe", actor + 44);
+            CHECK(execute_source(vm, root + 2,
+                "for (local i=0;i<64;i++) {\n"
+                "  if (!queryProbe.IsExistChip(80.0,180.0,96.0,212.0)) throw \"missing region\";\n"
+                "  if (queryProbe.IsExistChip(300.0,180.0,320.0,212.0)) throw \"empty region\";\n"
+                "}"));
+            CHECK(function_48aa20(vm) == top);
             position_actor(actor, 100, 200);
             *(uint32_t *)(intptr_t)(actor + 472) = 0x8000;
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
@@ -1371,6 +1519,8 @@ int main(int argc, char **argv) {
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
             *((uint8_t *)query_layer + 140) = 0;
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            CHECK(execute_source(vm, root + 2,
+                "if (queryProbe.IsExistChip(80.0,180.0,96.0,212.0)) throw \"disabled region\";"));
             *((uint8_t *)query_layer + 140) = 1;
             position_actor(actor, 200, 200);
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
@@ -1378,6 +1528,24 @@ int main(int argc, char **argv) {
             position_actor(actor, 132, 200);
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
+            {
+                int32_t other = function_463b40_this(manager, PTR(&g16), g483, g484,
+                    200, 300, -1, PTR(&g16), g483, g484, 0);
+                int32_t candidates[2] = {actor, other};
+                int32_t saved_begin = g_514300_storage[17], saved_count = g_514300_storage[21];
+                CHECK(other);
+                position_actor(actor, 100, 200);
+                position_actor(other, 200, 300);
+                g_514300_storage[17] = PTR(candidates);
+                g_514300_storage[21] = 2;
+                CHECK(execute_source(vm, root + 2,
+                    "if (queryProbe.IsExistChip(92.0,184.0,108.0,200.0)) throw \"self region\";\n"
+                    "if (!queryProbe.IsExistChip(208.0,300.0,220.0,320.0)) throw \"touching actor region\";\n"
+                    "if (queryProbe.IsExistChip(208.5,300.0,220.0,320.0)) throw \"disjoint actor region\";"));
+                g_514300_storage[17] = saved_begin;
+                g_514300_storage[21] = saved_count;
+                position_actor(actor, 132, 200);
+            }
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
             CHECK(function_4693a0(PTR(query_layout)));
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
@@ -1413,6 +1581,8 @@ int main(int argc, char **argv) {
             argc > 9 ? argv[9] : "data/map/w1-c01a.act") == 0);
     if (argc > 8)
         CHECK(test_stone_placement(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_floating_items(manager, vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
