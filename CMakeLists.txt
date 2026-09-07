@@ -28,6 +28,11 @@ target_include_directories(kinoko_core PUBLIC include)
 add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp)
 target_include_directories(kinoko_actor_collision PUBLIC include)
 
+add_library(kinoko_native_methods STATIC
+    src/reconstructed/actor_methods.cpp
+    src/reconstructed/sprite.cpp)
+target_include_directories(kinoko_native_methods PUBLIC include)
+
 add_library(kinoko_legacy_abi STATIC src/reconstructed/legacy_abi.cpp)
 target_include_directories(kinoko_legacy_abi PUBLIC include)
 
@@ -153,6 +158,7 @@ endif()
 set(KINOKO_D3DX9_33_LIB "${CMAKE_SOURCE_DIR}/third_party/d3dx9_33.lib")
 target_link_libraries(kinoko_retdec_rebuild PRIVATE
     kinoko_actor_collision
+    kinoko_native_methods
     kinoko_legacy_abi
     kinoko_diagnostics
     kinoko_zlib

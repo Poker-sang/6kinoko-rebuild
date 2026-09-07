@@ -11,6 +11,11 @@ import time
 
 
 user32 = c.WinDLL("user32", use_last_error=True)
+kernel32 = c.WinDLL("kernel32", use_last_error=True)
+kernel32.OpenProcess.argtypes = [w.DWORD, w.BOOL, w.DWORD]
+kernel32.OpenProcess.restype = w.HANDLE
+kernel32.GetExitCodeProcess.argtypes = [w.HANDLE, c.POINTER(w.DWORD)]
+kernel32.CloseHandle.argtypes = [w.HANDLE]
 user32.SetProcessDPIAware()
 user32.GetWindow.argtypes = [w.HWND, w.UINT]
 user32.GetWindow.restype = w.HWND
@@ -19,6 +24,9 @@ user32.SetForegroundWindow.argtypes = [w.HWND]
 user32.IsWindowVisible.argtypes = [w.HWND]
 user32.GetWindowThreadProcessId.argtypes = [w.HWND, c.POINTER(w.DWORD)]
 user32.PostMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
+user32.SendMessageTimeoutW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM,
+                                     w.UINT, w.UINT, c.POINTER(c.c_size_t)]
+user32.SendMessageTimeoutW.restype = w.LPARAM
 
 
 class Keyboard(c.Structure):
@@ -116,6 +124,9 @@ def main():
         recorder = subprocess.Popen(command + ["-t", str(args.seconds), "-c:v", "libx264",
                                      "-preset", "ultrafast", "-crf", "16", str(args.record)])
     start = time.monotonic()
+    process = kernel32.OpenProcess(0x1000, False, args.pid)
+    if not process:
+        raise c.WinError(c.get_last_error())
     try:
         if args.key:
             press(hwnd, args.key)
@@ -127,8 +138,21 @@ def main():
             press(hwnd, key)
         time.sleep(max(0, start + args.seconds - time.monotonic()))
     finally:
+        exit_code = w.DWORD()
+        if not kernel32.GetExitCodeProcess(process, c.byref(exit_code)):
+            kernel32.CloseHandle(process)
+            raise c.WinError(c.get_last_error())
+        kernel32.CloseHandle(process)
+        alive = exit_code.value == 259
+        reply = c.c_size_t()
+        responding = alive and bool(user32.SendMessageTimeoutW(
+            hwnd, 0, 0, 0, 2, 2000, c.byref(reply)))
+        print(json.dumps({"pid": args.pid, "alive": alive, "responding": responding,
+                          "exit_code": f"0x{exit_code.value:08X}"}), flush=True)
         if recorder and recorder.wait(timeout=15) != 0:
             raise RuntimeError("FFmpeg recording failed")
+    if not responding:
+        raise RuntimeError("Game exited or stopped responding before capture")
     if args.capture:
         subprocess.run(command + ["-frames:v", "1", str(args.capture)], check=True)
     if args.close:

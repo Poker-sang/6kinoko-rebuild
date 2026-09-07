@@ -1,6 +1,7 @@
 #include "kinoko/diagnostics.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <dbghelp.h>
 
@@ -115,6 +116,7 @@ extern "C" void kinoko_diagnostics_initialize() {
 #endif
     trace_enabled = environment_switch("KINOKO_TRACE", default_trace);
     dump_enabled = environment_switch("KINOKO_CRASH_DUMP", false);
+    std::atexit(kinoko_diagnostics_shutdown);
     if (trace_enabled || dump_enabled)
         SetUnhandledExceptionFilter(unhandled_exception);
 }

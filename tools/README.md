@@ -35,6 +35,8 @@ Ordinary builds do not write traces or take automatic screenshots. Set
 `KINOKO_CRASH_DUMP=1` to enable a crash dump beside the game EXE. The independent
 `exercise_game_window.py` tool captures the visible game window only when
 explicitly requested. The original VM trace call sites remain in quiet builds.
+The window tool reports process exit status and window responsiveness, so a
+lost-focus input guard can be distinguished from a game exception.
 
 CTest also runs `kinoko_stage_contract.exe` and `kinoko_legacy_abi_contract.exe`.
 The latter checks original x86 virtual calls against a compiler-generated

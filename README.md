@@ -30,6 +30,8 @@ neither setting changes runtime resource resolution. Saves are separate files.
 | `src/platform/diagnostics.cpp` | Optional trace output and crash dump |
 | `src/reconstructed/legacy_abi.cpp` | Compiler-generated x86 virtual calls |
 | `src/reconstructed/actor_collision.cpp` | Recovered actor collision methods |
+| `src/reconstructed/actor_methods.cpp` | Actor chip queries, flags and priority |
+| `src/reconstructed/sprite.cpp` | Typed sprite geometry and Direct3D drawing |
 | `src/squirrel/squirrel_compile_bridge.cpp` | ACT source to original bytecode |
 | `src/squirrel/squirrel_value_bridge.cpp` | Source-based object/error ownership |
 | `src/decompiled/6kinoko_rebuilt.c` | Remaining recovered game and VM code |

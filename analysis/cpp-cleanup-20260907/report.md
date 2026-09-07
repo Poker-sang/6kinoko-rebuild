@@ -35,9 +35,9 @@ Existing user changes/deletions listed by git status are outside this work.
 - [x] Replace the seven shared ABI adapters and nine-argument draw call with C++.
 - [x] Integrate source-based Squirrel object/error ownership helpers.
 - [x] Separate optional diagnostics and stop automatic render captures.
-- [ ] Remove superseded disabled decompiler bodies without changing live code.
-- [ ] Run focused contracts, diagnostic/quiet smoke and stage/hash DATs.
-- [ ] Record limitations and create checkpoint commits.
+- [x] Remove superseded disabled decompiler bodies without changing live code.
+- [x] Run focused contracts, diagnostic/quiet smoke and stage/hash DATs.
+- [x] Record limitations and create checkpoint commits.
 
 ## E-ownership / Source Integration
 
@@ -93,3 +93,60 @@ tracing/dumps without replacing the EXE or changing resource resolution.
 Remaining work includes migration of the many receiver bridges and remaining
 generated VM/native code, plus previously observed intermittent gameplay and
 shutdown defects. Startup and contract evidence is not an exhaustive game pass.
+
+## E-disabled-cleanup
+
+The first checkpoint is 88d8a14. The mechanical cleanup removes 74 complete
+literal #if 0 blocks with no live alternative, totaling 10,364 lines.
+The quiet EXE .text SHA256 before and immediately after only this cleanup is
+identical: 51204FD49904D6D283375ECB471A8DD2A3893B5653F637FAD347AB48C18F9E9B.
+Original decompiler reference src/decompiled/6kinoko.exe.c remains available.
+
+## E-native-cpp
+
+Original IDA 45F760/45F780/45F7A0/45F7E0/45F800/45F810/45F820 confirms the
+seven Actor wrappers now implemented with descriptive names in actor_methods.cpp.
+ActorView preserves field widths/offsets, signed 64-bit flag extension,
+per-layer chip-ID caching and calls to the existing manager/collision methods.
+The original script names, including InterrputCollisionCallback, are unchanged.
+
+Original 404770 and its existing reconstructed implementation anchor sprite.cpp.
+Typed vertices retain the 28-byte stride and 148-byte CSprite field layout.
+The three original vtable entries now use compiler-generated ABI adapters.
+Pivot, scale, rotation and texture/FVF/draw ordering follow the existing path.
+The native contract checks all three real vtable entries with fixed expected
+corners, rotation, negative scale, and unchanged depth/color/texture coordinates.
+Together with the first batch, 18 handwritten assembly blocks were replaced.
+
+The original worker expired before annotation; skill open.ps1 reopened it as
+f089ae12. Ownership/migration comments were saved through IDA MCP to
+C:/rs-ida/2131fc9c-6kinoko.exe.i64. Reference EXE/DAT contents were not changed.
+
+## Final Verification
+
+Both final Release variants pass CTest 3/3 and the extended resource contracts.
+Both final-stage.png window captures show active first-stage gameplay. The
+window tool reports alive=true and responding=true for both successful runs.
+The quiet executable also passes an explicit KINOKO_TRACE=1 output check;
+that generated trace is archived separately from the ordinary runtime.
+The imported 39 upstream files match the supplied source tree by SHA256.
+All three DATs are staged and size/hash-checked beside each final executable.
+
+During an earlier gameplay run the improved window tool recorded exit code
+C0000005. The user explicitly confirmed this gameplay access exception also
+occurred before the migration. It is retained as a known unresolved issue,
+not classified as a new regression and not claimed fixed. A separate lost-focus
+event occurred while the process was alive and responding. x32dbg was briefly
+attached to a later test process and then detached; no crash was captured in
+that debugging session and no full-path equivalence claim is made.
+
+Final EXE SHA256:
+- quiet: F06552B6053C70B05B14BE14E4CC05F6179334E082A743956C53C55C1C0D439F
+- diagnostic: 96B643E05BA8C0A79988CC1ABB7D1D1CFE9118F20CB8378E7D7DD5177B07EE52
+
+ADF P0: the migrated behavior has original/source anchors and executable
+contracts. Diagnostic and quiet gameplay smoke passed. The remaining C VM,
+receiver bridges and intermittent gameplay defects limit the equivalence
+claim. No scripted gameplay rule, resource-loading workaround, or symptom
+suppression was introduced. After the user requested an end to repeated
+attempts, no further runtime tests were performed.

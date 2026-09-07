@@ -1890,6 +1890,56 @@ static int test_map_camera_fpu(void) {
     return 0;
 }
 
+static int test_sprite_geometry(void) {
+    KinokoSprite sprite = {0};
+    const float expected_x[4] = {91.5f, 155.5f, 91.5f, 155.5f};
+    const float expected_y[4] = {194.5f, 194.5f, 218.5f, 218.5f};
+    const float rotated_x[4] = {105.5f, 105.5f, 81.5f, 81.5f};
+    const float rotated_y[4] = {191.5f, 255.5f, 191.5f, 255.5f};
+    void *methods[3] = {g407.e7, g407.e8, g407.e9};
+    union { float f; int32_t bits; } x = {100.0f}, y = {200.0f};
+    int32_t saved_device = g678;
+
+    sprite.width = 32;
+    sprite.height = 48;
+    sprite.pivot_x = 4;
+    sprite.pivot_y = 10;
+    sprite.scale_x = 2;
+    sprite.scale_y = 0.5f;
+    for (int i = 0; i < 4; ++i) {
+        sprite.vertices[i].z = 0.25f;
+        sprite.vertices[i].rhw = 1;
+        sprite.vertices[i].color = 0x12345678;
+        sprite.vertices[i].u = 0.125f;
+        sprite.vertices[i].v = 0.75f;
+    }
+    g678 = 0;
+    for (int method = 0; method < 3; ++method) {
+        sprite.angle = 0;
+        CHECK(retdec_call_thiscall2_result(&sprite, methods[method], x.bits, y.bits) == 0);
+        for (int i = 0; i < 4; ++i) {
+            CHECK(sprite.vertices[i].x == expected_x[i]);
+            CHECK(sprite.vertices[i].y == expected_y[i]);
+        }
+        sprite.angle = 90;
+        CHECK(retdec_call_thiscall2_result(&sprite, methods[method], x.bits, y.bits) == 0);
+        for (int i = 0; i < 4; ++i) {
+            CHECK(fabsf(sprite.vertices[i].x - rotated_x[i]) < 0.0001f);
+            CHECK(fabsf(sprite.vertices[i].y - rotated_y[i]) < 0.0001f);
+            CHECK(sprite.vertices[i].z == 0.25f && sprite.vertices[i].rhw == 1);
+            CHECK(sprite.vertices[i].color == 0x12345678);
+            CHECK(sprite.vertices[i].u == 0.125f && sprite.vertices[i].v == 0.75f);
+        }
+    }
+    sprite.angle = 0;
+    sprite.scale_x = -2;
+    kinoko_sprite_transform(&sprite, x.f, y.f);
+    CHECK(sprite.vertices[0].x == 107.5f && sprite.vertices[1].x == 43.5f);
+    g678 = saved_device;
+    puts("PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes");
+    return 0;
+}
+
 static int error_releases;
 
 static void __fastcall release_error_probe(void *self, void *unused) {
@@ -1976,6 +2026,7 @@ int main(int argc, char **argv) {
     }
     AddVectoredExceptionHandler(1, contract_exception);
     CHECK(test_map_camera_fpu() == 0);
+    CHECK(test_sprite_geometry() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -2607,17 +2658,17 @@ int main(int argc, char **argv) {
         int fault = 0;
         CHECK(actor);
         __try {
-            retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, 0x20);
+            retdec_call_thiscall1((void *)(intptr_t)actor, kinoko_actor_set_chip_flags, 0x20);
         } __except(EXCEPTION_EXECUTE_HANDLER) {
             fault = 1;
         }
         CHECK(fault == 0);
         CHECK(*(int64_t *)(intptr_t)(actor + 392) == 0x20);
-        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, -1);
+        retdec_call_thiscall1((void *)(intptr_t)actor, kinoko_actor_set_chip_flags, -1);
         CHECK(*(int64_t *)(intptr_t)(actor + 392) == -1);
-        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f780, 2);
+        retdec_call_thiscall1((void *)(intptr_t)actor, kinoko_actor_set_chip_bound_type, 2);
         CHECK(*(int16_t *)(intptr_t)(actor + 410) == 2);
-        retdec_call_thiscall1((void *)(intptr_t)actor, function_45f760, 0);
+        retdec_call_thiscall1((void *)(intptr_t)actor, kinoko_actor_set_chip_flags, 0);
         {
             int32_t query_layout[100] = {0}, query_layer[80] = {0}, query_resource[24] = {0};
             int32_t query_records[3][8] = {{1,80,180}, {2,120,180}, {3,136,180}};
@@ -2649,22 +2700,22 @@ int main(int argc, char **argv) {
             CHECK(function_48aa20(vm) == top);
             position_actor(actor, 100, 200);
             *(uint32_t *)(intptr_t)(actor + 472) = 0x8000;
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             CHECK(*(uint32_t *)(intptr_t)(actor + 472) == 0x8000);
             position_actor(actor, 128, 200);
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 6);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 6);
             position_actor(actor, 100, 200);
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             *((uint8_t *)query_layer + 140) = 0;
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 0);
             CHECK(execute_source(vm, root + 2,
                 "if (queryProbe.IsExistChip(80.0,180.0,96.0,212.0)) throw \"disabled region\";"));
             *((uint8_t *)query_layer + 140) = 1;
             position_actor(actor, 200, 200);
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 0);
             *(float *)((char *)query_layer + 144) = 32.5f;
             position_actor(actor, 132, 200);
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
             {
                 int32_t other = function_463b40_this(manager, PTR(&g16), g483, g484,
@@ -2684,9 +2735,9 @@ int main(int argc, char **argv) {
                 g_514300_storage[21] = saved_count;
                 position_actor(actor, 132, 200);
             }
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 0);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 0);
             CHECK(function_4693a0(PTR(query_layout)));
-            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45f810) == 1);
+            CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
         }
         function_469700();
