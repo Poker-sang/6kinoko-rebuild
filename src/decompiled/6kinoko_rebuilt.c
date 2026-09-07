@@ -149791,6 +149791,18 @@ int32_t function_470980(int32_t a1) {
                 return 0;
             retdec_trace_i32("470980:se-bytes",
                              (int32_t)g_retdec_se_entries[index].buffer_bytes);
+            if (a1 == 6) {
+                uint32_t words[12] = {0};
+                SIZE_T bytes;
+                char message[384];
+                ReadProcessMemory(GetCurrentProcess(), buffer, words, sizeof(words), &bytes);
+                sprintf_s(message, sizeof(message),
+                    "actor:stomp-sound buffer=%08X play=%08X thread=%u data=%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X",
+                    (uint32_t)(uintptr_t)buffer,(uint32_t)(uintptr_t)vtable[12],GetCurrentThreadId(),
+                    words[0],words[1],words[2],words[3],words[4],words[5],words[6],words[7],
+                    words[8],words[9],words[10],words[11]);
+                retdec_trace(message);
+            }
             hr = ((retdec_dsound_buffer_play_fn)vtable[12])(
                 buffer, 0, 0, 0);
             retdec_trace_hresult("470980:play-hr", hr);
@@ -153043,7 +153055,7 @@ int32_t function_473010(void) {
     function_48c950(v76, -3, 0);
     *(int32_t *)&v14 = v76;
     function_48aa50(v76);
-    int32_t v78; // bp-32, 0x473010
+    int32_t v78[3]; // Complete 12-byte SquirrelObject temporary.
     function_4a9500_this(&v78, function_4a8cc0());
     v8 = "updateMask";
     v9 = (char *)&g459;
@@ -196156,14 +196168,14 @@ static void retdec_squirrel_release(int32_t type, int32_t data) {
         retdec_trace_i32("sq-release-before", before);
     }
     retdec_squirrel_release_object_ref(data);
-    if (retdec_is_release_watch_data(data)) {
+    if (before > 1 && retdec_is_release_watch_data(data)) {
         retdec_trace_ref_watch("raw-release-after",
                                retdec_primary_shared_state, type, data);
         retdec_trace_i32("sq-watch:raw-release-after-site",
                          (int32_t)(uintptr_t)_ReturnAddress());
     }
     if (type == 0x08004000)
-        retdec_trace_i32("sq-release-after", *(int32_t *)(data + 4));
+        retdec_trace_i32("sq-release-after", before - 1);
 }
 
 /* Explicit receivers for the Squirrel base/table methods whose ECX was
@@ -201140,6 +201152,21 @@ int32_t function_48be70(void) { return 0; }
 
 static int32_t retdec_delete_squirrel_userdata_this(int32_t object_ptr, char flags) {
     int32_t owner;
+    if (*(int32_t *)(intptr_t)object_ptr != (int32_t)(intptr_t)&g68) {
+        uint32_t words[12] = {0};
+        SIZE_T bytes;
+        void *frames[12];
+        USHORT count = CaptureStackBackTrace(0, 12, frames, NULL);
+        char message[320];
+        ReadProcessMemory(GetCurrentProcess(), (const void *)(intptr_t)object_ptr,
+            words, sizeof(words), &bytes);
+        sprintf_s(message, sizeof(message),
+            "actor:userdata-wrong-vtable object=%08X flags=%d data=%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X",
+            (uint32_t)object_ptr, flags, words[0],words[1],words[2],words[3],words[4],words[5],
+            words[6],words[7],words[8],words[9],words[10],words[11]);
+        retdec_trace(message);
+        for (USHORT i=0;i<count;++i) retdec_trace_i32("actor:userdata-wrong-caller",(int32_t)(intptr_t)frames[i]);
+    }
     *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g68;
     if (*(int32_t *)(intptr_t)(object_ptr + 4) >= 0) {
         owner = *(int32_t *)(intptr_t)(object_ptr + 20);
@@ -210735,9 +210762,9 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
         static int32_t trace_native_failure_count;
         if (trace_native_failure_count < 64) {
             int32_t name_type =
-                *(int32_t *)(intptr_t)(native_closure + 68);
+                *(int32_t *)(intptr_t)(native_closure + 64);
             int32_t name_data =
-                *(int32_t *)(intptr_t)(native_closure + 72);
+                *(int32_t *)(intptr_t)(native_closure + 68);
             retdec_trace("48ace0:native-failure");
             retdec_trace_i32("48ace0:native-failure-closure",
                              native_closure);
@@ -211276,12 +211303,12 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
     int32_t v23 = 0; // 0x49362c
     int32_t * v24 = &v4; // 0x49362c
     if (v21 != 0) {
-        int32_t v25 = 0xa000020; // bp-24, 0x493632
+        int32_t v25[2] = {0x0a000020, v21}; // Original SQObjectPtr delegate.
         int32_t * v26 = (int32_t *)(v21 + 4); // 0x49363c
         *v26 = *v26 + 1;
         int32_t v27 = function_4948a0((int32_t)&v25, a2, a3, v1, 0); // 0x493657
         int32_t v28 = -1; // 0x49366c
-        if ((v25 & 0x8000000) != 0) {
+        if ((v25[0] & 0x8000000) != 0) {
             int32_t v29 = *v26 - 1; // 0x493671
             *v26 = v29;
             v28 = -1;
@@ -211324,9 +211351,6 @@ static int32_t function_493310_generated(int32_t a1, int32_t a2,
         __writefsdword(0, v2);
         return v23 & -256;
     }
-    int32_t v33 = (int32_t)v24;
-    *(int32_t *)(v33 - 4) = a3;
-    *(int32_t *)(v33 - 8) = a2;
     int32_t result10 = retdec_squirrel_lookup_state_table(80, a2, a3); // 0x4936d7
     __writefsdword(0, v2);
     return result10;
@@ -233638,31 +233662,25 @@ int32_t function_4a25a0(int32_t a1) {
 }
 
 // Address range: 0x4a25c0 - 0x4a2668
-int32_t function_4a25c0(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4, int32_t a5, int32_t a6) {
-    (void)a2;
-    if (a5 < 0) {
-        int32_t v1 = retdec_compare_with_vm(a1, a3, a4, a6); // 0x4a25da
-        return v1 & -256 | (int32_t)((char)v1 != 0);
+int32_t function_4a25c0(int32_t vm, int32_t array, int32_t left,
+                       int32_t right, int32_t compare, int32_t output) {
+    int32_t top;
+    (void)array;
+    if (compare < 0)
+        return (unsigned char)retdec_compare_with_vm(vm, left, right, output) != 0;
+    top = function_48aa20(vm);
+    function_48a6b0(vm, compare);
+    function_48a670(vm);
+    function_491820_this(vm, left);
+    function_491820_this(vm, right);
+    if (function_48ace0(vm, 3, 1, 0) < 0) {
+        if (*(int32_t *)(intptr_t)(vm + 64) != 0x08000010)
+            function_499a20(vm, "compare func failed");
+        return 0;
     }
-    int32_t v2 = function_48aa20(a1); // 0x4a25ed
-    function_48a6b0(a1, a5);
-    function_48a670(a1);
-    function_491820(a3);
-    function_491820(a4);
-    int32_t v3 = function_48ace0(a1, 3, 1, 0); // 0x4a2621
-    if (v3 >= 0) {
-        // 0x4a264b
-        function_48a7d0(a1, -1, (int32_t *)a6);
-        return function_48c910(a1, v2) & -256 | 1;
-    }
-    int32_t v4 = v3; // 0x4a2634
-    if (*(int32_t *)(a1 + 64) != 0x8000010) {
-        // 0x4a2636
-        v4 = function_499a20(a1, "compare func failed");
-    }
-    // 0x4a2644
-    return v4 & -256;
+    function_48a7d0(vm, -1, (int32_t *)(intptr_t)output);
+    function_48c910(vm, top);
+    return 1;
 }
 
 // Address range: 0x4a2670 - 0x4a27c4
@@ -234175,433 +234193,78 @@ int32_t function_4a30d0(int32_t a1) {
 }
 
 // Address range: 0x4a3120 - 0x4a352e
-int32_t function_4a3120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4a3130
-    int32_t v2; // bp-4, 0x4a3120
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-72, 0x4a313e
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v4 = 0x1000001; // bp-48, 0x4a3155
-    int32_t v5 = 0; // 0x4a3170
-    int32_t v6 = 0x1000001; // 0x4a3170
-    int32_t v7; // 0x4a3120
-    int32_t v8; // 0x4a3120
-    int32_t v9; // 0x4a3120
-    int32_t v10; // 0x4a3120
-    int32_t * v11; // 0x4a3120
-    int32_t * v12; // 0x4a3120
-    int32_t * v13; // 0x4a3120
-    int32_t * v14; // 0x4a3120
-    int32_t * v15; // 0x4a3120
-    int32_t v16; // 0x4a3347
-    int32_t v17; // 0x4a31ef
-    int32_t * v18; // 0x4a3176
-    int32_t v19; // 0x4a3179
-    int32_t v20; // 0x4a33a5
-    int32_t v21; // 0x4a33a9
-    int32_t v22; // 0x4a3182
-    if (a3 < a4) {
-        // 0x4a3176
-        v18 = (int32_t *)(*(int32_t *)(a2 + 4) + 24);
-        v19 = 8 * a3;
-        int32_t v23 = *v18 + v19; // 0x4a3180
-        v22 = *(int32_t *)(v23 + 4);
-        int32_t v24 = *(int32_t *)v23; // 0x4a3188
-        v4 = v24;
-        if ((v24 & 0x8000000) != 0) {
-            int32_t * v25 = (int32_t *)(v22 + 4); // 0x4a3194
-            *v25 = *v25 + 1;
-        }
-        int32_t v26 = &v3; // 0x4a313e
-        v11 = (int32_t *)(v26 - 4);
-        int32_t v27; // bp-28, 0x4a3120
-        int32_t v28 = &v27;
-        v12 = (int32_t *)(v26 - 8);
-        v13 = (int32_t *)(v26 - 12);
-        int32_t v29 = &v4;
-        v14 = (int32_t *)(v26 - 16);
-        v15 = (int32_t *)(v26 - 20);
-        int32_t * v30 = (int32_t *)(v26 - 24);
-        int32_t v31 = a4 + 1; // 0x4a319b
-        int32_t v32 = 0; // 0x4a319b
-        int32_t v33 = 0; // 0x4a319b
-        int32_t v34 = a3; // 0x4a319b
-        int32_t v35; // 0x4a31ca
-        while (true) {
-            // 0x4a31a6
-            v10 = v33;
-            v8 = v32;
-            int32_t v36 = v34 + 1; // 0x4a31a6
-            while (v36 <= a4) {
-                // 0x4a31af
-                *v11 = v28;
-                *v12 = a5;
-                *v13 = v29;
-                *v14 = *v18 + 8 * v36;
-                *v15 = a2;
-                *v30 = a1;
-                v35 = function_4a25c0(a1, a2, *v18 + 8 * v36,
-                                      v29, a5, v28);
-                if ((char)v35 == 0) {
-                    // break (via goto) -> 0x4a32f1
-                    goto lab_0x4a32f1;
-                }
-                int32_t v37 = v36; // 0x4a31de
-                if (v27 >= 1) {
-                    // break -> 0x4a31e0
-                    break;
-                }
-                v36 = v37 + 1;
+/* Preserve Squirrel 2.2.2's pivot choice, comparison order and recursive
+   partitions. SQObjectPtr temporaries must remain complete type/value pairs. */
+int32_t function_4a3120(int32_t vm, int32_t array, int32_t left,
+                       int32_t right, int32_t compare) {
+    int32_t object = *(int32_t *)(intptr_t)(array + 4);
+    int32_t pivot[2] = {g483, g484}, temporary[2] = {g483, g484};
+    int32_t i, j, order = 0, result = 1;
+    int32_t *values;
+    if (left >= right) return 1;
+    values = *(int32_t **)(intptr_t)(object + 24);
+    retdec_squirrel_assign(pivot, values + 2 * left);
+    i = left;
+    j = right + 1;
+    for (;;) {
+        do {
+            if (++i > right) break;
+            values = *(int32_t **)(intptr_t)(object + 24);
+            if (!function_4a25c0(vm, array, (int32_t)(intptr_t)(values + 2 * i),
+                    (int32_t)(intptr_t)pivot, compare, (int32_t)(intptr_t)&order)) {
+                result = 0;
+                goto done;
             }
-            // 0x4a31e0
-            v9 = v31;
-            int32_t v38 = v9 - 1; // 0x4a31e0
-            if (v38 < 0) {
-                // 0x4a333e
-                *v11 = (int32_t)"Invalid qsort, probably compare function defect";
-                *v12 = a1;
-                v16 = function_499a20(v38, (char *)&g1224);
-                goto lab_0x4a334f;
+        } while (order <= 0);
+        do {
+            if (--j < 0) {
+                function_499a20(vm, "Invalid qsort, probably compare function defect");
+                result = 0;
+                goto done;
             }
-            // 0x4a31e9
-            v17 = 8 * v38;
-            *v11 = v28;
-            *v12 = a5;
-            *v13 = v29;
-            *v14 = *v18 + v17;
-            *v15 = a2;
-            *v30 = a1;
-            int32_t v39 = function_4a25c0(a1, a2, *v18 + 8 * v38,
-                                          v29, a5, v28); // 0x4a3207
-            v16 = v39;
-            if ((char)v39 == 0) {
-                goto lab_0x4a334f;
+            values = *(int32_t **)(intptr_t)(object + 24);
+            if (!function_4a25c0(vm, array, (int32_t)(intptr_t)(values + 2 * j),
+                    (int32_t)(intptr_t)pivot, compare, (int32_t)(intptr_t)&order)) {
+                result = 0;
+                goto done;
             }
-            int32_t v40 = v27; // 0x4a3217
-            while (v40 >= 0 == (v40 != 0)) {
-                // 0x4a31e0
-                v9 = v38;
-                v38 = v9 - 1;
-                if (v38 < 0) {
-                    // 0x4a333e
-                    *v11 = (int32_t)"Invalid qsort, probably compare function defect";
-                    *v12 = a1;
-                    v16 = function_499a20(v38, (char *)&g1224);
-                    goto lab_0x4a334f;
-                }
-                // 0x4a31e9
-                v17 = 8 * v38;
-                *v11 = v28;
-                *v12 = a5;
-                *v13 = v29;
-                *v14 = *v18 + v17;
-                *v15 = a2;
-                *v30 = a1;
-                v39 = function_4a25c0(a1, a2, *v18 + 8 * v38,
-                                      v29, a5, v28);
-                v16 = v39;
-                if ((char)v39 == 0) {
-                    goto lab_0x4a334f;
-                }
-                // 0x4a3217
-                v40 = v27;
-            }
-            int32_t v41 = *v18; // 0x4a321d
-            if (v36 >= v38) {
-                int32_t v42 = v41 + v19;
-                v20 = *(int32_t *)(v42 + 4);
-                v21 = *(int32_t *)v42;
-                if ((v21 & 0x8000000) == 0) {
-                    goto lab_0x4a33bf;
-                } else {
-                    int32_t * v43 = (int32_t *)(v20 + 4); // 0x4a33bc
-                    *v43 = *v43 + 1;
-                    goto lab_0x4a33bf;
-                }
-            }
-            int32_t v44 = 8 * v36; // 0x4a3230
-            int32_t v45 = v41 + v44;
-            int32_t v46 = *(int32_t *)(v45 + 4); // 0x4a3232
-            int32_t v47 = *(int32_t *)v45; // 0x4a3236
-            v33 = v47 & 0x8000000;
-            if (v33 != 0) {
-                int32_t * v48 = (int32_t *)(v46 + 4); // 0x4a3249
-                *v48 = *v48 + 1;
-            }
-            if (v10 != 0) {
-                int32_t * v49 = (int32_t *)(v8 + 4); // 0x4a3254
-                *v49 = *v49 - 1;
-            }
-            int32_t v50 = *v18; // 0x4a3262
-            int32_t * v51 = (int32_t *)(v50 + v44); // 0x4a3265
-            int32_t v52 = v50 + 4; // 0x4a326b
-            int32_t * v53 = (int32_t *)(v52 + v44); // 0x4a326b
-            int32_t v54 = *v53; // 0x4a326b
-            *v53 = *(int32_t *)(v52 + v17);
-            int32_t v55 = *(int32_t *)(v50 + v17); // 0x4a3285
-            *v51 = v55;
-            if ((v55 & 0x8000000) != 0) {
-                int32_t * v56 = (int32_t *)(*v53 + 4); // 0x4a3295
-                *v56 = *v56 + 1;
-            }
-            if ((*v51 & 0x8000000) != 0) {
-                int32_t * v57 = (int32_t *)(v54 + 4); // 0x4a32a4
-                *v57 = *v57 - 1;
-            }
-            int32_t v58 = *v18; // 0x4a32b0
-            int32_t v59 = v58 + v17; // 0x4a32b6
-            int32_t * v60 = (int32_t *)v59; // 0x4a32b6
-            int32_t v61 = *(int32_t *)(v58 + (v17 | 4)); // 0x4a32b9
-            *(int32_t *)(v59 + 4) = v46;
-            *v60 = v47;
-            if (v33 != 0) {
-                int32_t * v62 = (int32_t *)(v46 + 4); // 0x4a32cd
-                *v62 = *v62 + 1;
-            }
-            if ((*v60 & 0x8000000) != 0) {
-                int32_t * v63 = (int32_t *)(v61 + 4); // 0x4a32dc
-                *v63 = *v63 - 1;
-            }
-            // 0x4a31a0
-            v31 = v38;
-            v32 = v46;
-            v34 = v36;
-        }
-      lab_0x4a32f1:
-        // 0x4a32f1
-        v7 = v35;
-        if (v10 != 0) {
-            int32_t * v64 = (int32_t *)(v8 + 4); // 0x4a3302
-            int32_t v65 = *v64 - 1; // 0x4a3302
-            *v64 = v65;
-            v7 = v35;
-            if (v65 == 0) {
-                // 0x4a3307
-                v7 = *(int32_t *)v8;
-            }
-        }
-        goto lab_0x4a3313;
-    } else {
-        goto lab_0x4a3500;
+        } while (order > 0);
+        if (i >= j) break;
+        values = *(int32_t **)(intptr_t)(object + 24);
+        retdec_squirrel_assign(temporary, values + 2 * i);
+        retdec_squirrel_assign(values + 2 * i, values + 2 * j);
+        retdec_squirrel_assign(values + 2 * j, temporary);
     }
-  lab_0x4a334f:;
-    int32_t v66 = v16; // 0x4a335e
-    if (v10 == 0) {
-        goto lab_0x4a336e;
-    } else {
-        int32_t * v67 = (int32_t *)(v8 + 4); // 0x4a3360
-        int32_t v68 = *v67 - 1; // 0x4a3360
-        *v67 = v68;
-        v66 = v16;
-        if (v68 != 0) {
-            goto lab_0x4a336e;
-        } else {
-            // 0x4a3365
-            v66 = *(int32_t *)(*(int32_t *)v8 + 4);
-            goto lab_0x4a336e;
-        }
-    }
-  lab_0x4a3500:
-    // 0x4a3500
-    if ((v4 & 0x8000000) == 0) {
-        // 0x4a351a
-        __writefsdword(0, v1);
-        return v6 & -256 | 1;
-    }
-    int32_t * v69 = (int32_t *)(v5 + 4); // 0x4a350b
-    int32_t v70 = *v69 - 1; // 0x4a350b
-    *v69 = v70;
-    int32_t v71 = v5; // 0x4a350e
-    if (v70 == 0) {
-        // 0x4a3510
-        v71 = *(int32_t *)v5;
-    }
-    // 0x4a351a
-    __writefsdword(0, v1);
-    return v71 & -256 | 1;
-  lab_0x4a3313:
-    // 0x4a3313
-    if ((v4 & 0x8000000) == 0) {
-        // 0x4a332a
-        __writefsdword(0, v1);
-        return v7 & -256;
-    }
-    int32_t * v72 = (int32_t *)(v22 + 4); // 0x4a331b
-    int32_t v73 = *v72 - 1; // 0x4a331b
-    *v72 = v73;
-    int32_t v74 = v22; // 0x4a331e
-    if (v73 == 0) {
-        // 0x4a3320
-        v74 = *(int32_t *)v22;
-    }
-    // 0x4a332a
-    __writefsdword(0, v1);
-    return v74 & -256;
-  lab_0x4a336e:;
-    int32_t v75 = v66; // 0x4a3374
-    if ((v4 & 0x8000000) == 0) {
-        goto lab_0x4a3388;
-    } else {
-        int32_t * v76 = (int32_t *)(v22 + 4); // 0x4a3379
-        int32_t v77 = *v76 - 1; // 0x4a3379
-        *v76 = v77;
-        v75 = v22;
-        if (v77 != 0) {
-            goto lab_0x4a3388;
-        } else {
-            // 0x4a337e
-            v75 = *(int32_t *)(*(int32_t *)v22 + 4);
-            goto lab_0x4a3388;
-        }
-    }
-  lab_0x4a3388:
-    // 0x4a3388
-    __writefsdword(0, v1);
-    return v75 & -256;
-  lab_0x4a33bf:
-    if (v10 == 0) {
-        goto lab_0x4a33d5;
-    } else {
-        int32_t * v78 = (int32_t *)(v8 + 4); // 0x4a33c7
-        *v78 = *v78 - 1;
-        goto lab_0x4a33d5;
-    }
-  lab_0x4a33d5:;
-    int32_t v79 = *v18; // 0x4a33d5
-    int32_t * v80 = (int32_t *)(v79 + v19); // 0x4a33d8
-    int32_t v81 = v79 + 4; // 0x4a33de
-    int32_t * v82 = (int32_t *)(v81 + v19); // 0x4a33de
-    *v82 = *(int32_t *)(v81 + v17);
-    int32_t v83 = *(int32_t *)(v79 + v17); // 0x4a33f8
-    *v80 = v83;
-    if ((v83 & 0x8000000) == 0) {
-        goto lab_0x4a340b;
-    } else {
-        int32_t * v84 = (int32_t *)(*v82 + 4); // 0x4a3408
-        *v84 = *v84 + 1;
-        goto lab_0x4a340b;
-    }
-  lab_0x4a340b:
-    if ((*v80 & 0x8000000) == 0) {
-        goto lab_0x4a3423;
-    } else {
-        int32_t * v85 = (int32_t *)(*v82 + 4); // 0x4a3417
-        *v85 = *v85 - 1;
-        goto lab_0x4a3423;
-    }
-  lab_0x4a3423:;
-    int32_t v86 = *v18; // 0x4a3423
-    int32_t v87 = v86 + v17; // 0x4a3429
-    int32_t * v88 = (int32_t *)v87; // 0x4a3429
-    *(int32_t *)(v87 + 4) = v20;
-    *v88 = v21;
-    if ((v21 & 0x8000000) == 0) {
-        goto lab_0x4a3443;
-    } else {
-        int32_t * v89 = (int32_t *)(v20 + 4); // 0x4a3440
-        *v89 = *v89 + 1;
-        goto lab_0x4a3443;
-    }
-  lab_0x4a3443:
-    if ((*v88 & 0x8000000) == 0) {
-        goto lab_0x4a3456;
-    } else {
-        int32_t * v90 = (int32_t *)(*(int32_t *)(v86 + (v17 | 4)) + 4); // 0x4a344a
-        *v90 = *v90 - 1;
-        goto lab_0x4a3456;
-    }
-  lab_0x4a3456:
-    // 0x4a3456
-    *v11 = a5;
-    *v12 = v9 - 2;
-    *v13 = a3;
-    *v14 = a2;
-    *v15 = a1;
-    int32_t v91 = function_4a3120(v21, v20, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x4a346b
-    if ((char)v91 != 0) {
-        // 0x4a349d
-        *v11 = a5;
-        *v12 = a4;
-        *v13 = v9;
-        *v14 = a2;
-        *v15 = a1;
-        int32_t v92 = function_4a3120((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x4a34ac
-        if ((char)v92 != 0) {
-            // 0x4a34e1
-            v5 = v22;
-            v6 = v92;
-            if ((v21 & 0x8000000) == 0) {
-                goto lab_0x4a3500;
-            } else {
-                int32_t * v93 = (int32_t *)(v20 + 4); // 0x4a34f2
-                int32_t v94 = *v93 - 1; // 0x4a34f2
-                *v93 = v94;
-                v5 = v22;
-                v6 = v92;
-                if (v94 != 0) {
-                    goto lab_0x4a3500;
-                } else {
-                    // 0x4a34f7
-                    v5 = v22;
-                    v6 = *(int32_t *)v20;
-                    goto lab_0x4a3500;
-                }
-            }
-        } else {
-            // 0x4a34b8
-            v7 = v92;
-            if ((v21 & 0x8000000) == 0) {
-                goto lab_0x4a3313;
-            } else {
-                int32_t * v95 = (int32_t *)(v20 + 4); // 0x4a34c4
-                int32_t v96 = *v95 - 1; // 0x4a34c4
-                *v95 = v96;
-                v7 = v92;
-                if (v96 != 0) {
-                    goto lab_0x4a3313;
-                } else {
-                    // 0x4a34c9
-                    v7 = *(int32_t *)v20;
-                    goto lab_0x4a3313;
-                }
-            }
-        }
-    } else {
-        // 0x4a3477
-        v7 = v91;
-        if ((v21 & 0x8000000) == 0) {
-            goto lab_0x4a3313;
-        } else {
-            int32_t * v97 = (int32_t *)(v20 + 4); // 0x4a3483
-            int32_t v98 = *v97 - 1; // 0x4a3483
-            *v97 = v98;
-            v7 = v91;
-            if (v98 != 0) {
-                goto lab_0x4a3313;
-            } else {
-                // 0x4a3488
-                v7 = *(int32_t *)v20;
-                goto lab_0x4a3313;
-            }
-        }
-    }
+    values = *(int32_t **)(intptr_t)(object + 24);
+    retdec_squirrel_assign(temporary, values + 2 * left);
+    retdec_squirrel_assign(values + 2 * left, values + 2 * j);
+    retdec_squirrel_assign(values + 2 * j, temporary);
+    result = function_4a3120(vm, array, left, j - 1, compare) &&
+             function_4a3120(vm, array, j + 1, right, compare);
+done:
+    retdec_release_squirrel_value(temporary);
+    retdec_release_squirrel_value(pivot);
+    return result;
 }
 
 // Address range: 0x4a3530 - 0x4a3597
-int32_t function_4a3530(int32_t a1) {
-    int32_t * v1 = (int32_t *)(a1 + 52); // 0x4a3538
-    int32_t v2 = function_4918a0(*v1); // 0x4a3542
-    int32_t v3 = function_4918a0(*v1 + 1); // 0x4a3550
-    uint32_t v4 = *(int32_t *)(*(int32_t *)(v2 + 4) + 28); // 0x4a3558
-    if (v4 >= 2) {
-        int32_t v5 = *(int32_t *)v3; // 0x4a3560
-        int32_t v6 = v5 != 0x8000100 == (v5 != 0x8000200) ? -1 : 2;
-        if ((char)function_4a3120(a1, v2, 0, v4 - 1, v6) == 0) {
-            // 0x4a3588
-            return -1;
+int32_t function_4a3530(int32_t vm) {
+    int32_t array[2] = {g483, g484};
+    int32_t base = *(int32_t *)(intptr_t)(vm + 52);
+    int32_t count, compare = -1, result = 0;
+    /* Keep the receiver rooted if a comparison callback grows the VM stack. */
+    retdec_squirrel_assign(array, (int32_t *)(intptr_t)function_4918a0_this(vm, base));
+    count = *(int32_t *)(intptr_t)(array[1] + 28);
+    if (count > 1) {
+        if (function_48aa20(vm) > 1) {
+            int32_t type = *(int32_t *)(intptr_t)function_4918a0_this(vm, base + 1);
+            if (type == 0x08000100 || type == 0x08000200) compare = 2;
         }
+        if (!function_4a3120(vm, (int32_t)(intptr_t)array, 0, count - 1, compare))
+            result = -1;
     }
-    // 0x4a3588
-    return 0;
+    retdec_release_squirrel_value(array);
+    return result;
 }
 
 // Address range: 0x4a35a0 - 0x4a360b

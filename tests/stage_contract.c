@@ -1378,6 +1378,80 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static void *retired_vm_stack;
+static int32_t sort_native_compare(int32_t vm) {
+    int32_t left, right;
+    if (function_48a7d0(vm,2,&left)<0 || function_48a7d0(vm,3,&right)<0) return -1;
+    function_48a4f0(vm, right-left);
+    return 1;
+}
+
+static int test_array_sort(int32_t vm, int32_t *root) {
+    int top = function_48aa20(vm);
+    CHECK(execute_source(vm, root+2,
+        "sortValues <- [5,1,3,1,-2,8];\n"
+        "sortValues.sort(function(a,b) { return a-b; });\n"
+        "local expected=[-2,1,1,3,5,8];\n"
+        "foreach(i,v in expected) if(sortValues[i]!=v) throw \"comparator order\";"));
+    CHECK(function_48aa20(vm)==top);
+    CHECK(retdec_sqrat_set_native_closure(vm,root+2,"SortNativeCompare",PTR(sort_native_compare),NULL,0));
+    CHECK(execute_source(vm,root+2,
+        "[].sort(); [3].sort();\n"
+        "sortValues.sort(SortNativeCompare);\n"
+        "local descending=[8,5,3,1,1,-2];\n"
+        "foreach(i,v in descending) if(sortValues[i]!=v) throw \"native comparator\";\n"
+        "sortValues.sort();\n"
+        "local ascending=[-2,1,1,3,5,8];\n"
+        "foreach(i,v in ascending) if(sortValues[i]!=v) throw \"default comparator\";\n"
+        "sortStrings <- [\"z\",\"a\",\"b\"]; sortStrings.sort();\n"
+        "if(sortStrings[0]!=\"a\" || sortStrings[2]!=\"z\") throw \"string order\";\n"
+        "class SortValue { rank=0; constructor(n) { rank=n; } }\n"
+        "sortObjects <- [SortValue(5),SortValue(1),SortValue(3),SortValue(1),SortValue(-2),SortValue(8)];\n"
+        "sortOriginal <- clone sortObjects;\n"));
+    int32_t array[3], objects[6], refs[6];
+    function_4aa3a0_this(PTR(root+1),PTR(array),"sortObjects");
+    int32_t *values=*(int32_t **)(intptr_t)(array[2]+24);
+    for(int i=0;i<6;++i) {
+        objects[i]=values[2*i+1];
+        refs[i]=*(int32_t *)(intptr_t)(objects[i]+4);
+    }
+    CHECK(execute_source(vm,root+2,
+        "sortRelocated <- false;\n"
+        "sortObjects.sort(function(a,b) {\n"
+        " if(!sortRelocated) { sortRelocated=true; RelocateStack(); }\n"
+        " local nested=[3,0,1]; nested.sort();\n"
+        " return a.rank-b.rank;\n"
+        "});\n"
+        "for(local round=0;round<64;round++) {\n"
+        " sortObjects.sort(function(a,b) { return b.rank-a.rank; });\n"
+        " sortObjects.sort(function(a,b) { return a.rank-b.rank; });\n"
+        "}\n"
+        "local expected=[-2,1,1,3,5,8];\n"
+        "foreach(i,v in expected) if(sortObjects[i].rank!=v) throw \"instance order\";\n"
+        "foreach(original in sortOriginal) {\n"
+        " local found=0; foreach(value in sortObjects) if(value==original) found++;\n"
+        " if(found!=1) throw \"instance ownership\";\n"
+        "}"));
+    CHECK(retired_vm_stack);
+    free(retired_vm_stack); retired_vm_stack=NULL;
+    for(int i=0;i<6;++i) CHECK(*(int32_t *)(intptr_t)(objects[i]+4)==refs[i]);
+    function_4a9d70_this(PTR(array));
+    expected_vm_error=1;
+    CHECK(execute_source(vm,root+2,
+        "local caught=0;\n"
+        "try { [2,1].sort(function(a,b){throw \"sort failed\";}); }\n"
+        "catch(e) { if(e!=\"sort failed\") throw e; caught++; }\n"
+        "try { [2,1].sort(function(a,b){throw 17;}); }\n"
+        "catch(e) { if(e!=\"compare func failed\") throw e; caught++; }\n"
+        "try { [2,1].sort(function(a,b){return 1;}); }\n"
+        "catch(e) { if(e!=\"Invalid qsort, probably compare function defect\") throw e; caught++; }\n"
+        "if(caught!=3) throw \"sort exception propagation\";"));
+    expected_vm_error=0;
+    CHECK(function_48aa20(vm)==top);
+    puts("PASS: array sort values/instances/native callbacks, ownership, nesting, VM relocation and errors");
+    return 0;
+}
+
 static char aux_output[16384];
 static void __cdecl capture_aux_output(int32_t vm, const char *format, ...) {
     va_list arguments;
@@ -1617,7 +1691,6 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
     return 0;
 }
 
-static void *retired_vm_stack;
 static int32_t relocate_vm_stack(int32_t vm) {
     int32_t size = *(int32_t *)(intptr_t)(vm + 28);
     int32_t capacity = *(int32_t *)(intptr_t)(vm + 32);
@@ -1818,6 +1891,27 @@ static int test_map_camera_fpu(void) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--sound-module") == 0) {
+        HMODULE module=LoadLibraryA("dsound.dll");
+        char path[MAX_PATH];
+        GetModuleFileNameA(module,path,MAX_PATH);
+        printf("module=%s base=%p preferred=%08lx\n",path,module,
+            ((IMAGE_NT_HEADERS *)((char *)module+((IMAGE_DOS_HEADER *)module)->e_lfanew))->OptionalHeader.ImageBase);
+        void *ds=NULL, *buffer=NULL;
+        retdec_direct_sound_create8_fn create=(retdec_direct_sound_create8_fn)GetProcAddress(module,"DirectSoundCreate8");
+        CHECK(SUCCEEDED(create(NULL,&ds,NULL)));
+        void **vt=*(void ***)ds;
+        CHECK(SUCCEEDED(((retdec_dsound_set_cooperative_level_fn)vt[6])(ds,GetDesktopWindow(),1)));
+        retdec_wave_format format={1,1,22050,44100,2,16,0};
+        retdec_dsound_buffer_desc description={0};
+        description.dwSize=sizeof(description); description.dwFlags=0x18088;
+        description.dwBufferBytes=4096; description.lpwfxFormat=&format;
+        CHECK(SUCCEEDED(((retdec_dsound_create_buffer_fn)vt[3])(ds,&description,&buffer,NULL)));
+        printf("buffer=%p vtable=%p play=%p\n",buffer,*(void ***)buffer,(*(void ***)buffer)[12]);
+        retdec_release_dsound_buffer(buffer);
+        ((retdec_dsound_release_fn)vt[2])(ds);
+        return 0;
+    }
     AddVectoredExceptionHandler(1, contract_exception);
     CHECK(test_map_camera_fpu() == 0);
     int32_t vm = function_48a170(1024);
@@ -2579,6 +2673,7 @@ int main(int argc, char **argv) {
     if (argc > 8)
         CHECK(test_map_transition(vm, root) == 0);
     CHECK(test_vm_error_unwind(vm, root) == 0);
+    CHECK(test_array_sort(vm, root) == 0);
     CHECK(test_standard_error_handler(vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");

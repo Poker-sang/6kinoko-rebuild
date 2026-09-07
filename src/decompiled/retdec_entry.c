@@ -283,20 +283,27 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
         if (module_base != 0 && context->Eip >= module_base) {
             eip_rva = context->Eip - module_base;
         }
-        __try {
-            previous_frame = *(ULONG_PTR *)(uintptr_t)context->Ebp;
-            return_address = *(ULONG_PTR *)(uintptr_t)(context->Ebp + 4);
-            stack_words[0] = *(ULONG_PTR *)(uintptr_t)context->Esp;
-            stack_words[1] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 4);
-            stack_words[2] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 8);
-            stack_words[3] = *(ULONG_PTR *)(uintptr_t)(context->Esp + 12);
+        {
+            SIZE_T read_count;
+            ULONG_PTR frame[2];
+            /* Optimized x86 code may use EBP as an ordinary register. Never
+               fault while examining it or discard the valid ESP snapshot. */
+            if (ReadProcessMemory(GetCurrentProcess(), (const void *)(uintptr_t)context->Esp,
+                    stack_words, sizeof(stack_words), &read_count) && read_count == sizeof(stack_words))
+                return_address = stack_words[0];
             frame_cursor = context->Ebp;
             for (frame_index = 0; frame_index < 32 && frame_cursor != 0;
                  ++frame_index) {
-                ULONG_PTR next_frame = *(ULONG_PTR *)(uintptr_t)frame_cursor;
-                ULONG_PTR frame_return =
-                    *(ULONG_PTR *)(uintptr_t)(frame_cursor + 4);
-                frame_returns[frame_index] = frame_return;
+                ULONG_PTR next_frame;
+                if (!ReadProcessMemory(GetCurrentProcess(), (const void *)frame_cursor,
+                        frame, sizeof(frame), &read_count) || read_count != sizeof(frame))
+                    break;
+                next_frame = frame[0];
+                if (frame_index == 0) {
+                    previous_frame = next_frame;
+                    return_address = frame[1];
+                }
+                frame_returns[frame_index] = frame[1];
                 ++frame_count;
                 if (next_frame <= frame_cursor ||
                     next_frame - frame_cursor > 0x100000) {
@@ -304,14 +311,6 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
                 }
                 frame_cursor = next_frame;
             }
-        } __except (EXCEPTION_EXECUTE_HANDLER) {
-            previous_frame = 0;
-            return_address = 0;
-            stack_words[0] = 0;
-            stack_words[1] = 0;
-            stack_words[2] = 0;
-            stack_words[3] = 0;
-            frame_count = 0;
         }
         if (module_base != 0 && return_address >= module_base) {
             ret_rva = return_address - module_base;
@@ -341,6 +340,22 @@ static LONG WINAPI retdec_vectored_exception_handler(EXCEPTION_POINTERS *excepti
               context != NULL ? (unsigned long)context->Esi : 0,
               context != NULL ? (unsigned long)context->Edi : 0);
     retdec_trace(message);
+    wsprintfA(message, "veh:thread=%lu parameters=%lu operation=%lu",
+        GetCurrentThreadId(), record->NumberParameters,
+        record->NumberParameters ? (unsigned long)record->ExceptionInformation[0] : 0);
+    retdec_trace(message);
+    if (context != NULL) {
+        ULONG_PTR words[32];
+        SIZE_T read_count;
+        if (ReadProcessMemory(GetCurrentProcess(), (const void *)(uintptr_t)context->Esp,
+                words, sizeof(words), &read_count) && read_count == sizeof(words)) {
+            for (ULONG index = 0; index < 32; index += 4) {
+                wsprintfA(message, "veh:stack+%02lX=%08lX,%08lX,%08lX,%08lX", index * 4,
+                    words[index], words[index+1], words[index+2], words[index+3]);
+                retdec_trace(message);
+            }
+        }
+    }
     for (frame_index = 0; frame_index < frame_count; ++frame_index) {
         wsprintfA(message, "veh:frame:%lu=0x%08lX",
                   (unsigned long)frame_index,
