@@ -22,6 +22,7 @@
 
 #include "retdec_asm_stubs.h"
 #include "kinoko/squirrel_compile_bridge.h"
+#include "kinoko/actor_collision.h"
 
 static volatile LONG retdec_actor_step_trace_active;
 static int32_t retdec_native_string_arg(int32_t vm, int32_t index, int32_t *value);
@@ -113056,6 +113057,11 @@ int32_t function_4525d0(int32_t this_ptr, float32_t x, float32_t y)
         LeaveCriticalSection(critical_section);
         return (int32_t)E_FAIL;
     }
+    /* Original 4528C9 gates both ACT layers and BitBlt commands on visibility. */
+    if (*(uint8_t *)(intptr_t)(act + 96) == 0) {
+        LeaveCriticalSection(critical_section);
+        return 0;
+    }
     layer_begin = *(int32_t *)(intptr_t)(act + 208);
     layer_end = *(int32_t *)(intptr_t)(act + 212);
     if (layer_begin == 0 || layer_end < layer_begin) {
@@ -129129,7 +129135,7 @@ static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr) {
         *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
         old_delegate = *(int32_t *)(intptr_t)(this_ptr + 36);
         *(int32_t *)(intptr_t)(this_ptr + 36) = 0;
-        retdec_release_squirrel_object(old_delegate);
+        retdec_actor_release_weak(old_delegate);
 
         function_4a94e0_this((int32_t)(intptr_t)temporary);
         function_4a97b0_this(this_ptr + 44, (int32_t)(intptr_t)&g601,
@@ -129147,7 +129153,7 @@ static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr) {
                     _InterlockedExchangeAdd(
                         (volatile LONG *)(intptr_t)(new_delegate + 8), 1);
                 }
-                retdec_release_squirrel_object(old_delegate);
+                retdec_actor_release_weak(old_delegate);
                 *(int32_t *)(intptr_t)(this_ptr + 36) = new_delegate;
             }
         }
@@ -130997,11 +131003,146 @@ static void retdec_actor_tick(int32_t actor)
     *(int32_t *)(intptr_t)(actor + 216) = 0;
 }
 
-/* Actor::Update (45EC60), reduced to the branch used by actors without a
-   collision controller.  This is the normal movement path for the title
-   animation actors: preserve previous positions, apply velocity plus any
-   parent delta, then rebuild the cached bounds consumed by visibility and
-   rendering. */
+static int32_t retdec_collision_append(int32_t *count,
+    const unsigned char *chip, const void *layout, int32_t index)
+{
+    int32_t state = (int32_t)(intptr_t)g_514300_storage;
+    KinokoCollisionRecord *records;
+    if (!retdec_collision_reserve(state + 36, (uint32_t)*count + 1, 12))
+        return 0;
+    records = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
+    records[*count].chip = chip;
+    records[*count].layout = layout;
+    records[*count].index = index;
+    ++*count;
+    if (g_514300_storage[10] < g_514300_storage[9] + *count * 12)
+        g_514300_storage[10] = g_514300_storage[9] + *count * 12;
+    return 1;
+}
+
+/* 435220/436290/4362F0: resume at the cached index, scan forward, then backward. */
+static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
+                                           int32_t layer_index, int32_t *count)
+{
+    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
+    int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
+    int32_t total = (*(int32_t *)(intptr_t)(layout + 268) -
+                     *(int32_t *)(intptr_t)(layout + 264)) / 32;
+    int32_t *cached = (int32_t *)(intptr_t)(actor + 480 + 4 * layer_index);
+    int32_t start = *cached, forward = 1, backward = 0;
+    int32_t left = (int32_t)(*(float *)(intptr_t)(actor + 440) - 24.0f);
+    int32_t top = (int32_t)(*(float *)(intptr_t)(actor + 444) - 24.0f);
+    int32_t right = (int32_t)(*(float *)(intptr_t)(actor + 448) + 24.0f);
+    int32_t bottom = (int32_t)(*(float *)(intptr_t)(actor + 452) + 24.0f);
+    int32_t max_width = *(int32_t *)(intptr_t)(layout + 240);
+    int32_t max_height = *(int32_t *)(intptr_t)(layout + 244);
+    float offset_x, offset_y;
+    int32_t offset_ix, offset_iy;
+    if (data == NULL || layer == 0 || total <= 0)
+        return 1;
+    offset_x = *(float *)(intptr_t)(layer + 144);
+    offset_y = *(float *)(intptr_t)(layer + 148);
+    offset_ix = (int32_t)offset_x;
+    offset_iy = (int32_t)offset_y;
+    if (start > 0 && start < total) {
+        int32_t record = retdec_map_record_at(layout, start);
+        int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
+        forward = right >= x;
+        backward = (int64_t)left - max_width <= x;
+    }
+    *cached = 0;
+    for (int32_t pass = 0; pass < 2; ++pass) {
+        int32_t step = pass == 0 ? 1 : -1;
+        int32_t index = pass == 0 ? start : start - forward;
+        int32_t first = 1;
+        if ((pass == 0 && !forward) || (pass == 1 && !backward))
+            continue;
+        for (; index >= 0 && index < total; index += step) {
+            int32_t record = retdec_map_record_at(layout, index);
+            int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
+            int32_t y = *(int32_t *)(intptr_t)(record + 8) + offset_iy;
+            struct retdec_mcd_chip *chip;
+            if ((step > 0 && x > right) ||
+                (step < 0 && x < (int64_t)left - max_width))
+                break;
+            if (x < (int64_t)left - max_width || x > right ||
+                y < (int64_t)top - max_height || y > bottom)
+                continue;
+            chip = retdec_mcd_find_chip(data, *(uint32_t *)(intptr_t)record);
+            if (chip == NULL)
+                continue;
+            *(float *)(intptr_t)(record + 12) =
+                (float)*(int32_t *)(intptr_t)(record + 4) + offset_x;
+            *(float *)(intptr_t)(record + 16) =
+                (float)*(int32_t *)(intptr_t)(record + 8) + offset_y;
+            if (!retdec_collision_append(count, chip->bytes, (void *)(intptr_t)record, index))
+                return 0;
+            if (pass != 0 || first)
+                *cached = index;
+            first = 0;
+        }
+    }
+    return 1;
+}
+
+static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
+{
+    int32_t count = 0;
+    int32_t layer_count = (g_514300_storage[2] - g_514300_storage[1]) / 4;
+    int32_t support;
+    if ((*(int32_t *)(intptr_t)(actor + 316) & 1) != 0) {
+        for (int32_t i = 0; i < layer_count; ++i) {
+            int32_t layout = *(int32_t *)(intptr_t)(g_514300_storage[1] + 4 * i);
+            int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
+            if (layer != 0 && *(uint8_t *)(intptr_t)(layer + 140)) {
+                int32_t *map_parent = (int32_t *)(intptr_t)(g_514300_storage[13] + 8 * i);
+                if (!retdec_collision_query_map(layout, actor, i, &count))
+                    return 0;
+                *(int32_t *)(intptr_t)(g_514300_storage[5] + 4 * i) = count;
+                if (*(int32_t *)(intptr_t)(actor + 32) == map_parent[0] &&
+                    *(int32_t *)(intptr_t)(actor + 36) != 0) {
+                    int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
+                    function_4606d0_this(actor, (int32_t)(intptr_t)empty);
+                }
+            }
+        }
+    }
+    for (int32_t i = 0; i < g_514300_storage[21]; ++i) {
+        int32_t other = *(int32_t *)(intptr_t)(g_514300_storage[17] + 4 * i);
+        if (other != actor &&
+            (*(int32_t *)(intptr_t)(other + 312) & *(int32_t *)(intptr_t)(actor + 316)) &&
+            *(float *)(intptr_t)(other + 448) + 24 >= *(float *)(intptr_t)(actor + 440) &&
+            *(float *)(intptr_t)(other + 440) - 24 <= *(float *)(intptr_t)(actor + 448)) {
+            if (!retdec_collision_append(&count,
+                *(const unsigned char **)(intptr_t)(other + 328),
+                *(const void **)(intptr_t)(other + 332),
+                *(int32_t *)(intptr_t)(other + 336)))
+                return 0;
+        }
+    }
+    support = kinoko_actor_collision_move((void *)(intptr_t)actor,
+        (const KinokoCollisionRecord *)(intptr_t)g_514300_storage[9], count, dx, dy);
+    if (support >= 0 && (*(int32_t *)(intptr_t)(actor + 316) & 1)) {
+        for (int32_t i = 0; i < layer_count; ++i) {
+            if (support < *(int32_t *)(intptr_t)(g_514300_storage[5] + 4 * i)) {
+                int32_t pair[2] = {0, 0};
+                function_45e410_this(g_514300_storage[13] + 8 * i, pair);
+                if (pair[0] != 0) {
+                    int32_t parent = *(int32_t *)(intptr_t)pair[0];
+                    int32_t object[3];
+                    function_4a9500_this(object, parent + 44);
+                    function_4606d0_this(actor, (int32_t)(intptr_t)object);
+                    retdec_release_squirrel_object(pair[1]);
+                    break;
+                }
+                retdec_release_squirrel_object(pair[1]);
+            }
+        }
+    }
+    return 1;
+}
+
+/* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
 static int32_t retdec_actor_update_motion(int32_t actor)
 {
     float parent_dx = 0.0f;
@@ -131049,8 +131190,20 @@ static int32_t retdec_actor_update_motion(int32_t actor)
     *(float32_t *)(intptr_t)(actor + 264) = parent_dx;
     *(float32_t *)(intptr_t)(actor + 268) = parent_dy;
 
-    /* 45EC60 enters this branch when no collision controller is attached. */
-    if (*(int32_t *)(intptr_t)(actor + 316) == 0) {
+    int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
+    if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
+        *(uint8_t *)(intptr_t)(animation + 25) != 0) {
+        float vx = *(float *)(intptr_t)(actor + 256);
+        float dx = vx + parent_dx;
+        float dy = *(float *)(intptr_t)(actor + 260) + parent_dy;
+        if (((*(uint32_t *)(intptr_t)(actor + 392) |
+              *(uint32_t *)(intptr_t)(actor + 236)) & 0x800000u) == 0 &&
+            *(int32_t *)(intptr_t)(actor + 296) != 0 && vx != 0) {
+            float slope_dy = fabsf(*(float *)(intptr_t)(actor + 276) * vx);
+            dy += fminf(fabsf(vx), slope_dy);
+        }
+        retdec_actor_collide_move(actor, dx, dy);
+    } else {
         *(float32_t *)(intptr_t)(actor + 240) +=
             *(float32_t *)(intptr_t)(actor + 256) + parent_dx;
         *(float32_t *)(intptr_t)(actor + 244) +=
@@ -131101,6 +131254,10 @@ static int32_t retdec_actor_update_motion(int32_t actor)
                          *(int32_t *)(intptr_t)(actor + 224));
         retdec_trace_i32("actor:motion-before-x", before_x);
         retdec_trace_i32("actor:motion-after-x", after_x);
+    }
+    if (parent != 0 && !function_4045c0(parent + 440, actor + 440)) {
+        int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
+        function_4606d0_this(actor, (int32_t)(intptr_t)empty);
     }
     retdec_release_squirrel_object(parent_pair[1]);
     return 0;

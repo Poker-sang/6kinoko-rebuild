@@ -6,6 +6,22 @@
 } } while (0)
 #define PTR(value) ((int32_t)(intptr_t)(value))
 
+static int draw_count;
+static int32_t __fastcall count_draw(void *self, void *unused, int32_t x, int32_t y) {
+    (void)self; (void)unused; (void)x; (void)y;
+    ++draw_count;
+    return 0;
+}
+
+static void position_actor(int32_t actor, float x, float y) {
+    *(float *)(intptr_t)(actor + 240) = x;
+    *(float *)(intptr_t)(actor + 244) = y;
+    *(float *)(intptr_t)(actor + 440) = x - 8;
+    *(float *)(intptr_t)(actor + 444) = y - 16;
+    *(float *)(intptr_t)(actor + 448) = x + 8;
+    *(float *)(intptr_t)(actor + 452) = y;
+}
+
 void retdec_trace(const char *message) {
     if (message && (strstr(message, "stagevm:compile-error") ||
                     strstr(message, "stagevm:failure")))
@@ -331,6 +347,181 @@ int main(int argc, char **argv) {
         CHECK(function_48aa20(vm) == top);
     }
     function_4a9d70_this(PTR(closure));
-    puts("PASS: stage creation, collision lifecycle and pair dispatch");
+    {
+        int32_t actor, animation[7] = {0};
+        function_469700();
+        CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        layout[66] = PTR(records);
+        layout[67] = PTR(records + 1);
+        layout[60] = 256;
+        layout[61] = 32;
+        *(uint8_t *)((char *)layer + 140) = 1;
+        records[0][0] = 0x443;
+        records[0][1] = 0;
+        records[0][2] = 100;
+        *(int16_t *)(chips[0].bytes + 12) = 256;
+        *(int16_t *)(chips[0].bytes + 14) = 32;
+        *(int16_t *)(chips[0].bytes + 34) = 0;
+        *(uint32_t *)(chips[0].bytes + 16) = 0;
+        CHECK(function_4693a0(PTR(layout)));
+        actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+            50, 40, -1, PTR(&g16), g483, g484, 0);
+        CHECK(actor);
+        *(int32_t *)(intptr_t)(actor + 316) = 1;
+        *(int32_t *)(intptr_t)(actor + 200) = PTR(animation);
+        *((uint8_t *)animation + 25) = 1;
+        *(float *)(intptr_t)(actor + 424) = -8;
+        *(float *)(intptr_t)(actor + 428) = -16;
+        *(float *)(intptr_t)(actor + 432) = 8;
+        *(float *)(intptr_t)(actor + 436) = 0;
+        position_actor(actor, 50, 40);
+        *(float *)(intptr_t)(actor + 256) = 2;
+        *(float *)(intptr_t)(actor + 260) = 5;
+        retdec_actor_manager_refresh(manager);
+        function_468620_this(PTR(g_514300_storage));
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 52);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 45);
+        for (int i = 0; i < 12; ++i) {
+            function_468620_this(PTR(g_514300_storage));
+            retdec_actor_update_motion(actor);
+        }
+        CHECK(*(float *)(intptr_t)(actor + 244) == 100);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+        CHECK(*(int32_t *)(intptr_t)(actor + 36) != 0);
+        *(float *)(intptr_t)(actor + 260) = -6;
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 94);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
+        CHECK(*(int32_t *)(intptr_t)(actor + 36) == 0);
+        records[0][1] = 110;
+        records[0][2] = 0;
+        *(int16_t *)(chips[0].bytes + 12) = 32;
+        *(int16_t *)(chips[0].bytes + 14) = 100;
+        layout[61] = 100;
+        position_actor(actor, 94, 80);
+        *(float *)(intptr_t)(actor + 256) = 12;
+        *(float *)(intptr_t)(actor + 260) = 0;
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 240) == 102);
+        CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
+        records[0][1] = 0;
+        records[0][2] = 20;
+        *(int16_t *)(chips[0].bytes + 12) = 256;
+        *(int16_t *)(chips[0].bytes + 14) = 32;
+        position_actor(actor, 50, 80);
+        *(float *)(intptr_t)(actor + 256) = 0;
+        *(float *)(intptr_t)(actor + 260) = -18;
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 68);
+        CHECK(*(int32_t *)(intptr_t)(actor + 288) != 0);
+        *(uint32_t *)(chips[0].bytes + 16) = 0x20;
+        position_actor(actor, 50, 80);
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 62);
+        CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
+        records[0][2] = 16;
+        *(uint32_t *)(chips[0].bytes + 16) = 0;
+        *(int16_t *)(chips[0].bytes + 12) = 32;
+        *(int16_t *)(chips[0].bytes + 34) = 1;
+        position_actor(actor, 16, 40);
+        *(float *)(intptr_t)(actor + 260) = 0;
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 32);
+        CHECK(*(float *)(intptr_t)(actor + 276) == -1);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
+        *(int16_t *)(chips[0].bytes + 34) = 2;
+        position_actor(actor, 16, 40);
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 32);
+        CHECK(*(float *)(intptr_t)(actor + 276) == 1);
+        *(uint8_t *)((char *)animation + 25) = 0;
+        position_actor(actor, 16, 40);
+        *(float *)(intptr_t)(actor + 260) = 5;
+        retdec_actor_update_motion(actor);
+        CHECK(*(float *)(intptr_t)(actor + 244) == 45);
+        CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
+        {
+            int32_t count = 0;
+            KinokoCollisionRecord *found;
+            layout[67] = PTR(records + 3);
+            layout[60] = 32;
+            layout[61] = 32;
+            for (int i = 0; i < 3; ++i) {
+                records[i][0] = 0x443;
+                records[i][1] = i * 64;
+                records[i][2] = 100;
+            }
+            position_actor(actor, 96, 100);
+            *(int32_t *)(intptr_t)(actor + 480) = 1;
+            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
+            CHECK(count == 2 && found[0].index == 1 && found[1].index == 2);
+            count = 0;
+            position_actor(actor, 16, 100);
+            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
+            CHECK(count == 1 && found[0].index == 0);
+            count = 0;
+            position_actor(actor, 144, 100);
+            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
+            CHECK(count == 1 && found[0].index == 2);
+        }
+        function_469700();
+        function_468950_this(PTR(g_514300_storage), manager);
+    }
+    if (argc > 2) {
+        CHECK(execute_file(vm, root + 2, argv[2]));
+        target = PTR(function_469a20);
+        CHECK(function_415550_this(PTR(root), PTR("SetGlobalUpdateFunction"),
+            PTR(&target), 4, PTR(function_471c70), 0) >= 0);
+        CHECK(execute_source(vm, root + 2,
+            "fadeCalls <- [];\n"
+            "Fader1 <- { FadeOut = function(a,b,c,d) { ::fadeCalls.append(0); }, "
+            "FadeIn = function(a,b,c,d) { ::fadeCalls.append(1); } };\n"
+            "StageStart <- { pl = { visible = true } };\n"
+            "updateMask <- 0x40000000;\nupdateMaskPause <- -1;\n"
+            "function UpdateGlobal() {}\n"
+            "stageChangeCount = 120;\nSetGlobalUpdateFunction(UpdateStageStart);\n"));
+        for (int i = 0; i < 121; ++i)
+            CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+        CHECK(execute_source(vm, root + 2,
+            "if (stageChangeCount != -1 || StageStart.pl.visible || updateMask != -1 || "
+            "fadeCalls.len() != 2) throw \"stage start countdown stalled\";"));
+        CHECK(function_48aa20(vm) == top);
+        {
+            int32_t player_pair[2] = {g483, g484};
+            CHECK(retdec_publish_acting_player_class(vm, PTR(root)));
+            act_resource[33] = PTR(act + 24);
+            act[24] = 1;
+            CHECK(retdec_publish_acting_player(vm, root + 2, "nativeStagePlayer",
+                PTR(act_resource), player_pair));
+            CHECK(execute_source(vm, root + 2,
+                "StageStart.pl = nativeStagePlayer;\nfadeCalls.clear();\n"
+                "stageChangeCount = 120;\nSetGlobalUpdateFunction(UpdateStageStart);\n"));
+            for (int i = 0; i < 121; ++i)
+                CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+            CHECK(*(uint8_t *)(act + 24) == 0);
+            CHECK(function_48aa20(vm) == top);
+            retdec_sqrat_release_pair(vm, player_pair);
+        }
+    }
+    {
+        int32_t draw_vtable[9] = {0}, fake_layout[2] = {0};
+        draw_vtable[8] = PTR(count_draw);
+        fake_layout[0] = PTR(draw_vtable);
+        layout_key[1] = PTR(fake_layout);
+        act_resource[3] = PTR(act);
+        act[24] = 0;
+        InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(act_resource + 5));
+        CHECK(function_4525d0(PTR(act_resource), 0, 0) == 0);
+        CHECK(draw_count == 0);
+        act[24] = 1;
+        CHECK(function_4525d0(PTR(act_resource), 0, 0) == 0);
+        CHECK(draw_count == 1);
+        DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(act_resource + 5));
+    }
+    puts("PASS: stage creation, collision lifecycle, terrain motion, cached queries and start visibility");
     return 0;
 }

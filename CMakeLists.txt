@@ -21,6 +21,9 @@ add_library(kinoko_core STATIC
 )
 target_include_directories(kinoko_core PUBLIC include)
 
+add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp)
+target_include_directories(kinoko_actor_collision PUBLIC include)
+
 # The original embeds zlib 1.2.3. Use that source for its damaged RetDec codec.
 set(KINOKO_ZLIB_DIR "${CMAKE_SOURCE_DIR}/third_party/zlib-1.2.3")
 add_library(kinoko_zlib STATIC
@@ -135,6 +138,7 @@ if(KINOKO_RETDEC_MAP_FILE)
 endif()
 set(KINOKO_D3DX9_33_LIB "${CMAKE_SOURCE_DIR}/third_party/d3dx9_33.lib")
 target_link_libraries(kinoko_retdec_rebuild PRIVATE
+    kinoko_actor_collision
     kinoko_zlib
     user32
     gdi32
