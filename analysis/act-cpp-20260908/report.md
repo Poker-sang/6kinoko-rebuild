@@ -17,8 +17,8 @@ all EXEs, build files, logs and captures, including failed attempts.
 - [x] Inspect the current ACT implementations and call sites.
 - [x] Confirm original method arguments and field access through IDA MCP.
 - [x] Move ACT resource control methods to C++ without changing their behavior.
-- [ ] Build/test and perform one bounded smoke run per diagnostic/quiet variant.
-- [ ] Record results and commit a checkpoint.
+- [x] Build/test and complete the bounded smoke conditions in both variants.
+- [x] Record results and commit a checkpoint.
 
 ## Original Evidence
 
@@ -80,3 +80,28 @@ requested close to finish (without force-terminating anything). The engine EXEs
 remain the binaries from 6537150; use new log/capture names for the next attempt.
 The original IDA worker expired before comment/save requests; function evidence
 is retained above, but no new saved IDB annotation is claimed for this batch.
+
+## Final Result
+
+The diagnostic retry used tool checkpoint af64971 and the unchanged engine EXE
+from 6537150. It entered stage one, accepted movement and a Z jump input, and
+showed the first enemy in smoke-06-enemy.png. The next operation closed the game;
+the tool confirmed closed=true. Both completed smoke runs were alive and
+responding when inspected. No further gameplay testing was performed.
+
+Build and runtime directories listed above are retained in full. Each runtime
+directory contains validation.json (build provenance) and validation-results.json
+(hashes and outcome). The diagnostic initial trace was copied to
+retdec_trace-attempt01.log before the successful retry; the active trace appends.
+No previous build, EXE, screenshot, log, or other artifact was deleted or replaced.
+
+Final EXE SHA256:
+- quiet: 34052334AC97B2F603CC590DEA78D58C7A59FF6FAF5FD37C4DBADEBA411E5779
+- diagnostic: 422A434B919DF817EAEF8C34076CA3BB1B540534B891B649CFD9489CEF6E8000
+
+ADF P0: seven migrated implementations have original field/call evidence and
+focused executable contracts; both variants passed CTest 3/3 and the requested
+game smoke. Nine assembly entry bridges are removed. Suspend/Resume remain
+compatibility implementations behind C++ entry points, with their original
+dispatch discrepancy explicitly documented. This is a bounded readability
+migration, not a claim that all native/VM behavior or existing crashes are fixed.
