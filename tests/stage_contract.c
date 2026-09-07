@@ -8,6 +8,17 @@
 
 static int draw_count;
 static int vm_failures;
+static int expected_vm_error;
+static LONG CALLBACK contract_exception(PEXCEPTION_POINTERS info) {
+    if (info->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION ||
+        info->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW) {
+        fprintf(stderr, "contract exception=%08lx rva=%08lx address=%p\n",
+            info->ExceptionRecord->ExceptionCode,
+            info->ContextRecord->Eip - (DWORD)(uintptr_t)GetModuleHandleA(NULL),
+            info->ExceptionRecord->ExceptionAddress);
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
 static int32_t __fastcall count_draw(void *self, void *unused, int32_t x, int32_t y) {
     (void)self; (void)unused; (void)x; (void)y;
     ++draw_count;
@@ -24,8 +35,8 @@ static void position_actor(int32_t actor, float x, float y) {
 }
 
 void retdec_trace(const char *message) {
-    if (message && strstr(message, "stagevm:failure-error")) ++vm_failures;
-    if (message && (strstr(message, "stagevm:compile-error") ||
+    if (!expected_vm_error && message && strstr(message, "stagevm:failure-error")) ++vm_failures;
+    if (!expected_vm_error && message && (strstr(message, "stagevm:compile-error") ||
                     strstr(message, "stagevm:failure")))
         fprintf(stderr, "%s\n", message);
 }
@@ -45,7 +56,7 @@ static int execute_source(int32_t vm, const int32_t *environment, const char *so
     script[23] = PTR(bytes);
     script[24] = size;
     result = retdec_execute_embedded_act_script(vm, PTR(script), environment);
-    if (!result && *(int32_t *)(intptr_t)(vm + 64) == 0x08000010)
+    if (!result && !expected_vm_error && *(int32_t *)(intptr_t)(vm + 64) == 0x08000010)
         fprintf(stderr, "VM: %s\n", (char *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 68) + 28));
     free(bytes);
     return result;
@@ -902,10 +913,11 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
 }
 
 static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
-    int32_t reader = 0, scripts[3], init[3], actors[2];
+    int32_t reader = 0, scripts[3], init[3], actors[3];
+    float saved_camera[4];
     int32_t create_target = PTR(function_469b40);
     int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
-    int32_t records[1][8] = {{1, -1000, 200}};
+    int32_t records[1][8] = {{1, -8000, 200}};
     struct retdec_mcd_chip chip = {0};
     struct retdec_mcd_data data = {1,&chip,0,NULL};
     unsigned char version;
@@ -913,10 +925,20 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     int failures = vm_failures;
     CHECK(function_415550_this(PTR(root), PTR("CreateActor"), PTR(&create_target),
         4, PTR(function_471df0), 0) >= 0);
+    {
+        int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
+        CHECK(retdec_sqrat_new_table(vm,globals+2));
+        CHECK(function_48e520_this(globals[3],root[3]));
+        CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
+        CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
+        CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
+        retdec_sqrat_release_pair(vm,callback);
+        retdec_sqrat_release_pair(vm,globals+2);
+    }
     CHECK(execute_source(vm, root + 2,
-        "t_enemy <- {};\ncamera <- {left=-2000.0,right=2000.0,top=-2000.0,bottom=2000.0};\n"
+        "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
         "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
-        "stageWaterLevel=10000;\n"));
+        "stageWaterLevel=10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
     CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
@@ -926,13 +948,13 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(retdec_pat_read_animations(reader, manager, 0));
     retdec_destroy_reader((int32_t *)(intptr_t)reader);
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
-    layout[0] = PTR(&g327); layout[60] = 2000; layout[61] = 32;
+    layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
     layout[66] = PTR(records); layout[67] = PTR(records + 1);
     layout[78] = PTR(layer); layout[79] = PTR(resource);
     *((uint8_t *)layer + 140) = 1;
     resource[16] = PTR(&data);
     chip.chip_id = 1;
-    *(int16_t *)(chip.bytes + 12) = 2000;
+    *(int16_t *)(chip.bytes + 12) = 16000;
     *(int16_t *)(chip.bytes + 14) = 32;
     CHECK(function_4693a0(PTR(layout)));
     function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_enemy");
@@ -971,11 +993,64 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(execute_source(vm, root + 2,
         "if (enemyA.direction!=1.0 || enemyA.vx<=0.0 || enemyB.direction!=-1.0) "
         "throw \"enemy wall reversal\";"));
+    function_4a9d70_this(PTR(init));
+    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0101");
+    actors[2] = function_463b40_this(manager, init[0], init[1], init[2],
+        600, 160, -1, PTR(&g16), 0x05000002, 0x101, 0);
+    CHECK(actors[2] && vm_failures == failures);
+    function_4a9840_this(PTR(root+1), "enemyC", actors[2]+44);
+    memcpy(saved_camera,g_retdec_camera_state+72,sizeof(saved_camera));
+    *(float *)(g_retdec_camera_state+72)=-8000;
+    *(float *)(g_retdec_camera_state+76)=-2000;
+    *(float *)(g_retdec_camera_state+80)=8000;
+    *(float *)(g_retdec_camera_state+84)=2000;
+    *(int32_t *)(intptr_t)(manager+64)=-1;
+    for (int frame=0;frame<3600;++frame) {
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        CHECK(vm_failures==failures);
+        for(int i=0;i<3;++i) {
+            for(int offset=240;offset<=244;offset+=4)
+                CHECK(_finite(*(float *)(intptr_t)(actors[i]+offset)));
+            CHECK(*(int32_t *)(intptr_t)(actors[i]+112)==0x08000100);
+            CHECK(*(float *)(intptr_t)(actors[i]+244)<210.0f);
+        }
+    }
+    CHECK(execute_source(vm,root+2,
+        "if(enemyA.user.frameCount<3600 || enemyB.user.frameCount<3600 || "
+        "enemyC.user.frameCount<3600) throw \"walking enemy reset early\";"));
+    for(int round=0;round<16;++round) {
+        CHECK(execute_source(vm,root+2,
+            "camera.left=-300; camera.right=1000;\n"
+            "enemyA.x=4000; enemyB.x=4200; enemyC.x=4400;"));
+        for(int i=0;i<3;++i) retdec_actor_tick(actors[i]);
+        CHECK(vm_failures==failures);
+        CHECK(execute_source(vm,root+2,
+            "if(enemyA.x!=-16777215 || enemyB.x!=-16777215 || enemyC.x!=-16777215) "
+            "throw \"offscreen waiting state\";\n"
+            "camera.left=-10000; camera.right=-9000;"));
+        for(int i=0;i<3;++i) retdec_actor_tick(actors[i]);
+        CHECK(vm_failures==failures);
+        const char *names[]={"enemyA","enemyB","enemyC"};
+        for(int i=0;i<3;++i) function_4a9840_this(PTR(root+1),names[i],actors[i]+44);
+        CHECK(execute_source(vm,root+2,
+            "if(enemyA.x!=enemyA.ox || enemyB.x!=enemyB.ox || enemyC.x!=enemyC.ox) "
+            "throw \"offscreen reset origin\";\n"
+            "camera.left=-8000; camera.right=8000;"));
+        for(int frame=0;frame<120;++frame)
+            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        CHECK(vm_failures==failures);
+        for(int i=0;i<3;++i) {
+            CHECK(_finite(*(float *)(intptr_t)(actors[i]+244)));
+            CHECK(*(int32_t *)(intptr_t)(actors[i]+112)==0x08000100);
+            CHECK(*(int32_t *)(intptr_t)(actors[i]+140)==0x08000100);
+        }
+    }
+    memcpy(g_retdec_camera_state+72,saved_camera,sizeof(saved_camera));
     function_469700();
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(scripts));
-    puts("PASS: full enemy script loading, independent state, walking, landing and wall reversal");
+    puts("PASS: fairy/white kedama, 16560 actor frames, collisions and 48 offscreen resets");
     return 0;
 }
 
@@ -1128,7 +1203,264 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_vm_error_unwind(int32_t vm, int32_t *root) {
+    int32_t top = function_48aa20(vm), base = *(int32_t *)(intptr_t)(vm + 52);
+    int32_t frames = *(int32_t *)(intptr_t)(vm + 100);
+    int32_t vargs = *(int32_t *)(intptr_t)(vm + 40);
+    int32_t traps = *(int32_t *)(intptr_t)(vm + 124);
+    int32_t native_depth = *(int32_t *)(intptr_t)(vm + 144);
+    int result;
+    expected_vm_error = 1;
+    result = execute_source(vm, root + 2,
+        "function ErrorLeaf(value) { throw 7; }\n"
+        "function ErrorOuter() { ErrorLeaf(3); }\nErrorOuter();");
+    expected_vm_error = 0;
+    CHECK(!result);
+    CHECK(*(int32_t *)(intptr_t)(vm + 52) == base);
+    CHECK(*(int32_t *)(intptr_t)(vm + 100) == frames);
+    CHECK(*(int32_t *)(intptr_t)(vm + 40) == vargs);
+    CHECK(*(int32_t *)(intptr_t)(vm + 124) == traps);
+    CHECK(*(int32_t *)(intptr_t)(vm + 144) == native_depth);
+    CHECK(function_48aa20(vm) == top);
+    CHECK(execute_source(vm,root+2,"afterError <- 17;\nif(afterError!=17) throw 1;"));
+    expected_vm_error = 1;
+    result = execute_source(vm, root + 2,
+        "caughtCount <- 0;\n"
+        "function CatchOuter() {\n"
+        "  try { ErrorOuter(); } catch (e) { if(e!=7) throw 99; ::caughtCount++; }\n"
+        "}\n"
+        "for(local i=0;i<64;i++) CatchOuter();\n"
+        "if(caughtCount!=64) throw 98;");
+    expected_vm_error = 0;
+    CHECK(result);
+    CHECK(*(int32_t *)(intptr_t)(vm + 52) == base);
+    CHECK(*(int32_t *)(intptr_t)(vm + 100) == frames);
+    CHECK(*(int32_t *)(intptr_t)(vm + 124) == traps);
+    CHECK(function_48aa20(vm) == top);
+    expected_vm_error = 1;
+    result = execute_source(vm,root+2,
+        "nativeCaught <- 0;\n"
+        "for(local i=0;i<32;i++) {\n"
+        "  try { ErrorOuter.call(this); } catch(e) { if(e!=7) throw 97; nativeCaught++; }\n"
+        "}\nif(nativeCaught!=32) throw 96;");
+    expected_vm_error = 0;
+    CHECK(result);
+    CHECK(*(int32_t *)(intptr_t)(vm + 52) == base);
+    CHECK(*(int32_t *)(intptr_t)(vm + 100) == frames);
+    CHECK(*(int32_t *)(intptr_t)(vm + 124) == traps);
+    CHECK(*(int32_t *)(intptr_t)(vm + 144) == native_depth);
+    CHECK(function_48aa20(vm) == top);
+    expected_vm_error = 1;
+    result = execute_source(vm,root+2,
+        "function VarError(...) { throw 7; }\nVarError(3,4,5);");
+    expected_vm_error = 0;
+    CHECK(!result);
+    CHECK(*(int32_t *)(intptr_t)(vm + 40) == vargs);
+    CHECK(*(int32_t *)(intptr_t)(vm + 52) == base);
+    CHECK(*(int32_t *)(intptr_t)(vm + 100) == frames);
+    CHECK(function_48aa20(vm) == top);
+    {
+        int32_t object[2]={g483,g484};
+        CHECK(execute_source(vm,root+2,
+            "sharedArgument <- {};\n"
+            "function DefaultArgs(a=sharedArgument,b=sharedArgument) { "
+            "if(a!=sharedArgument || b!=sharedArgument) throw 31; }\n"
+            "function ObjectVarargs(...) { if(vargc!=2 || vargv[0]!=sharedArgument || "
+            "vargv[1]!=sharedArgument) throw 32; }"));
+        CHECK(retdec_sqrat_get(PTR(root),"sharedArgument",object));
+        int32_t refs=*(int32_t *)(intptr_t)(object[1]+4);
+        CHECK(execute_source(vm,root+2,"DefaultArgs();"));
+        CHECK(execute_source(vm,root+2,"ObjectVarargs(sharedArgument,sharedArgument);"));
+        CHECK(execute_source(vm,root+2,
+            "for(local i=0;i<64;i++) { DefaultArgs(); ObjectVarargs(sharedArgument,sharedArgument); "
+            "try { VarError(sharedArgument,sharedArgument); } catch(e) { if(e!=7) throw 33; } }"));
+        CHECK(*(int32_t *)(intptr_t)(object[1]+4)==refs);
+        CHECK(*(int32_t *)(intptr_t)(vm+40)==vargs);
+        CHECK(execute_source(vm,root+2,
+            "function OuterFactory(value) {\n"
+            " local first=function():(value) { return function():(value) { return value; }; };\n"
+            " return first();\n}\n"
+            "captureSymbol <- sharedArgument;\n"
+            "function SymbolCaptured():(captureSymbol) { return captureSymbol; }\n"
+            "if(OuterFactory(sharedArgument)()!=sharedArgument || SymbolCaptured()!=sharedArgument) "
+            "throw \"closure capture source\";"));
+        retdec_sqrat_release_pair(vm,object);
+    }
+    CHECK(execute_source(vm,root+2,
+        "callableObject <- delegate { _call=function(env,a,b) { return a*10+b; } } : {};\n"
+        "function MetaNested(v) { local second=5; return ::callableObject(v,second); }\n"
+        "if(MetaNested(7)!=75) throw \"metacall argument base\";"));
+    {
+        int32_t old_handler[2]={g483,g484};
+        retdec_squirrel_assign(old_handler,(int32_t *)(intptr_t)(vm+72));
+        CHECK(execute_source(vm,root+2,
+            "errorObject <- {code=13};\nhandlerCalls <- 0;\nhandlerError <- null;\n"
+            "seterrorhandler(function(e) { ::handlerCalls++; ::handlerError=e; });"));
+        expected_vm_error=1;
+        result=execute_source(vm,root+2,"throw errorObject;");
+        expected_vm_error=0;
+        CHECK(!result);
+        CHECK(execute_source(vm,root+2,
+            "if(handlerCalls!=1 || handlerError!=errorObject) throw \"error object lost\";\n"
+            "try { ErrorOuter.pcall(this); } catch(e) { if(e!=7) throw 1; }\n"
+            "if(handlerCalls!=1) throw \"pcall raised error hook\";"));
+        retdec_squirrel_assign((int32_t *)(intptr_t)(vm+72),old_handler);
+        retdec_release_squirrel_value(old_handler);
+        CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
+        CHECK(function_48aa20(vm)==top);
+    }
+    {
+        int32_t manager = PTR(g_retdec_actor_manager_state), init[3];
+        CHECK(execute_source(vm,root+2,
+            "failedSteps <- 0;\nhealthySteps <- 0;\n"
+            "function FailureStep() { ::failedSteps++; ErrorOuter(); }\n"
+            "function HealthyStep() { ::healthySteps++; }\n"
+            "function InitErrorActor(bad) { updateGroup=1; vx=1.0; "
+            "SetUpdateFunction(bad ? ::FailureStep : ::HealthyStep); }"));
+        function_4aa3a0_this(PTR(root+1), PTR(init), "InitErrorActor");
+        int32_t broken = function_463b40_this(manager, init[0],init[1],init[2],
+            100,200,-1,PTR(&g16),0x01000008,1,0);
+        int32_t healthy = function_463b40_this(manager, init[0],init[1],init[2],
+            300,200,-1,PTR(&g16),0x01000008,0,0);
+        CHECK(broken && healthy);
+        *(unsigned char *)(intptr_t)(broken+40)=1;
+        *(unsigned char *)(intptr_t)(healthy+40)=1;
+        *(int32_t *)(intptr_t)(manager+64)=1;
+        expected_vm_error=1;
+        for(int frame=0;frame<64;++frame)
+            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        expected_vm_error=0;
+        CHECK(execute_source(vm,root+2,
+            "if(failedSteps!=1 || healthySteps!=64) throw \"update error counts\";"));
+        CHECK(*(int32_t *)(intptr_t)(broken+112)!=0x08000100);
+        CHECK(*(int32_t *)(intptr_t)(broken+116)==0);
+        CHECK(*(int32_t *)(intptr_t)(healthy+112)==0x08000100);
+        CHECK(execute_source(vm,root+2,
+            "if(failedSteps!=1 || healthySteps!=64) throw \"update error retirement\";"));
+        CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
+        CHECK(function_48aa20(vm)==top);
+        function_469700();
+        function_4a9d70_this(PTR(init));
+    }
+    {
+        int32_t transition[2]={g483,g484};
+        if(retdec_sqrat_get(PTR(root),"UpdateStageChange",transition)) {
+            CHECK(execute_source(vm,root+2,
+                "reentryLoads <- 0;\nreentrySaves <- 0;\n"
+                "function DisableInput() {}\n"
+                "function SavePlayerState() { ::reentrySaves++; }\n"
+                "function LoadStage(name) { ::reentryLoads++; }\n"
+                "stageNameNext=\"w0-s01a.act\"; stageChangeCount=0;\n"
+                "SetGlobalUpdateFunction(UpdateStageChange);"));
+            for(int frame=0;frame<120;++frame)
+                CHECK(retdec_actor_step_callback(PTR(g612))>=0);
+            CHECK(execute_source(vm,root+2,
+                "if(reentryLoads!=1 || reentrySaves!=1 || stageChangeCount!=-1) "
+                "throw \"repeated stage reentry\";\nSetGlobalUpdateFunction(null);"));
+            CHECK(execute_source(vm,root+2,
+                "failedGlobalCalls <- 0;\n"
+                "function FailedGlobal() { ::failedGlobalCalls++; throw 13; }\n"
+                "SetGlobalUpdateFunction(FailedGlobal);"));
+            int32_t old_mask=g459;
+            g459=0;
+            expected_vm_error=1;
+            for(int frame=0;frame<64;++frame) function_469900();
+            expected_vm_error=0;
+            g459=old_mask;
+            CHECK(execute_source(vm,root+2,
+                "if(failedGlobalCalls!=1) throw \"global error repeated\";"));
+            CHECK(g612[6]==0);
+            CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
+            CHECK(function_48aa20(vm)==top);
+        }
+        retdec_sqrat_release_pair(vm,transition);
+    }
+    puts("PASS: uncaught nested script errors restore VM frame, stack and varargs");
+    return 0;
+}
+
+static void *retired_vm_stack;
+static int32_t relocate_vm_stack(int32_t vm) {
+    int32_t size = *(int32_t *)(intptr_t)(vm + 28);
+    int32_t capacity = *(int32_t *)(intptr_t)(vm + 32);
+    int32_t *copy = (int32_t *)malloc((size_t)capacity * 8);
+    if (!copy || retired_vm_stack) return -1;
+    retired_vm_stack = *(void **)(intptr_t)(vm + 24);
+    memcpy(copy, retired_vm_stack, (size_t)size * 8);
+    *(int32_t *)(intptr_t)(vm + 24) = PTR(copy);
+    function_48a4f0(vm, 12345);
+    return 1;
+}
+
+static int test_native_stack_relocation(int32_t vm, int32_t *root) {
+    CHECK(retdec_sqrat_set_native_closure(vm, root + 2, "RelocateStack",
+        PTR(relocate_vm_stack), NULL, 0));
+    CHECK(execute_source(vm,root+2,
+        "relocationResult <- RelocateStack();\n"
+        "if(relocationResult!=12345) throw \"native return used retired stack\";"));
+    CHECK(retired_vm_stack);
+    free(retired_vm_stack);
+    retired_vm_stack = NULL;
+    puts("PASS: native return survives VM stack relocation");
+    return 0;
+}
+
+static int test_branch_motion(int32_t manager) {
+    const char *paths[] = {"data/map/w1-c01a.act", "data/map/w1-c01b.act", "data/map/w1-c01a.act"};
+    for (int round = 0; round < 3; ++round) {
+        int32_t act[60];
+        function_427530(PTR(act));
+        CHECK(function_428000(PTR(act), paths[round]));
+        CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
+            int32_t layer = *(int32_t *)(intptr_t)slot;
+            const char *name = retdec_std_string_data(layer + 112);
+            if (strncmp(name,"te",2) != 0 && strncmp(name,"wa",2) != 0) continue;
+            int32_t head = *(int32_t *)(intptr_t)(layer + 180);
+            for (int32_t node = *(int32_t *)(intptr_t)head; node != head;
+                 node = *(int32_t *)(intptr_t)node) {
+                int32_t key = *(int32_t *)(intptr_t)(node + 8);
+                int32_t layout = *(int32_t *)(intptr_t)(key + 4);
+                if (retdec_map_chip_data(layout)) CHECK(function_4693a0(layout));
+            }
+        }
+        for (int direction = -1; direction <= 1; direction += 2) {
+            int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
+                round == 1 ? 330.0f : 3120.0f, round == 1 ? 543.0f : 895.0f,
+                (float)direction, PTR(&g16), g483, g484, 0);
+            CHECK(actor);
+            function_462280_this(actor, round == 1 ? 615 : 335);
+            *(int32_t *)(intptr_t)(actor + 316) = 1;
+            *(float *)(intptr_t)(actor + 256) = direction * 2.5f;
+            *(float *)(intptr_t)(actor + 260) = -9.0f;
+            retdec_actor_manager_refresh(manager);
+            for (int frame = 0; frame < 240; ++frame) {
+                function_468620_this(PTR(g_514300_storage));
+                retdec_actor_update_motion(actor);
+                float *y = (float *)(intptr_t)(actor + 244);
+                float *vy = (float *)(intptr_t)(actor + 260);
+                if (!_finite(*y) || !_finite(*(float *)(intptr_t)(actor + 308)))
+                    fprintf(stderr,"branch motion invalid round=%d dir=%d frame=%d xy=(%g,%g) vy=%g pitch=%g\n",
+                        round,direction,frame,*(float *)(intptr_t)(actor+240),*y,*vy,
+                        *(float *)(intptr_t)(actor+276));
+                CHECK(_finite(*y) && _finite(*(float *)(intptr_t)(actor + 308)));
+                if (*(int32_t *)(intptr_t)(actor + 288) && *vy < 0) *vy = 0;
+                if (*(int32_t *)(intptr_t)(actor + 296) && *vy >= 0) *vy = -9;
+                else if (*vy < 9) *vy += 0.38f;
+            }
+            function_45dbc0_this(actor);
+            retdec_actor_manager_refresh(manager);
+        }
+        function_469700();
+        CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        retdec_destroy_cact_object(PTR(act));
+    }
+    puts("PASS: native branch-return motion stays finite across 1440 contact frames");
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    AddVectoredExceptionHandler(1, contract_exception);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -1148,6 +1480,7 @@ int main(int argc, char **argv) {
     CHECK(vm != 0);
     g644 = (char *)(intptr_t)vm;
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_native_stack_relocation(vm, root) == 0);
     function_48ab90(vm, root[2], root[3]);
     CHECK(function_4c6c20(vm) == 0);
     function_48aa50(vm);
@@ -1590,6 +1923,11 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2,
             "if (stageChangeCount != -1 || StageStart.pl.visible || updateMask != -1 || "
             "fadeCalls.len() != 2) throw \"stage start countdown stalled\";"));
+        for (int i = 0; i < 16; ++i)
+            CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+        CHECK(execute_source(vm, root + 2,
+            "if (stageChangeCount != -1 || fadeCalls.len() != 2) "
+            "throw \"retired stage callback still running\";"));
         CHECK(function_48aa20(vm) == top);
         {
             int32_t player_pair[2] = {g483, g484};
@@ -1862,6 +2200,9 @@ int main(int argc, char **argv) {
         CHECK(test_enemy_scripts(manager, vm, root) == 0);
     if (argc > 8)
         CHECK(test_stone_block(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_branch_motion(manager) == 0);
+    CHECK(test_vm_error_unwind(vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;

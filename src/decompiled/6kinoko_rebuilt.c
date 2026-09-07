@@ -127025,19 +127025,22 @@ static void retdec_actor_release_weak(int32_t control) {
             (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
 }
 
+static void retdec_clear_script_callback(int32_t callback) {
+    int32_t state[7] = {0};
+    retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
+    *(int32_t *)(intptr_t)callback = state[0];
+    function_4a95c0_this(callback + 4, (int32_t)(intptr_t)(state + 1));
+    function_4a95c0_this(callback + 16, (int32_t)(intptr_t)(state + 4));
+    function_4a9d70_this((int32_t)(intptr_t)(state + 4));
+    function_4a9d70_this((int32_t)(intptr_t)(state + 1));
+}
+
 /* 45FB90 clears the script instance and its callbacks, not the saved initializer. */
 static int32_t function_45fb90_this(int32_t actor) {
     int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
     if (function_4a9a30_this(actor + 44) == 0x0A008000) {
-        for (int32_t offset = 92; offset <= 120; offset += 28) {
-            int32_t state[7] = {0};
-            retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
-            *(int32_t *)(intptr_t)(actor + offset) = state[0];
-            function_4a95c0_this(actor + offset + 4, (int32_t)(intptr_t)(state + 1));
-            function_4a95c0_this(actor + offset + 16, (int32_t)(intptr_t)(state + 4));
-            function_4a9d70_this((int32_t)(intptr_t)(state + 4));
-            function_4a9d70_this((int32_t)(intptr_t)(state + 1));
-        }
+        for (int32_t offset = 92; offset <= 120; offset += 28)
+            retdec_clear_script_callback(actor + offset);
         function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g601,
                             (int32_t)(intptr_t)empty);
         function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g600,
@@ -130921,16 +130924,43 @@ static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
 /* 45E120 is Actor::Step.  The callback is a SquirrelFunction stored at
    Actor+0x5c; invoking it is what lets title actors update their own y
    coordinates before the frame timer advances. */
+/* Observe the first invalid numeric state without changing gameplay or the VM. */
+static void retdec_trace_invalid_actor(const char *phase, int32_t actor) {
+    static volatile LONG count;
+    static const int32_t offsets[]={240,244,256,260,264,268,304,308,440,444,448,452};
+    uint32_t bits[12];
+    int invalid=0;
+    if(!actor) return;
+    for(int i=0;i<12;++i) {
+        memcpy(bits+i,(const void *)(intptr_t)(actor+offsets[i]),4);
+        invalid |= (bits[i]&0x7f800000u)==0x7f800000u;
+    }
+    if(invalid && InterlockedIncrement(&count)<=32) {
+        char message[512];
+        sprintf_s(message,sizeof(message),
+            "actor:invalid-state frame=%d phase=%s actor=%08X take=%d "
+            "xy=%08X,%08X v=%08X,%08X parentDelta=%08X,%08X free=%08X,%08X "
+            "bounds=%08X,%08X,%08X,%08X step=%08X,%08X",
+            g848,phase,(uint32_t)actor,*(int32_t *)(intptr_t)(actor+208),
+            bits[0],bits[1],bits[2],bits[3],bits[4],bits[5],bits[6],bits[7],
+            bits[8],bits[9],bits[10],bits[11],
+            *(uint32_t *)(intptr_t)(actor+112),*(uint32_t *)(intptr_t)(actor+116));
+        retdec_trace(message);
+    }
+}
+
 static int32_t retdec_actor_step_callback(int32_t state_ptr)
 {
     int32_t vm;
     int32_t result;
+    int32_t base;
 
     if (state_ptr == 0)
         return -1;
     vm = *(int32_t *)(intptr_t)state_ptr;
     if (vm == 0)
         return -1;
+    base = function_48aa20(vm);
 
     /* SquirrelFunction<> pushes its bound environment and callable, then
        calls with one argument and removes the two temporary stack entries. */
@@ -130945,6 +130975,7 @@ static int32_t retdec_actor_step_callback(int32_t state_ptr)
     InterlockedExchange(&retdec_actor_step_trace_active, 0);
     if (result < 0) {
         retdec_trace_i32("actor:step-call-failed", result);
+        function_48c910(vm, base);
         return result;
     }
     return function_48aa30(vm, 2);
@@ -130998,7 +131029,12 @@ static void retdec_actor_tick(int32_t actor)
         retdec_trace_i32("actor:step-y-before", y_bits);
     }
     if (callback_type == 0x08000100) {
+        retdec_trace_invalid_actor("before-script",actor);
         step_result = retdec_actor_step_callback(actor + 92);
+        retdec_trace_invalid_actor("after-script",actor);
+        /* 45E180..45E1B6 replaces a failing update with an empty SquirrelFunction. */
+        if (step_result < 0)
+            retdec_clear_script_callback(actor + 92);
         if (step_trace_index <= 64)
             retdec_trace_i32("actor:step-result", step_result);
         if (step_trace_index <= 64 &&
@@ -131277,6 +131313,8 @@ static int32_t retdec_actor_update_motion(int32_t actor)
     if (actor == 0)
         return 0;
 
+    retdec_trace_invalid_actor("before-motion",actor);
+
     *(float32_t *)(intptr_t)(actor + 248) =
         *(float32_t *)(intptr_t)(actor + 240);
     *(float32_t *)(intptr_t)(actor + 252) =
@@ -131348,6 +131386,7 @@ static int32_t retdec_actor_update_motion(int32_t actor)
         function_4606d0_this(actor, (int32_t)(intptr_t)empty);
     }
     retdec_release_squirrel_object(parent_pair[1]);
+    retdec_trace_invalid_actor("after-motion",actor);
     return 0;
 }
 
@@ -132358,9 +132397,11 @@ static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
     int32_t vm = *(int32_t *)(intptr_t)(actor + 120);
     int32_t base = function_48aa20(vm);
     int32_t result;
+    retdec_trace_invalid_actor("before-collision",actor);
     function_4a9500_this(argument, other + 44);
     result = function_45e020_this(actor + 120, (int32_t)(intptr_t)argument,
                                   argument[1], argument[2]);
+    retdec_trace_invalid_actor("after-collision",actor);
     if (result < 0) {
         retdec_trace("actor:collision-callback-failed");
         function_48c910(vm, base);
@@ -141435,7 +141476,8 @@ int32_t function_469900(void) {
             retdec_trace_i32("stagevm:global-func-type", g612[5]);
             retdec_trace_i32("stagevm:global-func-data", g612[6]);
         }
-        retdec_actor_step_callback((int32_t)(intptr_t)g612);
+        if (retdec_actor_step_callback((int32_t)(intptr_t)g612) < 0)
+            retdec_clear_script_callback((int32_t)(intptr_t)g612);
     }
     int32_t v2 = function_471060(); // 0x46995c
     int32_t v3 = v2; // 0x469969
@@ -199135,40 +199177,14 @@ int32_t function_48a2d0(int32_t a1) {
 
 // Address range: 0x48a300 - 0x48a366
 int32_t function_48a300(int32_t a1) {
-    int32_t v1 = function_491880(-1); // 0x48a30b
-    int32_t v2 = *(int32_t *)v1; // 0x48a310
-    int32_t result = *(int32_t *)(v1 + 4); // 0x48a312
-    int32_t * v3; // 0x48a32d
-    int32_t * v4; // 0x48a331
-    switch (v2) {
-        default: {
-            if (v2 != 0x1000001) {
-                // 0x48a363
-                return result;
-            }
-        }
-        case 0x8000200: {
-        }
-        case 0x8000100: {
-            // 0x48a32d
-            v3 = (int32_t *)(a1 + 76);
-            v4 = (int32_t *)(a1 + 72);
-            *v3 = result;
-            *v4 = v2;
-            if ((v2 & 0x8000000) != 0) {
-                int32_t * v5 = (int32_t *)(result + 4); // 0x48a342
-                *v5 = *v5 + 1;
-            }
-            // break -> 0x48a345
-            break;
-        }
+    int32_t *value=(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(a1+24)+
+        8*(*(int32_t *)(intptr_t)(a1+48)-1));
+    if(value[0]==0x08000100 || value[0]==0x08000200 || value[0]==g483) {
+        /* 48A32D saves the old handler before assignment and releases that value. */
+        retdec_squirrel_assign((int32_t *)(intptr_t)(a1+72),value);
+        return function_4917b0_this(a1,1);
     }
-    if ((*v4 & 0x8000000) != 0) {
-        int32_t * v6 = (int32_t *)(*v3 + 4); // 0x48a34e
-        *v6 = *v6 - 1;
-    }
-    // 0x48a35a
-    return function_491760();
+    return value[1];
 }
 
 // Address range: 0x48a370 - 0x48a3d6
@@ -199815,7 +199831,7 @@ int32_t function_48ace0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
                     *(int32_t *)(failure_ci + 8);
                 int32_t failure_data =
                     *(int32_t *)(failure_ci + 12);
-                int32_t failure_proto = failure_data != 0
+                int32_t failure_proto = failure_type == 0x08000100 && failure_data != 0
                     ? *(int32_t *)(failure_data + 36) : 0;
                 retdec_trace_i32("48ace0:failure-closure-type",
                                  failure_type);
@@ -210217,6 +210233,20 @@ int32_t function_492c90(int32_t a1, int32_t a2, int32_t a3) {
 }
 
 // Address range: 0x492d00 - 0x492db2
+int32_t function_492d00(int32_t error_ptr) {
+    int32_t vm = retdec_stack_vm();
+    int32_t result[2] = {g483, g484};
+    if (*(int32_t *)(intptr_t)(vm + 72) == g483)
+        return 0;
+    function_491820_this(vm, vm + 56);
+    function_491820_this(vm, error_ptr);
+    function_497680_this(vm, vm + 72, 2, *(int32_t *)(intptr_t)(vm + 48) - 2,
+        (int32_t)(intptr_t)result, 0);
+    function_4917b0_this(vm, 2);
+    retdec_release_squirrel_value(result);
+    return 0;
+}
+#if 0
 int32_t function_492d00(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x492d10
     int32_t result = &v1; // 0x492d1e
@@ -210250,6 +210280,8 @@ int32_t function_492d00(int32_t a1) {
     abort();
     // UNREACHABLE
 }
+
+#endif
 
 // Address range: 0x492dc0 - 0x492ecf
 int32_t function_492dc0(int32_t a1, int32_t a2) {
@@ -212526,7 +212558,7 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     }
     if (v7 != a3) {
         int32_t v11 = *(int32_t *)(v5 + 84); // 0x494170
-        if (v7 > a3 == (v11 != 0)) {
+        if (v11 != 0 && a3 < v7) {
             int32_t v12 = v11 + a3 - v7; // 0x494186
             v8 = a3;
             v9 = v4;
@@ -212537,6 +212569,7 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 int32_t * v16 = (int32_t *)v15; // 0x4941b8
                 int32_t * v17 = (int32_t *)(v15 + 4); // 0x4941bd
                 int32_t v18 = *v17; // 0x4941bd
+                int32_t previous_type = *v16;
                 int32_t v19 = *(int32_t *)(a1 + 52) + 8 * v14; // 0x4941c0
                 int32_t v20 = *(int32_t *)(v19 + 4); // 0x4941c6
                 *v17 = v20;
@@ -212549,14 +212582,7 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     *v22 = *v22 + 1;
                 }
                 int32_t * v23; // 0x4941e9
-                if ((*v16 & 0x8000000) != 0) {
-                    // 0x4941e6
-                    v23 = (int32_t *)(v18 + 4);
-                    int32_t old_ref = *v23;
-                    *v23 = old_ref - 1;
-                    retdec_trace_direct_ref_decrement(
-                        "494120:copy-old", v18, old_ref, *v23);
-                }
+                retdec_squirrel_release(previous_type, v18);
                 // 0x4941f5
                 v14++;
                 v13 += 8;
@@ -212568,6 +212594,7 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     v16 = (int32_t *)v15;
                     v17 = (int32_t *)(v15 + 4);
                     v18 = *v17;
+                    previous_type = *v16;
                     v19 = *(int32_t *)(a1 + 52) + 8 * v14;
                     v20 = *(int32_t *)(v19 + 4);
                     *v17 = v20;
@@ -212578,14 +212605,7 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                         v22 = (int32_t *)(v20 + 4);
                         *v22 = *v22 + 1;
                     }
-                    if ((*v16 & 0x8000000) != 0) {
-                        // 0x4941e6
-                        v23 = (int32_t *)(v18 + 4);
-                        int32_t old_ref = *v23;
-                        *v23 = old_ref - 1;
-                        retdec_trace_direct_ref_decrement(
-                            "494120:copy-old-loop", v18, old_ref, *v23);
-                    }
+                    retdec_squirrel_release(previous_type, v18);
                     // 0x4941f5
                     v14++;
                     v13 += 8;
@@ -212607,16 +212627,14 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                 int32_t * v26 = (int32_t *)(v10 + 24); // 0x494243
                 int32_t v27 = v25; // 0x494240
                 int32_t v28 = 8 * (v7 + a4); // 0x494240
-                int32_t v29 = v4; // 0x494240
-                v29 -= 4;
-                *(int32_t *)v29 = *v26 + v28;
                 function_48d1b0_this(
                     v10 + 36,
-                    (int32_t *)(intptr_t)*(int32_t *)v29);
+                    (int32_t *)(intptr_t)(*v26 + v28));
                 int32_t v30 = *v26 + v28; // 0x494254
                 int32_t * v31 = (int32_t *)v30; // 0x494254
                 int32_t * v32 = (int32_t *)(v30 + 4); // 0x494262
                 int32_t v33 = *v32; // 0x494262
+                int32_t previous_type = *v31;
                 *v32 = g484;
                 int32_t v34 = (int32_t)g483; // 0x494268
                 *v31 = v34;
@@ -212627,30 +212645,22 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                     *v35 = *v35 + 1;
                 }
                 int32_t * v36; // 0x494287
-                if ((*v31 & 0x8000000) != 0) {
-                    // 0x494287
-                    v36 = (int32_t *)(v33 + 4);
-                    int32_t old_ref = *v36;
-                    *v36 = old_ref - 1;
-                    retdec_trace_direct_ref_decrement(
-                        "494120:fill-old", v33, old_ref, *v36);
-                }
+                retdec_squirrel_release(previous_type, v33);
                 // 0x494293
                 v27--;
                 v28 += 8;
                 v8 = a3;
-                v9 = v29;
+                v9 = v4;
                 while (v27 != 0) {
                     // 0x494243
-                    v29 -= 4;
-                    *(int32_t *)v29 = *v26 + v28;
                     function_48d1b0_this(
                         v10 + 36,
-                        (int32_t *)(intptr_t)*(int32_t *)v29);
+                        (int32_t *)(intptr_t)(*v26 + v28));
                     v30 = *v26 + v28;
                     v31 = (int32_t *)v30;
                     v32 = (int32_t *)(v30 + 4);
                     v33 = *v32;
+                    previous_type = *v31;
                     *v32 = g484;
                     v34 = (int32_t)g483;
                     *v31 = v34;
@@ -212659,19 +212669,12 @@ int32_t function_494120(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
                         v35 = (int32_t *)(*v32 + 4);
                         *v35 = *v35 + 1;
                     }
-                    if ((*v31 & 0x8000000) != 0) {
-                        // 0x494287
-                        v36 = (int32_t *)(v33 + 4);
-                        int32_t old_ref = *v36;
-                        *v36 = old_ref - 1;
-                        retdec_trace_direct_ref_decrement(
-                            "494120:fill-old-loop", v33, old_ref, *v36);
-                    }
+                    retdec_squirrel_release(previous_type, v33);
                     // 0x494293
                     v27--;
                     v28 += 8;
                     v8 = a3;
-                    v9 = v29;
+                    v9 = v4;
                 }
             }
         }
@@ -213994,6 +213997,68 @@ int32_t function_494da0(int32_t * a1, int32_t * a2, int32_t * a3, int32_t a4, in
 }
 
 // Address range: 0x4950c0 - 0x49535c
+/* SQVM::CLOSURE_OP, 4950C0: reserve and populate real SQObject vectors. */
+int32_t function_4950c0(int32_t target, int32_t proto) {
+    int32_t vm = retdec_stack_vm();
+    int32_t stack = *(int32_t *)(intptr_t)(vm + 24);
+    int32_t target_index = (target >= stack && target < stack + 8 *
+        *(int32_t *)(intptr_t)(vm + 28)) ? (target - stack) / 8 : -1;
+    int32_t closure = (int32_t)(intptr_t)malloc(64);
+    int32_t owned[2] = {0x08000100, closure};
+    int32_t null_value[2] = {g483,g484};
+    retdec_trace_i32("4950c0:destination", target);
+    retdec_trace_i32("4950c0:prototype", proto);
+    retdec_trace_i32("4950c0:prototype-word0", *(int32_t *)(intptr_t)proto);
+    retdec_trace_i32("4950c0:prototype-word1", *(int32_t *)(intptr_t)(proto+4));
+    if (!closure) return 0;
+    function_48ba20_this(closure, *(int32_t *)(intptr_t)(vm+140), proto);
+    ++*(int32_t *)(intptr_t)(closure+4);
+    for(int32_t kind=0;kind<2;++kind) {
+        int32_t count=*(int32_t *)(intptr_t)(proto+(kind ? 84 : 76));
+        int32_t vector=closure+(kind ? 52 : 40);
+        if(count) {
+            int32_t storage=function_498590(*(int32_t *)(intptr_t)vector,8*count);
+            if(!storage) { retdec_release_squirrel_value(owned); return 0; }
+            *(int32_t *)(intptr_t)vector=storage;
+            *(int32_t *)(intptr_t)(vector+8)=count;
+        }
+        for(int32_t i=0;i<count;++i) {
+            int32_t base=*(int32_t *)(intptr_t)(vm+52);
+            int32_t source;
+            stack=*(int32_t *)(intptr_t)(vm+24);
+            if(kind) {
+                int32_t slot=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(proto+88)+4*i);
+                source=stack+8*(base+slot);
+            } else {
+                int32_t outer=*(int32_t *)(intptr_t)(proto+80)+20*i;
+                int32_t type=*(int32_t *)(intptr_t)outer;
+                int32_t slot=*(int32_t *)(intptr_t)(outer+16);
+                if(type==1) {
+                    function_48d1b0_this(vector,null_value);
+                    int32_t output=*(int32_t *)(intptr_t)vector+8*i;
+                    if(!(char)function_4948a0(stack+8*base,outer+12,output,0,1)) {
+                        function_499ca0(vm,outer+12);
+                        retdec_release_squirrel_value(owned);
+                        return 0;
+                    }
+                    continue;
+                }
+                if(type==0) source=stack+8*(base+slot);
+                else if(type==2) {
+                    int32_t ci=*(int32_t *)(intptr_t)(vm+132);
+                    int32_t parent=*(int32_t *)(intptr_t)(ci+12);
+                    source=*(int32_t *)(intptr_t)(parent+40)+8*slot;
+                } else continue;
+            }
+            function_48d1b0_this(vector,(int32_t *)(intptr_t)source);
+        }
+    }
+    if(target_index>=0) target=*(int32_t *)(intptr_t)(vm+24)+8*target_index;
+    retdec_squirrel_assign((int32_t *)(intptr_t)target,owned);
+    retdec_release_squirrel_value(owned);
+    return 1;
+}
+#if 0
 int32_t function_4950c0(int32_t a1, int32_t a2) {
     // 0x4950c0
     /* The original __thiscall receiver is the active SQVM (ECX). */
@@ -214234,6 +214299,8 @@ int32_t function_4950c0(int32_t a1, int32_t a2) {
     }
     goto lab_0x495175;
 }
+
+#endif
 
 /* SQVM::_OP_CLOSURE with stable addresses.  The generated Execute body
  * reuses v82/v103 for native-call scratch storage, which can turn the target
@@ -218707,10 +218774,11 @@ static int32_t retdec_clean_vm_call_meta(int32_t vm, int32_t *callee,
     saved_values[0] = callee[0];
     saved_values[1] = callee[1];
     for (index = 0; index < nargs; ++index) {
-        int32_t *source = (int32_t *)(intptr_t)
-            retdec_clean_vm_slot(vm, args_index + index);
-        if (source == NULL)
+        int32_t *source;
+        if (args_index + index < 0 || args_index + index >= *(int32_t *)(intptr_t)(vm + 28))
             return 0;
+        source = (int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 24) +
+            8 * (args_index + index));
         saved_values[index * 2 + 2] = source[0];
         saved_values[index * 2 + 3] = source[1];
     }
@@ -218719,7 +218787,7 @@ static int32_t retdec_clean_vm_call_meta(int32_t vm, int32_t *callee,
         function_491820_this(vm, saved_values + index * 2);
 
     call_result = function_497850_this(
-        vm, callee[1], 11, count,
+        vm, saved_values[1], 11, count,
         (int32_t)(intptr_t)meta_result);
     if (call_result != 0 && target != 0xff) {
         target_slot = retdec_clean_vm_slot(vm, target);
@@ -218740,7 +218808,7 @@ static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
                                     int32_t raiseerror) {
     int32_t *callee = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
     int32_t call_base = *(int32_t *)(intptr_t)(vm + 52) + arg2;
-    int32_t target = retdec_clean_vm_slot(vm, arg0);
+    int32_t target;
     int32_t native_result[2] = { g483, g484 };
     int32_t constructor[2] = { g483, g484 };
     int32_t instance[2] = { g483, g484 };
@@ -218771,6 +218839,8 @@ static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
                 *(int32_t *)(intptr_t)(vm + 152) = arg0;
                 *(int32_t *)(intptr_t)(vm + 156) = 0;
             }
+            /* 495959 reloads _stack after CallNative, which may have resized it. */
+            target = retdec_clean_vm_slot(vm, arg0);
             if (arg0 != 0xff && target != 0)
                 retdec_squirrel_assign(
                     (int32_t *)(intptr_t)target, native_result);
@@ -218783,6 +218853,7 @@ static int32_t retdec_clean_vm_call(int32_t vm, int32_t instruction_ptr,
                 (int32_t)(intptr_t)constructor);
             if (call_result == 0)
                 return 0;
+            target = retdec_clean_vm_slot(vm, arg0);
             if (arg0 != 0xff && target != 0)
                 retdec_squirrel_assign(
                     (int32_t *)(intptr_t)target, instance);
@@ -218866,6 +218937,88 @@ static int32_t retdec_clean_vm_instanceof(int32_t vm, int32_t class_index,
     return retdec_clean_vm_assign_bool(vm, target, result);
 }
 
+static void retdec_clean_vm_pop_failed_frame(int32_t vm, int restore_stack) {
+    int32_t ci = *(int32_t *)(intptr_t)(vm + 132);
+    int32_t generator = *(int32_t *)(intptr_t)(ci + 16);
+    int32_t vargs = *(uint16_t *)(intptr_t)(ci + 44);
+    int32_t frames;
+    if (generator != 0)
+        function_491910_this(generator);
+    if (restore_stack) {
+        *(int32_t *)(intptr_t)(vm + 52) -= *(int32_t *)(intptr_t)(ci + 24);
+        *(int32_t *)(intptr_t)(vm + 48) = *(int32_t *)(intptr_t)(vm + 52) +
+            *(int32_t *)(intptr_t)(ci + 28);
+    }
+    for (int32_t i = 0; i < vargs; ++i) {
+        int32_t index = --*(int32_t *)(intptr_t)(vm + 40);
+        retdec_release_squirrel_value((int32_t *)(intptr_t)(
+            *(int32_t *)(intptr_t)(vm + 36) + 8 * index));
+    }
+    frames = --*(int32_t *)(intptr_t)(vm + 100);
+    retdec_release_squirrel_value((int32_t *)(intptr_t)(ci + 8));
+    *(int32_t *)(intptr_t)(vm + 132) = frames != 0 ?
+        *(int32_t *)(intptr_t)(vm + 96) + 48 * (frames - 1) : 0;
+}
+
+/* SQVM::Execute exception_trap, original 4971xx..4975xx. */
+static int32_t retdec_clean_vm_handle_exception(int32_t vm, int32_t raiseerror,
+    int32_t *traps) {
+    int32_t error[2] = {g483, g484};
+    int32_t last_top = *(int32_t *)(intptr_t)(vm + 48);
+    int32_t ci = *(int32_t *)(intptr_t)(vm + 132);
+    int32_t notify = *(uint8_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 140) + 169);
+    int32_t caught = 0;
+    retdec_squirrel_assign(error, (int32_t *)(intptr_t)(vm + 64));
+    if (ci != 0) {
+        if (notify)
+            function_492d00((int32_t)(intptr_t)error);
+        if (*traps != 0) {
+            int32_t popped = 0;
+            do {
+                ci = *(int32_t *)(intptr_t)(vm + 132);
+                if (*(int32_t *)(intptr_t)(ci + 20) > 0) {
+                    int32_t *trap = (int32_t *)(intptr_t)(
+                        *(int32_t *)(intptr_t)(vm + 120) +
+                        16 * (*(int32_t *)(intptr_t)(vm + 124) - 1));
+                    *(int32_t *)(intptr_t)ci = trap[2];
+                    *(int32_t *)(intptr_t)(vm + 52) = trap[0];
+                    *(int32_t *)(intptr_t)(vm + 48) = trap[1];
+                    retdec_squirrel_assign((int32_t *)(intptr_t)(
+                        *(int32_t *)(intptr_t)(vm + 24) + 8 * (trap[0] + trap[3])), error);
+                    --*(int32_t *)(intptr_t)(vm + 124);
+                    --*(int32_t *)(intptr_t)(ci + 20);
+                    --*traps;
+                    caught = 1;
+                    break;
+                }
+                if (*(int32_t *)(intptr_t)(ci + 8) != 0x08000100 && popped != 0)
+                    break;
+                retdec_clean_vm_pop_failed_frame(vm, 0);
+                ++popped;
+            } while (*(int32_t *)(intptr_t)(vm + 100) != 0);
+        } else if (raiseerror && !notify) {
+            function_492d00((int32_t)(intptr_t)error);
+        }
+        if (!caught) {
+            while ((ci = *(int32_t *)(intptr_t)(vm + 132)) != 0) {
+                int32_t root = *(int32_t *)(intptr_t)(ci + 40);
+                retdec_clean_vm_pop_failed_frame(vm, 1);
+                ci = *(int32_t *)(intptr_t)(vm + 132);
+                if (root || (ci != 0 && *(int32_t *)(intptr_t)(ci + 8) != 0x08000100))
+                    break;
+            }
+        }
+        while (last_top >= *(int32_t *)(intptr_t)(vm + 48)) {
+            int32_t slot = *(int32_t *)(intptr_t)(vm + 24) + 8 * last_top--;
+            retdec_release_squirrel_value((int32_t *)(intptr_t)slot);
+        }
+    }
+    if (!caught)
+        retdec_squirrel_assign((int32_t *)(intptr_t)(vm + 64), error);
+    retdec_release_squirrel_value(error);
+    return caught;
+}
+
 static int32_t retdec_execute_clean_vm(
     int32_t closure_slot, int32_t target, int32_t nargs,
     int32_t stackbase, int32_t outres, int32_t raiseerror) {
@@ -218903,6 +219056,7 @@ static int32_t retdec_execute_clean_vm(
     int32_t *trap_block;
     int32_t trap_count;
     int32_t trap_capacity;
+    int32_t traps = 0;
 
     if (trace_clean_entry_count < 64) {
         retdec_trace_i32("clean-execute:entry", closure_slot);
@@ -218938,6 +219092,7 @@ static int32_t retdec_execute_clean_vm(
     }
     *(int32_t *)(intptr_t)(current_ci + 40) = 1;
 
+clean_execute_loop:
     for (;;) {
         vm = retdec_stack_vm();
         if (vm == 0 || *(int32_t *)(intptr_t)(vm + 132) == 0) {
@@ -219265,15 +219420,13 @@ static int32_t retdec_execute_clean_vm(
                 break;
 
             case 29: { /* GETVARGV */
-                int32_t *ci = (int32_t *)(intptr_t)
-                    *(int32_t *)(intptr_t)(vm + 132);
-                int32_t *vargs = (int32_t *)(intptr_t)
-                    *(int32_t *)(intptr_t)(vm + 36);
+                int32_t ci = *(int32_t *)(intptr_t)(vm + 132);
+                int32_t vargs = *(int32_t *)(intptr_t)(vm + 36);
                 int32_t idx = 0;
                 src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
-                if (src == NULL || vargs == NULL ||
+                if (src == NULL || vargs == 0 ||
                     (src[0] != 0x05000002 && src[0] != 0x05000004) ||
-                    ci == NULL || *(uint16_t *)(intptr_t)(ci + 44) == 0)
+                    ci == 0 || *(uint16_t *)(intptr_t)(ci + 44) == 0)
                     goto clean_execute_failure;
                 if (src[0] == 0x05000002)
                     idx = src[1];
@@ -219639,13 +219792,14 @@ static int32_t retdec_execute_clean_vm(
                 }
                 trap_block = (int32_t *)(intptr_t)trap_block[0] +
                     4 * trap_count;
-                trap_block[0] = *(int32_t *)(intptr_t)(vm + 48);
-                trap_block[1] = *(int32_t *)(intptr_t)(vm + 52);
+                trap_block[0] = *(int32_t *)(intptr_t)(vm + 52);
+                trap_block[1] = *(int32_t *)(intptr_t)(vm + 48);
                 trap_block[2] = *(int32_t *)(intptr_t)(
                     *(int32_t *)(intptr_t)(vm + 132)) + 8 * arg1;
                 trap_block[3] = arg0;
                 *(int32_t *)(intptr_t)(vm + 124) = trap_count + 1;
                 *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132) + 20) += 1;
+                ++traps;
                 break;
 
             case 57:
@@ -219654,6 +219808,7 @@ static int32_t retdec_execute_clean_vm(
                     goto clean_execute_failure;
                 *(int32_t *)(intptr_t)(vm + 124) = trap_count - arg0;
                 *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm + 132) + 20) -= arg0;
+                traps -= arg0;
                 break;
 
             case 58:
@@ -219712,7 +219867,8 @@ clean_execute_failure:
                          *(int32_t *)(intptr_t)(vm + 132));
         ++trace_clean_failure_count;
     }
-    (void)raiseerror;
+    if (retdec_clean_vm_handle_exception(vm, raiseerror, &traps))
+        goto clean_execute_loop;
     *(int32_t *)(intptr_t)(vm + 144) -= 1;
     return 0;
 }
@@ -233705,15 +233861,13 @@ int32_t function_4a2990(int32_t a1) {
 // Address range: 0x4a2a90 - 0x4a2abd
 int32_t function_4a2a90(int32_t a1) {
     int32_t v1 = function_48aa20(a1); // 0x4a2a9c
-    int32_t v2 = function_48ace0(a1, v1 - 1, (int32_t)&g1224, (int32_t)&g1224); // 0x4a2aa7
-    return (int32_t)(v2 < 0) + (int32_t)(v2 >= 0);
+    return function_48ace0(a1, v1 - 1, 1, 0) >= 0 ? 1 : -1;
 }
 
 // Address range: 0x4a2ac0 - 0x4a2aed
 int32_t function_4a2ac0(int32_t a1) {
     int32_t v1 = function_48aa20(a1); // 0x4a2acc
-    int32_t v2 = function_48ace0(a1, v1 - 1, (int32_t)&g1224, (int32_t)&g1224); // 0x4a2ad7
-    return (int32_t)(v2 < 0) + (int32_t)(v2 >= 0);
+    return function_48ace0(a1, v1 - 1, 1, 1) >= 0 ? 1 : -1;
 }
 
 // Address range: 0x4a2af0 - 0x4a2b0e
@@ -241832,6 +241986,39 @@ static int32_t retdec_set_var_value(int32_t *context, int32_t varinfo,
             return -1;
         *(float32_t *)(intptr_t)source_ptr = converted;
         memcpy(&float_bits, &converted, sizeof(float_bits));
+        if(converted==-16777215.0f) {
+            static volatile LONG hide_count;
+            if(InterlockedIncrement(&hide_count)<=32) {
+                retdec_trace_i32("actor:script-hide-frame",g848);
+                retdec_trace_i32("actor:script-hide-store",source_ptr);
+                retdec_trace_i32("actor:script-hide-offset",*(int32_t *)(intptr_t)varinfo);
+                for(int i=0;i<4;++i)
+                    retdec_trace_i32("actor:script-hide-camera-bits",
+                        *(int32_t *)(g_retdec_camera_state+72+4*i));
+            }
+        }
+        if (((uint32_t)float_bits & 0x7f800000u)==0x7f800000u) {
+            static volatile LONG invalid_count;
+            if(InterlockedIncrement(&invalid_count)<=32) {
+                int32_t stack=*(int32_t *)(intptr_t)(vm+96);
+                int32_t frames=*(int32_t *)(intptr_t)(vm+100);
+                retdec_trace_i32("actor:invalid-float-store",source_ptr);
+                retdec_trace_i32("actor:invalid-float-offset",*(int32_t *)(intptr_t)varinfo);
+                retdec_trace_i32("actor:invalid-float-bits",float_bits);
+                for(int32_t i=frames-1;i>=0 && i>=frames-4;--i) {
+                    int32_t ci=stack+48*i;
+                    if(*(int32_t *)(intptr_t)(ci+8)==0x08000100) {
+                        int32_t proto=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(ci+12)+36);
+                        retdec_trace_squirrel_name("actor:invalid-float-source",
+                            *(int32_t *)(intptr_t)(proto+16)+28);
+                        retdec_trace_squirrel_name("actor:invalid-float-function",
+                            *(int32_t *)(intptr_t)(proto+24)+28);
+                        retdec_trace_i32("actor:invalid-float-instruction-index",
+                            (*(int32_t *)(intptr_t)ci-proto-96)/8-1);
+                    }
+                }
+            }
+        }
         function_48a580(vm, float_bits);
         return 1;
     }

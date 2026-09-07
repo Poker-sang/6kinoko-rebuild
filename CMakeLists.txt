@@ -200,7 +200,8 @@ target_compile_definitions(kinoko_stage_contract PRIVATE
     RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
 target_compile_options(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_OPTIONS>)
-target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF)
+target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF
+    "/MAP:${CMAKE_CURRENT_BINARY_DIR}/stage-contract.map")
 target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
