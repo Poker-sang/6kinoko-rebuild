@@ -23,6 +23,7 @@
 #include "retdec_asm_stubs.h"
 #include "retdec_math_compat.h"
 #include "kinoko/squirrel_compile_bridge.h"
+#include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
 
 static volatile LONG retdec_actor_step_trace_active;
@@ -178,7 +179,6 @@ static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle);
 static int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 static int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
-static void retdec_capture_render_target(IDirect3DDevice9 *device);
 static int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer);
 static int32_t retdec_c2dlayout_update_impl(int32_t layout);
@@ -10138,158 +10138,11 @@ int32_t function_401790(void) {
     if (device != NULL && device->lpVtbl != NULL) {
         HRESULT hr = device->lpVtbl->EndScene(device);
         retdec_trace_hresult("401790:endscene-hr", hr);
-#if !defined(RETDEC_DISABLE_RENDER_CAPTURE)
-        retdec_capture_render_target(device);
-#endif
     }
     LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
     return 0;
 }
 
-/* GDI capture reads the visible desktop and cannot see an occluded D3D
-   window.  Read back the actual render target once so a blank-looking
-   desktop capture cannot be mistaken for a blank frame. */
-static void retdec_capture_render_target(IDirect3DDevice9 *device)
-{
-    static volatile LONG capture_count;
-    LONG index;
-    IDirect3DSurface9 *source = NULL;
-    IDirect3DSurface9 *system_memory = NULL;
-    D3DSURFACE_DESC desc;
-    D3DLOCKED_RECT locked_rect;
-    HRESULT hr;
-    uint32_t hash = 2166136261u;
-    uint32_t nonzero = 0;
-    UINT row;
-    UINT column;
-    int can_write_bmp;
-
-    index = InterlockedIncrement(&capture_count);
-#if defined(RETDEC_CAPTURE_EVERY_10)
-    if ((index > 2 && (index % 10) != 0) ||
-        device == NULL || device->lpVtbl == NULL)
-#else
-    if ((index > 2 && index != 30 && index != 60 && index != 120 &&
-         (index < 600 || (index % 600) != 0)) ||
-        device == NULL || device->lpVtbl == NULL)
-#endif
-        return;
-
-    ZeroMemory(&desc, sizeof(desc));
-    hr = device->lpVtbl->GetRenderTarget(device, 0, &source);
-    retdec_trace_hresult("render-target:get-hr", hr);
-    if (FAILED(hr) || source == NULL || source->lpVtbl == NULL)
-        goto done;
-    hr = source->lpVtbl->GetDesc(source, &desc);
-    retdec_trace_hresult("render-target:desc-hr", hr);
-    if (FAILED(hr))
-        goto done;
-    retdec_trace_i32("render-target:width", (int32_t)desc.Width);
-    retdec_trace_i32("render-target:height", (int32_t)desc.Height);
-    retdec_trace_i32("render-target:format", (int32_t)desc.Format);
-    retdec_trace_i32("render-target:multisample",
-                     (int32_t)desc.MultiSampleType);
-
-    hr = device->lpVtbl->CreateOffscreenPlainSurface(
-        device, desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM,
-        &system_memory, NULL);
-    retdec_trace_hresult("render-target:create-system-hr", hr);
-    if (FAILED(hr) || system_memory == NULL || system_memory->lpVtbl == NULL)
-        goto done;
-    hr = device->lpVtbl->GetRenderTargetData(
-        device, source, system_memory);
-    retdec_trace_hresult("render-target:readback-hr", hr);
-    if (FAILED(hr))
-        goto done;
-
-    ZeroMemory(&locked_rect, sizeof(locked_rect));
-    hr = system_memory->lpVtbl->LockRect(
-        system_memory, &locked_rect, NULL, D3DLOCK_READONLY);
-    retdec_trace_hresult("render-target:lock-hr", hr);
-    if (FAILED(hr) || locked_rect.pBits == NULL)
-        goto done;
-    retdec_trace_i32("render-target:pitch", locked_rect.Pitch);
-
-    can_write_bmp = (desc.Format == D3DFMT_A8R8G8B8 ||
-                     desc.Format == D3DFMT_X8R8G8B8) &&
-                    locked_rect.Pitch >= (LONG)(desc.Width * 4u);
-    for (row = 0; row < desc.Height; ++row) {
-        const unsigned char *pixels =
-            (const unsigned char *)locked_rect.pBits +
-            (size_t)row * (size_t)locked_rect.Pitch;
-        if (can_write_bmp) {
-            const uint32_t *pixels32 = (const uint32_t *)pixels;
-            for (column = 0; column < desc.Width; ++column) {
-                uint32_t pixel = pixels32[column];
-                hash ^= pixel;
-                hash *= 16777619u;
-                if (pixel != 0)
-                    ++nonzero;
-            }
-        } else {
-            UINT byte_count = desc.Width * 4u;
-            UINT byte_index;
-            for (byte_index = 0; byte_index < byte_count; ++byte_index) {
-                hash ^= pixels[byte_index];
-                hash *= 16777619u;
-                if (pixels[byte_index] != 0)
-                    ++nonzero;
-            }
-        }
-    }
-    retdec_trace_i32("render-target:hash", (int32_t)hash);
-    retdec_trace_i32("render-target:nonzero", (int32_t)nonzero);
-
-    if (can_write_bmp) {
-        char module_path[MAX_PATH];
-        char bmp_path[MAX_PATH];
-        DWORD path_length;
-        BITMAPFILEHEADER file_header;
-        BITMAPINFOHEADER info_header;
-        FILE *file = NULL;
-
-        path_length = GetModuleFileNameA(NULL, module_path,
-                                          sizeof(module_path));
-        if (path_length != 0 && path_length < sizeof(module_path)) {
-            char *separator = strrchr(module_path, '\\');
-            if (separator != NULL)
-                separator[1] = '\0';
-            wsprintfA(bmp_path, "%sretdec_backbuffer_%ld.bmp",
-                      module_path, (long)index);
-            ZeroMemory(&file_header, sizeof(file_header));
-            ZeroMemory(&info_header, sizeof(info_header));
-            info_header.biSize = sizeof(info_header);
-            info_header.biWidth = (LONG)desc.Width;
-            info_header.biHeight = -(LONG)desc.Height;
-            info_header.biPlanes = 1;
-            info_header.biBitCount = 32;
-            info_header.biCompression = BI_RGB;
-            file_header.bfType = 0x4D42;
-            file_header.bfOffBits = sizeof(file_header) + sizeof(info_header);
-            file_header.bfSize = file_header.bfOffBits +
-                desc.Width * desc.Height * 4u;
-            if (fopen_s(&file, bmp_path, "wb") == 0 && file != NULL) {
-                fwrite(&file_header, sizeof(file_header), 1, file);
-                fwrite(&info_header, sizeof(info_header), 1, file);
-                for (row = 0; row < desc.Height; ++row) {
-                    const unsigned char *pixels =
-                        (const unsigned char *)locked_rect.pBits +
-                        (size_t)row * (size_t)locked_rect.Pitch;
-                    fwrite(pixels, desc.Width * 4u, 1, file);
-                }
-                fclose(file);
-                retdec_trace("render-target:bmp-ok");
-            }
-        }
-    }
-    system_memory->lpVtbl->UnlockRect(system_memory);
-
-done:
-    if (system_memory != NULL && system_memory->lpVtbl != NULL)
-        system_memory->lpVtbl->Release(system_memory);
-    if (source != NULL && source->lpVtbl != NULL)
-        source->lpVtbl->Release(source);
-}
 
 // Address range: 0x4017b0 - 0x401814
 int32_t function_4017b0(void) {
@@ -116571,20 +116424,9 @@ int32_t function_4555a0(int32_t a1) {
     function_48a7d0(a1, 3, &y);
     function_48a7d0(a1, 2, &x);
     method = descriptor[0];
-    __asm {
-        push alpha
-        push blend
-        push sy
-        push sx
-        push resource
-        push height
-        push width
-        push y
-        push x
-        mov ecx, self
-        call method
-        mov result, eax
-    }
+    result = kinoko_call_draw_method((void *)(intptr_t)self,
+        (void *)(intptr_t)method, x, y, width, height, resource,
+        sx, sy, blend, alpha);
     function_48a4f0(a1, result);
     return 1;
 }
@@ -196581,24 +196423,16 @@ static void retdec_squirrel_assign(int32_t *dst, const int32_t *src) {
 /* SQObjectPtr::operator=(SQInteger/SQFloat) keeps the destination in ECX.
  * RetDec dropped that hidden receiver from the generated C signatures. */
 static int32_t function_48e0e0_this(int32_t this_ptr, int32_t value) {
-    int32_t *object = (int32_t *)(intptr_t)this_ptr;
-
-    if (object == NULL)
+    if (this_ptr == 0)
         return 0;
-    retdec_squirrel_release(object[0], object[1]);
-    object[0] = 0x5000002;
-    object[1] = value;
+    kinoko_sq_assign_integer(this_ptr, value);
     return this_ptr;
 }
 
 static int32_t function_48e120_this(int32_t this_ptr, float value) {
-    int32_t *object = (int32_t *)(intptr_t)this_ptr;
-
-    if (object == NULL)
+    if (this_ptr == 0)
         return 0;
-    retdec_squirrel_release(object[0], object[1]);
-    object[0] = 0x5000004;
-    memcpy(&object[1], &value, sizeof(value));
+    kinoko_sq_assign_float(this_ptr, value);
     return this_ptr;
 }
 
@@ -199869,55 +199703,17 @@ int32_t function_48abe0(int32_t result) {
 
 // Address range: 0x48ac00 - 0x48ac62
 int32_t function_48ac00(int32_t a1, char * a2) {
-    int32_t v1 = function_48e480(*(int32_t *)(a1 + 140), (int32_t)a2, -1); // 0x48ac15
-    int32_t * v2 = (int32_t *)(v1 + 4); // 0x48ac21
-    *v2 = *v2 + 1;
-    int32_t * v3 = (int32_t *)(a1 + 64); // 0x48ac24
-    int32_t * v4 = (int32_t *)(a1 + 68); // 0x48ac27
-    *v4 = v1;
-    *v3 = 0x8000010;
-    int32_t v5 = *v2 + 1; // 0x48ac34
-    *v2 = v5;
-    int32_t v6 = v5; // 0x48ac3f
-    if ((*v3 & 0x8000000) != 0) {
-        int32_t * v7 = (int32_t *)(*v4 + 4); // 0x48ac41
-        *v7 = *v7 - 1;
-        v6 = *v2;
-    }
-    // 0x48ac4d
-    *v2 = v6 - 1;
+    int32_t string_object = function_48e480(
+        *(int32_t *)(intptr_t)(a1 + 140), (int32_t)(intptr_t)a2, -1);
+    kinoko_sq_set_error_string(a1, string_object);
     return -1;
 }
 
 // Address range: 0x48ac70 - 0x48acb6
 int32_t function_48ac70(int32_t a1) {
-    int32_t * v1 = (int32_t *)(a1 + 68); // 0x48ac76
-    int32_t v2 = *v1; // 0x48ac76
-    int32_t * v3 = (int32_t *)(a1 + 64); // 0x48ac79
-    *v1 = g484;
-    int32_t v4 = (int32_t)g483; // 0x48ac86
-    *v3 = v4;
-    int32_t result = a1; // 0x48ac97
-    if ((v4 & 0x8000000) != 0) {
-        // 0x48ac99
-        result = *v1;
-        int32_t * v5 = (int32_t *)(result + 4); // 0x48ac9c
-        *v5 = *v5 + 1;
-    }
-    // 0x48ac9f
-    if ((*v3 & 0x8000000) == 0) {
-        // 0x48acb4
-        return result;
-    }
-    int32_t * v6 = (int32_t *)(v2 + 4); // 0x48aca7
-    int32_t v7 = *v6 - 1; // 0x48aca7
-    *v6 = v7;
-    if (v7 != 0) {
-        // 0x48acb4
-        return result;
-    }
-    // 0x48acac
-    return *(int32_t *)v2;
+    /* sq_reseterror is void in Squirrel; keep the legacy C wrapper result. */
+    kinoko_sq_reset_error(a1);
+    return a1;
 }
 
 // Address range: 0x48acc0 - 0x48acd1
@@ -223475,39 +223271,19 @@ int32_t function_499a20(int32_t this_ptr, const char *format, ...) {
                                     (int32_t)(intptr_t)buffer, -1);
     if (string_object == 0)
         return -1;
-    error_value[0] = 0x08000010;
-    error_value[1] = string_object;
-    retdec_squirrel_assign((int32_t *)(intptr_t)(this_ptr + 64),
-                           error_value);
-    retdec_squirrel_release(0x08000010, string_object);
+    kinoko_sq_set_error_string(this_ptr, string_object);
     return 0;
 }
 
 int32_t function_499b00(int32_t this_ptr, int32_t value_ptr) {
-    int32_t old_type;
-    int32_t old_data;
-    int32_t new_type;
-    int32_t new_data;
     int32_t result;
 
     if (this_ptr == 0 || value_ptr == 0)
         return this_ptr;
 
-    old_type = *(int32_t *)(intptr_t)(this_ptr + 64);
-    old_data = *(int32_t *)(intptr_t)(this_ptr + 68);
-    new_type = *(int32_t *)(intptr_t)value_ptr;
-    new_data = *(int32_t *)(intptr_t)(value_ptr + 4);
-
-    *(int32_t *)(intptr_t)(this_ptr + 64) = new_type;
-    *(int32_t *)(intptr_t)(this_ptr + 68) = new_data;
-    result = this_ptr;
-
-    if ((new_type & 0x08000000) != 0) {
-        result = new_data;
-        retdec_squirrel_addref(new_type, new_data);
-    }
-    if ((old_type & 0x08000000) != 0)
-        retdec_squirrel_release(old_type, old_data);
+    result = (*(int32_t *)(intptr_t)value_ptr & 0x08000000) != 0
+        ? *(int32_t *)(intptr_t)(value_ptr + 4) : this_ptr;
+    kinoko_sq_set_error_value(this_ptr, (const int32_t *)(intptr_t)value_ptr);
     return result;
 }
 

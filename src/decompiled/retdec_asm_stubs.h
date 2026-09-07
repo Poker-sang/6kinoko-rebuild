@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "kinoko/legacy_abi.h"
 
 int *__errno(void);
 
@@ -81,19 +82,3 @@ int64_t __asm_rep_movsb_memcpy(void *destination, const void *source, int32_t co
 int64_t __asm_rep_movsd_memcpy(void *destination, const void *source, int32_t count);
 int64_t __asm_rep_stosb_memset(void *destination, int32_t value, int32_t count);
 int64_t __asm_rep_stosd_memset(void *destination, int32_t value, int32_t count);
-
-/* The RetDec C output still contains calls to x86 C++ virtual methods.
-   These adapters preserve ECX=this and the callee-cleaned explicit args. */
-void retdec_call_thiscall0(void *object, void *method);
-void retdec_call_thiscall1(void *object, void *method, int32_t argument);
-int32_t retdec_call_thiscall0_result(void *object, void *method);
-int32_t retdec_call_thiscall1_result(
-    void *object, void *method, int32_t argument);
-int32_t retdec_call_thiscall2_result(
-    void *object, void *method, int32_t argument1, int32_t argument2);
-int32_t retdec_call_thiscall3_result(
-    void *object, void *method, int32_t argument1, int32_t argument2,
-    int32_t argument3);
-int32_t retdec_call_thiscall4_result(
-    void *object, void *method, int32_t argument1, int32_t argument2,
-    int32_t argument3, int32_t argument4);

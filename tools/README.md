@@ -22,11 +22,23 @@ The archive tools share `include/kinoko/archive.hpp`,
 Those files are retained because asset extraction and the archive tests use
 them independently of the game runtime.
 
-The runtime now requires the Squirrel 2.2.2 source tree at
-`KINOKO_SQUIRREL2_ROOT` when building, to compile original inline ACT scripts.
+The runtime uses the included Squirrel 2.2.2 source tree at
+`third_party/squirrel-2.2.2` to compile original inline ACT scripts and for
+verified object/error ownership helpers. `KINOKO_SQUIRREL2_ROOT` can select
+the supplied external source tree for comparison.
 Compilation uses a separate C++ VM and transfers bytecode to the reconstructed
 VM; `KINOKO_ENABLE_SQUIRREL_CPP_VM` still controls only experimental execution.
 zlib 1.2.3 is vendored and linked statically for original save-file compatibility.
+
+Ordinary builds do not write traces or take automatic screenshots. Set
+`KINOKO_TRACE=1` to enable the external trace sink without rebuilding, and
+`KINOKO_CRASH_DUMP=1` to enable a crash dump beside the game EXE. The independent
+`exercise_game_window.py` tool captures the visible game window only when
+explicitly requested. The original VM trace call sites remain in quiet builds.
+
+CTest also runs `kinoko_stage_contract.exe` and `kinoko_legacy_abi_contract.exe`.
+The latter checks original x86 virtual calls against a compiler-generated
+C++ vtable, including receiver, argument order, return values and stack cleanup.
 
 ## Examples
 

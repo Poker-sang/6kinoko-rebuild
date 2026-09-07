@@ -1890,6 +1890,68 @@ static int test_map_camera_fpu(void) {
     return 0;
 }
 
+static int error_releases;
+
+static void __fastcall release_error_probe(void *self, void *unused) {
+    (void)unused;
+    if (((int32_t *)self)[1] == 0)
+        ++error_releases;
+}
+
+static int test_error_value_ownership(int32_t vm) {
+    int32_t methods[2] = {0, PTR(release_error_probe)};
+    int32_t object[3] = {PTR(methods), 1, 0};
+    int32_t value[2] = {0x08000080, PTR(object)};
+    int32_t *error = (int32_t *)(intptr_t)(vm + 64);
+    int32_t string_object;
+    int32_t refs;
+
+    function_48ac70(vm);
+    error_releases = 0;
+    function_499b00(vm, PTR(value));
+    CHECK(object[1] == 2);
+    function_499b00(vm, PTR(error));
+    CHECK(object[1] == 2 && error_releases == 0);
+    --object[1];
+    CHECK(function_48ac00(vm, "ownership replacement") == -1);
+    CHECK(error_releases == 1 && error[0] == 0x08000010);
+
+    string_object = error[1];
+    retdec_squirrel_addref(error[0], string_object);
+    refs = *(int32_t *)(intptr_t)(string_object + 4);
+    function_48ac70(vm);
+    CHECK(error[0] == 0x01000001 && error[1] == 0);
+    CHECK(*(int32_t *)(intptr_t)(string_object + 4) == refs - 1);
+    retdec_squirrel_release(0x08000010, string_object);
+
+    for (int i = 0; i < 128; ++i) {
+        char expected[64];
+        sprintf_s(expected, sizeof(expected), "ownership formatted error %d", i);
+        function_499a20(vm, "ownership formatted error %d", i);
+        CHECK(error[0] == 0x08000010);
+        CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
+        CHECK(strcmp((char *)(intptr_t)(error[1] + 28), expected) == 0);
+        function_499b00(vm, PTR(error));
+        CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
+        CHECK(function_48ac00(vm, expected) == -1);
+        CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
+    }
+    function_48ac70(vm);
+
+    object[1] = 1;
+    value[0] = 0x08000080;
+    value[1] = PTR(object);
+    function_48e0e0_this(PTR(value), -37);
+    CHECK(value[0] == 0x05000002 && value[1] == -37 && error_releases == 2);
+    object[1] = 1;
+    value[0] = 0x08000080;
+    value[1] = PTR(object);
+    function_48e120_this(PTR(value), 0.75f);
+    CHECK(value[0] == 0x05000004 && *(float *)&value[1] == 0.75f && error_releases == 3);
+    puts("PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--sound-module") == 0) {
         HMODULE module=LoadLibraryA("dsound.dll");
@@ -1932,6 +1994,7 @@ int main(int argc, char **argv) {
 
     CHECK(vm != 0);
     g644 = (char *)(intptr_t)vm;
+    CHECK(test_error_value_ownership(vm) == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     {
         int32_t anonymous[3];

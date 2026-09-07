@@ -10,6 +10,10 @@ if(NOT WIN32)
     message(FATAL_ERROR "The first runtime target is Windows x86.")
 endif()
 
+if(NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message(FATAL_ERROR "The reconstructed runtime requires MSVC with -A Win32.")
+endif()
+
 if(MSVC)
     add_compile_options(/W4 /permissive- /EHsc /utf-8)
     add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
@@ -23,6 +27,14 @@ target_include_directories(kinoko_core PUBLIC include)
 
 add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp)
 target_include_directories(kinoko_actor_collision PUBLIC include)
+
+add_library(kinoko_legacy_abi STATIC src/reconstructed/legacy_abi.cpp)
+target_include_directories(kinoko_legacy_abi PUBLIC include)
+
+add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
+target_include_directories(kinoko_diagnostics PUBLIC include)
+target_compile_definitions(kinoko_diagnostics PRIVATE _CRT_SECURE_NO_WARNINGS
+    $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_DEFINITIONS>)
 
 # The original embeds zlib 1.2.3. Use that source for its damaged RetDec codec.
 set(KINOKO_ZLIB_DIR "${CMAKE_SOURCE_DIR}/third_party/zlib-1.2.3")
@@ -43,7 +55,7 @@ add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
     src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
-    src/decompiled/retdec_entry.c
+    src/platform/windows_entry.cpp
 )
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT kinoko_retdec_rebuild)
 target_include_directories(kinoko_retdec_rebuild PRIVATE
@@ -55,12 +67,12 @@ option(KINOKO_ENABLE_SQUIRREL_CPP_VM
     "Use the C++ Squirrel 2.2.2 Execute backend from the RetDec runtime"
     OFF)
 set(KINOKO_SQUIRREL2_ROOT
-    "${CMAKE_SOURCE_DIR}/../squirrel-2.2.2/SQUIRREL2"
+    "${CMAKE_SOURCE_DIR}/third_party/squirrel-2.2.2"
     CACHE PATH
-    "Squirrel 2.2.2 source root used by the optional C++ VM backend")
+    "Squirrel 2.2.2 source root for compilation and verified C++ runtime helpers")
 option(KINOKO_RETDEC_DISABLE_TRACE
-    "Disable RetDec runtime trace file writes for differential startup tests"
-    OFF)
+    "Default to quiet output; KINOKO_TRACE=1 enables tracing without a rebuild"
+    ON)
 option(KINOKO_RETDEC_TRACE_FILTER
     "Keep only graphics/audio/input markers in RetDec diagnostic traces"
     OFF)
@@ -98,6 +110,7 @@ endif()
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_vm_bridge.cpp
     src/squirrel/squirrel_compile_bridge.cpp
+    src/squirrel/squirrel_value_bridge.cpp
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"
@@ -130,7 +143,8 @@ if(KINOKO_ENABLE_SQUIRREL_CPP_VM)
     )
 endif()
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
-target_compile_options(kinoko_retdec_rebuild PRIVATE /TC /Gy /wd4100 /wd4244 /wd4267 /wd4706)
+target_compile_options(kinoko_retdec_rebuild PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:/TC> /Gy /wd4100 /wd4244 /wd4267 /wd4706)
 # Match the original PE subsystem version and its non-client frame metrics.
 target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF /SUBSYSTEM:WINDOWS,5.01)
 if(KINOKO_RETDEC_MAP_FILE)
@@ -139,6 +153,8 @@ endif()
 set(KINOKO_D3DX9_33_LIB "${CMAKE_SOURCE_DIR}/third_party/d3dx9_33.lib")
 target_link_libraries(kinoko_retdec_rebuild PRIVATE
     kinoko_actor_collision
+    kinoko_legacy_abi
+    kinoko_diagnostics
     kinoko_zlib
     user32
     gdi32
@@ -180,7 +196,7 @@ add_executable(kinoko_archive_smoke
 target_include_directories(kinoko_archive_smoke PRIVATE include)
 target_link_libraries(kinoko_archive_smoke PRIVATE kinoko_core)
 
-set(KINOKO_REFERENCE_DIR "D:/6kinoko" CACHE PATH "Directory containing the original DAT files")
+set(KINOKO_REFERENCE_DIR "${CMAKE_SOURCE_DIR}/../6kinoko" CACHE PATH "Directory containing the original DAT files")
 set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime-builds/default" CACHE PATH
     "Directory for built runtime executables")
 enable_testing()
@@ -206,9 +222,14 @@ target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
 
+add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
+target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
+add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
+    kinoko_legacy_abi_contract
 )
 
 foreach(config Debug Release RelWithDebInfo MinSizeRel)
