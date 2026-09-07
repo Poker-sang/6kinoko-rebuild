@@ -109569,6 +109569,14 @@ static int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *en
         "BLEND_NORMAL", "BLEND_ALPHA", "BLEND_ADD", "BLEND_SUB",
         "BLEND_MULTI", "BLEND_INVERT"
     };
+    int32_t object[5] = {(int32_t)(intptr_t)&g39, vm, environment[0], environment[1], 0};
+    int32_t user[2] = {g483, g484};
+    int32_t have_user = retdec_sqrat_get((int32_t)(intptr_t)object, "u", user);
+    int32_t needs_user = !have_user || user[0] == g483;
+    retdec_sqrat_release_pair(vm, user);
+    /* 416056..41605F passes the same Sqrat object as source and destination. */
+    if (needs_user && !retdec_sqrat_set_pair(vm, environment, "u", environment))
+        return 0;
     /* 415FD0:4160DC installs these in the script environment before loading. */
     for (int32_t value = 0; value < 6; ++value) {
         if (!retdec_sqrat_set_int(vm, environment, names[value], value))
@@ -196002,19 +196010,18 @@ static int32_t function_48e4d0_this(int32_t this_ptr) {
 static int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr) {
     int32_t candidate;
     int32_t old_delegate;
-    int32_t released_object;
 
     if (this_ptr == 0)
         return 0;
     if (this_ptr == delegate_ptr)
-        return delegate_ptr & -256;
+        return 0;
 
     if (delegate_ptr != 0) {
         candidate = *(int32_t *)(intptr_t)(delegate_ptr + 24);
         while (candidate != 0 && candidate != this_ptr)
             candidate = *(int32_t *)(intptr_t)(candidate + 24);
         if (candidate == this_ptr)
-            return delegate_ptr & -256;
+            return 0;
         ++*(int32_t *)(intptr_t)(delegate_ptr + 4);
     }
 
@@ -196024,13 +196031,10 @@ static int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr) {
         return 1;
     }
 
-    --*(int32_t *)(intptr_t)(old_delegate + 4);
-    released_object = old_delegate;
-    if (*(int32_t *)(intptr_t)(old_delegate + 4) == 0)
-        released_object = *(int32_t *)(intptr_t)old_delegate;
+    retdec_squirrel_release(0x0A000020, old_delegate);
     *(int32_t *)(intptr_t)(this_ptr + 24) = 0;
     *(int32_t *)(intptr_t)(this_ptr + 24) = delegate_ptr;
-    return (released_object & -256) | 1;
+    return 1;
 }
 
 /* SQDelegable::GetMetaMethod(SQVM *, SQMetaMethod, SQObjectPtr &) is the
@@ -200970,9 +200974,31 @@ int32_t function_48be40(char a1) {
 // Address range: 0x48be70 - 0x48be78
 // From class:    .?AUSQUserData@@
 // Type:          virtual member function
-int32_t function_48be70(void) {
-    // 0x48be70
-    return function_48e520(0);
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_48be70(void) {
+    __asm {
+        push 0
+        push ecx
+        call function_48e520_this
+        add esp, 8
+        ret
+    }
+}
+#else
+int32_t function_48be70(void) { return 0; }
+#endif
+
+static int32_t retdec_delete_squirrel_userdata_this(int32_t object_ptr, char flags) {
+    int32_t owner;
+    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g68;
+    if (*(int32_t *)(intptr_t)(object_ptr + 4) >= 0) {
+        owner = *(int32_t *)(intptr_t)(object_ptr + 20);
+        function_49a170(owner + 68, object_ptr);
+    }
+    function_48e520_this(object_ptr, 0);
+    function_48e4d0_this(object_ptr);
+    if (flags & 1) free((void *)(intptr_t)object_ptr);
+    return object_ptr;
 }
 
 // Address range: 0x48be80 - 0x48beb5
@@ -200983,7 +201009,6 @@ int32_t function_48be70(void) {
  * explicit helper and expose a small thiscall bridge through the vtable. */
 static int32_t retdec_release_squirrel_userdata_this(int32_t object_ptr) {
     int32_t finalizer;
-    int32_t owner;
 
     if (object_ptr == 0)
         return 0;
@@ -200995,14 +201020,7 @@ static int32_t retdec_release_squirrel_userdata_this(int32_t object_ptr) {
     }
 
     /* This is SQUserData's scalar-deleting destructor with flags == 0. */
-    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g68;
-    if (*(int32_t *)(intptr_t)(object_ptr + 4) > -1) {
-        owner = *(int32_t *)(intptr_t)(object_ptr + 20);
-        if (owner != 0)
-            function_49a170(owner + 68, object_ptr);
-    }
-    function_48e520_this(object_ptr, 0);
-    function_48e4d0_this(object_ptr);
+    retdec_delete_squirrel_userdata_this(object_ptr, 0);
     return function_4985b0(object_ptr);
 }
 
@@ -201048,7 +201066,21 @@ int32_t function_48bec0(int32_t a1, int32_t a2) {
 
 // Address range: 0x48bf50 - 0x48bfd9
 // From class:    .?AUSQUserData@@
-// Type:          constructor
+// Type:          scalar-deleting destructor
+#if defined(_MSC_VER) && defined(_M_IX86)
+__declspec(naked) int32_t function_48bf50(char flags) {
+    __asm {
+        push [esp + 4]
+        push ecx
+        call retdec_delete_squirrel_userdata_this
+        add esp, 8
+        ret 4
+    }
+}
+#else
+int32_t function_48bf50(char flags) { return 0; }
+#endif
+#if 0
 int32_t function_48bf50(char a1) {
     // 0x48bf50
     int32_t v1; // 0x48bf50
@@ -201071,6 +201103,8 @@ int32_t function_48bf50(char a1) {
     __writefsdword(0, v2);
     return result;
 }
+
+#endif
 
 // Address range: 0x48bfe0 - 0x48c079
 // IDA: SQClass::Get(this, key, out). The table result is a member
@@ -207602,6 +207636,28 @@ int32_t function_490c40(void) {
 }
 
 // Address range: 0x490c80 - 0x490d4b
+int32_t function_490c80(int32_t target_ptr, int32_t object_ptr, int32_t delegate_ptr) {
+    int32_t vm = retdec_stack_vm();
+    int32_t *object = (int32_t *)(intptr_t)object_ptr;
+    int32_t *delegate = (int32_t *)(intptr_t)delegate_ptr;
+    int32_t table;
+    if (object[0] != 0x0A000020) {
+        function_499a20(vm, "delegating a '%s'", function_48e460(object_ptr));
+        return 0;
+    }
+    if (delegate[0] != 0x0A000020 && delegate[0] != 0x01000001) {
+        function_499a20(vm, "using '%s' as delegate", function_48e460(delegate_ptr));
+        return 0;
+    }
+    table = delegate[0] == 0x0A000020 ? delegate[1] : 0;
+    if (!(unsigned char)function_48e520_this(object[1], table)) {
+        function_499a20(vm, "delegate cycle detected");
+        return 0;
+    }
+    retdec_squirrel_assign((int32_t *)(intptr_t)target_ptr, object);
+    return 1;
+}
+#if 0
 int32_t function_490c80(int32_t a1, int32_t a2, int32_t a3) {
     int32_t * v1 = (int32_t *)a2; // 0x490c87
     int32_t v2; // 0x490c80
@@ -207662,6 +207718,8 @@ int32_t function_490c80(int32_t a1, int32_t a2, int32_t a3) {
     // 0x490d43
     return v11 & -256 | 1;
 }
+
+#endif
 
 // Address range: 0x490d50 - 0x490d86
 int32_t function_490d50(int32_t a1) {

@@ -30,10 +30,10 @@ a capability-absence claim. Previous target/import evidence remains in
 
 - [x] Read instructions and survey original/imports.
 - [x] Locate current crash RVAs in the matching pre-build linker map.
-- [ ] Compare affected native and Squirrel paths against original evidence.
-- [ ] Restore confirmed divergences and reproduce them in console tests.
-- [ ] Build/test diagnostic and no-log variants; stage checked DATs.
-- [ ] Record final evidence and commit backup.
+- [x] Compare affected native and Squirrel paths against original evidence.
+- [x] Restore confirmed divergences and reproduce them in console tests.
+- [x] Build/test diagnostic and no-log variants; stage checked DATs.
+- [x] Record final evidence and commit backup.
 - [ ] User gameplay and startup verification.
 
 ## E-current-crashes
@@ -41,7 +41,7 @@ a capability-absence claim. Previous target/import evidence remains in
 Targeted search of the existing 2.56 GB diagnostic trace found recent native
 faults at RVA 0x5404D and 0x5442A, both in function_4682a0 (preferred image
 0x453FD0). Caller 0x44DEC5 is in function_45f820, Actor::IsExistChip.
-Another fault has RVA 0x1208; it remains to be resolved. Exit-time stack
+Another fault has RVA 0x1208, resolved below to SQUserData destruction. Exit-time stack
 overflows recurse through function_429c70 at preferred image 0x430670.
 The pre-build map is build-runs/p3-save-worldmap-diag/kinoko.map.
 
@@ -56,7 +56,7 @@ when static comparisons and offline contract tests pass.
 read SQFloat arguments, call the CRT math operation, push SQFloat. RetDec
 sqrt/asin/acos/log/log10/tan/atan/atan2/pow/exp used uninitialized x87 locals;
 floor/ceil converted the result to an integer instead of passing float bits.
-Restored all eleven damaged wrappers using the existing float-bit helper.
+Restored all twelve damaged wrappers using the existing float-bit helper.
 The pre-fix console test fails with `sqrt distance`; all math checks now pass.
 Squirrel source-build disassembly reference remains
 ../evidence/raw/phase3-20260906/squirrel-sqvm.asm (VM/native ABI).
@@ -94,3 +94,132 @@ verifies both callback directions and the original order.
 Checkpoint: default native contracts and extended w1-c01a contracts pass.
 Game binaries are not rebuilt/staged yet at this checkpoint. Further ACT
 script loading, enemy, transformation and collision review remains active.
+
+## E-hidden-include
+
+The actual w1-c01a ACT hidden layer has inline source
+`CompileFile("Data/Script/stage/HiddenLayer.nut", u);`. The environment lacked
+`u`, producing the repeatedly logged ACT-inline GET failure. Original IDA
+416056..41605F passes the same Sqrat object as both arguments to 415870,
+installing a self-reference when u is null/missing. Restore this during ACT
+environment preparation, preserving an existing non-null u.
+
+The regression runs the actual ACT layer publisher and original include
+through CompileFile, then its retained Init/Update callbacks. Before the fix
+it reproduces the ACT-inline GET failure. Afterward the native C2DMapLayout
+blend is alpha, entering the real hidden rectangle fades alpha to zero, and
+leaving restores it to one. The test enables the original packaged-script
+mode (g874=1); it does not replace the include or the fade code.
+
+## E-delegate / E-enemies
+
+Full enemy.cv4 loading includes the original enemy class, base, update, hit,
+event and pattern scripts from the effective archives. Two real Init0106
+actors reproduced shared event tables despite distinct EnemyInfo instances.
+Both constructors ran, but DELEGATE used the broken 48E520 entry with no ECX
+receiver. 490C80 also used the newly assigned type to release an old value.
+
+Original IDA 490C80/48E520, sqvm.cpp::DELEGATE_OP,
+sqobject.cpp::SQDelegable::SetDelegate, and source-build disassembly
+squirrel-sqvm.asm::DELEGATE_OP+64..8B agree on the receiver, operand order,
+cycle check, reference changes and assignment. Restore those operations
+through the existing explicit-receiver helper, including actual release of
+an expired delegate. No enemy-specific branching or DAT edits were added.
+
+The same two-enemy regression now passes distinct user/event/data/child
+tables, bound owner identity, full update callbacks, walking, landing and
+wall reversal. Additional generic checks cover delegated inheritance,
+independent writes, cycle rejection and reference counts.
+
+## E-userdata / E-transform
+
+RVA 0x1208 maps to 48BF50, the SQUserData scalar-deleting destructor. Its
+uninitialized receiver was still present even though the ordinary Release
+helper had already been reconstructed. Restore the thiscall/ret-4 entry and
+the matching Finalize vtable entry. Share the destructor with Release while
+keeping its release hook before destruction. IDA 48BF50 and Squirrel 2.2.2
+squserdata.h confirm removal from the GC chain, delegate release, weak-ref
+invalidation and optional free. Thirty-two offline cycles exercise the real
+vtable entries and verify delegate counts and weak-ref expiry.
+
+The actual effective player.cv4 Update/SetType/SetTake paths run 32 eight-head
+expiry transitions, checking restored type/take, finite bounds, VM stack and
+PlayBgmMargin's five arguments through the native binding. Portrait/status
+and audio output are test sinks. This does not establish that every reported
+eight-head crash had this destructor as its cause; user retesting is required.
+
+## E-stone-block
+
+Original InitStone/CallbackStone establishes a real rider. Walking off changes
+the original update/collision callbacks to UpdateStone2/CallbackStone2. The
+test lets the stone fall onto an original Init0435 point block, dispatches the
+real collision pair, and executes CreateItemCommon's IsExistChip branch.
+It checks stone release, retired block callback/damage function and downward
+item direction, then clears the real native actors. The point block is
+chosen from the original ID registration: 0433 has no item and 0443 uses the
+separate break-block initializer. No production behavior was changed to fit
+those initially incorrect fixture assumptions.
+
+## E-remaining
+
+Old logs show player y/freeHeight already NaN before SetDead(false), including
+TYPE_2HEAD and TYPE_TEN. The first invalid coordinate was suppressed by the
+old trace cadence, so the producing instruction is not identified. The
+shared math/delegate/lifetime fixes are relevant candidates but are not
+proof of this symptom's resolution. Existing terrain/player tests and the
+new transformation/enemy cases remain finite. Do not replace death checks
+or clamp/respawn invalid coordinates to conceal the upstream defect.
+
+Other limitations: full visual/audio behavior, all enemy patterns/bosses,
+startup and gameplay await user execution. The previously known exit-time
+429C70 stack overflow is not fixed by this gameplay patch.
+
+## Final verification and handoff
+
+Both p3-save-worldmap-diag and p3-save-worldmap-notrace Release builds pass
+archive_smoke and stage_native_contract (2/2 per build). Both also pass the
+extended asset/script contracts for w1-c01a, w3-s01a and w7-s01a, including
+all the new floating/hidden/enemy/transform/stone-block cases. Only console
+test executables were run; neither game was launched. Trace-output behavior
+and the no-log build switches were not changed.
+
+stage_dat.ps1 copied and SHA256-verified the three original DATs beside each
+game EXE. Save/config files and unrelated user edits were preserved. No
+reference-directory working-directory or data-directory override was used.
+
+Final EXE SHA256:
+- Diagnostic: AB37E455B3CABB907A23B761BE2F4B10BB0191F8FF8185F02B0647DB121A1514
+- No-log: 2594A42003C9A084A6AE5505CE843F7B7F83198D3C43711DCB362026AA2F4820
+
+Reproduce extended console checks from the repository root:
+
+```powershell
+runtime-builds/p3-save-worldmap-diag/tools/kinoko_stage_contract.exe analysis/stage-entities-20260907/block.cv4 analysis/stage-entities-20260907/stage.cv4 analysis/actor-animation-bounds-20260907/marisa.pat 150465603 analysis/player_ground.cv4 analysis/gameplay-contracts-20260907/player.cv4 analysis/constant.cv4 C:/WorkSpace/6kinoko data/map/w1-c01a.act
+```
+
+Repeat with p3-save-worldmap-notrace and the other two map names as needed.
+The extracted CV4 files in this directory are unchanged original evidence.
+The first backup checkpoint is 1c1a8c8; the second includes the remaining
+source, tests, extracted evidence and this final report.
+The initial IDA worker expired before annotation. The skill scripts reopened
+the same original as a42e5051; final comments were saved successfully to
+C:/rs-ida/c7979d62-6kinoko.exe.i64.
+
+User tests, diagnostic build first:
+1. Ten: place/ride/walk off a stone and let it fall onto both ordinary and
+   item-containing blocks; repeat facing both ways and near walls.
+2. Let eight-head expire while standing, moving and near terrain; check
+   restored appearance/collision and BGM transition.
+3. Enter/leave the first-stage hidden passage; check its cover fades both ways.
+4. Collect point/save/1up items and check return flight and one reward each.
+5. Observe multiple enemies; check independent movement, wall reversal,
+   collision, damage, hold/throw and reentry/reset.
+6. Retest the formerly disappearing player's landing with the same stage/form.
+   This symptom remains unconfirmed, as does the exact eight-head crash cause.
+
+After the diagnostic cases pass, repeat with the no-log build. Preserve the
+diagnostic trace and any dump on failure, and record stage, form and exact
+action. P0 synthesis: restored contracts have original static and offline
+execution anchors (R41/R4*); gameplay claims are bounded by no-launch scope
+(R7). NaN and broader enemy behavior remain candidates for user validation,
+not promoted to fully resolved. Ordinary game reconstruction; no IOC claims.

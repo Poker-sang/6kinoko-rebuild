@@ -424,11 +424,6 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         CHECK(g678 == 0);
         function_427530(PTR(act));
         CHECK(function_428000(PTR(act), stage_path));
-        printf("ACT script path=%s compiled=%d text=%.1600s\n",
-            retdec_std_string_data(PTR(act) + 164),
-            *(uint8_t *)((char *)act + 201),
-            *(uint8_t *)((char *)act + 201) ? "(bytecode)" :
-                *(const char **)((char *)act + 192));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
@@ -436,12 +431,6 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 retdec_std_string_data(actual_layer + 112),
                 *(uint8_t *)(intptr_t)(actual_layer + 140),
                 *(float *)(intptr_t)(actual_layer + 144), *(float *)(intptr_t)(actual_layer + 148));
-            if (strncmp(retdec_std_string_data(actual_layer + 112), "hi", 2) == 0)
-                printf("hidden script path=%s compiled=%d text=%.1600s\n",
-                    retdec_std_string_data(actual_layer + 268),
-                    *(uint8_t *)(intptr_t)(actual_layer + 305),
-                    *(uint8_t *)(intptr_t)(actual_layer + 305) ? "(bytecode)" :
-                        *(const char **)(intptr_t)(actual_layer + 296));
             for (int32_t item = *(int32_t *)(intptr_t)sentinel; item != sentinel;
                  item = *(int32_t *)(intptr_t)item) {
                 int32_t key = *(int32_t *)(intptr_t)(item + 8);
@@ -858,6 +847,287 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_hidden_layer(int32_t vm, int32_t *root) {
+    int32_t act[60], resource[48] = {0}, parent[2] = {g483,g484};
+    int32_t hidden = 0, active = 0, layout = 0, script[3];
+    int32_t compile_target = PTR(function_471b30), stack_top = function_48aa20(vm);
+    int failures = vm_failures;
+    g874 = 1;
+    CHECK(function_415550_this(PTR(root), PTR("CompileFile"), PTR(&compile_target),
+        4, PTR(retdec_compile_file_native), 0) >= 0);
+    function_427530(PTR(act));
+    CHECK(function_428000(PTR(act), "data/map/w1-c01a.act"));
+    for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
+        int32_t layer = *(int32_t *)(intptr_t)slot;
+        if (strcmp(retdec_std_string_data(layer + 112), "hidden") == 0) hidden = layer;
+    }
+    CHECK(hidden);
+    CHECK(retdec_publish_cact_layer_class(vm, PTR(root)));
+    CHECK(retdec_sqrat_new_table(vm, parent));
+    CHECK(retdec_sqrat_set_pair(vm, root + 2, retdec_std_string_data(PTR(act) + 16), parent));
+    CHECK(execute_source(vm, parent, "resource <- {};"));
+    resource[39] = root[2];
+    resource[40] = root[3];
+    act[52] = PTR(&hidden);
+    act[53] = PTR(&hidden + 1);
+    CHECK(retdec_publish_act_layers(vm, PTR(act), PTR(resource), &active));
+    CHECK(vm_failures == failures && active == 1);
+    CHECK(*(int32_t *)(intptr_t)(hidden + 220) == 0x08000100);
+    CHECK(*(int32_t *)(intptr_t)(hidden + 240) == 0x08000100);
+    script[0] = PTR(&g16);
+    script[1] = *(int32_t *)(intptr_t)(hidden + 316);
+    script[2] = *(int32_t *)(intptr_t)(hidden + 320);
+    CHECK(execute_source(vm, script + 1,
+        "if (u != this || typeof Init != \"function\" || typeof Update != \"function\") "
+        "throw \"hidden script environment\";"));
+    int32_t layout_object[3];
+    function_4aa3a0_this(PTR(script), PTR(layout_object), "layout");
+    layout = function_4a9b40_this(PTR(layout_object), 0);
+    CHECK(layout && retdec_map_chip_data(layout));
+    function_4a9d70_this(PTR(layout_object));
+    CHECK(retdec_execute_act_callback(hidden + 204, 4, NULL) >= 0);
+    CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
+    CHECK(execute_source(vm, root + 2,
+        "player <- { left=2232.0, right=2264.0, top=800.0, bottom=832.0 };"));
+    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    CHECK(vm_failures == failures);
+    CHECK(*(float *)(intptr_t)(layout + 320) <= 0.001f);
+    CHECK(execute_source(vm, root + 2, "player.left=100.0; player.right=120.0;"));
+    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    CHECK(*(float *)(intptr_t)(layout + 320) >= 0.999f);
+    CHECK(vm_failures == failures && function_48aa20(vm) == stack_top);
+    retdec_sqrat_release_pair(vm, parent);
+    puts("PASS: original ACT hidden-layer include, callbacks, native fade-out and fade-in");
+    return 0;
+}
+
+static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t reader = 0, scripts[3], init[3], actors[2];
+    int32_t create_target = PTR(function_469b40);
+    int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
+    int32_t records[1][8] = {{1, -1000, 200}};
+    struct retdec_mcd_chip chip = {0};
+    struct retdec_mcd_data data = {1,&chip,0,NULL};
+    unsigned char version;
+    unsigned short textures;
+    int failures = vm_failures;
+    CHECK(function_415550_this(PTR(root), PTR("CreateActor"), PTR(&create_target),
+        4, PTR(function_471df0), 0) >= 0);
+    CHECK(execute_source(vm, root + 2,
+        "t_enemy <- {};\ncamera <- {left=-2000.0,right=2000.0,top=-2000.0,bottom=2000.0};\n"
+        "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
+        "stageWaterLevel=10000;\n"));
+    CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
+    CHECK(vm_failures == failures);
+    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
+    CHECK(retdec_pat_read_u8(reader, &version));
+    CHECK(retdec_pat_read_u16(reader, &textures));
+    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
+    CHECK(retdec_pat_read_animations(reader, manager, 0));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(function_468950_this(PTR(g_514300_storage), manager));
+    layout[0] = PTR(&g327); layout[60] = 2000; layout[61] = 32;
+    layout[66] = PTR(records); layout[67] = PTR(records + 1);
+    layout[78] = PTR(layer); layout[79] = PTR(resource);
+    *((uint8_t *)layer + 140) = 1;
+    resource[16] = PTR(&data);
+    chip.chip_id = 1;
+    *(int16_t *)(chip.bytes + 12) = 2000;
+    *(int16_t *)(chip.bytes + 14) = 32;
+    CHECK(function_4693a0(PTR(layout)));
+    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_enemy");
+    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0106");
+    for (int i = 0; i < 2; ++i) {
+        actors[i] = function_463b40_this(manager, init[0], init[1], init[2],
+            100.0f + 200.0f * i, 160, -1, PTR(&g16), 0x05000002, 0x106, 0);
+        CHECK(actors[i] && vm_failures == failures);
+        function_4a9840_this(PTR(root + 1), i ? "enemyB" : "enemyA", actors[i] + 44);
+    }
+    CHECK(execute_source(vm, root + 2,
+        "if (t_enemy.nextID!=2) throw \"enemy constructor not called\";\n"
+        "if (enemyA.user==enemyB.user) throw \"shared enemy user\";\n"
+        "if (enemyA.user.eventHandler==enemyB.user.eventHandler) throw \"shared enemy events\";\n"
+        "if (enemyA.user.data==enemyB.user.data) throw \"shared enemy data\";\n"
+        "if (enemyA.user.childRef==enemyB.user.childRef) throw \"shared enemy children\";\n"
+        "if (enemyA.user.actor!=enemyA || enemyB.user.actor!=enemyB) throw \"enemy owner binding\";\n"
+        "if (typeof enemyA.funcUpdate!=\"function\" || enemyA.user.takeID!=4010) "
+        "throw \"enemy initialization\";"));
+    CHECK(retdec_actor_manager_refresh(manager) == 3);
+    for (int frame = 0; frame < 40; ++frame) {
+        for (int i = 0; i < 2; ++i) retdec_actor_tick(actors[i]);
+        CHECK(vm_failures == failures);
+        function_468620_this(PTR(g_514300_storage));
+        for (int i = 0; i < 2; ++i) {
+            retdec_actor_update_motion(actors[i]);
+            CHECK(_finite(*(float *)(intptr_t)(actors[i] + 244)));
+        }
+    }
+    CHECK(execute_source(vm, root + 2,
+        "if (!(enemyA.x<100 && enemyB.x<300 && enemyA.hitBottom && enemyB.hitBottom)) "
+        "throw \"enemy walking and landing\";\n"
+        "enemyA.hitLeft=1; enemyA.xPrev=enemyA.x;"));
+    retdec_actor_tick(actors[0]);
+    CHECK(vm_failures == failures);
+    CHECK(execute_source(vm, root + 2,
+        "if (enemyA.direction!=1.0 || enemyA.vx<=0.0 || enemyB.direction!=-1.0) "
+        "throw \"enemy wall reversal\";"));
+    function_469700();
+    CHECK(function_468950_this(PTR(g_514300_storage), manager));
+    function_4a9d70_this(PTR(init));
+    function_4a9d70_this(PTR(scripts));
+    puts("PASS: full enemy script loading, independent state, walking, landing and wall reversal");
+    return 0;
+}
+
+static int test_delegate_lifetime(int32_t vm, int32_t *root) {
+    int32_t first[2] = {g483,g484}, second[2] = {g483,g484};
+    int32_t shared = *(int32_t *)(intptr_t)(vm + 140);
+    CHECK(execute_source(vm, root + 2,
+        "delegateBase <- {value=7};\n"
+        "delegateA <- delegate delegateBase : {};\n"
+        "delegateB <- delegate delegateBase : {};\n"
+        "delegateA.extra <- 9;\n"
+        "if (delegateA==delegateB || delegateA.value!=7 || (\"extra\" in delegateB)) "
+        "throw \"delegate isolation\";\n"
+        "delegateBase.value=11;\n"
+        "if (delegateA.value!=11 || delegateB.value!=11) throw \"delegate inheritance\";"));
+    CHECK(retdec_sqrat_new_table(vm, first));
+    CHECK(retdec_sqrat_new_table(vm, second));
+    int32_t first_refs = *(int32_t *)(intptr_t)(first[1]+4);
+    CHECK(function_48e520_this(second[1], first[1]));
+    CHECK(!function_48e520_this(first[1], second[1]));
+    CHECK(!function_48e520_this(first[1], first[1]));
+    CHECK(*(int32_t *)(intptr_t)(first[1]+4) == first_refs+1);
+    CHECK(function_48e520_this(second[1], 0));
+    for (int i=0;i<32;++i) {
+        int32_t userdata = function_48bec0(shared, 16);
+        int32_t weak[5] = {0,1,0,0x0A000080,userdata};
+        CHECK(userdata && function_48e520_this(userdata, first[1]));
+        *(int32_t *)(intptr_t)(userdata+8)=PTR(weak);
+        CHECK(*(int32_t *)(intptr_t)(first[1]+4) == first_refs+1);
+        retdec_call_thiscall0_result((void *)(intptr_t)userdata, function_48be70);
+        CHECK(*(int32_t *)(intptr_t)(userdata+24)==0 && weak[4]==userdata);
+        CHECK(function_48e520_this(userdata, first[1]));
+        retdec_call_thiscall1_result((void *)(intptr_t)userdata, function_48bf50, 0);
+        CHECK(weak[3]==g483 && weak[4]==0);
+        CHECK(*(int32_t *)(intptr_t)(first[1]+4)==first_refs);
+        free((void *)(intptr_t)userdata);
+    }
+    retdec_sqrat_release_pair(vm, first);
+    retdec_sqrat_release_pair(vm, second);
+    puts("PASS: delegate isolation/cycle rejection and userdata finalization/destruction");
+    return 0;
+}
+
+static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t enemy[3], item[3], block_init[3], stone_init[3], rider_init[3];
+    int32_t rider, stone, block;
+    int failures=vm_failures;
+    function_4aa3a0_this(PTR(root+1), PTR(enemy), "t_enemy");
+    function_4aa3a0_this(PTR(root+1), PTR(item), "t_item");
+    CHECK(execute_asset(vm, enemy+1, "data/script/block.cv4"));
+    CHECK(execute_asset(vm, item+1, "data/script/bullet.cv4"));
+    function_4aa3a0_this(PTR(enemy), PTR(block_init), "Init0435");
+    function_4aa3a0_this(PTR(item), PTR(stone_init), "InitStone");
+    function_4aa3a0_this(PTR(root+1), PTR(rider_init), "InitStoneRider");
+    rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
+        100,150,-1,PTR(&g16),g483,g484,0);
+    stone=function_463b40_this(manager,stone_init[0],stone_init[1],stone_init[2],
+        100,150,-1,PTR(&g16),g483,g484,0);
+    CHECK(rider && stone && vm_failures==failures);
+    function_4a9840_this(PTR(root+1), "fallingStone", stone+44);
+    CHECK(execute_source(vm,root+2,
+        "player.x=fallingStone.x;\n"
+        "player.y=fallingStone.top+2-(player.bottom-player.y); player.vy=1.0;"));
+    retdec_actor_refresh_bounds(rider);
+    function_462ce0(stone,rider);
+    CHECK(execute_source(vm,root+2,"player.x=fallingStone.right+64;"));
+    retdec_actor_update_motion(rider);
+    retdec_actor_tick(stone);
+    block=function_463b40_this(manager,block_init[0],block_init[1],block_init[2],
+        *(float *)(intptr_t)(stone+240),240,-1,PTR(&g16),0x05000002,0x435,0);
+    CHECK(block && vm_failures==failures);
+    function_4a9840_this(PTR(root+1),"stoneBlock",block+44);
+    int contacted=0;
+    retdec_actor_manager_refresh(manager);
+    for(int frame=0;frame<80;++frame) {
+        retdec_actor_tick(stone);
+        function_468620_this(PTR(g_514300_storage));
+        retdec_actor_update_motion(stone);
+        function_462ce0(stone,block);
+        CHECK(vm_failures==failures);
+        CHECK(_finite(*(float *)(intptr_t)(stone+244)));
+        if(*(uint8_t *)(intptr_t)(stone+22)) {contacted=1;break;}
+    }
+    CHECK(contacted);
+    CHECK(execute_source(vm,root+2,
+        "if (stoneBlock.callbackMask!=0 || stoneBlock.user.SetDamage!=null || stoneBlock.user.direction!=1) "
+        "throw \"stone did not activate original block callback\";"));
+    function_469700();
+    CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    function_4a9d70_this(PTR(enemy)); function_4a9d70_this(PTR(item));
+    function_4a9d70_this(PTR(block_init)); function_4a9d70_this(PTR(stone_init));
+    function_4a9d70_this(PTR(rider_init));
+    puts("PASS: original stone ride/walk-off/fall, block callback, region query and item spawn");
+    return 0;
+}
+
+static int margin_calls;
+static int32_t margin_args[4];
+static int32_t capture_bgm_margin(int32_t path, int32_t a, int32_t b, int32_t c, int32_t d) {
+    if (strcmp((const char *)(intptr_t)path, "data/bgm/st1.ogg") != 0) return 0;
+    ++margin_calls;
+    margin_args[0]=a; margin_args[1]=b; margin_args[2]=c; margin_args[3]=d;
+    return 0;
+}
+
+static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t init[3], actor, margin_target=PTR(capture_bgm_margin);
+    int failures=vm_failures, stack_top=function_48aa20(vm);
+    CHECK(function_415550_this(PTR(root), PTR("PlayBgmMargin"), PTR(&margin_target),
+        4, PTR(function_4720e0), 0)>=0);
+    CHECK(execute_source(vm, root+2,
+        "transformFaces <- 0;\n"
+        "PlayerImage <- {SetFaceType=function(t){::transformFaces++;}};\n"
+        "PlayerStatus <- {ItemCross=false};\n"
+        "stageBgm=\"data/bgm/st1.ogg\";\n"
+        "input.x=0; input.b3=0; input.b0=0; input.b2=0;\n"
+        "camera <- {left=-1000.0,right=1000.0,top=-1000.0,bottom=1000.0};"));
+    function_4aa3a0_this(PTR(root+1),PTR(init),"InitWalkingProbe");
+    actor=function_463b40_this(manager,init[0],init[1],init[2],
+        100,200,-1,PTR(&g16),g483,g484,0);
+    CHECK(actor);
+    function_4a9840_this(PTR(root+1),"transformProbe",actor+44);
+    CHECK(execute_source(vm,root+2,
+        "transformProbe.user.beforeType <- TYPE_2HEAD;\n"
+        "transformProbe.user.beforeTake <- TAKE_STAND;\n"
+        "transformProbe.user.count8headTime <- 600;\n"
+        "transformProbe.user.SetType <- t_player.SetType.bindenv(transformProbe);\n"
+        "transformProbe.funcUpdate=function(){};\ntransformProbe.collisionMask=0;"));
+    for(int round=0;round<32;++round) {
+        CHECK(execute_source(vm,root+2,
+            "stageBgmCurrent=\"data/bgm/8head.ogg\";\n"
+            "transformProbe.user.beforeType=TYPE_2HEAD; transformProbe.user.type=TYPE_8HEAD;\n"
+            "transformProbe.user.count8head=91; transformProbe.user.invincibleCount=0;\n"
+            "transformProbe.user.SetTake(TAKE_STAND);"));
+        retdec_actor_tick(actor);
+        retdec_actor_update_motion(actor);
+        CHECK(vm_failures==failures);
+        CHECK(execute_source(vm,root+2,
+            "if (transformProbe.user.type!=TYPE_2HEAD || transformProbe.user.count8head!=90 || "
+            "transformProbe.take!=TYPE_2HEAD*100+TAKE_STAND || PlayerStatus.ItemCross) "
+            "throw \"eight-head restoration\";"));
+        CHECK(_finite(*(float *)(intptr_t)(actor+244)));
+        CHECK(function_48aa20(vm)==stack_top);
+    }
+    CHECK(margin_calls==32 && margin_args[0]==1000 && margin_args[1]==2000 &&
+        margin_args[2]==100 && margin_args[3]==1);
+    function_469700();
+    function_4a9d70_this(PTR(init));
+    puts("PASS: original eight-head expiry, SetType/SetTake and native BGM adapter (32 transitions)");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -917,6 +1187,7 @@ int main(int argc, char **argv) {
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
+    CHECK(test_delegate_lifetime(vm, root)==0);
     /* Declare the isolated fixture's script-managed callback slot before creating instances. */
     CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
     layout[0] = PTR(&g327);
@@ -1583,6 +1854,14 @@ int main(int argc, char **argv) {
         CHECK(test_stone_placement(manager, vm, root) == 0);
     if (argc > 8)
         CHECK(test_floating_items(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_hidden_layer(vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_player_form_exit(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_enemy_scripts(manager, vm, root) == 0);
+    if (argc > 8)
+        CHECK(test_stone_block(manager, vm, root) == 0);
     CHECK(vm_failures == 0);
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
