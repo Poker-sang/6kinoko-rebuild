@@ -1921,6 +1921,8 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
         function_4a94e0_this(PTR(callbacks[i] + 1));
         function_4a94e0_this(PTR(callbacks[i] + 4));
     }
+    /* Empty callbacks use the lazily cached root object at 4A8CC0. */
+    CHECK(function_4a8cc0() != 0);
     int32_t first_refs = callback_external_refs(vm, first);
     int32_t second_refs = callback_external_refs(vm, second);
     int32_t root_refs = callback_external_refs(vm, root + 1);
