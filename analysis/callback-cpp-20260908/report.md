@@ -25,8 +25,8 @@ was observed. This is a game reconstruction, not a malware investigation.
 - [x] Read scope, previous evidence and current callback implementations.
 - [x] Confirm original layouts, calling conventions and call sites in IDA.
 - [x] Migrate callback binding into C++ and add focused ownership/ABI checks.
-- [ ] Commit source before fresh quiet/diagnostic builds and validation.
-- [ ] Record tests, bounded smoke outcomes and artifact provenance.
+- [x] Commit source before fresh quiet/diagnostic builds and validation.
+- [x] Record tests, user gameplay confirmation and artifact provenance.
 
 ## E-callback / Static Evidence
 
@@ -85,3 +85,32 @@ migration preserves this existing result. Correct the test to compare with
 that constructor's result; do not change runtime logic to satisfy the test.
 No game was launched for this attempt. All files are retained. Revised tests
 use fresh callback-cpp-20260908-r2-{quiet,diag} build/runtime directories.
+
+## Final Result
+
+Final tested source: ae6e361bb474225ee275d33db8b8bb020bc124db.
+Both r2 Win32 Release builds pass CTest 3/3. Both stage-dat.log files record
+size/SHA256-verified copies of all three original DAT files beside each EXE.
+The initial and r2 build/runtime directories, logs and EXEs are all retained;
+each runtime directory contains validation.json with source provenance.
+
+The quiet EXE was launched through run_staged.ps1, without a working-directory
+or data-directory override (smoke-launch.log, PID 36084). Computer Use observed
+a rendered game scene. Before automated navigation completed, physical Escape
+stopped Computer Use. No further UI input was sent. The user then explicitly
+reported that the game has no problem and asked to finish this version and
+stop. Gameplay acceptance is therefore user-confirmed; the automated
+stage-one/jump/enemy sequence is not claimed complete. No diagnostic gameplay
+run was performed after that instruction. No existing crash investigation or
+further development batch was started.
+
+Final EXE SHA256:
+- quiet: C0AF8CAAE8A00C6A27680FC5D690BB9E4FDB35EC42CA2B8F2108F60FA2162D72
+- diagnostic: 57E7656E3D9B7640E7B2C170D40C13559463256D6DD5438D4FB4612E2B5F8B73
+
+ADF P0: original disassembly anchors the four migrated entry points and
+field/type decisions; executable contracts verify ABI, external reference
+counts, replacement, clearing and Camera dispatch. Existing compatibility
+helpers remain, including the zero-type empty callback. Normal gameplay is
+accepted based on user feedback, not exhaustive automated equivalence. No
+DAT loading rule, VM backend or scripted game behavior was added or changed.
