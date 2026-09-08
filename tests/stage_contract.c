@@ -1905,6 +1905,7 @@ static int callback_external_refs(int32_t vm, const int32_t *object) {
 static int test_script_callback_binding(int32_t vm, int32_t *root) {
     int32_t actor[160] = {0}, camera[128] = {0};
     int32_t first[3], second[3], argument[3];
+    int32_t empty[7] = {0}, empty_type, empty_value;
     void *methods[3] = {kinoko_actor_set_update_callback,
         kinoko_actor_set_collision_callback, kinoko_camera_set_update_callback};
     int32_t *receivers[3] = {actor, actor, camera};
@@ -1921,8 +1922,13 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
         function_4a94e0_this(PTR(callbacks[i] + 1));
         function_4a94e0_this(PTR(callbacks[i] + 4));
     }
-    /* Empty callbacks use the lazily cached root object at 4A8CC0. */
-    CHECK(function_4a8cc0() != 0);
+    /* Match the existing empty-function constructor, including its zero-type
+       compatibility value; this migration does not normalize it to OT_NULL. */
+    CHECK(retdec_function_45df10_impl(PTR(empty), 0) == PTR(empty));
+    empty_type = empty[5];
+    empty_value = empty[6];
+    function_4a9d70_this(PTR(empty + 4));
+    function_4a9d70_this(PTR(empty + 1));
     int32_t first_refs = callback_external_refs(vm, first);
     int32_t second_refs = callback_external_refs(vm, second);
     int32_t root_refs = callback_external_refs(vm, root + 1);
@@ -1954,12 +1960,13 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
        Camera value, matching the original distinct method rules. */
     for (int i = 0; i < 3; ++i)
         retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), 0x05000002, 7);
-    CHECK(actor[35] == g483 && actor[36] == g484);
+    CHECK(actor[35] == empty_type && actor[36] == empty_value);
     CHECK(camera[8] == 0x05000002 && camera[9] == 7);
     CHECK(retdec_call_thiscall0_result(camera, kinoko_camera_update) == 0x05000002);
     for (int i = 0; i < 3; ++i) {
         retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), g483, g484);
-        CHECK(callbacks[i][5] == g483 && callbacks[i][6] == g484);
+        CHECK(callbacks[i][5] == (i == 1 ? empty_type : g483));
+        CHECK(callbacks[i][6] == (i == 1 ? empty_value : g484));
         function_4a9d70_this(PTR(callbacks[i] + 4));
         function_4a9d70_this(PTR(callbacks[i] + 1));
     }

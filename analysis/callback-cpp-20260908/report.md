@@ -72,3 +72,16 @@ New focused contracts call all three setters through the actual thiscall
 adapters, alternate/self-assign closures 64 times, inspect the external
 RefTable counts, check stack balance, invoke the Camera closure, and verify
 non-closure/empty handling. Existing script registration tests remain.
+
+## First Validation Attempt
+
+Source 98ff6ddf61380f2704685161baaae221fa3dbfe5 built successfully in both
+new directories. DAT staging passed. CTest passed archive/ABI but the new
+callback contract stopped at the empty collision callback assertion. All
+64 binding/self-assignment iterations and Camera dispatch checks had passed.
+The test assumed canonical OT_NULL, while the unchanged 45DF10 compatibility
+helper copies a zero-initialized temporary into its empty callable. The C++
+migration preserves this existing result. Correct the test to compare with
+that constructor's result; do not change runtime logic to satisfy the test.
+No game was launched for this attempt. All files are retained. Revised tests
+use fresh callback-cpp-20260908-r2-{quiet,diag} build/runtime directories.
