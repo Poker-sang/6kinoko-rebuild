@@ -27,6 +27,7 @@
 #include "kinoko/actor_collision.h"
 #include "kinoko/actor_methods.h"
 #include "kinoko/act_resource.h"
+#include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
 
 static volatile LONG retdec_actor_step_trace_active;
@@ -159,11 +160,11 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr);
 static void retdec_trace_star_state(const char *phase, int32_t actor);
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
                                           uint32_t stride);
-static int32_t retdec_function_45df10_impl(int32_t this_ptr,
+int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr);
 static int32_t retdec_squirrel_pair_from_stack(int32_t vm, int32_t index,
                                                 int32_t *target);
-static int32_t retdec_actor_step_callback(int32_t state_ptr);
+int32_t retdec_actor_step_callback(int32_t state_ptr);
 
 // These wrappers intentionally use the C calling convention in the
 // compatibility translation unit.
@@ -3924,8 +3925,6 @@ int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5);
 int32_t function_45fab0(int32_t a1, int32_t a2);
 int32_t function_45fb90(void);
-int32_t function_45fcd0(void);
-int32_t function_45fd80(void);
 int32_t function_45fe80(void);
 int32_t function_45ff80(int32_t a1, int32_t result);
 int32_t function_45ff90(void);
@@ -4043,8 +4042,6 @@ int32_t function_466100(int32_t a1);
 int32_t function_466270(void);
 static int32_t function_466270_this(int32_t this_ptr);
 int32_t function_466320(int32_t a1);
-int32_t function_4663c0(void);
-int32_t function_466470(void);
 int32_t function_466490(void);
 int32_t function_4664a0(int32_t a1);
 int32_t function_466540(int32_t a1, int32_t a2);
@@ -5206,14 +5203,14 @@ int32_t function_4a9490(int32_t * a1, int32_t a2, int32_t a3, char * a4, char * 
 static int32_t function_4a94e0_this(int32_t this_ptr);
 static int32_t function_4a9c10_this(int32_t this_ptr);
 int32_t function_4a9500(int32_t a1);
-static int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr);
+int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr);
 int32_t function_4a9540(int32_t a1, int32_t a2);
 static int32_t function_4a9540_this(int32_t this_ptr, int32_t a1,
                                     int32_t a2);
 int32_t function_4a9570(void);
 static int32_t function_4a9570_this(int32_t this_ptr);
 int32_t function_4a95c0(int32_t a1);
-static int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr);
+int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr);
 static int32_t function_4a90c0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_4a9600(int32_t a1);
 static int32_t function_4a9600_this(int32_t this_ptr, int32_t source_ptr);
@@ -5252,7 +5249,7 @@ int32_t function_4a9d30(int32_t * a1);
 static int32_t function_4a9d30_this(int32_t this_ptr, int32_t *a1);
 int32_t function_4a9d50(void);
 int32_t function_4a9d70(void);
-static int32_t function_4a9d70_this(int32_t this_ptr);
+int32_t function_4a9d70_this(int32_t this_ptr);
 int32_t function_4a9dc0(char a1);
 int32_t function_4a9e30(int32_t a1);
 static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr);
@@ -123602,7 +123599,7 @@ int32_t function_45de90(int32_t a1, int32_t a2) {
 // Address range: 0x45df10 - 0x45dfac
 /* 45DF10 is a constructor-like __thiscall routine.  Its object contains a
    VM pointer followed by two SquirrelObject members at +4 and +16. */
-static int32_t retdec_function_45df10_impl(int32_t this_ptr,
+int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr)
 {
     int32_t temporary[3] = { 0, 0, 0 };
@@ -125345,74 +125342,6 @@ __declspec(naked) int32_t function_45fb90(void) {
 int32_t function_45fb90(void) { return 0; }
 #endif
 
-// Address range: 0x45fcd0 - 0x45fd7e
-/* The Actor native callback receives one SquirrelObject by value.  RetDec
-   dropped ECX and represented the three object words as unrelated locals. */
-static int32_t function_45fcd0_this(int32_t this_ptr,
-                                    int32_t argument_type,
-                                    int32_t argument_data,
-                                    int32_t argument_aux)
-{
-    int32_t actor_object[3];
-    int32_t callback_object[3];
-    int32_t incoming_object[3] = {
-        argument_type, argument_data, argument_aux
-    };
-
-    function_4a9500_this(actor_object, this_ptr + 44);
-    function_4a9500_this(callback_object,
-                         (int32_t)(intptr_t)incoming_object);
-    *(int32_t *)(intptr_t)(this_ptr + 92) = (int32_t)(intptr_t)g644;
-    function_4a95c0_this(this_ptr + 96,
-                         (int32_t)(intptr_t)actor_object);
-    function_4a95c0_this(this_ptr + 108,
-                         (int32_t)(intptr_t)callback_object);
-    function_4a9d70_this((int32_t)(intptr_t)callback_object);
-    function_4a9d70_this((int32_t)(intptr_t)actor_object);
-    return function_4a9d70_this((int32_t)(intptr_t)incoming_object);
-}
-
-// Address range: 0x45fd80 - 0x45fe75
-static int32_t function_45fd80_this(int32_t this_ptr,
-                                    int32_t argument_type,
-                                    int32_t argument_data,
-                                    int32_t argument_aux)
-{
-    int32_t incoming_object[3] = {
-        argument_type, argument_data, argument_aux
-    };
-    int32_t first_object[3] = { 0, 0, 0 };
-    int32_t second_object[3] = { 0, 0, 0 };
-    int32_t default_function[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-    if (function_4a9a30_this((int32_t)(intptr_t)incoming_object) ==
-        0x8000100) {
-        function_4a9500_this(first_object, this_ptr + 44);
-        function_4a9500_this(second_object,
-                             (int32_t)(intptr_t)incoming_object);
-        *(int32_t *)(intptr_t)(this_ptr + 120) =
-            (int32_t)(intptr_t)g644;
-        function_4a95c0_this(this_ptr + 124,
-                             (int32_t)(intptr_t)first_object);
-        function_4a95c0_this(this_ptr + 136,
-                             (int32_t)(intptr_t)second_object);
-    } else {
-        retdec_function_45df10_impl(
-            (int32_t)(intptr_t)default_function, 0);
-        *(int32_t *)(intptr_t)(this_ptr + 120) = default_function[0];
-        function_4a95c0_this(this_ptr + 124,
-                             (int32_t)(intptr_t)(default_function + 1));
-        function_4a95c0_this(this_ptr + 136,
-                             (int32_t)(intptr_t)(default_function + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(default_function + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(default_function + 1));
-    }
-
-    function_4a9d70_this((int32_t)(intptr_t)second_object);
-    function_4a9d70_this((int32_t)(intptr_t)first_object);
-    return function_4a9d70_this((int32_t)(intptr_t)incoming_object);
-}
-
 // Address range: 0x45fe80 - 0x45ff73
 static int32_t function_45fe80_this(int32_t this_ptr,
                                     int32_t argument_type,
@@ -125463,36 +125392,6 @@ static int32_t function_45fe80_this(int32_t this_ptr,
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45fcd0(void) {
-    __asm {
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        push ecx
-        call function_45fcd0_this
-        add esp, 16
-        ret 12
-    }
-}
-
-__declspec(naked) int32_t function_45fd80(void) {
-    __asm {
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        push ecx
-        call function_45fd80_this
-        add esp, 16
-        ret 12
-    }
-}
-
 __declspec(naked) int32_t function_45fe80(void) {
     __asm {
         mov eax, [esp + 12]
@@ -125508,8 +125407,6 @@ __declspec(naked) int32_t function_45fe80(void) {
     }
 }
 #else
-int32_t function_45fcd0(void) { return 0; }
-int32_t function_45fd80(void) { return 0; }
 int32_t function_45fe80(void) { return 0; }
 #endif
 
@@ -126256,12 +126153,12 @@ int32_t function_460e00(void) {
                                           (int32_t)(intptr_t)&function_460b00,
                                           0);
     function_460e00_register_actor_method(v3, v2, "SetUpdateFunction",
-                                          (int32_t)(intptr_t)&function_45fcd0,
+                                          (int32_t)(intptr_t)&kinoko_actor_set_update_callback,
                                           (int32_t)(intptr_t)&function_460b50,
                                           0);
     function_460e00_register_actor_method(
         v3, v2, "SetCollisionCallbackFunction",
-        (int32_t)(intptr_t)&function_45fd80,
+        (int32_t)(intptr_t)&kinoko_actor_set_collision_callback,
         (int32_t)(intptr_t)&function_460b50, 0);
     function_460e00_register_actor_method(
         v3, v2, "InterrputCollisionCallback",
@@ -127535,7 +127432,7 @@ static void retdec_trace_invalid_actor(const char *phase, int32_t actor) {
     }
 }
 
-static int32_t retdec_actor_step_callback(int32_t state_ptr)
+int32_t retdec_actor_step_callback(int32_t state_ptr)
 {
     int32_t vm;
     int32_t result;
@@ -129011,7 +128908,7 @@ static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
         retdec_trace("actor:collision-callback-failed");
         function_48c910(vm, base);
         /* Original 462D9C/462E3E clears a failing callback before continuing. */
-        function_45fd80_this(actor, (int32_t)(intptr_t)&g16, g483, g484);
+        kinoko_actor_set_collision_callback(actor, NULL, (int32_t)(intptr_t)&g16, g483, g484);
     }
     return result;
 }
@@ -132578,94 +132475,6 @@ int32_t function_466320(int32_t a1) {
     return result;
 }
 
-// Address range: 0x4663c0 - 0x46646b
-/* Camera::SetUpdateFunction is a __thiscall member that receives one
-   SquirrelObject by value (three consecutive dwords).  RetDec dropped both
-   the ECX receiver and the by-value object, so keep the real object movement
-   in a C helper and expose the original callee-cleaned ABI below. */
-static int32_t function_4663c0_this(int32_t this_ptr,
-                                    int32_t argument_type,
-                                    int32_t argument_data,
-                                    int32_t argument_aux) {
-    int32_t camera_object[3];
-    int32_t callback_object[3];
-    int32_t incoming_object[3];
-
-    if (this_ptr == 0)
-        return 0;
-
-    incoming_object[0] = argument_type;
-    incoming_object[1] = argument_data;
-    incoming_object[2] = argument_aux;
-
-    retdec_trace("4663c0:begin");
-    retdec_trace_i32("4663c0:this", this_ptr);
-    retdec_trace_i32("4663c0:argument-type", argument_type);
-    retdec_trace_i32("4663c0:argument-data", argument_data);
-    retdec_trace_i32("4663c0:argument-aux", argument_aux);
-
-    /* 4663C0 constructs a local copy of the Camera SquirrelObject, then
-       copies the incoming callback into the Camera object. */
-    function_4a9500_this(camera_object, this_ptr);
-    function_4a9500_this(callback_object,
-                         (int32_t)(intptr_t)incoming_object);
-    *(int32_t *)(intptr_t)(this_ptr + 12) = (int32_t)(intptr_t)g644;
-    function_4a95c0_this(this_ptr + 16,
-                         (int32_t)(intptr_t)camera_object);
-    function_4a95c0_this(this_ptr + 28,
-                         (int32_t)(intptr_t)callback_object);
-    function_4a9d70_this((int32_t)(intptr_t)callback_object);
-    function_4a9d70_this((int32_t)(intptr_t)camera_object);
-    function_4a9d70_this((int32_t)(intptr_t)incoming_object);
-    retdec_trace("4663c0:end");
-    return 0;
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_4663c0(void) {
-    __asm {
-        /* Entry ABI: ECX=this, [esp+4..+12]=one SquirrelObject. */
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        push ecx
-        call function_4663c0_this
-        add esp, 16
-        ret 12
-    }
-}
-#else
-int32_t function_4663c0(void) {
-    return 0;
-}
-#endif
-
-// Address range: 0x466470 - 0x46648d
-static int32_t function_466470_this(int32_t camera) {
-    int32_t result = function_4a9a30_this(camera + 28);
-    if (result != 0x08000100)
-        return result;
-    return retdec_actor_step_callback(camera + 12);
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_466470(void) {
-    __asm {
-        push ecx
-        call function_466470_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_466470(void) {
-    return function_466470_this((int32_t)(intptr_t)g_retdec_camera_state);
-}
-#endif
-
 // Address range: 0x466490 - 0x466494
 // From class:    .?AU?$ClassType@M@SqPlus@@
 // Type:          virtual member function
@@ -132942,7 +132751,7 @@ int32_t function_4669d0(void) {
     function_48ab90(vm, camera_class[3], camera_class[4]);
     function_48a480(vm, (int32_t)"SetUpdateFunction", -1);
     *(int32_t *)function_48c2f0(vm, 4) =
-        (int32_t)(intptr_t)function_4663c0;
+        (int32_t)(intptr_t)kinoko_camera_set_update_callback;
     function_48d850(vm, (int32_t)(intptr_t)function_466890, 1);
     function_48c950(vm, -3, 0);
     function_48aa50(vm);
@@ -136042,7 +135851,7 @@ int32_t function_469900(void) {
     int32_t v3 = v2; // 0x469969
     if ((v2 & 0x20000000) != 0) {
         // 0x46996b
-        v3 = function_466470_this((int32_t)(intptr_t)g_retdec_camera_state);
+        v3 = kinoko_camera_update((int32_t)(intptr_t)g_retdec_camera_state, NULL);
     }
     int32_t v4 = v3; // 0x46997b
     if ((v2 & 0x1fffffff) != 0) {
@@ -190820,7 +190629,7 @@ static int32_t function_4a9570_this(int32_t this_ptr) {
     return value_ptr;
 }
 
-static int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr) {
+int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr) {
     int32_t source_value;
     int32_t destination_value;
 
@@ -190999,7 +190808,7 @@ static int32_t *function_4a92e0_this(int32_t *this_ptr, int32_t a2) {
     return this_ptr;
 }
 
-static int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr) {
+int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr) {
     retdec_trace("4a9500:this-begin");
     retdec_trace_i32("4a9500:this", (int32_t)(intptr_t)this_ptr);
     retdec_trace_i32("4a9500:source", source_ptr);
@@ -230007,7 +229816,7 @@ int32_t function_4a9d70(void) {
 
 // The original is a __thiscall destructor.  Most RetDec call sites lost ECX,
 // so callers that still have the SquirrelObject address use this form.
-static int32_t function_4a9d70_this(int32_t this_ptr) {
+int32_t function_4a9d70_this(int32_t this_ptr) {
     int32_t value_ptr;
 
     if (this_ptr == 0)

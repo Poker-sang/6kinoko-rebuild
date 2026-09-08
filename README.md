@@ -32,6 +32,7 @@ neither setting changes runtime resource resolution. Saves are separate files.
 | `src/reconstructed/actor_collision.cpp` | Recovered actor collision methods |
 | `src/reconstructed/actor_methods.cpp` | Actor chip queries, flags and priority |
 | `src/reconstructed/act_resource.cpp` | ACT clock, wake deadline and stage cleanup |
+| `src/reconstructed/script_callbacks.cpp` | Actor/Camera callback binding and SqPlus temporary lifetimes |
 | `src/reconstructed/sprite.cpp` | Typed sprite geometry and Direct3D drawing |
 | `src/squirrel/squirrel_compile_bridge.cpp` | ACT source to original bytecode |
 | `src/squirrel/squirrel_value_bridge.cpp` | Source-based object/error ownership |

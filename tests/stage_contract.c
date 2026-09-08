@@ -1818,7 +1818,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             " user={hold=null,water=false,deadCount=0,take=0}};\nInitCamera(player);\n"));
         for(int frame=0;frame<180;++frame) {
             CHECK(execute_source(vm,root+2,"player.x+=2.5; player.left+=2.5; player.right+=2.5;"));
-            CHECK(function_466470_this(PTR(g_retdec_camera_state))>=0);
+            CHECK(kinoko_camera_update(PTR(g_retdec_camera_state), NULL)>=0);
             retdec_actor_manager_update(PTR(g_retdec_actor_manager_state),PTR(g_retdec_camera_state));
             CHECK(function_46f0b0(map_state)>=0);
             int32_t manager=PTR(g_retdec_actor_manager_state);
@@ -1887,6 +1887,90 @@ static int test_map_camera_fpu(void) {
         CHECK(*(float *)(layer + 23) == 3.0f);
     }
     puts("PASS: map camera floor results and balanced x87 stack over 600 rendered frames");
+    return 0;
+}
+
+static int callback_external_refs(int32_t vm, const int32_t *object) {
+    int32_t table = *(int32_t *)(intptr_t)(vm + 140) + 24;
+    int32_t slots = *(int32_t *)(intptr_t)table;
+    int32_t nodes = *(int32_t *)(intptr_t)(table + 8);
+    for (int32_t i = 0; i < slots; ++i) {
+        int32_t *node = (int32_t *)(intptr_t)(nodes + 16 * i);
+        if (node[0] == object[1] && node[1] == object[2])
+            return node[2];
+    }
+    return 0;
+}
+
+static int test_script_callback_binding(int32_t vm, int32_t *root) {
+    int32_t actor[160] = {0}, camera[128] = {0};
+    int32_t first[3], second[3], argument[3];
+    void *methods[3] = {kinoko_actor_set_update_callback,
+        kinoko_actor_set_collision_callback, kinoko_camera_set_update_callback};
+    int32_t *receivers[3] = {actor, actor, camera};
+    int32_t *callbacks[3] = {actor + 23, actor + 30, camera + 3};
+    CHECK(execute_source(vm, root + 2,
+        "callbackCount <- 0;\n"
+        "callbackFirst <- function() { ::callbackCount += 1; };\n"
+        "callbackSecond <- function() { ::callbackCount += 10; };"));
+    function_4aa3a0_this(PTR(root + 1), PTR(first), "callbackFirst");
+    function_4aa3a0_this(PTR(root + 1), PTR(second), "callbackSecond");
+    function_4a9500_this(actor + 11, PTR(root + 1));
+    function_4a9500_this(camera, PTR(root + 1));
+    for (int i = 0; i < 3; ++i) {
+        function_4a94e0_this(PTR(callbacks[i] + 1));
+        function_4a94e0_this(PTR(callbacks[i] + 4));
+    }
+    int32_t first_refs = callback_external_refs(vm, first);
+    int32_t second_refs = callback_external_refs(vm, second);
+    int32_t root_refs = callback_external_refs(vm, root + 1);
+    int32_t stack_top = function_48aa20(vm);
+    CHECK(first[1] == 0x08000100 && second[1] == 0x08000100);
+    CHECK(first_refs > 0 && second_refs > 0);
+    for (int iteration = 0; iteration < 64; ++iteration) {
+        int32_t *source = (iteration / 2) % 2 ? second : first;
+        for (int i = 0; i < 3; ++i) {
+            function_4a9500_this(argument, PTR(source));
+            retdec_call_thiscall3_result(receivers[i], methods[i],
+                argument[0], argument[1], argument[2]);
+            CHECK(callbacks[i][0] == vm);
+            CHECK(callbacks[i][1] == PTR(&g16) && callbacks[i][4] == PTR(&g16));
+            CHECK(callbacks[i][2] == root[2] && callbacks[i][3] == root[3]);
+            CHECK(callbacks[i][5] == source[1] && callbacks[i][6] == source[2]);
+        }
+        CHECK(callback_external_refs(vm, first) == first_refs + (source == first ? 3 : 0));
+        CHECK(callback_external_refs(vm, second) == second_refs + (source == second ? 3 : 0));
+        CHECK(callback_external_refs(vm, root + 1) == root_refs + 3);
+        CHECK(function_48aa20(vm) == stack_top);
+    }
+    retdec_call_thiscall0_result(camera, kinoko_camera_update);
+    CHECK(function_48aa20(vm) == stack_top);
+    CHECK(execute_source(vm, root + 2,
+        "if (callbackCount != 10) throw \"camera callback result\";"));
+
+    /* A non-closure clears collision callbacks but remains a non-dispatched
+       Camera value, matching the original distinct method rules. */
+    for (int i = 0; i < 3; ++i)
+        retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), 0x05000002, 7);
+    CHECK(actor[35] == g483 && actor[36] == g484);
+    CHECK(camera[8] == 0x05000002 && camera[9] == 7);
+    CHECK(retdec_call_thiscall0_result(camera, kinoko_camera_update) == 0x05000002);
+    for (int i = 0; i < 3; ++i) {
+        retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), g483, g484);
+        CHECK(callbacks[i][5] == g483 && callbacks[i][6] == g484);
+        function_4a9d70_this(PTR(callbacks[i] + 4));
+        function_4a9d70_this(PTR(callbacks[i] + 1));
+    }
+    CHECK(callback_external_refs(vm, first) == first_refs);
+    CHECK(callback_external_refs(vm, second) == second_refs);
+    CHECK(callback_external_refs(vm, root + 1) == root_refs);
+    CHECK(function_48aa20(vm) == stack_top);
+    CHECK(retdec_call_thiscall0_result(camera, kinoko_camera_update) == g483);
+    function_4a9d70_this(PTR(camera));
+    function_4a9d70_this(PTR(actor + 11));
+    function_4a9d70_this(PTR(second));
+    function_4a9d70_this(PTR(first));
+    puts("PASS: C++ callback ABI, replacement/self-assignment, external refs, clear and Camera dispatch");
     return 0;
 }
 
@@ -2095,6 +2179,7 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_script_callback_binding(vm, root) == 0);
     {
         int32_t anonymous[3];
         CHECK(execute_source(vm,root+2,"anonymousError <- function() { throw 17; };"));
@@ -2797,14 +2882,15 @@ int main(int argc, char **argv) {
             "function CameraProbeUpdate() { ::cameraProbeCount++; }"));
         function_4a9500_this(camera, PTR(root + 1));
         function_4aa3a0_this(PTR(root + 1), PTR(callback), "CameraProbeUpdate");
-        function_4663c0_this(PTR(camera), callback[0], callback[1], callback[2]);
+        retdec_call_thiscall3_result(camera, kinoko_camera_set_update_callback,
+            callback[0], callback[1], callback[2]);
         int32_t camera_top = function_48aa20(vm);
-        retdec_call_thiscall0_result(camera, function_466470);
+        retdec_call_thiscall0_result(camera, kinoko_camera_update);
         CHECK(function_48aa20(vm) == camera_top);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"camera update callback skipped\";"));
         function_4a9d70_this(PTR(camera + 7));
-        CHECK(function_466470_this(PTR(camera)) == g483);
+        CHECK(kinoko_camera_update(PTR(camera), NULL) == g483);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"empty camera callback executed\";"));
         function_4a9d70_this(PTR(camera + 4));
