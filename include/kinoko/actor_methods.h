@@ -18,6 +18,10 @@ int32_t __fastcall kinoko_actor_has_chip(int32_t actor, void *unused,
     float left, float top, float right, float bottom);
 
 int32_t kinoko_actor_reset_priority(int32_t actor, int32_t priority);
+int32_t __fastcall kinoko_actor_release(int32_t actor, void *unused);
+int32_t kinoko_actor_set_init_data(int32_t actor, int32_t source);
+int32_t __fastcall kinoko_actor_sync_animation(int32_t actor, void *unused,
+    int32_t vtable, int32_t type, int32_t value);
 
 #ifdef __cplusplus
 }

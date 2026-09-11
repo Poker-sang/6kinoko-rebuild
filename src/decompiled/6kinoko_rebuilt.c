@@ -157,7 +157,7 @@ static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_act_bind_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
-static void retdec_trace_star_state(const char *phase, int32_t actor);
+void retdec_trace_star_state(const char *phase, int32_t actor);
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
                                           uint32_t stride);
 int32_t retdec_function_45df10_impl(int32_t this_ptr,
@@ -3872,12 +3872,9 @@ static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_45db10(void);
 int32_t function_45db30(void);
 int32_t function_45db90(int32_t a1);
-int32_t function_45dbc0(void);
 int32_t function_45dbd0(float32_t a1, float32_t a2);
 static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
 int32_t function_45de70(int32_t a1, int32_t * a2);
-static int32_t function_45de70_this(int32_t actor_ptr,
-                                    int32_t source_ptr);
 int32_t function_45de90(int32_t a1, int32_t a2);
 int32_t function_45df10(int32_t a1);
 int32_t function_45dfb0(void);
@@ -3925,7 +3922,6 @@ int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5);
 int32_t function_45fab0(int32_t a1, int32_t a2);
 int32_t function_45fb90(void);
-int32_t function_45fe80(void);
 int32_t function_45ff80(int32_t a1, int32_t result);
 int32_t function_45ff90(void);
 int32_t function_45ffa0(int32_t a1, int32_t result);
@@ -5241,7 +5237,7 @@ static int32_t function_4a9a40_this(int32_t this_ptr, int32_t index);
 int32_t function_4a9ac0(int32_t a1);
 static int32_t function_4a9ac0_this(int32_t this_ptr, int32_t index);
 int32_t function_4a9b40(int32_t a1);
-static int32_t function_4a9b40_this(int32_t object_ptr, int32_t index);
+int32_t function_4a9b40_this(int32_t object_ptr, int32_t index);
 int32_t function_4a9bb0(int32_t a1);
 int32_t function_4a9c10(void);
 int32_t function_4a9c60(int32_t * a1, int32_t * a2);
@@ -123488,28 +123484,6 @@ int32_t function_45db90(int32_t a1) {
     return result;
 }
 
-// Address range: 0x45dbc0 - 0x45dbcf
-static int32_t function_45dbc0_this(int32_t actor) {
-    retdec_trace_star_state("release", actor);
-    *(unsigned char *)(intptr_t)(actor + 22) = 1;
-    *(unsigned char *)(intptr_t)(
-        *(int32_t *)(intptr_t)(actor + 148) + 120) = 1;
-    return 1;
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45dbc0(void) {
-    __asm {
-        push ecx
-        call function_45dbc0_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_45dbc0(void) { return 0; }
-#endif
-
 // Address range: 0x45dbd0 - 0x45de6d
 #if defined(_MSC_VER) && defined(_M_IX86)
 __declspec(naked) int32_t function_45dbd0(float32_t dx, float32_t dy) {
@@ -123528,17 +123502,7 @@ int32_t function_45dbd0(float32_t dx, float32_t dy) { return 0; }
 
 // Address range: 0x45de70 - 0x45de8b
 int32_t function_45de70(int32_t a1, int32_t * a2) {
-    return function_45de70_this(a1, (int32_t)(intptr_t)a2);
-}
-
-/* Actor::SetInitData is a __thiscall memcpy into Actor + 0x178. */
-static int32_t function_45de70_this(int32_t actor_ptr, int32_t source_ptr)
-{
-    if (actor_ptr == 0 || source_ptr == 0)
-        return 0;
-    memcpy((void *)(intptr_t)(actor_ptr + 376),
-           (const void *)(intptr_t)source_ptr, 0x30u);
-    return actor_ptr;
+    return kinoko_actor_set_init_data(a1, (int32_t)(intptr_t)a2);
 }
 
 // Address range: 0x45de90 - 0x45df04
@@ -125342,74 +125306,6 @@ __declspec(naked) int32_t function_45fb90(void) {
 int32_t function_45fb90(void) { return 0; }
 #endif
 
-// Address range: 0x45fe80 - 0x45ff73
-static int32_t function_45fe80_this(int32_t this_ptr,
-                                    int32_t argument_type,
-                                    int32_t argument_data,
-                                    int32_t argument_aux)
-{
-    int32_t incoming_object[3] = {
-        argument_type, argument_data, argument_aux
-    };
-    int32_t result;
-    int32_t current_animation;
-    int32_t current_index;
-    int32_t animation_count;
-    int32_t animation_table;
-
-    if (function_4a9a30_this((int32_t)(intptr_t)incoming_object) ==
-            0xa008000 &&
-        *(int32_t *)(intptr_t)(this_ptr + 200) != 0) {
-        current_animation = function_4a9b40_this(
-            (int32_t)(intptr_t)incoming_object, 0);
-        current_index = *(int32_t *)(intptr_t)(current_animation + 212);
-        *(int32_t *)(intptr_t)(this_ptr + 216) =
-            *(int32_t *)(intptr_t)(current_animation + 216);
-        *(int32_t *)(intptr_t)(this_ptr + 212) = current_index;
-        animation_table = *(int32_t *)(intptr_t)(this_ptr + 200);
-        animation_count =
-            (*(int32_t *)(intptr_t)(animation_table + 12) -
-             *(int32_t *)(intptr_t)(animation_table + 8)) / 248;
-        if (current_index >= animation_count) {
-            current_index = animation_count - 1;
-            if (current_index < 0)
-                current_index = 0;
-            *(int32_t *)(intptr_t)(this_ptr + 212) = current_index;
-        }
-
-        /* Inline the exact 462250 body while its old RetDec wrapper still
-           lacks the Actor receiver. */
-        if (animation_table != 0) {
-            result = *(int32_t *)(intptr_t)(animation_table + 8) +
-                     248 * current_index;
-            *(int32_t *)(intptr_t)(this_ptr + 204) = result;
-            *(int32_t *)(intptr_t)(this_ptr + 152) = result;
-        }
-    }
-
-    result = function_4a9d70_this((int32_t)(intptr_t)incoming_object);
-    return result;
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45fe80(void) {
-    __asm {
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        mov eax, [esp + 12]
-        push eax
-        push ecx
-        call function_45fe80_this
-        add esp, 16
-        ret 12
-    }
-}
-#else
-int32_t function_45fe80(void) { return 0; }
-#endif
-
 // Address range: 0x45ff80 - 0x45ff8f
 int32_t function_45ff80(int32_t a1, int32_t result) {
     // 0x45ff80
@@ -126145,7 +126041,7 @@ int32_t function_460e00(void) {
                          (int32_t)(intptr_t)v2);
     int32_t v3 = (int32_t)(intptr_t)g644;
     function_460e00_register_actor_method(v3, v2, "Release",
-                                          (int32_t)(intptr_t)&function_45dbc0,
+                                          (int32_t)(intptr_t)&kinoko_actor_release,
                                           (int32_t)(intptr_t)&function_460b00,
                                           0);
     function_460e00_register_actor_method(v3, v2, "Reset",
@@ -126197,7 +126093,7 @@ int32_t function_460e00(void) {
                                           (int32_t)(intptr_t)&function_460bc0,
                                           0);
     function_460e00_register_actor_method(v3, v2, "SyncAnimation",
-                                          (int32_t)(intptr_t)&function_45fe80,
+                                          (int32_t)(intptr_t)&kinoko_actor_sync_animation,
                                           (int32_t)(intptr_t)&function_460b50,
                                           0);
     function_460e00_register_actor_method(v3, v2, "Move",
@@ -127350,7 +127246,7 @@ static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
    Actor+0x5c; invoking it is what lets title actors update their own y
    coordinates before the frame timer advances. */
 /* Observe the first invalid numeric state without changing gameplay or the VM. */
-static void retdec_trace_star_state(const char *phase, int32_t actor) {
+void retdec_trace_star_state(const char *phase, int32_t actor) {
     static struct { uint32_t handle; int hits, samples; } observed[32];
     uint32_t handle;
     int32_t sprite, proto=0;
@@ -130510,7 +130406,7 @@ static int32_t function_463b40_this(
     *(int32_t *)(intptr_t)(actor + 12) = handle[0];
     *(int32_t *)(intptr_t)(actor + 8) = 1;
     if (init_source != 0)
-        function_45de70_this(actor, init_source);
+        kinoko_actor_set_init_data(actor, init_source);
 
     if (!function_45e5e0_this(actor, manager_ptr,
                               first_vtable, first_type, first_data,
@@ -229690,7 +229586,7 @@ int32_t function_4a9b40(int32_t a1) {
     return 0;
 }
 
-static int32_t function_4a9b40_this(int32_t object_ptr, int32_t index) {
+int32_t function_4a9b40_this(int32_t object_ptr, int32_t index) {
     int32_t result = object_ptr;
 
     if (object_ptr == 0)

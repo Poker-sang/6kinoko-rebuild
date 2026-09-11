@@ -992,9 +992,9 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(vm_failures==failures && *(uint8_t *)(intptr_t)(actor+22));
             CHECK(execute_source(vm,root+2,"if(starRewards!=1) throw \"star pickup reward\";"));
         }
-        function_45dbc0_this(actor);
-        if(block) function_45dbc0_this(block);
-        if(bumper) function_45dbc0_this(bumper);
+        kinoko_actor_release(actor, NULL);
+        if(block) kinoko_actor_release(block, NULL);
+        if(bumper) kinoko_actor_release(bumper, NULL);
         retdec_actor_manager_refresh(manager);
         function_4a9d70_this(PTR(init));
     }
@@ -1759,7 +1759,7 @@ static int test_branch_motion(int32_t manager) {
                 if (*(int32_t *)(intptr_t)(actor + 296) && *vy >= 0) *vy = -9;
                 else if (*vy < 9) *vy += 0.38f;
             }
-            function_45dbc0_this(actor);
+            kinoko_actor_release(actor, NULL);
             retdec_actor_manager_refresh(manager);
         }
         function_469700();
@@ -1983,6 +1983,108 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_actor_state_fields(void) {
+    unsigned char actor[640] = {0}, manager[160] = {0};
+    unsigned char source[48], expected[640], expected_manager[160] = {0};
+    for (int i = 0; i < 48; ++i) source[i] = (unsigned char)(i * 7 + 3);
+    memset(actor, 0x5a, sizeof(actor));
+    memcpy(expected, actor, sizeof(actor));
+    memcpy(expected + 376, source, sizeof(source));
+    CHECK(kinoko_actor_set_init_data(PTR(actor), PTR(source)) == PTR(actor));
+    CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
+    CHECK(kinoko_actor_set_init_data(PTR(actor), 0) == 0);
+    CHECK(kinoko_actor_set_init_data(0, PTR(source)) == 0);
+    CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
+    memset(actor, 0, sizeof(actor));
+    *(int32_t *)(actor + 148) = PTR(manager);
+    memcpy(expected, actor, sizeof(actor));
+    expected[22] = 1;
+    expected_manager[120] = 1;
+    for (int i = 0; i < 2; ++i) {
+        CHECK(retdec_call_thiscall0_result(actor, kinoko_actor_release) == 1);
+        CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
+        CHECK(memcmp(manager, expected_manager, sizeof(manager)) == 0);
+    }
+    puts("PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI");
+    return 0;
+}
+
+static int test_actor_animation_sync(int32_t vm, int32_t *root,
+                                      int32_t target, int32_t source) {
+    const int offsets[6] = {152, 200, 204, 208, 212, 216};
+    int32_t saved[6], source_frame = *(int32_t *)(intptr_t)(source + 212);
+    int32_t source_time = *(int32_t *)(intptr_t)(source + 216);
+    int32_t animation[4] = {0}, incoming[3];
+    unsigned char frames[248 * 4] = {0};
+    const int32_t indices[6] = {0, 1, 2, 3, 99, -1};
+    const int32_t expected_indices[6] = {0, 1, 2, 2, 2, -1};
+    for (int i = 0; i < 6; ++i)
+        saved[i] = *(int32_t *)(intptr_t)(target + offsets[i]);
+    animation[2] = PTR(frames + 248);
+    animation[3] = PTR(frames + sizeof(frames));
+    *(int32_t *)(intptr_t)(target + 200) = PTR(animation);
+    int32_t refs = callback_external_refs(vm, (int32_t *)(intptr_t)(source + 44));
+    int32_t top = function_48aa20(vm);
+    for (int i = 0; i < 6; ++i) {
+        *(int32_t *)(intptr_t)(source + 212) = indices[i];
+        *(int32_t *)(intptr_t)(source + 216) = 100 + i;
+        function_4a9500_this(incoming, source + 44);
+        retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
+            incoming[0], incoming[1], incoming[2]);
+        CHECK(*(int32_t *)(intptr_t)(target + 212) == expected_indices[i]);
+        CHECK(*(int32_t *)(intptr_t)(target + 216) == 100 + i);
+        CHECK(*(int32_t *)(intptr_t)(target + 204) == animation[2] + 248 * expected_indices[i]);
+        CHECK(*(int32_t *)(intptr_t)(target + 152) == *(int32_t *)(intptr_t)(target + 204));
+        CHECK(*(int32_t *)(intptr_t)(target + 208) == saved[3]);
+        CHECK(callback_external_refs(vm, (int32_t *)(intptr_t)(source + 44)) == refs);
+        CHECK(function_48aa20(vm) == top);
+    }
+    animation[3] = animation[2];
+    *(int32_t *)(intptr_t)(source + 212) = 20;
+    function_4a9500_this(incoming, source + 44);
+    retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
+        incoming[0], incoming[1], incoming[2]);
+    CHECK(*(int32_t *)(intptr_t)(target + 212) == 0);
+    CHECK(*(int32_t *)(intptr_t)(target + 204) == animation[2]);
+
+    *(int32_t *)(intptr_t)(target + 200) = 0;
+    *(int32_t *)(intptr_t)(source + 216) = 999;
+    function_4a9500_this(incoming, source + 44);
+    retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
+        incoming[0], incoming[1], incoming[2]);
+    CHECK(*(int32_t *)(intptr_t)(target + 216) == 105);
+    CHECK(callback_external_refs(vm, (int32_t *)(intptr_t)(source + 44)) == refs);
+
+    *(int32_t *)(intptr_t)(target + 200) = PTR(animation);
+    retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
+        PTR(&g16), 0x05000002, 17);
+    CHECK(*(int32_t *)(intptr_t)(target + 216) == 105);
+    animation[3] = PTR(frames + sizeof(frames));
+    *(int32_t *)(intptr_t)(target + 212) = 1;
+    function_4a9500_this(incoming, target + 44);
+    retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
+        incoming[0], incoming[1], incoming[2]);
+    CHECK(*(int32_t *)(intptr_t)(target + 212) == 1);
+    CHECK(*(int32_t *)(intptr_t)(target + 204) == PTR(frames + 496));
+
+    function_4a9840_this(PTR(root + 1), "syncTarget", target + 44);
+    function_4a9840_this(PTR(root + 1), "syncSource", source + 44);
+    *(int32_t *)(intptr_t)(source + 212) = 2;
+    CHECK(execute_source(vm, root + 2,
+        "syncTarget.SyncAnimation(syncSource); delete ::syncTarget; delete ::syncSource;"));
+    CHECK(*(int32_t *)(intptr_t)(target + 212) == 2);
+    CHECK(*(int32_t *)(intptr_t)(target + 216) == 999);
+    CHECK(*(int32_t *)(intptr_t)(target + 204) == PTR(frames + 744));
+    CHECK(callback_external_refs(vm, (int32_t *)(intptr_t)(source + 44)) == refs);
+    CHECK(function_48aa20(vm) == top);
+    for (int i = 0; i < 6; ++i)
+        *(int32_t *)(intptr_t)(target + offsets[i]) = saved[i];
+    *(int32_t *)(intptr_t)(source + 212) = source_frame;
+    *(int32_t *)(intptr_t)(source + 216) = source_time;
+    puts("PASS: C++ SyncAnimation ABI/script binding, frame bounds, self-sync, refs and stack balance");
+    return 0;
+}
+
 static int test_act_resource_methods(void) {
     unsigned char resource[192] = {0};
     int32_t act[8] = {0}, holder = PTR(act);
@@ -2167,6 +2269,7 @@ int main(int argc, char **argv) {
     AddVectoredExceptionHandler(1, contract_exception);
     CHECK(test_map_camera_fpu() == 0);
     CHECK(test_sprite_geometry() == 0);
+    CHECK(test_actor_state_fields() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -2294,6 +2397,7 @@ int main(int argc, char **argv) {
         "seen[2] != 0xc9a) throw \"spawn order/id mismatch\";"));
     CHECK(retdec_actor_manager_refresh(manager) == 3);
     actors = *(int32_t **)(intptr_t)(manager + 100);
+    CHECK(test_actor_animation_sync(vm, root, actors[0], actors[1]) == 0);
     for (int i = 0; i < 3; ++i) {
         int32_t actor = actors[i];
         int32_t id = *(int32_t *)(intptr_t)(actor + 76);
