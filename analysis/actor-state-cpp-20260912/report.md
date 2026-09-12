@@ -20,8 +20,8 @@ COM and dynamic loading. No packing obstacle was observed.
 - [x] Read current source, prior evidence and repository constraints.
 - [x] Verify Actor state methods against original disassembly and call sites.
 - [x] Move verified bodies into C++ and cover behavior/ABI with contracts.
-- [ ] Commit source, build both variants in new directories and run contracts.
-- [ ] Stage all DATs and perform bounded first-stage smoke; record provenance.
+- [x] Commit source, build both variants in new directories and run contracts.
+- [x] Stage all DATs and record bounded smoke/user acceptance with provenance.
 
 Each gameplay check ends after entering stage one, attempting a jump and
 seeing an enemy. Retain every artifact and failed attempt. Existing gameplay
@@ -63,3 +63,33 @@ runtime-builds/actor-state-cpp-20260912-{quiet,diag}. Preserve all artifacts and
 record the source commit in each runtime validation manifest. README files are
 unchanged per the user's updated preference. Future batches may cover complete
 modules/call chains, with evidence and validation determining the scope.
+
+## Validation Result
+
+Source checkpoint b284f1be8a792fa1093ec7d6341221db4f9c02a9 was committed before
+both Win32 Release builds. Both pass CTest 3/3, including the new real-instance
+SyncAnimation/script/RefTable tests. DAT staging passes size and SHA256 checks.
+Build logs, CTest logs, runtime manifests, EXEs and screenshots are retained.
+
+Quiet gameplay entered stage one, received a Z jump input and a bounded
+three-second Right hold, and showed the first enemy in smoke-tool-04.png.
+The next game action closed the process; smoke-close.log confirms closed=true
+and alive/responding before closure. Computer Use initially produced brief
+keys and IME composition without progressing the menu, so the existing
+focus-guarded game tool provided DirectInput-compatible key durations. Its
+captures and the earlier Computer Use captures are all retained.
+
+Diagnostic gameplay reached the Stage 1 world-map node in smoke-03.png and
+was alive/responding. The user then confirmed gameplay had no problem and
+asked to continue. Do not claim the diagnostic automated jump/enemy sequence
+completed: this variant is accepted based on user feedback. At resumption no
+game process remained. No repeated gameplay or old-crash investigation followed.
+
+EXE SHA256:
+- quiet: 93CB4CF249AA05234B65A74CD9073DFF857B6170AFDCE9EF31072A888C026618
+- diagnostic: 59B76404D5C45AA6BCEA4B6F7F7CC7EBD147E852791998DDF134138A255B24EE
+
+ADF P0: static original evidence and executable contracts support the migrated
+behavior; gameplay evidence is bounded as above. Remaining generated code and
+existing compatibility guards limit any broader equivalence claim. No README
+changes or original binary resources are included in the source commits.
