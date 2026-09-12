@@ -9,7 +9,7 @@ Reference inputs are read-only. No DAT or script loading changes are intended.
 - [x] Inspect animation selection, ticking and existing contracts.
 - [x] Verify original SetTake/Step and field layouts through IDA MCP.
 - [x] Consolidate the animation state operations into a C++ module.
-- [ ] Commit before building and validate both variants in fresh directories.
+- [x] Commit before building and validate both variants in fresh directories.
 - [ ] Retain artifacts and record bounded smoke results.
 
 The user accepts larger related call-chain migrations and requests no routine
@@ -56,3 +56,37 @@ Commit before builds/tests. Use build-runs/actor-animation-cpp-20260912-{quiet,d
 and runtime-builds/actor-animation-cpp-20260912-{quiet,diag}. Keep all previous
 and new artifacts, with source commit and EXE hashes in validation manifests.
 README stays unchanged.
+
+## Validation Progress
+
+Tested source: 4e1f5cabb479f4dfe1b9ba25c124746d50a5a29b (runtime implementation
+854631b plus corrected IDA availability record). Both Win32 Release builds
+pass CTest 3/3, including the new timing/SetTake and existing SyncAnimation
+contracts. All three DAT archives are staged and size/SHA256 verified beside
+each EXE. No compile/link errors were found for the new module. The quiet
+native library disassembly is retained in native-methods-disasm.log: SetTake
+reads its receiver from ECX and ends in ret 4, ticking sign-extends the int16
+duration and uses 32-bit increment, and synchronization retains signed division.
+
+The quiet game was launched through run_staged.ps1 (PID 37248). It remained
+alive/responding but was not the foreground window (game HWND 1115898 versus
+foreground 526286); captured frames were black. Restoring the non-minimized
+window and SetForegroundWindow did not acquire focus. Computer Use initially
+lost its JS binding, and after reinitialization list_windows reported that
+the native pipe was unavailable. No gameplay key was sent without focus.
+Asked the user to click the game window. Do not classify this observation as
+a rendering regression or a successful gameplay check. Gameplay smoke remains
+pending for this new animation batch; diagnostic gameplay has not been launched.
+The previous actor-state batch's user acceptance does not validate these new EXEs.
+
+All build/runtime artifacts are preserved, including startup screenshots and
+focus logs. Both runtime validation.json files identify the tested source.
+README files are unchanged, and source commits contain no original binaries.
+
+EXE SHA256:
+- quiet: 062D297B5C94774B982C2D3C0908279EC1AE3DFDE56E7A5900EA649D5D6DFDD3
+- diagnostic: 79432B6406C727A9ECC6EA0EBF9E4E266F2666E430E0E3F4BA88CF3A3E88A43E
+
+ADF P0: original static evidence, compiled ABI and focused executable contracts
+support the animation refactor. Game-level acceptance is still pending because
+the test window could not acquire focus; no full equivalence claim is made.
