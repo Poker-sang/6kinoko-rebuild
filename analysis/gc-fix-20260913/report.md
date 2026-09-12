@@ -58,8 +58,8 @@ backend is enabled. Existing trace call sites remain.
 
 - [x] Inspect both user dumps and isolate a deterministic mark-head failure.
 - [x] Implement typed source-based chain splice and sweep in C++.
-- [ ] Commit before a new diagnostic/capture build and run regression contracts.
-- [ ] Stage DATs, preserve all outputs and hand over for gameplay reproduction.
+- [x] Commit before a new diagnostic/capture build and run regression contracts.
+- [x] Stage DATs, preserve all outputs and hand over for gameplay reproduction.
 
 Tests will verify caller-head/canary integrity, 32 collections of cyclic tables,
 arrays and closures, preservation of rooted values, root VM presence, cleared
@@ -96,3 +96,28 @@ destructor slots as well as Release, explicitly bypassing old destructor
 dispatch. SQArray's private destructor is reproduced using its source unlink,
 vector destruction and qualified base destruction; SQVM uses its qualified
 upstream destructor. Next batch: gc-fix-20260913-r5-diag.
+
+## Final Result
+
+Final source checkpoint b16a9a8423d0773d0cbe5b855baa2cef73a7981f passes CTest 4/4 in
+gc-fix-20260913-r5-diag. This includes the previously failing isolated head
+probe, 32 rounds of cyclic garbage collection, rooted array/closure preservation,
+root VM membership, mark-bit clearing, bidirectional GC link consistency, all
+existing native contracts, repeatable shutdown and diagnostic capture checks.
+The root/head defect was reproduced before fixing it; the VM/array release and
+destructor failures were reproduced in intermediate candidates before correction.
+
+Final EXE SHA256: 50FE40D635C63325EFD48316D2A7D0196F1A50714CE182D1DFBBE690DE717203.
+Every candidate directory contains a source/hash/test validation manifest;
+all five candidate game EXEs have verified DAT copies beside them. Earlier
+build trees, logs, dumps and test failures remain. The final EXE retains
+first-chance exception capture and sound. No game was launched in this batch,
+in accordance with the user's offer to reproduce gameplay. Stability under
+actual gameplay remains pending user validation; do not equate contract passes
+with an exhaustive crash fix.
+
+ADF P0: the user dumps show foreign DirectSound objects linked with Squirrel
+objects; deterministic contracts confirm concrete GC and destructor defects.
+Upstream Squirrel source anchors the corrections. The connection to every
+possible gameplay failure remains unproven until rerun. README and resource
+loading are unchanged, and no original binary/dump is committed.
