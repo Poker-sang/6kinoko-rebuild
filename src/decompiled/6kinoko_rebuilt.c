@@ -27,6 +27,7 @@
 #include "kinoko/actor_collision.h"
 #include "kinoko/actor_methods.h"
 #include "kinoko/actor_animation.h"
+#include "kinoko/actor_cleanup.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
@@ -63640,33 +63641,7 @@ int32_t function_429c20(int32_t a1, int32_t a2, int32_t a3) {
 
 // Address range: 0x429c70 - 0x429ca8
 int32_t function_429c70(int32_t a1) {
-    // 0x429c70
-    if (*(char *)(a1 + 21) != 0) {
-        // 0x429ca1
-        int32_t result; // 0x429c70
-        return result;
-    }
-    // 0x429c83
-    int32_t v1; // bp-16, 0x429c70
-    int32_t v2 = &v1;
-    int32_t v3 = v2 - 4; // 0x429c86
-    *(int32_t *)v3 = *(int32_t *)(a1 + 8);
-    function_429c70((int32_t)&g1224);
-    int32_t v4 = *(int32_t *)a1; // 0x429c8e
-    *(int32_t *)(v2 - 8) = a1;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (*(char *)(v4 + 21) == 0) {
-        int32_t v5 = v4;
-        v2 = v3;
-        v3 = v2 - 4;
-        *(int32_t *)v3 = *(int32_t *)(v5 + 8);
-        function_429c70((int32_t)&g1224);
-        v4 = *(int32_t *)v5;
-        *(int32_t *)(v2 - 8) = v5;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x429ca1
-    return &g1224;
+    return kinoko_erase_animation_tree(a1);
 }
 
 // Address range: 0x429cb0 - 0x429d01
@@ -129417,19 +129392,7 @@ int32_t function_463280(int32_t * a1, int32_t a2) {
 
 // Address range: 0x4634d0 - 0x463508
 int32_t function_4634d0(int32_t a1) {
-    int32_t current = a1;
-
-    /* sub_4634D0 receives the tree node on the stack and recursively frees
-       node[2] before advancing through node[0].  RetDec replaced both the
-       recursive node argument and operator-delete argument with g1224. */
-    while (current != 0 && *(char *)(current + 17) == 0) {
-        int32_t child = *(int32_t *)(current + 8);
-        int32_t next = *(int32_t *)current;
-        function_4634d0(child);
-        _free((void *)(intptr_t)current);
-        current = next;
-    }
-    return current;
+    return kinoko_erase_priority_tree(a1);
 }
 
 // Address range: 0x463510 - 0x46357a
@@ -130927,180 +130890,12 @@ int32_t function_464c90(int32_t a1, int32_t a2, int32_t a3) {
 
 // Address range: 0x464d90 - 0x464e19
 int32_t function_464d90(int32_t this_ptr) {
-    int32_t root;
-    int32_t node;
-
-    if (this_ptr == 0)
-        return 0;
-    root = *(int32_t *)(intptr_t)this_ptr;
-    if (root == 0) {
-        *(int32_t *)(intptr_t)(this_ptr + 4) = 0;
-        return 0;
-    }
-
-    node = *(int32_t *)(intptr_t)root;
-    *(int32_t *)(intptr_t)root = root;
-    *(int32_t *)(intptr_t)(root + 4) = root;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = 0;
-
-    while (node != 0 && node != root) {
-        int32_t next = *(int32_t *)(intptr_t)node;
-        int32_t begin = *(int32_t *)(intptr_t)(node + 16);
-        int32_t end = *(int32_t *)(intptr_t)(node + 20);
-
-        if (begin != 0 && end >= begin) {
-            int32_t element;
-            for (element = begin; element != end; element += 248) {
-                int32_t payload = *(int32_t *)(intptr_t)(element + 244);
-                if (payload != 0)
-                    _free((void *)(intptr_t)payload);
-                *(int32_t *)(intptr_t)element = g23;
-            }
-            _free((void *)(intptr_t)begin);
-        }
-        *(int32_t *)(intptr_t)(node + 16) = 0;
-        *(int32_t *)(intptr_t)(node + 20) = 0;
-        *(int32_t *)(intptr_t)(node + 24) = 0;
-        _free((void *)(intptr_t)node);
-        node = next;
-    }
-    return 0;
+    return kinoko_clear_animation_list(this_ptr);
 }
 
 // Address range: 0x464e20 - 0x464f7f
 int32_t function_464e20(int32_t this_ptr) {
-    // 0x464e20
-    int32_t v1 = this_ptr; // 0x464e20
-    int32_t * v2 = (int32_t *)(v1 + 72); // 0x464e2a
-    int32_t * v3 = (int32_t *)(v1 + 68); // 0x464e2d
-    int32_t v4; // bp-24, 0x464e20
-    int32_t v5 = &v4; // 0x464e30
-    int32_t v6 = *v3;
-    int32_t v7 = v5; // 0x464e38
-    int32_t v8 = 0; // 0x464e38
-    int32_t v9; // 0x464e20
-    int32_t v10; // 0x464e20
-    int32_t v11; // 0x464e20
-    if (*v2 - *v3 < 4) {
-        // 0x464e20
-        v9 = *v2;
-        v10 = v6;
-        v11 = v5;
-    } else {
-        v7 -= 4;
-        *(int32_t *)v7 = *(int32_t *)(4 * v8 + v6);
-        function_405d60((int32_t)&g1224);
-        int32_t v12 = *v2; // 0x464e51
-        int32_t v13 = *v3; // 0x464e54
-        v8++;
-        v9 = v12;
-        v10 = v13;
-        v11 = v7;
-        while (v8 < v12 - v13 >> 2) {
-            // 0x464e40
-            v7 -= 4;
-            *(int32_t *)v7 = *(int32_t *)(4 * v8 + v13);
-            function_405d60((int32_t)&g1224);
-            v12 = *v2;
-            v13 = *v3;
-            v8++;
-            v9 = v12;
-            v10 = v13;
-            v11 = v7;
-        }
-    }
-    // 0x464e5f
-    if (v10 != v9) {
-        // 0x464e69
-        *v2 = v10;
-    }
-    int32_t v14 = v11 - 4; // 0x464e84
-    *(int32_t *)v14 = v1 + 84;
-    function_463730(v1 + 84);
-    int32_t * v15 = (int32_t *)(v1 + 40); // 0x464e8c
-    int32_t v16 = *v15; // 0x464e8c
-    int32_t * v17 = (int32_t *)(v16 + 4);
-    int32_t v18 = *v17; // 0x464e8f
-    int32_t * v19 = v17; // 0x464e9c
-    int32_t v20 = v16; // 0x464e9c
-    int32_t v21 = v18; // 0x464e9c
-    int32_t v22 = v14; // 0x464e9c
-    if (*(char *)(v18 + 21) == 0) {
-        int32_t v23 = v22;
-        int32_t v24 = v21;
-        v22 = v23 - 4;
-        *(int32_t *)v22 = *(int32_t *)(v24 + 8);
-        function_429c70(*(int32_t *)(v24 + 8));
-        v21 = *(int32_t *)v24;
-        *(int32_t *)(v23 - 8) = v24;
-        _free((void *)(intptr_t)v24);
-        while (*(char *)(v21 + 21) == 0) {
-            // 0x464ea0
-            v23 = v22;
-            v24 = v21;
-            v22 = v23 - 4;
-            *(int32_t *)v22 = *(int32_t *)(v24 + 8);
-            function_429c70(*(int32_t *)(v24 + 8));
-            v21 = *(int32_t *)v24;
-            *(int32_t *)(v23 - 8) = v24;
-            _free((void *)(intptr_t)v24);
-        }
-        // 0x464ecf
-        v20 = *v15;
-        v19 = (int32_t *)(v20 + 4);
-    }
-    // 0x464ecf
-    *v19 = v20;
-    int32_t v25 = *v15; // 0x464ed5
-    *(int32_t *)v25 = v25;
-    int32_t v26 = *v15; // 0x464eda
-    *(int32_t *)(v26 + 8) = v26;
-    *(int32_t *)(v1 + 44) = 0;
-    function_464d90(v1 + 52);
-    int32_t * v27 = (int32_t *)(v1 + 88); // 0x464eef
-    int32_t v28 = *v27; // 0x464eef
-    int32_t * v29 = (int32_t *)(v28 + 4);
-    int32_t v30 = *v29; // 0x464ef2
-    int32_t * v31 = v29; // 0x464efc
-    int32_t v32 = v28; // 0x464efc
-    int32_t v33 = v30; // 0x464efc
-    int32_t v34 = v22; // 0x464efc
-    if (*(char *)(v30 + 17) == 0) {
-        int32_t v35 = v34;
-        int32_t v36 = v33;
-        v34 = v35 - 4;
-        *(int32_t *)v34 = *(int32_t *)(v36 + 8);
-        function_4634d0(*(int32_t *)(v36 + 8));
-        v33 = *(int32_t *)v36;
-        *(int32_t *)(v35 - 8) = v36;
-        _free((void *)(intptr_t)v36);
-        while (*(char *)(v33 + 17) == 0) {
-            // 0x464f00
-            v35 = v34;
-            v36 = v33;
-            v34 = v35 - 4;
-            *(int32_t *)v34 = *(int32_t *)(v36 + 8);
-            function_4634d0(*(int32_t *)(v36 + 8));
-            v33 = *(int32_t *)v36;
-            *(int32_t *)(v35 - 8) = v36;
-            _free((void *)(intptr_t)v36);
-        }
-        // 0x464f22
-        v32 = *v27;
-        v31 = (int32_t *)(v32 + 4);
-    }
-    // 0x464f22
-    *v31 = v32;
-    int32_t v37 = *v27; // 0x464f28
-    *(int32_t *)v37 = v37;
-    int32_t v38 = *v27; // 0x464f2d
-    *(int32_t *)(v38 + 8) = v38;
-    *(int32_t *)(v1 + 92) = 0;
-    int32_t result = *(int32_t *)(v1 + 100); // 0x464f38
-    *(int32_t *)(v1 + 104) = result;
-    *(int32_t *)(v1 + 116) = 0;
-    *(char *)(v1 + 120) = 0;
-    return result;
+    return kinoko_clear_actor_manager(this_ptr);
 }
 
 /* The generated 0x464F80 body lost every indirect reader call, several

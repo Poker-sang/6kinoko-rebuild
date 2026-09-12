@@ -1,0 +1,15 @@
+module: C:\WorkSpace\6kinoko-rebuild\runtime-builds\actor-animation-cpp-20260912-quiet\kinoko_retdec_rebuild.exe base: 0x460000
+thread: 32252 exception: 0xc00001a5 eip: _function_429c70+0x13
+frames: 64615
+count=64604 return=_function_429c70+0x1d first_arg=_g1224+0x0
+count=1 return=_function_464e20+0xbe first_arg=0x87b1180
+count=1 return=_function_469680+0x1a first_arg=_g_retdec_actor_manager_state+0x0
+count=1 return=_retdec_call_thiscall0_result+0x9 first_arg=0x10ff620
+count=1 return=_function_40d940+0x1d9 first_arg=0x12c7a18
+count=1 return=__WinMain_40_16+0x4bc first_arg=_g_retdec_runtime_state+0x0
+count=1 return=_WinMain@16+0x50 first_arg=___ImageBase+0x0
+count=1 return=?__scrt_common_main_seh@@YAHXZ+0x140 first_arg=___ImageBase+0x0
+count=1 return=0x761d5d49 first_arg=0xe86000
+count=1 return=0x7718e1fb first_arg=0xe86000
+count=1 return=0x7718e181 first_arg=0xffffffff
+count=1 return=0x0 first_arg=_WinMainCRTStartup+0x0

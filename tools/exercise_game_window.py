@@ -158,7 +158,7 @@ def main():
     if args.capture:
         subprocess.run(command + ["-frames:v", "1", str(args.capture)], check=True)
     if args.close:
-        process = kernel32.OpenProcess(0x100000, False, args.pid)
+        process = kernel32.OpenProcess(0x101000, False, args.pid)
         if not process:
             raise c.WinError(c.get_last_error())
         try:
@@ -166,9 +166,16 @@ def main():
                 raise c.WinError(c.get_last_error())
             if kernel32.WaitForSingleObject(process, 10000) != 0:
                 raise RuntimeError("Game did not finish exiting; no process was terminated")
+            final_exit = w.DWORD()
+            if not kernel32.GetExitCodeProcess(process, c.byref(final_exit)):
+                raise c.WinError(c.get_last_error())
+            print(json.dumps({"pid": args.pid, "closed": True,
+                              "exit_code": f"0x{final_exit.value:08X}",
+                              "normal_exit": final_exit.value == 0}), flush=True)
+            if final_exit.value != 0:
+                raise RuntimeError(f"Game exited abnormally: 0x{final_exit.value:08X}")
         finally:
             kernel32.CloseHandle(process)
-        print(json.dumps({"pid": args.pid, "closed": True}), flush=True)
 
 
 if __name__ == "__main__":

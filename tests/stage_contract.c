@@ -1983,6 +1983,75 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_shutdown_tree_cleanup(void) {
+    for (int layout = 0; layout < 2; ++layout) {
+        unsigned char sentinel[24] = {0};
+        int32_t *nodes[7];
+        int sentinel_offset = layout ? 21 : 17;
+        int32_t sentinel_address = PTR(sentinel);
+        sentinel[sentinel_offset] = 1;
+        for (int i = 0; i < 7; ++i) {
+            nodes[i] = (int32_t *)calloc(1, layout ? 24 : 20);
+            CHECK(nodes[i]);
+            nodes[i][0] = nodes[i][1] = nodes[i][2] = sentinel_address;
+        }
+        for (int i = 0; i < 3; ++i) {
+            nodes[i][0] = PTR(nodes[2*i+1]);
+            nodes[i][2] = PTR(nodes[2*i+2]);
+            nodes[2*i+1][1] = nodes[2*i+2][1] = PTR(nodes[i]);
+        }
+        CHECK((layout ? function_429c70(PTR(nodes[0])) : function_4634d0(PTR(nodes[0])))
+            == sentinel_address);
+        CHECK(sentinel[sentinel_offset] == 1);
+        CHECK((layout ? function_429c70(sentinel_address) : function_4634d0(sentinel_address))
+            == sentinel_address);
+    }
+
+    int32_t manager[40] = {0}, animation_head[6] = {0}, priority_head[5] = {0};
+    int32_t list_head[14] = {0}, textures[2] = {7, 13}, iteration[3] = {0};
+    int32_t *animation_node = (int32_t *)calloc(1, 24);
+    int32_t *priority_node = (int32_t *)calloc(1, 20);
+    int32_t *list_node = (int32_t *)calloc(1, 56);
+    unsigned char *frames = (unsigned char *)calloc(2, 248);
+    CHECK(animation_node && priority_node && list_node && frames);
+    *(int32_t *)(frames + 244) = PTR(malloc(12));
+    *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
+    CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
+    ((unsigned char *)animation_head)[21] = 1;
+    ((unsigned char *)priority_head)[17] = 1;
+    animation_head[0] = animation_head[1] = animation_head[2] = PTR(animation_node);
+    priority_head[0] = priority_head[1] = priority_head[2] = PTR(priority_node);
+    animation_node[0] = animation_node[1] = animation_node[2] = PTR(animation_head);
+    priority_node[0] = priority_node[1] = priority_node[2] = PTR(priority_head);
+    /* No live Actor in this fixture; the priority node is still reclaimed. */
+    priority_node[3] = 0;
+    list_head[0] = list_head[1] = PTR(list_node);
+    list_node[0] = list_node[1] = PTR(list_head);
+    list_node[4] = PTR(frames);
+    list_node[5] = list_node[6] = PTR(frames + 496);
+    animation_node[4] = PTR(list_node + 2);
+    manager[10] = PTR(animation_head); manager[11] = 1;
+    manager[13] = PTR(list_head); manager[14] = 1;
+    manager[17] = PTR(textures); manager[18] = manager[19] = PTR(textures + 2);
+    manager[22] = PTR(priority_head); manager[23] = 1;
+    manager[25] = PTR(iteration); manager[26] = manager[27] = PTR(iteration + 3);
+    manager[29] = 8; ((unsigned char *)manager)[120] = 1;
+    for (int repeat = 0; repeat < 2; ++repeat) {
+        CHECK(function_464e20(PTR(manager)) == PTR(iteration));
+        for (int i = 0; i < 3; ++i) {
+            CHECK(animation_head[i] == PTR(animation_head));
+            CHECK(priority_head[i] == PTR(priority_head));
+        }
+        CHECK(list_head[0] == PTR(list_head) && list_head[1] == PTR(list_head));
+        CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
+        CHECK(manager[18] == PTR(textures) && manager[19] == PTR(textures + 2));
+        CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
+        CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
+    }
+    puts("PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear");
+    return 0;
+}
+
 static int test_animation_timing(void) {
     int32_t actor[160] = {0}, animation[12] = {0};
     unsigned char frames[3][248] = {{0}};
@@ -2327,6 +2396,7 @@ int main(int argc, char **argv) {
     CHECK(test_sprite_geometry() == 0);
     CHECK(test_actor_state_fields() == 0);
     CHECK(test_animation_timing() == 0);
+    CHECK(test_shutdown_tree_cleanup() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -3111,6 +3181,8 @@ int main(int argc, char **argv) {
     CHECK(test_array_sort(vm, root) == 0);
     CHECK(test_standard_error_handler(vm, root) == 0);
     CHECK(vm_failures == 0);
+    CHECK(function_464e20(manager) == *(int32_t *)(intptr_t)(manager + 100));
+    CHECK(function_464e20(manager) == *(int32_t *)(intptr_t)(manager + 100));
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
