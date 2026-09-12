@@ -85,6 +85,12 @@ option(KINOKO_RETDEC_DISABLE_TRACE
 option(KINOKO_RETDEC_TRACE_FILTER
     "Keep only graphics/audio/input markers in RetDec diagnostic traces"
     OFF)
+option(KINOKO_CAPTURE_FIRST_CHANCE
+    "Default to first-fault context and full-memory dumps for diagnostic runs"
+    OFF)
+if(KINOKO_CAPTURE_FIRST_CHANCE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_CAPTURE_FIRST_CHANCE)
+endif()
 option(KINOKO_RETDEC_DIAGNOSTIC_NO_BGM_SERVICE
     "Disable background BGM ring-buffer service for diagnosis"
     OFF)
@@ -236,10 +242,15 @@ add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
 
+add_executable(kinoko_diagnostics_capture tests/diagnostics_capture.cpp)
+target_link_libraries(kinoko_diagnostics_capture PRIVATE kinoko_diagnostics dbghelp)
+add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract
+    kinoko_diagnostics_capture
 )
 
 foreach(config Debug Release RelWithDebInfo MinSizeRel)

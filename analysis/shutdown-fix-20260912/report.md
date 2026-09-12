@@ -35,7 +35,7 @@ by normal_exit and the exit code; abnormal exit now fails the command.
 
 - [x] Confirm the failure using original code and three existing dump stacks.
 - [x] Replace the broken tree/manager/list cleanup in C++.
-- [ ] Commit source and run new quiet/diagnostic builds and contracts.
+- [x] Commit source and run new quiet/diagnostic builds and contracts.
 - [ ] Verify bounded gameplay/closure with final exit status and retain evidence.
 
 Contracts build multi-branch trees of both node layouts, preserve sentinels,
@@ -43,3 +43,11 @@ exercise owning frame payload release and repeat manager cleanup. The complete
 stage contract also clears its real Actor manager twice before exit. Use new
 build-runs/shutdown-fix-20260912-{quiet,diag} and matching runtime-builds paths.
 The independent Squirrel gameplay access violation is not yet claimed fixed.
+
+Source 99af33e1dcf4016cbc5c3651b72918686af9adfe built in both variants and
+passed CTest 3/3, including real manager clear twice. DAT staging passed.
+The user subsequently reported a gameplay crash in shutdown-fix-20260912-diag
+and requested focusing on that build. Its trace ends without exception context;
+no corresponding dump was available. Do not claim game-level stability or
+normal exit validation. Follow-up instrumentation is documented in
+../first-fault-20260912/report.md. Original artifacts are preserved.
