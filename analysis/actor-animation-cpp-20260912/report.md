@@ -21,8 +21,9 @@ jump attempt and first visible enemy; user feedback may close validation.
 Previous IDA service had stopped; skill start.ps1/open.ps1 reopened the original
 as session 0d6ad0ef. analyze_batch inspected complete disassembly for 462280
 and 45E120, including call/data xrefs. SetTake is registered at 460FE6 and
-Actor.Step is called from 4641D0 at 464278. Comments saved to
-C:/rs-ida/be5d2829-6kinoko.exe.i64.
+Actor.Step is called from 4641D0 at 464278. The worker expired after analysis;
+set_comments returned worker-unreachable and idb_save returned session-not-found.
+No saved annotations are claimed for this batch; evidence is retained here.
 
 462280 resets take/index/timer before lookup, including missing take IDs. Bounds
 are signed integers at animation+28..40, with -0.5/+0.5/+1 edge adjustments.
