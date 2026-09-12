@@ -73,3 +73,11 @@ local declaration before running GC. Change the fixture to use the established
 root-slot/delete syntax. Keep all initial artifacts; next test batch uses
 gc-fix-20260913-r2-diag directories. No runtime change is made for this syntax
 adjustment. CTest's other three tests passed in the first candidate.
+
+The r2 fixture reached real GC and produced heap-corruption failure c0000374.
+The retained WER dump kinoko_stage_contract.exe.20168.dmp resolves the failure
+to function_491bf0 called by the sweep's virtual Release. Its generated C body
+passes an uninitialized local to free instead of receiving ECX. Replace only
+the SQVM Release vtable slot with a compiler-generated entry that invokes the
+supplied SQVM::Release/destructor; source layout is asserted. Preserve r2
+artifacts. The next batch uses gc-fix-20260913-r3-diag directories.

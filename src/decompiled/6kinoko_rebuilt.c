@@ -8667,7 +8667,7 @@ struct vtable_4da4e4_type g72 = {
 }; // 0x4da4e4
 struct vtable_4da554_type g73 = {
     .e0 = function_4940f0,
-    .e1 = function_491bf0,
+    .e1 = (int32_t (*)(void))kinoko_sq_vm_release,
     .e2 = function_48fac0,
     .e3 = function_491c10
 }; // 0x4da554

@@ -63,3 +63,8 @@ extern "C" int32_t kinoko_sq_gc_sweep(int32_t shared_state, int32_t live_head) {
     state._gc_chain = head;
     return visited;
 }
+
+// 491BF0: the generated C body lost ECX and freed an uninitialized local.
+extern "C" void __fastcall kinoko_sq_vm_release(int32_t vm, void *) {
+    pointer<SQVM>(vm)->SQVM::Release();
+}

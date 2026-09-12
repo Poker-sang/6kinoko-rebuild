@@ -53,7 +53,7 @@ for index in range(module_count):
     name_size, = unpack('I', name_rva)
     name = data[name_rva + 4:name_rva + 4 + name_size].decode('utf-16-le')
     modules.append((base, base + size, name))
-    if name.lower().endswith('kinoko_retdec_rebuild.exe'):
+    if name.lower().endswith(('kinoko_retdec_rebuild.exe', 'kinoko_stage_contract.exe')):
         image_base, image_size = base, size
         print('module:', name, 'base:', hex(base))
 
