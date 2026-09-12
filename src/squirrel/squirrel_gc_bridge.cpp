@@ -2,6 +2,7 @@
 #include <cstddef>
 #include "sqpcheader.h"
 #include "sqvm.h"
+#include "sqarray.h"
 
 extern "C" {
 int32_t retdec_gc_object_type(int32_t object);
@@ -16,6 +17,7 @@ static_assert(offsetof(SQCollectable, _prev) == 16);
 static_assert(offsetof(SQCollectable, _sharedstate) == 20);
 static_assert(offsetof(SQSharedState, _gc_chain) == 68);
 static_assert(offsetof(SQVM, _sharedstate) == 140);
+static_assert(sizeof(SQArray) == 36 && offsetof(SQArray, _values) == 24);
 
 template <typename T>
 T *pointer(int32_t address) {
@@ -67,4 +69,9 @@ extern "C" int32_t kinoko_sq_gc_sweep(int32_t shared_state, int32_t live_head) {
 // 491BF0: the generated C body lost ECX and freed an uninitialized local.
 extern "C" void __fastcall kinoko_sq_vm_release(int32_t vm, void *) {
     pointer<SQVM>(vm)->SQVM::Release();
+}
+
+// 48D430 has the same lost-ECX defect as 491BF0.
+extern "C" void __fastcall kinoko_sq_array_release(int32_t array, void *) {
+    pointer<SQArray>(array)->SQArray::Release();
 }

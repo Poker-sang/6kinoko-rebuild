@@ -621,7 +621,6 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(parent);
     parent_control = *(int32_t *)(intptr_t)(parent + 28);
     for (int round = 0; round < 32; ++round) {
-        fprintf(stderr, "GC cycle %d: create/collect\n", round);
         int32_t old_weak[2], locked[2];
         int32_t parent_weak_count = *(int32_t *)(intptr_t)(parent_control + 8);
         int32_t argument_refs = *(int32_t *)(intptr_t)(seed[2] + 4);
@@ -2015,7 +2014,6 @@ static int test_gc_repeated_collection(int32_t vm, int32_t *root) {
             "gcTrashB.callback <- function() { return 9; };\n"
             "delete ::gcTrashA;\ndelete ::gcTrashB;"));
         CHECK(function_49a520_this(shared, vm) >= 0);
-        fprintf(stderr, "GC cycle %d: verify chain/live values\n", round);
         CHECK(test_gc_chain_integrity(vm) == 0);
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2,

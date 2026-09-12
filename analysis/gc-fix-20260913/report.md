@@ -81,3 +81,10 @@ passes an uninitialized local to free instead of receiving ECX. Replace only
 the SQVM Release vtable slot with a compiler-generated entry that invokes the
 supplied SQVM::Release/destructor; source layout is asserted. Preserve r2
 artifacts. The next batch uses gc-fix-20260913-r3-diag directories.
+
+The r3 run completed collection cycle 0, then the next cycle exposed the same
+lost-ECX free in SQArray::Release (48D430), confirmed by WER dump
+kinoko_stage_contract.exe.22364.dmp. The recovered array virtual release slot
+now calls upstream SQArray::Release with an explicit receiver; size/vector
+offset assertions cover its layout. Other collectable release slots already
+have receiver-bearing adapters. The next batch uses gc-fix-20260913-r4-diag.
