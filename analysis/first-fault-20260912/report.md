@@ -36,9 +36,9 @@ are unchanged from the baseline. No routine README change is made.
 ## Validation
 
 - [x] Implement optional first-fault summary/dump and unique artifact names.
-- [ ] Commit source before build/tests in a new directory.
-- [ ] Build diagnostic variant and run CTest including synthetic capture checks.
-- [ ] Stage three original DAT files, record provenance and hand over for user reproduction.
+- [x] Commit source before build/tests in a new directory.
+- [x] Build diagnostic variant and run CTest including synthetic capture checks.
+- [x] Stage three original DAT files, record provenance and hand over for user reproduction.
 
 The capture test raises a handled access violation twice and reports a later
 illegal instruction. It checks that ordinary handling resumes, exactly one
@@ -47,3 +47,19 @@ contains the expected thread, code and access parameters. All outputs remain.
 New directories: build-runs/shutdown-fix-20260912-capture and
 runtime-builds/shutdown-fix-20260912-capture. Gameplay is delegated to the user
 per their request; no autonomous repeated gameplay is planned for this batch.
+
+## Result
+
+Source checkpoint 01da5dc41292afdade736031f1a2a8ffefb5673a was committed before
+building. Win32 Release with filtered trace and first-chance capture enabled
+passes CTest 4/4. The capture test log records both saved=1/error=0 dumps,
+correct access target 12345678, and normal test shutdown. MiniDumpReadDumpStream
+verified the recorded thread, codes and parameters. Synthetic test artifacts
+remain under the runtime tools directory, separate from future game captures.
+All three DAT archives pass size/SHA256 staging. No game was launched in this
+instrumentation batch; user reproduction is the pending next action.
+
+EXE SHA256: 7D49FE99ED8C8F8B566BFAE40634928845159098376E34B9A3C29540FEBC09E3.
+Game/decompiled/reconstructed source and both READMEs are unchanged from 99af33e.
+This artifact adds diagnostic evidence collection; it does not claim to fix
+the unresolved gameplay crash. Existing shutdown-fix diagnostic files remain.
