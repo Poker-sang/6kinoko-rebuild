@@ -2008,8 +2008,11 @@ static int test_gc_repeated_collection(int32_t vm, int32_t *root) {
     CHECK(test_gc_chain_integrity(vm) == 0);
     for (int round = 0; round < 32; ++round) {
         CHECK(execute_source(vm, root + 2,
-            "local a = {}; local b = {}; a.peer <- b; b.peer <- a;\n"
-            "a.items <- [a,b]; b.callback <- function() { return 9; };"));
+            "gcTrashA <- {};\ngcTrashB <- {};\n"
+            "gcTrashA.peer <- gcTrashB;\ngcTrashB.peer <- gcTrashA;\n"
+            "gcTrashA.items <- [gcTrashA,gcTrashB];\n"
+            "gcTrashB.callback <- function() { return 9; };\n"
+            "delete ::gcTrashA;\ndelete ::gcTrashB;"));
         CHECK(function_49a520_this(shared, vm) >= 0);
         CHECK(test_gc_chain_integrity(vm) == 0);
         CHECK(function_48aa20(vm) == top);

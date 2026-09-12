@@ -66,3 +66,10 @@ arrays and closures, preservation of rooted values, root VM presence, cleared
 mark bits, and both directions of the GC chain after allocation and collection.
 Use build-runs/gc-fix-20260913-diag and runtime-builds/gc-fix-20260913-diag.
 The link defect is proven; game-level stability still requires user rerun.
+
+First candidate ba74093 compiled successfully and passed the mark-head probe,
+but the multi-cycle contract script failed to compile at its second same-line
+local declaration before running GC. Change the fixture to use the established
+root-slot/delete syntax. Keep all initial artifacts; next test batch uses
+gc-fix-20260913-r2-diag directories. No runtime change is made for this syntax
+adjustment. CTest's other three tests passed in the first candidate.
