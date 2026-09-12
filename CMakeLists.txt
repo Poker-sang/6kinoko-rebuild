@@ -126,6 +126,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_vm_bridge.cpp
     src/squirrel/squirrel_compile_bridge.cpp
     src/squirrel/squirrel_value_bridge.cpp
+    src/squirrel/squirrel_gc_bridge.cpp
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"

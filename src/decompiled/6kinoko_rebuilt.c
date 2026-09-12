@@ -28,6 +28,7 @@
 #include "kinoko/actor_methods.h"
 #include "kinoko/actor_animation.h"
 #include "kinoko/actor_cleanup.h"
+#include "kinoko/squirrel_gc_bridge.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
@@ -71,7 +72,7 @@ static int32_t retdec_is_release_watch_data(int32_t data) {
 
 static int32_t function_49a520_this(int32_t shared_state, int32_t vm);
 static void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head);
-static void retdec_gc_finalize_collectable(int32_t object_ptr,
+void retdec_gc_finalize_collectable(int32_t object_ptr,
                                            int32_t object_type);
 static int32_t function_48e0e0_this(int32_t this_ptr, int32_t value);
 static int32_t function_48e120_this(int32_t this_ptr, float value);
@@ -213681,12 +213682,7 @@ static void retdec_gc_mark_value(const int32_t *value, int32_t *chain_head) {
             break;
     }
 
-    {
-        int32_t shared_state = *(int32_t *)(intptr_t)(data + 20);
-        if (shared_state != 0)
-            function_49a170(shared_state + 68, data);
-    }
-    function_49a140((int32_t)(intptr_t)&chain_head, data);
+    kinoko_sq_gc_move_marked(data, type, chain_head);
 }
 
 static void retdec_gc_clear_vector(int32_t values, int32_t *size_ptr) {
@@ -213724,10 +213720,13 @@ static void retdec_gc_clear_members(int32_t members, int32_t *size_ptr) {
     *size_ptr = 0;
 }
 
-static void retdec_gc_finalize_collectable(int32_t object_ptr,
+void retdec_gc_finalize_collectable(int32_t object_ptr,
                                             int32_t object_type) {
     if (object_ptr == 0)
         return;
+
+    if (retdec_gc_watch_cycle < 8 && object_ptr == retdec_gc_watch_table)
+        retdec_gc_trace_watch("gc:fader-finalize-before", object_ptr);
 
     switch (object_type) {
         case 0x0A000020: /* SQTable */
@@ -213840,7 +213839,7 @@ static void retdec_gc_finalize_collectable(int32_t object_ptr,
     }
 }
 
-static int32_t retdec_gc_object_type(int32_t object_ptr) {
+int32_t retdec_gc_object_type(int32_t object_ptr) {
     int32_t vtable;
 
     if (object_ptr == 0)
@@ -213872,7 +213871,6 @@ static int32_t function_49a520_this(int32_t shared_state, int32_t vm) {
     int32_t root_value[2];
     int32_t nodes;
     int32_t count;
-    int32_t current;
     int32_t collected = 0;
     int32_t scan;
     int32_t scan_count;
@@ -213933,35 +213931,7 @@ static int32_t function_49a520_this(int32_t shared_state, int32_t vm) {
     if (retdec_gc_watch_cycle < 8 && retdec_gc_watch_table != 0)
         retdec_gc_trace_watch("gc:fader-after-mark", retdec_gc_watch_table);
 
-    current = *(int32_t *)(intptr_t)(shared_state + 68);
-    while (current != 0) {
-        int32_t next = *(int32_t *)(intptr_t)(current + 12);
-        int32_t object_type = retdec_gc_object_type(current);
-
-        if (retdec_gc_watch_cycle < 8 && current == retdec_gc_watch_table)
-            retdec_gc_trace_watch("gc:fader-finalize-before", current);
-
-        ++*(int32_t *)(intptr_t)(current + 4);
-        if (object_type != 0)
-            retdec_gc_finalize_collectable(current, object_type);
-        if (--*(int32_t *)(intptr_t)(current + 4) == 0 && object_type != 0) {
-            int32_t vtable = *(int32_t *)(intptr_t)current;
-            int32_t release = vtable != 0
-                ? *(int32_t *)(intptr_t)(vtable + 4) : 0;
-            if (release != 0)
-                retdec_call_thiscall0((void *)(intptr_t)current,
-                                      (void *)(intptr_t)release);
-            ++collected;
-        }
-        current = next;
-    }
-
-    current = chain_head;
-    while (current != 0) {
-        int32_t next = *(int32_t *)(intptr_t)(current + 12);
-        *(uint32_t *)(intptr_t)(current + 4) &= ~0x80000000u;
-        current = next;
-    }
+    collected = kinoko_sq_gc_sweep(shared_state, chain_head);
     if (retdec_gc_watch_cycle < 8 && retdec_gc_watch_table != 0)
         retdec_gc_trace_watch("gc:fader-after-sweep", retdec_gc_watch_table);
     ++retdec_gc_watch_cycle;

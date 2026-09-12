@@ -1983,6 +1983,48 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_gc_chain_integrity(int32_t vm) {
+    const int32_t shared = *(int32_t *)(intptr_t)(vm + 140);
+    int32_t current = *(int32_t *)(intptr_t)(shared + 68), previous = 0;
+    int32_t count = 0, found_vm = 0;
+    while (current) {
+        CHECK(++count < 100000);
+        CHECK(retdec_gc_object_type(current) != 0);
+        CHECK(*(int32_t *)(intptr_t)(current + 16) == previous);
+        CHECK((*(uint32_t *)(intptr_t)(current + 4) & 0x80000000u) == 0);
+        if (current == vm) found_vm = 1;
+        previous = current;
+        current = *(int32_t *)(intptr_t)(current + 12);
+    }
+    CHECK(found_vm);
+    return 0;
+}
+
+static int test_gc_repeated_collection(int32_t vm, int32_t *root) {
+    const int32_t shared = *(int32_t *)(intptr_t)(vm + 140);
+    const int32_t top = function_48aa20(vm);
+    CHECK(execute_source(vm, root + 2,
+        "gcKeep <- { values = [17,23], action = function() { return 42; } };"));
+    CHECK(test_gc_chain_integrity(vm) == 0);
+    for (int round = 0; round < 32; ++round) {
+        CHECK(execute_source(vm, root + 2,
+            "local a = {}; local b = {}; a.peer <- b; b.peer <- a;\n"
+            "a.items <- [a,b]; b.callback <- function() { return 9; };"));
+        CHECK(function_49a520_this(shared, vm) >= 0);
+        CHECK(test_gc_chain_integrity(vm) == 0);
+        CHECK(function_48aa20(vm) == top);
+        CHECK(execute_source(vm, root + 2,
+            "if (gcKeep.values[0] != 17 || gcKeep.values[1] != 23 || "
+            "gcKeep.action() != 42) throw \"GC lost a live object\";"));
+        CHECK(test_gc_chain_integrity(vm) == 0);
+    }
+    CHECK(execute_source(vm, root + 2, "delete ::gcKeep;"));
+    CHECK(function_49a520_this(shared, vm) >= 0);
+    CHECK(test_gc_chain_integrity(vm) == 0);
+    puts("PASS: repeated cyclic GC preserves root VM, live objects and doubly linked chain integrity");
+    return 0;
+}
+
 static int test_gc_mark_link(void) {
     int32_t shared[40] = {0}, object[9] = {0}, head_storage[16] = {0};
     int32_t value[2] = {0x08000040, PTR(object)};
@@ -2416,6 +2458,7 @@ int main(int argc, char **argv) {
     CHECK(test_actor_state_fields() == 0);
     CHECK(test_animation_timing() == 0);
     CHECK(test_shutdown_tree_cleanup() == 0);
+    CHECK(test_gc_mark_link() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -2437,6 +2480,7 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_gc_repeated_collection(vm, root) == 0);
     CHECK(test_script_callback_binding(vm, root) == 0);
     {
         int32_t anonymous[3];
