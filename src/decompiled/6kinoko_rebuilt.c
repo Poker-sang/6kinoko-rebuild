@@ -8650,7 +8650,7 @@ struct vtable_4d9fc8_type g68 = {
     .e4 = function_48f240
 }; // 0x4d9fc8
 struct vtable_4da160_type g69 = {
-    .e0 = function_48d450,
+    .e0 = (int32_t (*)(char))kinoko_sq_array_delete,
     .e1 = (int32_t (*)(void))kinoko_sq_array_release,
     .e2 = function_48fba0,
     .e3 = function_48d550
@@ -8666,7 +8666,7 @@ struct vtable_4da4e4_type g72 = {
     .e3 = function_4919b0
 }; // 0x4da4e4
 struct vtable_4da554_type g73 = {
-    .e0 = function_4940f0,
+    .e0 = (int32_t (*)(char))kinoko_sq_vm_delete,
     .e1 = (int32_t (*)(void))kinoko_sq_vm_release,
     .e2 = function_48fac0,
     .e3 = function_491c10

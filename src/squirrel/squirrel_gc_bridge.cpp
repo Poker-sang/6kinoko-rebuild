@@ -68,10 +68,31 @@ extern "C" int32_t kinoko_sq_gc_sweep(int32_t shared_state, int32_t live_head) {
 
 // 491BF0: the generated C body lost ECX and freed an uninitialized local.
 extern "C" void __fastcall kinoko_sq_vm_release(int32_t vm, void *) {
-    pointer<SQVM>(vm)->SQVM::Release();
+    kinoko_sq_vm_delete(vm, nullptr, 1);
 }
 
 // 48D430 has the same lost-ECX defect as 491BF0.
 extern "C" void __fastcall kinoko_sq_array_release(int32_t array, void *) {
-    pointer<SQArray>(array)->SQArray::Release();
+    kinoko_sq_array_delete(array, nullptr, 1);
+}
+
+extern "C" int32_t __fastcall kinoko_sq_vm_delete(int32_t vm, void *, int32_t flags) {
+    // Qualified destruction bypasses the recovered scalar-deleting vtable slot.
+    pointer<SQVM>(vm)->SQVM::~SQVM();
+    if (flags & 1)
+        sq_vm_free(pointer<void>(vm), sizeof(SQVM));
+    return vm;
+}
+
+extern "C" int32_t __fastcall kinoko_sq_array_delete(int32_t array, void *, int32_t flags) {
+    auto *object = pointer<SQArray>(array);
+    // SQArray's destructor is private. Spell out its source sequence, then
+    // destroy its vector and base, rather than dispatching the damaged C slot.
+    if (!(object->_uiRef & MARK_FLAG))
+        SQCollectable::RemoveFromChain(&object->_sharedstate->_gc_chain, object);
+    object->_values.~sqvector<SQObjectPtr>();
+    object->SQCollectable::~SQCollectable();
+    if (flags & 1)
+        sq_vm_free(object, sizeof(SQArray));
+    return array;
 }

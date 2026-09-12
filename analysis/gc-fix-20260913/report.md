@@ -88,3 +88,11 @@ kinoko_stage_contract.exe.22364.dmp. The recovered array virtual release slot
 now calls upstream SQArray::Release with an explicit receiver; size/vector
 offset assertions cover its layout. Other collectable release slots already
 have receiver-bearing adapters. The next batch uses gc-fix-20260913-r4-diag.
+
+The r4 WER stack (kinoko_stage_contract.exe.28040.dmp) exposed the companion
+SQArray scalar-deleting destructor slot: upstream sq_delete's destructor call
+still dispatches virtually to that old C entry. Restore both VM and array
+destructor slots as well as Release, explicitly bypassing old destructor
+dispatch. SQArray's private destructor is reproduced using its source unlink,
+vector destruction and qualified base destruction; SQVM uses its qualified
+upstream destructor. Next batch: gc-fix-20260913-r5-diag.
