@@ -26,6 +26,7 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
 #include "kinoko/actor_methods.h"
+#include "kinoko/actor_animation.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
@@ -3959,7 +3960,6 @@ static void function_460e00_register_actor_method(int32_t vm,
 int32_t function_460de0(void);
 int32_t function_460e00(void);
 int32_t function_462250(int32_t a1);
-int32_t function_462280(int32_t a1);
 int32_t function_462480(void);
 int32_t function_4624a0(int32_t result);
 int32_t function_4624c0(int32_t result);
@@ -4238,7 +4238,7 @@ int32_t function_470360(void);
 int32_t function_470390(int32_t result);
 int32_t function_4703b0(char * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3);
-static int32_t function_4706c0_this(int32_t this_ptr,
+int32_t function_4706c0_this(int32_t this_ptr,
                                     int32_t *a1, int32_t *a2);
 int32_t function_4706c0(int32_t * a1, int32_t * a2);
 int32_t function_470730(int32_t * a1, int32_t a2, int32_t a3);
@@ -126061,7 +126061,7 @@ int32_t function_460e00(void) {
         (int32_t)(intptr_t)&kinoko_actor_interrupt_collision,
         (int32_t)(intptr_t)&function_460b00, 0);
     function_460e00_register_actor_method(v3, v2, "SetTake",
-                                          (int32_t)(intptr_t)&function_462280,
+                                          (int32_t)(intptr_t)&kinoko_actor_set_take_method,
                                           (int32_t)(intptr_t)&function_460bc0,
                                           0);
     function_460e00_register_actor_method(v3, v2, "SetStep",
@@ -126740,84 +126740,8 @@ int32_t function_462250(int32_t a1) {
 
 // Address range: 0x462280 - 0x46247f
 static int32_t function_462280_this(int32_t actor, int32_t take) {
-    int32_t manager = *(int32_t *)(intptr_t)(actor + 148);
-    int32_t entry = 0;
-    int32_t animation;
-    float scale, scale_x, scale_y, x, y;
-    float left, top, right, bottom;
-
-    *(int32_t *)(intptr_t)(actor + 208) = take;
-    *(int32_t *)(intptr_t)(actor + 212) = 0;
-    *(int32_t *)(intptr_t)(actor + 216) = 0;
-    function_4706c0_this(manager + 36, &entry, &take);
-    if (entry == *(int32_t *)(intptr_t)(manager + 40))
-        return entry;
-
-    animation = *(int32_t *)(intptr_t)(entry + 16);
-    *(int32_t *)(intptr_t)(actor + 200) = animation;
-    *(int32_t *)(intptr_t)(actor + 220) =
-        *(int32_t *)(intptr_t)(animation + 44);
-    x = *(float *)(intptr_t)(actor + 240);
-    y = *(float *)(intptr_t)(actor + 244);
-    if (*(uint8_t *)(intptr_t)(animation + 25)) {
-        /* 4622E7..462337 reads signed integer bounds, not float register temporaries. */
-        *(float *)(intptr_t)(actor + 424) =
-            (float)((double)*(int32_t *)(intptr_t)(animation + 28) - 0.5);
-        *(float *)(intptr_t)(actor + 428) =
-            (float)*(int32_t *)(intptr_t)(animation + 32);
-        *(float *)(intptr_t)(actor + 432) =
-            (float)((double)*(int32_t *)(intptr_t)(animation + 36) + 0.5);
-        *(float *)(intptr_t)(actor + 436) =
-            (float)((double)*(int32_t *)(intptr_t)(animation + 40) + 1.0);
-        *(float *)(intptr_t)(actor + 352) =
-            (float)((double)*(int32_t *)(intptr_t)(animation + 28) + x);
-        *(float *)(intptr_t)(actor + 356) =
-            (float)((double)*(int32_t *)(intptr_t)(animation + 32) + y);
-    } else {
-        memset((void *)(intptr_t)(actor + 424), 0, 16);
-        *(float *)(intptr_t)(actor + 352) = 0;
-        *(float *)(intptr_t)(actor + 356) = 0;
-        *(int32_t *)(intptr_t)(actor + 388) = 0;
-    }
-    scale = *(float *)(intptr_t)(actor + 168);
-    scale_x = *(float *)(intptr_t)(actor + 172);
-    scale_y = *(float *)(intptr_t)(actor + 176);
-    if (*(float *)(intptr_t)(actor + 272) <= 0) {
-        left = (float)((double)*(float *)(intptr_t)(actor + 424) * scale * scale_x + x);
-        right = (float)((double)*(float *)(intptr_t)(actor + 432) * scale * scale_x + x);
-    } else {
-        left = (float)(x - (double)*(float *)(intptr_t)(actor + 432) * scale * scale_x);
-        right = (float)(x - (double)*(float *)(intptr_t)(actor + 424) * scale * scale_x);
-    }
-    top = (float)((double)*(float *)(intptr_t)(actor + 428) * scale * scale_y + y);
-    bottom = (float)((double)*(float *)(intptr_t)(actor + 436) * scale * scale_y + y);
-    *(float *)(intptr_t)(actor + 440) = left;
-    *(float *)(intptr_t)(actor + 444) = top;
-    *(float *)(intptr_t)(actor + 448) = right;
-    *(float *)(intptr_t)(actor + 452) = bottom;
-    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(int32_t)(right - left);
-    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(int32_t)(bottom - top);
-    *(int32_t *)(intptr_t)(actor + 204) = *(int32_t *)(intptr_t)(animation + 8);
-    *(int32_t *)(intptr_t)(actor + 152) = *(int32_t *)(intptr_t)(animation + 8);
-    return *(int32_t *)(intptr_t)(actor + 204);
+    return kinoko_actor_set_take(actor, take);
 }
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_462280(int32_t a1) {
-    __asm {
-        mov edx, [esp + 4]
-        push edx
-        push ecx
-        call function_462280_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_462280(int32_t a1) {
-    return function_462280_this(0, a1);
-}
-#endif
 
 // Address range: 0x462480 - 0x46249e
 int32_t function_462480(void) {
@@ -127364,12 +127288,6 @@ static void retdec_actor_tick(int32_t actor)
 {
     int32_t animation_key;
     int32_t callback_type;
-    int32_t node;
-    int32_t frame;
-    int32_t frame_count;
-    int32_t frame_index;
-    int32_t duration;
-    int32_t timer;
     static volatile LONG step_trace_count;
     LONG step_trace_index;
     int32_t step_result;
@@ -127442,47 +127360,7 @@ static void retdec_actor_tick(int32_t actor)
         }
     }
 
-    frame = *(int32_t *)(intptr_t)(actor + 204);
-    if (frame == 0 || animation_key !=
-            *(int32_t *)(intptr_t)(actor + 208))
-        return;
-
-    timer = *(int32_t *)(intptr_t)(actor + 216) + 1;
-    *(int32_t *)(intptr_t)(actor + 216) = timer;
-    duration = (int32_t)*(int16_t *)(intptr_t)(frame + 240);
-    /* The original compares timer directly with the signed int16 duration;
-       zero and negative durations therefore advance immediately. */
-    if (timer < duration)
-        return;
-
-    node = *(int32_t *)(intptr_t)(actor + 200);
-    if (node == 0)
-        return;
-    frame_count = (*(int32_t *)(intptr_t)(node + 12) -
-                   *(int32_t *)(intptr_t)(node + 8)) / 248;
-    if (frame_count <= 0)
-        return;
-
-    frame_index = *(int32_t *)(intptr_t)(actor + 212);
-    ++frame_index;
-    *(int32_t *)(intptr_t)(actor + 212) = frame_index;
-    if (frame_index == frame_count) {
-        if (*(unsigned char *)(intptr_t)(node + 24) != 0) {
-            frame_index = 0;
-            *(int32_t *)(intptr_t)(actor + 212) = 0;
-        } else {
-            /* Non-looping animations keep the current (last) frame. */
-            *(int32_t *)(intptr_t)(actor + 212) = frame_index - 1;
-            *(int32_t *)(intptr_t)(actor + 216) = 0;
-            return;
-        }
-    }
-
-    *(int32_t *)(intptr_t)(actor + 204) =
-        *(int32_t *)(intptr_t)(node + 8) + frame_index * 248;
-    *(int32_t *)(intptr_t)(actor + 152) =
-        *(int32_t *)(intptr_t)(actor + 204);
-    *(int32_t *)(intptr_t)(actor + 216) = 0;
+    kinoko_actor_advance_animation(actor, animation_key);
 }
 
 static int32_t retdec_collision_append(int32_t state, int32_t *count,
@@ -142761,7 +142639,7 @@ int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3) {
 }
 
 // Address range: 0x4706c0 - 0x470722
-static int32_t function_4706c0_this(int32_t this_ptr,
+int32_t function_4706c0_this(int32_t this_ptr,
                                     int32_t *a1, int32_t *a2) {
     int32_t result = (int32_t)a1;
     int32_t v1 = this_ptr; // 0x4706c0

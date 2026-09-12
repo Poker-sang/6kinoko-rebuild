@@ -1,4 +1,5 @@
 #include "kinoko/actor_methods.h"
+#include "kinoko/actor_animation.h"
 
 #include <cstring>
 
@@ -64,24 +65,7 @@ public:
         const auto incoming_address = static_cast<int32_t>(
             reinterpret_cast<uintptr_t>(incoming));
         if (type == 0x0a008000 && read<int32_t>(animation_offset)) {
-            const ActorView source(function_4a9b40_this(incoming_address, 0));
-            int32_t frame = source.read<int32_t>(frame_index_offset);
-            write(frame_time_offset, source.read<int32_t>(frame_time_offset));
-            write(frame_index_offset, frame);
-            const ActorView animation(read<int32_t>(animation_offset));
-            const uint32_t begin = animation.read<uint32_t>(frames_begin_offset);
-            const uint32_t end = animation.read<uint32_t>(frames_end_offset);
-            const int32_t count = static_cast<int32_t>(end - begin) / frame_stride;
-            if (frame >= count) {
-                frame = count - 1;
-                if (frame < 0)
-                    frame = 0;
-                write(frame_index_offset, frame);
-            }
-            // 462250 updates both aliases, with the original 32-bit arithmetic.
-            const uint32_t selected = begin + static_cast<uint32_t>(frame) * frame_stride;
-            write(current_frame_offset, selected);
-            write(sprite_frame_offset, selected);
+            kinoko_actor_sync_animation_state(address_, function_4a9b40_this(incoming_address, 0));
         }
         // The by-value SqPlus object owns an external VM reference on entry.
         return function_4a9d70_this(incoming_address);
@@ -91,10 +75,7 @@ private:
     enum Offset {
         release_pending_offset = 22, manager_offset = 148,
         manager_cleanup_pending_offset = 120, init_data_offset = 376,
-        sprite_frame_offset = 152, animation_offset = 200,
-        current_frame_offset = 204, frame_index_offset = 212,
-        frame_time_offset = 216, frames_begin_offset = 8, frames_end_offset = 12,
-        frame_stride = 248,
+        animation_offset = 200,
         priority_offset = 228, x_offset = 240, y_offset = 244,
         chip_flags_offset = 392, chip_bound_type_offset = 410,
         chip_ids_offset = 512

@@ -31,6 +31,7 @@ target_include_directories(kinoko_actor_collision PUBLIC include)
 add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
     src/reconstructed/actor_methods.cpp
+    src/reconstructed/actor_animation.cpp
     src/reconstructed/script_callbacks.cpp
     src/reconstructed/sprite.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)

@@ -1983,6 +1983,62 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_animation_timing(void) {
+    int32_t actor[160] = {0}, animation[12] = {0};
+    unsigned char frames[3][248] = {{0}};
+    animation[2] = PTR(frames);
+    animation[3] = PTR(frames + 3);
+    *(uint8_t *)((char *)animation + 24) = 1;
+    *(int16_t *)(frames[0] + 240) = 2;
+    *(int16_t *)(frames[1] + 240) = 0;
+    *(int16_t *)(frames[2] + 240) = -3;
+    actor[38] = actor[51] = PTR(frames);
+    actor[50] = PTR(animation);
+    actor[52] = 41;
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 0 && actor[54] == 1 && actor[51] == PTR(frames));
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 1 && actor[54] == 0 && actor[51] == PTR(frames + 1));
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 2 && actor[54] == 0 && actor[51] == PTR(frames + 2));
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 0 && actor[54] == 0 && actor[51] == PTR(frames));
+    CHECK(actor[38] == actor[51]);
+
+    *(uint8_t *)((char *)animation + 24) = 0;
+    actor[53] = 2;
+    actor[38] = actor[51] = PTR(frames + 2);
+    for (int i = 0; i < 3; ++i) retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 2 && actor[54] == 0 && actor[51] == PTR(frames + 2));
+    actor[54] = 17;
+    kinoko_actor_advance_animation(PTR(actor), 40);
+    CHECK(actor[54] == 17 && actor[53] == 2);
+    actor[51] = 0;
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[54] == 17);
+    actor[51] = PTR(frames);
+    actor[50] = 0;
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[54] == 18 && actor[53] == 2);
+    actor[50] = PTR(animation);
+    animation[3] = animation[2];
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[54] == 19 && actor[53] == 2);
+
+    animation[3] = PTR(frames + 3);
+    actor[54] = INT32_MAX;
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[54] == INT32_MIN && actor[53] == 2);
+    actor[54] = 1;
+    actor[53] = 99;
+    retdec_actor_tick(PTR(actor));
+    CHECK(actor[53] == 100 && actor[54] == 0);
+    CHECK((uint32_t)actor[51] == (uint32_t)PTR(frames) + 100u * 248u);
+    CHECK(actor[38] == actor[51]);
+    puts("PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap");
+    return 0;
+}
+
 static int test_actor_state_fields(void) {
     unsigned char actor[640] = {0}, manager[160] = {0};
     unsigned char source[48], expected[640], expected_manager[160] = {0};
@@ -2270,6 +2326,7 @@ int main(int argc, char **argv) {
     CHECK(test_map_camera_fpu() == 0);
     CHECK(test_sprite_geometry() == 0);
     CHECK(test_actor_state_fields() == 0);
+    CHECK(test_animation_timing() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
     int32_t target = PTR(function_470fa0);
@@ -2804,7 +2861,8 @@ int main(int argc, char **argv) {
         CHECK(retdec_pat_tree_put(manager, 0x60000001, PTR(animation)));
         for (int i = 0; i < 8; ++i)
             __frontend_reg_store_fpr(i, 700.0L + i);
-        function_462280_this(actor, 0x60000001);
+        CHECK(retdec_call_thiscall1_result((void *)(intptr_t)actor,
+            kinoko_actor_set_take_method, 0x60000001) == PTR(frames));
         CHECK(*(float *)(intptr_t)(actor + 424) == -6.5f);
         CHECK(*(float *)(intptr_t)(actor + 428) == -20.0f);
         CHECK(*(float *)(intptr_t)(actor + 432) == 10.5f);
@@ -2828,6 +2886,22 @@ int main(int argc, char **argv) {
         function_462280_this(actor, 0x60000002);
         CHECK(*(int32_t *)(intptr_t)(actor + 200) == PTR(animation));
         CHECK(*(float *)(intptr_t)(actor + 440) == 68.5f);
+        CHECK(*(int32_t *)(intptr_t)(actor + 208) == 0x60000002);
+        CHECK(*(int32_t *)(intptr_t)(actor + 212) == 0);
+        CHECK(*(int32_t *)(intptr_t)(actor + 216) == 0);
+        *((uint8_t *)animation + 25) = 0;
+        function_4a9840_this(PTR(root + 1), "animationTakeProbe", actor + 44);
+        CHECK(execute_source(vm, root + 2,
+            "animationTakeProbe.SetTake(0x60000001); delete ::animationTakeProbe;"));
+        for (int offset = 424; offset < 440; offset += 4)
+            CHECK(*(float *)(intptr_t)(actor + offset) == 0);
+        CHECK(*(float *)(intptr_t)(actor + 352) == 0);
+        CHECK(*(float *)(intptr_t)(actor + 356) == 0);
+        CHECK(*(float *)(intptr_t)(actor + 440) == 100);
+        CHECK(*(float *)(intptr_t)(actor + 444) == 200);
+        CHECK(*(float *)(intptr_t)(actor + 448) == 100);
+        CHECK(*(float *)(intptr_t)(actor + 452) == 200);
+        CHECK(*(int32_t *)(intptr_t)(actor + 388) == 0);
         function_469700();
     }
     CHECK(test_pat_records(manager) == 0);
