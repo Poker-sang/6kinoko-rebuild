@@ -1983,6 +1983,23 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_gc_mark_link(void) {
+    int32_t shared[40] = {0}, object[9] = {0}, head_storage[16] = {0};
+    int32_t value[2] = {0x08000040, PTR(object)};
+    object[1] = 1;
+    object[5] = PTR(shared);
+    shared[17] = PTR(object);
+    head_storage[4] = 0x12345678;
+    retdec_gc_mark_value(value, head_storage);
+    CHECK(head_storage[0] == PTR(object));
+    CHECK(head_storage[4] == 0x12345678);
+    CHECK(object[3] == 0 && object[4] == 0);
+    CHECK((uint32_t)object[1] == 0x80000001u);
+    CHECK(shared[17] == 0);
+    puts("PASS: GC Mark moves the node into the caller-owned chain without writing past its head");
+    return 0;
+}
+
 static int test_shutdown_tree_cleanup(void) {
     for (int layout = 0; layout < 2; ++layout) {
         unsigned char sentinel[24] = {0};
@@ -2370,6 +2387,8 @@ static int test_error_value_ownership(int32_t vm) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--gc-link-probe") == 0)
+        return test_gc_mark_link();
     if (argc == 2 && strcmp(argv[1], "--sound-module") == 0) {
         HMODULE module=LoadLibraryA("dsound.dll");
         char path[MAX_PATH];

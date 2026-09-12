@@ -45,16 +45,17 @@ def memory(address, size):
     return data[cursor + address - start:cursor + address - start + size]
 
 rva, _ = streams[4]
+modules = []
 module_count, = unpack('I', rva)
 for index in range(module_count):
     base, size = unpack('QI', rva + 4 + 108 * index)
     name_rva, = unpack('I', rva + 4 + 108 * index + 20)
     name_size, = unpack('I', name_rva)
     name = data[name_rva + 4:name_rva + 4 + name_size].decode('utf-16-le')
+    modules.append((base, base + size, name))
     if name.lower().endswith('kinoko_retdec_rebuild.exe'):
         image_base, image_size = base, size
         print('module:', name, 'base:', hex(base))
-        break
 
 symbols = []
 for line in pathlib.Path(sys.argv[2]).read_text(errors='replace').splitlines():
@@ -66,6 +67,9 @@ addresses = [item[0] for item in symbols]
 
 def symbol(address):
     if not image_base <= address < image_base + image_size:
+        for base, end, name in modules:
+            if base <= address < end:
+                return '%s+0x%x' % (pathlib.PureWindowsPath(name).name, address - base)
         return hex(address)
     index = bisect.bisect_right(addresses, address) - 1
     return '%s+0x%x' % (symbols[index][1], address - addresses[index])
@@ -76,6 +80,8 @@ code, = unpack('I', rva + 8)
 context_size, context_rva = unpack('II', rva + 160)
 ebp, eip = unpack('II', context_rva + 180)
 print('thread:', thread, 'exception:', hex(code), 'eip:', symbol(eip))
+parameters, = unpack('I', rva + 32)
+print('exception parameters:', [hex(value) for value in unpack('Q' * parameters, rva + 40)])
 chain = []
 seen = set()
 while ebp not in seen and len(chain) < 100000:
