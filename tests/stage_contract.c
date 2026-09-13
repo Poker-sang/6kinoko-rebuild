@@ -1060,6 +1060,92 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t reader = 0, scripts[3], init[3], actors[3];
+    float saved_camera[4];
+    int32_t create_target = PTR(function_469b40);
+    int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
+    int32_t records[1][8] = {{1, -8000, 200}};
+    struct retdec_mcd_chip chip = {0};
+    struct retdec_mcd_data data = {1,&chip,0,NULL};
+    unsigned char version;
+    unsigned short textures;
+    int failures = vm_failures;
+    CHECK(function_415550_this(PTR(root), PTR("CreateActor"), PTR(&create_target),
+        4, PTR(function_471df0), 0) >= 0);
+    {
+        int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
+        CHECK(retdec_sqrat_new_table(vm,globals+2));
+        CHECK(function_48e520_this(globals[3],root[3]));
+        CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
+        CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
+        CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
+        retdec_sqrat_release_pair(vm,callback);
+        retdec_sqrat_release_pair(vm,globals+2);
+    }
+    CHECK(execute_source(vm, root + 2,
+        "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
+        "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
+        "stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
+    CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
+    CHECK(vm_failures == failures);
+    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
+    CHECK(retdec_pat_read_u8(reader, &version));
+    CHECK(retdec_pat_read_u16(reader, &textures));
+    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
+    CHECK(retdec_pat_read_animations(reader, manager, 0));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(function_468950_this(PTR(g_514300_storage), manager));
+    layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
+    layout[66] = PTR(records); layout[67] = PTR(records + 1);
+    layout[78] = PTR(layer); layout[79] = PTR(resource);
+    *((uint8_t *)layer + 140) = 1;
+    resource[16] = PTR(&data);
+    chip.chip_id = 1;
+    *(int16_t *)(chip.bytes + 12) = 16000;
+    *(int16_t *)(chip.bytes + 14) = 32;
+    CHECK(function_4693a0(PTR(layout)));
+    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_enemy");
+    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0107");
+    int32_t fairy = function_463b40_this(manager, init[0], init[1], init[2],
+        100,160,-1,PTR(&g16),0x05000002,0x107,0);
+    CHECK(fairy && vm_failures==failures);
+    function_4a9840_this(PTR(root+1),"fairy",fairy+44);
+    *(int32_t *)(intptr_t)(manager+64)=-1;
+    *(float *)(g_retdec_camera_state+72)=-8000;
+    *(float *)(g_retdec_camera_state+76)=-2000;
+    *(float *)(g_retdec_camera_state+80)=8000;
+    *(float *)(g_retdec_camera_state+84)=2000;
+    for(int round=0;round<4;++round) {
+        for(int frame=0;frame<100;++frame) {
+            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            CHECK(vm_failures==failures);
+        }
+        CHECK(execute_source(vm,root+2,
+            "if(fairy.user.data.ball.len()!=4) throw \"four balls missing\";\n"
+            "for(local i=0;i<4;i++) {\n"
+            "if(fairy.user.data.ball[i]==null) throw \"expired ball\";\n"
+            "if(fairy.user.data.ball[i].user.data.p!=fairy) throw \"ball parent\";\n"
+            "}\n"));
+        printf("PASS: ball generation %d\n",round); fflush(stdout);
+        CHECK(execute_source(vm,root+2,
+            "camera.left=-300; camera.right=1000; fairy.x=4000;"));
+        retdec_actor_tick(fairy);
+        CHECK(execute_source(vm,root+2,
+            "camera.left=-10000; camera.right=-9000;"));
+        retdec_actor_tick(fairy);
+        CHECK(vm_failures==failures);
+        function_4a9840_this(PTR(root+1),"fairy",fairy+44);
+        CHECK(execute_source(vm,root+2,
+            "if(fairy.x!=fairy.ox) throw \"reset origin\";\n"
+            "camera.left=-8000; camera.right=8000;"));
+    }
+    function_4a9d70_this(PTR(init));
+    function_4a9d70_this(PTR(scripts));
+    function_469700();
+    return 0;
+}
+
 static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader = 0, scripts[3], init[3], actors[3];
     float saved_camera[4];
@@ -2670,6 +2756,22 @@ int main(int argc, char **argv) {
     CHECK(test_global_script_cleanup(vm, root) == 0);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
+    if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {
+        char path[MAX_PATH];
+        for(char archive='a';archive<='c';++archive) {
+            sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",argv[2],archive);
+            CHECK(function_410500(path));
+        }
+        CHECK(retdec_construct_actor_manager(manager));
+        function_460e00();
+        CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
+        int32_t compile_target=PTR(function_471b30);
+        CHECK(function_415550_this(PTR(root),PTR("CompileFile"),PTR(&compile_target),
+            4,PTR(retdec_compile_file_native),0)>=0);
+        g874=1;
+        CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
+        return test_enemy_reentry(manager,vm,root);
+    }
     CHECK(test_generator_effects(vm, root, NULL) == 0);
     CHECK(test_gc_repeated_collection(vm, root) == 0);
     CHECK(test_script_callback_binding(vm, root) == 0);
