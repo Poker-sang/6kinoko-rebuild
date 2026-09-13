@@ -2993,7 +2993,7 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
         "t_lift <- {};\nplayer <- null;\n"
         "function InitPlatformRider(v) { SetTake(TYPE_2HEAD*100+TAKE_STAND); "
         "updateGroup=GP_PLAYER; priority=PR_PLAYER; collisionGroup=GP_PLAYER; "
-        "callbackGroup=GP_PLAYER; collisionMask=GP_LIFT; ::player=this; "
+        "callbackGroup=GP_PLAYER; collisionMask=GP_LIFT; SetStep(null); ::player=this; "
         "SetUpdateFunction(function() { vy=hitBottom ? 0.0 : 0.5; }); }"));
     int32_t scripts[3], init[3], rider_init[3];
     function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_lift");
