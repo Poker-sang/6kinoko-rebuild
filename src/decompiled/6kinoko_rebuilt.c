@@ -126951,9 +126951,10 @@ static void retdec_actor_tick(int32_t actor)
     }
     if (callback_type == 0x08000100) {
         retdec_trace_invalid_actor("before-script",actor);
-        step_result = retdec_actor_step_callback(actor + 92);
+        step_result = kinoko_actor_step_callback(actor);
         retdec_trace_invalid_actor("after-script",actor);
-        /* 45E180..45E1B6 replaces a failing update with an empty SquirrelFunction. */
+        /* The C++ adapter retires a failed invocation without cancelling a
+           replacement installed by Reset during that same invocation. */
         if (step_result < 0) {
             static volatile LONG failure_count;
             if (InterlockedIncrement(&failure_count) <= 64) {
@@ -126969,7 +126970,6 @@ static void retdec_actor_tick(int32_t actor)
                     *(float *)(g_retdec_camera_state + 80), *(float *)(g_retdec_camera_state + 84));
                 retdec_trace(message);
             }
-            retdec_clear_script_callback(actor + 92);
         }
         if (step_trace_index <= 64)
             retdec_trace_i32("actor:step-result", step_result);

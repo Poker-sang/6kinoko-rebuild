@@ -15,6 +15,7 @@ int32_t __fastcall kinoko_actor_set_collision_callback(int32_t actor, void *unus
 int32_t __fastcall kinoko_camera_set_update_callback(int32_t camera, void *unused,
     int32_t vtable, int32_t type, int32_t value);
 int32_t __fastcall kinoko_camera_update(int32_t camera, void *unused);
+int32_t kinoko_actor_step_callback(int32_t actor);
 
 #ifdef __cplusplus
 }

@@ -86,11 +86,39 @@ void bind(ScriptCallback &destination, const ScriptObject &environment,
     assign(destination, address(g644), saved_environment.value(), saved_function.value());
 }
 
+bool same_object(const ScriptObject &left, const ScriptObject &right) {
+    return left.type == right.type && left.value == right.value;
+}
+
+void clear(ScriptCallback &callback) {
+    ScriptCallback empty{};
+    retdec_function_45df10_impl(address(&empty), 0);
+    assign(callback, empty.vm, empty.environment, empty.function);
+    function_4a9d70_this(address(&empty.function));
+    function_4a9d70_this(address(&empty.environment));
+}
+
 constexpr int32_t script_closure_type = 0x08000100;
 constexpr uint32_t actor_object_offset = 44;
 constexpr uint32_t actor_update_offset = 92;
 constexpr uint32_t actor_collision_offset = 120;
 constexpr uint32_t camera_update_offset = 12;
+}
+
+// A Reset inside a callback replaces the Actor's script instance and update.
+// Keep the invocation alive, and retire only that invocation on failure.
+// Otherwise an error in the old instance cancels the newly initialized actor.
+extern "C" int32_t kinoko_actor_step_callback(int32_t actor) {
+    auto &current = at<ScriptCallback>(actor, actor_update_offset);
+    LocalObject environment(current.environment);
+    LocalObject function(current.function);
+    ScriptCallback invocation{current.vm, environment.value(), function.value()};
+    const int32_t result = retdec_actor_step_callback(address(&invocation));
+    if (result < 0 && current.vm == invocation.vm &&
+        same_object(current.environment, invocation.environment) &&
+        same_object(current.function, invocation.function))
+        clear(current);
+    return result;
 }
 
 // 45FCD0: Actor.SetUpdateFunction.

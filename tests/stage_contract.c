@@ -1081,15 +1081,12 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
         CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
         retdec_sqrat_release_pair(vm,callback);
-        CHECK(retdec_sqrat_get(PTR(globals),"PR_FRONT",callback));
-        CHECK(retdec_sqrat_set_pair(vm,root+2,"PR_FRONT",callback));
-        retdec_sqrat_release_pair(vm,callback);
         retdec_sqrat_release_pair(vm,globals+2);
     }
     CHECK(execute_source(vm, root + 2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
         "player <- {x=0.0,y=100.0,direction=-1.0,user={hold=null,water=false}};\n"
-        "function PlaySE(id) {}\n stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
+        "function PlaySE(id) {}\n PR_FRONT <- 65535;\n stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
     CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
@@ -1126,26 +1123,6 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "fairy.vy=-5.0;\nt_enemy.EnemyUpdate_Dead.call(fairy);\n"
         "if(fairy.vy<=-5.0) throw \"dead gravity missing\";\n"
         "fairy.vy=0.0; fairy.user.frameCount=0;"));
-    int32_t death_init[3];
-    function_4aa3a0_this(PTR(scripts),PTR(death_init),"Init0106");
-    int32_t victim=function_463b40_this(manager,death_init[0],death_init[1],death_init[2],
-        300,160,-1,PTR(&g16),0x05000002,0x106,0);
-    CHECK(victim);
-    function_4a9840_this(PTR(root+1),"victim",victim+44);
-    CHECK(execute_source(vm,root+2,
-        "t_item <- { InitPoint=function(v){}, Init1up=function(v){} };\n"
-        "attacker <- { user={hitCount=0},callbackGroup=0 };\n"
-        "t_enemy.EnemyCollision_Damage.call(victim,attacker);\n"
-        "if(victim.vy!=-5 || victim.user.blowOff) throw \"ordinary death setup\";"));
-    for(int frame=0;frame<90;++frame) {
-        retdec_actor_tick(victim);
-        retdec_actor_update_motion(victim);
-        CHECK(vm_failures==failures);
-        if(frame==30) CHECK(*(float *)(intptr_t)(victim+260)>0);
-    }
-    CHECK(*(float *)(intptr_t)(victim+244)>160);
-    puts("PASS: original collision death rises briefly then falls under gravity");
-    function_4a9d70_this(PTR(death_init));
     for(int round=0;round<4;++round) {
         for(int frame=0;frame<240;++frame) {
             retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
@@ -1173,18 +1150,53 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             function_4a9d70_this(PTR(obj));
         }
         printf("PASS: ball generation %d\n",round); fflush(stdout);
+        // Original map flags make a reset actor wait for native visibility.
+        *(uint32_t *)(intptr_t)(fairy+392)=0x20000;
         CHECK(execute_source(vm,root+2,
-            "camera.left=-300; camera.right=1000; fairy.x=4000;"));
+            "camera.left=-1140; camera.right=-500;"));
+        *(float *)(g_retdec_camera_state+72)=-1140;
+        *(float *)(g_retdec_camera_state+80)=-500;
+        expected_vm_error=1; // The original bytecode's final old-user write fails.
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
-        CHECK(execute_source(vm,root+2,
-            "camera.left=-10000; camera.right=-9000;"));
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
-        CHECK(vm_failures==failures);
+        expected_vm_error=0;
+        CHECK(*(int32_t *)(intptr_t)(fairy+112)==0x08000100);
         function_4a9840_this(PTR(root+1),"fairy",fairy+44);
         CHECK(execute_source(vm,root+2,
             "if(fairy.x!=fairy.ox) throw \"reset origin\";\n"
             "camera.left=-8000; camera.right=8000;"));
+        *(float *)(g_retdec_camera_state+72)=-8000;
+        *(float *)(g_retdec_camera_state+80)=8000;
     }
+    int32_t death_init[3];
+    function_4aa3a0_this(PTR(scripts),PTR(death_init),"Init0106");
+    int32_t victim=function_463b40_this(manager,death_init[0],death_init[1],death_init[2],
+        300,160,-1,PTR(&g16),0x05000002,0x106,0);
+    CHECK(victim);
+    function_4a9840_this(PTR(root+1),"victim",victim+44);
+    CHECK(execute_source(vm,root+2,
+        "t_item <- { InitPoint=function(v){}, Init1up=function(v){} };\n"
+        "attacker <- { user={hitCount=0},callbackGroup=0 };\n"
+        "t_enemy.EnemyCollision_Damage.call(victim,attacker);\n"
+        "if(victim.vy!=-5 || victim.user.blowOff) throw \"ordinary death setup\";"));
+    for(int frame=0;frame<90;++frame) {
+        retdec_actor_tick(victim);
+        retdec_actor_update_motion(victim);
+        CHECK(vm_failures==failures);
+        if(frame==30) CHECK(*(float *)(intptr_t)(victim+260)>0);
+    }
+    CHECK(*(float *)(intptr_t)(victim+244)>160);
+    CHECK(execute_source(vm,root+2,
+        "fairy.user.eventHandler.OnHitStep(attacker);\n"
+        "if(fairy.vy!=-5) throw \"stomp death setup\";"));
+    for(int frame=0;frame<90;++frame) {
+        retdec_actor_tick(fairy);
+        retdec_actor_update_motion(fairy);
+        CHECK(vm_failures==failures);
+    }
+    CHECK(*(float *)(intptr_t)(fairy+244)>160);
+    CHECK(*(float *)(intptr_t)(fairy+260)>0);
+    puts("PASS: original collision death rises briefly then falls under gravity");
+    function_4a9d70_this(PTR(death_init));
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(scripts));
     function_469700();
@@ -1782,6 +1794,18 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
             "if(failedSteps!=1 || healthySteps!=64) throw \"update error retirement\";"));
         CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
         CHECK(function_48aa20(vm)==top);
+        function_4a9840_this(PTR(root+1),"replacementProbe",healthy+44);
+        CHECK(execute_source(vm,root+2,
+            "replacementCalls <- 0;\n"
+            "function ReplacementStep() { ::replacementCalls++; }\n"
+            "replacementProbe.SetUpdateFunction(function() {\n"
+            "SetUpdateFunction(::ReplacementStep); throw 123; });"));
+        expected_vm_error=1;
+        retdec_actor_tick(healthy);
+        expected_vm_error=0;
+        for(int i=0;i<8;++i) retdec_actor_tick(healthy);
+        CHECK(execute_source(vm,root+2,
+            "if(replacementCalls!=8) throw \"replacement cancelled by old failure\";"));
         function_469700();
         function_4a9d70_this(PTR(init));
     }
