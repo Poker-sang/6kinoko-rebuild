@@ -28,8 +28,8 @@ void destroy_owner(StageOwner *owner) {
     if (!owner) return;
     std::free(owner->data);
     owner->data = nullptr;
-    // BeginStage currently borrows the source ACT. Detach this non-owning
-    // alias before destroying its owner; cloned ACTs remain runtime-owned.
+    // Detach legacy borrowed fixtures before destroying their source;
+    // BeginStage clones remain independently owned by the runtime.
     if (owner->runtime && owner->runtime[3] ==
             static_cast<int32_t>(reinterpret_cast<uintptr_t>(owner->source)))
         owner->runtime[3] = 0;

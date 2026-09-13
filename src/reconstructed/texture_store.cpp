@@ -99,3 +99,9 @@ extern "C" int32_t kinoko_texture_release(int32_t handle) {
     owner.name.clear();
     return 1;
 }
+
+extern "C" int32_t kinoko_texture_retain(int32_t handle) {
+    if (!valid(handle)) return 0;
+    ++owners[handle].references;
+    return 1;
+}

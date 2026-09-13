@@ -30,6 +30,7 @@ target_include_directories(kinoko_actor_collision PUBLIC include)
 
 add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
+    src/reconstructed/act_clone.cpp
     src/reconstructed/actor_methods.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/actor_cleanup.cpp
@@ -264,6 +265,8 @@ add_test(NAME green_stage5_contract
     COMMAND kinoko_stage_contract --green-stage5 "${KINOKO_REFERENCE_DIR}")
 add_test(NAME water_alpha_contract
     COMMAND kinoko_stage_contract --water-alpha "${KINOKO_REFERENCE_DIR}")
+add_test(NAME act_reentry_contract
+    COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
 
 add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
