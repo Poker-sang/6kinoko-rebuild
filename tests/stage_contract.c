@@ -3053,6 +3053,30 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     int32_t scripts[3], init[3], rider_init[3];
     function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_lift");
     CHECK(execute_asset(vm,scripts+1,"data/script/lift.cv4"));
+    if(green) {
+        int32_t player_scripts[3];
+        CHECK(execute_source(vm,root+2,"t_player <- {};"));
+        function_4aa3a0_this(PTR(root+1),PTR(player_scripts),"t_player");
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ground.cv4"));
+        function_4a9d70_this(PTR(player_scripts));
+        CHECK(execute_source(vm,root+2,
+            "t_player.SetLaddar <- function(){return false;};\n"
+            "input <- {x=0,y=0,b0=0,b2=0,b3=0};\n"
+            "camera <- {top=-1000,bottom=2000};\n"
+            "time <- 1000; stageWaterLevel <- 10000; stageWaterType <- 0;\n"
+            "stageLayerVector <- -1; stageIce <- false; stageTimeStop <- false;\n"
+            "function InitPlatformRider(id) {\n"
+            "user={type=TYPE_2HEAD,take=0,hold=null,water=false,rolling=false,pitch=1.0,"
+            "dash_count=0,hover=0,deadCount=0,clearCount=0,moveCount=0,goalCount=0,"
+            "changingCount=0,invincibleCount=0,count8head=0,countUFO=0,inertia=0.0,"
+            "hitblock=false,slide=false,hand=null,swim=false,ladder=false,hitCount=0,vx=0.0,vector=false};\n"
+            "user.SetTake <- ::t_player.SetTake.bindenv(this);\n"
+            "user.SetDead <- function(v){throw \"unexpected green rider death\";};\n"
+            "user.SetTake(TAKE_STAND); collisionMask=GP_TERRAIN|GP_LIFT; "
+            "collisionGroup=GP_PLAYER; callbackGroup=GP_PLAYER; priority=PR_PLAYER; updateGroup=GP_PLAYER; "
+            "SetStep(null); funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
+    }
     function_4aa3a0_this(PTR(scripts),PTR(init),green ? "InitRail" : "Init04c7");
     function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
     CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
