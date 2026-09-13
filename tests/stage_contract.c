@@ -2925,7 +2925,8 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
 static int test_array_pop_values(int32_t vm, int32_t *root) {
     const int32_t top = function_48aa20(vm);
     CHECK(execute_source(vm, root + 2,
-        "popObject <- {value=7}; popValues <- [popObject,null,3.25,\"tail\"];\n"
+        "popObject <- {value=7};\n"
+        "popValues <- [popObject,null,3.25,\"tail\"];\n"
         "if(popValues.top()!=\"tail\" || popValues.len()!=4) throw \"array top\";\n"
         "if(popValues.pop()!=\"tail\" || popValues.len()!=3) throw \"pop string\";\n"
         "if(popValues.pop()!=3.25 || popValues.pop()!=null) throw \"pop scalar\";\n"
@@ -2935,7 +2936,8 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
         "try { popValues.pop(); } catch(e) { popErrors++; }\n"
         "try { popValues.top(); } catch(e) { popErrors++; }\n"
         "if(popErrors!=2) throw \"empty array error return\";\n"
-        "popValues.append(popValues); poppedSelf <- popValues.pop();\n"
+        "popValues.append(popValues);\n"
+        "poppedSelf <- popValues.pop();\n"
         "if(poppedSelf!=popValues || popValues.len()!=0) throw \"pop self reference\";\n"
         "for(local i=0;i<512;i++) popValues.append(i);\n"
         "for(local i=511;i>=0;i--) if(popValues.pop()!=i) throw \"pop shrink order\";\n"
