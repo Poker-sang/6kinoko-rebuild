@@ -2431,6 +2431,73 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int test_generator_effects(int32_t vm, int32_t *root, const char *original_script) {
+    const int32_t top = function_48aa20(vm);
+    if (original_script) {
+        CHECK(execute_file(vm, root + 2, original_script));
+    } else {
+        /* Same resume/cleanup sequence as EffectLayer.nut::Update, including
+           the array receiver slot reused by len()-1 after a generator yield. */
+        CHECK(execute_source(vm, root + 2,
+            "effectList <- [];\n"
+            "function Update() {\n"
+            " for(local i=0; i<effectList.len(); i++)\n"
+            "  if(effectList[i]) if(!(resume effectList[i])) effectList[i]=null;\n"
+            " for(local i=effectList.len()-1; i>=0; i--)\n"
+            "  if(effectList[i]==null) effectList.remove(i);\n"
+            "}"));
+    }
+    CHECK(execute_source(vm, root + 2,
+        "effectSteps <- 0;\n"
+        "function ProbeEffect() { ::effectSteps++; yield true; ::effectSteps++; yield true; ::effectSteps++; return false; }\n"
+        "effectList.append(ProbeEffect());\n"));
+    for (int frame = 0; frame < 5; ++frame) {
+        CHECK(execute_source(vm, root + 2, "Update();"));
+        int32_t list[3], steps[3];
+        function_4aa3a0_this(PTR(root+1), PTR(list), "effectList");
+        function_4aa3a0_this(PTR(root+1), PTR(steps), "effectSteps");
+        int32_t *array = (int32_t *)(intptr_t)list[2];
+        CHECK(array[0] == PTR(&g68));
+        CHECK(array[7] == (frame < 2 ? 1 : 0));
+        CHECK(steps[2] == (frame < 2 ? frame + 1 : 3));
+        function_4a9d70_this(PTR(steps));
+        function_4a9d70_this(PTR(list));
+        CHECK(function_48aa20(vm) == top);
+    }
+    CHECK(execute_source(vm, root + 2,
+        "removedItem <- { value=17 };\n"
+        "removeArray <- [null,removedItem,29];\n"
+        "if(removeArray.remove(1.9)!=removedItem || removeArray.len()!=2) throw \"remove return\";\n"
+        "if(removeArray.remove(0)!=null || removeArray.remove(0)!=29 || removeArray.len()!=0) throw \"remove order\";\n"
+        "removeErrors <- 0;\n"
+        "try { removeArray.remove(0); } catch(e) { if(e!=\"idx out of range\") throw e; removeErrors++; }\n"
+        "if(removeErrors!=1 || removedItem.value!=17) throw \"remove ownership\";\n"));
+    if (original_script) {
+        /* Run unmodified original GenSmokeEffect and Update. The draw boundary
+           records calls so this regression needs no D3D window or gameplay. */
+        CHECK(execute_source(vm, root + 2,
+            "smokeDraws <- 0; BLEND_ALPHA <- 1;\n"
+            "resource <- {};\n"
+            "resource[\"smoke-small_0000\"] <- 0;\n"
+            "resource[\"smoke-small_0001\"] <- 1;\n"
+            "resource[\"smoke-small_0002\"] <- 2;\n"
+            "resource[\"smoke-small_0003\"] <- 3;\n"
+            "resource[\"smoke-small_0004\"] <- 4;\n"
+            "pl <- { BitBlt=function(x,y,w,h,r,sx,sy,blend,alpha) {\n"
+            " if(x!=64 || y!=80 || w!=32 || h!=32 || r!=::smokeDraws/5 || alpha!=1.0) throw \"smoke drawing\";\n"
+            " ::smokeDraws++;\n"
+            "}};\nCreateSmoke(80,96);"));
+        for (int frame = 0; frame < 26; ++frame) {
+            CHECK(execute_source(vm, root + 2, "Update();"));
+            CHECK(function_48aa20(vm) == top);
+        }
+        CHECK(execute_source(vm, root + 2,
+            "if(smokeDraws!=25 || effectList.len()!=0) throw \"smoke lifecycle\";"));
+    }
+    puts("PASS: effect yields/results, caller stack, completion, array removal and ownership");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--gc-link-probe") == 0)
         return test_gc_mark_link();
@@ -2483,31 +2550,9 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
-    if (argc == 3 && strcmp(argv[1], "--road-probe") == 0) {
-        CHECK(execute_file(vm, root + 2, argv[2]));
-        CHECK(execute_source(vm, root + 2,
-            "effectSteps <- 0;\n"
-            "function ProbeEffect() { ::effectSteps++; yield true; ::effectSteps++; yield true; ::effectSteps++; return false; }\n"
-            "effectList.append(ProbeEffect());\n"));
-        for (int frame = 0; frame < 5; ++frame) {
-            fprintf(stderr, "effect frame %d\n", frame);
-            CHECK(execute_source(vm, root + 2, "Update();"));
-            int32_t list[3], steps[3];
-            function_4aa3a0_this(PTR(root+1), PTR(list), "effectList");
-            function_4aa3a0_this(PTR(root+1), PTR(steps), "effectSteps");
-            int32_t *array = (int32_t *)(intptr_t)list[2];
-            fprintf(stderr, "steps=%d array=%p vtable=%08x refs=%d size=%d first=%08x/%08x\n",
-                steps[2], array, array[0], array[1], array[7],
-                array[7] ? ((int32_t *)(intptr_t)array[6])[0] : 0,
-                array[7] ? ((int32_t *)(intptr_t)array[6])[1] : 0);
-            function_4a9d70_this(PTR(steps));
-            function_4a9d70_this(PTR(list));
-        }
-        CHECK(execute_source(vm, root + 2,
-            "if (effectList.len() != 0) throw \"effect cleanup\";"));
-        puts("PASS: original EffectLayer Update generator lifecycle");
-        return 0;
-    }
+    if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
+        return test_generator_effects(vm, root, argv[2]);
+    CHECK(test_generator_effects(vm, root, NULL) == 0);
     CHECK(test_gc_repeated_collection(vm, root) == 0);
     CHECK(test_script_callback_binding(vm, root) == 0);
     {
