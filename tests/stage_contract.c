@@ -3178,13 +3178,13 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
    the real loader and Actor render preparation, not a replacement water rule. */
 static int test_water_alpha(int32_t manager, const char *directory) {
     char path[MAX_PATH];
-    const char *patterns[] = { "data/actor/system/system.pat", "data/actor/item/item.pat" };
+    const char *patterns[] = { "data/map/map.pat" };
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
         CHECK(function_410500(path));
     }
     CHECK(retdec_construct_actor_manager(manager));
-    for (int p=0; p<2; ++p) {
+    for (int p=0; p<1; ++p) {
         int32_t reader=0;
         uint8_t version;
         uint16_t textures;
