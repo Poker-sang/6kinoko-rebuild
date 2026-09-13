@@ -4,9 +4,13 @@
 
 extern "C" {
 extern char *g644;
+extern int32_t g600[3], g601[3], g602[3];
 int32_t *function_4a9500_this(int32_t *destination, int32_t source);
 int32_t function_4a95c0_this(int32_t destination, int32_t source);
 int32_t function_4a9d70_this(int32_t object);
+int32_t function_4a9570_this(int32_t object);
+int32_t function_4a97b0_this(int32_t object, int32_t key, int32_t value);
+int32_t function_4a94e0_this(int32_t object);
 int32_t retdec_function_45df10_impl(int32_t destination, int32_t name);
 int32_t retdec_actor_step_callback(int32_t callback);
 void retdec_trace(const char *message);
@@ -109,6 +113,24 @@ extern "C" int32_t kinoko_actor_step_callback(int32_t actor) {
     if (result < 0)
         clear(current);
     return result;
+}
+
+// Original 45FB90: clear native callbacks, reset Actor CLASS defaults, then
+// release the native owner's instance reference. Existing script instances
+// retain their own user/step fields until their remaining references expire.
+extern "C" int32_t kinoko_actor_clear_script(int32_t actor) {
+    auto &instance = at<ScriptObject>(actor, actor_object_offset);
+    if (instance.type == 0x0a008000) {
+        clear(at<ScriptCallback>(actor, actor_update_offset));
+        clear(at<ScriptCallback>(actor, actor_collision_offset));
+        ScriptObject empty{};
+        function_4a94e0_this(address(&empty));
+        // 45FC7A and 45FC94 both load ECX=513C58 (g602), not actor+44.
+        function_4a97b0_this(address(g602), address(g601), address(&empty));
+        function_4a97b0_this(address(g602), address(g600), address(&empty));
+        function_4a9d70_this(address(&empty));
+    }
+    return function_4a9570_this(address(&instance));
 }
 
 // 45FCD0: Actor.SetUpdateFunction.

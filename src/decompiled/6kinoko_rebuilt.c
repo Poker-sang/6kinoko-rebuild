@@ -3927,7 +3927,6 @@ int32_t function_45f8c0(int32_t a1, int32_t a2, int32_t a3,
 int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5);
 int32_t function_45fab0(int32_t a1, int32_t a2);
-int32_t function_45fb90(void);
 int32_t function_45ff80(int32_t a1, int32_t result);
 int32_t function_45ff90(void);
 int32_t function_45ffa0(int32_t a1, int32_t result);
@@ -5201,7 +5200,7 @@ int32_t function_4a92e0(int32_t result, int32_t a2);
 static int32_t *function_4a92e0_this(int32_t *this_ptr, int32_t a2);
 int32_t function_4a9370(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4a9490(int32_t * a1, int32_t a2, int32_t a3, char * a4, char * a5);
-static int32_t function_4a94e0_this(int32_t this_ptr);
+int32_t function_4a94e0_this(int32_t this_ptr);
 static int32_t function_4a9c10_this(int32_t this_ptr);
 int32_t function_4a9500(int32_t a1);
 int32_t *function_4a9500_this(int32_t *this_ptr, int32_t source_ptr);
@@ -5209,7 +5208,7 @@ int32_t function_4a9540(int32_t a1, int32_t a2);
 static int32_t function_4a9540_this(int32_t this_ptr, int32_t a1,
                                     int32_t a2);
 int32_t function_4a9570(void);
-static int32_t function_4a9570_this(int32_t this_ptr);
+int32_t function_4a9570_this(int32_t this_ptr);
 int32_t function_4a95c0(int32_t a1);
 int32_t function_4a95c0_this(int32_t this_ptr, int32_t source_ptr);
 static int32_t function_4a90c0_this(int32_t this_ptr, int32_t source_ptr);
@@ -5225,7 +5224,7 @@ int32_t function_4a9730(int32_t a1, int32_t a2);
 static int32_t function_4a9730_this(int32_t this_ptr, int32_t a2,
                                     int32_t source_ptr);
 int32_t function_4a97b0(char a1, int32_t a2);
-static int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2, int32_t a3);
+int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2, int32_t a3);
 int32_t function_4a9840(char * a1, int32_t * a2);
 static int32_t function_4a9840_this(int32_t this_ptr, const char *source_ptr,
                                     int32_t target_ptr);
@@ -123482,20 +123481,6 @@ static void retdec_clear_script_callback(int32_t callback) {
     function_4a9d70_this((int32_t)(intptr_t)(state + 1));
 }
 
-/* 45FB90 clears the script instance and its callbacks, not the saved initializer. */
-static int32_t function_45fb90_this(int32_t actor) {
-    int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    if (function_4a9a30_this(actor + 44) == 0x0A008000) {
-        for (int32_t offset = 92; offset <= 120; offset += 28)
-            retdec_clear_script_callback(actor + offset);
-        function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g601,
-                            (int32_t)(intptr_t)empty);
-        function_4a97b0_this(actor + 44, (int32_t)(intptr_t)g600,
-                            (int32_t)(intptr_t)empty);
-    }
-    return function_4a9570_this(actor + 44);
-}
-
 /* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
 static int32_t function_45e460_this(int32_t actor) {
     int32_t parent_control, owner_control;
@@ -123504,7 +123489,7 @@ static int32_t function_45e460_this(int32_t actor) {
         return 0;
     function_4a9570_this(actor + 56);
     function_4a9570_this(actor + 68);
-    function_45fb90_this(actor);
+    kinoko_actor_clear_script(actor);
     parent_control = *(int32_t *)(intptr_t)(actor + 36);
     *(int32_t *)(intptr_t)(actor + 32) = 0;
     *(int32_t *)(intptr_t)(actor + 36) = 0;
@@ -123924,7 +123909,7 @@ static int32_t function_45eb00_this(int32_t actor) {
     *(int32_t *)(intptr_t)(actor + 24) = 0;
     *(int32_t *)(intptr_t)(actor + 28) = 0;
     retdec_release_squirrel_object(owner_control);
-    function_45fb90_this(actor);
+    kinoko_actor_clear_script(actor);
 
     /* Init replaces these same fields, so retain both saved SquirrelObjects across the call. */
     function_4a9500_this(initial_argument, actor + 68);
@@ -124915,20 +124900,6 @@ int32_t function_45fab0(int32_t a1, int32_t a2) {
     }
     return result;
 }
-
-// Address range: 0x45fb90 - 0x45fcc6
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45fb90(void) {
-    __asm {
-        push ecx
-        call function_45fb90_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_45fb90(void) { return 0; }
-#endif
 
 // Address range: 0x45ff80 - 0x45ff8f
 int32_t function_45ff80(int32_t a1, int32_t result) {
@@ -189497,7 +189468,7 @@ static void retdec_table_refresh_free_slot(int32_t table_ptr) {
     *(int32_t *)(table_ptr + 28) = free_slot;
 }
 
-static int32_t function_4a94e0_this(int32_t this_ptr) {
+int32_t function_4a94e0_this(int32_t this_ptr) {
     if (this_ptr == 0)
         return 0;
     *(int32_t *)this_ptr = (int32_t)(intptr_t)&g16;
@@ -189520,7 +189491,7 @@ static int32_t function_4a9c10_this(int32_t this_ptr) {
     return 1;
 }
 
-static int32_t function_4a9570_this(int32_t this_ptr) {
+int32_t function_4a9570_this(int32_t this_ptr) {
     int32_t value_ptr;
 
     if (this_ptr == 0)
@@ -227894,7 +227865,7 @@ int32_t function_4a97b0(char a1, int32_t a2) {
     return 0;
 }
 
-static int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2,
+int32_t function_4a97b0_this(int32_t this_ptr, int32_t a2,
                                     int32_t a3) {
     int32_t stack_base;
     int32_t result;

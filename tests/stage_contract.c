@@ -631,11 +631,12 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         function_4a9500_this(parent_object, parent + 44);
         function_4606d0_this(actor, PTR(parent_object));
         CHECK(execute_source(vm, root + 2,
-            "oldReset <- resetProbe; resetProbe.x = 700; resetProbe.y = 800;\n"
+            "oldReset <- resetProbe; oldUser <- oldReset.user; oldStep <- oldReset.step;\n"
+            "resetProbe.x = 700; resetProbe.y = 800;\n"
             "resetProbe.direction = 1; resetProbe.priority = 123;\n"
             "resetProbe.SetChipFlag(32); resetProbe.Reset();\n"
-            "if (resetProbe == oldReset || oldReset.user != null || oldReset.step != null) "
-            "throw \"old reset instance retained state\";\n"
+            "if (resetProbe == oldReset || oldReset.user != oldUser || oldReset.step != oldStep) "
+            "throw \"old reset instance fields changed\";\n"
             "if (resetProbe.x != 100 || resetProbe.y != 200 || resetProbe.direction != -1 || "
             "resetProbe.priority != 7 || resetProbe.user.generation != resetCalls) "
             "throw \"reset initializer not replayed\";"));
@@ -654,7 +655,18 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(function_48aa20(vm) == stack_top);
     }
     CHECK(execute_source(vm, root + 2,
-        "if (resetCalls != 33 || resetTicks != 32) throw \"reset callback counts\";"));
+        "if (resetCalls != 33 || resetTicks != 32) throw \"reset callback counts\";\n"
+        "resetProbe.SetUpdateFunction(function() {\n"
+        " local previous = user; Reset();\n"
+        " if(user!=previous) throw \"Reset cleared executing instance\";\n"
+        " user.afterReset <- 42;\n"
+        "});"));
+    retdec_actor_tick(actor);
+    CHECK(vm_failures==0);
+    CHECK(*(int32_t *)(intptr_t)(actor+112)==0x08000100);
+    retdec_actor_tick(actor);
+    CHECK(execute_source(vm,root+2,
+        "if(resetCalls!=34 || resetTicks!=33) throw \"post-Reset callback continuation\";"));
     function_469700();
     function_4a9d70_this(PTR(init));
     function_4a9d70_this(PTR(seed));
