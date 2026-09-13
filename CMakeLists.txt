@@ -259,6 +259,8 @@ add_test(NAME crystal_countdown_contract
     COMMAND kinoko_stage_contract --crystal-countdown "${KINOKO_REFERENCE_DIR}")
 add_test(NAME orange_platform_contract
     COMMAND kinoko_stage_contract --orange-platform "${KINOKO_REFERENCE_DIR}")
+add_test(NAME green_stage5_contract
+    COMMAND kinoko_stage_contract --green-stage5 "${KINOKO_REFERENCE_DIR}")
 
 add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)

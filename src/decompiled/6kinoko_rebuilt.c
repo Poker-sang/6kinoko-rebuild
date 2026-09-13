@@ -125741,7 +125741,10 @@ int32_t function_460e00(void) {
     }
     // 0x462159
     function_460920(&v2, &g576, 324, "callbackMask", 0);
-    retdec_msvc_0_Init_locks_std__QAE_XZ5();
+    /* 462175..462178 constructs the null SquirrelObject used for both
+       class defaults. Zero-filled storage has type 0, not OT_NULL. */
+    int32_t v72[3] = {0, 0, 0};
+    function_4a94e0_this((int32_t)(intptr_t)v72);
     int32_t v70[3] = {0, 0, 0}; // temporary SquirrelObject
     int32_t v71 = (int32_t)(intptr_t)v70;
     function_4a95c0_this((int32_t)(intptr_t)&g601,
@@ -125750,7 +125753,6 @@ int32_t function_460e00(void) {
     function_4a95c0_this((int32_t)(intptr_t)&g600,
                          function_4a9250(v71, (int32_t)"user"));
     function_4a9d70_this(v71);
-    int32_t v72[3] = {0, 0, 0}; // temporary SquirrelObject
     int32_t v73 = (int32_t)(intptr_t)v72;
     function_4a97b0_this((int32_t)(intptr_t)&g602,
                          (int32_t)(intptr_t)&g601, v73);

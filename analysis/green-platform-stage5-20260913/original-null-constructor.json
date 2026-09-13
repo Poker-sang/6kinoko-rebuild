@@ -1,0 +1,1 @@
+{"addr":"0x4a94e0","code":"_DWORD *__thiscall sub_4A94E0(_DWORD *this)\n{\n  *this = &SquirrelObject::`vftable'; /*0x4a94e7*/\n  sub_48ABE0(a1: this + 1); /*0x4a94ed*/\n  return this; /*0x4a94f7*/\n}","refs":[{"addr":"0x4d54a4","name":"??_7SquirrelObject@@6B@"},{"addr":"0x48abe0","name":"sub_48ABE0"}]}

@@ -2977,6 +2977,8 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
+    CHECK(execute_source(vm,root+2,
+        "if(Actor.step!=null || Actor.user!=null) throw \"Actor null class defaults\";"));
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
     int32_t target=PTR(function_470fa0);
     CHECK(function_415550_this(PTR(root),PTR("SetInitFunctionByID"),PTR(&target),4,PTR(function_471d30),0)>=0);
@@ -3317,6 +3319,8 @@ int main(int argc, char **argv) {
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
+    CHECK(execute_source(vm,root+2,
+        "if(Actor.step!=null || Actor.user!=null) throw \"Actor null class defaults\";"));
     CHECK(test_delegate_lifetime(vm, root)==0);
     /* Declare the isolated fixture's script-managed callback slot before creating instances. */
     CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));

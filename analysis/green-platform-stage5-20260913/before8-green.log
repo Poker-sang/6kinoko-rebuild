@@ -1,0 +1,29 @@
+stagevm:failure-opcode:0x00000009
+stagevm:failure-frame:0x00000000
+stagevm:failure-instruction:0x0170A698
+stagevm:failure-instruction-index:0x0000001D
+stagevm:failure-source:ptr=0x016D5F5C text=data/script/lift.nut
+stagevm:failure-function:ptr=0x0168C99C text=SetRide
+stagevm:failure-error:ptr=0x0172E214 text=the index 'top' does not exist
+stagevm:failure-opcode:0x00000006
+stagevm:failure-frame:0x00000000
+stagevm:failure-instruction:0x016C99A0
+stagevm:failure-instruction-index:0x00000004
+stagevm:failure-source:ptr=0x016D5F5C text=data/script/lift.nut
+stagevm:failure-function:ptr=0x0170A1F4 text=CallbackRail
+stagevm:failure-error:ptr=0x0172E214 text=the index 'top' does not exist
+FAIL line 3106: function_462ce0(platform,rider)>=0
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
+PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push
+GREEN map spawn=(305,464) flags=00010020 rails=2 terrain=1
