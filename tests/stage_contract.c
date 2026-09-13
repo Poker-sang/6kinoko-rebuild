@@ -3252,6 +3252,58 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     return 0;
 }
 
+static int test_act_reentry(const char *directory) {
+    char path[MAX_PATH];
+    const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
+    for(char archive='a';archive<='c';++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    for(int asset=0;asset<2;++asset) {
+        int32_t source[60]={0}, runtime[48]={0}, holder=PTR(source);
+        CHECK(function_427530(PTR(source)));
+        CHECK(function_428000(PTR(source),assets[asset]));
+        runtime[0]=PTR(&holder);
+        for(int visit=0;visit<3;++visit) {
+            CHECK(retdec_bind_act_resource_object(PTR(runtime)));
+            const int32_t active=runtime[3];
+            CHECK(active!=PTR(source));
+            CHECK(*(int32_t *)(intptr_t)(active+212)-*(int32_t *)(intptr_t)(active+208)==source[53]-source[52]);
+            for(int index=0;index<(source[53]-source[52])/4;++index) {
+                int32_t original=*(int32_t *)(intptr_t)(source[52]+4*index);
+                int32_t layer=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(active+208)+4*index);
+                CHECK(layer!=original);
+                CHECK(*(float *)(intptr_t)(layer+148)==*(float *)(intptr_t)(original+148));
+                *(float *)(intptr_t)(layer+148)+=64.0f*(visit+1);
+                int32_t oh=*(int32_t *)(intptr_t)(original+180), lh=*(int32_t *)(intptr_t)(layer+180);
+                int32_t on=*(int32_t *)(intptr_t)oh, ln=*(int32_t *)(intptr_t)lh;
+                while(on!=oh && ln!=lh) {
+                    int32_t ok=*(int32_t *)(intptr_t)(on+8), lk=*(int32_t *)(intptr_t)(ln+8);
+                    int32_t ol=*(int32_t *)(intptr_t)(ok+4), ll=*(int32_t *)(intptr_t)(lk+4);
+                    CHECK(ok!=lk);
+                    if(ol) {
+                        CHECK(ll && ll!=ol);
+                        if(*(int32_t *)(intptr_t)ol==PTR(&g327)) {
+                            int32_t ob=*(int32_t *)(intptr_t)(ol+264), oe=*(int32_t *)(intptr_t)(ol+268);
+                            int32_t lb=*(int32_t *)(intptr_t)(ll+264);
+                            CHECK(*(int32_t *)(intptr_t)(ll+268)-lb==oe-ob);
+                            CHECK(!ob || (ob!=lb && memcmp((void *)(intptr_t)ob,(void *)(intptr_t)lb,oe-ob)==0));
+                            if(oe>ob) { ((uint8_t *)(intptr_t)lb)[24]^=1; ((float *)(intptr_t)lb)[7]=0; }
+                        }
+                    }
+                    on=*(int32_t *)(intptr_t)on; ln=*(int32_t *)(intptr_t)ln;
+                }
+                CHECK(on==oh && ln==lh);
+            }
+        }
+        retdec_destroy_cact_with_flags(runtime[3],1);
+        free((void *)(intptr_t)runtime[4]);
+        retdec_destroy_cact_object(PTR(source));
+    }
+    puts("PASS: title cursor and world-map records restart from independent ACT copies");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -3312,6 +3364,8 @@ int main(int argc, char **argv) {
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
+    if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
+        return test_act_reentry(argv[2]);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
