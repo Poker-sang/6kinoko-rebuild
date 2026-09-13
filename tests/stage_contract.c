@@ -2468,9 +2468,13 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
         "removedItem <- { value=17 };\n"
         "removeArray <- [null,removedItem,29];\n"
         "if(removeArray.remove(1.9)!=removedItem || removeArray.len()!=2) throw \"remove return\";\n"
-        "if(removeArray.remove(0)!=null || removeArray.remove(0)!=29 || removeArray.len()!=0) throw \"remove order\";\n"
+        "if(removeArray.remove(0)!=null || removeArray.remove(0)!=29 || removeArray.len()!=0) throw \"remove order\";\n"));
+    expected_vm_error = 1;
+    CHECK(execute_source(vm, root + 2,
         "removeErrors <- 0;\n"
-        "try { removeArray.remove(0); } catch(e) { if(e!=\"idx out of range\") throw e; removeErrors++; }\n"
+        "try { removeArray.remove(0); } catch(e) { if(e!=\"idx out of range\") throw e; removeErrors++; }\n"));
+    expected_vm_error = 0;
+    CHECK(execute_source(vm, root + 2,
         "if(removeErrors!=1 || removedItem.value!=17) throw \"remove ownership\";\n"));
     if (original_script) {
         /* Run unmodified original GenSmokeEffect and Update. The draw boundary
@@ -2494,6 +2498,7 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
         CHECK(execute_source(vm, root + 2,
             "if(smokeDraws!=25 || effectList.len()!=0) throw \"smoke lifecycle\";"));
     }
+    CHECK(vm_failures == 0);
     puts("PASS: effect yields/results, caller stack, completion, array removal and ownership");
     return 0;
 }
