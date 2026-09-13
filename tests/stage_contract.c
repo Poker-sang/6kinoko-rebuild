@@ -3034,9 +3034,15 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         }
         CHECK(rail_count>0 && green_source);
         printf("GREEN map spawn=(%g,%g) flags=%08x rails=%d terrain=%d\n",green_x,green_y,retdec_mcd_u32((unsigned char *)(intptr_t)green_source+16),rail_count,terrain_count);
+        /* 46F6D0 reverses map.layer_name before stage.nut creates rail events. */
+        for(int i=0;i<rail_count/2;++i) {
+            int32_t swap=rail_layouts[i]; rail_layouts[i]=rail_layouts[rail_count-1-i];
+            rail_layouts[rail_count-1-i]=swap;
+        }
         *(int32_t *)(intptr_t)(map_state+36)=PTR(rail_layouts);
         *(int32_t *)(intptr_t)(map_state+40)=PTR(rail_layouts+rail_count);
-        CHECK(execute_source(vm,root+2,"stageRailCount <- 1; stageSwitchRail <- 0;"));
+        sprintf_s(path,sizeof(path),"stageRailCount <- %d; stageSwitchRail <- 0;",rail_count);
+        CHECK(execute_source(vm,root+2,path));
     }
     CHECK(execute_source(vm,root+2,
         "t_lift <- {};\nplayer <- null;\n"
