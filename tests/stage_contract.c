@@ -3028,6 +3028,29 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
         CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
         CHECK(fabsf(*(float *)(intptr_t)(rider+452)-*(float *)(intptr_t)(platform+444))<0.001f);
     }
+    /* Original SetRide detaches upward-moving riders before platform Update. */
+    const float jump_platform_y=*(float *)(intptr_t)(platform+244);
+    const float jump_player_y=*(float *)(intptr_t)(rider+244);
+    CHECK(execute_source(vm,root+2,
+        "player.SetUpdateFunction(null); player.vy=-5.0;"));
+    CHECK(function_462ce0(platform,rider)>=0);
+    CHECK(*(int32_t *)(intptr_t)(rider+36)==0);
+    retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+    CHECK(*(float *)(intptr_t)(platform+244)==jump_platform_y-2.0f);
+    CHECK(*(float *)(intptr_t)(rider+244)==jump_player_y-5.0f);
+    CHECK(execute_source(vm,root+2,
+        "player.x=platformProbe.right+64; player.vy=0.0;"));
+    for(int frame=0;frame<180;++frame)
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+    CHECK(*(float *)(intptr_t)(platform+244)==672.0f);
+    CHECK(execute_source(vm,root+2,
+        "player.x=platformProbe.x; player.y=platformProbe.top-(player.bottom-player.y); "
+        "player.vy=0.5; player.SetUpdateFunction(function(){vy=hitBottom?0.0:0.5;});"));
+    retdec_actor_refresh_bounds(rider);
+    CHECK(function_462ce0(platform,rider)>=0);
+    for(int frame=0;frame<12;++frame)
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+    CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
     CHECK(execute_source(vm,root+2,
         "player.x=platformProbe.right+64; player.SetUpdateFunction(null); player.vy=0.0;"));
     retdec_actor_update_motion(rider);
@@ -3038,7 +3061,7 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
     CHECK(*(float *)(intptr_t)(platform+260)==0.0f);
     CHECK(execute_source(vm,root+2,"if(player.step!=null) throw \"walk off\";"));
     CHECK(vm_failures==0);
-    puts("PASS: original orange LiftBack carries rider down, detaches on exit and returns to its start");
+    puts("PASS: original orange LiftBack carries rider down; jump and walk-off detach; return and reboard work");
     return 0;
 }
 
