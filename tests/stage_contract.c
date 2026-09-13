@@ -2922,6 +2922,42 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     return 0;
 }
 
+static int test_array_pop_values(int32_t vm, int32_t *root) {
+    const int32_t top = function_48aa20(vm);
+    CHECK(execute_source(vm, root + 2,
+        "popObject <- {value=7}; popValues <- [popObject,null,3.25,\"tail\"];\n"
+        "if(popValues.top()!=\"tail\" || popValues.len()!=4) throw \"array top\";\n"
+        "if(popValues.pop()!=\"tail\" || popValues.len()!=3) throw \"pop string\";\n"
+        "if(popValues.pop()!=3.25 || popValues.pop()!=null) throw \"pop scalar\";\n"
+        "poppedObject <- popValues.pop();\n"
+        "if(poppedObject!=popObject || poppedObject.value!=7 || popValues.len()!=0) throw \"pop object ownership\";\n"
+        "popErrors <- 0;\n"
+        "try { popValues.pop(); } catch(e) { popErrors++; }\n"
+        "try { popValues.top(); } catch(e) { popErrors++; }\n"
+        "if(popErrors!=2) throw \"empty array error return\";\n"
+        "popValues.append(popValues); poppedSelf <- popValues.pop();\n"
+        "if(poppedSelf!=popValues || popValues.len()!=0) throw \"pop self reference\";\n"
+        "for(local i=0;i<512;i++) popValues.append(i);\n"
+        "for(local i=511;i>=0;i--) if(popValues.pop()!=i) throw \"pop shrink order\";\n"
+        "if(popValues.len()!=0) throw \"pop shrink length\";"));
+    CHECK(function_48aa20(vm) == top);
+    CHECK(execute_source(vm, root + 2, "apiPop <- [10,20,30];"));
+    int32_t array[3];
+    function_4aa3a0_this(PTR(root + 1), PTR(array), "apiPop");
+    function_48ab90(vm, array[1], array[2]);
+    CHECK(function_48dd10(vm, -1, 0) == 0);
+    CHECK(function_48aa20(vm) == top + 1);
+    CHECK(*(int32_t *)(intptr_t)(array[2] + 28) == 2);
+    CHECK(function_48dd10(vm, -1, 1) == 0);
+    CHECK(function_48aa20(vm) == top + 2);
+    int32_t value = 0;
+    CHECK(function_48a7d0(vm, -1, &value) == 0 && value == 20);
+    function_48c910(vm, top);
+    function_4a9d70_this(PTR(array));
+    puts("PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -2980,6 +3016,7 @@ int main(int argc, char **argv) {
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_global_script_cleanup(vm, root) == 0);
+    CHECK(test_array_pop_values(vm, root) == 0);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
         CHECK(retdec_construct_actor_manager(manager));
         function_460e00();

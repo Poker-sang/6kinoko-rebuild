@@ -17,6 +17,9 @@ int32_t kinoko_sq_generator_yield(int32_t generator, int32_t vm);
 int32_t kinoko_sq_generator_resume(int32_t generator, int32_t vm, int32_t target);
 void kinoko_sq_generator_kill(int32_t generator);
 int32_t kinoko_sq_array_remove(int32_t vm);
+int32_t kinoko_sq_array_pop_api(int32_t vm, int32_t index, int32_t push_value);
+int32_t kinoko_sq_array_pop(int32_t vm);
+int32_t kinoko_sq_array_top(int32_t vm);
 
 #ifdef __cplusplus
 }
