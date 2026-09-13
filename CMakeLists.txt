@@ -35,7 +35,9 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/script_callbacks.cpp
-    src/reconstructed/sprite.cpp)
+    src/reconstructed/sprite.cpp
+    src/reconstructed/texture_store.cpp
+    src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 
 add_library(kinoko_legacy_abi STATIC src/reconstructed/legacy_abi.cpp)
@@ -253,6 +255,10 @@ add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
 
+add_executable(kinoko_texture_store_contract tests/texture_store_contract.cpp)
+target_link_libraries(kinoko_texture_store_contract PRIVATE kinoko_native_methods user32)
+add_test(NAME texture_store_contract COMMAND kinoko_texture_store_contract)
+
 add_executable(kinoko_diagnostics_capture tests/diagnostics_capture.cpp)
 target_link_libraries(kinoko_diagnostics_capture PRIVATE kinoko_diagnostics dbghelp)
 add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
@@ -261,6 +267,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract
+    kinoko_texture_store_contract
     kinoko_diagnostics_capture
 )
 

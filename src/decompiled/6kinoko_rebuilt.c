@@ -32,6 +32,8 @@
 #include "kinoko/act_resource.h"
 #include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
+#include "kinoko/texture_store.h"
+#include "kinoko/map_render.h"
 
 static volatile LONG retdec_actor_step_trace_active;
 static int32_t retdec_native_string_arg(int32_t vm, int32_t index, int32_t *value);
@@ -148,7 +150,11 @@ static int32_t function_415810_this(int32_t self_ptr);
 static const char *retdec_std_string_data(int32_t string_ptr);
 static int32_t retdec_load_act_texture(const char *texture_name);
 static int32_t retdec_register_act_texture(
-    IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height);
+    IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height)
+{
+    return kinoko_texture_register(texture, width, height);
+}
+
 static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle);
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 static int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
@@ -2978,9 +2984,6 @@ int32_t function_434380(int32_t a1);
 int32_t function_434760(void);
 int32_t function_434920(int32_t a1, int32_t a2);
 int32_t function_434a50(int32_t a1);
-int32_t function_434b40(void);
-int32_t function_434b60(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_434f40(float32_t a1, float32_t a2);
 int32_t function_435220(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 int32_t function_4355f0(int32_t * a1, uint32_t a2, uint32_t a3, int32_t a4);
 int32_t function_435720(uint32_t a1, uint32_t a2);
@@ -4206,7 +4209,6 @@ int32_t function_46edc0(int32_t * a1);
 static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
 int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
                          int32_t top, int32_t right, int32_t bottom);
-int32_t function_46eed0(int32_t a1);
 int32_t function_46ef40(int32_t a1, int32_t a2, uint32_t result, int32_t a4);
 int32_t function_46efd0(uint32_t a1);
 int32_t function_46f020(int32_t result, int32_t a2);
@@ -8611,7 +8613,7 @@ struct vtable_4d5adc_type g36 = {
     .e1 = function_466490
 }; // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
-    .e0 = function_46eed0
+    .e0 = kinoko_map_entry_46eed0
 }; // 0x4d5ba0
 struct vtable_4d5ba8_type g38 = {
     .e0 = function_4701d0,
@@ -9048,10 +9050,10 @@ struct vtable_4ec79c_type g327 = {
     .e4 = function_433720,
     .e5 = function_433aa0,
     .e6 = function_434380,
-    .e7 = function_434b40,
-    .e8 = function_434f40,
+    .e7 = kinoko_map_entry_434b40,
+    .e8 = kinoko_map_entry_434f40,
     .e9 = function_4341f0,
-    .e10 = function_434b60
+    .e10 = kinoko_map_entry_434b60
 }; // 0x4ec79c
 struct vtable_4ec7cc_type g328 = {
     .e0 = function_43c1c0,
@@ -9480,16 +9482,8 @@ static uint32_t g_retdec_actor_init_count;
 static D3DDISPLAYMODE g_retdec_display_mode;
 static D3DPRESENT_PARAMETERS g_retdec_present_parameters;
 
-struct retdec_act_texture_slot {
-    IDirect3DBaseTexture9 *texture;
-    uint32_t width;
-    uint32_t height;
-};
-
-#define RETDEC_ACT_TEXTURE_SLOT_COUNT 4096u
-static struct retdec_act_texture_slot
-    g_retdec_act_texture_slots[RETDEC_ACT_TEXTURE_SLOT_COUNT];
-static uint32_t g_retdec_next_act_texture_slot = 1;
+#define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
+#define g_retdec_act_texture_slots kinoko_texture_slots
 
 static void retdec_sync_runtime_state_to_globals(const unsigned char *state);
 static void retdec_sync_globals_to_runtime_state(unsigned char *state);
@@ -16071,13 +16065,9 @@ static int32_t retdec_unbound_function_405d60(int32_t a1) {
    texture manager currently stores the native texture lifetime in the ACT
    resource/renderer path, so do not dereference the split RetDec globals as
    if they were the original contiguous manager object. */
-int32_t function_405d60(int32_t a1)
+int32_t function_405d60(int32_t handle)
 {
-    static volatile LONG trace_count;
-    LONG index = InterlockedIncrement(&trace_count);
-    if (index <= 16)
-        retdec_trace_i32("405d60:release-handle", a1);
-    return a1 == 0 ? 0 : 1;
+    return kinoko_texture_release(handle);
 }
 
 // Address range: 0x405e30 - 0x405ea0
@@ -16087,24 +16077,6 @@ int32_t function_405d60(int32_t a1)
 int32_t function_405e30(int32_t result)
 {
     return retdec_set_texture_stage(0, result);
-}
-
-static int32_t retdec_register_act_texture(
-    IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height)
-{
-    uint32_t slot;
-
-    if (texture == NULL || g_retdec_next_act_texture_slot >=
-        RETDEC_ACT_TEXTURE_SLOT_COUNT)
-        return 0;
-    slot = g_retdec_next_act_texture_slot++;
-    g_retdec_act_texture_slots[slot].texture = texture;
-    g_retdec_act_texture_slots[slot].width = width;
-    g_retdec_act_texture_slots[slot].height = height;
-    retdec_trace_i32("texture:slot", (int32_t)slot);
-    retdec_trace_i32("texture:width", (int32_t)width);
-    retdec_trace_i32("texture:height", (int32_t)height);
-    return (int32_t)slot;
 }
 
 static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle)
@@ -28340,10 +28312,6 @@ static int32_t retdec_load_act_texture(const char *texture_name)
     char path[MAX_PATH];
     const char *extension;
     size_t length;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    int32_t texture_value = 0;
-    int32_t handle;
 
     if (texture_name == NULL || g678 == 0)
         return 0;
@@ -28360,19 +28328,7 @@ static int32_t retdec_load_act_texture(const char *texture_name)
         memcpy(path + length, ".cv2", 5);
     }
 
-    if (function_40e630(0, path, (int32_t)(intptr_t)&texture_value,
-                        &width, &height) < 0 || texture_value == 0)
-        return 0;
-    handle = retdec_register_act_texture(
-        (IDirect3DBaseTexture9 *)(uintptr_t)(uint32_t)texture_value,
-        width, height);
-    if (handle == 0) {
-        IDirect3DBaseTexture9 *texture =
-            (IDirect3DBaseTexture9 *)(uintptr_t)(uint32_t)texture_value;
-        if (texture != NULL && texture->lpVtbl != NULL)
-            texture->lpVtbl->Release(texture);
-    }
-    return handle;
+    return kinoko_texture_acquire(path);
 }
 
 // Address range: 0x40e850 - 0x40ead7
@@ -58381,6 +58337,8 @@ static void retdec_destroy_cact_resource(int32_t resource)
         free((void *)(intptr_t)resource);
         return;
     }
+    kinoko_texture_release(*(int32_t *)(intptr_t)(resource + 68));
+    *(int32_t *)(intptr_t)(resource + 68) = 0;
     if (*(int32_t *)(intptr_t)(resource + 60) >= 16)
         free((void *)(intptr_t)*(int32_t *)(intptr_t)(resource + 40));
     *(int32_t *)(intptr_t)(resource + 40) = 0;
@@ -60147,6 +60105,10 @@ static void retdec_mcd_free(struct retdec_mcd_data *data)
 {
     if (data == NULL)
         return;
+    if (data->textures != NULL) {
+        for (uint32_t index = 0; index < data->texture_count; ++index)
+            kinoko_texture_release(data->textures[index].handle);
+    }
     free(data->chips);
     free(data->textures);
     free(data);
@@ -60353,7 +60315,7 @@ static int32_t retdec_map_sprite_init(int32_t sprite, int32_t handle,
     return 1;
 }
 
-static int32_t retdec_c2dmaplayout_update_impl(
+int32_t kinoko_map_update(
     int32_t layout, int32_t view_left, int32_t view_top,
     int32_t view_right, int32_t view_bottom)
 {
@@ -60609,7 +60571,7 @@ static int32_t retdec_c2dmaplayout_update_impl(
     return 0;
 }
 
-static int32_t retdec_c2dmaplayout_draw_impl(int32_t layout,
+int32_t kinoko_map_draw(int32_t layout,
                                              float x, float y)
 {
     IDirect3DDevice9 *device;
@@ -74929,524 +74891,6 @@ int32_t function_434a50(int32_t a1) {
     }
     // 0x434b2d
     return v18 & -256 | 1;
-}
-
-// Address range: 0x434b40 - 0x434b56
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_434b40(void) {
-    __asm {
-        push 7fffffffh
-        push 7fffffffh
-        push 0
-        push 0
-        push ecx
-        call retdec_c2dmaplayout_update_impl
-        add esp, 20
-        ret
-    }
-}
-#else
-int32_t function_434b40(void) { return (int32_t)E_FAIL; }
-#endif
-
-// Address range: 0x434b60 - 0x434f3c
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-int32_t function_434b60(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x434b60
-    int32_t v1; // 0x434b60
-    int32_t * v2 = (int32_t *)(v1 + 312); // 0x434b69
-    int32_t v3 = *v2; // 0x434b69
-    if (v3 == 0) {
-        // 0x434b78
-        return -0x7fffbffb;
-    }
-    // 0x434b86
-    if (*(char *)(v3 + 140) == 0) {
-        // 0x434b78
-        return 0;
-    }
-    int32_t * v4 = (int32_t *)(v1 + 316); // 0x434b93
-    int32_t v5 = *v4; // 0x434b93
-    int32_t v6 = v5; // 0x434b9b
-    int32_t v7; // bp-44, 0x434b60
-    int32_t * v8 = &v7; // 0x434b9b
-    if (v5 == 0) {
-        int32_t v9 = v3; // bp-48, 0x434ba2
-        v6 = *v4;
-        v8 = &v9;
-        if (v6 == 0) {
-            // 0x434b78
-            return -0x7fffbffb;
-        }
-    }
-    int32_t v10 = v6;
-    if (v10 == 0 | *(int32_t *)(*v2 + 100) != v10) {
-        // 0x434b78
-        return -0x7fffbffb;
-    }
-    int32_t v11 = (int32_t)v8;
-    int32_t v12 = v1 + 420; // 0x434bc6
-    int32_t v13 = *(int32_t *)v12; // 0x434bc6
-    int32_t v14 = *(int32_t *)(v1 + 424) - v13 >> 2; // 0x434bcc
-    int32_t v15 = 0; // 0x434bd1
-    int32_t v16 = v11; // 0x434bd1
-    if (v14 != 0) {
-        int32_t v17 = v11;
-        *(int32_t *)(v17 - 4) = *(int32_t *)(4 * v15 + v13);
-        int32_t v18 = v17 - 8; // 0x434be9
-        function_435d00((int32_t)&g1224, (int32_t)&g1224);
-        v15++;
-        while (v15 != v14) {
-            // 0x434be2
-            v17 = v18;
-            *(int32_t *)(v17 - 4) = *(int32_t *)(4 * v15 + v13);
-            v18 = v17 - 8;
-            function_435d00((int32_t)&g1224, (int32_t)&g1224);
-            v15++;
-        }
-        // 0x434bf4
-        v16 = v17 - 12;
-        *(int32_t *)v16 = v12;
-        function_437220((int32_t)&g1224);
-    }
-    // 0x434c00
-    *(int32_t *)(v16 - 4) = v1 + 456;
-    int32_t v19 = v1 + 380; // 0x434c0d
-    *(int32_t *)(v16 - 8) = v19;
-    *(int32_t *)(v16 - 12) = a4;
-    *(int32_t *)(v16 - 16) = a3;
-    *(int32_t *)(v16 - 20) = a2;
-    int32_t v20 = v1 + 364; // 0x434c1d
-    *(int32_t *)(v16 - 24) = a1;
-    *(int32_t *)(v16 - 28) = v20;
-    int32_t * v21 = (int32_t *)v19; // 0x434c27
-    *v21 = 0;
-    function_435220((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-    if (*v21 == 0) {
-        // 0x434b78
-        return 0;
-    }
-    // 0x434c3b
-    int3_t v22; // 0x434b60
-    int3_t v23 = v22 - 1; // 0x434c3b
-    __frontend_reg_store_fpr(v23, 0.0L);
-    float32_t v24 = __frontend_reg_load_fpr(v23); // bp-24, 0x434c46
-    float32_t v25; // bp-16, 0x434b60
-    *(int32_t *)(v16 - 32) = (int32_t)&v25;
-    float32_t v26 = __frontend_reg_load_fpr(v23); // bp-20, 0x434c4a
-    v25 = __frontend_reg_load_fpr(v23);
-    *(int32_t *)(v16 - 36) = (int32_t)&v26;
-    *(int32_t *)(v16 - 40) = (int32_t)&v24;
-    int32_t * v27 = (int32_t *)(v1 + 296); // 0x434c65
-    function_437170();
-    *(int32_t *)(v16 - 44) = v1 + 348;
-    function_437220((int32_t)&g1224);
-    int32_t v28 = v16 - 48; // 0x434c90
-    *(int32_t *)v28 = *v21;
-    function_439bd0((int32_t)&g1224);
-    int32_t v29 = *(int32_t *)(v1 + 368); // 0x434c9c
-    int32_t * v30 = (int32_t *)v20; // 0x434ca2
-    int32_t v31 = *v21; // 0x434cb1
-    uint32_t v32 = (int32_t)(0x2aaaaaab * (int64_t)(v29 - *v30) / 0x100000000) >> 1; // 0x434cb7
-    int32_t v33 = v32 / 0x80000000 + v32; // 0x434cbe
-    int32_t v34 = v33 < v31 ? v33 : v31;
-    *v21 = v34;
-    if (v34 < 1) {
-        // 0x434b78
-        return 0;
-    }
-    float32_t * v35 = (float32_t *)(v1 + 324);
-    int32_t v36 = 0; // 0x434f21
-    int32_t v37 = 0; // 0x434b60
-    int32_t v38 = v28; // 0x434b60
-    int32_t v39 = *(int32_t *)(v1 + 332); // 0x434cf4
-    int32_t v40; // 0x434b60
-    int3_t v41; // 0x434b60
-    int3_t v42; // 0x434b60
-    int3_t v43; // 0x434b60
-    int32_t v44; // 0x434b60
-    int32_t v45; // 0x434d7a
-    int32_t v46; // 0x434b60
-    int32_t * v47; // 0x434cf1
-    while (true) {
-      lab_0x434ce6:
-        // 0x434ce6
-        v40 = v39;
-        int32_t v48 = v38;
-        v42 = v41;
-        v44 = v36;
-        int32_t v49 = *v30 + v37; // 0x434cec
-        v47 = (int32_t *)(v49 + 4);
-        v39 = v40 + 232;
-        if (*(char *)(*v47 + 24) != 0) {
-            int32_t v50 = function_435e80(v39, v44); // 0x434d17
-            if (v50 != 0) {
-                int32_t v51 = v48 - 4; // 0x434d9b
-                *(int32_t *)v51 = v50;
-                function_42b3f0((int32_t)&g1224);
-                v46 = v40 + 176;
-                v45 = v51;
-                goto lab_0x434da3;
-            } else {
-                int32_t v52; // 0x434b60
-                int32_t v53; // 0x434b60
-                if ((char)(*(int32_t *)(v1 + 300) - *v27 >= 4) == (char)v50) {
-                    int32_t v54 = v48 - 4; // 0x434d3e
-                    *(int32_t *)v54 = *(int32_t *)(*(int32_t *)v49 + 4);
-                    int32_t v55 = function_42fe80((int32_t)&g1224); // 0x434d3f
-                    v52 = v54;
-                    v53 = v55;
-                } else {
-                    // 0x434d25
-                    v52 = v48;
-                    v53 = *(int32_t *)(*v27 + 4 * *(int32_t *)(v49 + 8));
-                }
-                int32_t v56 = v53;
-                int32_t v57 = v52;
-                if (v56 != 0) {
-                    int32_t v58 = *(int32_t *)v49; // 0x434d60
-                    *(int32_t *)(v57 - 4) = (int32_t)*(int16_t *)(v58 + 14);
-                    *(int32_t *)(v57 - 8) = (int32_t)*(int16_t *)(v58 + 12);
-                    *(int32_t *)(v57 - 12) = (int32_t)*(int16_t *)(v58 + 10);
-                    *(int32_t *)(v57 - 16) = (int32_t)*(int16_t *)(v58 + 8);
-                    *(int32_t *)(v57 - 20) = *(int32_t *)(v56 + 32);
-                    v45 = v57 - 24;
-                    *(int32_t *)v45 = v40;
-                    function_404ee0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-                    v46 = v40 + 176;
-                    __asm_rep_movsd_memcpy((char *)v46, (char *)(v40 + 128), 12);
-                    goto lab_0x434da3;
-                } else {
-                    // 0x434d48
-                    *(int32_t *)(v57 - 4) = v56;
-                    *(int32_t *)(v57 - 8) = v56;
-                    *(int32_t *)(v57 - 12) = v56;
-                    *(int32_t *)(v57 - 16) = v56;
-                    int32_t v59 = v57 - 24; // 0x434d4f
-                    *(int32_t *)v59 = v40;
-                    *(int32_t *)(v57 - 20) = 0;
-                    function_404ee0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-                    v43 = v42;
-                    v38 = v59;
-                    goto lab_0x434f1a;
-                }
-            }
-        } else {
-            // 0x434d09
-            *(int32_t *)(v40 + 4) = 0;
-            v43 = v42;
-            v38 = v48;
-            goto lab_0x434f1a;
-        }
-    }
-    // 0x434b78
-    return 0;
-  lab_0x434f1a:
-    // 0x434f1a
-    v36 = v44 + 1;
-    v37 += 12;
-    v41 = v43;
-    if (v36 >= *v21) {
-        return 0;
-    }
-    goto lab_0x434ce6;
-  lab_0x434da3:;
-    int32_t v60 = *v47; // 0x434da3
-    int3_t v61 = v42 - 1; // 0x434da6
-    __frontend_reg_store_fpr(v61, (float80_t)v25);
-    int32_t v62 = v45 - 12; // 0x434db5
-    *(float32_t *)(v45 - 4) = (float32_t)__frontend_reg_load_fpr(v61);
-    __frontend_reg_store_fpr(v61, (float80_t)(*(int32_t *)(v60 + 8) - a2));
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v61) + (float80_t)v26);
-    __frontend_reg_store_fpr(v42, __frontend_reg_load_fpr(v42));
-    *(float32_t *)(v45 - 8) = (float32_t)__frontend_reg_load_fpr(v42);
-    __frontend_reg_store_fpr(v42, (float80_t)(*(int32_t *)(v60 + 4) - a1));
-    __frontend_reg_store_fpr(v42, __frontend_reg_load_fpr(v42) + (float80_t)v24);
-    int3_t v63 = v42 + 1; // 0x434dd7
-    __frontend_reg_store_fpr(v63, __frontend_reg_load_fpr(v63));
-    *(float32_t *)v62 = (float32_t)__frontend_reg_load_fpr(v63);
-    function_405080((float80_t)(int80_t)&g1224, (float80_t)(int80_t)&g1224, (float80_t)(int80_t)&g1224);
-    __frontend_reg_store_fpr(v63, (float80_t)*(float32_t *)(*v47 + 28));
-    float80_t v64 = __frontend_reg_load_fpr(v63); // 0x434dee
-    __frontend_reg_store_fpr(v63, v64 * (float80_t)*(float32_t *)(v1 + 320));
-    __frontend_reg_store_fpr(v63, 255.0L * __frontend_reg_load_fpr(v63));
-    int32_t v65 = function_4ab9d0(); // 0x434dfa
-    *(char *)(v40 + 27) = 0;
-    int32_t v66 = v65 < 256 ? 0x1000000 * (v65 > 0 ? v65 : 0) : -0x1000000; // 0x434e1f
-    int32_t * v67 = (int32_t *)(v40 + 24); // 0x434e22
-    *v67 = v66 | *v67;
-    __frontend_reg_store_fpr(v42, (float80_t)*v35);
-    float80_t v68 = __frontend_reg_load_fpr(v42); // 0x434e2b
-    float32_t * v69 = (float32_t *)v46; // 0x434e2e
-    __frontend_reg_store_fpr(v42, (float80_t)*v69);
-    __frontend_reg_store_fpr(v61, v68);
-    int3_t v70 = v42 - 2; // 0x434e37
-    __frontend_reg_store_fpr(v70, __frontend_reg_load_fpr(v61));
-    float80_t v71 = __frontend_reg_load_fpr(v70); // 0x434e39
-    __frontend_reg_store_fpr(v42, v71 * __frontend_reg_load_fpr(v42));
-    float80_t v72 = __frontend_reg_load_fpr(v61); // 0x434e3b
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v42));
-    __frontend_reg_store_fpr(v42, v72);
-    *v69 = (float32_t)__frontend_reg_load_fpr(v61);
-    float32_t * v73 = (float32_t *)(v40 + 180); // 0x434e43
-    __frontend_reg_store_fpr(v61, (float80_t)*v73);
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v61) * __frontend_reg_load_fpr(v42));
-    *v73 = (float32_t)__frontend_reg_load_fpr(v61);
-    float80_t v74 = __frontend_reg_load_fpr(v42); // 0x434e51
-    float32_t * v75 = (float32_t *)(v40 + 184); // 0x434e51
-    __frontend_reg_store_fpr(v42, v74 * (float80_t)*v75);
-    *v75 = (float32_t)__frontend_reg_load_fpr(v42);
-    *(char *)(v40 + 55) = 0;
-    int32_t * v76 = (int32_t *)(v40 + 52); // 0x434e61
-    *v76 = *v76 | v66;
-    __frontend_reg_store_fpr(v42, (float80_t)*v35);
-    float80_t v77 = __frontend_reg_load_fpr(v42); // 0x434e6a
-    float32_t * v78 = (float32_t *)(v40 + 188); // 0x434e6d
-    __frontend_reg_store_fpr(v42, (float80_t)*v78);
-    __frontend_reg_store_fpr(v61, v77);
-    __frontend_reg_store_fpr(v70, __frontend_reg_load_fpr(v61));
-    float80_t v79 = __frontend_reg_load_fpr(v70); // 0x434e78
-    __frontend_reg_store_fpr(v42, v79 * __frontend_reg_load_fpr(v42));
-    float80_t v80 = __frontend_reg_load_fpr(v61); // 0x434e7a
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v42));
-    __frontend_reg_store_fpr(v42, v80);
-    *v78 = (float32_t)__frontend_reg_load_fpr(v61);
-    float32_t * v81 = (float32_t *)(v40 + 192); // 0x434e82
-    __frontend_reg_store_fpr(v61, (float80_t)*v81);
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v61) * __frontend_reg_load_fpr(v42));
-    *v81 = (float32_t)__frontend_reg_load_fpr(v61);
-    float80_t v82 = __frontend_reg_load_fpr(v42); // 0x434e90
-    float32_t * v83 = (float32_t *)(v40 + 196); // 0x434e90
-    __frontend_reg_store_fpr(v42, v82 * (float80_t)*v83);
-    *v83 = (float32_t)__frontend_reg_load_fpr(v42);
-    *(char *)(v40 + 83) = 0;
-    int32_t * v84 = (int32_t *)(v40 + 80); // 0x434ea0
-    *v84 = *v84 | v66;
-    __frontend_reg_store_fpr(v42, (float80_t)*v35);
-    float80_t v85 = __frontend_reg_load_fpr(v42); // 0x434ea9
-    float32_t * v86 = (float32_t *)(v40 + 200); // 0x434eac
-    __frontend_reg_store_fpr(v42, (float80_t)*v86);
-    __frontend_reg_store_fpr(v61, v85);
-    __frontend_reg_store_fpr(v70, __frontend_reg_load_fpr(v61));
-    float80_t v87 = __frontend_reg_load_fpr(v70); // 0x434eb7
-    __frontend_reg_store_fpr(v42, v87 * __frontend_reg_load_fpr(v42));
-    float80_t v88 = __frontend_reg_load_fpr(v61); // 0x434eb9
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v42));
-    __frontend_reg_store_fpr(v42, v88);
-    *v86 = (float32_t)__frontend_reg_load_fpr(v61);
-    float32_t * v89 = (float32_t *)(v40 + 204); // 0x434ec1
-    __frontend_reg_store_fpr(v61, (float80_t)*v89);
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v61) * __frontend_reg_load_fpr(v42));
-    *v89 = (float32_t)__frontend_reg_load_fpr(v61);
-    float80_t v90 = __frontend_reg_load_fpr(v42); // 0x434ecf
-    float32_t * v91 = (float32_t *)(v40 + 208); // 0x434ecf
-    __frontend_reg_store_fpr(v42, v90 * (float80_t)*v91);
-    *v91 = (float32_t)__frontend_reg_load_fpr(v42);
-    *(char *)(v40 + 111) = 0;
-    int32_t * v92 = (int32_t *)(v40 + 108); // 0x434edf
-    *v92 = *v92 | v66;
-    __frontend_reg_store_fpr(v42, (float80_t)*v35);
-    float80_t v93 = __frontend_reg_load_fpr(v42); // 0x434ee8
-    float32_t * v94 = (float32_t *)(v40 + 212); // 0x434eeb
-    __frontend_reg_store_fpr(v42, (float80_t)*v94);
-    __frontend_reg_store_fpr(v61, v93);
-    __frontend_reg_store_fpr(v70, __frontend_reg_load_fpr(v61));
-    float80_t v95 = __frontend_reg_load_fpr(v70); // 0x434ef6
-    __frontend_reg_store_fpr(v42, v95 * __frontend_reg_load_fpr(v42));
-    float80_t v96 = __frontend_reg_load_fpr(v61); // 0x434ef8
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v42));
-    __frontend_reg_store_fpr(v42, v96);
-    *v94 = (float32_t)__frontend_reg_load_fpr(v61);
-    float32_t * v97 = (float32_t *)(v40 + 216); // 0x434f00
-    __frontend_reg_store_fpr(v61, (float80_t)*v97);
-    __frontend_reg_store_fpr(v61, __frontend_reg_load_fpr(v61) * __frontend_reg_load_fpr(v42));
-    *v97 = (float32_t)__frontend_reg_load_fpr(v61);
-    float80_t v98 = __frontend_reg_load_fpr(v42); // 0x434f0e
-    float32_t * v99 = (float32_t *)(v40 + 220); // 0x434f0e
-    __frontend_reg_store_fpr(v42, v98 * (float80_t)*v99);
-    *v99 = (float32_t)__frontend_reg_load_fpr(v42);
-    v43 = v63;
-    v38 = v62;
-    goto lab_0x434f1a;
-}
-
-// Address range: 0x434f40 - 0x4351b8
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_434f40(float32_t a1, float32_t a2) {
-    __asm {
-        push [esp + 8]
-        push [esp + 8]
-        push ecx
-        call retdec_c2dmaplayout_draw_impl
-        add esp, 12
-        ret 8
-    }
-}
-#else
-int32_t function_434f40(float32_t a1, float32_t a2) { return (int32_t)E_FAIL; }
-#endif
-
-static int32_t retdec_unbound_function_434f40(float32_t a1, float32_t a2) {
-    // 0x434f40
-    int32_t v1; // 0x434f40
-    int32_t v2 = *(int32_t *)(v1 + 312); // 0x434f4b
-    if (v2 == 0) {
-        // 0x434f58
-        return -0x7fffbffb;
-    }
-    // 0x434f66
-    if (*(char *)(v2 + 140) == 0) {
-        // 0x434f58
-        return 0;
-    }
-    int32_t v3 = *(int32_t *)(v2 + 100); // 0x434f73
-    if (v3 == 0) {
-        // 0x434f58
-        return -0x7fffbffb;
-    }
-    int32_t v4 = *(int32_t *)(v1 + 316); // 0x434f7a
-    if (v4 == 0 || v3 != v4) {
-        // 0x434f58
-        return -0x7fffbffb;
-    }
-    int32_t v5 = 0; // bp-104, 0x434fe6
-    int32_t v6 = &v5; // 0x434fe6
-    function_402930(0, 0);
-    int32_t v7 = v6; // 0x434ffa
-    int32_t v8; // 0x434f40
-    int32_t v9; // 0x434f40
-    int32_t v10; // 0x434f40
-    int32_t v11; // 0x434f40
-    int32_t v12; // 0x434f40
-    if (g703 == 1) {
-        goto lab_0x435101;
-    } else {
-        // 0x435000
-        g1197 = 8 * g703;
-        v10 = v6;
-        v12 = v6;
-        int32_t v13; // bp-116, 0x434f40
-        int32_t v14; // 0x434ff2
-        switch (v14 & 0x1fffffff) {
-            case 0: {
-                // 0x43501d
-                v13 = g702;
-                v8 = g702;
-                v9 = &v13;
-                goto lab_0x435034;
-            }
-            case 3: {
-                // 0x43504f
-                v13 = g702;
-                int32_t v15 = 6; // bp-120, 0x435066
-                v11 = &v15;
-                goto lab_0x4350e5;
-            }
-            case 2: {
-                goto lab_0x435048;
-            }
-            case 4: {
-                // 0x435000
-                v8 = g702;
-                v9 = v6;
-                goto lab_0x435034;
-            }
-            default: {
-                goto lab_0x4350f7;
-            }
-        }
-    }
-  lab_0x435101:
-    // 0x435101
-    *(int32_t *)(v7 - 4) = 0;
-    int32_t v16 = v7 - 8; // 0x435103
-    *(int32_t *)v16 = 1;
-    function_4028d0((int32_t)&g1224, (int32_t)&g1224);
-    function_42ac20();
-    uint32_t v17 = *(int32_t *)(v1 + 380); // 0x435122
-    int32_t v18 = v16; // 0x435128
-    if (v17 >= 1) {
-        int32_t v19 = v17; // 0x43512d
-        int32_t v20 = *(int32_t *)(v1 + 332) + 4; // 0x43512d
-        int32_t v21 = v16; // 0x43512d
-        int32_t v22 = 0; // 0x43512d
-        int32_t v23; // 0x434f40
-        float32_t v24; // 0x434f40
-        float32_t v25; // 0x434f40
-        int32_t v26; // 0x434f40
-        int32_t v27; // 0x435130
-        if (*(int32_t *)v20 != 0) {
-            // 0x435135
-            *(int32_t *)(v23 - 4) = v27;
-            function_405e30(v26);
-            *(int32_t *)(v23 - 8) = (int32_t)v25;
-            *(int32_t *)(v23 - 12) = (int32_t)v24;
-            function_405800((float80_t)(int80_t)&g1224, (float80_t)(int80_t)&g1224);
-        }
-        // 0x43515c
-        v22++;
-        v20 += 232;
-        v18 = v21;
-        while (v22 < v19) {
-            // 0x435130
-            if (*(int32_t *)v20 != 0) {
-                // 0x435135
-                *(int32_t *)(v23 - 4) = v27;
-                function_405e30(v26);
-                float32_t v28 = v25;
-                int32_t v29 = v23 - 12; // 0x435142
-                *(int32_t *)(v23 - 8) = (int32_t)v28;
-                float32_t v30 = v24;
-                *(int32_t *)v29 = (int32_t)v30;
-                function_405800((float80_t)(int80_t)&g1224, (float80_t)(int80_t)&g1224);
-            }
-            // 0x43515c
-            v22++;
-            v20 += 232;
-            v18 = v21;
-        }
-    }
-    // 0x435173
-    *(int32_t *)(v18 - 4) = 0;
-    function_405e30((int32_t)&g1224);
-    *(int32_t *)(v18 - 12) = 1;
-    *(int32_t *)(v18 - 16) = 0;
-    *(int32_t *)(v18 - 20) = g678;
-    *(int32_t *)(v18 - 28) = 2;
-    *(int32_t *)(v18 - 32) = 0;
-    *(int32_t *)(v18 - 36) = g678;
-    // 0x434f58
-    return 0;
-  lab_0x435048:;
-    int32_t v31 = v10 - 4; // 0x435048
-    *(int32_t *)v31 = 6;
-    v11 = v31;
-    goto lab_0x4350e5;
-  lab_0x4350f7:
-    // 0x4350f7
-    g703 = 1;
-    v7 = v12;
-    goto lab_0x435101;
-  lab_0x435034:
-    // 0x435034
-    *(int32_t *)(v9 - 4) = 5;
-    *(int32_t *)(v9 - 8) = 19;
-    int32_t v33 = v9 - 12; // 0x435045
-    *(int32_t *)v33 = v8;
-    v10 = v33;
-    goto lab_0x435048;
-  lab_0x4350e5:
-    // 0x4350e5
-    *(int32_t *)(v11 - 4) = 20;
-    int32_t v32 = v11 - 8; // 0x4350f4
-    *(int32_t *)v32 = g702;
-    v12 = v32;
-    goto lab_0x4350f7;
 }
 
 // Address range: 0x435220 - 0x4355e4
@@ -130681,11 +130125,6 @@ static int32_t retdec_pat_load_texture(const char *directory,
 {
     char path[MAX_PATH];
     size_t length;
-    int32_t texture_value = 0;
-    int32_t handle;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    IDirect3DBaseTexture9 *texture;
 
     if (directory == NULL || resource_name == NULL)
         return 0;
@@ -130703,20 +130142,7 @@ static int32_t retdec_pat_load_texture(const char *directory,
     }
     if (strcat_s(path, sizeof(path), resource_name) != 0)
         return 0;
-    if (function_40e630(0, path, (int32_t)(intptr_t)&texture_value,
-                        &width, &height) < 0 || texture_value == 0)
-        return 0;
-    texture = (IDirect3DBaseTexture9 *)(uintptr_t)(uint32_t)texture_value;
-    handle = retdec_register_act_texture(texture, width, height);
-    if (handle == 0) {
-        if (texture->lpVtbl != NULL)
-            texture->lpVtbl->Release(texture);
-        return 0;
-    }
-    retdec_trace_i32("actor:pat-texture-handle", handle);
-    retdec_trace_i32("actor:pat-texture-width", (int32_t)width);
-    retdec_trace_i32("actor:pat-texture-height", (int32_t)height);
-    return handle;
+    return kinoko_texture_acquire(path);
 }
 
 static int32_t retdec_pat_build_frame(
@@ -140397,57 +139823,6 @@ int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
     function_48c910(vm, base);
     return result;
 }
-
-// Address range: 0x46eed0 - 0x46ef39
-// From class:    .?AVMapManagerRenderLayer@MapManager@NamespaceGlobal@@
-// Type:          virtual member function
-static int32_t retdec_map_render_layer_draw_this(int32_t this_ptr,
-                                                   int32_t camera_ptr)
-{
-    int32_t layout;
-    int32_t view_left = 0;
-    int32_t view_top = 0;
-    int32_t view_right = 0;
-    int32_t view_bottom = 0;
-    float draw_x = 0.0f;
-    float draw_y = 0.0f;
-
-    if (this_ptr == 0)
-        return 0;
-    layout = *(int32_t *)(intptr_t)(this_ptr + 4);
-    if (layout == 0)
-        return 0;
-    if (camera_ptr != 0) {
-        view_left = (int32_t)*(float *)(intptr_t)(camera_ptr + 72);
-        view_top = (int32_t)*(float *)(intptr_t)(camera_ptr + 76);
-        view_right = (int32_t)*(float *)(intptr_t)(camera_ptr + 80) + 32;
-        view_bottom = (int32_t)*(float *)(intptr_t)(camera_ptr + 84) + 32;
-        draw_x = -*(float *)(intptr_t)(camera_ptr + 56);
-        draw_y = -*(float *)(intptr_t)(camera_ptr + 60);
-    }
-    retdec_c2dmaplayout_update_impl(
-        layout, view_left, view_top, view_right, view_bottom);
-    return retdec_c2dmaplayout_draw_impl(layout, draw_x, draw_y);
-}
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_46eed0(int32_t camera_ptr)
-{
-    __asm {
-        mov eax, [esp + 4]
-        push eax
-        push ecx
-        call retdec_map_render_layer_draw_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_46eed0(int32_t camera_ptr)
-{
-    return retdec_map_render_layer_draw_this(0, camera_ptr);
-}
-#endif
 
 // Address range: 0x46ef40 - 0x46efc4
 static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,

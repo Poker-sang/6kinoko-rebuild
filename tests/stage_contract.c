@@ -2800,6 +2800,31 @@ static int test_texture_lifetime(void) {
         CHECK(texture[1] == cycle + 1);
         CHECK(retdec_resolve_texture_handle(handle) == NULL);
     }
+    {
+        struct retdec_mcd_data *data = calloc(1, sizeof(*data));
+        CHECK(data);
+        data->texture_count = 2;
+        data->textures = calloc(2, sizeof(*data->textures));
+        CHECK(data->textures);
+        for (int i = 0; i < 2; ++i)
+            data->textures[i].handle = retdec_register_act_texture(
+                (IDirect3DBaseTexture9 *)texture, 64, 64);
+        retdec_mcd_free(data);
+        CHECK(texture[1] == 5002);
+        int32_t *resource = calloc(1, 100);
+        CHECK(resource);
+        resource[0] = PTR(&g365);
+        resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9 *)texture, 64, 64);
+        retdec_destroy_cact_resource(PTR(resource));
+        CHECK(texture[1] == 5003);
+        int32_t layer[88] = {0}, layout[116] = {0}, render_layer[2] = {0}, camera[24] = {0};
+        layout[78] = PTR(layer); layout[79] = 1;
+        render_layer[1] = PTR(layout);
+        CHECK(retdec_call_thiscall0_result(layout, kinoko_map_entry_434b40) == 0);
+        CHECK(retdec_call_thiscall4_result(layout, kinoko_map_entry_434b60, 1, 2, 3, 4) == 0);
+        CHECK(retdec_call_thiscall2_result(layout, kinoko_map_entry_434f40, 0, 0) == 0);
+        CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_entry_46eed0, PTR(camera)) == 0);
+    }
     g678 = old_device;
     puts("PASS: 5000 texture load/unload cycles release COM objects and reuse handles");
     return 0;
@@ -2832,6 +2857,7 @@ int main(int argc, char **argv) {
         return 0;
     }
     AddVectoredExceptionHandler(1, contract_exception);
+    CHECK(test_texture_lifetime() == 0);
     CHECK(test_map_camera_fpu() == 0);
     CHECK(test_sprite_geometry() == 0);
     CHECK(test_actor_state_fields() == 0);
