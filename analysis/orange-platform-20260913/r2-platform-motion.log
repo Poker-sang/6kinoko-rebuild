@@ -1,0 +1,59 @@
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
+PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push
+PLATFORM frame=0 y=672.200012 vy=0.200000 playerBottom=664.200012 parentdy=0.200012 step=013f0430 hit=1
+PLATFORM frame=1 y=672.600037 vy=0.400000 playerBottom=664.600037 parentdy=0.400024 step=013f0430 hit=1
+PLATFORM frame=2 y=673.200012 vy=0.600000 playerBottom=665.200012 parentdy=0.599976 step=013f0430 hit=1
+PLATFORM frame=3 y=674.000000 vy=0.800000 playerBottom=666.000000 parentdy=0.799988 step=013f0430 hit=1
+PLATFORM frame=4 y=675.000000 vy=1.000000 playerBottom=667.000000 parentdy=1.000000 step=013f0430 hit=1
+PLATFORM frame=5 y=676.200012 vy=1.200000 playerBottom=668.200012 parentdy=1.200012 step=013f0430 hit=1
+PLATFORM frame=6 y=677.600037 vy=1.400000 playerBottom=669.600037 parentdy=1.400024 step=013f0430 hit=1
+PLATFORM frame=7 y=679.200012 vy=1.600000 playerBottom=671.200012 parentdy=1.599976 step=013f0430 hit=1
+PLATFORM frame=8 y=681.000000 vy=1.800000 playerBottom=673.000000 parentdy=1.799988 step=013f0430 hit=1
+PLATFORM frame=9 y=683.000000 vy=2.000000 playerBottom=675.000000 parentdy=2.000000 step=013f0430 hit=1
+PLATFORM frame=10 y=685.200012 vy=2.200000 playerBottom=677.200012 parentdy=2.200012 step=013f0430 hit=1
+PLATFORM frame=11 y=687.600037 vy=2.400000 playerBottom=679.600037 parentdy=2.400024 step=013f0430 hit=1
+PLATFORM frame=12 y=690.200012 vy=2.600000 playerBottom=682.200012 parentdy=2.599976 step=013f0430 hit=1
+PLATFORM frame=13 y=693.000000 vy=2.800000 playerBottom=685.000000 parentdy=2.799988 step=013f0430 hit=1
+PLATFORM frame=14 y=696.000000 vy=3.000000 playerBottom=688.000000 parentdy=3.000000 step=013f0430 hit=1
+PLATFORM frame=15 y=699.200012 vy=3.200001 playerBottom=691.200012 parentdy=3.200012 step=013f0430 hit=1
+PLATFORM frame=16 y=702.600037 vy=3.400001 playerBottom=694.600037 parentdy=3.400024 step=013f0430 hit=1
+PLATFORM frame=17 y=706.200012 vy=3.600001 playerBottom=698.200012 parentdy=3.599976 step=013f0430 hit=1
+PLATFORM frame=18 y=710.000000 vy=3.800001 playerBottom=702.000000 parentdy=3.799988 step=013f0430 hit=1
+PLATFORM frame=19 y=714.000000 vy=4.000000 playerBottom=706.000000 parentdy=4.000000 step=013f0430 hit=1
+PLATFORM frame=20 y=718.200012 vy=4.200000 playerBottom=710.200012 parentdy=4.200012 step=013f0430 hit=1
+PLATFORM frame=21 y=722.600037 vy=4.400000 playerBottom=714.600037 parentdy=4.400024 step=013f0430 hit=1
+PLATFORM frame=22 y=727.200012 vy=4.600000 playerBottom=719.200012 parentdy=4.599976 step=013f0430 hit=1
+PLATFORM frame=23 y=732.000000 vy=4.800000 playerBottom=724.000000 parentdy=4.799988 step=013f0430 hit=1
+PLATFORM frame=24 y=737.000000 vy=5.000000 playerBottom=729.000000 parentdy=5.000000 step=013f0430 hit=1
+PLATFORM frame=25 y=742.200012 vy=5.199999 playerBottom=734.200012 parentdy=5.200012 step=013f0430 hit=1
+PLATFORM frame=26 y=747.600037 vy=5.399999 playerBottom=739.600037 parentdy=5.400024 step=013f0430 hit=1
+PLATFORM frame=27 y=753.200012 vy=5.599999 playerBottom=745.200012 parentdy=5.599976 step=013f0430 hit=1
+PLATFORM frame=28 y=759.000000 vy=5.799999 playerBottom=751.000000 parentdy=5.799988 step=013f0430 hit=1
+PLATFORM frame=29 y=765.000000 vy=5.999999 playerBottom=757.000000 parentdy=6.000000 step=013f0430 hit=1
+PLATFORM frame=30 y=771.200012 vy=6.199998 playerBottom=763.200012 parentdy=6.200012 step=013f0430 hit=1
+PLATFORM frame=31 y=777.600037 vy=6.399998 playerBottom=769.600037 parentdy=6.400024 step=013f0430 hit=1
+PLATFORM frame=32 y=784.200012 vy=6.599998 playerBottom=776.200012 parentdy=6.599976 step=013f0430 hit=1
+PLATFORM frame=33 y=791.000000 vy=6.799998 playerBottom=783.000000 parentdy=6.799988 step=013f0430 hit=1
+PLATFORM frame=34 y=798.000000 vy=6.999998 playerBottom=790.000000 parentdy=7.000000 step=013f0430 hit=1
+PLATFORM frame=35 y=805.200012 vy=7.199997 playerBottom=797.200012 parentdy=7.200012 step=013f0430 hit=1
+PLATFORM frame=36 y=812.600037 vy=7.399997 playerBottom=804.600037 parentdy=7.400024 step=013f0430 hit=1
+PLATFORM frame=37 y=820.200012 vy=7.599997 playerBottom=812.200012 parentdy=7.599976 step=013f0430 hit=1
+PLATFORM frame=38 y=828.000000 vy=7.799997 playerBottom=820.000000 parentdy=7.799988 step=013f0430 hit=1
+PLATFORM frame=39 y=836.000000 vy=7.999997 playerBottom=828.000000 parentdy=8.000000 step=013f0430 hit=1
+PLATFORM frame=40 y=844.200012 vy=8.199997 playerBottom=836.200012 parentdy=8.200012 step=013f0430 hit=1
+PLATFORM frame=41 y=852.600037 vy=8.399997 playerBottom=844.600037 parentdy=8.400024 step=013f0430 hit=1
+PLATFORM frame=42 y=861.200012 vy=8.599997 playerBottom=853.200012 parentdy=8.599976 step=013f0430 hit=1
+PLATFORM frame=43 y=870.000000 vy=8.799996 playerBottom=862.000000 parentdy=8.799988 step=013f0430 hit=1
+PLATFORM frame=44 y=879.000000 vy=8.999996 playerBottom=871.000000 parentdy=9.000000 step=013f0430 hit=1
+PASS: original orange LiftBack carries rider down; jump and walk-off detach; return and reboard work
