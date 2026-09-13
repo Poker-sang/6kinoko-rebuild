@@ -650,9 +650,9 @@ struct vtable_4d5878_type {
 
 struct vtable_4d5898_type {
     int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t);
+    uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);
+    uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);
+    uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
 };
 
 struct vtable_4d5924_type {
@@ -1243,9 +1243,9 @@ struct vtable_4ec79c_type {
 
 struct vtable_4ec7cc_type {
     int32_t (*e0)();
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t);
+    uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);
+    uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);
+    uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
 };
 
 struct vtable_4ec804_type {
@@ -1552,9 +1552,9 @@ struct vtable_4ed174_type {
 
 struct vtable_4ed2cc_type {
     int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t);
+    uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);
+    uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);
+    uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
     int32_t (*e4)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
     int32_t (*e5)(int32_t, int32_t, int32_t, int32_t, int32_t);
     int32_t (*e6)(float32_t, float32_t, float32_t, float32_t);
@@ -2800,9 +2800,6 @@ int32_t function_42ab50(int32_t a1);
 int32_t function_42abe0(char a1);
 int32_t function_42ac10(void);
 int32_t function_42ac20(void);
-int32_t function_42b280(int32_t result);
-int32_t function_42b2a0(int32_t a1);
-int32_t function_42b2d0(int32_t a1);
 int32_t function_42b3a0(float80_t a1, float80_t a2, float80_t a3, float80_t a4, float80_t a5, float80_t a6);
 int32_t function_42b3f0(int32_t a1);
 int32_t function_42b470(void);
@@ -8567,9 +8564,9 @@ struct vtable_4d5878_type g22 = {
 }; // 0x4d5878
 struct vtable_4d5898_type g24 = {
     .e0 = function_44fd30,
-    .e1 = function_42b280,
-    .e2 = function_42b2a0,
-    .e3 = function_42b2d0
+    .e1 = kinoko_quad_set_color,
+    .e2 = kinoko_quad_set_vertex_colors,
+    .e3 = kinoko_quad_modulate_color
 }; // 0x4d5898
 struct vtable_4d5924_type g26 = {
     .e0 = function_4665d0,
@@ -9059,9 +9056,9 @@ struct vtable_4ec79c_type g327 = {
 }; // 0x4ec79c
 struct vtable_4ec7cc_type g328 = {
     .e0 = function_43c1c0,
-    .e1 = function_42b280,
-    .e2 = function_42b2a0,
-    .e3 = function_42b2d0
+    .e1 = kinoko_quad_set_color,
+    .e2 = kinoko_quad_set_vertex_colors,
+    .e3 = kinoko_quad_modulate_color
 }; // 0x4ec7cc
 struct vtable_4ec804_type g330 = {
     .e0 = function_43c1b0,
@@ -9327,9 +9324,9 @@ struct vtable_4ed174_type g406 = {
 }; // 0x4ed174
 struct vtable_4ed2cc_type g407 = {
     .e0 = function_44fd30,
-    .e1 = function_42b280,
-    .e2 = function_42b2a0,
-    .e3 = function_42b2d0,
+    .e1 = kinoko_quad_set_color,
+    .e2 = kinoko_quad_set_vertex_colors,
+    .e3 = kinoko_quad_modulate_color,
     .e4 = function_404640,
     .e5 = function_404610,
     .e6 = function_404e10,
@@ -64814,48 +64811,7 @@ int32_t function_42ac20(void) {
     return result2;
 }
 
-// Address range: 0x42b280 - 0x42b296
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-int32_t function_42b280(int32_t result) {
-    // 0x42b280
-    int32_t v1; // 0x42b280
-    *(int32_t *)(v1 + 108) = result;
-    *(int32_t *)(v1 + 80) = result;
-    *(int32_t *)(v1 + 52) = result;
-    *(int32_t *)(v1 + 24) = result;
-    return result;
-}
-
-// Address range: 0x42b2a0 - 0x42b2c1
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-int32_t function_42b2a0(int32_t a1) {
-    // 0x42b2a0
-    int32_t v1; // 0x42b2a0
-    *(int32_t *)(v1 + 24) = *(int32_t *)a1;
-    *(int32_t *)(v1 + 52) = *(int32_t *)(a1 + 4);
-    *(int32_t *)(v1 + 80) = *(int32_t *)(a1 + 8);
-    int32_t result = *(int32_t *)(a1 + 12); // 0x42b2b7
-    *(int32_t *)(v1 + 108) = result;
-    return result;
-}
-
-// Address range: 0x42b2d0 - 0x42b399
-// From class:    .?AVC2DMapLayout@@
-// Type:          virtual member function
-int32_t function_42b2d0(int32_t a1) {
-    // 0x42b2d0
-    int32_t v1; // 0x42b2d0
-    int32_t * v2 = (int32_t *)(v1 + 24); // 0x42b2db
-    uint32_t v3 = (*v2 & 255) * (a1 & 255);
-    int32_t result = 0x1000000 * (v3 + v3 / 2) / 128 / 0x1000000; // 0x42b303
-    *(int32_t *)(v1 + 108) = result;
-    *(int32_t *)(v1 + 80) = result;
-    *(int32_t *)(v1 + 52) = result;
-    *v2 = result;
-    return result;
-}
+// Color methods 42B280/42B2A0/42B2D0 live in reconstructed/sprite_color.cpp.
 
 // Address range: 0x42b3a0 - 0x42b3e6
 int32_t function_42b3a0(float80_t a1, float80_t a2, float80_t a3, float80_t a4, float80_t a5, float80_t a6) {
@@ -127192,10 +127148,7 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
         ((*(int32_t *)(intptr_t)(actor + 188) |
           ((*(int32_t *)(intptr_t)(actor + 184) |
             (*(int32_t *)(intptr_t)(actor + 180) << 8)) << 8)) << 8);
-    *(int32_t *)(intptr_t)(frame + 24) = color;
-    *(int32_t *)(intptr_t)(frame + 52) = color;
-    *(int32_t *)(intptr_t)(frame + 80) = color;
-    *(int32_t *)(intptr_t)(frame + 108) = color;
+    kinoko_actor_frame_color((void *)(intptr_t)frame, (uint32_t)color);
     retdec_trace_star_state("draw",actor);
     {
         int32_t blend_mode = *(int32_t *)(intptr_t)(actor + 196);

@@ -3176,6 +3176,25 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
 
 /* Render the original PAT water frames without a device/window. This exercises
    the real loader and Actor render preparation, not a replacement water rule. */
+static int test_quad_colors(void) {
+    KinokoColoredQuad quad={0};
+    const uint32_t colors[4]={0x80c86432u,0x11223344u,0x55667788u,0x99aabbccu};
+    CHECK((uint32_t)retdec_call_thiscall1_result(&quad,g407.e2,PTR(colors))==colors[3]);
+    for(int i=0;i<4;++i) CHECK(quad.vertices[i].color==colors[i]);
+    CHECK((uint32_t)retdec_call_thiscall1_result(&quad,g407.e3,0x80808080u)==0x40643219u);
+    for(int i=0;i<4;++i) CHECK(quad.vertices[i].color==0x40643219u);
+    for(unsigned base=0;base<256;++base) {
+        for(unsigned factor=0;factor<256;++factor) {
+            const uint32_t packed=base*0x01010101u;
+            CHECK((uint32_t)retdec_call_thiscall1_result(&quad,g407.e1,packed)==packed);
+            CHECK((uint32_t)retdec_call_thiscall1_result(&quad,g407.e3,factor*0x01010101u)==
+                  (base*factor/255u)*0x01010101u);
+        }
+    }
+    puts("PASS: original color vtable ABI, distinct vertices and all 65536 channel products");
+    return 0;
+}
+
 static int test_water_alpha(int32_t manager, const char *directory) {
     char path[MAX_PATH];
     const char *patterns[] = { "data/map/map.pat" };
@@ -3215,6 +3234,18 @@ static int test_water_alpha(int32_t manager, const char *directory) {
                    *(uint32_t *)(intptr_t)(frame+24));
             for(int vertex=0;vertex<4;++vertex)
                 CHECK(*(uint32_t *)(intptr_t)(frame+24+28*vertex)==expected);
+            /* A script fade multiplies PAT alpha; repeated renders must not
+               compound the previous frame's already-modulated color. */
+            actor[45]=128;
+            for(int repeat=0;repeat<3;++repeat) {
+                CHECK(retdec_actor_render(PTR(actor),0)==1);
+                CHECK(*(uint32_t *)(intptr_t)(frame+24)==
+                    (((expected>>24)*128u/255u)<<24 | (expected&0xffffffu)));
+            }
+            *(int32_t *)(intptr_t)(frame+244)=0;
+            CHECK(retdec_actor_render(PTR(actor),0)==1);
+            CHECK(*(uint32_t *)(intptr_t)(frame+24)==0x80ffffffu);
+            *(int32_t *)(intptr_t)(frame+244)=extra;
         }
     }
     puts("PASS: original water PAT colors survive Actor render preparation");
@@ -3251,6 +3282,7 @@ int main(int argc, char **argv) {
     CHECK(test_texture_lifetime() == 0);
     CHECK(test_map_camera_fpu() == 0);
     CHECK(test_sprite_geometry() == 0);
+    CHECK(test_quad_colors() == 0);
     CHECK(test_actor_state_fields() == 0);
     CHECK(test_animation_timing() == 0);
     CHECK(test_shutdown_tree_cleanup() == 0);
