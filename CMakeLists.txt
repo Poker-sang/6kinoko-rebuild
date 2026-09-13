@@ -250,6 +250,7 @@ target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF
 target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
+add_test(NAME damage_pause_contract COMMAND kinoko_stage_contract --damage-pause)
 
 add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)

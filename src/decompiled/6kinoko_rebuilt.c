@@ -7841,7 +7841,9 @@ int32_t g618 = 0; // 0x5143f4
 int32_t g619 = 0; // 0x5143f8
 int32_t g620 = 0; // 0x5143fc
 int32_t g621 = 0; // 0x514400
-int32_t g622 = 0; // 0x514420
+/* Original 514420 is ActorManager(5143E0)+64, not an independent global.
+   469987 writes the frame mask here before 4641D0 filters actor update groups. */
+#define g622 (*(int32_t *)(void *)(g_retdec_actor_manager_state + 64))
 int32_t g623 = 0; // 0x51446c
 int32_t g624 = 0; // 0x514470
 int32_t g625 = 0; // 0x514474

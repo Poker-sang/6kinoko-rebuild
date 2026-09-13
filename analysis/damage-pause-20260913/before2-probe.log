@@ -1,0 +1,13 @@
+FAIL line 2854: *(int32_t *)(intptr_t)(manager + 64) == g459
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
