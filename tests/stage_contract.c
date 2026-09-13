@@ -2965,6 +2965,83 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, const char *directory) {
+    char path[MAX_PATH];
+    for (char archive='a'; archive<='c'; ++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    CHECK(retdec_construct_actor_manager(manager));
+    function_460e00();
+    CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
+    int32_t target=PTR(function_470fa0);
+    CHECK(function_415550_this(PTR(root),PTR("SetInitFunctionByID"),PTR(&target),4,PTR(function_471d30),0)>=0);
+    CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
+    for(int kind=0;kind<2;++kind) {
+        int32_t reader=0;
+        uint8_t version;
+        uint16_t textures;
+        CHECK(function_407370(PTR(&reader),kind ? "data/actor/marisa/marisa.pat" : "data/actor/item/item.pat"));
+        CHECK(retdec_pat_read_u8(reader,&version));
+        CHECK(retdec_pat_read_u16(reader,&textures));
+        CHECK(retdec_pat_skip_bytes(reader,textures*128u));
+        CHECK(retdec_pat_read_animations(reader,manager,0));
+        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    }
+    CHECK(pat_lookup(manager,1823));
+    CHECK(execute_source(vm,root+2,
+        "t_lift <- {};\nplayer <- null;\n"
+        "function InitPlatformRider(v) { SetTake(TYPE_2HEAD*100+TAKE_STAND); "
+        "updateGroup=GP_PLAYER; priority=PR_PLAYER; collisionGroup=GP_PLAYER; "
+        "callbackGroup=GP_PLAYER; collisionMask=GP_LIFT; ::player=this; "
+        "SetUpdateFunction(function() { vy=hitBottom ? 0.0 : 0.5; }); }"));
+    int32_t scripts[3], init[3], rider_init[3];
+    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_lift");
+    CHECK(execute_asset(vm,scripts+1,"data/script/lift.cv4"));
+    function_4aa3a0_this(PTR(scripts),PTR(init),"Init04c7");
+    function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
+    CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
+    int32_t platform=function_463b40_this(manager,init[0],init[1],init[2],
+        608,672,-1,PTR(&g16),g483,g484,0);
+    int32_t rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
+        608,664,-1,PTR(&g16),g483,g484,0);
+    CHECK(platform && rider && vm_failures==0);
+    function_4a9840_this(PTR(root+1),"platformProbe",platform+44);
+    CHECK(execute_source(vm,root+2,
+        "player.y=platformProbe.top-(player.bottom-player.y); player.vy=0.5;"));
+    retdec_actor_refresh_bounds(rider);
+    *(uint8_t *)(intptr_t)(platform+40)=1;
+    *(uint8_t *)(intptr_t)(rider+40)=1;
+    CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    g459=-1;
+    *(int32_t *)(intptr_t)(manager+64)=-1;
+    CHECK(function_462ce0(platform,rider)>=0);
+    CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
+    for(int frame=0;frame<45;++frame) {
+        const float before=*(float *)(intptr_t)(platform+244);
+        CHECK(retdec_actor_manager_update(manager,PTR(g_retdec_camera_state))==2);
+        printf("PLATFORM frame=%d y=%.6f vy=%.6f playerBottom=%.6f parentdy=%.6f step=%08x hit=%d\n",
+            frame,*(float *)(intptr_t)(platform+244),*(float *)(intptr_t)(platform+260),
+            *(float *)(intptr_t)(rider+452),*(float *)(intptr_t)(rider+268),
+            *(uint32_t *)(intptr_t)(rider+36),*(int32_t *)(intptr_t)(rider+296));
+        CHECK(*(float *)(intptr_t)(platform+244)>=before);
+        CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
+        CHECK(fabsf(*(float *)(intptr_t)(rider+452)-*(float *)(intptr_t)(platform+444))<0.001f);
+    }
+    CHECK(execute_source(vm,root+2,
+        "player.x=platformProbe.right+64; player.SetUpdateFunction(null); player.vy=0.0;"));
+    retdec_actor_update_motion(rider);
+    CHECK(*(int32_t *)(intptr_t)(rider+36)==0);
+    for(int frame=0;frame<180;++frame)
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+    CHECK(*(float *)(intptr_t)(platform+244)==672.0f);
+    CHECK(*(float *)(intptr_t)(platform+260)==0.0f);
+    CHECK(execute_source(vm,root+2,"if(player.step!=null) throw \"walk off\";"));
+    CHECK(vm_failures==0);
+    puts("PASS: original orange LiftBack carries rider down, detaches on exit and returns to its start");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -3032,6 +3109,8 @@ int main(int argc, char **argv) {
     }
     if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
         return test_crystal_countdown(vm, root, argv[2]);
+    if (argc == 3 && strcmp(argv[1], "--orange-platform") == 0)
+        return test_orange_platform(vm, root, manager, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {

@@ -1,0 +1,180 @@
+FUNCTION data/script/lift.nut: SetRide stack=6 generator=False
+PARAMETERS ["this", "target"]
+LOCALS [["target", 1, 0, 47], ["this", 0, 0, 47]]
+K0 = "vy"
+K1 = "bottom"
+K2 = "top"
+K3 = "step"
+K4 = "SetStep"
+K5 = "updateGroup"
+K6 = "isStatic"
+0000 GETK           a0=  2 a1=          0 a2=  1 a3=  0
+0001 LOADINT        a0=  3 a1=          0 a2=  0 a3=  0
+0002 CMP            a0=  2 a1=          3 a2=  2 a3=  3
+0003 OR             a0=  2 a1=          6 a2=  2 a3=  0
+0004 GETK           a0=  3 a1=          1 a2=  1 a3=  0
+0005 GETK           a0=  4 a1=          2 a2=  0 a3=  0
+0006 LOADINT        a0=  5 a1=          4 a2=  0 a3=  0
+0007 ARITH          a0=  4 a1=          5 a2=  4 a3= 43
+0008 CMP            a0=  3 a1=          4 a2=  3 a3=  0
+0009 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0010 JZ             a0=  2 a1=          8 a2=  0 a3=  0
+0011 GETK           a0=  2 a1=          3 a2=  1 a3=  0
+0012 EQ             a0=  2 a1=          0 a2=  2 a3=  0
+0013 JZ             a0=  2 a1=          3 a2=  0 a3=  0
+0014 PREPCALLK      a0=  2 a1=          4 a2=  1 a3=  3
+0015 LOADNULLS      a0=  4 a1=          1 a2=  0 a3=  0
+0016 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0017 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0018 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0019 GETK           a0=  2 a1=          3 a2=  1 a3=  0
+0020 EQ             a0=  2 a1=          0 a2=  2 a3=  0
+0021 JZ             a0=  2 a1=          2 a2=  0 a3=  0
+0022 LOADBOOL       a0=  2 a1=          1 a2=  0 a3=  0
+0023 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0024 GETK           a0=  2 a1=          3 a2=  1 a3=  0
+0025 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0026 NE             a0=  2 a1=          3 a2=  2 a3=  0
+0027 JZ             a0=  2 a1=         14 a2=  0 a3=  0
+0028 GETK           a0=  2 a1=          3 a2=  1 a3=  0
+0029 GETK           a0=  2 a1=          2 a2=  2 a3=  0
+0030 GETK           a0=  3 a1=          2 a2=  0 a3=  0
+0031 CMP            a0=  2 a1=          3 a2=  2 a3=  4
+0032 AND            a0=  2 a1=          6 a2=  2 a3=  0
+0033 GETK           a0=  3 a1=          5 a2=  1 a3=  0
+0034 AND            a0=  3 a1=          3 a2=  3 a3=  0
+0035 GETK           a0=  4 a1=          6 a2=  1 a3=  0
+0036 NOT            a0=  4 a1=          4 a2=  0 a3=  0
+0037 MOVE           a0=  3 a1=          4 a2=  0 a3=  0
+0038 MOVE           a0=  2 a1=          3 a2=  0 a3=  0
+0039 JZ             a0=  2 a1=          2 a2=  0 a3=  0
+0040 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0041 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0042 PREPCALLK      a0=  2 a1=          4 a2=  1 a3=  3
+0043 MOVE           a0=  4 a1=          0 a2=  0 a3=  0
+0044 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0045 LOADBOOL       a0=  2 a1=          1 a2=  0 a3=  0
+0046 RETURN         a0=  1 a1=          2 a2=  0 a3=  0
+0047 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/lift.nut: InitLiftBack stack=6 generator=False
+PARAMETERS ["this", "v"]
+LOCALS [["v", 1, 0, 32], ["this", 0, 0, 32]]
+K0 = "SetTake"
+K1 = "SetCollisionCallbackFunction"
+K2 = "t_lift"
+K3 = "CallbackLiftBack"
+K4 = "priority"
+K5 = "PR_LIFT"
+K6 = "collisionGroup"
+K7 = "GP_LIFT"
+K8 = "callbackGroup"
+K9 = "callbackMask"
+K10 = "GP_PLAYER"
+K11 = "updateGroup"
+K12 = "user"
+K13 = "y"
+0000 PREPCALLK      a0=  2 a1=          0 a2=  0 a3=  3
+0001 LOADINT        a0=  4 a1=       1823 a2=  0 a3=  0
+0002 LOADINT        a0=  5 a1=       1223 a2=  0 a3=  0
+0003 ARITH          a0=  5 a1=          5 a2=  1 a3= 45
+0004 ARITH          a0=  4 a1=          5 a2=  4 a3= 45
+0005 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0006 PREPCALLK      a0=  2 a1=          1 a2=  0 a3=  3
+0007 GETK           a0=  4 a1=          2 a2=  0 a3=  0
+0008 GETK           a0=  4 a1=          3 a2=  4 a3=  0
+0009 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0010 DLOAD          a0=  2 a1=          4 a2=  3 a3=  5
+0011 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0012 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0013 DLOAD          a0=  2 a1=          6 a2=  3 a3=  7
+0014 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0015 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0016 DLOAD          a0=  2 a1=          8 a2=  3 a3=  7
+0017 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0018 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0019 DLOAD          a0=  2 a1=          9 a2=  3 a3= 10
+0020 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0021 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0022 DLOAD          a0=  2 a1=         11 a2=  3 a3=  7
+0023 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0024 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0025 LOAD           a0=  2 a1=         12 a2=  0 a3=  0
+0026 NEWTABLE       a0=  3 a1=          0 a2=  0 a3=  0
+0027 SET            a0=  2 a1=          0 a2=  2 a3=  3
+0028 GETK           a0=  2 a1=         12 a2=  0 a3=  0
+0029 DLOAD          a0=  3 a1=         13 a2=  4 a3= 13
+0030 GET            a0=  4 a1=          0 a2=  4 a3=  0
+0031 NEWSLOT        a0=  2 a1=          2 a2=  3 a3=  4
+0032 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/lift.nut: UpdateLiftBack stack=4 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 40]]
+K0 = "player"
+K1 = "step"
+K2 = "user"
+K3 = "y"
+K4 = "vy"
+K5 = "SetUpdateFunction"
+K6 = "MAX_FALL_SPEED"
+0000 GETK           a0=  1 a1=          0 a2=  0 a3=  0
+0001 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0002 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0003 OR             a0=  1 a1=          4 a2=  1 a3=  0
+0004 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0005 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0006 NE             a0=  2 a1=          0 a2=  2 a3=  0
+0007 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0008 JZ             a0=  1 a1=         21 a2=  0 a3=  0
+0009 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0010 GETK           a0=  1 a1=          3 a2=  1 a3=  0
+0011 GETK           a0=  2 a1=          3 a2=  0 a3=  0
+0012 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0013 JZ             a0=  1 a1=          5 a2=  0 a3=  0
+0014 LOAD           a0=  1 a1=          4 a2=  0 a3=  0
+0015 LOADINT        a0=  2 a1=          2 a2=  0 a3=  0
+0016 NEG            a0=  2 a1=          2 a2=  0 a3=  0
+0017 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0018 JMP            a0=  0 a1=         10 a2=  0 a3=  0
+0019 DLOAD          a0=  1 a1=          3 a2=  2 a3=  2
+0020 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0021 GETK           a0=  2 a1=          3 a2=  2 a3=  0
+0022 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0023 LOAD           a0=  1 a1=          4 a2=  0 a3=  0
+0024 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0025 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0026 PREPCALLK      a0=  1 a1=          5 a2=  0 a3=  2
+0027 LOADNULLS      a0=  3 a1=          1 a2=  0 a3=  0
+0028 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0029 JMP            a0=  0 a1=         10 a2=  0 a3=  0
+0030 LOAD           a0=  1 a1=          4 a2=  0 a3=  0
+0031 LOADFLOAT      a0=  2 a1= 1045220557 a2=  0 a3=  0
+0032 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 43
+0033 GETK           a0=  1 a1=          4 a2=  0 a3=  0
+0034 GETK           a0=  2 a1=          6 a2=  0 a3=  0
+0035 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0036 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0037 DLOAD          a0=  1 a1=          4 a2=  2 a3=  6
+0038 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0039 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0040 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/lift.nut: CallbackLiftBack stack=6 generator=False
+PARAMETERS ["this", "target"]
+LOCALS [["target", 1, 0, 12], ["this", 0, 0, 12]]
+K0 = "t_lift"
+K1 = "SetRide"
+K2 = "call"
+K3 = "SetUpdateFunction"
+K4 = "UpdateLiftBack"
+0000 GETK           a0=  2 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  2 a1=          1 a2=  2 a3=  0
+0002 PREPCALLK      a0=  2 a1=          2 a2=  2 a3=  3
+0003 DMOVE          a0=  4 a1=          0 a2=  5 a3=  1
+0004 CALL           a0=  2 a1=          2 a2=  3 a3=  3
+0005 NOT            a0=  2 a1=          2 a2=  0 a3=  0
+0006 JZ             a0=  2 a1=          1 a2=  0 a3=  0
+0007 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+0008 PREPCALLK      a0=  2 a1=          3 a2=  0 a3=  3
+0009 GETK           a0=  4 a1=          0 a2=  0 a3=  0
+0010 GETK           a0=  4 a1=          4 a2=  4 a3=  0
+0011 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0012 RETURN         a0=255 a1=          0 a2=  0 a3=  0
