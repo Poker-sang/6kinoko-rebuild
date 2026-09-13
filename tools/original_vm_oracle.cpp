@@ -25,9 +25,9 @@ static int32_t __cdecl create_probe(int32_t machine) {
     original<void(__thiscall *)(void *,int32_t)>(0x4a9660)(initializer,2);
     original<void(__thiscall *)(void *)>(0x4a94e0)(argument);
     actor=original<int32_t(__thiscall *)(void *,int32_t,int32_t,int32_t,
-        float,float,float,int32_t,int32_t,int32_t)>(0x463b40)(
+        float,float,float,int32_t,int32_t,int32_t,int32_t)>(0x463b40)(
         reinterpret_cast<void *>(location(0x5143e0)),initializer[0],initializer[1],initializer[2],
-        100,160,-1,argument[0],argument[1],argument[2]);
+        100,160,-1,argument[0],argument[1],argument[2],0);
     std::printf("original actor=%08x instance=%08x\n",actor,
         *reinterpret_cast<uint32_t *>(actor+52)); std::fflush(stdout);
     original<void(__cdecl *)(int32_t,int32_t,int32_t)>(0x48ab90)(machine,
