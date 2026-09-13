@@ -3174,6 +3174,53 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     return 0;
 }
 
+/* Render the original PAT water frames without a device/window. This exercises
+   the real loader and Actor render preparation, not a replacement water rule. */
+static int test_water_alpha(int32_t manager, const char *directory) {
+    char path[MAX_PATH];
+    const char *patterns[] = { "data/actor/system/system.pat", "data/actor/item/item.pat" };
+    for (char archive='a'; archive<='c'; ++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    CHECK(retdec_construct_actor_manager(manager));
+    for (int p=0; p<2; ++p) {
+        int32_t reader=0;
+        uint8_t version;
+        uint16_t textures;
+        CHECK(function_407370(PTR(&reader),patterns[p]));
+        CHECK(retdec_pat_read_u8(reader,&version));
+        CHECK(retdec_pat_read_u16(reader,&textures));
+        CHECK(retdec_pat_skip_bytes(reader,textures*128u));
+        CHECK(retdec_pat_read_animations(reader,manager,0));
+        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    }
+    for (int take=9700; take<=9730; take+=10) {
+        int32_t animation=pat_lookup(manager,take);
+        CHECK(animation);
+        for (int32_t frame=*(int32_t *)(intptr_t)(animation+8);
+             frame<*(int32_t *)(intptr_t)(animation+12); frame+=248) {
+            int32_t actor[200]={0};
+            int32_t extra=*(int32_t *)(intptr_t)(frame+244);
+            uint32_t expected=extra ? *(uint32_t *)(intptr_t)(extra+4) : 0xffffffffu;
+            actor[10]=1; ((uint8_t *)actor)[21]=1;
+            actor[51]=frame; actor[38]=frame;
+            ((float *)actor)[42]=1.0f;
+            ((float *)actor)[43]=((float *)actor)[44]=1.0f;
+            ((float *)actor)[68]=-1.0f;
+            actor[45]=actor[46]=actor[47]=actor[48]=255;
+            *(int32_t *)(intptr_t)(frame+4)=1; /* No device: only prepare vertices. */
+            CHECK(retdec_actor_render(PTR(actor),0)==1);
+            printf("take=%d PAT=%08x rendered=%08x\n",take,expected,
+                   *(uint32_t *)(intptr_t)(frame+24));
+            for(int vertex=0;vertex<4;++vertex)
+                CHECK(*(uint32_t *)(intptr_t)(frame+24+28*vertex)==expected);
+        }
+    }
+    puts("PASS: original water PAT colors survive Actor render preparation");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -3233,6 +3280,8 @@ int main(int argc, char **argv) {
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
+    if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
+        return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
         CHECK(retdec_construct_actor_manager(manager));
         function_460e00();
