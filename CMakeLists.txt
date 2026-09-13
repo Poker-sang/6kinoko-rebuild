@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(kinoko_rebuild LANGUAGES C CXX)
+project(kinoko_rebuild LANGUAGES C CXX RC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,7 +15,7 @@ if(NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
 endif()
 
 if(MSVC)
-    add_compile_options(/W4 /permissive- /EHsc /utf-8)
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:/W4;/permissive-;/EHsc;/utf-8>")
     add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
 endif()
 
@@ -68,11 +68,13 @@ add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
     src/platform/windows_entry.cpp
+    src/platform/resources/windows_resources.rc
 )
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT kinoko_retdec_rebuild)
 target_include_directories(kinoko_retdec_rebuild PRIVATE
     src/decompiled
     include
+    src/platform/resources
 )
 target_compile_definitions(kinoko_retdec_rebuild PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
 option(KINOKO_ENABLE_SQUIRREL_CPP_VM
@@ -173,7 +175,8 @@ if(KINOKO_ENABLE_SQUIRREL_CPP_VM)
 endif()
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
 target_compile_options(kinoko_retdec_rebuild PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:/TC> /Gy /wd4100 /wd4244 /wd4267 /wd4706)
+    $<$<COMPILE_LANGUAGE:C>:/TC>
+    "$<$<COMPILE_LANGUAGE:C,CXX>:/Gy;/wd4100;/wd4244;/wd4267;/wd4706>")
 # Match the original PE subsystem version and its non-client frame metrics.
 target_link_options(kinoko_retdec_rebuild PRIVATE /OPT:REF /OPT:ICF /SUBSYSTEM:WINDOWS,5.01)
 if(KINOKO_RETDEC_MAP_FILE)

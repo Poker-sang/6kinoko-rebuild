@@ -32,6 +32,7 @@
 #include "kinoko/act_resource.h"
 #include "kinoko/script_callbacks.h"
 #include "kinoko/sprite.h"
+#include "resource.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/map_render.h"
 
@@ -144592,8 +144593,8 @@ int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     window_class.lpszClassName = "Marisaland2";
     window_class.lpfnWndProc = function_473af0;
     window_class.style = 0;
-    window_class.hIcon = LoadIconA(hInstance, (LPCSTR)101);
-    window_class.hIconSm = LoadIconA(hInstance, (LPCSTR)101);
+    window_class.hIcon = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
+    window_class.hIconSm = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
     window_class.hCursor = LoadCursorA(NULL, (LPCSTR)0x7f00);
     window_class.lpszMenuName = NULL;
     window_class.cbClsExtra = 0;

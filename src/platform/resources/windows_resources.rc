@@ -1,0 +1,6 @@
+#include <windows.h>
+#include "resource.h"
+
+// Preserve the original resource ID and Japanese language (0x0411).
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+IDI_KINOKO ICON "kinoko.ico"
