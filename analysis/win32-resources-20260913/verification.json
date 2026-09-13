@@ -1,0 +1,28 @@
+[
+  {
+    "mode": "quiet",
+    "original_icon_payloads_identical": true,
+    "original_group_id": 101,
+    "original_language": 1041,
+    "manifest_unchanged": true,
+    "windows_LoadIcon_succeeded": true,
+    "windows_LoadImage_sizes": [
+      16,
+      32
+    ],
+    "exe_sha256": "4c4ebe4e635f4c8a1d66efb7e9f7cb9e0465305cd7a088a2edc8a0af726c7e73"
+  },
+  {
+    "mode": "diag",
+    "original_icon_payloads_identical": true,
+    "original_group_id": 101,
+    "original_language": 1041,
+    "manifest_unchanged": true,
+    "windows_LoadIcon_succeeded": true,
+    "windows_LoadImage_sizes": [
+      16,
+      32
+    ],
+    "exe_sha256": "402038268ecc06660374363204857f0668e19713977ed875fa56b939c808bd1c"
+  }
+]
