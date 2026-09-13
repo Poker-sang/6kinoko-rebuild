@@ -1,0 +1,59 @@
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
+PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push
+COUNTDOWN expected=44 actual=44 remaining=0
+TICK 0 expected_frame=31 actual_frame=31
+TICK 1 expected_frame=91 actual_frame=91
+TICK 2 expected_frame=150 actual_frame=150
+TICK 3 expected_frame=209 actual_frame=209
+TICK 4 expected_frame=266 actual_frame=266
+TICK 5 expected_frame=320 actual_frame=320
+TICK 6 expected_frame=370 actual_frame=370
+TICK 7 expected_frame=417 actual_frame=417
+TICK 8 expected_frame=460 actual_frame=460
+TICK 9 expected_frame=499 actual_frame=499
+TICK 10 expected_frame=534 actual_frame=534
+TICK 11 expected_frame=566 actual_frame=566
+TICK 12 expected_frame=595 actual_frame=595
+TICK 13 expected_frame=621 actual_frame=621
+TICK 14 expected_frame=644 actual_frame=644
+TICK 15 expected_frame=666 actual_frame=666
+TICK 16 expected_frame=685 actual_frame=685
+TICK 17 expected_frame=702 actual_frame=702
+TICK 18 expected_frame=718 actual_frame=718
+TICK 19 expected_frame=732 actual_frame=732
+TICK 20 expected_frame=745 actual_frame=745
+TICK 21 expected_frame=757 actual_frame=757
+TICK 22 expected_frame=767 actual_frame=767
+TICK 23 expected_frame=777 actual_frame=777
+TICK 24 expected_frame=787 actual_frame=787
+TICK 25 expected_frame=795 actual_frame=795
+TICK 26 expected_frame=803 actual_frame=803
+TICK 27 expected_frame=810 actual_frame=810
+TICK 28 expected_frame=811 actual_frame=811
+TICK 29 expected_frame=817 actual_frame=817
+TICK 30 expected_frame=823 actual_frame=823
+TICK 31 expected_frame=828 actual_frame=828
+TICK 32 expected_frame=833 actual_frame=833
+TICK 33 expected_frame=837 actual_frame=837
+TICK 34 expected_frame=841 actual_frame=841
+TICK 35 expected_frame=844 actual_frame=844
+TICK 36 expected_frame=847 actual_frame=847
+TICK 37 expected_frame=850 actual_frame=850
+TICK 38 expected_frame=853 actual_frame=853
+TICK 39 expected_frame=856 actual_frame=856
+TICK 40 expected_frame=859 actual_frame=859
+TICK 41 expected_frame=862 actual_frame=862
+TICK 42 expected_frame=865 actual_frame=865
+TICK 43 expected_frame=868 actual_frame=868
+PASS: original 900-frame blue-crystal countdown consumes all 44 timestamps at the original cadence
