@@ -124,3 +124,7 @@ normal damage execute original death scripts: initial vy=-5, positive velocity
 later, and y below the initial position after 90 updates. Known old-instance
 errors during reset remain errors; they no longer cancel the replacement.
 Outputs and original-build failures remain intact. No live game was launched.
+
+Final quiet candidate enemy-reset-20260913-r1-quiet also passed CTest 4/4
+and the original DAT enemy contract. Both modes have verified DAT copies and
+validation manifests recording source 33bff37; no new live gameplay run.
