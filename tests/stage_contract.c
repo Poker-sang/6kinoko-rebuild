@@ -2965,8 +2965,10 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     return 0;
 }
 
-static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, const char *directory) {
+static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, const char *directory, int green) {
     char path[MAX_PATH];
+    int32_t map_act[60]={0}, rail_layouts[8]={0}, terrain_layouts[16]={0};
+    int rail_count=0, terrain_count=0;
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
         CHECK(function_410500(path));
@@ -2989,6 +2991,40 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
         retdec_destroy_reader((int32_t *)(intptr_t)reader);
     }
     CHECK(pat_lookup(manager,1823));
+    if(green) {
+        int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
+        function_4a94e0_this(PTR(g722));
+        function_4a95c0_this(PTR(g722),PTR(root+1));
+        CHECK(function_46f4c0_this(map_state));
+        function_46fac0();
+        CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
+        function_4a95c0_this(map_state,PTR(map_object));
+        function_4a9d70_this(PTR(map_object));
+        function_4a9bb0_this(map_state,map_state);
+        function_4a9840_this(PTR(root+1),"map",map_state);
+        function_427530(PTR(map_act));
+        CHECK(function_428000(PTR(map_act),"data/map/w2-c05b.act"));
+        *(int32_t *)(intptr_t)(map_state+76)=map_act[2];
+        *(int32_t *)(intptr_t)(map_state+80)=map_act[3];
+        for(int32_t slot=map_act[52];slot!=map_act[53];slot+=4) {
+            int32_t layer=*(int32_t *)(intptr_t)slot;
+            const char *name=retdec_std_string_data(layer+112);
+            int32_t head=*(int32_t *)(intptr_t)(layer+180);
+            for(int32_t node=*(int32_t *)(intptr_t)head;node!=head;node=*(int32_t *)(intptr_t)node) {
+                int32_t key=*(int32_t *)(intptr_t)(node+8);
+                int32_t layout=*(int32_t *)(intptr_t)(key+4);
+                if(!retdec_map_chip_data(layout)) continue;
+                if(strncmp(name,"ra",2)==0) { CHECK(rail_count<8); rail_layouts[rail_count++]=layout; }
+                if(strncmp(name,"te",2)==0 || strncmp(name,"wa",2)==0) {
+                    CHECK(terrain_count<16); terrain_layouts[terrain_count++]=layout;
+                }
+            }
+        }
+        CHECK(rail_count>0);
+        *(int32_t *)(intptr_t)(map_state+36)=PTR(rail_layouts);
+        *(int32_t *)(intptr_t)(map_state+40)=PTR(rail_layouts+rail_count);
+        CHECK(execute_source(vm,root+2,"stageRailCount <- 1; stageSwitchRail <- 0;"));
+    }
     CHECK(execute_source(vm,root+2,
         "t_lift <- {};\nplayer <- null;\n"
         "function InitPlatformRider(v) { SetTake(TYPE_2HEAD*100+TAKE_STAND); "
@@ -2998,13 +3034,13 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
     int32_t scripts[3], init[3], rider_init[3];
     function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_lift");
     CHECK(execute_asset(vm,scripts+1,"data/script/lift.cv4"));
-    function_4aa3a0_this(PTR(scripts),PTR(init),"Init04c7");
+    function_4aa3a0_this(PTR(scripts),PTR(init),green ? "InitRail" : "Init04c7");
     function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
     CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
     int32_t platform=function_463b40_this(manager,init[0],init[1],init[2],
-        608,672,-1,PTR(&g16),0x05000002,1223,0);
+        green ? 288 : 608,green ? 448 : 672,-1,PTR(&g16),0x05000002,green ? 1207 : 1223,0);
     int32_t rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
-        608,664,-1,PTR(&g16),g483,g484,0);
+        green ? 288 : 608,green ? 440 : 664,-1,PTR(&g16),g483,g484,0);
     CHECK(platform && rider && vm_failures==0);
     function_4a9840_this(PTR(root+1),"platformProbe",platform+44);
     CHECK(execute_source(vm,root+2,
@@ -3013,10 +3049,32 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
     *(uint8_t *)(intptr_t)(platform+40)=1;
     *(uint8_t *)(intptr_t)(rider+40)=1;
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    if(green) {
+        for(int i=0;i<terrain_count;++i) CHECK(function_4693a0(terrain_layouts[i]));
+        *(int32_t *)(intptr_t)(rider+316)=3;
+    }
     g459=-1;
     *(int32_t *)(intptr_t)(manager+64)=-1;
     CHECK(function_462ce0(platform,rider)>=0);
     CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
+    if(green) {
+        for(int frame=0;frame<90;++frame) {
+            const float old_platform_x=*(float *)(intptr_t)(platform+240);
+            const float old_player_x=*(float *)(intptr_t)(rider+240);
+            CHECK(retdec_actor_manager_update(manager,PTR(g_retdec_camera_state))==2);
+            printf("GREEN frame=%d platform=(%.6f,%.6f) player=(%.6f,%.6f) carry=(%.6f,%.6f) step=%08x hit=%d\n",
+                frame,*(float *)(intptr_t)(platform+240),*(float *)(intptr_t)(platform+244),
+                *(float *)(intptr_t)(rider+240),*(float *)(intptr_t)(rider+244),
+                *(float *)(intptr_t)(rider+264),*(float *)(intptr_t)(rider+268),
+                *(uint32_t *)(intptr_t)(rider+36),*(int32_t *)(intptr_t)(rider+296));
+            CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
+            CHECK(fabsf((*(float *)(intptr_t)(rider+240)-old_player_x)-
+                (*(float *)(intptr_t)(platform+240)-old_platform_x))<0.001f);
+            CHECK(vm_failures==0);
+        }
+        puts("PASS: original w2-c05b green rail platform carries rider through native terrain collision");
+        return 0;
+    }
     for(int frame=0;frame<45;++frame) {
         const float before=*(float *)(intptr_t)(platform+244);
         CHECK(retdec_actor_manager_update(manager,PTR(g_retdec_camera_state))==2);
@@ -3133,7 +3191,9 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
         return test_crystal_countdown(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--orange-platform") == 0)
-        return test_orange_platform(vm, root, manager, argv[2]);
+        return test_platform_riding(vm, root, manager, argv[2], 0);
+    if (argc == 3 && strcmp(argv[1], "--green-stage5") == 0)
+        return test_platform_riding(vm, root, manager, argv[2], 1);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {

@@ -1,0 +1,173 @@
+FUNCTION data/script/lift.nut: main stack=7 generator=False
+PARAMETERS ["this"]
+LOCALS [["i", 1, 49, 67], ["this", 0, 0, 131]]
+K0 = "SetRide"
+K1 = "InitLiftFall"
+K2 = "UpdateLiftFall"
+K3 = "CallbackLiftFall"
+K4 = "Init04c3"
+K5 = "Init04c4"
+K6 = "Init04c5"
+K7 = "Init04c6"
+K8 = "InitLiftBack"
+K9 = "UpdateLiftBack"
+K10 = "CallbackLiftBack"
+K11 = "Init04c7"
+K12 = "Init04c8"
+K13 = "Init04c9"
+K14 = "Init04ca"
+K15 = "InitRail"
+K16 = "SetInitFunctionByID"
+K17 = "CallbackRail"
+K18 = "CallbackRailWait"
+K19 = "InitRailChild"
+K20 = "CallbackRailChildWait"
+K21 = "UpdateRail"
+K22 = "MoveRail"
+K23 = "InitLiftAcc"
+K24 = "CallbackLiftAcc"
+K25 = "InitSpringBar"
+K26 = "UpdateSpringBar"
+K27 = "CallbackSpringBar"
+K28 = "InitBoat"
+K29 = "UpdateBoat"
+K30 = "CallbackBoat"
+K31 = "Init04eb"
+K32 = "InitKomachi"
+K33 = "UpdateKomachi"
+K34 = "InitKorin"
+K35 = "UpdateKorin"
+K36 = "CallbackKorin"
+K37 = "Init0d67"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 CLOSURE        a0=  2 a1=          0 a2=  0 a3=  0
+0002 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0003 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0004 CLOSURE        a0=  2 a1=          1 a2=  0 a3=  0
+0005 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0006 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0007 CLOSURE        a0=  2 a1=          2 a2=  0 a3=  0
+0008 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0009 LOAD           a0=  1 a1=          3 a2=  0 a3=  0
+0010 CLOSURE        a0=  2 a1=          3 a2=  0 a3=  0
+0011 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0012 DLOAD          a0=  1 a1=          4 a2=  2 a3=  1
+0013 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0014 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0015 DLOAD          a0=  1 a1=          5 a2=  2 a3=  1
+0016 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0017 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0018 DLOAD          a0=  1 a1=          6 a2=  2 a3=  1
+0019 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0020 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0021 DLOAD          a0=  1 a1=          7 a2=  2 a3=  1
+0022 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0023 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0024 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0025 CLOSURE        a0=  2 a1=          4 a2=  0 a3=  0
+0026 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0027 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0028 CLOSURE        a0=  2 a1=          5 a2=  0 a3=  0
+0029 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0030 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0031 CLOSURE        a0=  2 a1=          6 a2=  0 a3=  0
+0032 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0033 DLOAD          a0=  1 a1=         11 a2=  2 a3=  8
+0034 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0035 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0036 DLOAD          a0=  1 a1=         12 a2=  2 a3=  8
+0037 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0038 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0039 DLOAD          a0=  1 a1=         13 a2=  2 a3=  8
+0040 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0041 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0042 DLOAD          a0=  1 a1=         14 a2=  2 a3=  8
+0043 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0044 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0045 LOAD           a0=  1 a1=         15 a2=  0 a3=  0
+0046 CLOSURE        a0=  2 a1=          7 a2=  0 a3=  0
+0047 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0048 LOADINT        a0=  1 a1=          0 a2=  0 a3=  0
+0049 LOADINT        a0=  2 a1=         16 a2=  0 a3=  0
+0050 CMP            a0=  2 a1=          2 a2=  1 a3=  3
+0051 JZ             a0=  2 a1=         16 a2=  0 a3=  0
+0052 PREPCALLK      a0=  2 a1=         16 a2=  0 a3=  3
+0053 LOADINT        a0=  4 a1=       1203 a2=  0 a3=  0
+0054 ARITH          a0=  4 a1=          1 a2=  4 a3= 43
+0055 GETK           a0=  5 a1=         15 a2=  0 a3=  0
+0056 MOVE           a0=  6 a1=          0 a2=  0 a3=  0
+0057 CALL           a0=  2 a1=          2 a2=  3 a3=  4
+0058 PREPCALLK      a0=  2 a1=         16 a2=  0 a3=  3
+0059 LOADINT        a0=  4 a1=       1203 a2=  0 a3=  0
+0060 ARITH          a0=  4 a1=          1 a2=  4 a3= 43
+0061 LOADINT        a0=  5 a1=         24 a2=  0 a3=  0
+0062 ARITH          a0=  4 a1=          5 a2=  4 a3= 43
+0063 GETK           a0=  5 a1=         15 a2=  0 a3=  0
+0064 MOVE           a0=  6 a1=          0 a2=  0 a3=  0
+0065 CALL           a0=  2 a1=          2 a2=  3 a3=  4
+0066 PINCL          a0=  2 a1=          1 a2=  0 a3=  1
+0067 JMP            a0=  0 a1=        -19 a2=  0 a3=  0
+0068 LOAD           a0=  1 a1=         17 a2=  0 a3=  0
+0069 CLOSURE        a0=  2 a1=          8 a2=  0 a3=  0
+0070 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0071 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0072 CLOSURE        a0=  2 a1=          9 a2=  0 a3=  0
+0073 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0074 LOAD           a0=  1 a1=         19 a2=  0 a3=  0
+0075 CLOSURE        a0=  2 a1=         10 a2=  0 a3=  0
+0076 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0077 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0078 CLOSURE        a0=  2 a1=         11 a2=  0 a3=  0
+0079 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0080 LOAD           a0=  1 a1=         21 a2=  0 a3=  0
+0081 CLOSURE        a0=  2 a1=         12 a2=  0 a3=  0
+0082 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0083 LOAD           a0=  1 a1=         22 a2=  0 a3=  0
+0084 CLOSURE        a0=  2 a1=         13 a2=  0 a3=  0
+0085 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0086 LOAD           a0=  1 a1=         23 a2=  0 a3=  0
+0087 CLOSURE        a0=  2 a1=         14 a2=  0 a3=  0
+0088 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0089 LOAD           a0=  1 a1=         24 a2=  0 a3=  0
+0090 CLOSURE        a0=  2 a1=         15 a2=  0 a3=  0
+0091 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0092 LOAD           a0=  1 a1=         25 a2=  0 a3=  0
+0093 CLOSURE        a0=  2 a1=         16 a2=  0 a3=  0
+0094 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0095 LOAD           a0=  1 a1=         26 a2=  0 a3=  0
+0096 CLOSURE        a0=  2 a1=         17 a2=  0 a3=  0
+0097 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0098 LOAD           a0=  1 a1=         27 a2=  0 a3=  0
+0099 CLOSURE        a0=  2 a1=         18 a2=  0 a3=  0
+0100 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0101 LOAD           a0=  1 a1=         28 a2=  0 a3=  0
+0102 CLOSURE        a0=  2 a1=         19 a2=  0 a3=  0
+0103 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0104 LOAD           a0=  1 a1=         29 a2=  0 a3=  0
+0105 CLOSURE        a0=  2 a1=         20 a2=  0 a3=  0
+0106 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0107 LOAD           a0=  1 a1=         30 a2=  0 a3=  0
+0108 CLOSURE        a0=  2 a1=         21 a2=  0 a3=  0
+0109 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0110 DLOAD          a0=  1 a1=         31 a2=  2 a3= 28
+0111 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0112 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0113 LOAD           a0=  1 a1=         32 a2=  0 a3=  0
+0114 CLOSURE        a0=  2 a1=         22 a2=  0 a3=  0
+0115 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0116 LOAD           a0=  1 a1=         33 a2=  0 a3=  0
+0117 CLOSURE        a0=  2 a1=         23 a2=  0 a3=  0
+0118 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0119 LOAD           a0=  1 a1=         34 a2=  0 a3=  0
+0120 CLOSURE        a0=  2 a1=         24 a2=  0 a3=  0
+0121 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0122 LOAD           a0=  1 a1=         35 a2=  0 a3=  0
+0123 CLOSURE        a0=  2 a1=         25 a2=  0 a3=  0
+0124 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0125 LOAD           a0=  1 a1=         36 a2=  0 a3=  0
+0126 CLOSURE        a0=  2 a1=         26 a2=  0 a3=  0
+0127 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0128 DLOAD          a0=  1 a1=         37 a2=  2 a3= 34
+0129 GET            a0=  2 a1=          0 a2=  2 a3=  0
+0130 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0131 RETURN         a0=255 a1=          0 a2=  0 a3=  0
