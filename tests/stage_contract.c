@@ -2431,6 +2431,59 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int stage_owner_releases;
+static int32_t __fastcall release_stage_owner(void *self, void *unused, int32_t flags) {
+    int32_t *owner = *(int32_t **)((char *)self + 4);
+    (void)unused;
+    if (flags != 1 || owner[1] != 0 || ((int32_t *)(intptr_t)owner[2])[3] != 0)
+        abort();
+    ++stage_owner_releases;
+    free(self);
+    return 0;
+}
+
+static int test_global_stage_cleanup(void) {
+    int32_t saved_head = g603, saved_count = g604;
+    int32_t *head = calloc(3, 4), *tail = head;
+    void *vtable[5] = {NULL, NULL, NULL, NULL, release_stage_owner};
+    CHECK(head);
+    head[0] = head[1] = PTR(head);
+    g603 = PTR(head);
+    g604 = 0;
+    stage_owner_releases = 0;
+    for (int i = 0; i < 2; ++i) {
+        int32_t *node = calloc(3, 4), *owner = calloc(3, 4);
+        int32_t *source = calloc(2, 4), *runtime = calloc(48, 4);
+        CHECK(node && owner && source && runtime);
+        source[0] = PTR(vtable);
+        source[1] = PTR(owner);
+        owner[0] = PTR(source);
+        owner[1] = PTR(malloc(32));
+        owner[2] = PTR(runtime);
+        CHECK(function_44fde0(PTR(runtime), PTR(owner)) == PTR(runtime));
+        runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
+        runtime[4] = PTR(malloc(24));
+        runtime[11] = PTR(malloc(36));
+        runtime[12] = runtime[11];
+        node[0] = PTR(head);
+        node[1] = PTR(tail);
+        node[2] = PTR(owner);
+        tail[0] = PTR(node);
+        head[1] = PTR(node);
+        tail = node;
+        ++g604;
+    }
+    CHECK(function_465f70() == PTR(head));
+    CHECK(stage_owner_releases == 2 && g604 == 0);
+    CHECK(head[0] == PTR(head) && head[1] == PTR(head));
+    CHECK(function_465f70() == PTR(head) && stage_owner_releases == 2);
+    g603 = saved_head;
+    g604 = saved_count;
+    free(head);
+    puts("PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear");
+    return 0;
+}
+
 static int test_generator_effects(int32_t vm, int32_t *root, const char *original_script) {
     const int32_t top = function_48aa20(vm);
     if (original_script) {
@@ -2533,6 +2586,7 @@ int main(int argc, char **argv) {
     CHECK(test_actor_state_fields() == 0);
     CHECK(test_animation_timing() == 0);
     CHECK(test_shutdown_tree_cleanup() == 0);
+    CHECK(test_global_stage_cleanup() == 0);
     CHECK(test_gc_mark_link() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
