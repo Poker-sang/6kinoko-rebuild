@@ -2932,9 +2932,14 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
         "if(popValues.pop()!=3.25 || popValues.pop()!=null) throw \"pop scalar\";\n"
         "poppedObject <- popValues.pop();\n"
         "if(poppedObject!=popObject || poppedObject.value!=7 || popValues.len()!=0) throw \"pop object ownership\";\n"
-        "popErrors <- 0;\n"
-        "try { popValues.pop(); } catch(e) { popErrors++; }\n"
-        "try { popValues.top(); } catch(e) { popErrors++; }\n"
+        "popErrors <- 0;\n"));
+    expected_vm_error = 1;
+    const int caught_errors = execute_source(vm, root + 2,
+        "try { popValues.pop(); } catch(e) { if(e==\"empty array\") popErrors++; }\n"
+        "try { popValues.top(); } catch(e) { if(e==\"top() on a empty array\") popErrors++; }");
+    expected_vm_error = 0;
+    CHECK(caught_errors);
+    CHECK(execute_source(vm, root + 2,
         "if(popErrors!=2) throw \"empty array error return\";\n"
         "popValues.append(popValues);\n"
         "poppedSelf <- popValues.pop();\n"
