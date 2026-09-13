@@ -9480,7 +9480,6 @@ static int32_t g_retdec_startup_vm = 0;
 static uint32_t g_retdec_actor_init_count;
 static D3DDISPLAYMODE g_retdec_display_mode;
 static D3DPRESENT_PARAMETERS g_retdec_present_parameters;
-static int g_retdec_g644_guarded;
 
 struct retdec_act_texture_slot {
     IDirect3DBaseTexture9 *texture;
@@ -9496,23 +9495,7 @@ static uint32_t g_retdec_next_act_texture_slot = 1;
 static void retdec_sync_runtime_state_to_globals(const unsigned char *state);
 static void retdec_sync_globals_to_runtime_state(unsigned char *state);
 static void retdec_initialize_runtime_objects(void);
-static void retdec_guard_g644(void);
 // ------------------------ Functions -------------------------
-
-static void retdec_guard_g644(void)
-{
-    DWORD old_protection;
-
-    if (g_retdec_g644_guarded != 0)
-        return;
-    if (VirtualProtect((void *)(intptr_t)&g644, sizeof(g644),
-                       PAGE_READONLY, &old_protection) != 0) {
-        g_retdec_g644_guarded = 1;
-        retdec_trace("g644:guarded");
-    } else {
-        retdec_trace("g644:guard-failed");
-    }
-}
 
 static void retdec_sync_runtime_state_to_globals(const unsigned char *state)
 {
@@ -227504,7 +227487,6 @@ int32_t function_4a8db0(int32_t a1) {
     retdec_trace_i32("4a8db0:before-owner", (int32_t)(intptr_t)g644);
     int32_t owner_result = function_4a9e30_this((int32_t)&unk_5149EC, current);
     retdec_trace_i32("4a8db0:after-owner", (int32_t)(intptr_t)g644);
-    retdec_guard_g644();
     return owner_result & -256 | 1;
 }
 

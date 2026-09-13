@@ -50,3 +50,12 @@ five wrappers, run shutdown twice and check each pair is null.
 Candidate 654c903: cleanup-20260913-r2-diag and r2-quiet, independent build/run
 directories. Final build/contract/game-exit results will be appended here.
 No VM execution-backend switch, gameplay rule, DAT edit or trace-call stripping.
+
+r2 contracts and original smoke bytecode passed in both modes. Live diagnostic
+exit advanced past ACT and audio cleanup but faulted in the inlined
+function_45da40+0x90 writing 0x00655000, the relocated g644 address. Its startup
+retdec_guard_g644 unconditionally VirtualProtect'ed that page PAGE_READONLY.
+This leftover diagnostic trap rejects the original legitimate g644=null
+shutdown operation. Remove the guard, its initialization and bookkeeping;
+leave VM trace call sites and optional output/dump tooling intact. Retain r2
+first-chance dump fault-20260913-025537-472-p24872-first.dmp. Next batch r3.
