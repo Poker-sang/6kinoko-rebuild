@@ -2779,7 +2779,35 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
     return 0;
 }
 
+static ULONG WINAPI count_texture_release(IDirect3DBaseTexture9 *texture) {
+    ++((int32_t *)texture)[1];
+    return 0;
+}
+
+static int test_texture_lifetime(void) {
+    IDirect3DBaseTexture9Vtbl vtable = {0};
+    int32_t texture[2] = {0};
+    int32_t old_device = g678;
+    vtable.Release = count_texture_release;
+    texture[0] = PTR(&vtable);
+    g678 = 0;
+    for (int cycle = 0; cycle < 5000; ++cycle) {
+        int32_t handle = retdec_register_act_texture(
+            (IDirect3DBaseTexture9 *)texture, 256, 256);
+        CHECK(handle != 0);
+        CHECK(retdec_resolve_texture_handle(handle) == (IDirect3DBaseTexture9 *)texture);
+        CHECK(function_405d60(handle) == 1);
+        CHECK(texture[1] == cycle + 1);
+        CHECK(retdec_resolve_texture_handle(handle) == NULL);
+    }
+    g678 = old_device;
+    puts("PASS: 5000 texture load/unload cycles release COM objects and reuse handles");
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
+        return test_texture_lifetime();
     if (argc == 2 && strcmp(argv[1], "--gc-link-probe") == 0)
         return test_gc_mark_link();
     if (argc == 2 && strcmp(argv[1], "--sound-module") == 0) {
