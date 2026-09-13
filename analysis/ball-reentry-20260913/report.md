@@ -82,3 +82,7 @@ The experimental enemy probe still needs its native PR_FRONT binding (not a
 field of global.cv4), and is not counted among passing CTest coverage.
 No claimed ball/death gameplay fix. User replay is needed for a real first-error
 snapshot rather than speculative changes to original actor/reset behavior.
+
+Quiet counterpart enemy-20260913-quiet also passed CTest 4/4 and DAT staging.
+Both executables correspond to source a4d5b56 (subsequent commits are evidence
+only). All artifacts retained. Live smoke explicitly deferred to the user.
