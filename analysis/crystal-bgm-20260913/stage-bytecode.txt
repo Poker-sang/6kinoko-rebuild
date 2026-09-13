@@ -1,0 +1,616 @@
+FUNCTION data/script/stage.nut: main stack=3 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 173]]
+K0 = "stageName"
+K1 = ""
+K2 = "stageNameNext"
+K3 = "stageBgm"
+K4 = "stageBgmCurrent"
+K5 = "stageOut"
+K6 = "stageStart"
+K7 = "stageChangeCount"
+K8 = "stageActorFlagTable"
+K9 = "stageActorFlagCurrent"
+K10 = "stageActorFlagCursor"
+K11 = "stageWarpFrom"
+K12 = "stageWarpTarget"
+K13 = "stageSwitchBlue"
+K14 = "stageSwitchRed"
+K15 = "stageSwitchRail"
+K16 = "stageSwitchCount"
+K17 = "stageRailCount"
+K18 = "stageLayerVector"
+K19 = "stageLayerEvent"
+K20 = "stageWaterLevel"
+K21 = "stageRedStar"
+K22 = "stageWaterType"
+K23 = "stageIce"
+K24 = "stageVal"
+K25 = "stageCurrentDoor"
+K26 = "stageNoIntro"
+K27 = "stageNoStatus"
+K28 = "stageBonus"
+K29 = "stageBonusType"
+K30 = "time"
+K31 = "warp"
+K32 = "loop"
+K33 = "loopPosition"
+K34 = "stageBeginTime"
+K35 = "stageTimeStop"
+K36 = "stageSwitchCountArray"
+K37 = "InitStage"
+K38 = "ChangeStageToWorld"
+K39 = "ChangeStageToTitle"
+K40 = "SetGameOver"
+K41 = "SetStage"
+K42 = "LoadStage"
+K43 = "UpdateStageStart"
+K44 = "UpdateStage"
+K45 = "UpdateStageChange"
+K46 = "SetBgm"
+K47 = "CheckActorFlag"
+K48 = "SetActorFlag"
+K49 = "SetSwitchBlue"
+K50 = "SetSwitchRed"
+K51 = "SetSwitchRail"
+K52 = "CheckDoor"
+K53 = "CheckDoorHidden"
+K54 = "CheckPipeDown"
+K55 = "CheckPipeUp"
+K56 = "InitWaterLine"
+K57 = "UpdateWaterLine"
+K58 = "InitWater"
+K59 = "UpdateWater"
+0000 DLOAD          a0=  1 a1=          0 a2=  2 a3=  1
+0001 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0002 DLOAD          a0=  1 a1=          2 a2=  2 a3=  1
+0003 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0004 DLOAD          a0=  1 a1=          3 a2=  2 a3=  1
+0005 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0006 DLOAD          a0=  1 a1=          4 a2=  2 a3=  1
+0007 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0008 LOAD           a0=  1 a1=          5 a2=  0 a3=  0
+0009 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0010 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0011 LOAD           a0=  1 a1=          6 a2=  0 a3=  0
+0012 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0013 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0014 LOAD           a0=  1 a1=          7 a2=  0 a3=  0
+0015 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0016 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0017 LOAD           a0=  1 a1=          8 a2=  0 a3=  0
+0018 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0019 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0020 LOAD           a0=  1 a1=          9 a2=  0 a3=  0
+0021 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0022 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0023 LOAD           a0=  1 a1=         10 a2=  0 a3=  0
+0024 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0025 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0026 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0027 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0028 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0029 LOAD           a0=  1 a1=         12 a2=  0 a3=  0
+0030 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0031 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0032 LOAD           a0=  1 a1=         13 a2=  0 a3=  0
+0033 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0034 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0035 LOAD           a0=  1 a1=         14 a2=  0 a3=  0
+0036 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0037 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0038 LOAD           a0=  1 a1=         15 a2=  0 a3=  0
+0039 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0040 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0041 LOAD           a0=  1 a1=         16 a2=  0 a3=  0
+0042 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0043 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0044 LOAD           a0=  1 a1=         17 a2=  0 a3=  0
+0045 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0046 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0047 LOAD           a0=  1 a1=         18 a2=  0 a3=  0
+0048 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0049 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0050 LOAD           a0=  1 a1=         19 a2=  0 a3=  0
+0051 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0052 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0053 LOAD           a0=  1 a1=         20 a2=  0 a3=  0
+0054 LOADFLOAT      a0=  2 a1= 1199570688 a2=  0 a3=  0
+0055 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0056 LOAD           a0=  1 a1=         21 a2=  0 a3=  0
+0057 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0058 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0059 LOAD           a0=  1 a1=         22 a2=  0 a3=  0
+0060 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0061 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0062 LOAD           a0=  1 a1=         23 a2=  0 a3=  0
+0063 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0064 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0065 LOAD           a0=  1 a1=         24 a2=  0 a3=  0
+0066 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0067 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0068 LOAD           a0=  1 a1=         25 a2=  0 a3=  0
+0069 LOADNULLS      a0=  2 a1=          1 a2=  0 a3=  0
+0070 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0071 LOAD           a0=  1 a1=         26 a2=  0 a3=  0
+0072 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0073 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0074 LOAD           a0=  1 a1=         27 a2=  0 a3=  0
+0075 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0076 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0077 LOAD           a0=  1 a1=         28 a2=  0 a3=  0
+0078 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0079 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0080 LOAD           a0=  1 a1=         29 a2=  0 a3=  0
+0081 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0082 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0083 LOAD           a0=  1 a1=         30 a2=  0 a3=  0
+0084 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0085 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0086 LOAD           a0=  1 a1=         31 a2=  0 a3=  0
+0087 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0088 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0089 LOAD           a0=  1 a1=         32 a2=  0 a3=  0
+0090 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0091 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0092 LOAD           a0=  1 a1=         33 a2=  0 a3=  0
+0093 NEWTABLE       a0=  2 a1=          0 a2=  0 a3=  0
+0094 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0095 LOAD           a0=  1 a1=         34 a2=  0 a3=  0
+0096 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0097 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0098 LOAD           a0=  1 a1=         35 a2=  0 a3=  0
+0099 LOADBOOL       a0=  2 a1=          0 a2=  0 a3=  0
+0100 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0101 LOAD           a0=  1 a1=         36 a2=  0 a3=  0
+0102 NEWARRAY       a0=  2 a1=          0 a2=  0 a3=  0
+0103 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0104 LOAD           a0=  1 a1=         37 a2=  0 a3=  0
+0105 CLOSURE        a0=  2 a1=          0 a2=  0 a3=  0
+0106 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0107 LOAD           a0=  1 a1=         38 a2=  0 a3=  0
+0108 CLOSURE        a0=  2 a1=          1 a2=  0 a3=  0
+0109 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0110 LOAD           a0=  1 a1=         39 a2=  0 a3=  0
+0111 CLOSURE        a0=  2 a1=          2 a2=  0 a3=  0
+0112 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0113 LOAD           a0=  1 a1=         40 a2=  0 a3=  0
+0114 CLOSURE        a0=  2 a1=          3 a2=  0 a3=  0
+0115 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0116 LOAD           a0=  1 a1=         41 a2=  0 a3=  0
+0117 CLOSURE        a0=  2 a1=          4 a2=  0 a3=  0
+0118 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0119 LOAD           a0=  1 a1=         42 a2=  0 a3=  0
+0120 CLOSURE        a0=  2 a1=          5 a2=  0 a3=  0
+0121 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0122 LOAD           a0=  1 a1=         43 a2=  0 a3=  0
+0123 CLOSURE        a0=  2 a1=          6 a2=  0 a3=  0
+0124 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0125 LOAD           a0=  1 a1=         44 a2=  0 a3=  0
+0126 CLOSURE        a0=  2 a1=          7 a2=  0 a3=  0
+0127 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0128 LOAD           a0=  1 a1=         45 a2=  0 a3=  0
+0129 CLOSURE        a0=  2 a1=          8 a2=  0 a3=  0
+0130 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0131 LOAD           a0=  1 a1=         46 a2=  0 a3=  0
+0132 CLOSURE        a0=  2 a1=          9 a2=  0 a3=  0
+0133 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0134 LOAD           a0=  1 a1=         47 a2=  0 a3=  0
+0135 CLOSURE        a0=  2 a1=         10 a2=  0 a3=  0
+0136 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0137 LOAD           a0=  1 a1=         48 a2=  0 a3=  0
+0138 CLOSURE        a0=  2 a1=         11 a2=  0 a3=  0
+0139 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0140 LOAD           a0=  1 a1=         49 a2=  0 a3=  0
+0141 CLOSURE        a0=  2 a1=         12 a2=  0 a3=  0
+0142 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0143 LOAD           a0=  1 a1=         50 a2=  0 a3=  0
+0144 CLOSURE        a0=  2 a1=         13 a2=  0 a3=  0
+0145 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0146 LOAD           a0=  1 a1=         51 a2=  0 a3=  0
+0147 CLOSURE        a0=  2 a1=         14 a2=  0 a3=  0
+0148 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0149 LOAD           a0=  1 a1=         52 a2=  0 a3=  0
+0150 CLOSURE        a0=  2 a1=         15 a2=  0 a3=  0
+0151 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0152 LOAD           a0=  1 a1=         53 a2=  0 a3=  0
+0153 CLOSURE        a0=  2 a1=         16 a2=  0 a3=  0
+0154 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0155 LOAD           a0=  1 a1=         54 a2=  0 a3=  0
+0156 CLOSURE        a0=  2 a1=         17 a2=  0 a3=  0
+0157 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0158 LOAD           a0=  1 a1=         55 a2=  0 a3=  0
+0159 CLOSURE        a0=  2 a1=         18 a2=  0 a3=  0
+0160 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0161 LOAD           a0=  1 a1=         56 a2=  0 a3=  0
+0162 CLOSURE        a0=  2 a1=         19 a2=  0 a3=  0
+0163 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0164 LOAD           a0=  1 a1=         57 a2=  0 a3=  0
+0165 CLOSURE        a0=  2 a1=         20 a2=  0 a3=  0
+0166 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0167 LOAD           a0=  1 a1=         58 a2=  0 a3=  0
+0168 CLOSURE        a0=  2 a1=         21 a2=  0 a3=  0
+0169 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0170 LOAD           a0=  1 a1=         59 a2=  0 a3=  0
+0171 CLOSURE        a0=  2 a1=         22 a2=  0 a3=  0
+0172 NEWSLOT        a0=  1 a1=          0 a2=  1 a3=  2
+0173 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/stage.nut: UpdateStage stack=5 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 172]]
+K0 = "updateMask"
+K1 = "GP_PLAYER"
+K2 = "time"
+K3 = "stageTimeStop"
+K4 = "PlayerStatus"
+K5 = "stageSwitchCount"
+K6 = "stageSwitchCountArray"
+K7 = "len"
+K8 = "top"
+K9 = "PlaySE"
+K10 = "pop"
+K11 = "stageSwitchBlue"
+0000 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0001 GETK           a0=  1 a1=          0 a2=  1 a3=  0
+0002 GETK           a0=  2 a1=          1 a2=  0 a3=  0
+0003 BITW           a0=  1 a1=          2 a2=  1 a3=  0
+0004 JZ             a0=  1 a1=         25 a2=  0 a3=  0
+0005 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0006 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0007 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0008 AND            a0=  1 a1=          3 a2=  1 a3=  0
+0009 GETK           a0=  2 a1=          3 a2=  0 a3=  0
+0010 NOT            a0=  2 a1=          2 a2=  0 a3=  0
+0011 MOVE           a0=  1 a1=          2 a2=  0 a3=  0
+0012 JZ             a0=  1 a1=         17 a2=  0 a3=  0
+0013 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0014 LOADINT        a0=  2 a1=          2 a2=  0 a3=  0
+0015 COMPARITH      a0=  1 a1=          2 a2=  1 a3= 45
+0016 GETK           a0=  1 a1=          2 a2=  0 a3=  0
+0017 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0018 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0019 JZ             a0=  1 a1=          3 a2=  0 a3=  0
+0020 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0021 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0022 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0023 LOADROOTTABLE  a0=  1 a1=          0 a2=  0 a3=  0
+0024 GETK           a0=  1 a1=          4 a2=  1 a3=  0
+0025 DLOAD          a0=  2 a1=          2 a2=  3 a3=  2
+0026 GET            a0=  3 a1=          0 a2=  3 a3=  0
+0027 LOADINT        a0=  4 a1=         60 a2=  0 a3=  0
+0028 ARITH          a0=  3 a1=          4 a2=  3 a3= 47
+0029 SET            a0=  1 a1=          1 a2=  2 a3=  3
+0030 GETK           a0=  1 a1=          5 a2=  0 a3=  0
+0031 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0032 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0033 JZ             a0=  1 a1=        138 a2=  0 a3=  0
+0034 GETK           a0=  1 a1=          6 a2=  0 a3=  0
+0035 PREPCALLK      a0=  1 a1=          7 a2=  1 a3=  2
+0036 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0037 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0038 CMP            a0=  1 a1=          2 a2=  1 a3=  0
+0039 JZ             a0=  1 a1=         18 a2=  0 a3=  0
+0040 GETK           a0=  1 a1=          6 a2=  0 a3=  0
+0041 PREPCALLK      a0=  1 a1=          8 a2=  1 a3=  2
+0042 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0043 LOADINT        a0=  2 a1=      15000 a2=  0 a3=  0
+0044 GETK           a0=  3 a1=          5 a2=  0 a3=  0
+0045 LOADINT        a0=  4 a1=       1000 a2=  0 a3=  0
+0046 ARITH          a0=  3 a1=          4 a2=  3 a3= 42
+0047 LOADINT        a0=  4 a1=         60 a2=  0 a3=  0
+0048 ARITH          a0=  3 a1=          4 a2=  3 a3= 47
+0049 ARITH          a0=  2 a1=          3 a2=  2 a3= 45
+0050 CMP            a0=  1 a1=          2 a2=  1 a3=  3
+0051 JZ             a0=  1 a1=          6 a2=  0 a3=  0
+0052 PREPCALLK      a0=  1 a1=          9 a2=  0 a3=  2
+0053 LOADINT        a0=  3 a1=        120 a2=  0 a3=  0
+0054 CALL           a0=  1 a1=          1 a2=  2 a3=  2
+0055 GETK           a0=  1 a1=          6 a2=  0 a3=  0
+0056 PREPCALLK      a0=  1 a1=         10 a2=  1 a3=  2
+0057 CALL           a0=  1 a1=          1 a2=  2 a3=  1
+0058 LOADINT        a0=  1 a1=        900 a2=  0 a3=  0
+0059 GETK           a0=  2 a1=          5 a2=  0 a3=  0
+0060 ARITH          a0=  1 a1=          2 a2=  1 a3= 45
+0061 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0062 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0063 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0064 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0065 LOADINT        a0=  4 a1=         42 a2=  0 a3=  0
+0066 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0067 JMP            a0=  0 a1=         96 a2=  0 a3=  0
+0068 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0069 LOADINT        a0=  2 a1=        870 a2=  0 a3=  0
+0070 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0071 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0072 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0073 LOADINT        a0=  4 a1=         43 a2=  0 a3=  0
+0074 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0075 JMP            a0=  0 a1=         88 a2=  0 a3=  0
+0076 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0077 LOADINT        a0=  2 a1=         48 a2=  0 a3=  0
+0078 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0079 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0080 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0081 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0082 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0083 JMP            a0=  0 a1=         80 a2=  0 a3=  0
+0084 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0085 LOADINT        a0=  2 a1=        120 a2=  0 a3=  0
+0086 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0087 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0088 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0089 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0090 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0091 JMP            a0=  0 a1=         72 a2=  0 a3=  0
+0092 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0093 LOADINT        a0=  2 a1=        192 a2=  0 a3=  0
+0094 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0095 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0096 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0097 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0098 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0099 JMP            a0=  0 a1=         64 a2=  0 a3=  0
+0100 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0101 LOADINT        a0=  2 a1=        264 a2=  0 a3=  0
+0102 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0103 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0104 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0105 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0106 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0107 JMP            a0=  0 a1=         56 a2=  0 a3=  0
+0108 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0109 LOADINT        a0=  2 a1=        336 a2=  0 a3=  0
+0110 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0111 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0112 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0113 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0114 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0115 JMP            a0=  0 a1=         48 a2=  0 a3=  0
+0116 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0117 LOADINT        a0=  2 a1=        408 a2=  0 a3=  0
+0118 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0119 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0120 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0121 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0122 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0123 JMP            a0=  0 a1=         40 a2=  0 a3=  0
+0124 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0125 LOADINT        a0=  2 a1=        480 a2=  0 a3=  0
+0126 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0127 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0128 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0129 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0130 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0131 JMP            a0=  0 a1=         32 a2=  0 a3=  0
+0132 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0133 LOADINT        a0=  2 a1=        552 a2=  0 a3=  0
+0134 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0135 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0136 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0137 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0138 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0139 JMP            a0=  0 a1=         24 a2=  0 a3=  0
+0140 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0141 LOADINT        a0=  2 a1=        624 a2=  0 a3=  0
+0142 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0143 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0144 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0145 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0146 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0147 JMP            a0=  0 a1=         16 a2=  0 a3=  0
+0148 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0149 LOADINT        a0=  2 a1=        696 a2=  0 a3=  0
+0150 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0151 JZ             a0=  2 a1=          5 a2=  0 a3=  0
+0152 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0153 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0154 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0155 JMP            a0=  0 a1=          8 a2=  0 a3=  0
+0156 JMP            a0=  0 a1=          3 a2=  0 a3=  0
+0157 LOADINT        a0=  2 a1=        768 a2=  0 a3=  0
+0158 EQ             a0=  2 a1=          2 a2=  1 a3=  0
+0159 JZ             a0=  2 a1=          4 a2=  0 a3=  0
+0160 PREPCALLK      a0=  2 a1=          9 a2=  0 a3=  3
+0161 LOADINT        a0=  4 a1=        119 a2=  0 a3=  0
+0162 CALL           a0=  2 a1=          2 a2=  3 a3=  2
+0163 JMP            a0=  0 a1=          0 a2=  0 a3=  0
+0164 LOAD           a0=  1 a1=          5 a2=  0 a3=  0
+0165 PINC           a0=  1 a1=          0 a2=  1 a3=255
+0166 GETK           a0=  1 a1=          5 a2=  0 a3=  0
+0167 LOADINT        a0=  2 a1=          0 a2=  0 a3=  0
+0168 EQ             a0=  1 a1=          2 a2=  1 a3=  0
+0169 JZ             a0=  1 a1=          2 a2=  0 a3=  0
+0170 LOAD           a0=  1 a1=         11 a2=  0 a3=  0
+0171 PINC           a0=  1 a1=          0 a2=  1 a3=  1
+0172 RETURN         a0=255 a1=          0 a2=  0 a3=  0
+FUNCTION data/script/stage.nut: SetSwitchBlue stack=5 generator=False
+PARAMETERS ["this"]
+LOCALS [["this", 0, 0, 184]]
+K0 = "stageSwitchBlue"
+K1 = "stageSwitchCount"
+K2 = "stageSwitchCountArray"
+0000 LOAD           a0=  1 a1=          0 a2=  0 a3=  0
+0001 PINC           a0=  1 a1=          0 a2=  1 a3=  1
+0002 LOAD           a0=  1 a1=          1 a2=  0 a3=  0
+0003 LOADINT        a0=  2 a1=         15 a2=  0 a3=  0
+0004 LOADINT        a0=  3 a1=         60 a2=  0 a3=  0
+0005 ARITH          a0=  2 a1=          3 a2=  2 a3= 42
+0006 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0007 LOAD           a0=  1 a1=          2 a2=  0 a3=  0
+0008 NEWARRAY       a0=  2 a1=         44 a2=  0 a3=  0
+0009 LOADINT        a0=  3 a1=      13951 a2=  0 a3=  0
+0010 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0011 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0012 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0013 LOADINT        a0=  3 a1=      13901 a2=  0 a3=  0
+0014 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0015 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0016 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0017 LOADINT        a0=  3 a1=      13851 a2=  0 a3=  0
+0018 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0019 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0020 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0021 LOADINT        a0=  3 a1=      13801 a2=  0 a3=  0
+0022 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0023 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0024 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0025 LOADINT        a0=  3 a1=      13751 a2=  0 a3=  0
+0026 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0027 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0028 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0029 LOADINT        a0=  3 a1=      13701 a2=  0 a3=  0
+0030 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0031 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0032 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0033 LOADINT        a0=  3 a1=      13651 a2=  0 a3=  0
+0034 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0035 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0036 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0037 LOADINT        a0=  3 a1=      13601 a2=  0 a3=  0
+0038 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0039 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0040 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0041 LOADINT        a0=  3 a1=      13551 a2=  0 a3=  0
+0042 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0043 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0044 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0045 LOADINT        a0=  3 a1=      13501 a2=  0 a3=  0
+0046 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0047 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0048 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0049 LOADINT        a0=  3 a1=      13441 a2=  0 a3=  0
+0050 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0051 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0052 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0053 LOADINT        a0=  3 a1=      13371 a2=  0 a3=  0
+0054 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0055 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0056 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0057 LOADINT        a0=  3 a1=      13291 a2=  0 a3=  0
+0058 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0059 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0060 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0061 LOADINT        a0=  3 a1=      13201 a2=  0 a3=  0
+0062 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0063 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0064 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0065 LOADINT        a0=  3 a1=      13101 a2=  0 a3=  0
+0066 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0067 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0068 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0069 LOADINT        a0=  3 a1=          1 a2=  0 a3=  0
+0070 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0071 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0072 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0073 LOADINT        a0=  3 a1=      12991 a2=  0 a3=  0
+0074 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0075 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0076 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0077 LOADINT        a0=  3 a1=      12871 a2=  0 a3=  0
+0078 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0079 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0080 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0081 LOADINT        a0=  3 a1=      12741 a2=  0 a3=  0
+0082 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0083 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0084 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0085 LOADINT        a0=  3 a1=      12601 a2=  0 a3=  0
+0086 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0087 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0088 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0089 LOADINT        a0=  3 a1=      12448 a2=  0 a3=  0
+0090 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0091 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0092 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0093 LOADINT        a0=  3 a1=      12282 a2=  0 a3=  0
+0094 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0095 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0096 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0097 LOADINT        a0=  3 a1=      12102 a2=  0 a3=  0
+0098 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0099 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0100 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0101 LOADINT        a0=  3 a1=      11904 a2=  0 a3=  0
+0102 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0103 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0104 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0105 LOADINT        a0=  3 a1=      11688 a2=  0 a3=  0
+0106 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0107 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0108 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0109 LOADINT        a0=  3 a1=      11451 a2=  0 a3=  0
+0110 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0111 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0112 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0113 LOADINT        a0=  3 a1=      11190 a2=  0 a3=  0
+0114 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0115 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0116 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0117 LOADINT        a0=  3 a1=      10902 a2=  0 a3=  0
+0118 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0119 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0120 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0121 LOADINT        a0=  3 a1=      10584 a2=  0 a3=  0
+0122 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0123 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0124 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0125 LOADINT        a0=  3 a1=      10232 a2=  0 a3=  0
+0126 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0127 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0128 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0129 LOADINT        a0=  3 a1=       9842 a2=  0 a3=  0
+0130 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0131 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0132 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0133 LOADINT        a0=  3 a1=       9409 a2=  0 a3=  0
+0134 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0135 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0136 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0137 LOADINT        a0=  3 a1=       8928 a2=  0 a3=  0
+0138 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0139 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0140 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0141 LOADINT        a0=  3 a1=       8395 a2=  0 a3=  0
+0142 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0143 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0144 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0145 LOADINT        a0=  3 a1=       7805 a2=  0 a3=  0
+0146 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0147 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0148 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0149 LOADINT        a0=  3 a1=       7153 a2=  0 a3=  0
+0150 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0151 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0152 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0153 LOADINT        a0=  3 a1=       6439 a2=  0 a3=  0
+0154 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0155 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0156 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0157 LOADINT        a0=  3 a1=       5660 a2=  0 a3=  0
+0158 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0159 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0160 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0161 LOADINT        a0=  3 a1=       4819 a2=  0 a3=  0
+0162 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0163 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0164 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0165 LOADINT        a0=  3 a1=       3921 a2=  0 a3=  0
+0166 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0167 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0168 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0169 LOADINT        a0=  3 a1=       2976 a2=  0 a3=  0
+0170 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0171 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0172 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0173 LOADINT        a0=  3 a1=       1997 a2=  0 a3=  0
+0174 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0175 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0176 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0177 LOADINT        a0=  3 a1=       1000 a2=  0 a3=  0
+0178 LOADINT        a0=  4 a1=        500 a2=  0 a3=  0
+0179 ARITH          a0=  3 a1=          4 a2=  3 a3= 43
+0180 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0181 LOADINT        a0=  3 a1=        500 a2=  0 a3=  0
+0182 APPENDARRAY    a0=  2 a1=          3 a2=  0 a3=  0
+0183 SET            a0=  1 a1=          0 a2=  1 a3=  2
+0184 RETURN         a0=255 a1=          0 a2=  0 a3=  0

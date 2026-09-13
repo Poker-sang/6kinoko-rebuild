@@ -2871,6 +2871,57 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directory) {
+    char path[MAX_PATH];
+    int32_t schedule[3], ticks[3];
+    int32_t expected[64], expected_count = 0;
+    for (char archive = 'a'; archive <= 'c'; ++archive) {
+        sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", directory, archive);
+        CHECK(function_410500(path));
+    }
+    CHECK(execute_asset(vm, root + 2, "data/script/stage.cv4"));
+    CHECK(execute_source(vm, root + 2,
+        "GP_PLAYER <- 4; updateMask <- 4; tickFrames <- []; clockFrame <- 0;\n"
+        "function PlaySE(id) { if(id==120) tickFrames.append(clockFrame); }\n"
+        "SetSwitchBlue();"));
+    function_4aa3a0_this(PTR(root + 1), PTR(schedule), "stageSwitchCountArray");
+    CHECK(schedule[1] == 0x08000040);
+    int32_t count = *(int32_t *)(intptr_t)(schedule[2] + 28);
+    int32_t *values = *(int32_t **)(intptr_t)(schedule[2] + 24);
+    CHECK(count == 44);
+    int32_t next = count - 1;
+    for (int frame = 0; frame < 900; ++frame) {
+        const int elapsed_ms = 15000 - (900 - frame) * 1000 / 60;
+        if (next >= 0 && values[next * 2 + 1] < elapsed_ms) {
+            CHECK(values[next * 2] == 0x05000002);
+            expected[expected_count++] = frame;
+            --next;
+        }
+    }
+    CHECK(expected_count == 44);
+    CHECK(execute_source(vm, root + 2,
+        "for(clockFrame=0; clockFrame<900; clockFrame++) UpdateStage();"));
+    function_4aa3a0_this(PTR(root + 1), PTR(ticks), "tickFrames");
+    CHECK(ticks[1] == 0x08000040);
+    const int actual_count = *(int32_t *)(intptr_t)(ticks[2] + 28);
+    int32_t *actual = *(int32_t **)(intptr_t)(ticks[2] + 24);
+    printf("COUNTDOWN expected=%d actual=%d remaining=%d\n", expected_count, actual_count,
+        *(int32_t *)(intptr_t)(schedule[2] + 28));
+    CHECK(actual_count == expected_count);
+    for (int i = 0; i < expected_count; ++i) {
+        printf("TICK %d expected_frame=%d actual_frame=%d\n", i, expected[i], actual[2*i+1]);
+        CHECK(actual[2*i] == 0x05000002 && actual[2*i+1] == expected[i]);
+    }
+    CHECK(*(int32_t *)(intptr_t)(schedule[2] + 28) == 0);
+    CHECK(execute_source(vm, root + 2,
+        "if(stageSwitchCount!=0 || stageSwitchBlue!=2) throw \"switch expiration\";"));
+    function_4a9d70_this(PTR(schedule));
+    function_4a9d70_this(PTR(ticks));
+    CHECK(vm_failures == 0);
+    puts("PASS: original 900-frame blue-crystal countdown consumes all 44 timestamps at the original cadence");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -2935,6 +2986,8 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
         return test_stage_update_mask(manager, vm, root);
     }
+    if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
+        return test_crystal_countdown(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {
