@@ -266,11 +266,11 @@ set(KINOKO_TOOL_TARGETS
 
 option(KINOKO_BUILD_ORIGINAL_ORACLE "Build offline original-PE VM comparison tool" OFF)
 if(KINOKO_BUILD_ORIGINAL_ORACLE)
-    add_executable(kinoko_original_vm_oracle tools/original_vm_oracle.cpp)
-    target_include_directories(kinoko_original_vm_oracle PRIVATE include)
-    target_link_libraries(kinoko_original_vm_oracle PRIVATE kinoko_squirrel_cpp_vm)
-    target_link_options(kinoko_original_vm_oracle PRIVATE /BASE:0x10000000 /DYNAMICBASE:NO)
-    list(APPEND KINOKO_TOOL_TARGETS kinoko_original_vm_oracle)
+    add_library(kinoko_original_vm_probe SHARED tools/original_vm_oracle.cpp)
+    target_include_directories(kinoko_original_vm_probe PRIVATE include)
+    target_link_libraries(kinoko_original_vm_probe PRIVATE kinoko_squirrel_cpp_vm)
+    add_executable(kinoko_original_vm_oracle tools/original_vm_oracle_host.cpp)
+    list(APPEND KINOKO_TOOL_TARGETS kinoko_original_vm_oracle kinoko_original_vm_probe)
 endif()
 
 foreach(config Debug Release RelWithDebInfo MinSizeRel)

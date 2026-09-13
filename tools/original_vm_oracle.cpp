@@ -1,5 +1,5 @@
-// Offline oracle: execute original PE code in a separate, fixed-base test host.
-// Only WinMain is redirected to the probe; game/VM functions remain unchanged.
+// Offline oracle DLL, called by the debugger host before original WinMain.
+// All original game and VM functions execute without patches.
 #include <windows.h>
 #include <cstdint>
 #include <cstdio>
@@ -77,67 +77,18 @@ static int WINAPI probe_main(HINSTANCE, HINSTANCE, LPSTR, int) {
         *reinterpret_cast<uint32_t *>(actor+52),*reinterpret_cast<uint32_t *>(actor+112));
     std::fflush(stdout);
     // No game has started; do not run unrelated game shutdown through the CRT.
-    ExitProcess(ok ? 0 : 1);
+    return ok ? 0 : 1;
 }
-int main(int argc, char **argv) {
-    auto *mapped=static_cast<unsigned char *>(VirtualAlloc(reinterpret_cast<void *>(0x400000),
-        0x130000,MEM_RESERVE|MEM_COMMIT,PAGE_EXECUTE_READWRITE));
-    if (!mapped) {
-        MEMORY_BASIC_INFORMATION region{};
-        VirtualQuery(reinterpret_cast<void *>(0x400000),&region,sizeof(region));
-        std::fprintf(stderr,"original image base unavailable: %lu region=%p size=%zu type=%lx\n",
-            GetLastError(),region.AllocationBase,region.RegionSize,region.Type);
-        return 5;
-    }
-    if (argc != 3) {
-        std::fprintf(stderr,"usage: original_vm_oracle original.exe probe.nut\n"); return 2;
-    }
-    std::ifstream source_file(argv[2],std::ios::binary);
+extern "C" __declspec(dllexport) DWORD WINAPI RunOriginalProbe(void *argument) {
+    HMODULE self=nullptr;
+    GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        reinterpret_cast<LPCSTR>(&RunOriginalProbe),&self);
+    char path[MAX_PATH]; GetModuleFileNameA(self,path,MAX_PATH);
+    std::strcat(path,".log");
+    FILE *out=nullptr; freopen_s(&out,path,"w",stdout);
+    std::ifstream source_file(static_cast<const char *>(argument),std::ios::binary);
     const std::string source((std::istreambuf_iterator<char>(source_file)),{});
     if (!retdec_squirrel_compile_source(source.data(),static_cast<int32_t>(source.size()),
         "original oracle",&probe_code,&probe_size)) return 3;
-    std::ifstream image_file(argv[1],std::ios::binary);
-    std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(image_file)),{});
-    if (bytes.size()<sizeof(IMAGE_DOS_HEADER)) return 4;
-    auto *dos=reinterpret_cast<IMAGE_DOS_HEADER *>(bytes.data());
-    if (dos->e_magic!=IMAGE_DOS_SIGNATURE || dos->e_lfanew<0 ||
-        static_cast<size_t>(dos->e_lfanew)+sizeof(IMAGE_NT_HEADERS32)>bytes.size()) return 4;
-    auto *pe=reinterpret_cast<IMAGE_NT_HEADERS32 *>(bytes.data()+dos->e_lfanew);
-    if (pe->Signature!=IMAGE_NT_SIGNATURE || pe->FileHeader.Machine!=IMAGE_FILE_MACHINE_I386 ||
-        pe->OptionalHeader.ImageBase!=0x400000 || pe->OptionalHeader.AddressOfEntryPoint!=0xaca23)
-        return 4;
-    std::memcpy(mapped,bytes.data(),pe->OptionalHeader.SizeOfHeaders);
-    auto *sections=IMAGE_FIRST_SECTION(pe);
-    for (unsigned i=0;i<pe->FileHeader.NumberOfSections;++i) {
-        const auto &section=sections[i];
-        if (static_cast<uint64_t>(section.PointerToRawData)+section.SizeOfRawData>bytes.size() ||
-            static_cast<uint64_t>(section.VirtualAddress)+section.SizeOfRawData>pe->OptionalHeader.SizeOfImage)
-            return 4;
-        std::memcpy(mapped+section.VirtualAddress,bytes.data()+section.PointerToRawData,section.SizeOfRawData);
-    }
-    auto *imports=reinterpret_cast<IMAGE_IMPORT_DESCRIPTOR *>(mapped+
-        pe->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-    for (;imports->Name;++imports) {
-        HMODULE module=LoadLibraryA(reinterpret_cast<char *>(mapped+imports->Name));
-        if (!module) { std::fprintf(stderr,"missing import %s\n",mapped+imports->Name); return 6; }
-        auto *lookup=reinterpret_cast<IMAGE_THUNK_DATA32 *>(mapped+
-            (imports->OriginalFirstThunk ? imports->OriginalFirstThunk : imports->FirstThunk));
-        auto *iat=reinterpret_cast<IMAGE_THUNK_DATA32 *>(mapped+imports->FirstThunk);
-        for (;lookup->u1.AddressOfData;++lookup,++iat) {
-            LPCSTR name=IMAGE_SNAP_BY_ORDINAL32(lookup->u1.Ordinal)
-                ? MAKEINTRESOURCEA(IMAGE_ORDINAL32(lookup->u1.Ordinal))
-                : reinterpret_cast<IMAGE_IMPORT_BY_NAME *>(mapped+lookup->u1.AddressOfData)->Name;
-            auto function=GetProcAddress(module,name);
-            if (!function) return 6;
-            iat->u1.Function=reinterpret_cast<uint32_t>(function);
-        }
-    }
-    auto *entry=mapped+0x73b30;
-    entry[0]=0xe9;
-    const auto displacement=static_cast<int32_t>(reinterpret_cast<uintptr_t>(&probe_main)-
-        reinterpret_cast<uintptr_t>(entry+5));
-    std::memcpy(entry+1,&displacement,4);
-    FlushInstructionCache(GetCurrentProcess(),mapped,pe->OptionalHeader.SizeOfImage);
-    original<void(__cdecl *)()>(0x4aca23)();
-    return 7;
+    return probe_main(nullptr,nullptr,nullptr,0);
 }
