@@ -2969,6 +2969,8 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     char path[MAX_PATH];
     int32_t map_act[60]={0}, rail_layouts[8]={0}, terrain_layouts[16]={0};
     int rail_count=0, terrain_count=0;
+    float green_x=0, green_y=0;
+    int32_t green_source=0;
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
         CHECK(function_410500(path));
@@ -3014,13 +3016,24 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
                 int32_t key=*(int32_t *)(intptr_t)(node+8);
                 int32_t layout=*(int32_t *)(intptr_t)(key+4);
                 if(!retdec_map_chip_data(layout)) continue;
+                for(int32_t record=*(int32_t *)(intptr_t)(layout+264);
+                    record!=*(int32_t *)(intptr_t)(layout+268);record+=32) {
+                    if(*(int32_t *)(intptr_t)record!=1207) continue;
+                    struct retdec_mcd_chip *chip=retdec_mcd_find_chip(retdec_map_chip_data(layout),1207);
+                    CHECK(chip);
+                    green_x=(float)((double)*(int32_t *)(intptr_t)(record+4)+retdec_mcd_i16(chip->bytes+12)*0.5+1.0);
+                    green_y=(float)((double)*(int32_t *)(intptr_t)(record+8)+retdec_mcd_i16(chip->bytes+14)*
+                        ((retdec_mcd_u32(chip->bytes+16)&0x10000u)?0.5:1.0));
+                    green_source=PTR(chip->bytes);
+                }
                 if(strncmp(name,"ra",2)==0) { CHECK(rail_count<8); rail_layouts[rail_count++]=layout; }
                 if(strncmp(name,"te",2)==0 || strncmp(name,"wa",2)==0) {
                     CHECK(terrain_count<16); terrain_layouts[terrain_count++]=layout;
                 }
             }
         }
-        CHECK(rail_count>0);
+        CHECK(rail_count>0 && green_source);
+        printf("GREEN map spawn=(%g,%g) flags=%08x rails=%d terrain=%d\n",green_x,green_y,retdec_mcd_u32((unsigned char *)(intptr_t)green_source+16),rail_count,terrain_count);
         *(int32_t *)(intptr_t)(map_state+36)=PTR(rail_layouts);
         *(int32_t *)(intptr_t)(map_state+40)=PTR(rail_layouts+rail_count);
         CHECK(execute_source(vm,root+2,"stageRailCount <- 1; stageSwitchRail <- 0;"));
@@ -3038,9 +3051,9 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
     CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
     int32_t platform=function_463b40_this(manager,init[0],init[1],init[2],
-        green ? 288 : 608,green ? 448 : 672,-1,PTR(&g16),0x05000002,green ? 1207 : 1223,0);
+        green ? green_x : 608,green ? green_y : 672,-1,PTR(&g16),0x05000002,green ? 1207 : 1223,green_source);
     int32_t rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
-        green ? 288 : 608,green ? 440 : 664,-1,PTR(&g16),g483,g484,0);
+        green ? green_x : 608,green ? green_y-8 : 664,-1,PTR(&g16),g483,g484,0);
     CHECK(platform && rider && vm_failures==0);
     function_4a9840_this(PTR(root+1),"platformProbe",platform+44);
     CHECK(execute_source(vm,root+2,
