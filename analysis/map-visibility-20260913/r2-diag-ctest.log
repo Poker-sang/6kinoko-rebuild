@@ -1,0 +1,15 @@
+Test project C:/WorkSpace/6kinoko-rebuild/build-runs/map-texture-20260913-r2-diag
+    Start 1: archive_smoke
+1/5 Test #1: archive_smoke ....................   Passed    0.02 sec
+    Start 2: stage_native_contract
+2/5 Test #2: stage_native_contract ............   Passed    0.21 sec
+    Start 3: legacy_abi_contract
+3/5 Test #3: legacy_abi_contract ..............   Passed    0.02 sec
+    Start 4: texture_store_contract
+4/5 Test #4: texture_store_contract ...........   Passed    0.03 sec
+    Start 5: diagnostics_capture
+5/5 Test #5: diagnostics_capture ..............   Passed    0.22 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   0.51 sec
