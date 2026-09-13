@@ -1,0 +1,105 @@
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
+PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push
+GREEN map spawn=(305,464) flags=00010020 rails=2 terrain=1
+GREEN frame=0 platform=(306.500000,464.000000) player=(306.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=1 platform=(308.000000,464.000000) player=(308.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=2 platform=(309.500000,464.000000) player=(309.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=3 platform=(311.000000,464.000000) player=(311.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=4 platform=(312.500000,464.000000) player=(312.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=5 platform=(314.000000,464.000000) player=(314.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=6 platform=(315.500000,464.000000) player=(315.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=7 platform=(317.000000,464.000000) player=(317.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=8 platform=(318.500000,464.000000) player=(318.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=9 platform=(320.000000,464.000000) player=(320.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=10 platform=(321.500000,464.000000) player=(321.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=11 platform=(323.000000,464.000000) player=(323.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=12 platform=(324.500000,464.000000) player=(324.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=13 platform=(326.000000,464.000000) player=(326.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=14 platform=(327.500000,464.000000) player=(327.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=15 platform=(329.000000,464.000000) player=(329.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=16 platform=(330.500000,464.000000) player=(330.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=17 platform=(332.000000,464.000000) player=(332.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=18 platform=(333.500000,464.000000) player=(333.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=19 platform=(335.000000,464.000000) player=(335.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=20 platform=(336.500000,464.000000) player=(336.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=21 platform=(338.000000,464.000000) player=(338.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=22 platform=(339.500000,464.000000) player=(339.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=23 platform=(341.000000,464.000000) player=(341.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=24 platform=(342.500000,464.000000) player=(342.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=25 platform=(344.000000,464.000000) player=(344.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=26 platform=(345.500000,464.000000) player=(345.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=27 platform=(347.000000,464.000000) player=(347.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=28 platform=(348.500000,464.000000) player=(348.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=29 platform=(350.000000,464.000000) player=(350.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=30 platform=(351.500000,464.000000) player=(351.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=31 platform=(353.000000,464.000000) player=(353.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=32 platform=(354.500000,464.000000) player=(354.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=33 platform=(356.000000,464.000000) player=(356.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=34 platform=(357.500000,464.000000) player=(357.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=35 platform=(359.000000,464.000000) player=(359.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=36 platform=(360.500000,464.000000) player=(360.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=37 platform=(362.000000,464.000000) player=(362.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=38 platform=(363.500000,464.000000) player=(363.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=39 platform=(365.000000,464.000000) player=(365.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=40 platform=(366.500000,464.000000) player=(366.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=41 platform=(368.000000,464.000000) player=(368.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=42 platform=(369.500000,464.000000) player=(369.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=43 platform=(371.000000,464.000000) player=(371.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=44 platform=(372.500000,464.000000) player=(372.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=45 platform=(374.000000,464.000000) player=(374.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=46 platform=(375.500000,464.000000) player=(375.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=47 platform=(377.000000,464.000000) player=(377.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=48 platform=(378.500000,464.000000) player=(378.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=49 platform=(380.000000,464.000000) player=(380.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=50 platform=(381.500000,464.000000) player=(381.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=51 platform=(383.000000,464.000000) player=(383.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=52 platform=(384.500000,464.000000) player=(384.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=53 platform=(386.000000,464.000000) player=(386.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=54 platform=(387.500000,464.000000) player=(387.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=55 platform=(389.000000,464.000000) player=(389.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=56 platform=(390.500000,464.000000) player=(390.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=57 platform=(392.000000,464.000000) player=(392.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=58 platform=(393.500000,464.000000) player=(393.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=59 platform=(395.000000,464.000000) player=(395.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=60 platform=(396.500000,464.000000) player=(396.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=61 platform=(398.000000,464.000000) player=(398.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=62 platform=(399.500000,464.000000) player=(399.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=63 platform=(401.000000,464.000000) player=(401.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=64 platform=(402.500000,464.000000) player=(402.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=65 platform=(404.000000,464.000000) player=(404.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=66 platform=(405.500000,464.000000) player=(405.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=67 platform=(407.000000,464.000000) player=(407.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=68 platform=(408.500000,464.000000) player=(408.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=69 platform=(410.000000,464.000000) player=(410.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=70 platform=(411.500000,464.000000) player=(411.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=71 platform=(413.000000,464.000000) player=(413.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=72 platform=(414.500000,464.000000) player=(414.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=73 platform=(416.000000,464.000000) player=(416.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=74 platform=(417.500000,464.000000) player=(417.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=75 platform=(419.000000,464.000000) player=(419.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=76 platform=(420.500000,464.000000) player=(420.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=77 platform=(422.000000,464.000000) player=(422.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=78 platform=(423.500000,464.000000) player=(423.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=79 platform=(425.000000,464.000000) player=(425.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=80 platform=(426.500000,464.000000) player=(426.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=81 platform=(428.000000,464.000000) player=(428.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=82 platform=(429.500000,464.000000) player=(429.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=83 platform=(431.000000,464.000000) player=(431.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=84 platform=(432.500000,464.000000) player=(432.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=85 platform=(434.000000,464.000000) player=(434.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=86 platform=(435.500000,464.000000) player=(435.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=87 platform=(437.000000,464.000000) player=(437.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=88 platform=(438.500000,464.000000) player=(438.500000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+GREEN frame=89 platform=(440.000000,464.000000) player=(440.000000,455.000000) carry=(1.500000,0.000000) step=01a60630 hit=1
+PASS: original w2-c05b green rail platform carries rider through native terrain collision

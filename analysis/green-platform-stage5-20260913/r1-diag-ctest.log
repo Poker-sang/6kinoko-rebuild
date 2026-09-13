@@ -1,0 +1,23 @@
+Test project C:/WorkSpace/6kinoko-rebuild/build-runs/green-stage5-20260913-r1-diag
+    Start 1: archive_smoke
+1/9 Test #1: archive_smoke ....................   Passed    0.02 sec
+    Start 2: stage_native_contract
+2/9 Test #2: stage_native_contract ............   Passed    0.22 sec
+    Start 3: damage_pause_contract
+3/9 Test #3: damage_pause_contract ............   Passed    0.03 sec
+    Start 4: crystal_countdown_contract
+4/9 Test #4: crystal_countdown_contract .......   Passed    0.06 sec
+    Start 5: orange_platform_contract
+5/9 Test #5: orange_platform_contract .........   Passed    0.28 sec
+    Start 6: green_stage5_contract
+6/9 Test #6: green_stage5_contract ............   Passed    0.31 sec
+    Start 7: legacy_abi_contract
+7/9 Test #7: legacy_abi_contract ..............   Passed    0.02 sec
+    Start 8: texture_store_contract
+8/9 Test #8: texture_store_contract ...........   Passed    0.03 sec
+    Start 9: diagnostics_capture
+9/9 Test #9: diagnostics_capture ..............   Passed    0.24 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   1.23 sec
