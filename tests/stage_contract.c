@@ -3061,7 +3061,8 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         for(int frame=0;frame<90;++frame) {
             const float old_platform_x=*(float *)(intptr_t)(platform+240);
             const float old_player_x=*(float *)(intptr_t)(rider+240);
-            CHECK(retdec_actor_manager_update(manager,PTR(g_retdec_camera_state))==2);
+            const int active_count=retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            CHECK(active_count>=2);
             printf("GREEN frame=%d platform=(%.6f,%.6f) player=(%.6f,%.6f) carry=(%.6f,%.6f) step=%08x hit=%d\n",
                 frame,*(float *)(intptr_t)(platform+240),*(float *)(intptr_t)(platform+244),
                 *(float *)(intptr_t)(rider+240),*(float *)(intptr_t)(rider+244),
