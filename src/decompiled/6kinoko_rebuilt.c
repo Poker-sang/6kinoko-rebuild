@@ -126953,8 +126953,7 @@ static void retdec_actor_tick(int32_t actor)
         retdec_trace_invalid_actor("before-script",actor);
         step_result = kinoko_actor_step_callback(actor);
         retdec_trace_invalid_actor("after-script",actor);
-        /* The C++ adapter retires a failed invocation without cancelling a
-           replacement installed by Reset during that same invocation. */
+        /* Original 45E180 failure retirement is handled by the C++ adapter. */
         if (step_result < 0) {
             static volatile LONG failure_count;
             if (InterlockedIncrement(&failure_count) <= 64) {

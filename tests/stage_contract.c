@@ -1156,7 +1156,6 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             "camera.left=-1140; camera.right=-500;"));
         *(float *)(g_retdec_camera_state+72)=-1140;
         *(float *)(g_retdec_camera_state+80)=-500;
-        expected_vm_error=1; // The original bytecode's final old-user write fails.
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
         expected_vm_error=0;
         CHECK(*(int32_t *)(intptr_t)(fairy+112)==0x08000100);
@@ -1805,7 +1804,7 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
         expected_vm_error=0;
         for(int i=0;i<8;++i) retdec_actor_tick(healthy);
         CHECK(execute_source(vm,root+2,
-            "if(replacementCalls!=8) throw \"replacement cancelled by old failure\";"));
+            "if(replacementCalls!=0) throw \"original failure retirement changed\";"));
         function_469700();
         function_4a9d70_this(PTR(init));
     }
