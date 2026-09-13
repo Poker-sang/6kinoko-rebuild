@@ -1,11 +1,14 @@
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
+#include "kinoko/actor_cleanup.h"
 #include <cstddef>
 #include <cstdlib>
 
 extern "C" {
 int32_t function_450020(int32_t resource);
 extern int32_t g603, g604;
+extern int32_t g638, g639;
+int32_t function_40b3a0(void);
 }
 
 namespace {
@@ -61,4 +64,18 @@ extern "C" int32_t kinoko_clear_global_stages() {
         node = next;
     }
     return g603;
+}
+
+// 470890: the rebuilt sound manager owns buffers in its SE pool and BGM
+// track records. Join its workers before releasing that storage; then clear
+// the non-owning original ID lookup tree, preserving its sentinel.
+extern "C" int32_t kinoko_clear_global_sound() {
+    function_40b3a0();
+    auto *head = reinterpret_cast<int32_t *>(static_cast<uintptr_t>(static_cast<uint32_t>(g638)));
+    if (head) {
+        kinoko_erase_animation_tree(head[1]);
+        head[0] = head[1] = head[2] = g638;
+    }
+    g639 = 0;
+    return 1;
 }

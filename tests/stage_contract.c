@@ -2484,6 +2484,63 @@ static int test_global_stage_cleanup(void) {
     return 0;
 }
 
+static ULONG WINAPI count_sound_release(void *self) {
+    ++((int32_t *)self)[1];
+    return 0;
+}
+static HRESULT WINAPI count_sound_stop(void *self) {
+    ++((int32_t *)self)[2];
+    return S_OK;
+}
+static int test_global_sound_cleanup(void) {
+    int32_t old_head = g638, old_size = g639;
+    int32_t *head = calloc(1, 24), *node = calloc(1, 24);
+    void *vtable[19] = {0};
+    int32_t buffers[3][3] = {0};
+    CHECK(head && node);
+    vtable[2] = count_sound_release;
+    vtable[18] = count_sound_stop;
+    for (int i = 0; i < 3; ++i) buffers[i][0] = PTR(vtable);
+    g638 = PTR(head); g639 = 1;
+    head[0] = head[1] = head[2] = PTR(node);
+    ((unsigned char *)head)[21] = 1;
+    node[0] = node[1] = node[2] = PTR(head);
+    g_retdec_se_entry_count = 2;
+    g_retdec_se_entries[0].buffer = buffers[0];
+    g_retdec_se_entries[1].buffer = buffers[1];
+    g_retdec_se_pool.stream_slots[0].buffer = buffers[2];
+    g_retdec_se_pool.initialized = 1;
+    CHECK(function_470890() == 1);
+    CHECK(g639 == 0 && head[0] == PTR(head) && head[1] == PTR(head) && head[2] == PTR(head));
+    CHECK(!g_retdec_se_entry_count && !g_retdec_se_pool.initialized);
+    CHECK(function_470890() == 1);
+    for (int i = 0; i < 3; ++i) CHECK(buffers[i][1] == 1);
+    CHECK(buffers[0][2] == 1 && buffers[1][2] == 1);
+    g638 = old_head; g639 = old_size;
+    free(head);
+    puts("PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown");
+    return 0;
+}
+
+static int test_global_script_cleanup(int32_t vm, int32_t *root) {
+    int32_t *globals[] = {g602, g629, g611, g636, unk_5149EC};
+    int32_t saved[5][3];
+    CHECK(g645 == 0);
+    for (int i = 0; i < 5; ++i) {
+        memcpy(saved[i], globals[i], 12);
+        function_4a9540_this(PTR(globals[i]), root[2], root[3]);
+    }
+    CHECK(function_4a8cc0() != 0);
+    CHECK(function_470f30() == 0 && g644 == NULL && g645 == 0);
+    for (int i = 0; i < 5; ++i) CHECK(globals[i][1] == g483 && globals[i][2] == 0);
+    CHECK(function_470f30() == 0 && g645 == 0);
+    for (int i = 0; i < 5; ++i) memcpy(globals[i], saved[i], 12);
+    g644 = (char *)(intptr_t)vm;
+    CHECK(execute_source(vm, root + 2, "if(typeof this!=\"table\") throw \"root lifetime\";"));
+    puts("PASS: distinct global script receivers, root wrapper release and repeated shutdown");
+    return 0;
+}
+
 static int test_generator_effects(int32_t vm, int32_t *root, const char *original_script) {
     const int32_t top = function_48aa20(vm);
     if (original_script) {
@@ -2587,6 +2644,7 @@ int main(int argc, char **argv) {
     CHECK(test_animation_timing() == 0);
     CHECK(test_shutdown_tree_cleanup() == 0);
     CHECK(test_global_stage_cleanup() == 0);
+    CHECK(test_global_sound_cleanup() == 0);
     CHECK(test_gc_mark_link() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
@@ -2609,6 +2667,7 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_global_script_cleanup(vm, root) == 0);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
     CHECK(test_generator_effects(vm, root, NULL) == 0);
