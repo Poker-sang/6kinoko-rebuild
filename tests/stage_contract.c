@@ -1116,6 +1116,15 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     *(float *)(g_retdec_camera_state+76)=-2000;
     *(float *)(g_retdec_camera_state+80)=8000;
     *(float *)(g_retdec_camera_state+84)=2000;
+    CHECK(execute_source(vm,root+2,
+        "if (!(\"OnReset\" in fairy.user)) throw \"OnReset not found\";\n"
+        "if (typeof fairy.user.OnReset!=\"function\") throw \"OnReset type\";\n"
+        "resetCalls <- 0;\noriginalReset <- fairy.user.OnReset;\n"
+        "fairy.user.OnReset = function() { ::resetCalls++; ::originalReset.call(this); };\n"
+        "if(fairy.user.blowOff) throw \"unexpected blowOff\";\n"
+        "fairy.vy=-5.0;\nt_enemy.EnemyUpdate_Dead.call(fairy);\n"
+        "if(fairy.vy<=-5.0) throw \"dead gravity missing\";\n"
+        "fairy.vy=0.0; fairy.user.frameCount=0;"));
     for(int round=0;round<4;++round) {
         for(int frame=0;frame<240;++frame) {
             retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
@@ -1149,6 +1158,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,
             "camera.left=4000; camera.right=4640;"));
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        CHECK(execute_source(vm,root+2,"if(resetCalls!=1) throw \"OnReset not executed\";"));
         CHECK(vm_failures==failures);
         function_4a9840_this(PTR(root+1),"fairy",fairy+44);
         CHECK(execute_source(vm,root+2,
