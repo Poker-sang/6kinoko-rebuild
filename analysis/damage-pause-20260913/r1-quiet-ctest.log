@@ -1,0 +1,17 @@
+Test project C:/WorkSpace/6kinoko-rebuild/build-runs/damage-pause-20260913-r1-quiet
+    Start 1: archive_smoke
+1/6 Test #1: archive_smoke ....................   Passed    0.02 sec
+    Start 2: stage_native_contract
+2/6 Test #2: stage_native_contract ............   Passed    0.20 sec
+    Start 3: damage_pause_contract
+3/6 Test #3: damage_pause_contract ............   Passed    0.02 sec
+    Start 4: legacy_abi_contract
+4/6 Test #4: legacy_abi_contract ..............   Passed    0.01 sec
+    Start 5: texture_store_contract
+5/6 Test #5: texture_store_contract ...........   Passed    0.02 sec
+    Start 6: diagnostics_capture
+6/6 Test #6: diagnostics_capture ..............   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Total Test time (real) =   0.50 sec
