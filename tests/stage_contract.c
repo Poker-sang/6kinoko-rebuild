@@ -1085,7 +1085,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     }
     CHECK(execute_source(vm, root + 2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
-        "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
+        "player <- {x=0.0,y=100.0,direction=-1.0,user={hold=null,water=false}};\n"
         "stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
