@@ -2498,7 +2498,8 @@ int main(int argc, char **argv) {
             int32_t *array = (int32_t *)(intptr_t)list[2];
             fprintf(stderr, "steps=%d array=%p vtable=%08x refs=%d size=%d first=%08x/%08x\n",
                 steps[2], array, array[0], array[1], array[7],
-                ((int32_t *)(intptr_t)array[6])[0], ((int32_t *)(intptr_t)array[6])[1]);
+                array[7] ? ((int32_t *)(intptr_t)array[6])[0] : 0,
+                array[7] ? ((int32_t *)(intptr_t)array[6])[1] : 0);
             function_4a9d70_this(PTR(steps));
             function_4a9d70_this(PTR(list));
         }
