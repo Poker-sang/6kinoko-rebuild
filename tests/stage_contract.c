@@ -3002,7 +3002,7 @@ static int test_orange_platform(int32_t vm, int32_t *root, int32_t manager, cons
     function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
     CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
     int32_t platform=function_463b40_this(manager,init[0],init[1],init[2],
-        608,672,-1,PTR(&g16),g483,g484,0);
+        608,672,-1,PTR(&g16),0x05000002,1223,0);
     int32_t rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
         608,664,-1,PTR(&g16),g483,g484,0);
     CHECK(platform && rider && vm_failures==0);
