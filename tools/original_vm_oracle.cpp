@@ -80,6 +80,15 @@ static int WINAPI probe_main(HINSTANCE, HINSTANCE, LPSTR, int) {
     ExitProcess(ok ? 0 : 1);
 }
 int main(int argc, char **argv) {
+    auto *mapped=static_cast<unsigned char *>(VirtualAlloc(reinterpret_cast<void *>(0x400000),
+        0x130000,MEM_RESERVE|MEM_COMMIT,PAGE_EXECUTE_READWRITE));
+    if (!mapped) {
+        MEMORY_BASIC_INFORMATION region{};
+        VirtualQuery(reinterpret_cast<void *>(0x400000),&region,sizeof(region));
+        std::fprintf(stderr,"original image base unavailable: %lu region=%p size=%zu type=%lx\n",
+            GetLastError(),region.AllocationBase,region.RegionSize,region.Type);
+        return 5;
+    }
     if (argc != 3) {
         std::fprintf(stderr,"usage: original_vm_oracle original.exe probe.nut\n"); return 2;
     }
@@ -97,9 +106,6 @@ int main(int argc, char **argv) {
     if (pe->Signature!=IMAGE_NT_SIGNATURE || pe->FileHeader.Machine!=IMAGE_FILE_MACHINE_I386 ||
         pe->OptionalHeader.ImageBase!=0x400000 || pe->OptionalHeader.AddressOfEntryPoint!=0xaca23)
         return 4;
-    auto *mapped=static_cast<unsigned char *>(VirtualAlloc(reinterpret_cast<void *>(0x400000),
-        pe->OptionalHeader.SizeOfImage,MEM_RESERVE|MEM_COMMIT,PAGE_EXECUTE_READWRITE));
-    if (!mapped) { std::fprintf(stderr,"original image base unavailable: %lu\n",GetLastError()); return 5; }
     std::memcpy(mapped,bytes.data(),pe->OptionalHeader.SizeOfHeaders);
     auto *sections=IMAGE_FIRST_SECTION(pe);
     for (unsigned i=0;i<pe->FileHeader.NumberOfSections;++i) {
