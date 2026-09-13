@@ -2830,6 +2830,47 @@ static int test_texture_lifetime(void) {
     return 0;
 }
 
+static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
+    int32_t closure[3], actors[2];
+    int32_t act_head[3] = {0};
+    act_head[0] = act_head[1] = PTR(act_head);
+    g603 = PTR(act_head);
+    CHECK(execute_source(vm, root + 2,
+        "maskActors <- [];\n"
+        "function InitMaskActor(group) { updateGroup=group; user={steps=0}; vx=1.0; "
+        "callbackGroup=0; callbackMask=0; collisionMask=0; "
+        "SetUpdateFunction(function() { user.steps++; }); ::maskActors.append(this); }"));
+    function_4aa3a0_this(PTR(root + 1), PTR(closure), "InitMaskActor");
+    for (int i = 0; i < 2; ++i) {
+        actors[i] = function_463b40_this(manager, closure[0], closure[1], closure[2],
+            10.0f, 20.0f, -1, PTR(&g16), 0x05000002, 4 << i, 0);
+        CHECK(actors[i]);
+        *(uint8_t *)(intptr_t)(actors[i] + 40) = 1;
+    }
+    function_4a9d70_this(PTR(closure));
+    /* Exercise 469900 itself: writing only g622 used to leave manager+64=-1. */
+    g459 = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
+    for (int frame = 0; frame < 30; ++frame) function_469900();
+    CHECK(*(int32_t *)(intptr_t)(manager + 64) == g459);
+    CHECK(execute_source(vm, root + 2,
+        "if(maskActors[0].user.steps!=30 || maskActors[1].user.steps!=0) "
+        "throw \"damage update groups\";"));
+    CHECK(*(float *)(intptr_t)(actors[0] + 240) == 40.0f);
+    CHECK(*(float *)(intptr_t)(actors[1] + 240) == 10.0f);
+    g459 = 12; /* Restore both Actor groups without dispatching map/camera. */
+    function_469900();
+    CHECK(execute_source(vm, root + 2,
+        "if(maskActors[0].user.steps!=31 || maskActors[1].user.steps!=1) "
+        "throw \"resume update groups\";"));
+    CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
+    g459 = 0;
+    function_469900();
+    CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
+    CHECK(vm_failures == 0);
+    puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -2965,6 +3006,8 @@ int main(int argc, char **argv) {
     CHECK(test_delegate_lifetime(vm, root)==0);
     /* Declare the isolated fixture's script-managed callback slot before creating instances. */
     CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
+    if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0)
+        return test_stage_update_mask(manager, vm, root);
     layout[0] = PTR(&g327);
     layout[66] = PTR(records);
     layout[67] = PTR(records + 4);
