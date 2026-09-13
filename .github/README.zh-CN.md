@@ -44,7 +44,7 @@
 | `src/reconstructed/actor_cleanup.cpp` | Actor 管理器动画与容器清理 |
 | `src/reconstructed/act_resource.cpp` | ACT 时钟、唤醒期限与关卡清理 |
 | `src/reconstructed/stage_cleanup.cpp` | 全局 ACT 所有权与声音退出清理 |
-| `src/reconstructed/script_callbacks.cpp` | Actor/Camera 绑定、调用所有权与失败回调停用 |
+| `src/reconstructed/script_callbacks.cpp` | Actor/Camera 绑定、原版类默认字段清理与失败回调停用 |
 | `src/reconstructed/sprite.cpp` | 类型化精灵几何与 Direct3D 绘制 |
 | `src/squirrel/squirrel_compile_bridge.cpp` | 将 ACT 源码编译为原版字节码 |
 | `src/squirrel/squirrel_value_bridge.cpp` | 基于源码的对象与错误所有权管理 |
@@ -56,18 +56,20 @@
 | `tests/stage_contract.c` | 原生方法与原版脚本契约 |
 | `analysis/*/report.md` | 原版地址、证据及验证边界 |
 
-## 已验证版本
+## 当前版本
 
-- 源码版本：`33bff37`；用户实际游玩的程序：
-  `runtime-builds/enemy-reset-20260913-r1-diag/kinoko_retdec_rebuild.exe`。
-- 对应的无日志版本：
-  `runtime-builds/enemy-reset-20260913-r1-quiet/kinoko_retdec_rebuild.exe`。
-  无日志版已通过离线检查；第一大关的实际游玩验证使用的是诊断版。
-- 两种 Win32 Release 构建均通过全部四项 CTest 测试，以及原版 DAT 敌人契约：
-  四轮重置后的球重建、普通伤害与踩踏死亡后按原版重力恢复下落。
-- C++ 回调适配器会保留每次调用及其环境。旧调用在 Reset 后失败时，不再取消
-  重置期间安装的新更新回调。这是回调生命周期修正，并非逐字复刻原版无条件的
-  错误清理。原版 DAT 与运动脚本保持原样；用户游玩验证覆盖了修正后的第一大关。
+- 源码版本：`72614f7`；无日志程序：
+  `runtime-builds/original-reset-20260913-r6-quiet/kinoko_retdec_rebuild.exe`。
+  对应诊断版：`runtime-builds/original-reset-20260913-r6-diag/kinoko_retdec_rebuild.exe`。
+- 原版清理函数重置的是 Actor **类默认字段**，而非旧实例的 `user` 和 `step`。
+  恢复正确接收者后，执行中的脚本可以在 Reset 后继续完成，不会提前丢失状态。
+  `33bff37` 中按回调身份保留新调用的临时防护已撤销，失败处理恢复为原版方式。
+- 在游戏 WinMain 执行前，直接调用原版 Actor/VM 函数做离线对照，确认
+  32 次嵌套 Reset 都会保留旧实例字段并创建新实例。这不是自动游玩验证。
+- 两种构建均通过全部四项 CTest，以及原版 DAT 敌人测试：四轮重置后的球重建、
+  普通伤害和踩踏死亡；该契约中没有脚本错误。
+- 用户反馈第一大关无崩溃的游玩记录属于较早的 `33bff37` 候选版。
+  这次按原版方法修正后的实际游玩效果仍待用户验证。
 
 本地构建目录及可执行文件产物不通过 Git 分发。
 
@@ -162,7 +164,7 @@ $env:KINOKO_CAPTURE_FIRST_CHANCE = "0"
 $env:KINOKO_CRASH_DUMP = "0"
 $env:KINOKO_CAPTURE_SCRIPT_FAILURE = "0"
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_staged.ps1 `
-  -Executable "runtime-builds/enemy-reset-20260913-r1-diag/kinoko_retdec_rebuild.exe" -Wait
+  -Executable "runtime-builds/original-reset-20260913-r6-diag/kinoko_retdec_rebuild.exe" -Wait
 Remove-Item Env:KINOKO_TRACE, Env:KINOKO_CAPTURE_FIRST_CHANCE, `
   Env:KINOKO_CRASH_DUMP, Env:KINOKO_CAPTURE_SCRIPT_FAILURE
 ```

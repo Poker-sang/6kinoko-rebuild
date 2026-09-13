@@ -1,3 +1,8 @@
+> Superseded by ../original-reset-20260913/report.md: the original rawset
+> receiver is the Actor class (g602), not actor+44. The identity guard was
+> withdrawn and the actual receiver mismatch corrected in 72614f7. Earlier
+> claims of an original-script boundary error below are historical and incorrect.
+
 # Enemy reentry and death investigation (in progress)
 
 User scope: restore original behavior for FairyOtedama ball reentry and ordinary

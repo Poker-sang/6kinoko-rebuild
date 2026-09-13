@@ -54,7 +54,7 @@ for stage and entity behavior.
 | `src/reconstructed/actor_cleanup.cpp` | Actor-manager animation and container cleanup |
 | `src/reconstructed/act_resource.cpp` | ACT clock, wake deadline, and stage cleanup |
 | `src/reconstructed/stage_cleanup.cpp` | Global ACT ownership and sound shutdown |
-| `src/reconstructed/script_callbacks.cpp` | Actor/Camera binding, invocation ownership, and failure retirement |
+| `src/reconstructed/script_callbacks.cpp` | Actor/Camera binding, original class-default cleanup, and failure retirement |
 | `src/reconstructed/sprite.cpp` | Typed sprite geometry and Direct3D drawing |
 | `src/squirrel/squirrel_compile_bridge.cpp` | ACT source compilation to original bytecode |
 | `src/squirrel/squirrel_value_bridge.cpp` | Source-based object and error ownership |
@@ -66,21 +66,23 @@ for stage and entity behavior.
 | `tests/stage_contract.c` | Native-method and original-script contracts |
 | `analysis/*/report.md` | Original addresses, evidence, and validation limits |
 
-## Validated Checkpoint
+## Current Checkpoint
 
-- Source: `33bff37`; user-tested runtime:
-  `runtime-builds/enemy-reset-20260913-r1-diag/kinoko_retdec_rebuild.exe`.
-- Quiet counterpart:
-  `runtime-builds/enemy-reset-20260913-r1-quiet/kinoko_retdec_rebuild.exe`.
-  It passed offline checks; the first-world playthrough used the diagnostic build.
-- Both Win32 Release builds passed all four CTest tests and the original DAT
-  enemy contract: four ball generations across resets and ordinary/stomp death
-  returning to downward motion under the original gravity logic.
-- The C++ callback adapter retains each invocation and its environment. When an
-  old invocation fails after Reset, it no longer cancels the replacement update.
-  This is a callback-lifetime correction, not a literal reproduction of the
-  original unconditional error cleanup. Original DATs and movement scripts are
-  unchanged; the user playthrough validates the resulting gameplay in world one.
+- Source: `72614f7`; quiet runtime:
+  `runtime-builds/original-reset-20260913-r6-quiet/kinoko_retdec_rebuild.exe`.
+  Diagnostic counterpart: `runtime-builds/original-reset-20260913-r6-diag/kinoko_retdec_rebuild.exe`.
+- Original cleanup resets the Actor **class defaults**, not the old instance's
+  `user` and `step`. Restoring that receiver lets an executing script finish
+  after Reset without losing its state. The temporary callback-identity guard
+  from `33bff37` has been removed; original failure handling is restored.
+- Direct execution of original Actor/VM functions before game WinMain confirms
+  that old fields survive 32 nested Reset calls while new instances are created.
+  This is an offline comparison, not automated gameplay.
+- Both restored builds passed four CTest tests and original DAT enemy tests:
+  four ball generations across resets and ordinary/stomp death, with no script
+  failures in that contract.
+- The user's crash-free first-world playthrough was on the earlier `33bff37`
+  candidate. Live validation of this original-method correction remains pending.
 
 Local build directories and executable artifacts are not distributed by Git.
 
@@ -184,7 +186,7 @@ $env:KINOKO_CAPTURE_FIRST_CHANCE = "0"
 $env:KINOKO_CRASH_DUMP = "0"
 $env:KINOKO_CAPTURE_SCRIPT_FAILURE = "0"
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_staged.ps1 `
-  -Executable "runtime-builds/enemy-reset-20260913-r1-diag/kinoko_retdec_rebuild.exe" -Wait
+  -Executable "runtime-builds/original-reset-20260913-r6-diag/kinoko_retdec_rebuild.exe" -Wait
 Remove-Item Env:KINOKO_TRACE, Env:KINOKO_CAPTURE_FIRST_CHANCE, `
   Env:KINOKO_CRASH_DUMP, Env:KINOKO_CAPTURE_SCRIPT_FAILURE
 ```

@@ -60,3 +60,25 @@ inspection. `ida_query.ps1` queries an existing IDA MCP database.
 These scripts are development tools and are not bundled into the game.
 `x64dbg_query.py` accesses debugger tools that are exposed only while a target
 is loaded, using the configured local MCP connection without displaying secrets.
+
+## Offline original Actor/VM comparison
+
+Configure `KINOKO_BUILD_ORIGINAL_ORACLE=ON` to build
+`kinoko_original_vm_oracle.exe` and `kinoko_original_vm_probe.dll`. The debugger
+host stops the original process before WinMain, restores the breakpoint byte,
+and calls the probe with the original main thread suspended. Original Actor,
+Reset, cleanup and VM instructions are unchanged; no game window/input loop runs.
+The probe executes `tests/original_actor_reset.nut` using the original VM and
+writes its result to `kinoko_original_vm_probe.dll.log` beside the DLL.
+
+```powershell
+$ToolDir = (Resolve-Path "runtime-builds/original-reset-20260913-r6-diag/tools").Path
+& "$ToolDir/kinoko_original_vm_oracle.exe" `
+  (Resolve-Path "../6kinoko/6kinoko.exe").Path `
+  "$ToolDir/kinoko_original_vm_probe.dll" `
+  (Resolve-Path "tests/original_actor_reset.nut").Path
+```
+
+This address-based oracle targets only the supplied original EXE. Use a new
+build/runtime directory per test batch; retain the log with the source revision.
+The normal game does not load the oracle DLL.
