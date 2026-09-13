@@ -3060,10 +3060,14 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ground.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_jump.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ex.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
         function_4a9d70_this(PTR(player_scripts));
         CHECK(execute_source(vm,root+2,
-            "t_player.SetLaddar <- function(){return false;};\n"
-            "input <- {x=0,y=0,b0=0,b2=0,b3=0};\n"
+
+            "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
             "camera <- {top=-1000,bottom=2000};\n"
             "time <- 1000; stageWaterLevel <- 10000; stageWaterType <- 0;\n"
             "stageLayerVector <- -1; stageIce <- false; stageTimeStop <- false;\n"
