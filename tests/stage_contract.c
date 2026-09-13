@@ -2457,7 +2457,7 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
         function_4aa3a0_this(PTR(root+1), PTR(list), "effectList");
         function_4aa3a0_this(PTR(root+1), PTR(steps), "effectSteps");
         int32_t *array = (int32_t *)(intptr_t)list[2];
-        CHECK(array[0] == PTR(&g68));
+        CHECK(array[0] == PTR(&g69));
         CHECK(array[7] == (frame < 2 ? 1 : 0));
         CHECK(steps[2] == (frame < 2 ? frame + 1 : 3));
         function_4a9d70_this(PTR(steps));
