@@ -2486,11 +2486,21 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0) {
         CHECK(execute_file(vm, root + 2, argv[2]));
         CHECK(execute_source(vm, root + 2,
-            "function ProbeEffect() { yield true; yield true; return false; }\n"
+            "effectSteps <- 0;\n"
+            "function ProbeEffect() { ::effectSteps++; yield true; ::effectSteps++; yield true; ::effectSteps++; return false; }\n"
             "effectList.append(ProbeEffect());\n"));
         for (int frame = 0; frame < 5; ++frame) {
             fprintf(stderr, "effect frame %d\n", frame);
             CHECK(execute_source(vm, root + 2, "Update();"));
+            int32_t list[3], steps[3];
+            function_4aa3a0_this(PTR(root+1), PTR(list), "effectList");
+            function_4aa3a0_this(PTR(root+1), PTR(steps), "effectSteps");
+            int32_t *array = (int32_t *)(intptr_t)list[2];
+            fprintf(stderr, "steps=%d array=%p vtable=%08x refs=%d size=%d first=%08x/%08x\n",
+                steps[2], array, array[0], array[1], array[7],
+                ((int32_t *)(intptr_t)array[6])[0], ((int32_t *)(intptr_t)array[6])[1]);
+            function_4a9d70_this(PTR(steps));
+            function_4a9d70_this(PTR(list));
         }
         CHECK(execute_source(vm, root + 2,
             "if (effectList.len() != 0) throw \"effect cleanup\";"));
