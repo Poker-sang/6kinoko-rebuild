@@ -711,7 +711,7 @@ struct vtable_4d5adc_type {
 };
 
 struct vtable_4d5ba0_type {
-    int32_t (*e0)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
 };
 
 struct vtable_4d5ba8_type {
@@ -1234,10 +1234,10 @@ struct vtable_4ec79c_type {
     int32_t (*e4)();
     int32_t (*e5)();
     int32_t (*e6)(int32_t);
-    int32_t (*e7)();
-    int32_t (*e8)(float32_t, float32_t);
+    int32_t (__fastcall *e7)(int32_t, void *);
+    int32_t (__fastcall *e8)(int32_t, void *, float32_t, float32_t);
     int32_t (*e9)();
-    int32_t (*e10)(int32_t, int32_t, int32_t, int32_t);
+    int32_t (__fastcall *e10)(int32_t, void *, int32_t, int32_t, int32_t, int32_t);
 };
 
 struct vtable_4ec7cc_type {
