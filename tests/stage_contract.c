@@ -2929,6 +2929,12 @@ int main(int argc, char **argv) {
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_global_script_cleanup(vm, root) == 0);
+    if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
+        CHECK(retdec_construct_actor_manager(manager));
+        function_460e00();
+        CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
+        return test_stage_update_mask(manager, vm, root);
+    }
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {
@@ -3006,8 +3012,6 @@ int main(int argc, char **argv) {
     CHECK(test_delegate_lifetime(vm, root)==0);
     /* Declare the isolated fixture's script-managed callback slot before creating instances. */
     CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
-    if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0)
-        return test_stage_update_mask(manager, vm, root);
     layout[0] = PTR(&g327);
     layout[66] = PTR(records);
     layout[67] = PTR(records + 4);
