@@ -12,7 +12,7 @@ jumping, and enemies. Full behavioral equivalence and crash-free gameplay have
 not yet been established. This repository is an engineering and preservation
 project, not a finished replacement for the original game.
 
-![Title screen rendered by the rebuilt runtime](docs/images/gameplay.png)
+![Title screen rendered by the rebuilt runtime](./images/gameplay.png)
 
 *The rebuilt runtime loading and rendering the title screen from the original
 DAT resources.*

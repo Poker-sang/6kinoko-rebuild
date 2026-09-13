@@ -3,9 +3,10 @@
 /run-*/
 /runtime/
 /runtime-builds/
-/runtime/*.exe
-/runtime/*.pdb
-/runtime/*.ilk
-/runtime/*.obj
-/runtime/*.lib
-/analysis/evidence/raw/
+
+# Local analysis artifacts; tracked evidence remains versioned.
+# Add new curated reports explicitly with git add -f.
+/analysis/
+
+# Python bytecode caches.
+__pycache__/
