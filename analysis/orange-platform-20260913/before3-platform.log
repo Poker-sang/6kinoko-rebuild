@@ -1,0 +1,18 @@
+FAIL line 3028: *(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28)
+PASS: 5000 texture load/unload cycles release COM objects and reuse handles
+PASS: map camera floor results and balanced x87 stack over 600 rendered frames
+PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes
+PASS: C++ Actor exact init-data span and deferred-release byte writes/ABI
+PASS: C++ animation signed durations, loop/hold, changed take, empty state and x86 wrap
+PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear
+PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear
+PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown
+PASS: GC Mark moves the node into the caller-owned chain without writing past its head
+PASS: source SQObjectPtr error replacement, self-assignment, reset and numeric ownership
+PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup
+PASS: distinct global script receivers, root wrapper release and repeated shutdown
+PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push
+PLATFORM frame=0 y=672.200012 vy=0.200000 playerBottom=664.200012 parentdy=0.200012 step=0128dd08 hit=1
+PLATFORM frame=1 y=672.600037 vy=0.400000 playerBottom=664.600037 parentdy=0.400024 step=0128dd08 hit=1
+PLATFORM frame=2 y=673.200012 vy=0.600000 playerBottom=665.200012 parentdy=0.599976 step=0128dd08 hit=1
+PLATFORM frame=3 y=674.000000 vy=0.800000 playerBottom=665.999939 parentdy=0.799988 step=00000000 hit=0

@@ -327,7 +327,10 @@ extern "C" int32_t kinoko_actor_collision_move(void *actor,
             }
         }
     }
-    moved.bottom = old.bottom + moved.top - old.top;
+    // 469151..469162 keeps both operations in x87 before storing a float.
+    // Rounding the intermediate sum to float can put a descending rider just
+    // above its support, losing the floor contact and then Actor::step.
+    moved.bottom = static_cast<float>(static_cast<double>(old.bottom) + moved.top - old.top);
     field<float>(actor, 276) = 0;
     float edge_bottom = moved.bottom;
     if (moved.bottom >= moved.top)
