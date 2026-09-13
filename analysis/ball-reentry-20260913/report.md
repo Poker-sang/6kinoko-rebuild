@@ -128,3 +128,14 @@ Outputs and original-build failures remain intact. No live game was launched.
 Final quiet candidate enemy-reset-20260913-r1-quiet also passed CTest 4/4
 and the original DAT enemy contract. Both modes have verified DAT copies and
 validation manifests recording source 33bff37; no new live gameplay run.
+
+## User confirmation
+
+On 2026-09-13 the user played through world one in the diagnostic candidate,
+reported that the severe gameplay bugs were gone, and encountered no crashes.
+This supersedes the pending live validation for that scope; later worlds and
+exact original exception parity are not established by the playthrough.
+At the user's explicit request, the seven .log files from these runs were
+deleted. Original DATs, marisaA.dat, dump snapshots and older test batches remain.
+The bilingual project READMEs under .github now record this checkpoint and the
+four independent diagnostic switches, including how to disable new captures.
