@@ -1125,6 +1125,26 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "fairy.vy=-5.0;\nt_enemy.EnemyUpdate_Dead.call(fairy);\n"
         "if(fairy.vy<=-5.0) throw \"dead gravity missing\";\n"
         "fairy.vy=0.0; fairy.user.frameCount=0;"));
+    int32_t death_init[3];
+    function_4aa3a0_this(PTR(scripts),PTR(death_init),"Init0106");
+    int32_t victim=function_463b40_this(manager,death_init[0],death_init[1],death_init[2],
+        300,160,-1,PTR(&g16),0x05000002,0x106,0);
+    CHECK(victim);
+    function_4a9840_this(PTR(root+1),"victim",victim+44);
+    CHECK(execute_source(vm,root+2,
+        "t_item <- { InitPoint=function(v){}, Init1up=function(v){} };\n"
+        "attacker <- { user={hitCount=0},callbackGroup=0 };\n"
+        "t_enemy.EnemyCollision_Damage.call(victim,attacker);\n"
+        "if(victim.vy!=-5 || victim.user.blowOff) throw \"ordinary death setup\";"));
+    for(int frame=0;frame<90;++frame) {
+        retdec_actor_tick(victim);
+        retdec_actor_update_motion(victim);
+        CHECK(vm_failures==failures);
+        if(frame==30) CHECK(*(float *)(intptr_t)(victim+260)>0);
+    }
+    CHECK(*(float *)(intptr_t)(victim+244)>160);
+    puts("PASS: original collision death rises briefly then falls under gravity");
+    function_4a9d70_this(PTR(death_init));
     for(int round=0;round<4;++round) {
         for(int frame=0;frame<240;++frame) {
             retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
@@ -1153,10 +1173,10 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         }
         printf("PASS: ball generation %d\n",round); fflush(stdout);
         CHECK(execute_source(vm,root+2,
-            "camera.left=4000; camera.right=4640;"));
+            "camera.left=-300; camera.right=1000; fairy.x=4000;"));
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
         CHECK(execute_source(vm,root+2,
-            "camera.left=4000; camera.right=4640;"));
+            "camera.left=-10000; camera.right=-9000;"));
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
         CHECK(execute_source(vm,root+2,"if(resetCalls!=1) throw \"OnReset not executed\";"));
         CHECK(vm_failures==failures);
