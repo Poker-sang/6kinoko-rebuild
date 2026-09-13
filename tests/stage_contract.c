@@ -3080,7 +3080,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
             "user.SetDead <- function(v){throw \"unexpected green rider death\";};\n"
             "user.SetTake(TAKE_STAND); collisionMask=GP_TERRAIN|GP_LIFT; "
             "collisionGroup=GP_PLAYER; callbackGroup=GP_PLAYER; priority=PR_PLAYER; updateGroup=GP_PLAYER; "
-            "SetStep(null); funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
+            "funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
     }
     function_4aa3a0_this(PTR(scripts),PTR(init),green ? "InitRail" : "Init04c7");
     function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
