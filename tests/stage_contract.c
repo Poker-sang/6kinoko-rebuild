@@ -1117,7 +1117,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     *(float *)(g_retdec_camera_state+80)=8000;
     *(float *)(g_retdec_camera_state+84)=2000;
     for(int round=0;round<4;++round) {
-        for(int frame=0;frame<100;++frame) {
+        for(int frame=0;frame<240;++frame) {
             retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
             CHECK(vm_failures==failures);
         }
@@ -1127,13 +1127,28 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             "if(fairy.user.data.ball[i]==null) throw \"expired ball\";\n"
             "if(fairy.user.data.ball[i].user.data.p!=fairy) throw \"ball parent\";\n"
             "}\n"));
+        CHECK(execute_source(vm,root+2,
+            "for(local i=0;i<4;i++) { if(fairy.user.data.ball[i].user.frameCount==0 && "
+            "fairy.user.data.ball[i].user.data.enable) throw \"ball not updating\"; }"));
+        for(int i=0;i<4;++i) {
+            char code[80]; int32_t obj[3];
+            sprintf_s(code,sizeof(code),"probeBall <- fairy.user.data.ball[%d];",i);
+            CHECK(execute_source(vm,root+2,code));
+            function_4aa3a0_this(PTR(root+1),PTR(obj),"probeBall");
+            int32_t ball=function_4a9b40_this(PTR(obj),0);
+            printf("ball %d/%d active=%d visible=%d release=%d xy=%g,%g callback=%x\n",round,i,
+                *(uint8_t *)(intptr_t)(ball+40),*(uint8_t *)(intptr_t)(ball+20),
+                *(uint8_t *)(intptr_t)(ball+22),*(float *)(intptr_t)(ball+240),
+                *(float *)(intptr_t)(ball+244),*(int32_t *)(intptr_t)(ball+112));
+            function_4a9d70_this(PTR(obj));
+        }
         printf("PASS: ball generation %d\n",round); fflush(stdout);
         CHECK(execute_source(vm,root+2,
-            "camera.left=-300; camera.right=1000; fairy.x=4000;"));
-        retdec_actor_tick(fairy);
+            "camera.left=4000; camera.right=4640;"));
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
         CHECK(execute_source(vm,root+2,
-            "camera.left=-10000; camera.right=-9000;"));
-        retdec_actor_tick(fairy);
+            "camera.left=4000; camera.right=4640;"));
+        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
         CHECK(vm_failures==failures);
         function_4a9840_this(PTR(root+1),"fairy",fairy+44);
         CHECK(execute_source(vm,root+2,
