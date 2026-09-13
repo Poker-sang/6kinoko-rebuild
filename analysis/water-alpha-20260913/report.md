@@ -33,5 +33,22 @@ fastcall C++ methods in their original vtable slots, with field-offset assertion
 Actor rendering resets PAT base color every draw before multiplying Actor ARGB.
 No guessed alpha, map-layer changes, gameplay changes or new automatic logging.
 
-Validation pending: independent diagnostic and quiet builds, CTest, staged DATs,
-and bounded first-level/jump/enemy window smoke tests. All products retained.
+Validation: implementation checkpoint ffd1708. Independent r1-diag and r1-quiet
+builds both passed CTest 10/10. Both runtime directories contain the three
+SHA256-verified DATs beside the EXE; staging/build/CTest logs are retained here.
+Water tests cover all frames of takes 9700/9710/9720/9730, Actor fades, repeated
+draws and frames without auxiliary appearance. Color ABI tests exercise the
+original vtable slots and all 65,536 byte-channel products.
+
+Window observation: the diagnostic executable was visible in a water stage;
+bamboo scenery and an underwater actor were visible through the blue water.
+The user then explicitly confirmed the repair ("已经确认修复") and interrupted
+further testing. No additional gameplay inputs or window closure were issued.
+The planned separate first-level/jump/enemy smoke sequence for both variants
+was not completed; do not claim it was. User visual confirmation and the two
+passing automated suites are the final validation evidence for this delivery.
+
+Checklist: skills read; original identity/imports and assembly retained;
+original PAT regression reproduced before repair; verified C++ color methods
+replace lost-receiver C; source committed before test batches; both modes pass;
+staged resources verified; user confirms visual repair; all artifacts retained.
