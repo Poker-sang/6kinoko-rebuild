@@ -86,3 +86,41 @@ snapshot rather than speculative changes to original actor/reset behavior.
 Quiet counterpart enemy-20260913-quiet also passed CTest 4/4 and DAT staging.
 Both executables correspond to source a4d5b56 (subsequent commits are evidence
 only). All artifacts retained. Live smoke explicitly deferred to the user.
+
+## User reproduction and callback repair, 2026-09-13
+
+The user reproduced both ball disappearance and upward stomp death in candidate
+ a4d5b56. Retained snapshot: runtime-builds/enemy-20260913-capture/
+fault-20260913-074843-528-p34516-script.dmp. The log shows FairyOtedama failing
+at frame 990, EnemyUpdateProc instruction 665, followed by four EnemyUpdate_Ball
+failures at instruction 14. A walking fairy fails the same way at frame 1130.
+At the first error the VM is 081A9BE8, STK(0) is old Actor instance 0DCE0300
+with user=null; native Actor 0823AC80 has already published new instance
+0D9FC4C8 with valid user 0D9FE8F8. The old invocation and new actor are distinct.
+
+The unconditional error retirement clears the newly initialized update in this
+case. A later damage callback can still set vy=-5, but the retired update never
+adds gravity again. This explains a shared mechanism for both symptoms; the
+snapshot itself precedes the stomp and does not independently capture it.
+
+Source 33bff37 moves invocation ownership/retirement into C++ with retained
+SqPlus environment/function objects. Failure retires an update only if its VM,
+environment and function still match the failed invocation. A newly installed
+callback survives. Ordinary permanently failing callbacks still retire once.
+This is a narrow reentrant callback-lifetime correction, not a literal copy of
+the original unconditional catch at 45E180. Original gameplay parity remains
+an explicit question to the user; do not misrepresent this as verified exact
+original exception behavior. No original resource, reset initializer, velocity,
+gravity, damage selection or intentional blow-off behavior is patched.
+
+Offline diagnostic candidate enemy-reset-20260913-r1-diag passed CTest 4/4,
+including a callback that installs its successor then throws (successor runs
+8 times) and the existing broken/healthy callback isolation. The original DAT
+enemy contract now supplies native PR_FRONT=65535 in its isolated fixture.
+It synchronizes native/script cameras and uses original map flag 0x20000 for
+activation after reset. Four generations preserve all four ball references,
+parent identity, callbacks, visibility and motion. After reset, OnHitStep and
+normal damage execute original death scripts: initial vy=-5, positive velocity
+later, and y below the initial position after 90 updates. Known old-instance
+errors during reset remain errors; they no longer cancel the replacement.
+Outputs and original-build failures remain intact. No live game was launched.
