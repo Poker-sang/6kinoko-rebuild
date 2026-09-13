@@ -59,3 +59,32 @@ This leftover diagnostic trap rejects the original legitimate g644=null
 shutdown operation. Remove the guard, its initialization and bookkeeping;
 leave VM trace call sites and optional output/dump tooling intact. Retain r2
 first-chance dump fault-20260913-025537-472-p24872-first.dmp. Next batch r3.
+
+## Final validation
+
+Source checkpoint 6367740. Both cleanup-20260913-r3-diag and r3-quiet compile
+as Win32 Release and pass CTest 4/4 plus the original EffectLayer/GenSmokeEffect
+probe (25 draws, exact frame sequence, normal completion and empty list).
+Each EXE has SHA256-verified copies of the three original DATs beside it.
+All five cleanup candidate directories have source/hash/result manifests.
+
+Both final games launched via run_staged.ps1 with WorkingDirectory unset,
+showed opening then title, responded to window controls, and exited with code
+0 after Alt+F4. Diagnostic PID 18372 recorded capture-start followed by
+diagnostics-shutdown, no exception or dump. Quiet runtime produced no trace,
+screenshot or dump files. The final cleanup live smoke ended at the title;
+short injected gameplay keys were not sampled reliably. First-stage/jump/enemy
+observations and user-confirmed road unlock belong to the preceding road
+checkpoint; no new full gameplay coverage is claimed for this cleanup batch.
+
+Final game SHA256:
+- Diagnostic: E63F562C3CD072F4A1E620365DFDF20408707B757285A9CD119BFF32389FA125
+- Quiet: 5FDE62BD1F11632CA4E2B2F79BD98F9BF74E39133DD1504CDB1D641D4AA612C7
+
+Checklist: original IDA/source anchors reviewed; actual ACT and audio exit
+faults retained; original legitimate null write distinguished from corruption;
+ACT/shared ownership/audio/global-reference contracts pass; first-chance
+diagnostic and quiet process exit codes are zero; artifacts retained; user
+deletions preserved. Source changes and evidence committed separately.
+ADF P0: independent original assembly, retained crashes and corrected exit
+runs support this cleanup repair, without implying absence of all game bugs.

@@ -40,10 +40,12 @@
 | `src/reconstructed/actor_collision.cpp` | 恢复出的 Actor 碰撞方法 |
 | `src/reconstructed/actor_methods.cpp` | Actor 图块查询、标志与优先级 |
 | `src/reconstructed/act_resource.cpp` | ACT 时钟、唤醒期限与关卡清理 |
+| `src/reconstructed/stage_cleanup.cpp` | 全局 ACT 所有权与声音退出清理 |
 | `src/reconstructed/script_callbacks.cpp` | Actor/Camera 回调绑定与 SqPlus 临时对象生命周期 |
 | `src/reconstructed/sprite.cpp` | 类型化精灵几何与 Direct3D 绘制 |
 | `src/squirrel/squirrel_compile_bridge.cpp` | 将 ACT 源码编译为原版字节码 |
 | `src/squirrel/squirrel_value_bridge.cpp` | 基于源码的对象与错误所有权管理 |
+| `src/squirrel/squirrel_generator_bridge.cpp` | 原版生成器挂起/恢复与数组删除 |
 | `src/decompiled/6kinoko_rebuilt.c` | 尚未迁移的游戏与 VM 恢复代码 |
 | `src/decompiled/6kinoko.exe.c` | 未修改的反编译器参考输出 |
 | `third_party/squirrel-2.2.2` | 仓库内的 Squirrel 2.2.2 源码与许可证 |
@@ -95,8 +97,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_staged.ps1 `
 ## Squirrel 2.2.2
 
 仓库内的 Squirrel 2.2.2 源码目前用于在独立 VM 中编译内联 ACT 源码，并提供
-经过验证的对象/错误所有权辅助实现。生成的字节码通常仍在恢复出的游戏 VM 中
-执行。
+经过验证的对象/错误所有权、生成器挂起/恢复和数组删除实现。生成的字节码通常
+仍在恢复出的游戏 VM 中执行。
 
 完整的 C++ 执行后端仍处于实验阶段。启用它需要同时设置 CMake 选项
 `KINOKO_ENABLE_SQUIRREL_CPP_VM=ON` 和运行时环境变量

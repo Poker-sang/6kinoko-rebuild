@@ -49,10 +49,12 @@ for stage and entity behavior.
 | `src/reconstructed/actor_collision.cpp` | Recovered Actor collision methods |
 | `src/reconstructed/actor_methods.cpp` | Actor chip queries, flags, and priority |
 | `src/reconstructed/act_resource.cpp` | ACT clock, wake deadline, and stage cleanup |
+| `src/reconstructed/stage_cleanup.cpp` | Global ACT ownership and sound shutdown |
 | `src/reconstructed/script_callbacks.cpp` | Actor/Camera callback binding and SqPlus temporary lifetimes |
 | `src/reconstructed/sprite.cpp` | Typed sprite geometry and Direct3D drawing |
 | `src/squirrel/squirrel_compile_bridge.cpp` | ACT source compilation to original bytecode |
 | `src/squirrel/squirrel_value_bridge.cpp` | Source-based object and error ownership |
+| `src/squirrel/squirrel_generator_bridge.cpp` | Original generator suspension/resumption and array removal |
 | `src/decompiled/6kinoko_rebuilt.c` | Remaining recovered game and VM code |
 | `src/decompiled/6kinoko.exe.c` | Unmodified decompiler reference |
 | `third_party/squirrel-2.2.2` | Vendored Squirrel 2.2.2 source and license |
@@ -107,8 +109,9 @@ not change runtime resource resolution.
 ## Squirrel 2.2.2
 
 The vendored Squirrel 2.2.2 source is currently used to compile inline ACT
-source in a separate VM and to provide verified object/error ownership
-helpers. Compiled bytecode normally executes in the recovered game VM.
+source in a separate VM and to provide verified object/error ownership,
+generator suspension/resumption, and array-removal helpers. Compiled bytecode
+normally executes in the recovered game VM.
 
 The full C++ execution backend is still experimental. It requires both the
 CMake option `KINOKO_ENABLE_SQUIRREL_CPP_VM=ON` and the runtime environment
