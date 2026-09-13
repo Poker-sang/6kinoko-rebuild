@@ -12,6 +12,8 @@ char trace_buffer[65536];
 DWORD trace_used = 0;
 bool trace_enabled = false;
 bool dump_enabled = false;
+bool script_capture_enabled = false;
+volatile LONG script_dump_written = 0;
 volatile LONG dump_written = 0;
 volatile LONG first_fault_written = 0;
 PVOID first_fault_handler = nullptr;
@@ -53,7 +55,11 @@ bool starts_with(const char *message, const char *prefix) {
 }
 
 bool selected_message(const char *message) {
-#if defined(RETDEC_TRACE_STAR_FILTER)
+#if defined(RETDEC_TRACE_ERRORS_ONLY)
+    return starts_with(message, "stagevm:failure") ||
+        starts_with(message, "actor:update-failed") ||
+        starts_with(message, "seh:") || starts_with(message, "veh:");
+#elif defined(RETDEC_TRACE_STAR_FILTER)
     const char *prefixes[] = {"actor:star", "actor:invalid", "actor:update-failed",
         "stagevm:failure", "map:path", "veh:", "seh:"};
 #elif defined(RETDEC_TRACE_FILTER)
@@ -69,7 +75,7 @@ bool selected_message(const char *message) {
     (void)message;
     return true;
 #endif
-#if defined(RETDEC_TRACE_STAR_FILTER) || defined(RETDEC_TRACE_FILTER)
+#if !defined(RETDEC_TRACE_ERRORS_ONLY) && (defined(RETDEC_TRACE_STAR_FILTER) || defined(RETDEC_TRACE_FILTER))
     for (const char *prefix : prefixes)
         if (starts_with(message, prefix))
             return true;
@@ -114,14 +120,15 @@ void write_fault_record(const char *phase, EXCEPTION_POINTERS *exception) {
     }
 }
 
-void write_dump(EXCEPTION_POINTERS *exception, bool first_chance = false) {
-    if (!dump_enabled || !exception ||
-        (!first_chance && InterlockedExchange(&dump_written, 1)))
+void write_dump(EXCEPTION_POINTERS *exception, bool first_chance = false,
+                const char *snapshot_kind = nullptr) {
+    if ((!dump_enabled && !snapshot_kind) || !exception ||
+        (!first_chance && !snapshot_kind && InterlockedExchange(&dump_written, 1)))
         return;
     char path[MAX_PATH];
     char name[128];
     std::snprintf(name, sizeof(name), "%s-%s.dmp", capture_stem,
-        first_chance ? "first" : "unhandled");
+        snapshot_kind ? snapshot_kind : (first_chance ? "first" : "unhandled"));
     if (!beside_executable(path, name))
         return;
     HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
@@ -140,6 +147,29 @@ void write_dump(EXCEPTION_POINTERS *exception, bool first_chance = false) {
         DWORD written;
         WriteFile(fault_file, message, static_cast<DWORD>(length), &written, nullptr);
         FlushFileBuffers(fault_file);
+    }
+}
+
+void capture_script_failure(const char *message) {
+    if (!script_capture_enabled || !starts_with(message, "stagevm:failure"))
+        return;
+    if (fault_file != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(fault_file, message, static_cast<DWORD>(std::strlen(message)), &written, nullptr);
+        WriteFile(fault_file, "\r\n", 2, &written, nullptr);
+        FlushFileBuffers(fault_file);
+    }
+    if (starts_with(message, "stagevm:failure-error") &&
+        !InterlockedCompareExchange(&script_dump_written, 1, 0)) {
+        CONTEXT context{};
+        RtlCaptureContext(&context);
+        EXCEPTION_RECORD record{};
+        // A labeled snapshot, not a raised exception: the VM keeps its normal
+        // error propagation and callback cleanup. Capture before that cleanup.
+        record.ExceptionCode = 0xE04B0001;
+        record.ExceptionAddress = reinterpret_cast<void *>(context.Eip);
+        EXCEPTION_POINTERS snapshot{&record, &context};
+        write_dump(&snapshot, false, "script");
     }
 }
 
@@ -177,9 +207,15 @@ extern "C" void kinoko_diagnostics_initialize() {
     constexpr bool default_capture = false;
 #endif
     const bool capture = environment_switch("KINOKO_CAPTURE_FIRST_CHANCE", default_capture);
+#if defined(RETDEC_CAPTURE_SCRIPT_FAILURE)
+    constexpr bool default_script_capture = true;
+#else
+    constexpr bool default_script_capture = false;
+#endif
+    script_capture_enabled = environment_switch("KINOKO_CAPTURE_SCRIPT_FAILURE", default_script_capture);
     trace_enabled = environment_switch("KINOKO_TRACE", default_trace);
     dump_enabled = environment_switch("KINOKO_CRASH_DUMP", capture);
-    if (capture || dump_enabled) {
+    if (capture || dump_enabled || script_capture_enabled) {
         SYSTEMTIME now;
         GetSystemTime(&now);
         std::snprintf(capture_stem, sizeof(capture_stem),
@@ -232,7 +268,10 @@ extern "C" void kinoko_diagnostics_shutdown() {
 // This remains an out-of-line sink in quiet builds. Removing VM call sites
 // changes the stack shape of the remaining reconstructed C code.
 extern "C" __declspec(noinline) void retdec_trace(const char *message) {
-    if (!trace_enabled || !message || !selected_message(message))
+    if (!message)
+        return;
+    capture_script_failure(message);
+    if (!trace_enabled || !selected_message(message))
         return;
     const size_t length = std::strlen(message);
     TraceLock lock;

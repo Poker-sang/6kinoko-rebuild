@@ -89,6 +89,14 @@ option(KINOKO_RETDEC_TRACE_FILTER
 option(KINOKO_CAPTURE_FIRST_CHANCE
     "Default to first-fault context and full-memory dumps for diagnostic runs"
     OFF)
+option(KINOKO_CAPTURE_SCRIPT_FAILURE "Capture the first VM script error before unwinding" OFF)
+option(KINOKO_RETDEC_TRACE_ERRORS_ONLY "Only write VM failures and exception markers" OFF)
+if(KINOKO_CAPTURE_SCRIPT_FAILURE)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_CAPTURE_SCRIPT_FAILURE)
+endif()
+if(KINOKO_RETDEC_TRACE_ERRORS_ONLY)
+    target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_TRACE_ERRORS_ONLY)
+endif()
 if(KINOKO_CAPTURE_FIRST_CHANCE)
     target_compile_definitions(kinoko_retdec_rebuild PRIVATE RETDEC_CAPTURE_FIRST_CHANCE)
 endif()

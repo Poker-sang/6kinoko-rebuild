@@ -66,7 +66,11 @@ int main() {
     SetEnvironmentVariableA("KINOKO_TRACE", "0");
     SetEnvironmentVariableA("KINOKO_CAPTURE_FIRST_CHANCE", "1");
     SetEnvironmentVariableA("KINOKO_CRASH_DUMP", "1");
+    SetEnvironmentVariableA("KINOKO_CAPTURE_SCRIPT_FAILURE", "1");
     kinoko_diagnostics_initialize();
+    retdec_trace("stagevm:failure-source:test fixture");
+    retdec_trace("stagevm:failure-error:first script failure");
+    retdec_trace("stagevm:failure-error:second script failure");
     if (!handled_probe(false) || !handled_probe(false) || !handled_probe(true))
         return 1;
     kinoko_diagnostics_shutdown();
@@ -74,18 +78,21 @@ int main() {
     GetModuleFileNameA(nullptr, executable, MAX_PATH);
     const std::string directory = std::string(executable).substr(0,
         std::string(executable).find_last_of('\\') + 1);
-    std::string first, final, log;
+    std::string first, final, log, script;
     if (!find_artifact(directory, "-first.dmp", first) ||
         !find_artifact(directory, "-unhandled.dmp", final) ||
         !find_artifact(directory, ".log", log) ||
         !validate_dump(first, EXCEPTION_ACCESS_VIOLATION) ||
-        !validate_dump(final, EXCEPTION_ILLEGAL_INSTRUCTION))
+        !validate_dump(final, EXCEPTION_ILLEGAL_INSTRUCTION) ||
+        !find_artifact(directory, "-script.dmp", script) ||
+        !validate_dump(script, 0xE04B0001))
         return 2;
     std::ifstream input(log);
     const std::string text((std::istreambuf_iterator<char>(input)), {});
     if (text.find("first-chance") == std::string::npos ||
         text.find("target=12345678") == std::string::npos ||
         text.find("unhandled") == std::string::npos ||
+        text.find("second script failure") == std::string::npos ||
         text.find("diagnostics-shutdown") == std::string::npos)
         return 3;
     std::puts("PASS: first-fault capture preserves handling, records context, and keeps separate valid dumps");

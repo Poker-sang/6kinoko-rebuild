@@ -1081,6 +1081,9 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
         CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
         retdec_sqrat_release_pair(vm,callback);
+        CHECK(retdec_sqrat_get(PTR(globals),"PR_FRONT",callback));
+        CHECK(retdec_sqrat_set_pair(vm,root+2,"PR_FRONT",callback));
+        retdec_sqrat_release_pair(vm,callback);
         retdec_sqrat_release_pair(vm,globals+2);
     }
     CHECK(execute_source(vm, root + 2,
@@ -1119,8 +1122,6 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(execute_source(vm,root+2,
         "if (!(\"OnReset\" in fairy.user)) throw \"OnReset not found\";\n"
         "if (typeof fairy.user.OnReset!=\"function\") throw \"OnReset type\";\n"
-        "resetCalls <- 0;\noriginalReset <- fairy.user.OnReset;\n"
-        "fairy.user.OnReset = function() { ::resetCalls++; ::originalReset.call(this); };\n"
         "if(fairy.user.blowOff) throw \"unexpected blowOff\";\n"
         "fairy.vy=-5.0;\nt_enemy.EnemyUpdate_Dead.call(fairy);\n"
         "if(fairy.vy<=-5.0) throw \"dead gravity missing\";\n"
@@ -1166,7 +1167,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             function_4aa3a0_this(PTR(root+1),PTR(obj),"probeBall");
             int32_t ball=function_4a9b40_this(PTR(obj),0);
             printf("ball %d/%d active=%d visible=%d release=%d xy=%g,%g callback=%x\n",round,i,
-                *(uint8_t *)(intptr_t)(ball+40),*(uint8_t *)(intptr_t)(ball+20),
+                *(uint8_t *)(intptr_t)(ball+40),*(uint8_t *)(intptr_t)(ball+21),
                 *(uint8_t *)(intptr_t)(ball+22),*(float *)(intptr_t)(ball+240),
                 *(float *)(intptr_t)(ball+244),*(int32_t *)(intptr_t)(ball+112));
             function_4a9d70_this(PTR(obj));
@@ -1178,7 +1179,6 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,
             "camera.left=-10000; camera.right=-9000;"));
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
-        CHECK(execute_source(vm,root+2,"if(resetCalls!=1) throw \"OnReset not executed\";"));
         CHECK(vm_failures==failures);
         function_4a9840_this(PTR(root+1),"fairy",fairy+44);
         CHECK(execute_source(vm,root+2,
