@@ -2483,6 +2483,20 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    if (argc == 3 && strcmp(argv[1], "--road-probe") == 0) {
+        CHECK(execute_file(vm, root + 2, argv[2]));
+        CHECK(execute_source(vm, root + 2,
+            "function ProbeEffect() { yield true; yield true; return false; }\n"
+            "effectList.append(ProbeEffect());\n"));
+        for (int frame = 0; frame < 5; ++frame) {
+            fprintf(stderr, "effect frame %d\n", frame);
+            CHECK(execute_source(vm, root + 2, "Update();"));
+        }
+        CHECK(execute_source(vm, root + 2,
+            "if (effectList.len() != 0) throw \"effect cleanup\";"));
+        puts("PASS: original EffectLayer Update generator lifecycle");
+        return 0;
+    }
     CHECK(test_gc_repeated_collection(vm, root) == 0);
     CHECK(test_script_callback_binding(vm, root) == 0);
     {
