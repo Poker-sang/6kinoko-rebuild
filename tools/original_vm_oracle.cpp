@@ -11,7 +11,10 @@
 
 extern "C" void retdec_trace(const char *message) { std::fprintf(stderr, "%s\n", message); }
 
-template <typename T> T original(uintptr_t address) { return reinterpret_cast<T>(address); }
+static uintptr_t location(uintptr_t address) {
+    return reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr)) + address - 0x400000;
+}
+template <typename T> T original(uintptr_t address) { return reinterpret_cast<T>(location(address)); }
 static unsigned char *probe_code;
 static int32_t probe_size;
 static int32_t vm;
@@ -23,7 +26,7 @@ static int32_t __cdecl create_probe(int32_t machine) {
     original<void(__thiscall *)(void *)>(0x4a94e0)(argument);
     actor=original<int32_t(__thiscall *)(void *,int32_t,int32_t,int32_t,
         float,float,float,int32_t,int32_t,int32_t)>(0x463b40)(
-        reinterpret_cast<void *>(0x5143e0),initializer[0],initializer[1],initializer[2],
+        reinterpret_cast<void *>(location(0x5143e0)),initializer[0],initializer[1],initializer[2],
         100,160,-1,argument[0],argument[1],argument[2]);
     std::printf("original actor=%08x instance=%08x\n",actor,
         *reinterpret_cast<uint32_t *>(actor+52)); std::fflush(stdout);
@@ -62,11 +65,11 @@ static bool execute(unsigned char *code, int32_t size) {
 static int WINAPI probe_main(HINSTANCE, HINSTANCE, LPSTR, int) {
     std::puts("original CRT initialized; game WinMain not executed"); std::fflush(stdout);
     original<int32_t(__cdecl *)(int32_t)>(0x4a8db0)(0);
-    vm = *reinterpret_cast<int32_t *>(0x5149dc);
+    vm = *reinterpret_cast<int32_t *>(location(0x5149dc));
     std::printf("original vm=%08x actor-manager-vtable=%08x\n",vm,
-        *reinterpret_cast<uint32_t *>(0x5143e0)); std::fflush(stdout);
+        *reinterpret_cast<uint32_t *>(location(0x5143e0))); std::fflush(stdout);
     original<int32_t(__cdecl *)()>(0x460e00)();
-    original<int32_t(__thiscall *)(void *)>(0x463af0)(reinterpret_cast<void *>(0x5143e0));
+    original<int32_t(__thiscall *)(void *)>(0x463af0)(reinterpret_cast<void *>(location(0x5143e0)));
     original<void(__cdecl *)(int32_t)>(0x48a670)(vm);
     original<void(__cdecl *)(int32_t,const char *,int32_t)>(0x48a480)(vm,"CreateProbe",-1);
     original<void(__cdecl *)(int32_t,decltype(&create_probe),int32_t)>(0x48d850)(vm,create_probe,0);
@@ -84,7 +87,7 @@ extern "C" __declspec(dllexport) DWORD WINAPI RunOriginalProbe(void *argument) {
     GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
         reinterpret_cast<LPCSTR>(&RunOriginalProbe),&self);
     char path[MAX_PATH]; GetModuleFileNameA(self,path,MAX_PATH);
-    std::strcat(path,".log");
+    strcat_s(path,".log");
     FILE *out=nullptr; freopen_s(&out,path,"w",stdout);
     std::ifstream source_file(static_cast<const char *>(argument),std::ios::binary);
     const std::string source((std::istreambuf_iterator<char>(source_file)),{});
