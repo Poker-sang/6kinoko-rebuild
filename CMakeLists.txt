@@ -271,6 +271,11 @@ add_test(NAME water_alpha_contract
 add_test(NAME act_reentry_contract
     COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
 
+add_executable(kinoko_game_math_contract tests/game_math_contract.cpp)
+target_link_libraries(kinoko_game_math_contract PRIVATE kinoko_actor_collision)
+target_compile_options(kinoko_game_math_contract PRIVATE /fp:strict)
+add_test(NAME game_math_contract COMMAND kinoko_game_math_contract)
+
 add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
@@ -286,7 +291,7 @@ add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
-    kinoko_legacy_abi_contract
+    kinoko_legacy_abi_contract kinoko_game_math_contract
     kinoko_texture_store_contract
     kinoko_diagnostics_capture
 )

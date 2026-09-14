@@ -24,7 +24,7 @@ public:
 };
 }
 
-extern "C" uint32_t kinoko_run_game_math(uint32_t (__stdcall *update)(void *), void *argument) {
+extern "C" unsigned long kinoko_run_game_math(unsigned long (__stdcall *update)(void *), void *argument) {
     GameRoundingScope rounding;
     return update(argument);
 }

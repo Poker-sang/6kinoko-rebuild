@@ -27,8 +27,8 @@ template<class T> T &slot(void *p, int offset) {
 static int probe_collision() {
     using Move = int32_t(__thiscall *)(void *,void *,float *,int32_t *,float *,float *,float *,float *,float *);
     auto move=original<Move>(0x4689d0);
-    kinoko_enter_game_math();
-    unsigned int control=0; _controlfp_s(&control,0,0);
+    // Independent oracle setup: exact NewValue/Mask from original 40DC20.
+    unsigned int control=0; _controlfp_s(&control,0x200,0x300);
     std::printf("collision original control=%08x\n",control);
     alignas(8) unsigned char a[640]={}, b[640]={}, platform[640]={}, chip[48]={};
     float layout[8]={}; KinokoCollisionRecord record{chip,layout,0}, scratch[8]{};
@@ -70,7 +70,7 @@ static int probe_collision() {
     }
     std::printf("collision differences=%d original_misses=%d rebuilt_misses=%d\n",differences,original_misses,rebuilt_misses);
     std::fflush(stdout);
-    return differences?1:0;
+    return differences || original_misses || rebuilt_misses ? 1 : 0;
 }
 
 static unsigned char *probe_code;

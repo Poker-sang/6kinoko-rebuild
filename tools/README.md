@@ -82,3 +82,11 @@ $ToolDir = (Resolve-Path "runtime-builds/original-reset-20260913-r6-diag/tools")
 This address-based oracle targets only the supplied original EXE. Use a new
 build/runtime directory per test batch; retain the log with the source revision.
 The normal game does not load the oracle DLL.
+
+`game_math_contract` checks the recovered update-thread upward rounding mode,
+its x87/SSE behavior, restoration after return/exception, and thread isolation.
+`moving_map_contract` loads original w3-c02b terrain-kabe and player scripts,
+then checks 1500 frames spanning motion, endpoint pauses and reversals.
+The original oracle accepts `tests/original_collision.nut` to compare 300
+identical collision inputs against the original x86 function with the original
+update-thread rounding mode. It does not start gameplay.
