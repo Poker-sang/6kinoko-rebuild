@@ -3033,6 +3033,9 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         moving_layout=*(int32_t *)(intptr_t)(key+4);
     }
     CHECK(moving_layer && moving_layout);
+    function_48ab90(vm,root[2],root[3]);
+    CHECK(function_4c6c20(vm)==0);
+    function_48aa50(vm);
     /* Publish the real CActLayer descriptors and invoke its captured callback. */
     int32_t resource[48]={0}, parent[2], active=0;
     CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
