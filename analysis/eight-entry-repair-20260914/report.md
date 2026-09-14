@@ -63,6 +63,8 @@ No failed build was provided as the candidate. No test artifacts were overwritte
 
 Both r5 EXEs have all three DATs staged with size/SHA256 verification. User owns
 interactive startup/gameplay testing and was given r5-quiet; no running game
-was closed. Interactive confirmation is pending. Offline passes are not a
+was closed. On 2026-09-15 the user reported “暂时没发现问题” for the r5 candidate.
+This is limited user feedback, not full-playthrough verification or confirmation
+of both variants' interactive startup. Offline passes are not a
 claim of complete behavioral equivalence or recovery of all old no-argument
 callers. Those call sites remain a separate unresolved part of the request.
