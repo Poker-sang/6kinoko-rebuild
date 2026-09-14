@@ -12,7 +12,7 @@ static unsigned rounding() {
 }
 static DWORD WINAPI calculate(void *argument) {
     unsigned x87 = 0, sse = 0;
-    CHECK(_control87_2(0, 0, &x87, &sse));
+    CHECK(__control87_2(0, 0, &x87, &sse));
     CHECK((x87 & _MCW_RC) == _RC_UP && (sse & _MCW_RC) == _RC_UP);
     volatile float one = 1, increment = 0x1p-25f;
     const float sum = one + increment;
@@ -55,3 +55,4 @@ int main() {
     std::puts("PASS: game rounding affects x87/SSE, restores after return/exception, and remains thread-local");
     return 0;
 }
+
