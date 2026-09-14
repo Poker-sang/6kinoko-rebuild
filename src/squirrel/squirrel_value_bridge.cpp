@@ -4,6 +4,8 @@
 #include <cstring>
 #include "sqpcheader.h"
 #include "sqvm.h"
+#include "sqclosure.h"
+#include "sqclass.h"
 
 namespace {
 static_assert(sizeof(void *) == 4, "The reconstructed VM requires Win32.");
@@ -45,4 +47,28 @@ extern "C" void kinoko_sq_assign_integer(int32_t object, int32_t value) {
 
 extern "C" void kinoko_sq_assign_float(int32_t object, float value) {
     at<SQObjectPtr>(object) = static_cast<SQFloat>(value);
+}
+
+// Original 489F50/489F30 are SQObjectPtr assignment and destruction.
+// Use the supplied 2.2.2 operations, including acquire-before-release and
+// dispatch through the value's own virtual Release slot.
+extern "C" int32_t kinoko_sq_pair_assign(int32_t destination, int32_t source) {
+    at<SQObjectPtr>(destination) = at<SQObjectPtr>(source);
+    return destination;
+}
+
+extern "C" void kinoko_sq_pair_destroy(int32_t object) {
+    at<SQObjectPtr>(object).~SQObjectPtr();
+}
+
+// These destroy members and unlink the GC node, but do not free the outer
+// allocation. Its existing scalar-deleting entry owns that final operation.
+extern "C" void kinoko_sq_closure_destroy(int32_t closure) {
+    static_assert(sizeof(SQClosure) == 64 && offsetof(SQClosure, _env) == 24);
+    at<SQClosure>(closure).SQClosure::~SQClosure();
+}
+
+extern "C" void kinoko_sq_class_destroy(int32_t klass) {
+    static_assert(sizeof(SQClass) == 92 && offsetof(SQClass, _attributes) == 68);
+    at<SQClass>(klass).SQClass::~SQClass();
 }

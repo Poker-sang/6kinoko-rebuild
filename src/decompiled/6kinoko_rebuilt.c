@@ -34,6 +34,7 @@
 #include "kinoko/act_resource.h"
 #include "kinoko/act_clone.h"
 #include "kinoko/script_callbacks.h"
+#include "kinoko/squirrel_object.h"
 #include "kinoko/sprite.h"
 #include "resource.h"
 #include "kinoko/texture_store.h"
@@ -2029,7 +2030,6 @@ int32_t function_403bf0(int32_t destination, int32_t source, uint32_t position, 
 int32_t function_403ce0(int32_t this_ptr, uint32_t new_capacity, uint32_t old_length);
 int32_t function_403db6(void);
 int32_t function_403dbc(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_403e50(char a1);
 int32_t function_403e80(void);
 int32_t function_403f00(void);
 int32_t function_403f20(void);
@@ -3908,8 +3908,8 @@ static int32_t function_45e5e0_this(
     float32_t x, float32_t y, float32_t z,
     int32_t second_vtable, int32_t second_type, int32_t second_data);
 int32_t function_45eb00(void);
-int32_t function_45ec60(void);
-static int32_t function_45ec60_this(int32_t this_ptr);
+
+static int32_t function_45ec60(int32_t actor);
 int32_t function_45f0c0(char a1);
 int32_t function_45f0f0(int32_t a1);
 int32_t function_45f350(void);
@@ -4629,7 +4629,7 @@ int32_t function_48ba10(void);
 int32_t function_48ba20(int32_t a1, int32_t a2);
 int32_t function_48bb10(void);
 int32_t function_48bb30(int32_t a1, int32_t a2);
-int32_t function_48bba0(void);
+
 int32_t function_48bc70(char a1);
 int32_t function_48bca0(int32_t object, int32_t shared_state,
                          int32_t function_ptr);
@@ -4945,7 +4945,7 @@ int32_t function_498e90(void);
 int32_t function_498f50(int32_t this_ptr, uint32_t count, int32_t * value);
 int32_t function_499080(int32_t this_ptr, int32_t * source);
 int32_t function_499130(void);
-int32_t function_4992c0(void);
+
 int32_t function_499380(void);
 int32_t function_4993b0(int32_t this_ptr, int32_t a1, int32_t a2,
                         int32_t a3, int32_t a4);
@@ -5219,8 +5219,8 @@ int32_t function_4a9660(int32_t a1);
 static int32_t function_4a9660_this(int32_t this_ptr, int32_t index);
 int32_t function_4a96c0(void);
 static int32_t function_4a96c0_this(int32_t this_ptr);
-int32_t function_4a96d0(void);
-static int32_t function_4a96d0_this(int32_t this_ptr);
+
+static int32_t function_4a96d0(int32_t this_ptr);
 int32_t function_4a9730(int32_t a1, int32_t a2);
 static int32_t function_4a9730_this(int32_t this_ptr, int32_t a2,
                                     int32_t source_ptr);
@@ -5233,8 +5233,8 @@ static int32_t function_4a9bb0_this(int32_t this_ptr, int32_t stack_index);
 int32_t function_4a98d0(int32_t * a1, int32_t a2);
 int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
                         int32_t a3, int32_t a4);
-int32_t function_4a99f0(void);
-static int32_t function_4a99f0_this(int32_t this_ptr);
+
+static int32_t function_4a99f0(int32_t this_ptr);
 int32_t function_4a9a30(void);
 static int32_t function_4a9a30_this(int32_t object_ptr);
 int32_t function_4a9a40(int32_t a1);
@@ -8547,7 +8547,7 @@ struct vtable_4d5484_type g15 = {
     .e3 = function_419d30
 }; // 0x4d5484
 struct vtable_4d54a4_type g16 = {
-    .e0 = function_403e50
+    .e0 = (int32_t (*)(char))kinoko_squirrel_object_delete
 }; // 0x4d54a4
 struct vtable_4d54ac_type g17 = {
     .e0 = function_45f0c0
@@ -11880,7 +11880,7 @@ int32_t function_402b90(int32_t a1) {
     int32_t v4; // bp-1068, 0x402b90
     int32_t v5 = &v4; // bp-1116, 0x402c0a
     function_4aa3a0(&v4, "debug_call_stack_line");
-    int32_t v6 = function_4a96d0_this((int32_t)&v3); // 0x402c23
+    int32_t v6 = function_4a96d0((int32_t)&v3); // 0x402c23
     int32_t v7 = &v5; // 0x402c2a
     if (v6 != 0) {
         // 0x402c30
@@ -11889,7 +11889,7 @@ int32_t function_402b90(int32_t a1) {
         int32_t v9 = (int32_t)&v8; // 0x402c40
         function_4038c0(a1, "CallStack\n", 10);
         v7 = v9;
-        if (function_4a96d0_this((int32_t)&v3) >= 1) {
+        if (function_4a96d0((int32_t)&v3) >= 1) {
             // 0x402c60
             int32_t v10; // bp-1044, 0x402b90
             int32_t v11 = &v10;
@@ -11925,7 +11925,7 @@ int32_t function_402b90(int32_t a1) {
             function_4038c0(a1, (const char *)v11, (uint32_t)strlen((const char *)v11));
             v12++;
             v7 = v15;
-            while (v12 < function_4a96d0_this((int32_t)&v3)) {
+            while (v12 < function_4a96d0((int32_t)&v3)) {
                 int32_t v20 = v15;
                 *(int32_t *)(v20 - 4) = v12;
                 *(int32_t *)(v20 - 8) = function_4a9ac0_this(
@@ -13455,17 +13455,8 @@ int32_t function_403dbc(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 // Address range: 0x403e50 - 0x403e71
 // From class:    .?AVSquirrelObject@@
 // Type:          virtual member function
-int32_t function_403e50(char a1) {
-    // 0x403e50
-    function_4a9d70();
-    if ((a1 & 1) != 0) {
-        // 0x403e61
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x403e6a
-    int32_t result; // 0x403e50
-    return result;
-}
+/* 403E50 is implemented by kinoko_squirrel_object_delete in C++ so the
+   virtual call preserves its receiver and deletes that same wrapper. */
 
 // Address range: 0x403e80 - 0x403ef5
 // From class:    .?AVSquirrelObject@@
@@ -122498,387 +122489,9 @@ int32_t function_45eb00(void) { return 0; }
 #endif
 
 // Address range: 0x45ec60 - 0x45f0bc
-int32_t function_45ec60(void) {
-    /* Legacy callers without ECX cannot reconstruct the Actor receiver. */
-    return 0;
-}
 
-static int32_t function_45ec60_this(int32_t this_ptr) {
-    // 0x45ec60
-    int32_t v1; // 0x45ec60
-    int32_t v2 = this_ptr;
-    int3_t v3; // 0x45ec60
-    int3_t v4 = v3;
-    int32_t v5 = __readfsdword(0); // bp-16, 0x45ec70
-    __writefsdword(0, (int32_t)&v5);
-    int32_t v6 = v2 + 440; // 0x45ec8a
-    int32_t v7 = v2 + 240; // 0x45ec90
-    float32_t * v8 = (float32_t *)v7; // 0x45ec90
-    int3_t v9 = v4 - 1;
-    __frontend_reg_store_fpr(v9, (float80_t)*v8);
-    int32_t v10 = v2 + 444; // 0x45ec96
-    *(float32_t *)(v2 + 248) = (float32_t)__frontend_reg_load_fpr(v9);
-    int32_t v11 = v2 + 448; // 0x45eca2
-    int32_t v12 = v2 + 244; // 0x45eca8
-    float32_t * v13 = (float32_t *)v12; // 0x45eca8
-    __frontend_reg_store_fpr(v9, (float80_t)*v13);
-    *(float32_t *)(v2 + 252) = (float32_t)__frontend_reg_load_fpr(v9);
-    *(int32_t *)(v2 + 456) = *(int32_t *)v6;
-    int32_t v14 = v2 + 452; // 0x45ecc0
-    *(int32_t *)(v2 + 460) = *(int32_t *)v10;
-    *(int32_t *)(v2 + 464) = *(int32_t *)v11;
-    *(int32_t *)(v2 + 468) = *(int32_t *)v14;
-    int32_t v15[2] = { 0, 0 }; // bp-32, 0x45ec60
-    function_45e410_this(v2 + 32, v15);
-    __frontend_reg_store_fpr(v9, 0.0L);
-    float32_t v16; // bp-24, 0x45ec60
-    if (v15[0] == 0) {
-        goto lab_0x45ed3f;
-    } else {
-        // 0x45ecf7
-        __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9));
-        v16 = (float32_t)*(int32_t *)(intptr_t)v15[0];
-        int32_t v17 = function_471060(); // 0x45ecfe
-        float32_t v18 = v16; // 0x45ed05
-        if ((*(int32_t *)((int32_t)v18 + 232) & v17) == 0) {
-            // 0x45ed3d
-            __frontend_reg_store_fpr(v9, 0.0L);
-            goto lab_0x45ed3f;
-        } else {
-            // 0x45ed10
-            __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)((int32_t)v18 + 240));
-            float80_t v19 = __frontend_reg_load_fpr(v9); // 0x45ed19
-            float32_t v20 = *(float32_t *)((int32_t)v18 + 248); // 0x45ed19
-            __frontend_reg_store_fpr(v9, v19 - (float80_t)v20);
-            *(float32_t *)(v2 + 264) = (float32_t)__frontend_reg_load_fpr(v9);
-            int32_t v21 = *(int32_t *)(intptr_t)v15[0]; // 0x45ed25
-            __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)(v21 + 244));
-            float80_t v22 = __frontend_reg_load_fpr(v9); // 0x45ed2d
-            __frontend_reg_store_fpr(v9, v22 - (float80_t)*(float32_t *)(v21 + 252));
-            *(float32_t *)(v2 + 268) = (float32_t)__frontend_reg_load_fpr(v9);
-            __frontend_reg_store_fpr(v9, 0.0L);
-            goto lab_0x45ed4b;
-        }
-    }
-  lab_0x45ed3f:
-    // 0x45ed3f
-    *(float32_t *)(v2 + 264) = (float32_t)__frontend_reg_load_fpr(v9);
-    *(float32_t *)(v2 + 268) = (float32_t)__frontend_reg_load_fpr(v9);
-    goto lab_0x45ed4b;
-  lab_0x45ed4b:;
-    // 0x45ed4b
-    int32_t v23; // 0x45ec60
-    int32_t v24; // 0x45ec60
-    int3_t v25; // 0x45ec60
-    float32_t * v26; // 0x45ec60
-    int3_t v27; // 0x45ec60
-    float32_t v28; // bp-20, 0x45ec60
-    if (*(int32_t *)(v2 + 316) == 0) {
-        goto lab_0x45eede;
-    } else {
-        int32_t v29 = *(int32_t *)(v2 + 200); // 0x45ed58
-        if (v29 == 0) {
-            goto lab_0x45eede;
-        } else {
-            // 0x45ed66
-            if (*(char *)(v29 + 25) == 0) {
-                goto lab_0x45eede;
-            } else {
-                // 0x45ed70
-                if (((*(int32_t *)(v2 + 392) | *(int32_t *)(v2 + 236)) & 0x800000) != 0) {
-                    goto lab_0x45ee92;
-                } else {
-                    // 0x45ed8c
-                    if (*(int32_t *)(v2 + 296) == 0) {
-                        goto lab_0x45ee92;
-                    } else {
-                        float32_t * v30 = (float32_t *)(v2 + 256);
-                        int3_t v31 = v4 - 2; // 0x45ed98
-                        __frontend_reg_store_fpr(v31, (float80_t)*v30);
-                        __frontend_reg_load_fpr(v31);
-                        __frontend_reg_load_fpr(v9);
-                        char v32 = v1 / 256; // 0x45eda2
-                        v26 = v30;
-                        if ((llvm_ctpop_i8(v32 & 68) & 1) != 0) {
-                            goto lab_0x45ee94;
-                        } else {
-                            int32_t v33 = v2 + 276;
-                            float32_t * v34 = (float32_t *)v33; // 0x45edab
-                            __frontend_reg_store_fpr(v9, (float80_t)*v34);
-                            __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9) * (float80_t)*v30);
-                            __frontend_reg_store_fpr(v31, 0.0L);
-                            __frontend_reg_load_fpr(v31);
-                            __frontend_reg_load_fpr(v9);
-                            char v35 = llvm_ctpop_i8(v32 & 65); // 0x45edbd
-                            float80_t v36 = __frontend_reg_load_fpr(v31);
-                            if ((v35 & 1) == 0) {
-                                // 0x45ee1f
-                                __frontend_reg_load_fpr(v9);
-                                v25 = v9;
-                                v24 = v33;
-                                if ((v1 & 0x4100) != 0) {
-                                    goto lab_0x45eeb2;
-                                } else {
-                                    // 0x45ee2c
-                                    __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)(v2 + 264));
-                                    __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9) + (float80_t)*v30);
-                                    v16 = __frontend_reg_load_fpr(v4);
-                                    __frontend_reg_store_fpr(v4, (float80_t)*v30);
-                                    float80_t v37 = __frontend_reg_load_fpr(v4); // 0x45ee41
-                                    v28 = v37;
-                                    __frontend_reg_store_fpr(v4, v37);
-                                    __frontend_reg_store_fpr(v4, fabsl(__frontend_reg_load_fpr(v4)));
-                                    float80_t v38 = __frontend_reg_load_fpr(v4); // 0x45ee49
-                                    v28 = v38;
-                                    __frontend_reg_store_fpr(v4, v38);
-                                    v28 = __frontend_reg_load_fpr(v4);
-                                    __frontend_reg_store_fpr(v4, (float80_t)*v30);
-                                    __frontend_reg_store_fpr(v4, -__frontend_reg_load_fpr(v4));
-                                    __frontend_reg_store_fpr(v4, __frontend_reg_load_fpr(v4) * (float80_t)*v34);
-                                    __frontend_reg_store_fpr(v9, (float80_t)v28);
-                                    __frontend_reg_load_fpr(v9);
-                                    __frontend_reg_load_fpr(v4);
-                                    if ((llvm_ctpop_i8(v32 & 5) & 1) != 0) {
-                                        // 0x45ee6c
-                                        __frontend_reg_store_fpr(v4, __frontend_reg_load_fpr(v4));
-                                        __frontend_reg_store_fpr(v4, (float80_t)*v30);
-                                        float80_t v39 = __frontend_reg_load_fpr(v4); // 0x45ee74
-                                        v28 = v39;
-                                        __frontend_reg_store_fpr(v4, v39);
-                                        __frontend_reg_store_fpr(v4, fabsl(__frontend_reg_load_fpr(v4)));
-                                        float80_t v40 = __frontend_reg_load_fpr(v4); // 0x45ee7c
-                                        v28 = v40;
-                                        __frontend_reg_store_fpr(v4, v40);
-                                    }
-                                    // 0x45ee82
-                                    __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)(v2 + 260));
-                                    float80_t v41 = __frontend_reg_load_fpr(v9); // 0x45ee88
-                                    __frontend_reg_store_fpr(v9, v41 + (float80_t)*(float32_t *)(v2 + 268));
-                                    int3_t v42 = v4 + 1; // 0x45ee8e
-                                    __frontend_reg_store_fpr(v42, __frontend_reg_load_fpr(v4) + __frontend_reg_load_fpr(v42));
-                                    v23 = v33;
-                                    v27 = v42;
-                                    goto lab_0x45eeaf;
-                                }
-                            } else {
-                                // 0x45edc2
-                                __frontend_reg_store_fpr(v31, v36);
-                                __frontend_reg_store_fpr(v31, (float80_t)*(float32_t *)(v2 + 264));
-                                __frontend_reg_store_fpr(v31, __frontend_reg_load_fpr(v31) + (float80_t)*v30);
-                                v16 = __frontend_reg_load_fpr(v9);
-                                __frontend_reg_store_fpr(v9, (float80_t)*v30);
-                                float80_t v43 = __frontend_reg_load_fpr(v9); // 0x45edd9
-                                v28 = v43;
-                                __frontend_reg_store_fpr(v9, v43);
-                                __frontend_reg_store_fpr(v9, fabsl(__frontend_reg_load_fpr(v9)));
-                                float80_t v44 = __frontend_reg_load_fpr(v9); // 0x45ede1
-                                v28 = v44;
-                                __frontend_reg_store_fpr(v9, v44);
-                                float80_t v45 = __frontend_reg_load_fpr(v9); // 0x45ede7
-                                v28 = v45;
-                                __frontend_reg_store_fpr(v9, v45);
-                                __frontend_reg_load_fpr(v9);
-                                __frontend_reg_load_fpr(v4);
-                                if ((llvm_ctpop_i8(v32 & 5) & 1) != 0) {
-                                    // 0x45edf6
-                                    __frontend_reg_store_fpr(v4, __frontend_reg_load_fpr(v4));
-                                    __frontend_reg_store_fpr(v4, (float80_t)*v30);
-                                    float80_t v46 = __frontend_reg_load_fpr(v4); // 0x45edfe
-                                    v28 = v46;
-                                    __frontend_reg_store_fpr(v4, v46);
-                                    __frontend_reg_store_fpr(v4, fabsl(__frontend_reg_load_fpr(v4)));
-                                    float80_t v47 = __frontend_reg_load_fpr(v4); // 0x45ee06
-                                    v28 = v47;
-                                    __frontend_reg_store_fpr(v4, v47);
-                                }
-                                // 0x45ee0c
-                                __frontend_reg_store_fpr(v9, (float80_t)*(float32_t *)(v2 + 260));
-                                float80_t v48 = __frontend_reg_load_fpr(v9); // 0x45ee12
-                                __frontend_reg_store_fpr(v9, v48 + (float80_t)*(float32_t *)(v2 + 268));
-                                int3_t v49 = v4 + 1; // 0x45ee18
-                                __frontend_reg_store_fpr(v49, __frontend_reg_load_fpr(v4) + __frontend_reg_load_fpr(v49));
-                                v23 = v33;
-                                v27 = v49;
-                                goto lab_0x45eeaf;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-  lab_0x45eede:;
-    int3_t v50 = v4 - 2; // 0x45eede
-    __frontend_reg_store_fpr(v50, (float80_t)*(float32_t *)(v2 + 256));
-    float80_t v51 = __frontend_reg_load_fpr(v50); // 0x45eee6
-    __frontend_reg_store_fpr(v50, v51 + (float80_t)*(float32_t *)(v2 + 264));
-    __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9) + (float80_t)*v8);
-    *v8 = (float32_t)__frontend_reg_load_fpr(v4);
-    __frontend_reg_store_fpr(v4, (float80_t)*(float32_t *)(v2 + 260));
-    float80_t v52 = __frontend_reg_load_fpr(v4); // 0x45eef6
-    __frontend_reg_store_fpr(v4, v52 + (float80_t)*(float32_t *)(v2 + 268));
-    int3_t v53 = v4 + 1; // 0x45eef6
-    __frontend_reg_store_fpr(v53, __frontend_reg_load_fpr(v53) + (float80_t)*v13);
-    *v13 = (float32_t)__frontend_reg_load_fpr(v4 + 2);
-    *(int32_t *)(v2 + 284) = 0;
-    *(int32_t *)(v2 + 288) = 0;
-    *(int32_t *)(v2 + 292) = 0;
-    *(int32_t *)(v2 + 296) = 0;
-    int3_t v54 = v4 + 3; // 0x45ef1a
-    goto lab_0x45ef20;
-  lab_0x45ef20:;
-    int3_t v55 = v54;
-    __frontend_reg_load_fpr(v55);
-    int3_t v56 = v55 + 1;
-    float32_t * v57; // 0x45ec60
-    int3_t v58; // 0x45ec60
-    float32_t * v59; // 0x45ec60
-    int3_t v60; // 0x45ec60
-    if ((llvm_ctpop_i8((char)(v1 / 256) & 5) & 1) == 0) {
-        // 0x45ef5d
-        __frontend_reg_store_fpr(v55, (float80_t)*(float32_t *)(v2 + 424));
-        float80_t v61 = __frontend_reg_load_fpr(v55); // 0x45ef63
-        float32_t * v62 = (float32_t *)(v2 + 168);
-        __frontend_reg_store_fpr(v55, v61 * (float80_t)*v62);
-        float80_t v63 = __frontend_reg_load_fpr(v55); // 0x45ef69
-        float32_t * v64 = (float32_t *)(v2 + 172); // 0x45ef69
-        __frontend_reg_store_fpr(v55, v63 * (float80_t)*v64);
-        float80_t v65 = __frontend_reg_load_fpr(v55); // 0x45ef6f
-        __frontend_reg_store_fpr(v55, v65 + (float80_t)*v8);
-        float80_t v66 = __frontend_reg_load_fpr(v56); // 0x45ef71
-        float32_t * v67 = (float32_t *)v6;
-        *v67 = (float32_t)v66;
-        __frontend_reg_store_fpr(v56, (float80_t)*(float32_t *)(v2 + 432));
-        __frontend_reg_store_fpr(v56, __frontend_reg_load_fpr(v56) * (float80_t)*v62);
-        __frontend_reg_store_fpr(v56, __frontend_reg_load_fpr(v56) * (float80_t)*v64);
-        __frontend_reg_store_fpr(v56, __frontend_reg_load_fpr(v56) + (float80_t)*v8);
-        v59 = v67;
-        v58 = v55 + 3;
-        v57 = v62;
-        v60 = v55 + 2;
-    } else {
-        // 0x45ef2d
-        __frontend_reg_store_fpr(v55, (float80_t)*v8);
-        int3_t v68 = v55 - 1; // 0x45ef2f
-        __frontend_reg_store_fpr(v68, (float80_t)*(float32_t *)(v2 + 432));
-        float80_t v69 = __frontend_reg_load_fpr(v68); // 0x45ef35
-        float32_t * v70 = (float32_t *)(v2 + 168);
-        __frontend_reg_store_fpr(v68, v69 * (float80_t)*v70);
-        float80_t v71 = __frontend_reg_load_fpr(v68); // 0x45ef3b
-        float32_t * v72 = (float32_t *)(v2 + 172); // 0x45ef3b
-        __frontend_reg_store_fpr(v68, v71 * (float80_t)*v72);
-        float80_t v73 = __frontend_reg_load_fpr(v68); // 0x45ef41
-        __frontend_reg_store_fpr(v55, __frontend_reg_load_fpr(v55) - v73);
-        float80_t v74 = __frontend_reg_load_fpr(v55); // 0x45ef43
-        float32_t * v75 = (float32_t *)v6;
-        *v75 = (float32_t)v74;
-        __frontend_reg_store_fpr(v55, (float80_t)*v8);
-        __frontend_reg_store_fpr(v68, (float80_t)*(float32_t *)(v2 + 424));
-        __frontend_reg_store_fpr(v68, __frontend_reg_load_fpr(v68) * (float80_t)*v70);
-        __frontend_reg_store_fpr(v68, __frontend_reg_load_fpr(v68) * (float80_t)*v72);
-        float80_t v76 = __frontend_reg_load_fpr(v68); // 0x45ef59
-        __frontend_reg_store_fpr(v55, __frontend_reg_load_fpr(v55) - v76);
-        v59 = v75;
-        v58 = v56;
-        v57 = v70;
-        v60 = v55;
-    }
-    int3_t v77 = v58;
-    float80_t v78 = __frontend_reg_load_fpr(v60); // 0x45ef87
-    float32_t * v79 = (float32_t *)v11; // 0x45ef87
-    *v79 = (float32_t)v78;
-    __frontend_reg_store_fpr(v60, (float80_t)*(float32_t *)(v2 + 428));
-    float80_t v80 = __frontend_reg_load_fpr(v60); // 0x45ef93
-    __frontend_reg_store_fpr(v60, v80 * (float80_t)*v57);
-    float80_t v81 = __frontend_reg_load_fpr(v60); // 0x45ef99
-    float32_t * v82 = (float32_t *)(v2 + 176); // 0x45ef99
-    __frontend_reg_store_fpr(v60, v81 * (float80_t)*v82);
-    float80_t v83 = __frontend_reg_load_fpr(v60); // 0x45ef9f
-    __frontend_reg_store_fpr(v60, v83 + (float80_t)*v13);
-    float80_t v84 = __frontend_reg_load_fpr(v77); // 0x45efa5
-    v16 = v84;
-    __frontend_reg_store_fpr(v77, v84);
-    *(float32_t *)v10 = (float32_t)__frontend_reg_load_fpr(v77);
-    __frontend_reg_store_fpr(v60, (float80_t)*(float32_t *)(v2 + 436));
-    float80_t v85 = __frontend_reg_load_fpr(v60); // 0x45efb7
-    __frontend_reg_store_fpr(v60, v85 * (float80_t)*v57);
-    float80_t v86 = __frontend_reg_load_fpr(v60); // 0x45efbd
-    __frontend_reg_store_fpr(v60, v86 * (float80_t)*v82);
-    float80_t v87 = __frontend_reg_load_fpr(v60); // 0x45efc3
-    __frontend_reg_store_fpr(v60, v87 + (float80_t)*v13);
-    float80_t v88 = __frontend_reg_load_fpr(v77); // 0x45efc9
-    v16 = v88;
-    __frontend_reg_store_fpr(v77, v88);
-    *(float32_t *)v14 = (float32_t)__frontend_reg_load_fpr(v77);
-    __frontend_reg_store_fpr(v60, (float80_t)*v59);
-    *(float32_t *)(v2 + 352) = (float32_t)__frontend_reg_load_fpr(v60);
-    int3_t v89 = v60 + 2; // 0x45efdd
-    float80_t v90 = __frontend_reg_load_fpr(v77); // 0x45efdd
-    __frontend_reg_store_fpr(v77, __frontend_reg_load_fpr(v89));
-    __frontend_reg_store_fpr(v89, v90);
-    *(float32_t *)(v2 + 356) = (float32_t)__frontend_reg_load_fpr(v77);
-    __frontend_reg_store_fpr(v60, (float80_t)*v79);
-    float80_t v91 = __frontend_reg_load_fpr(v60); // 0x45efeb
-    __frontend_reg_store_fpr(v60, v91 - (float80_t)*v59);
-    int32_t v92 = function_4ab9d0(); // 0x45efed
-    float80_t v93 = __frontend_reg_load_fpr(v60); // 0x45eff2
-    __frontend_reg_store_fpr(v77, __frontend_reg_load_fpr(v77) - v93);
-    *(int16_t *)(v2 + 388) = (int16_t)v92;
-    *(int16_t *)(v2 + 390) = (int16_t)function_4ab9d0();
-    int32_t result = 0; // 0x45f00c
-    if (v15[0] != 0) {
-        int32_t v94 = function_4045c0(
-            *(int32_t *)(intptr_t)v15[0] + 440, v6); // 0x45f018
-        result = v94;
-        if ((char)v94 == 0) {
-            // 0x45f024
-            *(int32_t *)(v2 + 32) = 0;
-            int32_t * v95 = (int32_t *)(v2 + 36); // 0x45f02b
-            int32_t v96 = *v95; // 0x45f02b
-            *v95 = 0;
-            if (v96 != 0) {
-                int32_t * v97 = (int32_t *)(v96 + 8); // 0x45f03f
-                *v97 = *v97 - 1;
-            }
-            int32_t v98 = retdec_msvc_0_Init_locks_std__QAE_XZ5(); // 0x45f04f
-            function_4a97b0((char)&g601, v98);
-            result = function_4a9d70();
-        }
-    }
-    // 0x45f072
-    retdec_release_squirrel_object(v15[1]);
-    __writefsdword(0, v5);
-    return result;
-  lab_0x45ee92:
-    // 0x45ee92
-    __frontend_reg_store_fpr(v9, __frontend_reg_load_fpr(v9));
-    v26 = (float32_t *)(v2 + 256);
-    goto lab_0x45ee94;
-  lab_0x45ee94:
-    // 0x45ee94
-    __frontend_reg_store_fpr(v9, (float80_t)*v26);
-    float80_t v104 = __frontend_reg_load_fpr(v9); // 0x45ee9a
-    __frontend_reg_store_fpr(v9, v104 + (float80_t)*(float32_t *)(v2 + 264));
-    v16 = __frontend_reg_load_fpr(v4);
-    __frontend_reg_store_fpr(v4, (float80_t)*(float32_t *)(v2 + 260));
-    float80_t v105 = __frontend_reg_load_fpr(v4); // 0x45eea9
-    __frontend_reg_store_fpr(v4, v105 + (float80_t)*(float32_t *)(v2 + 268));
-    v23 = v2 + 276;
-    v27 = v4 + 1;
-    goto lab_0x45eeaf;
-  lab_0x45eeaf:
-    // 0x45eeaf
-    v28 = __frontend_reg_load_fpr(v27);
-    v25 = v27;
-    v24 = v23;
-    goto lab_0x45eeb2;
-  lab_0x45eeb2:
-    // 0x45eeb2
-    function_469750((float80_t)(int80_t)v2, v6, v2 + 284, v7, v12, (int32_t)&v16, (int32_t)&v28, v24);
-    __frontend_reg_store_fpr(v25, 0.0L);
-    v54 = v25;
-    goto lab_0x45ef20;
-}
+
+
 
 // Address range: 0x45f0c0 - 0x45f0e1
 // From class:    .?AVActor@@
@@ -125728,7 +125341,7 @@ static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
 }
 
 /* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
-static int32_t retdec_actor_update_motion(int32_t actor)
+static int32_t function_45ec60(int32_t actor)
 {
     float parent_dx = 0.0f;
     float parent_dy = 0.0f;
@@ -126146,7 +125759,7 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
         if (actor != 0 &&
             *(unsigned char *)(intptr_t)(actor + 40) != 0 &&
             (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
-            retdec_actor_update_motion(actor);
+            function_45ec60(actor);
         retdec_trace_actor_window_state(3, actor, update_mask);
         retdec_trace_player_state("after-motion", actor, camera);
     }
@@ -139499,7 +139112,7 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
         }
     }
     /* 46F923 reverses the collected names before publishing them. */
-    function_4a99f0_this((int32_t)(intptr_t)layer_names);
+    function_4a99f0((int32_t)(intptr_t)layer_names);
     function_4a9840_this(map_state, "layer_name", layer_names);
     function_4a9d70_this((int32_t)(intptr_t)layer_names);
 
@@ -142773,7 +142386,7 @@ int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
                 ok = 0;
         } else if (value_type == 0x08000040u) {
             int32_t nested[3];
-            int32_t count = function_4a96d0_this(
+            int32_t count = function_4a96d0(
                 (int32_t)(intptr_t)value);
             if (count < 0 ||
                 !retdec_table_stream_write(stream_ptr, &count,
@@ -185913,11 +185526,8 @@ int32_t function_489f20(void) {
 // Address range: 0x489f30 - 0x489f4b
 // IDA: SQObjectPtr::Release(this).  RetDec dropped the __thiscall receiver.
 static int32_t function_489f30_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-    retdec_squirrel_release(
-        *(int32_t *)(intptr_t)this_ptr,
-        *(int32_t *)(intptr_t)(this_ptr + 4));
+    if (this_ptr != 0)
+        kinoko_sq_pair_destroy(this_ptr);
     return 0;
 }
 
@@ -185928,10 +185538,7 @@ static int32_t function_489f30_this(int32_t this_ptr) {
 static int32_t function_489f50_this(int32_t this_ptr, int32_t source_ptr) {
     if (this_ptr == 0 || source_ptr == 0)
         return this_ptr;
-    retdec_squirrel_assign(
-        (int32_t *)(intptr_t)this_ptr,
-        (const int32_t *)(intptr_t)source_ptr);
-    return this_ptr;
+    return kinoko_sq_pair_assign(this_ptr, source_ptr);
 }
 
 // Temporary link-compatible fallback for generated call sites that still
@@ -191180,32 +190787,17 @@ int32_t function_48ba20(int32_t a1, int32_t a2) {
 }
 
 /* Receiver-bearing SQClosure destructor used by both virtual release slots. */
-static int32_t function_48bba0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g66;
-    if (*(int32_t *)(intptr_t)(this_ptr + 4) >= 0) {
-        int32_t shared_state = *(int32_t *)(intptr_t)(this_ptr + 20);
-        if (shared_state != 0)
-            function_49a170(shared_state + 68, this_ptr);
-    }
-    function_48b920_this(this_ptr + 52);
-    function_48b920_this(this_ptr + 40);
-    retdec_squirrel_release(
-        *(int32_t *)(intptr_t)(this_ptr + 32),
-        *(int32_t *)(intptr_t)(this_ptr + 36));
-    retdec_squirrel_release(
-        *(int32_t *)(intptr_t)(this_ptr + 24),
-        *(int32_t *)(intptr_t)(this_ptr + 28));
-    return function_48e4d0_this(this_ptr);
+static int32_t function_48bba0(int32_t this_ptr) {
+    if (this_ptr != 0)
+        kinoko_sq_closure_destroy(this_ptr);
+    return 0;
 }
 
 static int32_t retdec_delete_squirrel_script_closure_scalar_this(
     int32_t object_ptr, int32_t flags) {
     if (object_ptr == 0)
         return 0;
-    function_48bba0_this(object_ptr);
+    function_48bba0(object_ptr);
     if ((flags & 1) != 0)
         function_4985b0(object_ptr);
     return object_ptr;
@@ -191244,10 +190836,7 @@ int32_t function_48bb30(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x48bba0 - 0x48bc63
-int32_t function_48bba0(void) {
-    /* Live destructor calls use function_48bba0_this via function_48bc70. */
-    return 0;
-}
+
 
 // Address range: 0x48bc70 - 0x48bc91
 // From class:    .?AUSQClosure@@
@@ -209430,33 +209019,14 @@ int32_t function_499130(void) {
 }
 #endif
 
-static int32_t function_4992c0_this(int32_t this_ptr) {
-    int32_t owner;
-    int32_t result;
-
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g76;
-    if (*(int32_t *)(intptr_t)(this_ptr + 4) > -1) {
-        owner = *(int32_t *)(intptr_t)(this_ptr + 20);
-        if (owner != 0)
-            function_49a170(owner + 68, this_ptr);
-    }
-    function_499130_this(this_ptr);
-    retdec_release_squirrel_value_exact(
-        *(int32_t *)(intptr_t)(this_ptr + 68),
-        *(int32_t *)(intptr_t)(this_ptr + 72));
-    function_48b920_this(this_ptr + 56);
-    function_498e90_this(this_ptr + 44);
-    function_498e90_this(this_ptr + 32);
-    result = function_48e4d0_this(this_ptr);
-    return result;
+static int32_t function_4992c0(int32_t this_ptr) {
+    if (this_ptr != 0)
+        kinoko_sq_class_destroy(this_ptr);
+    return 0;
 }
 
 // Address range: 0x4992c0 - 0x499377
-int32_t function_4992c0(void) {
-    return 0;
-}
+
 
 // Address range: 0x499380 - 0x4993ac
 // From class:    .?AUSQClass@@
@@ -209465,7 +209035,7 @@ static int32_t retdec_delete_squirrel_class_this(int32_t this_ptr,
                                                  int32_t flags) {
     if (this_ptr == 0)
         return 0;
-    function_4992c0_this(this_ptr);
+    function_4992c0(this_ptr);
     if ((flags & 1) != 0)
         function_4985b0(this_ptr);
     return this_ptr;
@@ -226149,30 +225719,12 @@ int32_t function_4a96c0(void) {
 }
 
 /* SquirrelObject::GetSize(), with the lost __thiscall receiver restored. */
-static int32_t function_4a96d0_this(int32_t this_ptr) {
-    int32_t type;
-    int32_t result;
-
-    if (this_ptr == 0 || g644 == 0)
-        return 0;
-    type = *(int32_t *)(intptr_t)(this_ptr + 4);
-    if (type != 0x8000040 && type != 0x0A000020 &&
-        type != 0x08000010)
-        return 0;
-    function_48ab90((int32_t)g644, type,
-                    *(int32_t *)(intptr_t)(this_ptr + 8));
-    result = function_48c700((int32_t)g644, -1);
-    function_48aa30((int32_t)g644, 1);
-    return result;
+static int32_t function_4a96d0(int32_t this_ptr) {
+    return kinoko_squirrel_object_size(this_ptr, (int32_t)(intptr_t)g644);
 }
 
 // Address range: 0x4a96d0 - 0x4a9723
-int32_t function_4a96d0(void) {
-    /* Legacy call sites without a recovered receiver must not dereference
-       an arbitrary stack value. Recovered __thiscall callers use the
-       explicit helper above. */
-    return 0;
-}
+
 
 // Address range: 0x4a9730 - 0x4a97ae
 int32_t function_4a9730(int32_t a1, int32_t a2) {
@@ -226281,20 +225833,10 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
 }
 
 // Address range: 0x4a99f0 - 0x4a9a2c
-int32_t function_4a99f0(void) {
-    /* Recovered callers pass the original ECX receiver explicitly. */
-    return 0;
-}
 
-static int32_t function_4a99f0_this(int32_t this_ptr) {
-    int32_t vm = (int32_t)(intptr_t)g644;
-    int32_t result;
 
-    function_48ab90(vm, *(int32_t *)(intptr_t)(this_ptr + 4),
-                    *(int32_t *)(intptr_t)(this_ptr + 8));
-    result = function_48c400(vm, -1);
-    function_48aa30(vm, 1);
-    return result == 0;
+static int32_t function_4a99f0(int32_t this_ptr) {
+    return kinoko_squirrel_object_clear(this_ptr, (int32_t)(intptr_t)g644);
 }
 
 // Address range: 0x4a9a30 - 0x4a9a34
@@ -227894,7 +227436,7 @@ int32_t function_4ab020(int32_t a1, int32_t * a2, int32_t a3) {
     int32_t v3; // bp-56, 0x4ab020
     int32_t v4 = &v3; // bp-96, 0x4ab0bc
     function_4aa3a0(&v3, "__ca");
-    int32_t v5 = function_4a96d0_this((int32_t)&v3); // 0x4ab0cb
+    int32_t v5 = function_4a96d0((int32_t)&v3); // 0x4ab0cb
     int32_t result; // 0x4ab14e
     if (v5 < 2) {
         // 0x4ab138

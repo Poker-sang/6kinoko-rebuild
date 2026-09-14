@@ -390,7 +390,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         "if (typeof walkingProbe.funcUpdate != \"function\") throw \"missing walking callback\";"));
     retdec_actor_manager_refresh(manager);
     function_468620_this(PTR(g_514300_storage));
-    retdec_actor_update_motion(actor);
+    function_45ec60(actor);
     CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
     for (int phase = 0; phase < 3; ++phase) {
         float start_x = *(float *)(intptr_t)(actor + 240);
@@ -402,7 +402,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             retdec_actor_tick(actor);
             CHECK(vm_failures == failures_before);
             function_468620_this(PTR(g_514300_storage));
-            retdec_actor_update_motion(actor);
+            function_45ec60(actor);
             if (*(float *)(intptr_t)(actor + 304) < 12 ||
                 *(float *)(intptr_t)(actor + 452) != 240)
                 fprintf(stderr, "walk phase=%d frame=%d x=%g -> %g bottom=%g width=%g "
@@ -492,7 +492,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         CHECK(actor);
         retdec_actor_manager_refresh(manager);
         function_468620_this(PTR(g_514300_storage));
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         for (int direction = 1; direction >= -1; direction -= 2) {
             CHECK(execute_source(vm, root + 2, direction == 1 ? "input.x = 1;" : "input.x = -1;"));
@@ -503,7 +503,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                     "throw \"invalid chip flag result\";"));
                 retdec_actor_tick(actor);
                 function_468620_this(PTR(g_514300_storage));
-                retdec_actor_update_motion(actor);
+                function_45ec60(actor);
                 if (failures_before != vm_failures || *(float *)(intptr_t)(actor + 304) < 12 ||
                     *(float *)(intptr_t)(actor + 452) > 896)
                     fprintf(stderr, "actual stage dir=%d frame=%d xy=(%g,%g) free=(%g,%g) "
@@ -755,8 +755,8 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             float old_x = *(float *)(intptr_t)(rider + 240);
             retdec_actor_tick(stone);
             function_468620_this(PTR(g_514300_storage));
-            retdec_actor_update_motion(stone);
-            retdec_actor_update_motion(rider);
+            function_45ec60(stone);
+            function_45ec60(rider);
             CHECK(vm_failures == failures);
             CHECK(*(float *)(intptr_t)(rider + 240) == old_x + direction * 2.0f);
             CHECK(*(int32_t *)(intptr_t)(rider + 36) == *(int32_t *)(intptr_t)(stone + 28));
@@ -767,12 +767,12 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             int32_t locked[2];
             function_45e410_this(rider + 32, locked);
             CHECK(locked[0] == 0 && locked[1] == 0);
-            retdec_actor_update_motion(rider);
+            function_45ec60(rider);
             CHECK(*(float *)(intptr_t)(rider + 264) == 0);
             CHECK(execute_source(vm, root + 2, "player.SetStep(null);"));
         } else {
             CHECK(execute_source(vm, root + 2, "player.x = stoneProbe.right + 64;"));
-            retdec_actor_update_motion(rider);
+            function_45ec60(rider);
             CHECK(*(int32_t *)(intptr_t)(rider + 36) == 0);
             CHECK(execute_source(vm, root + 2,
                 "if (player.step != null) throw \"walk-off did not detach\";"));
@@ -856,7 +856,7 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
                     CHECK(fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f);
                     ++homing_frames;
                 }
-                retdec_actor_update_motion(actor);
+                function_45ec60(actor);
             }
             CHECK(released);
             CHECK(retdec_actor_manager_refresh(manager) == 0);
@@ -1191,7 +1191,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "if(victim.vy!=-5 || victim.user.blowOff) throw \"ordinary death setup\";"));
     for(int frame=0;frame<90;++frame) {
         retdec_actor_tick(victim);
-        retdec_actor_update_motion(victim);
+        function_45ec60(victim);
         CHECK(vm_failures==failures);
         if(frame==30) CHECK(*(float *)(intptr_t)(victim+260)>0);
     }
@@ -1201,7 +1201,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "if(fairy.vy!=-5) throw \"stomp death setup\";"));
     for(int frame=0;frame<90;++frame) {
         retdec_actor_tick(fairy);
-        retdec_actor_update_motion(fairy);
+        function_45ec60(fairy);
         CHECK(vm_failures==failures);
     }
     CHECK(*(float *)(intptr_t)(fairy+244)>160);
@@ -1282,7 +1282,7 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(vm_failures == failures);
         function_468620_this(PTR(g_514300_storage));
         for (int i = 0; i < 2; ++i) {
-            retdec_actor_update_motion(actors[i]);
+            function_45ec60(actors[i]);
             CHECK(_finite(*(float *)(intptr_t)(actors[i] + 244)));
         }
     }
@@ -1446,7 +1446,7 @@ static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
     retdec_actor_refresh_bounds(rider);
     function_462ce0(stone,rider);
     CHECK(execute_source(vm,root+2,"player.x=fallingStone.right+64;"));
-    retdec_actor_update_motion(rider);
+    function_45ec60(rider);
     retdec_actor_tick(stone);
     block=function_463b40_this(manager,block_init[0],block_init[1],block_init[2],
         *(float *)(intptr_t)(stone+240),240,-1,PTR(&g16),0x05000002,0x435,0);
@@ -1457,7 +1457,7 @@ static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
     for(int frame=0;frame<80;++frame) {
         retdec_actor_tick(stone);
         function_468620_this(PTR(g_514300_storage));
-        retdec_actor_update_motion(stone);
+        function_45ec60(stone);
         function_462ce0(stone,block);
         CHECK(vm_failures==failures);
         CHECK(_finite(*(float *)(intptr_t)(stone+244)));
@@ -1515,7 +1515,7 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
             "transformProbe.user.count8head=91; transformProbe.user.invincibleCount=0;\n"
             "transformProbe.user.SetTake(TAKE_STAND);"));
         retdec_actor_tick(actor);
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(vm_failures==failures);
         CHECK(execute_source(vm,root+2,
             "if (transformProbe.user.type!=TYPE_2HEAD || transformProbe.user.count8head!=90 || "
@@ -1913,7 +1913,7 @@ static int test_branch_motion(int32_t manager) {
             retdec_actor_manager_refresh(manager);
             for (int frame = 0; frame < 240; ++frame) {
                 function_468620_this(PTR(g_514300_storage));
-                retdec_actor_update_motion(actor);
+                function_45ec60(actor);
                 float *y = (float *)(intptr_t)(actor + 244);
                 float *vy = (float *)(intptr_t)(actor + 260);
                 if (!_finite(*y) || !_finite(*(float *)(intptr_t)(actor + 308)))
@@ -2597,6 +2597,51 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int test_recovered_object_entries(int32_t vm, int32_t *root) {
+    int32_t table[3], array[3], text[3];
+    const int32_t stack_before = function_48aa20(vm);
+    CHECK(execute_source(vm, root + 2,
+        "entry_table <- {a=1,b=2}; entry_array <- [1,2,3]; entry_text <- \"entries\";"));
+    function_4aa3a0_this(PTR(root + 1), PTR(table), "entry_table");
+    function_4aa3a0_this(PTR(root + 1), PTR(array), "entry_array");
+    function_4aa3a0_this(PTR(root + 1), PTR(text), "entry_text");
+    CHECK(function_4a96d0(PTR(table)) == 2);
+    CHECK(function_4a96d0(PTR(array)) == 3);
+    CHECK(function_4a96d0(PTR(text)) == 7);
+    CHECK(function_4a99f0(PTR(table)) == 1);
+    CHECK(function_4a96d0(PTR(table)) == 0);
+    CHECK(function_48aa20(vm) == stack_before);
+
+    int32_t methods[2] = {0, PTR(release_error_probe)};
+    int32_t object[3] = {PTR(methods), 1, 0};
+    int32_t source[2] = {0x08000080, PTR(object)};
+    int32_t destination[2] = {0x01000001, 0};
+    const int releases_before = error_releases;
+    CHECK(function_489f50_this(PTR(destination), PTR(source)) == PTR(destination));
+    CHECK(object[1] == 2);
+    CHECK(function_489f50_this(PTR(destination), PTR(destination)) == PTR(destination));
+    CHECK(object[1] == 2);
+    function_489f30_this(PTR(destination));
+    CHECK(object[1] == 1 && error_releases == releases_before);
+    function_489f30_this(PTR(source));
+    CHECK(error_releases == releases_before + 1);
+
+    /* Invoke the actual SquirrelObject vtable through the original ABI.
+       flags=0 destroys a stack wrapper; flags=1 also frees a heap wrapper. */
+    CHECK(retdec_call_thiscall1_result(table, (void *)(intptr_t)g16.e0, 0) == PTR(table));
+    CHECK(table[0] == PTR(&g16) && table[1] == 0x01000001 && table[2] == 0);
+    int32_t *heap = _malloc(3 * sizeof(int32_t));
+    CHECK(heap != NULL);
+    function_4aa3a0_this(PTR(root + 1), PTR(heap), "entry_array");
+    int32_t heap_address = PTR(heap);
+    CHECK(retdec_call_thiscall1_result(heap, (void *)(intptr_t)g16.e0, 1) == heap_address);
+    function_4a9d70_this(PTR(array));
+    function_4a9d70_this(PTR(text));
+    CHECK(function_48aa20(vm) == stack_before);
+    puts("PASS: recovered size/clear, pair assignment/release, and virtual wrapper destruction");
+    return 0;
+}
+
 static int stage_owner_releases;
 static int32_t __fastcall release_stage_owner(void *self, void *unused, int32_t flags) {
     int32_t *owner = *(int32_t **)((char *)self + 4);
@@ -3133,7 +3178,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     g459=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
     retdec_actor_manager_refresh(manager);
     function_468620_this(PTR(g_514300_storage));
-    retdec_actor_update_motion(rider);
+    function_45ec60(rider);
     int failures=0, changes=0, previous_take=*(int32_t *)(intptr_t)(rider+208);
     for(int frame=0;frame<1500;++frame) {
         CHECK(retdec_execute_act_callback(moving_layer+204,24,NULL)>=0);
@@ -3354,7 +3399,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
     CHECK(execute_source(vm,root+2,
         "player.x=platformProbe.right+64; player.SetUpdateFunction(null); player.vy=0.0;"));
-    retdec_actor_update_motion(rider);
+    function_45ec60(rider);
     CHECK(*(int32_t *)(intptr_t)(rider+36)==0);
     for(int frame=0;frame<180;++frame)
         retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
@@ -3554,6 +3599,7 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
@@ -3993,18 +4039,18 @@ int main(int argc, char **argv) {
         *(float *)(intptr_t)(actor + 260) = 5;
         retdec_actor_manager_refresh(manager);
         function_468620_this(PTR(g_514300_storage));
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 240) == 52);
         CHECK(*(float *)(intptr_t)(actor + 244) == 45);
         for (int i = 0; i < 12; ++i) {
             function_468620_this(PTR(g_514300_storage));
-            retdec_actor_update_motion(actor);
+            function_45ec60(actor);
         }
         CHECK(*(float *)(intptr_t)(actor + 244) == 100);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         CHECK(*(int32_t *)(intptr_t)(actor + 36) != 0);
         *(float *)(intptr_t)(actor + 260) = -6;
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 94);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
         CHECK(*(int32_t *)(intptr_t)(actor + 36) == 0);
@@ -4016,7 +4062,7 @@ int main(int argc, char **argv) {
         position_actor(actor, 94, 80);
         *(float *)(intptr_t)(actor + 256) = 12;
         *(float *)(intptr_t)(actor + 260) = 0;
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 240) == 102);
         CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
         function_45dbd0_this(actor, 40, 0);
@@ -4030,12 +4076,12 @@ int main(int argc, char **argv) {
         position_actor(actor, 50, 80);
         *(float *)(intptr_t)(actor + 256) = 0;
         *(float *)(intptr_t)(actor + 260) = -18;
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 68);
         CHECK(*(int32_t *)(intptr_t)(actor + 288) != 0);
         *(uint32_t *)(chips[0].bytes + 16) = 0x20;
         position_actor(actor, 50, 80);
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 62);
         CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
         records[0][2] = 16;
@@ -4044,19 +4090,19 @@ int main(int argc, char **argv) {
         *(int16_t *)(chips[0].bytes + 34) = 1;
         position_actor(actor, 16, 40);
         *(float *)(intptr_t)(actor + 260) = 0;
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 32);
         CHECK(*(float *)(intptr_t)(actor + 276) == -1);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         *(int16_t *)(chips[0].bytes + 34) = 2;
         position_actor(actor, 16, 40);
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 32);
         CHECK(*(float *)(intptr_t)(actor + 276) == 1);
         *(uint8_t *)((char *)animation + 25) = 0;
         position_actor(actor, 16, 40);
         *(float *)(intptr_t)(actor + 260) = 5;
-        retdec_actor_update_motion(actor);
+        function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 45);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
         {
