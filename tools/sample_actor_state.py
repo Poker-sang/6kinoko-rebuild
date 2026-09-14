@@ -32,7 +32,7 @@ try:
   if k.SuspendThread(thread)==0xffffffff:raise c.WinError(c.get_last_error())
   try:
    if not k.Wow64GetThreadContext(thread,ctx):raise c.WinError(c.get_last_error())
-   actor=read(a.actor,548)
+   actor=read(a.actor,548) if a.actor else bytes(548)
    def u(offset):return struct.unpack_from('<I',actor,offset)[0]
    def f(offset):return struct.unpack_from('<f',actor,offset)[0]
    r=dict(sample=i,eip=struct.unpack_from('<I',ctx,184)[0],cw=struct.unpack_from('<I',ctx,28)[0],mxcsr=struct.unpack_from('<I',ctx,228)[0],take=u(208),x=f(240),y=f(244),oldy=f(252),vy=f(260),carry=f(268),hit=u(296),parent=u(32),top=f(444),bottom=f(452))
