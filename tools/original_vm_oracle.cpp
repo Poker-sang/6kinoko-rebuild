@@ -8,6 +8,9 @@
 #include <iterator>
 #include <vector>
 #include "kinoko/squirrel_compile_bridge.h"
+#include "kinoko/actor_collision.h"
+#include <cmath>
+#include <float.h>
 
 extern "C" void retdec_trace(const char *message) { std::fprintf(stderr, "%s\n", message); }
 
@@ -15,6 +18,59 @@ static uintptr_t location(uintptr_t address) {
     return reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr)) + address - 0x400000;
 }
 template <typename T> T original(uintptr_t address) { return reinterpret_cast<T>(location(address)); }
+
+static bool collision_mode;
+template<class T> T &slot(void *p, int offset) {
+    return *reinterpret_cast<T *>(static_cast<unsigned char *>(p)+offset);
+}
+static int probe_collision() {
+    using Move = int32_t(__thiscall *)(void *,void *,float *,int32_t *,float *,float *,float *,float *,float *);
+    auto move=original<Move>(0x4689d0);
+    unsigned int control=0; _controlfp_s(&control,0,0);
+    std::printf("collision original control=%08x\n",control);
+    alignas(8) unsigned char a[640]={}, b[640]={}, platform[640]={}, chip[48]={};
+    float layout[8]={}; KinokoCollisionRecord record{chip,layout,0}, scratch[8]{};
+    uintptr_t state[40]={}, candidates[]={reinterpret_cast<uintptr_t>(platform)};
+    state[9]=reinterpret_cast<uintptr_t>(scratch); state[10]=state[11]=state[9]+sizeof(scratch);
+    state[17]=reinterpret_cast<uintptr_t>(candidates); state[21]=1;
+    slot<int32_t>(platform,312)=2;
+    slot<float>(platform,440)=1952; slot<float>(platform,448)=2208;
+    slot<KinokoCollisionRecord>(platform,328)=record;
+    slot<int16_t>(chip,12)=256; slot<int16_t>(chip,14)=32;
+    layout[3]=1952;
+    int differences=0, original_misses=0, rebuilt_misses=0;
+    float previous=48;
+    for(int frame=1;frame<=300;++frame) {
+        const float angle=static_cast<float>(static_cast<float>(frame/300.0f)*3.14159274f);
+        const float offset=static_cast<float>(std::cos(static_cast<double>(angle)))*48.0f;
+        layout[4]=464+offset;
+        // Identical input to each solver, already standing on previous surface.
+        std::memset(a,0,sizeof(a));
+        slot<int32_t>(a,316)=2;
+        slot<float>(a,240)=2000; slot<float>(a,244)=(464+previous)-1;
+        slot<float>(a,440)=1989.5f; slot<float>(a,448)=2010.5f;
+        slot<float>(a,444)=slot<float>(a,244)-30; slot<float>(a,452)=slot<float>(a,244)+1;
+        slot<float>(a,268)=offset-previous;
+        std::memcpy(b,a,sizeof(a));
+        float dx=0,dy=offset-previous;
+        move(state,a,reinterpret_cast<float *>(a+440),reinterpret_cast<int32_t *>(a+284),
+            reinterpret_cast<float *>(a+240),reinterpret_cast<float *>(a+244),&dx,&dy,
+            reinterpret_cast<float *>(a+276));
+        kinoko_actor_collision_move(b,&record,1,0,offset-previous);
+        const int ah=slot<int32_t>(a,296), bh=slot<int32_t>(b,296);
+        if(!ah) ++original_misses; if(!bh) ++rebuilt_misses;
+        if(ah!=bh || slot<float>(a,244)!=slot<float>(b,244)) {
+            ++differences;
+            std::printf("DIFF frame=%d offset=%.9g floor=%.9g original=(%.9g,%d) rebuilt=(%.9g,%d)\n",
+                frame,offset,layout[4],slot<float>(a,244),ah,slot<float>(b,244),bh);
+        }
+        previous=offset;
+    }
+    std::printf("collision differences=%d original_misses=%d rebuilt_misses=%d\n",differences,original_misses,rebuilt_misses);
+    std::fflush(stdout);
+    return differences?1:0;
+}
+
 static unsigned char *probe_code;
 static int32_t probe_size;
 static int32_t vm;
@@ -75,6 +131,7 @@ static int WINAPI probe_main(HINSTANCE, HINSTANCE, LPSTR, int) {
     original<void(__cdecl *)(int32_t,decltype(&create_probe),int32_t)>(0x48d850)(vm,create_probe,0);
     original<int32_t(__cdecl *)(int32_t,int32_t,int32_t)>(0x48c950)(vm,-3,0);
     original<void(__cdecl *)(int32_t)>(0x48aa50)(vm);
+    if(collision_mode) return probe_collision();
     const bool ok = execute(probe_code,probe_size);
     if(actor) std::printf("original final instance=%08x callback=%08x\n",
         *reinterpret_cast<uint32_t *>(actor+52),*reinterpret_cast<uint32_t *>(actor+112));
@@ -91,6 +148,7 @@ extern "C" __declspec(dllexport) DWORD WINAPI RunOriginalProbe(void *argument) {
     FILE *out=nullptr; freopen_s(&out,path,"w",stdout);
     std::ifstream source_file(static_cast<const char *>(argument),std::ios::binary);
     const std::string source((std::istreambuf_iterator<char>(source_file)),{});
+    collision_mode=source.find("collision oracle")!=std::string::npos;
     if (!retdec_squirrel_compile_source(source.data(),static_cast<int32_t>(source.size()),
         "original oracle",&probe_code,&probe_size)) return 3;
     return probe_main(nullptr,nullptr,nullptr,0);
