@@ -26,3 +26,28 @@ Symbols for r3 were recovered by relinking its unchanged object/library files to
 Small hidden-window Direct3D9 probes tested device creation, texture creation, D3DXCreateTexture, first use on another thread, BeginScene/Clear/DrawPrimitiveUP/Present, and DirectInput polling. All preserve upward rounding after setup; these limited probes do not identify the application's first reset.
 
 Build r10-audit corresponds to commit736b324. All18 CTests pass (including orange/green lifts, submerged moving map, C++ scope). Three DATs staged with size/SHA256 verification (r10-dat.log). The optional KINOKO_MATH_AUDIT build records the first rounding transition at native-call/frame boundaries and never resets the observed mode. User menu launch pending. This is a diagnostic build, not a claimed fix. Ordinary builds keep this audit disabled.
+
+## r11: scoped BGM environment
+
+E-first-change: r10 live fp-first-change.txt records native-after detail00BB7A40,
+image base00B60000. Link map identifies PlayBgm/function_472080. The BGM prepare
+implementation contained an unscoped _fpreset(), explaining persistent nearest
+rounding. This is a rebuild audio integration defect, not a stage speed rule.
+IDA MCP session db17a7af, original-bgm-load-r11.json confirms 40A6C0 branches on
+queue flag a5: zero calls4096D0 synchronously; nonzero queues. Both paths remain.
+
+Commit41ca9d4: C++ AudioEnvironmentScope saves/restores fenv_t around BGM preparation,
+including early return and C++ exceptions, while preserving default decoder math.
+No collision epsilon, posture override, script, velocity or loading-thread change.
+The earlier original upward rounding and orange lift precision fixes are retained.
+
+Fresh r11-quiet and r11-diag builds each pass18 CTests. Moving-map fixtures now run
+actual archive/Vorbis/SFL/initial-fill code first, substituting only a memory sound
+buffer. They compare the first PCM block against default rounding and check x87
+and SSE restoration after success, invalid encoded input, device creation failure
+and buffer lock failure. C++ tests also cover return/throw and exception flags.
+Original orange/green lift and six moving-stone fixtures pass. Tests do not prove
+live third-world completion. Both EXEs have all3 DATs staged and hashed; startup
+and gameplay remain user-owned. No running game was stopped. r11-diag enables the
+opt-in first-change audit; r11-quiet leaves it disabled. Build/test/staging logs
+are r11-{quiet,diag}-*.log. Negative-control source is test-only and never shipped.
