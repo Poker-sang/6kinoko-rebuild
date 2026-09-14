@@ -3029,6 +3029,9 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(moving_layer && moving_layout);
     /* Run the packaged inline script with a plain output table. Collision still
        reads the actual ACT layout and chip definitions. */
+    function_48ab90(vm,root[2],root[3]);
+    CHECK(function_4c6c20(vm)==0);
+    function_48aa50(vm);
     CHECK(execute_source(vm,root+2,"layer <- {dst_y=0.0};"));
     CHECK(retdec_execute_act_source_script(vm,moving_layer+204,root+2));
     CHECK(execute_source(vm,root+2,"Update(); motionY <- layer.dst_y;"));
