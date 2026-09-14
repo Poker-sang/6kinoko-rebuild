@@ -2975,7 +2975,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
-    CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
+    CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null; player <- null;"));
     int32_t reader=0;
     uint8_t version; uint16_t textures;
     CHECK(function_407370(PTR(&reader),"data/actor/marisa/marisa.pat"));
