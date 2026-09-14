@@ -51,3 +51,27 @@ live third-world completion. Both EXEs have all3 DATs staged and hashed; startup
 and gameplay remain user-owned. No running game was stopped. r11-diag enables the
 opt-in first-change audit; r11-quiet leaves it disabled. Build/test/staging logs
 are r11-{quiet,diag}-*.log. Negative-control source is test-only and never shipped.
+
+E-negative-control (commitdb460ac): relinked the unchanged r11 stage-test objects
+with a test-only kinoko_prepare_audio that reproduces the old unscoped reset.
+Independent r11-negative output fails line3012 at x87/SSE upward-rounding check,
+then line3032 before stone motion. The fixed r11 tests pass the same assertion.
+No old build or game EXE was overwritten. Reproduction commands/link response
+are in build-runs/stone-posture-20260914-r11-negative; logs retained in analysis.
+
+E-r11-live: user launched verified r11-quiet path, PID23788. Menu dump and
+300 read-only samples of thread35152 over5 seconds show CW rounding0x800 and
+MXCSR rounding0x4000 in all300 samples (upward in both units), versus r3's all-nearest.
+User then explicitly confirmed: "R11确认修复". Third-world moving-stone fix is
+therefore user-confirmed. Diagnostic build offline checks passed; its interactive
+startup was not separately performed by the agent, per user-owned startup testing.
+
+EXE SHA256 (build commit41ca9d4):
+- r11-quiet: 97F957927C14971EDA7F6227F4B0972EB2CE8D1E01278C967D0D42CDCC59FC0F
+- r11-diag: 9008EE7A57A2FB5262C40660380778995FFD0EBB3ED0F22B4F8EF590BD49BD08
+
+Synthesis: static original rounding/collision evidence, r10 native-call reset
+localization, failure-before/pass-after audio regression, r11 live FP sampling,
+and user gameplay confirmation agree. No changes to original scripts or DATs,
+no new standing/swimming exception, and no broad VM migration in this bugfix batch.
+Existing Squirrel2.2.2 integration and opt-in diagnostics remain available.
