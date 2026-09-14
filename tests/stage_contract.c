@@ -2967,7 +2967,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
 
 
 /* Actual w3-c02b moving terrain, original player scripts, no game window. */
-static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory, int underwater) {
+static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory, int underwater, float start_x, float start_y) {
     const uint32_t previous_rounding=kinoko_enter_game_math();
     char path[MAX_PATH];
     for(char archive='a';archive<='c';++archive) {
@@ -3019,20 +3019,37 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         ? "stageWaterLevel=6; riderWater <- true; riderType <- TYPE_2HEAD;"
         : "riderWater <- false; riderType <- TYPE_USA;"));
 
-    int32_t act[60]={0}, moving_layer=0, moving_layout=0;
+    int32_t act[60]={0}, moving_layer=0, moving_layout=0, vector_layout=0;
     function_427530(PTR(act));
     CHECK(function_428000(PTR(act),"data/map/w3-c02b.act"));
     for(int32_t slot=act[52];slot!=act[53];slot+=4) {
         int32_t layer=*(int32_t *)(intptr_t)slot;
-        if(strcmp(retdec_std_string_data(layer+112),"terrain-kabe")!=0) continue;
+        const char *name=retdec_std_string_data(layer+112);
+        if(strcmp(name,"terrain-kabe")!=0 && strcmp(name,"vector")!=0) continue;
         int32_t head=*(int32_t *)(intptr_t)(layer+180);
         int32_t node=*(int32_t *)(intptr_t)head;
         CHECK(node!=head);
         int32_t key=*(int32_t *)(intptr_t)(node+8);
+        if(strcmp(name,"vector")==0) { vector_layout=*(int32_t *)(intptr_t)(key+4); continue; }
         moving_layer=layer;
         moving_layout=*(int32_t *)(intptr_t)(key+4);
     }
     CHECK(moving_layer && moving_layout);
+    int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
+    function_4a94e0_this(PTR(g722));
+    function_4a95c0_this(PTR(g722),PTR(root+1));
+    CHECK(function_46f4c0_this(map_state));
+    function_46fac0();
+    CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
+    function_4a95c0_this(map_state,PTR(map_object));
+    function_4a9d70_this(PTR(map_object));
+    function_4a9bb0_this(map_state,map_state);
+    function_4a9840_this(PTR(root+1),"map",map_state);
+    CHECK(vector_layout);
+    *(int32_t *)(intptr_t)(map_state+36)=PTR(&vector_layout);
+    *(int32_t *)(intptr_t)(map_state+40)=PTR(&vector_layout+1);
+    CHECK(execute_source(vm,root+2,"stageLayerVector=0;"));
+
     function_48ab90(vm,root[2],root[3]);
     CHECK(function_4c6c20(vm)==0);
     function_48aa50(vm);
@@ -3053,7 +3070,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     int32_t init[3];
     function_4aa3a0_this(PTR(root+1),PTR(init),"InitPlatformRider");
     int32_t rider=function_463b40_this(manager,init[0],init[1],init[2],
-        2000,463+*(float *)(intptr_t)(moving_layer+148),-1,PTR(&g16),g483,g484,0);
+        start_x,start_y+*(float *)(intptr_t)(moving_layer+148),-1,PTR(&g16),g483,g484,0);
     CHECK(rider);
     *(int32_t *)(intptr_t)(rider+316)=1;
     *(uint8_t *)(intptr_t)(rider+40)=1;
@@ -3496,9 +3513,9 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
         return test_crystal_countdown(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--moving-map") == 0)
-        return test_moving_map(vm, root, manager, argv[2], 0);
-    if (argc == 3 && strcmp(argv[1], "--moving-map-water") == 0)
-        return test_moving_map(vm, root, manager, argv[2], 1);
+        return test_moving_map(vm, root, manager, argv[2], 0, 2000, 463);
+    if ((argc == 3 || argc == 5) && strcmp(argv[1], "--moving-map-water") == 0)
+        return test_moving_map(vm, root, manager, argv[2], 1, argc==5?(float)atof(argv[3]):2000, argc==5?(float)atof(argv[4]):463);
     if (argc == 3 && strcmp(argv[1], "--orange-platform") == 0)
         return test_platform_riding(vm, root, manager, argv[2], 0);
     if (argc == 3 && strcmp(argv[1], "--green-stage5") == 0)

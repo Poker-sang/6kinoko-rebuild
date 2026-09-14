@@ -274,6 +274,12 @@ add_test(NAME act_reentry_contract
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")
 
+foreach(position IN ITEMS "2000,655" "2200,559" "2770,463" "3250,175" "4300,559")
+    string(REPLACE "," ";" coordinates "${position}")
+    add_test(NAME moving_map_water_${position}
+        COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}" ${coordinates})
+endforeach()
+
 add_executable(kinoko_game_math_contract tests/game_math_contract.cpp)
 target_link_libraries(kinoko_game_math_contract PRIVATE kinoko_actor_collision)
 target_compile_options(kinoko_game_math_contract PRIVATE /fp:strict)
