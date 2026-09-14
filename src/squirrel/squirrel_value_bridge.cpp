@@ -5,6 +5,7 @@
 #include "sqpcheader.h"
 #include "sqvm.h"
 #include "sqclosure.h"
+#include "sqtable.h"
 #include "sqclass.h"
 
 namespace {
