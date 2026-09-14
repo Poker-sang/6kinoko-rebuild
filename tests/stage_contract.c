@@ -3030,7 +3030,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     /* Run the packaged inline script with a plain output table. Collision still
        reads the actual ACT layout and chip definitions. */
     CHECK(execute_source(vm,root+2,"layer <- {dst_y=0.0};"));
-    CHECK(retdec_execute_embedded_act_script(vm,moving_layer+204,root+2));
+    CHECK(retdec_execute_act_source_script(vm,moving_layer+204,root+2));
     CHECK(execute_source(vm,root+2,"Update(); motionY <- layer.dst_y;"));
     int32_t value[3];
     function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
@@ -3056,7 +3056,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
         memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
         function_4a9d70_this(PTR(value));
-        retdec_actor_manager_update(manager,-1);
+        retdec_actor_manager_update(manager,0);
         int hit=*(int32_t *)(intptr_t)(rider+296);
         int take=*(int32_t *)(intptr_t)(rider+208);
         if(take!=previous_take) ++changes;
