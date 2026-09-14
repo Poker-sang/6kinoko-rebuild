@@ -27472,6 +27472,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
     (void)parameter;
     retdec_trace("game:entry");
     frame_event = (HANDLE)(intptr_t)function_412b80(0);
+    kinoko_math_checkpoint("event-created",0);
     while (g854 != 0) {
         int32_t *vtable;
         unsigned char can_draw;
@@ -27483,9 +27484,11 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
             Sleep(16);
         }
 
+        kinoko_math_checkpoint("frame-ready",0);
         if (g843 != 0)
             function_408c80();
 
+        kinoko_math_checkpoint("input-done",0);
         if (g861 != 0) {
             vtable = *(int32_t **)(uintptr_t)g861;
             if (vtable != NULL && vtable[2] != 0)
@@ -27494,6 +27497,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
                     (void *)(uintptr_t)vtable[2]);
         }
 
+        kinoko_math_checkpoint("manager-done",0);
         if (g871 != g870) {
             if (g862 == 0) {
                 retdec_activate_pending_scene();
@@ -27522,6 +27526,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
             }
         }
 
+        kinoko_math_checkpoint("scene-done",0);
         g713 = 0;
         can_draw = 1;
         if (g845 == 0 && g863 != 0)
@@ -27549,6 +27554,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
             if (g857 != 0)
                 SetEvent((HANDLE)(uintptr_t)g857);
         }
+        kinoko_math_checkpoint("render-done",0);
         ++g848;
         ++frame_index;
         if (frame_index <= 3 || (frame_index & 63) == 0)
@@ -199869,8 +199875,10 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
         }
     }
 
+    kinoko_math_checkpoint("native-before",native_function_ptr);
     return_code = ((int32_t (__cdecl *)(int32_t))(intptr_t)
                    native_function_ptr)(vm);
+    kinoko_math_checkpoint("native-after",native_function_ptr);
     if (retdec_actor_step_trace_active) {
         int32_t native_top = *(int32_t *)(intptr_t)(vm + 48);
 
