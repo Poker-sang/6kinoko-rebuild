@@ -2601,7 +2601,7 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     int32_t table[3], array[3], text[3];
     const int32_t stack_before = function_48aa20(vm);
     CHECK(execute_source(vm, root + 2,
-        "entry_table <- {a=1,b=2}; entry_array <- [1,2,3]; entry_text <- \"entries\";"));
+        "entry_table <- {a=1,b=2};\nentry_array <- [1,2,3];\nentry_text <- \"entries\";\n"));
     function_4aa3a0_this(PTR(root + 1), PTR(table), "entry_table");
     function_4aa3a0_this(PTR(root + 1), PTR(array), "entry_array");
     function_4aa3a0_this(PTR(root + 1), PTR(text), "entry_text");

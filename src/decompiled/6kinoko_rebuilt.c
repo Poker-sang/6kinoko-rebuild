@@ -225204,34 +225204,8 @@ int32_t function_4a9d70(void) {
 // The original is a __thiscall destructor.  Most RetDec call sites lost ECX,
 // so callers that still have the SquirrelObject address use this form.
 int32_t function_4a9d70_this(int32_t this_ptr) {
-    int32_t value_ptr;
-
-    if (this_ptr == 0)
-        return 0;
-    value_ptr = this_ptr + 4;
-
-    retdec_trace("4a9d70:begin");
-    retdec_trace_i32("4a9d70:this", this_ptr);
-    retdec_trace_i32("4a9d70:caller",
-                     (int32_t)(uintptr_t)_ReturnAddress());
-    retdec_trace_i32("4a9d70:type", *(int32_t *)value_ptr);
-    retdec_trace_i32("4a9d70:data", *(int32_t *)(this_ptr + 8));
-    *(int32_t *)this_ptr = (int32_t)&g16;
-    if (g644 != NULL) {
-        function_48a430((int32_t)g644, value_ptr);
-        retdec_trace_i32("4a9d70:gvm-after-release",
-                         (int32_t)(intptr_t)g644);
-        int32_t result = function_48abe0(value_ptr);
-        retdec_trace("4a9d70:after-release");
-        return result;
-    }
-    if (*(int32_t *)value_ptr != 0x1000001 &&
-        *(int32_t *)(this_ptr + 8) != 0) {
-        _printf("SquirrelObject::~SquirrelObject - Cannot release\n");
-    }
-    int32_t result = function_48abe0(value_ptr);
-    retdec_trace("4a9d70:after-clear");
-    return result;
+    return kinoko_squirrel_object_destroy(this_ptr,
+        (int32_t)(intptr_t)g644, (int32_t)(intptr_t)&g16);
 }
 
 // Address range: 0x4a9dc0 - 0x4a9e2f
