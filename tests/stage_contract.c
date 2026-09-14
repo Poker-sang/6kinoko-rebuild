@@ -3033,18 +3033,17 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         moving_layout=*(int32_t *)(intptr_t)(key+4);
     }
     CHECK(moving_layer && moving_layout);
-    /* Run the packaged inline script with a plain output table. Collision still
-       reads the actual ACT layout and chip definitions. */
-    function_48ab90(vm,root[2],root[3]);
-    CHECK(function_4c6c20(vm)==0);
-    function_48aa50(vm);
-    CHECK(execute_source(vm,root+2,"layer <- {dst_y=0.0};"));
-    CHECK(retdec_execute_act_source_script(vm,moving_layer+204,root+2));
-    CHECK(execute_source(vm,root+2,"Update(); motionY <- layer.dst_y;"));
-    int32_t value[3];
-    function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
-    memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
-    function_4a9d70_this(PTR(value));
+    /* Publish the real CActLayer descriptors and invoke its captured callback. */
+    int32_t resource[48]={0}, parent[2], active=0;
+    CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
+    CHECK(retdec_sqrat_new_table(vm,parent));
+    CHECK(retdec_sqrat_set_pair(vm,root+2,retdec_std_string_data(PTR(act)+16),parent));
+    CHECK(execute_source(vm,parent,"resource <- {};"));
+    resource[39]=root[2]; resource[40]=root[3];
+    act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
+    CHECK(retdec_publish_act_layers(vm,PTR(act),PTR(resource),&active));
+    CHECK(active==1);
+    CHECK(retdec_execute_act_callback(moving_layer+204,24,NULL)>=0);
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
     int32_t support=function_4693a0(moving_layout);
     CHECK(support);
@@ -3061,10 +3060,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     retdec_actor_update_motion(rider);
     int failures=0, changes=0, previous_take=*(int32_t *)(intptr_t)(rider+208);
     for(int frame=0;frame<1500;++frame) {
-        CHECK(execute_source(vm,root+2,"Update(); motionY=layer.dst_y;"));
-        function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
-        memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
-        function_4a9d70_this(PTR(value));
+        CHECK(retdec_execute_act_callback(moving_layer+204,24,NULL)>=0);
         retdec_actor_manager_update(manager,0);
         int hit=*(int32_t *)(intptr_t)(rider+296);
         int take=*(int32_t *)(intptr_t)(rider+208);
