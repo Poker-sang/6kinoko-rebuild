@@ -1,0 +1,17 @@
+# Tall-map investigation
+Scope: original ../6kinoko/6kinoko.exe and this rebuild. User delegates all post-edit testing to themselves; do not launch gameplay or execute tests.
+E-imports: IDA MCP HTTP session 6bebd75d; native x86 PE SHA256 2db975a408e260499d52126f25ecf2fbc529cad52d1bffc2a0b7ca2ff695f155. Readable imports cover file IO, USER32/GDI, D3D9/D3DX, timing, IME and COM. Full survey/imports saved alongside this report. Direct desktop connector failed (Transport closed); bundled server/open scripts and repository HTTP MCP client work.
+
+## Cause and implementation
+
+E-assets: extracted original w1-c02a.act (stage2) and decoded its ACT properties in stage2.json. Its bg2 layer contains chip 1072 at (96,320), sized 20480x688. The embedded Update writes dst_x=camera.left*7/10-200 and dst_y=camera.top/2-272. The rebuilt render path instead selected source ACT key layouts, whose layer callbacks are not the registered live callbacks. Thus the source layer's unchanged zero offsets place the top edge at y=320-camera.top, exposing a black region as the camera rises. This explains the reported association with vertical maps and the loss of background motion without inventing a sky fill or coordinate adjustment. Runtime visual confirmation remains with the user.
+
+E-ownership: BeginStage clones the template into ActingPlayer+12, with its live holder at +16, and publishes callbacks on those live layers. That isolation fix is retained. function_451640 updates live layers through that holder. The old retdec_map_find_layout walked MapManager+12 (source ACT) and its key lists directly, unlike collision/event lookup through function_46f140. Render nodes therefore borrowed the wrong layouts after source/runtime identities were separated.
+
+E-original: IDA MCP 470030 calls 46F140, which obtains each layout through 452020; 452040 reads ActingPlayer+16. Original pseudocode and assembly saved here. The fix shares this lookup between map render creation, collision and events, preserving append order, borrowed ownership and the existing runtime clone. No git rollback, resource patch, hardcoded background formula, renderer offset change, or VM change.
+
+C++: map_layers.cpp names the MapManager, render node, name string and layout fields and asserts original x86 offsets. It replaces the duplicate raw source-ACT traversal and C list creation. The C entry points remain small forwarding adapters. Removed the creation-path diagnostic spam; existing opt-in diagnostics and VM trace call sites remain. Squirrel 2.2.2 compiler/helpers were already enabled and remain so; the experimental full Execute backend remains off. Cross-checked external SQUIRREL2/squirrel/sqvm.cpp::Set (instance property/metamethod dispatch), plus retained source-object disassembly analysis/evidence/raw/phase3-20260906/squirrel-sqvm.asm at the Set symbol. The defect is which layer is rendered, not Squirrel arithmetic/property dispatch.
+
+Regression fixture added to stage_native_contract: same-name source and live layouts have distinct identity; CreateRenderLayer must return the live layout, expose its position writes while leaving the template untouched, reject missing names without inserting, and preserve append order. The fixture is authored but NOT RUN, per user request. Existing ACT reentry tests remain unchanged.
+
+Post-edit tests and gameplay are delegated to the user. Build/staging outcomes will be recorded separately; no passing tests or visual verification are claimed.

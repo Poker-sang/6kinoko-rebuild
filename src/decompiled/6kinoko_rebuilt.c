@@ -139357,29 +139357,8 @@ int32_t function_46f100(int32_t result, int32_t a2) {
 
 // Address range: 0x46f140 - 0x46f1f3
 int32_t function_46f140(int32_t name_ptr) {
-    int32_t manager = (int32_t)(intptr_t)g_retdec_map_manager_state;
-    int32_t count;
-    const char *wanted = (const char *)(intptr_t)name_ptr;
-
-    if (*(int32_t *)(intptr_t)(manager + 12) == 0 || wanted == NULL)
-        return 0;
-    count = function_455890(*(int32_t *)(intptr_t)(manager + 16));
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t layout = function_452020(
-            *(int32_t *)(intptr_t)(manager + 20), index);
-        int32_t layer;
-        const char *name;
-        /* C2DMapLayout's native type query returns this same object. */
-        if (layout == 0 || *(int32_t *)(intptr_t)layout != (int32_t)(intptr_t)&g327)
-            continue;
-        layer = *(int32_t *)(intptr_t)(layout + 312);
-        if (layer == 0)
-            continue;
-        name = retdec_std_string_data(layer + 112);
-        if (name != NULL && strcmp(name, wanted) == 0)
-            return layout;
-    }
-    return 0;
+    return kinoko_map_find_layout((int32_t)(intptr_t)g_retdec_map_manager_state,
+                                  (const char *)(intptr_t)name_ptr);
 }
 
 // Address range: 0x46f200 - 0x46f311
@@ -140052,83 +140031,11 @@ int32_t function_46ff60(int32_t a1, int32_t result, int32_t result2) {
 }
 
 // Address range: 0x470030 - 0x4700a4
-static int32_t retdec_map_find_layout(int32_t map_state,
-                                      const char *layer_name)
+int32_t function_470030(int32_t name_ptr)
 {
-    int32_t act;
-    int32_t begin;
-    int32_t end;
-    int32_t cursor;
-
-    if (map_state == 0 || layer_name == NULL || *layer_name == 0)
-        return 0;
-    act = *(int32_t *)(intptr_t)(map_state + 12);
-    if (act == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(act + 208);
-    end = *(int32_t *)(intptr_t)(act + 212);
-    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
-         cursor += 4) {
-        int32_t layer = *(int32_t *)(intptr_t)cursor;
-        int32_t sentinel;
-        int32_t node;
-
-        if (layer == 0)
-            continue;
-        sentinel = *(int32_t *)(intptr_t)(layer + 180);
-        if (sentinel == 0)
-            continue;
-        node = *(int32_t *)(intptr_t)sentinel;
-        while (node != 0 && node != sentinel) {
-            int32_t key = *(int32_t *)(intptr_t)(node + 8);
-            int32_t layout = key == 0
-                ? 0 : *(int32_t *)(intptr_t)(key + 4);
-            if (layout != 0 && *(int32_t *)(intptr_t)layout ==
-                    (int32_t)(intptr_t)&g327) {
-                const char *name = retdec_std_string_data(layer + 112);
-                if (name != NULL && strcmp(name, layer_name) == 0)
-                    return layout;
-            }
-            node = *(int32_t *)(intptr_t)node;
-        }
-    }
-    return 0;
-}
-
-static int32_t retdec_map_render_layer_create(const char *layer_name)
-{
-    int32_t map_state = (int32_t)(intptr_t)g_retdec_map_manager_state;
-    int32_t layout;
-    int32_t sentinel;
-    int32_t previous;
-    int32_t node;
-
-    layout = retdec_map_find_layout(map_state, layer_name);
-    if (layout == 0)
-        return 0;
-    sentinel = *(int32_t *)(intptr_t)(map_state + 24);
-    if (sentinel == 0)
-        return 0;
-    previous = *(int32_t *)(intptr_t)(sentinel + 4);
-    node = (int32_t)(intptr_t)calloc(1u, 16u);
-    if (node == 0)
-        return 0;
-    *(int32_t *)(intptr_t)node = sentinel;
-    *(int32_t *)(intptr_t)(node + 4) = previous;
-    *(int32_t *)(intptr_t)(node + 8) = (int32_t)(intptr_t)&g37;
-    *(int32_t *)(intptr_t)(node + 12) = layout;
-    *(int32_t *)(intptr_t)previous = node;
-    *(int32_t *)(intptr_t)(sentinel + 4) = node;
-    ++*(int32_t *)(intptr_t)(map_state + 28);
-    retdec_trace_squirrel_name(
-        "map:render-layer", (int32_t)(intptr_t)layer_name);
-    retdec_trace_i32("map:render-layout", layout);
-    return node + 8;
-}
-
-int32_t function_470030(int32_t a1)
-{
-    return retdec_map_render_layer_create((const char *)(intptr_t)a1);
+    return kinoko_map_create_render_layer(
+        (int32_t)(intptr_t)g_retdec_map_manager_state,
+        (const char *)(intptr_t)name_ptr);
 }
 
 // Address range: 0x4700b0 - 0x4700fe

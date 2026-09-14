@@ -39,6 +39,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp
+    src/reconstructed/map_layers.cpp
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 

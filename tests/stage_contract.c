@@ -3493,6 +3493,57 @@ int main(int argc, char **argv) {
     CHECK(function_46f140(PTR("en")) == PTR(layout));
     CHECK(function_46f140(PTR("e")) == 0);
     CHECK(function_46f140(PTR("missing")) == 0);
+    {
+        /* BeginStage keeps a template and a separate live ACT. Render lookup
+           must agree with collision/event lookup, even when names match. */
+        int32_t source_act[60] = {0}, source_layer[87] = {0};
+        int32_t source_layout[116] = {0}, source_key[9] = {0};
+        int32_t source_head[3] = {0}, source_node[3] = {0};
+        int32_t source_layers[1] = {PTR(source_layer)}, source_holder = PTR(source_act);
+        int32_t render_head[4] = {0};
+        int32_t saved_head = *(int32_t *)(g_retdec_map_manager_state + 24);
+        int32_t saved_count = *(int32_t *)(g_retdec_map_manager_state + 28);
+        int32_t render, second, node_address;
+        memcpy(source_layer + 28, "en", 3);
+        source_layer[32] = 2; source_layer[33] = 15;
+        source_layer[45] = PTR(source_head); source_layer[46] = 1;
+        source_head[0] = PTR(source_node);
+        source_node[0] = PTR(source_head); source_node[2] = PTR(source_key);
+        source_key[1] = PTR(source_layout);
+        source_layout[0] = PTR(&g327); source_layout[78] = PTR(source_layer);
+        source_act[52] = PTR(source_layers); source_act[53] = PTR(source_layers + 1);
+        render_head[0] = render_head[1] = PTR(render_head);
+        *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(source_act);
+        *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(&source_holder);
+        *(int32_t *)(g_retdec_map_manager_state + 24) = PTR(render_head);
+        *(int32_t *)(g_retdec_map_manager_state + 28) = 0;
+        render = function_470030(PTR("en"));
+        CHECK(render != 0 && *(int32_t *)(intptr_t)render == PTR(&g37));
+        CHECK(*(int32_t *)(intptr_t)(render + 4) == PTR(layout));
+        CHECK(*(int32_t *)(intptr_t)(render + 4) != PTR(source_layout));
+        CHECK(function_470030(PTR("missing")) == 0);
+        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 1);
+        /* A script-side mutation must be visible through the render binding,
+           while the template stays independent for the next activation. */
+        *(float *)((unsigned char *)layer + 148) = -172.0f;
+        CHECK(*(float *)(intptr_t)(*(int32_t *)(intptr_t)(
+            *(int32_t *)(intptr_t)(render + 4) + 312) + 148) == -172.0f);
+        CHECK(*(float *)((unsigned char *)source_layer + 148) == 0.0f);
+        *(float *)((unsigned char *)layer + 148) = 0.0f;
+        second = function_470030(PTR("en"));
+        CHECK(second != 0 && render_head[0] == render - 8 && render_head[1] == second - 8);
+        CHECK(*(int32_t *)(intptr_t)(render - 8) == second - 8);
+        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 2);
+        while ((node_address = render_head[0]) != PTR(render_head)) {
+            render_head[0] = *(int32_t *)(intptr_t)node_address;
+            free((void *)(intptr_t)node_address);
+        }
+        *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
+        *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
+        *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
+        *(int32_t *)(g_retdec_map_manager_state + 28) = saved_count;
+        puts("PASS: render layers bind live ACT layouts without undoing clone isolation");
+    }
     target = PTR(function_469d10);
     CHECK(function_415550_this(PTR(root), PTR("CreateActorFromMap"),
         PTR(&target), 4, PTR(function_471e50), 0) >= 0);
