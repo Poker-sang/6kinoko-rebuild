@@ -1,4 +1,6 @@
 #include "kinoko/game_math.h"
+#include "kinoko/audio_math.h"
+#include <fenv.h>
 #include <windows.h>
 #include <float.h>
 #include <cmath>
@@ -21,6 +23,13 @@ static DWORD WINAPI calculate(void *argument) {
     return 73;
 }
 static DWORD WINAPI fail(void *) { throw 42; }
+static int audio_callback(uint32_t handle, const char *, int, float) {
+    CHECK(rounding() == _RC_NEAR);
+    CHECK(fetestexcept(FE_ALL_EXCEPT) == 0);
+    feraiseexcept(FE_INEXACT);
+    if (handle == 2) throw 42;
+    return (int)handle;
+}
 struct ThreadGate { HANDLE ready, release; };
 static DWORD WINAPI wait_inside_scope(void *argument) {
     auto &gate = *static_cast<ThreadGate *>(argument);
@@ -38,6 +47,18 @@ static DWORD WINAPI worker(void *argument) {
 int main() {
     unsigned current = 0;
     _controlfp_s(&current, _RC_DOWN, _MCW_RC);
+    feraiseexcept(FE_INVALID);
+    const int audio_flags = fetestexcept(FE_ALL_EXCEPT);
+    for (uint32_t result = 0; result < 2; ++result) {
+        CHECK(kinoko_prepare_audio(audio_callback, result, nullptr, 0, 1) == result);
+        CHECK(rounding() == _RC_DOWN);
+        CHECK(fetestexcept(FE_ALL_EXCEPT) == audio_flags);
+    }
+    try { kinoko_prepare_audio(audio_callback, 2, nullptr, 0, 1); CHECK(false); }
+    catch (int value) { CHECK(value == 42); }
+    CHECK(rounding() == _RC_DOWN);
+    CHECK(fetestexcept(FE_ALL_EXCEPT) == audio_flags);
+    feclearexcept(FE_ALL_EXCEPT);
     CHECK(kinoko_run_game_math(calculate, reinterpret_cast<void *>(123)) == 73);
     CHECK(rounding() == _RC_DOWN);
     try { kinoko_run_game_math(fail, nullptr); CHECK(false); }

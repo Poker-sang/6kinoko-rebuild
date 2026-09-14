@@ -25,7 +25,7 @@ add_library(kinoko_core STATIC
 )
 target_include_directories(kinoko_core PUBLIC include)
 
-add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp src/platform/game_math.cpp)
+add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp src/platform/game_math.cpp src/platform/audio_math.cpp)
 target_include_directories(kinoko_actor_collision PUBLIC include)
 option(KINOKO_MATH_AUDIT "Record the first update-thread rounding change" OFF)
 if(KINOKO_MATH_AUDIT)

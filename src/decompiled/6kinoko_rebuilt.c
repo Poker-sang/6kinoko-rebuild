@@ -26,6 +26,7 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
 #include "kinoko/game_math.h"
+#include "kinoko/audio_math.h"
 #include "kinoko/actor_methods.h"
 #include "kinoko/actor_animation.h"
 #include "kinoko/actor_cleanup.h"
@@ -22910,7 +22911,7 @@ static void retdec_bgm_release_for_handle(uint32_t handle)
         LeaveCriticalSection(&g_retdec_audio_lock);
 }
 
-static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
+static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *path,
                                     int looping, float32_t volume)
 {
     unsigned char *encoded = NULL;
@@ -22934,7 +22935,6 @@ static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
         return 0;
     }
     retdec_trace_i32("bgm:encoded-bytes", (int32_t)encoded_size);
-    _fpreset();
     decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error,
                                       NULL);
     if (decoder == NULL) {
@@ -23026,6 +23026,13 @@ static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
     retdec_bgm_apply_state_volume(track, track->volume);
     retdec_trace("bgm:prepared");
     return 1;
+}
+
+static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
+                                    int looping, float32_t volume)
+{
+    return kinoko_prepare_audio(retdec_bgm_prepare_track_default_math,
+                                handle, path, looping, volume);
 }
 
 static void retdec_bgm_archive_current_track(void);

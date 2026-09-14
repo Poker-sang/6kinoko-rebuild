@@ -2967,6 +2967,61 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
 
 
 /* Actual w3-c02b moving terrain, original player scripts, no game window. */
+/* Only the sound device is substituted: archive reads, Vorbis decoding, SFL
+   loading and initial ring-buffer fill all execute the production path. */
+static unsigned char bgm_test_pcm[RETDEC_BGM_BUFFER_BYTES];
+static int bgm_test_failure;
+static ULONG WINAPI bgm_test_release(void *self) { (void)self; return 0; }
+static HRESULT WINAPI bgm_test_lock(void *self, DWORD offset, DWORD bytes,
+    void **first, DWORD *first_bytes, void **second, DWORD *second_bytes, DWORD flags) {
+    (void)self; (void)flags;
+    if (bgm_test_failure == 2 || offset + bytes > sizeof(bgm_test_pcm)) return E_FAIL;
+    *first=bgm_test_pcm+offset; *first_bytes=bytes; *second=NULL; *second_bytes=0;
+    return S_OK;
+}
+static HRESULT WINAPI bgm_test_unlock(void *self, void *first, DWORD first_bytes,
+    void *second, DWORD second_bytes) {
+    (void)self; (void)first; (void)first_bytes; (void)second; (void)second_bytes;
+    return S_OK;
+}
+static HRESULT WINAPI bgm_test_create(void *self, const void *description, void **buffer, void *outer) {
+    static void *vtable[20];
+    static void **object=vtable;
+    (void)self; (void)description; (void)outer;
+    if (bgm_test_failure == 1) return E_FAIL;
+    vtable[2]=bgm_test_release; vtable[11]=bgm_test_lock; vtable[19]=bgm_test_unlock;
+    *buffer=&object;
+    return S_OK;
+}
+static int test_bgm_preserves_game_math(void) {
+    void *device_vtable[4]={0,0,0,bgm_test_create};
+    void **device=device_vtable;
+    char *previous_device=g877;
+    unsigned current, x87, sse;
+    unsigned char reference_pcm[RETDEC_BGM_CHUNK_BYTES];
+    g877=(char *)&device;
+    /* Compare PCM with the former default-math decoding behavior. */
+    _controlfp_s(&current,_RC_NEAR,_MCW_RC);
+    CHECK(retdec_bgm_prepare_track(1,"data/bgm/st1.ogg",1,1.0f));
+    memcpy(reference_pcm,bgm_test_pcm,sizeof(reference_pcm));
+    retdec_bgm_release_track_locked();
+    kinoko_enter_game_math();
+    for (bgm_test_failure=0; bgm_test_failure<=2; ++bgm_test_failure) {
+        CHECK(retdec_bgm_prepare_track(1,"data/bgm/st1.ogg",1,1.0f)==(bgm_test_failure==0));
+        CHECK(__control87_2(0,0,&x87,&sse));
+        CHECK((x87&_MCW_RC)==_RC_UP && (sse&_MCW_RC)==_RC_UP);
+        if (!bgm_test_failure) CHECK(memcmp(reference_pcm,bgm_test_pcm,sizeof(reference_pcm))==0);
+        retdec_bgm_release_track_locked();
+    }
+    bgm_test_failure=0;
+    CHECK(!retdec_bgm_prepare_track(1,"data/script/constant.cv4",1,1.0f));
+    CHECK(__control87_2(0,0,&x87,&sse));
+    CHECK((x87&_MCW_RC)==_RC_UP && (sse&_MCW_RC)==_RC_UP);
+    g877=previous_device;
+    puts("PASS: real BGM decoding preserves PCM and game rounding on success/decoder/device/fill failure");
+    return 0;
+}
+
 static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory, int underwater, float start_x, float start_y) {
     const uint32_t previous_rounding=kinoko_enter_game_math();
     char path[MAX_PATH];
@@ -2974,6 +3029,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
         CHECK(function_410500(path));
     }
+    CHECK(test_bgm_preserves_game_math()==0);
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null; player <- null;"));
