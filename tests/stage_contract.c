@@ -3056,7 +3056,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
         memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
         function_4a9d70_this(PTR(value));
-        retdec_actor_manager_update(manager);
+        retdec_actor_manager_update(manager,-1);
         int hit=*(int32_t *)(intptr_t)(rider+296);
         int take=*(int32_t *)(intptr_t)(rider+208);
         if(take!=previous_take) ++changes;
@@ -4332,3 +4332,4 @@ int main(int argc, char **argv) {
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
+
