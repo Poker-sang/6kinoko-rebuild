@@ -2608,8 +2608,10 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     CHECK(function_4a96d0(PTR(table)) == 2);
     CHECK(function_4a96d0(PTR(array)) == 3);
     CHECK(function_4a96d0(PTR(text)) == 7);
-    CHECK(function_4a99f0(PTR(table)) == 1);
-    CHECK(function_4a96d0(PTR(table)) == 0);
+    CHECK(function_4a99f0(PTR(array)) == 1);
+    int32_t *reversed = *(int32_t **)(intptr_t)(array[2] + 24);
+    CHECK(reversed[1] == 3 && reversed[3] == 2 && reversed[5] == 1);
+    CHECK(function_4a96d0(PTR(array)) == 3);
     CHECK(function_48aa20(vm) == stack_before);
 
     int32_t methods[2] = {0, PTR(release_error_probe)};
@@ -2638,7 +2640,7 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     function_4a9d70_this(PTR(array));
     function_4a9d70_this(PTR(text));
     CHECK(function_48aa20(vm) == stack_before);
-    puts("PASS: recovered size/clear, pair assignment/release, and virtual wrapper destruction");
+    puts("PASS: recovered size/reverse, pair assignment/release, and virtual wrapper destruction");
     return 0;
 }
 

@@ -225003,7 +225003,7 @@ int32_t function_4a9950(int32_t this_ptr, int32_t src_ptr,
 
 
 static int32_t function_4a99f0(int32_t this_ptr) {
-    return kinoko_squirrel_object_clear(this_ptr, (int32_t)(intptr_t)g644);
+    return kinoko_squirrel_object_reverse(this_ptr, (int32_t)(intptr_t)g644);
 }
 
 // Address range: 0x4a9a30 - 0x4a9a34

@@ -40,7 +40,7 @@ extern "C" int32_t kinoko_squirrel_object_size(int32_t object, int32_t vm) {
     return size;
 }
 
-extern "C" int32_t kinoko_squirrel_object_clear(int32_t object, int32_t vm) {
+extern "C" int32_t kinoko_squirrel_object_reverse(int32_t object, int32_t vm) {
     const auto &value = wrapper(object);
     function_48ab90(vm, value.type, value.data);
     const auto result = function_48c400(vm, -1);
