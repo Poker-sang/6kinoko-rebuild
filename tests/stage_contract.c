@@ -2965,6 +2965,115 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     return 0;
 }
 
+
+/* Actual w3-c02b moving terrain, original player scripts, no game window. */
+static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory) {
+    char path[MAX_PATH];
+    for(char archive='a';archive<='c';++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    CHECK(retdec_construct_actor_manager(manager));
+    function_460e00();
+    CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
+    int32_t reader=0;
+    uint8_t version; uint16_t textures;
+    CHECK(function_407370(PTR(&reader),"data/actor/marisa/marisa.pat"));
+    CHECK(retdec_pat_read_u8(reader,&version));
+    CHECK(retdec_pat_read_u16(reader,&textures));
+    CHECK(retdec_pat_skip_bytes(reader,textures*128u));
+    CHECK(retdec_pat_read_animations(reader,manager,0));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
+        int32_t player_scripts[3];
+        CHECK(execute_source(vm,root+2,"t_player <- {};"));
+        function_4aa3a0_this(PTR(root+1),PTR(player_scripts),"t_player");
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ground.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_jump.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ex.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
+        CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
+        function_4a9d70_this(PTR(player_scripts));
+        CHECK(execute_source(vm,root+2,
+
+            "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
+            "camera <- {top=-1000,bottom=2000};\n"
+            "time <- 1000; stageWaterLevel <- 10000; stageWaterType <- 0;\n"
+            "stageLayerVector <- -1; stageIce <- false; stageTimeStop <- false;\n"
+            "function InitPlatformRider(id) {\n"
+            "user={type=TYPE_USA,take=0,hold=null,water=false,rolling=false,pitch=1.0,"
+            "dash_count=0,hover=0,deadCount=0,clearCount=0,moveCount=0,goalCount=0,"
+            "changingCount=0,invincibleCount=0,count8head=0,countUFO=0,inertia=0.0,"
+            "hitblock=false,slide=false,hand=null,swim=false,ladder=false,hitCount=0,vx=0.0,vector=false};\n"
+            "user.SetTake <- ::t_player.SetTake.bindenv(this);\n"
+            "user.SetDead <- function(v){throw \"unexpected green rider death\";};\n"
+            "user.SetTake(TAKE_STAND); collisionMask=GP_TERRAIN|GP_LIFT; "
+            "collisionGroup=GP_PLAYER; callbackGroup=GP_PLAYER; priority=PR_PLAYER; updateGroup=GP_PLAYER; "
+            "funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
+
+    int32_t act[60]={0}, moving_layer=0, moving_layout=0;
+    function_427530(PTR(act));
+    CHECK(function_428000(PTR(act),"data/map/w3-c02b.act"));
+    for(int32_t slot=act[52];slot!=act[53];slot+=4) {
+        int32_t layer=*(int32_t *)(intptr_t)slot;
+        if(strcmp(retdec_std_string_data(layer+112),"terrain-kabe")!=0) continue;
+        int32_t head=*(int32_t *)(intptr_t)(layer+180);
+        int32_t node=*(int32_t *)(intptr_t)head;
+        CHECK(node!=head);
+        int32_t key=*(int32_t *)(intptr_t)(node+8);
+        moving_layer=layer;
+        moving_layout=*(int32_t *)(intptr_t)(key+4);
+    }
+    CHECK(moving_layer && moving_layout);
+    /* Run the packaged inline script with a plain output table. Collision still
+       reads the actual ACT layout and chip definitions. */
+    CHECK(execute_source(vm,root+2,"layer <- {dst_y=0.0};"));
+    CHECK(retdec_execute_embedded_act_script(vm,moving_layer+204,root+2));
+    CHECK(execute_source(vm,root+2,"Update(); motionY <- layer.dst_y;"));
+    int32_t value[3];
+    function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
+    memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
+    function_4a9d70_this(PTR(value));
+    CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    int32_t support=function_4693a0(moving_layout);
+    CHECK(support);
+    int32_t init[3];
+    function_4aa3a0_this(PTR(root+1),PTR(init),"InitPlatformRider");
+    int32_t rider=function_463b40_this(manager,init[0],init[1],init[2],
+        2000,463+*(float *)(intptr_t)(moving_layer+148),-1,PTR(&g16),g483,g484,0);
+    CHECK(rider);
+    *(int32_t *)(intptr_t)(rider+316)=1;
+    *(uint8_t *)(intptr_t)(rider+40)=1;
+    g459=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
+    retdec_actor_manager_refresh(manager);
+    function_468620_this(PTR(g_514300_storage));
+    retdec_actor_update_motion(rider);
+    int failures=0, changes=0, previous_take=*(int32_t *)(intptr_t)(rider+208);
+    for(int frame=0;frame<1500;++frame) {
+        CHECK(execute_source(vm,root+2,"Update(); motionY=layer.dst_y;"));
+        function_4aa3a0_this(PTR(root+1),PTR(value),"motionY");
+        memcpy((void *)(intptr_t)(moving_layer+148),value+2,4);
+        function_4a9d70_this(PTR(value));
+        retdec_actor_manager_update(manager);
+        int hit=*(int32_t *)(intptr_t)(rider+296);
+        int take=*(int32_t *)(intptr_t)(rider+208);
+        if(take!=previous_take) ++changes;
+        if(!hit || take!=previous_take || frame<6)
+            printf("MAP frame=%d offset=%.9g y=%.9g bottom=%.9g carry=%.9g hit=%d take=%d step=%08x\n",
+                frame,*(float *)(intptr_t)(moving_layer+148),*(float *)(intptr_t)(rider+244),
+                *(float *)(intptr_t)(rider+452),*(float *)(intptr_t)(rider+268),hit,take,
+                *(uint32_t *)(intptr_t)(rider+36));
+        if(!hit) ++failures;
+        previous_take=take;
+        CHECK(vm_failures==0);
+    }
+    printf("MAP lost-contact=%d take-changes=%d\n",failures,changes);
+    CHECK(failures==0 && changes==0);
+    return 0;
+}
+
 static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, const char *directory, int green) {
     char path[MAX_PATH];
     int32_t map_act[60]={0}, rail_layouts[8]={0}, terrain_layouts[16]={0};
@@ -3376,6 +3485,8 @@ int main(int argc, char **argv) {
     }
     if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
         return test_crystal_countdown(vm, root, argv[2]);
+    if (argc == 3 && strcmp(argv[1], "--moving-map") == 0)
+        return test_moving_map(vm, root, manager, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--orange-platform") == 0)
         return test_platform_riding(vm, root, manager, argv[2], 0);
     if (argc == 3 && strcmp(argv[1], "--green-stage5") == 0)
