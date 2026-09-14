@@ -2968,6 +2968,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
 
 /* Actual w3-c02b moving terrain, original player scripts, no game window. */
 static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory) {
+    const uint32_t previous_rounding=kinoko_enter_game_math();
     char path[MAX_PATH];
     for(char archive='a';archive<='c';++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
@@ -3074,10 +3075,12 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     }
     printf("MAP lost-contact=%d take-changes=%d\n",failures,changes);
     CHECK(failures==0 && changes==0);
+    kinoko_leave_game_math(previous_rounding);
     return 0;
 }
 
 static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, const char *directory, int green) {
+    kinoko_enter_game_math();
     char path[MAX_PATH];
     int32_t map_act[60]={0}, rail_layouts[8]={0}, terrain_layouts[16]={0};
     int rail_count=0, terrain_count=0;

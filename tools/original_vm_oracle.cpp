@@ -9,6 +9,7 @@
 #include <vector>
 #include "kinoko/squirrel_compile_bridge.h"
 #include "kinoko/actor_collision.h"
+#include "kinoko/game_math.h"
 #include <cmath>
 #include <float.h>
 
@@ -26,6 +27,7 @@ template<class T> T &slot(void *p, int offset) {
 static int probe_collision() {
     using Move = int32_t(__thiscall *)(void *,void *,float *,int32_t *,float *,float *,float *,float *,float *);
     auto move=original<Move>(0x4689d0);
+    kinoko_enter_game_math();
     unsigned int control=0; _controlfp_s(&control,0,0);
     std::printf("collision original control=%08x\n",control);
     alignas(8) unsigned char a[640]={}, b[640]={}, platform[640]={}, chip[48]={};

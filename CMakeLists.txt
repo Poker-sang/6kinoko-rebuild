@@ -25,7 +25,7 @@ add_library(kinoko_core STATIC
 )
 target_include_directories(kinoko_core PUBLIC include)
 
-add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp)
+add_library(kinoko_actor_collision STATIC src/reconstructed/actor_collision.cpp src/platform/game_math.cpp)
 target_include_directories(kinoko_actor_collision PUBLIC include)
 
 add_library(kinoko_native_methods STATIC
@@ -260,6 +260,8 @@ add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
 add_test(NAME damage_pause_contract COMMAND kinoko_stage_contract --damage-pause)
 add_test(NAME crystal_countdown_contract
     COMMAND kinoko_stage_contract --crystal-countdown "${KINOKO_REFERENCE_DIR}")
+add_test(NAME moving_map_contract
+    COMMAND kinoko_stage_contract --moving-map "${KINOKO_REFERENCE_DIR}")
 add_test(NAME orange_platform_contract
     COMMAND kinoko_stage_contract --orange-platform "${KINOKO_REFERENCE_DIR}")
 add_test(NAME green_stage5_contract

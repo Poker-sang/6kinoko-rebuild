@@ -593,11 +593,6 @@ int32_t __CIsin(void) { return 0; }
 int32_t __CIsqrt(void) { return 0; }
 int32_t __CItan(void) { return 0; }
 
-int32_t __controlfp_s(void)
-{
-    return 0;
-}
-
 int32_t __chkstk(void)
 {
     return 0;
