@@ -2967,7 +2967,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
 
 
 /* Actual w3-c02b moving terrain, original player scripts, no game window. */
-static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory) {
+static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory, int underwater) {
     const uint32_t previous_rounding=kinoko_enter_game_math();
     char path[MAX_PATH];
     for(char archive='a';archive<='c';++archive) {
@@ -3004,7 +3004,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
             "time <- 1000; stageWaterLevel <- 10000; stageWaterType <- 0;\n"
             "stageLayerVector <- -1; stageIce <- false; stageTimeStop <- false;\n"
             "function InitPlatformRider(id) {\n"
-            "user={type=TYPE_USA,take=0,hold=null,water=false,rolling=false,pitch=1.0,"
+            "user={type=riderType,take=0,hold=null,water=riderWater,rolling=false,pitch=1.0,"
             "dash_count=0,hover=0,deadCount=0,clearCount=0,moveCount=0,goalCount=0,"
             "changingCount=0,invincibleCount=0,count8head=0,countUFO=0,inertia=0.0,"
             "hitblock=false,slide=false,hand=null,swim=false,ladder=false,hitCount=0,vx=0.0,vector=false};\n"
@@ -3013,6 +3013,11 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
             "user.SetTake(TAKE_STAND); collisionMask=GP_TERRAIN|GP_LIFT; "
             "collisionGroup=GP_PLAYER; callbackGroup=GP_PLAYER; priority=PR_PLAYER; updateGroup=GP_PLAYER; "
             "funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
+
+    /* Isolate the already-submerged state; use the packaged player state machine. */
+    CHECK(execute_source(vm,root+2, underwater
+        ? "stageWaterLevel=6; riderWater <- true; riderType <- TYPE_2HEAD;"
+        : "riderWater <- false; riderType <- TYPE_USA;"));
 
     int32_t act[60]={0}, moving_layer=0, moving_layout=0;
     function_427530(PTR(act));
@@ -3492,7 +3497,9 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--crystal-countdown") == 0)
         return test_crystal_countdown(vm, root, argv[2]);
     if (argc == 3 && strcmp(argv[1], "--moving-map") == 0)
-        return test_moving_map(vm, root, manager, argv[2]);
+        return test_moving_map(vm, root, manager, argv[2], 0);
+    if (argc == 3 && strcmp(argv[1], "--moving-map-water") == 0)
+        return test_moving_map(vm, root, manager, argv[2], 1);
     if (argc == 3 && strcmp(argv[1], "--orange-platform") == 0)
         return test_platform_riding(vm, root, manager, argv[2], 0);
     if (argc == 3 && strcmp(argv[1], "--green-stage5") == 0)

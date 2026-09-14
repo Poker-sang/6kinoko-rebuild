@@ -271,6 +271,9 @@ add_test(NAME water_alpha_contract
 add_test(NAME act_reentry_contract
     COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
 
+add_test(NAME moving_map_water_contract
+    COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")
+
 add_executable(kinoko_game_math_contract tests/game_math_contract.cpp)
 target_link_libraries(kinoko_game_math_contract PRIVATE kinoko_actor_collision)
 target_compile_options(kinoko_game_math_contract PRIVATE /fp:strict)
