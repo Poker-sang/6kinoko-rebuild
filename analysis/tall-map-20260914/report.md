@@ -15,3 +15,18 @@ C++: map_layers.cpp names the MapManager, render node, name string and layout fi
 Regression fixture added to stage_native_contract: same-name source and live layouts have distinct identity; CreateRenderLayer must return the live layout, expose its position writes while leaving the template untouched, reject missing names without inserting, and preserve append order. The fixture is authored but NOT RUN, per user request. Existing ACT reentry tests remain unchanged.
 
 Post-edit tests and gameplay are delegated to the user. Build/staging outcomes will be recorded separately; no passing tests or visual verification are claimed.
+
+## Build handoff
+
+Source checkpoint c984822. Both fresh Release Win32 builds succeeded using Visual Studio 17 2022:
+- build-runs/tall-map-20260914-r1-quiet -> runtime-builds/tall-map-20260914-r1-quiet
+- build-runs/tall-map-20260914-r1-diag -> runtime-builds/tall-map-20260914-r1-diag
+
+stage_dat.ps1 copied and SHA256-verified all three DAT files beside each game EXE. validation.json in each run directory records the exact commit, EXE hash and DAT hashes. All previous products remain untouched. Compilation includes the new regression fixture, but neither that fixture nor CTest nor either game has been executed. Existing legacy C/assembly compiler warnings remain; this is not a full-runtime C++ conversion.
+
+User validation: launch the quiet EXE, inspect world 1 stage2 background motion/top region, then leave and reenter to confirm clone isolation remains intact. The diagnostic EXE is available if evidence is needed. Optional offline suite commands:
+
+    ctest --test-dir build-runs/tall-map-20260914-r1-quiet -C Release --output-on-failure
+    ctest --test-dir build-runs/tall-map-20260914-r1-diag -C Release --output-on-failure
+
+Checklist: skill/tool path read; original identity/imports saved; original lookup call path checked in IDA MCP pseudocode and assembly; supplied Squirrel source/object disassembly consulted; cause repaired without reverting clone ownership; typed C++ lookup/list construction added; regression authored/compiled; both EXEs staged; execution explicitly deferred to user; backups committed.
