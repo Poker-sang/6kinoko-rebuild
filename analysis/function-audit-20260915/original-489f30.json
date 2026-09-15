@@ -1,0 +1,1 @@
+{"addr":"0x489f30","code":"void __thiscall sub_489F30(_DWORD *this)\n{\n  int v1; // eax\n\n  if ( (*this & 0x8000000) != 0 ) /*0x489f36*/\n  {\n    v1 = *(this + 1); /*0x489f38*/\n    if ( (*(_DWORD *)(v1 + 4))-- == 1 ) /*0x489f3b*/\n      (*(void (__thiscall **)(_DWORD))(*(_DWORD *)*(this + 1) + 4))(a1: *(this + 1)); /*0x489f48*/\n  }\n}"}
