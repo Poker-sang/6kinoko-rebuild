@@ -2597,6 +2597,71 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int test_receiver_operations(int32_t vm, int32_t *root) {
+    int top = function_48aa20(vm);
+    CHECK(execute_source(vm, root+2,
+        "cloneShared <- {value=7};\n"
+        "cloneArray <- [cloneShared,2];\n"
+        "cloneCopy <- clone cloneArray;\n"
+        "cloneCopy[1]=8;\n"
+        "if(cloneCopy==cloneArray || cloneArray[1]!=2 || cloneCopy[0]!=cloneShared) throw 81;\n"
+        "class ReceiverClone { value=0; shared=null;\n"
+        " function _cloned(other) { value=other.value+1; shared=other.shared; }\n"
+        "}\n"
+        "cloneInstance <- ReceiverClone();\n"
+        "cloneInstance.value=12; cloneInstance.shared=cloneShared;\n"
+        "clonedInstance <- clone cloneInstance;\n"
+        "if(clonedInstance==cloneInstance || clonedInstance.value!=13 || "
+        "clonedInstance.shared!=cloneShared || cloneInstance.value!=12) throw 82;\n"
+        "cloneTable <- delegate { _cloned=function(other) { value=other.value+2; } } : {value=3};\n"
+        "clonedTable <- clone cloneTable;\n"
+        "if(clonedTable.value!=5 || cloneTable.value!=3) throw 83;\n"
+        "class ReceiverIterator { entry=cloneShared;\n"
+        " function _nexti(previous) { return previous==null ? \"entry\" : null; }\n"
+        "}\n"
+        "iteratorObject <- ReceiverIterator();\n"
+        "for(local round=0;round<32;round++) {\n"
+        " local count=0; foreach(k,v in iteratorObject) {\n"
+        "  if(k!=\"entry\" || v!=cloneShared) throw 84; count++;\n"
+        " }\n"
+        " if(count!=1) throw 85;\n"
+        "}\n"
+        "local textCount=0; foreach(k,v in \"abc\") { if(v!=97+k) throw 86; textCount++; }\n"
+        "if(textCount!=3) throw 87;\n"
+        "function ReceiverVarargs(...) { return vargv[0.9]; }\n"
+        "if(ReceiverVarargs(cloneShared)!=cloneShared) throw 88;\n"));
+    int32_t array[3];
+    function_4aa3a0_this(PTR(root+1),PTR(array),"cloneArray");
+    int32_t methods[2]={0,PTR(release_error_probe)};
+    int32_t old[3]={PTR(methods),1,0};
+    int32_t destination[2]={0x08000080,PTR(old)};
+    int releases=error_releases;
+    CHECK(kinoko_sq_clone(vm,PTR(array+1),PTR(destination)));
+    CHECK(error_releases==releases+1 && destination[0]==0x08000040);
+    CHECK(destination[1]!=array[2]);
+    /* Aliased source/output must keep the original alive until copying ends. */
+    CHECK(kinoko_sq_clone(vm,PTR(destination),PTR(destination)));
+    function_489f30_this(PTR(destination));
+    function_4a9d70_this(PTR(array));
+    expected_vm_error=1;
+    int result=execute_source(vm,root+2,
+        "function ReceiverBadIndex(index,...) { return vargv[index]; }\n"
+        "function ReceiverEmpty(...) { return vargv[0]; }\n"
+        "local caught=0;\n"
+        "try { ReceiverBadIndex(-1,7); } catch(e) { if(e!=\"vargv index out of range\") throw e; caught++; }\n"
+        "try { ReceiverBadIndex(1,7); } catch(e) { if(e!=\"vargv index out of range\") throw e; caught++; }\n"
+        "try { ReceiverBadIndex(\"bad\",7); } catch(e) { if(e!=\"indexing 'vargv' with string\") throw e; caught++; }\n"
+        "try { ReceiverEmpty(); } catch(e) { if(e!=\"the function doesn't have var args\") throw e; caught++; }\n"
+        "class ReceiverBadIterator { function _nexti(previous) { return \"missing\"; } }\n"
+        "try { foreach(k,v in ReceiverBadIterator()) {} }\n"
+        "catch(e) { if(e!=\"_nexti returned an invalid idx\") throw e; caught++; }\n"
+        "if(caught!=5) throw 89;\n");
+    expected_vm_error=0;
+    CHECK(result && function_48aa20(vm)==top);
+    puts("PASS: C++ clone alias/ownership/metamethods, iterator lifetimes and vararg bounds/errors");
+    return 0;
+}
+
 static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     int32_t table[3], array[3], text[3];
     const int32_t stack_before = function_48aa20(vm);
@@ -3602,6 +3667,7 @@ int main(int argc, char **argv) {
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_recovered_object_entries(vm, root) == 0);
+    CHECK(test_receiver_operations(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)

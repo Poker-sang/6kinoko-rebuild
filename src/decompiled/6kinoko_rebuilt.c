@@ -4836,7 +4836,7 @@ static int32_t function_498b60_this(int32_t this_ptr, int32_t shared_state,
 static int32_t function_498c60_this(int32_t this_ptr, int32_t shared_state,
                                      int32_t source_ptr, int32_t memsize);
 static int32_t function_498e90_this(int32_t this_ptr);
-static int32_t function_498440_this(int32_t source_ptr);
+int32_t function_498440_this(int32_t source_ptr);
 static int32_t function_499610_this(int32_t this_ptr);
 static int32_t function_497680_this(int32_t this_ptr, int32_t object_ptr,
                                     int32_t a3, int32_t a4, int32_t a5,
@@ -188104,7 +188104,7 @@ static void retdec_table_finalize(int32_t table_ptr) {
 }
 
 /* SQTable::Clone(), with the lost ECX table made explicit. */
-static int32_t function_498440_this(int32_t source_ptr) {
+int32_t function_498440_this(int32_t source_ptr) {
     int32_t table_ptr;
     int32_t data;
     int32_t capacity;
@@ -196719,37 +196719,7 @@ int32_t function_4914a0(int32_t a1) {
 
 // Address range: 0x491500 - 0x4915a8
 int32_t function_491500(int32_t a1, int32_t a2, int32_t a3) {
-    uint16_t v1 = *(int16_t *)(a3 + 44); // 0x491509
-    int32_t v2; // 0x491500
-    if (v1 == 0) {
-        // 0x491514
-        return function_499a20(v2, "the function doesn't have var args") & -256;
-    }
-    int32_t v3 = *(int32_t *)a2; // 0x49152e
-    if ((v3 & 0x4000000) == 0) {
-        // 0x491538
-        function_48e460(a2);
-        return function_499a20(v2, "indexing 'vargv' with %s") & -256;
-    }
-    int32_t v4 = a2 + 4;
-    int32_t v5; // 0x491500
-    if (v3 != 0x5000004) {
-        // 0x491568
-        v5 = *(int32_t *)v4;
-    } else {
-        // 0x49155e
-        int3_t v6; // 0x491500
-        __frontend_reg_store_fpr(v6 - 1, (float80_t)*(float32_t *)v4);
-        v5 = function_4ab9d0();
-    }
-    // 0x49156b
-    if (v5 >= (int32_t)v1) {
-        // 0x491591
-        return function_499a20(v2, "vargv index out of range") & -256;
-    }
-    uint16_t v7 = *(int16_t *)(a3 + 46); // 0x491573
-    int32_t v8 = *(int32_t *)(v2 + 36); // 0x491579
-    return function_489f50(8 * (v5 + (int32_t)v7) + v8) & -256 | 1;
+    return kinoko_sq_get_vararg(retdec_stack_vm(), a1, a2, a3);
 }
 
 // Address range: 0x4915b0 - 0x49169c
@@ -200431,174 +200401,7 @@ int32_t function_4948a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 
 // Address range: 0x494990 - 0x494bed
 int32_t function_494990(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4949a0
-    int32_t v2 = retdec_stack_vm(); // hidden __thiscall VM
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-68, 0x4949ae
-    int32_t v4 = &v3; // 0x4949ae
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v5 = 0x1000001; // bp-44, 0x4949c1
-    int32_t v6 = 0x1000001; // bp-36, 0x4949ca
-    int32_t v7 = *(int32_t *)a1; // 0x4949d3
-    int32_t v8; // 0x494990
-    int32_t v9; // 0x494990
-    int32_t v10; // bp-28, 0x494990
-    int32_t v11; // bp-76, 0x494990
-    switch (v7) {
-        case 0x8000040: {
-            int32_t v12 = *(int32_t *)(a1 + 4); // 0x494b24
-            int32_t v13 = *(int32_t *)(v12 + 20); // 0x494b27
-            int32_t * v14 = _malloc(36); // 0x494b32
-            int32_t v15 = v4; // 0x494b48
-            if (v14 != NULL) {
-                // 0x494b4a
-                v11 = v13;
-                function_48d390_this((int32_t)(intptr_t)v14, v13,
-                                     *(int32_t *)(v12 + 28));
-                v15 = &v11;
-            }
-            int32_t v16 = (int32_t)v14; // 0x494b32
-            *(int32_t *)(v15 - 4) = v12 + 24;
-            if (v16 != 0)
-                function_48d940(v16 + 24, v12 + 24);
-            int32_t * v17 = (int32_t *)(v16 + 4); // 0x494b6b
-            *v17 = *v17 + 1;
-            v10 = 0x8000040;
-            int32_t * v18 = (int32_t *)a2; // 0x494b7b
-            int32_t * v19 = (int32_t *)(a2 + 4); // 0x494b7d
-            int32_t v20 = *v19; // 0x494b7d
-            *v19 = v16;
-            *v18 = 0x8000040;
-            *v17 = *v17 + 1;
-            int32_t v21 = a2; // 0x494b99
-            if ((*v18 & 0x8000000) != 0) {
-                int32_t * v22 = (int32_t *)(v20 + 4); // 0x494b9b
-                int32_t v23 = *v22 - 1; // 0x494b9b
-                *v22 = v23;
-                v21 = a2;
-                if (v23 == 0) {
-                    // 0x494ba0
-                    v21 = *(int32_t *)(*(int32_t *)v20 + 4);
-                }
-            }
-            int32_t v24 = *v17 - 1; // 0x494ba7
-            *v17 = v24;
-            int32_t v25 = v21; // 0x494bae
-            if (v24 == 0) {
-                // 0x494bb0
-                v25 = *(int32_t *)(*v14 + 4);
-            }
-            // 0x494bb9
-            if ((v5 & 0x8000000) == 0) {
-                // 0x494bd7
-                __writefsdword(0, v1);
-                return v25 & -256 | 1;
-            }
-            int32_t v26 = *(int32_t *)4 - 1; // 0x494bc8
-            *(int32_t *)4 = v26;
-            if (v26 == 0) {
-                // 0x494bcd
-                abort();
-                // UNREACHABLE
-            }
-            // 0x494bd7
-            __writefsdword(0, v1);
-            return 1;
-        }
-        case 0xa000020: {
-            retdec_trace("494990:clone-table");
-            retdec_trace_i32("494990:clone-source", *(int32_t *)(a1 + 4));
-            int32_t v27 = function_498440_this(*(int32_t *)(a1 + 4)); // 0x494aee
-            retdec_trace_i32("494990:clone-result", v27);
-            int32_t * v28 = (int32_t *)(v27 + 4); // 0x494af8
-            *v28 = *v28 + 1;
-            v6 = 0xa000020;
-            v9 = v4;
-            v8 = v27;
-            // break -> 0x494a4f
-            break;
-        }
-        case 0xa008000: {
-            // 0x494a0c
-            int32_t * v30 = (int32_t *)(
-                function_491400(*(int32_t *)(a1 + 4),
-                                *(int32_t *)(v2 + 140)) + 4); // 0x494a1d
-            *v30 = *v30 + 1;
-            v10 = 0xa008000;
-            int32_t v31 = &v10; // 0x494a2d
-            v11 = v31;
-            function_489f50(v31);
-            *v30 = *v30 - 1;
-            v9 = &v11;
-            v8 = 0;
-            // break -> 0x494a4f
-            break;
-        }
-        default: {
-            // 0x4949f6
-            __writefsdword(0, v1);
-            return v7 & -256;
-        }
-    }
-    // 0x494a4f
-    if (*(int32_t *)(v8 + 24) != 0) {
-        // 0x494a55
-        *(int32_t *)(v9 - 4) = (int32_t)&v6;
-        function_491820((int32_t)(intptr_t)&v6);
-        *(int32_t *)(v9 - 8) = a1;
-        function_491820(a1);
-        *(int32_t *)(v9 - 12) = (int32_t)&v5;
-        *(int32_t *)(v9 - 16) = 2;
-        *(int32_t *)(v9 - 20) = 12;
-        *(int32_t *)(v9 - 24) = v8;
-        function_497850(v8, 12, 2, (int32_t)(intptr_t)&v5);
-    }
-    int32_t * v32 = (int32_t *)a2; // 0x494a7e
-    int32_t * v33 = (int32_t *)(a2 + 4); // 0x494a80
-    int32_t v34 = *v33; // 0x494a80
-    *v32 = v6;
-    *v33 = v8;
-    if ((v6 & 0x8000000) != 0) {
-        int32_t * v35 = (int32_t *)(v8 + 4); // 0x494a90
-        *v35 = *v35 + 1;
-    }
-    int32_t v36 = a2; // 0x494a99
-    if ((*v32 & 0x8000000) != 0) {
-        int32_t * v37 = (int32_t *)(v34 + 4); // 0x494a9b
-        int32_t v38 = *v37 - 1; // 0x494a9b
-        *v37 = v38;
-        v36 = a2;
-        if (v38 == 0) {
-            // 0x494aa0
-            v36 = *(int32_t *)v34;
-        }
-    }
-    int32_t v39 = v36; // 0x494aad
-    if ((v6 & 0x8000000) != 0) {
-        int32_t * v40 = (int32_t *)(v8 + 4); // 0x494aaf
-        int32_t v41 = *v40 - 1; // 0x494aaf
-        *v40 = v41;
-        v39 = v36;
-        if (v41 == 0) {
-            // 0x494ab4
-            v39 = *(int32_t *)v8;
-        }
-    }
-    // 0x494abd
-    if ((v5 & 0x8000000) == 0) {
-        // 0x494bd7
-        __writefsdword(0, v1);
-        return v39 & -256 | 1;
-    }
-    int32_t v42 = *(int32_t *)4 - 1; // 0x494ad3
-    *(int32_t *)4 = v42;
-    if (v42 == 0) {
-        // 0x494adc
-        abort();
-        // UNREACHABLE
-    }
-    // 0x494bd7
-    __writefsdword(0, v1);
-    return 1;
+    return kinoko_sq_clone(retdec_stack_vm(), a1, a2);
 }
 
 // Address range: 0x494bf0 - 0x494d9f
@@ -200706,211 +200509,8 @@ int32_t function_494da0(int32_t * a1, int32_t * a2, int32_t * a3, int32_t a4, in
         retdec_trace_i32("494da0:exitpos", a6);
         ++next_trace_count;
     }
-    int32_t v1 = (int32_t)a7;
-    int32_t v2 = (int32_t)a3;
-    int32_t v3 = (int32_t)a2;
-    int32_t v4 = (int32_t)a1;
-    int32_t v5 = __readfsdword(0); // bp-16, 0x494db0
-    __writefsdword(0, (int32_t)&v5);
-    int32_t v6 = *a1; // 0x494dcd
-    int32_t v7; // 0x494da0
-    int32_t v8; // 0x494da0
-    char * v9; // bp-52, 0x494da0
-    int32_t v10; // bp-56, 0x494da0
-    int32_t v11; // 0x494da0
-    int32_t v12; // 0x494da0
-    if (v6 > 0x8004000) {
-        switch (v6) {
-            case 0xa000020: {
-                retdec_trace_i32("494da0:table", a1[1]);
-                /* a1 is the two-word Squirrel object value.  The generated
-                   pointer expression `(a1 + 4)` advanced four int32_t
-                   elements and passed the output value's type as ECX;
-                   SQTable::Next needs the value word a1[1]. */
-                int32_t next = function_497d30_this(
-                    a1[1], 0, a4, v3, v2);
-                retdec_trace_i32("494da0:table-next", next);
-                if (next == -1) {
-                    *a7 = a6;
-                    return 1;
-                }
-                function_48e0e0_this(a4, next);
-                *a7 = 1;
-                return 1;
-            }
-            case 0xa008000: {
-                goto lab_0x494f51;
-            }
-            case 0xa000080: {
-                goto lab_0x494f51;
-            }
-            default: {
-                goto lab_0x494f26;
-            }
-        }
-    } else {
-        switch (v6) {
-            case 0x8004000: {
-                int32_t v14 = function_4987a0_this(
-                    *(int32_t *)(a1 + 4), a4, v3, v2); // 0x494ec3
-                if (v14 == -1) {
-                    *a7 = a6;
-                    return 1;
-                }
-                function_48e0e0_this(a4, v14);
-                *a7 = 1;
-                return 1;
-            }
-            case 0x8000010: {
-                // 0x494e8a
-                v9 = (char *)a4;
-                int32_t v21 = function_48f1c0(a4, v3, v2); // 0x494e99
-                v8 = (int32_t)&v9;
-                v11 = v21;
-                goto lab_0x494e9e;
-            }
-            default: {
-                int32_t v22 = v6 - 0x8000040; // 0x494deb
-                if (v22 == 0) {
-                    // 0x494e5b
-                    v9 = (char *)a4;
-                    int32_t v23 = function_491340_array_next(
-                    a1[1], a4, v3, v2); // 0x494e6a
-                    v7 = -1;
-                    if (v23 != -1) {
-                        // 0x494e74
-                        /* SQVM::FOREACH_OP writes SQArray::Next's return
-                           value back to the refpos object before the next
-                           iteration. */
-                        function_48e0e0_this(a4, v23);
-                        /* function_491340_array_next already assigned the
-                           key and value outputs. */
-                        *a7 = 1;
-                        // 0x4950a9
-                        __writefsdword(0, v5);
-                        return v1 & -256 | 1;
-                    }
-                    goto lab_0x494e06;
-                } else {
-                    if (v22 != 960) {
-                        goto lab_0x494f26;
-                    } else {
-                        int32_t v24 = *(int32_t *)(*(int32_t *)(v4 + 4) + 116); // 0x494dfe
-                        v7 = v24;
-                        if (v24 != 2) {
-                            if (v24 == 1) {
-                                int32_t v25 = 0; // 0x494e27
-                                if (*(int32_t *)a4 == 0x5000002) {
-                                    // 0x494e29
-                                    v25 = *(int32_t *)(a4 + 4) + 1;
-                                }
-                                // 0x494e2d
-                                function_48e0e0(v25);
-                                function_48e0e0(v25);
-                                int32_t v26 = a5 + 1; // 0x494e45
-                                v9 = (char *)v26;
-                                int32_t v27 = function_490630(
-                                    a1[1], vm, v26); // 0x494e48
-                                *a7 = 0;
-                                // 0x4950a9
-                                __writefsdword(0, v5);
-                                return v27 & -256 | 1;
-                            }
-                            goto lab_0x494f26;
-                        } else {
-                            goto lab_0x494e06;
-                        }
-                    }
-                }
-            }
-        }
-    }
-  lab_0x494f51:;
-    int32_t * v28 = (int32_t *)(v4 + 4); // 0x494f51
-    if (*(int32_t *)(*v28 + 24) == 0) {
-        // 0x495008
-        __writefsdword(0, v5);
-        return 0;
-    }
-    int32_t v29 = 0x1000001; // bp-24, 0x494f5f
-    function_491820(v4);
-    function_491820(a4);
-    v9 = (char *)&v29;
-    v10 = 2;
-    int32_t v30 = &v29; // 0x494f8d
-    if ((char)function_497850(*v28, 9, 2, v30) == 0) {
-        int32_t v31 = function_499a20(vm, "_nexti failed"); // 0x495053
-        if ((v29 & 0x8000000) == 0) {
-            // 0x495067
-            __writefsdword(0, v5);
-            return v31 & -256;
-        }
-        int32_t v32 = *(int32_t *)4 - 1; // 0x495058
-        *(int32_t *)4 = v32;
-        if (v32 != 0) {
-            // 0x495067
-            __writefsdword(0, v5);
-            return 0;
-        }
-        // 0x49505d
-        abort();
-        // UNREACHABLE
-    }
-    // 0x494f9a
-    function_489f50(function_489f50(v30));
-    int32_t v33; // 0x494da0
-    if (v29 == 0x1000001) {
-        // 0x494fb7
-        *a7 = a6;
-        // 0x4950a9
-        v33 = function_489f30();
-        __writefsdword(0, v5);
-        return v33 & -256 | 1;
-    }
-    // 0x494fd3
-    if ((char)function_4948a0(v4, v30, v2, 0, 0) != 0) {
-        // 0x49501e
-        *a7 = 1;
-        // 0x4950a9
-        v33 = function_489f30();
-        __writefsdword(0, v5);
-        return v33 & -256 | 1;
-    }
-    // 0x494feb
-    function_499a20(vm, "_nexti returned an invalid idx");
-    int32_t result = function_489f30() & -256;
-    __writefsdword(0, v5);
-    return result;
-  lab_0x494f26:
-    // 0x494f26
-    function_48e460(v4);
-    v9 = "cannot iterate %s";
-        int32_t v34 = function_499a20(vm, "cannot iterate %s"); // 0x494f33
-    __writefsdword(0, v5);
-    return v34 & -256;
-  lab_0x494e9e:;
-    // 0x494e9e
-    int32_t v35; // 0x494da0
-    if (v11 != -1) {
-        // 0x495098
-        *(int32_t *)(v8 - 4) = v11;
-        int32_t v36 = function_48e0e0((int32_t)&g1224); // 0x49509b
-        *a7 = 1;
-        v35 = v36;
-    } else {
-        // 0x494ea7
-        *a7 = a6;
-        v35 = v1;
-    }
-    // 0x4950a9
-    __writefsdword(0, v5);
-    return v35 & -256 | 1;
-  lab_0x494e06:
-    // 0x494e06
-    *a7 = a6;
-    // 0x4950a9
-    __writefsdword(0, v5);
-    return v7 & -256 | 1;
+    return kinoko_sq_foreach(vm, (int32_t)(intptr_t)a1,
+        (int32_t)(intptr_t)a2, (int32_t)(intptr_t)a3, a4, a5, a6, a7);
 }
 
 // Address range: 0x4950c0 - 0x49535c
@@ -206097,30 +205697,12 @@ clean_execute_loop:
 
             case 29: { /* GETVARGV */
                 int32_t ci = *(int32_t *)(intptr_t)(vm + 132);
-                int32_t vargs = *(int32_t *)(intptr_t)(vm + 36);
-                int32_t idx = 0;
                 src = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg1);
-                if (src == NULL || vargs == 0 ||
-                    (src[0] != 0x05000002 && src[0] != 0x05000004) ||
-                    ci == 0 || *(uint16_t *)(intptr_t)(ci + 44) == 0)
-                    goto clean_execute_failure;
-                if (src[0] == 0x05000002)
-                    idx = src[1];
-                else {
-                    float f;
-                    memcpy(&f, &src[1], sizeof(f));
-                    idx = (int32_t)f;
-                }
-                if (idx < 0 || idx >= *(uint16_t *)(intptr_t)(ci + 44) ||
-                    (int32_t)*(uint16_t *)(intptr_t)(ci + 46) + idx >=
-                        *(int32_t *)(intptr_t)(vm + 40))
-                    goto clean_execute_failure;
-                src = (int32_t *)(intptr_t)(vargs + 8 *
-                    (*(uint16_t *)(intptr_t)(ci + 46) + idx));
                 dst = (int32_t *)(intptr_t)retdec_clean_vm_slot(vm, arg0);
-                if (dst == NULL)
+                if (src == NULL || dst == NULL || ci == 0 ||
+                    !kinoko_sq_get_vararg(vm, (int32_t)(intptr_t)dst,
+                                         (int32_t)(intptr_t)src, ci))
                     goto clean_execute_failure;
-                retdec_squirrel_assign(dst, src);
                 break;
             }
 

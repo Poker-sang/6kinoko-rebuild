@@ -148,6 +148,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_vm_bridge.cpp
     src/squirrel/squirrel_compile_bridge.cpp
     src/squirrel/squirrel_value_bridge.cpp
+    src/squirrel/squirrel_operations.cpp
     src/squirrel/squirrel_gc_bridge.cpp
     src/squirrel/squirrel_generator_bridge.cpp
     src/squirrel/squirrel_array_bridge.cpp

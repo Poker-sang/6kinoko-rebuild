@@ -17,6 +17,10 @@ int32_t kinoko_sq_pair_assign(int32_t destination, int32_t source);
 void kinoko_sq_pair_destroy(int32_t object);
 void kinoko_sq_closure_destroy(int32_t closure);
 void kinoko_sq_class_destroy(int32_t klass);
+int32_t kinoko_sq_get_vararg(int32_t vm, int32_t target, int32_t index, int32_t call_info);
+int32_t kinoko_sq_clone(int32_t vm, int32_t source, int32_t target);
+int32_t kinoko_sq_foreach(int32_t vm, int32_t object, int32_t key, int32_t value,
+                        int32_t iterator, int32_t arg2, int32_t exitpos, int32_t *jump);
 int32_t kinoko_sq_generator_yield(int32_t generator, int32_t vm);
 int32_t kinoko_sq_generator_resume(int32_t generator, int32_t vm, int32_t target);
 void kinoko_sq_generator_kill(int32_t generator);
