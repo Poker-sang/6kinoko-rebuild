@@ -4686,7 +4686,7 @@ static int32_t function_48d9f0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_48d220(uint32_t a1, int32_t * a2);
 int32_t function_48d310(uint32_t a1, int32_t * a2);
 int32_t function_48d390(int32_t a1, int32_t a2);
-static int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
+int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
                                     int32_t count);
 int32_t function_48d430(void);
 int32_t function_48d450(char a1);
@@ -191600,7 +191600,7 @@ int32_t function_48d310(uint32_t a1, int32_t * a2) {
 // Address range: 0x48d390 - 0x48d425
 // From class:    .?AUSQArray@@
 // Type:          constructor
-static int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
+int32_t function_48d390_this(int32_t this_ptr, int32_t shared_state,
                                     int32_t count) {
     int32_t v1 = __readfsdword(0);
     __writefsdword(0, (int32_t)&v1);

@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include <cstddef>
+#include <cstdlib>
 #include "sqpcheader.h"
 #include "sqvm.h"
 #include "sqtable.h"
@@ -10,6 +11,7 @@
 
 extern "C" {
 int32_t function_498440_this(int32_t source);
+int32_t function_48d390_this(int32_t array, int32_t shared_state, int32_t size);
 int32_t function_491400(int32_t source, int32_t shared_state);
 int32_t function_497850(int32_t object, int32_t method, int32_t nargs, int32_t result);
 int32_t function_491820(int32_t value);
@@ -77,9 +79,17 @@ extern "C" int32_t kinoko_sq_clone(int32_t vm, int32_t source, int32_t target) {
         cloned = &at<SQInstance>(function_491400(address(_instance(self)),
                                                 address(machine._sharedstate)));
         break;
-    case OT_ARRAY:
-        output.get() = _array(self)->Clone();
+    case OT_ARRAY: {
+        // The mixed VM identifies collectables by the reconstructed vtable.
+        // Keep that constructor, then use source vector copy/owned assignment.
+        auto *copy = static_cast<SQArray *>(std::malloc(sizeof(SQArray)));
+        if (!copy) return false;
+        function_48d390_this(address(copy), address(_array(self)->_sharedstate),
+                            _array(self)->Size());
+        copy->_values.copy(_array(self)->_values);
+        output.get() = copy;
         return true;
+    }
     default:
         return false;
     }
