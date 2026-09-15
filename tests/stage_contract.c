@@ -2628,7 +2628,7 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
         "local caught=0;\n"
         "try { threadFailure.wakeup(threadShared); } catch(e) { if(e!=threadShared) throw 99; caught++; }\n"
         "try { threadFailure.wakeup(); } catch(e) { if(e!=\"cannot wakeup a idle thread\") throw e; caught++; }\n"
-        "try { suspend(); } catch(e) { if(e!=\"cannot suspend through native calls/metamethods\") throw e; caught++; }\n"
+        "try { local f=function() { local x=suspend(); }; f.call(this); } catch(e) { if(e!=\"cannot suspend through native calls/metamethods\") throw e; caught++; }\n"
         "if(caught!=3) throw 100;\n");
     expected_vm_error=0;
     CHECK(result);
