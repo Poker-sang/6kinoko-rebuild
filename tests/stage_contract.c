@@ -2597,6 +2597,46 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int test_thread_receivers(int32_t vm, int32_t *root) {
+    const int top = function_48aa20(vm);
+    const int base = *(int32_t *)(intptr_t)(vm+52);
+    CHECK(execute_source(vm,root+2,
+        "threadShared <- {tag=29};\n"
+        "threadSteps <- 0;\n"
+        "threadProbe <- newthread(function(...) {\n"
+        " ::threadSteps++;\n"
+        " local first=suspend(vargv[0]);\n"
+        " if(first!=::threadShared || vargv[0]!=::threadShared) throw 91;\n"
+        " ::threadSteps++;\n"
+        " local second=suspend(17);\n"
+        " if(second!=null) throw 92;\n"
+        " ::threadSteps++; return 23;\n"
+        "});\n"
+        "if(threadProbe.getstatus()!=\"idle\") throw 93;\n"
+        "if(threadProbe.call(threadShared)!=threadShared || threadSteps!=1 || "
+        "threadProbe.getstatus()!=\"suspended\") throw 94;\n"
+        "if(threadProbe.wakeup(threadShared)!=17 || threadSteps!=2) throw 95;\n"
+        "if(threadProbe.wakeup()!=23 || threadSteps!=3 || threadProbe.getstatus()!=\"idle\") throw 96;\n"
+        "threadTrap <- newthread(function() {\n"
+        " try { local x=suspend(1); throw x; } catch(e) { return e; }\n"
+        "});\n"
+        "if(threadTrap.call()!=1 || threadTrap.wakeup(threadShared)!=threadShared) throw 97;\n"));
+    expected_vm_error=1;
+    int result=execute_source(vm,root+2,
+        "threadFailure <- newthread(function() { local x=suspend(2); throw x; });\n"
+        "if(threadFailure.call()!=2) throw 98;\n"
+        "local caught=0;\n"
+        "try { threadFailure.wakeup(threadShared); } catch(e) { if(e!=threadShared) throw 99; caught++; }\n"
+        "try { threadFailure.wakeup(); } catch(e) { if(e!=\"cannot wakeup a idle thread\") throw e; caught++; }\n"
+        "try { suspend(); } catch(e) { if(e!=\"cannot suspend through native calls/metamethods\") throw e; caught++; }\n"
+        "if(caught!=3) throw 100;\n");
+    expected_vm_error=0;
+    CHECK(result);
+    CHECK(function_48aa20(vm)==top && *(int32_t *)(intptr_t)(vm+52)==base);
+    puts("PASS: thread suspend/wakeup results, varargs/traps, errors and parent VM restoration");
+    return 0;
+}
+
 static int test_receiver_operations(int32_t vm, int32_t *root) {
     int top = function_48aa20(vm);
     CHECK(execute_source(vm, root+2,
@@ -3668,6 +3708,7 @@ int main(int argc, char **argv) {
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
     CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_receiver_operations(vm, root) == 0);
+    CHECK(test_thread_receivers(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)

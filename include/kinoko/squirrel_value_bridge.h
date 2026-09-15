@@ -28,6 +28,12 @@ int32_t kinoko_sq_array_remove(int32_t vm);
 int32_t kinoko_sq_array_pop_api(int32_t vm, int32_t index, int32_t push_value);
 int32_t kinoko_sq_array_pop(int32_t vm);
 int32_t kinoko_sq_array_top(int32_t vm);
+int32_t kinoko_sq_suspend(int32_t vm);
+int32_t kinoko_sq_wakeup(int32_t vm, int32_t wakeupret, int32_t retval, int32_t raiseerror);
+int32_t kinoko_sq_thread_call(int32_t vm);
+int32_t kinoko_sq_thread_wakeup(int32_t vm);
+int32_t kinoko_sq_thread_status(int32_t vm);
+int32_t kinoko_sq_newthread(int32_t vm);
 
 #ifdef __cplusplus
 }
