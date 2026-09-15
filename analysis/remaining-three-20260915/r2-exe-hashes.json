@@ -1,0 +1,10 @@
+[
+  {
+    "Path": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\receiver-20260915-r2-quiet\\kinoko_retdec_rebuild.exe",
+    "Hash": "8A99BEC61416A733076682CC6A96DD1BFB53C1DA044F4A3866D9A43442D885D0"
+  },
+  {
+    "Path": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\receiver-20260915-r2-diag\\kinoko_retdec_rebuild.exe",
+    "Hash": "ECE72AA80092DC8B0DEFA17856599B615214B3CC152772A364FB0E58BEC56A8C"
+  }
+]

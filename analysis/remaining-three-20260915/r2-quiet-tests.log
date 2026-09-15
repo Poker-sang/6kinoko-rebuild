@@ -1,0 +1,41 @@
+Test project C:/WorkSpace/6kinoko-rebuild/build-runs/receiver-20260915-r2-quiet
+      Start  1: archive_smoke
+ 1/18 Test  #1: archive_smoke ....................   Passed    0.04 sec
+      Start  2: stage_native_contract
+ 2/18 Test  #2: stage_native_contract ............   Passed    0.20 sec
+      Start  3: damage_pause_contract
+ 3/18 Test  #3: damage_pause_contract ............   Passed    0.03 sec
+      Start  4: crystal_countdown_contract
+ 4/18 Test  #4: crystal_countdown_contract .......   Passed    0.05 sec
+      Start  5: moving_map_contract
+ 5/18 Test  #5: moving_map_contract ..............   Passed    1.25 sec
+      Start  6: orange_platform_contract
+ 6/18 Test  #6: orange_platform_contract .........   Passed    0.20 sec
+      Start  7: green_stage5_contract
+ 7/18 Test  #7: green_stage5_contract ............   Passed    0.30 sec
+      Start  8: water_alpha_contract
+ 8/18 Test  #8: water_alpha_contract .............   Passed    0.03 sec
+      Start  9: act_reentry_contract
+ 9/18 Test  #9: act_reentry_contract .............   Passed    0.05 sec
+      Start 10: moving_map_water_contract
+10/18 Test #10: moving_map_water_contract ........   Passed    1.25 sec
+      Start 11: moving_map_water_2200,559
+11/18 Test #11: moving_map_water_2200,559 ........   Passed    1.25 sec
+      Start 12: moving_map_water_2400,559
+12/18 Test #12: moving_map_water_2400,559 ........   Passed    1.26 sec
+      Start 13: moving_map_water_2600,559
+13/18 Test #13: moving_map_water_2600,559 ........   Passed    1.25 sec
+      Start 14: moving_map_water_2770,463
+14/18 Test #14: moving_map_water_2770,463 ........   Passed    1.27 sec
+      Start 15: game_math_contract
+15/18 Test #15: game_math_contract ...............   Passed    0.01 sec
+      Start 16: legacy_abi_contract
+16/18 Test #16: legacy_abi_contract ..............   Passed    0.01 sec
+      Start 17: texture_store_contract
+17/18 Test #17: texture_store_contract ...........   Passed    0.02 sec
+      Start 18: diagnostics_capture
+18/18 Test #18: diagnostics_capture ..............   Passed    0.19 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Total Test time (real) =   8.67 sec

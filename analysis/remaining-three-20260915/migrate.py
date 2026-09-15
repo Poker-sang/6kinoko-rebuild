@@ -25,6 +25,7 @@ body('function_494da0', prefix + '\n    return kinoko_sq_foreach(vm, (int32_t)(i
      '        (int32_t)(intptr_t)a2, (int32_t)(intptr_t)a3, a4, a5, a6, a7);')
 assert s.count('static int32_t function_498440_this(') == 2
 s = s.replace('static int32_t function_498440_this(', 'int32_t function_498440_this(')
+s = s.replace('static int32_t function_48d390_this(', 'int32_t function_48d390_this(')
 # Give the live interpreter the same verified vararg operation, including errors.
 start = s.index('            case 29: { /* GETVARGV */')
 end = s.index('            case 30:', start)
