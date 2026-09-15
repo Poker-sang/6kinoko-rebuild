@@ -184967,7 +184967,10 @@ static int32_t retdec_funcstate_this(void) {
     return retdec_active_funcstate;
 }
 
+static __declspec(thread) int32_t retdec_explicit_vm;
 static __declspec(noinline) int32_t retdec_stack_vm(void) {
+    if (retdec_explicit_vm != 0)
+        return retdec_explicit_vm;
     static int32_t null_stack_trace_count;
     /* Once the runtime publishes g644, it is the stable primary VM.  Several
        recovered helper calls can temporarily poison retdec_active_vm with a
@@ -188462,7 +188465,11 @@ int32_t function_48a230(int32_t a1, int32_t a2) {
     retdec_trace_i32("48a230:child-shared",
                      vm != 0 ? *(int32_t *)(vm + 140) : 0);
 
-    if ((char)function_492890_this(vm, a1, a2) == 0) {
+    int32_t previous_vm = retdec_explicit_vm;
+    retdec_explicit_vm = vm;
+    int32_t initialized = function_492890_this(vm, a1, a2);
+    retdec_explicit_vm = previous_vm;
+    if ((char)initialized == 0) {
         if (vm != 0) {
             function_4985b0(vm);
         }
@@ -241736,16 +241743,22 @@ int32_t function_4583a0(int32_t this_ptr, int32_t result)
    caller VM; the same reconstructed interpreter handles call and resume. */
 int32_t kinoko_call_game_vm(int32_t vm, int32_t nargs, int32_t retval, int32_t raiseerror) {
     int32_t previous = retdec_active_vm;
+    int32_t previous_explicit = retdec_explicit_vm;
     retdec_active_vm = vm;
+    retdec_explicit_vm = vm;
     int32_t result = function_48ace0(vm, nargs, retval, raiseerror);
+    retdec_explicit_vm = previous_explicit;
     retdec_active_vm = previous;
     return result;
 }
 
 int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror) {
     int32_t previous = retdec_active_vm;
+    int32_t previous_explicit = retdec_explicit_vm;
     retdec_active_vm = vm;
+    retdec_explicit_vm = vm;
     int32_t result = retdec_execute_clean_vm(0, 0, 0, 0, out, raiseerror, 1);
+    retdec_explicit_vm = previous_explicit;
     retdec_active_vm = previous;
     return result;
 }
