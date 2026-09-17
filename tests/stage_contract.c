@@ -2597,6 +2597,69 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int test_csv_receivers(int32_t vm, int32_t *root) {
+    const int top=function_48aa20(vm);
+    CHECK(kinoko_csv_populate(vm,
+        "# ignored\r\nid,n,f,b,s\r\n,i,f,b,s\r\n"
+        "csvA,-12,1.25,true,\"hello\"\r\n"
+        "csvMissing,7\n"
+        "csvA,19,2.5,True,replaced,ignored\n"
+        "csvUncommitted,8,3,t,end",root+2)==0);
+    CHECK(execute_source(vm,root+2,
+        "if(csvA.n!=19 || csvA.f!=2.5 || csvA.b!=false || csvA.s!=\"replaced\") throw 110;"
+        "if(csvMissing.n!=7 || csvMissing.f!=0.0 || csvMissing.b!=false || csvMissing.s!=\"\") throw 111;"
+        "if(\"csvUncommitted\" in this) throw 112;"));
+    CHECK(kinoko_csv_populate(vm,
+        "id,a,b\n,s,s\n"
+        "csvComma,\"left,right\"\n"
+        "csvLine,\"one\r\ntwo\",ok\n"
+        "csvCarry,part#ignored\nrest,done\n",root+2)==0);
+    CHECK(execute_source(vm,root+2,
+        "if(csvComma.a!=\"left\" || csvComma.b!=\"right\") throw 113;"
+        "if(csvLine.a!=\"one\\r\\ntwo\" || csvLine.b!=\"ok\") throw 114;"
+        "if(csvCarry.a!=\"partrest\" || csvCarry.b!=\"done\") throw 115;"));
+    CHECK(kinoko_csv_populate(vm,"id,a,b\n,i\nnever,1,2\n",root+2)==2);
+    int32_t null_pair[2]={g483,g484};
+    CHECK(kinoko_csv_populate(vm,"",null_pair)==1);
+
+    // Exercise the actual four-word callback ABI and resource reader in both modes.
+    const char *fixture="id,value\n,i\ncsvFile,47\n";
+    const char saved_encoding=g874;
+    const int32_t saved_package=g765;
+    g765=0;
+    for(int encoded=0;encoded<2;++encoded) {
+        char path[MAX_PATH], actual[MAX_PATH];
+        CHECK(GetTempFileNameA(".","csv",0,path)!=0);
+        strcpy_s(actual,sizeof actual,path);
+        if(encoded) strcpy_s(actual+strlen(actual)-4,5,".cv1");
+        FILE *file=NULL;
+        CHECK(fopen_s(&file,actual,"wb")==0);
+        unsigned char key=0x8b,step=0x71;
+        for(size_t i=0;i<strlen(fixture);++i) {
+            unsigned char ch=(unsigned char)fixture[i];
+            if(encoded) { ch^=key; key=(unsigned char)(key+step); step=(unsigned char)(step-0x6b); }
+            fputc(ch,file);
+        }
+        fclose(file);
+        const int32_t refs=*(int32_t *)(intptr_t)(root[3]+4);
+        g874=(char)encoded;
+        function_48ab90(vm,root[2],root[3]);
+        function_48a480(vm,PTR(path),-1);
+        function_48ab90(vm,root[2],root[3]);
+        CHECK(function_471160(PTR(function_403000),vm,2)==1);
+        int32_t *result=(int32_t *)(intptr_t)function_491880_this(vm,-1);
+        CHECK(result[0]==0x01000008 && result[1]==1);
+        function_48c910(vm,top);
+        CHECK(*(int32_t *)(intptr_t)(root[3]+4)==refs);
+        CHECK(execute_source(vm,root+2,"if(csvFile.value!=47) throw 116;"));
+    }
+    g874=saved_encoding;
+    g765=saved_package;
+    CHECK(function_48aa20(vm)==top);
+    puts("PASS: original CSV quirks, typed rows, callback ownership and plain/encrypted readers");
+    return 0;
+}
+
 static int test_thread_receivers(int32_t vm, int32_t *root) {
     const int top = function_48aa20(vm);
     const int base = *(int32_t *)(intptr_t)(vm+52);
@@ -3729,6 +3792,7 @@ int main(int argc, char **argv) {
     CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_receiver_operations(vm, root) == 0);
     CHECK(test_thread_receivers(vm, root) == 0);
+    CHECK(test_csv_receivers(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
