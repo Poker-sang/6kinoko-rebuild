@@ -65,3 +65,62 @@ No game started, closed, switched or attached. Original game/resources and
 prior stone R11/lift/BGM fixes preserved; all older test artifacts retained.
 Interactive testing remains with the user: both variants, first stage, jump,
 observe an enemy and exit. Pause after handing over paths as requested.
+
+## ReadCSV continuation — 2026-09-17
+
+User confirmed thread r6 works in-game before authorizing this continuation.
+Code/test commit bf3461b; final builds csv-20260917-r3-{quiet,diag}.
+Both variants pass all 18 CTests: stage_native_contract first, then the other
+17 without repeating that test. Logs: csv-r3-*-stage.log and
+csv-r3-*-remaining-tests.log. DATs staged and verified beside each EXE;
+see csv-r3-*-dat.log and csv-r3-exe-hashes.json.
+
+403000 now accepts the original four-word C callback ABI: path followed by
+the three-word by-value SquirrelObject (vtable/type/data). 471160 already
+passes this ABI. The C++ owner consumes the external reference through the
+existing receiver-aware SquirrelObject destructor on success and failure.
+Local fields/rows use SQObjectPtr RAII; new row tables retain reconstructed
+vtable identity for mixed-VM GC. Raw table insertion mirrors 4A97B0 -> 48CB10,
+without invoking an invented _newslot callback.
+
+The C++ parser follows original 40C010 rather than a generic CSV library:
+quotes toggle newline preservation, commas split even inside quotes, # starts
+comment suppression, CR is kept only within quotes, and only an unquoted LF
+commits a noncomment row. Comment suppression does not clear accumulated
+fields, and EOF does not commit a trailing row. CharNextA preserves the original
+ANSI multibyte traversal. Textual values retain the original 256-byte
+strcpy_s contract; integer/float values use atoi/atof, and boolean means the
+first byte is lowercase t. Definition names and types stop at the first empty
+cell; a count mismatch fails before inserting rows. Duplicate row keys replace
+rows; missing values default via the original conversions. Original MessageBox
+captions retained for non-table, missing file and definition mismatch.
+
+g874 controls replacement of the final four filename bytes with .cv1 and the
+original rolling XOR decode (key 0x8b, step 0x71, step decrement 0x6b). Actual
+bytes still come through function_407370 and the existing file/archive reader,
+not a new data-directory bypass. Original reader implementations 414850 and
+414930 are bypassed only in this recovered chain; they are not globally fixed.
+
+Evidence: csv-{40bf10,40c010,40c2e0,40c370,40c4b0,40c790,40c6d0,414850,
+414930,4a97b0,4a9d70,471160}.json from IDA MCP session baf41fe8. Carry forward
+original-0x403000.json/original-csv.txt and prior E-imports/scope.
+
+Validation covers parser quirks, typed and missing cells, duplicate rows,
+no EOF flush, definition errors, both plain/encrypted file modes, the actual
+471160 four-word callback, unchanged caller stack and external table ownership.
+All existing thread, GC, moving-stone/water, lift and floating-point tests pass.
+Failed batches preserved: csv r1 test source lacked statement line breaks;
+csv r2 exposed C++ bool assignment choosing Squirrel's integer overload.
+The final code explicitly constructs SQObjectPtr(bool); neither failed build
+was delivered for interactive testing.
+
+Progress: 807 lines of broken ReadCSV expansion replaced; 21 receiverless
+4A9D70 call expressions removed from this function. The three fallback symbols
+are STILL NOT eliminated globally. Current call-like text counts (including
+prototypes/definitions) are 489F30=396, 489F50=18, 4A9D70=222. These are not
+runtime reachability counts. Old compiler paths and remaining wrapper callers
+need further analysis; do not claim full function coverage or equivalence.
+
+No game was launched/stopped/attached. User startup testing of both final
+variants remains pending (first stage, jump, see an enemy, exit). Pause after
+handoff as requested. All prior builds, fixtures and logs retained.
