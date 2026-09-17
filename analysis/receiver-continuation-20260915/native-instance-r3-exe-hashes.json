@@ -1,0 +1,14 @@
+[
+  {
+    "variant": "quiet",
+    "code_commit": "497e533",
+    "path": "runtime-builds/native-instance-20260917-r3-quiet/kinoko_retdec_rebuild.exe",
+    "sha256": "10DC3355862B920146E2A2E9BAA2748A074B76228DB3D162BA083472B13DC9B9"
+  },
+  {
+    "variant": "diag",
+    "code_commit": "497e533",
+    "path": "runtime-builds/native-instance-20260917-r3-diag/kinoko_retdec_rebuild.exe",
+    "sha256": "24F428B6A107874C29368E925CD83A47ED638FDAA3419EC44D0CE6CABFB09A4A"
+  }
+]

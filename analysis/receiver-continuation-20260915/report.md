@@ -216,3 +216,60 @@ Offline checks do not establish interactive startup or gameplay equivalence.
 No game was launched, closed or attached. User testing of both variants is
 pending: enter the first stage, jump, see an enemy, then exit. Pause at handoff
 as requested. All previous runtime/build/test artifacts remain preserved.
+
+## Native instance ownership and SQVM::Remove — 2026-09-17
+
+User confirmed destructors r1 works before authorizing this batch. Final
+code/test commit 497e533 (implementation 6622f02, fixture correction 5a77a1f).
+Both native-instance-20260917-r3-{quiet,diag} Release builds passed all 18
+CTests: stage_native_contract first, then the remaining 17. Original three DATs
+are staged beside each EXE and size/SHA256 verified. EXE hashes are recorded
+in native-instance-r3-exe-hashes.json. Logs use native-instance-r3 prefixes.
+
+Original 4AB020 and 4AB170 now use native_instance.cpp. The original sequence
+creates a class instance without executing its script constructor, retains the
+complete instance object pair, creates a fresh __ot table, maps ClassType<void>
+and the first size(__ca)-1 class tags to the native pointer, removes the root
+and class stack entries, then attaches the pointer/release hook. Failure before
+creation or while attaching restores the incoming top. C++ scope ownership
+uses the existing external VM reference table release/reset operations, not
+SQObjectPtr destruction for these wrappers. The ClassType<void> initialization
+remains lazy at its original point. No game-specific conditions were added.
+
+IDA 6a0354c5 evidence: native-4ab020.json, native-4ab020-asm.json,
+native-4ab170.json, native-4a98d0.json, native-48c7f0.json. ECX values in the
+assembly identify the previously lost table/instance/array receivers. The old
+4AB020 expansion was removed, and 4AB170 is a thin forwarding boundary.
+The older receiverless 4A98D0/4AA2D0 bodies remain unreferenced candidates for
+later removal. This batch does not claim restoration of native variable getter
+category 7 in retdec_get_var_value: that separate dispatch remains outstanding.
+The recovered factory is exercised directly by the contract test.
+
+New tests exposed an independent ownership defect in generated 4916A0:
+after overwriting a slot, it checked the NEW type when deciding whether to
+release the OLD value. It also omitted zero-reference virtual release. Original
+IDA native-4916a0.json matches supplied Squirrel 2.2.2 sqvm.cpp::SQVM::Remove.
+48AA60 now passes its explicit VM to that C++ implementation; the incorrect
+4916A0 expansion is removed. Index conversion, shift bounds and final null
+assignment follow upstream/original code, without a custom stack policy.
+This fix affects the actual existing sq_remove API callers, beyond the factory.
+
+Tests verify absent/nonclass lookup failure and stack restoration, exact success
+stack size, returned instance having only its stack reference, stored native
+pointer, void/base type map entries, exclusion of the last ancestry element,
+empty/single ancestry cases, skipped script constructor, and exactly one native
+release callback when the last owner is removed. Existing water/moving-stone,
+lift, floating-point, thread, CSV/compiler and GC tests all pass.
+Failed r1 used unsupported class-field assignment in its fixture; r2 corrected
+the fixture and exposed the real stack removal reference leak. Neither is handed
+over for gameplay. Both failed batches and their logs remain preserved.
+
+Progress: 8 receiverless 4A9D70 call expressions removed in this batch.
+Current call-like matching source lines: 4A9D70=28 including declaration and
+definition (NOT runtime reachability). Still TWO of THREE original placeholders
+eliminated; the last one remains in other wrapper/global/generated paths.
+Prior E-imports/scope and original reference are carried forward.
+
+No game was launched, closed or attached. Interactive quiet/diag startup remains
+pending: first stage, jump, see an enemy, exit. Pause after user handoff as
+requested; no claims of complete runtime equivalence from offline tests alone.
