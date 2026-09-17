@@ -2600,6 +2600,19 @@ static int test_error_value_ownership(int32_t vm) {
 static int test_thread_receivers(int32_t vm, int32_t *root) {
     const int top = function_48aa20(vm);
     const int base = *(int32_t *)(intptr_t)(vm+52);
+    // A native name owns its string independently of a root-table key.
+    function_48a480(vm, PTR("native-name-owned"), -1);
+    int32_t *key=(int32_t *)(intptr_t)function_491880_this(vm,-1);
+    int32_t name=key[1];
+    int32_t refs=*(int32_t *)(intptr_t)(name+4);
+    function_48d850(vm,PTR(function_4a1760),0);
+    CHECK(function_48c580(vm,-1,PTR("native-name-owned"))==0);
+    CHECK(*(int32_t *)(intptr_t)(name+4)==refs+1);
+    CHECK(function_48c580(vm,-1,PTR("native-name-owned"))==0);
+    CHECK(*(int32_t *)(intptr_t)(name+4)==refs+1);
+    CHECK(function_48c580(vm,-1,PTR("native-name-replaced"))==0);
+    CHECK(*(int32_t *)(intptr_t)(name+4)==refs);
+    function_48aa30(vm,2);
     CHECK(execute_source(vm,root+2,
         "threadShared <- {tag=29};\n"
         "threadSteps <- 0;\n"
@@ -2621,17 +2634,6 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
         " try { local x=suspend(1); throw x; } catch(e) { return e; }\n"
         "});\n"
         "if(threadTrap.call()!=1 || threadTrap.wakeup(threadShared)!=threadShared) throw 97;\n"));
-    {
-        int32_t table=root[3];
-        int32_t nodes=*(int32_t *)(intptr_t)(table+32);
-        int32_t count=*(int32_t *)(intptr_t)(table+36);
-        fprintf(stderr,"thread root=%08x vmroot=%08x nodes=%d refs=%d\n",table,*(int32_t *)(intptr_t)(vm+60),count,*(int32_t *)(intptr_t)(table+4));
-        for(int i=0;i<count;++i) {
-            int32_t *n=(int32_t *)(intptr_t)(nodes+20*i);
-            if(n[2]==0x08000010 && strcmp((char *)(intptr_t)(n[3]+28),"newthread")==0)
-                fprintf(stderr,"newthread node=%d key=%08x refs=%d val=%08x/%08x\n",i,n[3],*(int32_t *)(intptr_t)(n[3]+4),n[0],n[1]);
-        }
-    }
     expected_vm_error=1;
     int result=execute_source(vm,root+2,
         "threadFailure <- newthread(function() { local x=suspend(2); throw x; });\n"
