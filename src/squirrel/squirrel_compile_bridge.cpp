@@ -56,6 +56,7 @@ extern "C" int32_t retdec_squirrel_compile_source(const char *source,
 
 extern "C" int32_t function_48bb30(int32_t shared, int32_t proto);
 namespace {
+static_assert(offsetof(SQSharedState, _compilererrorhandler) == 160);
 int32_t source_table_vtable;
 template<class T> T *pointer(int32_t value) {
     return reinterpret_cast<T *>(static_cast<uintptr_t>(static_cast<uint32_t>(value)));

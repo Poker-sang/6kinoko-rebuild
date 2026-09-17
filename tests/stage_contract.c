@@ -2603,8 +2603,26 @@ static int32_t compiler_test_feed(int32_t context) {
     if(retdec_stack_vm()!=feed->vm) return 0;
     return feed->text[feed->offset] ? feed->text[feed->offset++] : 0;
 }
+static int compile_error_calls, compile_error_valid;
+static int32_t compile_error_vm;
+static void compiler_test_error(int32_t vm, const char *error, const char *source, int32_t line, int32_t column) {
+    ++compile_error_calls;
+    compile_error_valid = vm == compile_error_vm && retdec_stack_vm() == vm &&
+        error && *error && strcmp(source,"callback source")==0 && line>0 && column>0;
+}
 static int test_compiler_receivers(int32_t vm, int32_t *root) {
     const int top=function_48aa20(vm);
+    int32_t shared=*(int32_t *)(intptr_t)(vm+140);
+    int32_t previous_handler=*(int32_t *)(intptr_t)(shared+160);
+    compile_error_vm=vm;
+    compile_error_calls=compile_error_valid=0;
+    function_48afa0(vm,PTR(compiler_test_error));
+    CHECK(function_48d0b0(vm,PTR("local =;"),8,(int32_t *)"callback source",0)==-1);
+    CHECK(compile_error_calls==0 && function_48aa20(vm)==top);
+    CHECK(function_48d0b0(vm,PTR("local =;"),8,(int32_t *)"callback source",1)==-1);
+    CHECK(compile_error_calls==1 && compile_error_valid && function_48aa20(vm)==top);
+    CHECK(*(int32_t *)(intptr_t)(vm+64)==0x08000010);
+    function_48afa0(vm,previous_handler);
     // Length-limited source must ignore trailing bytes, unlike the old lost buffer state.
     CHECK(function_48d0b0(vm,PTR("return 42;INVALID"),10,(int32_t *)"bounded source",0)==0);
     function_48ab90(vm,root[2],root[3]);

@@ -183856,11 +183856,6 @@ static int32_t function_489f50_this(int32_t this_ptr, int32_t source_ptr) {
     return kinoko_sq_pair_assign(this_ptr, source_ptr);
 }
 
-// Temporary link-compatible fallback for generated call sites that still
-// need their original ECX receiver recovered.  It intentionally performs no
-// memory access; converted sites above use function_489f50_this instead.
-
-
 // Remaining generated callers have no receiver information.  Keep this
 // compatibility stub harmless until each call site is converted explicitly.
 int32_t function_489f30(void) {
