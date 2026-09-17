@@ -1,0 +1,68 @@
+name: Windows x86
+
+on:
+  push:
+    branches: [master, 'refactor/squirrel222-native-cpp-20260918']
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-x86-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [quiet, diagnostic]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Record source revision
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build-runs/ci-${{ matrix.trace }} | Out-Null
+          git rev-parse HEAD | Set-Content build-runs/ci-${{ matrix.trace }}/source-commit.txt
+      - name: Configure Win32
+        shell: pwsh
+        run: |
+          $quiet = if ('${{ matrix.trace }}' -eq 'quiet') { 'ON' } else { 'OFF' }
+          cmake -S . -B build-runs/ci-${{ matrix.trace }} -A Win32 `
+            -DKINOKO_RETDEC_DISABLE_TRACE=$quiet `
+            -DKINOKO_RETDEC_TRACE_FILTER=ON `
+            -DKINOKO_REFERENCE_DIR="${{ github.workspace }}/ci-no-proprietary-assets" `
+            -DKINOKO_RUNTIME_DIR="${{ github.workspace }}/runtime-builds/ci-${{ matrix.trace }}" `
+            2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/configure.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build all targets
+        shell: pwsh
+        run: |
+          cmake --build build-runs/ci-${{ matrix.trace }} --config Release --parallel 4 `
+            2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Asset-free contracts
+        shell: pwsh
+        run: |
+          ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure `
+            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture)$' `
+            2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/ctest.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve diagnostics and binaries
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-x86-${{ matrix.trace }}-${{ github.sha }}
+          retention-days: 14
+          path: |
+            build-runs/ci-${{ matrix.trace }}/*.log
+            build-runs/ci-${{ matrix.trace }}/source-commit.txt
+            build-runs/ci-${{ matrix.trace }}/Testing/Temporary/
+            runtime-builds/ci-${{ matrix.trace }}/
