@@ -26,6 +26,21 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Select installed MSVC x86 tools
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $installation) { throw 'An installed MSVC x86 toolchain is required.' }
+          $devcmd = Join-Path $installation 'Common7/Tools/VsDevCmd.bat'
+          $environment = & cmd.exe /s /c "`"`"$devcmd`" -no_logo -host_arch=x64 -arch=x86 >nul && set`""
+          if ($LASTEXITCODE -ne 0) { throw 'VsDevCmd failed.' }
+          foreach ($line in $environment) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              $name, $value = $Matches[1], $Matches[2]
+              if ($name -notmatch '^(GITHUB_|RUNNER_|CI$)') { "$name=$value" >> $env:GITHUB_ENV }
+            }
+          }
       - name: Record source revision
         shell: pwsh
         run: |
@@ -35,7 +50,7 @@ jobs:
         shell: pwsh
         run: |
           $quiet = if ('${{ matrix.trace }}' -eq 'quiet') { 'ON' } else { 'OFF' }
-          cmake -S . -B build-runs/ci-${{ matrix.trace }} -A Win32 `
+          cmake -S . -B build-runs/ci-${{ matrix.trace }} -G Ninja -DCMAKE_BUILD_TYPE=Release `
             -DKINOKO_RETDEC_DISABLE_TRACE=$quiet `
             -DKINOKO_RETDEC_TRACE_FILTER=ON `
             -DKINOKO_REFERENCE_DIR="${{ github.workspace }}/ci-no-proprietary-assets" `
@@ -51,8 +66,8 @@ jobs:
       - name: Asset-free contracts
         shell: pwsh
         run: |
-          ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure `
-            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture)$' `
+          ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error `
+            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract)$' `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/ctest.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Preserve diagnostics and binaries
