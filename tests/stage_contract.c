@@ -1216,6 +1216,9 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
 
 static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const char *name) {
     int32_t create_target=PTR(function_469b40), scripts[3], init[3], reader=0;
+    function_48ab90(vm,root[2],root[3]);
+    CHECK(function_4c6c20(vm)==0);
+    function_48aa50(vm);
     unsigned char version; unsigned short textures;
     CHECK(function_415550_this(PTR(root),PTR("CreateActor"),PTR(&create_target),4,PTR(function_471df0),0)>=0);
     int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
@@ -1227,7 +1230,7 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
     CHECK(execute_source(vm,root+2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
         "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
-        "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;"));
+        "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;\nfunction PlaySE(id) {}\n"));
     CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
     CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
