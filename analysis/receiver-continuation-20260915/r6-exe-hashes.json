@@ -1,0 +1,10 @@
+[
+  {
+    "Path": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\thread-20260917-r6-quiet\\kinoko_retdec_rebuild.exe",
+    "Hash": "69EA8F0015348E56E4662887DD59AFC6B9548B86D11EBD9E5488FEFDEEB3E9FA"
+  },
+  {
+    "Path": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\thread-20260917-r6-diag\\kinoko_retdec_rebuild.exe",
+    "Hash": "B7613F6BBE36DC439080406816D3F9140CEDBB9513593F624F5207321173D381"
+  }
+]
