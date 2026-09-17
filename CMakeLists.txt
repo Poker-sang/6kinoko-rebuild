@@ -314,7 +314,7 @@ add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
 
 add_executable(kinoko_squirrel_source_vm_contract tests/squirrel_source_vm_contract.cpp)
 target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE
-    "${KINOKO_SQUIRREL2_ROOT}/include")
+    include "${KINOKO_SQUIRREL2_ROOT}/include")
 target_link_libraries(kinoko_squirrel_source_vm_contract PRIVATE kinoko_squirrel_cpp_vm)
 target_link_options(kinoko_squirrel_source_vm_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME squirrel_source_vm_contract COMMAND kinoko_squirrel_source_vm_contract)

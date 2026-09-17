@@ -1,3 +1,5 @@
+#include "kinoko/squirrel_vm_lifecycle.h"
+#include <cstdint>
 #include <squirrel.h>
 
 #include <cstdio>
@@ -79,12 +81,32 @@ void register_native(HSQUIRRELVM vm, const char* name, SQFUNCTION function) {
     require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "register native function");
 }
 
+void child_lifecycle(HSQUIRRELVM parent) {
+    const auto original_top = sq_gettop(parent);
+    for (int i = 0; i < 16; ++i) {
+        const auto parent_address = static_cast<int32_t>(reinterpret_cast<uintptr_t>(parent));
+        const auto child_address = kinoko_sq_create_thread(parent_address, 64);
+        require(child_address != 0, "source child creation");
+        auto* child = reinterpret_cast<HSQUIRRELVM>(static_cast<uintptr_t>(static_cast<uint32_t>(child_address)));
+        require(sq_gettop(parent) == original_top + 1, "parent must own exactly one child reference");
+        require(sq_getvmstate(child) == SQ_VMSTATE_IDLE, "new child must be idle");
+        int32_t actual_vtable = 0;
+        std::memcpy(&actual_vtable, child, sizeof(actual_vtable));
+        require(actual_vtable != 0 && actual_vtable == kinoko_sq_source_vm_vtable(), "mixed collector must recognize source child vtable");
+        require(evaluate(child, "child-shared-root", "return native_twice(21);") == 42, "child must inherit parent root/native bindings");
+        sq_pop(parent, 1);
+        sq_collectgarbage(parent);
+        require(sq_gettop(parent) == original_top, "child creation/finalization leaked parent stack");
+    }
+}
+
 void contracts() {
     Machine machine;
     const auto vm = machine.get();
     const auto initial_top = sq_gettop(vm);
     register_native(vm, "native_twice", native_twice);
     register_native(vm, "native_failure", native_failure);
+    child_lifecycle(vm);
 
     require(evaluate(vm, "arithmetic", R"SQ(
         local total = 0;
