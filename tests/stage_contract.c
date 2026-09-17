@@ -1225,9 +1225,9 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
     CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
     CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
     CHECK(execute_source(vm,root+2,
-        "t_enemy <- {}; camera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0}; "
-        "player <- {x=0.0,y=100.0,user={hold=null,water=false}}; "
-        "stageWaterLevel=10000; updateMask <- -1; currentTime <- 0;"));
+        "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
+        "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
+        "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;"));
     CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
     CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
