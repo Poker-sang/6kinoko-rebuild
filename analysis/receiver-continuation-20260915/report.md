@@ -124,3 +124,61 @@ need further analysis; do not claim full function coverage or equivalence.
 No game was launched/stopped/attached. User startup testing of both final
 variants remains pending (first stage, jump, see an enemy, exit). Pause after
 handoff as requested. All prior builds, fixtures and logs retained.
+
+## Live compiler and assignment fallback — 2026-09-17
+
+User confirmed CSV r3 works before authorizing this batch. Final code/test
+commit 47ebabd. Both compiler-20260917-r3-{quiet,diag} Win32 Release builds
+passed all 18 CTests (stage test first, then remaining 17). Existing stone,
+water, lift, thread, CSV, math and GC checks pass. DATs staged beside both
+runtime EXEs and verified by size/SHA256. See compiler-r3-*-stage.log,
+compiler-r3-*-remaining-tests.log, compiler-r3-*-dat.log and EXE hash JSON.
+
+Restored 48C1F0/sq_compile, 48D0B0/sq_compilebuffer and 4A15B0/Compile through
+Squirrel 2.2.2 C++ Compile on the CURRENT VM. This preserves the actual shared
+constant/enum table, error callback, last-error value and debug setting.
+The bounded reader now carries pointer/offset/length, replacing the broken
+stack-local feed state and hard-coded old executable callback address.
+4A1B90/compilestring now returns -1 on error, +1 on successful closure push;
+the RetDec version always returned +1. The output prototype is a full owned
+SQObjectPtr instead of a single type word with a missing data field.
+
+Closures still use the reconstructed constructor/vtable and existing game
+Execute backend. Source prototypes are ordinary reference-counted objects.
+The compiler's temporary literal/string tables and persistent enum tables use
+the real upstream SQTable implementation. Its actual vtable is recognized by
+the mixed collector (without changing the object's vtable). Source-created
+objects are not silently ignored by GC. 48BB30's fake generated FS exception
+registration was also removed from the simple allocation wrapper.
+
+Evidence: compiler-{48c1f0,48d0b0,4a1b90}.json from IDA session baf41fe8;
+supplied/vendored Squirrel 2.2.2 sqapi.cpp, sqcompiler.cpp, sqfuncstate.cpp,
+sqclosure.h and sqtable.h. Prior E-imports/scope and original baseline carry
+forward. No new game-specific behavior or alternative execution backend.
+
+Removal audit:
+- 47 obsolete compiler implementations removed after checking external
+  references and transitive reachability in the candidate region. 49D700 had
+  an external reference and was retained. See compiler-removal.json and
+  prune_old_compiler.py (migration helper, not needed during builds).
+- Unreferenced 48F380_legacy and 492370 removed. Unreachable code following
+  4920A0's unconditional forwarding return removed; active comparator unchanged.
+- These were the final old callers of receiverless function_489f50. Its fallback
+  definition is now deleted. The correct function_489f50_this remains and uses
+  C++ pair assignment. The preserved original 6kinoko.exe.c is reference-only.
+- Current call-like source counts: 489F30=361, 489F50=0, 4A9D70=222 (including
+  declarations/definitions, not runtime reachability). Thus ONE of the original
+  three placeholders is eliminated; TWO destructor placeholders remain.
+
+Tests check bounded source, user lexer feed and receiver, compiler-error
+callback suppression/enabling with source coordinates, failure stack balance,
+current-VM constants/enums across compilestring calls, closure invocation,
+syntax-error catching and use after collectgarbage. Failed r1 had insufficient
+line breaks in the test's nested source; r2 passed the compiler scenarios but
+its expected caught error incremented the global unexpected-error test counter.
+The final test marks that deliberate error as expected. Earlier artifacts kept.
+
+Interactive startup remains pending for the new EXEs. No user game was
+launched, closed or attached. As requested, pause after handing over both
+variants for first-stage/jump/enemy startup validation. Original DAT/save
+files and older build/test artifacts preserved.
