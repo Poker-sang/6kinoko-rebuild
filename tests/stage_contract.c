@@ -2620,7 +2620,7 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
     CHECK(value[0]==0x05000002 && value[1]==73);
     function_48c910(vm,top);
     CHECK(execute_source(vm,root+2,
-        "compilerFactory <- compilestring(\"const CompilerSaved=31; enum CompilerEnum { first=7, second=9 } return function(x) { return x+CompilerSaved+CompilerEnum.second; };\",\"factory source\");\n"
+        "compilerFactory <- compilestring(\"const CompilerSaved=31;\\n enum CompilerEnum { first=7, second=9 }\\n return function(x) { return x+CompilerSaved+CompilerEnum.second; };\",\"factory source\");\n"
         "compilerClosure <- compilerFactory();\n"
         "if(compilerClosure(2)!=42) throw 120;\n"
         "local later=compilestring(\"return CompilerSaved+CompilerEnum.first;\");\n"
