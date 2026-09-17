@@ -1214,6 +1214,49 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const char *name) {
+    int32_t create_target=PTR(function_469b40), scripts[3], init[3], reader=0;
+    unsigned char version; unsigned short textures;
+    CHECK(function_415550_this(PTR(root),PTR("CreateActor"),PTR(&create_target),4,PTR(function_471df0),0)>=0);
+    int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
+    CHECK(retdec_sqrat_new_table(vm,globals+2));
+    CHECK(function_48e520_this(globals[3],root[3]));
+    CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
+    CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
+    CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
+    CHECK(execute_source(vm,root+2,
+        "t_enemy <- {}; camera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0}; "
+        "player <- {x=0.0,y=100.0,user={hold=null,water=false}}; "
+        "stageWaterLevel=10000; updateMask <- -1; currentTime <- 0;"));
+    CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
+    CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
+    CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
+    CHECK(retdec_pat_skip_bytes(reader,textures*128u));
+    CHECK(retdec_pat_read_animations(reader,manager,0));
+    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_enemy");
+    function_4aa3a0_this(PTR(scripts),PTR(init),name);
+    CHECK(init[1]==0x08000100);
+    for(int i=0;i<3;++i) {
+        int32_t actor=function_463b40_this(manager,init[0],init[1],init[2],200.0f+i*200,160,-1,PTR(&g16),0x05000002,(int32_t)strtol(name+4,NULL,16),0);
+        CHECK(actor && vm_failures==0);
+        *(unsigned char *)(intptr_t)(actor+40)=1;
+    }
+    CHECK(function_468950_this(PTR(g_514300_storage),manager));
+    *(int32_t *)(intptr_t)(manager+64)=-1;
+    g459=-1;
+    float camera[24]={0}; camera[18]=-8000;camera[19]=-2000;camera[20]=8000;camera[21]=2000;
+    LARGE_INTEGER frequency,start,end; QueryPerformanceFrequency(&frequency);
+    for(int frame=0;frame<240;++frame) {
+        QueryPerformanceCounter(&start);
+        int count=retdec_actor_manager_update(manager,PTR(camera));
+        QueryPerformanceCounter(&end);
+        CHECK(vm_failures==0);
+        if(frame<5 || frame%30==0) { printf("ENTITY %s frame=%d actors=%d ms=%.3f\n",name,frame,count,1000.0*(end.QuadPart-start.QuadPart)/frequency.QuadPart); fflush(stdout); }
+    }
+    return 0;
+}
+
 static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader = 0, scripts[3], init[3], actors[3];
     float saved_camera[4];
@@ -3995,7 +4038,8 @@ int main(int argc, char **argv) {
         return test_platform_riding(vm, root, manager, argv[2], 1);
     if (argc == 3 && strcmp(argv[1], "--road-probe") == 0)
         return test_generator_effects(vm, root, argv[2]);
-    if (argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) {
+    if ((argc == 3 && strcmp(argv[1], "--enemy-reentry") == 0) ||
+        (argc == 4 && strcmp(argv[1], "--entity-stutter") == 0)) {
         char path[MAX_PATH];
         for(char archive='a';archive<='c';++archive) {
             sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",argv[2],archive);
@@ -4009,6 +4053,7 @@ int main(int argc, char **argv) {
             4,PTR(retdec_compile_file_native),0)>=0);
         g874=1;
         CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
+        if(argc==4) return test_entity_stutter(manager,vm,root,argv[3]);
         return test_enemy_reentry(manager,vm,root);
     }
     CHECK(test_generator_effects(vm, root, NULL) == 0);
