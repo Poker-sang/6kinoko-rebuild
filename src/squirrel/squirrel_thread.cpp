@@ -1,5 +1,10 @@
 #include "kinoko/squirrel_value_bridge.h"
+#include "kinoko/squirrel_vm_lifecycle.h"
+
+#include <atomic>
 #include <cstddef>
+#include <cstring>
+
 #include "sqpcheader.h"
 #include "sqvm.h"
 #include "sqclosure.h"
@@ -8,7 +13,6 @@
 extern "C" {
 int32_t kinoko_call_game_vm(int32_t vm, int32_t nargs, int32_t retval, int32_t raiseerror);
 int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror);
-int32_t function_48a230(int32_t parent, int32_t stacksize);
 }
 namespace {
 SQVM *machine(int32_t p) {
@@ -17,11 +21,34 @@ SQVM *machine(int32_t p) {
 int32_t address(const void *p) {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(p));
 }
+std::atomic<int32_t> source_vm_vtable{0};
+static_assert(sizeof(void *) == 4);
+static_assert(sizeof(SQVM) == 168);
+static_assert(offsetof(SQVM, _sharedstate) == 140);
 static_assert(offsetof(SQVM, _suspended) == 148);
 static_assert(offsetof(SQVM, _suspended_root) == 152);
 static_assert(offsetof(SQVM, _suspended_target) == 156);
 static_assert(offsetof(SQVM, _suspended_traps) == 160);
 static_assert(offsetof(SQVM, _suspend_varargs) == 164);
+}
+
+extern "C" int32_t kinoko_sq_source_vm_vtable(void) {
+    return source_vm_vtable.load(std::memory_order_relaxed);
+}
+
+// 48A230 / sq_newthread. Allocation, construction, Init, parent-stack ownership
+// and failure cleanup all belong to the supplied Squirrel source. Do not
+// reconstruct these operations with byte offsets and manual refcount changes.
+extern "C" int32_t kinoko_sq_create_thread(int32_t parent, int32_t stack_size) {
+    auto *child = sq_newthread(machine(parent), stack_size);
+    if (child) {
+        int32_t vtable = 0;
+        // The Windows x86 compatibility collector compares vtable identities.
+        // memcpy reads the ABI word without an aliasing-violating int32_t lvalue.
+        std::memcpy(&vtable, child, sizeof(vtable));
+        source_vm_vtable.store(vtable, std::memory_order_relaxed);
+    }
+    return address(child);
 }
 
 // 490C40 / SQVM::Suspend, with the original explicit VM receiver.
@@ -101,8 +128,8 @@ extern "C" int32_t kinoko_sq_thread_status(int32_t vm) {
 extern "C" int32_t kinoko_sq_newthread(int32_t vm) {
     auto *v = machine(vm);
     const auto size = (_funcproto(_closure(stack_get(v, 2))->_function)->_stacksize << 1) + 2;
-    // Keep the reconstructed constructor/vtable for mixed-VM GC recognition.
-    auto *child = machine(function_48a230(vm, size > 12 ? size : 12));
+    auto *child = machine(kinoko_sq_create_thread(vm, size > 12 ? size : 12));
+    if (!child) return SQ_ERROR;
     sq_move(child, v, -2);
     return 1;
 }
