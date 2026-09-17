@@ -13,27 +13,31 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Inventory original VM boundaries
+      - name: Inventory VM definitions and boundary calls
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-          p = Path('src/decompiled/6kinoko_rebuilt.c')
-          s = p.read_text(encoding='utf-8-sig')
+          s = Path('src/decompiled/6kinoko_rebuilt.c').read_text(encoding='utf-8-sig')
           lines = s.splitlines()
-          print('SOURCE', len(s), 'characters', len(lines), 'lines')
-          print('=== HEADER ===')
-          for i, line in enumerate(lines[:150], 1):
-              print(f'{i}: {line}')
-          for needle in ['retdec_squirrel_execute_cpp', 'Squirrel', 'KINOKO_ENABLE_SQUIRREL_CPP_VM']:
-              print('\n=== CONTEXT', needle, '===')
-              hits = [i for i, line in enumerate(lines) if needle in line]
-              print('HITS', [i + 1 for i in hits])
-              for i in hits[:12]:
-                  for j in range(max(0, i - 14), min(len(lines), i + 28)):
-                      print(f'{j+1}: {lines[j]}')
-          print('\n=== FUNCTION DEFINITIONS ===')
-          for i, line in enumerate(lines):
-              if re.search(r'^\S.*\bfunction_[0-9a-fA-F]+\s*\([^;]*\)\s*\{', line):
+          print('SOURCE',len(s),len(lines))
+          defs=[]
+          for i,line in enumerate(lines):
+              m=re.search(r'^\S.*\b((?:FUN_|function_|sub_)[0-9a-fA-F]+)\s*\([^;]*\)\s*\{',line)
+              if m:
+                  defs.append((i,m.group(1)))
                   print(f'{i+1}: {line}')
+          print('TOTAL DEFINITIONS',len(defs))
+          print('=== EXECUTE ===')
+          for i,line in enumerate(lines):
+              if 'retdec_squirrel_execute_cpp(' in line:
+                  for j in range(max(0,i-15),min(len(lines),i+25)):
+                      print(f'{j+1}: {lines[j]}')
+          print('=== VENDOR FILES ===')
+          for p in Path('third_party').rglob('sqvm*'): print(p)
+          print('=== THREAD ===')
+          print(Path('src/squirrel/squirrel_thread.cpp').read_text(encoding='utf-8-sig'))
+          print('=== CORE TARGET ===')
+          cm=Path('CMakeLists.txt').read_text(encoding='utf-8-sig')
+          print(cm)
           PY
