@@ -2621,6 +2621,17 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
         " try { local x=suspend(1); throw x; } catch(e) { return e; }\n"
         "});\n"
         "if(threadTrap.call()!=1 || threadTrap.wakeup(threadShared)!=threadShared) throw 97;\n"));
+    {
+        int32_t table=root[3];
+        int32_t nodes=*(int32_t *)(intptr_t)(table+32);
+        int32_t count=*(int32_t *)(intptr_t)(table+36);
+        fprintf(stderr,"thread root=%08x vmroot=%08x nodes=%d refs=%d\n",table,*(int32_t *)(intptr_t)(vm+60),count,*(int32_t *)(intptr_t)(table+4));
+        for(int i=0;i<count;++i) {
+            int32_t *n=(int32_t *)(intptr_t)(nodes+20*i);
+            if(n[2]==0x08000010 && strcmp((char *)(intptr_t)(n[3]+28),"newthread")==0)
+                fprintf(stderr,"newthread node=%d key=%08x refs=%d val=%08x/%08x\n",i,n[3],*(int32_t *)(intptr_t)(n[3]+4),n[0],n[1]);
+        }
+    }
     expected_vm_error=1;
     int result=execute_source(vm,root+2,
         "threadFailure <- newthread(function() { local x=suspend(2); throw x; });\n"
