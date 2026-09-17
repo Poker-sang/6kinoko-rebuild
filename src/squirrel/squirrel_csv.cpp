@@ -106,7 +106,7 @@ extern "C" int32_t kinoko_csv_populate(int32_t address, const char *text, const 
             case 'f': value = static_cast<SQFloat>(std::atof(cell(rows, r, c + 1))); break;
             case 'b': {
                 auto token = text_cell(rows, r, c + 1);
-                value = !token.empty() && token[0] == 't'; break;
+                value = SQObjectPtr(!token.empty() && token[0] == 't'); break;
             }
             default: value = string(vm, text_cell(rows, r, c + 1)); break;
             }
