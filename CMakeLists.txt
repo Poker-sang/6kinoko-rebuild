@@ -144,7 +144,8 @@ if(NOT EXISTS "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp")
         "${KINOKO_SQUIRREL2_ROOT}")
 endif()
 
-# Inline ACT source is compiled in a separate VM; bytecode runs in the rebuild.
+# ACT compilation uses a separate VM; runtime compile APIs use the current VM.
+# Upstream core sources stay unmodified; adaptation lives in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_vm_bridge.cpp
     src/squirrel/squirrel_compile_bridge.cpp

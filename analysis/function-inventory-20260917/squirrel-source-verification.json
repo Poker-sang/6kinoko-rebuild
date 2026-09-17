@@ -1,0 +1,242 @@
+{
+  "files": 39,
+  "supplied_differences": [],
+  "archive_differences": [],
+  "archive_sha256": "5f7f7576731673d006b3ae45952b0c3ebd20c775b56cd34f0381e511c8fe6646",
+  "entries": [
+    {
+      "file": "COPYRIGHT",
+      "sha256": "d85548da7e1b956832f075fcc39393b6247e4ac25d6cb73e7385cf80ce19c5a8",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "HISTORY",
+      "sha256": "37aaf799f2baf98cc6b69923e84f9a35e7fb36e8aa4bb4922434986dcc9fd6b8",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdaux.h",
+      "sha256": "b01a87b1162b0a19478ba65afc2a87c2b7a6319b495e74c0197559ddaa770740",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdblob.h",
+      "sha256": "e53a3528a9b925db22ae072a59b81bc8081ca64c509027ae09b64b524f16d85f",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdio.h",
+      "sha256": "b2d61dec674dc68445db34ca7c44098babd7c212e5ff125cc7821d810c2640d8",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdmath.h",
+      "sha256": "925e383bdcc2690a7c809955f2b3aec5115b789028bd085a82e26cfbd8b6c10d",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdstring.h",
+      "sha256": "b270bb6c21c338193d8df63bc2be053754643641ee08743b748f5e47d0eed123",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/sqstdsystem.h",
+      "sha256": "3099ed98d3c188a49b4860f136e61624bdee468ad87e3af1e35c76d9ecadc8dd",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "include/squirrel.h",
+      "sha256": "ca9ee804852601094dd1cd5a0b8e364a9e0aa5a32bd2a110936c87f6c19a8a22",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/Makefile",
+      "sha256": "fb9e8346d5c485390bb283b4be026a11c3be6a0e7d131324f6e21addf45f82bf",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqapi.cpp",
+      "sha256": "094b1bf2a90a57b77d4c77f32fa10d29fa34cb2920dc23428d98d04b6afe7fab",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqarray.h",
+      "sha256": "8f1a15b72714da4598dd9405d4138049b2189a0ed974cb1ce0ee78c73704f47e",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqbaselib.cpp",
+      "sha256": "547f6771f234eb0334f56124e1e8cf52017eb8fedfaf7ce179236a4ce64f54a6",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqclass.cpp",
+      "sha256": "aec2f1707afcfbe4a6fed1bac5392c8c8c0c428b924980d3173431cb1144bb82",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqclass.h",
+      "sha256": "dc9f7c956ad1aa154097169998f745e6ef00ad9accb5688c1d589022988cbde2",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqclosure.h",
+      "sha256": "778cf68440e459d0faa36e8c4705a8b1bc5021cda8750363857cd857153105e4",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqcompiler.cpp",
+      "sha256": "49f45afd433d2ef34a538288cfbdd440ab8876b409926691c4c8eb9bb8b768e3",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqcompiler.h",
+      "sha256": "8cdbc21321d5172c741011cc2d45036b7bcb0dac0348f4226b8d8db26ebae574",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqdebug.cpp",
+      "sha256": "c78f5231c5473801d9854661b8f56ba39fcb5e51e9509dacbcbc0c24f0c76934",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqfuncproto.h",
+      "sha256": "3b52bf7982787c882a5f52dcd21bd7b2fb3d0df1c837b39c45f06c2067fb7e66",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqfuncstate.cpp",
+      "sha256": "0f99bc07b250b5e8ec50cab4baaf6f00188e175fa780d4a880785dd8ff89e0e7",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqfuncstate.h",
+      "sha256": "8d4b7f31fe59f19c7a85a2cee0a5c00b1038d0416677daca8994d6e3b2596f82",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqlexer.cpp",
+      "sha256": "0a1f971977b58e7ec96d9fb2c42d717dfb175cecb18b6d6fba8c187d5eee391a",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqlexer.h",
+      "sha256": "6df3b06bd66eb6e351b34fb6e84bd90b5a344bda5229fb64ceb2653d1d361f8b",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqmem.cpp",
+      "sha256": "6e9388adf1fad4bad83c30f6551d791daa30e69d124ab90eb9194cccc39821b6",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqobject.cpp",
+      "sha256": "943fa3f951d547ea3ff11553b1ededd78227ec1d27fa782483424a3c4d48a8c8",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqobject.h",
+      "sha256": "b22bb5a552c33ee4370565a5b8055d59d832a28be1b98aa3cbf8920a2fa4f54b",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqopcodes.h",
+      "sha256": "b4c0ecdefaeff6cf5a66042c0e63de7526ee1f26a514e986f869667e9e5b5fed",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqpcheader.h",
+      "sha256": "8b16f4c61f26fde45c49de157780f526ed91365cd6c04519df16ca44c6523596",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqstate.cpp",
+      "sha256": "c3bcaae2c945ab70a08169a01d1f7fa64689994a1c58992f11efad40f53d3486",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqstate.h",
+      "sha256": "af2fc2a7a147ab502466391eb86822b9833d342ba51e73fa4ff81e8c71107977",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqstring.h",
+      "sha256": "3856909a71131135717fb5dcd41bbff9ad6cd5493ff1de4fccaf9a7910467e40",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqtable.cpp",
+      "sha256": "a12781b0ce24f6dd82633d049a44f623a57a829a2ecda8a8043703e4b1e74742",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqtable.h",
+      "sha256": "459c2c2a8563bdf243d78895455f8cd4d9e7b723b4c97ceb9a3adbd2b5a13a30",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/squirrel.dsp",
+      "sha256": "1cb4479b110b95e406b6d8c006e9102f2c9c5b5cdc3c5c1df00874195c7a2c10",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/squserdata.h",
+      "sha256": "5d8581c3aea1201f0c54e2e2b8384062d1f623c5161d829d65c2bfcefba50a70",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/squtils.h",
+      "sha256": "5c06bd1fdd07cc63977a81452bdfb906ef39ab2a974d186f6ec7d84d7efcbbdf",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqvm.cpp",
+      "sha256": "40b508df323452d3c5722a2cd457a1273650ecd22a0ef037fbcc589bfe164f1d",
+      "supplied_identical": true,
+      "archive_identical": true
+    },
+    {
+      "file": "squirrel/sqvm.h",
+      "sha256": "e01bb6eced28c08abf9acfeebdaabc3d43c913180170e45e3baef3827368790d",
+      "supplied_identical": true,
+      "archive_identical": true
+    }
+  ]
+}
