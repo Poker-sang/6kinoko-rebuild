@@ -2597,6 +2597,82 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+static int native_instance_releases;
+static int native_instance_release_pointer;
+static int32_t native_instance_release(int32_t pointer, int32_t size) {
+    (void)size;
+    ++native_instance_releases;
+    native_instance_release_pointer = pointer;
+    return 0;
+}
+
+static int test_native_instance_receivers(int32_t vm, int32_t *root) {
+    const int top = function_48aa20(vm);
+    const int32_t pointer = 0x12345678;
+    int32_t instance[3], types[3];
+    CHECK(execute_source(vm, root + 2,
+        "nativeConstructorCalls <- 0;\n"
+        "class NativeBaseA {}\n"
+        "class NativeBaseB {}\n"
+        "class NativeProbe { __ot=null; __ca=null; constructor() { ++nativeConstructorCalls; } }\n"
+        "NativeProbe.__ca = [NativeBaseA,NativeBaseB,NativeProbe];\n"
+        "class NativeEmpty { __ot=null; __ca=[]; }\n"
+        "class NativeSingle { __ot=null; __ca=[NativeBaseA]; }\n"));
+    const char *names[] = {"NativeBaseA", "NativeBaseB", "NativeProbe"};
+    for (int i=0; i<3; ++i) {
+        function_48a670(vm);
+        function_48a480(vm, PTR(names[i]), -1);
+        CHECK(function_48ce70(vm, -2) == 0);
+        CHECK(function_48c780(vm, -1, 100+i) == 0);
+        function_48c910(vm, top);
+    }
+    CHECK(function_4ab170(vm, PTR("MissingNativeClass"), pointer, 0) == 0);
+    CHECK(function_48aa20(vm) == top);
+    function_48ac70(vm);
+    CHECK(function_4ab170(vm, PTR("nativeConstructorCalls"), pointer, 0) == 0);
+    CHECK(function_48aa20(vm) == top);
+    function_48ac70(vm);
+    native_instance_releases = 0;
+    CHECK(function_4ab170(vm, PTR("NativeProbe"), pointer, PTR(native_instance_release)) == 1);
+    CHECK(function_48aa20(vm) == top+1);
+    int32_t *slot=(int32_t *)(intptr_t)function_491880_this(vm, -1);
+    CHECK(slot[0] == 0x0a008000);
+    // Only the stack owns the returned instance; all temporary external refs are gone.
+    CHECK(*(int32_t *)(intptr_t)(slot[1]+4) == 1);
+    CHECK(*(int32_t *)(intptr_t)(slot[1]+32) == pointer);
+    function_4a94e0_this(PTR(instance));
+    function_4a9660_this(PTR(instance), -1);
+    function_4aa3a0_this(PTR(instance), PTR(types), "__ot");
+    CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 3);
+    int32_t keys[] = {kinoko_native_void_type(), 100, 101};
+    for(int i=0; i<3; ++i) {
+        function_48ab90(vm, types[1], types[2]);
+        function_48a4f0(vm, keys[i]);
+        CHECK(function_48ce00(vm, -2) == 0);
+        slot=(int32_t *)(intptr_t)function_491880_this(vm, -1);
+        CHECK(slot[1] == pointer);
+        function_48aa30(vm, 2);
+    }
+    function_4a9d70_this(PTR(types));
+    function_4a9d70_this(PTR(instance));
+    function_48c910(vm, top);
+    CHECK(native_instance_releases == 1 && native_instance_release_pointer == pointer);
+    CHECK(execute_source(vm, root+2, "if(nativeConstructorCalls!=0) throw 130;\n"));
+    const char *short_names[] = {"NativeEmpty", "NativeSingle"};
+    for(int i=0; i<2; ++i) {
+        CHECK(function_4ab170(vm, PTR(short_names[i]), pointer, 0) == 1);
+        function_4a94e0_this(PTR(instance));
+        function_4a9660_this(PTR(instance), -1);
+        function_4aa3a0_this(PTR(instance), PTR(types), "__ot");
+        CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 1);
+        function_4a9d70_this(PTR(types));
+        function_4a9d70_this(PTR(instance));
+        function_48c910(vm, top);
+    }
+    puts("PASS: native instance type maps, skipped constructor, failure stack and external-reference lifetime");
+    return 0;
+}
+
 struct compile_feed { const char *text; int offset; int32_t vm; };
 static int32_t compiler_test_feed(int32_t context) {
     struct compile_feed *feed=(struct compile_feed *)(intptr_t)context;
@@ -3855,6 +3931,7 @@ int main(int argc, char **argv) {
     CHECK(test_thread_receivers(vm, root) == 0);
     CHECK(test_csv_receivers(vm, root) == 0);
     CHECK(test_compiler_receivers(vm, root) == 0);
+    CHECK(test_native_instance_receivers(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)

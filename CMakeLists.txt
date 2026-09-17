@@ -42,6 +42,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/script_callbacks.cpp
     src/reconstructed/squirrel_object.cpp
+    src/reconstructed/native_instance.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp

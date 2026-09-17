@@ -5228,7 +5228,6 @@ int32_t function_4aac40(int32_t a1);
 int32_t function_4aaf30(int32_t a1);
 int32_t function_4aafa0(int32_t a1);
 int32_t function_4ab010(void);
-int32_t function_4ab020(int32_t a1, int32_t * a2, int32_t a3);
 int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4ab302(void);
 int32_t function_4ab330(void);
@@ -214204,122 +214203,25 @@ int32_t function_4ab010(void) {
     return 0x43e100;
 }
 
-// Address range: 0x4ab020 - 0x4ab165
-int32_t function_4ab020(int32_t a1, int32_t * a2, int32_t a3) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4ab030
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-32, 0x4ab020
-    function_4a91c0((char)(int32_t)&v2);
+// ClassType<void> identity used by the original SqPlus instance map.
+int32_t kinoko_native_void_type(void) {
     if ((g653 & 1) == 0) {
-        // 0x4ab062
         g653 |= 1;
         g649 = 0;
         g651 = 0;
         g652 = -1;
-        g648 = (int32_t)&g79;
+        g648 = (int32_t)(intptr_t)&g79;
         g650 = 0;
     }
-    // 0x4ab090
-    function_4a98d0(&g648, a3);
-    function_4a9840("__ot", &v2);
-    int32_t v3; // bp-56, 0x4ab020
-    int32_t v4 = &v3; // bp-96, 0x4ab0bc
-    function_4aa3a0(&v3, "__ca");
-    int32_t v5 = function_4a96d0((int32_t)&v3); // 0x4ab0cb
-    int32_t result; // 0x4ab14e
-    if (v5 < 2) {
-        // 0x4ab138
-        function_4a9d70();
-        result = function_4a9d70();
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t v6 = 0; // 0x4ab133
-    int32_t v7 = &v4;
-    *(int32_t *)(v7 - 4) = v6;
-    int32_t v8; // bp-44, 0x4ab020
-    *(int32_t *)(v7 - 8) = (int32_t)&v8;
-    function_4aa2d0((int32_t)&g1224, (int32_t)&g1224);
-    int32_t v9 = v7 - 16; // 0x4ab0f4
-    int32_t * v10 = (int32_t *)(v7 - 20); // 0x4ab0f5
-    *v10 = a1;
-    function_48ab90(2, (int32_t)&g1224, (int32_t)&g1224);
-    int32_t v11; // bp-20, 0x4ab020
-    *(int32_t *)(v7 - 24) = (int32_t)&v11;
-    *(int32_t *)(v7 - 28) = -1;
-    *(int32_t *)(v7 - 32) = a1;
-    function_48c7f0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-    *(int32_t *)(v7 - 12) = a3;
-    *(int32_t *)v9 = v11;
-    function_4a98d0(&g1224, (int32_t)&g1224);
-    *v10 = a1;
-    function_48aa50((int32_t)&g1224);
-    function_4a9d70();
-    v6++;
-    while (v6 != v5 - 1) {
-        // 0x4ab0e0
-        v7 = v9;
-        *(int32_t *)(v7 - 4) = v6;
-        *(int32_t *)(v7 - 8) = (int32_t)&v8;
-        function_4aa2d0((int32_t)&g1224, (int32_t)&g1224);
-        v9 = v7 - 16;
-        v10 = (int32_t *)(v7 - 20);
-        *v10 = a1;
-        function_48ab90(2, (int32_t)&g1224, (int32_t)&g1224);
-        *(int32_t *)(v7 - 24) = (int32_t)&v11;
-        *(int32_t *)(v7 - 28) = -1;
-        *(int32_t *)(v7 - 32) = a1;
-        function_48c7f0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
-        *(int32_t *)(v7 - 12) = a3;
-        *(int32_t *)v9 = v11;
-        function_4a98d0(&g1224, (int32_t)&g1224);
-        *v10 = a1;
-        function_48aa50((int32_t)&g1224);
-        function_4a9d70();
-        v6++;
-    }
-    // 0x4ab138
-    function_4a9d70();
-    result = function_4a9d70();
-    __writefsdword(0, v1);
-    return result;
+    return (int32_t)(intptr_t)&g648;
 }
 
 // Address range: 0x4ab170 - 0x4ab2a6
-int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4ab180
-    __writefsdword(0, (int32_t)&v1);
-    function_4a8db0(a1);
-    int32_t v2 = function_48aa20(a1); // 0x4ab1a2
-    function_48a670(a1);
-    function_48a480(a1, a2, -1);
-    if (function_48ce70(a1, -2) < 0 || function_48b490(a1, -1) < 0) {
-        // 0x4ab1ca
-        function_48c910(a1, v2);
-        __writefsdword(0, v1);
-        return 0;
-    }
-    // 0x4ab1f7
-    int32_t v3; // bp-24, 0x4ab170
-    function_48ab40(a1, -1, &v3);
-    int32_t v4; // 0x4ab170
-    function_4a9540(v3, v4);
-    int32_t v5; // bp-36, 0x4ab170
-    function_4ab020(a1, &v5, a3);
-    function_48aa60(a1, -3);
-    function_48aa60(a1, -2);
-    if (function_48c840(a1, -1, a3) >= 0) {
-        // 0x4ab276
-        function_48af30(a1, -1, a4);
-        function_4a9d70();
-        __writefsdword(0, v1);
-        return 1;
-    }
-    // 0x4ab24d
-    function_48c910(a1, v2);
-    function_4a9d70();
-    __writefsdword(0, v1);
-    return 0;
+int32_t function_4ab170(int32_t vm, int32_t class_name,
+                        int32_t native_pointer, int32_t release_hook) {
+    function_4a8db0(vm);
+    return kinoko_native_instance_create(vm, class_name, native_pointer,
+        release_hook, (int32_t)(intptr_t)&g16);
 }
 
 // Address range: 0x4ab2a6 - 0x4ab2b1
