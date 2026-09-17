@@ -1,39 +1,83 @@
-name: VM migration audit
+name: Apply VM lifecycle migration
 on:
   push:
     branches: ['refactor/squirrel222-native-cpp-20260918']
     paths: ['.github/workflows/vm-audit.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
-  inventory:
+  migrate:
+    if: github.repository == 'Poker-sang/6kinoko-rebuild' && github.ref == 'refs/heads/refactor/squirrel222-native-cpp-20260918'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          persist-credentials: false
-      - name: Inspect VM dispatch
+          ref: ${{ github.ref_name }}
+      - name: Apply exact source-boundary edits
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          lines=Path('src/decompiled/6kinoko_rebuilt.c').read_text(encoding='utf-8-sig').splitlines()
-          names=['kinoko_call_game_vm','kinoko_resume_game_vm','function_48a230','retdec_gc_object_type','retdec_squirrel_execute_cpp']
-          defs=[]
-          for i,line in enumerate(lines):
-              if re.search(r'^\S.*\w+\s*\([^;]*\)\s*\{',line): defs.append(i)
-          selected=set()
-          for i,line in enumerate(lines):
-              if any(n+'(' in line for n in names):
-                  start=max((d for d in defs if d<=i),default=0)
-                  end=next((d for d in defs if d>start),len(lines))
-                  if end-start<=700: selected.add((start,end))
-                  elif 'retdec_squirrel_execute_cpp(' in line: selected.add((i-25,i+65))
-          for start,end in sorted(selected):
-              print('\n===',start+1,end,'===')
-              for i in range(start,end): print(f'{i+1}: {lines[i]}')
-          for name in ['include/kinoko/squirrel_vm_bridge.h','third_party/squirrel-2.2.2/squirrel/sqvm.h']:
-              print('\n=== FILE',name,'===')
-              print(Path(name).read_text(encoding='utf-8-sig'))
+          p=Path('src/decompiled/6kinoko_rebuilt.c')
+          raw=p.read_bytes()
+          newline='\r\n' if b'\r\n' in raw else '\n'
+          bom=b'\xef\xbb\xbf' if raw.startswith(b'\xef\xbb\xbf') else b''
+          s=raw.decode('utf-8-sig').replace('\r\n','\n')
+          signature='int32_t function_48a230(int32_t a1, int32_t a2) {'
+          assert s.count(signature)==1, 'child constructor boundary changed'
+          start=s.index(signature)
+          end=s.index('\n}',start)+2
+          old=s[start:end]
+          assert 'function_491a50_this' in old and 'function_492890_this' in old
+          s=s[:start]+signature+'\n    return kinoko_sq_create_thread(a1, a2);\n}'+s[end:]
+          old='    if (vtable == (int32_t)(intptr_t)&g73)\n        return 0x08001000;'
+          assert s.count(old)==1, 'VM collector classification boundary changed'
+          s=s.replace(old,'    if (vtable == (int32_t)(intptr_t)&g73 ||\n        (vtable != 0 && vtable == kinoko_sq_source_vm_vtable()))\n        return 0x08001000;')
+          s='#include "kinoko/squirrel_vm_lifecycle.h"\n'+s
+          p.write_bytes(bom+s.replace('\n',newline).encode('utf-8'))
+          p=Path('CMakeLists.txt')
+          s=p.read_text()
+          needle='target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE\n    "${KINOKO_SQUIRREL2_ROOT}/include")'
+          assert s.count(needle)==1
+          s=s.replace(needle,'target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE\n    include "${KINOKO_SQUIRREL2_ROOT}/include")')
+          p.write_text(s)
+          p=Path('tests/squirrel_source_vm_contract.cpp')
+          s=p.read_text()
+          s='#include "kinoko/squirrel_vm_lifecycle.h"\n#include <cstdint>\n'+s
+          needle='void contracts() {'
+          assert s.count(needle)==1
+          helper='''void child_lifecycle(HSQUIRRELVM parent) {
+              const auto original_top = sq_gettop(parent);
+              for (int i = 0; i < 16; ++i) {
+                  const auto parent_address = static_cast<int32_t>(reinterpret_cast<uintptr_t>(parent));
+                  const auto child_address = kinoko_sq_create_thread(parent_address, 64);
+                  require(child_address != 0, "source child creation");
+                  auto* child = reinterpret_cast<HSQUIRRELVM>(static_cast<uintptr_t>(static_cast<uint32_t>(child_address)));
+                  require(sq_gettop(parent) == original_top + 1, "parent must own exactly one child reference");
+                  require(sq_getvmstate(child) == SQ_VMSTATE_IDLE, "new child must be idle");
+                  int32_t actual_vtable = 0;
+                  std::memcpy(&actual_vtable, child, sizeof(actual_vtable));
+                  require(actual_vtable != 0 && actual_vtable == kinoko_sq_source_vm_vtable(), "mixed collector must recognize source child vtable");
+                  require(evaluate(child, "child-shared-root", "return native_twice(21);") == 42, "child must inherit parent root/native bindings");
+                  sq_pop(parent, 1);
+                  sq_collectgarbage(parent);
+                  require(sq_gettop(parent) == original_top, "child creation/finalization leaked parent stack");
+              }
+          }
+
+          '''
+          s=s.replace(needle,helper+needle)
+          needle='    register_native(vm, "native_failure", native_failure);'
+          assert s.count(needle)==1
+          s=s.replace(needle,needle+'\n    child_lifecycle(vm);')
+          p.write_text(s)
           PY
+          git diff --check
+          git diff --stat
+      - name: Commit checked edits to this work branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/decompiled/6kinoko_rebuilt.c CMakeLists.txt tests/squirrel_source_vm_contract.cpp
+          git commit -m 'refactor: replace recovered child VM allocation and initialization with Squirrel source'
+          git push origin HEAD:refs/heads/refactor/squirrel222-native-cpp-20260918
