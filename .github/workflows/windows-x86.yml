@@ -65,6 +65,11 @@ jobs:
           cmake --build build-runs/ci-${{ matrix.trace }} --config Release --parallel 4 `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/build.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage authenticated legacy DirectX runtime
+        shell: pwsh
+        run: |
+          ./tools/prepare_ci_directx.ps1 -Destination "$env:RUNNER_TEMP/kinoko-directx-x86" `
+            2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/directx.log
       - name: Asset-free contracts
         shell: pwsh
         run: |
