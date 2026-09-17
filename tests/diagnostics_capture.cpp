@@ -68,6 +68,9 @@ int main() {
     SetEnvironmentVariableA("KINOKO_CRASH_DUMP", "1");
     SetEnvironmentVariableA("KINOKO_CAPTURE_SCRIPT_FAILURE", "1");
     kinoko_diagnostics_initialize();
+    if (kinoko_diagnostics_accepts("48a430:type") ||
+        !kinoko_diagnostics_accepts("stagevm:failure-error"))
+        return 4;
     retdec_trace("stagevm:failure-source:test fixture");
     retdec_trace("stagevm:failure-error:first script failure");
     retdec_trace("stagevm:failure-error:second script failure");

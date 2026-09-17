@@ -32,7 +32,13 @@ zlib 1.2.3 is vendored and linked statically for original save-file compatibilit
 
 Ordinary builds do not write traces or take automatic screenshots. Set
 `KINOKO_TRACE=1` to enable the external trace sink without rebuilding, and
-`KINOKO_CRASH_DUMP=1` to enable a crash dump beside the game EXE. The independent
+`KINOKO_CRASH_DUMP=1` to enable a crash dump beside the game EXE.
+Trace output defaults to failures and scene transitions. Set
+`KINOKO_TRACE_VERBOSE=1` together with `KINOKO_TRACE=1` only for detailed VM
+ownership tracing; this can generate gigabytes and slow composite enemies.
+Quiet output skips integer/name formatting inside the out-of-line trace
+helpers; the VM still calls those helpers. Native calls no longer query
+Windows memory protection for a diagnostic on every invocation. The independent
 `exercise_game_window.py` tool captures the visible game window only when
 explicitly requested. The original VM trace call sites remain in quiet builds.
 The window tool reports process exit status and window responsiveness, so a

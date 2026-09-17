@@ -315,7 +315,7 @@ extern "C" __declspec(noinline) void retdec_trace(const char *message) {
 }
 
 extern "C" void retdec_trace_hresult(const char *label, long value) {
-    if (!label)
+    if (!kinoko_diagnostics_accepts(label))
         return;
     char message[128];
     std::snprintf(message, sizeof(message), "%s:0x%08lX", label,

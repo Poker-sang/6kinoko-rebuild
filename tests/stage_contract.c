@@ -1219,6 +1219,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
 }
 
 static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const char *name) {
+    const unsigned int rounding = kinoko_enter_game_math();
     int32_t create_target=PTR(function_469b40), scripts[3], init[3], reader=0;
     function_48ab90(vm,root[2],root[3]);
     CHECK(function_4c6c20(vm)==0);
@@ -1234,7 +1235,7 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
     CHECK(execute_source(vm,root+2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
         "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
-        "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;\nfunction PlaySE(id) {}\n"));
+        "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;\nfunction PlaySE(id) {}\neffectCount <- 0;\nfunction CreateEffect(x,y,z,id) { ++::effectCount; }\n"));
     CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
     CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
@@ -1253,14 +1254,25 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
     *(int32_t *)(intptr_t)(manager+64)=-1;
     g459=-1;
     float camera[24]={0}; camera[18]=-8000;camera[19]=-2000;camera[20]=8000;camera[21]=2000;
+    const int32_t stack_top = function_48aa20(vm);
+    int peak_count = 0;
     LARGE_INTEGER frequency,start,end; QueryPerformanceFrequency(&frequency);
     for(int frame=0;frame<240;++frame) {
         QueryPerformanceCounter(&start);
         int count=retdec_actor_manager_update(manager,PTR(camera));
         QueryPerformanceCounter(&end);
-        CHECK(vm_failures==0);
+        CHECK(vm_failures==0 && function_48aa20(vm)==stack_top);
+        CHECK(count>=3 && count<=512);
+        if(count>peak_count) peak_count=count;
+        if(strcmp(name,"Init0989")==0) CHECK(count==36);
+        if(strcmp(name,"Init0cfb")==0) CHECK(count==393);
         if(frame<5 || frame%30==0) { printf("ENTITY %s frame=%d actors=%d ms=%.3f\n",name,frame,count,1000.0*(end.QuadPart-start.QuadPart)/frequency.QuadPart); fflush(stdout); }
     }
+    if(strcmp(name,"Init0d0c")==0) {
+        CHECK(peak_count>3);
+        CHECK(execute_source(vm,root+2,"if(effectCount==0) throw \"cannon did not fire\";"));
+    }
+    kinoko_leave_game_math(rounding);
     return 0;
 }
 

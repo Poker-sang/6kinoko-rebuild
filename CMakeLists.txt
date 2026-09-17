@@ -268,6 +268,10 @@ target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF
 target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
+foreach(entity IN ITEMS Init0989 Init0cfb Init0d0c)
+    add_test(NAME entity_${entity}_contract
+        COMMAND kinoko_stage_contract --entity-stutter "${KINOKO_REFERENCE_DIR}" ${entity})
+endforeach()
 add_test(NAME damage_pause_contract COMMAND kinoko_stage_contract --damage-pause)
 add_test(NAME crystal_countdown_contract
     COMMAND kinoko_stage_contract --crystal-countdown "${KINOKO_REFERENCE_DIR}")
