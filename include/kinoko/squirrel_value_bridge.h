@@ -15,6 +15,7 @@ int32_t kinoko_sq_set_native_name(int32_t vm, int32_t index, const char *name);
 void kinoko_sq_assign_integer(int32_t object, int32_t value);
 void kinoko_sq_assign_float(int32_t object, float value);
 int32_t kinoko_sq_pair_assign(int32_t destination, int32_t source);
+void kinoko_sq_stack_remove(int32_t vm, int32_t index);
 void kinoko_sq_pair_destroy(int32_t object);
 void kinoko_sq_closure_destroy(int32_t closure);
 void kinoko_sq_class_destroy(int32_t klass);

@@ -4,6 +4,12 @@
 #include <cstring>
 #include "sqpcheader.h"
 #include "sqvm.h"
+
+// Original 4916A0 matches Squirrel 2.2.2 SQVM::Remove. Its assignments must
+// release the OLD slot's type/data, including the final slot reset to null.
+extern "C" void kinoko_sq_stack_remove(int32_t vm, int32_t index) {
+    reinterpret_cast<SQVM *>(static_cast<uintptr_t>(vm))->Remove(index);
+}
 #include "sqclosure.h"
 #include "sqtable.h"
 #include "sqclass.h"

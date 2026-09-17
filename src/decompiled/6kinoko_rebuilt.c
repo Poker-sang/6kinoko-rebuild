@@ -4787,7 +4787,6 @@ int32_t function_4914a0(int32_t a1);
 static int32_t function_4914a0_this(int32_t this_ptr, int32_t value_ptr);
 int32_t function_491500(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4915b0(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_4916a0(int32_t a1);
 int32_t function_491760(void);
 int32_t function_4917b0(int32_t result);
 int32_t function_491820(int32_t a1);
@@ -187146,7 +187145,8 @@ int32_t function_48aa50(int32_t a1) {
 // Address range: 0x48aa60 - 0x48aa71
 int32_t function_48aa60(int32_t a1, int32_t a2) {
     // 0x48aa60
-    return function_4916a0(a2);
+    kinoko_sq_stack_remove(a1, a2);
+    return 0;
 }
 
 // Address range: 0x48aa80 - 0x48ab3e
@@ -194098,111 +194098,6 @@ int32_t function_4915b0(int32_t a1, int32_t a2, int32_t a3) {
     retdec_release_squirrel_value((int32_t *)(intptr_t)a3);
     __writefsdword(0, v1);
     return 1;
-}
-
-// Address range: 0x4916a0 - 0x491758
-int32_t function_4916a0(int32_t a1) {
-    // 0x4916a0
-    int32_t * v1; // 0x4916a0
-    int32_t v2; // 0x4916a0
-    int32_t v3; // 0x4916a0
-    int32_t v4 = retdec_stack_vm(); // hidden __thiscall VM, 0x4916a0
-    if (a1 < 0) {
-        int32_t * v5 = (int32_t *)(v4 + 48);
-        int32_t v6 = *v5; // 0x4916b7
-        v2 = v6;
-        v1 = v5;
-        v3 = v6 + a1;
-    } else {
-        int32_t * v7 = (int32_t *)(v4 + 48); // 0x4916ba
-        v2 = *v7;
-        v1 = v7;
-        v3 = a1 - 1 + *(int32_t *)(v4 + 52);
-    }
-    int32_t * v8 = v1;
-    int32_t * v9 = (int32_t *)(v4 + 24);
-    int32_t v10 = v3; // 0x4916bd
-    int32_t v11 = v2; // 0x4916bd
-    if (v3 < v2) {
-        int32_t v12 = 8 * v10 + *v9;
-        int32_t * v13 = (int32_t *)v12; // 0x4916c7
-        int32_t * v14 = (int32_t *)(v12 + 4); // 0x4916cd
-        int32_t v15 = *v14; // 0x4916cd
-        *v14 = *(int32_t *)(v12 + 12);
-        int32_t v16 = *(int32_t *)(v12 + 8); // 0x4916d3
-        *v13 = v16;
-        int32_t * v17; // 0x4916e3
-        if ((v16 & 0x8000000) != 0) {
-            // 0x4916e0
-            v17 = (int32_t *)(*v14 + 4);
-            *v17 = *v17 + 1;
-        }
-        int32_t * v18; // 0x4916ee
-        if ((*v13 & 0x8000000) != 0) {
-            // 0x4916ee
-            v18 = (int32_t *)(v15 + 4);
-            *v18 = *v18 - 1;
-        }
-        // 0x4916fa
-        v10++;
-        uint32_t v19 = *v8; // 0x4916fb
-        v11 = v19;
-        while (v10 < v19) {
-            // 0x4916c0
-            v12 = 8 * v10 + *v9;
-            v13 = (int32_t *)v12;
-            v14 = (int32_t *)(v12 + 4);
-            v15 = *v14;
-            *v14 = *(int32_t *)(v12 + 12);
-            v16 = *(int32_t *)(v12 + 8);
-            *v13 = v16;
-            if ((v16 & 0x8000000) != 0) {
-                // 0x4916e0
-                v17 = (int32_t *)(*v14 + 4);
-                *v17 = *v17 + 1;
-            }
-            if ((*v13 & 0x8000000) != 0) {
-                // 0x4916ee
-                v18 = (int32_t *)(v15 + 4);
-                *v18 = *v18 - 1;
-            }
-            // 0x4916fa
-            v10++;
-            v19 = *v8;
-            v11 = v19;
-        }
-    }
-    int32_t v20 = 8 * v11 + *v9; // 0x49170d
-    int32_t * v21 = (int32_t *)v20; // 0x49170d
-    int32_t * v22 = (int32_t *)(v20 + 4); // 0x491713
-    int32_t v23 = *v22; // 0x491713
-    *v22 = g484;
-    int32_t v24 = (int32_t)g483; // 0x491719
-    *v21 = v24;
-    int32_t result = v20; // 0x491727
-    if ((v24 & 0x8000000) != 0) {
-        // 0x491729
-        result = *v22;
-        int32_t * v25 = (int32_t *)(result + 4); // 0x49172c
-        *v25 = *v25 + 1;
-    }
-    // 0x49172f
-    if ((*v21 & 0x8000000) == 0) {
-        // 0x49174f
-        *v8 = *v8 - 1;
-        return result;
-    }
-    int32_t * v26 = (int32_t *)(v23 + 4); // 0x49173a
-    int32_t v27 = *v26 - 1; // 0x49173a
-    *v26 = v27;
-    int32_t result2 = result; // 0x49173d
-    if (v27 == 0) {
-        // 0x49173f
-        result2 = *(int32_t *)(*(int32_t *)v23 + 4);
-    }
-    // 0x491746
-    *v8 = *v8 - 1;
-    return result2;
 }
 
 // Address range: 0x491760 - 0x4917a9
