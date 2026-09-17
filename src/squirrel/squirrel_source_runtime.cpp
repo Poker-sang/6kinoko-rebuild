@@ -101,12 +101,15 @@ extern "C" int32_t kinoko_sq_execute(int32_t vm, int32_t closure, int32_t target
 }
 extern "C" int32_t kinoko_sq_call_native(int32_t vm, int32_t closure, int32_t nargs,
     int32_t stackbase, int32_t result, int32_t suspended) {
+    // The original bool out-parameter occupies one byte, not an SQInteger.
+    if (suspended) *pointer<unsigned char>(suspended) = 0;
+    if (!vm || !closure) return 0;
     auto* machine = pointer<SQVM>(vm);
     ReceiverScope scope(machine);
     bool did_suspend = false;
     const bool success = machine->CallNative(pointer<SQNativeClosure>(closure), nargs,
         stackbase, *pointer<SQObjectPtr>(result), did_suspend);
-    if (suspended) *pointer<int32_t>(suspended) = did_suspend ? 1 : 0;
+    if (suspended) *pointer<unsigned char>(suspended) = did_suspend ? 1 : 0;
     return success;
 }
 extern "C" int32_t kinoko_sq_pop(int32_t vm, int32_t count) {
