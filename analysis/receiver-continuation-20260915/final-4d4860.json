@@ -1,0 +1,1 @@
+{"addr":"0x4d4860","code":"void __cdecl sub_4D4860()\n{\n  sub_4A9D70(a1: &unk_513CA8); /*0x4d488e*/\n  sub_4A9D70(a1: &unk_513C9C); /*0x4d489f*/\n}","refs":[{"addr":"0x4a9d70","name":"sub_4A9D70"},{"addr":"0x513ca8","name":"unk_513CA8"},{"addr":"0x513c9c","name":"unk_513C9C"}]}

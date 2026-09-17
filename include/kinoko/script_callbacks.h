@@ -17,6 +17,7 @@ int32_t __fastcall kinoko_camera_set_update_callback(int32_t camera, void *unuse
 int32_t __fastcall kinoko_camera_update(int32_t camera, void *unused);
 int32_t kinoko_actor_step_callback(int32_t actor);
 int32_t kinoko_actor_clear_script(int32_t actor);
+int32_t kinoko_destroy_script_callback(int32_t callback);
 
 #ifdef __cplusplus
 }

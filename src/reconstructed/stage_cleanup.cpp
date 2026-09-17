@@ -3,11 +3,13 @@
 #include "kinoko/actor_cleanup.h"
 #include <cstddef>
 #include <cstdlib>
+#include <new>
 
 extern "C" {
 int32_t function_450020(int32_t resource);
 extern int32_t g603, g604;
 extern int32_t g638, g639;
+extern int32_t g613;
 int32_t function_40b3a0(void);
 }
 
@@ -21,6 +23,11 @@ struct StageNode {
     StageNode *next, *previous;
     StageOwner *owner;
 };
+struct RenderQueueNode {
+    RenderQueueNode *next, *previous;
+    void *payload;
+};
+static_assert(sizeof(RenderQueueNode) == 12);
 static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
 static_assert(offsetof(StageOwner, runtime) == 8);
 
@@ -45,6 +52,16 @@ void destroy_owner(StageOwner *owner) {
     }
     std::free(owner);
 }
+}
+
+// Original 4D3E50 owns a 12-byte circular list sentinel. 4D3EB0 is a
+// separate initializer; it must not be merged into this allocation's failure
+// path. The payload word is unused on the sentinel, as in the original.
+extern "C" void kinoko_initialize_render_queue() {
+    auto *head = static_cast<RenderQueueNode *>(std::malloc(sizeof(RenderQueueNode)));
+    if (!head) throw std::bad_alloc();
+    head->next = head->previous = head;
+    g613 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
 }
 
 // 465F70: destroy payloads first, reset the list, then release its nodes.

@@ -2673,6 +2673,44 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_global_callback_destructor(int32_t vm) {
+    int32_t saved_callback[7];
+    const int top = function_48aa20(vm);
+    const int32_t saved_queue = g613;
+    const int32_t saved_count = g614;
+    CHECK(function_4d3e50() == 0);
+    CHECK(g613 != 0 && g614 == saved_count);
+    int32_t *sentinel = (int32_t *)(intptr_t)g613;
+    CHECK(sentinel[0] == g613 && sentinel[1] == g613);
+    free(sentinel);
+    g613 = saved_queue;
+
+    memcpy(saved_callback, g612, sizeof(saved_callback));
+    g612[0] = vm;
+    function_4a94e0_this(PTR(g612 + 1));
+    function_4a94e0_this(PTR(g612 + 4));
+    native_instance_releases = 0;
+    for(int member=0; member<2; ++member) {
+        CHECK(function_4ab170(vm, PTR("NativeEmpty"), 21+member,
+                             PTR(native_instance_release)) == 1);
+        function_4a9660_this(PTR(g612+1+3*member), -1);
+        function_48c910(vm, top);
+    }
+    CHECK(native_instance_releases == 0);
+    function_4d4860();
+    CHECK(native_instance_releases == 2);
+    CHECK(native_instance_release_pointer == 21); // Environment released last.
+    CHECK(g612[0] == vm);
+    CHECK(g612[1] == PTR(&g16) && g612[4] == PTR(&g16));
+    CHECK(g612[2] == 0x01000001 && g612[3] == 0);
+    CHECK(g612[5] == 0x01000001 && g612[6] == 0);
+    function_4d4860();
+    CHECK(native_instance_releases == 2 && function_48aa20(vm) == top);
+    memcpy(g612, saved_callback, sizeof(saved_callback));
+    puts("PASS: original global callback destruction order, external owners, null reset and render sentinel");
+    return 0;
+}
+
 struct compile_feed { const char *text; int offset; int32_t vm; };
 static int32_t compiler_test_feed(int32_t context) {
     struct compile_feed *feed=(struct compile_feed *)(intptr_t)context;
@@ -3932,6 +3970,7 @@ int main(int argc, char **argv) {
     CHECK(test_csv_receivers(vm, root) == 0);
     CHECK(test_compiler_receivers(vm, root) == 0);
     CHECK(test_native_instance_receivers(vm, root) == 0);
+    CHECK(test_global_callback_destructor(vm) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)

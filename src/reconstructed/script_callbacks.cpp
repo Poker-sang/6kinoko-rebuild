@@ -105,6 +105,14 @@ constexpr uint32_t actor_collision_offset = 120;
 constexpr uint32_t camera_update_offset = 12;
 }
 
+// Original 4D4860 destroys the global callback at 513C98: function first
+// (513CA8), then environment (513C9C). The non-owning VM word is untouched.
+extern "C" int32_t kinoko_destroy_script_callback(int32_t callback) {
+    auto &value = at<ScriptCallback>(callback);
+    function_4a9d70_this(address(&value.function));
+    return function_4a9d70_this(address(&value.environment));
+}
+
 // 45E120/45E180: call the current update; a failed call clears the callback.
 // Keep original error handling while investigating the preceding runtime fault.
 extern "C" int32_t kinoko_actor_step_callback(int32_t actor) {
