@@ -13,7 +13,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - run: git rev-parse HEAD > SOURCE_REVISION.txt
+          fetch-depth: 0
+      - name: Record source and patch
+        run: |
+          git rev-parse HEAD > SOURCE_REVISION.txt
+          git diff d773657e78f2be272984cefae76c568278a067db > SOURCE_CHANGES.patch
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: migration-source-${{ github.sha }}
@@ -22,6 +26,7 @@ jobs:
             AGENTS.md
             CMakeLists.txt
             SOURCE_REVISION.txt
+            SOURCE_CHANGES.patch
             include/
             src/
             tests/
