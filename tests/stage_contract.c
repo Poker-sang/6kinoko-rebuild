@@ -2619,7 +2619,8 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
     value=(int32_t *)(intptr_t)function_491880_this(vm,-1);
     CHECK(value[0]==0x05000002 && value[1]==73);
     function_48c910(vm,top);
-    CHECK(execute_source(vm,root+2,
+    expected_vm_error=1;
+    int compile_result=execute_source(vm,root+2,
         "compilerFactory <- compilestring(\"const CompilerSaved=31;\\n enum CompilerEnum { first=7, second=9 }\\n return function(x) { return x+CompilerSaved+CompilerEnum.second; };\",\"factory source\");\n"
         "compilerClosure <- compilerFactory();\n"
         "if(compilerClosure(2)!=42) throw 120;\n"
@@ -2630,7 +2631,9 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         "if(!caught) throw 122;\n"
         "collectgarbage();\n"
         "if(compilerClosure(3)!=43) throw 123;\n"
-        "if(compilestring(\"return CompilerEnum.second;\")()!=9) throw 124;\n"));
+        "if(compilestring(\"return CompilerEnum.second;\")()!=9) throw 124;\n");
+    expected_vm_error=0;
+    CHECK(compile_result);
     CHECK(function_48aa20(vm)==top);
     CHECK(retdec_explicit_vm==0);
     puts("PASS: source compiler current-VM constants/enums, callbacks, errors, closures and GC");

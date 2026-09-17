@@ -1,0 +1,14 @@
+[
+  {
+    "removed": "function_48f380_legacy",
+    "reason": "No references outside definition/prototype; original baseline retained"
+  },
+  {
+    "removed": "function_492370",
+    "reason": "No references outside definition/prototype; original baseline retained"
+  },
+  {
+    "removed": "function_489f50",
+    "reason": "All actual callers repaired in prior batches or proven dead in this batch. Receiver-bearing function_489f50_this remains."
+  }
+]
