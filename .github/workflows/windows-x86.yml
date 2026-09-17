@@ -2,7 +2,7 @@ name: Windows x86
 
 on:
   push:
-    branches: [master, 'refactor/squirrel222-native-cpp-20260918']
+    branches: [master]
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -68,7 +68,7 @@ jobs:
       - name: Asset-free contracts
         shell: pwsh
         run: |
-          ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error `
+          ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error --timeout 120 `
             -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract)$' `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/ctest.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
