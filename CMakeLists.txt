@@ -87,9 +87,6 @@ target_include_directories(kinoko_retdec_rebuild PRIVATE
     src/platform/resources
 )
 target_compile_definitions(kinoko_retdec_rebuild PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
-option(KINOKO_ENABLE_SQUIRREL_CPP_VM
-    "Use the C++ Squirrel 2.2.2 Execute backend from the RetDec runtime"
-    OFF)
 set(KINOKO_SQUIRREL2_ROOT
     "${CMAKE_SOURCE_DIR}/third_party/squirrel-2.2.2"
     CACHE PATH
@@ -145,9 +142,11 @@ if(NOT EXISTS "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp")
 endif()
 
 # ACT compilation uses a separate VM; runtime compile APIs use the current VM.
-# Upstream core sources stay unmodified; adaptation lives in src/squirrel/.
+# Runtime uses the supplied core; CallNative has one receiver-scope hook.
+# All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
-    src/squirrel/squirrel_vm_bridge.cpp
+    src/squirrel/squirrel_source_runtime.cpp
+    src/squirrel/squirrel_source_gc.cpp
     src/squirrel/squirrel_compile_bridge.cpp
     src/squirrel/squirrel_value_bridge.cpp
     src/squirrel/squirrel_operations.cpp
@@ -180,11 +179,6 @@ target_compile_definitions(kinoko_squirrel_cpp_vm PRIVATE
 if(MSVC)
     target_compile_options(kinoko_squirrel_cpp_vm PRIVATE
         /permissive /Gy /wd4100 /wd4244 /wd4267 /wd4706
-    )
-endif()
-if(KINOKO_ENABLE_SQUIRREL_CPP_VM)
-    target_compile_definitions(kinoko_retdec_rebuild PRIVATE
-        KINOKO_ENABLE_SQUIRREL_CPP_VM=1
     )
 endif()
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
