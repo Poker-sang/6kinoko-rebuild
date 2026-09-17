@@ -2606,18 +2606,18 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         "csvA,19,2.5,True,replaced,ignored\n"
         "csvUncommitted,8,3,t,end",root+2)==0);
     CHECK(execute_source(vm,root+2,
-        "if(csvA.n!=19 || csvA.f!=2.5 || csvA.b!=false || csvA.s!=\"replaced\") throw 110;"
-        "if(csvMissing.n!=7 || csvMissing.f!=0.0 || csvMissing.b!=false || csvMissing.s!=\"\") throw 111;"
-        "if(\"csvUncommitted\" in this) throw 112;"));
+        "if(csvA.n!=19 || csvA.f!=2.5 || csvA.b!=false || csvA.s!=\"replaced\") throw 110;\n"
+        "if(csvMissing.n!=7 || csvMissing.f!=0.0 || csvMissing.b!=false || csvMissing.s!=\"\") throw 111;\n"
+        "if(\"csvUncommitted\" in this) throw 112;\n"));
     CHECK(kinoko_csv_populate(vm,
         "id,a,b\n,s,s\n"
         "csvComma,\"left,right\"\n"
         "csvLine,\"one\r\ntwo\",ok\n"
         "csvCarry,part#ignored\nrest,done\n",root+2)==0);
     CHECK(execute_source(vm,root+2,
-        "if(csvComma.a!=\"left\" || csvComma.b!=\"right\") throw 113;"
-        "if(csvLine.a!=\"one\\r\\ntwo\" || csvLine.b!=\"ok\") throw 114;"
-        "if(csvCarry.a!=\"partrest\" || csvCarry.b!=\"done\") throw 115;"));
+        "if(csvComma.a!=\"left\" || csvComma.b!=\"right\") throw 113;\n"
+        "if(csvLine.a!=\"one\\r\\ntwo\" || csvLine.b!=\"ok\") throw 114;\n"
+        "if(csvCarry.a!=\"partrest\" || csvCarry.b!=\"done\") throw 115;\n"));
     CHECK(kinoko_csv_populate(vm,"id,a,b\n,i\nnever,1,2\n",root+2)==2);
     int32_t null_pair[2]={g483,g484};
     CHECK(kinoko_csv_populate(vm,"",null_pair)==1);
@@ -2651,7 +2651,7 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         CHECK(result[0]==0x01000008 && result[1]==1);
         function_48c910(vm,top);
         CHECK(*(int32_t *)(intptr_t)(root[3]+4)==refs);
-        CHECK(execute_source(vm,root+2,"if(csvFile.value!=47) throw 116;"));
+        CHECK(execute_source(vm,root+2,"if(csvFile.value!=47) throw 116;\n"));
     }
     g874=saved_encoding;
     g765=saved_package;
