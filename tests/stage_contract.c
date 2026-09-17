@@ -2631,6 +2631,13 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
         "try { local f=function() { local x=suspend(); }; f.call(this); } catch(e) { if(e!=\"cannot suspend through native calls/metamethods\") throw e; caught++; }\n"
         "if(caught!=3) throw 100;\n");
     expected_vm_error=0;
+    if (!result) {
+        int32_t *error=(int32_t *)(intptr_t)(vm+64);
+        fprintf(stderr,"thread failure type=%08x data=%08x top=%d base=%d frames=%d selected=%08x\n",
+            error[0],error[1],function_48aa20(vm),*(int32_t *)(intptr_t)(vm+52),
+            *(int32_t *)(intptr_t)(vm+100),retdec_explicit_vm);
+        if(error[0]==0x08000010) fprintf(stderr,"thread error: %s\n",(char *)(intptr_t)(error[1]+28));
+    }
     CHECK(result);
     CHECK(function_48aa20(vm)==top && *(int32_t *)(intptr_t)(vm+52)==base);
     puts("PASS: thread suspend/wakeup results, varargs/traps, errors and parent VM restoration");
