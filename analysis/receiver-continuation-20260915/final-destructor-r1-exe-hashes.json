@@ -1,0 +1,14 @@
+[
+  {
+    "variant": "quiet",
+    "code_commit": "7a76ee4",
+    "path": "runtime-builds/final-destructor-20260917-r1-quiet/kinoko_retdec_rebuild.exe",
+    "sha256": "6F15D8F14CBCB1E926B31AF6EEDCFEAC8AC5ADF8961BCF60CD5EDAEE3337A435"
+  },
+  {
+    "variant": "diag",
+    "code_commit": "7a76ee4",
+    "path": "runtime-builds/final-destructor-20260917-r1-diag/kinoko_retdec_rebuild.exe",
+    "sha256": "B57DAB9C5EA4DAC08169132DF13BF7317832CCBDFF79A4E6D10E1E9FEB343606"
+  }
+]

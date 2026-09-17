@@ -273,3 +273,63 @@ Prior E-imports/scope and original reference are carried forward.
 No game was launched, closed or attached. Interactive quiet/diag startup remains
 pending: first stage, jump, see an enemy, exit. Pause after user handoff as
 requested; no claims of complete runtime equivalence from offline tests alone.
+
+## Final receiverless destructor eliminated — 2026-09-17
+
+User confirmed native-instance r3 works before authorizing this batch.
+Code/test commit: 7a76ee4. Both final-destructor-20260917-r1-{quiet,diag}
+Win32 Release builds passed all 18 CTests (stage first, then remaining 17).
+Original three DATs are staged beside each EXE and size/SHA256 verified.
+See final-destructor-r1-*-stage.log, *-remaining-tests.log, *-dat.log and
+final-destructor-r1-exe-hashes.json for artifact identities and validation.
+
+All THREE originally tracked receiverless fallback symbols are now absent
+from active src/include/tests C/C++ source (preserved 6kinoko.exe.c excluded):
+function_489f30=0, function_489f50=0, function_4a9d70=0. Correct receiver-bearing
+helpers such as function_4a9d70_this remain, forwarding to C++ ownership code.
+This is the completion of this three-symbol cleanup, NOT proof that every
+function or compatibility shim in the entire reconstruction is implemented.
+
+A conservative graph audit parsed 4998 named definitions (conditional duplicate
+bodies and address aliases retained), found 16 direct destructor callers and
+47 caller ancestors, and removed only the 43 ancestors with no root path.
+It checks symbols and literal original addresses, nonfunction data/initializers,
+other src/include/tests C/C++ files, and transitive reachability. Unparsed code
+remains external conservatively. See audit_final_destructor.py and the saved
+final-destructor-reachability.json, including the input hash and exact removal
+list. Its historical audit can be reproduced with --revision 3196614. This is
+not a blanket deletion of all globally unreferenced functions. Build/link and
+post-removal symbol checks also passed. About 1000 old C lines were removed.
+
+The one conservatively retained direct caller, 4D4860, is now a thin C boundary
+for kinoko_destroy_script_callback in script_callbacks.cpp. Original IDA
+final-4d4860.json identifies the two global wrappers at 513CA8 and 513C9C:
+the function member precedes the environment member in destruction; the VM
+word at 513C98 is not owned and is untouched. C++ uses the existing sq_release
+external-reference-table behavior and null reset, without substituting an
+internal SQObjectPtr destructor.
+
+Further IDA analysis showed the apparent startup edge to 4D4860 was an
+incorrect merged RetDec boundary: original 4D3E50 allocates a render-list
+sentinel and registers 4D4930; separate 4D3EB0 initializes the two callback
+wrappers and registers 4D4860. Evidence: final-4d3e50.json/final-4d3eb0.json.
+4D3E50 now uses a C++ 12-byte sentinel allocation, two self links and genuine
+bad_alloc failure, with its existing legacy registration boundary preserved.
+The merged 4D3EB0 tail and fake FS exception chain were removed from 4D3E50.
+The recovered 4D4860 remains independently testable; no new process-exit hook
+was installed. The legacy _atexit shim still does nothing, and full original
+CRT startup/shutdown restoration (including separate callback initialization)
+is outside this batch's claim. This prevents treating a textual graph edge as
+proof of runtime execution. Original 4D48C0 evidence is also retained.
+
+New tests call the actual global destructor with two independently owned native
+instances: both are released once, the environment last, the VM word stays
+unchanged, and both wrappers return to null with the correct vtable. Repeating
+the cleanup causes no extra release or stack change. Sentinel construction
+checks self links and unchanged list count. Existing moving-stone/water,
+orange/green lift, floating-point, GC, thread and compiler checks pass.
+
+Prior E-imports/scope and original reference carry forward. No game was
+launched, closed or attached. Interactive quiet/diag validation remains pending:
+first stage, jump, see an enemy, exit. Pause after handoff as requested. All
+previous build/runtime/test artifacts remain preserved.
