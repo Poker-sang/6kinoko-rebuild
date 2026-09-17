@@ -13,31 +13,30 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Inventory VM definitions and boundary calls
+      - name: Inspect migration boundaries
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-          s = Path('src/decompiled/6kinoko_rebuilt.c').read_text(encoding='utf-8-sig')
-          lines = s.splitlines()
-          print('SOURCE',len(s),len(lines))
-          defs=[]
-          for i,line in enumerate(lines):
-              m=re.search(r'^\S.*\b((?:FUN_|function_|sub_)[0-9a-fA-F]+)\s*\([^;]*\)\s*\{',line)
-              if m:
-                  defs.append((i,m.group(1)))
-                  print(f'{i+1}: {line}')
-          print('TOTAL DEFINITIONS',len(defs))
-          print('=== EXECUTE ===')
-          for i,line in enumerate(lines):
-              if 'retdec_squirrel_execute_cpp(' in line:
-                  for j in range(max(0,i-15),min(len(lines),i+25)):
-                      print(f'{j+1}: {lines[j]}')
-          print('=== VENDOR FILES ===')
-          for p in Path('third_party').rglob('sqvm*'): print(p)
-          print('=== THREAD ===')
-          print(Path('src/squirrel/squirrel_thread.cpp').read_text(encoding='utf-8-sig'))
-          print('=== CORE TARGET ===')
-          cm=Path('CMakeLists.txt').read_text(encoding='utf-8-sig')
-          print(cm)
+          p=Path('src/decompiled/6kinoko_rebuilt.c')
+          lines=p.read_text(encoding='utf-8-sig').splitlines()
+          names=['function_490b80','function_491120','function_491320','function_48eaf0','function_491820']
+          for name in names:
+              for i,line in enumerate(lines):
+                  if re.search(r'^\S.*\b'+name+r'\s*\([^;]*\)\s*\{',line):
+                      end=i+1
+                      while end<len(lines) and lines[end]!='}': end+=1
+                      print('\n===',name,'DEFINITION',i+1,end+1,'===')
+                      for j in range(i,min(end+1,i+(100 if name=='function_491820' else 330))):
+                          print(f'{j+1}: {lines[j]}')
+              hits=[(i+1,line) for i,line in enumerate(lines) if name+'(' in line]
+              print('CALLS',name,hits[:25])
+          for name in ['retdec_squirrel_open','retdec_squirrel_close','retdec_squirrel_thread','sq_open(','sq_close(','KINOKO_ENABLE_SQUIRREL_CPP_VM']:
+              print('\n=== LIFECYCLE',name,'===')
+              for i,line in enumerate(lines):
+                  if name in line:
+                      for j in range(max(0,i-3),min(len(lines),i+7)): print(f'{j+1}: {lines[j]}')
+          for name in ['src/squirrel/squirrel_thread.cpp','src/squirrel/squirrel_gc_bridge.cpp','include/retdec_squirrel_bridge.h','CMakeLists.txt']:
+              print('\n=== FILE',name,'===')
+              print(Path(name).read_text(encoding='utf-8-sig'))
           PY
