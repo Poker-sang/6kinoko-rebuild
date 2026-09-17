@@ -121338,6 +121338,7 @@ int32_t function_45f9d0(int32_t a1, int32_t a2, int32_t a3,
 
 static void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
     char message[512];
+    if (!kinoko_diagnostics_accepts(label)) return;
 
     if (name_ptr == 0) {
         wsprintfA(message, "%s:ptr=0x00000000", label);
@@ -182593,6 +182594,7 @@ static __declspec(noinline) void retdec_watch_g644(void) {
 __declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value) {
     char message[128];
+    if (!kinoko_diagnostics_accepts(label)) return;
     retdec_watch_g594();
     retdec_watch_g644();
     wsprintfA(message, "%s:0x%08lX", label, (unsigned long)value);
@@ -194477,8 +194479,6 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
     static int32_t trace_native_call_count;
     static int32_t trace_native_typecheck_count;
     static int32_t trace_var_set_typecheck_count;
-    MEMORY_BASIC_INFORMATION native_memory;
-    int32_t native_pointer_executable;
 
     if (suspend_ptr != 0)
         *(char *)(intptr_t)suspend_ptr = 0;
@@ -194680,43 +194680,9 @@ static __declspec(noinline) int32_t retdec_execute_call_native(
         }
     }
 
-    native_pointer_executable = 0;
-    if (VirtualQuery((const void *)(uintptr_t)(uint32_t)native_function_ptr,
-                     &native_memory, sizeof(native_memory)) != 0 &&
-        native_memory.State == MEM_COMMIT &&
-        (native_memory.Protect == PAGE_EXECUTE ||
-         native_memory.Protect == PAGE_EXECUTE_READ ||
-         native_memory.Protect == PAGE_EXECUTE_READWRITE ||
-         native_memory.Protect == PAGE_EXECUTE_WRITECOPY)) {
-        native_pointer_executable = 1;
-    }
-    if ((!native_pointer_executable ||
-         ((uint32_t)native_function_ptr & 0xffffu) == 0xde0cu ||
-         ((uint32_t)native_function_ptr & 0xffffu) == 0xfe0cu ||
-         ((uint32_t)native_function_ptr & 0xffffu) == 0xee0cu) &&
-        trace_invalid_native_count < 8) {
-        int32_t name_type =
-            *(int32_t *)(intptr_t)(native_closure + 68);
-        int32_t name_data =
-            *(int32_t *)(intptr_t)(native_closure + 72);
-        retdec_trace_i32("48ace0:invalid-closure", native_closure);
-        retdec_trace_i32("48ace0:invalid-function",
-                         native_function_ptr);
-        retdec_trace_i32("48ace0:invalid-vtable",
-                         *(int32_t *)(intptr_t)native_closure);
-        retdec_trace_i32("48ace0:invalid-nparams",
-                         nparams_check);
-        retdec_trace_i32("48ace0:invalid-name-type", name_type);
-        retdec_trace_i32("48ace0:invalid-name-data", name_data);
-        retdec_trace_i32("48ace0:invalid-callsite",
-                         (int32_t)(uintptr_t)_ReturnAddress());
-        retdec_trace_i32("48ace0:invalid-protect",
-                         native_memory.Protect);
-        if (name_type == 0x08000010 && name_data != 0)
-            retdec_trace_squirrel_name(
-                "48ace0:invalid-name", name_data + 28);
-        ++trace_invalid_native_count;
-    }
+    /* Original SQVM::CallNative invokes the registered closure directly.
+       Memory-page probing was a reconstruction diagnostic, not VM semantics.
+       Inspect suspect pointers with an attached debugger when needed. */
 
     if (trace_native_call_count < 20000) {
         retdec_trace_i32("48ace0:call-closure", native_closure);

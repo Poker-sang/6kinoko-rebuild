@@ -11,6 +11,7 @@ HANDLE trace_file = INVALID_HANDLE_VALUE;
 char trace_buffer[65536];
 DWORD trace_used = 0;
 bool trace_enabled = false;
+bool verbose_trace = false;
 bool dump_enabled = false;
 bool script_capture_enabled = false;
 volatile LONG script_dump_written = 0;
@@ -55,6 +56,15 @@ bool starts_with(const char *message, const char *prefix) {
 }
 
 bool selected_message(const char *message) {
+    // Normal diagnostics retain failures and scene transitions. Detailed VM
+    // ownership traces are opt-in: compound actors otherwise emit megabytes/frame.
+    if (!verbose_trace) {
+        const char *prefixes[] = {"stagevm:failure", "stagevm:compile-error", "seh:",
+            "veh:", "actor:update-failed", "game:", "scene:", "map:path", "savedata:"};
+        for (const char *prefix : prefixes)
+            if (starts_with(message, prefix)) return true;
+        return false;
+    }
 #if defined(RETDEC_TRACE_ERRORS_ONLY)
     return starts_with(message, "stagevm:failure") ||
         starts_with(message, "actor:update-failed") ||
@@ -214,6 +224,7 @@ extern "C" void kinoko_diagnostics_initialize() {
 #endif
     script_capture_enabled = environment_switch("KINOKO_CAPTURE_SCRIPT_FAILURE", default_script_capture);
     trace_enabled = environment_switch("KINOKO_TRACE", default_trace);
+    verbose_trace = environment_switch("KINOKO_TRACE_VERBOSE", false);
     dump_enabled = environment_switch("KINOKO_CRASH_DUMP", capture);
     if (capture || dump_enabled || script_capture_enabled) {
         SYSTEMTIME now;
@@ -326,4 +337,10 @@ extern "C" int kinoko_report_exception(EXCEPTION_POINTERS *exception) {
         retdec_trace(message);
     }
     return EXCEPTION_EXECUTE_HANDLER;
+}
+
+extern "C" int kinoko_diagnostics_accepts(const char *label) {
+    // Script-failure capture also needs its formatted metadata in quiet mode.
+    return label && ((trace_enabled && selected_message(label)) ||
+        (script_capture_enabled && starts_with(label, "stagevm:failure")));
 }

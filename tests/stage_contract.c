@@ -38,6 +38,10 @@ static void position_actor(int32_t actor, float x, float y) {
     *(float *)(intptr_t)(actor + 452) = y;
 }
 
+int kinoko_diagnostics_accepts(const char *label) {
+    return label && strstr(label, "stagevm:failure") != NULL;
+}
+
 void retdec_trace(const char *message) {
     if (!expected_vm_error && message && strstr(message, "stagevm:failure-error")) ++vm_failures;
     if (!expected_vm_error && message && (strstr(message, "stagevm:compile-error") ||
