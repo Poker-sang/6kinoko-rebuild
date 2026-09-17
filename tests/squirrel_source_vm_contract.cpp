@@ -209,7 +209,7 @@ void contracts() {
     for (int i = 0; i < 64; ++i) {
         require(evaluate(vm, "garbage-cycle", R"SQ(
             local root = {};
-            local child = { parent = root };
+            local child = { owner = root };
             root.child <- child;
             return 1;
         )SQ") == 1, "cycle creation");
