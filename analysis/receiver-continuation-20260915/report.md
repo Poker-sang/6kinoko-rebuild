@@ -182,3 +182,37 @@ Interactive startup remains pending for the new EXEs. No user game was
 launched, closed or attached. As requested, pause after handing over both
 variants for first-stage/jump/enemy startup validation. Original DAT/save
 files and older build/test artifacts preserved.
+
+## SQObjectPtr destructor fallback elimination — 2026-09-17
+
+User confirmed compiler r3 works before this batch. Code/test commit: ffe3add.
+Both destructors-20260917-r1-{quiet,diag} Win32 Release builds passed all
+18 CTests. Three original DATs were copied beside each EXE and verified by
+size and SHA256. EXE identities are recorded in destructors-r1-exe-hashes.json;
+build, test and DAT logs use the destructors-r1 prefix.
+
+IDA evidence at original 4CCC08 shows a constructor unwind chunk restoring
+ECX from its parent's EBP, adding 18h and jumping to 489F30. Such chunks are
+not ordinary independent functions. The removal audit checks external symbolic
+and literal-address references, scans other source/header/test files, and keeps
+the transitive closure of referenced candidates. See destructor-4ccc08-asm.json,
+destructor-removal.json and prune_dead_destructors.py. Prior E-imports/scope
+and supplied original reference remain applicable.
+
+Of 540 candidate definitions, 533 unreferenced generated functions/cleanup
+fragments were removed, deleting 4163 lines. Seven candidates were retained;
+this is NOT a count of all remaining caller functions, because other signatures
+were outside this audit's candidate set. No game behavior was added.
+
+The final receiverless function_489f30 fallback and its declaration are now
+removed. Together with earlier function_489f50 removal, TWO of the original
+THREE placeholders are eliminated. function_4a9d70 remains: 36 matching source
+lines including declaration/definition (text count, not runtime reachability).
+Its remaining wrapper ownership/native-instance/global-cleanup paths need
+further original-code analysis. Literal-address atexit references are preserved.
+Correct receiver-bearing C++ destruction/assignment helpers remain in use.
+
+Offline checks do not establish interactive startup or gameplay equivalence.
+No game was launched, closed or attached. User testing of both variants is
+pending: enter the first stage, jump, see an enemy, then exit. Pause at handoff
+as requested. All previous runtime/build/test artifacts remain preserved.
