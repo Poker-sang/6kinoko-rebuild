@@ -2614,8 +2614,8 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         "nativeConstructorCalls <- 0;\n"
         "class NativeBaseA {}\n"
         "class NativeBaseB {}\n"
-        "class NativeProbe { __ot=null; __ca=null; constructor() { ++nativeConstructorCalls; } }\n"
-        "NativeProbe.__ca = [NativeBaseA,NativeBaseB,NativeProbe];\n"
+        "class NativeProbe { __ot=null; __ca=[NativeBaseA,NativeBaseB]; constructor() { ++nativeConstructorCalls; } }\n"
+        "NativeProbe.__ca.append(NativeProbe);\n"
         "class NativeEmpty { __ot=null; __ca=[]; }\n"
         "class NativeSingle { __ot=null; __ca=[NativeBaseA]; }\n"));
     const char *names[] = {"NativeBaseA", "NativeBaseB", "NativeProbe"};
