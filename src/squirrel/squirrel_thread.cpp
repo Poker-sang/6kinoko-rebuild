@@ -1,9 +1,7 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/squirrel_vm_lifecycle.h"
 
-#include <atomic>
 #include <cstddef>
-#include <cstring>
 
 #include "sqpcheader.h"
 #include "sqvm.h"
@@ -21,7 +19,6 @@ SQVM *machine(int32_t p) {
 int32_t address(const void *p) {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(p));
 }
-std::atomic<int32_t> source_vm_vtable{0};
 static_assert(sizeof(void *) == 4);
 static_assert(sizeof(SQVM) == 168);
 static_assert(offsetof(SQVM, _sharedstate) == 140);
@@ -30,25 +27,6 @@ static_assert(offsetof(SQVM, _suspended_root) == 152);
 static_assert(offsetof(SQVM, _suspended_target) == 156);
 static_assert(offsetof(SQVM, _suspended_traps) == 160);
 static_assert(offsetof(SQVM, _suspend_varargs) == 164);
-}
-
-extern "C" int32_t kinoko_sq_source_vm_vtable(void) {
-    return source_vm_vtable.load(std::memory_order_relaxed);
-}
-
-// 48A230 / sq_newthread. Allocation, construction, Init, parent-stack ownership
-// and failure cleanup all belong to the supplied Squirrel source. Do not
-// reconstruct these operations with byte offsets and manual refcount changes.
-extern "C" int32_t kinoko_sq_create_thread(int32_t parent, int32_t stack_size) {
-    auto *child = sq_newthread(machine(parent), stack_size);
-    if (child) {
-        int32_t vtable = 0;
-        // The Windows x86 compatibility collector compares vtable identities.
-        // memcpy reads the ABI word without an aliasing-violating int32_t lvalue.
-        std::memcpy(&vtable, child, sizeof(vtable));
-        source_vm_vtable.store(vtable, std::memory_order_relaxed);
-    }
-    return address(child);
 }
 
 // 490C40 / SQVM::Suspend, with the original explicit VM receiver.

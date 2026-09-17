@@ -14,6 +14,9 @@
 #include "sqarray.h"
 #include "sqclass.h"
 
+// Preserve the explicit receiver for recovered game callbacks.
+SQInteger kinoko_squirrel_invoke_native(HSQUIRRELVM vm, SQFUNCTION function);
+
 #define TOP() (_stack._vals[_top-1])
 
 bool SQVM::BW_OP(SQUnsignedInteger op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
@@ -1098,7 +1101,7 @@ bool SQVM::CallNative(SQNativeClosure *nclosure,SQInteger nargs,SQInteger stackb
 	}
 
 	
-	SQInteger ret = (nclosure->_function)(this);
+	SQInteger ret = kinoko_squirrel_invoke_native(this, nclosure->_function);
 	_nnativecalls--;
 	suspend = false;
 	if( ret == SQ_SUSPEND_FLAG) suspend = true;
