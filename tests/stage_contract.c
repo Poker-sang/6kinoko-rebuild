@@ -2597,6 +2597,46 @@ static int test_error_value_ownership(int32_t vm) {
     return 0;
 }
 
+struct compile_feed { const char *text; int offset; int32_t vm; };
+static int32_t compiler_test_feed(int32_t context) {
+    struct compile_feed *feed=(struct compile_feed *)(intptr_t)context;
+    if(retdec_stack_vm()!=feed->vm) return 0;
+    return feed->text[feed->offset] ? feed->text[feed->offset++] : 0;
+}
+static int test_compiler_receivers(int32_t vm, int32_t *root) {
+    const int top=function_48aa20(vm);
+    // Length-limited source must ignore trailing bytes, unlike the old lost buffer state.
+    CHECK(function_48d0b0(vm,PTR("return 42;INVALID"),10,(int32_t *)"bounded source",0)==0);
+    function_48ab90(vm,root[2],root[3]);
+    CHECK(function_48ace0(vm,1,1,0)==0);
+    int32_t *value=(int32_t *)(intptr_t)function_491880_this(vm,-1);
+    CHECK(value[0]==0x05000002 && value[1]==42);
+    function_48c910(vm,top);
+    struct compile_feed feed={"return 73;",0,vm};
+    CHECK(function_48c1f0(vm,PTR(compiler_test_feed),(int32_t *)&feed,PTR("reader source"),0)==0);
+    function_48ab90(vm,root[2],root[3]);
+    CHECK(function_48ace0(vm,1,1,0)==0);
+    value=(int32_t *)(intptr_t)function_491880_this(vm,-1);
+    CHECK(value[0]==0x05000002 && value[1]==73);
+    function_48c910(vm,top);
+    CHECK(execute_source(vm,root+2,
+        "compilerFactory <- compilestring(\"const CompilerSaved=31; enum CompilerEnum { first=7, second=9 } return function(x) { return x+CompilerSaved+CompilerEnum.second; };\",\"factory source\");\n"
+        "compilerClosure <- compilerFactory();\n"
+        "if(compilerClosure(2)!=42) throw 120;\n"
+        "local later=compilestring(\"return CompilerSaved+CompilerEnum.first;\");\n"
+        "if(later()!=38) throw 121;\n"
+        "local caught=false;\n"
+        "try { compilestring(\"local =;\",\"bad source\"); } catch(e) { caught=typeof e==\"string\"; }\n"
+        "if(!caught) throw 122;\n"
+        "collectgarbage();\n"
+        "if(compilerClosure(3)!=43) throw 123;\n"
+        "if(compilestring(\"return CompilerEnum.second;\")()!=9) throw 124;\n"));
+    CHECK(function_48aa20(vm)==top);
+    CHECK(retdec_explicit_vm==0);
+    puts("PASS: source compiler current-VM constants/enums, callbacks, errors, closures and GC");
+    return 0;
+}
+
 static int test_csv_receivers(int32_t vm, int32_t *root) {
     const int top=function_48aa20(vm);
     CHECK(kinoko_csv_populate(vm,
@@ -3793,6 +3833,7 @@ int main(int argc, char **argv) {
     CHECK(test_receiver_operations(vm, root) == 0);
     CHECK(test_thread_receivers(vm, root) == 0);
     CHECK(test_csv_receivers(vm, root) == 0);
+    CHECK(test_compiler_receivers(vm, root) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)

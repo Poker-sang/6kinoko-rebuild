@@ -189097,17 +189097,9 @@ int32_t function_48bb10(void) {
 #endif
 
 // Address range: 0x48bb30 - 0x48bb94
-int32_t function_48bb30(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x48bb40
-    __writefsdword(0, (int32_t)&v1);
-    int32_t * v2 = _malloc(64); // 0x48bb58
-    if (v2 != NULL) {
-        // 0x48bb73
-        function_48ba20_this((int32_t)(intptr_t)v2, a1, a2);
-    }
-    // 0x48bb82
-    __writefsdword(0, v1);
-    return (int32_t)v2;
+int32_t function_48bb30(int32_t shared_state, int32_t proto) {
+    int32_t object = (int32_t)(intptr_t)_malloc(64);
+    return function_48ba20_this(object, shared_state, proto);
 }
 
 // Address range: 0x48bba0 - 0x48bc63
@@ -189506,51 +189498,16 @@ int32_t function_48c1c0(int32_t a1) {
 }
 
 // Address range: 0x48c1f0 - 0x48c2e9
-int32_t function_48c1f0(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_t a5) {
-    int32_t * v1 = (int32_t *)(a1 + 140); // 0x48c1ff
-    int32_t v2 = 0x1000001; // bp-12, 0x48c205
-    int32_t v3 = (int32_t)*(char *)(*v1 + 168); // 0x48c213
-    int32_t v4 = v3; // bp-32, 0x48c21a
-    int32_t v5 = &v2; // bp-40, 0x48c22b
-    int32_t v6 = function_4a15b0(a1, a2, (int32_t)a3, a4, &v2, (int32_t)(a5 != 0), v3); // 0x48c233
-    if ((char)v6 == 0) {
-        // 0x48c2c3
-        if ((v2 & 0x8000000) != 0) {
-            // 0x48c2cf
-            *(int32_t *)4 = *(int32_t *)4 - 1;
-        }
-        // 0x48c2bb
-        return -1;
-    }
-    int32_t v7 = *v1; // 0x48c243
-    int32_t * v8 = _malloc(64); // 0x48c252
-    int32_t * v9 = &v4; // 0x48c25e
-    if (v8 != NULL) {
-        // 0x48c260
-        v5 = v7;
-        function_48ba20_this((int32_t)(intptr_t)v8, v7, 0);
-        v9 = &v5;
-    }
-    // 0x48c26c
-    int32_t v10; // bp-20, 0x48c1f0
-    *(int32_t *)((int32_t)v9 - 4) = (int32_t)&v10;
-    v10 = 0x8000100;
-    int32_t * v11 = (int32_t *)((int32_t)v8 + 4); // 0x48c27a
-    *v11 = *v11 + 1;
-    function_491820(v10);
-    if ((v10 & 0x8000000) != 0) {
-        // 0x48c292
-        *v11 = *v11 - 1;
-    }
-    // 0x48c2a4
-    if ((v2 & 0x8000000) == 0) {
-        // 0x48c2bb
-        return 0;
-    }
-    // 0x48c2a9
-    *(int32_t *)4 = *(int32_t *)4 - 1;
-    return 0;
+int32_t function_48c1f0(int32_t vm, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror) {
+    int32_t previous = retdec_explicit_vm;
+    retdec_explicit_vm = vm;
+    int32_t result = kinoko_sq_compile_reader(vm, reader, (int32_t)(intptr_t)context,
+        (const char *)(intptr_t)name, raiseerror);
+    retdec_explicit_vm = previous;
+    return result;
 }
+
+
 
 // Address range: 0x48c2f0 - 0x48c34c
 int32_t function_48c2f0(int32_t a1, int32_t a2) {
@@ -190385,10 +190342,16 @@ int32_t function_48cfa0(int32_t vm, uint32_t level, int32_t index) {
 }
 
 // Address range: 0x48d0b0 - 0x48d0ea
-int32_t function_48d0b0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4, int32_t a5) {
-    int32_t v1 = a2; // bp-16, 0x48d0c3
-    return function_48c1f0(a1, 0x48b840, &v1, (int32_t)a4, a5);
+int32_t function_48d0b0(int32_t vm, int32_t text, int32_t length, int32_t *name, int32_t raiseerror) {
+    int32_t previous = retdec_explicit_vm;
+    retdec_explicit_vm = vm;
+    int32_t result = kinoko_sq_compile_buffer(vm, (const char *)(intptr_t)text,
+        length, (const char *)name, raiseerror);
+    retdec_explicit_vm = previous;
+    return result;
 }
+
+
 
 // Address range: 0x48d0f0 - 0x48d1a2
 int32_t function_48d0f0(uint32_t a1, int32_t * a2) {
@@ -204965,7 +204928,7 @@ int32_t retdec_gc_object_type(int32_t object_ptr) {
         return 0x08000400;
     if (vtable == (int32_t)(intptr_t)&g73)
         return 0x08001000;
-    if (vtable == (int32_t)(intptr_t)&g74)
+    if (vtable == (int32_t)(intptr_t)&g74 || vtable == kinoko_sq_source_table_vtable())
         return 0x0A000020;
     if (vtable == (int32_t)(intptr_t)&g75)
         return 0x0A008000;
@@ -212699,33 +212662,12 @@ int32_t function_4a1230(int32_t a1) {
 }
 
 // Address range: 0x4a15b0 - 0x4a1691
-int32_t function_4a15b0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t * a5, int32_t a6, int32_t a7) {
-    int32_t compiler_storage[46];
-    int32_t previous_compiler = retdec_active_compiler;
-    int32_t previous_lexer = retdec_active_lexer;
-    int32_t previous_funcstate = retdec_active_funcstate;
-    int32_t result;
-    int32_t source_type;
-    int32_t source_data;
-
-    memset(compiler_storage, 0, sizeof(compiler_storage));
-    retdec_active_compiler = (int32_t)(intptr_t)compiler_storage;
-    retdec_active_lexer = retdec_active_compiler + 16;
-    retdec_active_funcstate = 0;
-
-    function_49d790(a1, a2, a3, a4, a6, a7);
-    result = function_4a1230((int32_t)(intptr_t)a5);
-    function_4a6730();
-
-    source_type = compiler_storage[2];
-    source_data = compiler_storage[3];
-    retdec_squirrel_release(source_type, source_data);
-
-    retdec_active_compiler = previous_compiler;
-    retdec_active_lexer = previous_lexer;
-    retdec_active_funcstate = previous_funcstate;
-    return result;
+int32_t function_4a15b0(int32_t vm, int32_t reader, int32_t context, int32_t name, int32_t *out, int32_t raiseerror, int32_t lineinfo) {
+    return kinoko_sq_compile_proto(vm, reader, context, (const char *)(intptr_t)name,
+        out, raiseerror, lineinfo);
 }
+
+
 
 static int32_t retdec_parse_number(const char *text, int32_t *out) {
     char *end = NULL;
@@ -213031,21 +212973,11 @@ int32_t function_4a1b40(int32_t a1) {
 }
 
 // Address range: 0x4a1b90 - 0x4a1c05
-int32_t function_4a1b90(int32_t a1) {
-    uint32_t v1 = function_48aa20(a1); // 0x4a1b9d
-    int32_t v2 = 0; // bp-12, 0x4a1bab
-    char * v3 = "unnamedbuffer"; // bp-8, 0x4a1bb2
-    function_48a8d0(a1, 2, &v2);
-    int32_t v4 = function_48c700(a1, 2); // 0x4a1bc1
-    int32_t v5 = (int32_t)"unnamedbuffer"; // 0x4a1bce
-    if (v1 >= 3) {
-        // 0x4a1bd0
-        function_48a8d0(a1, 3, (int32_t *)&v3);
-        v5 = (int32_t)v3;
-    }
-    int32_t v6 = function_48d0b0(a1, v2, v4, (int32_t *)v5, 0); // 0x4a1beb
-    return (int32_t)(v6 < 0) + (int32_t)(v6 >= 0);
+int32_t function_4a1b90(int32_t vm) {
+    return kinoko_sq_compilestring(vm);
 }
+
+
 
 // Address range: 0x4a1c10 - 0x4a1c55
 int32_t function_4a1c10(int32_t a1) {
