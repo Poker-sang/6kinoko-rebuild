@@ -73,3 +73,9 @@ extern "C" void kinoko_sq_class_destroy(int32_t klass) {
     static_assert(sizeof(SQClass) == 92 && offsetof(SQClass, _attributes) == 68);
     at<SQClass>(klass).SQClass::~SQClass();
 }
+
+// 48C580 / sq_setnativeclosurename: SQObjectPtr retains the new name and
+// releases the previous name, including repeated registration on a child VM.
+extern "C" int32_t kinoko_sq_set_native_name(int32_t vm, int32_t index, const char *name) {
+    return sq_setnativeclosurename(&at<SQVM>(vm), index, name);
+}

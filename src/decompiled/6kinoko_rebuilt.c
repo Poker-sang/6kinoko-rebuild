@@ -190464,39 +190464,8 @@ int32_t function_48c400(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x48c580 - 0x48c61e
-int32_t function_48c580(int32_t a1, int32_t a2, int32_t a3) {
-    int32_t v1; // 0x48c580
-    if (a2 < 0) {
-        // 0x48c5a0
-        v1 = function_491880(a2);
-    } else {
-        // 0x48c58f
-        v1 = function_4918a0(a2 - 1 + *(int32_t *)(a1 + 52));
-    }
-    // 0x48c5a8
-    if (*(int32_t *)v1 != 0x8000200) {
-        // 0x48c60c
-        return function_48ac00(a1, "the object is not a nativeclosure");
-    }
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x48c5ae
-    int32_t v3 = function_48e480(*(int32_t *)(a1 + 140), a3, -1); // 0x48c5c0
-    int32_t * v4 = (int32_t *)(v3 + 4); // 0x48c5cc
-    *v4 = *v4 + 1;
-    int32_t * v5 = (int32_t *)(v2 + 64); // 0x48c5cf
-    int32_t * v6 = (int32_t *)(v2 + 68); // 0x48c5d2
-    *v6 = v3;
-    *v5 = 0x8000010;
-    int32_t v7 = *v4 + 1; // 0x48c5df
-    *v4 = v7;
-    int32_t v8 = v7; // 0x48c5ea
-    if ((*v5 & 0x8000000) != 0) {
-        int32_t * v9 = (int32_t *)(*v6 + 4); // 0x48c5ec
-        *v9 = *v9 - 1;
-        v8 = *v4;
-    }
-    // 0x48c5f8
-    *v4 = v8 - 1;
-    return 0;
+int32_t function_48c580(int32_t vm, int32_t index, int32_t name) {
+    return kinoko_sq_set_native_name(vm, index, (const char *)(intptr_t)name);
 }
 
 // Address range: 0x48c620 - 0x48c68f
