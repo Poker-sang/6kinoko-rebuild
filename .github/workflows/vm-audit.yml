@@ -14,117 +14,22 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.ref_name }}
-      - name: Apply checked source migration
+          fetch-depth: 0
+      - name: Apply the reviewed source edits
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('src/decompiled/6kinoko_rebuilt.c')
-          raw=p.read_bytes()
-          newline='\r\n' if b'\r\n' in raw else '\n'
-          bom=b'\xef\xbb\xbf' if raw.startswith(b'\xef\xbb\xbf') else b''
-          s=raw.decode('utf-8-sig').replace('\r\n','\n')
-          original_lines=s.count('\n')
-          def body(name, code):
-              global s
-              pattern=r'(?m)^(?:static\s+)?(?:__declspec\([^\n]*?\)\s+)?(?:int32_t|void)\s+'+re.escape(name)+r'\([^;]*?\)\s*\{'
-              matches=list(re.finditer(pattern,s))
-              assert len(matches)==1,(name,len(matches))
-              m=matches[0]
-              end=s.index('\n}',m.end())+2
-              s=s[:m.end()]+'\n'+code+'\n}'+s[end:]
-          needle='static __declspec(thread) int32_t retdec_explicit_vm;'
-          assert s.count(needle)==1
-          s=s.replace(needle,needle+'''
-          static int32_t retdec_exchange_source_receiver(int32_t vm) {
-              int32_t previous = retdec_explicit_vm;
-              retdec_explicit_vm = vm;
-              return previous;
-          }
-          ''')
-          s='#include "kinoko/squirrel_source_runtime.h"\n'+s
-          body('function_48a170','''    kinoko_sq_set_context_exchange(retdec_exchange_source_receiver);
-              int32_t vm = kinoko_sq_open(a1);
-              retdec_active_vm = vm;
-              retdec_primary_shared_state = vm ? *(int32_t *)(intptr_t)(vm + 140) : 0;
-              return vm;''')
-          body('function_491a50_this','    return kinoko_sq_construct_vm(this_ptr, shared_state);')
-          body('function_48ace0','    return kinoko_sq_call(a1, a2, a3, a4);')
-          body('function_497680_this','    return kinoko_sq_call_object(this_ptr, object_ptr, a3, a4, a5, a6);')
-          body('retdec_execute_call_native','    return kinoko_sq_call_native(vm, native_closure, nargs, stackbase, retval_ptr, suspend_ptr);')
-          body('retdec_execute_clean_vm','    return kinoko_sq_execute(retdec_stack_vm(), closure_slot, target, nargs, stackbase, outres, raiseerror, resume);')
-          needle='    int32_t stackbase, int32_t outres, int32_t raiseerror);'
-          assert s.count(needle)==1
-          s=s.replace(needle,'    int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume);')
-          body('function_4917b0_this','    return kinoko_sq_pop(this_ptr, count);')
-          body('function_491880_this','    return kinoko_sq_get_up(this_ptr, index);')
-          body('function_4918a0_this','    return kinoko_sq_get_at(this_ptr, index);')
-          body('retdec_gc_mark_value','    kinoko_sq_mark_value(value, chain_head);')
-          body('retdec_gc_finalize_collectable','    kinoko_sq_finalize_object(object_ptr, object_type);')
-          body('function_49a520_this','    return shared_state && vm ? kinoko_sq_collect(shared_state, vm) : 0;')
-          # Recovered nodes have no RTTI. Rule out every legacy vtable before
-          # classifying new source nodes, including source native closures.
-          m=re.search(r'(?m)^int32_t retdec_gc_object_type\(int32_t object_ptr\) \{',s)
-          assert m
-          end=s.index('\n}',m.end())
-          part=s[m.start():end]
-          assert part.endswith('    return 0;')
-          part=part[:-len('    return 0;')]+'    return kinoko_sq_source_object_type(object_ptr);'
-          s=s[:m.start()]+part+s[end:]
-          for table,name in {'g66':'closure','g67':'nativeclosure','g68':'userdata','g69':'array','g72':'generator','g73':'vm','g74':'table','g75':'instance','g76':'class'}.items():
-              pattern=r'(?m)^struct \w+ '+table+r' = \{.*?\n\};'
-              matches=list(re.finditer(pattern,s,re.S)); assert len(matches)==1,table
-              m=matches[0]; text=m.group()
-              text,n=re.subn(r'\.e2 = [^,\n]+', '.e2 = (int32_t (*)(int32_t))kinoko_sq_'+name+'_mark',text); assert n==1
-              text,n=re.subn(r'\.e3 = [^,\n]+', '.e3 = (int32_t (*)(void))kinoko_sq_'+name+'_finalize',text); assert n==1
-              s=s[:m.start()]+text+s[m.end():]
-          # Remove the private opcode helpers now used exclusively by the
-          # deleted C dispatch loop. Assert no outside references survive.
-          pattern=r'(?m)^static (?:int32_t|void) (retdec_clean_vm_\w+)\([^;]*?\)\s*\{'
-          ranges=[]; names=[]
-          for m in re.finditer(pattern,s):
-              ranges.append((m.start(),s.index('\n}',m.end())+2)); names.append(m.group(1))
-          for start,end in reversed(ranges): s=s[:start]+s[end:]
-          for name in names: assert not re.search(r'\b'+name+r'\b',s),name
-          p.write_bytes(bom+s.replace('\n',newline).encode('utf-8'))
-          print('Removed',original_lines-s.count('\n'),'recovered C lines')
-          # Lifecycle functions are independent of the legacy thread adapters.
-          p=Path('src/squirrel/squirrel_thread.cpp'); s=p.read_text()
-          start=s.index('extern "C" int32_t kinoko_sq_source_vm_vtable')
-          end=s.index('// 490C40',start)
-          s=s[:start]+s[end:]
-          s=s.replace('std::atomic<int32_t> source_vm_vtable{0};\n','')
-          s=s.replace('#include <atomic>\n','').replace('#include <cstring>\n','')
-          p.write_text(s)
-          p=Path('third_party/squirrel-2.2.2/squirrel/sqvm.cpp')
-          raw=p.read_bytes(); nl='\r\n' if b'\r\n' in raw else '\n'; s=raw.decode().replace('\r\n','\n')
-          needle='#include "sqclass.h"'; assert s.count(needle)==1
-          s=s.replace(needle,needle+'\n\n// Preserve the explicit receiver for recovered game callbacks.\nSQInteger kinoko_squirrel_invoke_native(HSQUIRRELVM vm, SQFUNCTION function);')
-          needle='SQInteger ret = (nclosure->_function)(this);'; assert s.count(needle)==1
-          s=s.replace(needle,'SQInteger ret = kinoko_squirrel_invoke_native(this, nclosure->_function);')
-          p.write_bytes(s.replace('\n',nl).encode())
-          p=Path('CMakeLists.txt'); s=p.read_text()
-          s=s.replace('    src/squirrel/squirrel_vm_bridge.cpp\n','    src/squirrel/squirrel_source_runtime.cpp\n    src/squirrel/squirrel_source_gc.cpp\n')
-          s=s.replace('# Upstream core sources stay unmodified; adaptation lives in src/squirrel/.','# Runtime uses the supplied core; CallNative has one receiver-scope hook.\n# All ABI and ownership adapters live in src/squirrel/.')
-          s,n=re.subn(r'option\(KINOKO_ENABLE_SQUIRREL_CPP_VM\n.*?\n    OFF\)\n','',s,flags=re.S); assert n==1
-          s,n=re.subn(r'if\(KINOKO_ENABLE_SQUIRREL_CPP_VM\)\n.*?\nendif\(\)\n','',s,flags=re.S); assert n==1
-          p.write_text(s)
-          # A tested source migration has no environment-controlled fallback.
-          Path('src/squirrel/squirrel_vm_bridge.cpp').unlink()
-          Path('include/kinoko/squirrel_vm_bridge.h').unlink()
-          p=Path('src/decompiled/6kinoko_rebuilt.c')
-          raw=p.read_bytes().replace(b'#include "kinoko/squirrel_vm_bridge.h"\r\n',b'').replace(b'#include "kinoko/squirrel_vm_bridge.h"\n',b'')
-          p.write_bytes(raw)
-          p=Path('.github/workflows/windows-x86.yml'); s=p.read_text()
-          s=s.replace("branches: [master, 'refactor/squirrel222-native-cpp-20260918']",'branches: [master]')
-          p.write_text(s)
+          import subprocess, textwrap
+          workflow = subprocess.check_output(['git','show','81956bf107bcbef476c8848a0c571cc9c2c96193:.github/workflows/vm-audit.yml'], text=True)
+          script = workflow.split("python3 - <<'PY'\n",1)[1].split('\n          PY',1)[0]
+          exec(compile(textwrap.dedent(script), 'checked-source-migration', 'exec'))
           PY
+          git restore .github/workflows/windows-x86.yml
           git diff --check
           git diff --stat
-      - name: Commit source migration on this branch only
+      - name: Commit source changes only
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src include CMakeLists.txt third_party/squirrel-2.2.2/squirrel/sqvm.cpp .github/workflows/windows-x86.yml
+          git add src include CMakeLists.txt third_party/squirrel-2.2.2/squirrel/sqvm.cpp
           git commit -m 'refactor: make vendored Squirrel the VM execution and garbage-collection backend'
           git push origin HEAD:refs/heads/refactor/squirrel222-native-cpp-20260918
