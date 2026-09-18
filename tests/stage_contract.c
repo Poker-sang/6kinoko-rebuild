@@ -1687,9 +1687,10 @@ static int test_standard_error_handler(int32_t vm, int32_t *root) {
     retdec_squirrel_assign(old_handler, (int32_t *)(intptr_t)(vm + 72));
     function_48b8b0(vm, PTR(capture_aux_output));
     function_4c5c80(vm);
-    CHECK(*(int32_t *)(intptr_t)(shared + 160) == PTR(function_4c5c40));
+    /* Source handlers have source addresses, not reconstructed function IDs. */
+    CHECK(*(int32_t *)(intptr_t)(shared + 160) != 0);
     CHECK(*(int32_t *)(intptr_t)(vm + 72) == 0x08000200);
-    CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm+76)+60) == PTR(function_4c5bc0));
+    CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(vm+76)+60) != 0);
     CHECK(execute_source(vm, root+2,
         "function AuxOuter() {\n"
         " local outerValue=31;\n"
@@ -1721,7 +1722,11 @@ static int test_standard_error_handler(int32_t vm, int32_t *root) {
     CHECK(strstr(aux_output, "AN ERROR HAS OCCURED [unknown]"));
     CHECK(function_48aa20(vm) == top);
     aux_output[0] = 0;
-    function_4c5c40(vm, PTR("bad token"), PTR("example.nut"), 4, 7);
+    {
+        typedef void (__cdecl *compiler_handler)(int32_t, const char*, const char*, int32_t, int32_t);
+        compiler_handler handler = (compiler_handler)(intptr_t)*(int32_t *)(intptr_t)(shared + 160);
+        handler(vm, "bad token", "example.nut", 4, 7);
+    }
     CHECK(strstr(aux_output, "example.nut line = (4) column = (7) : error bad token"));
     function_48b8b0(vm, old_print);
     function_48afa0(vm, old_compiler);
