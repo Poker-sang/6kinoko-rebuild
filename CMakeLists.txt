@@ -154,6 +154,8 @@ endif()
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
+    src/squirrel/sqrat_object_bridge.cpp
+    src/squirrel/native_property_bridge.cpp
     src/squirrel/squirrel_native_arguments.cpp
     src/reconstructed/squirrel_object.cpp
     src/reconstructed/native_instance.cpp
@@ -358,6 +360,15 @@ target_link_libraries(kinoko_squirrel_host_object_contract PRIVATE kinoko_squirr
 add_test(NAME squirrel_host_object_contract COMMAND kinoko_squirrel_host_object_contract)
 set_tests_properties(squirrel_host_object_contract PROPERTIES TIMEOUT 60)
 
+foreach(contract IN ITEMS sqrat_object native_property)
+    add_executable(kinoko_${contract}_contract tests/${contract}_contract.cpp)
+    target_include_directories(kinoko_${contract}_contract PRIVATE include
+        "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+    target_link_libraries(kinoko_${contract}_contract PRIVATE kinoko_squirrel_cpp_vm)
+    add_test(NAME ${contract}_contract COMMAND kinoko_${contract}_contract)
+    set_tests_properties(${contract}_contract PROPERTIES TIMEOUT 60)
+endforeach()
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
@@ -368,6 +379,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
     kinoko_squirrel_host_object_contract
+    kinoko_sqrat_object_contract kinoko_native_property_contract
 )
 
 option(KINOKO_BUILD_ORIGINAL_ORACLE "Build offline original-PE VM comparison tool" OFF)
