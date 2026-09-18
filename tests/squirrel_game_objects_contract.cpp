@@ -115,7 +115,17 @@ void callbacks(HSQUIRRELVM vm) {
     retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Missing");
     require(load<HSQOBJECT>(script.data()+offset+4)._type==OT_NULL && load<HSQOBJECT>(script.data()+offset+12)._type==OT_NULL,"missing callback clears old pairs");
     require(!has_extra_handle(environment) && !has_extra_handle(function),"missing lookup releases callback references");
-    destroy(table); destroy(closure);
+    for (auto* owner : {&table,&closure}) {
+        auto value=owner->get();
+        require(sq_release(vm,&value)==SQTrue,"callback external handles fully released");
+        owner->write(empty());
+    }
+    // 2.2.2's _OP_RETURN stores its result in SQVM::temp_reg, an INTERNAL
+    // reference that outlives sq_call. Overwrite it by executing a real return,
+    // not by clearing VM internals or collecting away an external-ref leak.
+    weak_closure.push(); sq_getweakrefval(vm,-1);
+    require(sq_gettype(vm,-1)==OT_CLOSURE,"source return register retains closure"); sq_pop(vm,2);
+    evaluate(vm,"return null;");
     for (auto* weak : {&weak_table,&weak_closure}) {
         weak->push(); sq_getweakrefval(vm,-1);
         require(sq_gettype(vm,-1)==OT_NULL,"callback replacement leaves no leaked external handle"); sq_pop(vm,2);
