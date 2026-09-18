@@ -1,6 +1,9 @@
 #include "kinoko/squirrel_vm_lifecycle.h"
 #include "kinoko/squirrel_source_runtime.h"
+#include "kinoko/squirrel_legacy_api.h"
 #include <squirrel.h>
+#include <vector>
+#include <limits>
 
 #include <cstdint>
 #include <cstdio>
@@ -119,6 +122,116 @@ void child_lifecycle(HSQUIRRELVM parent) {
         require(sq_gettop(parent) == original_top, "child finalization leaked parent stack");
     }
 }
+
+struct Bytecode {
+    std::vector<unsigned char> bytes;
+    size_t cursor = 0;
+};
+SQInteger write_bytecode(SQUserPointer context, SQUserPointer data, SQInteger size) {
+    if (size < 0) return -1;
+    auto& output = *static_cast<Bytecode*>(context);
+    const auto* begin = static_cast<const unsigned char*>(data);
+    try { output.bytes.insert(output.bytes.end(), begin, begin + size); }
+    catch (...) { return -1; }
+    return size;
+}
+SQInteger read_bytecode(SQUserPointer context, SQUserPointer data, SQInteger size) {
+    auto& input = *static_cast<Bytecode*>(context);
+    if (size < 0 || static_cast<size_t>(size) > input.bytes.size() - input.cursor) return -1;
+    std::memcpy(data, input.bytes.data() + input.cursor, size);
+    input.cursor += size;
+    return size;
+}
+void legacy_api_contracts(HSQUIRRELVM vm) {
+    StackScope stack(vm);
+    const auto machine = address(vm);
+    const auto initial_top = sq_gettop(vm);
+
+    int native_object = 42;
+    function_48a5c0(machine, address(&native_object));
+    require(function_48a6f0(machine, -1) == OT_USERPOINTER, "userpointer must not be encoded as an integer");
+    int32_t restored = 0;
+    require(SQ_SUCCEEDED(function_48a9e0(machine, -1, &restored)) && restored == address(&native_object), "userpointer round trip");
+    require(SQ_FAILED(function_48a7d0(machine, -1, &restored)), "userpointer is not an integer");
+    function_48aa30(machine, 1);
+    function_48ac70(machine);
+
+    function_48a480(machine, address("externally-retained"), -1);
+    HSQOBJECT retained;
+    require(SQ_SUCCEEDED(function_48ab40(machine, -1, reinterpret_cast<int32_t*>(&retained))), "get retained object");
+    function_48a400(machine, address(&retained));
+    function_48aa30(machine, 1);
+    function_48b180(machine, 0, 0);
+    function_48ab90(machine, retained._type, address(retained._unVal.pRefCounted));
+    const SQChar* string = nullptr;
+    require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::strcmp(string, "externally-retained") == 0, "external RefTable retains popped object");
+    function_48a430(machine, address(&retained));
+    function_48abe0(address(&retained));
+    function_48aa30(machine, 1);
+
+    auto* child = machine_at(function_48a230(machine, 32));
+    require(child != nullptr, "legacy child creation");
+    // Distinct source/destination stack contents expose using the wrong VM
+    // when translating a negative source index in sq_move.
+    sq_pushinteger(child, 73);
+    sq_pushinteger(vm, 19);
+    function_48b870(machine, address(child), -1);
+    SQInteger moved = 0;
+    require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &moved)) && moved == 73, "sq_move negative index uses source VM");
+    require(sq_gettop(child) == 1, "sq_move does not pop the source");
+    function_48aa30(machine, 3);
+
+    Bytecode code;
+    const char* source = "return 6 * 7;";
+    require(SQ_SUCCEEDED(function_48d0b0(machine, address(source), static_cast<int32_t>(std::strlen(source)), reinterpret_cast<int32_t*>(const_cast<char*>("legacy-bytecode")), 0)), "legacy compilebuffer");
+    require(SQ_SUCCEEDED(function_48afc0(machine, address(reinterpret_cast<const void*>(write_bytecode)), address(&code))), "source closure serialization");
+    function_48aa30(machine, 1);
+    require(SQ_SUCCEEDED(function_48b050(machine, address(reinterpret_cast<const void*>(read_bytecode)), reinterpret_cast<int32_t*>(&code))), "source closure deserialization");
+    function_48a670(machine);
+    require(SQ_SUCCEEDED(function_48ace0(machine, 1, 1, 0)), "deserialized closure call");
+    require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &moved)) && moved == 42, "deserialized result");
+    sq_settop(vm, initial_top);
+
+    int type_tag = 0;
+    require(SQ_SUCCEEDED(function_48c350(machine, 0)), "base class creation");
+    require(SQ_SUCCEEDED(function_48c780(machine, -1, address(&type_tag))), "base class tag");
+    require(SQ_SUCCEEDED(function_48c350(machine, 1)), "derived class creation");
+    require(SQ_SUCCEEDED(function_48b490(machine, -1)), "instance creation without constructor");
+    require(SQ_SUCCEEDED(function_48c840(machine, -1, address(&native_object))), "instance native object");
+    require(SQ_SUCCEEDED(function_48c890(machine, -1, &restored, address(&type_tag))) && restored == address(&native_object), "type-tag lookup walks actual class base links");
+    sq_settop(vm, initial_top);
+
+    const std::string large(8192, 'x');
+    require(SQ_SUCCEEDED(function_499a20(machine, "%s:%d", large.c_str(), 17)), "formatted error");
+    function_48acc0(machine);
+    require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::string(string) == large + ":17", "formatted error must not truncate or overrun a fixed buffer");
+    function_48aa30(machine, 1);
+    function_48ac70(machine);
+    require(sq_gettop(vm) == initial_top, "legacy API stack balance");
+}
+void standard_library_contracts(HSQUIRRELVM vm) {
+    const auto initial_top = sq_gettop(vm);
+    sq_pushroottable(vm);
+    require(SQ_SUCCEEDED(function_4c7c90(address(vm))), "source io registration");
+    require(SQ_SUCCEEDED(function_4c73a0(address(vm))), "source blob registration");
+    require(SQ_SUCCEEDED(function_4c6c20(address(vm))), "source math registration");
+    require(SQ_SUCCEEDED(function_4c6670(address(vm))), "source string/regexp registration");
+    sq_pop(vm, 1);
+    require(evaluate(vm, "source-standard-library", R"SQ(
+        local storage = blob(0);
+        storage.writen(12345, 'i');
+        storage.seek(0);
+        local value = storage.readn('i');
+        local expression = regexp("[a-z]+[0-9]+");
+        if (!expression.match("kinoko222")) return -1;
+        if (format("%s-%d", "source", 222) != "source-222") return -2;
+        if (strip("  source \t") != "source") return -3;
+        if (split("a,b,c", ",").len() != 3) return -4;
+        return value + abs(-5);
+    )SQ") == 12350, "source standard libraries preserve script results");
+    require(sq_gettop(vm) == initial_top, "stdlib registration stack balance");
+}
+
 void contracts() {
     Machine machine;
     const auto vm = machine.get();
@@ -126,6 +239,8 @@ void contracts() {
     register_native(vm, "native_twice", native_twice);
     register_native(vm, "native_failure", native_failure);
     child_lifecycle(vm);
+    legacy_api_contracts(vm);
+    standard_library_contracts(vm);
 
     require(evaluate(vm, "arithmetic", R"SQ(
         local total = 0;

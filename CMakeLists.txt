@@ -145,6 +145,7 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_source_runtime.cpp
     src/squirrel/squirrel_source_gc.cpp
     src/squirrel/squirrel_compile_bridge.cpp
@@ -152,9 +153,15 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_operations.cpp
     src/squirrel/squirrel_thread.cpp
     src/squirrel/squirrel_csv.cpp
-    src/squirrel/squirrel_gc_bridge.cpp
     src/squirrel/squirrel_generator_bridge.cpp
     src/squirrel/squirrel_array_bridge.cpp
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdaux.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdblob.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdio.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdmath.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdrex.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdstream.cpp"
+    "${KINOKO_SQUIRREL2_ROOT}/sqstdlib/sqstdstring.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqapi.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqbaselib.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqclass.cpp"

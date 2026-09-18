@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/squirrel_vm_lifecycle.h"
+#include "kinoko/squirrel_source_runtime.h"
 
 #include <cstddef>
 
@@ -8,10 +9,6 @@
 #include "sqclosure.h"
 #include "sqfuncproto.h"
 
-extern "C" {
-int32_t kinoko_call_game_vm(int32_t vm, int32_t nargs, int32_t retval, int32_t raiseerror);
-int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror);
-}
 namespace {
 SQVM *machine(int32_t p) {
     return reinterpret_cast<SQVM *>(static_cast<uintptr_t>(static_cast<uint32_t>(p)));
@@ -37,18 +34,7 @@ extern "C" int32_t kinoko_sq_suspend(int32_t vm) {
 // 48ADB0 / sq_wakeupvm: source ownership and API ordering, current interpreter.
 extern "C" int32_t kinoko_sq_wakeup(int32_t vm, int32_t wakeupret,
                                       int32_t retval, int32_t raiseerror) {
-    auto *v = machine(vm);
-    if (!v->_suspended)
-        return sq_throwerror(v, _SC("cannot resume a vm that is not running any code"));
-    SQObjectPtr result;
-    auto &target = v->GetAt(v->_stackbase + v->_suspended_target);
-    if (wakeupret) {
-        target = v->GetUp(-1);
-        v->Pop();
-    } else target.Null();
-    if (!kinoko_resume_game_vm(vm, address(&result), raiseerror)) return SQ_ERROR;
-    if (retval) v->Push(result);
-    return SQ_OK;
+    return sq_wakeupvm(machine(vm), wakeupret != 0, retval != 0, raiseerror != 0);
 }
 
 // 4A2C80 / thread_call. A local owner keeps the child alive across stack moves.
@@ -60,7 +46,7 @@ extern "C" int32_t kinoko_sq_thread_call(int32_t vm) {
     const auto nargs = sq_gettop(v);
     thread->Push(thread->_roottable);
     for (SQInteger i = 2; i <= nargs; ++i) sq_move(thread, v, i);
-    if (SQ_SUCCEEDED(kinoko_call_game_vm(address(thread), nargs, SQTrue, SQFalse))) {
+    if (SQ_SUCCEEDED(kinoko_sq_call(address(thread), nargs, SQTrue, SQFalse))) {
         sq_move(v, thread, -1);
         sq_pop(thread, 1);
         return 1;

@@ -54,7 +54,7 @@ extern "C" int32_t retdec_squirrel_compile_source(const char *source,
     return ok ? 1 : 0;
 }
 
-extern "C" int32_t function_48bb30(int32_t shared, int32_t proto);
+
 namespace {
 static_assert(offsetof(SQSharedState, _compilererrorhandler) == 160);
 int32_t source_table_vtable;
@@ -78,9 +78,7 @@ SQInteger read_source(SQUserPointer context) {
 }
 extern "C" int32_t kinoko_sq_source_table_vtable(void) { return source_table_vtable; }
 
-// 4A15B0: compile in the current VM, preserving its constants, debug setting,
-// error callback and last-error object. Source-created enum/literal tables use
-// their real vtable; the mixed collector recognizes that table implementation.
+// Compile in the current VM, preserving constants, debug info and errors.
 extern "C" int32_t kinoko_sq_compile_proto(int32_t vm, int32_t reader, int32_t context,
     const char *name, int32_t out[2], int32_t raiseerror, int32_t lineinfo) {
     auto *v = pointer<SQVM>(vm);
@@ -92,19 +90,13 @@ extern "C" int32_t kinoko_sq_compile_proto(int32_t vm, int32_t reader, int32_t c
 extern "C" int32_t kinoko_sq_compile_reader(int32_t vm, int32_t reader, int32_t context,
     const char *name, int32_t raiseerror) {
     auto *v = pointer<SQVM>(vm);
-    SQObjectPtr proto;
-    if (!kinoko_sq_compile_proto(vm, reader, context, name,
-        reinterpret_cast<int32_t *>(&proto), raiseerror, _ss(v)->_debuginfo)) return SQ_ERROR;
-    // Preserve the reconstructed closure vtable/current Execute backend.
-    SQObjectPtr closure(pointer<SQClosure>(function_48bb30(address(_ss(v)),address(_funcproto(proto)))));
-    v->Push(closure);
-    return SQ_OK;
+    recognize_compiler_tables(v);
+    return sq_compile(v, reinterpret_cast<SQLEXREADFUNC>(pointer<void>(reader)),
+                      pointer<void>(context), name, raiseerror != 0);
 }
 extern "C" int32_t kinoko_sq_compile_buffer(int32_t vm, const char *text, int32_t length,
     const char *name, int32_t raiseerror) {
-    SourceBuffer buffer{text, 0, length};
-    return kinoko_sq_compile_reader(vm, address(reinterpret_cast<const void *>(&read_source)),
-        address(&buffer), name, raiseerror);
+    return sq_compilebuffer(pointer<SQVM>(vm), text, length, name, raiseerror != 0);
 }
 // 4A1B90 returns -1 on compile failure, +1 when the new closure is on the stack.
 extern "C" int32_t kinoko_sq_compilestring(int32_t vm) {
