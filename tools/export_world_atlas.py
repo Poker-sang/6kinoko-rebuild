@@ -72,6 +72,32 @@ def read_act(data):
     return result
 
 
+def read_mcd(data):
+    r = Reader(data)
+    assert r.read(4) == b'2DMC' and r.u32() == 1
+    r.read(r.u32())
+    count, size = r.unpack('II')
+    chips = {}
+    for _ in range(count):
+        record = r.read(size)
+        chip = struct.unpack_from('<IIhhhh', record)
+        chips[chip[0]] = chip
+        r.u32()
+    textures = {}
+    for _ in range(r.u32()):
+        texture_id = r.u32()
+        textures[texture_id] = r.string()
+    assert r.pos == len(data)
+    return chips, textures
+
+
+def read_cv2(data):
+    depth, width, height, stride, packed = struct.unpack_from('<BIIII', data)
+    assert depth in (24, 32) and packed == 0
+    assert len(data) == 17 + stride * height * 4
+    return Image.frombytes('RGBA', (width, height), data[17:], 'raw', 'BGRA', stride * 4)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--reference', type=Path, required=True)
@@ -90,7 +116,36 @@ def main():
 
     act = read_act(asset('data/worldmap/worldmap.act'))
     (args.output / 'worldmap.json').write_text(json.dumps(act, ensure_ascii=False, indent=2), encoding='utf-8')
-    print(json.dumps(act, ensure_ascii=True, indent=2))
+    chips, textures = read_mcd(asset('data/worldmap/worldmap.mcd'))
+    layer, = [layer for layer in act['layers'] if layer['stName'] == 'bg_a']
+    assert len(layer['keys']) == 1 and layer['script']['raw'].strip('\0') == ''
+    records = layer['keys'][0]['records']
+    assert len(records) == 11
+    size = (act['properties']['screenWidth'], act['properties']['screenHeight'])
+    atlas = Image.new('RGBA', size)
+    manifest = {'size': size, 'layer': 'bg_a', 'maps': [],
+                'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                'animation': 'Static original base layer; animated overlays intentionally excluded.'}
+    for record in records:
+        chip_id, x, y = struct.unpack('<Iii', bytes.fromhex(record))
+        _, texture_id, left, top, width, height = chips[chip_id]
+        name = textures[texture_id].replace('\\', '/').lower() + '.cv2'
+        data = asset(name)
+        tile = read_cv2(data).crop((left, top, left + width, top + height))
+        assert tile.size == (544, 384)
+        assert 0 <= x <= size[0] - width and 0 <= y <= size[1] - height
+        tile.save(args.output / (Path(name).stem + '.png'))
+        atlas.alpha_composite(tile, (x, y))
+        manifest['maps'].append({'asset': name, 'chip_id': chip_id, 'x': x, 'y': y,
+                                 'width': width, 'height': height,
+                                 'decoded_sha256': hashlib.sha256(data).hexdigest()})
+    atlas.save(args.output / 'world-atlas.png')
+    atlas.resize((size[0]*2, size[1]*2), Image.Resampling.NEAREST).save(args.output / 'world-atlas-2x.png')
+    preview = Image.new('RGBA', size, '#20242b')
+    preview.alpha_composite(atlas)
+    preview.convert('RGB').save(args.output / 'world-atlas-preview.png')
+    (args.output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+    print(json.dumps(manifest, indent=2))
 
 
 if __name__ == '__main__':
