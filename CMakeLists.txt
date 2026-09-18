@@ -41,8 +41,6 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/script_callbacks.cpp
-    src/reconstructed/squirrel_object.cpp
-    src/reconstructed/native_instance.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp
@@ -155,6 +153,10 @@ endif()
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
+    src/squirrel/squirrel_host_compat.cpp
+    src/squirrel/squirrel_native_arguments.cpp
+    src/reconstructed/squirrel_object.cpp
+    src/reconstructed/native_instance.cpp
     src/squirrel/squirrel_source_runtime.cpp
     src/squirrel/squirrel_source_gc.cpp
     src/squirrel/squirrel_compile_bridge.cpp
@@ -349,6 +351,13 @@ target_include_directories(kinoko_squirrel_refcount_contract PRIVATE include
 target_link_libraries(kinoko_squirrel_refcount_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
 add_test(NAME squirrel_refcount_contract COMMAND kinoko_squirrel_refcount_contract)
 
+add_executable(kinoko_squirrel_host_object_contract tests/squirrel_host_object_contract.cpp)
+target_include_directories(kinoko_squirrel_host_object_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_squirrel_host_object_contract PRIVATE kinoko_squirrel_cpp_vm)
+add_test(NAME squirrel_host_object_contract COMMAND kinoko_squirrel_host_object_contract)
+set_tests_properties(squirrel_host_object_contract PROPERTIES TIMEOUT 60)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
@@ -358,6 +367,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_squirrel_source_vm_contract
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
+    kinoko_squirrel_host_object_contract
 )
 
 option(KINOKO_BUILD_ORIGINAL_ORACLE "Build offline original-PE VM comparison tool" OFF)
