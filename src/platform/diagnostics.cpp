@@ -1,4 +1,5 @@
 #include "kinoko/diagnostics.h"
+#include "kinoko/diagnostics_filter.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -56,41 +57,17 @@ bool starts_with(const char *message, const char *prefix) {
 }
 
 bool selected_message(const char *message) {
-    // Normal diagnostics retain failures and scene transitions. Detailed VM
-    // ownership traces are opt-in: compound actors otherwise emit megabytes/frame.
-    if (!verbose_trace) {
-        const char *prefixes[] = {"stagevm:failure", "stagevm:compile-error", "seh:",
-            "veh:", "actor:update-failed", "game:", "scene:", "map:path", "savedata:"};
-        for (const char *prefix : prefixes)
-            if (starts_with(message, prefix)) return true;
-        return false;
-    }
+    using kinoko::diagnostics::TraceFilter;
 #if defined(RETDEC_TRACE_ERRORS_ONLY)
-    return starts_with(message, "stagevm:failure") ||
-        starts_with(message, "actor:update-failed") ||
-        starts_with(message, "seh:") || starts_with(message, "veh:");
+    constexpr auto filter = TraceFilter::errors_only;
 #elif defined(RETDEC_TRACE_STAR_FILTER)
-    const char *prefixes[] = {"actor:star", "actor:invalid", "actor:update-failed",
-        "stagevm:failure", "map:path", "veh:", "seh:"};
+    constexpr auto filter = TraceFilter::star;
 #elif defined(RETDEC_TRACE_FILTER)
-    const char *prefixes[] = {"seh:", "veh:", "4011b0:", "4017b0:",
-        "render-target:", "map:", "mcd:", "draw:", "act:", "actor:",
-        "actor-create:", "actor-update:", "actor-manager:", "native-471df0:",
-        "native-userdata:", "c2d:", "4525d0:", "40d790:", "408b30:",
-        "411d80:", "40b520:", "4701e0:", "470220:", "470290:", "470300:",
-        "470320:", "470360:", "470980:", "game:", "scene:", "stagevm:",
-        "savedata:", "prepcall-beginstage-", "call-initstage-", "bgm:",
-        "audio:", "input:"};
+    constexpr auto filter = TraceFilter::graphics_audio_input;
 #else
-    (void)message;
-    return true;
+    constexpr auto filter = TraceFilter::all;
 #endif
-#if !defined(RETDEC_TRACE_ERRORS_ONLY) && (defined(RETDEC_TRACE_STAR_FILTER) || defined(RETDEC_TRACE_FILTER))
-    for (const char *prefix : prefixes)
-        if (starts_with(message, prefix))
-            return true;
-    return false;
-#endif
+    return message && kinoko::diagnostics::accepts(message, verbose_trace, filter);
 }
 
 void flush_locked() {

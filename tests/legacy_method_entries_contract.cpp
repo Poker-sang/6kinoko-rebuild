@@ -1,0 +1,196 @@
+#include "kinoko/legacy_method_entries.h"
+#include "kinoko/legacy_abi.h"
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <initializer_list>
+
+namespace {
+constexpr int32_t return_value = 0x13579bdf;
+std::array<uint32_t, 12> observed{};
+std::size_t observed_count = 0;
+int observed_entry = 0;
+uint32_t bits(float value) { uint32_t result; std::memcpy(&result, &value, 4); return result; }
+uint32_t bits(int32_t value) { return static_cast<uint32_t>(value); }
+uint32_t bits(uint32_t value) { return value; }
+uint32_t bits(char value) { return static_cast<uint32_t>(static_cast<int32_t>(value)); }
+uint32_t bits(unsigned char value) { return value; }
+int32_t record(int entry, std::initializer_list<uint32_t> arguments) {
+    observed_entry = entry;
+    observed_count = arguments.size();
+    std::size_t index = 0;
+    for (auto value : arguments) observed[index++] = value;
+    return return_value;
+}
+bool check(int entry, int32_t result, std::initializer_list<uint32_t> expected) {
+    if (observed_entry != entry || result != return_value || observed_count != expected.size()) return false;
+    std::size_t index = 0;
+    for (auto value : expected) if (observed[index++] != value) return false;
+    return true;
+}
+}
+
+// Stub only the original C bodies. Calls below execute the real C++ entry
+// adapters via legacy_abi.cpp's __thiscall invocations (no inline assembly).
+
+extern "C" int32_t retdec_destroy_cact_with_flags(int32_t receiver, unsigned char flags) {
+    return record(1, {bits(receiver), bits(flags)});
+}
+
+extern "C" int32_t retdec_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer) {
+    return record(2, {bits(receiver), bits(layer)});
+}
+
+extern "C" int32_t retdec_c2dlayout_update_faithful_impl(int32_t receiver) {
+    return record(3, {bits(receiver)});
+}
+
+extern "C" int32_t retdec_c2dlayout_draw_impl(int32_t receiver, float x, float y) {
+    return record(4, {bits(receiver), bits(x), bits(y)});
+}
+
+extern "C" int32_t function_43c860_this(int32_t receiver, int32_t source, int32_t mode) {
+    return record(5, {bits(receiver), bits(source), bits(mode)});
+}
+
+extern "C" int32_t retdec_begin_stage_this(int32_t receiver, int32_t stage) {
+    return record(6, {bits(receiver), bits(stage)});
+}
+
+extern "C" int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output) {
+    return record(7, {bits(receiver), bits(vm), bits(output)});
+}
+
+extern "C" int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width,
+    int32_t height, int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha) {
+    return record(8, {bits(receiver), bits(x), bits(y), bits(width), bits(height), bits(resource),
+            bits(source_x), bits(source_y), bits(blend), bits(alpha)});
+}
+
+extern "C" int32_t function_457a10_impl(int32_t receiver, int32_t argument) {
+    return record(9, {bits(receiver), bits(argument)});
+}
+
+extern "C" int32_t function_45d970_this(int32_t receiver, char flags) {
+    return record(10, {bits(receiver), bits(flags)});
+}
+
+extern "C" int32_t function_45dbd0_this(int32_t receiver, float dx, float dy) {
+    return record(11, {bits(receiver), bits(dx), bits(dy)});
+}
+
+extern "C" int32_t function_45eb00_this(int32_t receiver) {
+    return record(12, {bits(receiver)});
+}
+
+extern "C" int32_t function_469620_this(int32_t receiver, int32_t argument) {
+    return record(14, {bits(receiver), bits(argument)});
+}
+
+extern "C" int32_t function_46a6f0_this(int32_t receiver, uint32_t handle) {
+    return record(15, {bits(receiver), bits(handle)});
+}
+
+extern "C" int32_t function_46aa60_this(int32_t receiver) {
+    return record(16, {bits(receiver)});
+}
+
+extern "C" int32_t function_46ab10_this(int32_t receiver, int32_t output) {
+    return record(17, {bits(receiver), bits(output)});
+}
+
+int main() {
+    alignas(4) std::array<unsigned char, 16> object{};
+    const int32_t type = 0x2468ace;
+    // Exercise the source getter on an unaligned recovered view as well.
+    std::memcpy(object.data() + 9, &type, 4);
+    void* receiver = object.data() + 1;
+    const uint32_t receiver_bits = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(receiver));
+    for (int iteration = 0; iteration < 10000; ++iteration) {
+        if (!check(1, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_destroy_act),
+            static_cast<int32_t>(bits(static_cast<unsigned char>(0xa5)))), {receiver_bits,
+            bits(static_cast<unsigned char>(0xa5))})) {
+            std::fprintf(stderr, "Entry contract failed: retdec_cact_destructor_bridge\n"); return 1;
+        }
+        if (!check(2, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_layout_set_layer), static_cast<int32_t>(bits(-31))),
+            {receiver_bits, bits(-31)})) {
+            std::fprintf(stderr, "Entry contract failed: function_42bcc0\n"); return 1;
+        }
+        if (!check(3, retdec_call_thiscall0_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_layout_update)), {receiver_bits})) {
+            std::fprintf(stderr, "Entry contract failed: function_42c100\n"); return 1;
+        }
+        if (!check(4, retdec_call_thiscall2_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_layout_draw), static_cast<int32_t>(bits(-3.25f)),
+            static_cast<int32_t>(bits(7.75f))), {receiver_bits, bits(-3.25f), bits(7.75f)})) {
+            std::fprintf(stderr, "Entry contract failed: function_42c300\n"); return 1;
+        }
+        if (!check(5, retdec_call_thiscall2_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_layout3d_assign), static_cast<int32_t>(bits(-31)),
+            static_cast<int32_t>(bits(-14))), {receiver_bits, bits(-31), bits(-14)})) {
+            std::fprintf(stderr, "Entry contract failed: function_43c860\n"); return 1;
+        }
+        if (!check(6, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_begin_stage), static_cast<int32_t>(bits(-31))),
+            {receiver_bits, bits(-31)})) {
+            std::fprintf(stderr, "Entry contract failed: function_450950\n"); return 1;
+        }
+        if (!check(7, retdec_call_thiscall2_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_root_table_construct),
+            static_cast<int32_t>(bits(-31)), static_cast<int32_t>(bits(-14))), {receiver_bits, bits(-31),
+            bits(-14)})) {
+            std::fprintf(stderr, "Entry contract failed: function_450e30\n"); return 1;
+        }
+        if (!check(8, kinoko_call_draw_method(receiver,
+            reinterpret_cast<void*>(&kinoko_method_act_bitblt), (-31), (-14), (3), (20), (37), (54),
+            (71), (88), (7.75f)), {receiver_bits, bits(-31), bits(-14), bits(3), bits(20), bits(37),
+            bits(54), bits(71), bits(88), bits(7.75f)})) {
+            std::fprintf(stderr, "Entry contract failed: function_4514a0\n"); return 1;
+        }
+        if (!check(9, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_update_children), static_cast<int32_t>(bits(-31))),
+            {receiver_bits, bits(-31)})) {
+            std::fprintf(stderr, "Entry contract failed: function_457a10\n"); return 1;
+        }
+        if (!check(10, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_destroy_actor),
+            static_cast<int32_t>(bits(static_cast<char>(0xa5)))), {receiver_bits,
+            bits(static_cast<char>(0xa5))})) {
+            std::fprintf(stderr, "Entry contract failed: function_45d970_bridge\n"); return 1;
+        }
+        if (!check(11, retdec_call_thiscall2_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_actor_move), static_cast<int32_t>(bits(-3.25f)),
+            static_cast<int32_t>(bits(7.75f))), {receiver_bits, bits(-3.25f), bits(7.75f)})) {
+            std::fprintf(stderr, "Entry contract failed: function_45dbd0\n"); return 1;
+        }
+        if (!check(12, retdec_call_thiscall0_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_actor_destroy_state)), {receiver_bits})) {
+            std::fprintf(stderr, "Entry contract failed: function_45eb00\n"); return 1;
+        }
+        if (!check(14, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_render_layer_update),
+            static_cast<int32_t>(bits(-31))), {receiver_bits, bits(-31)})) {
+            std::fprintf(stderr, "Entry contract failed: function_469620\n"); return 1;
+        }
+        if (!check(15, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_actor_manager_remove),
+            static_cast<int32_t>(bits(0x89abcdefu))), {receiver_bits, bits(0x89abcdefu)})) {
+            std::fprintf(stderr, "Entry contract failed: function_46a6f0\n"); return 1;
+        }
+        if (!check(16, retdec_call_thiscall0_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_actor_manager_push)), {receiver_bits})) {
+            std::fprintf(stderr, "Entry contract failed: retdec_actor_manager_vtable_push\n"); return 1;
+        }
+        if (!check(17, retdec_call_thiscall1_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_actor_manager_top), static_cast<int32_t>(bits(-31))),
+            {receiver_bits, bits(-31)})) {
+            std::fprintf(stderr, "Entry contract failed: function_46ab10\n"); return 1;
+        }
+        if (retdec_call_thiscall0_result(receiver,
+            reinterpret_cast<void*>(&kinoko_method_class_type)) != type) return 1;
+    }
+    std::puts("PASS: all migrated x86 entries, receiver, float bits, argument order, result and stack cleanup");
+}
