@@ -1,0 +1,31 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "structuredContent": {
+      "result": "None",
+      "stdout": "[{\"address\": \"0x401000\", \"owner\": \"0x401000\", \"is_start\": true}, {\"address\": \"0x401010\", \"owner\": \"0x401010\", \"is_start\": true}, {\"address\": \"0x401040\", \"owner\": \"0x401040\", \"is_start\": true}, {\"address\": \"0x4011b0\", \"owner\": \"0x4011b0\", \"is_start\": true}, {\"address\": \"0x4013d0\", \"owner\": \"0x4013d0\", \"is_start\": true}, {\"address\": \"0x4014d0\", \"owner\": \"0x4014d0\", \"is_start\": true}, {\"address\": \"0x401600\", \"owner\": \"0x401600\", \"is_start\": true}, {\"address\": \"0x401660\", \"owner\": \"0x401660\", \"is_start\": true}, {\"address\": \"0x4016e0\", \"owner\": \"0x4016e0\", \"is_start\": true}, {\"address\": \"0x401740\", \"owner\": \"0x401740\", \"is_start\": true}, {\"address\": \"0x401760\", \"owner\": \"0x401760\", \"is_start\": true}, {\"address\": \"0x401790\", \"owner\": \"0x401790\", \"is_start\": true}, {\"address\": \"0x4017b0\", \"owner\": \"0x4017b0\", \"is_start\": true}, {\"address\": \"0x401820\", \"owner\": \"0x401820\", \"is_start\": true}, {\"address\": \"0x401850\", \"owner\": \"0x401850\", \"is_start\": true}, {\"address\": \"0x401a30\", \"owner\": \"0x401... [314410 chars total]",
+      "stderr": ""
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"result\":\"None\",\"stdout\":\"[{\\\"address\\\": \\\"0x401000\\\", \\\"owner\\\": \\\"0x401000\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401010\\\", \\\"owner\\\": \\\"0x401010\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401040\\\", \\\"owner\\\": \\\"0x401040\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x4011b0\\\", \\\"owner\\\": \\\"0x4011b0\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x4013d0\\\", \\\"owner\\\": \\\"0x4013d0\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x4014d0\\\", \\\"owner\\\": \\\"0x4014d0\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401600\\\", \\\"owner\\\": \\\"0x401600\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401660\\\", \\\"owner\\\": \\\"0x401660\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x4016e0\\\", \\\"owner\\\": \\\"0x4016e0\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401740\\\", \\\"owner\\\": \\\"0x401740\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401760\\\", \\\"owner\\\": \\\"0x401760\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401790\\\", \\\"owner\\\": \\\"0x401790\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x4017b0\\\", \\\"owner\\\": \\\"0x4017b0\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401820\\\", \\\"owner\\\": \\\"0x401820\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401850\\\", \\\"owner\\\": \\\"0x401850\\\", \\\"is_start\\\": true}, {\\\"address\\\": \\\"0x401a30\\\", \\\"owner\\\": \\\"0x401... [314410 chars total]\",\"stderr\":\"\"}"
+      },
+      {
+        "type": "text",
+        "text": "Output truncated. Run: curl -o .ida-mcp/94b9938a-6d1c-4ce1-a061-3240e60c64f1.json http://127.0.0.1:3548/output/94b9938a-6d1c-4ce1-a061-3240e60c64f1.json"
+      }
+    ],
+    "isError": false,
+    "_meta": {
+      "ida_mcp": {
+        "output_truncated": true,
+        "total_chars": 363289,
+        "output_id": "94b9938a-6d1c-4ce1-a061-3240e60c64f1",
+        "download_url": "http://127.0.0.1:3548/output/94b9938a-6d1c-4ce1-a061-3240e60c64f1.json",
+        "download_hint": "Output truncated. Run: curl -o .ida-mcp/94b9938a-6d1c-4ce1-a061-3240e60c64f1.json http://127.0.0.1:3548/output/94b9938a-6d1c-4ce1-a061-3240e60c64f1.json"
+      }
+    }
+  },
+  "id": 1
+}
