@@ -57,9 +57,15 @@ void constructors(HSQUIRRELVM vm) {
     }
     const auto unchanged=std::array<int32_t,2>{17,29}; auto output=unchanged;
     require(!retdec_create_unbound_instance(address(vm),wrong.data(),address(&native),output.data()) && output==unchanged,"invalid class preserves outputs");
-    require(!retdec_create_bound_instance(address(vm),wrong.data(),"bad",class_value.data(),address(&native),output.data()),"failed publication");
-    require(output[0]==OT_NULL && output[1]==0,"failed publication resets temporary handle");
-    top(vm,base,"failed publication balances stack");
+    // The supplied 2.2.2 sq_newslot returns SQ_OK for a non-table/class parent,
+    // without publishing anything. Preserve the recovered helper's success and
+    // its owned instance output instead of inventing a failure for this case.
+    require(retdec_create_bound_instance(address(vm),wrong.data(),"unpublished",class_value.data(),address(&native),output.data())==1,
+        "non-table parent retains 2.2.2 newslot success convention");
+    auto unpublished=load<HSQOBJECT>(output.data());
+    require(unpublished._type==OT_INSTANCE && data_bits(unpublished)!=0,"unpublished instance output is owned");
+    require(sq_release(vm,&unpublished)==SQTrue,"release unpublished output handle");
+    top(vm,base,"nonpublishing newslot path balances stack");
     erase_slot(vm,parent,"bound"); require(releases==before,"external bound handle survives slot deletion");
     destroy(bound); destroy(unbound); require(releases==before+2,"instances release exactly once");
 }
