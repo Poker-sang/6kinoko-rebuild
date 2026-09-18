@@ -155,6 +155,9 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
     src/squirrel/squirrel_native_arguments.cpp
+    src/squirrel/squirrel_class_binding.cpp
+    src/squirrel/squirrel_native_variables.cpp
+    src/squirrel/squirrel_method_dispatch.cpp
     src/reconstructed/squirrel_object.cpp
     src/reconstructed/native_instance.cpp
     src/squirrel/squirrel_source_runtime.cpp
@@ -358,6 +361,14 @@ target_link_libraries(kinoko_squirrel_host_object_contract PRIVATE kinoko_squirr
 add_test(NAME squirrel_host_object_contract COMMAND kinoko_squirrel_host_object_contract)
 set_tests_properties(squirrel_host_object_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_squirrel_binding_contract tests/squirrel_binding_contract.cpp)
+target_include_directories(kinoko_squirrel_binding_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_squirrel_binding_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+target_link_options(kinoko_squirrel_binding_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME squirrel_binding_contract COMMAND kinoko_squirrel_binding_contract)
+set_tests_properties(squirrel_binding_contract PROPERTIES TIMEOUT 60)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
@@ -367,7 +378,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_squirrel_source_vm_contract
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
-    kinoko_squirrel_host_object_contract
+    kinoko_squirrel_host_object_contract kinoko_squirrel_binding_contract
 )
 
 option(KINOKO_BUILD_ORIGINAL_ORACLE "Build offline original-PE VM comparison tool" OFF)
