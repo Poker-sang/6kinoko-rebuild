@@ -41,7 +41,8 @@ SQRESULT string_argument(HSQUIRRELVM vm, int32_t index, const SQChar*& value) {
     return SQ_OK;
 }
 bool pair_argument(HSQUIRRELVM vm, int64_t index, HSQOBJECT& value) {
-    return index_exists(vm, index) &&
+    // This recovered helper accepts positive argument indices only.
+    return index > 0 && index_exists(vm, index) &&
         SQ_SUCCEEDED(sq_getstackobj(vm, static_cast<SQInteger>(index), &value));
 }
 // One pointer-sized word in captured userdata. Some families allow a tag;

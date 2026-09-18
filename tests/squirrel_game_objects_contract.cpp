@@ -43,11 +43,11 @@ void erase_slot(HSQUIRRELVM vm, const Pair& object, const char* name) {
 void constructors(HSQUIRRELVM vm) {
     Top restore(vm);
     evaluate(vm,"ctor_calls <- 0;\nclass Bound { constructor() { ++ctor_calls; } }\n");
-    Pair type(vm), parent(vm), bound(vm), unbound(vm), wrong(vm);
-    evaluate(vm,"return Bound;",&type); root(vm,parent);
-    const auto base=sq_gettop(vm), before=releases;
-    require(retdec_create_bound_instance(address(vm),parent.data(),"bound",type.data(),address(&native),bound.data())==1,"create/publish instance");
-    require(retdec_create_unbound_instance(address(vm),type.data(),address(&native),unbound.data())==1,"create unbound instance");
+    Pair class_value(vm), parent(vm), bound(vm), unbound(vm), wrong(vm);
+    evaluate(vm,"return Bound;",&class_value); root(vm,parent);
+    const auto base=sq_gettop(vm); const auto before=releases;
+    require(retdec_create_bound_instance(address(vm),parent.data(),"bound",class_value.data(),address(&native),bound.data())==1,"create/publish instance");
+    require(retdec_create_unbound_instance(address(vm),class_value.data(),address(&native),unbound.data())==1,"create unbound instance");
     top(vm,base,"instance creation balances stack");
     evaluate(vm,"if (ctor_calls != 0) throw \"constructor executed\";\nif (typeof bound != \"instance\") throw \"published type\";\n");
     for (auto* object : {&bound,&unbound}) {
@@ -57,7 +57,7 @@ void constructors(HSQUIRRELVM vm) {
     }
     const auto unchanged=std::array<int32_t,2>{17,29}; auto output=unchanged;
     require(!retdec_create_unbound_instance(address(vm),wrong.data(),address(&native),output.data()) && output==unchanged,"invalid class preserves outputs");
-    require(!retdec_create_bound_instance(address(vm),wrong.data(),"bad",type.data(),address(&native),output.data()),"failed publication");
+    require(!retdec_create_bound_instance(address(vm),wrong.data(),"bad",class_value.data(),address(&native),output.data()),"failed publication");
     require(output[0]==OT_NULL && output[1]==0,"failed publication resets temporary handle");
     top(vm,base,"failed publication balances stack");
     erase_slot(vm,parent,"bound"); require(releases==before,"external bound handle survives slot deletion");
@@ -179,11 +179,11 @@ void callback_call(HSQUIRRELVM vm) {
     store(state.data(),address(vm)); store(state.data()+8,environment.get());
     std::array<int32_t,3> temporary{};
     for(bool fail : {false,true}) {
-        evaluate(vm,fail ? "return function(arg) { throw \"failed\"; };" : "return function(arg) { if (arg != 93) throw \"arg\"; return 77; };",&closure);
+        evaluate(vm,fail ? "return function(arg) { throw \"failed\"; };" : "return function(arg) { if (arg != 93) throw \"arg\";\nreturn 77; };",&closure);
         store(state.data()+20,closure.get());
         ObjectView value(temporary.data()); value.initialize(kinoko_squirrel_object_vtable());
         sq_newuserdata(vm,4); sq_setreleasehook(vm,-1,release_userdata); value.capture(vm,-1); sq_pop(vm,1);
-        const auto before=releases, base=sq_gettop(vm);
+        const auto before=releases; const auto base=sq_gettop(vm);
         const auto result=function_45e020_this(address(state.data()),address(temporary.data()),OT_INTEGER,93);
         require(fail ? SQ_FAILED(result) : SQ_SUCCEEDED(result),"callback forwards call status");
         require(releases==before+1 && value.value()._type==OT_NULL,"temporary consumed on either call result");

@@ -98,8 +98,7 @@ void methods(HSQUIRRELVM vm) {
     register_method(vm,"draw",function_4555a0,address(reinterpret_cast<void*>(draw_method)),true);
     sq_pushstring(vm,"weakref",-1); sq_newclosure(vm,entry(function_431650),0); sq_newslot(vm,-3,SQFalse);
     require(SQ_SUCCEEDED(sq_newslot(vm,-3,SQFalse)),"publish class");
-    sq_pushstring(vm,"host",-1); push_instance(vm); // Replace with an instance of Host below.
-    sq_pop(vm,1);
+    sq_pushstring(vm,"host",-1);
     sq_pushstring(vm,"Host",-1); require(SQ_SUCCEEDED(sq_get(vm,-3)),"get Host");
     require(SQ_SUCCEEDED(sq_createinstance(vm,-1)),"create Host"); sq_remove(vm,-2);
     sq_setinstanceup(vm,-1,&native); require(SQ_SUCCEEDED(sq_newslot(vm,-3,SQFalse)),"publish receiver");
@@ -190,6 +189,12 @@ void invalid_and_optional(HSQUIRRELVM vm) {
         require(function_471a60(0,address(vm),index)<0,"two argument index arithmetic bounded");
         require(function_471720(1,address(vm),index)<0,"pair argument index bounded");
     }
+    const auto transfers_before = consumed;
+    sq_pushstring(vm,"pair",-1); push_owned_userdata(vm); push_owned_userdata(vm);
+    require(function_471720(address(reinterpret_cast<void*>(pair_name)),address(vm),-3)<0,
+        "pair conversion preserves positive-index-only rule");
+    require(consumed==transfers_before,"negative pair indices transfer no references");
+    sq_settop(vm,base);
     for (int size=0;size<4;++size) {
         push_instance(vm); sq_newuserdata(vm,size); int32_t output[2]={-1,-1};
         function_46c6b0_pair(address(vm),output);
@@ -215,7 +220,7 @@ int main() {
         for (int pass=0;pass<8;++pass) {
             Machine machine; auto vm=machine.get(); active_vm=vm;
             methods(vm); ownership(vm); properties(vm); invalid_and_optional(vm);
-            sq_newthread(vm,64); HSQOBJECT child_object; sq_getstackobj(vm,-1,&child_object);
+            sq_newthread(vm,64);
             HSQUIRRELVM child=nullptr; require(SQ_SUCCEEDED(sq_getthread(vm,-1,&child)),"real child VM");
             active_vm=child; properties(child); ownership(child); top(child,0,"child frames balanced");
             active_vm=vm; sq_pop(vm,1); top(vm,0,"root frames balanced");
