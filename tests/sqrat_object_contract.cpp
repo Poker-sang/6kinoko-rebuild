@@ -77,7 +77,7 @@ void setters(HSQUIRRELVM vm) {
     require(retdec_sqrat_raw_set_string(address(vm), root.data(), "bridge_s", "hello"), "raw string");
     evaluate(vm, "if (bridge_i != 51 || bridge_f != -1.25 || bridge_b || bridge_s != \"hello\") throw \"setters\";");
     Pair instance(vm);
-    evaluate(vm, "bridge_reads <- 0; class BridgeClass { value = 0; function _get(k) { bridge_reads++; return 77; } }; return BridgeClass();", &instance);
+    evaluate(vm, "bridge_reads <- 0;\nclass BridgeClass { value = 0; function _get(k) { ::bridge_reads++; return 77; } }\nreturn BridgeClass();", &instance);
     require(retdec_sqrat_raw_set_int(address(vm), instance.data(), "value", 7), "raw instance existing field");
     require(!retdec_sqrat_raw_set_int(address(vm), instance.data(), "missing", 1), "raw instance unknown field fails");
     // 2.2.2 sq_newslot on an instance returns SQ_OK without publishing a slot.
