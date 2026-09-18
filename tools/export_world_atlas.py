@@ -156,10 +156,14 @@ def main():
                                  'width': width, 'height': height,
                                  'decoded_sha256': hashlib.sha256(data).hexdigest()})
     # The red cavern is a separate terrain overlay, faded in by UpdateAreaEffect
-    # while visiting world 5b. Show its fully visible state in the global atlas.
+    # while visiting world 5b. Its top/bottom transition images cover adjacent
+    # worlds only during the camera transition. Keep each world's own terrain
+    # in this simultaneous atlas and reveal only the central world-5b tile.
     cavern, = [l for l in act['layers'] if l['stName'] == 'w5_bg']
     for record in cavern['keys'][0]['records']:
         chip_id, x, y = struct.unpack('<Iii', bytes.fromhex(record))
+        if chip_id != 1142:
+            continue
         _, texture_id, left, top, width, height = chips[chip_id]
         tile = read_cv2(asset(textures[texture_id] + '.cv2')).crop((left, top, left+width, top+height))
         atlas.alpha_composite(tile, (x, y))
@@ -173,7 +177,9 @@ def main():
         if chip[1] in (19, 33, 34):
             buildings.append((chip, x, y))
     manifest['buildings'] = [{'chip_id': c[0], 'x': x, 'y': y} for c,x,y in buildings]
-    manifest['cavern_layer'] = 'w5_bg, alpha=1 (fully revealed red terrain)'
+    manifest['cavern_layer'] = 'w5_bg chip 1142, alpha=1; adjacent-world transition overlays excluded'
+    manifest['building_columns'] = [0, 1, 2, 1]
+    manifest['excluded_building_column'] = '3: dark defeated/cleared variant'
     frames = []
     for column in (0, 1, 2, 1):
         frame = atlas.copy()
