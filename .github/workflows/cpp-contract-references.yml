@@ -1,0 +1,41 @@
+name: Update stage contract entry references
+on:
+  push:
+    branches: ['refactor/squirrel222-native-cpp-20260918']
+    paths: ['.github/workflows/cpp-contract-references.yml']
+permissions:
+  contents: read
+jobs:
+  update:
+    if: github.repository == 'Poker-sang/6kinoko-rebuild' && github.ref == 'refs/heads/refactor/squirrel222-native-cpp-20260918'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Rename only the two migrated method references
+        shell: python
+        run: |
+          import hashlib, pathlib
+          path = pathlib.Path('tests/stage_contract.c')
+          data = path.read_bytes()
+          if hashlib.sha256(data).hexdigest() != '87f28f7696608d41a769ae7bd980f5406ff1e50565e3e82e53a9f22c45d566d2':
+              raise RuntimeError('Stage contract changed; refusing stale edits')
+          replacements = [(b'function_45dbd0,', b'kinoko_method_actor_move,'),
+                          (b'function_45eb00)', b'kinoko_method_actor_destroy_state)')]
+          for old, new in replacements:
+              if data.count(old) != 1:
+                  raise RuntimeError('Expected exactly one original reference')
+              data = data.replace(old, new)
+          if hashlib.sha256(data).hexdigest() != '05d44749ca336b5dac808097df45c091aa7159b56940fa6a5094d399bc92dc50':
+              raise RuntimeError('Unexpected output')
+          path.write_bytes(data)
+      - name: Commit source before validation
+        run: |
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- tests/stage_contract.c
+          git commit -m 'test: exercise renamed C++ actor entry points in stage integration'
+          git push origin HEAD:refs/heads/refactor/squirrel222-native-cpp-20260918
