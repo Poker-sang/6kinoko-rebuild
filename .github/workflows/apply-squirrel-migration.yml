@@ -1,0 +1,122 @@
+name: Verify source migration
+on:
+  push:
+    branches: ['refactor/squirrel222-native-cpp-20260918']
+    paths: ['.github/workflows/apply-squirrel-migration.yml', '.github/squirrel-migration.xz64']
+permissions:
+  contents: write
+concurrency:
+  group: apply-squirrel-migration
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'Poker-sang/6kinoko-rebuild'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Preserve tracked file bytes
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 2
+      - name: Apply hash-checked edit bundle
+        shell: python
+        run: |
+          import base64, hashlib, json, lzma
+          from pathlib import Path, PurePosixPath
+          raw = lzma.decompress(base64.b64decode(Path('.github/squirrel-migration.xz64').read_text()))
+          assert hashlib.sha256(raw).hexdigest() == 'd6edbea530f7415d5e08e38980b1faa33e6cc9ca9fb377b13f54089e3d34f626', 'Bundle checksum mismatch'
+          changes = json.loads(raw)
+          for item in changes:
+              name = PurePosixPath(item['path'])
+              assert not name.is_absolute() and '..' not in name.parts
+              assert name.parts[0] in ('src', 'include', 'tests') or str(name) == 'CMakeLists.txt'
+              path = Path(str(name))
+              old = path.read_bytes() if path.exists() else None
+              actual = hashlib.sha256(old).hexdigest() if old is not None else None
+              assert actual == item['before'], f'Concurrent source change: {name}'
+              if item.get('delete'):
+                  path.unlink()
+                  print('DELETE', name)
+                  continue
+              if 'text' in item:
+                  new = item['text'].encode('utf-8')
+              else:
+                  lines = old.decode('utf-8').splitlines(True)
+                  for start, count, text in reversed(item['edits']):
+                      lines[start:start+count] = text.splitlines(True)
+                  new = ''.join(lines).encode('utf-8')
+              assert hashlib.sha256(new).hexdigest() == item['after'], f'Output mismatch: {name}'
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(new)
+              print('WRITE', name)
+      - name: Commit exact test revision
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-squirrel-migration.yml .github/squirrel-migration.xz64
+          git add CMakeLists.txt src include tests
+          git commit -m 'refactor: replace remaining decompiled Squirrel core and standard libraries with C++ source'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force build-runs/migration-verification | Out-Null
+          git rev-parse HEAD | Set-Content build-runs/migration-verification/source-commit.txt
+          git diff HEAD~1 HEAD --stat | Set-Content build-runs/migration-verification/changes.txt
+      - name: Select installed MSVC x86 tools
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $installation) { throw 'MSVC x86 tools are required.' }
+          $devcmd = Join-Path $installation 'Common7/Tools/VsDevCmd.bat'
+          $batch = Join-Path $env:RUNNER_TEMP 'kinoko-msvc-x86.cmd'
+          @('@echo off', "call `"$devcmd`" -no_logo -host_arch=x64 -arch=x86 >nul", 'if errorlevel 1 exit /b 1', 'set') | Set-Content -Encoding ascii $batch
+          $environment = & cmd.exe /d /c $batch
+          if ($LASTEXITCODE -ne 0) { throw 'VsDevCmd failed.' }
+          foreach ($line in $environment) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              $name, $value = $Matches[1], $Matches[2]
+              if ($name -notmatch '^(GITHUB_|RUNNER_|CI$)') { "$name=$value" >> $env:GITHUB_ENV }
+            }
+          }
+      - name: Prepare existing DirectX dependency
+        shell: pwsh
+        run: ./tools/prepare_ci_directx.ps1 -Destination "$env:RUNNER_TEMP/kinoko-directx-x86"
+      - name: Build and test both configurations
+        shell: pwsh
+        run: |
+          foreach ($variant in @('quiet', 'diagnostic')) {
+            $build = "build-runs/migration-$variant"
+            New-Item -ItemType Directory -Force $build | Out-Null
+            $quiet = if ($variant -eq 'quiet') { 'ON' } else { 'OFF' }
+            cmake -S . -B $build -G Ninja -DCMAKE_BUILD_TYPE=Release `
+              -DKINOKO_RETDEC_DISABLE_TRACE=$quiet -DKINOKO_RETDEC_TRACE_FILTER=ON `
+              -DKINOKO_REFERENCE_DIR="$env:GITHUB_WORKSPACE/ci-no-proprietary-assets" `
+              -DKINOKO_RUNTIME_DIR="$env:GITHUB_WORKSPACE/runtime-builds/migration-$variant" `
+              2>&1 | Tee-Object "$build/configure.log"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            cmake --build $build --parallel 4 2>&1 | Tee-Object "$build/build.log"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            ctest --test-dir $build -C Release --output-on-failure --no-tests=error --timeout 120 `
+              -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract)$' `
+              2>&1 | Tee-Object "$build/ctest.log"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Push tested source without force
+        shell: pwsh
+        run: |
+          git push origin HEAD:refactor/squirrel222-native-cpp-20260918
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve exact revision and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: migration-verification-${{ github.sha }}
+          retention-days: 14
+          path: |
+            build-runs/migration-verification/
+            build-runs/migration-*/*.log
+            build-runs/migration-*/Testing/Temporary/
+            runtime-builds/migration-*/
