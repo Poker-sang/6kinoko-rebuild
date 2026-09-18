@@ -33,7 +33,7 @@ void function_460e00_register_actor_method(int32_t vm,
                                                   const char *name,
                                                   int32_t native_function,
                                                   int32_t type_wrapper,
-                                                  int32_t argument_count);
+                                                  int32_t slot_flags);
 int32_t function_4aa5e0(int32_t *context, int32_t *out_varinfo);
 int32_t retdec_get_var_info(int32_t *out_ptr, int32_t *context);
 int32_t retdec_get_var_value(int32_t *context, int32_t varinfo,

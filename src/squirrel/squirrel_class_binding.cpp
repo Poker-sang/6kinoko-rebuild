@@ -2,6 +2,7 @@
 #include "kinoko/legacy_abi.h"
 #include <cstdio>
 #include <string>
+#include <utility>
 
 namespace {
 using namespace kinoko::script;
