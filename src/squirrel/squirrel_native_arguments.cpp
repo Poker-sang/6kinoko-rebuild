@@ -6,6 +6,11 @@ extern "C" void retdec_trace_i32(const char*, int32_t);
 
 namespace {
 using namespace kinoko::script;
+bool valid_index(HSQUIRRELVM vm, SQInteger index) noexcept {
+    if (!vm || index == 0) return false;
+    const auto top = sq_gettop(vm);
+    return index > 0 ? index <= top : index >= -top;
+}
 int32_t payload_word(const void* payload) noexcept {
     int32_t result;
     std::memcpy(&result, payload, sizeof(result));
@@ -14,7 +19,8 @@ int32_t payload_word(const void* payload) noexcept {
 template<class T, class Getter>
 int32_t argument(HSQUIRRELVM vm, SQInteger index, SQObjectType expected,
                  T* output, Getter get) {
-    if (!output || sq_gettype(vm, index) != expected) {
+    if (!vm) return 0;
+    if (!output || !valid_index(vm, index) || sq_gettype(vm, index) != expected) {
         sq_throwerror(vm, "Incorrect function argument");
         return 0;
     }
@@ -38,23 +44,26 @@ extern "C" int32_t retdec_native_target_from_userdata(int32_t vm_address) {
     // Initialize before querying: failed conversion does not write the output.
     SQUserPointer payload = nullptr;
     const auto status = sq_getuserdata(vm, -1, &payload, nullptr);
+    const bool readable = SQ_SUCCEEDED(status) && payload &&
+        sq_getsize(vm, -1) >= static_cast<SQInteger>(sizeof(int32_t));
     if (trace_count < 96) {
         retdec_trace_i32("native-userdata:vm", vm_address);
         retdec_trace_i32("native-userdata:top", top);
         retdec_trace_i32("native-userdata:lookup", status);
         retdec_trace_i32("native-userdata:payload", address(payload));
         const auto bits = static_cast<uint32_t>(address(payload));
-        if (SQ_SUCCEEDED(status) && bits >= 0x10000u && bits < 0x7f000000u)
+        if (readable && bits >= 0x10000u && bits < 0x7f000000u)
             retdec_trace_i32("native-userdata:value", payload_word(payload));
         ++trace_count;
     }
-    return SQ_SUCCEEDED(status) && payload ? payload_word(payload) : 0;
+    return readable ? payload_word(payload) : 0;
 }
 extern "C" int32_t retdec_native_callback_from_stack(int32_t vm_address) {
     auto* vm = pointer<SQVM>(vm_address);
     if (!vm || sq_gettop(vm) <= 0) return 0;
     SQUserPointer payload = nullptr, tag = nullptr;
-    if (SQ_FAILED(sq_getuserdata(vm, sq_gettop(vm), &payload, &tag)) || tag || !payload)
+    if (SQ_FAILED(sq_getuserdata(vm, sq_gettop(vm), &payload, &tag)) || tag || !payload ||
+        sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(int32_t)))
         return 0;
     return payload_word(payload);
 }
@@ -64,7 +73,7 @@ extern "C" int32_t retdec_native_string_arg(int32_t vm_address, int32_t index, i
     if (trace_count < 64) {
         retdec_trace_i32("native-string-arg:vm", vm_address);
         retdec_trace_i32("native-string-arg:index", index);
-        retdec_trace_i32("native-string-arg:type", sq_gettype(vm, index));
+        retdec_trace_i32("native-string-arg:type", valid_index(vm, index) ? sq_gettype(vm, index) : OT_NULL);
         ++trace_count;
     }
     const SQChar* text = nullptr;
