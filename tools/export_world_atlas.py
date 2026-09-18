@@ -105,14 +105,30 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
+    # Preserve CP932 names when reading assets; Windows CLI argv conversion can
+    # otherwise corrupt the Japanese names of the three building sheets.
+    index = {}
+    inspect = args.probe.resolve().with_name('kinoko_archive_inspect.exe')
+    for suffix in 'abc':
+        archive = args.reference / f'6kinoko_{suffix}.dat'
+        listing = subprocess.check_output([str(inspect), '--all', str(archive)])
+        for match in re.finditer(rb'^  (.+) offset=(\d+) size=(\d+)\r?$', listing, re.M):
+            name, offset, length = match.groups()
+            index[name.decode('cp932').lower()] = (archive, int(offset), int(length))
+    cache = {}
 
     def asset(name):
-        dest = args.output / Path(name).name
-        proc = subprocess.run([str(args.probe.resolve()), str(args.reference.resolve()), name, str(dest)],
-                              check=True, stdout=subprocess.PIPE)
-        offset = int(re.search(rb'offset=(\d+)', proc.stdout)[1])
+        name = name.replace('\\', '/').lower()
+        if name in cache:
+            return cache[name]
+        archive, offset, length = index[name]
+        with archive.open('rb') as stream:
+            stream.seek(offset)
+            raw = stream.read(length)
+        assert len(raw) == length
         key = ((offset >> 1) | 0x23) & 255
-        return bytes(b ^ key for b in dest.read_bytes())
+        cache[name] = bytes(b ^ key for b in raw)
+        return cache[name]
 
     act = read_act(asset('data/worldmap/worldmap.act'))
     (args.output / 'worldmap.json').write_text(json.dumps(act, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -125,7 +141,7 @@ def main():
     atlas = Image.new('RGBA', size)
     manifest = {'size': size, 'layer': 'bg_a', 'maps': [],
                 'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-                'animation': 'Static original base layer; animated overlays intentionally excluded.'}
+                'animation': 'Original building animation: 90 game frames, 16 ms/frame; no cloud/road/stage overlays.'}
     for record in records:
         chip_id, x, y = struct.unpack('<Iii', bytes.fromhex(record))
         _, texture_id, left, top, width, height = chips[chip_id]
@@ -139,11 +155,56 @@ def main():
         manifest['maps'].append({'asset': name, 'chip_id': chip_id, 'x': x, 'y': y,
                                  'width': width, 'height': height,
                                  'decoded_sha256': hashlib.sha256(data).hexdigest()})
+    # The red cavern is a separate terrain overlay, faded in by UpdateAreaEffect
+    # while visiting world 5b. Show its fully visible state in the global atlas.
+    cavern, = [l for l in act['layers'] if l['stName'] == 'w5_bg']
+    for record in cavern['keys'][0]['records']:
+        chip_id, x, y = struct.unpack('<Iii', bytes.fromhex(record))
+        _, texture_id, left, top, width, height = chips[chip_id]
+        tile = read_cv2(asset(textures[texture_id] + '.cv2')).crop((left, top, left+width, top+height))
+        atlas.alpha_composite(tile, (x, y))
+    atlas.save(args.output / 'world-atlas-terrain.png')
+    symbols, = [l for l in act['layers'] if l['stName'] == 'symbol']
+    buildings = []
+    for record in symbols['keys'][0]['records']:
+        chip_id, x, y = struct.unpack('<Iii', bytes.fromhex(record))
+        chip = chips[chip_id]
+        # These MCD texture IDs refer to 家 / 家02 / 家03, verified visually.
+        if chip[1] in (19, 33, 34):
+            buildings.append((chip, x, y))
+    manifest['buildings'] = [{'chip_id': c[0], 'x': x, 'y': y} for c,x,y in buildings]
+    manifest['cavern_layer'] = 'w5_bg, alpha=1 (fully revealed red terrain)'
+    frames = []
+    for column in (0, 1, 2, 1):
+        frame = atlas.copy()
+        for chip, x, y in buildings:
+            chip_id, texture_id, left, top, width, height = chip
+            sheet = read_cv2(asset(textures[texture_id] + '.cv2'))
+            if chip_id != 1135:  # Static shadow of the floating building.
+                left = column * 96
+            tile = sheet.crop((left, top, left+width, top+height))
+            if chip_id == 1135:
+                tile.putalpha(tile.getchannel('A').point(lambda a: round(a * 0.8)))
+            frame.alpha_composite(tile, (x, y))
+        frames.append(frame)
+    atlas = frames[0]
     atlas.save(args.output / 'world-atlas.png')
     atlas.resize((size[0]*2, size[1]*2), Image.Resampling.NEAREST).save(args.output / 'world-atlas-2x.png')
     preview = Image.new('RGBA', size, '#20242b')
     preview.alpha_composite(atlas)
     preview.convert('RGB').save(args.output / 'world-atlas-preview.png')
+    # APNG keeps the original colors and alpha; GIF is a broadly compatible copy.
+    frames[0].save(args.output / 'world-atlas-animated.png', save_all=True,
+                   append_images=frames[1:], duration=[960, 160, 160, 160], loop=0, disposal=0, blend=0)
+    rgb_frames = []
+    for frame in frames:
+        background = Image.new('RGBA', size, '#20242b')
+        background.alpha_composite(frame)
+        rgb_frames.append(background.convert('RGB'))
+    palette = rgb_frames[0].quantize(colors=256)
+    gif_frames = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in rgb_frames]
+    gif_frames[0].save(args.output / 'world-atlas.gif', save_all=True,
+                       append_images=gif_frames[1:], duration=[960,160,160,160], loop=0, disposal=1)
     (args.output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     print(json.dumps(manifest, indent=2))
 
