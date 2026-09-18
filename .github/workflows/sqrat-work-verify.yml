@@ -2,71 +2,11 @@ name: Sqrat C++ work validation
 on:
   push:
     branches: ['work/sqrat-cpp-20260918']
-    paths: ['.github/workflows/sqrat-work-verify.yml']
 permissions:
   contents: read
 jobs:
-  apply:
-    if: github.repository == 'Poker-sang/6kinoko-rebuild' && github.ref == 'refs/heads/work/sqrat-cpp-20260918'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    outputs:
-      commit: ${{ steps.commit.outputs.commit }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - name: Validate complete input and output hashes before modifying source
-        shell: python
-        run: |
-          import base64, hashlib, json, lzma, pathlib, subprocess
-          parts = ['tools/migrations/sqrat-batch-01.b64', 'tools/migrations/sqrat-batch-02.b64']
-          compressed = base64.b64decode(''.join(pathlib.Path(p).read_text().strip() for p in parts), validate=True)
-          if hashlib.sha256(compressed).hexdigest() != '889aa2792aad02283c4e2696e8da10b54fa977b9676cb9cfe76ab8a05cd33960':
-              raise RuntimeError('Source bundle checksum mismatch')
-          bundle = json.loads(lzma.decompress(compressed))
-          outputs = {}
-          for name, entry in bundle['files'].items():
-              path = pathlib.Path(name)
-              if path.is_absolute() or '..' in path.parts or name.startswith('.github/'):
-                  raise RuntimeError('Path outside source application scope')
-              if entry['base'] is None:
-                  if path.exists():
-                      raise RuntimeError('Refusing to overwrite new file: ' + name)
-                  lines = []
-              else:
-                  data = path.read_bytes()
-                  if hashlib.sha256(data).hexdigest() != entry['base']:
-                      raise RuntimeError('Source changed since review: ' + name)
-                  lines = data.decode('utf-8').splitlines(keepends=True)
-              previous = 0
-              for start, end, replacement in entry['edits']:
-                  if not previous <= start <= end <= len(lines):
-                      raise RuntimeError('Invalid edit range')
-                  previous = end
-              for start, end, replacement in reversed(entry['edits']):
-                  lines[start:end] = replacement.splitlines(keepends=True)
-              output = ''.join(lines).encode('utf-8')
-              if hashlib.sha256(output).hexdigest() != entry['sha256']:
-                  raise RuntimeError('Output checksum mismatch: ' + name)
-              outputs[name] = output
-          for name, data in outputs.items():
-              path = pathlib.Path(name)
-              path.parent.mkdir(parents=True, exist_ok=True)
-              path.write_bytes(data)
-          subprocess.run(['git', 'diff', '--check'], check=True)
-          subprocess.run(['git', 'add', '-f', '--', *outputs], check=True)
-          subprocess.run(['git', 'rm', '--', *parts], check=True)
-      - name: Commit before tests and fast-forward the isolated work branch only
-        id: commit
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'refactor: migrate 45 Sqrat object, callback and native property helpers to source C++'
-          git push origin HEAD:refs/heads/work/sqrat-cpp-20260918
-          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
   verify:
-    needs: apply
+    if: github.repository == 'Poker-sang/6kinoko-rebuild'
     runs-on: windows-2022
     timeout-minutes: 30
     strategy:
@@ -76,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: ${{ needs.apply.outputs.commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - name: Select installed MSVC x86 tools
         shell: pwsh
@@ -100,7 +40,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }} | Out-Null
           git rev-parse HEAD | Set-Content build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/source-commit.txt
-          if ((git rev-parse HEAD).Trim() -ne '${{ needs.apply.outputs.commit }}') { throw 'Wrong source revision.' }
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') { throw 'Wrong source revision.' }
       - name: Configure Win32
         shell: pwsh
         run: |
@@ -133,7 +73,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: sqrat-work-${{ github.run_id }}-${{ matrix.trace }}-${{ needs.apply.outputs.commit }}
+          name: sqrat-work-${{ github.run_id }}-${{ matrix.trace }}-${{ github.sha }}
           retention-days: 14
           path: |
             build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/*.log
