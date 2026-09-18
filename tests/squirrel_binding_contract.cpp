@@ -94,7 +94,8 @@ std::string last_error(HSQUIRRELVM vm) {
 }
 void run_script(HSQUIRRELVM vm, const char* code) {
     StackTop stack(vm);
-    require(SQ_SUCCEEDED(sq_compilebuffer(vm, code, std::strlen(code), "binding-contract", SQTrue)), "compile real bytecode");
+    if (SQ_FAILED(sq_compilebuffer(vm, code, std::strlen(code), "binding-contract", SQTrue)))
+        throw std::runtime_error("compile real bytecode: " + last_error(vm));
     sq_pushroottable(vm);
     if (SQ_FAILED(kinoko_sq_call(address(vm), 1, 0, 0))) {
         throw std::runtime_error("execute real bytecode: " + last_error(vm));
@@ -290,7 +291,12 @@ void instance_contract(HSQUIRRELVM vm) {
     function_460a60(pointer<int32_t>(klass.location()), type, offsetof(Native, enabled), const_cast<char*>("enabled"), 0);
     Native native;
     make_instance(vm, klass, instance, &native); publish(vm, "propertyActor", instance);
-    run_script(vm, "propertyActor.value = 123; propertyActor.x = 7.25; propertyActor.enabled = false; if(propertyActor.value != 123 || propertyActor.x != 7.25 || propertyActor.enabled != false) throw \"property roundtrip\";");
+    run_script(vm, R"nut(
+propertyActor.value = 123;
+propertyActor.x = 7.25;
+propertyActor.enabled = false;
+if(propertyActor.value != 123 || propertyActor.x != 7.25 || propertyActor.enabled != false) throw "property roundtrip";
+)nut");
     require(native.value == 123 && native.x == 7.25f && native.enabled == 0 && native.guard == 0x1234, "script properties write exactly native fields");
     instance.view().push(vm); sq_pushstring(vm, "value", -1);
     require(function_4aabd0(address(vm)) == 1 && integer(vm) == 123, "direct instance getter");
@@ -343,10 +349,25 @@ void methods_contract(HSQUIRRELVM vm) {
     install_method(vm, klass, "consume", reinterpret_cast<void*>(&consume_object), reinterpret_cast<void*>(&function_460b50));
     Native native;
     make_instance(vm, klass, instance, &native); publish(vm, "methodActor", instance);
-    run_script(vm, "methodActor.touch(); methodActor.set(-123); if(methodActor.value()!=-123) throw \"return integer\"; methodActor.xy(1.25,-0.0); if(methodActor.rect(1.0,2.0,3.0,4.0)!=false) throw \"low byte bool\";");
+    run_script(vm, R"nut(
+methodActor.touch();
+methodActor.set(-123);
+if(methodActor.value()!=-123) throw "return integer";
+methodActor.xy(1.25,-0.0);
+if(methodActor.rect(1.0,2.0,3.0,4.0)!=false) throw "low byte bool";
+)nut");
     require(native.calls == 5 && native.value == -123 && native.arguments[3] == load<int32_t>(std::array<float,1>{4}.data()), "script calls native methods with original results");
     int calls_before = native.calls;
-    run_script(vm, "local caught=false; try { methodActor.set(1.0); } catch(e) { caught=true; } if(!caught) throw \"strict integer\"; caught=false; try { methodActor.xy(1,2.0); } catch(e) { caught=true; } if(!caught) throw \"strict floats\";");
+    run_script(vm, R"nut(
+local caught=false;
+try { methodActor.set(1.0);
+} catch(e) { caught=true;
+} if(!caught) throw "strict integer";
+caught=false;
+try { methodActor.xy(1,2.0);
+} catch(e) { caught=true;
+} if(!caught) throw "strict floats";
+)nut");
     require(native.calls == calls_before, "wrong method argument types do not invoke target");
     // Real callback invocation with a by-value owning wrapper.
     Object consume(vm); require(get_slot(vm, instance.view(), "consume", consume.view()), "get object-taking method");
@@ -383,6 +404,76 @@ void methods_contract(HSQUIRRELVM vm) {
     require(load<int32_t>(function_460540(address(vm))) == 0, "legacy result wrapper");
 }
 
+
+// Exercise the exported table callbacks through an actual native call frame.
+void table_callback_contract(HSQUIRRELVM vm) {
+    StackTop stack(vm);
+    Object table(vm); new_table(vm, table.view());
+    int32_t score = 73;
+    const auto metadata = function_45fab0(table.location(), address("score"));
+    require(metadata != 0, "table callback metadata");
+    store(metadata, Variable{address(&score), 0, 0, 0, 4, 0});
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&function_4aab60), 0);
+    table.view().push(vm); sq_pushstring(vm, "score", -1);
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 1, 0)) && integer(vm) == 73,
+        "source native table getter");
+    sq_pop(vm, 2);
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&function_4aaf30), 0);
+    table.view().push(vm); sq_pushstring(vm, "score", -1); sq_pushinteger(vm, -91);
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 3, 1, 0)) && integer(vm) == -91 && score == -91,
+        "source native table setter");
+    sq_pop(vm, 2);
+    require(current_vm() == vm && sq_gettop(vm) == 0, "table callback context restored");
+}
+int32_t __fastcall mapped_value(void* self, void*) { return load<int32_t>(self); }
+void mapped_method_contract(HSQUIRRELVM vm) {
+    StackTop stack(vm);
+    Object klass(vm), instance(vm), mapping(vm);
+    make_class(vm, klass, "MappedActor");
+    static int foreign_type;
+    klass.view().push(vm);
+    require(SQ_SUCCEEDED(sq_settypetag(vm, -1, &foreign_type)), "foreign class tag");
+    sq_pop(vm, 1);
+    int32_t native[2] = {12, 34}, mapped[2] = {56, 78};
+    make_instance(vm, klass, instance, native);
+    require(get_slot(vm, klass.view(), "__ot", mapping.view()), "foreign receiver map");
+    mapping.view().push(vm);
+    sq_pushinteger(vm, address(kinoko_native_binding_type(-1)));
+    sq_pushuserpointer(vm, mapped);
+    require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install mapped actor receiver"); sq_pop(vm, 1);
+    auto* payload = sq_newuserdata(vm, sizeof(Method));
+    store(payload, Method{address(reinterpret_cast<void*>(&mapped_value)), 4});
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&function_460c10), 1);
+    instance.view().push(vm);
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 1, 0)) && integer(vm) == 78,
+        "foreign __ot mapping and descriptor receiver offset");
+    sq_pop(vm, 2);
+    require(native[0] == 12 && native[1] == 34 && mapped[0] == 56 && mapped[1] == 78,
+        "mapped method leaves native records intact");
+}
+void child_binding_contract(HSQUIRRELVM vm) {
+    StackTop stack(vm);
+    Object klass(vm), instance(vm);
+    make_class(vm, klass, "ThreadBoundActor");
+    function_460920(pointer<int32_t>(klass.location()), kinoko_native_binding_type(-1),
+        0, const_cast<char*>("score"), 0);
+    int32_t native = 22;
+    make_instance(vm, klass, instance, &native);
+    // Keep the actual child VM on its parent's stack. Closing the root shared
+    // state here would invalidate the other test's external object references.
+    auto* child = sq_newthread(vm, 32);
+    require(child != nullptr, "create real child VM");
+    StackTop child_stack(child);
+    const char code[] = "this.score = 908; return this.score;";
+    require(SQ_SUCCEEDED(sq_compilebuffer(child, code, sizeof(code)-1, "child-binding", SQTrue)),
+        "compile child property bytecode");
+    instance.view().push(child);
+    require(current_vm() == vm, "parent context before child call");
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(child), 1, 1, 0)) && integer(child) == 908 && native == 908,
+        "child executes native property getter and setter");
+    require(current_vm() == vm, "child native callbacks restore parent context");
+}
+
 void argument_guards(HSQUIRRELVM vm) {
     StackTop stack(vm);
     int32_t output = 99; float f = 7;
@@ -411,9 +502,10 @@ int main() {
             Machine machine; auto* vm = machine.get();
             class_contract(vm); lookup_contract(vm); values_contract(vm);
             instance_contract(vm); methods_contract(vm); argument_guards(vm);
+            table_callback_contract(vm); mapped_method_contract(vm); child_binding_contract(vm);
             require(sq_gettop(vm) == 0, "all binding contracts restore caller stack");
         }
-        std::puts("Squirrel binding contracts passed: 8 full VM lifetimes, class/metadata/variables/methods/argument guards");
+        std::puts("Squirrel binding contracts passed: 8 full VM lifetimes, class/metadata/variables/methods/argument guards/table callbacks/mapped receivers/child VMs");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "Squirrel binding contract failed: %s\n", error.what());
