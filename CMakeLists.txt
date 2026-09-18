@@ -50,8 +50,17 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 
-add_library(kinoko_legacy_abi STATIC src/reconstructed/legacy_abi.cpp)
+add_library(kinoko_legacy_abi STATIC
+    src/reconstructed/legacy_abi.cpp
+    src/reconstructed/legacy_method_entries.cpp)
 target_include_directories(kinoko_legacy_abi PUBLIC include)
+
+add_library(kinoko_retdec_support STATIC
+    src/platform/retdec_memory.cpp
+    src/platform/retdec_runtime_compat.cpp)
+target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
+target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_options(kinoko_retdec_support PRIVATE /Gy)
 
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
 target_include_directories(kinoko_diagnostics PUBLIC include)
@@ -202,6 +211,7 @@ target_link_libraries(kinoko_retdec_rebuild PRIVATE
     kinoko_actor_collision
     kinoko_native_methods
     kinoko_legacy_abi
+    kinoko_retdec_support
     kinoko_diagnostics
     kinoko_zlib
     user32
@@ -321,6 +331,24 @@ target_link_options(kinoko_squirrel_source_vm_contract PRIVATE /OPT:REF /OPT:ICF
 add_test(NAME squirrel_source_vm_contract COMMAND kinoko_squirrel_source_vm_contract)
 set_tests_properties(squirrel_source_vm_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_legacy_method_entries_contract tests/legacy_method_entries_contract.cpp)
+target_link_libraries(kinoko_legacy_method_entries_contract PRIVATE kinoko_legacy_abi)
+add_test(NAME legacy_method_entries_contract COMMAND kinoko_legacy_method_entries_contract)
+
+add_executable(kinoko_retdec_memory_contract tests/retdec_memory_contract.cpp)
+target_link_libraries(kinoko_retdec_memory_contract PRIVATE kinoko_retdec_support)
+add_test(NAME retdec_memory_contract COMMAND kinoko_retdec_memory_contract)
+
+add_executable(kinoko_diagnostics_filter_contract tests/diagnostics_filter_contract.cpp)
+target_include_directories(kinoko_diagnostics_filter_contract PRIVATE include)
+add_test(NAME diagnostics_filter_contract COMMAND kinoko_diagnostics_filter_contract)
+
+add_executable(kinoko_squirrel_refcount_contract tests/squirrel_refcount_contract.cpp)
+target_include_directories(kinoko_squirrel_refcount_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_squirrel_refcount_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+add_test(NAME squirrel_refcount_contract COMMAND kinoko_squirrel_refcount_contract)
+
 set(KINOKO_TOOL_TARGETS
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
@@ -328,6 +356,8 @@ set(KINOKO_TOOL_TARGETS
     kinoko_texture_store_contract
     kinoko_diagnostics_capture
     kinoko_squirrel_source_vm_contract
+    kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
+    kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
 )
 
 option(KINOKO_BUILD_ORIGINAL_ORACLE "Build offline original-PE VM comparison tool" OFF)

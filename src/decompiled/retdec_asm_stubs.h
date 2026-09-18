@@ -2,18 +2,17 @@
 
 #include <stdint.h>
 #include "kinoko/legacy_abi.h"
+#include "kinoko/retdec_memory.h"
 
 int *__errno(void);
 
 int32_t __purecall(void);
 int32_t _3f__3f__G__non_rtti_object_40_std_40__40_UAEPAXI_40_Z(int32_t this_ptr, uint32_t flags);
 
-long double __frontend_reg_load_fpr(int32_t reg);
-void __frontend_reg_store_fpr(int32_t reg, long double value);
 
 /* RetDec leaves these machine-level helpers as external calls. The generic
-   declarations keep the generated C compilable; only the REP memory helpers
-   below have concrete behavior. */
+   declarations keep the generated C compilable; typed REP/FPR operations live separately in retdec_memory.cpp. Do not
+   convert these unknown-argument C declarations into zero-argument C++ APIs. */
 #define RETDEC_ASM_STUBS(X) \
     X(__asm_addpd) \
     X(__asm_addsd) \
@@ -77,8 +76,3 @@ void __frontend_reg_store_fpr(int32_t reg, long double value);
 #define RETDEC_DECLARE_STUB(name) int64_t name();
 RETDEC_ASM_STUBS(RETDEC_DECLARE_STUB)
 #undef RETDEC_DECLARE_STUB
-
-int64_t __asm_rep_movsb_memcpy(void *destination, const void *source, int32_t count);
-int64_t __asm_rep_movsd_memcpy(void *destination, const void *source, int32_t count);
-int64_t __asm_rep_stosb_memset(void *destination, int32_t value, int32_t count);
-int64_t __asm_rep_stosd_memset(void *destination, int32_t value, int32_t count);

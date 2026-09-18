@@ -1,3 +1,4 @@
+#include "kinoko/legacy_method_entries.h"
 #include "kinoko/squirrel_legacy_api.h"
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/squirrel_vm_lifecycle.h"
@@ -54,11 +55,6 @@ static int32_t retdec_native_value_pair(int32_t vm, int32_t index, int32_t *valu
 #define STB_VORBIS_NO_STDIO
 #include "stb_vorbis.c"
 
-#if defined(KINOKO_ENABLE_SQUIRREL_CPP_VM)
-#endif
-
-
-
 
 static void retdec_trace_ref_watch(const char *label, int32_t shared_state,
                                    int32_t type, int32_t data);
@@ -81,28 +77,6 @@ static int32_t retdec_is_release_watch_data(int32_t data) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-
-#else
-
-
-#endif
 static void retdec_release_squirrel_object(int32_t object_ptr);
 
 static void retdec_destroy_reader(int32_t *reader);
@@ -113,8 +87,7 @@ static void retdec_mcd_free(struct retdec_mcd_data *data);
 static void retdec_act_free_map_records(int32_t layout);
 static int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
-static int32_t retdec_cact_load_bridge(int32_t reader_ptr, int32_t version);
-static int32_t retdec_begin_stage_this(int32_t resource_ptr,
+int32_t retdec_begin_stage_this(int32_t resource_ptr,
                                         int32_t stage);
 static int32_t retdec_sqrat_raw_set_pair(int32_t vm,
                                           const int32_t *object_pair,
@@ -161,10 +134,10 @@ static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle);
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 static int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
-static int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
+int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer);
 static int32_t retdec_c2dlayout_update_impl(int32_t layout);
-static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
+int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 int32_t retdec_act_bind_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
@@ -250,33 +223,19 @@ static void retdec_trace_squirrel_table_entries(const char *label,
                                                 int32_t table_ptr);
 static int32_t retdec_native_target_from_userdata(int32_t vm);
 #if defined(_MSC_VER) && defined(_M_IX86)
-static int32_t retdec_read_ebx(void);
 static int32_t retdec_read_esi(void);
 #else
-static int32_t retdec_read_ebx(void);
 static int32_t retdec_read_esi(void);
 #endif
 static void retdec_destroy_cact_script(int32_t script_ptr);
 static void retdec_destroy_cact_object(int32_t object_ptr);
-static int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
+int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
-#if defined(_MSC_VER) && defined(_M_IX86)
-static int32_t retdec_cact_destructor_bridge(unsigned char flags);
-#else
-static int32_t retdec_cact_destructor_bridge(unsigned char flags);
-#endif
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
 double _strtod(const char *text, char **end);
-static int32_t function_45d970_this(int32_t this_ptr, char flags);
+int32_t function_45d970_this(int32_t this_ptr, char flags);
 static int32_t function_45d9f0_this(int32_t this_ptr);
-#if defined(_MSC_VER) && defined(_M_IX86)
-static int32_t function_45d970_bridge(char flags);
-static int32_t function_45d9f0_bridge(void);
-#else
-static int32_t function_45d970_bridge(int32_t this_ptr, char flags);
-static int32_t function_45d9f0_bridge(int32_t this_ptr);
-#endif
 
 // The Windows SDK's dsound.h is not usable with this generated C translation
 // unit under /TC and WIN32_LEAN_AND_MEAN. Keep the original COM calls through
@@ -2799,12 +2758,9 @@ int32_t function_42b580(void);
 int32_t function_42b5c0(void);
 int32_t function_42b6d0(int32_t a1);
 int32_t function_42ba50(void);
-int32_t function_42bcc0(int32_t a1);
 int32_t function_42bd00(void);
 int32_t function_42c030(int32_t a1, int32_t a2);
 int32_t function_42c0a0(int32_t a1);
-int32_t function_42c100(void);
-int32_t function_42c300(float32_t a1, float32_t a2);
 int32_t function_42c470(void);
 int32_t function_42c510(void);
 int32_t function_42c520(int32_t a1);
@@ -3140,10 +3096,9 @@ int32_t function_43c2b0(int32_t a1);
 int32_t function_43c530(void);
 int32_t function_43c690(int32_t a1);
 int32_t function_43c6b0(void);
-static int32_t function_43c860_this(int32_t this_ptr,
+int32_t function_43c860_this(int32_t this_ptr,
                                     int32_t source_ptr,
                                     int32_t mode);
-int32_t function_43c860(int32_t source_ptr, int32_t mode);
 int32_t function_43c8c0(int32_t a1);
 int32_t function_43c920(void);
 int32_t function_43ca40(void);
@@ -3545,18 +3500,15 @@ static void retdec_destroy_act_runtime(int32_t resource_ptr);
 int32_t kinoko_clear_global_stages(void);
 int32_t kinoko_clear_global_sound(void);
 int32_t function_450350(int32_t a1);
-int32_t function_450950(uint32_t a1);
 int32_t function_450d80(void);
-int32_t function_450e30(int32_t a1, int32_t a2);
 int32_t function_450f30(int32_t a1);
 static int32_t retdec_root_table_register_resource(int32_t root_object,
                                                     int32_t resource_ptr);
-static int32_t retdec_root_table_construct_this(int32_t resource_ptr,
+int32_t retdec_root_table_construct_this(int32_t resource_ptr,
                                                  int32_t vm,
                                                  int32_t output_ptr);
 int32_t function_451270(int32_t result, int32_t a2, int32_t a3);
 int32_t function_4513f0(void);
-int32_t function_4514a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, float32_t a9);
 int32_t function_451590(void);
 int32_t function_4515a0(int32_t a1);
 int32_t function_4515c0(void);
@@ -3692,7 +3644,6 @@ int32_t function_457500(int32_t a1);
 int32_t function_457660(unsigned char a1);
 int32_t function_4576e0(int32_t a1);
 int32_t function_457810(int32_t a1);
-int32_t function_457a10(int32_t a1);
 int32_t function_457a80(int32_t a1);
 int32_t function_457ac0(void);
 int32_t function_457b40(void);
@@ -3866,8 +3817,7 @@ int32_t function_45dac0(int32_t a1);
 static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_45db10(void);
 int32_t function_45db90(int32_t a1);
-int32_t function_45dbd0(float32_t a1, float32_t a2);
-static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
+int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
 int32_t function_45de70(int32_t a1, int32_t * a2);
 int32_t function_45de90(int32_t a1, int32_t a2);
 int32_t function_45df10(int32_t a1);
@@ -3890,7 +3840,6 @@ static int32_t function_45e5e0_this(
     int32_t first_vtable, int32_t first_type, int32_t first_data,
     float32_t x, float32_t y, float32_t z,
     int32_t second_vtable, int32_t second_type, int32_t second_data);
-int32_t function_45eb00(void);
 
 static int32_t function_45ec60(int32_t actor);
 int32_t function_45f0c0(char a1);
@@ -3957,7 +3906,6 @@ int32_t function_462530(int32_t result);
 int32_t function_462550(void);
 int32_t function_4625a0(void);
 int32_t function_462600(int32_t * a1, float80_t a2, float80_t a3);
-int32_t function_4627c0(int32_t a1, int32_t a2);
 int32_t function_462810(int32_t a1);
 int32_t function_462870(uint32_t a1);
 int32_t function_4628b0(uint32_t a1);
@@ -3995,12 +3943,10 @@ static int32_t function_463b40_this(
 int32_t function_463690(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4636e0(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_463730(int32_t a1);
-int32_t function_463800(void);
 int32_t function_463820(int32_t a1);
 int32_t function_4638b0(void);
 int32_t function_4638f0(int32_t a1, int32_t a2, int32_t result);
 int32_t function_4639f0(int32_t a1, int32_t a2, int32_t result);
-int32_t function_463af0(void);
 static int32_t function_463af0_this(int32_t this_ptr);
 int32_t function_463cf0(int32_t a1);
 int32_t function_463d40(int32_t this_ptr);
@@ -4025,7 +3971,6 @@ int32_t function_466100(int32_t a1);
 int32_t function_466270(void);
 static int32_t function_466270_this(int32_t this_ptr);
 int32_t function_466320(int32_t a1);
-int32_t function_466490(void);
 int32_t function_4664a0(int32_t a1);
 int32_t function_466540(int32_t a1, int32_t a2);
 int32_t function_4665d0(void);
@@ -4040,7 +3985,6 @@ int32_t function_466e20(float80_t a1, int32_t a2, int32_t a3, int32_t a4, int32_
 int32_t function_4674b0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4677c0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 int32_t function_467cd0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
-int32_t function_4681e0(int32_t a1);
 int32_t function_4682a0(int32_t a1, float80_t a2, float80_t a3, float80_t a4, float80_t a5);
 int32_t function_4683c0(int32_t a1, int32_t a2, int32_t result);
 int32_t function_468440(uint32_t a1);
@@ -4056,7 +4000,6 @@ int32_t function_468950(int32_t * a1);
 static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr);
 int32_t function_4689d0(int32_t this_ptr, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8);
 int32_t function_4693a0(int32_t a1);
-int32_t function_469620(int32_t a1);
 int32_t function_469640(void);
 int32_t function_469680(void);
 int32_t function_4696b0(int32_t a1);
@@ -4098,7 +4041,6 @@ int32_t function_46a140(void);
 int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
 int32_t function_46a260(int32_t a1, int32_t a2);
-int32_t function_46a2d0(void);
 static int32_t function_46a2d0_this(int32_t this_ptr);
 int32_t function_46a380(void);
 int32_t function_46a390(uint16_t a1, uint16_t a2);
@@ -4107,17 +4049,14 @@ int32_t function_46a550(char a1);
 int32_t function_46a580(int32_t a1, int32_t a2);
 int32_t function_46a5b0(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_46a650(int32_t * a1, int32_t a2, int32_t a3);
-int32_t function_46a6f0(uint32_t handle);
-static int32_t function_46a6f0_this(int32_t manager, uint32_t handle);
+int32_t function_46a6f0_this(int32_t manager, uint32_t handle);
 int32_t function_46a7a0(void);
 int32_t function_46a7e0(char a1);
 int32_t function_46a830(int32_t a1);
 int32_t function_46a9c0(void);
-int32_t function_46aa60(void);
-static int32_t function_46aa60_this(int32_t this_ptr);
+int32_t function_46aa60_this(int32_t this_ptr);
 int32_t function_46aae0(char a1);
-int32_t function_46ab10(int32_t a1);
-static int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr);
+int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr);
 static void retdec_actor_manager_clear_list(int32_t list_field);
 int32_t function_46acb0(void);
 int32_t function_46acf0(void);
@@ -4522,210 +4461,12 @@ float80_t function_489de0(int32_t a1);
 float80_t function_489e30(int32_t a1);
 float80_t function_489e80(int32_t a1);
 float80_t function_489e90(int32_t a1);
-int32_t function_489ef0(char a1);
-int32_t function_489f20(void);
-
-
 
 
 int32_t function_48a170(int32_t a1);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static int32_t function_49da60_this(int32_t compiler_ptr, int32_t * name);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 static int32_t retdec_execute_clean_vm(
@@ -4733,239 +4474,8 @@ static int32_t retdec_execute_clean_vm(
     int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
-
-
-
 int32_t function_498590(int32_t a1, int32_t a2);
 int32_t function_4985b0(int32_t a1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_4a1760(void);
-
-
-
-
-
-int32_t function_4a1850(int32_t a1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 int32_t function_4a8c50(void);
@@ -5248,129 +4758,6 @@ int32_t function_4c5760(int32_t a1, int32_t a2);
 int32_t function_4c5810(int32_t a1, int32_t a2);
 int32_t function_4c5840(int32_t * a1, int32_t a2);
 int32_t function_4c5910(int32_t a1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 int32_t function_4c9c8c(uint32_t a1, uint32_t a2);
@@ -6388,7 +5775,7 @@ char * g11; // 0x4a8b9c
 /* The original symbols at 0x4d53d0/0x4d53ec are six-entry MSVC vftables,
    not scalar function-pointer globals.  Logo's render method is slot 2. */
 int32_t g12[6] = {
-    (int32_t)(intptr_t)&function_45d970_bridge,
+    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
     (int32_t)(intptr_t)&__purecall,
     (int32_t)(intptr_t)&__purecall,
     (int32_t)(intptr_t)&function_43e100,
@@ -6396,7 +5783,7 @@ int32_t g12[6] = {
     (int32_t)(intptr_t)&function_45d960
 }; // 0x4d53d0
 int32_t g13[6] = {
-    (int32_t)(intptr_t)&function_45d970_bridge,
+    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
     (int32_t)(intptr_t)&function_45d9a0,
     (int32_t)(intptr_t)&function_45d9c0,
     (int32_t)(intptr_t)&function_43e100,
@@ -6409,19 +5796,18 @@ int32_t g14 = 0x42abe0; // 0x4d5448
    rebuilt image previously read the next global as virtual slot 1. */
 struct vtable_4d55a4_type g19 = {
     .e0 = function_45ff90,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d55b0
 struct vtable_4d55a4_type g21 = {
     .e0 = function_45ffd0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d55c8
 int32_t g23 = 0x44fd30; // 0x4d5884
 int32_t g25 = 0x44fd30; // 0x4d58ac
 int32_t g28 = 0x4698d0; // 0x4d59dc
-static int32_t retdec_actor_manager_vtable_push(void);
 struct vtable_4d5a68_type g32 = {
     .e0 = function_46b420,
-    .e1 = retdec_actor_manager_vtable_push
+    .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
 }; // 0x4d5a68
 /* CInputManager's vftable: destructor, then the per-frame input update. */
 int32_t g35[2] = {
@@ -6838,22 +6224,6 @@ struct retdec_native_binding {
     int32_t argument_count;
     const char *typemask;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 int32_t g529 = 0x412210; // 0x50f6d8
@@ -7687,11 +7057,11 @@ struct vtable_4d54ac_type g17 = {
 }; // 0x4d54ac
 struct vtable_4d55a4_type g18 = {
     .e0 = function_460de0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d55a4
 struct vtable_4d55bc_type g20 = {
     .e0 = function_45ffb0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d55bc
 struct vtable_4d5878_type g22 = {
     .e0 = function_401010,
@@ -7705,15 +7075,15 @@ struct vtable_4d5898_type g24 = {
 }; // 0x4d5898
 struct vtable_4d5924_type g26 = {
     .e0 = function_4665d0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d5924
 struct vtable_4d59bc_type g27 = {
-    .e0 = function_469620
+    .e0 = (int32_t (*)(int32_t))kinoko_method_render_layer_update
 }; // 0x4d59bc
 struct vtable_4d5a04_type g29 = {
     .e0 = function_46a550,
-    .e1 = function_46ab10,
-    .e2 = function_46a6f0,
+    .e1 = (int32_t (*)(int32_t))kinoko_method_actor_manager_top,
+    .e2 = (int32_t (*)(uint32_t))kinoko_method_actor_manager_remove,
     .e3 = function_46a390,
     .e4 = function_46a380
 }; // 0x4d5a04
@@ -7723,14 +7093,14 @@ struct vtable_4d5a1c_type g30 = {
 }; // 0x4d5a1c
 struct vtable_4d5a5c_type g31 = {
     .e0 = function_46aae0,
-    .e1 = retdec_actor_manager_vtable_push
+    .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
 }; // 0x4d5a5c
 struct vtable_4d5a94_type g33 = {
     .e0 = function_407310,
     .e1 = function_4072b0,
     .e2 = function_407270,
     .e3 = function_4072d0,
-    .e4 = function_466490,
+    .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_40d590,
     .e6 = function_407300
 }; // 0x4d5a94
@@ -7739,19 +7109,19 @@ struct vtable_4d5ab4_type g34 = {
     .e1 = function_4072b0,
     .e2 = function_40d520,
     .e3 = function_40d560,
-    .e4 = function_466490,
+    .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_40d590
 }; // 0x4d5ab4
 struct vtable_4d5adc_type g36 = {
     .e0 = function_46eda0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
     .e0 = kinoko_map_entry_46eed0
 }; // 0x4d5ba0
 struct vtable_4d5ba8_type g38 = {
     .e0 = function_4701d0,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d5ba8
 struct vtable_4d5c68_type g39 = {
     .e0 = function_453580,
@@ -7771,7 +7141,7 @@ struct vtable_4d5e88_type g41 = {
     .e4 = function_45da50
 }; // 0x4d5e88
 struct vtable_4d9eb0_type g65 = {
-    .e0 = function_489ef0,
+    .e0 = (int32_t (*)(char))kinoko_sq_delete_refcounted,
     .e1 = __purecall
 }; // 0x4d9eb0
  // 0x4d9fa0
@@ -7786,7 +7156,7 @@ struct vtable_4d9eb0_type g65 = {
  // 0x4da958
 struct vtable_4db71c_type g79 = {
     .e0 = function_4ab010,
-    .e1 = function_466490
+    .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4db71c
 struct vtable_4db764_type g81 = {
     .e0 = _3f__3f__G__non_rtti_object_40_std_40__40_UAEPAXI_40_Z,
@@ -7842,7 +7212,7 @@ struct vtable_4eb698_type g205 = {
     .e1 = function_4072b0,
     .e2 = function_407270,
     .e3 = function_410b90,
-    .e4 = function_466490,
+    .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_410c00,
     .e6 = function_410260
 }; // 0x4eb698
@@ -8034,7 +7404,7 @@ struct vtable_4ec1d4_type g285 = {
     .e1 = function_428150,
     .e2 = function_4461d0,
     .e3 = function_446210,
-    .e4 = retdec_cact_destructor_bridge,
+    .e4 = (int32_t (*)(unsigned char))kinoko_method_destroy_act,
     .e5 = kinoko_act_clone,
     .e6 = function_4289c0,
     .e7 = function_428af0,
@@ -8063,9 +7433,9 @@ struct vtable_4ec358_type g299 = {
     .e3 = function_42b480,
     .e4 = function_42b470,
     .e5 = function_42b580,
-    .e6 = function_42bcc0,
-    .e7 = function_42c100,
-    .e8 = function_42c300,
+    .e6 = (int32_t (*)(int32_t))kinoko_method_layout_set_layer,
+    .e7 = (int32_t (*)(void))kinoko_method_layout_update,
+    .e8 = (int32_t (*)(float, float))kinoko_method_layout_draw,
     .e9 = function_42ba50
 }; // 0x4ec358
 struct vtable_4ec3c8_type g303 = {
@@ -8168,7 +7538,7 @@ struct vtable_4ec8ac_type g339 = {
 }; // 0x4ec8ac
 struct vtable_4ec8f4_type g340 = {
     .e0 = function_43c8c0,
-    .e1 = function_43c860,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_layout3d_assign,
     .e2 = function_4461d0,
     .e3 = function_43e880,
     .e4 = function_43c1d0,
@@ -8419,7 +7789,7 @@ struct vtable_4ed56c_type g416 = {
     .e0 = function_45aac0,
     .e1 = function_457310,
     .e2 = function_457810,
-    .e3 = function_457a10,
+    .e3 = (int32_t (*)(int32_t))kinoko_method_update_children,
     .e4 = function_457a80,
     .e5 = function_457500,
     .e6 = function_4576e0
@@ -56384,7 +55754,7 @@ static void retdec_destroy_cact_object(int32_t object_ptr)
     *(int32_t *)(intptr_t)(object_ptr + 36) = 15;
 }
 
-static int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
+int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags)
 {
     if (object_ptr == 0)
@@ -56404,25 +55774,6 @@ static int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
     return object_ptr;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t retdec_cact_destructor_bridge(
-    unsigned char flags)
-{
-    __asm {
-        mov eax, [esp + 4]
-        push eax
-        push ecx
-        call retdec_destroy_cact_with_flags
-        add esp, 8
-        ret 4
-    }
-}
-#else
-static int32_t retdec_cact_destructor_bridge(unsigned char flags)
-{
-    return retdec_destroy_cact_with_flags(0, flags);
-}
-#endif
 
 // Address range: 0x427530 - 0x42760c
 int32_t function_427530(int32_t this_ptr) {
@@ -58284,28 +57635,6 @@ static int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     return 1;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t retdec_cact_load_bridge(
-    int32_t reader_ptr, int32_t version)
-{
-    __asm {
-        mov eax, ecx
-        mov edx, [esp + 4]
-        mov ecx, [esp + 8]
-        push ecx
-        push edx
-        push eax
-        call retdec_act_load
-        add esp, 12
-        ret 8
-    }
-}
-#else
-static int32_t retdec_cact_load_bridge(int32_t reader_ptr, int32_t version)
-{
-    return retdec_act_load(0, reader_ptr, version);
-}
-#endif
 
 // Address range: 0x428000 - 0x428146
 int32_t function_428000(int32_t this_ptr, const char *file_name) {
@@ -62493,7 +61822,7 @@ int32_t function_42ba50(void) {
    fields used by the original 42BCC0/42C470 pair.  The generated code lost
    ECX for all three virtual methods, so these explicit implementations are
    the single source of truth behind the x86 entry stubs below. */
-static int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
+int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer)
 {
     int32_t resource;
@@ -62879,7 +62208,7 @@ static void retdec_sprite_translate_faithful(int32_t sprite,
     }
 }
 
-static int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
+int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
 {
     int32_t layer;
     int32_t resource;
@@ -63098,7 +62427,7 @@ static int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
     return 0;
 }
 
-static int32_t retdec_c2dlayout_draw_impl(int32_t layout,
+int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float32_t x, float32_t y)
 {
     int32_t result;
@@ -63214,24 +62543,6 @@ restore_render_state:
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_42bcc0(int32_t layer)
-{
-    __asm {
-        mov eax, ecx
-        push [esp + 4]
-        push eax
-        call retdec_c2dlayout_set_layer_impl
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_42bcc0(int32_t layer)
-{
-    return retdec_c2dlayout_set_layer_impl(0, layer);
-}
-#endif
 
 // Address range: 0x42bd00 - 0x42c026
 int32_t function_42bd00(void) {
@@ -63433,23 +62744,6 @@ static int32_t retdec_unbound_function_42c100(void) {
     return 0;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_42c100(void)
-{
-    __asm {
-        mov eax, ecx
-        push eax
-        call retdec_c2dlayout_update_faithful_impl
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_42c100(void)
-{
-    return retdec_c2dlayout_update_impl(0);
-}
-#endif
 
 // Address range: 0x42c300 - 0x42c461
 // From class:    .?AVC2DLayout@@
@@ -63486,25 +62780,6 @@ static int32_t retdec_unbound_function_42c300(float32_t a1, float32_t a2) {
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_42c300(float32_t x, float32_t y)
-{
-    __asm {
-        mov eax, ecx
-        push [esp + 8]
-        push [esp + 8]
-        push eax
-        call retdec_c2dlayout_draw_impl
-        add esp, 12
-        ret 8
-    }
-}
-#else
-int32_t function_42c300(float32_t x, float32_t y)
-{
-    return retdec_c2dlayout_draw_impl(0, x, y);
-}
-#endif
 
 // Address range: 0x42c470 - 0x42c507
 int32_t function_42c470(void) {
@@ -80842,7 +80117,7 @@ int32_t function_43c6b0(void) {
 // Address range: 0x43c860 - 0x43c8bb
 // From class:    .?AVC3DLayout@@
 // Type:          virtual member function
-static int32_t function_43c860_this(int32_t this_ptr,
+int32_t function_43c860_this(int32_t this_ptr,
                                     int32_t source_ptr,
                                     int32_t mode) {
     if (source_ptr == 0) {
@@ -80863,25 +80138,6 @@ static int32_t function_43c860_this(int32_t this_ptr,
     return function_44d4c0((int32_t)(intptr_t)&g923, this_ptr) & -256 | 1;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_43c860(int32_t source_ptr, int32_t mode)
-{
-    __asm {
-        mov eax, ecx
-        push [esp + 8]
-        push [esp + 8]
-        push eax
-        call function_43c860_this
-        add esp, 12
-        ret 8
-    }
-}
-#else
-int32_t function_43c860(int32_t source_ptr, int32_t mode)
-{
-    return function_43c860_this(0, source_ptr, mode);
-}
-#endif
 
 // Address range: 0x43c8c0 - 0x43c91a
 // From class:    .?AVC3DLayout@@
@@ -101286,22 +100542,9 @@ static int32_t retdec_unbound_function_450950(uint32_t a1) {
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 /* CActResource::BeginStage(this, stage), original ABI: ECX=this, retn 4. */
-__declspec(naked) int32_t function_450950(uint32_t stage)
-{
-    __asm {
-        mov edx, [esp + 4]
-        push edx
-        push ecx
-        call retdec_begin_stage_this
-        add esp, 8
-        ret 4
-    }
-}
+
 #else
-int32_t function_450950(uint32_t stage)
-{
-    return retdec_begin_stage_this(0, (int32_t)stage);
-}
+
 #endif
 
 // Address range: 0x450d80 - 0x450e2c
@@ -102165,7 +101408,7 @@ static int32_t retdec_publish_cact_layer_members(
     }
 
     if (!retdec_sqrat_set_native_closure(
-            vm, class_pair, "constructor", (int32_t)(intptr_t)function_4a1760,
+            vm, class_pair, "constructor", (int32_t)(intptr_t)kinoko_sq_noop_constructor,
             NULL, 0) ||
         !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
                                (const int32_t *)&g1151) ||
@@ -102364,7 +101607,7 @@ static int32_t retdec_publish_c2dlayout_properties(
     }
 
     if (!retdec_sqrat_set_native_closure(
-            vm, class_pair, "constructor", (int32_t)(intptr_t)function_4a1760,
+            vm, class_pair, "constructor", (int32_t)(intptr_t)kinoko_sq_noop_constructor,
             NULL, 0) ||
         !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
                                (const int32_t *)&g1141) ||
@@ -102877,7 +102120,7 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
                                           (int32_t)(intptr_t)kinoko_act_get_current_frame,
                                           (int32_t)(intptr_t)function_445530, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "BeginStage",
-                                          (int32_t)(intptr_t)function_450950,
+                                          (int32_t)(intptr_t)kinoko_method_begin_stage,
                                           (int32_t)(intptr_t)function_455330, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "EndStage",
                                           (int32_t)(intptr_t)kinoko_act_end_stage,
@@ -102895,7 +102138,7 @@ static int32_t retdec_publish_acting_player_class(int32_t vm,
                                           (int32_t)(intptr_t)function_451f80,
                                           (int32_t)(intptr_t)function_455520, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "BitBlt",
-                                          (int32_t)(intptr_t)function_4514a0,
+                                          (int32_t)(intptr_t)kinoko_method_act_bitblt,
                                           (int32_t)(intptr_t)function_4555a0, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "SetRenderTarget",
                                           (int32_t)(intptr_t)function_452010,
@@ -104345,7 +103588,7 @@ done:
     return result;
 }
 
-static int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
+int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
 {
     struct retdec_RTL_CRITICAL_SECTION *critical_section;
     int32_t vm;
@@ -104601,7 +103844,7 @@ cleanup:
    caller passes the receiver in ECX and the generated RetDec bodies do not.
    Keep the receiver handling at the boundary so the loader follows the
    original 450E30 -> 450F30 call chain. */
-static int32_t retdec_root_table_construct_this(int32_t resource_ptr,
+int32_t retdec_root_table_construct_this(int32_t resource_ptr,
                                                  int32_t vm,
                                                  int32_t output_ptr)
 {
@@ -104628,19 +103871,7 @@ static int32_t retdec_root_table_construct_this(int32_t resource_ptr,
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_450e30(int32_t vm, int32_t output_ptr)
-{
-    __asm {
-        mov eax, [esp + 4]
-        mov edx, [esp + 8]
-        push edx
-        push eax
-        push ecx
-        call retdec_root_table_construct_this
-        add esp, 12
-        ret 8
-    }
-}
+
 
 __declspec(naked) int32_t function_450f30(int32_t resource_ptr)
 {
@@ -104654,12 +103885,7 @@ __declspec(naked) int32_t function_450f30(int32_t resource_ptr)
     }
 }
 #else
-int32_t function_450e30(int32_t vm, int32_t output_ptr)
-{
-    (void)vm;
-    (void)output_ptr;
-    return (int32_t)0x80070057u;
-}
+
 
 int32_t function_450f30(int32_t resource_ptr)
 {
@@ -104826,7 +104052,7 @@ static int32_t retdec_unbound_function_4514a0(int32_t a1, int32_t a2, int32_t a3
     return 0;
 }
 
-static int32_t retdec_act_bitblt_this(int32_t self, int32_t x, int32_t y,
+int32_t retdec_act_bitblt_this(int32_t self, int32_t x, int32_t y,
     int32_t width, int32_t height, int32_t resource, int32_t sx, int32_t sy,
     int32_t blend, float32_t alpha)
 {
@@ -104873,34 +104099,6 @@ static int32_t retdec_act_bitblt_this(int32_t self, int32_t x, int32_t y,
     }
     return 0;
 }
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_4514a0(int32_t x, int32_t y,
-    int32_t width, int32_t height, int32_t resource, int32_t sx, int32_t sy,
-    int32_t blend, float32_t alpha)
-{
-    __asm {
-        mov eax, esp
-        push [eax + 36]
-        push [eax + 32]
-        push [eax + 28]
-        push [eax + 24]
-        push [eax + 20]
-        push [eax + 16]
-        push [eax + 12]
-        push [eax + 8]
-        push [eax + 4]
-        push ecx
-        call retdec_act_bitblt_this
-        add esp, 40
-        ret 36
-    }
-}
-#else
-int32_t function_4514a0(int32_t x, int32_t y, int32_t width, int32_t height,
-    int32_t resource, int32_t sx, int32_t sy, int32_t blend, float32_t alpha)
-{ return retdec_act_bitblt_this(0, x, y, width, height, resource, sx, sy, blend, alpha); }
-#endif
 
 
 int32_t retdec_act_suspend_this(int32_t resource_ptr)
@@ -110048,7 +109246,7 @@ int32_t function_455330(int32_t a1) {
         retdec_trace_i32("450950:wrapper-instance", instance_ptr);
         retdec_trace_i32("450950:wrapper-argument-status", argument_status);
         retdec_trace_i32("450950:wrapper-argument", argument);
-        if (method == (int32_t)(intptr_t)function_450950)
+        if (method == (int32_t)(intptr_t)kinoko_method_begin_stage)
             retdec_trace("450950:wrapper-begin-stage");
     }
     result = retdec_call_thiscall1_result(
@@ -113414,7 +112612,7 @@ int32_t function_457810(int32_t a1) {
 // original vtable entry as a small calling-convention bridge and put the
 // recovered body in a normal C helper so the object and both virtual calls
 // remain explicit and reviewable.
-static int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
+int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
     int32_t begin;
     int32_t end;
     int32_t result = 0;
@@ -113466,22 +112664,6 @@ static int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_457a10(int32_t argument) {
-    __asm {
-        mov eax, ecx
-        push [esp + 4]
-        push eax
-        call function_457a10_impl
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_457a10(int32_t this_ptr, int32_t argument) {
-    return function_457a10_impl(this_ptr, argument);
-}
-#endif
 
 // Address range: 0x457a80 - 0x457ab7
 // From class:    .?AVCMeshControllerNode@@
@@ -119721,7 +118903,7 @@ int32_t __stdcall function_45d960(int32_t value) {
 }
 
 // Address range: 0x45d970 - 0x45d992
-static int32_t function_45d970_this(int32_t this_ptr, char flags) {
+int32_t function_45d970_this(int32_t this_ptr, char flags) {
     if (this_ptr == 0)
         return 0;
     *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g12;
@@ -119730,22 +118912,6 @@ static int32_t function_45d970_this(int32_t this_ptr, char flags) {
     return this_ptr;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t function_45d970_bridge(char flags) {
-    __asm {
-        mov edx, [esp + 4]
-        push edx
-        push ecx
-        call function_45d970_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-static int32_t function_45d970_bridge(int32_t this_ptr, char flags) {
-    return function_45d970_this(this_ptr, flags);
-}
-#endif
 
 int32_t function_45d970(char flags) {
     return function_45d970_this(0, flags);
@@ -119787,20 +118953,6 @@ static int32_t function_45d9f0_this(int32_t this_ptr) {
     return this_ptr;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t function_45d9f0_bridge(void) {
-    __asm {
-        push ecx
-        call function_45d9f0_this
-        add esp, 4
-        ret
-    }
-}
-#else
-static int32_t function_45d9f0_bridge(int32_t this_ptr) {
-    return function_45d9f0_this(this_ptr);
-}
-#endif
 
 // Address range: 0x45da00 - 0x45da37
 // From class:    .?AVSceneManager@@
@@ -119912,20 +119064,6 @@ int32_t function_45db90(int32_t a1) {
 }
 
 // Address range: 0x45dbd0 - 0x45de6d
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45dbd0(float32_t dx, float32_t dy) {
-    __asm {
-        push [esp + 8]
-        push [esp + 8]
-        push ecx
-        call function_45dbd0_this
-        add esp, 12
-        ret 8
-    }
-}
-#else
-int32_t function_45dbd0(float32_t dx, float32_t dy) { return 0; }
-#endif
 
 // Address range: 0x45de70 - 0x45de8b
 int32_t function_45de70(int32_t a1, int32_t * a2) {
@@ -120495,7 +119633,7 @@ static int32_t function_45e5e0_this(
 // Address range: 0x45eb00 - 0x45ec5d
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-static int32_t function_45eb00_this(int32_t actor) {
+int32_t function_45eb00_this(int32_t actor) {
     int32_t initial_function[3], initial_argument[3];
     int32_t parent_control = *(int32_t *)(intptr_t)(actor + 36);
     int32_t owner_control;
@@ -120521,18 +119659,6 @@ static int32_t function_45eb00_this(int32_t actor) {
     return kinoko_actor_reset_priority(actor, *(int32_t *)(intptr_t)(actor + 228));
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45eb00(void) {
-    __asm {
-        push ecx
-        call function_45eb00_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_45eb00(void) { return 0; }
-#endif
 
 // Address range: 0x45ec60 - 0x45f0bc
 
@@ -121049,12 +120175,7 @@ static void retdec_trace_proto_metadata(const char *label, int32_t proto, int32_
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) static int32_t retdec_read_ebx(void) {
-    __asm {
-        mov eax, ebx
-        ret
-    }
-}
+
 
 __declspec(naked) static int32_t retdec_read_esi(void) {
     __asm {
@@ -121063,9 +120184,7 @@ __declspec(naked) static int32_t retdec_read_esi(void) {
     }
 }
 #else
-static int32_t retdec_read_ebx(void) {
-    return 0;
-}
+
 
 static int32_t retdec_read_esi(void) {
     return 0;
@@ -121752,7 +120871,7 @@ int32_t function_460e00(void) {
                                           (int32_t)(intptr_t)&function_460b00,
                                           0);
     function_460e00_register_actor_method(v3, v2, "Reset",
-                                          (int32_t)(intptr_t)&function_45eb00,
+                                          (int32_t)(intptr_t)&kinoko_method_actor_destroy_state,
                                           (int32_t)(intptr_t)&function_460b00,
                                           0);
     function_460e00_register_actor_method(v3, v2, "SetUpdateFunction",
@@ -121804,7 +120923,7 @@ int32_t function_460e00(void) {
                                           (int32_t)(intptr_t)&function_460b50,
                                           0);
     function_460e00_register_actor_method(v3, v2, "Move",
-                                          (int32_t)(intptr_t)&function_45dbd0,
+                                          (int32_t)(intptr_t)&kinoko_method_actor_move,
                                           (int32_t)(intptr_t)&function_460cc0,
                                           0);
 
@@ -123253,7 +122372,7 @@ static void retdec_actor_refresh_bounds(int32_t actor) {
     *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
 }
 
-static int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
+int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
     while (dx != 0.0f || dy != 0.0f) {
         int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
         memcpy((void *)(intptr_t)(actor + 248), (const void *)(intptr_t)(actor + 240), 8);
@@ -123937,25 +123056,6 @@ static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_4627c0(int32_t update_arg,
-                                          int32_t layer_index)
-{
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push ecx
-        call function_4627c0_this
-        add esp, 12
-        ret 8
-    }
-}
-#else
-int32_t function_4627c0(int32_t update_arg, int32_t layer_index)
-{
-    return function_4627c0_this(0, update_arg, layer_index);
-}
-#endif
 
 // Address range: 0x462810 - 0x462867
 int32_t function_462810(int32_t a1) {
@@ -125620,20 +124720,6 @@ static int32_t function_463800_this(int32_t this_ptr) {
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_463800(void) {
-    __asm {
-        push ecx
-        call function_463800_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_463800(void) {
-    return 0;
-}
-#endif
 
 // Address range: 0x463820 - 0x4638a2
 int32_t function_463820(int32_t a1) {
@@ -125821,14 +124907,6 @@ static int32_t function_463af0_legacy(void) {
     return function_463580(v1 + 8) & -256 | 1;
 }
 
-__declspec(naked) int32_t function_463af0(void) {
-    __asm {
-        push ecx
-        call function_463af0_this
-        add esp, 4
-        ret
-    }
-}
 
 /* ActorManager::Init with the original global object supplied explicitly. */
 static int32_t function_463af0_this(int32_t this_ptr) {
@@ -127412,7 +126490,7 @@ int32_t function_466100(int32_t a1) {
     if (resource != 0 && g644 != NULL) {
         int32_t register_result = retdec_call_thiscall2_result(
             (void *)(intptr_t)resource,
-            (void *)(intptr_t)function_450e30,
+            (void *)(intptr_t)kinoko_method_root_table_construct,
             (int32_t)(intptr_t)g644, 0);
         retdec_trace_i32("466100:450e30-result", register_result);
     }
@@ -127527,18 +126605,6 @@ int32_t function_466320(int32_t a1) {
 // Address range: 0x466490 - 0x466494
 // From class:    .?AU?$ClassType@M@SqPlus@@
 // Type:          virtual member function
-#if defined(_M_IX86)
-__declspec(naked) int32_t function_466490(void) {
-    __asm {
-        mov eax, [ecx + 8]
-        ret
-    }
-}
-#else
-int32_t function_466490(void) {
-    return 0;
-}
-#endif
 
 // Address range: 0x4664a0 - 0x466536
 int32_t function_4664a0(int32_t a1) {
@@ -128685,21 +127751,6 @@ static int32_t function_4681e0_this(int32_t state, int32_t actor) {
     return (int32_t)flags;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_4681e0(int32_t actor) {
-    __asm {
-        push [esp + 4]
-        push ecx
-        call function_4681e0_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_4681e0(int32_t actor) {
-    return function_4681e0_this((int32_t)(intptr_t)g_514300_storage, actor);
-}
-#endif
 
 // Address range: 0x4682a0 - 0x4683b2
 static int32_t function_4682a0_this(int32_t state, int32_t actor,
@@ -130615,7 +129666,7 @@ int32_t function_4693a0(int32_t layout) {
 // Address range: 0x469620 - 0x469637
 // From class:    .?AVActorManagerRenderLayer@ActorManager@@
 // Type:          virtual member function
-static int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
+int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
 {
     int32_t actor_manager;
     int32_t layer_index;
@@ -130647,23 +129698,6 @@ static int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
     return function_4627c0_this(actor_manager, update_arg, layer_index);
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_469620(int32_t update_arg)
-{
-    __asm {
-        push dword ptr [esp + 4]
-        push ecx
-        call function_469620_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_469620(int32_t update_arg)
-{
-    return function_469620_this(0, update_arg);
-}
-#endif
 
 // Address range: 0x469640 - 0x469678
 int32_t function_469640(void) {
@@ -131581,14 +130615,7 @@ int32_t function_46a260(int32_t a1, int32_t a2) {
 // Address range: 0x46a2d0 - 0x46a380
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          constructor
-__declspec(naked) int32_t function_46a2d0(void) {
-    __asm {
-        push ecx
-        call function_46a2d0_this
-        add esp, 4
-        ret
-    }
-}
+
 
 /* CHandleManagerEx<Actor> constructor with the original destination in ECX. */
 static int32_t function_46a2d0_this(int32_t this_ptr) {
@@ -132236,7 +131263,7 @@ int32_t function_46a650(int32_t * a1, int32_t a2, int32_t a3) {
 // Address range: 0x46a6f0 - 0x46a793
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-static int32_t function_46a6f0_this(int32_t manager, uint32_t handle) {
+int32_t function_46a6f0_this(int32_t manager, uint32_t handle) {
     uint32_t index = handle & 0xffffu;
     uint32_t generation = handle >> 16;
     int32_t begin, generations, sentinel, node, actor;
@@ -132267,19 +131294,6 @@ static int32_t function_46a6f0_this(int32_t manager, uint32_t handle) {
     return result;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_46a6f0(uint32_t handle) {
-    __asm {
-        push dword ptr [esp + 4]
-        push ecx
-        call function_46a6f0_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_46a6f0(uint32_t handle) { return 0; }
-#endif
 
 // Address range: 0x46a7a0 - 0x46a7d1
 int32_t function_46a7a0(void) {
@@ -132590,17 +131604,10 @@ int32_t function_46a9c0(void) {
 // Address range: 0x46aa60 - 0x46aad4
 // From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
 // Type:          virtual member function
-__declspec(naked) int32_t function_46aa60(void) {
-    __asm {
-        push ecx
-        call function_46aa60_this
-        add esp, 4
-        ret
-    }
-}
+
 
 /* TObjectManagerBase<Actor>::Add with the hidden receiver restored. */
-static int32_t function_46aa60_this(int32_t this_ptr) {
+int32_t function_46aa60_this(int32_t this_ptr) {
     int32_t handle[2] = { 0, 0 };
     int32_t handle_manager;
     int32_t actor;
@@ -132636,14 +131643,6 @@ static int32_t function_46aa60_this(int32_t this_ptr) {
     return actor;
 }
 
-static __declspec(naked) int32_t retdec_actor_manager_vtable_push(void) {
-    __asm {
-        push ecx
-        call function_46aa60_this
-        add esp, 4
-        ret
-    }
-}
 
 // Address range: 0x46aae0 - 0x46ab01
 // From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
@@ -132774,7 +131773,7 @@ static int32_t function_46ab10_legacy(int32_t a1) {
 }
 
 /* CHandleManagerEx<Actor>::Get with the original ECX receiver restored. */
-static int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
+int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
     uint32_t index;
     uint32_t generation;
     int32_t actor;
@@ -132855,15 +131854,7 @@ static int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
 }
 
 /* The vtable call supplies ECX and no stack argument. */
-__declspec(naked) int32_t function_46ab10(int32_t a1) {
-    __asm {
-        push dword ptr [esp + 4]
-        push ecx
-        call function_46ab10_this
-        add esp, 8
-        ret 4
-    }
-}
+
 
 // Address range: 0x46acb0 - 0x46acef
 int32_t function_46acb0(void) {
@@ -136225,14 +135216,14 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     if (resource == 0 ||
         retdec_call_thiscall2_result(
             (void *)(intptr_t)resource,
-            (void *)(intptr_t)function_450e30, vm, 0) < 0) {
+            (void *)(intptr_t)kinoko_method_root_table_construct, vm, 0) < 0) {
         retdec_trace("map:450e30-failed");
         function_46f620_this(map_state);
         return 0;
     }
     if (retdec_call_thiscall1_result(
             (void *)(intptr_t)resource,
-            (void *)(intptr_t)function_450950, 0) < 0) {
+            (void *)(intptr_t)kinoko_method_begin_stage, 0) < 0) {
         retdec_trace("map:450950-failed");
         function_46f620_this(map_state);
         return 0;
@@ -181785,42 +180776,10 @@ float80_t function_489e90(int32_t a1) {
 // Address range: 0x489ef0 - 0x489f11
 // From class:    .?AUSQRefCounted@@
 // Type:          virtual member function
-static int32_t function_489ef0_this(int32_t this_ptr, int32_t flags) {
-    if (this_ptr == 0)
-        return 0;
-    function_48e4d0_this(this_ptr);
-    if ((flags & 1) != 0) {
-        _3f__3f_3_40_YAXPAX_40_Z(
-            (int32_t *)(intptr_t)this_ptr);
-    }
-    return this_ptr;
-}
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_489ef0(char a1) {
-    __asm {
-        mov edx, [esp + 4]
-        push edx
-        push ecx
-        call function_489ef0_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_489ef0(char a1) {
-    return function_489ef0_this(0, a1);
-}
-#endif
 
 // Address range: 0x489f20 - 0x489f30
-int32_t function_489f20(void) {
-    // 0x489f20
-    int32_t result; // 0x489f20
-    *(int32_t *)result = 0x1000001;
-    *(int32_t *)(result + 4) = 0;
-    return result;
-}
+
 
 // Address range: 0x489f30 - 0x489f4b
 // IDA: SQObjectPtr::Release(this).  RetDec dropped the __thiscall receiver.
@@ -181830,7 +180789,6 @@ int32_t function_489f20(void) {
 // IDA: SQObjectPtr::operator=(this, source).  The generated C version lost
 // the destination held in ECX, so use the same pair helper as the repaired
 // Squirrel table code.
-
 
 
 /* FlexibleClass stores the public value in SQInstance while the renderer
@@ -181877,12 +180835,6 @@ static volatile int32_t retdec_call_wrapper_nparams;
 /* RetDec represents a temporary that contains a VM-slot pointer as an
  * integer. Keep the required second dereference out of the optimized
  * Execute body so error helpers receive the SQObject pair itself. */
-
-
-
-
-
-
 
 
 static __declspec(thread) int32_t retdec_explicit_vm;
@@ -182000,8 +180952,6 @@ __declspec(noinline) void retdec_trace_i32(const char *label,
  * fixed heap address. */
 
 
-
-
 static __declspec(noinline) void retdec_trace_realloc_state(
     const char *label, int32_t block, int32_t old_bytes,
     int32_t new_bytes, int32_t result) {
@@ -182015,20 +180965,13 @@ static __declspec(noinline) void retdec_trace_realloc_state(
 }
 
 
-
-
-
 /* SQObjectPtr::Release decrements the object reference and dispatches the
  * object's virtual release method when the last reference disappears. */
-
-
 
 
 /* Explicit receivers for the Squirrel base/table methods whose ECX was
  * dropped by RetDec.  These are kept beside the compatibility ref helpers so
  * object cleanup uses the same direct SQObjectPtr reference semantics. */
-
-
 
 
 /* SQDelegable::GetMetaMethod(SQVM *, SQMetaMethod, SQObjectPtr &) is the
@@ -182039,32 +180982,10 @@ static __declspec(noinline) void retdec_trace_realloc_state(
  * object's delegate table. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
-
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 /* SQString::~SQString(flags) is the first virtual slot.  RetDec emitted the
  * body without its ECX receiver, so keep the receiver-bearing implementation
  * in a normal C helper and expose an x86 thiscall bridge to the vtable. */
 
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 /* Exact receiver-bearing implementation of StringTable::Remove. */
 
@@ -182072,42 +180993,14 @@ static __declspec(noinline) void retdec_trace_realloc_state(
 /* SQString::Release uses shared_state->m_stringtable as its receiver. */
 
 
-
-
-
-
-
-
 /* SQObjectPtr::operator=(SQInteger/SQFloat) keeps the destination in ECX.
  * RetDec dropped that hidden receiver from the generated C signatures. */
-
-
 
 
 /* These helpers restore the receivers that RetDec omitted from Squirrel's
  * small value/descriptor methods.  The descriptor layouts are five words:
  * a tag followed by two SQObjectPtr pairs. */
 
-
-
-
-
-
-
-
-
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-
-
-#else
-
-
-
-#endif
 
 /* Release the shared object held by Actor::m_parent/m_delegate. */
 static void retdec_release_squirrel_object(int32_t object_ptr) {
@@ -182153,7 +181046,6 @@ static uint32_t retdec_squirrel_key_hash(const int32_t *key) {
         return data;
     return data >> 3;
 }
-
 
 
 /* Snapshot the actual SQTable buckets without assuming which bindings were
@@ -182287,17 +181179,6 @@ static void retdec_trace_ref_watch(const char *label, int32_t shared_state,
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 /* Exact adapter for SQTable::Get.  The generated RetDec prototype lost the
  * __thiscall object and consequently cannot reliably pass the table or the
  * output value pair. */
@@ -182307,12 +181188,6 @@ static void retdec_trace_ref_watch(const char *label, int32_t shared_state,
 
 
 /* Exact adapter for SQTable::Remove (sub_498320). */
-
-
-
-
-
-
 
 
 int32_t function_4a94e0_this(int32_t this_ptr) {
@@ -182803,30 +181678,7 @@ static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr) {
 }
 
 
-
-
-
 /* SQObjectPtr vector copy used by SQClass construction. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /* SQClass::Lock() walks the base-class chain and marks each class locked. */
@@ -182847,16 +181699,8 @@ static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr) {
 /* SQClass::CreateInstance(), including its flexible SQInstance allocation. */
 
 
-
-
-
-
-
-
 /* Exact adapter for SQTable::Next().  IDA's prototype has two register
  * arguments and two output SQObject pairs in addition to the stack args. */
-
-
 
 
 /* SQTable::Finalize(): clear every key/value pair, then drop the delegate. */
@@ -182865,28 +181709,12 @@ static int32_t function_4a9e30_this(int32_t this_ptr, int32_t source_ptr) {
 /* SQTable::Clone(), with the lost ECX table made explicit. */
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Address range: 0x48a170 - 0x48a225
 int32_t function_48a170(int32_t a1) {
     kinoko_sq_set_context_exchange(retdec_exchange_source_receiver);
     int32_t vm = kinoko_sq_open(a1);
     retdec_active_vm = vm;
-    retdec_primary_shared_state = vm ? *(int32_t *)(intptr_t)(vm + 140) : 0;
+    retdec_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
 }
 
@@ -183060,8 +181888,6 @@ int32_t function_48a170(int32_t a1) {
  * boundary explicit and let the recovered FOREACH adapter own the outputs. */
 
 
-
-
 // Address range: 0x48b840 - 0x48b862
 
 
@@ -183104,21 +181930,12 @@ int32_t function_48a170(int32_t a1) {
 // Type:          constructor
 
 
-
-
 /* Receiver-bearing SQClosure destructor used by both virtual release slots. */
-
-
 
 
 // Address range: 0x48bb10 - 0x48bb28
 // From class:    .?AUSQClosure@@
 // Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48bb30 - 0x48bb94
 
@@ -183129,11 +181946,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48bc70 - 0x48bc91
 // From class:    .?AUSQClosure@@
 // Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48bca0 - 0x48bd34
 
@@ -183141,35 +181953,15 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48bd40 - 0x48bd58
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x48bd60 - 0x48be36
-
-
 
 
 // Address range: 0x48be40 - 0x48be61
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x48be70 - 0x48be78
 // From class:    .?AUSQUserData@@
 // Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 
 
 // Address range: 0x48be80 - 0x48beb5
@@ -183180,23 +181972,12 @@ int32_t function_48a170(int32_t a1) {
  * explicit helper and expose a small thiscall bridge through the vtable. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x48bec0 - 0x48bf4f
 
 
 // Address range: 0x48bf50 - 0x48bfd9
 // From class:    .?AUSQUserData@@
 // Type:          scalar-deleting destructor
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48bfe0 - 0x48c079
 // IDA: SQClass::Get(this, key, out). The table result is a member
@@ -183214,7 +181995,6 @@ int32_t function_48a170(int32_t a1) {
 
 
 // Address range: 0x48c1f0 - 0x48c2e9
-
 
 
 // Address range: 0x48c2f0 - 0x48c34c
@@ -183280,7 +182060,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48d0b0 - 0x48d0ea
 
 
-
 // Address range: 0x48d0f0 - 0x48d1a2
 
 
@@ -183296,8 +182075,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48d390 - 0x48d425
 // From class:    .?AUSQArray@@
 // Type:          constructor
-
-
 
 
 // Address range: 0x48d430 - 0x48d448
@@ -183331,12 +182108,6 @@ int32_t function_48a170(int32_t a1) {
 // From class:    .?AUSQClosure@@
 // Type:          virtual member function
 
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48d770 - 0x48d7d8
 
@@ -183376,10 +182147,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48de90 - 0x48e030
 
 
-
-
-
-
 // Address range: 0x48e030 - 0x48e0e0
 
 
@@ -183410,11 +182177,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48e4a0 - 0x48e4ad
 // From class:    .?AUSQString@@
 // Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48e4b0 - 0x48e4cf
 
@@ -183427,12 +182189,6 @@ int32_t function_48a170(int32_t a1) {
 // Address range: 0x48e4f0 - 0x48e51b
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x48e520 - 0x48e57a
 
 
@@ -183444,11 +182200,6 @@ int32_t function_48a170(int32_t a1) {
 
 // Address range: 0x48e640 - 0x48e674
 typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
-
-
-
-
-
 
 
 // Address range: 0x48e680 - 0x48e6b9
@@ -183510,8 +182261,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
  * below for reference and route the live symbol through this implementation. */
 
 
-
-
 // Address range: 0x48f380 - 0x48fabd (RetDec reference body)
 
 
@@ -183548,21 +182297,10 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 // Address range: 0x48fe70 - 0x48fec5
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x48fed0 - 0x48ffcc
 
 /* SQVector<CallInfo>::resize is a thiscall.  Keep the vector receiver in
  * ECX at the ABI boundary; the receiver-aware implementation is above. */
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x48ffd0 - 0x49003e
 
@@ -183633,30 +182371,12 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 // Type:          virtual member function
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x4910e0 - 0x491144
 
 
 /* SQGenerator::~SQGenerator() is a __thiscall. RetDec dropped ECX from
  * both destructor layers, so keep the receiver explicit through cleanup. */
 
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-
-
-#else
-
-
-
-#endif
 
 // Address range: 0x491260 - 0x4912de
 /* SQArray::Get(index, out), with the __thiscall receiver restored. */
@@ -183682,8 +182402,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 
 
 // Address range: 0x4914a0 - 0x4914f2
-
-
 
 
 // Address range: 0x491500 - 0x4915a8
@@ -183716,22 +182434,10 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 // Address range: 0x491910 - 0x4919ac
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x4919b0 - 0x491a45
 // From class:    .?AUSQGenerator@@
 // Type:          virtual member function
 
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x491a50 - 0x491be5
 // From class:    .?AUSQVM@@
@@ -183778,11 +182484,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 
 // Address range: 0x492890 - 0x492a7d
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x492a80 - 0x492c8d
 
@@ -183814,9 +182515,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 // Address range: 0x493310 - 0x493706
 
 
-
-
-
 /* Reconstruct SQVM::CallMetaMethod around the recovered 497850 call
    dispatcher.  Keeping the receiver and all three pushed object pairs
    explicit is important here: the original `this`/key/value triplet is what
@@ -183830,12 +182528,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
 
 
 // Address range: 0x493cd0 - 0x493e65
-
-
-
-
-
-
 
 
 // Address range: 0x493e70 - 0x49409f
@@ -183911,8 +182603,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
  */
 
 
-
-
 // Address range: 0x495360 - 0x497580
 
 
@@ -183923,28 +182613,6 @@ typedef int32_t (*retdec_stream_callback)(int32_t, int32_t, int32_t);
  * SQObject address from the live VM for each instruction.  This is the same
  * ownership/order model used by the repaired Squirrel adapters above.
  */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /* SQVM::Execute exception_trap, original 4971xx..4975xx. */
@@ -183959,11 +182627,7 @@ static int32_t retdec_execute_clean_vm(
 // Address range: 0x497680 - 0x49784d
 
 
-
-
 // Address range: 0x497850 - 0x497940
-
-
 
 
 // Address range: 0x497940 - 0x497984
@@ -183971,49 +182635,24 @@ static int32_t retdec_execute_clean_vm(
 
 // Address range: 0x497990 - 0x4979fd
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x497a00 - 0x497b05
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x497b10 - 0x497d21
 
 /* SQTable::NewSlot is a thiscall.  RetDec dropped ECX from the generated
  * wrapper, so keep the receiver at the boundary and use the repaired
  * receiver-aware implementation above. */
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x497d30 - 0x497e2c
 
 
 // Address range: 0x497e30 - 0x497f08
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x497f10 - 0x497fcb
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x497fd0 - 0x497fe3
 // From class:    .?AUSQTable@@
@@ -184029,64 +182668,28 @@ static int32_t retdec_execute_clean_vm(
  * destructor already has an explicit receiver adapter above. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x4980a0 - 0x4981d2
 
 /* SQTable::Rehash is a private thiscall.  The original generated body used
  * an unresolved local in place of ECX, which is the direct cause of the
  * 0x72F0B access violation seen during startup. */
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x4981e0 - 0x4981fa
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x498200 - 0x4982eb
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x4982f0 - 0x498311
 // From class:    .?AUSQTable@@
 // Type:          virtual member function
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x498320 - 0x49843b
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x498440 - 0x49857f
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x498580 - 0x498589
 
@@ -184153,12 +182756,6 @@ int32_t function_4985b0(int32_t a1) {
  * scalar-deleting destructor. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x498c60 - 0x498d21
 // From class:    .?AUSQInstance@@
 // Type:          constructor
@@ -184173,12 +182770,6 @@ int32_t function_4985b0(int32_t a1) {
  * must be captured before releasing the class reference. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
 // Address range: 0x498da0 - 0x498e30
 
 
@@ -184187,24 +182778,10 @@ int32_t function_4985b0(int32_t a1) {
  * path and the scalar-deleting destructor use the original layout. */
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
-
-
 // SQInstance::GetMetaMethod is a __thiscall.  The first explicit argument
 // (SQVM *) is unused by the original implementation, but remains on the
 // stack and must be included in the callee cleanup.
 
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x498e90 - 0x498f45
 
@@ -184218,18 +182795,6 @@ int32_t function_4985b0(int32_t a1) {
 /* Release one reference using the original virtual slot-4 destructor. */
 
 
-
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
-
-
-
 // Address range: 0x4992c0 - 0x499377
 
 
@@ -184237,18 +182802,6 @@ int32_t function_4985b0(int32_t a1) {
 // From class:    .?AUSQClass@@
 // Type:          virtual member function
 
-
-
-
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-
-
-#else
-
-
-
-#endif
 
 /* SQClass::GetSlot() is a __thiscall.  The original receiver is the
  * SQClass context passed to SQClass::NewSlot, while the generated RetDec
@@ -184266,11 +182819,6 @@ int32_t function_4985b0(int32_t a1) {
 // Address range: 0x4996c0 - 0x4996e1
 // From class:    .?AUSQInstance@@
 // Type:          virtual member function
-#if defined(_MSC_VER) && defined(_M_IX86)
-
-#else
-
-#endif
 
 // Address range: 0x4996f0 - 0x4997f3
 
@@ -184283,21 +182831,8 @@ int32_t function_4985b0(int32_t a1) {
 // Address range: 0x499970 - 0x499a1d
 
 
-
 /* Recovered Squirrel error/type helpers.  RetDec lost the __thiscall
  * receiver and the varargs boundary in this cluster. */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Address range: 0x499f80 - 0x499fc3
@@ -184327,13 +182862,9 @@ int32_t function_4985b0(int32_t a1) {
 /* Explicit receiver for RefTable::Finalize(). */
 
 
-
-
 // Address range: 0x49a280 - 0x49a297
 /* Explicit receiver for RefTable::~RefTable().  Nodes and buckets share one
    allocation of 20 bytes per slot, so the bucket base is the free pointer. */
-
-
 
 
 // Address range: 0x49a2a0 - 0x49a2d5
@@ -184349,8 +182880,6 @@ int32_t function_4985b0(int32_t a1) {
 /* Explicit receiver for StringTable::~StringTable(). */
 
 
-
-
 // Address range: 0x49a400 - 0x49a430
 
 
@@ -184364,27 +182893,6 @@ int32_t function_4985b0(int32_t a1) {
    Keep the object graph walk here in the same order as Squirrel 2.2.2. */
 static int32_t retdec_gc_watch_table;
 static int32_t retdec_gc_watch_cycle;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Address range: 0x49a520 - 0x49a66d
@@ -184418,12 +182926,6 @@ static int32_t retdec_gc_watch_cycle;
    49AB80 as uninitialized pointers. */
 
 
-
-
-
-
-
-
 typedef int32_t (__cdecl *retdec_native_fn)(void);
 typedef struct retdec_native_entry {
     const char *name;
@@ -184436,32 +182938,9 @@ typedef struct retdec_native_entry {
     { name, (retdec_native_fn)(intptr_t)(fn), (argc), mask }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #undef RETDEC_NATIVE_ENTRY
 
 // Address range: 0x49ad60 - 0x49af7c
-
-
 
 
 // Address range: 0x49af80 - 0x49c34f
@@ -184470,15 +182949,10 @@ typedef struct retdec_native_entry {
 // Address range: 0x49c350 - 0x49c9d4
 
 
-
 // Address range: 0x49d700 - 0x49d787
 
 
-
 // Address range: 0x4a15b0 - 0x4a1691
-
-
-
 
 
 // Address range: 0x4a16a0 - 0x4a1755
@@ -184487,10 +182961,7 @@ typedef struct retdec_native_entry {
 // Address range: 0x4a1760 - 0x4a1763
 // From class:    .?AUSQBlob@@
 // Type:          virtual member function
-int32_t function_4a1760(void) {
-    // 0x4a1760
-    return 0;
-}
+
 
 // Address range: 0x4a1770 - 0x4a178f
 
@@ -184508,11 +182979,7 @@ int32_t function_4a1760(void) {
 
 
 // Address range: 0x4a1850 - 0x4a1863
-int32_t function_4a1850(int32_t a1) {
-    // 0x4a1850
-    function_48a300(a1);
-    return 0;
-}
+
 
 // Address range: 0x4a1870 - 0x4a1883
 
@@ -184533,8 +183000,6 @@ int32_t function_4a1850(int32_t a1) {
    C-friendly while preserving get_slice_params semantics from sqbaselib.cpp. */
 
 
-
-
 // Address range: 0x4a1a40 - 0x4a1b40
 
 
@@ -184542,7 +183007,6 @@ int32_t function_4a1850(int32_t a1) {
 
 
 // Address range: 0x4a1b90 - 0x4a1c05
-
 
 
 // Address range: 0x4a1c10 - 0x4a1c55
@@ -184558,16 +183022,6 @@ int32_t function_4a1850(int32_t a1) {
 
 
 // Address range: 0x4a1e20 - 0x4a1ea6
-
-
-
-
-
-
-
-
-
-
 
 
 // Address range: 0x4a1eb0 - 0x4a2113
@@ -184714,19 +183168,13 @@ int32_t function_4a1850(int32_t a1) {
 // Address range: 0x4a4540 - 0x4a46c2
 
 
-
-
 // Address range: 0x4a46d0 - 0x4a47d3
 
 
 // Address range: 0x4a47e0 - 0x4a48b6
 
 
-
-
 // Address range: 0x4a48c0 - 0x4a49b2
-
-
 
 
 // Address range: 0x4a49c0 - 0x4a49da
@@ -184759,36 +183207,22 @@ int32_t function_4a1850(int32_t a1) {
 // Address range: 0x4a5030 - 0x4a5062
 
 
-
-
 // Address range: 0x4a5070 - 0x4a50c8
-
-
 
 
 // Address range: 0x4a50d0 - 0x4a51a4
 
 
-
-
 // Address range: 0x4a51b0 - 0x4a526a
-
-
 
 
 // Address range: 0x4a5270 - 0x4a5320
 
 
-
-
 // Address range: 0x4a5320 - 0x4a5385
 
 
-
-
 // Address range: 0x4a5390 - 0x4a55e6
-
-
 
 
 // Address range: 0x4a55f0 - 0x4a5678
@@ -184812,14 +183246,10 @@ int32_t function_4a1850(int32_t a1) {
 /* Explicit receiver for SQFuncState::AddLocalVariable. */
 
 
-
-
 // Address range: 0x4a5960 - 0x4a5b9a
 
 
 // Address range: 0x4a5ba0 - 0x4a5c28
-
-
 
 
 // Address range: 0x4a5c30 - 0x4a5e61
@@ -184828,22 +183258,10 @@ int32_t function_4a1850(int32_t a1) {
 // Address range: 0x4a5eb0 - 0x4a5f91
 
 
-
-
-
-
 // Address range: 0x4a5fa0 - 0x4a61f8
 
 
-
-
-
-
 // Address range: 0x4a6200 - 0x4a6261
-
-
-
-
 
 
 // Address range: 0x4a6270 - 0x4a6287
@@ -191132,8 +189550,6 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 // Address range: 0x4c63d0 - 0x4c6424
 
 
-
-
 // Address range: 0x4c6430 - 0x4c64c2
 
 
@@ -191152,7 +189568,6 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 // Address range: 0x4c6670 - 0x4c677c
 
 
-
 // Address range: 0x4c6780 - 0x4c67c1
 
 
@@ -191160,8 +189575,6 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 
 
 // Address range: 0x4c67f0 - 0x4c6820
-
-
 
 
 // Address range: 0x4c6820 - 0x4c685e
@@ -191504,10 +189917,6 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 
 
 // Address range: 0x4c99c0 - 0x4c9ad6
-
-
-
-
 
 
 // Address range: 0x4c9ae0 - 0x4c9c8c

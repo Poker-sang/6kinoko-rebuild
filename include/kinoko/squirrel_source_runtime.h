@@ -10,6 +10,11 @@ extern "C" {
 typedef int32_t (*kinoko_sq_context_exchange)(int32_t vm);
 void kinoko_sq_set_context_exchange(kinoko_sq_context_exchange exchange);
 int32_t kinoko_sq_open(int32_t stack_size);
+int32_t kinoko_sq_shared_state(int32_t vm);
+/* Existing embedding constructor: intentionally returns no values. */
+int32_t kinoko_sq_noop_constructor(int32_t vm);
+/* Original SQRefCounted deleting-destructor entry (ECX receiver). */
+int32_t __fastcall kinoko_sq_delete_refcounted(int32_t object, void *unused_edx, int32_t flags);
 int32_t kinoko_sq_construct_vm(int32_t storage, int32_t shared_state);
 int32_t kinoko_sq_call(int32_t vm, int32_t nargs, int32_t retval, int32_t raiseerror);
 int32_t kinoko_sq_call_object(int32_t vm, int32_t closure, int32_t nargs,

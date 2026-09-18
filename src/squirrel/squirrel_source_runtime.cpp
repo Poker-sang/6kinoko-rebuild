@@ -128,3 +128,26 @@ extern "C" int32_t kinoko_sq_get_up(int32_t vm, int32_t index) {
 extern "C" int32_t kinoko_sq_get_at(int32_t vm, int32_t index) {
     return vm ? address(&pointer<SQVM>(vm)->GetAt(index)) : 0;
 }
+
+// Keep shared-state layout knowledge in the actual source type, not a magic
+// +140 dereference in the decompiled embedding layer.
+extern "C" int32_t kinoko_sq_shared_state(int32_t vm) {
+    return vm ? address(pointer<SQVM>(vm)->_sharedstate) : 0;
+}
+
+extern "C" int32_t kinoko_sq_noop_constructor(int32_t /* vm */) {
+    // The original embedding registered 4A1760 for these classes; it neither
+    // allocates state nor pushes a return value. This is not a new constructor.
+    return 0;
+}
+
+extern "C" int32_t __fastcall kinoko_sq_delete_refcounted(
+    int32_t object, void* /* unused_edx */, int32_t flags) {
+    if (!object) return 0;
+    auto* value = pointer<SQRefCounted>(object);
+    // Qualified base destruction is intentional. The old vtable entry did
+    // not dispatch a second derived destructor; it cleared the weak reference.
+    value->SQRefCounted::~SQRefCounted();
+    if ((flags & 1) != 0) sq_free(value, 0);
+    return object;
+}

@@ -2910,7 +2910,7 @@ static int test_thread_receivers(int32_t vm, int32_t *root) {
     int32_t *key=(int32_t *)(intptr_t)function_491880_this(vm,-1);
     int32_t name=key[1];
     int32_t refs=*(int32_t *)(intptr_t)(name+4);
-    function_48d850(vm,PTR(function_4a1760),0);
+    function_48d850(vm,PTR(kinoko_sq_noop_constructor),0);
     CHECK(function_48c580(vm,-1,PTR("native-name-owned"))==0);
     CHECK(*(int32_t *)(intptr_t)(name+4)==refs+1);
     CHECK(function_48c580(vm,-1,PTR("native-name-owned"))==0);
