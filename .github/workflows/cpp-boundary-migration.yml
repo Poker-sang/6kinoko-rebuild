@@ -57,14 +57,18 @@ jobs:
               if hashlib.sha256(output).hexdigest() != entry['sha256']:
                   raise RuntimeError('Reconstructed output checksum mismatch: ' + name)
               outputs[name] = output
+          # Workflow changes are submitted separately through the authorized connector.
+          # This contents-only token applies source code, never workflow administration.
+          outputs.pop('.github/workflows/windows-x86.yml')
+          if any(name.startswith('.github/workflows/') for name in outputs):
+              raise RuntimeError('Workflow change is outside source application scope')
           for name, output in outputs.items():
               path = pathlib.Path(name)
               path.parent.mkdir(parents=True, exist_ok=True)
               path.write_bytes(output)
           subprocess.run(['git', 'diff', '--check'], check=True)
           subprocess.run(['git', 'add', '-f', '--', *outputs], check=True)
-          # The transport is one-shot and is not retained as executable maintenance code.
-          subprocess.run(['git', 'rm', '--', *parts, '.github/workflows/cpp-boundary-migration.yml'], check=True)
+          subprocess.run(['git', 'rm', '--', *parts], check=True)
       - name: Commit before tests and fast-forward only the existing PR branch
         id: commit
         shell: bash
