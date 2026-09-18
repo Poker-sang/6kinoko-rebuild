@@ -1,0 +1,31 @@
+{
+  "total": 4890,
+  "categories": [
+    {
+      "label": "保留原反编译函数体",
+      "count": 2161,
+      "percent": 44.19
+    },
+    {
+      "label": "已修改／替换的非空实现",
+      "count": 477,
+      "percent": 9.75
+    },
+    {
+      "label": "未找到同名入口，待核对替代",
+      "count": 1307,
+      "percent": 26.73
+    },
+    {
+      "label": "原版即为简单返回／空函数",
+      "count": 849,
+      "percent": 17.36
+    },
+    {
+      "label": "简化返回／占位候选，待核对",
+      "count": 96,
+      "percent": 1.96
+    }
+  ],
+  "method": "Source inventory by original function address. Comments and whitespace ignored; all conditional variants checked. Not semantic equivalence or runtime reachability. External CRT/instruction helpers excluded."
+}

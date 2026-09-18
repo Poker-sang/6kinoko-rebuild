@@ -1,0 +1,2450 @@
+{
+  "revision": "3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547",
+  "source_units": [
+    {
+      "path": "src/decompiled/6kinoko_rebuilt.c",
+      "lines": 194035,
+      "code_lines": 162549,
+      "address_definitions": 3837,
+      "inline_asm": 8
+    },
+    {
+      "path": "src/decompiled/retdec_asm_stubs.c",
+      "lines": 26,
+      "code_lines": 21,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/decompiled/retdec_runtime_compat.c",
+      "lines": 100,
+      "code_lines": 84,
+      "address_definitions": 0,
+      "inline_asm": 2
+    },
+    {
+      "path": "src/platform/audio_math.cpp",
+      "lines": 23,
+      "code_lines": 21,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/platform/diagnostics.cpp",
+      "lines": 323,
+      "code_lines": 296,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/platform/game_math.cpp",
+      "lines": 54,
+      "code_lines": 50,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/platform/retdec_memory.cpp",
+      "lines": 50,
+      "code_lines": 43,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/platform/retdec_runtime_compat.cpp",
+      "lines": 893,
+      "code_lines": 748,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/platform/windows_entry.cpp",
+      "lines": 21,
+      "code_lines": 18,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/act_clone.cpp",
+      "lines": 233,
+      "code_lines": 216,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/act_resource.cpp",
+      "lines": 154,
+      "code_lines": 129,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/actor_animation.cpp",
+      "lines": 188,
+      "code_lines": 165,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/actor_cleanup.cpp",
+      "lines": 127,
+      "code_lines": 112,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/actor_collision.cpp",
+      "lines": 347,
+      "code_lines": 333,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/actor_methods.cpp",
+      "lines": 163,
+      "code_lines": 125,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/archive.cpp",
+      "lines": 249,
+      "code_lines": 218,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/asset_store.cpp",
+      "lines": 81,
+      "code_lines": 74,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/legacy_abi.cpp",
+      "lines": 51,
+      "code_lines": 41,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/legacy_method_entries.cpp",
+      "lines": 131,
+      "code_lines": 91,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/map_layers.cpp",
+      "lines": 89,
+      "code_lines": 77,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/map_render.cpp",
+      "lines": 52,
+      "code_lines": 45,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/native_instance.cpp",
+      "lines": 100,
+      "code_lines": 91,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/script_callbacks.cpp",
+      "lines": 201,
+      "code_lines": 165,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/sprite.cpp",
+      "lines": 74,
+      "code_lines": 63,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/sprite_color.cpp",
+      "lines": 69,
+      "code_lines": 56,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/squirrel_object.cpp",
+      "lines": 66,
+      "code_lines": 58,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/stage_cleanup.cpp",
+      "lines": 98,
+      "code_lines": 83,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/reconstructed/texture_store.cpp",
+      "lines": 107,
+      "code_lines": 94,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/native_property_bridge.cpp",
+      "lines": 198,
+      "code_lines": 188,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/sqrat_object_bridge.cpp",
+      "lines": 275,
+      "code_lines": 258,
+      "address_definitions": 2,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_array_bridge.cpp",
+      "lines": 37,
+      "code_lines": 28,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_class_binding.cpp",
+      "lines": 253,
+      "code_lines": 225,
+      "address_definitions": 16,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_compile_bridge.cpp",
+      "lines": 108,
+      "code_lines": 98,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_csv.cpp",
+      "lines": 140,
+      "code_lines": 131,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_game_objects.cpp",
+      "lines": 203,
+      "code_lines": 189,
+      "address_definitions": 3,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_generator_bridge.cpp",
+      "lines": 50,
+      "code_lines": 40,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_host_compat.cpp",
+      "lines": 459,
+      "code_lines": 446,
+      "address_definitions": 34,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_legacy_api.cpp",
+      "lines": 540,
+      "code_lines": 416,
+      "address_definitions": 111,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_method_dispatch.cpp",
+      "lines": 179,
+      "code_lines": 166,
+      "address_definitions": 15,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_arguments.cpp",
+      "lines": 115,
+      "code_lines": 109,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_calls.cpp",
+      "lines": 246,
+      "code_lines": 232,
+      "address_definitions": 22,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_variables.cpp",
+      "lines": 190,
+      "code_lines": 174,
+      "address_definitions": 5,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_operations.cpp",
+      "lines": 66,
+      "code_lines": 55,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_source_gc.cpp",
+      "lines": 104,
+      "code_lines": 93,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_source_runtime.cpp",
+      "lines": 153,
+      "code_lines": 129,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_table_values.cpp",
+      "lines": 52,
+      "code_lines": 49,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_thread.cpp",
+      "lines": 99,
+      "code_lines": 86,
+      "address_definitions": 0,
+      "inline_asm": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_value_bridge.cpp",
+      "lines": 87,
+      "code_lines": 62,
+      "address_definitions": 0,
+      "inline_asm": 0
+    }
+  ],
+  "cpp_code_lines": 6586,
+  "c_code_lines": 162654,
+  "cpp_source_share": 3.89,
+  "history": [
+    {
+      "revision": "d807bd0",
+      "physical_lines": 229275,
+      "code_lines": 194996,
+      "address_definitions": 4877,
+      "function_body_code_lines": 159499
+    },
+    {
+      "revision": "06ad4bf",
+      "physical_lines": 197411,
+      "code_lines": 165734,
+      "address_definitions": 3956,
+      "function_body_code_lines": 137819
+    },
+    {
+      "revision": "0f92ecb",
+      "physical_lines": 194035,
+      "code_lines": 162549,
+      "address_definitions": 3837,
+      "function_body_code_lines": 135982
+    },
+    {
+      "revision": "3cffc80",
+      "physical_lines": 194035,
+      "code_lines": 162549,
+      "address_definitions": 3837,
+      "function_body_code_lines": 135982
+    }
+  ],
+  "remaining_address_definitions": 3837,
+  "missing_with_cpp_address_definition": {
+    "function_4029b0": [
+      {
+        "file": "src/squirrel/squirrel_game_objects.cpp",
+        "name": "function_4029b0",
+        "line": 66,
+        "lines": 3,
+        "tokens": 37
+      }
+    ],
+    "function_402a50": [
+      {
+        "file": "src/squirrel/squirrel_game_objects.cpp",
+        "name": "function_402a50",
+        "line": 72,
+        "lines": 12,
+        "tokens": 177
+      }
+    ],
+    "function_41e260": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_41e260",
+        "line": 107,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_41e2c0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_41e2c0",
+        "line": 108,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_431650": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_431650",
+        "line": 109,
+        "lines": 4,
+        "tokens": 39
+      }
+    ],
+    "function_445730": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_445730",
+        "line": 115,
+        "lines": 8,
+        "tokens": 99
+      }
+    ],
+    "function_4552e0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_4552e0",
+        "line": 125,
+        "lines": 10,
+        "tokens": 96
+      }
+    ],
+    "function_4555a0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_4555a0",
+        "line": 137,
+        "lines": 17,
+        "tokens": 243
+      }
+    ],
+    "function_45e020": [
+      {
+        "file": "src/squirrel/squirrel_game_objects.cpp",
+        "name": "function_45e020_this",
+        "line": 187,
+        "lines": 11,
+        "tokens": 133
+      }
+    ],
+    "function_45f4f0": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_45f4f0",
+        "line": 97,
+        "lines": 9,
+        "tokens": 119
+      }
+    ],
+    "function_45f560": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f560",
+        "line": 42,
+        "lines": 5,
+        "tokens": 50
+      }
+    ],
+    "function_45f5a0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f5a0",
+        "line": 51,
+        "lines": 5,
+        "tokens": 50
+      }
+    ],
+    "function_48a830": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a830",
+        "line": 120,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_45f5e0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f5e0",
+        "line": 58,
+        "lines": 1,
+        "tokens": 12
+      },
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f5e0_at",
+        "line": 61,
+        "lines": 1,
+        "tokens": 17
+      }
+    ],
+    "function_45f640": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_45f640",
+        "line": 109,
+        "lines": 25,
+        "tokens": 208
+      }
+    ],
+    "function_45f850": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f850",
+        "line": 64,
+        "lines": 5,
+        "tokens": 70
+      }
+    ],
+    "function_45f8c0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f8c0",
+        "line": 72,
+        "lines": 11,
+        "tokens": 143
+      }
+    ],
+    "function_45f9d0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_45f9d0",
+        "line": 87,
+        "lines": 7,
+        "tokens": 111
+      }
+    ],
+    "function_45fab0": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_45fab0",
+        "line": 140,
+        "lines": 18,
+        "tokens": 204
+      }
+    ],
+    "function_4aa080": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4aa080",
+        "line": 362,
+        "lines": 26,
+        "tokens": 204
+      }
+    ],
+    "function_460540": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460540_this",
+        "line": 98,
+        "lines": 35,
+        "tokens": 327
+      },
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460540",
+        "line": 137,
+        "lines": 2,
+        "tokens": 18
+      }
+    ],
+    "function_4607e0": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_4607e0",
+        "line": 199,
+        "lines": 12,
+        "tokens": 110
+      }
+    ],
+    "function_460920": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_460920",
+        "line": 186,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_4609c0": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_4609c0",
+        "line": 190,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_460a60": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_460a60",
+        "line": 194,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_460b00": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460b00",
+        "line": 141,
+        "lines": 4,
+        "tokens": 39
+      }
+    ],
+    "function_460b50": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460b50",
+        "line": 147,
+        "lines": 8,
+        "tokens": 115
+      }
+    ],
+    "function_460bc0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460bc0",
+        "line": 159,
+        "lines": 3,
+        "tokens": 43
+      }
+    ],
+    "function_460c10": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460c10",
+        "line": 164,
+        "lines": 4,
+        "tokens": 50
+      }
+    ],
+    "function_460c70": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460c70",
+        "line": 170,
+        "lines": 3,
+        "tokens": 43
+      }
+    ],
+    "function_460cc0": [
+      {
+        "file": "src/squirrel/squirrel_method_dispatch.cpp",
+        "name": "function_460cc0",
+        "line": 175,
+        "lines": 3,
+        "tokens": 43
+      }
+    ],
+    "function_460d10": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_460d10_this",
+        "line": 215,
+        "lines": 14,
+        "tokens": 175
+      },
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_460d10_actor",
+        "line": 232,
+        "lines": 7,
+        "tokens": 92
+      }
+    ],
+    "function_46b490": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46b490",
+        "line": 157,
+        "lines": 6,
+        "tokens": 83
+      }
+    ],
+    "function_46b500": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46b500",
+        "line": 165,
+        "lines": 6,
+        "tokens": 104
+      }
+    ],
+    "function_46b610": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46b610",
+        "line": 184,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_46b6f0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46b6f0",
+        "line": 187,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_46ce70": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46ce70",
+        "line": 196,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_46cec0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46cec0",
+        "line": 197,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_46cf10": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46cf10",
+        "line": 198,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_46cf60": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_46cf60",
+        "line": 199,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_48a890": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a890",
+        "line": 124,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_4716b0": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_4716b0",
+        "line": 200,
+        "lines": 4,
+        "tokens": 66
+      }
+    ],
+    "function_471720": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_471720",
+        "line": 216,
+        "lines": 6,
+        "tokens": 120
+      }
+    ],
+    "function_471a60": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_471a60",
+        "line": 206,
+        "lines": 8,
+        "tokens": 130
+      }
+    ],
+    "function_48a920": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a920",
+        "line": 132,
+        "lines": 1,
+        "tokens": 30
+      }
+    ],
+    "function_471d30": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_471d30",
+        "line": 224,
+        "lines": 5,
+        "tokens": 108
+      }
+    ],
+    "function_471e50": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_471e50",
+        "line": 231,
+        "lines": 7,
+        "tokens": 121
+      }
+    ],
+    "function_471f70": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_471f70",
+        "line": 240,
+        "lines": 1,
+        "tokens": 19
+      }
+    ],
+    "function_472030": [
+      {
+        "file": "src/squirrel/squirrel_native_calls.cpp",
+        "name": "function_472030",
+        "line": 241,
+        "lines": 4,
+        "tokens": 67
+      }
+    ],
+    "function_489f30": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_489f30_this",
+        "line": 448,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_489f50": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_489f50_this",
+        "line": 452,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48a230": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a230",
+        "line": 36,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_48a2d0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a2d0",
+        "line": 40,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_48a300": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a300",
+        "line": 44,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48a370": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a370",
+        "line": 48,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48a3e0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a3e0",
+        "line": 52,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48a400": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a400",
+        "line": 56,
+        "lines": 1,
+        "tokens": 23
+      }
+    ],
+    "function_48a430": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a430",
+        "line": 60,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48a460": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a460",
+        "line": 64,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48a480": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a480",
+        "line": 68,
+        "lines": 1,
+        "tokens": 25
+      }
+    ],
+    "function_48a4f0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a4f0",
+        "line": 72,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48a530": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a530",
+        "line": 76,
+        "lines": 1,
+        "tokens": 19
+      }
+    ],
+    "function_48a580": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a580",
+        "line": 80,
+        "lines": 1,
+        "tokens": 34
+      }
+    ],
+    "function_48a5c0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a5c0",
+        "line": 84,
+        "lines": 1,
+        "tokens": 22
+      }
+    ],
+    "function_48a600": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a600",
+        "line": 88,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48a670": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a670",
+        "line": 92,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48a690": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a690",
+        "line": 96,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48a6b0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a6b0",
+        "line": 100,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48a720": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a720",
+        "line": 108,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48a790": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a790",
+        "line": 112,
+        "lines": 1,
+        "tokens": 22
+      }
+    ],
+    "function_48a980": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a980",
+        "line": 136,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48a9e0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48a9e0",
+        "line": 140,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48aa30": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48aa30",
+        "line": 148,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_48aa50": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48aa50",
+        "line": 152,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_48aa60": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48aa60",
+        "line": 156,
+        "lines": 1,
+        "tokens": 13
+      }
+    ],
+    "function_48aa80": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48aa80",
+        "line": 160,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48ab40": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ab40",
+        "line": 164,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_48ab90": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ab90",
+        "line": 168,
+        "lines": 1,
+        "tokens": 48
+      }
+    ],
+    "function_48abe0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48abe0",
+        "line": 172,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48ac00": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ac00",
+        "line": 176,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48ac70": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ac70",
+        "line": 180,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48acc0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48acc0",
+        "line": 184,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48ace0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ace0",
+        "line": 188,
+        "lines": 1,
+        "tokens": 12
+      }
+    ],
+    "function_48ada0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ada0",
+        "line": 192,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_48adb0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48adb0",
+        "line": 196,
+        "lines": 1,
+        "tokens": 24
+      }
+    ],
+    "function_48af30": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48af30",
+        "line": 200,
+        "lines": 1,
+        "tokens": 27
+      }
+    ],
+    "function_48afa0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48afa0",
+        "line": 204,
+        "lines": 1,
+        "tokens": 25
+      }
+    ],
+    "function_48b050": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b050",
+        "line": 212,
+        "lines": 1,
+        "tokens": 25
+      }
+    ],
+    "function_48b160": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b160",
+        "line": 216,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48b180": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b180",
+        "line": 220,
+        "lines": 1,
+        "tokens": 23
+      }
+    ],
+    "function_48b1a0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b1a0",
+        "line": 224,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48b320": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b320",
+        "line": 228,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48b410": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b410",
+        "line": 232,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48b510": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b510",
+        "line": 240,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48b5a0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b5a0",
+        "line": 244,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48b630": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b630",
+        "line": 248,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48b870": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b870",
+        "line": 252,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48b8b0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b8b0",
+        "line": 256,
+        "lines": 1,
+        "tokens": 25
+      }
+    ],
+    "function_48b8d0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b8d0",
+        "line": 260,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_48b8f0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48b8f0",
+        "line": 264,
+        "lines": 1,
+        "tokens": 15
+      }
+    ],
+    "function_48bb30": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48bb30",
+        "line": 380,
+        "lines": 1,
+        "tokens": 26
+      }
+    ],
+    "function_48be70": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48be70",
+        "line": 532,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_48bec0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48bec0",
+        "line": 384,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_48bf50": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48bf50",
+        "line": 536,
+        "lines": 3,
+        "tokens": 57
+      }
+    ],
+    "function_48c1c0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c1c0",
+        "line": 268,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48c1f0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c1f0",
+        "line": 272,
+        "lines": 1,
+        "tokens": 41
+      }
+    ],
+    "function_48c2f0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c2f0",
+        "line": 276,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48c350": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c350",
+        "line": 280,
+        "lines": 1,
+        "tokens": 14
+      }
+    ],
+    "function_48c400": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c400",
+        "line": 284,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48c580": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c580",
+        "line": 288,
+        "lines": 1,
+        "tokens": 22
+      }
+    ],
+    "function_48c620": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c620",
+        "line": 292,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_48c690": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c690",
+        "line": 296,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_48c700": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c700",
+        "line": 300,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48c780": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c780",
+        "line": 304,
+        "lines": 1,
+        "tokens": 19
+      }
+    ],
+    "function_48c7f0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c7f0",
+        "line": 308,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_48c910": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c910",
+        "line": 320,
+        "lines": 1,
+        "tokens": 19
+      }
+    ],
+    "function_48c950": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48c950",
+        "line": 324,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48ca10": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ca10",
+        "line": 328,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48cb10": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48cb10",
+        "line": 332,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_491880": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_491880_this",
+        "line": 425,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_48cc70": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48cc70",
+        "line": 336,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48e520": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48e520_this",
+        "line": 412,
+        "lines": 1,
+        "tokens": 21
+      }
+    ],
+    "function_48cd50": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48cd50",
+        "line": 340,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48ce70": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48ce70",
+        "line": 348,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48cfa0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48cfa0",
+        "line": 352,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_48d0b0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48d0b0",
+        "line": 356,
+        "lines": 1,
+        "tokens": 37
+      }
+    ],
+    "function_48d770": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48d770",
+        "line": 360,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_48d7e0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48d7e0",
+        "line": 364,
+        "lines": 1,
+        "tokens": 11
+      }
+    ],
+    "function_48d850": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48d850",
+        "line": 368,
+        "lines": 1,
+        "tokens": 30
+      }
+    ],
+    "function_48dd10": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48dd10",
+        "line": 372,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_48dda0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48dda0",
+        "line": 376,
+        "lines": 1,
+        "tokens": 20
+      }
+    ],
+    "function_48e0e0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48e0e0_this",
+        "line": 456,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_48e120": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48e120_this",
+        "line": 460,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_48e4d0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_48e4d0_this",
+        "line": 464,
+        "lines": 3,
+        "tokens": 45
+      }
+    ],
+    "function_491760": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_491760_this",
+        "line": 443,
+        "lines": 2,
+        "tokens": 42
+      }
+    ],
+    "function_491820": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_491820_this",
+        "line": 416,
+        "lines": 4,
+        "tokens": 59
+      }
+    ],
+    "function_4918a0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4918a0_this",
+        "line": 429,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_497a00": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_497a00_this",
+        "line": 433,
+        "lines": 2,
+        "tokens": 49
+      }
+    ],
+    "function_499970": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_499970",
+        "line": 439,
+        "lines": 1,
+        "tokens": 28
+      }
+    ],
+    "function_499a20": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_499a20",
+        "line": 477,
+        "lines": 16,
+        "tokens": 168
+      }
+    ],
+    "function_499b00": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_499b00",
+        "line": 470,
+        "lines": 4,
+        "tokens": 61
+      }
+    ],
+    "function_49a520": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_49a520_this",
+        "line": 496,
+        "lines": 1,
+        "tokens": 15
+      }
+    ],
+    "function_49c350": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_49c350_this",
+        "line": 408,
+        "lines": 1,
+        "tokens": 17
+      }
+    ],
+    "function_4a91c0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a91c0_this",
+        "line": 146,
+        "lines": 5,
+        "tokens": 36
+      }
+    ],
+    "function_4a9250": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_4a9250",
+        "line": 38,
+        "lines": 7,
+        "tokens": 59
+      }
+    ],
+    "function_4a92e0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a92e0_this",
+        "line": 153,
+        "lines": 5,
+        "tokens": 38
+      }
+    ],
+    "function_4a9370": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_4a9370",
+        "line": 48,
+        "lines": 14,
+        "tokens": 153
+      }
+    ],
+    "function_4a9490": [
+      {
+        "file": "src/squirrel/squirrel_class_binding.cpp",
+        "name": "function_4a9490",
+        "line": 70,
+        "lines": 5,
+        "tokens": 51
+      }
+    ],
+    "function_4a9540": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9540_this",
+        "line": 86,
+        "lines": 16,
+        "tokens": 96
+      }
+    ],
+    "function_4a9600": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9600_this",
+        "line": 138,
+        "lines": 6,
+        "tokens": 61
+      }
+    ],
+    "function_4a96c0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a96c0_this",
+        "line": 160,
+        "lines": 1,
+        "tokens": 15
+      }
+    ],
+    "function_4a9730": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9730_this",
+        "line": 169,
+        "lines": 19,
+        "tokens": 140
+      }
+    ],
+    "function_4a97b0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a97b0_this",
+        "line": 192,
+        "lines": 7,
+        "tokens": 72
+      }
+    ],
+    "function_4a9840": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9840_this",
+        "line": 201,
+        "lines": 6,
+        "tokens": 53
+      }
+    ],
+    "function_4a9950": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9950",
+        "line": 209,
+        "lines": 18,
+        "tokens": 153
+      }
+    ],
+    "function_4a99f0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a99f0",
+        "line": 166,
+        "lines": 1,
+        "tokens": 13
+      }
+    ],
+    "function_4a9a40": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9a40_this",
+        "line": 232,
+        "lines": 1,
+        "tokens": 13
+      }
+    ],
+    "function_4a9ac0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9ac0_this",
+        "line": 235,
+        "lines": 1,
+        "tokens": 18
+      }
+    ],
+    "function_4a9b40": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9b40_this",
+        "line": 241,
+        "lines": 10,
+        "tokens": 77
+      }
+    ],
+    "function_4a9bb0": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9bb0_this",
+        "line": 253,
+        "lines": 6,
+        "tokens": 66
+      }
+    ],
+    "function_4a9c10": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9c10_this",
+        "line": 261,
+        "lines": 7,
+        "tokens": 75
+      }
+    ],
+    "function_4a9d30": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9d30_this",
+        "line": 279,
+        "lines": 21,
+        "tokens": 159
+      }
+    ],
+    "function_4a9d50": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9d50",
+        "line": 278,
+        "lines": 1,
+        "tokens": 10
+      }
+    ],
+    "function_4a9d70": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9d70_this",
+        "line": 302,
+        "lines": 1,
+        "tokens": 17
+      }
+    ],
+    "function_4a9e30": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9e30_this",
+        "line": 305,
+        "lines": 36,
+        "tokens": 278
+      }
+    ],
+    "function_4a9f60": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4a9f60",
+        "line": 345,
+        "lines": 15,
+        "tokens": 163
+      }
+    ],
+    "function_4aa000": [
+      {
+        "file": "src/squirrel/squirrel_host_compat.cpp",
+        "name": "function_4aa000_this",
+        "line": 238,
+        "lines": 1,
+        "tokens": 16
+      }
+    ],
+    "function_4aa5e0": [
+      {
+        "file": "src/squirrel/squirrel_native_variables.cpp",
+        "name": "function_4aa5e0",
+        "line": 49,
+        "lines": 13,
+        "tokens": 157
+      }
+    ],
+    "function_4aab60": [
+      {
+        "file": "src/squirrel/squirrel_native_variables.cpp",
+        "name": "function_4aab60",
+        "line": 187,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_4aabd0": [
+      {
+        "file": "src/squirrel/squirrel_native_variables.cpp",
+        "name": "function_4aabd0",
+        "line": 188,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_4aaf30": [
+      {
+        "file": "src/squirrel/squirrel_native_variables.cpp",
+        "name": "function_4aaf30",
+        "line": 189,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_4aafa0": [
+      {
+        "file": "src/squirrel/squirrel_native_variables.cpp",
+        "name": "function_4aafa0",
+        "line": 190,
+        "lines": 1,
+        "tokens": 8
+      }
+    ],
+    "function_4c5c80": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4c5c80",
+        "line": 404,
+        "lines": 1,
+        "tokens": 13
+      }
+    ],
+    "function_4c6670": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4c6670",
+        "line": 400,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_4c6c20": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4c6c20",
+        "line": 396,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_4c73a0": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4c73a0",
+        "line": 392,
+        "lines": 1,
+        "tokens": 9
+      }
+    ],
+    "function_4c7c90": [
+      {
+        "file": "src/squirrel/squirrel_legacy_api.cpp",
+        "name": "function_4c7c90",
+        "line": 388,
+        "lines": 1,
+        "tokens": 9
+      }
+    ]
+  },
+  "missing_with_macro_alias": {},
+  "simplified_candidate_token_counts": {
+    "function_4ccc00": 2,
+    "function_4ccc1e": 2,
+    "function_4ccc29": 2,
+    "function_4ccc60": 2,
+    "function_4ccc7e": 2,
+    "function_4ccc89": 2,
+    "function_4cccb0": 2,
+    "function_4cccb8": 2,
+    "function_4cccc3": 2,
+    "function_4ccd11": 2,
+    "function_4ccd40": 2,
+    "function_4ccd70": 2,
+    "function_4ccd78": 2,
+    "function_4ccdb0": 2,
+    "function_4ccdb8": 2,
+    "function_4ccec8": 2,
+    "function_4ccf00": 2,
+    "function_4ccf60": 2,
+    "function_4cd070": 2,
+    "function_4cd083": 2,
+    "function_4cd08e": 2,
+    "function_4cd099": 2,
+    "function_4cd0a4": 2,
+    "function_4cd0e0": 2,
+    "function_4cd0f3": 2,
+    "function_4cd0fe": 2,
+    "function_4cd109": 2,
+    "function_4cd114": 2,
+    "function_4cd170": 2,
+    "function_4cd1a0": 2,
+    "function_4cd1a8": 2,
+    "function_4cd1b3": 2,
+    "function_4cd1f5": 2,
+    "function_4cd200": 2,
+    "function_4cd278": 2,
+    "function_4cd318": 2,
+    "function_4cd3d0": 2,
+    "function_4cd520": 2,
+    "function_4cd610": 2,
+    "function_4cd670": 2,
+    "function_4cd780": 2,
+    "function_4cd7c0": 2,
+    "function_4cd800": 2,
+    "function_4cd880": 2,
+    "function_4cd890": 2,
+    "function_4cd8d0": 2,
+    "function_4cd8d8": 2,
+    "function_4cd8e3": 2,
+    "function_4cd8ee": 2,
+    "function_4cd928": 2,
+    "function_4cd938": 2,
+    "function_4cd9a0": 2,
+    "function_4cd9f0": 2,
+    "function_4cd9f8": 2,
+    "function_4cda03": 2,
+    "function_4cda0e": 2,
+    "function_4cddcb": 2,
+    "function_4cdf3b": 2,
+    "function_4cdf7b": 2,
+    "function_4cdf86": 2,
+    "function_4ce020": 2,
+    "function_4ce080": 2,
+    "function_4ce0d0": 2,
+    "function_4ce0e6": 2,
+    "function_4ce580": 2,
+    "function_4ce58b": 2,
+    "function_4ce596": 2,
+    "function_4ce5a1": 2,
+    "function_4ce5ac": 2,
+    "function_4ce5b7": 2,
+    "function_4ce5c2": 2,
+    "function_4ce5cd": 2,
+    "function_4ce5d8": 2,
+    "function_4ce618": 2,
+    "function_4ce626": 2,
+    "function_4ce634": 2,
+    "function_4ce642": 2,
+    "function_4ce650": 2,
+    "function_4ce780": 2,
+    "function_4ce798": 2,
+    "function_4ce7b0": 2,
+    "function_4ce7e0": 2,
+    "function_4ce7eb": 2,
+    "function_4ce7f6": 2,
+    "function_4ce801": 2,
+    "function_4ce80c": 2,
+    "function_4ce817": 2,
+    "function_4ce822": 2,
+    "function_4ce82d": 2,
+    "function_4ce838": 2,
+    "function_4ce878": 2,
+    "function_4ce886": 2,
+    "function_4ce894": 2,
+    "function_4ce8a2": 2,
+    "function_4ce8b0": 2,
+    "function_4ce920": 2
+  },
+  "simplified_candidate_project_frequency": {
+    "2": 96
+  },
+  "missing_breakdown": {
+    "explicit_cpp_definition": 177,
+    "needs_full_replacement_mapping": 535,
+    "explicit_this_in_c": 19,
+    "historical_removal_manifest": 576
+  },
+  "squirrel_reference_comparison": [
+    {
+      "path": "COPYRIGHT",
+      "same": true
+    },
+    {
+      "path": "HISTORY",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdaux.h",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdblob.h",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdio.h",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdmath.h",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdstring.h",
+      "same": true
+    },
+    {
+      "path": "include\\sqstdsystem.h",
+      "same": true
+    },
+    {
+      "path": "include\\squirrel.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdaux.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdblob.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdblobimpl.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdio.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdmath.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdrex.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdstream.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdstream.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdstring.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib\\sqstdsystem.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\Makefile",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqapi.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqarray.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqbaselib.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqclass.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqclass.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqclosure.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqcompiler.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqcompiler.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqdebug.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqfuncproto.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqfuncstate.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqfuncstate.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqlexer.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqlexer.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqmem.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqobject.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqobject.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqopcodes.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqpcheader.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqstate.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqstate.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqstring.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqtable.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqtable.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\squirrel.dsp",
+      "same": true
+    },
+    {
+      "path": "squirrel\\squserdata.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\squtils.h",
+      "same": true
+    },
+    {
+      "path": "squirrel\\sqvm.cpp",
+      "same": false
+    },
+    {
+      "path": "squirrel\\sqvm.h",
+      "same": true
+    }
+  ],
+  "largest_remaining": [
+    {
+      "name": "function_474110",
+      "line": 136483,
+      "lines": 3435,
+      "tokens": 19173
+    },
+    {
+      "name": "function_483300",
+      "line": 161415,
+      "lines": 3149,
+      "tokens": 23801
+    },
+    {
+      "name": "function_41c870",
+      "line": 43023,
+      "lines": 1748,
+      "tokens": 8963
+    },
+    {
+      "name": "function_4077c0",
+      "line": 15696,
+      "lines": 1620,
+      "tokens": 16002
+    },
+    {
+      "name": "function_41bc30",
+      "line": 41106,
+      "lines": 1601,
+      "tokens": 8197
+    },
+    {
+      "name": "function_4857e0",
+      "line": 168289,
+      "lines": 1208,
+      "tokens": 10371
+    },
+    {
+      "name": "function_4689d0",
+      "line": 126587,
+      "lines": 1010,
+      "tokens": 8285
+    },
+    {
+      "name": "function_484300",
+      "line": 165405,
+      "lines": 1004,
+      "tokens": 11476
+    },
+    {
+      "name": "function_47eb50",
+      "line": 152180,
+      "lines": 997,
+      "tokens": 8846
+    },
+    {
+      "name": "function_484ec0",
+      "line": 166953,
+      "lines": 886,
+      "tokens": 9278
+    },
+    {
+      "name": "function_47fab0",
+      "line": 153845,
+      "lines": 836,
+      "tokens": 7717
+    },
+    {
+      "name": "function_488c90",
+      "line": 176389,
+      "lines": 716,
+      "tokens": 5347
+    },
+    {
+      "name": "function_4141e0",
+      "line": 31945,
+      "lines": 713,
+      "tokens": 3976
+    },
+    {
+      "name": "function_487260",
+      "line": 172673,
+      "lines": 710,
+      "tokens": 5263
+    },
+    {
+      "name": "function_482e90",
+      "line": 160695,
+      "lines": 703,
+      "tokens": 7071
+    },
+    {
+      "name": "function_413500",
+      "line": 31091,
+      "lines": 682,
+      "tokens": 5969
+    },
+    {
+      "name": "function_486f90",
+      "line": 171856,
+      "lines": 651,
+      "tokens": 4949
+    },
+    {
+      "name": "function_4757e0",
+      "line": 140205,
+      "lines": 638,
+      "tokens": 5069
+    },
+    {
+      "name": "function_473010",
+      "line": 135580,
+      "lines": 619,
+      "tokens": 5717
+    },
+    {
+      "name": "function_486a30",
+      "line": 170662,
+      "lines": 597,
+      "tokens": 3930
+    },
+    {
+      "name": "function_460e00",
+      "line": 118975,
+      "lines": 585,
+      "tokens": 3824
+    },
+    {
+      "name": "function_47bfc0",
+      "line": 147940,
+      "lines": 570,
+      "tokens": 3806
+    },
+    {
+      "name": "function_477490",
+      "line": 142795,
+      "lines": 532,
+      "tokens": 3599
+    },
+    {
+      "name": "function_41b7c0",
+      "line": 40489,
+      "lines": 527,
+      "tokens": 2678
+    },
+    {
+      "name": "function_47e160",
+      "line": 151388,
+      "lines": 502,
+      "tokens": 4172
+    }
+  ],
+  "limits": "CMake explicit project source units; excludes headers, third party and textual includes. Physical source is not linked/live coverage. Function definition regex is address-named only. C++ source share is not maintainability completion."
+}
