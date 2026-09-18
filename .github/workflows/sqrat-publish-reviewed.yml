@@ -1,0 +1,68 @@
+name: Publish reviewed Sqrat source batch
+on:
+  push:
+    branches: ['work/sqrat-cpp-20260918']
+    paths: ['.github/workflows/sqrat-publish-reviewed.yml']
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.repository == 'Poker-sang/6kinoko-rebuild' && github.ref == 'refs/heads/work/sqrat-cpp-20260918'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0cff60aa70b454128d832136acfcf6d20cb911d1
+          fetch-depth: 0
+      - name: Verify the tested source and merged baseline, then commit only source changes
+        shell: python
+        run: |
+          import hashlib, json, pathlib, subprocess
+          source = '0cff60aa70b454128d832136acfcf6d20cb911d1'
+          base = 'f7d2f9dd46a5c4da5a8385d77abd876738c49ff6'
+          target = 'refactor/sqrat-native-cpp-20260918'
+          expected = {
+              'CMakeLists.txt': '49d187ec15ad1eae4159c494a5e8e0e9cfa2d7d421d02514374a13d1542817c1',
+              'analysis/sqrat-native-cpp-20260918/report.md': '08736eaa9c663ac7c19ef73a419535c4937119fb970225f2d096fbcd4b14dcc2',
+              'include/kinoko/native_property_bridge.h': 'c6cef9f26016f9fcd42818f2f29db93896e49b11759651c08ad5a13a51c6110a',
+              'include/kinoko/sqrat_object_bridge.h': '9158eaab156b27246a404ea6730a96140258dd9a77dfe19d035f2432a3a6917f',
+              'src/decompiled/6kinoko_rebuilt.c': 'cd5f4b5cf63294069eab5c632cbad9c5e7231635b461cf9ea49feafa18b7d411',
+              'src/squirrel/native_property_bridge.cpp': 'fa74e4818ac781dd02be00cc1b63cc19252e5321505525293fe92617e8646ce6',
+              'src/squirrel/sqrat_object_bridge.cpp': '8a763f56b6beccacd55873a86772cf9d232c25086080b755dbbe4600eb0ee26c',
+              'tests/native_property_contract.cpp': '7bb37615796cec33267842698a6c79249bc1dfe27d2741b8a9bb00df287b3ec9',
+              'tests/sqrat_object_contract.cpp': '10d36be00a13ad55630009793b07418cf77f173751d90ed4fdca60fd2d2eebc0',
+              'tests/squirrel_bridge_test_support.hpp': '5d7658df91815cb7a43641c83a9d1cb8bd00277d9d3e8c010d2dd3af0590287d'
+          }
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          def run(*args):
+              subprocess.run(['git', *args], check=True)
+          if git('rev-parse', 'HEAD') != source:
+              raise RuntimeError('Wrong tested source revision')
+          for name, digest in expected.items():
+              if hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() != digest:
+                  raise RuntimeError('Tested source hash mismatch: ' + name)
+          run('fetch', 'origin', 'master')
+          if git('rev-parse', 'FETCH_HEAD') != base:
+              raise RuntimeError('Master advanced; review before publishing')
+          if git('rev-parse', base + '^{tree}') != 'f8ae79e584f4ada3d20a680834710796432418f1':
+              raise RuntimeError('Merged baseline differs from reviewed baseline')
+          if git('ls-remote', '--heads', 'origin', 'refs/heads/' + target):
+              raise RuntimeError('Continuation branch already exists; do not overwrite')
+          run('switch', '--detach', base)
+          run('restore', '--source=' + source, '--staged', '--worktree', '--', *expected)
+          for name, digest in expected.items():
+              if hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() != digest:
+                  raise RuntimeError('Published output differs from tested source: ' + name)
+          if set(git('diff', '--cached', '--name-only').splitlines()) != set(expected):
+              raise RuntimeError('Unexpected changed-file set')
+          run('diff', '--cached', '--check')
+          run('config', 'user.name', 'github-actions[bot]')
+          run('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
+          run('commit', '-m', 'refactor: migrate 45 Sqrat object, callback and native property helpers to source C++',
+              '-m', 'Continue merged PR #1. Source and tests match 0cff60aa70b454128d832136acfcf6d20cb911d1, verified by Windows x86 quiet and diagnostic run 35305177161 (14 contracts each). No temporary workflows or encoded transport files are carried into this branch.')
+          run('push', 'origin', 'HEAD:refs/heads/' + target)
+          print(json.dumps({'branch': target, 'commit': git('rev-parse', 'HEAD'), 'base': base, 'tested_source': source}, indent=2))
