@@ -2,8 +2,12 @@
 
 ## Baseline and scope
 
-Continue PR #1 from `06ad4bf1aafd817fc5bc75305d3c1ef0ab33c047`, retaining
-its earlier 43-function SqPlus/native-argument migration. The user reported
+This work started from PR #1 at
+`06ad4bf1aafd817fc5bc75305d3c1ef0ab33c047`, retaining its earlier 43-function
+SqPlus/native-argument migration. PR #1 was merged during this batch, so the
+reviewed changes are published as a follow-up from master
+`f7d2f9dd46a5c4da5a8385d77abd876738c49ff6`. Both starting revisions have the
+same source tree, `f8ae79e584f4ada3d20a680834710796432418f1`. The user reported
 local gameplay success for the preceding reported batch; this is not evidence
 of gameplay testing of these new changes. `AGENTS.md` was read first.
 
@@ -98,10 +102,33 @@ Two Release-enabled contracts execute the actual vendored 2.2.2 VM:
   test of its unmodified C allocator implementation.
 
 They are included along with all **12 existing asset-free contracts** in both
-quiet and diagnostic Windows x86 Release configurations. Results and exact
-source/merge revisions must be recorded from actual CI; this source report
-makes no claim that an unexecuted test passed. Every batch is committed before
-execution, with separate retained logs and binaries.
+quiet and diagnostic Windows x86 Release configurations. Every batch is
+committed before execution, with separate retained logs and binaries.
+
+### Completed pre-publication validation
+
+Windows x86 work run `35305177161` checks out exactly
+`0cff60aa70b454128d832136acfcf6d20cb911d1`. Quiet and diagnostic both passed
+full configuration/build/link, DirectX staging and all **14/14 contracts**.
+The Sqrat contract completes eight repetitions and the native-property
+contract sixteen. Published source commit
+`bf743077d9aca6145acaa6f62956236fbaa4e383` has identical runtime, test and
+CMake contents, verified by input/output SHA256, and is based on the merged
+master rather than carrying temporary work-branch history into review.
+
+The first work run caught a migration implementation error: passing a ternary
+directly into 2.2.2's `SQ_SUCCEEDED(res)` macro misparsed the raw-set status.
+The fix evaluates an explicit `SQRESULT` before the macro. A second run
+exposed a test-fixture statement-boundary error; the class fixture now uses
+line breaks accepted by the supplied compiler. Neither correction changes
+the vendored interpreter or weakens the tested semantics. The final work run
+passes every contract; both earlier failed runs and their artifacts remain.
+
+All nine inline evaluation scripts additionally compile in a local x64
+syntax-only harness using the same vendored compiler. This is a syntax check,
+not a Win32 ABI, sanitizer or gameplay result. The permanent PR CI now selects
+all fourteen contracts; its final tested PR merge revision is recorded in the
+PR description after that run completes.
 
 No original DATs/EXE or interactive Windows debugger are available here.
 Asset-free CI is not gameplay/visual parity evidence. The eight remaining
