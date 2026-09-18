@@ -1,0 +1,46 @@
+{
+  "archive": "squirrel_2.2.2_stable.tar.gz",
+  "archive_sha256": "5f7f7576731673d006b3ae45952b0c3ebd20c775b56cd34f0381e511c8fe6646",
+  "files": [
+    {
+      "file": "sqstdlib/sqstdaux.cpp",
+      "sha256": "501019843de3979d1ca697ce7314ad7c60cd5e0ce71eb5883c44058afc264f15"
+    },
+    {
+      "file": "sqstdlib/sqstdblob.cpp",
+      "sha256": "4d6ca2f94725587544ab29d80fdc5b1f86b29c08edf24437267c7585c966ab17"
+    },
+    {
+      "file": "sqstdlib/sqstdblobimpl.h",
+      "sha256": "e793bbfc5d5e511dd5684284e113a3b7728709c76441e2dedaf34d589e0bff8c"
+    },
+    {
+      "file": "sqstdlib/sqstdio.cpp",
+      "sha256": "8c2897381aa2956ecdce8166760796e640ed9d035995408fda13efeb66e146ab"
+    },
+    {
+      "file": "sqstdlib/sqstdmath.cpp",
+      "sha256": "ef8607e92e19f9f9d6e010a9970b503f19c62396228c00873003f44b0fd4975a"
+    },
+    {
+      "file": "sqstdlib/sqstdrex.cpp",
+      "sha256": "af82751e53ede9f044523e082253c5dcd8c30b6c077027bbe254aa2951b4497f"
+    },
+    {
+      "file": "sqstdlib/sqstdstream.cpp",
+      "sha256": "72258ab8593c971a169a339c03b37f5e09f29aaddbc4b054e5e9e073b67a33e9"
+    },
+    {
+      "file": "sqstdlib/sqstdstream.h",
+      "sha256": "ab6805aad3b9346393a67d437379f2af8d87ea748eb3464a95f80b6b1341773d"
+    },
+    {
+      "file": "sqstdlib/sqstdstring.cpp",
+      "sha256": "3735dce0e39e1012be491d085c9b01baba7a251d9a9d9fcf749264b7633a2e34"
+    },
+    {
+      "file": "sqstdlib/sqstdsystem.cpp",
+      "sha256": "be8d926804fa1e0a96e68786b664831d2a473988df51672546e3f1f5e6e22591"
+    }
+  ]
+}
