@@ -74,7 +74,7 @@ jobs:
         shell: pwsh
         run: |
           ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error --timeout 120 `
-            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract|legacy_method_entries_contract|retdec_memory_contract|diagnostics_filter_contract|squirrel_refcount_contract|squirrel_host_object_contract)$' `
+            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract|legacy_method_entries_contract|retdec_memory_contract|diagnostics_filter_contract|squirrel_refcount_contract|squirrel_host_object_contract|squirrel_binding_contract)$' `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/ctest.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Preserve diagnostics and binaries
