@@ -1,4 +1,8 @@
+#include "kinoko/sqrat_object_bridge.h"
+#include "kinoko/native_property_bridge.h"
 #include "kinoko/squirrel_binding.h"
+#include "kinoko/squirrel_native_calls.h"
+#include "kinoko/squirrel_game_objects.h"
 #include "kinoko/squirrel_native_arguments.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_method_entries.h"
@@ -90,31 +94,6 @@ static int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
 int32_t retdec_begin_stage_this(int32_t resource_ptr,
                                         int32_t stage);
-static int32_t retdec_sqrat_raw_set_pair(int32_t vm,
-                                          const int32_t *object_pair,
-                                          const char *name,
-                                          const int32_t *value_pair);
-static int32_t retdec_sqrat_raw_set_int(int32_t vm,
-                                         const int32_t *object_pair,
-                                         const char *name, int32_t value);
-static int32_t retdec_sqrat_raw_set_float(int32_t vm,
-                                           const int32_t *object_pair,
-                                           const char *name, float value);
-static int32_t retdec_sqrat_raw_set_bool(int32_t vm,
-                                          const int32_t *object_pair,
-                                          const char *name, int32_t value);
-static int32_t retdec_sqrat_raw_set_string(int32_t vm,
-                                            const int32_t *object_pair,
-                                            const char *name,
-                                            const char *value);
-static int32_t retdec_sqrat_new_table(int32_t vm, int32_t out_pair[2]);
-static int32_t retdec_sqrat_set_native_closure(
-    int32_t vm, const int32_t *object_pair, const char *name,
-    int32_t native_function, const int32_t *free_pair,
-    int32_t free_count);
-static int32_t retdec_sqrat_set_offset_closure(
-    int32_t vm, const int32_t *table_pair, const char *name,
-    int32_t offset, int32_t callback);
 static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t resource_ptr,
                                           int32_t *active_count);
@@ -122,8 +101,6 @@ static int32_t retdec_publish_cact_resource2d_class(int32_t vm,
                                                      int32_t root_object);
 int32_t retdec_act_suspend_this(int32_t resource_ptr);
 int32_t retdec_act_resume_this(int32_t resource_ptr);
-static int32_t function_415810_this(int32_t self_ptr);
-static const char *retdec_std_string_data(int32_t string_ptr);
 static int32_t retdec_load_act_texture(const char *texture_name);
 static int32_t retdec_register_act_texture(
     IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height)
@@ -1945,12 +1922,10 @@ int32_t function_402770(int32_t result);
 int32_t function_4028d0(int32_t a1, int32_t a2);
 int32_t function_402930(int32_t a1, int32_t a2);
 int32_t function_402970(int32_t a1);
-int32_t function_4029b0(int32_t a1, int32_t * a2);
 int32_t function_4029d0(void);
 int32_t function_4029f0(int32_t result);
 int32_t function_402a10(void);
 int32_t function_402a20(void);
-int32_t function_402a50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_402aa0(void);
 int32_t function_402ac0(void);
 int32_t function_402ad0(char * lpCaption, int32_t lpText);
@@ -2523,8 +2498,6 @@ int32_t function_41e0c0(int32_t a1);
 int32_t function_41e190(void);
 int32_t function_41e1e0(void);
 int32_t function_41e200(int32_t a1);
-int32_t function_41e260(int32_t a1);
-int32_t function_41e2c0(int32_t a1);
 int32_t function_41e320(void);
 int32_t function_41e390(int32_t a1);
 int32_t function_41e790(void);
@@ -2861,7 +2834,6 @@ int32_t function_431220(int32_t a1, int32_t a2);
 int32_t function_4312c0(uint32_t a1);
 int32_t function_4313a2(int32_t a1);
 int32_t function_431490(void);
-int32_t function_431650(int32_t a1);
 int32_t function_431670(int32_t a1, int32_t result, int32_t a3);
 int32_t function_4318d0(void);
 int32_t function_431920(int32_t result, int32_t a2);
@@ -3286,7 +3258,6 @@ int32_t function_445580(int32_t a1);
 int32_t function_4455e0(int32_t a1);
 int32_t function_445650(int32_t a1);
 int32_t function_4456c0(int32_t a1);
-int32_t function_445730(int32_t a1);
 int32_t function_445790(int32_t a1);
 int32_t function_4457f0(int32_t a1);
 int32_t function_445880(int32_t a1);
@@ -3588,12 +3559,10 @@ int32_t function_455090(void);
 int32_t function_4550d0(int32_t a1);
 int32_t function_455180(int32_t * a1);
 int32_t function_455230(int32_t a1, int32_t a2, int32_t result);
-int32_t function_4552e0(int32_t a1);
 int32_t function_455330(int32_t a1);
 int32_t function_455390(int32_t a1);
 int32_t function_4554b0(int32_t a1);
 int32_t function_455520(int32_t a1);
-int32_t function_4555a0(int32_t a1);
 int32_t function_4556c0(int32_t a1);
 int32_t function_455730(int32_t a1);
 int32_t function_4557a0(int32_t a1);
@@ -3829,9 +3798,6 @@ static int32_t function_45e300_this(int32_t this_ptr);
 int32_t function_45e410(int32_t * a1);
 static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair);
 int32_t function_45e460(void);
-static int32_t function_45e020_this(int32_t state_ptr,
-                                    int32_t temporary_ptr,
-                                    int32_t arg_type, int32_t arg_data);
 static int32_t function_45e5e0_this(
     int32_t actor_ptr, int32_t manager_ptr,
     int32_t first_vtable, int32_t first_type, int32_t first_data,
@@ -4026,14 +3992,6 @@ int32_t function_46afa0(void);
 int32_t function_46b080(void);
 int32_t function_46b420(char a1);
 int32_t function_46b450(int32_t a1, int32_t a2);
-int32_t function_46b490(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg);
-int32_t function_46b500(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg);
-int32_t function_46b610(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg);
-int32_t function_46b6f0(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg);
 int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b880(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b9a0(int32_t this_ptr);
@@ -4060,10 +4018,6 @@ int32_t function_46c9e0(int32_t a1);
 int32_t function_46cbb0(int32_t * a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
 int32_t function_46cd90(int32_t * a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 int32_t function_46ce40(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_46ce70(int32_t a1);
-int32_t function_46cec0(int32_t a1);
-int32_t function_46cf10(int32_t a1);
-int32_t function_46cf60(int32_t a1);
 int32_t function_46d080(int32_t result, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 int32_t function_46d130(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_46d190(uint32_t a1);
@@ -4146,26 +4100,19 @@ int32_t function_471240(int32_t a1, int32_t a2);
 int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471510(int32_t a1, int32_t a2);
 int32_t function_4715e0(int32_t a1, int32_t a2);
-int32_t function_4716b0(int32_t callback_ptr, int32_t vm, int32_t index);
-int32_t function_471720(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471810(int32_t a1, int32_t a2);
 int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
-int32_t function_471a60(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
                        int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
 int32_t function_471c70(int32_t a1);
-int32_t function_471d30(int32_t a1);
 int32_t function_471d90(int32_t a1);
 int32_t function_471df0(int32_t a1);
-int32_t function_471e50(int32_t a1);
 int32_t function_471eb0(int32_t a1);
 int32_t function_471f10(int32_t a1);
-int32_t function_471f70(int32_t a1);
 int32_t function_471fd0(int32_t a1);
-int32_t function_472030(int32_t a1);
 int32_t function_472080(int32_t a1);
 int32_t function_4720e0(int32_t a1);
 int32_t function_472140(int32_t a1);
@@ -10077,10 +10024,7 @@ int32_t function_402970(int32_t a1) {
 }
 
 // Address range: 0x4029b0 - 0x4029cc
-int32_t function_4029b0(int32_t a1, int32_t * a2) {
-    int32_t v1 = (int32_t)a2;
-    return function_48ab90(a1, *(int32_t *)(v1 + 4), *(int32_t *)(v1 + 8));
-}
+
 
 // Address range: 0x4029d0 - 0x4029ed
 // From class:    .?AVObject@Sqrat@@
@@ -10134,16 +10078,7 @@ int32_t function_402a20(void) {
 }
 
 // Address range: 0x402a50 - 0x402a9b
-int32_t function_402a50(int32_t a1, int32_t a2, int32_t a3) {
-    int32_t * v1 = (int32_t *)(a1 + 8); // 0x402a5b
-    int32_t v2 = *v1; // 0x402a5b
-    int32_t v3 = *(int32_t *)(a1 + 4) - v2 + *(int32_t *)a1; // 0x402a65
-    int32_t v4 = v3 > 0 ? v3 : 0; // 0x402a6c
-    int32_t result = v4 > a3 ? a3 : v4;
-    _memcpy_s((int32_t *)a2, a3, (int32_t *)v2, result);
-    *v1 = result + *v1;
-    return result;
-}
+
 
 // Address range: 0x402aa0 - 0x402abb
 int32_t function_402aa0(void) {
@@ -33696,57 +33631,7 @@ int32_t function_415550(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
  * for untouched call sites, while using the recovered object path where the
  * startup code first registers native functions.
  */
-static int32_t function_415550_this(int32_t this_ptr, int32_t name,
-                                     int32_t src, int32_t size,
-                                     int32_t native_function,
-                                     int32_t arg_count) {
-    static int32_t trace_registration_count;
-    int32_t vm;
-    int32_t value_ptr;
-    int32_t destination;
 
-    if (this_ptr == 0)
-        return 0;
-    vm = *(int32_t *)(intptr_t)(this_ptr + 4);
-    value_ptr = this_ptr + 8;
-    if (trace_registration_count < 96) {
-        retdec_trace_squirrel_name("415550:name", name);
-        retdec_trace_i32("415550:src", src);
-        retdec_trace_i32("415550:size", size);
-        retdec_trace_i32("415550:native", native_function);
-        if (src != 0 && size >= 4)
-            retdec_trace_i32("415550:src-value",
-                             *(int32_t *)(intptr_t)src);
-        ++trace_registration_count;
-    }
-    retdec_trace_i32("415550:this", this_ptr);
-    retdec_trace_i32("415550:vm", vm);
-    retdec_trace_i32("415550:value-type", *(int32_t *)(intptr_t)value_ptr);
-    retdec_trace_i32("415550:value-data",
-                     *(int32_t *)(intptr_t)(value_ptr + 4));
-    function_48ab90(vm, *(int32_t *)(intptr_t)value_ptr,
-                    *(int32_t *)(intptr_t)(value_ptr + 4));
-    function_48a480(vm, name, -1);
-    destination = function_48c2f0(vm, size);
-    if (destination == 0)
-        return 0;
-    memcpy((void *)(intptr_t)destination,
-           (const void *)(intptr_t)src, (size_t)(uint32_t)size);
-    if (trace_registration_count <= 96) {
-        retdec_trace_i32("415550:userdata", destination);
-        if (size >= 4)
-            retdec_trace_i32("415550:userdata-value",
-                             *(int32_t *)(intptr_t)destination);
-    }
-    function_48d850(vm, native_function, 1);
-    function_48c950(vm, -3, arg_count & 255);
-    destination = function_48aa30(vm, 1);
-    retdec_trace_i32("415550:after-pop-type",
-                     *(int32_t *)(intptr_t)value_ptr);
-    retdec_trace_i32("415550:after-pop-data",
-                     *(int32_t *)(intptr_t)(value_ptr + 4));
-    return destination;
-}
 
 // Address range: 0x4155d0 - 0x4156c7
 // From class:    .?AVObject@Sqrat@@
@@ -33848,63 +33733,7 @@ int32_t function_415790(int32_t a1) {
 }
 
 // Address range: 0x415810 - 0x415861
-static int32_t function_415810_this(int32_t self_ptr) {
-    // 0x415810
-    static volatile LONG trace_count;
-    static volatile LONG interesting_trace_count;
-    int32_t v2 = self_ptr;
-    int32_t vm;
-    int32_t closure_type;
-    int32_t closure_data;
-    LONG trace_index;
 
-    if (v2 == 0)
-        return -1;
-    vm = *(int32_t *)(intptr_t)v2;
-    if (vm == 0)
-        return -1;
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 96) {
-        retdec_trace_i32("415810:self", self_ptr);
-        retdec_trace_i32("415810:env-type",
-                         *(int32_t *)(intptr_t)(v2 + 4));
-        retdec_trace_i32("415810:env-data",
-                         *(int32_t *)(intptr_t)(v2 + 8));
-        retdec_trace_i32("415810:closure-type",
-                         *(int32_t *)(intptr_t)(v2 + 12));
-        retdec_trace_i32("415810:closure-data",
-                         *(int32_t *)(intptr_t)(v2 + 16));
-    }
-    closure_type = *(int32_t *)(intptr_t)(v2 + 12);
-    closure_data = *(int32_t *)(intptr_t)(v2 + 16);
-    if (closure_type == 0x08000100 && closure_data != 0) {
-        int32_t proto = *(int32_t *)(intptr_t)(closure_data + 36);
-        if (proto != 0 &&
-            *(int32_t *)(intptr_t)(proto + 12) == 0x08000010 &&
-            *(int32_t *)(intptr_t)(proto + 16) != 0) {
-            LONG interesting_index = InterlockedIncrement(
-                &interesting_trace_count);
-            if (interesting_index <= 240) {
-                retdec_trace_i32("415810:interesting-self", self_ptr);
-                retdec_trace_i32("415810:interesting-proto", proto);
-                retdec_trace_squirrel_name(
-                    "415810:interesting-source",
-                    *(int32_t *)(intptr_t)(proto + 16) + 28);
-                if (*(int32_t *)(intptr_t)(proto + 20) == 0x08000010 &&
-                    *(int32_t *)(intptr_t)(proto + 24) != 0)
-                    retdec_trace_squirrel_name(
-                        "415810:interesting-name",
-                        *(int32_t *)(intptr_t)(proto + 24) + 28);
-            }
-        }
-    }
-    function_48ab90(vm, *(int32_t *)(intptr_t)(v2 + 12),
-                    *(int32_t *)(intptr_t)(v2 + 16));
-    function_48ab90(vm, *(int32_t *)(intptr_t)(v2 + 4),
-                    *(int32_t *)(intptr_t)(v2 + 8));
-    function_48ace0(vm, 1, 0, (int32_t)g560);
-    return function_48aa30(vm, 1);
-}
 
 int32_t function_415810(void) {
     // Retain the generated ABI for unconverted callers; the live paths use
@@ -46305,33 +46134,10 @@ int32_t function_41e200(int32_t a1) {
 }
 
 // Address range: 0x41e260 - 0x41e2b4
-int32_t function_41e260(int32_t a1) {
-    // 0x41e260
-    function_48a6b0(a1, 2);
-    if (function_48ce00(a1, -2) < 0) {
-        // 0x41e27e
-        return function_48ac00(a1, "Member Variable not found");
-    }
-    // 0x41e28f
-    function_48a6b0(a1, 1);
-    function_48ace0(a1, 1, 1, (int32_t)g560);
-    return 1;
-}
+
 
 // Address range: 0x41e2c0 - 0x41e319
-int32_t function_41e2c0(int32_t a1) {
-    // 0x41e2c0
-    function_48a6b0(a1, 2);
-    if (function_48ce00(a1, -2) < 0) {
-        // 0x41e2de
-        return function_48ac00(a1, "Member Variable not found");
-    }
-    // 0x41e2ef
-    function_48a6b0(a1, 1);
-    function_48a6b0(a1, 3);
-    function_48ace0(a1, 2, 0, (int32_t)g560);
-    return 0;
-}
+
 
 // Address range: 0x41e320 - 0x41e387
 int32_t function_41e320(void) {
@@ -67825,11 +67631,7 @@ int32_t function_431490(void) {
 }
 
 // Address range: 0x431650 - 0x431668
-int32_t function_431650(int32_t a1) {
-    // 0x431650
-    function_48b510(a1, -1);
-    return 1;
-}
+
 
 // Address range: 0x431670 - 0x4318ce
 int32_t function_431670(int32_t a1, int32_t result, int32_t a3) {
@@ -89190,22 +88992,7 @@ int32_t function_4456c0(int32_t a1) {
 }
 
 // Address range: 0x445730 - 0x445783
-int32_t function_445730(int32_t a1) {
-    int32_t method_holder = 0;
-    int32_t instance = 0;
-    int32_t argument = 0;
-    int32_t method;
 
-    if (function_48a920(a1, -1, &method_holder, 0) < 0 ||
-        method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        function_48c890(a1, 1, &instance, 0) < 0 ||
-        function_48a7d0(a1, 2, &argument) < 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)method_holder;
-    retdec_call_thiscall1((void *)(intptr_t)instance,
-                          (void *)(intptr_t)method, argument);
-    return 0;
-}
 
 // Address range: 0x445790 - 0x4457ea
 int32_t function_445790(int32_t a1) {
@@ -100663,563 +100450,51 @@ static int32_t retdec_unbound_function_450f30(int32_t a1) {
  * calling the generated bodies directly.  Keep the recovered ACT path
  * explicit and use the same VM primitives as Squirrel 2.2.2's public API.
  */
-static void retdec_sqrat_trim_stack(int32_t vm, int32_t base)
-{
-    int32_t top;
 
-    if (vm == 0)
-        return;
-    top = function_48aa20(vm);
-    if (top > base)
-        function_48aa30(vm, top - base);
-}
 
-static int32_t retdec_sqrat_root_construct(int32_t object_ptr, int32_t vm)
-{
-    if (object_ptr == 0 || vm == 0)
-        return 0;
 
-    retdec_trace_i32("450e30:construct-object", object_ptr);
-    retdec_trace_i32("450e30:construct-pair", object_ptr + 8);
 
-    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g39;
-    *(int32_t *)(intptr_t)(object_ptr + 4) = vm;
-    *(unsigned char *)(intptr_t)(object_ptr + 16) = 1;
-    function_48abe0(object_ptr + 8);
-    retdec_trace_i32("450e30:after-init-type",
-                     *(int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-init-data",
-                     *(int32_t *)(intptr_t)(object_ptr + 12));
-
-    /* RootTable::RootTable(vm): copy the VM root table into the object. */
-    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g40;
-    function_48a670(vm);
-    retdec_trace_i32("450e30:after-push-type",
-                     *(int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-push-data",
-                     *(int32_t *)(intptr_t)(object_ptr + 12));
-    function_48ab40(vm, -1, (int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-copy-type",
-                     *(int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-copy-data",
-                     *(int32_t *)(intptr_t)(object_ptr + 12));
-    function_48a400(vm, object_ptr + 8);
-    retdec_trace_i32("450e30:after-addref-type",
-                     *(int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-addref-data",
-                     *(int32_t *)(intptr_t)(object_ptr + 12));
-    function_48aa30(vm, 1);
-    retdec_trace_i32("450e30:after-pop-type",
-                     *(int32_t *)(intptr_t)(object_ptr + 8));
-    retdec_trace_i32("450e30:after-pop-data",
-                     *(int32_t *)(intptr_t)(object_ptr + 12));
-    return object_ptr;
-}
-
-static void retdec_sqrat_object_release(int32_t object_ptr)
-{
-    int32_t vm;
-
-    if (object_ptr == 0)
-        return;
-    vm = *(int32_t *)(intptr_t)(object_ptr + 4);
-    if (*(unsigned char *)(intptr_t)(object_ptr + 16) != 0 && vm != 0)
-        function_48a430(vm, object_ptr + 8);
-    *(unsigned char *)(intptr_t)(object_ptr + 16) = 0;
-    function_48abe0(object_ptr + 8);
-    *(int32_t *)(intptr_t)object_ptr = (int32_t)(intptr_t)&g39;
-}
-
-static int32_t retdec_sqrat_get(int32_t object_ptr, const char *name,
-                                int32_t out_ptr)
-{
-    static int32_t trace_sqrat_get_table_count;
-    int32_t vm;
-    int32_t base;
-    int32_t result;
-
-    if (object_ptr == 0 || name == NULL || out_ptr == 0)
-        return 0;
-    vm = *(int32_t *)(intptr_t)(object_ptr + 4);
-    if (vm == 0)
-        return 0;
-
-    if (trace_sqrat_get_table_count < 16 &&
-        *(int32_t *)(intptr_t)(object_ptr + 8) == 0x0A000020 &&
-        *(int32_t *)(intptr_t)(object_ptr + 12) != 0 &&
-        (strcmp(name, "Init") == 0 || strcmp(name, "Update") == 0 ||
-         strcmp(name, "OnCreate") == 0)) {
-        retdec_trace_squirrel_table_entries(
-            "sq-meta:get-table",
-            *(int32_t *)(intptr_t)(object_ptr + 12));
-        ++trace_sqrat_get_table_count;
-    }
-
-    *(int32_t *)(intptr_t)out_ptr = g483;
-    *(int32_t *)(intptr_t)(out_ptr + 4) = g484;
-    base = function_48aa20(vm);
-    function_48ab90(vm,
-                    *(int32_t *)(intptr_t)(object_ptr + 8),
-                    *(int32_t *)(intptr_t)(object_ptr + 12));
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    result = function_48ce00(vm, -2);
-    if (result < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    function_48ab40(vm, -1, (int32_t *)(intptr_t)out_ptr);
-    function_48a400(vm, out_ptr);
-    retdec_sqrat_trim_stack(vm, base);
-    return 1;
-}
 
 /* Sqrat::Object owns a returned pair through SQVM's RefTable, not through a
    raw SQObjectPtr release.  Keep that ownership boundary explicit for the
    receiver-safe paths below. */
-static void retdec_sqrat_release_pair(int32_t vm, int32_t pair[2])
-{
-    if (pair == NULL)
-        return;
-    if (pair[0] != g483 || pair[1] != g484)
-        function_48a430(vm, (int32_t)(intptr_t)pair);
-    pair[0] = g483;
-    pair[1] = g484;
-}
 
-static int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t *object_pair,
-                                     const char *name,
-                                     const int32_t *value_pair)
-{
-    static int32_t trace_set_pair_count;
-    static int32_t trace_player_pair_count;
-    int32_t base;
-    int32_t result;
-    int32_t actual[2] = { g483, g484 };
-    int32_t object_wrapper[5] = { (int32_t)(intptr_t)&g40, 0,
-                                  g483, g484, 1 };
 
-    if (vm == 0 || object_pair == NULL || name == NULL || value_pair == NULL)
-        return 0;
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    function_48ab90(vm, value_pair[0], value_pair[1]);
-    if (trace_set_pair_count < 96) {
-        retdec_trace_squirrel_name("sqrat:set-name", (int32_t)(intptr_t)name);
-        retdec_trace_i32("sqrat:set-object-type", object_pair[0]);
-        retdec_trace_i32("sqrat:set-object-data", object_pair[1]);
-        retdec_trace_i32("sqrat:set-value-type", value_pair[0]);
-        retdec_trace_i32("sqrat:set-value-data", value_pair[1]);
-        ++trace_set_pair_count;
-    }
-    result = function_48c950(vm, -3, 0);
-    if (strcmp(name, "pl") == 0 || strcmp(name, "player") == 0) {
-        if (trace_player_pair_count < 96) {
-            retdec_trace_squirrel_name("sqrat:player-name",
-                                       (int32_t)(intptr_t)name);
-            retdec_trace_i32("sqrat:player-object-type", object_pair[0]);
-            retdec_trace_i32("sqrat:player-object-data", object_pair[1]);
-            retdec_trace_i32("sqrat:player-value-type", value_pair[0]);
-            retdec_trace_i32("sqrat:player-value-data", value_pair[1]);
-            if (value_pair[0] == 0x0A008000 && value_pair[1] != 0) {
-                retdec_trace_i32("sqrat:player-value-class",
-                                 *(int32_t *)(intptr_t)(value_pair[1] + 28));
-                retdec_trace_i32("sqrat:player-value-user",
-                                 *(int32_t *)(intptr_t)(value_pair[1] + 32));
-            }
-            object_wrapper[1] = vm;
-            object_wrapper[2] = object_pair[0];
-            object_wrapper[3] = object_pair[1];
-            if (retdec_sqrat_get((int32_t)(intptr_t)object_wrapper,
-                                 name, actual)) {
-                retdec_trace_i32("sqrat:player-read-type", actual[0]);
-                retdec_trace_i32("sqrat:player-read-data", actual[1]);
-                if (actual[0] == 0x0A008000 && actual[1] != 0) {
-                    retdec_trace_i32("sqrat:player-read-class",
-                                     *(int32_t *)(intptr_t)(actual[1] + 28));
-                    retdec_trace_i32("sqrat:player-read-user",
-                                     *(int32_t *)(intptr_t)(actual[1] + 32));
-                }
-                retdec_sqrat_release_pair(vm, actual);
-            } else {
-                retdec_trace("sqrat:player-read-failed");
-            }
-            ++trace_player_pair_count;
-        }
-    }
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
+
 
 /* sq_rawset is required for an already-created class instance.  sq_newslot
    routes through SQInstance::NewSlot and rejects fields that are not meant to
    be dynamically added; the original Sqrat layer publisher writes the
    instance's existing members through the raw path. */
-static int32_t retdec_sqrat_raw_set_pair(int32_t vm,
-                                          const int32_t *object_pair,
-                                          const char *name,
-                                          const int32_t *value_pair)
-{
-    int32_t base;
-    int32_t result;
 
-    if (vm == 0 || object_pair == NULL || name == NULL || value_pair == NULL)
-        return 0;
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    function_48ab90(vm, value_pair[0], value_pair[1]);
-    result = function_48cb10(vm, -3);
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
 
-static int32_t retdec_sqrat_raw_set_int(int32_t vm,
-                                         const int32_t *object_pair,
-                                         const char *name, int32_t value)
-{
-    int32_t pair[2] = { 0x05000002, value };
-    return retdec_sqrat_raw_set_pair(vm, object_pair, name, pair);
-}
 
-static int32_t retdec_sqrat_raw_set_float(int32_t vm,
-                                           const int32_t *object_pair,
-                                           const char *name, float value)
-{
-    int32_t pair[2] = { 0x05000004, 0 };
-    memcpy(&pair[1], &value, sizeof(value));
-    return retdec_sqrat_raw_set_pair(vm, object_pair, name, pair);
-}
 
-static int32_t retdec_sqrat_raw_set_bool(int32_t vm,
-                                          const int32_t *object_pair,
-                                          const char *name, int32_t value)
-{
-    int32_t pair[2] = { 0x01000008, value != 0 };
-    return retdec_sqrat_raw_set_pair(vm, object_pair, name, pair);
-}
 
-static int32_t retdec_sqrat_raw_set_string(int32_t vm,
-                                            const int32_t *object_pair,
-                                            const char *name,
-                                            const char *value)
-{
-    int32_t base;
-    int32_t result;
 
-    if (vm == 0 || object_pair == NULL || name == NULL)
-        return 0;
-    if (value == NULL)
-        value = "";
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    function_48a480(vm, (int32_t)(intptr_t)value, -1);
-    result = function_48cb10(vm, -3);
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
 
-static int32_t retdec_sqrat_set_native_closure(
-    int32_t vm, const int32_t *object_pair, const char *name,
-    int32_t native_function, const int32_t *free_pair,
-    int32_t free_count)
-{
-    int32_t base;
-    int32_t result;
 
-    if (vm == 0 || object_pair == NULL || name == NULL ||
-        native_function == 0 || free_count < 0 ||
-        (free_count != 0 && free_pair == NULL))
-        return 0;
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    if (free_count != 0)
-        function_48ab90(vm, free_pair[0], free_pair[1]);
-    function_48d850(vm, native_function, free_count);
-    result = function_48c950(vm, -3, 0);
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
 
-static int32_t retdec_sqrat_set_offset_closure(
-    int32_t vm, const int32_t *table_pair, const char *name,
-    int32_t offset, int32_t callback)
-{
-    int32_t base;
-    int32_t payload;
-    int32_t result;
 
-    if (vm == 0 || table_pair == NULL || name == NULL ||
-        callback == 0)
-        return 0;
-    base = function_48aa20(vm);
-    function_48ab90(vm, table_pair[0], table_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    payload = function_48c2f0(vm, 4);
-    if (payload == 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    *(int32_t *)(intptr_t)payload = offset;
-    /* 422A60/422D00 install one callback in each of the distinct
-       __getTable and __setTable objects. */
-    function_48d850(vm, callback, 1);
-    result = function_48c950(vm, -3, 0);
-    if (result >= 0)
-        function_48aa30(vm, 1);
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
-
-static int32_t retdec_sqrat_set_int(int32_t vm, const int32_t *object_pair,
-                                    const char *name, int32_t value)
-{
-    int32_t pair[2] = { 0x05000002, value };
-    return retdec_sqrat_set_pair(vm, object_pair, name, pair);
-}
-
-static int32_t retdec_sqrat_set_bool(int32_t vm, const int32_t *object_pair,
-                                     const char *name, int32_t value)
-{
-    int32_t pair[2] = { 0x01000008, value != 0 };
-    return retdec_sqrat_set_pair(vm, object_pair, name, pair);
-}
-
-static int32_t retdec_sqrat_set_string(int32_t vm, const int32_t *object_pair,
-                                       const char *name, const char *value)
-{
-    int32_t base;
-    int32_t result;
-
-    if (value == NULL)
-        value = "";
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    function_48a480(vm, (int32_t)(intptr_t)value, -1);
-    result = function_48c950(vm, -3, 0);
-    retdec_sqrat_trim_stack(vm, base);
-    return result >= 0;
-}
 
 /* CActLayer's VarInfo callbacks receive the native object from the instance
    and a four-byte userdata descriptor from the closure's free environment.
    This is the same ABI used by the original 42E370/43E640/454C20 callback
    families; keep the descriptor lookup in one place so direct and aliased
    fields cannot diverge. */
-static int32_t retdec_cact_layer_property_offset(int32_t vm,
-                                                   int32_t *offset)
-{
-    static volatile LONG trace_count;
-    int32_t target = 0;
-    int32_t *descriptor = NULL;
 
-    if (vm == 0 || offset == NULL ||
-        function_48c890(vm, 1, &target, 0) < 0 || target == 0 ||
-        function_48a920(vm, -1, (int32_t *)&descriptor, 0) < 0 ||
-        descriptor == NULL)
-        return 0;
-    *offset = *descriptor;
-    if ((*offset == 0x8c || (*offset >= 0x34 && *offset <= 0x44)) &&
-        InterlockedIncrement(&trace_count) <= 256) {
-        retdec_trace_i32("cact:property-target", target);
-        retdec_trace_i32("cact:property-offset", *offset);
-        retdec_trace_i32("cact:property-vtable",
-                         *(int32_t *)(intptr_t)target);
-    }
-    return target;
-}
 
-static int32_t retdec_cact_layer_get_int(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
 
-    if (target == 0)
-        return 0;
-    function_48a4f0(vm, *(int32_t *)(intptr_t)(target + offset));
-    return 1;
-}
 
-static int32_t retdec_cact_layer_set_int(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value = 0;
 
-    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
-        return 0;
-    *(int32_t *)(intptr_t)(target + offset) = value;
-    return 0;
-}
 
-static int32_t retdec_cact_layer_get_bool(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
 
-    if (target == 0)
-        return 0;
-    function_48a530(vm,
-                    *(uint8_t *)(intptr_t)(target + offset));
-    return 1;
-}
 
-static int32_t retdec_cact_layer_set_bool(int32_t vm)
-{
-    static volatile LONG trace_set_count;
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value = 0;
 
-    if (target == 0 || function_48a790(vm, 2, &value) < 0)
-        return 0;
-    *(uint8_t *)(intptr_t)(target + offset) = (uint8_t)(value != 0);
-    if ((offset == 0x8c || offset == 0x8d) &&
-        InterlockedIncrement(&trace_set_count) <= 128) {
-        retdec_trace_i32("cact:set-bool-target", target);
-        retdec_trace_i32("cact:set-bool-offset", offset);
-        retdec_trace_i32("cact:set-bool-value", value != 0);
-    }
-    return 0;
-}
 
-static int32_t retdec_cact_layer_get_float(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_bits;
 
-    if (target == 0)
-        return 0;
-    memcpy(&value_bits, (const void *)(intptr_t)(target + offset),
-           sizeof(value_bits));
-    function_48a580(vm, value_bits);
-    return 1;
-}
 
-static int32_t retdec_cact_layer_set_float(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_bits = 0;
 
-    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
-        return 0;
-    memcpy((void *)(intptr_t)(target + offset), &value_bits,
-           sizeof(value_bits));
-    return 0;
-}
-
-static int32_t retdec_cact_layer_get_pointer_float(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_ptr;
-    int32_t value_bits;
-
-    if (target == 0)
-        return 0;
-    value_ptr = *(int32_t *)(intptr_t)(target + offset);
-    if (value_ptr == 0)
-        return 0;
-    memcpy(&value_bits, (const void *)(intptr_t)value_ptr,
-           sizeof(value_bits));
-    function_48a580(vm, value_bits);
-    return 1;
-}
-
-static int32_t retdec_cact_layer_set_pointer_float(int32_t vm)
-{
-    static volatile LONG trace_set_count;
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_ptr;
-    int32_t value_bits = 0;
-
-    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
-        return 0;
-    value_ptr = *(int32_t *)(intptr_t)(target + offset);
-    if (value_ptr != 0)
-        memcpy((void *)(intptr_t)value_ptr, &value_bits,
-               sizeof(value_bits));
-    if (offset >= 0x34 && offset <= 0x34 &&
-        InterlockedIncrement(&trace_set_count) <= 128) {
-        retdec_trace_i32("cact:set-pointer-float-target", target);
-        retdec_trace_i32("cact:set-pointer-float-offset", offset);
-        retdec_trace_i32("cact:set-pointer-float-value", value_bits);
-        retdec_trace_i32("cact:set-pointer-float-destination", value_ptr);
-    }
-    return 0;
-}
-
-static int32_t retdec_cact_layer_get_pointer_int(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_ptr;
-
-    if (target == 0)
-        return 0;
-    value_ptr = *(int32_t *)(intptr_t)(target + offset);
-    if (value_ptr == 0)
-        return 0;
-    function_48a4f0(vm, *(int32_t *)(intptr_t)value_ptr);
-    return 1;
-}
-
-static int32_t retdec_cact_layer_set_pointer_int(int32_t vm)
-{
-    static volatile LONG trace_set_count;
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value_ptr;
-    int32_t value = 0;
-
-    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
-        return 0;
-    value_ptr = *(int32_t *)(intptr_t)(target + offset);
-    if (value_ptr != 0)
-        *(int32_t *)(intptr_t)value_ptr = value;
-    if (offset >= 0x38 && offset <= 0x44 &&
-        InterlockedIncrement(&trace_set_count) <= 128) {
-        retdec_trace_i32("cact:set-pointer-int-target", target);
-        retdec_trace_i32("cact:set-pointer-int-offset", offset);
-        retdec_trace_i32("cact:set-pointer-int-value", value);
-        retdec_trace_i32("cact:set-pointer-int-destination", value_ptr);
-    }
-    return 0;
-}
-
-static int32_t retdec_cact_layer_get_string(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    const char *value;
-
-    if (target == 0)
-        return 0;
-    value = retdec_std_string_data(target + offset);
-    if (value == NULL)
-        value = "";
-    return function_48a480(vm, (int32_t)(intptr_t)value, -1) >= 0;
-}
-
-static int32_t retdec_cact_layer_set_string(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_cact_layer_property_offset(vm, &offset);
-    int32_t value = 0;
-
-    if (target == 0 || function_48a8d0(vm, 2, &value) < 0)
-        return 0;
-    retdec_string_assign_cstr(
-        (int32_t *)(intptr_t)(target + offset),
-        (const char *)(intptr_t)value);
-    return 0;
-}
 
 static int32_t retdec_publish_cact_layer_property(
     int32_t vm, const char *name, int32_t offset,
@@ -101374,86 +100649,11 @@ failed:
     return 0;
 }
 
-static int32_t retdec_c2dlayout_property_offset(int32_t vm,
-                                                  int32_t *offset)
-{
-    int32_t target = 0;
-    int32_t *descriptor = NULL;
 
-    if (vm == 0 || offset == NULL ||
-        function_48c890(vm, 1, &target, 0) < 0 || target == 0 ||
-        function_48a920(vm, -1, (int32_t *)&descriptor, 0) < 0 ||
-        descriptor == NULL)
-        return 0;
-    *offset = *descriptor;
-    return target;
-}
 
-static int32_t retdec_c2dlayout_get_int(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
 
-    if (target == 0)
-        return 0;
-    function_48a4f0(vm, *(int32_t *)(intptr_t)(target + offset));
-    return 1;
-}
 
-static int32_t retdec_c2dlayout_get_float(int32_t vm)
-{
-    int32_t offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
-    int32_t value_bits;
 
-    if (target == 0)
-        return 0;
-    memcpy(&value_bits, (const void *)(intptr_t)(target + offset),
-           sizeof(value_bits));
-    function_48a580(vm, value_bits);
-    return 1;
-}
-
-static int32_t retdec_c2dlayout_set_int(int32_t vm)
-{
-    int32_t target_offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
-    int32_t value = 0;
-
-    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
-        return 0;
-    *(int32_t *)(intptr_t)(target + target_offset) = value;
-    return 0;
-}
-
-static int32_t retdec_c2dlayout_set_float(int32_t vm)
-{
-    int32_t target_offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
-    int32_t value_bits = 0;
-
-    if (target == 0 || function_48a830(vm, 2, &value_bits) < 0)
-        return 0;
-    memcpy((void *)(intptr_t)(target + target_offset), &value_bits,
-           sizeof(value_bits));
-    return 0;
-}
-
-static int32_t retdec_c2dlayout_set_color(int32_t vm)
-{
-    int32_t target_offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &target_offset);
-    int32_t value = 0;
-
-    if (target == 0 || function_48a7d0(vm, 2, &value) < 0)
-        return 0;
-    if (value < 0)
-        value = 0;
-    if (value > 255)
-        value = 255;
-    *(int32_t *)(intptr_t)(target + target_offset) = value;
-    return 0;
-}
 
 static int32_t retdec_publish_c2dlayout_properties(
     int32_t vm, const int32_t class_pair[2])
@@ -101608,97 +100808,8 @@ publish_failed:
     return 0;
 }
 
-static int32_t retdec_sqrat_new_table(int32_t vm, int32_t out_pair[2])
-{
-    static int32_t trace_new_table_count;
-    int32_t base;
 
-    if (vm == 0 || out_pair == NULL)
-        return 0;
-    out_pair[0] = g483;
-    out_pair[1] = g484;
-    base = function_48aa20(vm);
-    if (function_48a600(vm) == 0 || function_48aa20(vm) <= base)
-        return 0;
-    function_48ab40(vm, -1, out_pair);
-    function_48a400(vm, (int32_t)(intptr_t)out_pair);
-    if (trace_new_table_count < 32) {
-        retdec_trace_i32("sqrat:new-table-type", out_pair[0]);
-        retdec_trace_i32("sqrat:new-table-data", out_pair[1]);
-        if (out_pair[0] == 0x0A000020 && out_pair[1] != 0) {
-            retdec_trace_i32("sqrat:new-table-delegate",
-                             *(int32_t *)(intptr_t)(out_pair[1] + 24));
-            retdec_trace_i32("sqrat:new-table-nodes",
-                             *(int32_t *)(intptr_t)(out_pair[1] + 32));
-            retdec_trace_i32("sqrat:new-table-capacity",
-                             *(int32_t *)(intptr_t)(out_pair[1] + 36));
-        }
-        ++trace_new_table_count;
-    }
-    retdec_sqrat_trim_stack(vm, base);
-    return out_pair[0] == 0x0A000020 && out_pair[1] != 0;
-}
 
-static int32_t retdec_sqrat_set_delegate(int32_t vm,
-                                          const int32_t *object_pair,
-                                          const int32_t *delegate_pair)
-{
-    static int32_t trace_delegate_count;
-    int32_t base;
-    int32_t result = 0;
-
-    if (vm == 0 || object_pair == NULL || delegate_pair == NULL)
-        return 0;
-    if (trace_delegate_count < 32) {
-        retdec_trace_i32("sqrat:delegate-object-type", object_pair[0]);
-        retdec_trace_i32("sqrat:delegate-object-data", object_pair[1]);
-        retdec_trace_i32("sqrat:delegate-value-type", delegate_pair[0]);
-        retdec_trace_i32("sqrat:delegate-value-data", delegate_pair[1]);
-        if (object_pair[0] == 0x0A000020 && object_pair[1] != 0)
-            retdec_trace_i32("sqrat:delegate-old",
-                             *(int32_t *)(intptr_t)(object_pair[1] + 24));
-        ++trace_delegate_count;
-    }
-    base = function_48aa20(vm);
-    function_48ab90(vm, object_pair[0], object_pair[1]);
-    function_48ab90(vm, delegate_pair[0], delegate_pair[1]);
-    /* 48d7e0 is the userdata-only API.  The ACT global is a table, so use
-       SQDelegable::SetDelegate with the receiver-bearing adapter directly. */
-    if (object_pair[0] == 0x0A000020) {
-        if (delegate_pair[0] == 0x0A000020)
-            result = function_48e520_this(object_pair[1], delegate_pair[1]);
-        else if (delegate_pair[0] == g483)
-            result = function_48e520_this(object_pair[1], 0);
-    } else if (object_pair[0] == 0x0A000080) {
-        if (delegate_pair[0] == 0x0A000020)
-            result = function_48e520_this(object_pair[1], delegate_pair[1]);
-        else if (delegate_pair[0] == g483)
-            result = function_48e520_this(object_pair[1], 0);
-    }
-    if (result == 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    if (trace_delegate_count <= 32 && object_pair[0] == 0x0A000020 &&
-        object_pair[1] != 0)
-        retdec_trace_i32("sqrat:delegate-after",
-                         *(int32_t *)(intptr_t)(object_pair[1] + 24));
-    function_491760_this(vm);
-    retdec_sqrat_trim_stack(vm, base);
-    return 1;
-}
-
-static const char *retdec_std_string_data(int32_t string_ptr)
-{
-    uint32_t capacity;
-
-    if (string_ptr == 0)
-        return NULL;
-    capacity = *(uint32_t *)(intptr_t)(string_ptr + 20);
-    if (capacity >= 16u)
-        return *(const char **)(intptr_t)string_ptr;
-    return (const char *)(intptr_t)string_ptr;
-}
 
 /* RetDec emitted the body of 424210 as an orphaned tail at 4241F9 and did
    not give the native thunk a callable symbol.  Keep the method available to
@@ -101879,48 +100990,8 @@ static int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     return 1;
 }
 
-static int32_t retdec_acting_player_property(int32_t vm, int32_t *offset) {
-    int32_t target = retdec_c2dlayout_property_offset(vm, offset);
-    if (target == 0)
-        return 0;
-    return *offset == 8 ? target + 8 : *(int32_t *)(intptr_t)(target + *offset);
-}
 
-static int32_t retdec_acting_player_get_property(int32_t vm) {
-    int32_t offset = 0;
-    int32_t field = retdec_acting_player_property(vm, &offset);
-    if (field == 0)
-        return 0;
-    if (offset == 8 || offset == 132)
-        function_48a530(vm, *(uint8_t *)(intptr_t)field);
-    else if (offset == 124 || offset == 128)
-        function_48a580(vm, *(int32_t *)(intptr_t)field);
-    else if (offset == 148)
-        function_48a480(vm, (int32_t)(intptr_t)retdec_std_string_data(field), -1);
-    else
-        function_48a4f0(vm, *(int32_t *)(intptr_t)field);
-    return 1;
-}
 
-static int32_t retdec_acting_player_set_property(int32_t vm) {
-    int32_t offset = 0;
-    int32_t field = retdec_acting_player_property(vm, &offset);
-    int32_t value = 0;
-    if (field == 0)
-        return 0;
-    if (offset == 8 || offset == 132) {
-        function_48a790(vm, 2, &value);
-        *(uint8_t *)(intptr_t)field = (uint8_t)(value != 0);
-    } else if (offset == 148) {
-        if (function_48a8d0(vm, 2, &value) >= 0)
-            retdec_msvc_0_Init_locks_std__QAE_XZ(
-                (int32_t *)(intptr_t)field, (int32_t *)(intptr_t)value);
-    } else if ((offset == 124 || offset == 128
-        ? function_48a830(vm, 2, &value) : function_48a7d0(vm, 2, &value)) >= 0) {
-        *(int32_t *)(intptr_t)field = value;
-    }
-    return 0;
-}
 
 static int32_t retdec_publish_acting_player_properties(int32_t vm,
                                                         const int32_t class_pair[2]) {
@@ -102166,58 +101237,7 @@ static int32_t retdec_publish_acting_player(int32_t vm,
    the ACT global table as its this/environment value.  This is the small
    receiver-safe equivalent of the original 415FD0 path; it deliberately
    reuses the existing VM stream reader and call machinery. */
-static int32_t retdec_execute_embedded_act_script(
-    int32_t vm, int32_t script_ptr, const int32_t *environment_pair)
-{
-    int32_t raw_data;
-    int32_t raw_size;
-    int32_t stream_state[3];
-    int32_t closure_pair[2] = { g483, g484 };
-    int32_t base;
-    int32_t load_result = -1;
-    int32_t execute_result = -1;
 
-    if (vm == 0 || script_ptr == 0 || environment_pair == NULL)
-        return 0;
-    raw_data = *(int32_t *)(intptr_t)(script_ptr + 92);
-    raw_size = *(int32_t *)(intptr_t)(script_ptr + 96);
-    if (raw_data == 0 || raw_size <= 0)
-        return 0;
-
-    retdec_trace_i32("act-script:data", raw_data);
-    retdec_trace_i32("act-script:size", raw_size);
-    retdec_trace_i32("act-script:compiled",
-                     *(uint8_t *)(intptr_t)(script_ptr + 101));
-    if (raw_size < 2 || *(uint16_t *)(intptr_t)raw_data != 0xFAFAu)
-        return 0;
-
-    stream_state[0] = raw_data;
-    stream_state[1] = raw_size;
-    stream_state[2] = raw_data;
-    base = function_48aa20(vm);
-    load_result = function_48b050(
-        vm, (int32_t)(intptr_t)function_402a50, stream_state);
-    retdec_trace_i32("act-script:readclosure-result", load_result);
-    if (load_result < 0 || function_48aa20(vm) <= base)
-        goto cleanup;
-
-    function_48ab40(vm, -1, closure_pair);
-    retdec_trace_i32("act-script:closure-type", closure_pair[0]);
-    retdec_trace_i32("act-script:closure-data", closure_pair[1]);
-    if (closure_pair[0] != 0x08000100 || closure_pair[1] == 0)
-        goto cleanup;
-
-    /* The reader leaves one closure on the stack.  The call ABI needs a
-       second closure slot followed by its single environment argument. */
-    function_48ab90(vm, closure_pair[0], closure_pair[1]);
-    function_48ab90(vm, environment_pair[0], environment_pair[1]);
-    execute_result = function_48ace0(vm, 1, 0, 1);
-    retdec_trace_i32("act-script:execute-result", execute_result);
-
-cleanup:
-    retdec_sqrat_trim_stack(vm, base);
-    return load_result >= 0 && execute_result >= 0;
-}
 
 /* 416268 compiles inline ACT source, including classes and callback bodies.
    Transfer only its closure stream from the source compiler into this VM. */
@@ -102251,65 +101271,7 @@ static int32_t retdec_execute_act_source_script(
     return result;
 }
 
-static void retdec_copy_act_callback(int32_t vm, int32_t script_ptr,
-                                     int32_t offset, int32_t global_object,
-                                     const char *name)
-{
-    int32_t value[2] = { g483, g484 };
-    int32_t destination;
-    int32_t old_vm;
-    int32_t lookup_result;
 
-    if (vm == 0 || script_ptr == 0 || global_object == 0 || name == NULL)
-        return;
-    destination = script_ptr + offset;
-    /* CActScript callback slots are five words, not Sqrat::Object values:
-       [VM, environment type, environment data, closure type, closure data].
-       This is the layout consumed directly by 415810. */
-    if (*(int32_t *)(intptr_t)(destination + 12) != 0x1000001) {
-        old_vm = *(int32_t *)(intptr_t)destination;
-        if (old_vm != 0) {
-            function_48a430(old_vm, destination + 4);
-            function_48a430(old_vm, destination + 12);
-        }
-        function_48abe0(destination + 4);
-        function_48abe0(destination + 12);
-    }
-    lookup_result = retdec_sqrat_get(global_object, name, value);
-    if (strcmp(name, "Init") == 0 ||
-        strcmp(name, "Update") == 0 ||
-        strcmp(name, "OnCreate") == 0) {
-        const char *script_path = retdec_std_string_data(script_ptr + 64);
-        retdec_trace_i32("act:copy-update-script", script_ptr);
-        retdec_trace_i32("act:copy-update-offset", offset);
-        retdec_trace_i32("act:copy-callback-name",
-                         strcmp(name, "Init") == 0 ? 1 :
-                         (strcmp(name, "Update") == 0 ? 2 : 3));
-        retdec_trace_squirrel_name("act:copy-callback-path",
-                                   (int32_t)(intptr_t)script_path);
-        retdec_trace_i32("act:copy-update-object-type",
-                         *(int32_t *)(intptr_t)(global_object + 8));
-        retdec_trace_i32("act:copy-update-object-data",
-                         *(int32_t *)(intptr_t)(global_object + 12));
-        retdec_trace_i32("act:copy-update-result", lookup_result);
-        retdec_trace_i32("act:copy-update-value-type", value[0]);
-        retdec_trace_i32("act:copy-update-value-data", value[1]);
-    }
-    if (lookup_result) {
-        *(int32_t *)(intptr_t)destination = vm;
-        *(int32_t *)(intptr_t)(destination + 4) =
-            *(int32_t *)(intptr_t)(global_object + 8);
-        *(int32_t *)(intptr_t)(destination + 8) =
-            *(int32_t *)(intptr_t)(global_object + 12);
-        *(int32_t *)(intptr_t)(destination + 12) = value[0];
-        *(int32_t *)(intptr_t)(destination + 16) = value[1];
-        function_48a400(vm, destination + 4);
-        function_48a400(vm, destination + 12);
-    }
-    /* retdec_sqrat_get acquired one temporary RefTable handle.  The callback
-       slots acquired their own handles above, so release the temporary here. */
-    retdec_sqrat_release_pair(vm, value);
-}
 
 /* 415810 is the original CActScript callback invoker.  Keep the callback
    phase explicit: CActResource publishes OnCreate, while BeginStage invokes
@@ -102348,72 +101310,9 @@ static int32_t retdec_execute_act_callback(int32_t script_ptr,
    receiver registers, so reproduce their observable Squirrel operations with
    explicit object pairs while keeping the native layer pointer as instance
    userdata. */
-static int32_t retdec_create_bound_instance(
-    int32_t vm, const int32_t *parent_pair, const char *name,
-    const int32_t *class_pair, int32_t native_ptr, int32_t out_pair[2])
-{
-    int32_t base;
 
-    if (vm == 0 || parent_pair == NULL || name == NULL ||
-        class_pair == NULL || out_pair == NULL || native_ptr == 0 ||
-        class_pair[0] != 0x08004000 || class_pair[1] == 0)
-        return 0;
-    out_pair[0] = g483;
-    out_pair[1] = g484;
-    base = function_48aa20(vm);
-    function_48ab90(vm, parent_pair[0], parent_pair[1]);
-    function_48a480(vm, (int32_t)(intptr_t)name, -1);
-    function_48ab90(vm, class_pair[0], class_pair[1]);
-    if (function_48b490(vm, -1) < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    /* sq_createinstance leaves the class below the new instance. */
-    function_48aa60(vm, -2);
-    if (function_48c840(vm, -1, native_ptr) < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    function_48ab40(vm, -1, out_pair);
-    function_48a400(vm, out_pair);
-    /* This is the sq_newslot(parent, name, instance) operation. */
-    if (function_48c950(vm, -3, 0) < 0) {
-        retdec_sqrat_release_pair(vm, out_pair);
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    retdec_sqrat_trim_stack(vm, base);
-    return out_pair[0] == 0x0a008000 && out_pair[1] != 0;
-}
 
-static int32_t retdec_create_unbound_instance(
-    int32_t vm, const int32_t *class_pair, int32_t native_ptr,
-    int32_t out_pair[2])
-{
-    int32_t base;
 
-    if (vm == 0 || class_pair == NULL || native_ptr == 0 ||
-        out_pair == NULL || class_pair[0] != 0x08004000 ||
-        class_pair[1] == 0)
-        return 0;
-    out_pair[0] = g483;
-    out_pair[1] = g484;
-    base = function_48aa20(vm);
-    function_48ab90(vm, class_pair[0], class_pair[1]);
-    if (function_48b490(vm, -1) < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    function_48aa60(vm, -2);
-    if (function_48c840(vm, -1, native_ptr) < 0) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    function_48ab40(vm, -1, out_pair);
-    function_48a400(vm, out_pair);
-    retdec_sqrat_trim_stack(vm, base);
-    return out_pair[0] == 0x0a008000 && out_pair[1] != 0;
-}
 
 static int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environment)
 {
@@ -102496,22 +101395,6 @@ struct retdec_native_view_property {
     int32_t kind;
 };
 
-static int32_t retdec_native_view_get_short(int32_t vm) {
-    int32_t offset = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
-    if (target == 0)
-        return 0;
-    function_48a4f0(vm, *(int16_t *)(intptr_t)(target + offset));
-    return 1;
-}
-
-static int32_t retdec_native_view_set_short(int32_t vm) {
-    int32_t offset = 0, value = 0;
-    int32_t target = retdec_c2dlayout_property_offset(vm, &offset);
-    if (target != 0 && function_48a7d0(vm, 2, &value) >= 0)
-        *(int16_t *)(intptr_t)(target + offset) = (int16_t)value;
-    return 0;
-}
 
 static int32_t retdec_map_chip_count(int32_t vm) {
     int32_t layout = 0;
@@ -103342,30 +102225,7 @@ static int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
 /* CActResource keeps an owned root-table pair and a pointer to the runtime
    CAct used by the renderer.  The generated 450E30/450950 bodies lost both
    C++ receivers, so restore those object invariants explicitly. */
-static int32_t retdec_bind_act_resource_root(int32_t resource_ptr,
-                                              int32_t vm,
-                                              const int32_t *root_pair)
-{
-    int32_t *resource;
 
-    retdec_trace_i32("450e30:root-resource", resource_ptr);
-    retdec_trace_i32("450e30:root-vm", vm);
-    retdec_trace_i32("450e30:root-type",
-                     root_pair != NULL ? root_pair[0] : 0);
-    retdec_trace_i32("450e30:root-data",
-                     root_pair != NULL ? root_pair[1] : 0);
-    if (resource_ptr == 0 || vm == 0 || root_pair == NULL ||
-        root_pair[0] != 0x0A000020 || root_pair[1] == 0)
-        return 0;
-    resource = (int32_t *)(intptr_t)resource_ptr;
-    if ((resource[39] & 0x08000000) != 0 && resource[40] != 0)
-        function_48a430(vm, resource + 39);
-    resource[38] = vm;
-    resource[39] = root_pair[0];
-    resource[40] = root_pair[1];
-    function_48a400(vm, resource + 39);
-    return 1;
-}
 
 static int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
 {
@@ -109073,23 +107933,7 @@ int32_t function_455230(int32_t a1, int32_t a2, int32_t result) {
 }
 
 // Address range: 0x4552e0 - 0x455323
-int32_t function_4552e0(int32_t a1) {
-    int32_t method_holder = 0;
-    int32_t instance = 0;
-    int32_t method;
 
-    retdec_trace_i32("450950:zero-wrapper-entry", a1);
-    if (function_48a920(a1, -1, &method_holder, 0) < 0 ||
-        method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        function_48c890(a1, 1, &instance, 0) < 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)method_holder;
-    retdec_trace_i32("450950:zero-wrapper-method", method);
-    retdec_trace_i32("450950:zero-wrapper-instance", instance);
-    retdec_call_thiscall0((void *)(intptr_t)instance,
-                          (void *)(intptr_t)method);
-    return 0;
-}
 
 // Address range: 0x455330 - 0x455390
 int32_t function_455330(int32_t a1) {
@@ -109200,33 +108044,7 @@ int32_t function_455520(int32_t a1) {
 }
 
 // Address range: 0x4555a0 - 0x4556be
-int32_t function_4555a0(int32_t a1) {
-    int32_t *descriptor = NULL;
-    int32_t self = 0, resource = 0;
-    int32_t x = 0, y = 0, width = 0, height = 0, sx = 0, sy = 0, blend = 0;
-    float32_t alpha = 0.0f;
-    int32_t result, method;
 
-    if (function_48a920(a1, -1, (int32_t *)&descriptor, 0) < 0 ||
-        descriptor == NULL || descriptor[0] == 0 ||
-        function_48c890(a1, 1, &self, 0) < 0 || self == 0)
-        return -1;
-    function_48a830(a1, 10, (int32_t *)&alpha);
-    function_48a7d0(a1, 9, &blend);
-    function_48a7d0(a1, 8, &sy);
-    function_48a7d0(a1, 7, &sx);
-    function_48c890(a1, 6, &resource, 0);
-    function_48a7d0(a1, 5, &height);
-    function_48a7d0(a1, 4, &width);
-    function_48a7d0(a1, 3, &y);
-    function_48a7d0(a1, 2, &x);
-    method = descriptor[0];
-    result = kinoko_call_draw_method((void *)(intptr_t)self,
-        (void *)(intptr_t)method, x, y, width, height, resource,
-        sx, sy, blend, alpha);
-    function_48a4f0(a1, result);
-    return 1;
-}
 
 // Address range: 0x4556c0 - 0x45572c
 int32_t function_4556c0(int32_t a1) {
@@ -119311,34 +118129,7 @@ int32_t function_45e460(void) { return 0; }
 #endif
 
 /* SquirrelFunction::operator() for the Actor initialization callback. */
-static int32_t function_45e020_this(int32_t state_ptr,
-                                    int32_t temporary_ptr,
-                                    int32_t arg_type, int32_t arg_data)
-{
-    int32_t vm;
-    int32_t result;
 
-    if (state_ptr == 0 || temporary_ptr == 0)
-        return -1;
-    vm = *(int32_t *)(intptr_t)state_ptr;
-    if (vm == 0)
-        return -1;
-
-    /* state + 8 and state + 20 are the two SquirrelObject members used by
-       the original templated call; the explicit pair is its second arg. */
-    function_48ab90(vm,
-                    *(int32_t *)(intptr_t)(state_ptr + 20),
-                    *(int32_t *)(intptr_t)(state_ptr + 24));
-    function_48ab90(vm,
-                    *(int32_t *)(intptr_t)(state_ptr + 8),
-                    *(int32_t *)(intptr_t)(state_ptr + 12));
-    function_48ab90(vm, arg_type, arg_data);
-    result = function_48ace0(vm, 2, 1, 1);
-    if (result >= 0)
-        function_48aa30(vm, 2);
-    function_4a9d70_this(temporary_ptr);
-    return result;
-}
 
 /* Actor initialization with the original __thiscall receiver and argument
    layout restored. */
@@ -131640,82 +130431,13 @@ int32_t function_46b450(int32_t a1, int32_t a2) {
 // The original routines below are SqPlus argument adapters.  RetDec lost
 // their first (this) argument and consequently shifted the VM arguments into
 // uninitialized locals.  Keep the adapter ABI explicit in the clean C build.
-int32_t function_46b490(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg) {
-    static int32_t trace_count;
-    int32_t value;
-    if (trace_count < 32) {
-        retdec_trace_i32("46b490:this", this_ptr);
-        retdec_trace_i32("46b490:target", target);
-        retdec_trace_i32("46b490:vm", vm);
-        retdec_trace_i32("46b490:first-arg", first_arg);
-        ++trace_count;
-    }
-    if (function_48a6f0(vm, first_arg) != 0x08000010)
-        return function_48ac00(vm, "Incorrect function argument");
-    if (function_48a8d0(vm, first_arg, &value) < 0)
-        return function_48ac00(vm, "sq_get*() failed (type error)");
-    if (target == 0)
-        return function_48ac00(vm, "Invalid native function");
-    ((int32_t (*)(int32_t, int32_t))(intptr_t)target)(this_ptr, value);
-    return 0;
-}
 
-int32_t function_46b500(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg) {
-    int32_t values[3];
-    int32_t index;
-    for (index = 0; index < 3; ++index) {
-        int32_t arg = first_arg + index;
-        if (function_48a6f0(vm, arg) != 0x05000002)
-            return function_48ac00(vm, "Incorrect function argument");
-        if (function_48a7d0(vm, arg, &values[index]) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-    }
-    if (target == 0)
-        return function_48ac00(vm, "Invalid native function");
-    ((int32_t (*)(int32_t, int32_t, int32_t, int32_t))(intptr_t)target)(
-        this_ptr, values[0], values[1], values[2]);
-    return 0;
-}
 
-int32_t function_46b610(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg) {
-    int32_t values[2];
-    int32_t index;
-    for (index = 0; index < 2; ++index) {
-        int32_t arg = first_arg + index;
-        if (function_48a6f0(vm, arg) != 0x05000002)
-            return function_48ac00(vm, "Incorrect function argument");
-        if (function_48a7d0(vm, arg, &values[index]) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-    }
-    if (target == 0)
-        return function_48ac00(vm, "Invalid native function");
-    int32_t result = ((int32_t (*)(int32_t, int32_t, int32_t))(intptr_t)target)(
-        this_ptr, values[0], values[1]);
-    function_48a530(vm, result != 0);
-    return 1;
-}
 
-int32_t function_46b6f0(int32_t this_ptr, int32_t target,
-                        int32_t vm, int32_t first_arg) {
-    int32_t values[2];
-    int32_t index;
-    for (index = 0; index < 2; ++index) {
-        int32_t arg = first_arg + index;
-        if (function_48a6f0(vm, arg) != 0x05000002)
-            return function_48ac00(vm, "Incorrect function argument");
-        if (function_48a7d0(vm, arg, &values[index]) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-    }
-    if (target == 0)
-        return function_48ac00(vm, "Invalid native function");
-    int32_t result = ((int32_t (*)(int32_t, int32_t, int32_t))(intptr_t)target)(
-        this_ptr, values[0], values[1]);
-    function_48a4f0(vm, result);
-    return 1;
-}
+
+
+
+
 
 // Address range: 0x46b7c0 - 0x46b878
 // From class:    .?AVCFileWriter@@
@@ -133054,72 +131776,19 @@ int32_t function_46ce40(int32_t a1, int32_t a2, int32_t a3) {
 
 /* Recovered 0x46C6B0: SqPlus member wrappers carry the native object in the
  * instance userpointer and the member target in the outer userdata value. */
-static void function_46c6b0_pair(int32_t vm, int32_t pair[2]) {
-    static int32_t trace_count;
-    int32_t instance = 0;
-    int32_t binding_slot = 0;
-    int32_t typetag = 0;
 
-    pair[0] = 0;
-    pair[1] = 0;
-    if (vm == 0)
-        return;
-
-    if (function_48c890(vm, 1, &instance, 0) >= 0)
-        pair[0] = instance;
-    if (function_48aa20(vm) > 0 &&
-        function_48a920(vm, function_48aa20(vm), &binding_slot, &typetag) >= 0 &&
-        typetag == 0) {
-        pair[1] = binding_slot;
-    }
-    if (trace_count < 32) {
-        retdec_trace_i32("46c6b0:vm", vm);
-        retdec_trace_i32("46c6b0:top", function_48aa20(vm));
-        retdec_trace_i32("46c6b0:instance", pair[0]);
-        retdec_trace_i32("46c6b0:binding-slot", pair[1]);
-        retdec_trace_i32("46c6b0:target",
-                         pair[1] != 0
-                             ? *(int32_t *)(intptr_t)pair[1]
-                             : 0);
-        ++trace_count;
-    }
-}
 
 // Address range: 0x46ce70 - 0x46ceb8
-int32_t function_46ce70(int32_t a1) {
-    int32_t pair[2];
-    function_46c6b0_pair(a1, pair);
-    if (pair[0] == 0 || pair[1] == 0)
-        return function_48ac00(a1, "Invalid Instance Type");
-    return function_46b490(pair[0], *(int32_t *)(intptr_t)pair[1], a1, 2);
-}
+
 
 // Address range: 0x46cec0 - 0x46cf08
-int32_t function_46cec0(int32_t a1) {
-    int32_t pair[2];
-    function_46c6b0_pair(a1, pair);
-    if (pair[0] == 0 || pair[1] == 0)
-        return function_48ac00(a1, "Invalid Instance Type");
-    return function_46b500(pair[0], *(int32_t *)(intptr_t)pair[1], a1, 2);
-}
+
 
 // Address range: 0x46cf10 - 0x46cf58
-int32_t function_46cf10(int32_t a1) {
-    int32_t pair[2];
-    function_46c6b0_pair(a1, pair);
-    if (pair[0] == 0 || pair[1] == 0)
-        return function_48ac00(a1, "Invalid Instance Type");
-    return function_46b610(pair[0], *(int32_t *)(intptr_t)pair[1], a1, 2);
-}
+
 
 // Address range: 0x46cf60 - 0x46cfa8
-int32_t function_46cf60(int32_t a1) {
-    int32_t pair[2];
-    function_46c6b0_pair(a1, pair);
-    if (pair[0] == 0 || pair[1] == 0)
-        return function_48ac00(a1, "Invalid Instance Type");
-    return function_46b6f0(pair[0], *(int32_t *)(intptr_t)pair[1], a1, 2);
-}
+
 
 
 // Address range: 0x46d080 - 0x46d12d
@@ -136148,39 +134817,14 @@ int32_t function_4715e0(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x4716b0 - 0x47171c
-int32_t function_4716b0(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t value;
 
-    if (function_48a6f0(vm, index) != 0x08000010)
-        return function_48ac00(vm, "Incorrect function argument");
-    if (function_48a8d0(vm, index, &value) < 0)
-        return function_48ac00(vm, "sq_get*() failed (type error)");
-    if (callback_ptr != 0)
-        ((void (__cdecl *)(int32_t))(intptr_t)callback_ptr)(value);
-    return 0;
-}
 
 // Address range: 0x471720 - 0x471809
 // The first parameter is an indirect callback, followed by the Squirrel VM
 // and the one-based stack index.  RetDec dropped the callback's type and
 // shifted the remaining parameters, which made the generated code pass a
 // local stack address to function_48a6f0 as if it were a VM.
-int32_t function_471720(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t name, closure_pair[2], environment_pair[2];
-    int32_t closure[3], environment[3];
 
-    if (callback_ptr == 0 || !retdec_native_string_arg(vm, index, &name) ||
-        !retdec_native_value_pair(vm, index + 1, closure_pair) ||
-        !retdec_native_value_pair(vm, index + 2, environment_pair))
-        return function_48ac00(vm, "Incorrect function argument");
-    function_4a9540_this(environment, environment_pair[0], environment_pair[1]);
-    function_4a9540_this(closure, closure_pair[0], closure_pair[1]);
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)callback_ptr)(
-        name, closure[0], closure[1], closure[2],
-        environment[0], environment[1], environment[2]);
-    return 0;
-}
 
 // Address range: 0x471810 - 0x47187c
 int32_t function_471810(int32_t a1, int32_t a2) {
@@ -136264,21 +134908,7 @@ int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index) {
 /* IDA prototype: int __cdecl(void (__cdecl *)(int, int), int, int).
    The generated C had collapsed the callback and VM arguments into two
    locals, so it passed the address of a type-tag temporary as the VM. */
-int32_t function_471a60(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t first;
-    int32_t second;
 
-    if (function_48a6f0(vm, index) != 0x5000002 ||
-        function_48a6f0(vm, index + 1) != 0x5000002)
-        return function_48ac00(vm, "Incorrect function argument");
-    if (function_48a7d0(vm, index + 1, &second) < 0 ||
-        function_48a7d0(vm, index, &first) < 0)
-        return function_48ac00(vm, "sq_get*() failed (type error)");
-    if (callback_ptr != 0)
-        ((void (__cdecl *)(int32_t, int32_t))(intptr_t)callback_ptr)(
-            first, second);
-    return 0;
-}
 
 // Address range: 0x471b30 - 0x471bbe
 int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
@@ -136359,25 +134989,7 @@ int32_t function_471c70(int32_t a1) {
 }
 
 // Address range: 0x471d30 - 0x471d8c
-int32_t function_471d30(int32_t vm) {
-    int32_t target = retdec_native_target_from_userdata(vm);
-    int32_t id;
-    int32_t closure_pair[2], environment_pair[2];
-    int32_t closure[3], environment[3];
 
-    if (target == 0 || !retdec_native_integer_arg(vm, 2, &id) ||
-        !retdec_native_value_pair(vm, 3, closure_pair) ||
-        !retdec_native_value_pair(vm, 4, environment_pair))
-        return function_48ac00(vm, "Incorrect function argument");
-    /* 471240 constructs the two by-value SquirrelObject arguments. */
-    function_4a9540_this(environment, environment_pair[0], environment_pair[1]);
-    function_4a9540_this(closure, closure_pair[0], closure_pair[1]);
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)target)(
-        id, closure[0], closure[1], closure[2],
-        environment[0], environment[1], environment[2]);
-    return 0;
-}
 
 // Address range: 0x471d90 - 0x471dec
 int32_t function_471d90(int32_t a1) {
@@ -136431,21 +135043,7 @@ int32_t function_471df0(int32_t a1) {
 }
 
 // Address range: 0x471e50 - 0x471eac
-int32_t function_471e50(int32_t vm) {
-    int32_t target = retdec_native_target_from_userdata(vm);
-    int32_t name;
-    int32_t environment_pair[2];
-    int32_t environment[3];
 
-    if (target == 0 || !retdec_native_string_arg(vm, 2, &name) ||
-        !retdec_native_value_pair(vm, 3, environment_pair))
-        return function_48ac00(vm, "Incorrect function argument");
-    /* 471510 forwards the layer name and one owned SquirrelObject. */
-    function_4a9540_this(environment, environment_pair[0], environment_pair[1]);
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t))(intptr_t)target)(
-        name, environment[0], environment[1], environment[2]);
-    return 0;
-}
 
 // Address range: 0x471eb0 - 0x471f0c
 int32_t function_471eb0(int32_t a1) {
@@ -136467,22 +135065,7 @@ int32_t function_471f10(int32_t a1) {
 }
 
 // Address range: 0x471f70 - 0x471fcc
-int32_t function_471f70(int32_t a1) {
-    int32_t vm = a1;
-    int32_t top = function_48aa20(vm);
-    int32_t callback_holder = 0;
-    int32_t type_tag = 0;
 
-    if (top <= 0 || function_48a920(vm, top, &callback_holder,
-                                    (int32_t)(intptr_t)&type_tag) < 0 ||
-        type_tag != 0) {
-        return function_471720(0, vm, 2);
-    }
-
-    return function_471720(
-        callback_holder != 0 ? *(int32_t *)(intptr_t)callback_holder : 0,
-        vm, 2);
-}
 
 // Address range: 0x471fd0 - 0x47202c
 int32_t function_471fd0(int32_t a1) {
@@ -136496,15 +135079,7 @@ int32_t function_471fd0(int32_t a1) {
 }
 
 // Address range: 0x472030 - 0x47207e
-int32_t function_472030(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t result = 0;
 
-    if (target != 0)
-        result = ((int32_t (__cdecl *)(void))(intptr_t)target)();
-    function_48a4f0(a1, result);
-    return 1;
-}
 
 // Address range: 0x472080 - 0x4720dc
 int32_t function_472080(int32_t a1) {
@@ -136613,62 +135188,13 @@ static int32_t retdec_table_stream_read(int32_t *stream, void *data,
     return 1;
 }
 
-static int32_t retdec_squirrel_object_from_pair(int32_t *object,
-                                                int32_t type, int32_t data) {
-    if (object == NULL || g644 == 0)
-        return 0;
-    function_4a94e0_this((int32_t)(intptr_t)object);
-    function_48ab90((int32_t)g644, type, data);
-    function_4a9660_this((int32_t)(intptr_t)object, -1);
-    function_48aa50((int32_t)g644);
-    return 1;
-}
 
-static int32_t retdec_squirrel_object_string(int32_t *object,
-                                              const char **value) {
-    int32_t string_ptr;
 
-    if (object == NULL || value == NULL || g644 == 0)
-        return 0;
-    function_48ab90((int32_t)g644, object[1], object[2]);
-    if (function_48a8d0((int32_t)g644, -1, &string_ptr) < 0) {
-        function_48aa50((int32_t)g644);
-        return 0;
-    }
-    function_48aa50((int32_t)g644);
-    *value = (const char *)(intptr_t)string_ptr;
-    return *value != NULL;
-}
 
-static int32_t retdec_squirrel_object_copy(int32_t *destination,
-                                            const int32_t *source) {
-    if (destination == NULL || source == NULL)
-        return 0;
-    function_4a94e0_this((int32_t)(intptr_t)destination);
-    function_4a95c0_this((int32_t)(intptr_t)destination,
-                         (int32_t)(intptr_t)source);
-    return 1;
-}
 
-static int32_t retdec_squirrel_object_from_string(int32_t *object,
-                                                   const char *data,
-                                                   uint32_t length) {
-    char *copy;
 
-    if (object == NULL || data == NULL || g644 == 0 || length > 0x1000000u)
-        return 0;
-    copy = (char *)malloc((size_t)length + 1);
-    if (copy == NULL)
-        return 0;
-    memcpy(copy, data, length);
-    copy[length] = 0;
-    function_4a94e0_this((int32_t)(intptr_t)object);
-    function_48a480((int32_t)g644, (int32_t)(intptr_t)copy, -1);
-    function_4a9660_this((int32_t)(intptr_t)object, -1);
-    function_48aa50((int32_t)g644);
-    free(copy);
-    return 1;
-}
+
+
 
 static int32_t retdec_table_stream_read_string(int32_t *stream,
                                                int32_t *object) {
@@ -182317,6 +180843,9 @@ int32_t function_4a90c0(int32_t * a1, int32_t * a2) {
 
 // Address range: 0x4a9490 - 0x4a94df
 
+
+int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&g39; }
+int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&g40; }
 
 int32_t kinoko_squirrel_object_vtable(void) {
     return (int32_t)(intptr_t)&g16;
