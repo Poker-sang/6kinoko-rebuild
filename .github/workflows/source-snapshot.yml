@@ -3,6 +3,7 @@ on:
   push:
     branches: ['refactor/squirrel222-native-cpp-20260918']
     paths: ['.github/workflows/source-snapshot.yml']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -14,21 +15,15 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Record source and patch
+      - name: Record complete tracked source and revision
         run: |
-          git rev-parse HEAD > SOURCE_REVISION.txt
-          git diff d773657e78f2be272984cefae76c568278a067db > SOURCE_CHANGES.patch
+          mkdir -p snapshot
+          git rev-parse HEAD > snapshot/SOURCE_REVISION.txt
+          git archive --format=tar.gz --output=snapshot/source.tar.gz HEAD
+          git log -30 --format='%H %s' > snapshot/COMMITS.txt
+          sha256sum snapshot/source.tar.gz > snapshot/SHA256SUMS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: migration-source-${{ github.sha }}
-          retention-days: 1
-          path: |
-            AGENTS.md
-            CMakeLists.txt
-            SOURCE_REVISION.txt
-            SOURCE_CHANGES.patch
-            include/
-            src/
-            tests/
-            third_party/
-            tools/
+          retention-days: 14
+          path: snapshot/
