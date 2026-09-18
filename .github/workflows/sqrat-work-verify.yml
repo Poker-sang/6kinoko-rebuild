@@ -1,0 +1,142 @@
+name: Sqrat C++ work validation
+on:
+  push:
+    branches: ['work/sqrat-cpp-20260918']
+    paths: ['.github/workflows/sqrat-work-verify.yml']
+permissions:
+  contents: read
+jobs:
+  apply:
+    if: github.repository == 'Poker-sang/6kinoko-rebuild' && github.ref == 'refs/heads/work/sqrat-cpp-20260918'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      commit: ${{ steps.commit.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Validate complete input and output hashes before modifying source
+        shell: python
+        run: |
+          import base64, hashlib, json, lzma, pathlib, subprocess
+          parts = ['tools/migrations/sqrat-batch-01.b64', 'tools/migrations/sqrat-batch-02.b64']
+          compressed = base64.b64decode(''.join(pathlib.Path(p).read_text().strip() for p in parts), validate=True)
+          if hashlib.sha256(compressed).hexdigest() != '889aa2792aad02283c4e2696e8da10b54fa977b9676cb9cfe76ab8a05cd33960':
+              raise RuntimeError('Source bundle checksum mismatch')
+          bundle = json.loads(lzma.decompress(compressed))
+          outputs = {}
+          for name, entry in bundle['files'].items():
+              path = pathlib.Path(name)
+              if path.is_absolute() or '..' in path.parts or name.startswith('.github/'):
+                  raise RuntimeError('Path outside source application scope')
+              if entry['base'] is None:
+                  if path.exists():
+                      raise RuntimeError('Refusing to overwrite new file: ' + name)
+                  lines = []
+              else:
+                  data = path.read_bytes()
+                  if hashlib.sha256(data).hexdigest() != entry['base']:
+                      raise RuntimeError('Source changed since review: ' + name)
+                  lines = data.decode('utf-8').splitlines(keepends=True)
+              previous = 0
+              for start, end, replacement in entry['edits']:
+                  if not previous <= start <= end <= len(lines):
+                      raise RuntimeError('Invalid edit range')
+                  previous = end
+              for start, end, replacement in reversed(entry['edits']):
+                  lines[start:end] = replacement.splitlines(keepends=True)
+              output = ''.join(lines).encode('utf-8')
+              if hashlib.sha256(output).hexdigest() != entry['sha256']:
+                  raise RuntimeError('Output checksum mismatch: ' + name)
+              outputs[name] = output
+          for name, data in outputs.items():
+              path = pathlib.Path(name)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(data)
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          subprocess.run(['git', 'add', '-f', '--', *outputs], check=True)
+          subprocess.run(['git', 'rm', '--', *parts], check=True)
+      - name: Commit before tests and fast-forward the isolated work branch only
+        id: commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'refactor: migrate 45 Sqrat object, callback and native property helpers to source C++'
+          git push origin HEAD:refs/heads/work/sqrat-cpp-20260918
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  verify:
+    needs: apply
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [quiet, diagnostic]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ needs.apply.outputs.commit }}
+          persist-credentials: false
+      - name: Select installed MSVC x86 tools
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $installation) { throw 'An installed MSVC x86 toolchain is required.' }
+          $devcmd = Join-Path $installation 'Common7/Tools/VsDevCmd.bat'
+          $batch = Join-Path $env:RUNNER_TEMP 'kinoko-msvc-x86.cmd'
+          @('@echo off', "call `"$devcmd`" -no_logo -host_arch=x64 -arch=x86 >nul", 'if errorlevel 1 exit /b 1', 'set') | Set-Content -Encoding ascii $batch
+          $environment = & cmd.exe /d /c $batch
+          if ($LASTEXITCODE -ne 0) { throw 'VsDevCmd failed.' }
+          foreach ($line in $environment) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              $name, $value = $Matches[1], $Matches[2]
+              if ($name -notmatch '^(GITHUB_|RUNNER_|CI$)') { "$name=$value" >> $env:GITHUB_ENV }
+            }
+          }
+      - name: Record exact tested revision
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }} | Out-Null
+          git rev-parse HEAD | Set-Content build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/source-commit.txt
+          if ((git rev-parse HEAD).Trim() -ne '${{ needs.apply.outputs.commit }}') { throw 'Wrong source revision.' }
+      - name: Configure Win32
+        shell: pwsh
+        run: |
+          $quiet = if ('${{ matrix.trace }}' -eq 'quiet') { 'ON' } else { 'OFF' }
+          cmake -S . -B build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }} -G Ninja -DCMAKE_BUILD_TYPE=Release `
+            -DKINOKO_RETDEC_DISABLE_TRACE=$quiet -DKINOKO_RETDEC_TRACE_FILTER=ON `
+            -DKINOKO_REFERENCE_DIR="${{ github.workspace }}/ci-no-proprietary-assets" `
+            -DKINOKO_RUNTIME_DIR="${{ github.workspace }}/runtime-builds/sqrat-${{ github.run_id }}-${{ matrix.trace }}" `
+            2>&1 | Tee-Object build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/configure.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build all targets
+        shell: pwsh
+        run: |
+          cmake --build build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }} --config Release --parallel 4 `
+            2>&1 | Tee-Object build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage authenticated legacy DirectX runtime
+        shell: pwsh
+        run: |
+          ./tools/prepare_ci_directx.ps1 -Destination "$env:RUNNER_TEMP/kinoko-directx-x86" `
+            2>&1 | Tee-Object build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/directx.log
+      - name: Run all fourteen asset-free contracts
+        shell: pwsh
+        run: |
+          ctest --test-dir build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error --timeout 120 `
+            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract|legacy_method_entries_contract|retdec_memory_contract|diagnostics_filter_contract|squirrel_refcount_contract|squirrel_host_object_contract|sqrat_object_contract|native_property_contract)$' `
+            2>&1 | Tee-Object build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/ctest.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve every batch's logs and binaries
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sqrat-work-${{ github.run_id }}-${{ matrix.trace }}-${{ needs.apply.outputs.commit }}
+          retention-days: 14
+          path: |
+            build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/*.log
+            build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/source-commit.txt
+            build-runs/sqrat-${{ github.run_id }}-${{ matrix.trace }}/Testing/Temporary/
+            runtime-builds/sqrat-${{ github.run_id }}-${{ matrix.trace }}/
