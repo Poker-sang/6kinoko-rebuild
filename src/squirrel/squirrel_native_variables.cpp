@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "sqpcheader.h"
+#include "sqvm.h"
 #include "sqtable.h"
 #include "squserdata.h"
 
