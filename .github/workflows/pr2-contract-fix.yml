@@ -1,0 +1,30 @@
+name: Apply PR2 contract corrections
+on:
+  push:
+    branches: ['refactor/sqrat-native-cpp-20260918']
+    paths: ['.github/workflows/pr2-contract-fix.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Apply exact reviewed corrections
+        shell: python
+        run: |
+          import hashlib, json, pathlib, subprocess
+          manifest = json.loads(r'''[{"path":"src/squirrel/squirrel_native_calls.cpp","before":"bc7005fc12c328071421822b906c7157eb303d372542c7f21a4591ab8e10b9db","after":"9918eee4f71029131502efe1711707c0f113f28f00a936810cdae37d15c4ef0c","edits":[{"start":43,"end":44,"text":"    // This recovered helper accepts positive argument indices only.\n    return index > 0 && index_exists(vm, index) &&\n"}]},{"path":"tests/squirrel_native_calls_contract.cpp","before":"0999df1bd7c341ce84700d2d2c773da02e1bd06e0f98e31e2c44bc636186e068","after":"5f8811c71b24894d7b201a87b65b2236a7b1b41a85a20708f59332592334d3ff","edits":[{"start":100,"end":102,"text":"    sq_pushstring(vm,\"host\",-1);\n"},{"start":192,"end":192,"text":"    const auto transfers_before = consumed;\n    sq_pushstring(vm,\"pair\",-1); push_owned_userdata(vm); push_owned_userdata(vm);\n    require(function_471720(address(reinterpret_cast<void*>(pair_name)),address(vm),-3)<0,\n        \"pair conversion preserves positive-index-only rule\");\n    require(consumed==transfers_before,\"negative pair indices transfer no references\");\n    sq_settop(vm,base);\n"},{"start":217,"end":218,"text":"            sq_newthread(vm,64);\n"}]},{"path":"tests/squirrel_game_objects_contract.cpp","before":"f8ed2bf85d8f2fe85b8db06df8aa34d31bb2b82d6ddb189a978e29f98e133b8b","after":"537e386976a81b56b19a5984f38de1bc7b6d761e152f04e6f8e1cd561c1471fb","edits":[{"start":45,"end":50,"text":"    Pair class_value(vm), parent(vm), bound(vm), unbound(vm), wrong(vm);\n    evaluate(vm,\"return Bound;\",&class_value); root(vm,parent);\n    const auto base=sq_gettop(vm); const auto before=releases;\n    require(retdec_create_bound_instance(address(vm),parent.data(),\"bound\",class_value.data(),address(&native),bound.data())==1,\"create/publish instance\");\n    require(retdec_create_unbound_instance(address(vm),class_value.data(),address(&native),unbound.data())==1,\"create unbound instance\");\n"},{"start":59,"end":60,"text":"    require(!retdec_create_bound_instance(address(vm),wrong.data(),\"bad\",class_value.data(),address(&native),output.data()),\"failed publication\");\n"},{"start":181,"end":182,"text":"        evaluate(vm,fail ? \"return function(arg) { throw \\\"failed\\\"; };\" : \"return function(arg) { if (arg != 93) throw \\\"arg\\\";\\nreturn 77; };\",&closure);\n"},{"start":185,"end":186,"text":"        const auto before=releases; const auto base=sq_gettop(vm);\n"}]}]''')
+          for f in manifest:
+              path = pathlib.Path(f['path'])
+              before = path.read_bytes()
+              assert hashlib.sha256(before).hexdigest() == f['before'], str(path)
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              for edit in reversed(f['edits']):
+                  lines[edit['start']:edit['end']] = [edit['text']]
+              after = ''.join(lines).encode('utf-8')
+              assert hashlib.sha256(after).hexdigest() == f['after'], str(path)
+              path.write_bytes(after)
+          for args in (['diff','--check'], ['config','user.name','Poker'], ['config','user.email','poker_sang@outlook.com'], ['add','src/squirrel/squirrel_native_calls.cpp','tests/squirrel_native_calls_contract.cpp','tests/squirrel_game_objects_contract.cpp'], ['commit','-m','fix: preserve positive pair indices and correct source VM contract fixtures'], ['push','origin','HEAD:refs/heads/refactor/sqrat-native-cpp-20260918']):
+              subprocess.run(['git',*args],check=True)
