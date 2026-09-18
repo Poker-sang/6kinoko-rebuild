@@ -4705,7 +4705,7 @@ int main(int argc, char **argv) {
         memcpy(&dx_bits, &dx, sizeof(dx_bits));
         memcpy(&dy_bits, &dy, sizeof(dy_bits));
         __try {
-            retdec_call_thiscall2_result((void *)(intptr_t)actor, function_45dbd0, dx_bits, dy_bits);
+            retdec_call_thiscall2_result((void *)(intptr_t)actor, kinoko_method_actor_move, dx_bits, dy_bits);
         } __except(EXCEPTION_EXECUTE_HANDLER) {
             fault = 1;
         }
@@ -4713,7 +4713,7 @@ int main(int argc, char **argv) {
         CHECK(*(float *)(intptr_t)(actor + 240) == 60);
         CHECK(*(float *)(intptr_t)(actor + 244) == 200);
         __try {
-            retdec_call_thiscall0_result((void *)(intptr_t)actor, function_45eb00);
+            retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_method_actor_destroy_state);
         } __except(EXCEPTION_EXECUTE_HANDLER) {
             fault = 1;
         }
