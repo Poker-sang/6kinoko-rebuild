@@ -294,7 +294,7 @@ extern "C" int32_t function_4a9d30_this(int32_t object, int32_t* tag) {
     }
     if (trace) {
         retdec_trace_i32("4a9d30:result", result);
-        retdec_trace_i32("4a9d30:value", *tag);
+        retdec_trace_i32("4a9d30:value", result ? address(native_tag) : 0);
         ++trace_count;
     }
     return result;
@@ -323,7 +323,7 @@ extern "C" int32_t function_4a9e30_this(int32_t object, int32_t thread_address) 
         SQObjectPtr retained(thread);
         {
             SQObjectPtr pushed(retained);
-            if (vm->_top >= vm->_stack.size()) sq_reservestack(vm, 1);
+            if (static_cast<SQUnsignedInteger>(vm->_top) >= vm->_stack.size()) sq_reservestack(vm, 1);
             vm->Push(pushed);
         }
         retdec_trace_i32("4a9e30:gvm-after-push", address(current_vm()));
@@ -361,6 +361,7 @@ extern "C" int32_t function_4a9f60(int32_t object, int32_t delegate) {
 }
 extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, int32_t tag_output) {
     int32_t result = 0;
+    bool converted = false;
     retdec_trace("4aa080:begin");
     retdec_trace_i32("4aa080:this", object);
     retdec_trace_squirrel_name("4aa080:name", key);
@@ -374,13 +375,15 @@ extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, 
     const auto status = sq_get(vm, -2);
     retdec_trace_i32("4aa080:lookup", status);
     if (SQ_SUCCEEDED(status)) {
-        retdec_trace_i32("4aa080:read", read_userdata(vm, pointer<int32_t>(output), tag_output));
+        const auto conversion = read_userdata(vm, pointer<int32_t>(output), tag_output);
+        converted = SQ_SUCCEEDED(conversion);
+        retdec_trace_i32("4aa080:read", conversion);
         pop(vm);
         result = 1;
     }
     pop(vm);
     retdec_trace_i32("4aa080:result", result);
-    retdec_trace_i32("4aa080:out-value", output ? *pointer<int32_t>(output) : 0);
+    retdec_trace_i32("4aa080:out-value", converted && output ? *pointer<int32_t>(output) : 0);
     retdec_trace_i32("4aa080:stack-after", sq_gettop(vm));
     return result;
 }

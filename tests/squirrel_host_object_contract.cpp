@@ -259,7 +259,7 @@ void threads(HSQUIRRELVM vm) {
     require(g644 == reinterpret_cast<char*>(vm), "host receiver restored");
     sq_settop(child, 0);
     // Exercise the old stack-reservation path while retaining the input thread.
-    while (vm->_top < vm->_stack.size()) sq_pushinteger(vm, 17);
+    while (static_cast<SQUnsignedInteger>(vm->_top) < vm->_stack.size()) sq_pushinteger(vm, 17);
     const auto full_top = sq_gettop(vm);
     const auto capacity = vm->_stack.size();
     function_4a9e30_this(thread_owner.id(), address(child));
@@ -344,7 +344,10 @@ void native_arguments(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(kinoko_sq_call(id, 1, SQTrue, SQFalse)), "execute real closure with captured userdata");
     SQInteger result = 0;
     require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &result)) && result == 21, "native argument result");
-    sq_pop(vm, 1);
+    // 2.2.2 sq_call pops its arguments, but retains the called closure.
+    require_top(vm, top + 2, "source call leaves closure and result");
+    require(sq_gettype(vm, -2) == OT_CLOSURE, "called closure retained");
+    sq_pop(vm, 2);
     sq_reseterror(vm);
     require_top(vm, top, "native argument helpers preserve stack");
 }
