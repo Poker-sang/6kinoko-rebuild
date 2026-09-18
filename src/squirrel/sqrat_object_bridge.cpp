@@ -92,7 +92,8 @@ int32_t set_pair(int32_t id, const int32_t* object, const char* name,
         }
     }
     // Logging must not do a second scripted get (especially _get on instances).
-    return SQ_SUCCEEDED(raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse));
+    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
+    return SQ_SUCCEEDED(status);
 }
 int32_t set_string(int32_t id, const int32_t* object, const char* name,
                    const char* value, bool raw) {
@@ -103,7 +104,8 @@ int32_t set_string(int32_t id, const int32_t* object, const char* name,
     sq_pushobject(vm, receiver);
     sq_pushstring(vm, name, -1);
     sq_pushstring(vm, value ? value : "", -1);
-    return SQ_SUCCEEDED(raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse));
+    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
+    return SQ_SUCCEEDED(status);
 }
 int32_t set_value(int32_t vm, const int32_t* object, const char* name,
                   const HSQOBJECT& value, bool raw) {
@@ -214,7 +216,9 @@ extern "C" int32_t retdec_sqrat_new_table(int32_t id, int32_t* out) {
     sq_newtable(vm);
     HSQOBJECT value; sq_getstackobj(vm, -1, &value);
     sq_addref(vm, &value); write(out, value);
-    trace_pair("sqrat:new-table-type", "sqrat:new-table-data", value);
+    static std::atomic<unsigned> traces{0};
+    if (traces.fetch_add(1, std::memory_order_relaxed) < 32)
+        trace_pair("sqrat:new-table-type", "sqrat:new-table-data", value);
     return value._type == OT_TABLE && _table(value) != nullptr;
 }
 extern "C" int32_t retdec_sqrat_set_delegate(int32_t id, const int32_t* object, const int32_t* delegate) {
