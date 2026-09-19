@@ -1,0 +1,17 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x4a1760\",\"code\":\"int sub_4A1760()\\n{\\n  return 0; /*0x4a1762*/\\n}\"}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x4a1760",
+      "code": "int sub_4A1760()\n{\n  return 0; /*0x4a1762*/\n}"
+    },
+    "isError": false
+  },
+  "id": 1
+}

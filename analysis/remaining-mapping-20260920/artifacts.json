@@ -1,0 +1,28 @@
+{
+  "audit_commit": "50d626c58c385d55e492225a6312df03c530ff07",
+  "runtime_build_commit": "181b23cc76cf5693c19a41cbf3a23669846262e9",
+  "original_database": "kinoko-final-map-20260920",
+  "disassembly_command": "dumpbin /DISASM <sqvm.obj or sqstate.obj>; object files from the existing Win32 source-Squirrel build",
+  "files": {
+    "C:\\WorkSpace\\6kinoko\\6kinoko.exe": {
+      "sha256": "2db975a408e260499d52126f25ecf2fbc529cad52d1bffc2a0b7ca2ff695f155",
+      "bytes": 1193984
+    },
+    "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\input-181b23c-quiet-20260919\\kinoko_squirrel_cpp_vm.dir\\Release\\sqvm.obj": {
+      "sha256": "91986a061d98fd351da750fa672aed664ad60e0172ade78b3a763b276fa80268",
+      "bytes": 140158
+    },
+    "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\input-181b23c-quiet-20260919\\kinoko_squirrel_cpp_vm.dir\\Release\\sqstate.obj": {
+      "sha256": "100bf34e08b4ddb3e82baa80553b66f86886c2efd8383f372dd7dfb522f6e236",
+      "bytes": 70119
+    },
+    "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\input-181b23c-quiet-20260919\\runtime.map": {
+      "sha256": "d06762c9a263512fc4c65c82d6836b93aad37f8a8e88dfe7b44577f122098d8a",
+      "bytes": 811848
+    },
+    "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\input-181b23c-diag-20260919\\runtime.map": {
+      "sha256": "fb3600b14b17c16154e4e7a2f6220525557d501e6f23a9ea5852ff43dda5e4b5",
+      "bytes": 811848
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x46b450\",\"code\":\"int __cdecl sub_46B450(int a1, int a2, int a3)\\n{\\n  int v4; // [esp+0h] [ebp-8h] BYREF\\n  const char *pExceptionObject; // [esp+4h] [ebp-4h] BYREF\\n\\n  if ( (int)sub_48A8D0(a1: a2, a2: a3, a3: &v4) < 0 ) /*0x46b46c*/\\n  {\\n    pExceptionObject = \\\"sq_get*() failed (type error)\\\"; /*0x46b477*/\\n    _CxxThrowException(&pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI1_AUSquirrelError__); /*0x46b47e*/\\n  }\\n  return v4; /*0x46b486*/\\n}\",\"refs\":[{\"addr\":\"0x4d5538\",\"name\":\"aSqGetFailedTyp\",\"string\":\"sq_get*() failed (type error)\"},{\"addr\":\"0x4aba7b\",\"name\":\"__CxxThrowException@8\"},{\"addr\":\"0x4f3514\",\"name\":\"__TI1?AUSquirrelError@@\"},{\"addr\":\"0x48a8d0\",\"name\":\"sub_48A8D0\"}]}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x46b450",
+      "code": "int __cdecl sub_46B450(int a1, int a2, int a3)\n{\n  int v4; // [esp+0h] [ebp-8h] BYREF\n  const char *pExceptionObject; // [esp+4h] [ebp-4h] BYREF\n\n  if ( (int)sub_48A8D0(a1: a2, a2: a3, a3: &v4) < 0 ) /*0x46b46c*/\n  {\n    pExceptionObject = \"sq_get*() failed (type error)\"; /*0x46b477*/\n    _CxxThrowException(&pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI1_AUSquirrelError__); /*0x46b47e*/\n  }\n  return v4; /*0x46b486*/\n}",
+      "refs": [
+        {
+          "addr": "0x4d5538",
+          "name": "aSqGetFailedTyp",
+          "string": "sq_get*() failed (type error)"
+        },
+        {
+          "addr": "0x4aba7b",
+          "name": "__CxxThrowException@8"
+        },
+        {
+          "addr": "0x4f3514",
+          "name": "__TI1?AUSquirrelError@@"
+        },
+        {
+          "addr": "0x48a8d0",
+          "name": "sub_48A8D0"
+        }
+      ]
+    },
+    "isError": false
+  },
+  "id": 1
+}

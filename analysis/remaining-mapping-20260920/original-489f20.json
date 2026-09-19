@@ -1,0 +1,17 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x489f20\",\"code\":\"DNameNode *__thiscall DNameNode::DNameNode(DNameNode *this)\\n{\\n  *(_DWORD *)this = 16777217; /*0x489f22*/\\n  *((_DWORD *)this + 1) = 0; /*0x489f28*/\\n  return this; /*0x489f2f*/\\n}\"}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x489f20",
+      "code": "DNameNode *__thiscall DNameNode::DNameNode(DNameNode *this)\n{\n  *(_DWORD *)this = 16777217; /*0x489f22*/\n  *((_DWORD *)this + 1) = 0; /*0x489f28*/\n  return this; /*0x489f2f*/\n}"
+    },
+    "isError": false
+  },
+  "id": 1
+}

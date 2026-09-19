@@ -1,0 +1,32 @@
+[
+  {
+    "path": "third_party/squirrel-2.2.2/squirrel/sqobject.h",
+    "reference": "../squirrel-2.2.2/SQUIRREL2/squirrel/sqobject.h",
+    "identical": true,
+    "sha256": "b22bb5a552c33ee4370565a5b8055d59d832a28be1b98aa3cbf8920a2fa4f54b"
+  },
+  {
+    "path": "third_party/squirrel-2.2.2/squirrel/sqclass.h",
+    "reference": "../squirrel-2.2.2/SQUIRREL2/squirrel/sqclass.h",
+    "identical": true,
+    "sha256": "dc9f7c956ad1aa154097169998f745e6ef00ad9accb5688c1d589022988cbde2"
+  },
+  {
+    "path": "third_party/squirrel-2.2.2/squirrel/sqvm.h",
+    "reference": "../squirrel-2.2.2/SQUIRREL2/squirrel/sqvm.h",
+    "identical": true,
+    "sha256": "e01bb6eced28c08abf9acfeebdaabc3d43c913180170e45e3baef3827368790d"
+  },
+  {
+    "path": "third_party/squirrel-2.2.2/squirrel/sqstate.cpp",
+    "reference": "../squirrel-2.2.2/SQUIRREL2/squirrel/sqstate.cpp",
+    "identical": true,
+    "sha256": "c3bcaae2c945ab70a08169a01d1f7fa64689994a1c58992f11efad40f53d3486"
+  },
+  {
+    "path": "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp",
+    "reference": "../squirrel-2.2.2/SQUIRREL2/squirrel/sqbaselib.cpp",
+    "identical": true,
+    "sha256": "547f6771f234eb0334f56124e1e8cf52017eb8fedfaf7ce179236a4ce64f54a6"
+  }
+]

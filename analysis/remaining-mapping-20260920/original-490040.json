@@ -1,0 +1,23 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x490040\",\"code\":\"int __thiscall sub_490040(_DWORD *this)\\n{\\n  int v2; // esi\\n  int result; // eax\\n  int v4; // ecx\\n  _BYTE v6[8]; // [esp+10h] [ebp-3Ch] BYREF\\n  int v7; // [esp+18h] [ebp-34h]\\n  int v8; // [esp+1Ch] [ebp-30h]\\n  int v9; // [esp+3Ch] [ebp-10h]\\n  int v10; // [esp+48h] [ebp-4h]\\n\\n  v2 = 2 * *(this + 26); /*0x490071*/\\n  v7 = 16777217; /*0x490073*/\\n  v8 = 0; /*0x49007a*/\\n  v9 = 0; /*0x49007d*/\\n  v10 = 0; /*0x490080*/\\n  sub_48FED0(a1: v2, a2: v6); /*0x49008b*/\\n  result = -1; /*0x490090*/\\n  v10 = -1; /*0x49009a*/\\n  if ( (v7 & 0x8000000) != 0 ) /*0x49009d*/\\n  {\\n    v4 = v8; /*0x49009f*/\\n    if ( (*(_DWORD *)(v8 + 4))-- == 1 ) /*0x4900a2*/\\n      result = (*(int (__thiscall **)(int))(*(_DWORD *)v4 + 4))(a1: v4); /*0x4900ac*/\\n  }\\n  *(this + 24) = *(this + 27); /*0x4900b1*/\\n  *(this + 26) = v2; /*0x4900b4*/\\n  return result; /*0x4900b7*/\\n}\",\"refs\":[{\"addr\":\"0x48fed0\",\"name\":\"sub_48FED0\"}]}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x490040",
+      "code": "int __thiscall sub_490040(_DWORD *this)\n{\n  int v2; // esi\n  int result; // eax\n  int v4; // ecx\n  _BYTE v6[8]; // [esp+10h] [ebp-3Ch] BYREF\n  int v7; // [esp+18h] [ebp-34h]\n  int v8; // [esp+1Ch] [ebp-30h]\n  int v9; // [esp+3Ch] [ebp-10h]\n  int v10; // [esp+48h] [ebp-4h]\n\n  v2 = 2 * *(this + 26); /*0x490071*/\n  v7 = 16777217; /*0x490073*/\n  v8 = 0; /*0x49007a*/\n  v9 = 0; /*0x49007d*/\n  v10 = 0; /*0x490080*/\n  sub_48FED0(a1: v2, a2: v6); /*0x49008b*/\n  result = -1; /*0x490090*/\n  v10 = -1; /*0x49009a*/\n  if ( (v7 & 0x8000000) != 0 ) /*0x49009d*/\n  {\n    v4 = v8; /*0x49009f*/\n    if ( (*(_DWORD *)(v8 + 4))-- == 1 ) /*0x4900a2*/\n      result = (*(int (__thiscall **)(int))(*(_DWORD *)v4 + 4))(a1: v4); /*0x4900ac*/\n  }\n  *(this + 24) = *(this + 27); /*0x4900b1*/\n  *(this + 26) = v2; /*0x4900b4*/\n  return result; /*0x4900b7*/\n}",
+      "refs": [
+        {
+          "addr": "0x48fed0",
+          "name": "sub_48FED0"
+        }
+      ]
+    },
+    "isError": false
+  },
+  "id": 1
+}

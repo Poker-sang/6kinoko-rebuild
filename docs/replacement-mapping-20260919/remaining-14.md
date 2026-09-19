@@ -55,3 +55,7 @@
 
 复核：python tests/test_replacement_mapping.py；
 python tools/audit_replacement_mapping.py --link-map <quiet 或 diag 的 runtime.map> --output <本次独立输出文件>。
+
+最终验证：4 项审计工具回归、迁移边界检查、quiet/diag 两份链接 map
+审计均通过。审计输出明确列出 40A8D0 与 4A8D60 两个 open_implementation_gaps，
+未将它们算作完成实现。可执行函数体未变的定向源码比较也已通过。

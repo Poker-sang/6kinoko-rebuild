@@ -1,0 +1,35 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x4a8d60\",\"code\":\"int __thiscall sub_4A8D60(int this, char a2)\\n{\\n  if ( *(_DWORD *)this != 0 ) /*0x4a8d6a*/\\n  {\\n    sub_49C350(); /*0x4a8d6c*/\\n    sub_4985B0(Block: *(void **)this); /*0x4a8d79*/\\n  }\\n  if ( *(_DWORD *)(this + 4) != 0 ) /*0x4a8d86*/\\n    sub_4A8D60(a1: 1); /*0x4a8d8a*/\\n  if ( (a2 & 1) != 0 ) /*0x4a8d93*/\\n    operator delete(a1: (void *)this); /*0x4a8d96*/\\n  return this; /*0x4a8da0*/\\n}\",\"refs\":[{\"addr\":\"0x49c350\",\"name\":\"sub_49C350\"},{\"addr\":\"0x4985b0\",\"name\":\"sub_4985B0\"},{\"addr\":\"0x4a8d60\",\"name\":\"sub_4A8D60\"},{\"addr\":\"0x4ab2a6\",\"name\":\"??3@YAXPAX@Z\"}]}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x4a8d60",
+      "code": "int __thiscall sub_4A8D60(int this, char a2)\n{\n  if ( *(_DWORD *)this != 0 ) /*0x4a8d6a*/\n  {\n    sub_49C350(); /*0x4a8d6c*/\n    sub_4985B0(Block: *(void **)this); /*0x4a8d79*/\n  }\n  if ( *(_DWORD *)(this + 4) != 0 ) /*0x4a8d86*/\n    sub_4A8D60(a1: 1); /*0x4a8d8a*/\n  if ( (a2 & 1) != 0 ) /*0x4a8d93*/\n    operator delete(a1: (void *)this); /*0x4a8d96*/\n  return this; /*0x4a8da0*/\n}",
+      "refs": [
+        {
+          "addr": "0x49c350",
+          "name": "sub_49C350"
+        },
+        {
+          "addr": "0x4985b0",
+          "name": "sub_4985B0"
+        },
+        {
+          "addr": "0x4a8d60",
+          "name": "sub_4A8D60"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        }
+      ]
+    },
+    "isError": false
+  },
+  "id": 1
+}

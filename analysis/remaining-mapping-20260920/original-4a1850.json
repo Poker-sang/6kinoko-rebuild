@@ -1,0 +1,23 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x4a1850\",\"code\":\"int __cdecl sub_4A1850(int a1)\\n{\\n  sub_48A300(a1); /*0x4a1857*/\\n  return 0; /*0x4a1861*/\\n}\",\"refs\":[{\"addr\":\"0x48a300\",\"name\":\"sub_48A300\"}]}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x4a1850",
+      "code": "int __cdecl sub_4A1850(int a1)\n{\n  sub_48A300(a1); /*0x4a1857*/\n  return 0; /*0x4a1861*/\n}",
+      "refs": [
+        {
+          "addr": "0x48a300",
+          "name": "sub_48A300"
+        }
+      ]
+    },
+    "isError": false
+  },
+  "id": 1
+}

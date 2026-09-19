@@ -1,0 +1,27 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"addr\":\"0x489ef0\",\"code\":\"void *__thiscall sub_489EF0(void *this, char a2)\\n{\\n  sub_48E4D0(); /*0x489ef6*/\\n  if ( (a2 & 1) != 0 ) /*0x489eff*/\\n    operator delete(a1: this); /*0x489f02*/\\n  return this; /*0x489f0c*/\\n}\",\"refs\":[{\"addr\":\"0x48e4d0\",\"name\":\"sub_48E4D0\"},{\"addr\":\"0x4ab2a6\",\"name\":\"??3@YAXPAX@Z\"}]}"
+      }
+    ],
+    "structuredContent": {
+      "addr": "0x489ef0",
+      "code": "void *__thiscall sub_489EF0(void *this, char a2)\n{\n  sub_48E4D0(); /*0x489ef6*/\n  if ( (a2 & 1) != 0 ) /*0x489eff*/\n    operator delete(a1: this); /*0x489f02*/\n  return this; /*0x489f0c*/\n}",
+      "refs": [
+        {
+          "addr": "0x48e4d0",
+          "name": "sub_48E4D0"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        }
+      ]
+    },
+    "isError": false
+  },
+  "id": 1
+}
