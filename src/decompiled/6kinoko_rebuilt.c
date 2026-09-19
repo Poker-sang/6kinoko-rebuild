@@ -44,7 +44,6 @@
 #include <zlib.h>
 
 #include "retdec_asm_stubs.h"
-#include "retdec_math_compat.h"
 #include "kinoko/squirrel_compile_bridge.h"
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
@@ -207,7 +206,6 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
-double _strtod(const char *text, char **end);
 int32_t function_45d970_this(int32_t this_ptr, char flags);
 static int32_t function_45d9f0_this(int32_t this_ptr);
 
@@ -7395,7 +7393,7 @@ int32_t function_4021e0(int32_t a1, int32_t a2, int32_t a3) {
         function_4634d0(*(int32_t *)v6);
         int32_t v7 = *(int32_t *)v3; // 0x4021fb
         *(int32_t *)(v5 - 8) = v3;
-        _free((void *)(intptr_t)v3);
+        free((void *)(intptr_t)v3);
         while (*(char *)(v7 + 17) == 0) {
             int32_t v8 = v7;
             v5 = v6;
@@ -7404,7 +7402,7 @@ int32_t function_4021e0(int32_t a1, int32_t a2, int32_t a3) {
             function_4634d0(*(int32_t *)v6);
             v7 = *(int32_t *)v8;
             *(int32_t *)(v5 - 8) = v8;
-            _free((void *)(intptr_t)v8);
+            free((void *)(intptr_t)v8);
         }
     }
     int32_t v9 = *v2; // 0x40220e
@@ -9220,7 +9218,7 @@ int32_t function_406690(void) {
     }
     int32_t v6 = 4 * v1 + v1; // 0x4066c0
     if (v6 != v3) {
-        int32_t * v7 = _memcpy((int32_t *)v6, (int32_t *)v3, 0); // 0x4066d9
+        int32_t * v7 = memmove((int32_t *)v6, (int32_t *)v3, 0); // 0x4066d9
         *v2 = v6;
         result = (int32_t)v7;
     }
@@ -9255,7 +9253,7 @@ int32_t function_4067f0(uint32_t a1, uint32_t a2) {
     *(int32_t *)(v5 - 8) = v7 - v8;
     *(int32_t *)(v5 - 12) = v10 + v8;
     *(int32_t *)(v5 - 16) = v10;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v11 = *v1 - v8; // 0x40684a
     *v1 = v11;
     if (*v9 >= 16) {
@@ -9467,12 +9465,12 @@ int32_t function_406ac0(int32_t a1, int32_t result2, int32_t * a3) {
         *v23 = result2 - v22 & -4;
         *(int32_t *)(v10 - 8) = v22;
         *(int32_t *)(v10 - 12) = v17;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v10 - 16) = *v5 - result2 & -4;
         *(int32_t *)(v10 - 20) = result2;
         int32_t v24 = 4 * v2;
         *(int32_t *)(v10 - 24) = (v18 + v24 & -4) + v17;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         int32_t v25 = *v3; // 0x406b96
         if (v25 != 0) {
             // 0x406ba9
@@ -9492,7 +9490,7 @@ int32_t function_406ac0(int32_t a1, int32_t result2, int32_t * a3) {
         *(int32_t *)(v10 - 4) = v26 & -4;
         *(int32_t *)(v10 - 8) = result2;
         *(int32_t *)(v10 - 12) = v28 + result2;
-        _memcpy((int32_t *)v27, (int32_t *)v28, (int32_t)&g1224);
+        memmove((int32_t *)v27, (int32_t *)v28, (int32_t)&g1224);
         function_43adc0();
         int32_t v29 = *v5; // 0x406c15
         *v5 = v29 + v28;
@@ -9516,13 +9514,13 @@ int32_t function_406ac0(int32_t a1, int32_t result2, int32_t * a3) {
     *(int32_t *)(v10 - 4) = v30;
     *(int32_t *)(v10 - 8) = v31;
     *(int32_t *)(v10 - 12) = v6;
-    int32_t * v32 = _memcpy((int32_t *)v27, &g1224, (int32_t)&g1224); // 0x406c64
+    int32_t * v32 = memmove((int32_t *)v27, &g1224, (int32_t)&g1224); // 0x406c64
     *v5 = v30 + (int32_t)v32;
     int32_t v33 = v31 - result2 & -4;
     *(int32_t *)(v10 - 16) = v33;
     *(int32_t *)(v10 - 20) = result2;
     *(int32_t *)(v10 - 24) = v6 - v33;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     if (v30 == 0) {
         // 0x406c34
         return result2;
@@ -10112,7 +10110,7 @@ int32_t function_407190(int32_t result) {
     *v9 = *v8 - v6 & -4;
     *(int32_t *)(v3 - 20) = v6;
     *(int32_t *)(v3 - 24) = v7;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     if (v6 != 0) {
         // 0x4071ea
         *v9 = v6;
@@ -10651,7 +10649,7 @@ int32_t function_408650(void *this_ptr, HWND hwnd) {
     } else {
         module_path[0] = 0;
     }
-    _strcpy_s(g766, sizeof(g766), module_path);
+    strcpy_s(g766, sizeof(g766), module_path);
     if (g766[0] != 0) {
         SetCurrentDirectoryA(g766);
     }
@@ -11594,7 +11592,7 @@ int32_t function_40cba0(uint32_t a1, int32_t a2) {
     int32_t * v18 = (int32_t *)(v14 - 8); // 0x40cc40
     *v18 = v17;
     *(int32_t *)(v14 - 12) = v17 + a1;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     *v16 = a2;
     *v18 = a1;
     function_40cc80((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
@@ -11610,7 +11608,7 @@ int32_t function_40cc80(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v2; // 0x40cc80
     if (a2 != 1) {
         // 0x40cca0
-        return (int32_t)_memset((int32_t *)(v2 + a1), v1, a2);
+        return (int32_t)memset((int32_t *)(v2 + a1), v1, a2);
     }
     // 0x40cc8b
     *(char *)(v2 + a1) = (char)v1;
@@ -12492,7 +12490,7 @@ int32_t function_40e3f0(void) {
         v4 = (int32_t *)(result + 16);
     } else {
         int32_t * v5 = (int32_t *)(result + 16);
-        _memcpy((int32_t *)result, (int32_t *)result, *v5 + 1);
+        memmove((int32_t *)result, (int32_t *)result, *v5 + 1);
         v4 = v5;
     }
     // 0x40e437
@@ -14260,7 +14258,7 @@ int32_t function_411870(int32_t a1, int32_t result) {
                 *v6 = *v14 + 1;
                 *(int32_t *)(v5 - 8) = v15;
                 *(int32_t *)(v5 - 12) = result;
-                _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                memmove(&g1224, &g1224, (int32_t)&g1224);
                 v8 = v14;
             }
             // 0x4118fa
@@ -14309,7 +14307,7 @@ int32_t function_411870(int32_t a1, int32_t result) {
                     *v6 = *v14 + 1;
                     *(int32_t *)(v5 - 8) = v20;
                     *(int32_t *)(v5 - 12) = v19;
-                    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                    memmove(&g1224, &g1224, (int32_t)&g1224);
                     v8 = v14;
                 }
                 // 0x4118fa
@@ -15002,7 +15000,7 @@ int32_t function_412da0(void) {
     int32_t v1 = ImmGetCompositionStringA(g534, 2048, (int32_t *)&g542, 255); // 0x412dca
     *(char *)(v1 + (int32_t)&g542) = 0;
     int32_t v2; // bp-1032, 0x412da0
-    _strcpy_s((char *)&v2, 1024, (char *)&g537);
+    strcpy_s((char *)&v2, 1024, (char *)&g537);
     int32_t v3 = (int32_t)&g542; // 0x412e00
     while (*(char *)v3 != 0) {
         // 0x412e03
@@ -15011,7 +15009,7 @@ int32_t function_412da0(void) {
     int32_t v4 = v3 - (int32_t)&g543; // 0x412e0a
     int32_t v5 = 1024 - g550; // 0x412e17
     int32_t v6 = v5 < v4 ? v5 : v4;
-    _strncpy_s((char *)&g537, v5, (char *)&g542, v6);
+    strncpy_s((char *)&g537, v5, (char *)&g542, v6);
     int32_t v7 = g550 + v1; // 0x412e3c
     g550 = v7;
     int32_t v8 = &v2; // 0x412e4d
@@ -15024,7 +15022,7 @@ int32_t function_412da0(void) {
     int32_t v10 = v8 - (int32_t)&v9; // 0x412e5c
     int32_t v11 = 1024 - v7; // 0x412e5e
     int32_t v12 = v11 < v10 ? v11 : v10;
-    _strncpy_s((char *)(v7 + (int32_t)&g537), v11, (char *)&v2, v12);
+    strncpy_s((char *)(v7 + (int32_t)&g537), v11, (char *)&v2, v12);
     if (g550 > g545) {
         // 0x412e8d
         g550 -= v1;
@@ -15033,7 +15031,7 @@ int32_t function_412da0(void) {
     if (v13 < 129) {
         // 0x412ec3
         *(char *)&g541 = 0;
-        _memset((int32_t *)&g542, 0, 256);
+        memset((int32_t *)&g542, 0, 256);
         g547 = 1;
         return ___report_gsfailure();
     }
@@ -15041,7 +15039,7 @@ int32_t function_412da0(void) {
         if (v13 < 224 || v13 == -1) {
             // 0x412ec3
             *(char *)&g541 = 0;
-            _memset((int32_t *)&g542, 0, 256);
+            memset((int32_t *)&g542, 0, 256);
             g547 = 1;
             return ___report_gsfailure();
         }
@@ -15050,7 +15048,7 @@ int32_t function_412da0(void) {
     g540 = 0;
     // 0x412ec3
     *(char *)&g541 = 0;
-    _memset((int32_t *)&g542, 0, 256);
+    memset((int32_t *)&g542, 0, 256);
     g547 = 1;
     return ___report_gsfailure();
 }
@@ -15069,7 +15067,7 @@ int32_t function_412ef0(int32_t a1) {
     // 0x412f1f
     *(char *)&g543 = 0;
     int32_t v2; // bp-1032, 0x412ef0
-    _strcpy_s((char *)&v2, 1024, (char *)&g537);
+    strcpy_s((char *)&v2, 1024, (char *)&g537);
     *(char *)&g537 = (char)a1;
     int32_t v3 = g550; // 0x412f51
     g550 = v3 + 1;
@@ -15083,7 +15081,7 @@ int32_t function_412ef0(int32_t a1) {
     int32_t v6 = v4 - (int32_t)&v5; // 0x412f7c
     int32_t v7 = 1023 - v3; // 0x412f7e
     int32_t v8 = v7 < v6 ? v7 : v6;
-    _strncpy_s((char *)&g538, v7, (char *)&v2, v8);
+    strncpy_s((char *)&g538, v7, (char *)&v2, v8);
     if (g550 > g545) {
         // 0x412fac
         g550--;
@@ -15221,7 +15219,7 @@ int32_t function_4130a0(void) {
   lab_0x413102:;
     // 0x413102
     int32_t v3; // bp-1032, 0x4130a0
-    _strcpy_s((char *)&v3, 1024, v2);
+    strcpy_s((char *)&v3, 1024, v2);
     *(char *)&g537 = 0;
     int32_t v4 = &v3;
     int32_t v5 = v4 + 1; // 0x413122
@@ -15234,7 +15232,7 @@ int32_t function_4130a0(void) {
     int32_t v7; // bp-1031, 0x4130a0
     int32_t v8 = v5 - (int32_t)&v7 + 2; // 0x413136
     int32_t v9 = v6 < v8 ? v6 : v8;
-    _strncpy_s((char *)&g537, 1024 - g550, (char *)&v3, v9);
+    strncpy_s((char *)&g537, 1024 - g550, (char *)&v3, v9);
     unsigned char v10 = g540; // 0x413161
     if (v10 < 129) {
         // 0x413193
@@ -15271,7 +15269,7 @@ int32_t function_4131b0(void) {
     }
     // 0x4131b9
     if (g548 == 0) {
-        int32_t * v1 = _memset((int32_t *)&g542, 0, 256); // 0x4131ce
+        int32_t * v1 = memset((int32_t *)&g542, 0, 256); // 0x4131ce
         *(char *)&g546 = 1;
         result = (int32_t)v1;
     }
@@ -15558,7 +15556,7 @@ int32_t function_414ad0(int32_t a1) {
     int32_t v5 = *v4; // 0x414b04
     if (v5 != 0) {
         // 0x414b10
-        _free((int32_t *)v5);
+        free((int32_t *)v5);
     }
     // 0x414b19
     *v4 = 0;
@@ -15566,7 +15564,7 @@ int32_t function_414ad0(int32_t a1) {
     int32_t v7 = *v6; // 0x414b1c
     if (v7 != 0) {
         // 0x414b23
-        _free((int32_t *)v7);
+        free((int32_t *)v7);
     }
     // 0x414b2c
     *v6 = 0;
@@ -15574,7 +15572,7 @@ int32_t function_414ad0(int32_t a1) {
     int32_t v9 = *v8; // 0x414b2f
     if (v9 != 0) {
         // 0x414b36
-        _free((int32_t *)v9);
+        free((int32_t *)v9);
     }
     // 0x414b3f
     *v8 = 0;
@@ -15583,7 +15581,7 @@ int32_t function_414ad0(int32_t a1) {
     if (v11 != 0) {
         // 0x414b49
         *(int32_t *)((int32_t)&v3 - 4) = v11;
-        _free(&g1224);
+        free(&g1224);
     }
     // 0x414b52
     *v10 = 0;
@@ -15842,7 +15840,7 @@ int32_t function_414e80(char a1) {
         }
     } else {
         // 0x414e93
-        _free((int32_t *)*(int32_t *)(result + 16));
+        free((int32_t *)*(int32_t *)(result + 16));
     }
     // 0x414eac
     *v2 = (int32_t)&g126;
@@ -16866,8 +16864,8 @@ int32_t function_415f60(int32_t a1, int32_t a2) {
     // 0x415f98
     *v4 = v3;
     _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    _memset((int32_t *)*v4, 0, *v2);
-    _memcpy_s((int32_t *)*v4, a2, (int32_t *)a1, a2);
+    memset((int32_t *)*v4, 0, *v2);
+    memcpy_s((int32_t *)*v4, a2, (int32_t *)a1, a2);
     *(char *)(v1 + 100) = 1;
     return 0;
 }
@@ -17170,7 +17168,7 @@ int32_t function_416440(int32_t a1, int32_t a2) {
     *v13 = *v9;
     *(int32_t *)(v5 - 36) = 0;
     *(int32_t *)(v5 - 40) = *v12;
-    _memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
+    memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
     int32_t v14 = *(int32_t *)(*(int32_t *)*v2 + 12); // 0x4164df
     *v11 = *v9;
     *v13 = *v12;
@@ -17336,11 +17334,11 @@ int32_t function_416700(void) {
         return result;
     }
     // 0x416757
-    _memset((int32_t *)v5, 0, *v2);
+    memset((int32_t *)v5, 0, *v2);
     int32_t v6 = *(int32_t *)(result + 92); // 0x416763
     if (v6 != 0) {
         int32_t v7 = *v2; // 0x41676d
-        _memcpy_s((int32_t *)*v4, v7, (int32_t *)v6, v7);
+        memcpy_s((int32_t *)*v4, v7, (int32_t *)v6, v7);
     }
     // 0x41677f
     return result;
@@ -17789,7 +17787,7 @@ int32_t function_4175f0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x417763
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -21844,7 +21842,7 @@ int32_t function_41b7c0(int32_t * a1, int32_t * a2, int32_t a3) {
     char * v39; // 0x41b9e3
     int32_t v40; // 0x41b7c0
     int32_t v41; // 0x41bab7
-    if (_memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224) == NULL) {
+    if (memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224) == NULL) {
         // 0x41ba8f
         v37 = v28;
         v32 = v31;
@@ -24259,7 +24257,7 @@ int32_t function_41c7b0(int32_t a1) {
     if (v1 != 1) {
         // 0x41c825
         *(int32_t *)(v5 - 8) = v6;
-        _memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
     } else {
         // 0x41c7ed
         *(char *)result = (char)v6;
@@ -27010,7 +27008,7 @@ int32_t function_41dc80(uint32_t a1, int32_t * a2) {
         *v21 = v7 + v19;
         int32_t * v22 = (int32_t *)(v15 - 12); // 0x41dd44
         *v22 = v9 + v19;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         int32_t v23 = v5; // 0x41dd55
         if (*(int32_t *)(v5 + 20) >= 16) {
             // 0x41dd57
@@ -27039,7 +27037,7 @@ int32_t function_41dc80(uint32_t a1, int32_t * a2) {
         *v30 = v7 + v29;
         int32_t * v31 = (int32_t *)(v15 - 12);
         *v31 = v9 + v29;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         *v24 = v9;
         v26 = v31;
         v25 = v30;
@@ -27050,7 +27048,7 @@ int32_t function_41dc80(uint32_t a1, int32_t * a2) {
         int32_t v32 = result + v1; // 0x41dda9
         int32_t * v33 = (int32_t *)(v15 - 12);
         *v33 = v32;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         *v24 = v18;
         v26 = v33;
         v25 = (int32_t *)(v15 - 8);
@@ -27060,7 +27058,7 @@ int32_t function_41dc80(uint32_t a1, int32_t * a2) {
     // 0x41de34
     *v25 = v28;
     *v26 = v27;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     // 0x41de3b
     *v2 = v14;
     *(char *)(v14 + result) = 0;
@@ -27480,7 +27478,7 @@ int32_t function_41e390(int32_t a1) {
             *(float32_t *)(result + 152) = 0.0f;
             *(float32_t *)(result + 176) = 0.0f;
             *(float32_t *)(result + 164) = 0.0f;
-            _memset((int32_t *)(result + 4), 0, v11);
+            memset((int32_t *)(result + 4), 0, v11);
             __writefsdword(0, v3);
             return result;
         }
@@ -28908,7 +28906,7 @@ int32_t function_4200e0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x420253
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -29577,7 +29575,7 @@ int32_t function_420b90(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
 int32_t function_420dc0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5, int32_t a6) {
     // 0x420dc0
     int32_t v1; // bp-80, 0x420dc0
-    _sprintf_s((char *)&v1, 64, (char *)function_421dc0());
+    sprintf_s((char *)&v1, 64, (char *)function_421dc0());
     function_421e40(a1, a4, &v1, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -29588,7 +29586,7 @@ int32_t function_420dc0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
 int32_t function_420e40(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5, int32_t a6) {
     // 0x420e40
     int32_t v1; // bp-80, 0x420e40
-    _sprintf_s((char *)&v1, 64, (char *)function_421dc0());
+    sprintf_s((char *)&v1, 64, (char *)function_421dc0());
     function_421e40(a1, a4, &v1, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -29599,7 +29597,7 @@ int32_t function_420e40(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
 int32_t function_420ec0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5, int32_t a6, int32_t a7) {
     // 0x420ec0
     int32_t v1; // bp-80, 0x420ec0
-    _sprintf_s((char *)&v1, 64, (char *)function_421dc0());
+    sprintf_s((char *)&v1, 64, (char *)function_421dc0());
     function_421e40(a1, a4, &v1, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -29610,7 +29608,7 @@ int32_t function_420ec0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
 int32_t function_420f40(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5, int32_t a6, int32_t a7) {
     // 0x420f40
     int32_t v1; // bp-80, 0x420f40
-    _sprintf_s((char *)&v1, 64, (char *)function_421dc0());
+    sprintf_s((char *)&v1, 64, (char *)function_421dc0());
     function_421e40(a1, a4, &v1, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -29871,7 +29869,7 @@ int32_t function_420fc0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
     __frontend_reg_load_fpr(v15);
     *(char *)(v50 + 3) = 0;
     int32_t v52; // bp-184, 0x420fc0
-    int32_t v53 = _sprintf_s((char *)&v52, 108, &v45); // 0x421187
+    int32_t v53 = sprintf_s((char *)&v52, 108, &v45); // 0x421187
     function_421860(a1, a4, &v52, v20, v19, v53, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
   lab_0x421102:
@@ -30036,7 +30034,7 @@ int32_t function_4211d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
     *(char *)(v34 + 3) = v35;
     *(char *)(v34 + 4) = 0;
     int32_t v36; // bp-184, 0x4211d0
-    int32_t v37 = _sprintf_s((char *)&v36, 108, &v29); // 0x421385
+    int32_t v37 = sprintf_s((char *)&v36, 108, &v29); // 0x421385
     function_421860(a1, a4, &v36, v18, v17, v37, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -30047,7 +30045,7 @@ int32_t function_4211d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5,
 int32_t function_4213d0(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5, int32_t a6) {
     // 0x4213d0
     int32_t v1; // bp-80, 0x4213d0
-    _sprintf_s((char *)&v1, 64, "%p", (int32_t *)a6);
+    sprintf_s((char *)&v1, 64, "%p", (int32_t *)a6);
     function_421e40(a1, a4, &v1, (int32_t)&g1224, (int32_t)&g1224);
     return ___report_gsfailure();
 }
@@ -30218,11 +30216,11 @@ int32_t function_421860(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
     *v22 = v13;
     int32_t * v23 = (int32_t *)(int32_t)v18;
     int32_t * v24 = v23; // bp-92, 0x42196b
-    int32_t * v25 = _memchr(v23, 101, (int32_t)&g1224); // 0x421974
+    int32_t * v25 = memchr(v23, 101, (int32_t)&g1224); // 0x421974
     *v19 = a6;
     *v21 = (int32_t)v18;
     *v22 = v13;
-    int32_t * v26 = _memchr(v25, (int32_t)&g1224, (int32_t)&g1224); // 0x421986
+    int32_t * v26 = memchr(v25, (int32_t)&g1224, (int32_t)&g1224); // 0x421986
     char * v27; // bp-76, 0x421860
     int32_t v28 = (int32_t)&v27;
     int32_t v29 = a6; // 0x4219ad
@@ -30420,7 +30418,7 @@ int32_t function_421860(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
     *v84 = 0x1000000 * (int32_t)v24 >> 24;
     int32_t * v85 = (int32_t *)(v61 - 12); // 0x421b9c
     *v85 = v60;
-    int32_t * v86 = _memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x421b9d
+    int32_t * v86 = memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x421b9d
     int32_t v87 = v57; // 0x421ba7
     int32_t v88 = v58; // 0x421ba7
     int32_t v89 = v59; // 0x421ba7
@@ -30460,7 +30458,7 @@ int32_t function_421860(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
     *v83 = v87;
     *v84 = 101;
     *v85 = v90;
-    int32_t * v101 = _memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x421c5b
+    int32_t * v101 = memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x421c5b
     int32_t * v102; // 0x421860
     int32_t * v103; // 0x421860
     int32_t * v104; // 0x421860
@@ -30704,7 +30702,7 @@ int32_t function_421e40(int32_t a1, int32_t a2, int32_t * a3, int32_t a4, int32_
                 *(int32_t *)(v17 - 8) = v30;
                 *(int32_t *)(v17 - 12) = v29;
                 *(int32_t *)(v17 - 16) = v13 + 1 + v28;
-                _memmove_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+                memmove_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
                 *(char *)v30 = 0;
                 char * v31 = (char *)((int32_t)v6 + 1);
                 char * v32 = v6; // 0x421f95
@@ -30992,7 +30990,7 @@ int32_t function_422410(int32_t result, int32_t a2, int32_t a3, int32_t a4, int3
     *v3 = a3;
     *v4 = 0;
     *v5 = v6;
-    int32_t * v7 = _memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x422427
+    int32_t * v7 = memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x422427
     int32_t v8 = v7 == NULL ? a3 : (int32_t)v7 - v6;
     *v3 = v8;
     *v4 = a6;
@@ -31021,7 +31019,7 @@ int32_t function_422410(int32_t result, int32_t a2, int32_t a3, int32_t a4, int3
         *v3 = v18;
         *v4 = 0;
         *v5 = v6;
-        v7 = _memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        v7 = memchr(&g1224, (int32_t)&g1224, (int32_t)&g1224);
         v8 = v7 == NULL ? v18 : (int32_t)v7 - v6;
         *v3 = v8;
         *v4 = v16;
@@ -33550,7 +33548,7 @@ int32_t function_425ae0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x425c53
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -34407,7 +34405,7 @@ int32_t function_426d70(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x426ee3
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -36266,7 +36264,7 @@ int32_t function_4291c0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x429333
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -37884,12 +37882,12 @@ int32_t function_42b3f0(int32_t a1) {
     int32_t result; // 0x42b3f0
     *(int32_t *)(result + 224) = *(int32_t *)(a1 + 224);
     *(int32_t *)(result + 228) = *(int32_t *)(a1 + 228);
-    _memcpy_s((int32_t *)(result + 128), 48, (int32_t *)(a1 + 128), 48);
-    _memcpy_s((int32_t *)(result + 176), 48, (int32_t *)(a1 + 176), 48);
+    memcpy_s((int32_t *)(result + 128), 48, (int32_t *)(a1 + 128), 48);
+    memcpy_s((int32_t *)(result + 176), 48, (int32_t *)(a1 + 176), 48);
     *(int32_t *)(result + 4) = *(int32_t *)(a1 + 4);
     *(int32_t *)(result + 120) = *(int32_t *)(a1 + 120);
     *(int32_t *)(result + 124) = *(int32_t *)(a1 + 124);
-    _memcpy_s((int32_t *)(result + 8), 112, (int32_t *)(a1 + 8), 112);
+    memcpy_s((int32_t *)(result + 8), 112, (int32_t *)(a1 + 8), 112);
     return result;
 }
 
@@ -38477,7 +38475,7 @@ int32_t function_42cac0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x42cc33
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -41364,7 +41362,7 @@ int32_t function_430770(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x4308e3
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -44295,7 +44293,7 @@ int32_t function_434380(int32_t a1) {
                     *v25 = 0;
                     *v26 = v23;
                     *v27 = v28;
-                    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                    memmove(&g1224, &g1224, (int32_t)&g1224);
                     *v22 = *v29;
                     v16 = v19;
                     v17 = v24;
@@ -44479,7 +44477,7 @@ int32_t function_434380(int32_t a1) {
         *(int32_t *)(v73 - 12) = v75;
         int32_t * v76 = (int32_t *)(v73 + 32); // 0x434507
         *v76 = 0;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         *v34 = *v76 + v75;
     }
     // 0x43451c
@@ -45305,7 +45303,7 @@ int32_t function_435860(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v6 = *(int32_t *)(v1 + 280); // 0x43588d
     if (v6 != v5) {
         // 0x435897
-        _memcpy((int32_t *)v6, (int32_t *)v5, 0);
+        memmove((int32_t *)v6, (int32_t *)v5, 0);
         *v4 = v6;
     }
     int32_t * v7 = (int32_t *)(v1 + 300); // 0x4358b8
@@ -45313,7 +45311,7 @@ int32_t function_435860(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v9 = *(int32_t *)(v1 + 296); // 0x4358be
     if (v9 != v8) {
         // 0x4358c8
-        _memcpy((int32_t *)v9, (int32_t *)v8, 0);
+        memmove((int32_t *)v9, (int32_t *)v8, 0);
         *v7 = v9;
     }
     int32_t * v10 = (int32_t *)(v1 + 268); // 0x4358e9
@@ -45573,13 +45571,13 @@ int32_t function_435b20(void) {
             v22 = -1;
         } else {
             int32_t * v23 = (int32_t *)v21; // 0x435c07
-            _memcpy(v23, (int32_t *)v14, 0);
+            memmove(v23, (int32_t *)v14, 0);
             *v7 = v21;
             int32_t v24 = *v10;
             v22 = -1;
             if (v24 != v21) {
                 // 0x435c31
-                _memcpy((int32_t *)v24, v23, 0);
+                memmove((int32_t *)v24, v23, 0);
                 *v7 = v24;
             }
         }
@@ -46051,7 +46049,7 @@ int32_t function_4363b0(int32_t a1) {
     }
     // 0x4363f0
     int32_t v9; // bp-56, 0x4363b0
-    _memset(&v9, 0, 48);
+    memset(&v9, 0, 48);
     int32_t v10; // bp-104, 0x4363b0
     __asm_rep_movsd_memcpy((char *)&v10, (char *)&v9, 12);
     function_432e50((int32_t)&g1224);
@@ -46271,7 +46269,7 @@ int32_t function_436940(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x436ab3
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -46565,14 +46563,14 @@ int32_t function_436ec0(int32_t a1) {
             return result;
         }
         // 0x436ef3
-        _memcpy((int32_t *)v3, (int32_t *)v7, 0);
+        memmove((int32_t *)v3, (int32_t *)v7, 0);
         *v6 = v3;
         return result;
     }
     int32_t v8 = v7 - v3; // 0x436f1d
     if (v5 <= v8 >> 2) {
         int32_t * v9 = (int32_t *)v3; // 0x436f33
-        _memcpy(v9, v9, v4 & -4);
+        memmove(v9, v9, v4 & -4);
         int32_t v10 = *v1 - *v2; // 0x436f3b
         *v6 = (v10 & -4) + v10;
         return result;
@@ -46594,9 +46592,9 @@ int32_t function_436ec0(int32_t a1) {
     int32_t v12 = v8 & -4; // 0x436f61
     int32_t v13 = v12 + v3; // 0x436f61
     int32_t * v14 = (int32_t *)v3; // 0x436f74
-    _memcpy(v14, v14, v12);
+    memmove(v14, v14, v12);
     int32_t v15 = *v1 - v13 & -4;
-    int32_t * v16 = _memcpy((int32_t *)*v6, (int32_t *)v13, v15); // 0x436f8e
+    int32_t * v16 = memmove((int32_t *)*v6, (int32_t *)v13, v15); // 0x436f8e
     *v6 = v15 + (int32_t)v16;
     return result;
 }
@@ -46965,14 +46963,14 @@ int32_t function_4378c0(int32_t a1) {
             return result;
         }
         // 0x4378f3
-        _memcpy((int32_t *)v3, (int32_t *)v7, 0);
+        memmove((int32_t *)v3, (int32_t *)v7, 0);
         *v6 = v3;
         return result;
     }
     int32_t v8 = v7 - v3; // 0x43791d
     if (v5 <= v8 >> 2) {
         int32_t * v9 = (int32_t *)v3; // 0x437933
-        _memcpy(v9, v9, v4 & -4);
+        memmove(v9, v9, v4 & -4);
         int32_t v10 = *v1 - *v2; // 0x43793b
         *v6 = (v10 & -4) + v10;
         return result;
@@ -46994,9 +46992,9 @@ int32_t function_4378c0(int32_t a1) {
     int32_t v12 = v8 & -4; // 0x437961
     int32_t v13 = v12 + v3; // 0x437961
     int32_t * v14 = (int32_t *)v3; // 0x437974
-    _memcpy(v14, v14, v12);
+    memmove(v14, v14, v12);
     int32_t v15 = *v1 - v13 & -4;
-    int32_t * v16 = _memcpy((int32_t *)*v6, (int32_t *)v13, v15); // 0x43798e
+    int32_t * v16 = memmove((int32_t *)*v6, (int32_t *)v13, v15); // 0x43798e
     *v6 = v15 + (int32_t)v16;
     return result;
 }
@@ -48882,7 +48880,7 @@ int32_t function_439c20(int32_t a1) {
 int32_t function_439c50(int32_t a1) {
     int32_t v1 = 0;
     int32_t v2; // 0x439c50
-    return v1 + (int32_t)_memcpy((int32_t *)a1, (int32_t *)v2, v1);
+    return v1 + (int32_t)memmove((int32_t *)a1, (int32_t *)v2, v1);
 }
 
 // Address range: 0x439c80 - 0x439cad
@@ -49872,12 +49870,12 @@ int32_t function_43a7b0(int32_t a1) {
     *(int32_t *)(v5 + 228) = *(int32_t *)v4;
     *(int32_t *)(v3 - 12) = 48;
     *(int32_t *)(v3 - 16) = v5 + 128;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     *(int32_t *)(v3 - 20) = 48;
     *(int32_t *)(v3 - 24) = v4 - 52;
     *(int32_t *)(v3 - 28) = 48;
     *(int32_t *)(v3 - 32) = v5 + 176;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     *(int32_t *)(v3 - 36) = 112;
     *(int32_t *)(v5 + 4) = *(int32_t *)(v4 - 224);
     *(int32_t *)(v5 + 120) = *(int32_t *)(v4 - 108);
@@ -49885,7 +49883,7 @@ int32_t function_43a7b0(int32_t a1) {
     *(int32_t *)(v5 + 124) = *(int32_t *)(v4 - 104);
     *(int32_t *)(v3 - 44) = 112;
     *(int32_t *)(v3 - 48) = v5 + 8;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     int32_t result2 = v5 + 232; // 0x43a841
     int32_t v6 = v4 + 232; // 0x43a849
     while (v4 + 4 != a1) {
@@ -49897,12 +49895,12 @@ int32_t function_43a7b0(int32_t a1) {
         *(int32_t *)(result2 + 228) = *(int32_t *)v4;
         *(int32_t *)(v3 - 12) = 48;
         *(int32_t *)(v3 - 16) = result2 + 128;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v3 - 20) = 48;
         *(int32_t *)(v3 - 24) = v4 - 52;
         *(int32_t *)(v3 - 28) = 48;
         *(int32_t *)(v3 - 32) = result2 + 176;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v3 - 36) = 112;
         *(int32_t *)(result2 + 4) = *(int32_t *)(v4 - 224);
         *(int32_t *)(result2 + 120) = *(int32_t *)(v4 - 108);
@@ -49910,7 +49908,7 @@ int32_t function_43a7b0(int32_t a1) {
         *(int32_t *)(result2 + 124) = *(int32_t *)(v4 - 104);
         *(int32_t *)(v3 - 44) = 112;
         *(int32_t *)(v3 - 48) = result2 + 8;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         result2 += 232;
         v6 = v4 + 232;
     }
@@ -49934,7 +49932,7 @@ int32_t function_43a9f0(int32_t a1, int32_t a2) {
     *(int32_t *)(v2 - 4) = 48;
     *(int32_t *)(v2 - 8) = 0;
     *(int32_t *)(v2 - 12) = v3;
-    _memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
+    memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
     if (a1 != 0) {
         // 0x43aa1a
         __asm_rep_movsd_memcpy((char *)a1, (char *)v3, 12);
@@ -49947,7 +49945,7 @@ int32_t function_43a9f0(int32_t a1, int32_t a2) {
         *(int32_t *)(v2 - 4) = 48;
         *(int32_t *)(v2 - 8) = 0;
         *(int32_t *)(v2 - 12) = v3;
-        _memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        memset(&g1224, (int32_t)&g1224, (int32_t)&g1224);
         if (v5 != 0) {
             // 0x43aa1a
             __asm_rep_movsd_memcpy((char *)v5, (char *)v3, 12);
@@ -49979,12 +49977,12 @@ int32_t function_43aa40(int32_t a1, int32_t result) {
     *(int32_t *)(result2 + 228) = *(int32_t *)v4;
     *(int32_t *)(v3 - 12) = 48;
     *(int32_t *)(v3 - 16) = result2 + 128;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     *(int32_t *)(v3 - 20) = 48;
     *(int32_t *)(v3 - 24) = v4 - 52;
     *(int32_t *)(v3 - 28) = 48;
     *(int32_t *)(v3 - 32) = result2 + 176;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     *(int32_t *)(v3 - 36) = 112;
     *(int32_t *)(result2 + 4) = *(int32_t *)(v4 - 224);
     *(int32_t *)(result2 + 120) = *(int32_t *)(v4 - 108);
@@ -49992,7 +49990,7 @@ int32_t function_43aa40(int32_t a1, int32_t result) {
     *(int32_t *)(result2 + 124) = *(int32_t *)(v4 - 104);
     *(int32_t *)(v3 - 44) = 112;
     *(int32_t *)(v3 - 48) = result2 + 8;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+    memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
     __asm_rep_movsd_memcpy((char *)(result2 + 232), (char *)(v4 + 4), 12);
     *(char *)(result2 + 280) = *(char *)(v4 + 52);
     result2 += 288;
@@ -50006,12 +50004,12 @@ int32_t function_43aa40(int32_t a1, int32_t result) {
         *(int32_t *)(result2 + 228) = *(int32_t *)v4;
         *(int32_t *)(v3 - 12) = 48;
         *(int32_t *)(v3 - 16) = result2 + 128;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v3 - 20) = 48;
         *(int32_t *)(v3 - 24) = v4 - 52;
         *(int32_t *)(v3 - 28) = 48;
         *(int32_t *)(v3 - 32) = result2 + 176;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v3 - 36) = 112;
         *(int32_t *)(result2 + 4) = *(int32_t *)(v4 - 224);
         *(int32_t *)(result2 + 120) = *(int32_t *)(v4 - 108);
@@ -50019,7 +50017,7 @@ int32_t function_43aa40(int32_t a1, int32_t result) {
         *(int32_t *)(result2 + 124) = *(int32_t *)(v4 - 104);
         *(int32_t *)(v3 - 44) = 112;
         *(int32_t *)(v3 - 48) = result2 + 8;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+        memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
         __asm_rep_movsd_memcpy((char *)(result2 + 232), (char *)(v4 + 4), 12);
         *(char *)(result2 + 280) = *(char *)(v4 + 52);
         result2 += 288;
@@ -50102,12 +50100,12 @@ int32_t function_43abc0(int32_t a1, int32_t result2, int32_t a3) {
         *v24 = result2 - v23 & -4;
         *(int32_t *)(v10 - 12) = v23;
         *(int32_t *)(v10 - 16) = v18;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         *(int32_t *)(v10 - 20) = *v5 - result2 & -4;
         *(int32_t *)(v10 - 24) = result2;
         int32_t v25 = 4 * v2;
         *(int32_t *)(v10 - 28) = (v19 + v25 & -4) + v18;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         int32_t v26 = *v3; // 0x43ac96
         if (v26 != 0) {
             // 0x43aca9
@@ -50127,7 +50125,7 @@ int32_t function_43abc0(int32_t a1, int32_t result2, int32_t a3) {
         *(int32_t *)(v10 - 4) = v27 & -4;
         *(int32_t *)(v10 - 8) = result2;
         *(int32_t *)(v10 - 12) = v29 + result2;
-        _memcpy((int32_t *)v28, (int32_t *)v29, (int32_t)&g1224);
+        memmove((int32_t *)v28, (int32_t *)v29, (int32_t)&g1224);
         function_43adc0();
         int32_t v30 = *v5; // 0x43ad15
         *v5 = v30 + v29;
@@ -50151,13 +50149,13 @@ int32_t function_43abc0(int32_t a1, int32_t result2, int32_t a3) {
     *(int32_t *)(v10 - 4) = v31;
     *(int32_t *)(v10 - 8) = v32;
     *(int32_t *)(v10 - 12) = v6;
-    int32_t * v33 = _memcpy((int32_t *)v28, &g1224, (int32_t)&g1224); // 0x43ad64
+    int32_t * v33 = memmove((int32_t *)v28, &g1224, (int32_t)&g1224); // 0x43ad64
     *v5 = v31 + (int32_t)v33;
     int32_t v34 = v32 - result2 & -4;
     *(int32_t *)(v10 - 16) = v34;
     *(int32_t *)(v10 - 20) = result2;
     *(int32_t *)(v10 - 24) = v6 - v34;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     if (v31 == 0) {
         // 0x43ad34
         return result2;
@@ -51445,7 +51443,7 @@ int32_t function_43bba0(int32_t a1, int32_t a2) {
         v17 = v1 + 4;
         *(int32_t *)(v3 - 8) = a1;
         *(int32_t *)(v3 - 12) = v17 - v16;
-        v18 = _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        v18 = memmove(&g1224, &g1224, (int32_t)&g1224);
         *v4 = v6;
         v7 = v17;
         result2 = (int32_t)v18;
@@ -51493,7 +51491,7 @@ int32_t function_43bba0(int32_t a1, int32_t a2) {
             v17 = v21 + 4;
             *(int32_t *)(v3 - 8) = a1;
             *(int32_t *)(v3 - 12) = v17 - v16;
-            v18 = _memcpy(&g1224, &g1224, (int32_t)&g1224);
+            v18 = memmove(&g1224, &g1224, (int32_t)&g1224);
             *v4 = v6;
             v7 = v17;
             result2 = (int32_t)v18;
@@ -52574,7 +52572,7 @@ int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x43d283
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -54758,7 +54756,7 @@ int32_t function_4418a0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x441a13
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -56809,7 +56807,7 @@ int32_t function_447570(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x4476e3
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -58920,7 +58918,7 @@ int32_t function_44a170(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x44a2e3
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -60751,7 +60749,7 @@ int32_t function_44d0b0(int32_t a1) {
     int32_t v87 = (*v84 >= 16 ? *v86 : v85) + v30;
     *(int32_t *)(v26 - 16) = v87 + v25;
     *(int32_t *)(v26 - 20) = v87;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     int32_t v88 = *v31 - v25; // 0x44d223
     *v31 = v88;
     *(char *)((*v84 >= 16 ? *v86 : v85) + v88) = 0;
@@ -61803,7 +61801,7 @@ int32_t function_452010(int32_t a1) {
 int32_t function_452150(int32_t lpFileName) {
     // 0x452150
     int32_t v1; // bp-344, 0x452150
-    _memset(&v1, 0, 324);
+    memset(&v1, 0, 324);
     int32_t lpFindFileData; // bp-340, 0x452150
     int32_t * v2 = FindFirstFileA((char *)lpFileName, (struct retdec_WIN32_FIND_DATAA *)&lpFindFileData); // 0x452192
     int32_t v3 = (int32_t)v2; // bp-352, 0x452198
@@ -63477,7 +63475,7 @@ int32_t function_455a20(int32_t a1) {
             *(int32_t *)(v4 - 8) = v26;
             *(int32_t *)(v4 - 12) = v27;
             *v22 = 0;
-            _memcpy(&g1224, &g1224, (int32_t)&g1224);
+            memmove(&g1224, &g1224, (int32_t)&g1224);
             *v25 = *v22 + v27;
             v28 = *v5;
         }
@@ -63497,7 +63495,7 @@ int32_t function_455a20(int32_t a1) {
                 *(int32_t *)(v4 - 8) = v26;
                 *(int32_t *)(v4 - 12) = v27;
                 *v22 = 0;
-                _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                memmove(&g1224, &g1224, (int32_t)&g1224);
                 *v25 = *v22 + v27;
                 v28 = *v5;
             }
@@ -63850,7 +63848,7 @@ int32_t function_455d30(int32_t a1, int32_t a2) {
         *(int32_t *)(v8 - 4) = v12 - v15 & -4;
         *(int32_t *)(v8 - 8) = v15;
         *(int32_t *)(v8 - 12) = result;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         v14 = *v10;
         v13 = *v11 - 4;
         *v11 = v13;
@@ -63872,7 +63870,7 @@ int32_t function_455d30(int32_t a1, int32_t a2) {
             *(int32_t *)(v8 - 4) = v18 - v15 & -4;
             *(int32_t *)(v8 - 8) = v15;
             *(int32_t *)(v8 - 12) = v17;
-            _memcpy(&g1224, &g1224, (int32_t)&g1224);
+            memmove(&g1224, &g1224, (int32_t)&g1224);
             v14 = *v10;
             v13 = *v11 - 4;
             *v11 = v13;
@@ -64131,7 +64129,7 @@ int32_t function_455fd0(int32_t a1, int32_t a2) {
                     *(int32_t *)(v4 - 4) = *v28 - v29 & -4;
                     *(int32_t *)(v4 - 8) = v29;
                     *(int32_t *)(v4 - 12) = v27;
-                    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                    memmove(&g1224, &g1224, (int32_t)&g1224);
                     *v28 = *v28 - 4;
                 }
             }
@@ -65464,7 +65462,7 @@ int32_t function_457310(int32_t a1, int32_t a2, int32_t a3, int32_t a4, char a5)
                 v8 = v12;
                 v9 = a4;
                 int32_t v13; // bp-268, 0x457310
-                _sprintf_s((char *)&v13, 260, "%s%s.msh", (char *)a4, v12);
+                sprintf_s((char *)&v13, 260, "%s%s.msh", (char *)a4, v12);
             }
             // 0x4573e4
             int32_t v14; // bp-276, 0x457310
@@ -67279,7 +67277,7 @@ int32_t function_4598a0(uint32_t a1) {
     int32_t * v7 = (int32_t *)(v4 + 4); // 0x4598cb
     *(int32_t *)(v2 - 12) = *v7 - v4 & -4;
     *(int32_t *)(v2 - 20) = v6;
-    _memcpy(&g1224, &g1224, (int32_t)&g1224);
+    memmove(&g1224, &g1224, (int32_t)&g1224);
     if (v4 != 0) {
         // 0x4598f4
         _3f__3f_3_40_YAXPAX_40_Z(&g1224);
@@ -67373,7 +67371,7 @@ int32_t function_459980(int32_t a1) {
         *(int32_t *)(v14 - 8) = 0;
         *(int32_t *)(v14 - 12) = v15;
         *(int32_t *)(v14 - 16) = v16;
-        int32_t * v17 = _memcpy(&g1224, &g1224, (int32_t)&g1224); // 0x4599c2
+        int32_t * v17 = memmove(&g1224, &g1224, (int32_t)&g1224); // 0x4599c2
         *v3 = v16;
         result = (int32_t)v17;
     }
@@ -67438,7 +67436,7 @@ int32_t function_4599e0(int32_t a1) {
         *(int32_t *)(v14 - 8) = 0;
         *(int32_t *)(v14 - 12) = v15;
         *(int32_t *)(v14 - 16) = v16;
-        int32_t * v17 = _memcpy(&g1224, &g1224, (int32_t)&g1224); // 0x459a21
+        int32_t * v17 = memmove(&g1224, &g1224, (int32_t)&g1224); // 0x459a21
         *v3 = v16;
         result = (int32_t)v17;
     }
@@ -67490,7 +67488,7 @@ int32_t function_459a40(int32_t a1) {
             *v7 = 1;
             *(int32_t *)(v4 - 8) = v6;
             *(int32_t *)(v4 - 12) = v10;
-            _memcpy(&g1224, &g1224, (int32_t)&g1224);
+            memmove(&g1224, &g1224, (int32_t)&g1224);
             *v12 = 0;
             *v11 = 15;
         }
@@ -67524,7 +67522,7 @@ int32_t function_459a40(int32_t a1) {
                 *v7 = 1;
                 *(int32_t *)(v4 - 8) = v6;
                 *(int32_t *)(v4 - 12) = v10;
-                _memcpy(&g1224, &g1224, (int32_t)&g1224);
+                memmove(&g1224, &g1224, (int32_t)&g1224);
                 *v12 = 0;
                 *v11 = 15;
             }
@@ -68427,7 +68425,7 @@ int32_t function_45aed0(void) {
     int3_t v5 = v4 + 1; // 0x45aef1
     __frontend_reg_store_fpr(v5, __frontend_reg_load_fpr(v4) * __frontend_reg_load_fpr(v5));
     int3_t v6 = v4 + 2; // 0x45aef6
-    _ceil((float64_t)__frontend_reg_load_fpr(v5));
+    ceil((float64_t)__frontend_reg_load_fpr(v5));
     float80_t v7 = __frontend_reg_load_fpr(v6); // 0x45aefe
     __frontend_reg_store_fpr(v6, 4294967295.0L);
     __frontend_reg_store_fpr(v5, v7);
@@ -69081,7 +69079,7 @@ int32_t function_45bbc0(void) {
     __frontend_reg_store_fpr(v2, v4 / (float80_t)*(float32_t *)(v3 + 8));
     float80_t v5 = __frontend_reg_load_fpr(v2); // 0x45bbdc
     int3_t v6 = v2 + 1; // 0x45bbdc
-    _floor((float64_t)v5);
+    floor((float64_t)v5);
     float80_t v7 = __frontend_reg_load_fpr(v6); // 0x45bbe4
     __frontend_reg_store_fpr(v6, 4294967295.0L);
     __frontend_reg_store_fpr(v2, v7);
@@ -69337,7 +69335,7 @@ int32_t function_45bee0(int32_t a1) {
     *v17 = *v13 + v14;
     int32_t * v18 = (int32_t *)(v5 - 20); // 0x45bf6f
     *v18 = v12 + v14;
-    int32_t * v19 = _memcpy((int32_t *)v15, (int32_t *)v12, (int32_t)&g1224); // 0x45bf73
+    int32_t * v19 = memmove((int32_t *)v15, (int32_t *)v12, (int32_t)&g1224); // 0x45bf73
     int32_t v20 = v15 + (int32_t)v19; // 0x45bf7b
     int32_t v21 = *v13; // 0x45bf7e
     int32_t v22; // 0x45bee0
@@ -69347,14 +69345,14 @@ int32_t function_45bee0(int32_t a1) {
         *v16 = v24;
         *v17 = v21;
         *v18 = v20;
-        _memcpy(&g1224, &g1224, (int32_t)&g1224);
+        memmove(&g1224, &g1224, (int32_t)&g1224);
         int32_t v25 = *v13; // 0x45bfdc
         int32_t v26 = v25 + v24; // 0x45bfdf
         int32_t v27 = v25 + v14 - v26 & -4;
         *(int32_t *)(v5 - 24) = v27;
         *(int32_t *)(v5 - 28) = v26;
         *(int32_t *)(v5 - 32) = v12;
-        int32_t * v28 = _memcpy(&g1224, &g1224, (int32_t)&g1224); // 0x45bff3
+        int32_t * v28 = memmove(&g1224, &g1224, (int32_t)&g1224); // 0x45bff3
         v22 = v8;
         v23 = v27 + (int32_t)v28;
         if (v8 == 0) {
@@ -69367,7 +69365,7 @@ int32_t function_45bee0(int32_t a1) {
         *v16 = v14;
         *v17 = v21;
         *v18 = v20;
-        int32_t * v29 = _memcpy((int32_t *)v14, &g1224, (int32_t)&g1224); // 0x45bf9d
+        int32_t * v29 = memmove((int32_t *)v14, &g1224, (int32_t)&g1224); // 0x45bf9d
         int32_t v30 = v8 - v11; // 0x45bfaa
         if (v30 != 0) {
             // 0x45bfae
@@ -70608,7 +70606,7 @@ int32_t function_45d970_this(int32_t this_ptr, char flags) {
         return 0;
     *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g12;
     if ((flags & 1) != 0)
-        _free((void *)(intptr_t)this_ptr);
+        free((void *)(intptr_t)this_ptr);
     return this_ptr;
 }
 
@@ -73486,7 +73484,7 @@ static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
     if (*(int32_t *)(intptr_t)(tree_ptr + 8) > 0)
         --*(int32_t *)(intptr_t)(tree_ptr + 8);
     *(int32_t *)(intptr_t)result_ptr = replacement;
-    _free((void *)(intptr_t)node_ptr);
+    free((void *)(intptr_t)node_ptr);
     return result_ptr;
 }
 
@@ -73539,7 +73537,7 @@ int32_t function_463690(int32_t a1, int32_t a2, int32_t a3) {
         function_4634d0(*(int32_t *)v10);
         int32_t v11 = *(int32_t *)v5; // 0x4636ae
         *(int32_t *)(v9 - 8) = v5;
-        _free((void *)(intptr_t)v5);
+        free((void *)(intptr_t)v5);
         while (*(char *)(v11 + 17) == 0) {
             // 0x4636a3
             v9 = v10;
@@ -73549,7 +73547,7 @@ int32_t function_463690(int32_t a1, int32_t a2, int32_t a3) {
             function_4634d0(*(int32_t *)v10);
             v11 = *(int32_t *)v12;
             *(int32_t *)(v9 - 8) = v12;
-            _free((void *)(intptr_t)v12);
+            free((void *)(intptr_t)v12);
         }
         // 0x4636c1
         v7 = *v2;
@@ -77662,11 +77660,11 @@ static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
     if (render_layer == 0)
         return 0;
     *(float32_t *)(intptr_t)(render_layer + 88) =
-        (float32_t)_floor((float64_t)(
+        (float32_t)floor((float64_t)(
             *(float32_t *)((unsigned char *)(void *)a1 + 48) -
             *(float32_t *)((unsigned char *)(void *)a1 + 40)));
     *(float32_t *)(intptr_t)(render_layer + 92) =
-        (float32_t)_floor((float64_t)(
+        (float32_t)floor((float64_t)(
             *(float32_t *)((unsigned char *)(void *)a1 + 52) -
             *(float32_t *)((unsigned char *)(void *)a1 + 44)));
     return render_layer;
@@ -77806,7 +77804,7 @@ int32_t function_46f0b0(int32_t this_ptr) {
 // Address range: 0x46f0d0 - 0x46f0fb
 int32_t function_46f0d0(int32_t a1, int32_t a2, int32_t a3) {
     int32_t v1 = a2 - a1 & -4;
-    return v1 + (int32_t)_memcpy((int32_t *)a3, (int32_t *)a1, v1);
+    return v1 + (int32_t)memmove((int32_t *)a3, (int32_t *)a1, v1);
 }
 
 
@@ -77841,14 +77839,14 @@ int32_t function_46f320(int32_t a1) {
             return result;
         }
         // 0x46f353
-        _memcpy((int32_t *)v2, (int32_t *)v8, 0);
+        memmove((int32_t *)v2, (int32_t *)v8, 0);
         *v7 = v2;
         return result;
     }
     int32_t v9 = v8 - v2; // 0x46f37d
     if (v6 <= v9 >> 2) {
         int32_t v10 = v5 & -4;
-        _memcpy((int32_t *)v2, (int32_t *)v4, v10);
+        memmove((int32_t *)v2, (int32_t *)v4, v10);
         *v7 = (*v1 - *v3 & -4) + v10;
         return result;
     }
@@ -77856,9 +77854,9 @@ int32_t function_46f320(int32_t a1) {
     if (v6 <= v11) {
         int32_t v12 = v9 & -4; // 0x46f3c1
         int32_t v13 = v12 + v4; // 0x46f3c1
-        _memcpy((int32_t *)v11, (int32_t *)v4, v12);
+        memmove((int32_t *)v11, (int32_t *)v4, v12);
         int32_t v14 = *v1 - v13 & -4;
-        int32_t * v15 = _memcpy((int32_t *)*v7, (int32_t *)v13, v14); // 0x46f3ee
+        int32_t * v15 = memmove((int32_t *)*v7, (int32_t *)v13, v14); // 0x46f3ee
         *v7 = v14 + (int32_t)v15;
         return result;
     }
@@ -81787,9 +81785,9 @@ int32_t function_47aed0(int32_t a1) {
             }
             // 0x47af47
             *(int32_t *)(v12 - 4) = *v7;
-            _free(&g1224);
+            free(&g1224);
             *(int32_t *)(v12 - 8) = *v11;
-            _free(&g1224);
+            free(&g1224);
             v8 = v12 + 4;
         }
     }
@@ -81797,26 +81795,26 @@ int32_t function_47aed0(int32_t a1) {
     if (v18 != 0) {
         // 0x47af64
         *(int32_t *)(v8 - 4) = v18;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v19 = *(int32_t *)(a1 + 68); // 0x47af6d
     if (v19 != 0) {
         // 0x47af74
         *(int32_t *)(v8 - 4) = v19;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v20 = *(int32_t *)(a1 + 64); // 0x47af7d
     int32_t * v21 = (int32_t *)(v8 - 4);
     if (v20 != 0) {
         // 0x47af84
         *v21 = v20;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v22 = *(int32_t *)(a1 + 56); // 0x47af8d
     if (v22 != 0) {
         // 0x47af94
         *v21 = v22;
-        _free(&g1224);
+        free(&g1224);
     }
     // 0x47af9d
     *v21 = a1 + 24;
@@ -81923,7 +81921,7 @@ int32_t function_47d1c0(int32_t a1) {
         if (v7 != 0) {
             // 0x47d1dc
             *v5 = v7;
-            _free(&g1224);
+            free(&g1224);
         }
         // 0x47d1e5
         v6++;
@@ -81934,7 +81932,7 @@ int32_t function_47d1c0(int32_t a1) {
             if (v7 != 0) {
                 // 0x47d1dc
                 *v5 = v7;
-                _free(&g1224);
+                free(&g1224);
             }
             // 0x47d1e5
             v6++;
@@ -81945,14 +81943,14 @@ int32_t function_47d1c0(int32_t a1) {
     if (v8 != 0) {
         // 0x47d1f4
         v3 = v8;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t * v9 = (int32_t *)(a1 + 4);
     int32_t v10 = *v9; // 0x47d1fd
     if (v10 != 0) {
         // 0x47d204
         v3 = v10;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t * v11 = (int32_t *)(a1 + 12);
     int32_t v12 = *v11; // 0x47d20d
@@ -81960,7 +81958,7 @@ int32_t function_47d1c0(int32_t a1) {
     if (v12 != 0) {
         // 0x47d214
         v3 = v12;
-        _free(&g1224);
+        free(&g1224);
         result = &g1224;
     }
     // 0x47d21d
@@ -81997,7 +81995,7 @@ int32_t function_47d280(int32_t a1) {
         if (v9 != 0) {
             // 0x47d2a6
             *(int32_t *)(v6 - 4) = v9;
-            _free(&g1224);
+            free(&g1224);
         }
         // 0x47d2af
         v7++;
@@ -82008,7 +82006,7 @@ int32_t function_47d280(int32_t a1) {
             if (v9 != 0) {
                 // 0x47d2a6
                 *(int32_t *)(v6 - 4) = v9;
-                _free(&g1224);
+                free(&g1224);
             }
             // 0x47d2af
             v7++;
@@ -82112,7 +82110,7 @@ int32_t function_47d280(int32_t a1) {
     if (v29 != 0) {
         // 0x47d399
         *(int32_t *)(v6 - 4) = v29;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t * v30 = (int32_t *)(v1 + 28); // 0x47d3a2
     int32_t * v31; // 0x47d280
@@ -82139,7 +82137,7 @@ int32_t function_47d280(int32_t a1) {
     }
     // 0x47d3c8
     *v31 = v1;
-    _free(&g1224);
+    free(&g1224);
     // 0x47d3d3
     __asm_rep_stosd_memset((char *)*(int32_t *)(20 + v6), 0, 8);
     return 0;
@@ -82180,22 +82178,22 @@ int32_t function_47da20(int32_t a1) {
         int32_t * v8 = (int32_t *)(v2 + 4); // 0x47da33
         int32_t v9 = *v8; // 0x47da33
         *(int32_t *)(v6 - 4) = *v7;
-        _free(&g1224);
+        free(&g1224);
         *(int32_t *)(v6 - 8) = v2;
         *v7 = 0;
         *v8 = 0;
-        _free(&g1224);
+        free(&g1224);
         while (v9 != 0) {
             int32_t v10 = v9;
             v7 = (int32_t *)v10;
             v8 = (int32_t *)(v10 + 4);
             v9 = *v8;
             *(int32_t *)(v6 - 4) = *v7;
-            _free(&g1224);
+            free(&g1224);
             *(int32_t *)(v6 - 8) = v10;
             *v7 = 0;
             *v8 = 0;
-            _free(&g1224);
+            free(&g1224);
         }
         // 0x47da54
         v4 = v6 + 4;
@@ -82208,7 +82206,7 @@ int32_t function_47da20(int32_t a1) {
         int32_t * v14 = (int32_t *)(a1 + 68); // 0x47da5f
         *(int32_t *)(v4 - 4) = *v13 + v12;
         *(int32_t *)(v4 - 8) = *v14;
-        *v14 = (int32_t)_realloc(&g1224, (int32_t)&g1224);
+        *v14 = (int32_t)realloc(&g1224, (int32_t)&g1224);
         result = *v11;
         *v11 = 0;
         *v13 = result + *v13;
@@ -82234,12 +82232,12 @@ int32_t function_47da90(int32_t a1) {
     int32_t v2 = *(int32_t *)(a1 + 68); // 0x47dab3
     if (v2 != 0) {
         // 0x47dabd
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t v3 = *(int32_t *)(a1 + 104); // 0x47dac6
     if (v3 != 0) {
         // 0x47dacd
-        _free((int32_t *)v3);
+        free((int32_t *)v3);
     }
     // 0x47dad6
     __asm_rep_stosd_memset((char *)a1, 0, 28);
@@ -82274,23 +82272,23 @@ int32_t function_47de90(int32_t a1) {
         if (v9 != 0) {
             // 0x47dec4
             function_482a90(v9);
-            _free((int32_t *)*v8);
+            free((int32_t *)*v8);
         }
         int32_t * v10 = (int32_t *)(v5 + 12); // 0x47ded5
         int32_t v11 = *v10; // 0x47ded5
         if (v11 != 0) {
             // 0x47dedc
             function_4842c0(*(int32_t *)v11);
-            _free((int32_t *)*(int32_t *)*v10);
-            _free((int32_t *)*v10);
+            free((int32_t *)*(int32_t *)*v10);
+            free((int32_t *)*v10);
         }
         int32_t * v12 = (int32_t *)(v5 + 16); // 0x47defb
         int32_t v13 = *v12; // 0x47defb
         if (v13 != 0) {
             // 0x47df02
             function_4842c0(*(int32_t *)v13);
-            _free((int32_t *)*(int32_t *)*v12);
-            _free((int32_t *)*v12);
+            free((int32_t *)*(int32_t *)*v12);
+            free((int32_t *)*v12);
         }
         int32_t * v14 = (int32_t *)(v5 + 48); // 0x47df21
         int32_t v15 = *v14; // 0x47df21
@@ -82317,7 +82315,7 @@ int32_t function_47de90(int32_t a1) {
             }
             // 0x47df58
             *v18 = v20;
-            _free(&g1224);
+            free(&g1224);
             v16 = *(int32_t *)(v4 + 24);
         }
         int32_t * v23 = (int32_t *)(v5 + 52); // 0x47df68
@@ -82345,7 +82343,7 @@ int32_t function_47de90(int32_t a1) {
             }
             // 0x47df9f
             *v27 = v29;
-            _free(&g1224);
+            free(&g1224);
             v25 = *(int32_t *)(v4 + 24);
         }
         int32_t * v32 = (int32_t *)(v5 + 56); // 0x47dfaf
@@ -82385,7 +82383,7 @@ int32_t function_47de90(int32_t a1) {
             }
             // 0x47dfdc
             *v36 = v37;
-            _free(&g1224);
+            free(&g1224);
             v34 = v36;
             v7 = *(int32_t *)(v4 + 24);
         }
@@ -82417,7 +82415,7 @@ int32_t function_47de90(int32_t a1) {
             if (v48 != 0) {
                 // 0x47e038
                 *v45 = v48;
-                _free(&g1224);
+                free(&g1224);
                 v50 = *(int32_t *)(v4 + 16);
                 v49 = *v43;
             }
@@ -82433,7 +82431,7 @@ int32_t function_47de90(int32_t a1) {
                 if (v48 != 0) {
                     // 0x47e038
                     *v45 = v48;
-                    _free(&g1224);
+                    free(&g1224);
                     v50 = *(int32_t *)(v4 + 16);
                     v49 = *v43;
                 }
@@ -82446,12 +82444,12 @@ int32_t function_47de90(int32_t a1) {
         }
         // 0x47e04d
         *v45 = v46;
-        _free(&g1224);
+        free(&g1224);
         int32_t v53 = *(int32_t *)(v7 + 12); // 0x47e056
         if (v53 != 0) {
             // 0x47e060
             *v45 = v53;
-            _free(&g1224);
+            free(&g1224);
         }
     }
     if (v5 == 0) {
@@ -82464,24 +82462,24 @@ int32_t function_47de90(int32_t a1) {
     if (v54 != 0) {
         // 0x47e074
         *(int32_t *)(v4 - 4) = v54;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v55 = *(int32_t *)(v5 + 68); // 0x47e07d
     int32_t * v56 = (int32_t *)(v4 - 4);
     if (v55 != 0) {
         // 0x47e084
         *v56 = v55;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v57 = *(int32_t *)(v5 + 72); // 0x47e08d
     if (v57 != 0) {
         // 0x47e094
         *v56 = v57;
-        _free(&g1224);
+        free(&g1224);
     }
     // 0x47e09d
     *v56 = v5;
-    _free(&g1224);
+    free(&g1224);
     // 0x47e0a6
     __asm_rep_stosd_memset((char *)v7, 0, 28);
     // 0x47e0b2
@@ -82518,7 +82516,7 @@ int32_t function_47eaf0(int32_t a1) {
     if (a1 != 0) {
         // 0x47eaf8
         __asm_rep_stosd_memset((char *)a1, 0, 9);
-        _free((int32_t *)a1);
+        free((int32_t *)a1);
         result = &g1224;
     }
     // 0x47eb0e
@@ -82531,7 +82529,7 @@ int32_t function_47eb10(int32_t a1) {
     if (a1 != 0) {
         // 0x47eb18
         __asm_rep_stosd_memset((char *)a1, 0, 132);
-        _free((int32_t *)a1);
+        free((int32_t *)a1);
         result = &g1224;
     }
     // 0x47eb2e
@@ -82563,17 +82561,17 @@ int32_t function_47f8a0(int32_t a1) {
     int32_t v1 = *(int32_t *)(a1 + 16); // 0x47f8ad
     if (v1 != 0) {
         // 0x47f8b4
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     int32_t v2 = *(int32_t *)(a1 + 20); // 0x47f8bd
     if (v2 != 0) {
         // 0x47f8c4
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t v3 = *(int32_t *)(a1 + 24); // 0x47f8cd
     if (v3 != 0) {
         // 0x47f8d4
-        _free((int32_t *)v3);
+        free((int32_t *)v3);
     }
     // 0x47f8dd
     int32_t v4; // bp-4, 0x47f8a0
@@ -82585,15 +82583,15 @@ int32_t function_47f8a0(int32_t a1) {
             for (int32_t j = 0; j < 32; j += 4) {
                 // 0x47f8ea
                 *v7 = *(int32_t *)(*(int32_t *)(*v6 + i) + j);
-                _free(&g1224);
+                free(&g1224);
             }
             // 0x47f904
             *v7 = *(int32_t *)(*v6 + i);
-            _free(&g1224);
+            free(&g1224);
         }
         // 0x47f91b
         *v7 = *v6;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t * v8 = (int32_t *)(a1 + 12); // 0x47f928
     int32_t v9 = *v8; // 0x47f928
@@ -82606,19 +82604,19 @@ int32_t function_47f8a0(int32_t a1) {
     int32_t * v10 = (int32_t *)(v5 - 8);
     int32_t v11 = 0; // 0x47f93d
     *v10 = *(int32_t *)(v11 + v9);
-    _free(&g1224);
+    free(&g1224);
     v11 += 4;
     int32_t v12 = *v8;
     while (v11 < 12) {
         // 0x47f931
         *v10 = *(int32_t *)(v11 + v12);
-        _free(&g1224);
+        free(&g1224);
         v11 += 4;
         v12 = *v8;
     }
     // 0x47f948
     *v10 = v12;
-    _free(&g1224);
+    free(&g1224);
     // 0x47f954
     __asm_rep_stosd_memset((char *)a1, 0, 12);
     // 0x47f95e
@@ -82710,36 +82708,36 @@ int32_t function_481710(int32_t a1) {
     int32_t v1 = *(int32_t *)(a1 + 32); // 0x481720
     if (v1 != 0) {
         // 0x481727
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     int32_t v2 = *(int32_t *)(a1 + 8); // 0x481730
     if (v2 != 0) {
         // 0x481737
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t * v3 = (int32_t *)(a1 + 36); // 0x481740
     int32_t v4 = *v3; // 0x481740
     if (v4 != 0) {
         // 0x481748
-        _free((int32_t *)*(int32_t *)v4);
-        _free((int32_t *)*(int32_t *)(*v3 + 4));
-        _free((int32_t *)*(int32_t *)(*v3 + 8));
-        _free((int32_t *)*(int32_t *)(*v3 + 12));
+        free((int32_t *)*(int32_t *)v4);
+        free((int32_t *)*(int32_t *)(*v3 + 4));
+        free((int32_t *)*(int32_t *)(*v3 + 8));
+        free((int32_t *)*(int32_t *)(*v3 + 12));
         __asm_rep_stosd_memset((char *)*v3, 0, 6);
-        _free((int32_t *)*v3);
+        free((int32_t *)*v3);
     }
     int32_t * v5 = (int32_t *)(a1 + 40); // 0x48178c
     int32_t v6 = *v5; // 0x48178c
     if (v6 != 0) {
         // 0x481793
-        _free((int32_t *)*(int32_t *)v6);
-        _free((int32_t *)*(int32_t *)(*v5 + 4));
+        free((int32_t *)*(int32_t *)v6);
+        free((int32_t *)*(int32_t *)(*v5 + 4));
         int32_t v7 = *v5; // 0x4817a7
         *(int32_t *)v7 = 0;
         *(int32_t *)(v7 + 4) = 0;
         *(int32_t *)(v7 + 8) = 0;
         *(int32_t *)(v7 + 12) = 0;
-        _free((int32_t *)*v5);
+        free((int32_t *)*v5);
     }
     // 0x4817c3
     __asm_rep_stosd_memset((char *)a1, 0, 13);
@@ -82753,7 +82751,7 @@ int32_t function_4817e0(int32_t a1) {
     if (*(int32_t *)(a1 + 48) != 0) {
         // 0x4817ec
         function_481710(a1);
-        _free((int32_t *)a1);
+        free((int32_t *)a1);
         result = &g1224;
     }
     // 0x4817fb
@@ -82765,17 +82763,17 @@ int32_t function_481800(int32_t a1) {
     int32_t v1 = *(int32_t *)(a1 + 16); // 0x481805
     if (v1 != 0) {
         // 0x48180c
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     int32_t v2 = *(int32_t *)(a1 + 20); // 0x481815
     if (v2 != 0) {
         // 0x48181c
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t v3 = *(int32_t *)(a1 + 24); // 0x481825
     if (v3 != 0) {
         // 0x48182c
-        _free((int32_t *)v3);
+        free((int32_t *)v3);
     }
     // 0x481835
     int32_t v4; // bp-4, 0x481800
@@ -82784,13 +82782,13 @@ int32_t function_481800(int32_t a1) {
     if (v6 != 0) {
         // 0x48183c
         *(int32_t *)(v5 - 4) = v6;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v7 = *(int32_t *)(a1 + 32); // 0x481845
     if (v7 != 0) {
         // 0x48184c
         *(int32_t *)(v5 - 4) = v7;
-        _free(&g1224);
+        free(&g1224);
     }
     // 0x481855
     __asm_rep_stosd_memset((char *)a1, 0, 11);
@@ -82840,17 +82838,17 @@ int32_t function_482990(int32_t a1) {
     int32_t v1 = *(int32_t *)a1; // 0x48299d
     if (v1 != 0) {
         // 0x4829a3
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     int32_t v2 = *(int32_t *)(a1 + 4); // 0x4829ac
     if (v2 != 0) {
         // 0x4829b3
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t v3 = *(int32_t *)(a1 + 20); // 0x4829bc
     if (v3 != 0) {
         // 0x4829c3
-        _free((int32_t *)v3);
+        free((int32_t *)v3);
     }
     // 0x4829cc
     int32_t v4; // bp-4, 0x482990
@@ -82859,19 +82857,19 @@ int32_t function_482990(int32_t a1) {
     if (v6 != 0) {
         // 0x4829d3
         *(int32_t *)(v5 - 4) = v6;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v7 = *(int32_t *)(a1 + 52); // 0x4829dc
     if (v7 != 0) {
         // 0x4829e3
         *(int32_t *)(v5 - 4) = v7;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v8 = *(int32_t *)(a1 + 56); // 0x4829ec
     if (v8 != 0) {
         // 0x4829f3
         *(int32_t *)(v5 - 4) = v8;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t * v9 = (int32_t *)(a1 + 96); // 0x4829fc
     int32_t v10 = *v9; // 0x4829fc
@@ -82907,13 +82905,13 @@ int32_t function_482990(int32_t a1) {
         }
         // 0x482a3b
         *v13 = *v9;
-        _free(&g1224);
+        free(&g1224);
     }
     int32_t v18 = *(int32_t *)(a1 + 100); // 0x482a48
     if (v18 != 0) {
         // 0x482a4f
         *(int32_t *)(v5 - 4) = v18;
-        _free(&g1224);
+        free(&g1224);
     }
     // 0x482a58
     __asm_rep_stosd_memset((char *)a1, 0, 26);
@@ -82934,23 +82932,23 @@ int32_t function_482a90(int32_t a1) {
     int32_t v4 = 7; // 0x482aa6
     int32_t v5 = a1 + 48; // 0x482aa6
     *v3 = *(int32_t *)v5;
-    _free(&g1224);
+    free(&g1224);
     v4--;
     v5 += 16;
     while (v4 != 0) {
         // 0x482aab
         *v3 = *(int32_t *)v5;
-        _free(&g1224);
+        free(&g1224);
         v4--;
         v5 += 16;
     }
     // 0x482abc
     *v3 = *(int32_t *)(a1 + 36);
-    _free(&g1224);
+    free(&g1224);
     *(int32_t *)(v2 - 8) = *(int32_t *)(a1 + 152);
-    _free(&g1224);
+    free(&g1224);
     *(int32_t *)(v2 - 12) = *(int32_t *)(a1 + 160);
-    _free(&g1224);
+    free(&g1224);
     __asm_rep_stosd_memset((char *)a1, 0, 45);
     return 0;
 }
@@ -82996,13 +82994,13 @@ int32_t function_4840a0(int32_t a1) {
     int32_t v2 = *v1; // 0x4840a9
     if (v2 != 0) {
         // 0x4840b0
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t * v3 = (int32_t *)(a1 + 8); // 0x4840b9
     int32_t v4 = *v3; // 0x4840b9
     if (v4 != 0) {
         // 0x4840c0
-        _free((int32_t *)v4);
+        free((int32_t *)v4);
     }
     // 0x4840c9
     *(int32_t *)a1 = 0;
@@ -83026,13 +83024,13 @@ int32_t function_4842c0(int32_t a1) {
     int32_t v2 = *v1; // 0x4842c9
     if (v2 != 0) {
         // 0x4842d0
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t * v3 = (int32_t *)(a1 + 12); // 0x4842d9
     int32_t v4 = *v3; // 0x4842d9
     if (v4 != 0) {
         // 0x4842e0
-        _free((int32_t *)v4);
+        free((int32_t *)v4);
     }
     // 0x4842e9
     *(int32_t *)a1 = 0;
@@ -84669,7 +84667,7 @@ int32_t function_498590(int32_t a1, int32_t a2) {
     int32_t caller = (int32_t)(uintptr_t)_ReturnAddress();
 
     // 0x498590
-    result = (int32_t)(intptr_t)_realloc((void *)(intptr_t)a1,
+    result = (int32_t)(intptr_t)realloc((void *)(intptr_t)a1,
                                           (size_t)(uint32_t)a2);
     retdec_trace_i32("498590:caller", caller);
     retdec_trace_realloc_state("498590", a1, -1, a2, result);
@@ -85567,7 +85565,7 @@ int32_t function_4ab170(int32_t vm, int32_t class_name,
 // Address range: 0x4ab2a6 - 0x4ab2b1
 // Demangled:     void __cdecl operator delete(void *)
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
-    _free(a1);
+    free(a1);
 }
 
 
@@ -85686,7 +85684,7 @@ int32_t function_4ad16b(int32_t a1) {
 float80_t function_4ad7f2(void) {
     // 0x4ad7f2
     float80_t v1; // 0x4ad7f2
-    float80_t result = llvm_round_f80(v1); // 0x4ad7f4
+    float80_t result = roundl(v1); // 0x4ad7f4
     __asm_wait();
     int32_t v2; // 0x4ad7f2
     if ((v2 & 0x4000) == 0) {
@@ -86996,17 +86994,17 @@ int32_t function_4c4cf0(int32_t a1) {
     int32_t v1 = *(int32_t *)a1; // 0x4c4cf9
     if (v1 != 0) {
         // 0x4c4cff
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     int32_t v2 = *(int32_t *)(a1 + 16); // 0x4c4d08
     if (v2 != 0) {
         // 0x4c4d0f
-        _free((int32_t *)v2);
+        free((int32_t *)v2);
     }
     int32_t v3 = *(int32_t *)(a1 + 20); // 0x4c4d18
     if (v3 != 0) {
         // 0x4c4d1f
-        _free((int32_t *)v3);
+        free((int32_t *)v3);
     }
     // 0x4c4d28
     __asm_rep_stosd_memset((char *)a1, 0, 90);
@@ -87034,7 +87032,7 @@ int32_t function_4c4e90(int32_t a1) {
     int32_t v1 = *(int32_t *)a1; // 0x4c4e99
     if (v1 != 0) {
         // 0x4c4e9f
-        _free((int32_t *)v1);
+        free((int32_t *)v1);
     }
     // 0x4c4ea8
     function_4c4e70(a1);
@@ -87046,7 +87044,7 @@ int32_t function_4c4e90(int32_t a1) {
 // Address range: 0x4c5700 - 0x4c5723
 int32_t function_4c5700(int32_t a1) {
     int32_t * v1 = (int32_t *)(a1 + 8); // 0x4c5705
-    _free((int32_t *)*v1);
+    free((int32_t *)*v1);
     *(int32_t *)a1 = 0;
     *(int32_t *)(a1 + 4) = 0;
     *v1 = 0;
