@@ -67,6 +67,9 @@ add_library(kinoko_legacy_string STATIC
 target_include_directories(kinoko_legacy_string PUBLIC include)
 target_compile_options(kinoko_legacy_string PRIVATE /Gy)
 
+add_library(kinoko_native_control STATIC src/reconstructed/native_control.cpp)
+target_include_directories(kinoko_native_control PUBLIC include)
+
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
     src/reconstructed/legacy_method_entries.cpp
@@ -242,6 +245,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
 )
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_native_control)
 target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
     "${KINOKO_SQUIRREL2_ROOT}/include"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel"
@@ -506,6 +510,11 @@ foreach(contract IN ITEMS squirrel_native_calls squirrel_game_objects)
 endforeach()
 
 # /RTC1 checks caller/callee stack agreement without hand-written ESP probes.
+add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
+target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
+add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
+set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
+
 add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
 target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include
     "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
@@ -548,6 +557,7 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_native_control_contract
     kinoko_legacy_string_contract
     kinoko_act_frame_contract
     kinoko_native_record_view_contract

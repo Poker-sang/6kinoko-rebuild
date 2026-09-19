@@ -637,9 +637,9 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
             "if (resetProbe.x != 100 || resetProbe.y != 200 || resetProbe.direction != -1 || "
             "resetProbe.priority != 7 || resetProbe.user.generation != resetCalls) "
             "throw \"reset initializer not replayed\";"));
-        function_45e410_this(PTR(old_weak), locked);
+        kinoko_native_weak_pair_lock(PTR(old_weak), locked);
         CHECK(locked[0] == 0 && locked[1] == 0);
-        retdec_actor_release_weak(old_weak[1]);
+        kinoko_native_release_weak(old_weak[1]);
         CHECK(*(int32_t *)(intptr_t)(parent_control + 8) == parent_weak_count);
         CHECK(*(int32_t *)(intptr_t)(seed[2] + 4) == argument_refs);
         CHECK(*(int32_t *)(intptr_t)(actor + 12) == original_handle);
@@ -762,7 +762,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(execute_source(vm, root + 2, "stoneProbe.Release();\nstoneProbe = null;"));
             CHECK(retdec_actor_manager_refresh(manager) == 1);
             int32_t locked[2];
-            function_45e410_this(rider + 32, locked);
+            kinoko_native_weak_pair_lock(rider + 32, locked);
             CHECK(locked[0] == 0 && locked[1] == 0);
             function_45ec60(rider);
             CHECK(*(float *)(intptr_t)(rider + 264) == 0);
@@ -4581,7 +4581,7 @@ int main(int argc, char **argv) {
         function_469700();
         CHECK(*(int32_t *)(intptr_t)(manager + 92) == 0);
         CHECK(*(int32_t *)(intptr_t)(control + 4) == 0);
-        function_45e410_this(g_514300_storage[13], pair);
+        kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
         CHECK(pair[0] == 0 && pair[1] == 0);
         CHECK(VirtualProtect(retired_layout, 4096, PAGE_NOACCESS, &old_protection));
         function_468620_this(PTR(g_514300_storage));
@@ -4602,7 +4602,7 @@ int main(int argc, char **argv) {
                       *(int32_t *)(intptr_t)(pool + 4) == pool_bytes);
                 CHECK(*(int32_t *)(intptr_t)(pool + 24) -
                       *(int32_t *)(intptr_t)(pool + 20) == pool_bytes);
-                function_45e410_this(g_514300_storage[13], pair);
+                kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 function_468620_this(PTR(g_514300_storage));
                 function_469700();
