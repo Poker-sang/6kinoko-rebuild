@@ -48,6 +48,13 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 
+add_library(kinoko_audio_runtime STATIC src/reconstructed/audio_runtime.cpp)
+target_include_directories(kinoko_audio_runtime PUBLIC include PRIVATE src/decompiled)
+target_compile_definitions(kinoko_audio_runtime PRIVATE _CRT_SECURE_NO_WARNINGS
+    $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_DEFINITIONS>)
+target_compile_options(kinoko_audio_runtime PRIVATE /Gy)
+target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_actor_collision ole32 dxguid winmm user32)
+
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
     src/reconstructed/legacy_method_entries.cpp
@@ -237,6 +244,7 @@ if(KINOKO_RETDEC_MAP_FILE)
 endif()
 set(KINOKO_D3DX9_33_LIB "${CMAKE_SOURCE_DIR}/third_party/d3dx9_33.lib")
 target_link_libraries(kinoko_retdec_rebuild PRIVATE
+    kinoko_audio_runtime
     kinoko_actor_collision
     kinoko_native_methods
     kinoko_legacy_abi
@@ -359,6 +367,17 @@ target_link_options(kinoko_squirrel_source_vm_contract PRIVATE /OPT:REF /OPT:ICF
 add_test(NAME squirrel_source_vm_contract COMMAND kinoko_squirrel_source_vm_contract)
 set_tests_properties(squirrel_source_vm_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_com_owner_contract tests/com_owner_contract.cpp)
+target_include_directories(kinoko_com_owner_contract PRIVATE include)
+add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
+
+add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
+target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
+target_compile_definitions(kinoko_audio_runtime_contract PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_actor_collision ole32 dxguid winmm user32)
+add_test(NAME audio_runtime_contract COMMAND kinoko_audio_runtime_contract)
+set_tests_properties(audio_runtime_contract PROPERTIES TIMEOUT 60)
+
 add_executable(kinoko_squirrel_c_api_contract
     tests/squirrel_c_api_contract.c tests/squirrel_c_api_driver.cpp)
 target_include_directories(kinoko_squirrel_c_api_contract PRIVATE include
@@ -478,6 +497,8 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_com_owner_contract
+    kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
     kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract

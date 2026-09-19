@@ -1,3 +1,5 @@
+#include "kinoko/audio_runtime.h"
+#include "kinoko/audio_host.h"
 #include "kinoko/squirrel_api_types.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
@@ -59,11 +61,7 @@
 
 static volatile LONG retdec_actor_step_trace_active;
 
-/* The original runtime embeds a Vorbis decoder.  Keep the decoder local to
-   this translation unit so packaged DAT playback has no external codec
-   dependency. */
-#define STB_VORBIS_NO_STDIO
-#include "stb_vorbis.c"
+
 
 
 void retdec_trace_ref_watch(const char *label, int32_t shared_state,
@@ -212,60 +210,7 @@ double _strtod(const char *text, char **end);
 int32_t function_45d970_this(int32_t this_ptr, char flags);
 static int32_t function_45d9f0_this(int32_t this_ptr);
 
-// The Windows SDK's dsound.h is not usable with this generated C translation
-// unit under /TC and WIN32_LEAN_AND_MEAN. Keep the original COM calls through
-// the stable DirectSound vtable slots instead of pulling in its declarations.
-typedef HRESULT (WINAPI *retdec_dsound_initialize_fn)(void *self,
-    const GUID *guid);
-typedef HRESULT (WINAPI *retdec_direct_sound_create8_fn)(
-    const GUID *device_guid, void **direct_sound, void *outer);
-typedef HRESULT (WINAPI *retdec_dsound_set_cooperative_level_fn)(void *self,
-    HWND hwnd, DWORD level);
-typedef HRESULT (WINAPI *retdec_dsound_get_caps_fn)(void *self, void *caps);
-typedef HRESULT (WINAPI *retdec_dsound_create_buffer_fn)(void *self,
-    const void *description, void **buffer, void *outer);
-typedef HRESULT (WINAPI *retdec_dsound_query_interface_fn)(void *self,
-    const GUID *iid, void **result);
-typedef ULONG (WINAPI *retdec_dsound_release_fn)(void *self);
 
-typedef struct retdec_dsound_buffer_desc {
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwBufferBytes;
-    DWORD dwReserved;
-    void *lpwfxFormat;
-    GUID guid3DAlgorithm;
-} retdec_dsound_buffer_desc;
-
-typedef HRESULT (WINAPI *retdec_dsound_buffer_lock_fn)(
-    void *self, DWORD offset, DWORD bytes, void **part1, DWORD *part1_bytes,
-    void **part2, DWORD *part2_bytes, DWORD flags);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_unlock_fn)(
-    void *self, void *part1, DWORD part1_bytes, void *part2,
-    DWORD part2_bytes);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_set_volume_fn)(
-    void *self, LONG volume);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_play_fn)(
-    void *self, DWORD reserved1, DWORD reserved2, DWORD flags);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_get_status_fn)(
-    void *self, DWORD *status);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_get_current_position_fn)(
-    void *self, DWORD *play_cursor, DWORD *write_cursor);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_stop_fn)(void *self);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_set_position_fn)(
-    void *self, DWORD position);
-
-#pragma pack(push, 1)
-typedef struct retdec_wave_format {
-    WORD wFormatTag;
-    WORD nChannels;
-    DWORD nSamplesPerSec;
-    DWORD nAvgBytesPerSec;
-    WORD nBlockAlign;
-    WORD wBitsPerSample;
-    WORD cbSize;
-} retdec_wave_format;
-#pragma pack(pop)
 
 // ---------------- Integer Types Definitions -----------------
 
@@ -2085,20 +2030,6 @@ int32_t function_409540(int32_t a1);
 int32_t function_409620(int32_t a1);
 int32_t function_4098a0(int32_t a1, float80_t a2, int32_t a3);
 int32_t function_409930(void);
-int32_t function_40a0f0(void);
-int32_t function_40a3d0(void);
-int32_t function_40a460(void);
-int32_t function_40a5d0(int32_t result);
-int32_t function_40a5f0(int32_t a1);
-int32_t function_40a7f0(int32_t a1, int32_t a2);
-int32_t function_40a8d0(int32_t a1);
-int32_t function_40a950(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_40a9a0(int32_t a1, int32_t a2, int32_t a3, float80_t a4);
-int32_t function_40a9f0(float80_t a1);
-int32_t function_40aaa0(void);
-int32_t function_40aac0(void);
-int32_t function_40aae0(void);
-int32_t function_40adb0(int32_t * a1);
 int32_t function_40ae70(void);
 int32_t function_40af70(void);
 int32_t function_40af80(char a1);
@@ -2108,11 +2039,8 @@ int32_t function_40b160(int16_t a1, uint16_t a2);
 int32_t function_40b210(uint16_t a1, uint16_t a2);
 int32_t function_40b2c0(void);
 int32_t function_40b2d0(void);
-int32_t function_40b3a0(void);
-int32_t function_40b520(void);
 int32_t function_40b6f0(void);
 int32_t function_40b840(int32_t a1);
-int32_t function_40b8a0(float80_t a1);
 int32_t function_40b9a0(int32_t a1);
 int32_t function_40ba20(int32_t * a1);
 int32_t function_40bb70(void);
@@ -2232,8 +2160,6 @@ int32_t function_4119e0(void);
 int32_t function_411a10(int32_t a1, int32_t a2);
 int32_t function_411d10(void);
 int32_t function_411d30(void);
-int32_t function_411d80(HWND hwnd, int32_t options);
-int32_t function_411f90(void);
 int32_t function_411ff0(int32_t * a1, int32_t a2);
 int32_t function_412060(float80_t a1);
 int32_t function_4120c0(void);
@@ -4023,14 +3949,6 @@ int32_t function_4700b0(int32_t a1, int32_t a2);
 int32_t function_470100(int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
 int32_t function_4701d0(void);
-int32_t function_4701e0(void);
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4);
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5);
-int32_t function_470300(void);
-int32_t function_470320(int32_t a1, int32_t a2);
-int32_t function_470360(void);
 int32_t function_470390(int32_t result);
 int32_t function_4703b0(char * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3);
@@ -4039,10 +3957,8 @@ int32_t function_4706c0_this(int32_t this_ptr,
 int32_t function_4706c0(int32_t * a1, int32_t * a2);
 int32_t function_470730(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_470890(void);
-int32_t function_470980(int32_t a1);
 int32_t function_4709c0(int32_t * a1);
 int32_t function_470a30(int32_t a1);
-int32_t function_470ab0(int32_t a1);
 int32_t function_470d00(int32_t a1);
 int32_t function_470df0(int32_t a1, int32_t a2);
 int32_t function_470ee0(int32_t a1);
@@ -6130,81 +6046,6 @@ int32_t g802 = 0; // 0x51b260
 int32_t g803 = 0; // 0x51b264
 float80_t g804 = 0.0L; // 0x51b278
 
-/* The audio manager is a single object at 0x51B1C0 in the original.  RetDec
-   split its fields into unrelated globals, so the recovered thiscall methods
-   could not safely address their documented offsets. */
-#define RETDEC_AUDIO_MANAGER_BYTES 0x140
-__declspec(align(8)) static unsigned char
-    g_retdec_audio_manager_state[RETDEC_AUDIO_MANAGER_BYTES];
-static int32_t g_retdec_audio_manager_initialized;
-
-typedef struct retdec_dsound_slot {
-    void *buffer;
-    DWORD buffer_bytes;
-    int in_use;
-} retdec_dsound_slot;
-
-#define RETDEC_SE_MAX_ENTRIES 128
-
-typedef struct retdec_se_entry {
-    int id;
-    void *buffer;
-    DWORD buffer_bytes;
-} retdec_se_entry;
-
-typedef struct retdec_se_pool_state {
-    unsigned char object_prefix[0xd0];
-    retdec_dsound_slot stream_slots[32];
-    unsigned char object_tail[0x200];
-    float master_volume;
-    int initialized;
-} retdec_se_pool_state;
-
-typedef struct retdec_bgm_track_state {
-    void *buffer;
-    DWORD buffer_bytes;
-    unsigned char *encoded_data;
-    short *decoded_samples;
-    short *decode_scratch;
-    stb_vorbis *decoder;
-    DWORD encoded_bytes;
-    DWORD decoded_bytes;
-    DWORD sample_rate;
-    WORD channels;
-    uint32_t handle;
-    DWORD loop_start_frame;
-    DWORD loop_end_frame;
-    DWORD source_frame;
-    DWORD write_offset;
-    DWORD write_window_start;
-    DWORD play_offset;
-    DWORD buffered_bytes;
-    DWORD start_time;
-    int source_ended;
-    int looping;
-    int started;
-    float volume;
-    float fade_from;
-    float fade_to;
-    DWORD fade_started;
-    DWORD fade_duration;
-    int playing;
-} retdec_bgm_track_state;
-
-static retdec_se_pool_state g_retdec_se_pool;
-static retdec_se_entry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
-static int g_retdec_se_entry_count;
-static retdec_bgm_track_state g_retdec_bgm_track;
-static retdec_bgm_track_state g_retdec_bgm_fading_tracks[31];
-static HANDLE g_retdec_audio_queue_event;
-static HANDLE g_retdec_audio_stop_event;
-static HANDLE g_retdec_audio_update_thread;
-static HANDLE g_retdec_audio_loader_thread;
-static float g_retdec_audio_master_volume = 1.0f;
-static volatile LONG g_retdec_audio_running;
-static int g_retdec_audio_threads_initialized;
-static CRITICAL_SECTION g_retdec_audio_lock;
-static int g_retdec_audio_lock_initialized;
 int32_t g805 = 0; // 0x51b27c
 int32_t g806 = 0; // 0x51b280
 int32_t g807 = 0; // 0x51b284
@@ -10281,7 +10122,7 @@ static int retdec_page_is_readable(const MEMORY_BASIC_INFORMATION *info)
 /* A large part of the RetDec output lost the third argument of
    std::string::assign(const char *, size_t). Keep those old call sites
    usable while the explicit-length callers are repaired incrementally. */
-static uint32_t retdec_safe_c_string_length(const char *source)
+uint32_t retdec_safe_c_string_length(const char *source)
 {
     const unsigned char *cursor = (const unsigned char *)source;
     const uintptr_t limit = (uintptr_t)source + 0x100000u;
@@ -18322,2122 +18163,185 @@ int32_t function_409930(void) {
    objects into unrelated globals, so keep their recovered state explicit and
    use the original DirectSound/reader boundaries for the live path. */
 
-static void retdec_trace_audio_text(const char *label, const char *value)
-{
-    char message[512];
 
-    if (label == NULL || value == NULL)
-        return;
-    wsprintfA(message, "%s:%s", label, value);
-    retdec_trace(message);
-}
 
-static LONG retdec_audio_volume_db(float gain)
-{
-    double value;
 
-    if (!(gain > 0.0020000001f))
-        return -10000;
-    value = 3322.0001220703125 * log10((double)gain);
-    if (value < -10000.0)
-        return -10000;
-    if (value > 0.0)
-        return 0;
-    return (LONG)value;
-}
 
-static void retdec_release_dsound_buffer(void *buffer)
-{
-    void **vtable;
 
-    if (buffer == NULL)
-        return;
-    vtable = *(void ***)buffer;
-    if (vtable != NULL && vtable[2] != NULL)
-        ((retdec_dsound_release_fn)vtable[2])(buffer);
-}
 
-static int retdec_create_secondary_buffer(const retdec_wave_format *format,
-                                          DWORD buffer_bytes, void **result)
-{
-    retdec_dsound_buffer_desc description;
-    void **vtable;
-    HRESULT hr;
 
-    if (result == NULL)
-        return 0;
-    *result = NULL;
-    if (g877 == NULL || format == NULL || buffer_bytes == 0)
-        return 0;
-    vtable = *(void ***)g877;
-    if (vtable == NULL || vtable[3] == NULL)
-        return 0;
 
-    ZeroMemory(&description, sizeof(description));
-    description.dwSize = sizeof(description);
-    description.dwFlags = 0x18088;
-    description.dwBufferBytes = buffer_bytes;
-    description.lpwfxFormat = (void *)format;
-    retdec_trace_i32("audio:create-bytes", (int32_t)buffer_bytes);
-    retdec_trace_i32("audio:create-rate", (int32_t)format->nSamplesPerSec);
-    retdec_trace_i32("audio:create-channels", (int32_t)format->nChannels);
-    hr = ((retdec_dsound_create_buffer_fn)vtable[3])(
-        (void *)g877, &description, result, NULL);
-    retdec_trace_hresult("audio:secondary-create-hr", hr);
-    if (FAILED(hr) || *result == NULL) {
-        *result = NULL;
-        return 0;
-    }
-    return 1;
-}
 
-static int retdec_read_asset_bytes(const char *path,
-                                   unsigned char **data,
-                                   DWORD *size)
-{
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    DWORD asset_size;
-    DWORD file_size;
-    unsigned char *contents;
 
-    if (data == NULL || size == NULL || path == NULL)
-        return 0;
-    *data = NULL;
-    *size = 0;
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, path))
-        return 0;
 
-    reader = (int32_t *)(intptr_t)reader_slot;
-    if (reader == NULL || reader[1] == 0) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    if (g765 != 0) {
-        asset_size = (DWORD)reader[3];
-    } else {
-        file_size = GetFileSize((HANDLE)(intptr_t)reader[1], NULL);
-        if (file_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
-            retdec_destroy_reader(reader);
-            return 0;
-        }
-        asset_size = file_size;
-    }
-    if (asset_size == 0) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    contents = (unsigned char *)malloc(asset_size);
-    if (contents == NULL ||
-        !retdec_reader_read_exact(reader_slot, contents, asset_size)) {
-        free(contents);
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    retdec_destroy_reader(reader);
-    *data = contents;
-    *size = asset_size;
-    return 1;
-}
-
-static uint32_t retdec_bgm_read_u32(const unsigned char *bytes)
-{
-    return (uint32_t)bytes[0] |
-           ((uint32_t)bytes[1] << 8) |
-           ((uint32_t)bytes[2] << 16) |
-           ((uint32_t)bytes[3] << 24);
-}
 
 /* The original loader reads an optional RIFF/SFPL sidecar to obtain the
    loop region.  The packaged reader has already removed its XOR layer here. */
-static int retdec_bgm_read_loop_points(const char *path,
-                                       DWORD *loop_start,
-                                       DWORD *loop_end)
-{
-    char sidecar[MAX_PATH];
-    unsigned char *data = NULL;
-    DWORD size = 0;
-    DWORD start = 0;
-    DWORD length = 0;
-    DWORD index;
-    size_t path_length;
 
-    if (path == NULL || loop_start == NULL || loop_end == NULL)
-        return 0;
-    path_length = strlen(path);
-    if (path_length < 4 || path_length >= sizeof(sidecar))
-        return 0;
-    memcpy(sidecar, path, path_length + 1);
-    sidecar[path_length - 3] = 's';
-    sidecar[path_length - 2] = 'f';
-    sidecar[path_length - 1] = 'l';
-    if (!retdec_read_asset_bytes(sidecar, &data, &size))
-        return 0;
 
-    for (index = 0; index + 8 <= size; ++index) {
-        const unsigned char *chunk = data + index;
-        DWORD chunk_size = retdec_bgm_read_u32(chunk + 4);
 
-        if (memcmp(chunk, "cue ", 4) == 0 && chunk_size >= 28 &&
-            chunk_size <= size - index - 8 &&
-            retdec_bgm_read_u32(chunk + 8) != 0) {
-            const unsigned char *cue_point = chunk + 12;
-            start = retdec_bgm_read_u32(cue_point + 4);
-        }
-        if (memcmp(chunk, "ltxt", 4) == 0 && chunk_size >= 8 &&
-            chunk_size <= size - index - 8)
-            length = retdec_bgm_read_u32(chunk + 12);
-    }
-    free(data);
-    if (start == 0 || length == 0 || start > UINT32_MAX - length)
-        return 0;
-    *loop_start = start;
-    *loop_end = start + length;
-    return *loop_end > *loop_start;
-}
 
-static int retdec_decode_bgm(const char *path,
-                             short **samples,
-                             DWORD *sample_bytes,
-                             DWORD *sample_rate,
-                             WORD *channels)
-{
-    unsigned char *encoded = NULL;
-    DWORD encoded_size = 0;
-    stb_vorbis *decoder;
-    stb_vorbis_info info;
-    unsigned int frame_count;
-    size_t short_count;
-    short *decoded = NULL;
-    int error = 0;
-    int frame_cursor = 0;
-    int frame_total;
 
-    if (samples == NULL || sample_bytes == NULL || sample_rate == NULL ||
-        channels == NULL)
-        return 0;
-    *samples = NULL;
-    *sample_bytes = 0;
-    *sample_rate = 0;
-    *channels = 0;
-    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size))
-        return 0;
 
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error, NULL);
-    if (decoder == NULL) {
-        free(encoded);
-        retdec_trace_i32("audio:vorbis-open-error", error);
-        return 0;
-    }
-    info = stb_vorbis_get_info(decoder);
-    frame_count = stb_vorbis_stream_length_in_samples(decoder);
-    if (info.channels <= 0 || info.channels > 8 || info.sample_rate == 0 ||
-        frame_count == 0) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
 
-    short_count = (size_t)frame_count * (size_t)info.channels;
-    if (short_count > (size_t)0x7fffffff ||
-        short_count > (size_t)0xffffffffu / sizeof(short)) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    decoded = (short *)malloc(short_count * sizeof(short));
-    if (decoded == NULL) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
 
-    frame_total = (int)frame_count;
-    while (frame_cursor < frame_total) {
-        int remaining_frames = frame_total - frame_cursor;
-        int got = stb_vorbis_get_samples_short_interleaved(
-            decoder, info.channels, decoded +
-                (size_t)frame_cursor * (size_t)info.channels,
-            remaining_frames * info.channels);
-        if (got <= 0)
-            break;
-        frame_cursor += got;
-    }
-    stb_vorbis_close(decoder);
-    free(encoded);
-    if (frame_cursor <= 0) {
-        free(decoded);
-        return 0;
-    }
 
-    *samples = decoded;
-    *sample_bytes = (DWORD)((size_t)frame_cursor *
-                            (size_t)info.channels * sizeof(short));
-    *sample_rate = info.sample_rate;
-    *channels = (WORD)info.channels;
-    return 1;
-}
 
-static int retdec_fill_dsound_buffer(void *buffer,
-                                     const void *samples,
-                                     DWORD sample_bytes)
-{
-    void **vtable;
-    void *part1 = NULL;
-    void *part2 = NULL;
-    DWORD part1_bytes = 0;
-    DWORD part2_bytes = 0;
-    DWORD first_copy;
-    HRESULT hr;
 
-    if (buffer == NULL || samples == NULL || sample_bytes == 0)
-        return 0;
-    vtable = *(void ***)buffer;
-    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
-        return 0;
-    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
-        buffer, 0, sample_bytes, &part1, &part1_bytes,
-        &part2, &part2_bytes, 0);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:secondary-lock-hr", hr);
-        return 0;
-    }
-    first_copy = part1_bytes < sample_bytes ? part1_bytes : sample_bytes;
-    if (first_copy != 0)
-        memcpy(part1, samples, first_copy);
-    if (part2_bytes != 0 && first_copy < sample_bytes) {
-        DWORD second_copy = part2_bytes < sample_bytes - first_copy
-            ? part2_bytes : sample_bytes - first_copy;
-        memcpy(part2, (const unsigned char *)samples + first_copy,
-               second_copy);
-    }
-    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
-        buffer, part1, part1_bytes, part2, part2_bytes);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:secondary-unlock-hr", hr);
-        return 0;
-    }
-    return first_copy + part2_bytes >= sample_bytes;
-}
 
-static void retdec_set_dsound_volume(void *buffer, float gain)
-{
-    void **vtable;
 
-    if (buffer == NULL)
-        return;
-    vtable = *(void ***)buffer;
-    if (vtable != NULL && vtable[15] != NULL)
-        ((retdec_dsound_buffer_set_volume_fn)vtable[15])(
-            buffer, retdec_audio_volume_db(gain));
-}
 
-#define RETDEC_BGM_BUFFER_BYTES 0x100000u
-#define RETDEC_BGM_CHUNK_BYTES  0x8000u
-#define RETDEC_BGM_MAX_CHANNELS 8
-#define RETDEC_BGM_GUARD_BYTES 16u
 
-static void retdec_bgm_write_guard(void *memory, DWORD size)
-{
-    DWORD index;
-    unsigned char *bytes = (unsigned char *)memory;
 
-    if (bytes == NULL)
-        return;
-    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index)
-        bytes[size + index] = 0xA5u;
-}
 
-static int retdec_bgm_check_guard(const void *memory, DWORD size)
-{
-    DWORD index;
-    const unsigned char *bytes = (const unsigned char *)memory;
 
-    if (bytes == NULL)
-        return 0;
-    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index) {
-        if (bytes[size + index] != 0xA5u)
-            return 0;
-    }
-    return 1;
-}
 
-static void retdec_bgm_release_state(retdec_bgm_track_state *track)
-{
-    if (track == NULL)
-        return;
-    if (track->buffer != NULL) {
-        DWORD status = 0;
-        int wait_count;
-        retdec_trace_i32("bgm:release-handle", (int32_t)track->handle);
-        void **vtable = *(void ***)track->buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
-        if (vtable != NULL && vtable[9] != NULL) {
-            for (wait_count = 0; wait_count < 100; ++wait_count) {
-                if (FAILED(((retdec_dsound_buffer_get_status_fn)vtable[9])(
-                               track->buffer, &status)) ||
-                    (status & 1u) == 0)
-                    break;
-                Sleep(1);
-            }
-        }
-        retdec_release_dsound_buffer(track->buffer);
-    }
-    if (track->decoder != NULL)
-        stb_vorbis_close(track->decoder);
-    /* BGM owns the dynamically created DirectSound buffer and its decoder. */
-    free(track->encoded_data);
-    free(track->decoded_samples);
-    free(track->decode_scratch);
-    ZeroMemory(track, sizeof(*track));
-}
 
-static retdec_bgm_track_state *retdec_bgm_find_track(uint32_t handle)
-{
-    int index;
 
-    if (handle == 0)
-        return NULL;
-    if (g_retdec_bgm_track.buffer != NULL &&
-        g_retdec_bgm_track.handle == handle)
-        return &g_retdec_bgm_track;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer != NULL &&
-            g_retdec_bgm_fading_tracks[index].handle == handle)
-            return &g_retdec_bgm_fading_tracks[index];
-    }
-    return NULL;
-}
 
-static void retdec_bgm_apply_state_volume(retdec_bgm_track_state *track,
-                                          float gain)
-{
-    float effective_gain;
-
-    if (track == NULL || track->buffer == NULL)
-        return;
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    track->volume = gain;
-    effective_gain = gain * g_retdec_audio_master_volume;
-    retdec_set_dsound_volume(track->buffer, effective_gain);
-}
-
-static int retdec_bgm_write_buffer(retdec_bgm_track_state *track,
-                                   const void *samples, DWORD bytes)
-{
-    void **vtable;
-    void *part1 = NULL;
-    void *part2 = NULL;
-    DWORD part1_bytes = 0;
-    DWORD part2_bytes = 0;
-    DWORD first_copy;
-    DWORD second_copy;
-    HRESULT hr;
-
-    if (track == NULL || track->buffer == NULL || samples == NULL ||
-        bytes == 0 || track->buffer_bytes == 0 ||
-        bytes > track->buffer_bytes)
-        return 0;
-    retdec_trace_i32("bgm:write-handle", (int32_t)track->handle);
-    retdec_trace_i32("bgm:write-offset", (int32_t)track->write_offset);
-    retdec_trace_i32("bgm:write-bytes", (int32_t)bytes);
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
-        return 0;
-    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
-        track->buffer, track->write_offset, bytes, &part1, &part1_bytes,
-        &part2, &part2_bytes, 0);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:stream-lock-hr", hr);
-        return 0;
-    }
-    retdec_trace_i32("bgm:lock-part1", (int32_t)part1_bytes);
-    retdec_trace_i32("bgm:lock-part2", (int32_t)part2_bytes);
-    first_copy = part1_bytes < bytes ? part1_bytes : bytes;
-    second_copy = bytes - first_copy;
-    if (second_copy > part2_bytes)
-        second_copy = part2_bytes;
-    if (first_copy != 0)
-        memcpy(part1, samples, first_copy);
-    if (second_copy != 0)
-        memcpy(part2, (const unsigned char *)samples + first_copy,
-               second_copy);
-    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
-        track->buffer, part1, part1_bytes, part2, part2_bytes);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:stream-unlock-hr", hr);
-        return 0;
-    }
-    track->write_offset = (track->write_offset + bytes) &
-                          (track->buffer_bytes - 1);
-    return first_copy + second_copy == bytes;
-}
-
-static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
-                                         short *output,
-                                         DWORD requested_frames)
-{
-    DWORD request_frames;
-    DWORD seek_frame;
-    int got;
-
-    if (track == NULL || track->decoder == NULL || output == NULL ||
-        requested_frames == 0)
-        return 0;
-
-    /* 412240 reads at most 4096 PCM bytes, then seeks past the loop start
-       by any overshoot.  Track delivered samples, not decoder read-ahead. */
-    request_frames = 4096u / ((DWORD)track->channels * sizeof(short));
-    if (request_frames > requested_frames)
-        request_frames = requested_frames;
-    got = stb_vorbis_get_samples_short_interleaved(
-        track->decoder, track->channels, output,
-        (int)(request_frames * (DWORD)track->channels));
-    if (got > 0) {
-        track->source_frame += (DWORD)got;
-        if (track->source_frame <= track->loop_end_frame)
-            return got;
-        seek_frame = track->source_frame - track->loop_end_frame +
-                     track->loop_start_frame;
-        if (!stb_vorbis_seek(track->decoder, seek_frame)) {
-            track->source_ended = 1;
-            return got;
-        }
-        track->source_frame = seek_frame;
-        retdec_trace_i32("bgm:loop-seek-frame", (int32_t)seek_frame);
-    }
-    return got;
-}
 
 /* Decode only the amount that is about to be written.  BgmBuffer creates its
    DirectSound buffer from the Vorbis stream format, so preserve the source
    channel interleave exactly as the original decoder does. */
-static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
-                                     unsigned char *output, DWORD bytes)
-{
-    DWORD requested_frames;
-    DWORD written_frames = 0;
-    int channels;
-
-    if (track == NULL || track->decoder == NULL || output == NULL ||
-        bytes == 0)
-        return 0;
-    channels = track->channels;
-    if (channels <= 0 || channels > RETDEC_BGM_MAX_CHANNELS)
-        return 0;
-    /* The original Vorbis helper produces 16-bit PCM.  Decode directly into
-       the destination instead of routing through float samples; the latter
-       can yield NaNs in this mixed RetDec translation unit and turns into
-       clipped noise after integer conversion. */
-    requested_frames = bytes / ((DWORD)channels * sizeof(short));
-    while (written_frames < requested_frames) {
-        int got;
-        short *destination = (short *)output +
-            (size_t)written_frames * (size_t)channels;
-
-        if (track->looping && track->loop_end_frame >
-                track->loop_start_frame) {
-            got = retdec_bgm_decode_loop_frames(
-                track, destination, requested_frames - written_frames);
-        } else {
-            got = stb_vorbis_get_samples_short_interleaved(
-                track->decoder, channels, destination,
-                (int)((requested_frames - written_frames) *
-                      (DWORD)channels));
-        }
-        if (got <= 0) {
-            if (!track->looping || track->source_ended) {
-                if (!track->source_ended)
-                    retdec_trace_i32("bgm:source-ended", (int32_t)track->handle);
-                track->source_ended = 1;
-                break;
-            }
-            if (!stb_vorbis_seek_start(track->decoder)) {
-                track->source_ended = 1;
-                break;
-            }
-            track->source_frame = 0;
-            continue;
-        }
-        written_frames += (DWORD)got;
-    }
-    return written_frames * (DWORD)channels * sizeof(short);
-}
-
-static int retdec_bgm_fill_chunk(retdec_bgm_track_state *track, DWORD bytes)
-{
-    DWORD decoded;
-
-    if (track == NULL || track->decoded_samples == NULL || bytes == 0 ||
-        bytes > RETDEC_BGM_CHUNK_BYTES)
-        return 0;
-    if (!retdec_bgm_check_guard(track->decode_scratch,
-                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
-        !retdec_bgm_check_guard(track->decoded_samples,
-                                RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:decode-guard-before-failed");
-        return 0;
-    }
-    decoded = retdec_bgm_decode_chunk(track, (unsigned char *)
-                                      track->decoded_samples, bytes);
-    if (decoded < bytes)
-        memset((unsigned char *)track->decoded_samples + decoded, 0,
-               bytes - decoded);
-    if (!retdec_bgm_check_guard(track->decode_scratch,
-                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
-        !retdec_bgm_check_guard(track->decoded_samples,
-                                RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:decode-guard-after-failed");
-        return 0;
-    }
-#if defined(RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
-    retdec_trace("bgm:write-skipped");
-    return 1;
-#else
-    if (!retdec_bgm_write_buffer(track, track->decoded_samples, bytes))
-        return 0;
-    return 1;
-#endif
-}
-
-static void retdec_bgm_release_track_locked(void)
-{
-    retdec_bgm_release_state(&g_retdec_bgm_track);
-}
-
-static void retdec_bgm_release_track(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_release_track_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_release_all_tracks_locked(void)
-{
-    int index;
-
-    retdec_bgm_release_state(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[index]);
-    g637 = 0;
-}
-
-static void retdec_bgm_release_all_tracks(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_release_all_tracks_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_se_entries_release(void)
-{
-    int index;
-
-    for (index = 0; index < g_retdec_se_entry_count; ++index) {
-        void *buffer = g_retdec_se_entries[index].buffer;
-        void **vtable;
-
-        if (buffer == NULL)
-            continue;
-        vtable = *(void ***)buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(buffer);
-        retdec_release_dsound_buffer(buffer);
-        g_retdec_se_entries[index].buffer = NULL;
-        g_retdec_se_entries[index].buffer_bytes = 0;
-    }
-    ZeroMemory(g_retdec_se_entries, sizeof(g_retdec_se_entries));
-    g_retdec_se_entry_count = 0;
-}
-
-static void retdec_se_pool_release(void)
-{
-    int index;
-
-    retdec_se_entries_release();
-    for (index = 0; index < 32; ++index) {
-        retdec_release_dsound_buffer(g_retdec_se_pool.stream_slots[index].buffer);
-        g_retdec_se_pool.stream_slots[index].buffer = NULL;
-        g_retdec_se_pool.stream_slots[index].buffer_bytes = 0;
-        g_retdec_se_pool.stream_slots[index].in_use = 0;
-    }
-    g_retdec_se_pool.initialized = 0;
-}
-
-static int retdec_se_parse_wave_asset(const char *path,
-                                      retdec_wave_format *format,
-                                      unsigned char **samples,
-                                      DWORD *sample_bytes)
-{
-    unsigned char *data = NULL;
-    DWORD size = 0;
-    size_t path_length;
-
-    if (path == NULL || format == NULL || samples == NULL ||
-        sample_bytes == NULL)
-        return 0;
-    *samples = NULL;
-    *sample_bytes = 0;
-    ZeroMemory(format, sizeof(*format));
-    if (!retdec_read_asset_bytes(path, &data, &size))
-        return 0;
-
-    path_length = strlen(path);
-    if (path_length >= 4 &&
-        _stricmp(path + path_length - 4, ".cv3") == 0) {
-        DWORD payload_bytes;
-
-        /* Packed SE files are WAVEFORMATEX followed by a DWORD payload size
-           and the raw PCM.  This is the exact layout consumed by the
-           original CPackageFileReader path. */
-        if (size < 22)
-            goto failed;
-        memcpy(format, data, sizeof(*format));
-        payload_bytes = retdec_bgm_read_u32(data + 18);
-        if (payload_bytes == 0 || payload_bytes > size - 22)
-            goto failed;
-        if (format->wFormatTag != 1 || format->nChannels == 0 ||
-            format->nSamplesPerSec == 0 || format->nBlockAlign == 0 ||
-            format->wBitsPerSample == 0)
-            goto failed;
-        *samples = (unsigned char *)malloc(payload_bytes);
-        if (*samples == NULL)
-            goto failed;
-        memcpy(*samples, data + 22, payload_bytes);
-        *sample_bytes = payload_bytes;
-        free(data);
-        return 1;
-    }
-
-    /* Loose-file mode uses the original RIFF/WAVE parser instead of the
-       packed CV3 envelope.  Accept the normal chunk ordering and ignore
-       metadata chunks between fmt and data. */
-    if (size >= 12 && memcmp(data, "RIFF", 4) == 0 &&
-        memcmp(data + 8, "WAVE", 4) == 0) {
-        DWORD offset = 12;
-        int have_format = 0;
-        while (offset <= size && size - offset >= 8) {
-            const unsigned char *chunk = data + offset;
-            DWORD chunk_bytes = retdec_bgm_read_u32(chunk + 4);
-            DWORD available = size - offset - 8;
-
-            if (chunk_bytes > available)
-                goto failed;
-            if (memcmp(chunk, "fmt ", 4) == 0 && chunk_bytes >= 16) {
-                ZeroMemory(format, sizeof(*format));
-                memcpy(format, chunk + 8,
-                       chunk_bytes >= sizeof(*format)
-                           ? sizeof(*format) : chunk_bytes);
-                have_format = format->wFormatTag == 1 &&
-                    format->nChannels != 0 &&
-                    format->nSamplesPerSec != 0 &&
-                    format->nBlockAlign != 0 &&
-                    format->wBitsPerSample != 0;
-            } else if (memcmp(chunk, "data", 4) == 0 && have_format) {
-                *samples = (unsigned char *)malloc(chunk_bytes);
-                if (*samples == NULL)
-                    goto failed;
-                memcpy(*samples, chunk + 8, chunk_bytes);
-                *sample_bytes = chunk_bytes;
-                free(data);
-                return chunk_bytes != 0;
-            }
-            offset += 8 + chunk_bytes + (chunk_bytes & 1u);
-        }
-    }
-
-failed:
-    free(*samples);
-    *samples = NULL;
-    *sample_bytes = 0;
-    free(data);
-    return 0;
-}
-
-static int retdec_se_replace_extension(const char *source, char *path,
-                                       size_t path_size)
-{
-    size_t length;
-
-    if (source == NULL || path == NULL || path_size == 0)
-        return 0;
-    length = strlen(source);
-    if (length + 1 > path_size)
-        return 0;
-    memcpy(path, source, length + 1);
-    if (g874 != 0 && length >= 4 &&
-        _stricmp(path + length - 4, ".wav") == 0) {
-        path[length - 3] = 'c';
-        path[length - 2] = 'v';
-        path[length - 1] = '3';
-    }
-    return 1;
-}
-
-static int retdec_se_load_entry(int id, const char *source)
-{
-    char path[MAX_PATH];
-    retdec_wave_format format;
-    unsigned char *samples = NULL;
-    DWORD sample_bytes = 0;
-    void *buffer = NULL;
-    void **vtable;
-    HRESULT hr;
-    int index;
-
-    if (source == NULL || id < 0 ||
-        !retdec_se_replace_extension(source, path, sizeof(path)) ||
-        !retdec_se_parse_wave_asset(path, &format, &samples, &sample_bytes)) {
-        retdec_trace_i32("loadse:entry-failed", id);
-        return 0;
-    }
-    if (!retdec_create_secondary_buffer(&format, sample_bytes, &buffer) ||
-        !retdec_fill_dsound_buffer(buffer, samples, sample_bytes)) {
-        retdec_release_dsound_buffer(buffer);
-        free(samples);
-        retdec_trace_i32("loadse:buffer-failed", id);
-        return 0;
-    }
-    free(samples);
-    retdec_set_dsound_volume(buffer, g_retdec_se_pool.master_volume);
-
-    vtable = *(void ***)buffer;
-    hr = vtable != NULL && vtable[13] != NULL
-        ? ((retdec_dsound_buffer_set_position_fn)vtable[13])(buffer, 0)
-        : S_OK;
-    if (FAILED(hr)) {
-        retdec_release_dsound_buffer(buffer);
-        return 0;
-    }
-
-    for (index = 0; index < g_retdec_se_entry_count; ++index) {
-        if (g_retdec_se_entries[index].id == id) {
-            retdec_release_dsound_buffer(g_retdec_se_entries[index].buffer);
-            g_retdec_se_entries[index].buffer = buffer;
-            g_retdec_se_entries[index].buffer_bytes = sample_bytes;
-            return 1;
-        }
-    }
-    if (g_retdec_se_entry_count >= RETDEC_SE_MAX_ENTRIES) {
-        retdec_release_dsound_buffer(buffer);
-        return 0;
-    }
-    g_retdec_se_entries[g_retdec_se_entry_count].id = id;
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer = buffer;
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer_bytes = sample_bytes;
-    ++g_retdec_se_entry_count;
-    retdec_trace_i32("loadse:entry-loaded", id);
-    return 1;
-}
-
-static int retdec_se_pool_initialize(void)
-{
-    retdec_wave_format format;
-    int index;
-    int created = 0;
-
-    if (g_retdec_se_pool.initialized)
-        return 1;
-    ZeroMemory(&g_retdec_se_pool, sizeof(g_retdec_se_pool));
-    ZeroMemory(&format, sizeof(format));
-    format.wFormatTag = 1;
-    format.nChannels = 1;
-    format.nSamplesPerSec = 44100;
-    format.nAvgBytesPerSec = 88200;
-    format.nBlockAlign = 2;
-    format.wBitsPerSample = 16;
-
-    for (index = 0; index < 32; ++index) {
-        if (retdec_create_secondary_buffer(&format, 0x40000,
-                                            &g_retdec_se_pool.stream_slots[
-                                                index].buffer)) {
-            g_retdec_se_pool.stream_slots[index].buffer_bytes = 0x40000;
-            g_retdec_se_pool.stream_slots[index].in_use = 0;
-            ++created;
-        }
-    }
-    g_retdec_se_pool.master_volume = 1.0f;
-    g_retdec_se_pool.initialized = 1;
-    retdec_trace_i32("40b520:secondary-created", created);
-    return created != 0;
-}
-
-static void retdec_se_pool_set_volume(float gain)
-{
-    int index;
-
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    g_retdec_se_pool.master_volume = gain;
-    for (index = 0; index < 32; ++index)
-        retdec_set_dsound_volume(g_retdec_se_pool.stream_slots[index].buffer,
-                                 gain);
-}
-
-static void retdec_bgm_apply_track_volume(float gain)
-{
-    int index;
-
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    g_retdec_audio_master_volume = gain;
-    retdec_bgm_apply_state_volume(&g_retdec_bgm_track,
-                                  g_retdec_bgm_track.volume);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_apply_state_volume(&g_retdec_bgm_fading_tracks[index],
-                                      g_retdec_bgm_fading_tracks[index].volume);
-}
-
-static void retdec_bgm_update_fade_locked(void)
-{
-    DWORD now = timeGetTime();
-    int index;
-
-    for (index = -1; index < 31; ++index) {
-        retdec_bgm_track_state *track = index < 0
-            ? &g_retdec_bgm_track : &g_retdec_bgm_fading_tracks[index];
-        DWORD elapsed;
-        float ratio;
-
-        if (track->buffer == NULL || track->fade_duration == 0)
-            continue;
-        if ((int32_t)(now - track->fade_started) < 0)
-            continue;
-        elapsed = now - track->fade_started;
-        if (elapsed >= track->fade_duration) {
-            retdec_bgm_apply_state_volume(track, track->fade_to);
-            track->fade_duration = 0;
-            if (track->fade_to <= 0.0f) {
-                if (track == &g_retdec_bgm_track)
-                    g637 = 0;
-                retdec_bgm_release_state(track);
-            }
-            continue;
-        }
-        ratio = (float)elapsed / (float)track->fade_duration;
-        retdec_bgm_apply_state_volume(
-            track, track->fade_from +
-            (track->fade_to - track->fade_from) * ratio);
-    }
-}
-
-static void retdec_bgm_update_fade(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_begin_fade_locked(retdec_bgm_track_state *track,
-                                         DWORD duration, float target,
-                                         DWORD start_delay)
-{
-    if (track == NULL || track->buffer == NULL)
-        return;
-    if (target < 0.0f)
-        target = 0.0f;
-    if (target > 1.0f)
-        target = 1.0f;
-    track->fade_from = track->volume;
-    track->fade_to = target;
-    track->fade_started = timeGetTime() + start_delay;
-    track->fade_duration = duration;
-    if (duration == 0)
-        retdec_bgm_apply_state_volume(track, target);
-}
-
-static void retdec_bgm_begin_fade(DWORD duration, float target)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_begin_fade_locked(&g_retdec_bgm_track, duration, target, 0);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
-                                             DWORD duration,
-                                             DWORD start_delay,
-                                             float target)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_begin_fade_locked(retdec_bgm_find_track(handle), duration,
-                                 target, start_delay);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_stop_for_handle(uint32_t handle)
-{
-    retdec_bgm_track_state *track;
-    void **vtable;
-
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track(handle);
-    if (track != NULL && track->buffer != NULL) {
-        vtable = *(void ***)track->buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
-        if (vtable != NULL && vtable[13] != NULL)
-            ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-                track->buffer, 0);
-        track->started = 0;
-        track->playing = 0;
-        track->play_offset = 0;
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_release_for_handle(uint32_t handle)
-{
-    retdec_bgm_track_state *track;
-
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track(handle);
-    if (track != NULL)
-        retdec_bgm_release_state(track);
-    if (handle == g637)
-        g637 = 0;
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *path,
-                                    int looping, float32_t volume)
-{
-    unsigned char *encoded = NULL;
-    DWORD encoded_size = 0;
-    stb_vorbis *decoder = NULL;
-    stb_vorbis_info info;
-    int error = 0;
-    retdec_bgm_track_state *track = &g_retdec_bgm_track;
-    void *buffer;
-    unsigned char *scratch = NULL;
-    short *decoded_scratch = NULL;
-    retdec_wave_format format;
-
-    retdec_trace_audio_text("bgm:prepare-path", path);
-    retdec_trace_i32("bgm:prepare-handle", (int32_t)handle);
-    if (path == NULL || g877 == NULL || handle == 0 ||
-        track->buffer != NULL)
-        return 0;
-    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size)) {
-        retdec_trace("bgm:asset-read-failed");
-        return 0;
-    }
-    retdec_trace_i32("bgm:encoded-bytes", (int32_t)encoded_size);
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error,
-                                      NULL);
-    if (decoder == NULL) {
-        free(encoded);
-        retdec_trace_i32("audio:vorbis-open-error", error);
-        return 0;
-    }
-    info = stb_vorbis_get_info(decoder);
-    retdec_trace_i32("bgm:sample-rate", (int32_t)info.sample_rate);
-    retdec_trace_i32("bgm:channels", (int32_t)info.channels);
-    if (info.sample_rate != 44100 || info.channels <= 0 ||
-        info.channels > RETDEC_BGM_MAX_CHANNELS) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        retdec_trace("audio:unsupported-vorbis-format");
-        return 0;
-    }
-
-    ZeroMemory(&format, sizeof(format));
-    format.wFormatTag = 1;
-    format.nChannels = (WORD)info.channels;
-    format.nSamplesPerSec = info.sample_rate;
-    format.nBlockAlign = (WORD)(info.channels * sizeof(short));
-    format.nAvgBytesPerSec = info.sample_rate * format.nBlockAlign;
-    format.wBitsPerSample = 16;
-    if (!retdec_create_secondary_buffer(&format, RETDEC_BGM_BUFFER_BYTES,
-                                        &buffer)) {
-        retdec_trace("bgm:buffer-create-failed");
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    scratch = (unsigned char *)malloc(
-        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-        RETDEC_BGM_MAX_CHANNELS * sizeof(short) + RETDEC_BGM_GUARD_BYTES);
-    if (scratch != NULL)
-        decoded_scratch = (short *)malloc(RETDEC_BGM_CHUNK_BYTES +
-                                          RETDEC_BGM_GUARD_BYTES);
-    if (scratch == NULL || decoded_scratch == NULL) {
-        retdec_trace("bgm:scratch-alloc-failed");
-        retdec_release_dsound_buffer(buffer);
-        free(scratch);
-        free(decoded_scratch);
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    retdec_bgm_write_guard(
-        scratch,
-        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-        RETDEC_BGM_MAX_CHANNELS * sizeof(short));
-    retdec_bgm_write_guard(decoded_scratch, RETDEC_BGM_CHUNK_BYTES);
-    ZeroMemory(track, sizeof(*track));
-    track->handle = handle;
-    track->buffer = buffer;
-    track->buffer_bytes = RETDEC_BGM_BUFFER_BYTES;
-    track->encoded_data = encoded;
-    track->encoded_bytes = encoded_size;
-    track->decode_scratch = (short *)scratch;
-    track->decoded_samples = decoded_scratch;
-    track->decoder = decoder;
-    track->sample_rate = info.sample_rate;
-    track->channels = (WORD)info.channels;
-    track->looping = looping != 0;
-    /* 412203 always loads SFL markers, overriding the whole-file fallback
-       selected by the PlayBgm argument, including when that argument is 0. */
-    if (retdec_bgm_read_loop_points(path, &track->loop_start_frame,
-                                    &track->loop_end_frame))
-        track->looping = 1;
-    retdec_trace_i32("bgm:looping", track->looping);
-    retdec_trace_i32("bgm:loop-start-frame", (int32_t)track->loop_start_frame);
-    retdec_trace_i32("bgm:loop-end-frame", (int32_t)track->loop_end_frame);
-    track->volume = volume;
-    track->write_offset = 0;
-    track->write_window_start = 0;
-    track->play_offset = 0;
-    track->buffered_bytes = 0;
-
-    /* 4096D0 creates the 1 MiB stream buffer and 4099C0 supplies one 0x8000
-       byte block before playback.  The worker keeps the ring filled after
-       that initial block. */
-    retdec_trace("bgm:initial-fill");
-    if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:initial-fill-failed");
-        retdec_bgm_release_track_locked();
-        return 0;
-    }
-    track->buffered_bytes = RETDEC_BGM_CHUNK_BYTES;
-    retdec_bgm_apply_state_volume(track, track->volume);
-    retdec_trace("bgm:prepared");
-    return 1;
-}
-
-static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
-                                    int looping, float32_t volume)
-{
-    return kinoko_prepare_audio(retdec_bgm_prepare_track_default_math,
-                                handle, path, looping, volume);
-}
-
-static void retdec_bgm_archive_current_track(void);
-static int32_t retdec_audio_manager_this(void);
-static void retdec_audio_list_push(int32_t list, int32_t value);
-static int retdec_audio_list_pop(int32_t list, int32_t *value);
-static const char *retdec_audio_buffer_path(int32_t buffer);
-static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle);
-
-static void retdec_bgm_process_pending_locked(void)
-{
-    int32_t list = *(int32_t *)(g_retdec_audio_manager_state + 0x94);
-    int32_t handle;
-
-    while (retdec_audio_list_pop(list, &handle)) {
-        int32_t buffer = retdec_audio_handle_lookup(
-            retdec_audio_manager_this() + 0x38, (uint32_t)handle);
-        const char *path;
-        float volume;
-        int looping;
-        retdec_bgm_track_state *track;
-
-        if (buffer == 0)
-            continue;
-        path = retdec_audio_buffer_path(buffer);
-        retdec_trace_audio_text("bgm:queued-path", path);
-        volume = *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368);
-        looping = *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c);
-        if (path == NULL)
-            continue;
-
-        retdec_bgm_update_fade_locked();
-        retdec_bgm_archive_current_track();
-        if (!retdec_bgm_prepare_track((uint32_t)handle, path, looping,
-                                      volume))
-            continue;
-        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
-        track = &g_retdec_bgm_track;
-        track->start_time = *(uint32_t *)(intptr_t)(uint32_t)
-            (buffer + 0x1350);
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
-    }
-}
-
-static void retdec_bgm_start_track(retdec_bgm_track_state *track)
-{
-    void **vtable;
-    HRESULT hr;
-
-    if (track == NULL || track->buffer == NULL || track->started)
-        return;
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[12] == NULL)
-        return;
-    if (vtable[13] != NULL)
-        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-            track->buffer, 0);
-    retdec_trace("bgm:play");
-    hr = ((retdec_dsound_buffer_play_fn)vtable[12])(track->buffer, 0, 0, 1);
-    retdec_trace_hresult("audio:stream-play-hr", hr);
-    if (SUCCEEDED(hr)) {
-        track->started = 1;
-        track->playing = 1;
-        track->play_offset = 0;
-    }
-}
-
-static void retdec_bgm_service_track(retdec_bgm_track_state *track)
-{
-    void **vtable;
-    DWORD play_cursor;
-    DWORD write_cursor;
-    DWORD consumed;
-    DWORD write_boundary;
-    DWORD write_limit;
-    int in_write_window;
-
-    if (track == NULL || track->buffer == NULL)
-        return;
-    /* 409A11 stops a non-looping stream on the update after a short read.
-       Waiting for the ring to drain can let the hardware read stale PCM. */
-    if (track->source_ended && !track->looping) {
-        retdec_trace_i32("bgm:stop-at-eof", (int32_t)track->handle);
-        if (track == &g_retdec_bgm_track)
-            g637 = 0;
-        retdec_bgm_release_state(track);
-        return;
-    }
-    if (!track->started) {
-        if (track->start_time == 0 ||
-            (int32_t)(timeGetTime() - track->start_time) >= 0)
-            retdec_bgm_start_track(track);
-        if (!track->started)
-            return;
-    }
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[4] == NULL)
-        return;
-    play_cursor = 0;
-    write_cursor = 0;
-    if (FAILED(((retdec_dsound_buffer_get_current_position_fn)vtable[4])(
-                   track->buffer, &play_cursor, &write_cursor)))
-        return;
-    if (track->started && track->play_offset == 0) {
-        retdec_trace_i32("bgm:play-cursor", (int32_t)play_cursor);
-        retdec_trace_i32("bgm:write-cursor", (int32_t)write_cursor);
-    }
-    play_cursor &= track->buffer_bytes - 1;
-    write_cursor &= track->buffer_bytes - 1;
-    consumed = play_cursor >= track->play_offset
-        ? play_cursor - track->play_offset
-        : track->buffer_bytes - track->play_offset + play_cursor;
-    if (consumed > track->buffered_bytes)
-        consumed = track->buffered_bytes;
-    track->buffered_bytes -= consumed;
-    track->play_offset = play_cursor;
-    /* 4099C0 gates the next block with DirectSound's write cursor.  The two
-       fields at 1340/1344 are the next and previous 0x8000-byte boundaries;
-       advancing the previous boundary is what prevents a fast worker from
-       repeatedly overwriting data ahead of the hardware cursor. */
-    in_write_window = 0;
-    if (write_cursor >= track->write_window_start) {
-        write_limit = track->write_offset;
-        if (write_limit <= track->write_window_start)
-            write_limit += track->buffer_bytes;
-        if (write_cursor < write_limit)
-            in_write_window = 1;
-    }
-    if (in_write_window &&
-        !(track->source_ended && !track->looping)) {
-        write_boundary = track->write_offset;
-        if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES))
-            return;
-        retdec_trace_i32("bgm:service-filled", (int32_t)track->handle);
-        track->write_window_start = write_boundary;
-        track->buffered_bytes += RETDEC_BGM_CHUNK_BYTES;
-    }
-}
-
-static void retdec_bgm_service_all_locked(void)
-{
-#if defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
-    return;
-#else
-    int index;
-
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_service_track(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_service_track(&g_retdec_bgm_fading_tracks[index]);
-
-    if (g_retdec_bgm_track.buffer != NULL &&
-        g_retdec_bgm_track.source_ended &&
-        !g_retdec_bgm_track.looping &&
-        g_retdec_bgm_track.buffered_bytes == 0) {
-        retdec_bgm_release_state(&g_retdec_bgm_track);
-        g637 = 0;
-    }
-    for (index = 0; index < 31; ++index) {
-        retdec_bgm_track_state *track = &g_retdec_bgm_fading_tracks[index];
-        if (track->buffer != NULL && track->source_ended &&
-            !track->looping && track->buffered_bytes == 0)
-            retdec_bgm_release_state(track);
-    }
-#endif
-}
-
-static void retdec_bgm_archive_current_track(void)
-{
-    int index;
-
-    if (g_retdec_bgm_track.buffer == NULL)
-        return;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer == NULL) {
-            g_retdec_bgm_fading_tracks[index] = g_retdec_bgm_track;
-            ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
-            return;
-        }
-    }
-    /* The original manager is bounded by the 32 preallocated buffers.  If
-       callers replace tracks faster than the fade window, reclaim the oldest
-       fading slot so the new handle can still be created. */
-    retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[0]);
-    for (index = 1; index < 31; ++index)
-        g_retdec_bgm_fading_tracks[index - 1] =
-            g_retdec_bgm_fading_tracks[index];
-    g_retdec_bgm_fading_tracks[30] = g_retdec_bgm_track;
-    ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
-}
-
-static void retdec_bgm_stop(int reset_position)
-{
-    void **vtable;
-
-    if (g_retdec_bgm_track.buffer == NULL)
-        return;
-    vtable = *(void ***)g_retdec_bgm_track.buffer;
-    if (vtable != NULL && vtable[18] != NULL)
-        ((retdec_dsound_buffer_stop_fn)vtable[18])(g_retdec_bgm_track.buffer);
-    if (reset_position && vtable != NULL && vtable[13] != NULL)
-        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-            g_retdec_bgm_track.buffer, 0);
-    g_retdec_bgm_track.playing = 0;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Restore the contiguous DirectSound manager that the original methods use.
    The generated globals above retain their RetDec names for reference, but
    calls through 0x51B1C0 must see the original offsets. */
-static int32_t retdec_audio_manager_this(void)
-{
-    return (int32_t)(intptr_t)g_retdec_audio_manager_state;
-}
 
-static int32_t retdec_audio_manager_list_init(uint32_t offset)
-{
-    int32_t node = (int32_t)(intptr_t)malloc(12);
 
-    if (node == 0) {
-        return 0;
-    }
-    *(int32_t *)(g_retdec_audio_manager_state + offset) = node;
-    *(int32_t *)(intptr_t)(uint32_t)node = node;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = node;
-    return 1;
-}
 
-static void retdec_audio_list_push(int32_t list, int32_t value)
-{
-    int32_t node;
-    int32_t previous;
 
-    if (list == 0) {
-        return;
-    }
-    node = (int32_t)(intptr_t)malloc(12);
-    if (node == 0) {
-        return;
-    }
-    previous = *(int32_t *)(intptr_t)(uint32_t)(list + 4);
-    *(int32_t *)(intptr_t)(uint32_t)node = list;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = previous;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 8) = value;
-    *(int32_t *)(intptr_t)(uint32_t)(previous) = node;
-    *(int32_t *)(intptr_t)(uint32_t)(list + 4) = node;
-}
 
-static int retdec_audio_list_pop(int32_t list, int32_t *value)
-{
-    int32_t node;
-    int32_t next;
-    int32_t previous;
 
-    if (list == 0)
-        return 0;
-    node = *(int32_t *)(intptr_t)(uint32_t)list;
-    if (node == list)
-        return 0;
-    next = *(int32_t *)(intptr_t)(uint32_t)node;
-    previous = *(int32_t *)(intptr_t)(uint32_t)(node + 4);
-    *(int32_t *)(intptr_t)(uint32_t)previous = next;
-    *(int32_t *)(intptr_t)(uint32_t)(next + 4) = previous;
-    if (value != NULL)
-        *value = *(int32_t *)(intptr_t)(uint32_t)(node + 8);
-    free((void *)(intptr_t)(uint32_t)node);
-    return 1;
-}
 
-static const char *retdec_audio_buffer_path(int32_t buffer)
-{
-    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
 
-    if (object == NULL)
-        return NULL;
-    if (*(uint32_t *)(object + 20) < 16)
-        return (const char *)object;
-    return *(const char **)(object);
-}
 
-static void retdec_audio_buffer_initialize(int32_t buffer)
-{
-    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
 
-    memset(object, 0, 0x1378);
-    *(uint32_t *)(object + 0x14) = 15;
-    *(uint32_t *)(object + 0x24) = (uint32_t)(uintptr_t)&g208;
-    *(float32_t *)(object + 0x135c) = 1.0f;
-    *(uint32_t *)(object + 0x1c) = 3;
-}
 
-static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle)
-{
-    uint32_t index = handle & 0xffffu;
-    uint32_t generation = handle >> 16;
-    uint32_t *buffers;
-    uint32_t *generations;
-    uint32_t begin;
-    uint32_t end;
 
-    if (manager == 0) {
-        return 0;
-    }
-    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
-    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
-    generations = (uint32_t *)(intptr_t)(uint32_t)
-        (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14));
-    retdec_trace_i32("audio:lookup-manager", manager);
-    retdec_trace_i32("audio:lookup-handle", (int32_t)handle);
-    retdec_trace_i32("audio:lookup-begin", (int32_t)begin);
-    retdec_trace_i32("audio:lookup-end", (int32_t)end);
-    retdec_trace_i32("audio:lookup-generations", (int32_t)(intptr_t)generations);
-    if (begin == 0 || end < begin || index >= (end - begin) / 4) {
-        return 0;
-    }
-    if (generations == 0 || generations[index] != generation) {
-        retdec_trace_i32("audio:lookup-generation",
-                         generations == 0 ? 0 : (int32_t)generations[index]);
-        return 0;
-    }
-    buffers = (uint32_t *)(intptr_t)begin;
-    retdec_trace_i32("audio:lookup-buffer", (int32_t)buffers[index]);
-    return (int32_t)(intptr_t)(uintptr_t)buffers[index];
-}
 
-static int32_t retdec_audio_handle_create(int32_t manager, int32_t output)
-{
-    uint32_t *buffers;
-    uint32_t *generations;
-    uint32_t *new_buffers;
-    uint32_t *new_generations;
-    uint32_t begin;
-    uint32_t end;
-    uint32_t generation_begin;
-    uint32_t generation_end;
-    uint32_t count;
-    uint32_t generation;
-    uint32_t handle;
-    int32_t buffer;
-    int32_t list;
 
-    if (manager == 0 || output == 0) {
-        return 0;
-    }
 
-    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
-    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
-    generation_begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14);
-    generation_end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18);
-    if (begin == 0 || end < begin) {
-        count = 0;
-    } else {
-        count = (end - begin) / 4;
-    }
-    retdec_trace_i32("audio:create-manager", manager);
-    retdec_trace_i32("audio:create-count", (int32_t)count);
 
-    buffer = (int32_t)(intptr_t)malloc(0x1378);
-    if (buffer == 0) {
-        return 0;
-    }
-    retdec_audio_buffer_initialize(buffer);
 
-    new_buffers = (uint32_t *)malloc((count + 1) * sizeof(*new_buffers));
-    new_generations = (uint32_t *)malloc(
-        (count + 1) * sizeof(*new_generations));
-    if (new_buffers == 0 || new_generations == 0) {
-        free(new_buffers);
-        free(new_generations);
-        free((void *)(intptr_t)(uint32_t)buffer);
-        return 0;
-    }
-    if (count != 0) {
-        memcpy(new_buffers, (void *)(intptr_t)begin,
-               count * sizeof(*new_buffers));
-        if (generation_begin != 0 && generation_end >= generation_begin) {
-            memcpy(new_generations, (void *)(intptr_t)generation_begin,
-                   count * sizeof(*new_generations));
-        } else {
-            memset(new_generations, 0,
-                   count * sizeof(*new_generations));
-        }
-    }
 
-    generation = (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) + 1)
-                 & 0xffffu;
-    if (generation == 0) {
-        generation = 1;
-    }
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) = generation;
-    handle = count | (generation << 16);
-    new_buffers[count] = (uint32_t)(uintptr_t)buffer;
-    new_generations[count] = generation;
-    retdec_trace_i32("audio:create-handle", (int32_t)handle);
-    retdec_trace_i32("audio:create-buffer", buffer);
-    retdec_trace_i32("audio:create-buffer-table",
-                     (int32_t)(intptr_t)new_buffers);
-    retdec_trace_i32("audio:create-generation-table",
-                     (int32_t)(intptr_t)new_generations);
 
-    buffers = (uint32_t *)(intptr_t)begin;
-    generations = (uint32_t *)(intptr_t)generation_begin;
-    free(buffers);
-    free(generations);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 4) =
-        (uint32_t)(uintptr_t)new_buffers;
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 8) =
-        (uint32_t)(uintptr_t)(new_buffers + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0xc) =
-        (uint32_t)(uintptr_t)(new_buffers + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14) =
-        (uint32_t)(uintptr_t)new_generations;
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18) =
-        (uint32_t)(uintptr_t)(new_generations + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x1c) =
-        (uint32_t)(uintptr_t)(new_generations + count + 1);
 
-    list = *(int32_t *)(intptr_t)(uint32_t)(manager + 0x24);
-    retdec_audio_list_push(list, (int32_t)handle);
-    *(uint32_t *)(intptr_t)(uint32_t)output = handle;
-    return 1;
-}
 
-static void retdec_audio_manager_construct(void)
-{
-    unsigned char *state = g_retdec_audio_manager_state;
 
-    if (g_retdec_audio_manager_initialized != 0) {
-        return;
-    }
-    memset(state, 0, sizeof(g_retdec_audio_manager_state));
-    *(uint32_t *)(state + 0x1c) = (uint32_t)(uintptr_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)(state + 0x20));
-    function_40adb0((int32_t *)(state + 0x38));
-    if (!retdec_audio_manager_list_init(0x88) ||
-        !retdec_audio_manager_list_init(0x94) ||
-        !retdec_audio_manager_list_init(0xa0)) {
-        return;
-    }
-    *(float32_t *)(state + 0xac) = 1.0f;
-    *(float32_t *)(state + 0xb0) = 1.0f;
-    g_retdec_audio_manager_initialized = 1;
-}
 
-static int32_t retdec_audio_method_40a5d0(int32_t this_ptr,
-                                          int32_t output)
-{
-    if (output == 0) {
-        return 0;
-    }
-    *(int32_t *)(intptr_t)(uint32_t)output = 0;
-    if (g_retdec_audio_manager_initialized == 0) {
-        retdec_audio_manager_construct();
-    }
-    if (g_retdec_audio_manager_initialized == 0) {
-        return output;
-    }
-    retdec_audio_handle_create(this_ptr + 0x38, output);
-    return output;
-}
 
-static int32_t retdec_audio_method_40a6c0(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t source,
-                                          int32_t buffer_flag,
-                                          int32_t queue_mode,
-                                          float32_t volume)
-{
-    int32_t buffer;
-    const char *path = (const char *)(intptr_t)(uint32_t)source;
-    uint32_t path_length;
-    float32_t gain;
-    int prepared = 0;
 
-    retdec_trace_audio_text("470220:request-path", path);
-    retdec_trace_i32("470220:request-queue", queue_mode);
-    if (this_ptr == 0 || source == 0) {
-        return 1;
-    }
-    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
-                                        (uint32_t)handle);
-    retdec_trace_i32("470220:handle", handle);
-    retdec_trace_i32("470220:buffer", buffer);
-    if (buffer == 0) {
-        return 1;
-    }
-    path_length = retdec_safe_c_string_length(path);
-    retdec_trace_i32("470220:path-length", (int32_t)path_length);
-    retdec_string_assign_n((int32_t *)(intptr_t)(uint32_t)buffer,
-                           path, path_length);
-    retdec_trace("470220:path-assigned");
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 0;
-    gain = *(float32_t *)(this_ptr + 0xb0) *
-           *(float32_t *)(this_ptr + 0xac);
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x135c) = gain;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368) = volume;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1364) = gain;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1360) = gain;
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c) =
-        (unsigned char)buffer_flag;
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x136c) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 3;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1354) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1358) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1370) = 0;
-
-    if (queue_mode != 0) {
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x94), handle);
-        if (g_retdec_audio_queue_event != NULL)
-            SetEvent(g_retdec_audio_queue_event);
-        return 1;
-    }
-
-    /* a5 == 0 is the original synchronous path: prepare the new buffer
-       before it is inserted into the active list. */
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_archive_current_track();
-    prepared = retdec_bgm_prepare_track(
-        (uint32_t)handle, retdec_audio_buffer_path(buffer),
-        buffer_flag, volume);
-    if (prepared) {
-        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
-        retdec_trace("470220:prepared-sync");
-    } else {
-        retdec_trace("470220:prepare-failed");
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
-
-static int32_t retdec_audio_method_40a7f0(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t delay)
-{
-    int32_t buffer;
-    retdec_bgm_track_state *track;
-    DWORD start_time;
-
-    if (this_ptr == 0) {
-        return 0;
-    }
-    retdec_trace_i32("470220:start-delay", delay);
-    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
-                                        (uint32_t)handle);
-    if (buffer == 0) {
-        return 0;
-    }
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track((uint32_t)handle);
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 0;
-    if (delay != 0) {
-        start_time = timeGetTime() + (uint32_t)delay;
-        *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
-        if (track != NULL)
-            track->start_time = start_time;
-    } else {
-        if (track != NULL &&
-            *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) != 0) {
-            track->start_time = 0;
-            retdec_bgm_start_track(track);
-        } else {
-            start_time = timeGetTime();
-            *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
-        }
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
-
-static int32_t retdec_audio_method_40a950(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t duration,
-                                          int32_t start_delay,
-                                          float32_t target)
-{
-    (void)this_ptr;
-    (void)target;
-    retdec_bgm_begin_fade_for_handle((uint32_t)handle,
-                                     duration > 0 ? (DWORD)duration : 0,
-                                     start_delay > 0 ? (DWORD)start_delay : 0,
-                                     0.0f);
-    return 1;
-}
 
 // Address range: 0x40a0f0 - 0x40a3c3
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_40a0f0(void) {
-    /* The RetDec body below lost the constructor's this pointer.  The
-       recovered manager storage above is the live object used by the audio
-       methods, so construct it once and return without executing that stale
-       stack-based reconstruction. */
-    retdec_audio_manager_construct();
-    return retdec_audio_manager_this();
-}
+
 
 // Address range: 0x40a3d0 - 0x40a453
-int32_t function_40a3d0(void) {
-    if (g_retdec_audio_threads_initialized)
-        return (int32_t)(intptr_t)g_retdec_audio_queue_event;
-    if (!g_retdec_audio_lock_initialized) {
-        InitializeCriticalSection(&g_retdec_audio_lock);
-        g_retdec_audio_lock_initialized = 1;
-    }
-    g_retdec_audio_queue_event = CreateEventA(NULL, FALSE, FALSE, NULL);
-    g_retdec_audio_stop_event = CreateEventA(NULL, TRUE, FALSE, NULL);
-    if (g_retdec_audio_queue_event == NULL ||
-        g_retdec_audio_stop_event == NULL) {
-        if (g_retdec_audio_queue_event != NULL)
-            CloseHandle(g_retdec_audio_queue_event);
-        if (g_retdec_audio_stop_event != NULL)
-            CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_queue_event = NULL;
-        g_retdec_audio_stop_event = NULL;
-        retdec_trace("40a3d0:audio-events-failed");
-        return 0;
-    }
-    InterlockedExchange(&g_retdec_audio_running, 1);
-    g_retdec_audio_update_thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aaa0, NULL, 0, NULL);
-    if (g_retdec_audio_update_thread != NULL)
-        SetThreadPriority(g_retdec_audio_update_thread, 15);
-    g_retdec_audio_loader_thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aac0, NULL, 0, NULL);
-    if (g_retdec_audio_update_thread == NULL ||
-        g_retdec_audio_loader_thread == NULL) {
-        InterlockedExchange(&g_retdec_audio_running, 0);
-        SetEvent(g_retdec_audio_stop_event);
-        SetEvent(g_retdec_audio_queue_event);
-        if (g_retdec_audio_update_thread != NULL) {
-            WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
-            CloseHandle(g_retdec_audio_update_thread);
-            g_retdec_audio_update_thread = NULL;
-        }
-        if (g_retdec_audio_loader_thread != NULL) {
-            WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
-            CloseHandle(g_retdec_audio_loader_thread);
-            g_retdec_audio_loader_thread = NULL;
-        }
-        CloseHandle(g_retdec_audio_queue_event);
-        CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_queue_event = NULL;
-        g_retdec_audio_stop_event = NULL;
-        retdec_trace("40a3d0:audio-threads-failed");
-        return 0;
-    }
-    g_retdec_audio_threads_initialized = 1;
-    retdec_trace("40a3d0:audio-threads-ready");
-    return (int32_t)(intptr_t)g_retdec_audio_queue_event;
-}
+
 
 // Address range: 0x40a460 - 0x40a5cf
-int32_t function_40a460(void) {
-    if (!g_retdec_audio_threads_initialized)
-        return 1;
 
-    InterlockedExchange(&g_retdec_audio_running, 0);
-    if (g_retdec_audio_stop_event != NULL)
-        SetEvent(g_retdec_audio_stop_event);
-    if (g_retdec_audio_queue_event != NULL)
-        SetEvent(g_retdec_audio_queue_event);
-    if (g_retdec_audio_update_thread != NULL) {
-        WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
-        CloseHandle(g_retdec_audio_update_thread);
-        g_retdec_audio_update_thread = NULL;
-    }
-    if (g_retdec_audio_loader_thread != NULL) {
-        WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
-        CloseHandle(g_retdec_audio_loader_thread);
-        g_retdec_audio_loader_thread = NULL;
-    }
-    if (g_retdec_audio_queue_event != NULL) {
-        CloseHandle(g_retdec_audio_queue_event);
-        g_retdec_audio_queue_event = NULL;
-    }
-    if (g_retdec_audio_stop_event != NULL) {
-        CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_stop_event = NULL;
-    }
-    g_retdec_audio_threads_initialized = 0;
-    /* 40A4A8 releases the manager's active, pending and retired buffers
-       after joining its workers, rather than waiting for CRT destruction. */
-    retdec_bgm_release_all_tracks();
-    return 1;
-}
 
 // Address range: 0x40a5d0 - 0x40a5ef
-int32_t function_40a5d0(int32_t result) {
-    // 0x40a5d0
-    *(int32_t *)result = 0;
-    return result;
-}
+
 
 // Address range: 0x40a5f0 - 0x40a6bc
-int32_t function_40a5f0(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2; // 0x40a5f0
-    int32_t lpCriticalSection = v2 + 32; // 0x40a5f8
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v3 = *(int32_t *)(v2 + 136); // 0x40a602
-    int32_t v4 = *(int32_t *)v3; // 0x40a608
-    int32_t v5 = v4; // 0x40a60f
-    if (v4 != v3) {
-        int32_t v6 = v5; // 0x40a614
-        while (*(int32_t *)(v5 + 8) != a1) {
-            // 0x40a616
-            v5 = *(int32_t *)v5;
-            v6 = v5;
-            if (v5 == v3) {
-                // break -> 0x40a61c
-                break;
-            }
-            v6 = v5;
-        }
-        // 0x40a61c
-        if (v6 != v3) {
-            int32_t * v7 = (int32_t *)(v6 + 4); // 0x40a620
-            int32_t * v8 = (int32_t *)v6; // 0x40a623
-            *(int32_t *)*v7 = *v8;
-            *(int32_t *)(*v8 + 4) = *v7;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            int32_t * v9 = (int32_t *)(v2 + 140); // 0x40a63b
-            *v9 = *v9 - 1;
-        }
-    }
-    int32_t v10 = *(int32_t *)(v2 + 56); // 0x40a641
-    if (v10 != 0) {
-        int32_t v11 = *(int32_t *)(v10 + 0x1370); // 0x40a651
-        if (v11 != 0) {
-            // 0x40a65b
-            *(int32_t *)(v11 + 0x1374) = 0;
-        }
-    }
-    int32_t v12 = *(int32_t *)(v2 + 160); // 0x40a665
-    int32_t * v13 = (int32_t *)(v12 + 4); // 0x40a66b
-    int32_t v14 = v12; // bp-36, 0x40a673
-    int32_t v15 = function_4214a0(v12, *v13, &v1); // 0x40a674
-    int32_t * v16 = (int32_t *)(v2 + 164); // 0x40a679
-    int32_t v17 = *v16; // 0x40a679
-    int32_t v18 = v15; // 0x40a689
-    int32_t v19 = &v14; // 0x40a689
-    if (v17 == 0x3ffffffe) {
-        char * v20 = "list<T> too long"; // bp-40, 0x40a68b
-        v18 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
-        v19 = (int32_t)&v20;
-    }
-    int32_t v21 = v18;
-    *v16 = v17 + 1;
-    *v13 = v21;
-    *(int32_t *)*(int32_t *)(v21 + 4) = v21;
-    *(int32_t *)(v19 - 4) = *(int32_t *)(v2 + 20);
-    SetEvent(&g1224);
-    *(int32_t *)(v19 - 8) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a6c0 - 0x40a7ee
 
 
 // Address range: 0x40a7f0 - 0x40a886
-int32_t function_40a7f0(int32_t a1, int32_t a2) {
-    // 0x40a7f0
-    int32_t v1; // 0x40a7f0
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)(v1 + 32); // 0x40a7fa
-    EnterCriticalSection(lpCriticalSection);
-    int32_t v2 = *(int32_t *)(*(int32_t *)(v1 + 56) + 12); // 0x40a807
-    if (v2 == 0) {
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a818
-    *(int32_t *)(v2 + 28) = 0;
-    if (a2 != 0) {
-        // 0x40a823
-        *(int32_t *)(v2 + 0x1350) = timeGetTime() + a2;
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a83f
-    if (*(char *)(v2 + 32) == 0) {
-        // 0x40a86c
-        *(int32_t *)(v2 + 0x1350) = timeGetTime();
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a844
-    *(int32_t *)(v2 + 0x1350) = 0;
-    if (*(int32_t *)(v2 + 40) == 0) {
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a84f
-    LeaveCriticalSection(lpCriticalSection);
-    return &g1224;
-}
+
 
 // Address range: 0x40a890 - 0x40a8c6
 
 
 // Address range: 0x40a8d0 - 0x40a94f
-int32_t function_40a8d0(int32_t a1) {
-    // 0x40a8d0
-    int32_t v1; // 0x40a8d0
-    int32_t v2 = v1 + 32; // 0x40a8d8
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)v2; // 0x40a8db
-    EnterCriticalSection(lpCriticalSection);
-    int32_t v3 = *(int32_t *)(*(int32_t *)(v1 + 56) + 12); // 0x40a8e8
-    int32_t lpCriticalSection2 = a1; // bp-24, 0x40a8ee
-    int32_t v4 = &lpCriticalSection2; // 0x40a8ee
-    if (v3 == 0 || *(char *)(v3 + 32) == 0) {
-        // 0x40a940
-        *(int32_t *)(v4 - 4) = v2;
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-        return &g1224;
-    }
-    int32_t v5 = *(int32_t *)(v3 + 40); // 0x40a8fd
-    if (v5 == 0) {
-        // 0x40a940
-        *(int32_t *)(v4 - 4) = v2;
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-        return &g1224;
-    }
-    if ((v1 & 1) != 0) {
-        // 0x40a91b
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    int32_t v6 = v5; // bp-48, 0x40a93d
-    // 0x40a940
-    *(int32_t *)((int32_t)&v6 - 4) = v2;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-    return &g1224;
-}
+
 
 // Address range: 0x40a950 - 0x40a999
-int32_t function_40a950(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x40a950
-    int32_t v1; // 0x40a950
-    int32_t lpCriticalSection = v1 + 32; // 0x40a957
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v2 = a1; // bp-20, 0x40a96d
-    int32_t * v3 = &v2; // 0x40a972
-    if (*(int32_t *)(*(int32_t *)(v1 + 56) + 12) != 0) {
-        int32_t v4 = 0; // bp-32, 0x40a982
-        function_4098a0(a3, 0.0L, a4);
-        v3 = &v4;
-    }
-    // 0x40a98c
-    *(int32_t *)((int32_t)v3 - 4) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a9a0 - 0x40a9e8
-int32_t function_40a9a0(int32_t a1, int32_t a2, int32_t a3, float80_t a4) {
-    // 0x40a9a0
-    int32_t v1; // 0x40a9a0
-    int32_t lpCriticalSection = v1 + 32; // 0x40a9a7
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v2 = a1; // bp-20, 0x40a9bd
-    int32_t v3 = &v2; // 0x40a9c2
-    if (*(int32_t *)(*(int32_t *)(v1 + 56) + 12) != 0) {
-        float80_t v4 = a4; // bp-32, 0x40a9d1
-        function_4098a0(a3, a4, 0);
-        v3 = &v4;
-    }
-    // 0x40a9db
-    *(int32_t *)(v3 - 4) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a9f0 - 0x40aa95
-int32_t function_40a9f0(float80_t a1) {
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_apply_track_volume((float)a1);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
+
 
 // Address range: 0x40aaa0 - 0x40aabc
-int32_t function_40aaa0(void) {
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
-            if (g_retdec_audio_stop_event == NULL ||
-                WaitForSingleObject(g_retdec_audio_stop_event, 16) ==
-                    WAIT_OBJECT_0)
-                break;
-            function_40aae0();
-        }
-        CoUninitialize();
-    }
-    return 0;
-}
+
 
 // Address range: 0x40aac0 - 0x40aadc
-int32_t function_40aac0(void) {
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
-            HANDLE handles[2];
-            DWORD wait_result;
 
-            handles[0] = g_retdec_audio_queue_event;
-            handles[1] = g_retdec_audio_stop_event;
-            if (handles[0] == NULL || handles[1] == NULL)
-                break;
-            wait_result = WaitForMultipleObjects(2, handles, FALSE,
-                                                 INFINITE);
-            if (wait_result != WAIT_OBJECT_0)
-                break;
-            EnterCriticalSection(&g_retdec_audio_lock);
-            if (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
-                retdec_bgm_process_pending_locked();
-            LeaveCriticalSection(&g_retdec_audio_lock);
-        }
-        CoUninitialize();
-    }
-    return 0;
-}
 
 // Address range: 0x40aae0 - 0x40adb0
-int32_t function_40aae0(void) {
-    if (!InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
-        return 0;
-    EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_service_all_locked();
-    LeaveCriticalSection(&g_retdec_audio_lock);
-    return 0;
-}
+
 
 // Address range: 0x40adb0 - 0x40ae70
 // From class:    .?AV?$CHandleManagerEx@VBgmBuffer@@@@
 // Type:          constructor
-int32_t function_40adb0(int32_t * a1) {
-    int32_t result = (int32_t)a1;
-    int32_t v1 = __readfsdword(0); // bp-16, 0x40adc0
-    __writefsdword(0, (int32_t)&v1);
-    *a1 = (int32_t)&g198;
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 8) = 0;
-    *(int32_t *)(result + 12) = 0;
-    *(int32_t *)(result + 20) = 0;
-    *(int32_t *)(result + 24) = 0;
-    *(int32_t *)(result + 28) = 0;
-    *(int32_t *)(result + 40) = 0;
-    int32_t v2 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x40ae00
-    if (v2 != 0) {
-        int32_t * v3 = (int32_t *)(result + 36); // 0x40ae0c
-        *v3 = v2;
-        *(int32_t *)v2 = v2;
-        int32_t v4 = *v3; // 0x40ae11
-        *(int32_t *)(v4 + 4) = v4;
-        *(int32_t *)(result + 52) = (int32_t)&g190;
-        InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(result + 56));
-        *(int32_t *)(result + 48) = 0;
-        __writefsdword(0, v1);
-        return result;
-    }
-    // 0x40ae40
-    int32_t v5; // bp-32, 0x40adb0
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v5);
-    v5 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    return __asm_int3();
-}
+
 
 // Address range: 0x40ae70 - 0x40af6e
 // From class:    .?AV?$CHandleManagerEx@VBgmBuffer@@@@
@@ -20847,17 +18751,10 @@ int32_t function_40b2d0(void) {
 }
 
 // Address range: 0x40b3a0 - 0x40b516
-int32_t function_40b3a0(void) {
-    function_40a460();
-    retdec_bgm_release_all_tracks();
-    retdec_se_pool_release();
-    return 1;
-}
+
 
 // Address range: 0x40b520 - 0x40b6ef
-int32_t function_40b520(void) {
-    return retdec_se_pool_initialize();
-}
+
 
 // Address range: 0x40b6f0 - 0x40b75f
 int32_t function_40b6f0(void) {
@@ -20972,10 +18869,7 @@ int32_t function_40b840(int32_t a1) {
 }
 
 // Address range: 0x40b8a0 - 0x40b996
-int32_t function_40b8a0(float80_t a1) {
-    retdec_se_pool_set_volume((float)a1);
-    return 1;
-}
+
 
 // Address range: 0x40b9a0 - 0x40ba11
 int32_t function_40b9a0(int32_t a1) {
@@ -28011,157 +25905,10 @@ int32_t function_411d30(void) {
 }
 
 // Address range: 0x411d80 - 0x411f89
-int32_t function_411d80(HWND hwnd, int32_t options) {
-    void *direct_sound = NULL;
-    void *primary_buffer = NULL;
-    void *listener = NULL;
-    HMODULE dsound_module = NULL;
-    retdec_direct_sound_create8_fn direct_sound_create8 = NULL;
-    int direct_sound_is_initialized = 0;
-    uint32_t caps[24];
-    retdec_dsound_buffer_desc buffer_desc;
-    void **direct_sound_vtable;
-    void **primary_buffer_vtable;
-    HRESULT hr;
-    static const GUID iid_direct_sound_3d_listener = {
-        0x279afa84, 0x4981, 0x11ce,
-        { 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60 }
-    };
 
-    g876 = 0;
-    g878 = 0;
-    g877 = NULL;
-    retdec_trace("411d80:pre-cocreate");
-    hr = (HRESULT)CoCreateInstance(
-        (const GUID *)&g62, NULL, CLSCTX_INPROC_SERVER,
-        (const GUID *)&g61, (void **)&direct_sound);
-    retdec_trace_hresult("411d80:cocreate-hr", hr);
-    if (FAILED(hr) || direct_sound == NULL) {
-        // CLSID_DirectSound8 is not registered on some current Windows
-        // installations even though dsound.dll is available. The exported
-        // factory is the documented equivalent creation path.
-        retdec_trace("411d80:pre-directsoundcreate8");
-        dsound_module = LoadLibraryA("dsound.dll");
-        if (dsound_module != NULL) {
-            direct_sound_create8 = (retdec_direct_sound_create8_fn)
-                GetProcAddress(dsound_module, "DirectSoundCreate8");
-        }
-        if (direct_sound_create8 != NULL) {
-            hr = direct_sound_create8(NULL, &direct_sound, NULL);
-        } else {
-            hr = E_FAIL;
-        }
-        retdec_trace_hresult("411d80:directsoundcreate8-hr", hr);
-        if (SUCCEEDED(hr) && direct_sound != NULL) {
-            direct_sound_is_initialized = 1;
-        }
-    }
-    if (FAILED(hr) || direct_sound == NULL) {
-        MessageBoxA(NULL, (char *)&g209, "DSound-Error", MB_OK);
-        return 0;
-    }
-    g877 = (char *)direct_sound;
-    direct_sound_vtable = *(void ***)direct_sound;
-
-    if (direct_sound_is_initialized == 0) {
-        retdec_trace("411d80:pre-initialize");
-        hr = ((retdec_dsound_initialize_fn)direct_sound_vtable[10])(
-            direct_sound, NULL);
-        retdec_trace_hresult("411d80:initialize-hr", hr);
-        if (FAILED(hr)) {
-            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-            g877 = NULL;
-            return 0;
-        }
-    } else {
-        retdec_trace("411d80:initialize-skipped");
-    }
-
-    retdec_trace("411d80:pre-cooperative-level");
-    hr = ((retdec_dsound_set_cooperative_level_fn)direct_sound_vtable[6])(
-        direct_sound, hwnd, 2);
-    if (FAILED(hr)) {
-        hr = ((retdec_dsound_set_cooperative_level_fn)
-            direct_sound_vtable[6])(direct_sound, hwnd, 1);
-    }
-    retdec_trace_hresult("411d80:cooperative-level-hr", hr);
-    if (FAILED(hr)) {
-        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-        g877 = NULL;
-        return 0;
-    }
-
-    ZeroMemory(&caps, sizeof(caps));
-    caps[0] = sizeof(caps);
-    ((retdec_dsound_get_caps_fn)direct_sound_vtable[4])(
-        direct_sound, &caps);
-
-    ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-    buffer_desc.dwSize = sizeof(buffer_desc);
-    buffer_desc.dwFlags = (options & 1) != 0 ? 153u : 9u;
-    retdec_trace("411d80:pre-create-primary");
-    hr = ((retdec_dsound_create_buffer_fn)direct_sound_vtable[3])(
-        direct_sound, &buffer_desc, &primary_buffer, NULL);
-    retdec_trace_hresult("411d80:create-primary-hr", hr);
-    if (FAILED(hr) || primary_buffer == NULL) {
-        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-        g877 = NULL;
-        return 0;
-    }
-    g876 = (int32_t)(uintptr_t)primary_buffer;
-    primary_buffer_vtable = *(void ***)primary_buffer;
-
-    if ((options & 1) != 0) {
-        hr = ((retdec_dsound_query_interface_fn)primary_buffer_vtable[0])(
-            primary_buffer, &iid_direct_sound_3d_listener,
-            (void **)&listener);
-        retdec_trace_hresult("411d80:listener-hr", hr);
-        if (FAILED(hr) || listener == NULL) {
-            ((retdec_dsound_release_fn)primary_buffer_vtable[2])(
-                primary_buffer);
-            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-            g876 = 0;
-            g877 = NULL;
-            return 0;
-        }
-        g878 = (int32_t)(uintptr_t)listener;
-    }
-    /* The original starts the primary buffer after creating the listener.
-       Secondary BGM buffers are mixed into this stream. */
-    retdec_trace("411d80:pre-play-primary");
-    if (primary_buffer_vtable != NULL && primary_buffer_vtable[12] != NULL) {
-        hr = ((retdec_dsound_buffer_play_fn)primary_buffer_vtable[12])(
-            primary_buffer, 0, 0, 1);
-        retdec_trace_hresult("411d80:play-primary-hr", hr);
-    }
-    retdec_trace("411d80:done");
-    return 1;
-}
 
 // Address range: 0x411f90 - 0x411fe2
-int32_t function_411f90(void) {
-    // 0x411f90
-    int32_t v1; // 0x411f90
-    if (g878 != 0) {
-        int32_t v2 = g878; // bp-4, 0x411f9e
-        g878 = 0;
-        v1 = &v2;
-    }
-    int32_t v3 = v1; // 0x411fb2
-    if (g876 != 0) {
-        int32_t v4 = g876; // bp-8, 0x411fb9
-        g876 = 0;
-        v3 = &v4;
-    }
-    int32_t result = (int32_t)g877; // 0x411fc6
-    if (g877 != NULL) {
-        // 0x411fcf
-        *(int32_t *)(v3 - 4) = result;
-        g877 = NULL;
-    }
-    // 0x411fe1
-    return result;
-}
+
 
 // Address range: 0x411ff0 - 0x41205f
 int32_t function_411ff0(int32_t * a1, int32_t a2) {
@@ -124949,75 +122696,22 @@ int32_t function_4701d0(void) {
 }
 
 // Address range: 0x4701e0 - 0x47021d
-int32_t function_4701e0(void) {
-    retdec_trace("4701e0:audio-begin");
-    function_40b520();
-    function_40b8a0(0.80000001L);
-    function_40a3d0();
-    int32_t result = function_40a9f0(0.80000001L);
-    retdec_trace("4701e0:audio-ready");
-    return result;
-}
+
 
 // Address range: 0x470220 - 0x47028a
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    int32_t manager = retdec_audio_manager_this();
-    int32_t new_handle = 0;
 
-    (void)a3;
-    if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
-    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
-    g637 = new_handle;
-    /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
-    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
-    return 0;
-}
 
 // Address range: 0x470290 - 0x4702fc
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5) {
-    int32_t manager = retdec_audio_manager_this();
-    int32_t new_handle = 0;
 
-    if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, a3, 1.0f);
-    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
-    g637 = new_handle;
-    retdec_audio_method_40a6c0(manager, g637, a1, a5, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
-    return 0;
-}
 
 // Address range: 0x470300 - 0x470315
-int32_t function_470300(void) {
-    if (g637 != 0) {
-        retdec_bgm_stop_for_handle((uint32_t)g637);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470320 - 0x470355
-int32_t function_470320(int32_t a1, int32_t a2) {
-    if (g637 != 0) {
-        float target = (float)a2 / 100.0f;
-        retdec_bgm_begin_fade_for_handle((uint32_t)g637,
-                                         a1 > 0 ? (DWORD)a1 : 0, 0,
-                                         target);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470360 - 0x47038f
-int32_t function_470360(void) {
-    if (g637 != 0) {
-        uint32_t handle = (uint32_t)g637;
-        retdec_bgm_stop_for_handle(handle);
-        retdec_bgm_release_for_handle(handle);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470390 - 0x4703ac
 int32_t function_470390(int32_t result) {
@@ -125540,57 +123234,7 @@ int32_t function_470890(void) {
 }
 
 // Address range: 0x470980 - 0x4709b3
-int32_t function_470980(int32_t a1) {
-    retdec_trace_i32("470980:se-id", a1);
-    if (g_retdec_se_entry_count > 0) {
-        int index;
 
-        for (index = 0; index < g_retdec_se_entry_count; ++index) {
-            void *buffer;
-            void **vtable;
-            DWORD status = 0;
-            HRESULT hr;
-
-            if (g_retdec_se_entries[index].id != a1)
-                continue;
-            buffer = g_retdec_se_entries[index].buffer;
-            if (buffer == NULL)
-                return 0;
-            vtable = *(void ***)buffer;
-            if (vtable == NULL)
-                return 0;
-            if (vtable[9] != NULL)
-                ((retdec_dsound_buffer_get_status_fn)vtable[9])(
-                    buffer, &status);
-            if ((status & 1u) != 0 && vtable[18] != NULL)
-                ((retdec_dsound_buffer_stop_fn)vtable[18])(buffer);
-            if (vtable[13] != NULL)
-                ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-                    buffer, 0);
-            if (vtable[12] == NULL)
-                return 0;
-            retdec_trace_i32("470980:se-bytes",
-                             (int32_t)g_retdec_se_entries[index].buffer_bytes);
-            if (a1 == 6) {
-                uint32_t words[12] = {0};
-                SIZE_T bytes;
-                char message[384];
-                ReadProcessMemory(GetCurrentProcess(), buffer, words, sizeof(words), &bytes);
-                sprintf_s(message, sizeof(message),
-                    "actor:stomp-sound buffer=%08X play=%08X thread=%u data=%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X",
-                    (uint32_t)(uintptr_t)buffer,(uint32_t)(uintptr_t)vtable[12],GetCurrentThreadId(),
-                    words[0],words[1],words[2],words[3],words[4],words[5],words[6],words[7],
-                    words[8],words[9],words[10],words[11]);
-                retdec_trace(message);
-            }
-            hr = ((retdec_dsound_buffer_play_fn)vtable[12])(
-                buffer, 0, 0, 0);
-            retdec_trace_hresult("470980:play-hr", hr);
-            return SUCCEEDED(hr) ? 1 : 0;
-        }
-    }
-    return 0;
-}
 
 // Address range: 0x4709c0 - 0x470a30
 // From class:    .?AVbad_alloc@std@@
@@ -125667,124 +123311,9 @@ int32_t function_470a30(int32_t a1) {
 // Address range: 0x470ab0 - 0x470d00
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-static void retdec_loadse_blob(const char *source)
-{
-    char path[MAX_PATH];
-    size_t length;
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    uint32_t size;
-    unsigned char *blob;
-    uint32_t index;
-    unsigned char key = 0x8bu;
-    unsigned char step = 0x71u;
-    int loaded = 0;
 
-    if (source == NULL)
-        return;
-    retdec_se_entries_release();
-    length = strlen(source);
-    if (length < 4 || length + 1 > sizeof(path))
-        return;
-    memcpy(path, source, length + 1);
-    if (_stricmp(path + length - 4, ".csv") == 0) {
-        path[length - 2] = 'v';
-        path[length - 1] = '1';
-    } else if (_stricmp(path + length - 4, ".cv1") != 0) {
-        return;
-    }
 
-    if (function_407370((int32_t)(intptr_t)&reader_slot, path) == 0) {
-        retdec_trace("loadse:reader-failed");
-        return;
-    }
-    reader = (int32_t *)(intptr_t)reader_slot;
-    size = g765 != 0 ? (uint32_t)reader[3] :
-        (uint32_t)function_407300(reader_slot);
-    retdec_trace_squirrel_name("loadse:path", (int32_t)(intptr_t)path);
-    retdec_trace_i32("loadse:size", (int32_t)size);
-    if (size == 0 || size > 16u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
-        return;
-    }
-    blob = (unsigned char *)malloc(size + 1u);
-    if (blob != NULL && retdec_reader_read_exact(reader_slot, blob, size)) {
-        /* This is the same rolling transform used by sub_414930 before the
-           CSV stream is handed to the original line parser. */
-        for (index = 0; index < size; ++index) {
-            blob[index] ^= key;
-            key = (unsigned char)(key + step);
-            step = (unsigned char)(step - 0x6bu);
-        }
-        blob[size] = 0;
-        retdec_trace("loadse:blob-read");
 
-        /* se.cv1 is a small CSV table.  Its quoted filename is passed to
-           CWaveBuffer::Load one row at a time, which creates the actual
-           secondary buffer used later by PlaySE. */
-        {
-            char *cursor = (char *)blob;
-            char *end = cursor + size;
-            while (cursor < end) {
-                char *line_end = (char *)memchr(cursor, '\n',
-                                                (size_t)(end - cursor));
-                char *field;
-                char *path_start;
-                char *path_end;
-                char saved;
-                char *number_end;
-                long id;
-
-                if (line_end == NULL)
-                    line_end = end;
-                *line_end = 0;
-                field = cursor;
-                while (*field == ' ' || *field == '\t' || *field == '\r')
-                    ++field;
-                if (*field != 0 && *field != '#') {
-                    id = strtol(field, &number_end, 10);
-                    if (number_end != field && id >= 0 && id <= 0x7fffffffL) {
-                        field = number_end;
-                        while (*field == ' ' || *field == '\t')
-                            ++field;
-                        if (*field == ',') {
-                            ++field;
-                            while (*field == ' ' || *field == '\t')
-                                ++field;
-                            if (*field == '"')
-                                ++field;
-                            path_start = field;
-                            path_end = path_start;
-                            while (*path_end != 0 && *path_end != '"' &&
-                                   *path_end != '\r')
-                                ++path_end;
-                            saved = *path_end;
-                            *path_end = 0;
-                            if (*path_start != 0 &&
-                                retdec_se_load_entry((int)id, path_start))
-                                ++loaded;
-                            *path_end = saved;
-                        }
-                    }
-                }
-                if (line_end == end)
-                    break;
-                cursor = line_end + 1;
-            }
-        }
-        retdec_trace_i32("loadse:entries-loaded", loaded);
-    } else {
-        retdec_trace("loadse:blob-read-failed");
-    }
-    free(blob);
-    retdec_destroy_reader(reader);
-}
-
-int32_t function_470ab0(int32_t a1) {
-    /* LoadSE builds the same ID -> CDSBuffer table that PlaySE consumes. */
-    retdec_loadse_blob((const char *)(intptr_t)a1);
-    return 0;
-}
 
 // Address range: 0x470d00 - 0x470de9
 int32_t function_470d00(int32_t a1) {
@@ -146749,5 +144278,15 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
         &g39, /* sq_object_vtable */
         &g40, /* sq_root_vtable */
     };
+    return &symbols;
+}
+
+/* Immutable host identities; audio code owns no retdec global VM state. */
+const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
+    static struct KinokoAudioHostSymbols symbols;
+    symbols.critical_section_vtable = &g190;
+    symbols.handle_table_vtable = &g198;
+    symbols.decoder_vtable = &g208;
+    symbols.device_error_message = g209;
     return &symbols;
 }
