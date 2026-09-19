@@ -1,6 +1,7 @@
 /* Exercise the actual reconstructed functions without WinMain, graphics or DAT startup. */
 #include "../src/decompiled/6kinoko_rebuilt.c"
 #include "stage_audio_contract.h"
+#include "kinoko/squirrel_vm_bootstrap.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -4174,7 +4175,49 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int owned_release_count, owned_release_order[2];
+static SQInteger owned_release(SQUserPointer payload, SQInteger size) {
+    if (owned_release_count < 2) owned_release_order[owned_release_count] = *(int*)payload;
+    ++owned_release_count;
+    return 0;
+}
+static void check_owned_exit(void) {
+    if (g643 || owned_release_count != 2 || owned_release_order[0] != 2 || owned_release_order[1] != 1)
+        abort();
+    puts("PASS: CRT exit destroys owned states newest first, once each");
+}
+static int test_owned_states(int at_exit) {
+    CHECK(g643 == 0);
+    if (at_exit) CHECK(atexit(check_owned_exit) == 0);
+    for (int i = 1; i <= 2; ++i) {
+        CHECK(function_4a8db0(0) & 1);
+        HSQUIRRELVM vm = (HSQUIRRELVM)g644;
+        *(int*)sq_newuserdata(vm, sizeof(int)) = i;
+        sq_setreleasehook(vm, -1, owned_release);
+        function_4a8c50();
+        CHECK(owned_release_count == 0 && g644 == NULL && g645 == 0);
+    }
+    if (at_exit) return 0;
+    HSQUIRRELVM external = sq_open(64);
+    const int32_t head = g643;
+    CHECK(function_4a8db0(PTR(external)) & 1);
+    CHECK(g643 == head);
+    function_4a8c50();
+    kinoko_sq_release_owned_states();
+    check_owned_exit();
+    kinoko_sq_release_owned_states();
+    CHECK(owned_release_count == 2);
+    sq_pushinteger(external, 123);
+    SQInteger value = 0;
+    CHECK(SQ_SUCCEEDED(sq_getinteger(external, -1, &value)) && value == 123);
+    sq_close(external);
+    puts("PASS: external VM survives owned-state teardown and repeated cleanup");
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)
+        return test_owned_states(1);
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
     if (argc == 2 && strcmp(argv[1], "--gc-link-probe") == 0)
@@ -4192,6 +4235,8 @@ int main(int argc, char **argv) {
     CHECK(test_shutdown_tree_cleanup() == 0);
     CHECK(test_global_stage_cleanup() == 0);
     CHECK(test_global_sound_cleanup() == 0);
+    CHECK(kinoko_test_bgm_pause() == 0);
+    CHECK(test_owned_states(0) == 0);
     CHECK(test_gc_mark_link() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];

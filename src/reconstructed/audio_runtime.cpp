@@ -1199,6 +1199,22 @@ static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
 
 }
 
+// Original 40A8D0 toggles the hardware state without rewinding the ring.
+static void retdec_bgm_toggle_pause(uint32_t handle)
+{
+    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    auto* track = retdec_bgm_find_track(handle);
+    if (!track || !track->buffer.get()) return;
+    DWORD status = 0;
+    track->buffer.get()->GetStatus(&status);
+    if (status & DSBSTATUS_PLAYING) {
+        if (SUCCEEDED(track->buffer.get()->Stop())) track->playing = 0;
+    } else if (SUCCEEDED(track->buffer.get()->Play(0, 0, DSBPLAY_LOOPING))) {
+        track->started = 1;
+        track->playing = 1;
+    }
+}
+
 static void retdec_bgm_stop_for_handle(uint32_t handle)
 {
     BgmTrack *track;
@@ -2154,7 +2170,7 @@ int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
 
 int32_t function_470300(void) {
     if (g637 != 0) {
-        retdec_bgm_stop_for_handle((uint32_t)g637);
+        retdec_bgm_toggle_pause((uint32_t)g637);
     }
     return 0;
 }

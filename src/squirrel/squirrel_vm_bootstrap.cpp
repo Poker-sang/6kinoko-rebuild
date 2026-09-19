@@ -23,9 +23,26 @@ namespace {
 using kinoko::script::address;
 using kinoko::script::pointer;
 HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); }
+struct OwnedState {
+    int32_t state;
+    OwnedState* next;
+};
+static_assert(sizeof(OwnedState) == 8);
+void delete_owned_states(OwnedState* node) {
+    if (!node) return;
+    kinoko_sq_delete_shared_state(node->state);
+    delete_owned_states(node->next);
+    std::free(node);
+}
 int32_t function_address(void* value) noexcept {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(value));
 }
+}
+extern "C" void kinoko_sq_release_owned_states(void) {
+    // Original CRT exit handler 4D4B30 and node destructor 4A8D60.
+    // Ordinary 4A8C50 only releases wrappers; it must not destroy these VMs.
+    delete_owned_states(pointer<OwnedState>(g643));
+    g643 = 0;
 }
 extern "C" int32_t function_4a8c50(void) {
     if (g645 != 0) {
@@ -70,6 +87,8 @@ extern "C" int32_t function_4a8db0(int32_t requested_vm) {
         if (current == 0) return 0;
         const int32_t node = _3f__3f_2_40_YAPAXI_40_Z(8);
         if (node != 0) {
+            static const int registered = std::atexit(kinoko_sq_release_owned_states);
+            (void)registered;
             *pointer<int32_t>(node) = kinoko_sq_shared_state(current);
             *pointer<int32_t>(node + 4) = g643;
             g643 = node;

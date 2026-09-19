@@ -331,6 +331,7 @@ target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF
 target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
+add_test(NAME squirrel_owned_state_exit_contract COMMAND kinoko_stage_contract --owned-state-exit)
 foreach(entity IN ITEMS Init0989 Init0cfb Init0d0c)
     add_test(NAME entity_${entity}_contract
         COMMAND kinoko_stage_contract --entity-stutter "${KINOKO_REFERENCE_DIR}" ${entity})

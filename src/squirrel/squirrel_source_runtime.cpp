@@ -135,6 +135,11 @@ extern "C" int32_t kinoko_sq_shared_state(int32_t vm) {
     return vm ? address(pointer<SQVM>(vm)->_sharedstate) : 0;
 }
 
+extern "C" void kinoko_sq_delete_shared_state(int32_t state) {
+    // 49C350 + 4985B0: the state destructor itself finalizes the root VM.
+    if (state) sq_delete(pointer<SQSharedState>(state), SQSharedState);
+}
+
 extern "C" int32_t kinoko_sq_noop_constructor(int32_t /* vm */) {
     // The original embedding registered 4A1760 for these classes; it neither
     // allocates state nor pushes a return value. This is not a new constructor.
