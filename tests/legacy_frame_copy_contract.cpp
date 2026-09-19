@@ -24,6 +24,7 @@ __declspec(noinline) void check_register() {
     RtlCaptureContext(context);
     const auto expected = context->Ebp;
     const auto actual = kinoko_legacy_caller_ebp();
+    if (actual != expected) std::fprintf(stderr, "EBP expected=%08x actual=%08x\n", expected, static_cast<unsigned>(actual));
     require(actual == expected && canary == 0xa135246bu, "incoming EBP and stack preserved");
     _aligned_free(context);
 }
@@ -44,6 +45,11 @@ __declspec(noinline) void check_legacy_entry() {
     const volatile uint32_t triple[3] = {static_cast<uint32_t>(address(output.data())),
         static_cast<uint32_t>(address(input.data())), 64};
     const auto result = _memcpy2();
+    if (static_cast<uintptr_t>(result) != address(output.data()) || input != output)
+        std::fprintf(stderr, "copy result=%08x to=%08x from=%08x triple=%08x first=%u expected=%u\n",
+            static_cast<unsigned>(result), static_cast<unsigned>(address(output.data())),
+            static_cast<unsigned>(address(input.data())), static_cast<unsigned>(reinterpret_cast<uintptr_t>(&triple)),
+            output[0], input[0]);
     require(triple[2] == 64 && static_cast<uintptr_t>(result) == address(output.data()) && input == output,
         "real zero-argument entry forwards the incoming caller frame");
 }
@@ -92,6 +98,7 @@ void check_selection() {
 }
 int main() {
     check_selection();
+    check_register();
     for (int i = 0; i < 100; ++i) check_nested_entry(3);
     for (int i = 0; i < 10000; ++i) check_register();
     std::vector<std::thread> threads;
