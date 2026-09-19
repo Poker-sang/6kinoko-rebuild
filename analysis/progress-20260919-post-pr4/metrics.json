@@ -1,0 +1,890 @@
+{
+  "files": [
+    {
+      "path": "src/decompiled/6kinoko_rebuilt.c",
+      "physical_lines": 146767,
+      "code_lines": 118853,
+      "address_definitions": 3518,
+      "address_body_lines": 97748,
+      "legacy_local_tokens": 107331,
+      "field_accesses": 5
+    },
+    {
+      "path": "src/decompiled/retdec_asm_stubs.c",
+      "physical_lines": 26,
+      "code_lines": 21,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/audio_math.cpp",
+      "physical_lines": 23,
+      "code_lines": 21,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/diagnostics.cpp",
+      "physical_lines": 323,
+      "code_lines": 296,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/game_math.cpp",
+      "physical_lines": 54,
+      "code_lines": 50,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/legacy_frame_copy.cpp",
+      "physical_lines": 46,
+      "code_lines": 38,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/legacy_frame_entry.cpp",
+      "physical_lines": 51,
+      "code_lines": 33,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/retdec_address_space.cpp",
+      "physical_lines": 41,
+      "code_lines": 37,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/retdec_memory.cpp",
+      "physical_lines": 50,
+      "code_lines": 43,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/retdec_runtime_compat.cpp",
+      "physical_lines": 859,
+      "code_lines": 715,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/platform/windows_entry.cpp",
+      "physical_lines": 21,
+      "code_lines": 18,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/act_clone.cpp",
+      "physical_lines": 233,
+      "code_lines": 216,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 51
+    },
+    {
+      "path": "src/reconstructed/act_containers.cpp",
+      "physical_lines": 464,
+      "code_lines": 429,
+      "address_definitions": 4,
+      "address_body_lines": 176,
+      "legacy_local_tokens": 0,
+      "field_accesses": 49
+    },
+    {
+      "path": "src/reconstructed/act_document.cpp",
+      "physical_lines": 882,
+      "code_lines": 819,
+      "address_definitions": 1,
+      "address_body_lines": 3,
+      "legacy_local_tokens": 0,
+      "field_accesses": 123
+    },
+    {
+      "path": "src/reconstructed/act_layout.cpp",
+      "physical_lines": 749,
+      "code_lines": 689,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 202
+    },
+    {
+      "path": "src/reconstructed/act_lifetime.cpp",
+      "physical_lines": 286,
+      "code_lines": 264,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 96
+    },
+    {
+      "path": "src/reconstructed/act_map.cpp",
+      "physical_lines": 412,
+      "code_lines": 391,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 8,
+      "field_accesses": 88
+    },
+    {
+      "path": "src/reconstructed/act_properties.cpp",
+      "physical_lines": 454,
+      "code_lines": 423,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 61
+    },
+    {
+      "path": "src/reconstructed/act_resource.cpp",
+      "physical_lines": 154,
+      "code_lines": 129,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 12
+    },
+    {
+      "path": "src/reconstructed/actor_animation.cpp",
+      "physical_lines": 188,
+      "code_lines": 165,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/actor_cleanup.cpp",
+      "physical_lines": 127,
+      "code_lines": 112,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/actor_collision.cpp",
+      "physical_lines": 347,
+      "code_lines": 333,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 42
+    },
+    {
+      "path": "src/reconstructed/actor_methods.cpp",
+      "physical_lines": 163,
+      "code_lines": 125,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/archive.cpp",
+      "physical_lines": 249,
+      "code_lines": 218,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/asset_store.cpp",
+      "physical_lines": 81,
+      "code_lines": 74,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/legacy_abi.cpp",
+      "physical_lines": 51,
+      "code_lines": 41,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/legacy_copy_entries.cpp",
+      "physical_lines": 18,
+      "code_lines": 13,
+      "address_definitions": 3,
+      "address_body_lines": 4,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/legacy_method_entries.cpp",
+      "physical_lines": 131,
+      "code_lines": 91,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/map_layers.cpp",
+      "physical_lines": 89,
+      "code_lines": 77,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/map_render.cpp",
+      "physical_lines": 52,
+      "code_lines": 45,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/native_instance.cpp",
+      "physical_lines": 100,
+      "code_lines": 91,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/script_callbacks.cpp",
+      "physical_lines": 201,
+      "code_lines": 165,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/sprite.cpp",
+      "physical_lines": 74,
+      "code_lines": 63,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/sprite_color.cpp",
+      "physical_lines": 69,
+      "code_lines": 56,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/squirrel_object.cpp",
+      "physical_lines": 66,
+      "code_lines": 58,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/stage_cleanup.cpp",
+      "physical_lines": 98,
+      "code_lines": 83,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/reconstructed/texture_store.cpp",
+      "physical_lines": 107,
+      "code_lines": 94,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/act_binding.cpp",
+      "physical_lines": 2094,
+      "code_lines": 1934,
+      "address_definitions": 9,
+      "address_body_lines": 38,
+      "legacy_local_tokens": 0,
+      "field_accesses": 192
+    },
+    {
+      "path": "src/squirrel/actor_lifecycle.cpp",
+      "physical_lines": 224,
+      "code_lines": 197,
+      "address_definitions": 6,
+      "address_body_lines": 64,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/native_property_bridge.cpp",
+      "physical_lines": 198,
+      "code_lines": 188,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/sqrat_object_bridge.cpp",
+      "physical_lines": 275,
+      "code_lines": 258,
+      "address_definitions": 2,
+      "address_body_lines": 29,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_array_bridge.cpp",
+      "physical_lines": 37,
+      "code_lines": 28,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_class_binding.cpp",
+      "physical_lines": 253,
+      "code_lines": 225,
+      "address_definitions": 16,
+      "address_body_lines": 159,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_compile_bridge.cpp",
+      "physical_lines": 108,
+      "code_lines": 98,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_csv.cpp",
+      "physical_lines": 140,
+      "code_lines": 131,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_game_objects.cpp",
+      "physical_lines": 203,
+      "code_lines": 189,
+      "address_definitions": 3,
+      "address_body_lines": 26,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_generator_bridge.cpp",
+      "physical_lines": 50,
+      "code_lines": 40,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_host_compat.cpp",
+      "physical_lines": 459,
+      "code_lines": 446,
+      "address_definitions": 34,
+      "address_body_lines": 304,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_legacy_api.cpp",
+      "physical_lines": 540,
+      "code_lines": 416,
+      "address_definitions": 111,
+      "address_body_lines": 138,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_method_dispatch.cpp",
+      "physical_lines": 179,
+      "code_lines": 166,
+      "address_definitions": 15,
+      "address_body_lines": 97,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_arguments.cpp",
+      "physical_lines": 115,
+      "code_lines": 109,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_calls.cpp",
+      "physical_lines": 413,
+      "code_lines": 398,
+      "address_definitions": 37,
+      "address_body_lines": 236,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_native_variables.cpp",
+      "physical_lines": 190,
+      "code_lines": 174,
+      "address_definitions": 5,
+      "address_body_lines": 17,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_operations.cpp",
+      "physical_lines": 66,
+      "code_lines": 55,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_source_gc.cpp",
+      "physical_lines": 104,
+      "code_lines": 93,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_source_runtime.cpp",
+      "physical_lines": 153,
+      "code_lines": 129,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_table_values.cpp",
+      "physical_lines": 52,
+      "code_lines": 49,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_thread.cpp",
+      "physical_lines": 99,
+      "code_lines": 86,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_value_bridge.cpp",
+      "physical_lines": 87,
+      "code_lines": 62,
+      "address_definitions": 0,
+      "address_body_lines": 0,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    },
+    {
+      "path": "src/squirrel/squirrel_vm_bootstrap.cpp",
+      "physical_lines": 92,
+      "code_lines": 89,
+      "address_definitions": 5,
+      "address_body_lines": 52,
+      "legacy_local_tokens": 0,
+      "field_accesses": 0
+    }
+  ],
+  "cpp_code_lines": 12075,
+  "c_code_lines": 118874,
+  "cpp_share": 9.22,
+  "history": [
+    {
+      "revision": "3cffc80",
+      "physical_lines": 194035,
+      "code_lines": 162549,
+      "address_definitions": 3837,
+      "address_body_lines": 135982
+    },
+    {
+      "revision": "955aee6",
+      "physical_lines": 146767,
+      "code_lines": 118853,
+      "address_definitions": 3518,
+      "address_body_lines": 97748
+    },
+    {
+      "revision": "HEAD",
+      "physical_lines": 146767,
+      "code_lines": 118853,
+      "address_definitions": 3518,
+      "address_body_lines": 97748
+    }
+  ],
+  "largest_remaining": [
+    {
+      "name": "function_41c870",
+      "line": 41071,
+      "lines": 1748,
+      "tokens": 8963
+    },
+    {
+      "name": "function_4077c0",
+      "line": 15324,
+      "lines": 1620,
+      "tokens": 16002
+    },
+    {
+      "name": "function_41bc30",
+      "line": 39154,
+      "lines": 1601,
+      "tokens": 8197
+    },
+    {
+      "name": "function_4141e0",
+      "line": 30209,
+      "lines": 713,
+      "tokens": 3976
+    },
+    {
+      "name": "function_413500",
+      "line": 29382,
+      "lines": 682,
+      "tokens": 5969
+    },
+    {
+      "name": "function_473010",
+      "line": 126776,
+      "lines": 619,
+      "tokens": 5717
+    },
+    {
+      "name": "function_460e00",
+      "line": 111554,
+      "lines": 585,
+      "tokens": 3824
+    },
+    {
+      "name": "function_41b7c0",
+      "line": 38537,
+      "lines": 527,
+      "tokens": 2678
+    },
+    {
+      "name": "function_405320",
+      "line": 12166,
+      "lines": 491,
+      "tokens": 4763
+    },
+    {
+      "name": "function_428150",
+      "line": 53567,
+      "lines": 430,
+      "tokens": 3682
+    },
+    {
+      "name": "function_43fc40",
+      "line": 78114,
+      "lines": 417,
+      "tokens": 3824
+    },
+    {
+      "name": "function_458a20",
+      "line": 105415,
+      "lines": 409,
+      "tokens": 3312
+    },
+    {
+      "name": "function_435220",
+      "line": 66645,
+      "lines": 393,
+      "tokens": 3571
+    },
+    {
+      "name": "function_421860",
+      "line": 47468,
+      "lines": 370,
+      "tokens": 2893
+    },
+    {
+      "name": "function_46d950",
+      "line": 123516,
+      "lines": 366,
+      "tokens": 2523
+    },
+    {
+      "name": "function_44e3f0",
+      "line": 93244,
+      "lines": 362,
+      "tokens": 2332
+    },
+    {
+      "name": "function_4180e0",
+      "line": 34740,
+      "lines": 352,
+      "tokens": 2239
+    },
+    {
+      "name": "function_411100",
+      "line": 26986,
+      "lines": 349,
+      "tokens": 2219
+    },
+    {
+      "name": "function_43d110_this",
+      "line": 75630,
+      "lines": 335,
+      "tokens": 2642
+    },
+    {
+      "name": "function_4175f0",
+      "line": 33693,
+      "lines": 334,
+      "tokens": 2635
+    }
+  ],
+  "squirrel_comparison": [
+    {
+      "path": "COPYRIGHT",
+      "same": true
+    },
+    {
+      "path": "HISTORY",
+      "same": true
+    },
+    {
+      "path": "include/sqstdaux.h",
+      "same": true
+    },
+    {
+      "path": "include/sqstdblob.h",
+      "same": true
+    },
+    {
+      "path": "include/sqstdio.h",
+      "same": true
+    },
+    {
+      "path": "include/sqstdmath.h",
+      "same": true
+    },
+    {
+      "path": "include/sqstdstring.h",
+      "same": true
+    },
+    {
+      "path": "include/sqstdsystem.h",
+      "same": true
+    },
+    {
+      "path": "include/squirrel.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdaux.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdblob.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdblobimpl.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdio.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdmath.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdrex.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdstream.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdstream.h",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdstring.cpp",
+      "same": true
+    },
+    {
+      "path": "sqstdlib/sqstdsystem.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/Makefile",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqapi.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqarray.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqbaselib.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqclass.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqclass.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqclosure.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqcompiler.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqcompiler.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqdebug.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqfuncproto.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqfuncstate.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqfuncstate.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqlexer.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqlexer.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqmem.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqobject.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqobject.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqopcodes.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqpcheader.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqstate.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqstate.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqstring.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqtable.cpp",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqtable.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/squirrel.dsp",
+      "same": true
+    },
+    {
+      "path": "squirrel/squserdata.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/squtils.h",
+      "same": true
+    },
+    {
+      "path": "squirrel/sqvm.cpp",
+      "same": false
+    },
+    {
+      "path": "squirrel/sqvm.h",
+      "same": true
+    }
+  ]
+}

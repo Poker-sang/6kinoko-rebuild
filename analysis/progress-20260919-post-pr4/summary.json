@@ -1,0 +1,123 @@
+{
+  "revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
+  "total": 4890,
+  "categories": {
+    "unchanged_decompiled_body": 1960,
+    "modified_nonempty_body": 424,
+    "cpp_address_replacement": 218,
+    "original_short_body": 833,
+    "pr4_disconnected_removal": 228,
+    "replacement_mapping_unresolved": 537,
+    "explicit_receiver_in_c": 18,
+    "historical_removal_manifest": 576,
+    "simplified_fragment_candidate": 96
+  },
+  "instruction_stub_definitions": 58,
+  "instruction_stubs_with_source_occurrences": 57,
+  "instruction_stub_source_occurrences": 2076,
+  "main_lines": 146767,
+  "main_inline_assembly": 0,
+  "source_sha256": {
+    "src/decompiled/6kinoko_rebuilt.c": "37c1bc66fbafe97fb3fc923a29631ec5654f6f8057cbb2e27334274824dced7e",
+    "src/decompiled/retdec_asm_stubs.c": "f93d2279266ff1714e4a2694df811a9d5a4268dbf12e662c6f0346b87ab5b228",
+    "src/platform/audio_math.cpp": "2beb5e70718f5b73a872c6ff011f0205e97685e3c8bf370ff14506893fd0f4c0",
+    "src/platform/diagnostics.cpp": "a822d9d8c2cea5e6c4ab6b1d8dfe7e82d4baf87de26902d0b0ae83374e71d3f2",
+    "src/platform/game_math.cpp": "4f236845b45ad67f451899ad0456b5d3993b0c30651497ca5da6d852f9f3111b",
+    "src/platform/legacy_frame_copy.cpp": "0c0cca11b45a27ddacb099c4f013e84cfbe290c81292c99eba48c452f8bbed16",
+    "src/platform/legacy_frame_entry.cpp": "80c818a299d0ad4e178c815ff63a30231e83a6065c300970f832f875ecde2a2c",
+    "src/platform/retdec_address_space.cpp": "52f4d748554e5b5a38638ea74db027a004afc1dc02ad2fc2579ee2a543619a7c",
+    "src/platform/retdec_memory.cpp": "5c677c3ad41e82028212b6eb826699da14976e8d90f855c4b8abbcf30c0e9086",
+    "src/platform/retdec_runtime_compat.cpp": "d6f61346bd0a0212aac8ebe105950282ec772474b89a945bb5716889b949a188",
+    "src/platform/windows_entry.cpp": "3a8a491ba00fd87292ae0e96feca5479d51cef2e3c301bd389658b618f0bfc9b",
+    "src/reconstructed/act_clone.cpp": "b501b11ef3b4db476caf30b809611582669984f0ca8615bb17b34e63a6704ec4",
+    "src/reconstructed/act_containers.cpp": "054a2b20b4e294fa08a5a0a55273466546c3731cd0c7f765d262f3dad8d75cb1",
+    "src/reconstructed/act_document.cpp": "8ef9df7f0048189cabd9e0c4407955d061a10c5ff48798f739460badf056cbc7",
+    "src/reconstructed/act_layout.cpp": "6e8ed0b9e3d5b32a9a4cb9e4079e5df05806491c43acd325f3e2dee66643acfa",
+    "src/reconstructed/act_lifetime.cpp": "adf16309a25db6823cc6c56477a66d1b5a6cc6af724bf3bb93dfb53e6fc6e119",
+    "src/reconstructed/act_map.cpp": "19028168dfa745a6b4fa2d1f33d40b3e4ef4a6b146310f3dd64e4ad421b2bc53",
+    "src/reconstructed/act_properties.cpp": "dc2ac9d69fa0b5ef9327ccd1e3c473715bdcc1600fb64f33b4a592ece8216def",
+    "src/reconstructed/act_resource.cpp": "bd313d9d78f0a89708e0a3e9a421c09815ba293724d4cfac47e967d359b957a4",
+    "src/reconstructed/actor_animation.cpp": "4a3c50a07939a8ed28532e812e130022a7357f305252b181dfc8fb6245fdda2b",
+    "src/reconstructed/actor_cleanup.cpp": "03215a3032f0bcb719f8b00e350c3a81fbd15c2fbb3e56cff8a524e52f0c50ea",
+    "src/reconstructed/actor_collision.cpp": "5f07d2ce03d4a2e6babcfecc293fac00f9fa706f6a623a2cc15baa4ca05f7f96",
+    "src/reconstructed/actor_methods.cpp": "0f2fc3c83f2f9645bca6f6efea04cb83e3e4002c55c0eb0bca2b541c7a48e68a",
+    "src/reconstructed/archive.cpp": "e226fcd7ae6c5eb7a811f6b2e99f4da08011f2efa9a28111f3e554cfc9495efe",
+    "src/reconstructed/asset_store.cpp": "8119089315926090976b748a03a7dccef863f1206107fbcae3e3809773efbd19",
+    "src/reconstructed/legacy_abi.cpp": "0c724b680e40569253858129706bf25ae43a30dc3fc479d5409c7c692e28fd9c",
+    "src/reconstructed/legacy_copy_entries.cpp": "97c19836080501e3cb2fee1e5a02c37b5fa7a7ec30f0a9051adce9845545c0ff",
+    "src/reconstructed/legacy_method_entries.cpp": "128d9d0037890f4df7663b8b4e6b9b544b1de4a173ab6b084b008e06ade3f3e5",
+    "src/reconstructed/map_layers.cpp": "a54c7973ca68a53bb894fe8c35e68d02de6d98abf639a547c83f524ad0897b2c",
+    "src/reconstructed/map_render.cpp": "6220183db55d6252c2706c95af96a941cb4d1ffcd064afa37641d4da68de1756",
+    "src/reconstructed/native_instance.cpp": "dee7c45f1177fcaa54fd317926cbd662ab80e874c0c9a0179806f71416be4abc",
+    "src/reconstructed/script_callbacks.cpp": "730de0b777e020278e296b2607f436073b2b99751fb2a39216056c856fc4e6e3",
+    "src/reconstructed/sprite.cpp": "2977079b678dd3c85a0fadfdf56611ee9d5f0f1f42b927dd543c70a843c97132",
+    "src/reconstructed/sprite_color.cpp": "25ecb664b79808d9480a79841cd0c322757d67df640c46d17ece6ef9a342d4ae",
+    "src/reconstructed/squirrel_object.cpp": "abd77e83e9e7cef3c23b9cfde61eadc34312714961021b436938bf369d762551",
+    "src/reconstructed/stage_cleanup.cpp": "a3e62df165916d4e59573f6f29609d10fc466e0855b0fb875e00b15ba2c13fac",
+    "src/reconstructed/texture_store.cpp": "efadef9b30f595543e0fadfb051c58e13c5eab241332bda4c6ed2526afcef6ac",
+    "src/squirrel/act_binding.cpp": "d0c28376a50d9d47b44df087abd1075359117b8c2b1702e2c62dc66057bd402c",
+    "src/squirrel/actor_lifecycle.cpp": "e605962445d3313445d3763f1c1154d7b18824540ad29f8722b431f8ddb7bf6b",
+    "src/squirrel/native_property_bridge.cpp": "416991b56fdd617045e46492e1325ec6eda5fd615be0fe0d9c969b03f649f4a7",
+    "src/squirrel/sqrat_object_bridge.cpp": "d8bb4f5115970104d1f5a13af9a4275611c8ec954f3225de59317f2c1217d95a",
+    "src/squirrel/squirrel_array_bridge.cpp": "c1d64066083b157707aed96e6c7af75ca52e6877e1e2d6f41698fe732656831f",
+    "src/squirrel/squirrel_class_binding.cpp": "7ad873aac0c20d5f09d635dbfe1727d6b5397ddfc253e5039fd55222466329a2",
+    "src/squirrel/squirrel_compile_bridge.cpp": "c72d453417bd4cdac625be96cbfb5b27d12a5466a2afd72bdcb45c823c0d2737",
+    "src/squirrel/squirrel_csv.cpp": "8cf1e3c2415df42c3f57d37b24b0cf3d4bc4ffc2b2c35e97bec1d76075551d3f",
+    "src/squirrel/squirrel_game_objects.cpp": "6cbe84d20e0c32a069e14478c8ba674721a1a6022a9c88acfa06696ff5361fe8",
+    "src/squirrel/squirrel_generator_bridge.cpp": "fc353a24e7a303b49cd11899343e1319fc934f485230c1bd53f0e18f78966920",
+    "src/squirrel/squirrel_host_compat.cpp": "3582832b5c0a39e6cf1d0b0dcfb2eff3983a764b11b3be15e82af452426f88b1",
+    "src/squirrel/squirrel_legacy_api.cpp": "50fab079af0e42ee149d3813917f94cad5f408257c628f613b8f2798461d6acb",
+    "src/squirrel/squirrel_method_dispatch.cpp": "7e216e3acfe84a3f753ed2aa72068d9b1e2992d0385c75c34df295e64c1a8d6a",
+    "src/squirrel/squirrel_native_arguments.cpp": "e055609beb71a2bc41e37385de98e95e4a1ee58ab034cb444af1a74bb11db142",
+    "src/squirrel/squirrel_native_calls.cpp": "1ef17bc6a6d9627a8f4778b9135e6398dee791b1b3a8d6d0ec0c81c556a55b00",
+    "src/squirrel/squirrel_native_variables.cpp": "28754094fe7d4f4591e284ad08368065284f58cbe018c4c01d37320466e7be35",
+    "src/squirrel/squirrel_operations.cpp": "116c399e4e03b99a14a5d7923f7e7e9023f665115aad6794cdfa17db9be6a966",
+    "src/squirrel/squirrel_source_gc.cpp": "63b2974181218dda2cc28444e6e0f169a750239b65ae32d3ad7c3224f23d0255",
+    "src/squirrel/squirrel_source_runtime.cpp": "f3107215da5b57095025e16133bbdfd2a4b72b5049485160827feb2f9cf05ee9",
+    "src/squirrel/squirrel_table_values.cpp": "b15a12c3debbd07336aaf6a45bd16a3261f2b9ce388bd30fdc8da5f63bfe75bd",
+    "src/squirrel/squirrel_thread.cpp": "7ab1ff1de2cd112cff7800cce4b25bd931573eb40aba24152a3a3cd0b977cf4f",
+    "src/squirrel/squirrel_value_bridge.cpp": "1ac17df64861fc417f8eb73daf83cf2de547a42ceeabbee119080a1c6f53ca2e",
+    "src/squirrel/squirrel_vm_bootstrap.cpp": "eb7db920c53681870dcbaa12aeee0a82716e9ba4d6166f5259601130e272a6e2"
+  },
+  "limitations": "Address-entry source classification, not recovered-feature counts. No preprocessor, link reachability or dynamic coverage analysis. Stub occurrences are lexical, not proven live calls.",
+  "ida_entry_kind_by_category": {
+    "unchanged_decompiled_body": {
+      "function_start": 1643,
+      "internal_fragment": 298,
+      "no_function_owner": 19
+    },
+    "modified_nonempty_body": {
+      "function_start": 411,
+      "internal_fragment": 13
+    },
+    "cpp_address_replacement": {
+      "function_start": 218
+    },
+    "original_short_body": {
+      "function_start": 180,
+      "internal_fragment": 650,
+      "no_function_owner": 3
+    },
+    "pr4_disconnected_removal": {
+      "function_start": 217,
+      "no_function_owner": 9,
+      "internal_fragment": 2
+    },
+    "replacement_mapping_unresolved": {
+      "function_start": 504,
+      "internal_fragment": 30,
+      "no_function_owner": 3
+    },
+    "explicit_receiver_in_c": {
+      "function_start": 17,
+      "internal_fragment": 1
+    },
+    "historical_removal_manifest": {
+      "function_start": 51,
+      "internal_fragment": 525
+    },
+    "simplified_fragment_candidate": {
+      "internal_fragment": 96
+    }
+  }
+}
