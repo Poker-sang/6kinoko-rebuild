@@ -1,0 +1,1 @@
+{"addr":"0x4083e0","code":"bool __thiscall sub_4083E0(_BYTE *this, unsigned __int8 a2, char a3, char a4, char a5)\n{\n  return *((_DWORD *)this + a2) == 1 /*0x4083ef*/\n      && (a3 == 0 || *(this + 1040) != 0)\n      && (a4 == 0 || *(this + 1041) != 0)\n      && (a5 == 0 || *(this + 1042) != 0);\n}"}
