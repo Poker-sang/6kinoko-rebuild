@@ -3115,7 +3115,7 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
        flags=0 destroys a stack wrapper; flags=1 also frees a heap wrapper. */
     CHECK(retdec_call_thiscall1_result(table, (void *)(intptr_t)g16.e0, 0) == PTR(table));
     CHECK(table[0] == PTR(&g16) && table[1] == 0x01000001 && table[2] == 0);
-    int32_t *heap = _malloc(3 * sizeof(int32_t));
+    int32_t *heap = malloc(3 * sizeof(int32_t));
     CHECK(heap != NULL);
     function_4aa3a0_this(PTR(root + 1), PTR(heap), "entry_array");
     int32_t heap_address = PTR(heap);

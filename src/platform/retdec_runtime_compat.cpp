@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "retdec_math_compat.h"
 #include <cstring>
 
 namespace {
@@ -161,58 +160,6 @@ uint32_t timeBeginPeriod(uint32_t period)
     return begin_period == nullptr ? 0u : (uint32_t)begin_period((UINT)period);
 }
 
-void *_malloc(size_t size)
-{
-    return malloc(size);
-}
-
-void *_realloc(void *memory, size_t size)
-{
-    return realloc(memory, size);
-}
-
-void _free(void *memory)
-{
-    free(memory);
-}
-
-void *_memcpy(void *destination, const void *source, size_t count)
-{
-    return memmove(destination, source, count);
-}
-
-void *_memset(void *destination, int value, size_t count)
-{
-    return memset(destination, value, count);
-}
-
-void *_memchr(const void *buffer, int value, size_t count)
-{
-    return (void *)memchr(buffer, value, count);
-}
-
-int _memcpy_s(void *destination, size_t destination_size,
-              const void *source, size_t source_size)
-{
-    return memcpy_s(destination, destination_size, source, source_size);
-}
-
-int _memmove_s(void *destination, size_t destination_size,
-               const void *source, size_t source_size)
-{
-    return memmove_s(destination, destination_size, source, source_size);
-}
-
-int _strcpy_s(char *destination, size_t destination_size, const char *source)
-{
-    return strcpy_s(destination, destination_size, source);
-}
-
-int _strncpy_s(char *destination, size_t destination_size,
-               const char *source, size_t source_count)
-{
-    return strncpy_s(destination, destination_size, source, source_count);
-}
 
 size_t _strcspn(const char *text, const char *reject)
 {
@@ -234,51 +181,6 @@ size_t _fwrite(const void *buffer, size_t size, size_t count, FILE *stream)
     return fwrite(buffer, size, count, stream);
 }
 
-void _qsort(void *base, size_t count, size_t size,
-            int (__cdecl *compare)(const void *, const void *))
-{
-    qsort(base, count, size, compare);
-}
-
-double _strtod(const char *text, char **end)
-{
-    return strtod(text, end);
-}
-
-double _frexp(double value, int *exponent)
-{
-    return frexp(value, exponent);
-}
-
-double _fabs(double value)
-{
-    return fabs(value);
-}
-
-double _acos(double value)
-{
-    return acos(value);
-}
-
-double _floor(double value)
-{
-    return floor(value);
-}
-
-double _ceil(double value)
-{
-    return ceil(value);
-}
-
-int _sprintf_s(char *buffer, size_t buffer_size, const char *format, ...)
-{
-    int result;
-    va_list args;
-    va_start(args, format);
-    result = vsprintf_s(buffer, buffer_size, format, args);
-    va_end(args);
-    return result;
-}
 
 /* The RetDec output passes a caller-owned vararg area to this old helper. A
    normal vararg view is sufficient for the diagnostic strings used here. */
@@ -294,20 +196,6 @@ double __atof_l(const char *text, void *locale, void *unused)
     return strtod(text, nullptr);
 }
 
-long double llvm_log2_f80(long double value)
-{
-    return log2l(value);
-}
-
-long double llvm_round_f80(long double value)
-{
-    return roundl(value);
-}
-
-long double llvm_exp2_f80(long double value)
-{
-    return exp2l(value);
-}
 
 uint8_t llvm_ctpop_i8(uint8_t value)
 {
