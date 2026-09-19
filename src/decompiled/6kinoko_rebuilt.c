@@ -151362,7 +151362,6 @@ int32_t function_56ffffb4(void) {
 // int32_t __FindAndUnlinkFrame(int32_t a1);
 // int32_t __fload_withFB(void);
 // int32_t __fsopen(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-// int32_t __ftol(void);
 // int32_t __Getctype(int32_t * a1);
 // int32_t __Getcvt(void);
 // int32_t __getptd(void);

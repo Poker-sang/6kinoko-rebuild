@@ -56,10 +56,14 @@ target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
     src/platform/retdec_memory.cpp
+    src/platform/legacy_frame_copy.cpp
     src/platform/retdec_runtime_compat.cpp)
 target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
 target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(kinoko_retdec_support PRIVATE /Gy)
+# Only this transitional frame adapter needs fixed frames, never the callers.
+set_source_files_properties(src/platform/legacy_frame_copy.cpp
+    PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-")
 
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
 target_include_directories(kinoko_diagnostics PUBLIC include)
@@ -83,7 +87,6 @@ target_include_directories(kinoko_zlib PUBLIC ${KINOKO_ZLIB_DIR})
 
 add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
-    src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
     src/platform/windows_entry.cpp
     src/platform/resources/windows_resources.rc
@@ -277,7 +280,6 @@ add_test(
 
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
-    src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
 )
 target_include_directories(kinoko_stage_contract PRIVATE
@@ -409,8 +411,24 @@ target_link_libraries(kinoko_legacy_copy_entries_contract PRIVATE kinoko_legacy_
 target_compile_options(kinoko_legacy_copy_entries_contract PRIVATE /Od /RTC1)
 add_test(NAME legacy_copy_entries_contract COMMAND kinoko_legacy_copy_entries_contract)
 
+# Both frame-pointer policies must agree with the register captured by Windows.
+foreach(policy IN ITEMS checked optimized)
+    add_executable(kinoko_legacy_frame_copy_${policy}_contract tests/legacy_frame_copy_contract.cpp)
+    target_include_directories(kinoko_legacy_frame_copy_${policy}_contract PRIVATE include)
+    target_link_libraries(kinoko_legacy_frame_copy_${policy}_contract PRIVATE kinoko_retdec_support)
+    if(policy STREQUAL "checked")
+        target_compile_options(kinoko_legacy_frame_copy_${policy}_contract PRIVATE /Od /RTC1 /Oy-)
+    else()
+        target_compile_options(kinoko_legacy_frame_copy_${policy}_contract PRIVATE /O2 /Oy)
+    endif()
+    target_link_options(kinoko_legacy_frame_copy_${policy}_contract PRIVATE /OPT:REF /OPT:ICF)
+    add_test(NAME legacy_frame_copy_${policy}_contract COMMAND kinoko_legacy_frame_copy_${policy}_contract)
+    set_tests_properties(legacy_frame_copy_${policy}_contract PROPERTIES TIMEOUT 120)
+endforeach()
+
 set(KINOKO_TOOL_TARGETS
     kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
+    kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract
