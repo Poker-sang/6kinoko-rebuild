@@ -133969,128 +133969,19 @@ typedef struct retdec_native_entry {
 
 
 // Address range: 0x4a8c50 - 0x4a8c8a
-int32_t function_4a8c50(void) {
-    if (g645 != 0) {
-        /* 4A8CC0 allocates a 12-byte SquirrelObject root wrapper. */
-        function_4a9570_this(g645);
-        free((void *)(intptr_t)g645);
-        g645 = 0;
-    }
-    if (g642 == 0) {
-        function_4a9570_this((int32_t)(intptr_t)unk_5149EC);
-    }
-    g644 = NULL;
-    return 0;
-}
+/* function_4a8c50 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8c90 - 0x4a8cb4
-int32_t function_4a8c90(int32_t vm, const char *format, ...) {
-    char message[4096] = "stagevm:aux ";
-    va_list arguments;
-    int result;
-    (void)vm;
-    va_start(arguments, format);
-    result = vsnprintf(message + 12, sizeof(message) - 12, format, arguments);
-    va_end(arguments);
-    retdec_trace(message);
-    return result;
-}
+/* function_4a8c90 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8cc0 - 0x4a8d54
-int32_t function_4a8cc0(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4a8cd0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result = g645; // 0x4a8ce3
-    if (result != 0) {
-        // 0x4a8d45
-        __writefsdword(0, v1);
-        return result;
-    }
-    // 0x4a8cec
-    function_48a670((int32_t)g644);
-    int32_t v2 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x4a8d0d
-    if (v2 != 0)
-        function_4a94e0_this(v2);
-    // 0x4a8d1a
-    g645 = v2;
-    function_4a9660_this(v2, -1);
-    function_48aa30((int32_t)g644, 1);
-    // 0x4a8d45
-    __writefsdword(0, v1);
-    return g645;
-}
+/* function_4a8cc0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8d60 - 0x4a8da5
 
 
 // Address range: 0x4a8db0 - 0x4a8e97
-int32_t function_4a8db0(int32_t a1) {
-    int32_t current = a1;
-
-    retdec_trace_i32("4a8db0:arg", a1);
-    retdec_trace_i32("4a8db0:gvm-before", (int32_t)(intptr_t)g644);
-    retdec_trace_i32("4a8db0:caller",
-                     (int32_t)(uintptr_t)_ReturnAddress());
-
-    if (a1 != 0) {
-        // 0x4a8dbb
-        if ((int32_t)g644 == a1) {
-            return 1;
-        }
-    }
-
-    if (g645 != 0) {
-        // The original calls the first virtual cleanup slot here.  The
-        // generated object type is not recovered, but the global must still
-        // be cleared before creating the next VM.
-        g645 = 0;
-    }
-
-    if (g642 == 0) {
-        function_4a9570();
-    }
-    g644 = NULL;
-
-    if (a1 == 0) {
-        current = function_48a170(1024);
-        retdec_trace(current != 0 ? "4a8db0:vm-ok" : "4a8db0:vm-null");
-        if (current == 0)
-            return 0;
-
-        int32_t v8 = _3f__3f_2_40_YAPAXI_40_Z(8);
-        retdec_trace("4a8db0:after-alloc");
-        if (v8 != 0) {
-            *(int32_t *)v8 = *(int32_t *)(current + 140);
-            *(int32_t *)(v8 + 4) = g643;
-            g643 = v8;
-        }
-        function_48b8b0(current, (int32_t)function_4a8c90);
-        retdec_trace("4a8db0:after-error-handler");
-        function_48a670(current);
-        retdec_trace("4a8db0:after-print");
-        function_4c7c90(current);
-        retdec_trace("4a8db0:after-register-1");
-        function_4c73a0(current);
-        retdec_trace("4a8db0:after-register-2");
-        function_4c6c20(current);
-        retdec_trace("4a8db0:after-register-3");
-        function_4c6670(current);
-        retdec_trace("4a8db0:after-register-4");
-        function_4c5c80(current);
-        retdec_trace("4a8db0:after-register-5");
-        function_48aa30(current, 1);
-        retdec_trace("4a8db0:after-root");
-    }
-
-    g642 = 0;
-    g644 = (char *)current;
-    retdec_trace_i32("4a8db0:gvm", (int32_t)g644);
-    retdec_trace_i32("4a8db0:gshared", g644 != NULL ? *(int32_t *)((int32_t)g644 + 140) : 0);
-    retdec_trace_i32("4a8db0:before-owner", (int32_t)(intptr_t)g644);
-    int32_t owner_result = function_4a9e30_this((int32_t)&unk_5149EC, current);
-    retdec_trace_i32("4a8db0:after-owner", (int32_t)(intptr_t)g644);
-    return owner_result & -256 | 1;
-}
+/* function_4a8db0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8ea0 - 0x4a8f90
 
@@ -134099,10 +133990,7 @@ int32_t function_4a8db0(int32_t a1) {
 
 
 // Address range: 0x4a90c0 - 0x4a91bc
-int32_t function_4a90c0(int32_t * a1, int32_t * a2) {
-    return function_4a90c0_this((int32_t)(intptr_t)a1,
-                                (int32_t)(intptr_t)a2);
-}
+/* function_4a90c0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a91c0 - 0x4a9244
 
@@ -134156,9 +134044,7 @@ int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void) {
    recover ECX and is retained only for untouched legacy paths. */
 
 // Address range: 0x4a9570 - 0x4a95b8
-int32_t function_4a9570(void) {
-    return function_4a9570_this((int32_t)&unk_5149EC);
-}
+/* function_4a9570 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a95c0 - 0x4a9600
 int32_t function_4a95c0(int32_t a1) {
