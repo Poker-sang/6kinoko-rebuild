@@ -193,6 +193,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/native_property_bridge.cpp
     src/squirrel/squirrel_native_arguments.cpp
     src/squirrel/squirrel_class_binding.cpp
+    src/squirrel/actor_registration.cpp
     src/squirrel/squirrel_native_variables.cpp
     src/squirrel/squirrel_method_dispatch.cpp
     src/reconstructed/squirrel_object.cpp
