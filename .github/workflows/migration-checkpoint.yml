@@ -19,6 +19,8 @@ jobs:
       - name: Apply reviewed migration batch
         run: |
           python3 tools/migration-checkpoint.py
+          # Workflow updates are submitted separately by the authorized user.
+          git restore --source=HEAD -- .github/workflows/windows-x86.yml
           python3 tools/check_migration_boundaries.py
           git diff --check
           git config user.name 'Poker-sang'
