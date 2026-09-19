@@ -378,6 +378,22 @@ target_link_libraries(kinoko_squirrel_host_object_contract PRIVATE kinoko_squirr
 add_test(NAME squirrel_host_object_contract COMMAND kinoko_squirrel_host_object_contract)
 set_tests_properties(squirrel_host_object_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_squirrel_pair_contract tests/squirrel_pair_contract.cpp)
+target_include_directories(kinoko_squirrel_pair_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_squirrel_pair_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_link_options(kinoko_squirrel_pair_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME squirrel_pair_contract COMMAND kinoko_squirrel_pair_contract)
+set_tests_properties(squirrel_pair_contract PROPERTIES TIMEOUT 60)
+
+add_executable(kinoko_act_properties_contract tests/act_properties_contract.cpp)
+target_include_directories(kinoko_act_properties_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_act_properties_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_link_options(kinoko_act_properties_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME act_properties_contract COMMAND kinoko_act_properties_contract)
+set_tests_properties(act_properties_contract PROPERTIES TIMEOUT 60)
+
 foreach(contract IN ITEMS sqrat_object native_property)
     add_executable(kinoko_${contract}_contract tests/${contract}_contract.cpp)
     target_include_directories(kinoko_${contract}_contract PRIVATE include
@@ -459,6 +475,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
     kinoko_squirrel_host_object_contract
+    kinoko_squirrel_pair_contract kinoko_act_properties_contract
     kinoko_sqrat_object_contract kinoko_native_property_contract
     kinoko_squirrel_binding_contract
     kinoko_squirrel_native_calls_contract kinoko_squirrel_game_objects_contract
