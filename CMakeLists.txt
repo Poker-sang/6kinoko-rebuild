@@ -367,6 +367,15 @@ target_link_options(kinoko_squirrel_source_vm_contract PRIVATE /OPT:REF /OPT:ICF
 add_test(NAME squirrel_source_vm_contract COMMAND kinoko_squirrel_source_vm_contract)
 set_tests_properties(squirrel_source_vm_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_native_record_view_contract tests/native_record_view_contract.cpp)
+target_include_directories(kinoko_native_record_view_contract PRIVATE include)
+add_test(NAME native_record_view_contract COMMAND kinoko_native_record_view_contract)
+
+add_executable(kinoko_actor_records_contract tests/actor_records_contract.cpp)
+target_include_directories(kinoko_actor_records_contract PRIVATE include)
+target_link_libraries(kinoko_actor_records_contract PRIVATE kinoko_native_methods)
+add_test(NAME actor_records_contract COMMAND kinoko_actor_records_contract)
+
 add_executable(kinoko_com_owner_contract tests/com_owner_contract.cpp)
 target_include_directories(kinoko_com_owner_contract PRIVATE include)
 add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
@@ -497,6 +506,8 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_native_record_view_contract
+    kinoko_actor_records_contract
     kinoko_com_owner_contract
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
