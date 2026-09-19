@@ -533,15 +533,14 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     return 0;
 }
 
-/* Exercise the actual thiscall ABI, not a cdecl call to the adapter signature.
-   The separate /RTC1 ABI contract detects an incorrect callee stack cleanup;
-   these guards also catch accidental writes to caller storage. */
+/* MSVC C does not expose __thiscall function-pointer syntax. Exercise the
+   typed ECX/EDX adapter here; actor_lifecycle_contract.cpp independently calls
+   the real thiscall ABI under /RTC1. These guards catch caller-storage writes. */
 static __declspec(noinline) int32_t probe_set_step_entry(int32_t actor, int32_t object) {
-    typedef int32_t (__thiscall *SetStep)(int32_t, KinokoOwnedObjectWords);
     volatile uint32_t guards[4] = {0x12345678u, 0x87654321u, 0xa55aa55au, 0x5aa55aa5u};
     KinokoOwnedObjectWords argument;
     memcpy(&argument, (void *)(intptr_t)object, sizeof(argument));
-    ((SetStep)function_4606d0)(actor, argument);
+    function_4606d0(actor, NULL, argument);
     return guards[0] == 0x12345678u && guards[1] == 0x87654321u &&
         guards[2] == 0xa55aa55au && guards[3] == 0x5aa55aa5u;
 }
