@@ -2,7 +2,7 @@ name: Source snapshot
 # Preserve the full starting revision for the next C++ migration validation batch.
 on:
   push:
-    branches: ['refactor/squirrel222-native-cpp-20260918']
+    branches: ['refactor/typed-native-runtime-20260919']
     paths: ['.github/workflows/source-snapshot.yml']
   workflow_dispatch:
 permissions:
