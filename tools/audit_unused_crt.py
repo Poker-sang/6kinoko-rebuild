@@ -18,7 +18,7 @@ REFERENCE = 'src/decompiled/6kinoko.exe.c'
 LEX = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 DEFINITION = re.compile(
     r'^(?:static\s+)?(?:RETDEC_NOINLINE\s+)?'
-    r'(?:void|int|long|unsigned|float|double|int\d+_t|uint\d+_t|char)'
+    r'(?:void|int|long|unsigned|float|double|int\d+_t|uint\d+_t|char|size_t|struct\s+lconv)'
     r'[^\n;{}=]*?\b([A-Za-z_]\w*)\s*\([^;{}]*\)\s*\{', re.M)
 
 

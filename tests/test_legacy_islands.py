@@ -102,6 +102,14 @@ class GraphContract(unittest.TestCase):
             with self.subTest(code=code):
                 self.assertIsNone(CALLBACK_LITERAL.search(masked(code)))
 
+    def test_crt_size_and_locale_pointer_definitions(self):
+        from audit_unused_crt import definitions
+        source = 'size_t size_result(const char *s) { return 0; }\n'
+        source += 'struct lconv *locale_result(void) { return localeconv(); }\n'
+        source += 'size_t declaration(void);\nstruct lconv *global = 0;\n'
+        self.assertEqual([entry['name'] for entry in definitions(source)],
+                         ['size_result', 'locale_result'])
+
     def test_duplicate_definition_and_bad_braces_fail_closed(self):
         for suffix in ('int32_t function_401000(void) { return 0; }', '{', '}'):
             with self.subTest(suffix=suffix), self.assertRaises(ValueError):
