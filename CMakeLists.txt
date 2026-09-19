@@ -50,15 +50,22 @@ target_include_directories(kinoko_native_methods PUBLIC include)
 
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
-    src/reconstructed/legacy_method_entries.cpp)
+    src/reconstructed/legacy_method_entries.cpp
+    src/reconstructed/legacy_copy_entries.cpp)
 target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
     src/platform/retdec_memory.cpp
+    src/platform/retdec_address_space.cpp
+    src/platform/legacy_frame_copy.cpp
+    src/platform/legacy_frame_entry.cpp
     src/platform/retdec_runtime_compat.cpp)
 target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
 target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(kinoko_retdec_support PRIVATE /Gy)
+# Only this transitional frame adapter needs fixed frames, never the callers.
+set_source_files_properties(src/platform/legacy_frame_entry.cpp
+    PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-")
 
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
 target_include_directories(kinoko_diagnostics PUBLIC include)
@@ -82,7 +89,6 @@ target_include_directories(kinoko_zlib PUBLIC ${KINOKO_ZLIB_DIR})
 
 add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
-    src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
     src/platform/windows_entry.cpp
     src/platform/resources/windows_resources.rc
@@ -152,8 +158,17 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/reconstructed/act_lifetime.cpp
+    src/reconstructed/act_document.cpp
+    src/reconstructed/act_properties.cpp
+    src/reconstructed/act_map.cpp
+    src/reconstructed/act_containers.cpp
+    src/reconstructed/act_layout.cpp
+    src/squirrel/act_binding.cpp
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
+    src/squirrel/squirrel_vm_bootstrap.cpp
+    src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
@@ -275,7 +290,6 @@ add_test(
 
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
-    src/decompiled/retdec_runtime_compat.c
     src/decompiled/retdec_asm_stubs.c
 )
 target_include_directories(kinoko_stage_contract PRIVATE
@@ -366,6 +380,22 @@ target_link_libraries(kinoko_squirrel_host_object_contract PRIVATE kinoko_squirr
 add_test(NAME squirrel_host_object_contract COMMAND kinoko_squirrel_host_object_contract)
 set_tests_properties(squirrel_host_object_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_squirrel_pair_contract tests/squirrel_pair_contract.cpp)
+target_include_directories(kinoko_squirrel_pair_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_squirrel_pair_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_link_options(kinoko_squirrel_pair_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME squirrel_pair_contract COMMAND kinoko_squirrel_pair_contract)
+set_tests_properties(squirrel_pair_contract PROPERTIES TIMEOUT 60)
+
+add_executable(kinoko_act_properties_contract tests/act_properties_contract.cpp)
+target_include_directories(kinoko_act_properties_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_sources(kinoko_act_properties_contract PRIVATE src/reconstructed/act_properties.cpp)
+target_link_options(kinoko_act_properties_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME act_properties_contract COMMAND kinoko_act_properties_contract)
+set_tests_properties(act_properties_contract PROPERTIES TIMEOUT 60)
+
 foreach(contract IN ITEMS sqrat_object native_property)
     add_executable(kinoko_${contract}_contract tests/${contract}_contract.cpp)
     target_include_directories(kinoko_${contract}_contract PRIVATE include
@@ -392,7 +422,52 @@ foreach(contract IN ITEMS squirrel_native_calls squirrel_game_objects)
     set_tests_properties(${contract}_contract PROPERTIES TIMEOUT 60)
 endforeach()
 
+# /RTC1 checks caller/callee stack agreement without hand-written ESP probes.
+add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
+target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_actor_lifecycle_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+target_compile_options(kinoko_actor_lifecycle_contract PRIVATE /Od /RTC1)
+target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
+set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
+
+add_executable(kinoko_legacy_copy_entries_contract tests/legacy_copy_entries_contract.cpp)
+target_link_libraries(kinoko_legacy_copy_entries_contract PRIVATE kinoko_legacy_abi)
+target_compile_options(kinoko_legacy_copy_entries_contract PRIVATE /Od /RTC1)
+add_test(NAME legacy_copy_entries_contract COMMAND kinoko_legacy_copy_entries_contract)
+
+# Test actual register forwarding separately from deterministic candidate selection.
+# The entry contract supplies a scanner spy; the copy contract links the real one.
+foreach(policy IN ITEMS checked optimized)
+    foreach(boundary IN ITEMS copy entry)
+        set(contract kinoko_legacy_frame_${boundary}_${policy}_contract)
+        add_executable(${contract} tests/legacy_frame_${boundary}_contract.cpp)
+        target_include_directories(${contract} PRIVATE include)
+        if(boundary STREQUAL "entry")
+            # The scanner spy must not pull in a library containing the real
+            # scanner. Compile the actual production entry and validator here.
+            target_sources(${contract} PRIVATE
+                src/platform/legacy_frame_entry.cpp
+                src/platform/retdec_address_space.cpp)
+        else()
+            target_link_libraries(${contract} PRIVATE kinoko_retdec_support)
+        endif()
+        if(policy STREQUAL "checked")
+            target_compile_options(${contract} PRIVATE /Od /RTC1 /Oy-)
+        else()
+            target_compile_options(${contract} PRIVATE /O2 /Oy)
+        endif()
+        target_link_options(${contract} PRIVATE /OPT:REF /OPT:ICF)
+        add_test(NAME legacy_frame_${boundary}_${policy}_contract COMMAND ${contract})
+        set_tests_properties(legacy_frame_${boundary}_${policy}_contract PROPERTIES TIMEOUT 120)
+    endforeach()
+endforeach()
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
+    kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract
+    kinoko_legacy_frame_entry_checked_contract kinoko_legacy_frame_entry_optimized_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract
@@ -402,6 +477,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
     kinoko_squirrel_host_object_contract
+    kinoko_squirrel_pair_contract kinoko_act_properties_contract
     kinoko_sqrat_object_contract kinoko_native_property_contract
     kinoko_squirrel_binding_contract
     kinoko_squirrel_native_calls_contract kinoko_squirrel_game_objects_contract

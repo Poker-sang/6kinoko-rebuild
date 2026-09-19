@@ -244,3 +244,170 @@ extern "C" int32_t function_472030(int32_t id) {
     const auto result=callback ? reinterpret_cast<int32_t (__cdecl *)(void)>(pointer(callback))() : 0;
     sq_pushinteger(vm,result); return 1;
 }
+
+extern "C" int32_t function_470df0(int32_t id, int32_t index) {
+    auto vm = pointer<SQVM>(id);
+    if (!index_exists(vm, index)) return error(vm, argument_error);
+    switch (sq_gettype(vm, index)) {
+    case OT_NULL:
+        return 0;
+    case OT_BOOL: {
+        SQBool value = SQFalse;
+        if (SQ_FAILED(sq_getbool(vm, index, &value))) return error(vm, conversion_error);
+        return value != SQFalse;
+    }
+    case OT_INTEGER: {
+        SQInteger value = 0;
+        if (SQ_FAILED(sq_getinteger(vm, index, &value))) return error(vm, conversion_error);
+        return value != 0;
+    }
+    case OT_FLOAT: {
+        SQFloat value = 0;
+        if (SQ_FAILED(sq_getfloat(vm, index, &value))) return error(vm, conversion_error);
+        return value != 0;
+    }
+    default:
+        return 1;
+    }
+}
+extern "C" int32_t function_470ee0(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    const auto callback = target(vm);
+    if (callback) reinterpret_cast<int32_t (__cdecl *)(void)>(pointer(callback))();
+    return 0;
+}
+extern "C" int32_t function_471160(int32_t callback, int32_t id, int32_t index) {
+    auto vm = pointer<SQVM>(id);
+    if (!strict_type(vm, index, OT_STRING)) return error(vm, argument_error);
+    HSQOBJECT object{};
+    if (!pair_argument(vm, static_cast<int64_t>(index) + 1, object))
+        return error(vm, argument_error);
+    auto argument = transfer(vm, object);
+    const SQChar* value = nullptr;
+    if (SQ_FAILED(sq_getstring(vm, index, &value))) {
+        sq_release(vm, &argument.value);
+        return error(vm, conversion_error);
+    }
+    if (!callback) {
+        sq_release(vm, &argument.value);
+        return 0;
+    }
+    using Function = int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t);
+    const auto result = reinterpret_cast<Function>(pointer(callback))(
+        address(value), static_cast<int32_t>(argument.vtable),
+        static_cast<int32_t>(argument.value._type), data_bits(argument.value));
+    sq_pushbool(vm, static_cast<unsigned char>(result) != 0);
+    return 1;
+}
+extern "C" int32_t function_471330(int32_t callback, int32_t id, int32_t index) {
+    auto vm = pointer<SQVM>(id);
+    const SQChar* value = nullptr;
+    if (SQ_FAILED(string_argument(vm, index, value))) return -1;
+    if (callback) {
+        using Function = int32_t (__cdecl *)(int32_t);
+        const auto result = reinterpret_cast<Function>(pointer(callback))(address(value));
+        sq_pushbool(vm, static_cast<unsigned char>(result) != 0);
+    }
+    return 1;
+}
+extern "C" int32_t function_471880(int32_t callback, int32_t id, int32_t index) {
+    auto vm = pointer<SQVM>(id);
+    const int64_t second_index = static_cast<int64_t>(index) + 1;
+    const int64_t third_index = static_cast<int64_t>(index) + 2;
+    const int64_t fourth_index = static_cast<int64_t>(index) + 3;
+    if (!strict_type(vm, index, OT_STRING) || !strict_type(vm, second_index, OT_INTEGER) ||
+        !strict_type(vm, third_index, OT_INTEGER) || !index_exists(vm, fourth_index))
+        return error(vm, argument_error);
+    const auto fourth = function_470df0(id, static_cast<int32_t>(fourth_index));
+    if (fourth < 0) return fourth;
+    SQInteger third = 0, second = 0;
+    const SQChar* first = nullptr;
+    if (SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(third_index), &third)) ||
+        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(second_index), &second)) ||
+        SQ_FAILED(sq_getstring(vm, index, &first))) return error(vm, conversion_error);
+    if (callback) {
+        using Function = void (__cdecl *)(int32_t, int32_t, int32_t, int32_t);
+        reinterpret_cast<Function>(pointer(callback))(address(first), second, third, fourth);
+    }
+    return 0;
+}
+extern "C" int32_t function_471960(int32_t callback, int32_t id, int32_t index) {
+    auto vm = pointer<SQVM>(id);
+    const int64_t second_index = static_cast<int64_t>(index) + 1;
+    const int64_t third_index = static_cast<int64_t>(index) + 2;
+    const int64_t fourth_index = static_cast<int64_t>(index) + 3;
+    const int64_t fifth_index = static_cast<int64_t>(index) + 4;
+    if (!strict_type(vm, index, OT_STRING) || !strict_type(vm, second_index, OT_INTEGER) ||
+        !strict_type(vm, third_index, OT_INTEGER) || !strict_type(vm, fourth_index, OT_INTEGER) ||
+        !index_exists(vm, fifth_index)) return error(vm, argument_error);
+    const auto fifth = function_470df0(id, static_cast<int32_t>(fifth_index));
+    if (fifth < 0) return fifth;
+    SQInteger fourth = 0, third = 0, second = 0;
+    const SQChar* first = nullptr;
+    if (SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(fourth_index), &fourth)) ||
+        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(third_index), &third)) ||
+        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(second_index), &second)) ||
+        SQ_FAILED(sq_getstring(vm, index, &first))) return error(vm, conversion_error);
+    if (callback) {
+        using Function = void (__cdecl *)(int32_t, int32_t, int32_t, int32_t, int32_t);
+        reinterpret_cast<Function>(pointer(callback))(address(first), second, third, fourth, fifth);
+    }
+    return 0;
+}
+extern "C" int32_t function_471bc0(int32_t id) { return function_470ee0(id); }
+extern "C" int32_t function_471c10(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_471160(target(vm), id, 2);
+}
+extern "C" int32_t function_471d90(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_471330(target(vm), id, 2);
+}
+extern "C" int32_t function_471eb0(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    const auto callback = target(vm);
+    if (!callback) return 0;
+    if (!strict_type(vm, 2, OT_FLOAT) || !strict_type(vm, 3, OT_FLOAT)) {
+        error(vm, argument_error);
+        return 0;
+    }
+    SQFloat first = 0, second = 0;
+    if (SQ_FAILED(sq_getfloat(vm, 2, &first)) || SQ_FAILED(sq_getfloat(vm, 3, &second))) {
+        error(vm, conversion_error);
+        return 0;
+    }
+    reinterpret_cast<int32_t (__cdecl *)(SQFloat, SQFloat)>(pointer(callback))(first, second);
+    return 0;
+}
+extern "C" int32_t function_471f10(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_4716b0(target(vm), id, 2);
+}
+extern "C" int32_t function_471fd0(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    const auto callback = target(vm);
+    if (!callback) return 0;
+    if (!strict_type(vm, 2, OT_INTEGER)) {
+        error(vm, argument_error);
+        return 0;
+    }
+    SQInteger value = 0;
+    if (SQ_FAILED(sq_getinteger(vm, 2, &value))) {
+        error(vm, conversion_error);
+        return 0;
+    }
+    reinterpret_cast<int32_t (__cdecl *)(int32_t)>(pointer(callback))(value);
+    return 0;
+}
+extern "C" int32_t function_472080(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_471880(target(vm), id, 2);
+}
+extern "C" int32_t function_4720e0(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_471960(target(vm), id, 2);
+}
+extern "C" int32_t function_472140(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return function_471a60(target(vm), id, 2);
+}

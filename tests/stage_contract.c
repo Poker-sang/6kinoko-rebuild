@@ -533,23 +533,16 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     return 0;
 }
 
-/* Recover ESP even for the broken entry, so an ABI regression reports a failure. */
-static __declspec(naked) int32_t probe_set_step_stack(int32_t actor, int32_t object) {
-    __asm {
-        push ebp
-        mov ebp, esp
-        mov ecx, [ebp + 8]
-        mov edx, [ebp + 12]
-        push [edx + 8]
-        push [edx + 4]
-        push [edx]
-        call function_4606d0
-        mov eax, esp
-        sub eax, ebp
-        mov esp, ebp
-        pop ebp
-        ret
-    }
+/* MSVC C does not expose __thiscall function-pointer syntax. Exercise the
+   typed ECX/EDX adapter here; actor_lifecycle_contract.cpp independently calls
+   the real thiscall ABI under /RTC1. These guards catch caller-storage writes. */
+static __declspec(noinline) int32_t probe_set_step_entry(int32_t actor, int32_t object) {
+    volatile uint32_t guards[4] = {0x12345678u, 0x87654321u, 0xa55aa55au, 0x5aa55aa5u};
+    KinokoOwnedObjectWords argument;
+    memcpy(&argument, (void *)(intptr_t)object, sizeof(argument));
+    function_4606d0(actor, NULL, argument);
+    return guards[0] == 0x12345678u && guards[1] == 0x87654321u &&
+        guards[2] == 0xa55aa55au && guards[3] == 0x5aa55aa5u;
 }
 
 static int test_actor_step(int32_t manager, int32_t vm, int32_t *root) {
@@ -569,9 +562,7 @@ static int test_actor_step(int32_t manager, int32_t vm, int32_t *root) {
         refs[i] = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actors[i + 1] + 52) + 4);
     }
     function_4a9500_this(object, actors[1] + 44);
-    int32_t stack_delta = probe_set_step_stack(actors[0], PTR(object));
-    if (stack_delta != 0) fprintf(stderr, "SetStep ESP delta: %d (expected 0)\n", stack_delta);
-    CHECK(stack_delta == 0);
+    CHECK(probe_set_step_entry(actors[0], PTR(object)));
     CHECK(*(int32_t *)(intptr_t)(actors[0] + 32) == *(int32_t *)(intptr_t)(actors[1] + 24));
     CHECK(execute_source(vm, root + 2,
         "if (stepRider.step != stepFirst) throw \"native step binding missing\";\n"

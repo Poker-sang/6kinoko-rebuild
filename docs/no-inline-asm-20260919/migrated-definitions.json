@@ -1,0 +1,97 @@
+{
+  "parent": "e34e555388ecf28c01530186660222bef8090573",
+  "definitions": [
+    {
+      "name": "function_43cf20",
+      "line": 78118,
+      "body_lines": 7,
+      "sha256": "749b0b1c6eefedf155d6ac14aeee1bf5302ad47e66509d99f05011d9ca45d5c9"
+    },
+    {
+      "name": "function_43cf20",
+      "line": 78126,
+      "body_lines": 4,
+      "sha256": "5765334be09662c0a7b5e9ab83d85b1188b07abce1ad788913687a1ddeb473de"
+    },
+    {
+      "name": "function_43d110",
+      "line": 78566,
+      "body_lines": 11,
+      "sha256": "a5b984bbd070c847f8eb235f82dd08dece910cc4989dcfc505d1489f2cb3f5b0"
+    },
+    {
+      "name": "function_43d110",
+      "line": 78578,
+      "body_lines": 4,
+      "sha256": "1b8a83ce35d8d63930ddc665c8b47b5f6c2239066f7cf0d4f9df84c7a79800fe"
+    },
+    {
+      "name": "function_43e860",
+      "line": 80029,
+      "body_lines": 4,
+      "sha256": "d6ed456342b68a0631faf1a7ccf7c9c9f686e18d6c98551248d61022ee13bc01"
+    },
+    {
+      "name": "function_45e300_this",
+      "line": 115301,
+      "body_lines": 33,
+      "sha256": "4ebbb6c3c778b81d03282d5dae9eb13c1bf1d9f5ddfe5ada5c103b15b99d4c00"
+    },
+    {
+      "name": "retdec_actor_release_weak",
+      "line": 115361,
+      "body_lines": 12,
+      "sha256": "8429d524e867c9e7ecdf620547991b5893c103798f236f898154639412288cd0"
+    },
+    {
+      "name": "function_45e460_this",
+      "line": 115385,
+      "body_lines": 20,
+      "sha256": "b4808464423a7ffe747b19603e411987736d95446aa7619dc8416cdd565d9089"
+    },
+    {
+      "name": "function_45e460",
+      "line": 115407,
+      "body_lines": 8,
+      "sha256": "fd275bb6b1c06c8db5783922294a4f25a2ebeca020c7ed0a559b0009b66e28d8"
+    },
+    {
+      "name": "function_45e460",
+      "line": 115416,
+      "body_lines": 1,
+      "sha256": "94fd4bdfd217629e4d3ffe27c13504c8aeafb96c36da2db2a0e8294efa35c70e"
+    },
+    {
+      "name": "function_45f0c0",
+      "line": 115633,
+      "body_lines": 11,
+      "sha256": "28a6ae061130da2ced576b1c62df1535fcdb0c31a3eb86dccd42c855e08350d7"
+    },
+    {
+      "name": "function_4606d0",
+      "line": 116145,
+      "body_lines": 11,
+      "sha256": "7fccf1681c1a9cbcd8d8f9a22edfefeac889918c3da9a561ac7008f5fe3fde38"
+    },
+    {
+      "name": "function_4606d0",
+      "line": 116157,
+      "body_lines": 1,
+      "sha256": "40a3466d0ab406d6081f928b0afd28cde11fdd88972cd1bbb75b347084391b6d"
+    },
+    {
+      "name": "function_4606d0_this",
+      "line": 116160,
+      "body_lines": 41,
+      "sha256": "75f28a9f81f2f8fce901aa3da38d6101a63c7914bbeb9ffd6069615b6eec2278"
+    },
+    {
+      "name": "retdec_release_squirrel_object",
+      "line": 136931,
+      "body_lines": 31,
+      "sha256": "dec011d8056733c25ee19bc3aad10a8e19f1a0b6eacff4fd11c48dea61b27d15"
+    }
+  ],
+  "source": "src/decompiled/6kinoko_rebuilt.c",
+  "classification": "11 distinct C entry names replaced by typed C++ (15 conditional definitions; 199 function-body lines)"
+}

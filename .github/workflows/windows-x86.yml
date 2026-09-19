@@ -26,6 +26,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Check migration boundaries
+        shell: pwsh
+        run: python tools/check_migration_boundaries.py
       - name: Select installed MSVC x86 tools
         shell: pwsh
         run: |
@@ -55,6 +58,7 @@ jobs:
           cmake -S . -B build-runs/ci-${{ matrix.trace }} -G Ninja -DCMAKE_BUILD_TYPE=Release `
             -DKINOKO_RETDEC_DISABLE_TRACE=$quiet `
             -DKINOKO_RETDEC_TRACE_FILTER=ON `
+            -DKINOKO_RETDEC_MAP_FILE="${{ github.workspace }}/build-runs/ci-${{ matrix.trace }}/kinoko.map" `
             -DKINOKO_REFERENCE_DIR="${{ github.workspace }}/ci-no-proprietary-assets" `
             -DKINOKO_RUNTIME_DIR="${{ github.workspace }}/runtime-builds/ci-${{ matrix.trace }}" `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/configure.log
@@ -74,7 +78,7 @@ jobs:
         shell: pwsh
         run: |
           ctest --test-dir build-runs/ci-${{ matrix.trace }} -C Release --output-on-failure --no-tests=error --timeout 120 `
-            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract|legacy_method_entries_contract|retdec_memory_contract|diagnostics_filter_contract|squirrel_refcount_contract|squirrel_host_object_contract|sqrat_object_contract|native_property_contract|squirrel_binding_contract|squirrel_native_calls_contract|squirrel_game_objects_contract)$' `
+            -R '^(stage_native_contract|damage_pause_contract|game_math_contract|legacy_abi_contract|texture_store_contract|diagnostics_capture|squirrel_source_vm_contract|legacy_method_entries_contract|retdec_memory_contract|diagnostics_filter_contract|squirrel_refcount_contract|squirrel_host_object_contract|squirrel_pair_contract|act_properties_contract|sqrat_object_contract|native_property_contract|squirrel_binding_contract|squirrel_native_calls_contract|squirrel_game_objects_contract|actor_lifecycle_contract|legacy_copy_entries_contract|legacy_frame_copy_checked_contract|legacy_frame_copy_optimized_contract|legacy_frame_entry_checked_contract|legacy_frame_entry_optimized_contract)$' `
             2>&1 | Tee-Object build-runs/ci-${{ matrix.trace }}/ctest.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Preserve diagnostics and binaries
@@ -85,6 +89,7 @@ jobs:
           retention-days: 14
           path: |
             build-runs/ci-${{ matrix.trace }}/*.log
+            build-runs/ci-${{ matrix.trace }}/*.map
             build-runs/ci-${{ matrix.trace }}/source-commit.txt
             build-runs/ci-${{ matrix.trace }}/Testing/Temporary/
             runtime-builds/ci-${{ matrix.trace }}/
