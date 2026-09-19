@@ -1,5 +1,6 @@
 #pragma once
 #include "kinoko/native_record_view.hpp"
+#include "kinoko/native_control.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -58,14 +59,8 @@ struct ActorRecord {
     // guessed supported layer count is imposed on the original GetChipID ABI.
     std::array<unsigned char, 32> chip_cache_storage;
 };
-struct ControlRecord {
-    Address vtable;
-    std::int32_t strong, weak;
-    Address allocation; // owned owner-slot allocation, not the Actor itself
-};
-struct ControlTable {
-    Address unknown_entry, dispose, destroy;
-};
+using native::ControlRecord;
+using native::ControlTable;
 struct AnimationRecord {
     std::array<unsigned char, 8> unknown0;
     Address frames_begin, frames_end;

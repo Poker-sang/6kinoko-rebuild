@@ -66,20 +66,20 @@ void initialize_key(HSQUIRRELVM vm) {
 void controls() {
     std::array<int32_t, 4> custom{address(control_table.data()), 2, 2, 0};
     auto old_disposes = disposes, old_destroys = destroys;
-    retdec_release_squirrel_object(address(custom.data()));
+    kinoko_native_release_strong(address(custom.data()));
     require(custom[1] == 1 && disposes == old_disposes, "nonfinal strong release");
-    retdec_release_squirrel_object(address(custom.data()));
+    kinoko_native_release_strong(address(custom.data()));
     require(custom[1] == 0 && custom[2] == 1 && disposes == old_disposes + 1 && destroys == old_destroys,
         "dispose before implicit weak release");
-    retdec_actor_release_weak(address(custom.data()));
+    kinoko_native_release_weak(address(custom.data()));
     require(custom[2] == 0 && destroys == old_destroys + 1, "last custom weak destruction");
     auto* control = static_cast<int32_t*>(std::malloc(16)); require(control != nullptr, "control allocation");
     control[0] = kinoko_actor_control_vtable(); control[1] = 1; control[2] = 2;
     control[3] = address(std::malloc(4)); require(control[3] != 0, "owner-slot allocation");
-    retdec_release_squirrel_object(address(control));
+    kinoko_native_release_strong(address(control));
     require(control[1] == 0 && control[2] == 1 && control[3] == 0, "special control frees owned slot, not Actor");
-    retdec_actor_release_weak(address(control));
-    retdec_actor_release_weak(0); retdec_release_squirrel_object(0);
+    kinoko_native_release_weak(address(control));
+    kinoko_native_release_weak(0); kinoko_native_release_strong(0);
 }
 void initialize_table(HSQUIRRELVM vm, int32_t actor) {
     sq_newtable(vm); sq_pushstring(vm, "step", -1); sq_pushnull(vm);

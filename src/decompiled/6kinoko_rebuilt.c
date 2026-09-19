@@ -3037,8 +3037,6 @@ int32_t function_45d9f0(int32_t *this_ptr);
 int32_t function_45da00(void);
 int32_t function_45da40(void);
 int32_t function_45da50(int32_t a1);
-int32_t function_45dac0(int32_t a1);
-static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr);
 
 
 int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
@@ -3047,10 +3045,7 @@ int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
 int32_t function_45df10(int32_t a1);
 
 
-static int32_t function_45e270_this(int32_t holder_ptr,
-                                    int32_t actor_ptr);
 
-static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair);
 static int32_t function_45e5e0_this(
     int32_t actor_ptr, int32_t manager_ptr,
     int32_t first_vtable, int32_t first_type, int32_t first_data,
@@ -59809,39 +59804,10 @@ int32_t function_45da50(int32_t a1) {
 }
 
 // Address range: 0x45dac0 - 0x45db04
-int32_t function_45dac0(int32_t a1) {
-    static __declspec(thread) int32_t result;
 
-    return (int32_t)(intptr_t)function_45dac0_this(
-        (int32_t)(intptr_t)&result, a1);
-}
 
 /* SQObjectPtr copy helper. RetDec omitted the destination hidden in ECX. */
-static int32_t *function_45dac0_this(int32_t this_ptr, int32_t source_ptr) {
-    int32_t value = *(int32_t *)(intptr_t)source_ptr;
-    volatile LONG *refcount;
-    LONG expected;
 
-    *(int32_t *)(intptr_t)this_ptr = value;
-    if (value == 0)
-        return (int32_t *)(intptr_t)this_ptr;
-
-    refcount = (volatile LONG *)(intptr_t)(value + 4);
-    expected = *refcount;
-    if (expected == 0) {
-        *(int32_t *)(intptr_t)this_ptr = 0;
-        return (int32_t *)(intptr_t)this_ptr;
-    }
-    while (_InterlockedCompareExchange(refcount, expected + 1, expected) !=
-           expected) {
-        expected = *refcount;
-        if (expected == 0) {
-            *(int32_t *)(intptr_t)this_ptr = 0;
-            break;
-        }
-    }
-    return (int32_t *)(intptr_t)this_ptr;
-}
 
 
 // Address range: 0x45dbd0 - 0x45de6d
@@ -59889,24 +59855,7 @@ int32_t function_45df10(int32_t source_ptr)
 
 
 /* boost::shared_ptr<Actor>'s control-block constructor. */
-static int32_t function_45e270_this(int32_t holder_ptr, int32_t actor_ptr)
-{
-    int32_t control_ptr;
 
-    if (holder_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)holder_ptr = 0;
-    control_ptr = _3f__3f_2_40_YAPAXI_40_Z(16);
-    if (control_ptr != 0) {
-        *(int32_t *)(intptr_t)(control_ptr + 0) =
-            (int32_t)(intptr_t)&g15;
-        *(int32_t *)(intptr_t)(control_ptr + 4) = 1;
-        *(int32_t *)(intptr_t)(control_ptr + 8) = 1;
-        *(int32_t *)(intptr_t)(control_ptr + 12) = actor_ptr;
-    }
-    *(int32_t *)(intptr_t)holder_ptr = control_ptr;
-    return holder_ptr;
-}
 
 // Address range: 0x45e300 - 0x45e409
 // From class:    .?AVActor@@
@@ -59919,16 +59868,7 @@ static int32_t function_45e270_this(int32_t holder_ptr, int32_t actor_ptr)
 
 
 /* Actor/SquirrelObject pair extraction with the original hidden receiver. */
-static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair) {
-    if (out_pair == NULL)
-        return NULL;
-    out_pair[0] = 0;
-    out_pair[1] = 0;
-    function_45dac0_this((int32_t)(intptr_t)(out_pair + 1), this_ptr + 4);
-    if (out_pair[1] != 0)
-        out_pair[0] = *(int32_t *)(intptr_t)this_ptr;
-    return out_pair;
-}
+
 
 // Address range: 0x45e460 - 0x45e5d4
 // From class:    .?AVActor@@
@@ -59991,7 +59931,7 @@ static int32_t function_45e5e0_this(
     if (actor_slot == 0)
         return 0;
     *(int32_t *)(intptr_t)actor_slot = actor_ptr;
-    function_45e270_this((int32_t)(intptr_t)&shared_holder, actor_slot);
+    kinoko_native_control_create((int32_t)(intptr_t)&shared_holder, actor_slot);
     control_ptr = shared_holder;
     if (control_ptr == 0) {
         free((void *)(intptr_t)actor_slot);
@@ -60000,7 +59940,7 @@ static int32_t function_45e5e0_this(
     int32_t old_control = *(int32_t *)(intptr_t)(actor_ptr + 28);
     *(int32_t *)(intptr_t)(actor_ptr + 24) = actor_slot;
     *(int32_t *)(intptr_t)(actor_ptr + 28) = control_ptr;
-    retdec_release_squirrel_object(old_control);
+    kinoko_native_release_strong(old_control);
 
     *(char *)(intptr_t)(actor_ptr + 40) =
         (*(int32_t *)(intptr_t)(actor_ptr + 392) & 0x20000) == 0;
@@ -60135,11 +60075,11 @@ int32_t function_45eb00_this(int32_t actor) {
     int32_t owner_control;
     *(int32_t *)(intptr_t)(actor + 32) = 0;
     *(int32_t *)(intptr_t)(actor + 36) = 0;
-    retdec_actor_release_weak(parent_control);
+    kinoko_native_release_weak(parent_control);
     owner_control = *(int32_t *)(intptr_t)(actor + 28);
     *(int32_t *)(intptr_t)(actor + 24) = 0;
     *(int32_t *)(intptr_t)(actor + 28) = 0;
-    retdec_release_squirrel_object(owner_control);
+    kinoko_native_release_strong(owner_control);
     kinoko_actor_clear_script(actor);
 
     /* Init replaces these same fields, so retain both saved SquirrelObjects across the call. */
@@ -61065,16 +61005,16 @@ static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
         for (int32_t i = 0; i < layer_count; ++i) {
             if (support < *(int32_t *)(intptr_t)(g_514300_storage[5] + 4 * i)) {
                 int32_t pair[2] = {0, 0};
-                function_45e410_this(g_514300_storage[13] + 8 * i, pair);
+                kinoko_native_weak_pair_lock(g_514300_storage[13] + 8 * i, pair);
                 if (pair[0] != 0) {
                     int32_t parent = *(int32_t *)(intptr_t)pair[0];
                     int32_t object[3];
                     function_4a9500_this(object, parent + 44);
                     function_4606d0_this(actor, (int32_t)(intptr_t)object);
-                    retdec_release_squirrel_object(pair[1]);
+                    kinoko_native_release_strong(pair[1]);
                     break;
                 }
-                retdec_release_squirrel_object(pair[1]);
+                kinoko_native_release_strong(pair[1]);
             }
         }
     }
@@ -61174,7 +61114,7 @@ static int32_t function_45ec60(int32_t actor)
     *(float32_t *)(intptr_t)(actor + 468) =
         *(float32_t *)(intptr_t)(actor + 452);
 
-    function_45e410_this(actor + 32, parent_pair);
+    kinoko_native_weak_pair_lock(actor + 32, parent_pair);
     parent_slot = parent_pair[0];
     parent = parent_slot != 0
         ? *(int32_t *)(intptr_t)parent_slot : 0;
@@ -61231,7 +61171,7 @@ static int32_t function_45ec60(int32_t actor)
         int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
         function_4606d0_this(actor, (int32_t)(intptr_t)empty);
     }
-    retdec_release_squirrel_object(parent_pair[1]);
+    kinoko_native_release_strong(parent_pair[1]);
     retdec_trace_invalid_actor("after-motion",actor);
     retdec_trace_star_state("after-motion",actor);
     return 0;
@@ -64117,7 +64057,7 @@ static int32_t function_468620_this(int32_t this_ptr) {
             int32_t actor;
             int32_t config;
 
-            function_45e410_this((int32_t)(intptr_t)member, pair);
+            kinoko_native_weak_pair_lock((int32_t)(intptr_t)member, pair);
             actor_slot = (int32_t *)(intptr_t)pair[0];
             if (actor_slot != NULL) {
                 actor = *actor_slot;
@@ -64140,7 +64080,7 @@ static int32_t function_468620_this(int32_t this_ptr) {
                     }
                 }
             }
-            retdec_release_squirrel_object(pair[1]);
+            kinoko_native_release_strong(pair[1]);
         }
     }
 
@@ -64208,7 +64148,7 @@ static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr)
     pair_end = *(int32_t *)(intptr_t)(this_ptr + 56);
     for (int32_t cursor = pair_begin; cursor != pair_end; cursor += 8) {
         int32_t control = *(int32_t *)(intptr_t)(cursor + 4);
-        retdec_actor_release_weak(control);
+        kinoko_native_release_weak(control);
     }
     *(int32_t *)(intptr_t)(this_ptr + 56) = pair_begin;
     *(int32_t *)(intptr_t)this_ptr = actor_ptr;
@@ -64289,8 +64229,7 @@ int32_t function_4693a0(int32_t layout) {
     layouts[0] = layout;
     pairs[0] = *(int32_t *)(intptr_t)(actor + 24);
     pairs[1] = control = *(int32_t *)(intptr_t)(actor + 28);
-    if (control != 0)
-        InterlockedIncrement((volatile LONG *)(intptr_t)(control + 8));
+    kinoko_native_add_weak(control);
     g_514300_storage[2] = g_514300_storage[1] + (count + 1) * 4;
     g_514300_storage[14] = g_514300_storage[13] + (count + 1) * 8;
     scratch = (int32_t *)(intptr_t)g_514300_storage[5];

@@ -25,39 +25,6 @@ HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); 
 
 using namespace kinoko::actor;
 
-// Boost-style native strong/weak counts remain separate from external VM refs.
-// Count slots have the original Win32 alignment required by Interlocked APIs.
-class ControlView final {
-    kinoko::native::RecordView<ControlRecord> view_;
-public:
-    explicit ControlView(int32_t control) : view_(pointer(control)) {}
-    LONG add_strong(LONG delta) const noexcept {
-        return InterlockedExchangeAdd(reinterpret_cast<volatile LONG*>(
-            view_.bytes(&ControlRecord::strong)), delta);
-    }
-    LONG add_weak(LONG delta) const noexcept {
-        return InterlockedExchangeAdd(reinterpret_cast<volatile LONG*>(
-            view_.bytes(&ControlRecord::weak)), delta);
-    }
-    Address get(Address ControlRecord::* member) const noexcept {
-        return view_.get(member);
-    }
-    void set(Address ControlRecord::* member, Address value) const noexcept {
-        view_.set(member, value);
-    }
-};
-
-void call_control_method(int32_t control, Address table,
-                         Address ControlTable::* member) {
-    if (!table) return;
-    const kinoko::native::RecordView<ControlTable> methods(pointer(static_cast<int32_t>(table)));
-    const auto entry = methods.get(member);
-    if (!entry) return;
-    // Exact zero-argument x86 member ABI, not a C register-context simulator.
-    using Method = void (__thiscall*)(void*);
-    reinterpret_cast<Method>(pointer(static_cast<int32_t>(entry)))(pointer(control));
-}
-
 void raw_set_step(const ActorView& actor, const HSQOBJECT& step) {
     auto* vm = current_vm();
     StackTop restore(vm);
@@ -96,33 +63,6 @@ extern "C" int32_t function_45e300_this(int32_t actor) {
     return actor;
 }
 
-extern "C" void retdec_actor_release_weak(int32_t control) {
-    if (!control) return;
-    const ControlView view(control);
-    if (view.add_weak(-1) != 1) return;
-    const auto table = view.get(&ControlRecord::vtable);
-    if (table == kinoko_actor_control_vtable())
-        std::free(pointer(control));
-    else
-        call_control_method(control, table, &ControlTable::destroy);
-}
-
-extern "C" void retdec_release_squirrel_object(int32_t control) {
-    if (!control) return;
-    const ControlView view(control);
-    if (view.add_strong(-1) != 1) return;
-    const auto table = view.get(&ControlRecord::vtable);
-    if (table == kinoko_actor_control_vtable()) {
-        std::free(pointer(view.get(&ControlRecord::allocation)));
-        view.set(&ControlRecord::allocation, 0);
-        retdec_actor_release_weak(control);
-        return;
-    }
-    call_control_method(control, table, &ControlTable::dispose);
-    if (view.add_weak(-1) == 1)
-        call_control_method(control, table, &ControlTable::destroy);
-}
-
 extern "C" int32_t function_45e460_this(int32_t actor) {
     if (!actor) return 0;
     const ActorView view(pointer(actor));
@@ -134,11 +74,11 @@ extern "C" int32_t function_45e460_this(int32_t actor) {
     const auto parent_control = view.get(&ActorRecord::step_control);
     view.set(&ActorRecord::step, Address{0});
     view.set(&ActorRecord::step_control, Address{0});
-    retdec_actor_release_weak(parent_control);
+    kinoko_native_release_weak(parent_control);
     const auto owner_control = view.get(&ActorRecord::owner_control);
     view.set(&ActorRecord::owner, Address{0});
     view.set(&ActorRecord::owner_control, Address{0});
-    retdec_release_squirrel_object(owner_control);
+    kinoko_native_release_strong(owner_control);
     for (auto member = script_members.rbegin(); member != script_members.rend(); ++member)
         kinoko_squirrel_object_destroy(address(view.bytes(*member)), address(current_vm()),
             kinoko_squirrel_object_vtable());
@@ -154,7 +94,7 @@ extern "C" int32_t function_4606d0_this(int32_t actor, int32_t owned_object) {
         view.set(&ActorRecord::step, Address{0});
         const auto previous = view.get(&ActorRecord::step_control);
         view.set(&ActorRecord::step_control, Address{0});
-        retdec_actor_release_weak(previous);
+        kinoko_native_release_weak(previous);
         ObjectStorage empty{};
         ObjectView(&empty).initialize(kinoko_squirrel_object_vtable());
         raw_set_step(view, empty.value);
@@ -169,8 +109,8 @@ extern "C" int32_t function_4606d0_this(int32_t actor, int32_t owned_object) {
             const auto next = target.get(&ActorRecord::owner_control);
             const auto previous = view.get(&ActorRecord::step_control);
             if (next != previous) {
-                if (next) ControlView(next).add_weak(1);
-                retdec_actor_release_weak(previous);
+                kinoko_native_add_weak(next);
+                kinoko_native_release_weak(previous);
                 view.set(&ActorRecord::step_control, next);
             }
         }
