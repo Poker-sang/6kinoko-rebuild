@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_layer_access.h"
 #include "kinoko/audio_runtime.h"
@@ -1773,7 +1774,6 @@ struct vtable_4ed700_type {
 
 // ------------------- Function Prototypes --------------------
 
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ(int32_t * this, int32_t * result);
 int32_t retdec_msvc_0_Init_locks_std__QAE_XZ3(int32_t * result);
 int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void);
 void retdec_msvc_Finitlocks__YAXXZ(void);
@@ -1882,12 +1882,8 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 int32_t function_403820(void);
 
-int32_t function_4038c0(int32_t this_ptr, const char * source, uint32_t size);
-int32_t function_4039e0(int32_t this_ptr, uint32_t capacity, int32_t shrink_to_fit);
 
 
-int32_t function_403bf0(int32_t destination, int32_t source, uint32_t position, uint32_t size);
-int32_t function_403ce0(int32_t this_ptr, uint32_t new_capacity, uint32_t old_length);
 
 
 int32_t function_404090(char * lpCaption, int32_t lpText, int32_t a3);
@@ -8375,335 +8371,7 @@ int32_t function_403820(void) {
 }
 
 
-/* The RetDec output lost the register arguments of the old MSVC string
-   implementation.  The original object is an MSVC basic_string<char>:
-   inline bytes at +0, length at +0x10, and capacity at +0x14. */
-static unsigned char *retdec_string_object(int32_t object)
-{
-    return (unsigned char *)(uintptr_t)(uint32_t)object;
-}
-
-static char *retdec_string_data(unsigned char *object)
-{
-    uint32_t capacity = *(uint32_t *)(object + 20);
-    if (capacity >= 16) {
-        return *(char **)object;
-    }
-    return (char *)object;
-}
-
-static int retdec_page_is_readable(const MEMORY_BASIC_INFORMATION *info)
-{
-    DWORD protection;
-
-    if (info == NULL || info->State != MEM_COMMIT) {
-        return 0;
-    }
-    protection = info->Protect & 0xffu;
-    return protection != PAGE_NOACCESS && protection != PAGE_EXECUTE;
-}
-
-/* A large part of the RetDec output lost the third argument of
-   std::string::assign(const char *, size_t). Keep those old call sites
-   usable while the explicit-length callers are repaired incrementally. */
-uint32_t retdec_safe_c_string_length(const char *source)
-{
-    const unsigned char *cursor = (const unsigned char *)source;
-    const uintptr_t limit = (uintptr_t)source + 0x100000u;
-    uint32_t length = 0;
-
-    if (source == NULL) {
-        return 0;
-    }
-    while ((uintptr_t)cursor < limit && length < 0x100000u) {
-        MEMORY_BASIC_INFORMATION info;
-        uintptr_t region_end;
-        size_t available;
-        size_t index;
-
-        if (VirtualQuery(cursor, &info, sizeof(info)) != sizeof(info) ||
-            !retdec_page_is_readable(&info)) {
-            return 0;
-        }
-        region_end = (uintptr_t)info.BaseAddress + info.RegionSize;
-        if (region_end <= (uintptr_t)cursor) {
-            return 0;
-        }
-        available = (size_t)(region_end - (uintptr_t)cursor);
-        if (available > (size_t)(limit - (uintptr_t)cursor)) {
-            available = (size_t)(limit - (uintptr_t)cursor);
-        }
-        for (index = 0; index < available; ++index) {
-            if (cursor[index] == 0) {
-                return length + (uint32_t)index;
-            }
-        }
-        cursor += available;
-        length += (uint32_t)available;
-    }
-    return 0;
-}
-
-int32_t retdec_string_assign_n(int32_t *this_ptr,
-                                      const char *source,
-                                      uint32_t size)
-{
-    unsigned char *object = retdec_string_object((int32_t)(uintptr_t)this_ptr);
-    char *data;
-    char *temporary = NULL;
-    uint32_t old_length;
-    uint32_t old_capacity;
-
-    if (object == NULL) {
-        return 0;
-    }
-    if (size > 0xfffffffeu) {
-        return (int32_t)(uintptr_t)this_ptr;
-    }
-
-    old_length = *(uint32_t *)(object + 16);
-    old_capacity = *(uint32_t *)(object + 20);
-    data = retdec_string_data(object);
-
-    /* assign() permits a source range inside the destination string. Save it
-       before reserve() can release the old heap buffer. */
-    if (source != NULL && size != 0) {
-        uintptr_t source_address = (uintptr_t)source;
-        uintptr_t data_address = (uintptr_t)data;
-        uintptr_t data_end = data_address + (uintptr_t)old_length + 1u;
-        if (source_address >= data_address && source_address < data_end &&
-            source_address <= UINTPTR_MAX - (uintptr_t)size &&
-            source_address + (uintptr_t)size <= data_end) {
-            temporary = (char *)malloc(size);
-            if (temporary == NULL) {
-                return (int32_t)(uintptr_t)this_ptr;
-            }
-            memcpy(temporary, source, size);
-            source = temporary;
-        }
-    }
-
-    if (old_capacity < size && function_403ce0(
-            (int32_t)(uintptr_t)this_ptr, size, old_length) == 0) {
-        free(temporary);
-        return (int32_t)(uintptr_t)this_ptr;
-    }
-
-    data = retdec_string_data(object);
-    if (size != 0 && source != NULL) {
-        memmove(data, source, size);
-    }
-    *(uint32_t *)(object + 16) = size;
-    data[size] = 0;
-    free(temporary);
-    return (int32_t)(uintptr_t)this_ptr;
-}
-
-int32_t retdec_string_assign_cstr(int32_t *this_ptr,
-                                         const char *source)
-{
-    return retdec_string_assign_n(this_ptr, source,
-                                  retdec_safe_c_string_length(source));
-}
-
-// Address range: 0x4038c0 - 0x4039d3
-int32_t function_4038c0(int32_t this_ptr, const char *source, uint32_t size)
-{
-    unsigned char *object = retdec_string_object(this_ptr);
-    uint32_t old_length;
-    uint32_t new_length;
-    char *data;
-
-    if (object == NULL) {
-        return 0;
-    }
-
-    old_length = *(uint32_t *)(object + 16);
-    data = retdec_string_data(object);
-    if (source != NULL && source >= data && source < data + old_length) {
-        return function_403bf0(this_ptr, this_ptr,
-                               (uint32_t)(source - data), size);
-    }
-
-    if (size > 0xffffffffu - old_length) {
-        return this_ptr;
-    }
-    new_length = old_length + size;
-    if (new_length == 0xffffffffu) {
-        return this_ptr;
-    }
-
-    if (*(uint32_t *)(object + 20) < new_length) {
-        if (function_403ce0(this_ptr, new_length, old_length) == 0) {
-            return this_ptr;
-        }
-    }
-
-    data = retdec_string_data(object);
-    if (size != 0 && source != NULL) {
-        memmove(data + old_length, source, size);
-    }
-    *(uint32_t *)(object + 16) = new_length;
-    data[new_length] = 0;
-    return this_ptr;
-}
-
-// Address range: 0x4039e0 - 0x403a8b
-int32_t function_4039e0(int32_t this_ptr, uint32_t capacity,
-                        int32_t shrink_to_fit)
-{
-    unsigned char *object = retdec_string_object(this_ptr);
-    uint32_t old_capacity;
-    uint32_t old_length;
-    uint32_t kept_length;
-    char *old_data;
-
-    if (object == NULL || capacity == 0xffffffffu) {
-        return 0;
-    }
-
-    old_capacity = *(uint32_t *)(object + 20);
-    old_length = *(uint32_t *)(object + 16);
-    if (old_capacity < capacity) {
-        return function_403ce0(this_ptr, capacity, old_length) != 0;
-    }
-
-    if (capacity >= 16 || shrink_to_fit == 0) {
-        if (capacity == 0) {
-            *(uint32_t *)(object + 16) = 0;
-            retdec_string_data(object)[0] = 0;
-        }
-        return capacity != 0;
-    }
-
-    kept_length = old_length < capacity ? old_length : capacity;
-    old_data = retdec_string_data(object);
-    if (old_capacity >= 16) {
-        if (kept_length != 0) {
-            memmove(object, old_data, kept_length);
-        }
-        free(old_data);
-    }
-    *(uint32_t *)(object + 16) = kept_length;
-    *(uint32_t *)(object + 20) = 15;
-    object[kept_length] = 0;
-    return capacity != 0;
-}
-
-
-// Address range: 0x403ad0 - 0x403b90
-// From class:    .?AVbad_alloc@std@@
-// Type:          constructor
-
-
-// Address range: 0x403bf0 - 0x403cd3
-int32_t function_403bf0(int32_t destination, int32_t source,
-                        uint32_t position, uint32_t size)
-{
-    unsigned char *destination_object = retdec_string_object(destination);
-    unsigned char *source_object = retdec_string_object(source);
-    uint32_t source_length;
-    uint32_t count;
-    uint32_t old_length;
-    uint32_t new_length;
-    char *source_data;
-    char *destination_data;
-
-    if (destination_object == NULL || source_object == NULL) {
-        return 0;
-    }
-    source_length = *(uint32_t *)(source_object + 16);
-    if (position > source_length) {
-        return destination;
-    }
-    count = source_length - position;
-    if (count > size) {
-        count = size;
-    }
-    if (count == 0) {
-        return destination;
-    }
-
-    old_length = *(uint32_t *)(destination_object + 16);
-    if (count > 0xffffffffu - old_length) {
-        return destination;
-    }
-    new_length = old_length + count;
-    if (*(uint32_t *)(destination_object + 20) < new_length) {
-        if (function_403ce0(destination, new_length, old_length) == 0) {
-            return destination;
-        }
-    }
-
-    source_data = retdec_string_data(source_object);
-    destination_data = retdec_string_data(destination_object);
-    memmove(destination_data + old_length, source_data + position, count);
-    *(uint32_t *)(destination_object + 16) = new_length;
-    destination_data[new_length] = 0;
-    return destination;
-}
-
-// Address range: 0x403ce0 - 0x403e18
-// Recovered from sub_403CE0; RetDec incorrectly split its normal cleanup
-// landing pad at 0x403DBC into a separate function.
-int32_t function_403ce0(int32_t this_ptr, uint32_t new_capacity,
-                        uint32_t old_length)
-{
-    unsigned char *object = retdec_string_object(this_ptr);
-    uint32_t old_capacity;
-    uint32_t adjusted_capacity;
-    uint32_t half_capacity;
-    char *old_data;
-    char *new_data;
-
-    if (object == NULL) {
-        return 0;
-    }
-    old_capacity = *(uint32_t *)(object + 20);
-    adjusted_capacity = new_capacity | 15u;
-    if (adjusted_capacity != 0xffffffffu) {
-        half_capacity = old_capacity / 2u;
-        if (half_capacity > adjusted_capacity / 3u) {
-            if (old_capacity > 0xfffffffeu - half_capacity) {
-                adjusted_capacity = 0xfffffffeu;
-            } else {
-                adjusted_capacity = old_capacity + half_capacity;
-            }
-        }
-    } else {
-        adjusted_capacity = new_capacity;
-    }
-
-    if (adjusted_capacity == 0xffffffffu) {
-        return 0;
-    }
-    old_data = retdec_string_data(object);
-    new_data = (char *)malloc((size_t)adjusted_capacity + 1u);
-    if (new_data == NULL) {
-        return 0;
-    }
-    if (old_length != 0) {
-        memcpy(new_data, old_data, old_length);
-    }
-    if (old_capacity >= 16) {
-        free(old_data);
-    }
-
-    *(char **)object = new_data;
-    *(uint32_t *)(object + 20) = adjusted_capacity;
-    *(uint32_t *)(object + 16) = old_length;
-    if (adjusted_capacity < 16) {
-        if (old_length != 0) {
-            memcpy(object, new_data, old_length);
-        }
-        object[old_length] = 0;
-        free(new_data);
-    } else {
-        new_data[old_length] = 0;
-    }
-    return (int32_t)(uintptr_t)new_data;
-}
-
+/* Legacy string operations now live in reconstructed/legacy_string.cpp. */
 
 // Address range: 0x403e50 - 0x403e71
 // From class:    .?AVSquirrelObject@@
@@ -9278,7 +8946,7 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
         v1++;
     }
     // 0x406167
-    retdec_msvc_0_Init_locks_std__QAE_XZ(result, (int32_t *)a2);
+    retdec_string_assign_cstr(result, (const char *)(a2));
     return result2;
 }
 
@@ -9422,7 +9090,7 @@ int32_t function_406370(int32_t * a1) {
         v3++;
     }
     // 0x4063cc
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&lpsz, (int32_t *)v2);
+    retdec_string_assign_cstr((int32_t *)&lpsz, (const char *)(v2));
     CharLowerBuffA(&lpsz, 0);
     uint32_t v4 = v2 + 4; // 0x4063f9
     int32_t v5; // bp-76, 0x406370
@@ -9560,11 +9228,7 @@ int32_t function_406690(void) {
     return result;
 }
 
-// Address range: 0x4066f0 - 0x4067e5
-// The original function is std::string::assign(const char *, size_t).
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ(int32_t * this, int32_t * result) {
-    return retdec_string_assign_cstr(this, (const char *)result);
-}
+// 4066F0: missing-length C callers use retdec_string_assign_cstr explicitly.
 
 // Address range: 0x4067f0 - 0x406872
 int32_t function_4067f0(uint32_t a1, uint32_t a2) {
@@ -16463,7 +16127,7 @@ int32_t function_415350(void) {
         v2++;
     }
     // 0x4153c7
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)result, (int32_t *)v1);
+    retdec_string_assign_cstr((int32_t *)result, (const char *)(v1));
     return result;
 }
 
@@ -17166,7 +16830,7 @@ int32_t function_415ea0(int32_t a1) {
     if (*(char *)(a1 + 101) != 0) {
         // 0x415ed5
         int32_t v2; // 0x415ea0
-        retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v2, (int32_t *)"/* This script is compiled. Can't read this. Don't edit this.*/");
+        retdec_string_assign_cstr((int32_t *)v2, (const char *)("/* This script is compiled. Can't read this. Don't edit this.*/"));
         // 0x415f38
         __writefsdword(0, v1);
         return ___report_gsfailure();
@@ -17179,7 +16843,7 @@ int32_t function_415ea0(int32_t a1) {
         v5++;
     }
     // 0x415f09
-    retdec_msvc_0_Init_locks_std__QAE_XZ(&v4, (int32_t *)v3);
+    retdec_string_assign_cstr(&v4, (const char *)(v3));
     function_40e3f0();
     // 0x415f38
     __writefsdword(0, v1);
@@ -17190,7 +16854,7 @@ int32_t function_415ea0(int32_t a1) {
 int32_t function_415f60(int32_t a1, int32_t a2) {
     // 0x415f60
     int32_t v1; // 0x415f60
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)(v1 + 64), (int32_t *)&g189);
+    retdec_string_assign_cstr((int32_t *)(v1 + 64), (const char *)(&g189));
     int32_t * v2 = (int32_t *)(v1 + 96); // 0x415f7b
     *v2 = a2 + 1;
     int32_t v3 = function_473ebb(); // 0x415f7e
@@ -17727,7 +17391,7 @@ int32_t function_416790(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
             }
             // 0x416877
             v14 = a1;
-            retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v11, (int32_t *)a1);
+            retdec_string_assign_cstr((int32_t *)&v11, (const char *)(a1));
             int32_t v17 = g556 >= 16 ? g554 : (int32_t)&g554;
             v9 = 0;
             v10 = (char *)&g189;
@@ -19829,7 +19493,7 @@ int32_t function_418a30(int32_t result) {
         v3++;
     }
     // 0x418a67
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)result, (int32_t *)v2);
+    retdec_string_assign_cstr((int32_t *)result, (const char *)(v2));
     return result;
 }
 
@@ -19849,7 +19513,7 @@ int32_t function_418a80(int32_t result) {
         v3++;
     }
     // 0x418ab7
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)result, (int32_t *)v2);
+    retdec_string_assign_cstr((int32_t *)result, (const char *)(v2));
     return result;
 }
 
@@ -19869,7 +19533,7 @@ int32_t function_418ad0(int32_t result) {
         v3++;
     }
     // 0x418b07
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)result, (int32_t *)v2);
+    retdec_string_assign_cstr((int32_t *)result, (const char *)(v2));
     return result;
 }
 
@@ -27503,7 +27167,7 @@ int32_t function_41df70(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x41df80
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = 0; // bp-48, 0x41dfb2
-    retdec_msvc_0_Init_locks_std__QAE_XZ(&v2, (int32_t *)&g189);
+    retdec_string_assign_cstr(&v2, (const char *)(&g189));
     function_418370((int32_t)&v2);
     int32_t v3; // 0x41df70
     int32_t v4 = *(int32_t *)(v3 + 4); // 0x41dfde
@@ -27654,7 +27318,7 @@ int32_t function_41e0c0(int32_t a1) {
         v5++;
     }
     // 0x41e139
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v4, (int32_t *)v3);
+    retdec_string_assign_cstr((int32_t *)&v4, (const char *)(v3));
     function_40e3f0();
     kinoko_sq_pop(a1, 1);
     __writefsdword(0, v1);
@@ -27803,7 +27467,7 @@ int32_t function_41e390(int32_t a1) {
             *(int32_t *)(result + 88) = 0;
             *(int32_t *)(result + 108) = -1;
             *(int32_t *)(result + 104) = -1;
-            retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v5, (int32_t *)"Layer_");
+            retdec_string_assign_cstr((int32_t *)v5, (const char *)("Layer_"));
             *(float32_t *)(result + 144) = 0.0f;
             v11 = 68;
             *(float32_t *)(result + 168) = 0.0f;
@@ -32002,7 +31666,7 @@ int32_t function_423640(int32_t a1, int32_t a2) {
         v3++;
     }
     // 0x423697
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v2, (int32_t *)a2);
+    retdec_string_assign_cstr((int32_t *)&v2, (const char *)(a2));
     function_424640();
     int32_t v4; // 0x423640
     int32_t v5 = *(int32_t *)(v4 + 20); // 0x4236b2
@@ -35982,7 +35646,7 @@ int32_t function_4289c0(int32_t a1) {
             v2++;
         }
         int32_t v7 = a1; // bp-28, 0x4289f8
-        v3 = retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)(v6 + 44), (int32_t *)a1);
+        v3 = retdec_string_assign_cstr((int32_t *)(v6 + 44), (const char *)(a1));
         v5 = &v7;
         v4 = a1;
     } else {
@@ -40484,7 +40148,7 @@ int32_t function_42ed30(char a1, int32_t a2, int32_t a3) {
     }
     char * v5 = (char *)v2; // bp-144, 0x42ed8e
     int32_t v6 = (int32_t)&v5; // 0x42ed8e
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v3, (int32_t *)v2);
+    retdec_string_assign_cstr((int32_t *)&v3, (const char *)(v2));
     int32_t v7 = v6 - 36; // 0x42ee6c
     *(int32_t *)(v6 - 40) = -1;
     char v8 = 0; // bp-114, 0x42ee76
@@ -40612,7 +40276,7 @@ int32_t function_42f120(void) {
     *(int32_t *)(result + 24) = 0;
     *(char *)v2 = 0;
     *(int32_t *)(result + 4) = -1;
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v2, (int32_t *)"Resource#");
+    retdec_string_assign_cstr((int32_t *)v2, (const char *)("Resource#"));
     *v3 = (int32_t)&g313;
     *(int32_t *)(result + 56) = 15;
     *(int32_t *)(result + 52) = 0;
@@ -41090,7 +40754,7 @@ int32_t function_42fae0(int32_t a1) {
     }
     char * v7 = (char *)v4; // bp-172, 0x42fb72
     int32_t v8 = (int32_t)&v7; // 0x42fb72
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v5, (int32_t *)v4);
+    retdec_string_assign_cstr((int32_t *)&v5, (const char *)(v4));
     char * v9 = (char *)(v8 + 19); // 0x42fc08
     *v9 = 0;
     int32_t v10 = v8 + 136;
@@ -49526,7 +49190,7 @@ int32_t function_43a020(int32_t a1, int32_t a2) {
         v3++;
     }
     // 0x43a077
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v2, (int32_t *)a2);
+    retdec_string_assign_cstr((int32_t *)&v2, (const char *)(a2));
     int32_t v4; // 0x43a020
     *(int32_t *)(*(int32_t *)(v4 + 20) + a1) = function_424430();
     int32_t result = function_43a0b6((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x43a0ac
@@ -54459,7 +54123,7 @@ int32_t function_43e890(uint32_t a1, int32_t a2) {
         *(float32_t *)(result + 152) = 1.0f;
         *(int32_t *)(result + 148) = 0;
         *(int32_t *)(result + 156) = 1;
-        retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v2, (int32_t *)&g349);
+        retdec_string_assign_cstr((int32_t *)v2, (const char *)(&g349));
         *(float32_t *)(result + 136) = 1.0f;
         *(float32_t *)(result + 140) = 1.0f;
         *(int32_t *)(result + 116) = 255;
@@ -54495,9 +54159,9 @@ int32_t function_43e890(uint32_t a1, int32_t a2) {
     __writefsdword(0, (int32_t)&v7);
     v6 = &g350;
     int32_t v8; // bp-32, 0x43e890
-    retdec_msvc_0_Init_locks_std__QAE_XZ(&v8, (int32_t *)&g189);
+    retdec_string_assign_cstr(&v8, (const char *)(&g189));
     int32_t v9; // bp-4, 0x43e890
-    retdec_msvc_0_Init_locks_std__QAE_XZ(&v9, (int32_t *)&g189);
+    retdec_string_assign_cstr(&v9, (const char *)(&g189));
     function_4410c0(result);
     int32_t v10 = &v6; // bp-128, 0x43ea92
     function_441250(&v6);
@@ -54581,9 +54245,9 @@ int32_t function_4410c0(int32_t this_ptr) {
     int32_t v5 = v2 + 4; // 0x4410ee
     char * v6; // bp-48, 0x4410c0
     function_431d80((int32_t *)&v6, v5, v4);
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v5, (int32_t *)&g189);
+    retdec_string_assign_cstr((int32_t *)v5, (const char *)(&g189));
     char * v7 = (char *)&g189; // bp-128, 0x441116
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v4, (int32_t *)&g189);
+    retdec_string_assign_cstr((int32_t *)v4, (const char *)(&g189));
     *(char *)(v2 + 228) = 1;
     *(int32_t *)(v2 + 208) = 0;
     *(int32_t *)(v2 + 204) = 0;
@@ -55931,7 +55595,7 @@ int32_t function_444570(int32_t a1, int32_t a2) {
         v3++;
     }
     // 0x4445c7
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v2, (int32_t *)a2);
+    retdec_string_assign_cstr((int32_t *)&v2, (const char *)(a2));
     int32_t v4; // 0x444570
     *(char *)(*(int32_t *)(v4 + 20) + a1) = (char)function_41a010();
     int32_t result = function_444606((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x4445fc
@@ -56193,7 +55857,7 @@ int32_t function_446220(void) {
     *(int32_t *)(result + 24) = 0;
     *(char *)v2 = 0;
     *(int32_t *)(result + 4) = -1;
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)v2, (int32_t *)"Resource#");
+    retdec_string_assign_cstr((int32_t *)v2, (const char *)("Resource#"));
     *v3 = (int32_t)&g365;
     *(int32_t *)(result + 60) = 15;
     *(int32_t *)(result + 56) = 0;
@@ -56626,7 +56290,7 @@ int32_t function_446bd0(int32_t a1) {
         v6++;
     }
     // 0x446c67
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v5, (int32_t *)v4);
+    retdec_string_assign_cstr((int32_t *)&v5, (const char *)(v4));
     int32_t v7 = *(int32_t *)(function_416ba0(1) + 16); // 0x446c99
     int32_t v8 = 0; // bp-216, 0x446ca2
     int32_t v9 = function_406600(0, v7, (int32_t)&g311, 1); // 0x446cad
@@ -58307,7 +57971,7 @@ int32_t function_448bc0(int32_t a1, int32_t a2) {
         v3++;
     }
     // 0x448c17
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v2, (int32_t *)a2);
+    retdec_string_assign_cstr((int32_t *)&v2, (const char *)(a2));
     function_419d10();
     function_40e3f0();
     int32_t v4; // 0x448bc0
@@ -61827,7 +61491,7 @@ int32_t function_4517c0(int32_t a1) {
         v12++;
     }
     // 0x4518e7
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)(v11 + 112), (int32_t *)v9);
+    retdec_string_assign_cstr((int32_t *)(v11 + 112), (const char *)(v9));
     int32_t v13 = _3f__3f_2_40_YAPAXI_40_Z(36); // 0x4518f6
     if (v13 != 0) {
         // 0x451904
@@ -61977,7 +61641,7 @@ int32_t function_451b70(int32_t a1) {
         v12++;
     }
     // 0x451c97
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)(v11 + 112), (int32_t *)v9);
+    retdec_string_assign_cstr((int32_t *)(v11 + 112), (const char *)(v9));
     int32_t v13 = _3f__3f_2_40_YAPAXI_40_Z(36); // 0x451ca6
     if (v13 != 0) {
         // 0x451cb4
@@ -69275,7 +68939,7 @@ int32_t function_45b8b0(int32_t * a1) {
         v6 = v7 + 1;
     }
     // 0x45b91c
-    retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v5, (int32_t *)cchLength);
+    retdec_string_assign_cstr((int32_t *)&v5, (const char *)(cchLength));
     v1 = 0;
     int32_t v8; // bp-64, 0x45b8b0
     int32_t lpsz = cchLength >= 16 ? cchLength : (int32_t)&v8;

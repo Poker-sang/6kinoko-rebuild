@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.hpp"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -44,21 +45,13 @@ uint32_t retdec_string_length32(int32_t object)
     if (object == 0) {
         return 0;
     }
-    return field<uint32_t>(object + 16);
+    return kinoko::legacy::StringView(pointer<void>(object)).length();
 }
 
 const unsigned char *retdec_string_data32(int32_t object)
 {
-    uint32_t capacity;
-
-    if (object == 0) {
-        return nullptr;
-    }
-    capacity = field<uint32_t>(object + 20);
-    if (capacity < 16) {
-        return pointer<const unsigned char>(object);
-    }
-    return pointer<const unsigned char>(field<uint32_t>(object));
+    return reinterpret_cast<const unsigned char*>(
+        kinoko::legacy::StringView(pointer<void>(object)).data());
 }
 
 int32_t retdec_compare_bytes32(const unsigned char *left,
