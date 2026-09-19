@@ -711,11 +711,6 @@ struct vtable_4db71c_type {
     int32_t (*e1)();
 };
 
-struct vtable_4db764_type {
-    int32_t (*e0)(int32_t);
-    int32_t (*e1)();
-};
-
 struct vtable_4e4fbc_type {
     int32_t (*e0)(int32_t, int32_t);
     int32_t (*e1)(int32_t, int32_t);
@@ -819,13 +814,6 @@ struct vtable_4ebb04_type {
     int32_t (*e1)();
 };
 
-struct vtable_4ebb94_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)();
-    int32_t (*e3)();
-};
-
 struct vtable_4ebe58_type {
     int32_t (*e0)(char);
     int32_t (*e1)();
@@ -902,14 +890,6 @@ struct vtable_4ec0b0_type {
 struct vtable_4ec0f0_type {
     int32_t (*e0)();
     int32_t (*e1)();
-};
-
-struct vtable_4ec120_type {
-    int32_t (*e0)(int32_t, int32_t);
-    int32_t (*e1)(int32_t, int32_t);
-    int32_t (*e2)(int32_t, int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)(int32_t, int32_t);
 };
 
 struct vtable_4ec138_type {
@@ -1091,20 +1071,6 @@ struct vtable_4ecb84_type {
     int32_t (*e1)();
 };
 
-struct vtable_4ecbb4_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
-};
-
-struct vtable_4ecc0c_type {
-    int32_t (*e0)(int32_t, int32_t);
-    int32_t (*e1)(int32_t, int32_t);
-    int32_t (*e2)(int32_t, int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)(int32_t, int32_t);
-};
-
 struct vtable_4ecc24_type {
     int32_t (*e0)(char);
     int32_t (*e1)();
@@ -1156,14 +1122,6 @@ struct vtable_4ecd94_type {
     int32_t (*e0)(char);
     int32_t (*e1)();
     int32_t (*e2)(int32_t);
-};
-
-struct vtable_4ecdd4_type {
-    int32_t (*e0)(int32_t, int32_t);
-    int32_t (*e1)(int32_t, int32_t);
-    int32_t (*e2)(int32_t, int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)(int32_t, int32_t);
 };
 
 struct vtable_4ecdec_type {
@@ -1231,26 +1189,6 @@ struct vtable_4ed04c_type {
 struct vtable_4ed0cc_type {
     int32_t (*e0)();
     int32_t (*e1)();
-};
-
-struct vtable_4ed0fc_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
-};
-
-struct vtable_4ed10c_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
-};
-
-struct vtable_4ed134_type {
-    int32_t (*e0)(int32_t, int32_t);
-    int32_t (*e1)(int32_t, int32_t);
-    int32_t (*e2)(int32_t, int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)(int32_t, int32_t);
 };
 
 struct vtable_4ed14c_type {
@@ -1622,51 +1560,11 @@ void retdec_msvc_Finitlocks__YAXXZ7(void);
 void retdec_msvc_Finitlocks__YAXXZ8(void);
 void retdec_msvc_Finitlocks__YAXXZ9(void);
 int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z(int32_t * result, char * a2);
-int32_t _3f__3f_1exception_40_std_40__40_UAE_40_XZ(void);
-int32_t _3f__3f_1locale_40_std_40__40_QAE_40_XZ(void);
+
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
-void _3f__CallMemberFunction0_40__40_YGXPAX0_40_Z(int32_t * result, int32_t * a2, int32_t * a3);
-int32_t * _3f__Decref_40_facet_40_locale_40_std_40__40_QAEPAV123_40_XZ(void);
-void _3f__Incref_40_facet_40_locale_40_std_40__40_QAEXXZ(void);
-void _3f__Tidy_40__3f__24__Mpunct_40_D_40_std_40__40_AAEXXZ(void);
-int32_t _40___security_check_cookie_40_4(void);
-int32_t ___crtTlsAlloc_40_4(void);
-int32_t * ___get_sigabrt(int32_t * Ptr);
-int32_t ___iob_func(void);
-int32_t ___sys_errlist(void);
-int32_t ___sys_nerr(void);
-int32_t __acos_pentium4(int64_t a1);
-float80_t __acos_pentium4_(int64_t a1);
-int32_t __acos_pentium4__(int64_t a1);
-int32_t __acos_pentium4___(int64_t a1);
-float80_t __acos_pentium4____(int64_t result, uint32_t a2);
-float80_t __acos_pentium4_____(int64_t a1);
-int32_t __acos_pentium4______(int64_t a1);
-int32_t __acos_pentium4_______(int64_t a1);
-int32_t __c_exit(void);
-int32_t __cexit(void);
-int32_t __cos_default(int32_t a1);
-int32_t __crt_debugger_hook(void);
-int32_t * __encoded_null(int32_t * Ptr);
-float80_t __exp_pentium4(int64_t a1, int32_t a2);
-int32_t __fast_exit(int32_t a1);
-int32_t __flushall(void);
-int32_t * __initp_eh_hooks(int32_t * Ptr);
-int32_t __initp_heap_handler(int32_t result);
-int32_t __initp_misc_invarg(int32_t result);
-int32_t __initp_misc_purevirt(int32_t result);
-int32_t __initp_misc_rand_s(int32_t result);
-int32_t __lockexit(void);
-int32_t __matherr(void);
-int32_t __NLG_Call(void);
-int32_t __NLG_Notify1(void);
-float80_t __pow_pentium4(int64_t a1, int64_t a2, int32_t a3);
-int32_t __sin_default(int32_t a1);
-int32_t __tan_default(int32_t a1);
-int32_t __unlockexit(void);
-void _RtlUnwind_40_16(int32_t * TargetFrame, int32_t * TargetIp, struct retdec_EXCEPTION_RECORD * ExceptionRecord, int32_t * ReturnValue);
+
 int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t entry_point(void);
+
 int32_t function_401000(void);
 int32_t function_401010(char a1);
 int32_t function_401040(void);
@@ -2034,7 +1932,6 @@ int32_t function_419aa0(void);
 int32_t function_419b00(int32_t a1, int32_t a2);
 int32_t function_419c50(int32_t a1);
 
-int32_t function_419d10(void);
 int32_t function_419d30(void);
 
 int32_t function_41df50(void);
@@ -2095,7 +1992,6 @@ int32_t function_4231e0(int32_t a1, int32_t result, int32_t a3);
 int32_t function_423350(int32_t a1);
 int32_t function_423430(int32_t a1);
 
-int32_t function_423790(int32_t a1, int32_t a2);
 int32_t function_4237b0(int32_t result, int32_t a2, int32_t a3);
 int32_t function_423990(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_423be0(int32_t * a1);
@@ -2588,11 +2484,6 @@ int32_t function_441df0(int32_t result2, int32_t a2);
 
 int32_t function_4422e0(void);
 
-
-int32_t function_442780(int32_t result);
-int32_t function_4427a0(void);
-
-
 int32_t function_4429b0(void);
 
 
@@ -2606,10 +2497,6 @@ int32_t function_443560(void);
 
 
 int32_t function_4443c0(char * a1, int32_t * a2, int32_t a3, int32_t a4, int32_t a5);
-
-int32_t function_444630(int32_t a1, int32_t a2);
-int32_t function_444650(int32_t result, int32_t a2);
-
 
 int32_t function_4449c0(int32_t a1);
 int32_t function_444a50(int32_t a1);
@@ -2668,9 +2555,7 @@ int32_t function_448830(int32_t a1, int32_t a2);
 int32_t function_448910(int32_t a1, int32_t a2);
 int32_t function_4489b0(int32_t a1);
 int32_t function_448a90(int32_t a1);
-int32_t function_448bc0(int32_t a1, int32_t a2);
 
-int32_t function_448c83(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_448cb0(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_448f00(int32_t * a1);
 int32_t function_449040(int32_t a1);
@@ -2732,11 +2617,6 @@ int32_t function_44ced0(void);
 
 int32_t function_44d0b0(int32_t a1);
 int32_t function_44d4c0(int32_t result2, int32_t a2);
-
-
-int32_t function_44d940(int32_t result);
-int32_t function_44d960(void);
-
 
 int32_t function_44e780(uint32_t count, int32_t * vector, int32_t position, int32_t value);
 
@@ -3120,8 +3000,6 @@ static int32_t function_463af0_this(int32_t this_ptr);
 int32_t function_463e60(int32_t manager, int32_t layout, int32_t environment);
 
 static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1);
-int32_t function_4645b0(int32_t a1, int32_t a2);
-
 
 int32_t function_464d90(int32_t this_ptr);
 int32_t function_464e20(int32_t this_ptr);
@@ -3395,9 +3273,6 @@ int32_t function_4ad16b(int32_t a1);
 
 float80_t function_4ad7f2(void);
 
-
-int32_t function_4bbf40(int32_t a1, int32_t a2);
-
 int32_t function_4c4cf0(int32_t a1);
 
 
@@ -3547,101 +3422,12 @@ int32_t g64 = 0x25e609e4; // 0x4d9d8c
 int32_t g77 = 124; // 0x4da950
 int32_t g80 = 0x4ab2c1; // 0x4db728
 int32_t g82 = 0x4b07e1; // 0x4dc338
-int128_t * g83 = NULL; // 0x4dc680
-int128_t g84; // 0x4dce80
-int128_t g85; // 0x4dce90
-int128_t g86; // 0x4dcea0
-int128_t g87; // 0x4dceb0
-int128_t g88; // 0x4dced0
-int64_t * g89 = NULL; // 0x4dd420
-int128_t * g90 = NULL; // 0x4dd830
-int64_t * g91 = NULL; // 0x4de040
-int128_t * g92 = NULL; // 0x4de450
-int64_t * g93 = (int64_t *)0x40000000; // 0x4dec60
-int128_t * g94 = NULL; // 0x4df470
-int128_t g95; // 0x4e0480
-int128_t g96; // 0x4e0490
-int128_t * g97 = NULL; // 0x4e04a0
-int128_t g98; // 0x4e0cb0
+
 int128_t g99; // 0x4e0cc0
-int128_t g100; // 0x4e0cd0
-int128_t g101; // 0x4e0ce0
-int128_t g102; // 0x4e0cf0
-int128_t g103; // 0x4e0dc0
-int128_t g104; // 0x4e0dd0
-int128_t g105; // 0x4e0de0
-int128_t g106; // 0x4e0df0
-int128_t g107; // 0x4e0e00
-int128_t * g108 = NULL; // 0x4e0e10
-int128_t g109; // 0x4e0e30
-int128_t g110; // 0x4e0e40
-int128_t g111; // 0x4e0e80
-int128_t g112; // 0x4e0e90
-int128_t g113; // 0x4e0ea0
-int128_t g114; // 0x4e0eb0
-int128_t * g115 = NULL; // 0x4e0ec0
-int128_t * g116 = NULL; // 0x4e12d0
-int128_t * g117 = (int128_t *)-0x1c225ea8; // 0x4e1a50
-int64_t * g118 = (int64_t *)-0x627a4f03; // 0x4e2950
-int128_t g119; // 0x4e3150
-int128_t g120; // 0x4e3160
-int128_t g121; // 0x4e31d0
-int128_t g122; // 0x4e31e0
-int128_t g123; // 0x4e31f0
-int128_t g124; // 0x4e3210
+
 int32_t g125 = 0x4c3d36; // 0x4e4a8c
 int32_t g128 = 1; // 0x4e5050
-int128_t * g130 = (int128_t *)-0x1c225ea8; // 0x4e52f0
-int64_t * g131 = (int64_t *)-0x627a4f03; // 0x4e61f0
-int128_t g132; // 0x4e69f0
-int128_t g133; // 0x4e6a10
-int128_t g134; // 0x4e6a20
-int128_t g135; // 0x4e6a40
-int128_t g136; // 0x4e6a50
-int128_t g137; // 0x4e6a60
-int128_t g138; // 0x4e6a70
-int128_t g139; // 0x4e6ad0
-float64_t * g140 = (float64_t *)0x54442d18; // 0x4e6ae0
-int128_t g141; // 0x4e6bb8
-int128_t g142; // 0x4e6be8
-int128_t g143; // 0x4e6bf0
-int128_t g144; // 0x4e6bf8
-int128_t g145; // 0x4e6c00
-int128_t g146; // 0x4e6c20
-int128_t g147; // 0x4e6c30
-int128_t g148; // 0x4e6c40
-int128_t g149; // 0x4e6c50
-int128_t g150; // 0x4e6c70
-int128_t g151; // 0x4e6c80
-int128_t g152; // 0x4e6c90
-int128_t g153; // 0x4e6ca0
-int128_t g154; // 0x4e6cb0
-int128_t * g155 = NULL; // 0x4e6cc0
-int128_t g156; // 0x4e7110
-int128_t g157; // 0x4e7120
-int128_t g158; // 0x4e7130
-int128_t g159; // 0x4e7140
-int128_t * g160 = NULL; // 0x4e7150
-int128_t g161; // 0x4e7170
-int128_t g162; // 0x4e7180
-int128_t g163; // 0x4e71c0
-int128_t g164; // 0x4e71d0
-int128_t g165; // 0x4e71e0
-int128_t * g166 = NULL; // 0x4e71f0
-int128_t * g167 = NULL; // 0x4e7600
-int128_t * g168 = NULL; // 0x4e7a10
-int128_t g169; // 0x4e8210
-int128_t g170; // 0x4e8220
-int128_t g171; // 0x4e8230
-int128_t g172; // 0x4e8240
-int128_t g173; // 0x4e8260
-int128_t * g174 = NULL; // 0x4e82b0
-int128_t g175; // 0x4e98b0
-int128_t g176; // 0x4e98c0
-int128_t g177; // 0x4e98d0
-int128_t g178; // 0x4e98e0
-int128_t g179; // 0x4e98f0
-int128_t g180; // 0x4e9910
+
 char * g181 = "D3D\x83I\x83u\x83W\x83\x46\x83N\x83g\x82\xcc\x8d\xec\x90\xac\x82\xc9\x8e\xb8\x94s"; // 0x4eb160
 char * g182 = "\x83\x66\x83\x42\x83X\x83v\x83\x8c\x83\x43\x83\x82\x81[\x83h\x82\xcc\x8e\xe6\x93\xbe\x82\xc9\x8e\xb8\x94s"; // 0x4eb17c
 int32_t g183 = -0x7cbbccbc; // 0x4eb19c
@@ -3850,53 +3636,6 @@ char (*g505)[9] = "getclass"; // 0x50d558
 char (*g506)[4] = "ref"; // 0x50d5a8
 int32_t g507 = -0x44bf19b2; // 0x50d658
 float64_t g508 = 0.5; // 0x50d6f0
-char * g510[44] = {
-    "No error",
-    "Operation not permitted",
-    "No such file or directory",
-    "No such process",
-    "Interrupted function call",
-    "Input/output error",
-    "No such device or address",
-    "Arg list too long",
-    "Exec format error",
-    "Bad file descriptor",
-    "No child processes",
-    "Resource temporarily unavailable",
-    "Not enough space",
-    "Permission denied",
-    "Bad address",
-    "Unknown error",
-    "Resource device",
-    "File exists",
-    "Improper link",
-    "No such device",
-    "Not a directory",
-    "Is a directory",
-    "Invalid argument",
-    "Too many open files in system",
-    "Too many open files",
-    "Inappropriate I/O control operation",
-    "Unknown error",
-    "File too large",
-    "No space left on device",
-    "Invalid seek",
-    "Read-only file system",
-    "Too many links",
-    "Broken pipe",
-    "Domain error",
-    "Result too large",
-    "Unknown error",
-    "Resource deadlock avoided",
-    "Unknown error",
-    "Filename too long",
-    "No locks available",
-    "Function not implemented",
-    "Directory not empty",
-    "Illegal byte sequence",
-    "Unknown error"
-}; // 0x50e5e0
-int32_t g511 = 43; // 0x50e690
 
 // 0x50f108
  // 0x50f178
@@ -4059,13 +3798,6 @@ int32_t g650 = 0; // 0x515304
 int32_t g651 = 0; // 0x515308
 int32_t g652 = 0; // 0x51530c
 char g653 = 0; // 0x515310
-int32_t g654 = 0; // 0x515324
-int32_t g655 = 0; // 0x5159a8
-int32_t g656 = 0; // 0x5159ac
-int32_t g657 = 0; // 0x5159b0
-int32_t g658 = 0; // 0x515cf0
-int32_t g659 = 0; // 0x515f90
-int32_t g660 = 0; // 0x515f9c
 
 int32_t g664 = 0; // 0x51620c
 int32_t g665 = 0; // 0x516210
@@ -4468,8 +4200,7 @@ int32_t g1055 = 0; // 0x51bcfc
 int32_t g1056 = 0; // 0x51bd00
 int32_t g1057 = 0; // 0x51bd04
 int32_t g1058 = 0; // 0x51bd08
-int32_t g1059 = 0; // 0x51bd0c
-int32_t g1060 = 0; // 0x51bd10
+
 int32_t g1061 = 0; // 0x51bd14
 int32_t g1062 = 0; // 0x51bd18
 int32_t g1063 = 0; // 0x51bd1c
@@ -4498,8 +4229,7 @@ int32_t g1085 = 0; // 0x51bd80
 int32_t g1086 = 0; // 0x51bd84
 int32_t g1087 = 0; // 0x51bd88
 int32_t g1088 = 0; // 0x51bd8c
-int32_t g1089 = 0; // 0x51bd90
-int32_t g1090 = 0; // 0x51bd94
+
 int32_t g1091 = 0; // 0x51bd98
 int32_t g1092 = 0; // 0x51bd9c
 int32_t g1093 = 0; // 0x51bda0
@@ -4575,9 +4305,8 @@ char g1162 = 0; // 0x51becc
 char g1163 = 0; // 0x51bed0
 char g1164 = 0; // 0x51bed4
 
-int32_t g1168 = 0; // 0x51bee4
 int32_t g1169 = 0; // 0x51bee8
-int32_t g1170 = 0; // 0x51bf00
+
 int32_t g1171 = 0; // 0x51cf20
 // Detected cryptographic pattern: unlzx_table_three (32-bit, little endian)
 int32_t unlzx_table_three_at_50f05c[16] = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 0x1fff, 0x3fff, 0x7fff}; // 0x50f05c
@@ -4756,10 +4485,6 @@ struct vtable_4db71c_type g79 = {
     .e0 = function_4ab010,
     .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4db71c
-struct vtable_4db764_type g81 = {
-    .e0 = _3f__3f__G__non_rtti_object_40_std_40__40_UAEPAXI_40_Z,
-    .e1 = function_4abca1
-}; // 0x4db764
 
 // 0x4e4fbc
  // 0x4e50e4
@@ -4832,13 +4557,6 @@ struct vtable_4ebb04_type g233 = {
     .e1 = function_4252d0
 }; // 0x4ebb04
 
-struct vtable_4ebb94_type g240 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ebb94
-
 struct vtable_4ebe58_type g251 = {
     .e0 = function_453580,
     .e1 = function_402a10,
@@ -4907,13 +4625,7 @@ struct vtable_4ec0f0_type g279 = {
     .e0 = function_427520,
     .e1 = function_4252d0
 }; // 0x4ec0f0
-struct vtable_4ec120_type g282 = {
-    .e0 = function_4461d0,
-    .e1 = function_423790,
-    .e2 = function_444630,
-    .e3 = function_444650,
-    .e4 = function_448bc0
-}; // 0x4ec120
+
 struct vtable_4ec138_type g283 = {
     .e0 = function_42abe0,
     .e1 = function_43e850,
@@ -5071,19 +4783,7 @@ struct vtable_4ecb84_type g352 = {
     .e0 = function_4461b0,
     .e1 = function_4252d0
 }; // 0x4ecb84
-struct vtable_4ecbb4_type g355 = {
-    .e0 = function_453580,
-    .e1 = function_4427a0,
-    .e2 = function_442780
-}; // 0x4ecbb4
 
-struct vtable_4ecc0c_type g359 = {
-    .e0 = function_4461d0,
-    .e1 = function_423790,
-    .e2 = function_444630,
-    .e3 = function_444650,
-    .e4 = function_448bc0
-}; // 0x4ecc0c
 struct vtable_4ecc24_type g360 = {
     .e0 = function_42abe0,
     .e1 = function_43e850,
@@ -5131,13 +4831,6 @@ struct vtable_4ecd94_type g371 = {
     .e2 = function_447b90
 }; // 0x4ecd94
 
-struct vtable_4ecdd4_type g374 = {
-    .e0 = function_4461d0,
-    .e1 = function_423790,
-    .e2 = function_444630,
-    .e3 = function_444650,
-    .e4 = function_448bc0
-}; // 0x4ecdd4
 struct vtable_4ecdec_type g375 = {
     .e0 = function_42abe0,
     .e1 = function_43e850,
@@ -5197,24 +4890,7 @@ struct vtable_4ed0cc_type g397 = {
     .e0 = function_44fd10,
     .e1 = function_4252d0
 }; // 0x4ed0cc
-struct vtable_4ed0fc_type g400 = {
-    .e0 = function_453580,
-    .e1 = function_44d960,
-    .e2 = function_44d940
-}; // 0x4ed0fc
-struct vtable_4ed10c_type g401 = {
-    .e0 = function_453580,
-    .e1 = function_44d960,
-    .e2 = function_44d940
-}; // 0x4ed10c
 
-struct vtable_4ed134_type g403 = {
-    .e0 = function_4461d0,
-    .e1 = function_423790,
-    .e2 = function_444630,
-    .e3 = function_444650,
-    .e4 = function_448bc0
-}; // 0x4ed134
 struct vtable_4ed14c_type g404 = {
     .e0 = function_42abe0,
     .e1 = function_43e850,
@@ -5339,7 +5015,7 @@ struct vtable_4ed700_type g437 = {
 }; // 0x4ed700
 int32_t * g445 = &g442; // 0x4f7314
 int32_t * g454 = &g446; // 0x4f7338
-int32_t * g509 = &g1170; // 0x50e258
+
 int32_t * g528 = &g80; // 0x50f6cc
 int32_t ** g447 = &g528; // 0x4f731c
 int32_t * g561 = &g80; // 0x510a2c
@@ -14945,74 +14621,6 @@ int32_t function_414010(int32_t this_ptr, const char *file_name) {
     return 1;
 }
 
-// Address range: 0x414ba0 - 0x414bca
-// Demangled:     public: void __thiscall std::locale::facet::_Incref(void)
-void _3f__Incref_40_facet_40_locale_40_std_40__40_QAEXXZ(void) {
-    // 0x414ba0
-    int32_t v1; // bp-8, 0x414ba0
-    _3f__3f_0_Lockit_40_std_40__40_QAE_40_H_40_Z((int32_t)&v1);
-    int32_t v2; // 0x414ba0
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x414bb1
-    int32_t v4 = *v3; // 0x414bb1
-    if (v4 != -1) {
-        // 0x414bb9
-        *v3 = v4 + 1;
-    }
-    // 0x414bbd
-    _3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ();
-}
-
-// Address range: 0x414bd0 - 0x414c0d
-// Demangled:     public: class std::locale::facet * __thiscall std::locale::facet::_Decref(void)
-int32_t * _3f__Decref_40_facet_40_locale_40_std_40__40_QAEPAV123_40_XZ(void) {
-    // 0x414bd0
-    int32_t v1; // bp-8, 0x414bd0
-    _3f__3f_0_Lockit_40_std_40__40_QAE_40_H_40_Z((int32_t)&v1);
-    int32_t v2; // 0x414bd0
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x414be2
-    int32_t v4 = *v3; // 0x414be2
-    int32_t v5 = v4; // 0x414be7
-    if (v4 != 0 && v4 != -1) {
-        // 0x414bee
-        v5 = v4 - 1;
-        *v3 = v5;
-    }
-    // 0x414bf2
-    _3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ();
-    return (int32_t *)(v5 == 0 ? v2 : 0);
-}
-
-
-// Address range: 0x414c20 - 0x414c6b
-// Demangled:     public: __thiscall std::locale::~locale(void)
-int32_t _3f__3f_1locale_40_std_40__40_QAE_40_XZ(void) {
-    // 0x414c20
-    int32_t v1; // 0x414c20
-    if (v1 == 0) {
-        // 0x414c66
-        int32_t result; // 0x414c20
-        return result;
-    }
-    // 0x414c2b
-    int32_t v2; // bp-8, 0x414c20
-    _3f__3f_0_Lockit_40_std_40__40_QAE_40_H_40_Z((int32_t)&v2);
-    int32_t * v3 = (int32_t *)(v1 + 4); // 0x414c35
-    int32_t v4 = *v3;
-    int32_t v5 = v4; // 0x414c3a
-    if (v4 != 0 && v4 != -1) {
-        // 0x414c41
-        v5 = v4 - 1;
-        *v3 = v5;
-    }
-    int32_t result2 = _3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ(); // 0x414c59
-    if (v5 == 0) {
-        // 0x414c5b
-        result2 = *(int32_t *)v1;
-    }
-    // 0x414c66
-    return result2;
-}
-
 // Address range: 0x415130 - 0x415183
 int32_t function_415130(void) {
     // 0x415130
@@ -18755,13 +18363,6 @@ int32_t function_419c50(int32_t a1) {
     return result;
 }
 
-// Address range: 0x419d10 - 0x419d2c
-int32_t function_419d10(void) {
-    // 0x419d10
-    int32_t result; // 0x419d10
-    return result;
-}
-
 // Address range: 0x419d30 - 0x419d35
 // From class:    .?AV?$sp_counted_impl_p@PAVActor@@@detail@boost@@
 // Type:          virtual member function
@@ -21569,15 +21170,6 @@ int32_t function_423430(int32_t a1) {
     // 0x423518
     function_423990(v8, 0, result);
     return result;
-}
-
-// Address range: 0x423790 - 0x4237aa
-// From class:    .?AU?$TypePropertyClass@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@?$TUserData@VCActKey@@@@
-// Type:          virtual member function
-int32_t function_423790(int32_t a1, int32_t a2) {
-    // 0x423790
-    int32_t v1; // 0x423790
-    return function_406cc0(*(int32_t *)(v1 + 20) + a1, 0, -1);
 }
 
 // Address range: 0x4237b0 - 0x423988
@@ -44564,26 +44156,6 @@ int32_t function_4422e0(void) {
     return result;
 }
 
-
-// Address range: 0x442780 - 0x44279b
-// From class:    .?AV?$Class@VCStringLayout@@VNoConstructor@Sqrat@@@Sqrat@@
-// Type:          virtual member function
-int32_t function_442780(int32_t result) {
-    // 0x442780
-    *(int32_t *)result = g1089;
-    *(int32_t *)(result + 4) = g1090;
-    return result;
-}
-
-// Address range: 0x4427a0 - 0x4427a6
-// From class:    .?AV?$Class@VCStringLayout@@VNoConstructor@Sqrat@@@Sqrat@@
-// Type:          virtual member function
-int32_t function_4427a0(void) {
-    // 0x4427a0
-    return &g1089;
-}
-
-
 // Address range: 0x4429b0 - 0x4429c5
 int32_t function_4429b0(void) {
     // 0x4429b0
@@ -44734,26 +44306,6 @@ int32_t function_4443c0(char * a1, int32_t * a2, int32_t a3, int32_t a4, int32_t
     sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
     return kinoko_sq_pop(*v2, 1);
 }
-
-// Address range: 0x444630 - 0x44464a
-// From class:    .?AU?$TypePropertyClass@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@?$TUserData@VCActKey@@@@
-// Type:          virtual member function
-int32_t function_444630(int32_t a1, int32_t a2) {
-    // 0x444630
-    return function_406cc0(a2, 0, -1);
-}
-
-// Address range: 0x444650 - 0x4446a7
-// From class:    .?AU?$TypePropertyClass@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@?$TUserData@VCActKey@@@@
-// Type:          virtual member function
-int32_t function_444650(int32_t result, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x444660
-    __writefsdword(0, (int32_t)&v1);
-    function_419d10();
-    __writefsdword(0, v1);
-    return result;
-}
-
 
 // Address range: 0x4449c0 - 0x444a39
 int32_t function_4449c0(int32_t a1) {
@@ -47080,40 +46632,6 @@ int32_t function_448a90(int32_t a1) {
     // 0x448b78
     function_448cb0(v8, 0, result);
     return result;
-}
-
-// Address range: 0x448bc0 - 0x448c7b
-// From class:    .?AU?$TypePropertyClass@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@?$TUserData@VCActKey@@@@
-// Type:          virtual member function
-int32_t function_448bc0(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x448bd0
-    __writefsdword(0, (int32_t)&v1);
-    char v2 = 0; // bp-52, 0x448c0a
-    int32_t v3 = a2; // 0x448c0d
-    while (*(char *)v3 != 0) {
-        // 0x448c10
-        v3++;
-    }
-    // 0x448c17
-    retdec_string_assign_cstr((int32_t *)&v2, (const char *)(a2));
-    function_419d10();
-    function_40e3f0();
-    int32_t v4; // 0x448bc0
-    if ((uint32_t)v4 >= 16) {
-        // 0x448c4d
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    int32_t result = function_448c83((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x448c79
-    return result;
-}
-
-
-// Address range: 0x448c83 - 0x448ca1
-int32_t function_448c83(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x448c83
-    int32_t v1; // 0x448c83
-    __writefsdword(0, *(int32_t *)(v1 - 12));
-    return ___report_gsfailure();
 }
 
 // Address range: 0x448cb0 - 0x448ef6
@@ -50158,26 +49676,6 @@ int32_t function_44d4c0(int32_t result2, int32_t a2) {
     // 0x44d53f
     return result2;
 }
-
-
-// Address range: 0x44d940 - 0x44d95b
-// From class:    .?AV?$Class@VCActResourceMesh@@VNoConstructor@Sqrat@@@Sqrat@@
-// Type:          virtual member function
-int32_t function_44d940(int32_t result) {
-    // 0x44d940
-    *(int32_t *)result = g1059;
-    *(int32_t *)(result + 4) = g1060;
-    return result;
-}
-
-// Address range: 0x44d960 - 0x44d966
-// From class:    .?AV?$Class@VCActResourceMesh@@VNoConstructor@Sqrat@@@Sqrat@@
-// Type:          virtual member function
-int32_t function_44d960(void) {
-    // 0x44d960
-    return &g1059;
-}
-
 
 // Address range: 0x44f420 - 0x44f499
 int32_t function_44f420(int32_t a1) {
@@ -62882,63 +62380,6 @@ static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1) {
     return retdec_actor_manager_update(this_ptr, (int32_t)(intptr_t)a1);
 }
 
-// Address range: 0x4645b0 - 0x4645e9
-int32_t function_4645b0(int32_t a1, int32_t a2) {
-    if (a1 == a2) {
-        // 0x4645e3
-        int32_t result; // 0x4645b0
-        return result;
-    }
-    int32_t v1 = a1; // 0x4645d9
-    int32_t v2 = *(int32_t *)(v1 + 244); // 0x4645c0
-    int32_t result2 = 0; // 0x4645c8
-    int32_t v3; // bp-12, 0x4645b0
-    if (v2 != 0) {
-        // 0x4645ca
-        *(int32_t *)((int32_t)&v3 - 4) = v2;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result2 = &g1224;
-    }
-    // 0x4645d3
-    *(int32_t *)v1 = (int32_t)&g23;
-    v1 += 248;
-    while (v1 != a2) {
-        // 0x4645c0
-        v2 = *(int32_t *)(v1 + 244);
-        result2 = 0;
-        if (v2 != 0) {
-            // 0x4645ca
-            *(int32_t *)((int32_t)&v3 - 4) = v2;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            result2 = &g1224;
-        }
-        // 0x4645d3
-        *(int32_t *)v1 = (int32_t)&g23;
-        v1 += 248;
-    }
-    // 0x4645e3
-    return result2;
-}
-
-
-// Address range: 0x464750 - 0x464786
-// Demangled:     private: void __thiscall std::_Mpunct<char>::_Tidy(void)
-void _3f__Tidy_40__3f__24__Mpunct_40_D_40_std_40__40_AAEXXZ(void) {
-    // 0x464750
-    int32_t v1; // 0x464750
-    int32_t * v2 = (int32_t *)(v1 + 4);
-    if (v1 != 0) {
-        // 0x464759
-        function_4645b0(v1, *v2);
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x464770
-    *(int32_t *)v1 = 0;
-    *v2 = 0;
-    *(int32_t *)(v1 + 8) = 0;
-}
-
-
 // Address range: 0x464d90 - 0x464e19
 int32_t function_464d90(int32_t this_ptr) {
     return kinoko_clear_animation_list(this_ptr);
@@ -74634,28 +74075,6 @@ int32_t function_4ab330(void) {
     return &g1224;
 }
 
-
-// Address range: 0x4ab4ae - 0x4ab4b5
-// Demangled:     void __stdcall _CallMemberFunction0(void *, void *)
-void _3f__CallMemberFunction0_40__40_YGXPAX0_40_Z(int32_t * result, int32_t * a2, int32_t * a3) {
-    // 0x4ab4ae
-    return;
-}
-
-
-// Address range: 0x4ab87f - 0x4ab88e
-int32_t _40___security_check_cookie_40_4(void) {
-    // 0x4ab87f
-    int32_t result; // 0x4ab87f
-    if (result != g507) {
-        // 0x4ab889
-        return ___report_gsfailure();
-    }
-    // 0x4ab887
-    return result;
-}
-
-
 // Address range: 0x4ab9d0 - 0x4ab9d9
 int32_t function_4ab9d0(void) {
     // 0x4ab9d0
@@ -74673,62 +74092,6 @@ int32_t function_4abca1(void) {
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x4abca1
     return v2 != 0 ? v2 : (int32_t)"Unknown exception";
 }
-
-// Address range: 0x4abd68 - 0x4abd73
-// From class:    .?AVexception@std@@
-// Type:          constructor
-// Demangled:     public: virtual __thiscall std::exception::~exception(void)
-int32_t _3f__3f_1exception_40_std_40__40_UAE_40_XZ(void) {
-    // 0x4abd68
-    int32_t v1; // 0x4abd68
-    *(int32_t *)v1 = (int32_t)&g81;
-    return _3f__Tidy_40_exception_40_std_40__40_AAEXXZ();
-}
-
-
-// Address range: 0x4aca23 - 0x4aca2d
-int32_t entry_point(void) {
-    // 0x4aca23
-    ___security_init_cookie();
-    return ___tmainCRTStartup();
-}
-
-
-// Address range: 0x4acb3f - 0x4acbd9
-int32_t __cos_default(int32_t a1) {
-    // 0x4acb3f
-    __fload_withFB();
-    int32_t v1 = __asm_wait(); // 0x4acb49
-    bool v2; // 0x4acb3f
-    if (v2) {
-        if ((v1 & 0xfffff || a1) != 0) {
-            // 0x4acb98
-            __convertTOStoQNaN();
-        }
-        // 0x4acbba
-        if (g654 != 0) {
-            __fast_exit((int32_t)&g1224);
-        }
-        // 0x4acbc7
-        return __startOneArgErrorHandling();
-    }
-    // 0x4acb4f
-    __asm_wait();
-    int32_t v3; // 0x4acb3f
-    if ((v3 & 1024) != 0) {
-        while (true) {
-            // 0x4acb8a
-            __asm_wait();
-        }
-    }
-    // 0x4acb65
-    if (g654 != 0) {
-        __fast_exit((int32_t)&g1224);
-    }
-    // 0x4acb72
-    return __math_exit();
-}
-
 
 // Address range: 0x4ad16b - 0x4ad17e
 int32_t function_4ad16b(int32_t a1) {
@@ -74752,1274 +74115,6 @@ float80_t function_4ad7f2(void) {
     // 0x4ad800
     __asm_wait();
     return result * (float80_t)g508;
-}
-
-
-// Address range: 0x4aea90 - 0x4aea99
-int32_t __lockexit(void) {
-    // 0x4aea90
-    return __lock(8);
-}
-
-// Address range: 0x4aea99 - 0x4aeaa2
-int32_t __unlockexit(void) {
-    // 0x4aea99
-    return __unlock(8);
-}
-
-
-// Address range: 0x4aecfc - 0x4aed07
-int32_t __cexit(void) {
-    // 0x4aecfc
-    _doexit(0, 0, 1);
-    // UNREACHABLE
-}
-
-
-// Address range: 0x4aed0b - 0x4aed16
-int32_t __c_exit(void) {
-    // 0x4aed0b
-    _doexit(0, 1, 1);
-    // UNREACHABLE
-}
-
-
-// Address range: 0x4b0506 - 0x4b0515
-int32_t __initp_misc_purevirt(int32_t result) {
-    // 0x4b0506
-    g655 = result;
-    return result;
-}
-
-
-// Address range: 0x4b0599 - 0x4b05aa
-int32_t * __initp_eh_hooks(int32_t * Ptr) {
-    int32_t * result = EncodePointer((int32_t *)"j\bhhmO"); // 0x4b059e
-    g656 = (int32_t)result;
-    return result;
-}
-
-// Address range: 0x4b079f - 0x4b07ae
-int32_t __initp_heap_handler(int32_t result) {
-    // 0x4b079f
-    g657 = result;
-    return result;
-}
-
-
-// Address range: 0x4b14c4 - 0x4b14cd
-int32_t * __encoded_null(int32_t * Ptr) {
-    // 0x4b14c4
-    return EncodePointer(NULL);
-}
-
-// Address range: 0x4b14cd - 0x4b14d6
-int32_t ___crtTlsAlloc_40_4(void) {
-    // 0x4b14cd
-    return TlsAlloc();
-}
-
-
-// Address range: 0x4b287e - 0x4b288b
-int32_t __fast_exit(int32_t a1) {
-    // 0x4b287e
-    int32_t result; // 0x4b287e
-    return result;
-}
-
-
-// Address range: 0x4b2bdb - 0x4b2bea
-int32_t __initp_misc_invarg(int32_t result) {
-    // 0x4b2bdb
-    g658 = result;
-    return result;
-}
-
-
-// Address range: 0x4b4de8 - 0x4b4f79
-int32_t __acos_pentium4(int64_t a1) {
-    // 0x4b4de8
-    int128_t v1; // 0x4b4de8
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4b4de8
-    int16_t v3 = ((int16_t)__asm_pextrw(v2, 3) & 0x7fff) - 0x3030; // 0x4b4dfb
-    int64_t v4; // 0x4b4de8
-    if (v3 >= 0x10c6) {
-        if (v3 > 0x10c5) {
-            // 0x4b4f74
-            return __cos_default((int32_t)&g1224);
-        }
-        int32_t result = __asm_pextrw(v2, 3) & -0x8001; // 0x4b4f4e
-        __asm_movlpd_451(v4, __asm_subsd(__asm_movlpd(v1, 0x3ff0000000000000), __asm_pinsrw(v2, result, 3)));
-        return result;
-    }
-    int128_t v5 = __asm_mulsd(__asm_movlpd(v1, 0x40245f306dc9c883), v2); // 0x4b4e0d
-    int128_t v6 = __asm_movlpd(v1, 0x4338000000000000); // 0x4b4e11
-    int32_t v7 = __asm_cvtsd2si(v5); // 0x4b4e19
-    int128_t v8 = __asm_addsd(v5, v6); // 0x4b4e1d
-    int128_t v9 = __asm_movlpd(v1, 0x3fb921fb54400000); // 0x4b4e21
-    int128_t v10 = __asm_subsd(v8, v6); // 0x4b4e29
-    int128_t v11 = __asm_movapd(g88); // 0x4b4e2d
-    int128_t v12 = __asm_mulsd(v9, v10); // 0x4b4e35
-    int128_t v13 = __asm_unpcklpd(v10, v10); // 0x4b4e39
-    int128_t v14 = __asm_movsd(v1, v2); // 0x4b4e43
-    int128_t v15 = __asm_movapd(g87); // 0x4b4e4a
-    int32_t v16 = 32 * v7 + 512 & 2016; // 0x4b4e58
-    int32_t result2 = v16 + (int32_t)&g83; // 0x4b4e5b
-    int128_t v17 = __asm_mulpd(v11, v13); // 0x4b4e5d
-    int128_t v18 = __asm_subsd(v2, v12); // 0x4b4e61
-    int128_t v19 = __asm_mulsd_449(v13, 0x3b63198a2e037073); // 0x4b4e65
-    int128_t v20 = __asm_subsd(v14, v12); // 0x4b4e6d
-    int64_t * v21 = (int64_t *)(v16 + (int32_t)&g83 + 8); // 0x4b4e71
-    int128_t v22 = __asm_movlpd(v1, *v21); // 0x4b4e71
-    int128_t v23 = __asm_unpcklpd(v18, v18); // 0x4b4e76
-    int128_t v24 = __asm_movsd(v12, v20); // 0x4b4e7a
-    int128_t v25 = __asm_subsd(v20, v17); // 0x4b4e7e
-    int128_t v26 = __asm_mulpd(v15, v23); // 0x4b4e82
-    int128_t v27 = __asm_subpd(v23, v17); // 0x4b4e86
-    int128_t v28 = __asm_movapd(g85); // 0x4b4e8a
-    int128_t v29 = __asm_mulsd(v22, v25); // 0x4b4e92
-    int128_t v30 = __asm_subsd(v24, v25); // 0x4b4e96
-    int128_t v31 = __asm_mulpd(v26, v27); // 0x4b4e9a
-    int128_t v32 = __asm_mulpd(v27, v27); // 0x4b4e9e
-    int128_t v33 = __asm_subsd(v30, v17); // 0x4b4ea2
-    int128_t v34 = __asm_movapd(*(int128_t *)result2); // 0x4b4ea6
-    int128_t v35 = __asm_subsd(v19, v33); // 0x4b4eaa
-    int128_t v36 = __asm_movlpd(v33, *(int64_t *)(v16 + (int32_t)&g83 + 24)); // 0x4b4eae
-    int128_t v37 = __asm_addsd(v34, v36); // 0x4b4eb3
-    int128_t v38 = __asm_subsd(v29, v37); // 0x4b4eb7
-    int128_t v39 = __asm_mulsd(v37, v25); // 0x4b4ebb
-    int128_t v40 = __asm_mulpd(v28, v32); // 0x4b4ebf
-    int128_t v41 = __asm_mulsd(v36, v25); // 0x4b4ec3
-    int128_t v42 = __asm_mulpd(v39, v32); // 0x4b4ec7
-    int128_t v43 = __asm_mulpd(v32, v32); // 0x4b4ecb
-    int128_t v44 = __asm_addpd(v31, g86); // 0x4b4ecf
-    int128_t v45 = __asm_mulsd_449(v25, *(int64_t *)result2); // 0x4b4ed7
-    int128_t v46 = __asm_addpd(v40, g84); // 0x4b4edb
-    int128_t v47 = __asm_mulpd(v44, v43); // 0x4b4ee3
-    int128_t v48 = __asm_movsd(v43, v41); // 0x4b4ee7
-    int128_t v49 = __asm_addsd_450(v41, *v21); // 0x4b4eeb
-    int128_t v50 = __asm_mulsd(v35, v38); // 0x4b4ef0
-    int128_t v51 = __asm_movsd(v38, v45); // 0x4b4ef4
-    int128_t v52 = __asm_addsd(v45, v49); // 0x4b4ef8
-    int128_t v53 = __asm_addpd(v46, v47); // 0x4b4efc
-    int128_t v54 = __asm_subsd(__asm_movlpd(v47, *v21), v49); // 0x4b4f05
-    int128_t v55 = __asm_subsd(v49, v52); // 0x4b4f09
-    int128_t v56 = __asm_addsd_450(v50, *(int64_t *)(v16 + (int32_t)&g83 + 16)); // 0x4b4f0d
-    int128_t v57 = __asm_mulpd(v53, v42); // 0x4b4f12
-    int128_t v58 = __asm_addsd(__asm_addsd(__asm_addsd(v56, __asm_addsd(v54, v48)), __asm_addsd(v55, v51)), v57); // 0x4b4f26
-    __asm_movlpd_451(v4, __asm_addsd(v52, __asm_addsd(v58, __asm_unpckhpd(v57, v57))));
-    return result2;
-}
-
-
-// Address range: 0x4b7e2c - 0x4b7e32
-int32_t ___iob_func(void) {
-    // 0x4b7e2c
-    return (int32_t)&g509;
-}
-
-// Address range: 0x4b80d9 - 0x4b8c11
-float80_t __pow_pentium4(int64_t a1, int64_t a2, int32_t a3) {
-    // 0x4b80d9
-    int128_t v1; // 0x4b80d9
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4b80d9
-    int64_t v3 = *(int64_t *)&g98; // 0x4b80df
-    int128_t v4 = __asm_movlpd(v1, v3); // 0x4b80df
-    int64_t v5 = *(int64_t *)&g99; // 0x4b80e7
-    int128_t v6 = __asm_movlpd(v1, v5); // 0x4b80e7
-    int128_t v7 = __asm_andpd(v4, v2); // 0x4b80ef
-    int128_t v8 = __asm_movsd(v1, v2); // 0x4b80f3
-    int128_t v9 = __asm_psrlq(v2, 44); // 0x4b80f7
-    int32_t v10 = __asm_pextrw(v9, 0); // 0x4b80fc
-    int128_t v11 = __asm_orpd(v7, v6); // 0x4b8101
-    int32_t v12 = __asm_pextrw(v8, 3); // 0x4b8105
-    int32_t v13 = (v10 & 255) + 1 & 510; // 0x4b8112
-    int64_t * v14 = (int64_t *)(4 * v13 + (int32_t)&g89); // 0x4b8117
-    int128_t v15 = __asm_mulsd_449(v11, *v14); // 0x4b8117
-    int128_t v16 = __asm_movlpd(v1, *v14); // 0x4b8120
-    int128_t v17 = __asm_movapd(*(int128_t *)(8 * v13 + (int32_t)&g90)); // 0x4b812b
-    int32_t v18 = 0x7fef - v12; // 0x4b8139
-    int128_t v19 = v9; // 0x4b8146
-    int128_t v20 = v6; // 0x4b8146
-    int128_t v21 = v8; // 0x4b8146
-    int128_t v22 = v16; // 0x4b8146
-    int128_t v23 = v17; // 0x4b8146
-    int128_t v24 = v15; // 0x4b8146
-    int32_t v25 = 0; // 0x4b8146
-    int32_t v26 = 0x3fe7f; // 0x4b8146
-    int64_t v27; // 0x4b80d9
-    int32_t v28; // 0x4b80d9
-    int32_t v29; // 0x4b80d9
-    int32_t v30; // 0x4b80d9
-    int32_t v31; // 0x4b80d9
-    int32_t v32; // 0x4b80d9
-    int32_t v33; // 0x4b80d9
-    float64_t result; // 0x4b80d9
-    int128_t v34; // 0x4b80d9
-    int128_t v35; // 0x4b80d9
-    int128_t v36; // 0x4b80d9
-    int128_t v37; // 0x4b80d9
-    int128_t v38; // 0x4b80d9
-    int128_t v39; // 0x4b80d9
-    int128_t v40; // 0x4b80d9
-    int128_t v41; // 0x4b80d9
-    int128_t v42; // 0x4b80d9
-    int128_t v43; // 0x4b80d9
-    int128_t v44; // 0x4b80d9
-    int128_t v45; // 0x4b80d9
-    int128_t v46; // 0x4b80d9
-    if ((v12 - 16 || v18) <= -1) {
-        int128_t v47 = __asm_movlpd(v1, a2); // 0x4b8427
-        int128_t v48 = __asm_movlpd(v1, *(int64_t *)&g100); // 0x4b842d
-        int32_t v49 = __asm_movd(v47); // 0x4b8435
-        int128_t v50 = __asm_movsd(v6, v47); // 0x4b8439
-        int128_t v51 = __asm_psrlq(__asm_andpd(v47, v48), 32); // 0x4b8441
-        uint32_t v52 = __asm_movd(v51); // 0x4b8446
-        if (v52 >= 0x7ff00000) {
-            int128_t v53 = __asm_movlpd(v15, a1); // 0x4b8530
-            int128_t v54 = __asm_movlpd(v8, a1); // 0x4b8536
-            int32_t v55 = __asm_movd(v53); // 0x4b853c
-            int32_t v56 = __asm_movd(__asm_psrlq(v53, 32)); // 0x4b8545
-            uint32_t v57 = v56 & 0x7fffffff; // 0x4b854b
-            v27 = v3;
-            v34 = v9;
-            v38 = v51;
-            v41 = v50;
-            v44 = v48;
-            v46 = v54;
-            v31 = v56;
-            v32 = v55;
-            if (v57 < 0x7ff00000) {
-                goto lab_0x4b87f5;
-            } else {
-                // 0x4b855b
-                v45 = v54;
-                v27 = v3;
-                v34 = v9;
-                v38 = v51;
-                v41 = v50;
-                v44 = v48;
-                v46 = v54;
-                v31 = v56;
-                v32 = 0;
-                if (v55 == 0 == v57 == 0x7ff00000) {
-                    goto lab_0x4b87f5;
-                } else {
-                    goto lab_0x4b873f;
-                }
-            }
-        } else {
-            if ((v52 || v49) == 0) {
-                int32_t v58 = __asm_movd(v8); // 0x4b887d
-                int128_t v59 = __asm_psrlq(v8, 32); // 0x4b8881
-                int32_t v60 = __asm_movd(v59); // 0x4b8886
-                int128_t v61 = __asm_movlpd(v9, v5); // 0x4b8894
-                v35 = v61;
-                v33 = 26;
-                if ((v60 & 0x7fffffff || v58) != 0) {
-                    uint32_t v62 = __asm_movd(v59) & 0x7fffffff; // 0x4b88af
-                    v35 = v61;
-                    v33 = 29;
-                    if (v62 < 0x7ff00001) {
-                        // 0x4b88bb
-                        v35 = v61;
-                        v33 = 29;
-                        if (v58 == 0 || v62 != 0x7ff00000) {
-                            // 0x4b88c2
-                            __asm_movlpd_451((int64_t)result, v61);
-                            return result;
-                        }
-                    }
-                }
-                goto lab_0x4b88e0;
-            } else {
-                // 0x4b8461
-                v36 = v51;
-                v39 = v50;
-                v43 = v48;
-                v29 = 0;
-                if (v18 >= 0) {
-                    goto lab_0x4b8574;
-                } else {
-                    int128_t v63 = __asm_orpd(v50, __asm_psllq_454(v48, 52)); // 0x4b8477
-                    int128_t v64 = __asm_movd_452(1011); // 0x4b8480
-                    int128_t v65 = __asm_psubd(__asm_psrlq(v51, 20), v64); // 0x4b8489
-                    int128_t v66 = __asm_pxor(v64, v64); // 0x4b848d
-                    int128_t v67 = __asm_pmaxsw(v65, v66); // 0x4b8491
-                    int128_t v68 = __asm_pcmpeqd(__asm_psllq(v63, v67), v66); // 0x4b8499
-                    int32_t v69 = __asm_pmovmskb(v68); // 0x4b849d
-                    uint32_t v70 = v12 & 0x7fff; // 0x4b84a3
-                    if (v70 >= 0x7ff0) {
-                        int128_t v71 = __asm_pcmpeqd(__asm_xorpd(v67, v67), __asm_andpd(__asm_movlpd(v66, v3), v8)); // 0x4b8668
-                        v45 = v8;
-                        if ((__asm_pmovmskb(v71) & 255) == 255) {
-                            // 0x4b8682
-                            if ((int16_t)__asm_pextrw(v8, 3) > -1) {
-                                int128_t v72 = __asm_movlpd(v71, a2); // 0x4b8723
-                            }
-                            int128_t v73 = v71; // 0x4b86a0
-                            if ((v69 & 255) == 255) {
-                                int128_t v74 = __asm_movlpd(v71, a2); // 0x4b86a2
-                                int128_t v75 = __asm_movlpd(v68, a2); // 0x4b86a8
-                                int128_t v76 = __asm_movd_452(1012); // 0x4b86b3
-                                v73 = __asm_psubd(__asm_psrlq(__asm_andpd(v74, g100), 52), v76);
-                                if ((__asm_pmovmskb(__asm_pcmpeqd(__asm_psllq(v75, v73), __asm_pxor(v76, v76))) & 255) != 255) {
-                                    int128_t v77 = __asm_movlpd(v73, a2); // 0x4b86e4
-                                }
-                            }
-                            // 0x4b8707
-                            if ((int16_t)__asm_pextrw(__asm_movlpd(v73, a2), 3) > -1) {
-                                // 0x4b8655
-                                return INFINITY;
-                            }
-                            // 0x4b8655
-                            return 0.0L;
-                        }
-                        goto lab_0x4b873f;
-                    } else {
-                        if ((v69 & 255) != 255) {
-                            int128_t v78 = __asm_movlpd(v68, a1); // 0x4b8751
-                            int32_t v79 = __asm_movd(v78); // 0x4b8757
-                            int128_t v80 = __asm_psrlq(v78, 32); // 0x4b875b
-                            int32_t v81 = __asm_movd(v80); // 0x4b8760
-                            v30 = 0;
-                            v28 = 0;
-                            v40 = v80;
-                            v37 = v67;
-                            if ((v81 & 0x7fffffff || v79) == 0) {
-                                goto lab_0x4b8607;
-                            } else {
-                                int128_t v82 = __asm_movlpd(v67, 0x7ff0000000000001); // 0x4b877a
-                                int128_t v83 = __asm_movlpd(v9, -0x8000000000000); // 0x4b8782
-                                __asm_mulsd(v82, v82);
-                                v35 = v83;
-                                v33 = 28;
-                                goto lab_0x4b88e0;
-                            }
-                        } else {
-                            int128_t v84 = __asm_movlpd(v67, a2); // 0x4b84c5
-                            int128_t v85 = __asm_movlpd(v68, a2); // 0x4b84cb
-                            int128_t v86 = __asm_movd_452(1012); // 0x4b84d6
-                            int128_t v87 = __asm_psubd(__asm_psrlq(__asm_andpd(v84, g100), 52), v86); // 0x4b84e7
-                            int128_t v88 = __asm_movlpd(v86, -0x8000000000000000); // 0x4b84eb
-                            int128_t v89 = __asm_pcmpeqd(__asm_psllq(v85, v87), v88); // 0x4b84f7
-                            int32_t v90 = (__asm_pmovmskb(v89) & 255) + 0x3ff01 & 0x40000; // 0x4b850b
-                            v36 = v87;
-                            v39 = v89;
-                            v43 = v88;
-                            v29 = v90;
-                            if (v70 < 16) {
-                                goto lab_0x4b8574;
-                            } else {
-                                int128_t v91 = __asm_movlpd(v88, v3); // 0x4b851b
-                                v19 = v9;
-                                v20 = __asm_movlpd(v89, v5);
-                                v42 = v91;
-                                v21 = v8;
-                                v22 = v16;
-                                v23 = v17;
-                                v24 = v15;
-                                v25 = v90;
-                                v26 = 0xbfe7f;
-                                goto lab_0x4b8156;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } else {
-        goto lab_0x4b8156;
-    }
-  lab_0x4b8156:;
-    int32_t v92 = v25;
-    int128_t v93 = __asm_movd_452(v26); // 0x4b8156
-    int128_t v94 = __asm_cvtdq2pd(__asm_psrlq(__asm_psubq(v19, v93), 8)); // 0x4b8163
-    int128_t v95 = __asm_movlpd(v93, -0x8000000); // 0x4b8167
-    int128_t v96 = __asm_movsd(v42, v24); // 0x4b816f
-    int128_t v97 = __asm_psrlq(v24, 38); // 0x4b8173
-    int32_t v98 = __asm_pextrw(v97, 0); // 0x4b8178
-    int128_t v99 = __asm_andpd(v21, g98); // 0x4b817d
-    int32_t v100 = (v98 & 255) + 1 & 510; // 0x4b818d
-    int64_t * v101 = (int64_t *)(4 * v100 + (int32_t)&g91); // 0x4b8192
-    int128_t v102 = __asm_mulsd_449(v96, *v101); // 0x4b8192
-    int128_t v103 = __asm_mulsd_449(v22, *v101); // 0x4b819b
-    int128_t v104 = *(int128_t *)(8 * v100 + (int32_t)&g92); // 0x4b81a6
-    int128_t v105 = __asm_addpd(v23, v104); // 0x4b81a6
-    int128_t v106 = __asm_orpd(v99, g99); // 0x4b81af
-    int128_t v107 = __asm_addsd(v105, v94); // 0x4b81b7
-    int128_t v108 = __asm_andpd(v95, v106); // 0x4b81bb
-    int128_t v109 = __asm_movsd(v20, v102); // 0x4b81bf
-    int128_t v110 = __asm_psrlq(v102, 31); // 0x4b81c3
-    int32_t v111 = __asm_pextrw(v110, 0); // 0x4b81c8
-    int128_t v112 = __asm_movlpd(v94, -0x8000000); // 0x4b81cd
-    int128_t v113 = __asm_subsd(v106, v108); // 0x4b81d5
-    int128_t v114 = __asm_movlpd(v97, -0x4008eab8c0000000); // 0x4b81d9
-    int32_t v115 = (v111 & 511) + 1 & 1022; // 0x4b81e9
-    int64_t * v116 = (int64_t *)(4 * v115 + (int32_t)&g93); // 0x4b81ee
-    int128_t v117 = __asm_mulsd_449(v103, *v116); // 0x4b81ee
-    int128_t v118 = __asm_mulsd_449(v109, *v116); // 0x4b81f7
-    int128_t v119 = __asm_addpd(v107, *(int128_t *)(8 * v115 + (int32_t)&g94)); // 0x4b8200
-    int128_t v120 = __asm_andpd(v112, v117); // 0x4b8209
-    int128_t v121 = __asm_subsd(v117, v120); // 0x4b820d
-    int128_t v122 = __asm_addsd(v114, v118); // 0x4b8211
-    int128_t v123 = __asm_movsd(v110, v120); // 0x4b8215
-    int128_t v124 = __asm_mulsd(v120, v108); // 0x4b8219
-    int128_t v125 = __asm_mulsd(v108, v121); // 0x4b821d
-    int128_t v126 = __asm_mulsd(v123, v113); // 0x4b8221
-    int128_t v127 = __asm_subsd(v118, v124); // 0x4b8225
-    int128_t v128 = __asm_mulsd(v113, v121); // 0x4b8229
-    int128_t v129 = __asm_movsd(v124, v119); // 0x4b822d
-    int128_t v130 = __asm_subsd(v127, v125); // 0x4b8231
-    int128_t v131 = __asm_addsd(v119, v122); // 0x4b8235
-    int128_t v132 = __asm_movlpd(v125, a2); // 0x4b8239
-    int32_t v133 = __asm_pextrw(v132, 3); // 0x4b823f
-    int128_t v134 = __asm_subsd(v130, v126); // 0x4b8244
-    int128_t v135 = __asm_subsd(v129, v131); // 0x4b8248
-    int128_t v136 = __asm_movlpd(v126, -0x8000000); // 0x4b824c
-    int32_t v137 = __asm_pextrw(v131, 3); // 0x4b8254
-    int128_t v138 = __asm_subsd(v134, v128); // 0x4b8259
-    int128_t v139 = __asm_movsd(v128, v131); // 0x4b825d
-    int128_t v140 = __asm_addsd(v135, v122); // 0x4b8261
-    int128_t v141 = __asm_subsd(v122, v138); // 0x4b8265
-    int128_t v142 = __asm_subsd(v131, v138); // 0x4b8269
-    int128_t v143 = __asm_unpcklpd(v141, v141); // 0x4b826d
-    int32_t v144 = v133 & 0x7ff0; // 0x4b8271
-    int128_t v145; // 0x4b80d9
-    int128_t v146; // 0x4b80d9
-    int128_t v147; // 0x4b80d9
-    int128_t v148; // 0x4b80d9
-    int128_t v149; // 0x4b80d9
-    int128_t v150; // 0x4b80d9
-    if (v144 == 0x7ff0) {
-        int64_t v151 = g98;
-        int128_t v152 = __asm_movlpd(v139, a1); // 0x4b8798
-        int128_t v153 = __asm_movlpd(v138, a2); // 0x4b879e
-        int128_t v154 = __asm_movlpd(v136, v151); // 0x4b87a4
-        int128_t v155 = __asm_xorpd(v132, v132); // 0x4b87ac
-        int128_t v156 = __asm_andpd(v154, v153); // 0x4b87b0
-        int128_t v157 = __asm_pcmpeqd(v155, v156); // 0x4b87b4
-        v145 = v140;
-        v149 = v153;
-        if ((__asm_pmovmskb(v157) & 255) != 255) {
-            goto lab_0x4b886e;
-        } else {
-            int32_t v158 = __asm_movd(v152); // 0x4b87cc
-            v27 = v151;
-            v34 = v140;
-            v38 = v157;
-            v41 = v153;
-            v44 = v156;
-            v46 = v152;
-            v31 = v92;
-            v32 = v137;
-            if (v158 != 0) {
-                goto lab_0x4b87f5;
-            } else {
-                int128_t v159 = __asm_psrlq(v152, 32); // 0x4b87d5
-                int32_t v160 = __asm_movd(v159); // 0x4b87da
-                v146 = v140;
-                if (v160 == 0x3ff00000) {
-                    goto lab_0x4b88d3;
-                } else {
-                    // 0x4b87ea
-                    v27 = v151;
-                    v34 = v140;
-                    v38 = v157;
-                    v41 = v153;
-                    v44 = v156;
-                    v46 = v159;
-                    v31 = v92;
-                    v32 = v160;
-                    if (v160 == -0x40100000) {
-                        // 0x4b8655
-                        return 1.0L;
-                    }
-                    goto lab_0x4b87f5;
-                }
-            }
-        }
-    } else {
-        int32_t v161 = v144 - 0x3ff0 + (v137 & 0x7ff0); // 0x4b828c
-        v150 = v139;
-        if ((0x40a0 - v161 || v161 - 0x3c70) <= -1) {
-            int128_t v162 = __asm_mulpd(__asm_pshufd(v132, 68), v142); // 0x4b8b91
-            int32_t v163 = __asm_pextrw(v162, 3) & 0x7ff0; // 0x4b8b9a
-            uint32_t v164 = v163 - 0x3c70; // 0x4b8ba6
-            v150 = v162;
-            if ((0x40a0 - v163 || v164) > -1) {
-                goto lab_0x4b82a8;
-            } else {
-                if (v164 <= 0xffffffff) {
-                    // 0x4b8bc0
-                    __asm_movlpd_451((int64_t)result, __asm_psllq_454(__asm_movd_452(v92 | 0x1ff80), 45));
-                    return result;
-                }
-                int32_t v165 = __asm_pextrw(__asm_movlpd(v162, a1), 3); // 0x4b8be6
-                v147 = v140;
-                v148 = v140;
-                if ((int16_t)((v165 & 0x7ff0) + 0xc010 ^ __asm_pextrw(v132, 3)) <= -1) {
-                    goto lab_0x4b8b39;
-                } else {
-                    goto lab_0x4b8b5c;
-                }
-            }
-        } else {
-            goto lab_0x4b82a8;
-        }
-    }
-  lab_0x4b87f5:;
-    int128_t v166 = v38;
-    int128_t v167 = __asm_movlpd(v44, v27); // 0x4b87f5
-    int128_t v168 = __asm_pcmpeqd(__asm_xorpd(v166, v166), __asm_andpd(v167, v41)); // 0x4b8805
-    v145 = v34;
-    v149 = v41;
-    if ((__asm_pmovmskb(v168) & 255) != 255) {
-        goto lab_0x4b886e;
-    } else {
-        int32_t v169 = __asm_pextrw(v41, 3); // 0x4b8819
-        int128_t v170 = __asm_movlpd(v46, a1); // 0x4b881e
-        v146 = v34;
-        if ((v32 || v31 ^ -0x40100000) != 0) {
-            int32_t v171 = __asm_pextrw(v170, 3);
-            if ((int16_t)v169 > -1) {
-                float80_t v172 = 0.0L; // 0x4b8862
-                if ((v171 & 0x7ff0) < 0x3ff0) {
-                    float80_t result2 = v172;
-                    return result2;
-                }
-            } else {
-                // 0x4b883f
-                if ((v171 & 0x7ff0) >= 0x3ff0) {
-                    // 0x4b8655
-                    return 0.0L;
-                }
-            }
-            // 0x4b8655
-            return INFINITY;
-        }
-        goto lab_0x4b88d3;
-    }
-  lab_0x4b886e:;
-    int128_t v173 = v149;
-    v35 = __asm_movsd(v145, __asm_addsd(v173, v173));
-    v33 = 1006;
-    goto lab_0x4b88e0;
-  lab_0x4b82a8:;
-    int128_t v264 = __asm_subsd(v150, v142); // 0x4b82a8
-    int128_t v265 = __asm_subsd(v138, v264); // 0x4b82ac
-    int128_t v266 = __asm_movlpd(v264, -0x8000000); // 0x4b82b0
-    int128_t v267 = __asm_andpd(v136, v132); // 0x4b82b8
-    int128_t v268 = __asm_andpd(v266, v142); // 0x4b82bc
-    int128_t v201 = __asm_subsd(v140, v265); // 0x4b82c0
-    int128_t v269 = __asm_pinsrw(__asm_xorpd(v265, v265), 0x4060, 3); // 0x4b82cd
-    int128_t v270 = __asm_movsd(v121, v267); // 0x4b82d2
-    int128_t v271 = __asm_mulsd(v267, v268); // 0x4b82d6
-    int128_t v272 = __asm_subsd(v142, v268); // 0x4b82da
-    int128_t v273 = __asm_subsd(v132, v270); // 0x4b82de
-    int128_t v203 = __asm_mulsd(v271, v269); // 0x4b82e2
-    int128_t v274 = __asm_mulsd(v270, v272); // 0x4b82e6
-    int128_t v207 = __asm_movapd(g95); // 0x4b82ea
-    int128_t v275 = __asm_mulsd(v268, v273); // 0x4b82f2
-    int32_t v212 = __asm_cvtsd2si(v203); // 0x4b82f6
-    int128_t v276 = __asm_mulsd(v272, v273); // 0x4b82fa
-    int128_t v216 = __asm_movapd(g96); // 0x4b82fe
-    int128_t v277 = __asm_addsd(v274, v275); // 0x4b8306
-    int128_t v200 = __asm_pshufd(v276, -18); // 0x4b830a
-    int128_t v227 = __asm_addsd(v277, v276); // 0x4b830f
-    if ((0x1ff7f - v212 || v212 + 0x1e1ff) >= 1) {
-        int128_t v278 = __asm_addsd(v200, v201); // 0x4b833d
-        int128_t v279 = __asm_movsd(v201, v203); // 0x4b8341
-        int128_t v280 = __asm_addsd_450(v203, 0x4338000000000000); // 0x4b8345
-        int128_t v281 = __asm_mulpd(v207, v143); // 0x4b834d
-        int128_t v282 = __asm_subsd_453(v280, 0x4338000000000000); // 0x4b8351
-        int128_t v283 = __asm_mulpd(v143, v143); // 0x4b8359
-        int128_t v284 = __asm_subsd(v279, v282); // 0x4b835d
-        int128_t v285 = *(int128_t *)((16 * v212 & 2032) + (int32_t)&g97); // 0x4b8369
-        int128_t v286 = __asm_movapd(v285); // 0x4b8369
-        int128_t v287 = __asm_movapd(g101); // 0x4b8371
-        int128_t v288 = __asm_addpd(v281, __asm_mulpd(v216, v283)); // 0x4b837d
-        int128_t v289 = __asm_pshufd(v288, -18); // 0x4b8381
-        int128_t v290 = __asm_mulsd(v288, v283); // 0x4b8386
-        int128_t v291 = __asm_xorpd(v283, v283); // 0x4b838a
-        int128_t v292 = __asm_addsd(v290, v289); // 0x4b8393
-        int128_t v293 = __asm_pinsrw(v291, 0x3f80, 3); // 0x4b8397
-        int128_t v294 = __asm_addsd(v292, v278); // 0x4b839c
-        int128_t v295 = __asm_movlpd(v278, 0x3fe62e42fefa39ef); // 0x4b83a0
-        int128_t v296 = __asm_movd_452(v92 + 0x1ff80 + v212 & -128); // 0x4b83a8
-        int128_t v297 = __asm_mulsd_449(v294, a2); // 0x4b83ac
-        int128_t v298 = __asm_mulsd(v284, v293); // 0x4b83b2
-        int128_t v299 = __asm_pshufd(__asm_psllq_454(v296, 45), 68); // 0x4b83bb
-        int128_t v300 = __asm_movapd(g102); // 0x4b83c0
-        int128_t v301 = __asm_addsd(v227, v297); // 0x4b83c8
-        int128_t v302 = __asm_mulpd(v286, v299); // 0x4b83cc
-        int128_t v303 = __asm_addsd(v298, v301); // 0x4b83d0
-        int128_t v304 = __asm_unpcklpd(v303, v303); // 0x4b83d4
-        int128_t v305 = __asm_mulpd(v287, v304); // 0x4b83d8
-        int128_t v306 = __asm_mulsd(v295, v304); // 0x4b83dc
-        int128_t v307 = __asm_mulpd(v304, v304); // 0x4b83e0
-        int128_t v308 = __asm_mulpd(__asm_addpd(v300, v305), v307); // 0x4b83e8
-        int128_t v309 = __asm_mulsd(v307, v302); // 0x4b83ec
-        int128_t v310 = __asm_pshufd(v308, -18); // 0x4b83f0
-        int128_t v311 = __asm_mulsd(v309, v308); // 0x4b83f5
-        int128_t v312 = __asm_pshufd(v302, -18); // 0x4b83f9
-        int128_t v313 = __asm_addsd(__asm_addsd(__asm_addsd(v311, v312), __asm_mulsd(v310, v302)), __asm_mulsd(v306, v302)); // 0x4b8411
-        __asm_movlpd_451((int64_t)result, __asm_addsd(v313, v302));
-        return result;
-    }
-    int32_t v242; // 0x4b80d9
-    int32_t v198; // 0x4b80d9
-    int32_t v254; // 0x4b80d9
-    if (v212 < 1) {
-        // 0x4b893d
-        v147 = v201;
-        if (v212 < -0x3fdff) {
-            goto lab_0x4b8b39;
-        } else {
-            // 0x4b8948
-            v242 = v92 + 128;
-            v198 = v212 + 0x3fe80;
-            v254 = 0;
-            goto lab_0x4b8963;
-        }
-    } else {
-        // 0x4b8915
-        v148 = v201;
-        if (v212 >= 0x40000) {
-            goto lab_0x4b8b5c;
-        } else {
-            // 0x4b8920
-            v242 = v92 + 0x3ff00;
-            v198 = v212 - 128;
-            v254 = 0x3ff0;
-            goto lab_0x4b8963;
-        }
-    }
-  lab_0x4b873f:;
-    int128_t v314 = v45;
-    v35 = __asm_movsd(v9, __asm_addsd(v314, v314));
-    v33 = 1006;
-    goto lab_0x4b88e0;
-  lab_0x4b88e0:;
-    // 0x4b88e0
-    int32_t v174; // 0x4b80d9
-    int32_t v175 = v174;
-    int32_t v176 = v175 - 12; // 0x4b88e3
-    __asm_movlpd_451(*(int64_t *)v176, v35);
-    *(int32_t *)(v175 - 16) = v33;
-    *(int32_t *)(v175 - 20) = v176;
-    *(int32_t *)(v175 - 24) = v175 + 12;
-    *(int32_t *)(v175 - 28) = v175 + 4;
-    ___libm_error_support();
-    return (float80_t)*(float64_t *)v176;
-  lab_0x4b8574:;
-    int128_t v177 = __asm_pinsrw(__asm_xorpd(v9, v9), 0x43f0, 3); // 0x4b857d
-    int128_t v178 = __asm_movlpd(v15, v3); // 0x4b8582
-    int128_t v179 = __asm_movlpd(v39, v5); // 0x4b858a
-    int128_t v180 = __asm_mulsd(v177, v8); // 0x4b8592
-    int32_t v181 = __asm_movd(v8); // 0x4b8596
-    int128_t v182 = __asm_psrlq(v8, 32); // 0x4b859a
-    int32_t v183 = __asm_movd(v182); // 0x4b859f
-    if (v181 == 0) {
-        // 0x4b85fa
-        v30 = v29;
-        v28 = v183;
-        v40 = v179;
-        v37 = v36;
-        if ((v183 & 0x7fffffff) != 0) {
-            goto lab_0x4b85a8;
-        } else {
-            goto lab_0x4b8607;
-        }
-    } else {
-        goto lab_0x4b85a8;
-    }
-  lab_0x4b88d3:
-    // 0x4b88d3
-    v35 = __asm_movlpd(v146, 0);
-    v33 = 28;
-    goto lab_0x4b88e0;
-  lab_0x4b85a8:;
-    int128_t v184 = __asm_andpd(v178, v180); // 0x4b85a8
-    int128_t v185 = __asm_movsd(v182, v180); // 0x4b85ac
-    int128_t v186 = __asm_psrlq(__asm_andpd(v180, g100), 44); // 0x4b85b8
-    int32_t v187 = __asm_pextrw(v186, 0); // 0x4b85bd
-    int128_t v188 = __asm_orpd(v184, v179); // 0x4b85c2
-    int32_t v189 = (v187 & 255) + 1 & 510; // 0x4b85ce
-    int64_t * v190 = (int64_t *)(4 * v189 + (int32_t)&g89); // 0x4b85d3
-    int128_t v191 = __asm_mulsd_449(v188, *v190); // 0x4b85d3
-    int128_t v192 = __asm_movlpd(v16, *v190); // 0x4b85dc
-    v19 = v186;
-    v20 = v179;
-    v42 = v43;
-    v21 = v185;
-    v22 = v192;
-    v23 = __asm_movapd(*(int128_t *)(8 * v189 + (int32_t)&g90));
-    v24 = v191;
-    v25 = v29;
-    v26 = 0x43e7f;
-    goto lab_0x4b8156;
-  lab_0x4b8b39:;
-    int128_t v193 = __asm_movlpd(v147, 0x10000000000000); // 0x4b8b39
-    v35 = __asm_orpd(__asm_mulsd(v193, v193), __asm_psllq_454(__asm_movd_452(v92), 45));
-    v33 = 25;
-    goto lab_0x4b88e0;
-  lab_0x4b8b5c:
-    // 0x4b8b5c
-    if (v92 == 0) {
-        int128_t v194 = __asm_movlpd(v148, 0x7fe0000000000000); // 0x4b8b7b
-        v35 = __asm_mulsd(v194, v194);
-        v33 = 24;
-    } else {
-        // 0x4b8b66
-        v35 = __asm_mulsd_449(__asm_movlpd(v148, -0x20000000000000), 0x7fe0000000000000);
-        v33 = 24;
-    }
-    goto lab_0x4b88e0;
-  lab_0x4b8607:;
-    int32_t v195 = v28 & 0x2000 * v30;
-    if (a3 > -1) {
-        // 0x4b8647
-        if (v195 == 0) {
-            // 0x4b8655
-            return 0.0L;
-        }
-        // 0x4b8655
-        return 0.0L;
-    }
-    int128_t v196 = __asm_psllq_454(__asm_movd_452(v195 | 0x7ff00000), 32); // 0x4b8626
-    __asm_divsd(__asm_movlpd(v37, v5), __asm_movlpd(v40, a1));
-    v35 = v196;
-    v33 = 27;
-    goto lab_0x4b88e0;
-  lab_0x4b8963:;
-    int32_t v197 = v198 & -128;
-    int128_t v199 = __asm_addsd(v200, v201); // 0x4b8963
-    int128_t v202 = __asm_movsd(v201, v203); // 0x4b8967
-    int128_t v204 = __asm_addsd_450(v203, 0x4338000000000000); // 0x4b896b
-    int32_t v205 = v197 - 0x1ff80; // 0x4b8975
-    int128_t v206 = __asm_mulpd(v207, v143); // 0x4b897b
-    int128_t v208 = __asm_subsd_453(v204, 0x4338000000000000); // 0x4b897f
-    int128_t v209 = __asm_mulpd(v143, v143); // 0x4b8987
-    int128_t v210 = __asm_subsd(v202, v208); // 0x4b898b
-    int128_t v211 = *(int128_t *)((16 * v212 & 2032) + (int32_t)&g97); // 0x4b8997
-    int128_t v213 = __asm_movapd(v211); // 0x4b8997
-    int128_t v214 = __asm_movapd(g101); // 0x4b899f
-    int128_t v215 = __asm_addpd(v206, __asm_mulpd(v216, v209)); // 0x4b89ab
-    int128_t v217 = __asm_addsd(__asm_addsd(__asm_mulsd(v215, v209), __asm_pshufd(v215, -18)), v199); // 0x4b89bc
-    int128_t v218 = __asm_movlpd(v199, 0x3fe62e42fefa39ef); // 0x4b89c0
-    int128_t v219 = __asm_movd_452(v197); // 0x4b89c8
-    int32_t v220 = (0x1ff80 - v197 >> 7) + 2; // 0x4b89d7
-    int128_t v221 = __asm_pinsrw(__asm_xorpd(v209, v209), 0x3f80, 3); // 0x4b89ea
-    int128_t v222 = __asm_mulsd_449(v217, a2); // 0x4b89ef
-    int128_t v223 = __asm_mulsd(v210, v221); // 0x4b89f5
-    int128_t v224 = __asm_pshufd(__asm_psllq_454(v219, 45), 68); // 0x4b89fe
-    int128_t v225 = __asm_movapd(g102); // 0x4b8a03
-    int128_t v226 = __asm_addsd(v227, v222); // 0x4b8a0b
-    int128_t v228 = __asm_mulpd(v213, v224); // 0x4b8a0f
-    int128_t v229 = __asm_addsd(v223, v226); // 0x4b8a13
-    int128_t v230 = __asm_unpcklpd(v229, v229); // 0x4b8a17
-    int128_t v231 = __asm_mulpd(v214, v230); // 0x4b8a1b
-    int128_t v232 = __asm_mulsd(v218, v230); // 0x4b8a1f
-    int128_t v233 = __asm_mulpd(v230, v230); // 0x4b8a23
-    int128_t v234 = __asm_mulpd(__asm_addpd(v225, v231), v233); // 0x4b8a2b
-    int128_t v235 = __asm_mulsd(v233, v228); // 0x4b8a2f
-    int128_t v236 = __asm_pshufd(v234, -18); // 0x4b8a33
-    int128_t v237 = __asm_mulsd(v235, v234); // 0x4b8a38
-    int128_t v238 = __asm_pshufd(v228, -18); // 0x4b8a3c
-    int128_t v239 = __asm_mulsd(v236, v228); // 0x4b8a41
-    int128_t v240 = __asm_mulsd(v232, v228); // 0x4b8a45
-    int128_t v241 = __asm_psllq_454(__asm_movd_452(v242), 45); // 0x4b8a4d
-    int128_t v243 = __asm_movd_452((v220 & 32) + v220); // 0x4b8a52
-    int128_t v244 = __asm_psllq(__asm_pcmpeqd(v224, v224), v243); // 0x4b8a5a
-    int128_t v245 = __asm_addsd(__asm_addsd(v237, v238), v239); // 0x4b8a62
-    int128_t v246 = __asm_andpd(v244, v228); // 0x4b8a66
-    int128_t v247 = __asm_addsd(v245, v240); // 0x4b8a6a
-    int128_t v248 = __asm_xorpd(v239, v239); // 0x4b8a6e
-    int128_t v249 = __asm_psllq(__asm_pcmpeqd(v240, v240), v243); // 0x4b8a76
-    int128_t v250 = __asm_subsd(v228, v246); // 0x4b8a7a
-    int128_t v251 = __asm_movsd(v243, v246); // 0x4b8a7e
-    int128_t v252 = __asm_andpd(__asm_addsd(v246, v247), v249); // 0x4b8a86
-    int128_t v253 = __asm_pinsrw(v248, v254, 3); // 0x4b8a8a
-    int128_t v255 = __asm_addsd(__asm_addsd(v247, __asm_subsd(v251, v252)), v250); // 0x4b8a98
-    int32_t v256; // 0x4b80d9
-    int32_t v257 = &v256;
-    if (v205 >= 0 == (v205 != 0)) {
-        int128_t v258 = __asm_mulsd(__asm_addsd(v255, v252), v241); // 0x4b8af4
-        int128_t v259 = __asm_addsd(v258, __asm_mulsd(v253, v258)); // 0x4b8afc
-        int32_t v260 = __asm_pextrw(v259, 3); // 0x4b8b00
-        v35 = v259;
-        v33 = 24;
-        v174 = v257;
-        switch (v260 & 0x7ff0) {
-            case 0x7ff0: {
-                goto lab_0x4b88e0;
-            }
-            case 0: {
-                // 0x4b88e0
-                v35 = v259;
-                v33 = 25;
-                v174 = v257;
-                goto lab_0x4b88e0;
-            }
-            default: {
-                // 0x4b8b28
-                __asm_movlpd_451((int64_t)result, v259);
-                return result;
-            }
-        }
-    } else {
-        int128_t v261 = __asm_addsd(__asm_mulsd(v255, v241), __asm_mulsd(v252, v241)); // 0x4b8aaa
-        int128_t v262 = __asm_addsd(v261, __asm_mulsd(v253, v261)); // 0x4b8ab2
-        int32_t v263 = __asm_pextrw(v262, 3); // 0x4b8ab6
-        v35 = v262;
-        v33 = 24;
-        v174 = v257;
-        switch (v263 & 0x7ff0) {
-            case 0x7ff0: {
-                goto lab_0x4b88e0;
-            }
-            case 0: {
-                // 0x4b88e0
-                v35 = v262;
-                v33 = 25;
-                v174 = v257;
-                goto lab_0x4b88e0;
-            }
-            default: {
-                // 0x4b8ade
-                __asm_movlpd_451((int64_t)result, v262);
-                return result;
-            }
-        }
-    }
-}
-
-
-// Address range: 0x4b8fc8 - 0x4b9234
-float80_t __acos_pentium4_(int64_t a1) {
-    // 0x4b8fc8
-    int128_t v1; // 0x4b8fc8
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4b8fce
-    int32_t v3 = -1023; // 0x4b8fce
-    int128_t v4 = v2;
-    int128_t v5 = __asm_movapd(v4); // 0x4b8fd3
-    int128_t v6 = __asm_unpcklpd(v4, v4); // 0x4b8fd7
-    int32_t v7 = __asm_pextrw(__asm_psrlq(v5, 52), 0); // 0x4b8fe0
-    int128_t v8 = __asm_movapd(g103); // 0x4b8fe5
-    int128_t v9 = __asm_movapd(g104); // 0x4b8fed
-    int128_t v10 = __asm_movapd(g109); // 0x4b8ff5
-    int128_t v11 = __asm_movapd(g105); // 0x4b8ffd
-    int128_t v12 = __asm_movapd(g106); // 0x4b9005
-    int128_t v13 = __asm_orpd(__asm_andpd(v6, v8), v10); // 0x4b9011
-    int32_t v14 = __asm_pextrw(__asm_addpd(v11, v13), 0) & 2032; // 0x4b901e
-    int128_t v15 = __asm_movapd(*(int128_t *)(v14 + (int32_t)&g116)); // 0x4b9023
-    int128_t v16 = __asm_movapd(*(int128_t *)(v14 + (int32_t)&g115)); // 0x4b902b
-    int128_t v17 = __asm_andpd(v12, v13); // 0x4b9033
-    int128_t v18 = __asm_subpd(v13, v17); // 0x4b9037
-    int128_t v19 = __asm_subpd(__asm_mulpd(v17, v15), v9); // 0x4b903f
-    int128_t v20 = __asm_addsd(v16, v19); // 0x4b9043
-    int128_t v21 = __asm_mulpd(v18, v15); // 0x4b9047
-    int128_t v22 = __asm_movapd(v21); // 0x4b904b
-    int128_t v23 = __asm_addpd(v21, v19); // 0x4b904f
-    int32_t v24 = v7 & 4095; // 0x4b9053
-    uint32_t v25 = v24 - 1; // 0x4b9059
-    int128_t v26; // 0x4b9134
-    int128_t v27; // 0x4b8fc8
-    while (v25 >= 2046) {
-        int128_t v28 = __asm_movlpd(v23, a1); // 0x4b9126
-        v26 = __asm_cmpeqsd(__asm_movapd(g110), v28);
-        if (__asm_pextrw(v26, 0) != 0) {
-            // 0x4b918b
-            __asm_divsd(__asm_movlpd(v9, (int64_t)g109), v28);
-            v27 = __asm_movlpd(v26, -0x10000000000000);
-            goto lab_0x4b91da;
-        }
-        if (v24 != 0) {
-            if (v25 < 2047) {
-                int128_t v29 = __asm_movlpd(v28, a1); // 0x4b9150
-                int128_t v30 = __asm_movapd(g103); // 0x4b9156
-                int128_t v31 = __asm_movapd(g109); // 0x4b915e
-                int128_t v32 = __asm_cmpeqsd(v31, __asm_orpd(__asm_andpd(v29, v30), v31)); // 0x4b916e
-                v27 = v30;
-                if (__asm_pextrw(v32, 0) != 0) {
-                    // 0x4b917d
-                    return INFINITY;
-                }
-                goto lab_0x4b91da;
-            } else {
-                if ((v7 & 2047) == 2047) {
-                    int128_t v33 = __asm_movlpd(v9, a1); // 0x4b9207
-                    __asm_movlpd(v28, a1);
-                    int32_t v34 = __asm_movd(v33); // 0x4b9213
-                    int128_t v35 = __asm_psrlq(v33, 32); // 0x4b9217
-                    v27 = v26;
-                    if ((__asm_movd(v35) & 0xfffff || v34) == 0) {
-                        goto lab_0x4b91cd;
-                    } else {
-                        goto lab_0x4b91da;
-                    }
-                } else {
-                    goto lab_0x4b91cd;
-                }
-            }
-        }
-        // 0x4b91a6
-        v2 = __asm_mulsd(v28, __asm_movlpd(v26, 0x4330000000000000));
-        v3 = -1075;
-        v4 = v2;
-        v5 = __asm_movapd(v4);
-        v6 = __asm_unpcklpd(v4, v4);
-        v7 = __asm_pextrw(__asm_psrlq(v5, 52), 0);
-        v8 = __asm_movapd(g103);
-        v9 = __asm_movapd(g104);
-        v10 = __asm_movapd(g109);
-        v11 = __asm_movapd(g105);
-        v12 = __asm_movapd(g106);
-        v13 = __asm_orpd(__asm_andpd(v6, v8), v10);
-        v14 = __asm_pextrw(__asm_addpd(v11, v13), 0) & 2032;
-        v15 = __asm_movapd(*(int128_t *)(v14 + (int32_t)&g116));
-        v16 = __asm_movapd(*(int128_t *)(v14 + (int32_t)&g115));
-        v17 = __asm_andpd(v12, v13);
-        v18 = __asm_subpd(v13, v17);
-        v19 = __asm_subpd(__asm_mulpd(v17, v15), v9);
-        v20 = __asm_addsd(v16, v19);
-        v21 = __asm_mulpd(v18, v15);
-        v22 = __asm_movapd(v21);
-        v23 = __asm_addpd(v21, v19);
-        v24 = v7 & 4095;
-        v25 = v24 - 1;
-    }
-    int32_t v36 = v24 + v3; // 0x4b906e
-    int128_t v37 = __asm_cvtsi2sd(v36); // 0x4b9070
-    int128_t v38 = __asm_unpcklpd(v37, v37); // 0x4b9074
-    int128_t v39 = __asm_movapd(g111); // 0x4b908d
-    int128_t v40 = __asm_movapd(v23); // 0x4b9095
-    int128_t v41 = __asm_movapd(g112); // 0x4b9099
-    int128_t v42 = __asm_mulpd(v39, v23); // 0x4b90a1
-    int128_t v43 = __asm_mulpd(v40, v40); // 0x4b90a5
-    int128_t v44 = __asm_addpd(v42, v41); // 0x4b90a9
-    int128_t v45 = __asm_movapd(g113); // 0x4b90ad
-    int128_t v46 = __asm_mulsd(v43, v43); // 0x4b90b5
-    int128_t v47 = __asm_mulpd(v38, __asm_movapd(g107)); // 0x4b90c1
-    int32_t v48 = v14 == -((1024 * v36)) ? (int32_t)&g108 + 16 : (int32_t)&g108; // 0x4b90c5
-    int128_t v49 = __asm_addpd(__asm_addpd(v20, v47), __asm_andpd(v22, __asm_movapd(*(int128_t *)v48))); // 0x4b90d5
-    int128_t v50 = __asm_mulpd(v44, v23); // 0x4b90d9
-    int128_t v51 = __asm_mulsd(v46, v23); // 0x4b90dd
-    int128_t v52 = __asm_addpd(v50, v45); // 0x4b90e1
-    int128_t v53 = __asm_mulpd(__asm_movapd(g114), v23); // 0x4b90ed
-    int128_t v54 = __asm_movapd(v49); // 0x4b90f1
-    int128_t v55 = __asm_unpckhpd(v54, v54); // 0x4b90f5
-    int128_t v56 = __asm_mulpd(v52, v51); // 0x4b90f9
-    int128_t v57 = __asm_movapd(v56); // 0x4b9100
-    int128_t v58 = __asm_addsd(__asm_addsd(__asm_unpckhpd(v57, v57), __asm_addpd(v56, v53)), v55); // 0x4b9110
-    float64_t result; // 0x4b8fc8
-    __asm_movlpd_451((int64_t)result, __asm_addsd(v58, v49));
-    return result;
-  lab_0x4b91da:
-    // 0x4b91da
-    __asm_movlpd_451((int64_t)result, v27);
-    ___libm_error_support();
-    return result;
-  lab_0x4b91cd:;
-    int128_t v59 = __asm_xorpd(v26, v26); // 0x4b91cd
-    v27 = __asm_divsd(v59, v59);
-    goto lab_0x4b91da;
-}
-
-
-// Address range: 0x4b979f - 0x4b97a8
-int32_t __flushall(void) {
-    // 0x4b979f
-    return _flsall(1);
-}
-
-
-// Address range: 0x4ba20f - 0x4ba215
-int32_t ___sys_nerr(void) {
-    // 0x4ba20f
-    return &g511;
-}
-
-// Address range: 0x4ba215 - 0x4ba21b
-int32_t ___sys_errlist(void) {
-    // 0x4ba215
-    return (int32_t)&g510;
-}
-
-
-// Address range: 0x4bb5a9 - 0x4bb5b6
-int32_t * ___get_sigabrt(int32_t * Ptr) {
-    // 0x4bb5a9
-    return DecodePointer((int32_t *)g659);
-}
-
-
-// Address range: 0x4bb759 - 0x4bb768
-int32_t __initp_misc_rand_s(int32_t result) {
-    // 0x4bb759
-    g660 = result;
-    return result;
-}
-
-// Address range: 0x4bb8d8 - 0x4bbe14
-int32_t __acos_pentium4__(int64_t a1) {
-    // 0x4bb8d8
-    int128_t v1; // 0x4bb8d8
-    int128_t v2 = v1;
-    int128_t v3 = v1;
-    int64_t v4; // 0x4bb8d8
-    int64_t v5 = v4;
-    int128_t v6 = __asm_movlpd(v1, a1); // 0x4bb8d8
-    int128_t v7 = __asm_movlpd(v1, *(int64_t *)&g124); // 0x4bb8de
-    int128_t v8 = __asm_movlpd(v1, 0x3ff0000000000000); // 0x4bb8e6
-    int128_t v9 = __asm_xorpd(v3, v3); // 0x4bb8ee
-    int128_t v10 = __asm_movlpd(v1, -0x400000000000); // 0x4bb8f2
-    int128_t v11 = __asm_movsd(v1, v6); // 0x4bb8fa
-    int128_t v12 = __asm_psrlq(v6, 44); // 0x4bb8fe
-    int32_t v13 = __asm_movd(v12); // 0x4bb903
-    int128_t v14 = __asm_movsd(v1, v11); // 0x4bb907
-    int128_t v15 = __asm_pinsrw(v9, 0x2000, 2); // 0x4bb910
-    int128_t v16 = __asm_movsd(v12, v11); // 0x4bb915
-    uint32_t result4 = v13 & 0x7ffff; // 0x4bb91e
-    uint32_t result = result4 - 0x3fb00; // 0x4bb920
-    if (result < 955) {
-        int128_t v17 = __asm_mulsd(v11, v11); // 0x4bb930
-        int128_t v18 = __asm_sqrtsd(__asm_subsd(v8, v17)); // 0x4bb93e
-        int128_t v19 = __asm_andpd(v10, v14); // 0x4bb942
-        int32_t v20 = (v13 & 0xfffc) - 0xfb00; // 0x4bb949
-        int128_t v21 = __asm_movlpd(v17, *(int64_t *)(2 * v20 + (int32_t)&g118)); // 0x4bb94f
-        int128_t v22 = __asm_orpd(v19, v15); // 0x4bb958
-        int128_t v23 = __asm_movapd(*(int128_t *)(4 * v20 + (int32_t)&g117)); // 0x4bb95c
-        int128_t v24 = __asm_movsd(v2, v14); // 0x4bb965
-        int128_t v25 = __asm_addsd(v14, v22); // 0x4bb969
-        int128_t v26 = __asm_subsd(v16, v22); // 0x4bb96d
-        int128_t v27 = __asm_mulsd(v25, v26); // 0x4bb971
-        int128_t v28 = __asm_mulsd(v24, v21); // 0x4bb975
-        int128_t v29 = __asm_mulsd(v18, v22); // 0x4bb979
-        int128_t v30 = __asm_movsd(v21, v28); // 0x4bb97d
-        int128_t v31 = __asm_addsd(v28, v29); // 0x4bb981
-        int128_t v32 = __asm_divsd(v27, v31); // 0x4bb985
-        int128_t v33 = __asm_movlpd(v26, -0x4059249249249249); // 0x4bb989
-        int128_t v34 = __asm_movlpd(v15, -0x403aaaaaaaaaaaab); // 0x4bb991
-        int128_t v35 = __asm_subsd(v30, v29); // 0x4bb999
-        int128_t v36 = __asm_psrlq(v22, 63); // 0x4bb99d
-        int128_t v37 = __asm_movsd(v29, v35); // 0x4bb9a2
-        int128_t v38 = __asm_psllq_454(v36, 63); // 0x4bb9a6
-        int128_t v39 = __asm_mulsd(v35, v35); // 0x4bb9ab
-        int128_t v40 = __asm_pshufd(v38, 68); // 0x4bb9af
-        int128_t v41 = __asm_movlpd(v31, -0x404ccccccccccccd); // 0x4bb9b4
-        int128_t v42 = __asm_mulsd(v37, v39); // 0x4bb9bc
-        int128_t v43 = __asm_mulsd(v33, v39); // 0x4bb9c0
-        int128_t v44 = __asm_xorpd(v23, v40); // 0x4bb9c7
-        int128_t v45 = __asm_mulsd(v34, v42); // 0x4bb9cb
-        int128_t v46 = __asm_subpd(v44, g119); // 0x4bb9cf
-        int128_t v47 = __asm_mulsd(__asm_addsd(v43, v41), __asm_mulsd(v42, v39)); // 0x4bb9df
-        int128_t v48 = __asm_subsd(v45, v46); // 0x4bb9e3
-        __asm_movlpd_451(v5, __asm_subsd(__asm_subsd(__asm_addsd(v47, v48), v32), __asm_pshufd(v46, -18)));
-        return result;
-    }
-    if (result4 < 0x3fefc) {
-        int128_t v49 = __asm_psllq_454(__asm_psrlq(v14, 38), 38); // 0x4bba19
-        uint32_t v50 = __asm_pmovmskb(v16); // 0x4bba1e
-        int128_t v51 = __asm_andnpd(v7, v16); // 0x4bba22
-        int128_t v52 = __asm_subsd(v11, v49); // 0x4bba26
-        int128_t v53 = __asm_movsd(v2, v49); // 0x4bba2a
-        int128_t v54 = __asm_mulsd(v49, v49); // 0x4bba2e
-        int128_t v55 = __asm_addsd(v16, v53); // 0x4bba32
-        int128_t v56 = __asm_orpd(v15, v51); // 0x4bba36
-        int128_t v57 = __asm_subsd(v8, v54); // 0x4bba3a
-        int128_t v58 = __asm_mulsd(v55, v52); // 0x4bba3e
-        int128_t v59 = __asm_movsd(v51, v57); // 0x4bba42
-        int128_t v60 = __asm_sqrtsd(__asm_subsd(v57, v58)); // 0x4bba4a
-        int32_t v61 = -((v50 / 128 & 1)); // 0x4bba56
-        int128_t v62 = __asm_movsd(v54, v60); // 0x4bba58
-        int128_t v63 = __asm_andpd(v10, v60); // 0x4bba5c
-        int32_t v64 = __asm_pextrw(__asm_psllq_454(v60, 2), 3); // 0x4bba65
-        int128_t v65 = __asm_orpd(v63, v56); // 0x4bba6a
-        int128_t v66 = __asm_pshufd(__asm_movd_452(v61), 0); // 0x4bba72
-        int32_t v67 = 2 * v64 - 0x1fd80; // 0x4bba7d
-        int128_t v68 = __asm_mulsd_449(v62, *(int64_t *)(4 * v67 + (int32_t)&g118)); // 0x4bba7f
-        int128_t v69 = __asm_mulsd(v53, v65); // 0x4bba88
-        int128_t v70 = __asm_mulsd(v52, v65); // 0x4bba8c
-        int128_t v71 = __asm_mulsd(v65, v65); // 0x4bba90
-        int128_t v72 = __asm_subsd(v69, v68); // 0x4bba94
-        int128_t v73 = __asm_andpd(v66, g120); // 0x4bba98
-        int128_t v74 = __asm_addsd(v72, v70); // 0x4bbaa0
-        int128_t v75 = __asm_subsd(v59, v71); // 0x4bbaa4
-        int128_t v76 = __asm_addsd(v68, v68); // 0x4bbaa8
-        int128_t v77 = __asm_movlpd(v56, -0x403aaaaaaaaaaaab); // 0x4bbaac
-        int128_t v78 = __asm_subsd(v75, v58); // 0x4bbab4
-        int128_t v79 = __asm_addsd(v76, v74); // 0x4bbab8
-        int128_t v80 = __asm_movlpd(v58, -0x4059249249249249); // 0x4bbabc
-        int128_t v81 = __asm_divsd(v78, v79); // 0x4bbac4
-        int128_t v82 = __asm_movlpd(v71, -0x404ccccccccccccd); // 0x4bbac8
-        int128_t v83 = __asm_addpd(v73, *(int128_t *)(8 * v67 + (int32_t)&g117)); // 0x4bbad0
-        int128_t v84 = __asm_movsd(v70, v74); // 0x4bbad9
-        int128_t v85 = __asm_mulsd(v74, v74); // 0x4bbadd
-        int128_t v86 = __asm_mulsd(v80, v85); // 0x4bbae1
-        int128_t v87 = __asm_mulsd(v84, v85); // 0x4bbae5
-        int128_t v88 = __asm_mulsd(v77, v87); // 0x4bbaec
-        int128_t v89 = __asm_mulsd(v87, v85); // 0x4bbaf0
-        int128_t v90 = __asm_addsd(v86, v82); // 0x4bbaf4
-        int128_t v91 = __asm_pxor(v85, v85); // 0x4bbaf8
-        int128_t v92 = __asm_mulsd(v90, v89); // 0x4bbafc
-        int128_t v93 = __asm_addsd(v88, v83); // 0x4bbb00
-        int128_t v94 = __asm_addsd(v92, v93); // 0x4bbb04
-        int32_t result2 = v61 & 0x8000; // 0x4bbb08
-        int128_t v95 = __asm_pinsrw(v91, result2, 3); // 0x4bbb0d
-        int128_t v96 = __asm_movsd(v93, v81); // 0x4bbb12
-        int128_t v97 = __asm_pshufd(v83, -18); // 0x4bbb16
-        int128_t v98 = __asm_addsd(v81, v97); // 0x4bbb1b
-        int128_t v99 = __asm_addsd(__asm_addsd(v94, __asm_addsd(v96, __asm_subsd(v97, v98))), v98); // 0x4bbb2b
-        __asm_movlpd_451(v5, __asm_xorpd(v99, v95));
-        return result2;
-    }
-    uint32_t result3 = result4 - 0x3c300; // 0x4bbb41
-    if (result3 < 0x3800) {
-        int128_t v100 = __asm_unpcklpd(v16, v16); // 0x4bbb51
-        int128_t v101 = __asm_movapd(g121); // 0x4bbb55
-        int128_t v102 = __asm_unpcklpd(v11, v100); // 0x4bbb5d
-        int128_t v103 = __asm_movapd(g122); // 0x4bbb61
-        int128_t v104 = __asm_movapd(g123); // 0x4bbb69
-        int128_t v105 = __asm_mulpd(v100, v100); // 0x4bbb71
-        int128_t v106 = __asm_movapd(g119); // 0x4bbb75
-        int128_t v107 = __asm_mulpd(v102, v105); // 0x4bbb80
-        int128_t v108 = __asm_mulpd(v101, v105); // 0x4bbb84
-        int128_t v109 = __asm_mulpd(v105, v105); // 0x4bbb88
-        int128_t v110 = __asm_movsd(v8, v107); // 0x4bbb8c
-        int128_t v111 = __asm_mulsd(v107, v107); // 0x4bbb90
-        int128_t v112 = __asm_addpd(v108, v103); // 0x4bbb94
-        int128_t v113 = __asm_mulpd(v104, v109); // 0x4bbb98
-        int128_t v114 = __asm_mulsd(v111, v110); // 0x4bbb9c
-        int128_t v115 = __asm_addpd(v112, v113); // 0x4bbba0
-        int128_t v116 = __asm_pshufd(v106, -18); // 0x4bbba4
-        int128_t v117 = __asm_mulpd(v114, v115); // 0x4bbba9
-        int128_t v118 = __asm_pshufd(v106, -18); // 0x4bbbad
-        int128_t v119 = __asm_subsd(v116, v14); // 0x4bbbb2
-        int128_t v120 = __asm_pshufd(v117, -18); // 0x4bbbb6
-        int128_t v121 = __asm_subsd(__asm_subsd(__asm_subsd(v106, v117), v120), __asm_subsd(v14, __asm_subsd(v118, v119))); // 0x4bbbcb
-        __asm_movlpd_451(v5, __asm_addsd(v119, v121));
-        return result3;
-    }
-    if ((v13 & 0x7fffc) != 0x3fefc) {
-        if (result4 < 0x3ff00) {
-            int128_t v122 = __asm_movlpd(v10, *(int64_t *)&g119); // 0x4bbddd
-            __asm_movlpd_451(v5, __asm_addsd(__asm_movlpd(v16, 0x3ff921fb54442d18), v122));
-            return result4;
-        }
-        int32_t v123 = __asm_movd(v14); // 0x4bbcf3
-        int128_t v124 = __asm_psrlq(v14, 32); // 0x4bbcf7
-        if ((0x3ff00000 - (__asm_movd(v124) & 0x7fffffff) || v123) == 0) {
-            int128_t v125 = __asm_pshufd(__asm_movd_452(-((__asm_pextrw(v124, 1) / 0x8000))), 0); // 0x4bbdab
-            int128_t v126 = __asm_movlpd(v10, 0x3ca1a62633145c07); // 0x4bbdb0
-            int128_t v127 = __asm_movlpd(v16, 0x400921fb54442d18); // 0x4bbdb8
-            __asm_movlpd_451(v5, __asm_addsd(__asm_andpd(v127, v125), __asm_andpd(v126, v125)));
-            return 0;
-        }
-        int128_t v128 = __asm_movlpd(v10, a1); // 0x4bbd18
-        int32_t v129 = __asm_movd(v128); // 0x4bbd1e
-        int128_t v130; // 0x4bb8d8
-        if ((__asm_movd(__asm_psrlq(v128, 32)) & 0x7fffffff) >= (v129 == 0 ? 0x7ff00001 : 0x7ff00000)) {
-            // 0x4bbe02
-            v130 = __asm_addsd(v16, __asm_xorpd(v2, v2));
-        } else {
-            // 0x4bbd43
-            v130 = __asm_mulsd(__asm_xorpd(v16, v16), __asm_pinsrw(__asm_xorpd(v11, v11), 0x7ff0, 3));
-        }
-        // 0x4bbd5e
-        __asm_movlpd_451(v5, v130);
-        int32_t result5 = ___libm_error_support(); // 0x4bbd7e
-        __asm_movlpd_451(v5, __asm_movlpd(v130, v5));
-        return result5;
-    }
-    int128_t v131 = __asm_xorpd(v2, v2); // 0x4bbbef
-    int128_t v132 = __asm_andpd(v14, g124); // 0x4bbbf3
-    int128_t v133 = __asm_movlpd(v7, 0x3fe0000000000000); // 0x4bbbfb
-    int128_t v134 = __asm_movapd(g121); // 0x4bbc03
-    int128_t v135 = __asm_mulsd(v132, v133); // 0x4bbc0b
-    int128_t v136 = __asm_movapd(g122); // 0x4bbc0f
-    int128_t v137 = __asm_subsd(v133, v135); // 0x4bbc17
-    int128_t v138 = __asm_movapd(g123); // 0x4bbc1b
-    int128_t v139 = __asm_pshufd(v137, 68); // 0x4bbc23
-    int128_t v140 = __asm_sqrtsd(v137); // 0x4bbc28
-    int128_t v141 = __asm_mulpd(v134, v139); // 0x4bbc2c
-    int128_t v142 = __asm_pshufd(v139, 68); // 0x4bbc30
-    int32_t v143 = __asm_pextrw(v16, 3); // 0x4bbc35
-    int128_t v144 = __asm_mulpd(v139, v139); // 0x4bbc3a
-    int128_t v145 = __asm_addpd(v136, v141); // 0x4bbc3e
-    int128_t v146 = __asm_movlpd(v141, -0x8000000); // 0x4bbc42
-    int128_t v147 = __asm_mulpd(v138, v144); // 0x4bbc4a
-    int128_t v148 = __asm_cmpltsd(v16, v131); // 0x4bbc4e
-    int128_t v149 = __asm_mulsd(v144, v142); // 0x4bbc53
-    int128_t v150 = __asm_addpd(v145, v147); // 0x4bbc57
-    int128_t v151 = __asm_pshufd(v148, 68); // 0x4bbc5b
-    int128_t v152 = __asm_mulsd(v150, v149); // 0x4bbc60
-    int128_t v153 = __asm_andpd(v151, g120); // 0x4bbc64
-    int128_t v154 = __asm_mulpd(v152, v142); // 0x4bbc6c
-    int128_t v155 = __asm_andpd(v146, v140); // 0x4bbc70
-    int128_t v156 = __asm_pshufd(v140, 68); // 0x4bbc74
-    int128_t v157 = __asm_subsd(v140, v155); // 0x4bbc79
-    int128_t v158 = __asm_addsd(v156, v156); // 0x4bbc7d
-    int128_t v159 = __asm_mulsd(v155, v155); // 0x4bbc81
-    int128_t v160 = __asm_subsd(v158, v157); // 0x4bbc85
-    int128_t v161 = __asm_subsd(v142, v159); // 0x4bbc89
-    int128_t v162 = __asm_mulsd(v157, v160); // 0x4bbc8d
-    int128_t v163 = __asm_pshufd(v160, -18); // 0x4bbc91
-    int128_t v164 = __asm_divsd(__asm_subsd(v161, v162), v163); // 0x4bbc9a
-    int128_t v165 = __asm_addpd(v163, v163); // 0x4bbca1
-    int128_t v166 = __asm_mulpd(v154, v165); // 0x4bbca5
-    int128_t v167 = __asm_pshufd(v166, -18); // 0x4bbca9
-    int128_t v168 = __asm_addsd(v166, v153); // 0x4bbcae
-    int32_t result6 = v143 & 0x8000; // 0x4bbcb2
-    int128_t v169 = __asm_pinsrw(v131, result6, 3); // 0x4bbcb7
-    int128_t v170 = __asm_addsd(__asm_pshufd(v153, -18), __asm_addsd(__asm_addsd(__asm_addsd(v168, v167), v164), v165)); // 0x4bbccd
-    __asm_movlpd_451(v5, __asm_xorpd(v170, v169));
-    return result6;
-}
-
-// Address range: 0x4bbf2c - 0x4bbf35
-int32_t __NLG_Notify1(void) {
-    // 0x4bbf2c
-    int32_t v1; // 0x4bbf2c
-    return function_4bbf40(v1, v1);
-}
-
-// Address range: 0x4bbf40 - 0x4bbf54
-int32_t function_4bbf40(int32_t a1, int32_t a2) {
-    // 0x4bbf40
-    int32_t result; // 0x4bbf40
-    return result;
-}
-
-// Address range: 0x4bbf54 - 0x4bbf57
-int32_t __NLG_Call(void) {
-    // 0x4bbf54
-    int32_t result; // 0x4bbf54
-    return result;
-}
-
-
-// Address range: 0x4bc68f - 0x4bc697
-int32_t __crt_debugger_hook(void) {
-    // 0x4bc68f
-    g1168 = 0;
-    int32_t result; // 0x4bc68f
-    return result;
-}
-
-
-// Address range: 0x4bdc89 - 0x4bdc8c
-int32_t __matherr(void) {
-    // 0x4bdc89
-    return 0;
-}
-
-
-// Address range: 0x4c3bf2 - 0x4c3bf8
-void _RtlUnwind_40_16(int32_t * TargetFrame, int32_t * TargetIp, struct retdec_EXCEPTION_RECORD * ExceptionRecord, int32_t * ReturnValue) {
-    // 0x4c3bf2
-    RtlUnwind(TargetFrame, TargetIp, ExceptionRecord, ReturnValue);
 }
 
 // Address range: 0x4c4cf0 - 0x4c4d35
@@ -76528,785 +74623,6 @@ int32_t function_4c9d80(void) {
     // 0x4c9d90
     return 0;
 }
-
-
-// Address range: 0x4ca33f - 0x4ca3d9
-int32_t __sin_default(int32_t a1) {
-    // 0x4ca33f
-    __fload_withFB();
-    int32_t v1 = __asm_wait(); // 0x4ca349
-    bool v2; // 0x4ca33f
-    if (v2) {
-        if ((v1 & 0xfffff || a1) != 0) {
-            // 0x4ca398
-            __convertTOStoQNaN();
-        }
-        // 0x4ca3ba
-        if (g654 != 0) {
-            __fast_exit((int32_t)&g1224);
-        }
-        // 0x4ca3c7
-        return __startOneArgErrorHandling();
-    }
-    // 0x4ca34f
-    __asm_wait();
-    int32_t v3; // 0x4ca33f
-    if ((v3 & 1024) != 0) {
-        while (true) {
-            // 0x4ca38a
-            __asm_wait();
-        }
-    }
-    // 0x4ca365
-    if (g654 != 0) {
-        __fast_exit((int32_t)&g1224);
-    }
-    // 0x4ca372
-    return __math_exit();
-}
-
-// Address range: 0x4ca46f - 0x4ca50d
-int32_t __tan_default(int32_t a1) {
-    // 0x4ca46f
-    int3_t v1; // 0x4ca46f
-    int3_t v2 = v1;
-    __fload_withFB();
-    int32_t v3 = __asm_wait(); // 0x4ca479
-    bool v4; // 0x4ca46f
-    if (v4) {
-        if ((v3 & 0xfffff || a1) == 0) {
-            // 0x4ca4e1
-            __frontend_reg_store_fpr(v2, __frontend_reg_load_fpr(v2));
-            __frontend_reg_store_fpr(v2, 0.0L);
-        } else {
-            // 0x4ca4cc
-            __convertTOStoQNaN();
-        }
-        // 0x4ca4ee
-        if (g654 != 0) {
-            __fast_exit((int32_t)&g1224);
-        }
-        // 0x4ca4fb
-        return __startOneArgErrorHandling();
-    }
-    float80_t v5 = __frontend_reg_load_fpr(v2); // 0x4ca48d
-    int3_t v6; // 0x4ca46f
-    if (v5 < 9223372036854775808.0L) {
-        __frontend_reg_store_fpr(v2, __asm_fptan(v5));
-        int3_t v7 = v2 - 1; // 0x4ca48d
-        __frontend_reg_store_fpr(v7, 1.0L);
-        v6 = v7;
-    }
-    int3_t v8 = v6;
-    __asm_wait();
-    int32_t v9; // 0x4ca46f
-    if ((v9 & 1024) == 0) {
-        // 0x4ca497
-        __frontend_reg_store_fpr(v8, __frontend_reg_load_fpr(v8));
-        if (g654 != 0) {
-            __fast_exit((int32_t)&g1224);
-        }
-        // 0x4ca4a4
-        return __math_exit();
-    }
-    int3_t v10 = v8 - 1; // 0x4ca4b4
-    __frontend_reg_store_fpr(v10, 1.4488e+19L);
-    float80_t v11 = __frontend_reg_load_fpr(v10); // 0x4ca4ba
-    __frontend_reg_store_fpr(v10, __frontend_reg_load_fpr(v8));
-    __frontend_reg_store_fpr(v8, v11);
-    while (true) {
-        // 0x4ca4bc
-        __frontend_reg_store_fpr(v10, fmodl(__frontend_reg_load_fpr(v10), __frontend_reg_load_fpr(v8)));
-        __asm_wait();
-    }
-}
-
-// Address range: 0x4ca558 - 0x4caac0
-int32_t __acos_pentium4___(int64_t a1) {
-    // 0x4ca558
-    int128_t v1; // 0x4ca558
-    int128_t v2 = v1;
-    int128_t v3 = v1;
-    int64_t v4; // 0x4ca558
-    int64_t v5 = v4;
-    int128_t v6 = __asm_movlpd(v1, a1); // 0x4ca558
-    int128_t v7 = __asm_movlpd(v1, 0x7fffffffffffffff); // 0x4ca55e
-    int128_t v8 = __asm_movlpd(v1, 0x3ff0000000000000); // 0x4ca566
-    int128_t v9 = __asm_xorpd(v3, v3); // 0x4ca56e
-    int128_t v10 = __asm_movlpd(v1, -0x400000000000); // 0x4ca572
-    int128_t v11 = __asm_movsd(v1, v6); // 0x4ca57a
-    int128_t v12 = __asm_psrlq(v6, 44); // 0x4ca57e
-    int32_t v13 = __asm_movd(v12); // 0x4ca583
-    int128_t v14 = __asm_movsd(v1, v11); // 0x4ca587
-    int128_t v15 = __asm_pinsrw(v9, 0x2000, 2); // 0x4ca590
-    int128_t v16 = __asm_movsd(v12, v11); // 0x4ca595
-    uint32_t result4 = v13 & 0x7ffff; // 0x4ca59e
-    uint32_t result = result4 - 0x3fb00; // 0x4ca5a0
-    if (result < 955) {
-        int128_t v17 = __asm_mulsd(v11, v11); // 0x4ca5b0
-        int128_t v18 = __asm_sqrtsd(__asm_subsd(v8, v17)); // 0x4ca5be
-        int128_t v19 = __asm_andpd(v10, v14); // 0x4ca5c2
-        int32_t v20 = (v13 & 0xfffc) - 0xfb00; // 0x4ca5c9
-        int128_t v21 = __asm_movlpd(v17, *(int64_t *)(2 * v20 + (int32_t)&g131)); // 0x4ca5cf
-        int128_t v22 = __asm_orpd(v19, v15); // 0x4ca5d8
-        int128_t v23 = __asm_movapd(*(int128_t *)(4 * v20 + (int32_t)&g130)); // 0x4ca5dc
-        int128_t v24 = __asm_movsd(v2, v14); // 0x4ca5e5
-        int128_t v25 = __asm_addsd(v14, v22); // 0x4ca5e9
-        int128_t v26 = __asm_mulsd(__asm_subsd(v16, v22), v25); // 0x4ca5f1
-        int128_t v27 = __asm_mulsd(v24, v21); // 0x4ca5f5
-        int128_t v28 = __asm_mulsd(v18, v22); // 0x4ca5f9
-        int128_t v29 = __asm_movsd(v21, v27); // 0x4ca5fd
-        int128_t v30 = __asm_addsd(v27, v28); // 0x4ca601
-        int128_t v31 = __asm_divsd(v26, v30); // 0x4ca605
-        int128_t v32 = __asm_movlpd(v25, 0x3fa6db6db6db6db7); // 0x4ca609
-        int128_t v33 = __asm_movlpd(v15, 0x3fc5555555555555); // 0x4ca611
-        int128_t v34 = __asm_subsd(v29, v28); // 0x4ca619
-        int128_t v35 = __asm_psrlq(v22, 63); // 0x4ca61d
-        int128_t v36 = __asm_movsd(v28, v34); // 0x4ca622
-        int128_t v37 = __asm_psllq_454(v35, 63); // 0x4ca626
-        int128_t v38 = __asm_mulsd(v34, v34); // 0x4ca62b
-        int128_t v39 = __asm_pshufd(v37, 68); // 0x4ca62f
-        int128_t v40 = __asm_movlpd(v30, 0x3fb3333333333333); // 0x4ca634
-        int128_t v41 = __asm_mulsd(v36, v38); // 0x4ca63c
-        int128_t v42 = __asm_mulsd(v32, v38); // 0x4ca640
-        int128_t v43 = __asm_xorpd(v23, v39); // 0x4ca647
-        int128_t v44 = __asm_mulsd(v33, v41); // 0x4ca64b
-        int128_t v45 = __asm_mulsd(__asm_addsd(v40, v42), __asm_mulsd(v41, v38)); // 0x4ca657
-        int128_t v46 = __asm_addsd(v44, v43); // 0x4ca65b
-        __asm_movlpd_451(v5, __asm_addsd(__asm_addsd(v31, __asm_addsd(v45, v46)), __asm_pshufd(v43, -18)));
-        return result;
-    }
-    if (result4 < 0x3fefe) {
-        int128_t v47 = __asm_mulsd(v11, v11); // 0x4ca68c
-        int128_t v48 = __asm_sqrtsd(__asm_subsd(v8, v47)); // 0x4ca694
-        int32_t v49 = __asm_pmovmskb(v14); // 0x4ca698
-        int128_t v50 = __asm_psllq_454(v16, 1); // 0x4ca69c
-        int128_t v51 = __asm_andpd(v14, g134); // 0x4ca6a1
-        int128_t v52 = __asm_psrlq(v50, 1); // 0x4ca6a9
-        int128_t v53 = __asm_movsd(v47, v52); // 0x4ca6ae
-        int128_t v54 = __asm_movlpd(v7, 0x3ff0000000000000); // 0x4ca6b2
-        int128_t v55 = __asm_movsd(v2, v51); // 0x4ca6ba
-        int128_t v56 = __asm_subsd(v53, v51); // 0x4ca6be
-        int128_t v57 = __asm_mulsd(v51, v51); // 0x4ca6c2
-        int128_t v58 = __asm_addsd(v52, v55); // 0x4ca6c6
-        int128_t v59 = __asm_subsd(v54, v57); // 0x4ca6ca
-        int128_t v60 = __asm_mulsd(v58, v56); // 0x4ca6ce
-        int128_t v61 = __asm_movsd(v57, v48); // 0x4ca6d2
-        int128_t v62 = __asm_andpd(v10, v48); // 0x4ca6d6
-        int32_t v63 = __asm_pextrw(__asm_psllq_454(v48, 2), 3); // 0x4ca6df
-        int128_t v64 = __asm_orpd(v62, v15); // 0x4ca6e4
-        int32_t v65 = 2 * v63 - 0x1fd80; // 0x4ca6ee
-        int128_t v66 = __asm_mulsd_449(v61, *(int64_t *)(4 * v65 + (int32_t)&g131)); // 0x4ca6f0
-        int128_t v67 = __asm_mulsd(v55, v64); // 0x4ca6f9
-        int128_t v68 = __asm_movapd(g132); // 0x4ca6fd
-        int128_t v69 = __asm_mulsd(v56, v64); // 0x4ca705
-        int128_t v70 = __asm_mulsd(v64, v64); // 0x4ca709
-        int128_t v71 = __asm_addsd(__asm_subsd(v67, v66), v69); // 0x4ca711
-        int128_t v72 = __asm_subsd(v59, v70); // 0x4ca715
-        int128_t v73 = __asm_addsd(v66, v66); // 0x4ca719
-        int128_t v74 = __asm_movlpd(v15, 0x3fc5555555555555); // 0x4ca71d
-        int128_t v75 = __asm_subsd(v72, v60); // 0x4ca725
-        int128_t v76 = __asm_addsd(v73, v71); // 0x4ca729
-        int128_t v77 = __asm_movlpd(v60, 0x3fa6db6db6db6db7); // 0x4ca72d
-        int128_t v78 = __asm_divsd(v75, v76); // 0x4ca735
-        int128_t v79 = __asm_movlpd(v70, 0x3fb3333333333333); // 0x4ca739
-        int128_t v80 = __asm_subpd(v68, *(int128_t *)(8 * v65 + (int32_t)&g130)); // 0x4ca741
-        int128_t v81 = __asm_movsd(v69, v71); // 0x4ca74a
-        int128_t v82 = __asm_mulsd(v71, v71); // 0x4ca74e
-        int32_t result2 = 256 * v49 & 0x8000; // 0x4ca757
-        int128_t v83 = __asm_mulsd(v77, v82); // 0x4ca75a
-        int128_t v84 = __asm_mulsd(v81, v82); // 0x4ca75e
-        int128_t v85 = __asm_mulsd(v74, v84); // 0x4ca765
-        int128_t v86 = __asm_mulsd(v84, v82); // 0x4ca769
-        int128_t v87 = __asm_addsd(v83, v79); // 0x4ca76d
-        int128_t v88 = __asm_pxor(v82, v82); // 0x4ca771
-        int128_t v89 = __asm_mulsd(v87, v86); // 0x4ca775
-        int128_t v90 = __asm_addsd(v85, v80); // 0x4ca779
-        int128_t v91 = __asm_pinsrw(v88, result2, 3); // 0x4ca77d
-        int128_t v92 = __asm_addsd(__asm_subsd(__asm_addsd(v89, v90), v78), __asm_pshufd(v80, -18)); // 0x4ca78f
-        __asm_movlpd_451(v5, __asm_orpd(v92, v91));
-        return result2;
-    }
-    uint32_t result3 = result4 - 0x3c300; // 0x4ca7a5
-    if (result3 < 0x3800) {
-        int128_t v93 = __asm_unpcklpd(v14, v14); // 0x4ca7b1
-        int128_t v94 = __asm_movapd(g135); // 0x4ca7b5
-        int128_t v95 = __asm_unpcklpd(v11, v93); // 0x4ca7bd
-        int128_t v96 = __asm_movapd(g136); // 0x4ca7c1
-        int128_t v97 = __asm_movapd(g137); // 0x4ca7c9
-        int128_t v98 = __asm_mulpd(v93, v93); // 0x4ca7d1
-        int128_t v99 = __asm_mulpd(v95, v98); // 0x4ca7d8
-        int128_t v100 = __asm_mulpd(v94, v98); // 0x4ca7dc
-        int128_t v101 = __asm_mulpd(v98, v98); // 0x4ca7e0
-        int128_t v102 = __asm_movsd(v8, v99); // 0x4ca7e4
-        int128_t v103 = __asm_mulsd(v99, v99); // 0x4ca7e8
-        int128_t v104 = __asm_mulpd(__asm_mulsd(v103, v102), __asm_addpd(__asm_addpd(v100, v96), __asm_mulpd(v97, v101))); // 0x4ca7fc
-        __asm_movlpd_451(v5, __asm_addsd(v16, __asm_addsd(v104, __asm_pshufd(v104, -18))));
-        return result3;
-    }
-    if ((v13 & 0x7fffe) != 0x3fefe) {
-        if (result4 < 0x3ff00) {
-            int128_t v105 = __asm_movlpd(v16, a1); // 0x4caa7f
-            int128_t v106 = __asm_xorpd(v2, v2); // 0x4caa85
-            int128_t v107 = __asm_movsd(v14, v105); // 0x4caa8c
-            int32_t v108 = __asm_pextrw(v105, 3); // 0x4caa90
-            int128_t v109 = v105; // 0x4caaa4
-            if ((v108 & 0x7ff0) >= 0x7ff0) {
-                // 0x4caaa6
-                v109 = __asm_orpd(v105, __asm_addsd(v106, v105));
-                __asm_mulsd(v107, v109);
-            }
-            // 0x4caab2
-            __asm_movlpd_451(v5, v109);
-            return result4;
-        }
-        int32_t v110 = __asm_movd(v16); // 0x4ca988
-        int128_t v111 = __asm_psrlq(v16, 32); // 0x4ca98c
-        if ((0x3ff00000 - (__asm_movd(v111) & 0x7fffffff) || v110) == 0) {
-            int128_t v112 = __asm_movlpd(v11, 0x7fffffffffffffff); // 0x4caa32
-            int128_t v113 = __asm_movlpd(v10, *(int64_t *)&g132); // 0x4caa3a
-            int128_t v114 = __asm_addsd(__asm_movlpd(v111, 0x3ff921fb54442d18), v113); // 0x4caa4a
-            __asm_movlpd_451(v5, __asm_orpd(v114, __asm_andnpd(v112, v14)));
-            return 0;
-        }
-        int128_t v115 = __asm_movlpd(v10, a1); // 0x4ca9ad
-        int32_t v116 = __asm_movd(v115); // 0x4ca9b3
-        int128_t v117; // 0x4ca558
-        if ((__asm_movd(__asm_psrlq(v115, 32)) & 0x7fffffff) >= (v116 == 0 ? 0x7ff00001 : 0x7ff00000)) {
-            // 0x4caa67
-            v117 = __asm_addsd(__asm_movlpd(v111, a1), __asm_xorpd(v2, v2));
-        } else {
-            // 0x4ca9d8
-            v117 = __asm_mulsd(__asm_xorpd(v111, v111), __asm_pinsrw(__asm_xorpd(v11, v11), 0x7ff0, 3));
-        }
-        // 0x4ca9f3
-        __asm_movlpd_451(v5, v117);
-        int32_t result5 = ___libm_error_support(); // 0x4caa13
-        __asm_movlpd_451(v5, __asm_movlpd(v117, v5));
-        return result5;
-    }
-    int128_t v118 = __asm_mulsd(v11, v11); // 0x4ca829
-    int128_t v119 = __asm_sqrtsd(__asm_subsd(v8, v118)); // 0x4ca831
-    int32_t v120 = __asm_pextrw(v14, 3); // 0x4ca835
-    int128_t v121 = __asm_andpd(v14, g133); // 0x4ca83a
-    int128_t v122 = __asm_pshufd(v119, 68); // 0x4ca842
-    int128_t v123 = __asm_andpd(v119, g133); // 0x4ca847
-    int128_t v124 = __asm_movsd(v118, v121); // 0x4ca84f
-    int128_t v125 = __asm_movlpd(v7, 0x3ff0000000000000); // 0x4ca853
-    int128_t v126 = __asm_movsd(v2, v121); // 0x4ca85b
-    int128_t v127 = __asm_subsd(v16, v121); // 0x4ca85f
-    int128_t v128 = __asm_mulsd(v121, v121); // 0x4ca863
-    int128_t v129 = __asm_mulsd(__asm_addsd(v124, v124), v127); // 0x4ca86b
-    int128_t v130 = __asm_subsd(v125, v128); // 0x4ca86f
-    int128_t v131 = __asm_movsd(v126, v123); // 0x4ca873
-    int128_t v132 = __asm_mulsd(v123, v123); // 0x4ca877
-    int128_t v133 = __asm_mulsd(v127, v127); // 0x4ca87b
-    int128_t v134 = __asm_subsd(v130, v129); // 0x4ca87f
-    int128_t v135 = __asm_subsd(v131, v122); // 0x4ca883
-    int128_t v136 = __asm_addsd(v122, v122); // 0x4ca887
-    int128_t v137 = __asm_subsd(v134, v132); // 0x4ca88b
-    int128_t v138 = __asm_movapd(g135); // 0x4ca88f
-    int128_t v139 = __asm_pshufd(v136, -18); // 0x4ca897
-    int128_t v140 = __asm_subsd(v137, v133); // 0x4ca89c
-    int128_t v141 = __asm_addsd(v136, v135); // 0x4ca8a0
-    int128_t v142 = __asm_pshufd(v139, -18); // 0x4ca8a4
-    int128_t v143 = __asm_addsd(v139, v139); // 0x4ca8a9
-    int128_t v144 = __asm_addsd(v140, __asm_mulsd(v141, v135)); // 0x4ca8b1
-    int128_t v145 = __asm_pshufd(v142, -18); // 0x4ca8b5
-    int128_t v146 = __asm_divsd(v144, v143); // 0x4ca8ba
-    int128_t v147 = __asm_movapd(g138); // 0x4ca8be
-    int128_t v148 = __asm_movapd(g136); // 0x4ca8c6
-    int128_t v149 = __asm_movapd(g137); // 0x4ca8ce
-    int128_t v150 = __asm_mulpd(v142, v142); // 0x4ca8d6
-    int128_t v151 = __asm_movsd(v143, v145); // 0x4ca8da
-    int128_t v152 = __asm_mulpd(v138, v150); // 0x4ca8de
-    int128_t v153 = __asm_mulpd(v145, v150); // 0x4ca8e2
-    int32_t result6 = v120 & 0x8000; // 0x4ca8e6
-    int128_t v154 = __asm_mulsd(v147, v150); // 0x4ca8eb
-    int128_t v155 = __asm_mulpd(v150, v150); // 0x4ca8ef
-    int128_t v156 = __asm_addpd(v148, v152); // 0x4ca8f3
-    int128_t v157 = __asm_movapd(v153); // 0x4ca8f7
-    int128_t v158 = __asm_mulsd(v153, v153); // 0x4ca8fb
-    int128_t v159 = __asm_mulpd(v155, v149); // 0x4ca8ff
-    int128_t v160 = __asm_movapd(g132); // 0x4ca903
-    int128_t v161 = __asm_mulsd(v157, v158); // 0x4ca90b
-    int128_t v162 = __asm_addpd(v159, v156); // 0x4ca90f
-    int128_t v163 = __asm_pshufd(v154, -18); // 0x4ca913
-    int128_t v164 = __asm_mulsd(v158, v161); // 0x4ca918
-    int128_t v165 = __asm_mulpd(v162, v161); // 0x4ca91f
-    int128_t v166 = __asm_addsd(v154, v163); // 0x4ca923
-    int128_t v167 = __asm_xorpd(v163, v163); // 0x4ca927
-    int128_t v168 = __asm_pshufd(v165, -18); // 0x4ca92b
-    int128_t v169 = __asm_mulsd(v166, v164); // 0x4ca930
-    int128_t v170 = __asm_pshufd(v160, -18); // 0x4ca934
-    int128_t v171 = __asm_addsd(v165, v168); // 0x4ca939
-    int128_t v172 = __asm_movsd(v168, v151); // 0x4ca93d
-    int128_t v173 = __asm_pinsrw(v167, result6, 3); // 0x4ca941
-    int128_t v174 = __asm_subsd(v151, v170); // 0x4ca946
-    int128_t v175 = __asm_addsd(v160, v169); // 0x4ca94a
-    int128_t v176 = __asm_addsd(v170, v174); // 0x4ca94e
-    int128_t v177 = __asm_subsd(__asm_subsd(__asm_subsd(v175, __asm_addsd(v171, v146)), __asm_subsd(v172, v176)), v174); // 0x4ca962
-    __asm_movlpd_451(v5, __asm_orpd(v177, v173));
-    return result6;
-}
-
-// Address range: 0x4caad8 - 0x4cadab
-float80_t __acos_pentium4____(int64_t result, uint32_t a2) {
-    int128_t v1 = __asm_movq(result); // 0x4caad8
-    int128_t v2 = __asm_andpd(__asm_movapd(__asm_unpcklpd(v1, v1)), g139); // 0x4caae6
-    __asm_comisd(v2, g144);
-    bool v3; // 0x4caad8
-    if (v3) {
-        // 0x4cad82
-        ___libm_error_support();
-        return result;
-    }
-    if (!v3) {
-        int128_t v4 = __asm_movq_459(v2); // 0x4cad57
-        int128_t v5 = __asm_movq(0x7ff0000000000000); // 0x4cad5b
-        __asm_ucomisd(__asm_andpd(v4, v5), v5);
-        float64_t v6 = *(float64_t *)(8 * a2 / 0x80000000 + (int32_t)&g140); // 0x4cad7a
-        return (float80_t)v6 + 4.77830972673648066043e-299L;
-    }
-    // 0x4cad10
-    __asm_comisd(v2, g142);
-    __asm_comisd(v2, g143);
-    __asm_comisd(v2, g141);
-    if (v3) {
-        // 0x4cad1a
-        return result;
-    }
-    // 0x4cad29
-    __asm_comisd(v2, g145);
-    return result;
-}
-
-// Address range: 0x4cadc8 - 0x4cb06d
-float80_t __exp_pentium4(int64_t a1, int32_t a2) {
-    // 0x4cadc8
-    float64_t v1; // 0x4cadc8
-    float64_t result = v1;
-    int128_t v2; // 0x4cadc8
-    int128_t v3 = __asm_movlpd(v2, a1); // 0x4cadc8
-    int128_t v4 = __asm_unpcklpd(v3, v3); // 0x4cadce
-    int128_t v5 = __asm_movapd(g150); // 0x4cadd2
-    int128_t v6 = __asm_movapd(g149); // 0x4cadda
-    int128_t v7 = __asm_movapd(g151); // 0x4cade2
-    int128_t v8 = __asm_movapd(g152); // 0x4cadea
-    int32_t v9 = __asm_pextrw(v4, 3) & 0x7fff; // 0x4cadf7
-    int128_t v10; // 0x4cadc8
-    if ((0x408f - v9 || v9 - 0x3c90) <= -1) {
-        uint32_t v11 = a2 & 0x7fffffff; // 0x4cb042
-        if (v11 < 0x40900000) {
-            // 0x4cb04e
-            __asm_movlpd_451((int64_t)result, __asm_addsd_450(__asm_movlpd(v4, a1), 0x3ff0000000000000));
-            return result;
-        }
-        if (v11 >= 0x7ff00000) {
-            // 0x4cb00b
-            v10 = v4;
-            if (v11 < 0x7ff00001) {
-                // 0x4cb016
-                v10 = v4;
-                if ((int32_t)a1 == 0) {
-                    // 0x4cb01b
-                    return a2 != 0x7ff00000 ? 0.0L : INFINITY;
-                }
-            }
-        } else {
-            if (a2 <= -1) {
-                int128_t v12 = __asm_movlpd(v4, 0x10000000000000); // 0x4caff8
-                v10 = __asm_mulsd(v12, v12);
-            } else {
-                int128_t v13 = __asm_movlpd(v4, 0x7fefffffffffffff); // 0x4cafe5
-                v10 = __asm_mulsd(v13, v13);
-            }
-        }
-    } else {
-        int128_t v14 = __asm_addpd(__asm_mulpd(v5, v4), v6); // 0x4cae1a
-        int128_t v15 = __asm_movapd(v14); // 0x4cae1e
-        int128_t v16 = __asm_subpd(v14, v6); // 0x4cae22
-        int128_t v17 = __asm_mulpd(v7, v16); // 0x4cae26
-        int128_t v18 = __asm_movapd(g153); // 0x4cae2a
-        int128_t v19 = __asm_mulpd(v8, v16); // 0x4cae32
-        int128_t v20 = __asm_movapd(g154); // 0x4cae36
-        int128_t v21 = __asm_subpd(v4, v17); // 0x4cae3e
-        int32_t v22 = __asm_movd(v15); // 0x4cae42
-        int128_t v23 = __asm_subpd(v21, v19); // 0x4cae53
-        int128_t v24 = __asm_movapd(*(int128_t *)((16 * v22 & 1008) + (int32_t)&g155)); // 0x4cae57
-        int128_t v25 = __asm_mulpd(v18, v23); // 0x4cae5f
-        int128_t v26 = __asm_movapd(v23); // 0x4cae63
-        int128_t v27 = __asm_mulpd(v23, v23); // 0x4cae67
-        int128_t v28 = __asm_addpd(v20, v25); // 0x4cae6b
-        int128_t v29 = __asm_mulsd(v27, v27); // 0x4cae6f
-        int128_t v30 = __asm_addsd(v26, v24); // 0x4cae73
-        int128_t v31 = __asm_unpckhpd(v24, v24); // 0x4cae77
-        int128_t v32 = __asm_pand(v15, __asm_movdqa_446(g147)); // 0x4cae83
-        int128_t v33 = __asm_psllq_454(__asm_paddq(v32, __asm_movdqa_446(g148)), 46); // 0x4cae93
-        int128_t v34 = __asm_mulpd(v29, v28); // 0x4cae98
-        int128_t v35 = __asm_addsd(v30, v34); // 0x4cae9c
-        int128_t v36 = __asm_orpd(v31, v33); // 0x4caea0
-        int128_t v37 = __asm_addsd(__asm_unpckhpd(v34, v34), v35); // 0x4caea8
-        if (v22 >> 6 < 1023) {
-            // 0x4caeba
-            __asm_movlpd_451((int64_t)result, __asm_addsd(__asm_mulsd(v37, v36), v36));
-            return result;
-        }
-        int32_t v38 = __asm_wait(); // 0x4caed6
-        int32_t v39 = v38 >> 1; // 0x4caeee
-        int128_t v40 = __asm_pandn(__asm_movdqa_446(g146), v36); // 0x4caefa
-        int128_t v41 = __asm_orpd(v40, __asm_psllq_454(__asm_movd_452(v39 + 1023), 52)); // 0x4caf0c
-        int128_t v42 = __asm_psllq_454(__asm_movd_452(v38 + 1023 - v39), 52); // 0x4caf1a
-        int16_t v43; // 0x4cadc8
-        int64_t v44 = (float32_t)(float64_t)(int64_t)(v43 | 768); // 0x4caf1f
-        __asm_movlpd_451(v44, v37);
-        float80_t v45 = (int64_t)(v43 | 768); // 0x4caf24
-        __asm_movlpd_451((int64_t)v1, v41);
-        float80_t v46 = v1; // 0x4caf2d
-        __asm_movlpd_451(v44, v42);
-        int128_t v47 = __asm_movlpd(v37, (int64_t)(int32_t)(float32_t)((v46 * v45 + v46) * v45)); // 0x4caf42
-        int32_t v48 = __asm_pextrw(v47, 3) & 0x7ff0; // 0x4caf53
-        v10 = v47;
-        if (v48 != 0 && v48 != 0x7ff0) {
-            // 0x4cafc2
-            __asm_movlpd_451((int64_t)result, v47);
-            return result;
-        }
-    }
-    // 0x4caf94
-    __asm_movlpd_451((int64_t)result, v10);
-    ___libm_error_support();
-    // 0x4cafc2
-    __asm_movlpd_451((int64_t)result, __asm_movlpd(v10, (int64_t)result));
-    return result;
-}
-
-// Address range: 0x4cb088 - 0x4cb2dc
-float80_t __acos_pentium4_____(int64_t a1) {
-    // 0x4cb088
-    int128_t v1; // 0x4cb088
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4cb08e
-    int32_t v3 = -1023; // 0x4cb08e
-    int128_t v4 = v2;
-    int128_t v5 = __asm_movapd(v4); // 0x4cb093
-    int128_t v6 = __asm_unpcklpd(v4, v4); // 0x4cb097
-    int32_t v7 = __asm_pextrw(__asm_psrlq(v5, 52), 0); // 0x4cb0a0
-    int128_t v8 = __asm_movapd(g156); // 0x4cb0a5
-    int128_t v9 = __asm_movapd(g161); // 0x4cb0ad
-    int128_t v10 = __asm_movapd(g157); // 0x4cb0b5
-    int128_t v11 = __asm_movapd(g158); // 0x4cb0bd
-    int128_t v12 = __asm_orpd(__asm_andpd(v6, v8), v9); // 0x4cb0c9
-    int32_t v13 = __asm_pextrw(__asm_addpd(v10, v12), 0) & 2032; // 0x4cb0d6
-    int128_t v14 = __asm_movapd(*(int128_t *)(v13 + (int32_t)&g166)); // 0x4cb0db
-    int128_t v15 = __asm_movapd(*(int128_t *)(v13 + (int32_t)&g167)); // 0x4cb0e3
-    int128_t v16 = __asm_andpd(v11, v12); // 0x4cb0eb
-    int128_t v17 = __asm_subpd(v12, v16); // 0x4cb0ef
-    int128_t v18 = __asm_subpd(__asm_mulpd(v16, v14), v9); // 0x4cb0f7
-    int128_t v19 = __asm_addsd(v15, v18); // 0x4cb0fb
-    int128_t v20 = __asm_mulpd(v17, v14); // 0x4cb0ff
-    int128_t v21 = __asm_movapd(v20); // 0x4cb103
-    int128_t v22 = __asm_addpd(v20, v18); // 0x4cb107
-    int32_t v23 = v7 & 4095; // 0x4cb10b
-    uint32_t v24 = v23 - 1; // 0x4cb111
-    int128_t v25; // 0x4cb1dc
-    int128_t v26; // 0x4cb088
-    while (v24 >= 2046) {
-        int128_t v27 = __asm_movlpd(v22, a1); // 0x4cb1ce
-        v25 = __asm_cmpeqsd(__asm_movapd(g162), v27);
-        if (__asm_pextrw(v25, 0) != 0) {
-            // 0x4cb233
-            __asm_divsd(__asm_movlpd(v1, (int64_t)g161), v27);
-            v26 = __asm_movlpd(v25, -0x10000000000000);
-            goto lab_0x4cb282;
-        }
-        if (v23 != 0) {
-            if (v24 < 2047) {
-                int128_t v28 = __asm_movlpd(v27, a1); // 0x4cb1f8
-                int128_t v29 = __asm_movapd(g156); // 0x4cb1fe
-                int128_t v30 = __asm_movapd(g161); // 0x4cb206
-                int128_t v31 = __asm_cmpeqsd(v30, __asm_orpd(__asm_andpd(v28, v29), v30)); // 0x4cb216
-                v26 = v29;
-                if (__asm_pextrw(v31, 0) != 0) {
-                    // 0x4cb225
-                    return INFINITY;
-                }
-                goto lab_0x4cb282;
-            } else {
-                if ((v7 & 2047) == 2047) {
-                    int128_t v32 = __asm_movlpd(v1, a1); // 0x4cb2af
-                    __asm_movlpd(v27, a1);
-                    int32_t v33 = __asm_movd(v32); // 0x4cb2bb
-                    int128_t v34 = __asm_psrlq(v32, 32); // 0x4cb2bf
-                    v26 = v25;
-                    if ((__asm_movd(v34) & 0xfffff || v33) == 0) {
-                        goto lab_0x4cb275;
-                    } else {
-                        goto lab_0x4cb282;
-                    }
-                } else {
-                    goto lab_0x4cb275;
-                }
-            }
-        }
-        // 0x4cb24e
-        v2 = __asm_mulsd(v27, __asm_movlpd(v25, 0x4330000000000000));
-        v3 = -1075;
-        v4 = v2;
-        v5 = __asm_movapd(v4);
-        v6 = __asm_unpcklpd(v4, v4);
-        v7 = __asm_pextrw(__asm_psrlq(v5, 52), 0);
-        v8 = __asm_movapd(g156);
-        v9 = __asm_movapd(g161);
-        v10 = __asm_movapd(g157);
-        v11 = __asm_movapd(g158);
-        v12 = __asm_orpd(__asm_andpd(v6, v8), v9);
-        v13 = __asm_pextrw(__asm_addpd(v10, v12), 0) & 2032;
-        v14 = __asm_movapd(*(int128_t *)(v13 + (int32_t)&g166));
-        v15 = __asm_movapd(*(int128_t *)(v13 + (int32_t)&g167));
-        v16 = __asm_andpd(v11, v12);
-        v17 = __asm_subpd(v12, v16);
-        v18 = __asm_subpd(__asm_mulpd(v16, v14), v9);
-        v19 = __asm_addsd(v15, v18);
-        v20 = __asm_mulpd(v17, v14);
-        v21 = __asm_movapd(v20);
-        v22 = __asm_addpd(v20, v18);
-        v23 = v7 & 4095;
-        v24 = v23 - 1;
-    }
-    int32_t v35 = v23 + v3; // 0x4cb126
-    int128_t v36 = __asm_cvtsi2sd(v35); // 0x4cb128
-    int128_t v37 = __asm_unpcklpd(v36, v36); // 0x4cb12c
-    int128_t v38 = __asm_movapd(g163); // 0x4cb145
-    int128_t v39 = __asm_movapd(v22); // 0x4cb14d
-    int128_t v40 = __asm_movapd(g164); // 0x4cb151
-    int128_t v41 = __asm_mulpd(v38, v22); // 0x4cb159
-    int128_t v42 = __asm_mulpd(v39, v39); // 0x4cb15d
-    int128_t v43 = __asm_addpd(v41, v40); // 0x4cb161
-    int128_t v44 = __asm_movapd(g165); // 0x4cb165
-    int128_t v45 = __asm_mulsd(v42, v42); // 0x4cb16d
-    int128_t v46 = __asm_mulpd(v37, __asm_movapd(g159)); // 0x4cb179
-    int32_t v47 = v13 == -((1024 * v35)) ? (int32_t)&g160 + 16 : (int32_t)&g160; // 0x4cb17d
-    int128_t v48 = __asm_addpd(__asm_addpd(v19, v46), __asm_andpd(v21, __asm_movapd(*(int128_t *)v47))); // 0x4cb18d
-    int128_t v49 = __asm_mulpd(v43, v22); // 0x4cb191
-    int128_t v50 = __asm_mulsd(v45, v22); // 0x4cb195
-    int128_t v51 = __asm_addpd(v49, v44); // 0x4cb199
-    int128_t v52 = __asm_movapd(v48); // 0x4cb19d
-    int128_t v53 = __asm_unpckhpd(v52, v52); // 0x4cb1a1
-    int128_t v54 = __asm_mulpd(v51, v50); // 0x4cb1a5
-    int128_t v55 = __asm_addsd(__asm_addsd(__asm_movapd(v54), __asm_unpckhpd(v54, v54)), v53); // 0x4cb1b8
-    float64_t result; // 0x4cb088
-    __asm_movlpd_451((int64_t)result, __asm_addsd(v55, v48));
-    return result;
-  lab_0x4cb282:
-    // 0x4cb282
-    __asm_movlpd_451((int64_t)result, v26);
-    ___libm_error_support();
-    return result;
-  lab_0x4cb275:;
-    int128_t v56 = __asm_xorpd(v25, v25); // 0x4cb275
-    v26 = __asm_divsd(v56, v56);
-    goto lab_0x4cb282;
-}
-
-// Address range: 0x4cb2f8 - 0x4cb4a7
-int32_t __acos_pentium4______(int64_t a1) {
-    // 0x4cb2f8
-    int128_t v1; // 0x4cb2f8
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4cb2f8
-    int32_t v3 = __asm_pextrw(v2, 3); // 0x4cb2fe
-    uint32_t v4 = (v3 & 0x7fff) + 0xcfd0; // 0x4cb307
-    int16_t v5 = v4; // 0x4cb30b
-    int64_t v6; // 0x4cb2f8
-    if (v5 >= 0x10c6) {
-        if (v5 > 0x10c5) {
-            // 0x4cb4a2
-            return __sin_default((int32_t)&g1224);
-        }
-        int32_t v7 = v4 / 16 & 4095; // 0x4cb45c
-        int32_t result = v7 | v3 & -0x10000; // 0x4cb45c
-        if (v7 == 3325) {
-            // 0x4cb466
-            __asm_movlpd_451(v6, __asm_mulsd_449(v2, 0x3fefffffffffffff));
-            return result;
-        }
-        // 0x4cb47c
-        __asm_mulsd_449(__asm_subsd(__asm_mulsd(__asm_movlpd(v1, 0x4360000000000000), v2), v2), 0x3c80000000000000);
-        __asm_movlpd_451(v6, v2);
-        return result;
-    }
-    int128_t v8 = __asm_mulsd(__asm_movlpd(v1, 0x40245f306dc9c883), v2); // 0x4cb31d
-    int128_t v9 = __asm_movlpd(v1, 0x4338000000000000); // 0x4cb321
-    int32_t v10 = __asm_cvtsd2si(v8); // 0x4cb329
-    int128_t v11 = __asm_addsd(v8, v9); // 0x4cb32d
-    int128_t v12 = __asm_movlpd(v1, 0x3fb921fb54400000); // 0x4cb331
-    int128_t v13 = __asm_subsd(v11, v9); // 0x4cb339
-    int128_t v14 = __asm_movapd(g173); // 0x4cb33d
-    int128_t v15 = __asm_mulsd(v12, v13); // 0x4cb345
-    int128_t v16 = __asm_unpcklpd(v13, v13); // 0x4cb349
-    int128_t v17 = __asm_movsd(v1, v2); // 0x4cb353
-    int128_t v18 = __asm_movapd(g172); // 0x4cb35a
-    int32_t v19 = 32 * v10 & 2016; // 0x4cb368
-    int32_t result2 = v19 + (int32_t)&g168; // 0x4cb36b
-    int128_t v20 = __asm_mulpd(v14, v16); // 0x4cb36d
-    int128_t v21 = __asm_subsd(v2, v15); // 0x4cb371
-    int128_t v22 = __asm_mulsd_449(v16, 0x3b63198a2e037073); // 0x4cb375
-    int128_t v23 = __asm_subsd(v17, v15); // 0x4cb37d
-    int64_t * v24 = (int64_t *)(v19 + (int32_t)&g168 + 8); // 0x4cb381
-    int128_t v25 = __asm_movlpd(v1, *v24); // 0x4cb381
-    int128_t v26 = __asm_unpcklpd(v21, v21); // 0x4cb386
-    int128_t v27 = __asm_movsd(v15, v23); // 0x4cb38a
-    int128_t v28 = __asm_subsd(v23, v20); // 0x4cb38e
-    int128_t v29 = __asm_mulpd(v18, v26); // 0x4cb392
-    int128_t v30 = __asm_subpd(v26, v20); // 0x4cb396
-    int128_t v31 = __asm_movapd(g170); // 0x4cb39a
-    int128_t v32 = __asm_mulsd(v25, v28); // 0x4cb3a2
-    int128_t v33 = __asm_subsd(v27, v28); // 0x4cb3a6
-    int128_t v34 = __asm_mulpd(v29, v30); // 0x4cb3aa
-    int128_t v35 = __asm_mulpd(v30, v30); // 0x4cb3ae
-    int128_t v36 = __asm_subsd(v33, v20); // 0x4cb3b2
-    int128_t v37 = __asm_movapd(*(int128_t *)result2); // 0x4cb3b6
-    int128_t v38 = __asm_subsd(v22, v36); // 0x4cb3ba
-    int128_t v39 = __asm_movlpd(v36, *(int64_t *)(v19 + (int32_t)&g168 + 24)); // 0x4cb3be
-    int128_t v40 = __asm_addsd(v37, v39); // 0x4cb3c3
-    int128_t v41 = __asm_subsd(v32, v40); // 0x4cb3c7
-    int128_t v42 = __asm_mulsd(v40, v28); // 0x4cb3cb
-    int128_t v43 = __asm_mulpd(v31, v35); // 0x4cb3cf
-    int128_t v44 = __asm_mulsd(v39, v28); // 0x4cb3d3
-    int128_t v45 = __asm_mulpd(v42, v35); // 0x4cb3d7
-    int128_t v46 = __asm_mulpd(v35, v35); // 0x4cb3db
-    int128_t v47 = __asm_addpd(v34, g171); // 0x4cb3df
-    int128_t v48 = __asm_mulsd_449(v28, *(int64_t *)result2); // 0x4cb3e7
-    int128_t v49 = __asm_addpd(v43, g169); // 0x4cb3eb
-    int128_t v50 = __asm_mulpd(v47, v46); // 0x4cb3f3
-    int128_t v51 = __asm_movsd(v46, v44); // 0x4cb3f7
-    int128_t v52 = __asm_addsd_450(v44, *v24); // 0x4cb3fb
-    int128_t v53 = __asm_mulsd(v38, v41); // 0x4cb400
-    int128_t v54 = __asm_movsd(v41, v48); // 0x4cb404
-    int128_t v55 = __asm_addsd(v48, v52); // 0x4cb408
-    int128_t v56 = __asm_addpd(v49, v50); // 0x4cb40c
-    int128_t v57 = __asm_subsd(__asm_movlpd(v50, *v24), v52); // 0x4cb415
-    int128_t v58 = __asm_subsd(v52, v55); // 0x4cb419
-    int128_t v59 = __asm_addsd_450(v53, *(int64_t *)(v19 + (int32_t)&g168 + 16)); // 0x4cb41d
-    int128_t v60 = __asm_mulpd(v56, v45); // 0x4cb422
-    int128_t v61 = __asm_addsd(__asm_addsd(__asm_addsd(v59, __asm_addsd(v57, v51)), __asm_addsd(v58, v54)), v60); // 0x4cb436
-    __asm_movlpd_451(v6, __asm_addsd(v55, __asm_addsd(v61, __asm_unpckhpd(v60, v60))));
-    return result2;
-}
-
-// Address range: 0x4cb4c8 - 0x4cb702
-int32_t __acos_pentium4_______(int64_t a1) {
-    // 0x4cb4c8
-    int128_t v1; // 0x4cb4c8
-    int128_t v2 = __asm_movlpd(v1, a1); // 0x4cb4c8
-    int32_t v3 = __asm_pextrw(v2, 3); // 0x4cb4ce
-    uint32_t v4 = (v3 & 0x7fff) + 0xc7e0; // 0x4cb4d7
-    int16_t v5 = v4; // 0x4cb4db
-    int64_t v6; // 0x4cb4c8
-    if (v5 >= 2217) {
-        if (v5 > 2216) {
-            // 0x4cb6fd
-            return __tan_default((int32_t)&g1224);
-        }
-        int32_t v7 = v4 / 16 & 4095; // 0x4cb6c1
-        int128_t v8; // 0x4cb4c8
-        if (v7 == 3198) {
-            // 0x4cb6cb
-            v8 = __asm_mulsd_449(__asm_movsd(v1, v2), 0x3c80000000000000);
-        }
-        int128_t v9 = __asm_addsd(__asm_mulsd(__asm_movlpd(v8, 0x4360000000000000), v2), v2); // 0x4cb6e3
-        __asm_movlpd_451(v6, __asm_mulsd_449(v9, 0x3c80000000000000));
-        return v7 | v3 & -0x10000;
-    }
-    int128_t v10 = __asm_unpcklpd(v2, v2); // 0x4cb4e5
-    int128_t v11 = __asm_mulpd(__asm_movapd(g175), v10); // 0x4cb4f1
-    int32_t v12 = __asm_cvtsd2si(v11); // 0x4cb4f5
-    int128_t v13 = __asm_movapd(g176); // 0x4cb4f9
-    int128_t v14 = __asm_addpd(v11, v13); // 0x4cb501
-    int128_t v15 = __asm_movapd(g177); // 0x4cb505
-    int128_t v16 = __asm_subpd(v14, v13); // 0x4cb50d
-    int128_t v17 = __asm_movlpd(v1, 0x3d32e7b9676733af); // 0x4cb511
-    int128_t v18 = __asm_movapd(g178); // 0x4cb51f
-    int128_t v19 = __asm_mulpd(v15, v16); // 0x4cb527
-    int128_t v20 = __asm_mulsd(v17, v16); // 0x4cb52e
-    int128_t v21 = __asm_mulpd(v18, v16); // 0x4cb534
-    int128_t v22 = __asm_subpd(v10, v19); // 0x4cb53a
-    int128_t v23 = __asm_mulpd(v16, g179); // 0x4cb53e
-    int128_t v24 = __asm_addsd(v20, v22); // 0x4cb54d
-    int128_t v25 = __asm_movapd(v22); // 0x4cb551
-    int128_t v26 = __asm_subpd(v22, v21); // 0x4cb555
-    int128_t v27 = __asm_movlpd(v1, 0x3ff0000000000000); // 0x4cb559
-    int32_t v28 = 176 * (v12 & 31); // 0x4cb561
-    int128_t v29 = __asm_andpd(v24, g180); // 0x4cb56a
-    int128_t v30 = __asm_movapd(v26); // 0x4cb572
-    int32_t result = v28 + (int32_t)&g174; // 0x4cb576
-    int128_t v31 = __asm_subpd(v25, v26); // 0x4cb578
-    int128_t v32 = __asm_unpckhpd(v26, v26); // 0x4cb57c
-    int128_t v33 = __asm_divsd(v27, v29); // 0x4cb580
-    int128_t v34 = __asm_subpd(v31, v21); // 0x4cb584
-    int128_t v35 = __asm_movapd(*(int128_t *)(v28 + (int32_t)&g174 + 16)); // 0x4cb588
-    int128_t v36 = __asm_subsd(v30, v29); // 0x4cb58d
-    int128_t v37 = __asm_mulpd(v35, v32); // 0x4cb591
-    int128_t v38 = __asm_subpd(v34, v23); // 0x4cb595
-    int128_t v39 = *(int128_t *)(v28 + (int32_t)&g174 + 48); // 0x4cb599
-    int128_t v40 = __asm_mulpd(__asm_movapd(v39), v32); // 0x4cb59e
-    int128_t v41 = *(int128_t *)(v28 + (int32_t)&g174 + 96); // 0x4cb5a2
-    int128_t v42 = __asm_mulpd(__asm_movapd(v41), v32); // 0x4cb5a7
-    int128_t v43 = __asm_addsd(v38, v36); // 0x4cb5ab
-    int128_t v44 = __asm_movapd(v32); // 0x4cb5af
-    int128_t v45 = __asm_mulpd(v32, v32); // 0x4cb5b3
-    int128_t v46 = __asm_addpd(v37, *(int128_t *)result); // 0x4cb5b7
-    int128_t v47 = *(int128_t *)(v28 + (int32_t)&g174 + 32); // 0x4cb5bb
-    int128_t v48 = __asm_mulpd(__asm_addpd(v40, v47), v45); // 0x4cb5c0
-    int128_t v49 = __asm_addpd(v42, *(int128_t *)(v28 + (int32_t)&g174 + 80)); // 0x4cb5c4
-    int128_t v50 = __asm_addpd(v46, v48); // 0x4cb5c9
-    int128_t v51 = *(int128_t *)(v28 + (int32_t)&g174 + 112); // 0x4cb5cd
-    int128_t v52 = __asm_mulpd(__asm_movapd(v51), v45); // 0x4cb5d2
-    int128_t v53 = __asm_mulpd(v45, v45); // 0x4cb5d6
-    int128_t v54 = __asm_addpd(v49, v52); // 0x4cb5da
-    int128_t v55 = __asm_movapd(*(int128_t *)(v28 + (int32_t)&g174 + 64)); // 0x4cb5de
-    int128_t v56 = __asm_addpd(v50, __asm_mulpd(v55, v53)); // 0x4cb5e7
-    int128_t v57 = __asm_movapd(v44); // 0x4cb5eb
-    int128_t v58 = __asm_mulpd(v44, v53); // 0x4cb5ef
-    int128_t v59 = __asm_mulsd(v53, v53); // 0x4cb5f3
-    int32_t v60 = v28 + (int32_t)&g174 + 144; // 0x4cb5f7
-    int128_t v61 = __asm_mulpd(v57, *(int128_t *)v60); // 0x4cb5f7
-    int128_t v62 = __asm_mulpd(v54, v58); // 0x4cb5ff
-    int128_t v63 = __asm_movsd(v58, v61); // 0x4cb603
-    int128_t v64 = __asm_addpd(v56, v62); // 0x4cb607
-    int128_t v65 = __asm_movsd(v62, v61); // 0x4cb60b
-    int128_t v66 = __asm_mulsd(v59, v64); // 0x4cb60f
-    int128_t v67 = __asm_unpckhpd(v64, v64); // 0x4cb613
-    int128_t v68 = __asm_addsd(v66, v67); // 0x4cb617
-    int128_t v69 = __asm_unpckhpd(v61, v61); // 0x4cb61b
-    int128_t v70 = __asm_addsd(v63, v69); // 0x4cb61f
-    int128_t v71 = __asm_subsd(v65, v70); // 0x4cb623
-    int128_t v72 = __asm_addsd(v69, v71); // 0x4cb627
-    int128_t v73 = __asm_movsd(v71, v43); // 0x4cb62b
-    int128_t v74 = __asm_movlpd(v67, *(int64_t *)v60); // 0x4cb62f
-    int128_t v75 = __asm_unpckhpd(v43, v43); // 0x4cb637
-    int64_t v76 = *(int64_t *)(v28 + (int32_t)&g174 + 152); // 0x4cb63b
-    int128_t v77 = __asm_mulsd(__asm_addsd_450(v74, v76), v75); // 0x4cb643
-    int64_t v78 = *(int64_t *)(v28 + (int32_t)&g174 + 136); // 0x4cb647
-    int128_t v79 = __asm_addsd(__asm_addsd_450(v77, v78), v72); // 0x4cb64f
-    int128_t v80 = __asm_addsd(v68, v79); // 0x4cb653
-    int128_t v81 = __asm_movlpd(v79, 0x3ff0000000000000); // 0x4cb657
-    int128_t v82 = __asm_mulsd(v73, v33); // 0x4cb65f
-    int64_t v83 = *(int64_t *)(v28 + (int32_t)&g174 + 168); // 0x4cb663
-    int128_t v84 = __asm_andpd(__asm_movlpd(v75, v83), v33); // 0x4cb66b
-    int128_t v85 = __asm_mulsd(v29, v84); // 0x4cb66f
-    int64_t v86 = *(int64_t *)(v28 + (int32_t)&g174 + 160); // 0x4cb673
-    int128_t v87 = __asm_mulsd_449(v33, v86); // 0x4cb673
-    int128_t v88 = __asm_subsd(v81, v85); // 0x4cb67b
-    int64_t v89 = *(int64_t *)(v28 + (int32_t)&g174 + 128); // 0x4cb67f
-    int128_t v90 = __asm_subsd_453(v84, v89); // 0x4cb67f
-    int128_t v91 = __asm_mulsd(__asm_subsd(v88, v82), v87); // 0x4cb68b
-    int128_t v92 = __asm_movsd(v82, v70); // 0x4cb68f
-    int128_t v93 = __asm_subsd(v70, v90); // 0x4cb693
-    int128_t v94 = __asm_subsd(__asm_addsd(v80, __asm_subsd(v92, __asm_addsd(v90, v93))), v91); // 0x4cb6a3
-    __asm_movlpd_451(v6, __asm_addsd(v94, v93));
-    return result;
-}
-
 
 // Address range: 0x4d3ce0 - 0x4d3d40
 // From class:    .?AVbad_alloc@std@@
