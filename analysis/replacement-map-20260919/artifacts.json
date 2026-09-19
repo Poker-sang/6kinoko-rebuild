@@ -1,0 +1,34 @@
+{
+  "audit_implementation_commit": "4d7cb3a3495dc4ff45d9b1fa262ee56cedef6b4e",
+  "runtime_implementation_commit": "181b23cc76cf5693c19a41cbf3a23669846262e9",
+  "artifacts": {
+    "build-runs/input-181b23c-quiet-20260919/runtime.map": {
+      "sha256": "d06762c9a263512fc4c65c82d6836b93aad37f8a8e88dfe7b44577f122098d8a",
+      "bytes": 811848
+    },
+    "runtime-builds/input-181b23c-quiet-20260919/kinoko_retdec_rebuild.exe": {
+      "sha256": "a8b4e1855d55ca34e916f40aa4e45a9e062af8cebe9c3516e84eab124e2570db",
+      "bytes": 782336
+    },
+    "build-runs/input-181b23c-diag-20260919/runtime.map": {
+      "sha256": "fb3600b14b17c16154e4e7a2f6220525557d501e6f23a9ea5852ff43dda5e4b5",
+      "bytes": 811848
+    },
+    "runtime-builds/input-181b23c-diag-20260919/kinoko_retdec_rebuild.exe": {
+      "sha256": "f9d66bc90ad625ad2f850118de3b6e91d808ca4c1c60aa463a2f29d45942427e",
+      "bytes": 782336
+    },
+    "analysis/replacement-map-20260919/ida-ownership.json": {
+      "sha256": "8d51dcb3853403a8c472ffbaf676005ebaefb884a5fa9d66add1b3db96f5137b",
+      "bytes": 67225
+    },
+    "analysis/replacement-map-20260919/validation-quiet-corrected.json": {
+      "sha256": "aabbdf30fdb2c2017b8833a0cfd841a3c8796c2b5594a8e58ca64c32911660fc",
+      "bytes": 1901
+    },
+    "analysis/replacement-map-20260919/validation-diag.json": {
+      "sha256": "aabbdf30fdb2c2017b8833a0cfd841a3c8796c2b5594a8e58ca64c32911660fc",
+      "bytes": 1901
+    }
+  }
+}

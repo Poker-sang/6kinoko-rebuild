@@ -11,24 +11,24 @@
 | 已确认去向 | 全部地址 | 独立起点 |
 |---|---:|---:|
 | 语义名称替代、合入调用者或 C++ ABI 适配入口 | 40 | 40 |
-| 随旧 VM/标准库源码切换移除的旧入口 | 501 | 492 |
+| 随旧 VM/标准库源码切换移除的旧入口 | 506 | 497 |
 | 已有 dead_ancestors 清理记录，但旧脚本漏读 | 32 | 8 |
-| 已有包装入口清理提交 | 9 | 9 |
-| 仍需核对 | 18 | 18 |
+| 已有包装入口清理提交 | 8 | 8 |
+| 仍需核对 | 14 | 14 |
 | 合计 | 600 | 567 |
 
-未映射独立起点从 **567 降至 18**，本轮归类 549 个，约 96.83%。
-这是补齐统计与历史证据，不是今天新重写了 549 个函数。
+未映射独立起点从 **567 降至 14**，本轮归类 553 个，约 97.53%。
+这是补齐统计与历史证据，不是今天新重写了 553 个函数。
 
 ## “已删除”的具体含义
 
 删除类别指旧同名实现已从项目中移除，不指游戏功能消失。
-501 个旧入口确实在 `49dfad5` 中退出主 C，且当前源码和链接 map
+506 个旧入口确实在 `49dfad5` 中退出主 C，且当前源码和链接 map
 未保留这些精确符号。该提交改用 Squirrel 核心/标准库源码，当前
 CMake 仍编译并链接这些源码。但这批同时包含模板/运行库附属入口，
 不能单凭提交或地址区域将每一个都称为 Squirrel 业务函数。
 
-这 501 项记录的是**旧入口的退出去向**，并未建立每项到上游某个
+这 506 项记录的是**旧入口的退出去向**，并未建立每项到上游某个
 C++ 方法的语义等价证明。将来若恢复行为或排查缺陷仍有需要，可以
 按记录追溯，而不是把它们从审计中抹去。
 
@@ -53,7 +53,7 @@ ACT 克隆和命令清空、原生对象绑定、数组出栈与 VM 栈移除等
 复核命令（两个 map 使用相同的已测运行代码 181b23c）：
 
 ```powershell
-python tools/audit_replacement_mapping.py --link-map build-runs/input-181b23c-quiet-20260919/runtime.map --output analysis/replacement-map-20260919/validation-quiet.json
+python tools/audit_replacement_mapping.py --link-map build-runs/input-181b23c-quiet-20260919/runtime.map --output analysis/replacement-map-20260919/validation-quiet-corrected.json
 python tools/audit_replacement_mapping.py --link-map build-runs/input-181b23c-diag-20260919/runtime.map --output analysis/replacement-map-20260919/validation-diag.json
 ```
 
@@ -62,12 +62,11 @@ python tools/audit_replacement_mapping.py --link-map build-runs/input-181b23c-di
 这不验证原始数值地址引用、预处理后完整调用图或全程序行为等价。
 本批没有重新运行游戏，也没有将上一批 46/46 结果冒充新增游戏测试。
 
-## 仍需核对的 18 个独立入口
+## 仍需核对的 14 个独立入口
 
 ```text
-40a5f0 40a8d0 40a9a0 46b450 46f9f0 489ef0 489f20 48a830
-48a8d0 48a920 48b630 48c080 48c950 495360 49c350 4a1760
-4a1850 4a8d60
+40a5f0 40a8d0 40a9a0 46b450 46f9f0 489ef0 489f20
+48c080 490040 495360 49c350 4a1760 4a1850 4a8d60
 ```
 
 这些项已经找到移除提交，但替代目标或退出理由还没有充分核实。
@@ -75,5 +74,14 @@ python tools/audit_replacement_mapping.py --link-map build-runs/input-181b23c-di
 对应模块却找不到同名定义。因此不按旧注释直接宣告映射完成；
 目前也没有从这个声明推断出游戏运行缺陷。
 
-后续统计应叠加这份明确映射，不能再把这 582 个已归类地址全部
+后续统计应叠加这份明确映射，不能再把这 586 个已归类地址全部
 退回“没有同名定义，所以未映射”的旧规则。
+
+定义解析回归：`python tests/test_replacement_mapping.py`。首次校验发现旧
+词法规则会把条件表达式中的调用误作定义，现要求名称前必须有声明
+类型标记，并重新计算全部 600 项历史记录；失败产物保留供回查。
+
+最终校验：修正后的 quiet/diag 两份 map 审计均通过，errors=[]；
+定义解析的 3 项回归通过。quiet map 找到 40 个替代目标中的 36 个
+独立符号，另外 4 个只确认源码定义和构建纳入，不宣称独立链接存活。
+具体逐项结果、输入 map/EXE 哈希及审计代码版本见本轮 analysis 产物。
