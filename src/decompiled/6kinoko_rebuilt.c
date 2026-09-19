@@ -3545,7 +3545,6 @@ static void retdec_actor_manager_clear_list(int32_t list_field);
 
 
 int32_t function_46b420(char a1);
-int32_t function_46b450(int32_t a1, int32_t a2);
 int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b880(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b9a0(int32_t this_ptr);
@@ -77826,7 +77825,8 @@ int32_t function_46b420(char a1) {
 }
 
 // Address range: 0x46b450 - 0x46b48a
-/* function_46b450 is implemented in native C++ (squirrel_native_calls.cpp). */
+/* Original 46B450 string conversion is inlined as sq_getstring in callers
+   471880/471960 in squirrel_native_calls.cpp; no separate old entry remains. */
 
 // The original routines below are SqPlus argument adapters.  RetDec lost
 // their first (this) argument and consequently shifted the VM arguments into

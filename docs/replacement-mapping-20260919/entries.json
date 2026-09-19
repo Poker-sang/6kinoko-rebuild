@@ -51,8 +51,23 @@
       "last_present_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
       "first_absent_revision": "33e51d8f5e2144cf099d205c1d747853043c3883",
       "last_body_sha256": "25222f64df5a2942b83f0ed36451e15863a357c4fa9d1778c86d3feb6511f1f9",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original callers 470360/470890 release an audio handle. Current BGM release is in 470360 and global SE/BGM shutdown is in kinoko_clear_global_sound. Queue/container ownership changed; not a one-to-one timing equivalence claim.",
+      "replacement": {
+        "path": "src/reconstructed/audio_runtime.cpp",
+        "symbol": "function_470360"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": [
+        {
+          "path": "src/reconstructed/audio_runtime.cpp",
+          "snippet": "retdec_bgm_release_for_handle(handle);"
+        },
+        {
+          "path": "src/reconstructed/stage_cleanup.cpp",
+          "snippet": "extern \"C\" int32_t kinoko_clear_global_sound()"
+        }
+      ]
     },
     {
       "function": "function_40a7f0",
@@ -75,8 +90,28 @@
       "last_present_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
       "first_absent_revision": "33e51d8f5e2144cf099d205c1d747853043c3883",
       "last_body_sha256": "f9df21df5dabe2df70fd57979b6f7287b672351655151d925824ef61d90b2f01",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "identified_gap",
+      "evidence": "Original 40A8D0 assembly/decompilation and sole caller 470300, registered as PauseBgm.",
+      "replacement": {
+        "path": "src/reconstructed/audio_runtime.cpp",
+        "symbol": "function_470300"
+      },
+      "finding": "PauseBgm behavior differs: original GetStatus -> Stop when playing, Play(DSBPLAY_LOOPING) when stopped, without resetting position. Current path always Stop + SetCurrentPosition(0); no resume branch.",
+      "source_evidence": [
+        {
+          "path": "src/reconstructed/audio_runtime.cpp",
+          "snippet": "(track->buffer.get())->SetCurrentPosition(0);"
+        },
+        {
+          "path": "src/reconstructed/audio_runtime.cpp",
+          "snippet": "retdec_bgm_stop_for_handle((uint32_t)g637);"
+        },
+        {
+          "path": "src/squirrel/global_registration.cpp",
+          "snippet": "{\"PauseBgm\", entry(function_470300), entry(function_471bc0)}"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_40a950",
@@ -99,8 +134,19 @@
       "last_present_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
       "first_absent_revision": "33e51d8f5e2144cf099d205c1d747853043c3883",
       "last_body_sha256": "bd7c1ec4ba6a550c2548d3770266b1ac58088d83af3051d9ad5f0908c574ff76",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original 470320 divides target percent by 100 and calls 40A9A0. Current 470320 preserves that API and dispatches the typed per-handle fade service.",
+      "replacement": {
+        "path": "src/reconstructed/audio_runtime.cpp",
+        "symbol": "retdec_bgm_begin_fade_for_handle"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": [
+        {
+          "path": "src/reconstructed/audio_runtime.cpp",
+          "snippet": "float target = (float)a2 / 100.0f;"
+        }
+      ]
     },
     {
       "function": "function_427950",
@@ -584,8 +630,19 @@
       "last_present_revision": "3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547",
       "first_absent_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
       "last_body_sha256": "d520d57990af02c2e24eb763464f27ace81cdb636066a24ede22cfd6425fa35b",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original 48A8D0 extracts OT_STRING payload; callers 471880/471960 now inline sq_getstring directly. Error propagation uses source-native error returns rather than the obsolete throwing helper.",
+      "replacement": {
+        "path": "src/squirrel/squirrel_native_calls.cpp",
+        "symbol": "function_471880"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": [
+        {
+          "path": "src/squirrel/squirrel_native_calls.cpp",
+          "snippet": "SQ_FAILED(sq_getstring(vm, index, &first))) return error(vm, conversion_error);"
+        }
+      ]
     },
     {
       "function": "function_46c600",
@@ -648,8 +705,14 @@
       "last_present_revision": "862bf100f3da3503684b8f218c5e8ae02384335f",
       "first_absent_revision": "d559bf63856c7159080f5d4127818ed729aabc4e",
       "last_body_sha256": "e688b85e1c18350a5b85e8a97dcc974ad4c00565f8482a090fc25fe51ead2451",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original Map registration 46FAC0 constructs this 48-byte class-binding state. Current Map registration uses construct with null parent; this maps the current caller, not arbitrary unused parent arguments.",
+      "replacement": {
+        "path": "src/squirrel/camera_map_binding.cpp",
+        "symbol": "construct"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": []
     },
     {
       "function": "function_489ef0",
@@ -658,8 +721,14 @@
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
       "last_body_sha256": "11a695adf325248c0c6b487db08fd18e9450d95e80f50a2877c3c5a7fcfc8f81",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original scalar-deleting SQRefCounted destructor (also in SQWeakRef vtable) delegates to 48E4D0 then frees when flags&1. Current qualified base destructor and flag-controlled free are in this adapter.",
+      "replacement": {
+        "path": "src/squirrel/squirrel_source_runtime.cpp",
+        "symbol": "kinoko_sq_delete_refcounted"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": []
     },
     {
       "function": "function_489f20",
@@ -668,8 +737,21 @@
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
       "last_body_sha256": "06c1004edced5155234966a27442e16a5df53448437c4c3e50fdfc4b64100553",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "source_method_mapping",
+      "evidence": "Original stores OT_NULL=0x1000001 and zero payload, identical to supplied-source constructor disassembly. IDA DNameNode label is a misleading short-function library match; xrefs are SQObjectPtr array constructors.",
+      "source_replacement": {
+        "path": "third_party/squirrel-2.2.2/squirrel/sqobject.h",
+        "symbol": "SQObjectPtr::SQObjectPtr()",
+        "translation_unit": "third_party/squirrel-2.2.2/squirrel/sqvm.cpp",
+        "map_symbol": "??0SQObjectPtr@@QAE@XZ"
+      },
+      "source_evidence": [
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqobject.h",
+          "snippet": "SQObjectPtr()\n\t{\n\t\t_type=OT_NULL;\n\t\t_unVal.pUserPointer=NULL;"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_489fa0",
@@ -1168,8 +1250,21 @@
       "last_present_revision": "bb12dfde12509dc46b9acd4b79ebf94200ae95c5",
       "first_absent_revision": "17ffd15e4f80ec0e3b0b446f3bc74a29e0289a83",
       "last_body_sha256": "cc0617e064afe84226a894e24e2116871286b86f7b3bace2a0449fbb505366ef",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "source_method_mapping",
+      "evidence": "Original field/method index decoding and weak-reference dereference match SQInstance::Get. Current SQVM::Get invokes this supplied-source inline method.",
+      "source_replacement": {
+        "path": "third_party/squirrel-2.2.2/squirrel/sqclass.h",
+        "symbol": "SQInstance::Get",
+        "translation_unit": "third_party/squirrel-2.2.2/squirrel/sqvm.cpp",
+        "map_symbol": "?Get@SQInstance@@"
+      },
+      "source_evidence": [
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqclass.h",
+          "snippet": "if(_class->_members->Get(key,val)) {"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_48c170",
@@ -1952,8 +2047,21 @@
       "last_present_revision": "c35b946a2f11cd7d10af7f6ae50346f38a4693e7",
       "first_absent_revision": "aebce90f646f6a4b547d3d1b3c73e53b91a15886",
       "last_body_sha256": "da7527d4ac58b6221860580deea6cbf3dc5c0cc2dcefe3fa0b46ea9e524b2a44",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "source_method_mapping",
+      "evidence": "Original doubles +104, resizes callstackdata, and updates +96 from +108. Supplied-source method and object disassembly preserve that layout and operation.",
+      "source_replacement": {
+        "path": "third_party/squirrel-2.2.2/squirrel/sqvm.h",
+        "symbol": "SQVM::GrowCallStack",
+        "translation_unit": "third_party/squirrel-2.2.2/squirrel/sqvm.cpp",
+        "map_symbol": "?GrowCallStack@SQVM@@"
+      },
+      "source_evidence": [
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqvm.h",
+          "snippet": "void GrowCallStack() {\n\t\tSQInteger newsize = _alloccallsstacksize*2;"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_4900d0",
@@ -2636,8 +2744,23 @@
       "last_present_revision": "0d50c66027deea121ae5895d76cdfde9503c5cc9",
       "first_absent_revision": "abe9382f3242eddaf844a22f38f4d4bfd43318f4",
       "last_body_sha256": "36f4690b312a644d9d212082c68446d0f01af7e38c1b987cb561f431c6ae399f",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original SQVM::Execute is routed through retdec_execute_clean_vm to kinoko_sq_execute, then supplied-source SQVM::Execute. Resume-flag translation and native receiver scope remain explicit.",
+      "replacement": {
+        "path": "src/squirrel/squirrel_source_runtime.cpp",
+        "symbol": "kinoko_sq_execute"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": [
+        {
+          "path": "src/squirrel/squirrel_source_runtime.cpp",
+          "snippet": "return machine->Execute("
+        },
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqvm.cpp",
+          "snippet": "bool SQVM::Execute(SQObjectPtr &closure, SQInteger target, SQInteger nargs, SQInteger stackbase,SQObjectPtr &outres, SQBool raiseerror,ExecutionType et)"
+        }
+      ]
     },
     {
       "function": "function_497680",
@@ -3406,8 +3529,21 @@
       "last_present_revision": "17ffd15e4f80ec0e3b0b446f3bc74a29e0289a83",
       "first_absent_revision": "6209e9029dab4d568a10456bc46411aefcf48b8d",
       "last_body_sha256": "0d1ce99fbc81e2bfc7272a15e8eae42634d8186ada9fbf681b00060d36dcc971",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "source_method_mapping",
+      "evidence": "Supplied-source destructor owns registry/default delegates, reference table and GC teardown. It is reached by source sq_close; host g643 chain cleanup is a SEPARATE open gap recorded under 4A8D60.",
+      "source_replacement": {
+        "path": "third_party/squirrel-2.2.2/squirrel/sqstate.cpp",
+        "symbol": "SQSharedState::~SQSharedState",
+        "translation_unit": "third_party/squirrel-2.2.2/squirrel/sqstate.cpp",
+        "map_symbol": "??1SQSharedState@@"
+      },
+      "source_evidence": [
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqstate.cpp",
+          "snippet": "SQSharedState::~SQSharedState()"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_49d700",
@@ -3446,8 +3582,14 @@
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
       "last_body_sha256": "9377f31f30b79c378ef3979d148a3eda68ce4839fe8237558fdbc18cd389ee1d",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "semantic_replacement",
+      "evidence": "Original callback returns zero without allocation or stack output. ACT registration now uses the explicitly named no-op constructor.",
+      "replacement": {
+        "path": "src/squirrel/squirrel_source_runtime.cpp",
+        "symbol": "kinoko_sq_noop_constructor"
+      },
+      "investigation": "analysis/remaining-mapping-20260920",
+      "source_evidence": []
     },
     {
       "function": "function_4a1770",
@@ -3506,8 +3648,21 @@
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
       "last_body_sha256": "58fd0f1c91ab4cb0a699dd4cb00422466aa56c0192bc61fdf2e53b85766ed73a",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "source_method_mapping",
+      "evidence": "Original registration data 50D00C names seterrorhandler; 48A300 sets VM error-handler slot and pops accepted closure/null. It is not sq_close.",
+      "source_replacement": {
+        "path": "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp",
+        "symbol": "base_seterrorhandler",
+        "translation_unit": "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp",
+        "map_symbol": "base_seterrorhandler"
+      },
+      "source_evidence": [
+        {
+          "path": "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp",
+          "snippet": "static SQInteger base_seterrorhandler(HSQUIRRELVM v)\n{\n\tsq_seterrorhandler(v);\n\treturn 0;"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_4a1870",
@@ -4586,8 +4741,16 @@
       "last_present_revision": "17ffd15e4f80ec0e3b0b446f3bc74a29e0289a83",
       "first_absent_revision": "6209e9029dab4d568a10456bc46411aefcf48b8d",
       "last_body_sha256": "c1bbd88399e94be5c2ca777bee94edd379a7bfd916874ab3a1fddac66151379e",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "status": "identified_gap",
+      "evidence": "Original 4A8D60 and 4D4B30; original 49C350 corresponds to source shared-state destructor, but that fact does not restore host ownership cleanup.",
+      "finding": "Host-owned shared-state chain teardown is not restored. Original exit hook 4D4B30 destroys g643 head and 4A8D60 recursively destroys remaining nodes/states. Current bootstrap only appends nodes to g643; no project teardown consumes that chain.",
+      "source_evidence": [
+        {
+          "path": "src/squirrel/squirrel_vm_bootstrap.cpp",
+          "snippet": "*pointer<int32_t>(node + 4) = g643;\n            g643 = node;"
+        }
+      ],
+      "investigation": "analysis/remaining-mapping-20260920"
     },
     {
       "function": "function_4a8ea0",
@@ -6163,5 +6326,6 @@
       "status": "historical_dead_cleanup",
       "evidence": "analysis/receiver-continuation-20260915/final-destructor-reachability.json:dead_ancestors"
     }
-  ]
+  ],
+  "last_investigation": "2026-09-20: remaining 14 classified as 12 mapped and 2 identified gaps; gaps are NOT completed implementations."
 }

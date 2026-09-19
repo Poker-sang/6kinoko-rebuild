@@ -37,6 +37,13 @@ def definition(text, name):
     return text[match.start():end]
 
 
+def linked_symbol(text, symbol, source_path):
+    """Avoid counting an unrelated 'construct' or a longer adapter name."""
+    pattern = re.compile(r'(?<![A-Za-z0-9])' + re.escape(symbol) + r'(?![A-Za-z0-9_])')
+    owner = Path(source_path).stem + '.obj'
+    return any(owner in line and pattern.search(line) for line in text.splitlines())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--link-map', type=Path)
@@ -53,6 +60,7 @@ def main():
                 sources[path.relative_to(ROOT).as_posix()] = path.read_text(encoding='utf-8')
     tokens = set(re.findall(r'\bfunction_[0-9a-f]+\b', '\n'.join(mask(s) for s in sources.values())))
     cmake = (ROOT / 'CMakeLists.txt').read_text(encoding='utf-8')
+    source_cmake = cmake.replace('${KINOKO_SQUIRREL2_ROOT}', 'third_party/squirrel-2.2.2')
     link_map = args.link_map.read_text(encoding='utf-8') if args.link_map else None
     map_hits = {}
     for row in rows:
@@ -80,13 +88,28 @@ def main():
             if definition(sources.get(target['path'], ''), target['symbol']) is None:
                 errors.append(name + ': replacement definition missing')
             if link_map:
-                map_hits[name] = target['symbol'] in link_map
+                map_hits[name] = linked_symbol(link_map, target['symbol'], target['path'])
+        source_target = row.get('source_replacement')
+        if source_target:
+            if source_target['translation_unit'] not in source_cmake:
+                errors.append(name + ': source-library translation unit missing from CMake')
+            if not row.get('source_evidence'):
+                errors.append(name + ': source-library target lacks reviewed source evidence')
+            if link_map:
+                map_hits[name] = source_target['map_symbol'] in link_map
+        for evidence in row.get('source_evidence', []):
+            path = ROOT / evidence['path']
+            if not path.is_file() or evidence['snippet'] not in path.read_text(encoding='utf-8'):
+                errors.append(name + ': reviewed source anchor missing: ' + evidence['path'])
+        if row['status'] == 'identified_gap' and (not row.get('finding') or not row.get('source_evidence')):
+            errors.append(name + ': identified gap needs a finding and source evidence')
         if row['status'] == 'retired_source_runtime_switch' and not row['first_absent_revision'].startswith('49dfad5'):
             errors.append(name + ': wrong source-runtime retirement commit')
     counts = Counter(r['status'] for r in rows)
     independent = Counter(r['status'] for r in rows if r['original_is_start'])
     result = dict(entries=len(rows), independent_entries=sum(independent.values()),
                   categories=dict(counts), independent_categories=dict(independent),
+                  open_implementation_gaps=[r['function'] for r in rows if r['status'] == 'identified_gap'],
                   replacement_symbols_in_map=map_hits, errors=errors,
                   limits='Exact-symbol source/link checks; not raw-address reachability or per-function equivalence. '
                          'A missing optimized helper symbol can mean inlining or link pruning.')

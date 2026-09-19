@@ -32,6 +32,13 @@ class DefinitionTests(unittest.TestCase):
 /* int32_t function_48a830(int32_t x) { return x; } */'''
         self.assertIsNone(audit.definition(source, 'function_48a830'))
 
+    def test_link_match_requires_the_symbol_and_its_object_file(self):
+        text = '''0001:1 ?construct@other@@ 00401000 f library:other.obj
+0001:2 _construct_extra 00402000 f library:camera_map_binding.obj
+0001:3 @kinoko_camera_update@8 00403000 f library:script_callbacks.obj'''
+        self.assertFalse(audit.linked_symbol(text, 'construct', 'src/squirrel/camera_map_binding.cpp'))
+        self.assertTrue(audit.linked_symbol(text, 'kinoko_camera_update', 'src/reconstructed/script_callbacks.cpp'))
+
 
 if __name__ == '__main__':
     unittest.main()
