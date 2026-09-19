@@ -17985,5 +17985,7 @@
   ],
   "root_policy": "Conservative source graph for generated address functions; dry-run by default.\n\nAll conditional variants, main-TU initializers and non-address helpers are roots.\nOther project sources, headers and tests are scanned even if not built. Symbol\nreferences (including address-taking) and numeric address literals are edges.\nAn absent link-map symbol is additional evidence, not sufficient by itself.\n",
   "after_lines": 95733,
-  "after_sha256": "ab928b0f0c00fa30bbfb0dec8c7a011499eb4040e3f1f13f2b05e802afb09c65"
+  "after_sha256": "ab928b0f0c00fa30bbfb0dec8c7a011499eb4040e3f1f13f2b05e802afb09c65",
+  "link_map_sha256": "484dfd104d791705b905ee83fad235603505414d64cd544ff64f6cc13cb0566a",
+  "link_map_revision": "33e51d8f5e2144cf099d205c1d747853043c3883"
 }

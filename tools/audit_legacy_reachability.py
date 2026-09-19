@@ -95,6 +95,9 @@ def audit(link_map):
                 retained=len(live), candidate_names=len(dead),
                 candidate_lines=sum(d['lines'] for d in removed),
                 link_map=str(link_map) if link_map else None,
+                link_map_sha256=hashlib.sha256(link_map.read_bytes()).hexdigest() if link_map else None,
+                link_map_revision=(link_map.parent / 'source-commit.txt').read_text().strip()
+                    if link_map and (link_map.parent / 'source-commit.txt').exists() else None,
                 linked_candidates=sorted(dead & linked), scanned_files=files, candidates=removed,
                 root_policy=__doc__)
 
@@ -102,6 +105,11 @@ def audit(link_map):
 def apply_removal(result):
     if not result['link_map'] or result['linked_candidates']:
         raise ValueError('Removal requires a baseline link map and no linked candidates')
+    if result['link_map_revision'] != result['revision']:
+        raise ValueError('Build/commit mismatch: create a map from the current committed baseline')
+    if subprocess.run(['git', 'diff', '--quiet', result['revision'], '--',
+                       'src', 'include', 'CMakeLists.txt'], cwd=ROOT).returncode:
+        raise ValueError('Runtime source has uncommitted changes since the baseline build')
     if hashlib.sha256(MAIN.read_bytes()).hexdigest() != result['source_sha256']:
         raise ValueError('Source changed since audit')
     text = MAIN.read_text(encoding='utf-8')
