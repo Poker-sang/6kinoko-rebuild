@@ -54,7 +54,8 @@ add_library(kinoko_native_methods STATIC
 target_include_directories(kinoko_native_methods PUBLIC include)
 
 add_library(kinoko_audio_runtime STATIC src/reconstructed/audio_runtime.cpp)
-target_include_directories(kinoko_audio_runtime PUBLIC include PRIVATE src/decompiled)
+set(KINOKO_STB_VORBIS_DIR "${CMAKE_SOURCE_DIR}/third_party/stb_vorbis-1.22")
+target_include_directories(kinoko_audio_runtime PUBLIC include PRIVATE "${KINOKO_STB_VORBIS_DIR}")
 target_compile_definitions(kinoko_audio_runtime PRIVATE _CRT_SECURE_NO_WARNINGS
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_DEFINITIONS>)
 target_compile_options(kinoko_audio_runtime PRIVATE /Gy)
@@ -409,7 +410,7 @@ target_include_directories(kinoko_com_owner_contract PRIVATE include)
 add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
 
 add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
-target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
+target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled "${KINOKO_STB_VORBIS_DIR}")
 target_compile_definitions(kinoko_audio_runtime_contract PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_actor_collision ole32 dxguid winmm user32)
 add_test(NAME audio_runtime_contract COMMAND kinoko_audio_runtime_contract)
