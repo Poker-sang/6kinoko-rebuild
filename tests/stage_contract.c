@@ -4009,6 +4009,86 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_input_aggregation(void) {
+    int32_t cluster[50] = {0}, devices[3][42] = {{0}}, blocks[2][4] = {{0}}, map[2];
+    map[0]=PTR(blocks[0]); map[1]=PTR(blocks[1]);
+    cluster[43]=PTR(map); cluster[44]=2; cluster[45]=7; cluster[46]=3;
+    blocks[1][3]=PTR(devices[0]); blocks[0][0]=PTR(devices[1]); blocks[0][1]=PTR(devices[2]);
+    ((uint8_t*)devices[0])[4]=10; ((uint8_t*)devices[1])[4]=20; ((uint8_t*)devices[2])[4]=30;
+    devices[0][18]=-5; devices[1][18]=5; devices[2][18]=3;
+    devices[0][19]=2; devices[1][19]=-6;
+    devices[0][20]=9; devices[1][20]=9;
+    ((uint8_t*)devices[1])[130]=1; /* A held button must not inherit a release edge. */
+    ((uint8_t*)devices[0])[131]=1; /* Zero count does accumulate release edges. */
+    devices[2][31]=7; /* The twelfth button participates (not only ten buttons). */
+    ((float*)devices[0])[36]=-0.75f; ((float*)devices[1])[36]=0.75f;
+    ((float*)devices[2])[41]=-0.9f;
+    cluster[48]=99;
+    CHECK(function_4077c0(PTR(cluster))==3);
+    CHECK(cluster[18]==-5 && cluster[19]==-6 && cluster[20]==9 && cluster[31]==7);
+    CHECK(((uint8_t*)cluster)[130]==0 && ((uint8_t*)cluster)[131]==1);
+    CHECK(((uint8_t*)cluster)[192]==30);
+    CHECK(((float*)cluster)[36]==-0.75f && ((float*)cluster)[41]==-0.9f);
+    cluster[46]=0;
+    CHECK(function_4077c0(PTR(cluster))==PTR(cluster)+72);
+    for(int i=18;i<42;++i) CHECK(cluster[i]==0);
+    CHECK(((uint8_t*)cluster)[192]==30); /* Last device survives an empty frame. */
+    puts("PASS: original InputCluster deque wrap, signed axes, 12 buttons, release edges and device precedence");
+    return 0;
+}
+
+static int test_table_serialization(int32_t vm, int32_t *root) {
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL,path,MAX_PATH);
+    char *filename=strrchr(path,'\\'); CHECK(filename!=NULL);
+    sprintf_s(filename+1,MAX_PATH-(filename+1-path),"table-contract-%lu.dat",GetCurrentProcessId());
+    CHECK(execute_source(vm,root+2,
+        "serializationSource <- {n=123,f=1.25,b=true,s=\"abc\",empty=null,"
+        "nested={value=-9},a=[4,null,false,\"tail\"]}; serializationTarget <- {};"));
+    int32_t source[3], target[3], owned[3];
+    function_4aa3a0_this(PTR(root+1),PTR(source),"serializationSource");
+    CHECK(retdec_squirrel_object_copy(owned,source));
+    CHECK(function_472e50(PTR(path),owned[0],owned[1],owned[2]));
+    function_4aa3a0_this(PTR(root+1),PTR(target),"serializationTarget");
+    CHECK(retdec_squirrel_object_copy(owned,target));
+    CHECK(function_472c90(PTR(path),owned[0],owned[1],owned[2]));
+    CHECK(execute_source(vm,root+2,
+        "if(serializationTarget.n!=123 || serializationTarget.f!=1.25 || !serializationTarget.b || "
+        "serializationTarget.s!=\"abc\" || serializationTarget.nested.value!=-9 || "
+        "serializationTarget.a.len()!=4 || serializationTarget.a[0]!=4 || "
+        "serializationTarget.a[1]!=null || serializationTarget.a[2]!=false || "
+        "serializationTarget.a[3]!=\"tail\" || (\"empty\" in serializationTarget)) throw \"save format\";"));
+    function_4a9d70_this(PTR(target)); function_4a9d70_this(PTR(source));
+    puts("PASS: original compressed table format nested arrays/tables/scalars and skipped null values");
+    return 0;
+}
+
+static int test_camera_map_bindings(int32_t vm, int32_t *root) {
+    const int top=sq_gettop(kinoko_vm(vm));
+    int32_t camera[128]={0}, map[32]={0};
+    function_4669d0(); function_46fac0();
+    const char *names[]={"Camera","Map"}, *slots[]={"moduleCamera","moduleMap"};
+    int32_t pointers[]={PTR(camera),PTR(map)};
+    for(int i=0;i<2;++i) {
+        sq_pushroottable(kinoko_vm(vm)); sq_pushstring(kinoko_vm(vm),slots[i],-1);
+        CHECK(function_4ab170(vm,PTR(names[i]),pointers[i],0));
+        CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm),-3,SQFalse)));
+        sq_settop(kinoko_vm(vm),top);
+    }
+    CHECK(execute_source(vm,root+2,
+        "moduleCamera.x=12.5; moduleCamera.offset_y=-3.0; moduleCamera.right=640.0;"
+        "moduleMap.width=321; moduleMap.last_id=27; moduleMap.last_bottom=123.5;"
+        "moduleCamera.SetUpdateFunction(function(){});"));
+    CHECK(((float*)camera)[10]==12.5f && ((float*)camera)[15]==-3.0f && ((float*)camera)[20]==640.0f);
+    CHECK(map[19]==321 && map[14]==27 && ((float*)map)[18]==123.5f);
+    CHECK(camera[8]==0x08000100); /* Callback is retained through the real native receiver. */
+    function_4a9d70_this(PTR(camera+7)); function_4a9d70_this(PTR(camera+4));
+    CHECK(execute_source(vm,root+2,"delete moduleCamera; delete moduleMap;"));
+    CHECK(sq_gettop(kinoko_vm(vm))==top);
+    puts("PASS: Camera/Map native fields and Camera SetUpdateFunction receiver ownership");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -4059,6 +4139,9 @@ int main(int argc, char **argv) {
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     CHECK(test_script_registrations(vm, root) == 0);
+    CHECK(test_input_aggregation() == 0);
+    CHECK(test_table_serialization(vm, root) == 0);
+    CHECK(test_camera_map_bindings(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
         return test_act_reentry(argv[2]);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)

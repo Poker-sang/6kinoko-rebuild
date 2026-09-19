@@ -37,6 +37,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
     src/reconstructed/act_clone.cpp
     src/reconstructed/actor_methods.cpp
+    src/reconstructed/input_aggregation.cpp
+    src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
@@ -196,6 +198,8 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/actor_registration.cpp
     src/squirrel/input_registration.cpp
     src/squirrel/global_registration.cpp
+    src/squirrel/table_serialization.cpp
+    src/squirrel/camera_map_binding.cpp
     src/squirrel/squirrel_native_variables.cpp
     src/squirrel/squirrel_method_dispatch.cpp
     src/reconstructed/squirrel_object.cpp

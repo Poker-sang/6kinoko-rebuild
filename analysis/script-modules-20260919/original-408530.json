@@ -1,0 +1,1 @@
+{"addr":"0x408530","code":"_DWORD *__thiscall sub_408530(int *this, _DWORD *a2)\n{\n  int v2; // edx\n  int v4; // ecx\n\n  v2 = *(this + 3); /*0x408533*/\n  v4 = *this; /*0x408539*/\n  a2[1] = 0; /*0x40853b*/\n  *a2 = v4; /*0x408542*/\n  a2[2] = v2; /*0x408544*/\n  return a2; /*0x408547*/\n}"}
