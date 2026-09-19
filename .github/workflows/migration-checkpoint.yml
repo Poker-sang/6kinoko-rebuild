@@ -1,0 +1,41 @@
+name: Migration checkpoint
+on:
+  push:
+    branches: [refactor/no-inline-asm-cpp-20260919]
+    paths:
+      - .github/workflows/migration-checkpoint.yml
+      - tools/migration-checkpoint.py
+permissions:
+  contents: write
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: refactor/no-inline-asm-cpp-20260919
+      - name: Apply reviewed migration batch
+        run: |
+          if test -f tools/migration-checkpoint.py; then
+            python3 tools/migration-checkpoint.py
+            git config user.name 'Poker-sang'
+            git config user.email '62325494+Poker-sang@users.noreply.github.com'
+            git add -A
+            if ! git diff --cached --quiet; then
+              git commit -m 'refactor: apply reviewed C++ migration checkpoint'
+              git push origin HEAD:refactor/no-inline-asm-cpp-20260919
+            fi
+          fi
+      - name: Export exact source checkpoint
+        run: |
+          git rev-parse HEAD > source-commit.txt
+          git bundle create /tmp/migration-source.bundle HEAD refs/remotes/origin/master
+          cp /tmp/migration-source.bundle .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-source-${{ github.run_number }}
+          path: |
+            migration-source.bundle
+            source-commit.txt
+          retention-days: 30
