@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.hpp"
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "sqpcheader.h"
 #include "sqvm.h"
@@ -119,8 +120,7 @@ extern "C" int32_t retdec_get_var_value(int32_t* context, int32_t metadata, int3
         if (!source) return -1;
         // This is the original 24-byte MSVC string record, NOT std::string
         // from the current toolchain. Preserve its inline/heap discriminator.
-        sq_pushstring(vm, pointer<const char>(load<uint32_t>(add_address(source, 20)) >= 16 ?
-            load<int32_t>(source) : source), -1);
+        sq_pushstring(vm, kinoko::legacy::StringView(pointer<void>(source)).data(), -1);
         return 1;
     default: return -1;
     }

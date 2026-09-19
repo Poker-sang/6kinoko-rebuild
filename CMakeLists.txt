@@ -61,6 +61,12 @@ target_compile_definitions(kinoko_audio_runtime PRIVATE _CRT_SECURE_NO_WARNINGS
 target_compile_options(kinoko_audio_runtime PRIVATE /Gy)
 target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_actor_collision ole32 dxguid winmm user32)
 
+add_library(kinoko_legacy_string STATIC
+    src/reconstructed/legacy_string.cpp
+    src/platform/legacy_string_scan.cpp)
+target_include_directories(kinoko_legacy_string PUBLIC include)
+target_compile_options(kinoko_legacy_string PRIVATE /Gy)
+
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
     src/reconstructed/legacy_method_entries.cpp
@@ -249,6 +255,7 @@ if(MSVC)
         /permissive /Gy /wd4100 /wd4244 /wd4267 /wd4706
     )
 endif()
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_legacy_string)
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
 target_compile_options(kinoko_retdec_rebuild PRIVATE
     $<$<COMPILE_LANGUAGE:C>:/TC>
@@ -429,6 +436,12 @@ add_executable(kinoko_legacy_method_entries_contract tests/legacy_method_entries
 target_link_libraries(kinoko_legacy_method_entries_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_method_entries_contract COMMAND kinoko_legacy_method_entries_contract)
 
+add_executable(kinoko_legacy_string_contract tests/legacy_string_contract.cpp)
+target_link_libraries(kinoko_legacy_string_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_legacy_string_contract PRIVATE /Od /RTC1)
+add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
+set_tests_properties(legacy_string_contract PROPERTIES TIMEOUT 60)
+
 add_executable(kinoko_retdec_memory_contract tests/retdec_memory_contract.cpp)
 target_link_libraries(kinoko_retdec_memory_contract PRIVATE kinoko_retdec_support)
 add_test(NAME retdec_memory_contract COMMAND kinoko_retdec_memory_contract)
@@ -535,6 +548,7 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_legacy_string_contract
     kinoko_act_frame_contract
     kinoko_native_record_view_contract
     kinoko_actor_records_contract

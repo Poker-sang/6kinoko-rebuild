@@ -1,4 +1,5 @@
 #pragma once
+#include "kinoko/legacy_string.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -7,7 +8,6 @@ extern "C" {
 
 /* Recovered host entry points. Values crossing this C ABI keep their Win32
    bit patterns; implementation uses the vendored Squirrel 2.2.2 source. */
-const char *retdec_std_string_data(int32_t string_ptr);
 int32_t retdec_cact_layer_property_offset(int32_t vm,
     int32_t *offset);
 int32_t retdec_cact_layer_get_int(int32_t vm);

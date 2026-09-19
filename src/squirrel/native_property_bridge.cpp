@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 #include "kinoko/native_property_bridge.h"
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_source_runtime.h"
@@ -6,9 +7,6 @@
 
 extern "C" {
 void retdec_trace_i32(const char*, int32_t);
-// The game's 24-byte MSVC string is NOT the current compiler's std::string.
-// Retain its recovered allocator/copy implementation at this narrow boundary.
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ(int32_t*, int32_t*);
 }
 
 namespace {
@@ -85,17 +83,10 @@ template<class T> int32_t set_number(int32_t id, bool trace, bool indirect = fal
     return 0;
 }
 void assign_string(void* field, const char* value) {
-    retdec_msvc_0_Init_locks_std__QAE_XZ(static_cast<int32_t*>(field),
-        reinterpret_cast<int32_t*>(const_cast<char*>(value)));
+    retdec_string_assign_cstr(static_cast<int32_t*>(field), value);
 }
 }
 
-extern "C" const char* retdec_std_string_data(int32_t storage) {
-    if (!storage) return nullptr;
-    auto bytes = pointer<unsigned char>(storage);
-    return read<uint32_t>(bytes + 20) >= 16 ? read<const char*>(bytes)
-                                           : reinterpret_cast<const char*>(bytes);
-}
 extern "C" int32_t retdec_cact_layer_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, true); }
 extern "C" int32_t retdec_c2dlayout_property_offset(int32_t id, int32_t* offset) { return descriptor(id, offset, false); }
 extern "C" int32_t retdec_cact_layer_get_int(int32_t id) { return get_number<SQInteger>(id, true); }

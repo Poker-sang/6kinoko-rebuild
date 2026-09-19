@@ -1,4 +1,5 @@
 #pragma once
+#include "kinoko/legacy_string.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -87,11 +88,6 @@ int32_t retdec_reader_read_exact(int32_t reader_ptr, void *buffer,
 int32_t retdec_reader_seek_relative(int32_t reader_ptr,
                                             uint32_t offset);
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
-int32_t retdec_string_assign_cstr(int32_t *this_ptr,
-                                         const char *source);
-int32_t retdec_string_assign_n(int32_t *this_ptr,
-                                      const char *source,
-                                      uint32_t size);
 __declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value);
 void retdec_trace_ref_watch(const char *label, int32_t shared_state,

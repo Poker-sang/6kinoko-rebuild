@@ -1,4 +1,5 @@
 #pragma once
+#include "kinoko/legacy_string.h"
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
@@ -20,8 +21,6 @@ int32_t function_407370(int32_t slot_address, const char* path);
 int32_t function_407300(int32_t reader);
 int32_t retdec_reader_read_exact(int32_t reader, void* buffer, uint32_t size);
 void retdec_destroy_reader(int32_t* reader);
-uint32_t retdec_safe_c_string_length(const char* source);
-int32_t retdec_string_assign_n(int32_t* object, const char* source, uint32_t size);
 void retdec_trace(const char* message);
 void retdec_trace_i32(const char* label, int32_t value);
 void retdec_trace_hresult(const char* label, long value);

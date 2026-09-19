@@ -1,26 +1,16 @@
 #include "kinoko/sqrat_object_bridge.h"
 #include "kinoko/native_property_bridge.h"
+#include "kinoko/legacy_string.hpp"
 #include "squirrel_bridge_test_support.hpp"
 #include <limits>
 
-namespace {
-int string_assignments = 0;
-void* assigned_target = nullptr;
-std::string assigned_text;
-}
 extern "C" {
 char g560 = 0;
 int32_t kinoko_sqrat_object_vtable(void) { return 0x12121212; }
 int32_t kinoko_sqrat_root_vtable(void) { return 0x34343434; }
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
-// Observe the host string-allocator ABI without pretending this fixture is
-// the recovered MSVC allocator. All VM conversions/closures are real source.
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ(int32_t* target, int32_t* text) {
-    ++string_assignments; assigned_target = target;
-    assigned_text = reinterpret_cast<const char*>(text);
-    return bridge_test::address(target);
-}
+
 }
 namespace {
 using namespace bridge_test;
@@ -139,18 +129,37 @@ void player_and_strings(HSQUIRRELVM vm) {
     const char* heap = "long legacy heap string";
     store(name, heap); store<uint32_t>(name + 16, static_cast<uint32_t>(std::strlen(heap))); store<uint32_t>(name + 20, 31);
     require(f.get_string("name_get") == heap, "legacy heap string field");
-    const auto before = string_assignments;
+    // The borrowed heap string above is a getter fixture, not writable owned
+    // storage. Reset to an initialized inline record before real assignments.
+    std::memset(name, 0, 24); store<uint32_t>(name + 20, 15);
     f.set_string("name_set", "new value");
-    require(string_assignments == before + 1 && assigned_target == name && assigned_text == "new value", "player string assignment uses original host ABI");
-    f.set_int("name_set", 5); require(string_assignments == before + 1, "string setter rejects wrong type");
+    require(f.get_string("name_get") == "new value", "player string uses real native storage");
+    const std::string long_name(180, 'p');
+    f.set_string("name_set", long_name.c_str());
+    require(f.get_string("name_get") == long_name, "player inline to heap assignment");
+    const auto owned_name = kinoko::legacy::StringView(name);
+    const auto allocation = owned_name.data();
+    f.set_string("name_set", "short");
+    require(f.get_string("name_get") == "short" && owned_name.data() == allocation,
+        "short assignment retains the original heap allocation");
+    f.set_int("name_set", 5);
+    require(f.get_string("name_get") == "short", "string setter rejects wrong type");
+    owned_name.reserve(0, true);
     f.bind("layer_name_get", 177, retdec_cact_layer_get_string); f.bind("layer_name_set", 177, retdec_cact_layer_set_string);
-    std::memcpy(f.object() + 177, "layer", 6); store<uint32_t>(f.object() + 197, 15);
+    std::memcpy(f.object() + 177, "layer", 6);
+    store<uint32_t>(f.object() + 193, 5); store<uint32_t>(f.object() + 197, 15);
     require(f.get_string("layer_name_get") == "layer", "layer string inline layout");
     f.set_string("layer_name_set", "updated");
-    require(assigned_target == f.object() + 177 && assigned_text == "updated", "layer string assignment host ABI");
+    require(f.get_string("layer_name_get") == "updated", "layer string real assignment");
+    f.set_string("layer_name_set", long_name.c_str());
+    require(f.get_string("layer_name_get") == long_name, "unaligned layer heap assignment");
+    f.set_string("layer_name_set", "");
+    require(f.get_string("layer_name_get").empty(), "layer empty assignment");
+    kinoko::legacy::StringView(f.object() + 177).reserve(0, true);
     store<void*>(f.object() + 177, nullptr); store<uint32_t>(f.object() + 197, 31);
     require(f.get_string("layer_name_get").empty(), "layer null heap pointer becomes empty text");
-    store<void*>(name, nullptr); require(retdec_std_string_data(address(name)) == nullptr, "string view does not invent heap buffer");
+    store<void*>(name, nullptr); store<uint32_t>(name + 20, 31);
+    require(retdec_std_string_data(address(name)) == nullptr, "string view does not invent heap buffer");
     require(retdec_std_string_data(0) == nullptr, "null legacy string view");
     f.require_canaries(); top(vm, base, "player/string stack");
 }
