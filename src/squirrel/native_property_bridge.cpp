@@ -1,5 +1,6 @@
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_property_bridge.h"
+#include "kinoko/native_property_callbacks.h"
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_source_runtime.h"
 #include <algorithm>
@@ -82,6 +83,26 @@ template<class T> int32_t set_number(int32_t id, bool trace, bool indirect = fal
     field.value(value);
     return 0;
 }
+int32_t get_bool(int32_t id, bool trace) {
+    NativeField field(id, trace);
+    if (!field.storage()) return 0;
+    sq_pushbool(field.vm(), field.value<uint8_t>() != 0); return 1;
+}
+int32_t set_bool(int32_t id, bool trace) {
+    NativeField field(id, trace, false, true);
+    if (!field.storage()) return 0;
+    SQBool value; sq_tobool(field.vm(), 2, &value);
+    field.value<uint8_t>(value != 0);
+    if (trace && (field.offset() == 0x8c || field.offset() == 0x8d)) {
+        static std::atomic<unsigned> count{0};
+        if (count.fetch_add(1, std::memory_order_relaxed) < 128) {
+            retdec_trace_i32("cact:set-bool-target", field.target());
+            retdec_trace_i32("cact:set-bool-offset", field.offset());
+            retdec_trace_i32("cact:set-bool-value", value != 0);
+        }
+    }
+    return 0;
+}
 void assign_string(void* field, const char* value) {
     retdec_string_assign_cstr(static_cast<int32_t*>(field), value);
 }
@@ -101,26 +122,8 @@ extern "C" int32_t retdec_c2dlayout_get_int(int32_t id) { return get_number<SQIn
 extern "C" int32_t retdec_c2dlayout_set_int(int32_t id) { return set_number<SQInteger>(id, false); }
 extern "C" int32_t retdec_c2dlayout_get_float(int32_t id) { return get_number<SQFloat>(id, false); }
 extern "C" int32_t retdec_c2dlayout_set_float(int32_t id) { return set_number<SQFloat>(id, false); }
-extern "C" int32_t retdec_cact_layer_get_bool(int32_t id) {
-    NativeField field(id, true);
-    if (!field.storage()) return 0;
-    sq_pushbool(field.vm(), field.value<uint8_t>() != 0); return 1;
-}
-extern "C" int32_t retdec_cact_layer_set_bool(int32_t id) {
-    NativeField field(id, true, false, true);
-    if (!field.storage()) return 0;
-    SQBool value; sq_tobool(field.vm(), 2, &value);
-    field.value<uint8_t>(value != 0);
-    if (field.offset() == 0x8c || field.offset() == 0x8d) {
-        static std::atomic<unsigned> count{0};
-        if (count.fetch_add(1, std::memory_order_relaxed) < 128) {
-            retdec_trace_i32("cact:set-bool-target", field.target());
-            retdec_trace_i32("cact:set-bool-offset", field.offset());
-            retdec_trace_i32("cact:set-bool-value", value != 0);
-        }
-    }
-    return 0;
-}
+extern "C" int32_t retdec_cact_layer_get_bool(int32_t id) { return get_bool(id, true); }
+extern "C" int32_t retdec_cact_layer_set_bool(int32_t id) { return set_bool(id, true); }
 extern "C" int32_t retdec_cact_layer_get_string(int32_t id) {
     NativeField field(id, true);
     if (!field.storage()) return 0;
@@ -187,3 +190,20 @@ extern "C" int32_t retdec_native_view_set_short(int32_t id) {
     if (field.storage() && argument(field.vm(), value)) field.value(static_cast<uint16_t>(value));
     return 0;
 }
+
+// These entry points are assigned directly to SQFUNCTION. The older int32_t
+// host APIs above remain for generated C callers; there is no address lookup
+// table and no dependency on the original EXE image being mapped.
+extern "C" SQInteger kinoko_sqrat_get_int(HSQUIRRELVM vm) { return get_number<SQInteger>(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_set_int(HSQUIRRELVM vm) { return set_number<SQInteger>(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_get_float(HSQUIRRELVM vm) { return get_number<SQFloat>(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_set_float(HSQUIRRELVM vm) { return set_number<SQFloat>(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_get_bool(HSQUIRRELVM vm) { return get_bool(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_set_bool(HSQUIRRELVM vm) { return set_bool(address(vm), false); }
+extern "C" SQInteger kinoko_sqrat_get_short(HSQUIRRELVM vm) { return retdec_native_view_get_short(address(vm)); }
+extern "C" SQInteger kinoko_sqrat_set_short(HSQUIRRELVM vm) { return retdec_native_view_set_short(address(vm)); }
+extern "C" SQInteger kinoko_sqrat_get_pointer_int(HSQUIRRELVM vm) { return get_number<SQInteger>(address(vm), false, true); }
+extern "C" SQInteger kinoko_sqrat_set_pointer_int(HSQUIRRELVM vm) { return set_number<SQInteger>(address(vm), false, true); }
+extern "C" SQInteger kinoko_sqrat_get_pointer_float(HSQUIRRELVM vm) { return get_number<SQFloat>(address(vm), false, true); }
+extern "C" SQInteger kinoko_sqrat_set_pointer_float(HSQUIRRELVM vm) { return set_number<SQFloat>(address(vm), false, true); }
+extern "C" SQInteger kinoko_sqrat_noop(HSQUIRRELVM) { return 0; }
