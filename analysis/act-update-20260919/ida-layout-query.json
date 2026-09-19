@@ -1,0 +1,1 @@
+{"addr":"0x452020","code":"int __fastcall sub_452020(_DWORD *a1, int a2, int a3)\n{\n  int result; // eax\n\n  result = sub_452040(a1: a3, a2, a3: a1); /*0x452027*/\n  if ( result != 0 ) /*0x45202e*/\n    return *(_DWORD *)(result + 4); /*0x452034*/\n  return result; /*0x452030*/\n}","refs":[{"addr":"0x452040","name":"sub_452040"}]}

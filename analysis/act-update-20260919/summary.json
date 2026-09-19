@@ -1,0 +1,12 @@
+{
+  "baseline": "6432b44",
+  "source_commit": "12b96e70a645e2c7c3180c5fb621a4f26b56806a",
+  "main_c_before": 95605,
+  "main_c_after": 95426,
+  "main_c_definitions": 1340,
+  "new_files_lines": {
+    "src/reconstructed/act_layer_access.cpp": 111,
+    "include/kinoko/act_layer_access.h": 15,
+    "include/kinoko/act_layer_records.hpp": 25
+  }
+}
