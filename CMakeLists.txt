@@ -167,6 +167,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/act_binding.cpp
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
+    src/squirrel/squirrel_vm_bootstrap.cpp
     src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
     src/squirrel/squirrel_game_objects.cpp

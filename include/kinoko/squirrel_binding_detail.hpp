@@ -2,14 +2,11 @@
 
 #include "kinoko/squirrel_binding.h"
 #include "kinoko/squirrel_host_compat.h"
+#include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/squirrel_host_object.hpp"
 #include <array>
 
-extern "C" {
-extern char* g644;
-int32_t function_4a8cc0(void);
-int32_t function_4a8db0(int32_t vm);
-}
+extern "C" { extern char* g644; }
 
 namespace kinoko::script::binding {
 
