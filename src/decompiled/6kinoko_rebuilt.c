@@ -1,3 +1,4 @@
+#include "kinoko/act_layer_access.h"
 #include "kinoko/audio_runtime.h"
 #include "kinoko/audio_host.h"
 #include "kinoko/squirrel_api_types.h"
@@ -3110,8 +3111,6 @@ int32_t function_451b70(int32_t a1);
 int32_t function_451f30(int32_t a1);
 int32_t function_451f80(int32_t a1, int32_t a2);
 int32_t function_452010(int32_t a1);
-int32_t function_452020(int32_t this_ptr, int32_t index);
-int32_t function_452040(int32_t resource_ptr, int32_t index);
 int32_t function_452150(int32_t lpFileName);
 int32_t function_452220(void);
 int32_t function_452270(void);
@@ -3181,8 +3180,6 @@ int32_t function_455c40(int32_t a1, int32_t a2);
 int32_t function_455ce0(void);
 int32_t function_455d30(int32_t a1, int32_t a2);
 int32_t function_455dc0(void);
-static int32_t function_455dc0_this(int32_t holder_ptr, int32_t index,
-                                     int32_t output_ptr);
 int32_t function_455e40(int32_t this_ptr, int32_t result_ptr, int32_t flags);
 
 int32_t function_455ee0(int32_t a1, int32_t a2);
@@ -64641,7 +64638,7 @@ int32_t function_451640(int32_t this_ptr) {
                 *(int32_t *)(intptr_t)(this_ptr + 16) == 0)
                 continue;
 
-            function_455dc0_this(
+            kinoko_act_layer_holder(
                 *(int32_t *)(intptr_t)(this_ptr + 16), index,
                 (int32_t)(intptr_t)&temporary_holder);
             item_holder = temporary_holder;
@@ -65027,106 +65024,6 @@ int32_t function_452010(int32_t a1) {
     int32_t v1; // 0x452010
     *(int32_t *)(v1 + 76) = a1;
     return a1 & -256 | 1;
-}
-
-// Address range: 0x452020 - 0x45203b
-int32_t function_452020(int32_t this_ptr, int32_t index) {
-    // 0x452020: original wrapper preserves ECX=this and passes index.
-    int32_t result = function_452040(this_ptr, index); // 0x452027
-    if (result != 0) {
-        // 0x452034
-        return *(int32_t *)(result + 4);
-    }
-    // 0x452030
-    return result;
-}
-
-// Address range: 0x452040 - 0x452145
-/* The original is a __fastcall helper.  Its stack argument is the resource,
-   ECX is the layer index, and its result is the first live object in that
-   layer's list. */
-int32_t function_452040(int32_t resource_ptr, int32_t index) {
-    int32_t holder_ptr;
-    int32_t cact;
-    int32_t begin;
-    int32_t end;
-    int32_t count;
-    int32_t item_holder = 0;
-    int32_t item;
-    int32_t item_extra_count;
-    int32_t item_key_count;
-    int32_t value_holder = 0;
-    int32_t value;
-
-    retdec_trace_i32("452040:resource", resource_ptr);
-    retdec_trace_i32("452040:index", index);
-    if (resource_ptr == 0 || index < 0 ||
-        *(unsigned char *)(intptr_t)(resource_ptr + 8) == 0)
-        return 0;
-
-    holder_ptr = *(int32_t *)(intptr_t)(resource_ptr + 16);
-    if (holder_ptr == 0)
-        return 0;
-    cact = *(int32_t *)(intptr_t)holder_ptr;
-    if (cact == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(cact + 208);
-    end = *(int32_t *)(intptr_t)(cact + 212);
-    count = end - begin;
-    if (begin == 0 || end < begin || index >= count / 4)
-        return 0;
-
-    function_455dc0_this(holder_ptr, index,
-                         (int32_t)(intptr_t)&item_holder);
-    retdec_trace_i32("452040:item-holder", item_holder);
-    item = item_holder == 0 ? 0 :
-        *(int32_t *)(intptr_t)item_holder;
-    retdec_trace_i32("452040:item", item);
-    if (item == 0) {
-        retdec_trace("452040:free-item-holder-before");
-        _free((void *)(intptr_t)item_holder);
-        retdec_trace("452040:free-item-holder-after");
-        return 0;
-    }
-
-    item_extra_count = *(int32_t *)(intptr_t)(item + 196);
-    item_key_count = *(int32_t *)(intptr_t)(item + 184);
-    retdec_trace_i32("452040:item-extra-count", item_extra_count);
-    retdec_trace_i32("452040:item-key-count", item_key_count);
-    if (item_extra_count != 0 || item_key_count == 0) {
-        retdec_trace("452040:free-item-invalid-before");
-        _free((void *)(intptr_t)item_holder);
-        retdec_trace("452040:free-item-invalid-after");
-        return 0;
-    }
-
-    /* 455F50 receives the same temporary holder as 455DC0.  The
-       actual layer object remains owned by the CAct layer vector. */
-    function_455f50_this(item_holder, 0,
-                        (int32_t)(intptr_t)&value_holder);
-    retdec_trace_i32("452040:value-holder", value_holder);
-    value = value_holder == 0 ? 0 :
-        *(int32_t *)(intptr_t)value_holder;
-    retdec_trace_i32("452040:value", value);
-    if (value_holder != 0) {
-        retdec_trace("452040:free-value-holder-before");
-        _free((void *)(intptr_t)value_holder);
-        retdec_trace("452040:free-value-holder-after");
-    }
-    if (value == 0) {
-        retdec_trace("452040:free-item-holder-empty-before");
-        _free((void *)(intptr_t)item_holder);
-        retdec_trace("452040:free-item-holder-empty-after");
-        return 0;
-    }
-
-    /* The list node stores the object pointer directly.  The original
-       routine returns it and releases only the two temporary holders. */
-    retdec_trace_i32("452040:result", value);
-    retdec_trace("452040:free-item-holder-before");
-    _free((void *)(intptr_t)item_holder);
-    retdec_trace("452040:free-item-holder-after");
-    return value;
 }
 
 // Address range: 0x452150 - 0x452211
@@ -67627,82 +67524,6 @@ int32_t function_455dc0(void) {
     *(int32_t *)result = v2;
     _3f__3f_3_40_YAXPAX_40_Z(&g1224);
     return result;
-}
-
-/* Original 455DC0 usercall: EAX=one-word CAct holder, ECX=layer index,
-   EDI=temporary output pointer. */
-static int32_t function_455dc0_this(int32_t holder_ptr, int32_t index,
-                                     int32_t output_ptr)
-{
-    int32_t cact;
-    int32_t begin;
-    int32_t end;
-    int32_t item;
-
-    if (output_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)output_ptr = 0;
-    if (holder_ptr == 0 || index < 0)
-        return output_ptr;
-    cact = *(int32_t *)(intptr_t)holder_ptr;
-    if (cact == 0)
-        return output_ptr;
-    begin = *(int32_t *)(intptr_t)(cact + 208);
-    end = *(int32_t *)(intptr_t)(cact + 212);
-    if (begin == 0 || end < begin || index >= (end - begin) / 4)
-        return output_ptr;
-    item = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (item != 0) {
-        *(int32_t *)(intptr_t)item =
-            *(int32_t *)(intptr_t)(begin + index * 4);
-        *(int32_t *)(intptr_t)output_ptr = item;
-    }
-    return output_ptr;
-}
-
-/* Original 455F50 usercall: EAX=list index, ECX=list-object pointer,
-   EDI=temporary output pointer. */
-static int32_t function_455f50_this(int32_t list_holder, int32_t index,
-                                    int32_t output_ptr)
-{
-    int32_t list_object;
-    int32_t list_head;
-    int32_t node;
-    int32_t count;
-    int32_t value_holder;
-
-    if (output_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)output_ptr = 0;
-    if (list_holder == 0 || index < 0)
-        return output_ptr;
-
-    list_object = *(int32_t *)(intptr_t)list_holder;
-    if (list_object == 0)
-        return output_ptr;
-
-    count = *(int32_t *)(intptr_t)(list_object + 184);
-    if (index >= count)
-        return output_ptr;
-    list_head = *(int32_t *)(intptr_t)(list_object + 180);
-    if (list_head == 0)
-        return output_ptr;
-    node = *(int32_t *)(intptr_t)list_head;
-    if (node == 0)
-        return output_ptr;
-    while (index-- > 0) {
-        node = *(int32_t *)(intptr_t)node;
-        if (node == 0)
-            return output_ptr;
-    }
-
-    value_holder = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (value_holder != 0) {
-        *(int32_t *)(intptr_t)value_holder =
-            *(int32_t *)(intptr_t)(node + 8);
-        *(int32_t *)(intptr_t)output_ptr = value_holder;
-    }
-    return output_ptr;
 }
 
 // Address range: 0x455e40 - 0x455eb5

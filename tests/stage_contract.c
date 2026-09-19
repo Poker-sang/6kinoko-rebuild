@@ -2497,6 +2497,66 @@ static int test_actor_animation_sync(int32_t vm, int32_t *root,
     return 0;
 }
 
+static int test_act_layer_access(void) {
+    /* Deliberately independent raw ABI fixtures: no production schema offsets.
+       Stack-owned records must survive freeing each temporary heap wrapper. */
+    int32_t runtime[48] = {0}, document[60] = {0}, layer[50] = {0};
+    int32_t layout[2] = {123, 456}, key[2] = {7, PTR(layout)};
+    int32_t second_key[2] = {8, PTR(layout + 1)};
+    int32_t head[3] = {0}, first[3] = {0}, second[3] = {0};
+    int32_t layers[2] = {PTR(layer), 0}, document_holder = PTR(document);
+    int32_t layer_holder = PTR(layer), output = 99;
+    runtime[4] = PTR(&document_holder);
+    document[52] = PTR(layers);
+    document[53] = PTR(layers + 2);
+    layer[45] = PTR(head); layer[46] = 2;
+    head[0] = PTR(first); head[1] = PTR(second);
+    first[0] = PTR(second); first[1] = PTR(head); first[2] = PTR(key);
+    second[0] = PTR(head); second[1] = PTR(first); second[2] = PTR(second_key);
+    CHECK(function_452040(0, 0) == 0);
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* inactive */
+    *((unsigned char *)runtime + 8) = 1;
+    for (int i = 0; i < 1000; ++i) {
+        CHECK(function_452040(PTR(runtime), 0) == PTR(key));
+        CHECK(function_452020(PTR(runtime), 0) == PTR(layout));
+    }
+    CHECK(key[0] == 7 && layout[0] == 123 && first[2] == PTR(key));
+    CHECK(function_452040(PTR(runtime), -1) == 0);
+    CHECK(function_452040(PTR(runtime), 1) == 0); /* null layer */
+    CHECK(function_452040(PTR(runtime), 2) == 0); /* past end */
+    layer[49] = 1;
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* extra tracks */
+    layer[49] = 0; layer[46] = 0;
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* empty keys */
+    layer[46] = 2; first[2] = 0;
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* null first key */
+    first[2] = PTR(key);
+    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(output && *(int32_t *)(intptr_t)output == PTR(second_key));
+    free((void *)(intptr_t)output);
+    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 2, PTR(&output)) == PTR(&output));
+    CHECK(output == 0);
+    CHECK(kinoko_act_key_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(output == 0); /* reject index before touching invalid holder */
+    CHECK(kinoko_act_layer_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(output == 0);
+    CHECK(kinoko_act_layer_holder(PTR(&document_holder), 0, 0) == 0);
+    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 0, 0) == 0);
+    head[0] = 0;
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* missing node */
+    head[0] = PTR(first); first[0] = 0;
+    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(output == 0); /* broken chain guard retained */
+    document[53] = document[52] - 4;
+    CHECK(function_452040(PTR(runtime), 0) == 0); /* reversed vector */
+    document_holder = 0;
+    CHECK(function_452040(PTR(runtime), 0) == 0);
+    runtime[4] = 0;
+    CHECK(function_452040(PTR(runtime), 0) == 0);
+    puts("PASS: ACT layer/key query bounds, borrowed records and temporary holder ownership");
+    return 0;
+}
+
 static int test_act_resource_methods(void) {
     unsigned char resource[192] = {0};
     int32_t act[8] = {0}, holder = PTR(act);
@@ -3909,6 +3969,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--sound-module") == 0)
         return kinoko_test_sound_module();
     AddVectoredExceptionHandler(1, contract_exception);
+    CHECK(test_act_layer_access() == 0);
     CHECK(test_texture_lifetime() == 0);
     CHECK(test_map_camera_fpu() == 0);
     CHECK(test_sprite_geometry() == 0);

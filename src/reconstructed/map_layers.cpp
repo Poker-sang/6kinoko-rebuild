@@ -1,4 +1,5 @@
 #include "kinoko/map_render.h"
+#include "kinoko/act_layer_access.h"
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -6,7 +7,6 @@
 extern "C" {
 extern unsigned char g327, g37;
 int32_t function_455890(int32_t holder);
-int32_t function_452020(int32_t player, int32_t index);
 }
 
 namespace {
