@@ -90,28 +90,22 @@
       "last_present_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
       "first_absent_revision": "33e51d8f5e2144cf099d205c1d747853043c3883",
       "last_body_sha256": "f9df21df5dabe2df70fd57979b6f7287b672351655151d925824ef61d90b2f01",
-      "status": "identified_gap",
+      "status": "semantic_replacement",
       "evidence": "Original 40A8D0 assembly/decompilation and sole caller 470300, registered as PauseBgm.",
       "replacement": {
         "path": "src/reconstructed/audio_runtime.cpp",
         "symbol": "function_470300"
       },
-      "finding": "PauseBgm behavior differs: original GetStatus -> Stop when playing, Play(DSBPLAY_LOOPING) when stopped, without resetting position. Current path always Stop + SetCurrentPosition(0); no resume branch.",
       "source_evidence": [
         {
           "path": "src/reconstructed/audio_runtime.cpp",
-          "snippet": "(track->buffer.get())->SetCurrentPosition(0);"
-        },
-        {
-          "path": "src/reconstructed/audio_runtime.cpp",
-          "snippet": "retdec_bgm_stop_for_handle((uint32_t)g637);"
-        },
-        {
-          "path": "src/squirrel/global_registration.cpp",
-          "snippet": "{\"PauseBgm\", entry(function_470300), entry(function_471bc0)}"
+          "snippet": "retdec_bgm_toggle_pause((uint32_t)g637);"
         }
       ],
-      "investigation": "analysis/remaining-mapping-20260920"
+      "investigation": "analysis/remaining-mapping-20260920",
+      "historical_finding": "PauseBgm behavior differs: original GetStatus -> Stop when playing, Play(DSBPLAY_LOOPING) when stopped, without resetting position. Current path always Stop + SetCurrentPosition(0); no resume branch.",
+      "implementation_revision": "710e0de",
+      "validation": "docs/replacement-mapping-20260919/gap-fixes.md"
     },
     {
       "function": "function_40a950",
@@ -4741,16 +4735,26 @@
       "last_present_revision": "17ffd15e4f80ec0e3b0b446f3bc74a29e0289a83",
       "first_absent_revision": "6209e9029dab4d568a10456bc46411aefcf48b8d",
       "last_body_sha256": "c1bbd88399e94be5c2ca777bee94edd379a7bfd916874ab3a1fddac66151379e",
-      "status": "identified_gap",
+      "status": "semantic_replacement",
       "evidence": "Original 4A8D60 and 4D4B30; original 49C350 corresponds to source shared-state destructor, but that fact does not restore host ownership cleanup.",
-      "finding": "Host-owned shared-state chain teardown is not restored. Original exit hook 4D4B30 destroys g643 head and 4A8D60 recursively destroys remaining nodes/states. Current bootstrap only appends nodes to g643; no project teardown consumes that chain.",
       "source_evidence": [
         {
           "path": "src/squirrel/squirrel_vm_bootstrap.cpp",
-          "snippet": "*pointer<int32_t>(node + 4) = g643;\n            g643 = node;"
+          "snippet": "std::atexit(kinoko_sq_release_owned_states)"
+        },
+        {
+          "path": "src/squirrel/squirrel_source_runtime.cpp",
+          "snippet": "sq_delete(pointer<SQSharedState>(state), SQSharedState)"
         }
       ],
-      "investigation": "analysis/remaining-mapping-20260920"
+      "investigation": "analysis/remaining-mapping-20260920",
+      "historical_finding": "Host-owned shared-state chain teardown is not restored. Original exit hook 4D4B30 destroys g643 head and 4A8D60 recursively destroys remaining nodes/states. Current bootstrap only appends nodes to g643; no project teardown consumes that chain.",
+      "implementation_revision": "710e0de",
+      "validation": "docs/replacement-mapping-20260919/gap-fixes.md",
+      "replacement": {
+        "path": "src/squirrel/squirrel_vm_bootstrap.cpp",
+        "symbol": "kinoko_sq_release_owned_states"
+      }
     },
     {
       "function": "function_4a8ea0",

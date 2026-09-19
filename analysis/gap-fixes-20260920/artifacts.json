@@ -1,0 +1,18 @@
+[
+  {
+    "mode": "quiet",
+    "source_commit": "710e0de380dfc127d88fc70300a8602da8e10f34",
+    "executable": "runtime-builds/gaps-710e0de-quiet-20260920/kinoko_retdec_rebuild.exe",
+    "sha256": "c5637281a6957f9806472435e9ddd10f6ab40d32096b118bffb2a122fb30f63c",
+    "ctest": "47/47 passed",
+    "graphical_validation": "User reported successful test after quiet build launch"
+  },
+  {
+    "mode": "diag",
+    "source_commit": "710e0de380dfc127d88fc70300a8602da8e10f34",
+    "executable": "runtime-builds/gaps-710e0de-diag-20260920/kinoko_retdec_rebuild.exe",
+    "sha256": "8b5a01aca729129708c4d9e22556e7edb188cd43a97133844e05529996a3ec33",
+    "ctest": "47/47 passed",
+    "graphical_validation": "Not run"
+  }
+]
