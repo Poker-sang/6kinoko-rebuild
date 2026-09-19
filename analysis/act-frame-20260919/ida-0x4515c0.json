@@ -1,0 +1,1 @@
+{"addr":"0x4515c0","code":"int __thiscall sub_4515C0(_DWORD **this)\n{\n  int v2; // ecx\n\n  v2 = (int)*(this + 3); /*0x4515c3*/\n  *((_BYTE *)this + 104) = 1; /*0x4515c6*/\n  if ( v2 != 0 ) /*0x4515cc*/\n    (*(void (__thiscall **)(int))(*(_DWORD *)v2 + 28))(a1: v2); /*0x4515d3*/\n  return (*(int (__thiscall **)(_DWORD))(*(_DWORD *)**this + 28))(a1: **this);\n}"}
