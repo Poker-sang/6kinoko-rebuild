@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -47,12 +48,12 @@ int32_t retdec_construct_cact_script(int32_t this_ptr)
         return 0;
 
     field<int32_t>(this_ptr) = address(kinoko_act_host_symbols()->script_vtable);
-    function_48abe0(this_ptr + 8);
-    function_48abe0(this_ptr + 16);
-    function_48abe0(this_ptr + 28);
-    function_48abe0(this_ptr + 36);
-    function_48abe0(this_ptr + 48);
-    function_48abe0(this_ptr + 56);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 8));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 16));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 28));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 36));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 48));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 56));
     field<int32_t>(this_ptr + 80) = 0;
     field<int32_t>(this_ptr + 84) = 15;
     field<unsigned char>(this_ptr + 64) = 0;
@@ -81,8 +82,8 @@ void retdec_destroy_cact_script(int32_t script_ptr)
             function_48a430(vm, script_ptr + 48);
             function_48a430(vm, script_ptr + 56);
         }
-        function_48abe0(script_ptr + 48);
-        function_48abe0(script_ptr + 56);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 48));
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 56));
     }
     if (field<int32_t>(script_ptr + 36) != g483) {
         vm = field<int32_t>(script_ptr + 24);
@@ -90,8 +91,8 @@ void retdec_destroy_cact_script(int32_t script_ptr)
             function_48a430(vm, script_ptr + 28);
             function_48a430(vm, script_ptr + 36);
         }
-        function_48abe0(script_ptr + 28);
-        function_48abe0(script_ptr + 36);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 28));
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 36));
     }
     if (field<int32_t>(script_ptr + 16) != g483) {
         vm = field<int32_t>(script_ptr + 4);
@@ -99,8 +100,8 @@ void retdec_destroy_cact_script(int32_t script_ptr)
             function_48a430(vm, script_ptr + 8);
             function_48a430(vm, script_ptr + 16);
         }
-        function_48abe0(script_ptr + 8);
-        function_48abe0(script_ptr + 16);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 8));
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 16));
     }
 
     std::free(pointer<void>(field<int32_t>(script_ptr + 92)));
@@ -162,14 +163,14 @@ void retdec_destroy_cact_layer(int32_t layer)
         int32_t vm = field<int32_t>(layer + 332);
         if (vm != 0)
             function_48a430(vm, layer + 336);
-        function_48abe0(layer + 336);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 336));
         field<unsigned char>(layer + 344) = 0;
     }
     if (field<unsigned char>(layer + 324) != 0) {
         int32_t vm = field<int32_t>(layer + 312);
         if (vm != 0)
             function_48a430(vm, layer + 316);
-        function_48abe0(layer + 316);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 316));
         field<unsigned char>(layer + 324) = 0;
     }
     retdec_destroy_cact_script(layer + 204);

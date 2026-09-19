@@ -104,6 +104,10 @@ set(KINOKO_SQUIRREL2_ROOT
     "${CMAKE_SOURCE_DIR}/third_party/squirrel-2.2.2"
     CACHE PATH
     "Squirrel 2.2.2 source root for compilation and verified C++ runtime helpers")
+# Generated C callers use the public API; only representation conversions
+# remain in squirrel_api_types.h. Do not expose private VM layouts to C.
+target_include_directories(kinoko_retdec_rebuild PRIVATE "${KINOKO_SQUIRREL2_ROOT}/include")
+target_include_directories(kinoko_native_methods PRIVATE "${KINOKO_SQUIRREL2_ROOT}/include")
 option(KINOKO_RETDEC_DISABLE_TRACE
     "Default to quiet output; KINOKO_TRACE=1 enables tracing without a rebuild"
     ON)
@@ -355,6 +359,15 @@ target_link_options(kinoko_squirrel_source_vm_contract PRIVATE /OPT:REF /OPT:ICF
 add_test(NAME squirrel_source_vm_contract COMMAND kinoko_squirrel_source_vm_contract)
 set_tests_properties(squirrel_source_vm_contract PROPERTIES TIMEOUT 60)
 
+add_executable(kinoko_squirrel_c_api_contract
+    tests/squirrel_c_api_contract.c tests/squirrel_c_api_driver.cpp)
+target_include_directories(kinoko_squirrel_c_api_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include")
+target_link_libraries(kinoko_squirrel_c_api_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_link_options(kinoko_squirrel_c_api_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME squirrel_c_api_contract COMMAND kinoko_squirrel_c_api_contract)
+set_tests_properties(squirrel_c_api_contract PROPERTIES TIMEOUT 60)
+
 add_executable(kinoko_legacy_method_entries_contract tests/legacy_method_entries_contract.cpp)
 target_link_libraries(kinoko_legacy_method_entries_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_method_entries_contract COMMAND kinoko_legacy_method_entries_contract)
@@ -465,6 +478,7 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
     kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract
     kinoko_legacy_frame_entry_checked_contract kinoko_legacy_frame_entry_optimized_contract

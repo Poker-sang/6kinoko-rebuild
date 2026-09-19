@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -317,12 +318,12 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
     if (existing_result)
         retdec_sqrat_release_pair(vm, existing);
 
-    base = function_48aa20(vm);
-    if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
+    base = sq_gettop(kinoko_vm(vm));
+    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    function_48ab40(vm, -1, class_pair);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
     function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
@@ -354,8 +355,8 @@ int32_t retdec_cact_associate_resource(int32_t vm)
 {
     int32_t layer = 0, resource = 0;
     int32_t result = (int32_t)E_FAIL;
-    if (function_48c890(vm, 1, &layer, 0) >= 0 && layer != 0 &&
-        function_48c890(vm, 2, &resource, 0) >= 0 && resource != 0) {
+    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layer), kinoko_pointer(0)) >= 0 && layer != 0 &&
+        sq_getinstanceup(kinoko_vm(vm), 2, (SQUserPointer*)(&resource), kinoko_pointer(0)) >= 0 && resource != 0) {
         /* 424210 -> 4252E0 -> 41EF20: change only the resource and its ID. */
         field<int32_t>(layer + 100) = resource;
         field<int32_t>(layer + 96) = field<int32_t>(resource + 4);
@@ -365,7 +366,7 @@ int32_t retdec_cact_associate_resource(int32_t vm)
             address(retdec_std_string_data(resource + 8)));
         result = 0;
     }
-    function_48a4f0(vm, result);
+    sq_pushinteger(kinoko_vm(vm), result);
     return 1;
 }
 
@@ -401,12 +402,12 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm,
     if (existing_result)
         retdec_sqrat_release_pair(vm, existing);
 
-    base = function_48aa20(vm);
-    if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
+    base = sq_gettop(kinoko_vm(vm));
+    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    function_48ab40(vm, -1, class_pair);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
     function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
@@ -475,12 +476,12 @@ int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
             return 1;
     }
 
-    base = function_48aa20(vm);
-    if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base) {
+    base = sq_gettop(kinoko_vm(vm));
+    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    function_48ab40(vm, -1, class_pair);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
     function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
@@ -575,10 +576,10 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
             return 1;
     }
 
-    base = function_48aa20(vm);
-    if (function_48c350(vm, 0) != 0 || function_48aa20(vm) <= base)
+    base = sq_gettop(kinoko_vm(vm));
+    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base)
         return 0;
-    function_48ab40(vm, -1, class_pair);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
     function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
@@ -692,16 +693,16 @@ int32_t retdec_publish_acting_player(int32_t vm,
     retdec_trace_i32("act:acting-class-data", g1050);
     out_pair[0] = g483;
     out_pair[1] = g484;
-    base = function_48aa20(vm);
-    function_48ab90(vm, act_pair[0], act_pair[1]);
-    function_48a480(vm, address(name), -1);
-    function_48ab90(vm, g1049, g1050);
-    if (function_48b490(vm, -1) < 0) {
+    base = sq_gettop(kinoko_vm(vm));
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(act_pair[0], act_pair[1]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer(address(name)), -1);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(g1049, g1050));
+    if (sq_createinstance(kinoko_vm(vm), -1) < 0) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    function_48aa60(vm, -2);
-    instance_slot = function_491880_this(vm, -1);
+    sq_remove(kinoko_vm(vm), -2);
+    instance_slot = kinoko_sq_get_up(vm, -1);
     retdec_trace_i32("act:acting-instance-slot", instance_slot);
     retdec_trace_i32("act:acting-instance-type",
                      instance_slot != 0 ? field<int32_t>(instance_slot) : 0);
@@ -716,7 +717,7 @@ int32_t retdec_publish_acting_player(int32_t vm,
         retdec_trace_i32("act:acting-instance-user-before",
                          field<int32_t>(instance + 32));
     }
-    if (function_48c840(vm, -1, player_ptr) < 0) {
+    if (sq_setinstanceup(kinoko_vm(vm), -1, kinoko_pointer(player_ptr)) < 0) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
@@ -729,9 +730,9 @@ int32_t retdec_publish_acting_player(int32_t vm,
         retdec_trace_i32("act:acting-instance-user-after",
                          field<int32_t>(instance + 32));
     }
-    function_48ab40(vm, -1, out_pair);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(out_pair));
     function_48a400(vm, address(out_pair));
-    result = function_48c950(vm, -3, 0);
+    result = sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
     if (std::strcmp(name, "pl") == 0 || std::strcmp(name, "player") == 0) {
         retdec_trace_squirrel_name("act:acting-read-name",
                                    address(name));
@@ -858,7 +859,7 @@ int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     field<int32_t>(layer + 308) = address(kinoko_act_host_symbols()->layer_ref_vtable);
     field<int32_t>(layer + 312) = vm;
     field<uint8_t>(layer + 324) = 1;
-    function_48abe0(layer + 316);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 316));
     if (!retdec_sqrat_new_table(vm, table_pair))
         return 0;
     field<int32_t>(layer + 316) = table_pair[0];
@@ -877,7 +878,7 @@ int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     field<int32_t>(layer + 328) = address(kinoko_act_host_symbols()->layer_layout_vtable);
     field<int32_t>(layer + 332) = vm;
     field<uint8_t>(layer + 344) = 1;
-    function_48abe0(layer + 336);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 336));
     return 1;
 }
 
@@ -894,9 +895,9 @@ void retdec_publish_c2dlayout_values(
 
 int32_t retdec_map_chip_count(int32_t vm) {
     int32_t layout = 0;
-    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0)
+    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0)
         return 0;
-    function_48a4f0(vm, (field<int32_t>(layout + 268) -
+    sq_pushinteger(kinoko_vm(vm), (field<int32_t>(layout + 268) -
                          field<int32_t>(layout + 264)) / 32);
     return 1;
 }
@@ -909,22 +910,22 @@ int32_t retdec_map_get_chip_layout(int32_t vm) {
     int32_t root[5];
     int32_t chip_class[2] = { g483, g484 };
     int32_t instance[2] = { g483, g484 };
-    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0 ||
-        function_48a7d0(vm, 2, &index) < 0)
+    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
+        sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&index)) < 0)
         return 0;
     begin = field<int32_t>(layout + 264);
     count = (field<int32_t>(layout + 268) - begin) / 32;
     if (index < 0 || index >= count) {
-        function_48a460(vm);
+        sq_pushnull(kinoko_vm(vm));
         return 1;
     }
     if (!retdec_sqrat_root_construct(address(root), vm))
         return 0;
     if (get_pair(address(root), "ChipLayout", chip_class) &&
         retdec_create_unbound_instance(vm, chip_class, begin + 32 * index, instance))
-        function_48ab90(vm, instance[0], instance[1]);
+        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(instance[0], instance[1]));
     else
-        function_48a460(vm);
+        sq_pushnull(kinoko_vm(vm));
     retdec_sqrat_release_pair(vm, instance);
     retdec_sqrat_release_pair(vm, chip_class);
     retdec_sqrat_object_release(address(root));
@@ -933,8 +934,8 @@ int32_t retdec_map_get_chip_layout(int32_t vm) {
 
 int32_t retdec_map_layout_argument(int32_t vm, int32_t *index) {
     int32_t layout = 0;
-    if (function_48c890(vm, 1, &layout, 0) < 0 || layout == 0 ||
-        (index != nullptr && function_48a7d0(vm, 2, index) < 0))
+    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
+        (index != nullptr && sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(index)) < 0))
         return 0;
     return layout;
 }
@@ -955,7 +956,7 @@ int32_t retdec_map_get_chip_by_position(int32_t vm) {
     int32_t layout = retdec_map_layout_argument(vm, &x);
     struct retdec_mcd_data *data = retdec_map_chip_data(layout);
     int32_t found = -1;
-    if (layout != 0 && data != nullptr && function_48a7d0(vm, 3, &y) >= 0) {
+    if (layout != 0 && data != nullptr && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&y)) >= 0) {
         int32_t layer = field<int32_t>(layout + 312);
         for (int32_t index = 0, record; (record = retdec_map_record_at(layout, index)) != 0; ++index) {
             struct retdec_mcd_chip *chip = retdec_mcd_find_chip(data, field<uint32_t>(record));
@@ -973,7 +974,7 @@ int32_t retdec_map_get_chip_by_position(int32_t vm) {
             }
         }
     }
-    function_48a4f0(vm, found);
+    sq_pushinteger(kinoko_vm(vm), found);
     return 1;
 }
 
@@ -983,8 +984,8 @@ int32_t retdec_map_set_chip_rect(int32_t vm) {
     struct retdec_mcd_chip *chip = retdec_mcd_find_chip(retdec_map_chip_data(layout), (uint32_t)id);
     if (chip != nullptr) {
         for (int32_t i = 0; i < 4; ++i) {
-            if (function_48a7d0(vm, i + 3, rectangle + i) < 0) {
-                function_48a530(vm, 0);
+            if (sq_getinteger(kinoko_vm(vm), i + 3, (SQInteger*)(rectangle + i)) < 0) {
+                sq_pushbool(kinoko_vm(vm), ((0) != 0));
                 return 1;
             }
         }
@@ -993,7 +994,7 @@ int32_t retdec_map_set_chip_rect(int32_t vm) {
             std::memcpy(chip->bytes + 8 + i * 2, &component, sizeof(component));
         }
     }
-    function_48a530(vm, chip != nullptr);
+    sq_pushbool(kinoko_vm(vm), ((chip != nullptr) != 0));
     return 1;
 }
 
@@ -1001,13 +1002,13 @@ int32_t retdec_map_set_chip_layout(int32_t vm) {
     int32_t index = -1, left = 0, top = 0;
     int32_t layout = retdec_map_layout_argument(vm, &index);
     int32_t record = retdec_map_record_at(layout, index);
-    int32_t ok = record != 0 && function_48a7d0(vm, 3, &left) >= 0 &&
-                 function_48a7d0(vm, 4, &top) >= 0;
+    int32_t ok = record != 0 && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&left)) >= 0 &&
+                 sq_getinteger(kinoko_vm(vm), 4, (SQInteger*)(&top)) >= 0;
     if (ok) {
         field<int32_t>(record + 4) = left;
         field<int32_t>(record + 8) = top;
     }
-    function_48a530(vm, ok);
+    sq_pushbool(kinoko_vm(vm), ((ok) != 0));
     return 1;
 }
 
@@ -1015,10 +1016,10 @@ int32_t retdec_map_set_chip_id(int32_t vm) {
     int32_t index = -1, id = 0;
     int32_t layout = retdec_map_layout_argument(vm, &index);
     int32_t record = retdec_map_record_at(layout, index);
-    int32_t ok = record != 0 && function_48a7d0(vm, 3, &id) >= 0;
+    int32_t ok = record != 0 && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&id)) >= 0;
     if (ok)
         field<int32_t>(record) = id;
-    function_48a530(vm, ok);
+    sq_pushbool(kinoko_vm(vm), ((ok) != 0));
     return 1;
 }
 
@@ -1026,7 +1027,7 @@ int32_t retdec_map_get_chip_id(int32_t vm) {
     int32_t index = -1;
     int32_t layout = retdec_map_layout_argument(vm, &index);
     int32_t record = retdec_map_record_at(layout, index);
-    function_48a4f0(vm, record ? field<int32_t>(record) : -1);
+    sq_pushinteger(kinoko_vm(vm), record ? field<int32_t>(record) : -1);
     return 1;
 }
 
@@ -1043,7 +1044,7 @@ int32_t retdec_map_prearrangement(int32_t vm) {
     struct retdec_mcd_data *data = retdec_map_chip_data(layout);
     int32_t begin, count;
     if (layout == 0 || data == nullptr) {
-        function_48a4f0(vm, (int32_t)E_FAIL);
+        sq_pushinteger(kinoko_vm(vm), (int32_t)E_FAIL);
         return 1;
     }
     begin = field<int32_t>(layout + 264);
@@ -1079,7 +1080,7 @@ int32_t retdec_map_prearrangement(int32_t vm) {
         if (field<int32_t>(layout + 252) > record[2])
             field<int32_t>(layout + 252) = record[2];
     }
-    function_48a4f0(vm, 0);
+    sq_pushinteger(kinoko_vm(vm), 0);
     return 1;
 }
 
@@ -1088,14 +1089,14 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
     int32_t property_count, int32_t is_map, int32_t out[2]) {
     int32_t get_table[2] = { g483, g484 };
     int32_t set_table[2] = { g483, g484 };
-    int32_t base = function_48aa20(vm);
+    int32_t base = sq_gettop(kinoko_vm(vm));
     int32_t ok = 0;
     if (get_pair(root, name, out) && out[0] == 0x08004000)
         return 1;
     retdec_sqrat_release_pair(vm, out);
-    if (function_48c350(vm, 0) < 0)
+    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) < 0)
         goto cleanup;
-    function_48ab40(vm, -1, out);
+    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(out));
     function_48a400(vm, address(out));
     if (!retdec_sqrat_new_table(vm, get_table) ||
         !retdec_sqrat_new_table(vm, set_table) ||
@@ -1177,19 +1178,19 @@ int32_t retdec_resource_get_chip_info(int32_t vm) {
     int32_t root[5];
     int32_t klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
     struct retdec_mcd_chip *chip;
-    if (function_48c890(vm, 1, &resource, 0) < 0 || resource == 0 ||
-        function_48a7d0(vm, 2, &id) < 0)
+    if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&resource), kinoko_pointer(0)) < 0 || resource == 0 ||
+        sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&id)) < 0)
         return 0;
     chip = retdec_mcd_find_chip(field<retdec_mcd_data *>(resource + 64), (uint32_t)id);
     if (chip == nullptr || !retdec_sqrat_root_construct(address(root), vm)) {
-        function_48a460(vm);
+        sq_pushnull(kinoko_vm(vm));
         return 1;
     }
     if (get_pair(address(root), "ChipInfo", klass) &&
         retdec_create_unbound_instance(vm, klass, address(chip->bytes), instance))
-        function_48ab90(vm, instance[0], instance[1]);
+        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(instance[0], instance[1]));
     else
-        function_48a460(vm);
+        sq_pushnull(kinoko_vm(vm));
     retdec_sqrat_release_pair(vm, klass);
     retdec_sqrat_release_pair(vm, instance);
     retdec_sqrat_object_release(address(root));
