@@ -1,4 +1,5 @@
 #include "kinoko/legacy_string.h"
+#include "kinoko/legacy_string.hpp"
 #include "kinoko/native_property_bridge.h"
 #include "kinoko/native_property_callbacks.h"
 #include "kinoko/squirrel_host_object.hpp"
@@ -207,3 +208,29 @@ extern "C" SQInteger kinoko_sqrat_set_pointer_int(HSQUIRRELVM vm) { return set_n
 extern "C" SQInteger kinoko_sqrat_get_pointer_float(HSQUIRRELVM vm) { return get_number<SQFloat>(address(vm), false, true); }
 extern "C" SQInteger kinoko_sqrat_set_pointer_float(HSQUIRRELVM vm) { return set_number<SQFloat>(address(vm), false, true); }
 extern "C" SQInteger kinoko_sqrat_noop(HSQUIRRELVM) { return 0; }
+
+// Original 44BA90/44BB10 use string value conversion, not the strict Layer
+// setter above. 41E0C0 calls sq_tostring(index 2) then gets the pushed string
+// and discards it. In 2.2.2 ToString also defines metamethod-failure fallback.
+extern "C" SQInteger kinoko_sqrat_get_string(HSQUIRRELVM vm) {
+    NativeField field(address(vm), false);
+    if (!field.storage()) return 0;
+    const kinoko::legacy::StringView value(field.storage());
+    sq_pushstring(vm, value.data(), -1); // Preserve first-NUL truncation.
+    return 1;
+}
+extern "C" SQInteger kinoko_sqrat_set_string(HSQUIRRELVM vm) {
+    NativeField field(address(vm), false, false, true);
+    if (!field.storage()) return 0;
+    const auto top = sq_gettop(vm);
+    sq_tostring(vm, 2); // void in 2.2.2; always pushes its conversion result.
+    const SQChar* converted = nullptr;
+    if (SQ_SUCCEEDED(sq_getstring(vm, -1, &converted))) {
+        // Unlike unresolved missing-length C callers, this is a live SQString
+        // with a guaranteed terminator. Do not apply the 1 MiB address scanner.
+        kinoko::legacy::StringView(field.storage()).assign(converted,
+            static_cast<std::uint32_t>(std::strlen(converted)));
+    }
+    sq_settop(vm, top); // Pop only the conversion, retaining its last-error.
+    return 0;
+}

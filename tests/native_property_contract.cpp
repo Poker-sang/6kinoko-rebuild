@@ -209,6 +209,68 @@ void typed_source_callbacks(HSQUIRRELVM vm) {
     }
     f.require_canaries(); top(vm, base, "typed callback stack");
 }
+int conversion_calls = 0;
+SQInteger conversion_meta(HSQUIRRELVM vm) {
+    ++conversion_calls;
+    SQInteger mode = 0; sq_getinteger(vm, -1, &mode);
+    if (mode == 2) return sq_throwerror(vm, "conversion sentinel");
+    if (mode == 1) sq_pushinteger(vm, 777); // Invalid metamethod result: fallback.
+    else sq_pushstring(vm, "converted\0ignored", 17);
+    return 1;
+}
+void push_conversion_table(HSQUIRRELVM vm, SQInteger mode) {
+    sq_newtable(vm); sq_newtable(vm);
+    sq_pushstring(vm, "_tostring", -1); sq_pushinteger(vm, mode);
+    sq_newclosure(vm, conversion_meta, 1);
+    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "conversion metamethod slot");
+    require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "conversion table delegate");
+}
+void coercing_string_fields(HSQUIRRELVM vm) {
+    Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
+    auto* storage = f.object() + 101;
+    std::memset(storage, 0, sizeof(kinoko::legacy::StringRecord));
+    store<uint32_t>(storage + 20, 15);
+    struct Cleanup { kinoko::legacy::StringView value; ~Cleanup() { value.reserve(0, true); } } cleanup{kinoko::legacy::StringView(storage)};
+    f.bind("string_get", 101, kinoko_sqrat_get_string);
+    f.bind("string_set", 101, kinoko_sqrat_set_string);
+    f.set_int("string_set", -2147483647);
+    require(f.get_string("string_get") == "-2147483647", "Sqrat string setter converts integers rather than rejecting them");
+    f.set_float("string_set", 1.25f);
+    require(f.get_string("string_get") == "1.25", "source float formatting");
+    f.prepare("string_set"); sq_pushbool(vm, SQTrue); f.call(2, false);
+    require(f.get_string("string_get") == "true", "source bool formatting");
+    f.prepare("string_set"); sq_pushstring(vm, "part\0tail", 9); f.call(2, false);
+    require(f.get_string("string_get") == "part" && cleanup.value.length() == 4,
+            "first-NUL truncation on converted input");
+    cleanup.value.assign("get\0tail", 8);
+    require(f.get_string("string_get") == "get", "getter retains NUL-terminated semantics even for sized storage");
+    // A source-owned string is bounded by Squirrel, not by the transitional
+    // address probe used for unrelated missing-length decompiler callers.
+    const std::string large(0x100008, 'x');
+    f.set_string("string_set", large.c_str());
+    require(f.get_string("string_get") == large, "known source string is not truncated by the old address-scan limit");
+    for (SQInteger mode : {SQInteger{-1}, SQInteger{0}, SQInteger{1}, SQInteger{2}}) {
+        Pair value(vm);
+        if (mode == -1) sq_pushnull(vm); else push_conversion_table(vm, mode);
+        value.capture();
+        value.push(); sq_reseterror(vm); sq_tostring(vm, -1);
+        const auto expected = bridge_test::get_string(vm);
+        sq_pop(vm, 2);
+        sq_getlasterror(vm); HSQOBJECT expected_error; sq_getstackobj(vm, -1, &expected_error);
+        sq_addref(vm, &expected_error); sq_pop(vm, 1);
+        conversion_calls = 0; sq_reseterror(vm);
+        f.prepare("string_set"); value.push(); f.call(2, false);
+        require(conversion_calls == (mode == -1 ? 0 : 1), "setter invokes _tostring exactly once");
+        sq_getlasterror(vm); HSQOBJECT actual_error; sq_getstackobj(vm, -1, &actual_error); sq_pop(vm, 1);
+        require(actual_error._type == expected_error._type && std::memcmp(&actual_error._unVal, &expected_error._unVal, sizeof(SQObjectValue)) == 0,
+                "source conversion fallback and last-error are not replaced with a new policy");
+        sq_release(vm, &expected_error);
+        require(f.get_string("string_get") == expected, "null, string metamethod, nonstring return and failure fallback match source VM");
+    }
+    sq_reseterror(vm);
+    require(f.object()[100] == 0xa7 && f.object()[125] == 0xa7, "string record canaries");
+    f.require_canaries(); top(vm, base, "coercing string callback stack");
+}
 void malformed_descriptors(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
     // Directly exercise malformed ABI inputs that source APIs do not bounds-check.
@@ -241,7 +303,7 @@ int main() {
         for (int repeat = 0; repeat < 16; ++repeat) {
             scalar_fields(machine.get()); indirect_fields(machine.get());
             player_and_strings(machine.get()); malformed_descriptors(machine.get());
-            typed_source_callbacks(machine.get());
+            typed_source_callbacks(machine.get()); coercing_string_fields(machine.get());
         }
         std::puts("Native property source-VM contracts passed (16 repetitions)");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }
