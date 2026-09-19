@@ -1,0 +1,20 @@
+{
+  "baseline_revision": "33e51d8f5e2144cf099d205c1d747853043c3883",
+  "code_revision": "e644effa6922a86f21330c00a85b2ff08855547a",
+  "before_lines": 144292,
+  "after_lines": 95733,
+  "removed_lines": 48559,
+  "removed_percent": 33.65,
+  "removed_definitions": 1980,
+  "removed_definition_body_lines": 43014,
+  "remaining_definitions": 1346,
+  "ownership_counts": {
+    "independent_start": 911,
+    "internal_fragment": 1047,
+    "not_in_old_inventory_or_unowned": 22
+  },
+  "final_main_lines": 95605,
+  "final_removed_lines": 48687,
+  "final_removed_percent": 33.74,
+  "lifecycle_code_revision": "f2da106"
+}
