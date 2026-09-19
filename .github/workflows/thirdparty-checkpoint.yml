@@ -1,0 +1,48 @@
+name: Third-party migration checkpoint
+on:
+  push:
+    branches: [refactor/legacy-library-boundaries-20260920]
+    paths: [tools/thirdparty-step.py]
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: thirdparty-migration-pr6
+  cancel-in-progress: false
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: refactor/legacy-library-boundaries-20260920
+          fetch-depth: 0
+      - name: Apply checked source transformation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tools/thirdparty-step.py
+          git config user.name OpenAI
+          git config user.email noreply@openai.com
+          message=$(sed -n 's/^# commit: //p' tools/thirdparty-step.py | head -1)
+          test -n "$message"
+          python tools/thirdparty-step.py
+          git diff --check
+          git add src include tests tools docs CMakeLists.txt
+          git rm tools/thirdparty-step.py
+          git commit -m "$message"
+          git rev-parse HEAD > source-commit.txt
+          git bundle create thirdparty-source.bundle HEAD
+          git push origin HEAD:refactor/legacy-library-boundaries-20260920
+      - name: Run quiet and diagnostic Win32 verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run windows-x86.yml --ref refactor/legacy-library-boundaries-20260920
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: thirdparty-checkpoint-${{ github.run_id }}
+          retention-days: 30
+          path: |
+            thirdparty-source.bundle
+            source-commit.txt
