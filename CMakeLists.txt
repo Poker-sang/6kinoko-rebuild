@@ -56,6 +56,7 @@ target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
     src/platform/retdec_memory.cpp
+    src/platform/retdec_address_space.cpp
     src/platform/legacy_frame_copy.cpp
     src/platform/legacy_frame_entry.cpp
     src/platform/retdec_runtime_compat.cpp)
@@ -419,7 +420,15 @@ foreach(policy IN ITEMS checked optimized)
         set(contract kinoko_legacy_frame_${boundary}_${policy}_contract)
         add_executable(${contract} tests/legacy_frame_${boundary}_contract.cpp)
         target_include_directories(${contract} PRIVATE include)
-        target_link_libraries(${contract} PRIVATE kinoko_retdec_support)
+        if(boundary STREQUAL "entry")
+            # The scanner spy must not pull in a library containing the real
+            # scanner. Compile the actual production entry and validator here.
+            target_sources(${contract} PRIVATE
+                src/platform/legacy_frame_entry.cpp
+                src/platform/retdec_address_space.cpp)
+        else()
+            target_link_libraries(${contract} PRIVATE kinoko_retdec_support)
+        endif()
         if(policy STREQUAL "checked")
             target_compile_options(${contract} PRIVATE /Od /RTC1 /Oy-)
         else()
