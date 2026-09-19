@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "kinoko/actor_methods.h"
+#include "kinoko/actor_animation.h"
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/script_callbacks.h"
@@ -9,27 +10,30 @@ extern "C" { extern int32_t g600[3], g601[3], g602[3]; }
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
+template<class Function> int32_t entry(Function function) {
+    return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
+}
 struct ActorMethod { const char* name; int32_t target; int32_t wrapper; };
 enum class FieldKind { Integer, Float, Boolean };
 struct ActorField { const char* name; int32_t offset; FieldKind kind; int32_t flags; };
 // Original 460E00 registration order and storage offsets. In particular,
 // isActive/isStatic share one byte; InterrputCollisionCallback is not a typo here.
 const ActorMethod methods[] = {
-    {"Release", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_release)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b00))},
-    {"Reset", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_method_actor_destroy_state)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b00))},
-    {"SetUpdateFunction", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_set_update_callback)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b50))},
-    {"SetCollisionCallbackFunction", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_set_collision_callback)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b50))},
-    {"InterrputCollisionCallback", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_interrupt_collision)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b00))},
-    {"SetTake", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_set_take_method)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460bc0))},
-    {"SetStep", static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_4606d0)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b50))},
-    {"SetChipFlag", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_set_chip_flags)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460bc0))},
-    {"SetChipBoundType", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_set_chip_bound_type)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460bc0))},
-    {"GetChipID", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_get_chip_id)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460bc0))},
-    {"GetChipFlag", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_get_chip_flags)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460c10))},
-    {"IsExistChip", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_has_chip)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460c70))},
-    {"ResetPriority", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_reset_priority_method)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460bc0))},
-    {"SyncAnimation", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_actor_sync_animation)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460b50))},
-    {"Move", static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_method_actor_move)), static_cast<int32_t>(reinterpret_cast<intptr_t>(&function_460cc0))},
+    {"Release", entry(&kinoko_actor_release), entry(&function_460b00)},
+    {"Reset", entry(&kinoko_method_actor_destroy_state), entry(&function_460b00)},
+    {"SetUpdateFunction", entry(&kinoko_actor_set_update_callback), entry(&function_460b50)},
+    {"SetCollisionCallbackFunction", entry(&kinoko_actor_set_collision_callback), entry(&function_460b50)},
+    {"InterrputCollisionCallback", entry(&kinoko_actor_interrupt_collision), entry(&function_460b00)},
+    {"SetTake", entry(&kinoko_actor_set_take_method), entry(&function_460bc0)},
+    {"SetStep", entry(&function_4606d0), entry(&function_460b50)},
+    {"SetChipFlag", entry(&kinoko_actor_set_chip_flags), entry(&function_460bc0)},
+    {"SetChipBoundType", entry(&kinoko_actor_set_chip_bound_type), entry(&function_460bc0)},
+    {"GetChipID", entry(&kinoko_actor_get_chip_id), entry(&function_460bc0)},
+    {"GetChipFlag", entry(&kinoko_actor_get_chip_flags), entry(&function_460c10)},
+    {"IsExistChip", entry(&kinoko_actor_has_chip), entry(&function_460c70)},
+    {"ResetPriority", entry(&kinoko_actor_reset_priority_method), entry(&function_460bc0)},
+    {"SyncAnimation", entry(&kinoko_actor_sync_animation), entry(&function_460b50)},
+    {"Move", entry(&kinoko_method_actor_move), entry(&function_460cc0)},
 };
 constexpr ActorField fields[] = {
     {"timeTotal", 220, FieldKind::Integer, 0},
