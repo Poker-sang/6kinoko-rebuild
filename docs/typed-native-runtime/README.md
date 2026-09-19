@@ -23,3 +23,28 @@ No change to EXE-relative DAT search, archive ordering, game scripts, save forma
 VM registration order, or trace call placement. Quiet and diagnostic Windows x86
 validation must be recorded per source revision. Unit tests do not prove gameplay
 or visual equivalence; original EXE/DAT assets are not available here.
+
+## Native runtime batches
+
+The audio implementation now lives in `src/reconstructed/audio_runtime.cpp`.
+Its device, decoder, secondary-buffer and worker lifetime model is documented in
+[audio-ownership.md](audio-ownership.md). The common Actor/manager record schema,
+strong/weak versus VM references, animation rules and retained cleanup ordering
+are documented in [actor-ownership.md](actor-ownership.md).
+
+Tests that previously reached into audio globals from the generated C file now
+use a test-only C++ translation unit with the actual audio implementation and
+SDK-interface fixtures. No test injection API or duplicated audio state is added
+to the production runtime. The real-DAT BGM decoding/rounding check and the
+optional sound-module probe remain available; they are not asset-free CI tests.
+
+The Windows workflow builds every target in quiet and diagnostic configurations,
+then runs an explicit asset-free contract set including direct Squirrel C API,
+COM ownership, audio threads/buffers, shared record views and native Actor code.
+Each run preserves its source revision, logs and produced binaries. Final run
+IDs, revision and diff totals are recorded on PR #5. Temporary write-enabled
+migration transport workflows are removed from the completed tree.
+
+This milestone does not claim all compatibility code or all fixed native
+addresses have disappeared. Broader render/input/save ownership migration and
+original-asset game smoke testing remain separate follow-up work.
