@@ -1,0 +1,2725 @@
+{
+  "source_commit": "44d1f41c468690263143e89dc3593de67fe69042",
+  "source_sha256": "77527c46ee03967c90cce6f1effae8fcd38d76db214c8532df0b2691b7bc960c",
+  "policy": "Read-only, pinned-source audit of closed generated-code/data components.\n\nC tables are graph nodes, not automatic entry points. A linked table can keep a\nwhole retired library alive without a call from the program. All unmodelled\nsource, all conditional branches and other runtime/vendor/test/build files are\nroots. Calls, address-taking, string lookup names and original numeric addresses\nare references. Maps are reported (including linked candidates), not used to\ninfer runtime execution. This is a lexical proof under the recovered C symbols\nand literal-address model, not an arbitrary pointer-arithmetic/runtime oracle.\nNo code is deleted by this tool. Review the selected component before removal.\n",
+  "seeds": [
+    "function_417420",
+    "function_43c1d0",
+    "function_423cf0",
+    "function_423d60",
+    "function_42e3d0",
+    "function_433080",
+    "function_454c20",
+    "function_454c80",
+    "function_454cf0"
+  ],
+  "include_named_functions": true,
+  "source_files": {
+    ".github/README.md": "a8db2a9335e6718e0e019a8663ca51beba725a5efaaf482a8fd8f50745fcd4ee",
+    ".github/README.zh-CN.md": "57f201ed8d51e4ada04b427efca0f7b5ef6f085b5432fb399b673f0d1968869d",
+    ".github/workflows/source-snapshot.yml": "4fe8e716bdfc65b2e1f5b457151cd8a7cb0ceaabc7f1269aad5bd8d2c4fcd282",
+    ".github/workflows/thirdparty-checkpoint.yml": "31e143348c05f29b40901c3250226b0202ccedba7f204afdfae59601d80308d0",
+    ".github/workflows/windows-x86.yml": "929a1220daa6382c45094fc856334757d17e3b36dacfbff64b173c343a0664ff",
+    "CMakeLists.txt": "ec46f447b546d7b005ed52de4e13df20f5e6be3685e5f3f197346dba94180279",
+    "include/kinoko/act_clone.h": "fd7372e2f0a3c67ed5fdbf61f822f8e570a1b73c19afed172005189ddc8d9650",
+    "include/kinoko/act_draw_records.hpp": "151fb0424a3ee425ffbd3acc4ca0785cfa1925c4db1cdfdb532539edd449744b",
+    "include/kinoko/act_frame.h": "9cf0241793ab630c42e66d9133d76954a4e6cf8ebde399226001bce5574d8b5d",
+    "include/kinoko/act_host.h": "89a72d65c8b077d058e71b2c3dae99832fedddfca0129e0370618a9862f8675c",
+    "include/kinoko/act_layer_access.h": "6c492a17d471299862753a26db0455cd01f32dc43496f677b954f995d5181079",
+    "include/kinoko/act_layer_records.hpp": "c6ab913d2d348ad766f9d47bdacb5bd490d4e3e8c37adacd1a14210daab06cdc",
+    "include/kinoko/act_resource.h": "01492ba6fe878aa31c68a1c641da071ad4800ec100f39bf5bee34fb4920845e6",
+    "include/kinoko/act_resource_records.hpp": "3c6f11bd031fca549e81bc890090ff4a8cedaf33f0019e463d0a9bbdf3dd6c41",
+    "include/kinoko/act_runtime.h": "0e5875b9757ed0dd2a3e3860e2dbd5b4c797f31afbd1da83a921468a2bbcd130",
+    "include/kinoko/actor_animation.h": "e0c83c4add57dd4d4e16cebea5e877a13ed930ac2a64cfe0c57f12fe6ccf5419",
+    "include/kinoko/actor_cleanup.h": "7e937a2a00df6fefef085d0da4b45f2ba3dad409e9da89cc81fd7f3fd5c0cb46",
+    "include/kinoko/actor_collision.h": "689554560ac51cdace9f1ea1c576cd19a49b7879e34cbf6d58a80fde738e129a",
+    "include/kinoko/actor_lifecycle.h": "1926d85fabde3201f879c70372710f2050d7544eb62000506cac5788ee481004",
+    "include/kinoko/actor_methods.h": "f340f5d7e12296d86f5bd00cbeefef97a4f89dc9ecdd241398cc3d425c02638b",
+    "include/kinoko/actor_records.hpp": "b74e932c655d978669440f9670b3a04323ca9807aa8fa9a54dbbcaa20bd52dfb",
+    "include/kinoko/archive.hpp": "a86fa4b47451979d6fbefaadb7617b44abbdac4e91f2f6553e1e368d79aefdf6",
+    "include/kinoko/audio_host.h": "07d11a2271c09388d13caf24bd694e1ce5e41fc866da424678fe691109cf5e3c",
+    "include/kinoko/audio_math.h": "3f49161eeaf600418589f49fadcb09965df108d80d5fd8d217eea9d175bc59e5",
+    "include/kinoko/audio_records.hpp": "dd5fbe96057ee88709ce1d796eb8ff2b62378800e00fce845afe7a19a2cb013e",
+    "include/kinoko/audio_runtime.h": "3e52ff86c14cafbcbefadef37cd19754e03f2f3f3f3b19ca27c3f4f4784addfa",
+    "include/kinoko/com_owner.hpp": "7546386b5b043c4bbd7ea4f7e2ad69925fcbb04e52b11462685439772a20bf43",
+    "include/kinoko/csv_bridge.h": "a983cb5dea8538007b65153bda6321d161fbb1d37248d3e4778cb979510b433a",
+    "include/kinoko/diagnostics.h": "71c4de987bc2f904f6644331be1fa88ff705c13a4fed696c7317d16cce868b7d",
+    "include/kinoko/diagnostics_filter.hpp": "e88d7e00403c065014adbe0d57ce7ec6e8580eabf5030f2ce9f1d135b8efeabf",
+    "include/kinoko/game_math.h": "00152c236e75b8be5c413b56c71198e23ec034c65b1b5f67697b65bfc3231ca6",
+    "include/kinoko/legacy_abi.h": "435c1f0e658c9a00678f411f84abbe4fb3e299262e655cc616060830b854e98f",
+    "include/kinoko/legacy_copy_entries.h": "ebbde48bc9afb2f79a25f63f09194d3e4c64554164b51d89a0327fcdf92380f3",
+    "include/kinoko/legacy_frame_copy.h": "25822e62454dad0576ee7dc3160ae7fa2db1fc6cd7132a81138cd396214f3712",
+    "include/kinoko/legacy_memory.hpp": "33af0564b2e18a0cec580d561e7114b95755dc675d3fa8b46661ca44222bef1b",
+    "include/kinoko/legacy_method_entries.h": "81478a5c30dcc614161803f33c1f8feb0afc11775c5f9eb5bd8f4376a5fbe0d1",
+    "include/kinoko/legacy_string.h": "ff9e39307b1f6837d5de7587c279ba2e6312653db8dd593d9e7e44951bd16eab",
+    "include/kinoko/legacy_string.hpp": "4dad418ed86f7933c41b86518f83695554c3082c33ec9038ea176b45e892791c",
+    "include/kinoko/map_render.h": "37d6a5c7b35ee82b3ad00573ef234851ad2af17e803467c8321e628bb900e248",
+    "include/kinoko/native_control.h": "8cf40795fdcb76475d557094a97f3fa8538f2128588ed11e80a2c1c817c87f45",
+    "include/kinoko/native_control.hpp": "85c6c5a69210a37356742e0e0e51ee16a94bd4530a1656cde6a18d5e73e2a5e8",
+    "include/kinoko/native_property_bridge.h": "6b8009bea47a25afc45a06dc557a0a1ce6481c429c60f41bcc3b3831586eabea",
+    "include/kinoko/native_property_callbacks.h": "d797fb8e8f9b230837ebd25dcbaaa72e9fbd7506dd45162ce9829d7375fde539",
+    "include/kinoko/native_record_view.hpp": "e38a2d57e7c0e4a001e6863fa3d17fad55fc3a603b8f49d973562960aa2b8931",
+    "include/kinoko/retdec_memory.h": "d7073500582641c77793215fc8890305c20e5663eb9c9f2c63aa7c0dfbece2fd",
+    "include/kinoko/script_callbacks.h": "17333b65a818c988af130b32b3492de223429c86aede6296b7784eea9ed0ff89",
+    "include/kinoko/script_registration.h": "2964f62b8b06add22457db86ee8055e1932f9367789fcaf0df96fe799f572006",
+    "include/kinoko/sprite.h": "dda7e3186cdc84eebf40b1e6f85bbde26b0a464c992eda9512dd77032f09abb0",
+    "include/kinoko/sqrat_object_bridge.h": "9158eaab156b27246a404ea6730a96140258dd9a77dfe19d035f2432a3a6917f",
+    "include/kinoko/squirrel_api_types.h": "950251a530170e31aefd3a07ce8823ced9f1c8f7e6bd6e5dad5bce86dc2c6905",
+    "include/kinoko/squirrel_binding.h": "c11bde9f6e6493586e9ea5d451569c247de9212590e460c26486aa8589acc34f",
+    "include/kinoko/squirrel_binding_detail.hpp": "0d800508c045a7b66a85f43d901aa3028e346d3c41902d9b7f349d2def8ce0df",
+    "include/kinoko/squirrel_compile_bridge.h": "d2683535b8e13ad842910eed6d4ba4de4f265acc2d872c1445123166a84c6a31",
+    "include/kinoko/squirrel_game_objects.h": "549412fc13a09d87da2ebbdefc3e5b0fd599d7b70c1951ce42a77a45523ebb3e",
+    "include/kinoko/squirrel_gc_bridge.h": "b1f3c9fe1a348136ced26ff2cf975e56c7453daba596191132cfc80bc383b510",
+    "include/kinoko/squirrel_host_compat.h": "3ea044667686a73b26d1d9308dae5b01e72b2aa6336af70bc39dc6d91820ae4f",
+    "include/kinoko/squirrel_host_object.hpp": "59138b7f4bc353f8548c08232faa30580f205ef09efdbc86069b90a0bd3e5a8d",
+    "include/kinoko/squirrel_legacy_api.h": "d05ddc1879ca04685e68f47302496811549bec5b5ffb7a96f45b7a92ff661297",
+    "include/kinoko/squirrel_native_arguments.h": "cce9c5923fd74668c48c0e2d6e9dd8fdeb6bad2ac2696c4678c331b9019b5717",
+    "include/kinoko/squirrel_native_calls.h": "6792a48ff56376f9db645cc39323c35bdb9bda831703528480ce2c9bc4c97618",
+    "include/kinoko/squirrel_object.h": "f35cd9f380de234d7c52f828396e5b2712a4f81ab17daf6512050b72d9219f56",
+    "include/kinoko/squirrel_pair.hpp": "85683e3ddd97beca3b6d11237ff3a1e39ee4db7dde629198a07c9d27f85a8d45",
+    "include/kinoko/squirrel_source_runtime.h": "a60e9bd7de51c74ab15c312834a39084bc966b98be03e52d4a738598afae57b7",
+    "include/kinoko/squirrel_value_bridge.h": "75730bc97f184808fa383e044547288f84377bcef5cb47332a5da0d9ede3ceb7",
+    "include/kinoko/squirrel_vm_bootstrap.h": "f56c7341f7958e06a2e66b3852002818a77fd85803259d26b266bf44d06abf59",
+    "include/kinoko/squirrel_vm_lifecycle.h": "a94da93973c03e6d8c3f7fbfdd366b8382d39f87561df3c6c2785cd9e99075c5",
+    "include/kinoko/stage_cleanup.h": "cabad708d77c06fcc2266fb5862fe59b7ff2a15dbc35803fac846adfb96b35df",
+    "include/kinoko/texture_store.h": "23371f5f33923f66b4c95c0fc8697fd256b33329b6d8fc619bac41ae731227c8",
+    "include/kinoko/windows_owner.hpp": "e46b038050996c2833460517398012eefc98a5cefb84a2364bedf6884f06af69",
+    "src/decompiled/6kinoko_rebuilt.c": "77527c46ee03967c90cce6f1effae8fcd38d76db214c8532df0b2691b7bc960c",
+    "src/decompiled/retdec_asm_stubs.c": "adc55ac6bc05661a4a223d7821a269e5bce1da20118fbbae03bdabfc9d0a5cf0",
+    "src/decompiled/retdec_asm_stubs.h": "e764bc606e13c7ff8ec24ec6018586d74ead66487463f441faca41b71d85016f",
+    "src/decompiled/unistd.h": "81613cfc6abe16aecc7e02ea856d2780bb9bee75ee368ec32d85a2048a3fd37c",
+    "src/platform/audio_math.cpp": "2beb5e70718f5b73a872c6ff011f0205e97685e3c8bf370ff14506893fd0f4c0",
+    "src/platform/diagnostics.cpp": "26f60eeca53ca786fb6f8f4a78a43c9f63198a8a5ee8a3c963012906bf8da11e",
+    "src/platform/game_math.cpp": "25beca62ba8c4c78726454a03a6a0842c6e3eb8824acc3a0a31330612cccb24b",
+    "src/platform/legacy_frame_copy.cpp": "5feca5098f3e3e234f44fb1a4eb5167d226937210a68506fe6d57c03c073d528",
+    "src/platform/legacy_frame_entry.cpp": "8bc727d69e6889d6877cbe8e0ccfddc16271eadc65d4585194d20471f6dd92db",
+    "src/platform/legacy_string_scan.cpp": "244fe27736332a92b4f617a8a66a1943ba040b117c3632a0560f8bf63834f203",
+    "src/platform/resources/resource.h": "a8ab0f51f0db96469e7097842aab1ccd78bf0d057b24f8f9ca1eaeab81eafab2",
+    "src/platform/resources/windows_resources.rc": "3ad65101542514bd4ddcd85700ce86ee80eb0cf09a7c6a16d4d75f3ab7250ef5",
+    "src/platform/retdec_address_space.cpp": "029bac29af0029e4e1724c2b596ea65bba02a29bb8b1810a747708fb922a5437",
+    "src/platform/retdec_memory.cpp": "3539fffd25bc2418eb8d322d933c46fbebbaebd6974693dd291d01c9e9e523fc",
+    "src/platform/retdec_runtime_compat.cpp": "2a2163db260e86fc9c8e30804c2b72e9f84dc42f95355f6bbe467f1930111f04",
+    "src/platform/windows_entry.cpp": "3a8a491ba00fd87292ae0e96feca5479d51cef2e3c301bd389658b618f0bfc9b",
+    "src/reconstructed/act_clone.cpp": "b501b11ef3b4db476caf30b809611582669984f0ca8615bb17b34e63a6704ec4",
+    "src/reconstructed/act_containers.cpp": "5b473c991b1deec312eea8c81349a6cc642bc55c15b16e445ac048f0d6a3f6d3",
+    "src/reconstructed/act_document.cpp": "ea57ef1ca49d76b6af760ecbcd8107f49548564b0b15b689e4afbf87e609043a",
+    "src/reconstructed/act_draw_storage.cpp": "66ca128eb84e52af021f3aa41da205e80a0640e23d3d0972e186df2adbfc864b",
+    "src/reconstructed/act_frame_render.cpp": "efa11158c9957c5c97cf0fef2b7d5b32b1a22502b73e4cc87a48fa1bcea5f2c1",
+    "src/reconstructed/act_frame_update.cpp": "570eb556cf0fa78f00e56209e4b9eeb4b53ea7af60f91edf5d9b9dfcc559a5a8",
+    "src/reconstructed/act_layer_access.cpp": "ab365459886a93321d5135e24af43d782c4b54611d08dabd05fe48c3ec587d22",
+    "src/reconstructed/act_layout.cpp": "7a75a6e9f48498a175470a1a95f27cde6dc35db908aad94f9cc5e5413a39734d",
+    "src/reconstructed/act_lifetime.cpp": "51c8f8d2ed1a9e0c9c546bf6c028d4a85e1d8840ac3589c4fc41efb117dd09c0",
+    "src/reconstructed/act_map.cpp": "f6c614682e176e167403bbc51749acf4f73abd5ff8ad2b7065ab4ac71a5158f8",
+    "src/reconstructed/act_properties.cpp": "55072b190c9c3491c474d8eeaed144c7e51ceb71641366c296c747c21ef66516",
+    "src/reconstructed/act_resource.cpp": "bd313d9d78f0a89708e0a3e9a421c09815ba293724d4cfac47e967d359b957a4",
+    "src/reconstructed/act_runtime_lifecycle.cpp": "c5b7332c510e76608141a5b17646eeda3a84941d96b29d4f3ebdc0613355e058",
+    "src/reconstructed/actor_animation.cpp": "6b9bf8960137977fb6790f6d9475750abfb1abcd68ffef684304fc5de15b3525",
+    "src/reconstructed/actor_cleanup.cpp": "53516642a0594a9d6cda0e992de8c63eadc643589627bc1732563f8c60f7e62b",
+    "src/reconstructed/actor_collision.cpp": "5f07d2ce03d4a2e6babcfecc293fac00f9fa706f6a623a2cc15baa4ca05f7f96",
+    "src/reconstructed/actor_methods.cpp": "aa1e8d785ec6c062d3a152b1ecf9eb9575bc5f9986ffdfd8aa826e0305d23dbf",
+    "src/reconstructed/archive.cpp": "e226fcd7ae6c5eb7a811f6b2e99f4da08011f2efa9a28111f3e554cfc9495efe",
+    "src/reconstructed/asset_store.cpp": "8119089315926090976b748a03a7dccef863f1206107fbcae3e3809773efbd19",
+    "src/reconstructed/audio_runtime.cpp": "cc07e496114d239293961be42a1f7ce0a354acf4ce10d3e546046f2b664b74fa",
+    "src/reconstructed/direct_input.cpp": "00c0ad0dfc38bc3586bf09a1b1ab33b913973be4d34e9fa1a251c5460bb9c107",
+    "src/reconstructed/input_aggregation.cpp": "cf5f52404dd102a9c2eb8467c3dcc19fc07d0fdaab1e43da2017889d753acf09",
+    "src/reconstructed/input_runtime.cpp": "7963b03f69274782ad421bd08eb73c183f74e6ac8094769ff5c17adc22d674ad",
+    "src/reconstructed/legacy_abi.cpp": "0c724b680e40569253858129706bf25ae43a30dc3fc479d5409c7c692e28fd9c",
+    "src/reconstructed/legacy_copy_entries.cpp": "e7ca4795c1dbec988bc40133366d3935ae9ef4125a9cec27f0f7986a087c0ab6",
+    "src/reconstructed/legacy_method_entries.cpp": "8e77dc9640a03d7813f4b6ceb405783d648de174fa424d01858c834b785288e6",
+    "src/reconstructed/legacy_string.cpp": "e0ed12ce340518219390e01cecf8fdd49c0918f122deefde3eb8e544aee1444d",
+    "src/reconstructed/map_layers.cpp": "50516cc2dfb2cd569fecb62da1c4523e97c132ab1a52c006b974a557ff199ade",
+    "src/reconstructed/map_render.cpp": "3742c900bcea4a0b8f9ad92bff86f711f3646a8a0dab7e569c8a51756ede7f9b",
+    "src/reconstructed/native_control.cpp": "8690d4e14d91086bf32cdf91dfdb5390a6afb0edf08d5a82db0e73c12ad13e4c",
+    "src/reconstructed/native_instance.cpp": "ff4ebea55e5e310493e1bfe4aef89c66434bcb17d2eec172a8a210db5853ba87",
+    "src/reconstructed/physical_input.cpp": "f6b73857bd97a89f3495b64882086a653ea853c7d92ce1893cdedf074a1fa990",
+    "src/reconstructed/script_callbacks.cpp": "915e370f0e371972f0f67ffa44c064085264cc653ce32128c629620068ac0fa0",
+    "src/reconstructed/sprite.cpp": "2977079b678dd3c85a0fadfdf56611ee9d5f0f1f42b927dd543c70a843c97132",
+    "src/reconstructed/sprite_color.cpp": "25ecb664b79808d9480a79841cd0c322757d67df640c46d17ece6ef9a342d4ae",
+    "src/reconstructed/sprite_rect.cpp": "9c574d2126cedb69f1b34430e2fe46bb2ff35dc29f3bdacaae366da80d117e73",
+    "src/reconstructed/squirrel_object.cpp": "0ff47a8c01e42d04bba62f035aa4d27a584a0f540a0abc12c2a003fcd86278f6",
+    "src/reconstructed/stage_cleanup.cpp": "e5f89269898b0c8a06a6ec029d5be6c941fd729e365f1c6502efdbe6d09826ec",
+    "src/reconstructed/texture_store.cpp": "da97306708d244d5ca7112392f30cb419a4096926930aafc350a1dc3337ae482",
+    "src/squirrel/act_binding.cpp": "f9d2d9f637bff9f6e298eee571985057cceacd364a7b77e03d8caeb257e22917",
+    "src/squirrel/actor_lifecycle.cpp": "8e8a6a890c13aa5527acaa210a87e93dae6d1806018b2209901790e4e16eaeda",
+    "src/squirrel/actor_registration.cpp": "b03924052625f0036b5d5391c288db62699d9b5f4f6a19f43fc88c0e96392f5a",
+    "src/squirrel/camera_map_binding.cpp": "18ea2fbd2118413ce7138166f660a4f59cf7f3f6b3da783cd01aed2334eceaaf",
+    "src/squirrel/global_registration.cpp": "27574808092e3d9c3fc1f916e0a6a93a9a2ec6f8fded7f6ce1b17315a5ba6962",
+    "src/squirrel/input_registration.cpp": "df074fbb0b1a55dbd8a9e55f4f8457fd0bccc7411a5e21e9857593aa7970f0ff",
+    "src/squirrel/native_property_bridge.cpp": "53cbfa4bfec5870da7328fb458d986abc02dfd346a0af5249e7bbf40d3241711",
+    "src/squirrel/script_registration_host.hpp": "543ffcf23c0d54a567618dd5a4a937f2389b94ebc8ac0f2e7e469df9e170b5ad",
+    "src/squirrel/sqrat_object_bridge.cpp": "81a668af7d23197733257f0d466640ca1d8bcf15deb574945742fd04481a6311",
+    "src/squirrel/squirrel_array_bridge.cpp": "c1d64066083b157707aed96e6c7af75ca52e6877e1e2d6f41698fe732656831f",
+    "src/squirrel/squirrel_class_binding.cpp": "2c1bd4d262ba7e2600b1899ff86fde1d1f3b323ed54d5b83714aa589cb8b8575",
+    "src/squirrel/squirrel_compile_bridge.cpp": "41a34360960fb23ca700197e27cb74043445fd5693ff7bf82a16bc31f5804ec2",
+    "src/squirrel/squirrel_csv.cpp": "698c61f271e1c9f2b5ffca5dff7c3f9e226b4db3cb10c7403f898fa309ae3e6f",
+    "src/squirrel/squirrel_game_objects.cpp": "9015233df467049aec5c7ac3199457dd8b4f046c5b14fac120db42514a919247",
+    "src/squirrel/squirrel_generator_bridge.cpp": "fc353a24e7a303b49cd11899343e1319fc934f485230c1bd53f0e18f78966920",
+    "src/squirrel/squirrel_host_compat.cpp": "0535d7d84f7fee416e4e28765f0d3e44c5f81572088cccc5379cd2c9a828e078",
+    "src/squirrel/squirrel_legacy_api.cpp": "44d86b0205cf4209afccaa40ff52068ee144a35b9b336cdac0bce33a4dadb248",
+    "src/squirrel/squirrel_method_dispatch.cpp": "3f28006672afdf655baee1da70885f50094500f6aa82b3ccc1f7af2ffd0193ec",
+    "src/squirrel/squirrel_native_arguments.cpp": "10acac045ede27f06dde04609d869632af783da61777ba19ca52d7f47e2a8e00",
+    "src/squirrel/squirrel_native_calls.cpp": "021a91c1bf67fb5fe21befa40e26d5c323ac585a257ffab2b1b5fbf24f6d6fdf",
+    "src/squirrel/squirrel_native_variables.cpp": "a3cc3c7d407202d006555b672bf324e66d242cabdcb8fdb81c24acb6fca8f1e6",
+    "src/squirrel/squirrel_operations.cpp": "612bddb707ff5b066c8808d8e5453a0417e34be3054408fa030b9b4840b761b6",
+    "src/squirrel/squirrel_source_gc.cpp": "4ae54c891f7470ed7f79f5aecc737c7eb4b6562846789220296f4f74301b87c2",
+    "src/squirrel/squirrel_source_runtime.cpp": "54d87006ad90848f28bd08ae71ed6146139d595b6efbfb943cbbde88c95f5ecc",
+    "src/squirrel/squirrel_table_values.cpp": "7b71fdb51fb6b394b98b826637ed783fa2e2cc40c49432b22344bda1cd22351e",
+    "src/squirrel/squirrel_thread.cpp": "199201e3276ced3b3b551b8fdd69dc2acde8211899a0774d5e7a116d37921c59",
+    "src/squirrel/squirrel_value_bridge.cpp": "6d5c12a0d4ca5ea4467cce9ef8fe389dff1351dcb5b1f0df5d015a5e1a496aac",
+    "src/squirrel/squirrel_vm_bootstrap.cpp": "021ee17db268cf9280b956e6ddacaddbee8c17e16eb76f8c35f0cf1629df0754",
+    "src/squirrel/table_serialization.cpp": "90ced9ecaeef443634c65b5a78e1d4ec3d1ae00b11bf729d0454a721d322e3e7",
+    "tests/act_frame_contract.cpp": "10c5f8377e4e8bc0cc2ee4abbb77674e407bf77e15b4c6db51f52c0af274ef04",
+    "tests/act_properties_contract.cpp": "abe0bc6d54aafa63f59f979d3d528e1f8448ab453e6b1bd15b48274e89823168",
+    "tests/actor_lifecycle_contract.cpp": "cb67b72dab3933b884fdb717001f059a0f8994361763994b5ca309d8c5467a81",
+    "tests/actor_records_contract.cpp": "9e1545abb3714cbaf3c79e9ec408e200da0deeb440709f4be0628534e006ef25",
+    "tests/archive_smoke.cpp": "5d6108bf57ddb12ca1ba252a0f2dd827f984272d6f1803f48c7402fe8db6575e",
+    "tests/audio_runtime_contract.cpp": "d7a2594734c577d22a7c1dd7b079bf81c92b488080481b4e9ec69aaa11da2838",
+    "tests/com_owner_contract.cpp": "7f11ab12b1c4aa265c0ad986d5395b4d209dc2eca0911424ae1bd2025ec4445d",
+    "tests/diagnostics_capture.cpp": "b68632f0c8b371196d0e825105bac8616e37fec7e8e46add6d800cb675c34707",
+    "tests/diagnostics_filter_contract.cpp": "450676fca4a1b5f216c8f8232dedef5c7e935b51e911e8b2f376709eea8af317",
+    "tests/directsound_fixture.hpp": "ed21feb6bf480069928d98aff64738e0de26fa9b2a9bda15e02de241751c4c46",
+    "tests/game_math_contract.cpp": "3dbeb8042b43215352d4451665e556d01f709e201a4c4369012a12f9ed66b18c",
+    "tests/legacy_abi_contract.cpp": "91175f69199aa893d06739ddad1250cfd14cd2c2adc17f35ba68c5385a616581",
+    "tests/legacy_copy_entries_contract.cpp": "412984e1d580b16ba0f38bc4f45bc0fa8cff3b99a340cb39c6df678b3ad18804",
+    "tests/legacy_frame_copy_contract.cpp": "d06ec99ec9959761bd79d8c12f77f0caaf4c65198059e1a217ac4e63c0cb6039",
+    "tests/legacy_frame_entry_contract.cpp": "756cff8e3a83aa6f4ea02758c3b8e0caf1962f9da0f8403381533493d74b25be",
+    "tests/legacy_method_entries_contract.cpp": "64c620a2627d03868d7eac397dcf08d2fcb413f7814144699e0ce238204fa83b",
+    "tests/legacy_string_contract.cpp": "5f3f84e8457f7fc46150757273256c00cf9e086d200f63f767ba80963f5fb742",
+    "tests/native_control_contract.cpp": "d04b39c10b44d45d6c42bf9f7c6419613f48b7498e142dd2de88602a6969ecab",
+    "tests/native_property_contract.cpp": "d42a0310fe860e34ddc73a351766f6223ec1a84dbf25fb5a9aaaea044854d9b6",
+    "tests/native_record_view_contract.cpp": "bc0b6407f90d0d758899286fabb17f04658a07aafa6188342a2f407cfe8ba170",
+    "tests/original_actor_reset.nut": "a0a806fc62a1746dbcb6a359c5087294290767d86c5b9beb23d1a9c2e1af9121",
+    "tests/original_collision.nut": "457c30a396a64f363ed4b37189ca44546c0e1537ee3a3a0c6b7506b96fc2670e",
+    "tests/retdec_memory_contract.cpp": "d427f66ba90e661bd5d8f0db61f43c3c4ace2d2202e08f18f720706cb047f860",
+    "tests/sqrat_object_contract.cpp": "10d36be00a13ad55630009793b07418cf77f173751d90ed4fdca60fd2d2eebc0",
+    "tests/squirrel_binding_contract.cpp": "73cd42079d058503a4a796aaef81f3604ad67351e3bf889414654fc23e51abcb",
+    "tests/squirrel_bridge_test_support.hpp": "5d7658df91815cb7a43641c83a9d1cb8bd00277d9d3e8c010d2dd3af0590287d",
+    "tests/squirrel_c_api_contract.c": "44cbec0eb63a1d1f408de5722c7c392378229070e1e7949d9464ce241816af76",
+    "tests/squirrel_c_api_driver.cpp": "dbf52b791582427d3305fc0f2853ffd0b8887f0bfb32316cd65635235cd8ac61",
+    "tests/squirrel_game_objects_contract.cpp": "28ca019ec8ba015956ff545a895630f67075f74a07c14567c022240a2485268c",
+    "tests/squirrel_host_object_contract.cpp": "b6819d4a347269992b98d5782cfe152adb5dfe919267c924d712c55362e4b76f",
+    "tests/squirrel_native_calls_contract.cpp": "c1073487443c329f13d231744261658aa1516a7f152e8a47aec20ac33ff13ea6",
+    "tests/squirrel_pair_contract.cpp": "b3570eeba12af1d036bc39845a05d8f5889c9d279c9c14c7312556a2c1d5c649",
+    "tests/squirrel_refcount_contract.cpp": "109273b39fbfbcff3861429441729ecb40f2805b63df26a14706c4e3628a22ab",
+    "tests/squirrel_source_vm_contract.cpp": "08a15c2e6f1dc3acb7c87463b806c2b2b228da5fa2e52b88593e3638843747ea",
+    "tests/stage_audio_contract.cpp": "4d36d643bd45323ce1ab47184bd1f960410d1657ceb4c24c6ba4d214f43ff0d3",
+    "tests/stage_audio_contract.h": "70f42fd7b9ae0cbaaa2bf5f881e1ea0b53948b17cea31cc315ffd9fd809b1e4b",
+    "tests/stage_contract.c": "5dab61d3137ec71c60ca2a3b80f896d56820b39a12373a2cf9b36e7bdca6a51a",
+    "tests/test_legacy_islands.py": "87793b025e1fbc977dacb7154c762cdf92b94b397ac255201bfdde47e104d70d",
+    "tests/test_legacy_reachability.py": "1c17e4e272095aa1feeea87d5330478766cb2b0bb5004e138d6dc68498e7aa09",
+    "tests/test_replacement_mapping.py": "5be23a79b133764080b1a66ecf5287918cf87c4e456c90294782c6ea803d9061",
+    "tests/texture_store_contract.cpp": "a6b397151143bc2b201270a8d54044a7053fdb5a0c9b87f0f645871af15f68ab",
+    "third_party/d3dx9_33.def": "fa4188a4194172121b8182baa8f1b7f4a32d474e9248166d490d8237d6707ce1",
+    "third_party/squirrel-2.2.2/COPYRIGHT": "3f5a2aa1d53322a972e302c1a69c7684d24b0718c54c5f71e68af80a19460325",
+    "third_party/squirrel-2.2.2/HISTORY": "e20f2e532fd869e2f8bceb8d1d04bfd64984bd39723a803b5052e438f3c6ae58",
+    "third_party/squirrel-2.2.2/README.kinoko.md": "46e29e6aa1b33300545338848d742e90328b27dc77150156752ed6b1aeb40103",
+    "third_party/squirrel-2.2.2/include/sqstdaux.h": "21de4476067ab3bdb33046b821f4dea14170a78eec0fd1ea4547ac9e30ac312b",
+    "third_party/squirrel-2.2.2/include/sqstdblob.h": "ac008a8eb76e0e3f37fce1b4587fb4dd1cd58c39be7f0e0a2de256ee91b9f8bc",
+    "third_party/squirrel-2.2.2/include/sqstdio.h": "8bb9ed54734dbb7ec406a0efd4a2f0ec70fd4528612af18cd1c1f183a64553fc",
+    "third_party/squirrel-2.2.2/include/sqstdmath.h": "e76bcc502e7d11abd318e3efee66e821b5b2807d39d3b5ba1f1d62414bfb8826",
+    "third_party/squirrel-2.2.2/include/sqstdstring.h": "fbf7002e8d0857e710e9bb004047f2359fe97f3628af9038999d132f5372bd1e",
+    "third_party/squirrel-2.2.2/include/sqstdsystem.h": "eadf691e660dc4fe61470df8809025ca398a0d016e9f515629a781fae499e237",
+    "third_party/squirrel-2.2.2/include/squirrel.h": "2061ec02fcfffe4568d73146fab12b365f92a3961a58f17ff823786c38c3e1c0",
+    "third_party/squirrel-2.2.2/sqstdlib-provenance.json": "59a8f3b9116da6b2270ec6518e4caeb0d57ec9ac15e4959204c4f10f89f7c91e",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdaux.cpp": "501019843de3979d1ca697ce7314ad7c60cd5e0ce71eb5883c44058afc264f15",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdblob.cpp": "4d6ca2f94725587544ab29d80fdc5b1f86b29c08edf24437267c7585c966ab17",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdblobimpl.h": "e793bbfc5d5e511dd5684284e113a3b7728709c76441e2dedaf34d589e0bff8c",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdio.cpp": "8c2897381aa2956ecdce8166760796e640ed9d035995408fda13efeb66e146ab",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdmath.cpp": "ef8607e92e19f9f9d6e010a9970b503f19c62396228c00873003f44b0fd4975a",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdrex.cpp": "af82751e53ede9f044523e082253c5dcd8c30b6c077027bbe254aa2951b4497f",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstream.cpp": "72258ab8593c971a169a339c03b37f5e09f29aaddbc4b054e5e9e073b67a33e9",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstream.h": "ab6805aad3b9346393a67d437379f2af8d87ea748eb3464a95f80b6b1341773d",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstring.cpp": "3735dce0e39e1012be491d085c9b01baba7a251d9a9d9fcf749264b7633a2e34",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdsystem.cpp": "be8d926804fa1e0a96e68786b664831d2a473988df51672546e3f1f5e6e22591",
+    "third_party/squirrel-2.2.2/squirrel/Makefile": "37434e0d4339e6223d1f9dea0dcafcc65820ae723c5a71d9ae9b47db2155be49",
+    "third_party/squirrel-2.2.2/squirrel/sqapi.cpp": "7cbee5e90f05fc619e8de0739632d830f00bbf4f2ef02fe8daaf76ff85560236",
+    "third_party/squirrel-2.2.2/squirrel/sqarray.h": "a555734898421c097241c19147b7985207a5b576b986e2cc6c41db03f55ac80d",
+    "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp": "9f0c7728cf78a06aa74233ea4fea4aa1c2cc9475453b79112af55a03002e7df0",
+    "third_party/squirrel-2.2.2/squirrel/sqclass.cpp": "56f6f620030f54abb2cbfa48beda8eeda7056dcacf610c2d12a56295df0bb4c1",
+    "third_party/squirrel-2.2.2/squirrel/sqclass.h": "2ec1c780d5c95ba600ba6f7af16edfb36c28d232922099b2eaa67be5a8d63641",
+    "third_party/squirrel-2.2.2/squirrel/sqclosure.h": "06bd0dab636c24f213b93f954213b844705acf7b8c6c49de6a1e0821b17e6cd5",
+    "third_party/squirrel-2.2.2/squirrel/sqcompiler.cpp": "2200826c9147e68d58c13760ef2d2ea274bc74c6732c60f47c8bbc717124779e",
+    "third_party/squirrel-2.2.2/squirrel/sqcompiler.h": "91d79b33d97b23890eb87477a1658aa9961c12a9fb81c515d1452919f96dd1b0",
+    "third_party/squirrel-2.2.2/squirrel/sqdebug.cpp": "f245a667883d6b1b67352ddaf00bb334e9c9ec62990406ce05ee622fe51773a3",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncproto.h": "1c63b0709634323b4c72535be3ab31db500c7c379ce0931098e937dead971afd",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncstate.cpp": "b2a7bb8eeaf9ef38141f89801d2d3c11ea45664b04e987d17286c14f97a9300a",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncstate.h": "aaee962c67088b2f7c8973a80ab4cd60978a5d07bf914edda27986e88f03c38b",
+    "third_party/squirrel-2.2.2/squirrel/sqlexer.cpp": "165d48e89a208fcd8222490375a97519e970116ab80631aa807d30f6dbb05851",
+    "third_party/squirrel-2.2.2/squirrel/sqlexer.h": "a6b6f9155dc9902e3916e48789993ac034a0ae7ba0f021fea915f730ff4c6291",
+    "third_party/squirrel-2.2.2/squirrel/sqmem.cpp": "06d77d7fd4164756916b80f361ce80df5b512dce22c268bf0ccebd9dca82bcd5",
+    "third_party/squirrel-2.2.2/squirrel/sqobject.cpp": "eb9249f872a0e52c6c909324ab63a73b610594665caab04d21941123bed182bf",
+    "third_party/squirrel-2.2.2/squirrel/sqobject.h": "24ab4baf2e03b25550572a9ba47ef1dcfd4f9b4abffaed018190f0c63b4e6d7e",
+    "third_party/squirrel-2.2.2/squirrel/sqopcodes.h": "f66cb5d682a4b2d0d3decad4eba45a5d29384168c6d4780e5427d57a9adcd59a",
+    "third_party/squirrel-2.2.2/squirrel/sqpcheader.h": "e8a9b8cfba72258d16bcfde8972718e2f4fe287996ab572b4fb07e8d890f62d1",
+    "third_party/squirrel-2.2.2/squirrel/sqstate.cpp": "83fd121a093275918d24f0e24c6199f3f8602f877b2120021e336a195b2792db",
+    "third_party/squirrel-2.2.2/squirrel/sqstate.h": "7afe300c2c49cdfa04574326fa79614647342be3606dd0cec133193fa25459a5",
+    "third_party/squirrel-2.2.2/squirrel/sqstring.h": "5aef32b57b3c97e2d096ca12b0fc59ec2ef6672f5d3ab3986d4dfcee15a52d7b",
+    "third_party/squirrel-2.2.2/squirrel/sqtable.cpp": "e2ac36678e1f876739ecef6832839dbfcd63a02d3e7fb4f1f5b9a45404fee8b8",
+    "third_party/squirrel-2.2.2/squirrel/sqtable.h": "2d251fdf475294bc84b0a5efd8cefffd9915dfa1913e5293e2bd89d4feed533a",
+    "third_party/squirrel-2.2.2/squirrel/squirrel.dsp": "665a7254c5f8752f61f080fdeb8884a4bf9fc3a3f009473cb242a12d3522ad9b",
+    "third_party/squirrel-2.2.2/squirrel/squserdata.h": "987700bdd6808d3ff7611f4cb9b7bfa875f241316a47b66cbc2a7e5d14d35099",
+    "third_party/squirrel-2.2.2/squirrel/squtils.h": "bcc6d7cecaa77810afbf7aaf3f064a248be636497551c66bd070650862a60449",
+    "third_party/squirrel-2.2.2/squirrel/sqvm.cpp": "8eae095597b0589821922ab2783ac153394cf659fda0a1fb222a3cc584ebbef9",
+    "third_party/squirrel-2.2.2/squirrel/sqvm.h": "f7414bf815266e7173a3112ed56bebb1179359c8c53d811f89e8b724c64f498d",
+    "third_party/stb_vorbis-1.22/README.kinoko.md": "412ce50f781d2084788a544912bdb888d2f7ac7355df617a46aae4d6c3183a45",
+    "third_party/stb_vorbis-1.22/stb_vorbis.c": "171318341b2025084affe0aceb9f554242efcd8edb44a80da1dcc28d796b372d",
+    "third_party/zlib-1.2.3/README": "365db9b693fda6c66ddd97d81ae3eb17be32c890909553973a77439d85900494",
+    "third_party/zlib-1.2.3/adler32.c": "00c99977ac0c230d4a4e7a8e6ceea805a177d2c152f96d65b9120606ba568e59",
+    "third_party/zlib-1.2.3/compress.c": "d1b6b94695a515f7dbc242ec3899110f443e6d61ad331a7731022acb2922269b",
+    "third_party/zlib-1.2.3/crc32.c": "72fed7e11dbcbc2523a643f40dfb076360128f819455378d65492cc2f31855c9",
+    "third_party/zlib-1.2.3/crc32.h": "b8252ca25db989e06910c09b031a328a18ab9c32fb3ab6e6f5c98c0e2b0089cb",
+    "third_party/zlib-1.2.3/deflate.c": "9a7b00ada17c00871dddfd5607e17de22ca22bf57fe16b4e3baae042669a44d6",
+    "third_party/zlib-1.2.3/deflate.h": "21b874a8ed5c2e0157e65d2290f5dd99398583c556466d693f38b2a18dd85194",
+    "third_party/zlib-1.2.3/inffast.c": "42466c76b7c4c330167c7e7e5758b1444140c7adcb4f41d6c6b9f082a8f0f617",
+    "third_party/zlib-1.2.3/inffast.h": "b338cc7381a11473014404298bc89c5c3d6d4f3f5bd4e5c7ca3a8c1c1216ad6a",
+    "third_party/zlib-1.2.3/inffixed.h": "88a340c8e628d56682a99c3a9a38e44fafeb8b4c609e0df85ea17c66011e0f42",
+    "third_party/zlib-1.2.3/inflate.c": "ea0f06889e0e479379b4e7b14df5771825f3d95355c31487076d1d9955c37b33",
+    "third_party/zlib-1.2.3/inflate.h": "664cd98c729e0201f801aa4534f7797bde53190867a33b5336e23025e4271c5d",
+    "third_party/zlib-1.2.3/inftrees.c": "f256499c66a70ca0f63fa575112efaf313d44f69447bea544e4d85a54f289dde",
+    "third_party/zlib-1.2.3/inftrees.h": "f29ebb99a776d4500446d6926155df48dcac9fa7d396ac7fabe31e5bd60cebbe",
+    "third_party/zlib-1.2.3/kinoko-source.md": "7756c553a250951e099e7e794d0e863186d5182f0206f22a09002a40bfdd6d82",
+    "third_party/zlib-1.2.3/trees.c": "1d42f8cb2cf319854d3acbb8e45c821107682fe065ab22c61432a849ecde8133",
+    "third_party/zlib-1.2.3/trees.h": "81579041310716219bbbf7c98849d91f5aeabdd7eadb1f8e9d7e2aa57724b58b",
+    "third_party/zlib-1.2.3/zconf.h": "dd6fc06ec36207bd5af7aa31557553665cc5d294e881a80052a108cff5dd303e",
+    "third_party/zlib-1.2.3/zlib.h": "ebceab9efa0d906fcc28dabb864ae63d99da8e5efe56e030cb9cb96578622245",
+    "third_party/zlib-1.2.3/zutil.c": "e779dcf163308a4565e53d6d462ae19e4896b6f1c759312105bce758404ae075",
+    "third_party/zlib-1.2.3/zutil.h": "5b3ffa91e57686861114a1da30a5ef8327acf2926535241f18de050249af9ac3",
+    "tools/README.md": "df2dfa5dda56fa40a8ffcc6909f1f1890a1bc847d475f4c1672203b650038615",
+    "tools/audit_legacy_islands.py": "ece1bfa11999e477a70fef47133512f270b0462621229efb875adab3cf779c1c",
+    "tools/audit_legacy_reachability.py": "daa1e6f767c8a6c643c9ab4c741ec4f98b22d7a0b69334799686d7955d5c1a59",
+    "tools/audit_replacement_mapping.py": "d717667930375e9fd72ef13017871aa839b359bcb6ca71deee3137641629b9c8",
+    "tools/audit_unused_crt.py": "ee5266f6bd8bc3b334882b5771b966151a1aec70113ce5f6ff8d308b09bb1f28",
+    "tools/capture_loopback.py": "d2dd431f48876276bc38828d9ed6ddeb2dc4a54f619c3e7193b438173597b32a",
+    "tools/capture_process_dump.cpp": "360ff28dd36c9ee4af945f34b0ae764520be88dbe387922bccac017bc5d45610",
+    "tools/check_migration_boundaries.py": "0ec3ec62bc74fb4f8e5ad10fea4c60fff14427c167324a2693a8987ec63b902c",
+    "tools/exercise_game_window.py": "22b9e7dfce8e74301283429a28649d9eda272a98dedf4f7fb64503980794c209",
+    "tools/export_world_atlas.py": "25bf348c4cd139362962e41f99974e3e2298ae16da160e9c46184fceb55599a2",
+    "tools/ida_query.ps1": "657fca1cf3b3975fd827b57f2b0e9c28e02995b780a8a90ac2abcd049e2d2a52",
+    "tools/inspect_archive.cpp": "1ec67add60d4e0be1e7bc5a7425c59160dc6fb2303ade691f15fc43dbcf76f91",
+    "tools/inspect_cv4.py": "1117e2638c37a95717ee6f4f2cecf2d16f4a0d9a49340d01450cd0d0c7600beb",
+    "tools/inspect_minidump.cpp": "0324082bb44956fd933dd4eecff51da2bfbd8fee99811c864677b6178b4b0f58",
+    "tools/original_vm_oracle.cpp": "0a865c854985654d8ed1617a25166c9018942f87b4bdfa6c6c260ecaa452c636",
+    "tools/original_vm_oracle_host.cpp": "057ce5908c15f04e397c5ef1cc20a3dfc4580b0f5da50dc95132e2113010cb81",
+    "tools/prepare_ci_directx.ps1": "72e8310ea5ade1969d8f5c7b185194a857f456c6c4cbd63c0f4c34d5de20968e",
+    "tools/probe_asset.cpp": "f11bf4ec23abc5187b4fbf0e660a21a1ca56f11967a1c70ee2e375a4603781ea",
+    "tools/run_staged.ps1": "3981d3b948ae392ec25202ae0997f336fb6fdd46546928cb2b4e6a77aee0fdb4",
+    "tools/sample_actor_state.py": "7ec64497852627ae03a3f8584081558ddd65173132f15e2d1703857ea59ea417",
+    "tools/stage_dat.ps1": "37fa616972e71897a774de4f88ef6f4abc7315b153f339bc722492e737a7a7bd",
+    "tools/x64dbg_query.py": "e97e3aab75e5b87a1eaf4f91d536a4918109da467e93e5f5c695fb500a91e975"
+  },
+  "maps": [
+    {
+      "name": "kinoko.map",
+      "sha256": "9b6b4e5300b49074f0f4e46b46a7959c9b381fb582d5894d1c5b7d432d3043b5",
+      "source_commit": "44d1f41c468690263143e89dc3593de67fe69042"
+    },
+    {
+      "name": "stage-contract.map",
+      "sha256": "010dd24957d743f515b8fe22f5dd22b8f26bbe6f1537842da672ba3deb6d85de",
+      "source_commit": "44d1f41c468690263143e89dc3593de67fe69042"
+    },
+    {
+      "name": "kinoko.map",
+      "sha256": "af9592c9d7fa3453965d997d7eefc91208076a5608348a88a60d76dd4e6df83d",
+      "source_commit": "44d1f41c468690263143e89dc3593de67fe69042"
+    },
+    {
+      "name": "stage-contract.map",
+      "sha256": "2c252364408ea3e272d4542a382a8a2fe72d6eb9f6102f4c319e97c990691ca2",
+      "source_commit": "44d1f41c468690263143e89dc3593de67fe69042"
+    }
+  ],
+  "graph_nodes": 2224,
+  "root_nodes": 267,
+  "source_reachable": 1414,
+  "outside_inbound": [],
+  "interior_literal_ranges": {
+    "g272": [
+      5161020,
+      5161032
+    ],
+    "g273": [
+      5161032,
+      5161056
+    ],
+    "g345": [
+      5163384,
+      5163400
+    ],
+    "g353": [
+      5163920,
+      5163932
+    ],
+    "g354": [
+      5163932,
+      5163956
+    ],
+    "g398": [
+      5165272,
+      5165284
+    ],
+    "g399": [
+      5165284,
+      5165308
+    ],
+    "g899": [
+      5355876,
+      5355884
+    ],
+    "g922": [
+      5356016,
+      5356020
+    ],
+    "g1035": [
+      5356725,
+      5356726
+    ],
+    "g1091": [
+      5356952,
+      5356956
+    ],
+    "g1092": [
+      5356956,
+      5356960
+    ],
+    "g1093": [
+      5356960,
+      5356968
+    ],
+    "g1094": [
+      5356968,
+      5356972
+    ],
+    "g1095": [
+      5356972,
+      5356976
+    ],
+    "g1096": [
+      5356976,
+      5356980
+    ],
+    "g1097": [
+      5356980,
+      5356984
+    ],
+    "g1098": [
+      5356984,
+      5356988
+    ],
+    "g1099": [
+      5356988,
+      5356992
+    ],
+    "g1100": [
+      5356992,
+      5356996
+    ],
+    "g1155": [
+      5357232,
+      5357236
+    ],
+    "g233": [
+      5159684,
+      5159696
+    ],
+    "g269": [
+      5160944,
+      5160972
+    ],
+    "g271": [
+      5161008,
+      5161020
+    ],
+    "g275": [
+      5161080,
+      5161100
+    ],
+    "g279": [
+      5161200,
+      5161212
+    ],
+    "g330": [
+      5163012,
+      5163024
+    ],
+    "g340": [
+      5163252,
+      5163300
+    ],
+    "g352": [
+      5163908,
+      5163920
+    ],
+    "g360": [
+      5164068,
+      5164088
+    ],
+    "g367": [
+      5164372,
+      5164384
+    ],
+    "g397": [
+      5165260,
+      5165272
+    ],
+    "g404": [
+      5165388,
+      5165408
+    ],
+    "function_417420": [
+      4289568,
+      4289580
+    ],
+    "function_41df50": [
+      4317008,
+      4317016
+    ],
+    "function_41ff00": [
+      4325120,
+      4325132
+    ],
+    "function_420900": [
+      4327680,
+      4327795
+    ],
+    "function_423cf0": [
+      4340976,
+      4341080
+    ],
+    "function_423d60": [
+      4341088,
+      4341189
+    ],
+    "function_4252d0": [
+      4346576,
+      4346584
+    ],
+    "function_425320": [
+      4346656,
+      4346704
+    ],
+    "function_4253d0": [
+      4346832,
+      4346909
+    ],
+    "function_425420": [
+      4346912,
+      4347148
+    ],
+    "function_425510": [
+      4347152,
+      4347345
+    ],
+    "function_425900": [
+      4348160,
+      4348172
+    ],
+    "function_425ae0": [
+      4348640,
+      4349680
+    ],
+    "function_425ef0": [
+      4349680,
+      4349902
+    ],
+    "function_425fd0": [
+      4349904,
+      4350000
+    ],
+    "function_426060": [
+      4350048,
+      4350096
+    ],
+    "function_426090": [
+      4350096,
+      4350152
+    ],
+    "function_4260d0": [
+      4350160,
+      4350238
+    ],
+    "function_426120": [
+      4350240,
+      4350415
+    ],
+    "function_4261f0": [
+      4350448,
+      4350532
+    ],
+    "function_426390": [
+      4350864,
+      4350903
+    ],
+    "function_4263e0": [
+      4350944,
+      4351065
+    ],
+    "function_426500": [
+      4351232,
+      4351275
+    ],
+    "function_426530": [
+      4351280,
+      4351288
+    ],
+    "function_426b90": [
+      4352912,
+      4352924
+    ],
+    "function_427520": [
+      4355360,
+      4355368
+    ],
+    "function_42e3d0": [
+      4383696,
+      4383778
+    ],
+    "function_433080": [
+      4403328,
+      4403412
+    ],
+    "function_436770": [
+      4417392,
+      4417404
+    ],
+    "function_43c1b0": [
+      4440496,
+      4440504
+    ],
+    "function_43c1d0": [
+      4440528,
+      4440534
+    ],
+    "function_43c210": [
+      4440592,
+      4440599
+    ],
+    "function_43c220": [
+      4440608,
+      4440750
+    ],
+    "function_43c2b0": [
+      4440752,
+      4441377
+    ],
+    "function_43c530": [
+      4441392,
+      4441742
+    ],
+    "function_43c690": [
+      4441744,
+      4441772
+    ],
+    "function_43c8c0": [
+      4442304,
+      4442394
+    ],
+    "function_43c920": [
+      4442400,
+      4442683
+    ],
+    "function_43ca40": [
+      4442688,
+      4443135
+    ],
+    "function_43d520": [
+      4445472,
+      4445600
+    ],
+    "function_43d5a0": [
+      4445600,
+      4445871
+    ],
+    "function_43d6b0": [
+      4445872,
+      4445972
+    ],
+    "function_43d720": [
+      4445984,
+      4446114
+    ],
+    "function_43d810": [
+      4446224,
+      4446311
+    ],
+    "function_43d880": [
+      4446336,
+      4446775
+    ],
+    "function_43da40": [
+      4446784,
+      4446986
+    ],
+    "function_43db10": [
+      4446992,
+      4447617
+    ],
+    "function_43dd90": [
+      4447632,
+      4447701
+    ],
+    "function_43dde0": [
+      4447712,
+      4447785
+    ],
+    "function_43de30": [
+      4447792,
+      4448012
+    ],
+    "function_43df10": [
+      4448016,
+      4448168
+    ],
+    "function_43e110": [
+      4448528,
+      4448746
+    ],
+    "function_43e1f0": [
+      4448752,
+      4449045
+    ],
+    "function_43e340": [
+      4449088,
+      4449670
+    ],
+    "function_43e590": [
+      4449680,
+      4449944
+    ],
+    "function_43e6a0": [
+      4449952,
+      4450094
+    ],
+    "function_43e880": [
+      4450432,
+      4450446
+    ],
+    "function_4416c0": [
+      4462272,
+      4462284
+    ],
+    "function_4418a0": [
+      4462752,
+      4463792
+    ],
+    "function_4449c0": [
+      4475328,
+      4475449
+    ],
+    "function_4461b0": [
+      4481456,
+      4481464
+    ],
+    "function_4473a0": [
+      4486048,
+      4486060
+    ],
+    "function_449300": [
+      4494080,
+      4494088
+    ],
+    "function_44ced0": [
+      4509392,
+      4509404
+    ],
+    "function_44d0b0": [
+      4509872,
+      4510912
+    ],
+    "function_44f420": [
+      4518944,
+      4519065
+    ],
+    "function_44fd10": [
+      4521232,
+      4521240
+    ],
+    "function_454c20": [
+      4541472,
+      4541556
+    ],
+    "function_454c80": [
+      4541568,
+      4541672
+    ],
+    "function_454cf0": [
+      4541680,
+      4541784
+    ],
+    "function_4d44e0": [
+      5063904,
+      5063994
+    ]
+  },
+  "outside_interior_literal_references": [],
+  "reference_sha256": "504d899c97d12700aad88d88edbc072f95c600184b684c0bf15bad7471821014",
+  "data_interval_policy": "Original address to next original global address",
+  "candidates": [
+    {
+      "name": "g272",
+      "kind": "data",
+      "start": 128618,
+      "end": 128642,
+      "line": 3482,
+      "original_address": 5161020,
+      "sha256": "f479e3f906736713f5ebf887cb3e03e46cab71c280bcff2467bb514199f3113f",
+      "lines": 1,
+      "references": [
+        "function_425ae0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g273",
+      "kind": "data",
+      "start": 128655,
+      "end": 128679,
+      "line": 3483,
+      "original_address": 5161032,
+      "sha256": "01f3e9315cb0b1a28b1791e76d8fa040fe88bb060fdb5a822130ed014a6800c4",
+      "lines": 1,
+      "references": [
+        "function_4461d0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g345",
+      "kind": "data",
+      "start": 130271,
+      "end": 130295,
+      "line": 3527,
+      "original_address": 5163384,
+      "sha256": "b0618ae777aa42f199b6a3b36dd2fb6283a37c20f35ebaad816adbe8c8d7e976",
+      "lines": 1,
+      "references": [
+        "function_453580"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g353",
+      "kind": "data",
+      "start": 130520,
+      "end": 130544,
+      "line": 3533,
+      "original_address": 5163920,
+      "sha256": "7692ba88d6a1eb9cdb48f17ae6079e8919696fc8ed5640d7e7e916a014d7edb7",
+      "lines": 1,
+      "references": [
+        "function_4418a0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g354",
+      "kind": "data",
+      "start": 130557,
+      "end": 130581,
+      "line": 3534,
+      "original_address": 5163932,
+      "sha256": "94fdd748443787fda5d404d50ace4a35f92f5be06442755c04c51d9bea086c28",
+      "lines": 1,
+      "references": [
+        "function_4461d0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g398",
+      "kind": "data",
+      "start": 131334,
+      "end": 131358,
+      "line": 3555,
+      "original_address": 5165272,
+      "sha256": "c9edf724912446c20e604439924af70dac6176d2685ea0531f6f651629047480",
+      "lines": 1,
+      "references": [
+        "function_44d0b0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g399",
+      "kind": "data",
+      "start": 131371,
+      "end": 131395,
+      "line": 3556,
+      "original_address": 5165284,
+      "sha256": "d7cad7deaa2a4cdcfadb385a5ff0c29778e3211e1d12ec1710428840cfec2c9d",
+      "lines": 1,
+      "references": [
+        "function_4461d0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g899",
+      "kind": "data",
+      "start": 148506,
+      "end": 148523,
+      "line": 4046,
+      "original_address": 5355876,
+      "sha256": "092b3ee1abc62aaf8661456388df954e2e3128d31e5520e8245a416f6cb1bf4c",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g922",
+      "kind": "data",
+      "start": 149196,
+      "end": 149213,
+      "line": 4069,
+      "original_address": 5356016,
+      "sha256": "c4362b7eec4c31fb983dedbbd04f03e4714417c0babfcd0c21ea4b45320ecd06",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1035",
+      "kind": "data",
+      "start": 152572,
+      "end": 152587,
+      "line": 4180,
+      "original_address": 5356725,
+      "sha256": "865cf68b438885e3882967625088ab64dde545b0a7df7c378c184102a98b9d53",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1091",
+      "kind": "data",
+      "start": 154168,
+      "end": 154186,
+      "line": 4234,
+      "original_address": 5356952,
+      "sha256": "21771af88f6dc348ab0ab7060be6c512fc516078e2b8e6c7eaa71e9f2b9174ef",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1092",
+      "kind": "data",
+      "start": 154199,
+      "end": 154217,
+      "line": 4235,
+      "original_address": 5356956,
+      "sha256": "70baf5f447ecf180ec35c91afca0d57aca9ce43a44457bc07b7886b6e7ae67a6",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1093",
+      "kind": "data",
+      "start": 154230,
+      "end": 154248,
+      "line": 4236,
+      "original_address": 5356960,
+      "sha256": "e67a140f4218891c04728d1731751a3869f5a73de04eddcf5108c8185e297556",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1094",
+      "kind": "data",
+      "start": 154261,
+      "end": 154279,
+      "line": 4237,
+      "original_address": 5356968,
+      "sha256": "80903bb792d2876f85d035288a7a568a43893a9a044edec65478db7d8568a765",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1095",
+      "kind": "data",
+      "start": 154292,
+      "end": 154310,
+      "line": 4238,
+      "original_address": 5356972,
+      "sha256": "a4adcf0c0fc8c8bbb3e60b15d73f3eacd7337021d0036f4cf351a46a52b89237",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1096",
+      "kind": "data",
+      "start": 154323,
+      "end": 154341,
+      "line": 4239,
+      "original_address": 5356976,
+      "sha256": "4dbe8a21fa3afe70adea8bf6180306185039de43c2de322742763b7d63316636",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1097",
+      "kind": "data",
+      "start": 154354,
+      "end": 154372,
+      "line": 4240,
+      "original_address": 5356980,
+      "sha256": "93fab3583840b169fdf16424fcf1ae663ed74fe415c32396dcd0369ef92e2e97",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1098",
+      "kind": "data",
+      "start": 154385,
+      "end": 154403,
+      "line": 4241,
+      "original_address": 5356984,
+      "sha256": "63d318b3e8d7959a8e879a87baf064059228a8bcefcec7d56b1ca1ab7c250203",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1099",
+      "kind": "data",
+      "start": 154416,
+      "end": 154434,
+      "line": 4242,
+      "original_address": 5356988,
+      "sha256": "035b91274e59098ed303c0b9f4cf7d446c2fed50c09839fd69ebb5641c0e8fe4",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1100",
+      "kind": "data",
+      "start": 154447,
+      "end": 154465,
+      "line": 4243,
+      "original_address": 5356992,
+      "sha256": "2e8f90fdc8ef5af673bf1f47d4275a2610739a12a98aa56c0c87a41b0d56bf2d",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g1155",
+      "kind": "data",
+      "start": 156152,
+      "end": 156167,
+      "line": 4298,
+      "original_address": 5357232,
+      "sha256": "3ed4739aac6ca2e53531396d6d8d26808f03293b305a195312d047bb4eb0baf4",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g233",
+      "kind": "data",
+      "start": 163056,
+      "end": 163146,
+      "line": 4556,
+      "original_address": 5159684,
+      "sha256": "708f8d330f3a1be375cc8fd0c3e5cbd939b8947d0cf5fc9e15d70384f98c14e2",
+      "lines": 4,
+      "references": [
+        "function_41df50",
+        "function_4252d0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g269",
+      "kind": "data",
+      "start": 164129,
+      "end": 164327,
+      "line": 4598,
+      "original_address": 5160944,
+      "sha256": "8bccb427721ccb81efc696c8b8f06520228bda836ac17523f528574f40e4d7c8",
+      "lines": 8,
+      "references": [
+        "function_420900",
+        "function_4253d0",
+        "function_425420",
+        "function_425510",
+        "function_4461d0",
+        "function_446210"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g271",
+      "kind": "data",
+      "start": 164340,
+      "end": 164430,
+      "line": 4606,
+      "original_address": 5161008,
+      "sha256": "d1775a0833b6df912e8e0490f575347d0ca35ea4efb6daeac60fe42fa85ced15",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_426530"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g275",
+      "kind": "data",
+      "start": 164444,
+      "end": 164588,
+      "line": 4611,
+      "original_address": 5161080,
+      "sha256": "78490894b5ca941ad689c49ee48d8fcc2b3552b4ca310d08b082529230062300",
+      "lines": 6,
+      "references": [
+        "function_415220",
+        "function_419d30",
+        "function_42abe0",
+        "function_43e850"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g279",
+      "kind": "data",
+      "start": 164812,
+      "end": 164902,
+      "line": 4625,
+      "original_address": 5161200,
+      "sha256": "6537b4f2825566ea064ea6b7d822d535bc1083c519f66428bbc602e8a37e1d6f",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_427520"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g330",
+      "kind": "data",
+      "start": 167828,
+      "end": 167918,
+      "line": 4733,
+      "original_address": 5163012,
+      "sha256": "c4aad756df9b7f11faa7d00f83b361cd214fc7f2b034468f654226419cbee756",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_43c1b0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g340",
+      "kind": "data",
+      "start": 168506,
+      "end": 168885,
+      "line": 4760,
+      "original_address": 5163252,
+      "sha256": "ae5b1d8e4f0691686d8fe652cde817e6f290b996f468aec797997770d5ecc38c",
+      "lines": 13,
+      "references": [
+        "function_43c1d0",
+        "function_43c220",
+        "function_43c530",
+        "function_43c690",
+        "function_43c8c0",
+        "function_43c920",
+        "function_43ca40",
+        "function_43d810",
+        "function_43e880",
+        "function_4461d0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g352",
+      "kind": "data",
+      "start": 169180,
+      "end": 169270,
+      "line": 4783,
+      "original_address": 5163908,
+      "sha256": "ba4591a2d4f996317bc65ec5985ef6b79f9c40d9932a3550d05e2ac6d8e59a04",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_4461b0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g360",
+      "kind": "data",
+      "start": 169284,
+      "end": 169428,
+      "line": 4788,
+      "original_address": 5164068,
+      "sha256": "97a39fea19e0ae8614df2a1eba90bb880ce631333678ad83e9c731b9589fa2c0",
+      "lines": 6,
+      "references": [
+        "function_415220",
+        "function_419d30",
+        "function_42abe0",
+        "function_43e850"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g367",
+      "kind": "data",
+      "start": 170130,
+      "end": 170220,
+      "line": 4820,
+      "original_address": 5164372,
+      "sha256": "24c930a3a29d0ebd01e69b28cbdc4cfb238b5a08a23e259bef0855ee55d35858",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_449300"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g397",
+      "kind": "data",
+      "start": 171947,
+      "end": 172037,
+      "line": 4890,
+      "original_address": 5165260,
+      "sha256": "d4d3d9d6dff562510af2ae0eab1f333141a97681b5c116362417b7c9b1a68b8c",
+      "lines": 4,
+      "references": [
+        "function_4252d0",
+        "function_44fd10"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "g404",
+      "kind": "data",
+      "start": 172051,
+      "end": 172195,
+      "line": 4895,
+      "original_address": 5165388,
+      "sha256": "c2162da7cda91e0fdc1aa55b59dde0ee4cbc6b2c7ca27163a8581183d200fa67",
+      "lines": 6,
+      "references": [
+        "function_415220",
+        "function_419d30",
+        "function_42abe0",
+        "function_43e850"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_417420",
+      "start": 525750,
+      "end": 525844,
+      "line": 16080,
+      "kind": "function",
+      "original_address": 4289568,
+      "sha256": "7c5f3b8ad8b1d2a33d7bec9da24c54e1470ec409e1cb46cf9a55c6e351f593de",
+      "lines": 4,
+      "references": [
+        "function_4175f0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_41df50",
+      "start": 597584,
+      "end": 597663,
+      "line": 18378,
+      "kind": "function",
+      "original_address": 4317008,
+      "sha256": "85e1902b4f8f2d394004fa2dfd799c412124cc72ac4cb79e07701e6ad15e18f4",
+      "lines": 4,
+      "references": [
+        "function_417420"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_41ff00",
+      "start": 646621,
+      "end": 646715,
+      "line": 19924,
+      "kind": "function",
+      "original_address": 4325120,
+      "sha256": "80e3686d0c12d5ca6350e92c77f39916aa3cc981f78a611efd5d5ce18b2a86b7",
+      "lines": 4,
+      "references": [
+        "function_441cb0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_420900",
+      "start": 665393,
+      "end": 666313,
+      "line": 20505,
+      "kind": "function",
+      "original_address": 4327680,
+      "sha256": "abda2709ecfc0a326ae70bdc3aea46c38947f862ca0142677bd1a3d118c5cee0",
+      "lines": 33,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_425320",
+        "function_4ab330",
+        "g1224",
+        "g269"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_423cf0",
+      "start": 708321,
+      "end": 708920,
+      "line": 21757,
+      "kind": "function",
+      "original_address": 4340976,
+      "sha256": "e62a65a770b7521f2f96ef1e397afb016d31c9cc8e5f36d89d088d1ddb39d1c9",
+      "lines": 15,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_423d60",
+      "start": 708960,
+      "end": 709463,
+      "line": 21774,
+      "kind": "function",
+      "original_address": 4341088,
+      "sha256": "fdda3780ef70fb02211fcdfc37f9590749286832ef39f84bc0720ce2275be34d",
+      "lines": 14,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4252d0",
+      "start": 714637,
+      "end": 714716,
+      "line": 21958,
+      "kind": "function",
+      "original_address": 4346576,
+      "sha256": "d0f5cb34b33945585e42bcc42627bcb2bc915fcf94d5c3d8e6f1ac81b8153ecc",
+      "lines": 4,
+      "references": [
+        "function_41ff00"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_425320",
+      "start": 715083,
+      "end": 715509,
+      "line": 21980,
+      "kind": "function",
+      "original_address": 4346656,
+      "sha256": "a90b56b51be7e90cfd0b22121104bed9a23d295b0753d921a07875cf884eb9cc",
+      "lines": 17,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "g1224",
+        "g269"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4253d0",
+      "start": 715629,
+      "end": 716268,
+      "line": 22002,
+      "kind": "function",
+      "original_address": 4346832,
+      "sha256": "23c3c4364094e9c63f2303f144befdbeaf41e36bb411d45e3608763eafbbe5a2",
+      "lines": 22,
+      "references": [
+        "function_425ef0",
+        "g269"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_425420",
+      "start": 716387,
+      "end": 718682,
+      "line": 22028,
+      "kind": "function",
+      "original_address": 4346912,
+      "sha256": "522660d03f0602aa0f4c33895b23a156531104df0f4494a09c4b7944e03fca54",
+      "lines": 84,
+      "references": [
+        "function_425ae0",
+        "function_425fd0",
+        "function_44d4c0",
+        "g1224",
+        "g899"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_425510",
+      "start": 718801,
+      "end": 720765,
+      "line": 22116,
+      "kind": "function",
+      "original_address": 4347152,
+      "sha256": "9c21d89c4b92d0d49d982c36446551a6962940ccbf7b5fcf4f599470513f466b",
+      "lines": 71,
+      "references": [
+        "function_441cb0",
+        "function_441df0",
+        "g1224",
+        "g673",
+        "g899"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_425900",
+      "start": 720923,
+      "end": 721017,
+      "line": 22197,
+      "kind": "function",
+      "original_address": 4348160,
+      "sha256": "425522e9d4ea5afc4aff3d5ad89fe3397b53a075fb0f5ee8f32e3d351b63cf74",
+      "lines": 4,
+      "references": [
+        "function_425ae0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_425ae0",
+      "start": 721058,
+      "end": 733502,
+      "line": 22204,
+      "kind": "function",
+      "original_address": 4348640,
+      "sha256": "b50304cd25bb7636368fbe08ea4c9262921aaca8ed6a0dda878ef803dfa6c256",
+      "lines": 369,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_405900",
+        "function_406cc0",
+        "function_418500",
+        "function_4231e0",
+        "function_4263e0",
+        "function_4273a0",
+        "function_438e70",
+        "function_43e100",
+        "g1224",
+        "g273",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_425ef0",
+      "start": 733542,
+      "end": 734691,
+      "line": 22575,
+      "kind": "function",
+      "original_address": 4349680,
+      "sha256": "69523c72ba006f9468104f60318a633e62f7fc0cab884ff91f15691f595ca2d4",
+      "lines": 43,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_426060",
+        "function_426090",
+        "function_426390",
+        "function_426500",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_425fd0",
+      "start": 734731,
+      "end": 736032,
+      "line": 22620,
+      "kind": "function",
+      "original_address": 4349904,
+      "sha256": "9f278aabc828991ab17d35c466c0b0350db254f0cd1d19cea2d6fcab9ff0d4d2",
+      "lines": 48,
+      "references": [
+        "function_4260d0"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_426060",
+      "start": 736073,
+      "end": 736173,
+      "line": 22671,
+      "kind": "function",
+      "original_address": 4350048,
+      "sha256": "5b2f81c8e3cbb2cfaea977a3190c5ccab7ac8e2101d8182aed9f79a9187ae022",
+      "lines": 5,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_426090",
+      "start": 736213,
+      "end": 736856,
+      "line": 22678,
+      "kind": "function",
+      "original_address": 4350096,
+      "sha256": "bc795e6dd9546608e28e11b60f84a8d5ca16fe27cf1eb17c42e24e037019faed",
+      "lines": 25,
+      "references": [
+        "function_4261f0"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4260d0",
+      "start": 736896,
+      "end": 737774,
+      "line": 22705,
+      "kind": "function",
+      "original_address": 4350160,
+      "sha256": "76e699cae26df6b90112bed7bdeea3ed921b688dc63e3acbc659ff86cb72697d",
+      "lines": 25,
+      "references": [
+        "function_426120",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_426120",
+      "start": 737814,
+      "end": 739036,
+      "line": 22732,
+      "kind": "function",
+      "original_address": 4350240,
+      "sha256": "9414206c0af56514b11bdd34cd048408b18a242ee7c309ee6fed939f3f9cf578",
+      "lines": 39,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_4261f0",
+        "function_426500",
+        "g1224",
+        "g507"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4261f0",
+      "start": 739076,
+      "end": 739630,
+      "line": 22773,
+      "kind": "function",
+      "original_address": 4350448,
+      "sha256": "bea63ae198a50785d7b2c590ef5e91bae92c4f72fc3cae6506884d8051742c7b",
+      "lines": 22,
+      "references": [
+        "g22"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_426390",
+      "start": 739671,
+      "end": 740208,
+      "line": 22798,
+      "kind": "function",
+      "original_address": 4350864,
+      "sha256": "c53cff153fa363d72be2a0961ed85920172aaa8902bee01960aed9d8ecbc6af2",
+      "lines": 22,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4263e0",
+      "start": 740249,
+      "end": 740799,
+      "line": 22823,
+      "kind": "function",
+      "original_address": 4350944,
+      "sha256": "9632f60ec825b30f38f83072dcce87239130dc5e24f3badfbf1c453ad20d01a9",
+      "lines": 19,
+      "references": [
+        "g275"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_426500",
+      "start": 740840,
+      "end": 741636,
+      "line": 22845,
+      "kind": "function",
+      "original_address": 4351232,
+      "sha256": "8a0df27ce2a021fadac448a00af724f5fd2f2d57085839e39d12da359b40f243",
+      "lines": 32,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_426530",
+      "start": 741786,
+      "end": 741865,
+      "line": 22881,
+      "kind": "function",
+      "original_address": 4351280,
+      "sha256": "acc0e0817a4adcad5279c911d1d49c04e5ccadb24a7c8e793eb7018c2154ac1b",
+      "lines": 4,
+      "references": [
+        "function_425900"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_426b90",
+      "start": 746336,
+      "end": 746430,
+      "line": 23054,
+      "kind": "function",
+      "original_address": 4352912,
+      "sha256": "67d0667d7ef15f63e38df4652e048845d8755237d9c7ce96c33338e5d0a5b86d",
+      "lines": 4,
+      "references": [
+        "function_426d70",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_427520",
+      "start": 761608,
+      "end": 761687,
+      "line": 23522,
+      "kind": "function",
+      "original_address": 4355360,
+      "sha256": "a68d9388b0ccdd1570d71ffdd7cefd408b1ceaf691d85e388c59e0e737a05a42",
+      "lines": 4,
+      "references": [
+        "function_426b90"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_42e3d0",
+      "start": 931424,
+      "end": 931868,
+      "line": 28818,
+      "kind": "function",
+      "original_address": 4383696,
+      "sha256": "8f64748bbf6a4d489a7523a8388078a0465cdad92882b8029f2dae11fafdbe23",
+      "lines": 10,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_433080",
+      "start": 1044949,
+      "end": 1045402,
+      "line": 32399,
+      "kind": "function",
+      "original_address": 4403328,
+      "sha256": "7cd6897d925c9ba25263d674d061751f555fa8e008d707db3fec30cf43ecd1c1",
+      "lines": 10,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_436770",
+      "start": 1124643,
+      "end": 1124737,
+      "line": 34882,
+      "kind": "function",
+      "original_address": 4417392,
+      "sha256": "6d46cc5d0699b9f7bbf01d3827483a2b230f028cd26108786b1fcd134194fd28",
+      "lines": 4,
+      "references": [
+        "function_436940",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43c1b0",
+      "start": 1310221,
+      "end": 1310300,
+      "line": 40775,
+      "kind": "function",
+      "original_address": 4440496,
+      "sha256": "d9d3424abc48530ec88ca4570460f46a51228ed5a484daadca7b932126c08122",
+      "lines": 4,
+      "references": [
+        "function_436770"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c1d0",
+      "start": 1310629,
+      "end": 1310696,
+      "line": 40791,
+      "kind": "function",
+      "original_address": 4440528,
+      "sha256": "a8f440ad643985be94762e05df38376e91bb95744cd5a4e772c35811293f25a7",
+      "lines": 4,
+      "references": [
+        "g922"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c210",
+      "start": 1310801,
+      "end": 1310942,
+      "line": 40800,
+      "kind": "function",
+      "original_address": 4440592,
+      "sha256": "b414e40c674c24bfeb57d776b7290d0ce613407fa8de3c7870e4360193096597",
+      "lines": 6,
+      "references": [
+        "g340"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43c220",
+      "start": 1311058,
+      "end": 1312549,
+      "line": 40810,
+      "kind": "function",
+      "original_address": 4440608,
+      "sha256": "eec080dfcf7f3f65f9b62a33bab0aa23f5b1585a65c268ca5bb9149d254e717c",
+      "lines": 42,
+      "references": [
+        "g340"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c2b0",
+      "start": 1312589,
+      "end": 1314974,
+      "line": 40854,
+      "kind": "function",
+      "original_address": 4440752,
+      "sha256": "36c909d88d1157255d4667cbedb911c02a5b988861363c70ad9956e8de92ad6b",
+      "lines": 76,
+      "references": [
+        "function_415870",
+        "function_41e200",
+        "function_43d520",
+        "function_43d5a0",
+        "function_43d6b0",
+        "function_43d720",
+        "function_43de30",
+        "function_43e110",
+        "function_43e590",
+        "function_4d44e0",
+        "g1092",
+        "g1155",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c530",
+      "start": 1315090,
+      "end": 1317035,
+      "line": 40934,
+      "kind": "function",
+      "original_address": 4441392,
+      "sha256": "c825266c4ec756530f8124adcff6219e6cec84921c3509b27ae6425ff75bce20",
+      "lines": 62,
+      "references": [
+        "function_415480",
+        "function_41e200",
+        "function_43c2b0",
+        "function_43df10",
+        "function_43e6a0",
+        "g1224",
+        "g39",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c690",
+      "start": 1317151,
+      "end": 1317369,
+      "line": 41000,
+      "kind": "function",
+      "original_address": 4441744,
+      "sha256": "d749002418469672767b1e461b96e9af583a14eceadf0935696ca0c6e0bbffae",
+      "lines": 11,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c8c0",
+      "start": 1318221,
+      "end": 1318846,
+      "line": 41041,
+      "kind": "function",
+      "original_address": 4442304,
+      "sha256": "474f2b33df00450c59bdd6389780cd91c923dd8d2fdf3691cf08025353698c5c",
+      "lines": 23,
+      "references": [
+        "function_441cb0",
+        "function_441df0",
+        "g1224",
+        "g673",
+        "g923"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43c920",
+      "start": 1318962,
+      "end": 1320835,
+      "line": 41068,
+      "kind": "function",
+      "original_address": 4442400,
+      "sha256": "e861fd96b6c6a739b8550cdca58433fc2e23af67c9f95bdefae0b357bf129aae",
+      "lines": 46,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43ca40",
+      "start": 1320951,
+      "end": 1321731,
+      "line": 41118,
+      "kind": "function",
+      "original_address": 4442688,
+      "sha256": "fc6065513a5b0ec328ec36fdc598e74661751d793af0f0345d376fa0231ab75b",
+      "lines": 28,
+      "references": [
+        "g678"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43d520",
+      "start": 1334644,
+      "end": 1335400,
+      "line": 41536,
+      "kind": "function",
+      "original_address": 4445472,
+      "sha256": "cb23f3f2fdf133d1e17c8c550b63d0f73344fc330439cd8479397f0d7f4274a0",
+      "lines": 28,
+      "references": [
+        "g1091",
+        "g1092",
+        "g1093",
+        "g22"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43d5a0",
+      "start": 1335440,
+      "end": 1337298,
+      "line": 41566,
+      "kind": "function",
+      "original_address": 4445600,
+      "sha256": "db209dfc2d424a6fee6d7b5329a781160a0e4a03766b00325b4ce9deab22b034",
+      "lines": 61,
+      "references": [
+        "function_43d720",
+        "function_43e1f0",
+        "function_43e590",
+        "g1092",
+        "g39"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43d6b0",
+      "start": 1337338,
+      "end": 1338217,
+      "line": 41629,
+      "kind": "function",
+      "original_address": 4445872,
+      "sha256": "e6b2fcde4773b5455d7e033d4e0810f931931d78c17a05e3428d565559cf9b4a",
+      "lines": 30,
+      "references": [
+        "g1092"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43d720",
+      "start": 1338324,
+      "end": 1339045,
+      "line": 41663,
+      "kind": "function",
+      "original_address": 4445984,
+      "sha256": "5acc0200ac12bfa9f204108dcf2c2fc792d47ab2f6fdc9ff4a6df47ff4972f2b",
+      "lines": 22,
+      "references": [
+        "function_43d880",
+        "g1035",
+        "g1099",
+        "g345",
+        "g39"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43d810",
+      "start": 1339162,
+      "end": 1339881,
+      "line": 41690,
+      "kind": "function",
+      "original_address": 4446224,
+      "sha256": "49f0b0b577b3f8b39998bfd3af2f3b05f4bae32eba4cab35b2feab2a4a3323e1",
+      "lines": 25,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_43c210",
+        "function_4ab330",
+        "g1224",
+        "g340"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43d880",
+      "start": 1339922,
+      "end": 1341822,
+      "line": 41718,
+      "kind": "function",
+      "original_address": 4446336,
+      "sha256": "5faa5f8ebcc0ce6124a580bbf01b2d7a0a48a0d27c4f9f563bc0a61d1b33cbc6",
+      "lines": 34,
+      "references": [
+        "g1094",
+        "g1095",
+        "g1096",
+        "g1097",
+        "g1098",
+        "g1099",
+        "g1100"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43da40",
+      "start": 1341862,
+      "end": 1346189,
+      "line": 41754,
+      "kind": "function",
+      "original_address": 4446784,
+      "sha256": "667d8672645b12f058c1f56b2399fe6325bb4e1f967ced4f19ce09e828dd1ddb",
+      "lines": 142,
+      "references": [
+        "function_43db10",
+        "function_44ada0",
+        "g1092",
+        "g1093",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43db10",
+      "start": 1346229,
+      "end": 1357006,
+      "line": 41898,
+      "kind": "function",
+      "original_address": 4446992,
+      "sha256": "8d68ba2f7c584990103b282597b592ebd9a67ece54d91df07bb9b89cfc6eae0f",
+      "lines": 337,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_43dd90",
+        "function_43dde0",
+        "function_443560",
+        "function_453fe0",
+        "g1092",
+        "g1093",
+        "g1224",
+        "g39"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43dd90",
+      "start": 1357046,
+      "end": 1357889,
+      "line": 42237,
+      "kind": "function",
+      "original_address": 4447632,
+      "sha256": "35478ff2ab17226a9bdf2ca24a49b0b94e457743295f50340fa6b115ab824d34",
+      "lines": 32,
+      "references": [
+        "g1092"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43dde0",
+      "start": 1357929,
+      "end": 1358390,
+      "line": 42271,
+      "kind": "function",
+      "original_address": 4447712,
+      "sha256": "17f1d870222da76f7d5f29fc6ea9dcefe7b8a7f40603fb55f129f7225b39faab",
+      "lines": 17,
+      "references": [
+        "g1092"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43de30",
+      "start": 1358430,
+      "end": 1359326,
+      "line": 42290,
+      "kind": "function",
+      "original_address": 4447792,
+      "sha256": "dc13f2288272c4d7f3dca023822da6f3f89076166a69806514cceecb3f3c60fa",
+      "lines": 18,
+      "references": [
+        "g1095",
+        "g1096",
+        "g1097",
+        "g1098"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43df10",
+      "start": 1359366,
+      "end": 1360062,
+      "line": 42310,
+      "kind": "function",
+      "original_address": 4448016,
+      "sha256": "935f400499c876a3933008c36952a0901489ffcc68bdfc84c5377b049bd168c9",
+      "lines": 15,
+      "references": [
+        "g1099",
+        "g1100"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43e110",
+      "start": 1360322,
+      "end": 1362297,
+      "line": 42337,
+      "kind": "function",
+      "original_address": 4448528,
+      "sha256": "793de160be558abc86afcde25d94a39aeb70c0fd669d50f6b58ffe68f801dab3",
+      "lines": 73,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_43a350",
+        "function_43e340",
+        "g1092",
+        "g1224",
+        "g39"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43e1f0",
+      "start": 1362337,
+      "end": 1364671,
+      "line": 42412,
+      "kind": "function",
+      "original_address": 4448752,
+      "sha256": "41e960f70aa373f670dc4753a3969cbd0dcab6c2f8a773d0622576303a0de3e8",
+      "lines": 80,
+      "references": [
+        "function_43a350",
+        "function_43e110",
+        "function_43e340",
+        "function_453fe0",
+        "g1092",
+        "g1093"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43e340",
+      "start": 1364712,
+      "end": 1374115,
+      "line": 42495,
+      "kind": "function",
+      "original_address": 4449088,
+      "sha256": "c382ca16d662f3e7846e9fa380006abf712437ed4fd14283d09cb8a3d851600d",
+      "lines": 266,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "g1092",
+        "g1093",
+        "g1224",
+        "g39"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43e590",
+      "start": 1374223,
+      "end": 1375913,
+      "line": 42765,
+      "kind": "function",
+      "original_address": 4449680,
+      "sha256": "9103b37755f68392a0f12c10c120fdd6f0ef9ae9e9c69d0f6af5f5fff87046d9",
+      "lines": 44,
+      "references": [
+        "g1092",
+        "g22",
+        "g345",
+        "g39",
+        "g443"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_43e6a0",
+      "start": 1375953,
+      "end": 1376602,
+      "line": 42811,
+      "kind": "function",
+      "original_address": 4449952,
+      "sha256": "647cf360982d301595f9a0e71328a26e28d6e51e8c0e5d617a85cb19e7e556c7",
+      "lines": 15,
+      "references": [
+        "g1099",
+        "g1100"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_43e880",
+      "start": 1377605,
+      "end": 1377733,
+      "line": 42864,
+      "kind": "function",
+      "original_address": 4450432,
+      "sha256": "84957a87746be14de3889380f0a001cc0ab6c285d46586ca47361ec549e3306f",
+      "lines": 6,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_4416c0",
+      "start": 1392273,
+      "end": 1392367,
+      "line": 43339,
+      "kind": "function",
+      "original_address": 4462272,
+      "sha256": "595ee4ca4fb64e8d7cd16605ed50e946181fc3ffd5966a22176623a7b9c79bc2",
+      "lines": 4,
+      "references": [
+        "function_4418a0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4418a0",
+      "start": 1392408,
+      "end": 1404852,
+      "line": 43346,
+      "kind": "function",
+      "original_address": 4462752,
+      "sha256": "c4307d25411ed8c7d615378a58a3b643e61fc10031dc0aaf0663a099cfc139de",
+      "lines": 369,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_405900",
+        "function_406cc0",
+        "function_418500",
+        "function_4231e0",
+        "function_4273a0",
+        "function_438e70",
+        "function_43e100",
+        "function_4449c0",
+        "g1224",
+        "g354",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_4449c0",
+      "start": 1423153,
+      "end": 1423703,
+      "line": 44312,
+      "kind": "function",
+      "original_address": 4475328,
+      "sha256": "21c7dbe025c50c9b95282a4148e9cae7fc2d761cb0898da40f9a68cc1113cd2c",
+      "lines": 19,
+      "references": [
+        "g360"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_4461b0",
+      "start": 1429116,
+      "end": 1429195,
+      "line": 44476,
+      "kind": "function",
+      "original_address": 4481456,
+      "sha256": "d59c013f631abfbf5a9b9f2f3c2d187f084f9454dc34431bbc84638c8494f292",
+      "lines": 4,
+      "references": [
+        "function_4416c0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_4473a0",
+      "start": 1453098,
+      "end": 1453192,
+      "line": 45286,
+      "kind": "function",
+      "original_address": 4486048,
+      "sha256": "56d761232737e8e575545a145b1b5ee7057f976fec5b8c3bc83e450d15275bed",
+      "lines": 4,
+      "references": [
+        "function_447570",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_449300",
+      "start": 1509289,
+      "end": 1509368,
+      "line": 46987,
+      "kind": "function",
+      "original_address": 4494080,
+      "sha256": "a630ded88d82edb639a048df202707dc752ef061a3e188ba648219be852b79c6",
+      "lines": 4,
+      "references": [
+        "function_4473a0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_44ced0",
+      "start": 1579831,
+      "end": 1579925,
+      "line": 49182,
+      "kind": "function",
+      "original_address": 4509392,
+      "sha256": "654686075b1ac1b2c58908a53a069a249b6cec8744ba1ecca81d17d4408982ea",
+      "lines": 4,
+      "references": [
+        "function_44d0b0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_44d0b0",
+      "start": 1579966,
+      "end": 1592410,
+      "line": 49189,
+      "kind": "function",
+      "original_address": 4509872,
+      "sha256": "97715a5536b755df2ab4bbb321c64e312102a951f13ce34af7ab48cc90f69f49",
+      "lines": 369,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_405900",
+        "function_406cc0",
+        "function_418500",
+        "function_4231e0",
+        "function_4273a0",
+        "function_438e70",
+        "function_43e100",
+        "function_44f420",
+        "g1224",
+        "g399",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_44f420",
+      "start": 1596198,
+      "end": 1596748,
+      "line": 49682,
+      "kind": "function",
+      "original_address": 4518944,
+      "sha256": "9b86b0eaaa0a7ee415902af9494a4448c97267131cc83486c94d18c00142d703",
+      "lines": 19,
+      "references": [
+        "g404"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_44fd10",
+      "start": 1603963,
+      "end": 1604042,
+      "line": 49947,
+      "kind": "function",
+      "original_address": 4521232,
+      "sha256": "ac801aa4299d73b6ca91074d3019bae2912d902238f89e7c38913ed48c7780cd",
+      "lines": 4,
+      "references": [
+        "function_44ced0"
+      ],
+      "linked_maps": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "name": "function_454c20",
+      "start": 1655721,
+      "end": 1656151,
+      "line": 51663,
+      "kind": "function",
+      "original_address": 4541472,
+      "sha256": "fe43d6e730e799671aadd2039a6691cb888a4052e7f456d63bbc6b29d35c12ef",
+      "lines": 9,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_454c80",
+      "start": 1656191,
+      "end": 1656772,
+      "line": 51674,
+      "kind": "function",
+      "original_address": 4541568,
+      "sha256": "d8750368fb3081bce6b25c008642fb0ed3f80163c41e332d7909713df565ccca",
+      "lines": 15,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_454cf0",
+      "start": 1656812,
+      "end": 1657343,
+      "line": 51691,
+      "kind": "function",
+      "original_address": 4541680,
+      "sha256": "1fe04450e4790997cf7aa526765fd16ef9091dafec71f5c70c62bbc548827f69",
+      "lines": 14,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4d44e0",
+      "start": 2385042,
+      "end": 2385327,
+      "line": 74782,
+      "kind": "function",
+      "original_address": 5063904,
+      "sha256": "f22a02e44937c33c495e9f1d41c31838148b2d8b73340e3fe2547d4669c14d50",
+      "lines": 9,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_43da40",
+        "g1092",
+        "g1224"
+      ],
+      "linked_maps": []
+    }
+  ],
+  "functions": 71,
+  "data": 33,
+  "selected_lines": 3443,
+  "linked_candidates": 71,
+  "after_sha256": "696ac4931b10802d51948a6a5210d7e98c58467a70bc00e208ce9e0b8369d854",
+  "removed_table_types": [
+    "vtable_4ebb04_type",
+    "vtable_4ebff0_type",
+    "vtable_4ec030_type",
+    "vtable_4ec078_type",
+    "vtable_4ec0f0_type",
+    "vtable_4ec804_type",
+    "vtable_4ec8f4_type",
+    "vtable_4ecb84_type",
+    "vtable_4ecc24_type",
+    "vtable_4ecd54_type",
+    "vtable_4ed0cc_type",
+    "vtable_4ed14c_type"
+  ],
+  "artifacts": [
+    {
+      "id": 10589904537,
+      "variant": "quiet",
+      "sha256": "b1f1f94d8f4205f93d9a865a09eb0b8998a53852fd0b4dd484e2aaf2a418ab52"
+    },
+    {
+      "id": 10590264071,
+      "variant": "diagnostic",
+      "sha256": "3882249142ebb2f253e253ac87077d7e347eee42b24c7177ce2d9df293dc4769"
+    }
+  ]
+}
