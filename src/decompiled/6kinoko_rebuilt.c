@@ -121774,16 +121774,7 @@ int32_t function_46b420(char a1) {
 }
 
 // Address range: 0x46b450 - 0x46b48a
-int32_t function_46b450(int32_t a1, int32_t a2) {
-    // 0x46b450
-    int32_t result; // bp-12, 0x46b450
-    if (function_48a8d0(a1, a2, &result) < 0) {
-        // 0x46b46e
-        __CxxThrowException_40_8();
-    }
-    // 0x46b483
-    return result;
-}
+/* function_46b450 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // The original routines below are SqPlus argument adapters.  RetDec lost
 // their first (this) argument and consequently shifted the VM arguments into
@@ -125850,40 +125841,10 @@ int32_t function_470d00(int32_t a1) {
 }
 
 // Address range: 0x470df0 - 0x470ed8
-int32_t function_470df0(int32_t vm, int32_t index) {
-    int32_t type = function_48a6f0(vm, index);
-    int32_t integer_value;
-    int32_t bool_value;
-    int32_t float_value;
-
-    if (type == 0x01000001)
-        return 0;
-    if (type == 0x01000008) {
-        if (function_48a890(vm, index, &bool_value) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-        return bool_value != 0;
-    }
-    if (type == 0x05000002) {
-        if (function_48a7d0(vm, index, &integer_value) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-        return integer_value != 0;
-    }
-    if (type == 0x05000004) {
-        if (function_48a830(vm, index, &float_value) < 0)
-            return function_48ac00(vm, "sq_get*() failed (type error)");
-        return float_value != 0;
-    }
-    return 1;
-}
+/* function_470df0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x470ee0 - 0x470f05
-int32_t function_470ee0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-
-    if (target != 0)
-        ((int32_t (__cdecl *)(void))(intptr_t)target)();
-    return 0;
-}
+/* function_470ee0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x470f10 - 0x470f21
 int32_t function_470f10(void) {
@@ -126013,30 +125974,7 @@ int32_t function_471100(void) {
 }
 
 // Address range: 0x471160 - 0x471237
-int32_t function_471160(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t callback_object[3];
-    int32_t value;
-    int32_t result;
-
-    if (function_48a6f0(vm, index) != 0x08000010)
-        return function_48ac00(vm, "Incorrect function argument");
-
-    /* The original reserves a SquirrelObject below the callback argument.
-       LoadTable/SaveTable consume the three dwords as a by-value object. */
-    function_45f5e0_at(callback_object, 0, vm, index + 1);
-    if (function_48a8d0(vm, index, &value) < 0)
-        return function_48ac00(vm, "sq_get*() failed (type error)");
-    if (callback_ptr == 0) {
-        function_4a9d70_this((int32_t)(intptr_t)callback_object);
-        return 0;
-    }
-
-    result = ((int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t))
-              (intptr_t)callback_ptr)(
-        value, callback_object[0], callback_object[1], callback_object[2]);
-    function_48a530(vm, (unsigned char)result);
-    return 1;
-}
+/* function_471160 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471240 - 0x471329
 int32_t function_471240(int32_t a1, int32_t a2) {
@@ -126070,20 +126008,7 @@ int32_t function_471240(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x471330 - 0x4713a9
-int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t value;
-    int32_t result;
-
-    if (function_48a6f0(vm, index) != 0x08000010)
-        return function_48ac00(vm, "Incorrect function argument");
-    if (function_48a8d0(vm, index, &value) < 0)
-        return function_48ac00(vm, "sq_get*() failed (type error)");
-    if (callback_ptr != 0) {
-        result = ((int32_t (__cdecl *)(int32_t))(intptr_t)callback_ptr)(value);
-        function_48a530(vm, (unsigned char)result);
-    }
-    return 1;
-}
+/* function_471330 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 
 // Address range: 0x471510 - 0x4715da
@@ -126215,51 +126140,10 @@ int32_t function_471810(int32_t a1, int32_t a2) {
    VM and one-based argument index.  RetDec collapsed those three values into
    two parameters, so the old body validated a local address as a VM and never
    invoked the registered callback. */
-int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t first;
-    int32_t second;
-    int32_t third;
-    int32_t fourth;
-
-    if (function_48a6f0(vm, index) != 0x08000010 ||
-        function_48a6f0(vm, index + 1) != 0x05000002 ||
-        function_48a6f0(vm, index + 2) != 0x05000002)
-        return function_48ac00(vm, "Incorrect function argument");
-
-    fourth = function_470df0(vm, index + 3);
-    third = function_45f560(vm, index + 2);
-    second = function_45f560(vm, index + 1);
-    first = function_46b450(vm, index);
-    if (callback_ptr != 0)
-        ((void (__cdecl *)(int32_t, int32_t, int32_t, int32_t))
-            (intptr_t)callback_ptr)(first, second, third, fourth);
-    return 0;
-}
+/* function_471880 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471960 - 0x471a5c
-int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index) {
-    int32_t first;
-    int32_t second;
-    int32_t third;
-    int32_t fourth;
-    int32_t fifth;
-
-    if (function_48a6f0(vm, index) != 0x08000010 ||
-        function_48a6f0(vm, index + 1) != 0x05000002 ||
-        function_48a6f0(vm, index + 2) != 0x05000002 ||
-        function_48a6f0(vm, index + 3) != 0x05000002)
-        return function_48ac00(vm, "Incorrect function argument");
-
-    fifth = function_470df0(vm, index + 4);
-    fourth = function_45f560(vm, index + 3);
-    third = function_45f560(vm, index + 2);
-    second = function_45f560(vm, index + 1);
-    first = function_46b450(vm, index);
-    if (callback_ptr != 0)
-        ((void (__cdecl *)(int32_t, int32_t, int32_t, int32_t, int32_t))
-            (intptr_t)callback_ptr)(first, second, third, fourth, fifth);
-    return 0;
-}
+/* function_471960 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471a60 - 0x471b22
 /* IDA prototype: int __cdecl(void (__cdecl *)(int, int), int, int).
@@ -126311,18 +126195,10 @@ static int32_t retdec_compile_file_native(int32_t vm) {
 
 
 // Address range: 0x471bc0 - 0x471c0c
-int32_t function_471bc0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-
-    if (target != 0)
-        ((int32_t (__cdecl *)(void))(intptr_t)target)();
-    return 0;
-}
+/* function_471bc0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471c10 - 0x471c6c
-int32_t function_471c10(int32_t a1) {
-    return function_471160(retdec_native_callback_from_stack(a1), a1, 2);
-}
+/* function_471c10 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471c70 - 0x471d27
 int32_t function_471c70(int32_t a1) {
@@ -126349,17 +126225,7 @@ int32_t function_471c70(int32_t a1) {
 
 
 // Address range: 0x471d90 - 0x471dec
-int32_t function_471d90(int32_t a1) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    int32_t callback = retdec_native_callback_from_stack(a1);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor:load-wrapper-top", function_48aa20(a1));
-        retdec_trace_i32("actor:load-wrapper-callback", callback);
-        retdec_trace_i32("actor:load-wrapper-arg-type", function_48a6f0(a1, 2));
-    }
-    return function_471330(callback, a1, 2);
-}
+/* function_471d90 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471df0 - 0x471e4c
 int32_t function_471df0(int32_t a1) {
@@ -126403,55 +126269,28 @@ int32_t function_471df0(int32_t a1) {
 
 
 // Address range: 0x471eb0 - 0x471f0c
-int32_t function_471eb0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    float32_t first;
-    float32_t second;
-
-    if (target == 0 || !retdec_native_float_arg(a1, 2, &first) ||
-        !retdec_native_float_arg(a1, 3, &second))
-        return 0;
-    ((int32_t (__cdecl *)(float32_t, float32_t))(intptr_t)target)(
-        first, second);
-    return 0;
-}
+/* function_471eb0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471f10 - 0x471f6c
-int32_t function_471f10(int32_t a1) {
-    return function_4716b0(retdec_native_callback_from_stack(a1), a1, 2);
-}
+/* function_471f10 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x471f70 - 0x471fcc
 
 
 // Address range: 0x471fd0 - 0x47202c
-int32_t function_471fd0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t value;
-
-    if (target == 0 || !retdec_native_integer_arg(a1, 2, &value))
-        return 0;
-    ((int32_t (__cdecl *)(int32_t))(intptr_t)target)(value);
-    return 0;
-}
+/* function_471fd0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x472030 - 0x47207e
 
 
 // Address range: 0x472080 - 0x4720dc
-int32_t function_472080(int32_t a1) {
-    return function_471880(retdec_native_callback_from_stack(a1), a1, 2);
-}
+/* function_472080 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x4720e0 - 0x47213c
-int32_t function_4720e0(int32_t a1) {
-    return function_471960(retdec_native_callback_from_stack(a1), a1, 2);
-}
+/* function_4720e0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x472140 - 0x47219c
-int32_t function_472140(int32_t a1) {
-    return function_471a60(retdec_native_callback_from_stack(a1), a1, 2);
-}
+/* function_472140 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x4721a0 - 0x47223b
 int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {

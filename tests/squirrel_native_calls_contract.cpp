@@ -11,6 +11,7 @@ namespace {
 using namespace bridge_test;
 using kinoko::script::ObjectStorage;
 using kinoko::script::data_bits;
+using kinoko::script::borrowed_value;
 using Export = int32_t (*)(int32_t);
 SQFUNCTION entry(Export fn) { return reinterpret_cast<SQFUNCTION>(fn); }
 int native_calls = 0, consumed = 0, released = 0, property_value = 0;
@@ -64,6 +65,27 @@ int32_t __cdecl one_name(const char* text, ObjectStorage environment) {
 int32_t __cdecl constant() { ++native_calls; return -971; }
 void __cdecl optional_name(const char* name) { require(std::string(name) == "optional", "optional string"); ++native_calls; }
 void __cdecl optional_two(int32_t a, int32_t b) { require(a == -5 && b == 13, "optional two integer order"); ++native_calls; }
+int32_t __cdecl bool_name(int32_t text) {
+    require(std::string(pointer<char>(text)) == "loaded", "single string callback value");
+    ++native_calls; return 0x100;
+}
+int32_t __cdecl string_object(int32_t text, int32_t vtable, int32_t type, int32_t data) {
+    require(std::string(pointer<char>(text)) == "table", "string/object callback value");
+    ObjectStorage object{static_cast<uint32_t>(vtable), borrowed_value(type, data)};
+    require(object.vtable == static_cast<uint32_t>(kinoko_squirrel_object_vtable()), "string/object wrapper vtable");
+    require(sq_release(active_vm, &object.value) == SQTrue, "string/object callee consumes external handle");
+    ++consumed; return 1;
+}
+void __cdecl play_four(int32_t text, int32_t a, int32_t b, int32_t truth) {
+    require(std::string(pointer<char>(text)) == "bgm" && a == 2 && b == 3 && truth == 1, "four argument callback");
+    ++native_calls;
+}
+void __cdecl play_five(int32_t text, int32_t a, int32_t b, int32_t c, int32_t truth) {
+    require(std::string(pointer<char>(text)) == "se" && a == 4 && b == 5 && c == 6 && truth == 0, "five argument callback");
+    ++native_calls;
+}
+int32_t __cdecl integer_callback(int32_t value) { require(value == -44, "integer callback"); ++native_calls; return 0; }
+int32_t __cdecl float_callback(float a, float b) { require(a == 1.5f && b == -2.25f, "float callback"); ++native_calls; return 0; }
 
 void captured_closure(HSQUIRRELVM vm, Export fn, int32_t target,
     SQInteger size = sizeof(int32_t), bool tagged = false) {
@@ -181,6 +203,61 @@ void properties(HSQUIRRELVM vm) {
     require(function_41e260(address(vm))==1,"legacy getter return despite inner failure");
     top(vm,base+4,"failed inner call retains closure without invented cleanup");
 }
+void migrated_adapters(HSQUIRRELVM vm) {
+    Top restore(vm);
+    const auto base = sq_gettop(vm);
+    auto truth = [&](auto push, int expected) {
+        sq_settop(vm, base); push();
+        require(function_470df0(address(vm), base + 1) == expected, "source truth conversion");
+    };
+    truth([&]{ sq_pushnull(vm); }, 0);
+    truth([&]{ sq_pushbool(vm, SQFalse); }, 0);
+    truth([&]{ sq_pushbool(vm, SQTrue); }, 1);
+    truth([&]{ sq_pushinteger(vm, 0); }, 0);
+    truth([&]{ sq_pushinteger(vm, -7); }, 1);
+    truth([&]{ sq_pushfloat(vm, 0.0f); }, 0);
+    truth([&]{ sq_pushfloat(vm, -0.5f); }, 1);
+    truth([&]{ sq_pushstring(vm, "value", -1); }, 1);
+    truth([&]{ sq_newtable(vm); }, 1);
+
+    sq_settop(vm, base); sq_pushstring(vm, "loaded", -1);
+    const auto before = native_calls;
+    require(function_471330(address(reinterpret_cast<void*>(bool_name)), address(vm), base + 1) == 1,
+        "single string adapter return count");
+    SQBool boolean = SQTrue; require(SQ_SUCCEEDED(sq_getbool(vm, -1, &boolean)) && boolean == SQFalse,
+        "single string adapter preserves low-byte BOOL conversion");
+    require(native_calls == before + 1, "single string callback called");
+
+    sq_settop(vm, base); sq_pushstring(vm, "table", -1); push_owned_userdata(vm);
+    const auto consumed_before = consumed, released_before = released;
+    require(function_471160(address(reinterpret_cast<void*>(string_object)), address(vm), base + 1) == 1,
+        "string/object adapter return count");
+    require(consumed == consumed_before + 1, "string/object callback consumes one external handle");
+    sq_settop(vm, base); sq_collectgarbage(vm);
+    require(released == released_before + 1, "string/object stack ownership releases exactly once");
+
+    sq_pushstring(vm, "table", -1); push_owned_userdata(vm);
+    require(function_471160(0, address(vm), base + 1) == 0, "null string/object callback");
+    sq_settop(vm, base); sq_collectgarbage(vm);
+    require(released == released_before + 2, "null callback balances temporary external handle");
+
+    sq_pushstring(vm, "bgm", -1); sq_pushinteger(vm, 2); sq_pushinteger(vm, 3); sq_pushstring(vm, "truthy", -1);
+    require(function_471880(address(reinterpret_cast<void*>(play_four)), address(vm), base + 1) == 0,
+        "four argument source adapter");
+    sq_settop(vm, base); sq_pushstring(vm, "se", -1); sq_pushinteger(vm, 4); sq_pushinteger(vm, 5);
+    sq_pushinteger(vm, 6); sq_pushnull(vm);
+    require(function_471960(address(reinterpret_cast<void*>(play_five)), address(vm), base + 1) == 0,
+        "five argument source adapter");
+
+    sq_settop(vm, base); captured_closure(vm, function_471fd0, address(reinterpret_cast<void*>(integer_callback)));
+    sq_pushroottable(vm); sq_pushinteger(vm, -44);
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, SQFalse, SQFalse)), "captured integer wrapper");
+    sq_settop(vm, base); captured_closure(vm, function_471eb0, address(reinterpret_cast<void*>(float_callback)));
+    sq_pushroottable(vm); sq_pushfloat(vm, 1.5f); sq_pushfloat(vm, -2.25f);
+    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 3, SQFalse, SQFalse)), "captured float wrapper");
+    require(native_calls == before + 5, "all migrated callbacks invoked");
+    sq_settop(vm, base);
+}
 void invalid_and_optional(HSQUIRRELVM vm) {
     Top restore(vm);
     const auto base=sq_gettop(vm);
@@ -219,7 +296,7 @@ int main() {
     try {
         for (int pass=0;pass<8;++pass) {
             Machine machine; auto vm=machine.get(); active_vm=vm;
-            methods(vm); ownership(vm); properties(vm); invalid_and_optional(vm);
+            methods(vm); ownership(vm); properties(vm); migrated_adapters(vm); invalid_and_optional(vm);
             sq_newthread(vm,64);
             HSQUIRRELVM child=nullptr; require(SQ_SUCCEEDED(sq_getthread(vm,-1,&child)),"real child VM");
             active_vm=child; properties(child); ownership(child); top(child,0,"child frames balanced");
