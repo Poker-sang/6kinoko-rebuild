@@ -18,11 +18,15 @@ import re
 import subprocess
 
 from audit_legacy_reachability import definitions, PROTOTYPE
-from audit_unused_crt import mask, sha
+from audit_unused_crt import mask, sha, definitions as named_definitions
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = 'src/decompiled/6kinoko_rebuilt.c'
 REFERENCE = 'src/decompiled/6kinoko.exe.c'
+NAMED_TOKEN = re.compile(r'\b[A-Za-z_]\w*\b')
+NAMED_PROTOTYPE = re.compile(
+    r'^(?:static\s+)?(?:void|int|long|unsigned|float|double|int\d+_t|uint\d+_t|char)'
+    r'[^\n;{}=]*?\b[A-Za-z_]\w*\s*\([^;{}]*\)\s*;', re.M)
 TOKEN = re.compile(r'\b(?:g\d+(?:_\w+)?|(?:retdec_unbound_)?function_[0-9a-f]+(?:_\w+)?)\b')
 NUMBER = re.compile(r'\b(?:0[xX][0-9a-fA-F]+|[0-9]+)[uUlL]*\b')
 GLOBAL = re.compile(
@@ -30,9 +34,14 @@ GLOBAL = re.compile(
     r'[^;{}\n]*?\b(g\d+(?:_\w+)?)(?:\[[^\n]*?\])?\s*(?:=[^;]*|)\s*;', re.M)
 
 
-def graph(text, external):
+def graph(text, external, *, include_named_functions=False):
     """Return a conservative graph; external is {path: UTF-8 source text}."""
-    code, functions = definitions(text)
+    if include_named_functions:
+        code, functions = mask(text, strings=True), list(named_definitions(text))
+    else:
+        code, functions = definitions(text)
+    token = NAMED_TOKEN if include_named_functions else TOKEN
+    prototype = NAMED_PROTOTYPE if include_named_functions else PROTOTYPE
     # C top-level only: never turn locals within non-address helpers into nodes.
     depth, depths = 0, []
     for character in code:
@@ -59,7 +68,14 @@ def graph(text, external):
             raise ValueError('Overlapping generated definitions')
         previous = entry['end']
         if entry['kind'] == 'function':
-            address = int(re.search(r'function_([0-9a-f]+)', entry['name'])[1], 16)
+            named = re.search(r'function_([0-9a-f]+)', entry['name'])
+            if named:
+                address = int(named[1], 16)
+            else:
+                marker = text.rfind('// Address range:', 0, entry['start'])
+                adjacent = marker >= 0 and not code[marker:entry['start']].strip()
+                original = re.match(r'// Address range: (0x[0-9a-f]+)', text[marker:]) if adjacent else None
+                address = int(original[1], 16) if original else None
         else:
             comment = re.match(r'[ \t]*//[ \t]*(0x[0-9a-fA-F]+)\b', text[entry['end']:])
             address = int(comment[1], 16) if comment else None
@@ -71,7 +87,7 @@ def graph(text, external):
         entry['lines'] = body.count('\n') + 1
 
     def references(source):
-        result = set(TOKEN.findall(source)) & names
+        result = set(token.findall(source)) & names
         for literal in NUMBER.findall(source):
             value = re.sub(r'[uUlL]+$', '', literal)
             base = 16 if value.lower().startswith('0x') else 8 if len(value) > 1 and value[0] == '0' else 10
@@ -92,7 +108,7 @@ def graph(text, external):
         remainder[start:end] = ' ' * (end - start)
     # Mask prototypes using structurally parsed spans, never by matching inside
     # retained string literals (which may name a dynamically resolved function).
-    for match in PROTOTYPE.finditer(code):
+    for match in prototype.finditer(code):
         if not any(e['start'] <= match.start() < e['end'] for e in entities):
             remainder[match.start():match.end()] = ' ' * (match.end() - match.start())
     root_sources = defaultdict(set)
@@ -136,11 +152,58 @@ def component(entities, edges, roots, live, seeds):
     return selected
 
 
+
+def interior_references(text, entries, external, original_text):
+    """Fail closed on unbounded records; report pointers into selected bodies.
+
+    RetDec sometimes merges a real callback into another function's error arm.
+    Exact-symbol reachability alone cannot prove that such a body is unused.
+    Collapsed data records use the next original address, not sizeof(the first
+    word), so a literal pointing into a table also prevents its removal.
+    """
+    original_addresses = sorted({int(m[1], 16) for m in re.finditer(
+        r'}?;\s*//\s*(0x[0-9a-fA-F]+)', original_text)})
+    ranges = {}
+    remaining = list(mask(text))
+    for entry in entries:
+        name, start, end = entry['name'], entry['start'], entry['end']
+        lo = entry['original_address']
+        if lo is None:
+            raise ValueError('No original address for selected record: ' + name)
+        if entry['kind'] == 'function':
+            marker = text.rfind('// Address range:', 0, start)
+            match = re.match(r'// Address range: (0x[0-9a-f]+) - (0x[0-9a-f]+)', text[marker:]) if marker >= 0 else None
+            if not match or int(match[1], 16) != lo or mask(text[marker:start], strings=True).strip():
+                raise ValueError('Unverified original function range: ' + name)
+            hi = int(match[2], 16)
+        else:
+            hi = next((address for address in original_addresses if address > lo), None)
+        if hi is None or hi <= lo:
+            raise ValueError('Unbounded original record: ' + name)
+        ranges[name] = [lo, hi]
+        remaining[start:end] = ' ' * (end - start)
+    sources = {MAIN: ''.join(remaining)}
+    sources.update({path: mask(source) for path, source in external.items()})
+    hits = []
+    for path, code in sources.items():
+        for match in NUMBER.finditer(code):
+            literal = re.sub(r'[uUlL]+$', '', match[0])
+            base = 16 if literal.lower().startswith('0x') else 8 if len(literal) > 1 and literal[0] == '0' else 10
+            try:
+                value = int(literal, base)
+            except ValueError:
+                value = int(literal, 10)
+            for name, (lo, hi) in ranges.items():
+                if lo <= value < hi:
+                    hits.append(dict(source=path, record=name, literal=match[0],
+                                     line=code.count('\n', 0, match.start()) + 1))
+    return ranges, hits
+
 def git(*args):
     return subprocess.check_output(['git', '-C', str(ROOT), *args])
 
 
-def audit(source_ref, maps, seeds):
+def audit(source_ref, maps, seeds, *, include_named_functions=False):
     commit = git('rev-parse', '--verify', source_ref + '^{commit}').decode().strip()
     text = git('show', commit + ':' + MAIN).decode()
     external, corpus = {}, {}
@@ -158,8 +221,13 @@ def audit(source_ref, maps, seeds):
         corpus[path] = sha(data)
         if path != MAIN:
             external[path] = source
-    entities, edges, roots, live = graph(text, external)
+    entities, edges, roots, live = graph(text, external, include_named_functions=include_named_functions)
     selected = component(entities, edges, roots, live, seeds)
+    selected_entries = [entry for entry in entities if entry['name'] in selected]
+    original_text = git('show', commit + ':' + REFERENCE).decode()
+    ranges, interior_hits = interior_references(text, selected_entries, external, original_text)
+    if interior_hits:
+        raise ValueError('Outside literal points into selected records: ' + repr(interior_hits))
     linked = defaultdict(list)
     map_reports = []
     if not maps:
@@ -177,9 +245,11 @@ def audit(source_ref, maps, seeds):
     entries = [dict(e, references=sorted(edges[e['name']]), linked_maps=linked[e['name']])
                for e in entities if e['name'] in selected]
     return dict(source_commit=commit, source_sha256=sha(text.encode()), policy=__doc__,
-                seeds=seeds, source_files=corpus, maps=map_reports,
+                seeds=seeds, include_named_functions=include_named_functions, source_files=corpus, maps=map_reports,
                 graph_nodes=len(entities), root_nodes=len(roots), source_reachable=len(live),
-                outside_inbound=[], candidates=entries,
+                outside_inbound=[], interior_literal_ranges=ranges,
+                outside_interior_literal_references=[], reference_sha256=sha(original_text.encode()),
+                data_interval_policy='Original address to next original global address', candidates=entries,
                 functions=sum(e['kind'] == 'function' for e in entries),
                 data=sum(e['kind'] == 'data' for e in entries),
                 selected_lines=sum(e['lines'] for e in entries),
@@ -189,11 +259,13 @@ def audit(source_ref, maps, seeds):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-ref', required=True)
+    parser.add_argument('--include-named-functions', action='store_true',
+                        help='Also model recovered CRT names; unmodelled functions remain roots')
     parser.add_argument('--map', type=Path, action='append', required=True, dest='maps')
     parser.add_argument('--seed', action='append', required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    report = audit(args.source_ref, args.maps, args.seed)
+    report = audit(args.source_ref, args.maps, args.seed, include_named_functions=args.include_named_functions)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     print(f"Closed component: {report['functions']} functions, {report['data']} data records; "
