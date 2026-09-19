@@ -302,9 +302,10 @@ add_test(
 
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
+    tests/stage_audio_contract.cpp
     src/decompiled/retdec_asm_stubs.c
 )
-target_include_directories(kinoko_stage_contract PRIVATE
+target_include_directories(kinoko_stage_contract PRIVATE src/decompiled
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,INCLUDE_DIRECTORIES>)
 target_compile_definitions(kinoko_stage_contract PRIVATE
     RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
