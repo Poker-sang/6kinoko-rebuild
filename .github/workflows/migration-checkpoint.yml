@@ -11,7 +11,7 @@ jobs:
   checkpoint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
           ref: refactor/no-inline-asm-cpp-20260919
@@ -19,6 +19,13 @@ jobs:
         run: |
           if test -f tools/migration-checkpoint.py; then
             python3 tools/migration-checkpoint.py
+            # Runner credentials cannot edit workflows. Workflow changes are
+            # made separately through the authorized GitHub connection.
+            git restore -- .github/workflows/windows-x86.yml
+            if test -f analysis/no-inline-asm-20260919/removed-definitions.json && ! test -f docs/no-inline-asm-20260919/removed-definitions.json; then
+              mkdir -p docs/no-inline-asm-20260919
+              cp analysis/no-inline-asm-20260919/removed-definitions.json docs/no-inline-asm-20260919/
+            fi
             git config user.name 'Poker-sang'
             git config user.email '62325494+Poker-sang@users.noreply.github.com'
             git add -A
@@ -28,11 +35,13 @@ jobs:
             fi
           fi
       - name: Export exact source checkpoint
+        if: always()
         run: |
           git rev-parse HEAD > source-commit.txt
           git bundle create /tmp/migration-source.bundle HEAD refs/remotes/origin/master
           cp /tmp/migration-source.bundle .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
           name: migration-source-${{ github.run_number }}
           path: |
