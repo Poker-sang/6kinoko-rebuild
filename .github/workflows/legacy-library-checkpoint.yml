@@ -3,35 +3,54 @@ on:
   push:
     branches: [refactor/legacy-library-boundaries-20260920]
     paths:
-      - .github/workflows/legacy-library-checkpoint.yml
+      - tools/legacy-migration-payload.json
 permissions:
-  contents: read
+  contents: write
   actions: write
+concurrency:
+  group: legacy-library-migration
+  cancel-in-progress: false
 jobs:
-  snapshot:
+  checkpoint:
     runs-on: ubuntu-latest
     steps:
-      - name: Remove superseded transport archive
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api repos/${{ github.repository }}/actions/runs/35458649434/artifacts --jq '.artifacts[].id' | while read id; do
-            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
-          done
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
-      - name: Capture exact source and history without local configuration
+          ref: refactor/legacy-library-boundaries-20260920
+      - name: Apply checked source commits
+        shell: python
         run: |
-          git rev-parse HEAD > source-commit.txt
-          git bundle create source-history.bundle --all
-          tar --exclude=./.git --exclude=./source-checkpoint.tar.gz -czf "$RUNNER_TEMP/source-checkpoint.tar.gz" .
-          mv "$RUNNER_TEMP/source-checkpoint.tar.gz" .
+          import base64, gzip, json, pathlib, subprocess
+          def git(*args, **kwargs):
+              return subprocess.run(['git', *args], check=True, **kwargs)
+          path = pathlib.Path('tools/legacy-migration-payload.json')
+          payload = json.loads(path.read_text())
+          git('merge-base', '--is-ancestor', payload['baseline'], 'HEAD')
+          git('config', 'user.name', 'OpenAI')
+          git('config', 'user.email', 'noreply@openai.com')
+          for commit in payload['commits']:
+              patch = gzip.decompress(base64.b64decode(commit['patch_gzip_b64']))
+              git('apply', '--index', '--check', '--binary', '-', input=patch)
+              git('apply', '--index', '--binary', '-', input=patch)
+              git('commit', '-m', commit['message'])
+          git('rm', str(path))
+          if payload.get('final'):
+              git('rm', '.github/workflows/legacy-library-checkpoint.yml')
+          git('commit', '-m', 'chore: remove applied migration transport' if payload.get('final') else 'chore: remove applied checkpoint payload')
+          git('push', 'origin', 'HEAD:refactor/legacy-library-boundaries-20260920')
+          with open('source-commit.txt', 'w') as f:
+              git('rev-parse', 'HEAD', stdout=f)
+          git('bundle', 'create', 'source-history.bundle', 'HEAD')
+      - name: Validate exact published revision in both Win32 configurations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run windows-x86.yml --ref refactor/legacy-library-boundaries-20260920
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: legacy-library-source-${{ github.sha }}
+          name: legacy-library-checkpoint-${{ github.run_id }}
           path: |
-            source-checkpoint.tar.gz
             source-commit.txt
+            source-history.bundle
           retention-days: 30
