@@ -88,6 +88,20 @@ class GraphContract(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unbounded'):
             interior_references(source, entries, {}, source)
 
+    def test_original_image_callbacks_are_rejected(self):
+        from check_migration_boundaries import CALLBACK_LITERAL, masked
+        for code in ('sq_newclosure(vm, (SQFUNCTION)kinoko_pointer(0x01020304), 1);',
+                     'sq_newclosure(kinoko_vm(vm),\n (SQFUNCTION)0x01020304, 0);',
+                     'sq_newclosure(vm, (SQFUNCTION)kinoko_pointer(16909060), 1);'):
+            with self.subTest(code=code):
+                self.assertIsNotNone(CALLBACK_LITERAL.search(masked(code)))
+        for code in ('sq_newclosure(vm, kinoko_sqrat_get_float, 1);',
+                     'sq_newclosure(vm, (SQFUNCTION)function_callback, 1);',
+                     'sq_newclosure(vm, (SQFUNCTION)kinoko_pointer(callback), 1);',
+                     '// sq_newclosure(vm, (SQFUNCTION)0x01020304, 1);'):
+            with self.subTest(code=code):
+                self.assertIsNone(CALLBACK_LITERAL.search(masked(code)))
+
     def test_duplicate_definition_and_bad_braces_fail_closed(self):
         for suffix in ('int32_t function_401000(void) { return 0; }', '{', '}'):
             with self.subTest(suffix=suffix), self.assertRaises(ValueError):

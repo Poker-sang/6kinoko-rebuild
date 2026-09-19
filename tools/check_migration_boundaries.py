@@ -16,6 +16,11 @@ REFERENCE_SHA256 = '504d899c97d12700aad88d88edbc072f95c600184b684c0bf15bad747182
 LEXICAL = re.compile(r'R"([A-Za-z0-9_]*)\([\s\S]*?\)\1"|//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
 ASM = re.compile(r'\b(?:__asm|__asm__|_asm|asm)\b|\b__declspec\s*\(\s*naked\s*\)')
 
+# Original EXE addresses are not relocated C function pointers. A retained
+# generated registration must name a compiled callback, even when the original
+# decompiler merged that callback into another function's error branch.
+CALLBACK_LITERAL = re.compile(r'\bsq_newclosure\s*\([^;]*,\s*\(\s*SQFUNCTION\s*\)\s*(?:kinoko_pointer\s*\(\s*)?(?:0x[0-9A-Fa-f]+|\d+)\b')
+
 def masked(text: str) -> str:
     return LEXICAL.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
 
@@ -38,6 +43,9 @@ def main() -> int:
             for match in ASM.finditer(text):
                 line = text.count('\n', 0, match.start()) + 1
                 errors.append(f'{path.relative_to(ROOT)}:{line}: handwritten assembly/naked entry')
+            for match in CALLBACK_LITERAL.finditer(text):
+                line = text.count('\n', 0, match.start()) + 1
+                errors.append(f'{path.relative_to(ROOT)}:{line}: original-image native callback address')
     # These settings belong ONLY to the transitional adapter; removing them
     # changes its ABI. They are not a substitute for recovering copy operands.
     cmake = (ROOT / 'CMakeLists.txt').read_text()
@@ -46,7 +54,7 @@ def main() -> int:
     if errors:
         print('\n'.join(errors), file=sys.stderr)
         return 1
-    print(f'PASS: {scanned} source/header files; zero inline assembly/naked entries; original reference intact.')
+    print(f'PASS: {scanned} source/header files; zero inline assembly/naked entries and literal native-closure addresses; original reference intact.')
     print('NOTE: legacy_frame_copy.cpp still preserves the old operand-selection heuristic.')
     return 0
 
