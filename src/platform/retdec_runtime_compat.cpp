@@ -25,12 +25,6 @@
 #include "retdec_math_compat.h"
 #include <cstring>
 
-#if defined(_MSC_VER)
-#define RETDEC_NOINLINE __declspec(noinline)
-#else
-#define RETDEC_NOINLINE
-#endif
-
 namespace {
 
 using retdec_co_initialize_fn = HRESULT (WINAPI *)(LPVOID);
@@ -172,11 +166,6 @@ void *_malloc(size_t size)
     return malloc(size);
 }
 
-void *_calloc(size_t count, size_t size)
-{
-    return calloc(count, size);
-}
-
 void *_realloc(void *memory, size_t size)
 {
     return realloc(memory, size);
@@ -219,57 +208,16 @@ int _strcpy_s(char *destination, size_t destination_size, const char *source)
     return strcpy_s(destination, destination_size, source);
 }
 
-int _strcat_s(char *destination, size_t destination_size, const char *source)
-{
-    return strcat_s(destination, destination_size, source);
-}
-
 int _strncpy_s(char *destination, size_t destination_size,
                const char *source, size_t source_count)
 {
     return strncpy_s(destination, destination_size, source, source_count);
 }
 
-char *_strchr(const char *text, int value)
-{
-    return (char *)strchr(text, value);
-}
-
-char *_strrchr(const char *text, int value)
-{
-    return (char *)strrchr(text, value);
-}
-
 size_t _strcspn(const char *text, const char *reject)
 {
     return strcspn(text, reject);
 }
-
-char *_strtok(char *text, const char *delimiters)
-{
-    return strtok(text, delimiters);
-}
-
-char *_strtok_s(char *text, const char *delimiters, char **context)
-{
-    return strtok_s(text, delimiters, context);
-}
-
-int __stricmp(const char *left, const char *right)
-{
-    return _stricmp(left, right);
-}
-
-int _isalnum(int value) { return isalnum((unsigned char)value); }
-int _isalpha(int value) { return isalpha((unsigned char)value); }
-int _iscntrl(int value) { return iscntrl((unsigned char)value); }
-int _isdigit(int value) { return isdigit((unsigned char)value); }
-int _isprint(int value) { return isprint((unsigned char)value); }
-int _ispunct(int value) { return ispunct((unsigned char)value); }
-int _isspace(int value) { return isspace((unsigned char)value); }
-int _islower(int value) { return islower((unsigned char)value); }
-int _isupper(int value) { return isupper((unsigned char)value); }
-int _isxdigit(int value) { return isxdigit((unsigned char)value); }
 
 struct lconv *_localeconv(void)
 {
@@ -286,50 +234,10 @@ size_t _fwrite(const void *buffer, size_t size, size_t count, FILE *stream)
     return fwrite(buffer, size, count, stream);
 }
 
-int _fseek(FILE *stream, long offset, int origin)
-{
-    return fseek(stream, offset, origin);
-}
-
-long _ftell(FILE *stream)
-{
-    return ftell(stream);
-}
-
-int _fflush(FILE *stream)
-{
-    return fflush(stream);
-}
-
-int _fclose(FILE *stream)
-{
-    return fclose(stream);
-}
-
 void _qsort(void *base, size_t count, size_t size,
             int (__cdecl *compare)(const void *, const void *))
 {
     qsort(base, count, size, compare);
-}
-
-int _rand(void)
-{
-    return rand();
-}
-
-void _srand(unsigned int seed)
-{
-    srand(seed);
-}
-
-long _atol(const char *text)
-{
-    return atol(text);
-}
-
-long _strtol(const char *text, char **end, int base)
-{
-    return strtol(text, end, base);
 }
 
 double _strtod(const char *text, char **end)
@@ -372,41 +280,6 @@ int _sprintf_s(char *buffer, size_t buffer_size, const char *format, ...)
     return result;
 }
 
-int _vsprintf(char *buffer, const char *format, ...)
-{
-    int result;
-    va_list args;
-    va_start(args, format);
-    result = vsprintf_s(buffer, 0x7fffffff, format, args);
-    va_end(args);
-    return result;
-}
-
-int __snprintf(char *buffer, size_t buffer_size, const char *format, ...)
-{
-    int result;
-    va_list args;
-    va_start(args, format);
-    result = _vsnprintf(buffer, buffer_size, format, args);
-    va_end(args);
-    return result;
-}
-
-int _printf(const char *format, ...)
-{
-    int result;
-    va_list args;
-    va_start(args, format);
-    result = vprintf(format, args);
-    va_end(args);
-    return result;
-}
-
-int _puts(const char *text)
-{
-    return puts(text);
-}
-
 /* The RetDec output passes a caller-owned vararg area to this old helper. A
    normal vararg view is sufficient for the diagnostic strings used here. */
 int _vsprintf_compat(char *buffer, const char *format, va_list args)
@@ -436,11 +309,6 @@ long double llvm_exp2_f80(long double value)
     return exp2l(value);
 }
 
-uint32_t llvm_bswap_i32(uint32_t value)
-{
-    return _byteswap_ulong(value);
-}
-
 uint8_t llvm_ctpop_i8(uint8_t value)
 {
     uint8_t count = 0;
@@ -449,52 +317,6 @@ uint8_t llvm_ctpop_i8(uint8_t value)
         value = (uint8_t)(value >> 1);
     }
     return count;
-}
-
-int64_t __alldiv(int64_t left, int64_t right)
-{
-    return right == 0 ? 0 : left / right;
-}
-
-int64_t __allmul(int64_t left, int64_t right)
-{
-    return left * right;
-}
-
-int32_t __allshr(void)
-{
-    return 0;
-}
-
-int32_t _acos2(long double value)
-{
-    (void)value;
-    return 0;
-}
-
-int32_t __CIacos(void) { return 0; }
-int32_t __CIasin(void) { return 0; }
-int32_t __CIatan(void) { return 0; }
-int32_t __CIcos(void) { return 0; }
-int32_t __CIexp(void) { return 0; }
-int32_t __CIfmod(void) { return 0; }
-int32_t __CIlog(void) { return 0; }
-int32_t __CIlog10(void) { return 0; }
-int32_t __CIpow(void) { return 0; }
-int32_t __CIsin(void) { return 0; }
-int32_t __CIsqrt(void) { return 0; }
-int32_t __CItan(void) { return 0; }
-
-int32_t __chkstk(void)
-{
-    return 0;
-}
-
-int32_t _longjmp(void *environment, int32_t value)
-{
-    (void)environment;
-    (void)value;
-    return 0;
 }
 
 int _atexit(void (*function)(void))
@@ -511,43 +333,10 @@ int32_t _doexit(int32_t code, int32_t quick, int32_t retcaller)
     return 0;
 }
 
-int32_t __splitpath_s(
-    const char *path,
-    char *drive,
-    size_t drive_count,
-    char *directory,
-    size_t directory_count,
-    char *filename,
-    size_t filename_count,
-    char *extension,
-    size_t extension_count,
-    ...)
-{
-    if (path == nullptr) {
-        return EINVAL;
-    }
-    _splitpath_s(path, drive, drive_count, directory, directory_count,
-                 filename, filename_count, extension, extension_count);
-    return 0;
-}
-
-void *__fsopen(const char *path, const char *mode, int share)
-{
-    FILE *stream;
-    (void)share;
-    stream = fopen(path, mode);
-    return stream;
-}
-
 int32_t _flsall(int32_t flush)
 {
     (void)flush;
     fflush(nullptr);
-    return 0;
-}
-
-static int32_t retdec_zero(void)
-{
     return 0;
 }
 
@@ -610,10 +399,11 @@ double __Stodx(const char *text, char **end, int flags)
     return retdec_valid_text(text) ? strtod(text, end) : 0.0;
 }
 
-/* Safe fallbacks for old C++ ABI and locale entry points. The decompiled
-   source contains the corresponding object layouts and performs the useful
-   field initialization itself; these functions only need to preserve the
-   call contract and avoid entering a mismatched modern ABI. */
+/* Remaining C++ ABI/locale adapters are referenced by recovered callers.
+   Several signatures and exception semantics are still incomplete. They are
+   NOT equivalent to the modern STL or a working native exception runtime;
+   keep the boundary until its complete caller/object/unwind contract is known.
+   See docs/legacy-library-audit-20260920.md. */
 int32_t _3f__3f_2_40_YAPAXI_40_Z(uint32_t size)
 {
     return (int32_t)(uintptr_t)malloc(size);
@@ -647,21 +437,6 @@ int32_t _3f__3f_0bad_alloc_40_std_40__40_QAE_40_PBD_40_Z(char *message)
 int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
 {
     return (int32_t)(uintptr_t)result;
-}
-
-int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABV01_40__40_Z(void *result)
-{
-    return (int32_t)(uintptr_t)result;
-}
-
-int32_t _3f__3f_1_Fac_tidy_reg_t_40_std_40__40_QAE_40_XZ(void)
-{
-    return 0;
-}
-
-int32_t _3f__3f_1_Init_atexit_40__40_QAE_40_XZ(void)
-{
-    return 0;
 }
 
 int32_t _3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ(void)
@@ -750,88 +525,24 @@ int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
         object, count, size, destroy);
 }
 
-int32_t _3f_ExFilterRethrow_40__40_YAHPAU_EXCEPTION_POINTERS_40__40__40_Z(void *value)
-{
-    (void)value;
-    return 0;
-}
-
-int32_t _3f_terminate_40__40_YAXXZ(void)
-{
-    return 0;
-}
-
-int32_t __87except(int32_t a1, int32_t a2, int32_t a3)
-{
-    (void)a1;
-    (void)a2;
-    (void)a3;
-    return 0;
-}
-
-int32_t ___alldiv_placeholder(void)
-{
-    return 0;
-}
-
-int32_t __amsg_exit(int32_t code)
-{
-    (void)code;
-    return 0;
-}
-
-int32_t __calloc_impl(void)
-{
-    return 0;
-}
-
-int32_t __check_range_exit(void)
-{
-    return 0;
-}
-
-int32_t __cintrindisp1(void) { return 0; }
-int32_t __cintrindisp2(void) { return 0; }
 int32_t __convertTOStoQNaN(void) { return 0; }
-int32_t __ctrandisp1(void) { return 0; }
-int32_t __ctrandisp2(void) { return 0; }
-int32_t __FindAndUnlinkFrame(int32_t value) { return value; }
+
 int32_t __fload_withFB(void) { return 0; }
-int32_t __getptd(void) { return 0; }
-int32_t __IsExceptionObjectToBeDestroyed(int32_t value) { return value; }
-int32_t __load_CW(void) { return 0; }
-int32_t __local_unwind4(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
-{
-    (void)a1;
-    (void)a2;
-    (void)a3;
-    (void)a4;
-    return 0;
-}
+
 int32_t __lock(int32_t value) { return value; }
 int32_t __math_exit(void) { return 0; }
-int32_t __Mtxlock(int32_t value) { return value; }
-int32_t __Mtxunlock(int32_t value) { return value; }
-int32_t __powhlp(int64_t value) { return (int32_t)value; }
-int32_t __SEH_epilog4(void) { return 0; }
+
 int32_t __startOneArgErrorHandling(void) { return 0; }
-int32_t __startTwoArgErrorHandling(void) { return 0; }
+
 int32_t __unlock(int32_t value) { return value; }
-int32_t __unlock_fhandle(int32_t value) { return value; }
-int32_t __unlock_file(int32_t value) { return value; }
-int32_t __unlock_file2(int32_t a1, int32_t a2) { return a1 + a2; }
-int32_t __XcptFilter(int32_t a1, int32_t a2) { return a1 + a2; }
-int32_t __twoToTOS(void) { return 0; }
+
 int32_t ___security_init_cookie(void) { return 0; }
 int32_t ___tmainCRTStartup(void) { return 0; }
 int32_t ___report_gsfailure(void) { return 0; }
 int32_t __CxxThrowException_40_8(void) { return 0; }
-int32_t ___CxxFrameHandler(void) { return 0; }
-int32_t ___DestructExceptionObject(int32_t a1, int32_t a2) { return a1 + a2; }
-int32_t ___FrameUnwindToState(void) { return 0; }
-int32_t ___freetlocinfo(int32_t value) { return value; }
+
 int32_t ___libm_error_support(void) { return 0; }
-int32_t ___removelocaleref(int32_t value) { return value; }
+
 int32_t ___RTtypeid(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 {
     (void)a2;
