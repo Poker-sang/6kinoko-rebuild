@@ -1,0 +1,238 @@
+{
+  "before_sha256": "6cdbbcf428b84ff80433b6ce9082de8f1aed3586966fdc8b5afb1129b14a5400",
+  "after_sha256": "77527c46ee03967c90cce6f1effae8fcd38d76db214c8532df0b2691b7bc960c",
+  "reference_sha256": "504d899c97d12700aad88d88edbc072f95c600184b684c0bf15bad7471821014",
+  "entries": [
+    {
+      "original": "0x4a1760",
+      "target": "kinoko_sqrat_noop",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x4a1760",
+        "end": "0x4a1763",
+        "line": 206992
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x42e370",
+      "target": "kinoko_sqrat_get_int",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x42e2c0",
+        "end": "0x42e3c3",
+        "line": 63277
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x42e3d0",
+      "target": "kinoko_sqrat_set_int",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x42e3d0",
+        "end": "0x42e422",
+        "line": 63325
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x43e640",
+      "target": "kinoko_sqrat_get_float",
+      "registrations": 7,
+      "original_body": {
+        "begin": "0x43e590",
+        "end": "0x43e698",
+        "line": 81021
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x43a460",
+      "target": "kinoko_sqrat_set_float",
+      "registrations": 7,
+      "original_body": {
+        "begin": "0x43a3b0",
+        "end": "0x43a4b2",
+        "line": 76010
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x454c20",
+      "target": "kinoko_sqrat_get_bool",
+      "registrations": 2,
+      "original_body": {
+        "begin": "0x454c20",
+        "end": "0x454c74",
+        "line": 104413
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x423c90",
+      "target": "kinoko_sqrat_set_bool",
+      "registrations": 2,
+      "original_body": {
+        "begin": "0x423be0",
+        "end": "0x423cee",
+        "line": 52745
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x454cf0",
+      "target": "kinoko_sqrat_get_pointer_float",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x454cf0",
+        "end": "0x454d58",
+        "line": 104441
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x423cf0",
+      "target": "kinoko_sqrat_set_pointer_float",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x423cf0",
+        "end": "0x423d58",
+        "line": 52795
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x423d60",
+      "target": "kinoko_sqrat_get_pointer_int",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x423d60",
+        "end": "0x423dc5",
+        "line": 52812
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x454c80",
+      "target": "kinoko_sqrat_set_pointer_int",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x454c80",
+        "end": "0x454ce8",
+        "line": 104424
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x433020",
+      "target": "kinoko_sqrat_get_short",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x432f70",
+        "end": "0x433074",
+        "line": 68421
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x433080",
+      "target": "kinoko_sqrat_set_short",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x433080",
+        "end": "0x4330d4",
+        "line": 68469
+      },
+      "change": "typed source field callback"
+    },
+    {
+      "original": "0x41e260",
+      "target": "function_41e260",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x41e260",
+        "end": "0x41e2b4",
+        "line": 46790
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x41e2c0",
+      "target": "function_41e2c0",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x41e2c0",
+        "end": "0x41e319",
+        "line": 46804
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x431650",
+      "target": "function_431650",
+      "registrations": 9,
+      "original_body": {
+        "begin": "0x431650",
+        "end": "0x431668",
+        "line": 66316
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x44ba90",
+      "target": "function_44ba90",
+      "registrations": 4,
+      "original_body": {
+        "begin": "0x44ba90",
+        "end": "0x44bb01",
+        "line": 94236
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x44bb10",
+      "target": "function_44bb10",
+      "registrations": 4,
+      "original_body": {
+        "begin": "0x44bb10",
+        "end": "0x44bbb1",
+        "line": 94247
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x4330e0",
+      "target": "function_4330e0",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x4330e0",
+        "end": "0x43315f",
+        "line": 68481
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x433160",
+      "target": "function_433160",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x433160",
+        "end": "0x4331c5",
+        "line": 68493
+      },
+      "change": "compiled symbol; callee body unchanged"
+    },
+    {
+      "original": "0x43ab00",
+      "target": "function_43ab00",
+      "registrations": 1,
+      "original_body": {
+        "begin": "0x43ab00",
+        "end": "0x43ab58",
+        "line": 76674
+      },
+      "change": "compiled symbol; callee body unchanged"
+    }
+  ]
+}
