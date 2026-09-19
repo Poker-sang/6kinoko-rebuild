@@ -6,17 +6,28 @@ on:
       - .github/workflows/legacy-library-checkpoint.yml
 permissions:
   contents: read
+  actions: write
 jobs:
   snapshot:
     runs-on: ubuntu-latest
     steps:
+      - name: Remove superseded transport archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/35458649434/artifacts --jq '.artifacts[].id' | while read id; do
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
+          done
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Capture exact source and history
+          persist-credentials: false
+      - name: Capture exact source and history without local configuration
         run: |
           git rev-parse HEAD > source-commit.txt
-          tar --exclude=./source-checkpoint.tar.gz -czf source-checkpoint.tar.gz .
+          git bundle create source-history.bundle --all
+          tar --exclude=./.git --exclude=./source-checkpoint.tar.gz -czf "$RUNNER_TEMP/source-checkpoint.tar.gz" .
+          mv "$RUNNER_TEMP/source-checkpoint.tar.gz" .
       - uses: actions/upload-artifact@v4
         with:
           name: legacy-library-source-${{ github.sha }}
