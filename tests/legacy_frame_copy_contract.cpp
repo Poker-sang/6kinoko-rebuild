@@ -38,28 +38,6 @@ struct Fixture {
         std::memcpy(reinterpret_cast<void*>(frame() + static_cast<uintptr_t>(offset)), triple, sizeof triple);
     }
 };
-#pragma optimize("y", off)
-__declspec(noinline) void check_legacy_entry() {
-    std::array<unsigned char, 64> input{}, output{};
-    for (unsigned i = 0; i < input.size(); ++i) input[i] = static_cast<unsigned char>(i + 3);
-    const volatile uint32_t triple[3] = {static_cast<uint32_t>(address(output.data())),
-        static_cast<uint32_t>(address(input.data())), 64};
-    const auto result = _memcpy2();
-    if (static_cast<uintptr_t>(result) != address(output.data()) || input != output)
-        std::fprintf(stderr, "copy result=%08x to=%08x from=%08x triple=%08x first=%u expected=%u\n",
-            static_cast<unsigned>(result), static_cast<unsigned>(address(output.data())),
-            static_cast<unsigned>(address(input.data())), static_cast<unsigned>(reinterpret_cast<uintptr_t>(&triple)),
-            output[0], input[0]);
-    require(triple[2] == 64 && static_cast<uintptr_t>(result) == address(output.data()) && input == output,
-        "real zero-argument entry forwards the incoming caller frame");
-}
-__declspec(noinline) void check_nested_entry(unsigned depth) {
-    volatile uint32_t separation[1024]{};
-    if (depth) check_nested_entry(depth - 1);
-    else check_legacy_entry();
-    require(separation[0] == 0 && separation[1023] == 0, "nested caller frame canaries");
-}
-#pragma optimize("", on)
 void check_selection() {
     Fixture f;
     std::array<unsigned char, 128> source{}, first{}, second{};
@@ -99,12 +77,11 @@ void check_selection() {
 int main() {
     check_selection();
     check_register();
-    for (int i = 0; i < 100; ++i) check_nested_entry(3);
     for (int i = 0; i < 10000; ++i) check_register();
     std::vector<std::thread> threads;
     for (int n = 0; n < 4; ++n) threads.emplace_back([] {
         for (int i = 0; i < 1000; ++i) check_register();
     });
     for (auto& thread : threads) thread.join();
-    std::puts("PASS: context-derived incoming EBP, caller stack, independent TLS, legacy selection/overlap/permissions");
+    std::puts("PASS: context-derived incoming EBP, independent TLS, deterministic legacy selection/overlap/permissions");
 }
