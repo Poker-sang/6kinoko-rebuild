@@ -2392,7 +2392,7 @@ void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
    else if (M2.n == n) M = &M2;
    else if (M1.n == 0) { mdct_init(&M1, n); M = &M1; }
    else {
-      if (M2.n) __asm int 3;
+      if (M2.n) abort(); /* The optional comparator supports only two block sizes. */
       mdct_init(&M2, n);
       M = &M2;
    }

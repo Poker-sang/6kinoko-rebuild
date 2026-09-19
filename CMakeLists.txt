@@ -50,7 +50,8 @@ target_include_directories(kinoko_native_methods PUBLIC include)
 
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
-    src/reconstructed/legacy_method_entries.cpp)
+    src/reconstructed/legacy_method_entries.cpp
+    src/reconstructed/legacy_copy_entries.cpp)
 target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
@@ -154,6 +155,7 @@ endif()
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
+    src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
@@ -392,7 +394,23 @@ foreach(contract IN ITEMS squirrel_native_calls squirrel_game_objects)
     set_tests_properties(${contract}_contract PROPERTIES TIMEOUT 60)
 endforeach()
 
+# /RTC1 checks caller/callee stack agreement without hand-written ESP probes.
+add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
+target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_actor_lifecycle_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+target_compile_options(kinoko_actor_lifecycle_contract PRIVATE /Od /RTC1)
+target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
+set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
+
+add_executable(kinoko_legacy_copy_entries_contract tests/legacy_copy_entries_contract.cpp)
+target_link_libraries(kinoko_legacy_copy_entries_contract PRIVATE kinoko_legacy_abi)
+target_compile_options(kinoko_legacy_copy_entries_contract PRIVATE /Od /RTC1)
+add_test(NAME legacy_copy_entries_contract COMMAND kinoko_legacy_copy_entries_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract
