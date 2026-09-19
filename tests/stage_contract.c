@@ -3961,6 +3961,54 @@ static int test_act_reentry(const char *directory) {
     return 0;
 }
 
+static int test_script_registrations(int32_t vm, int32_t *root) {
+    const int32_t top = sq_gettop(kinoko_vm(vm));
+    const char *globals[] = {"ShowCallStack", "CompileFile", "PostQuitMessage", "ReadCSV",
+        "LoadTable", "SaveTable", "SetGlobalUpdateFunction", "SetInitFunctionByID",
+        "LoadAnimationData", "CreateActor", "CreateActorFromMap", "ClearActor", "MoveActor",
+        "ClearCollision", "CreateCollision", "CreateEvent", "ClearRenderLayer", "CreateRenderLayer",
+        "LoadAct", "LoadMap", "LoadSE", "ReleaseMap", "MessageBox", "dprint", "Sleep",
+        "timeGetTime", "PlaySE", "PlayBgm", "PlayBgmMargin", "FadeBgm", "StopBgm", "PauseBgm"};
+    for (int repeat = 0; repeat < 2; ++repeat) {
+        kinoko_register_global_methods(PTR(root));
+        CHECK(sq_gettop(kinoko_vm(vm)) == top);
+        for (int i = 0; i < sizeof(globals)/sizeof(globals[0]); ++i) {
+            sq_pushroottable(kinoko_vm(vm));
+            sq_pushstring(kinoko_vm(vm), globals[i], -1);
+            CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -2)));
+            CHECK(sq_gettype(kinoko_vm(vm), -1) == OT_NATIVECLOSURE);
+            sq_settop(kinoko_vm(vm), top);
+        }
+        CHECK(execute_source(vm, root + 2,
+            "Sleep(0); if(typeof timeGetTime()!=\"integer\") throw \"native return ABI\";"));
+    }
+    int32_t input[384] = {0};
+    input[8] = 73; /* Original GetAssign(-1,3): record +16, then (3+1)*4. */
+    function_46d950();
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    sq_pushroottable(kinoko_vm(vm));
+    sq_pushstring(kinoko_vm(vm), "registrationInput", -1);
+    CHECK(function_4ab170(vm, PTR("Input"), PTR(input), 0));
+    CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+    sq_settop(kinoko_vm(vm), top);
+    CHECK(execute_source(vm, root + 2,
+        "registrationInput.x=-17; registrationInput.y=29;"
+        "registrationInput.b2=123; registrationInput.kr1=true;"
+        "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;"
+        "if(registrationInput.k2!=123 || !registrationInput.br1 || "
+        "registrationInput.GetAssign(-1,3)!=73) throw \"Input alias/receiver\";"
+        "registrationInput.br1=false; if(registrationInput.kr1) throw \"Input bool alias\";"));
+    CHECK(input[359] == -17 && input[360] == 29);
+    CHECK(input[363] == 123 && input[366] == 456);
+    CHECK(input[368] == 789 && input[377] == 987);
+    CHECK(((uint8_t*)input)[1469] == 0 && ((uint8_t*)input)[1468] == 0);
+    CHECK(input[358] == 0 && input[378] == 0);
+    CHECK(execute_source(vm, root + 2, "delete registrationInput;"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: global registration repeat/stack/ABI and Input field aliases/native receiver");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
         return test_texture_lifetime();
@@ -4010,6 +4058,7 @@ int main(int argc, char **argv) {
     CHECK(test_global_callback_destructor(vm) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
+    CHECK(test_script_registrations(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
         return test_act_reentry(argv[2]);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)

@@ -1,0 +1,117 @@
+#include "kinoko/squirrel_binding_detail.hpp"
+#include "kinoko/script_registration.h"
+#include "kinoko/sqrat_object_bridge.h"
+#include "kinoko/squirrel_legacy_api.h"
+#include "script_registration_host.hpp"
+
+namespace {
+using namespace kinoko::script;
+using namespace kinoko::script::binding;
+template<class Function> int32_t entry(Function function) {
+    return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
+}
+struct NativeMethod { const char* name; int32_t target; int32_t wrapper; };
+// Original 473010 order; targets retain their existing recovered ABI adapters.
+const NativeMethod methods[] = {
+    {"PostQuitMessage", entry(function_471080), entry(function_471bc0)},
+    {"ReadCSV", entry(function_403000), entry(function_471c10)},
+    {"LoadTable", entry(function_472c90), entry(function_471c10)},
+    {"SaveTable", entry(function_472e50), entry(function_471c10)},
+    {"SetGlobalUpdateFunction", entry(function_469a20), entry(function_471c70)},
+    {"SetInitFunctionByID", entry(function_470fa0), entry(function_471d30)},
+    {"LoadAnimationData", entry(function_4696b0), entry(function_471d90)},
+    {"CreateActor", entry(function_469b40), entry(function_471df0)},
+    {"CreateActorFromMap", entry(function_469d10), entry(function_471e50)},
+    {"ClearActor", entry(function_469700), entry(function_471bc0)},
+    {"MoveActor", entry(function_469710), entry(function_471eb0)},
+    {"ClearCollision", entry(function_469870), entry(function_471bc0)},
+    {"CreateCollision", entry(function_469880), entry(function_471f10)},
+    {"CreateEvent", entry(function_469dd0), entry(function_471f70)},
+    {"ClearRenderLayer", entry(function_46a1d0), entry(function_471bc0)},
+    {"CreateRenderLayer", entry(retdec_create_render_layer_fixed), entry(function_471f10)},
+    {"LoadAct", entry(function_469820), entry(function_471d90)},
+    {"LoadMap", entry(function_469840), entry(function_471d90)},
+    {"LoadSE", entry(function_470ab0), entry(function_471f10)},
+    {"ReleaseMap", entry(function_469860), entry(function_471bc0)},
+    {"MessageBox", entry(function_470f60), entry(function_471f10)},
+    {"dprint", entry(function_43e100), entry(function_471f10)},
+    {"Sleep", entry(function_470f80), entry(function_471fd0)},
+    {"timeGetTime", entry(function_470f90), entry(function_472030)},
+    {"PlaySE", entry(function_470980), entry(function_471fd0)},
+    {"PlayBgm", entry(function_470220), entry(function_472080)},
+    {"PlayBgmMargin", entry(function_470290), entry(function_4720e0)},
+    {"FadeBgm", entry(function_470320), entry(function_472140)},
+    {"StopBgm", entry(function_470360), entry(function_471bc0)},
+    {"PauseBgm", entry(function_470300), entry(function_471bc0)},
+};
+struct Constant { const char* name; int32_t value; };
+constexpr Constant constants[] = {
+    {"GP_CAMERA", 0x20000000}, {"GP_ACT", 0x40000000},
+    {"GP_BACKGROUND", INT32_MIN}, {"PR_BACK", -1},
+    {"PR_FRONT", 0xffff}, {"PR_WATER", 0x10000},
+};
+} // namespace
+
+extern "C" void kinoko_register_global_methods(int32_t root_table) {
+    int32_t target = entry(function_402af0);
+    function_415550_this(root_table, address("ShowCallStack"), address(&target),
+        4, entry(function_470ee0), 0);
+    target = entry(function_471b30);
+    function_415550_this(root_table, address("CompileFile"), address(&target),
+        4, entry(retdec_compile_file_native), 0);
+    for (const auto& method : methods) {
+        auto* vm = current_vm();
+        sq_pushroottable(vm);
+        sq_pushstring(vm, method.name, -1);
+        std::memcpy(sq_newuserdata(vm, 4), &method.target, 4);
+        sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(method.wrapper)), 1);
+        sq_newslot(vm, -3, SQFalse);
+        sq_pop(vm, 1);
+    }
+}
+
+extern "C" int32_t function_473010(void) {
+    retdec_trace("473010:enter");
+    function_402aa0();
+    g664 = address(g644);
+    int32_t root_table[5];
+    root_table[0] = kinoko_sqrat_object_vtable();
+    root_table[1] = g664;
+    root_table[4] = 1;
+    auto* root_value = reinterpret_cast<HSQOBJECT*>(root_table + 2);
+    sq_resetobject(root_value);
+    root_table[0] = kinoko_sqrat_root_vtable();
+    sq_pushroottable(current_vm());
+    sq_getstackobj(current_vm(), -1, root_value);
+    function_48a400(g664, address(root_value));
+    sq_pop(current_vm(), 1);
+    kinoko_register_global_methods(address(root_table));
+    int32_t object[3];
+    function_4a9500_this(object, function_4a8cc0());
+    const auto update_result = function_4721a0(object, &g459, const_cast<char*>("updateMask"), 0);
+    retdec_trace_i32("473010:update-bind-result", update_result);
+    retdec_trace_i32("473010:update-storage", g459);
+    retdec_trace_i32("473010:update-object-type", object[1]);
+    retdec_trace_i32("473010:update-object-data", object[2]);
+    retdec_trace_i32("473010:update-present", function_4aa1a0(address(object), "updateMask"));
+    function_4a9d70_this(address(object));
+    function_4a9500_this(object, function_4a8cc0());
+    const auto render_result = function_4721a0(object, &g460, const_cast<char*>("renderMask"), 0);
+    retdec_trace_i32("473010:render-bind-result", render_result);
+    retdec_trace_i32("473010:render-storage", g460);
+    retdec_trace_i32("473010:render-object-type", object[1]);
+    retdec_trace_i32("473010:render-object-data", object[2]);
+    retdec_trace_i32("473010:render-present", function_4aa1a0(address(object), "renderMask"));
+    function_4a9d70_this(address(object));
+    for (const auto& constant : constants) {
+        function_4a9500_this(object, function_4a8cc0());
+        function_472240(object, constant.value, const_cast<char*>(constant.name));
+        function_4a9d70_this(address(object));
+    }
+    function_460e00();
+    function_46d950();
+    function_4669d0();
+    function_46fac0();
+    function_402d40(const_cast<char*>("data/script/class_def.nut"), function_402d30());
+    return function_48a430(address(g644), address(root_table + 2));
+}
