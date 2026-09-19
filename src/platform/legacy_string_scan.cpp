@@ -56,4 +56,3 @@ extern "C" uint32_t retdec_safe_c_string_length(const char *source)
     }
     return 0;
 }
-
