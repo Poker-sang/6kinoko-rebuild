@@ -1,0 +1,146 @@
+#include "kinoko/audio_runtime.h"
+#include "kinoko/audio_host.h"
+#include "kinoko/audio_records.hpp"
+#include "kinoko/audio_math.h"
+#include "kinoko/com_owner.hpp"
+#include "kinoko/legacy_memory.hpp"
+#include "kinoko/windows_owner.hpp"
+#include <mmsystem.h>
+#include <dsound.h>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
+#include <cstdint>
+#include <memory>
+#include <new>
+#include <utility>
+
+// The vendored decoder remains local to the audio implementation. No external
+// codec, filesystem search policy or script-format change is introduced.
+#define STB_VORBIS_NO_STDIO
+#include "stb_vorbis.c"
+
+using float32_t = float;
+using float80_t = long double;
+using namespace kinoko::audio;
+using kinoko::legacy::address;
+using kinoko::legacy::pointer;
+using kinoko::windows::CriticalLock;
+
+namespace {
+constexpr DWORD RETDEC_BGM_BUFFER_BYTES = 0x100000u;
+constexpr DWORD RETDEC_BGM_CHUNK_BYTES = 0x8000u;
+constexpr int RETDEC_BGM_MAX_CHANNELS = 8;
+constexpr DWORD RETDEC_BGM_GUARD_BYTES = 16u;
+constexpr int RETDEC_SE_MAX_ENTRIES = 128;
+static_assert(sizeof(WAVEFORMATEX) == 18 && sizeof(DSBUFFERDESC) == 36);
+
+struct VorbisClose {
+    void operator()(stb_vorbis* decoder) const noexcept {
+        if (decoder) stb_vorbis_close(decoder);
+    }
+};
+// The track exclusively owns its secondary buffer, decoder and decoder input.
+// Moving transfers those owners; copying is impossible. Native ABI buffer
+// records only describe requests and never own these resources.
+struct BgmTrack {
+    BgmTrack() = default;
+    BgmTrack(const BgmTrack&) = delete;
+    BgmTrack& operator=(const BgmTrack&) = delete;
+    BgmTrack(BgmTrack&&) noexcept = default;
+    BgmTrack& operator=(BgmTrack&& other) noexcept {
+        if (this != &other) {
+            // Close the decoder before releasing its borrowed input memory.
+            this->~BgmTrack();
+            new (this) BgmTrack(std::move(other));
+        }
+        return *this;
+    }
+    kinoko::legacy::Allocation<unsigned char> encoded_data;
+    kinoko::legacy::Allocation<short> decoded_samples;
+    kinoko::legacy::Allocation<short> decode_scratch;
+    std::unique_ptr<stb_vorbis, VorbisClose> decoder;
+    kinoko::ComOwner<IDirectSoundBuffer> buffer;
+    DWORD buffer_bytes = 0;
+    DWORD encoded_bytes = 0;
+    DWORD decoded_bytes = 0;
+    DWORD sample_rate = 0;
+    WORD channels = 0;
+    std::uint32_t handle = 0;
+    DWORD loop_start_frame = 0;
+    DWORD loop_end_frame = 0;
+    DWORD source_frame = 0;
+    DWORD write_offset = 0;
+    DWORD write_window_start = 0;
+    DWORD play_offset = 0;
+    DWORD buffered_bytes = 0;
+    DWORD start_time = 0;
+    int source_ended = 0;
+    int looping = 0;
+    int started = 0;
+    float volume = 0;
+    float fade_from = 0;
+    float fade_to = 0;
+    DWORD fade_started = 0;
+    DWORD fade_duration = 0;
+    int playing = 0;
+};
+struct SoundSlot {
+    kinoko::ComOwner<IDirectSoundBuffer> buffer;
+    DWORD buffer_bytes = 0;
+    int in_use = 0;
+};
+struct SoundEntry {
+    int id = 0;
+    kinoko::ComOwner<IDirectSoundBuffer> buffer;
+    DWORD buffer_bytes = 0;
+};
+struct SoundPool {
+    SoundSlot stream_slots[32];
+    float master_volume = 0;
+    int initialized = 0;
+};
+struct AudioDevice {
+    HMODULE module = nullptr;
+    kinoko::ComOwner<IDirectSound8> device;
+    kinoko::ComOwner<IDirectSoundBuffer> primary;
+    kinoko::ComOwner<IDirectSound3DListener> listener;
+    void reset() noexcept {
+        listener.reset();
+        primary.reset();
+        device.reset();
+        if (const auto old = std::exchange(module, nullptr)) FreeLibrary(old);
+    }
+    ~AudioDevice() { reset(); }
+    AudioDevice() = default;
+    AudioDevice(const AudioDevice&) = delete;
+    AudioDevice& operator=(const AudioDevice&) = delete;
+};
+// Declared before tracks: the device outlives all secondary-buffer owners.
+AudioDevice g_audio_device;
+ManagerRecord g_retdec_audio_manager_state{};
+int g_retdec_audio_manager_initialized = 0;
+SoundPool g_retdec_se_pool;
+SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
+int g_retdec_se_entry_count = 0;
+BgmTrack g_retdec_bgm_track;
+BgmTrack g_retdec_bgm_fading_tracks[31];
+kinoko::windows::HandleOwner g_retdec_audio_queue_event;
+kinoko::windows::HandleOwner g_retdec_audio_stop_event;
+kinoko::windows::HandleOwner g_retdec_audio_update_thread;
+kinoko::windows::HandleOwner g_retdec_audio_loader_thread;
+float g_retdec_audio_master_volume = 1.0f;
+volatile LONG g_retdec_audio_running = 0;
+int g_retdec_audio_threads_initialized = 0;
+CRITICAL_SECTION g_retdec_audio_lock{};
+int g_retdec_audio_lock_initialized = 0;
+void sync_audio_device_aliases() noexcept {
+    // Read-only borrows for not-yet-migrated C entry points, never extra owners.
+    g876 = address(g_audio_device.primary.get());
+    g877 = reinterpret_cast<char*>(g_audio_device.device.get());
+    g878 = address(g_audio_device.listener.get());
+}
+DWORD WINAPI audio_update_worker(void*) { return function_40aaa0(); }
+DWORD WINAPI audio_loader_worker(void*) { return function_40aac0(); }
+}
