@@ -1,0 +1,542 @@
+{
+  "source_commit": "ef6236d0bf1a6f67b0141632446b513c8a4351cb",
+  "implementation_file": "src/platform/retdec_runtime_compat.cpp",
+  "implementation_sha256": "74de4f4144e222dacb60524a87c385ec167b961333dedde8b8ee09019273948c",
+  "scanned_file_count": 285,
+  "scanned_source_sha256": "4670c1c5e369f96801a2df160a213fbf255f3b9c002fc9d2ed18a4351408756f",
+  "maps": [
+    {
+      "name": "kinoko.map",
+      "sha256": "b0eb073fb2621e1b53d288df88e763bb207f7fc58ad98a3d817aeb4598e51d5d"
+    },
+    {
+      "name": "stage-contract.map",
+      "sha256": "e913445850276767bc0d690ed40d6ac7c449504009e5f72e50209836329ba84d"
+    },
+    {
+      "name": "kinoko.map",
+      "sha256": "298319daf1745ee3fe00ce73527b4cda0515cd76febf5ca51b7a52ae59cad9fd"
+    },
+    {
+      "name": "stage-contract.map",
+      "sha256": "f8a81b20b470e7abf20a87655d20aa96838165a2428053106eceff9654ccdef7"
+    }
+  ],
+  "candidates": [
+    {
+      "name": "llvm_ctpop_i8",
+      "line": 200,
+      "lines": 9,
+      "body_sha256": "be586530d9834e137bb212d7c5df40073031087ed572b7507f923de2abe80f38"
+    },
+    {
+      "name": "__Getctype",
+      "line": 231,
+      "lines": 6,
+      "body_sha256": "99feaad9284ca22ad16bfd0de1c25cc315d8d110de1959097fcafd9660406fc2"
+    },
+    {
+      "name": "__Getcvt",
+      "line": 238,
+      "lines": 4,
+      "body_sha256": "1247d6d28cfd73b12a6e9e267643137c103c6c1cde9c9104a63dfe4c072e95f2"
+    },
+    {
+      "name": "__Tolower",
+      "line": 243,
+      "lines": 4,
+      "body_sha256": "c4b5859ae61609de93f808d97bfe96600eb8a26f008bc4c0321f639226ef334c"
+    },
+    {
+      "name": "__Toupper",
+      "line": 248,
+      "lines": 4,
+      "body_sha256": "ab1b853f3467c5ea3a3d4177510e505831a9b69b1170400c123b05f05194072d"
+    },
+    {
+      "name": "__Stolx",
+      "line": 258,
+      "lines": 4,
+      "body_sha256": "c028f4ada3e3bdc05618512d5bb3d6f2a109030054434bb97ad147e1ad9c5700"
+    },
+    {
+      "name": "__Stoulx",
+      "line": 263,
+      "lines": 4,
+      "body_sha256": "c8ec28a8323fa2b5a6787806baad7a68bf9ac9e7af8e1a97693e1f2e940e81f9"
+    },
+    {
+      "name": "__Stollx",
+      "line": 268,
+      "lines": 4,
+      "body_sha256": "6bcfb90a3d83a341d170db98704606be01050e95269b52cbc187a85ea276ef21"
+    },
+    {
+      "name": "__Stoullx",
+      "line": 273,
+      "lines": 4,
+      "body_sha256": "c749e680c520d542458a4c69f43f7422512551ee909d3633bb890f0549cb8e67"
+    },
+    {
+      "name": "__Stofx",
+      "line": 278,
+      "lines": 5,
+      "body_sha256": "e7952ed701e5a10af4af4771a839021ca7a9d10dc861f1dcb3bb93786165b861"
+    },
+    {
+      "name": "__Stodx",
+      "line": 284,
+      "lines": 5,
+      "body_sha256": "8ca35eb27820a66ab9f74698ada1f86a66d7efe2298bb0587da0bdc4ffad682f"
+    },
+    {
+      "name": "_3f__3f_0_Mutex_40_std_40__40_QAE_40_XZ",
+      "line": 310,
+      "lines": 3,
+      "body_sha256": "7db671d2961c6719bd53bf96b890cafed19fc46e4e5c396903bf158e10dca1bf"
+    },
+    {
+      "name": "_3f__3f_1_Mutex_40_std_40__40_QAE_40_XZ",
+      "line": 314,
+      "lines": 4,
+      "body_sha256": "1ef779c7a9a151c09ad6ded9bafd13ce77896470c67c5de37f4d3503c76fdff7"
+    },
+    {
+      "name": "_3f__3f_0bad_alloc_40_std_40__40_QAE_40_PBD_40_Z",
+      "line": 319,
+      "lines": 5,
+      "body_sha256": "d2c37c6edba34a1d1a47d79f12d0180eed550c4433aabe5fa53700f23a8e044e"
+    },
+    {
+      "name": "_3f__Facet_Register_40_facet_40_locale_40_std_40__40_CAXPAV123_40__40_Z",
+      "line": 340,
+      "lines": 4,
+      "body_sha256": "ce75d0dc8d579b1620245a50357b3f4f7702479f18a9056508af0bf8b3bc92a1"
+    },
+    {
+      "name": "_3f__Init_40_locale_40_std_40__40_CAPAV_Locimp_40_12_40_XZ",
+      "line": 345,
+      "lines": 4,
+      "body_sha256": "bc868d07be0a29d812ede4a5629590ed9b9e54a4d40bf20b3ee04c23bd6695d3"
+    },
+    {
+      "name": "_3f__Ios_base_dtor_40_ios_base_40_std_40__40_CAXPAV12_40__40_Z",
+      "line": 350,
+      "lines": 4,
+      "body_sha256": "c4b11918a21bdcf2673378f1cb971a8bf062a6948bb160020c74ac8445598ec1"
+    },
+    {
+      "name": "_3f__Locinfo_ctor_40__Locinfo_40_std_40__40_SAXPAV12_40_PBD_40_Z",
+      "line": 355,
+      "lines": 5,
+      "body_sha256": "973fdc9325e9366f0b34bb89a7c5af2a568338a677b687fb947817258033781d"
+    },
+    {
+      "name": "_3f__Locinfo_dtor_40__Locinfo_40_std_40__40_SAXPAV12_40__40_Z",
+      "line": 361,
+      "lines": 4,
+      "body_sha256": "b101df3f2a9649f71c64c5f9fbda3b483b6da2cd66f398b6f8b787ff957cce2d"
+    },
+    {
+      "name": "_3f___uncaught_exception_40__40_YA_NXZ",
+      "line": 377,
+      "lines": 4,
+      "body_sha256": "13cdc1c7d5fa22afcc15f8df036ca67a93bf58691a2b2e80bd27e77354374b0e"
+    },
+    {
+      "name": "retdec_msvc_0bad_alloc_std__QAE_ABV01__Z",
+      "line": 442,
+      "lines": 4,
+      "body_sha256": "9a5412d49559417f960e6d31e266c92f8470bc84b0cbcd77b9e808fe014c2d5d"
+    }
+  ],
+  "retained": [
+    {
+      "name": "Direct3DCreate9",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map"
+      ]
+    },
+    {
+      "name": "CoInitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoUninitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoCreateInstance",
+      "source_references": [
+        "src/reconstructed/audio_runtime.cpp",
+        "src/reconstructed/direct_input.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "timeGetTime",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_frame_update.cpp",
+        "src/reconstructed/act_resource.cpp",
+        "src/reconstructed/audio_runtime.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/global_registration.cpp",
+        "tests/act_frame_contract.cpp",
+        "tests/stage_contract.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "timeBeginPeriod",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map"
+      ]
+    },
+    {
+      "name": "_vsprintf_compat",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__atof_l",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_atexit",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_doexit",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_flsall",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "retdec_valid_text",
+      "source_references": [],
+      "local_references": 6,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_2_40_YAPAXI_40_Z",
+      "source_references": [
+        "include/kinoko/act_host.h",
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_layer_access.cpp",
+        "src/reconstructed/act_lifetime.cpp",
+        "src/reconstructed/act_runtime_lifecycle.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/squirrel_vm_bootstrap.cpp",
+        "tests/act_frame_contract.cpp"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__3f_0_Lockit_40_std_40__40_QAE_40_H_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_8type_info_40__40_QBE_NABV0_40__40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__Tidy_40_exception_40_std_40__40_AAEXXZ",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z",
+      "source_references": [],
+      "local_references": 1,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f__L_40_YGXPAXIHP6EX0_40_Z1_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "__convertTOStoQNaN",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__fload_withFB",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__lock",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__math_exit",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__startOneArgErrorHandling",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "__unlock",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "___security_init_cookie",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "___tmainCRTStartup",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "___report_gsfailure",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "__CxxThrowException_40_8",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "___libm_error_support",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "___RTtypeid",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "retdec_Xinvalid_argument",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs/orphan-crt-evidence/quiet/kinoko.map",
+        "build-runs/orphan-crt-evidence/quiet/stage-contract.map",
+        "build-runs/orphan-crt-evidence/diagnostic/kinoko.map",
+        "build-runs/orphan-crt-evidence/diagnostic/stage-contract.map"
+      ]
+    },
+    {
+      "name": "unknown_fcd53371",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    }
+  ],
+  "dependency_cleanup": {
+    "name": "retdec_valid_text",
+    "body_sha256": "f793a01d5c6b1694b6fcba8d9aa7670bd356335ce94e06186f45ad5e28b3dad6",
+    "old_local_references": 6,
+    "remaining_local_references": 0
+  },
+  "after_sha256": "2a2163db260e86fc9c8e30804c2b72e9f84dc42f95355f6bbe467f1930111f04"
+}
