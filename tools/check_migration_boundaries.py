@@ -41,7 +41,7 @@ def main() -> int:
     # These settings belong ONLY to the transitional adapter; removing them
     # changes its ABI. They are not a substitute for recovering copy operands.
     cmake = (ROOT / 'CMakeLists.txt').read_text()
-    if not re.search(r'set_source_files_properties\(src/platform/legacy_frame_copy\.cpp\s+PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-"\)', cmake):
+    if not re.search(r'set_source_files_properties\(src/platform/legacy_frame_entry\.cpp\s+PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-"\)', cmake):
         errors.append('The isolated frame adapter lost its /Oy- /GL- ABI settings.')
     if errors:
         print('\n'.join(errors), file=sys.stderr)
