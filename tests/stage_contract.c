@@ -1,5 +1,6 @@
 /* Exercise the actual reconstructed functions without WinMain, graphics or DAT startup. */
 #include "../src/decompiled/6kinoko_rebuilt.c"
+#include "stage_audio_contract.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -3118,38 +3119,16 @@ static int test_global_stage_cleanup(void) {
     return 0;
 }
 
-static ULONG WINAPI count_sound_release(void *self) {
-    ++((int32_t *)self)[1];
-    return 0;
-}
-static HRESULT WINAPI count_sound_stop(void *self) {
-    ++((int32_t *)self)[2];
-    return S_OK;
-}
 static int test_global_sound_cleanup(void) {
     int32_t old_head = g638, old_size = g639;
     int32_t *head = calloc(1, 24), *node = calloc(1, 24);
-    void *vtable[19] = {0};
-    int32_t buffers[3][3] = {0};
     CHECK(head && node);
-    vtable[2] = count_sound_release;
-    vtable[18] = count_sound_stop;
-    for (int i = 0; i < 3; ++i) buffers[i][0] = PTR(vtable);
     g638 = PTR(head); g639 = 1;
     head[0] = head[1] = head[2] = PTR(node);
     ((unsigned char *)head)[21] = 1;
     node[0] = node[1] = node[2] = PTR(head);
-    g_retdec_se_entry_count = 2;
-    g_retdec_se_entries[0].buffer = buffers[0];
-    g_retdec_se_entries[1].buffer = buffers[1];
-    g_retdec_se_pool.stream_slots[0].buffer = buffers[2];
-    g_retdec_se_pool.initialized = 1;
-    CHECK(function_470890() == 1);
+    CHECK(kinoko_test_sound_cleanup(function_470890) == 0);
     CHECK(g639 == 0 && head[0] == PTR(head) && head[1] == PTR(head) && head[2] == PTR(head));
-    CHECK(!g_retdec_se_entry_count && !g_retdec_se_pool.initialized);
-    CHECK(function_470890() == 1);
-    for (int i = 0; i < 3; ++i) CHECK(buffers[i][1] == 1);
-    CHECK(buffers[0][2] == 1 && buffers[1][2] == 1);
     g638 = old_head; g639 = old_size;
     free(head);
     puts("PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown");
@@ -3435,62 +3414,6 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
 }
 
 
-/* Actual w3-c02b moving terrain, original player scripts, no game window. */
-/* Only the sound device is substituted: archive reads, Vorbis decoding, SFL
-   loading and initial ring-buffer fill all execute the production path. */
-static unsigned char bgm_test_pcm[RETDEC_BGM_BUFFER_BYTES];
-static int bgm_test_failure;
-static ULONG WINAPI bgm_test_release(void *self) { (void)self; return 0; }
-static HRESULT WINAPI bgm_test_lock(void *self, DWORD offset, DWORD bytes,
-    void **first, DWORD *first_bytes, void **second, DWORD *second_bytes, DWORD flags) {
-    (void)self; (void)flags;
-    if (bgm_test_failure == 2 || offset + bytes > sizeof(bgm_test_pcm)) return E_FAIL;
-    *first=bgm_test_pcm+offset; *first_bytes=bytes; *second=NULL; *second_bytes=0;
-    return S_OK;
-}
-static HRESULT WINAPI bgm_test_unlock(void *self, void *first, DWORD first_bytes,
-    void *second, DWORD second_bytes) {
-    (void)self; (void)first; (void)first_bytes; (void)second; (void)second_bytes;
-    return S_OK;
-}
-static HRESULT WINAPI bgm_test_create(void *self, const void *description, void **buffer, void *outer) {
-    static void *vtable[20];
-    static void **object=vtable;
-    (void)self; (void)description; (void)outer;
-    if (bgm_test_failure == 1) return E_FAIL;
-    vtable[2]=bgm_test_release; vtable[11]=bgm_test_lock; vtable[19]=bgm_test_unlock;
-    *buffer=&object;
-    return S_OK;
-}
-static int test_bgm_preserves_game_math(void) {
-    void *device_vtable[4]={0,0,0,bgm_test_create};
-    void **device=device_vtable;
-    char *previous_device=g877;
-    unsigned current, x87, sse;
-    unsigned char reference_pcm[RETDEC_BGM_CHUNK_BYTES];
-    g877=(char *)&device;
-    /* Compare PCM with the former default-math decoding behavior. */
-    _controlfp_s(&current,_RC_NEAR,_MCW_RC);
-    CHECK(retdec_bgm_prepare_track(1,"data/bgm/st1.ogg",1,1.0f));
-    memcpy(reference_pcm,bgm_test_pcm,sizeof(reference_pcm));
-    retdec_bgm_release_track_locked();
-    kinoko_enter_game_math();
-    for (bgm_test_failure=0; bgm_test_failure<=2; ++bgm_test_failure) {
-        CHECK(retdec_bgm_prepare_track(1,"data/bgm/st1.ogg",1,1.0f)==(bgm_test_failure==0));
-        CHECK(__control87_2(0,0,&x87,&sse));
-        CHECK((x87&_MCW_RC)==_RC_UP && (sse&_MCW_RC)==_RC_UP);
-        if (!bgm_test_failure) CHECK(memcmp(reference_pcm,bgm_test_pcm,sizeof(reference_pcm))==0);
-        retdec_bgm_release_track_locked();
-    }
-    bgm_test_failure=0;
-    CHECK(!retdec_bgm_prepare_track(1,"data/script/constant.cv4",1,1.0f));
-    CHECK(__control87_2(0,0,&x87,&sse));
-    CHECK((x87&_MCW_RC)==_RC_UP && (sse&_MCW_RC)==_RC_UP);
-    g877=previous_device;
-    puts("PASS: real BGM decoding preserves PCM and game rounding on success/decoder/device/fill failure");
-    return 0;
-}
-
 static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const char *directory, int underwater, float start_x, float start_y) {
     const uint32_t previous_rounding=kinoko_enter_game_math();
     char path[MAX_PATH];
@@ -3498,7 +3421,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
         CHECK(function_410500(path));
     }
-    CHECK(test_bgm_preserves_game_math()==0);
+    CHECK(kinoko_test_bgm_preserves_game_math()==0);
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null; player <- null;"));
@@ -3970,27 +3893,8 @@ int main(int argc, char **argv) {
         return test_texture_lifetime();
     if (argc == 2 && strcmp(argv[1], "--gc-link-probe") == 0)
         return test_gc_mark_link();
-    if (argc == 2 && strcmp(argv[1], "--sound-module") == 0) {
-        HMODULE module=LoadLibraryA("dsound.dll");
-        char path[MAX_PATH];
-        GetModuleFileNameA(module,path,MAX_PATH);
-        printf("module=%s base=%p preferred=%08lx\n",path,module,
-            ((IMAGE_NT_HEADERS *)((char *)module+((IMAGE_DOS_HEADER *)module)->e_lfanew))->OptionalHeader.ImageBase);
-        void *ds=NULL, *buffer=NULL;
-        retdec_direct_sound_create8_fn create=(retdec_direct_sound_create8_fn)GetProcAddress(module,"DirectSoundCreate8");
-        CHECK(SUCCEEDED(create(NULL,&ds,NULL)));
-        void **vt=*(void ***)ds;
-        CHECK(SUCCEEDED(((retdec_dsound_set_cooperative_level_fn)vt[6])(ds,GetDesktopWindow(),1)));
-        retdec_wave_format format={1,1,22050,44100,2,16,0};
-        retdec_dsound_buffer_desc description={0};
-        description.dwSize=sizeof(description); description.dwFlags=0x18088;
-        description.dwBufferBytes=4096; description.lpwfxFormat=&format;
-        CHECK(SUCCEEDED(((retdec_dsound_create_buffer_fn)vt[3])(ds,&description,&buffer,NULL)));
-        printf("buffer=%p vtable=%p play=%p\n",buffer,*(void ***)buffer,(*(void ***)buffer)[12]);
-        retdec_release_dsound_buffer(buffer);
-        ((retdec_dsound_release_fn)vt[2])(ds);
-        return 0;
-    }
+    if (argc == 2 && strcmp(argv[1], "--sound-module") == 0)
+        return kinoko_test_sound_module();
     AddVectoredExceptionHandler(1, contract_exception);
     CHECK(test_texture_lifetime() == 0);
     CHECK(test_map_camera_fpu() == 0);
