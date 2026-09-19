@@ -30,6 +30,11 @@ extern "C" {
 #endif
 
 void kinoko_sprite_transform(KinokoSprite *sprite, float x, float y);
+int32_t __fastcall kinoko_sprite_set_rect(KinokoSprite *sprite, void *unused,
+    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height);
+int32_t __fastcall kinoko_sprite_set_rect_pivot(KinokoSprite *sprite, void *unused,
+    int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height,
+    int32_t pivot_x, int32_t pivot_y);
 uint32_t __fastcall kinoko_quad_set_color(KinokoColoredQuad *quad, void *unused, uint32_t color);
 uint32_t __fastcall kinoko_quad_set_vertex_colors(KinokoColoredQuad *quad, void *unused, const uint32_t *colors);
 uint32_t __fastcall kinoko_quad_modulate_color(KinokoColoredQuad *quad, void *unused, uint32_t color);

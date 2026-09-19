@@ -42,6 +42,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/script_callbacks.cpp
     src/reconstructed/sprite.cpp
+    src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp
     src/reconstructed/map_layers.cpp
@@ -365,6 +366,7 @@ add_executable(kinoko_act_frame_contract
     tests/act_frame_contract.cpp
     src/reconstructed/act_layer_access.cpp
     src/reconstructed/act_draw_storage.cpp
+    src/reconstructed/sprite_rect.cpp
     src/reconstructed/act_frame_render.cpp
     src/reconstructed/legacy_abi.cpp)
 target_include_directories(kinoko_act_frame_contract PRIVATE include)

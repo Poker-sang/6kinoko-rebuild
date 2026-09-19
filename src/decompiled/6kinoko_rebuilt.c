@@ -1432,8 +1432,8 @@ struct vtable_4ed2cc_type {
     uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);
     uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);
     uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
-    int32_t (*e4)(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-    int32_t (*e5)(int32_t, int32_t, int32_t, int32_t, int32_t);
+    int32_t (__fastcall *e4)(KinokoSprite *, void *, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+    int32_t (__fastcall *e5)(KinokoSprite *, void *, int32_t, int32_t, int32_t, int32_t, int32_t);
     int32_t (*e6)(float32_t, float32_t, float32_t, float32_t);
     int32_t (__fastcall *e7)(KinokoSprite *, void *, float32_t, float32_t);
     int32_t (__fastcall *e8)(KinokoSprite *, void *, float32_t, float32_t);
@@ -1898,8 +1898,6 @@ int32_t function_404230(void);
 int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4);
 int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4045c0(int32_t a1, int32_t a2);
-int32_t function_404610(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
-int32_t function_404640(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7);
 
 
 int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4);
@@ -5745,8 +5743,8 @@ struct vtable_4ed2cc_type g407 = {
     .e1 = kinoko_quad_set_color,
     .e2 = kinoko_quad_set_vertex_colors,
     .e3 = kinoko_quad_modulate_color,
-    .e4 = function_404640,
-    .e5 = function_404610,
+    .e4 = kinoko_sprite_set_rect_pivot,
+    .e5 = kinoko_sprite_set_rect,
     .e6 = function_404e10,
     .e7 = kinoko_sprite_draw_404770,
     .e8 = kinoko_sprite_draw_404bc0,
@@ -8836,132 +8834,9 @@ int32_t function_4045c0(int32_t a1, int32_t a2) {
            second[0] <= first[2] && second[1] <= first[3];
 }
 
-// Address range: 0x404610 - 0x404636
-// From class:    .?AVCSprite@@
-// Type:          virtual member function
-int32_t function_404610(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5) {
-    // 0x404610
-    int32_t v1; // 0x404610
-    return *(int32_t *)(v1 + 16);
-}
 
-// Address range: 0x404640 - 0x404766
-// From class:    .?AVCSprite@@
-// Type:          virtual member function
-int32_t function_404640(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7) {
-    // 0x404640
-    int3_t v1; // 0x404640
-    int3_t v2 = v1 - 1; // 0x404643
-    __frontend_reg_store_fpr(v2, (float80_t)a4);
-    int32_t v3; // 0x404640
-    *(float32_t *)(v3 + 120) = (float32_t)__frontend_reg_load_fpr(v2);
-    __frontend_reg_store_fpr(v2, (float80_t)a5);
-    *(float32_t *)(v3 + 124) = (float32_t)__frontend_reg_load_fpr(v2);
-    float80_t v4 = a6; // 0x40465e
-    __frontend_reg_store_fpr(v2, v4);
-    *(int32_t *)(v3 + 4) = a1;
-    *(float32_t *)(v3 + 128) = (float32_t)__frontend_reg_load_fpr(v2);
-    float80_t v5 = a7; // 0x40466a
-    __frontend_reg_store_fpr(v2, v5);
-    *(float32_t *)(v3 + 132) = (float32_t)__frontend_reg_load_fpr(v2);
-    function_405ea0((int32_t)&g1224);
-    __frontend_reg_store_fpr(v2, (float80_t)a2);
-    int3_t v6 = v1 - 2; // 0x404683
-    __frontend_reg_store_fpr(v6, v4);
-    if (a6 < 0) {
-        // 0x40468a
-        __frontend_reg_store_fpr(v6, __frontend_reg_load_fpr(v6) + 4294967296.0L);
-    }
-    int3_t v7 = v6 + 1;
-    __frontend_reg_store_fpr(v7, __frontend_reg_load_fpr(v7) / __frontend_reg_load_fpr(v6));
-    __frontend_reg_store_fpr(v7, __frontend_reg_load_fpr(v7));
-    *(float32_t *)(v3 + 28) = (float32_t)__frontend_reg_load_fpr(v7);
-    __frontend_reg_store_fpr(v6, (float80_t)a3);
-    int3_t v8 = v6 - 1;
-    __frontend_reg_store_fpr(v8, v5);
-    int3_t v9; // 0x404640
-    int3_t v10; // 0x404640
-    int3_t v11; // 0x404640
-    if (a7 >= 0) {
-        // 0x404690
-        v9 = v6 - 2;
-        v10 = v6;
-        v11 = v8;
-    } else {
-        // 0x4046ad
-        __frontend_reg_store_fpr(v8, __frontend_reg_load_fpr(v8) + 4294967296.0L);
-        v9 = v8;
-        v10 = v7;
-        v11 = v6;
-    }
-    int3_t v12 = v10;
-    int3_t v13 = v9;
-    float80_t v14 = __frontend_reg_load_fpr(v11); // 0x4046b3
-    __frontend_reg_store_fpr(v12, __frontend_reg_load_fpr(v12) / v14);
-    __frontend_reg_store_fpr(v12, __frontend_reg_load_fpr(v12));
-    *(float32_t *)(v3 + 32) = (float32_t)__frontend_reg_load_fpr(v12);
-    __frontend_reg_store_fpr(v11, (float80_t)(a4 + a2));
-    __frontend_reg_store_fpr(v13, v4);
-    int3_t v15; // 0x404640
-    int3_t v16; // 0x404640
-    if (a6 >= 0) {
-        // 0x4046b3
-        v15 = v13 + 1;
-        v16 = v13;
-    } else {
-        // 0x4046d4
-        __frontend_reg_store_fpr(v13, __frontend_reg_load_fpr(v13) + 4294967296.0L);
-        v15 = v12;
-        v16 = v11;
-    }
-    int3_t v17 = v15;
-    float80_t v18 = __frontend_reg_load_fpr(v16); // 0x4046da
-    __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v17) / v18);
-    __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v17));
-    *(float32_t *)(v3 + 56) = (float32_t)__frontend_reg_load_fpr(v17);
-    int3_t v19 = v16 + 2; // 0x4046eb
-    float80_t v20 = __frontend_reg_load_fpr(v17); // 0x4046eb
-    __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v19));
-    __frontend_reg_store_fpr(v19, v20);
-    *(float32_t *)(v3 + 60) = (float32_t)__frontend_reg_load_fpr(v17);
-    int3_t v21 = v16 + 3; // 0x4046f3
-    float80_t v22 = __frontend_reg_load_fpr(v19); // 0x4046f3
-    __frontend_reg_store_fpr(v19, __frontend_reg_load_fpr(v21));
-    __frontend_reg_store_fpr(v21, v22);
-    *(float32_t *)(v3 + 84) = (float32_t)__frontend_reg_load_fpr(v19);
-    __frontend_reg_store_fpr(v19, (float80_t)(a5 + a3));
-    __frontend_reg_store_fpr(v17, v5);
-    if (a7 < 0) {
-        // 0x404705
-        __frontend_reg_store_fpr(v17, __frontend_reg_load_fpr(v17) + 4294967296.0L);
-    }
-    int3_t v23 = v17 + 1; // 0x40470b
-    __frontend_reg_store_fpr(v23, __frontend_reg_load_fpr(v23) / __frontend_reg_load_fpr(v17));
-    *(int32_t *)(v3 + 108) = -1;
-    *(int32_t *)(v3 + 80) = -1;
-    *(int32_t *)(v3 + 52) = -1;
-    *(int32_t *)(v3 + 24) = -1;
-    __frontend_reg_store_fpr(v23, __frontend_reg_load_fpr(v23));
-    *(float32_t *)(v3 + 88) = (float32_t)__frontend_reg_load_fpr(v23);
-    *(float32_t *)(v3 + 116) = (float32_t)__frontend_reg_load_fpr(v23);
-    int3_t v24 = v17 + 2; // 0x404727
-    *(float32_t *)(v3 + 112) = (float32_t)__frontend_reg_load_fpr(v24);
-    __frontend_reg_store_fpr(v24, 0.5L);
-    *(float32_t *)(v3 + 100) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 72) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 44) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 16) = (float32_t)__frontend_reg_load_fpr(v24);
-    __frontend_reg_store_fpr(v24, 1.0L);
-    *(float32_t *)(v3 + 104) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 76) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 48) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 20) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 140) = (float32_t)__frontend_reg_load_fpr(v24);
-    *(float32_t *)(v3 + 136) = (float32_t)__frontend_reg_load_fpr(v24);
-    __frontend_reg_store_fpr(v24, 0.0L);
-    *(float32_t *)(v3 + 144) = (float32_t)__frontend_reg_load_fpr(v24);
-    return -1;
-}
+
+
 
 
 // Address range: 0x404e10 - 0x404ea6

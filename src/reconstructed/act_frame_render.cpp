@@ -80,16 +80,10 @@ int32_t prepare_sprite(int32_t item, const BlitCommand& command) {
     if (!texture.width || !texture.height) return E_FAIL;
     KinokoSprite sprite{};
     sprite.vtable = const_cast<void*>(kinoko_act_host_symbols()->sprite_vtable);
-    sprite.texture = command.texture;
-    sprite.width = static_cast<float>(command.width);
-    sprite.height = static_cast<float>(command.height);
-    sprite.scale_x = sprite.scale_y = 1;
-    const float u0 = static_cast<float>(command.source_x) / texture.width;
-    const float v0 = static_cast<float>(command.source_y) / texture.height;
-    const float u1 = static_cast<float>(command.source_x + command.width) / texture.width;
-    const float v1 = static_cast<float>(command.source_y + command.height) / texture.height;
+    kinoko_sprite_set_rect(&sprite, nullptr, command.texture, command.source_x,
+        command.source_y, command.width, command.height);
     const uint32_t color = (static_cast<uint32_t>(command.alpha * 255.0f) << 24) | 0xffffffu;
-    for (int i = 0; i < 4; ++i) sprite.vertices[i] = {0, 0, 0.5f, 1, color, (i & 1) ? u1 : u0, (i & 2) ? v1 : v0};
+    for (auto& vertex : sprite.vertices) vertex.color = color;
     const RecordView<BlitSprite> target(pointer(item));
     target.set(&BlitSprite::command, command);
     target.set(&BlitSprite::sprite, sprite);

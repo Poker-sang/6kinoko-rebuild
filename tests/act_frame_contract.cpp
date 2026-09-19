@@ -248,16 +248,42 @@ static int test_storage_and_draw() {
     return 0;
 }
 
+static int test_sprite_rect() {
+    KinokoSprite sprite{};
+    sprite.vtable = test::sprite_vtable;
+    for (int i = 0; i < 4; ++i) { sprite.vertices[i].x = 10.0f + i; sprite.vertices[i].y = 20.0f + i; }
+    kinoko_texture_slots[2].width = 1000; kinoko_texture_slots[2].height = 300;
+    using SetPivot = int32_t (__thiscall*)(KinokoSprite*, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+    const auto set_pivot = reinterpret_cast<SetPivot>(kinoko_sprite_set_rect_pivot);
+    CHECK(set_pivot(&sprite, 2, 13, 17, 100, 80, -3, 4) == -1);
+    CHECK(sprite.texture == 2 && sprite.width == 100 && sprite.height == 80 && sprite.pivot_x == -3 && sprite.pivot_y == 4);
+    CHECK(sprite.vertices[0].u == static_cast<float>(13.0 / 1000.0));
+    CHECK(sprite.vertices[3].v == static_cast<float>(97.0 / 300.0));
+    for (int i = 0; i < 4; ++i) {
+        CHECK(sprite.vertices[i].x == 10.0f + i && sprite.vertices[i].y == 20.0f + i);
+        CHECK(sprite.vertices[i].z == 0.5f && sprite.vertices[i].rhw == 1 && sprite.vertices[i].color == 0xffffffffu);
+    }
+    CHECK(sprite.scale_x == 1 && sprite.scale_y == 1 && sprite.angle == 0);
+    using SetRect = int32_t (__thiscall*)(KinokoSprite*, int32_t, int32_t, int32_t, int32_t, int32_t);
+    const auto set_rect = reinterpret_cast<SetRect>(kinoko_sprite_set_rect);
+    CHECK(set_rect(&sprite, 0, 32, 64, 64, 32) == -1);
+    CHECK(sprite.pivot_x == 0 && sprite.pivot_y == 0);
+    CHECK(sprite.vertices[0].u == 0.125f && sprite.vertices[3].v == 0.375f);
+    return 0;
+}
+
 int main() {
     test::symbols.texture_resource_vtable = &test::texture_identity;
     test::symbols.render_target_vtable = &test::target_identity;
     test::symbols.color_vtable = &test::color_identity;
     test::symbols.sprite_vtable = test::sprite_vtable;
     test::sprite_vtable[7] = address(test::draw_sprite);
+    test::sprite_vtable[4] = address(kinoko_sprite_set_rect_pivot);
     test::layout_vtable[7] = address(test::prepare_layout);
     test::layout_vtable[8] = address(test::draw_layout);
     CHECK(test_update() == 0);
     CHECK(test_storage_and_draw() == 0);
+    CHECK(test_sprite_rect() == 0);
     puts("PASS: original ACT update ordering, unsigned clock, mutable layers, BitBlt and D3D state restoration");
     return 0;
 }
