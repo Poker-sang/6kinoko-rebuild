@@ -6,6 +6,8 @@
 #include "kinoko/squirrel_native_arguments.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_method_entries.h"
+#include "kinoko/legacy_copy_entries.h"
+#include "kinoko/actor_lifecycle.h"
 #include "kinoko/squirrel_legacy_api.h"
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/squirrel_vm_lifecycle.h"
@@ -82,7 +84,6 @@ static int32_t retdec_is_release_watch_data(int32_t data) {
 }
 
 
-static void retdec_release_squirrel_object(int32_t object_ptr);
 
 static void retdec_destroy_reader(int32_t *reader);
 static int32_t retdec_reader_seek_relative(int32_t reader_ptr,
@@ -3049,11 +3050,9 @@ int32_t function_43ca40(void);
 int32_t function_43cc00(void);
 int32_t function_43cec0(void);
 int32_t function_43ced0(int32_t * a1);
-int32_t function_43cf20(void);
 int32_t function_43cf30(int32_t a1);
 int32_t function_43d010(int32_t a1, int32_t a2);
-static int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr);
-int32_t function_43d110(int32_t source_ptr);
+int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_43d520(void);
 int32_t function_43d5a0(char * a1);
 int32_t function_43d6b0(int32_t * a1);
@@ -3083,7 +3082,6 @@ int32_t function_43e7aa(int32_t a1);
 int32_t function_43e7c0(int32_t a1);
 int32_t function_43e83a(int32_t a1);
 int32_t function_43e850(void);
-int32_t function_43e860(void);
 int32_t function_43e870(void);
 int32_t function_43e880(void);
 int32_t function_43e890(uint32_t a1, int32_t a2);
@@ -3764,10 +3762,8 @@ int32_t function_45e0e0(void);
 int32_t function_45e270(int32_t holder_ptr, int32_t actor_ptr);
 static int32_t function_45e270_this(int32_t holder_ptr,
                                     int32_t actor_ptr);
-static int32_t function_45e300_this(int32_t this_ptr);
 int32_t function_45e410(int32_t * a1);
 static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair);
-int32_t function_45e460(void);
 static int32_t function_45e5e0_this(
     int32_t actor_ptr, int32_t manager_ptr,
     int32_t first_vtable, int32_t first_type, int32_t first_data,
@@ -3775,7 +3771,6 @@ static int32_t function_45e5e0_this(
     int32_t second_vtable, int32_t second_type, int32_t second_data);
 
 static int32_t function_45ec60(int32_t actor);
-int32_t function_45f0c0(char a1);
 int32_t function_45f0f0(int32_t a1);
 int32_t function_45f350(void);
 int32_t function_45f3b0(int32_t a1, int32_t a2);
@@ -3787,8 +3782,6 @@ int32_t function_45ffb0(void);
 int32_t function_45ffc0(int32_t a1, int32_t result);
 int32_t function_45ffd0(void);
 int32_t function_45ffe0(int32_t a1);
-int32_t function_4606d0(void);
-static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr);
 static int32_t function_46cfb0_this(int32_t this_ptr, const char *name,
                                     int32_t parent_ptr);
 int32_t function_460900(int32_t a1, int32_t a2);
@@ -6648,7 +6641,7 @@ struct vtable_4d54a4_type g16 = {
     .e0 = (int32_t (*)(char))kinoko_squirrel_object_delete
 }; // 0x4d54a4
 struct vtable_4d54ac_type g17 = {
-    .e0 = function_45f0c0
+    .e0 = (int32_t (*)(char))function_45f0c0
 }; // 0x4d54ac
 struct vtable_4d55a4_type g18 = {
     .e0 = function_460de0,
@@ -7145,7 +7138,7 @@ struct vtable_4ec8f4_type g340 = {
     .e10 = function_43d810
 }; // 0x4ec8f4
 struct vtable_4ec954_type g343 = {
-    .e0 = function_43d110,
+    .e0 = (int32_t (*)(int32_t))function_43d110,
     .e1 = function_441cb0
 }; // 0x4ec954
 struct vtable_4ec9b4_type g348 = {
@@ -78114,20 +78107,7 @@ int32_t function_43ced0(int32_t * a1) {
 }
 
 // Address range: 0x43cf20 - 0x43cf2c
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_43cf20(void)
-{
-    __asm {
-        add ecx, 4
-        jmp function_43d110
-    }
-}
-#else
-int32_t function_43cf20(void)
-{
-    return function_43d110(0);
-}
-#endif
+
 
 // Address range: 0x43cf30 - 0x43d00a
 int32_t function_43cf30(int32_t a1) {
@@ -78191,7 +78171,7 @@ int32_t function_43d010(int32_t a1, int32_t a2) {
 // Address range: 0x43d110 - 0x43d520
 // From class:    .?AV?$TUserData@VC3DLayout@@@@
 // Type:          virtual member function
-static int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr) {
+int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr) {
     int32_t a1 = source_ptr;
     int32_t v1 = __readfsdword(0); // bp-20, 0x43d123
     int32_t v2; // bp-152, 0x43d110
@@ -78562,24 +78542,7 @@ static int32_t function_43d110_this(int32_t this_ptr, int32_t source_ptr) {
     goto lab_0x43d206;
 }
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_43d110(int32_t source_ptr)
-{
-    __asm {
-        mov eax, ecx
-        push [esp + 4]
-        push eax
-        call function_43d110_this
-        add esp, 8
-        ret 4
-    }
-}
-#else
-int32_t function_43d110(int32_t source_ptr)
-{
-    return function_43d110_this(0, source_ptr);
-}
-#endif
+
 
 // Address range: 0x43d520 - 0x43d5a0
 // From class:    .?AVbad_alloc@std@@
@@ -80026,10 +79989,7 @@ int32_t function_43e850(void) {
 }
 
 // Address range: 0x43e860 - 0x43e868
-int32_t function_43e860(void) {
-    // 0x43e860
-    return function_43cf20();
-}
+
 
 // Address range: 0x43e870 - 0x43e876
 int32_t function_43e870(void) {
@@ -115298,39 +115258,7 @@ static int32_t function_45e270_this(int32_t holder_ptr, int32_t actor_ptr)
 /* Actor constructor used by CHandleManagerEx::Get.  The original object is
    0x220 bytes; the generated body lost ECX and consequently wrote through an
    undefined local instead of the freshly allocated Actor. */
-static int32_t function_45e300_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
 
-    memset((void *)(intptr_t)this_ptr, 0, 0x220);
-    *(int32_t *)(intptr_t)(this_ptr + 0) = (int32_t)(intptr_t)&g17;
-    *(int32_t *)(intptr_t)(this_ptr + 8) = 1;
-    *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 24) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 28) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 36) = 0;
-
-    function_4a94e0_this(this_ptr + 44);
-    function_4a94e0_this(this_ptr + 56);
-    function_4a94e0_this(this_ptr + 68);
-
-    *(int32_t *)(intptr_t)(this_ptr + 92) = 0;
-    function_4a94e0_this(this_ptr + 96);
-    function_4a94e0_this(this_ptr + 108);
-
-    *(int32_t *)(intptr_t)(this_ptr + 120) = 0;
-    function_4a94e0_this(this_ptr + 124);
-    function_4a94e0_this(this_ptr + 136);
-
-    memset((void *)(intptr_t)(this_ptr + 376), 0, 48);
-    memset((void *)(intptr_t)(this_ptr + 340), 0, 32);
-    *(int32_t *)(intptr_t)(this_ptr + 332) = this_ptr + 340;
-    *(int32_t *)(intptr_t)(this_ptr + 328) = this_ptr + 376;
-    *(char *)(intptr_t)(this_ptr + 22) = 0;
-    return this_ptr;
-}
 
 // Address range: 0x45e410 - 0x45e452
 int32_t function_45e410(int32_t * a1) {
@@ -115358,18 +115286,7 @@ static int32_t *function_45e410_this(int32_t this_ptr, int32_t *out_pair) {
 // Address range: 0x45e460 - 0x45e5d4
 // From class:    .?AVActor@@
 // Type:          constructor
-static void retdec_actor_release_weak(int32_t control) {
-    int32_t vtable;
-    if (control == 0 ||
-        InterlockedDecrement((volatile LONG *)(intptr_t)(control + 8)) != 0)
-        return;
-    vtable = *(int32_t *)(intptr_t)control;
-    if (vtable == (int32_t)(intptr_t)&g15)
-        free((void *)(intptr_t)control);
-    else if (vtable != 0 && *(int32_t *)(intptr_t)(vtable + 8) != 0)
-        retdec_call_thiscall0((void *)(intptr_t)control,
-            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
-}
+
 
 static void retdec_clear_script_callback(int32_t callback) {
     int32_t state[7] = {0};
@@ -115382,39 +115299,9 @@ static void retdec_clear_script_callback(int32_t callback) {
 }
 
 /* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
-static int32_t function_45e460_this(int32_t actor) {
-    int32_t parent_control, owner_control;
-    static const int32_t object_offsets[] = {136, 124, 108, 96, 68, 56, 44};
-    if (actor == 0)
-        return 0;
-    function_4a9570_this(actor + 56);
-    function_4a9570_this(actor + 68);
-    kinoko_actor_clear_script(actor);
-    parent_control = *(int32_t *)(intptr_t)(actor + 36);
-    *(int32_t *)(intptr_t)(actor + 32) = 0;
-    *(int32_t *)(intptr_t)(actor + 36) = 0;
-    retdec_actor_release_weak(parent_control);
-    owner_control = *(int32_t *)(intptr_t)(actor + 28);
-    *(int32_t *)(intptr_t)(actor + 24) = 0;
-    *(int32_t *)(intptr_t)(actor + 28) = 0;
-    retdec_release_squirrel_object(owner_control);
-    for (size_t i = 0; i < sizeof(object_offsets) / sizeof(object_offsets[0]); ++i)
-        function_4a9d70_this(actor + object_offsets[i]);
-    return actor;
-}
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_45e460(void) {
-    __asm {
-        push ecx
-        call function_45e460_this
-        add esp, 4
-        ret
-    }
-}
-#else
-int32_t function_45e460(void) { return 0; }
-#endif
+
+
 
 /* SquirrelFunction::operator() for the Actor initialization callback. */
 
@@ -115630,17 +115517,7 @@ int32_t function_45eb00_this(int32_t actor) {
 // Address range: 0x45f0c0 - 0x45f0e1
 // From class:    .?AVActor@@
 // Type:          virtual member function
-int32_t function_45f0c0(char a1) {
-    // 0x45f0c0
-    function_45e460();
-    if ((a1 & 1) != 0) {
-        // 0x45f0d1
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x45f0da
-    int32_t result; // 0x45f0c0
-    return result;
-}
+
 
 // Address range: 0x45f0f0 - 0x45f34f
 int32_t function_45f0f0(int32_t a1) {
@@ -116141,63 +116018,9 @@ int32_t function_45ffe0(int32_t a1) {
 
 
 // Address range: 0x4606d0 - 0x4607dc
-#if defined(_MSC_VER) && defined(_M_IX86)
-__declspec(naked) int32_t function_4606d0(void) {
-    __asm {
-        /* The original consumes the by-value SquirrelObject and returns with ret 12. */
-        lea eax, [esp + 4]
-        push eax
-        push ecx
-        call function_4606d0_this
-        add esp, 8
-        ret 12
-    }
-}
-#else
-int32_t function_4606d0(void) { return 0; }
-#endif
 
-static int32_t function_4606d0_this(int32_t this_ptr, int32_t object_ptr) {
-    int32_t temporary[3] = {0, 0, 0};
-    int32_t value_ptr;
-    int32_t new_delegate;
-    int32_t old_delegate;
 
-    if (this_ptr == 0 || object_ptr == 0)
-        return 0;
 
-    if (function_4a9a30_this(object_ptr) != 0xa008000 &&
-        function_4a9a30_this(object_ptr) != 0x08010000) {
-        *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
-        old_delegate = *(int32_t *)(intptr_t)(this_ptr + 36);
-        *(int32_t *)(intptr_t)(this_ptr + 36) = 0;
-        retdec_actor_release_weak(old_delegate);
-
-        function_4a94e0_this((int32_t)(intptr_t)temporary);
-        function_4a97b0_this(this_ptr + 44, (int32_t)(intptr_t)&g601,
-                             (int32_t)(intptr_t)temporary);
-        function_4a9d70_this((int32_t)(intptr_t)temporary);
-    } else {
-        value_ptr = function_4a9b40_this(object_ptr, 0);
-        if (value_ptr != 0) {
-            *(int32_t *)(intptr_t)(this_ptr + 32) =
-                *(int32_t *)(intptr_t)(value_ptr + 24);
-            new_delegate = *(int32_t *)(intptr_t)(value_ptr + 28);
-            old_delegate = *(int32_t *)(intptr_t)(this_ptr + 36);
-            if (new_delegate != old_delegate) {
-                if (new_delegate != 0) {
-                    _InterlockedExchangeAdd(
-                        (volatile LONG *)(intptr_t)(new_delegate + 8), 1);
-                }
-                retdec_actor_release_weak(old_delegate);
-                *(int32_t *)(intptr_t)(this_ptr + 36) = new_delegate;
-            }
-        }
-        function_4a97b0_this(this_ptr + 44, (int32_t)(intptr_t)&g601,
-                             object_ptr);
-    }
-    return function_4a9d70_this(object_ptr);
-}
 
 // Address range: 0x4607e0 - 0x4608f1
 
@@ -136928,37 +136751,7 @@ static __declspec(noinline) void retdec_trace_realloc_state(
 
 
 /* Release the shared object held by Actor::m_parent/m_delegate. */
-static void retdec_release_squirrel_object(int32_t object_ptr) {
-    volatile LONG *refcount;
-    int32_t vtable;
 
-    if (object_ptr == 0)
-        return;
-    refcount = (volatile LONG *)(intptr_t)(object_ptr + 4);
-    if (_InterlockedExchangeAdd(refcount, -1) != 1)
-        return;
-
-    vtable = *(int32_t *)(intptr_t)object_ptr;
-    if (vtable == (int32_t)(intptr_t)&g15) {
-        /* 43E850 disposes the Actor* slot; 415220 destroys the control block. */
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(object_ptr + 12));
-        *(int32_t *)(intptr_t)(object_ptr + 12) = 0;
-        retdec_actor_release_weak(object_ptr);
-        return;
-    }
-    if (vtable != 0 && *(int32_t *)(intptr_t)(vtable + 4) != 0) {
-        retdec_call_thiscall0(
-            (void *)(intptr_t)object_ptr,
-            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 4));
-    }
-    if (_InterlockedExchangeAdd(
-            (volatile LONG *)(intptr_t)(object_ptr + 8), -1) == 1 &&
-        vtable != 0 && *(int32_t *)(intptr_t)(vtable + 8) != 0) {
-        retdec_call_thiscall0(
-            (void *)(intptr_t)object_ptr,
-            (void *)(intptr_t)*(int32_t *)(intptr_t)(vtable + 8));
-    }
-}
 
 static uint32_t retdec_squirrel_key_hash(const int32_t *key) {
     uint32_t type = (uint32_t)key[0];
@@ -139006,6 +138799,10 @@ int32_t function_4a90c0(int32_t * a1, int32_t * a2) {
 
 int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&g39; }
 int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&g40; }
+
+int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&g17; }
+int32_t kinoko_actor_control_vtable(void) { return (int32_t)(intptr_t)&g15; }
+int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&g601; }
 
 int32_t kinoko_squirrel_object_vtable(void) {
     return (int32_t)(intptr_t)&g16;

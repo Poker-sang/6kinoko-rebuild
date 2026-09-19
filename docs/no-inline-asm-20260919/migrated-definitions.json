@@ -1,0 +1,80 @@
+{
+  "parent": "612eedb",
+  "definitions": [
+    {
+      "name": "function_43cf20",
+      "line": 78118,
+      "body_lines": 7
+    },
+    {
+      "name": "function_43cf20",
+      "line": 78126,
+      "body_lines": 4
+    },
+    {
+      "name": "function_43d110",
+      "line": 78566,
+      "body_lines": 11
+    },
+    {
+      "name": "function_43d110",
+      "line": 78578,
+      "body_lines": 4
+    },
+    {
+      "name": "function_43e860",
+      "line": 80029,
+      "body_lines": 4
+    },
+    {
+      "name": "function_45e300_this",
+      "line": 115301,
+      "body_lines": 33
+    },
+    {
+      "name": "retdec_actor_release_weak",
+      "line": 115361,
+      "body_lines": 12
+    },
+    {
+      "name": "function_45e460_this",
+      "line": 115385,
+      "body_lines": 20
+    },
+    {
+      "name": "function_45e460",
+      "line": 115407,
+      "body_lines": 8
+    },
+    {
+      "name": "function_45e460",
+      "line": 115416,
+      "body_lines": 1
+    },
+    {
+      "name": "function_45f0c0",
+      "line": 115633,
+      "body_lines": 11
+    },
+    {
+      "name": "function_4606d0",
+      "line": 116145,
+      "body_lines": 11
+    },
+    {
+      "name": "function_4606d0",
+      "line": 116157,
+      "body_lines": 1
+    },
+    {
+      "name": "function_4606d0_this",
+      "line": 116160,
+      "body_lines": 41
+    },
+    {
+      "name": "retdec_release_squirrel_object",
+      "line": 136931,
+      "body_lines": 31
+    }
+  ]
+}
