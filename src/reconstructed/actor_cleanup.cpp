@@ -1,4 +1,5 @@
 #include "kinoko/actor_cleanup.h"
+#include "kinoko/actor_records.hpp"
 
 #include <cstddef>
 #include <cstdlib>
@@ -10,6 +11,9 @@ extern int32_t g23;
 }
 
 namespace {
+using namespace kinoko::actor;
+using kinoko::native::RecordView;
+
 struct AnimationTreeNode {
     AnimationTreeNode *left, *parent, *right;
     int32_t key, value;
@@ -96,9 +100,10 @@ extern "C" int32_t kinoko_clear_animation_list(int32_t list_address) {
         const int32_t begin = static_cast<int32_t>(node->frames_begin);
         const int32_t end = static_cast<int32_t>(node->frames_end);
         if (begin && end >= begin) {
-            for (uint32_t frame = node->frames_begin; frame != node->frames_end; frame += 248) {
-                std::free(pointer<void>(*pointer<int32_t>(static_cast<int32_t>(frame + 244))));
-                *pointer<int32_t>(static_cast<int32_t>(frame)) = g23;
+            for (uint32_t frame = node->frames_begin; frame != node->frames_end; frame += sizeof(FrameRecord)) {
+                const RecordView<FrameRecord> item(pointer<void>(static_cast<int32_t>(frame)));
+                std::free(pointer<void>(static_cast<int32_t>(item.get(&FrameRecord::owned_payload))));
+                item.set(&FrameRecord::vtable, static_cast<Address>(g23));
             }
             std::free(pointer<void>(begin));
         }
@@ -112,16 +117,29 @@ extern "C" int32_t kinoko_clear_animation_list(int32_t list_address) {
 // 464E20: texture handles, live actors, nonowning lookup, owning animations,
 // priority tree, then transient iteration state. Keep capacities and sentinels.
 extern "C" int32_t kinoko_clear_actor_manager(int32_t manager) {
-    auto *words = pointer<int32_t>(manager);
-    for (int32_t index = 0; index < (words[18] - words[17]) / 4; ++index)
-        function_405d60(pointer<int32_t>(words[17])[index]);
-    words[18] = words[17];
-    function_463730(manager + 84);
-    clear_tree(pointer<AnimationTreeNode>(words[10]), words[11]);
-    kinoko_clear_animation_list(manager + 52);
-    clear_tree(pointer<PriorityTreeNode>(words[22]), words[23]);
-    words[26] = words[25];
-    words[29] = 0;
-    pointer<uint8_t>(manager)[120] = 0;
-    return words[25];
+    const ManagerView state(pointer<void>(manager));
+    const auto textures = state.view(&ManagerPrefix::textures);
+    const auto first = textures.get(&VectorIndex::begin);
+    const auto last = textures.get(&VectorIndex::end);
+    const auto count = static_cast<int32_t>(last - first) / static_cast<int32_t>(sizeof(int32_t));
+    for (int32_t index = 0; index < count; ++index)
+        function_405d60(pointer<int32_t>(static_cast<int32_t>(first))[index]);
+    textures.set(&VectorIndex::end, first);
+    // Actor destruction precedes releasing animations that actors only borrow.
+    const auto actors = state.view(&ManagerPrefix::actors);
+    function_463730(address(actors.data()));
+    const auto animations = state.view(&ManagerPrefix::animation_lookup);
+    auto animation_count = animations.get(&TreeIndex::count);
+    clear_tree(pointer<AnimationTreeNode>(static_cast<int32_t>(animations.get(&TreeIndex::head))), animation_count);
+    animations.set(&TreeIndex::count, animation_count);
+    kinoko_clear_animation_list(address(state.bytes(&ManagerPrefix::animations)));
+    auto actor_count = actors.get(&TreeIndex::count);
+    clear_tree(pointer<PriorityTreeNode>(static_cast<int32_t>(actors.get(&TreeIndex::head))), actor_count);
+    actors.set(&TreeIndex::count, actor_count);
+    const auto iteration = state.view(&ManagerPrefix::iteration);
+    const auto iteration_begin = iteration.get(&VectorIndex::begin);
+    iteration.set(&VectorIndex::end, iteration_begin);
+    state.set(&ManagerPrefix::iteration_state, int32_t{0});
+    state.set(&ManagerPrefix::cleanup_pending, uint8_t{0});
+    return static_cast<int32_t>(iteration_begin);
 }
