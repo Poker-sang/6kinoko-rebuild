@@ -3095,7 +3095,20 @@ static int test_global_stage_cleanup(void) {
         owner[0] = PTR(source);
         owner[1] = PTR(malloc(32));
         owner[2] = PTR(runtime);
+        /* Constructor initializes known members only, not padding/unknowns. */
+        const int untouched[] = {9, 10, 11, 56, 72, 80, 92, 105, 106, 107, 188};
+        for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
+            ((unsigned char *)runtime)[untouched[u]] = 0xa5;
         CHECK(function_44fde0(PTR(runtime), PTR(owner)) == PTR(runtime));
+        for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
+            CHECK(((unsigned char *)runtime)[untouched[u]] == 0xa5);
+        CHECK(runtime[0] == PTR(owner) && runtime[3] == 0 && runtime[4] == 0);
+        CHECK(runtime[38] == 0 && runtime[39] == OT_NULL && runtime[40] == 0);
+        CHECK(runtime[45] == 0 && runtime[46] == 15);
+        int32_t *find_head = (int32_t *)(intptr_t)runtime[21];
+        CHECK(find_head && find_head[0] == PTR(find_head) && find_head[1] == PTR(find_head)
+              && find_head[2] == PTR(find_head));
+        CHECK(((unsigned char *)find_head)[340] == 1 && ((unsigned char *)find_head)[341] == 1);
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));
         runtime[11] = PTR(malloc(36));

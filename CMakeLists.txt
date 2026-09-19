@@ -169,6 +169,7 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_document.cpp
     src/reconstructed/act_properties.cpp

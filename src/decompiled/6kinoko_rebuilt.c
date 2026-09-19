@@ -3091,7 +3091,7 @@ int32_t function_44fd30(char a1);
 int32_t function_44fde0(int32_t result, int32_t a2);
 
 int32_t function_450020(int32_t resource);
-static void retdec_destroy_act_runtime(int32_t resource_ptr);
+
 int32_t kinoko_clear_global_stages(void);
 int32_t kinoko_clear_global_sound(void);
 
@@ -64239,94 +64239,10 @@ int32_t function_44fd30(char a1) {
 
 
 // Address range: 0x44fde0 - 0x44ff8f
-// From class:    .?AVbad_alloc@std@@
-// Type:          constructor
-int32_t function_44fde0(int32_t result, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x44fdf0
-    __writefsdword(0, (int32_t)&v1);
-    *(int32_t *)result = a2;
-    *(int32_t *)(result + 12) = 0;
-    *(int32_t *)(result + 16) = 0;
-    *(int32_t *)(result + 44) = 0;
-    *(int32_t *)(result + 48) = 0;
-    *(int32_t *)(result + 52) = 0;
-    *(int32_t *)(result + 60) = 0;
-    *(int32_t *)(result + 64) = 0;
-    *(int32_t *)(result + 68) = 0;
-    *(int32_t *)(result + 88) = 0;
-    int32_t v2 = _3f__3f_2_40_YAPAXI_40_Z(344); // 0x44fe38
-    if (v2 == 0) {
-        // 0x44fefc
-        int32_t v3; // bp-28, 0x44fde0
-        _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v3);
-        v3 = (int32_t)&g22;
-        __CxxThrowException_40_8();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        __asm_int3();
-        int32_t v4 = __readfsdword(0); // bp-68, 0x44ff40
-        __writefsdword(0, (int32_t)&v4);
-        function_4537d0(*(int32_t *)0x401000, 0x401000);
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        __writefsdword(0, v4);
-        return &g1224;
-    }
-    int32_t * v5 = (int32_t *)(result + 84); // 0x44fe48
-    *v5 = v2;
-    *(int32_t *)v2 = v2;
-    int32_t v6 = *v5; // 0x44fe4d
-    *(int32_t *)(v6 + 4) = v6;
-    int32_t v7 = *v5; // 0x44fe53
-    *(int32_t *)(v7 + 8) = v7;
-    *(char *)(*v5 + 340) = 1;
-    *(char *)(*v5 + 341) = 1;
-    *(int32_t *)(result + 184) = 15;
-    *(int32_t *)(result + 180) = 0;
-    *(char *)(result + 164) = 0;
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 152) = 0;
-    *(char *)(result + 8) = 0;
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 156));
-    *(int32_t *)(result + 76) = 0;
-    *(int32_t *)(result + 96) = 0;
-    *(int32_t *)(result + 100) = 0;
-    *(char *)(result + 104) = 0;
-    *(int32_t *)(result + 108) = 0;
-    *(int32_t *)(result + 112) = 0;
-    *(int32_t *)(result + 116) = 0;
-    *(int32_t *)(result + 120) = 0;
-    *(int32_t *)(result + 124) = 0;
-    *(int32_t *)(result + 128) = 0;
-    *(int32_t *)(result + 132) = 0;
-    *(int32_t *)(result + 136) = 0;
-    *(int32_t *)(result + 140) = 0;
-    *(int32_t *)(result + 144) = 0;
-    *(int32_t *)(result + 148) = 0;
-    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(result + 20));
-    __writefsdword(0, v1);
-    return result;
-}
-
+// CActResource construction/destruction now live in act_runtime_lifecycle.cpp.
 
 // Address range: 0x450020 - 0x450345
-int32_t function_450020(int32_t resource) {
-    if (resource != 0)
-        retdec_destroy_act_runtime(resource);
-    return resource;
-}
+
 
 // Address range: 0x450350 - 0x45094c
 
@@ -65320,54 +65236,10 @@ static int32_t retdec_act_prepare_blit_sprite(int32_t item, const int32_t *comma
     return 0;
 }
 
-static void retdec_act_release_find_tree(int32_t node) {
-    while (*(uint8_t *)(intptr_t)(node + 341) == 0) {
-        int32_t left = *(int32_t *)(intptr_t)node;
-        retdec_act_release_find_tree(*(int32_t *)(intptr_t)(node + 8));
-        FindClose((HANDLE)(intptr_t)*(int32_t *)(intptr_t)(node + 16));
-        free((void *)(intptr_t)node);
-        node = left;
-    }
-}
+
 
 /* 450020/4513F0: stop the resource, unregister its environment, then release owners. */
-static void retdec_destroy_act_runtime(int32_t resource_ptr) {
-    int32_t *resource = (int32_t *)(intptr_t)resource_ptr;
-    int32_t vm = resource[38];
-    int32_t source_act = resource[0] ? *(int32_t *)(intptr_t)resource[0] : 0;
-    kinoko_act_end_stage(resource_ptr, NULL);
-    if (vm != 0 && resource[39] == 0x0a000020 && resource[45] != 0) {
-        int32_t top = sq_gettop(kinoko_vm(vm));
-        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(resource[39], resource[40]));
-        sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)(intptr_t)retdec_std_string_data(resource_ptr + 164)), -1);
-        sq_deleteslot(kinoko_vm(vm), -2, ((0) != 0));
-        sq_settop(kinoko_vm(vm), (SQInteger)(top));
-    }
-    if (resource[21] != 0) {
-        retdec_act_release_find_tree(*(int32_t *)(intptr_t)(resource[21] + 4));
-        free((void *)(intptr_t)resource[21]);
-        resource[21] = resource[22] = 0;
-    }
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 5));
-    if ((uint32_t)resource[46] >= 16u)
-        free((void *)(intptr_t)resource[41]);
-    resource[41] = resource[45] = 0;
-    resource[46] = 15;
-    free((void *)(intptr_t)resource[15]);
-    resource[15] = resource[16] = resource[17] = 0;
-    free((void *)(intptr_t)resource[11]);
-    resource[11] = resource[12] = resource[13] = 0;
-    free((void *)(intptr_t)resource[4]);
-    resource[4] = 0;
-    /* Runtime ACTs own their cloned graph; tolerate legacy borrowed fixtures. */
-    if (resource[3] != 0 && resource[3] != source_act)
-        retdec_destroy_cact_with_flags(resource[3], 1);
-    resource[3] = 0;
-    if (vm != 0 && (resource[39] & 0x08000000) != 0)
-        function_48a430(vm, resource_ptr + 156);
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(resource_ptr + 156));
-    resource[38] = 0;
-}
+
 
 int32_t function_4522f0(int32_t self)
 {

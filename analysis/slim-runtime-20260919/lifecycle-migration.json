@@ -1,0 +1,30 @@
+[
+  {
+    "name": "retdec_destroy_act_runtime",
+    "line": 65334,
+    "lines": 37,
+    "sha256": "faa35eb93a7960e2d2fc82a005a613b91d05abab455e2a082bceb599a0ced3b9",
+    "replacement": "src/reconstructed/act_runtime_lifecycle.cpp"
+  },
+  {
+    "name": "retdec_act_release_find_tree",
+    "line": 65323,
+    "lines": 9,
+    "sha256": "ca6cb6a134caf9256a45d8749125ba41863ab8c2da8cb1b2ac4cb7eb64a00406",
+    "replacement": "src/reconstructed/act_runtime_lifecycle.cpp"
+  },
+  {
+    "name": "function_450020",
+    "line": 64325,
+    "lines": 5,
+    "sha256": "60cc8d8e680affa66d802e1b099b4e28115ea2c89d75a023d200632e58bdd374",
+    "replacement": "src/reconstructed/act_runtime_lifecycle.cpp"
+  },
+  {
+    "name": "function_44fde0",
+    "line": 64244,
+    "lines": 78,
+    "sha256": "1dc260319ca42bd1a6999b4877c57c89269142174be7bc7626e1799c6be7e793",
+    "replacement": "src/reconstructed/act_runtime_lifecycle.cpp"
+  }
+]

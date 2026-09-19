@@ -1,8 +1,7 @@
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/actor_cleanup.h"
-#include "kinoko/native_record_view.hpp"
-#include <array>
+#include "kinoko/act_resource_records.hpp"
 #include <cstddef>
 #include <cstdlib>
 #include <new>
@@ -21,13 +20,6 @@ struct StageOwner {
     void *data;   // owned auxiliary allocation
     void *runtime; // owned runtime allocation; may borrow source during setup
 };
-// Only the known prefix is described. BeginStage can replace borrowed_source
-// with an independently owned clone; cleanup must not detach that clone.
-struct StageRuntimePrefix {
-    uint32_t vtable;
-    std::array<unsigned char, 8> unknown;
-    uint32_t borrowed_source;
-};
 struct StageNode {
     StageNode *next, *previous;
     StageOwner *owner;
@@ -39,8 +31,6 @@ struct RenderQueueNode {
 static_assert(sizeof(RenderQueueNode) == 12);
 static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
 static_assert(offsetof(StageOwner, runtime) == 8);
-static_assert(sizeof(StageRuntimePrefix) == 16);
-static_assert(offsetof(StageRuntimePrefix, borrowed_source) == 12);
 
 void destroy_owner(StageOwner *owner) {
     if (!owner) return;
@@ -49,10 +39,10 @@ void destroy_owner(StageOwner *owner) {
     // Detach legacy borrowed fixtures before destroying their source;
     // BeginStage clones remain independently owned by the runtime.
     if (owner->runtime) {
-        const kinoko::native::RecordView<StageRuntimePrefix> runtime(owner->runtime);
-        if (runtime.get(&StageRuntimePrefix::borrowed_source) ==
+        const kinoko::native::RecordView<kinoko::act::RuntimeRecord> runtime(owner->runtime);
+        if (runtime.get(&kinoko::act::RuntimeRecord::act) ==
                 reinterpret_cast<uintptr_t>(owner->source))
-            runtime.set(&StageRuntimePrefix::borrowed_source, uint32_t{0});
+            runtime.set(&kinoko::act::RuntimeRecord::act, uint32_t{0});
     }
     if (owner->source) {
         auto **vtable = *static_cast<void ***>(owner->source);
