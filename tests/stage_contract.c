@@ -4587,7 +4587,7 @@ int main(int argc, char **argv) {
         }
     }
     {
-        int32_t draw_vtable[9] = {0}, fake_layout[2] = {0};
+        int32_t draw_vtable[9] = {0}, fake_layout[80] = {0};
         draw_vtable[8] = PTR(count_draw);
         fake_layout[0] = PTR(draw_vtable);
         layout_key[1] = PTR(fake_layout);

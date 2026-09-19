@@ -169,6 +169,9 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/reconstructed/act_frame_update.cpp
+    src/reconstructed/act_frame_render.cpp
+    src/reconstructed/act_draw_storage.cpp
     src/reconstructed/act_layer_access.cpp
     src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
@@ -358,6 +361,16 @@ add_executable(kinoko_texture_store_contract tests/texture_store_contract.cpp)
 target_link_libraries(kinoko_texture_store_contract PRIVATE kinoko_native_methods user32)
 add_test(NAME texture_store_contract COMMAND kinoko_texture_store_contract)
 
+add_executable(kinoko_act_frame_contract
+    tests/act_frame_contract.cpp
+    src/reconstructed/act_layer_access.cpp
+    src/reconstructed/act_draw_storage.cpp
+    src/reconstructed/act_frame_render.cpp
+    src/reconstructed/legacy_abi.cpp)
+target_include_directories(kinoko_act_frame_contract PRIVATE include)
+target_link_libraries(kinoko_act_frame_contract PRIVATE user32)
+add_test(NAME act_frame_contract COMMAND kinoko_act_frame_contract)
+
 add_executable(kinoko_diagnostics_capture tests/diagnostics_capture.cpp)
 target_link_libraries(kinoko_diagnostics_capture PRIVATE kinoko_diagnostics dbghelp)
 add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
@@ -509,6 +522,7 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_act_frame_contract
     kinoko_native_record_view_contract
     kinoko_actor_records_contract
     kinoko_com_owner_contract

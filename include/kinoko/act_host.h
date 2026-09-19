@@ -19,6 +19,9 @@ struct KinokoActHostSymbols {
     const void* texture_resource_vtable;
     const void* sq_object_vtable;
     const void* sq_root_vtable;
+    const void* sprite_vtable;
+    const void* color_vtable;
+    const void* render_target_vtable;
 };
 
 #ifdef __cplusplus

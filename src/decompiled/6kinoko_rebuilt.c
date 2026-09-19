@@ -1,3 +1,4 @@
+#include "kinoko/act_frame.h"
 #include "kinoko/act_layer_access.h"
 #include "kinoko/audio_runtime.h"
 #include "kinoko/audio_host.h"
@@ -2325,7 +2326,6 @@ int32_t function_41eca0(int32_t result, int32_t a2);
 int32_t function_41eed0(void);
 int32_t function_41ef20(int32_t a1);
 int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_41efb0(int32_t object_ptr);
 int32_t function_41eff0(int32_t a1);
 int32_t function_41f580(int32_t a1);
 int32_t function_41f800(int32_t a1, int32_t a2);
@@ -3105,7 +3105,6 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
 
 int32_t function_451620(int32_t this_ptr);
 
-int32_t function_451640(int32_t this_ptr);
 int32_t function_4517c0(int32_t a1);
 int32_t function_451b70(int32_t a1);
 int32_t function_451f30(int32_t a1);
@@ -3115,13 +3114,9 @@ int32_t function_452150(int32_t lpFileName);
 int32_t function_452220(void);
 int32_t function_452270(void);
 int32_t function_4522c0(void);
-int32_t function_4522f0(int32_t this_ptr);
-int32_t function_4525d0(int32_t this_ptr, float32_t a1, float32_t a2);
 
 
-int32_t function_452ba0(int32_t a1);
 
-int32_t function_452c20(int32_t vector_ptr, uint32_t requested);
 
 int32_t function_452d40(int32_t a1, int32_t result, int32_t a3);
 int32_t function_453030(int32_t * a1);
@@ -3162,7 +3157,6 @@ int32_t function_454cf0(int32_t a1);
 int32_t function_455010(void);
 
 
-int32_t function_455230(int32_t a1, int32_t a2, int32_t result);
 int32_t function_455330(int32_t a1);
 int32_t function_455390(int32_t a1);
 int32_t function_4554b0(int32_t a1);
@@ -30845,34 +30839,7 @@ int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
     return result2;
 }
 
-// Address range: 0x41efb0 - 0x41eff0
-int32_t function_41efb0(int32_t object_ptr) {
-    // 0x41efb0
-    static volatile LONG title_layer_trace_count;
-    int32_t v2 = object_ptr;
-    if (v2 == 0)
-        return -1;
-    {
-        LONG trace_index = InterlockedIncrement(&title_layer_trace_count);
-        if (trace_index <= 160) {
-            retdec_trace_i32("41efb0:layer", v2);
-            retdec_trace_i32("41efb0:callback-vm", *(int32_t *)(v2 + 228));
-            retdec_trace_i32("41efb0:callback-env-type", *(int32_t *)(v2 + 232));
-            retdec_trace_i32("41efb0:callback-env-data", *(int32_t *)(v2 + 236));
-            retdec_trace_i32("41efb0:callback-type", *(int32_t *)(v2 + 240));
-            retdec_trace_i32("41efb0:callback-data", *(int32_t *)(v2 + 244));
-        }
-    }
-    *(int32_t *)(v2 + 168) = *(int32_t *)(v2 + 144);
-    *(int32_t *)(v2 + 172) = *(int32_t *)(v2 + 148);
-    *(int32_t *)(v2 + 176) = *(int32_t *)(v2 + 152);
-    if (*(int32_t *)(v2 + 240) != 0x1000001) {
-        // 0x41efe0
-        return function_415810_this(v2 + 228);
-    }
-    // 0x41efed
-    return 0;
-}
+
 
 // Address range: 0x41eff0 - 0x41f57f
 int32_t function_41eff0(int32_t a1) {
@@ -64264,217 +64231,7 @@ int32_t function_44fd30(char a1) {
 // live ABI-correct entry point is defined below the receiver-safe helpers.
 
 
-// Address range: 0x450f30 - 0x45126c
-// RetDec's body loses the RootTable ECX receiver.  Keep it for comparison;
-// the live entry point is defined below the receiver-safe implementation.
 
-
-/*
- * The two RootTable routines above are RetDec's cdecl-shaped output of a
- * C++/Sqrat call.  Their hidden ECX/EAX/EDI values cannot be recovered by
- * calling the generated bodies directly.  Keep the recovered ACT path
- * explicit and use the same VM primitives as Squirrel 2.2.2's public API.
- */
-
-
-/* Sqrat::Object owns a returned pair through SQVM's RefTable, not through a
-   raw SQObjectPtr release.  Keep that ownership boundary explicit for the
-   receiver-safe paths below. */
-
-
-/* sq_rawset is required for an already-created class instance.  sq_newslot
-   routes through SQInstance::NewSlot and rejects fields that are not meant to
-   be dynamically added; the original Sqrat layer publisher writes the
-   instance's existing members through the raw path. */
-
-
-/* CActLayer's VarInfo callbacks receive the native object from the instance
-   and a four-byte userdata descriptor from the closure's free environment.
-   This is the same ABI used by the original 42E370/43E640/454C20 callback
-   families; keep the descriptor lookup in one place so direct and aliased
-   fields cannot diverge. */
-
-
-/* retdec_publish_cact_layer_property is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_cact_layer_members is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-/* retdec_publish_c2dlayout_properties is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Recreate the lazy 42B6D0 registration needed by CActLayer::Register.
-   Title scripts receive a real C2DLayout instance and access these fields
-   through the normal Squirrel class/instance lookup path. */
-/* retdec_publish_c2dlayout_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-/* RetDec emitted the body of 424210 as an orphaned tail at 4241F9 and did
-   not give the native thunk a callable symbol.  Keep the method available to
-   Squirrel with the same one-argument ABI; title layers do not invoke it,
-   while later ACT users can be wired to the recovered virtual call. */
-/* retdec_cact_associate_resource is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Recreate the lazy 446520 registration for CActResource2D.  The original
-   class is published once in the VM root and its pair is retained in
-   g1079/g1080 for the 448FB0 and 448910 binding helpers. */
-/* retdec_publish_cact_resource2d_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Recreate the lazy 41EFF0 registration with explicit Squirrel receivers.
-   The original FlexibleClass wrapper is only needed to expose the ACT layer
-   class and its native AssociateResource entry; layer state itself is filled
-   through the raw instance slots by retdec_publish_act_layers. */
-/* retdec_publish_cact_layer_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-/* retdec_publish_acting_player_properties is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_acting_player_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_acting_player is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* CActScript::Register executes an embedded Squirrel closure stream with
-   the ACT global table as its this/environment value.  This is the small
-   receiver-safe equivalent of the original 415FD0 path; it deliberately
-   reuses the existing VM stream reader and call machinery. */
-
-
-/* 416268 compiles inline ACT source, including classes and callback bodies.
-   Transfer only its closure stream from the source compiler into this VM. */
-/* retdec_execute_act_source_script is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-/* 415810 is the original CActScript callback invoker.  Keep the callback
-   phase explicit: CActResource publishes OnCreate, while BeginStage invokes
-   Init after the resource has become active. */
-/* retdec_execute_act_callback is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* The ACT layer publisher is the part of 0x450950 that must run before the
-   root Init callback.  The generated 0x41F580/0x423DD0 bodies lost their
-   receiver registers, so reproduce their observable Squirrel operations with
-   explicit object pairs while keeping the native layer pointer as instance
-   userdata. */
-
-
-/* retdec_publish_act_script_constants is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_prepare_cact_layer_objects is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_c2dlayout_values is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-/* retdec_map_chip_count is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_get_chip_layout is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_layout_argument is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_record_at is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_chip_data is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* 435720/435220 enumerate layouts in vector order and use the MCD rectangle. */
-/* retdec_map_get_chip_by_position is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_set_chip_rect is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_set_chip_layout is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_set_chip_id is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_get_chip_id is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_map_compare_records is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* 435860 sorts by left/top, rebuilds chip lookup, then derives map bounds. */
-/* retdec_map_prearrangement is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* 433C90 registers two pointer views. Descriptors keep script writes attached
-   to the ACT's original 32-byte records rather than detached table copies. */
-/* retdec_publish_map_view_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_c2dmaplayout_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_resource_get_chip_info is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_get_act_resource_class is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_act_resource_values is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_act_resource_pairs is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_publish_act_layers is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* CActResource keeps an owned root-table pair and a pointer to the runtime
-   CAct used by the renderer.  The generated 450E30/450950 bodies lost both
-   C++ receivers, so restore those object invariants explicitly. */
-
-
-/* retdec_bind_act_resource_object is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Original 450CB4 registers the runtime script in the existing global table;
-   450CC6 then invokes the source ACT's retained Init callback. */
-/* retdec_register_runtime_act_script is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* retdec_begin_stage_this is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Receiver-safe implementation of CActResource's RootTable registration.
-   The caller owns root_object, just as 450E30 owns its local RootTable. */
-/* retdec_root_table_register_resource is implemented in native C++ (kinoko/act_runtime.h). */
-
-/* Live ABI entry points for the two recovered Sqrat methods.  The original
-   caller passes the receiver in ECX and the generated RetDec bodies do not.
-   Keep the receiver handling at the boundary so the loader follows the
-   original 450E30 -> 450F30 call chain. */
-/* retdec_root_table_construct_this is implemented in native C++ (kinoko/act_runtime.h). */
-
-
-int32_t retdec_act_bitblt_this(int32_t self, int32_t x, int32_t y,
-    int32_t width, int32_t height, int32_t resource, int32_t sx, int32_t sy,
-    int32_t blend, float32_t alpha)
-{
-    int32_t *vector;
-    int32_t *entry;
-    size_t count, capacity;
-    int32_t type;
-    static LONG trace_count;
-
-    if (self == 0 || resource == 0)
-        return (int32_t)E_FAIL;
-    /* 4514A0 queries the two concrete texture resource types by RTTI.
-       Their reconstructed vtables identify the same native objects. */
-    type = *(int32_t *)(intptr_t)resource;
-    if (type != (int32_t)(intptr_t)&g365 &&
-        type != (int32_t)(intptr_t)&g379)
-        return (int32_t)E_FAIL;
-    vector = (int32_t *)(intptr_t)(self + 44);
-    count = vector[0] ? (size_t)(vector[1] - vector[0]) / 36u : 0;
-    capacity = vector[0] ? (size_t)(vector[2] - vector[0]) / 36u : 0;
-    if (count == capacity) {
-        size_t next = capacity ? capacity + capacity / 2 + 1 : 1;
-        void *replacement = realloc((void *)(intptr_t)vector[0], next * 36u);
-        if (replacement == NULL)
-            return (int32_t)E_OUTOFMEMORY;
-        vector[0] = (int32_t)(intptr_t)replacement;
-        vector[2] = vector[0] + (int32_t)(next * 36u);
-    }
-    entry = (int32_t *)(intptr_t)(vector[0] + count * 36u);
-    vector[1] = (int32_t)(intptr_t)(entry + 9);
-    entry[0] = blend;
-    ((float32_t *)entry)[1] = alpha < 0.0f ? 0.0f : alpha > 1.0f ? 1.0f : alpha;
-    ((float32_t *)entry)[2] = (float32_t)x;
-    ((float32_t *)entry)[3] = (float32_t)y;
-    entry[4] = sx;
-    entry[5] = sy;
-    entry[6] = width;
-    entry[7] = height;
-    entry[8] = *(int32_t *)(intptr_t)(resource + 68);
-    if (InterlockedIncrement(&trace_count) <= 12) {
-        retdec_trace_i32("act:bitblt-texture", entry[8]);
-        retdec_trace_i32("act:bitblt-x", x);
-        retdec_trace_i32("act:bitblt-y", y);
-    }
-    return 0;
-}
 
 
 int32_t retdec_act_suspend_this(int32_t resource_ptr)
@@ -64510,28 +64267,7 @@ int32_t retdec_act_resume_this(int32_t resource_ptr)
     return act != 0 ? *(int32_t *)(intptr_t)act : 0;
 }
 
-int32_t retdec_act_clear_layout_vector(int32_t vector_ptr)
-{
-    int32_t begin;
-    int32_t end;
-    int32_t result;
 
-    if (vector_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)vector_ptr;
-    end = *(int32_t *)(intptr_t)(vector_ptr + 4);
-    if (begin == end)
-        return begin;
-    result = function_455230(end, end, begin);
-    if (result == 0)
-        return 0;
-    while (result != end) {
-        *(int32_t *)(intptr_t)(result + 36) = (int32_t)(intptr_t)&g23;
-        result += 184;
-    }
-    *(int32_t *)(intptr_t)(vector_ptr + 4) = begin;
-    return begin;
-}
 
 
 // Address range: 0x451620 - 0x45162d
@@ -64540,129 +64276,7 @@ int32_t function_451620(int32_t this_ptr) {
 }
 
 
-// Address range: 0x451640 - 0x4517b2
-int32_t function_451640(int32_t this_ptr) {
-    /* The original is __thiscall(ECX=this).  RetDec lost both the
-       receiver and the two temporary delete operands in this routine. */
-    struct retdec_RTL_CRITICAL_SECTION *critical_section;
-    int32_t act_holder;
-    int32_t act_object;
-    int32_t layer_begin;
-    int32_t layer_end;
-    int32_t layer_count;
-    int32_t index;
-    int32_t root_update_type;
-    int32_t root_update_result;
-    static volatile LONG trace_count;
-    LONG trace_index;
 
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 48) {
-        int32_t act = this_ptr != 0
-            ? *(int32_t *)(intptr_t)(this_ptr + 12) : 0;
-        retdec_trace_i32("451640:resource", this_ptr);
-        retdec_trace_i32("451640:active", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 8) : 0);
-        retdec_trace_i32("451640:suspend", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 104) : 0);
-        retdec_trace_i32("451640:time", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 100) : 0);
-        retdec_trace_i32("451640:current", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 4) : 0);
-        retdec_trace_i32("451640:act", act);
-        if (act != 0)
-            retdec_trace_squirrel_name(
-                "451640:act-name",
-                (int32_t)(intptr_t)retdec_std_string_data(act + 16));
-    }
-
-    if (this_ptr == 0 || *(char *)(this_ptr + 104) != 0) {
-        if (trace_index <= 48)
-            retdec_trace("451640:skip-suspended");
-        return 0;
-    }
-
-    critical_section = (struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)
-        (this_ptr + 20);
-    EnterCriticalSection(critical_section);
-
-    if (*(char *)(this_ptr + 8) == 0 || *(int32_t *)(intptr_t)(this_ptr + 16) == 0) {
-        LeaveCriticalSection(critical_section);
-        return -0x7fffbffb;
-    }
-
-    function_452ba0(this_ptr + 44);
-    if (*(int32_t *)(intptr_t)(this_ptr + 100) >= (int32_t)timeGetTime()) {
-        if (trace_index <= 48)
-            retdec_trace("451640:skip-time");
-        LeaveCriticalSection(critical_section);
-        return 0;
-    }
-
-    /* CActResource::Update reads the layer vector from **this, not from
-       offsets +0xD0/+0xD4 of the smaller resource object. */
-    act_holder = *(int32_t *)(intptr_t)this_ptr;
-    act_object = act_holder == 0
-        ? 0 : *(int32_t *)(intptr_t)act_holder;
-    if (act_object == 0) {
-        if (trace_index <= 48)
-            retdec_trace("451640:skip-no-act-object");
-        LeaveCriticalSection(critical_section);
-        return 0;
-    }
-    root_update_type = *(int32_t *)(intptr_t)(act_object + 136);
-    if (trace_index <= 48)
-        retdec_trace_i32("451640:root-update-type", root_update_type);
-    if (root_update_type != 0x1000001) {
-        root_update_result = function_415810_this(act_object + 124);
-        if (trace_index <= 48)
-            retdec_trace_i32("451640:root-update-result",
-                             root_update_result);
-    }
-
-    layer_begin = *(int32_t *)(intptr_t)(act_object + 208);
-    layer_end = *(int32_t *)(intptr_t)(act_object + 212);
-    layer_count = layer_end - layer_begin;
-    if (trace_index <= 48)
-        retdec_trace_i32("451640:layer-count",
-                         layer_count >= 0 ? layer_count / 4 : -1);
-    if ((layer_count & -4) > 0) {
-        layer_count >>= 2;
-        for (index = 0; index < layer_count; ++index) {
-            int32_t temporary_holder = 0;
-            int32_t item_holder;
-            int32_t item;
-            int32_t result;
-
-            if (*(char *)(this_ptr + 8) == 0 ||
-                *(int32_t *)(intptr_t)(this_ptr + 16) == 0)
-                continue;
-
-            kinoko_act_layer_holder(
-                *(int32_t *)(intptr_t)(this_ptr + 16), index,
-                (int32_t)(intptr_t)&temporary_holder);
-            item_holder = temporary_holder;
-            temporary_holder = 0;
-
-            if (item_holder == 0) {
-                LeaveCriticalSection(critical_section);
-                return 0;
-            }
-
-            item = *(int32_t *)(intptr_t)item_holder;
-            result = function_41efb0(item);
-            /* This is the non-null delete at 0x45173b/0x451789. */
-            _free((void *)(intptr_t)item_holder);
-            if (result < 0) {
-                LeaveCriticalSection(critical_section);
-                return -0x7fffbffb;
-            }
-        }
-    }
-
-    LeaveCriticalSection(critical_section);
-    return 0;
-}
 
 // Address range: 0x4517c0 - 0x451b66
 int32_t function_4517c0(int32_t a1) {
@@ -65096,352 +64710,25 @@ int32_t function_4522c0(void) {
 
 
 /* CSprite::SetRect (404610 -> 404640) and IColor::SetColor (42B280). */
-static int32_t retdec_act_prepare_blit_sprite(int32_t item, const int32_t *command)
-{
-    int32_t sprite = item + 36;
-    int32_t handle = command[8];
-    uint32_t width, height, color;
-    float32_t u0, v0, u1, v1;
 
-    if (handle <= 0 || (uint32_t)handle >= RETDEC_ACT_TEXTURE_SLOT_COUNT)
-        return (int32_t)E_FAIL;
-    width = g_retdec_act_texture_slots[handle].width;
-    height = g_retdec_act_texture_slots[handle].height;
-    if (width == 0 || height == 0)
-        return (int32_t)E_FAIL;
-    memcpy((void *)(intptr_t)item, command, 36);
-    memset((void *)(intptr_t)sprite, 0, 148);
-    *(int32_t *)(intptr_t)sprite = (int32_t)(intptr_t)&g407;
-    *(int32_t *)(intptr_t)(sprite + 4) = handle;
-    *(float32_t *)(intptr_t)(sprite + 120) = (float32_t)command[6];
-    *(float32_t *)(intptr_t)(sprite + 124) = (float32_t)command[7];
-    *(float32_t *)(intptr_t)(sprite + 136) = 1.0f;
-    *(float32_t *)(intptr_t)(sprite + 140) = 1.0f;
-    u0 = (float32_t)command[4] / width;
-    v0 = (float32_t)command[5] / height;
-    u1 = (float32_t)(command[4] + command[6]) / width;
-    v1 = (float32_t)(command[5] + command[7]) / height;
-    color = ((uint32_t)(((const float32_t *)command)[1] * 255.0f) << 24) | 0xffffffu;
-    for (int32_t i = 0; i < 4; ++i) {
-        int32_t vertex = sprite + 8 + i * 28;
-        *(float32_t *)(intptr_t)(vertex + 8) = 0.5f;
-        *(float32_t *)(intptr_t)(vertex + 12) = 1.0f;
-        *(uint32_t *)(intptr_t)(vertex + 16) = color;
-        *(float32_t *)(intptr_t)(vertex + 20) = (i & 1) ? u1 : u0;
-        *(float32_t *)(intptr_t)(vertex + 24) = (i & 2) ? v1 : v0;
-    }
-    return 0;
-}
 
 
 
 /* 450020/4513F0: stop the resource, unregister its environment, then release owners. */
 
 
-int32_t function_4522f0(int32_t self)
-{
-    int32_t act, begin, end, count, result = 0;
-    struct retdec_RTL_CRITICAL_SECTION *lock;
-    if (self == 0)
-        return (int32_t)E_FAIL;
-    if (*(uint8_t *)(intptr_t)(self + 104) != 0)
-        return 0;
-    lock = (struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(self + 20);
-    EnterCriticalSection(lock);
-    act = *(int32_t *)(intptr_t)(self + 12);
-    if (*(uint8_t *)(intptr_t)(self + 8) != 0 && act != 0 &&
-        *(uint8_t *)(intptr_t)(act + 96) != 0) {
-        begin = *(int32_t *)(intptr_t)(act + 208);
-        end = *(int32_t *)(intptr_t)(act + 212);
-        for (int32_t i = (end - begin) / 4 - 1; i >= 0; --i) {
-            int32_t key = function_452040(self, i);
-            int32_t layout = key ? *(int32_t *)(intptr_t)(key + 4) : 0;
-            if (layout != 0) {
-                int32_t *methods = *(int32_t **)(intptr_t)layout;
-                if (methods != NULL && methods[7] != 0 &&
-                    retdec_call_thiscall0_result((void *)(intptr_t)layout,
-                        (void *)(intptr_t)methods[7]) < 0)
-                    result = (int32_t)E_FAIL;
-            }
-        }
-        begin = *(int32_t *)(intptr_t)(self + 44);
-        end = *(int32_t *)(intptr_t)(self + 48);
-        count = (end - begin) / 36;
-        function_452c20(self + 60, (uint32_t)count);
-        if ((*(int32_t *)(intptr_t)(self + 64) -
-             *(int32_t *)(intptr_t)(self + 60)) / 184 != count) {
-            result = (int32_t)E_OUTOFMEMORY;
-        } else {
-            for (int32_t i = 0; i < count; ++i) {
-                int32_t item = *(int32_t *)(intptr_t)(self + 60) + i * 184;
-                if (retdec_act_prepare_blit_sprite(item,
-                        (const int32_t *)(intptr_t)(begin + i * 36)) < 0)
-                    result = (int32_t)E_FAIL;
-            }
-        }
-    }
-    LeaveCriticalSection(lock);
-    return result;
-}
+
 
 
 /* The live render entry keeps the original resource traversal but invokes
    C2DLayout::Draw through its vtable with the recovered __thiscall ABI. */
-int32_t function_4525d0(int32_t this_ptr, float32_t x, float32_t y)
-{
-    struct retdec_RTL_CRITICAL_SECTION *critical_section;
-    IDirect3DDevice9 *sampler_device = (IDirect3DDevice9 *)(intptr_t)g678;
-    DWORD address_u = D3DTADDRESS_WRAP, address_v = D3DTADDRESS_WRAP;
-    int32_t act;
-    int32_t layer_begin;
-    int32_t layer_end;
-    int32_t layer_count;
-    int32_t index;
-    int32_t result = 0;
-    static volatile LONG trace_count;
-    LONG trace_index;
-    float32_t draw_x;
-    float32_t draw_y;
-    static volatile LONG actor_trace_count;
-    LONG actor_trace_index;
-
-    if (this_ptr == 0)
-        return -0x7fffbffb;
-    if (*(uint8_t *)(intptr_t)(this_ptr + 104) != 0)
-        return 0;
-
-    actor_trace_index = InterlockedIncrement(&actor_trace_count);
-    if (actor_trace_index <= 64) {
-        act = *(int32_t *)(intptr_t)(this_ptr + 12);
-        retdec_trace_i32("4525d0:actor-index", actor_trace_index);
-        retdec_trace_i32("4525d0:flag-68",
-                         *(int32_t *)(intptr_t)(this_ptr + 104));
-        retdec_trace_i32("4525d0:flag-8",
-                         *(int32_t *)(intptr_t)(this_ptr + 8));
-        retdec_trace_i32("4525d0:field-10",
-                         *(int32_t *)(intptr_t)(this_ptr + 16));
-        retdec_trace_i32("4525d0:act", act);
-        if (act != 0) {
-            retdec_trace_squirrel_name(
-                "4525d0:actor-name",
-                (int32_t)(intptr_t)retdec_std_string_data(act + 16));
-            retdec_trace_i32("4525d0:act-60",
-                             *(int32_t *)(intptr_t)(act + 96));
-            retdec_trace_i32("4525d0:act-begin",
-                             *(int32_t *)(intptr_t)(act + 208));
-            retdec_trace_i32("4525d0:act-end",
-                             *(int32_t *)(intptr_t)(act + 212));
-        }
-    }
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 8) {
-        retdec_trace("4525d0:live-entry");
-        retdec_trace_i32("4525d0:live-resource", this_ptr);
-        retdec_trace_i32("4525d0:live-act",
-                         *(int32_t *)(intptr_t)(this_ptr + 12));
-        act = *(int32_t *)(intptr_t)(this_ptr + 12);
-        if (act != 0) {
-            retdec_trace_squirrel_name(
-                "4525d0:live-act-name",
-                (int32_t)(intptr_t)retdec_std_string_data(act + 16));
-        }
-        retdec_trace_squirrel_name(
-            "4525d0:live-resource-name",
-            (int32_t)(intptr_t)retdec_std_string_data(this_ptr + 164));
-    }
-
-    critical_section = (struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)
-        (this_ptr + 20);
-    EnterCriticalSection(critical_section);
-    if (*(uint8_t *)(intptr_t)(this_ptr + 8) == 0) {
-        LeaveCriticalSection(critical_section);
-        return 0;
-    }
-
-    act = *(int32_t *)(intptr_t)(this_ptr + 12);
-    if (act == 0) {
-        LeaveCriticalSection(critical_section);
-        return (int32_t)E_FAIL;
-    }
-    /* Original 4528C9 gates both ACT layers and BitBlt commands on visibility. */
-    if (*(uint8_t *)(intptr_t)(act + 96) == 0) {
-        LeaveCriticalSection(critical_section);
-        return 0;
-    }
-    layer_begin = *(int32_t *)(intptr_t)(act + 208);
-    layer_end = *(int32_t *)(intptr_t)(act + 212);
-    if (layer_begin == 0 || layer_end < layer_begin) {
-        LeaveCriticalSection(critical_section);
-        return 0;
-    }
-    /* 4525d0 reads the origin from the active CAct (resource + 0x0c), not
-       from the CActResource object itself.  The latter happens to overlap
-       unrelated state and produced the 0x00000004 Y argument seen in trace. */
-    draw_x = x + *(float32_t *)(intptr_t)(act + 88);
-    draw_y = y + *(float32_t *)(intptr_t)(act + 92);
-    /* 45265B saves and clamps both axes for this ACT render pass. */
-    if (sampler_device != NULL) {
-        sampler_device->lpVtbl->GetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, &address_u);
-        sampler_device->lpVtbl->GetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, &address_v);
-        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-    }
-    layer_count = (layer_end - layer_begin) / 4;
-    for (index = layer_count - 1; index >= 0; --index) {
-        int32_t key = function_452040(this_ptr, index);
-        int32_t layout;
-        int32_t *vtable;
-        int32_t x_bits;
-        int32_t y_bits;
-        int32_t draw_result;
-
-        if (key == 0)
-            continue;
-        layout = *(int32_t *)(intptr_t)(key + 4);
-        if (layout == 0)
-            continue;
-        vtable = *(int32_t **)(intptr_t)layout;
-        if (vtable == NULL || vtable[8] == 0) {
-            result = (int32_t)E_FAIL;
-            continue;
-        }
-        memcpy(&x_bits, &draw_x, sizeof(x_bits));
-        memcpy(&y_bits, &draw_y, sizeof(y_bits));
-        draw_result = retdec_call_thiscall2_result(
-            (void *)(intptr_t)layout,
-            (void *)(uintptr_t)(uint32_t)vtable[8], x_bits, y_bits);
-        if (trace_index <= 8) {
-            retdec_trace_i32("4525d0:live-x", x_bits);
-            retdec_trace_i32("4525d0:live-y", y_bits);
-            retdec_trace_i32("4525d0:live-layout", layout);
-            retdec_trace_i32("4525d0:live-texture",
-                             *(int32_t *)(intptr_t)(layout + 0x134));
-            retdec_trace_i32("4525d0:live-draw-result", draw_result);
-        }
-        if (draw_result < 0)
-            result = draw_result;
-    }
-
-    /* 4529A7 draws the prepared BitBlt sprites after the ACT layers. */
-    if (*(uint8_t *)(intptr_t)(act + 96) != 0) {
-        IDirect3DDevice9 *device = (IDirect3DDevice9 *)(intptr_t)g678;
-        DWORD saved[4];
-        const D3DRENDERSTATETYPE states[4] = {
-            D3DRS_SRCBLEND, D3DRS_DESTBLEND, D3DRS_BLENDOP, D3DRS_ALPHABLENDENABLE
-        };
-        if (device != NULL) {
-            for (int i = 0; i < 4; ++i)
-                device->lpVtbl->GetRenderState(device, states[i], &saved[i]);
-            device->lpVtbl->SetRenderState(device, D3DRS_ALPHABLENDENABLE, TRUE);
-            for (int32_t item = *(int32_t *)(intptr_t)(this_ptr + 60);
-                 item != *(int32_t *)(intptr_t)(this_ptr + 64); item += 184) {
-                int32_t blend = *(int32_t *)(intptr_t)item;
-                DWORD src = D3DBLEND_ONE, dest = D3DBLEND_ZERO, op = D3DBLENDOP_ADD;
-                int32_t sprite = item + 36;
-                int32_t *methods = *(int32_t **)(intptr_t)sprite;
-                float32_t bx = draw_x + *(float32_t *)(intptr_t)(item + 8);
-                float32_t by = draw_y + *(float32_t *)(intptr_t)(item + 12);
-                int32_t bx_bits, by_bits;
-                if (blend == 1) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_INVSRCALPHA; }
-                else if (blend == 2) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_ONE; }
-                else if (blend == 3) { src = D3DBLEND_SRCALPHA; dest = D3DBLEND_ONE; op = D3DBLENDOP_REVSUBTRACT; }
-                else if (blend == 4) { src = D3DBLEND_ZERO; dest = D3DBLEND_SRCCOLOR; }
-                else if (blend == 5) { src = D3DBLEND_DESTCOLOR; dest = D3DBLEND_ONE; }
-                device->lpVtbl->SetRenderState(device, D3DRS_SRCBLEND, src);
-                device->lpVtbl->SetRenderState(device, D3DRS_DESTBLEND, dest);
-                device->lpVtbl->SetRenderState(device, D3DRS_BLENDOP, op);
-                memcpy(&bx_bits, &bx, sizeof(bx_bits));
-                memcpy(&by_bits, &by, sizeof(by_bits));
-                if (methods != NULL && methods[7] != 0 &&
-                    retdec_call_thiscall2_result((void *)(intptr_t)sprite,
-                        (void *)(intptr_t)methods[7], bx_bits, by_bits) < 0)
-                    result = (int32_t)E_FAIL;
-            }
-            retdec_set_texture_stage(0, 0);
-            for (int i = 0; i < 4; ++i)
-                device->lpVtbl->SetRenderState(device, states[i], saved[i]);
-        }
-    }
-    if (sampler_device != NULL) {
-        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSU, address_u);
-        sampler_device->lpVtbl->SetSamplerState(sampler_device, 0, D3DSAMP_ADDRESSV, address_v);
-    }
-    LeaveCriticalSection(critical_section);
-    return result;
-}
 
 
-// Address range: 0x452ba0 - 0x452bda
-int32_t function_452ba0(int32_t a1) {
-    int32_t * v1 = (int32_t *)(a1 + 4); // 0x452ba6
-    int32_t v2 = *v1; // 0x452ba6
-    int32_t v3 = *(int32_t *)a1; // 0x452baa
-    int32_t result; // 0x452ba0
-    if (v3 != v2) {
-        // 0x452bb0
-        *v1 = v3;
-        result = v2;
-    }
-    // 0x452bd5
-    return result;
-}
 
 
-// Address range: 0x452c20 - 0x452cee
-/* The original is a usercall: EDI is the vector, EAX is the requested
-   element count.  RetDec emitted both register arguments as locals, so the
-   old body dereferenced address zero during the first scene frame. */
-int32_t function_452c20(int32_t vector_ptr, uint32_t requested) {
-    int32_t begin;
-    int32_t finish;
-    int32_t capacity_end;
-    uint32_t size;
-    uint32_t capacity;
-    size_t bytes;
-    int32_t replacement;
 
-    if (vector_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)vector_ptr;
-    finish = *(int32_t *)(intptr_t)(vector_ptr + 4);
-    capacity_end = *(int32_t *)(intptr_t)(vector_ptr + 8);
-    size = (begin != 0 && finish >= begin) ?
-        (uint32_t)((finish - begin) / 184) : 0;
-    capacity = (begin != 0 && capacity_end >= begin) ?
-        (uint32_t)((capacity_end - begin) / 184) : 0;
 
-    if (requested <= capacity) {
-        *(int32_t *)(intptr_t)(vector_ptr + 4) = begin + (int32_t)(requested * 184u);
-        return (int32_t)capacity;
-    }
-    if (requested > 0x1642c85u || requested > (SIZE_MAX / 184u))
-        return 0;
 
-    bytes = (size_t)requested * 184u;
-    replacement = (int32_t)(intptr_t)malloc(bytes);
-    if (replacement == 0)
-        return 0;
-    memset((void *)(intptr_t)replacement, 0, bytes);
-    if (begin != 0 && size != 0 && size <= requested)
-        memcpy((void *)(intptr_t)replacement, (const void *)(intptr_t)begin,
-               (size_t)size * 184u);
-    *(int32_t *)(intptr_t)(vector_ptr + 0) = replacement;
-    *(int32_t *)(intptr_t)(vector_ptr + 4) = replacement + (int32_t)bytes;
-    *(int32_t *)(intptr_t)(vector_ptr + 8) = replacement +
-        (int32_t)bytes;
-    /* Preserve the element vtable expected by the IColor cleanup path for
-       slots that have not yet been populated by the sprite builder. */
-    for (uint32_t index = size; index < requested; ++index)
-        *(int32_t *)(intptr_t)(replacement + index * 184u + 36) =
-            (int32_t)(intptr_t)&g407;
-    if (begin != 0)
-        free((void *)(intptr_t)begin);
-    retdec_trace_i32("452c20:vector", vector_ptr);
-    retdec_trace_i32("452c20:requested", (int32_t)requested);
-    retdec_trace_i32("452c20:replacement", replacement);
-    return (int32_t)capacity;
-}
 
 
 // Address range: 0x452d40 - 0x453028
@@ -66684,57 +65971,7 @@ int32_t function_455010(void) {
 }
 
 
-// Address range: 0x455230 - 0x4552d5
-int32_t function_455230(int32_t a1, int32_t a2, int32_t result) {
-    // 0x455230
-    if (a1 == a2) {
-        // 0x4552d2
-        return result;
-    }
-    // 0x455243
-    int32_t v1; // bp-16, 0x455230
-    int32_t v2 = &v1; // 0x455249
-    int32_t v3 = result + 168; // 0x455253
-    int32_t v4 = a1 + 168; // 0x455253
-    int32_t result2 = result; // 0x455253
-    __asm_rep_movsd_memcpy((char *)result2, (char *)(v4 - 168), 9);
-    *(int32_t *)(v3 - 4) = *(int32_t *)(v4 - 4);
-    *(int32_t *)v3 = *(int32_t *)v4;
-    *(int32_t *)(v3 + 4) = *(int32_t *)(v4 + 4);
-    *(int32_t *)(v3 + 8) = *(int32_t *)(v4 + 8);
-    *(int32_t *)(v3 + 12) = *(int32_t *)(v4 + 12);
-    *(int32_t *)(v3 - 128) = *(int32_t *)(v4 - 128);
-    *(int32_t *)(v2 - 4) = 112;
-    *(int32_t *)(v3 - 12) = *(int32_t *)(v4 - 12);
-    *(int32_t *)(v2 - 8) = v4 - 124;
-    *(int32_t *)(v3 - 8) = *(int32_t *)(v4 - 8);
-    *(int32_t *)(v2 - 12) = 112;
-    *(int32_t *)(v2 - 16) = v3 - 124;
-    _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
-    result2 += 184;
-    while (v4 + 16 != a2) {
-        // 0x455260
-        v3 += 184;
-        v4 += 184;
-        __asm_rep_movsd_memcpy((char *)result2, (char *)(v4 - 168), 9);
-        *(int32_t *)(v3 - 4) = *(int32_t *)(v4 - 4);
-        *(int32_t *)v3 = *(int32_t *)v4;
-        *(int32_t *)(v3 + 4) = *(int32_t *)(v4 + 4);
-        *(int32_t *)(v3 + 8) = *(int32_t *)(v4 + 8);
-        *(int32_t *)(v3 + 12) = *(int32_t *)(v4 + 12);
-        *(int32_t *)(v3 - 128) = *(int32_t *)(v4 - 128);
-        *(int32_t *)(v2 - 4) = 112;
-        *(int32_t *)(v3 - 12) = *(int32_t *)(v4 - 12);
-        *(int32_t *)(v2 - 8) = v4 - 124;
-        *(int32_t *)(v3 - 8) = *(int32_t *)(v4 - 8);
-        *(int32_t *)(v2 - 12) = 112;
-        *(int32_t *)(v2 - 16) = v3 - 124;
-        _memcpy_s(&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
-        result2 += 184;
-    }
-    // 0x4552d2
-    return result2;
-}
+
 
 // Address range: 0x4552e0 - 0x455323
 
@@ -95411,6 +94648,9 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
         &g365, /* texture_resource_vtable */
         &g39, /* sq_object_vtable */
         &g40, /* sq_root_vtable */
+        &g407, /* sprite_vtable */
+        &g23, /* color_vtable */
+        &g379, /* render_target_vtable */
     };
     return &symbols;
 }
