@@ -18,6 +18,8 @@ SQInteger kinoko_sqrat_get_pointer_int(HSQUIRRELVM vm);
 SQInteger kinoko_sqrat_set_pointer_int(HSQUIRRELVM vm);
 SQInteger kinoko_sqrat_get_pointer_float(HSQUIRRELVM vm);
 SQInteger kinoko_sqrat_set_pointer_float(HSQUIRRELVM vm);
+SQInteger kinoko_sqrat_get_string(HSQUIRRELVM vm);
+SQInteger kinoko_sqrat_set_string(HSQUIRRELVM vm);
 SQInteger kinoko_sqrat_noop(HSQUIRRELVM vm);
 #ifdef __cplusplus
 }
