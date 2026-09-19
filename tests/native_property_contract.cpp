@@ -1,5 +1,6 @@
 #include "kinoko/sqrat_object_bridge.h"
 #include "kinoko/native_property_bridge.h"
+#include "kinoko/native_property_callbacks.h"
 #include "kinoko/legacy_string.hpp"
 #include "squirrel_bridge_test_support.hpp"
 #include <limits>
@@ -29,6 +30,10 @@ public:
     unsigned char* aliased() { return alias.data() + 1; }
     void bind(const char* name, int32_t offset, Callback cb) {
         require(retdec_sqrat_set_offset_closure(address(vm), methods.data(), name, offset, callback_address(cb)), "bind actual captured descriptor");
+    }
+    void bind(const char* name, int32_t offset, SQFUNCTION cb) {
+        require(retdec_sqrat_set_offset_closure(address(vm), methods.data(), name, offset,
+            address(reinterpret_cast<void*>(cb))), "bind typed SQFUNCTION without an original code address");
     }
     void prepare(const char* name) {
         methods.push(); sq_pushstring(vm, name, -1);
@@ -163,6 +168,47 @@ void player_and_strings(HSQUIRRELVM vm) {
     require(retdec_std_string_data(0) == nullptr, "null legacy string view");
     f.require_canaries(); top(vm, base, "player/string stack");
 }
+void typed_source_callbacks(HSQUIRRELVM vm) {
+    Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
+    f.bind("i", 17, kinoko_sqrat_get_int); f.bind("set_i", 17, kinoko_sqrat_set_int);
+    f.bind("f", 25, kinoko_sqrat_get_float); f.bind("set_f", 25, kinoko_sqrat_set_float);
+    f.bind("b", 33, kinoko_sqrat_get_bool); f.bind("set_b", 33, kinoko_sqrat_set_bool);
+    f.bind("s", 37, kinoko_sqrat_get_short); f.bind("set_s", 37, kinoko_sqrat_set_short);
+    f.bind("pi", 45, kinoko_sqrat_get_pointer_int); f.bind("set_pi", 45, kinoko_sqrat_set_pointer_int);
+    f.bind("pf", 53, kinoko_sqrat_get_pointer_float); f.bind("set_pf", 53, kinoko_sqrat_set_pointer_float);
+    f.bind("noop", 0, kinoko_sqrat_noop);
+    store(f.object() + 45, f.aliased()); store(f.object() + 53, f.aliased() + 8);
+    for (const auto value : {std::numeric_limits<SQInteger>::min(), SQInteger{-17}, SQInteger{0},
+                             std::numeric_limits<SQInteger>::max()}) {
+        f.set_int("set_i", value); f.set_int("set_pi", value);
+        require(f.get_int("i") == value && f.get_int("pi") == value, "typed signed integer and indirect fields");
+    }
+    for (uint32_t bits : {0u, 0x80000000u, 0x3fc00000u, 0xc0600000u, 0x7f800000u, 0xff800000u, 0x7fc01234u}) {
+        SQFloat value; std::memcpy(&value, &bits, sizeof(value));
+        f.set_float("set_f", value); f.set_float("set_pf", value);
+        const auto direct = f.get_float("f"), indirect = f.get_float("pf");
+        require(load<uint32_t>(&direct) == bits && load<uint32_t>(&indirect) == bits,
+                "typed floats preserve fractions, signed zero, infinity and quiet NaN payloads");
+    }
+    f.set_float("set_i", -12.75f); require(f.get_int("i") == -12, "typed integer uses source numeric conversion");
+    f.set_int("set_f", 27); require(f.get_float("f") == 27, "typed float accepts a source integer");
+    f.set_string("set_i", "invalid"); f.set_string("set_f", "invalid");
+    require(f.get_int("i") == -12 && f.get_float("f") == 27, "typed invalid numbers leave fields unchanged");
+    f.prepare("set_b"); sq_pushnull(vm); f.call(2, false); require(!f.get_bool("b"), "typed null is false");
+    f.set_string("set_b", ""); require(f.get_bool("b"), "typed empty string follows Squirrel truthiness");
+    require(f.object()[32] == 0xa7 && f.object()[34] == 0xa7, "typed bool changes one byte");
+    f.set_int("set_s", -32769); require(f.get_int("s") == 32767, "typed short truncates to signed low 16 bits");
+    require(f.object()[36] == 0xa7 && f.object()[39] == 0xa7, "typed short changes two bytes");
+    store<void*>(f.object() + 45, nullptr); store<void*>(f.object() + 53, nullptr);
+    const auto old_alias = f.alias;
+    f.set_int("set_pi", 900); f.set_float("set_pf", 5.5f);
+    require(f.alias == old_alias, "typed null indirect setters do not write");
+    for (const auto name : {"pi", "pf", "noop"}) {
+        f.prepare(name); f.call(1, true);
+        require(sq_gettype(vm, -1) == OT_NULL, "typed absent result maps to VM null"); sq_pop(vm, 1);
+    }
+    f.require_canaries(); top(vm, base, "typed callback stack");
+}
 void malformed_descriptors(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm); Fixture f(vm);
     // Directly exercise malformed ABI inputs that source APIs do not bounds-check.
@@ -195,6 +241,7 @@ int main() {
         for (int repeat = 0; repeat < 16; ++repeat) {
             scalar_fields(machine.get()); indirect_fields(machine.get());
             player_and_strings(machine.get()); malformed_descriptors(machine.get());
+            typed_source_callbacks(machine.get());
         }
         std::puts("Native property source-VM contracts passed (16 repetitions)");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }
