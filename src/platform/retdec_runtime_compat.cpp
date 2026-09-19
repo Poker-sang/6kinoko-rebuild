@@ -196,17 +196,6 @@ double __atof_l(const char *text, void *locale, void *unused)
     return strtod(text, nullptr);
 }
 
-
-uint8_t llvm_ctpop_i8(uint8_t value)
-{
-    uint8_t count = 0;
-    while (value != 0) {
-        count = (uint8_t)(count + (value & 1u));
-        value = (uint8_t)(value >> 1);
-    }
-    return count;
-}
-
 int _atexit(void (*function)(void))
 {
     (void)function;
@@ -226,65 +215,6 @@ int32_t _flsall(int32_t flush)
     (void)flush;
     fflush(nullptr);
     return 0;
-}
-
-int32_t __Getctype(int32_t *unused)
-{
-    static int32_t ctype_data[4];
-    (void)unused;
-    return (int32_t)(uintptr_t)ctype_data;
-}
-
-int32_t __Getcvt(void)
-{
-    return 0;
-}
-
-int32_t __Tolower(void)
-{
-    return 0;
-}
-
-int32_t __Toupper(void)
-{
-    return 0;
-}
-
-static int retdec_valid_text(const char *text)
-{
-    return text != nullptr && retdec_valid_range(text, 1, 0);
-}
-
-long __Stolx(const char *text, char **end, int base)
-{
-    return retdec_valid_text(text) ? strtol(text, end, base) : 0;
-}
-
-unsigned long __Stoulx(const char *text, char **end, int base)
-{
-    return retdec_valid_text(text) ? strtoul(text, end, base) : 0;
-}
-
-long long __Stollx(const char *text, char **end, int base)
-{
-    return retdec_valid_text(text) ? _strtoi64(text, end, base) : 0;
-}
-
-unsigned long long __Stoullx(const char *text, char **end, int base)
-{
-    return retdec_valid_text(text) ? _strtoui64(text, end, base) : 0;
-}
-
-float __Stofx(const char *text, char **end, int flags)
-{
-    (void)flags;
-    return retdec_valid_text(text) ? (float)strtod(text, end) : 0.0f;
-}
-
-double __Stodx(const char *text, char **end, int flags)
-{
-    (void)flags;
-    return retdec_valid_text(text) ? strtod(text, end) : 0.0;
 }
 
 /* Remaining C++ ABI/locale adapters are referenced by recovered callers.
@@ -307,21 +237,6 @@ int32_t _3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ(void)
     return 0;
 }
 
-void _3f__3f_0_Mutex_40_std_40__40_QAE_40_XZ(void)
-{
-}
-
-int32_t _3f__3f_1_Mutex_40_std_40__40_QAE_40_XZ(void)
-{
-    return 0;
-}
-
-int32_t _3f__3f_0bad_alloc_40_std_40__40_QAE_40_PBD_40_Z(char *message)
-{
-    (void)message;
-    return 0;
-}
-
 int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
 {
     return (int32_t)(uintptr_t)result;
@@ -337,32 +252,6 @@ int32_t _3f__3f_8type_info_40__40_QBE_NABV0_40__40_Z(void *value)
     return (int32_t)(uintptr_t)value;
 }
 
-int32_t _3f__Facet_Register_40_facet_40_locale_40_std_40__40_CAXPAV123_40__40_Z(void *value)
-{
-    return (int32_t)(uintptr_t)value;
-}
-
-int32_t _3f__Init_40_locale_40_std_40__40_CAPAV_Locimp_40_12_40_XZ(void)
-{
-    return 0;
-}
-
-int32_t _3f__Ios_base_dtor_40_ios_base_40_std_40__40_CAXPAV12_40__40_Z(void *value)
-{
-    return (int32_t)(uintptr_t)value;
-}
-
-int32_t _3f__Locinfo_ctor_40__Locinfo_40_std_40__40_SAXPAV12_40_PBD_40_Z(void *value, char *name)
-{
-    (void)name;
-    return (int32_t)(uintptr_t)value;
-}
-
-int32_t _3f__Locinfo_dtor_40__Locinfo_40_std_40__40_SAXPAV12_40__40_Z(void *value)
-{
-    return (int32_t)(uintptr_t)value;
-}
-
 int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
 {
     return 0;
@@ -371,11 +260,6 @@ int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
 int32_t _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z(char *message)
 {
     (void)message;
-    return 0;
-}
-
-int32_t _3f___uncaught_exception_40__40_YA_NXZ(void)
-{
     return 0;
 }
 
@@ -437,11 +321,6 @@ int32_t ___RTtypeid(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
     (void)a3;
     (void)a4;
     return a1;
-}
-
-int32_t retdec_msvc_0bad_alloc_std__QAE_ABV01__Z(int32_t *value)
-{
-    return (int32_t)(uintptr_t)value;
 }
 
 int32_t retdec_Xinvalid_argument(char *message)
