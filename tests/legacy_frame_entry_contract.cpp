@@ -23,10 +23,13 @@ __declspec(noinline) void check_entry() {
     auto* context = static_cast<CONTEXT*>(_aligned_malloc(sizeof(CONTEXT), 16));
     require(context != nullptr, "allocate independent context");
     const volatile uint32_t canary = 0x13572468;
-    RtlCaptureContext(context);
-    const auto expected = context->Ebp;
     observed_frame = 0;
+    // Keep the two external calls adjacent. With /Oy the compiler can reuse
+    // EBP for a TLS base; accessing observed_frame BETWEEN the calls changes
+    // the very register being sampled and invalidates the reference capture.
+    RtlCaptureContext(context);
     const auto result = _memcpy2();
+    const auto expected = context->Ebp;
     if (observed_frame != expected)
         std::fprintf(stderr, "entry EBP expected=%08x forwarded=%08x\n",
             expected, static_cast<unsigned>(observed_frame));
