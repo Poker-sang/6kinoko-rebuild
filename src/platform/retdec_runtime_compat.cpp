@@ -160,28 +160,6 @@ uint32_t timeBeginPeriod(uint32_t period)
     return begin_period == nullptr ? 0u : (uint32_t)begin_period((UINT)period);
 }
 
-
-size_t _strcspn(const char *text, const char *reject)
-{
-    return strcspn(text, reject);
-}
-
-struct lconv *_localeconv(void)
-{
-    return localeconv();
-}
-
-size_t _fread(void *buffer, size_t size, size_t count, FILE *stream)
-{
-    return fread(buffer, size, count, stream);
-}
-
-size_t _fwrite(const void *buffer, size_t size, size_t count, FILE *stream)
-{
-    return fwrite(buffer, size, count, stream);
-}
-
-
 /* The RetDec output passes a caller-owned vararg area to this old helper. A
    normal vararg view is sufficient for the diagnostic strings used here. */
 int _vsprintf_compat(char *buffer, const char *format, va_list args)
@@ -202,21 +180,6 @@ int _atexit(void (*function)(void))
     return 0;
 }
 
-int32_t _doexit(int32_t code, int32_t quick, int32_t retcaller)
-{
-    (void)code;
-    (void)quick;
-    (void)retcaller;
-    return 0;
-}
-
-int32_t _flsall(int32_t flush)
-{
-    (void)flush;
-    fflush(nullptr);
-    return 0;
-}
-
 /* Remaining C++ ABI/locale adapters are referenced by recovered callers.
    Several signatures and exception semantics are still incomplete. They are
    NOT equivalent to the modern STL or a working native exception runtime;
@@ -225,16 +188,6 @@ int32_t _flsall(int32_t flush)
 int32_t _3f__3f_2_40_YAPAXI_40_Z(uint32_t size)
 {
     return (int32_t)(uintptr_t)malloc(size);
-}
-
-void _3f__3f_0_Lockit_40_std_40__40_QAE_40_H_40_Z(int32_t value)
-{
-    (void)value;
-}
-
-int32_t _3f__3f_1_Lockit_40_std_40__40_QAE_40_XZ(void)
-{
-    return 0;
 }
 
 int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
@@ -297,23 +250,8 @@ int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
         object, count, size, destroy);
 }
 
-int32_t __convertTOStoQNaN(void) { return 0; }
-
-int32_t __fload_withFB(void) { return 0; }
-
-int32_t __lock(int32_t value) { return value; }
-int32_t __math_exit(void) { return 0; }
-
-int32_t __startOneArgErrorHandling(void) { return 0; }
-
-int32_t __unlock(int32_t value) { return value; }
-
-int32_t ___security_init_cookie(void) { return 0; }
-int32_t ___tmainCRTStartup(void) { return 0; }
 int32_t ___report_gsfailure(void) { return 0; }
 int32_t __CxxThrowException_40_8(void) { return 0; }
-
-int32_t ___libm_error_support(void) { return 0; }
 
 int32_t ___RTtypeid(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 {
