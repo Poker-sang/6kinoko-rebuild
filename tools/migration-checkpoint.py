@@ -26,13 +26,13 @@ using kinoko::legacy::field;
 
 """ + block)
 
-doc.write_text(text[:start] + "// ACT property parsing/mapping lives in act_properties.cpp.\\n\\n" + text[end:])
+doc.write_text(text[:start] + "// ACT property parsing/mapping lives in act_properties.cpp.\n\n" + text[end:])
 
 cm = Path("CMakeLists.txt")
 c = cm.read_text()
-needle = "    src/reconstructed/act_document.cpp\\n"
+needle = "    src/reconstructed/act_document.cpp\n"
 assert c.count(needle) == 1
-c = c.replace(needle, needle + "    src/reconstructed/act_properties.cpp\\n", 1)
+c = c.replace(needle, needle + "    src/reconstructed/act_properties.cpp\n", 1)
 old = """target_link_libraries(kinoko_act_properties_contract PRIVATE kinoko_squirrel_cpp_vm)
 target_link_options(kinoko_act_properties_contract PRIVATE /OPT:REF /OPT:ICF)
 """
