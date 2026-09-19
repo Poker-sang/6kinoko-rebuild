@@ -24,7 +24,10 @@ def mask(text):
 
 def definition(text, name):
     clean = mask(text)
-    match = re.search(r'^[^\n;{}]*\b' + re.escape(name) + r'\s*\([^;{}]*\)\s*\{', clean, re.M)
+    # Require declaration tokens before the name. A ternary call inside an
+    # if-condition is not a function definition (the old inventory allowed it).
+    match = re.search(r'^[ \t]*(?:[A-Za-z_]\w*[\s*&]+)+' + re.escape(name)
+                      + r'\s*\([^;{}]*\)\s*\{', clean, re.M)
     if not match:
         return None
     end, depth = match.end(), 1

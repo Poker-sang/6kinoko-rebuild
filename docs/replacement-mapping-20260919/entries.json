@@ -164,7 +164,7 @@
       "original_owner": "0x42bcc0",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "b148cf2cd6a00041a2dfe86af42663241d3025204ad4aaa3b9baa915ddc114e7",
+      "last_body_sha256": "33193e0d140a2003ddf4df362ca8daa551bdf5661c2d05ff5faebeb65dc4f4da",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -178,7 +178,7 @@
       "original_owner": "0x42c100",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "786aab2b09fa242c02d05ede66766ad1167a8ba3b0ca4dc9e15d7a8c133e8a8f",
+      "last_body_sha256": "87aaf03fd3fef7fda72fe119043b63beecc5e61063d6a5ff75ea2756a7c33e0a",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -192,7 +192,7 @@
       "original_owner": "0x42c300",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "169de1103eb87f3c10e55e218226ea294b5192086401c7b7a77ed7615ac04672",
+      "last_body_sha256": "960a3057da2b9cdcea9307b4d5356a747a4252ae3d4a81ff1161054222216404",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -206,7 +206,7 @@
       "original_owner": "0x434b40",
       "last_present_revision": "72614f7a5ed5ec5660d879040b46236a0c62916b",
       "first_absent_revision": "8023c756292cf4f800a6bb572170428cc858bc9b",
-      "last_body_sha256": "581cdeede777df25339be8e1dc6cae0c69b398ada61848cea3793c4bb82050ff",
+      "last_body_sha256": "5f04537a50de9187c630aa8d1bb52f62b2e066d1c8234a8653a6f45cc3f6faaa",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/map_render.cpp",
@@ -234,7 +234,7 @@
       "original_owner": "0x434f40",
       "last_present_revision": "72614f7a5ed5ec5660d879040b46236a0c62916b",
       "first_absent_revision": "8023c756292cf4f800a6bb572170428cc858bc9b",
-      "last_body_sha256": "8141a8c9f086ec9128cf0a0b928f2a6caa7077b810abe011d1c8337dfd59c767",
+      "last_body_sha256": "808bccc06271865daa15bf0aa388567d29004f5d69246fb3fd2961666b199e62",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/map_render.cpp",
@@ -248,7 +248,7 @@
       "original_owner": "0x450950",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "ce347306a0fd5e5431be035d56db95ae66ba4e246bb38be516d66ee81a229dae",
+      "last_body_sha256": "2306e3575e6e337bd495bb4f119d8738ce5d2a99586d6d6f5b9907ddb3679018",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -262,7 +262,7 @@
       "original_owner": "0x450e30",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "b0bdc4a010a3703a6d6c96ceee58194353f36b46e84bed8f6557aac8dc8e0504",
+      "last_body_sha256": "ff994debffc2dc95645c9424e8c2457f43d5394d21067a728df1fbdff69fda3d",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -276,7 +276,7 @@
       "original_owner": "0x4514a0",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "28af9d7b232b0f9f2eecbbc2391ebec0a8da85f750fedf4320c99f80c265f224",
+      "last_body_sha256": "84b6d0892f7ef7d16a3eb4c652a236834cd98b8731457ade479aa89feb55a01f",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -305,7 +305,7 @@
       "original_owner": "0x457a10",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "1470d9e93cb1dd23f42d2e21bcfd8f0a36f096a5118644fb39b9f90b8f5b0349",
+      "last_body_sha256": "421c2a8421f59efe292e9bddd3eec913cd64ec3c5b4fd69b091c2038ba8360cb",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -329,7 +329,7 @@
       "original_owner": "0x45dbc0",
       "last_present_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
       "first_absent_revision": "b284f1be8a792fa1093ec7d6341221db4f9c02a9",
-      "last_body_sha256": "576d728dc8c6ca3a27c1a05b310cc0521b4cf9f27031986c4e02724235cfbe73",
+      "last_body_sha256": "0689df149ac90545d7de110bd677086b630f36eb711b0004fe1b30f2caa0a700",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -343,7 +343,7 @@
       "original_owner": "0x45f760",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "c9f4d991a6d0f43ebc2ccd079c07d334a19776293d33c972a9a452a9d1905504",
+      "last_body_sha256": "0b8d1c809cd1c933feb23bab5e3ca897178f0b2a2b804d13d412f503974e7eae",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -357,7 +357,7 @@
       "original_owner": "0x45f780",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "f57f4354c1fef89f264329eeb86ab943b732f6042d784181583b649dd43d1918",
+      "last_body_sha256": "29be409a9be2c0f249a0b5e0fde64e32171491d231b5ee200274d2b83fe919f8",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -371,7 +371,7 @@
       "original_owner": "0x45f7a0",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "61650a7d3d99028d16cfc7fc58c1625c61b5647f32e80a3ef3117ca524aa967c",
+      "last_body_sha256": "6383d688a55f36f05bb47555cb90698547654f62c9c7c4d4be26b2049e618610",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -385,7 +385,7 @@
       "original_owner": "0x45f7e0",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "5c934e7dcba9e60dfcd29328dcfa6c092d88e2055867d35eefcc09f4141cee4a",
+      "last_body_sha256": "90dd19a5c5dd377ef1f0c5a049e0378d6e829cf4e9ac2a79d3fa580b36c10723",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -399,7 +399,7 @@
       "original_owner": "0x45f800",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "cd6ae812940040c2c662c589e75e9c02e7bea235fec5b0eaa1a329fdf562a95a",
+      "last_body_sha256": "401d403b8b5d912b369cfdcc0a731eb469fa4f7ad5a64871c3023b04d847b9f8",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -413,7 +413,7 @@
       "original_owner": "0x45f810",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "22aa5075d57a750dc2642a6d4c79a3a4603076e52d05a4a6eadbd7a6ea19ab31",
+      "last_body_sha256": "d36a7b8d2748ffc6c1524edc5856db83250859f4e733d30412d0f30617878b59",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -427,7 +427,7 @@
       "original_owner": "0x45f820",
       "last_present_revision": "88d8a1486ed6d85a2f29c1a9fa62463309290eec",
       "first_absent_revision": "7848407f0cc9b8e2cae040b3455e35ceaf2b7225",
-      "last_body_sha256": "ced62c7148ed8ba4d1f7a62c14cf734ed68c340006daa477fbacb8d1719f4fad",
+      "last_body_sha256": "7e6975ebd317132c595724e8620dab3cf93d83e10038d2aa1fc0dbd7fa4e7f86",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -441,7 +441,7 @@
       "original_owner": "0x45fb90",
       "last_present_revision": "609efb5250d1b8b0b220c61de66447af861580b0",
       "first_absent_revision": "72614f7a5ed5ec5660d879040b46236a0c62916b",
-      "last_body_sha256": "874b975f584d4855f95a65da51614c9e1794f253b33e81edff765f7544e67e35",
+      "last_body_sha256": "0cdabf65883cc49575bf88a761484c8acefe8230851b888157bb09d5557bd0c1",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/script_callbacks.cpp",
@@ -455,7 +455,7 @@
       "original_owner": "0x45fcd0",
       "last_present_revision": "653715053f5c1152e910ae8c4939d8492c049fc9",
       "first_absent_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
-      "last_body_sha256": "b92e79ecc21e123913c1d0eac7ed7ed3968974e20240e959a58f07683b68c6e2",
+      "last_body_sha256": "1d344af0cda00520f896ca964e0d3932bbb2ca6d891157f7fae79ace41725a93",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/script_callbacks.cpp",
@@ -469,7 +469,7 @@
       "original_owner": "0x45fd80",
       "last_present_revision": "653715053f5c1152e910ae8c4939d8492c049fc9",
       "first_absent_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
-      "last_body_sha256": "f57069ca9ae7d986eefb97b21978115629fbc3e29e67a1f208e32bb51a18fd9b",
+      "last_body_sha256": "05cd1b44b75190e12e1e682b1a8a375e3dd8a5899bbe3b211b4a6985e734828b",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/script_callbacks.cpp",
@@ -483,7 +483,7 @@
       "original_owner": "0x45fe80",
       "last_present_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
       "first_absent_revision": "b284f1be8a792fa1093ec7d6341221db4f9c02a9",
-      "last_body_sha256": "305057930631bd63951c068fdd4402d935738847793c09441c65bb2adc584fb0",
+      "last_body_sha256": "693617bf6531c52e9728c28c4f315d025a3e78ee3e0a712f647eda3a92139e42",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/actor_methods.cpp",
@@ -507,7 +507,7 @@
       "original_owner": "0x4663c0",
       "last_present_revision": "653715053f5c1152e910ae8c4939d8492c049fc9",
       "first_absent_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
-      "last_body_sha256": "138ae2da355e20e218738185338f1a3900ae597d2164399e87e6668f3466840c",
+      "last_body_sha256": "6e7d1a839fe9093111170456eb7aeea1bce0812892c1c2e62f956dba1d50e2e1",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/script_callbacks.cpp",
@@ -521,7 +521,7 @@
       "original_owner": "0x466470",
       "last_present_revision": "653715053f5c1152e910ae8c4939d8492c049fc9",
       "first_absent_revision": "a9f0d6ce8cd5029e0449142b5bf2e2caf00d4b0b",
-      "last_body_sha256": "bd631cb7da827b05e3f317320db4ab292bfadd955e97c47391acc5a8aaf14261",
+      "last_body_sha256": "39b519612ab2cbe10a1a143abdc29d0d5aadef8c4a6b659f3df1c94dcb55ed6b",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/script_callbacks.cpp",
@@ -535,7 +535,7 @@
       "original_owner": "0x466490",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "34c3d358982fe488a224af5487656f5cb375600f22cdd480e94d0d4322355cd9",
+      "last_body_sha256": "193f718ed7b03ebbc8b696b4960fb889cd3e7e41118b3a4194807902deca89ca",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/legacy_method_entries.cpp",
@@ -633,7 +633,7 @@
       "original_owner": "0x46eed0",
       "last_present_revision": "72614f7a5ed5ec5660d879040b46236a0c62916b",
       "first_absent_revision": "8023c756292cf4f800a6bb572170428cc858bc9b",
-      "last_body_sha256": "f66c3527f5ddf865de1f2d36aa8156a2c346500a73a37950e7cb96a65e60d445",
+      "last_body_sha256": "51b4a72b0dc94809057a842d3d5c71045ff9691716b95cac09a077838ce1ce6a",
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/map_render.cpp",
@@ -657,7 +657,7 @@
       "original_owner": "0x489ef0",
       "last_present_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
       "first_absent_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "last_body_sha256": "7efac147410ba006d149400b862ce21b65fed594213e054bc4ab386169fa3840",
+      "last_body_sha256": "11a695adf325248c0c6b487db08fd18e9450d95e80f50a2877c3c5a7fcfc8f81",
       "status": "unresolved",
       "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
     },
@@ -805,41 +805,41 @@
       "function": "function_48a830",
       "original_is_start": true,
       "original_owner": "0x48a830",
-      "last_present_revision": "64daefe8a5e80303649753146d74b0ddd4288bf7",
-      "first_absent_revision": "30204a267bce86c4ebb587e007d00dd6e4313d20",
-      "last_body_sha256": "8d086aa92ad2a4f103089aeed240889e34d4a0fe68c28389fc8d7f2b1d44f13a",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "89047aa9e09397fae71ae93ba8025c9f9682313ec6a394aa462d4f90aae8c260",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48a890",
       "original_is_start": true,
       "original_owner": "0x48a890",
-      "last_present_revision": "30204a267bce86c4ebb587e007d00dd6e4313d20",
-      "first_absent_revision": "4ca477c6534821c7e606776a50420e4da454b4e4",
-      "last_body_sha256": "b6ce63c6b4101b73d61e6cb557e373182a56acddd0255d9e986297cc5e4af69d",
-      "status": "retired_unused_wrapper_batch",
-      "evidence": "Removed in 4ca477c wrapper-pruning batch. Current exact-symbol source/link scan corroborates absence."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "be0427ef89c0944bd4499192e3f02b445e19e6c150fe6ecb5e5c4502f36436e9",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48a8d0",
       "original_is_start": true,
       "original_owner": "0x48a8d0",
-      "last_present_revision": "3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547",
-      "first_absent_revision": "a51ea1bd2522904cf699d3019419ef9e70c64719",
-      "last_body_sha256": "de8c8e0065cd9731f4eae8d82113205cef05c5d5726e58db3dbe5d9776435937",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "00ed336044b9dbc4dcfdfab9f3dea74a71dcf42d5916bcdaa5d0bf459cf9ffba",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48a920",
       "original_is_start": true,
       "original_owner": "0x48a920",
-      "last_present_revision": "4ca477c6534821c7e606776a50420e4da454b4e4",
-      "first_absent_revision": "3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547",
-      "last_body_sha256": "746685361a289fd9b455fd30cc082fefc6bed5dd088ef1939134bc13518a6044",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "4f8c28c4aeaf00314497a60bdd5d2335b12562837aa149577cdf420e0a5a347c",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48a980",
@@ -965,11 +965,11 @@
       "function": "function_48b630",
       "original_is_start": true,
       "original_owner": "0x48b630",
-      "last_present_revision": "2f1bdcd9f88a9cb1f480a59882c57d1a195515ce",
-      "first_absent_revision": "64daefe8a5e80303649753146d74b0ddd4288bf7",
-      "last_body_sha256": "0a1f96905d854e67ec1d0bc4d8db3d3c379ac86c178e7a70fb209753a6f71620",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "0b82457bec58b5274a56686bdcde36944acc006016959a731fa7c8bdf2efbc13",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48b840",
@@ -1067,7 +1067,7 @@
       "original_owner": "0x48bb10",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "fc7491d03108336e2f1966acdebb01361c754cd1235df79af8430959eed865b7",
+      "last_body_sha256": "f8750d4e7e02ea23a93b51baa94ff3191fb25bbfa6520e5f6cfe06852b6fec2d",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1097,7 +1097,7 @@
       "original_owner": "0x48bc70",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "905370280e5100231953a4b2a310777ca019680f93e171f586283089a0a89b6c",
+      "last_body_sha256": "f005ecd71a0fcabd07f82495bcae92aa66980baef07d64720b521082fb0427cd",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1117,7 +1117,7 @@
       "original_owner": "0x48bd40",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "f82ad52da0a9744514ec279e26275a846f0c52250578db0a2eff8e11202af2e2",
+      "last_body_sha256": "220ca593b7b6c0e2753867f5516b2affbef93d4e2822af2922f738c1e55678c4",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1137,7 +1137,7 @@
       "original_owner": "0x48be40",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "bbd054d9a731baca805dbceb50c3b3260ecd0014c6a55b1190cfd649c1f57fdb",
+      "last_body_sha256": "293e796300d6654137957d193d5d920aebb04678e8cce0ae4bf95d23ac837e72",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1147,7 +1147,7 @@
       "original_owner": "0x48be80",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "453c1466f7017b19ea8cfe54e45fe2feac1fdbb029927ebf9446197592cd3d4e",
+      "last_body_sha256": "9998e9feac5a780510e826a9d85e69618a88ebf41ed0d9a53cea7bda8b327499",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1255,11 +1255,11 @@
       "function": "function_48c950",
       "original_is_start": true,
       "original_owner": "0x48c950",
-      "last_present_revision": "4ca477c6534821c7e606776a50420e4da454b4e4",
-      "first_absent_revision": "3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547",
-      "last_body_sha256": "a7419ab57221747e6c400449447666179e49a0be40722b46d7ff766f0cf33935",
-      "status": "unresolved",
-      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
+      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
+      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
+      "last_body_sha256": "676a86ec5d11a737489b9db092055b7bd00291f04f95cdf253103f256d4be111",
+      "status": "retired_source_runtime_switch",
+      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
     {
       "function": "function_48ca10",
@@ -1437,7 +1437,7 @@
       "original_owner": "0x48d720",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "1455e0121db4e8daca7c534ccfeb5816e9f20d89bc5ffa5a42603e197ce55791",
+      "last_body_sha256": "9be06b6319b0fb2ae16a895fc9d90c2f93cca59a2aa37b855abee354829964a1",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1621,7 +1621,7 @@
       "original_owner": "0x48e4a0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "9cefd87ccb17f52c22d3874494b9e087b639d593693a66377923101f9d3f6b0c",
+      "last_body_sha256": "11ef9246e1eb5ce0002307a212c7dbe2f1269f639b0830545c27a751e3601507",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1651,7 +1651,7 @@
       "original_owner": "0x48e4f0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "bb38067862de94d72fabe9820b20d32ab0720a870aedc2fb80b8d84b59bf6a01",
+      "last_body_sha256": "3a56a4527a0a1b3758f0550001777abd9a1404e8c092a56aad66ea86f3f83314",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1921,7 +1921,7 @@
       "original_owner": "0x48fe70",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "c43d07382f0a82d5f5ef88f515554a172db822b064a61bf4ce15db5856092786",
+      "last_body_sha256": "6a037dc1f294189f189935074b9466fbbc2c927a5bbbaf74823ef0003247b798",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1931,7 +1931,7 @@
       "original_owner": "0x48fed0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "68d6005f20903c97eb7835e4888c35656b5b83028d048586a4084344c866680a",
+      "last_body_sha256": "2ae16ad98cf8b9ff9843baca5e057ff73889485c9745775f2a2074056e757ff4",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -1949,11 +1949,11 @@
       "function": "function_490040",
       "original_is_start": true,
       "original_owner": "0x490040",
-      "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
-      "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "ffdf74469e58ad28af991f3042d04d7729d42b64284597c47018bc04ab10217c",
-      "status": "retired_source_runtime_switch",
-      "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
+      "last_present_revision": "c35b946a2f11cd7d10af7f6ae50346f38a4693e7",
+      "first_absent_revision": "aebce90f646f6a4b547d3d1b3c73e53b91a15886",
+      "last_body_sha256": "da7527d4ac58b6221860580deea6cbf3dc5c0cc2dcefe3fa0b46ea9e524b2a44",
+      "status": "unresolved",
+      "evidence": "Removal commit located; precise replacement or justified retirement still needs review."
     },
     {
       "function": "function_4900d0",
@@ -2121,7 +2121,7 @@
       "original_owner": "0x4910c0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "eb70ecf2d6790842a114f12e54e902dec7842ce7a9e5376f3f723397bd2c342e",
+      "last_body_sha256": "f8793c4995515eefea8acf25a132134091230f277b0b679c979cb878c6dabc46",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2141,7 +2141,7 @@
       "original_owner": "0x491150",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "5d72ae20347bdcf53c9f5b4a3cf3e665c2662d4aa04a57b1f1db7294f5521c89",
+      "last_body_sha256": "2e64f7d26c71f2e5e8fc7e68f96de88b4674bd7782a74f48410791420e0e031b",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2151,7 +2151,7 @@
       "original_owner": "0x491230",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "68b44ea0e94906f0016209340f730eb4d47c76b2408c98bee431b8b4862d5051",
+      "last_body_sha256": "d29a4eadc447d55e540ecdad2d8d3e77c4eb4dacb9fb5e20022dfb9fb178e543",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2305,7 +2305,7 @@
       "original_owner": "0x491910",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "140b8db3973af2f8bafa4204210bb8bf30ec50c6e3293172ae64951089af3674",
+      "last_body_sha256": "359d5c59e97dba6e3c2874958f10b6ef914b1f9a8563be5d232165c7c7dabed5",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2315,7 +2315,7 @@
       "original_owner": "0x4919b0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "5a46af35efbde0de3a893065613ec4f610bf95c2f19168d844e8fff45cd2d055",
+      "last_body_sha256": "017a605a6b96f40a5fdf19482d2d89d09de64af8e2c1faffd9f1fa0aace3e3c9",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2425,7 +2425,7 @@
       "original_owner": "0x492890",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "6ff2298d9f80d4b4521ad13091d32cabc86a2d1e463c202e754f2b2e10d0c792",
+      "last_body_sha256": "bd9e67f61afcd98da01030a244666c02675df834d860b0db15cbc49d38305f20",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2655,7 +2655,7 @@
       "original_owner": "0x497850",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "3cab2fa717c1feb93f5c573fd29ad74ea9c544e317bd8c5c5943c2d089c596f8",
+      "last_body_sha256": "ebe0da932ea8dab1d6e346f2ed66343a5a450b289bed404f8f8222671eb15245",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2675,7 +2675,7 @@
       "original_owner": "0x497990",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "f3a21e247e6616fa3d9282094ef55c3024519cbd1e7bb24ee280cec939025202",
+      "last_body_sha256": "baffa8702dd0661421791d239d72b89e870c7694eca9ef75fc4f8b6606b10d63",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2685,7 +2685,7 @@
       "original_owner": "0x497a00",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "cb0f1645d37e7863275ac919cd22d91e15ff49212be6fac0590698962ae6dc6c",
+      "last_body_sha256": "4f7c1d8d9b2b43b643bb20da6e4c6be4b0d104c47f42a9fc46ff30a3e64d7dd8",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2695,7 +2695,7 @@
       "original_owner": "0x497b10",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "b735a716b2704219f625f19f141b16fff5f249f840481768f08c0f9b4f5c9f78",
+      "last_body_sha256": "aebb48a8d857cd1e774ddac13bc6d12855c0237df115c547ddd07d8027f7035a",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2715,7 +2715,7 @@
       "original_owner": "0x497e30",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "1b4a5ebfdf9a02f87e7784613ec1f590551f81ef56d6936d21f69adc1b59b62c",
+      "last_body_sha256": "adaf3c01935b9ff9f41a7b64796826eadfedab5abd75a1c0b692aeff68c775f2",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2725,7 +2725,7 @@
       "original_owner": "0x497f10",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "06a6edcd90e9ff97469cdc7bde00a1c58103c2c8b91f8e3d30a7c71f4ad14283",
+      "last_body_sha256": "7196f8c09ec11f1013732040ee0d7fe3cdce5d3b88a6e9ee30d1a395628afe62",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2755,7 +2755,7 @@
       "original_owner": "0x498080",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "6fc3edbd375826e8d8c9735b9b75135f198accd4004127519b2ed9324393d0ad",
+      "last_body_sha256": "9c53c2e149a9725f93116f7d5073a5f2692bbb14c10010f8dfa1341574caec14",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2765,7 +2765,7 @@
       "original_owner": "0x4980a0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "a17af2744e5a1814f02f83b4feab0e8d85b716e83fd2a24702eb78c57e32eae7",
+      "last_body_sha256": "50c7d560929863e02630382fff9dacdfd0a514341653f16633e67eac79634745",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2775,7 +2775,7 @@
       "original_owner": "0x4981e0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "28282bc1cee86e4974765332126ffcf3eeddf11f55ed61a6284798dc5619bcf2",
+      "last_body_sha256": "d40c4b0ec010e27b5bf87b978eb1b5497fa9a86ae72d3206c8b5f337d8294490",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2785,7 +2785,7 @@
       "original_owner": "0x498200",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "6bea93cb3b16e97225d990f16eb1e5a0f34e4df5e4120fd37c3fc7563532b35a",
+      "last_body_sha256": "5efd4b83eb8efea1bc7356f50948cb96d0066099c0f2efec18e2b34accab07ed",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2795,7 +2795,7 @@
       "original_owner": "0x4982f0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "945933a77dd1e83243a7491abfcf17bd8461eb7b5dc01344a7fc81d4010db5fd",
+      "last_body_sha256": "9b1da23bf01446886e9874b8a13a81df158273fc90126c1fa393da215d1525e9",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2805,7 +2805,7 @@
       "original_owner": "0x498320",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "d525eba5f33883869a973d0f3dd346017f437f3dffcbcc2da55435370398674a",
+      "last_body_sha256": "667a0b5f08c6c43311dd727a6a2c3cf3c03916da3bbd6ec0c0815c2bec61edb8",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2815,7 +2815,7 @@
       "original_owner": "0x498440",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "ec9f164ea3dfc9a2f0eded86faadedd258c260ff3a7369faac7d6a7b025258de",
+      "last_body_sha256": "64d1ea09ac1611184e718fdd1bc0616b1030cdf33a3dd60ce6a227eeeeba7dca",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2905,7 +2905,7 @@
       "original_owner": "0x498a30",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "211cdf7598fa80a65e31fde656c54420fe34e051e75eea715e9d369f944477c5",
+      "last_body_sha256": "0d57126678241953eb911365edd8605d99391316e7f957871d3acf79ab18e4d6",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2925,7 +2925,7 @@
       "original_owner": "0x498c20",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "7fc759ac18aa6d9ed1705271770ed3acdbd96cfc7f40ea0dd93b63b8cbc92b7b",
+      "last_body_sha256": "caa1d711414a07110717acabd4973ede66050c50a4ddf81b8ce0e249f36e99e3",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2945,7 +2945,7 @@
       "original_owner": "0x498d30",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "f5cf87140db826e7797f115aaaf37fbf7aab63441935f4daee362e7c27f98187",
+      "last_body_sha256": "29221195028752b9a77c5c4da47576a182dffe310f3e9ceff337605dba9c9f03",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2955,7 +2955,7 @@
       "original_owner": "0x498da0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "b296dbf1cb3161038c9a491e6245b4e1afb97a5307e439caf7fd28cb3bedb676",
+      "last_body_sha256": "ab08a9e369d67091befd833acb02288345865d1e42c1b93188571a315095d1f6",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -2965,7 +2965,7 @@
       "original_owner": "0x498e30",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "a7742603c259666d46f469f5723bf339e4cb8a925084b97c17ef3358ed435ab6",
+      "last_body_sha256": "e724977cc070c24537b390dc53390e155cbf0c51bc138d03d8c064187dbbe5ab",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -3005,7 +3005,7 @@
       "original_owner": "0x499130",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "70b88b3c6f2ce3f1104f856516bd503bf2295004e0af4bb37dc61080c8c11149",
+      "last_body_sha256": "b6d0934f3ac295350e47c7c8fb891c8f87ae1420d5f22441ceae0bd690630f82",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -3025,7 +3025,7 @@
       "original_owner": "0x499380",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "e1c4365f1e43afb6b64b521070d50adf28f79e1689971eb0a249812a763d42d7",
+      "last_body_sha256": "3e087ab8c3413ff80ef09281b7cd8012e28dc319b18fd39a9bf41bd689182750",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -3055,7 +3055,7 @@
       "original_owner": "0x4996c0",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "b45eff00a5289f98d21d3116c6315015fb70acee609d7b8bc0f86977d34ce0fd",
+      "last_body_sha256": "38b327734d1475c8c60ded8584a73cabf9753fd34c0e14af9ab54e760743effb",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -3085,7 +3085,7 @@
       "original_owner": "0x499940",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "7bcdf72c4a23b178cf03c7c6f93526a00e9f6f9f7934a720345457b9bef856ec",
+      "last_body_sha256": "d3b33e43ef86c3fc609d148455e18a524434c26593bfc85845eff35f8da9bc07",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
@@ -3375,7 +3375,7 @@
       "original_owner": "0x49ab80",
       "last_present_revision": "57d857f236aae404d2cdbb51325306e7a88dab2a",
       "first_absent_revision": "49dfad566ff589150190f40950e4ddf801f24bad",
-      "last_body_sha256": "b306707de2d60f795d2957c66be5f571035545fb735801767b85053047e5c63f",
+      "last_body_sha256": "f5a0b25193c2c76f26b2bc78a1eb1cc0c6c81f2bd468f8bf0c490162f0c2131c",
       "status": "retired_source_runtime_switch",
       "evidence": "Removed in 49dfad5 source VM/stdlib switch. Current source/link no longer uses this exact symbol. Retirement mapping only; no one-to-one source equivalence claimed."
     },
