@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from audit_legacy_islands import component, graph
+from audit_legacy_islands import component, graph, interior_references
 
 SAMPLE = '''
 int32_t function_401000(void);
@@ -57,6 +57,36 @@ class GraphContract(unittest.TestCase):
 
     def test_constant_original_address_edge(self):
         self.assertEqual(len(self.selected(SAMPLE.replace('(int32_t)&g11', '0x502000'))), 4)
+
+    def test_named_crt_helpers_require_explicit_opt_in(self):
+        text = SAMPLE + '\n// Address range: 0x403000 - 0x403100\nint32_t __old_helper(void);\nint32_t __old_helper(void) { return (int32_t)&g10; }\n'
+        with self.assertRaisesRegex(ValueError, 'reachable'):
+            self.selected(text)
+        entities, edges, roots, live = graph(text, {}, include_named_functions=True)
+        selected = component(entities, edges, roots, live, ['__old_helper'])
+        self.assertEqual(len(selected), 5)
+
+    def test_named_helper_address_and_external_prototype_are_roots(self):
+        text = SAMPLE + '\nint32_t __old_helper(void);\n// Address range: 0x403000 - 0x403100\nint32_t __old_helper(void) { return (int32_t)&g10; }\n'
+        for reference in ('0x403000', '&__old_helper', '"__old_helper"', 'int32_t __old_helper(void);'):
+            with self.subTest(reference=reference), self.assertRaisesRegex(ValueError, 'reachable'):
+                entities, edges, roots, live = graph(text, {'outside.h': reference}, include_named_functions=True)
+                component(entities, edges, roots, live, ['__old_helper'])
+
+    def test_merged_interior_entry_and_collapsed_data_are_not_discarded(self):
+        source = '// Address range: 0x401000 - 0x401050\nint32_t function_401000(void) { return 0; }\n'
+        source += 'int32_t g1 = 0; // 0x501000\n'
+        entries, _, _, _ = graph(source, {})
+        original = source + 'int32_t g2 = 0; // 0x501020\n'
+        for literal in ('0x401040', '0x501010', '4198464', '\"0x401040\"'):
+            with self.subTest(literal=literal):
+                ranges, hits = interior_references(source, entries, {'external.c': literal}, original)
+                self.assertEqual(len(hits), 1)
+                self.assertEqual(ranges['g1'], [0x501000, 0x501020])
+        _, hits = interior_references(source, entries, {'external.c': '0x401050; // 0x401040'}, original)
+        self.assertEqual(hits, [])
+        with self.assertRaisesRegex(ValueError, 'Unbounded'):
+            interior_references(source, entries, {}, source)
 
     def test_duplicate_definition_and_bad_braces_fail_closed(self):
         for suffix in ('int32_t function_401000(void) { return 0; }', '{', '}'):
