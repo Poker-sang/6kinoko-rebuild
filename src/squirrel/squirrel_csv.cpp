@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_api_types.h"
 #include "kinoko/csv_bridge.h"
 #include <windows.h>
 #include <cstdlib>
@@ -96,7 +97,7 @@ extern "C" int32_t kinoko_csv_populate(int32_t address, const char *text, const 
         auto key = text_cell(rows, r, 0);
         if (key.empty()) continue;
         // Keep the game's table vtable so its GC recognizes the new row.
-        function_48a600(address);
+        sq_newtable(kinoko_vm(address));
         SQObjectPtr row = vm.GetUp(-1);
         vm.Pop();
         for (size_t c = 0; c < columns.size(); ++c) {

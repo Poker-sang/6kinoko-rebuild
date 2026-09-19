@@ -1,3 +1,6 @@
+#include "kinoko/audio_runtime.h"
+#include "kinoko/audio_host.h"
+#include "kinoko/squirrel_api_types.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
 #include "kinoko/sqrat_object_bridge.h"
@@ -58,11 +61,7 @@
 
 static volatile LONG retdec_actor_step_trace_active;
 
-/* The original runtime embeds a Vorbis decoder.  Keep the decoder local to
-   this translation unit so packaged DAT playback has no external codec
-   dependency. */
-#define STB_VORBIS_NO_STDIO
-#include "stb_vorbis.c"
+
 
 
 void retdec_trace_ref_watch(const char *label, int32_t shared_state,
@@ -211,60 +210,7 @@ double _strtod(const char *text, char **end);
 int32_t function_45d970_this(int32_t this_ptr, char flags);
 static int32_t function_45d9f0_this(int32_t this_ptr);
 
-// The Windows SDK's dsound.h is not usable with this generated C translation
-// unit under /TC and WIN32_LEAN_AND_MEAN. Keep the original COM calls through
-// the stable DirectSound vtable slots instead of pulling in its declarations.
-typedef HRESULT (WINAPI *retdec_dsound_initialize_fn)(void *self,
-    const GUID *guid);
-typedef HRESULT (WINAPI *retdec_direct_sound_create8_fn)(
-    const GUID *device_guid, void **direct_sound, void *outer);
-typedef HRESULT (WINAPI *retdec_dsound_set_cooperative_level_fn)(void *self,
-    HWND hwnd, DWORD level);
-typedef HRESULT (WINAPI *retdec_dsound_get_caps_fn)(void *self, void *caps);
-typedef HRESULT (WINAPI *retdec_dsound_create_buffer_fn)(void *self,
-    const void *description, void **buffer, void *outer);
-typedef HRESULT (WINAPI *retdec_dsound_query_interface_fn)(void *self,
-    const GUID *iid, void **result);
-typedef ULONG (WINAPI *retdec_dsound_release_fn)(void *self);
 
-typedef struct retdec_dsound_buffer_desc {
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwBufferBytes;
-    DWORD dwReserved;
-    void *lpwfxFormat;
-    GUID guid3DAlgorithm;
-} retdec_dsound_buffer_desc;
-
-typedef HRESULT (WINAPI *retdec_dsound_buffer_lock_fn)(
-    void *self, DWORD offset, DWORD bytes, void **part1, DWORD *part1_bytes,
-    void **part2, DWORD *part2_bytes, DWORD flags);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_unlock_fn)(
-    void *self, void *part1, DWORD part1_bytes, void *part2,
-    DWORD part2_bytes);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_set_volume_fn)(
-    void *self, LONG volume);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_play_fn)(
-    void *self, DWORD reserved1, DWORD reserved2, DWORD flags);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_get_status_fn)(
-    void *self, DWORD *status);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_get_current_position_fn)(
-    void *self, DWORD *play_cursor, DWORD *write_cursor);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_stop_fn)(void *self);
-typedef HRESULT (WINAPI *retdec_dsound_buffer_set_position_fn)(
-    void *self, DWORD position);
-
-#pragma pack(push, 1)
-typedef struct retdec_wave_format {
-    WORD wFormatTag;
-    WORD nChannels;
-    DWORD nSamplesPerSec;
-    DWORD nAvgBytesPerSec;
-    WORD nBlockAlign;
-    WORD wBitsPerSample;
-    WORD cbSize;
-} retdec_wave_format;
-#pragma pack(pop)
 
 // ---------------- Integer Types Definitions -----------------
 
@@ -2084,20 +2030,6 @@ int32_t function_409540(int32_t a1);
 int32_t function_409620(int32_t a1);
 int32_t function_4098a0(int32_t a1, float80_t a2, int32_t a3);
 int32_t function_409930(void);
-int32_t function_40a0f0(void);
-int32_t function_40a3d0(void);
-int32_t function_40a460(void);
-int32_t function_40a5d0(int32_t result);
-int32_t function_40a5f0(int32_t a1);
-int32_t function_40a7f0(int32_t a1, int32_t a2);
-int32_t function_40a8d0(int32_t a1);
-int32_t function_40a950(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_40a9a0(int32_t a1, int32_t a2, int32_t a3, float80_t a4);
-int32_t function_40a9f0(float80_t a1);
-int32_t function_40aaa0(void);
-int32_t function_40aac0(void);
-int32_t function_40aae0(void);
-int32_t function_40adb0(int32_t * a1);
 int32_t function_40ae70(void);
 int32_t function_40af70(void);
 int32_t function_40af80(char a1);
@@ -2107,11 +2039,8 @@ int32_t function_40b160(int16_t a1, uint16_t a2);
 int32_t function_40b210(uint16_t a1, uint16_t a2);
 int32_t function_40b2c0(void);
 int32_t function_40b2d0(void);
-int32_t function_40b3a0(void);
-int32_t function_40b520(void);
 int32_t function_40b6f0(void);
 int32_t function_40b840(int32_t a1);
-int32_t function_40b8a0(float80_t a1);
 int32_t function_40b9a0(int32_t a1);
 int32_t function_40ba20(int32_t * a1);
 int32_t function_40bb70(void);
@@ -2231,8 +2160,6 @@ int32_t function_4119e0(void);
 int32_t function_411a10(int32_t a1, int32_t a2);
 int32_t function_411d10(void);
 int32_t function_411d30(void);
-int32_t function_411d80(HWND hwnd, int32_t options);
-int32_t function_411f90(void);
 int32_t function_411ff0(int32_t * a1, int32_t a2);
 int32_t function_412060(float80_t a1);
 int32_t function_4120c0(void);
@@ -4022,14 +3949,6 @@ int32_t function_4700b0(int32_t a1, int32_t a2);
 int32_t function_470100(int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
 int32_t function_4701d0(void);
-int32_t function_4701e0(void);
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4);
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5);
-int32_t function_470300(void);
-int32_t function_470320(int32_t a1, int32_t a2);
-int32_t function_470360(void);
 int32_t function_470390(int32_t result);
 int32_t function_4703b0(char * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4705e0(int32_t * a1, int32_t a2, int32_t a3);
@@ -4038,10 +3957,8 @@ int32_t function_4706c0_this(int32_t this_ptr,
 int32_t function_4706c0(int32_t * a1, int32_t * a2);
 int32_t function_470730(int32_t * a1, int32_t a2, int32_t a3);
 int32_t function_470890(void);
-int32_t function_470980(int32_t a1);
 int32_t function_4709c0(int32_t * a1);
 int32_t function_470a30(int32_t a1);
-int32_t function_470ab0(int32_t a1);
 int32_t function_470d00(int32_t a1);
 int32_t function_470df0(int32_t a1, int32_t a2);
 int32_t function_470ee0(int32_t a1);
@@ -6129,81 +6046,6 @@ int32_t g802 = 0; // 0x51b260
 int32_t g803 = 0; // 0x51b264
 float80_t g804 = 0.0L; // 0x51b278
 
-/* The audio manager is a single object at 0x51B1C0 in the original.  RetDec
-   split its fields into unrelated globals, so the recovered thiscall methods
-   could not safely address their documented offsets. */
-#define RETDEC_AUDIO_MANAGER_BYTES 0x140
-__declspec(align(8)) static unsigned char
-    g_retdec_audio_manager_state[RETDEC_AUDIO_MANAGER_BYTES];
-static int32_t g_retdec_audio_manager_initialized;
-
-typedef struct retdec_dsound_slot {
-    void *buffer;
-    DWORD buffer_bytes;
-    int in_use;
-} retdec_dsound_slot;
-
-#define RETDEC_SE_MAX_ENTRIES 128
-
-typedef struct retdec_se_entry {
-    int id;
-    void *buffer;
-    DWORD buffer_bytes;
-} retdec_se_entry;
-
-typedef struct retdec_se_pool_state {
-    unsigned char object_prefix[0xd0];
-    retdec_dsound_slot stream_slots[32];
-    unsigned char object_tail[0x200];
-    float master_volume;
-    int initialized;
-} retdec_se_pool_state;
-
-typedef struct retdec_bgm_track_state {
-    void *buffer;
-    DWORD buffer_bytes;
-    unsigned char *encoded_data;
-    short *decoded_samples;
-    short *decode_scratch;
-    stb_vorbis *decoder;
-    DWORD encoded_bytes;
-    DWORD decoded_bytes;
-    DWORD sample_rate;
-    WORD channels;
-    uint32_t handle;
-    DWORD loop_start_frame;
-    DWORD loop_end_frame;
-    DWORD source_frame;
-    DWORD write_offset;
-    DWORD write_window_start;
-    DWORD play_offset;
-    DWORD buffered_bytes;
-    DWORD start_time;
-    int source_ended;
-    int looping;
-    int started;
-    float volume;
-    float fade_from;
-    float fade_to;
-    DWORD fade_started;
-    DWORD fade_duration;
-    int playing;
-} retdec_bgm_track_state;
-
-static retdec_se_pool_state g_retdec_se_pool;
-static retdec_se_entry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
-static int g_retdec_se_entry_count;
-static retdec_bgm_track_state g_retdec_bgm_track;
-static retdec_bgm_track_state g_retdec_bgm_fading_tracks[31];
-static HANDLE g_retdec_audio_queue_event;
-static HANDLE g_retdec_audio_stop_event;
-static HANDLE g_retdec_audio_update_thread;
-static HANDLE g_retdec_audio_loader_thread;
-static float g_retdec_audio_master_volume = 1.0f;
-static volatile LONG g_retdec_audio_running;
-static int g_retdec_audio_threads_initialized;
-static CRITICAL_SECTION g_retdec_audio_lock;
-static int g_retdec_audio_lock_initialized;
 int32_t g805 = 0; // 0x51b27c
 int32_t g806 = 0; // 0x51b280
 int32_t g807 = 0; // 0x51b284
@@ -9830,7 +9672,7 @@ int32_t function_402a20(void) {
     int32_t * v1 = (int32_t *)result; // 0x402a24
     *v1 = (int32_t)&g39;
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g185;
     return result;
 }
@@ -10093,27 +9935,20 @@ int32_t function_402d40(char * a1, int32_t a2) {
         stream_state[0] = (int32_t)(intptr_t)blob;
         stream_state[1] = (int32_t)blob_size;
         stream_state[2] = (int32_t)(intptr_t)blob;
-        function_48abe0((int32_t)(intptr_t)script_value);
-        load_result = function_48b050(
-            (int32_t)(intptr_t)g644,
-            (int32_t)(intptr_t)function_402a50,
-            stream_state);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)(intptr_t)script_value));
+        load_result = sq_readclosure(kinoko_vm((int32_t)(intptr_t)g644), (SQREADFUNC)kinoko_pointer((int32_t)(intptr_t)function_402a50), stream_state);
         retdec_trace_i32("402d40:compiled-result", load_result);
         if (load_result >= 0 && g644 != NULL) {
-            function_48ab40((int32_t)(intptr_t)g644, -1, script_value);
+            sq_getstackobj(kinoko_vm((int32_t)(intptr_t)g644), -1, (HSQOBJECT*)(script_value));
             if (script_value[0] != 0x01000001) {
-                function_48ab90((int32_t)(intptr_t)g644,
-                                script_value[0], script_value[1]);
+                sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(script_value[0], script_value[1]));
                 if (a2 == 0 || *(int32_t *)(intptr_t)(a2 + 4) ==
                         0x01000001) {
-                    function_48a670((int32_t)(intptr_t)g644);
+                    sq_pushroottable(kinoko_vm((int32_t)(intptr_t)g644));
                 } else {
-                    function_48ab90((int32_t)(intptr_t)g644,
-                                    *(int32_t *)(intptr_t)(a2 + 4),
-                                    *(int32_t *)(intptr_t)(a2 + 8));
+                    sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(*(int32_t *)(intptr_t)(a2 + 4), *(int32_t *)(intptr_t)(a2 + 8)));
                 }
-                execute_result = function_48ace0(
-                    (int32_t)(intptr_t)g644, 1, 0, 1);
+                execute_result = kinoko_sq_call((int32_t)(intptr_t)g644, 1, 0, 1);
                 retdec_trace_i32("402d40:execute-result", execute_result);
                 if (execute_result < 0 &&
                     *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 64) ==
@@ -10287,7 +10122,7 @@ static int retdec_page_is_readable(const MEMORY_BASIC_INFORMATION *info)
 /* A large part of the RetDec output lost the third argument of
    std::string::assign(const char *, size_t). Keep those old call sites
    usable while the explicit-length callers are repaired incrementally. */
-static uint32_t retdec_safe_c_string_length(const char *source)
+uint32_t retdec_safe_c_string_length(const char *source)
 {
     const unsigned char *cursor = (const unsigned char *)source;
     const uintptr_t limit = (uintptr_t)source + 0x100000u;
@@ -10650,15 +10485,15 @@ int32_t function_403dbc(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
 int32_t function_403e80(void) {
     // 0x403e80
     int32_t result; // 0x403e80
-    function_48a480((int32_t)g644, result, -1);
+    sq_pushstring(kinoko_vm((int32_t)g644), (const SQChar*)kinoko_pointer(result), -1);
     function_4a9660(-1);
-    function_48aa50((int32_t)g644);
+    kinoko_sq_pop((int32_t)g644, 1);
     *(int32_t *)result = (int32_t)&g16;
-    function_48abe0(result + 4);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 4));
     int32_t v1 = *(int32_t *)(result + 4); // 0x403ec4
-    function_48ab90((int32_t)g644, v1, *(int32_t *)(result + 8));
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v1, *(int32_t *)(result + 8)));
     function_4a9660(-1);
-    function_48aa50((int32_t)g644);
+    kinoko_sq_pop((int32_t)g644, 1);
     return result;
 }
 
@@ -10814,11 +10649,11 @@ int32_t function_404040(int32_t a1) {
     // 0x404040
     int32_t result; // 0x404040
     *(int32_t *)result = (int32_t)&g16;
-    function_48abe0(result + 4);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 4));
     int32_t v1 = *(int32_t *)(a1 + 4); // 0x40405b
-    function_48ab90((int32_t)g644, v1, *(int32_t *)(a1 + 8));
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v1, *(int32_t *)(a1 + 8)));
     function_4a9660(-1);
-    function_48aa50((int32_t)g644);
+    kinoko_sq_pop((int32_t)g644, 1);
     return result;
 }
 
@@ -18328,2122 +18163,185 @@ int32_t function_409930(void) {
    objects into unrelated globals, so keep their recovered state explicit and
    use the original DirectSound/reader boundaries for the live path. */
 
-static void retdec_trace_audio_text(const char *label, const char *value)
-{
-    char message[512];
 
-    if (label == NULL || value == NULL)
-        return;
-    wsprintfA(message, "%s:%s", label, value);
-    retdec_trace(message);
-}
 
-static LONG retdec_audio_volume_db(float gain)
-{
-    double value;
 
-    if (!(gain > 0.0020000001f))
-        return -10000;
-    value = 3322.0001220703125 * log10((double)gain);
-    if (value < -10000.0)
-        return -10000;
-    if (value > 0.0)
-        return 0;
-    return (LONG)value;
-}
 
-static void retdec_release_dsound_buffer(void *buffer)
-{
-    void **vtable;
 
-    if (buffer == NULL)
-        return;
-    vtable = *(void ***)buffer;
-    if (vtable != NULL && vtable[2] != NULL)
-        ((retdec_dsound_release_fn)vtable[2])(buffer);
-}
 
-static int retdec_create_secondary_buffer(const retdec_wave_format *format,
-                                          DWORD buffer_bytes, void **result)
-{
-    retdec_dsound_buffer_desc description;
-    void **vtable;
-    HRESULT hr;
 
-    if (result == NULL)
-        return 0;
-    *result = NULL;
-    if (g877 == NULL || format == NULL || buffer_bytes == 0)
-        return 0;
-    vtable = *(void ***)g877;
-    if (vtable == NULL || vtable[3] == NULL)
-        return 0;
 
-    ZeroMemory(&description, sizeof(description));
-    description.dwSize = sizeof(description);
-    description.dwFlags = 0x18088;
-    description.dwBufferBytes = buffer_bytes;
-    description.lpwfxFormat = (void *)format;
-    retdec_trace_i32("audio:create-bytes", (int32_t)buffer_bytes);
-    retdec_trace_i32("audio:create-rate", (int32_t)format->nSamplesPerSec);
-    retdec_trace_i32("audio:create-channels", (int32_t)format->nChannels);
-    hr = ((retdec_dsound_create_buffer_fn)vtable[3])(
-        (void *)g877, &description, result, NULL);
-    retdec_trace_hresult("audio:secondary-create-hr", hr);
-    if (FAILED(hr) || *result == NULL) {
-        *result = NULL;
-        return 0;
-    }
-    return 1;
-}
 
-static int retdec_read_asset_bytes(const char *path,
-                                   unsigned char **data,
-                                   DWORD *size)
-{
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    DWORD asset_size;
-    DWORD file_size;
-    unsigned char *contents;
 
-    if (data == NULL || size == NULL || path == NULL)
-        return 0;
-    *data = NULL;
-    *size = 0;
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, path))
-        return 0;
 
-    reader = (int32_t *)(intptr_t)reader_slot;
-    if (reader == NULL || reader[1] == 0) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    if (g765 != 0) {
-        asset_size = (DWORD)reader[3];
-    } else {
-        file_size = GetFileSize((HANDLE)(intptr_t)reader[1], NULL);
-        if (file_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
-            retdec_destroy_reader(reader);
-            return 0;
-        }
-        asset_size = file_size;
-    }
-    if (asset_size == 0) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    contents = (unsigned char *)malloc(asset_size);
-    if (contents == NULL ||
-        !retdec_reader_read_exact(reader_slot, contents, asset_size)) {
-        free(contents);
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    retdec_destroy_reader(reader);
-    *data = contents;
-    *size = asset_size;
-    return 1;
-}
-
-static uint32_t retdec_bgm_read_u32(const unsigned char *bytes)
-{
-    return (uint32_t)bytes[0] |
-           ((uint32_t)bytes[1] << 8) |
-           ((uint32_t)bytes[2] << 16) |
-           ((uint32_t)bytes[3] << 24);
-}
 
 /* The original loader reads an optional RIFF/SFPL sidecar to obtain the
    loop region.  The packaged reader has already removed its XOR layer here. */
-static int retdec_bgm_read_loop_points(const char *path,
-                                       DWORD *loop_start,
-                                       DWORD *loop_end)
-{
-    char sidecar[MAX_PATH];
-    unsigned char *data = NULL;
-    DWORD size = 0;
-    DWORD start = 0;
-    DWORD length = 0;
-    DWORD index;
-    size_t path_length;
 
-    if (path == NULL || loop_start == NULL || loop_end == NULL)
-        return 0;
-    path_length = strlen(path);
-    if (path_length < 4 || path_length >= sizeof(sidecar))
-        return 0;
-    memcpy(sidecar, path, path_length + 1);
-    sidecar[path_length - 3] = 's';
-    sidecar[path_length - 2] = 'f';
-    sidecar[path_length - 1] = 'l';
-    if (!retdec_read_asset_bytes(sidecar, &data, &size))
-        return 0;
 
-    for (index = 0; index + 8 <= size; ++index) {
-        const unsigned char *chunk = data + index;
-        DWORD chunk_size = retdec_bgm_read_u32(chunk + 4);
 
-        if (memcmp(chunk, "cue ", 4) == 0 && chunk_size >= 28 &&
-            chunk_size <= size - index - 8 &&
-            retdec_bgm_read_u32(chunk + 8) != 0) {
-            const unsigned char *cue_point = chunk + 12;
-            start = retdec_bgm_read_u32(cue_point + 4);
-        }
-        if (memcmp(chunk, "ltxt", 4) == 0 && chunk_size >= 8 &&
-            chunk_size <= size - index - 8)
-            length = retdec_bgm_read_u32(chunk + 12);
-    }
-    free(data);
-    if (start == 0 || length == 0 || start > UINT32_MAX - length)
-        return 0;
-    *loop_start = start;
-    *loop_end = start + length;
-    return *loop_end > *loop_start;
-}
 
-static int retdec_decode_bgm(const char *path,
-                             short **samples,
-                             DWORD *sample_bytes,
-                             DWORD *sample_rate,
-                             WORD *channels)
-{
-    unsigned char *encoded = NULL;
-    DWORD encoded_size = 0;
-    stb_vorbis *decoder;
-    stb_vorbis_info info;
-    unsigned int frame_count;
-    size_t short_count;
-    short *decoded = NULL;
-    int error = 0;
-    int frame_cursor = 0;
-    int frame_total;
 
-    if (samples == NULL || sample_bytes == NULL || sample_rate == NULL ||
-        channels == NULL)
-        return 0;
-    *samples = NULL;
-    *sample_bytes = 0;
-    *sample_rate = 0;
-    *channels = 0;
-    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size))
-        return 0;
 
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error, NULL);
-    if (decoder == NULL) {
-        free(encoded);
-        retdec_trace_i32("audio:vorbis-open-error", error);
-        return 0;
-    }
-    info = stb_vorbis_get_info(decoder);
-    frame_count = stb_vorbis_stream_length_in_samples(decoder);
-    if (info.channels <= 0 || info.channels > 8 || info.sample_rate == 0 ||
-        frame_count == 0) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
 
-    short_count = (size_t)frame_count * (size_t)info.channels;
-    if (short_count > (size_t)0x7fffffff ||
-        short_count > (size_t)0xffffffffu / sizeof(short)) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    decoded = (short *)malloc(short_count * sizeof(short));
-    if (decoded == NULL) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
 
-    frame_total = (int)frame_count;
-    while (frame_cursor < frame_total) {
-        int remaining_frames = frame_total - frame_cursor;
-        int got = stb_vorbis_get_samples_short_interleaved(
-            decoder, info.channels, decoded +
-                (size_t)frame_cursor * (size_t)info.channels,
-            remaining_frames * info.channels);
-        if (got <= 0)
-            break;
-        frame_cursor += got;
-    }
-    stb_vorbis_close(decoder);
-    free(encoded);
-    if (frame_cursor <= 0) {
-        free(decoded);
-        return 0;
-    }
 
-    *samples = decoded;
-    *sample_bytes = (DWORD)((size_t)frame_cursor *
-                            (size_t)info.channels * sizeof(short));
-    *sample_rate = info.sample_rate;
-    *channels = (WORD)info.channels;
-    return 1;
-}
 
-static int retdec_fill_dsound_buffer(void *buffer,
-                                     const void *samples,
-                                     DWORD sample_bytes)
-{
-    void **vtable;
-    void *part1 = NULL;
-    void *part2 = NULL;
-    DWORD part1_bytes = 0;
-    DWORD part2_bytes = 0;
-    DWORD first_copy;
-    HRESULT hr;
 
-    if (buffer == NULL || samples == NULL || sample_bytes == 0)
-        return 0;
-    vtable = *(void ***)buffer;
-    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
-        return 0;
-    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
-        buffer, 0, sample_bytes, &part1, &part1_bytes,
-        &part2, &part2_bytes, 0);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:secondary-lock-hr", hr);
-        return 0;
-    }
-    first_copy = part1_bytes < sample_bytes ? part1_bytes : sample_bytes;
-    if (first_copy != 0)
-        memcpy(part1, samples, first_copy);
-    if (part2_bytes != 0 && first_copy < sample_bytes) {
-        DWORD second_copy = part2_bytes < sample_bytes - first_copy
-            ? part2_bytes : sample_bytes - first_copy;
-        memcpy(part2, (const unsigned char *)samples + first_copy,
-               second_copy);
-    }
-    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
-        buffer, part1, part1_bytes, part2, part2_bytes);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:secondary-unlock-hr", hr);
-        return 0;
-    }
-    return first_copy + part2_bytes >= sample_bytes;
-}
 
-static void retdec_set_dsound_volume(void *buffer, float gain)
-{
-    void **vtable;
 
-    if (buffer == NULL)
-        return;
-    vtable = *(void ***)buffer;
-    if (vtable != NULL && vtable[15] != NULL)
-        ((retdec_dsound_buffer_set_volume_fn)vtable[15])(
-            buffer, retdec_audio_volume_db(gain));
-}
 
-#define RETDEC_BGM_BUFFER_BYTES 0x100000u
-#define RETDEC_BGM_CHUNK_BYTES  0x8000u
-#define RETDEC_BGM_MAX_CHANNELS 8
-#define RETDEC_BGM_GUARD_BYTES 16u
 
-static void retdec_bgm_write_guard(void *memory, DWORD size)
-{
-    DWORD index;
-    unsigned char *bytes = (unsigned char *)memory;
 
-    if (bytes == NULL)
-        return;
-    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index)
-        bytes[size + index] = 0xA5u;
-}
 
-static int retdec_bgm_check_guard(const void *memory, DWORD size)
-{
-    DWORD index;
-    const unsigned char *bytes = (const unsigned char *)memory;
 
-    if (bytes == NULL)
-        return 0;
-    for (index = 0; index < RETDEC_BGM_GUARD_BYTES; ++index) {
-        if (bytes[size + index] != 0xA5u)
-            return 0;
-    }
-    return 1;
-}
 
-static void retdec_bgm_release_state(retdec_bgm_track_state *track)
-{
-    if (track == NULL)
-        return;
-    if (track->buffer != NULL) {
-        DWORD status = 0;
-        int wait_count;
-        retdec_trace_i32("bgm:release-handle", (int32_t)track->handle);
-        void **vtable = *(void ***)track->buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
-        if (vtable != NULL && vtable[9] != NULL) {
-            for (wait_count = 0; wait_count < 100; ++wait_count) {
-                if (FAILED(((retdec_dsound_buffer_get_status_fn)vtable[9])(
-                               track->buffer, &status)) ||
-                    (status & 1u) == 0)
-                    break;
-                Sleep(1);
-            }
-        }
-        retdec_release_dsound_buffer(track->buffer);
-    }
-    if (track->decoder != NULL)
-        stb_vorbis_close(track->decoder);
-    /* BGM owns the dynamically created DirectSound buffer and its decoder. */
-    free(track->encoded_data);
-    free(track->decoded_samples);
-    free(track->decode_scratch);
-    ZeroMemory(track, sizeof(*track));
-}
 
-static retdec_bgm_track_state *retdec_bgm_find_track(uint32_t handle)
-{
-    int index;
 
-    if (handle == 0)
-        return NULL;
-    if (g_retdec_bgm_track.buffer != NULL &&
-        g_retdec_bgm_track.handle == handle)
-        return &g_retdec_bgm_track;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer != NULL &&
-            g_retdec_bgm_fading_tracks[index].handle == handle)
-            return &g_retdec_bgm_fading_tracks[index];
-    }
-    return NULL;
-}
 
-static void retdec_bgm_apply_state_volume(retdec_bgm_track_state *track,
-                                          float gain)
-{
-    float effective_gain;
-
-    if (track == NULL || track->buffer == NULL)
-        return;
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    track->volume = gain;
-    effective_gain = gain * g_retdec_audio_master_volume;
-    retdec_set_dsound_volume(track->buffer, effective_gain);
-}
-
-static int retdec_bgm_write_buffer(retdec_bgm_track_state *track,
-                                   const void *samples, DWORD bytes)
-{
-    void **vtable;
-    void *part1 = NULL;
-    void *part2 = NULL;
-    DWORD part1_bytes = 0;
-    DWORD part2_bytes = 0;
-    DWORD first_copy;
-    DWORD second_copy;
-    HRESULT hr;
-
-    if (track == NULL || track->buffer == NULL || samples == NULL ||
-        bytes == 0 || track->buffer_bytes == 0 ||
-        bytes > track->buffer_bytes)
-        return 0;
-    retdec_trace_i32("bgm:write-handle", (int32_t)track->handle);
-    retdec_trace_i32("bgm:write-offset", (int32_t)track->write_offset);
-    retdec_trace_i32("bgm:write-bytes", (int32_t)bytes);
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[11] == NULL || vtable[19] == NULL)
-        return 0;
-    hr = ((retdec_dsound_buffer_lock_fn)vtable[11])(
-        track->buffer, track->write_offset, bytes, &part1, &part1_bytes,
-        &part2, &part2_bytes, 0);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:stream-lock-hr", hr);
-        return 0;
-    }
-    retdec_trace_i32("bgm:lock-part1", (int32_t)part1_bytes);
-    retdec_trace_i32("bgm:lock-part2", (int32_t)part2_bytes);
-    first_copy = part1_bytes < bytes ? part1_bytes : bytes;
-    second_copy = bytes - first_copy;
-    if (second_copy > part2_bytes)
-        second_copy = part2_bytes;
-    if (first_copy != 0)
-        memcpy(part1, samples, first_copy);
-    if (second_copy != 0)
-        memcpy(part2, (const unsigned char *)samples + first_copy,
-               second_copy);
-    hr = ((retdec_dsound_buffer_unlock_fn)vtable[19])(
-        track->buffer, part1, part1_bytes, part2, part2_bytes);
-    if (FAILED(hr)) {
-        retdec_trace_hresult("audio:stream-unlock-hr", hr);
-        return 0;
-    }
-    track->write_offset = (track->write_offset + bytes) &
-                          (track->buffer_bytes - 1);
-    return first_copy + second_copy == bytes;
-}
-
-static int retdec_bgm_decode_loop_frames(retdec_bgm_track_state *track,
-                                         short *output,
-                                         DWORD requested_frames)
-{
-    DWORD request_frames;
-    DWORD seek_frame;
-    int got;
-
-    if (track == NULL || track->decoder == NULL || output == NULL ||
-        requested_frames == 0)
-        return 0;
-
-    /* 412240 reads at most 4096 PCM bytes, then seeks past the loop start
-       by any overshoot.  Track delivered samples, not decoder read-ahead. */
-    request_frames = 4096u / ((DWORD)track->channels * sizeof(short));
-    if (request_frames > requested_frames)
-        request_frames = requested_frames;
-    got = stb_vorbis_get_samples_short_interleaved(
-        track->decoder, track->channels, output,
-        (int)(request_frames * (DWORD)track->channels));
-    if (got > 0) {
-        track->source_frame += (DWORD)got;
-        if (track->source_frame <= track->loop_end_frame)
-            return got;
-        seek_frame = track->source_frame - track->loop_end_frame +
-                     track->loop_start_frame;
-        if (!stb_vorbis_seek(track->decoder, seek_frame)) {
-            track->source_ended = 1;
-            return got;
-        }
-        track->source_frame = seek_frame;
-        retdec_trace_i32("bgm:loop-seek-frame", (int32_t)seek_frame);
-    }
-    return got;
-}
 
 /* Decode only the amount that is about to be written.  BgmBuffer creates its
    DirectSound buffer from the Vorbis stream format, so preserve the source
    channel interleave exactly as the original decoder does. */
-static DWORD retdec_bgm_decode_chunk(retdec_bgm_track_state *track,
-                                     unsigned char *output, DWORD bytes)
-{
-    DWORD requested_frames;
-    DWORD written_frames = 0;
-    int channels;
-
-    if (track == NULL || track->decoder == NULL || output == NULL ||
-        bytes == 0)
-        return 0;
-    channels = track->channels;
-    if (channels <= 0 || channels > RETDEC_BGM_MAX_CHANNELS)
-        return 0;
-    /* The original Vorbis helper produces 16-bit PCM.  Decode directly into
-       the destination instead of routing through float samples; the latter
-       can yield NaNs in this mixed RetDec translation unit and turns into
-       clipped noise after integer conversion. */
-    requested_frames = bytes / ((DWORD)channels * sizeof(short));
-    while (written_frames < requested_frames) {
-        int got;
-        short *destination = (short *)output +
-            (size_t)written_frames * (size_t)channels;
-
-        if (track->looping && track->loop_end_frame >
-                track->loop_start_frame) {
-            got = retdec_bgm_decode_loop_frames(
-                track, destination, requested_frames - written_frames);
-        } else {
-            got = stb_vorbis_get_samples_short_interleaved(
-                track->decoder, channels, destination,
-                (int)((requested_frames - written_frames) *
-                      (DWORD)channels));
-        }
-        if (got <= 0) {
-            if (!track->looping || track->source_ended) {
-                if (!track->source_ended)
-                    retdec_trace_i32("bgm:source-ended", (int32_t)track->handle);
-                track->source_ended = 1;
-                break;
-            }
-            if (!stb_vorbis_seek_start(track->decoder)) {
-                track->source_ended = 1;
-                break;
-            }
-            track->source_frame = 0;
-            continue;
-        }
-        written_frames += (DWORD)got;
-    }
-    return written_frames * (DWORD)channels * sizeof(short);
-}
-
-static int retdec_bgm_fill_chunk(retdec_bgm_track_state *track, DWORD bytes)
-{
-    DWORD decoded;
-
-    if (track == NULL || track->decoded_samples == NULL || bytes == 0 ||
-        bytes > RETDEC_BGM_CHUNK_BYTES)
-        return 0;
-    if (!retdec_bgm_check_guard(track->decode_scratch,
-                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
-        !retdec_bgm_check_guard(track->decoded_samples,
-                                RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:decode-guard-before-failed");
-        return 0;
-    }
-    decoded = retdec_bgm_decode_chunk(track, (unsigned char *)
-                                      track->decoded_samples, bytes);
-    if (decoded < bytes)
-        memset((unsigned char *)track->decoded_samples + decoded, 0,
-               bytes - decoded);
-    if (!retdec_bgm_check_guard(track->decode_scratch,
-                                (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-                                RETDEC_BGM_MAX_CHANNELS * sizeof(short)) ||
-        !retdec_bgm_check_guard(track->decoded_samples,
-                                RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:decode-guard-after-failed");
-        return 0;
-    }
-#if defined(RETDEC_DIAGNOSTIC_NO_BGM_WRITE)
-    retdec_trace("bgm:write-skipped");
-    return 1;
-#else
-    if (!retdec_bgm_write_buffer(track, track->decoded_samples, bytes))
-        return 0;
-    return 1;
-#endif
-}
-
-static void retdec_bgm_release_track_locked(void)
-{
-    retdec_bgm_release_state(&g_retdec_bgm_track);
-}
-
-static void retdec_bgm_release_track(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_release_track_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_release_all_tracks_locked(void)
-{
-    int index;
-
-    retdec_bgm_release_state(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[index]);
-    g637 = 0;
-}
-
-static void retdec_bgm_release_all_tracks(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_release_all_tracks_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_se_entries_release(void)
-{
-    int index;
-
-    for (index = 0; index < g_retdec_se_entry_count; ++index) {
-        void *buffer = g_retdec_se_entries[index].buffer;
-        void **vtable;
-
-        if (buffer == NULL)
-            continue;
-        vtable = *(void ***)buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(buffer);
-        retdec_release_dsound_buffer(buffer);
-        g_retdec_se_entries[index].buffer = NULL;
-        g_retdec_se_entries[index].buffer_bytes = 0;
-    }
-    ZeroMemory(g_retdec_se_entries, sizeof(g_retdec_se_entries));
-    g_retdec_se_entry_count = 0;
-}
-
-static void retdec_se_pool_release(void)
-{
-    int index;
-
-    retdec_se_entries_release();
-    for (index = 0; index < 32; ++index) {
-        retdec_release_dsound_buffer(g_retdec_se_pool.stream_slots[index].buffer);
-        g_retdec_se_pool.stream_slots[index].buffer = NULL;
-        g_retdec_se_pool.stream_slots[index].buffer_bytes = 0;
-        g_retdec_se_pool.stream_slots[index].in_use = 0;
-    }
-    g_retdec_se_pool.initialized = 0;
-}
-
-static int retdec_se_parse_wave_asset(const char *path,
-                                      retdec_wave_format *format,
-                                      unsigned char **samples,
-                                      DWORD *sample_bytes)
-{
-    unsigned char *data = NULL;
-    DWORD size = 0;
-    size_t path_length;
-
-    if (path == NULL || format == NULL || samples == NULL ||
-        sample_bytes == NULL)
-        return 0;
-    *samples = NULL;
-    *sample_bytes = 0;
-    ZeroMemory(format, sizeof(*format));
-    if (!retdec_read_asset_bytes(path, &data, &size))
-        return 0;
-
-    path_length = strlen(path);
-    if (path_length >= 4 &&
-        _stricmp(path + path_length - 4, ".cv3") == 0) {
-        DWORD payload_bytes;
-
-        /* Packed SE files are WAVEFORMATEX followed by a DWORD payload size
-           and the raw PCM.  This is the exact layout consumed by the
-           original CPackageFileReader path. */
-        if (size < 22)
-            goto failed;
-        memcpy(format, data, sizeof(*format));
-        payload_bytes = retdec_bgm_read_u32(data + 18);
-        if (payload_bytes == 0 || payload_bytes > size - 22)
-            goto failed;
-        if (format->wFormatTag != 1 || format->nChannels == 0 ||
-            format->nSamplesPerSec == 0 || format->nBlockAlign == 0 ||
-            format->wBitsPerSample == 0)
-            goto failed;
-        *samples = (unsigned char *)malloc(payload_bytes);
-        if (*samples == NULL)
-            goto failed;
-        memcpy(*samples, data + 22, payload_bytes);
-        *sample_bytes = payload_bytes;
-        free(data);
-        return 1;
-    }
-
-    /* Loose-file mode uses the original RIFF/WAVE parser instead of the
-       packed CV3 envelope.  Accept the normal chunk ordering and ignore
-       metadata chunks between fmt and data. */
-    if (size >= 12 && memcmp(data, "RIFF", 4) == 0 &&
-        memcmp(data + 8, "WAVE", 4) == 0) {
-        DWORD offset = 12;
-        int have_format = 0;
-        while (offset <= size && size - offset >= 8) {
-            const unsigned char *chunk = data + offset;
-            DWORD chunk_bytes = retdec_bgm_read_u32(chunk + 4);
-            DWORD available = size - offset - 8;
-
-            if (chunk_bytes > available)
-                goto failed;
-            if (memcmp(chunk, "fmt ", 4) == 0 && chunk_bytes >= 16) {
-                ZeroMemory(format, sizeof(*format));
-                memcpy(format, chunk + 8,
-                       chunk_bytes >= sizeof(*format)
-                           ? sizeof(*format) : chunk_bytes);
-                have_format = format->wFormatTag == 1 &&
-                    format->nChannels != 0 &&
-                    format->nSamplesPerSec != 0 &&
-                    format->nBlockAlign != 0 &&
-                    format->wBitsPerSample != 0;
-            } else if (memcmp(chunk, "data", 4) == 0 && have_format) {
-                *samples = (unsigned char *)malloc(chunk_bytes);
-                if (*samples == NULL)
-                    goto failed;
-                memcpy(*samples, chunk + 8, chunk_bytes);
-                *sample_bytes = chunk_bytes;
-                free(data);
-                return chunk_bytes != 0;
-            }
-            offset += 8 + chunk_bytes + (chunk_bytes & 1u);
-        }
-    }
-
-failed:
-    free(*samples);
-    *samples = NULL;
-    *sample_bytes = 0;
-    free(data);
-    return 0;
-}
-
-static int retdec_se_replace_extension(const char *source, char *path,
-                                       size_t path_size)
-{
-    size_t length;
-
-    if (source == NULL || path == NULL || path_size == 0)
-        return 0;
-    length = strlen(source);
-    if (length + 1 > path_size)
-        return 0;
-    memcpy(path, source, length + 1);
-    if (g874 != 0 && length >= 4 &&
-        _stricmp(path + length - 4, ".wav") == 0) {
-        path[length - 3] = 'c';
-        path[length - 2] = 'v';
-        path[length - 1] = '3';
-    }
-    return 1;
-}
-
-static int retdec_se_load_entry(int id, const char *source)
-{
-    char path[MAX_PATH];
-    retdec_wave_format format;
-    unsigned char *samples = NULL;
-    DWORD sample_bytes = 0;
-    void *buffer = NULL;
-    void **vtable;
-    HRESULT hr;
-    int index;
-
-    if (source == NULL || id < 0 ||
-        !retdec_se_replace_extension(source, path, sizeof(path)) ||
-        !retdec_se_parse_wave_asset(path, &format, &samples, &sample_bytes)) {
-        retdec_trace_i32("loadse:entry-failed", id);
-        return 0;
-    }
-    if (!retdec_create_secondary_buffer(&format, sample_bytes, &buffer) ||
-        !retdec_fill_dsound_buffer(buffer, samples, sample_bytes)) {
-        retdec_release_dsound_buffer(buffer);
-        free(samples);
-        retdec_trace_i32("loadse:buffer-failed", id);
-        return 0;
-    }
-    free(samples);
-    retdec_set_dsound_volume(buffer, g_retdec_se_pool.master_volume);
-
-    vtable = *(void ***)buffer;
-    hr = vtable != NULL && vtable[13] != NULL
-        ? ((retdec_dsound_buffer_set_position_fn)vtable[13])(buffer, 0)
-        : S_OK;
-    if (FAILED(hr)) {
-        retdec_release_dsound_buffer(buffer);
-        return 0;
-    }
-
-    for (index = 0; index < g_retdec_se_entry_count; ++index) {
-        if (g_retdec_se_entries[index].id == id) {
-            retdec_release_dsound_buffer(g_retdec_se_entries[index].buffer);
-            g_retdec_se_entries[index].buffer = buffer;
-            g_retdec_se_entries[index].buffer_bytes = sample_bytes;
-            return 1;
-        }
-    }
-    if (g_retdec_se_entry_count >= RETDEC_SE_MAX_ENTRIES) {
-        retdec_release_dsound_buffer(buffer);
-        return 0;
-    }
-    g_retdec_se_entries[g_retdec_se_entry_count].id = id;
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer = buffer;
-    g_retdec_se_entries[g_retdec_se_entry_count].buffer_bytes = sample_bytes;
-    ++g_retdec_se_entry_count;
-    retdec_trace_i32("loadse:entry-loaded", id);
-    return 1;
-}
-
-static int retdec_se_pool_initialize(void)
-{
-    retdec_wave_format format;
-    int index;
-    int created = 0;
-
-    if (g_retdec_se_pool.initialized)
-        return 1;
-    ZeroMemory(&g_retdec_se_pool, sizeof(g_retdec_se_pool));
-    ZeroMemory(&format, sizeof(format));
-    format.wFormatTag = 1;
-    format.nChannels = 1;
-    format.nSamplesPerSec = 44100;
-    format.nAvgBytesPerSec = 88200;
-    format.nBlockAlign = 2;
-    format.wBitsPerSample = 16;
-
-    for (index = 0; index < 32; ++index) {
-        if (retdec_create_secondary_buffer(&format, 0x40000,
-                                            &g_retdec_se_pool.stream_slots[
-                                                index].buffer)) {
-            g_retdec_se_pool.stream_slots[index].buffer_bytes = 0x40000;
-            g_retdec_se_pool.stream_slots[index].in_use = 0;
-            ++created;
-        }
-    }
-    g_retdec_se_pool.master_volume = 1.0f;
-    g_retdec_se_pool.initialized = 1;
-    retdec_trace_i32("40b520:secondary-created", created);
-    return created != 0;
-}
-
-static void retdec_se_pool_set_volume(float gain)
-{
-    int index;
-
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    g_retdec_se_pool.master_volume = gain;
-    for (index = 0; index < 32; ++index)
-        retdec_set_dsound_volume(g_retdec_se_pool.stream_slots[index].buffer,
-                                 gain);
-}
-
-static void retdec_bgm_apply_track_volume(float gain)
-{
-    int index;
-
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
-    g_retdec_audio_master_volume = gain;
-    retdec_bgm_apply_state_volume(&g_retdec_bgm_track,
-                                  g_retdec_bgm_track.volume);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_apply_state_volume(&g_retdec_bgm_fading_tracks[index],
-                                      g_retdec_bgm_fading_tracks[index].volume);
-}
-
-static void retdec_bgm_update_fade_locked(void)
-{
-    DWORD now = timeGetTime();
-    int index;
-
-    for (index = -1; index < 31; ++index) {
-        retdec_bgm_track_state *track = index < 0
-            ? &g_retdec_bgm_track : &g_retdec_bgm_fading_tracks[index];
-        DWORD elapsed;
-        float ratio;
-
-        if (track->buffer == NULL || track->fade_duration == 0)
-            continue;
-        if ((int32_t)(now - track->fade_started) < 0)
-            continue;
-        elapsed = now - track->fade_started;
-        if (elapsed >= track->fade_duration) {
-            retdec_bgm_apply_state_volume(track, track->fade_to);
-            track->fade_duration = 0;
-            if (track->fade_to <= 0.0f) {
-                if (track == &g_retdec_bgm_track)
-                    g637 = 0;
-                retdec_bgm_release_state(track);
-            }
-            continue;
-        }
-        ratio = (float)elapsed / (float)track->fade_duration;
-        retdec_bgm_apply_state_volume(
-            track, track->fade_from +
-            (track->fade_to - track->fade_from) * ratio);
-    }
-}
-
-static void retdec_bgm_update_fade(void)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_begin_fade_locked(retdec_bgm_track_state *track,
-                                         DWORD duration, float target,
-                                         DWORD start_delay)
-{
-    if (track == NULL || track->buffer == NULL)
-        return;
-    if (target < 0.0f)
-        target = 0.0f;
-    if (target > 1.0f)
-        target = 1.0f;
-    track->fade_from = track->volume;
-    track->fade_to = target;
-    track->fade_started = timeGetTime() + start_delay;
-    track->fade_duration = duration;
-    if (duration == 0)
-        retdec_bgm_apply_state_volume(track, target);
-}
-
-static void retdec_bgm_begin_fade(DWORD duration, float target)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_begin_fade_locked(&g_retdec_bgm_track, duration, target, 0);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
-                                             DWORD duration,
-                                             DWORD start_delay,
-                                             float target)
-{
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_begin_fade_locked(retdec_bgm_find_track(handle), duration,
-                                 target, start_delay);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_stop_for_handle(uint32_t handle)
-{
-    retdec_bgm_track_state *track;
-    void **vtable;
-
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track(handle);
-    if (track != NULL && track->buffer != NULL) {
-        vtable = *(void ***)track->buffer;
-        if (vtable != NULL && vtable[18] != NULL)
-            ((retdec_dsound_buffer_stop_fn)vtable[18])(track->buffer);
-        if (vtable != NULL && vtable[13] != NULL)
-            ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-                track->buffer, 0);
-        track->started = 0;
-        track->playing = 0;
-        track->play_offset = 0;
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static void retdec_bgm_release_for_handle(uint32_t handle)
-{
-    retdec_bgm_track_state *track;
-
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track(handle);
-    if (track != NULL)
-        retdec_bgm_release_state(track);
-    if (handle == g637)
-        g637 = 0;
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-}
-
-static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *path,
-                                    int looping, float32_t volume)
-{
-    unsigned char *encoded = NULL;
-    DWORD encoded_size = 0;
-    stb_vorbis *decoder = NULL;
-    stb_vorbis_info info;
-    int error = 0;
-    retdec_bgm_track_state *track = &g_retdec_bgm_track;
-    void *buffer;
-    unsigned char *scratch = NULL;
-    short *decoded_scratch = NULL;
-    retdec_wave_format format;
-
-    retdec_trace_audio_text("bgm:prepare-path", path);
-    retdec_trace_i32("bgm:prepare-handle", (int32_t)handle);
-    if (path == NULL || g877 == NULL || handle == 0 ||
-        track->buffer != NULL)
-        return 0;
-    if (!retdec_read_asset_bytes(path, &encoded, &encoded_size)) {
-        retdec_trace("bgm:asset-read-failed");
-        return 0;
-    }
-    retdec_trace_i32("bgm:encoded-bytes", (int32_t)encoded_size);
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error,
-                                      NULL);
-    if (decoder == NULL) {
-        free(encoded);
-        retdec_trace_i32("audio:vorbis-open-error", error);
-        return 0;
-    }
-    info = stb_vorbis_get_info(decoder);
-    retdec_trace_i32("bgm:sample-rate", (int32_t)info.sample_rate);
-    retdec_trace_i32("bgm:channels", (int32_t)info.channels);
-    if (info.sample_rate != 44100 || info.channels <= 0 ||
-        info.channels > RETDEC_BGM_MAX_CHANNELS) {
-        stb_vorbis_close(decoder);
-        free(encoded);
-        retdec_trace("audio:unsupported-vorbis-format");
-        return 0;
-    }
-
-    ZeroMemory(&format, sizeof(format));
-    format.wFormatTag = 1;
-    format.nChannels = (WORD)info.channels;
-    format.nSamplesPerSec = info.sample_rate;
-    format.nBlockAlign = (WORD)(info.channels * sizeof(short));
-    format.nAvgBytesPerSec = info.sample_rate * format.nBlockAlign;
-    format.wBitsPerSample = 16;
-    if (!retdec_create_secondary_buffer(&format, RETDEC_BGM_BUFFER_BYTES,
-                                        &buffer)) {
-        retdec_trace("bgm:buffer-create-failed");
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    scratch = (unsigned char *)malloc(
-        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-        RETDEC_BGM_MAX_CHANNELS * sizeof(short) + RETDEC_BGM_GUARD_BYTES);
-    if (scratch != NULL)
-        decoded_scratch = (short *)malloc(RETDEC_BGM_CHUNK_BYTES +
-                                          RETDEC_BGM_GUARD_BYTES);
-    if (scratch == NULL || decoded_scratch == NULL) {
-        retdec_trace("bgm:scratch-alloc-failed");
-        retdec_release_dsound_buffer(buffer);
-        free(scratch);
-        free(decoded_scratch);
-        stb_vorbis_close(decoder);
-        free(encoded);
-        return 0;
-    }
-    retdec_bgm_write_guard(
-        scratch,
-        (RETDEC_BGM_CHUNK_BYTES / sizeof(short)) *
-        RETDEC_BGM_MAX_CHANNELS * sizeof(short));
-    retdec_bgm_write_guard(decoded_scratch, RETDEC_BGM_CHUNK_BYTES);
-    ZeroMemory(track, sizeof(*track));
-    track->handle = handle;
-    track->buffer = buffer;
-    track->buffer_bytes = RETDEC_BGM_BUFFER_BYTES;
-    track->encoded_data = encoded;
-    track->encoded_bytes = encoded_size;
-    track->decode_scratch = (short *)scratch;
-    track->decoded_samples = decoded_scratch;
-    track->decoder = decoder;
-    track->sample_rate = info.sample_rate;
-    track->channels = (WORD)info.channels;
-    track->looping = looping != 0;
-    /* 412203 always loads SFL markers, overriding the whole-file fallback
-       selected by the PlayBgm argument, including when that argument is 0. */
-    if (retdec_bgm_read_loop_points(path, &track->loop_start_frame,
-                                    &track->loop_end_frame))
-        track->looping = 1;
-    retdec_trace_i32("bgm:looping", track->looping);
-    retdec_trace_i32("bgm:loop-start-frame", (int32_t)track->loop_start_frame);
-    retdec_trace_i32("bgm:loop-end-frame", (int32_t)track->loop_end_frame);
-    track->volume = volume;
-    track->write_offset = 0;
-    track->write_window_start = 0;
-    track->play_offset = 0;
-    track->buffered_bytes = 0;
-
-    /* 4096D0 creates the 1 MiB stream buffer and 4099C0 supplies one 0x8000
-       byte block before playback.  The worker keeps the ring filled after
-       that initial block. */
-    retdec_trace("bgm:initial-fill");
-    if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES)) {
-        retdec_trace("bgm:initial-fill-failed");
-        retdec_bgm_release_track_locked();
-        return 0;
-    }
-    track->buffered_bytes = RETDEC_BGM_CHUNK_BYTES;
-    retdec_bgm_apply_state_volume(track, track->volume);
-    retdec_trace("bgm:prepared");
-    return 1;
-}
-
-static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
-                                    int looping, float32_t volume)
-{
-    return kinoko_prepare_audio(retdec_bgm_prepare_track_default_math,
-                                handle, path, looping, volume);
-}
-
-static void retdec_bgm_archive_current_track(void);
-static int32_t retdec_audio_manager_this(void);
-static void retdec_audio_list_push(int32_t list, int32_t value);
-static int retdec_audio_list_pop(int32_t list, int32_t *value);
-static const char *retdec_audio_buffer_path(int32_t buffer);
-static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle);
-
-static void retdec_bgm_process_pending_locked(void)
-{
-    int32_t list = *(int32_t *)(g_retdec_audio_manager_state + 0x94);
-    int32_t handle;
-
-    while (retdec_audio_list_pop(list, &handle)) {
-        int32_t buffer = retdec_audio_handle_lookup(
-            retdec_audio_manager_this() + 0x38, (uint32_t)handle);
-        const char *path;
-        float volume;
-        int looping;
-        retdec_bgm_track_state *track;
-
-        if (buffer == 0)
-            continue;
-        path = retdec_audio_buffer_path(buffer);
-        retdec_trace_audio_text("bgm:queued-path", path);
-        volume = *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368);
-        looping = *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c);
-        if (path == NULL)
-            continue;
-
-        retdec_bgm_update_fade_locked();
-        retdec_bgm_archive_current_track();
-        if (!retdec_bgm_prepare_track((uint32_t)handle, path, looping,
-                                      volume))
-            continue;
-        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
-        track = &g_retdec_bgm_track;
-        track->start_time = *(uint32_t *)(intptr_t)(uint32_t)
-            (buffer + 0x1350);
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
-    }
-}
-
-static void retdec_bgm_start_track(retdec_bgm_track_state *track)
-{
-    void **vtable;
-    HRESULT hr;
-
-    if (track == NULL || track->buffer == NULL || track->started)
-        return;
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[12] == NULL)
-        return;
-    if (vtable[13] != NULL)
-        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-            track->buffer, 0);
-    retdec_trace("bgm:play");
-    hr = ((retdec_dsound_buffer_play_fn)vtable[12])(track->buffer, 0, 0, 1);
-    retdec_trace_hresult("audio:stream-play-hr", hr);
-    if (SUCCEEDED(hr)) {
-        track->started = 1;
-        track->playing = 1;
-        track->play_offset = 0;
-    }
-}
-
-static void retdec_bgm_service_track(retdec_bgm_track_state *track)
-{
-    void **vtable;
-    DWORD play_cursor;
-    DWORD write_cursor;
-    DWORD consumed;
-    DWORD write_boundary;
-    DWORD write_limit;
-    int in_write_window;
-
-    if (track == NULL || track->buffer == NULL)
-        return;
-    /* 409A11 stops a non-looping stream on the update after a short read.
-       Waiting for the ring to drain can let the hardware read stale PCM. */
-    if (track->source_ended && !track->looping) {
-        retdec_trace_i32("bgm:stop-at-eof", (int32_t)track->handle);
-        if (track == &g_retdec_bgm_track)
-            g637 = 0;
-        retdec_bgm_release_state(track);
-        return;
-    }
-    if (!track->started) {
-        if (track->start_time == 0 ||
-            (int32_t)(timeGetTime() - track->start_time) >= 0)
-            retdec_bgm_start_track(track);
-        if (!track->started)
-            return;
-    }
-    vtable = *(void ***)track->buffer;
-    if (vtable == NULL || vtable[4] == NULL)
-        return;
-    play_cursor = 0;
-    write_cursor = 0;
-    if (FAILED(((retdec_dsound_buffer_get_current_position_fn)vtable[4])(
-                   track->buffer, &play_cursor, &write_cursor)))
-        return;
-    if (track->started && track->play_offset == 0) {
-        retdec_trace_i32("bgm:play-cursor", (int32_t)play_cursor);
-        retdec_trace_i32("bgm:write-cursor", (int32_t)write_cursor);
-    }
-    play_cursor &= track->buffer_bytes - 1;
-    write_cursor &= track->buffer_bytes - 1;
-    consumed = play_cursor >= track->play_offset
-        ? play_cursor - track->play_offset
-        : track->buffer_bytes - track->play_offset + play_cursor;
-    if (consumed > track->buffered_bytes)
-        consumed = track->buffered_bytes;
-    track->buffered_bytes -= consumed;
-    track->play_offset = play_cursor;
-    /* 4099C0 gates the next block with DirectSound's write cursor.  The two
-       fields at 1340/1344 are the next and previous 0x8000-byte boundaries;
-       advancing the previous boundary is what prevents a fast worker from
-       repeatedly overwriting data ahead of the hardware cursor. */
-    in_write_window = 0;
-    if (write_cursor >= track->write_window_start) {
-        write_limit = track->write_offset;
-        if (write_limit <= track->write_window_start)
-            write_limit += track->buffer_bytes;
-        if (write_cursor < write_limit)
-            in_write_window = 1;
-    }
-    if (in_write_window &&
-        !(track->source_ended && !track->looping)) {
-        write_boundary = track->write_offset;
-        if (!retdec_bgm_fill_chunk(track, RETDEC_BGM_CHUNK_BYTES))
-            return;
-        retdec_trace_i32("bgm:service-filled", (int32_t)track->handle);
-        track->write_window_start = write_boundary;
-        track->buffered_bytes += RETDEC_BGM_CHUNK_BYTES;
-    }
-}
-
-static void retdec_bgm_service_all_locked(void)
-{
-#if defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
-    return;
-#else
-    int index;
-
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_service_track(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_service_track(&g_retdec_bgm_fading_tracks[index]);
-
-    if (g_retdec_bgm_track.buffer != NULL &&
-        g_retdec_bgm_track.source_ended &&
-        !g_retdec_bgm_track.looping &&
-        g_retdec_bgm_track.buffered_bytes == 0) {
-        retdec_bgm_release_state(&g_retdec_bgm_track);
-        g637 = 0;
-    }
-    for (index = 0; index < 31; ++index) {
-        retdec_bgm_track_state *track = &g_retdec_bgm_fading_tracks[index];
-        if (track->buffer != NULL && track->source_ended &&
-            !track->looping && track->buffered_bytes == 0)
-            retdec_bgm_release_state(track);
-    }
-#endif
-}
-
-static void retdec_bgm_archive_current_track(void)
-{
-    int index;
-
-    if (g_retdec_bgm_track.buffer == NULL)
-        return;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer == NULL) {
-            g_retdec_bgm_fading_tracks[index] = g_retdec_bgm_track;
-            ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
-            return;
-        }
-    }
-    /* The original manager is bounded by the 32 preallocated buffers.  If
-       callers replace tracks faster than the fade window, reclaim the oldest
-       fading slot so the new handle can still be created. */
-    retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[0]);
-    for (index = 1; index < 31; ++index)
-        g_retdec_bgm_fading_tracks[index - 1] =
-            g_retdec_bgm_fading_tracks[index];
-    g_retdec_bgm_fading_tracks[30] = g_retdec_bgm_track;
-    ZeroMemory(&g_retdec_bgm_track, sizeof(g_retdec_bgm_track));
-}
-
-static void retdec_bgm_stop(int reset_position)
-{
-    void **vtable;
-
-    if (g_retdec_bgm_track.buffer == NULL)
-        return;
-    vtable = *(void ***)g_retdec_bgm_track.buffer;
-    if (vtable != NULL && vtable[18] != NULL)
-        ((retdec_dsound_buffer_stop_fn)vtable[18])(g_retdec_bgm_track.buffer);
-    if (reset_position && vtable != NULL && vtable[13] != NULL)
-        ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-            g_retdec_bgm_track.buffer, 0);
-    g_retdec_bgm_track.playing = 0;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Restore the contiguous DirectSound manager that the original methods use.
    The generated globals above retain their RetDec names for reference, but
    calls through 0x51B1C0 must see the original offsets. */
-static int32_t retdec_audio_manager_this(void)
-{
-    return (int32_t)(intptr_t)g_retdec_audio_manager_state;
-}
 
-static int32_t retdec_audio_manager_list_init(uint32_t offset)
-{
-    int32_t node = (int32_t)(intptr_t)malloc(12);
 
-    if (node == 0) {
-        return 0;
-    }
-    *(int32_t *)(g_retdec_audio_manager_state + offset) = node;
-    *(int32_t *)(intptr_t)(uint32_t)node = node;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = node;
-    return 1;
-}
 
-static void retdec_audio_list_push(int32_t list, int32_t value)
-{
-    int32_t node;
-    int32_t previous;
 
-    if (list == 0) {
-        return;
-    }
-    node = (int32_t)(intptr_t)malloc(12);
-    if (node == 0) {
-        return;
-    }
-    previous = *(int32_t *)(intptr_t)(uint32_t)(list + 4);
-    *(int32_t *)(intptr_t)(uint32_t)node = list;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 4) = previous;
-    *(int32_t *)(intptr_t)(uint32_t)(node + 8) = value;
-    *(int32_t *)(intptr_t)(uint32_t)(previous) = node;
-    *(int32_t *)(intptr_t)(uint32_t)(list + 4) = node;
-}
 
-static int retdec_audio_list_pop(int32_t list, int32_t *value)
-{
-    int32_t node;
-    int32_t next;
-    int32_t previous;
 
-    if (list == 0)
-        return 0;
-    node = *(int32_t *)(intptr_t)(uint32_t)list;
-    if (node == list)
-        return 0;
-    next = *(int32_t *)(intptr_t)(uint32_t)node;
-    previous = *(int32_t *)(intptr_t)(uint32_t)(node + 4);
-    *(int32_t *)(intptr_t)(uint32_t)previous = next;
-    *(int32_t *)(intptr_t)(uint32_t)(next + 4) = previous;
-    if (value != NULL)
-        *value = *(int32_t *)(intptr_t)(uint32_t)(node + 8);
-    free((void *)(intptr_t)(uint32_t)node);
-    return 1;
-}
 
-static const char *retdec_audio_buffer_path(int32_t buffer)
-{
-    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
 
-    if (object == NULL)
-        return NULL;
-    if (*(uint32_t *)(object + 20) < 16)
-        return (const char *)object;
-    return *(const char **)(object);
-}
 
-static void retdec_audio_buffer_initialize(int32_t buffer)
-{
-    unsigned char *object = (unsigned char *)(intptr_t)(uint32_t)buffer;
 
-    memset(object, 0, 0x1378);
-    *(uint32_t *)(object + 0x14) = 15;
-    *(uint32_t *)(object + 0x24) = (uint32_t)(uintptr_t)&g208;
-    *(float32_t *)(object + 0x135c) = 1.0f;
-    *(uint32_t *)(object + 0x1c) = 3;
-}
 
-static int32_t retdec_audio_handle_lookup(int32_t manager, uint32_t handle)
-{
-    uint32_t index = handle & 0xffffu;
-    uint32_t generation = handle >> 16;
-    uint32_t *buffers;
-    uint32_t *generations;
-    uint32_t begin;
-    uint32_t end;
 
-    if (manager == 0) {
-        return 0;
-    }
-    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
-    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
-    generations = (uint32_t *)(intptr_t)(uint32_t)
-        (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14));
-    retdec_trace_i32("audio:lookup-manager", manager);
-    retdec_trace_i32("audio:lookup-handle", (int32_t)handle);
-    retdec_trace_i32("audio:lookup-begin", (int32_t)begin);
-    retdec_trace_i32("audio:lookup-end", (int32_t)end);
-    retdec_trace_i32("audio:lookup-generations", (int32_t)(intptr_t)generations);
-    if (begin == 0 || end < begin || index >= (end - begin) / 4) {
-        return 0;
-    }
-    if (generations == 0 || generations[index] != generation) {
-        retdec_trace_i32("audio:lookup-generation",
-                         generations == 0 ? 0 : (int32_t)generations[index]);
-        return 0;
-    }
-    buffers = (uint32_t *)(intptr_t)begin;
-    retdec_trace_i32("audio:lookup-buffer", (int32_t)buffers[index]);
-    return (int32_t)(intptr_t)(uintptr_t)buffers[index];
-}
 
-static int32_t retdec_audio_handle_create(int32_t manager, int32_t output)
-{
-    uint32_t *buffers;
-    uint32_t *generations;
-    uint32_t *new_buffers;
-    uint32_t *new_generations;
-    uint32_t begin;
-    uint32_t end;
-    uint32_t generation_begin;
-    uint32_t generation_end;
-    uint32_t count;
-    uint32_t generation;
-    uint32_t handle;
-    int32_t buffer;
-    int32_t list;
 
-    if (manager == 0 || output == 0) {
-        return 0;
-    }
 
-    begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 4);
-    end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 8);
-    generation_begin = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14);
-    generation_end = *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18);
-    if (begin == 0 || end < begin) {
-        count = 0;
-    } else {
-        count = (end - begin) / 4;
-    }
-    retdec_trace_i32("audio:create-manager", manager);
-    retdec_trace_i32("audio:create-count", (int32_t)count);
 
-    buffer = (int32_t)(intptr_t)malloc(0x1378);
-    if (buffer == 0) {
-        return 0;
-    }
-    retdec_audio_buffer_initialize(buffer);
 
-    new_buffers = (uint32_t *)malloc((count + 1) * sizeof(*new_buffers));
-    new_generations = (uint32_t *)malloc(
-        (count + 1) * sizeof(*new_generations));
-    if (new_buffers == 0 || new_generations == 0) {
-        free(new_buffers);
-        free(new_generations);
-        free((void *)(intptr_t)(uint32_t)buffer);
-        return 0;
-    }
-    if (count != 0) {
-        memcpy(new_buffers, (void *)(intptr_t)begin,
-               count * sizeof(*new_buffers));
-        if (generation_begin != 0 && generation_end >= generation_begin) {
-            memcpy(new_generations, (void *)(intptr_t)generation_begin,
-                   count * sizeof(*new_generations));
-        } else {
-            memset(new_generations, 0,
-                   count * sizeof(*new_generations));
-        }
-    }
 
-    generation = (*(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) + 1)
-                 & 0xffffu;
-    if (generation == 0) {
-        generation = 1;
-    }
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x30) = generation;
-    handle = count | (generation << 16);
-    new_buffers[count] = (uint32_t)(uintptr_t)buffer;
-    new_generations[count] = generation;
-    retdec_trace_i32("audio:create-handle", (int32_t)handle);
-    retdec_trace_i32("audio:create-buffer", buffer);
-    retdec_trace_i32("audio:create-buffer-table",
-                     (int32_t)(intptr_t)new_buffers);
-    retdec_trace_i32("audio:create-generation-table",
-                     (int32_t)(intptr_t)new_generations);
 
-    buffers = (uint32_t *)(intptr_t)begin;
-    generations = (uint32_t *)(intptr_t)generation_begin;
-    free(buffers);
-    free(generations);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 4) =
-        (uint32_t)(uintptr_t)new_buffers;
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 8) =
-        (uint32_t)(uintptr_t)(new_buffers + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0xc) =
-        (uint32_t)(uintptr_t)(new_buffers + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x14) =
-        (uint32_t)(uintptr_t)new_generations;
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x18) =
-        (uint32_t)(uintptr_t)(new_generations + count + 1);
-    *(uint32_t *)(intptr_t)(uint32_t)(manager + 0x1c) =
-        (uint32_t)(uintptr_t)(new_generations + count + 1);
 
-    list = *(int32_t *)(intptr_t)(uint32_t)(manager + 0x24);
-    retdec_audio_list_push(list, (int32_t)handle);
-    *(uint32_t *)(intptr_t)(uint32_t)output = handle;
-    return 1;
-}
 
-static void retdec_audio_manager_construct(void)
-{
-    unsigned char *state = g_retdec_audio_manager_state;
 
-    if (g_retdec_audio_manager_initialized != 0) {
-        return;
-    }
-    memset(state, 0, sizeof(g_retdec_audio_manager_state));
-    *(uint32_t *)(state + 0x1c) = (uint32_t)(uintptr_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)(state + 0x20));
-    function_40adb0((int32_t *)(state + 0x38));
-    if (!retdec_audio_manager_list_init(0x88) ||
-        !retdec_audio_manager_list_init(0x94) ||
-        !retdec_audio_manager_list_init(0xa0)) {
-        return;
-    }
-    *(float32_t *)(state + 0xac) = 1.0f;
-    *(float32_t *)(state + 0xb0) = 1.0f;
-    g_retdec_audio_manager_initialized = 1;
-}
 
-static int32_t retdec_audio_method_40a5d0(int32_t this_ptr,
-                                          int32_t output)
-{
-    if (output == 0) {
-        return 0;
-    }
-    *(int32_t *)(intptr_t)(uint32_t)output = 0;
-    if (g_retdec_audio_manager_initialized == 0) {
-        retdec_audio_manager_construct();
-    }
-    if (g_retdec_audio_manager_initialized == 0) {
-        return output;
-    }
-    retdec_audio_handle_create(this_ptr + 0x38, output);
-    return output;
-}
 
-static int32_t retdec_audio_method_40a6c0(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t source,
-                                          int32_t buffer_flag,
-                                          int32_t queue_mode,
-                                          float32_t volume)
-{
-    int32_t buffer;
-    const char *path = (const char *)(intptr_t)(uint32_t)source;
-    uint32_t path_length;
-    float32_t gain;
-    int prepared = 0;
 
-    retdec_trace_audio_text("470220:request-path", path);
-    retdec_trace_i32("470220:request-queue", queue_mode);
-    if (this_ptr == 0 || source == 0) {
-        return 1;
-    }
-    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
-                                        (uint32_t)handle);
-    retdec_trace_i32("470220:handle", handle);
-    retdec_trace_i32("470220:buffer", buffer);
-    if (buffer == 0) {
-        return 1;
-    }
-    path_length = retdec_safe_c_string_length(path);
-    retdec_trace_i32("470220:path-length", (int32_t)path_length);
-    retdec_string_assign_n((int32_t *)(intptr_t)(uint32_t)buffer,
-                           path, path_length);
-    retdec_trace("470220:path-assigned");
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 0;
-    gain = *(float32_t *)(this_ptr + 0xb0) *
-           *(float32_t *)(this_ptr + 0xac);
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x135c) = gain;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1368) = volume;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1364) = gain;
-    *(float32_t *)(intptr_t)(uint32_t)(buffer + 0x1360) = gain;
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x134c) =
-        (unsigned char)buffer_flag;
-    *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x136c) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 3;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1354) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1358) = 0;
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1370) = 0;
-
-    if (queue_mode != 0) {
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x94), handle);
-        if (g_retdec_audio_queue_event != NULL)
-            SetEvent(g_retdec_audio_queue_event);
-        return 1;
-    }
-
-    /* a5 == 0 is the original synchronous path: prepare the new buffer
-       before it is inserted into the active list. */
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_archive_current_track();
-    prepared = retdec_bgm_prepare_track(
-        (uint32_t)handle, retdec_audio_buffer_path(buffer),
-        buffer_flag, volume);
-    if (prepared) {
-        *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) = 1;
-        retdec_audio_list_push(
-            *(int32_t *)(g_retdec_audio_manager_state + 0x88), handle);
-        retdec_trace("470220:prepared-sync");
-    } else {
-        retdec_trace("470220:prepare-failed");
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
-
-static int32_t retdec_audio_method_40a7f0(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t delay)
-{
-    int32_t buffer;
-    retdec_bgm_track_state *track;
-    DWORD start_time;
-
-    if (this_ptr == 0) {
-        return 0;
-    }
-    retdec_trace_i32("470220:start-delay", delay);
-    buffer = retdec_audio_handle_lookup(this_ptr + 0x38,
-                                        (uint32_t)handle);
-    if (buffer == 0) {
-        return 0;
-    }
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    track = retdec_bgm_find_track((uint32_t)handle);
-    *(int32_t *)(intptr_t)(uint32_t)(buffer + 0x1c) = 0;
-    if (delay != 0) {
-        start_time = timeGetTime() + (uint32_t)delay;
-        *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
-        if (track != NULL)
-            track->start_time = start_time;
-    } else {
-        if (track != NULL &&
-            *(unsigned char *)(intptr_t)(uint32_t)(buffer + 0x20) != 0) {
-            track->start_time = 0;
-            retdec_bgm_start_track(track);
-        } else {
-            start_time = timeGetTime();
-            *(uint32_t *)(intptr_t)(uint32_t)(buffer + 0x1350) = start_time;
-        }
-    }
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
-
-static int32_t retdec_audio_method_40a950(int32_t this_ptr,
-                                          int32_t handle,
-                                          int32_t duration,
-                                          int32_t start_delay,
-                                          float32_t target)
-{
-    (void)this_ptr;
-    (void)target;
-    retdec_bgm_begin_fade_for_handle((uint32_t)handle,
-                                     duration > 0 ? (DWORD)duration : 0,
-                                     start_delay > 0 ? (DWORD)start_delay : 0,
-                                     0.0f);
-    return 1;
-}
 
 // Address range: 0x40a0f0 - 0x40a3c3
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_40a0f0(void) {
-    /* The RetDec body below lost the constructor's this pointer.  The
-       recovered manager storage above is the live object used by the audio
-       methods, so construct it once and return without executing that stale
-       stack-based reconstruction. */
-    retdec_audio_manager_construct();
-    return retdec_audio_manager_this();
-}
+
 
 // Address range: 0x40a3d0 - 0x40a453
-int32_t function_40a3d0(void) {
-    if (g_retdec_audio_threads_initialized)
-        return (int32_t)(intptr_t)g_retdec_audio_queue_event;
-    if (!g_retdec_audio_lock_initialized) {
-        InitializeCriticalSection(&g_retdec_audio_lock);
-        g_retdec_audio_lock_initialized = 1;
-    }
-    g_retdec_audio_queue_event = CreateEventA(NULL, FALSE, FALSE, NULL);
-    g_retdec_audio_stop_event = CreateEventA(NULL, TRUE, FALSE, NULL);
-    if (g_retdec_audio_queue_event == NULL ||
-        g_retdec_audio_stop_event == NULL) {
-        if (g_retdec_audio_queue_event != NULL)
-            CloseHandle(g_retdec_audio_queue_event);
-        if (g_retdec_audio_stop_event != NULL)
-            CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_queue_event = NULL;
-        g_retdec_audio_stop_event = NULL;
-        retdec_trace("40a3d0:audio-events-failed");
-        return 0;
-    }
-    InterlockedExchange(&g_retdec_audio_running, 1);
-    g_retdec_audio_update_thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aaa0, NULL, 0, NULL);
-    if (g_retdec_audio_update_thread != NULL)
-        SetThreadPriority(g_retdec_audio_update_thread, 15);
-    g_retdec_audio_loader_thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)function_40aac0, NULL, 0, NULL);
-    if (g_retdec_audio_update_thread == NULL ||
-        g_retdec_audio_loader_thread == NULL) {
-        InterlockedExchange(&g_retdec_audio_running, 0);
-        SetEvent(g_retdec_audio_stop_event);
-        SetEvent(g_retdec_audio_queue_event);
-        if (g_retdec_audio_update_thread != NULL) {
-            WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
-            CloseHandle(g_retdec_audio_update_thread);
-            g_retdec_audio_update_thread = NULL;
-        }
-        if (g_retdec_audio_loader_thread != NULL) {
-            WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
-            CloseHandle(g_retdec_audio_loader_thread);
-            g_retdec_audio_loader_thread = NULL;
-        }
-        CloseHandle(g_retdec_audio_queue_event);
-        CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_queue_event = NULL;
-        g_retdec_audio_stop_event = NULL;
-        retdec_trace("40a3d0:audio-threads-failed");
-        return 0;
-    }
-    g_retdec_audio_threads_initialized = 1;
-    retdec_trace("40a3d0:audio-threads-ready");
-    return (int32_t)(intptr_t)g_retdec_audio_queue_event;
-}
+
 
 // Address range: 0x40a460 - 0x40a5cf
-int32_t function_40a460(void) {
-    if (!g_retdec_audio_threads_initialized)
-        return 1;
 
-    InterlockedExchange(&g_retdec_audio_running, 0);
-    if (g_retdec_audio_stop_event != NULL)
-        SetEvent(g_retdec_audio_stop_event);
-    if (g_retdec_audio_queue_event != NULL)
-        SetEvent(g_retdec_audio_queue_event);
-    if (g_retdec_audio_update_thread != NULL) {
-        WaitForSingleObject(g_retdec_audio_update_thread, INFINITE);
-        CloseHandle(g_retdec_audio_update_thread);
-        g_retdec_audio_update_thread = NULL;
-    }
-    if (g_retdec_audio_loader_thread != NULL) {
-        WaitForSingleObject(g_retdec_audio_loader_thread, INFINITE);
-        CloseHandle(g_retdec_audio_loader_thread);
-        g_retdec_audio_loader_thread = NULL;
-    }
-    if (g_retdec_audio_queue_event != NULL) {
-        CloseHandle(g_retdec_audio_queue_event);
-        g_retdec_audio_queue_event = NULL;
-    }
-    if (g_retdec_audio_stop_event != NULL) {
-        CloseHandle(g_retdec_audio_stop_event);
-        g_retdec_audio_stop_event = NULL;
-    }
-    g_retdec_audio_threads_initialized = 0;
-    /* 40A4A8 releases the manager's active, pending and retired buffers
-       after joining its workers, rather than waiting for CRT destruction. */
-    retdec_bgm_release_all_tracks();
-    return 1;
-}
 
 // Address range: 0x40a5d0 - 0x40a5ef
-int32_t function_40a5d0(int32_t result) {
-    // 0x40a5d0
-    *(int32_t *)result = 0;
-    return result;
-}
+
 
 // Address range: 0x40a5f0 - 0x40a6bc
-int32_t function_40a5f0(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2; // 0x40a5f0
-    int32_t lpCriticalSection = v2 + 32; // 0x40a5f8
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v3 = *(int32_t *)(v2 + 136); // 0x40a602
-    int32_t v4 = *(int32_t *)v3; // 0x40a608
-    int32_t v5 = v4; // 0x40a60f
-    if (v4 != v3) {
-        int32_t v6 = v5; // 0x40a614
-        while (*(int32_t *)(v5 + 8) != a1) {
-            // 0x40a616
-            v5 = *(int32_t *)v5;
-            v6 = v5;
-            if (v5 == v3) {
-                // break -> 0x40a61c
-                break;
-            }
-            v6 = v5;
-        }
-        // 0x40a61c
-        if (v6 != v3) {
-            int32_t * v7 = (int32_t *)(v6 + 4); // 0x40a620
-            int32_t * v8 = (int32_t *)v6; // 0x40a623
-            *(int32_t *)*v7 = *v8;
-            *(int32_t *)(*v8 + 4) = *v7;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            int32_t * v9 = (int32_t *)(v2 + 140); // 0x40a63b
-            *v9 = *v9 - 1;
-        }
-    }
-    int32_t v10 = *(int32_t *)(v2 + 56); // 0x40a641
-    if (v10 != 0) {
-        int32_t v11 = *(int32_t *)(v10 + 0x1370); // 0x40a651
-        if (v11 != 0) {
-            // 0x40a65b
-            *(int32_t *)(v11 + 0x1374) = 0;
-        }
-    }
-    int32_t v12 = *(int32_t *)(v2 + 160); // 0x40a665
-    int32_t * v13 = (int32_t *)(v12 + 4); // 0x40a66b
-    int32_t v14 = v12; // bp-36, 0x40a673
-    int32_t v15 = function_4214a0(v12, *v13, &v1); // 0x40a674
-    int32_t * v16 = (int32_t *)(v2 + 164); // 0x40a679
-    int32_t v17 = *v16; // 0x40a679
-    int32_t v18 = v15; // 0x40a689
-    int32_t v19 = &v14; // 0x40a689
-    if (v17 == 0x3ffffffe) {
-        char * v20 = "list<T> too long"; // bp-40, 0x40a68b
-        v18 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
-        v19 = (int32_t)&v20;
-    }
-    int32_t v21 = v18;
-    *v16 = v17 + 1;
-    *v13 = v21;
-    *(int32_t *)*(int32_t *)(v21 + 4) = v21;
-    *(int32_t *)(v19 - 4) = *(int32_t *)(v2 + 20);
-    SetEvent(&g1224);
-    *(int32_t *)(v19 - 8) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a6c0 - 0x40a7ee
 
 
 // Address range: 0x40a7f0 - 0x40a886
-int32_t function_40a7f0(int32_t a1, int32_t a2) {
-    // 0x40a7f0
-    int32_t v1; // 0x40a7f0
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)(v1 + 32); // 0x40a7fa
-    EnterCriticalSection(lpCriticalSection);
-    int32_t v2 = *(int32_t *)(*(int32_t *)(v1 + 56) + 12); // 0x40a807
-    if (v2 == 0) {
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a818
-    *(int32_t *)(v2 + 28) = 0;
-    if (a2 != 0) {
-        // 0x40a823
-        *(int32_t *)(v2 + 0x1350) = timeGetTime() + a2;
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a83f
-    if (*(char *)(v2 + 32) == 0) {
-        // 0x40a86c
-        *(int32_t *)(v2 + 0x1350) = timeGetTime();
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a844
-    *(int32_t *)(v2 + 0x1350) = 0;
-    if (*(int32_t *)(v2 + 40) == 0) {
-        // 0x40a879
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    // 0x40a84f
-    LeaveCriticalSection(lpCriticalSection);
-    return &g1224;
-}
+
 
 // Address range: 0x40a890 - 0x40a8c6
 
 
 // Address range: 0x40a8d0 - 0x40a94f
-int32_t function_40a8d0(int32_t a1) {
-    // 0x40a8d0
-    int32_t v1; // 0x40a8d0
-    int32_t v2 = v1 + 32; // 0x40a8d8
-    struct retdec_RTL_CRITICAL_SECTION * lpCriticalSection = (struct retdec_RTL_CRITICAL_SECTION *)v2; // 0x40a8db
-    EnterCriticalSection(lpCriticalSection);
-    int32_t v3 = *(int32_t *)(*(int32_t *)(v1 + 56) + 12); // 0x40a8e8
-    int32_t lpCriticalSection2 = a1; // bp-24, 0x40a8ee
-    int32_t v4 = &lpCriticalSection2; // 0x40a8ee
-    if (v3 == 0 || *(char *)(v3 + 32) == 0) {
-        // 0x40a940
-        *(int32_t *)(v4 - 4) = v2;
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-        return &g1224;
-    }
-    int32_t v5 = *(int32_t *)(v3 + 40); // 0x40a8fd
-    if (v5 == 0) {
-        // 0x40a940
-        *(int32_t *)(v4 - 4) = v2;
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-        return &g1224;
-    }
-    if ((v1 & 1) != 0) {
-        // 0x40a91b
-        LeaveCriticalSection(lpCriticalSection);
-        return &g1224;
-    }
-    int32_t v6 = v5; // bp-48, 0x40a93d
-    // 0x40a940
-    *(int32_t *)((int32_t)&v6 - 4) = v2;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection2);
-    return &g1224;
-}
+
 
 // Address range: 0x40a950 - 0x40a999
-int32_t function_40a950(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x40a950
-    int32_t v1; // 0x40a950
-    int32_t lpCriticalSection = v1 + 32; // 0x40a957
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v2 = a1; // bp-20, 0x40a96d
-    int32_t * v3 = &v2; // 0x40a972
-    if (*(int32_t *)(*(int32_t *)(v1 + 56) + 12) != 0) {
-        int32_t v4 = 0; // bp-32, 0x40a982
-        function_4098a0(a3, 0.0L, a4);
-        v3 = &v4;
-    }
-    // 0x40a98c
-    *(int32_t *)((int32_t)v3 - 4) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a9a0 - 0x40a9e8
-int32_t function_40a9a0(int32_t a1, int32_t a2, int32_t a3, float80_t a4) {
-    // 0x40a9a0
-    int32_t v1; // 0x40a9a0
-    int32_t lpCriticalSection = v1 + 32; // 0x40a9a7
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)lpCriticalSection);
-    int32_t v2 = a1; // bp-20, 0x40a9bd
-    int32_t v3 = &v2; // 0x40a9c2
-    if (*(int32_t *)(*(int32_t *)(v1 + 56) + 12) != 0) {
-        float80_t v4 = a4; // bp-32, 0x40a9d1
-        function_4098a0(a3, a4, 0);
-        v3 = &v4;
-    }
-    // 0x40a9db
-    *(int32_t *)(v3 - 4) = lpCriticalSection;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x40a9f0 - 0x40aa95
-int32_t function_40a9f0(float80_t a1) {
-    if (g_retdec_audio_lock_initialized)
-        EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_update_fade_locked();
-    retdec_bgm_apply_track_volume((float)a1);
-    if (g_retdec_audio_lock_initialized)
-        LeaveCriticalSection(&g_retdec_audio_lock);
-    return 1;
-}
+
 
 // Address range: 0x40aaa0 - 0x40aabc
-int32_t function_40aaa0(void) {
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
-            if (g_retdec_audio_stop_event == NULL ||
-                WaitForSingleObject(g_retdec_audio_stop_event, 16) ==
-                    WAIT_OBJECT_0)
-                break;
-            function_40aae0();
-        }
-        CoUninitialize();
-    }
-    return 0;
-}
+
 
 // Address range: 0x40aac0 - 0x40aadc
-int32_t function_40aac0(void) {
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
-            HANDLE handles[2];
-            DWORD wait_result;
 
-            handles[0] = g_retdec_audio_queue_event;
-            handles[1] = g_retdec_audio_stop_event;
-            if (handles[0] == NULL || handles[1] == NULL)
-                break;
-            wait_result = WaitForMultipleObjects(2, handles, FALSE,
-                                                 INFINITE);
-            if (wait_result != WAIT_OBJECT_0)
-                break;
-            EnterCriticalSection(&g_retdec_audio_lock);
-            if (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
-                retdec_bgm_process_pending_locked();
-            LeaveCriticalSection(&g_retdec_audio_lock);
-        }
-        CoUninitialize();
-    }
-    return 0;
-}
 
 // Address range: 0x40aae0 - 0x40adb0
-int32_t function_40aae0(void) {
-    if (!InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
-        return 0;
-    EnterCriticalSection(&g_retdec_audio_lock);
-    retdec_bgm_service_all_locked();
-    LeaveCriticalSection(&g_retdec_audio_lock);
-    return 0;
-}
+
 
 // Address range: 0x40adb0 - 0x40ae70
 // From class:    .?AV?$CHandleManagerEx@VBgmBuffer@@@@
 // Type:          constructor
-int32_t function_40adb0(int32_t * a1) {
-    int32_t result = (int32_t)a1;
-    int32_t v1 = __readfsdword(0); // bp-16, 0x40adc0
-    __writefsdword(0, (int32_t)&v1);
-    *a1 = (int32_t)&g198;
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 8) = 0;
-    *(int32_t *)(result + 12) = 0;
-    *(int32_t *)(result + 20) = 0;
-    *(int32_t *)(result + 24) = 0;
-    *(int32_t *)(result + 28) = 0;
-    *(int32_t *)(result + 40) = 0;
-    int32_t v2 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x40ae00
-    if (v2 != 0) {
-        int32_t * v3 = (int32_t *)(result + 36); // 0x40ae0c
-        *v3 = v2;
-        *(int32_t *)v2 = v2;
-        int32_t v4 = *v3; // 0x40ae11
-        *(int32_t *)(v4 + 4) = v4;
-        *(int32_t *)(result + 52) = (int32_t)&g190;
-        InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(result + 56));
-        *(int32_t *)(result + 48) = 0;
-        __writefsdword(0, v1);
-        return result;
-    }
-    // 0x40ae40
-    int32_t v5; // bp-32, 0x40adb0
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v5);
-    v5 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    return __asm_int3();
-}
+
 
 // Address range: 0x40ae70 - 0x40af6e
 // From class:    .?AV?$CHandleManagerEx@VBgmBuffer@@@@
@@ -20853,17 +18751,10 @@ int32_t function_40b2d0(void) {
 }
 
 // Address range: 0x40b3a0 - 0x40b516
-int32_t function_40b3a0(void) {
-    function_40a460();
-    retdec_bgm_release_all_tracks();
-    retdec_se_pool_release();
-    return 1;
-}
+
 
 // Address range: 0x40b520 - 0x40b6ef
-int32_t function_40b520(void) {
-    return retdec_se_pool_initialize();
-}
+
 
 // Address range: 0x40b6f0 - 0x40b75f
 int32_t function_40b6f0(void) {
@@ -20978,10 +18869,7 @@ int32_t function_40b840(int32_t a1) {
 }
 
 // Address range: 0x40b8a0 - 0x40b996
-int32_t function_40b8a0(float80_t a1) {
-    retdec_se_pool_set_volume((float)a1);
-    return 1;
-}
+
 
 // Address range: 0x40b9a0 - 0x40ba11
 int32_t function_40b9a0(int32_t a1) {
@@ -28017,157 +25905,10 @@ int32_t function_411d30(void) {
 }
 
 // Address range: 0x411d80 - 0x411f89
-int32_t function_411d80(HWND hwnd, int32_t options) {
-    void *direct_sound = NULL;
-    void *primary_buffer = NULL;
-    void *listener = NULL;
-    HMODULE dsound_module = NULL;
-    retdec_direct_sound_create8_fn direct_sound_create8 = NULL;
-    int direct_sound_is_initialized = 0;
-    uint32_t caps[24];
-    retdec_dsound_buffer_desc buffer_desc;
-    void **direct_sound_vtable;
-    void **primary_buffer_vtable;
-    HRESULT hr;
-    static const GUID iid_direct_sound_3d_listener = {
-        0x279afa84, 0x4981, 0x11ce,
-        { 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60 }
-    };
 
-    g876 = 0;
-    g878 = 0;
-    g877 = NULL;
-    retdec_trace("411d80:pre-cocreate");
-    hr = (HRESULT)CoCreateInstance(
-        (const GUID *)&g62, NULL, CLSCTX_INPROC_SERVER,
-        (const GUID *)&g61, (void **)&direct_sound);
-    retdec_trace_hresult("411d80:cocreate-hr", hr);
-    if (FAILED(hr) || direct_sound == NULL) {
-        // CLSID_DirectSound8 is not registered on some current Windows
-        // installations even though dsound.dll is available. The exported
-        // factory is the documented equivalent creation path.
-        retdec_trace("411d80:pre-directsoundcreate8");
-        dsound_module = LoadLibraryA("dsound.dll");
-        if (dsound_module != NULL) {
-            direct_sound_create8 = (retdec_direct_sound_create8_fn)
-                GetProcAddress(dsound_module, "DirectSoundCreate8");
-        }
-        if (direct_sound_create8 != NULL) {
-            hr = direct_sound_create8(NULL, &direct_sound, NULL);
-        } else {
-            hr = E_FAIL;
-        }
-        retdec_trace_hresult("411d80:directsoundcreate8-hr", hr);
-        if (SUCCEEDED(hr) && direct_sound != NULL) {
-            direct_sound_is_initialized = 1;
-        }
-    }
-    if (FAILED(hr) || direct_sound == NULL) {
-        MessageBoxA(NULL, (char *)&g209, "DSound-Error", MB_OK);
-        return 0;
-    }
-    g877 = (char *)direct_sound;
-    direct_sound_vtable = *(void ***)direct_sound;
-
-    if (direct_sound_is_initialized == 0) {
-        retdec_trace("411d80:pre-initialize");
-        hr = ((retdec_dsound_initialize_fn)direct_sound_vtable[10])(
-            direct_sound, NULL);
-        retdec_trace_hresult("411d80:initialize-hr", hr);
-        if (FAILED(hr)) {
-            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-            g877 = NULL;
-            return 0;
-        }
-    } else {
-        retdec_trace("411d80:initialize-skipped");
-    }
-
-    retdec_trace("411d80:pre-cooperative-level");
-    hr = ((retdec_dsound_set_cooperative_level_fn)direct_sound_vtable[6])(
-        direct_sound, hwnd, 2);
-    if (FAILED(hr)) {
-        hr = ((retdec_dsound_set_cooperative_level_fn)
-            direct_sound_vtable[6])(direct_sound, hwnd, 1);
-    }
-    retdec_trace_hresult("411d80:cooperative-level-hr", hr);
-    if (FAILED(hr)) {
-        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-        g877 = NULL;
-        return 0;
-    }
-
-    ZeroMemory(&caps, sizeof(caps));
-    caps[0] = sizeof(caps);
-    ((retdec_dsound_get_caps_fn)direct_sound_vtable[4])(
-        direct_sound, &caps);
-
-    ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-    buffer_desc.dwSize = sizeof(buffer_desc);
-    buffer_desc.dwFlags = (options & 1) != 0 ? 153u : 9u;
-    retdec_trace("411d80:pre-create-primary");
-    hr = ((retdec_dsound_create_buffer_fn)direct_sound_vtable[3])(
-        direct_sound, &buffer_desc, &primary_buffer, NULL);
-    retdec_trace_hresult("411d80:create-primary-hr", hr);
-    if (FAILED(hr) || primary_buffer == NULL) {
-        ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-        g877 = NULL;
-        return 0;
-    }
-    g876 = (int32_t)(uintptr_t)primary_buffer;
-    primary_buffer_vtable = *(void ***)primary_buffer;
-
-    if ((options & 1) != 0) {
-        hr = ((retdec_dsound_query_interface_fn)primary_buffer_vtable[0])(
-            primary_buffer, &iid_direct_sound_3d_listener,
-            (void **)&listener);
-        retdec_trace_hresult("411d80:listener-hr", hr);
-        if (FAILED(hr) || listener == NULL) {
-            ((retdec_dsound_release_fn)primary_buffer_vtable[2])(
-                primary_buffer);
-            ((retdec_dsound_release_fn)direct_sound_vtable[2])(direct_sound);
-            g876 = 0;
-            g877 = NULL;
-            return 0;
-        }
-        g878 = (int32_t)(uintptr_t)listener;
-    }
-    /* The original starts the primary buffer after creating the listener.
-       Secondary BGM buffers are mixed into this stream. */
-    retdec_trace("411d80:pre-play-primary");
-    if (primary_buffer_vtable != NULL && primary_buffer_vtable[12] != NULL) {
-        hr = ((retdec_dsound_buffer_play_fn)primary_buffer_vtable[12])(
-            primary_buffer, 0, 0, 1);
-        retdec_trace_hresult("411d80:play-primary-hr", hr);
-    }
-    retdec_trace("411d80:done");
-    return 1;
-}
 
 // Address range: 0x411f90 - 0x411fe2
-int32_t function_411f90(void) {
-    // 0x411f90
-    int32_t v1; // 0x411f90
-    if (g878 != 0) {
-        int32_t v2 = g878; // bp-4, 0x411f9e
-        g878 = 0;
-        v1 = &v2;
-    }
-    int32_t v3 = v1; // 0x411fb2
-    if (g876 != 0) {
-        int32_t v4 = g876; // bp-8, 0x411fb9
-        g876 = 0;
-        v3 = &v4;
-    }
-    int32_t result = (int32_t)g877; // 0x411fc6
-    if (g877 != NULL) {
-        // 0x411fcf
-        *(int32_t *)(v3 - 4) = result;
-        g877 = NULL;
-    }
-    // 0x411fe1
-    return result;
-}
+
 
 // Address range: 0x411ff0 - 0x41205f
 int32_t function_411ff0(int32_t * a1, int32_t a2) {
@@ -31773,8 +29514,8 @@ int32_t function_4152a0(void) {
 int32_t function_415350(void) {
     char * v1 = NULL; // bp-8, 0x415358
     int32_t result; // 0x415350
-    function_48acc0(result);
-    if (function_48a6f0(result, -1) == 0x1000001) {
+    sq_getlasterror(kinoko_vm(result));
+    if (sq_gettype(kinoko_vm(result), -1) == 0x1000001) {
         // 0x415376
         *(int32_t *)(result + 20) = 15;
         *(int32_t *)(result + 16) = 0;
@@ -31782,8 +29523,8 @@ int32_t function_415350(void) {
         return result;
     }
     // 0x41538e
-    function_48a720(result, -1);
-    function_48a8d0(result, -1, (int32_t *)&v1);
+    sq_tostring(kinoko_vm(result), -1);
+    sq_getstring(kinoko_vm(result), -1, (const SQChar**)((int32_t *)&v1));
     *(int32_t *)(result + 20) = 15;
     *(int32_t *)(result + 16) = 0;
     *(char *)result = 0;
@@ -31846,23 +29587,23 @@ int32_t function_415480(int32_t a1) {
     int32_t result; // 0x415480
     int32_t * v1 = (int32_t *)(result + 4); // 0x4154a2
     int32_t v2 = *v1; // 0x4154a2
-    function_48ab90(v2, result, v2);
-    function_48a480(*v1, a1, -1);
-    int32_t v3 = function_48ce00(*v1, -2); // 0x4154c7
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(result, v2));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    int32_t v3 = sq_get(kinoko_vm(*v1), -2); // 0x4154c7
     int32_t v4 = *v1; // 0x4154cc
     if (v3 < 0) {
         // 0x4154d6
-        function_48aa30(v4, 1);
+        kinoko_sq_pop(v4, 1);
         *(int32_t *)result = (int32_t)&g39;
         *(int32_t *)(result + 4) = *v1;
         *(char *)(result + 16) = 1;
-        function_48abe0(result + 8);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
         return result;
     }
     // 0x415503
     int32_t v5; // bp-28, 0x415480
-    function_48ab40(v4, -1, &v5);
-    function_48aa30(*v1, 2);
+    sq_getstackobj(kinoko_vm(v4), -1, (HSQOBJECT*)(&v5));
+    kinoko_sq_pop(*v1, 2);
     int32_t v6 = *v1; // 0x41551b
     int32_t v7 = result + 8; // 0x415526
     *(int32_t *)result = (int32_t)&g39;
@@ -31880,13 +29621,13 @@ int32_t function_415550(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
     int32_t v1; // 0x415550
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x415561
     int32_t v3 = *v2; // 0x415561
-    function_48ab90(v3, v3, v3);
-    function_48a480(*v2, a1, -1);
-    function_48c2f0(*v2, a3);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v3, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
+    (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), a3));
     _memcpy2();
-    function_48d850(*v2, a4, 1);
-    function_48c950(*v2, -3, a5 & 255);
-    return function_48aa30(*v2, 1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(a4), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((a5 & 255) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 /*
@@ -31910,9 +29651,9 @@ int32_t function_4155d0(int32_t a1, int32_t a2) {
     *v3 = 0;
     char * v4 = (char *)(result + 16); // 0x41560c
     *v4 = 1;
-    function_48abe0(v2);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(v2));
     int32_t v5; // bp-28, 0x4155d0
-    function_48ab40(a1, a2, &v5);
+    sq_getstackobj(kinoko_vm(a1), a2, (HSQOBJECT*)(&v5));
     int32_t v6; // bp-40, 0x4155d0
     int32_t v7 = &v6; // 0x415632
     v6 = v5;
@@ -31964,7 +29705,7 @@ int32_t function_415750(void) {
         int32_t v3 = v1 + 4; // 0x415760
         function_48a430(v1, v3);
         function_48a430(v1, v2);
-        function_48abe0(v3);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(v3));
         result = function_48abe0(v2);
     }
     // 0x415783
@@ -31982,8 +29723,8 @@ int32_t function_415790(int32_t a1) {
         // 0x4157a4
         function_48a430(result, v3);
         function_48a430(result, v1);
-        function_48abe0(v3);
-        function_48abe0(v1);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(v3));
+        sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
     }
     // 0x4157cb
     *(int32_t *)result = *(int32_t *)a1;
@@ -32008,11 +29749,11 @@ int32_t function_415870(int32_t * a1) {
     int32_t v2 = v1;
     int32_t * v3 = (int32_t *)(v1 + 4); // 0x41587c
     int32_t v4 = *v3; // 0x41587c
-    function_48ab90(v4, v1, v4);
-    function_48a480(*v3, (int32_t)a1, -1);
-    function_48ab90(*v3, v2, *(int32_t *)(v2 + 4));
-    function_48c950(*v3, -3, 0);
-    return function_48aa30(*v3, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(v1, v4));
+    sq_pushstring(kinoko_vm(*v3), (const SQChar*)kinoko_pointer((int32_t)a1), -1);
+    sq_pushobject(kinoko_vm(*v3), kinoko_borrowed_object(v2, *(int32_t *)(v2 + 4)));
+    sq_newslot(kinoko_vm(*v3), -3, ((0) != 0));
+    return kinoko_sq_pop(*v3, 1);
 }
 
 // Address range: 0x4158e0 - 0x415994
@@ -32032,7 +29773,7 @@ int32_t function_4158e0(char a1) {
     int32_t * v7 = (int32_t *)(v6 + 4); // 0x415922
     int32_t v8 = *v7; // 0x415922
     int32_t v9 = v8; // bp-104, 0x415925
-    int32_t v10 = function_48d0b0(v8, v5, *(int32_t *)(v1 + 16), (int32_t *)&g189, 1); // 0x415926
+    int32_t v10 = sq_compilebuffer(kinoko_vm(v8), (const SQChar*)kinoko_pointer(v5), *(int32_t *)(v1 + 16), (const SQChar*)((int32_t *)&g189), ((1) != 0)); // 0x415926
     int32_t v11 = *v7; // 0x415933
     int32_t * v12 = &v4; // 0x415933
     int32_t v13; // 0x4158e0
@@ -32049,7 +29790,7 @@ int32_t function_4158e0(char a1) {
     *(int32_t *)(v16 - 4) = v13 + 8;
     *(int32_t *)(v16 - 8) = -1;
     *(int32_t *)(v16 - 12) = v11;
-    function_48ab40((int32_t)&g1224, (int32_t)&g1224, &g1224);
+    sq_getstackobj(kinoko_vm((int32_t)&g1224), (int32_t)&g1224, (HSQOBJECT*)(&g1224));
     __writefsdword(0, v2);
     return ___report_gsfailure();
 }
@@ -32104,17 +29845,17 @@ int32_t function_4159f0(char a1) {
         return ___report_gsfailure();
     }
     int32_t * v7 = (int32_t *)(v5 + 4); // 0x415a3a
-    function_48ab90(*v7, v6, *(int32_t *)(v5 + 12));
+    sq_pushobject(kinoko_vm(*v7), kinoko_borrowed_object(v6, *(int32_t *)(v5 + 12)));
     int32_t v8; // bp-92, 0x4159f0
     int32_t v9 = &v8; // bp-104, 0x415a51
     if (v5 != 0x1000001) {
         int32_t v10 = *(int32_t *)(v5 + 4); // 0x415a6e
-        function_48ab90(*v7, *(int32_t *)v10, *(int32_t *)(v10 + 4));
+        sq_pushobject(kinoko_vm(*v7), kinoko_borrowed_object(*(int32_t *)v10, *(int32_t *)(v10 + 4)));
     } else {
         // 0x415a5e
-        function_48a670(*v7);
+        sq_pushroottable(kinoko_vm(*v7));
     }
-    int32_t v11 = function_48ace0(*v7, 1, 0, 1); // 0x415a92
+    int32_t v11 = kinoko_sq_call(*v7, 1, 0, 1); // 0x415a92
     int32_t v12 = &v9; // 0x415a9c
     if (v11 < 0) {
         // 0x415a9e
@@ -32135,8 +29876,8 @@ int32_t function_415b00(int32_t a1) {
     int32_t v2 = *(int32_t *)(v1 + 8); // 0x415b03
     if (v2 != 0x1000001) {
         int32_t * v3 = (int32_t *)(v1 + 4); // 0x415b12
-        function_48ab90(*v3, v2, *(int32_t *)(v1 + 12));
-        if (function_48afc0(*v3, 0x415b50, a1) < 0) {
+        sq_pushobject(kinoko_vm(*v3), kinoko_borrowed_object(v2, *(int32_t *)(v1 + 12)));
+        if (sq_writeclosure(kinoko_vm(*v3), (SQWRITEFUNC)kinoko_pointer(0x415b50), kinoko_pointer(a1)) < 0) {
             // 0x415b36
             return -1;
         }
@@ -32159,12 +29900,12 @@ int32_t function_415b80(void) {
     __writefsdword(0, (int32_t)&v1);
     int32_t result; // 0x415b80
     *(int32_t *)result = (int32_t)&g231;
-    function_48abe0(result + 8);
-    function_48abe0(result + 16);
-    function_48abe0(result + 28);
-    function_48abe0(result + 36);
-    function_48abe0(result + 48);
-    function_48abe0(result + 56);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 16));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 28));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 36));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 48));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 56));
     *(int32_t *)(result + 84) = 15;
     *(int32_t *)(result + 80) = 0;
     *(char *)(result + 64) = 0;
@@ -32499,7 +30240,7 @@ int32_t function_415c50(void) {
         *(int32_t *)(v7 - 16) = *v45;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v7 - 20) = v46;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *(int32_t *)(v7 - 24) = v43;
         v44 = function_48abe0((int32_t)&g1224);
     }
@@ -32515,7 +30256,7 @@ int32_t function_415c50(void) {
         *(int32_t *)(v7 - 16) = *v49;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v7 - 20) = v50;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *(int32_t *)(v7 - 24) = v47;
         v48 = function_48abe0((int32_t)&g1224);
     }
@@ -32531,7 +30272,7 @@ int32_t function_415c50(void) {
         *(int32_t *)(v7 - 16) = *v52;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v7 - 20) = v53;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *(int32_t *)(v7 - 24) = v51;
         result = function_48abe0((int32_t)&g1224);
     }
@@ -32688,7 +30429,7 @@ int32_t function_415fd0(int32_t a1, int32_t a2) {
         int32_t * v23 = (int32_t *)(v16 - 72); // 0x416190
         int32_t v24 = &v10; // 0x416190
         *v23 = v24;
-        function_48abe0((int32_t)&g39);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g39));
         if (*(char *)(a1 + 101) == 0) {
             // 0x4161fa
             *v23 = 0;
@@ -32742,14 +30483,14 @@ int32_t function_415fd0(int32_t a1, int32_t a2) {
             int32_t * v35 = (int32_t *)(v16 - 80); // 0x4161d0
             *v35 = v3;
             v22 = *(int32_t *)(a1 + 96);
-            uint32_t v36 = function_48b050((int32_t)&g185, (int32_t)&g1224, &g1224); // 0x4161d4
+            uint32_t v36 = sq_readclosure(kinoko_vm((int32_t)&g185), (SQREADFUNC)kinoko_pointer((int32_t)&g1224), &g1224); // 0x4161d4
             v21 = v19;
             if (v36 >= 0) {
                 // 0x4161e0
                 *v23 = v24;
                 *v34 = -1;
                 *v35 = v3;
-                function_48ab40((int32_t)&g1224, (int32_t)&g1224, &g1224);
+                sq_getstackobj(kinoko_vm((int32_t)&g1224), (int32_t)&g1224, (HSQOBJECT*)(&g1224));
                 v21 = v19;
             }
             goto lab_0x41629c;
@@ -32785,9 +30526,9 @@ int32_t function_415fd0(int32_t a1, int32_t a2) {
         *v42 = v37;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v21 - 32) = v41;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *v38 = v37;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         v39 = v42;
     }
     int32_t * v43 = (int32_t *)(v21 - 28);
@@ -32811,9 +30552,9 @@ int32_t function_415fd0(int32_t a1, int32_t a2) {
         int32_t v49 = v21 - 40;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v21 - 44) = v47;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *v43 = v37;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         v44 = (int32_t *)v49;
         v20 = v49;
         v45 = v48;
@@ -32830,9 +30571,9 @@ int32_t function_415fd0(int32_t a1, int32_t a2) {
         *(int32_t *)(v21 - 48) = v37;
         function_48a430((int32_t)&g1224, (int32_t)&g1224);
         *(int32_t *)(v21 - 56) = v50;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
         *v44 = v37;
-        function_48abe0((int32_t)&g1224);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1224));
     }
     int32_t v51 = *(int32_t *)(*(int32_t *)(*(int32_t *)a2 + 4) + 4); // 0x4163b3
     v22 = v51;
@@ -33008,12 +30749,12 @@ int32_t function_416510(int32_t a1) {
     int32_t v18 = function_48a170(v14); // 0x41660d
     int32_t * v19 = (int32_t *)(v10 - 32); // 0x416614
     *v19 = v18;
-    function_4c5c80(v18);
+    sqstd_seterrorhandlers(kinoko_vm(v18));
     int32_t * v20 = (int32_t *)(v10 - 36); // 0x41661d
     *v20 = 0x43e100;
     int32_t * v21 = (int32_t *)(v10 - 40); // 0x416622
     *v21 = v18;
-    function_48b8b0((int32_t)&g1224, (int32_t)&g1224);
+    sq_setprintfunc(kinoko_vm((int32_t)&g1224), (SQPRINTFUNCTION)kinoko_pointer((int32_t)&g1224));
     function_402a20();
     *v17 = *(int32_t *)(v2 + 92);
     int32_t v22; // bp-48, 0x416510
@@ -33035,7 +30776,7 @@ int32_t function_416510(int32_t a1) {
     if (v18 != 0) {
         // 0x4166be
         *(int32_t *)(v10 - 72) = v18;
-        function_48c1c0(v15);
+        sq_close(kinoko_vm(v15));
     }
     // 0x4166c7
     function_41e1e0();
@@ -33120,7 +30861,7 @@ int32_t function_416790(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
             }
             // 0x416831
             int32_t v15; // bp-124, 0x416790
-            function_48abe0((int32_t)&v15);
+            sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&v15));
             v11 = 0;
             int32_t v16 = a1; // 0x416869
             while (*(char *)v16 != 0) {
@@ -36297,11 +34038,11 @@ int32_t function_4190e0(int32_t a1, int32_t a2) {
     int32_t result; // 0x4190e0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4190ec
     int32_t v2 = *v1; // 0x4190ec
-    function_48ab90(v2, result, v2);
-    function_48a480(*v1, a1, -1);
-    function_48a4f0(*v1, *(int32_t *)a2);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(result, v2));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushinteger(kinoko_vm(*v1), *(int32_t *)a2);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -37352,21 +35093,21 @@ int32_t function_419e49(void) {
     int32_t v1 = __readfsdword(0); // bp-24, 0x419e70
     __writefsdword(0, (int32_t)&v1);
     int32_t v2; // bp-32, 0x419e49
-    function_48a920(0, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = function_4155d0(0, 3); // 0x419ea2
     int32_t v4 = *(int32_t *)(v3 + 8); // bp-92, 0x419ec5
     function_48a400(*(int32_t *)(v3 + 4), (int32_t)&v4);
-    function_48a720(0, 2);
+    sq_tostring(kinoko_vm(0), 2);
     int32_t v5; // bp-28, 0x419e49
-    function_48a8d0(0, -1, &v5);
-    function_48aa30(0, 1);
+    sq_getstring(kinoko_vm(0), -1, (const SQChar**)(&v5));
+    kinoko_sq_pop(0, 1);
     char v6; // 0x419e49
     if (v6 != 0) {
         // 0x419f1c
         function_48a430(v5, (int32_t)&g1224);
     }
     // 0x419f2c
-    function_48a530(0, v5 & 255);
+    sq_pushbool(kinoko_vm(0), ((v5 & 255) != 0));
     __writefsdword(0, v1);
     return 1;
 }
@@ -44106,9 +41847,9 @@ int32_t function_41e0c0(int32_t a1) {
     *(int32_t *)(v2 + 20) = 15;
     *(int32_t *)(v2 + 16) = 0;
     *(char *)v2 = 0;
-    function_48a720(a1, 2);
+    sq_tostring(kinoko_vm(a1), 2);
     char * v3; // bp-52, 0x41e0c0
-    function_48a8d0(a1, -1, (int32_t *)&v3);
+    sq_getstring(kinoko_vm(a1), -1, (const SQChar**)((int32_t *)&v3));
     int32_t * v4 = NULL; // bp-48, 0x41e12b
     int32_t v5 = (int32_t)v3; // 0x41e12f
     while (*(char *)v5 != 0) {
@@ -44118,7 +41859,7 @@ int32_t function_41e0c0(int32_t a1) {
     // 0x41e139
     retdec_msvc_0_Init_locks_std__QAE_XZ((int32_t *)&v4, (int32_t *)v3);
     function_40e3f0();
-    function_48aa30(a1, 1);
+    kinoko_sq_pop(a1, 1);
     __writefsdword(0, v1);
     return ___report_gsfailure();
 }
@@ -44134,12 +41875,12 @@ int32_t function_41e190(void) {
     *v2 = (int32_t)&g39;
     int32_t * v3 = (int32_t *)(result + 4); // 0x41e19b
     *(char *)(result + 16) = 1;
-    function_48abe0(v1);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
     *v2 = (int32_t)&g251;
-    function_48a600(*v3);
-    function_48ab40(*v3, -1, (int32_t *)v1);
+    sq_newtable(kinoko_vm(*v3));
+    sq_getstackobj(kinoko_vm(*v3), -1, (HSQOBJECT*)((int32_t *)v1));
     function_48a400(*v3, v1);
-    function_48aa30(*v3, 1);
+    kinoko_sq_pop(*v3, 1);
     return result;
 }
 
@@ -44172,12 +41913,12 @@ int32_t function_41e200(int32_t a1) {
     int32_t * v3 = (int32_t *)(result + 4); // 0x41e215
     *v3 = a1;
     *(char *)(result + 16) = 1;
-    function_48abe0(v1);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
     *v2 = (int32_t)&g40;
-    function_48a670(*v3);
-    function_48ab40(*v3, -1, (int32_t *)v1);
+    sq_pushroottable(kinoko_vm(*v3));
+    sq_getstackobj(kinoko_vm(*v3), -1, (HSQOBJECT*)((int32_t *)v1));
     function_48a400(*v3, v1);
-    function_48aa30(a1, 1);
+    kinoko_sq_pop(a1, 1);
     return result;
 }
 
@@ -44194,12 +41935,12 @@ int32_t function_41e320(void) {
     int32_t v2 = v1;
     int32_t v3 = v1;
     int32_t * v4 = (int32_t *)(v2 + 4); // 0x41e324
-    int32_t v5 = function_48aa20(*v4); // 0x41e328
-    function_48ab90(*v4, *(int32_t *)(v2 + 8), *(int32_t *)(v2 + 12));
-    function_48a480(*v4, (int32_t)"script", -1);
-    function_48ab90(*v4, *(int32_t *)(v3 + 8), *(int32_t *)(v3 + 12));
-    int32_t v6 = function_48cb10(*v4, -3); // 0x41e367
-    function_48c910(*v4, v5);
+    int32_t v5 = sq_gettop(kinoko_vm(*v4)); // 0x41e328
+    sq_pushobject(kinoko_vm(*v4), kinoko_borrowed_object(*(int32_t *)(v2 + 8), *(int32_t *)(v2 + 12)));
+    sq_pushstring(kinoko_vm(*v4), (const SQChar*)kinoko_pointer((int32_t)"script"), -1);
+    sq_pushobject(kinoko_vm(*v4), kinoko_borrowed_object(*(int32_t *)(v3 + 8), *(int32_t *)(v3 + 12)));
+    int32_t v6 = sq_rawset(kinoko_vm(*v4), -3); // 0x41e367
+    sq_settop(kinoko_vm(*v4), (SQInteger)(v5));
     return v6 >= 0;
 }
 
@@ -44247,18 +41988,18 @@ int32_t function_41e390(int32_t a1) {
             int32_t * v16 = (int32_t *)(result + 312); // 0x41e463
             *v16 = g664;
             *(char *)(result + 324) = 1;
-            function_48abe0(v14);
+            sq_resetobject((HSQOBJECT*)kinoko_pointer(v14));
             *v15 = (int32_t)&g251;
-            function_48a600(*v16);
+            sq_newtable(kinoko_vm(*v16));
             v11 = v14;
-            function_48ab40(*v16, -1, (int32_t *)v14);
+            sq_getstackobj(kinoko_vm(*v16), -1, (HSQOBJECT*)((int32_t *)v14));
             function_48a400(*v16, v14);
-            function_48aa30(*v16, 1);
+            kinoko_sq_pop(*v16, 1);
             int32_t * v17 = (int32_t *)(result + 328); // 0x41e4c1
             *v17 = (int32_t)&g39;
             *(int32_t *)(result + 332) = g664;
             *(char *)(result + 344) = 1;
-            function_48abe0(result + 336);
+            sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 336));
             *v17 = (int32_t)&g253;
             *(int32_t *)(result + 96) = -1;
             *(int32_t *)(result + 100) = 0;
@@ -46293,14 +44034,14 @@ int32_t function_420740(int32_t a1) {
     // 0x420740
     int32_t v1; // 0x420740
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x42074b
-    int32_t v3 = function_48aa20(v2); // 0x42074f
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x42074f
     int32_t v4; // bp-16, 0x420740
     int32_t v5 = *(int32_t *)(function_48abe0((int32_t)&v4) + 4); // 0x420761
-    function_48ab90(v2, *(int32_t *)v5, *(int32_t *)(v5 + 4));
-    function_48a480(v2, a1, -1);
-    function_48ab90(v2, v4, v1);
-    int32_t v6 = function_48cb10(v2, -3); // 0x420795
-    function_48c910(v2, v3);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(*(int32_t *)v5, *(int32_t *)(v5 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v4, v1));
+    int32_t v6 = sq_rawset(kinoko_vm(v2), -3); // 0x420795
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v6 >= 0;
 }
 
@@ -46514,15 +44255,15 @@ int32_t function_420a90(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x420a9d
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g259;
     if (g1028 == 0) {
         // 0x420abb
-        function_48abe0((int32_t)&g1026);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1026);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1026));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1026));
         function_48a400(*v2, (int32_t)&g1026);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_4216a0();
         g1028 = 1;
     }
@@ -47434,34 +45175,34 @@ int32_t function_4216a0(void) {
     g1150 = 0x4a1760;
     int32_t v1; // 0x4216a0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x4216b6
-    function_48ab90(*v2, g1026, g1027);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1151);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1151);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1026, g1027));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1151));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1151));
     function_48a400(*v2, (int32_t)&g1151);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1153);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1153);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1153));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1153));
     function_48a400(*v2, (int32_t)&g1153);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1151, g1152);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1153, g1154);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1151, g1152));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1153, g1154));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x421860 - 0x421db1
@@ -48912,18 +46653,18 @@ int32_t function_422a60(int32_t a1, int32_t a2) {
     // 0x422a60
     int32_t result; // 0x422a60
     int32_t * v1 = (int32_t *)(result + 4); // 0x422a6e
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -48932,18 +46673,18 @@ int32_t function_422b40(void) {
     // 0x422b40
     int32_t result; // 0x422b40
     int32_t * v1 = (int32_t *)(result + 4); // 0x422b4b
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 112;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 112;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 112;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 112;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -48952,18 +46693,18 @@ int32_t function_422c20(int32_t a1, int32_t a2) {
     // 0x422c20
     int32_t result; // 0x422c20
     int32_t * v1 = (int32_t *)(result + 4); // 0x422c2e
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x454c20, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x423c90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454c20), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423c90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -48972,18 +46713,18 @@ int32_t function_422d00(int32_t a1, int32_t a2) {
     // 0x422d00
     int32_t result; // 0x422d00
     int32_t * v1 = (int32_t *)(result + 4); // 0x422d0e
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -48992,18 +46733,18 @@ int32_t function_422de0(int32_t a1, int32_t a2) {
     // 0x422de0
     int32_t result; // 0x422de0
     int32_t * v1 = (int32_t *)(result + 4); // 0x422dee
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x454cf0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x423cf0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454cf0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423cf0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -49012,18 +46753,18 @@ int32_t function_422ec0(int32_t a1, int32_t a2) {
     // 0x422ec0
     int32_t result; // 0x422ec0
     int32_t * v1 = (int32_t *)(result + 4); // 0x422ece
-    function_48ab90(*v1, g1153, g1154);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x423d60, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1151, g1152);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x454c80, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423d60), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454c80), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -50143,12 +47884,12 @@ int32_t function_423be0(int32_t * a1) {
         __asm_int3();
         __asm_int3();
         int32_t v2 = 0; // bp-52, 0x423ca4
-        function_48c890((int32_t)&g443, 1, &v2, 0);
+        sq_getinstanceup(kinoko_vm((int32_t)&g443), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
         int32_t v3 = 0; // bp-48, 0x423cb9
-        function_48a920((int32_t)&g443, -1, &v3, 0);
+        sq_getuserdata(kinoko_vm((int32_t)&g443), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
         int32_t v4 = *(int32_t *)v3; // 0x423cc8
         int32_t v5; // bp-56, 0x423be0
-        function_48a790((int32_t)&g443, 2, &v5);
+        sq_tobool(kinoko_vm((int32_t)&g443), 2, (SQBool*)(&v5));
         *(char *)(v2 + v4) = (char)(v5 != 0);
         return 0;
     }
@@ -50179,14 +47920,14 @@ int32_t function_423be0(int32_t * a1) {
 // Address range: 0x423cf0 - 0x423d58
 int32_t function_423cf0(int32_t a1) {
     int32_t v1 = 0; // bp-8, 0x423d04
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x423d19
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)v2; // 0x423d28
     if (*(int32_t *)(v1 + v3) != 0) {
         // 0x423d36
         float32_t v4; // bp-16, 0x423cf0
-        function_48a830(a1, 2, (int32_t *)&v4);
+        sq_getfloat(kinoko_vm(a1), 2, (SQFloat*)((int32_t *)&v4));
         *(int32_t *)*(int32_t *)(v1 + v3) = (int32_t)v4;
     }
     // 0x423d50
@@ -50196,16 +47937,16 @@ int32_t function_423cf0(int32_t a1) {
 // Address range: 0x423d60 - 0x423dc5
 int32_t function_423d60(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x423d73
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x423d88
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)(v1 + *(int32_t *)v2); // 0x423d9f
     if (v3 == 0) {
         // 0x423da5
         return 0;
     }
     // 0x423dac
-    function_48a4f0(a1, *(int32_t *)v3);
+    sq_pushinteger(kinoko_vm(a1), *(int32_t *)v3);
     return 1;
 }
 
@@ -50215,15 +47956,15 @@ int32_t function_423dd0(int32_t a1, int32_t a2) {
     int32_t v1; // 0x423dd0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x423de1
     int32_t v3 = *v2; // 0x423de1
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, a1, -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
     int32_t v4 = *v2; // 0x423e0e
-    function_48ab90(v4, g1026, g1027);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a2);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1026, g1027));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a2));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x423e70 - 0x423ee9
@@ -50367,12 +48108,12 @@ int32_t function_4241f9(void) {
     __asm_int3();
     __asm_int3();
     int32_t v1; // bp-24, 0x4241f9
-    function_48a920(0, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-20, 0x42423b
-    function_48c890(0, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(0), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-16, 0x424250
-    function_48c890(0, 2, &v3, 0);
-    function_48a4f0(0, v3);
+    sq_getinstanceup(kinoko_vm(0), 2, (SQUserPointer*)(&v3), kinoko_pointer(0));
+    sq_pushinteger(kinoko_vm(0), v3);
     return 1;
 }
 
@@ -58746,15 +56487,15 @@ int32_t function_42d0d0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x42d0dd
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g305;
     if (g1030 == 0) {
         // 0x42d0fb
-        function_48abe0((int32_t)&g1145);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1145);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1145));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1145));
         function_48a400(*v2, (int32_t)&g1145);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_42d240();
         g1030 = 1;
     }
@@ -58829,34 +56570,34 @@ int32_t function_42d240(void) {
     g1140 = 0x4a1760;
     int32_t v1; // 0x42d240
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x42d256
-    function_48ab90(*v2, g1145, g1146);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1141);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1141);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1145, g1146));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1141));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1141));
     function_48a400(*v2, (int32_t)&g1141);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1143);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1143);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1143));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1143));
     function_48a400(*v2, (int32_t)&g1143);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1141, g1142);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1143, g1144);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1141, g1142));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1143, g1144));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x42d400 - 0x42d4ca
@@ -59434,18 +57175,18 @@ int32_t function_42d850(int32_t a1, int32_t a2) {
     // 0x42d850
     int32_t result; // 0x42d850
     int32_t * v1 = (int32_t *)(result + 4); // 0x42d85e
-    function_48ab90(*v1, g1143, g1144);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1141, g1142);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1143, g1144));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1141, g1142));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -59454,18 +57195,18 @@ int32_t function_42d930(void) {
     // 0x42d930
     int32_t result; // 0x42d930
     int32_t * v1 = (int32_t *)(result + 4); // 0x42d93b
-    function_48ab90(*v1, g1143, g1144);
-    function_48a480(*v1, (int32_t)"blend", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 288;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1141, g1142);
-    function_48a480(*v1, (int32_t)"blend", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 288;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1143, g1144));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"blend"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 288;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1141, g1142));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"blend"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 288;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -59501,15 +57242,15 @@ int32_t function_42da80(int32_t a1) {
     // 0x42da80
     int32_t v1; // 0x42da80
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x42da88
-    int32_t v3 = function_48aa20(v2); // 0x42da8c
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, (int32_t)"layout", -1);
-    function_48ab90(v2, g1145, g1146);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a1);
-    int32_t v4 = function_48cb10(v2, -3); // 0x42daf7
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x42da8c
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1145, g1146));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a1));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x42daf7
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -59767,13 +57508,13 @@ int32_t function_42dfc0(int32_t a1, int32_t * a2, int32_t a3, int32_t a4, int32_
     // 0x42dfc0
     int32_t v1; // 0x42dfc0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x42dfc9
-    function_48ab90(*v2, a4, a5);
-    function_48a480(*v2, a1, -1);
-    function_48c2f0(*v2, v1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(a4, a5));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
+    (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), v1));
     _memcpy2();
-    function_48d850(*v2, a3, 1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(a3), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x42e030 - 0x42e045
@@ -60078,11 +57819,11 @@ int32_t function_42e2c0(int32_t * a1) {
         __asm_int3();
         __asm_int3();
         int32_t v2 = 0; // bp-52, 0x42e383
-        function_48c890((int32_t)&g443, 1, &v2, 0);
+        sq_getinstanceup(kinoko_vm((int32_t)&g443), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
         int32_t v3 = 0; // bp-48, 0x42e398
-        function_48a920((int32_t)&g443, -1, &v3, 0);
+        sq_getuserdata(kinoko_vm((int32_t)&g443), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
         int32_t v4 = *(int32_t *)(v2 + *(int32_t *)v3); // 0x42e3ac
-        function_48a4f0((int32_t)&g443, v4);
+        sq_pushinteger(kinoko_vm((int32_t)&g443), v4);
         return 1;
     }
     // 0x42e2de
@@ -60112,11 +57853,11 @@ int32_t function_42e2c0(int32_t * a1) {
 // Address range: 0x42e3d0 - 0x42e422
 int32_t function_42e3d0(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x42e3e5
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x42e3f5
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3; // bp-16, 0x42e3d0
-    function_48a7d0(a1, 2, &v3);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3));
     *(int32_t *)(v1 + *(int32_t *)v2) = v3;
     return 0;
 }
@@ -60127,15 +57868,15 @@ int32_t function_42e430(int32_t a1) {
     int32_t v1; // 0x42e430
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x42e43d
     int32_t v3 = *v2; // 0x42e43d
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, (int32_t)"layout", -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
     int32_t v4 = *v2; // 0x42e46b
-    function_48ab90(v4, g1145, g1146);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1145, g1146));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a1));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x42e4c0 - 0x42e539
@@ -60167,11 +57908,11 @@ int32_t function_42e539(void) {
     __asm_int3();
     __asm_int3();
     int32_t v1; // bp-20, 0x42e539
-    function_48a920(0, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-16, 0x42e57b
-    function_48c890(0, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(0), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-24, 0x42e539
-    function_48a7d0(0, 2, &v3);
+    sq_getinteger(kinoko_vm(0), 2, (SQInteger*)(&v3));
     return 0;
 }
 
@@ -62546,15 +60287,15 @@ int32_t function_430e10(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x430e1d
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g319;
     if (g1031 == 0) {
         // 0x430e3b
-        function_48abe0((int32_t)&g1133);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1133);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1133));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1133));
         function_48a400(*v2, (int32_t)&g1133);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_431060();
         g1031 = 1;
     }
@@ -62672,15 +60413,15 @@ int32_t function_430fd0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x430fdd
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g320;
     if (g1032 == 0) {
         // 0x430ffb
-        function_48abe0((int32_t)&g1135);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1135);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1135));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1135));
         function_48a400(*v2, (int32_t)&g1135);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_431490();
         g1032 = 1;
     }
@@ -62694,34 +60435,34 @@ int32_t function_431060(void) {
     g1128 = 0x4a1760;
     int32_t v1; // 0x431060
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x431076
-    function_48ab90(*v2, g1133, g1134);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1129);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1129);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1133, g1134));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1129));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1129));
     function_48a400(*v2, (int32_t)&g1129);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1131);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1131);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1131));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1131));
     function_48a400(*v2, (int32_t)&g1131);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1129, g1130);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1131, g1132);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1129, g1130));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1131, g1132));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x431220 - 0x4312bc
@@ -63072,34 +60813,34 @@ int32_t function_431490(void) {
     g1123 = 0x4a1760;
     int32_t v1; // 0x431490
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x4314a6
-    function_48ab90(*v2, g1135, g1136);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1124);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1124);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1135, g1136));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1124));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1124));
     function_48a400(*v2, (int32_t)&g1124);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1126);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1126);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1126));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1126));
     function_48a400(*v2, (int32_t)&g1126);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1124, g1125);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1126, g1127);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1124, g1125));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1126, g1127));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x431650 - 0x431668
@@ -64177,18 +61918,18 @@ int32_t function_432160(void) {
     // 0x432160
     int32_t result; // 0x432160
     int32_t * v1 = (int32_t *)(result + 4); // 0x43216b
-    function_48ab90(*v1, g1126, g1127);
-    function_48a480(*v1, (int32_t)"resourceID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1124, g1125);
-    function_48a480(*v1, (int32_t)"resourceID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1126, g1127));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"resourceID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1124, g1125));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"resourceID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -64197,18 +61938,18 @@ int32_t function_432240(void) {
     // 0x432240
     int32_t result; // 0x432240
     int32_t * v1 = (int32_t *)(result + 4); // 0x43224b
-    function_48ab90(*v1, g1126, g1127);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1124, g1125);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1126, g1127));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1124, g1125));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -64217,18 +61958,18 @@ int32_t function_432320(char * a1, int32_t a2) {
     int32_t v1 = (int32_t)a1;
     int32_t result; // 0x432320
     int32_t * v2 = (int32_t *)(result + 4); // 0x43232e
-    function_48ab90(*v2, g1131, g1132);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x42e370, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
-    function_48ab90(*v2, g1129, g1130);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x42e3d0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1131, g1132));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1129, g1130));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
     return result;
 }
 
@@ -64237,18 +61978,18 @@ int32_t function_432400(char * a1, int32_t a2) {
     int32_t v1 = (int32_t)a1;
     int32_t result; // 0x432400
     int32_t * v2 = (int32_t *)(result + 4); // 0x43240e
-    function_48ab90(*v2, g1131, g1132);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x433020, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
-    function_48ab90(*v2, g1129, g1130);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x433080, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1131, g1132));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x433020), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1129, g1130));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x433080), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
     return result;
 }
 
@@ -64257,18 +61998,18 @@ int32_t function_4324e0(void) {
     // 0x4324e0
     int32_t result; // 0x4324e0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4324eb
-    function_48ab90(*v1, g1131, g1132);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 32;
-    function_48d850(*v1, 0x4330e0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1129, g1130);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 32;
-    function_48d850(*v1, 0x433160, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1131, g1132));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 32;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x4330e0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1129, g1130));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 32;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x433160), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -64277,15 +62018,15 @@ int32_t function_4325c0(int32_t a1, int32_t a2) {
     // 0x4325c0
     int32_t v1; // 0x4325c0
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x4325c9
-    int32_t v3 = function_48aa20(v2); // 0x4325cd
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, a1, -1);
-    function_48ab90(v2, g1135, g1136);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a2);
-    int32_t v4 = function_48cb10(v2, -3); // 0x432638
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x4325cd
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1135, g1136));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a2));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x432638
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -65220,11 +62961,11 @@ int32_t function_432f70(int32_t * a1) {
         __asm_int3();
         __asm_int3();
         int32_t v2 = 0; // bp-52, 0x433033
-        function_48c890((int32_t)&g443, 1, &v2, 0);
+        sq_getinstanceup(kinoko_vm((int32_t)&g443), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
         int32_t v3 = 0; // bp-48, 0x433048
-        function_48a920((int32_t)&g443, -1, &v3, 0);
+        sq_getuserdata(kinoko_vm((int32_t)&g443), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
         int16_t v4 = *(int16_t *)(v2 + *(int32_t *)v3); // 0x43305c
-        function_48a4f0((int32_t)&g443, (int32_t)v4);
+        sq_pushinteger(kinoko_vm((int32_t)&g443), (int32_t)v4);
         return 1;
     }
     // 0x432f8e
@@ -65254,11 +62995,11 @@ int32_t function_432f70(int32_t * a1) {
 // Address range: 0x433080 - 0x4330d4
 int32_t function_433080(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x433095
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x4330a5
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3; // bp-16, 0x433080
-    function_48a7d0(a1, 2, &v3);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3));
     *(int16_t *)(v1 + *(int32_t *)v2) = (int16_t)v3;
     return 0;
 }
@@ -65266,23 +63007,23 @@ int32_t function_433080(int32_t a1) {
 // Address range: 0x4330e0 - 0x43315f
 int32_t function_4330e0(int32_t a1) {
     int32_t v1 = 0; // bp-16, 0x4330f3
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x433108
-    function_48a920(a1, -1, &v2, 0);
-    function_48ab90(a1, g1118, g1119);
-    function_48b490(a1, -1);
-    function_48aa60(a1, -2);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
+    sq_pushobject(kinoko_vm(a1), kinoko_borrowed_object(g1118, g1119));
+    sq_createinstance(kinoko_vm(a1), -1);
+    sq_remove(kinoko_vm(a1), -2);
     return 1;
 }
 
 // Address range: 0x433160 - 0x4331c5
 int32_t function_433160(int32_t a1) {
     int32_t v1 = 0; // bp-16, 0x433174
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x433189
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     char * v3 = NULL; // bp-12, 0x4331a3
-    function_48c890(a1, 2, (int32_t *)&v3, 0);
+    sq_getinstanceup(kinoko_vm(a1), 2, (SQUserPointer*)((int32_t *)&v3), kinoko_pointer(0));
     *(char *)(v1 + *(int32_t *)v2) = *v3;
     return 0;
 }
@@ -65293,15 +63034,15 @@ int32_t function_4331d0(int32_t a1, int32_t a2) {
     int32_t v1; // 0x4331d0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x4331de
     int32_t v3 = *v2; // 0x4331de
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, a1, -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
     int32_t v4 = *v2; // 0x43320b
-    function_48ab90(v4, g1135, g1136);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a2);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1135, g1136));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a2));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x433260 - 0x4332d9
@@ -65465,16 +63206,16 @@ int32_t function_4334f9(void) {
     __asm_int3();
     __asm_int3();
     int32_t v1; // bp-20, 0x4334f9
-    function_48a920(0, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-16, 0x433538
-    function_48c890(0, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(0), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-24, 0x4334f9
-    function_48a790(0, 4, &v3);
+    sq_tobool(kinoko_vm(0), 4, (SQBool*)(&v3));
     int32_t v4; // bp-28, 0x4334f9
-    function_48a7d0(0, 3, &v4);
+    sq_getinteger(kinoko_vm(0), 3, (SQInteger*)(&v4));
     int32_t v5; // bp-36, 0x4334f9
-    int32_t v6 = function_48a7d0(0, 2, &v5); // 0x433570
-    function_48a530(0, v6 & 255);
+    int32_t v6 = sq_getinteger(kinoko_vm(0), 2, (SQInteger*)(&v5)); // 0x433570
+    sq_pushbool(kinoko_vm(0), ((v6 & 255) != 0));
     return 1;
 }
 
@@ -65482,15 +63223,15 @@ int32_t function_4334f9(void) {
 int32_t function_4335a0(int32_t a1) {
     // 0x4335a0
     int32_t v1; // bp-12, 0x4335a0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x4335c7
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x4335a0
-    int32_t v4 = function_48a7d0(a1, 2, &v3); // 0x4335da
-    function_48ab90(a1, g1133, g1134);
-    function_48b490(a1, -1);
-    function_48aa60(a1, -2);
-    function_48c840(a1, -1, v4);
+    int32_t v4 = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3)); // 0x4335da
+    sq_pushobject(kinoko_vm(a1), kinoko_borrowed_object(g1133, g1134));
+    sq_createinstance(kinoko_vm(a1), -1);
+    sq_remove(kinoko_vm(a1), -2);
+    sq_setinstanceup(kinoko_vm(a1), -1, kinoko_pointer(v4));
     return 1;
 }
 
@@ -69643,15 +67384,15 @@ int32_t function_437be0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x437bed
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g333;
     if (g1033 == 0) {
         // 0x437c0b
-        function_48abe0((int32_t)&g1116);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1116);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1116));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1116));
         function_48a400(*v2, (int32_t)&g1116);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_438380();
         g1033 = 1;
     }
@@ -69687,15 +67428,15 @@ int32_t function_437ca0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x437cad
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g334;
     if (g1034 == 0) {
         // 0x437ccb
-        function_48abe0((int32_t)&g1114);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1114);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1114));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1114));
         function_48a400(*v2, (int32_t)&g1114);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_438540();
         g1034 = 1;
     }
@@ -70268,34 +68009,34 @@ int32_t function_438380(void) {
     g1109 = 0x4a1760;
     int32_t v1; // 0x438380
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x438396
-    function_48ab90(*v2, g1116, g1117);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1110);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1110);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1116, g1117));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1110));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1110));
     function_48a400(*v2, (int32_t)&g1110);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1112);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1112);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1112));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1112));
     function_48a400(*v2, (int32_t)&g1112);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1110, g1111);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1112, g1113);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1110, g1111));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1112, g1113));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x438540 - 0x4386f7
@@ -70304,34 +68045,34 @@ int32_t function_438540(void) {
     g1104 = 0x4a1760;
     int32_t v1; // 0x438540
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x438556
-    function_48ab90(*v2, g1114, g1115);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1105);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1105);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1114, g1115));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1105));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1105));
     function_48a400(*v2, (int32_t)&g1105);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1107);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1107);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1107));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1107));
     function_48a400(*v2, (int32_t)&g1107);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1105, g1106);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1107, g1108);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1105, g1106));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1107, g1108));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x438700 - 0x4387ac
@@ -71277,18 +69018,18 @@ int32_t function_439220(int32_t a1, int32_t a2) {
     // 0x439220
     int32_t result; // 0x439220
     int32_t * v1 = (int32_t *)(result + 4); // 0x43922e
-    function_48ab90(*v1, g1112, g1113);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1110, g1111);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1112, g1113));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1110, g1111));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71297,18 +69038,18 @@ int32_t function_439300(int32_t a1, int32_t a2) {
     // 0x439300
     int32_t result; // 0x439300
     int32_t * v1 = (int32_t *)(result + 4); // 0x43930e
-    function_48ab90(*v1, g1112, g1113);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1110, g1111);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1112, g1113));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1110, g1111));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71317,14 +69058,14 @@ int32_t function_4393e0(int32_t a1, int32_t a2, int32_t a3) {
     // 0x4393e0
     int32_t result; // 0x4393e0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4393ef
-    function_48ab90(*v1, g1112, g1113);
-    function_48a480(*v1, a1, -1);
-    int32_t v2 = function_48c2f0(*v1, 8); // 0x439415
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1112, g1113));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    int32_t v2 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 8)); // 0x439415
     *(int32_t *)v2 = a2;
     *(int32_t *)(v2 + 4) = a3;
-    function_48d850(*v1, 0x43ab00, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43ab00), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71333,18 +69074,18 @@ int32_t function_439460(char * a1, int32_t a2) {
     int32_t v1 = (int32_t)a1;
     int32_t result; // 0x439460
     int32_t * v2 = (int32_t *)(result + 4); // 0x43946e
-    function_48ab90(*v2, g1107, g1108);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x42e370, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
-    function_48ab90(*v2, g1105, g1106);
-    function_48a480(*v2, v1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = a2;
-    function_48d850(*v2, 0x42e3d0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1107, g1108));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1105, g1106));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    kinoko_sq_pop(*v2, 1);
     return result;
 }
 
@@ -71353,18 +69094,18 @@ int32_t function_439540(void) {
     // 0x439540
     int32_t result; // 0x439540
     int32_t * v1 = (int32_t *)(result + 4); // 0x43954b
-    function_48ab90(*v1, g1107, g1108);
-    function_48a480(*v1, (int32_t)"layoutID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 20;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1105, g1106);
-    function_48a480(*v1, (int32_t)"layoutID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 20;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1107, g1108));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"layoutID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 20;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1105, g1106));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"layoutID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 20;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71373,18 +69114,18 @@ int32_t function_439620(void) {
     // 0x439620
     int32_t result; // 0x439620
     int32_t * v1 = (int32_t *)(result + 4); // 0x43962b
-    function_48ab90(*v1, g1107, g1108);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 24;
-    function_48d850(*v1, 0x454c20, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1105, g1106);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 24;
-    function_48d850(*v1, 0x423c90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1107, g1108));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 24;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454c20), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1105, g1106));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 24;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423c90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71393,18 +69134,18 @@ int32_t function_439700(void) {
     // 0x439700
     int32_t result; // 0x439700
     int32_t * v1 = (int32_t *)(result + 4); // 0x43970b
-    function_48ab90(*v1, g1107, g1108);
-    function_48a480(*v1, (int32_t)"alpha", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 28;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1105, g1106);
-    function_48a480(*v1, (int32_t)"alpha", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 28;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1107, g1108));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"alpha"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 28;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1105, g1106));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"alpha"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 28;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -71440,15 +69181,15 @@ int32_t function_439840(int32_t a1) {
     // 0x439840
     int32_t v1; // 0x439840
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x439848
-    int32_t v3 = function_48aa20(v2); // 0x43984c
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, (int32_t)"layout", -1);
-    function_48ab90(v2, g1116, g1117);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a1);
-    int32_t v4 = function_48cb10(v2, -3); // 0x4398b7
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x43984c
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1116, g1117));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a1));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x4398b7
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -72317,11 +70058,11 @@ int32_t function_43a3b0(int32_t * a1) {
         __asm_int3();
         __asm_int3();
         int32_t v2 = 0; // bp-52, 0x43a475
-        function_48c890((int32_t)&g443, 1, &v2, 0);
+        sq_getinstanceup(kinoko_vm((int32_t)&g443), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
         int32_t v3 = 0; // bp-48, 0x43a485
-        function_48a920((int32_t)&g443, -1, &v3, 0);
+        sq_getuserdata(kinoko_vm((int32_t)&g443), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
         float32_t v4; // bp-56, 0x43a3b0
-        function_48a830((int32_t)&g443, 2, (int32_t *)&v4);
+        sq_getfloat(kinoko_vm((int32_t)&g443), 2, (SQFloat*)((int32_t *)&v4));
         *(int32_t *)(v2 + *(int32_t *)v3) = (int32_t)v4;
         return 0;
     }
@@ -72355,15 +70096,15 @@ int32_t function_43a4c0(int32_t a1) {
     int32_t v1; // 0x43a4c0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x43a4cd
     int32_t v3 = *v2; // 0x43a4cd
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, (int32_t)"layout", -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
     int32_t v4 = *v2; // 0x43a4fb
-    function_48ab90(v4, g1116, g1117);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1116, g1117));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a1));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x43a550 - 0x43a611
@@ -72968,10 +70709,10 @@ int32_t function_43aa40(int32_t a1, int32_t result) {
 int32_t function_43ab00(int32_t a1) {
     // 0x43ab00
     int32_t v1; // bp-12, 0x43ab00
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43ab2b
-    int32_t v3 = function_48c890(a1, 1, &v2, 0); // 0x43ab32
-    function_48a4f0(a1, v3);
+    int32_t v3 = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0)); // 0x43ab32
+    sq_pushinteger(kinoko_vm(a1), v3);
     return 1;
 }
 
@@ -72979,11 +70720,11 @@ int32_t function_43ab00(int32_t a1) {
 int32_t function_43ab60(int32_t a1) {
     // 0x43ab60
     int32_t v1; // bp-12, 0x43ab60
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43ab89
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     float80_t v3; // 0x43ab60
-    function_48a580(a1, (int32_t)(float32_t)v3);
+    sq_pushfloat(kinoko_vm(a1), kinoko_float_bits((int32_t)(float32_t)v3));
     return 1;
 }
 
@@ -73134,14 +70875,14 @@ int32_t function_43adc0(void) {
 int32_t function_43ade0(int32_t a1) {
     // 0x43ade0
     int32_t v1; // bp-12, 0x43ade0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43ae0b
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43ade0
-    function_48a7d0(a1, 3, &v3);
+    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v3));
     int32_t v4; // bp-24, 0x43ade0
-    function_48a7d0(a1, 2, &v4);
-    function_48a4f0(a1, v4);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4));
+    sq_pushinteger(kinoko_vm(a1), v4);
     return 1;
 }
 
@@ -73149,20 +70890,20 @@ int32_t function_43ade0(int32_t a1) {
 int32_t function_43ae60(int32_t a1) {
     // 0x43ae60
     int32_t v1; // bp-12, 0x43ae60
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43ae8b
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43ae60
-    function_48a7d0(a1, 6, &v3);
+    sq_getinteger(kinoko_vm(a1), 6, (SQInteger*)(&v3));
     int32_t v4; // bp-20, 0x43ae60
-    function_48a7d0(a1, 5, &v4);
+    sq_getinteger(kinoko_vm(a1), 5, (SQInteger*)(&v4));
     int32_t v5; // bp-24, 0x43ae60
-    function_48a7d0(a1, 4, &v5);
+    sq_getinteger(kinoko_vm(a1), 4, (SQInteger*)(&v5));
     int32_t v6; // bp-28, 0x43ae60
-    function_48a7d0(a1, 3, &v6);
+    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v6));
     int32_t v7; // bp-48, 0x43ae60
-    function_48a7d0(a1, 2, &v7);
-    function_48a530(a1, v7 & 255);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v7));
+    sq_pushbool(kinoko_vm(a1), ((v7 & 255) != 0));
     return 1;
 }
 
@@ -73170,16 +70911,16 @@ int32_t function_43ae60(int32_t a1) {
 int32_t function_43af30(int32_t a1) {
     // 0x43af30
     int32_t v1; // bp-12, 0x43af30
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43af5b
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43af30
-    function_48a7d0(a1, 4, &v3);
+    sq_getinteger(kinoko_vm(a1), 4, (SQInteger*)(&v3));
     int32_t v4; // bp-20, 0x43af30
-    function_48a7d0(a1, 3, &v4);
+    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v4));
     int32_t v5; // bp-32, 0x43af30
-    function_48a7d0(a1, 2, &v5);
-    function_48a530(a1, v5 & 255);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v5));
+    sq_pushbool(kinoko_vm(a1), ((v5 & 255) != 0));
     return 1;
 }
 
@@ -73187,15 +70928,15 @@ int32_t function_43af30(int32_t a1) {
 int32_t function_43afd0(int32_t a1) {
     // 0x43afd0
     int32_t v1; // bp-12, 0x43afd0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43affb
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43afd0
-    function_48a7d0(a1, 2, &v3);
-    function_48ab90(a1, g1114, g1115);
-    function_48b490(a1, -1);
-    function_48aa60(a1, -2);
-    function_48c840(a1, -1, v3);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3));
+    sq_pushobject(kinoko_vm(a1), kinoko_borrowed_object(g1114, g1115));
+    sq_createinstance(kinoko_vm(a1), -1);
+    sq_remove(kinoko_vm(a1), -2);
+    sq_setinstanceup(kinoko_vm(a1), -1, kinoko_pointer(v3));
     return 1;
 }
 
@@ -73203,14 +70944,14 @@ int32_t function_43afd0(int32_t a1) {
 int32_t function_43b060(int32_t a1) {
     // 0x43b060
     int32_t v1; // bp-12, 0x43b060
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43b08b
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43b060
-    function_48a7d0(a1, 3, &v3);
+    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v3));
     int32_t v4; // bp-24, 0x43b060
-    function_48a7d0(a1, 2, &v4);
-    function_48a530(a1, v4 & 255);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4));
+    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
     return 1;
 }
 
@@ -73218,12 +70959,12 @@ int32_t function_43b060(int32_t a1) {
 int32_t function_43b0e0(int32_t a1) {
     // 0x43b0e0
     int32_t v1; // bp-12, 0x43b0e0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43b10b
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x43b0e0
-    function_48a7d0(a1, 2, &v3);
-    function_48a4f0(a1, v3);
+    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3));
+    sq_pushinteger(kinoko_vm(a1), v3);
     return 1;
 }
 
@@ -73231,11 +70972,11 @@ int32_t function_43b0e0(int32_t a1) {
 int32_t function_43b150(int32_t a1) {
     // 0x43b150
     int32_t v1; // bp-12, 0x43b150
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x43b177
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     float32_t v3; // bp-16, 0x43b150
-    function_48a830(a1, 2, (int32_t *)&v3);
+    sq_getfloat(kinoko_vm(a1), 2, (SQFloat*)((int32_t *)&v3));
     return 0;
 }
 
@@ -76137,15 +73878,15 @@ int32_t function_43d720(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x43d72d
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g345;
     if (g1035 == 0) {
         // 0x43d74b
-        function_48abe0((int32_t)&g1099);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1099);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1099));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1099));
         function_48a400(*v2, (int32_t)&g1099);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_43d880();
         g1035 = 1;
     }
@@ -76221,34 +73962,34 @@ int32_t function_43d880(void) {
     g1094 = 0x4a1760;
     int32_t v1; // 0x43d880
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x43d896
-    function_48ab90(*v2, g1099, g1100);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1095);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1095);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1099, g1100));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1095));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1095));
     function_48a400(*v2, (int32_t)&g1095);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1097);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1097);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1097));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1097));
     function_48a400(*v2, (int32_t)&g1097);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1095, g1096);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1097, g1098);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1095, g1096));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1097, g1098));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x43da40 - 0x43db0a
@@ -76792,18 +74533,18 @@ int32_t function_43de30(int32_t a1, int32_t a2) {
     // 0x43de30
     int32_t result; // 0x43de30
     int32_t * v1 = (int32_t *)(result + 4); // 0x43de3e
-    function_48ab90(*v1, g1097, g1098);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1095, g1096);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1097, g1098));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1095, g1096));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -76812,15 +74553,15 @@ int32_t function_43df10(int32_t a1) {
     // 0x43df10
     int32_t v1; // 0x43df10
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x43df18
-    int32_t v3 = function_48aa20(v2); // 0x43df1c
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, (int32_t)"layout", -1);
-    function_48ab90(v2, g1099, g1100);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a1);
-    int32_t v4 = function_48cb10(v2, -3); // 0x43df87
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x43df1c
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1099, g1100));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a1));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x43df87
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -77327,11 +75068,11 @@ int32_t function_43e590(int32_t * a1) {
         __asm_int3();
         __asm_int3();
         int32_t v2 = 0; // bp-52, 0x43e653
-        function_48c890((int32_t)&g443, 1, &v2, 0);
+        sq_getinstanceup(kinoko_vm((int32_t)&g443), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
         int32_t v3 = 0; // bp-48, 0x43e668
-        function_48a920((int32_t)&g443, -1, &v3, 0);
+        sq_getuserdata(kinoko_vm((int32_t)&g443), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
         float32_t v4 = *(float32_t *)(v2 + *(int32_t *)v3); // 0x43e67c
-        function_48a580((int32_t)&g443, (int32_t)v4);
+        sq_pushfloat(kinoko_vm((int32_t)&g443), kinoko_float_bits((int32_t)v4));
         return 1;
     }
     // 0x43e5ae
@@ -77364,15 +75105,15 @@ int32_t function_43e6a0(int32_t a1) {
     int32_t v1; // 0x43e6a0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x43e6ad
     int32_t v3 = *v2; // 0x43e6ad
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, (int32_t)"layout", -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
     int32_t v4 = *v2; // 0x43e6db
-    function_48ab90(v4, g1099, g1100);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1099, g1100));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a1));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x43e730 - 0x43e7a9
@@ -81376,15 +79117,15 @@ int32_t function_4426f0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x4426fd
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g355;
     if (g1036 == 0) {
         // 0x44271b
-        function_48abe0((int32_t)&g1089);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1089);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1089));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1089));
         function_48a400(*v2, (int32_t)&g1089);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_442db0();
         g1036 = 1;
     }
@@ -81911,34 +79652,34 @@ int32_t function_442db0(void) {
     g1084 = 0x4a1760;
     int32_t v1; // 0x442db0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x442dc6
-    function_48ab90(*v2, g1089, g1090);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1085);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1085);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1089, g1090));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1085));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1085));
     function_48a400(*v2, (int32_t)&g1085);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1087);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1087);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1087));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1087));
     function_48a400(*v2, (int32_t)&g1087);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1085, g1086);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1087, g1088);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1085, g1086));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1087, g1088));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x442f70 - 0x442fab
@@ -82624,18 +80365,18 @@ int32_t function_443580(int32_t a1, int32_t a2) {
     // 0x443580
     int32_t result; // 0x443580
     int32_t * v1 = (int32_t *)(result + 4); // 0x44358e
-    function_48ab90(*v1, g1087, g1088);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1085, g1086);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1087, g1088));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1085, g1086));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -82644,18 +80385,18 @@ int32_t function_443660(int32_t a1, int32_t a2) {
     // 0x443660
     int32_t result; // 0x443660
     int32_t * v1 = (int32_t *)(result + 4); // 0x44366e
-    function_48ab90(*v1, g1087, g1088);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1085, g1086);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1087, g1088));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1085, g1086));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -82664,18 +80405,18 @@ int32_t function_443740(void) {
     // 0x443740
     int32_t result; // 0x443740
     int32_t * v1 = (int32_t *)(result + 4); // 0x44374b
-    function_48ab90(*v1, g1087, g1088);
-    function_48a480(*v1, (int32_t)"stText", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1085, g1086);
-    function_48a480(*v1, (int32_t)"stText", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1087, g1088));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stText"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1085, g1086));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stText"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -82718,12 +80459,12 @@ int32_t function_443920(int32_t a1, int32_t a2) {
     // 0x443920
     int32_t result; // 0x443920
     int32_t * v1 = (int32_t *)(result + 4); // 0x44392e
-    function_48ab90(*v1, g1087, g1088);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x445530, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1087, g1088));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x445530), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -82732,15 +80473,15 @@ int32_t function_4439a0(int32_t a1) {
     // 0x4439a0
     int32_t v1; // 0x4439a0
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x4439a8
-    int32_t v3 = function_48aa20(v2); // 0x4439ac
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, (int32_t)"layout", -1);
-    function_48ab90(v2, g1089, g1090);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a1);
-    int32_t v4 = function_48cb10(v2, -3); // 0x443a17
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x4439ac
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1089, g1090));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a1));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x443a17
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -83186,12 +80927,12 @@ int32_t function_4443c0(char * a1, int32_t * a2, int32_t a3, int32_t a4, int32_t
     // 0x4443c0
     int32_t v1; // 0x4443c0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x4443c9
-    function_48ab90(*v2, a4, a5);
-    function_48a480(*v2, (int32_t)a1, -1);
-    *(int32_t *)function_48c2f0(*v2, 4) = *a2;
-    function_48d850(*v2, a3, 1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(a4, a5));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), 4)) = *a2;
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(a3), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x444430 - 0x444487
@@ -83605,15 +81346,15 @@ int32_t function_444930(int32_t a1) {
     int32_t v1; // 0x444930
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44493d
     int32_t v3 = *v2; // 0x44493d
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, (int32_t)"layout", -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"layout"), -1);
     int32_t v4 = *v2; // 0x44496b
-    function_48ab90(v4, g1089, g1090);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a1);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1089, g1090));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a1));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x4449c0 - 0x444a39
@@ -84266,17 +82007,17 @@ int32_t function_445410(int32_t a1) {
             *v25 = v11 - 24;
             *(int32_t *)(v11 - 44) = -1;
             *(int32_t *)(v11 - 48) = v23;
-            function_48a920((int32_t)&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224);
+            sq_getuserdata(kinoko_vm((int32_t)&g1224), (int32_t)&g1224, (SQUserPointer*)(&g1224), (SQUserPointer*)kinoko_pointer((int32_t)&g1224));
             *(int32_t *)(v11 - 52) = 0;
             int32_t v26 = v11 - 20; // 0x4454f0
             *(int32_t *)(v11 - 56) = v26;
             *(int32_t *)(v11 - 60) = 1;
             *(int32_t *)(v11 - 64) = v23;
             *(int32_t *)v26 = 0;
-            int32_t v27 = function_48c890((int32_t)&g1224, (int32_t)&g1224, &g1224, (int32_t)&g1224); // 0x4454fe
+            int32_t v27 = sq_getinstanceup(kinoko_vm((int32_t)&g1224), (int32_t)&g1224, (SQUserPointer*)(&g1224), kinoko_pointer((int32_t)&g1224)); // 0x4454fe
             *v24 = v27 & 255;
             *v25 = v23;
-            function_48a530((int32_t)&g1224, (int32_t)&g1224);
+            sq_pushbool(kinoko_vm((int32_t)&g1224), (((int32_t)&g1224) != 0));
             return 1;
         }
         // 0x445453
@@ -84308,14 +82049,14 @@ int32_t function_445530(int32_t a1) {
     int32_t method;
     int32_t result;
 
-    if (function_48a920(a1, -1, &method_holder, 0) < 0 ||
+    if (sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&method_holder), (SQUserPointer*)kinoko_pointer(0)) < 0 ||
         method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        function_48c890(a1, 1, &instance, 0) < 0)
+        sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance), kinoko_pointer(0)) < 0)
         return 0;
     method = *(int32_t *)(intptr_t)method_holder;
     result = retdec_call_thiscall0_result(
         (void *)(intptr_t)instance, (void *)(intptr_t)method);
-    function_48a4f0(a1, result);
+    sq_pushinteger(kinoko_vm(a1), result);
     return 1;
 }
 
@@ -84323,10 +82064,10 @@ int32_t function_445530(int32_t a1) {
 int32_t function_445580(int32_t a1) {
     // 0x445580
     int32_t v1; // bp-12, 0x445580
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x4455a7
-    int32_t v3 = function_48c890(a1, 1, &v2, 0); // 0x4455ae
-    function_48a480(a1, v3, -1);
+    int32_t v3 = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0)); // 0x4455ae
+    sq_pushstring(kinoko_vm(a1), (const SQChar*)kinoko_pointer(v3), -1);
     return 1;
 }
 
@@ -84334,12 +82075,12 @@ int32_t function_445580(int32_t a1) {
 int32_t function_4455e0(int32_t a1) {
     // 0x4455e0
     int32_t v1; // bp-12, 0x4455e0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x445607
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x4455e0
-    int32_t v4 = function_48a7d0(a1, 2, &v3); // 0x44561a
-    function_48a530(a1, v4 & 255);
+    int32_t v4 = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3)); // 0x44561a
+    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
     return 1;
 }
 
@@ -84347,13 +82088,13 @@ int32_t function_4455e0(int32_t a1) {
 int32_t function_445650(int32_t a1) {
     // 0x445650
     int32_t v1; // bp-12, 0x445650
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x445677
-    function_48c890(a1, 1, &v2, 0);
-    function_48a720(a1, 2);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
+    sq_tostring(kinoko_vm(a1), 2);
     int32_t v3; // bp-16, 0x445650
-    function_48a8d0(a1, -1, &v3);
-    function_48a4f0(a1, function_48aa30(a1, 1));
+    sq_getstring(kinoko_vm(a1), -1, (const SQChar**)(&v3));
+    sq_pushinteger(kinoko_vm(a1), kinoko_sq_pop(a1, 1));
     return 1;
 }
 
@@ -84361,13 +82102,13 @@ int32_t function_445650(int32_t a1) {
 int32_t function_4456c0(int32_t a1) {
     // 0x4456c0
     int32_t v1; // bp-12, 0x4456c0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x4456e7
-    function_48c890(a1, 1, &v2, 0);
-    function_48a720(a1, 2);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
+    sq_tostring(kinoko_vm(a1), 2);
     int32_t v3; // bp-16, 0x4456c0
-    function_48a8d0(a1, -1, &v3);
-    function_48aa30(a1, 1);
+    sq_getstring(kinoko_vm(a1), -1, (const SQChar**)(&v3));
+    kinoko_sq_pop(a1, 1);
     return 0;
 }
 
@@ -84378,11 +82119,11 @@ int32_t function_4456c0(int32_t a1) {
 int32_t function_445790(int32_t a1) {
     // 0x445790
     int32_t v1; // bp-12, 0x445790
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x4457b7
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x445790
-    function_48a790(a1, 2, &v3);
+    sq_tobool(kinoko_vm(a1), 2, (SQBool*)(&v3));
     return 0;
 }
 
@@ -86525,15 +84266,15 @@ int32_t function_447c60(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x447c6d
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g371;
     if (g1037 == 0) {
         // 0x447c8b
-        function_48abe0((int32_t)&g1079);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1079);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1079));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1079));
         function_48a400(*v2, (int32_t)&g1079);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_447dc0();
         g1037 = 1;
     }
@@ -86691,34 +84432,34 @@ int32_t function_447dc0(void) {
     g1074 = 0x4a1760;
     int32_t v1; // 0x447dc0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x447dd6
-    function_48ab90(*v2, g1079, g1080);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1075);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1075);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1079, g1080));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1075));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1075));
     function_48a400(*v2, (int32_t)&g1075);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1077);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1077);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1077));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1077));
     function_48a400(*v2, (int32_t)&g1077);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1075, g1076);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1077, g1078);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1075, g1076));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1077, g1078));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x447f80 - 0x4481f1
@@ -87256,18 +84997,18 @@ int32_t function_448670(int32_t a1, int32_t a2) {
     // 0x448670
     int32_t result; // 0x448670
     int32_t * v1 = (int32_t *)(result + 4); // 0x44867e
-    function_48ab90(*v1, g1077, g1078);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1075, g1076);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1077, g1078));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1075, g1076));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -87276,18 +85017,18 @@ int32_t function_448750(void) {
     // 0x448750
     int32_t result; // 0x448750
     int32_t * v1 = (int32_t *)(result + 4); // 0x44875b
-    function_48ab90(*v1, g1077, g1078);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1075, g1076);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1077, g1078));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1075, g1076));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -87296,18 +85037,18 @@ int32_t function_448830(int32_t a1, int32_t a2) {
     // 0x448830
     int32_t result; // 0x448830
     int32_t * v1 = (int32_t *)(result + 4); // 0x44883e
-    function_48ab90(*v1, g1077, g1078);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1075, g1076);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1077, g1078));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1075, g1076));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -87316,15 +85057,15 @@ int32_t function_448910(int32_t a1, int32_t a2) {
     // 0x448910
     int32_t v1; // 0x448910
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x448919
-    int32_t v3 = function_48aa20(v2); // 0x44891d
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, a1, -1);
-    function_48ab90(v2, g1079, g1080);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a2);
-    int32_t v4 = function_48cb10(v2, -3); // 0x448988
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x44891d
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1079, g1080));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a2));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x448988
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -87837,15 +85578,15 @@ int32_t function_448f00(int32_t * a1) {
     int32_t v8; // 0x448f00
     int32_t * v9 = (int32_t *)(v8 + 4); // 0x448fbe
     int32_t v10 = *v9; // 0x448fbe
-    function_48ab90(v10, v8, v10);
-    function_48a480(*v9, (int32_t)&g443, -1);
+    sq_pushobject(kinoko_vm(v10), kinoko_borrowed_object(v8, v10));
+    sq_pushstring(kinoko_vm(*v9), (const SQChar*)kinoko_pointer((int32_t)&g443), -1);
     int32_t v11 = *v9; // 0x448feb
-    function_48ab90(v11, g1079, g1080);
-    function_48b490(v11, -1);
-    function_48aa60(v11, -2);
-    function_48c840(v11, -1, (int32_t)&v2);
-    function_48c950(*v9, -3, 0);
-    return function_48aa30(*v9, 1);
+    sq_pushobject(kinoko_vm(v11), kinoko_borrowed_object(g1079, g1080));
+    sq_createinstance(kinoko_vm(v11), -1);
+    sq_remove(kinoko_vm(v11), -2);
+    sq_setinstanceup(kinoko_vm(v11), -1, kinoko_pointer((int32_t)&v2));
+    sq_newslot(kinoko_vm(*v9), -3, ((0) != 0));
+    return kinoko_sq_pop(*v9, 1);
 }
 
 // Address range: 0x449040 - 0x4490b9
@@ -87940,13 +85681,13 @@ int32_t function_449269(void) {
     __asm_int3();
     __asm_int3();
     int32_t v1; // bp-20, 0x449269
-    function_48a920(0, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-16, 0x4492a7
-    function_48c890(0, 1, &v2, 0);
-    function_48a720(0, 2);
+    sq_getinstanceup(kinoko_vm(0), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
+    sq_tostring(kinoko_vm(0), 2);
     int32_t v3; // bp-24, 0x449269
-    function_48a8d0(0, -1, &v3);
-    function_48a530(0, function_48aa30(0, 1) & 255);
+    sq_getstring(kinoko_vm(0), -1, (const SQChar**)(&v3));
+    sq_pushbool(kinoko_vm(0), ((kinoko_sq_pop(0, 1) & 255) != 0));
     return 1;
 }
 
@@ -89131,15 +86872,15 @@ int32_t function_44a800(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x44a80d
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g385;
     if (g1038 == 0) {
         // 0x44a82b
-        function_48abe0((int32_t)&g1069);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1069);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1069));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1069));
         function_48a400(*v2, (int32_t)&g1069);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_44a960();
         g1038 = 1;
     }
@@ -89297,34 +87038,34 @@ int32_t function_44a960(void) {
     g1064 = 0x4a1760;
     int32_t v1; // 0x44a960
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44a976
-    function_48ab90(*v2, g1069, g1070);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1065);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1065);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1069, g1070));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1065));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1065));
     function_48a400(*v2, (int32_t)&g1065);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1067);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1067);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1067));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1067));
     function_48a400(*v2, (int32_t)&g1067);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1065, g1066);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1067, g1068);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1065, g1066));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1067, g1068));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x44ab20 - 0x44ad91
@@ -89920,18 +87661,18 @@ int32_t function_44b270(int32_t a1, int32_t a2) {
     // 0x44b270
     int32_t result; // 0x44b270
     int32_t * v1 = (int32_t *)(result + 4); // 0x44b27e
-    function_48ab90(*v1, g1067, g1068);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1065, g1066);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1067, g1068));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1065, g1066));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -89940,18 +87681,18 @@ int32_t function_44b350(void) {
     // 0x44b350
     int32_t result; // 0x44b350
     int32_t * v1 = (int32_t *)(result + 4); // 0x44b35b
-    function_48ab90(*v1, g1067, g1068);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1065, g1066);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1067, g1068));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1065, g1066));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -89960,18 +87701,18 @@ int32_t function_44b430(int32_t a1, int32_t a2) {
     // 0x44b430
     int32_t result; // 0x44b430
     int32_t * v1 = (int32_t *)(result + 4); // 0x44b43e
-    function_48ab90(*v1, g1067, g1068);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43e640, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1065, g1066);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x43a460, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1067, g1068));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43e640), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1065, g1066));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x43a460), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -89980,15 +87721,15 @@ int32_t function_44b510(int32_t a1, int32_t a2) {
     // 0x44b510
     int32_t v1; // 0x44b510
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x44b519
-    int32_t v3 = function_48aa20(v2); // 0x44b51d
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, a1, -1);
-    function_48ab90(v2, g1069, g1070);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a2);
-    int32_t v4 = function_48cb10(v2, -3); // 0x44b588
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x44b51d
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1069, g1070));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a2));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x44b588
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -90449,9 +88190,9 @@ int32_t function_44b840(int32_t * a1, int32_t a2, int32_t a3) {
 // Address range: 0x44ba90 - 0x44bb01
 int32_t function_44ba90(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x44baa3
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x44bab8
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     function_406cc0(v1 + *(int32_t *)v2, 0, -1);
     function_424280((int32_t)&g1224);
     return 1;
@@ -90462,9 +88203,9 @@ int32_t function_44bb10(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x44bb20
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = 0; // bp-52, 0x44bb48
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-56, 0x44bb58
-    function_48a920(a1, -1, &v3, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
     function_41e0c0(a1);
     function_40e3f0();
     int32_t v4; // 0x44bb10
@@ -90483,15 +88224,15 @@ int32_t function_44bbc0(int32_t a1, int32_t a2) {
     int32_t v1; // 0x44bbc0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44bbce
     int32_t v3 = *v2; // 0x44bbce
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, a1, -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
     int32_t v4 = *v2; // 0x44bbfb
-    function_48ab90(v4, g1069, g1070);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a2);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1069, g1070));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a2));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x44bc50 - 0x44bcc9
@@ -92350,15 +90091,15 @@ int32_t function_44dab0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x44dabd
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g401;
     if (g1039 == 0) {
         // 0x44dadb
-        function_48abe0((int32_t)&g1059);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1059);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1059));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1059));
         function_48a400(*v2, (int32_t)&g1059);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_44dda0();
         g1039 = 1;
     }
@@ -92578,34 +90319,34 @@ int32_t function_44dda0(void) {
     g1054 = 0x4a1760;
     int32_t v1; // 0x44dda0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44ddb6
-    function_48ab90(*v2, g1059, g1060);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1055);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1055);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1059, g1060));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1055));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1055));
     function_48a400(*v2, (int32_t)&g1055);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1057);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1057);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1057));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1057));
     function_48a400(*v2, (int32_t)&g1057);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1055, g1056);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1057, g1058);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1055, g1056));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1057, g1058));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x44df60 - 0x44dfbc
@@ -93913,18 +91654,18 @@ int32_t function_44ec50(void) {
     // 0x44ec50
     int32_t result; // 0x44ec50
     int32_t * v1 = (int32_t *)(result + 4); // 0x44ec5b
-    function_48ab90(*v1, g1057, g1058);
-    function_48a480(*v1, (int32_t)"resourceID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x42e370, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1055, g1056);
-    function_48a480(*v1, (int32_t)"resourceID", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 4;
-    function_48d850(*v1, 0x42e3d0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1057, g1058));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"resourceID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e370), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1055, g1056));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"resourceID"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 4;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x42e3d0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -93933,18 +91674,18 @@ int32_t function_44ed30(int32_t a1, int32_t a2) {
     // 0x44ed30
     int32_t result; // 0x44ed30
     int32_t * v1 = (int32_t *)(result + 4); // 0x44ed3e
-    function_48ab90(*v1, g1057, g1058);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x44ba90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1055, g1056);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x44bb10, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1057, g1058));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44ba90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1055, g1056));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x44bb10), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -93953,15 +91694,15 @@ int32_t function_44ee10(int32_t a1, int32_t a2) {
     // 0x44ee10
     int32_t v1; // 0x44ee10
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x44ee19
-    int32_t v3 = function_48aa20(v2); // 0x44ee1d
-    function_48ab90(v2, v3, *(int32_t *)(v3 + 4));
-    function_48a480(v2, a1, -1);
-    function_48ab90(v2, g1059, g1060);
-    function_48b490(v2, -1);
-    function_48aa60(v2, -2);
-    function_48c840(v2, -1, a2);
-    int32_t v4 = function_48cb10(v2, -3); // 0x44ee88
-    function_48c910(v2, v3);
+    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x44ee1d
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v3, *(int32_t *)(v3 + 4)));
+    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
+    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(g1059, g1060));
+    sq_createinstance(kinoko_vm(v2), -1);
+    sq_remove(kinoko_vm(v2), -2);
+    sq_setinstanceup(kinoko_vm(v2), -1, kinoko_pointer(a2));
+    int32_t v4 = sq_rawset(kinoko_vm(v2), -3); // 0x44ee88
+    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
     return v4 >= 0;
 }
 
@@ -94416,15 +92157,15 @@ int32_t function_44f390(int32_t a1, int32_t a2) {
     int32_t v1; // 0x44f390
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44f39e
     int32_t v3 = *v2; // 0x44f39e
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, a1, -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
     int32_t v4 = *v2; // 0x44f3cb
-    function_48ab90(v4, g1059, g1060);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a2);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1059, g1060));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a2));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x44f420 - 0x44f499
@@ -94631,15 +92372,15 @@ int32_t function_44f829(void) {
     __asm_int3();
     __asm_int3();
     int32_t v1; // bp-24, 0x44f829
-    function_48a920(0, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(0), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-20, 0x44f868
-    function_48c890(0, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(0), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-16, 0x44f878
-    function_48c890(0, 3, &v3, 0);
-    function_48a720(0, 2);
+    sq_getinstanceup(kinoko_vm(0), 3, (SQUserPointer*)(&v3), kinoko_pointer(0));
+    sq_tostring(kinoko_vm(0), 2);
     int32_t v4; // bp-28, 0x44f829
-    function_48a8d0(0, -1, &v4);
-    function_48a4f0(0, function_48aa30(0, 1));
+    sq_getstring(kinoko_vm(0), -1, (const SQChar**)(&v4));
+    sq_pushinteger(kinoko_vm(0), kinoko_sq_pop(0, 1));
     return 1;
 }
 
@@ -95042,12 +92783,12 @@ int32_t function_44fd60(int32_t a1) {
     int32_t v1; // 0x44fd60
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x44fd68
     int32_t v3 = *v2; // 0x44fd68
-    int32_t v4 = function_48aa20(v3); // 0x44fd6c
-    function_48ab90(v3, v1, *v2);
+    int32_t v4 = sq_gettop(kinoko_vm(v3)); // 0x44fd6c
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, *v2));
     int32_t v5 = *(int32_t *)a1; // 0x44fd8d
-    function_48ab90(v3, *(int32_t *)v5, *(int32_t *)(v5 + 4));
-    function_48cc70(v3, -2);
-    function_48c910(v3, v4);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(*(int32_t *)v5, *(int32_t *)(v5 + 4)));
+    sq_setdelegate(kinoko_vm(v3), -2);
+    sq_settop(kinoko_vm(v3), (SQInteger)(v4));
     return 0;
 }
 
@@ -95119,7 +92860,7 @@ int32_t function_44fde0(int32_t result, int32_t a2) {
     *(int32_t *)(result + 4) = 0;
     *(int32_t *)(result + 152) = 0;
     *(char *)(result + 8) = 0;
-    function_48abe0(result + 156);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 156));
     *(int32_t *)(result + 76) = 0;
     *(int32_t *)(result + 96) = 0;
     *(int32_t *)(result + 100) = 0;
@@ -95538,17 +93279,17 @@ int32_t function_4513f0(void) {
         return -0x7fffbffb;
     }
     int32_t v4 = v1 + 164; // 0x451408
-    int32_t v5 = function_48aa20(*v2); // 0x45143c
-    function_48ab90(*v2, *v3, *(int32_t *)(v1 + 160));
+    int32_t v5 = sq_gettop(kinoko_vm(*v2)); // 0x45143c
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(*v3, *(int32_t *)(v1 + 160)));
     int32_t v6 = v4; // 0x451464
     if (*(int32_t *)(v1 + 184) >= 16) {
         // 0x451466
         v6 = *(int32_t *)v4;
     }
     // 0x451468
-    function_48a480(*v2, v6, -1);
-    function_48ca10(*v2, -2, 0);
-    function_48c910(*v2, v5);
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(v6), -1);
+    sq_deleteslot(kinoko_vm(*v2), -2, ((0) != 0));
+    sq_settop(kinoko_vm(*v2), (SQInteger)(v5));
     return 0;
 }
 
@@ -96710,11 +94451,11 @@ static void retdec_destroy_act_runtime(int32_t resource_ptr) {
     int32_t source_act = resource[0] ? *(int32_t *)(intptr_t)resource[0] : 0;
     kinoko_act_end_stage(resource_ptr, NULL);
     if (vm != 0 && resource[39] == 0x0a000020 && resource[45] != 0) {
-        int32_t top = function_48aa20(vm);
-        function_48ab90(vm, resource[39], resource[40]);
-        function_48a480(vm, (int32_t)(intptr_t)retdec_std_string_data(resource_ptr + 164), -1);
-        function_48ca10(vm, -2, 0);
-        function_48c910(vm, top);
+        int32_t top = sq_gettop(kinoko_vm(vm));
+        sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(resource[39], resource[40]));
+        sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)(intptr_t)retdec_std_string_data(resource_ptr + 164)), -1);
+        sq_deleteslot(kinoko_vm(vm), -2, ((0) != 0));
+        sq_settop(kinoko_vm(vm), (SQInteger)(top));
     }
     if (resource[21] != 0) {
         retdec_act_release_find_tree(*(int32_t *)(intptr_t)(resource[21] + 4));
@@ -96738,7 +94479,7 @@ static void retdec_destroy_act_runtime(int32_t resource_ptr) {
     resource[3] = 0;
     if (vm != 0 && (resource[39] & 0x08000000) != 0)
         function_48a430(vm, resource_ptr + 156);
-    function_48abe0(resource_ptr + 156);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(resource_ptr + 156));
     resource[38] = 0;
 }
 
@@ -98438,15 +96179,15 @@ int32_t function_4534f0(void) {
     *v1 = (int32_t)&g39;
     int32_t * v2 = (int32_t *)(result + 4); // 0x4534fd
     *(char *)(result + 16) = 0;
-    function_48abe0(result + 8);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 8));
     *v1 = (int32_t)&g409;
     if (g1040 == 0) {
         // 0x45351b
-        function_48abe0((int32_t)&g1049);
-        function_48c350(*v2, 0);
-        function_48ab40(*v2, -1, &g1049);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1049));
+        sq_newclass(kinoko_vm(*v2), ((0) != 0));
+        sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1049));
         function_48a400(*v2, (int32_t)&g1049);
-        function_48aa30(*v2, 1);
+        kinoko_sq_pop(*v2, 1);
         function_4539b0();
         g1040 = 1;
     }
@@ -98923,34 +96664,34 @@ int32_t function_4539b0(void) {
     g1044 = 0x4a1760;
     int32_t v1; // 0x4539b0
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x4539c6
-    function_48ab90(*v2, g1049, g1050);
-    function_48a480(*v2, (int32_t)"constructor", -1);
-    function_48d850(*v2, 0x4a1760, 0);
-    function_48c950(*v2, -3, 0);
-    function_48abe0((int32_t)&g1045);
-    function_48a480(*v2, (int32_t)"__setTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1045);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1049, g1050));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"constructor"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x4a1760), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1045));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__setTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1045));
     function_48a400(*v2, (int32_t)&g1045);
-    function_48c950(*v2, -3, 1);
-    function_48abe0((int32_t)&g1047);
-    function_48a480(*v2, (int32_t)"__getTable", -1);
-    function_48a600(*v2);
-    function_48ab40(*v2, -1, &g1047);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&g1047));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"__getTable"), -1);
+    sq_newtable(kinoko_vm(*v2));
+    sq_getstackobj(kinoko_vm(*v2), -1, (HSQOBJECT*)(&g1047));
     function_48a400(*v2, (int32_t)&g1047);
-    function_48c950(*v2, -3, 1);
-    function_48a480(*v2, (int32_t)"_set", -1);
-    function_48ab90(*v2, g1045, g1046);
-    function_48d850(*v2, 0x41e2c0, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"_get", -1);
-    function_48ab90(*v2, g1047, g1048);
-    function_48d850(*v2, 0x41e260, 1);
-    function_48c950(*v2, -3, 0);
-    function_48a480(*v2, (int32_t)"weakref", -1);
-    function_48d850(*v2, 0x431650, 0);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((1) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_set"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1045, g1046));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e2c0), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"_get"), -1);
+    sq_pushobject(kinoko_vm(*v2), kinoko_borrowed_object(g1047, g1048));
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x41e260), 1);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer((int32_t)"weakref"), -1);
+    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(0x431650), 0);
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x453b70 - 0x453bc4
@@ -99518,18 +97259,18 @@ int32_t function_454030(void) {
     // 0x454030
     int32_t result; // 0x454030
     int32_t * v1 = (int32_t *)(result + 4); // 0x45403b
-    function_48ab90(*v1, g1047, g1048);
-    function_48a480(*v1, (int32_t)"staging", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x454c20, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1045, g1046);
-    function_48a480(*v1, (int32_t)"staging", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 8;
-    function_48d850(*v1, 0x423c90, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1047, g1048));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"staging"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454c20), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1045, g1046));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"staging"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 8;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423c90), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -99538,18 +97279,18 @@ int32_t function_454110(int32_t a1, int32_t a2) {
     // 0x454110
     int32_t result; // 0x454110
     int32_t * v1 = (int32_t *)(result + 4); // 0x45411e
-    function_48ab90(*v1, g1047, g1048);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x423d60, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1045, g1046);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x454c80, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1047, g1048));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423d60), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1045, g1046));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454c80), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -99558,18 +97299,18 @@ int32_t function_4541f0(int32_t a1, int32_t a2) {
     // 0x4541f0
     int32_t result; // 0x4541f0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4541fe
-    function_48ab90(*v1, g1047, g1048);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x454cf0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1045, g1046);
-    function_48a480(*v1, a1, -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = a2;
-    function_48d850(*v1, 0x423cf0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1047, g1048));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454cf0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1045, g1046));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x423cf0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -99578,18 +97319,18 @@ int32_t function_4542d0(void) {
     // 0x4542d0
     int32_t result; // 0x4542d0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4542db
-    function_48ab90(*v1, g1047, g1048);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 132;
-    function_48d850(*v1, 0x454d60, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1045, g1046);
-    function_48a480(*v1, (int32_t)"visible", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 132;
-    function_48d850(*v1, 0x454dd0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1047, g1048));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 132;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454d60), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1045, g1046));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"visible"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 132;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454dd0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -99598,18 +97339,18 @@ int32_t function_4543b0(void) {
     // 0x4543b0
     int32_t result; // 0x4543b0
     int32_t * v1 = (int32_t *)(result + 4); // 0x4543bb
-    function_48ab90(*v1, g1047, g1048);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 148;
-    function_48d850(*v1, 0x454e40, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
-    function_48ab90(*v1, g1045, g1046);
-    function_48a480(*v1, (int32_t)"stName", -1);
-    *(int32_t *)function_48c2f0(*v1, 4) = 148;
-    function_48d850(*v1, 0x454ed0, 1);
-    function_48c950(*v1, -3, 0);
-    function_48aa30(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1047, g1048));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 148;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454e40), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
+    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1045, g1046));
+    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 148;
+    sq_newclosure(kinoko_vm(*v1), (SQFUNCTION)kinoko_pointer(0x454ed0), 1);
+    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
+    kinoko_sq_pop(*v1, 1);
     return result;
 }
 
@@ -100366,25 +98107,25 @@ int32_t function_454ba0(void) {
 // Address range: 0x454c20 - 0x454c74
 int32_t function_454c20(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x454c33
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x454c48
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     unsigned char v3 = *(char *)(v1 + *(int32_t *)v2); // 0x454c5c
-    function_48a530(a1, (int32_t)v3);
+    sq_pushbool(kinoko_vm(a1), (((int32_t)v3) != 0));
     return 1;
 }
 
 // Address range: 0x454c80 - 0x454ce8
 int32_t function_454c80(int32_t a1) {
     int32_t v1 = 0; // bp-8, 0x454c94
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x454ca9
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)v2; // 0x454cb8
     if (*(int32_t *)(v1 + v3) != 0) {
         // 0x454cc6
         int32_t v4; // bp-16, 0x454c80
-        function_48a7d0(a1, 2, &v4);
+        sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4));
         *(int32_t *)*(int32_t *)(v1 + v3) = v4;
     }
     // 0x454ce0
@@ -100394,46 +98135,46 @@ int32_t function_454c80(int32_t a1) {
 // Address range: 0x454cf0 - 0x454d58
 int32_t function_454cf0(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x454d03
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x454d18
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)(v1 + *(int32_t *)v2); // 0x454d2f
     if (v3 == 0) {
         // 0x454d35
         return 0;
     }
     // 0x454d3c
-    function_48a580(a1, (int32_t)*(float32_t *)v3);
+    sq_pushfloat(kinoko_vm(a1), kinoko_float_bits((int32_t)*(float32_t *)v3));
     return 1;
 }
 
 // Address range: 0x454d60 - 0x454dc6
 int32_t function_454d60(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x454d73
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x454d88
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)(v1 + *(int32_t *)v2); // 0x454d9f
     if (v3 == 0) {
         // 0x454da5
         return 0;
     }
     // 0x454dac
-    function_48a530(a1, (int32_t)*(char *)v3);
+    sq_pushbool(kinoko_vm(a1), (((int32_t)*(char *)v3) != 0));
     return 1;
 }
 
 // Address range: 0x454dd0 - 0x454e3c
 int32_t function_454dd0(int32_t a1) {
     int32_t v1 = 0; // bp-8, 0x454de4
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x454df9
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)v2; // 0x454e08
     if (*(int32_t *)(v1 + v3) != 0) {
         // 0x454e16
         int32_t v4; // bp-16, 0x454dd0
-        function_48a790(a1, 2, &v4);
+        sq_tobool(kinoko_vm(a1), 2, (SQBool*)(&v4));
         int32_t v5 = *(int32_t *)(v1 + v3); // 0x454e25
         *(char *)v5 = (char)(v4 != 0);
     }
@@ -100444,9 +98185,9 @@ int32_t function_454dd0(int32_t a1) {
 // Address range: 0x454e40 - 0x454ec4
 int32_t function_454e40(int32_t a1) {
     int32_t v1 = 0; // bp-12, 0x454e53
-    function_48c890(a1, 1, &v1, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x454e68
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     int32_t v3 = *(int32_t *)(v1 + *(int32_t *)v2); // 0x454e7f
     if (v3 == 0) {
         // 0x454e85
@@ -100463,9 +98204,9 @@ int32_t function_454ed0(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x454ee0
     __writefsdword(0, (int32_t)&v1);
     int32_t v2 = 0; // bp-52, 0x454f08
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-56, 0x454f18
-    function_48a920(a1, -1, &v3, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
     if (*(int32_t *)(v2 + *(int32_t *)v3) == 0) {
         // 0x454f5b
         __writefsdword(0, v1);
@@ -100490,15 +98231,15 @@ int32_t function_454f80(int32_t a1, int32_t a2) {
     int32_t v1; // 0x454f80
     int32_t * v2 = (int32_t *)(v1 + 4); // 0x454f8e
     int32_t v3 = *v2; // 0x454f8e
-    function_48ab90(v3, v1, v3);
-    function_48a480(*v2, a1, -1);
+    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v1, v3));
+    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
     int32_t v4 = *v2; // 0x454fbb
-    function_48ab90(v4, g1049, g1050);
-    function_48b490(v4, -1);
-    function_48aa60(v4, -2);
-    function_48c840(v4, -1, a2);
-    function_48c950(*v2, -3, 0);
-    return function_48aa30(*v2, 1);
+    sq_pushobject(kinoko_vm(v4), kinoko_borrowed_object(g1049, g1050));
+    sq_createinstance(kinoko_vm(v4), -1);
+    sq_remove(kinoko_vm(v4), -2);
+    sq_setinstanceup(kinoko_vm(v4), -1, kinoko_pointer(a2));
+    sq_newslot(kinoko_vm(*v2), -3, ((0) != 0));
+    return kinoko_sq_pop(*v2, 1);
 }
 
 // Address range: 0x455010 - 0x455090
@@ -100760,17 +98501,17 @@ int32_t function_455330(int32_t a1) {
     trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 128)
         retdec_trace_i32("450950:wrapper-entry", a1);
-    outer_status = function_48a920(a1, -1, &outer_payload, 0);
+    outer_status = sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
     if (trace_index <= 128) {
-        retdec_trace_i32("450950:wrapper-top", function_48aa20(a1));
+        retdec_trace_i32("450950:wrapper-top", sq_gettop(kinoko_vm(a1)));
         retdec_trace_i32("450950:wrapper-outer-status", outer_status);
         retdec_trace_i32("450950:wrapper-outer", outer_payload);
     }
     if (outer_payload == 0 || *(int32_t *)(intptr_t)outer_payload == 0)
         return 0;
     method = *(int32_t *)(intptr_t)outer_payload;
-    instance_status = function_48c890(a1, 1, &instance_ptr, 0);
-    argument_status = function_48a7d0(a1, 2, &argument);
+    instance_status = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance_ptr), kinoko_pointer(0));
+    argument_status = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&argument));
     if (argument_status < 0)
         return 0;
     if (trace_index <= 128) {
@@ -100786,7 +98527,7 @@ int32_t function_455330(int32_t a1) {
         (void *)(intptr_t)instance_ptr,
         (void *)(intptr_t)method,
         argument);
-    function_48a4f0(a1, result);
+    sq_pushinteger(kinoko_vm(a1), result);
     return 1;
 }
 
@@ -100795,10 +98536,10 @@ int32_t function_455390(int32_t a1) {
     int32_t v1 = __readfsdword(0); // bp-20, 0x4553a3
     __writefsdword(0, (int32_t)&v1);
     int32_t v2; // bp-64, 0x455390
-    function_48a920(a1, -1, &v2, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
     uint32_t v3 = *(int32_t *)v2; // 0x4553de
     int32_t v4 = 0; // bp-72, 0x4553ed
-    function_48c890(a1, 1, &v4, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v4), kinoko_pointer(0));
     function_41e0c0(a1);
     int32_t v5; // bp-124, 0x455390
     v2 = &v5;
@@ -100810,10 +98551,10 @@ int32_t function_455390(int32_t a1) {
     }
     // 0x455442
     v4 = 0;
-    function_48ab90(a1, g1026, g1027);
-    function_48b490(a1, -1);
-    function_48aa60(a1, -2);
-    function_48c840(a1, -1, v6);
+    sq_pushobject(kinoko_vm(a1), kinoko_borrowed_object(g1026, g1027));
+    sq_createinstance(kinoko_vm(a1), -1);
+    sq_remove(kinoko_vm(a1), -2);
+    sq_setinstanceup(kinoko_vm(a1), -1, kinoko_pointer(v6));
     int32_t v7; // 0x455390
     __writefsdword(0, v7);
     return ___report_gsfailure();
@@ -100823,12 +98564,12 @@ int32_t function_455390(int32_t a1) {
 int32_t function_4554b0(int32_t a1) {
     // 0x4554b0
     int32_t v1; // bp-16, 0x4554b0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x4554d7
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-8, 0x4554ec
-    int32_t v4 = function_48c890(a1, 2, &v3, 0); // 0x4554f3
-    function_48a4f0(a1, v4);
+    int32_t v4 = sq_getinstanceup(kinoko_vm(a1), 2, (SQUserPointer*)(&v3), kinoko_pointer(0)); // 0x4554f3
+    sq_pushinteger(kinoko_vm(a1), v4);
     return 1;
 }
 
@@ -100836,14 +98577,14 @@ int32_t function_4554b0(int32_t a1) {
 int32_t function_455520(int32_t a1) {
     // 0x455520
     int32_t v1; // bp-12, 0x455520
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x455548
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x455520
-    function_48a7d0(a1, 3, &v3);
+    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v3));
     int32_t v4; // bp-20, 0x455520
-    int32_t v5 = function_48a7d0(a1, 2, &v4); // 0x45556a
-    function_48a530(a1, v5 & 255);
+    int32_t v5 = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4)); // 0x45556a
+    sq_pushbool(kinoko_vm(a1), ((v5 & 255) != 0));
     return 1;
 }
 
@@ -100854,12 +98595,12 @@ int32_t function_455520(int32_t a1) {
 int32_t function_4556c0(int32_t a1) {
     // 0x4556c0
     int32_t v1; // bp-16, 0x4556c0
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-12, 0x4556e7
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3 = 0; // bp-8, 0x4556fc
-    int32_t v4 = function_48c890(a1, 2, &v3, 0); // 0x455703
-    function_48a530(a1, v4 & 255);
+    int32_t v4 = sq_getinstanceup(kinoko_vm(a1), 2, (SQUserPointer*)(&v3), kinoko_pointer(0)); // 0x455703
+    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
     return 1;
 }
 
@@ -100867,12 +98608,12 @@ int32_t function_4556c0(int32_t a1) {
 int32_t function_455730(int32_t a1) {
     // 0x455730
     int32_t v1; // bp-12, 0x455730
-    function_48a920(a1, -1, &v1, 0);
+    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
     int32_t v2 = 0; // bp-8, 0x455757
-    function_48c890(a1, 1, &v2, 0);
+    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
     int32_t v3; // bp-16, 0x455730
-    int32_t v4 = function_48a7d0(a1, 2, &v3); // 0x45576a
-    function_48a480(a1, v4, -1);
+    int32_t v4 = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3)); // 0x45576a
+    sq_pushstring(kinoko_vm(a1), (const SQChar*)kinoko_pointer(v4), -1);
     return 1;
 }
 
@@ -111199,7 +108940,7 @@ int32_t function_45f350(void) {
 int32_t function_45f3b0(int32_t a1, int32_t a2) {
     int32_t v1 = a2;
     int32_t v2; // 0x45f3b0
-    return function_48c890(*(int32_t *)(v2 + 4), a1, &v1, a2) > -1 ? v1 : 0;
+    return sq_getinstanceup(kinoko_vm(*(int32_t *)(v2 + 4)), a1, (SQUserPointer*)(&v1), kinoko_pointer(a2)) > -1 ? v1 : 0;
 }
 
 // Address range: 0x45f3e0 - 0x45f4e5
@@ -112785,25 +110526,21 @@ int32_t retdec_actor_step_callback(int32_t state_ptr)
     vm = *(int32_t *)(intptr_t)state_ptr;
     if (vm == 0)
         return -1;
-    base = function_48aa20(vm);
+    base = sq_gettop(kinoko_vm(vm));
 
     /* SquirrelFunction<> pushes its bound environment and callable, then
        calls with one argument and removes the two temporary stack entries. */
-    function_48ab90(vm,
-                    *(int32_t *)(intptr_t)(state_ptr + 20),
-                    *(int32_t *)(intptr_t)(state_ptr + 24));
-    function_48ab90(vm,
-                    *(int32_t *)(intptr_t)(state_ptr + 8),
-                    *(int32_t *)(intptr_t)(state_ptr + 12));
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(*(int32_t *)(intptr_t)(state_ptr + 20), *(int32_t *)(intptr_t)(state_ptr + 24)));
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(*(int32_t *)(intptr_t)(state_ptr + 8), *(int32_t *)(intptr_t)(state_ptr + 12)));
     InterlockedExchange(&retdec_actor_step_trace_active, 1);
-    result = function_48ace0(vm, 1, 1, 1);
+    result = kinoko_sq_call(vm, 1, 1, 1);
     InterlockedExchange(&retdec_actor_step_trace_active, 0);
     if (result < 0) {
         retdec_trace_i32("actor:step-call-failed", result);
-        function_48c910(vm, base);
+        sq_settop(kinoko_vm(vm), (SQInteger)(base));
         return result;
     }
-    return function_48aa30(vm, 2);
+    return kinoko_sq_pop(vm, 2);
 }
 
 static void retdec_actor_tick(int32_t actor)
@@ -114170,7 +111907,7 @@ int32_t function_462bf0(int32_t a1, int32_t a2, int32_t result) {
 static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
     int32_t argument[3];
     int32_t vm = *(int32_t *)(intptr_t)(actor + 120);
-    int32_t base = function_48aa20(vm);
+    int32_t base = sq_gettop(kinoko_vm(vm));
     int32_t result;
     retdec_trace_invalid_actor("before-collision",actor);
     function_4a9500_this(argument, other + 44);
@@ -114179,7 +111916,7 @@ static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
     retdec_trace_invalid_actor("after-collision",actor);
     if (result < 0) {
         retdec_trace("actor:collision-callback-failed");
-        function_48c910(vm, base);
+        sq_settop(kinoko_vm(vm), (SQInteger)(base));
         /* Original 462D9C/462E3E clears a failing callback before continuing. */
         kinoko_actor_set_collision_callback(actor, NULL, (int32_t)(intptr_t)&g16, g483, g484);
     }
@@ -117359,8 +115096,8 @@ static int32_t function_4665e0_this(int32_t result, int32_t a1) {
     int32_t v1 = a1;
     int32_t v2 = __readfsdword(0); // bp-16, 0x4665f0
     __writefsdword(0, (int32_t)&v2);
-    int32_t v3 = function_48aa20(a1); // 0x46660f
-    int32_t v4 = function_48c890(a1, 1, &v1, 0) > -1 ? v1 : 0; // 0x466635
+    int32_t v3 = sq_gettop(kinoko_vm(a1)); // 0x46660f
+    int32_t v4 = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0)) > -1 ? v1 : 0; // 0x466635
     int32_t * v5 = (int32_t *)result; // 0x466638
     *v5 = v4;
     int32_t v6; // bp-24, 0x4665e0
@@ -117370,7 +115107,7 @@ static int32_t function_4665e0_this(int32_t result, int32_t a1) {
         // 0x466660
         *(int32_t *)(result + 4) = 0;
     } else {
-        pair_status = function_48a920(a1, v3, &v6, (int32_t)&v1); // 0x466648
+        pair_status = sq_getuserdata(kinoko_vm(a1), v3, (SQUserPointer*)(&v6), (SQUserPointer*)kinoko_pointer((int32_t)&v1)); // 0x466648
         int32_t v9 = 0; // 0x466652
         if (pair_status >= 0) {
             // 0x466654
@@ -117378,8 +115115,8 @@ static int32_t function_4665e0_this(int32_t result, int32_t a1) {
         }
         // 0x46666b
         *(int32_t *)(result + 4) = v9;
-        function_48abe0((int32_t)&v7);
-        function_48ab40(a1, 1, &v7);
+        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)&v7));
+        sq_getstackobj(kinoko_vm(a1), 1, (HSQOBJECT*)(&v7));
     }
     if (camera_instance_trace_count < 16) {
         retdec_trace_i32("4665e0:vm", a1);
@@ -117451,7 +115188,7 @@ int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-44, 0x46678e
     __writefsdword(0, (int32_t)&v1);
     int32_t v4 = a2; // bp-48, 0x46679d
-    int32_t v5 = function_48aa20(a2); // 0x4667a4
+    int32_t v5 = sq_gettop(kinoko_vm(a2)); // 0x4667a4
     retdec_msvc_0_Init_locks_std__QAE_XZ5();
     if ((g610 & 1) == 0) {
         // 0x4667cc
@@ -117472,16 +115209,16 @@ int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
         int32_t root_object[3];
         function_4a94e0_this((int32_t)(intptr_t)root_object);
         int32_t v9 = *(int32_t *)(result + 4); // 0x46682d
-        function_48ab90((int32_t)g644, v9, *(int32_t *)(result + 8));
+        sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v9, *(int32_t *)(result + 8)));
         function_4a9660_this((int32_t)(intptr_t)root_object, -1);
-        function_48aa50((int32_t)g644);
+        kinoko_sq_pop((int32_t)g644, 1);
         function_45f640(root_object);
         v8 = &v4;
     }
     int32_t v10 = (int32_t)v8;
     *(int32_t *)(v10 - 4) = v5;
     *(int32_t *)(v10 - 8) = a2;
-    function_48c910(a2, (uint32_t)v5);
+    sq_settop(kinoko_vm(a2), (SQInteger)((uint32_t)v5));
     __writefsdword(0, v1);
     return result;
 }
@@ -117501,11 +115238,11 @@ int32_t function_466890(int32_t a1) {
     type_info = result[1];
     if (native_instance == 0 || type_info == 0) {
         // 0x4668de
-        return function_48ac00(a1, "Invalid Instance Type");
+        return sq_throwerror(kinoko_vm(a1), "Invalid Instance Type");
     }
     method = *(int32_t *)(intptr_t)type_info;
     if (method == 0)
-        return function_48ac00(a1, "Invalid Instance Type");
+        return sq_throwerror(kinoko_vm(a1), "Invalid Instance Type");
 
     // 0x4668b3: the native callback is __thiscall with three SQ arguments.
     function_45f5e0(arguments, 0, a1);
@@ -117547,13 +115284,13 @@ int32_t function_4669d0(void) {
     function_4a95c0_this((int32_t)(intptr_t)g611,
                          (int32_t)(intptr_t)(camera_class + 2));
     vm = camera_class[0];
-    function_48ab90(vm, camera_class[3], camera_class[4]);
-    function_48a480(vm, (int32_t)"SetUpdateFunction", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(camera_class[3], camera_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"SetUpdateFunction"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)kinoko_camera_set_update_callback;
-    function_48d850(vm, (int32_t)(intptr_t)function_466890, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_466890), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
     char v4 = g610; // 0x466a78
     if ((v4 & 1) == 0) {
         // 0x466a86
@@ -122856,7 +120593,7 @@ int32_t function_46c9e0(int32_t a1) {
             *v26 = 0;
             int32_t * v34 = (int32_t *)(v8 - 32); // 0x46cac1
             *v34 = 0;
-            int32_t v35 = function_48aa20((int32_t)&g1224); // 0x46cac4
+            int32_t v35 = sq_gettop(kinoko_vm((int32_t)&g1224)); // 0x46cac4
             int32_t result = *v23; // 0x46cac9
             int32_t * v36 = (int32_t *)(v8 - 36); // 0x46cad1
             *v36 = v35;
@@ -122893,20 +120630,18 @@ int32_t function_46c9e0(int32_t a1) {
                 *v41 = *(int32_t *)(result + 8);
                 *(int32_t *)(v8 - 80) = *(int32_t *)(result + 4);
                 *(int32_t *)(v8 - 84) = (int32_t)g644;
-                function_48ab90((int32_t)g644,
-                                *(int32_t *)(result + 4),
-                                *(int32_t *)(result + 8));
+                sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(*(int32_t *)(result + 4), *(int32_t *)(result + 8)));
                 *v40 = -1;
                 function_4a9660_this((int32_t)(intptr_t)root_object, -1);
                 *v41 = (int32_t)g644;
-                function_48aa50((int32_t)g644);
+                kinoko_sq_pop((int32_t)g644, 1);
                 function_45f640(root_object);
                 v43 = v32;
             }
             // 0x46cb80
             *(int32_t *)(v43 - 4) = *v36;
             *(int32_t *)(v43 - 8) = v31;
-            function_48c910((int32_t)g644, (uint32_t)v35);
+            sq_settop(kinoko_vm((int32_t)g644), (SQInteger)((uint32_t)v35));
             __writefsdword(0, *v29);
             return result;
         }
@@ -123524,41 +121259,41 @@ int32_t function_46d950(void) {
     function_4a9500_this(root_object, function_4a8cc0());
     function_46cfb0_this((int32_t)(intptr_t)input_class, "Input", 0);
     vm = input_class[0];
-    function_48ab90(vm, input_class[3], input_class[4]);
-    function_48a480(vm, (int32_t)"Save", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(input_class[3], input_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"Save"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)function_46b7c0;
-    function_48d850(vm, (int32_t)(intptr_t)function_46ce70, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
-    function_48ab90(vm, input_class[3], input_class[4]);
-    function_48a480(vm, (int32_t)"Load", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_46ce70), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(input_class[3], input_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"Load"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)function_46b880;
-    function_48d850(vm, (int32_t)(intptr_t)function_46ce70, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
-    function_48ab90(vm, input_class[3], input_class[4]);
-    function_48a480(vm, (int32_t)"SetAssign", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_46ce70), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(input_class[3], input_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"SetAssign"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)function_46bbe0;
-    function_48d850(vm, (int32_t)(intptr_t)function_46cec0, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
-    function_48ab90(vm, input_class[3], input_class[4]);
-    function_48a480(vm, (int32_t)"WaitAssign", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_46cec0), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(input_class[3], input_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"WaitAssign"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)function_46bc90;
-    function_48d850(vm, (int32_t)(intptr_t)function_46cf10, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
-    function_48ab90(vm, input_class[3], input_class[4]);
-    function_48a480(vm, (int32_t)"GetAssign", -1);
-    *(int32_t *)function_48c2f0(vm, 4) =
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_46cf10), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(input_class[3], input_class[4]));
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)"GetAssign"), -1);
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(vm), 4)) =
         (int32_t)(intptr_t)function_46be40;
-    function_48d850(vm, (int32_t)(intptr_t)function_46cf60, 1);
-    function_48c950(vm, -3, 0);
-    function_48aa50(vm);
+    sq_newclosure(kinoko_vm(vm), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_46cf60), 1);
+    sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
+    kinoko_sq_pop(vm, 1);
     char v3 = g628; // 0x46db12
     if ((v3 & 1) == 0) {
         // 0x46db20
@@ -124108,17 +121843,17 @@ int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
                          int32_t top, int32_t right, int32_t bottom) {
     int32_t *call = (int32_t *)(intptr_t)state;
     int32_t vm = call[0];
-    int32_t base = function_48aa20(vm);
+    int32_t base = sq_gettop(kinoko_vm(vm));
     int32_t result;
-    function_48ab90(vm, call[5], call[6]);
-    function_48ab90(vm, call[2], call[3]);
-    function_48a4f0(vm, id);
-    function_48a4f0(vm, left);
-    function_48a4f0(vm, top);
-    function_48a4f0(vm, right);
-    function_48a4f0(vm, bottom);
-    result = function_48ace0(vm, 6, 1, 1);
-    function_48c910(vm, base);
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[5], call[6]));
+    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[2], call[3]));
+    sq_pushinteger(kinoko_vm(vm), id);
+    sq_pushinteger(kinoko_vm(vm), left);
+    sq_pushinteger(kinoko_vm(vm), top);
+    sq_pushinteger(kinoko_vm(vm), right);
+    sq_pushinteger(kinoko_vm(vm), bottom);
+    result = kinoko_sq_call(vm, 6, 1, 1);
+    sq_settop(kinoko_vm(vm), (SQInteger)(base));
     return result;
 }
 
@@ -124203,16 +121938,16 @@ int32_t function_46efd0(uint32_t a1) {
 // Type:          constructor
 int32_t function_46f020(int32_t result, int32_t a2) {
     // 0x46f020
-    function_48a480((int32_t)g644, a2, -1);
+    sq_pushstring(kinoko_vm((int32_t)g644), (const SQChar*)kinoko_pointer(a2), -1);
     function_4a9660(-1);
-    function_48aa50((int32_t)g644);
+    kinoko_sq_pop((int32_t)g644, 1);
     *(int32_t *)result = (int32_t)&g16;
-    function_48abe0(result + 4);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(result + 4));
     int32_t v1; // 0x46f020
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x46f06e
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v2, *(int32_t *)(v1 + 8)));
     function_4a9660(-1);
-    function_48aa50((int32_t)g644);
+    kinoko_sq_pop((int32_t)g644, 1);
     return result;
 }
 
@@ -124288,7 +122023,7 @@ int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
     int32_t v3 = g507 ^ (int32_t)&v2; // bp-44, 0x46f21e
     __writefsdword(0, (int32_t)&v1);
     int32_t v4 = a2; // bp-48, 0x46f22d
-    int32_t v5 = function_48aa20(a2); // 0x46f234
+    int32_t v5 = sq_gettop(kinoko_vm(a2)); // 0x46f234
     retdec_msvc_0_Init_locks_std__QAE_XZ5();
     if ((g635 & 1) == 0) {
         // 0x46f25c
@@ -124309,16 +122044,16 @@ int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4) {
         int32_t root_object[3];
         function_4a94e0_this((int32_t)(intptr_t)root_object);
         int32_t v9 = *(int32_t *)(result + 4); // 0x46f2bd
-        function_48ab90((int32_t)g644, v9, *(int32_t *)(result + 8));
+        sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v9, *(int32_t *)(result + 8)));
         function_4a9660_this((int32_t)(intptr_t)root_object, -1);
-        function_48aa50((int32_t)g644);
+        kinoko_sq_pop((int32_t)g644, 1);
         function_45f640(root_object);
         v8 = &v4;
     }
     int32_t v10 = (int32_t)v8;
     *(int32_t *)(v10 - 4) = v5;
     *(int32_t *)(v10 - 8) = a2;
-    function_48c910(a2, (uint32_t)v5);
+    sq_settop(kinoko_vm(a2), (SQInteger)((uint32_t)v5));
     __writefsdword(0, v1);
     return result;
 }
@@ -124505,9 +122240,9 @@ static int32_t retdec_map_make_string(int32_t output_ptr,
     if (output_ptr == 0 || source_ptr == NULL || vm == 0)
         return 0;
     function_4a94e0_this(output_ptr);
-    function_48a480(vm, (int32_t)(intptr_t)source_ptr, -1);
+    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)(intptr_t)source_ptr), -1);
     function_4a9660_this(output_ptr, -1);
-    function_48aa30(vm, 1);
+    kinoko_sq_pop(vm, 1);
     return 1;
 }
 
@@ -124961,75 +122696,22 @@ int32_t function_4701d0(void) {
 }
 
 // Address range: 0x4701e0 - 0x47021d
-int32_t function_4701e0(void) {
-    retdec_trace("4701e0:audio-begin");
-    function_40b520();
-    function_40b8a0(0.80000001L);
-    function_40a3d0();
-    int32_t result = function_40a9f0(0.80000001L);
-    retdec_trace("4701e0:audio-ready");
-    return result;
-}
+
 
 // Address range: 0x470220 - 0x47028a
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    int32_t manager = retdec_audio_manager_this();
-    int32_t new_handle = 0;
 
-    (void)a3;
-    if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
-    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
-    g637 = new_handle;
-    /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
-    retdec_audio_method_40a6c0(manager, g637, a1, a4, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
-    return 0;
-}
 
 // Address range: 0x470290 - 0x4702fc
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5) {
-    int32_t manager = retdec_audio_manager_this();
-    int32_t new_handle = 0;
 
-    if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, a3, 1.0f);
-    retdec_audio_method_40a5d0(manager, (int32_t)(intptr_t)&new_handle);
-    g637 = new_handle;
-    retdec_audio_method_40a6c0(manager, g637, a1, a5, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
-    return 0;
-}
 
 // Address range: 0x470300 - 0x470315
-int32_t function_470300(void) {
-    if (g637 != 0) {
-        retdec_bgm_stop_for_handle((uint32_t)g637);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470320 - 0x470355
-int32_t function_470320(int32_t a1, int32_t a2) {
-    if (g637 != 0) {
-        float target = (float)a2 / 100.0f;
-        retdec_bgm_begin_fade_for_handle((uint32_t)g637,
-                                         a1 > 0 ? (DWORD)a1 : 0, 0,
-                                         target);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470360 - 0x47038f
-int32_t function_470360(void) {
-    if (g637 != 0) {
-        uint32_t handle = (uint32_t)g637;
-        retdec_bgm_stop_for_handle(handle);
-        retdec_bgm_release_for_handle(handle);
-    }
-    return 0;
-}
+
 
 // Address range: 0x470390 - 0x4703ac
 int32_t function_470390(int32_t result) {
@@ -125552,57 +123234,7 @@ int32_t function_470890(void) {
 }
 
 // Address range: 0x470980 - 0x4709b3
-int32_t function_470980(int32_t a1) {
-    retdec_trace_i32("470980:se-id", a1);
-    if (g_retdec_se_entry_count > 0) {
-        int index;
 
-        for (index = 0; index < g_retdec_se_entry_count; ++index) {
-            void *buffer;
-            void **vtable;
-            DWORD status = 0;
-            HRESULT hr;
-
-            if (g_retdec_se_entries[index].id != a1)
-                continue;
-            buffer = g_retdec_se_entries[index].buffer;
-            if (buffer == NULL)
-                return 0;
-            vtable = *(void ***)buffer;
-            if (vtable == NULL)
-                return 0;
-            if (vtable[9] != NULL)
-                ((retdec_dsound_buffer_get_status_fn)vtable[9])(
-                    buffer, &status);
-            if ((status & 1u) != 0 && vtable[18] != NULL)
-                ((retdec_dsound_buffer_stop_fn)vtable[18])(buffer);
-            if (vtable[13] != NULL)
-                ((retdec_dsound_buffer_set_position_fn)vtable[13])(
-                    buffer, 0);
-            if (vtable[12] == NULL)
-                return 0;
-            retdec_trace_i32("470980:se-bytes",
-                             (int32_t)g_retdec_se_entries[index].buffer_bytes);
-            if (a1 == 6) {
-                uint32_t words[12] = {0};
-                SIZE_T bytes;
-                char message[384];
-                ReadProcessMemory(GetCurrentProcess(), buffer, words, sizeof(words), &bytes);
-                sprintf_s(message, sizeof(message),
-                    "actor:stomp-sound buffer=%08X play=%08X thread=%u data=%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X,%08X",
-                    (uint32_t)(uintptr_t)buffer,(uint32_t)(uintptr_t)vtable[12],GetCurrentThreadId(),
-                    words[0],words[1],words[2],words[3],words[4],words[5],words[6],words[7],
-                    words[8],words[9],words[10],words[11]);
-                retdec_trace(message);
-            }
-            hr = ((retdec_dsound_buffer_play_fn)vtable[12])(
-                buffer, 0, 0, 0);
-            retdec_trace_hresult("470980:play-hr", hr);
-            return SUCCEEDED(hr) ? 1 : 0;
-        }
-    }
-    return 0;
-}
 
 // Address range: 0x4709c0 - 0x470a30
 // From class:    .?AVbad_alloc@std@@
@@ -125679,124 +123311,9 @@ int32_t function_470a30(int32_t a1) {
 // Address range: 0x470ab0 - 0x470d00
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-static void retdec_loadse_blob(const char *source)
-{
-    char path[MAX_PATH];
-    size_t length;
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    uint32_t size;
-    unsigned char *blob;
-    uint32_t index;
-    unsigned char key = 0x8bu;
-    unsigned char step = 0x71u;
-    int loaded = 0;
 
-    if (source == NULL)
-        return;
-    retdec_se_entries_release();
-    length = strlen(source);
-    if (length < 4 || length + 1 > sizeof(path))
-        return;
-    memcpy(path, source, length + 1);
-    if (_stricmp(path + length - 4, ".csv") == 0) {
-        path[length - 2] = 'v';
-        path[length - 1] = '1';
-    } else if (_stricmp(path + length - 4, ".cv1") != 0) {
-        return;
-    }
 
-    if (function_407370((int32_t)(intptr_t)&reader_slot, path) == 0) {
-        retdec_trace("loadse:reader-failed");
-        return;
-    }
-    reader = (int32_t *)(intptr_t)reader_slot;
-    size = g765 != 0 ? (uint32_t)reader[3] :
-        (uint32_t)function_407300(reader_slot);
-    retdec_trace_squirrel_name("loadse:path", (int32_t)(intptr_t)path);
-    retdec_trace_i32("loadse:size", (int32_t)size);
-    if (size == 0 || size > 16u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
-        return;
-    }
-    blob = (unsigned char *)malloc(size + 1u);
-    if (blob != NULL && retdec_reader_read_exact(reader_slot, blob, size)) {
-        /* This is the same rolling transform used by sub_414930 before the
-           CSV stream is handed to the original line parser. */
-        for (index = 0; index < size; ++index) {
-            blob[index] ^= key;
-            key = (unsigned char)(key + step);
-            step = (unsigned char)(step - 0x6bu);
-        }
-        blob[size] = 0;
-        retdec_trace("loadse:blob-read");
 
-        /* se.cv1 is a small CSV table.  Its quoted filename is passed to
-           CWaveBuffer::Load one row at a time, which creates the actual
-           secondary buffer used later by PlaySE. */
-        {
-            char *cursor = (char *)blob;
-            char *end = cursor + size;
-            while (cursor < end) {
-                char *line_end = (char *)memchr(cursor, '\n',
-                                                (size_t)(end - cursor));
-                char *field;
-                char *path_start;
-                char *path_end;
-                char saved;
-                char *number_end;
-                long id;
-
-                if (line_end == NULL)
-                    line_end = end;
-                *line_end = 0;
-                field = cursor;
-                while (*field == ' ' || *field == '\t' || *field == '\r')
-                    ++field;
-                if (*field != 0 && *field != '#') {
-                    id = strtol(field, &number_end, 10);
-                    if (number_end != field && id >= 0 && id <= 0x7fffffffL) {
-                        field = number_end;
-                        while (*field == ' ' || *field == '\t')
-                            ++field;
-                        if (*field == ',') {
-                            ++field;
-                            while (*field == ' ' || *field == '\t')
-                                ++field;
-                            if (*field == '"')
-                                ++field;
-                            path_start = field;
-                            path_end = path_start;
-                            while (*path_end != 0 && *path_end != '"' &&
-                                   *path_end != '\r')
-                                ++path_end;
-                            saved = *path_end;
-                            *path_end = 0;
-                            if (*path_start != 0 &&
-                                retdec_se_load_entry((int)id, path_start))
-                                ++loaded;
-                            *path_end = saved;
-                        }
-                    }
-                }
-                if (line_end == end)
-                    break;
-                cursor = line_end + 1;
-            }
-        }
-        retdec_trace_i32("loadse:entries-loaded", loaded);
-    } else {
-        retdec_trace("loadse:blob-read-failed");
-    }
-    free(blob);
-    retdec_destroy_reader(reader);
-}
-
-int32_t function_470ab0(int32_t a1) {
-    /* LoadSE builds the same ID -> CDSBuffer table that PlaySE consumes. */
-    retdec_loadse_blob((const char *)(intptr_t)a1);
-    return 0;
-}
 
 // Address range: 0x470d00 - 0x470de9
 int32_t function_470d00(int32_t a1) {
@@ -125932,9 +123449,9 @@ int32_t function_4710a0(void) {
     int32_t v1; // 0x4710a0
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x4710a6
     int32_t v3 = v2; // bp-20, 0x4710b3
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v2, *(int32_t *)(v1 + 8)));
     int32_t result; // bp-12, 0x4710a0
-    int32_t v4 = function_48a7d0((int32_t)g644, -1, &result); // 0x4710c7
+    int32_t v4 = sq_getinteger(kinoko_vm((int32_t)g644), -1, (SQInteger*)(&result)); // 0x4710c7
     int32_t * v5 = &result; // 0x4710d1
     if (v4 < 0) {
         // 0x4710d3
@@ -125946,7 +123463,7 @@ int32_t function_4710a0(void) {
     }
     // 0x4710e8
     *(int32_t *)((int32_t)v5 - 4) = (int32_t)g644;
-    function_48aa50((int32_t)&g1224);
+    kinoko_sq_pop((int32_t)&g1224, 1);
     return result;
 }
 
@@ -125956,9 +123473,9 @@ int32_t function_471100(void) {
     int32_t v1; // 0x471100
     int32_t v2 = *(int32_t *)(v1 + 4); // 0x471106
     int32_t v3 = v2; // bp-20, 0x471113
-    function_48ab90((int32_t)g644, v2, *(int32_t *)(v1 + 8));
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v2, *(int32_t *)(v1 + 8)));
     int32_t v4; // bp-12, 0x471100
-    int32_t v5 = function_48a830((int32_t)g644, -1, &v4); // 0x471127
+    int32_t v5 = sq_getfloat(kinoko_vm((int32_t)g644), -1, (SQFloat*)(&v4)); // 0x471127
     int32_t * v6 = &v4; // 0x471131
     if (v5 < 0) {
         // 0x471133
@@ -125970,7 +123487,7 @@ int32_t function_471100(void) {
     }
     // 0x471148
     *(int32_t *)((int32_t)v6 - 4) = (int32_t)g644;
-    return function_48aa50((int32_t)&g1224);
+    return kinoko_sq_pop((int32_t)&g1224, 1);
 }
 
 // Address range: 0x471160 - 0x471237
@@ -125980,8 +123497,8 @@ int32_t function_471100(void) {
 int32_t function_471240(int32_t a1, int32_t a2) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x471250
     __writefsdword(0, (int32_t)&v1);
-    if (function_48a6f0(a1, a2) != 0x5000002) {
-        int32_t result = function_48ac00(a1, "Incorrect function argument"); // 0x471284
+    if (sq_gettype(kinoko_vm(a1), a2) != 0x5000002) {
+        int32_t result = sq_throwerror(kinoko_vm(a1), "Incorrect function argument"); // 0x471284
         __writefsdword(0, v1);
         return result;
     }
@@ -125991,7 +123508,7 @@ int32_t function_471240(int32_t a1, int32_t a2) {
     int32_t v4 = a1; // bp-80, 0x4712cb
     function_45f5e0(&v2, 0, a1);
     int32_t v5; // bp-32, 0x471240
-    int32_t v6 = function_48a7d0(a1, a2, &v5); // 0x4712e4
+    int32_t v6 = sq_getinteger(kinoko_vm(a1), a2, (SQInteger*)(&v5)); // 0x4712e4
     int32_t * v7 = &v2; // 0x4712ee
     if (v6 < 0) {
         // 0x4712f0
@@ -126015,8 +123532,8 @@ int32_t function_471240(int32_t a1, int32_t a2) {
 int32_t function_471510(int32_t a1, int32_t a2) {
     int32_t v1 = __readfsdword(0); // bp-16, 0x471520
     __writefsdword(0, (int32_t)&v1);
-    if (function_48a6f0(a1, a2) != 0x8000010) {
-        int32_t result = function_48ac00(a1, "Incorrect function argument"); // 0x471554
+    if (sq_gettype(kinoko_vm(a1), a2) != 0x8000010) {
+        int32_t result = sq_throwerror(kinoko_vm(a1), "Incorrect function argument"); // 0x471554
         __writefsdword(0, v1);
         return result;
     }
@@ -126024,7 +123541,7 @@ int32_t function_471510(int32_t a1, int32_t a2) {
     int32_t v3; // bp-56, 0x471510
     function_45f5e0(&v3, 0, a1);
     int32_t v4; // bp-28, 0x471510
-    int32_t v5 = function_48a8d0(a1, a2, &v4); // 0x471595
+    int32_t v5 = sq_getstring(kinoko_vm(a1), a2, (const SQChar**)(&v4)); // 0x471595
     int32_t * v6 = &v3; // 0x47159f
     if (v5 < 0) {
         // 0x4715a1
@@ -126043,25 +123560,25 @@ int32_t function_471510(int32_t a1, int32_t a2) {
 // Address range: 0x4715e0 - 0x4716b0
 int32_t function_4715e0(int32_t a1, int32_t a2) {
     char * v1 = (char *)a2; // bp-32, 0x4715ee
-    if (function_48a6f0(a1, a2) != 0x5000004) {
+    if (sq_gettype(kinoko_vm(a1), a2) != 0x5000004) {
         // 0x4715ff
         v1 = "Incorrect function argument";
-        return function_48ac00(a1, "Incorrect function argument");
+        return sq_throwerror(kinoko_vm(a1), "Incorrect function argument");
     }
     // 0x471613
     int32_t v2; // 0x4715e0
     v1 = (char *)v2;
     int32_t v3 = a2 + 1; // 0x471614
     int32_t v4 = a1; // bp-40, 0x471618
-    if (function_48a6f0(a1, v3) != 0x5000004) {
+    if (sq_gettype(kinoko_vm(a1), v3) != 0x5000004) {
         // 0x471628
         v4 = a1;
-        return function_48ac00(a1, "Incorrect function argument");
+        return sq_throwerror(kinoko_vm(a1), "Incorrect function argument");
     }
     // 0x47163d
     v4 = v3;
     float32_t v5; // bp-12, 0x4715e0
-    int32_t v6 = function_48a830(a1, v3, (int32_t *)&v5); // 0x471643
+    int32_t v6 = sq_getfloat(kinoko_vm(a1), v3, (SQFloat*)((int32_t *)&v5)); // 0x471643
     int32_t v7 = (int32_t)&v1; // 0x47164d
     if (v6 < 0) {
         // 0x47164f
@@ -126080,7 +123597,7 @@ int32_t function_4715e0(int32_t a1, int32_t a2) {
     *v13 = a2;
     *(int32_t *)(v7 - 12) = a1;
     int32_t v14 = (int32_t)v12;
-    int32_t v15 = function_48a830(v14, (int32_t)&g1224, &g1224); // 0x471670
+    int32_t v15 = sq_getfloat(kinoko_vm(v14), (int32_t)&g1224, (SQFloat*)(&g1224)); // 0x471670
     int32_t * v16 = v13; // 0x47167a
     int32_t v17 = v14; // 0x47167a
     if (v15 < 0) {
@@ -126111,15 +123628,15 @@ int32_t function_4715e0(int32_t a1, int32_t a2) {
 // Address range: 0x471810 - 0x47187c
 int32_t function_471810(int32_t a1, int32_t a2) {
     int32_t v1 = a1; // bp-28, 0x47181f
-    if (function_48a6f0(a1, a2) != 0x5000002) {
+    if (sq_gettype(kinoko_vm(a1), a2) != 0x5000002) {
         // 0x47182f
         v1 = a1;
-        return function_48ac00(a1, "Incorrect function argument");
+        return sq_throwerror(kinoko_vm(a1), "Incorrect function argument");
     }
     // 0x471843
     v1 = a2;
     int32_t v2; // bp-12, 0x471810
-    int32_t v3 = function_48a7d0(a1, a2, &v2); // 0x471849
+    int32_t v3 = sq_getinteger(kinoko_vm(a1), a2, (SQInteger*)(&v2)); // 0x471849
     int32_t v4; // bp-20, 0x471810
     int32_t * v5 = &v4; // 0x471853
     if (v3 < 0) {
@@ -126182,12 +123699,12 @@ static int32_t retdec_compile_file_native(int32_t vm) {
         return 0;
     /* The final stack entry is the native closure's userdata.  The optional
        script environment is argument 3, before that entry (419EA2). */
-    if (function_48aa20(vm) > 3 &&
-        function_48ab40(vm, 3, environment) < 0)
+    if (sq_gettop(kinoko_vm(vm)) > 3 &&
+        sq_getstackobj(kinoko_vm(vm), 3, (HSQOBJECT*)(environment)) < 0)
         return -1;
     result = function_471b30(path, (int32_t)(intptr_t)&g39, vm,
                              environment[0], environment[1], 0);
-    function_48a530(vm, result);
+    sq_pushbool(kinoko_vm(vm), ((result) != 0));
     return 1;
 }
 
@@ -126236,13 +123753,13 @@ int32_t function_471df0(int32_t a1) {
     float32_t first_float;
     float32_t second_float;
     float32_t third_float;
-    int32_t top = function_48aa20(a1);
+    int32_t top = sq_gettop(kinoko_vm(a1));
 
     retdec_trace_i32("native-471df0:top", top);
-    retdec_trace_i32("native-471df0:type2", function_48a6f0(a1, 2));
-    retdec_trace_i32("native-471df0:type3", function_48a6f0(a1, 3));
-    retdec_trace_i32("native-471df0:type4", function_48a6f0(a1, 4));
-    retdec_trace_i32("native-471df0:type5", function_48a6f0(a1, 5));
+    retdec_trace_i32("native-471df0:type2", sq_gettype(kinoko_vm(a1), 2));
+    retdec_trace_i32("native-471df0:type3", sq_gettype(kinoko_vm(a1), 3));
+    retdec_trace_i32("native-471df0:type4", sq_gettype(kinoko_vm(a1), 4));
+    retdec_trace_i32("native-471df0:type5", sq_gettype(kinoko_vm(a1), 5));
 
     if (target == 0 || top < 6 ||
         !retdec_native_value_pair(a1, 2, first) ||
@@ -126787,12 +124304,12 @@ int32_t function_473010(void) {
     root_table[0] = (int32_t)(intptr_t)&g39;
     root_table[1] = v2;
     root_table[4] = 1;
-    function_48abe0((int32_t)(intptr_t)&root_table[2]);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)(intptr_t)&root_table[2]));
     root_table[0] = (int32_t)(intptr_t)&g40;
-    function_48a670(v2);
-    function_48ab40(v2, -1, (int32_t *)(intptr_t)&root_table[2]);
+    sq_pushroottable(kinoko_vm(v2));
+    sq_getstackobj(kinoko_vm(v2), -1, (HSQOBJECT*)((int32_t *)(intptr_t)&root_table[2]));
     function_48a400(v2, (int32_t)(intptr_t)&root_table[2]);
-    function_48aa30(v2, 1);
+    kinoko_sq_pop(v2, 1);
     int32_t v5; // bp-20, 0x473010
     int32_t v6 = &v5; // 0x4730a3
     v5 = (int32_t)(intptr_t)function_402af0;
@@ -126804,504 +124321,504 @@ int32_t function_473010(void) {
                          (int32_t)(intptr_t)"CompileFile", v6, 4,
                          (int32_t)(intptr_t)retdec_compile_file_native, 0);
     int32_t v7 = (int32_t)g644;
-    function_48a670(v7);
+    sq_pushroottable(kinoko_vm(v7));
     char * v8 = "PostQuitMessage"; // bp-116, 0x4730e9
     char * v9; // bp-120, 0x473010
     *(int32_t *)&v9 = v7;
-    function_48a480(v7, (int32_t)"PostQuitMessage", -1);
+    sq_pushstring(kinoko_vm(v7), (const SQChar*)kinoko_pointer((int32_t)"PostQuitMessage"), -1);
     char * v10 = (char *)4; // bp-124, 0x4730f4
-    int32_t v11 = function_48c2f0(v7, 4); // 0x4730f7
+    int32_t v11 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v7), 4)); // 0x4730f7
     char * v12 = (char *)1; // bp-132, 0x4730fc
     char * v13 = (char *)(intptr_t)function_471bc0; // bp-136, 0x4730fe
     char * v14; // bp-140, 0x473010
     *(int32_t *)&v14 = v7;
     *(int32_t *)v11 = (int32_t)(intptr_t)function_471080;
-    function_48d850((int32_t)v14, (int32_t)v13, (int32_t)v12);
+    sq_newclosure(kinoko_vm((int32_t)v14), (SQFUNCTION)kinoko_pointer((int32_t)v13), (int32_t)v12);
     char * v15 = NULL; // bp-144, 0x47310f
     char * v16; // bp-152, 0x473010
     *(int32_t *)&v16 = v7;
-    function_48c950(v7, -3, 0);
+    sq_newslot(kinoko_vm(v7), -3, ((0) != 0));
     char * v17; // bp-156, 0x473010
     *(int32_t *)&v17 = v7;
-    function_48aa50(v7);
+    kinoko_sq_pop(v7, 1);
     int32_t v18 = (int32_t)g644;
-    function_48a670(v18);
+    sq_pushroottable(kinoko_vm(v18));
     char * v19 = "ReadCSV"; // bp-168, 0x47312c
     char * v20; // bp-172, 0x473010
     *(int32_t *)&v20 = v18;
-    function_48a480(v18, (int32_t)"ReadCSV", -1);
-    int32_t v21 = function_48c2f0(v18, 4); // 0x47313d
+    sq_pushstring(kinoko_vm(v18), (const SQChar*)kinoko_pointer((int32_t)"ReadCSV"), -1);
+    int32_t v21 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v18), 4)); // 0x47313d
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471c10;
     *(int32_t *)&v10 = v18;
     *(int32_t *)v21 = (int32_t)(intptr_t)function_403000;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v18;
-    function_48c950(v18, -3, 0);
+    sq_newslot(kinoko_vm(v18), -3, ((0) != 0));
     *(int32_t *)&v14 = v18;
-    function_48aa50(v18);
+    kinoko_sq_pop(v18, 1);
     int32_t v22 = (int32_t)g644;
     *(int32_t *)&v15 = v22;
-    function_48a670(v22);
+    sq_pushroottable(kinoko_vm(v22));
     v16 = "LoadTable";
     *(int32_t *)&v17 = v22;
-    function_48a480(v22, (int32_t)"LoadTable", -1);
-    int32_t v23 = function_48c2f0(v22, 4); // 0x473180
+    sq_pushstring(kinoko_vm(v22), (const SQChar*)kinoko_pointer((int32_t)"LoadTable"), -1);
+    int32_t v23 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v22), 4)); // 0x473180
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471c10;
     char * v24; // bp-176, 0x473010
     *(int32_t *)&v24 = v22;
     *(int32_t *)v23 = (int32_t)(intptr_t)function_472c90;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v22;
-    function_48c950(v22, -3, 0);
+    sq_newslot(kinoko_vm(v22), -3, ((0) != 0));
     *(int32_t *)&v9 = v22;
-    function_48aa50(v22);
+    kinoko_sq_pop(v22, 1);
     int32_t v25 = (int32_t)g644;
     *(int32_t *)&v10 = v25;
-    function_48a670(v25);
+    sq_pushroottable(kinoko_vm(v25));
     v12 = "SaveTable";
     *(int32_t *)&v13 = v25;
-    function_48a480(v25, (int32_t)"SaveTable", -1);
+    sq_pushstring(kinoko_vm(v25), (const SQChar*)kinoko_pointer((int32_t)"SaveTable"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v25;
-    int32_t v26 = function_48c2f0(v25, 4); // 0x4731c6
+    int32_t v26 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v25), 4)); // 0x4731c6
     v16 = (char *)(intptr_t)function_471c10;
     *(int32_t *)&v17 = v25;
     *(int32_t *)v26 = (int32_t)(intptr_t)function_472e50;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v25;
-    function_48c950(v25, -3, 0);
-    function_48aa50(v25);
+    sq_newslot(kinoko_vm(v25), -3, ((0) != 0));
+    kinoko_sq_pop(v25, 1);
     int32_t v27 = (int32_t)g644;
-    function_48a670(v27);
+    sq_pushroottable(kinoko_vm(v27));
     v8 = (char *)-1;
     v9 = "SetGlobalUpdateFunction";
     *(int32_t *)&v10 = v27;
-    function_48a480(v27, (int32_t)"SetGlobalUpdateFunction", -1);
+    sq_pushstring(kinoko_vm(v27), (const SQChar*)kinoko_pointer((int32_t)"SetGlobalUpdateFunction"), -1);
     *(int32_t *)&v12 = v27;
-    int32_t v28 = function_48c2f0(v27, 4); // 0x47320c
+    int32_t v28 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v27), 4)); // 0x47320c
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471c70;
     *(int32_t *)&v15 = v27;
     *(int32_t *)v28 = (int32_t)(intptr_t)function_469a20;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v27;
-    function_48c950(v27, -3, 0);
-    function_48aa50(v27);
+    sq_newslot(kinoko_vm(v27), -3, ((0) != 0));
+    kinoko_sq_pop(v27, 1);
     int32_t v29 = (int32_t)g644;
-    function_48a670(v29);
+    sq_pushroottable(kinoko_vm(v29));
     v19 = (char *)-1;
     v20 = "SetInitFunctionByID";
     *(int32_t *)&v24 = v29;
-    function_48a480(v29, (int32_t)"SetInitFunctionByID", -1);
-    int32_t v30 = function_48c2f0(v29, 4); // 0x473252
+    sq_pushstring(kinoko_vm(v29), (const SQChar*)kinoko_pointer((int32_t)"SetInitFunctionByID"), -1);
+    int32_t v30 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v29), 4)); // 0x473252
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471d30;
     *(int32_t *)&v10 = v29;
     *(int32_t *)v30 = (int32_t)(intptr_t)function_470fa0;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v29;
-    function_48c950(v29, -3, 0);
+    sq_newslot(kinoko_vm(v29), -3, ((0) != 0));
     *(int32_t *)&v14 = v29;
-    function_48aa50(v29);
+    kinoko_sq_pop(v29, 1);
     int32_t v31 = (int32_t)g644;
     *(int32_t *)&v15 = v31;
-    function_48a670(v31);
+    sq_pushroottable(kinoko_vm(v31));
     v16 = "LoadAnimationData";
     *(int32_t *)&v17 = v31;
-    function_48a480(v31, (int32_t)"LoadAnimationData", -1);
-    int32_t v32 = function_48c2f0(v31, 4); // 0x473295
+    sq_pushstring(kinoko_vm(v31), (const SQChar*)kinoko_pointer((int32_t)"LoadAnimationData"), -1);
+    int32_t v32 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v31), 4)); // 0x473295
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471d90;
     *(int32_t *)&v24 = v31;
     *(int32_t *)v32 = (int32_t)(intptr_t)function_4696b0;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v31;
-    function_48c950(v31, -3, 0);
+    sq_newslot(kinoko_vm(v31), -3, ((0) != 0));
     *(int32_t *)&v9 = v31;
-    function_48aa50(v31);
+    kinoko_sq_pop(v31, 1);
     int32_t v33 = (int32_t)g644;
     *(int32_t *)&v10 = v33;
-    function_48a670(v33);
+    sq_pushroottable(kinoko_vm(v33));
     v12 = "CreateActor";
     *(int32_t *)&v13 = v33;
-    function_48a480(v33, (int32_t)"CreateActor", -1);
+    sq_pushstring(kinoko_vm(v33), (const SQChar*)kinoko_pointer((int32_t)"CreateActor"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v33;
-    int32_t v34 = function_48c2f0(v33, 4); // 0x4732db
+    int32_t v34 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v33), 4)); // 0x4732db
     v16 = (char *)(intptr_t)function_471df0;
     *(int32_t *)&v17 = v33;
     *(int32_t *)v34 = (int32_t)(intptr_t)function_469b40;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v33;
-    function_48c950(v33, -3, 0);
-    function_48aa50(v33);
+    sq_newslot(kinoko_vm(v33), -3, ((0) != 0));
+    kinoko_sq_pop(v33, 1);
     int32_t v35 = (int32_t)g644;
-    function_48a670(v35);
+    sq_pushroottable(kinoko_vm(v35));
     v8 = (char *)-1;
     v9 = "CreateActorFromMap";
     *(int32_t *)&v10 = v35;
-    function_48a480(v35, (int32_t)"CreateActorFromMap", -1);
+    sq_pushstring(kinoko_vm(v35), (const SQChar*)kinoko_pointer((int32_t)"CreateActorFromMap"), -1);
     *(int32_t *)&v12 = v35;
-    int32_t v36 = function_48c2f0(v35, 4); // 0x473321
+    int32_t v36 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v35), 4)); // 0x473321
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471e50;
     *(int32_t *)&v15 = v35;
     *(int32_t *)v36 = (int32_t)(intptr_t)function_469d10;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v35;
-    function_48c950(v35, -3, 0);
-    function_48aa50(v35);
+    sq_newslot(kinoko_vm(v35), -3, ((0) != 0));
+    kinoko_sq_pop(v35, 1);
     int32_t v37 = (int32_t)g644;
-    function_48a670(v37);
+    sq_pushroottable(kinoko_vm(v37));
     v19 = (char *)-1;
     v20 = "ClearActor";
     *(int32_t *)&v24 = v37;
-    function_48a480(v37, (int32_t)"ClearActor", -1);
-    int32_t v38 = function_48c2f0(v37, 4); // 0x473367
+    sq_pushstring(kinoko_vm(v37), (const SQChar*)kinoko_pointer((int32_t)"ClearActor"), -1);
+    int32_t v38 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v37), 4)); // 0x473367
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v10 = v37;
     *(int32_t *)v38 = (int32_t)(intptr_t)function_469700;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v37;
-    function_48c950(v37, -3, 0);
+    sq_newslot(kinoko_vm(v37), -3, ((0) != 0));
     *(int32_t *)&v14 = v37;
-    function_48aa50(v37);
+    kinoko_sq_pop(v37, 1);
     int32_t v39 = (int32_t)g644;
     *(int32_t *)&v15 = v39;
-    function_48a670(v39);
+    sq_pushroottable(kinoko_vm(v39));
     v16 = "MoveActor";
     *(int32_t *)&v17 = v39;
-    function_48a480(v39, (int32_t)"MoveActor", -1);
-    int32_t v40 = function_48c2f0(v39, 4); // 0x4733aa
+    sq_pushstring(kinoko_vm(v39), (const SQChar*)kinoko_pointer((int32_t)"MoveActor"), -1);
+    int32_t v40 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v39), 4)); // 0x4733aa
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471eb0;
     *(int32_t *)&v24 = v39;
     *(int32_t *)v40 = (int32_t)(intptr_t)function_469710;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v39;
-    function_48c950(v39, -3, 0);
+    sq_newslot(kinoko_vm(v39), -3, ((0) != 0));
     *(int32_t *)&v9 = v39;
-    function_48aa50(v39);
+    kinoko_sq_pop(v39, 1);
     int32_t v41 = (int32_t)g644;
     *(int32_t *)&v10 = v41;
-    function_48a670(v41);
+    sq_pushroottable(kinoko_vm(v41));
     v12 = "ClearCollision";
     *(int32_t *)&v13 = v41;
-    function_48a480(v41, (int32_t)"ClearCollision", -1);
+    sq_pushstring(kinoko_vm(v41), (const SQChar*)kinoko_pointer((int32_t)"ClearCollision"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v41;
-    int32_t v42 = function_48c2f0(v41, 4); // 0x4733f0
+    int32_t v42 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v41), 4)); // 0x4733f0
     v16 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v17 = v41;
     *(int32_t *)v42 = (int32_t)(intptr_t)function_469870;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v41;
-    function_48c950(v41, -3, 0);
-    function_48aa50(v41);
+    sq_newslot(kinoko_vm(v41), -3, ((0) != 0));
+    kinoko_sq_pop(v41, 1);
     int32_t v43 = (int32_t)g644;
-    function_48a670(v43);
+    sq_pushroottable(kinoko_vm(v43));
     v8 = (char *)-1;
     v9 = "CreateCollision";
     *(int32_t *)&v10 = v43;
-    function_48a480(v43, (int32_t)"CreateCollision", -1);
+    sq_pushstring(kinoko_vm(v43), (const SQChar*)kinoko_pointer((int32_t)"CreateCollision"), -1);
     *(int32_t *)&v12 = v43;
-    int32_t v44 = function_48c2f0(v43, 4); // 0x473436
+    int32_t v44 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v43), 4)); // 0x473436
     v13 = (char *)1;
     *(int32_t *)v44 = (int32_t)(intptr_t)function_469880;
     v14 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v15 = v43;
-    function_48d850(v43, (int32_t)(intptr_t)function_471f10, (int32_t)v13);
+    sq_newclosure(kinoko_vm(v43), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_471f10), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v43;
-    function_48c950(v43, -3, 0);
-    function_48aa50(v43);
+    sq_newslot(kinoko_vm(v43), -3, ((0) != 0));
+    kinoko_sq_pop(v43, 1);
     int32_t v45 = (int32_t)g644;
-    function_48a670(v45);
+    sq_pushroottable(kinoko_vm(v45));
     v19 = (char *)-1;
     v20 = "CreateEvent";
     *(int32_t *)&v24 = v45;
-    function_48a480(v45, (int32_t)"CreateEvent", -1);
-    int32_t v46 = function_48c2f0(v45, 4); // 0x47347c
+    sq_pushstring(kinoko_vm(v45), (const SQChar*)kinoko_pointer((int32_t)"CreateEvent"), -1);
+    int32_t v46 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v45), 4)); // 0x47347c
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471f70;
     *(int32_t *)&v10 = v45;
     *(int32_t *)v46 = (int32_t)(intptr_t)function_469dd0;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v45;
-    function_48c950(v45, -3, 0);
+    sq_newslot(kinoko_vm(v45), -3, ((0) != 0));
     *(int32_t *)&v14 = v45;
-    function_48aa50(v45);
+    kinoko_sq_pop(v45, 1);
     int32_t v47 = (int32_t)g644;
     *(int32_t *)&v15 = v47;
-    function_48a670(v47);
+    sq_pushroottable(kinoko_vm(v47));
     v16 = "ClearRenderLayer";
     *(int32_t *)&v17 = v47;
-    function_48a480(v47, (int32_t)"ClearRenderLayer", -1);
-    int32_t v48 = function_48c2f0(v47, 4); // 0x4734bf
+    sq_pushstring(kinoko_vm(v47), (const SQChar*)kinoko_pointer((int32_t)"ClearRenderLayer"), -1);
+    int32_t v48 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v47), 4)); // 0x4734bf
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v24 = v47;
     *(int32_t *)v48 = (int32_t)(intptr_t)function_46a1d0;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v47;
-    function_48c950(v47, -3, 0);
+    sq_newslot(kinoko_vm(v47), -3, ((0) != 0));
     *(int32_t *)&v9 = v47;
-    function_48aa50(v47);
+    kinoko_sq_pop(v47, 1);
     int32_t v49 = (int32_t)g644;
     *(int32_t *)&v10 = v49;
-    function_48a670(v49);
+    sq_pushroottable(kinoko_vm(v49));
     v12 = "CreateRenderLayer";
     *(int32_t *)&v13 = v49;
-    function_48a480(v49, (int32_t)"CreateRenderLayer", -1);
+    sq_pushstring(kinoko_vm(v49), (const SQChar*)kinoko_pointer((int32_t)"CreateRenderLayer"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v49;
-    int32_t v50 = function_48c2f0(v49, 4); // 0x473505
+    int32_t v50 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v49), 4)); // 0x473505
     v16 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v17 = v49;
     *(int32_t *)v50 = (int32_t)(intptr_t)retdec_create_render_layer_fixed;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v49;
-    function_48c950(v49, -3, 0);
-    function_48aa50(v49);
+    sq_newslot(kinoko_vm(v49), -3, ((0) != 0));
+    kinoko_sq_pop(v49, 1);
     int32_t v51 = (int32_t)g644;
-    function_48a670(v51);
+    sq_pushroottable(kinoko_vm(v51));
     v8 = (char *)-1;
     v9 = "LoadAct";
     *(int32_t *)&v10 = v51;
-    function_48a480(v51, (int32_t)"LoadAct", -1);
+    sq_pushstring(kinoko_vm(v51), (const SQChar*)kinoko_pointer((int32_t)"LoadAct"), -1);
     *(int32_t *)&v12 = v51;
-    int32_t v52 = function_48c2f0(v51, 4); // 0x47354b
+    int32_t v52 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v51), 4)); // 0x47354b
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471d90;
     *(int32_t *)&v15 = v51;
     *(int32_t *)v52 = (int32_t)(intptr_t)function_469820;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v51;
-    function_48c950(v51, -3, 0);
-    function_48aa50(v51);
+    sq_newslot(kinoko_vm(v51), -3, ((0) != 0));
+    kinoko_sq_pop(v51, 1);
     int32_t v53 = (int32_t)g644;
-    function_48a670(v53);
+    sq_pushroottable(kinoko_vm(v53));
     v19 = (char *)-1;
     v20 = "LoadMap";
     *(int32_t *)&v24 = v53;
-    function_48a480(v53, (int32_t)"LoadMap", -1);
-    int32_t v54 = function_48c2f0(v53, 4); // 0x473591
+    sq_pushstring(kinoko_vm(v53), (const SQChar*)kinoko_pointer((int32_t)"LoadMap"), -1);
+    int32_t v54 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v53), 4)); // 0x473591
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471d90;
     *(int32_t *)&v10 = v53;
     *(int32_t *)v54 = (int32_t)(intptr_t)function_469840;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v53;
-    function_48c950(v53, -3, 0);
+    sq_newslot(kinoko_vm(v53), -3, ((0) != 0));
     *(int32_t *)&v14 = v53;
-    function_48aa50(v53);
+    kinoko_sq_pop(v53, 1);
     int32_t v55 = (int32_t)g644;
     *(int32_t *)&v15 = v55;
-    function_48a670(v55);
+    sq_pushroottable(kinoko_vm(v55));
     v16 = "LoadSE";
     *(int32_t *)&v17 = v55;
-    function_48a480(v55, (int32_t)"LoadSE", -1);
-    int32_t v56 = function_48c2f0(v55, 4); // 0x4735d4
+    sq_pushstring(kinoko_vm(v55), (const SQChar*)kinoko_pointer((int32_t)"LoadSE"), -1);
+    int32_t v56 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v55), 4)); // 0x4735d4
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v24 = v55;
     *(int32_t *)v56 = (int32_t)(intptr_t)function_470ab0;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v55;
-    function_48c950(v55, -3, 0);
+    sq_newslot(kinoko_vm(v55), -3, ((0) != 0));
     *(int32_t *)&v9 = v55;
-    function_48aa50(v55);
+    kinoko_sq_pop(v55, 1);
     int32_t v57 = (int32_t)g644;
     *(int32_t *)&v10 = v57;
-    function_48a670(v57);
+    sq_pushroottable(kinoko_vm(v57));
     v12 = "ReleaseMap";
     *(int32_t *)&v13 = v57;
-    function_48a480(v57, (int32_t)"ReleaseMap", -1);
+    sq_pushstring(kinoko_vm(v57), (const SQChar*)kinoko_pointer((int32_t)"ReleaseMap"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v57;
-    int32_t v58 = function_48c2f0(v57, 4); // 0x47361a
+    int32_t v58 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v57), 4)); // 0x47361a
     v16 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v17 = v57;
     *(int32_t *)v58 = (int32_t)(intptr_t)function_469860;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v57;
-    function_48c950(v57, -3, 0);
-    function_48aa50(v57);
+    sq_newslot(kinoko_vm(v57), -3, ((0) != 0));
+    kinoko_sq_pop(v57, 1);
     int32_t v59 = (int32_t)g644;
-    function_48a670(v59);
+    sq_pushroottable(kinoko_vm(v59));
     v8 = (char *)-1;
     v9 = "MessageBox";
     *(int32_t *)&v10 = v59;
-    function_48a480(v59, (int32_t)"MessageBox", -1);
+    sq_pushstring(kinoko_vm(v59), (const SQChar*)kinoko_pointer((int32_t)"MessageBox"), -1);
     *(int32_t *)&v12 = v59;
-    int32_t v60 = function_48c2f0(v59, 4); // 0x473660
+    int32_t v60 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v59), 4)); // 0x473660
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v15 = v59;
     *(int32_t *)v60 = (int32_t)(intptr_t)function_470f60;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v59;
-    function_48c950(v59, -3, 0);
-    function_48aa50(v59);
+    sq_newslot(kinoko_vm(v59), -3, ((0) != 0));
+    kinoko_sq_pop(v59, 1);
     int32_t v61 = (int32_t)g644;
-    function_48a670(v61);
+    sq_pushroottable(kinoko_vm(v61));
     v19 = (char *)-1;
     v20 = "dprint";
     *(int32_t *)&v24 = v61;
-    function_48a480(v61, (int32_t)"dprint", -1);
-    int32_t v62 = function_48c2f0(v61, 4); // 0x4736a6
+    sq_pushstring(kinoko_vm(v61), (const SQChar*)kinoko_pointer((int32_t)"dprint"), -1);
+    int32_t v62 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v61), 4)); // 0x4736a6
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471f10;
     *(int32_t *)&v10 = v61;
     *(int32_t *)v62 = (int32_t)(intptr_t)function_43e100;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v61;
-    function_48c950(v61, -3, 0);
+    sq_newslot(kinoko_vm(v61), -3, ((0) != 0));
     *(int32_t *)&v14 = v61;
-    function_48aa50(v61);
+    kinoko_sq_pop(v61, 1);
     int32_t v63 = (int32_t)g644;
     *(int32_t *)&v15 = v63;
-    function_48a670(v63);
+    sq_pushroottable(kinoko_vm(v63));
     v16 = "Sleep";
     *(int32_t *)&v17 = v63;
-    function_48a480(v63, (int32_t)"Sleep", -1);
-    int32_t v64 = function_48c2f0(v63, 4); // 0x4736e9
+    sq_pushstring(kinoko_vm(v63), (const SQChar*)kinoko_pointer((int32_t)"Sleep"), -1);
+    int32_t v64 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v63), 4)); // 0x4736e9
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_471fd0;
     *(int32_t *)&v24 = v63;
     *(int32_t *)v64 = (int32_t)(intptr_t)function_470f80;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v63;
-    function_48c950(v63, -3, 0);
+    sq_newslot(kinoko_vm(v63), -3, ((0) != 0));
     *(int32_t *)&v9 = v63;
-    function_48aa50(v63);
+    kinoko_sq_pop(v63, 1);
     int32_t v65 = (int32_t)g644;
     *(int32_t *)&v10 = v65;
-    function_48a670(v65);
+    sq_pushroottable(kinoko_vm(v65));
     v12 = "timeGetTime";
     *(int32_t *)&v13 = v65;
-    function_48a480(v65, (int32_t)"timeGetTime", -1);
+    sq_pushstring(kinoko_vm(v65), (const SQChar*)kinoko_pointer((int32_t)"timeGetTime"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v65;
-    int32_t v66 = function_48c2f0(v65, 4); // 0x47372f
+    int32_t v66 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v65), 4)); // 0x47372f
     v16 = (char *)(intptr_t)function_472030;
     *(int32_t *)&v17 = v65;
     *(int32_t *)v66 = (int32_t)(intptr_t)function_470f90;
-    function_48d850((int32_t)v17, (int32_t)v16, 1);
+    sq_newclosure(kinoko_vm((int32_t)v17), (SQFUNCTION)kinoko_pointer((int32_t)v16), 1);
     *(int32_t *)&v19 = v65;
-    function_48c950(v65, -3, 0);
-    function_48aa50(v65);
+    sq_newslot(kinoko_vm(v65), -3, ((0) != 0));
+    kinoko_sq_pop(v65, 1);
     int32_t v67 = (int32_t)g644;
-    function_48a670(v67);
+    sq_pushroottable(kinoko_vm(v67));
     v8 = (char *)-1;
     v9 = "PlaySE";
     *(int32_t *)&v10 = v67;
-    function_48a480(v67, (int32_t)"PlaySE", -1);
+    sq_pushstring(kinoko_vm(v67), (const SQChar*)kinoko_pointer((int32_t)"PlaySE"), -1);
     *(int32_t *)&v12 = v67;
-    int32_t v68 = function_48c2f0(v67, 4); // 0x473775
+    int32_t v68 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v67), 4)); // 0x473775
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471fd0;
     *(int32_t *)&v15 = v67;
     *(int32_t *)v68 = (int32_t)(intptr_t)function_470980;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v67;
-    function_48c950(v67, -3, 0);
-    function_48aa50(v67);
+    sq_newslot(kinoko_vm(v67), -3, ((0) != 0));
+    kinoko_sq_pop(v67, 1);
     int32_t v69 = (int32_t)g644;
-    function_48a670(v69);
+    sq_pushroottable(kinoko_vm(v69));
     v19 = (char *)-1;
     v20 = "PlayBgm";
     *(int32_t *)&v24 = v69;
-    function_48a480(v69, (int32_t)"PlayBgm", -1);
-    int32_t v70 = function_48c2f0(v69, 4); // 0x4737bb
+    sq_pushstring(kinoko_vm(v69), (const SQChar*)kinoko_pointer((int32_t)"PlayBgm"), -1);
+    int32_t v70 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v69), 4)); // 0x4737bb
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_472080;
     *(int32_t *)&v10 = v69;
     *(int32_t *)v70 = (int32_t)(intptr_t)function_470220;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v69;
-    function_48c950(v69, -3, 0);
+    sq_newslot(kinoko_vm(v69), -3, ((0) != 0));
     *(int32_t *)&v14 = v69;
-    function_48aa50(v69);
+    kinoko_sq_pop(v69, 1);
     int32_t v71 = (int32_t)g644;
     *(int32_t *)&v15 = v71;
-    function_48a670(v71);
+    sq_pushroottable(kinoko_vm(v71));
     v16 = "PlayBgmMargin";
     *(int32_t *)&v17 = v71;
-    function_48a480(v71, (int32_t)"PlayBgmMargin", -1);
-    int32_t v72 = function_48c2f0(v71, 4); // 0x4737fe
+    sq_pushstring(kinoko_vm(v71), (const SQChar*)kinoko_pointer((int32_t)"PlayBgmMargin"), -1);
+    int32_t v72 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v71), 4)); // 0x4737fe
     v19 = (char *)1;
     v20 = (char *)(intptr_t)function_4720e0;
     *(int32_t *)&v24 = v71;
     *(int32_t *)v72 = (int32_t)(intptr_t)function_470290;
-    function_48d850((int32_t)v24, (int32_t)v20, (int32_t)v19);
+    sq_newclosure(kinoko_vm((int32_t)v24), (SQFUNCTION)kinoko_pointer((int32_t)v20), (int32_t)v19);
     *(int32_t *)&v8 = v71;
-    function_48c950(v71, -3, 0);
+    sq_newslot(kinoko_vm(v71), -3, ((0) != 0));
     *(int32_t *)&v9 = v71;
-    function_48aa50(v71);
+    kinoko_sq_pop(v71, 1);
     int32_t v73 = (int32_t)g644;
     *(int32_t *)&v10 = v73;
-    function_48a670(v73);
+    sq_pushroottable(kinoko_vm(v73));
     v12 = "FadeBgm";
     *(int32_t *)&v13 = v73;
-    function_48a480(v73, (int32_t)"FadeBgm", -1);
+    sq_pushstring(kinoko_vm(v73), (const SQChar*)kinoko_pointer((int32_t)"FadeBgm"), -1);
     v14 = (char *)4;
     *(int32_t *)&v15 = v73;
-    *(int32_t *)function_48c2f0(v73, 4) = (int32_t)(intptr_t)function_470320;
+    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v73), 4)) = (int32_t)(intptr_t)function_470320;
     v16 = (char *)(intptr_t)function_472140;
     *(int32_t *)&v17 = v73;
-    function_48d850(v73, (int32_t)(intptr_t)function_472140, 1);
+    sq_newclosure(kinoko_vm(v73), (SQFUNCTION)kinoko_pointer((int32_t)(intptr_t)function_472140), 1);
     *(int32_t *)&v19 = v73;
-    function_48c950(v73, -3, 0);
-    function_48aa50(v73);
+    sq_newslot(kinoko_vm(v73), -3, ((0) != 0));
+    kinoko_sq_pop(v73, 1);
     int32_t v74 = (int32_t)g644;
-    function_48a670(v74);
+    sq_pushroottable(kinoko_vm(v74));
     v8 = (char *)-1;
     v9 = "StopBgm";
     *(int32_t *)&v10 = v74;
-    function_48a480(v74, (int32_t)"StopBgm", -1);
+    sq_pushstring(kinoko_vm(v74), (const SQChar*)kinoko_pointer((int32_t)"StopBgm"), -1);
     *(int32_t *)&v12 = v74;
-    int32_t v75 = function_48c2f0(v74, 4); // 0x47388a
+    int32_t v75 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v74), 4)); // 0x47388a
     v13 = (char *)1;
     v14 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v15 = v74;
     *(int32_t *)v75 = (int32_t)(intptr_t)function_470360;
-    function_48d850((int32_t)v15, (int32_t)v14, (int32_t)v13);
+    sq_newclosure(kinoko_vm((int32_t)v15), (SQFUNCTION)kinoko_pointer((int32_t)v14), (int32_t)v13);
     v16 = (char *)-3;
     *(int32_t *)&v17 = v74;
-    function_48c950(v74, -3, 0);
-    function_48aa50(v74);
+    sq_newslot(kinoko_vm(v74), -3, ((0) != 0));
+    kinoko_sq_pop(v74, 1);
     int32_t v76 = (int32_t)g644;
-    function_48a670(v76);
+    sq_pushroottable(kinoko_vm(v76));
     v19 = (char *)-1;
     v20 = "PauseBgm";
-    function_48a480(v76, (int32_t)"PauseBgm", -1);
-    int32_t v77 = function_48c2f0(v76, 4); // 0x4738d0
+    sq_pushstring(kinoko_vm(v76), (const SQChar*)kinoko_pointer((int32_t)"PauseBgm"), -1);
+    int32_t v77 = (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(v76), 4)); // 0x4738d0
     v8 = (char *)1;
     v9 = (char *)(intptr_t)function_471bc0;
     *(int32_t *)&v10 = v76;
     *(int32_t *)v77 = (int32_t)(intptr_t)function_470300;
-    function_48d850((int32_t)v10, (int32_t)v9, (int32_t)v8);
+    sq_newclosure(kinoko_vm((int32_t)v10), (SQFUNCTION)kinoko_pointer((int32_t)v9), (int32_t)v8);
     v12 = (char *)-3;
     *(int32_t *)&v13 = v76;
-    function_48c950(v76, -3, 0);
+    sq_newslot(kinoko_vm(v76), -3, ((0) != 0));
     *(int32_t *)&v14 = v76;
-    function_48aa50(v76);
+    kinoko_sq_pop(v76, 1);
     int32_t v78[3]; // Complete 12-byte SquirrelObject temporary.
     function_4a9500_this(&v78, function_4a8cc0());
     v8 = "updateMask";
@@ -132294,7 +129811,7 @@ static int32_t function_46cfb0_this(int32_t this_ptr, const char *name,
     function_4a91c0_this(state + 6);
     function_4a91c0_this(state + 9);
 
-    stack_base = function_48aa20(state[0]);
+    stack_base = sq_gettop(kinoko_vm(state[0]));
     function_4a94e0_this((int32_t)(intptr_t)temporary);
     if ((g628 & 1) == 0) {
         g628 |= 1;
@@ -132307,14 +129824,12 @@ static int32_t function_46cfb0_this(int32_t this_ptr, const char *name,
     if (function_4aa540(state[0], (int32_t)(intptr_t)temporary, &g623,
                         state[1], state[5]) != 0) {
         function_4a94e0_this((int32_t)(intptr_t)nested);
-        function_48ab90((int32_t)g644,
-                        *(int32_t *)(intptr_t)(temporary + 1),
-                        *(int32_t *)(intptr_t)(temporary + 2));
+        sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(*(int32_t *)(intptr_t)(temporary + 1), *(int32_t *)(intptr_t)(temporary + 2)));
         function_4a9660_this((int32_t)(intptr_t)nested, -1);
-        function_48aa50((int32_t)g644);
+        kinoko_sq_pop((int32_t)g644, 1);
         function_45f640(nested);
     }
-    function_48c910(state[0], stack_base);
+    sq_settop(kinoko_vm(state[0]), (SQInteger)(stack_base));
     function_4a95c0_this(this_ptr + 8, (int32_t)(intptr_t)temporary);
     function_4a9d70_this((int32_t)(intptr_t)temporary);
     return this_ptr;
@@ -134070,7 +131585,7 @@ int32_t function_4a9660(int32_t a1) {
     int32_t value[2]; // bp-12, 0x4a9660
     retdec_trace("4a9660:begin");
     retdec_trace_i32("4a9660:index", a1);
-    function_48ab40((int32_t)g644, a1, value);
+    sq_getstackobj(kinoko_vm((int32_t)g644), a1, (HSQOBJECT*)(value));
     retdec_trace_i32("4a9660:type", value[0]);
     retdec_trace_i32("4a9660:data", value[1]);
     function_48a400((int32_t)g644, (int32_t)(intptr_t)value);
@@ -134184,23 +131699,23 @@ int32_t function_4aa3a0(int32_t * a1, char * a2) {
     int32_t result = (int32_t)a1;
     int32_t v1 = result + 4; // 0x4aa3ac
     *a1 = (int32_t)&g16;
-    function_48abe0(v1);
+    sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
     int32_t this_ptr = (int32_t)&g722;
     int32_t v3 = *(int32_t *)(this_ptr + 4); // 0x4aa3c7
-    function_48ab90((int32_t)g644, v3, *(int32_t *)(this_ptr + 8));
-    function_48a480((int32_t)g644, (int32_t)a2, -1);
-    if (function_48ce00((int32_t)g644, -2) >= 0) {
+    sq_pushobject(kinoko_vm((int32_t)g644), kinoko_borrowed_object(v3, *(int32_t *)(this_ptr + 8)));
+    sq_pushstring(kinoko_vm((int32_t)g644), (const SQChar*)kinoko_pointer((int32_t)a2), -1);
+    if (sq_get(kinoko_vm((int32_t)g644), -2) >= 0) {
         // 0x4aa3ff
         int32_t v4; // bp-12, 0x4aa3a0
-        function_48ab40((int32_t)g644, -1, &v4);
+        sq_getstackobj(kinoko_vm((int32_t)g644), -1, (HSQOBJECT*)(&v4));
         function_48a400((int32_t)g644, (int32_t)&v4);
         function_48a430((int32_t)g644, v1);
         *(int32_t *)v1 = v4;
         *(int32_t *)(result + 8) = 0;
-        function_48aa30((int32_t)g644, 1);
+        kinoko_sq_pop((int32_t)g644, 1);
     }
     // 0x4aa449
-    function_48aa30((int32_t)g644, 1);
+    kinoko_sq_pop((int32_t)g644, 1);
     return result;
 }
 
@@ -134208,7 +131723,7 @@ int32_t function_4aa3a0(int32_t * a1, char * a2) {
 int32_t function_4aa470(int32_t a1) {
     // 0x4aa470
     int32_t v1; // 0x4aa470
-    function_48a480(*(int32_t *)(v1 + 4), a1, -1);
+    sq_pushstring(kinoko_vm(*(int32_t *)(v1 + 4)), (const SQChar*)kinoko_pointer(a1), -1);
     return 1;
 }
 
@@ -134220,7 +131735,7 @@ int32_t function_4aa490(float80_t a1) {
     int32_t value_bits;
 
     memcpy(&value_bits, &value, sizeof(value_bits));
-    function_48a580(*(int32_t *)(v1 + 4), value_bits);
+    sq_pushfloat(kinoko_vm(*(int32_t *)(v1 + 4)), kinoko_float_bits(value_bits));
     return 1;
 }
 
@@ -134228,7 +131743,7 @@ int32_t function_4aa490(float80_t a1) {
 int32_t function_4aa4b0(int32_t a1) {
     // 0x4aa4b0
     int32_t v1; // 0x4aa4b0
-    function_48a4f0(*(int32_t *)(v1 + 4), a1);
+    sq_pushinteger(kinoko_vm(*(int32_t *)(v1 + 4)), a1);
     return 1;
 }
 
@@ -134236,7 +131751,7 @@ int32_t function_4aa4b0(int32_t a1) {
 int32_t function_4aa4d0(int32_t a1) {
     // 0x4aa4d0
     int32_t v1; // 0x4aa4d0
-    function_48a530(*(int32_t *)(v1 + 4), a1 & 255);
+    sq_pushbool(kinoko_vm(*(int32_t *)(v1 + 4)), ((a1 & 255) != 0));
     return 1;
 }
 
@@ -146703,7 +144218,7 @@ int32_t kinoko_call_game_vm(int32_t vm, int32_t nargs, int32_t retval, int32_t r
     int32_t previous_explicit = retdec_explicit_vm;
     retdec_active_vm = vm;
     retdec_explicit_vm = vm;
-    int32_t result = function_48ace0(vm, nargs, retval, raiseerror);
+    int32_t result = kinoko_sq_call(vm, nargs, retval, raiseerror);
     retdec_explicit_vm = previous_explicit;
     retdec_active_vm = previous;
     return result;
@@ -146763,5 +144278,15 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
         &g39, /* sq_object_vtable */
         &g40, /* sq_root_vtable */
     };
+    return &symbols;
+}
+
+/* Immutable host identities; audio code owns no retdec global VM state. */
+const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
+    static struct KinokoAudioHostSymbols symbols;
+    symbols.critical_section_vtable = &g190;
+    symbols.handle_table_vtable = &g198;
+    symbols.decoder_vtable = &g208;
+    symbols.device_error_message = g209;
     return &symbols;
 }

@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_api_types.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_host_object.hpp"
@@ -73,14 +74,14 @@ extern "C" int32_t function_4a8db0(int32_t requested_vm) {
             *pointer<int32_t>(node + 4) = g643;
             g643 = node;
         }
-        function_48b8b0(current, function_address(reinterpret_cast<void*>(&function_4a8c90)));
-        function_48a670(current);
-        function_4c7c90(current);
-        function_4c73a0(current);
-        function_4c6c20(current);
-        function_4c6670(current);
-        function_4c5c80(current);
-        function_48aa30(current, 1);
+        sq_setprintfunc(kinoko_vm(current), (SQPRINTFUNCTION)kinoko_pointer(function_address(reinterpret_cast<void*>(&function_4a8c90))));
+        sq_pushroottable(kinoko_vm(current));
+        sqstd_register_iolib(kinoko_vm(current));
+        sqstd_register_bloblib(kinoko_vm(current));
+        sqstd_register_mathlib(kinoko_vm(current));
+        sqstd_register_stringlib(kinoko_vm(current));
+        sqstd_seterrorhandlers(kinoko_vm(current));
+        kinoko_sq_pop(current, 1);
     }
     g642 = 0;
     g644 = pointer<char>(current);
