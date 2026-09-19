@@ -47,6 +47,12 @@ __declspec(noinline) void check_legacy_entry() {
     require(triple[2] == 64 && static_cast<uintptr_t>(result) == address(output.data()) && input == output,
         "real zero-argument entry forwards the incoming caller frame");
 }
+__declspec(noinline) void check_nested_entry(unsigned depth) {
+    volatile uint32_t separation[1024]{};
+    if (depth) check_nested_entry(depth - 1);
+    else check_legacy_entry();
+    require(separation[0] == 0 && separation[1023] == 0, "nested caller frame canaries");
+}
 #pragma optimize("", on)
 void check_selection() {
     Fixture f;
@@ -86,7 +92,7 @@ void check_selection() {
 }
 int main() {
     check_selection();
-    for (int i = 0; i < 100; ++i) check_legacy_entry();
+    for (int i = 0; i < 100; ++i) check_nested_entry(3);
     for (int i = 0; i < 10000; ++i) check_register();
     std::vector<std::thread> threads;
     for (int n = 0; n < 4; ++n) threads.emplace_back([] {
