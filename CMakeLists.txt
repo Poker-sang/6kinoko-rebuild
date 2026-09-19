@@ -160,6 +160,7 @@ endif()
 add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_document.cpp
+    src/reconstructed/act_properties.cpp
     src/reconstructed/act_map.cpp
     src/reconstructed/act_containers.cpp
     src/reconstructed/act_layout.cpp
@@ -389,7 +390,7 @@ set_tests_properties(squirrel_pair_contract PROPERTIES TIMEOUT 60)
 add_executable(kinoko_act_properties_contract tests/act_properties_contract.cpp)
 target_include_directories(kinoko_act_properties_contract PRIVATE include
     "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
-target_link_libraries(kinoko_act_properties_contract PRIVATE kinoko_squirrel_cpp_vm)
+target_sources(kinoko_act_properties_contract PRIVATE src/reconstructed/act_properties.cpp)
 target_link_options(kinoko_act_properties_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME act_properties_contract COMMAND kinoko_act_properties_contract)
 set_tests_properties(act_properties_contract PROPERTIES TIMEOUT 60)
