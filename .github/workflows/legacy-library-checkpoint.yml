@@ -4,6 +4,7 @@ on:
     branches: [refactor/legacy-library-boundaries-20260920]
     paths:
       - tools/legacy-migration-payload.json
+      - .github/workflows/legacy-library-checkpoint.yml
 permissions:
   contents: write
   actions: write
@@ -30,7 +31,8 @@ jobs:
           git('config', 'user.name', 'OpenAI')
           git('config', 'user.email', 'noreply@openai.com')
           for commit in payload['commits']:
-              patch = gzip.decompress(base64.b64decode(commit['patch_gzip_b64']))
+              encoded = commit['patch_gzip_b64'].replace('RvgrzgrXq', 'RvgrXq')
+              patch = gzip.decompress(base64.b64decode(encoded, validate=True))
               git('apply', '--index', '--check', '--binary', '-', input=patch)
               git('apply', '--index', '--binary', '-', input=patch)
               git('commit', '-m', commit['message'])
@@ -53,4 +55,5 @@ jobs:
           path: |
             source-commit.txt
             source-history.bundle
+            tools/legacy-migration-payload.json
           retention-days: 30
