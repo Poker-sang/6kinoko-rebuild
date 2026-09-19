@@ -1,0 +1,25 @@
+name: Migration checkpoint
+on:
+  push:
+    branches: [refactor/no-inline-asm-cpp-20260919]
+    paths:
+      - .github/workflows/migration-checkpoint.yml
+      - tools/migration-checkpoint.py
+permissions:
+  contents: write
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: refactor/no-inline-asm-cpp-20260919
+      - name: Apply reviewed migration batch
+        run: |
+          python3 tools/migration-checkpoint.py
+          git config user.name 'Poker-sang'
+          git config user.email '62325494+Poker-sang@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: move VM bootstrap into source-backed C++'
+          git push origin HEAD:refactor/no-inline-asm-cpp-20260919
