@@ -19,6 +19,8 @@ jobs:
           fetch-depth: 0
       - name: Apply checked source transformation
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test -f tools/thirdparty-step.py
@@ -34,6 +36,8 @@ jobs:
           git rev-parse HEAD > source-commit.txt
           git bundle create thirdparty-source.bundle HEAD
           git push origin HEAD:refactor/legacy-library-boundaries-20260920
+      - name: Check graph audit contracts after committing
+        run: python -m unittest discover -s tests -p test_legacy_islands.py -v
       - name: Run quiet and diagnostic Win32 verification
         env:
           GH_TOKEN: ${{ github.token }}
