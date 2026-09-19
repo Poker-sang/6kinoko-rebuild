@@ -3,6 +3,7 @@
 // owners without exporting globals or adding injection paths to the game.
 #include "../src/reconstructed/audio_runtime.cpp"
 #include "stage_audio_contract.h"
+#include "kinoko/game_math.h"
 #include "directsound_fixture.hpp"
 #include <array>
 #include <cstdio>
