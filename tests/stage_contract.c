@@ -4009,6 +4009,35 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_input_configuration(void) {
+    int32_t manager[384]={0}, devices[2][42]={{0}};
+    char path[MAX_PATH]; GetModuleFileNameA(NULL,path,MAX_PATH);
+    char *filename=strrchr(path,'\\'); CHECK(filename!=NULL);
+    sprintf_s(filename+1,MAX_PATH-(filename+1-path),"input-contract-%lu.dat",GetCurrentProcessId());
+    manager[45]=PTR(devices); manager[46]=PTR(devices+2);
+    manager[4]=0xfe; manager[8]=55;
+    devices[0][1]=0; devices[0][9]=7;
+    devices[1][1]=1; devices[1][9]=19;
+    const int old_count=g782; g782=2;
+    function_46b7c0(PTR(manager),PTR(path));
+    memset(manager+4,0,68); memset(devices[0]+1,0,68); memset(devices[1]+1,0,68);
+    function_46b880(PTR(manager),PTR(path));
+    CHECK(manager[4]==0xfe && manager[8]==55);
+    CHECK(devices[0][9]==7 && devices[1][9]==7); /* First saved device broadcasts to all. */
+    CHECK(function_46be40(PTR(manager),-1,3)==55);
+    function_46bbe0(PTR(manager),1,3,23);
+    CHECK(devices[1][9]==23 && devices[0][9]==7);
+    unsigned char previous[256]; memcpy(previous,g_retdec_keyboard_state,256);
+    memset(g_retdec_keyboard_state,0,256);
+    g_retdec_keyboard_state[58]=g_retdec_keyboard_state[112]=g_retdec_keyboard_state[148]=0x80;
+    CHECK(function_46bc90(PTR(manager),-1,3)==0);
+    g_retdec_keyboard_state[149]=0x80;
+    CHECK(function_46bc90(PTR(manager),-1,3)==1 && manager[8]==149);
+    memcpy(g_retdec_keyboard_state,previous,256); g782=old_count;
+    puts("PASS: Input config two-record format/broadcast, assignment offsets and original excluded keys");
+    return 0;
+}
+
 static int test_input_aggregation(void) {
     int32_t cluster[50] = {0}, devices[3][42] = {{0}}, blocks[2][4] = {{0}}, map[2];
     map[0]=PTR(blocks[0]); map[1]=PTR(blocks[1]);
@@ -4044,7 +4073,7 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
     sprintf_s(filename+1,MAX_PATH-(filename+1-path),"table-contract-%lu.dat",GetCurrentProcessId());
     CHECK(execute_source(vm,root+2,
         "serializationSource <- {n=123,f=1.25,b=true,s=\"abc\",empty=null,"
-        "nested={value=-9},a=[4,null,false,\"tail\"]}; serializationTarget <- {};"));
+        "nested={value=-9},a=[4,null,false,\"tail\"]};\nserializationTarget <- {};"));
     int32_t source[3], target[3], owned[3];
     function_4aa3a0_this(PTR(root+1),PTR(source),"serializationSource");
     CHECK(retdec_squirrel_object_copy(owned,source));
@@ -4140,6 +4169,7 @@ int main(int argc, char **argv) {
     CHECK(test_array_pop_values(vm, root) == 0);
     CHECK(test_script_registrations(vm, root) == 0);
     CHECK(test_input_aggregation() == 0);
+    CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
