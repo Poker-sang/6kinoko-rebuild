@@ -1,5 +1,5 @@
 name: Source snapshot
-# Preserve the full starting revision for the next C++ migration validation batch.
+# Preserve tracked source for reproducible native runtime validation.
 on:
   push:
     branches: ['refactor/typed-native-runtime-20260919']
@@ -22,6 +22,8 @@ jobs:
           git rev-parse HEAD > snapshot/SOURCE_REVISION.txt
           git archive --format=tar.gz --output=snapshot/source.tar.gz HEAD
           git log -30 --format='%H %s' > snapshot/COMMITS.txt
+          git diff --numstat b2d945eeea78d1593bbd16f4cca7c51c92e1fa29 HEAD > snapshot/DIFF_NUMSTAT.txt
+          git diff --check b2d945eeea78d1593bbd16f4cca7c51c92e1fa29 HEAD
           sha256sum snapshot/source.tar.gz > snapshot/SHA256SUMS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
