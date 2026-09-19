@@ -64,6 +64,7 @@ static_assert(std::is_nothrow_move_constructible_v<BgmTrack>);
 extern "C" {
 int32_t g637 = 0, g765 = 1, g876 = 0, g878 = 0;
 char* g877 = nullptr;
+char g874 = 0;
 const KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static const KinokoAudioHostSymbols symbols{identities, identities + 1, identities + 2, "test"};
     return &symbols;
