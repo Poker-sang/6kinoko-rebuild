@@ -26,3 +26,17 @@ operand-selection heuristic. ABI forwarding and deterministic selection are now
 separate contracts; neither proves that every unresolved call site supplies
 correct operands. No original EXE/DAT assets are present in this environment,
 so asset-free tests cannot establish gameplay parity.
+
+
+## Continuation checkpoint
+
+The ACT property parser and byte-offset property mappings are now isolated in
+`src/reconstructed/act_properties.cpp`. The asset-free parser contract links
+that unit directly, so it no longer drags unrelated render/texture host symbols
+into the test executable.
+
+A further native-callback batch moved 16 Squirrel argument/closure adapters out
+of `6kinoko_rebuilt.c` and into `squirrel_native_calls.cpp`. Truthiness,
+string/integer/float conversion, stack access and object ownership now go
+through the vendored Squirrel 2.2.2 API. Legacy ABI names remain only at the
+C boundary while callers are incrementally migrated.
