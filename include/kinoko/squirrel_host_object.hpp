@@ -1,6 +1,7 @@
 #pragma once
 
 #include <squirrel.h>
+#include "kinoko/native_record_view.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -38,18 +39,16 @@ inline HSQOBJECT borrowed_value(int32_t type, int32_t data) noexcept {
 // them as live C++ objects or assuming stronger alignment than their storage.
 class ObjectView final {
 public:
-    explicit ObjectView(void* storage) noexcept : bytes_(static_cast<unsigned char*>(storage)) {}
+    explicit ObjectView(void* storage) noexcept : record_(storage) {}
     explicit ObjectView(int32_t storage) noexcept : ObjectView(pointer(storage)) {}
     HSQOBJECT value() const noexcept {
-        HSQOBJECT result;
-        std::memcpy(&result, bytes_ + offsetof(ObjectStorage, value), sizeof(result));
-        return result;
+        return record_.get(&ObjectStorage::value);
     }
     void write(const HSQOBJECT& value) const noexcept {
-        std::memcpy(bytes_ + offsetof(ObjectStorage, value), &value, sizeof(value));
+        record_.set(&ObjectStorage::value, value);
     }
     void set_vtable(int32_t vtable) const noexcept {
-        std::memcpy(bytes_, &vtable, sizeof(vtable));
+        record_.set(&ObjectStorage::vtable, static_cast<std::uint32_t>(vtable));
     }
     void initialize(int32_t vtable) const noexcept {
         set_vtable(vtable);
@@ -85,9 +84,11 @@ public:
         assign(vm, incoming);
         return incoming._type;
     }
-    int32_t payload_address() const noexcept { return address(bytes_ + 4); }
+    int32_t payload_address() const noexcept {
+        return address(record_.bytes(&ObjectStorage::value));
+    }
 private:
-    unsigned char* bytes_;
+    kinoko::native::RecordView<ObjectStorage> record_;
 };
 
 // Only use for balanced helper operations. BeginIteration intentionally leaves

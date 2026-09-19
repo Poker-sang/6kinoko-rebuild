@@ -43,17 +43,20 @@ template<class T> void write(void* bytes, const T& value) {
 }
 class ObjectView final {
 public:
-    explicit ObjectView(int32_t storage) : bytes_(pointer<unsigned char>(storage)) {}
-    HSQUIRRELVM vm() const { return read<HSQUIRRELVM>(bytes_ + 4); }
-    HSQOBJECT value() const { return read<HSQOBJECT>(bytes_ + 8); }
-    void value(const HSQOBJECT& value) { write(bytes_ + 8, value); }
+    explicit ObjectView(int32_t storage) : record_(pointer(storage)) {}
+    HSQUIRRELVM vm() const { return record_.get(&SqratStorage::vm); }
+    HSQOBJECT value() const { return record_.get(&SqratStorage::value); }
+    void value(const HSQOBJECT& value) { record_.set(&SqratStorage::value, value); }
     void reset() { HSQOBJECT empty; sq_resetobject(&empty); value(empty); }
-    void vm(HSQUIRRELVM vm) { write(bytes_ + 4, vm); }
-    bool owns() const { return bytes_[16] != 0; }
-    void owns(bool flag) { bytes_[16] = flag ? 1 : 0; }
-    void vtable(int32_t value) { write(bytes_, value); }
+    void vm(HSQUIRRELVM vm) { record_.set(&SqratStorage::vm, vm); }
+    bool owns() const { return record_.get(&SqratStorage::owns) != 0; }
+    void owns(bool flag) { record_.set(&SqratStorage::owns, uint8_t(flag ? 1 : 0)); }
+    void vtable(int32_t value) { record_.set(&SqratStorage::vtable, uint32_t(value)); }
+    int32_t payload_address() const {
+        return address(record_.bytes(&SqratStorage::value));
+    }
 private:
-    unsigned char* bytes_;
+    kinoko::native::RecordView<SqratStorage> record_;
 };
 // Unlike sq_settop, the original trim helper NEVER grows a depleted stack.
 class TrimStack final {
@@ -127,7 +130,7 @@ extern "C" int32_t retdec_sqrat_root_construct(int32_t storage, int32_t id) {
     auto vm = pointer<SQVM>(id);
     ObjectView object(storage);
     retdec_trace_i32("450e30:construct-object", storage);
-    retdec_trace_i32("450e30:construct-pair", storage + 8);
+    retdec_trace_i32("450e30:construct-pair", object.payload_address());
     object.vtable(kinoko_sqrat_object_vtable());
     object.vm(vm); object.owns(true); object.reset();
     object.vtable(kinoko_sqrat_root_vtable());
