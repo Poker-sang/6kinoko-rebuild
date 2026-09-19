@@ -1,0 +1,97 @@
+Test project C:/WorkSpace/6kinoko-rebuild/build-runs/actorbind-e2673d6-diagnostic-20260919
+      Start  1: archive_smoke
+ 1/46 Test  #1: archive_smoke ...........................   Passed    0.02 sec
+      Start  2: stage_native_contract
+ 2/46 Test  #2: stage_native_contract ...................   Passed    0.05 sec
+      Start  3: entity_Init0989_contract
+ 3/46 Test  #3: entity_Init0989_contract ................   Passed    0.22 sec
+      Start  4: entity_Init0cfb_contract
+ 4/46 Test  #4: entity_Init0cfb_contract ................   Passed    0.19 sec
+      Start  5: entity_Init0d0c_contract
+ 5/46 Test  #5: entity_Init0d0c_contract ................   Passed    0.10 sec
+      Start  6: damage_pause_contract
+ 6/46 Test  #6: damage_pause_contract ...................   Passed    0.02 sec
+      Start  7: crystal_countdown_contract
+ 7/46 Test  #7: crystal_countdown_contract ..............   Passed    0.02 sec
+      Start  8: moving_map_contract
+ 8/46 Test  #8: moving_map_contract .....................   Passed    0.23 sec
+      Start  9: orange_platform_contract
+ 9/46 Test  #9: orange_platform_contract ................   Passed    0.18 sec
+      Start 10: green_stage5_contract
+10/46 Test #10: green_stage5_contract ...................   Passed    0.20 sec
+      Start 11: water_alpha_contract
+11/46 Test #11: water_alpha_contract ....................   Passed    0.03 sec
+      Start 12: act_reentry_contract
+12/46 Test #12: act_reentry_contract ....................   Passed    0.05 sec
+      Start 13: moving_map_water_contract
+13/46 Test #13: moving_map_water_contract ...............   Passed    0.23 sec
+      Start 14: moving_map_water_2200,559
+14/46 Test #14: moving_map_water_2200,559 ...............   Passed    0.22 sec
+      Start 15: moving_map_water_2400,559
+15/46 Test #15: moving_map_water_2400,559 ...............   Passed    0.21 sec
+      Start 16: moving_map_water_2600,559
+16/46 Test #16: moving_map_water_2600,559 ...............   Passed    0.21 sec
+      Start 17: moving_map_water_2770,463
+17/46 Test #17: moving_map_water_2770,463 ...............   Passed    0.21 sec
+      Start 18: game_math_contract
+18/46 Test #18: game_math_contract ......................   Passed    0.01 sec
+      Start 19: legacy_abi_contract
+19/46 Test #19: legacy_abi_contract .....................   Passed    0.01 sec
+      Start 20: texture_store_contract
+20/46 Test #20: texture_store_contract ..................   Passed    0.03 sec
+      Start 21: act_frame_contract
+21/46 Test #21: act_frame_contract ......................   Passed    0.02 sec
+      Start 22: diagnostics_capture
+22/46 Test #22: diagnostics_capture .....................   Passed    0.23 sec
+      Start 23: squirrel_source_vm_contract
+23/46 Test #23: squirrel_source_vm_contract .............   Passed    0.02 sec
+      Start 24: native_record_view_contract
+24/46 Test #24: native_record_view_contract .............   Passed    0.02 sec
+      Start 25: actor_records_contract
+25/46 Test #25: actor_records_contract ..................   Passed    0.02 sec
+      Start 26: com_owner_contract
+26/46 Test #26: com_owner_contract ......................   Passed    0.01 sec
+      Start 27: audio_runtime_contract
+27/46 Test #27: audio_runtime_contract ..................   Passed    0.02 sec
+      Start 28: squirrel_c_api_contract
+28/46 Test #28: squirrel_c_api_contract .................   Passed    0.01 sec
+      Start 29: legacy_method_entries_contract
+29/46 Test #29: legacy_method_entries_contract ..........   Passed    0.01 sec
+      Start 30: retdec_memory_contract
+30/46 Test #30: retdec_memory_contract ..................   Passed    0.01 sec
+      Start 31: diagnostics_filter_contract
+31/46 Test #31: diagnostics_filter_contract .............   Passed    0.01 sec
+      Start 32: squirrel_refcount_contract
+32/46 Test #32: squirrel_refcount_contract ..............   Passed    0.01 sec
+      Start 33: squirrel_host_object_contract
+33/46 Test #33: squirrel_host_object_contract ...........   Passed    0.01 sec
+      Start 34: squirrel_pair_contract
+34/46 Test #34: squirrel_pair_contract ..................   Passed    0.01 sec
+      Start 35: act_properties_contract
+35/46 Test #35: act_properties_contract .................   Passed    0.01 sec
+      Start 36: sqrat_object_contract
+36/46 Test #36: sqrat_object_contract ...................   Passed    0.02 sec
+      Start 37: native_property_contract
+37/46 Test #37: native_property_contract ................   Passed    0.01 sec
+      Start 38: squirrel_binding_contract
+38/46 Test #38: squirrel_binding_contract ...............   Passed    0.02 sec
+      Start 39: squirrel_native_calls_contract
+39/46 Test #39: squirrel_native_calls_contract ..........   Passed    0.02 sec
+      Start 40: squirrel_game_objects_contract
+40/46 Test #40: squirrel_game_objects_contract ..........   Passed    0.02 sec
+      Start 41: actor_lifecycle_contract
+41/46 Test #41: actor_lifecycle_contract ................   Passed    0.02 sec
+      Start 42: legacy_copy_entries_contract
+42/46 Test #42: legacy_copy_entries_contract ............   Passed    0.01 sec
+      Start 43: legacy_frame_copy_checked_contract
+43/46 Test #43: legacy_frame_copy_checked_contract ......   Passed    0.02 sec
+      Start 44: legacy_frame_entry_checked_contract
+44/46 Test #44: legacy_frame_entry_checked_contract .....   Passed    0.03 sec
+      Start 45: legacy_frame_copy_optimized_contract
+45/46 Test #45: legacy_frame_copy_optimized_contract ....   Passed    0.02 sec
+      Start 46: legacy_frame_entry_optimized_contract
+46/46 Test #46: legacy_frame_entry_optimized_contract ...   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 46
+
+Total Test time (real) =   3.13 sec
