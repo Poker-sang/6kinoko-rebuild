@@ -1,4 +1,5 @@
 #include "kinoko/texture_store.h"
+#include "kinoko/com_owner.hpp"
 
 #include <array>
 #include <string>
@@ -62,12 +63,13 @@ extern "C" int32_t kinoko_texture_acquire(const char *path) {
         if (function_40e630(0, path, reinterpret_cast<int32_t>(&texture_value),
                            &width, &height) < 0 || !texture_value)
             return 0;
-        auto *texture = reinterpret_cast<IDirect3DBaseTexture9 *>(texture_value);
-        const auto handle = kinoko_texture_register(texture, width, height);
-        if (!handle) {
-            texture->Release();
-            return 0;
-        }
+        // Loading transfers one COM reference. Registration adopts it only on
+        // success; a full store leaves the temporary responsible for release.
+        kinoko::ComOwner<IDirect3DBaseTexture9> texture(
+            reinterpret_cast<IDirect3DBaseTexture9 *>(texture_value));
+        const auto handle = kinoko_texture_register(texture.get(), width, height);
+        if (!handle) return 0;
+        texture.detach();
         owners[handle].name.swap(key);
         return handle;
     } catch (...) {
@@ -82,19 +84,23 @@ extern "C" int32_t kinoko_texture_release(int32_t handle) {
     if (--owner.references) return 1;
 
     auto &slot = kinoko_texture_slots[handle];
-    auto *texture = static_cast<IDirect3DBaseTexture9 *>(slot.texture);
+    // Adopt the store's final reference for this scope. The public slot is a
+    // borrowed renderer view and remains intact throughout device unbinding.
+    kinoko::ComOwner<IDirect3DBaseTexture9> texture(
+        static_cast<IDirect3DBaseTexture9 *>(slot.texture));
     auto *device = reinterpret_cast<IDirect3DDevice9 *>(g678);
     // 405D60 unbinds a final reference from all eight texture stages first.
     if (device) {
         for (DWORD stage = 0; stage < 8; ++stage) {
-            IDirect3DBaseTexture9 *bound = nullptr;
-            if (SUCCEEDED(device->GetTexture(stage, &bound)) && bound) {
-                if (bound == texture) device->SetTexture(stage, nullptr);
-                bound->Release();
+            IDirect3DBaseTexture9 *value = nullptr;
+            if (SUCCEEDED(device->GetTexture(stage, &value)) && value) {
+                // GetTexture returns a new reference, not a borrowed pointer.
+                kinoko::ComOwner<IDirect3DBaseTexture9> bound(value);
+                if (bound.get() == texture.get()) device->SetTexture(stage, nullptr);
             }
         }
     }
-    texture->Release();
+    texture.reset(); // Preserve final Release before clearing the slot/name.
     slot = {};
     owner.name.clear();
     return 1;

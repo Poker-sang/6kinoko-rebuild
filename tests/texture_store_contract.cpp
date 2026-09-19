@@ -13,7 +13,8 @@ struct Texture {
     unsigned references;
 };
 static unsigned loads, releases, unbinds;
-static IDirect3DBaseTexture9 *bound_texture;
+static IDirect3DBaseTexture9 *bound_textures[8];
+static IDirect3DBaseTexture9 *&bound_texture = bound_textures[0];
 static ULONG WINAPI release_texture(IDirect3DBaseTexture9 *raw) {
     auto *texture = reinterpret_cast<Texture *>(raw);
     const auto references = --texture->references;
@@ -22,16 +23,16 @@ static ULONG WINAPI release_texture(IDirect3DBaseTexture9 *raw) {
 }
 static HRESULT WINAPI get_texture(IDirect3DDevice9 *, DWORD stage,
                                   IDirect3DBaseTexture9 **out) {
-    *out = stage == 0 ? bound_texture : nullptr;
+    *out = bound_textures[stage];
     if (*out) ++reinterpret_cast<Texture *>(*out)->references;
     return S_OK;
 }
 static HRESULT WINAPI set_texture(IDirect3DDevice9 *, DWORD stage,
                                   IDirect3DBaseTexture9 *texture) {
-    if (stage == 0 && !texture && bound_texture) {
+    if (!texture && bound_textures[stage]) {
         ++unbinds;
-        release_texture(bound_texture);
-        bound_texture = nullptr;
+        release_texture(bound_textures[stage]);
+        bound_textures[stage] = nullptr;
     }
     return S_OK;
 }
@@ -76,5 +77,37 @@ int main() {
     CHECK(kinoko_texture_acquire("data/missing.cv2") == 0);
     CHECK(kinoko_texture_release(0) == 0 && kinoko_texture_release(-1) == 0);
     CHECK(kinoko_texture_release(KINOKO_TEXTURE_CAPACITY) == 0);
-    std::puts("PASS: 5000 shared texture cycles; one load, retained owner, final unbind/release, slot reuse, failed loads");
+    // The same texture can be bound more than once; an unrelated stage must
+    // keep both its device reference and its store reference.
+    const auto shared = kinoko_texture_acquire("shared.cv2");
+    const auto other = kinoko_texture_acquire("other.cv2");
+    CHECK(shared && other && shared != other);
+    auto *shared_raw = static_cast<IDirect3DBaseTexture9 *>(kinoko_texture_slots[shared].texture);
+    auto *other_raw = static_cast<IDirect3DBaseTexture9 *>(kinoko_texture_slots[other].texture);
+    bound_textures[1] = bound_textures[7] = shared_raw;
+    reinterpret_cast<Texture *>(shared_raw)->references += 2;
+    bound_textures[3] = other_raw;
+    ++reinterpret_cast<Texture *>(other_raw)->references;
+    const auto before_release = releases, before_unbind = unbinds;
+    CHECK(kinoko_texture_release(shared) == 1);
+    CHECK(releases == before_release + 1 && unbinds == before_unbind + 2);
+    CHECK(!bound_textures[1] && !bound_textures[7] && bound_textures[3] == other_raw);
+    CHECK(reinterpret_cast<Texture *>(other_raw)->references == 2);
+    CHECK(kinoko_texture_release(other) == 1);
+    CHECK(releases == before_release + 2 && unbinds == before_unbind + 3);
+
+    // A full store must release a successfully loaded, but unregistered,
+    // texture exactly once. Existing slots must stay owned and unchanged.
+    int32_t handles[KINOKO_TEXTURE_CAPACITY - 1]{};
+    for (auto &handle : handles) {
+        auto *raw = new Texture{&texture_vtable, 1};
+        handle = kinoko_texture_register(raw, 1, 1);
+        CHECK(handle != 0);
+    }
+    const auto full_releases = releases, full_loads = loads;
+    CHECK(kinoko_texture_acquire("full.cv2") == 0);
+    CHECK(releases == full_releases + 1 && loads == full_loads + 1);
+    for (auto handle : handles) CHECK(kinoko_texture_release(handle) == 1);
+    CHECK(releases == full_releases + KINOKO_TEXTURE_CAPACITY);
+    std::puts("PASS: texture ownership, shared names, all-stage unbind, unrelated borrows, capacity failure and reuse");
 }

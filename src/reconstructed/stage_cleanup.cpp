@@ -1,6 +1,8 @@
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/actor_cleanup.h"
+#include "kinoko/native_record_view.hpp"
+#include <array>
 #include <cstddef>
 #include <cstdlib>
 #include <new>
@@ -15,9 +17,16 @@ int32_t function_40b3a0(void);
 
 namespace {
 struct StageOwner {
-    void *source;
-    void *data;
-    int32_t *runtime;
+    void *source; // owned ACT source; released through its original destructor
+    void *data;   // owned auxiliary allocation
+    void *runtime; // owned runtime allocation; may borrow source during setup
+};
+// Only the known prefix is described. BeginStage can replace borrowed_source
+// with an independently owned clone; cleanup must not detach that clone.
+struct StageRuntimePrefix {
+    uint32_t vtable;
+    std::array<unsigned char, 8> unknown;
+    uint32_t borrowed_source;
 };
 struct StageNode {
     StageNode *next, *previous;
@@ -30,6 +39,8 @@ struct RenderQueueNode {
 static_assert(sizeof(RenderQueueNode) == 12);
 static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
 static_assert(offsetof(StageOwner, runtime) == 8);
+static_assert(sizeof(StageRuntimePrefix) == 16);
+static_assert(offsetof(StageRuntimePrefix, borrowed_source) == 12);
 
 void destroy_owner(StageOwner *owner) {
     if (!owner) return;
@@ -37,9 +48,12 @@ void destroy_owner(StageOwner *owner) {
     owner->data = nullptr;
     // Detach legacy borrowed fixtures before destroying their source;
     // BeginStage clones remain independently owned by the runtime.
-    if (owner->runtime && owner->runtime[3] ==
-            static_cast<int32_t>(reinterpret_cast<uintptr_t>(owner->source)))
-        owner->runtime[3] = 0;
+    if (owner->runtime) {
+        const kinoko::native::RecordView<StageRuntimePrefix> runtime(owner->runtime);
+        if (runtime.get(&StageRuntimePrefix::borrowed_source) ==
+                reinterpret_cast<uintptr_t>(owner->source))
+            runtime.set(&StageRuntimePrefix::borrowed_source, uint32_t{0});
+    }
     if (owner->source) {
         auto **vtable = *static_cast<void ***>(owner->source);
         retdec_call_thiscall1(owner->source, vtable[4], 1);
