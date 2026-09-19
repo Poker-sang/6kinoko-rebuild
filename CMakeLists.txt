@@ -37,6 +37,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
     src/reconstructed/act_clone.cpp
     src/reconstructed/actor_methods.cpp
+    src/reconstructed/physical_input.cpp
+    src/reconstructed/direct_input.cpp
     src/reconstructed/input_aggregation.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp

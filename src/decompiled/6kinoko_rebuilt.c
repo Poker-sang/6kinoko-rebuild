@@ -1989,7 +1989,7 @@ int32_t function_408b30(void);
 int32_t function_408bf0(void);
 int32_t function_408c80(void);
 int32_t function_408d00(void);
-static void retdec_poll_fallback_keyboard(void);
+void retdec_poll_fallback_keyboard(void);
 static int32_t retdec_input_aggregate_add(int32_t aggregate_ptr,
                                            int32_t key_code);
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
@@ -4538,7 +4538,7 @@ int32_t g773 = 0; // 0x51b07c
 int32_t g774 = 0; // 0x51b080
 char * g775; // 0x51b088
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
-static unsigned char g_retdec_keyboard_state[256];
+unsigned char g_retdec_keyboard_state[256];
 /* CInputManager::CInputManagerCluster owns a vector of unique key codes.
    Keep the vector storage separate from the manager so its pointers remain
    valid while the Squirrel object is updated. */
@@ -10758,7 +10758,7 @@ int32_t function_4074b0(void) {
 /* DirectInput is unavailable on some modern desktop sessions.  This is only
    an input-source fallback: it samples the real foreground keyboard and uses
    the same DIK scan codes as the original device record. */
-static void retdec_poll_fallback_keyboard(void)
+void retdec_poll_fallback_keyboard(void)
 {
     static int previous_z;
     HKL keyboard_layout = GetKeyboardLayout(0);
@@ -10919,295 +10919,7 @@ int32_t retdec_update_input_cluster(int32_t cluster_ptr)
 }
 
 // Address range: 0x407500 - 0x4077b5
-int32_t __fastcall function_407500(int32_t this_ptr) {
-    // 0x407500
-    int32_t v1 = this_ptr;
-    char v2 = *(char *)(v1 + 4); // 0x407500
-    if ((int8_t)v2 >= 0) {
-        int32_t result = v2; // 0x40750f
-        if (result < 0 || result >= g782) {
-            // 0x407649
-            return result;
-        }
-        int32_t v3 = 80 * result + (int32_t)g783; // 0x40752d
-        if (v3 == 0) {
-            // 0x407649
-            return result;
-        }
-        int32_t * v4 = (int32_t *)v3; // 0x40753b
-        int32_t v5 = *v4; // 0x40753b
-        if (v5 > -501) {
-            int32_t * v6 = (int32_t *)(v1 + 72);
-            int32_t v7 = *v6;
-            if (v5 < 501) {
-                // 0x407574
-                *v6 = 0;
-                *(char *)(v1 + 128) = (char)(v7 != 0);
-            } else {
-                int32_t v8 = v7; // 0x407564
-                if (v7 < 0) {
-                    // 0x407566
-                    *v6 = 0;
-                    v8 = 0;
-                }
-                // 0x407569
-                *v6 = v8 + 1;
-                *(char *)(v1 + 128) = 0;
-            }
-        } else {
-            int32_t * v9 = (int32_t *)(v1 + 72); // 0x407547
-            int32_t v10 = *v9; // 0x407547
-            int32_t v11 = v10; // 0x40754a
-            if (v10 > 0) {
-                // 0x40754c
-                *v9 = 0;
-                v11 = 0;
-            }
-            // 0x40754f
-            *v9 = v11 - 1;
-            *(char *)(v1 + 128) = 0;
-        }
-        int32_t * v12 = (int32_t *)(v3 + 4); // 0x407583
-        int32_t v13 = *v12; // 0x407583
-        if (v13 > -501) {
-            int32_t * v14 = (int32_t *)(v1 + 76);
-            int32_t v15 = *v14;
-            if (v13 < 501) {
-                // 0x4075ba
-                *v14 = 0;
-                *(char *)(v1 + 129) = (char)(v15 != 0);
-            } else {
-                int32_t v16 = v15; // 0x4075aa
-                if (v15 < 0) {
-                    // 0x4075ac
-                    *v14 = 0;
-                    v16 = 0;
-                }
-                // 0x4075af
-                *v14 = v16 + 1;
-                *(char *)(v1 + 129) = 0;
-            }
-        } else {
-            int32_t * v17 = (int32_t *)(v1 + 76); // 0x40758d
-            int32_t v18 = *v17; // 0x40758d
-            int32_t v19 = v18; // 0x407590
-            if (v18 > 0) {
-                // 0x407592
-                *v17 = 0;
-                v19 = 0;
-            }
-            // 0x407595
-            *v17 = v19 - 1;
-            *(char *)(v1 + 129) = 0;
-        }
-        int32_t v20 = v1 + 130;
-        int32_t v21 = 0;
-        int32_t v22 = v1 + 80;
-        uint32_t v23 = *(int32_t *)(v22 - 56); // 0x4075d0
-        int32_t * v24; // 0x4075e8
-        int32_t v25; // 0x4075e8
-        int32_t * v26; // 0x4075e4
-        if (v23 >= 0) {
-            // 0x4075d7
-            if (*(char *)(v3 + 48 + v23) == 0) {
-                // 0x4075e8
-                v24 = (int32_t *)v22;
-                v25 = *v24;
-                *(char *)(v21 + v20) = (char)(v25 >= 0 == (v25 != 0));
-                *v24 = 0;
-            } else {
-                // 0x4075dd
-                *(char *)(v21 + v20) = 0;
-                v26 = (int32_t *)v22;
-                *v26 = *v26 + 1;
-            }
-        }
-        int32_t v27 = v21 + 1; // 0x4075f6
-        int32_t result2 = v22 + 4; // 0x4075f7
-        while (v27 != 12) {
-            // 0x4075d0
-            v21 = v27;
-            v22 = result2;
-            v23 = *(int32_t *)(v22 - 56);
-            if (v23 >= 0) {
-                // 0x4075d7
-                if (*(char *)(v3 + 48 + v23) == 0) {
-                    // 0x4075e8
-                    v24 = (int32_t *)v22;
-                    v25 = *v24;
-                    *(char *)(v21 + v20) = (char)(v25 >= 0 == (v25 != 0));
-                    *v24 = 0;
-                } else {
-                    // 0x4075dd
-                    *(char *)(v21 + v20) = 0;
-                    v26 = (int32_t *)v22;
-                    *v26 = *v26 + 1;
-                }
-            }
-            // 0x4075f6
-            v27 = v21 + 1;
-            result2 = v22 + 4;
-        }
-        // 0x4075ff
-        *(float32_t *)(v1 + 144) = (float32_t)((float80_t)*v4 / 1000.0L);
-        *(float32_t *)(v1 + 148) = (float32_t)((float80_t)*v12 / 1000.0L);
-        int32_t v28 = *(int32_t *)(v3 + 8); // 0x40761e
-        *(float32_t *)(v1 + 152) = (float32_t)((float80_t)v28 / 1000.0L);
-        int32_t v29 = *(int32_t *)(v3 + 12); // 0x407629
-        *(float32_t *)(v1 + 156) = (float32_t)((float80_t)v29 / 1000.0L);
-        int32_t v30 = *(int32_t *)(v3 + 16); // 0x407634
-        *(float32_t *)(v1 + 160) = (float32_t)((float80_t)v30 / 1000.0L);
-        int32_t v31 = *(int32_t *)(v3 + 20); // 0x40763f
-        *(float32_t *)(v1 + 164) = (float32_t)((float80_t)v31 / 1000.0L);
-        // 0x407649
-        return result2;
-    }
-    if (v2 != -1) {
-        // 0x4077a3
-        return (int32_t)_memset((int32_t *)(v1 + 72), 0, 96);
-    }
-    int32_t v32 = v1 + 16; // 0x407661
-    if (*(int32_t *)v32 >= 0) {
-        int32_t v33 = v1 + 20; // 0x407666
-        if (*(int32_t *)v33 >= 0) {
-            unsigned char v34 = *(char *)v32; // 0x40766b
-            if (*(char *)((int32_t)v34 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-                unsigned char v35 = *(char *)v33; // 0x407695
-                int32_t * v36 = (int32_t *)(v1 + 72);
-                int32_t v37 = *v36;
-                if (*(char *)((int32_t)v35 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-                    // 0x4076bb
-                    *(float32_t *)(v1 + 144) = 0.0f;
-                    *v36 = 0;
-                    *(char *)(v1 + 128) = (char)(v37 != 0);
-                } else {
-                    int32_t v38 = v37; // 0x4076a5
-                    if (v37 < 0) {
-                        // 0x4076a7
-                        *v36 = 0;
-                        v38 = 0;
-                    }
-                    // 0x4076aa
-                    *v36 = v38 + 1;
-                    *(float32_t *)(v1 + 144) = 1.0f;
-                    *(char *)(v1 + 128) = 0;
-                }
-            } else {
-                int32_t * v39 = (int32_t *)(v1 + 72); // 0x407678
-                int32_t v40 = *v39; // 0x407678
-                int32_t v41 = v40; // 0x40767b
-                if (v40 > 0) {
-                    // 0x40767d
-                    *v39 = 0;
-                    v41 = 0;
-                }
-                // 0x407680
-                *v39 = v41 - 1;
-                *(float32_t *)(v1 + 144) = -1.0f;
-                *(char *)(v1 + 128) = 0;
-            }
-        }
-    }
-    int32_t v42 = v1 + 8; // 0x4076d4
-    if (*(int32_t *)v42 >= 0) {
-        int32_t v43 = v1 + 12; // 0x4076d9
-        if (*(int32_t *)v43 >= 0) {
-            unsigned char v44 = *(char *)v42; // 0x4076de
-            if (*(char *)((int32_t)v44 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-                unsigned char v45 = *(char *)v43; // 0x407708
-                int32_t * v46 = (int32_t *)(v1 + 76);
-                int32_t v47 = *v46;
-                if (*(char *)((int32_t)v45 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-                    // 0x407732
-                    *(float32_t *)(v1 + 148) = 0.0f;
-                    *v46 = 0;
-                    *(char *)(v1 + 129) = (char)(v47 != 0);
-                } else {
-                    int32_t v48 = v47; // 0x40771a
-                    if (v47 < 0) {
-                        // 0x40771c
-                        *v46 = 0;
-                        v48 = 0;
-                    }
-                    // 0x40771f
-                    *v46 = v48 + 1;
-                    *(float32_t *)(v1 + 148) = 1.0f;
-                    *(char *)(v1 + 129) = 0;
-                }
-            } else {
-                int32_t * v49 = (int32_t *)(v1 + 76); // 0x4076ed
-                int32_t v50 = *v49; // 0x4076ed
-                int32_t v51 = v50; // 0x4076f0
-                if (v50 > 0) {
-                    // 0x4076f2
-                    *v49 = 0;
-                    v51 = 0;
-                }
-                // 0x4076f5
-                *v49 = v51 - 1;
-                *(float32_t *)(v1 + 148) = -1.0f;
-                *(char *)(v1 + 129) = 0;
-            }
-        }
-    }
-    int32_t v52 = v1 + 130;
-    int32_t v53 = 0;
-    int32_t v54 = v1 + 80;
-    int32_t v55 = v54 - 56; // 0x407754
-    unsigned char v56; // 0x407759
-    int32_t * v57; // 0x407771
-    int32_t v58; // 0x407771
-    int32_t * v59; // 0x40776d
-    if (*(int32_t *)v55 >= 0) {
-        // 0x407759
-        v56 = *(char *)v55;
-        if (*(char *)((int32_t)v56 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-            // 0x407771
-            v57 = (int32_t *)v54;
-            v58 = *v57;
-            *(char *)(v53 + v52) = (char)(v58 >= 0 == (v58 != 0));
-            *v57 = 0;
-        } else {
-            // 0x407766
-            *(char *)(v53 + v52) = 0;
-            v59 = (int32_t *)v54;
-            *v59 = *v59 + 1;
-        }
-    }
-    int32_t v60 = v53 + 1; // 0x40777f
-    int32_t result3 = v54 + 4; // 0x407780
-    while (v60 != 12) {
-        // 0x407754
-        v53 = v60;
-        v54 = result3;
-        v55 = v54 - 56;
-        if (*(int32_t *)v55 >= 0) {
-            // 0x407759
-            v56 = *(char *)v55;
-            if (*(char *)((int32_t)v56 + (int32_t)(uintptr_t)g_retdec_keyboard_state) > -1) {
-                // 0x407771
-                v57 = (int32_t *)v54;
-                v58 = *v57;
-                *(char *)(v53 + v52) = (char)(v58 >= 0 == (v58 != 0));
-                *v57 = 0;
-            } else {
-                // 0x407766
-                *(char *)(v53 + v52) = 0;
-                v59 = (int32_t *)v54;
-                *v59 = *v59 + 1;
-            }
-        }
-        // 0x40777f
-        v60 = v53 + 1;
-        result3 = v54 + 4;
-    }
-    // 0x407788
-    *(float32_t *)(v1 + 152) = 0.0f;
-    *(float32_t *)(v1 + 156) = 0.0f;
-    *(float32_t *)(v1 + 160) = 0.0f;
-    *(float32_t *)(v1 + 164) = 0.0f;
-    return result3;
-}
+
 
 // Address range: 0x4077c0 - 0x4082b0
 // From class:    .?AVCInputManagerCluster@@
@@ -11216,121 +10928,10 @@ int32_t __fastcall function_407500(int32_t this_ptr) {
 
 
 // Address range: 0x408320 - 0x4083d6
-int32_t function_408320(int32_t this_ptr) {
-    // 0x408320
-    int32_t v1 = this_ptr;
-    int32_t * v2 = (int32_t *)(v1 + 1024); // 0x408320
-    int32_t v3 = *v2; // 0x408320
-    int32_t * v4 = (int32_t *)(v1 + 1028); // 0x408326
-    int32_t v5 = 0; // 0x408334
-    if (*v4 != v3) {
-        int32_t v6 = (int32_t)*(char *)(v5 + v3); // 0x40833a
-        int32_t * v7 = (int32_t *)(4 * v6 + v1);
-        int32_t v8 = 0; // 0x408344
-        if ((int8_t)g_retdec_keyboard_state[v6] < 0) {
-            v8 = *v7 + 1;
-        }
-        // 0x408352
-        *v7 = v8;
-        int32_t v9 = *v2; // 0x408352
-        v5++;
-        while (*v4 - v9 > v5) {
-            // 0x40833a
-            v6 = (int32_t)*(char *)(v5 + v9);
-            v7 = (int32_t *)(4 * v6 + v1);
-            v8 = 0;
-            if ((int8_t)g_retdec_keyboard_state[v6] < 0) {
-                v8 = *v7 + 1;
-            }
-            // 0x408352
-            *v7 = v8;
-            v9 = *v2;
-            v5++;
-        }
-    }
-    // 0x408365
-    char v10; // 0x408320
-    if ((int8_t)g_retdec_keyboard_state[0x2a] < 0) {
-        // 0x408383
-        v10 = 1;
-        goto lab_0x408388;
-    } else {
-        // 0x40836d
-        v10 = 0;
-        if ((int8_t)g_retdec_keyboard_state[0x36] < 0) {
-            // 0x408383
-            v10 = 1;
-            goto lab_0x408388;
-        } else {
-            goto lab_0x408388;
-        }
-    }
-  lab_0x408388:
-    // 0x408388
-    *(char *)(v1 + 1040) = v10;
-    char v11; // 0x408320
-    if ((int8_t)g_retdec_keyboard_state[0x38] < 0) {
-        // 0x4083a2
-        v11 = 1;
-        goto lab_0x4083a7;
-    } else {
-        // 0x408396
-        v11 = 0;
-        if ((int8_t)g_retdec_keyboard_state[0xb8] < 0) {
-            // 0x4083a2
-            v11 = 1;
-            goto lab_0x4083a7;
-        } else {
-            goto lab_0x4083a7;
-        }
-    }
-  lab_0x4083a7:
-    // 0x4083a7
-    *(char *)(v1 + 1041) = v11;
-    if ((int8_t)g_retdec_keyboard_state[0x1d] < 0 ||
-        (int8_t)g_retdec_keyboard_state[0x9d] < 0) {
-        // 0x4083c8
-        *(char *)(v1 + 1042) = 1;
-        return 1;
-    }
-    // 0x4083bd
-    *(char *)(v1 + 1042) = 0;
-    return 0;
-}
+
 
 // Address range: 0x4083e0 - 0x408426
-int32_t function_4083e0(int32_t this_ptr, int32_t a1, int32_t a2,
-                        int32_t a3, int32_t a4) {
-    // 0x4083e0
-    int32_t v1 = this_ptr;
-    if (*(int32_t *)(v1 + (4 * a1 & 1020)) != 1) {
-        // 0x4083ed
-        return 0;
-    }
-    if ((char)a2 != 0) {
-        // 0x4083f9
-        if (*(char *)(v1 + 1040) == 0) {
-            // 0x4083ed
-            return 0;
-        }
-    }
-    if ((char)a3 != 0) {
-        // 0x408408
-        if (*(char *)(v1 + 1041) == 0) {
-            // 0x4083ed
-            return 0;
-        }
-    }
-    if ((char)a4 != 0) {
-        // 0x408417
-        if (*(char *)(v1 + 1042) == 0) {
-            // 0x4083ed
-            return 0;
-        }
-    }
-    // 0x4083ed
-    return 1;
-}
+
 
 
 // Address range: 0x408530 - 0x40854b
@@ -11466,110 +11067,14 @@ int32_t function_408830(void) {
 
 
 // Address range: 0x408930 - 0x4089be
-int32_t function_408930(HWND hwnd, HINSTANCE instance) {
-    void *direct_input = NULL;
-    HRESULT hr;
 
-    (void)instance;
-    if (g769 != NULL) {
-        return 1;
-    }
-    g768 = (char *)hwnd;
-    retdec_trace("408930:pre-cocreate");
-    hr = (HRESULT)CoCreateInstance(
-        &CLSID_DirectInput8, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IDirectInput8A, &direct_input);
-    retdec_trace(FAILED(hr) ? "408930:cocreate-failed" :
-                 "408930:post-cocreate");
-    if (FAILED(hr) || direct_input == NULL) {
-        g769 = NULL;
-        MessageBoxA(hwnd, "DirectInput8Create failed", "DInput-Error", MB_OK);
-        return 0;
-    }
-    g769 = direct_input;
-    return 1;
-}
 
 // Address range: 0x4089c0 - 0x408b0b
-int32_t function_4089c0(void) {
-    IDirectInputDevice8A *mouse = (IDirectInputDevice8A *)g771;
-    IDirectInputDevice8A *keyboard = (IDirectInputDevice8A *)g770;
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
 
-    if (mouse != NULL) {
-        mouse->lpVtbl->Unacquire(mouse);
-        mouse->lpVtbl->Release(mouse);
-        g771 = NULL;
-    }
-    if (keyboard != NULL) {
-        keyboard->lpVtbl->Unacquire(keyboard);
-        keyboard->lpVtbl->Release(keyboard);
-        g770 = NULL;
-    }
-    if (g772 != 0) {
-        free((void *)(intptr_t)g772);
-        g772 = 0;
-    }
-    g773 = 0;
-    g774 = 0;
-    g782 = 0;
-    g783 = NULL;
-    g784 = NULL;
-    g786 = 0;
-    g787 = 0;
-    if (direct_input != NULL) {
-        direct_input->lpVtbl->Release(direct_input);
-        g769 = NULL;
-    }
-    return 1;
-}
 
 
 // Address range: 0x408b30 - 0x408bec
-int32_t function_408b30(void) {
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
-    IDirectInputDevice8A *keyboard = NULL;
-    HRESULT hr;
 
-    if (g770 != NULL) {
-        return 1;
-    }
-    if (direct_input == NULL || g768 == NULL) {
-        return 0;
-    }
-    retdec_trace("408b30:pre-create-device");
-    hr = direct_input->lpVtbl->CreateDevice(
-        direct_input, &GUID_SysKeyboard, &keyboard, NULL);
-    retdec_trace_hresult("408b30:create-device-hr", hr);
-    retdec_trace(FAILED(hr) ? "408b30:create-device-failed" :
-                 "408b30:create-device-ok");
-    if (FAILED(hr) || keyboard == NULL) {
-        return 0;
-    }
-    retdec_trace("408b30:pre-data-format");
-    hr = keyboard->lpVtbl->SetDataFormat(keyboard, &c_dfDIKeyboard);
-    retdec_trace(FAILED(hr) ? "408b30:data-format-failed" :
-                 "408b30:data-format-ok");
-    if (SUCCEEDED(hr)) {
-        retdec_trace("408b30:pre-cooperative-level");
-        hr = keyboard->lpVtbl->SetCooperativeLevel(
-            keyboard, (HWND)g768, 22);
-        retdec_trace(FAILED(hr) ? "408b30:cooperative-level-failed" :
-                     "408b30:cooperative-level-ok");
-    }
-    if (SUCCEEDED(hr)) {
-        retdec_trace("408b30:pre-acquire");
-        hr = keyboard->lpVtbl->Acquire(keyboard);
-        retdec_trace(FAILED(hr) ? "408b30:acquire-failed" :
-                     "408b30:acquire-ok");
-    }
-    if (FAILED(hr)) {
-        keyboard->lpVtbl->Release(keyboard);
-        return 0;
-    }
-    g770 = keyboard;
-    return 1;
-}
 
 // Address range: 0x408bf0 - 0x408c73
 int32_t function_408bf0(void) {
@@ -11583,95 +11088,16 @@ int32_t function_408bf0(void) {
 }
 
 // Address range: 0x408c80 - 0x408cf4
-int32_t function_408c80(void) {
-    IDirectInputDevice8A *keyboard = (IDirectInputDevice8A *)g770;
-    IDirectInputDevice8A *mouse = (IDirectInputDevice8A *)g771;
-    HRESULT hr;
-    unsigned char keyboard_state[256];
-    DIMOUSESTATE2 mouse_state;
-    static volatile LONG poll_trace_count;
-    LONG poll_index = InterlockedIncrement(&poll_trace_count);
 
-    if (poll_index <= 5)
-        retdec_trace_i32("input:poll-keyboard", (int32_t)(intptr_t)keyboard);
-
-    if (keyboard != NULL) {
-        hr = keyboard->lpVtbl->GetDeviceState(
-            keyboard, (DWORD)sizeof(keyboard_state), keyboard_state);
-        if (FAILED(hr)) {
-            keyboard->lpVtbl->Acquire(keyboard);
-            ZeroMemory(keyboard_state, sizeof(keyboard_state));
-        }
-        /* The original consumers read this fixed 256-byte state area. */
-        memcpy(g_retdec_keyboard_state, keyboard_state,
-               sizeof(g_retdec_keyboard_state));
-    } else {
-        retdec_poll_fallback_keyboard();
-    }
-    if (mouse != NULL) {
-        hr = mouse->lpVtbl->GetDeviceState(
-            mouse, (DWORD)sizeof(mouse_state), &mouse_state);
-        if (FAILED(hr)) {
-            mouse->lpVtbl->Acquire(mouse);
-            ZeroMemory(&mouse_state, sizeof(mouse_state));
-        }
-    }
-    return 1;
-}
 
 // Address range: 0x408d00 - 0x408e54
-int32_t function_408d00(void) {
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
-    IDirectInputDevice8A *mouse = NULL;
-    DIPROPDWORD buffer_property;
-    HRESULT hr;
 
-    if (g771 != NULL) {
-        return 1;
-    }
-    if (direct_input == NULL || g768 == NULL) {
-        return 0;
-    }
-    hr = direct_input->lpVtbl->CreateDevice(
-        direct_input, &GUID_SysMouse, &mouse, NULL);
-    if (FAILED(hr) || mouse == NULL) {
-        return 0;
-    }
-    hr = mouse->lpVtbl->SetDataFormat(mouse, &c_dfDIMouse2);
-    if (SUCCEEDED(hr)) {
-        hr = mouse->lpVtbl->SetCooperativeLevel(mouse, (HWND)g768, 6);
-    }
-    ZeroMemory(&buffer_property, sizeof(buffer_property));
-    buffer_property.diph.dwSize = sizeof(buffer_property);
-    buffer_property.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-    buffer_property.diph.dwObj = 0;
-    buffer_property.diph.dwHow = DIPH_DEVICE;
-    buffer_property.dwData = 1;
-    if (SUCCEEDED(hr)) {
-        hr = mouse->lpVtbl->SetProperty(
-            mouse, DIPROP_BUFFERSIZE, &buffer_property.diph);
-    }
-    if (SUCCEEDED(hr)) {
-        hr = mouse->lpVtbl->Acquire(mouse);
-    }
-    if (FAILED(hr)) {
-        mouse->lpVtbl->Release(mouse);
-        return 0;
-    }
-    g771 = mouse;
-    return 1;
-}
 
 // Address range: 0x408e60 - 0x408e73
-int32_t function_408e60(int32_t a1) {
-    return g_retdec_keyboard_state[(unsigned char)a1] >> 7;
-}
+
 
 // Address range: 0x408e80 - 0x408ea8
-int32_t function_408e80(int32_t a1) {
-    return a1 >= 0 && a1 < g782 && g783 != NULL
-        ? (int32_t)(intptr_t)(g783 + 80 * a1) : 0;
-}
+
 
 
 // Address range: 0x4094e0 - 0x40953e

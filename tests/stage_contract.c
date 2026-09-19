@@ -4009,6 +4009,62 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_physical_input(void) {
+    int32_t device[42] = {0}, tracker[261] = {0}, joystick[20] = {0};
+    unsigned char scans[] = {0x80, 0xff};
+    unsigned char saved_keys[256];
+    char *saved_states = g783;
+    int32_t saved_count = g782;
+    int i;
+    memcpy(saved_keys, g_retdec_keyboard_state, 256);
+    memset(g_retdec_keyboard_state, 0, 256);
+    device[1] = -1;
+    device[2] = 0x80; device[3] = 0xff;
+    device[4] = 0xcb; device[5] = 0xcd;
+    for (i = 6; i < 18; ++i) device[i] = -1;
+    device[6] = 0xff;
+    device[21] = 37;
+    g_retdec_keyboard_state[0xcb] = g_retdec_keyboard_state[0xcd] = 0x80;
+    g_retdec_keyboard_state[0xff] = 0x80;
+    CHECK(function_407500(PTR(device)) == PTR(device) + 128);
+    CHECK(device[18] == -1 && device[19] == 1 && device[20] == 1);
+    CHECK(device[21] == 37 && ((float*)device)[36] == -1.0f);
+    device[20] = INT32_MAX;
+    function_407500(PTR(device));
+    CHECK(device[20] == INT32_MIN);
+    memset(g_retdec_keyboard_state, 0, 256);
+    function_407500(PTR(device));
+    CHECK(device[18] == 0 && ((unsigned char*)device)[128] == 1);
+    CHECK(((unsigned char*)device)[130] == 0);
+    function_407500(PTR(device));
+    CHECK(((unsigned char*)device)[128] == 0);
+    tracker[256] = PTR(scans); tracker[257] = PTR(scans + 2);
+    g_retdec_keyboard_state[0xff] = g_retdec_keyboard_state[0x9d] = 0x80;
+    CHECK(function_408320(PTR(tracker)) == 1);
+    CHECK(tracker[255] == 1 && tracker[128] == 0);
+    CHECK(function_4083e0(PTR(tracker), 0x1ff, 0, 0, 1) == 1);
+    CHECK(function_4083e0(PTR(tracker), 0xff, 1, 0, 1) == 0);
+    function_408320(PTR(tracker));
+    CHECK(function_4083e0(PTR(tracker), 0xff, 0, 0, 0) == 0);
+    g783 = (char*)joystick; g782 = 1; device[1] = 0; device[6] = 0;
+    joystick[0] = -501; joystick[1] = 501; joystick[2] = 250;
+    ((unsigned char*)joystick)[48] = 1;
+    function_407500(PTR(device));
+    CHECK(device[18] == -1 && device[19] == 1 && device[20] == 1);
+    CHECK(((float*)device)[38] == 0.25f && device[21] == 37);
+    joystick[0] = -500; joystick[1] = 500;
+    ((unsigned char*)joystick)[48] = 0;
+    function_407500(PTR(device));
+    CHECK(device[18] == 0 && device[19] == 0 && device[20] == 0);
+    CHECK(((unsigned char*)device)[128] && ((unsigned char*)device)[129] && ((unsigned char*)device)[130]);
+    device[1] = -2;
+    function_407500(PTR(device));
+    for (i = 18; i < 42; ++i) CHECK(device[i] == 0);
+    g783 = saved_states; g782 = saved_count;
+    memcpy(g_retdec_keyboard_state, saved_keys, 256);
+    return 0;
+}
+
 static int test_input_configuration(void) {
     int32_t manager[384]={0}, devices[2][42]={{0}};
     char path[MAX_PATH]; GetModuleFileNameA(NULL,path,MAX_PATH);
@@ -4168,6 +4224,7 @@ int main(int argc, char **argv) {
     CHECK(test_global_script_cleanup(vm, root) == 0);
     CHECK(test_array_pop_values(vm, root) == 0);
     CHECK(test_script_registrations(vm, root) == 0);
+    CHECK(test_physical_input() == 0);
     CHECK(test_input_aggregation() == 0);
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
