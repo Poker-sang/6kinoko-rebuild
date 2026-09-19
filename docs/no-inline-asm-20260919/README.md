@@ -4,20 +4,42 @@ Baseline: `3cffc802f4c54ebb5ac1b9c5dfb5482e0be84547`.
 
 ## Completed source batches
 
-- Removed 242 disconnected legacy definitions (239 names, 41,874 function-body lines). This is deletion, not a claim of 41,874 lines migrated to C++. `removed-definitions.json` records individual baseline hashes and locations. The original `6kinoko.exe.c` reference is unchanged.
-- Replaced Actor constructor, destructor, weak/shared control-count operations, and owned-object SetStep with source-backed C++ using the vendored Squirrel 2.2.2 API.
-- Replaced Actor and copy-adjustor register entry shims with compiler-generated x86 fastcall entries whose ECX and stack layout match their original thiscall callers. The legacy copy body itself is not yet C++.
-- Corrected the deleting Actor destructor to preserve its actual receiver and free that allocation only when requested by the flags.
-- Added real-VM ownership/child-thread tests and independent C++ thiscall tests with compiler stack-balance checking. The C stage probe uses the typed adapter because MSVC C does not accept the C++ thiscall function-pointer syntax.
+- Removed 242 disconnected legacy definitions (239 names, 41,874 function-body
+  lines). This is deletion, not a claim that those lines were migrated to C++.
+  `removed-definitions.json` records the baseline hashes/locations, and the
+  original `6kinoko.exe.c` reference remains unchanged.
+- Replaced Actor lifecycle/control-count and owned-object paths with source-backed
+  C++ using the vendored Squirrel 2.2.2 API.
+- Replaced register-entry shims with compiler-generated x86 C++ entries and
+  separated the remaining legacy frame scanner from its production ABI entry.
+- Moved the active ACT loader, MCD parsing, layouts, map rendering, resources and
+  Squirrel-facing ACT binding into native C++ translation units.
+- Added typed legacy-layout adapters plus real Squirrel 2.2.2 object/pair
+  ownership helpers instead of overlaying VM internals in decompiled C.
+- Migrated another native-callback group to the Squirrel source API, covering
+  truthiness, string/object arguments, integer/float callbacks and BGM/SE-style
+  argument lists.
+- Added Win32 contracts for ACT property parsing/mapping, Squirrel ownership and
+  weak references, callback adapters, actor lifecycle, legacy register/copy
+  boundaries, plus the pre-existing runtime contracts.
+- The compilable source tree contains zero handwritten inline assembly and zero
+  naked functions; CI enforces that boundary.
 
 ## Validation boundary
 
-Windows CI runs quiet and diagnostic Win32 builds and preserves logs, executable revisions, and linker maps. Tests are not considered passed until their actual job result is recorded. The first run caught and led to correction of the C stage-probe declaration.
+Windows CI builds quiet and diagnostic Win32 configurations and preserves logs,
+executables and linker maps. The latest successful check for the final source
+revision is the authoritative asset-free validation result.
 
-The original game assets and executable are not available in this environment. Startup, jumps, monster visibility, and visual/gameplay parity therefore still require the original-asset local smoke test specified by AGENTS.md.
+The original game assets and executable are not available in this environment.
+Startup, jump, monster visibility and visual/gameplay parity still require the
+original-asset local smoke test specified by `AGENTS.md`.
 
-## In progress
+## Remaining legacy boundary
 
-The main rebuilt C translation unit no longer contains inline assembly. The runtime compatibility file still contains an obsolete x87 entry and the legacy zero-argument memcpy frame heuristic; these must be resolved rather than replaced by invented arguments or no-op stubs. No claim of complete C++/VM migration is made.
+The project still contains a large generated C host for game code that has not
+yet benefited from migration. The zero-argument `_memcpy2` compatibility path
+also retains its historical frame/candidate-selection heuristic; no invented
+arguments or no-op replacement were introduced.
 
-Resource staging and EXE-relative DAT loading are unchanged.
+Resource staging, archive order and EXE-relative DAT loading are unchanged.
