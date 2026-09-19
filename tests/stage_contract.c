@@ -3996,7 +3996,7 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
         "registrationInput.b2=123; registrationInput.kr1=true;"
         "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;"
         "if(registrationInput.k2!=123 || !registrationInput.br1 || "
-        "registrationInput.GetAssign(-1,3)!=73) throw \"Input alias/receiver\";"
+        "registrationInput.GetAssign(-1,3)!=73) throw \"Input alias/receiver\";\n"
         "registrationInput.br1=false; if(registrationInput.kr1) throw \"Input bool alias\";"));
     CHECK(input[359] == -17 && input[360] == 29);
     CHECK(input[363] == 123 && input[366] == 456);
