@@ -1765,13 +1765,9 @@ int32_t function_415230(void);
 int32_t function_4152a0(void);
 int32_t function_415350(void);
 int32_t function_4153e0(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_415420(int32_t a1);
 int32_t function_415480(int32_t a1);
-int32_t function_415550(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
 
-int32_t function_4156d0(int32_t a1, int32_t a2);
 
-int32_t function_415790(int32_t a1);
 int32_t function_4158e0(char a1);
 int32_t function_4159a0(void);
 int32_t function_415b00(int32_t a1);
@@ -1820,7 +1816,6 @@ int32_t function_419d30(void);
 
 int32_t function_41df70(int32_t a1);
 int32_t function_41e0c0(int32_t a1);
-int32_t function_41e190(void);
 int32_t function_41e1e0(void);
 int32_t function_41e200(int32_t a1);
 int32_t function_41e390(int32_t a1);
@@ -13509,29 +13504,7 @@ int32_t function_4153e0(int32_t a1, int32_t a2, int32_t a3) {
 }
 
 // Address range: 0x415420 - 0x415474
-int32_t function_415420(int32_t a1) {
-    // 0x415420
-    int32_t result; // 0x415420
-    char * v1 = (char *)(result + 16); // 0x415426
-    int32_t * v2 = (int32_t *)(result + 4);
-    int32_t v3; // 0x415420
-    if (*v1 == 0) {
-        // 0x415420
-        v3 = result + 8;
-    } else {
-        int32_t v4 = result + 8;
-        function_48a430(*v2, v4);
-        v3 = v4;
-    }
-    // 0x41543c
-    *v2 = *(int32_t *)(a1 + 4);
-    int32_t v5 = *(int32_t *)(a1 + 8); // 0x415445
-    *(int32_t *)v3 = v5;
-    *(int32_t *)(result + 12) = *(int32_t *)(a1 + 12);
-    *v1 = *(char *)(a1 + 16);
-    function_48a400(*v2, *(int32_t *)(v5 + 4));
-    return result;
-}
+
 
 // Address range: 0x415480 - 0x41554e
 // From class:    .?AVObject@Sqrat@@
@@ -13570,19 +13543,7 @@ int32_t function_415480(int32_t a1) {
 }
 
 // Address range: 0x415550 - 0x4155d0
-int32_t function_415550(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5) {
-    // 0x415550
-    int32_t v1; // 0x415550
-    int32_t * v2 = (int32_t *)(v1 + 4); // 0x415561
-    int32_t v3 = *v2; // 0x415561
-    sq_pushobject(kinoko_vm(v3), kinoko_borrowed_object(v3, v3));
-    sq_pushstring(kinoko_vm(*v2), (const SQChar*)kinoko_pointer(a1), -1);
-    (int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v2), a3));
-    _memcpy2();
-    sq_newclosure(kinoko_vm(*v2), (SQFUNCTION)kinoko_pointer(a4), 1);
-    sq_newslot(kinoko_vm(*v2), -3, ((a5 & 255) != 0));
-    return kinoko_sq_pop(*v2, 1);
-}
+
 
 /*
  * Sqrat's registration helper is a __thiscall.  RetDec dropped ECX and also
@@ -13595,51 +13556,11 @@ int32_t function_415550(int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t 
 // Address range: 0x4156d0 - 0x415748
 // From class:    .?AVObject@Sqrat@@
 // Type:          constructor
-int32_t function_4156d0(int32_t a1, int32_t a2) {
-    // 0x4156d0
-    int32_t v1; // 0x4156d0
-    int32_t result = v1;
-    *(int32_t *)result = *(int32_t *)(a1 + 4);
-    function_48a400(result, result + 4);
-    function_415480(a2);
-    int32_t v2 = result + 12; // 0x41570d
-    int32_t v3; // bp-16, 0x4156d0
-    *(int32_t *)v2 = v3;
-    function_48a400(result, v2);
-    char v4; // 0x4156d0
-    if (v4 != 0) {
-        // 0x41572e
-        function_48a430(v1, (int32_t)&v3);
-    }
-    // 0x41573e
-    return result;
-}
+
 
 
 // Address range: 0x415790 - 0x415805
-int32_t function_415790(int32_t a1) {
-    // 0x415790
-    int32_t result; // 0x415790
-    int32_t v1 = result + 12; // 0x415793
-    int32_t * v2 = (int32_t *)v1; // 0x415793
-    int32_t v3 = result + 4;
-    if (*v2 != 0x1000001) {
-        // 0x4157a4
-        function_48a430(result, v3);
-        function_48a430(result, v1);
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(v3));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
-    }
-    // 0x4157cb
-    *(int32_t *)result = *(int32_t *)a1;
-    *(int32_t *)v3 = *(int32_t *)(a1 + 4);
-    *(int32_t *)(result + 8) = *(int32_t *)(a1 + 8);
-    *v2 = *(int32_t *)(a1 + 12);
-    *(int32_t *)(result + 16) = *(int32_t *)(a1 + 16);
-    function_48a400(result, v3);
-    function_48a400(result, v1);
-    return result;
-}
+
 
 // Address range: 0x415810 - 0x415861
 
@@ -15516,22 +15437,7 @@ int32_t function_41e0c0(int32_t a1) {
 // Address range: 0x41e190 - 0x41e1de
 // From class:    .?AVTable@Sqrat@@
 // Type:          constructor
-int32_t function_41e190(void) {
-    // 0x41e190
-    int32_t result; // 0x41e190
-    int32_t v1 = result + 8; // 0x41e191
-    int32_t * v2 = (int32_t *)result; // 0x41e195
-    *v2 = (int32_t)&g39;
-    int32_t * v3 = (int32_t *)(result + 4); // 0x41e19b
-    *(char *)(result + 16) = 1;
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(v1));
-    *v2 = (int32_t)&g251;
-    sq_newtable(kinoko_vm(*v3));
-    sq_getstackobj(kinoko_vm(*v3), -1, (HSQOBJECT*)((int32_t *)v1));
-    function_48a400(*v3, v1);
-    kinoko_sq_pop(*v3, 1);
-    return result;
-}
+
 
 // Address range: 0x41e1e0 - 0x41e1fd
 // From class:    .?AVObject@Sqrat@@
