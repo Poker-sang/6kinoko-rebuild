@@ -1536,7 +1536,6 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 
 
-int32_t function_404090(char * lpCaption, int32_t lpText, int32_t a3);
 float32_t function_4040d0(float80_t a1);
 float32_t function_404130(float80_t a1);
 
@@ -1702,7 +1701,6 @@ int32_t function_4123a0(int32_t a1);
 int32_t function_4123c0(int32_t a1);
 
 
-int32_t function_412610(void);
 
 
 int32_t function_412890(void);
@@ -4696,15 +4694,7 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 
 // Address range: 0x404090 - 0x4040c7
-int32_t function_404090(char * lpCaption, int32_t lpText, int32_t a3) {
-    int32_t result = MessageBoxA((int32_t *)g767, (char *)lpText, lpCaption, 0); // 0x4040ae
-    if ((char)a3 != 0) {
-        // 0x4040b0
-        result = __CxxThrowException_40_8();
-    }
-    // 0x4040c5
-    return result;
-}
+
 
 // Address range: 0x4040d0 - 0x404124
 float32_t function_4040d0(float80_t a1) {
@@ -7072,32 +7062,7 @@ int32_t function_4123c0(int32_t a1) {
 
 
 // Address range: 0x412610 - 0x412657
-int32_t function_412610(void) {
-    // 0x412610
-    int32_t v1; // 0x412610
-    if (v1 == 0) {
-        // 0x412653
-        return 0;
-    }
-    int32_t * hThread = (int32_t *)v1; // 0x41261e
-    SetThreadPriority(hThread, 15);
-    int32_t v2 = 259; // bp-8, 0x41262a
-    int32_t v3; // bp-20, 0x412610
-    int32_t v4 = &v3; // 0x41262a
-    *(int32_t *)(v4 - 4) = (int32_t)&v2;
-    v4 -= 8;
-    GetExitCodeThread(&g1224, &g1224);
-    while (v2 == 259) {
-        // 0x412631
-        *(int32_t *)(v4 - 4) = (int32_t)&v2;
-        v4 -= 8;
-        GetExitCodeThread(&g1224, &g1224);
-    }
-    bool handleClosed = CloseHandle(&g1224); // 0x412646
-    *hThread = 0;
-    // 0x412653
-    return handleClosed;
-}
+
 
 
 // Address range: 0x412680 - 0x41271c
