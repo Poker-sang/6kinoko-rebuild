@@ -3233,10 +3233,19 @@ static int test_global_stage_cleanup(void) {
         CHECK(runtime[0] == PTR(owner) && runtime[3] == 0 && runtime[4] == 0);
         CHECK(runtime[38] == 0 && runtime[39] == OT_NULL && runtime[40] == 0);
         CHECK(runtime[45] == 0 && runtime[46] == 15);
-        int32_t *find_head = (int32_t *)(intptr_t)runtime[21];
-        CHECK(find_head && find_head[0] == PTR(find_head) && find_head[1] == PTR(find_head)
-              && find_head[2] == PTR(find_head));
-        CHECK(((unsigned char *)find_head)[340] == 1 && ((unsigned char *)find_head)[341] == 1);
+        CHECK(runtime[21] && runtime[22]==0 && runtime[24]==0);
+        CHECK(kinoko_act_find_first(PTR(runtime),"__kinoko_missing_find_contract__/*.none")==0);
+        CHECK(runtime[24]==0 && kinoko_act_find_name(PTR(runtime),1)==NULL);
+        CHECK(!kinoko_act_find_next(PTR(runtime),1) && !kinoko_act_find_close(PTR(runtime),1));
+        int32_t first=kinoko_act_find_first(PTR(runtime),"*");
+        int32_t second=kinoko_act_find_first(PTR(runtime),"*");
+        CHECK(first==1 && second==2 && runtime[22]==2);
+        CHECK(kinoko_act_find_name(PTR(runtime),first)!=NULL);
+        CHECK(kinoko_act_find_close(PTR(runtime),first) && runtime[22]==1);
+        CHECK(!kinoko_act_find_close(PTR(runtime),first));
+        CHECK(kinoko_act_find_name(PTR(runtime),first)==NULL);
+        CHECK(kinoko_act_find_first(PTR(runtime),"*")==3 && runtime[22]==2);
+        /* Two open searches remain for the runtime destructor to close. */
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));
         runtime[11] = PTR(malloc(36));

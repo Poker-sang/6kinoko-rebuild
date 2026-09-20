@@ -666,6 +666,30 @@ int32_t swap_layers_native(int32_t vm) {
     } catch (...) { return sq_throwerror(kinoko_vm(vm),"SwapLayer allocation failed"); }
 }
 
+int32_t find_first_native(int32_t vm) {
+    int32_t player=0;
+    const SQChar* pattern=nullptr;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&pattern)))
+        return sq_throwerror(kinoko_vm(vm),"invalid FindFirstFile arguments");
+    sq_pushinteger(kinoko_vm(vm),kinoko_act_find_first(player,pattern));
+    return 1;
+}
+enum class FindOperation { Next, Close, Name };
+template<FindOperation operation> int32_t find_by_id_native(int32_t vm) {
+    int32_t player=0;
+    SQInteger id=0;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinteger(kinoko_vm(vm),2,&id)))
+        return sq_throwerror(kinoko_vm(vm),"invalid file enumeration arguments");
+    if constexpr (operation==FindOperation::Name)
+        sq_pushstring(kinoko_vm(vm),kinoko_act_find_name(player,id),-1);
+    else if constexpr (operation==FindOperation::Close)
+        sq_pushbool(kinoko_vm(vm),kinoko_act_find_close(player,id));
+    else sq_pushbool(kinoko_vm(vm),kinoko_act_find_next(player,id));
+    return 1;
+}
+
 // Original 4517C0. Native RAII replaces the old auto_ptr temporaries and the
 // source-backed Sqrat bridge replaces Object/GetSlot/RootTable emulation.
 int32_t create_layer_2d(int32_t player, const char* name) {
@@ -805,18 +829,14 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     function_460e00_register_actor_method(vm, class_object + 1, "SetRenderTarget",
                                           address(function_452010),
                                           address(function_4556c0), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "FindFirstFile",
-                                          address(function_452150),
-                                          address(function_445650), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "FindNextFile",
-                                          address(function_452220),
-                                          address(function_4455e0), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "FindClose",
-                                          address(function_452270),
-                                          address(function_4455e0), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "GetFindFileName",
-                                          address(function_4522c0),
-                                          address(function_455730), 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "FindFirstFile",
+        address(find_first_native), nullptr, 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "FindNextFile",
+        address(find_by_id_native<FindOperation::Next>), nullptr, 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "FindClose",
+        address(find_by_id_native<FindOperation::Close>), nullptr, 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "GetFindFileName",
+        address(find_by_id_native<FindOperation::Name>), nullptr, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "timeGetTime",
                                           address(timeGetTime),
                                           address(function_445530), 0);
