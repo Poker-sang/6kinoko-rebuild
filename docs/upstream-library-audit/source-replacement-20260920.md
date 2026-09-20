@@ -373,3 +373,24 @@ long names, IDs, owned key/layout records and published property aliases.
 Per the user's testing handoff, neither this test nor any runtime/game test was
 executed for r60. The user subsequently confirmed "R60没问题"; this is user
 validation, not an agent-executed test.
+
+
+## r61: source-backed layer ordering
+
+Source f9ee133 includes 8501614. GetLayerOrder and SwapLayer now bind through
+native Sqrat closures using the upstream Squirrel API. IDA 451F30 preserves
+inactive zero and missing -1. 451F80/455990/455A20/455C40 establish locking,
+index bounds, ancestor rejection, child-vector rebuilding and root preorder.
+Native std::map/std::vector own the temporary hierarchy; no decompiled STL or
+recursive generated traversal is invoked. ABI child buffers retain native
+ownership and are prepared before committing changes. Malformed cyclic,
+missing-parent or duplicate-layer graphs fail without mutation, instead of
+original unchecked traversal; allocation failures also leave order unchanged.
+
+retired-layer-ordering.json removes five disconnected functions (129 definition
+lines) under the pinned source-only audit. Shared helpers still called by old
+CreateLayerString remain retained. The dynamic-layer contract source now covers
+hierarchical ordering, subtree movement, ancestor rejection, bad indices and
+inactive/missing results. It was compiled, not executed. The quiet build
+succeeded; all three DAT files were staged and SHA256-verified. Runtime testing
+remains delegated to the user.
