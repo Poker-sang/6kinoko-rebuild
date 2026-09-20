@@ -2744,16 +2744,9 @@ static int32_t function_45ec60(int32_t actor);
 
 
 int32_t function_45f3e0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4, int32_t a5, int32_t a6);
-int32_t function_45ff80(int32_t a1, int32_t result);
-int32_t function_45ff90(void);
-int32_t function_45ffa0(int32_t a1, int32_t result);
-int32_t function_45ffb0(void);
-int32_t function_45ffc0(int32_t a1, int32_t result);
-int32_t function_45ffd0(void);
 int32_t function_45ffe0(int32_t a1);
 
 int32_t function_460900(int32_t a1, int32_t a2);
-int32_t function_460de0(void);
 int32_t function_460e00(void);
 
 
@@ -2814,7 +2807,6 @@ static int32_t function_466270_this(int32_t this_ptr);
 
 int32_t function_4664a0(int32_t a1);
 int32_t function_466540(int32_t a1, int32_t a2);
-int32_t function_4665d0(void);
 int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_466890(int32_t a1);
 
@@ -2899,7 +2891,6 @@ int32_t function_46d950(void);
 static int32_t function_46e6f0_this(int32_t this_ptr);
 
 int32_t function_46ed80(int32_t a1, int32_t result);
-int32_t function_46eda0(void);
 
 static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
 int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
@@ -2925,7 +2916,6 @@ int32_t function_470030(int32_t a1);
 int32_t function_4700b0(int32_t a1, int32_t a2);
 int32_t function_470100(int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
-int32_t function_4701d0(void);
 int32_t function_470390(int32_t result);
 
 
@@ -3017,7 +3007,6 @@ int32_t function_4a95c0(int32_t a1);
 int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr);
 
 
-int32_t function_4ab010(void);
 int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
 int32_t function_4ab330(void);
@@ -3128,14 +3117,8 @@ int32_t g14 = 0x42abe0; // 0x4d5448
 /* IDA shows the int and bool ClassType vtables as two adjacent function
    pointers. RetDec emitted only their first dword as g19/g21, so the
    rebuilt image previously read the next global as virtual slot 1. */
-struct vtable_4d55a4_type g19 = {
-    .e0 = function_45ff90,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d55b0
-struct vtable_4d55a4_type g21 = {
-    .e0 = function_45ffd0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d55c8
+ // 0x4d55b0
+ // 0x4d55c8
 int32_t g23 = 0x44fd30; // 0x4d5884
 int32_t g25 = 0x44fd30; // 0x4d58ac
 int32_t g28 = 0x4698d0; // 0x4d59dc
@@ -4052,14 +4035,8 @@ struct vtable_4d54a4_type g16 = {
 struct vtable_4d54ac_type g17 = {
     .e0 = (int32_t (*)(char))function_45f0c0
 }; // 0x4d54ac
-struct vtable_4d55a4_type g18 = {
-    .e0 = function_460de0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d55a4
-struct vtable_4d55bc_type g20 = {
-    .e0 = function_45ffb0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d55bc
+ // 0x4d55a4
+ // 0x4d55bc
 struct vtable_4d5878_type g22 = {
     .e0 = function_401010,
     .e1 = function_4abca1
@@ -4070,10 +4047,7 @@ struct vtable_4d5898_type g24 = {
     .e2 = kinoko_quad_set_vertex_colors,
     .e3 = kinoko_quad_modulate_color
 }; // 0x4d5898
-struct vtable_4d5924_type g26 = {
-    .e0 = function_4665d0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d5924
+ // 0x4d5924
 struct vtable_4d59bc_type g27 = {
     .e0 = (int32_t (*)(int32_t))kinoko_method_render_layer_update
 }; // 0x4d59bc
@@ -4109,17 +4083,11 @@ struct vtable_4d5ab4_type g34 = {
     .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_40d590
 }; // 0x4d5ab4
-struct vtable_4d5adc_type g36 = {
-    .e0 = function_46eda0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d5adc
+ // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
     .e0 = kinoko_map_entry_46eed0
 }; // 0x4d5ba0
-struct vtable_4d5ba8_type g38 = {
-    .e0 = function_4701d0,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4d5ba8
+ // 0x4d5ba8
 struct vtable_4d5c68_type g39 = {
     .e0 = kinoko_sqrat_delete_object,
     .e1 = kinoko_sqrat_object_reference,
@@ -4151,10 +4119,7 @@ struct vtable_4d9eb0_type g65 = {
  // 0x4da894
  // 0x4da8ac
  // 0x4da958
-struct vtable_4db71c_type g79 = {
-    .e0 = function_4ab010,
-    .e1 = (int32_t (*)(void))kinoko_method_class_type
-}; // 0x4db71c
+ // 0x4db71c
 
 // 0x4e4fbc
  // 0x4e50e4
@@ -55151,45 +55116,24 @@ static void retdec_trace_proto_metadata(const char *label, int32_t proto, int32_
 
 
 // Address range: 0x45ff80 - 0x45ff8f
-int32_t function_45ff80(int32_t a1, int32_t result) {
-    // 0x45ff80
-    *(int32_t *)a1 = *(int32_t *)result;
-    return result;
-}
+
 
 // Address range: 0x45ff90 - 0x45ff96
-int32_t function_45ff90(void) {
-    // 0x45ff90
-    return 0x45ff80;
-}
+
 
 // Address range: 0x45ffa0 - 0x45ffaf
-int32_t function_45ffa0(int32_t a1, int32_t result) {
-    // 0x45ffa0
-    *(int32_t *)a1 = *(int32_t *)result;
-    return result;
-}
+
 
 // Address range: 0x45ffb0 - 0x45ffb6
 // From class:    .?AU?$ClassType@M@SqPlus@@
 // Type:          virtual member function
-int32_t function_45ffb0(void) {
-    // 0x45ffb0
-    return 0x45ffa0;
-}
+
 
 // Address range: 0x45ffc0 - 0x45ffcf
-int32_t function_45ffc0(int32_t a1, int32_t result) {
-    // 0x45ffc0
-    *(char *)a1 = *(char *)result;
-    return result;
-}
+
 
 // Address range: 0x45ffd0 - 0x45ffd6
-int32_t function_45ffd0(void) {
-    // 0x45ffd0
-    return 0x45ffc0;
-}
+
 
 // Address range: 0x45ffe0 - 0x460535
 int32_t function_45ffe0(int32_t a1) {
@@ -55420,10 +55364,7 @@ int32_t function_460900(int32_t a1, int32_t a2) {
 // Address range: 0x460de0 - 0x460de6
 // From class:    .?AU?$ClassType@VActor@@@SqPlus@@
 // Type:          virtual member function
-int32_t function_460de0(void) {
-    // 0x460de0
-    return 0x460900;
-}
+
 
 // Address range: 0x460e00 - 0x462242
 
@@ -58379,10 +58320,7 @@ int32_t function_466540(int32_t a1, int32_t a2) {
 // Address range: 0x4665d0 - 0x4665d6
 // From class:    .?AU?$ClassType@VCamera@@@SqPlus@@
 // Type:          virtual member function
-int32_t function_4665d0(void) {
-    // 0x4665d0
-    return 0x466540;
-}
+
 
 // Address range: 0x4665e0 - 0x466765
 /* The original is __thiscall: the caller supplies a two-word result object
@@ -60684,10 +60622,7 @@ int32_t function_46ed80(int32_t a1, int32_t result) {
 // Address range: 0x46eda0 - 0x46eda6
 // From class:    .?AU?$ClassType@VInput@@@SqPlus@@
 // Type:          virtual member function
-int32_t function_46eda0(void) {
-    // 0x46eda0
-    return 0x46ed80;
-}
+
 
 
 /* CMapManager's CRT constructor was omitted from the generated C.  The
@@ -61388,10 +61323,7 @@ int32_t function_4701b0(int32_t a1, int32_t a2) {
 // Address range: 0x4701d0 - 0x4701d6
 // From class:    .?AU?$ClassType@VMapManager@NamespaceGlobal@@@SqPlus@@
 // Type:          virtual member function
-int32_t function_4701d0(void) {
-    // 0x4701d0
-    return 0x4701b0;
-}
+
 
 // Address range: 0x4701e0 - 0x47021d
 
@@ -64935,10 +64867,7 @@ int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr) {
 // Address range: 0x4ab010 - 0x4ab016
 // From class:    .?AU?$ClassType@X@SqPlus@@
 // Type:          virtual member function
-int32_t function_4ab010(void) {
-    // 0x4ab010
-    return 0x43e100;
-}
+
 
 // Original SqPlus ClassType identities retained at the C/C++ boundary.
 // The rest of class/property/method binding lives in src/squirrel/.
