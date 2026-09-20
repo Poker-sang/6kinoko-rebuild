@@ -73,7 +73,6 @@ int32_t function_4252e0(void);
 int32_t function_445530(int32_t a1);
 int32_t function_4455e0(int32_t a1);
 int32_t function_445650(int32_t a1);
-int32_t function_4517c0(int32_t a1);
 int32_t function_451b70(int32_t a1);
 int32_t function_451f30(int32_t a1);
 int32_t function_451f80(int32_t a1, int32_t a2);
