@@ -30,6 +30,25 @@ public:
 private:
     void* allocation_;
 };
+class CallbackControl final : public boost::detail::sp_counted_base {
+public:
+    CallbackControl(void* allocation, void (*dispose)(void*)) noexcept
+        : allocation_(allocation), dispose_(dispose) {}
+    void* allocation() const noexcept { return allocation_; }
+    void dispose() override {
+        auto* value = allocation_;
+        allocation_ = nullptr;
+        if (dispose_) dispose_(value);
+    }
+    void destroy() override {
+        this->~CallbackControl();
+        std::free(this);
+    }
+    void* get_deleter(const boost::detail::sp_typeinfo&) override { return nullptr; }
+private:
+    void* allocation_;
+    void (*dispose_)(void*);
+};
 #if defined(_MSC_VER) && defined(_M_IX86)
 static_assert(sizeof(boost::detail::sp_counted_base) == 12, "recovered counter ABI");
 static_assert(sizeof(OwnerControl) == 16, "recovered allocation slot follows the counts");
@@ -49,17 +68,35 @@ std::uintptr_t owner_table() noexcept {
     }();
     return value;
 }
+std::uintptr_t callback_table() noexcept {
+    static const std::uintptr_t value = [] {
+        CallbackControl probe(nullptr, nullptr);
+        return table(&probe);
+    }();
+    return value;
+}
 }
 CountedControl* create_owner_control(void* allocation) noexcept {
     void* storage = std::malloc(sizeof(OwnerControl));
     return storage ? new (storage) OwnerControl(allocation) : nullptr;
 }
-bool owns_control(const void* control) noexcept { return control && table(control) == owner_table(); }
+CountedControl* create_callback_control(void* allocation, void (*dispose)(void*)) noexcept {
+    void* storage = std::malloc(sizeof(CallbackControl));
+    return storage ? new (storage) CallbackControl(allocation, dispose) : nullptr;
+}
+bool owns_control(const void* control) noexcept {
+    return control && (table(control) == owner_table() || table(control) == callback_table());
+}
 bool lock(CountedControl* control) noexcept { return control->add_ref_lock(); }
 void add_strong(CountedControl* control) noexcept { control->add_ref_copy(); }
 void add_weak(CountedControl* control) noexcept { control->weak_add_ref(); }
 void release_weak(CountedControl* control) noexcept { control->weak_release(); }
 void release_strong(CountedControl* control) noexcept { control->release(); }
 long use_count(const CountedControl* control) noexcept { return control->use_count(); }
-void* allocation(const CountedControl* control) noexcept { return static_cast<const OwnerControl*>(control)->allocation(); }
+void* allocation(const CountedControl* control) noexcept {
+    if (!control) return nullptr;
+    if (table(control) == owner_table()) return static_cast<const OwnerControl*>(control)->allocation();
+    if (table(control) == callback_table()) return static_cast<const CallbackControl*>(control)->allocation();
+    return nullptr;
+}
 } // namespace kinoko::native::upstream

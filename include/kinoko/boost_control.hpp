@@ -7,6 +7,9 @@ namespace boost { namespace detail { class sp_counted_base; } }
 namespace kinoko::native::upstream {
 using CountedControl = boost::detail::sp_counted_base;
 CountedControl* create_owner_control(void* allocation) noexcept;
+// Native resource ownership: run its actual destructor on the last strong
+// release. Allocation failure leaves the resource with the caller.
+CountedControl* create_callback_control(void* allocation, void (*dispose)(void*)) noexcept;
 bool owns_control(const void* control) noexcept;
 bool lock(CountedControl* control) noexcept;
 void add_strong(CountedControl* control) noexcept;

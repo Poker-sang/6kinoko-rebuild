@@ -1,5 +1,7 @@
 #include "kinoko/act_clone.h"
 #include "kinoko/texture_store.h"
+#include "kinoko/act_runtime.h"
+#include "kinoko/boost_control.hpp"
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -14,12 +16,14 @@ int32_t retdec_act_bind_layouts(int32_t act);
 }
 
 namespace {
+namespace up = kinoko::native::upstream;
 using Address = uint32_t;
 template<class T> T &field(Address address, size_t offset=0) {
     return *reinterpret_cast<T *>(static_cast<uintptr_t>(address)+offset);
 }
 void *pointer(Address address) { return reinterpret_cast<void *>(static_cast<uintptr_t>(address)); }
 Address address(const void *p) { return static_cast<Address>(reinterpret_cast<uintptr_t>(p)); }
+void dispose_chip_data(void* data) { retdec_mcd_free(static_cast<retdec_mcd_data*>(data)); }
 
 struct String { char storage[16]; uint32_t size, capacity; };
 struct Vector { Address begin, end, capacity; };
@@ -190,15 +194,15 @@ private:
             string(result,source,72);
             auto &control=field<Address>(source,68);
             if(!control) {
-                // Original 42FA50 shares decoded chip data using reference ownership.
-                auto *count=static_cast<uint32_t *>(std::malloc(sizeof(uint32_t)));
-                if(!count) throw std::bad_alloc();
-                *count=1;
-                control=address(count);
+                // Original 42FA50 shares chip data. Use the actual Boost 1.44
+                // counter and an MCD destructor, never the Actor slot deleter.
+                auto* counted=up::create_callback_control(pointer(field<Address>(source,64)), dispose_chip_data);
+                if(!counted) throw std::bad_alloc();
+                control=address(counted);
             }
             chip_owners_.push_back(result);
             field<Address>(result,68)=control;
-            ++field<uint32_t>(control);
+            up::add_strong(static_cast<up::CountedControl*>(pointer(control)));
         } else {
             string(result,source,40);
             const auto handle=field<int32_t>(source,68);
@@ -227,7 +231,7 @@ extern "C" int32_t kinoko_act_release_chip_data(int32_t resource) {
     if(!control) return 1;
     const auto saved=control;
     control=0;
-    if(--field<uint32_t>(saved)) return 0;
-    std::free(pointer(saved));
-    return 1;
+    up::release_strong(static_cast<up::CountedControl*>(pointer(saved)));
+    // The upstream control invokes the MCD destructor on final release.
+    return 0;
 }

@@ -4015,6 +4015,39 @@ static int test_portrait_regions(const char *directory) {
     return 0;
 }
 
+static int test_chip_shared_ownership(void) {
+    int32_t source[60]={0}, texture[2]={0};
+    IDirect3DBaseTexture9Vtbl vtable={0}; vtable.Release=count_texture_release;
+    texture[0]=PTR(&vtable);
+    CHECK(function_427530(PTR(source)));
+    int32_t *resource=(int32_t*)calloc(1,100), *resources=(int32_t*)calloc(1,4);
+    struct retdec_mcd_data *data=(struct retdec_mcd_data*)calloc(1,sizeof(*data));
+    CHECK(resource && resources && data);
+    data->textures=(struct retdec_mcd_texture*)calloc(1,sizeof(*data->textures));
+    CHECK(data->textures);
+    data->texture_count=1;
+    data->textures[0].handle=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    CHECK(data->textures[0].handle);
+    resource[0]=PTR(&g313); resource[7]=resource[14]=resource[23]=15;
+    resource[16]=PTR(data); resources[0]=PTR(resource);
+    source[56]=PTR(resources); source[57]=source[58]=PTR(resources+1);
+    int32_t first=kinoko_act_clone(PTR(source),NULL);
+    int32_t second=kinoko_act_clone(PTR(source),NULL);
+    CHECK(first && second && resource[17]);
+    const int32_t first_resource=**(int32_t**)(intptr_t)(first+224);
+    const int32_t second_resource=**(int32_t**)(intptr_t)(second+224);
+    CHECK(*(int32_t*)(intptr_t)(first_resource+64)==PTR(data));
+    CHECK(*(int32_t*)(intptr_t)(second_resource+68)==resource[17]);
+    retdec_destroy_cact_object(PTR(source));
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_with_flags(first,1);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_with_flags(second,1);
+    CHECK(texture[1]==1);
+    puts("PASS: real Boost chip ownership survives source/clone destruction and frees final textures once");
+    return 0;
+}
+
 static int test_act_reentry(const char *directory) {
     char path[MAX_PATH];
     const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
@@ -4824,6 +4857,7 @@ int main(int argc, char **argv) {
     CHECK(test_layout_registration_entries(vm) == 0);
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);
+    CHECK(test_chip_shared_ownership() == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);

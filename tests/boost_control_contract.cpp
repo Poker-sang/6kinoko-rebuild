@@ -32,6 +32,30 @@ void owner_slot() {
     up::release_weak(control);
     require(!up::owns_control(nullptr), "null is not an owned control");
 }
+int callback_calls, callback_value;
+void dispose_resource(void* payload) {
+    ++callback_calls;
+    callback_value = *static_cast<int*>(payload);
+    std::free(payload);
+}
+void resource_owner() {
+    auto* payload = static_cast<int*>(std::malloc(sizeof(int)));
+    require(payload != nullptr, "resource allocation");
+    *payload = 42;
+    auto* control = up::create_callback_control(payload, dispose_resource);
+    require(control && up::owns_control(control) && up::allocation(control)==payload,
+            "native callback control is constructed by the upstream base");
+    up::add_weak(control);
+    up::add_strong(control);
+    up::release_strong(control);
+    require(callback_calls==0 && up::use_count(control)==1, "shared resource remains alive");
+    up::release_strong(control);
+    require(callback_calls==1 && callback_value==42 && !up::allocation(control),
+            "final strong release invokes the resource destructor exactly once");
+    require(!up::lock(control), "disposed resource cannot be resurrected");
+    up::release_weak(control);
+    require(callback_calls==1, "weak release does not dispose the resource twice");
+}
 // Exercise the genuine counted-base algorithm with an observable virtual
 // deleter. This is not a substitute implementation of the reference counter.
 struct Events : boost::detail::sp_counted_base {
@@ -79,7 +103,7 @@ void race(bool final_release) {
 }
 int main() {
     try {
-        owner_slot(); race(false); race(true);
+        owner_slot(); resource_owner(); race(false); race(true);
         std::puts("Boost 1.44 counted-base: slot ownership and 262144 contended weak locks passed");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }
 }
