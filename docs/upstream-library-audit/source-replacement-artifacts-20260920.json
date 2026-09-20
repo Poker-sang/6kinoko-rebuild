@@ -2646,6 +2646,28 @@
         }
       ],
       "user_confirmation": "User reported r74 has no problems on 2026-09-20."
+    },
+    {
+      "batch": "pr7-complete-20260920-r75-quiet",
+      "source_commit": "ca2bf1422e2d3ba77320884285efe40423938b8a",
+      "validation": "Build command completed with exit 0; no tests run. Original build-runs directory disappeared before artifact recording. Recovered source-commit record uses the recorded build invocation; original logs and maps unavailable. Surviving EXE staged and DAT hashes verified.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-recovered/source-commit.txt",
+          "size": 42,
+          "sha256": "5d77097a3aacbac267e0a6642d46023c9fd1ee3a8071fc9e1b2f531f0f86819c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-recovered/stage-dat.log",
+          "size": 454,
+          "sha256": "e3f7633112e1c9dda744b37d33d42c6e01e1d14a9ae1332e4ce50b2fede39a89"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r75-quiet/kinoko_retdec_rebuild.exe",
+          "size": 837120,
+          "sha256": "cbb5f261a7098d9855e8b16acdec3e1a256aebaf6456871f4f56aa8ab7cc2cac"
+        }
+      ]
     }
   ]
 }

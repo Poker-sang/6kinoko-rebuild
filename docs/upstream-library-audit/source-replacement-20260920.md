@@ -693,3 +693,12 @@ layer construction now frees its partial owned state.
 retired-act-serialization.json proves deletion of 50 functions and 16 data
 items, including obsolete generic type lookup/tree/property machinery. The
 remaining adapters and unsupported layout paths still require migration.
+
+R75 (ca2bf14) build command finished with exit 0. Before staging, the entire
+build-runs directory was observed missing; this task issued no cleanup. Only
+runtime directories r73/r74/r75 remained at that observation. The surviving
+R75 EXE was staged and DAT hashes verified. Its reconstructed source-commit
+record and new staging log are under build-runs/*-r75-recovered; the original
+configuration/build logs and maps cannot be claimed retained. Earlier manifest
+entries remain historical records and do not guarantee current file presence.
+No tests or game session ran.
