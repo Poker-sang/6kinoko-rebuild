@@ -4,8 +4,6 @@
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/legacy_abi.h"
 #include <array>
-#include <windows.h>
-#include "kinoko/legacy_method_entries.h"
 
 extern "C" {
 extern char g560;
@@ -409,71 +407,3 @@ extern "C" int32_t function_472140(int32_t id) {
     return function_471a60(target(vm), id, 2);
 }
 
-// Recovered 445530/455330 method bridges. Source Squirrel owns captures and
-// values; preserve the existing trace calls and explicit x86 member dispatch.
-extern "C" int32_t kinoko_sqrat_call_integer0(int32_t a1) {
-    int32_t method_holder = 0;
-    int32_t instance = 0;
-    int32_t method;
-    int32_t result;
-
-    if (sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&method_holder), (SQUserPointer*)kinoko_pointer(0)) < 0 ||
-        method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance), kinoko_pointer(0)) < 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)method_holder;
-    result = retdec_call_thiscall0_result(
-        (void *)(intptr_t)instance, (void *)(intptr_t)method);
-    sq_pushinteger(kinoko_vm(a1), result);
-    return 1;
-}
-
-extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
-    static volatile LONG trace_count;
-    int32_t outer_payload = 0;
-    int32_t instance_ptr = 0;
-    int32_t argument = 0;
-    int32_t outer_status;
-    int32_t instance_status;
-    int32_t argument_status;
-    int32_t result;
-    int32_t method;
-    LONG trace_index;
-
-    /* Original 455330 is a Sqrat native wrapper.  The first outer value is
-       the userdata payload containing the target method; the first script
-       argument is the class instance and the second is the integer argument.
-       RetDec dropped the indirect __thiscall and returned the conversion
-       status from 48A7D0 instead. */
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 128)
-        retdec_trace_i32("450950:wrapper-entry", a1);
-    outer_status = sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
-    if (trace_index <= 128) {
-        retdec_trace_i32("450950:wrapper-top", sq_gettop(kinoko_vm(a1)));
-        retdec_trace_i32("450950:wrapper-outer-status", outer_status);
-        retdec_trace_i32("450950:wrapper-outer", outer_payload);
-    }
-    if (outer_payload == 0 || *(int32_t *)(intptr_t)outer_payload == 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)outer_payload;
-    instance_status = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance_ptr), kinoko_pointer(0));
-    argument_status = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&argument));
-    if (argument_status < 0)
-        return 0;
-    if (trace_index <= 128) {
-        retdec_trace_i32("450950:wrapper-method", method);
-        retdec_trace_i32("450950:wrapper-instance-status", instance_status);
-        retdec_trace_i32("450950:wrapper-instance", instance_ptr);
-        retdec_trace_i32("450950:wrapper-argument-status", argument_status);
-        retdec_trace_i32("450950:wrapper-argument", argument);
-        if (method == (int32_t)(intptr_t)kinoko_method_begin_stage)
-            retdec_trace("450950:wrapper-begin-stage");
-    }
-    result = retdec_call_thiscall1_result(
-        (void *)(intptr_t)instance_ptr,
-        (void *)(intptr_t)method,
-        argument);
-    sq_pushinteger(kinoko_vm(a1), result);
-    return 1;
-}

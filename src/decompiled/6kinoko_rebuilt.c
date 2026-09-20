@@ -2077,10 +2077,7 @@ int32_t function_444a50(int32_t a1);
 int32_t function_445230(int32_t result, int32_t a2);
 
 
-int32_t function_445530(int32_t a1);
 
-int32_t function_4455e0(int32_t a1);
-int32_t function_445650(int32_t a1);
 
 int32_t function_4461c0(void);
 int32_t function_4461d0(int32_t a1, int32_t a2);
@@ -2151,7 +2148,6 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
 int32_t function_451620(int32_t this_ptr);
 
 int32_t function_451b70(int32_t a1);
-int32_t function_452010(int32_t a1);
 
 
 
@@ -2176,9 +2172,7 @@ int32_t function_453fe0(void);
 
 
 
-int32_t function_455330(int32_t a1);
 int32_t function_455390(int32_t a1);
-int32_t function_4556c0(int32_t a1);
 
 
 int32_t function_455880(int32_t this_ptr, int32_t value);
@@ -22662,50 +22656,14 @@ int32_t function_445230(int32_t result, int32_t a2) {
 
 
 // Address range: 0x445530 - 0x445580
-int32_t function_445530(int32_t a1) {
-    int32_t method_holder = 0;
-    int32_t instance = 0;
-    int32_t method;
-    int32_t result;
 
-    if (sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&method_holder), (SQUserPointer*)kinoko_pointer(0)) < 0 ||
-        method_holder == 0 || *(int32_t *)(intptr_t)method_holder == 0 ||
-        sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance), kinoko_pointer(0)) < 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)method_holder;
-    result = retdec_call_thiscall0_result(
-        (void *)(intptr_t)instance, (void *)(intptr_t)method);
-    sq_pushinteger(kinoko_vm(a1), result);
-    return 1;
-}
 
 
 // Address range: 0x4455e0 - 0x445643
-int32_t function_4455e0(int32_t a1) {
-    // 0x4455e0
-    int32_t v1; // bp-12, 0x4455e0
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x445607
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x4455e0
-    int32_t v4 = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3)); // 0x44561a
-    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
-    return 1;
-}
+
 
 // Address range: 0x445650 - 0x4456c0
-int32_t function_445650(int32_t a1) {
-    // 0x445650
-    int32_t v1; // bp-12, 0x445650
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x445677
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    sq_tostring(kinoko_vm(a1), 2);
-    int32_t v3; // bp-16, 0x445650
-    sq_getstring(kinoko_vm(a1), -1, (const SQChar**)(&v3));
-    sq_pushinteger(kinoko_vm(a1), kinoko_sq_pop(a1, 1));
-    return 1;
-}
+
 
 
 // Address range: 0x445730 - 0x445783
@@ -23569,12 +23527,7 @@ int32_t function_451b70(int32_t a1) {
 
 
 // Address range: 0x452010 - 0x45201f
-int32_t function_452010(int32_t a1) {
-    // 0x452010
-    int32_t v1; // 0x452010
-    *(int32_t *)(v1 + 76) = a1;
-    return a1 & -256 | 1;
-}
+
 
 // Address range: 0x452150 - 0x452211
 
@@ -23728,55 +23681,7 @@ int32_t function_453fe0(void) {
 
 
 // Address range: 0x455330 - 0x455390
-int32_t function_455330(int32_t a1) {
-    static volatile LONG trace_count;
-    int32_t outer_payload = 0;
-    int32_t instance_ptr = 0;
-    int32_t argument = 0;
-    int32_t outer_status;
-    int32_t instance_status;
-    int32_t argument_status;
-    int32_t result;
-    int32_t method;
-    LONG trace_index;
 
-    /* Original 455330 is a Sqrat native wrapper.  The first outer value is
-       the userdata payload containing the target method; the first script
-       argument is the class instance and the second is the integer argument.
-       RetDec dropped the indirect __thiscall and returned the conversion
-       status from 48A7D0 instead. */
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 128)
-        retdec_trace_i32("450950:wrapper-entry", a1);
-    outer_status = sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&outer_payload), (SQUserPointer*)kinoko_pointer(0));
-    if (trace_index <= 128) {
-        retdec_trace_i32("450950:wrapper-top", sq_gettop(kinoko_vm(a1)));
-        retdec_trace_i32("450950:wrapper-outer-status", outer_status);
-        retdec_trace_i32("450950:wrapper-outer", outer_payload);
-    }
-    if (outer_payload == 0 || *(int32_t *)(intptr_t)outer_payload == 0)
-        return 0;
-    method = *(int32_t *)(intptr_t)outer_payload;
-    instance_status = sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&instance_ptr), kinoko_pointer(0));
-    argument_status = sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&argument));
-    if (argument_status < 0)
-        return 0;
-    if (trace_index <= 128) {
-        retdec_trace_i32("450950:wrapper-method", method);
-        retdec_trace_i32("450950:wrapper-instance-status", instance_status);
-        retdec_trace_i32("450950:wrapper-instance", instance_ptr);
-        retdec_trace_i32("450950:wrapper-argument-status", argument_status);
-        retdec_trace_i32("450950:wrapper-argument", argument);
-        if (method == (int32_t)(intptr_t)kinoko_method_begin_stage)
-            retdec_trace("450950:wrapper-begin-stage");
-    }
-    result = retdec_call_thiscall1_result(
-        (void *)(intptr_t)instance_ptr,
-        (void *)(intptr_t)method,
-        argument);
-    sq_pushinteger(kinoko_vm(a1), result);
-    return 1;
-}
 
 // Address range: 0x455390 - 0x4554a9
 int32_t function_455390(int32_t a1) {
@@ -23817,17 +23722,7 @@ int32_t function_455390(int32_t a1) {
 
 
 // Address range: 0x4556c0 - 0x45572c
-int32_t function_4556c0(int32_t a1) {
-    // 0x4556c0
-    int32_t v1; // bp-16, 0x4556c0
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-12, 0x4556e7
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3 = 0; // bp-8, 0x4556fc
-    int32_t v4 = sq_getinstanceup(kinoko_vm(a1), 2, (SQUserPointer*)(&v3), kinoko_pointer(0)); // 0x455703
-    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
-    return 1;
-}
+
 
 // Address range: 0x455730 - 0x455792
 
