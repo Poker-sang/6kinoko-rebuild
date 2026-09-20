@@ -2775,7 +2775,7 @@ int32_t g341 = 0x43cec0; // 0x4ec924
 int32_t g346 = 0x4461d0; // 0x4ec988
  // 0x4ec9a0
 char * g349 = "\x82l\x82r \x83S\x83V\x83\x62\x83N"; // 0x4ec9c4
-int32_t g350 = 0x43fbe0; // 0x4ecb30
+int32_t g350 = (int32_t)kinoko_method_write_string_layout; // 0x4ecb30
 int32_t g351 = 0x441660; // 0x4ecb60
 
  // 0x4ecc38
@@ -3587,7 +3587,7 @@ struct vtable_4d5a94_type g33 = {
     .e0 = function_407310,
     .e1 = function_4072b0,
     .e2 = function_407270,
-    .e3 = function_4072d0,
+    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_file,
     .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_40d590,
     .e6 = function_407300
@@ -3674,7 +3674,7 @@ struct vtable_4eb698_type g205 = {
     .e0 = function_407310,
     .e1 = function_4072b0,
     .e2 = function_407270,
-    .e3 = function_410b90,
+    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_package,
     .e4 = (int32_t (*)(void))kinoko_method_class_type,
     .e5 = function_410c00,
     .e6 = function_410260
@@ -3695,7 +3695,7 @@ struct vtable_4ebe58_type g251 = {
     .e2 = kinoko_sqrat_copy_object
 }; // 0x4ebe58
 struct vtable_4ebe68_type g252 = {
-    .e0 = function_41f990,
+    .e0 = (int32_t (*)(int32_t))kinoko_method_write_act_layer,
     .e1 = function_41f800,
     .e2 = function_4461d0,
     .e3 = function_446210,
@@ -3718,7 +3718,7 @@ struct vtable_4ebed0_type g256 = {
  // 0x4ebfb0
 
 struct vtable_4ec0b0_type g277 = {
-    .e0 = function_426740,
+    .e0 = (int32_t (*)(int32_t))kinoko_method_write_act_key,
     .e1 = function_426650,
     .e2 = function_4461d0,
     .e3 = function_446210,

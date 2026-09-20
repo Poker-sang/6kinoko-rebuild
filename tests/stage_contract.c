@@ -4690,6 +4690,32 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                 CHECK(stream.position==stream.size && restored[1]==17 && restored[2]==51);
                 CHECK(restored[4]-restored[3]==16*(compact+1));
                 CHECK(memcmp((void*)(intptr_t)(restored[3]+16*compact),timeline_pairs,16)==0);
+                /* Exercise the real ECX virtual entry, including package XOR.
+                   A memory-only stream cannot detect a cdecl slot mismatch. */
+                for (int package=0;package<2;++package) {
+                    char directory[MAX_PATH],path[MAX_PATH];
+                    CHECK(GetTempPathA(sizeof(directory),directory));
+                    CHECK(GetTempFileNameA(directory,"tli",0,path));
+                    HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,
+                        OPEN_EXISTING,FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL);
+                    CHECK(file!=INVALID_HANDLE_VALUE);
+                    unsigned char payload[8192],prefix[32]={0}; DWORD written=0;
+                    for(uint32_t i=0;i<stream.size;++i) payload[i]=stream.bytes[i]^(package?0xa7:0);
+                    if(package) CHECK(WriteFile(file,prefix,sizeof(prefix),&written,NULL) && written==sizeof(prefix));
+                    CHECK(WriteFile(file,payload,stream.size,&written,NULL) && written==stream.size);
+                    CHECK(SetFilePointer(file,package?32:0,NULL,FILE_BEGIN)!=(DWORD)-1);
+                    int32_t reader[7]={0};
+                    reader[0]=package?PTR(&g205):PTR(&g33); reader[1]=PTR(file);
+                    reader[3]=stream.size; reader[4]=reader[5]=package?32:0;
+                    ((unsigned char*)reader)[24]=package?0xa7:0;
+                    int32_t actual=kinoko_act_new_timeline(); CHECK(actual);
+                    CHECK(kinoko_act_load_timeline(actual,PTR(reader),1));
+                    int32_t* value=(int32_t*)(intptr_t)actual;
+                    CHECK(value[1]==17 && value[2]==51 && value[4]-value[3]==16);
+                    CHECK(memcmp((void*)(intptr_t)value[3],timeline_pairs,16)==0);
+                    if(package) CHECK(reader[5]==32+stream.size);
+                    retdec_destroy_cact_key(actual); CHECK(CloseHandle(file));
+                }
             }
             const int32_t before=restored[3];
             stream.position=0; --stream.size;
@@ -4814,6 +4840,31 @@ static int test_chip_serialization(void) {
     g673=saved;
     retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
     puts("PASS: chip schema IO preserves independent native/MCD lifecycle fields");
+    return 0;
+}
+
+static int test_key_string_writers(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t key[9]={0},layout[65]={0};
+    key[0]=PTR(&g277); key[7]=15;
+    layout[0]=PTR(&g350); layout[6]=layout[13]=layout[20]=15;
+    ((unsigned char*)layout)[128]=1; layout[33]=0x12345678;
+    const unsigned char saved=g673; g673=1;
+    CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+    CHECK(stream.size==6 && stream.bytes[0]==0 && stream.bytes[5]==0);
+    stream.position=stream.size=0;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)(intptr_t)g350,PTR(&stream))==1);
+    /* Sorted addEdge/alignment are both bytes from +128, not the int at +132. */
+    CHECK(stream.size==75 && stream.bytes[0]==0 && stream.bytes[1]==1 && stream.bytes[2]==1);
+    unsigned char expected[8192]; const uint32_t size=stream.size;
+    memcpy(expected,stream.bytes,size);
+    stream.position=stream.size=0; key[1]=PTR(layout);
+    CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+    CHECK(stream.size==10+size && stream.bytes[5]==1);
+    CHECK(memcmp(stream.bytes+10,expected,size)==0);
+    g673=saved;
+    puts("PASS: key presence byte and CStringLayout original bool alias serialization");
     return 0;
 }
 
@@ -5268,7 +5319,7 @@ int main(int argc, char **argv) {
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
         return test_texture_serialization(0) || test_texture_serialization(1) ||
-            test_chip_serialization() || test_layout_serialization();
+            test_chip_serialization() || test_layout_serialization() || test_key_string_writers();
     if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
         return test_map_serialization() || test_map_set_layer();
     if(argc==2 && strcmp(argv[1],"--dynamic-layer")==0)

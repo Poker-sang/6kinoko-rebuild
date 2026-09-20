@@ -4,6 +4,7 @@
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
+#include "kinoko/boost_hash.h"
 #include <algorithm>
 #include <array>
 #include <climits>
@@ -13,6 +14,7 @@
 #include <string>
 
 extern "C" unsigned char g673;
+extern "C" int32_t g350;
 
 namespace {
 using kinoko::legacy::address;
@@ -42,6 +44,27 @@ Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
                    {"stChipFile", {3,3,36}}};
 // 425350: CActTimeLine has two integers followed by a vector of integer pairs.
 Schema timeline_schema{{"beginTime", {0,0,4}}, {"timeLength", {0,0,8}}};
+// 41E790, including the two byte-sized booleans and previous-position fields.
+Schema layer_schema{
+    {"resourceID",{0,0,96}}, {"layerID",{0,0,104}}, {"parentID",{0,0,108}},
+    {"stName",{3,3,112}}, {"visible",{2,2,140}}, {"debugOnly",{2,2,141}},
+    {"dst_x",{1,1,144}}, {"dst_y",{1,1,148}}, {"dst_z",{1,1,152}},
+    {"ox",{1,1,156}}, {"oy",{1,1,160}}, {"oz",{1,1,164}},
+    {"prev_x",{1,1,168}}, {"prev_y",{1,1,172}}, {"prev_z",{1,1,176}}
+};
+Schema key_schema{{"scriptFunction",{3,3,8}}};
+// 43F770 registers alignment with the bool template 443CC0 AND offset 128,
+// aliasing addEdge (43F97D), despite the runtime integer living at 132.
+Schema string_layout_schema{
+    {"stText",{3,3,4}}, {"stBackQueue",{3,3,32}}, {"stFontFaceName",{3,3,60}},
+    {"fontHeight",{0,0,88}}, {"fontWeight",{0,0,92}},
+    {"colorR",{0,0,96}}, {"colorG",{0,0,100}}, {"colorB",{0,0,104}},
+    {"baseR",{0,0,108}}, {"baseG",{0,0,112}}, {"baseB",{0,0,116}},
+    {"charactorSpace",{0,0,120}}, {"lineSpace",{0,0,124}},
+    {"addEdge",{2,2,128}}, {"alignment",{2,2,128}},
+    {"scaleX",{1,1,136}}, {"scaleY",{1,1,140}}, {"wordBreakWidth",{0,0,144}},
+    {"alpha",{1,1,152}}, {"blend",{0,0,156}}
+};
 // 42BD00 registers the 17 serialized C2DLayout members.
 Schema layout_schema{
     {"roll.x", {1,1,236}}, {"roll.y", {1,1,240}}, {"roll.z", {1,1,244}},
@@ -465,4 +488,86 @@ extern "C" int32_t kinoko_act_new_timeline(void) {
 }
 extern "C" int32_t kinoko_act_load_timeline(int32_t timeline,int32_t reader,int32_t version) {
     return read_timeline(timeline,nullptr,address(&reader),version);
+}
+
+
+namespace {
+uint32_t type_hash(const char* name,size_t length) {
+    return static_cast<uint32_t>(kinoko_boost_hash_range(address(name),address(name+length)));
+}
+uint32_t type_hash(const char* name) { return type_hash(name,std::strlen(name)); }
+struct TypeName {
+    unsigned char bytes[28]{};
+    TypeName() { field<uint32_t>(address(bytes)+20)=15; }
+    ~TypeName() {
+        const kinoko::legacy::StringView text(bytes);
+        if (text.is_heap()) std::free(text.data());
+    }
+};
+bool layout_hash(int32_t layout,uint32_t& hash) {
+    const auto table=field<int32_t>(layout);
+    const char* name=nullptr;
+    if (table==address(kinoko_act_host_symbols()->layout_vtable)) name=".?AVC2DLayout@@";
+    else if (table==address(kinoko_act_host_symbols()->map_layout_vtable)) name=".?AVC2DMapLayout@@";
+    else if (table==address(&g350)) name=".?AVCStringLayout@@";
+    if (name) { hash=type_hash(name); return true; }
+    // Original 426740 obtains the remaining registered types through virtual
+    // GetType/GetName. Keep this boundary until their registries are migrated;
+    // do not confuse modern compiler RTTI spelling with the original raw name.
+    if (!table) return false;
+    const auto binder=retdec_call_thiscall0_result(pointer<void>(layout),field<void*>(table+16));
+    if (!binder || !field<int32_t>(binder)) return false;
+    TypeName result;
+    retdec_call_thiscall1_result(pointer<void>(binder),field<void*>(field<int32_t>(binder)+4),address(result.bytes));
+    const kinoko::legacy::StringView text(result.bytes);
+    hash=type_hash(text.data(),text.length());
+    return true;
+}
+bool write_layer_list(int32_t layer,int32_t offset,int32_t writer,const char* type) {
+    auto count=field<uint32_t>(layer+offset+4);
+    const auto head=field<int32_t>(layer+offset);
+    if (count>0x10000 || !head || !transfer(writer,count)) return false;
+    auto node=field<int32_t>(head);
+    auto hash=type_hash(type);
+    for (uint32_t i=0;i<count;++i) {
+        if (!node || node==head || !transfer(writer,hash)) return false;
+        const auto object=field<int32_t>(node+8);
+        // Original 41F990 ignores each element writer's return value, but
+        // propagates failure to emit the list count/type and final script.
+        if (object) retdec_call_thiscall1_result(pointer<void>(object),
+            field<void*>(field<int32_t>(object)),writer);
+        node=field<int32_t>(node);
+    }
+    return node==head;
+}
+}
+extern "C" int32_t __fastcall kinoko_method_write_act_layer(int32_t layer,void*,int32_t writer) {
+    if (!layer || !writer) return 0;
+    try {
+        if (!write(layer,writer,layer_schema) ||
+            !write_layer_list(layer,180,writer,".?AVCActKey@@") ||
+            !write_layer_list(layer,192,writer,".?AVCActTimeLine@@")) return 0;
+        const auto script=layer+204;
+        return (retdec_call_thiscall1_result(pointer<void>(script),
+            field<void*>(field<int32_t>(script)),writer)&0xff)!=0;
+    } catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,int32_t writer) {
+    if (!key || !writer) return 0;
+    try {
+        if (!write(key,writer,key_schema)) return 0;
+        const auto layout=field<int32_t>(key+4);
+        uint8_t present=layout!=0;
+        if (!transfer(writer,present)) return 0;
+        if (!layout) return 1;
+        uint32_t hash=0;
+        if (!layout_hash(layout,hash) || !transfer(writer,hash)) return 0;
+        return (retdec_call_thiscall1_result(pointer<void>(layout),
+            field<void*>(field<int32_t>(layout)),writer)&0xff)!=0;
+    } catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_write_string_layout(int32_t layout,void*,int32_t writer) {
+    if (!layout || !writer) return 0;
+    try { return write(layout,writer,string_layout_schema); }
+    catch (...) { return 0; }
 }
