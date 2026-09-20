@@ -194,7 +194,7 @@ int32_t retdec_publish_c2dlayout_properties(
 {
     static const char *const float_names[] = {
         "roll_x", "roll_y", "roll_z", "cor_x", "cor_y", "cor_z",
-        "scale_x", "scale_y", "scale_z", "cos_x", "cos_y", "cos_z",
+        "scale_x", "scale_y", "scale_z", "cos_x", "cos_y", "coS_z",
         "alpha"
     };
     static const int32_t float_offsets[] = {
@@ -323,6 +323,18 @@ publish_failed:
     retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_trim_stack(vm, base);
     return 0;
+}
+
+// Original 42B6D0 is a cdecl VM-only registration entry. The root-table
+// registry used by the active binding owns the same class/property handles;
+// do not create another decompiled map of Sqrat objects for this old caller.
+extern "C" int32_t function_42b6d0(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_c2dlayout_class(vm, address(root));
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
 }
 
 int32_t retdec_cact_associate_resource(int32_t vm)

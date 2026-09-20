@@ -4279,7 +4279,18 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
-        CHECK(retdec_construct_actor_manager(manager));
+        {
+        int32_t before = function_48aa20(vm);
+        CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
+        CHECK(function_42b6d0(vm) == 0);
+        CHECK(function_42b6d0(vm) == 0);
+        CHECK(function_48aa20(vm) == before);
+        CHECK(execute_source(vm, root + 2,
+            "if (typeof C2DLayout != \"class\") throw \"layout registration\";"
+            "if (!(\"coS_z\" in C2DLayout.__getTable)) throw \"original layout spelling\";"
+            "if (\"cos_z\" in C2DLayout.__getTable) throw \"invented layout alias\";"));
+    }
+    CHECK(retdec_construct_actor_manager(manager));
         function_460e00();
         CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
         return test_stage_update_mask(manager, vm, root);
