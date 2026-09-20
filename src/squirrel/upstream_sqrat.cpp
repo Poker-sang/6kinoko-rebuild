@@ -75,6 +75,28 @@ HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value) {
 void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns) {
     Adopted object(vm, value, owns); // actual ~Sqrat::Object owns the release
 }
+bool sqrat_integer_argument(HSQUIRRELVM vm, SQInteger index, SQInteger& value) {
+    const auto type = sq_gettype(vm, index);
+    if (type != OT_INTEGER && type != OT_FLOAT) {
+        SQInteger unused; sq_getinteger(vm, index, &unused); return false;
+    }
+    value = Sqrat::Var<SQInteger>(vm, index).value;
+    return true;
+}
+bool sqrat_float_argument(HSQUIRRELVM vm, SQInteger index, SQFloat& value) {
+    const auto type = sq_gettype(vm, index);
+    if (type != OT_INTEGER && type != OT_FLOAT) {
+        SQFloat unused; sq_getfloat(vm, index, &unused); return false;
+    }
+    value = Sqrat::Var<SQFloat>(vm, index).value;
+    return true;
+}
+bool sqrat_bool_argument(HSQUIRRELVM vm, SQInteger index) {
+    return Sqrat::Var<bool>(vm, index).value;
+}
+void sqrat_push_integer(HSQUIRRELVM vm, SQInteger value) { Sqrat::PushVar(vm, value); }
+void sqrat_push_float(HSQUIRRELVM vm, SQFloat value) { Sqrat::PushVar(vm, value); }
+void sqrat_push_bool(HSQUIRRELVM vm, bool value) { Sqrat::PushVar(vm, value); }
 SQInteger sqrat_property_dispatch(HSQUIRRELVM vm, bool write, SQBool raiseerror,
     SQRESULT (*invoke)(HSQUIRRELVM,SQInteger,SQBool,SQBool)) {
     return write ? Sqrat::sqVarSetWithContext(vm, raiseerror, invoke) :

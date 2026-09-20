@@ -75,6 +75,12 @@ void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value);
 HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns);
+bool sqrat_integer_argument(HSQUIRRELVM vm, SQInteger index, SQInteger& value);
+bool sqrat_float_argument(HSQUIRRELVM vm, SQInteger index, SQFloat& value);
+bool sqrat_bool_argument(HSQUIRRELVM vm, SQInteger index);
+void sqrat_push_integer(HSQUIRRELVM vm, SQInteger value);
+void sqrat_push_float(HSQUIRRELVM vm, SQFloat value);
+void sqrat_push_bool(HSQUIRRELVM vm, bool value);
 SQInteger sqrat_property_dispatch(HSQUIRRELVM vm, bool write, SQBool raiseerror,
     SQRESULT (*invoke)(HSQUIRRELVM,SQInteger,SQBool,SQBool));
 SQInteger sqrat_weakref(HSQUIRRELVM vm);
