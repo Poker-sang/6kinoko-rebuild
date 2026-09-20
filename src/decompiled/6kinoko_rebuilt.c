@@ -3872,8 +3872,7 @@ int32_t g1075 = 0; // 0x51bd54
 int32_t g1076 = 0; // 0x51bd58
 int32_t g1077 = 0; // 0x51bd5c
 int32_t g1078 = 0; // 0x51bd60
-int32_t g1079 = 0; // 0x51bd64
-int32_t g1080 = 0; // 0x51bd68
+int32_t kinoko_resource2d_class_pair[2] = {0, 0}; // 0x51bd64
 int32_t g1081 = 0; // 0x51bd6c
 int32_t g1082 = 0; // 0x51bd70
 int32_t g1083 = 0; // 0x51bd74
@@ -3923,20 +3922,15 @@ int32_t g1136 = 0; // 0x51be5c
  // 0x51be64
  // 0x51be68
  // 0x51be70
-int32_t g1141 = 0; // 0x51be74
-int32_t g1142 = 0; // 0x51be78
-int32_t g1143 = 0; // 0x51be7c
-int32_t g1144 = 0; // 0x51be80
-int32_t g1145 = 0; // 0x51be84
-int32_t g1146 = 0; // 0x51be88
+int32_t kinoko_layout_set_pair[2] = {0, 0}; // 0x51be74
+int32_t kinoko_layout_get_pair[2] = {0, 0}; // 0x51be7c
+int32_t kinoko_layout_class_pair[2] = {0, 0}; // 0x51be84
 int32_t g1147 = 0; // 0x51be8c
 int32_t g1148 = 0; // 0x51be90
 int32_t g1149 = 0; // 0x51be94
 int32_t g1150 = 0; // 0x51be9c
-int32_t g1151 = 0; // 0x51bea0
-int32_t g1152 = 0; // 0x51bea4
-int32_t g1153 = 0; // 0x51bea8
-int32_t g1154 = 0; // 0x51beac
+int32_t kinoko_layer_set_pair[2] = {0, 0}; // 0x51bea0
+int32_t kinoko_layer_get_pair[2] = {0, 0}; // 0x51bea8
 
 char g1156 = 0; // 0x51beb4
 char g1157 = 0; // 0x51beb8
