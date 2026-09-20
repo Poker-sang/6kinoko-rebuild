@@ -85,7 +85,7 @@ class GraphContract(unittest.TestCase):
         self.assertEqual(len(self.selected(SAMPLE.replace('(int32_t)&g11', '0x502000'))), 4)
 
     def test_named_crt_helpers_require_explicit_opt_in(self):
-        text = SAMPLE + '\n// Address range: 0x403000 - 0x403100\nint32_t __old_helper(void);\nint32_t __old_helper(void) { return (int32_t)&g10; }\n'
+        text = SAMPLE + '\nint32_t __old_helper(void);\n// Address range: 0x403000 - 0x403100\nint32_t __old_helper(void) { return (int32_t)&g10; }\n'
         with self.assertRaisesRegex(ValueError, 'reachable'):
             self.selected(text)
         entities, edges, roots, live = graph(text, {}, include_named_functions=True)
