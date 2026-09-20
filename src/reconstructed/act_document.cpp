@@ -627,7 +627,8 @@ load_failed:
 extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t resource, void *) {
     if (!resource) return 0;
     const int32_t handle = field<int32_t>(resource + 68);
-    if (!field<uint8_t>(resource + 36) && handle) kinoko_texture_release(handle);
+    if (!kinoko_act_release_cloned_texture(resource) && !field<uint8_t>(resource + 36) && handle)
+        kinoko_texture_release(handle);
     field<int32_t>(resource + 68) = 0;
     return 1;
 }

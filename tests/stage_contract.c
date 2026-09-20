@@ -4087,6 +4087,9 @@ static int test_chip_shared_ownership(void) {
     CHECK(memcmp((void*)(intptr_t)(texture_copy+72),resource+18,25)==0);
     CHECK(memcmp((void*)(intptr_t)(target_copy+72),resource+18,25)==0);
     retdec_destroy_cact_resource(PTR(resource));
+    CHECK(retdec_call_thiscall0_result((void*)(intptr_t)texture_copy,(void*)g365.e11)==1);
+    CHECK(*(int32_t*)(intptr_t)(texture_copy+68)==0 && texture[1]==0);
+    CHECK(retdec_call_thiscall0_result((void*)(intptr_t)texture_copy,(void*)g365.e11)==1);
     retdec_destroy_cact_resource(texture_copy);
     CHECK(texture[1]==0);
     retdec_destroy_cact_resource(target_copy);

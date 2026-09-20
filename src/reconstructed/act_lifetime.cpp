@@ -206,7 +206,8 @@ void retdec_destroy_cact_resource(int32_t resource)
         std::free(pointer<void>(resource));
         return;
     }
-    kinoko_texture_release(field<int32_t>(resource + 68));
+    if (!kinoko_act_release_cloned_texture(resource))
+        kinoko_texture_release(field<int32_t>(resource + 68));
     field<int32_t>(resource + 68) = 0;
     if (field<int32_t>(resource + 60) >= 16)
         std::free(pointer<void>(field<int32_t>(resource + 40)));

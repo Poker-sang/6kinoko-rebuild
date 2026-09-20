@@ -12,6 +12,8 @@
 #include <cstring>
 #include <new>
 #include <unordered_map>
+#include <unordered_set>
+#include <mutex>
 #include <vector>
 
 extern "C" {
@@ -264,6 +266,8 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*)
 }
 
 namespace {
+std::mutex cloned_texture_mutex;
+std::unordered_set<Address> cloned_texture_owners;
 // 42F9D0/42FA50 and 446AF0/446B70/449B70 copy different resource fields.
 // The MCD control is the actual Boost counter already used by archive clones.
 int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
@@ -305,11 +309,27 @@ int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
         const auto handle=field<int32_t>(source,68);
         // The reconstructed texture store refcounts native handles. Retain
         // here so the source and clone can each execute their native cleanup.
-        if (handle && !kinoko_texture_retain(handle)) return 0;
+        if (handle) {
+            // Keep the original borrowed bit while recording the additional
+            // native-store reference, so explicit Unload also releases it.
+            {
+                std::lock_guard<std::mutex> lock(cloned_texture_mutex);
+                cloned_texture_owners.insert(result);
+            }
+            if (!kinoko_texture_retain(handle)) return 0;
+        }
         field<int32_t>(result,68)=handle;
     }
     return static_cast<int32_t>(address(owned.release()));
 }
+}
+extern "C" int32_t kinoko_act_release_cloned_texture(int32_t resource) {
+    {
+        std::lock_guard<std::mutex> lock(cloned_texture_mutex);
+        if (!cloned_texture_owners.erase(static_cast<Address>(resource))) return 0;
+    }
+    kinoko_texture_release(field<int32_t>(resource,68));
+    return 1;
 }
 extern "C" int32_t __fastcall kinoko_method_clone_chip_resource(int32_t source, void*) {
     try { return clone_resource(source,kinoko_act_host_symbols()->chip_resource_vtable,true); }
