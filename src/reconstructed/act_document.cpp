@@ -416,11 +416,20 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         retdec_trace("act:layer-extra-count-failed");
         return 0;
     }
-    /* The second layer list is empty in Logo.act.  Its object types are not
-       needed to load a 2D title layer, but reject rather than desynchronize. */
-    if (count != 0) {
-        retdec_trace_i32("act:layer-extra-count", (int32_t)count);
-        return 0;
+    // 41F800's second factory loop loads CActTimeLine, whose raw RTTI name
+    // .?AVCActTimeLine@@ hashes to 9902F2C0 with the original Boost algorithm.
+    for (index = 0; index < count; ++index) {
+        if (!retdec_act_read_u32(reader_ptr, &type) || type != 0x9902f2c0u) {
+            retdec_trace_i32("act:unsupported-timeline", (int32_t)type);
+            return 0;
+        }
+        const auto timeline = kinoko_act_new_timeline();
+        if (!timeline || !kinoko_act_load_timeline(timeline, reader_ptr, version) ||
+            !retdec_act_append_list(layer + 192, timeline)) {
+            retdec_destroy_cact_key(timeline);
+            return 0;
+        }
+        ++field<int32_t>(layer + 196);
     }
     return retdec_act_load_script(layer + 0xcc, reader_ptr);
 }

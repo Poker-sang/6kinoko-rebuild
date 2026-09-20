@@ -40,6 +40,8 @@ Schema render_target_schema = make_schema();
 // 42F2A0: chip resources serialize the base ID/name and the MCD filename.
 Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
                    {"stChipFile", {3,3,36}}};
+// 425350: CActTimeLine has two integers followed by a vector of integer pairs.
+Schema timeline_schema{{"beginTime", {0,0,4}}, {"timeLength", {0,0,8}}};
 // 42BD00 registers the 17 serialized C2DLayout members.
 Schema layout_schema{
     {"roll.x", {1,1,236}}, {"roll.y", {1,1,240}}, {"roll.z", {1,1,244}},
@@ -185,8 +187,9 @@ bool read(int32_t resource, int32_t reader, Schema& schema, bool texture) {
             if (assign) kinoko::legacy::StringView(pointer<void>(resource+property.offset)).assign(
                 text.data(), static_cast<uint32_t>(text.size()));
         } else if (type == 2) {
-            uint8_t ignored;
-            if (!transfer(reader, ignored)) return false;
+            uint8_t value;
+            if (!transfer(reader, value)) return false;
+            if (assign) field<uint8_t>(resource+property.offset) = value;
         } else {
             uint32_t bits;
             if (!transfer(reader, bits)) return false;
@@ -215,7 +218,8 @@ bool write(int32_t resource, int32_t writer, const Schema& schema) {
         if (property.type == 3) {
             const kinoko::legacy::StringView text(pointer<void>(resource+property.offset));
             if (!write_string(writer, text.data(), text.length())) return false;
-        } else if (!transfer(writer, pointer<void>(resource+property.offset), 4)) return false;
+        } else if (!transfer(writer, pointer<void>(resource+property.offset),
+                             property.type == 2 ? 1 : 4)) return false;
     }
     return true;
 }
@@ -365,4 +369,100 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
         replace_buffer(layout+296, texture_refs.data(), texture_refs.size()*4);
         return 0;
     } catch (...) { return fail; }
+}
+
+
+namespace {
+using TimelinePair = std::array<int32_t,2>;
+std::vector<TimelinePair> timeline_pairs(int32_t timeline) {
+    const auto begin=field<uint32_t>(timeline+12),end=field<uint32_t>(timeline+16);
+    if (end<begin || (end-begin)%8 || (!begin && end) || (end-begin)/8>0x10000)
+        throw std::bad_alloc();
+    if (begin==end) return {};
+    return {pointer<TimelinePair>(begin),pointer<TimelinePair>(end)};
+}
+int32_t __fastcall read_timeline(int32_t timeline,void*,int32_t holder,int32_t version) {
+    if (!timeline || !holder || version!=1) return 0;
+    try {
+        const auto reader=field<int32_t>(holder);
+        if (!read(timeline,reader,timeline_schema,false)) return 0;
+        uint32_t count=0;
+        if (!transfer(reader,count) || count>0x10000) return 0;
+        auto pairs=timeline_pairs(timeline);
+        if (count>0x10000-pairs.size()) return 0;
+        for (uint32_t i=0;i<count;++i) {
+            TimelinePair pair{};
+            if (!transfer(reader,pair[0]) || !transfer(reader,pair[1])) return 0;
+            pairs.push_back(pair);
+        }
+        // 425420 appends; preserve existing records on a repeated read. Unlike
+        // the original partial append, a truncated batch leaves the vector intact.
+        if (count) replace_buffer(timeline+12,pairs.data(),pairs.size()*sizeof(TimelinePair));
+        return 1;
+    } catch (...) { return 0; }
+}
+int32_t __fastcall write_timeline(int32_t timeline,void*,int32_t writer) {
+    if (!timeline || !writer) return 0;
+    try {
+        const auto pairs=timeline_pairs(timeline);
+        if (!write(timeline,writer,timeline_schema)) return 0;
+        auto count=static_cast<uint32_t>(pairs.size());
+        if (!transfer(writer,count)) return 0;
+        for (auto pair:pairs)
+            if (!transfer(writer,pair[0]) || !transfer(writer,pair[1])) return 0;
+        return 1;
+    } catch (...) { return 0; }
+}
+int32_t __fastcall query_timeline(int32_t timeline,void*,int32_t type,int32_t output) {
+    if (!output) return 0;
+    const bool match=type && std::strcmp(pointer<const char>(type+8),".?AVCActTimeLine@@")==0;
+    field<int32_t>(output)=match?timeline:0;
+    return match;
+}
+void clear_timeline(int32_t timeline) {
+    std::free(pointer<void>(field<int32_t>(timeline+12)));
+    std::memset(pointer<void>(timeline+12),0,12);
+}
+int32_t __fastcall delete_timeline(int32_t timeline,void*,int32_t flags) {
+    if (!timeline) return 0;
+    if (flags&2) {
+        const auto count=field<uint32_t>(timeline-4);
+        for (auto i=count;i>0;--i) clear_timeline(timeline+(i-1)*28);
+        if (flags&1) std::free(pointer<void>(timeline-4));
+        return timeline-4;
+    }
+    clear_timeline(timeline);
+    if (flags&1) std::free(pointer<void>(timeline));
+    return timeline;
+}
+int32_t __fastcall destroy_timeline(int32_t timeline,void*) {
+    return delete_timeline(timeline,nullptr,1);
+}
+int32_t __fastcall clone_timeline(int32_t timeline,void*) {
+    if (!timeline) return 0;
+    try {
+        const auto pairs=timeline_pairs(timeline);
+        kinoko::legacy::Allocation<unsigned char> owner(pointer<unsigned char>(kinoko_act_new_timeline()));
+        if (!owner) return 0;
+        const auto result=address(owner.get());
+        field<int32_t>(result+4)=field<int32_t>(timeline+4);
+        field<int32_t>(result+8)=field<int32_t>(timeline+8);
+        replace_buffer(result+12,pairs.data(),pairs.size()*sizeof(TimelinePair));
+        return address(owner.release());
+    } catch (...) { return 0; }
+}
+const void* const timeline_methods[]={
+    reinterpret_cast<const void*>(write_timeline),reinterpret_cast<const void*>(read_timeline),
+    reinterpret_cast<const void*>(query_timeline),reinterpret_cast<const void*>(destroy_timeline),
+    reinterpret_cast<const void*>(delete_timeline),reinterpret_cast<const void*>(clone_timeline)
+};
+}
+extern "C" const void* kinoko_act_timeline_vtable(void) { return timeline_methods; }
+extern "C" int32_t kinoko_act_new_timeline(void) {
+    const auto result=address(std::calloc(1,28));
+    if (result) field<int32_t>(result)=address(timeline_methods);
+    return result;
+}
+extern "C" int32_t kinoko_act_load_timeline(int32_t timeline,int32_t reader,int32_t version) {
+    return read_timeline(timeline,nullptr,address(&reader),version);
 }

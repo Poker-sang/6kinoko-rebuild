@@ -102,6 +102,13 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
 
 void retdec_destroy_cact_key(int32_t value) {
     if (value != 0) {
+        // The layer's second list owns CActTimeLine (28 bytes), not CActKey.
+        // Its beginTime at +4 must never be treated as a layout pointer.
+        if (field<int32_t>(value) == address(kinoko_act_timeline_vtable())) {
+            std::free(pointer<void>(field<int32_t>(value + 12)));
+            std::free(pointer<void>(value));
+            return;
+        }
         int32_t layout = field<int32_t>(value + 4);
         if (layout != 0) {
             if (field<int32_t>(layout) ==

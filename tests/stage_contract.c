@@ -4664,7 +4664,41 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         retdec_string_assign_cstr((int32_t*)(intptr_t)(source+268),"a long original script filename.nut");
         const int32_t head=*(int32_t*)(intptr_t)(source+180);
         const int32_t source_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
-        const int32_t event=retdec_call_thiscall0_result((void*)(intptr_t)source_key,(void*)g277.e5);
+        const int32_t event=kinoko_act_new_timeline();
+        CHECK(event);
+        int32_t* timeline=(int32_t*)(intptr_t)event;
+        timeline[1]=17; timeline[2]=51;
+        int32_t* timeline_pairs=(int32_t*)malloc(16); CHECK(timeline_pairs);
+        timeline_pairs[0]=3; timeline_pairs[1]=11;
+        timeline_pairs[2]=29; timeline_pairs[3]=47;
+        timeline[3]=PTR(timeline_pairs); timeline[4]=timeline[5]=PTR(timeline_pairs+4);
+        {
+            int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+            struct script_io_stream stream={0}; stream.vtable=methods;
+            const int32_t loaded=kinoko_act_new_timeline(); CHECK(loaded);
+            int32_t* restored=(int32_t*)(intptr_t)loaded;
+            const unsigned char saved=g673;
+            const int32_t* vtable=(const int32_t*)kinoko_act_timeline_vtable();
+            for(int compact=0;compact<2;++compact) {
+                g673=(unsigned char)compact;
+                stream.position=stream.size=0; stream.reading=0;
+                CHECK(retdec_call_thiscall1_result(timeline,(void*)(intptr_t)vtable[0],PTR(&stream))==1);
+                CHECK(stream.size==(compact?29:68));
+                CHECK(stream.bytes[0]==!compact);
+                stream.position=0; stream.reading=1;
+                CHECK(kinoko_act_load_timeline(loaded,PTR(&stream),1)==1);
+                CHECK(stream.position==stream.size && restored[1]==17 && restored[2]==51);
+                CHECK(restored[4]-restored[3]==16*(compact+1));
+                CHECK(memcmp((void*)(intptr_t)(restored[3]+16*compact),timeline_pairs,16)==0);
+            }
+            const int32_t before=restored[3];
+            stream.position=0; --stream.size;
+            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),1));
+            CHECK(restored[3]==before && restored[4]-restored[3]==32);
+            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),2));
+            g673=saved;
+            retdec_destroy_cact_key(loaded);
+        }
         CHECK(event && retdec_act_append_list(source+192,event));
         *(int32_t*)(intptr_t)(source+196)=1;
         for(int compiled=0;compiled<2;++compiled) {
@@ -4684,11 +4718,19 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                 const int offset=list?192:180;
                 const int32_t copy_head=*(int32_t*)(intptr_t)(copy+offset);
                 const int32_t copy_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)copy_head+8);
-                const int32_t layout=*(int32_t*)(intptr_t)(copy_key+4);
                 CHECK(copy_key!=source_key && copy_key!=event && *(int32_t*)(intptr_t)(copy+offset+4)==1);
-                CHECK(*(int32_t*)(intptr_t)(layout+304)==(list?source:copy));
-                CHECK(*(uint32_t*)(intptr_t)(copy_key+24)==*(uint32_t*)(intptr_t)(source_key+24));
-                CHECK(retdec_std_string_data(copy_key+8)!=retdec_std_string_data(source_key+8));
+                if(list) {
+                    const int32_t* cloned_timeline=(int32_t*)(intptr_t)copy_key;
+                    CHECK(cloned_timeline[0]==PTR(kinoko_act_timeline_vtable()));
+                    CHECK(cloned_timeline[1]==17 && cloned_timeline[2]==51);
+                    CHECK(cloned_timeline[3]!=timeline[3] && cloned_timeline[4]-cloned_timeline[3]==16);
+                    CHECK(memcmp((void*)(intptr_t)cloned_timeline[3],timeline_pairs,16)==0);
+                } else {
+                    const int32_t layout=*(int32_t*)(intptr_t)(copy_key+4);
+                    CHECK(*(int32_t*)(intptr_t)(layout+304)==copy);
+                    CHECK(*(uint32_t*)(intptr_t)(copy_key+24)==*(uint32_t*)(intptr_t)(source_key+24));
+                    CHECK(retdec_std_string_data(copy_key+8)!=retdec_std_string_data(source_key+8));
+                }
             }
             retdec_destroy_cact_layer(copy); free((void*)(intptr_t)copy);
         }

@@ -155,6 +155,11 @@ private:
         return result;
     }
     Address key(Address source) {
+        if (field<Address>(source)==address(kinoko_act_timeline_vtable())) {
+            const auto result=copy(source,28);
+            clone_vector(result,source,12);
+            return result;
+        }
         const auto result=copy(source,36);
         string(result,source,8);
         if(field<Address>(source,4)) field<Address>(result,4)=layout(field<Address>(source,4));
