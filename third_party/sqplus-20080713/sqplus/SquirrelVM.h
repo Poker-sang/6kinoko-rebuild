@@ -147,7 +147,9 @@ public:
     static void PushRootTable(void);
     
     // Create/bind a function on the table currently on the stack.
-    static SquirrelObject CreateFunction(SQFUNCTION func,const SQChar * scriptFuncName,const SQChar * typeMask=0);
+    typedef void (*FactoryCapture)(SquirrelObject &result, void *context);
+    static SquirrelObject CreateFunction(SQFUNCTION func,const SQChar * scriptFuncName,const SQChar * typeMask=0,
+                                        FactoryCapture capture=0, void *context=0);
     // Create/bind a function on the table so. typeMask: standard Squirrel types plus: no typemask means no args, "*" means any type of args.
     static SquirrelObject CreateFunction(SquirrelObject & so,SQFUNCTION func,const SQChar * scriptFuncName,const SQChar * typeMask=0);
     // Create/bind a function to the root table. typeMask: standard Squirrel types plus: no typemask means no args, "*" means any type of args.

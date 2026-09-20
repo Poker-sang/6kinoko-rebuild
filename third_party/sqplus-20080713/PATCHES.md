@@ -69,3 +69,23 @@ than read an indeterminate pointer. The host catches source factory failures,
 restores the entry stack height (the source error constructor pushes an error),
 and preserves the VM last error and the recovered null-wrapper result. The
 successful factory's external reference transfers directly into the host record.
+
+## Native instance, hierarchy and named-function factories
+
+`SquirrelBindingsUtils.cpp` is now compiled for the host. The standalone VM Init
+and unrelated standalone registration entries remain excluded. Its original
+CreateNativeClassInstance algorithm receives the existing host void-type identity
+explicitly instead of manufacturing a second registry identity. PopulateAncestry
+shares its original body via PopulateAncestryWithType; normal source callers
+still obtain the identity from ClassType<T>. The same reference factoring lets
+the host transfer a consumed class argument to setupClassHierarchyBody, without
+copying hierarchy construction into a separate host algorithm.
+
+CreateFunction accepts an optional capture hook immediately after
+AttachToStackObject. The default source API is unchanged. Production transfers
+the external reference into its output record there, before the source publishes
+the slot (a _newslot callback may inspect that output). The source owns typemask
+formatting/checking and publication. Its SquirrelError now replaces the former
+hand-written oversized-mask fallback: original 4A940F/4A9421 also throws on a
+negative _snprintf result. At the C boundary, failure releases the captured
+reference, restores the stack, returns failure and retains the source error text.

@@ -46,23 +46,17 @@ extern "C" int32_t function_4a9250(int32_t output, int32_t text) {
 extern "C" int32_t function_4a9370(int32_t output, int32_t native,
                                     int32_t name, int32_t mask_address) {
     auto* vm = current_vm();
-    sq_pushstring(vm, pointer<const char>(name), -1);
-    const auto closure = upstream::sqplus_new_closure(vm, reinterpret_cast<SQFUNCTION>(pointer(native)));
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    result.write(closure); // Transfer before publication: _newslot may observe output.
-    sq_pushobject(vm, closure);
-    const auto* mask = pointer<const char>(mask_address);
-    if (!mask || mask[0] != '*') {
-        // The recovered overflow branch falls back to the receiver-only mask
-        // after its no-op exception stub. Preserve that behavior without
-        // writing through invented stack-frame temporaries or a truncated C
-        // string. All in-game masks fit the original 64-byte buffer.
-        const std::string complete = std::string("t|y|x") + (mask ? mask : "");
-        sq_setparamscheck(vm, SQ_MATCHTYPEMASKSTRING,
-            complete.size() < 64 ? complete.c_str() : "t|y|x");
+    const bool bound = upstream::sqplus_bind_function(vm,
+        reinterpret_cast<SQFUNCTION>(pointer(native)), pointer<const char>(name),
+        pointer<const char>(mask_address), [](void* storage, HSQOBJECT value) {
+            ObjectView(storage).write(value);
+        }, pointer(output));
+    if (!bound) {
+        result.release(vm); result.reset();
+        return 0;
     }
-    sq_newslot(vm, -3, SQFalse);
     return output;
 }
 
@@ -70,9 +64,9 @@ extern "C" int32_t function_4a9490(int32_t* output, int32_t object,
                                     int32_t native, char* name, char* mask) {
     auto* vm = current_vm();
     ObjectView(object).push(vm);
-    function_4a9370(address(output), native, address(name), address(mask));
+    const auto result = function_4a9370(address(output), native, address(name), address(mask));
     sq_pop(vm, 1);
-    return address(output);
+    return result;
 }
 
 extern "C" int32_t function_4aa540(int32_t vm_address, int32_t output,
@@ -101,33 +95,10 @@ extern "C" int32_t function_45f4f0(int32_t object) {
 }
 
 extern "C" int32_t function_45f640(int32_t* root_object) {
-    auto* vm = current_vm();
     const ObjectView root(root_object);
-    if (!has_slot(vm, root, "__ot")) {
-        Object mapping(vm);
-        new_table(vm, mapping.view());
-        raw_store(vm, root, "__ot", mapping.view());
-    }
-    {
-        Object ancestors(vm);
-        if (has_slot(vm, root, "__ca")) {
-            get_slot(vm, root, "__ca", ancestors.view());
-        } else {
-            StackTop stack(vm);
-            sq_newarray(vm, 0);
-            ancestors.view().capture(vm, -1);
-            raw_store(vm, root, "__ca", ancestors.view());
-        }
-        // Inherited __ca is intentionally reused, not cloned. This ordering
-        // drives the existing native instance mapping in native_instance.cpp.
-        if (ancestors.view().value()._type == OT_ARRAY) {
-            StackTop stack(vm);
-            ancestors.view().push(vm); root.push(vm);
-            sq_arrayappend(vm, -2);
-        }
-    }
-    // This function consumes its by-value SquirrelObject argument.
-    root.release(vm); root.reset();
+    const auto value = root.value();
+    root.reset(); // transfer this by-value argument's owned reference
+    upstream::sqplus_setup_hierarchy(current_vm(), value);
     return root.payload_address();
 }
 

@@ -13,14 +13,18 @@
   },
   "sqplus/SquirrelVM.h": {
     "original_sha256": "00b3e88ae1cd2c328b7424464fc297803411b8cf2a5c4f1e9cc6d6f8098bd32b",
-    "adapted_sha256": "95f88ce54f55bb874ffb4b22c6f122d3b6ea48325c8cb2a417210bfd71b1161c"
+    "adapted_sha256": "404609550ffc8af501b1176e0408e2f903444b36c5776ca91f231b810aaf8e0c"
   },
   "sqplus/sqplus.h": {
     "original_sha256": "c284abe781250b47ce21b466c4211b60c21d3d90923b7a944ff8cd4b565aae05",
-    "adapted_sha256": "007cbfbe9e5c6ad9faa936c6a9cfb49443eee0a4d0ee239a6e922af3f5e214b5"
+    "adapted_sha256": "a7c7bdaaa163cfce52b3878c42cfa2b47a4dd347ac682a350afe52cdb3787bb4"
   },
   "sqplus/SquirrelVM.cpp": {
     "original_sha256": "28cefe7dd5c421bd1c298c16b8d6ee3954c0016e52dafc010634b99fced38163",
-    "adapted_sha256": "9b011df2d9e83134e0903eeeaed2049e588c68230e88a42a01cc0634c568984e"
+    "adapted_sha256": "c8b3feb6848e42ba4b0894375861839a8d8a61e85adc637341dac180ad241e35"
+  },
+  "sqplus/SquirrelBindingsUtils.cpp": {
+    "original_sha256": "eacbc90f97e59a751ccadfa548193dfa8a5627366d1dc91dfcff0b32ddae2dd0",
+    "adapted_sha256": "28df286c2d0234901ea53a4adfedc7e0890c3bd63d9ed882c473ecd62053d3a0"
   }
 }

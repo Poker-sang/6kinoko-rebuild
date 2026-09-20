@@ -72,6 +72,33 @@ std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept {
     SqPlus::getVarNameTag(key.data(), static_cast<INT>(key.size()), name ? name : "");
     return key;
 }
+bool sqplus_bind_function(HSQUIRRELVM vm, SQFUNCTION function, const SQChar* name,
+                           const SQChar* mask, void (*capture)(void*, HSQOBJECT), void* context) {
+    VmScope scope(vm);
+    const auto top = sq_gettop(vm);
+    struct Publication { void (*capture)(void*, HSQOBJECT); void* context; } state{capture, context};
+    try {
+        auto result = SquirrelVM::CreateFunction(function, name, mask,
+            [](SquirrelObject& object, void* context) {
+                auto& state = *static_cast<Publication*>(context);
+                state.capture(state.context, take(object));
+            }, &state);
+        return true;
+    } catch (const SquirrelError& error) {
+        sq_settop(vm, top);
+        sq_throwerror(vm, error.desc);
+        return false;
+    }
+}
+void sqplus_setup_hierarchy(HSQUIRRELVM vm, HSQOBJECT owned_class) {
+    VmScope context(vm); Adopted klass(owned_class);
+    SqPlus::setupClassHierarchyBody(klass);
+}
+bool sqplus_native_instance(HSQUIRRELVM vm, const SQChar* name, SQUserPointer native,
+                            SQRELEASEHOOK hook, SQUserPointer native_type) {
+    VmScope context(vm);
+    return CreateNativeClassInstanceForHost(vm, name, native, hook, native_type) != 0;
+}
 bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output) {
     VmScope context(vm); Borrowed source(klass);
     const auto top = sq_gettop(vm);

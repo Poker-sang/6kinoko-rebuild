@@ -8,6 +8,7 @@ add_library(kinoko_upstream_bindings STATIC
     "${KINOKO_BINDING_ROOT}/src/squirrel/upstream_sqrat.cpp"
     "${KINOKO_SQPLUS_DIR}/SquirrelObject.cpp"
     "${KINOKO_SQPLUS_DIR}/SquirrelVM.cpp"
+    "${KINOKO_SQPLUS_DIR}/SquirrelBindingsUtils.cpp"
     "${KINOKO_SQPLUS_DIR}/SqPlus.cpp")
 target_include_directories(kinoko_upstream_bindings PUBLIC "${KINOKO_BINDING_ROOT}/include"
     "${KINOKO_SQUIRREL2_ROOT}/include" PRIVATE

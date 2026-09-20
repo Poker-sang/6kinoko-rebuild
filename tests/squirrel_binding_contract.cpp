@@ -178,10 +178,14 @@ void class_contract(HSQUIRRELVM vm) {
     { StackTop call(vm); typed.view().push(vm); table.view().push(vm); sq_pushfloat(vm, 7);
       require(SQ_FAILED(kinoko_sq_call(address(vm), 2, 0, 0)), "typed closure rejects float"); }
     const std::string longmask(100, 'i');
-    function_4a9490(pointer<int32_t>(overflow.location()), table.location(), address(reinterpret_cast<void*>(&noop)),
-        const_cast<char*>("overflow"), const_cast<char*>(longmask.c_str()));
-    overflow.view().push(vm); table.view().push(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 0, 0)), "oversized mask preserves receiver-only fallback"); sq_pop(vm, 1);
+    require(function_4a9490(pointer<int32_t>(overflow.location()), table.location(),
+        address(reinterpret_cast<void*>(&noop)), const_cast<char*>("overflow"),
+        const_cast<char*>(longmask.c_str())) == 0, "source rejects oversized parameter mask");
+    require(overflow.view().value()._type == OT_NULL, "failed registration releases captured closure");
+    sq_getlasterror(vm);
+    require(text(vm) == "CreateFunction: typeMask string too long.", "original SquirrelError text preserved");
+    sq_pop(vm, 1);
+    require(!has_slot(vm, table.view(), "overflow"), "failed function is not published");
     Object string(vm);
     require(function_4a9250(string.location(), address("bound string")) == string.location(), "string object return");
     string.view().push(vm); require(text(vm) == "bound string", "string object value"); sq_pop(vm, 1);

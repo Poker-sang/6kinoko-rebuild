@@ -14,6 +14,11 @@ SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
+bool sqplus_bind_function(HSQUIRRELVM vm, SQFUNCTION function, const SQChar* name,
+                           const SQChar* mask, void (*capture)(void*, HSQOBJECT), void* context);
+void sqplus_setup_hierarchy(HSQUIRRELVM vm, HSQOBJECT owned_class);
+bool sqplus_native_instance(HSQUIRRELVM vm, const SQChar* name, SQUserPointer native,
+                            SQRELEASEHOOK hook, SQUserPointer native_type);
 bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output);
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
 HSQOBJECT sqplus_new_array(HSQUIRRELVM vm, int size);

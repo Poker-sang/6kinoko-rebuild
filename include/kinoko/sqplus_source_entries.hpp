@@ -12,3 +12,7 @@ using ScalarCommit = void (*)(void*) noexcept;
 int WriteScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value,
                        ScalarCommit commit, void* context);
 }
+
+int CreateNativeClassInstanceForHost(HSQUIRRELVM vm, const SQChar* name,
+                                     SQUserPointer native, SQRELEASEHOOK hook,
+                                     SQUserPointer native_type);

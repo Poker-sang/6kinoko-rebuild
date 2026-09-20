@@ -460,11 +460,13 @@ void SquirrelVM::PushRootTable(void) {
 
 // Creates a function in the table or class currently on the stack.
 //void CreateFunction(HSQUIRRELVM v,const SQChar * scriptFuncName,SQFUNCTION func,int numParams=0,const SQChar * typeMask=0) {
-SquirrelObject SquirrelVM::CreateFunction(SQFUNCTION func,const SQChar * scriptFuncName,const SQChar * typeMask) {
+SquirrelObject SquirrelVM::CreateFunction(SQFUNCTION func,const SQChar * scriptFuncName,const SQChar * typeMask,
+                                         FactoryCapture capture, void *context) {
   sq_pushstring(_VM,scriptFuncName,-1);
   sq_newclosure(_VM,func,0);
   SquirrelObject ret;
   ret.AttachToStackObject(-1);
+  if (capture) capture(ret, context); // host output is visible before publication
   SQChar tm[64];
   SQChar * ptm = tm;
   int numParams = SQ_MATCHTYPEMASKSTRING;

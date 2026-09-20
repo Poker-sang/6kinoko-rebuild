@@ -1897,15 +1897,14 @@ struct ReleaseClassPtr {
 BOOL CreateClass(HSQUIRRELVM v,SquirrelObject & newClass,SQUserPointer classType,const SQChar * name,const SQChar * baseName=0);
 
 
-template<typename T>
-inline void PopulateAncestry(HSQUIRRELVM v,
+inline void PopulateAncestryWithType(HSQUIRRELVM v,
                              SquirrelObject &instance,
-                             T *newClass)
+                             SQUserPointer newClass, SQUserPointer nativeType)
 {
   // 11/2/05: Create a new table for this instance.
   SquirrelObject newObjectTable = SquirrelVM::CreateTable();
   // <TODO> 64-bit compatible version.
-  newObjectTable.SetUserPointer(INT((size_t)ClassType<T>::type()), newClass);
+  newObjectTable.SetUserPointer(INT((size_t)nativeType), newClass);
   instance.SetValue(SQ_CLASS_OBJECT_TABLE_NAME, newObjectTable);
 
   SquirrelObject classHierArray = instance.GetValue(SQ_CLASS_HIER_ARRAY);
@@ -1926,6 +1925,12 @@ inline void PopulateAncestry(HSQUIRRELVM v,
   }
 }
 
+
+// Shared source body accepts the host's recovered type identity explicitly.
+template<typename T>
+inline void PopulateAncestry(HSQUIRRELVM v, SquirrelObject &instance, T *newClass) {
+  PopulateAncestryWithType(v, instance, newClass, ClassType<T>::type());
+}
 
 // Call PostConstruct() at the end of custom constructors.
 template<typename T>
@@ -1967,7 +1972,7 @@ int sq_typeof(HSQUIRRELVM v) {
 # endif
 
 // === Helper for RegisterClassType*() ===
-inline void setupClassHierarchy(SquirrelObject newClass) {
+inline void setupClassHierarchyBody(SquirrelObject &newClass) {
   // <NOTE> New member vars cannot be added to instances (OT_INSTANCE): additions must occur on the defining class (OT_CLASS), before any instances are instantiated.
   if (!newClass.Exists(SQ_CLASS_OBJECT_TABLE_NAME)) { // Will always get table from most-derived registered class.
     SquirrelObject objectTable = SquirrelVM::CreateTable();
@@ -1982,6 +1987,9 @@ inline void setupClassHierarchy(SquirrelObject newClass) {
     classHierArray = newClass.GetValue(SQ_CLASS_HIER_ARRAY);
   } // if
   classHierArray.ArrayAppend(newClass);          // Add the class to the hierarchy array. The array values will be released and replaced with UserData to free created ancestor classes.
+} // setupClassHierarchyBody
+inline void setupClassHierarchy(SquirrelObject newClass) {
+  setupClassHierarchyBody(newClass);
 } // setupClassHierarchy
 
 

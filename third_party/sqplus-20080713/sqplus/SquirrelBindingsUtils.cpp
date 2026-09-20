@@ -1,5 +1,7 @@
 #include "sqplus.h"
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
+
 BOOL CreateStaticNamespace(HSQUIRRELVM v,ScriptNamespaceDecl *sn)
 {
 	int n = 0;
@@ -92,14 +94,24 @@ BOOL CreateClass(HSQUIRRELVM v,SquirrelClassDecl *cd)
 	return TRUE;
 }
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+BOOL CreateNativeClassInstanceForHost(HSQUIRRELVM v, const SQChar *classname,
+                                     SQUserPointer ud, SQRELEASEHOOK hook,
+                                     SQUserPointer nativeType)
+#else
 BOOL CreateNativeClassInstance(HSQUIRRELVM v,
                                const SQChar *classname,
                                SQUserPointer ud,
                                SQRELEASEHOOK hook)
+#endif
 {
   // If we don't do this, SquirrelVM keeps an old pointer around and this 
   // will be used by SquirrelObject. That crashes when using several VMs.
+#ifndef SQPLUS_HOST_OBJECT_ONLY
   SquirrelVM::Init( v );
+#endif
   
   int oldtop = sq_gettop(v);
   sq_pushroottable(v);
@@ -118,7 +130,11 @@ BOOL CreateNativeClassInstance(HSQUIRRELVM v,
   HSQOBJECT ho;
   sq_getstackobj(v, -1, &ho); // OT_INSTANCE
   SquirrelObject instance(ho);
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+  SqPlus::PopulateAncestryWithType(v, instance, ud, nativeType);
+#else
   SqPlus::PopulateAncestry(v, instance, ud);
+#endif
 #endif
     
   sq_remove(v,-3); //removes the root table
@@ -133,6 +149,7 @@ BOOL CreateNativeClassInstance(HSQUIRRELVM v,
 
 
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 // Create native class instance and leave on stack.
 BOOL CreateConstructNativeClassInstance(HSQUIRRELVM v,const SQChar * className) {
   int oldtop = sq_gettop(v);
@@ -159,3 +176,5 @@ BOOL CreateConstructNativeClassInstance(HSQUIRRELVM v,const SQChar * className) 
 } // CreateConstructNativeClassInstance
 
 
+
+#endif // !SQPLUS_HOST_OBJECT_ONLY
