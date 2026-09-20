@@ -48,9 +48,18 @@ This is a source-graph boundary proof, not proof for arbitrary computed pointers
 - 8c54ad6: r2 diagnostic/quiet builds, 52/52 CTests each.
 - 56417b8: r3 diagnostic/quiet builds, 52/52 CTests each; Sqrat virtual ABI cases.
 - f19c0ac: r4 diagnostic/quiet builds, 52/52 CTests each; retired audio identities.
-- The subsequent removal/source-factory batch receives independent r5 build and
-  runtime directories, with source-commit.txt before testing. Results are recorded
-  separately after execution. Earlier gameplay approval does not validate r5.
+- 4a7b21efdb84c5975a62e9a499fabecf4c1f6422: independent r5 diagnostic/quiet
+  builds, 52/52 CTests each. DAT copied and SHA256-verified beside each EXE;
+  run_staged reports WORKING_DIRECTORY unset and EXIT_CODE 0 for both. The
+  assistant observed first-level frames with airborne actors and monsters in
+  both variants. User operated the game and separately confirmed both normal;
+  injected jump/close actions were blocked by concurrent user input, so they
+  are not claimed as successful automated actions. Quiet produced no trace.
+  All artifacts remain under their original build-runs/runtime-builds paths.
+  Hash index: [r5 artifacts](source-replacement-artifacts-20260920.json).
+- Following the user's updated instruction, future local and Windows CI
+  verification uses the quiet variant only. r5's already-generated diagnostic
+  artifacts remain retained; this does not require another dual run.
 
 Remaining game-specific Sqrat/SqPlus registration, native descriptors, legacy
 Boost blocks and CRT exception/RTTI compatibility are separate migration work;

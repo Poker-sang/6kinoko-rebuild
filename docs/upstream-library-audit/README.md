@@ -5,6 +5,10 @@ This is the active PR #7 audit, based on master
 not a current inventory. Original `src/decompiled/6kinoko.exe.c` is unchanged.
 Vendoring a header is not counted as replacing an executing implementation.
 
+The latest continuation is [actual source replacement and old-body removal](source-replacement-20260920.md):
+source callback/instance factories, three Sqrat virtuals and a 33-function retired
+audio island. Future verification defaults to quiet only per the user's update.
+
 ## Implementations actually used by production
 
 | Component | Source and live use | Not implied |
