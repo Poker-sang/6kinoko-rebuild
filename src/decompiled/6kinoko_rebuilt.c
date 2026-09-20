@@ -1,3 +1,4 @@
+#include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_layer_access.h"
@@ -6831,7 +6832,7 @@ int32_t function_405990(void) {
     // 0x405990
     int32_t v1; // 0x405990
     int32_t v2 = v1;
-    return function_407210(v2, *(int32_t *)(v2 + 16) + v2);
+    return kinoko_boost_hash_range(v2, *(int32_t *)(v2 + 16) + v2);
 }
 
 // Address range: 0x4059c0 - 0x405a4e
@@ -13669,7 +13670,7 @@ int32_t function_41f990(int32_t a1) {
         int32_t v25 = v19 - 12; // 0x41fa60
         int32_t * v26 = (int32_t *)v25; // 0x41fa60
         *v26 = v22;
-        v16 = function_407210((int32_t)&g1224, (int32_t)&g1224);
+        v16 = kinoko_boost_hash_range((int32_t)&g1224, (int32_t)&g1224);
         if (v7 >= 16) {
             // 0x41fa72
             *v24 = v15;
@@ -13710,7 +13711,7 @@ int32_t function_41f990(int32_t a1) {
             v25 = v19 - 12;
             v26 = (int32_t *)v25;
             *v26 = v22;
-            v16 = function_407210((int32_t)&g1224, (int32_t)&g1224);
+            v16 = kinoko_boost_hash_range((int32_t)&g1224, (int32_t)&g1224);
             if (v7 >= 16) {
                 // 0x41fa72
                 *v24 = v15;
@@ -16613,7 +16614,7 @@ int32_t function_428720(int32_t a1) {
     int32_t v60 = v24 - 12; // 0x428853
     int32_t * v61 = (int32_t *)v60; // 0x428853
     *v61 = v57;
-    v26 = function_407210((int32_t)&g1224, (int32_t)&g1224);
+    v26 = kinoko_boost_hash_range((int32_t)&g1224, (int32_t)&g1224);
     if (v7 >= 16) {
         // 0x428865
         *v59 = v39;

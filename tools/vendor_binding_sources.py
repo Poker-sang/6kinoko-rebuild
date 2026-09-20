@@ -14,6 +14,7 @@ import re
 import tarfile
 import urllib.request
 import zipfile
+from verify_upstream import _matches
 
 RELEASES = {
     'sqrat-0.8.1': ('sqrat_0.8.1.zip',
@@ -52,11 +53,12 @@ def select(name: str, files: dict[str, bytes]) -> set[str]:
         return {p for p in files if (p.startswith('sqplus/') and p.endswith(('.h', '.cpp', '.txt')))
                 or p == 'COPYRIGHT'}
     # Configuration uses computed #include names. Retain that small family;
-    # other includes are resolved transitively from the two used backends.
+    # other includes are resolved transitively from the used counter/hash APIs.
     chosen = {p for p in files if p.startswith('boost/config/') and p.endswith('.hpp')}
     chosen |= {'boost/config.hpp', 'boost/version.hpp', 'LICENSE_1_0.txt',
                'boost/smart_ptr/detail/sp_counted_base_w32.hpp',
-               'boost/smart_ptr/detail/sp_counted_base_pt.hpp'}
+               'boost/smart_ptr/detail/sp_counted_base_pt.hpp',
+               'boost/functional/hash.hpp'}
     pending = list(chosen)
     while pending:
         path = pending.pop()
@@ -71,9 +73,13 @@ def select(name: str, files: dict[str, bytes]) -> set[str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archives', type=Path)
+    parser.add_argument('--only', choices=tuple(RELEASES), action='append',
+                        help='Refresh only the selected hash-pinned releases')
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
     args = parser.parse_args()
     for name, (filename, url, digest) in RELEASES.items():
+        if args.only and name not in args.only:
+            continue
         data = (args.archives / filename).read_bytes() if args.archives else urllib.request.urlopen(url, timeout=120).read()
         if sha(data) != digest:
             raise RuntimeError('Release archive hash mismatch: ' + name)
@@ -89,7 +95,7 @@ def main() -> None:
             destination = output / path
             payload = files[path]
             destination.parent.mkdir(parents=True, exist_ok=True)
-            if destination.exists() and destination.read_bytes() != payload:
+            if destination.exists() and not _matches(destination.read_bytes(), sha(payload)):
                 raise RuntimeError('Refusing to overwrite local edits: ' + str(destination))
             destination.write_bytes(payload)
             manifest[path] = sha(payload)

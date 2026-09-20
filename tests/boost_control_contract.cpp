@@ -1,4 +1,5 @@
 #include "kinoko/boost_control.hpp"
+#include "kinoko/boost_hash.h"
 #if defined(_WIN32)
 #include <boost/smart_ptr/detail/sp_counted_base_w32.hpp>
 #else
@@ -103,6 +104,19 @@ void race(bool final_release) {
 }
 int main() {
     try {
+#if defined(_WIN32)
+        const char layout[]=".?AVC2DLayout@@", timeline[]=".?AVCActTimeLine@@";
+        const char binary[]={static_cast<char>(0x80),0,static_cast<char>(0xff)};
+        auto hash=[](const char* bytes,size_t size) {
+            return static_cast<uint32_t>(kinoko_boost_hash_range(
+                static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes)),
+                static_cast<int32_t>(reinterpret_cast<uintptr_t>(bytes+size))));
+        };
+        require(hash(layout,sizeof(layout)-1)==0x655cd5b0u,"original C2DLayout serialized type ID");
+        require(hash(timeline,sizeof(timeline)-1)==0x9902f2c0u,"original CActTimeLine serialized type ID");
+        require(hash(binary,sizeof(binary))==0xfb404e69u,"signed char hashing includes embedded zero");
+        require(hash(binary,0)==0,"empty Boost iterator range");
+#endif
         owner_slot(); resource_owner(); race(false); race(true);
         std::puts("Boost 1.44 counted-base: slot ownership and 262144 contended weak locks passed");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }

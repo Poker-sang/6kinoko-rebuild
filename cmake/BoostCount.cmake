@@ -1,5 +1,8 @@
 set(KINOKO_BOOST_ROOT "${CMAKE_CURRENT_LIST_DIR}/../third_party/boost-1.44.0")
 add_library(kinoko_boost_count STATIC "${CMAKE_CURRENT_LIST_DIR}/../src/reconstructed/boost_control.cpp")
+if(WIN32)
+    target_sources(kinoko_boost_count PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/reconstructed/boost_hash.cpp")
+endif()
 target_include_directories(kinoko_boost_count PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../include")
 target_include_directories(kinoko_boost_count PRIVATE "${KINOKO_BOOST_ROOT}")
 if(NOT WIN32)
