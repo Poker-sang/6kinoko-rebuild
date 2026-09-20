@@ -1858,6 +1858,52 @@
           "sha256": "6a737504cbcfd391d14d3ea4fac015d80c421ea581ab68b47374ece0c7c5fdb9"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r57-quiet",
+      "source_commit": "a877ff718689fe0b513debcf9ab28552164bf507",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "144efa7d2a5c4bc2f43bd9314a4d896f2a90cae29c560ae5990ac79193c8be4d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/configure.log",
+          "size": 956,
+          "sha256": "bc28766a87b0e56957c7c7c67e6ba898b48e4b25d01596cfc61138fef5ad4398"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/build.log",
+          "size": 1244502,
+          "sha256": "6eaf817b2d643efc7dacf4ac98534e18f32c38a96a5a95f35437951a681464bb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/ctest.log",
+          "size": 6663,
+          "sha256": "263dc8ed3d036bd9d2ab55337b5c67990a5394be3fa7ce9bbedd848a39acbf3c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/kinoko.map",
+          "size": 932400,
+          "sha256": "fef33886b556ca49b5e8ac8a93d4ed2adfaf5d67983a7c0faa6751e0db129b57"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/stage-contract.map",
+          "size": 1150591,
+          "sha256": "255ab67b33ad4224f78dbe10e4812e0b1d77046aba443f7e1bc78bd291427013"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e099b3293d553c57814e57b31e43627ddf748b3dd0ea86be1bd85d64eef5cb24"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r57-quiet/kinoko_retdec_rebuild.exe",
+          "size": 857600,
+          "sha256": "57470a111d10fc96bfdf92f15786396eadad9f418b6e7bfa8e9a6c043cc08b94"
+        }
+      ]
     }
   ]
 }

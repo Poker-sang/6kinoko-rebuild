@@ -287,3 +287,17 @@ build and failed artifact from earlier batches remains available. Historical
 source hashes and migration boundaries passed after r56. The overall migration
 is still incomplete: remaining legacy paths are not declared replaced merely
 because these batches pass.
+
+## r57 and incoming PR updates
+
+- r57 (a877ff7, including 0824d7e): C3DLayout reads use native schema ownership.
+  Original trans/roll field aliasing is retained; the contract tests cover it.
+  Removed the obsolete copy ABI shim and its spy-only test, the retired 3D
+  schema (396 lines) and chip ownership factory (20 lines). Passed 53/53;
+  the reduced test count reflects removal of the obsolete shim test.
+  DAT files staged and verified. No gameplay validation claimed for r57.
+- Merged incoming PR #7 commits through 374e709 without conflicts. These add
+  guarded migration checkpoint automation and preserve source snapshots and
+  baseline whitespace diagnostics. Both local migration commits are retained.
+- Historical provenance (199 members) and migration boundaries (440 source/header
+  files) passed after this merge. The operand-selection heuristic remains pending.
