@@ -4212,6 +4212,39 @@ static int test_map_registration(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_chip_resource_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t resource[17] = {0};
+    struct retdec_mcd_chip chip = {0};
+    struct retdec_mcd_data data = {0};
+    chip.chip_id = 7;
+    data.chip_count = 1; data.chips = &chip;
+    resource[16] = PTR(&data);
+    CHECK(function_42f350(0) == (int32_t)E_INVALIDARG);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g313.e6, vm) == 0);
+    CHECK(function_42f350(vm) == 0);
+    sq_pushroottable(kinoko_vm(vm));
+    sq_pushstring(kinoko_vm(vm), "testChipResource", -1);
+    sq_pushstring(kinoko_vm(vm), "CActResourceChip", -1);
+    CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+    CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+    CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, resource)));
+    sq_remove(kinoko_vm(vm), -2);
+    CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+    sq_settop(kinoko_vm(vm), top);
+    CHECK(execute_source(vm, root+2,
+        "local info=testChipResource.GetChipInfo(7);\n"
+        "info.flag0=6; info.flag1=123;\n"
+        "if(!testChipResource.SetChipFlag(7,0,true) || info.flag0!=7 || info.flag1!=123) throw 1;\n"
+        "if(testChipResource.SetChipFlag(7,1,true) || testChipResource.SetChipFlag(7,-1,true)) throw 2;\n"
+        "if(testChipResource.SetChipFlag(999,0,true)) throw 3;\n"
+        "if(!testChipResource.SetChipFlag(7,0,false) || info.flag0!=6) throw 4;\n"
+        "delete testChipResource;\n"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: chip resource virtual ABI, native ChipInfo and original bit-zero-only SetChipFlag");
+    return 0;
+}
+
 static int owned_release_count, owned_release_order[2];
 static SQInteger owned_release(SQUserPointer payload, SQInteger size) {
     if (owned_release_count < 2) owned_release_order[owned_release_count] = *(int*)payload;
@@ -4312,6 +4345,7 @@ int main(int argc, char **argv) {
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
     CHECK(test_map_registration(vm, root) == 0);
+    CHECK(test_chip_resource_registration(vm, root) == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);

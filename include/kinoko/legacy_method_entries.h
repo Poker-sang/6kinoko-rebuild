@@ -13,6 +13,9 @@
 extern "C" {
 #endif
 
+// function_42f350
+int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, int32_t vm);
+
 // retdec_cact_destructor_bridge
 int32_t __fastcall kinoko_method_destroy_act(int32_t receiver, void* unused_edx, unsigned char flags);
 // function_42bcc0

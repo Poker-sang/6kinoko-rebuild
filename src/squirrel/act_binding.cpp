@@ -1244,7 +1244,26 @@ int32_t retdec_resource_get_chip_info(int32_t vm) {
     return 1;
 }
 
-int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[2]) {
+int32_t retdec_resource_set_chip_flag(int32_t vm) {
+    const int32_t resource = retdec_map_layout_argument(vm, nullptr);
+    SQInteger id = 0, flag = -1;
+    // Original 42FEF8/42FEFD accepts only bit zero, despite the 64-bit storage.
+    auto *data = resource ? field<retdec_mcd_data *>(resource + 64) : nullptr;
+    auto *chip = data && kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm), 2, id) &&
+        kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm), 3, flag) && flag == 0
+        ? retdec_mcd_find_chip(data, static_cast<uint32_t>(id)) : nullptr;
+    if (chip) {
+        uint32_t bits;
+        std::memcpy(&bits, chip->bytes + 16, sizeof(bits));
+        bits = kinoko::script::upstream::sqrat_bool_argument(kinoko_vm(vm), 4) ? bits | 1u : bits & ~1u;
+        std::memcpy(chip->bytes + 16, &bits, sizeof(bits));
+    }
+    sq_pushbool(kinoko_vm(vm), chip != nullptr);
+    return 1;
+}
+
+int32_t retdec_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out[2]) {
+
     static const struct retdec_native_view_property info_properties[] = {
         { "chipID", 0, 0 }, { "textureID", 4, 0 },
         { "left", 8, 3 }, { "top", 10, 3 }, { "width", 12, 3 }, { "height", 14, 3 },
@@ -1255,28 +1274,49 @@ int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[
     static const struct retdec_native_view_property resource_properties[] = {
         { "resourceID", 4, 0 }, { "stName", 8, 4 }
     };
-    int32_t root[5], info[2] = { g483, g484 };
+    if (get_pair(root, "CActResourceChip", out) && out[0] == 0x08004000) return 1;
+    retdec_sqrat_release_pair(vm, out);
+    int32_t info[2] = { g483, g484 };
     int32_t ok;
+    ok = retdec_publish_map_view_class(vm, root, "ChipInfo",
+        info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
+        retdec_publish_map_view_class(vm, root, "CActResourceChip",
+            resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
+        retdec_sqrat_set_native_closure(vm, out, "GetChipInfo",
+            address(retdec_resource_get_chip_info), nullptr, 0) &&
+        retdec_sqrat_set_native_closure(vm, out, "SetChipFlag",
+            address(retdec_resource_set_chip_flag), nullptr, 0);
+    retdec_sqrat_release_pair(vm, info);
+    return ok;
+}
+
+// Reconstructed C callers use this cdecl port; the virtual slot has its own
+// ECX/stack-cleanup adapter matching original 42F350 (retn 4).
+extern "C" int32_t function_42f350(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {}, klass[2] = { g483, g484 };
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_chip_resource_class(vm, address(root), klass);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
+}
+
+extern "C" int32_t __fastcall kinoko_method_register_chip_resource(
+    int32_t receiver, void *, int32_t vm) {
+    return function_42f350(vm);
+}
+
+int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[2]) {
     if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         out[0] = g1079;
         out[1] = g1080;
         function_48a400(vm, address(out));
         return out[0] == 0x08004000;
     }
-    if (!retdec_sqrat_root_construct(address(root), vm))
-        return 0;
-    if (get_pair(address(root), "CActResourceChip", out) && out[0] == 0x08004000) {
-        retdec_sqrat_object_release(address(root));
-        return 1;
-    }
-    retdec_sqrat_release_pair(vm, out);
-    ok = retdec_publish_map_view_class(vm, address(root), "ChipInfo",
-        info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
-        retdec_publish_map_view_class(vm, address(root), "CActResourceChip",
-            resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
-        retdec_sqrat_set_native_closure(vm, out, "GetChipInfo",
-            address(retdec_resource_get_chip_info), nullptr, 0);
-    retdec_sqrat_release_pair(vm, info);
+    int32_t root[5] = {};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return 0;
+    const auto ok = retdec_publish_chip_resource_class(vm, address(root), out);
     retdec_sqrat_object_release(address(root));
     return ok;
 }
