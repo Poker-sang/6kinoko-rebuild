@@ -4175,6 +4175,43 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_map_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t layout[84] = {0}, chips[16] = {0};
+    CHECK(function_433c90(0) == (int32_t)E_INVALIDARG);
+    CHECK(function_433c90(vm) == 0);
+    CHECK(function_433c90(vm) == 0);
+    const char *classes[] = {"C2DMapLayout", "ChipLayout"};
+    const char *slots[] = {"testMapLayout", "testChipLayout"};
+    void *objects[] = {layout, chips};
+    for (int i = 0; i < 2; ++i) {
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), slots[i], -1);
+        sq_pushstring(kinoko_vm(vm), classes[i], -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+        CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+        CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, objects[i])));
+        sq_remove(kinoko_vm(vm), -2);
+        CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+        sq_settop(kinoko_vm(vm), top);
+    }
+    CHECK(execute_source(vm, root+2,
+        "if(testMapLayout.left!=0 || testMapLayout.right!=0 || testMapLayout.chipCount!=0) throw 1;"
+        "testChipLayout.left=11; testChipLayout.top=19;"
+        "testChipLayout.f_left=-3.75; testChipLayout.f_top=2.5;"
+        "if(testChipLayout.left!=-3 || testChipLayout.top!=19) throw 2;"));
+    CHECK(chips[1] == -3 && chips[2] == 19);
+    CHECK(((float*)chips)[3] == -3.75f && ((float*)chips)[4] == 2.5f);
+    chips[1] = 12; chips[9] = 34;
+    layout[66] = PTR(chips); layout[67] = PTR(chips+16);
+    CHECK(execute_source(vm, root+2,
+        "if(testMapLayout.left!=12 || testMapLayout.right!=34 || testMapLayout.chipCount!=2) throw 3;"
+        "delete testMapLayout; delete testChipLayout;"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: original map registry, empty bounds and asymmetric fractional chip setters");
+    return 0;
+}
+
 static int owned_release_count, owned_release_order[2];
 static SQInteger owned_release(SQUserPointer payload, SQInteger size) {
     if (owned_release_count < 2) owned_release_order[owned_release_count] = *(int*)payload;
@@ -4274,6 +4311,7 @@ int main(int argc, char **argv) {
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
+    CHECK(test_map_registration(vm, root) == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);

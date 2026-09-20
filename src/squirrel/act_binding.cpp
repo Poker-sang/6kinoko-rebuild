@@ -29,6 +29,7 @@
 #include "kinoko/map_render.h"
 #include "kinoko/sprite.h"
 #include "kinoko/game_math.h"
+#include "kinoko/upstream_bindings.hpp"
 #include <windows.h>
 #include <d3d9.h>
 #include <mmsystem.h>
@@ -1071,6 +1072,54 @@ int32_t retdec_map_prearrangement(int32_t vm) {
     return 1;
 }
 
+// Original 433740 stores the fractional position and truncates it into left.
+// 433770 intentionally updates only f_top; preserve that asymmetry.
+int32_t retdec_chip_set_fractional_left(int32_t vm) {
+    const int32_t chip = retdec_map_layout_argument(vm, nullptr);
+    SQFloat value = 0;
+    if (!chip || !kinoko::script::upstream::sqrat_float_argument(kinoko_vm(vm), 2, value)) return 0;
+    field<float>(chip + 12) = value;
+    // __ftol2_sse produces a signed 64-bit integer; the caller keeps EAX.
+    const int64_t truncated = std::isfinite(value) &&
+        static_cast<double>(value) >= -9223372036854775808.0 &&
+        static_cast<double>(value) < 9223372036854775808.0
+        ? static_cast<int64_t>(value) : INT64_MIN;
+    field<int32_t>(chip + 4) = static_cast<int32_t>(truncated);
+    return 0;
+}
+
+int32_t retdec_map_get_left(int32_t vm) {
+    const int32_t layout = retdec_map_layout_argument(vm, nullptr);
+    const int32_t first = retdec_map_record_at(layout, 0);
+    sq_pushinteger(kinoko_vm(vm), first ? field<int32_t>(first + 4) : 0);
+    return 1;
+}
+
+// Original 435F00 scans backwards only within maxChipWidth of the last left.
+int32_t retdec_map_get_right(int32_t vm) {
+    const int32_t layout = retdec_map_layout_argument(vm, nullptr);
+    const int32_t begin = layout ? field<int32_t>(layout + 264) : 0;
+    const int32_t end = layout ? field<int32_t>(layout + 268) : 0;
+    int32_t right = end != begin ? field<int32_t>(end - 28) : 0;
+    auto *data = retdec_map_chip_data(layout);
+    if (end != begin && data) {
+        const int32_t minimum = static_cast<int32_t>(
+            static_cast<uint32_t>(right) - field<uint32_t>(layout + 240));
+        for (int32_t record = end - 32; record >= begin; record -= 32) {
+            const int32_t left = field<int32_t>(record + 4);
+            if (left < minimum) break;
+            auto *chip = retdec_mcd_find_chip(data, field<uint32_t>(record));
+            if (chip) {
+                const int32_t edge = static_cast<int32_t>(static_cast<uint32_t>(left) +
+                    retdec_mcd_i16(chip->bytes + 12));
+                if (edge >= right) right = edge;
+            }
+        }
+    }
+    sq_pushinteger(kinoko_vm(vm), right);
+    return 1;
+}
+
 int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
     const char *name, const struct retdec_native_view_property *properties,
     int32_t property_count, int32_t is_map, int32_t out[2]) {
@@ -1086,7 +1135,7 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
     if (!retdec_sqrat_new_table(vm, get_table) ||
         !retdec_sqrat_new_table(vm, set_table) ||
         !retdec_sqrat_initialize_class(vm, out, set_table, get_table,
-            0, address(function_41e2c0), address(function_41e260), address(function_431650)))
+            address(retdec_sqrat_no_constructor), address(function_41e2c0), address(function_41e260), address(function_431650)))
         goto cleanup;
     for (int32_t i = 0; i < property_count; ++i) {
         const struct retdec_native_view_property *p = properties + i;
@@ -1104,8 +1153,16 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
             !retdec_sqrat_set_offset_closure(vm, set_table, p->name, p->offset, setter))
             goto cleanup;
     }
+    if (!is_map && std::strcmp(name, "ChipLayout") == 0 &&
+        !retdec_sqrat_set_native_closure(vm, set_table, "f_left",
+            address(retdec_chip_set_fractional_left), nullptr, 0))
+        goto cleanup;
     if (is_map &&
-        (!retdec_sqrat_set_native_closure(vm, out, "PreArrangement",
+        (!retdec_sqrat_set_native_closure(vm, get_table, "left",
+            address(retdec_map_get_left), nullptr, 0) ||
+         !retdec_sqrat_set_native_closure(vm, get_table, "right",
+            address(retdec_map_get_right), nullptr, 0) ||
+         !retdec_sqrat_set_native_closure(vm, out, "PreArrangement",
             address(retdec_map_prearrangement), nullptr, 0) ||
          !retdec_sqrat_set_native_closure(vm, get_table, "chipCount",
             address(retdec_map_chip_count), nullptr, 0) ||
@@ -1150,6 +1207,17 @@ int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
     retdec_sqrat_release_pair(vm, chip_class);
     return ok && retdec_publish_map_view_class(vm, root, "C2DMapLayout",
         map_properties, sizeof(map_properties) / sizeof(map_properties[0]), 1, out);
+}
+
+// 433C90: cdecl, one VM argument, HRESULT result (IDA 4341ED: retn).
+extern "C" int32_t function_433c90(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {}, klass[2] = { g483, g484 };
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_c2dmaplayout_class(vm, address(root), klass);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
 }
 
 int32_t retdec_resource_get_chip_info(int32_t vm) {
