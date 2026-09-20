@@ -249,3 +249,41 @@ is retained under r44/r45. No additional gameplay run is claimed.
 
 All batches, including failures, are retained. No user-owned game was closed.
 Historical-source and migration-boundary checks passed after the r51 removal.
+
+## Further checkpoints: r52–r56
+
+The user confirmed the portrait fix in actual gameplay before these migrations.
+
+- r52 (12edf87): CActResource2D property read/write now uses native C++ schema
+  ownership and explicit stream receivers. Original 447570 preserves known
+  descriptors, marks absent entries, consumes mismatched/unknown values, and
+  reads values in sorted map order. Full and compact wire forms, heap strings,
+  reordered headers and omitted fields are covered. Passed 54/54.
+- r53 (87f181a): CActRenderTarget uses the same recovered wire operations but
+  an independent schema, matching 4493F0/449AB0. Removed the closed texture
+  schema component (2 functions, 3 data records, 396 lines). Passed 54/54.
+- r54 (d997b99): chip resource properties use original ID/name/MCD-file fields
+  (42F2A0); the texture auto-size transition is deliberately class-specific.
+  Removed the retired render-target schema component (2 functions, 3 data
+  records, 394 lines). Passed 54/54.
+- 039c4c9: C2DLayout's 17 properties use native IO; original 42C084 sets the
+  transform-dirty byte after reading. Removed the old chip schema component
+  (4 functions, 4 data records, 408 lines).
+- r55 (8c66930): replaced the reconstructed single-integer chip reference count
+  with the real Boost 1.44 counted base and a native MCD destruction callback.
+  This differs from the Actor slot's free-only deleter. Source/clone teardown
+  tests confirm the final owner frees textures exactly once; weak ownership
+  tests confirm no resurrection or second disposal. Passed 54/54.
+- r56 (bcdc480): original chip loading virtual 42FAE0 now loads into a temporary
+  source-owned MCD and replaces only on success. Preserves live clones, old data
+  on failure, and original empty/default prefix and separator rules. The active
+  ACT loader uses this same path. Removed the retired layout schema component
+  (2 functions, 3 data records, 394 lines). Passed 54/54; DAT staged and verified.
+
+The supported property wire types remain the existing loader's 0–3; malformed
+input is bounded rather than following unsafe original allocation behavior.
+No new gameplay claim is made for r52–r56. All tests are quiet variants; every
+build and failed artifact from earlier batches remains available. Historical
+source hashes and migration boundaries passed after r56. The overall migration
+is still incomplete: remaining legacy paths are not declared replaced merely
+because these batches pass.
