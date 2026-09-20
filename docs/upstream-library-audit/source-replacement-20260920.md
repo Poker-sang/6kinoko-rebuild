@@ -799,3 +799,9 @@ R86's main EXE and stage contract linked, but the independent act_frame_contract
 ## R87 — remove the retired string factory call thunk
 
 After native CreateLayerString publication, removed its unused 455390 thunk, the two old class-pair globals, the transitive receiverless 40E3F0/41E0C0 helpers and two unreferenced deque iterator wrappers. Pinned-source hash/reachability evidence is in retired-string-call-helpers.json (five functions, two data records). Fixed R86's missing standalone frame fixture identity. No game or test execution.
+
+## R88 — real renderer sets and render-target texture ownership
+
+IDA 401850 distinguishes the live constructor from its glued exception tail. Its two unsigned-handle registries now use normally constructed std::set containers; original scalar cache defaults remain in the host. The real texture store already owns textures with std::array/std::string/COM RAII, so startup no longer constructs a second decompiled CHandleManager solely to initialize its eight borrowed sampler-stage caches.
+
+Recovered 449C10/401DC0 with explicit ECX receiver and width/height arguments. The render-target virtual entry now calls D3DXCreateTexture with usage RENDERTARGET, A8R8G8B8, DEFAULT pool and one mip level. Square-only device caps affect texture dimensions, while resource image dimensions retain the requested size. Registration adopts the texture reference; renderer set insertion borrows the handle without an additional retain. Original true return on D3DX failure and no automatic release of an overwritten resource handle are preserved. Cleanup of the disconnected old handle/tree graph follows its pinned-source audit; no runtime test was run.

@@ -1,3 +1,4 @@
+#include "kinoko/render_target.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
@@ -3730,7 +3731,7 @@ struct vtable_4ece50_type g379 = {
     .e9 = (int32_t (*)(void))kinoko_method_clone_render_target,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
     .e11 = (int32_t (*)(void))kinoko_method_unload_resource_texture,
-    .e12 = function_449c10
+    .e12 = (int32_t (*)(int32_t, int32_t))kinoko_method_create_render_target
 }; // 0x4ece50
  // 0x4eceb8
  // 0x4ecf58
@@ -3900,7 +3901,7 @@ static void retdec_initialize_runtime_objects(void)
     // that table, so initialize the subsystems before loading the DATs.
     function_401040();
     function_401850();
-    function_4059c0();
+    kinoko_initialize_texture_cache();
     function_410270();
     function_4d3ce0();
     function_4d3e50();
@@ -4469,110 +4470,12 @@ int32_t function_401820(void) {
 // From class:    .?AVCRenderer@@
 // Type:          constructor
 int32_t function_401850(void) {
-    // 0x401850
-    int32_t v1; // bp-4, 0x401850
-    int32_t v2 = &v1; // 0x401851
-    int32_t v3 = __readfsdword(0); // bp-16, 0x401860
-    int32_t v4 = g507 ^ v2; // bp-64, 0x40186d
-    __writefsdword(0, (int32_t)&v3);
-    g701 = (int32_t)&g184;
-    g703 = 0;
-    g704 = 0;
-    g705 = 0;
-    g706 = 0;
-    g707 = 0;
-    g709 = 0;
-    g711 = 0;
-    g712 = 0;
-    g708 = 4;
-    g710 = 8;
-    g717 = 0;
-    int32_t v5 = _3f__3f_2_40_YAPAXI_40_Z(20); // 0x4018da
-    int32_t * v6 = &v4; // 0x4018e4
-    if (v5 != 0) {
-        // 0x4018ea
-        g716 = v5;
-        *(int32_t *)v5 = v5;
-        int32_t v7 = g716; // 0x4018f1
-        *(int32_t *)(v7 + 4) = v7;
-        int32_t v8 = g716; // 0x4018f9
-        *(int32_t *)(v8 + 8) = v8;
-        *(char *)(g716 + 16) = 1;
-        *(char *)(g716 + 17) = 1;
-        g720 = 0;
-        int32_t v9 = _3f__3f_2_40_YAPAXI_40_Z(20); // 0x40191f
-        if (v9 != 0) {
-            // 0x40192b
-            g719 = v9;
-            *(int32_t *)v9 = v9;
-            int32_t v10 = g719; // 0x401932
-            *(int32_t *)(v10 + 4) = v10;
-            int32_t v11 = g719; // 0x40193a
-            *(int32_t *)(v11 + 8) = v11;
-            *(char *)(g719 + 16) = 1;
-            *(char *)(g719 + 17) = 1;
-            g702 = 0;
-            g718 = 0;
-            g721 = 0;
-            __writefsdword(0, v3);
-            return &g701;
-        }
-        // 0x40197b
-        int32_t v12; // bp-40, 0x401850
-        _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v12);
-        int32_t v13 = &v12; // bp-76, 0x401992
-        v12 = (int32_t)&g22;
-        __CxxThrowException_40_8();
-        v6 = &v13;
-    }
-    int32_t v14 = (int32_t)v6;
-    int32_t v15; // bp-24, 0x401850
-    *(int32_t *)(v14 - 4) = (int32_t)&v15;
-    v15 = 0;
-    int32_t v16; // bp-52, 0x401850
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v16);
-    int32_t * v17 = (int32_t *)(v14 - 8); // 0x4019ae
-    *v17 = (int32_t)&g443;
-    int32_t v18 = &v16; // 0x4019b6
-    *(int32_t *)(v14 - 12) = v18;
-    v16 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    int32_t v19 = v14 - 16; // 0x4019d0
-    *(int32_t *)v19 = v2;
-    int32_t * v20 = (int32_t *)(v14 - 20); // 0x4019d3
-    *v20 = -1;
-    *(int32_t *)(v14 - 24) = 0x4cfa58;
-    int32_t v21 = __readfsdword(0); // 0x4019da
-    int32_t v22 = v14 - 28; // 0x4019e0
-    int32_t * v23 = (int32_t *)v22; // 0x4019e0
-    *v23 = v21;
-    *(int32_t *)(v14 - 32) = v18;
-    *(int32_t *)(v14 - 36) = 0;
-    *(int32_t *)(v14 - 44) = g507 ^ v19;
-    __writefsdword(0, v22);
-    *v20 = 0;
-    int32_t * v24 = (int32_t *)(*v17 + 4); // 0x4019ff
-    int32_t v25 = *v24; // 0x4019ff
-    *(int32_t *)(v14 - 48) = v25;
-    *(int32_t *)(v14 - 52) = *(int32_t *)v25;
-    function_401ee0((int32_t)&g1224, (int32_t)&g1224);
-    *(int32_t *)(v14 - 56) = *v24;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    __writefsdword(0, *v23);
-    return &g1224;
+    g701=(int32_t)&g184;
+    g703=g704=g705=g706=g707=g709=g711=g712=0;
+    g708=4;g710=8;
+    kinoko_initialize_renderer_sets();
+    g702=g718=g721=0;
+    return (int32_t)&g701;
 }
 
 
