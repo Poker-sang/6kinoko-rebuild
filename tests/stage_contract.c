@@ -4274,23 +4274,31 @@ int main(int argc, char **argv) {
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
-    if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
-        return test_act_reentry(argv[2]);
-    if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
-        return test_water_alpha(manager, argv[2]);
-    if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
-        {
+    {
         int32_t before = function_48aa20(vm);
         CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
         CHECK(function_42b6d0(vm) == 0);
         CHECK(function_42b6d0(vm) == 0);
         CHECK(function_48aa20(vm) == before);
-        CHECK(execute_source(vm, root + 2,
-            "if (typeof C2DLayout != \"class\") throw \"layout registration\";"
-            "if (!(\"coS_z\" in C2DLayout.__getTable)) throw \"original layout spelling\";"
-            "if (\"cos_z\" in C2DLayout.__getTable) throw \"invented layout alias\";"));
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), "C2DLayout", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -2)));
+        CHECK(sq_gettype(kinoko_vm(vm), -1) == OT_CLASS);
+        sq_pushstring(kinoko_vm(vm), "__getTable", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -2)));
+        sq_pushstring(kinoko_vm(vm), "coS_z", -1);
+        CHECK(SQ_SUCCEEDED(sq_rawget(kinoko_vm(vm), -2)));
+        sq_pop(kinoko_vm(vm), 1);
+        sq_pushstring(kinoko_vm(vm), "cos_z", -1);
+        CHECK(SQ_FAILED(sq_rawget(kinoko_vm(vm), -2)));
+        sq_settop(kinoko_vm(vm), before);
     }
-    CHECK(retdec_construct_actor_manager(manager));
+    if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
+        return test_act_reentry(argv[2]);
+    if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
+        return test_water_alpha(manager, argv[2]);
+    if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
+        CHECK(retdec_construct_actor_manager(manager));
         function_460e00();
         CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
         return test_stage_update_mask(manager, vm, root);
