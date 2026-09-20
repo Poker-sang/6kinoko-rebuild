@@ -243,16 +243,13 @@ extern "C" int32_t function_415550_this(int32_t storage, int32_t name, int32_t s
     retdec_trace_squirrel_name("415550:name", name);
     retdec_trace_i32("415550:size", size);
     retdec_trace_i32("415550:native", function);
-    sq_pushobject(vm, object.value()); sq_pushstring(vm, pointer<const char>(name), -1);
-    auto payload = sq_newuserdata(vm, static_cast<SQUnsignedInteger>(size));
-    if (!payload) return 0; // Preserve this registration helper's failure stack.
-    if (size) std::memcpy(payload, pointer(source), static_cast<size_t>(size));
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(function)), 1);
-    // The last argument is a static-slot BYTE, not a native parameter count.
-    sq_newslot(vm, -3, static_slot & 255);
-    const auto result = kinoko_sq_pop(address(vm), 1); // Original returns VM, even on error.
+    // Execute Sqrat's actual BindFunc body, including userdata copy, closure,
+    // publication and pop. The legacy entry returns VM, not BindFunc's void.
+    kinoko::script::upstream::sqrat_bind_function(vm, object.value(),
+        pointer<const char>(name), pointer<const void>(source), static_cast<size_t>(size),
+        reinterpret_cast<SQFUNCTION>(pointer(function)), (static_slot & 255) != 0);
     trace_pair("415550:after-pop-type", "415550:after-pop-data", object.value());
-    return result;
+    return address(vm);
 }
 extern "C" int32_t function_415810_this(int32_t storage) {
     if (!storage) return -1;

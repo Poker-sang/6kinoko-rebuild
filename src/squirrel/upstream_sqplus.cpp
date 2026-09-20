@@ -77,6 +77,32 @@ HSQOBJECT sqplus_new_table(HSQUIRRELVM vm) {
     auto result = SquirrelVM::CreateTable();
     return take(result);
 }
+HSQOBJECT sqplus_new_array(HSQUIRRELVM vm, int size) {
+    VmScope context(vm);
+    auto result = SquirrelVM::CreateArray(size);
+    return take(result);
+}
+bool sqplus_set_string(HSQUIRRELVM vm, HSQOBJECT receiver, int key, const SQChar* value) {
+    VmScope context(vm); Borrowed object(receiver);
+    return object.SetValue(key, value) != 0;
+}
+bool sqplus_new_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
+                          int size, SQUserPointer tag) {
+    VmScope context(vm); Borrowed object(receiver);
+    // Snapshot NewUserData passes this pointer value to sq_settypetag; it does
+    // not dereference it despite its historical pointer-to-pointer signature.
+    return object.NewUserData(key, size, static_cast<SQUserPointer*>(tag)) != 0;
+}
+bool sqplus_get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
+                          SQUserPointer* data, SQUserPointer* tag, bool raw) {
+    VmScope context(vm); Borrowed object(receiver);
+    return (raw ? object.RawGetUserData(key, data, tag) :
+                  object.GetUserData(key, data, tag)) != 0;
+}
+bool sqplus_get_typetag(HSQUIRRELVM vm, HSQOBJECT receiver, SQUserPointer* tag) {
+    VmScope context(vm); Borrowed object(receiver);
+    return object.GetTypeTag(tag) != 0;
+}
 HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text) {
     VmScope context(vm);
     auto result = SquirrelVM::CreateString(text);

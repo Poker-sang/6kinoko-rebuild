@@ -15,6 +15,13 @@ SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
+HSQOBJECT sqplus_new_array(HSQUIRRELVM vm, int size);
+bool sqplus_set_string(HSQUIRRELVM vm, HSQOBJECT receiver, int key, const SQChar* value);
+bool sqplus_new_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
+                          int size, SQUserPointer tag);
+bool sqplus_get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
+                          SQUserPointer* data, SQUserPointer* tag, bool raw);
+bool sqplus_get_typetag(HSQUIRRELVM vm, HSQOBJECT receiver, SQUserPointer* tag);
 HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text);
 HSQOBJECT sqplus_new_closure(HSQUIRRELVM vm, SQFUNCTION native);
 HSQOBJECT sqplus_assign(HSQUIRRELVM vm, HSQOBJECT previous, HSQOBJECT incoming);
@@ -50,4 +57,7 @@ HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
 void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value);
+void sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
+                          const void* payload, std::size_t size,
+                          SQFUNCTION function, bool static_slot);
 } // namespace kinoko::script::upstream

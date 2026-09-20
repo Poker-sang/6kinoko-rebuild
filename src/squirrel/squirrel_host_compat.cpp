@@ -30,23 +30,24 @@ void trace_value(const char* type_label, const char* data_label, ObjectView obje
     retdec_trace_i32(type_label, value._type);
     retdec_trace_i32(data_label, data_bits(value));
 }
-void push_key(HSQUIRRELVM vm, SQInteger key) { sq_pushinteger(vm, key); }
-void push_key(HSQUIRRELVM vm, const char* key) { sq_pushstring(vm, key, -1); }
-
-// Lookup success is the original return contract, even when the subsequent
-// userdata conversion fails. A failed conversion must not overwrite outputs.
-SQRESULT read_userdata(HSQUIRRELVM vm, int32_t* output, int32_t tag_output) {
+// The snapshot returns lookup success, independently of userdata conversion.
+// Aligned locals bridge the original possibly unaligned 32-bit output slots.
+// A real Squirrel userdata payload is never null; failed conversions leave it
+// null and must leave both caller outputs untouched.
+bool get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const char* key,
+                  int32_t* output, int32_t tag_output, bool raw) {
     SQUserPointer data = nullptr, tag = nullptr;
-    const auto status = sq_getuserdata(vm, -1, &data, tag_output ? &tag : nullptr);
-    if (SQ_SUCCEEDED(status)) {
-        const int32_t bits = address(data);
+    const bool found = upstream::sqplus_get_userdata(vm, receiver, key, &data,
+        tag_output ? &tag : nullptr, raw);
+    if (data) {
+        const auto bits = address(data);
         std::memcpy(output, &bits, sizeof(bits));
         if (tag_output) {
-            const int32_t tag_bits = address(tag);
+            const auto tag_bits = address(tag);
             std::memcpy(pointer(tag_output), &tag_bits, sizeof(tag_bits));
         }
     }
-    return status;
+    return found;
 }
 } // namespace
 
@@ -129,16 +130,12 @@ extern "C" int32_t function_4a9600_this(int32_t object, int32_t source) {
 }
 extern "C" int32_t* function_4a91c0_this(int32_t* object) {
     function_4a94e0_this(address(object));
-    sq_newtable(current_vm());
-    function_4a9660_this(address(object), -1);
-    pop(current_vm());
+    ObjectView(object).write(upstream::sqplus_new_table(current_vm()));
     return object;
 }
 extern "C" int32_t* function_4a92e0_this(int32_t* object, int32_t size) {
     function_4a94e0_this(address(object));
-    sq_newarray(current_vm(), size);
-    function_4a9660_this(address(object), -1);
-    pop(current_vm());
+    ObjectView(object).write(upstream::sqplus_new_array(current_vm(), size));
     return object;
 }
 extern "C" int32_t function_4a96c0_this(int32_t object) {
@@ -161,15 +158,9 @@ extern "C" int32_t function_4a9730_this(int32_t object, int32_t key, int32_t tex
     auto* vm = current_vm();
     const SQInteger top = sq_gettop(vm);
     retdec_trace_i32("4a9730:stack-base", top);
-    ObjectView(object).push(vm);
-    retdec_trace("4a9730:after-ab90");
-    sq_pushinteger(vm, key);
-    retdec_trace("4a9730:after-a4f0");
-    sq_pushstring(vm, pointer<const char>(text), -1);
-    retdec_trace("4a9730:after-a480");
-    const int32_t result = SQ_SUCCEEDED(sq_rawset(vm, -3));
+    const int32_t result = upstream::sqplus_set_string(vm, ObjectView(object).value(),
+        key, pointer<const char>(text));
     retdec_trace_i32("4a9730:result", result);
-    sq_settop(vm, top);
     retdec_trace("4a9730:after-c910");
     return result;
 }
@@ -192,12 +183,8 @@ extern "C" int32_t function_4a9950(int32_t object, int32_t key, int32_t size, in
     retdec_trace_i32("4a9950:aux", tag);
     retdec_trace_i32("4a9950:stack-before", top);
     if (object) trace_value("4a9950:this-type", "4a9950:this-data", ObjectView(object));
-    ObjectView(object).push(vm);
-    push_key(vm, pointer<const char>(key));
-    sq_newuserdata(vm, size);
-    if (tag) sq_settypetag(vm, -1, pointer(tag));
-    const int32_t result = SQ_SUCCEEDED(sq_rawset(vm, -3));
-    sq_settop(vm, top);
+    const int32_t result = upstream::sqplus_new_userdata(vm, ObjectView(object).value(),
+        pointer<const char>(key), size, pointer(tag));
     retdec_trace_i32("4a9950:result", result);
     retdec_trace_i32("4a9950:stack-after", sq_gettop(vm));
     return result;
@@ -254,7 +241,7 @@ extern "C" int32_t function_4a9d30_this(int32_t object, int32_t* tag) {
         retdec_trace_i32("4a9d30:out", address(tag));
     }
     SQUserPointer native_tag = nullptr;
-    const int32_t result = SQ_SUCCEEDED(sq_getobjtypetag(&value, &native_tag));
+    const int32_t result = upstream::sqplus_get_typetag(current_vm(), value, &native_tag);
     if (result) {
         const auto bits = address(native_tag);
         std::memcpy(tag, &bits, sizeof(bits));
@@ -327,8 +314,6 @@ extern "C" int32_t function_4a9f60(int32_t object, int32_t delegate) {
     return SQ_SUCCEEDED(result);
 }
 extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, int32_t tag_output) {
-    int32_t result = 0;
-    bool converted = false;
     retdec_trace("4aa080:begin");
     retdec_trace_i32("4aa080:this", object);
     retdec_trace_squirrel_name("4aa080:name", key);
@@ -337,36 +322,16 @@ extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, 
     if (object) trace_value("4aa080:this-type", "4aa080:this-data", ObjectView(object));
     auto* vm = current_vm();
     retdec_trace_i32("4aa080:stack-before", sq_gettop(vm));
-    ObjectView(object).push(vm);
-    push_key(vm, pointer<const char>(key));
-    const auto status = sq_get(vm, -2);
-    retdec_trace_i32("4aa080:lookup", status);
-    if (SQ_SUCCEEDED(status)) {
-        const auto conversion = read_userdata(vm, pointer<int32_t>(output), tag_output);
-        converted = SQ_SUCCEEDED(conversion);
-        retdec_trace_i32("4aa080:read", conversion);
-        pop(vm);
-        result = 1;
-    }
-    pop(vm);
+    const int32_t result = get_userdata(vm, ObjectView(object).value(),
+        pointer<const char>(key), pointer<int32_t>(output), tag_output, false);
     retdec_trace_i32("4aa080:result", result);
-    retdec_trace_i32("4aa080:out-value", converted && output ? *pointer<int32_t>(output) : 0);
     retdec_trace_i32("4aa080:stack-after", sq_gettop(vm));
     return result;
 }
 extern "C" int32_t retdec_function_4aa110_this(int32_t object, const char* key, int32_t* output, int32_t tag_output) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
-    ObjectView(object).push(vm);
-    push_key(vm, key);
-    int32_t result = 0;
-    if (SQ_SUCCEEDED(sq_rawget(vm, -2))) {
-        read_userdata(vm, output, tag_output);
-        pop(vm);
-        result = 1;
-    }
-    pop(vm);
-    return result;
+    return get_userdata(vm, ObjectView(object).value(), key, output, tag_output, true);
 }
 extern "C" int32_t function_4aa1a0(int32_t object, const char* key) {
     return upstream::sqplus_exists(current_vm(), ObjectView(object).value(), key);
