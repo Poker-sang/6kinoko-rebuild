@@ -34,6 +34,15 @@ Schema render_target_schema = make_schema();
 // 42F2A0: chip resources serialize the base ID/name and the MCD filename.
 Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
                    {"stChipFile", {3,3,36}}};
+// 42BD00 registers the 17 serialized C2DLayout members.
+Schema layout_schema{
+    {"roll.x", {1,1,236}}, {"roll.y", {1,1,240}}, {"roll.z", {1,1,244}},
+    {"cor_x", {1,1,248}}, {"cor_y", {1,1,252}}, {"cor_z", {1,1,256}},
+    {"scale.x", {1,1,260}}, {"scale.y", {1,1,264}}, {"scale.z", {1,1,268}},
+    {"cos_x", {1,1,272}}, {"cos_y", {1,1,276}}, {"cos_z", {1,1,280}},
+    {"alpha", {1,1,284}}, {"blend", {0,0,288}},
+    {"colorR", {0,0,292}}, {"colorG", {0,0,296}}, {"colorB", {0,0,300}}
+};
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
         field<void*>(field<int32_t>(stream)+12), address(bytes), size) & 0xff) != 0;
@@ -151,5 +160,22 @@ extern "C" int32_t __fastcall kinoko_method_write_chip_resource(
     int32_t resource, void*, int32_t writer) {
     if (!resource || !writer) return 0;
     try { return write(resource, writer, chip_schema); }
+    catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_read_layout_properties(
+    int32_t layout, void*, int32_t holder, int32_t version) {
+    if (!layout || !holder || version != 1) return 0;
+    try {
+        if (!read(layout, field<int32_t>(holder), layout_schema, false)) return 0;
+        // 42C084 invalidates transforms after reading; this is not a texture.
+        field<uint8_t>(layout+312) = 1;
+        return 1;
+    } catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_write_layout_properties(
+    int32_t layout, void*, int32_t writer) {
+    if (!layout || !writer) return 0;
+    try { return write(layout, writer, layout_schema); }
     catch (...) { return 0; }
 }

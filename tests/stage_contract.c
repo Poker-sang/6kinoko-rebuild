@@ -4433,6 +4433,30 @@ static int test_chip_serialization(void) {
     return 0;
 }
 
+static int test_layout_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream), source[79]={0}, loaded[79]={0};
+    source[0]=loaded[0]=PTR(&g299);
+    for (int i=59;i<72;++i) ((float*)source)[i]=(float)(i-61)*0.125f;
+    source[72]=3; source[73]=255; source[74]=128; source[75]=64;
+    const unsigned char saved=g673;
+    for (int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact;
+        stream.position=stream.size=0; stream.reading=0;
+        loaded[24]=0x12345678; loaded[78]=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g299.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g299.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && memcmp(source+59,loaded+59,17*4)==0);
+        CHECK(loaded[78]==1 && loaded[24]==0x12345678);
+    }
+    g673=saved;
+    puts("PASS: all 17 layout properties round-trip and restore original transform-dirty state");
+    return 0;
+}
+
 static int test_texture_serialization(int render_target) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
@@ -4835,7 +4859,8 @@ int main(int argc, char **argv) {
     if(argc==3 && strcmp(argv[1],"--portrait-regions")==0)
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
-        return test_texture_serialization(0) || test_texture_serialization(1) || test_chip_serialization();
+        return test_texture_serialization(0) || test_texture_serialization(1) ||
+            test_chip_serialization() || test_layout_serialization();
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
