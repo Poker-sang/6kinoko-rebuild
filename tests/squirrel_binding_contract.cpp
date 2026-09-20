@@ -251,12 +251,29 @@ void values_contract(HSQUIRRELVM vm) {
         for (int32_t input : {-32769, -129, -1, 0, 127, 128, 32767, 65535, 65536}) {
             bytes.fill(0xA5); sq_settop(vm, 0); sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
             require(retdec_set_var_value(context, info_addr, value_addr) == 1, "integer setter returns one");
-            require(integer(vm) == input, "setter returns full value before narrowing");
+            const int32_t expected = size == 1 ? static_cast<int8_t>(input) : size == 2 ? static_cast<int16_t>(input) : input;
+            require(integer(vm) == expected, "original setter returns stored signed narrow value");
             sq_pop(vm, 1);
             require(retdec_get_var_value(context, info_addr, value_addr) == 1, "integer getter returns one");
-            const int32_t expected = size == 1 ? static_cast<int8_t>(input) : size == 2 ? static_cast<int16_t>(input) : input;
             require(integer(vm) == expected, "signed narrow integer round trip");
             require(bytes.front() == 0xA5 && bytes[size + 1] == 0xA5, "unaligned narrow store canaries");
+        }
+    }
+    // Original 4AAD1B and snapshot VAR_TYPE_UINT always use unsigned32,
+    // independent of m_size. SQInteger is signed32 on the game's Win32 ABI.
+    for (int size : {1, 2, 4}) {
+        const Variable unsigned_info{0, 1, 0, 0, static_cast<uint16_t>(size), 0};
+        store(info_addr, unsigned_info);
+        for (int32_t input : {-1, 0, 128, 65535, 0x12345678}) {
+            bytes.fill(0xA5); sq_settop(vm, 0);
+            sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
+            require(retdec_set_var_value(context, info_addr, value_addr) == 1 && integer(vm) == input,
+                    "unsigned32 setter preserves all 32 bits");
+            require(load<int32_t>(value_addr) == input && bytes.front() == 0xA5 && bytes[5] == 0xA5,
+                    "unsigned32 uses four bytes even when metadata size is narrow");
+            sq_pop(vm, 1);
+            require(retdec_get_var_value(context, info_addr, value_addr) == 1 && integer(vm) == input,
+                    "unsigned32 getter ignores signed-small-integer width");
         }
     }
     Variable info{0, 0, 0, 0, 4, 0}; store(info_addr, info);
