@@ -2406,7 +2406,6 @@ int32_t function_4d4930(void);
 int32_t function_4d4a30(void);
 
 
-int32_t unknown_fcd53371(void);
 
 // --------------------- Global Variables ---------------------
 
@@ -2561,7 +2560,12 @@ int32_t g286 = 0x428f80; // 0x4ec1fc
  // 0x4ec2b0
  // 0x4ec2d8
  // 0x4ec300
-int32_t g300 = 0x42e6e0; // 0x4ec384
+struct vtable_4ec7cc_type g300 = {
+    .e0 = kinoko_delete_layout_sprite,
+    .e1 = kinoko_quad_set_color,
+    .e2 = kinoko_quad_set_vertex_colors,
+    .e3 = kinoko_quad_modulate_color
+}; // 0x4ec384
 int32_t g301 = 0x42c890; // 0x4ec398
 int32_t g302 = 0x42e6d0; // 0x4ec3bc
  // 0x4ec3d4

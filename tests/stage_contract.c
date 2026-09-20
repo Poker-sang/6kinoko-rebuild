@@ -5623,7 +5623,21 @@ static int test_actor_handle_lookup(void) {
     return 0;
 }
 
+static int test_layout_secondary_lifetime(void) {
+    unsigned char *layout=(unsigned char*)calloc(1,316);
+    unsigned char *array=(unsigned char*)calloc(1,4+2*316);CHECK(layout && array);
+    *(int32_t*)layout=PTR(&g299);*(int32_t*)(layout+4)=PTR(&g300);
+    CHECK(retdec_call_thiscall1_result(layout+4,(void*)g300.e0,0)==PTR(layout));
+    CHECK(*(int32_t*)layout==PTR(&g299));CHECK(*(int32_t*)(layout+4)==PTR(&g23));
+    free(layout);*(uint32_t*)array=2;
+    CHECK(kinoko_delete_layout_sprite(PTR(array+8),NULL,2)==PTR(array));
+    CHECK(*(int32_t*)(array+8)==PTR(&g23));
+    CHECK(*(int32_t*)(array+8+316)==PTR(&g23));free(array);
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    CHECK(test_layout_secondary_lifetime()==0);
     CHECK(test_actor_handle_lookup()==0);
     CHECK(test_map_virtual_clone()==0);
     if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)

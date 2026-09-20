@@ -328,3 +328,25 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void
 extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
     return delete_with_flags<clear_resource>(object,100,flags);
 }
+
+
+extern "C" { extern unsigned char g23; }
+extern "C" int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite,void*,int32_t flags) {
+    const int32_t layout=sprite-4;
+    const auto destroy=[](int32_t object) {
+        field<int32_t>(object)=address(kinoko_act_host_symbols()->layout_vtable);
+        field<int32_t>(object+4)=address(&g23);
+    };
+    // Original 42E6E0 -> 42D1C0: secondary this adjustment and array cookie.
+    // C2DLayout has no owned nested buffers; its texture handle is borrowed.
+    if(flags&2) {
+        const int32_t allocation=layout-4;
+        const uint32_t count=field<uint32_t>(allocation);
+        for(uint32_t i=count;i>0;--i) destroy(layout+316*(i-1));
+        if(flags&1) std::free(pointer<void>(allocation));
+        return allocation;
+    }
+    destroy(layout);
+    if(flags&1) std::free(pointer<void>(layout));
+    return layout;
+}
