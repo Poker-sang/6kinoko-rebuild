@@ -2223,8 +2223,6 @@ int32_t function_446220(void);
 int32_t function_4462c0(void);
 
 int32_t function_446520(int32_t a1);
-int32_t function_446a30(int32_t a1, int32_t a2);
-int32_t function_446a90(int32_t a1);
 int32_t function_446af0(void);
 int32_t function_446b70(void);
 
@@ -4135,8 +4133,8 @@ struct vtable_4ec954_type g343 = {
  // 0x4ecc4c
  // 0x4ecc74
 struct vtable_4eccfc_type g365 = {
-    .e0 = function_446a90,
-    .e1 = function_446a30,
+    .e0 = (int32_t (*)(int32_t))kinoko_method_write_texture_resource,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_texture_resource,
     .e2 = function_4461d0,
     .e3 = function_446210,
     .e4 = function_429720,
@@ -32607,59 +32605,12 @@ int32_t function_4462c0(void) {
 // Address range: 0x446a30 - 0x446a8f
 // From class:    .?AVCActResource2D@@
 // Type:          virtual member function
-int32_t function_446a30(int32_t a1, int32_t a2) {
-    // 0x446a30
-    if (a1 == 0) {
-        // 0x446a3e
-        int32_t v1; // 0x446a30
-        return v1 & -256;
-    }
-    // 0x446a46
-    if (a2 != 1) {
-        // 0x446a3e
-        return a2 & -256;
-    }
-    int32_t v2 = *(int32_t *)(*(int32_t *)*(int32_t *)a1 + 12); // 0x446a58
-    if ((char)v2 == 0) {
-        // 0x446a3e
-        return v2 & -256;
-    }
-    int32_t v3 = a1; // bp-24, 0x446a6d
-    function_447570(a1);
-    int32_t v4 = &v3;
-    *(int32_t *)(v4 - 8) = (int32_t)&g931;
-    int32_t v5 = function_44d4c0((int32_t)&g1224, (int32_t)&g1224); // 0x446a7e
-    int32_t v6; // 0x446a30
-    *(char *)(v6 + 96) = 0;
-    return v5 & -256 | 1;
-}
+
 
 // Address range: 0x446a90 - 0x446aea
 // From class:    .?AVCActResource2D@@
 // Type:          virtual member function
-int32_t function_446a90(int32_t a1) {
-    if (a1 == 0) {
-        // 0x446a9e
-        int32_t v1; // 0x446a90
-        return v1 & -256;
-    }
-    char v2 = g673 == 0; // 0x446ab5
-    int32_t v3 = &v2; // 0x446aba
-    int32_t v4 = v3; // bp-20, 0x446abd
-    if ((char)v3 == 0) {
-        // 0x446a9e
-        return v3 & -256;
-    }
-    int32_t * v5 = &v4; // 0x446aca
-    if (g673 == 0) {
-        int32_t v6 = a1; // bp-24, 0x446acc
-        function_441cb0(a1);
-        v5 = &v6;
-    }
-    // 0x446ad7
-    *(int32_t *)((int32_t)v5 - 8) = (int32_t)&g931;
-    return function_441df0((int32_t)&g1224, (int32_t)&g1224) & -256 | 1;
-}
+
 
 // Address range: 0x446af0 - 0x446b63
 // From class:    .?AVCActResource2D@@

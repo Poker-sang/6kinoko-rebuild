@@ -56,3 +56,7 @@ statement-separator error was fixed in the same checkpoint and now passes.
    with character-specific mappings or remove valid auto-size behavior globally.
 
 These findings were recorded before resuming the remaining library migration.
+
+The user subsequently confirmed that the portrait issue is fixed in actual
+running gameplay. This supplements the headless contracts; it does not imply
+that the remaining third-party migration is complete.

@@ -34,6 +34,8 @@ int32_t __fastcall kinoko_method_delete_input_device(int32_t receiver, void* unu
 int32_t __fastcall kinoko_method_register_act_layer(int32_t receiver, void* unused_edx, int32_t parent, int32_t flags);
 int32_t __fastcall kinoko_method_read_act_script(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_write_act_script(int32_t receiver, void* unused_edx, int32_t writer);
+int32_t __fastcall kinoko_method_read_texture_resource(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_texture_resource(int32_t receiver, void* unused_edx, int32_t writer);
 
 // function_42f350
 int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, int32_t vm);

@@ -196,6 +196,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_document.cpp
     src/reconstructed/act_properties.cpp
     src/reconstructed/act_script_io.cpp
+    src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
     src/reconstructed/act_containers.cpp
     src/reconstructed/act_layout.cpp
@@ -368,6 +369,8 @@ add_test(NAME act_reentry_contract
     COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
 add_test(NAME portrait_regions_contract
     COMMAND kinoko_stage_contract --portrait-regions "${KINOKO_REFERENCE_DIR}")
+add_test(NAME texture_serialization_contract
+    COMMAND kinoko_stage_contract --texture-serialization)
 
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")
