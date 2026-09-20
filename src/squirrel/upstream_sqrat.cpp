@@ -76,7 +76,10 @@ void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns) {
 }
 bool sqrat_bind_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
                       HSQOBJECT incoming, bool raw) {
-    Adopted object(vm, receiver), value(vm, incoming);
+    Adopted object(vm, receiver);
+    // PushVar takes Object by value; its copy inherits the ownership flag.
+    // Supply a normally owning object so every acquired reference is released.
+    Sqrat::Object value(incoming, vm);
     Sqrat::Object& base = value;
     return SQ_SUCCEEDED(object.bind_value(name, base, raw));
 }
