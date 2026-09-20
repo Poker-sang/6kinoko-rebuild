@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
@@ -308,11 +309,21 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         return 1;
     if (!retdec_act_read_u32(reader_ptr, &layout_type) ||
         (layout_type != 0x655cd5b0u &&
-         layout_type != 0xc9ca5c20u)) {
+         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u)) {
         retdec_trace_i32("act:unsupported-layout", (int32_t)layout_type);
         return 0;
     }
-    if (layout_type == 0xc9ca5c20u) {
+    if(layout_type==0x9e695d47u) {
+        // Original Boost hash of .?AVCStringLayout@@; use the genuine native
+        // reader through its recovered holder/version ABI.
+        layout=address(std::calloc(1,260));
+        if(layout) {
+            kinoko_construct_string_layout(layout);
+            if(!kinoko_method_read_string_layout(layout,nullptr,address(&reader_ptr),version)) {
+                kinoko_clear_string_layout(layout);std::free(pointer<void>(layout));layout=0;
+            }
+        }
+    } else if (layout_type == 0xc9ca5c20u) {
         layout = retdec_act_make_map_layout(reader_ptr);
         if (layout != 0 && !retdec_act_read_map_records(layout, reader_ptr)) {
             retdec_act_free_map_records(layout);
@@ -836,7 +847,9 @@ int32_t retdec_act_bind_layouts(int32_t act)
             int32_t layout = key == 0 ? 0 :
                 field<int32_t>(key + 4);
             if (layout != 0) {
-                if (field<int32_t>(layout) ==
+                if(field<int32_t>(layout)==address(g350))
+                    kinoko_method_set_string_layer(layout,nullptr,layer);
+                else if (field<int32_t>(layout) ==
                         address(kinoko_act_host_symbols()->map_layout_vtable))
                     retdec_c2dmaplayout_set_layer_impl(layout, layer);
                 else
@@ -845,7 +858,7 @@ int32_t retdec_act_bind_layouts(int32_t act)
                     retdec_trace_i32("act:layout", layout);
                     retdec_trace_i32("act:layout-layer", layer);
                     retdec_trace_i32("act:layout-texture",
-                                     field<int32_t>(layout + 0x134));
+                                     field<int32_t>(layout)==address(g350)?0:field<int32_t>(layout + 0x134));
                 }
             }
             node = field<int32_t>(node);

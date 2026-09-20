@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_draw_records.hpp"
 #include "kinoko/act_layer_access.h"
@@ -175,7 +176,7 @@ extern "C" int32_t function_4525d0(int32_t self, float x, float y) {
             retdec_trace_i32("4525d0:live-x", float_bits(draw_x));
             retdec_trace_i32("4525d0:live-y", float_bits(draw_y));
             retdec_trace_i32("4525d0:live-layout", layout);
-            retdec_trace_i32("4525d0:live-texture", RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
+            retdec_trace_i32("4525d0:live-texture", load<Address>(pointer(layout))==address(g350)?0:RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
             retdec_trace_i32("4525d0:live-draw-result", status);
         }
         if (status < 0) result = status;

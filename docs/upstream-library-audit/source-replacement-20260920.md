@@ -787,3 +787,9 @@ Replaced the collapsed writer-only g350 with all eleven original virtual slots, 
 43EB80/43EC30 clone copies strings/style/tail and container values, then clears copied atlas values without releasing borrowed textures, retains vector capacity, and releases the copied deque storage without changing atlas counts. Generic ACT key destruction now recognizes CStringLayout. Added compiled-only clone/virtual prerequisites/tab/newline coverage. Serialized ACT factory and activation clone support are handled in the following integration batch; no runtime test is claimed.
 
 The pinned-source audit retired fourteen unreachable legacy factory/Sqrat Object/RootTable/auto_ptr/list helpers (retired-string-factory.json). Bodies were removed only after their exact pinned SHA256 and unique current-source match were verified; this is source reachability evidence, not runtime coverage.
+
+## R86 — serialized CStringLayout and ACT activation integration
+
+ACT key loading now accepts the original Boost 1.44 RTTI hash 9E695D47, constructs CStringLayout and invokes its native shared-schema reader. ACT activation cloning recognizes the 260-byte string object instead of copying it as a 316-byte C2DLayout; rollback owns and destroys its nested strings/proxy. Binding selects CStringLayout SetLayer and actual Sqrat class publication, including alpha/blend/RGB aliases. Trace calls remain in place, but their texture argument no longer reads C2DLayout+308 beyond a CStringLayout allocation.
+
+Compiled-only contracts now cover real CreateLayerString closures and script aliases, key virtual cloning, and both full/compact key archives containing strings with embedded NUL bytes. The reader combines rendered/pending text without truncation and preserves the original serialized alignment/addEdge byte alias, leaving runtime alignment at its constructor value. No game or test executable ran.

@@ -4940,13 +4940,28 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         *(uint8_t*)(intptr_t)(source+305)=0;
         CHECK(execute_source(vm,root+2,"if(dynamicFirst.alpha!=0.375) throw \"clone altered source\";"));
     }
+    CHECK(execute_source(vm,root+2,
+        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");"
+        "dynamicText.alpha=0.625; dynamicText.colorR=73;"
+        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";"
+        "if(!dynamicText.layout.PushBack(\"native text\") || dynamicText.layout.queueCount!=11) throw \"text methods\";"));
+    layers=(int32_t*)(intptr_t)act[52];CHECK(act[53]-act[52]==28);
+    const int32_t text_layer=layers[6],text_head=*(int32_t*)(intptr_t)(text_layer+180);
+    const int32_t text_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)text_head+8);
+    const int32_t text_layout=*(int32_t*)(intptr_t)(text_key+4);
+    CHECK(*(int32_t*)(intptr_t)text_layout==PTR(g350));
+    CHECK(*(int32_t*)(intptr_t)(text_layout+148)==text_layer);
+    const int32_t text_copy=retdec_call_thiscall0_result((void*)(intptr_t)text_key,(void*)g277.e5);
+    CHECK(text_copy && *(int32_t*)(intptr_t)(text_copy+4)!=text_layout);
+    retdec_destroy_cact_key(text_copy);
+    CHECK(execute_source(vm,root+2,"delete dynamicText;"));
     ((uint8_t*)player)[8]=0;
     CHECK(execute_source(vm,root+2,
         "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.SwapLayer(0,1)) throw \"inactive order\";"));
     CHECK(execute_source(vm,root+2,
         "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
         "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
-    for(int i=0;i<6;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
+    for(int i=0;i<7;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
     free(layers); retdec_sqrat_release_pair(vm,player_pair);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
@@ -5160,8 +5175,13 @@ static int test_key_string_writers(void) {
     ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
     key[1]=PTR(flat);
     retdec_string_assign_cstr(key+2,"independently owned callback name");
+    int32_t string_source[65]={0};kinoko_construct_string_layout(PTR(string_source));
+    retdec_string_assign_n(string_source+1,"A\0B",3);
+    retdec_string_assign_n(string_source+8,"C\0D",3);
+    ((uint8_t*)string_source)[128]=1;string_source[33]=2;
     const int32_t archives=g765; g765=0;
-    for(int compact=0;compact<2;++compact) {
+    for(int kind=0;kind<2;++kind) for(int compact=0;compact<2;++compact) {
+        key[1]=kind?PTR(string_source):PTR(flat);
         g673=(unsigned char)compact; stream.position=stream.size=0;
         CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
         char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
@@ -5175,11 +5195,17 @@ static int test_key_string_writers(void) {
         CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
         CHECK(copy[1] && copy[1]!=key[1]);
         CHECK(strcmp(retdec_std_string_data(PTR(copy+2)),retdec_std_string_data(PTR(key+2)))==0);
-        CHECK(*(float*)(intptr_t)(copy[1]+236)==0.625f && *(float*)(intptr_t)(copy[1]+284)==0.75f);
+        if(kind) {
+            int32_t* text=(int32_t*)(intptr_t)copy[1];
+            CHECK(text[0]==PTR(g350) && text[5]==0 && text[12]==6);
+            CHECK(memcmp(retdec_std_string_data(copy[1]+32),"A\0BC\0D",6)==0);
+            CHECK(((uint8_t*)text)[128]==1 && text[33]==0); /* wire bool alias, not runtime alignment */
+        } else CHECK(*(float*)(intptr_t)(copy[1]+236)==0.625f && *(float*)(intptr_t)(copy[1]+284)==0.75f);
         CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
         retdec_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
     }
     g765=archives;
+    kinoko_clear_string_layout(PTR(string_source));
     if(key[7]>=16) free((void*)(intptr_t)key[2]);
     g673=saved;
     puts("PASS: key presence byte and CStringLayout original bool alias serialization");

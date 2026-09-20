@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/act_clone.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/act_runtime.h"
@@ -52,6 +53,7 @@ public:
         if (committed_) return;
         for(auto texture: textures_) kinoko_texture_release(texture);
         for(auto resource: chip_owners_) kinoko_act_release_chip_data(static_cast<int32_t>(resource));
+        for(auto object:string_layouts_) kinoko_method_delete_string_layout(static_cast<int32_t>(object),nullptr,1);
         for(auto allocation: allocations_) std::free(allocation);
     }
 
@@ -140,6 +142,13 @@ private:
         field<Address>(dest,92)=copy(field<Address>(source,92),size);
     }
     Address layout(Address source) {
+        if(field<Address>(source)==address(g350)) {
+            const auto result=static_cast<Address>(kinoko_method_clone_string_layout(static_cast<int32_t>(source),nullptr));
+            if(!result) throw std::bad_alloc();
+            try {string_layouts_.push_back(result);}
+            catch(...) {kinoko_method_delete_string_layout(static_cast<int32_t>(result),nullptr,1);throw;}
+            return result;
+        }
         const bool map=field<Address>(source)==address(&g327);
         const auto result=copy(source,map ? 464 : 316);
         if(map) {
@@ -228,6 +237,7 @@ private:
     std::vector<void *> allocations_;
     std::vector<int32_t> textures_;
     std::vector<Address> chip_owners_;
+    std::vector<Address> string_layouts_;
     bool committed_=false;
 };
 }

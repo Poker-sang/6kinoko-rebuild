@@ -1994,7 +1994,8 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             }
             if (candidate != 0 &&
                 (field<int32_t>(candidate) == address(kinoko_act_host_symbols()->layout_vtable) ||
-                 field<int32_t>(candidate) == address(kinoko_act_host_symbols()->map_layout_vtable))) {
+                 field<int32_t>(candidate) == address(kinoko_act_host_symbols()->map_layout_vtable) ||
+                 field<int32_t>(candidate) == address(g350))) {
                 layout = candidate;
                 have_layout = 1;
                 break;
@@ -2006,7 +2007,9 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             retdec_trace_i32("act:publish-layer-layout", layout);
         }
         retdec_sqrat_release_pair(vm, layout_class_pair);
-        if (have_layout && field<int32_t>(layout) == address(kinoko_act_host_symbols()->map_layout_vtable))
+        if(have_layout && field<int32_t>(layout)==address(g350))
+            kinoko_publish_string_layout_class(vm,address(root_object),layout_class_pair);
+        else if (have_layout && field<int32_t>(layout) == address(kinoko_act_host_symbols()->map_layout_vtable))
             retdec_publish_c2dmaplayout_class(vm, address(root_object), layout_class_pair);
         else
             get_pair(address(root_object), "C2DLayout", layout_class_pair);
@@ -2014,6 +2017,10 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             layout_class_pair[1] != 0 &&
             retdec_create_unbound_instance(vm, layout_class_pair, layout,
                                             layout_pair)) {
+            if(field<int32_t>(layout)==address(g350)) {
+                field<int32_t>(layer+52)=layout+152;field<int32_t>(layer+56)=layout+156;
+                field<int32_t>(layer+60)=layout+96;field<int32_t>(layer+64)=layout+100;field<int32_t>(layer+68)=layout+104;
+            }
             (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
                                              layout_pair);
             retdec_sqrat_release_pair(vm, layout_pair);
