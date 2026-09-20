@@ -176,3 +176,28 @@ controls, owning container copies and CRT compatibility need further recovery.
 DAT staging was verified for r33, r35 and r37. The user-owned r18 process is still
 running (observed PID 17656); it was not closed and no new gameplay result is
 claimed. IDA evidence for these entries is retained under r31/r33–r36.
+
+
+## Further checkpoints: r38–r42
+
+- 7e6ad94: removed 22 functions/15 globals (362 lines) in the retired resource
+  publication component. r38 passed 52/52.
+- b2ee5fc: ACT source compilation now uses real Sqrat::Script in the current VM,
+  preserving that VM's constants/enums. Source Run shares its operation sequence
+  with the embedding's explicit-environment entry. r39 passed 52/52.
+- c3113b7: embedded bytecode also executes through Script; current VM receiver
+  scope covers compilation/error callbacks. r40 passed 52/52.
+- 6168f06: original ACT registration and local CompileFile use source operations
+  and std::map for environment ownership. File compilation refreshes callbacks;
+  original bytecode files execute twice (416A8D then 416AE8), inline bytecode once.
+  The extension string is now a complete 28-byte record rather than separately
+  linked globals. r41 passed 52/52, including those behavioral contracts.
+- 38df4df: removed the old file-compiler component (5 functions, 1 global,
+  180 lines). Layer construction uses source Table and empty Instance records,
+  and script deletion uses explicit ECX receiver cleanup. r42 failed to compile:
+  act_document.cpp needed the source Squirrel type header. af56250 adds it.
+
+IDA's e8d7ff83 worker became unreachable; the required start/open scripts restored
+original analysis as session 3c59c915. Restored evidence is under r41. No gameplay
+claim is added for these batches; work has continued without closing the user's
+r18 game.
