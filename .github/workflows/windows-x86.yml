@@ -94,6 +94,7 @@ jobs:
           path: |
             build-runs/ci-${{ matrix.trace }}/*.log
             build-runs/ci-${{ matrix.trace }}/*.map
+            build-runs/ci-${{ matrix.trace }}/*.bin
             build-runs/ci-${{ matrix.trace }}/source-commit.txt
             build-runs/ci-${{ matrix.trace }}/Testing/Temporary/
             runtime-builds/ci-${{ matrix.trace }}/
