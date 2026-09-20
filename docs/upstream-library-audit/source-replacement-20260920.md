@@ -706,3 +706,32 @@ No tests or game session ran.
 The user confirmed manually cleaning the build artifacts and requested regeneration.
 R75-rebuilt-quiet (a519bab, same runtime source) completed successfully with new
 configure/build logs, both linker maps, staged DATs and SHA256 records. No tests ran.
+
+
+## r76: explicit serializable type identity and deleting-destructor ABI
+
+User confirmed R75 works. Original 4461D0 compares the actual dynamic type,
+not base-class compatibility; 4AB2E2 compares RTTI descriptor names starting
+at byte nine (skipping the raw name's prefix). Native queries now obtain the
+recovered object's dynamic identity from its concrete vtable and compare the
+original decorated name. This is an ABI metadata adapter, not applying modern
+C++ typeid to unconstructed legacy storage. Timeline queries use the same name
+comparison rule. The __RTtypeid and type_info equality stubs that merely returned
+an input pointer are deleted after their sole old consumer is disconnected.
+
+446210 dispatches the deleting destructor at slot four with flags=1. Native
+key/layer/resource entries now accept their ECX receiver, preserve scalar vs
+reverse-order array destruction, and free the array cookie only when bit one
+is set. Key size36, layer348 and resource100 are verified from original
+420830/4209B0/429720/429780/429840. Layout tables have different slot semantics:
+42B480 destroys through the embedded sprite, so their primary Destroy slots
+use the existing source-owned 2D/map cleanup rather than the slot-four adapter.
+Unsupported CStringLayout/mesh lifetimes remain unfinished.
+
+In-place cleanup resets strings and list counts without freeing the object.
+The texture filename's length/capacity reset is corrected to +56=0/+60=15;
+its former helper assigned 15 to the length. Existing clone/texture ownership
+tracking is retained. Compiled-only contracts cover all ten migrated dynamic
+type queries, rejecting a base-class descriptor, prefix-byte equivalence,
+null outputs, array keys, scalar resources and virtual Destroy dispatch.
+retired-act-rtti-destruction.json audits 13 functions and 19 data records.

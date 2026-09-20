@@ -200,11 +200,6 @@ int32_t _3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ(void)
     return 0;
 }
 
-int32_t _3f__3f_8type_info_40__40_QBE_NABV0_40__40_Z(void *value)
-{
-    return (int32_t)(uintptr_t)value;
-}
-
 int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
 {
     return 0;
@@ -252,14 +247,6 @@ int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
 
 int32_t ___report_gsfailure(void) { return 0; }
 int32_t __CxxThrowException_40_8(void) { return 0; }
-
-int32_t ___RTtypeid(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
-{
-    (void)a2;
-    (void)a3;
-    (void)a4;
-    return a1;
-}
 
 int32_t retdec_Xinvalid_argument(char *message)
 {

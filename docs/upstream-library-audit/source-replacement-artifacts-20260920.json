@@ -2709,7 +2709,8 @@
           "size": 837120,
           "sha256": "a52843532be53f7b519b4be901106df2300a81bd306ddea18b392a0ce104e2b7"
         }
-      ]
+      ],
+      "user_confirmation": "User reported version 75 has no problems on 2026-09-20."
     }
   ]
 }
