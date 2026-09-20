@@ -1586,7 +1586,6 @@ int32_t function_407000(int32_t * a1);
 static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 int32_t function_407130(int32_t a1);
 int32_t function_407190(int32_t result);
-int32_t function_407210(int32_t a1, int32_t a2);
 
 int32_t function_407270(int32_t lpFileName);
 int32_t function_4072b0(int32_t a1);
@@ -7652,27 +7651,7 @@ int32_t function_407190(int32_t result) {
 }
 
 // Address range: 0x407210 - 0x407245
-int32_t function_407210(int32_t a1, int32_t a2) {
-    // 0x407210
-    if (a1 == a2) {
-        // 0x407243
-        return 0;
-    }
-    int32_t v1 = a1; // 0x40721d
-    uint32_t v2 = 0;
-    char v3 = *(char *)v1; // 0x40722d
-    v1++;
-    int32_t result = v2 / 4 - 0x61c88647 + 64 * v2 + (int32_t)v3 ^ v2; // 0x407238
-    while (v1 != a2) {
-        // 0x407221
-        v2 = result;
-        v3 = *(char *)v1;
-        v1++;
-        result = v2 / 4 - 0x61c88647 + 64 * v2 + (int32_t)v3 ^ v2;
-    }
-    // 0x407243
-    return result;
-}
+
 
 
 // Address range: 0x407270 - 0x4072ac
