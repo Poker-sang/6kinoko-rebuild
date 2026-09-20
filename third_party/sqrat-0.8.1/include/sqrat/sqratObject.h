@@ -132,8 +132,9 @@ namespace Sqrat {
 				return Object(vm); // Return a NULL object
 			} else {
 				sq_getstackobj(vm, -1, &slotObj);
+				Object result(slotObj, vm); // Own transient _get results before popping.
 				sq_pop(vm, 2);
-				return Object(slotObj, vm);
+				return result;
 			}
 		}
 

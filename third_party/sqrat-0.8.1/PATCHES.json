@@ -1,0 +1,8 @@
+{
+  "files": {
+    "include/sqrat/sqratObject.h": {
+      "upstream_sha256": "485ae6df30ad83bf24c53612e34e40d5ce9daaf4d69eaa6c7945e1b23ca9ed89",
+      "patched_sha256": "dd63baada6cc8d71de3c1eddf28d4c393e1898c078a5b5eddfb518c9caf82f46"
+    }
+  }
+}
