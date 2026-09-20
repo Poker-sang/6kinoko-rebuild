@@ -3432,51 +3432,6 @@ struct retdec_MAT2 * g559 = (struct retdec_MAT2 *)0x10000; // 0x51035c
 char g560 = 1; // 0x5109db
 int32_t g574 = 0; // 0x513738
 int32_t g575 = 0x43480000; // 0x513758
-/*
- * These are four adjacent SqPlus ClassType/TypeProperty descriptors in the
- * original image.  RetDec emitted each dword as an independent global, but
- * 45F3E0 and ClassTypeBase::GetName use the descriptor's +8 byte field.  Keep
- * the six dwords together so the recovered thiscall sees the original ABI.
- */
-struct retdec_sqplus_type_descriptor {
-    int32_t vtable;
-    int32_t value;
-    char *name;
-    int32_t value2;
-    int32_t value3;
-    int32_t initialized;
-};
-struct retdec_sqplus_type_descriptor g576_descriptor = { 0 }; // 0x513be0
-struct retdec_sqplus_type_descriptor g582_descriptor = { 0 }; // 0x513bf8
-struct retdec_sqplus_type_descriptor g588_descriptor = { 0 }; // 0x513c10
-struct retdec_sqplus_type_descriptor g594_descriptor = { 0 }; // 0x513c28
-
-/* Preserve the names used by the decompiler while making each descriptor
- * field addressable at its original byte offset. */
-#define g576 (g576_descriptor.vtable)
-#define g577 (g576_descriptor.value)
-#define g578 (g576_descriptor.name)
-#define g579 (g576_descriptor.value2)
-#define g580 (g576_descriptor.value3)
-#define g581 (g576_descriptor.initialized)
-#define g582 (g582_descriptor.vtable)
-#define g583 (g582_descriptor.value)
-#define g584 (g582_descriptor.name)
-#define g585 (g582_descriptor.value2)
-#define g586 (g582_descriptor.value3)
-#define g587 (g582_descriptor.initialized)
-#define g588 (g588_descriptor.vtable)
-#define g589 (g588_descriptor.value)
-#define g590 (g588_descriptor.name)
-#define g591 (g588_descriptor.value2)
-#define g592 (g588_descriptor.value3)
-#define g593 (g588_descriptor.initialized)
-#define g594 (g594_descriptor.vtable)
-#define g595 (g594_descriptor.value)
-#define g596 (g594_descriptor.name)
-#define g597 (g594_descriptor.value2)
-#define g598 (g594_descriptor.value3)
-#define g599 (g594_descriptor.initialized)
 /* RetDec emitted only the first byte/word of these global SquirrelObject
  * instances.  Their original slots are 12 bytes apart, and the repaired
  * __thiscall paths use the complete object at each address. */
@@ -3485,7 +3440,6 @@ int32_t g601[3] = { 0, 0, 0 }; // 0x513c4c
 int32_t g602[3] = { 0, 0, 0 }; // 0x513c58
 int32_t g603 = 0; // 0x513c64
 int32_t g604 = 0; // 0x513c68
-struct retdec_sqplus_type_descriptor g605_descriptor = {0};
 int32_t g611[3] = { 0, 0, 0 }; // 0x513c88, global SquirrelObject
 /* SetGlobalUpdateFunction stores a VM pointer and two SquirrelObject values
    in this 28-byte SquirrelFunction object. */
@@ -3513,9 +3467,7 @@ int32_t g621 = 0; // 0x514400
 /* Original 514420 is ActorManager(5143E0)+64, not an independent global.
    469987 writes the frame mask here before 4641D0 filters actor update groups. */
 #define g622 (*(int32_t *)(void *)(g_retdec_actor_manager_state + 64))
-struct retdec_sqplus_type_descriptor g623_descriptor = { 0 }; // 0x51446c
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
-struct retdec_sqplus_type_descriptor g630_descriptor = {0};
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
 int32_t g637 = 0; // 0x5144b4
 int32_t g638 = 0; // 0x5144bc
@@ -3531,12 +3483,6 @@ int32_t g645 = 0; // 0x5149e0
 int32_t unk_5149EC[3] = { 0, 0, 0 }; // zero-initialized global SquirrelObject storage
 char * g646; // 0x5149f8
 char * g647; // 0x5151f9
-int32_t g648 = 0; // 0x5152fc
-int32_t g649 = 0; // 0x515300
-int32_t g650 = 0; // 0x515304
-int32_t g651 = 0; // 0x515308
-int32_t g652 = 0; // 0x51530c
-char g653 = 0; // 0x515310
 
 int32_t g664 = 0; // 0x51620c
 int32_t g665 = 0; // 0x516210
@@ -61548,39 +61494,39 @@ int32_t function_470d00(int32_t a1) {
     int32_t v3[3];
     int32_t setdelegate_result;
 
-    retdec_trace_i32("470d00:enter-g582", g582);
+    retdec_trace_i32("470d00:enter-g582", (*kinoko_native_binding_type(0)));
     function_4aa210(a1, v3);
-    retdec_trace_i32("470d00:after-4aa210-g582", g582);
+    retdec_trace_i32("470d00:after-4aa210-g582", (*kinoko_native_binding_type(0)));
     retdec_trace_i32("470d00:delegate-type", v3[1]);
     retdec_trace_i32("470d00:delegate-data", v3[2]);
     if (function_4aa1a0((int32_t)(intptr_t)v3, "_set") == 0) {
-        retdec_trace_i32("470d00:after-4aa1a0-g582", g582);
+        retdec_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
         function_4a91c0_this(v2);
-        retdec_trace_i32("470d00:after-4a91c0-g582", g582);
+        retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
         function_4a95c0_this((int32_t)(intptr_t)v3,
                              (int32_t)(intptr_t)v2);
-        retdec_trace_i32("470d00:after-4a95c0-g582", g582);
+        retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
         function_4a9d70_this((int32_t)(intptr_t)v2);
-        retdec_trace_i32("470d00:after-first-dtor-g582", g582);
+        retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
         function_4a9490(v2, (int32_t)(intptr_t)v3,
                         (int32_t)(intptr_t)&function_4aaf30,
                         "_set", "sn|b|s");
-        retdec_trace_i32("470d00:after-set-binding-g582", g582);
+        retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
         function_4a9d70_this((int32_t)(intptr_t)v2);
-        retdec_trace_i32("470d00:after-second-dtor-g582", g582);
+        retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
         function_4a9490(v2, (int32_t)(intptr_t)v3,
                         (int32_t)(intptr_t)&function_4aab60,
                         "_get", "s");
-        retdec_trace_i32("470d00:after-get-binding-g582", g582);
+        retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
         function_4a9d70_this((int32_t)(intptr_t)v2);
-        retdec_trace_i32("470d00:after-third-dtor-g582", g582);
+        retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
         setdelegate_result = function_4a9f60(
             a1, (int32_t)(intptr_t)v3);
         retdec_trace_i32("470d00:setdelegate-result", setdelegate_result);
-        retdec_trace_i32("470d00:after-4a9f60-g582", g582);
+        retdec_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
     }
     int32_t result = function_4a9d70_this((int32_t)(intptr_t)v3);
-    retdec_trace_i32("470d00:exit-g582", g582);
+    retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }
 
@@ -61842,19 +61788,11 @@ int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
     int32_t v1 = (int32_t)a1;
     int32_t v2 = function_45fab0(v1, (int32_t)a3); // 0x4721b0
     retdec_trace_i32("4721a0:userdata", v2);
-    if ((g587 & 1) == 0) {
-        // 0x4721c9
-        g587 |= 1;
-        g583 = 0;
-        g585 = 0;
-        g586 = -1;
-        g582 = (int32_t)(uintptr_t)&g19;
-        g584 = "int";
-    }
+    int32_t *type = kinoko_native_binding_type(0);
     int32_t v3[5];
-    retdec_trace_i32("4721a0:g582-before", g582);
-    function_45f3e0_this(v3, (int32_t)a2, 0, 0, &g582, 4, a4);
-    retdec_trace_i32("4721a0:g582-after", g582);
+    retdec_trace_i32("4721a0:g582-before", (*kinoko_native_binding_type(0)));
+    function_45f3e0_this(v3, (int32_t)a2, 0, 0, type, 4, a4);
+    retdec_trace_i32("4721a0:g582-after", (*kinoko_native_binding_type(0)));
     retdec_trace_i32("4721a0:userdata-after-parse", v2);
     retdec_trace_i32("4721a0:parsed-type", v3[0]);
     *(int32_t *)v2 = v3[0];
@@ -61869,19 +61807,11 @@ int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
 int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
     int32_t v1 = (int32_t)a1;
     int32_t v2 = function_45fab0(v1, (int32_t)a3); // 0x472250
-    if ((g587 & 1) == 0) {
-        // 0x472269
-        g587 |= 1;
-        g583 = 0;
-        g585 = 0;
-        g586 = -1;
-        g582 = (int32_t)(uintptr_t)&g19;
-        g584 = "int";
-    }
+    int32_t *type = kinoko_native_binding_type(0);
     int32_t v3[5];
-    retdec_trace_i32("472240:g582-before", g582);
-    function_45f3e0_this(v3, a2, 0, 0, &g582, 4, 2);
-    retdec_trace_i32("472240:g582-after", g582);
+    retdec_trace_i32("472240:g582-before", (*kinoko_native_binding_type(0)));
+    function_45f3e0_this(v3, a2, 0, 0, type, 4, 2);
+    retdec_trace_i32("472240:g582-after", (*kinoko_native_binding_type(0)));
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
     *(int32_t *)(v2 + 8) = v3[2];
@@ -62861,7 +62791,7 @@ static __declspec(noinline) void retdec_watch_g594(void) {
     if (retdec_g594_watch_busy != 0)
         return;
     retdec_g594_watch_busy = 1;
-    current = g594;
+    current = (*kinoko_native_binding_type(3));
     if (retdec_g594_watch_initialized == 0 ||
         current != retdec_g594_watch_value) {
         wsprintfA(message,
@@ -65013,38 +64943,13 @@ int32_t function_4ab010(void) {
 // Original SqPlus ClassType identities retained at the C/C++ boundary.
 // The rest of class/property/method binding lives in src/squirrel/.
 int32_t *kinoko_native_binding_type(int32_t category) {
-    struct retdec_sqplus_type_descriptor *descriptor;
-    int32_t vtable;
-    char *name;
-    switch (category) {
-    case -1: descriptor = &g576_descriptor; vtable = (int32_t)(intptr_t)&g18; name = NULL; break;
-    case 0: descriptor = &g582_descriptor; vtable = (int32_t)(intptr_t)&g19; name = "int"; break;
-    case 2: descriptor = &g588_descriptor; vtable = (int32_t)(intptr_t)&g20; name = "float"; break;
-    case 3: descriptor = &g594_descriptor; vtable = (int32_t)(intptr_t)&g21; name = "bool"; break;
-    default: return NULL;
-    }
-    if ((descriptor->initialized & 1) == 0) {
-        descriptor->initialized |= 1;
-        descriptor->value = 0;
-        descriptor->value2 = 0;
-        descriptor->value3 = -1;
-        descriptor->vtable = vtable;
-        descriptor->name = name;
-    }
-    return &descriptor->vtable;
+    return category == -1 ? kinoko_sqplus_game_type(0, function_460900)
+                          : kinoko_sqplus_scalar_type(category);
 }
 
 // ClassType<void> identity used by the original SqPlus instance map.
 int32_t kinoko_native_void_type(void) {
-    if ((g653 & 1) == 0) {
-        g653 |= 1;
-        g649 = 0;
-        g651 = 0;
-        g652 = -1;
-        g648 = (int32_t)(intptr_t)&g79;
-        g650 = 0;
-    }
-    return (int32_t)(intptr_t)&g648;
+    return (int32_t)(intptr_t)kinoko_sqplus_scalar_type(-1);
 }
 
 // Address range: 0x4ab170 - 0x4ab2a6
@@ -66172,36 +66077,13 @@ const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
 
 /* Original Input ClassType identity, shared by class and property registration. */
 int32_t *kinoko_input_binding_type(void) {
-    if (!(g623_descriptor.initialized & 1)) {
-        g623_descriptor.initialized |= 1;
-        g623_descriptor.value = g623_descriptor.value2 = 0;
-        g623_descriptor.value3 = -1;
-        g623_descriptor.vtable = (int32_t)(intptr_t)&g36;
-        g623_descriptor.name = NULL;
-    }
-    return &g623_descriptor.vtable;
+    return kinoko_sqplus_game_type(2, function_46ed80);
 }
 
 int32_t *kinoko_camera_binding_type(void) {
-    struct retdec_sqplus_type_descriptor *type = &g605_descriptor;
-    if (!(type->initialized & 1)) {
-        type->initialized |= 1;
-        type->vtable = (int32_t)(intptr_t)&g26;
-        type->value = type->value2 = 0;
-        type->value3 = -1;
-        type->name = NULL;
-    }
-    return &type->vtable;
+    return kinoko_sqplus_game_type(1, function_466540);
 }
 
 int32_t *kinoko_map_binding_type(void) {
-    struct retdec_sqplus_type_descriptor *type = &g630_descriptor;
-    if (!(type->initialized & 1)) {
-        type->initialized |= 1;
-        type->vtable = (int32_t)(intptr_t)&g38;
-        type->value = type->value2 = 0;
-        type->value3 = -1;
-        type->name = NULL;
-    }
-    return &type->vtable;
+    return kinoko_sqplus_game_type(3, function_4701b0);
 }

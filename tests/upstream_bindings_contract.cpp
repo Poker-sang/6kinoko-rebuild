@@ -1,4 +1,5 @@
 #include "kinoko/upstream_bindings.hpp"
+#include "kinoko/squirrel_binding.h"
 #include "kinoko/sqplus_source_entries.hpp"
 #include <sqplus.h>
 #include <sqrat/sqratTable.h>
@@ -13,6 +14,25 @@
 namespace up = kinoko::script::upstream;
 namespace {
 void require(bool ok, const char* text) { if (!ok) throw std::runtime_error(text); }
+void source_type_registry() {
+    auto* integer = reinterpret_cast<SqPlus::ClassTypeBase*>(kinoko_sqplus_scalar_type(0));
+    auto* floating = reinterpret_cast<SqPlus::ClassTypeBase*>(kinoko_sqplus_scalar_type(2));
+    auto* boolean = reinterpret_cast<SqPlus::ClassTypeBase*>(kinoko_sqplus_scalar_type(3));
+    auto* nothing = reinterpret_cast<SqPlus::ClassTypeBase*>(kinoko_sqplus_scalar_type(-1));
+    require(integer == SqPlus::ClassType<INT>::Get() &&
+        floating == SqPlus::ClassType<FLOAT>::Get() &&
+        boolean == SqPlus::ClassType<bool>::Get() && nothing == SqPlus::ClassType<void>::Get(),
+        "embedding shares the actual source registry, not a second byte descriptor");
+    require(std::strcmp(integer->GetTypeName(), "int") == 0 &&
+        std::strcmp(floating->GetTypeName(), "float") == 0 &&
+        std::strcmp(boolean->GetTypeName(), "bool") == 0 && !nothing->GetTypeName(),
+        "original descriptor names");
+    INT source = 1729, copied = 0; integer->vgetCopyFunc()(&copied, &source);
+    require(copied == source, "source virtual copy entry");
+    require(integer->MayHaveOffset() == 0 && integer->m_may_have_offset == 0,
+        "source base-offset cache is constructed and updated normally");
+    nothing->vgetCopyFunc()(nullptr, nullptr);
+}
 HSQOBJECT empty() { HSQOBJECT value; sq_resetobject(&value); return value; }
 bool same(HSQOBJECT a, HSQOBJECT b) {
     return a._type == b._type && a._unVal.pRefCounted == b._unVal.pRefCounted;
@@ -448,6 +468,7 @@ void cycle() {
 }
 int main() {
     try {
+        source_type_registry();
         variable_names();
         for (int i = 0; i < 8; ++i) cycle();
         std::atomic<bool> ok{true};

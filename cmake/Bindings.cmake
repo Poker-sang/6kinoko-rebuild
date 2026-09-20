@@ -4,6 +4,7 @@ set(KINOKO_BINDING_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 set(KINOKO_SQPLUS_DIR "${KINOKO_BINDING_ROOT}/third_party/sqplus-20080713/sqplus")
 add_library(kinoko_upstream_bindings STATIC
     "${KINOKO_BINDING_ROOT}/src/squirrel/upstream_sqplus.cpp"
+    "${KINOKO_BINDING_ROOT}/src/squirrel/squirrel_type_registry.cpp"
     "${KINOKO_BINDING_ROOT}/src/squirrel/upstream_sqplus_scalars.cpp"
     "${KINOKO_BINDING_ROOT}/src/squirrel/upstream_sqrat.cpp"
     "${KINOKO_SQPLUS_DIR}/SquirrelObject.cpp"
