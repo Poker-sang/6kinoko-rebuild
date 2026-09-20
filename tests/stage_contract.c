@@ -4402,6 +4402,37 @@ static int32_t __fastcall script_io_seek(struct script_io_stream* self, void* un
     return self->position;
 }
 
+static int test_chip_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream);
+    int32_t *source=(int32_t*)calloc(1,100), *loaded=(int32_t*)calloc(1,100);
+    CHECK(source && loaded);
+    source[0]=loaded[0]=PTR(&g313);
+    source[7]=source[14]=source[23]=loaded[7]=loaded[14]=loaded[23]=15;
+    source[1]=719;
+    retdec_string_assign_cstr(source+2,"map atlas");
+    retdec_string_assign_cstr(source+9,"data/worldmap/worldmap.mcd");
+    loaded[24]=0x5a;
+    const unsigned char saved=g673;
+    for (int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact;
+        stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g313.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g313.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && loaded[1]==719);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"map atlas")==0);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+9)),"data/worldmap/worldmap.mcd")==0);
+        CHECK(loaded[16]==0 && loaded[17]==0 && loaded[24]==0x5a);
+    }
+    g673=saved;
+    retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
+    puts("PASS: chip schema IO preserves independent native/MCD lifecycle fields");
+    return 0;
+}
+
 static int test_texture_serialization(int render_target) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
@@ -4804,7 +4835,7 @@ int main(int argc, char **argv) {
     if(argc==3 && strcmp(argv[1],"--portrait-regions")==0)
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
-        return test_texture_serialization(0) || test_texture_serialization(1);
+        return test_texture_serialization(0) || test_texture_serialization(1) || test_chip_serialization();
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {

@@ -31,6 +31,9 @@ Schema texture_schema = make_schema();
 // 4493F0 registers the same inherited fields, but 449AB0 uses a distinct
 // TUserData<CActRenderTarget> schema. Never let one class's header alter another.
 Schema render_target_schema = make_schema();
+// 42F2A0: chip resources serialize the base ID/name and the MCD filename.
+Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
+                   {"stChipFile", {3,3,36}}};
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
         field<void*>(field<int32_t>(stream)+12), address(bytes), size) & 0xff) != 0;
@@ -47,7 +50,7 @@ bool read_string(int32_t stream, std::string& text, uint32_t limit) {
 bool write_string(int32_t stream, const char* text, uint32_t size) {
     return transfer(stream, size) && (!size || transfer(stream, const_cast<char*>(text), size));
 }
-bool read(int32_t resource, int32_t reader, Schema& schema) {
+bool read(int32_t resource, int32_t reader, Schema& schema, bool texture) {
     uint8_t has_schema = 1;
     if (!transfer(reader, has_schema)) return false;
     if (has_schema) {
@@ -85,7 +88,7 @@ bool read(int32_t resource, int32_t reader, Schema& schema) {
         }
     }
     // 446A84: serialized crop rectangles disable constructor auto-size.
-    field<uint8_t>(resource+96) = 0;
+    if (texture) field<uint8_t>(resource+96) = 0;
     return true;
 }
 bool write(int32_t resource, int32_t writer, const Schema& schema) {
@@ -115,7 +118,7 @@ bool write(int32_t resource, int32_t writer, const Schema& schema) {
 extern "C" int32_t __fastcall kinoko_method_read_texture_resource(
     int32_t resource, void*, int32_t holder, int32_t version) {
     if (!resource || !holder || version != 1) return 0;
-    try { return read(resource, field<int32_t>(holder), texture_schema); }
+    try { return read(resource, field<int32_t>(holder), texture_schema, true); }
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_write_texture_resource(
@@ -128,12 +131,25 @@ extern "C" int32_t __fastcall kinoko_method_write_texture_resource(
 extern "C" int32_t __fastcall kinoko_method_read_render_target(
     int32_t resource, void*, int32_t holder, int32_t version) {
     if (!resource || !holder || version != 1) return 0;
-    try { return read(resource, field<int32_t>(holder), render_target_schema); }
+    try { return read(resource, field<int32_t>(holder), render_target_schema, true); }
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_write_render_target(
     int32_t resource, void*, int32_t writer) {
     if (!resource || !writer) return 0;
     try { return write(resource, writer, render_target_schema); }
+    catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_read_chip_resource(
+    int32_t resource, void*, int32_t holder, int32_t version) {
+    if (!resource || !holder || version != 1) return 0;
+    try { return read(resource, field<int32_t>(holder), chip_schema, false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_write_chip_resource(
+    int32_t resource, void*, int32_t writer) {
+    if (!resource || !writer) return 0;
+    try { return write(resource, writer, chip_schema); }
     catch (...) { return 0; }
 }
