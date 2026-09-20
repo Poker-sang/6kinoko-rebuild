@@ -2,7 +2,7 @@ name: Windows x86
 
 on:
   push:
-    branches: [master]
+    branches: [master, 'refactor/**']
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -32,6 +32,8 @@ jobs:
           python tools/check_migration_boundaries.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s tests -p test_legacy_islands.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p test_upstream_provenance.py -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Select installed MSVC x86 tools
         shell: pwsh
