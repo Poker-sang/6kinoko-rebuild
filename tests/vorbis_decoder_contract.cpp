@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <utility>
 #include <iterator>
+#include <array>
 
 #define REQUIRE(value) do { if (!(value)) { \
     std::fprintf(stderr, "vorbis contract line %d: %s\n", __LINE__, #value); std::abort(); \
@@ -18,6 +19,67 @@
 
 namespace {
 using kinoko::audio::VorbisDecoder;
+// Bit-by-bit oracle is independent of the optimized historical bitpacker.
+void check_bitreader() {
+    std::uint32_t random = 0x7135a9d1U;
+    for (unsigned pattern = 0; pattern < 64; ++pattern) {
+        std::array<unsigned char, 8> bytes{};
+        for (auto& byte : bytes) {
+            random = random * 1664525U + 1013904223U;
+            byte = static_cast<unsigned char>(random >> 24);
+        }
+        if (pattern == 0) bytes.fill(0xff);
+        if (pattern == 1) bytes.fill(0);
+        for (bool big : {false, true}) for (int offset = 0; offset < 8; ++offset) {
+            for (int width = 0; width <= 32; ++width) {
+                std::uint32_t expected = 0;
+                for (int bit = 0; bit < width; ++bit) {
+                    const int at = offset + bit;
+                    const unsigned value = (bytes[at / 8] >> (big ? 7 - at % 8 : at % 8)) & 1U;
+                    if (big) expected = (expected << 1) | value;
+                    else expected |= std::uint32_t(value) << bit;
+                }
+                oggpack_buffer buffer{};
+                (big ? oggpackB_readinit : oggpack_readinit)(&buffer, bytes.data(), static_cast<int>(bytes.size()));
+                (big ? oggpackB_adv : oggpack_adv)(&buffer, offset);
+                REQUIRE(static_cast<std::uint32_t>((big ? oggpackB_look : oggpack_look)(&buffer, width)) == expected);
+                REQUIRE(oggpack_bits(&buffer) == offset); // look must not consume
+                REQUIRE(static_cast<std::uint32_t>((big ? oggpackB_read : oggpack_read)(&buffer, width)) == expected);
+                REQUIRE(oggpack_bits(&buffer) == offset + width);
+            }
+        }
+    }
+    unsigned char byte = 0xa5;
+    for (bool big : {false, true}) {
+        oggpack_buffer buffer{};
+        (big ? oggpackB_readinit : oggpack_readinit)(&buffer, &byte, 1);
+        REQUIRE((big ? oggpackB_look : oggpack_look)(&buffer, 9) == -1);
+        REQUIRE(oggpack_bits(&buffer) == 0);
+        REQUIRE((big ? oggpackB_read : oggpack_read)(&buffer, 8) == byte);
+        REQUIRE((big ? oggpackB_read1 : oggpack_read1)(&buffer) == -1);
+    }
+}
+// Optional explicit output captures encoded fixtures AND decoded PCM for a
+// before/after codec comparison under the same compiler/configuration. This is
+// not a golden original-game recording. Integer fields are little-endian.
+void word(FILE* file, std::uint32_t value) {
+    unsigned char bytes[4];
+    for (unsigned i = 0; i != 4; ++i) bytes[i] = static_cast<unsigned char>(value >> (8 * i));
+    REQUIRE(std::fwrite(bytes, 1, 4, file) == 4);
+}
+void snapshot(FILE* file, int channels, int rate, const std::vector<unsigned char>& encoded,
+              const std::vector<short>& pcm) {
+    if (!file) return;
+    REQUIRE(encoded.size() <= UINT32_MAX && pcm.size() <= UINT32_MAX);
+    word(file, static_cast<std::uint32_t>(channels)); word(file, static_cast<std::uint32_t>(rate));
+    word(file, static_cast<std::uint32_t>(encoded.size())); word(file, static_cast<std::uint32_t>(pcm.size()));
+    REQUIRE(std::fwrite(encoded.data(), 1, encoded.size(), file) == encoded.size());
+    for (short sample : pcm) {
+        const auto value = static_cast<std::uint16_t>(sample);
+        const unsigned char bytes[] = {static_cast<unsigned char>(value), static_cast<unsigned char>(value >> 8)};
+        REQUIRE(std::fwrite(bytes, 1, 2, file) == 2);
+    }
+}
 std::vector<unsigned char> encode(int channels, int rate, int count, int serial) {
     vorbis_info info{}; vorbis_info_init(&info);
     REQUIRE(vorbis_encode_init_vbr(&info, channels, rate, 0.25f) == 0);
@@ -98,7 +160,7 @@ std::vector<short> upstream_pcm(const std::vector<unsigned char>& bytes) {
     REQUIRE(ov_clear(&stream) == 0); // closes the test FILE
     return result;
 }
-void check_stream(int channels, int rate) {
+void check_stream(int channels, int rate, FILE* capture) {
     constexpr int frames = 12000;
     const auto bytes = encode(channels, rate, frames, 91 + channels);
     int error = 777;
@@ -107,6 +169,7 @@ void check_stream(int channels, int rate) {
     REQUIRE(decoder->format().channels == channels && decoder->format().sample_rate == static_cast<unsigned>(rate));
     REQUIRE(decoder->frame_count() == frames);
     const auto expected = upstream_pcm(bytes);
+    snapshot(capture, channels, rate, bytes, expected);
     REQUIRE(expected.size() == static_cast<std::size_t>(frames * channels));
     REQUIRE(read_all(*decoder, 2048) == expected);
     short sentinel[32]; std::fill(std::begin(sentinel), std::end(sentinel), short{12345});
@@ -127,13 +190,17 @@ void check_stream(int channels, int rate) {
     }
 }
 }
-int main() {
+int main(int argc, char** argv) {
+    REQUIRE(argc == 1 || (argc == 3 && std::strcmp(argv[1], "--snapshot") == 0));
+    FILE* capture = argc == 3 ? std::fopen(argv[2], "wb") : nullptr;
+    REQUIRE(argc == 1 || capture != nullptr);
+    check_bitreader();
     int error = 0; unsigned char garbage[64]{};
     REQUIRE(!VorbisDecoder::open(nullptr, 1, error) && error == OV_EINVAL);
     REQUIRE(!VorbisDecoder::open(garbage, 0, error));
     REQUIRE(!VorbisDecoder::open(garbage, static_cast<std::size_t>(INT32_MAX) + 1, error));
     REQUIRE(!VorbisDecoder::open(garbage, sizeof garbage, error) && error < 0);
-    check_stream(1, 44100); check_stream(2, 44100); check_stream(2, 22050);
+    check_stream(1, 44100, capture); check_stream(2, 44100, capture); check_stream(2, 22050, capture);
     auto first = encode(2, 44100, 900, 700);
     const auto truncated = VorbisDecoder::open(first.data(), 4, error);
     REQUIRE(!truncated);
@@ -145,5 +212,6 @@ int main() {
     const auto wrong_format = encode(1, 44100, 200, 702);
     first.insert(first.end(), wrong_format.begin(), wrong_format.end());
     REQUIRE(!VorbisDecoder::open(first.data(), first.size(), error) && error == OV_EBADLINK);
-    std::puts("PASS: upstream 1.2.0 PCM, memory callbacks, format, seek, EOF, partial reads, ownership and chains");
+    if (capture) REQUIRE(std::fclose(capture) == 0);
+    std::puts("PASS: independent 0-32 bit reader oracle; upstream 1.2.0 PCM, memory callbacks, format, seek, EOF, partial reads, ownership and chains");
 }
