@@ -16,10 +16,8 @@
 #include <new>
 #include <utility>
 
-// The vendored decoder remains local to the audio implementation. No external
-// codec, filesystem search policy or script-format change is introduced.
-#define STB_VORBIS_NO_STDIO
-#include "stb_vorbis.c"
+// The original codec uses memory callbacks, not host FILE* or new search paths.
+#include "kinoko/vorbis_decoder.hpp"
 
 using float32_t = float;
 using float80_t = long double;
@@ -36,11 +34,6 @@ constexpr DWORD RETDEC_BGM_GUARD_BYTES = 16u;
 constexpr int RETDEC_SE_MAX_ENTRIES = 128;
 static_assert(sizeof(WAVEFORMATEX) == 18 && sizeof(DSBUFFERDESC) == 36);
 
-struct VorbisClose {
-    void operator()(stb_vorbis* decoder) const noexcept {
-        if (decoder) stb_vorbis_close(decoder);
-    }
-};
 // The track exclusively owns its secondary buffer, decoder and decoder input.
 // Moving transfers those owners; copying is impossible. Native ABI buffer
 // records only describe requests and never own these resources.
@@ -60,7 +53,7 @@ struct BgmTrack {
     kinoko::legacy::Allocation<unsigned char> encoded_data;
     kinoko::legacy::Allocation<short> decoded_samples;
     kinoko::legacy::Allocation<short> decode_scratch;
-    std::unique_ptr<stb_vorbis, VorbisClose> decoder;
+    std::unique_ptr<VorbisDecoder> decoder;
     kinoko::ComOwner<IDirectSoundBuffer> buffer;
     DWORD buffer_bytes = 0;
     DWORD encoded_bytes = 0;
@@ -478,8 +471,8 @@ static int retdec_decode_bgm(const char *path,
 {
     unsigned char *encoded = NULL;
     DWORD encoded_size = 0;
-    stb_vorbis *decoder;
-    stb_vorbis_info info;
+    std::unique_ptr<VorbisDecoder> decoder;
+    VorbisDecoder::Format info;
     unsigned int frame_count;
     size_t short_count;
     short *decoded = NULL;
@@ -497,17 +490,17 @@ static int retdec_decode_bgm(const char *path,
     if (!retdec_read_asset_bytes(path, &encoded, &encoded_size))
         return 0;
 
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error, NULL);
+    decoder = VorbisDecoder::open(encoded, encoded_size, error);
     if (decoder == NULL) {
         free(encoded);
         retdec_trace_i32("audio:vorbis-open-error", error);
         return 0;
     }
-    info = stb_vorbis_get_info(decoder);
-    frame_count = stb_vorbis_stream_length_in_samples(decoder);
+    info = decoder->format();
+    frame_count = static_cast<unsigned int>(decoder->frame_count());
     if (info.channels <= 0 || info.channels > 8 || info.sample_rate == 0 ||
         frame_count == 0) {
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         return 0;
     }
@@ -515,13 +508,13 @@ static int retdec_decode_bgm(const char *path,
     short_count = (size_t)frame_count * (size_t)info.channels;
     if (short_count > (size_t)0x7fffffff ||
         short_count > (size_t)0xffffffffu / sizeof(short)) {
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         return 0;
     }
     decoded = (short *)malloc(short_count * sizeof(short));
     if (decoded == NULL) {
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         return 0;
     }
@@ -529,15 +522,13 @@ static int retdec_decode_bgm(const char *path,
     frame_total = (int)frame_count;
     while (frame_cursor < frame_total) {
         int remaining_frames = frame_total - frame_cursor;
-        int got = stb_vorbis_get_samples_short_interleaved(
-            decoder, info.channels, decoded +
-                (size_t)frame_cursor * (size_t)info.channels,
-            remaining_frames * info.channels);
+        int got = decoder->read_frames(decoded +
+            (size_t)frame_cursor * (size_t)info.channels, remaining_frames);
         if (got <= 0)
             break;
         frame_cursor += got;
     }
-    stb_vorbis_close(decoder);
+    decoder.reset();
     free(encoded);
     if (frame_cursor <= 0) {
         free(decoded);
@@ -742,16 +733,14 @@ static int retdec_bgm_decode_loop_frames(BgmTrack *track,
     request_frames = 4096u / ((DWORD)track->channels * sizeof(short));
     if (request_frames > requested_frames)
         request_frames = requested_frames;
-    got = stb_vorbis_get_samples_short_interleaved(
-        track->decoder.get(), track->channels, output,
-        (int)(request_frames * (DWORD)track->channels));
+    got = track->decoder->read_frames(output, static_cast<int>(request_frames));
     if (got > 0) {
         track->source_frame += (DWORD)got;
         if (track->source_frame <= track->loop_end_frame)
             return got;
         seek_frame = track->source_frame - track->loop_end_frame +
                      track->loop_start_frame;
-        if (!stb_vorbis_seek(track->decoder.get(), seek_frame)) {
+        if (!track->decoder->seek_frame(seek_frame)) {
             track->source_ended = 1;
             return got;
         }
@@ -774,10 +763,9 @@ static DWORD retdec_bgm_decode_chunk(BgmTrack *track,
     channels = track->channels;
     if (channels <= 0 || channels > RETDEC_BGM_MAX_CHANNELS)
         return 0;
-    /* The original Vorbis helper produces 16-bit PCM.  Decode directly into
-       the destination instead of routing through float samples; the latter
-       can yield NaNs in this mixed RetDec translation unit and turns into
-       clipped noise after integer conversion. */
+    /* The original 412240 supplies ov_read with (little-endian, 2 bytes,
+       signed) and a 4096-byte limit. Let upstream perform its own PCM
+       clipping/conversion; do not duplicate the codec's floating-point path. */
     requested_frames = bytes / ((DWORD)channels * sizeof(short));
     while (written_frames < requested_frames) {
         int got;
@@ -789,10 +777,8 @@ static DWORD retdec_bgm_decode_chunk(BgmTrack *track,
             got = retdec_bgm_decode_loop_frames(
                 track, destination, requested_frames - written_frames);
         } else {
-            got = stb_vorbis_get_samples_short_interleaved(
-                track->decoder.get(), channels, destination,
-                (int)((requested_frames - written_frames) *
-                      (DWORD)channels));
+            got = track->decoder->read_frames(destination, static_cast<int>(
+                (std::min<DWORD>)(requested_frames - written_frames, 4096u / (channels * sizeof(short)))));
         }
         if (got <= 0) {
             if (!track->looping || track->source_ended) {
@@ -801,7 +787,7 @@ static DWORD retdec_bgm_decode_chunk(BgmTrack *track,
                 track->source_ended = 1;
                 break;
             }
-            if (!stb_vorbis_seek_start(track->decoder.get())) {
+            if (!track->decoder->seek_frame(0)) {
                 track->source_ended = 1;
                 break;
             }
@@ -1251,8 +1237,8 @@ static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *pa
 {
     unsigned char *encoded = NULL;
     DWORD encoded_size = 0;
-    stb_vorbis *decoder = NULL;
-    stb_vorbis_info info;
+    std::unique_ptr<VorbisDecoder> decoder;
+    VorbisDecoder::Format info;
     int error = 0;
     BgmTrack *track = &g_retdec_bgm_track;
     IDirectSoundBuffer *buffer;
@@ -1270,19 +1256,18 @@ static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *pa
         return 0;
     }
     retdec_trace_i32("bgm:encoded-bytes", (int32_t)encoded_size);
-    decoder = stb_vorbis_open_memory(encoded, (int)encoded_size, &error,
-                                      NULL);
+    decoder = VorbisDecoder::open(encoded, encoded_size, error);
     if (decoder == NULL) {
         free(encoded);
         retdec_trace_i32("audio:vorbis-open-error", error);
         return 0;
     }
-    info = stb_vorbis_get_info(decoder);
+    info = decoder->format();
     retdec_trace_i32("bgm:sample-rate", (int32_t)info.sample_rate);
     retdec_trace_i32("bgm:channels", (int32_t)info.channels);
     if (info.sample_rate != 44100 || info.channels <= 0 ||
         info.channels > RETDEC_BGM_MAX_CHANNELS) {
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         retdec_trace("audio:unsupported-vorbis-format");
         return 0;
@@ -1298,7 +1283,7 @@ static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *pa
     if (!retdec_create_secondary_buffer(&format, RETDEC_BGM_BUFFER_BYTES,
                                         &buffer)) {
         retdec_trace("bgm:buffer-create-failed");
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         return 0;
     }
@@ -1313,7 +1298,7 @@ static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *pa
         retdec_release_dsound_buffer(buffer);
         free(scratch);
         free(decoded_scratch);
-        stb_vorbis_close(decoder);
+        decoder.reset();
         free(encoded);
         return 0;
     }
@@ -1330,7 +1315,7 @@ static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *pa
     track->encoded_bytes = encoded_size;
     track->decode_scratch.reset((short *)scratch);
     track->decoded_samples.reset(decoded_scratch);
-    track->decoder.reset(decoder);
+    track->decoder = std::move(decoder);
     track->sample_rate = info.sample_rate;
     track->channels = (WORD)info.channels;
     track->looping = looping != 0;
