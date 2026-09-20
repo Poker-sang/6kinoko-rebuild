@@ -29541,66 +29541,16 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 // Address range: 0x4d3ce0 - 0x4d3d40
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-int32_t function_4d3ce0(void) {
-    int32_t v1 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x4d3ce8
-    if (v1 != 0) {
-        // 0x4d3cf4
-        g603 = v1;
-        *(int32_t *)v1 = v1;
-        int32_t v2 = g603; // 0x4d3cfb
-        *(int32_t *)(v2 + 4) = v2;
-        return _atexit((void (*)())0x4d47f0);
-    }
-    // 0x4d3d14
-    int32_t v3; // bp-20, 0x4d3ce0
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v3);
-    v3 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    return __asm_int3();
-}
+/* Native initializer and CRT exit callback: stage_cleanup.cpp. */
 
 
 // Address range: 0x4d3e50 - 0x4d3eac
-int32_t function_4d3e50(void) {
-    kinoko_initialize_render_queue();
-    return _atexit((void (*)())0x4d4930);
-}
+/* Native initializer and CRT exit callback: stage_cleanup.cpp. */
 
 // Address range: 0x4d3f50 - 0x4d3fdc
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-int32_t function_4d3f50(void) {
-    int32_t v1 = _3f__3f_2_40_YAPAXI_40_Z(24); // 0x4d3f58
-    if (v1 != 0) {
-        // 0x4d3f64
-        g638 = v1;
-        *(int32_t *)v1 = v1;
-        int32_t v2 = g638; // 0x4d3f6b
-        *(int32_t *)(v2 + 4) = v2;
-        int32_t v3 = g638; // 0x4d3f73
-        *(int32_t *)(v3 + 8) = v3;
-        *(char *)(g638 + 20) = 1;
-        *(char *)(g638 + 21) = 1;
-        return _atexit((void (*)())0x4d49d0);
-    }
-    // 0x4d3fa0
-    int32_t v4; // bp-20, 0x4d3f50
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v4);
-    v4 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    return _atexit((void (*)())0x4d4a30);
-}
+/* Native initializer and CRT exit callback: stage_cleanup.cpp. */
 
 
 // Address range: 0x4d4040 - 0x4d404c

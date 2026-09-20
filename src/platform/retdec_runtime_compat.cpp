@@ -174,12 +174,6 @@ double __atof_l(const char *text, void *locale, void *unused)
     return strtod(text, nullptr);
 }
 
-int _atexit(void (*function)(void))
-{
-    (void)function;
-    return 0;
-}
-
 /* Remaining C++ ABI/locale adapters are referenced by recovered callers.
    Several signatures and exception semantics are still incomplete. They are
    NOT equivalent to the modern STL or a working native exception runtime;
