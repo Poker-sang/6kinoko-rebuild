@@ -81,8 +81,9 @@ SQInteger sqrat_property_dispatch(HSQUIRRELVM vm, bool write, SQBool raiseerror,
                    Sqrat::sqVarGetWithContext(vm, raiseerror, invoke);
 }
 SQInteger sqrat_weakref(HSQUIRRELVM vm) {
-    struct HostClass : Sqrat::Class<int, Sqrat::NoConstructor> {
-        using Sqrat::Class<int, Sqrat::NoConstructor>::ClassWeakref;
+    struct NativeTag {};
+    struct HostClass : Sqrat::Class<NativeTag, Sqrat::NoConstructor> {
+        using Sqrat::Class<NativeTag, Sqrat::NoConstructor>::ClassWeakref;
     };
     return HostClass::ClassWeakref(vm);
 }

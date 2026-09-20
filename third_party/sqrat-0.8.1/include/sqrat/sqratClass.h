@@ -335,8 +335,8 @@ namespace Sqrat {
 				sq_pushobject(v, ClassType<B>::ClassObject());
 				sq_newclass(v, true);
 				sq_getstackobj(v, -1, &classObj);
-				sq_addref(vm, &classObj); // must addref before the pop!
-				sq_pop(vm, 1);
+				sq_addref(this->vm, &classObj); // must addref before the pop!
+				sq_pop(this->vm, 1);
 
 				InitDerivedClass(v);
 				ClassType<C>::Initialized() = true;
@@ -395,7 +395,7 @@ namespace Sqrat {
 			sq_newslot(vm, -3, false);
 
 			// pop the class
-			sq_pop(vm, 1);
+			sq_pop(this->vm, 1);
 		}
 	};
 

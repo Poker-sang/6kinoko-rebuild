@@ -11,6 +11,10 @@
     "include/sqrat/sqratMemberMethods.h": {
       "upstream_sha256": "104c833839b0600f28f89b1cc021aad509bd77d3c7ebf82fd28cad8a0fa4d547",
       "patched_sha256": "f67d3e266b0b87dfad1d3c595ab9309bbbd980ad7a21523ac3ad161d0c1ed12a"
+    },
+    "include/sqrat/sqratClass.h": {
+      "upstream_sha256": "c2e6bf52364006f6633ebd73770bad3df758d18dea0e67903f3a3bcc77568802",
+      "patched_sha256": "8252a537d80f65173acd76b193422bd2d5f127006309cea6423e1ab7f6b79126"
     }
   }
 }
