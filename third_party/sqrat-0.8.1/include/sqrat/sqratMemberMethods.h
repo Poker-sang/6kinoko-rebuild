@@ -1015,7 +1015,7 @@ namespace Sqrat {
 		return 1;
 	}
 
-	inline SQInteger sqVarGet(HSQUIRRELVM vm) {
+	inline SQInteger sqVarGetWithContext(HSQUIRRELVM vm, SQBool raiseerror, SQRESULT (*invoke)(HSQUIRRELVM,SQInteger,SQBool,SQBool)) {
 		// Find the get method in the get table
 		sq_push(vm, 2);
 		if (SQ_FAILED( sq_get(vm,-2) )) {
@@ -1026,9 +1026,12 @@ namespace Sqrat {
 		sq_push(vm, 1);
 
 		// Call the getter
-		sq_call(vm, 1, true, ErrorHandling::IsEnabled());
+		invoke(vm, 1, true, raiseerror);
 		return 1;
 	}
+	inline SQInteger sqVarGet(HSQUIRRELVM vm) {
+        return sqVarGetWithContext(vm, ErrorHandling::IsEnabled(), sq_call);
+    }
 
 	//
 	// Variable Set
@@ -1048,7 +1051,7 @@ namespace Sqrat {
 		return 0;
 	}
 
-	inline SQInteger sqVarSet(HSQUIRRELVM vm) {
+	inline SQInteger sqVarSetWithContext(HSQUIRRELVM vm, SQBool raiseerror, SQRESULT (*invoke)(HSQUIRRELVM,SQInteger,SQBool,SQBool)) {
 		// Find the set method in the set table
 		sq_push(vm, 2);
 		if (SQ_FAILED( sq_get(vm,-2) )) {
@@ -1060,10 +1063,13 @@ namespace Sqrat {
 		sq_push(vm, 3);
 
 		// Call the setter
-		sq_call(vm, 2, false, ErrorHandling::IsEnabled());
+		invoke(vm, 2, false, raiseerror);
 
 		return 0;
 	}
+	inline SQInteger sqVarSet(HSQUIRRELVM vm) {
+        return sqVarSetWithContext(vm, ErrorHandling::IsEnabled(), sq_call);
+    }
 }
 
 #endif

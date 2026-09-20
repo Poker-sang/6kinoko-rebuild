@@ -46,3 +46,11 @@ accepts a publication entry defaulting to sq_newslot; the recovered raw path
 supplies sq_rawset. All object/key/value pushes and cleanup remain the source
 algorithm. Host values are borrowed actual Object instances or strings. Offset
 accessor closures now use BindFunc's source userdata/copy/closure implementation.
+
+## Property dispatch
+
+sqVarGet/sqVarSet delegate to their original bodies with explicit error-handling
+and call-entry arguments. Defaults remain ErrorHandling::IsEnabled and sq_call.
+The host supplies the recovered scoped call entry and error byte, so nested VMs
+do not mutate a shared global. ClassWeakref is invoked directly from a source
+Class specialization without constructing a second class registry.

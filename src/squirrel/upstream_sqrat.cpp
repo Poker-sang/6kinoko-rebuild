@@ -1,6 +1,7 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqrat/sqratTable.h>
 #include <sqrat/sqratFunction.h>
+#include <sqrat/sqratClass.h>
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 static_assert(sizeof(Sqrat::Object) == 20, "Sqrat 0.8.1 agrees with recovered Win32 size");
@@ -73,6 +74,17 @@ HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value) {
 }
 void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns) {
     Adopted object(vm, value, owns); // actual ~Sqrat::Object owns the release
+}
+SQInteger sqrat_property_dispatch(HSQUIRRELVM vm, bool write, SQBool raiseerror,
+    SQRESULT (*invoke)(HSQUIRRELVM,SQInteger,SQBool,SQBool)) {
+    return write ? Sqrat::sqVarSetWithContext(vm, raiseerror, invoke) :
+                   Sqrat::sqVarGetWithContext(vm, raiseerror, invoke);
+}
+SQInteger sqrat_weakref(HSQUIRRELVM vm) {
+    struct HostClass : Sqrat::Class<int, Sqrat::NoConstructor> {
+        using Sqrat::Class<int, Sqrat::NoConstructor>::ClassWeakref;
+    };
+    return HostClass::ClassWeakref(vm);
 }
 bool sqrat_bind_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
                       HSQOBJECT incoming, bool raw) {
