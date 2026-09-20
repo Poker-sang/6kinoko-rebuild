@@ -394,3 +394,38 @@ hierarchical ordering, subtree movement, ancestor rejection, bad indices and
 inactive/missing results. It was compiled, not executed. The quiet build
 succeeded; all three DAT files were staged and SHA256-verified. Runtime testing
 remains delegated to the user.
+
+
+## r62: native file enumeration ownership
+
+Source 7a3b2b3 includes 3ded1c5. Original 452150/452220/452270/4522C0 and 455730
+were recovered in IDA. ActingPlayer now stores an actual std::map owning Win32
+find handles through RAII. IDs increment after successful FindFirstFile calls;
+lookup failure returns false/null, explicit close erases even if FindClose
+fails, and runtime destruction releases all outstanding searches. The four
+script methods use upstream Squirrel calls and native Sqrat closures. The old
+344-byte tree-node schema and manual tree cleanup are removed. The runtime's
++84 field now points to the actual C++ container; it is not an upstream vtable
+placed over legacy bytes. At ID wrap, replacement also closes the prior handle
+instead of leaking it. Constructor contracts now check observable enumeration
+and cleanup behavior rather than old red-black-tree node bytes.
+
+retired-file-enumeration.json proves deletion of 19 functions, 1154 definition
+lines. Quiet build and DAT staging succeeded; tests were compiled, not run.
+
+## r63: key and 2D layout clone virtuals
+
+Source bf2cba5 includes 6137c1d. Original 4265E0 now has an explicit receiver,
+RAII allocation and length-preserving native string copying, including embedded
+NULs. Layout cloning still dispatches through the source layout's virtual; a
+null clone result remains a key with null layout, matching the original.
+42B580/42B5C0/42B3F0 confirm C2DLayout copying covers offsets 8..312 while both
+constructor vtables remain intact. Trailing layout/key padding is not copied.
+The archive clone orchestrator remains separate in this batch.
+
+retired-key-layout-clones.json removes four functions (95 definition lines),
+including the obsolete constructor and the key clone's receiverless 406CC0
+call. Other 406CC0 callers and the final memcpy operand heuristic remain open.
+The dynamic-layer contract adds deep string/layout ownership and exact copying
+bounds. Quiet build and DAT staging succeeded; test source compiled but no test
+or game was executed by the agent.
