@@ -476,3 +476,9 @@ R61-r66 together retired 56 functions (1879 definition lines). No game or local
 automated test was run after the user's handoff. Overall replacement remains
 incomplete: CStringLayout, active property-template readers, remaining explicit
 string receivers/operand heuristic and CRT/RTTI compatibility still need work.
+
+
+## User confirmation after r66
+
+The user reported "已确认无误" after the r66 delivery. Record this as user
+validation of r66; the agent did not execute gameplay or automated tests.

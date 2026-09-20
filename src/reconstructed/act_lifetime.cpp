@@ -100,6 +100,34 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
     return 0;
 }
 
+void retdec_destroy_cact_key(int32_t value) {
+    if (value != 0) {
+        int32_t layout = field<int32_t>(value + 4);
+        if (layout != 0) {
+            if (field<int32_t>(layout) ==
+                    address(kinoko_act_host_symbols()->map_layout_vtable)) {
+                retdec_act_free_map_records(layout);
+                if (field<int32_t>(layout + 332) != 0)
+                    std::free(pointer<void>(field<int32_t>(layout + 332)));
+                field<int32_t>(layout + 332) = 0;
+                field<int32_t>(layout + 336) = 0;
+                field<int32_t>(layout + 340) = 0;
+                // Native map serialization also owns these flat ABI caches.
+                for (auto offset : {280, 296, 404, 436}) {
+                    std::free(pointer<void>(field<int32_t>(layout + offset)));
+                    field<int32_t>(layout + offset) = 0;
+                    field<int32_t>(layout + offset + 4) = 0;
+                    field<int32_t>(layout + offset + 8) = 0;
+                }
+            }
+            std::free(pointer<void>(layout));
+        }
+        if (field<int32_t>(value + 28) >= 16)
+            std::free(pointer<void>(field<int32_t>(value + 8)));
+        std::free(pointer<void>(value));
+    }
+}
+
 void retdec_destroy_cact_list(int32_t *list_slot)
 {
     int32_t sentinel;
@@ -111,32 +139,7 @@ void retdec_destroy_cact_list(int32_t *list_slot)
     node = field<int32_t>(sentinel);
     while (node != 0 && node != sentinel) {
         int32_t next = field<int32_t>(node);
-        int32_t value = field<int32_t>(node + 8);
-        if (value != 0) {
-            int32_t layout = field<int32_t>(value + 4);
-            if (layout != 0) {
-                if (field<int32_t>(layout) ==
-                        address(kinoko_act_host_symbols()->map_layout_vtable)) {
-                    retdec_act_free_map_records(layout);
-                    if (field<int32_t>(layout + 332) != 0)
-                        std::free(pointer<void>(field<int32_t>(layout + 332)));
-                    field<int32_t>(layout + 332) = 0;
-                    field<int32_t>(layout + 336) = 0;
-                    field<int32_t>(layout + 340) = 0;
-                    // Native map serialization also owns these flat ABI caches.
-                    for (auto offset : {280, 296, 404, 436}) {
-                        std::free(pointer<void>(field<int32_t>(layout + offset)));
-                        field<int32_t>(layout + offset) = 0;
-                        field<int32_t>(layout + offset + 4) = 0;
-                        field<int32_t>(layout + offset + 8) = 0;
-                    }
-                }
-                std::free(pointer<void>(layout));
-            }
-            if (field<int32_t>(value + 28) >= 16)
-                std::free(pointer<void>(field<int32_t>(value + 24)));
-            std::free(pointer<void>(value));
-        }
+        retdec_destroy_cact_key(field<int32_t>(node + 8));
         std::free(pointer<void>(node));
         node = next;
     }

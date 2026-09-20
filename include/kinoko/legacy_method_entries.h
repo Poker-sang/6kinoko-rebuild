@@ -48,6 +48,7 @@ int32_t __fastcall kinoko_method_write_map_layout(int32_t receiver, void* unused
 int32_t __fastcall kinoko_method_map_set_layer(int32_t receiver, void* unused_edx, int32_t layer);
 int32_t __fastcall kinoko_method_clone_c2d_layout(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_clone_act_key(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_clone_act_layer(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_clone_chip_resource(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_clone_texture_resource(int32_t receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_clone_render_target(int32_t receiver, void* unused_edx);

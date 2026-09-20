@@ -4644,6 +4644,49 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     int32_t* children=(int32_t*)(intptr_t)*(int32_t*)(intptr_t)(original_layers[0]+72);
     CHECK(children[0]==original_layers[5] && children[1]==original_layers[2]);
     CHECK(*(int32_t*)(intptr_t)(original_layers[0]+76)==PTR(children+2));
+    {
+        const int32_t source=original_layers[0];
+        const char text[]="return 17;";
+        const char compiled_text[]="/* This script is compiled. Can't read this. Don't edit this.*/";
+        free((void*)(intptr_t)*(int32_t*)(intptr_t)(source+296));
+        char* raw=(char*)malloc(sizeof(text)); CHECK(raw);
+        memcpy(raw,text,sizeof(text));
+        *(int32_t*)(intptr_t)(source+296)=PTR(raw);
+        *(uint32_t*)(intptr_t)(source+300)=sizeof(text);
+        retdec_string_assign_cstr((int32_t*)(intptr_t)(source+268),"a long original script filename.nut");
+        const int32_t head=*(int32_t*)(intptr_t)(source+180);
+        const int32_t source_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
+        const int32_t event=retdec_call_thiscall0_result((void*)(intptr_t)source_key,(void*)g277.e5);
+        CHECK(event && retdec_act_append_list(source+192,event));
+        *(int32_t*)(intptr_t)(source+196)=1;
+        for(int compiled=0;compiled<2;++compiled) {
+            *(uint8_t*)(intptr_t)(source+305)=(uint8_t)compiled;
+            const int32_t copy=retdec_call_thiscall0_result((void*)(intptr_t)source,(void*)g252.e5);
+            CHECK(copy && copy!=source);
+            CHECK(*(int32_t*)(intptr_t)(copy+72)!=PTR(children));
+            CHECK(memcmp((void*)(intptr_t)*(int32_t*)(intptr_t)(copy+72),children,8)==0);
+            CHECK(*(int32_t*)(intptr_t)(copy+316)==*(int32_t*)(intptr_t)(source+316));
+            CHECK(*(int32_t*)(intptr_t)(copy+320)==*(int32_t*)(intptr_t)(source+320));
+            CHECK(*(int32_t*)(intptr_t)(copy+340)==*(int32_t*)(intptr_t)(source+340));
+            CHECK(retdec_std_string_data(copy+268)[0]==0);
+            CHECK(strcmp((char*)(intptr_t)*(int32_t*)(intptr_t)(copy+296),compiled?compiled_text:text)==0);
+            CHECK(*(uint32_t*)(intptr_t)(copy+300)==(compiled?sizeof(compiled_text):sizeof(text)));
+            CHECK(*(uint8_t*)(intptr_t)(copy+304)==1 && *(uint8_t*)(intptr_t)(copy+305)==compiled);
+            for(int list=0;list<2;++list) {
+                const int offset=list?192:180;
+                const int32_t copy_head=*(int32_t*)(intptr_t)(copy+offset);
+                const int32_t copy_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)copy_head+8);
+                const int32_t layout=*(int32_t*)(intptr_t)(copy_key+4);
+                CHECK(copy_key!=source_key && copy_key!=event && *(int32_t*)(intptr_t)(copy+offset+4)==1);
+                CHECK(*(int32_t*)(intptr_t)(layout+304)==(list?source:copy));
+                CHECK(*(uint32_t*)(intptr_t)(copy_key+24)==*(uint32_t*)(intptr_t)(source_key+24));
+                CHECK(retdec_std_string_data(copy_key+8)!=retdec_std_string_data(source_key+8));
+            }
+            retdec_destroy_cact_layer(copy); free((void*)(intptr_t)copy);
+        }
+        *(uint8_t*)(intptr_t)(source+305)=0;
+        CHECK(execute_source(vm,root+2,"if(dynamicFirst.alpha!=0.375) throw \"clone altered source\";"));
+    }
     ((uint8_t*)player)[8]=0;
     CHECK(execute_source(vm,root+2,
         "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.SwapLayer(0,1)) throw \"inactive order\";"));

@@ -135,6 +135,7 @@ int32_t retdec_compare_strings32(int32_t left_object,
                                         int32_t right_object);
 int32_t retdec_construct_cact_script(int32_t this_ptr);
 void retdec_destroy_cact_layer(int32_t layer);
+void retdec_destroy_cact_key(int32_t key);
 void retdec_destroy_cact_list(int32_t *list_slot);
 void retdec_destroy_cact_object(int32_t object_ptr);
 void retdec_destroy_cact_resource(int32_t resource);
