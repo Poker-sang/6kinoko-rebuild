@@ -2,7 +2,7 @@ name: Upstream source checkpoint
 on:
   push:
     branches: [refactor/upstream-libraries-20260920]
-    paths: [tools/upstream-payload.json, .github/workflows/upstream-checkpoint.yml]
+    paths: [tools/upstream-payload.json]
 permissions:
   contents: write
   actions: write
@@ -18,9 +18,11 @@ jobs:
           fetch-depth: 0
           ref: refactor/upstream-libraries-20260920
       - name: Apply checked source commits
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: python
         run: |
-          import base64, gzip, hashlib, json, pathlib, subprocess
+          import base64, gzip, hashlib, json, pathlib, subprocess, tempfile, zipfile
           def git(*args, **kwargs):
               return subprocess.run(['git', *args], check=True, **kwargs)
           path = pathlib.Path('tools/upstream-payload.json')
@@ -29,21 +31,33 @@ jobs:
           git('config', 'user.name', 'OpenAI')
           git('config', 'user.email', 'noreply@openai.com')
           for commit in payload['commits']:
-              encoded = commit['patch']
-              if hashlib.sha256(encoded.encode()).hexdigest() == 'd61c9ee8e43d3196a67c5f464f481c5364fcaa057408b5d6585f56c60adc5287':
-                  assert encoded.count('NXidVZrkZA') == 1
-                  encoded = encoded.replace('NXidVZrkZA', 'NXidVrkZA')
-                  assert hashlib.sha256(encoded.encode()).hexdigest() == '6fd74790353bcfa9713c413138a8ae387c9429be43bad168ce8fd21d3012c493'
-              patch = gzip.decompress(base64.b64decode(encoded, validate=True))
-              git('apply', '--exclude=.github/workflows/*', '--index', '--check', '--binary', '-', input=patch)
-              git('apply', '--exclude=.github/workflows/*', '--index', '--binary', '-', input=patch)
-              if commit.get('vendor'):
-                  script = {'audio': 'tools/vendor_audio_sources.py', 'bindings': 'tools/vendor_binding_sources.py'}[commit['vendor']]
-                  subprocess.run(['python', script], check=True)
-                  git('add', 'third_party')
+              if commit.get('retire'):
+                  assert commit['retire'] == 'zlib-stl-268'
+                  with tempfile.TemporaryDirectory() as temporary:
+                      maps = []
+                      for mode, artifact, digest in [
+                          ('quiet', 10598685684, '2fc70fbf23c046dd7501bfb67e35fd40f25e8fcb994ad45682ce28d61afdf528'),
+                          ('diagnostic', 10598740623, '4f2cdb3cf252453f2cb263130d5eb03df2b3ab9c59fba0fac34eb37d7bb37503')]:
+                          data = subprocess.run(['gh', 'api', f'repos/${{ github.repository }}/actions/artifacts/{artifact}/zip'], check=True, capture_output=True).stdout
+                          assert hashlib.sha256(data).hexdigest() == digest
+                          archive = pathlib.Path(temporary) / (mode + '.zip')
+                          archive.write_bytes(data)
+                          with zipfile.ZipFile(archive) as z:
+                              for member in [f'build-runs/ci-{mode}/{name}' for name in ['source-commit.txt', 'kinoko.map', 'stage-contract.map']]:
+                                  z.extract(member, pathlib.Path(temporary) / mode)
+                          directory = pathlib.Path(temporary) / mode / 'build-runs' / ('ci-' + mode)
+                          maps.extend(['--map', str(directory / 'kinoko.map'), '--map', str(directory / 'stage-contract.map')])
+                      subprocess.run(['python', 'tools/upstream_retire_step.py', *maps], check=True)
+                  git('add', 'src/decompiled/6kinoko_rebuilt.c', 'docs/upstream-library-audit/retired-zlib-stl.json')
+              else:
+                  patch = gzip.decompress(base64.b64decode(commit['patch'], validate=True))
+                  git('apply', '--exclude=.github/workflows/*', '--index', '--check', '--binary', '-', input=patch)
+                  git('apply', '--exclude=.github/workflows/*', '--index', '--binary', '-', input=patch)
               git('commit', '-m', commit['message'])
           git('rm', str(path))
-          git('commit', '-m', 'chore: remove applied checkpoint payload')
+          if pathlib.Path('tools/upstream_retire_step.py').exists():
+              git('rm', 'tools/upstream_retire_step.py')
+          git('commit', '-m', 'chore: remove applied checkpoint transport')
           with open('source-commit.txt', 'w') as f:
               git('rev-parse', 'HEAD', stdout=f)
           git('bundle', 'create', 'source.bundle', 'HEAD')
