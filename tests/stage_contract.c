@@ -3977,6 +3977,44 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     return 0;
 }
 
+static int test_portrait_regions(const char *directory) {
+    char path[MAX_PATH];
+    for (char archive='a'; archive<='c'; ++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    int32_t act[60]={0};
+    CHECK(function_427530(PTR(act)));
+    CHECK(function_428000(PTR(act),"data/system/playerimage.act"));
+    /* Independent values from the original PlayerImage ACT, not resource order.
+       Shared atlases must keep distinct crops after deserialization. */
+    const char *names[]={"face_1","face_2","face_3","face_4","face_5",
+                         "face_6","face_7","face_0","face_Default"};
+    const int ids[]={11,14,15,16,17,18,19,20,21};
+    const int atlas[]={1,1,1,2,2,3,2,3,3};
+    const float x[]={0,137,273,0,137,137,273,0,273};
+    CHECK((act[57]-act[56])/4==9);
+    for (int i=0;i<9;++i) {
+        int32_t resource=0;
+        for (int32_t entry=act[56];entry<act[57];entry+=4) {
+            const int32_t candidate=*(int32_t*)(intptr_t)entry;
+            if (strcmp(retdec_std_string_data(candidate+8),names[i])==0) resource=candidate;
+        }
+        CHECK(resource);
+        CHECK(*(int32_t*)(intptr_t)(resource+4)==ids[i]);
+        sprintf_s(path,sizeof(path),"Data/System/face%d",atlas[i]);
+        CHECK(strcmp(retdec_std_string_data(resource+40),path)==0);
+        CHECK(*(float*)(intptr_t)(resource+80)==x[i]);
+        CHECK(*(float*)(intptr_t)(resource+84)==0);
+        CHECK(*(float*)(intptr_t)(resource+88)==136);
+        CHECK(*(float*)(intptr_t)(resource+92)==480);
+        CHECK(*(uint8_t*)(intptr_t)(resource+96)==0);
+    }
+    retdec_destroy_cact_object(PTR(act));
+    puts("PASS: all nine original PlayerImage atlas regions preserve names, IDs and crop rectangles");
+    return 0;
+}
+
 static int test_act_reentry(const char *directory) {
     char path[MAX_PATH];
     const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
@@ -4395,7 +4433,8 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
         int32_t compiled[26]={0};
         compiled[23]=PTR(stream.bytes+prefix+4); compiled[24]=stream.size-prefix-4;
         CHECK(retdec_execute_embedded_act_script(vm,PTR(compiled),root+2));
-        CHECK(execute_source(vm,root+2,"if(ioCompiledValue!=42) throw \"serialized closure\"; delete ioCompiledValue;"));
+        CHECK(execute_source(vm,root+2,"if(ioCompiledValue!=42) throw \"serialized closure\";\n"
+            "delete ioCompiledValue;\n"));
     }
     g673=previous;
     retdec_destroy_cact_script(PTR(loaded)); retdec_destroy_cact_script(PTR(script));
@@ -4705,6 +4744,8 @@ int main(int argc, char **argv) {
     }
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
         return test_act_reentry(argv[2]);
+    if(argc==3 && strcmp(argv[1],"--portrait-regions")==0)
+        return test_portrait_regions(argv[2]);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {

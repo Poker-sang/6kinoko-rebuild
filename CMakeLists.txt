@@ -366,6 +366,8 @@ add_test(NAME water_alpha_contract
     COMMAND kinoko_stage_contract --water-alpha "${KINOKO_REFERENCE_DIR}")
 add_test(NAME act_reentry_contract
     COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
+add_test(NAME portrait_regions_contract
+    COMMAND kinoko_stage_contract --portrait-regions "${KINOKO_REFERENCE_DIR}")
 
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")

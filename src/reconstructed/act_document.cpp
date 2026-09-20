@@ -713,6 +713,9 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         retdec_act_apply_resource(resource, properties, property_count);
     retdec_act_free_properties(properties, property_count);
     if (type == 0xc6fdb98au) {
+        // Original 446A84 clears auto-size after deserializing, including an
+        // absent property block. Serialized atlas regions must survive LoadTexture.
+        field<uint8_t>(resource + 96) = 0;
         kinoko_method_load_resource_texture(resource, nullptr, nullptr);
         retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
     } else {
