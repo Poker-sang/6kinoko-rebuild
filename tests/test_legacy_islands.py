@@ -57,6 +57,18 @@ class GraphContract(unittest.TestCase):
     def test_comments_are_not_roots(self):
         self.assertEqual(len(self.selected(external={'notes.h': '// g10\n/* function_401000() */'})), 4)
 
+    def test_unknown_address_records_are_retained_with_dependencies(self):
+        source = SAMPLE.replace('return (int32_t)&g11;', 'g99=1; return (int32_t)&g11;')
+        source += 'int32_t g99;\n'
+        entities, edges, roots, live = graph(source, {})
+        self.assertIn('g99', roots)
+        self.assertEqual(component(entities, edges, roots, live, ['function_401000']),
+                         {'g10', 'g11', 'function_401000', 'function_402000'})
+        with self.assertRaisesRegex(ValueError, 'reachable'):
+            component(entities, edges, roots, live, ['g99'])
+        with self.assertRaisesRegex(ValueError, 'reachable'):
+            self.selected(SAMPLE + 'int32_t g99 = (int32_t)&g10;\n')
+
     def test_string_that_looks_like_a_prototype_is_still_rooted(self):
         with self.assertRaisesRegex(ValueError, 'reachable'):
             self.selected(SAMPLE + 'const char *lookup = "int32_t function_401000(void);";\n')

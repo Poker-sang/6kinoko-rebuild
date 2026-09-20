@@ -7,7 +7,9 @@ roots. Calls, address-taking, string lookup names and original numeric addresses
 are references. Maps are reported (including linked candidates), not used to
 infer runtime execution. This is a lexical proof under the recovered C symbols
 and literal-address model, not an arbitrary pointer-arithmetic/runtime oracle.
-No code is deleted by this tool. Review the selected component before removal.
+Records without an original address are retained as roots, together with their
+dependencies. No code is deleted by this tool. Review the selected component
+before removal.
 """
 import argparse
 from collections import defaultdict
@@ -112,6 +114,12 @@ def graph(text, external, *, include_named_functions=False):
         if not any(e['start'] <= match.start() < e['end'] for e in entities):
             remainder[match.start():match.end()] = ' ' * (match.end() - match.start())
     root_sources = defaultdict(set)
+    for entry in entities:
+        if entry['original_address'] is None:
+            # Do not invent a numeric range for RetDec synthetic globals. Keep
+            # the record and everything it references; unrelated dead callers
+            # can still be audited using their own verified original ranges.
+            root_sources[entry['name']].add(MAIN + ':unknown-original-address')
     for name in references(''.join(remainder)):
         root_sources[name].add(MAIN + ':unmodelled')
     for path, source in external.items():
