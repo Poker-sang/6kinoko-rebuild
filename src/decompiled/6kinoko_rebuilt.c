@@ -25725,10 +25725,7 @@ int32_t function_470100_this(int32_t result, int32_t a1) {
 }
 
 // Address range: 0x4701b0 - 0x4701c1
-int32_t function_4701b0(int32_t a1, int32_t a2) {
-    // 0x4701b0
-    return function_470100_this(a1, a2);
-}
+/* SqPlus map copy is implemented in reconstructed/map_copy.cpp. */
 
 // Address range: 0x4701d0 - 0x4701d6
 // From class:    .?AU?$ClassType@VMapManager@NamespaceGlobal@@@SqPlus@@
