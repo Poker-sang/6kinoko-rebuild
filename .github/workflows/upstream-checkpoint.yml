@@ -30,15 +30,10 @@ jobs:
           git('config', 'user.email', 'noreply@openai.com')
           for commit in payload['commits']:
               encoded = commit['patch']
-              if hashlib.sha256(encoded.encode()).hexdigest() == '83e6c6dffb31bfaba3f176de45dc9ec4d00c680ea673ca97a4c1a6c05d33f529':
-                  for bad, good in [
-                      ('Yb5mmn+k/sF7D6YYWDCGGJCqrLwbjElAeSSeTNiy1', 'Yb5mmn+k/sF7D6YYWDCGJCqrLwbjElAeSSeTNiy1'),
-                      ('bvM/dqwWPbUXF2QZtqi+UUeF0/MsKWWuF41Fqd8sE', 'bvM/dqwWPbUXF2QZtqi+UeF0/MsKWWuF41Fqd8sE'),
-                      ('H8O3/tu0BkLfN8Gp/XWeRRkg5IBLxnXqxlVbwfH/S', 'H8O3/tu0BkLfN8Gp/XWeRkg5IBLxnXqxlVbwfH/S'),
-                      ('A1MuDNxOhNYsI7f7/ShcWnNzsDHLPjO7A+sVK9M+w', 'A1MuDNxOhNYsI7f7/ShcwDnNzsDHLPjO7A+sVK9M+w')]:
-                      assert encoded.count(bad) == 1
-                      encoded = encoded.replace(bad, good)
-                  assert hashlib.sha256(encoded.encode()).hexdigest() == '06db191d1799b6eb7232ef516870fd556b3578a811b1f322618bfc33cc1f5531'
+              if hashlib.sha256(encoded.encode()).hexdigest() == 'd61c9ee8e43d3196a67c5f464f481c5364fcaa057408b5d6585f56c60adc5287':
+                  assert encoded.count('NXidVZrkZA') == 1
+                  encoded = encoded.replace('NXidVZrkZA', 'NXidVrkZA')
+                  assert hashlib.sha256(encoded.encode()).hexdigest() == '6fd74790353bcfa9713c413138a8ae387c9429be43bad168ce8fd21d3012c493'
               patch = gzip.decompress(base64.b64decode(encoded, validate=True))
               git('apply', '--exclude=.github/workflows/*', '--index', '--check', '--binary', '-', input=patch)
               git('apply', '--exclude=.github/workflows/*', '--index', '--binary', '-', input=patch)
