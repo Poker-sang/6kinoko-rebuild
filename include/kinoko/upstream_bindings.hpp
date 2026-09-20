@@ -22,6 +22,7 @@ bool sqplus_new_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
 bool sqplus_get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key,
                           SQUserPointer* data, SQUserPointer* tag, bool raw);
 bool sqplus_get_typetag(HSQUIRRELVM vm, HSQOBJECT receiver, SQUserPointer* tag);
+bool sqplus_set_delegate(HSQUIRRELVM vm, HSQOBJECT receiver, HSQOBJECT delegate);
 HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text);
 HSQOBJECT sqplus_new_closure(HSQUIRRELVM vm, SQFUNCTION native);
 HSQOBJECT sqplus_assign(HSQUIRRELVM vm, HSQOBJECT previous, HSQOBJECT incoming);
@@ -57,6 +58,8 @@ HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
 void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value);
+HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value);
+void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns);
 void sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
                           const void* payload, std::size_t size,
                           SQFUNCTION function, bool static_slot);

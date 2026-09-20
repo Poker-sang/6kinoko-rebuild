@@ -303,15 +303,10 @@ extern "C" int32_t function_4a9f60(int32_t object, int32_t delegate) {
     retdec_trace_i32("4a9f60:source-type", delegate_type);
     retdec_trace_i32("4a9f60:this-data", data_bits(ObjectView(object).value()));
     retdec_trace_i32("4a9f60:source-data", data_bits(ObjectView(delegate).value()));
-    if ((delegate_type != OT_TABLE && delegate_type != OT_NULL) ||
-        (type != OT_TABLE && type != OT_USERDATA)) return 0;
-    auto* vm = current_vm();
-    ObjectView(object).push(vm);
-    ObjectView(delegate).push(vm);
-    const auto result = sq_setdelegate(vm, -2);
+    const auto result = upstream::sqplus_set_delegate(current_vm(),
+        ObjectView(object).value(), ObjectView(delegate).value());
     retdec_trace_i32("4a9f60:setdelegate-result", result);
-    pop(vm);
-    return SQ_SUCCEEDED(result);
+    return result;
 }
 extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, int32_t tag_output) {
     retdec_trace("4aa080:begin");

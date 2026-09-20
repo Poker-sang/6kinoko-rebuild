@@ -6,6 +6,7 @@
 #include "sqtable.h"
 #include "squserdata.h"
 #include <atomic>
+#include <cstdlib>
 
 extern "C" {
 extern char g560;
@@ -250,6 +251,23 @@ extern "C" int32_t function_415550_this(int32_t storage, int32_t name, int32_t s
         reinterpret_cast<SQFUNCTION>(pointer(function)), (static_slot & 255) != 0);
     trace_pair("415550:after-pop-type", "415550:after-pop-data", object.value());
     return address(vm);
+}
+extern "C" int32_t __fastcall kinoko_sqrat_copy_object(int32_t receiver, void*, int32_t output) {
+    const ObjectView object(receiver);
+    write(pointer(output), kinoko::script::upstream::sqrat_object_value(object.vm(), object.value()));
+    return output;
+}
+extern "C" int32_t __fastcall kinoko_sqrat_object_reference(int32_t receiver, void*) {
+    // This slot returns a reference into the host record, not a temporary
+    // source Object. Only the legacy storage address crosses this ABI bridge.
+    return ObjectView(receiver).payload_address();
+}
+extern "C" int32_t __fastcall kinoko_sqrat_delete_object(int32_t receiver, void*, int32_t flags) {
+    ObjectView object(receiver);
+    object.vtable(kinoko_sqrat_object_vtable()); // visible during a release hook
+    kinoko::script::upstream::sqrat_destroy_object(object.vm(), object.value(), object.owns());
+    if (flags & 1) std::free(pointer(receiver));
+    return receiver;
 }
 extern "C" int32_t function_415810_this(int32_t storage) {
     if (!storage) return -1;

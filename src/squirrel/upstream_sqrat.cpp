@@ -9,6 +9,7 @@ namespace {
 class Adopted final : public Sqrat::Object {
 public:
     Adopted(HSQUIRRELVM vm, HSQOBJECT value) : Object(vm, false) { obj = value; }
+    Adopted(HSQUIRRELVM vm, HSQOBJECT value, bool owns) : Object(vm, owns) { obj = value; }
     void bind(const SQChar* name, const void* payload, std::size_t size,
               SQFUNCTION function, bool static_slot) {
         BindFunc(name, const_cast<void*>(payload), size, function, static_slot);
@@ -44,6 +45,13 @@ void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value) {
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value) {
     Adopted adopted(vm, value);
     adopted.Release();
+}
+HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value) {
+    const Adopted object(vm, value);
+    return object.GetObject();
+}
+void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns) {
+    Adopted object(vm, value, owns); // actual ~Sqrat::Object owns the release
 }
 void sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
                           const void* payload, std::size_t size,

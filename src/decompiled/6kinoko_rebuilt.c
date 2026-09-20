@@ -599,15 +599,15 @@ struct vtable_4d5ba8_type {
 };
 
 struct vtable_4d5c68_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
+    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e2)(int32_t, void *, int32_t);
 };
 
 struct vtable_4d5c80_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
+    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e2)(int32_t, void *, int32_t);
 };
 
 struct vtable_4d5e88_type {
@@ -742,9 +742,9 @@ struct vtable_4eb20c_type {
 };
 
 struct vtable_4eb330_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
+    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e2)(int32_t, void *, int32_t);
 };
 
 struct vtable_4eb45c_type {
@@ -811,9 +811,9 @@ struct vtable_4ebacc_type {
 };
 
 struct vtable_4ebe58_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
+    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e2)(int32_t, void *, int32_t);
 };
 
 struct vtable_4ebe68_type {
@@ -829,9 +829,9 @@ struct vtable_4ebe68_type {
 };
 
 struct vtable_4ebe90_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)();
-    int32_t (*e2)(int32_t);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
+    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e2)(int32_t, void *, int32_t);
 };
 
 struct vtable_4ebed0_type {
@@ -980,13 +980,13 @@ struct vtable_4ec7cc_type {
 };
 
 struct vtable_4ec834_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
     int32_t (*e1)();
     int32_t (*e2)(int32_t);
 };
 
 struct vtable_4ec844_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
     int32_t (*e1)();
     int32_t (*e2)(int32_t);
 };
@@ -1047,13 +1047,13 @@ struct vtable_4eccfc_type {
 };
 
 struct vtable_4ecd84_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
     int32_t (*e1)();
     int32_t (*e2)(int32_t);
 };
 
 struct vtable_4ecd94_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
     int32_t (*e1)();
     int32_t (*e2)(int32_t);
 };
@@ -1524,8 +1524,6 @@ int32_t function_4028d0(int32_t a1, int32_t a2);
 
 int32_t function_402970(int32_t a1);
 int32_t function_4029d0(void);
-int32_t function_4029f0(int32_t result);
-int32_t function_402a10(void);
 int32_t function_402a20(void);
 int32_t function_402aa0(void);
 int32_t function_402ac0(void);
@@ -2504,7 +2502,6 @@ int32_t function_4534a0(void);
 int32_t function_4534c0(void);
 
 
-int32_t function_453580(char a1);
 
 
 int32_t function_4537d0(int32_t a1, int32_t a2);
@@ -4216,14 +4213,14 @@ struct vtable_4d5ba8_type g38 = {
     .e1 = (int32_t (*)(void))kinoko_method_class_type
 }; // 0x4d5ba8
 struct vtable_4d5c68_type g39 = {
-    .e0 = function_453580,
-    .e1 = function_402a10,
-    .e2 = function_4029f0
+    .e0 = kinoko_sqrat_delete_object,
+    .e1 = kinoko_sqrat_object_reference,
+    .e2 = kinoko_sqrat_copy_object
 }; // 0x4d5c68
 struct vtable_4d5c80_type g40 = {
-    .e0 = function_453580,
-    .e1 = function_402a10,
-    .e2 = function_4029f0
+    .e0 = kinoko_sqrat_delete_object,
+    .e1 = kinoko_sqrat_object_reference,
+    .e2 = kinoko_sqrat_copy_object
 }; // 0x4d5c80
 struct vtable_4d5e88_type g41 = {
     .e0 = function_45da00,
@@ -4258,9 +4255,9 @@ struct vtable_4eb20c_type g184 = {
     .e1 = function_401ba0
 }; // 0x4eb20c
 struct vtable_4eb330_type g185 = {
-    .e0 = function_453580,
-    .e1 = function_402a10,
-    .e2 = function_4029f0
+    .e0 = kinoko_sqrat_delete_object,
+    .e1 = kinoko_sqrat_object_reference,
+    .e2 = kinoko_sqrat_copy_object
 }; // 0x4eb330
 struct vtable_4eb45c_type g187 = {
     .e0 = function_4065a0,
@@ -4319,9 +4316,9 @@ struct vtable_4ebacc_type g231 = {
 }; // 0x4ebacc
 
 struct vtable_4ebe58_type g251 = {
-    .e0 = function_453580,
-    .e1 = function_402a10,
-    .e2 = function_4029f0
+    .e0 = kinoko_sqrat_delete_object,
+    .e1 = kinoko_sqrat_object_reference,
+    .e2 = kinoko_sqrat_copy_object
 }; // 0x4ebe58
 struct vtable_4ebe68_type g252 = {
     .e0 = function_41f990,
@@ -4335,9 +4332,9 @@ struct vtable_4ebe68_type g252 = {
     .e8 = function_41f580
 }; // 0x4ebe68
 struct vtable_4ebe90_type g253 = {
-    .e0 = function_453580,
-    .e1 = function_402a10,
-    .e2 = function_4029f0
+    .e0 = kinoko_sqrat_delete_object,
+    .e1 = kinoko_sqrat_object_reference,
+    .e2 = kinoko_sqrat_copy_object
 }; // 0x4ebe90
 struct vtable_4ebed0_type g256 = {
     .e0 = function_4200e0,
@@ -4470,12 +4467,12 @@ struct vtable_4ec7cc_type g328 = {
 }; // 0x4ec7cc
 
 struct vtable_4ec834_type g333 = {
-    .e0 = function_453580,
+    .e0 = kinoko_sqrat_delete_object,
     .e1 = function_437c90,
     .e2 = function_437c70
 }; // 0x4ec834
 struct vtable_4ec844_type g334 = {
-    .e0 = function_453580,
+    .e0 = kinoko_sqrat_delete_object,
     .e1 = function_437d50,
     .e2 = function_437d30
 }; // 0x4ec844
@@ -4532,12 +4529,12 @@ struct vtable_4eccfc_type g365 = {
 }; // 0x4eccfc
 
 struct vtable_4ecd84_type g370 = {
-    .e0 = function_453580,
+    .e0 = kinoko_sqrat_delete_object,
     .e1 = function_447bb0,
     .e2 = function_447b90
 }; // 0x4ecd84
 struct vtable_4ecd94_type g371 = {
-    .e0 = function_453580,
+    .e0 = kinoko_sqrat_delete_object,
     .e1 = function_447bb0,
     .e2 = function_447b90
 }; // 0x4ecd94
@@ -7025,22 +7022,12 @@ int32_t function_4029d0(void) {
 // Address range: 0x4029f0 - 0x402a05
 // From class:    .?AVInstance@Sqrat@@
 // Type:          virtual member function
-int32_t function_4029f0(int32_t result) {
-    // 0x4029f0
-    int32_t v1; // 0x4029f0
-    *(int32_t *)result = *(int32_t *)(v1 + 8);
-    *(int32_t *)(result + 4) = *(int32_t *)(v1 + 12);
-    return result;
-}
+
 
 // Address range: 0x402a10 - 0x402a14
 // From class:    .?AVInstance@Sqrat@@
 // Type:          virtual member function
-int32_t function_402a10(void) {
-    // 0x402a10
-    int32_t v1; // 0x402a10
-    return v1 + 8;
-}
+
 
 // Address range: 0x402a20 - 0x402a42
 // From class:    .?AVLocalScript@Sqrat@@
@@ -47168,22 +47155,7 @@ int32_t function_4534c0(void) {
 // Address range: 0x453580 - 0x4535b8
 // From class:    .?AV?$Class@U_@C2DMapLayout@@VNoConstructor@Sqrat@@@Sqrat@@
 // Type:          constructor
-int32_t function_453580(char a1) {
-    // 0x453580
-    int32_t v1; // 0x453580
-    int32_t result = v1;
-    *(int32_t *)result = (int32_t)&g39;
-    if (*(char *)(result + 16) != 0) {
-        // 0x453592
-        function_48a430(*(int32_t *)(result + 4), result + 8);
-    }
-    if ((a1 & 1) != 0) {
-        // 0x4535a8
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4535b1
-    return result;
-}
+
 
 
 // Address range: 0x4537d0 - 0x45387a

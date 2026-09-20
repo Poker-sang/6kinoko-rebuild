@@ -103,6 +103,10 @@ bool sqplus_get_typetag(HSQUIRRELVM vm, HSQOBJECT receiver, SQUserPointer* tag) 
     VmScope context(vm); Borrowed object(receiver);
     return object.GetTypeTag(tag) != 0;
 }
+bool sqplus_set_delegate(HSQUIRRELVM vm, HSQOBJECT receiver, HSQOBJECT delegate) {
+    VmScope context(vm); Borrowed object(receiver), incoming(delegate);
+    return object.SetDelegate(incoming) != 0;
+}
 HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text) {
     VmScope context(vm);
     auto result = SquirrelVM::CreateString(text);

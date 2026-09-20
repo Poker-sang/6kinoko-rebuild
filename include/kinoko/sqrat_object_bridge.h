@@ -9,6 +9,11 @@ extern "C" {
    bit patterns; implementation uses the vendored Squirrel 2.2.2 source. */
 int32_t kinoko_sqrat_object_vtable(void);
 int32_t kinoko_sqrat_root_vtable(void);
+/* Original thiscall virtual slots: ECX receiver, callee pops output/flags.
+   The unused EDX parameter lets MSVC express these entries without assembly. */
+int32_t __fastcall kinoko_sqrat_copy_object(int32_t receiver, void *unused, int32_t output);
+int32_t __fastcall kinoko_sqrat_object_reference(int32_t receiver, void *unused);
+int32_t __fastcall kinoko_sqrat_delete_object(int32_t receiver, void *unused, int32_t flags);
 void retdec_sqrat_trim_stack(int32_t vm, int32_t base);
 int32_t retdec_sqrat_root_construct(int32_t object_ptr, int32_t vm);
 void retdec_sqrat_object_release(int32_t object_ptr);
