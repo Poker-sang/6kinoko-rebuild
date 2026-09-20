@@ -554,6 +554,118 @@ struct DynamicLayerParent {
     ~DynamicLayerParent() { retdec_sqrat_release_pair(object[1], object+2); }
 };
 
+// 451F30: inactive players return zero, while an absent layer returns -1.
+int32_t get_layer_order(int32_t player, int32_t layer) {
+    if (!player || !field<uint8_t>(player+8)) return 0;
+    const auto holder = field<int32_t>(player+16);
+    const auto act = holder ? field<int32_t>(holder) : 0;
+    if (!act) return -1;
+    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    for (auto slot=begin; slot<end; slot+=4)
+        if (field<int32_t>(slot)==layer) return static_cast<int32_t>((slot-begin)/4);
+    return -1;
+}
+
+// 451F80/455990/455A20/455C40. A swap rebuilds child vectors, then flattens
+// roots in preorder; exchanging only the two slots breaks hierarchy ordering.
+bool swap_layers(int32_t player, int32_t first, int32_t second) {
+    if (!player) return false;
+    DynamicLayerLock lock(player);
+    if (!field<uint8_t>(player+8)) return false;
+    const auto holder = field<int32_t>(player+16);
+    const auto act = holder ? field<int32_t>(holder) : 0;
+    if (!act) return false;
+    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    if (end<begin || (end-begin)%4 || (!begin && end)) return false;
+    const auto count = (end-begin)/4;
+    if (first<0 || second<0 || static_cast<uint32_t>(first)>=count ||
+        static_cast<uint32_t>(second)>=count || first==second) return false;
+    std::vector<int32_t> layers(pointer<int32_t>(begin),pointer<int32_t>(end));
+    std::map<int32_t,size_t> index;
+    for (size_t i=0;i<layers.size();++i)
+        if (!layers[i] || !index.emplace(layers[i],i).second) return false;
+    // Bound malformed parent chains before traversing them. Valid ACT trees
+    // preserve the original ancestor rejection in both directions.
+    for (const auto layer: layers) {
+        auto parent = field<int32_t>(layer+88);
+        size_t depth=0;
+        while (parent) {
+            if (!index.count(parent) || ++depth>layers.size()) return false;
+            if ((layer==layers[first] && parent==layers[second]) ||
+                (layer==layers[second] && parent==layers[first])) return false;
+            parent=field<int32_t>(parent+88);
+        }
+    }
+    std::swap(layers[first],layers[second]);
+    std::map<int32_t,std::vector<int32_t>> children;
+    std::vector<int32_t> roots, ordered, pending;
+    for (const auto layer: layers) {
+        const auto parent=field<int32_t>(layer+88);
+        if (parent) children[parent].push_back(layer);
+        else roots.push_back(layer);
+    }
+    pending.assign(roots.rbegin(),roots.rend());
+    ordered.reserve(layers.size());
+    while (!pending.empty()) {
+        const auto layer=pending.back(); pending.pop_back();
+        ordered.push_back(layer);
+        const auto found=children.find(layer);
+        if (found!=children.end())
+            pending.insert(pending.end(),found->second.rbegin(),found->second.rend());
+    }
+    // Allocate any enlarged ABI buffers before changing live records. STL owns
+    // all temporary collections; only the native record boundary uses malloc.
+    std::map<int32_t,kinoko::legacy::Allocation<int32_t>> replacements;
+    for (const auto& entry: children) {
+        const auto child_begin=field<uint32_t>(entry.first+72);
+        const auto child_capacity=field<uint32_t>(entry.first+80);
+        if (child_capacity<child_begin || (child_capacity-child_begin)%4 ||
+            (!child_begin && child_capacity)) return false;
+        if (entry.second.size()>(child_capacity-child_begin)/4) {
+            kinoko::legacy::Allocation<int32_t> buffer(
+                static_cast<int32_t*>(std::malloc(entry.second.size()*4)));
+            if (!buffer) return false;
+            replacements.emplace(entry.first,std::move(buffer));
+        }
+    }
+    for (const auto layer: layers) {
+        const auto found=children.find(layer);
+        const auto size=found==children.end() ? 0u : found->second.size();
+        auto replacement=replacements.find(layer);
+        if (replacement!=replacements.end()) {
+            std::free(pointer<void>(field<int32_t>(layer+72)));
+            field<int32_t>(layer+72)=address(replacement->second.release());
+            field<uint32_t>(layer+80)=field<uint32_t>(layer+72)+size*4;
+        }
+        const auto child_begin=field<uint32_t>(layer+72);
+        if (size) std::memcpy(pointer<void>(child_begin),found->second.data(),size*4);
+        field<uint32_t>(layer+76)=child_begin+size*4;
+    }
+    std::memcpy(pointer<void>(begin),ordered.data(),ordered.size()*4);
+    return true;
+}
+
+int32_t get_layer_order_native(int32_t vm) {
+    int32_t player=0, layer=0;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),2,reinterpret_cast<SQUserPointer*>(&layer),nullptr)))
+        return sq_throwerror(kinoko_vm(vm),"invalid GetLayerOrder arguments");
+    sq_pushinteger(kinoko_vm(vm),get_layer_order(player,layer));
+    return 1;
+}
+int32_t swap_layers_native(int32_t vm) {
+    int32_t player=0;
+    SQInteger first=0, second=0;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getinteger(kinoko_vm(vm),2,&first)) ||
+        SQ_FAILED(sq_getinteger(kinoko_vm(vm),3,&second)))
+        return sq_throwerror(kinoko_vm(vm),"invalid SwapLayer arguments");
+    try {
+        sq_pushbool(kinoko_vm(vm),swap_layers(player,first,second));
+        return 1;
+    } catch (...) { return sq_throwerror(kinoko_vm(vm),"SwapLayer allocation failed"); }
+}
+
 // Original 4517C0. Native RAII replaces the old auto_ptr temporaries and the
 // source-backed Sqrat bridge replaces Object/GetSlot/RootTable emulation.
 int32_t create_layer_2d(int32_t player, const char* name) {
@@ -683,12 +795,10 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     function_460e00_register_actor_method(vm, class_object + 1, "CreateLayerString",
                                           address(function_451b70),
                                           address(function_455390), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "GetLayerOrder",
-                                          address(function_451f30),
-                                          address(function_4554b0), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "SwapLayer",
-                                          address(function_451f80),
-                                          address(function_455520), 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "GetLayerOrder",
+        address(get_layer_order_native), nullptr, 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "SwapLayer",
+        address(swap_layers_native), nullptr, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "BitBlt",
                                           address(kinoko_method_act_bitblt),
                                           address(function_4555a0), 0);

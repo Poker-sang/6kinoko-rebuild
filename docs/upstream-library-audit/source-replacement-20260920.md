@@ -371,4 +371,5 @@ The quiet Win32 build succeeds and DAT files are staged and hash-verified.
 New dynamic_layer_contract source compiles and covers active/inactive creation,
 long names, IDs, owned key/layout records and published property aliases.
 Per the user's testing handoff, neither this test nor any runtime/game test was
-executed for r60. The binary is offered for user testing, not marked validated.
+executed for r60. The user subsequently confirmed "R60没问题"; this is user
+validation, not an agent-executed test.

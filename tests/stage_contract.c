@@ -4551,12 +4551,45 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     }
     CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
     CHECK(execute_source(vm,root+2,
-        "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicHost; delete dynamicPlayer;"));
-    for(int i=0;i<2;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
+        "if(dynamicPlayer.GetLayerOrder(dynamicFirst)!=0 || dynamicPlayer.GetLayerOrder(dynamicSecond)!=1) throw \"initial order\";\n"
+        "if(dynamicPlayer.GetLayerOrder(inactiveLayer)!=-1) throw \"missing layer\";\n"
+        "if(dynamicPlayer.SwapLayer(-1,1) || dynamicPlayer.SwapLayer(0,2) || dynamicPlayer.SwapLayer(0,0)) throw \"invalid swap\";\n"
+        "dynamicThird <- dynamicPlayer.CreateLayer2D(\"third\");\n"
+        "dynamicFourth <- dynamicPlayer.CreateLayer2D(\"fourth\");\n"
+        "dynamicFifth <- dynamicPlayer.CreateLayer2D(\"fifth\");\n"
+        "dynamicSixth <- dynamicPlayer.CreateLayer2D(\"sixth\");\n"));
+    layers=(int32_t*)(intptr_t)act[52];
+    int32_t original_layers[6]; memcpy(original_layers,layers,sizeof(original_layers));
+    *(int32_t*)(intptr_t)(original_layers[2]+88)=original_layers[0];
+    *(int32_t*)(intptr_t)(original_layers[3]+88)=original_layers[1];
+    *(int32_t*)(intptr_t)(original_layers[4]+88)=original_layers[2];
+    *(int32_t*)(intptr_t)(original_layers[5]+88)=original_layers[0];
+    CHECK(execute_source(vm,root+2,
+        "if(dynamicPlayer.SwapLayer(0,4) || dynamicPlayer.SwapLayer(4,0)) throw \"ancestor swap\";\n"
+        "if(!dynamicPlayer.SwapLayer(0,1)) throw \"root swap\";\n"
+        "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.GetLayerOrder(dynamicFourth)!=1 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFirst)!=2 || dynamicPlayer.GetLayerOrder(dynamicThird)!=3 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFifth)!=4 || dynamicPlayer.GetLayerOrder(dynamicSixth)!=5) throw \"preorder\";\n"
+        "if(!dynamicPlayer.SwapLayer(3,5)) throw \"sibling swap\";\n"
+        "if(dynamicPlayer.GetLayerOrder(dynamicSixth)!=3 || dynamicPlayer.GetLayerOrder(dynamicThird)!=4 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFifth)!=5) throw \"subtree follows parent\";\n"
+        "if(!dynamicPlayer.SwapLayer(0,2)) throw \"second root swap\";\n"));
+    const int final_order[]={0,5,2,4,1,3};
+    for(int i=0;i<6;++i) CHECK(layers[i]==original_layers[final_order[i]]);
+    int32_t* children=(int32_t*)(intptr_t)*(int32_t*)(intptr_t)(original_layers[0]+72);
+    CHECK(children[0]==original_layers[5] && children[1]==original_layers[2]);
+    CHECK(*(int32_t*)(intptr_t)(original_layers[0]+76)==PTR(children+2));
+    ((uint8_t*)player)[8]=0;
+    CHECK(execute_source(vm,root+2,
+        "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.SwapLayer(0,1)) throw \"inactive order\";"));
+    CHECK(execute_source(vm,root+2,
+        "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
+        "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
+    for(int i=0;i<6;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
     free(layers); retdec_sqrat_release_pair(vm,player_pair);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
-    puts("PASS: dynamic 2D layer IDs, key/layout ownership, long names and Sqrat publication aliases");
+    puts("PASS: dynamic 2D ownership, Sqrat aliases, layer order, ancestor rejection and subtree swaps");
     return 0;
 }
 
