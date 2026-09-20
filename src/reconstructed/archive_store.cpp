@@ -28,6 +28,7 @@ public:
     File& operator=(const File&)=delete;
     bool valid() const { return value_!=INVALID_HANDLE_VALUE; }
     HANDLE get() const { return value_; }
+    void close() { if(valid()) CloseHandle(detach()); }
     HANDLE detach() { return std::exchange(value_,INVALID_HANDLE_VALUE); }
     bool read(void *data,DWORD size) {
         DWORD read=0;
@@ -68,6 +69,7 @@ extern "C" int32_t function_410500(char *path) {
     if(!file.read(&count,sizeof(count)) || !file.read(&size,sizeof(size)) || size>256u*1024u*1024u) return 0;
     std::vector<uint8_t> bytes(size);
     if(size && !file.read(bytes.data(),size)) return 0;
+    file.close();
     kinoko_decode_archive_index(bytes.data(),size);
     const auto archive=static_cast<uint32_t>(archives.size());
     archives.emplace_back(path);g765=static_cast<int32_t>(archives.size());

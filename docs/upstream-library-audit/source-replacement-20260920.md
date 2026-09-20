@@ -830,3 +830,10 @@ Removed the disconnected legacy archive map/vector initialization from 410270 wh
 Replaced the active fixed 64-path/8192-entry C arrays and linear scan with real std::vector<std::string> archive ownership, std::map<uint32_t,std::list<Entry>> CRC buckets and vector-owned decrypted index bytes. File handles use scope ownership. The existing malformed-file length/read checks remain; artificial container capacity limits are gone. On a malformed entry after registration the archive and earlier entries remain, consistent with the original nontransactional loader rather than a fabricated rollback.
 
 IDA 410750/4109D0/4044D0 establishes the actual key protocol: CharLowerBuffA on a copy, actual upstream zlib CRC32 including the terminating NUL, unsigned map comparison, retained original path spelling, case-insensitive duplicate overwrite, and insertion-ordered collision successors. Lookup strips exactly ./ before replacing backslashes. The original skips name comparison for a bucket with no successor; that behavior is retained. Lookup publishes size/offset before opening and performs the original SetFilePointer call without inventing a new seek-failure branch. This removes the previously approximate globally normalized, linear-search implementation. Runtime coverage is pending user validation; no tests or game were executed.
+
+
+## R92 — declare the archive module's zlib dependency
+
+R91 failed compilation because zlib was linked only by downstream EXEs, so the library compiling archive_store.cpp did not inherit its include path. Declared kinoko_zlib directly on kinoko_squirrel_cpp_vm, which propagates its headers and link dependency to all consumers. Restored CloseHandle immediately after the index read, before decoding, as shown at original 410665. R91 is recorded as a failed, unstaged build; no success or runtime validation is claimed for it.
+
+Removed the now-unreferenced no-op _Init_locks destructor adapter using the R90 pinned-source/maps audit, after the obsolete atexit thunks were already deleted in R89.

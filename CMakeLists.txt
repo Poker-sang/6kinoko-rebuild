@@ -252,7 +252,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
 )
-target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_native_control)
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_native_control kinoko_zlib)
 target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
     "${KINOKO_SQUIRREL2_ROOT}/include"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel"

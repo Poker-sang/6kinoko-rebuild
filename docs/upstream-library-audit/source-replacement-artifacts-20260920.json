@@ -3332,6 +3332,28 @@
           "sha256": "57622e1b16e3111a3092d38f9185c9a3e7ead83f058b1455c22ae9f7ac5f6b09"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r91-quiet",
+      "source_commit": "f650a14df2e1985800e4ce6f31c01459adcb5d31",
+      "validation": "Build failed: archive_store.cpp could not find zlib.h because the owning static library lacked the zlib target dependency. Not staged; no tests/game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1ac6553148219642ea21db19195e8957981e4395dd5f85ec6657a49e36afb776"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/configure.log",
+          "size": 956,
+          "sha256": "4555c62bf0dbf0a684b761ad88b9a477129bcfcbd902af391a0168a6d075a078"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/build.log",
+          "size": 189501,
+          "sha256": "a4e62a69dea03f81fd7590a214da83b1d5399e15dcb5437ef9d515555c3d84f4"
+        }
+      ]
     }
   ]
 }

@@ -184,10 +184,7 @@ int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
     return (int32_t)(uintptr_t)result;
 }
 
-int32_t _3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ(void)
-{
-    return 0;
-}
+
 
 int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
 {
