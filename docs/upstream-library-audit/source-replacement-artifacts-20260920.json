@@ -2880,6 +2880,48 @@
         }
       ],
       "user_confirmation": "User reported R79 has no problems."
+    },
+    {
+      "batch": "pr7-complete-20260920-r80-quiet",
+      "source_commit": "6a46107b5db869ad1bb66dd3dbcaf314fbe29a0b",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Glyph cache/rebuild contract compiled only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "b67e9e237a374b48cc84a45918fc8ed6dc4bd31ef48a68482f846ea6a348e4c5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/configure.log",
+          "size": 956,
+          "sha256": "ef0f63a24bb29d669f08710d8a61becfad898658dde16f1d621d202b7e6684c4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/build.log",
+          "size": 613721,
+          "sha256": "c42eb100c5d566aacac3b3954cbc7b67222c4d880a76d2b275224c61df80da5b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/kinoko.map",
+          "size": 989020,
+          "sha256": "43fbba19ade381750e26e6385355394ad8d5c44054aff99ebba9f1566f9e6138"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/stage-contract.map",
+          "size": 1237903,
+          "sha256": "ec652d6c08664b894a3659071a2b431c20a47312b9aa3204f40fc4f5718cbadb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "b8bfdf9ce827088f5577ee9d7632fe5bf1b862d4827fff758ac4928b2f6094ec"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r80-quiet/kinoko_retdec_rebuild.exe",
+          "size": 835072,
+          "sha256": "d31885718651d9faeae24c62007c8e1503eaf220fb047b767139b28b78ecc000"
+        }
+      ]
     }
   ]
 }
