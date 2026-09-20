@@ -122,6 +122,7 @@ static bool restored() {
 
 extern "C" {
 int32_t g678;
+int32_t g350[11]{}; // CStringLayout identity used by the diagnostic texture view.
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 const KinokoActHostSymbols* kinoko_act_host_symbols() { return &test::symbols; }
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
