@@ -43,6 +43,13 @@ Schema layout_schema{
     {"alpha", {1,1,284}}, {"blend", {0,0,288}},
     {"colorR", {0,0,292}}, {"colorG", {0,0,296}}, {"colorB", {0,0,300}}
 };
+// Original 43C6B0 registers trans.* and roll.* at the same offsets. Preserve
+// that alias instead of inferring a different layout from the property names.
+Schema layout3d_schema{
+    {"trans.x", {1,1,16}}, {"trans.y", {1,1,20}}, {"trans.z", {1,1,24}},
+    {"roll.x", {1,1,16}}, {"roll.y", {1,1,20}}, {"roll.z", {1,1,24}},
+    {"scale.x", {1,1,28}}, {"scale.y", {1,1,32}}, {"scale.z", {1,1,36}}
+};
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
         field<void*>(field<int32_t>(stream)+12), address(bytes), size) & 0xff) != 0;
@@ -177,5 +184,11 @@ extern "C" int32_t __fastcall kinoko_method_write_layout_properties(
     int32_t layout, void*, int32_t writer) {
     if (!layout || !writer) return 0;
     try { return write(layout, writer, layout_schema); }
+    catch (...) { return 0; }
+}
+
+extern "C" int32_t function_43c860_this(int32_t layout, int32_t holder, int32_t version) {
+    if (!layout || !holder || version != 1) return 0;
+    try { return read(layout, field<int32_t>(holder), layout3d_schema, false); }
     catch (...) { return 0; }
 }

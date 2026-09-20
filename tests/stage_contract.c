@@ -4508,6 +4508,29 @@ static int test_layout_serialization(void) {
         CHECK(loaded[78]==1 && loaded[24]==0x12345678);
     }
     g673=saved;
+    /* Original 43C6B0 aliases trans.x and roll.x. Sorted reads make trans.x
+       the final assignment even when the header lists it before roll.x. */
+    stream.position=stream.size=0; stream.reading=0;
+    {
+        uint8_t has=1; uint32_t count=2,len=7,type=1;
+        float roll=1.25f, trans=-3.5f;
+        CHECK(script_io_transfer(&stream,NULL,&has,1));
+        CHECK(script_io_transfer(&stream,NULL,&count,4));
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"trans.x",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        len=6;
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"roll.x",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        CHECK(script_io_transfer(&stream,NULL,&roll,4));
+        CHECK(script_io_transfer(&stream,NULL,&trans,4));
+    }
+    stream.position=0; stream.reading=1;
+    int32_t layout3d[13]={0}; layout3d[1]=123; layout3d[7]=456;
+    CHECK(retdec_call_thiscall2_result(layout3d,(void*)kinoko_method_layout3d_assign,PTR(&holder),1)==1);
+    CHECK(stream.position==stream.size && ((float*)layout3d)[4]==-3.5f);
+    CHECK(layout3d[1]==123 && layout3d[7]==456);
     puts("PASS: all 17 layout properties round-trip and restore original transform-dirty state");
     return 0;
 }

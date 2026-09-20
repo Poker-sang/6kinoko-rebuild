@@ -16,7 +16,6 @@
 #include "kinoko/squirrel_native_arguments.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_method_entries.h"
-#include "kinoko/legacy_copy_entries.h"
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/squirrel_legacy_api.h"
 #include "kinoko/squirrel_source_runtime.h"
@@ -29764,26 +29763,7 @@ int32_t function_43c1c0(void) {
 // Address range: 0x43c860 - 0x43c8bb
 // From class:    .?AVC3DLayout@@
 // Type:          virtual member function
-int32_t function_43c860_this(int32_t this_ptr,
-                                    int32_t source_ptr,
-                                    int32_t mode) {
-    if (source_ptr == 0) {
-        // 0x43c86e
-        return 0;
-    }
-    // 0x43c876
-    if (mode != 1) {
-        // 0x43c86e
-        return mode & -256;
-    }
-    int32_t v2 = *(int32_t *)(*(int32_t *)*(int32_t *)source_ptr + 12); // 0x43c888
-    if ((char)v2 == 0) {
-        // 0x43c86e
-        return v2 & -256;
-    }
-    function_43d110_this((int32_t)(intptr_t)&g923, source_ptr);
-    return function_44d4c0((int32_t)(intptr_t)&g923, this_ptr) & -256 | 1;
-}
+
 
 // Address range: 0x43cec0 - 0x43cec6
 int32_t function_43cec0(void) {

@@ -261,7 +261,8 @@ def main():
     parser.add_argument('--source-ref', required=True)
     parser.add_argument('--include-named-functions', action='store_true',
                         help='Also model recovered CRT names; unmodelled functions remain roots')
-    parser.add_argument('--map', type=Path, action='append', required=True, dest='maps')
+    parser.add_argument('--map', type=Path, action='append', default=[], dest='maps',
+                        help='Optional matching linker evidence; source reachability is always checked')
     parser.add_argument('--seed', action='append', required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
