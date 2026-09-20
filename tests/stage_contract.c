@@ -5672,6 +5672,28 @@ static int test_actor_handle_lookup(void) {
     return 0;
 }
 
+static int test_actor_owner_list(void) {
+    int32_t manager[4]={0}, handle=0, probe=PTR(&pool_actor_delete_probe), a, b;
+    int32_t *pool=(int32_t*)calloc(1,80);
+    CHECK(pool);pool_retire_calls=pool_delete_calls=0;
+    CHECK(kinoko_actor_pool_construct(PTR(pool))==PTR(pool));
+    manager[0]=PTR(&g31);manager[1]=PTR(pool);
+    kinoko_actor_owner_list_construct(PTR(manager));
+    a=function_46aa60_this(PTR(manager));b=function_46aa60_this(PTR(manager));
+    CHECK(a && b && kinoko_actor_owner_list_size(PTR(manager))==2);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    CHECK(*(int32_t*)(intptr_t)(a+8)==1 && *(int32_t*)(intptr_t)(b+8)==1);
+    *(int32_t*)(intptr_t)(b+8)=2;
+    kinoko_actor_owner_list_clear(PTR(manager));
+    CHECK(kinoko_actor_owner_list_size(PTR(manager))==0 && pool_retire_calls==1);
+    CHECK(*(int32_t*)(intptr_t)(b+8)==1);
+    CHECK(function_46ab10_this(PTR(pool),PTR(&handle))==a);
+    *(int32_t*)(intptr_t)a=PTR(&probe);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g31.e0,0)==PTR(manager));
+    CHECK(pool_delete_calls==2 && manager[1]==0 && manager[2]==0);
+    return 0;
+}
+
 static int test_layout_secondary_lifetime(void) {
     unsigned char *layout=(unsigned char*)calloc(1,316);
     unsigned char *array=(unsigned char*)calloc(1,4+2*316);CHECK(layout && array);
@@ -5688,6 +5710,7 @@ static int test_layout_secondary_lifetime(void) {
 int main(int argc, char **argv) {
     CHECK(test_layout_secondary_lifetime()==0);
     CHECK(test_actor_handle_lookup()==0);
+    CHECK(test_actor_owner_list()==0);
     CHECK(test_map_virtual_clone()==0);
     if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)
         return test_owned_states(1);

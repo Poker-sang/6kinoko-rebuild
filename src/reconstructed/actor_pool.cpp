@@ -105,7 +105,8 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, v
     auto* state = field<Pool*>(manager + 4);
     // 46A450 visits every allocated slot, including recycled ones, before
     // destroying the lock, free-list, generations, and actor-pointer vector.
-    for (auto actor : state->actors) if (actor) destroy_actor(actor, 1);
+    for (size_t index = 0; index < state->actors.size(); ++index)
+        if (const auto actor = state->actors[index]) destroy_actor(actor, 1);
     DeleteCriticalSection(pointer<CRITICAL_SECTION>(manager + 52));
     delete state;
     field<Pool*>(manager + 4) = nullptr;

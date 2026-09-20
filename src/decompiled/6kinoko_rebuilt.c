@@ -1,3 +1,4 @@
+#include "kinoko/actor_owner_list.h"
 #include "kinoko/actor_pool.h"
 #include "kinoko/render_queue.h"
 #include "kinoko/ime_input.h"
@@ -570,7 +571,7 @@ struct vtable_4d5a1c_type {
 };
 
 struct vtable_4d5a5c_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, unsigned char);
     int32_t (*e1)();
 };
 
@@ -2124,7 +2125,6 @@ int32_t function_462f30(int32_t a1);
 static int32_t function_463210_this(int32_t tree_ptr, int32_t source_ptr);
 int32_t function_4634d0(int32_t a1);
 
-int32_t function_463580(int32_t a1);
 
 
 static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
@@ -2215,11 +2215,8 @@ int32_t function_46a260(int32_t a1, int32_t a2);
 
 
 int32_t function_46a7e0(char a1);
-int32_t function_46a9c0(void);
 int32_t function_46aa60_this(int32_t this_ptr);
-int32_t function_46aae0(char a1);
 int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr);
-static void retdec_actor_manager_clear_list(int32_t list_field);
 
 
 int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
@@ -3358,7 +3355,7 @@ struct vtable_4d5a1c_type g30 = {
     .e1 = (int32_t (*)())&function_4077c0
 }; // 0x4d5a1c
 struct vtable_4d5a5c_type g31 = {
-    .e0 = function_46aae0,
+    .e0 = kinoko_method_actor_owner_delete,
     .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
 }; // 0x4d5a5c
 struct vtable_4d5a94_type g33 = {
@@ -12778,76 +12775,7 @@ int32_t function_4634d0(int32_t a1) {
 
 
 // Address range: 0x463580 - 0x4635e0
-int32_t function_463580(int32_t a1) {
-    int32_t * v1 = (int32_t *)a1; // 0x463589
-    int32_t v2 = *v1; // 0x463589
-    int32_t * v3 = (int32_t *)v2;
-    int32_t v4 = *v3; // 0x46358b
-    int32_t v5 = v4; // 0x463591
-    int32_t * v6 = v3; // 0x463591
-    int32_t result = v2; // 0x463591
-    int32_t v7 = v2; // 0x463591
-    int32_t v8; // bp-16, 0x463580
-    int32_t v9 = &v8; // 0x463591
-    if (v4 != v2) {
-        int32_t v10 = v9;
-        int32_t * v11 = (int32_t *)(v5 + 8); // 0x463593
-        int32_t * v12 = (int32_t *)(*v11 + 8); // 0x463596
-        int32_t v13 = *v12 - 1; // 0x463596
-        *v12 = v13;
-        int32_t v14 = v10; // 0x463599
-        if (v13 == 0) {
-            // 0x46359b
-            v14 = v10 - 4;
-            *(int32_t *)v14 = *(int32_t *)(*v11 + 12);
-        }
-        // 0x4635ac
-        v9 = v14;
-        v5 = *(int32_t *)v5;
-        v7 = *v1;
-        while (v5 != v7) {
-            // 0x463593
-            v10 = v9;
-            v11 = (int32_t *)(v5 + 8);
-            v12 = (int32_t *)(*v11 + 8);
-            v13 = *v12 - 1;
-            *v12 = v13;
-            v14 = v10;
-            if (v13 == 0) {
-                // 0x46359b
-                v14 = v10 - 4;
-                *(int32_t *)v14 = *(int32_t *)(*v11 + 12);
-            }
-            // 0x4635ac
-            v9 = v14;
-            v5 = *(int32_t *)v5;
-            v7 = *v1;
-        }
-        // 0x4635b2
-        v6 = (int32_t *)v7;
-        result = *v6;
-    }
-    // 0x4635b2
-    *v6 = v7;
-    int32_t v15 = *v1; // 0x4635b8
-    *(int32_t *)(v15 + 4) = v15;
-    *(int32_t *)(a1 + 4) = 0;
-    if (result == *v1) {
-        // 0x4635d9
-        return result;
-    }
-    int32_t result2 = *(int32_t *)result; // 0x4635c8
-    *(int32_t *)(v9 - 4) = result;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (result2 != *v1) {
-        int32_t v16 = result2;
-        result2 = *(int32_t *)v16;
-        *(int32_t *)(v9 - 4) = v16;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4635d9
-    return result2;
-}
+
 
 
 /* Insert an Actor node into the priority tree.  The original uses an MSVC
@@ -13118,11 +13046,11 @@ static int32_t function_463af0_this(int32_t this_ptr) {
 
     *(int32_t *)(intptr_t)(this_ptr + 64) = -1;
     *(int32_t *)(intptr_t)(this_ptr + 116) = 0;
-    while (*(int32_t *)(intptr_t)(this_ptr + 12) < 512) {
+    while (kinoko_actor_owner_list_size(this_ptr) < 512) {
         if (function_46aa60_this(this_ptr) == 0)
             break;
     }
-    retdec_actor_manager_clear_list(this_ptr + 8);
+    kinoko_actor_owner_list_clear(this_ptr);
     return 1;
 }
 
@@ -15134,7 +15062,6 @@ int32_t function_46a260(int32_t a1, int32_t a2) {
 static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 {
     int32_t handle_manager;
-    int32_t actor_list;
     int32_t render_list;
     int32_t resource_list;
     int32_t priority_tree;
@@ -15147,12 +15074,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
            sizeof(g_retdec_actor_manager_state));
     *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g31;
 
-    actor_list = (int32_t)(intptr_t)calloc(1u, 12u);
-    if (actor_list == 0)
-        return 0;
-    *(int32_t *)(intptr_t)actor_list = actor_list;
-    *(int32_t *)(intptr_t)(actor_list + 4) = actor_list;
-    *(int32_t *)(intptr_t)(this_ptr + 8) = actor_list;
+    kinoko_actor_owner_list_construct(this_ptr);
 
     handle_manager = (int32_t)(intptr_t)calloc(1u, 80u);
     if (handle_manager == 0 ||
@@ -15250,28 +15172,7 @@ static int32_t retdec_actor_vector_push_i32(int32_t vector_ptr,
     return end - 4;
 }
 
-static void retdec_actor_manager_clear_list(int32_t list_field) {
-    int32_t sentinel;
-    int32_t node;
 
-    if (list_field == 0)
-        return;
-    sentinel = *(int32_t *)(intptr_t)list_field;
-    if (sentinel == 0)
-        return;
-    node = *(int32_t *)(intptr_t)sentinel;
-    while (node != 0 && node != sentinel) {
-        int32_t next = *(int32_t *)(intptr_t)node;
-        int32_t actor = *(int32_t *)(intptr_t)(node + 8);
-        if (actor != 0 && *(int32_t *)(intptr_t)(actor + 8) > 0)
-            --*(int32_t *)(intptr_t)(actor + 8);
-        free((void *)(intptr_t)node);
-        node = next;
-    }
-    *(int32_t *)(intptr_t)sentinel = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-    *(int32_t *)(intptr_t)(list_field + 4) = 0;
-}
 
 // Address range: 0x46a380 - 0x46a38a
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
@@ -15356,50 +15257,7 @@ int32_t retdec_create_render_layer_fixed(int32_t name_ptr)
 // Address range: 0x46a9c0 - 0x46aa52
 // From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
 // Type:          constructor
-int32_t function_46a9c0(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x46a9d0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x46a9c0
-    *(int32_t *)v2 = (int32_t)&g31;
-    int32_t v3 = v2 + 8; // 0x46a9f0
-    int32_t v4 = v3; // bp-36, 0x46a9f3
-    function_463580(v3);
-    int32_t * v5 = &v4; // 0x46aa05
-    if (*(int32_t *)(v2 + 4) != 0) {
-        int32_t v6 = 1; // bp-40, 0x46aa0b
-        v5 = &v6;
-    }
-    int32_t * v7 = (int32_t *)v3; // 0x46aa0f
-    int32_t v8 = *v7; // 0x46aa0f
-    int32_t * v9 = (int32_t *)v8; // 0x46aa11
-    int32_t v10 = *v9; // 0x46aa11
-    *v9 = v8;
-    int32_t v11 = *v7; // 0x46aa15
-    *(int32_t *)(v11 + 4) = v11;
-    *(int32_t *)(v2 + 12) = 0;
-    int32_t * v12 = (int32_t *)((int32_t)v5 - 4);
-    int32_t v13 = v10; // 0x46aa23
-    if (v10 != *v7) {
-        int32_t v14 = *(int32_t *)v10; // 0x46aa25
-        *v12 = v10;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        int32_t v15 = *v7; // 0x46aa32
-        v13 = v15;
-        while (v14 != v15) {
-            int32_t v16 = v14;
-            v14 = *(int32_t *)v16;
-            *v12 = v16;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            v15 = *v7;
-            v13 = v15;
-        }
-    }
-    // 0x46aa36
-    *v12 = v13;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    __writefsdword(0, v1);
-    return &g1224;
-}
+
 
 // Address range: 0x46aa60 - 0x46aad4
 // From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
@@ -15413,17 +15271,7 @@ int32_t function_46a9c0(void) {
 // Address range: 0x46aae0 - 0x46ab01
 // From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
 // Type:          virtual member function
-int32_t function_46aae0(char a1) {
-    // 0x46aae0
-    function_46a9c0();
-    if ((a1 & 1) != 0) {
-        // 0x46aaf1
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x46aafa
-    int32_t result; // 0x46aae0
-    return result;
-}
+
 
 // Address range: 0x46ab10 - 0x46aca1
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
