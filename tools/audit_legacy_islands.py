@@ -230,8 +230,6 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
         raise ValueError('Outside literal points into selected records: ' + repr(interior_hits))
     linked = defaultdict(list)
     map_reports = []
-    if not maps:
-        raise ValueError('Matching maps are required to report linker retention')
     for path in maps:
         recorded = path.with_name('source-commit.txt').read_text(encoding='utf-8-sig').strip()
         if recorded != commit:
@@ -253,7 +251,8 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
                 functions=sum(e['kind'] == 'function' for e in entries),
                 data=sum(e['kind'] == 'data' for e in entries),
                 selected_lines=sum(e['lines'] for e in entries),
-                linked_candidates=sum(bool(e['linked_maps']) for e in entries))
+                linker_evidence_available=bool(maps),
+                linked_candidates=sum(bool(e['linked_maps']) for e in entries) if maps else None)
 
 
 def main():
@@ -269,8 +268,10 @@ def main():
     report = audit(args.source_ref, args.maps, args.seed, include_named_functions=args.include_named_functions)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
+    linker = (f"{report['linked_candidates']} linker-retained nodes" if args.maps
+              else 'source-only audit; linker retention not measured')
     print(f"Closed component: {report['functions']} functions, {report['data']} data records; "
-          f"{report['linked_candidates']} linker-retained nodes; NO runtime claim.")
+          f"{linker}; NO runtime claim.")
 
 
 if __name__ == '__main__':
