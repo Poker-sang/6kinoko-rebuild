@@ -86,15 +86,19 @@ completed checkpoints (not substituted for later revision checks):
 | 35492572872 | 35a5be58b7eced31b59b7dd85ca7f33b584b755a | both configurations pass after integer fix |
 | 35493118260 | 5393ac83ac88fa2a38e50d2433ef44a168ec3c6e | inherited property regression intentionally fails before fix |
 | 35493261228 | 0514be16782bcc8e64d0af0fcf8638ff79304fbd | both configurations pass after source receiver integration |
+| 35493667851 | ec2d86c82763f7c1ff62eb5c0a498839fff81ade | both configurations 35/35, provenance checks included, temporary workflow removed |
 
-The recorded Vorbis fixture snapshot contains generated Ogg bytes and decoded
-PCM for mono 44100 Hz, stereo 44100 Hz and stereo 22050 Hz. Same-toolchain
-before/after Windows quiet/diagnostic snapshots matched byte-for-byte:
-`e430384272a9b3e520e5865f9c1ff532f959bf792cce826e01cf6ac67aaa1169db`
-(532224 bytes). This validates the narrow codec adaptations, **not** comparison
-with the original game. Final CI revision and artifact digests are recorded in
-the PR; each artifact contains source-commit.txt and CTest logs. Failed and
-successful batches are retained rather than overwritten locally.
+The recorded `vorbis-snapshot.bin` contains generated Ogg bytes and decoded
+PCM for mono 44100 Hz, stereo 44100 Hz and stereo 22050 Hz. Downloaded Windows
+quiet/diagnostic artifacts for `2cc8a985` and `ec2d86c8` contain byte-identical
+snapshots with SHA-256
+`aafe9128b7d35d65b37e176dec26dd92e943f414c06a3c8234ed309f1968d010`
+(133876 bytes). The earlier draft of this document recorded an incorrect size
+and digest; these values were corrected from the actual artifact members.
+This validates the narrow codec adaptations, **not** comparison with the
+original game. Final CI revision and artifact digests are recorded in the PR;
+each artifact contains source-commit.txt and CTest logs. Failed and successful
+batches are retained rather than overwritten locally.
 
 ## What is still not replaced
 
