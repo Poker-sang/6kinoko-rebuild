@@ -201,3 +201,20 @@ IDA's e8d7ff83 worker became unreachable; the required start/open scripts restor
 original analysis as session 3c59c915. Restored evidence is under r41. No gameplay
 claim is added for these batches; work has continued without closing the user's
 r18 game.
+
+## Further checkpoints: r43–r45
+
+- af56250: r43 passed 52/52 after the missing Squirrel type header fix; DAT staged.
+- d8ef184: removed the retired script ownership/registry component (9 functions,
+  2 globals, 1179 lines). r44 passed 52/52.
+- 845ca41: Input copy now retains its SqPlus object through source operations,
+  deep-copies device/key vectors, and preserves the shallow device-pointer deque.
+  Existing device vtables, allocator bytes and iterator proxy are preserved.
+  The original device deleting virtual now receives ECX explicitly. r45 passed
+  52/52, covering independent storage, wrap/growth, shrink, empty and self-copy.
+  DAT staged with size/SHA256 verification.
+
+The old Boost factory seeds are still source-reachable through ACT property
+reader virtuals, so none were deleted on linker absence. r45 source-graph.json
+records those paths. Original assembly evidence for Input and layer registration
+is retained under r44/r45. No additional gameplay run is claimed.
