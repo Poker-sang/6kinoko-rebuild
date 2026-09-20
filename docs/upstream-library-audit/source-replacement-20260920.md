@@ -482,3 +482,44 @@ string receivers/operand heuristic and CRT/RTTI compatibility still need work.
 
 The user reported "已确认无误" after the r66 delivery. Record this as user
 validation of r66; the agent did not execute gameplay or automated tests.
+
+
+## r67: CActLayer clone virtual and key cleanup
+
+Source 69f1280 includes 155a217. IDA 41EA50/41ECA0 confirms constructor-owned
+layer storage, independent child-vector allocation with shallow parent/child
+links, deep key/event cloning through their virtuals, SetLayer on main keys
+only, and source-backed Sqrat Table/Instance reference assignment. The new
+act_layer_clone.cpp uses native RAII and standard containers; it never executes
+the old receiverless string/vector/list assignment scaffolding. This changes
+the standalone clone virtual, not the archive clone orchestrator.
+
+41EA50 obtains script text through 415EA0 and writes it through 415F60 after
+assignment. IDA disassembly resolves the apparently constant zero length in
+pseudocode: it is the returned string's length loaded at 41EAEE. Plain scripts
+copy through their first NUL; compiled scripts yield the exact original 63-byte
+comment, retain the compiled byte and set the dirty byte. The destination script
+filename is cleared. Callback environments retain constructor state. Malformed
+unbounded script buffers and list cycles are rejected instead of unchecked
+original reads/traversal; partial clones are destroyed through native owners.
+
+Source review also found the native key-list cleanup freeing key+24 (the string
+length) instead of the heap address at key+8. A shared key destructor now frees
+the correct buffer and is used by both list cleanup and failed clone insertion.
+The existing dynamic-layer fixture already exercised long names; its source is
+extended with main/event lists, child-vector independence, layout rebinding,
+shared Sqrat pairs, both script modes and source survival after clone teardown.
+
+The pinned source-only retired-layer-clone.json audit removes 27 functions and
+six data records (750 definition lines), including 416700 and 41ECA0's old string
+assignment callers and disconnected binding dependencies. No outside symbolic
+or interior-literal references were found under the documented audit model.
+Quiet Win32 build and DAT staging succeeded; all added contract source compiled,
+but no test or game was executed by the agent, per the user's handoff.
+
+Lessons: track owning pointers separately from length/capacity in legacy byte
+records, and exercise destruction of heap-backed strings, not just successful
+construction. For decompiler constant arguments, inspect the caller's actual
+push/register sequence before translating: temporary-string lengths can be
+lost even when the callee is understood. Original odd compiled-script behavior
+is preserved rather than replaced with an inferred intent.
