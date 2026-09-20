@@ -91,6 +91,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr);
 int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version);
 int32_t retdec_act_make_layer(void);
+int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm);
 int32_t retdec_act_make_layout(int32_t reader_ptr);
 int32_t retdec_act_make_list(int32_t *list_slot);
 int32_t retdec_act_make_map_layout(int32_t reader_ptr);

@@ -119,30 +119,46 @@ int32_t retdec_act_append_list(int32_t list_slot, int32_t value)
     return 1;
 }
 
-int32_t retdec_act_make_layer(void)
-{
-    int32_t layer;
-
-    layer = address(std::calloc(1u, 348u));
-    if (layer == 0)
-        return 0;
+int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
+    if (!layer) return 0;
+    std::memset(pointer<void>(layer), 0, 348);
     field<int32_t>(layer) = address(kinoko_act_host_symbols()->layer_vtable);
-    field<int32_t>(layer + 0x60) = -1;
-    field<int32_t>(layer + 0x68) = -1;
-    field<int32_t>(layer + 0x6c) = -1;
-    field<int32_t>(layer + 0x80) = 0;
-    field<int32_t>(layer + 0x84) = 15;
-    field<uint8_t>(layer + 0x70) = 0;
-    field<uint16_t>(layer + 0x8c) = 1;
-    field<uint8_t>(layer + 0x5c) = 1;
-    if (!retdec_act_make_list(pointer<int32_t>(layer + 0xb4)) ||
-        !retdec_act_make_list(pointer<int32_t>(layer + 0xc0))) {
-        std::free(pointer<void>(layer));
+    field<int32_t>(layer + 96) = -1;
+    field<int32_t>(layer + 104) = -1;
+    field<int32_t>(layer + 108) = -1;
+    field<int32_t>(layer + 132) = 15;
+    retdec_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
+    field<uint16_t>(layer + 140) = 1;
+    field<uint8_t>(layer + 92) = 1;
+    if (!retdec_act_make_list(pointer<int32_t>(layer + 180)) ||
+        !retdec_act_make_list(pointer<int32_t>(layer + 192))) {
+        std::free(pointer<void>(field<int32_t>(layer + 180)));
+        std::free(pointer<void>(field<int32_t>(layer + 192)));
+        field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
         return 0;
     }
-    field<int32_t>(layer + 0xb8) = 0;
-    field<int32_t>(layer + 0xc4) = 0;
-    if (retdec_construct_cact_script(layer + 0xcc) == 0) {
+    retdec_construct_cact_script(layer + 204);
+    for (int32_t offset : {208, 228, 248}) field<int32_t>(layer + offset) = vm;
+    field<int32_t>(layer + 308) = address(kinoko_act_host_symbols()->layer_ref_vtable);
+    field<int32_t>(layer + 312) = vm;
+    field<uint8_t>(layer + 324) = 1;
+    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 316)));
+    field<int32_t>(layer + 328) = address(kinoko_act_host_symbols()->layer_layout_vtable);
+    field<int32_t>(layer + 332) = vm;
+    field<uint8_t>(layer + 344) = 1;
+    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
+    if (vm && !retdec_sqrat_new_table(vm, pointer<int32_t>(layer + 316))) {
+        retdec_destroy_cact_layer(layer);
+        return 0;
+    }
+    return layer;
+}
+
+int32_t retdec_act_make_layer(void) {
+    const int32_t layer = address(std::calloc(1u, 348u));
+    // The archive parser can run before VM creation; publication creates its
+    // script table once a VM is available. Original native callers pass g664.
+    if (!retdec_construct_cact_layer(layer, 0)) {
         std::free(pointer<void>(layer));
         return 0;
     }

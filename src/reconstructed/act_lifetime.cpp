@@ -92,6 +92,14 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     field<unsigned char>(script_ptr + 101) = 0;
 }
 
+extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
+    if (script) {
+        retdec_destroy_cact_script(script);
+        std::free(pointer<void>(script));
+    }
+    return 0;
+}
+
 void retdec_destroy_cact_list(int32_t *list_slot)
 {
     int32_t sentinel;

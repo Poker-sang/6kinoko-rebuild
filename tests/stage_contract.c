@@ -4279,6 +4279,26 @@ static int test_map_registration(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_original_layer_constructor(int32_t vm) {
+    int32_t *layer = malloc(348);
+    CHECK(layer); memset(layer, 0xcd, 348);
+    const int32_t previous = g664; g664 = vm;
+    CHECK(function_41e390(PTR(layer)) == PTR(layer)); g664 = previous;
+    CHECK(layer[24] == -1 && layer[26] == -1 && layer[27] == -1);
+    CHECK(strcmp(retdec_std_string_data(PTR(layer)+112), "Layer_") == 0);
+    CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
+    CHECK(layer[52] == vm && layer[57] == vm && layer[62] == vm);
+    int32_t missing[2] = {g483,g484};
+    CHECK(!retdec_sqrat_get(PTR(layer)+308,"CompileFile",PTR(missing)));
+    retdec_sqrat_release_pair(vm, missing);
+    retdec_destroy_cact_layer(PTR(layer)); free(layer);
+    int32_t *script = calloc(26, sizeof(int32_t));
+    CHECK(script && retdec_construct_cact_script(PTR(script)));
+    CHECK(retdec_call_thiscall0_result(script, (void*)g231.e3) == 0);
+    puts("PASS: original layer constructor source Table, empty Instance, default name and script deleting ABI");
+    return 0;
+}
+
 static int test_layout_registration_entries(int32_t vm) {
     int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
     CHECK(retdec_prepare_cact_layer_objects(vm, PTR(layer), environment));
@@ -4506,6 +4526,7 @@ int main(int argc, char **argv) {
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
     CHECK(test_map_registration(vm, root) == 0);
+    CHECK(test_original_layer_constructor(vm) == 0);
     CHECK(test_layout_registration_entries(vm) == 0);
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);
