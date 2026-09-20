@@ -331,10 +331,13 @@ void scalar_variables(HSQUIRRELVM vm) {
     float stored_float = 0; std::memcpy(&stored_float, data, sizeof(stored_float));
     require(stored_float == 42, "source float storage");
     const auto saved = bytes;
+    sq_throwerror(vm, "float policy sentinel");
+    sq_getlasterror(vm); HSQOBJECT prior_error; sq_getstackobj(vm, -1, &prior_error); sq_pop(vm, 1);
     sq_settop(vm, 2); sq_pushstring(vm, "bad", -1);
     require(SQ_FAILED(up::sqplus_write_scalar(vm, info, data)) && bytes == saved && sq_gettop(vm) == 3,
             "host float rejection preserves destination and stack");
-    sq_getlasterror(vm); require(sq_gettype(vm, -1) == OT_STRING, "float rejection retains API error");
+    sq_getlasterror(vm); HSQOBJECT current_error; sq_getstackobj(vm, -1, &current_error);
+    require(same(prior_error, current_error), "Squirrel 2.2.2 float rejection leaves last error untouched");
     sq_settop(vm, 0); info.flags = binding::Constant;
     require(up::sqplus_read_scalar(vm, info, nullptr, -42) == 1, "host float constant conversion");
     SQFloat result_float = 0; sq_getfloat(vm, -1, &result_float);

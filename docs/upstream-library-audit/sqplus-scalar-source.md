@@ -18,8 +18,8 @@ switch bodies and standalone StackHandler instantiation are unchanged.
 ## Deliberately retained host policies
 
 - Read-only or constant writes return SQ_ERROR without introducing C++ unwind.
-- Nonnumeric float writes preserve the destination and the existing API error
-  path, instead of using the snapshot's default-zero write policy.
+- Nonnumeric float writes preserve the destination and existing last-error
+  object (sq_getfloat returns SQ_ERROR without replacing it), instead of using the snapshot's default-zero write policy.
 - Constants are decoded from the established host representation before source
   dereference: full integer word, integer-to-float, full-word bool. The float
   immediate policy is not asserted to be original-binary parity.

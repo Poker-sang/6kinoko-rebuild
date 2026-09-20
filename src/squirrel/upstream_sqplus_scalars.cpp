@@ -77,7 +77,7 @@ SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const Variable& info, void* storag
         (info.flags & (binding::ReadOnly | binding::Constant))) return SQ_ERROR;
     // The established host rejects a nonnumeric float value and preserves the
     // destination. Snapshot StackHandler::GetFloat instead supplies zero.
-    // Keep the host policy and its actual sq_getfloat last-error side effect.
+    // Keep the host status; Squirrel 2.2.2 leaves last-error untouched here.
     if (info.category == SqPlus::VAR_TYPE_FLOAT &&
         sq_gettype(vm, 3) != OT_INTEGER && sq_gettype(vm, 3) != OT_FLOAT) {
         SQFloat unused;
