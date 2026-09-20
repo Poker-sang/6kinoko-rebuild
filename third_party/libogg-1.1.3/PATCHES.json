@@ -1,0 +1,9 @@
+{
+  "reason": "Defined bit arithmetic and bounded encoder interpolation; see PATCHES.md",
+  "files": {
+    "src/bitwise.c": {
+      "upstream_sha256": "393540191fb55da254dc9c7ed58ebc78906d052f968928d9580939c911748c77",
+      "patched_sha256": "05fd7815c17e65d75b685fd7c5a4a64f49026e65b6906e4f0ee5c2177b81b982"
+    }
+  }
+}
