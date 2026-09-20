@@ -6,7 +6,7 @@ enable_testing()
 include(../../cmake/Xiph.cmake)
 add_executable(kinoko_vorbis_decoder_contract ../vorbis_decoder_contract.cpp)
 target_link_libraries(kinoko_vorbis_decoder_contract PRIVATE kinoko_vorbis_decoder kinoko_vorbisenc)
-add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract)
+add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract --snapshot "${CMAKE_BINARY_DIR}/vorbis-snapshot.bin")
 
 set(KINOKO_SQUIRREL2_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../third_party/squirrel-2.2.2")
 include(../../cmake/Bindings.cmake)

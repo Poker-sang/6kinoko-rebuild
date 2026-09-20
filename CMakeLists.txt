@@ -431,7 +431,7 @@ add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
 
 add_executable(kinoko_vorbis_decoder_contract tests/vorbis_decoder_contract.cpp)
 target_link_libraries(kinoko_vorbis_decoder_contract PRIVATE kinoko_vorbis_decoder kinoko_vorbisenc)
-add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract)
+add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract --snapshot "${CMAKE_BINARY_DIR}/vorbis-snapshot.bin")
 
 add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
 target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
