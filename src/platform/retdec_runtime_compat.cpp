@@ -179,23 +179,13 @@ int32_t _3f__3f_2_40_YAPAXI_40_Z(uint32_t size)
     return (int32_t)(uintptr_t)malloc(size);
 }
 
-int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
-{
-    return (int32_t)(uintptr_t)result;
-}
 
 
 
-int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
-{
-    return 0;
-}
 
-int32_t _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z(char *message)
-{
-    (void)message;
-    return 0;
-}
+
+
+
 
 int32_t _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
     void *object, int32_t count, int32_t size, void (*destroy)(int32_t *))
@@ -212,25 +202,13 @@ int32_t _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
 
 
 
-int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
-    void *object, int32_t count, int32_t size, void (*destroy)(int32_t *))
-{
-    return _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
-        object, count, size, destroy);
-}
+
 
 int32_t ___report_gsfailure(void) { return 0; }
-int32_t __CxxThrowException_40_8(void) { return 0; }
 
-int32_t retdec_Xinvalid_argument(char *message)
-{
-    (void)message;
-    return 0;
-}
 
-int32_t unknown_fcd53371(void)
-{
-    return 0;
-}
+
+
+
 
 } // extern "C"
