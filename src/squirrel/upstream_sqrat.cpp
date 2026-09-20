@@ -158,6 +158,19 @@ bool sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
 } // namespace kinoko::script::upstream
 
 namespace kinoko::script::upstream {
+bool sqrat_run_script(HSQUIRRELVM vm, HSQOBJECT closure, HSQOBJECT environment,
+    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
+    class BorrowedScript final : public Sqrat::Script {
+    public:
+        BorrowedScript(HSQUIRRELVM vm, HSQOBJECT value) : Script(vm) { obj = value; }
+    } script(vm, closure);
+    try {
+        script.RunInEnvironment(environment, invoke);
+        return true;
+    } catch (const Sqrat::Exception&) {
+        return false;
+    }
+}
 bool sqrat_compile_and_run(HSQUIRRELVM vm, const char *source, std::size_t size,
     HSQOBJECT environment, SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
     const SQInteger top = sq_gettop(vm);

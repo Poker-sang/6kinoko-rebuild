@@ -67,6 +67,8 @@ bool sqplus_exists(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key);
 HSQOBJECT sqplus_get_delegate(HSQUIRRELVM vm, HSQOBJECT receiver);
 HSQOBJECT sqplus_get_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key);
 // found is independent of an OT_NULL result; _get is invoked exactly once.
+bool sqrat_run_script(HSQUIRRELVM vm, HSQOBJECT closure, HSQOBJECT environment,
+    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
 bool sqrat_compile_and_run(HSQUIRRELVM vm, const char* source, std::size_t size,
     HSQOBJECT environment, SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
 bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& result);

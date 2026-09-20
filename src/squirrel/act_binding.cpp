@@ -742,11 +742,8 @@ int32_t retdec_execute_act_source_script(
     const char *source = field<const char *>(script_ptr + 92);
     const int32_t size = field<int32_t>(script_ptr + 96);
     if (!source || size <= 0 || size > 0x1000000) return 0;
-    return kinoko::script::upstream::sqrat_compile_and_run(kinoko_vm(vm), source,
-        strnlen(source, size), kinoko_borrowed_object(environment_pair[0], environment_pair[1]),
-        [](HSQUIRRELVM target, SQInteger nargs, SQBool result, SQBool errors) -> SQRESULT {
-            return kinoko_sq_call(address(target), nargs, result, errors);
-        });
+    return kinoko_sq_compile_act_source(vm, source, static_cast<int32_t>(strnlen(source, size)),
+        environment_pair);
 }
 
 int32_t retdec_execute_act_callback(int32_t script_ptr,

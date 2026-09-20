@@ -175,13 +175,13 @@ extern "C" int32_t retdec_execute_embedded_act_script(int32_t id, int32_t script
     if (SQ_FAILED(load) || sq_gettop(vm) <= restore.top()) return 0;
     HSQOBJECT closure = empty(); sq_getstackobj(vm, -1, &closure);
     if (closure._type != OT_CLOSURE || !data_bits(closure)) return 0;
-    // The read closure stays below a second closure and its environment, exactly
-    // as in the original call sequence. Do not substitute the VM root table.
-    sq_pushobject(vm, closure);
-    sq_pushobject(vm, read<HSQOBJECT>(environment));
-    const auto result = kinoko_sq_call(id, 1, SQFalse, SQTrue);
-    retdec_trace_i32("act-script:execute-result", result);
-    return SQ_SUCCEEDED(result);
+    // Source LocalScript::Run leaves the read closure below its own call pair.
+    const bool result = upstream::sqrat_run_script(vm, closure, read<HSQOBJECT>(environment),
+        [](HSQUIRRELVM target, SQInteger count, SQBool value, SQBool errors) -> SQRESULT {
+            return kinoko_sq_call(address(target), count, value, errors);
+        });
+    retdec_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
+    return result;
 }
 extern "C" int32_t function_45e020_this(int32_t state, int32_t temporary,
     int32_t type, int32_t data) {

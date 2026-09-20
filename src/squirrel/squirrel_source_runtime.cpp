@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/squirrel_vm_lifecycle.h"
+#include "kinoko/upstream_bindings.hpp"
 #include <atomic>
 #include <cstddef>
 #include <cstring>
@@ -155,4 +156,16 @@ extern "C" int32_t __fastcall kinoko_sq_delete_refcounted(
     value->SQRefCounted::~SQRefCounted();
     if ((flags & 1) != 0) sq_free(value, 0);
     return object;
+}
+
+extern "C" int32_t kinoko_sq_compile_act_source(int32_t id, const char *text,
+    int32_t length, const int32_t environment[2]) {
+    auto *vm = pointer<SQVM>(id);
+    ReceiverScope receiver(vm);
+    HSQOBJECT object;
+    std::memcpy(&object, environment, sizeof(object));
+    return kinoko::script::upstream::sqrat_compile_and_run(vm, text, length, object,
+        [](HSQUIRRELVM target, SQInteger count, SQBool result, SQBool errors) -> SQRESULT {
+            return kinoko_sq_call(address(target), count, result, errors);
+        });
 }

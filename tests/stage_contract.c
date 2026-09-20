@@ -2839,10 +2839,11 @@ static int32_t compiler_test_feed(int32_t context) {
 }
 static int compile_error_calls, compile_error_valid;
 static int32_t compile_error_vm;
+static const char *compile_error_source = "callback source";
 static void compiler_test_error(int32_t vm, const char *error, const char *source, int32_t line, int32_t column) {
     ++compile_error_calls;
     compile_error_valid = vm == compile_error_vm && retdec_stack_vm() == vm &&
-        error && *error && strcmp(source,"callback source")==0 && line>0 && column>0;
+        error && *error && strcmp(source,compile_error_source)==0 && line>0 && column>0;
 }
 static int test_compiler_receivers(int32_t vm, int32_t *root) {
     const int top=function_48aa20(vm);
@@ -2895,7 +2896,13 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         const char *bad = "local =;";
         script[23] = PTR(bad); script[24] = (int32_t)strlen(bad);
         expected_vm_error = 1;
+        compile_error_source = "";
+        compile_error_calls = compile_error_valid = 0;
+        function_48afa0(vm, PTR(compiler_test_error));
         CHECK(!retdec_execute_act_source_script(vm, PTR(script), root+2));
+        CHECK(compile_error_calls == 1 && compile_error_valid);
+        function_48afa0(vm, previous_handler);
+        compile_error_source = "callback source";
         expected_vm_error = 0;
         CHECK(sq_gettop(kinoko_vm(vm)) == top);
     }
