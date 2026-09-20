@@ -2878,7 +2878,8 @@
           "size": 836096,
           "sha256": "9c1f4f23ab838af3ef2f9fba8c2c879874db477c4aad77e9da3905edfd514a03"
         }
-      ]
+      ],
+      "user_confirmation": "User reported R79 has no problems."
     }
   ]
 }

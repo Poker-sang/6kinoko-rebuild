@@ -4367,6 +4367,37 @@ static int test_input_copy(void) {
     return 0;
 }
 
+static int test_string_glyph_cache(void) {
+    int32_t layout[65]={0};
+    int32_t* atlas=(int32_t*)calloc(1,436);
+    int32_t* head=(int32_t*)calloc(1,12);
+    int32_t* map=(int32_t*)calloc(8,4);
+    CHECK(atlas && head && map);
+    head[0]=head[1]=PTR(head);
+    atlas[(24+348)/4]=PTR(head);
+    atlas[(24+388)/4]=15;
+    atlas[(24+344)/4]=PTR(malloc(32));
+    atlas[5]=4;atlas[108]=2;
+    layout[6]=layout[13]=15;
+    retdec_string_assign_cstr(layout+1,"AB");
+    retdec_string_assign_cstr(layout+8,"CD");
+    layout[22]=19;layout[40]=PTR(atlas);layout[41]=layout[42]=PTR(atlas)+436;
+    layout[44]=0x1234;layout[45]=PTR(map);layout[46]=8;layout[47]=7;layout[48]=2;
+    map[7]=PTR(calloc(1,256));map[0]=PTR(calloc(1,256));
+    CHECK(map[7] && map[0]);
+    ((int32_t*)(intptr_t)map[7])[2]=4;((int32_t*)(intptr_t)map[0])[2]=4;
+    ((int32_t*)(intptr_t)map[7])[63]=PTR(atlas);((int32_t*)(intptr_t)map[0])[63]=PTR(atlas);
+    CHECK(function_441250(layout)==1 && layout[41]==PTR(atlas)+436);
+    CHECK(function_4410c0(PTR(layout))==1);
+    CHECK(layout[41]==layout[40] && layout[42]==PTR(atlas)+436);
+    CHECK(layout[44]==0x1234 && layout[45]==0 && layout[46]==0 && layout[47]==0 && layout[48]==0);
+    CHECK(layout[5]==0 && layout[12]==4 && memcmp(layout+8,"ABCD",5)==0);
+    CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
+    free(atlas);
+    puts("PASS: wrapped glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
+    return 0;
+}
+
 static int test_map_manager_copy(void) {
     int32_t source[21]={0},target[21]={0};
     int32_t source_head[4]={0},target_head[4]={0};
@@ -5484,6 +5515,7 @@ int main(int argc, char **argv) {
     CHECK(test_physical_input() == 0);
     CHECK(test_input_aggregation() == 0);
     CHECK(test_map_manager_copy() == 0);
+    CHECK(test_string_glyph_cache() == 0);
     CHECK(test_input_copy() == 0);
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
