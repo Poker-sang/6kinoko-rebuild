@@ -1,0 +1,24 @@
+{
+  "release": "sqrat-0.8.1",
+  "url": "https://downloads.sourceforge.net/project/scrat/Sqrat/Sqrat%200.8/sqrat_0.8.1.zip",
+  "archive_sha256": "b9fead15226f3a44405e66d87d90e1d8c4a2f249ca3e1fa1b949ca4f3462051c",
+  "files": {
+    "docs/History.txt": "2722e9ce7abf78b3ea4968848a3b7debecab7decb3bffa517e56fe204230a647",
+    "docs/binding.html": "5d2077082d44cec17cc1d16a72c48abed0d01ddb6e581595a5867f96350f5a13",
+    "docs/index.html": "ff3091dc37095e9e52154ec55708226551d1bd662de32d6c4cb1a0021a7570fd",
+    "include/sqrat.h": "3643fdf17b79c5cd57acf687d3f7bdab5e4cafccad86b6e1e08db4e506395200",
+    "include/sqrat/sqratAllocator.h": "ed585dce14a5382bdf00d24736364c87808621e3b9b99de0d96f02e500256b0a",
+    "include/sqrat/sqratClass.h": "c2e6bf52364006f6633ebd73770bad3df758d18dea0e67903f3a3bcc77568802",
+    "include/sqrat/sqratClassType.h": "138debf437e4c36909f07b97407d2a641dacf8887e0c0d52ac6aadcdcf0fa492",
+    "include/sqrat/sqratConst.h": "77bd6006db991354d9f607a31017b3f49291dbf6e5a6363f9cb6df49f360cd20",
+    "include/sqrat/sqratFunction.h": "9a6ebb5fca502326c8c424bd8a08385b4969512f196130d04a8d10b7a8f83bdf",
+    "include/sqrat/sqratGlobalMethods.h": "4c48ff890c4ccc9cddac473e8fbdb89b4cfa549de8a6f296695ce5c21238065b",
+    "include/sqrat/sqratMemberMethods.h": "104c833839b0600f28f89b1cc021aad509bd77d3c7ebf82fd28cad8a0fa4d547",
+    "include/sqrat/sqratObject.h": "485ae6df30ad83bf24c53612e34e40d5ce9daaf4d69eaa6c7945e1b23ca9ed89",
+    "include/sqrat/sqratOverloadMethods.h": "4cde5628db1c808c68eedf93df7ee5d662a2aa2bed6e11b8a5c611aa3754f268",
+    "include/sqrat/sqratScript.h": "f29378c2cec8c259fb410bf6e366f5338c50db99c3b5be82a208cae651994c0f",
+    "include/sqrat/sqratTable.h": "74ecc1b0513fd94e90de7893e6369d9c1c087c8e4b3ea5f01ccdf36ba26dbc50",
+    "include/sqrat/sqratTypes.h": "d5a55be33f97eeabc15ebf40fde80e3dcc35239e108305513cb0ce3f496dacfb",
+    "include/sqrat/sqratUtil.h": "fd02d9f80373d07c92e6f326c08cd9ac6013b697237fd2bd7fc70b7ec6415958"
+  }
+}
