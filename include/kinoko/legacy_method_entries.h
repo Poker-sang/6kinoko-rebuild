@@ -18,6 +18,7 @@ int32_t __fastcall kinoko_method_register_texture_resource(int32_t receiver, voi
 int32_t __fastcall kinoko_method_register_render_target(int32_t receiver, void* unused_edx, int32_t vm);
 int32_t __fastcall kinoko_method_load_resource_texture(int32_t receiver, void* unused_edx, const char* prefix);
 int32_t __fastcall kinoko_method_unload_resource_texture(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_load_chip_resource(int32_t receiver, void* unused_edx, const char* prefix);
 
 int32_t __fastcall kinoko_method_resource_42f6c0(int32_t receiver, void* unused_edx, int32_t object, const char* name);
 int32_t __fastcall kinoko_method_resource_42f800(int32_t receiver, void* unused_edx, int32_t object, const char* name);

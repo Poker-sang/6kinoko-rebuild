@@ -4092,6 +4092,28 @@ static int test_act_reentry(const char *directory) {
                 CHECK(on==oh && ln==lh);
             }
         }
+        if (asset==1) {
+            int checked=0;
+            for (int32_t entry=source[56];entry<source[57];entry+=4) {
+                int32_t* original=*(int32_t**)(intptr_t)entry;
+                if(original[0]!=PTR(&g313)) continue;
+                const int index=(entry-source[56])/4;
+                int32_t* copy=*(int32_t**)(intptr_t)(*(int32_t*)(intptr_t)(runtime[3]+224)+index*4);
+                const int32_t previous=original[16];
+                CHECK(previous && copy[16]==previous && original[17]==copy[17]);
+                const uint32_t count=((struct retdec_mcd_data*)(intptr_t)previous)->chip_count;
+                CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("./"))==1);
+                CHECK(original[16] && original[16]!=previous && copy[16]==previous);
+                CHECK(((struct retdec_mcd_data*)(intptr_t)previous)->chip_count==count);
+                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                const int32_t refreshed=original[16];
+                CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("missing-prefix"))==0);
+                CHECK(original[16]==refreshed && copy[16]==previous);
+                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                ++checked;
+            }
+            CHECK(checked>0);
+        }
         retdec_destroy_cact_with_flags(runtime[3],1);
         free((void *)(intptr_t)runtime[4]);
         retdec_destroy_cact_object(PTR(source));

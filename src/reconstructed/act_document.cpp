@@ -31,6 +31,7 @@
 #include "kinoko/game_math.h"
 #include "kinoko/legacy_abi.h"
 #include <string>
+#include <memory>
 #include <windows.h>
 #include <d3d9.h>
 #include <algorithm>
@@ -627,6 +628,34 @@ extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t reso
     return 1;
 }
 
+extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
+    int32_t resource, void*, const char* prefix) {
+    if (!resource) return 0;
+    const char* name = retdec_std_string_data(resource+36);
+    if (!name || !*name) return 0;
+    try {
+        // 42FB4E uses an empty default prefix. Append '/' only to a nonempty
+        // prefix that lacks either accepted separator (42FC5A..42FC71).
+        std::string base(prefix ? prefix : "");
+        if (!base.empty() && base.back()!='/' && base.back()!='\\') base += '/';
+        const std::string path = base + name;
+        auto destroy = [](int32_t* value) { retdec_destroy_cact_resource(address(value)); };
+        std::unique_ptr<int32_t, decltype(destroy)> temporary(
+            static_cast<int32_t*>(std::calloc(1,100)), destroy);
+        if (!temporary) return 0;
+        temporary.get()[0] = address(kinoko_act_host_symbols()->chip_resource_vtable);
+        temporary.get()[7] = temporary.get()[14] = temporary.get()[23] = 15;
+        // Original loads into a temporary owner and only replaces on success.
+        if (!retdec_act_load_mcd(address(temporary.get()), path.c_str())) return 0;
+        retdec_string_assign_cstr(pointer<int32_t>(resource+72), base.c_str());
+        if (kinoko_act_release_chip_data(resource))
+            retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource+64)));
+        field<int32_t>(resource+64) = temporary.get()[16];
+        temporary.get()[16] = 0;
+        return 1;
+    } catch (...) { return 0; }
+}
+
 extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
     int32_t resource, void *, const char *prefix) {
     if (!resource) return 0;
@@ -720,7 +749,7 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
     } else {
         const char *chip_file = retdec_std_string_data(resource + 36);
-        if (!retdec_act_load_mcd(resource, chip_file)) {
+        if (!kinoko_method_load_chip_resource(resource, nullptr, nullptr)) {
             retdec_trace("act:chip-resource-load-failed");
             retdec_destroy_cact_resource(resource);
             return 0;
