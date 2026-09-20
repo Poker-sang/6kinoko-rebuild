@@ -1,5 +1,6 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqplus.h>
+#include <sqrat/sqratTable.h>
 #include <atomic>
 #include <cstdio>
 #include <cstring>
@@ -106,14 +107,61 @@ void classes(HSQUIRRELVM vm) {
     up::sqplus_release(vm, child); up::sqplus_release(vm, base);
     require(SquirrelVM::GetVMPtr() == nullptr, "class operations restore borrowed VM");
 }
+// The _get result has no table owner: only the VM return stack holds it.
+// Sqrat must acquire its external reference before popping that stack slot.
+thread_local int slot_releases = 0;
+thread_local int slot_calls = 0;
+SQInteger slot_cleanup(SQUserPointer, SQInteger) { ++slot_releases; return 0; }
+SQInteger temporary_slot(HSQUIRRELVM vm) {
+    ++slot_calls;
+    const SQChar* name = nullptr;
+    if (SQ_FAILED(sq_getstring(vm, 2, &name))) return SQ_ERROR;
+    if (std::strcmp(name, "temporary") == 0) {
+        sq_newuserdata(vm, 16);
+        sq_setreleasehook(vm, -1, slot_cleanup);
+        return 1;
+    }
+    if (std::strcmp(name, "null") == 0) { sq_pushnull(vm); return 1; }
+    return sq_throwerror(vm, "missing property");
+}
+void slot_lifetime(HSQUIRRELVM vm) {
+    const auto top = sq_gettop(vm);
+    const auto first_release = slot_releases;
+    const auto first_call = slot_calls;
+    {
+        sq_newtable(vm);
+        HSQOBJECT receiver; sq_getstackobj(vm, -1, &receiver);
+        Sqrat::Object object(receiver, vm);
+        sq_newtable(vm);
+        sq_pushstring(vm, "_get", -1); sq_newclosure(vm, temporary_slot, 0);
+        require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "register temporary _get");
+        require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "delegate _get");
+        sq_pop(vm, 1);
+        {
+            auto value = object.GetSlot("temporary");
+            require(value.GetObject()._type == OT_USERDATA, "upstream GetSlot result");
+            require(slot_calls == first_call + 1, "GetSlot invokes _get exactly once");
+            require(slot_releases == first_release, "GetSlot owns result before stack pop");
+            require(sq_gettop(vm) == top, "GetSlot restores stack while result is owned");
+        }
+        require(slot_releases == first_release + 1, "GetSlot result releases exactly once");
+        require(object.GetSlot("missing").IsNull(), "missing GetSlot returns null");
+        require(sq_gettop(vm) == top, "missing GetSlot balances stack");
+        sq_reseterror(vm);
+    }
+    require(slot_releases == first_release + 1 && sq_gettop(vm) == top,
+            "temporary result is neither leaked nor released twice");
+}
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
     classes(root.vm);
+    slot_lifetime(root.vm);
     // Child VM shares the original VM's ref table but has a separate stack.
     auto child = sq_newthread(root.vm, 32);
     require(child != nullptr, "child VM");
     objects(child, root.vm);
+    slot_lifetime(child);
     sq_pop(root.vm, 1);
 }
 }

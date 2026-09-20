@@ -17,7 +17,8 @@ if(NOT MSVC)
     target_compile_options(kinoko_contract_vm PRIVATE -include "${CMAKE_CURRENT_LIST_DIR}/vm_allocator_declarations.hpp")
 endif()
 add_executable(kinoko_upstream_bindings_contract ../upstream_bindings_contract.cpp)
-target_include_directories(kinoko_upstream_bindings_contract PRIVATE "${KINOKO_SQPLUS_DIR}")
+target_include_directories(kinoko_upstream_bindings_contract PRIVATE "${KINOKO_SQPLUS_DIR}"
+    "${KINOKO_BINDING_ROOT}/third_party/sqrat-0.8.1/include")
 target_link_libraries(kinoko_upstream_bindings_contract PRIVATE kinoko_upstream_bindings kinoko_contract_vm)
 add_test(NAME upstream_bindings_contract COMMAND kinoko_upstream_bindings_contract)
 
