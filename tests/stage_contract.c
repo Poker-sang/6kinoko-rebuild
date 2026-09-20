@@ -4276,6 +4276,9 @@ int main(int argc, char **argv) {
     CHECK(test_camera_map_bindings(vm, root) == 0);
     {
         int32_t before = function_48aa20(vm);
+        CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);
+        CHECK(function_41eff0(vm) == 0);
+        CHECK(function_41eff0(vm) == 0);
         CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
         CHECK(function_42b6d0(vm) == 0);
         /* Drop the script root and collect before replacing the native cached

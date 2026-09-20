@@ -54,6 +54,7 @@ int32_t retdec_sqrat_set_bool(int32_t vm, const int32_t *object_pair,
     const char *name, int32_t value);
 int32_t retdec_sqrat_set_string(int32_t vm, const int32_t *object_pair,
     const char *name, const char *value);
+int32_t retdec_sqrat_no_constructor(int32_t vm);
 int32_t retdec_sqrat_initialize_class(int32_t vm, const int32_t* type,
     const int32_t* set_table, const int32_t* get_table, int32_t constructor,
     int32_t setter, int32_t getter, int32_t weakref);

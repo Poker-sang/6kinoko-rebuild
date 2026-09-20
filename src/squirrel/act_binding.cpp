@@ -93,7 +93,7 @@ int32_t retdec_publish_cact_layer_members(
     };
     static const int32_t pointer_int_offsets[] = { 56, 60, 64, 68 };
     static const char *const object_names[] = {
-        "script", "layout", "resource", "thisAct"
+        "script", "layout", "resource"
     };
     int32_t empty_pair[2] = { g483, g484 };
     int32_t table_pair[2] = { g483, g484 };
@@ -121,7 +121,7 @@ int32_t retdec_publish_cact_layer_members(
 
     if (!retdec_sqrat_initialize_class(vm, class_pair,
             (const int32_t *)&g1151, (const int32_t *)&g1153,
-            address(kinoko_sq_noop_constructor), address(function_41e2c0),
+            address(retdec_sqrat_no_constructor), address(function_41e2c0),
             address(function_41e260), address(function_431650)))
         goto failed;
 
@@ -172,7 +172,7 @@ int32_t retdec_publish_cact_layer_members(
             goto failed;
     }
 
-    /* These are the four SQObject members installed by the original
+    /* These are the three SQObject members installed by the original
        TypePropertyClass<string/object> helpers.  Their values are filled on
        each instance with the same raw/newslot distinction as the ACT path. */
     for (index = 0; index < sizeof(object_names) / sizeof(object_names[0]);
@@ -227,7 +227,7 @@ int32_t retdec_publish_c2dlayout_properties(
 
     if (!retdec_sqrat_initialize_class(vm, class_pair,
             (const int32_t *)&g1141, (const int32_t *)&g1143,
-            address(kinoko_sq_noop_constructor), address(function_41e2c0),
+            address(retdec_sqrat_no_constructor), address(function_41e2c0),
             address(function_41e260), address(function_431650)))
         goto failed;
 
@@ -499,6 +499,17 @@ int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     retdec_sqrat_release_pair(vm, class_pair);
     retdec_sqrat_trim_stack(vm, base);
     return 1;
+}
+
+// Original VM-only CActLayer class registration (41EFF0). Game instance
+// publication still lives in its register method; only the class setup is shared.
+extern "C" int32_t function_41eff0(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_cact_layer_class(vm, address(root));
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
 }
 
 int32_t retdec_publish_acting_player_properties(int32_t vm,
@@ -1448,9 +1459,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
            slots: doing so shadows _get/_set and leaves animation detached
            from the native layer. */
         if (!retdec_sqrat_raw_set_pair(vm, layer_pair, "script",
-                                       script_pair) ||
-            !retdec_sqrat_raw_set_pair(vm, layer_pair, "thisAct",
-                                       parent_pair)) {
+                                       script_pair)) {
             retdec_trace_i32("act:layer-fields-failed", index);
             retdec_sqrat_release_pair(vm, layer_pair);
             retdec_sqrat_release_pair(vm, parent_pair);

@@ -58,6 +58,7 @@ bool sqrat_initialize_class(HSQUIRRELVM vm, HSQOBJECT type, HSQOBJECT setter_tab
     return SQ_SUCCEEDED(Sqrat::InitializeClass(vm, type, setter_table, getter_table,
         constructor, setter, getter, weakref, true));
 }
+SQInteger sqrat_no_constructor(HSQUIRRELVM vm) { return Sqrat::NoConstructor::New(vm); }
 bool sqrat_push_instance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer native) {
     return SQ_SUCCEEDED(Sqrat::PushClassInstance(vm, type, native));
 }
