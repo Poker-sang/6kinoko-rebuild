@@ -125,3 +125,15 @@ extern "C" int32_t kinoko_string_replicate(int32_t object,int32_t source) {
     references(out,1);
     return 1;
 }
+
+// 442300 appends a default CSpriteEx value into the one-element block deque.
+// The original leaves non-vtable/default-texture fields for 404EE0 to fill.
+extern "C" int32_t kinoko_string_append_glyph(int32_t layout) {
+    auto& q=queue(layout);
+    if(q.capacity<=q.size+1) grow(q);
+    auto& block=q.map[(q.first+q.size)%q.capacity];
+    if(!block) { block=address(std::malloc(256));if(!block) throw std::bad_alloc(); }
+    field<void*>(block+20)=&g25;field<int32_t>(block+24)=0;
+    ++q.size;
+    return block;
+}

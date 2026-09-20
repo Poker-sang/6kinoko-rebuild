@@ -1,6 +1,8 @@
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/string_layout.h"
+#include "kinoko/string_font.h"
+#include <stdexcept>
 #include <algorithm>
 #include <climits>
 #include <cstdlib>
@@ -198,4 +200,38 @@ extern "C" int32_t __fastcall kinoko_method_delete_string_layout(int32_t object,
     kinoko_clear_string_layout(object);
     if(flags&1) std::free(pointer<void>(object));
     return object;
+}
+
+// 442930/442FE0 grow the 436-byte atlas vector using the recovered 1.5x
+// capacity rule and renderer copy construction. Glyph pointers are borrowed:
+// the original vector relocation does not repair them or retain textures.
+extern "C" int32_t kinoko_string_append_atlas(int32_t layout) {
+    using kinoko::legacy::address;
+    int32_t begin=field<int32_t>(layout+160),end=field<int32_t>(layout+164);
+    const uint32_t count=(end-begin)/436;
+    const uint32_t capacity=(field<int32_t>(layout+168)-begin)/436;
+    if(count==9850842u) throw std::length_error("vector<T> too long");
+    if(count==capacity) {
+        uint32_t next=capacity<=9850842u-capacity/2?capacity+capacity/2:0;
+        next=(std::max)(next,count+1);
+        const int32_t replacement=address(std::malloc(size_t(next)*436));
+        if(!replacement) throw std::bad_alloc();
+        for(uint32_t i=0;i<count;++i) {
+            const int32_t from=begin+i*436,to=replacement+i*436;
+            kinoko_string_font_construct(to+24);
+            std::copy_n(pointer<unsigned char>(from),24,pointer<unsigned char>(to));
+            assign_renderer(to+24,from+24);
+            field<uint32_t>(to+428)=field<uint32_t>(from+428);
+            field<uint32_t>(to+432)=field<uint32_t>(from+432);
+        }
+        for(uint32_t i=0;i<count;++i) destroy_renderer(begin+i*436+24);
+        std::free(pointer<void>(begin));
+        begin=replacement;end=begin+count*436;
+        field<int32_t>(layout+160)=begin;field<int32_t>(layout+164)=end;
+        field<int32_t>(layout+168)=begin+next*436;
+    }
+    kinoko_string_font_construct(end+24);
+    field<int32_t>(end+428)=0;
+    field<int32_t>(layout+164)=end+436;
+    return end;
 }
