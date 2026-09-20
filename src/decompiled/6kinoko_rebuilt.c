@@ -7073,46 +7073,6 @@ int32_t function_410270(void) {
 
 // Address range: 0x410500 - 0x410747
 
-typedef struct retdec_archive_entry {
-    char path[MAX_PATH];
-    uint32_t archive_index;
-    uint32_t offset;
-    uint32_t size;
-} retdec_archive_entry;
-
-
-
-static char retdec_archive_paths[64][MAX_PATH];
-static uint32_t retdec_archive_count;
-static retdec_archive_entry retdec_archive_entries[8192];
-static uint32_t retdec_archive_entry_count;
-
-static int retdec_normalize_asset_path(const char *source, char *destination, size_t capacity)
-{
-    size_t length = 0;
-
-    if (source == NULL || destination == NULL || capacity == 0) {
-        return 0;
-    }
-    if (source[0] == '.' && (source[1] == '/' || source[1] == '\\')) {
-        source += 2;
-    }
-    while (source[length] != 0) {
-        if (length + 1 >= capacity) {
-            return 0;
-        }
-        if (source[length] == '\\') {
-            destination[length] = '/';
-        } else if (source[length] >= 'A' && source[length] <= 'Z') {
-            destination[length] = (char)(source[length] + ('a' - 'A'));
-        } else {
-            destination[length] = source[length];
-        }
-        ++length;
-    }
-    destination[length] = 0;
-    return 1;
-}
 
 
 
@@ -7120,162 +7080,22 @@ static int retdec_normalize_asset_path(const char *source, char *destination, si
 
 
 
-int32_t function_410500(char *file_name)
-{
-    HANDLE file_handle;
-    DWORD bytes_read = 0;
-    uint16_t entry_count = 0;
-    uint32_t index_size = 0;
-    uint8_t *index_data;
-    uint32_t archive_index;
-    uint32_t cursor = 0;
-    uint32_t entry_number;
 
-    if (file_name == NULL) {
-        return 0;
-    }
-    file_handle = CreateFileA(file_name, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-    if (!ReadFile(file_handle, &entry_count, sizeof(entry_count), &bytes_read, NULL) ||
-        bytes_read != sizeof(entry_count) ||
-        !ReadFile(file_handle, &index_size, sizeof(index_size), &bytes_read, NULL) ||
-        bytes_read != sizeof(index_size) || index_size > 256u * 1024u * 1024u) {
-        CloseHandle(file_handle);
-        return 0;
-    }
-    index_data = (uint8_t *)malloc(index_size == 0 ? 1u : index_size);
-    if (index_data == NULL ||
-        (index_size != 0 &&
-         (!ReadFile(file_handle, index_data, index_size, &bytes_read, NULL) ||
-          bytes_read != index_size))) {
-        free(index_data);
-        CloseHandle(file_handle);
-        return 0;
-    }
-    CloseHandle(file_handle);
-    if (retdec_archive_count >= 64) {
-        free(index_data);
-        return 0;
-    }
 
-    archive_index = retdec_archive_count;
-    strncpy_s(retdec_archive_paths[archive_index], MAX_PATH, file_name, _TRUNCATE);
-    kinoko_decode_archive_index(index_data, index_size);
-    for (entry_number = 0; entry_number < entry_count; ++entry_number) {
-        uint32_t offset;
-        uint32_t size;
-        uint32_t path_length;
-        char path[MAX_PATH];
 
-        if (cursor + 9u > index_size) {
-            free(index_data);
-            return 0;
-        }
-        offset = (uint32_t)index_data[cursor] |
-            ((uint32_t)index_data[cursor + 1] << 8) |
-            ((uint32_t)index_data[cursor + 2] << 16) |
-            ((uint32_t)index_data[cursor + 3] << 24);
-        size = (uint32_t)index_data[cursor + 4] |
-            ((uint32_t)index_data[cursor + 5] << 8) |
-            ((uint32_t)index_data[cursor + 6] << 16) |
-            ((uint32_t)index_data[cursor + 7] << 24);
-        path_length = index_data[cursor + 8];
-        cursor += 9;
-        if (cursor + path_length > index_size || path_length >= MAX_PATH) {
-            free(index_data);
-            return 0;
-        }
-        memcpy(path, index_data + cursor, path_length);
-        path[path_length] = 0;
-        cursor += path_length;
-        function_410750(path, (int32_t)archive_index,
-                        (int32_t)offset, (int32_t)size);
-    }
-    ++retdec_archive_count;
-    g765 = (int32_t)retdec_archive_count;
-    free(index_data);
-    return 1;
-}
+
+
+
+
 
 // Address range: 0x410750 - 0x410993
 
-int32_t function_410750(char *path, int32_t archive_index,
-                        int32_t offset, int32_t size)
-{
-    char normalized_path[MAX_PATH];
-    uint32_t i;
 
-    if (!retdec_normalize_asset_path(path, normalized_path,
-                                     sizeof(normalized_path))) {
-        return 0;
-    }
-    for (i = 0; i < retdec_archive_entry_count; ++i) {
-        if (_stricmp(retdec_archive_entries[i].path, normalized_path) == 0) {
-            retdec_archive_entries[i].archive_index = (uint32_t)archive_index;
-            retdec_archive_entries[i].offset = (uint32_t)offset;
-            retdec_archive_entries[i].size = (uint32_t)size;
-            return 1;
-        }
-    }
-    if (retdec_archive_entry_count >=
-        sizeof(retdec_archive_entries) / sizeof(retdec_archive_entries[0])) {
-        return 0;
-    }
-    strncpy_s(retdec_archive_entries[retdec_archive_entry_count].path,
-              MAX_PATH, normalized_path, _TRUNCATE);
-    retdec_archive_entries[retdec_archive_entry_count].archive_index =
-        (uint32_t)archive_index;
-    retdec_archive_entries[retdec_archive_entry_count].offset = (uint32_t)offset;
-    retdec_archive_entries[retdec_archive_entry_count].size = (uint32_t)size;
-    ++retdec_archive_entry_count;
-    return 1;
-}
 
 
 // Address range: 0x4109d0 - 0x410b8f
 
-int32_t function_4109d0(const char *path, uint32_t *offset, uint32_t *size)
-{
-    char normalized_path[MAX_PATH];
-    uint32_t i;
 
-    if (offset == NULL || size == NULL ||
-        !retdec_normalize_asset_path(path, normalized_path,
-                                     sizeof(normalized_path))) {
-        return 0;
-    }
-    *offset = 0;
-    *size = 0;
-    for (i = 0; i < retdec_archive_entry_count; ++i) {
-        const retdec_archive_entry *entry = &retdec_archive_entries[i];
-        HANDLE file_handle;
-
-        if (_stricmp(entry->path, normalized_path) != 0 ||
-            entry->archive_index >= retdec_archive_count) {
-            continue;
-        }
-        file_handle = CreateFileA(
-            retdec_archive_paths[entry->archive_index],
-            GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL, NULL);
-        if (file_handle == INVALID_HANDLE_VALUE) {
-            return 0;
-        }
-        if (SetFilePointer(file_handle, (LONG)entry->offset, NULL,
-                           FILE_BEGIN) == INVALID_SET_FILE_POINTER &&
-            GetLastError() != NO_ERROR) {
-            CloseHandle(file_handle);
-            return 0;
-        }
-        *offset = entry->offset;
-        *size = entry->size;
-        return (int32_t)(intptr_t)file_handle;
-    }
-    return 0;
-}
 
 // Address range: 0x410b90 - 0x410bf5
 // From class:    .?AVCPackageFileReader@@
