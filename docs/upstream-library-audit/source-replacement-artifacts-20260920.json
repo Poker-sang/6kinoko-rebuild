@@ -3736,7 +3736,7 @@
     {
       "batch": "pr7-complete-20260920-r101-quiet",
       "source_commit": "6b44c05ec1bbe117b407b78ac584d3dd1ff598b2",
-      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "validation": "Overall Win32 build FAILED: isolated kinoko_act_frame_contract lacks kinoko_set_render_target boundary definition (LNK2019). Main game and stage contract executables linked, and main EXE DAT staging succeeded. No tests or game executed. R102 supplies the test boundary.",
       "artifacts": [
         {
           "path": "build-runs/pr7-complete-20260920-r101-quiet/source-commit.txt",
