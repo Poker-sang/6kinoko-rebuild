@@ -56,9 +56,11 @@ static struct SquirrelVM_ModConstr {
 
 
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
 SquirrelError::SquirrelError() 
 {
-    const SQChar *s;
+    const SQChar *s = NULL; // defined fallback when the VM error is not a string
     sq_getlasterror(SquirrelVM::_VM);
     sq_getstring(SquirrelVM::_VM,-1,&s);
     if(s) {
@@ -70,6 +72,7 @@ SquirrelError::SquirrelError()
 }
 
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 SquirrelVMSys::~SquirrelVMSys() {
     // Must take care to release object with the 'ref' VM
     PushRefVM( _vm.GetObjectHandle()._unVal.pThread );
@@ -376,6 +379,8 @@ SquirrelObject SquirrelVM::EndCall()
     return ret;
 }
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
 SquirrelObject SquirrelVM::CreateInstance(SquirrelObject &oclass)
 {
     SquirrelObject ret;
@@ -389,8 +394,6 @@ SquirrelObject SquirrelVM::CreateInstance(SquirrelObject &oclass)
     sq_pop(_VM,2);
     return ret;
 }
-
-#endif // !SQPLUS_HOST_OBJECT_ONLY
 
 SquirrelObject SquirrelVM::CreateTable()
 {

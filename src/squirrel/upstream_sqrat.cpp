@@ -1,5 +1,6 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqrat/sqratTable.h>
+#include <sqrat/sqratFunction.h>
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 static_assert(sizeof(Sqrat::Object) == 20, "Sqrat 0.8.1 agrees with recovered Win32 size");
@@ -39,6 +40,20 @@ bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT&
 }
 HSQOBJECT sqrat_root(HSQUIRRELVM vm) { Detached<Sqrat::RootTable> root(vm); return root.take(); }
 HSQOBJECT sqrat_table(HSQUIRRELVM vm) { Detached<Sqrat::Table> table(vm); return table.take(); }
+void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
+                   SQBool raiseerror,
+                   SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
+    // Construct the real source Function and borrow its handles without refcount
+    // churn. Detach even if a native callback propagates a C++ exception.
+    class BorrowedFunction final : public Sqrat::Function {
+    public:
+        BorrowedFunction(HSQUIRRELVM machine, HSQOBJECT env, HSQOBJECT function) {
+            GetVM() = machine; GetEnv() = env; GetFunc() = function;
+        }
+        ~BorrowedFunction() { sq_resetobject(&GetEnv()); sq_resetobject(&GetFunc()); }
+    } function(vm, environment, closure);
+    function.ExecuteWithErrorHandling(raiseerror, invoke);
+}
 void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value) {
     Adopted::retain(vm, value);
 }

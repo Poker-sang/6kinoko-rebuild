@@ -59,3 +59,13 @@ and `ReadInstanceBaseForHost` call that same source body. It does not construct
 snapshot descriptors in the old byte records or reinterpret the host vtable.
 The host checks metadata and converts `SquirrelError` to the native VM error
 boundary. Field-offset arithmetic and static/constant bypass stay outside.
+
+## Instance factory
+
+The host-only gate now also compiles the original `CreateInstance` body and
+`SquirrelError` constructor. Initialize the error-string pointer to NULL before
+`sq_getstring`: a non-string last error must use the existing fallback rather
+than read an indeterminate pointer. The host catches source factory failures,
+restores the entry stack height (the source error constructor pushes an error),
+and preserves the VM last error and the recovered null-wrapper result. The
+successful factory's external reference transfers directly into the host record.

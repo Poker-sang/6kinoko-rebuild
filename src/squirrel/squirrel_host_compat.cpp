@@ -353,16 +353,14 @@ extern "C" int32_t function_4a90c0_this(int32_t object, int32_t klass) {
     retdec_trace_i32("4a90c0:vm", address(vm));
     const auto top = sq_gettop(vm);
     retdec_trace_i32("4a90c0:stack-before", top);
-    ObjectView(klass).push(vm);
-    retdec_trace("4a90c0:after-push");
-    if (SQ_FAILED(sq_createinstance(vm, -1))) {
+    HSQOBJECT result;
+    sq_resetobject(&result);
+    if (!upstream::sqplus_new_instance(vm, ObjectView(klass).value(), result)) {
         retdec_trace("4a90c0:instance-get-failed");
-        sq_settop(vm, top);
         return object;
     }
     retdec_trace("4a90c0:after-instance-get");
-    function_4a9660_this(object, -1);
+    ObjectView(object).write(result); // transfer the source factory's owned ref
     retdec_trace("4a90c0:after-copy");
-    pop(vm, 2);
     return object;
 }

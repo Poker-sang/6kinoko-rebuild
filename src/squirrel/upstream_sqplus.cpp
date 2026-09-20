@@ -72,6 +72,20 @@ std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept {
     SqPlus::getVarNameTag(key.data(), static_cast<INT>(key.size()), name ? name : "");
     return key;
 }
+bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output) {
+    VmScope context(vm); Borrowed source(klass);
+    const auto top = sq_gettop(vm);
+    try {
+        auto result = SquirrelVM::CreateInstance(source);
+        output = take(result);
+        return true;
+    } catch (const SquirrelError&) {
+        // The source error constructor pushes the last-error object. The C ABI
+        // reports failure via a null wrapper, retaining the VM's original error.
+        sq_settop(vm, top);
+        return false;
+    }
+}
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm) {
     VmScope context(vm);
     auto result = SquirrelVM::CreateTable();

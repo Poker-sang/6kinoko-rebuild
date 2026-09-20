@@ -225,6 +225,9 @@ void userdata_delegates_and_types(HSQUIRRELVM vm) {
     function_4a9570_this(instance.id());
     function_4a90c0_this(instance.id(), scalar.id());
     require(instance.words[1] == OT_NULL, "invalid class produces null wrapper");
+    sq_getlasterror(vm);
+    require(sq_gettype(vm, -1) == OT_STRING, "source factory preserves invalid-class error");
+    sq_pop(vm, 1);
     require_top(vm, top, "userdata/delegate/type operations balanced");
 }
 

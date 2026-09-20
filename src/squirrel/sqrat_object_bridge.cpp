@@ -279,10 +279,10 @@ extern "C" int32_t function_415810_this(int32_t storage) {
         trace_pair("415810:env-type", "415810:env-data", callback.environment);
         trace_pair("415810:closure-type", "415810:closure-data", callback.closure);
     }
-    sq_pushobject(callback.vm, callback.closure);
-    sq_pushobject(callback.vm, callback.environment);
-    // Keep receiver switching for nested/child VMs, the original error-handler
-    // flag and return convention. Do not add a blanket stack reset on failure.
-    kinoko_sq_call(address(callback.vm), 1, 0, static_cast<int32_t>(g560));
-    return kinoko_sq_pop(address(callback.vm), 1);
+    kinoko::script::upstream::sqrat_execute(callback.vm, callback.environment,
+        callback.closure, g560 != 0,
+        [](HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) -> SQRESULT {
+            return kinoko_sq_call(address(vm), count, result, errors);
+        });
+    return address(callback.vm);
 }

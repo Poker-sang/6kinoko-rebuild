@@ -27,3 +27,13 @@ usage is unchanged. The host must distinguish an existing null-valued slot from
 a missing key without invoking `_get` twice or inspecting stale last-error state.
 This exposes the status already computed by the upstream method; it does not
 change lookup, error, stack or reference behavior.
+
+## Function execution with an explicit host context
+
+`Function::Execute()` delegates to `ExecuteWithErrorHandling`, which contains
+its original push/call/pop algorithm. The latter accepts the recovered per-call
+error flag and an optional call entry (default `sq_call`). Production supplies
+its existing receiver-scoped call entry. This avoids changing a process-global
+Sqrat error setting across nested or concurrent VMs. No second hand-written
+callback execution body remains in the host. The host borrows Function handles
+in a normally constructed stack object and detaches them before destruction.

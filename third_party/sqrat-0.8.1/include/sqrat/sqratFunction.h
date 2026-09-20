@@ -272,10 +272,17 @@ namespace Sqrat {
 		//
 
 		void Execute() {
+			ExecuteWithErrorHandling(ErrorHandling::IsEnabled());
+		}
+
+		// Host adaptation: keep the per-call flag and receiver-scoped call entry.
+		// Both public entries execute this single original push/call/pop body.
+		void ExecuteWithErrorHandling(SQBool raiseerror,
+			SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool) = sq_call) {
 			sq_pushobject(vm, obj);
 			sq_pushobject(vm, env);
 
-			sq_call(vm, 1, false, ErrorHandling::IsEnabled());
+			invoke(vm, 1, false, raiseerror);
 			sq_pop(vm, 1);		
 		}
 

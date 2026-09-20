@@ -204,6 +204,12 @@ int main() {
             virtual_entries(machine.get());
             ownership(machine.get()); setters(machine.get()); delegates(machine.get());
             closures(machine.get()); callback(machine.get());
+            // Source Function must use the child's actual VM and restore the
+            // outer receiver even on the error-handler path.
+            Pair child(machine.get()); sq_newthread(machine.get(), 32); child.capture();
+            const auto previous_receiver = receiver;
+            callback(child.get()._unVal.pThread);
+            require(receiver == previous_receiver, "child Function restores outer receiver");
         }
         std::puts("Sqrat source object/registration/callback contracts passed (8 repetitions)");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }

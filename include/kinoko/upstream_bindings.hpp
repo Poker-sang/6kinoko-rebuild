@@ -14,6 +14,7 @@ SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
+bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output);
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
 HSQOBJECT sqplus_new_array(HSQUIRRELVM vm, int size);
 bool sqplus_set_string(HSQUIRRELVM vm, HSQOBJECT receiver, int key, const SQChar* value);
@@ -56,6 +57,9 @@ HSQOBJECT sqplus_get_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key
 bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& result);
 HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
+void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
+                   SQBool raiseerror,
+                   SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
 void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value);
 HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value);
