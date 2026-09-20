@@ -812,22 +812,22 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     class_object[3] = class_pair[1];
     function_460e00_register_actor_method(vm, class_object + 1, "SetCurrentTime",
                                           address(kinoko_act_set_current_time),
-                                          address(function_455330), 0);
+                                          address(kinoko_sqrat_call_integer1), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "IncrementFrame",
                                           address(kinoko_act_increment_frame),
-                                          address(function_445530), 0);
+                                          address(kinoko_sqrat_call_integer0), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentTime",
                                           address(kinoko_act_get_current_time),
-                                          address(function_445530), 0);
+                                          address(kinoko_sqrat_call_integer0), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "GetCurrentFrame",
                                           address(kinoko_act_get_current_frame),
-                                          address(function_445530), 0);
+                                          address(kinoko_sqrat_call_integer0), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "BeginStage",
                                           address(kinoko_method_begin_stage),
-                                          address(function_455330), 0);
+                                          address(kinoko_sqrat_call_integer1), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "EndStage",
                                           address(kinoko_act_end_stage),
-                                          address(function_445530), 0);
+                                          address(kinoko_sqrat_call_integer0), 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "CreateLayer2D",
         address(create_layer_2d_native), nullptr, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "CreateLayerString",
@@ -852,7 +852,7 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
         address(find_by_id_native<FindOperation::Name>), nullptr, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "timeGetTime",
                                           address(timeGetTime),
-                                          address(function_445530), 0);
+                                          address(kinoko_sqrat_call_integer0), 0);
     function_460e00_register_actor_method(vm, class_object + 1, "Sleep",
                                           address(kinoko_act_sleep),
                                           address(function_445730), 0);
