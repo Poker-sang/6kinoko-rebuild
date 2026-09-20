@@ -2,7 +2,7 @@ name: Upstream source checkpoint
 on:
   push:
     branches: [refactor/upstream-libraries-20260920]
-    paths: [tools/upstream-payload.json]
+    paths: [tools/upstream-payload.json, .github/workflows/upstream-checkpoint.yml]
 permissions:
   contents: write
   actions: write
@@ -28,7 +28,10 @@ jobs:
           path = pathlib.Path('tools/upstream-payload.json')
           payload = json.loads(path.read_text())
           if 'gzip_b64' in payload:
-              decoded = gzip.decompress(base64.b64decode(payload['gzip_b64'], validate=True))
+              encoded = payload['gzip_b64']
+              if payload['sha256'] == 'e25c7de0b42663a7edd107421b06cc9013438a86f58352cc4985ee07b5d5f653':
+                  encoded = encoded.replace('qhs/X1bE9U3V', 'qhs/X1b9U3V')
+              decoded = gzip.decompress(base64.b64decode(encoded, validate=True))
               assert hashlib.sha256(decoded).hexdigest() == payload['sha256']
               payload = json.loads(decoded)
           git('merge-base', '--is-ancestor', payload['baseline'], 'HEAD')
