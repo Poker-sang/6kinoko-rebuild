@@ -263,6 +263,67 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*)
     return static_cast<int32_t>(address(result.release()));
 }
 
+namespace {
+// 42F9D0/42FA50 and 446AF0/446B70/449B70 copy different resource fields.
+// The MCD control is the actual Boost counter already used by archive clones.
+int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
+    if (!source) return 0;
+    auto destroy=[](unsigned char* value) {
+        if (value) retdec_destroy_cact_resource(static_cast<int32_t>(address(value)));
+    };
+    std::unique_ptr<unsigned char,decltype(destroy)> owned(
+        static_cast<unsigned char*>(std::calloc(1,100)),destroy);
+    if (!owned) return 0;
+    const auto result=address(owned.get());
+    field<Address>(result)=address(vtable);
+    field<int32_t>(result,4)=field<int32_t>(source,4);
+    field<uint32_t>(result,28)=15;
+    if (chip) field<uint32_t>(result,56)=field<uint32_t>(result,92)=15;
+    else field<uint32_t>(result,60)=15;
+    const auto copy_string=[&](size_t offset) {
+        const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+offset);
+        const kinoko::legacy::StringView output(owned.get()+offset);
+        output.assign(input.data(),input.length());
+        if (input.length()!=output.length()) throw std::bad_alloc();
+    };
+    copy_string(8);
+    if (chip) {
+        copy_string(36); copy_string(72);
+        auto& control=field<Address>(source,68);
+        if (!control) {
+            auto* counted=up::create_callback_control(pointer(field<Address>(source,64)),dispose_chip_data);
+            if (!counted) return 0;
+            control=address(counted);
+        }
+        up::add_strong(static_cast<up::CountedControl*>(pointer(control)));
+        field<Address>(result,64)=field<Address>(source,64);
+        field<Address>(result,68)=control;
+    } else {
+        copy_string(40);
+        field<uint8_t>(result,36)=1; // Both original clone methods mark borrowing.
+        std::memcpy(owned.get()+72,static_cast<unsigned char*>(pointer(source))+72,25);
+        const auto handle=field<int32_t>(source,68);
+        // The reconstructed texture store refcounts native handles. Retain
+        // here so the source and clone can each execute their native cleanup.
+        if (handle && !kinoko_texture_retain(handle)) return 0;
+        field<int32_t>(result,68)=handle;
+    }
+    return static_cast<int32_t>(address(owned.release()));
+}
+}
+extern "C" int32_t __fastcall kinoko_method_clone_chip_resource(int32_t source, void*) {
+    try { return clone_resource(source,kinoko_act_host_symbols()->chip_resource_vtable,true); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_clone_texture_resource(int32_t source, void*) {
+    try { return clone_resource(source,kinoko_act_host_symbols()->texture_resource_vtable,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_clone_render_target(int32_t source, void*) {
+    try { return clone_resource(source,kinoko_act_host_symbols()->render_target_vtable,false); }
+    catch (...) { return 0; }
+}
+
 extern "C" int32_t __fastcall kinoko_act_clone(int32_t source,void *) {
     if(!source) return 0;
     try { return static_cast<int32_t>(Clone().act(static_cast<Address>(source))); }

@@ -182,6 +182,12 @@ void retdec_destroy_cact_resource(int32_t resource)
 {
     if (resource == 0)
         return;
+    // Every resource owns the base name, including long names in native clones.
+    if (field<uint32_t>(resource + 28) >= 16)
+        std::free(pointer<void>(field<int32_t>(resource + 8)));
+    field<int32_t>(resource + 8) = 0;
+    field<uint32_t>(resource + 24) = 0;
+    field<uint32_t>(resource + 28) = 15;
     if (field<int32_t>(resource) ==
             address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         if (kinoko_act_release_chip_data(resource))

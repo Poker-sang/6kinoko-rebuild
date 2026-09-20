@@ -4038,8 +4038,20 @@ static int test_chip_shared_ownership(void) {
     data->textures[0].handle=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
     CHECK(data->textures[0].handle);
     resource[0]=PTR(&g313); resource[7]=resource[14]=resource[23]=15;
+    retdec_string_assign_cstr(resource+2,"a long named chip resource");
+    retdec_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
+    retdec_string_assign_cstr(resource+18,"a long shared resource prefix/");
     resource[16]=PTR(data); resources[0]=PTR(resource);
     source[56]=PTR(resources); source[57]=source[58]=PTR(resources+1);
+    int32_t virtual_copy=retdec_call_thiscall0_result(resource,(void*)g313.e9);
+    CHECK(virtual_copy && virtual_copy!=PTR(resource));
+    CHECK(*(int32_t*)(intptr_t)(virtual_copy+64)==PTR(data));
+    CHECK(*(int32_t*)(intptr_t)(virtual_copy+68)==resource[17] && resource[17]);
+    for(int i=0;i<3;++i) {
+        const int offsets[]={8,36,72};
+        CHECK(strcmp(retdec_std_string_data(virtual_copy+offsets[i]),retdec_std_string_data(PTR(resource)+offsets[i]))==0);
+        CHECK(retdec_std_string_data(virtual_copy+offsets[i])!=retdec_std_string_data(PTR(resource)+offsets[i]));
+    }
     int32_t first=kinoko_act_clone(PTR(source),NULL);
     int32_t second=kinoko_act_clone(PTR(source),NULL);
     CHECK(first && second && resource[17]);
@@ -4052,8 +4064,34 @@ static int test_chip_shared_ownership(void) {
     retdec_destroy_cact_with_flags(first,1);
     CHECK(texture[1]==0);
     retdec_destroy_cact_with_flags(second,1);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_resource(virtual_copy);
     CHECK(texture[1]==1);
-    puts("PASS: real Boost chip ownership survives source/clone destruction and frees final textures once");
+    texture[1]=0;
+    resource=(int32_t*)calloc(1,100);
+    CHECK(resource);
+    resource[0]=PTR(&g365); resource[7]=resource[15]=15;
+    resource[1]=47;
+    retdec_string_assign_cstr(resource+2,"a long texture resource name");
+    retdec_string_assign_cstr(resource+10,"data/system/a-long-texture-name");
+    resource[17]=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    resource[18]=64; resource[19]=64;
+    ((float*)resource)[20]=3.0f; ((float*)resource)[21]=7.0f;
+    ((float*)resource)[22]=12.0f; ((float*)resource)[23]=24.0f;
+    int32_t texture_copy=retdec_call_thiscall0_result(resource,(void*)g365.e9);
+    resource[0]=PTR(&g379);
+    int32_t target_copy=retdec_call_thiscall0_result(resource,(void*)g379.e9);
+    CHECK(texture_copy && target_copy);
+    CHECK(*(int32_t*)(intptr_t)texture_copy==PTR(&g365) && *(int32_t*)(intptr_t)target_copy==PTR(&g379));
+    CHECK(*(uint8_t*)(intptr_t)(texture_copy+36)==1 && *(uint8_t*)(intptr_t)(target_copy+36)==1);
+    CHECK(memcmp((void*)(intptr_t)(texture_copy+72),resource+18,25)==0);
+    CHECK(memcmp((void*)(intptr_t)(target_copy+72),resource+18,25)==0);
+    retdec_destroy_cact_resource(PTR(resource));
+    retdec_destroy_cact_resource(texture_copy);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_resource(target_copy);
+    CHECK(texture[1]==1);
+    puts("PASS: native resource clone virtuals, deep names, real Boost ownership and final texture release");
     return 0;
 }
 

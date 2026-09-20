@@ -3834,7 +3834,7 @@ struct vtable_4ec548_type g313 = {
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_chip_resource,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f800,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f6c0,
-    .e9 = function_42f9d0,
+    .e9 = (int32_t (*)(void))kinoko_method_clone_chip_resource,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_chip_resource
 }; // 0x4ec548
  // 0x4ec5a8
@@ -3881,7 +3881,7 @@ struct vtable_4eccfc_type g365 = {
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_texture_resource,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_446920,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4467e0,
-    .e9 = function_446af0,
+    .e9 = (int32_t (*)(void))kinoko_method_clone_texture_resource,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
     .e11 = (int32_t (*)(void))kinoko_method_unload_resource_texture
 }; // 0x4eccfc
@@ -3901,7 +3901,7 @@ struct vtable_4ece50_type g379 = {
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_render_target,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4499a0,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_449860,
-    .e9 = function_449b70,
+    .e9 = (int32_t (*)(void))kinoko_method_clone_render_target,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
     .e11 = (int32_t (*)(void))kinoko_method_unload_resource_texture,
     .e12 = function_449c10
