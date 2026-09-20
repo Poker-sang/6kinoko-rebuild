@@ -876,3 +876,14 @@ Replaced 4214A0's allocation/aggregate construction with a native C++ flat-node 
 IDA reads of 4EC384–4EC390 confirm the four secondary virtual slots: deleting destructor, solid color, vertex colors and color modulation. The collapsed integer containing original address 42E6E0 is now a real table using the existing native color methods and a native lifetime entry. This adjusts this by -4, resets the concrete/IColor identities and implements 316-byte reverse array destruction and cookie/free flags, replacing the obsolete runtime array-unwind adapter. Compiled-only cases cover the secondary virtual call and retained scalar/array storage; no tests/game ran.
 
 The source audit conservatively treated parser unit-test string fixtures named function_401000/401010 as possible dynamic references to the real exception helpers. Renamed only those synthetic fixture addresses/symbols to the disjoint 0x60xxxx range, preserving their relationships and test assertions. The audit algorithm and its string/literal root policy are unchanged. Removed the standalone unused unknown_fcd53371 declaration so the export can be audited independently. The following pinned component audit covers the obsolete exception and secondary-layout helpers; no runtime reachability claim is made.
+
+
+### R97 / R98: layout lifetime, CRT exception removal and IME recovery
+
+R97 replaces the complete C2DLayout secondary vtable with native addresses and restores the this-minus-four adjustment and reverse array-cookie destruction. The pinned audit removes eight obsolete functions and four data records. Its quiet executable was compiled and staged, not run.
+
+R98 removes seven unreferenced simulated CRT exports, including the no-op CxxThrowException and exception constructor/tidy helpers; the R97 source/map audit records the evidence. Remaining allocation and API adapters are not claimed to be fully migrated.
+
+The IME dispatcher (original 4131E0) now receives HWND, message, WPARAM and LPARAM explicitly. Seven damaged RetDec handlers are replaced by native C++ using actual Win32 IMM and CRT functions and std::array storage. IDA confirms 1024-byte local text tails, 256-byte composition/attribute buffers, CP932 lead-byte rules, the EAX direction parameter of 413000, and the distinct handled results for WM_KEYDOWN/WM_CHAR. Original text-limit/strncpy_s behavior is retained; negative IMM error results are rejected before indexing buffers. Input enabling is not invented: the existing enabled flag still controls dispatch. Native compiler stack protection replaces the erroneous calls to a no-op report_gsfailure shim.
+
+Lesson: a security-cookie epilogue is not the function return value, and a scalar global at a buffer address is not the original storage extent. Recover callers, register arguments, buffers and return flags together before removing CRT boundaries. Game and contract tests remain delegated to the user; no runtime verification is claimed.

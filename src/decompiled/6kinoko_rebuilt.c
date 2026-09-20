@@ -1,3 +1,4 @@
+#include "kinoko/ime_input.h"
 #include "kinoko/render_target.h"
 #include "kinoko/archive_random.h"
 #include "kinoko/scene_queue.h"
@@ -1706,13 +1707,6 @@ DWORD WINAPI function_412ad0(LPVOID lpThreadParameter);
 int32_t function_412b80(int32_t a1);
 int32_t function_412c10(int32_t hEvent);
 int32_t function_412ca0(void);
-int32_t function_412d30(void);
-int32_t function_412da0(void);
-int32_t function_412ef0(int32_t a1);
-int32_t function_413000(void);
-int32_t function_4130a0(void);
-int32_t function_4131b0(void);
-int32_t function_4131e0(uint32_t a1);
 
 
 int32_t function_414010(int32_t a1, const char *file_name);
@@ -2737,15 +2731,6 @@ int32_t g531 = 0x4123a0; // 0x50f6e0
 int32_t g532 = 0x4123c0; // 0x50f6e4
 int32_t g534 = 0; // 0x50f6f0
 int32_t g535 = 0; // 0x50f6f4
-char g536 = 0; // 0x50f6f6
-char * g537; // 0x50f6f8
-char * g538; // 0x50f6f9
-int32_t g539 = 0; // 0x50f6fa
-char g540 = 0; // 0x50faf6
-int32_t g541 = 0; // 0x50faf7
-char * g542; // 0x50fef8
-int32_t g543 = 0; // 0x50fef9
-int32_t g544 = 0; // 0x50fff8
 int32_t g545 = 1023; // 0x5100f8
 int32_t g546 = 0; // 0x5100fc
 char g547 = 0; // 0x5100fd
@@ -6478,7 +6463,7 @@ LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPAR
     // RetDec output modeled its register arguments as a fake stack frame,
     // which caused the default window procedure to receive invalid values.
     if (a1 != NULL && *(unsigned char *)((unsigned char *)a1 + 43) != 0 &&
-        (char)function_4131e0(a3) != 0) {
+        (char)kinoko_ime_dispatch((int32_t)(uintptr_t)a2, a3, (uint32_t)a4, (int32_t)a5) != 0) {
         return 0;
     }
 
@@ -7130,463 +7115,25 @@ int32_t function_412ca0(void) {
 }
 
 // Address range: 0x412d30 - 0x412d9c
-int32_t function_412d30(void) {
-    // 0x412d30
-    if (ImmGetCompositionStringA(g534, 512, NULL, 0) != 0) {
-        // 0x412d4c
-        function_412da0();
-    }
-    int32_t v1 = ImmGetCompositionStringA(g534, 8, (int32_t *)&g542, 255); // 0x412d64
-    *(char *)(v1 + (int32_t)&g542) = 0;
-    ImmGetCompositionStringA(g534, 16, &g544, 255);
-    g548 = 1;
-    return ImmGetCompositionStringA(g534, 128, NULL, 0);
-}
+
 
 // Address range: 0x412da0 - 0x412eed
-int32_t function_412da0(void) {
-    int32_t v1 = ImmGetCompositionStringA(g534, 2048, (int32_t *)&g542, 255); // 0x412dca
-    *(char *)(v1 + (int32_t)&g542) = 0;
-    int32_t v2; // bp-1032, 0x412da0
-    strcpy_s((char *)&v2, 1024, (char *)&g537);
-    int32_t v3 = (int32_t)&g542; // 0x412e00
-    while (*(char *)v3 != 0) {
-        // 0x412e03
-        v3++;
-    }
-    int32_t v4 = v3 - (int32_t)&g543; // 0x412e0a
-    int32_t v5 = 1024 - g550; // 0x412e17
-    int32_t v6 = v5 < v4 ? v5 : v4;
-    strncpy_s((char *)&g537, v5, (char *)&g542, v6);
-    int32_t v7 = g550 + v1; // 0x412e3c
-    g550 = v7;
-    int32_t v8 = &v2; // 0x412e4d
-    while (*(char *)v8 != 0) {
-        // 0x412e50
-        v8++;
-    }
-    // 0x412e57
-    int32_t v9; // bp-1031, 0x412da0
-    int32_t v10 = v8 - (int32_t)&v9; // 0x412e5c
-    int32_t v11 = 1024 - v7; // 0x412e5e
-    int32_t v12 = v11 < v10 ? v11 : v10;
-    strncpy_s((char *)(v7 + (int32_t)&g537), v11, (char *)&v2, v12);
-    if (g550 > g545) {
-        // 0x412e8d
-        g550 -= v1;
-    }
-    unsigned char v13 = g540; // 0x412e93
-    if (v13 < 129) {
-        // 0x412ec3
-        *(char *)&g541 = 0;
-        memset((int32_t *)&g542, 0, 256);
-        g547 = 1;
-        return ___report_gsfailure();
-    }
-    if (v13 >= 160) {
-        if (v13 < 224 || v13 == -1) {
-            // 0x412ec3
-            *(char *)&g541 = 0;
-            memset((int32_t *)&g542, 0, 256);
-            g547 = 1;
-            return ___report_gsfailure();
-        }
-    }
-    // 0x412ea9
-    g540 = 0;
-    // 0x412ec3
-    *(char *)&g541 = 0;
-    memset((int32_t *)&g542, 0, 256);
-    g547 = 1;
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x412ef0 - 0x412ffe
-int32_t function_412ef0(int32_t a1) {
-    int32_t v1 = (int32_t)&g542; // 0x412f0e
-    while (*(char *)v1 != 0) {
-        // 0x412f10
-        v1++;
-    }
-    if (v1 != (int32_t)&g543) {
-        // 0x412fed
-        return ___report_gsfailure();
-    }
-    // 0x412f1f
-    *(char *)&g543 = 0;
-    int32_t v2; // bp-1032, 0x412ef0
-    strcpy_s((char *)&v2, 1024, (char *)&g537);
-    *(char *)&g537 = (char)a1;
-    int32_t v3 = g550; // 0x412f51
-    g550 = v3 + 1;
-    int32_t v4 = &v2; // 0x412f6a
-    while (*(char *)v4 != 0) {
-        // 0x412f70
-        v4++;
-    }
-    // 0x412f77
-    int32_t v5; // bp-1031, 0x412ef0
-    int32_t v6 = v4 - (int32_t)&v5; // 0x412f7c
-    int32_t v7 = 1023 - v3; // 0x412f7e
-    int32_t v8 = v7 < v6 ? v7 : v6;
-    strncpy_s((char *)&g538, v7, (char *)&v2, v8);
-    if (g550 > g545) {
-        // 0x412fac
-        g550--;
-    }
-    unsigned char v9 = g540; // 0x412fb2
-    if (v9 < 129) {
-        // 0x412fe6
-        *(char *)&g541 = 0;
-        g547 = 1;
-        // 0x412fed
-        return ___report_gsfailure();
-    }
-    if (v9 >= 160) {
-        if (v9 < 224 || v9 == -1) {
-            // 0x412fe6
-            *(char *)&g541 = 0;
-            g547 = 1;
-            // 0x412fed
-            return ___report_gsfailure();
-        }
-    }
-    // 0x412fcc
-    g540 = 0;
-    // 0x412fe6
-    *(char *)&g541 = 0;
-    g547 = 1;
-    // 0x412fed
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x413000 - 0x413099
-int32_t function_413000(void) {
-    // 0x413000
-    int32_t result; // 0x413000
-    if (result < 0) {
-        uint32_t v1 = g550; // 0x413004
-        if (v1 <= 1) {
-            // 0x41300f
-            g550 = 0;
-            return result;
-        }
-        unsigned char v2 = g536; // 0x41301a
-        int32_t result2 = result & -256 | (int32_t)v2; // 0x41301a
-        if (v2 < 129) {
-            // 0x41303a
-            g550 = v1 - 1;
-            return result2;
-        }
-        if (v2 < 160) {
-            // 0x413030
-            g550 = v1 - 2;
-            return result2;
-        }
-        if (v2 < 224 || v2 == -1) {
-            // 0x41303a
-            g550 = v1 - 1;
-            return result2;
-        }
-        // 0x413030
-        g550 = v1 - 2;
-        return result2;
-    }
-    if (result < 1) {
-        // 0x413098
-        int32_t result3; // 0x413000
-        return result3;
-    }
-    int32_t result4 = g550; // 0x413044
-    if (*(char *)&g537 == 0) {
-        // 0x413098
-        return result4;
-    }
-    int32_t v3 = result4; // 0x413057
-    if (result4 >= 1022) {
-        // 0x413059
-        g550 = 1023;
-        v3 = 1023;
-    }
-    unsigned char v4 = *(char *)(v3 + (int32_t)&g537); // 0x413063
-    if (v4 < 129) {
-        goto lab_0x413082;
-    } else {
-        if (v4 < 160) {
-            goto lab_0x41307d;
-        } else {
-            if (v4 < 224 || v4 == -1) {
-                goto lab_0x413082;
-            } else {
-                goto lab_0x41307d;
-            }
-        }
-    }
-  lab_0x413082:;
-    int32_t result5 = v3 + 1;
-    int32_t v5 = g545; // 0x413083
-    g550 = result5 > v5 ? v5 : result5;
-    return result5;
-  lab_0x41307d:
-    // 0x413083
-    result5 = v3 + 2;
-    v5 = g545;
-    g550 = result5 > v5 ? v5 : result5;
-    return result5;
-}
+
 
 // Address range: 0x4130a0 - 0x4131a9
-int32_t function_4130a0(void) {
-    unsigned char v1 = *(char *)&g537; // 0x4130b9
-    if (v1 == 0) {
-        // 0x41319a
-        return ___report_gsfailure();
-    }
-    char * v2; // 0x4130a0
-    if (v1 < 129) {
-        // 0x4130ef
-        v2 = (char *)&g538;
-        goto lab_0x413102;
-    } else {
-        // 0x4130ce
-        v2 = (char *)&g539;
-        if (v1 < 160) {
-            goto lab_0x413102;
-        } else {
-            // 0x4130d2
-            v2 = (char *)&g539;
-            if (v1 < 224 || v1 == -1) {
-                // 0x4130ef
-                v2 = (char *)&g538;
-                goto lab_0x413102;
-            } else {
-                goto lab_0x413102;
-            }
-        }
-    }
-  lab_0x413102:;
-    // 0x413102
-    int32_t v3; // bp-1032, 0x4130a0
-    strcpy_s((char *)&v3, 1024, v2);
-    *(char *)&g537 = 0;
-    int32_t v4 = &v3;
-    int32_t v5 = v4 + 1; // 0x413122
-    while (*(char *)v4 != 0) {
-        // 0x413120
-        v4 = v5;
-        v5 = v4 + 1;
-    }
-    int32_t v6 = 1023 - g550; // 0x413134
-    int32_t v7; // bp-1031, 0x4130a0
-    int32_t v8 = v5 - (int32_t)&v7 + 2; // 0x413136
-    int32_t v9 = v6 < v8 ? v6 : v8;
-    strncpy_s((char *)&g537, 1024 - g550, (char *)&v3, v9);
-    unsigned char v10 = g540; // 0x413161
-    if (v10 < 129) {
-        // 0x413193
-        *(char *)&g541 = 0;
-        g547 = 1;
-        // 0x41319a
-        return ___report_gsfailure();
-    }
-    if (v10 >= 160) {
-        if (v10 < 224 || v10 == -1) {
-            // 0x413193
-            *(char *)&g541 = 0;
-            g547 = 1;
-            // 0x41319a
-            return ___report_gsfailure();
-        }
-    }
-    // 0x41317a
-    g540 = 0;
-    // 0x413193
-    *(char *)&g541 = 0;
-    g547 = 1;
-    // 0x41319a
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x4131b0 - 0x4131de
-int32_t function_4131b0(void) {
-    // 0x4131b0
-    int32_t result; // 0x4131b0
-    if (g547 != 0) {
-        // 0x4131dd
-        return result;
-    }
-    // 0x4131b9
-    if (g548 == 0) {
-        int32_t * v1 = memset((int32_t *)&g542, 0, 256); // 0x4131ce
-        *(char *)&g546 = 1;
-        result = (int32_t)v1;
-    }
-    // 0x4131dd
-    return result;
-}
+
 
 // Address range: 0x4131e0 - 0x413433
-int32_t function_4131e0(uint32_t a1) {
-    // 0x4131e0
-    if (g549 == 0) {
-        // 0x4133fb
-        return ___report_gsfailure();
-    }
-    int32_t v1; // 0x4131e0
-    int32_t uVirtKey; // 0x4131e0
-    if (a1 < 271) {
-        switch (a1) {
-            case 270: {
-                // 0x4133c2
-                function_412da0();
-                return ___report_gsfailure();
-            }
-            case 256: {
-                unsigned char v2 = *(char *)(uVirtKey + 0x413468); // 0x4132b0
-                g1203 = v2;
-                int32_t v3; // 0x4131e0
-                switch (v2) {
-                    case 0: {
-                        // 0x41335d
-                        if (g550 < 1) {
-                            // 0x413234
-                            return ___report_gsfailure();
-                        }
-                        // 0x41336a
-                        function_413000();
-                        // 0x413372
-                        function_4130a0();
-                        return ___report_gsfailure();
-                    }
-                    case 1: {
-                        // 0x4132be
-                        function_4131b0();
-                        return ___report_gsfailure();
-                    }
-                    case 2: {
-                        // 0x4132d5
-                        function_413000();
-                        return ___report_gsfailure();
-                    }
-                    case 3: {
-                        // 0x4132ef
-                        if (*(char *)&g537 == 0) {
-                            // 0x413234
-                            return ___report_gsfailure();
-                        }
-                        // 0x413301
-                        v3 = g550;
-                        if (g550 >= 1022) {
-                            // 0x413308
-                            g550 = 1023;
-                            v3 = 1023;
-                        }
-                        // break -> 0x413312
-                        break;
-                    }
-                    case 4: {
-                        // 0x413372
-                        function_4130a0();
-                        return ___report_gsfailure();
-                    }
-                    default: {
-                        int32_t lpChar = 0; // bp-28, 0x41338d
-                        ToAscii(uVirtKey, uVirtKey >> 16, NULL, (int16_t *)&lpChar, 1);
-                        return ___report_gsfailure();
-                    }
-                }
-                unsigned char v4 = *(char *)(v3 + (int32_t)&g537); // 0x413312
-                if (v4 < 129) {
-                    // 0x413331
-                    v1 = v3 + 1;
-                    goto lab_0x413332;
-                } else {
-                    if (v4 < 160) {
-                        // 0x41332c
-                        v1 = v3 + 2;
-                        goto lab_0x413332;
-                    } else {
-                        if (v4 < 224 || v4 == -1) {
-                            // 0x413331
-                            v1 = v3 + 1;
-                            goto lab_0x413332;
-                        } else {
-                            // 0x41332c
-                            v1 = v3 + 2;
-                            goto lab_0x413332;
-                        }
-                    }
-                }
-            }
-            case 258: {
-                unsigned char v5 = *(char *)(uVirtKey + 0x41343c); // 0x41324e
-                g1202 = v5;
-                switch (v5) {
-                    case 0: {
-                        // 0x413234
-                        return ___report_gsfailure();
-                    }
-                    case 1: {
-                        // 0x413275
-                        function_4131b0();
-                        return ___report_gsfailure();
-                    }
-                    case 2: {
-                        // 0x41325c
-                        g549 = 0;
-                        return ___report_gsfailure();
-                    }
-                }
-                // 0x41328c
-                function_412ef0(uVirtKey);
-                return ___report_gsfailure();
-            }
-            default: {
-                if (a1 != 269) {
-                    // 0x4133fb
-                    return ___report_gsfailure();
-                }
-                goto lab_0x41322a;
-            }
-        }
-    } else {
-        switch (a1) {
-            case 271: {
-                goto lab_0x41322a;
-            }
-            case 641: {
-                // 0x41340d
-                DefWindowProcA((int32_t *)uVirtKey, 641, uVirtKey, uVirtKey & 0x3ffffff0);
-                return ___report_gsfailure();
-            }
-            default: {
-                if (a1 == 642 != uVirtKey < 6) {
-                    // 0x4133fb
-                    return ___report_gsfailure();
-                }
-                // 0x413234
-                return ___report_gsfailure();
-            }
-        }
-    }
-  lab_0x41322a:
-    if ((uVirtKey & 8) != 0) {
-        // 0x41322f
-        function_412d30();
-    }
-    // 0x413234
-    return ___report_gsfailure();
-  lab_0x413332:
-    // 0x413332
-    g550 = v1;
-    if (v1 <= g545) {
-        // 0x413234
-        return ___report_gsfailure();
-    }
-    // 0x413345
-    g550 = g545;
-    return ___report_gsfailure();
-}
+
 
 
 // Address range: 0x413f18 - 0x414007
