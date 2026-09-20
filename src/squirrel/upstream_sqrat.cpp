@@ -186,4 +186,18 @@ bool sqrat_compile_and_run(HSQUIRRELVM vm, const char *source, std::size_t size,
     sq_settop(vm, top);
     return ok;
 }
+bool sqrat_compile_and_write(HSQUIRRELVM vm, const char *source, std::size_t size,
+    SQWRITEFUNC write, SQUserPointer context) {
+    const auto top = sq_gettop(vm);
+    bool ok = false;
+    try {
+        Sqrat::Script script(vm);
+        script.CompileString(std::string(source, size));
+        sq_pushobject(vm, script.GetObject());
+        ok = SQ_SUCCEEDED(sq_writeclosure(vm, write, context));
+    } catch (const Sqrat::Exception&) {
+    }
+    sq_settop(vm, top);
+    return ok;
+}
 }

@@ -4341,6 +4341,68 @@ static int test_map_registration(int32_t vm, int32_t *root) {
     return 0;
 }
 
+struct script_io_stream {
+    int32_t* vtable;
+    uint32_t position, size;
+    int reading;
+    unsigned char bytes[8192];
+};
+static int32_t __fastcall script_io_transfer(struct script_io_stream* self, void* unused, void* data, uint32_t size) {
+    (void)unused;
+    if (size > sizeof(self->bytes)-self->position || (self->reading && size > self->size-self->position)) return 0;
+    if (size) {
+        if (self->reading) memcpy(data,self->bytes+self->position,size);
+        else memcpy(self->bytes+self->position,data,size);
+    }
+    self->position+=size;
+    if (!self->reading && self->position>self->size) self->size=self->position;
+    return 1;
+}
+static int32_t __fastcall script_io_seek(struct script_io_stream* self, void* unused, int32_t offset, int32_t origin) {
+    (void)unused;
+    self->position=(origin==0 ? 0 : origin==1 ? self->position : self->size)+offset;
+    return self->position;
+}
+static int test_script_serialization(int32_t vm, int32_t* root) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t script[26]={0}, loaded[26]={0}, holder=PTR(&stream);
+    const char source[]="ioCompiledValue <- 42;\n";
+    const char path[]="a-long-script-path-for-serialization.cv4";
+    CHECK(retdec_construct_cact_script(PTR(script)) && retdec_construct_cact_script(PTR(loaded)));
+    free((void*)(intptr_t)script[23]); script[23]=PTR(malloc(sizeof(source))); CHECK(script[23]);
+    memcpy((void*)(intptr_t)script[23],source,sizeof(source)); script[24]=sizeof(source); script[25]=1;
+    retdec_string_assign_cstr(script+16,path);
+    const unsigned char previous=g673; g673=0;
+    CHECK(retdec_call_thiscall1_result(script,(void*)g231.e0,PTR(&stream))==1);
+    CHECK(stream.bytes[0]==1 && *(uint32_t*)(stream.bytes+1)==2);
+    CHECK(memcmp(stream.bytes+9,"compiled",8)==0);
+    CHECK(((unsigned char*)script)[101]==0);
+    stream.reading=1; stream.position=0;
+    CHECK(retdec_call_thiscall2_result(loaded,(void*)g231.e1,PTR(&holder),1)==1);
+    CHECK(stream.position==stream.size && loaded[24]==sizeof(source));
+    CHECK(strcmp(retdec_std_string_data(PTR(loaded)+64),path)==0);
+    CHECK(memcmp((void*)(intptr_t)loaded[23],source,sizeof(source))==0);
+    CHECK(loaded[23]!=script[23] && ((unsigned char*)loaded)[100]==1);
+    CHECK(kinoko_method_read_act_script(PTR(loaded),NULL,PTR(&holder),2)==0);
+    stream.reading=0; stream.position=stream.size=0; g673=1;
+    CHECK(kinoko_method_write_act_script(PTR(script),NULL,PTR(&stream))==1);
+    CHECK(stream.bytes[0]==0 && stream.bytes[1]==1 && ((unsigned char*)script)[101]==0);
+    {
+        uint32_t prefix=1+1+4+(uint32_t)strlen(path);
+        CHECK(*(uint32_t*)(stream.bytes+prefix)==stream.size-prefix);
+        CHECK(*(uint16_t*)(stream.bytes+prefix+4)==0xfafa);
+        int32_t compiled[26]={0};
+        compiled[23]=PTR(stream.bytes+prefix+4); compiled[24]=stream.size-prefix-4;
+        CHECK(retdec_execute_embedded_act_script(vm,PTR(compiled),root+2));
+        CHECK(execute_source(vm,root+2,"if(ioCompiledValue!=42) throw \"serialized closure\"; delete ioCompiledValue;"));
+    }
+    g673=previous;
+    retdec_destroy_cact_script(PTR(loaded)); retdec_destroy_cact_script(PTR(script));
+    puts("PASS: original script virtual read/write, heap path ownership, source compile and inclusive bytecode length");
+    return 0;
+}
+
 static int test_original_layer_constructor(int32_t vm) {
     int32_t *layer = malloc(348);
     CHECK(layer); memset(layer, 0xcd, 348);
@@ -4607,6 +4669,7 @@ int main(int argc, char **argv) {
     CHECK(test_camera_map_bindings(vm, root) == 0);
     CHECK(test_map_registration(vm, root) == 0);
     CHECK(test_original_layer_constructor(vm) == 0);
+    CHECK(test_script_serialization(vm, root) == 0);
     CHECK(test_layout_registration_entries(vm) == 0);
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);

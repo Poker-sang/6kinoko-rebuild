@@ -84,7 +84,7 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     field<int32_t>(script_ptr + 92) = 0;
     field<int32_t>(script_ptr + 96) = 0;
     if (field<int32_t>(script_ptr + 84) >= 16)
-        std::free(pointer<void>(field<int32_t>(script_ptr + 80)));
+        std::free(pointer<void>(field<int32_t>(script_ptr + 64)));
     field<int32_t>(script_ptr + 80) = 0;
     field<int32_t>(script_ptr + 84) = 15;
     field<unsigned char>(script_ptr + 64) = 0;

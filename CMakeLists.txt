@@ -195,6 +195,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_document.cpp
     src/reconstructed/act_properties.cpp
+    src/reconstructed/act_script_io.cpp
     src/reconstructed/act_map.cpp
     src/reconstructed/act_containers.cpp
     src/reconstructed/act_layout.cpp

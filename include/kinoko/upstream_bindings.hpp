@@ -71,6 +71,8 @@ bool sqrat_run_script(HSQUIRRELVM vm, HSQOBJECT closure, HSQOBJECT environment,
     SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
 bool sqrat_compile_and_run(HSQUIRRELVM vm, const char* source, std::size_t size,
     HSQOBJECT environment, SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
+bool sqrat_compile_and_write(HSQUIRRELVM vm, const char* source, std::size_t size,
+    SQWRITEFUNC write, SQUserPointer context);
 bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& result);
 HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
