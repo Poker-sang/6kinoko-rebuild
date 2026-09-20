@@ -47,6 +47,64 @@ namespace Sqrat {
         if (!keepOnStack) sq_pop(vm, 1);
     }
 
+    // KINOKO SOURCE FACTORING: InitClass can use an embedding's existing
+    // class and table handles instead of introducing another owning registry.
+    inline SQRESULT InitializeClass(HSQUIRRELVM vm, HSQOBJECT classObject,
+        HSQOBJECT& setTable, HSQOBJECT& getTable, SQFUNCTION constructor,
+        SQFUNCTION setter, SQFUNCTION getter, SQFUNCTION weakref,
+        bool reuseTables = false) {
+        const SQInteger top = sq_gettop(vm);
+        sq_pushobject(vm, classObject);
+        SQRESULT status = SQ_OK;
+        if (constructor) {
+            sq_pushstring(vm, _SC("constructor"), -1);
+            sq_newclosure(vm, constructor, 0);
+            status = sq_newslot(vm, -3, false);
+        }
+        if (SQ_SUCCEEDED(status)) {
+            sq_pushstring(vm, _SC("__setTable"), -1);
+            if (reuseTables) sq_pushobject(vm, setTable);
+            else {
+                sq_resetobject(&setTable);
+                sq_newtable(vm);
+                sq_getstackobj(vm, -1, &setTable);
+                sq_addref(vm, &setTable);
+            }
+            status = sq_newslot(vm, -3, true);
+        }
+        if (SQ_SUCCEEDED(status)) {
+            sq_pushstring(vm, _SC("__getTable"), -1);
+            if (reuseTables) sq_pushobject(vm, getTable);
+            else {
+                sq_resetobject(&getTable);
+                sq_newtable(vm);
+                sq_getstackobj(vm, -1, &getTable);
+                sq_addref(vm, &getTable);
+            }
+            status = sq_newslot(vm, -3, true);
+        }
+        if (SQ_SUCCEEDED(status)) {
+            sq_pushstring(vm, _SC("_set"), -1);
+            sq_pushobject(vm, setTable);
+            sq_newclosure(vm, setter, 1);
+            status = sq_newslot(vm, -3, false);
+        }
+        if (SQ_SUCCEEDED(status)) {
+            sq_pushstring(vm, _SC("_get"), -1);
+            sq_pushobject(vm, getTable);
+            sq_newclosure(vm, getter, 1);
+            status = sq_newslot(vm, -3, false);
+        }
+        if (SQ_SUCCEEDED(status) && weakref) {
+            sq_pushstring(vm, _SC("weakref"), -1);
+            sq_newclosure(vm, weakref, 0);
+            status = sq_newslot(vm, -3, false);
+        }
+        sq_settop(vm, top);
+        return status;
+    }
+
+
 	/**
 		@tparam	C	class type to expose
 		@tparam A	allocator to use when instantiating and destroying class instances in Squirrel
@@ -243,54 +301,11 @@ namespace Sqrat {
 
 		// Initialize the required data structure for the class
 		void InitClass() {
-			ClassType<C>::CopyFunc() = &A::Copy;
-
-			// push the class
-			sq_pushobject(vm, ClassType<C>::ClassObject());
-
-			// add the default constructor
-			sq_pushstring(vm,_SC("constructor"), -1);
-			sq_newclosure(vm, &A::New, 0);
-			sq_newslot(vm, -3, false);
-
-			// add the set table (static)
-			HSQOBJECT& setTable = ClassType<C>::SetTable();
-			sq_resetobject(&setTable);
-			sq_pushstring(vm,_SC("__setTable"), -1);
-			sq_newtable(vm);
-			sq_getstackobj(vm, -1, &setTable);
-			sq_addref(vm, &setTable);
-			sq_newslot(vm, -3, true);
-
-			// add the get table (static)
-			HSQOBJECT& getTable = ClassType<C>::GetTable();
-			sq_resetobject(&getTable);
-			sq_pushstring(vm,_SC("__getTable"), -1);
-			sq_newtable(vm);
-			sq_getstackobj(vm, -1, &getTable);
-			sq_addref(vm, &getTable);
-			sq_newslot(vm, -3, true);
-
-			// override _set
-			sq_pushstring(vm, _SC("_set"), -1);
-			sq_pushobject(vm, setTable); // Push the set table as a free variable
-			sq_newclosure(vm, &sqVarSet, 1);
-			sq_newslot(vm, -3, false);
-
-			// override _get
-			sq_pushstring(vm, _SC("_get"), -1);
-			sq_pushobject(vm, getTable); // Push the get table as a free variable
-			sq_newclosure(vm, &sqVarGet, 1);
-			sq_newslot(vm, -3, false);
-
-			// add weakref (apparently not provided by default)
-			sq_pushstring(vm, _SC("weakref"), -1);
-			sq_newclosure(vm, &Class::ClassWeakref, 0);
-			sq_newslot(vm, -3, false);
-
-			// pop the class
-			sq_pop(vm, 1);
-		}
+            ClassType<C>::CopyFunc() = &A::Copy;
+            InitializeClass(vm, ClassType<C>::ClassObject(),
+                ClassType<C>::SetTable(), ClassType<C>::GetTable(),
+                &A::New, &sqVarSet, &sqVarGet, &Class::ClassWeakref);
+        }
 
 		// Helper function used to bind getters and setters
 		inline void BindAccessor(const SQChar* name, void* var, size_t varSize, SQFUNCTION func, HSQOBJECT table) {

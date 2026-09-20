@@ -119,22 +119,10 @@ int32_t retdec_publish_cact_layer_members(
         retdec_sqrat_release_pair(vm, table_pair2);
     }
 
-    if (!retdec_sqrat_set_native_closure(
-            vm, class_pair, "constructor", address(kinoko_sq_noop_constructor),
-            nullptr, 0) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
-                               (const int32_t *)&g1151) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__getTable",
-                               (const int32_t *)&g1153) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "_set", address(function_41e2c0),
-            (const int32_t *)&g1151, 1) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "_get", address(function_41e260),
-            (const int32_t *)&g1153, 1) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "weakref", address(function_431650),
-            nullptr, 0))
+    if (!retdec_sqrat_initialize_class(vm, class_pair,
+            (const int32_t *)&g1151, (const int32_t *)&g1153,
+            address(kinoko_sq_noop_constructor), address(function_41e2c0),
+            address(function_41e260), address(function_431650)))
         goto failed;
 
     if (!retdec_publish_cact_layer_property(
@@ -237,22 +225,10 @@ int32_t retdec_publish_c2dlayout_properties(
         retdec_sqrat_release_pair(vm, table_pair2);
     }
 
-    if (!retdec_sqrat_set_native_closure(
-            vm, class_pair, "constructor", address(kinoko_sq_noop_constructor),
-            nullptr, 0) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__setTable",
-                               (const int32_t *)&g1141) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__getTable",
-                               (const int32_t *)&g1143) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "_set", address(function_41e2c0),
-            (const int32_t *)&g1141, 1) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "_get", address(function_41e260),
-            (const int32_t *)&g1143, 1) ||
-        !retdec_sqrat_set_native_closure(
-            vm, class_pair, "weakref", address(function_431650),
-            nullptr, 0))
+    if (!retdec_sqrat_initialize_class(vm, class_pair,
+            (const int32_t *)&g1141, (const int32_t *)&g1143,
+            address(kinoko_sq_noop_constructor), address(function_41e2c0),
+            address(function_41e260), address(function_431650)))
         goto failed;
 
     for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
@@ -525,12 +501,8 @@ int32_t retdec_publish_acting_player_properties(int32_t vm,
     int32_t ok = 0;
     if (!retdec_sqrat_new_table(vm, get_table) ||
         !retdec_sqrat_new_table(vm, set_table) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__getTable", get_table) ||
-        !retdec_sqrat_set_pair(vm, class_pair, "__setTable", set_table) ||
-        !retdec_sqrat_set_native_closure(vm, class_pair, "_get",
-            address(function_41e260), get_table, 1) ||
-        !retdec_sqrat_set_native_closure(vm, class_pair, "_set",
-            address(function_41e2c0), set_table, 1))
+        !retdec_sqrat_initialize_class(vm, class_pair, set_table, get_table,
+            0, address(function_41e2c0), address(function_41e260), 0))
         goto cleanup;
     for (size_t i = 0; i < sizeof(offsets) / sizeof(offsets[0]); ++i) {
         if (!retdec_sqrat_set_offset_closure(vm, get_table, names[i], offsets[i],
@@ -1090,14 +1062,8 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
         goto cleanup;
     if (!retdec_sqrat_new_table(vm, get_table) ||
         !retdec_sqrat_new_table(vm, set_table) ||
-        !retdec_sqrat_set_pair(vm, out, "__getTable", get_table) ||
-        !retdec_sqrat_set_pair(vm, out, "__setTable", set_table) ||
-        !retdec_sqrat_set_native_closure(vm, out, "_get",
-            address(function_41e260), get_table, 1) ||
-        !retdec_sqrat_set_native_closure(vm, out, "_set",
-            address(function_41e2c0), set_table, 1) ||
-        !retdec_sqrat_set_native_closure(vm, out, "weakref",
-            address(function_431650), nullptr, 0))
+        !retdec_sqrat_initialize_class(vm, out, set_table, get_table,
+            0, address(function_41e2c0), address(function_41e260), address(function_431650)))
         goto cleanup;
     for (int32_t i = 0; i < property_count; ++i) {
         const struct retdec_native_view_property *p = properties + i;

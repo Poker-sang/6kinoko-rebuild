@@ -194,6 +194,15 @@ extern "C" int32_t retdec_sqrat_set_offset_closure(int32_t id, const int32_t* ta
     return kinoko::script::upstream::sqrat_bind_function(vm, receiver, name,
         &offset, sizeof(offset), reinterpret_cast<SQFUNCTION>(pointer(function)), false);
 }
+extern "C" int32_t retdec_sqrat_initialize_class(int32_t id, const int32_t* type,
+    const int32_t* set_table, const int32_t* get_table, int32_t constructor,
+    int32_t setter, int32_t getter, int32_t weakref) {
+    if (!id || !type || !set_table || !get_table || !setter || !getter) return 0;
+    auto callback = [](int32_t value) { return reinterpret_cast<SQFUNCTION>(pointer(value)); };
+    return kinoko::script::upstream::sqrat_initialize_class(pointer<SQVM>(id),
+        read<HSQOBJECT>(type), read<HSQOBJECT>(set_table), read<HSQOBJECT>(get_table),
+        callback(constructor), callback(setter), callback(getter), callback(weakref));
+}
 extern "C" int32_t retdec_sqrat_new_class(int32_t id, int32_t* output) {
     if (!id || !output) return 0;
     const auto value = kinoko::script::upstream::sqrat_new_class(pointer<SQVM>(id), true);

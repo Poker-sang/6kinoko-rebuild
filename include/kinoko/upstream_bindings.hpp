@@ -70,6 +70,9 @@ HSQOBJECT sqplus_get_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key
 bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& result);
 HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
+bool sqrat_initialize_class(HSQUIRRELVM vm, HSQOBJECT type, HSQOBJECT setter_table,
+    HSQOBJECT getter_table, SQFUNCTION constructor, SQFUNCTION setter,
+    SQFUNCTION getter, SQFUNCTION weakref);
 bool sqrat_push_instance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer native);
 HSQOBJECT sqrat_new_class(HSQUIRRELVM vm, bool keep_on_stack);
 void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,

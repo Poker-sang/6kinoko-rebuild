@@ -52,6 +52,12 @@ HSQOBJECT sqrat_new_class(HSQUIRRELVM vm, bool keep_on_stack) {
     Sqrat::CreateClassObject(vm, value, keep_on_stack);
     return value;
 }
+bool sqrat_initialize_class(HSQUIRRELVM vm, HSQOBJECT type, HSQOBJECT setter_table,
+    HSQOBJECT getter_table, SQFUNCTION constructor, SQFUNCTION setter,
+    SQFUNCTION getter, SQFUNCTION weakref) {
+    return SQ_SUCCEEDED(Sqrat::InitializeClass(vm, type, setter_table, getter_table,
+        constructor, setter, getter, weakref, true));
+}
 bool sqrat_push_instance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer native) {
     return SQ_SUCCEEDED(Sqrat::PushClassInstance(vm, type, native));
 }

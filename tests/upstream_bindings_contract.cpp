@@ -445,10 +445,39 @@ void instance_bases(HSQUIRRELVM vm) {
         "non-instance rejected before source accessor");
     sq_settop(vm, top);
 }
+SQInteger unused_class_callback(HSQUIRRELVM) { return 0; }
+void source_class_initialization(HSQUIRRELVM vm) {
+    const auto top = sq_gettop(vm);
+    auto type = up::sqrat_new_class(vm, false);
+    auto set = up::sqrat_table(vm), get = up::sqrat_table(vm);
+    require(up::sqrat_initialize_class(vm, type, set, get, nullptr,
+        unused_class_callback, unused_class_callback, nullptr), "source class initialization");
+    require(sq_gettop(vm) == top, "class initialization preserves caller stack");
+    int native = 71;
+    require(up::sqrat_push_instance(vm, type, &native), "source native instance creation");
+    SQUserPointer actual = nullptr;
+    require(SQ_SUCCEEDED(sq_getinstanceup(vm, -1, &actual, nullptr)) && actual == &native,
+        "source instance preserves native identity without invoking constructor");
+    // Change the class slot AFTER instantiation. A non-static copied default
+    // would leave the instance pointing at the old table, unlike the original.
+    auto replacement = up::sqrat_table(vm);
+    sq_pushobject(vm, type); sq_pushstring(vm, "__getTable", -1);
+    sq_pushobject(vm, replacement);
+    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQTrue)), "replace static table on locked class");
+    sq_pop(vm, 1);
+    sq_pushstring(vm, "__getTable", -1);
+    require(SQ_SUCCEEDED(sq_get(vm, -2)), "instance resolves class property table");
+    HSQOBJECT resolved; sq_getstackobj(vm, -1, &resolved);
+    require(same(resolved, replacement), "property tables are class statics, not instance copies");
+    sq_settop(vm, top);
+    up::sqrat_release(vm, replacement); up::sqrat_release(vm, get);
+    up::sqrat_release(vm, set); up::sqrat_release(vm, type);
+}
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
     classes(root.vm);
+    source_class_initialization(root.vm);
     slot_lifetime(root.vm);
     object_operations(root.vm);
     factories(root.vm);

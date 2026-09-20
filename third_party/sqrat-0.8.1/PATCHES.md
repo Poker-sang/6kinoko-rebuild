@@ -72,3 +72,11 @@ class/set-native sequence with PushClassInstance, accepting an explicit existing
 class handle. It returns the VM status and stops after failed creation. The host
 retains the resulting stack object at its ABI boundary and never constructs a
 second ClassType registry or calls a scripted constructor.
+
+InitClass shares its registration sequence with InitializeClass, which accepts
+borrowed existing class/property tables and recovered native callbacks. Source
+callers still create and retain fresh tables and initialize CopyFunc. The host
+reuses its existing owning table records and can omit constructor/weakref slots
+when that game class registers them separately. Errors are returned and the
+entry stack height restored. Table slots are static as in source and original
+421734/421785 (push 1 before newslot), correcting the host's non-static copies.
