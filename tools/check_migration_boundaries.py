@@ -9,6 +9,7 @@ import hashlib
 from pathlib import Path
 import re
 import sys
+from verify_upstream import verify as verify_upstream
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = Path('src/decompiled/6kinoko.exe.c')
@@ -31,7 +32,7 @@ def masked(text: str) -> str:
     return LEXICAL.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
 
 def main() -> int:
-    errors: list[str] = []
+    errors, upstream_members = verify_upstream(ROOT)
     reference = (ROOT / REFERENCE).read_bytes()
     # Git working trees on Windows may use CRLF. Preserve byte content modulo
     # only this checkout transformation; arbitrary whitespace is not ignored.
@@ -64,6 +65,7 @@ def main() -> int:
         print('\n'.join(errors), file=sys.stderr)
         return 1
     print(f'PASS: {scanned} source/header files; zero handwritten inline assembly/naked entries and literal native-closure addresses; original reference intact.')
+    print(f'PASS: {upstream_members} historical upstream members and documented patches verified.')
     print('NOTE: legacy_frame_copy.cpp still preserves the old operand-selection heuristic.')
     return 0
 
