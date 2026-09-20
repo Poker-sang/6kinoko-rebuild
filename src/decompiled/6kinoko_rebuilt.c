@@ -2,6 +2,7 @@
 #include "kinoko/archive_random.h"
 #include "kinoko/scene_queue.h"
 #include "kinoko/timer_events.h"
+#include "kinoko/legacy_container_memory.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
@@ -556,7 +557,7 @@ struct vtable_4d5a04_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(uint32_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -756,7 +757,7 @@ struct vtable_4eb45c_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -768,7 +769,7 @@ struct vtable_4eb59c_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -776,7 +777,7 @@ struct vtable_4eb5cc_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -784,7 +785,7 @@ struct vtable_4eb5fc_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -1206,7 +1207,7 @@ struct vtable_4ed60c_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -1214,7 +1215,7 @@ struct vtable_4ed63c_type {
     int32_t (*e0)(char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(int16_t, int16_t);
-    int32_t (*e3)(int16_t, int16_t);
+    int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
     int32_t (*e4)();
 };
 
@@ -3379,7 +3380,7 @@ struct vtable_4d5a04_type g29 = {
     .e0 = function_46a550,
     .e1 = (int32_t (*)(int32_t))kinoko_method_actor_manager_top,
     .e2 = (int32_t (*)(uint32_t))kinoko_method_actor_manager_remove,
-    .e3 = function_46a390,
+    .e3 = kinoko_method_lookup_actor,
     .e4 = function_46a380
 }; // 0x4d5a04
 struct vtable_4d5a1c_type g30 = {
@@ -8122,66 +8123,7 @@ int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
 
 
 // Address range: 0x4214a0 - 0x4215af
-int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3) {
-    int32_t result = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x4214a8
-    if (result != 0) {
-        // 0x4214b4
-        *(int32_t *)result = a1;
-        int32_t v1 = result + 8; // 0x4214bc
-        *(int32_t *)(result + 4) = a2;
-        if (v1 != 0) {
-            // 0x4214c6
-            *(int32_t *)v1 = *a3;
-        }
-        // 0x4214cd
-        return result;
-    }
-    // 0x4214d3
-    int32_t v2; // bp-16, 0x4214a0
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v2);
-    v2 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    int32_t v3; // bp-4, 0x4214a0
-    int32_t v4 = &v3; // bp-32, 0x421500
-    int32_t v5 = __readfsdword(0); // bp-44, 0x421510
-    int32_t v6 = g507 ^ (int32_t)&v4; // bp-68, 0x42151e
-    __writefsdword(0, (int32_t)&v5);
-    int32_t v7 = &v6; // 0x421536
-    if ((char *)&g443 > (char *)0x3fffffff) {
-        char * v8 = "vector<T> too long"; // bp-72, 0x421538
-        _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("vector<T> too long");
-        v7 = (int32_t)&v8;
-    }
-    // 0x421542
-    int32_t v9; // 0x4214a0
-    int32_t result2 = v9 - v2 >> 2; // 0x421547
-    if (result2 >= (int32_t)&g443) {
-        // 0x42159b
-        __writefsdword(0, v5);
-        return result2;
-    }
-    int32_t v10 = function_459920(); // 0x42154e
-    int32_t * v11 = (int32_t *)(v7 - 4); // 0x421564
-    *v11 = (int32_t)&g443;
-    *(int32_t *)(v7 - 8) = v2;
-    function_424320(v10);
-    int32_t v12 = v2; // 0x421570
-    if (v12 != 0) {
-        // 0x421581
-        *v11 = v12;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x42158a
-    v2 = v10;
-    // 0x42159b
-    __writefsdword(0, v5);
-    return v10 + 4 * (int32_t)&g443;
-}
+
 
 
 // Address range: 0x4216a0 - 0x421857
@@ -16287,41 +16229,7 @@ int32_t function_46a9c0(void) {
 
 
 /* TObjectManagerBase<Actor>::Add with the hidden receiver restored. */
-int32_t function_46aa60_this(int32_t this_ptr) {
-    int32_t handle[2] = { 0, 0 };
-    int32_t handle_manager;
-    int32_t actor;
-    int32_t list_field;
-    int32_t sentinel;
-    int32_t node;
 
-    if (this_ptr == 0)
-        return 0;
-    handle_manager = *(int32_t *)(intptr_t)(this_ptr + 4);
-    actor = function_46ab10_this(handle_manager,
-                                 (int32_t)(intptr_t)handle);
-    if (actor == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(actor + 12) = handle[0];
-    *(int32_t *)(intptr_t)(actor + 8) = 1;
-
-    list_field = this_ptr + 8;
-    sentinel = *(int32_t *)(intptr_t)list_field;
-    if (sentinel == 0)
-        return actor;
-    node = function_4214a0(
-        sentinel,
-        *(int32_t *)(intptr_t)(sentinel + 4),
-        &actor);
-    if (node == 0)
-        return actor;
-    if (*(int32_t *)(intptr_t)(this_ptr + 12) == 0x3ffffffe)
-        _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z("list<T> too long");
-    ++*(int32_t *)(intptr_t)(this_ptr + 12);
-    *(int32_t *)(intptr_t)(sentinel + 4) = node;
-    *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(node + 4)) = node;
-    return actor;
-}
 
 
 // Address range: 0x46aae0 - 0x46ab01

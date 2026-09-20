@@ -5603,7 +5603,28 @@ static int test_map_virtual_clone(void) {
     return 0;
 }
 
+static int test_actor_handle_lookup(void) {
+    int32_t manager[19]={0};
+    int32_t actors[2]={0x12340000,0x23450000};
+    uint32_t generations[2]={0xbbbb,0xaaaa};
+    int32_t value=0x11223344,node;
+    manager[0]=PTR(&g29);manager[1]=PTR(actors);manager[2]=PTR(actors+2);
+    manager[5]=PTR(generations);manager[6]=PTR(generations+2);
+    InitializeCriticalSection((LPCRITICAL_SECTION)((unsigned char*)manager+52));
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0001u)==actors[1]);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0000u)==0);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xbbbb0000u)==actors[0]);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0002u)==0);
+    DeleteCriticalSection((LPCRITICAL_SECTION)((unsigned char*)manager+52));
+    node=function_4214a0(0x1111,0x2222,&value);CHECK(node);
+    CHECK(((int32_t*)(intptr_t)node)[0]==0x1111);
+    CHECK(((int32_t*)(intptr_t)node)[1]==0x2222);
+    CHECK(((int32_t*)(intptr_t)node)[2]==value);free((void*)(intptr_t)node);
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    CHECK(test_actor_handle_lookup()==0);
     CHECK(test_map_virtual_clone()==0);
     if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)
         return test_owned_states(1);
