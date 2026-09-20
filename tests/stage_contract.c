@@ -4358,8 +4358,8 @@ static int test_original_layer_constructor(int32_t vm) {
         const char text[]="registered <- thisAct.marker;\nsawLayer <- (\"layer\" in this);\n";
         CHECK(retdec_sqrat_new_table(vm,parent+2));
         CHECK(retdec_sqrat_set_int(vm,parent+2,"marker",73));
-        layer[73]=PTR(malloc(sizeof(text))); CHECK(layer[73]);
-        memcpy((void*)(intptr_t)layer[73],text,sizeof(text)); layer[75]=1; layer[74]=sizeof(text)-1;
+        layer[74]=PTR(malloc(sizeof(text))); CHECK(layer[74]);
+        memcpy((void*)(intptr_t)layer[74],text,sizeof(text)); layer[76]=1; layer[75]=sizeof(text)-1;
         ((float*)layer)[36]=13.0f; ((float*)layer)[37]=17.0f;
         CHECK(retdec_call_thiscall2_result(layer,(void*)g252.e8,PTR(parent),0)==0);
         CHECK(((float*)layer)[39]==13.0f && ((float*)layer)[40]==17.0f);
