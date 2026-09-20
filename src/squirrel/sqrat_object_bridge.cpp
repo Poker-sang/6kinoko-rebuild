@@ -134,18 +134,16 @@ extern "C" int32_t retdec_sqrat_root_construct(int32_t storage, int32_t id) {
     object.vtable(kinoko_sqrat_object_vtable());
     object.vm(vm); object.owns(true); object.reset();
     object.vtable(kinoko_sqrat_root_vtable());
-    sq_pushroottable(vm);
-    HSQOBJECT root; sq_getstackobj(vm, -1, &root);
+    const auto root = kinoko::script::upstream::sqrat_root(vm);
     object.value(root);
-    sq_addref(vm, &root);
-    sq_pop(vm, 1);
     trace_pair("450e30:after-pop-type", "450e30:after-pop-data", root);
     return storage;
 }
 extern "C" void retdec_sqrat_object_release(int32_t storage) {
     if (!storage) return;
     ObjectView object(storage);
-    if (object.owns() && object.vm()) { auto value = object.value(); sq_release(object.vm(), &value); }
+    if (object.owns() && object.vm())
+        kinoko::script::upstream::sqrat_release(object.vm(), object.value());
     object.owns(false); object.reset(); object.vtable(kinoko_sqrat_object_vtable());
 }
 extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t out) {
@@ -159,13 +157,13 @@ extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t o
     sq_pushstring(vm, name, -1);
     if (SQ_FAILED(sq_get(vm, -2))) return 0;
     HSQOBJECT value; sq_getstackobj(vm, -1, &value);
-    sq_addref(vm, &value); write(pointer(out), value);
+    kinoko::script::upstream::sqrat_retain(vm, value); write(pointer(out), value);
     return 1;
 }
 extern "C" void retdec_sqrat_release_pair(int32_t id, int32_t* pair) {
     if (!pair) return;
     auto value = read<HSQOBJECT>(pair);
-    if (value._type != OT_NULL || data_bits(value) != 0) sq_release(pointer<SQVM>(id), &value);
+    if (value._type != OT_NULL || data_bits(value) != 0) kinoko::script::upstream::sqrat_release(pointer<SQVM>(id), value);
     reset_pair(pair);
 }
 extern "C" int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t* object, const char* name, const int32_t* value) { return set_pair(vm, object, name, value, false); }
@@ -216,9 +214,8 @@ extern "C" int32_t retdec_sqrat_new_table(int32_t id, int32_t* out) {
     auto vm = pointer<SQVM>(id);
     reset_pair(out);
     TrimStack stack(vm);
-    sq_newtable(vm);
-    HSQOBJECT value; sq_getstackobj(vm, -1, &value);
-    sq_addref(vm, &value); write(out, value);
+    const auto value = kinoko::script::upstream::sqrat_table(vm);
+    write(out, value);
     static std::atomic<unsigned> traces{0};
     if (traces.fetch_add(1, std::memory_order_relaxed) < 32)
         trace_pair("sqrat:new-table-type", "sqrat:new-table-data", value);

@@ -69,6 +69,8 @@ target_compile_options(kinoko_legacy_string PRIVATE /Gy)
 
 add_library(kinoko_native_control STATIC src/reconstructed/native_control.cpp)
 target_include_directories(kinoko_native_control PUBLIC include)
+include(cmake/BoostCount.cmake)
+target_link_libraries(kinoko_native_control PUBLIC kinoko_boost_count)
 
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
@@ -259,7 +261,8 @@ if(MSVC)
         /permissive /Gy /wd4100 /wd4244 /wd4267 /wd4706
     )
 endif()
-target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_legacy_string)
+include(cmake/Bindings.cmake)
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_legacy_string kinoko_upstream_bindings)
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
 target_compile_options(kinoko_retdec_rebuild PRIVATE
     $<$<COMPILE_LANGUAGE:C>:/TC>
@@ -399,6 +402,12 @@ add_executable(kinoko_diagnostics_capture tests/diagnostics_capture.cpp)
 target_link_libraries(kinoko_diagnostics_capture PRIVATE kinoko_diagnostics dbghelp)
 add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
 
+add_executable(kinoko_upstream_bindings_contract tests/upstream_bindings_contract.cpp)
+target_include_directories(kinoko_upstream_bindings_contract PRIVATE "${KINOKO_SQPLUS_DIR}")
+target_link_libraries(kinoko_upstream_bindings_contract PRIVATE kinoko_squirrel_cpp_vm)
+add_test(NAME upstream_bindings_contract COMMAND kinoko_upstream_bindings_contract)
+set_tests_properties(upstream_bindings_contract PROPERTIES TIMEOUT 120)
+
 add_executable(kinoko_squirrel_source_vm_contract tests/squirrel_source_vm_contract.cpp)
 target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE
     include "${KINOKO_SQUIRREL2_ROOT}/include")
@@ -514,6 +523,12 @@ foreach(contract IN ITEMS squirrel_native_calls squirrel_game_objects)
 endforeach()
 
 # /RTC1 checks caller/callee stack agreement without hand-written ESP probes.
+add_executable(kinoko_boost_control_contract tests/boost_control_contract.cpp)
+target_include_directories(kinoko_boost_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
+target_link_libraries(kinoko_boost_control_contract PRIVATE kinoko_boost_count)
+add_test(NAME boost_control_contract COMMAND kinoko_boost_control_contract)
+set_tests_properties(boost_control_contract PROPERTIES TIMEOUT 120)
+
 add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
@@ -561,6 +576,8 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_boost_control_contract
+    kinoko_upstream_bindings_contract
     kinoko_vorbis_decoder_contract
     kinoko_native_control_contract
     kinoko_legacy_string_contract

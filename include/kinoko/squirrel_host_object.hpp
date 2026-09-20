@@ -1,6 +1,7 @@
 #pragma once
 
 #include <squirrel.h>
+#include "kinoko/upstream_bindings.hpp"
 #include "kinoko/native_record_view.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -61,19 +62,15 @@ public:
     }
     void push(HSQUIRRELVM vm) const { sq_pushobject(vm, value()); }
     void retain(HSQUIRRELVM vm) const {
-        auto current = value();
-        sq_addref(vm, &current);
+        upstream::sqplus_retain(vm, value());
     }
     void release(HSQUIRRELVM vm) const {
-        auto current = value();
-        sq_release(vm, &current);
+        upstream::sqplus_release(vm, value());
     }
     void assign(HSQUIRRELVM vm, HSQOBJECT incoming) const {
         // Acquire first: source and destination may be identical, or the old
         // destination may own the source. Keep the borrowed value in a local.
-        sq_addref(vm, &incoming);
-        release(vm);
-        write(incoming);
+        write(upstream::sqplus_assign(vm, value(), incoming));
     }
     SQObjectType capture(HSQUIRRELVM vm, SQInteger index) const {
         HSQOBJECT incoming;

@@ -93,6 +93,9 @@ public:
 
     static const SquirrelObject &GetRootTable();
     static HSQUIRRELVM GetVMPtr() { return _VM; }
+    // KINOKO HOST ADAPTATION: borrow the existing VM without a second owner.
+    // Defined by the host; restore the previous value at every scope exit.
+    static HSQUIRRELVM ExchangeVMForHost(HSQUIRRELVM v);
 
     // The sandbox VM ptr is one which cannot access functions bound with 
     // SqPlus. It is suitable for running non-trusted scripts that can only
@@ -158,7 +161,7 @@ public:
 
 private:
     static SquirrelObject _vm;        // This is a Squirrel reference to the VM
-    static HSQUIRRELVM    _VM;        // The raw C++ pointer
+    static thread_local HSQUIRRELVM _VM;        // The raw C++ pointer
     static bool           _no_vm_ref; // Set if we only keep the raw C++ pointer and no ref
     static int _CallState;
     static SquirrelObject * _root;    // Cached root table if non NULL

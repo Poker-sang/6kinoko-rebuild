@@ -21,6 +21,11 @@
 #include <memory.h>
 #include <memory>
 #include <limits.h>  // For INT_MAX on GCC
+// KINOKO BUILD ADAPTATION: resolve the snapshot's undeclared string helpers.
+#include <string.h>
+#if !defined(_WIN32)
+#include <strings.h>
+#endif
 
 #include "squirrel.h"   // Include to get SQUNICODE setting from here
 #ifndef _SC
@@ -193,10 +198,14 @@ struct ScriptStringVar : ScriptStringVarBase {
     return safeStringCopy(s,_s.s,MaxLength);
   }
   bool operator == (const ScriptStringVar & _s) {
-    return _strcmp(s,_s.s) == 0;
+    return scstrcmp(s,_s.s) == 0;
   }
   bool compareCaseInsensitive(const ScriptStringVar & _s) {
+#if defined(_WIN32)
     return _stricmp(s,_s.s) == 0;
+#else
+    return strcasecmp(s,_s.s) == 0;
+#endif
   }
 };
 
@@ -539,10 +548,10 @@ inline void getVarNameTag(SQChar * buff,INT maxSize,const SQChar * scriptName) {
 } // getVarNameTag
 
 // Internal use only.
-int setVarFunc(HSQUIRRELVM v);
-int getVarFunc(HSQUIRRELVM v);
-int setInstanceVarFunc(HSQUIRRELVM v);
-int getInstanceVarFunc(HSQUIRRELVM v);
+SQInteger setVarFunc(HSQUIRRELVM v);
+SQInteger getVarFunc(HSQUIRRELVM v);
+SQInteger setInstanceVarFunc(HSQUIRRELVM v);
+SQInteger getInstanceVarFunc(HSQUIRRELVM v);
 
 // === BEGIN Helpers ===
 

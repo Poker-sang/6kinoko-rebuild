@@ -1,3 +1,4 @@
+// KINOKO BUILD ADAPTATION: native callbacks return Squirrel 2.2.2 SQInteger.
 #include "sqplus.h"
 #include <stdio.h>
 
@@ -280,7 +281,7 @@ static int getVar(StackHandler & sa,VarRef * vr,void * data) {
 
 // === Global Vars ===
 
-int setVarFunc(HSQUIRRELVM v) {
+SQInteger setVarFunc(HSQUIRRELVM v) {
   SquirrelVM::Init(v);  // For handling multi-VM setting right
   StackHandler sa(v);
   if (sa.GetType(1) == OT_TABLE) {
@@ -292,7 +293,7 @@ int setVarFunc(HSQUIRRELVM v) {
   return SQ_ERROR;
 } // setVarFunc
 
-int getVarFunc(HSQUIRRELVM v) {
+SQInteger getVarFunc(HSQUIRRELVM v) {
   SquirrelVM::Init(v);  // For handling multi-VM setting right
   StackHandler sa(v);
   if (sa.GetType(1) == OT_TABLE) {
@@ -306,7 +307,7 @@ int getVarFunc(HSQUIRRELVM v) {
 
 // === Instance Vars ===
 
-int setInstanceVarFunc(HSQUIRRELVM v) {
+SQInteger setInstanceVarFunc(HSQUIRRELVM v) {
   SquirrelVM::Init(v);  // For handling multi-VM setting right
   StackHandler sa(v);
   if (sa.GetType(1) == OT_INSTANCE) {
@@ -319,7 +320,7 @@ int setInstanceVarFunc(HSQUIRRELVM v) {
   return SQ_ERROR;
 } // setInstanceVarFunc
 
-int getInstanceVarFunc(HSQUIRRELVM v) {
+SQInteger getInstanceVarFunc(HSQUIRRELVM v) {
   SquirrelVM::Init(v);  // For handling multi-VM setting right
   StackHandler sa(v);
   if (sa.GetType(1) == OT_INSTANCE) {

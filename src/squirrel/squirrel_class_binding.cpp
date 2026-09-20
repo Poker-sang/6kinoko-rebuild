@@ -80,18 +80,13 @@ extern "C" int32_t function_4aa540(int32_t vm_address, int32_t output,
                                     int32_t* type, int32_t name, int32_t parent) {
     auto* vm = pointer<SQVM>(vm_address);
     StackTop stack(vm);
-    sq_pushroottable(vm);
-    sq_pushstring(vm, pointer<const char>(name), -1);
-    if (parent) {
-        sq_pushstring(vm, pointer<const char>(parent), -1);
-        if (SQ_FAILED(sq_get(vm, -3))) return 0;
-    }
-    if (SQ_FAILED(sq_newclass(vm, parent ? SQTrue : SQFalse))) return 0;
-    ObjectView(output).capture(vm, -1);
-    sq_settypetag(vm, -1, type);
-    sq_newslot(vm, -3, SQFalse);
+    ObjectView result(output);
+    auto value = result.value();
+    const bool created = upstream::sqplus_create_class(vm, value, type,
+        pointer<const char>(name), pointer<const char>(parent));
+    result.write(value);
     // The original reports successful class creation, not newslot's status.
-    return 1;
+    return created;
 }
 
 extern "C" int32_t function_45f4f0(int32_t object) {

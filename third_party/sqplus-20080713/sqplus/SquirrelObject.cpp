@@ -73,8 +73,9 @@ SquirrelObject & SquirrelObject::operator =(int n)
 }
 
 #include <assert.h>
-#include "../squirrel/sqstate.h"
-#include "../squirrel/sqvm.h"
+// KINOKO HOST ADAPTATION: use the existing 2.2.2 VM, not bundled 2.1.1.
+#include "sqpcheader.h"
+#include "sqvm.h"
 SquirrelObject & SquirrelObject::operator =(HSQUIRRELVM v)
 {
     if( v && SquirrelVM::_VM ){
@@ -198,7 +199,7 @@ int SquirrelObject::Len() const
 	sq_settop(SquirrelVM::_VM,top); \
 	return ret;
 
-BOOL SquirrelObject::SetValue(INT key,const SquirrelObject &val)
+BOOL SquirrelObject::SetValue(SQInteger key,const SquirrelObject &val)
 {
 	_SETVALUE_INT_BEGIN
 	sq_pushobject(SquirrelVM::_VM,val._o);
@@ -443,7 +444,7 @@ FLOAT SquirrelObject::GetFloat(INT key) const
 
 INT SquirrelObject::GetInt(INT key) const
 {
-	INT ret = 0;
+	SQInteger ret = 0;
 	if(GetSlot(key)) {
 		sq_getinteger(SquirrelVM::_VM,-1,&ret);
 		sq_pop(SquirrelVM::_VM,1);
@@ -531,7 +532,7 @@ FLOAT SquirrelObject::GetFloat(const SQChar *key) const
 
 INT SquirrelObject::GetInt(const SQChar *key) const
 {
-	INT ret = 0;
+	SQInteger ret = 0;
 	if(GetSlot(key)) {
 		sq_getinteger(SquirrelVM::_VM,-1,&ret);
 		sq_pop(SquirrelVM::_VM,1);

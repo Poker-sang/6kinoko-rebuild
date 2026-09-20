@@ -1,5 +1,6 @@
 #include "kinoko/native_control.h"
 #include "kinoko/native_control.hpp"
+#include "kinoko/boost_control.hpp"
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -50,7 +51,8 @@ void owner_slot_and_unaligned_pairs() {
     const RecordView<ControlRecord> control(pointer(control_address));
     require(control.get(&ControlRecord::strong) == 1 && control.get(&ControlRecord::weak) == 1,
             "one strong and one implicit weak reference");
-    require(control.get(&ControlRecord::vtable) == static_cast<Address>(address(&known_table_tag)) &&
+    require(upstream::owns_control(pointer(control_address)) &&
+            control.get(&ControlRecord::vtable) != static_cast<Address>(address(&known_table_tag)) &&
             control.get(&ControlRecord::allocation) == static_cast<Address>(address(slot)), "original owner-slot layout");
     require(holder.front() == 0xa7 && holder.back() == 0xa7, "unaligned holder canaries");
     kinoko_native_add_weak(static_cast<int32_t>(control_address));

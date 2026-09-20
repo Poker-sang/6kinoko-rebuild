@@ -1,3 +1,4 @@
+// KINOKO BUILD ADAPTATION: use SQInteger for sq_getinteger output storage.
 #ifndef _SQPLUS_FUNCTION_CALL_IMPL_H_
 #define _SQPLUS_FUNCTION_CALL_IMPL_H_
 
@@ -57,14 +58,14 @@ SQINLINE bool	Match(TypeWrapper<SquirrelObject>,HSQUIRRELVM v,int idx) { return 
 
 SQINLINE void           Get(TypeWrapper<void>,HSQUIRRELVM v,int)                {}
 //SQINLINE bool           Get(TypeWrapper<bool>,HSQUIRRELVM v,int idx)            { SQBool b; SQPLUS_CHECK_GET(sq_getbool(v,idx,&b)); return b != 0; }
-SQINLINE char           Get(TypeWrapper<char>,HSQUIRRELVM v,int idx)            { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<char>(i); }
-SQINLINE unsigned char  Get(TypeWrapper<unsigned char>,HSQUIRRELVM v,int idx)   { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned char>(i); }
-SQINLINE short          Get(TypeWrapper<short>,HSQUIRRELVM v,int idx)           { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<short>(i); }
-SQINLINE unsigned short	Get(TypeWrapper<unsigned short>,HSQUIRRELVM v,int idx)  { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned short>(i); }
-SQINLINE int            Get(TypeWrapper<int>,HSQUIRRELVM v,int idx)             { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return i; }
-SQINLINE unsigned int   Get(TypeWrapper<unsigned int>,HSQUIRRELVM v,int idx)    { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned int>(i); }
-SQINLINE long           Get(TypeWrapper<long>,HSQUIRRELVM v,int idx)            { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<long>(i); }
-SQINLINE unsigned long  Get(TypeWrapper<unsigned long>,HSQUIRRELVM v,int idx)   { INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned long>(i); }
+SQINLINE char           Get(TypeWrapper<char>,HSQUIRRELVM v,int idx)            { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<char>(i); }
+SQINLINE unsigned char  Get(TypeWrapper<unsigned char>,HSQUIRRELVM v,int idx)   { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned char>(i); }
+SQINLINE short          Get(TypeWrapper<short>,HSQUIRRELVM v,int idx)           { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<short>(i); }
+SQINLINE unsigned short	Get(TypeWrapper<unsigned short>,HSQUIRRELVM v,int idx)  { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned short>(i); }
+SQINLINE int            Get(TypeWrapper<int>,HSQUIRRELVM v,int idx)             { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return i; }
+SQINLINE unsigned int   Get(TypeWrapper<unsigned int>,HSQUIRRELVM v,int idx)    { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned int>(i); }
+SQINLINE long           Get(TypeWrapper<long>,HSQUIRRELVM v,int idx)            { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<long>(i); }
+SQINLINE unsigned long  Get(TypeWrapper<unsigned long>,HSQUIRRELVM v,int idx)   { SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return static_cast<unsigned long>(i); }
 SQINLINE float          Get(TypeWrapper<float>,HSQUIRRELVM v,int idx)           { FLOAT f; SQPLUS_CHECK_GET(sq_getfloat(v,idx,&f)); return f; }
 SQINLINE double         Get(TypeWrapper<double>,HSQUIRRELVM v,int idx)          { FLOAT f; SQPLUS_CHECK_GET(sq_getfloat(v,idx,&f)); return static_cast<double>(f); }
 SQINLINE const SQChar * Get(TypeWrapper<const SQChar *>,HSQUIRRELVM v,int idx)  { const SQChar * s; SQPLUS_CHECK_GET(sq_getstring(v,idx,&s)); return s; }
@@ -77,7 +78,7 @@ SQINLINE bool Get(TypeWrapper<bool>,HSQUIRRELVM v,int idx){
     switch( sq_gettype(v,idx) ){
         case OT_NULL:{ return false; }
         case OT_BOOL:{ SQBool b; SQPLUS_CHECK_GET(sq_getbool(v,idx,&b)); return b != 0; }
-        case OT_INTEGER:{ INT i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return i != 0; }
+        case OT_INTEGER:{ SQInteger i; SQPLUS_CHECK_GET(sq_getinteger(v,idx,&i)); return i != 0; }
         case OT_FLOAT:{ FLOAT f; SQPLUS_CHECK_GET(sq_getfloat(v,idx,&f)); return f != (FLOAT)0.0; }
         default: return true; } }
 
