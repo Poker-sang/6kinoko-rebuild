@@ -4518,6 +4518,41 @@ static int test_map_serialization(void) {
     return 0;
 }
 
+static int test_map_set_layer(void) {
+    int32_t layout[116]={0}, layer[87]={0}, resource[25]={0}, wrong[25]={0};
+    int32_t records[3][8]={{4,7,8},{999,1,2},{2,-3,-4}};
+    struct retdec_mcd_chip chips[2]={0};
+    struct retdec_mcd_texture textures[1]={{17,123}};
+    struct retdec_mcd_data data={2,chips,1,textures};
+    chips[0].chip_id=4; chips[1].chip_id=2;
+    *(uint32_t*)chips[0].bytes=4; *(uint32_t*)chips[1].bytes=2;
+    *(uint32_t*)(chips[0].bytes+4)=17; *(uint32_t*)(chips[1].bytes+4)=999;
+    layout[0]=PTR(&g327); resource[0]=PTR(&g313); wrong[0]=PTR(&g365);
+    layout[66]=PTR(records); layout[67]=layout[68]=PTR(records+3); layout[113]=-1;
+    resource[16]=PTR(&data); layer[25]=PTR(resource);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,0)==(int32_t)E_FAIL);
+    ((uint8_t*)layout)[460]=1;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[78]==PTR(layer) && layout[79]==0 && ((uint8_t*)layout)[460]==0);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[79]==PTR(resource) && layout[71]-layout[70]==12 && layout[75]-layout[74]==12);
+    CHECK(records[0][0]==4 && records[2][0]==2); /* Bind never sorts map records. */
+    int32_t *chip_refs=(int32_t*)(intptr_t)layout[70], *texture_refs=(int32_t*)(intptr_t)layout[74];
+    CHECK(chip_refs[0]==PTR(chips[0].bytes) && chip_refs[1]==0 && chip_refs[2]==PTR(chips[1].bytes));
+    CHECK(texture_refs[0]==PTR(textures) && texture_refs[1]==0 && texture_refs[2]==0);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[71]-layout[70]==12 && layout[75]-layout[74]==24);
+    layer[25]=PTR(wrong);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==(int32_t)E_FAIL);
+    CHECK(layout[79]==0); /* Type failure does not reinterpret a texture as MCD. */
+    layer[25]=0;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[71]==layout[70] && layout[75]-layout[74]==24);
+    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; free((void*)(intptr_t)layout[slots[i]]); }
+    puts("PASS: map SetLayer one-shot suppression, type checks, sparse refs and original append behavior");
+    return 0;
+}
+
 static int test_chip_serialization(void) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
@@ -5002,7 +5037,7 @@ int main(int argc, char **argv) {
         return test_texture_serialization(0) || test_texture_serialization(1) ||
             test_chip_serialization() || test_layout_serialization();
     if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
-        return test_map_serialization();
+        return test_map_serialization() || test_map_set_layer();
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {

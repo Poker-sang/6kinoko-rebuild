@@ -3,6 +3,7 @@
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_host.h"
 #include <algorithm>
 #include <array>
 #include <climits>
@@ -80,17 +81,10 @@ void replace_buffer(int32_t slot, const void* bytes, size_t size) {
 }
 // Original 435860/435B20, adapted to the source-owned MCD rather than an old
 // MSVC tree. The ABI caches still contain flat records and an ID/index vector.
-void prepare_map(int32_t layout) {
+void rebuild_map_cache(int32_t layout) {
     const auto resource = field<int32_t>(layout+316);
     if (!resource || !field<int32_t>(resource+64)) return; // Writer ignores E_FAIL.
     const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
-    field<int32_t>(layout+284) = field<int32_t>(layout+280);
-    field<int32_t>(layout+300) = field<int32_t>(layout+296);
-    const auto count = record_count(layout);
-    auto records = pointer<MapRecord>(field<int32_t>(layout+264));
-    if (count) std::sort(records, records+count, [](const auto& a, const auto& b) {
-        return a[1] < b[1] || (a[1] == b[1] && a[2] < b[2]);
-    });
     std::vector<const retdec_mcd_chip*> chips;
     for (uint32_t i=0; i<data->chip_count; ++i) chips.push_back(&data->chips[i]);
     std::sort(chips.begin(), chips.end(), [](auto a, auto b) { return a->chip_id < b->chip_id; });
@@ -107,6 +101,19 @@ void prepare_map(int32_t layout) {
     replace_buffer(layout+404, cache.data(), cache.size()*48);
     replace_buffer(layout+436, indices.data(), indices.size()*4);
     field<int32_t>(layout+452) = max_id;
+}
+void prepare_map(int32_t layout) {
+    const auto resource = field<int32_t>(layout+316);
+    if (!resource || !field<int32_t>(resource+64)) return;
+    const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
+    field<int32_t>(layout+284) = field<int32_t>(layout+280);
+    field<int32_t>(layout+300) = field<int32_t>(layout+296);
+    const auto count = record_count(layout);
+    auto records = pointer<MapRecord>(field<int32_t>(layout+264));
+    if (count) std::sort(records, records+count, [](const auto& a, const auto& b) {
+        return a[1] < b[1] || (a[1] == b[1] && a[2] < b[2]);
+    });
+    rebuild_map_cache(layout);
     field<int32_t>(layout+240) = field<int32_t>(layout+244) = INT_MIN;
     if (!count) {
         for (auto offset : {248,252,256,260}) field<int32_t>(layout+offset) = 0;
@@ -316,4 +323,46 @@ extern "C" int32_t __fastcall kinoko_method_write_map_layout(
             if (!transfer(writer, records[i].data(), size)) return 0;
         return 1;
     } catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_map_set_layer(
+    int32_t layout, void*, int32_t layer) {
+    constexpr int32_t fail = static_cast<int32_t>(0x80004005u);
+    if (!layout || !layer) return fail;
+    try {
+        const auto resource = field<int32_t>(layer+100);
+        field<int32_t>(layout+316) = 0;
+        if (!resource || field<uint8_t>(layout+460)) {
+            // Original one-shot suppression is distinct from an invalid type.
+            field<uint8_t>(layout+460) = 0;
+        } else {
+            if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable))
+                return fail;
+            field<int32_t>(layout+316) = resource;
+            // Source MCD loading already loads each texture once. The original
+            // sorted/unique texture preload therefore needs no second acquire.
+            rebuild_map_cache(layout);
+        }
+        field<int32_t>(layout+312) = layer;
+        field<int32_t>(layout+284) = field<int32_t>(layout+280);
+        if (!field<int32_t>(layout+316)) return 0;
+        const auto count = record_count(layout);
+        const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
+        if (!data && count) return fail;
+        auto records = pointer<MapRecord>(field<int32_t>(layout+264));
+        std::vector<int32_t> chip_refs, texture_refs;
+        // 434380 clears only the chip-reference vector; texture refs append.
+        auto begin = field<uint32_t>(layout+296), end = field<uint32_t>(layout+300);
+        if (end < begin || (end-begin)%4 || (end-begin)/4 > 0x10000 || (!begin && end)) return fail;
+        if (end != begin) texture_refs.assign(pointer<int32_t>(begin), pointer<int32_t>(end));
+        for (uint32_t i=0; i<count; ++i) {
+            auto chip = retdec_mcd_find_chip(data, static_cast<uint32_t>(records[i][0]));
+            auto texture = chip ? retdec_mcd_find_texture(data, kinoko::legacy::load<uint32_t>(chip->bytes+4)) : nullptr;
+            chip_refs.push_back(chip ? address(chip->bytes) : 0);
+            texture_refs.push_back(address(texture));
+        }
+        replace_buffer(layout+280, chip_refs.data(), chip_refs.size()*4);
+        replace_buffer(layout+296, texture_refs.data(), texture_refs.size()*4);
+        return 0;
+    } catch (...) { return fail; }
 }
