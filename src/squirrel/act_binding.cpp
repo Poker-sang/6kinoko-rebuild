@@ -933,6 +933,48 @@ int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     return 1;
 }
 
+// 41F580: publish in the ACT table, create a fresh script table, execute its
+// script, then expose the inner native layer and associated resource wrappers.
+// The second stack argument is unused by the original implementation.
+extern "C" int32_t __fastcall kinoko_method_register_act_layer(
+    int32_t layer, void *, int32_t parent, int32_t) {
+    if (!layer || !parent || field<int32_t>(parent + 8) == 0x01000001)
+        return static_cast<int32_t>(E_FAIL);
+    const auto vm = field<int32_t>(parent + 4);
+    if (!vm) return static_cast<int32_t>(E_FAIL);
+    std::memcpy(pointer<void>(layer + 156), pointer<const void>(layer + 144), 12);
+    int32_t root[5] = {}, klass[2] = {g483, g484};
+    int32_t outer[2] = {g483, g484}, inner[2] = {g483, g484}, script[2] = {g483, g484};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    bool ok = retdec_publish_cact_layer_class(vm, address(root)) &&
+        get_pair(address(root), "CActLayer", klass) &&
+        retdec_create_bound_instance(vm, pointer<const int32_t>(parent + 8),
+            retdec_std_string_data(layer + 112), klass, layer, outer) &&
+        retdec_prepare_cact_layer_objects(vm, layer, script);
+    if (ok) {
+        retdec_sqrat_assign_pair(vm, pointer<int32_t>(layer + 336), outer);
+        ok = retdec_sqrat_raw_set_pair(vm, outer, "script", script) &&
+            retdec_sqrat_set_pair(vm, script, "thisAct", pointer<const int32_t>(parent + 8)) &&
+            retdec_register_act_script(layer + 204, layer + 308) >= 0;
+    }
+    if (ok) {
+        ok = retdec_create_bound_instance(vm, script, "layer", klass, layer, inner) != 0;
+        const auto resource = field<int32_t>(layer + 100);
+        if (resource) {
+            // Preserve the original virtual order and derived resource type.
+            retdec_call_thiscall2_result(pointer<void>(resource),
+                field<void*>(field<int32_t>(resource) + 28), layer + 328, address("resource"));
+            retdec_call_thiscall2_result(pointer<void>(resource),
+                field<void*>(field<int32_t>(resource) + 32), layer + 308, address("resource"));
+        }
+    }
+    retdec_sqrat_release_pair(vm, inner);
+    retdec_sqrat_release_pair(vm, outer);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
+}
+
 int32_t retdec_bind_original_layout(int32_t layout, bool map) {
     const int32_t layer = layout ? field<int32_t>(layout + (map ? 312 : 304)) : 0;
     if (!layer || field<int32_t>(layer + 336) == 0x01000001) return static_cast<int32_t>(E_FAIL);
@@ -1609,8 +1651,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         int32_t script_pair[2] = { g483, g484 };
         int32_t layout_pair[2] = { g483, g484 };
         int32_t script_layout_pair[2] = { g483, g484 };
-        int32_t inner_layer_pair[2] = { g483, g484 };
-        int32_t script_wrapper[5] = { 0, 0, g483, g484, 1 };
         int32_t script_ptr;
         int32_t node;
         int32_t sentinel;
@@ -1621,85 +1661,26 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
 
         if (layer == 0)
             continue;
-        /* 41F580 saves the loaded position before publishing the layer.
-           Scripts use this origin when moving a cursor or restoring a logo. */
-        std::memcpy(pointer<void>(layer + 156),
-               pointer<const void>(layer + 144), 3 * sizeof(float));
-        layer_name = retdec_std_string_data(layer + 112);
-        if (layer_name == nullptr || *layer_name == 0 ||
-            !retdec_create_bound_instance(vm, parent_pair, layer_name,
-                                           class_pair, layer, layer_pair) ||
-            !retdec_prepare_cact_layer_objects(vm, layer, script_pair)) {
+        int32_t parent_object[5] = {
+            address(kinoko_act_host_symbols()->sq_object_vtable), vm, parent_pair[0], parent_pair[1], 0
+        };
+        const int32_t script_result = kinoko_method_register_act_layer(layer, nullptr, address(parent_object), 0);
+        if (script_result < 0) {
             retdec_trace_i32("act:layer-publish-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
             retdec_sqrat_release_pair(vm, parent_pair);
             retdec_sqrat_release_pair(vm, layout_class_pair);
             retdec_sqrat_release_pair(vm, class_pair);
             retdec_sqrat_object_release(address(root_object));
             return 0;
         }
-        field<int32_t>(layer + 336) = layer_pair[0];
-        field<int32_t>(layer + 340) = layer_pair[1];
-        function_48a400(vm, layer + 336);
-
-        /* Scalar and visual fields are class descriptors in the original
-           CActLayer binding.  They must not be materialized as instance raw
-           slots: doing so shadows _get/_set and leaves animation detached
-           from the native layer. */
-        if (!retdec_sqrat_raw_set_pair(vm, layer_pair, "script",
-                                       script_pair)) {
-            retdec_trace_i32("act:layer-fields-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-
+        layer_pair[0] = field<int32_t>(layer + 336);
+        layer_pair[1] = field<int32_t>(layer + 340);
+        function_48a400(vm, address(layer_pair));
+        script_pair[0] = field<int32_t>(layer + 316);
+        script_pair[1] = field<int32_t>(layer + 320);
         script_ptr = layer + 204;
         script_path = retdec_std_string_data(script_ptr + 64);
-        if (script_path != nullptr && *script_path != 0 &&
-            !retdec_sqrat_raw_set_string(vm, script_pair, "filePath",
-                                         script_path)) {
-            retdec_trace_i32("act:layer-script-fields-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-        if (!retdec_sqrat_raw_set_bool(
-                vm, script_pair, "compiled",
-                field<uint8_t>(script_ptr + 101))) {
-            retdec_trace_i32("act:layer-script-compiled-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-
-        /* CActLayer::Register stores thisAct on the script table before
-           CActScript::Register captures the callback environment. */
-        if (!retdec_sqrat_set_pair(vm, script_pair, "thisAct",
-                                   parent_pair)) {
-            retdec_trace_i32("act:layer-script-thisact-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-
-        script_wrapper[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
-        script_wrapper[1] = vm;
-        script_wrapper[2] = script_pair[0];
-        script_wrapper[3] = script_pair[1];
-        const int32_t script_result = retdec_register_act_script(script_ptr, address(script_wrapper));
+        layer_name = retdec_std_string_data(layer + 112);
         retdec_trace_i32("act:layer-script-result", script_result >= 0);
         if (index < 96) {
             int32_t raw_data = field<int32_t>(script_ptr + 92);
@@ -1816,31 +1797,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             if (have_layout)
                 retdec_trace_i32("act:layout-instance-missing", index);
         }
-        if (!retdec_publish_act_resource_pairs(
-                vm, layer_pair, script_pair,
-                field<int32_t>(layer + 0x64))) {
-            retdec_trace_i32("act:layer-resource-publish-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-        /* CActLayer::Register creates a second native wrapper below the
-           script table.  It is distinct from the ACT table's layer entry. */
-        if (!retdec_create_bound_instance(vm, script_pair, "layer",
-                                          class_pair, layer,
-                                          inner_layer_pair)) {
-            retdec_trace_i32("act:layer-script-layer-failed", index);
-            retdec_sqrat_release_pair(vm, layer_pair);
-            retdec_sqrat_release_pair(vm, parent_pair);
-            retdec_sqrat_release_pair(vm, layout_class_pair);
-            retdec_sqrat_release_pair(vm, class_pair);
-            retdec_sqrat_object_release(address(root_object));
-            return 0;
-        }
-        retdec_sqrat_release_pair(vm, inner_layer_pair);
         retdec_trace_i32("act:layer-published", index);
         if (active_count != nullptr)
             ++*active_count;

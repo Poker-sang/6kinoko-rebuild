@@ -4353,6 +4353,23 @@ static int test_original_layer_constructor(int32_t vm) {
     int32_t missing[2] = {g483,g484};
     CHECK(!retdec_sqrat_get(PTR(layer)+308,"CompileFile",PTR(missing)));
     retdec_sqrat_release_pair(vm, missing);
+    {
+        int32_t parent[5]={PTR(kinoko_act_host_symbols()->sq_object_vtable),vm,g483,g484,1};
+        const char text[]="registered <- thisAct.marker;\nsawLayer <- (\"layer\" in this);\n";
+        CHECK(retdec_sqrat_new_table(vm,parent+2));
+        CHECK(retdec_sqrat_set_int(vm,parent+2,"marker",73));
+        layer[73]=PTR(malloc(sizeof(text))); CHECK(layer[73]);
+        memcpy((void*)(intptr_t)layer[73],text,sizeof(text)); layer[75]=1; layer[74]=sizeof(text)-1;
+        ((float*)layer)[36]=13.0f; ((float*)layer)[37]=17.0f;
+        CHECK(retdec_call_thiscall2_result(layer,(void*)g252.e8,PTR(parent),0)==0);
+        CHECK(((float*)layer)[39]==13.0f && ((float*)layer)[40]==17.0f);
+        CHECK(execute_source(vm,parent+2,
+            "if(Layer_.script.registered!=73 || Layer_.script.sawLayer) throw \"layer order\";\n"
+            "if(Layer_.script.thisAct!=this || Layer_.script.layer==Layer_) throw \"layer identity\";\n"
+            "if(\"filePath\" in Layer_.script) throw \"invented script field\";\n"));
+        CHECK(kinoko_method_register_act_layer(PTR(layer),NULL,0,0)==(int32_t)E_FAIL);
+        retdec_sqrat_object_release(PTR(parent));
+    }
     retdec_destroy_cact_layer(PTR(layer)); free(layer);
     int32_t *script = calloc(26, sizeof(int32_t));
     CHECK(script && retdec_construct_cact_script(PTR(script)));

@@ -1836,7 +1836,6 @@ int32_t function_41eed0(void);
 int32_t function_41ef20(int32_t a1);
 int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_41eff0(int32_t a1);
-int32_t function_41f580(int32_t a1);
 int32_t function_41f800(int32_t a1, int32_t a2);
 int32_t function_41f990(int32_t a1);
 
@@ -4033,7 +4032,7 @@ struct vtable_4ebe68_type g252 = {
     .e5 = function_41ea50,
     .e6 = function_41ef20,
     .e7 = function_41ef50,
-    .e8 = function_41f580
+    .e8 = (int32_t (*)(int32_t))kinoko_method_register_act_layer
 }; // 0x4ebe68
 struct vtable_4ebe90_type g253 = {
     .e0 = kinoko_sqrat_delete_object,
@@ -16203,131 +16202,7 @@ int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
 // Address range: 0x41f580 - 0x41f7f4
 // From class:    .?AVCActLayer@@
 // Type:          destructor
-int32_t function_41f580(int32_t a1) {
-    // 0x41f580
-    int32_t v1; // 0x41f580
-    int32_t v2 = v1;
-    int32_t v3 = __readfsdword(0); // bp-20, 0x41f593
-    __writefsdword(0, (int32_t)&v3);
-    char * v4; // bp-120, 0x41f580
-    int32_t v5 = (int32_t)&v4; // bp-144, 0x41f5ba
-    int32_t v6 = &v5; // 0x41f5ba
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x41f77a
-        __writefsdword(0, *(int32_t *)(v6 + 120));
-        return -0x7fffbffb;
-    }
-    int32_t v7 = *(int32_t *)(a1 + 4); // 0x41f5cb
-    int32_t v8 = v7; // bp-124, 0x41f5ce
-    if (v7 == 0) {
-        // 0x41f77a
-        __writefsdword(0, *(int32_t *)(v6 + 120));
-        return -0x7fffbffb;
-    }
-    // 0x41f5da
-    *(int32_t *)(v2 + 156) = *(int32_t *)(v2 + 144);
-    *(int32_t *)(v2 + 160) = *(int32_t *)(v2 + 148);
-    *(int32_t *)(v2 + 164) = *(int32_t *)(v2 + 152);
-    function_41e200(v7);
-    v3 = 0;
-    int32_t v9 = function_415480((int32_t)"CActLayer"); // 0x41f61c
-    int32_t v10 = &v8; // bp-156, 0x41f632
-    v4 = (char *)&g39;
-    char v11; // 0x41f580
-    if (v11 != 0) {
-        // 0x41f652
-        int32_t v12; // bp-112, 0x41f580
-        function_48a430(v1, (int32_t)&v12);
-    }
-    if (v11 != 0) {
-        // 0x41f67a
-        int32_t v13; // bp-92, 0x41f580
-        function_48a430(v1, (int32_t)&v13);
-    }
-    int32_t v14 = &v10; // 0x41f632
-    if (*(int32_t *)v9 == 0x1000001) {
-        // 0x41f693
-        if (function_41eff0(v7) < 0) {
-            // 0x41f77a
-            __writefsdword(0, *(int32_t *)(v14 + 120));
-            return -0x7fffbffb;
-        }
-    }
-    int32_t * v15 = (int32_t *)(v2 + 132); // 0x41f6a4
-    int32_t v16 = v2 + 112; // 0x41f6ab
-    int32_t v17 = v16; // 0x41f6ae
-    if (*v15 >= 16) {
-        // 0x41f6b0
-        v17 = *(int32_t *)v16;
-    }
-    // 0x41f6b6
-    *(int32_t *)(v14 - 8) = v17;
-    function_423dd0((int32_t)&g1224, (int32_t)&g1224);
-    int32_t v18 = v16; // 0x41f6c4
-    if (*v15 >= 16) {
-        // 0x41f6c6
-        v18 = *(int32_t *)v16;
-    }
-    // 0x41f6c8
-    *(int32_t *)(v14 - 12) = v18;
-    function_415480((int32_t)&g1224);
-    *(int32_t *)(v14 + 116) = 2;
-    function_41eed0();
-    function_41e190();
-    function_41e320();
-    *(int32_t *)(v14 + 44) = (int32_t)&g39;
-    int32_t * v19; // 0x41f580
-    int32_t * v20; // 0x41f580
-    if (*(char *)(v14 + 60) == 0) {
-        // 0x41f6c8
-        v20 = (int32_t *)(v14 - 20);
-        v19 = (int32_t *)(v14 - 16);
-    } else {
-        int32_t * v21 = (int32_t *)(v14 - 16);
-        *v21 = v14 + 52;
-        int32_t * v22 = (int32_t *)(v14 - 20);
-        *v22 = *(int32_t *)(v14 + 48);
-        function_48a430((int32_t)&g1224, (int32_t)&g1224);
-        v20 = v22;
-        v19 = v21;
-    }
-    // 0x41f723
-    *v19 = (int32_t)"script";
-    function_415480((int32_t)&g1224);
-    int32_t v23 = v2 + 308; // 0x41f737
-    *(char *)(v14 + 112) = 3;
-    function_41eed0();
-    *v20 = (int32_t)"thisAct";
-    function_415870(&g1224);
-    *(int32_t *)(v14 - 24) = v23;
-    int32_t v24 = v14 - 28; // 0x41f75e
-    *(int32_t *)v24 = v2 + 204;
-    if (function_415fd0((int32_t)&g1224, (int32_t)&g1224) < 0) {
-        // 0x41f768
-        function_4029d0();
-        function_4029d0();
-        // 0x41f77a
-        __writefsdword(0, *(int32_t *)(v24 + 120));
-        return -0x7fffbffb;
-    }
-    int32_t v25 = v14 - 36; // 0x41f795
-    *(int32_t *)v25 = (int32_t)"layer";
-    function_423dd0((int32_t)&g1224, (int32_t)&g1224);
-    int32_t v26 = v25; // 0x41f7a4
-    if (*(int32_t *)(v2 + 100) != 0) {
-        // 0x41f7a6
-        *(int32_t *)(v14 - 40) = (int32_t)"resource";
-        *(int32_t *)(v14 - 44) = v2 + 328;
-        *(int32_t *)(v14 - 48) = (int32_t)"resource";
-        v26 = v14 - 52;
-        *(int32_t *)v26 = v23;
-    }
-    // 0x41f7cb
-    function_4029d0();
-    function_4029d0();
-    __writefsdword(0, *(int32_t *)(v26 + 120));
-    return 0;
-}
+
 
 // Address range: 0x41f800 - 0x41f990
 // From class:    .?AVCActLayer@@
