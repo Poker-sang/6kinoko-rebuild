@@ -2455,6 +2455,70 @@
           "sha256": "197ea737dd32c77d453e16e7e6820b055e066116bb8aca156ee12bb4dff9971b"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r70-quiet",
+      "source_commit": "688300acc3c4f008c3607a58d8e14e931511e218",
+      "validation": "Build failed: old Boost unary_function requires MSVC compatibility declaration; all artifacts retained",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "842d007713a2810ba51c94cee1a6c043c862674dad2615d1247bc0a44e12977e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/configure.log",
+          "size": 956,
+          "sha256": "ecf11ffb916a452b54dd6d2862394d3715709ecb5655aa3aff640f5a89daae3e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/build.log",
+          "size": 199236,
+          "sha256": "a47bd43756f9d7ff80ddb5ad5f163c77abf01875a6fb6c8a0b39fe1781f83f42"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r71-quiet",
+      "source_commit": "e027d10dc0d8f5871ced8040757ea8dc4cdfe8ef",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "26c444dee58f8f5f00dd739accd572ef427a5cff7b1d8a8a2c787b6b4122a257"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/configure.log",
+          "size": 956,
+          "sha256": "330072820ccad76148fe44ea1c34673cfe070a0c2d78195f74bf84c43115f0d4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/build.log",
+          "size": 774447,
+          "sha256": "a0f17b3df1a85108afb7097a8a13f2cfb139a2b511c99da796b2e231c67e80c5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/kinoko.map",
+          "size": 970642,
+          "sha256": "4a33ddb1e00302207faedf14300b26394051d1c340c0fa6e7b1ed5b96cb87046"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/stage-contract.map",
+          "size": 1207724,
+          "sha256": "74a541bc1cc91cb11296aecb64a7306bd2e7ae4e27fab290763308ea91e082f0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "89f5e57b3efb57adc14380dc174f5948f4bd8c9e8356cbe06f096f9d9bbeb823"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r71-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844800,
+          "sha256": "9f8d5a20e64d03080f1949271a805adab973bf31aa9ae3f49efc54729ee31617"
+        }
+      ]
     }
   ]
 }

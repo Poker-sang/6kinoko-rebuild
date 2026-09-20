@@ -576,3 +576,26 @@ name; recover its factory/binder and allocation size first.
 Quiet Win32 r69 source 7591a5d built successfully and DATs were hash verified.
 Tests were compiled only; no game or automated test execution was performed.
 This does not claim that the remaining generic factory or CStringLayout is complete.
+
+## r70/r71: actual upstream Boost hash_range
+
+Boost 1.44's original functional/hash headers and their dependencies are now
+retained from the same SHA256-pinned release archive as the counted base (198
+manifested Boost members in total). The vendoring tool can refresh one release
+and permits only the same CRLF/LF checkout conversion as verify_upstream;
+other local modifications still fail closed. UPSTREAM.json records exact
+archive-member hashes. No Boost source was patched for this migration.
+
+The native Win32 bridge calls boost::hash_range<char const*> directly. All
+407210 call sites now use it and retired-boost-hash.json proves the old loop
+can be deleted. Its callers with incompletely recovered argument plumbing,
+including 405990, still require migration; replacing hashing does not repair
+those callers. Byte ranges, signed char behavior and 32-bit size_t are retained.
+The compiled-only contract adds original C2DLayout/CActTimeLine IDs, an empty
+range and a binary range containing a negative char and embedded zero.
+
+R70 (688300a) failed at compilation because C++17 removes std::unary_function.
+R71 (e027d10) enables MSVC's _HAS_AUTO_PTR_ETC solely for boost_hash.cpp, using
+the genuine standard-library compatibility declaration rather than a shim.
+Its quiet Win32 build succeeded and all three DAT hashes were verified. R70's
+failed artifacts remain intact. No automated tests or game sessions ran.
