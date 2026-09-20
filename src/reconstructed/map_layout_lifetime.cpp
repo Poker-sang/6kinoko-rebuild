@@ -1,0 +1,77 @@
+#include "kinoko/map_render.h"
+#include "kinoko/legacy_memory.hpp"
+#include <array>
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
+#include <new>
+extern "C" { extern unsigned char g327,g328,g25,g23; }
+namespace {
+using kinoko::legacy::field;
+using kinoko::legacy::address;
+using kinoko::legacy::pointer;
+struct VectorView { int32_t begin,end,capacity; };
+struct Spec { int offset,width,copy_bytes; };
+constexpr std::array<Spec,10> vectors={{{264,32,32},{280,4,4},{296,4,4},
+    {332,232,232},{348,4,4},{364,12,12},{384,288,281},{404,48,48},{420,4,4},{436,4,4}}};
+struct Free { void operator()(void *p) const { std::free(p); } };
+using Owned=std::unique_ptr<void,Free>;
+Owned allocate(size_t size) {
+    Owned value(std::malloc(size));if(!value) throw std::bad_alloc();return value;
+}
+}
+extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
+    // This is 433AA0's full virtual clone, not ACT activation's cache reset.
+    Owned output=allocate(464);
+    const auto result=address(output.get());
+    field<int32_t>(result)=address(&g327);field<int32_t>(result+4)=address(&g328);
+    std::memcpy(pointer<void>(result+8),pointer<void>(source+8),228);
+    for(auto range: {std::pair<int,int>{236,28},{312,20},{380,4},{400,4},{452,8}})
+        std::memcpy(pointer<void>(result+range.first),pointer<void>(source+range.first),range.second);
+    std::array<Owned,vectors.size()> buffers;
+    for(size_t i=0;i<vectors.size();++i) {
+        const auto spec=vectors[i];const auto in=field<VectorView>(source+spec.offset);
+        const auto bytes=static_cast<uint32_t>(in.end)-static_cast<uint32_t>(in.begin);
+        if(in.end<in.begin || bytes%spec.width || bytes>0x7fffffffu) throw std::bad_alloc();
+        auto &out=field<VectorView>(result+spec.offset);out={};
+        if(!bytes) continue;
+        buffers[i]=allocate(bytes);
+        const auto begin=address(buffers[i].get());
+        for(uint32_t pos=0;pos<bytes;pos+=spec.width) {
+            std::memcpy(pointer<void>(begin+pos),pointer<void>(in.begin+pos),spec.copy_bytes);
+            if(spec.width==232 || spec.width==288) field<int32_t>(begin+pos)=address(&g25);
+        }
+        out={begin,begin+static_cast<int32_t>(bytes),begin+static_cast<int32_t>(bytes)};
+    }
+    // Fourth words between vector views are untouched, as in 433780/433AE0.
+    field<uint8_t>(result+460)=1;
+    for(auto &buffer:buffers) buffer.release();
+    return address(output.release());
+}
+extern "C" void kinoko_clear_map_layout(int32_t layout) {
+    if(!layout) return;
+    field<int32_t>(layout)=address(&g327);field<int32_t>(layout+4)=address(&g328);
+    for(auto it=vectors.rbegin();it!=vectors.rend();++it) {
+        auto &view=field<VectorView>(layout+it->offset);
+        // Both concrete sprite element destructors only reset IColor identity;
+        // their texture handles are borrowed, so no texture retain/release.
+        if(it->width==232 || it->width==288)
+            for(int32_t p=view.begin;p!=view.end;p+=it->width) field<int32_t>(p)=address(&g23);
+        std::free(pointer<void>(view.begin));view={};
+    }
+    field<int32_t>(layout+4)=address(&g23);
+}
+extern "C" int32_t __fastcall kinoko_delete_map_sprite(int32_t sprite,void*,int32_t flags) {
+    const int32_t layout=sprite-4; // Original 43C1C0 adjusts the secondary this.
+    if(flags&2) {
+        const int32_t allocation=layout-4;
+        const uint32_t count=field<uint32_t>(allocation);
+        for(uint32_t i=count;i>0;--i) kinoko_clear_map_layout(layout+464*(i-1));
+        if(flags&1) std::free(pointer<void>(allocation));
+        return allocation;
+    }
+    kinoko_clear_map_layout(layout);
+    if(flags&1) std::free(pointer<void>(layout));
+    return layout;
+}

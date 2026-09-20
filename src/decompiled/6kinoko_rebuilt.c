@@ -968,7 +968,7 @@ struct vtable_4ec79c_type {
     int32_t (*e2)(int32_t, int32_t);
     int32_t (*e3)();
     int32_t (*e4)();
-    int32_t (*e5)();
+    int32_t (__fastcall *e5)(int32_t, void *);
     int32_t (*e6)(int32_t);
     int32_t (__fastcall *e7)(int32_t, void *);
     int32_t (__fastcall *e8)(int32_t, void *, float32_t, float32_t);
@@ -977,7 +977,7 @@ struct vtable_4ec79c_type {
 };
 
 struct vtable_4ec7cc_type {
-    int32_t (*e0)();
+    int32_t (__fastcall *e0)(int32_t, void *, int32_t);
     uint32_t (__fastcall *e1)(KinokoColoredQuad *, void *, uint32_t);
     uint32_t (__fastcall *e2)(KinokoColoredQuad *, void *, const uint32_t *);
     uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
@@ -3615,7 +3615,7 @@ struct vtable_4ec79c_type g327 = {
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_layout,
     .e4 = function_433720,
-    .e5 = function_433aa0,
+    .e5 = kinoko_clone_map_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_map_set_layer,
     .e7 = kinoko_map_entry_434b40,
     .e8 = kinoko_map_entry_434f40,
@@ -3623,7 +3623,7 @@ struct vtable_4ec79c_type g327 = {
     .e10 = kinoko_map_entry_434b60
 }; // 0x4ec79c
 struct vtable_4ec7cc_type g328 = {
-    .e0 = function_43c1c0,
+    .e0 = kinoko_delete_map_sprite,
     .e1 = kinoko_quad_set_color,
     .e2 = kinoko_quad_set_vertex_colors,
     .e3 = kinoko_quad_modulate_color

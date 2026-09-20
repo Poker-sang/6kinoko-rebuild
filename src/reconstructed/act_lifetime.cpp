@@ -1,3 +1,4 @@
+#include "kinoko/map_render.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -106,13 +107,7 @@ void clear_layout(int32_t layout) {
     if (!layout) return;
     if (field<int32_t>(layout)==address(g350)) { kinoko_clear_string_layout(layout);return; }
     if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
-        retdec_act_free_map_records(layout);
-        for (auto offset : {280,296,332,404,436}) {
-            std::free(pointer<void>(field<int32_t>(layout+offset)));
-            field<int32_t>(layout+offset)=0;
-            field<int32_t>(layout+offset+4)=0;
-            field<int32_t>(layout+offset+8)=0;
-        }
+        kinoko_clear_map_layout(layout);
     }
 }
 void clear_key(int32_t value) {

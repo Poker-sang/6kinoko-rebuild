@@ -5559,7 +5559,52 @@ static int test_owned_states(int at_exit) {
     return 0;
 }
 
+/* Compiled-only until the user runs the contract: full map virtual clone,
+   independent cache storage, borrowed scalar pointers and deleting flags. */
+static int test_map_virtual_clone(void) {
+    const int offsets[]={264,280,296,332,348,364,384,404,420,436};
+    const int widths[]={32,4,4,232,4,12,288,48,4,4};
+    unsigned char *source=(unsigned char*)calloc(1,464);
+    int32_t clone; int i; CHECK(source);
+    *(int32_t*)source=PTR(&g327);*(int32_t*)(source+4)=PTR(&g328);
+    *(int32_t*)(source+236)=0x12345678;*(int32_t*)(source+452)=37;
+    for(i=0;i<10;++i) {
+        unsigned char *data=(unsigned char*)malloc(widths[i]*2);CHECK(data);
+        memset(data,0x31+i,widths[i]*2);
+        *(int32_t*)(source+offsets[i])=PTR(data);
+        *(int32_t*)(source+offsets[i]+4)=PTR(data+widths[i]*2);
+        *(int32_t*)(source+offsets[i]+8)=PTR(data+widths[i]*2);
+    }
+    clone=retdec_call_thiscall0_result(source,(void*)g327.e5);CHECK(clone);
+    CHECK(*(int32_t*)(intptr_t)clone==PTR(&g327));
+    CHECK(*(int32_t*)(intptr_t)(clone+4)==PTR(&g328));
+    CHECK(*(int32_t*)(intptr_t)(clone+236)==0x12345678);
+    CHECK(*(int32_t*)(intptr_t)(clone+452)==37);
+    CHECK(*(unsigned char*)(intptr_t)(clone+460)==1);
+    for(i=0;i<10;++i) {
+        unsigned char *copied=(unsigned char*)(intptr_t)*(int32_t*)(intptr_t)(clone+offsets[i]);
+        unsigned char *original=(unsigned char*)(intptr_t)*(int32_t*)(source+offsets[i]);
+        int skip=(widths[i]==232 || widths[i]==288)?4:0;
+        int length=widths[i]==288?281:widths[i];
+        CHECK(copied!=original);
+        CHECK(memcmp(copied+skip,original+skip,length-skip)==0);
+        CHECK(memcmp(copied+widths[i]+skip,original+widths[i]+skip,length-skip)==0);
+        if(skip) CHECK(*(int32_t*)copied==PTR(&g25));
+    }
+    CHECK(kinoko_delete_map_sprite(clone+4,NULL,0)==clone);
+    for(i=0;i<10;++i) CHECK(*(int32_t*)(intptr_t)(clone+offsets[i])==0);
+    free((void*)(intptr_t)clone);kinoko_clear_map_layout(PTR(source));free(source);
+    {
+        unsigned char *array=(unsigned char*)calloc(1,4+2*464);CHECK(array);
+        *(uint32_t*)array=2;
+        CHECK(kinoko_delete_map_sprite(PTR(array+8),NULL,2)==PTR(array));
+        CHECK(*(uint32_t*)array==2);free(array);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    CHECK(test_map_virtual_clone()==0);
     if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)
         return test_owned_states(1);
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
