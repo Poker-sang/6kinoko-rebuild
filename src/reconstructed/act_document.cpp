@@ -167,15 +167,10 @@ int32_t retdec_act_make_layer(void) {
     return layer;
 }
 
-int32_t retdec_act_make_layout(int32_t reader_ptr)
-{
-    int32_t layout;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
-
-    layout = address(std::calloc(1u, 316u));
-    if (layout == 0)
-        return 0;
+int32_t retdec_construct_c2dlayout(int32_t layout) {
+    if (!layout) return 0;
+    // 42B4A0: shared constructor for archive and dynamic layer creation.
+    std::memset(pointer<void>(layout), 0, 316);
     field<int32_t>(layout) = address(kinoko_act_host_symbols()->layout_vtable);
     field<int32_t>(layout + 4) = address(kinoko_act_host_symbols()->layout_sprite_vtable);
     field<float>(layout + 0x104) = 1.0f;
@@ -186,6 +181,15 @@ int32_t retdec_act_make_layout(int32_t reader_ptr)
     field<int32_t>(layout + 0x124) = 255;
     field<int32_t>(layout + 0x128) = 255;
     field<int32_t>(layout + 0x12c) = 255;
+    return layout;
+}
+
+int32_t retdec_act_make_layout(int32_t reader_ptr)
+{
+    struct retdec_act_property *properties = nullptr;
+    uint32_t property_count = 0;
+    const auto layout = address(std::calloc(1u, 316u));
+    if (!retdec_construct_c2dlayout(layout)) return 0;
     if (!retdec_act_read_properties(reader_ptr, &properties,
                                     &property_count)) {
         std::free(pointer<void>(layout));

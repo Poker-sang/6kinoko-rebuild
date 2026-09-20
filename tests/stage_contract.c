@@ -4518,6 +4518,48 @@ static int test_map_serialization(void) {
     return 0;
 }
 
+static int test_dynamic_layer(int32_t vm, int32_t* root) {
+    int32_t player[50]={0}, act[60]={0}, holder=PTR(act), player_pair[2]={g483,g484};
+    const int top=sq_gettop(kinoko_vm(vm));
+    player[4]=PTR(&holder); player[37]=kinoko_sqrat_object_vtable(); player[38]=vm;
+    player[39]=root[2]; player[40]=root[3]; player[46]=15;
+    retdec_string_assign_cstr(player+41,"dynamicHost");
+    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
+    CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
+    CHECK(retdec_publish_acting_player_class(vm,PTR(root)));
+    CHECK(retdec_publish_acting_player(vm,root+2,"dynamicPlayer",PTR(player),player_pair));
+    CHECK(execute_source(vm,root+2,"inactiveLayer <- dynamicPlayer.CreateLayer2D(\"inactive\");"));
+    CHECK(act[52]==0 && act[53]==0);
+    ((uint8_t*)player)[8]=1;
+    CHECK(execute_source(vm,root+2,
+        "dynamicFirst <- dynamicPlayer.CreateLayer2D(\"first\");\n"
+        "dynamicSecond <- dynamicPlayer.CreateLayer2D(\"a long dynamically created layer\");\n"
+        "if(dynamicFirst.layerID!=1 || dynamicSecond.layerID!=2) throw \"layer ids\";\n"
+        "dynamicFirst.alpha=0.375; dynamicSecond.colorR=17;\n"
+        "if(dynamicHost.first.alpha!=0.375 || dynamicFirst.layout.alpha!=0.375) throw \"layer alias\";\n"));
+    CHECK(act[53]-act[52]==8);
+    int32_t* layers=(int32_t*)(intptr_t)act[52];
+    for (int i=0;i<2;++i) {
+        int32_t layer=layers[i], head=*(int32_t*)(intptr_t)(layer+180);
+        int32_t key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
+        int32_t layout=*(int32_t*)(intptr_t)(key+4);
+        CHECK(*(int32_t*)(intptr_t)(layer+184)==1 && *(int32_t*)(intptr_t)key==PTR(&g277));
+        CHECK(*(int32_t*)(intptr_t)layout==PTR(&g299));
+        CHECK(*(int32_t*)(intptr_t)(layout+304)==layer);
+        CHECK(*(float*)(intptr_t)(layout+260)==1.0f);
+        CHECK(i ? *(int32_t*)(intptr_t)(layout+292)==17 : *(float*)(intptr_t)(layout+284)==0.375f);
+    }
+    CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
+    CHECK(execute_source(vm,root+2,
+        "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicHost; delete dynamicPlayer;"));
+    for(int i=0;i<2;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
+    free(layers); retdec_sqrat_release_pair(vm,player_pair);
+    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
+    CHECK(sq_gettop(kinoko_vm(vm))==top);
+    puts("PASS: dynamic 2D layer IDs, key/layout ownership, long names and Sqrat publication aliases");
+    return 0;
+}
+
 static int test_map_set_layer(void) {
     int32_t layout[116]={0}, layer[87]={0}, resource[25]={0}, wrong[25]={0};
     int32_t records[3][8]={{4,7,8},{999,1,2},{2,-3,-4}};
@@ -5038,6 +5080,8 @@ int main(int argc, char **argv) {
             test_chip_serialization() || test_layout_serialization();
     if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
         return test_map_serialization() || test_map_set_layer();
+    if(argc==2 && strcmp(argv[1],"--dynamic-layer")==0)
+        return test_dynamic_layer(vm,root);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {

@@ -5,6 +5,7 @@
 #include "kinoko/act_host.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/legacy_memory.hpp"
+#include "kinoko/legacy_string.hpp"
 #include "kinoko/sqrat_object_bridge.h"
 #include "kinoko/native_property_bridge.h"
 #include "kinoko/squirrel_binding.h"
@@ -533,6 +534,97 @@ cleanup:
     return ok;
 }
 
+namespace {
+struct DynamicLayerDelete {
+    void operator()(unsigned char* layer) const noexcept {
+        retdec_destroy_cact_layer(address(layer));
+        std::free(layer);
+    }
+};
+struct DynamicLayerLock {
+    CRITICAL_SECTION* section;
+    explicit DynamicLayerLock(int32_t player) : section(pointer<CRITICAL_SECTION>(player+20)) {
+        EnterCriticalSection(section);
+    }
+    ~DynamicLayerLock() { LeaveCriticalSection(section); }
+};
+struct DynamicLayerParent {
+    int32_t object[5];
+    explicit DynamicLayerParent(int32_t vm) : object{kinoko_sqrat_object_vtable(),vm,g483,g484,0} {}
+    ~DynamicLayerParent() { retdec_sqrat_release_pair(object[1], object+2); }
+};
+
+// Original 4517C0. Native RAII replaces the old auto_ptr temporaries and the
+// source-backed Sqrat bridge replaces Object/GetSlot/RootTable emulation.
+int32_t create_layer_2d(int32_t player, const char* name) {
+    if (!player || !name) return 0;
+    DynamicLayerLock lock(player);
+    if (!field<uint8_t>(player+8)) return 0;
+    const auto holder = field<int32_t>(player+16);
+    const auto act = holder ? field<int32_t>(holder) : 0;
+    const auto vm = field<int32_t>(player+152);
+    if (!act || !vm) return 0;
+    DynamicLayerParent parent(vm);
+    if (!get_pair(player+148, retdec_std_string_data(player+164), parent.object+2) ||
+        parent.object[2] != 0x0a000020) return 0;
+    kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,348)));
+    if (!storage || !retdec_construct_cact_layer(address(storage.get()), vm)) return 0;
+    std::unique_ptr<unsigned char,DynamicLayerDelete> owned(storage.release());
+    const auto layer = address(owned.get());
+    kinoko::legacy::StringView(pointer<void>(layer+112)).assign(name, static_cast<uint32_t>(std::strlen(name)));
+    kinoko::legacy::Allocation<int32_t> key(static_cast<int32_t*>(std::calloc(1,36)));
+    kinoko::legacy::Allocation<unsigned char> layout(static_cast<unsigned char*>(std::calloc(1,316)));
+    if (!key || !layout || !retdec_construct_c2dlayout(address(layout.get()))) return 0;
+    key.get()[0] = address(kinoko_act_host_symbols()->key_vtable);
+    key.get()[7] = 15;
+    if (!retdec_act_append_list(layer+180, address(key.get()))) return 0;
+    key.get()[1] = address(layout.release());
+    const auto native_layout = key.get()[1];
+    key.release();
+    field<int32_t>(layer+184) = 1;
+    const auto begin = field<uint32_t>(act+208), end = field<uint32_t>(act+212);
+    if (end < begin || (end-begin)%4 || (!begin && end) || (end-begin)/4 >= 0x10000) return 0;
+    const auto count = (end-begin)/4;
+    int32_t maximum = -1;
+    for (uint32_t i=0; i<count; ++i) {
+        const auto old_layer = field<int32_t>(begin+i*4);
+        if (old_layer) maximum = std::max(maximum, field<int32_t>(old_layer+104));
+    }
+    field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
+    kinoko::legacy::Allocation<int32_t> layers(static_cast<int32_t*>(std::malloc((count+1)*4)));
+    if (!layers) return 0;
+    if (count) std::memcpy(layers.get(), pointer<void>(begin), count*4);
+    layers.get()[count] = layer;
+    std::free(pointer<void>(begin));
+    field<int32_t>(act+208) = address(layers.release());
+    field<uint32_t>(act+212) = field<uint32_t>(act+216) = field<uint32_t>(act+208)+(count+1)*4;
+    owned.release(); // ACT owns the layer before either publication callback.
+    kinoko_method_layout_set_layer(native_layout, nullptr, layer);
+    kinoko_method_register_act_layer(layer, nullptr, address(parent.object), 0);
+    kinoko_method_register_layout(native_layout, nullptr);
+    return layer;
+}
+int32_t create_layer_2d_native(int32_t vm) {
+    int32_t player = 0;
+    const SQChar* name = nullptr;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
+        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&name))) return sq_throwerror(kinoko_vm(vm), "invalid CreateLayer2D arguments");
+    try {
+        DynamicLayerParent root(vm), klass(vm);
+        const auto root_value = kinoko::script::upstream::sqrat_root(kinoko_vm(vm));
+        std::memcpy(root.object+2, &root_value, sizeof(root_value));
+        if (!retdec_publish_cact_layer_class(vm,address(root.object)) ||
+            !get_pair(address(root.object),"CActLayer",klass.object+2))
+            return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
+        const auto layer = create_layer_2d(player,name);
+        const auto type = kinoko::legacy::load<HSQOBJECT>(klass.object+2);
+        if (!kinoko::script::upstream::sqrat_push_instance(kinoko_vm(vm),type,pointer<void>(layer)))
+            return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
+        return 1;
+    } catch (...) { return sq_throwerror(kinoko_vm(vm), "CreateLayer2D allocation failed"); }
+}
+}
+
 int32_t retdec_publish_acting_player_class(int32_t vm,
                                                    int32_t root_object)
 {
@@ -586,9 +678,8 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     function_460e00_register_actor_method(vm, class_object + 1, "EndStage",
                                           address(kinoko_act_end_stage),
                                           address(function_445530), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "CreateLayer2D",
-                                          address(function_4517c0),
-                                          address(function_455390), 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "CreateLayer2D",
+        address(create_layer_2d_native), nullptr, 0);
     function_460e00_register_actor_method(vm, class_object + 1, "CreateLayerString",
                                           address(function_451b70),
                                           address(function_455390), 0);

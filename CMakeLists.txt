@@ -372,6 +372,8 @@ add_test(NAME texture_serialization_contract
     COMMAND kinoko_stage_contract --texture-serialization)
 add_test(NAME map_serialization_contract
     COMMAND kinoko_stage_contract --map-serialization)
+add_test(NAME dynamic_layer_contract
+    COMMAND kinoko_stage_contract --dynamic-layer)
 
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")
