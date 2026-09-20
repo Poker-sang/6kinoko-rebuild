@@ -84,9 +84,6 @@ int32_t set_pair(int32_t id, const int32_t* object, const char* name,
     // Snapshot before pushing: the caller's borrowed pair may be stack-backed.
     const auto receiver = read<HSQOBJECT>(object), incoming = read<HSQOBJECT>(value);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver);
-    sq_pushstring(vm, name, -1);
-    sq_pushobject(vm, incoming);
     if (!raw) {
         static std::atomic<unsigned> traces{0};
         if (traces.fetch_add(1, std::memory_order_relaxed) < 96) {
@@ -96,8 +93,7 @@ int32_t set_pair(int32_t id, const int32_t* object, const char* name,
         }
     }
     // Logging must not do a second scripted get (especially _get on instances).
-    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
-    return SQ_SUCCEEDED(status);
+    return kinoko::script::upstream::sqrat_bind_value(vm, receiver, name, incoming, raw);
 }
 int32_t set_string(int32_t id, const int32_t* object, const char* name,
                    const char* value, bool raw) {
@@ -105,11 +101,7 @@ int32_t set_string(int32_t id, const int32_t* object, const char* name,
     auto vm = pointer<SQVM>(id);
     const auto receiver = read<HSQOBJECT>(object);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver);
-    sq_pushstring(vm, name, -1);
-    sq_pushstring(vm, value ? value : "", -1);
-    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
-    return SQ_SUCCEEDED(status);
+    return kinoko::script::upstream::sqrat_bind_string(vm, receiver, name, value ? value : "", raw);
 }
 int32_t set_value(int32_t vm, const int32_t* object, const char* name,
                   const HSQOBJECT& value, bool raw) {
@@ -199,14 +191,8 @@ extern "C" int32_t retdec_sqrat_set_offset_closure(int32_t id, const int32_t* ta
     auto vm = pointer<SQVM>(id);
     const auto receiver = read<HSQOBJECT>(table);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver); sq_pushstring(vm, name, -1);
-    auto payload = sq_newuserdata(vm, sizeof(offset));
-    if (!payload) return 0;
-    write(payload, offset);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(function)), 1);
-    const auto result = sq_newslot(vm, -3, SQFalse);
-    if (SQ_SUCCEEDED(result)) kinoko_sq_pop(id, 1);
-    return SQ_SUCCEEDED(result);
+    return kinoko::script::upstream::sqrat_bind_function(vm, receiver, name,
+        &offset, sizeof(offset), reinterpret_cast<SQFUNCTION>(pointer(function)), false);
 }
 extern "C" int32_t retdec_sqrat_new_table(int32_t id, int32_t* out) {
     if (!id || !out) return 0;

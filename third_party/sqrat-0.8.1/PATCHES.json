@@ -2,7 +2,7 @@
   "files": {
     "include/sqrat/sqratObject.h": {
       "upstream_sha256": "485ae6df30ad83bf24c53612e34e40d5ce9daaf4d69eaa6c7945e1b23ca9ed89",
-      "patched_sha256": "c673fa57a2089997ba4217f828e8d90d78445abc9ae5c853d35a9af8216902c0"
+      "patched_sha256": "a3b0d702d4a44193f4858024e9659480b480acdc5a22bd77c289fa8dfea6acfc"
     },
     "include/sqrat/sqratFunction.h": {
       "upstream_sha256": "9a6ebb5fca502326c8c424bd8a08385b4969512f196130d04a8d10b7a8f83bdf",

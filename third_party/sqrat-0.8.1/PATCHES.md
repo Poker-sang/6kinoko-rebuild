@@ -37,3 +37,12 @@ its existing receiver-scoped call entry. This avoids changing a process-global
 Sqrat error setting across nested or concurrent VMs. No second hand-written
 callback execution body remains in the host. The host borrows Function handles
 in a normally constructed stack object and detaches them before destruction.
+
+## Value publication and accessor payloads
+
+BindFunc and BindValue expose the status of their existing slot publication;
+callers that ignored the previous void result retain the same behavior. BindValue
+accepts a publication entry defaulting to sq_newslot; the recovered raw path
+supplies sq_rawset. All object/key/value pushes and cleanup remain the source
+algorithm. Host values are borrowed actual Object instances or strings. Offset
+accessor closures now use BindFunc's source userdata/copy/closure implementation.

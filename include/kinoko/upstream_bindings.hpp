@@ -75,7 +75,11 @@ void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_release(HSQUIRRELVM vm, HSQOBJECT value);
 HSQOBJECT sqrat_object_value(HSQUIRRELVM vm, HSQOBJECT value);
 void sqrat_destroy_object(HSQUIRRELVM vm, HSQOBJECT value, bool owns);
-void sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
+bool sqrat_bind_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
+                      HSQOBJECT incoming, bool raw);
+bool sqrat_bind_string(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
+                       const SQChar* text, bool raw);
+bool sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
                           const void* payload, std::size_t size,
                           SQFUNCTION function, bool static_slot);
 } // namespace kinoko::script::upstream

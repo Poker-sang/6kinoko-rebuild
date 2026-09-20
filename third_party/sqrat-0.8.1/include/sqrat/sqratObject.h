@@ -150,7 +150,7 @@ namespace Sqrat {
 
 	protected:
 		// Bind a function and it's associated Squirrel closure to the object
-		inline void BindFunc(const SQChar* name, void* method, size_t methodSize, SQFUNCTION func, bool staticVar = false) {
+		inline SQRESULT BindFunc(const SQChar* name, void* method, size_t methodSize, SQFUNCTION func, bool staticVar = false) {
 			sq_pushobject(vm, GetObject());
 			sq_pushstring(vm, name, -1);
 
@@ -158,8 +158,9 @@ namespace Sqrat {
 			memcpy(methodPtr, method, methodSize);
 
 			sq_newclosure(vm, func, 1);
-			sq_newslot(vm, -3, staticVar);
+			const SQRESULT status = sq_newslot(vm, -3, staticVar);
 			sq_pop(vm,1); // pop table
+			return status;
 		}
 
 		// Bind a function and it's associated Squirrel closure to the object
@@ -186,12 +187,13 @@ namespace Sqrat {
 
 		// Set the value of a variable on the object. Changes to values set this way are not reciprocated
 		template<class V>
-		inline void BindValue(const SQChar* name, const V& val, bool staticVar = false) {
+		inline SQRESULT BindValue(const SQChar* name, const V& val, bool staticVar = false, SQRESULT (*publish)(HSQUIRRELVM,SQInteger,SQBool) = sq_newslot) {
 			sq_pushobject(vm, GetObject());
 			sq_pushstring(vm, name, -1);
 			PushVar(vm, val);
-			sq_newslot(vm, -3, staticVar);
+			const SQRESULT status = publish(vm, -3, staticVar);
 			sq_pop(vm,1); // pop table
+			return status;
 		}
 
 		// Set the value of an instance on the object. Changes to values set this way are reciprocated back to the source instance
