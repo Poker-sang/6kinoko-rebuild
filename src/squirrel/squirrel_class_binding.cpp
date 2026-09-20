@@ -39,9 +39,7 @@ extern "C" int32_t function_4a9250(int32_t output, int32_t text) {
     auto* vm = current_vm();
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    StackTop stack(vm);
-    sq_pushstring(vm, pointer<const char>(text), -1);
-    result.capture(vm, -1);
+    result.write(upstream::sqplus_new_string(vm, pointer<const char>(text)));
     return output;
 }
 
@@ -49,10 +47,11 @@ extern "C" int32_t function_4a9370(int32_t output, int32_t native,
                                     int32_t name, int32_t mask_address) {
     auto* vm = current_vm();
     sq_pushstring(vm, pointer<const char>(name), -1);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(native)), 0);
+    const auto closure = upstream::sqplus_new_closure(vm, reinterpret_cast<SQFUNCTION>(pointer(native)));
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    result.capture(vm, -1);
+    result.write(closure); // Transfer before publication: _newslot may observe output.
+    sq_pushobject(vm, closure);
     const auto* mask = pointer<const char>(mask_address);
     if (!mask || mask[0] != '*') {
         // The recovered overflow branch falls back to the receiver-only mask

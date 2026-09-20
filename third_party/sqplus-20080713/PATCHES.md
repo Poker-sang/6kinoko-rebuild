@@ -21,10 +21,20 @@ records the reviewed replacement hashes. No bundled Squirrel 2.1.1 VM is used.
 
 * `SQPLUS_HOST_OBJECT_ONLY` gates standalone registration/variable helpers in
   `SqPlus.cpp` and root-registry type-name overloads in `SquirrelObject.cpp`.
-  They require the snapshot VM bootstrap and a different VarRef ABI. MSVC
-  resolves even discardable COMDAT references, so dead-stripping alone is not
-  sufficient. No zero-return replacement implementations are supplied.
+  They require the snapshot VM bootstrap, native ClassTypeBase objects and
+  its string/error policies. The Win32 VarRef layout is in fact the same 20
+  bytes as the recovered record, now checked member by member. Layout equality
+  does not justify overlaying a constructed upstream object or changing those
+  policies. MSVC resolves even discardable COMDAT references, so dead-stripping
+  alone is not sufficient. No zero-return replacement implementations exist.
+* `SquirrelVM.cpp`: the same host-only gate excludes the independent VM owner,
+  compiler/call-state and cached root, while compiling the original stateless
+  factories. Their algorithms are unchanged. Host registration keeps its
+  capture-before-publication order and the pre-existing oversized-mask policy.
+* `sqplus.h`: test the getVarNameTag input limit before examining the next
+  character, preserving the host's 255-byte maximum read (including a bounded
+  prefix with no NUL). Valid source strings have identical tags.
 
-The object copy/assignment/Reset and CreateClass algorithms are unchanged.
+The object copy/assignment/Reset, factory and CreateClass algorithms are unchanged.
 The host transfers *external* references by adopting/detaching public object
 handles; it never overlays an upstream polymorphic class on legacy storage.

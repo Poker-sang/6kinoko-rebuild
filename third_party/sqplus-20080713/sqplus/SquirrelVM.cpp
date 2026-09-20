@@ -14,6 +14,8 @@
 #include <sqstdsystem.h>
 
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
+// Host builds borrow the existing 2.2.2 VM; no second owner/compiler/bootstrap.
 HSQUIRRELVM     SquirrelVM::_VM;
 bool            SquirrelVM::_no_vm_ref;
 int             SquirrelVM::_CallState = -1;
@@ -388,6 +390,8 @@ SquirrelObject SquirrelVM::CreateInstance(SquirrelObject &oclass)
     return ret;
 }
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
 SquirrelObject SquirrelVM::CreateTable()
 {
     SquirrelObject ret;
@@ -433,6 +437,7 @@ SquirrelObject SquirrelVM::CreateUserData(int size) {
   return ret;
 }
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 const SquirrelObject &SquirrelVM::GetRootTable()
 {
     if( !_root ){
@@ -443,6 +448,8 @@ const SquirrelObject &SquirrelVM::GetRootTable()
     }
     return *_root;
 }
+
+#endif // !SQPLUS_HOST_OBJECT_ONLY
 
 void SquirrelVM::PushRootTable(void) {
   sq_pushroottable(_VM);

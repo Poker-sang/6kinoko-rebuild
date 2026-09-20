@@ -1,11 +1,27 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqplus.h>
+#include "kinoko/squirrel_variable_record.hpp"
 
 // We use the existing source VM and its bootstrap, not the snapshot's VM owner,
 // compiler or standard libraries. Context is borrowed and scoped per thread:
 // explicit-VM host operations must not introduce a shared global VM race.
 #if defined(_MSC_VER) && defined(_M_IX86)
 static_assert(sizeof(SquirrelObject) == 12, "snapshot object agrees with recovered Win32 size");
+#endif
+#if defined(_MSC_VER) && defined(_M_IX86)
+// Matching layout is necessary but not sufficient to call the variable switch:
+// its native descriptor, string and error policies still need host adaptation.
+using HostVariable = kinoko::script::binding::Variable;
+static_assert(sizeof(SqPlus::VarRef) == sizeof(HostVariable));
+static_assert(offsetof(SqPlus::VarRef, offsetOrAddrOrConst) == offsetof(HostVariable, offset));
+static_assert(offsetof(SqPlus::VarRef, m_type) == offsetof(HostVariable, category));
+static_assert(offsetof(SqPlus::VarRef, instanceType) == offsetof(HostVariable, instance_type));
+static_assert(offsetof(SqPlus::VarRef, varType) == offsetof(HostVariable, value_type));
+static_assert(offsetof(SqPlus::VarRef, m_size) == offsetof(HostVariable, size));
+static_assert(offsetof(SqPlus::VarRef, m_access) == offsetof(HostVariable, flags));
+static_assert(SqPlus::VAR_ACCESS_READ_ONLY == kinoko::script::binding::ReadOnly);
+static_assert(SqPlus::VAR_ACCESS_CONSTANT == kinoko::script::binding::Constant);
+static_assert(SqPlus::VAR_ACCESS_STATIC == kinoko::script::binding::Static);
 #endif
 thread_local HSQUIRRELVM SquirrelVM::_VM = nullptr;
 HSQUIRRELVM SquirrelVM::ExchangeVMForHost(HSQUIRRELVM vm) {
@@ -49,6 +65,26 @@ HSQOBJECT take(SquirrelObject& object) {
     sq_resetobject(&object.GetObjectHandle());
     return result;
 }
+}
+std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept {
+    std::array<char, 258> key{};
+    SqPlus::getVarNameTag(key.data(), static_cast<INT>(key.size()), name ? name : "");
+    return key;
+}
+HSQOBJECT sqplus_new_table(HSQUIRRELVM vm) {
+    VmScope context(vm);
+    auto result = SquirrelVM::CreateTable();
+    return take(result);
+}
+HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text) {
+    VmScope context(vm);
+    auto result = SquirrelVM::CreateString(text);
+    return take(result);
+}
+HSQOBJECT sqplus_new_closure(HSQUIRRELVM vm, SQFUNCTION native) {
+    VmScope context(vm);
+    auto result = SquirrelVM::CreateFunction(native);
+    return take(result);
 }
 HSQOBJECT sqplus_assign(HSQUIRRELVM vm, HSQOBJECT previous, HSQOBJECT incoming) {
     VmScope context(vm);

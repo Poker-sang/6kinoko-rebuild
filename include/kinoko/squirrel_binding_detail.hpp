@@ -4,24 +4,13 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/squirrel_host_object.hpp"
-#include <array>
+#include "kinoko/squirrel_variable_record.hpp"
 
 extern "C" { extern char* g644; }
 
 namespace kinoko::script::binding {
 
-// Fixed-width views of the original records, not replacement C++ object
-// layouts. Read/write through memcpy: generated callers can be unaligned.
-struct Variable {
-    int32_t offset;
-    int32_t category;
-    int32_t instance_type;
-    int32_t value_type;
-    uint16_t size;
-    uint16_t flags;
-};
-static_assert(sizeof(Variable) == 20 && offsetof(Variable, flags) == 18);
-enum VariableFlags : uint16_t { ReadOnly = 1, Constant = 2, Static = 4 };
+// Read/write all recovered records through memcpy; callers can be unaligned.
 struct Method { int32_t function; int32_t receiver_offset; };
 static_assert(sizeof(Method) == 8);
 
@@ -47,10 +36,7 @@ inline bool valid_index(HSQUIRRELVM vm, SQInteger index) noexcept {
     return index > 0 ? index <= top : index >= -top;
 }
 inline std::array<char, 258> variable_key(const char* name) noexcept {
-    std::array<char, 258> key{};
-    key[0] = '_'; key[1] = 'v';
-    for (size_t i = 0; name && i < 255 && name[i]; ++i) key[i + 2] = name[i];
-    return key;
+    return upstream::sqplus_variable_key(name);
 }
 
 // A scoped EXTERNAL reference for locally owned SquirrelObject temporaries.
@@ -79,18 +65,19 @@ inline bool get_slot(HSQUIRRELVM vm, ObjectView object, const char* key, ObjectV
     return true;
 }
 inline void raw_store(HSQUIRRELVM vm, ObjectView object, const char* key, ObjectView value) {
-    StackTop stack(vm);
-    object.push(vm); sq_pushstring(vm, key, -1); value.push(vm);
-    sq_rawset(vm, -3);
+    upstream::sqplus_raw_set(vm, object.value(), key, value.value());
 }
 inline bool has_slot(HSQUIRRELVM vm, ObjectView object, const char* key) {
-    StackTop stack(vm);
-    object.push(vm); sq_pushstring(vm, key, -1);
-    return SQ_SUCCEEDED(sq_get(vm, -2));
+    return upstream::sqplus_exists(vm, object.value(), key);
 }
 inline void new_table(HSQUIRRELVM vm, ObjectView output) {
     StackTop stack(vm);
-    sq_newtable(vm); output.capture(vm, -1);
+    const auto value = upstream::sqplus_new_table(vm);
+    // Transfer the factory's one external ref. During the old-value release,
+    // retain the same stack root and external count as AttachToStackObject.
+    sq_pushobject(vm, value);
+    output.release(vm);
+    output.write(value);
 }
 
 } // namespace kinoko::script::binding

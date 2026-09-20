@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <stdexcept>
 #include <thread>
 #include <vector>
@@ -244,23 +245,64 @@ void object_operations(HSQUIRRELVM vm) {
     require(sq_gettop(vm) == top && SquirrelVM::GetVMPtr() == nullptr,
             "source operations restore stack and borrowed VM scope");
 }
+SQInteger factory_callback(HSQUIRRELVM vm) { sq_pushinteger(vm, 23); return 1; }
+void factories(HSQUIRRELVM vm) {
+    const auto top = sq_gettop(vm);
+    auto table = up::sqplus_new_table(vm);
+    auto text = up::sqplus_new_string(vm, "source factory");
+    auto null_text = up::sqplus_new_string(vm, nullptr);
+    auto closure = up::sqplus_new_closure(vm, factory_callback);
+    require(table._type == OT_TABLE && text._type == OT_STRING && null_text._type == OT_NULL &&
+            closure._type == OT_NATIVECLOSURE && sq_gettop(vm) == top, "source factory types and stack");
+    sq_pushobject(vm, text);
+    const SQChar* data = nullptr;
+    require(SQ_SUCCEEDED(sq_getstring(vm, -1, &data)) && !std::strcmp(data, "source factory"), "CreateString data");
+    sq_pop(vm, 1);
+    sq_pushobject(vm, closure); sq_pushobject(vm, table);
+    require(SQ_SUCCEEDED(sq_call(vm, 1, SQTrue, SQFalse)), "CreateFunction actual native call");
+    SQInteger answer = 0;
+    require(SQ_SUCCEEDED(sq_getinteger(vm, -1, &answer)) && answer == 23, "factory callback result");
+    sq_pop(vm, 2);
+    for (auto value : {closure, text, null_text, table}) up::sqplus_release(vm, value);
+    require(sq_gettop(vm) == top && SquirrelVM::GetVMPtr() == nullptr, "factory ownership and scope");
+}
+void variable_names() {
+    for (const char* name : {static_cast<const char*>(nullptr), "", "name", "_already_tagged"}) {
+        const auto key = up::sqplus_variable_key(name);
+        require(std::string(key.data()) == std::string("_v") + (name ? name : ""), "source metadata key");
+        for (auto i = std::strlen(key.data()) + 1; i < key.size(); ++i)
+            require(key[i] == 0, "unused key storage stays zero initialized");
+    }
+    for (size_t length : {254, 255, 256, 1024}) {
+        const std::string name(length, 'n');
+        const auto key = up::sqplus_variable_key(name.c_str());
+        require(std::string(key.data()) == "_v" + name.substr(0, 255), "metadata name truncates at 255");
+    }
+    // Match the host's bounded prefix contract: no read of byte 255.
+    const std::vector<char> prefix(255, 'b');
+    const auto key = up::sqplus_variable_key(prefix.data());
+    require(std::string(key.data()) == "_v" + std::string(255, 'b'), "bounded non-NUL prefix");
+}
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
     classes(root.vm);
     slot_lifetime(root.vm);
     object_operations(root.vm);
+    factories(root.vm);
     // Child VM shares the original VM's ref table but has a separate stack.
     auto child = sq_newthread(root.vm, 32);
     require(child != nullptr, "child VM");
     objects(child, root.vm);
     slot_lifetime(child);
     object_operations(child);
+    factories(child);
     sq_pop(root.vm, 1);
 }
 }
 int main() {
     try {
+        variable_names();
         for (int i = 0; i < 8; ++i) cycle();
         std::atomic<bool> ok{true};
         std::vector<std::thread> threads;

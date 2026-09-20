@@ -1,10 +1,15 @@
 #pragma once
 #include <squirrel.h>
+#include <array>
 
 // Values cross this boundary; neither the game's unaligned legacy records nor
 // internal SQObjectPtr references are overlaid with an upstream C++ object.
 // Each *_retain/new/assign result owns exactly one external VM reference.
 namespace kinoko::script::upstream {
+std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
+HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
+HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text);
+HSQOBJECT sqplus_new_closure(HSQUIRRELVM vm, SQFUNCTION native);
 HSQOBJECT sqplus_assign(HSQUIRRELVM vm, HSQOBJECT previous, HSQOBJECT incoming);
 // The caller supplies a valid stack index, as in Squirrel 2.2.2's API.
 HSQOBJECT sqplus_capture(HSQUIRRELVM vm, HSQOBJECT previous, int index);

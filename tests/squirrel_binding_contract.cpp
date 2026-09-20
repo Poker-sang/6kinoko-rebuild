@@ -126,6 +126,15 @@ void publish(HSQUIRRELVM vm, const char* name, Object& value) {
 }
 SQInteger noop(HSQUIRRELVM) { return 0; }
 
+thread_local int32_t publishing_output = 0;
+thread_local bool saw_published_output = false;
+SQInteger inspect_publication(HSQUIRRELVM vm) {
+    HSQOBJECT value; sq_getstackobj(vm, 3, &value);
+    const auto output = ObjectView(publishing_output).value();
+    saw_published_output = output._type == OT_NATIVECLOSURE && data_bits(output) == data_bits(value);
+    sq_push(vm, 2); sq_push(vm, 3);
+    return SQ_SUCCEEDED(sq_rawset(vm, 1)) ? 0 : -1;
+}
 void class_contract(HSQUIRRELVM vm) {
     const auto top = sq_gettop(vm);
     Object base(vm), derived(vm), failed(vm), table(vm), closure(vm);
@@ -176,6 +185,18 @@ void class_contract(HSQUIRRELVM vm) {
     Object string(vm);
     require(function_4a9250(string.location(), address("bound string")) == string.location(), "string object return");
     string.view().push(vm); require(text(vm) == "bound string", "string object value"); sq_pop(vm, 1);
+    Object delegate(vm), published(vm);
+    new_table(vm, delegate.view());
+    delegate.view().push(vm); sq_pushstring(vm, "_newslot", -1);
+    sq_newclosure(vm, inspect_publication, 0);
+    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "install real publication callback");
+    sq_pop(vm, 1); table.view().push(vm); delegate.view().push(vm);
+    require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "registration table delegate"); sq_pop(vm, 1);
+    publishing_output = published.location(); saw_published_output = false;
+    function_4a9490(pointer<int32_t>(published.location()), table.location(),
+        address(reinterpret_cast<void*>(&noop)), const_cast<char*>("published"), nullptr);
+    publishing_output = 0;
+    require(saw_published_output, "legacy output captured before _newslot publication callback");
     require(sq_gettop(vm) == top, "all class helpers balanced");
 }
 

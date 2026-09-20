@@ -537,7 +537,7 @@ inline void getVarNameTag(SQChar * buff,INT maxSize,const SQChar * scriptName) {
   d = &d[2];
   maxSize -= (2+1); // +1 = space for null.
   int pos=0;
-  while (scriptName[pos] && pos < maxSize) {
+  while (pos < maxSize && scriptName[pos]) {
     d[pos] = scriptName[pos];
     pos++;
   } // while
