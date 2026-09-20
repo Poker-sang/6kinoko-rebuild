@@ -3,6 +3,7 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/sqrat_object_bridge.h"
+#include "kinoko/upstream_bindings.hpp"
 #include <algorithm>
 
 extern "C" {
@@ -53,10 +54,7 @@ bool valid_class(HSQUIRRELVM vm, const int32_t* input, int32_t native, int32_t* 
 }
 bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, int32_t native,
                      HSQOBJECT& result) {
-    sq_pushobject(vm, type);
-    if (SQ_FAILED(sq_createinstance(vm, -1))) return false; // NOT sq_call / constructor.
-    sq_remove(vm, -2); // Remove the class, keep the instance.
-    if (SQ_FAILED(sq_setinstanceup(vm, -1, pointer(native)))) return false;
+    if (!upstream::sqrat_push_instance(vm, type, pointer(native))) return false;
     sq_getstackobj(vm, -1, &result);
     sq_addref(vm, &result);
     return true;

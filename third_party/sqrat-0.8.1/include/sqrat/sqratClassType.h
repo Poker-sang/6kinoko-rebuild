@@ -32,6 +32,16 @@
 
 namespace Sqrat {
 
+    // KINOKO SOURCE FACTORING: the original PushInstance sequence accepts the
+    // embedding's existing class handle, without a second template registry.
+    inline SQRESULT PushClassInstance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer ptr) {
+        sq_pushobject(vm, type);
+        SQRESULT status = sq_createinstance(vm, -1);
+        if (SQ_FAILED(status)) return status;
+        sq_remove(vm, -2);
+        return sq_setinstanceup(vm, -1, ptr);
+    }
+
 	//
 	// ClassType
 	//
@@ -70,10 +80,7 @@ namespace Sqrat {
 		}
 
 		static void PushInstance(HSQUIRRELVM vm, C* ptr) {
-			sq_pushobject(vm, ClassObject());
-			sq_createinstance(vm, -1);
-			sq_remove(vm, -2);
-			sq_setinstanceup(vm, -1, ptr);
+			PushClassInstance(vm, ClassObject(), ptr);
 		}
 
 		static void PushInstanceCopy(HSQUIRRELVM vm, C& value) {

@@ -66,3 +66,9 @@ InitClass. The host uses the same factory with its existing per-game registries;
 an explicit keepOnStack option preserves the stack shape until host publication
 finishes. This replaces five handwritten class creation paths without overlaying
 source Class objects on the recovered record or adding another owning registry.
+
+ClassType::PushInstance now shares its original push-class/create-instance/remove-
+class/set-native sequence with PushClassInstance, accepting an explicit existing
+class handle. It returns the VM status and stops after failed creation. The host
+retains the resulting stack object at its ABI boundary and never constructs a
+second ClassType registry or calls a scripted constructor.
