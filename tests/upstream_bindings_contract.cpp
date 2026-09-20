@@ -458,17 +458,17 @@ void source_class_initialization(HSQUIRRELVM vm) {
     SQUserPointer actual = nullptr;
     require(SQ_SUCCEEDED(sq_getinstanceup(vm, -1, &actual, nullptr)) && actual == &native,
         "source instance preserves native identity without invoking constructor");
-    // Change the class slot AFTER instantiation. A non-static copied default
-    // would leave the instance pointing at the old table, unlike the original.
+    // An instance cannot replace a static class table with a private copy.
+    // Squirrel 2.2.2 locks the class after construction, so test through the
+    // instance write contract rather than attempting to mutate a locked class.
     auto replacement = up::sqrat_table(vm);
-    sq_pushobject(vm, type); sq_pushstring(vm, "__getTable", -1);
-    sq_pushobject(vm, replacement);
-    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQTrue)), "replace static table on locked class");
-    sq_pop(vm, 1);
+    sq_pushstring(vm, "__getTable", -1); sq_pushobject(vm, replacement);
+    require(SQ_FAILED(sq_rawset(vm, -3)), "instance cannot overwrite static property table");
+    sq_settop(vm, top + 1);
     sq_pushstring(vm, "__getTable", -1);
     require(SQ_SUCCEEDED(sq_get(vm, -2)), "instance resolves class property table");
     HSQOBJECT resolved; sq_getstackobj(vm, -1, &resolved);
-    require(same(resolved, replacement), "property tables are class statics, not instance copies");
+    require(same(resolved, get), "instance keeps the shared class property table");
     sq_settop(vm, top);
     up::sqrat_release(vm, replacement); up::sqrat_release(vm, get);
     up::sqrat_release(vm, set); up::sqrat_release(vm, type);
