@@ -301,3 +301,30 @@ because these batches pass.
   baseline whitespace diagnostics. Both local migration commits are retained.
 - Historical provenance (199 members) and migration boundaries (440 source/header
   files) passed after this merge. The operand-selection heuristic remains pending.
+
+## r58: map serialization and preparation
+
+Source commit 1077d77 includes 1e3b909. Recovered original 434760/434920/434A50
+and 435860/435B20 through IDA against the original executable. Map property IO
+now owns native C++ descriptors; original schema has nine entries (no blend).
+Native std::sort replaces decompiled sorting and preparation builds flat caches
+from the source MCD, ordered by unsigned chip ID. Record ordering uses signed X
+then signed Y. Original bottom-bound initialization from last X is retained.
+The source ACT destructor frees the new cache buffers, and clones reset caches.
+
+The reader preserves original min(serialized_size,32) consumption and append
+semantics, setting per-record ordinal, visible byte and alpha. Unsafe counts are
+bounded; on a truncated record input existing records remain intact (deliberate
+failure safety, rather than original partial append). Writer emits 12-byte
+records after preparation and preserves original missing-resource behavior.
+
+Pinned source-only audit retired-map-serialization.json proves removal of a
+closed component: 18 functions, 4 data records, 1693 lines, including the old
+Boost property factory and MSVC vector/sort implementations. It makes no linker
+or runtime reachability claim. Other still-referenced map helpers remain pending.
+
+Quiet Win32 build passed 54/54 tests, including the new map serialization
+contract for signed ordering, sparse IDs, cache replacement, compact/full wire
+forms, append behavior, truncation and empty extents. DAT staged and SHA256
+verified. Historical provenance and migration boundaries passed. No new gameplay
+claim; no user-owned game was touched. All batch artifacts are retained.
