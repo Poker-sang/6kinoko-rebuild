@@ -123,14 +123,16 @@ namespace Sqrat {
 			return up;
 		}
 
-		Object GetSlot(const SQChar* slot) const {
+		Object GetSlot(const SQChar* slot, bool* found = NULL) const {
 			HSQOBJECT slotObj;
 			sq_pushobject(vm, GetObject());
 			sq_pushstring(vm, slot, -1);
 			if(SQ_FAILED(sq_get(vm, -2))) {
+				if(found) *found = false;
 				sq_pop(vm, 1);
 				return Object(vm); // Return a NULL object
 			} else {
+				if(found) *found = true;
 				sq_getstackobj(vm, -1, &slotObj);
 				Object result(slotObj, vm); // Own transient _get results before popping.
 				sq_pop(vm, 2);

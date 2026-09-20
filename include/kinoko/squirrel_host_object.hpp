@@ -73,12 +73,8 @@ public:
         write(upstream::sqplus_assign(vm, value(), incoming));
     }
     SQObjectType capture(HSQUIRRELVM vm, SQInteger index) const {
-        HSQOBJECT incoming;
-        sq_resetobject(&incoming);
-        // Match the legacy scratch-pair initialization; the caller supplies
-        // a valid index, as required by the Squirrel 2.2.2 API.
-        sq_getstackobj(vm, index, &incoming);
-        assign(vm, incoming);
+        const auto incoming = upstream::sqplus_capture(vm, value(), static_cast<int>(index));
+        write(incoming);
         return incoming._type;
     }
     int32_t payload_address() const noexcept {

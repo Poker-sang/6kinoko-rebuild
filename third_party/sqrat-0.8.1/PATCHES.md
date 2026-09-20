@@ -19,3 +19,11 @@ GetSlot wrapper already retained before popping; fix the upstream source before
 routing that production call through it, rather than introducing a regression.
 
 No Squirrel VM, lookup, last-error or missing-slot policy is changed here.
+
+## Optional lookup status for the legacy host
+
+`GetSlot` additionally accepts an optional `bool* found`. The default one-argument
+usage is unchanged. The host must distinguish an existing null-valued slot from
+a missing key without invoking `_get` twice or inspecting stale last-error state.
+This exposes the status already computed by the upstream method; it does not
+change lookup, error, stack or reference behavior.

@@ -148,20 +148,114 @@ void slot_lifetime(HSQUIRRELVM vm) {
         require(object.GetSlot("missing").IsNull(), "missing GetSlot returns null");
         require(sq_gettop(vm) == top, "missing GetSlot balances stack");
         sq_reseterror(vm);
+        HSQOBJECT result;
+        int calls = slot_calls;
+        require(up::sqrat_get(vm, receiver, "temporary", result), "host uses upstream GetSlot");
+        require(slot_calls == calls + 1 && slot_releases == first_release + 1,
+                "transferred GetSlot result is alive, single lookup");
+        up::sqrat_release(vm, result);
+        require(slot_releases == first_release + 2, "transferred GetSlot releases once");
+        require(up::sqrat_get(vm, receiver, "null", result) && result._type == OT_NULL,
+                "existing null is not a missing slot");
+        calls = slot_calls;
+        require(!up::sqrat_get(vm, receiver, "missing", result) && result._type == OT_NULL,
+                "missing lookup still resets output");
+        require(slot_calls == calls + 1, "status does not probe _get twice");
+        calls = slot_calls;
+        result = up::sqplus_get_value(vm, receiver, "temporary");
+        require(result._type == OT_USERDATA && slot_calls == calls + 1 &&
+                slot_releases == first_release + 2, "SqPlus GetValue transfers owned result");
+        up::sqplus_release(vm, result);
+        require(up::sqplus_exists(vm, receiver, "null"), "Exists accepts null result");
+        require(!up::sqplus_exists(vm, receiver, "missing"), "Exists misses key");
+        sq_reseterror(vm);
     }
-    require(slot_releases == first_release + 1 && sq_gettop(vm) == top,
+    require(slot_releases == first_release + 3 && sq_gettop(vm) == top,
             "temporary result is neither leaked nor released twice");
+}
+HSQOBJECT owned_top(HSQUIRRELVM vm) {
+    auto result = up::sqplus_capture(vm, empty(), -1);
+    sq_pop(vm, 1);
+    return result;
+}
+HSQOBJECT integer(SQInteger value) {
+    auto result = empty(); result._type = OT_INTEGER; result._unVal.nInteger = value; return result;
+}
+void object_operations(HSQUIRRELVM vm) {
+    const auto top = sq_gettop(vm);
+    auto table = up::sqrat_table(vm);
+    sq_newarray(vm, 0); auto array = owned_top(vm);
+    sq_pushstring(vm, "value", -1); auto text = owned_top(vm);
+    int native = 7, tag = 9, other_tag = 10;
+    auto pointer = empty(); pointer._type = OT_USERPOINTER; pointer._unVal.pUserPointer = &native;
+    require(up::sqplus_raw_set(vm, table, integer(-3), integer(-13)), "upstream object-key SetValue");
+    require(up::sqplus_raw_set(vm, table, integer(4), text), "upstream string value");
+    require(up::sqplus_raw_set(vm, table, integer(7), pointer), "upstream pointer value");
+    require(up::sqplus_raw_set(vm, table, "named", text), "upstream string-key SetValue");
+    require(up::sqplus_get_integer(vm, table, -3) == -13, "negative integer key");
+    require(std::strcmp(up::sqplus_get_string(vm, table, 4), "value") == 0, "borrowed stored string");
+    require(up::sqplus_get_userpointer(vm, table, 7) == &native, "native pointer identity");
+    require(up::sqplus_get_integer(vm, table, 4) == 0, "wrong numeric conversion");
+    require(up::sqplus_get_string(vm, table, -3) == nullptr, "wrong string conversion");
+    require(up::sqplus_get_userpointer(vm, table, -3) == nullptr, "wrong pointer conversion");
+    require(up::sqplus_get_integer(vm, table, 999) == 0, "missing integer key");
+    require(up::sqplus_length(vm, table) == 4 && up::sqplus_length(vm, text) == 5,
+            "upstream length type restrictions");
+    require(up::sqplus_length(vm, integer(5)) == 0, "non-container length is zero");
+    up::sqplus_append(vm, array, integer(10)); up::sqplus_append(vm, array, integer(20));
+    require(up::sqplus_reverse(vm, array) && up::sqplus_get_integer(vm, array, 0) == 20,
+            "source array append and reverse");
+    up::sqplus_append(vm, table, integer(3));
+    require(up::sqplus_length(vm, table) == 4, "append nonarray no-op");
+    require(!up::sqplus_reverse(vm, table), "reverse nonarray fails");
+    sq_reseterror(vm);
+    require(!up::sqplus_begin_iteration(vm, integer(0)) && sq_gettop(vm) == top,
+            "non-container cannot begin iteration");
+    require(up::sqplus_begin_iteration(vm, table) && sq_gettop(vm) == top + 2,
+            "iteration leaves container and iterator");
+    auto key = empty(), value = empty(); int count = 0;
+    while (SQ_SUCCEEDED(sq_next(vm, -2))) {
+        key = up::sqplus_capture(vm, key, -2);
+        value = up::sqplus_capture(vm, value, -1);
+        sq_pop(vm, 2); ++count;
+    }
+    sq_pop(vm, 2);
+    require(count == 4, "iteration captures all entries through source AttachToStackObject");
+    up::sqplus_release(vm, key); up::sqplus_release(vm, value);
+    auto delegate = up::sqrat_table(vm);
+    sq_pushobject(vm, table); sq_pushobject(vm, delegate);
+    require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "set fixture delegate"); sq_pop(vm, 1);
+    auto fetched = up::sqplus_get_delegate(vm, table);
+    require(same(fetched, delegate), "GetDelegate identity and owned reference");
+    up::sqplus_release(vm, fetched);
+    auto klass = empty();
+    require(up::sqplus_create_class(vm, klass, &tag, "NativeInstance", nullptr), "instance class");
+    sq_pushobject(vm, klass); require(SQ_SUCCEEDED(sq_createinstance(vm, -1)), "create instance");
+    auto instance = owned_top(vm); sq_pop(vm, 1);
+    require(up::sqplus_set_instance_up(vm, instance, &native) &&
+            up::sqplus_get_instance_up(vm, instance, &tag) == &native, "source instance association");
+    require(up::sqplus_get_instance_up(vm, instance, &other_tag) == nullptr,
+            "wrong instance tag rejected");
+    sq_getlasterror(vm); require(sq_gettype(vm, -1) == OT_NULL, "GetInstanceUP clears mismatch error");
+    sq_pop(vm, 1);
+    require(!up::sqplus_set_instance_up(vm, table, &native), "noninstance setter fails");
+    require(up::sqplus_length(vm, klass) == 0, "class excluded from Len despite sq_getsize support");
+    for (auto object : {instance, klass, delegate, text, array, table}) up::sqplus_release(vm, object);
+    require(sq_gettop(vm) == top && SquirrelVM::GetVMPtr() == nullptr,
+            "source operations restore stack and borrowed VM scope");
 }
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
     classes(root.vm);
     slot_lifetime(root.vm);
+    object_operations(root.vm);
     // Child VM shares the original VM's ref table but has a separate stack.
     auto child = sq_newthread(root.vm, 32);
     require(child != nullptr, "child VM");
     objects(child, root.vm);
     slot_lifetime(child);
+    object_operations(child);
     sq_pop(root.vm, 1);
 }
 }

@@ -24,6 +24,14 @@ public:
     HSQOBJECT take() { this->release = false; return this->obj; }
 };
 }
+bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& output) {
+    Adopted object(vm, receiver); // borrowed, not another reference to the host
+    bool found = false;
+    auto result = object.GetSlot(key, &found);
+    output = result.GetObject();
+    sq_resetobject(&result.GetObject()); // transfer the owned external reference
+    return found;
+}
 HSQOBJECT sqrat_root(HSQUIRRELVM vm) { Detached<Sqrat::RootTable> root(vm); return root.take(); }
 HSQOBJECT sqrat_table(HSQUIRRELVM vm) { Detached<Sqrat::Table> table(vm); return table.take(); }
 void sqrat_retain(HSQUIRRELVM vm, HSQOBJECT value) {

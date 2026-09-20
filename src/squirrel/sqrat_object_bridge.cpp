@@ -153,12 +153,10 @@ extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t o
     if (!vm) return 0;
     reset_pair(pointer(out));
     TrimStack stack(vm);
-    sq_pushobject(vm, object.value());
-    sq_pushstring(vm, name, -1);
-    if (SQ_FAILED(sq_get(vm, -2))) return 0;
-    HSQOBJECT value; sq_getstackobj(vm, -1, &value);
-    kinoko::script::upstream::sqrat_retain(vm, value); write(pointer(out), value);
-    return 1;
+    HSQOBJECT value;
+    const bool found = kinoko::script::upstream::sqrat_get(vm, object.value(), name, value);
+    write(pointer(out), value);
+    return found;
 }
 extern "C" void retdec_sqrat_release_pair(int32_t id, int32_t* pair) {
     if (!pair) return;

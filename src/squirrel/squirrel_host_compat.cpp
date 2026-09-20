@@ -33,21 +33,6 @@ void trace_value(const char* type_label, const char* data_label, ObjectView obje
 void push_key(HSQUIRRELVM vm, SQInteger key) { sq_pushinteger(vm, key); }
 void push_key(HSQUIRRELVM vm, const char* key) { sq_pushstring(vm, key, -1); }
 
-template<class T, class Getter>
-T get_integer_key(int32_t object, SQInteger key, Getter get) {
-    auto* vm = current_vm();
-    T result{};
-    if (!object || !vm) return result;
-    ObjectView(object).push(vm);
-    push_key(vm, key);
-    if (SQ_SUCCEEDED(sq_get(vm, -2))) {
-        get(vm, -1, &result);
-        pop(vm);
-    }
-    pop(vm);
-    return result;
-}
-
 // Lookup success is the original return contract, even when the subsequent
 // userdata conversion fails. A failed conversion must not overwrite outputs.
 SQRESULT read_userdata(HSQUIRRELVM vm, int32_t* output, int32_t tag_output) {
@@ -121,7 +106,7 @@ extern "C" int32_t function_4a95c0_this(int32_t object, int32_t source) {
     retdec_trace_i32("4a95c0:source", source);
     // Snapshot before releasing the old destination, including self-assignment.
     auto incoming = ObjectView(source).value();
-    sq_addref(current_vm(), &incoming);
+    upstream::sqplus_retain(current_vm(), incoming);
     retdec_trace("4a95c0:after-addref");
     ObjectView(object).release(current_vm());
     retdec_trace("4a95c0:after-release");
@@ -136,12 +121,11 @@ extern "C" int32_t function_4a9660_this(int32_t object, int32_t index) {
     return object ? ObjectView(object).capture(current_vm(), index) : 0;
 }
 extern "C" int32_t function_4a9600_this(int32_t object, int32_t source) {
-    if (ObjectView(object).value()._type != OT_ARRAY) return 0;
+    const auto receiver = ObjectView(object).value();
+    if (receiver._type != OT_ARRAY) return 0;
     auto* vm = current_vm();
-    ObjectView(object).push(vm);
-    ObjectView(source).push(vm);
-    sq_arrayappend(vm, -2);
-    return pop(vm);
+    upstream::sqplus_append(vm, receiver, ObjectView(source).value());
+    return address(vm); // Retained legacy return, not the upstream void result.
 }
 extern "C" int32_t* function_4a91c0_this(int32_t* object) {
     function_4a94e0_this(address(object));
@@ -191,20 +175,12 @@ extern "C" int32_t function_4a9730_this(int32_t object, int32_t key, int32_t tex
 }
 extern "C" int32_t function_4a97b0_this(int32_t object, int32_t key, int32_t value) {
     if (!object || !key || !value) return 0;
-    auto* vm = current_vm();
-    StackTop stack(vm);
-    ObjectView(object).push(vm);
-    ObjectView(key).push(vm);
-    ObjectView(value).push(vm);
-    return SQ_SUCCEEDED(sq_rawset(vm, -3));
+    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
+                                   ObjectView(key).value(), ObjectView(value).value());
 }
 extern "C" int32_t function_4a9840_this(int32_t object, const char* key, int32_t value) {
-    auto* vm = current_vm();
-    StackTop stack(vm);
-    ObjectView(object).push(vm);
-    push_key(vm, key);
-    ObjectView(value).push(vm);
-    return SQ_SUCCEEDED(sq_rawset(vm, -3));
+    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
+                                   key, ObjectView(value).value());
 }
 extern "C" int32_t function_4a9950(int32_t object, int32_t key, int32_t size, int32_t tag) {
     auto* vm = current_vm();
@@ -230,42 +206,33 @@ extern "C" int32_t function_4a9a30_this(int32_t object) {
     return object ? ObjectView(object).value()._type : 0;
 }
 extern "C" int32_t function_4a9a40_this(int32_t object, int32_t key) {
-    return get_integer_key<SQInteger>(object, key, sq_getinteger);
+    auto* vm = current_vm();
+    if (!object || !vm) return 0;
+    return upstream::sqplus_get_integer(vm, ObjectView(object).value(), key);
 }
 extern "C" int32_t function_4a9ac0_this(int32_t object, int32_t key) {
-    return address(get_integer_key<const SQChar*>(object, key, sq_getstring));
+    auto* vm = current_vm();
+    if (!object || !vm) return 0;
+    return address(upstream::sqplus_get_string(vm, ObjectView(object).value(), key));
 }
 extern "C" int32_t function_4aa000_this(int32_t object, int32_t key) {
-    return address(get_integer_key<SQUserPointer>(object, key, sq_getuserpointer));
+    auto* vm = current_vm();
+    if (!object || !vm) return 0;
+    return address(upstream::sqplus_get_userpointer(vm, ObjectView(object).value(), key));
 }
 extern "C" int32_t function_4a9b40_this(int32_t object, int32_t tag) {
     if (!object) return 0;
-    auto* vm = current_vm();
-    ObjectView(object).push(vm);
-    SQUserPointer result = pointer(object);
-    if (SQ_FAILED(sq_getinstanceup(vm, -1, &result, pointer(tag)))) {
-        sq_reseterror(vm);
-        result = nullptr;
-    }
-    pop(vm);
-    return address(result);
+    return address(upstream::sqplus_get_instance_up(current_vm(), ObjectView(object).value(), pointer(tag)));
 }
 extern "C" int32_t function_4a9bb0_this(int32_t object, int32_t native_pointer) {
     auto* vm = current_vm();
-    if (!object || !vm || ObjectView(object).value()._type != OT_INSTANCE) return 0;
-    ObjectView(object).push(vm);
-    sq_setinstanceup(vm, -1, pointer(native_pointer));
-    pop(vm);
-    return 1;
+    if (!object || !vm) return 0;
+    return upstream::sqplus_set_instance_up(vm, ObjectView(object).value(), pointer(native_pointer));
 }
 extern "C" int32_t function_4a9c10_this(int32_t object) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
-    const auto type = ObjectView(object).value()._type;
-    if (type != OT_TABLE && type != OT_ARRAY && type != OT_CLASS) return 0;
-    ObjectView(object).push(vm);
-    sq_pushnull(vm);
-    return 1; // Deliberately leave [container, iterator] on the stack.
+    return upstream::sqplus_begin_iteration(vm, ObjectView(object).value());
 }
 extern "C" int32_t function_4a9c60(int32_t* key, int32_t* value) {
     auto* vm = current_vm();
@@ -402,37 +369,19 @@ extern "C" int32_t retdec_function_4aa110_this(int32_t object, const char* key, 
     return result;
 }
 extern "C" int32_t function_4aa1a0(int32_t object, const char* key) {
-    auto* vm = current_vm();
-    ObjectView(object).push(vm);
-    push_key(vm, key);
-    const bool found = SQ_SUCCEEDED(sq_get(vm, -2));
-    pop(vm, found ? 2 : 1);
-    return found;
+    return upstream::sqplus_exists(current_vm(), ObjectView(object).value(), key);
 }
 extern "C" int32_t* function_4aa210_this(int32_t object, int32_t output) {
     ObjectView destination(output);
     destination.initialize(kinoko_squirrel_object_vtable());
-    const auto type = ObjectView(object).value()._type;
-    if (type == OT_TABLE || type == OT_USERDATA) {
-        auto* vm = current_vm();
-        StackTop stack(vm);
-        ObjectView(object).push(vm);
-        sq_getdelegate(vm, -1);
-        destination.capture(vm, -1);
-    }
+    // Snapshot AFTER initialization, preserving the legacy output==receiver case.
+    destination.write(upstream::sqplus_get_delegate(current_vm(), ObjectView(object).value()));
     return pointer<int32_t>(output);
 }
 extern "C" int32_t* function_4aa3a0_this(int32_t object, int32_t output, const char* key) {
     ObjectView destination(output);
     destination.initialize(kinoko_squirrel_object_vtable());
-    auto* vm = current_vm();
-    ObjectView(object).push(vm);
-    push_key(vm, key);
-    if (SQ_SUCCEEDED(sq_get(vm, -2))) {
-        destination.capture(vm, -1);
-        pop(vm);
-    }
-    pop(vm);
+    destination.write(upstream::sqplus_get_value(current_vm(), ObjectView(object).value(), key));
     return pointer<int32_t>(output);
 }
 extern "C" int32_t function_4a90c0_this(int32_t object, int32_t klass) {
