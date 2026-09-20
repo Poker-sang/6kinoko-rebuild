@@ -2644,7 +2644,8 @@
           "size": 845824,
           "sha256": "2fe2d797e40855841d13a2ae46fe0dcce1d73ef7e596dfce57ff6903d9031cb9"
         }
-      ]
+      ],
+      "user_confirmation": "User reported r74 has no problems on 2026-09-20."
     }
   ]
 }

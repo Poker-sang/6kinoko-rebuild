@@ -666,3 +666,30 @@ generic type registry and CStringLayout rendering remain unfinished work.
 
 R74 (5e5560c) built successfully, with all three DAT files staged and hash
 verified. Contracts compiled only; no automated tests or game sessions ran.
+
+
+## r75: CAct serialization and shared script/resource schemas
+
+User confirmed R74 works. CAct's original 428150/428720 virtual slots now use
+native methods. The archive path shares native std::map property descriptors
+for CAct, script, texture and chip resources as well as layers/keys/layouts.
+The existing resource loading/lifetime services remain in place. This still
+does not add unsupported CStringLayout/mesh factories to the source loader.
+
+427750 assembly proves marginLeft/Top/Right/Bottom offsets +72/+76/+80/+84.
+The old source helper incorrectly mapped bottom/left/top to +72/+76/+84;
+both the active schema and retained standalone helper now match the original.
+Lesson: copied offset tables and tests derived from the same helper are not
+independent evidence. The compiled-only writer fixture checks sorted serialized
+margin values against assembly offsets, alongside a real-file CAct round trip.
+
+The native writer calls actual Boost hashing, preserves layer/resource vector
+order, and ignores nested element write results as 428720 does. It removes a
+debug-only layer only when BOTH the global output mode and the debugOnly byte
+are exactly one; byte value two remains included. A callback fixture verifies
+this predicate and emitted order independently of script compilation. Failed
+layer construction now frees its partial owned state.
+
+retired-act-serialization.json proves deletion of 50 functions and 16 data
+items, including obsolete generic type lookup/tree/property machinery. The
+remaining adapters and unsupported layout paths still require migration.
