@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
@@ -103,6 +104,7 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
 namespace {
 void clear_layout(int32_t layout) {
     if (!layout) return;
+    if (field<int32_t>(layout)==address(g350)) { kinoko_clear_string_layout(layout);return; }
     if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
         retdec_act_free_map_records(layout);
         for (auto offset : {280,296,332,404,436}) {

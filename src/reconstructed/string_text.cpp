@@ -137,3 +137,12 @@ extern "C" int32_t kinoko_string_append_glyph(int32_t layout) {
     ++q.size;
     return block;
 }
+
+// 43EC30 copies deque values without adjusting atlas references; 43EB80
+// immediately destroys that copied queue without decrementing references.
+extern "C" void kinoko_string_copy_queue_storage(int32_t object,int32_t source) {
+    assign(queue(object),queue(source));
+}
+extern "C" void kinoko_string_drop_queue_storage(int32_t object) {
+    const Deque empty{};assign(queue(object),empty);
+}

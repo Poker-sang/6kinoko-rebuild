@@ -2680,7 +2680,19 @@ int32_t g341 = 0x43cec0; // 0x4ec924
  // 0x4ec988
  // 0x4ec9a0
 char * g349 = "\x82l\x82r \x83S\x83V\x83\x62\x83N"; // 0x4ec9c4
-int32_t g350 = (int32_t)kinoko_method_write_string_layout; // 0x4ecb30
+int32_t g350[11] = { // Original CStringLayout table at 0x4ecb30.
+    (int32_t)kinoko_method_write_string_layout,
+    (int32_t)kinoko_method_read_string_layout,
+    (int32_t)kinoko_method_query_serializable,
+    (int32_t)kinoko_method_destroy_string_layout,
+    (int32_t)kinoko_method_string_layout_type,
+    (int32_t)kinoko_method_clone_string_layout,
+    (int32_t)kinoko_method_set_string_layer,
+    (int32_t)kinoko_method_update_string_layout,
+    (int32_t)kinoko_method_draw_string_layout,
+    (int32_t)kinoko_method_register_string_layout,
+    (int32_t)kinoko_method_delete_string_layout
+};
 int32_t g351 = 0x441660; // 0x4ecb60
 
  // 0x4ecc38

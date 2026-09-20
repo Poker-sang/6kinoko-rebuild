@@ -3,6 +3,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern int32_t g350[11];
+int32_t __fastcall kinoko_method_clone_string_layout(int32_t object, void *unused);
+int32_t __fastcall kinoko_method_destroy_string_layout(int32_t object, void *unused);
+int32_t __fastcall kinoko_method_string_layout_type(int32_t object, void *unused);
+int32_t __fastcall kinoko_method_register_string_layout(int32_t object, void *unused);
 int32_t kinoko_string_append_glyph(int32_t object);
 int32_t kinoko_string_append_atlas(int32_t object);
 int32_t kinoko_string_add_character(int32_t object, const char *character);

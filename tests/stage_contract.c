@@ -4417,6 +4417,20 @@ static int test_string_layout_lifetime(void) {
     CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
     CHECK(((int32_t*)(intptr_t)layout[44])[0]==PTR(layout)+176);
     CHECK(((int32_t*)(intptr_t)layout[44])[1]==0 && layout[48]==0);
+    retdec_string_assign_cstr(layout+1,"rendered");
+    kinoko_string_push_back(PTR(layout),"pending");
+    layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
+    int32_t clone=kinoko_method_clone_string_layout(PTR(layout),NULL);CHECK(clone);
+    int32_t* copied=(int32_t*)(intptr_t)clone;
+    CHECK(copied[0]==PTR(g350) && copied[44]!=layout[44]);
+    CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
+    CHECK(copied[40]==copied[41] && copied[45]==0 && copied[48]==0);
+    CHECK(kinoko_method_set_string_layer(clone,NULL,0)<0);
+    CHECK(kinoko_method_update_string_layout(clone,NULL)<0);
+    CHECK(kinoko_method_draw_string_layout(clone,NULL,0,0)<0);
+    CHECK(kinoko_string_add_character(clone,"\t")==1 && copied[51]==64);
+    CHECK(kinoko_string_add_character(clone,"\n")==1 && copied[51]==0 && copied[52]==27);
+    kinoko_method_delete_string_layout(clone,NULL,1);
     CHECK(kinoko_method_delete_string_layout(PTR(layout),NULL,0)==PTR(layout));
     CHECK(layout[44]==0 && layout[40]==0 && layout[41]==0 && layout[42]==0);
     CHECK(layout[19]==0 && layout[20]==15);
@@ -5132,7 +5146,7 @@ static int test_key_string_writers(void) {
     CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
     CHECK(stream.size==6 && stream.bytes[0]==0 && stream.bytes[5]==0);
     stream.position=stream.size=0;
-    CHECK(retdec_call_thiscall1_result(layout,(void*)(intptr_t)g350,PTR(&stream))==1);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)(intptr_t)g350[0],PTR(&stream))==1);
     /* Sorted addEdge/alignment are both bytes from +128, not the int at +132. */
     CHECK(stream.size==75 && stream.bytes[0]==0 && stream.bytes[1]==1 && stream.bytes[2]==1);
     unsigned char expected[8192]; const uint32_t size=stream.size;

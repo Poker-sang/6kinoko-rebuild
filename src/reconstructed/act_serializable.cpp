@@ -8,7 +8,7 @@
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
-extern "C" int32_t g350;
+#include "kinoko/string_layout.h"
 
 extern "C" const char* kinoko_act_serialized_type_name(int32_t object) {
     if (!object) return nullptr;

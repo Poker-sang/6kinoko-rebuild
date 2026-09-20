@@ -15,7 +15,7 @@
 #include <string>
 
 extern "C" unsigned char g673;
-extern "C" int32_t g350;
+#include "kinoko/string_layout.h"
 
 namespace {
 using kinoko::legacy::address;

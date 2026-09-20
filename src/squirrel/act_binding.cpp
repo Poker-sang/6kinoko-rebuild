@@ -693,7 +693,7 @@ template<FindOperation operation> int32_t find_by_id_native(int32_t vm) {
 
 // Original 4517C0. Native RAII replaces the old auto_ptr temporaries and the
 // source-backed Sqrat bridge replaces Object/GetSlot/RootTable emulation.
-int32_t create_layer_2d(int32_t player, const char* name) {
+template<bool string_layout> int32_t create_layer(int32_t player, const char* name) {
     if (!player || !name) return 0;
     DynamicLayerLock lock(player);
     if (!field<uint8_t>(player+8)) return 0;
@@ -710,8 +710,16 @@ int32_t create_layer_2d(int32_t player, const char* name) {
     const auto layer = address(owned.get());
     kinoko::legacy::StringView(pointer<void>(layer+112)).assign(name, static_cast<uint32_t>(std::strlen(name)));
     kinoko::legacy::Allocation<int32_t> key(static_cast<int32_t*>(std::calloc(1,36)));
-    kinoko::legacy::Allocation<unsigned char> layout(static_cast<unsigned char*>(std::calloc(1,316)));
-    if (!key || !layout || !retdec_construct_c2dlayout(address(layout.get()))) return 0;
+    const auto clear_layout=[](unsigned char* value) {
+        if constexpr(string_layout) if(value) kinoko_clear_string_layout(address(value));
+        std::free(value);
+    };
+    auto* layout_storage=static_cast<unsigned char*>(std::calloc(1,string_layout?260:316));
+    if(!layout_storage) return 0;
+    if constexpr(string_layout) kinoko_construct_string_layout(address(layout_storage));
+    else retdec_construct_c2dlayout(address(layout_storage));
+    std::unique_ptr<unsigned char,decltype(clear_layout)> layout(layout_storage,clear_layout);
+    if (!key) return 0;
     key.get()[0] = address(kinoko_act_host_symbols()->key_vtable);
     key.get()[7] = 15;
     if (!retdec_act_append_list(layer+180, address(key.get()))) return 0;
@@ -736,9 +744,11 @@ int32_t create_layer_2d(int32_t player, const char* name) {
     field<int32_t>(act+208) = address(layers.release());
     field<uint32_t>(act+212) = field<uint32_t>(act+216) = field<uint32_t>(act+208)+(count+1)*4;
     owned.release(); // ACT owns the layer before either publication callback.
-    kinoko_method_layout_set_layer(native_layout, nullptr, layer);
+    if constexpr(string_layout) kinoko_method_set_string_layer(native_layout,nullptr,layer);
+    else kinoko_method_layout_set_layer(native_layout, nullptr, layer);
     kinoko_method_register_act_layer(layer, nullptr, address(parent.object), 0);
-    kinoko_method_register_layout(native_layout, nullptr);
+    if constexpr(string_layout) kinoko_method_register_string_layout(native_layout,nullptr);
+    else kinoko_method_register_layout(native_layout, nullptr);
     return layer;
 }
 // Original 452010 stores the borrowed native instance in player+76. The
@@ -755,11 +765,11 @@ int32_t set_render_target_native(int32_t vm) {
     sq_pushbool(machine, SQTrue);
     return 1;
 }
-int32_t create_layer_2d_native(int32_t vm) {
+template<bool string_layout> int32_t create_layer_native(int32_t vm) {
     int32_t player = 0;
     const SQChar* name = nullptr;
     if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
-        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&name))) return sq_throwerror(kinoko_vm(vm), "invalid CreateLayer2D arguments");
+        SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&name))) return sq_throwerror(kinoko_vm(vm), "invalid CreateLayer arguments");
     try {
         DynamicLayerParent root(vm), klass(vm);
         const auto root_value = kinoko::script::upstream::sqrat_root(kinoko_vm(vm));
@@ -767,12 +777,12 @@ int32_t create_layer_2d_native(int32_t vm) {
         if (!retdec_publish_cact_layer_class(vm,address(root.object)) ||
             !get_pair(address(root.object),"CActLayer",klass.object+2))
             return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
-        const auto layer = create_layer_2d(player,name);
+        const auto layer = create_layer<string_layout>(player,name);
         const auto type = kinoko::legacy::load<HSQOBJECT>(klass.object+2);
         if (!kinoko::script::upstream::sqrat_push_instance(kinoko_vm(vm),type,pointer<void>(layer)))
             return sq_throwerror(kinoko_vm(vm), "CActLayer class is unavailable");
         return 1;
-    } catch (...) { return sq_throwerror(kinoko_vm(vm), "CreateLayer2D allocation failed"); }
+    } catch (...) { return sq_throwerror(kinoko_vm(vm), "CreateLayer allocation failed"); }
 }
 }
 
@@ -830,10 +840,9 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
                                           address(kinoko_act_end_stage),
                                           address(kinoko_sqrat_call_integer0), 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "CreateLayer2D",
-        address(create_layer_2d_native), nullptr, 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "CreateLayerString",
-                                          address(function_451b70),
-                                          address(function_455390), 0);
+        address(create_layer_native<false>), nullptr, 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "CreateLayerString",
+        address(create_layer_native<true>), nullptr, 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "GetLayerOrder",
         address(get_layer_order_native), nullptr, 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "SwapLayer",
@@ -2563,4 +2572,23 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
     retdec_sqrat_trim_stack(vm,top);
     if(!ok) retdec_sqrat_release_pair(vm,out);
     return ok;
+}
+
+extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layout,void*) {
+    const int32_t layer=layout?field<int32_t>(layout+148):0;
+    if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
+    const int32_t vm=field<int32_t>(layer+332);
+    if(!vm) return E_INVALIDARG;
+    int32_t root[5]{},klass[2]={g483,g484},outer[2]={g483,g484},script[2]={g483,g484};
+    if(!retdec_sqrat_root_construct(address(root),vm)) return E_FAIL;
+    const bool ok=kinoko_publish_string_layout_class(vm,address(root),klass) &&
+        retdec_create_unbound_instance(vm,klass,layout,outer) &&
+        retdec_sqrat_raw_set_pair(vm,pointer<const int32_t>(layer+336),"layout",outer) &&
+        retdec_create_bound_instance(vm,pointer<const int32_t>(layer+316),"layout",klass,layout,script);
+    retdec_sqrat_release_pair(vm,script);retdec_sqrat_release_pair(vm,outer);
+    retdec_sqrat_release_pair(vm,klass);retdec_sqrat_object_release(address(root));
+    if(!ok) return E_FAIL;
+    field<int32_t>(layer+52)=layout+152;field<int32_t>(layer+56)=layout+156;
+    field<int32_t>(layer+60)=layout+96;field<int32_t>(layer+64)=layout+100;field<int32_t>(layer+68)=layout+104;
+    return 0;
 }

@@ -10,7 +10,6 @@
 #include <string>
 
 extern "C" int32_t function_405d60(int32_t texture);
-extern "C" int32_t g350;
 
 namespace {
 using kinoko::legacy::field;
@@ -234,4 +233,53 @@ extern "C" int32_t kinoko_string_append_atlas(int32_t layout) {
     field<int32_t>(end+428)=0;
     field<int32_t>(layout+164)=end+436;
     return end;
+}
+
+extern "C" void kinoko_string_copy_queue_storage(int32_t object,int32_t source);
+extern "C" void kinoko_string_drop_queue_storage(int32_t object);
+extern "C" int32_t __fastcall kinoko_method_clone_string_layout(int32_t source,void*) {
+    using kinoko::legacy::address;
+    const int32_t out=address(std::malloc(260));
+    if(!out) return 0;
+    kinoko_construct_string_layout(out);
+    // 43EC30: three independent strings, scalar style fields, atlas/deque
+    // assignment, and all 60 tail bytes. Padding 129..131 remains untouched.
+    for(int offset:{4,32,60})
+        StringView(pointer<void>(out+offset)).assign(StringView(pointer<void>(source+offset)),0,UINT32_MAX);
+    std::copy_n(pointer<unsigned char>(source+88),40,pointer<unsigned char>(out+88));
+    field<uint8_t>(out+128)=field<uint8_t>(source+128);
+    std::copy_n(pointer<unsigned char>(source+132),28,pointer<unsigned char>(out+132));
+    const int32_t source_begin=field<int32_t>(source+160),end=field<int32_t>(source+164);
+    const uint32_t bytes=end-source_begin;
+    if(bytes) {
+        const int32_t allocation=address(std::malloc(bytes));
+        if(!allocation) throw std::bad_alloc();
+        field<int32_t>(out+160)=field<int32_t>(out+164)=allocation;
+        field<int32_t>(out+168)=allocation+bytes;
+    }
+    for(int32_t from=source_begin;from!=end;from+=436) {
+        const int32_t to=field<int32_t>(out+164);
+        kinoko_string_font_construct(to+24);
+        field<int32_t>(out+164)+=436;
+        std::copy_n(pointer<unsigned char>(from),24,pointer<unsigned char>(to));
+        assign_renderer(to+24,from+24);
+        field<uint32_t>(to+428)=field<uint32_t>(from+428);
+        field<uint32_t>(to+432)=field<uint32_t>(from+432);
+    }
+    kinoko_string_copy_queue_storage(out,source);
+    std::copy_n(pointer<unsigned char>(source+200),60,pointer<unsigned char>(out+200));
+    // 43EB80 clears cloned atlas values (retains vector capacity, no texture
+    // Release), then frees deque blocks/map while retaining its own proxy.
+    for(int32_t page=field<int32_t>(out+160);page!=field<int32_t>(out+164);page+=436)
+        destroy_renderer(page+24);
+    field<int32_t>(out+164)=field<int32_t>(out+160);
+    kinoko_string_drop_queue_storage(out);
+    return out;
+}
+extern "C" int32_t __fastcall kinoko_method_destroy_string_layout(int32_t object,void*) {
+    return object?kinoko_method_delete_string_layout(object,nullptr,1):0;
+}
+extern "C" int32_t g926;
+extern "C" int32_t __fastcall kinoko_method_string_layout_type(int32_t,void*) {
+    return kinoko::legacy::address(&g926);
 }
