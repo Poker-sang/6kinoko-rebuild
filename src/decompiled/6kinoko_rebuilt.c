@@ -1806,7 +1806,6 @@ int32_t function_41fef0(void);
 
 int32_t function_4200e0(int32_t a1);
 int32_t function_4204f0(void);
-int32_t function_420740(int32_t a1);
 
 int32_t function_420830(char a1);
 
@@ -1818,12 +1817,6 @@ int32_t function_420a30(int32_t a1);
 int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3);
 
 
-int32_t function_422a60(int32_t a1, int32_t a2);
-int32_t function_422b40(void);
-int32_t function_422c20(int32_t a1, int32_t a2);
-int32_t function_422d00(int32_t a1, int32_t a2);
-int32_t function_422de0(int32_t a1, int32_t a2);
-int32_t function_422ec0(int32_t a1, int32_t a2);
 int32_t function_422fc0(int32_t a1);
 
 int32_t function_4231e0(int32_t a1, int32_t result, int32_t a3);
@@ -1833,7 +1826,6 @@ int32_t function_4237b0(int32_t result, int32_t a2, int32_t a3);
 int32_t function_423e70(int32_t a1);
 int32_t function_423f00(int32_t a1, int32_t a2);
 
-int32_t function_424280(int32_t a1);
 int32_t function_424320(int32_t a1);
 
 int32_t function_424720(int32_t a1, int32_t a2, int32_t result, int32_t result2);
@@ -1921,8 +1913,6 @@ int32_t function_42c890(void);
 int32_t function_42d1c0(int32_t a1);
 
 
-int32_t function_42d850(int32_t a1, int32_t a2);
-int32_t function_42d930(void);
 
 
 
@@ -1932,7 +1922,6 @@ int32_t function_42d930(void);
 int32_t function_42e6e0(void);
 int32_t function_42e6f0(void);
 
-int32_t function_42e940(int32_t a1, int32_t a2);
 
 int32_t function_42f1b0(int32_t a1, int32_t a2, int32_t a3);
 
@@ -1979,10 +1968,6 @@ int32_t function_433c90(int32_t a1);
 
 
 
-int32_t function_4360c0(int32_t a1, int32_t a2, int32_t a3);
-int32_t function_436110(int32_t a1);
-int32_t function_436140(int32_t a1, int32_t a2);
-int32_t function_436180(int32_t a1);
 
 int32_t function_436710(void);
 
@@ -2036,10 +2021,6 @@ int32_t function_43a7b0(int32_t a1);
 int32_t function_43aa40(int32_t a1, int32_t result);
 int32_t function_43adc0(void);
 int32_t function_43ade0(int32_t a1);
-int32_t function_43ae60(int32_t a1);
-int32_t function_43af30(int32_t a1);
-int32_t function_43b060(int32_t a1);
-int32_t function_43b0e0(int32_t a1);
 
 
 int32_t function_43b6c0(int32_t a1);
@@ -2136,8 +2117,6 @@ int32_t function_449f10(void);
 
 
 
-int32_t function_44ba90(int32_t a1);
-int32_t function_44bb10(int32_t a1);
 
 
 int32_t function_44c870(int32_t a1);
@@ -14725,20 +14704,7 @@ int32_t function_4204f0(void) {
 
 
 // Address range: 0x420740 - 0x4207b8
-int32_t function_420740(int32_t a1) {
-    // 0x420740
-    int32_t v1; // 0x420740
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x42074b
-    int32_t v3 = sq_gettop(kinoko_vm(v2)); // 0x42074f
-    int32_t v4; // bp-16, 0x420740
-    int32_t v5 = *(int32_t *)(function_48abe0((int32_t)&v4) + 4); // 0x420761
-    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(*(int32_t *)v5, *(int32_t *)(v5 + 4)));
-    sq_pushstring(kinoko_vm(v2), (const SQChar*)kinoko_pointer(a1), -1);
-    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(v4, v1));
-    int32_t v6 = sq_rawset(kinoko_vm(v2), -3); // 0x420795
-    sq_settop(kinoko_vm(v2), (SQInteger)(v3));
-    return v6 >= 0;
-}
+
 
 // Address range: 0x420830 - 0x4208fb
 // From class:    .?AVCActKey@@
@@ -14911,124 +14877,22 @@ int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3) {
 
 
 // Address range: 0x422a60 - 0x422b3c
-int32_t function_422a60(int32_t a1, int32_t a2) {
-    // 0x422a60
-    int32_t result; // 0x422a60
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422a6e
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422b40 - 0x422c1b
-int32_t function_422b40(void) {
-    // 0x422b40
-    int32_t result; // 0x422b40
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422b4b
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 112;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_string, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"stName"), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 112;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_string, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422c20 - 0x422cfc
-int32_t function_422c20(int32_t a1, int32_t a2) {
-    // 0x422c20
-    int32_t result; // 0x422c20
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422c2e
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_bool, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_bool, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422d00 - 0x422ddc
-int32_t function_422d00(int32_t a1, int32_t a2) {
-    // 0x422d00
-    int32_t result; // 0x422d00
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422d0e
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422de0 - 0x422ebc
-int32_t function_422de0(int32_t a1, int32_t a2) {
-    // 0x422de0
-    int32_t result; // 0x422de0
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422dee
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_pointer_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_pointer_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422ec0 - 0x422f9c
-int32_t function_422ec0(int32_t a1, int32_t a2) {
-    // 0x422ec0
-    int32_t result; // 0x422ec0
-    int32_t * v1 = (int32_t *)(result + 4); // 0x422ece
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1153, g1154));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_pointer_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1151, g1152));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_pointer_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x422fc0 - 0x42309e
 int32_t function_422fc0(int32_t a1) {
@@ -15524,23 +15388,7 @@ int32_t function_423f00(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x424280 - 0x424311
-int32_t function_424280(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2 = __readfsdword(0); // bp-16, 0x424290
-    __writefsdword(0, (int32_t)&v2);
-    int32_t v3 = 0; // bp-44, 0x4242b0
-    function_406cc0((int32_t)&v1, 0, -1);
-    int32_t v4; // 0x424280
-    int32_t result = function_48a480(v4, (int32_t)&v3, -1); // 0x4242f4
-    if (v4 >= 16) {
-        // 0x4242f6
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result = &g1224;
-    }
-    // 0x424302
-    __writefsdword(0, v2);
-    return result;
-}
+
 
 // Address range: 0x424320 - 0x424345
 int32_t function_424320(int32_t a1) {
@@ -19602,44 +19450,10 @@ int32_t function_42d1c0(int32_t a1) {
 
 
 // Address range: 0x42d850 - 0x42d92c
-int32_t function_42d850(int32_t a1, int32_t a2) {
-    // 0x42d850
-    int32_t result; // 0x42d850
-    int32_t * v1 = (int32_t *)(result + 4); // 0x42d85e
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1143, g1144));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1141, g1142));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = a2;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_float, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x42d930 - 0x42da0b
-int32_t function_42d930(void) {
-    // 0x42d930
-    int32_t result; // 0x42d930
-    int32_t * v1 = (int32_t *)(result + 4); // 0x42d93b
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1143, g1144));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"blend"), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 288;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_get_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    sq_pushobject(kinoko_vm(*v1), kinoko_borrowed_object(g1141, g1142));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer((int32_t)"blend"), -1);
-    *(int32_t *)(int32_t)(intptr_t)(sq_newuserdata(kinoko_vm(*v1), 4)) = 288;
-    sq_newclosure(kinoko_vm(*v1), kinoko_sqrat_set_int, 1);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+
 
 // Address range: 0x42da10 - 0x42da72
 
@@ -19693,26 +19507,7 @@ int32_t function_42e6f0(void) {
 
 
 // Address range: 0x42e940 - 0x42ea77
-int32_t function_42e940(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x42e950
-    __writefsdword(0, (int32_t)&v1);
-    int32_t retdec_reader_slot = 0;
-    if (a2 == 0) {
-        // 0x42e999
-        __writefsdword(0, v1);
-        return 0;
-    }
-    int32_t v2 = function_407370((int32_t)(intptr_t)&retdec_reader_slot,
-                                 (const char *)(intptr_t)a2); // 0x42e97a
-    if ((char)v2 != 0) {
-        // 0x42e9db
-        __writefsdword(0, v1);
-        return 0;
-    }
-    // 0x42e999
-    __writefsdword(0, v1);
-    return v2 & -256;
-}
+
 
 
 // Address range: 0x42ed30 - 0x42eef8
@@ -20370,80 +20165,16 @@ int32_t function_433ae0(int32_t result) {
 
 
 // Address range: 0x4360c0 - 0x436108
-int32_t function_4360c0(int32_t a1, int32_t a2, int32_t a3) {
-    // 0x4360c0
-    if (a1 < 0) {
-        // 0x4360ca
-        return a1 & -256;
-    }
-    // 0x4360d0
-    int32_t v1; // 0x4360c0
-    int32_t * v2 = (int32_t *)(v1 + 264); // 0x4360d6
-    int32_t v3 = *v2; // 0x4360d6
-    if (*(int32_t *)(v1 + 268) - v3 >> 5 <= a1) {
-        // 0x4360ca
-        return a1 & -256;
-    }
-    int32_t v4 = 32 * a1; // 0x4360ed
-    *(int32_t *)(v3 + (v4 | 4)) = a2;
-    *(int32_t *)(*v2 + (v4 | 8)) = a3;
-    return v4 & -256 | 1;
-}
+
 
 // Address range: 0x436110 - 0x436140
-int32_t function_436110(int32_t a1) {
-    // 0x436110
-    if (a1 < 0) {
-        // 0x43611a
-        return 0;
-    }
-    // 0x436120
-    int32_t v1; // 0x436110
-    int32_t v2 = *(int32_t *)(v1 + 264); // 0x436126
-    if (*(int32_t *)(v1 + 268) - v2 >> 5 > a1) {
-        // 0x436133
-        return v2 + 32 * a1;
-    }
-    // 0x43611a
-    return 0;
-}
+
 
 // Address range: 0x436140 - 0x436178
-int32_t function_436140(int32_t a1, int32_t a2) {
-    // 0x436140
-    if (a1 < 0) {
-        // 0x43614a
-        return a1 & -256;
-    }
-    // 0x436150
-    int32_t v1; // 0x436140
-    int32_t v2 = *(int32_t *)(v1 + 264); // 0x436156
-    if (*(int32_t *)(v1 + 268) - v2 >> 5 <= a1) {
-        // 0x43614a
-        return a1 & -256;
-    }
-    int32_t v3 = 32 * a1; // 0x43616c
-    *(int32_t *)(v2 + v3) = a2;
-    return v3 & -256 | 1;
-}
+
 
 // Address range: 0x436180 - 0x4361b4
-int32_t function_436180(int32_t a1) {
-    // 0x436180
-    if (a1 < 0) {
-        // 0x43618a
-        return -1;
-    }
-    // 0x436191
-    int32_t v1; // 0x436180
-    int32_t v2 = *(int32_t *)(v1 + 264); // 0x436197
-    if (*(int32_t *)(v1 + 268) - v2 >> 5 > a1) {
-        // 0x4361a4
-        return *(int32_t *)(v2 + 32 * a1);
-    }
-    // 0x43618a
-    return -1;
-}
+
 
 // Address range: 0x4361c0 - 0x436284
 
@@ -21856,73 +21587,19 @@ int32_t function_43ade0(int32_t a1) {
 }
 
 // Address range: 0x43ae60 - 0x43af25
-int32_t function_43ae60(int32_t a1) {
-    // 0x43ae60
-    int32_t v1; // bp-12, 0x43ae60
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x43ae8b
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x43ae60
-    sq_getinteger(kinoko_vm(a1), 6, (SQInteger*)(&v3));
-    int32_t v4; // bp-20, 0x43ae60
-    sq_getinteger(kinoko_vm(a1), 5, (SQInteger*)(&v4));
-    int32_t v5; // bp-24, 0x43ae60
-    sq_getinteger(kinoko_vm(a1), 4, (SQInteger*)(&v5));
-    int32_t v6; // bp-28, 0x43ae60
-    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v6));
-    int32_t v7; // bp-48, 0x43ae60
-    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v7));
-    sq_pushbool(kinoko_vm(a1), ((v7 & 255) != 0));
-    return 1;
-}
+
 
 // Address range: 0x43af30 - 0x43afc6
-int32_t function_43af30(int32_t a1) {
-    // 0x43af30
-    int32_t v1; // bp-12, 0x43af30
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x43af5b
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x43af30
-    sq_getinteger(kinoko_vm(a1), 4, (SQInteger*)(&v3));
-    int32_t v4; // bp-20, 0x43af30
-    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v4));
-    int32_t v5; // bp-32, 0x43af30
-    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v5));
-    sq_pushbool(kinoko_vm(a1), ((v5 & 255) != 0));
-    return 1;
-}
+
 
 // Address range: 0x43afd0 - 0x43b05e
 
 
 // Address range: 0x43b060 - 0x43b0e0
-int32_t function_43b060(int32_t a1) {
-    // 0x43b060
-    int32_t v1; // bp-12, 0x43b060
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x43b08b
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x43b060
-    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v3));
-    int32_t v4; // bp-24, 0x43b060
-    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4));
-    sq_pushbool(kinoko_vm(a1), ((v4 & 255) != 0));
-    return 1;
-}
+
 
 // Address range: 0x43b0e0 - 0x43b147
-int32_t function_43b0e0(int32_t a1) {
-    // 0x43b0e0
-    int32_t v1; // bp-12, 0x43b0e0
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x43b10b
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x43b0e0
-    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v3));
-    sq_pushinteger(kinoko_vm(a1), v3);
-    return 1;
-}
+
 
 // Address range: 0x43b150 - 0x43b1a6
 
@@ -23784,35 +23461,10 @@ int32_t function_449f10(void) {
 
 
 // Address range: 0x44ba90 - 0x44bb01
-int32_t function_44ba90(int32_t a1) {
-    int32_t v1 = 0; // bp-12, 0x44baa3
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v1), kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x44bab8
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
-    function_406cc0(v1 + *(int32_t *)v2, 0, -1);
-    function_424280((int32_t)&g1224);
-    return 1;
-}
+
 
 // Address range: 0x44bb10 - 0x44bbb1
-int32_t function_44bb10(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x44bb20
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2 = 0; // bp-52, 0x44bb48
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3 = 0; // bp-56, 0x44bb58
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v3), (SQUserPointer*)kinoko_pointer(0));
-    function_41e0c0(a1);
-    function_40e3f0();
-    int32_t v4; // 0x44bb10
-    if ((uint32_t)v4 >= 16) {
-        // 0x44bb87
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x44bb93
-    __writefsdword(0, v1);
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x44bbc0 - 0x44bc4f
 
