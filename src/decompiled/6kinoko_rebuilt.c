@@ -1490,8 +1490,6 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
 
 int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_401000(void);
-int32_t function_401010(char a1);
 int32_t function_401040(void);
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height);
 int32_t function_4013d0(void);
@@ -1560,7 +1558,6 @@ float80_t function_405080(float80_t a1, float80_t a2, float80_t a3);
 
 int32_t function_405d60(int32_t a1);
 int32_t function_405e30(int32_t result);
-int32_t function_405ea0(int32_t a1);
 
 
 
@@ -1810,7 +1807,6 @@ int32_t function_429c70(int32_t a1);
 
 int32_t function_42b470(void);
 
-int32_t function_42b560(void);
 int32_t function_42b6d0(int32_t a1);
 
 
@@ -1820,7 +1816,6 @@ int32_t function_42c890(void);
 
 
 
-int32_t function_42d1c0(int32_t a1);
 
 
 
@@ -1829,7 +1824,6 @@ int32_t function_42d1c0(int32_t a1);
 
 
 
-int32_t function_42e6e0(void);
 int32_t function_42e6f0(void);
 
 
@@ -2360,12 +2354,10 @@ int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr);
 
 int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_4ab330(void);
 
 
 
 
-int32_t function_4abca1(void);
 
 
 
@@ -2905,9 +2897,9 @@ int32_t g750 = 0; // 0x51aef8
 int32_t g751 = 0; // 0x51aefc
 int32_t g752 = 0; // 0x51af00
 int32_t g753 = 0; // 0x51af04
-int32_t g754 = 0; // 0x51af08
-int32_t g755 = 0; // 0x51af0c
-int32_t g756 = 0; // 0x51af10
+ // 0x51af08
+ // 0x51af0c
+ // 0x51af10
 int32_t g757 = 0; // 0x51af18
 struct retdec_RTL_CRITICAL_SECTION g758 = { 0 }; // 0x51af1c
 int32_t g765 = 0; // 0x51af54
@@ -3369,10 +3361,7 @@ struct vtable_4d54ac_type g17 = {
 }; // 0x4d54ac
  // 0x4d55a4
  // 0x4d55bc
-struct vtable_4d5878_type g22 = {
-    .e0 = function_401010,
-    .e1 = function_4abca1
-}; // 0x4d5878
+ // 0x4d5878
  // 0x4d5898
  // 0x4d5924
 struct vtable_4d59bc_type g27 = {
@@ -3840,28 +3829,12 @@ static ULONG retdec_release_d3d_object(void *object)
 // Address range: 0x401000 - 0x40100b
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-int32_t function_401000(void) {
-    // 0x401000
-    int32_t v1; // 0x401000
-    *(int32_t *)v1 = (int32_t)&g22;
-    return _3f__Tidy_40_exception_40_std_40__40_AAEXXZ();
-}
+
 
 // Address range: 0x401010 - 0x401037
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-int32_t function_401010(char a1) {
-    // 0x401010
-    int32_t result; // 0x401010
-    *(int32_t *)result = (int32_t)&g22;
-    _3f__Tidy_40_exception_40_std_40__40_AAEXXZ();
-    if ((a1 & 1) != 0) {
-        // 0x401027
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x401030
-    return result;
-}
+
 
 // Address range: 0x401040 - 0x4011a5
 // From class:    .?AVCCriticalSection@Common@@
@@ -5056,27 +5029,7 @@ int32_t retdec_set_texture_stage(int32_t stage, int32_t handle)
 }
 
 // Address range: 0x405ea0 - 0x405f71
-int32_t function_405ea0(int32_t a1) {
-    // 0x405ea0
-    int32_t v1; // 0x405ea0
-    if (a1 == 0) {
-        // 0x405eb7
-        *(int32_t *)v1 = 256;
-        *(int32_t *)v1 = 256;
-        return ___report_gsfailure();
-    }
-    // 0x405ed3
-    if (g756 != a1) {
-        // 0x405efa
-        EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        return ___report_gsfailure();
-    }
-    // 0x405edb
-    *(int32_t *)v1 = g754;
-    *(int32_t *)v1 = g755;
-    return ___report_gsfailure();
-}
+
 
 
 // Address range: 0x406140 - 0x40617a
@@ -9030,13 +8983,7 @@ int32_t function_42b470(void) {
 // Address range: 0x42b560 - 0x42b575
 // From class:    .?AVC2DLayout@@
 // Type:          constructor
-int32_t function_42b560(void) {
-    // 0x42b560
-    int32_t result; // 0x42b560
-    *(int32_t *)result = (int32_t)&g299;
-    *(int32_t *)(result + 4) = (int32_t)&g23;
-    return result;
-}
+
 
 // Address range: 0x42b580 - 0x42b5b1
 // From class:    .?AVC2DLayout@@
@@ -9095,32 +9042,7 @@ int32_t function_42c890(void) {
 
 
 // Address range: 0x42d1c0 - 0x42d228
-int32_t function_42d1c0(int32_t a1) {
-    // 0x42d1c0
-    int32_t result; // 0x42d1c0
-    int32_t v1; // 0x42d1c0
-    if ((a1 & 2) == 0) {
-        // 0x42d1fe
-        *(int32_t *)v1 = (int32_t)&g299;
-        *(int32_t *)(v1 + 4) = (int32_t)&g23;
-        if ((a1 & 1) != 0) {
-            // 0x42d217
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        }
-    } else {
-        int32_t v2 = v1 - 4; // 0x42d1cf
-        int32_t v3 = *(int32_t *)v2; // 0x42d1cf
-        _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z((int32_t *)v1, 316, v3, (void (*)(int32_t *))0x42b560);
-        result = v2;
-        if ((a1 & 1) != 0) {
-            // 0x42d1ec
-            function_4ab330();
-            result = v2;
-        }
-    }
-    // 0x42d1f5
-    return result;
-}
+
 
 
 // Address range: 0x42d240 - 0x42d3f7
@@ -9177,10 +9099,7 @@ int32_t function_42d1c0(int32_t a1) {
 
 
 // Address range: 0x42e6e0 - 0x42e6e8
-int32_t function_42e6e0(void) {
-    // 0x42e6e0
-    return function_42d1c0((int32_t)&g1224);
-}
+
 
 // Address range: 0x42e6f0 - 0x42e6f6
 // From class:    .?AVCActResourceChip@@
@@ -20427,11 +20346,7 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
 
 
 // Address range: 0x4ab330 - 0x4ab33b
-int32_t function_4ab330(void) {
-    // 0x4ab330
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    return &g1224;
-}
+
 
 // Address range: 0x4ab9d0 - 0x4ab9d9
 
@@ -20440,12 +20355,7 @@ int32_t function_4ab330(void) {
 // Address range: 0x4abca1 - 0x4abcae
 // From class:    .?AV__non_rtti_object@std@@
 // Type:          virtual member function
-int32_t function_4abca1(void) {
-    // 0x4abca1
-    int32_t v1; // 0x4abca1
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4abca1
-    return v2 != 0 ? v2 : (int32_t)"Unknown exception";
-}
+
 
 // Address range: 0x4ad16b - 0x4ad17e
 
