@@ -4196,17 +4196,17 @@ static int test_map_registration(int32_t vm, int32_t *root) {
         sq_settop(kinoko_vm(vm), top);
     }
     CHECK(execute_source(vm, root+2,
-        "if(testMapLayout.left!=0 || testMapLayout.right!=0 || testMapLayout.chipCount!=0) throw 1;"
-        "testChipLayout.left=11; testChipLayout.top=19;"
-        "testChipLayout.f_left=-3.75; testChipLayout.f_top=2.5;"
-        "if(testChipLayout.left!=-3 || testChipLayout.top!=19) throw 2;"));
+        "if(testMapLayout.left!=0 || testMapLayout.right!=0 || testMapLayout.chipCount!=0) throw 1;\n"
+        "testChipLayout.left=11; testChipLayout.top=19;\n"
+        "testChipLayout.f_left=-3.75; testChipLayout.f_top=2.5;\n"
+        "if(testChipLayout.left!=-3 || testChipLayout.top!=19) throw 2;\n"));
     CHECK(chips[1] == -3 && chips[2] == 19);
     CHECK(((float*)chips)[3] == -3.75f && ((float*)chips)[4] == 2.5f);
     chips[1] = 12; chips[9] = 34;
     layout[66] = PTR(chips); layout[67] = PTR(chips+16);
     CHECK(execute_source(vm, root+2,
-        "if(testMapLayout.left!=12 || testMapLayout.right!=34 || testMapLayout.chipCount!=2) throw 3;"
-        "delete testMapLayout; delete testChipLayout;"));
+        "if(testMapLayout.left!=12 || testMapLayout.right!=34 || testMapLayout.chipCount!=2) throw 3;\n"
+        "delete testMapLayout; delete testChipLayout;\n"));
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     puts("PASS: original map registry, empty bounds and asymmetric fractional chip setters");
     return 0;
