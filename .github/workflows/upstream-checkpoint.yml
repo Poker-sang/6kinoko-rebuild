@@ -20,13 +20,17 @@ jobs:
       - name: Apply checked source commits
         shell: python
         run: |
-          import json, pathlib, subprocess
+          import base64, gzip, hashlib, json, pathlib, subprocess
           def git(*args, **kwargs):
               return subprocess.run(['git', *args], check=True, **kwargs)
           def blob(data):
               return git('hash-object', '--stdin', input=data, capture_output=True).stdout.decode().strip()
           path = pathlib.Path('tools/upstream-payload.json')
           payload = json.loads(path.read_text())
+          if 'gzip_b64' in payload:
+              decoded = gzip.decompress(base64.b64decode(payload['gzip_b64'], validate=True))
+              assert hashlib.sha256(decoded).hexdigest() == payload['sha256']
+              payload = json.loads(decoded)
           git('merge-base', '--is-ancestor', payload['baseline'], 'HEAD')
           git('config', 'user.name', 'OpenAI')
           git('config', 'user.email', 'noreply@openai.com')
