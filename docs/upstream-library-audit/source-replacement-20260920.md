@@ -429,3 +429,50 @@ call. Other 406CC0 callers and the final memcpy operand heuristic remain open.
 The dynamic-layer contract adds deep string/layout ownership and exact copying
 bounds. Quiet build and DAT staging succeeded; test source compiled but no test
 or game was executed by the agent.
+
+
+## r64: resource clone ownership
+
+Source ca1ba87 includes 92dd8a7. IDA confirms 42F9D0/42FA50 copies chip ID,
+three strings and shared MCD ownership; 446AF0/446B70/449B70 copy texture fields
+and mark cloned resources as borrowed. These virtuals now allocate through
+native RAII, use explicit receivers for length-preserving strings, and share
+MCD data through the actual Boost 1.44 control used by archive clones. Native
+texture references are retained to match the reconstructed handle store.
+The common resource destructor now frees the base name, which the earlier
+source implementation omitted for heap-backed names.
+
+retired-resource-clones.json removes seven functions (153 definition lines),
+including old constructors, string assignment callers and manual Boost count
+manipulation. Contracts cover virtual/whole-ACT sharing, independent long names,
+texture/render-target type and crop preservation, and final handle release.
+Quiet build and DAT staging succeeded; contracts were compiled, not executed.
+Explicit unload of the new borrowed texture clones needed the r66 follow-up.
+
+## r65: disconnected source-replaced property bindings
+
+Source d6d8519 removes 21 obsolete Sqrat property binders and string getter
+helper functions (348 definition lines). The pinned source-only audit
+retired-disconnected-bindings.json covers CActLayer, C2DLayout, map layout and
+texture property paths already registered through source-backed bindings.
+No outside symbolic or interior-literal references were found. This is removal
+of replaced library scaffolding, not a claim that remaining active templates
+have been replaced. Quiet build and DAT staging succeeded; no tests executed.
+
+## r66: explicit unload of borrowed native clones
+
+Source 1e4c172 fixes a lifecycle boundary found during source review of r64:
+the original borrowed flag suppresses an original owner release, but the native
+clone also retains a handle-store reference. Track that additional reference in
+a mutex-protected C++ owner set. Both explicit Unload and destruction consume it
+once; ordinary borrowed fixtures keep their previous behavior. Failed retains
+and allocation cleanup remove pending ownership entries. The new contract
+source unloads twice, then destroys the clone and verifies final release through
+its remaining owner; it was compiled, not executed.
+
+r66 quiet build succeeded and three DAT files were staged and SHA256-verified.
+The user can test r66 cumulatively; earlier binaries and logs remain retained.
+R61-r66 together retired 56 functions (1879 definition lines). No game or local
+automated test was run after the user's handoff. Overall replacement remains
+incomplete: CStringLayout, active property-template readers, remaining explicit
+string receivers/operand heuristic and CRT/RTTI compatibility still need work.
