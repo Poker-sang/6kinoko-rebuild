@@ -2048,7 +2048,6 @@ int32_t function_4583a0(int32_t this_ptr, int32_t result);
 
 
 
-int32_t function_459920(void);
 
 
 
@@ -2226,7 +2225,6 @@ int32_t function_46a210(int32_t * a1);
 int32_t function_46a260(int32_t a1, int32_t a2);
 static int32_t function_46a2d0_this(int32_t this_ptr);
 int32_t function_46a380(void);
-int32_t function_46a390(uint16_t a1, uint16_t a2);
 int32_t function_46a450(int32_t a1, int32_t a2);
 int32_t function_46a550(char a1);
 
@@ -10922,28 +10920,7 @@ int32_t function_458330(int32_t a1, int32_t a2, int32_t result) {
 
 
 // Address range: 0x459920 - 0x459974
-int32_t function_459920(void) {
-    // 0x459920
-    int32_t v1; // 0x459920
-    uint32_t v2 = v1;
-    if (v2 == 0) {
-        // 0x459970
-        return 0;
-    }
-    if (v2 < 0x40000000) {
-        int32_t result = _3f__3f_2_40_YAPAXI_40_Z(4 * v2); // 0x45993c
-        if (result != 0) {
-            // 0x459970
-            return result;
-        }
-    }
-    // 0x459948
-    int32_t v3; // bp-20, 0x459920
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v3);
-    v3 = (int32_t)&g22;
-    // 0x459970
-    return __CxxThrowException_40_8();
-}
+
 
 // Address range: 0x459980 - 0x4599d4
 
@@ -15927,37 +15904,7 @@ int32_t function_46a380(void) {
 // Address range: 0x46a390 - 0x46a44a
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-int32_t function_46a390(uint16_t a1, uint16_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x46a3a0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x46a390
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(v2 + 52));
-    int32_t v3 = *(int32_t *)(v2 + 20); // 0x46a3c7
-    uint32_t v4 = (int32_t)a1; // 0x46a3ca
-    if (*(int32_t *)(v2 + 24) - v3 >> 2 <= v4) {
-        // 0x46a427
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)-1);
-        __writefsdword(0, v1);
-        return 0;
-    }
-    int32_t v5 = 4 * v4;
-    if (*(int32_t *)(v3 + v5) != (int32_t)a2) {
-        // 0x46a427
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)-1);
-        __writefsdword(0, v1);
-        return 0;
-    }
-    int32_t v6 = *(int32_t *)(v2 + 4); // 0x46a3e8
-    int32_t v7 = v5; // 0x46a3f5
-    if (*(int32_t *)(v2 + 8) - v6 >> 2 <= v4) {
-        // 0x46a3f7
-        v7 = 4 * retdec_Xinvalid_argument("invalid vector<T> subscript");
-    }
-    // 0x46a401
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)-1);
-    __writefsdword(0, v1);
-    return *(int32_t *)(v7 + v6);
-}
+
 
 // Address range: 0x46a450 - 0x46a549
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
