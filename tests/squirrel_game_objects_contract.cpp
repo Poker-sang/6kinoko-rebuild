@@ -112,6 +112,10 @@ void callbacks(HSQUIRRELVM vm) {
     require(has_extra_handle(environment) && has_extra_handle(function),"callback owns both pairs independently");
     retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
     require(has_extra_handle(environment) && has_extra_handle(function),"callback replacement balances handles");
+    retdec_release_act_callback(address(script.data()+offset));
+    retdec_release_act_callback(address(script.data()+offset));
+    require(!has_extra_handle(environment) && !has_extra_handle(function),"source callback destruction is balanced and repeatable");
+    retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Update");
     retdec_copy_act_callback(address(vm),address(script.data()),offset,address(object.data()),"Missing");
     require(load<HSQOBJECT>(script.data()+offset+4)._type==OT_NULL && load<HSQOBJECT>(script.data()+offset+12)._type==OT_NULL,"missing callback clears old pairs");
     require(!has_extra_handle(environment) && !has_extra_handle(function),"missing lookup releases callback references");

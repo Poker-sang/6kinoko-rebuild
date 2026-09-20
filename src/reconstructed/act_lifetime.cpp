@@ -70,39 +70,14 @@ int32_t retdec_construct_cact_script(int32_t this_ptr)
 
 void retdec_destroy_cact_script(int32_t script_ptr)
 {
-    int32_t vm;
 
     if (script_ptr == 0)
         return;
 
     field<int32_t>(script_ptr) = address(kinoko_act_host_symbols()->script_vtable);
-    if (field<int32_t>(script_ptr + 56) != g483) {
-        vm = field<int32_t>(script_ptr + 44);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 48);
-            function_48a430(vm, script_ptr + 56);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 48));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 56));
-    }
-    if (field<int32_t>(script_ptr + 36) != g483) {
-        vm = field<int32_t>(script_ptr + 24);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 28);
-            function_48a430(vm, script_ptr + 36);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 28));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 36));
-    }
-    if (field<int32_t>(script_ptr + 16) != g483) {
-        vm = field<int32_t>(script_ptr + 4);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 8);
-            function_48a430(vm, script_ptr + 16);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 8));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 16));
-    }
+    retdec_release_act_callback(script_ptr + 44);
+    retdec_release_act_callback(script_ptr + 24);
+    retdec_release_act_callback(script_ptr + 4);
 
     std::free(pointer<void>(field<int32_t>(script_ptr + 92)));
     field<int32_t>(script_ptr + 92) = 0;

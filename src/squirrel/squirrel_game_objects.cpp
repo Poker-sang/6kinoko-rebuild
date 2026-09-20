@@ -112,20 +112,22 @@ extern "C" int32_t retdec_create_unbound_instance(int32_t id, const int32_t* typ
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
+extern "C" void retdec_release_act_callback(int32_t record) {
+    if (!record) return;
+    auto callback = read<ActCallback>(pointer(record));
+    if (callback.closure._type == OT_NULL) return;
+    if (callback.vm) upstream::sqrat_release_function(pointer<SQVM>(callback.vm),
+        callback.environment, callback.closure);
+    callback.environment = empty(); callback.closure = empty();
+    write(pointer(record), callback);
+}
 extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t offset,
     int32_t global, const char* name) {
     auto vm = pointer<SQVM>(id);
     if (!vm || !script || !global || !name) return;
     auto* destination = bytes(script) + offset;
+    retdec_release_act_callback(address(destination));
     auto callback = read<ActCallback>(destination);
-    if (callback.closure._type != OT_NULL) {
-        if (callback.vm) {
-            auto previous_vm = pointer<SQVM>(callback.vm);
-            upstream::sqrat_release_function(previous_vm, callback.environment, callback.closure);
-        }
-        callback.environment = empty(); callback.closure = empty();
-        write(destination, callback);
-    }
     int32_t pair[2]; write(pair, empty());
     const auto found = retdec_sqrat_get(global, name, address(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
