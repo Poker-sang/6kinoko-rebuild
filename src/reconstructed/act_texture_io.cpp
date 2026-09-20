@@ -20,12 +20,17 @@ struct Property {
 // Original TUserData<CActResource2D> owns descriptors by name. Native value
 // ownership replaces its decompiled map/shared-pointer allocation machinery.
 // Type 12 is an unknown member; read type 24 is absent from the latest schema.
-std::map<std::string, Property> schema{
+using Schema = std::map<std::string, Property>;
+Schema make_schema() { return {
     {"image_height", {0,0,76}}, {"image_width", {0,0,72}},
     {"resourceID", {0,0,4}}, {"src_height", {1,1,92}},
     {"src_width", {1,1,88}}, {"src_x", {1,1,80}}, {"src_y", {1,1,84}},
     {"stName", {3,3,8}}, {"stTextureName", {3,3,40}}
-};
+}; }
+Schema texture_schema = make_schema();
+// 4493F0 registers the same inherited fields, but 449AB0 uses a distinct
+// TUserData<CActRenderTarget> schema. Never let one class's header alter another.
+Schema render_target_schema = make_schema();
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
         field<void*>(field<int32_t>(stream)+12), address(bytes), size) & 0xff) != 0;
@@ -42,7 +47,7 @@ bool read_string(int32_t stream, std::string& text, uint32_t limit) {
 bool write_string(int32_t stream, const char* text, uint32_t size) {
     return transfer(stream, size) && (!size || transfer(stream, const_cast<char*>(text), size));
 }
-bool read(int32_t resource, int32_t reader) {
+bool read(int32_t resource, int32_t reader, Schema& schema) {
     uint8_t has_schema = 1;
     if (!transfer(reader, has_schema)) return false;
     if (has_schema) {
@@ -83,7 +88,7 @@ bool read(int32_t resource, int32_t reader) {
     field<uint8_t>(resource+96) = 0;
     return true;
 }
-bool write(int32_t resource, int32_t writer) {
+bool write(int32_t resource, int32_t writer, const Schema& schema) {
     uint8_t has_schema = !g673;
     if (!transfer(writer, has_schema)) return false;
     if (has_schema) {
@@ -110,12 +115,25 @@ bool write(int32_t resource, int32_t writer) {
 extern "C" int32_t __fastcall kinoko_method_read_texture_resource(
     int32_t resource, void*, int32_t holder, int32_t version) {
     if (!resource || !holder || version != 1) return 0;
-    try { return read(resource, field<int32_t>(holder)); }
+    try { return read(resource, field<int32_t>(holder), texture_schema); }
     catch (...) { return 0; }
 }
 extern "C" int32_t __fastcall kinoko_method_write_texture_resource(
     int32_t resource, void*, int32_t writer) {
     if (!resource || !writer) return 0;
-    try { return write(resource, writer); }
+    try { return write(resource, writer, texture_schema); }
+    catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_read_render_target(
+    int32_t resource, void*, int32_t holder, int32_t version) {
+    if (!resource || !holder || version != 1) return 0;
+    try { return read(resource, field<int32_t>(holder), render_target_schema); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_write_render_target(
+    int32_t resource, void*, int32_t writer) {
+    if (!resource || !writer) return 0;
+    try { return write(resource, writer, render_target_schema); }
     catch (...) { return 0; }
 }

@@ -4402,13 +4402,14 @@ static int32_t __fastcall script_io_seek(struct script_io_stream* self, void* un
     return self->position;
 }
 
-static int test_texture_serialization(void) {
+static int test_texture_serialization(int render_target) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
     int32_t holder=PTR(&stream);
     int32_t *source=(int32_t*)calloc(1,100), *loaded=(int32_t*)calloc(1,100);
     CHECK(source && loaded);
-    source[0]=loaded[0]=PTR(&g365);
+    source[0]=loaded[0]=render_target ? PTR(&g379) : PTR(&g365);
+    void **vtable=(void**)(intptr_t)source[0];
     source[7]=source[15]=loaded[7]=loaded[15]=15;
     source[1]=15; source[18]=source[19]=512;
     ((float*)source)[20]=273; ((float*)source)[21]=0;
@@ -4419,11 +4420,11 @@ static int test_texture_serialization(void) {
     for (int compact=0;compact<2;++compact) {
         g673=(unsigned char)compact;
         stream.position=stream.size=0; stream.reading=0;
-        CHECK(retdec_call_thiscall1_result(source,(void*)g365.e0,PTR(&stream))==1);
+        CHECK(retdec_call_thiscall1_result(source,vtable[0],PTR(&stream))==1);
         CHECK(stream.bytes[0]==!compact);
         stream.position=0; stream.reading=1;
         ((unsigned char*)loaded)[96]=1;
-        CHECK(retdec_call_thiscall2_result(loaded,(void*)g365.e1,PTR(&holder),1)==1);
+        CHECK(retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),1)==1);
         CHECK(stream.position==stream.size && loaded[1]==15);
         CHECK(loaded[18]==512 && loaded[19]==512);
         CHECK(memcmp(source+20,loaded+20,16)==0 && !((unsigned char*)loaded)[96]);
@@ -4447,11 +4448,11 @@ static int test_texture_serialization(void) {
         CHECK(script_io_transfer(&stream,NULL,&x,4));
     }
     stream.position=0; stream.reading=1;
-    CHECK(retdec_call_thiscall2_result(loaded,(void*)g365.e1,PTR(&holder),1)==1);
+    CHECK(retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),1)==1);
     CHECK(stream.position==stream.size && loaded[1]==321 && ((float*)loaded)[20]==137);
     CHECK(((float*)loaded)[22]==136 && ((float*)loaded)[23]==480);
     CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
-    CHECK(!retdec_call_thiscall2_result(loaded,(void*)g365.e1,PTR(&holder),2));
+    CHECK(!retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),2));
     g673=saved;
     retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
     puts("PASS: native texture property IO, full/compact schemas, sorted values, heap strings and crop lifecycle");
@@ -4803,7 +4804,7 @@ int main(int argc, char **argv) {
     if(argc==3 && strcmp(argv[1],"--portrait-regions")==0)
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
-        return test_texture_serialization();
+        return test_texture_serialization(0) || test_texture_serialization(1);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
