@@ -12472,7 +12472,6 @@ int32_t function_427530(int32_t this_ptr) {
 // CAct::Clone (427950) is implemented in reconstructed/act_clone.cpp.
 
 
-/* retdec_act_free_properties is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* retdec_act_read_u8 is implemented in native C++ (kinoko/act_runtime.h). */
 
@@ -12481,30 +12480,19 @@ int32_t function_427530(int32_t this_ptr) {
 /* ACT properties are serialized as a packed descriptor block followed by
    packed values.  Keeping the descriptor/value pairing here avoids relying on
    the incomplete RetDec property-tree implementation. */
-/* retdec_act_read_properties is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_property_integer is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_property_float is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_assign_string is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_cact is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_script is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_layer is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_layout is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* C2DMapLayout keeps the map limits and render properties at a different
    offset from C2DLayout, and its vtable owns a second fixed-width record
    vector.  Do not feed these fields through the C2DLayout adapter. */
-/* retdec_act_apply_map_layout is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_resource is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_apply_chip_resource is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* retdec_act_load_script is implemented in native C++ (kinoko/act_runtime.h). */
 

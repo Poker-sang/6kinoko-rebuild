@@ -735,3 +735,7 @@ tracking is retained. Compiled-only contracts cover all ten migrated dynamic
 type queries, rejecting a base-class descriptor, prefix-byte equivalence,
 null outputs, array keys, scalar resources and virtual Destroy dispatch.
 retired-act-rtti-destruction.json audits 13 functions and 19 data records.
+
+## R77 — remove superseded untyped ACT property parser
+
+After R74/R75, the untyped parser and apply helpers have no production callers. Removed the duplicate implementation, obsolete public property record/API and its isolated contract target. The live scalar byte/dword reads now reside in act_document.cpp. Production readers continue using the shared native std::map schemas and existing stage contracts for full/compact archives. Removed tests covered only the retired parser; their former truncation/coercion results are not claimed for the replacement. Reference scan covered src, include, tests and tools. Build only; runtime testing remains with the user.

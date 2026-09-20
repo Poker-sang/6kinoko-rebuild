@@ -43,7 +43,16 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 
-// ACT property parsing/mapping lives in act_properties.cpp.
+// Scalar archive reads shared by the native schema loaders.
+int32_t retdec_act_read_u8(int32_t reader_ptr, uint8_t *value)
+{
+    return retdec_reader_read_exact(reader_ptr, value, 1);
+}
+
+int32_t retdec_act_read_u32(int32_t reader_ptr, uint32_t *value)
+{
+    return retdec_reader_read_exact(reader_ptr, value, sizeof(*value));
+}
 
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
 {
