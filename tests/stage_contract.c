@@ -4872,6 +4872,61 @@ static int test_chip_serialization(void) {
     return 0;
 }
 
+static int test_serializable_lifetime(void) {
+    const int32_t tables[]={PTR(&g231),PTR(&g252),PTR(&g277),PTR(&g285),PTR(&g299),
+        PTR(&g327),PTR(&g365),PTR(&g313),PTR(&g379),PTR(kinoko_act_timeline_vtable())};
+    const char* names[]={".?AVCActScript@@",".?AVCActLayer@@",".?AVCActKey@@",".?AVCAct@@",
+        ".?AVC2DLayout@@",".?AVC2DMapLayout@@",".?AVCActResource2D@@",".?AVCActResourceChip@@",
+        ".?AVCActRenderTarget@@",".?AVCActTimeLine@@"};
+    for(unsigned i=0;i<sizeof(tables)/sizeof(tables[0]);++i) {
+        int32_t object=tables[i],result=123; unsigned char descriptor[96]={0};
+        strcpy((char*)descriptor+8,names[i]);
+        const int32_t* table=(int32_t*)(intptr_t)tables[i];
+        CHECK(retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result))==1);
+        CHECK(result==PTR(&object));
+        descriptor[8]='!'; /* MSVC 4AB2E2 ignores the decorated-name prefix byte. */
+        CHECK(retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result))==1);
+        strcpy((char*)descriptor+8,".?AUISerializable@NamespaceProperty@@");
+        CHECK(!retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result)) && result==0);
+        CHECK(!retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),0));
+    }
+    for(int count=1;count<=2;++count) {
+        unsigned char* allocation=(unsigned char*)calloc(1,4+36*count); CHECK(allocation);
+        *(uint32_t*)allocation=count;
+        for(int i=0;i<count;++i) {
+            int32_t* key=(int32_t*)(allocation+4+36*i); key[0]=PTR(&g277); key[7]=15;
+            retdec_string_assign_cstr(key+2,"heap callback released by native destructor");
+            key[1]=PTR(calloc(1,316)); CHECK(retdec_construct_c2dlayout(key[1]));
+        }
+        CHECK(retdec_call_thiscall1_result(allocation+4,(void*)g277.e4,2)==PTR(allocation));
+        for(int i=0;i<count;++i) {
+            int32_t* key=(int32_t*)(allocation+4+36*i);
+            CHECK(key[1]==0 && key[6]==0 && key[7]==15 && ((char*)(key+2))[0]==0);
+        }
+        free(allocation);
+    }
+    for(int kind=0;kind<3;++kind) {
+        int32_t resource[25]={0}; resource[0]=kind==0?PTR(&g365):kind==1?PTR(&g313):PTR(&g379);
+        resource[7]=15;
+        if(kind==1) { resource[14]=15; resource[23]=15; }
+        else resource[15]=15;
+        retdec_string_assign_cstr(resource+2,"resource heap name released in place");
+        retdec_string_assign_cstr(resource+(kind==1?9:10),"independent long backing filename");
+        const int32_t* table=(int32_t*)(intptr_t)resource[0];
+        CHECK(retdec_call_thiscall1_result(resource,(void*)(intptr_t)table[4],0)==PTR(resource));
+        CHECK(resource[6]==0 && resource[7]==15);
+        CHECK(kind==1 ? resource[13]==0 && resource[14]==15 : resource[14]==0 && resource[15]==15);
+    }
+    const int32_t layer=retdec_act_make_layer(); CHECK(layer);
+    CHECK(retdec_call_thiscall1_result((void*)(intptr_t)layer,(void*)g252.e4,0)==layer);
+    CHECK(!*(int32_t*)(intptr_t)(layer+180) && !*(int32_t*)(intptr_t)(layer+192));
+    free((void*)(intptr_t)layer);
+    int32_t* key=(int32_t*)calloc(1,36); CHECK(key); key[0]=PTR(&g277); key[7]=15;
+    retdec_call_thiscall0_result(key,(void*)g277.e3); /* Destroy invokes deleting slot four with flags=1. */
+    puts("PASS: exact original RTTI name queries and explicit receiver scalar/array destruction");
+    return 0;
+}
+
 static int32_t __fastcall act_contract_no_script(int32_t self,void* unused,int32_t stream) {
     (void)self; (void)unused; (void)stream; return 1;
 }
@@ -5434,7 +5489,8 @@ int main(int argc, char **argv) {
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
         return test_texture_serialization(0) || test_texture_serialization(1) ||
-            test_chip_serialization() || test_layout_serialization() || test_key_string_writers() || test_act_serialization();
+            test_chip_serialization() || test_layout_serialization() || test_key_string_writers() || test_act_serialization() ||
+            test_serializable_lifetime();
     if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
         return test_map_serialization() || test_map_set_layer();
     if(argc==2 && strcmp(argv[1],"--dynamic-layer")==0)

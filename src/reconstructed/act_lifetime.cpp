@@ -100,39 +100,44 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
     return 0;
 }
 
-void retdec_destroy_cact_key(int32_t value) {
-    if (value != 0) {
-        // The layer's second list owns CActTimeLine (28 bytes), not CActKey.
-        // Its beginTime at +4 must never be treated as a layout pointer.
-        if (field<int32_t>(value) == address(kinoko_act_timeline_vtable())) {
-            std::free(pointer<void>(field<int32_t>(value + 12)));
-            std::free(pointer<void>(value));
-            return;
+namespace {
+void clear_layout(int32_t layout) {
+    if (!layout) return;
+    if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
+        retdec_act_free_map_records(layout);
+        for (auto offset : {280,296,332,404,436}) {
+            std::free(pointer<void>(field<int32_t>(layout+offset)));
+            field<int32_t>(layout+offset)=0;
+            field<int32_t>(layout+offset+4)=0;
+            field<int32_t>(layout+offset+8)=0;
         }
-        int32_t layout = field<int32_t>(value + 4);
-        if (layout != 0) {
-            if (field<int32_t>(layout) ==
-                    address(kinoko_act_host_symbols()->map_layout_vtable)) {
-                retdec_act_free_map_records(layout);
-                if (field<int32_t>(layout + 332) != 0)
-                    std::free(pointer<void>(field<int32_t>(layout + 332)));
-                field<int32_t>(layout + 332) = 0;
-                field<int32_t>(layout + 336) = 0;
-                field<int32_t>(layout + 340) = 0;
-                // Native map serialization also owns these flat ABI caches.
-                for (auto offset : {280, 296, 404, 436}) {
-                    std::free(pointer<void>(field<int32_t>(layout + offset)));
-                    field<int32_t>(layout + offset) = 0;
-                    field<int32_t>(layout + offset + 4) = 0;
-                    field<int32_t>(layout + offset + 8) = 0;
-                }
-            }
-            std::free(pointer<void>(layout));
-        }
-        if (field<int32_t>(value + 28) >= 16)
-            std::free(pointer<void>(field<int32_t>(value + 8)));
-        std::free(pointer<void>(value));
     }
+}
+void clear_key(int32_t value) {
+    if (!value) return;
+    field<int32_t>(value)=address(kinoko_act_host_symbols()->key_vtable);
+    const auto layout=field<int32_t>(value+4);
+    clear_layout(layout);
+    std::free(pointer<void>(layout));
+    field<int32_t>(value+4)=0;
+    if (field<uint32_t>(value+28)>=16) std::free(pointer<void>(field<int32_t>(value+8)));
+    field<uint8_t>(value+8)=0;
+    field<uint32_t>(value+24)=0;
+    field<uint32_t>(value+28)=15;
+}
+}
+void retdec_destroy_cact_key(int32_t value) {
+    if (!value) return;
+    // The layer's second list owns CActTimeLine, not a key with a layout.
+    if (field<int32_t>(value)==address(kinoko_act_timeline_vtable()))
+        std::free(pointer<void>(field<int32_t>(value+12)));
+    else clear_key(value);
+    std::free(pointer<void>(value));
+}
+extern "C" int32_t __fastcall kinoko_method_destroy_layout(int32_t layout,void*) {
+    clear_layout(layout);
+    std::free(pointer<void>(layout));
+    return layout;
 }
 
 void retdec_destroy_cact_list(int32_t *list_slot)
@@ -177,6 +182,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     retdec_destroy_cact_script(layer + 204);
     retdec_destroy_cact_list(pointer<int32_t>(layer + 180));
     retdec_destroy_cact_list(pointer<int32_t>(layer + 192));
+    field<uint32_t>(layer+184)=field<uint32_t>(layer+196)=0;
     if (field<int32_t>(layer + 132) >= 16)
         std::free(pointer<void>(field<int32_t>(layer + 112)));
     field<int32_t>(layer + 112) = 0;
@@ -188,7 +194,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     field<int32_t>(layer + 80) = 0;
 }
 
-void retdec_destroy_cact_resource(int32_t resource)
+static void clear_resource(int32_t resource)
 {
     if (resource == 0)
         return;
@@ -213,7 +219,6 @@ void retdec_destroy_cact_resource(int32_t resource)
         field<int32_t>(resource + 72) = 0;
         field<int32_t>(resource + 88) = 0;
         field<int32_t>(resource + 92) = 15;
-        std::free(pointer<void>(resource));
         return;
     }
     if (!kinoko_act_release_cloned_texture(resource))
@@ -222,7 +227,12 @@ void retdec_destroy_cact_resource(int32_t resource)
     if (field<int32_t>(resource + 60) >= 16)
         std::free(pointer<void>(field<int32_t>(resource + 40)));
     field<int32_t>(resource + 40) = 0;
-    field<int32_t>(resource + 56) = 15;
+    field<int32_t>(resource + 56) = 0;
+    field<int32_t>(resource + 60) = 15;
+}
+
+void retdec_destroy_cact_resource(int32_t resource) {
+    clear_resource(resource);
     std::free(pointer<void>(resource));
 }
 
@@ -292,4 +302,32 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
     if ((flags & 1) != 0)
         std::free(pointer<void>(object_ptr));
     return object_ptr;
+}
+
+namespace {
+template<void (*Clear)(int32_t)>
+int32_t delete_with_flags(int32_t object,uint32_t size,unsigned char flags) {
+    if (!object) return 0;
+    if (flags&2) {
+        const auto count=field<uint32_t>(object-4);
+        for (auto i=count;i>0;--i) Clear(object+(i-1)*size);
+        if (flags&1) std::free(pointer<void>(object-4));
+        return object-4;
+    }
+    Clear(object);
+    if (flags&1) std::free(pointer<void>(object));
+    return object;
+}
+}
+// Original deleting-destructor sizes: 420830=36, 4209B0=348,
+// 429720/429780/429840=100. Bit two destroys arrays in reverse order;
+// bit one releases the allocation, including its four-byte array cookie.
+extern "C" int32_t __fastcall kinoko_method_delete_act_key(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<clear_key>(object,36,flags);
+}
+extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<retdec_destroy_cact_layer>(object,348,flags);
+}
+extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<clear_resource>(object,100,flags);
 }

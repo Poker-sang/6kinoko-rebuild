@@ -89,6 +89,7 @@ int32_t kinoko_act_read_key_properties(int32_t key, int32_t reader);
 int32_t kinoko_act_read_map_properties(int32_t layout, int32_t reader);
 int32_t kinoko_act_read_properties(int32_t act, int32_t reader);
 int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader);
+const char* kinoko_act_serialized_type_name(int32_t object);
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                      int32_t version);
 int32_t retdec_act_load_mcd(int32_t resource,

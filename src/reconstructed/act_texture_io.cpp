@@ -445,7 +445,7 @@ int32_t __fastcall write_timeline(int32_t timeline,void*,int32_t writer) {
 }
 int32_t __fastcall query_timeline(int32_t timeline,void*,int32_t type,int32_t output) {
     if (!output) return 0;
-    const bool match=type && std::strcmp(pointer<const char>(type+8),".?AVCActTimeLine@@")==0;
+    const bool match=type && std::strcmp(pointer<const char>(type+9),"?AVCActTimeLine@@")==0;
     field<int32_t>(output)=match?timeline:0;
     return match;
 }
@@ -513,13 +513,7 @@ struct TypeName {
 };
 bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {
     const auto table=field<int32_t>(layout);
-    const char* name=nullptr;
-    if (table==address(kinoko_act_host_symbols()->layout_vtable)) name=".?AVC2DLayout@@";
-    else if (table==address(kinoko_act_host_symbols()->map_layout_vtable)) name=".?AVC2DMapLayout@@";
-    else if (table==address(&g350)) name=".?AVCStringLayout@@";
-    else if (table==address(kinoko_act_host_symbols()->texture_resource_vtable)) name=".?AVCActResource2D@@";
-    else if (table==address(kinoko_act_host_symbols()->chip_resource_vtable)) name=".?AVCActResourceChip@@";
-    else if (table==address(kinoko_act_host_symbols()->render_target_vtable)) name=".?AVCActRenderTarget@@";
+    const auto* name=kinoko_act_serialized_type_name(layout);
     if (name) { hash=type_hash(name); return true; }
     // Original 426740 obtains the remaining registered types through virtual
     // GetType/GetName. Keep this boundary until their registries are migrated;
