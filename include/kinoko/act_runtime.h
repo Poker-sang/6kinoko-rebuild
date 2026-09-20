@@ -136,6 +136,8 @@ void retdec_destroy_cact_layer(int32_t layer);
 void retdec_destroy_cact_list(int32_t *list_slot);
 void retdec_destroy_cact_object(int32_t object_ptr);
 void retdec_destroy_cact_resource(int32_t resource);
+int32_t retdec_register_act_script(int32_t script, int32_t object);
+void retdec_forget_act_script(int32_t script);
 void retdec_destroy_cact_script(int32_t script_ptr);
 int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);

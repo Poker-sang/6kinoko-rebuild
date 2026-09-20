@@ -2912,6 +2912,53 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_act_script_source_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t script[26] = {0}, environment[2] = {g483,g484}, wrapper[5] = {0};
+    int32_t extension[7]; memcpy(extension, kinoko_act_script_extension, sizeof(extension));
+    int32_t old_archive = g765;
+    CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
+    retdec_string_assign_n(&g554, ".cv4", 4);
+    CHECK(g555 == 4 && g556 == 15 && strcmp((char*)&g554, ".cv4") == 0);
+    CHECK(retdec_sqrat_new_table(vm, environment));
+    wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
+    wrapper[2] = environment[0]; wrapper[3] = environment[1];
+    script[21] = 15;
+    CHECK(retdec_register_act_script(PTR(script), PTR(wrapper)) == 0); /* No source yet. */
+    const char *initial = "counter <- 0;\n function Init() { counter += 1; }\n";
+    script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
+    ((unsigned char*)script)[100] = 1;
+    CHECK(function_415fd0(PTR(script), PTR(wrapper)) == 0);
+    g765 = 0;
+    char actual[MAX_PATH], requested[MAX_PATH], command[512];
+    sprintf_s(actual,sizeof(actual),"act-source-%lu.cv4",GetCurrentProcessId());
+    sprintf_s(requested,sizeof(requested),"act-source-%lu.nut",GetCurrentProcessId());
+    FILE *file = NULL;
+    CHECK(fopen_s(&file,actual,"wb") == 0);
+    const char *source = "counter += 10;\n function Init() { counter += 20; }\n";
+    CHECK(fwrite(source,1,strlen(source),file) == strlen(source)); fclose(file);
+    sprintf_s(command,sizeof(command),"if(!CompileFile(\"%s\", this)) throw 1;\n",requested);
+    CHECK(execute_source(vm, environment, command));
+    CHECK(retdec_execute_act_callback(PTR(script),4,"test:act-compile-file"));
+    CHECK(execute_source(vm, environment,"if(counter!=30) throw 2;\n"));
+    unsigned char *bytecode = NULL; int32_t bytecode_size = 0;
+    const char *increment = "counter += 1;";
+    CHECK(retdec_squirrel_compile_source(increment,(int32_t)strlen(increment),"ACT file",&bytecode,&bytecode_size));
+    sprintf_s(actual,sizeof(actual),"act-bytecode-%lu.cv4",GetCurrentProcessId());
+    sprintf_s(requested,sizeof(requested),"act-bytecode-%lu.nut",GetCurrentProcessId());
+    CHECK(fopen_s(&file,actual,"wb") == 0);
+    CHECK(fwrite(bytecode,1,bytecode_size,file) == (size_t)bytecode_size); fclose(file); free(bytecode);
+    sprintf_s(command,sizeof(command),"if(!CompileFile(\"%s\", this)) throw 3;\n if(counter!=32) throw 4;\n",requested);
+    CHECK(execute_source(vm, environment, command));
+    CHECK(execute_source(vm, environment,"if(CompileFile(\"missing.nut\")) throw 5;\n"));
+    retdec_destroy_cact_script(PTR(script));
+    retdec_sqrat_release_pair(vm, environment);
+    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); g765 = old_archive;
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: original ACT script registration, extension rewrite, callback refresh and bytecode double execution");
+    return 0;
+}
+
 static int test_csv_receivers(int32_t vm, int32_t *root) {
     const int top=function_48aa20(vm);
     CHECK(kinoko_csv_populate(vm,
@@ -4447,6 +4494,7 @@ int main(int argc, char **argv) {
     CHECK(test_thread_receivers(vm, root) == 0);
     CHECK(test_csv_receivers(vm, root) == 0);
     CHECK(test_compiler_receivers(vm, root) == 0);
+    CHECK(test_act_script_source_registration(vm, root) == 0);
     CHECK(test_native_instance_receivers(vm, root) == 0);
     CHECK(test_global_callback_destructor(vm) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);

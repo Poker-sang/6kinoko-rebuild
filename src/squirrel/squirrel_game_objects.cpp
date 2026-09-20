@@ -160,8 +160,8 @@ extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
     retdec_trace_i32("450e30:root-vm", id);
     return 1;
 }
-extern "C" int32_t retdec_execute_embedded_act_script(int32_t id, int32_t script,
-    const int32_t* environment) {
+static int32_t execute_embedded_act_script(int32_t id, int32_t script,
+    const int32_t* environment, int runs) {
     auto vm = pointer<SQVM>(id);
     if (!vm || !script || !environment) return 0;
     const auto data = read<uint32_t>(bytes(script) + script_data_offset);
@@ -176,12 +176,25 @@ extern "C" int32_t retdec_execute_embedded_act_script(int32_t id, int32_t script
     HSQOBJECT closure = empty(); sq_getstackobj(vm, -1, &closure);
     if (closure._type != OT_CLOSURE || !data_bits(closure)) return 0;
     // Source LocalScript::Run leaves the read closure below its own call pair.
-    const bool result = upstream::sqrat_run_script(vm, closure, read<HSQOBJECT>(environment),
-        [](HSQUIRRELVM target, SQInteger count, SQBool value, SQBool errors) -> SQRESULT {
-            return kinoko_sq_call(address(target), count, value, errors);
-        });
+    bool result = false;
+    for (int run = 0; run < runs; ++run) {
+        result = upstream::sqrat_run_script(vm, closure, read<HSQOBJECT>(environment),
+            [](HSQUIRRELVM target, SQInteger count, SQBool value, SQBool errors) -> SQRESULT {
+                return kinoko_sq_call(address(target), count, value, errors);
+            });
+    }
     retdec_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
     return result;
+}
+extern "C" int32_t retdec_execute_embedded_act_script(int32_t vm, int32_t script,
+    const int32_t* environment) {
+    return execute_embedded_act_script(vm, script, environment, 1);
+}
+extern "C" int32_t retdec_execute_act_file_bytecode(int32_t vm, int32_t script,
+    const int32_t* environment) {
+    // 416A8D calls the loaded closure, then 416AE8 calls LocalScript::Run on
+    // that same closure. The first call's failure is not used as a branch.
+    return execute_embedded_act_script(vm, script, environment, 2);
 }
 extern "C" int32_t function_45e020_this(int32_t state, int32_t temporary,
     int32_t type, int32_t data) {

@@ -38,6 +38,9 @@
 #include <cmath>
 #include <cstring>
 #include <cstdlib>
+#include <map>
+#include <string>
+#include <vector>
 
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
@@ -775,6 +778,76 @@ int32_t retdec_execute_act_callback(int32_t script_ptr,
     return result;
 }
 
+namespace {
+// 51B924 maps the script environment's object pointer to CActScript. Original
+// insert is unique; re-registering an environment does not replace its owner.
+std::map<int32_t, int32_t> act_script_owners;
+void refresh_act_script_callbacks(int32_t vm, int32_t script, const int32_t *environment) {
+    int32_t wrapper[5] = {kinoko_sqrat_object_vtable(), vm, environment[0], environment[1], 0};
+    retdec_copy_act_callback(vm, script, 4, address(wrapper), "Init");
+    retdec_copy_act_callback(vm, script, 24, address(wrapper), "Update");
+    retdec_copy_act_callback(vm, script, 44, address(wrapper), "OnCreate");
+}
+}
+
+extern "C" void retdec_forget_act_script(int32_t script) {
+    for (auto entry = act_script_owners.begin(); entry != act_script_owners.end();) {
+        if (entry->second == script) entry = act_script_owners.erase(entry);
+        else ++entry;
+    }
+}
+
+int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *environment) {
+    if (!vm || !path || !environment || environment[0] == 0x01000001) return 0;
+    int32_t reader = 0;
+    try {
+        std::string resolved(path);
+        const char *extension = retdec_std_string_data(address(kinoko_act_script_extension));
+        if (extension && *extension) {
+            const auto dot = resolved.rfind('.');
+            if (dot != std::string::npos) resolved = resolved.substr(0, dot) + extension;
+        }
+        if (!function_407370(address(&reader), resolved.c_str())) {
+            if (reader) retdec_destroy_reader(pointer<int32_t>(reader));
+            return 0;
+        }
+        const uint32_t size = g765 ? field<uint32_t>(reader + 12)
+            : GetFileSize(field<HANDLE>(reader + 4), nullptr);
+        if (size > 0x1000000) {
+            retdec_destroy_reader(pointer<int32_t>(reader));
+            return 0;
+        }
+        std::vector<unsigned char> buffer(static_cast<size_t>(size) + 1, 0);
+        const bool read = !size || retdec_reader_read_exact(reader, buffer.data(), size);
+        retdec_destroy_reader(pointer<int32_t>(reader));
+        reader = 0;
+        if (!read) return 0;
+        int32_t script[26] = {};
+        script[23] = address(buffer.data()); script[24] = size;
+        const bool compiled = size >= 2 && buffer[0] == 0xfa && buffer[1] == 0xfa;
+        const bool ok = compiled ? retdec_execute_act_file_bytecode(vm, address(script), environment)
+            : kinoko_sq_compile_act_source(vm, reinterpret_cast<const char*>(buffer.data()),
+                static_cast<int32_t>(strnlen(reinterpret_cast<const char*>(buffer.data()), size)), environment);
+        if (!ok) return 0;
+        const auto owner = act_script_owners.find(environment[1]);
+        if (owner != act_script_owners.end()) refresh_act_script_callbacks(vm, owner->second, environment);
+        return 1;
+    } catch (...) {
+        if (reader) retdec_destroy_reader(pointer<int32_t>(reader));
+        return 0;
+    }
+}
+
+int32_t retdec_local_compile_file_native(int32_t vm) {
+    const SQChar *path = nullptr;
+    int32_t environment[2] = {g483, g484};
+    if (sq_gettop(kinoko_vm(vm)) < 2 || SQ_FAILED(sq_getstring(kinoko_vm(vm), 2, &path))) return 0;
+    if (sq_gettop(kinoko_vm(vm)) >= 3)
+        sq_getstackobj(kinoko_vm(vm), 3, reinterpret_cast<HSQOBJECT*>(environment));
+    sq_pushbool(kinoko_vm(vm), retdec_compile_act_file(vm, path, environment));
+    return 1;
+}
+
 int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environment)
 {
     static const char *const names[] = {
@@ -794,7 +867,28 @@ int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environme
         if (!retdec_sqrat_set_int(vm, environment, names[value], value))
             return 0;
     }
-    return 1;
+    return retdec_sqrat_set_native_closure(vm, environment, "CompileFile",
+        address(retdec_local_compile_file_native), nullptr, 0);
+}
+
+extern "C" int32_t retdec_register_act_script(int32_t script, int32_t object) {
+    if (!script || !object || field<int32_t>(object + 8) == 0x01000001) return static_cast<int32_t>(E_FAIL);
+    const int32_t vm = field<int32_t>(object + 4);
+    const auto *environment = pointer<const int32_t>(object + 8);
+    if (!vm || !retdec_publish_act_script_constants(vm, environment)) return static_cast<int32_t>(E_FAIL);
+    if (!field<uint8_t>(script + 100)) return 0;
+    bool ok = false;
+    if (field<uint8_t>(script + 101)) {
+        ok = retdec_execute_embedded_act_script(vm, script, environment) != 0;
+    } else {
+        const char *path = retdec_std_string_data(script + 64);
+        ok = path && *path ? retdec_compile_act_file(vm, path, environment) != 0
+                          : retdec_execute_act_source_script(vm, script, environment) != 0;
+    }
+    if (!ok) return static_cast<int32_t>(E_FAIL);
+    refresh_act_script_callbacks(vm, script, environment);
+    act_script_owners.emplace(environment[1], script);
+    return 0;
 }
 
 int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
@@ -1605,33 +1699,8 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         script_wrapper[1] = vm;
         script_wrapper[2] = script_pair[0];
         script_wrapper[3] = script_pair[1];
-        if (field<uint8_t>(script_ptr + 100) != 0) {
-            int32_t script_result;
-            if (field<uint8_t>(script_ptr + 101) != 0 &&
-                field<int32_t>(script_ptr + 92) != 0 &&
-                field<int32_t>(script_ptr + 96) >= 2 &&
-                field<uint16_t>(field<int32_t>(script_ptr + 92)) ==
-                    0xFAFAu) {
-                int32_t environment_pair[2] = {
-                    script_pair[0], script_pair[1]
-                };
-                script_result = retdec_execute_embedded_act_script(
-                    vm, script_ptr, environment_pair);
-            } else {
-                int32_t environment_pair[2] = {
-                    script_pair[0], script_pair[1]
-                };
-                script_result = retdec_execute_act_source_script(
-                    vm, script_ptr, environment_pair);
-            }
-            retdec_trace_i32("act:layer-script-result", script_result);
-        }
-        retdec_copy_act_callback(vm, script_ptr, 4,
-                                 address(script_wrapper), "Init");
-        retdec_copy_act_callback(vm, script_ptr, 24,
-                                 address(script_wrapper), "Update");
-        retdec_copy_act_callback(vm, script_ptr, 44,
-                                 address(script_wrapper), "OnCreate");
+        const int32_t script_result = retdec_register_act_script(script_ptr, address(script_wrapper));
+        retdec_trace_i32("act:layer-script-result", script_result >= 0);
         if (index < 96) {
             int32_t raw_data = field<int32_t>(script_ptr + 92);
             retdec_trace_i32("act:layer-native", layer);

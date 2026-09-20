@@ -50,6 +50,10 @@ extern int32_t kinoko_layer_set_pair[2];
 extern int32_t kinoko_layer_get_pair[2];
 #define g1153 (kinoko_layer_get_pair[0])
 #define g1154 (kinoko_layer_get_pair[1])
+extern int32_t kinoko_act_script_extension[7];
+#define g554 (kinoko_act_script_extension[0])
+#define g555 (kinoko_act_script_extension[4])
+#define g556 (kinoko_act_script_extension[5])
 extern int32_t  g1224;
 extern int32_t  g483;
 extern int32_t  g484;

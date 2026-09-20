@@ -74,6 +74,7 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     if (script_ptr == 0)
         return;
 
+    retdec_forget_act_script(script_ptr);
     field<int32_t>(script_ptr) = address(kinoko_act_host_symbols()->script_vtable);
     retdec_release_act_callback(script_ptr + 44);
     retdec_release_act_callback(script_ptr + 24);
