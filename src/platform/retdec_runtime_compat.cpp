@@ -167,12 +167,7 @@ int _vsprintf_compat(char *buffer, const char *format, va_list args)
     return vsprintf_s(buffer, 0x7fffffff, format, args);
 }
 
-double __atof_l(const char *text, void *locale, void *unused)
-{
-    (void)locale;
-    (void)unused;
-    return strtod(text, nullptr);
-}
+
 
 /* Remaining C++ ABI/locale adapters are referenced by recovered callers.
    Several signatures and exception semantics are still incomplete. They are
@@ -218,19 +213,7 @@ int32_t _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
     return 0;
 }
 
-int32_t _3f__3f__L_40_YGXPAXIHP6EX0_40_Z1_40_Z(
-    void *object, int32_t count, int32_t size,
-    void (*construct)(int32_t *), void (*destroy)(int32_t *))
-{
-    int32_t i;
-    (void)destroy;
-    if (construct != nullptr) {
-        for (i = 0; i < count; ++i) {
-            construct((int32_t *)((unsigned char *)object + (size_t)i * (size_t)size));
-        }
-    }
-    return 0;
-}
+
 
 int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
     void *object, int32_t count, int32_t size, void (*destroy)(int32_t *))
