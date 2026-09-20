@@ -46,6 +46,11 @@ namespace Sqrat {
 		}
 
 	public:
+        // KINOKO SOURCE ENTRY: the embedding already resolved these handles.
+        // Execute the original retaining constructor, without another lookup.
+        static Function FromObjects(HSQUIRRELVM vm, HSQOBJECT env, HSQOBJECT obj) {
+            return Function(vm, env, obj);
+        }
 		Function() {
 			sq_resetobject(&env);
 			sq_resetobject(&obj);

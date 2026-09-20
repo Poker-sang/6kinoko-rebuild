@@ -80,3 +80,9 @@ reuses its existing owning table records and can omit constructor/weakref slots
 when that game class registers them separately. Errors are returned and the
 entry stack height restored. Table slots are static as in source and original
 421734/421785 (push 1 before newslot), correcting the host's non-static copies.
+
+Function::FromObjects exposes the existing retaining handle constructor to the
+embedding after its lookup has completed. The host detaches the resulting two
+references into its byte record; callback replacement adopts those records into
+a real Function whose destructor executes the original null/Release policy.
+This avoids a duplicate lookup and keeps missing-slot behavior unchanged.

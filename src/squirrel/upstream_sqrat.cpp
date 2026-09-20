@@ -61,6 +61,16 @@ bool sqrat_initialize_class(HSQUIRRELVM vm, HSQOBJECT type, HSQOBJECT setter_tab
 bool sqrat_push_instance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer native) {
     return SQ_SUCCEEDED(Sqrat::PushClassInstance(vm, type, native));
 }
+void sqrat_retain_function(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure) {
+    auto function = Sqrat::Function::FromObjects(vm, environment, closure);
+    // Transfer the two references to the host's byte record.
+    sq_resetobject(&function.GetEnv()); sq_resetobject(&function.GetFunc());
+}
+void sqrat_release_function(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure) {
+    Sqrat::Function function;
+    function.GetVM() = vm; function.GetEnv() = environment; function.GetFunc() = closure;
+    // The actual source destructor applies Function's IsNull/Release policy.
+}
 void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
                    SQBool raiseerror,
                    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {

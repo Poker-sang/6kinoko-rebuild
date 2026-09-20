@@ -6,7 +6,7 @@
     },
     "include/sqrat/sqratFunction.h": {
       "upstream_sha256": "9a6ebb5fca502326c8c424bd8a08385b4969512f196130d04a8d10b7a8f83bdf",
-      "patched_sha256": "3e620535840c0406168ad93afbbb50069ddea79b4e151e1c5219beb446ef2ffa"
+      "patched_sha256": "6df39221754b486b52e3dc947af3bb2f294fd6a0b98363a60776c9e058665255"
     },
     "include/sqrat/sqratMemberMethods.h": {
       "upstream_sha256": "104c833839b0600f28f89b1cc021aad509bd77d3c7ebf82fd28cad8a0fa4d547",

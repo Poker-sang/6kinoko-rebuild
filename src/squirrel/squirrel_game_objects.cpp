@@ -121,8 +121,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
     if (callback.closure._type != OT_NULL) {
         if (callback.vm) {
             auto previous_vm = pointer<SQVM>(callback.vm);
-            sq_release(previous_vm, &callback.environment);
-            sq_release(previous_vm, &callback.closure);
+            upstream::sqrat_release_function(previous_vm, callback.environment, callback.closure);
         }
         callback.environment = empty(); callback.closure = empty();
         write(destination, callback);
@@ -136,7 +135,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
         callback.vm = id;
         callback.environment = read<HSQOBJECT>(bytes(global) + 8);
         callback.closure = read<HSQOBJECT>(pair);
-        sq_addref(vm, &callback.environment); sq_addref(vm, &callback.closure);
+        upstream::sqrat_retain_function(vm, callback.environment, callback.closure);
         write(destination, callback);
     }
     retdec_sqrat_release_pair(id, pair);

@@ -75,6 +75,8 @@ bool sqrat_initialize_class(HSQUIRRELVM vm, HSQOBJECT type, HSQOBJECT setter_tab
     SQFUNCTION getter, SQFUNCTION weakref);
 bool sqrat_push_instance(HSQUIRRELVM vm, HSQOBJECT type, SQUserPointer native);
 HSQOBJECT sqrat_new_class(HSQUIRRELVM vm, bool keep_on_stack);
+void sqrat_retain_function(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure);
+void sqrat_release_function(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure);
 void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
                    SQBool raiseerror,
                    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
