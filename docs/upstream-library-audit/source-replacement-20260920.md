@@ -150,3 +150,29 @@ container copy). These are still migration work, not completed functionality.
 These are automated quiet-build checks, not additional gameplay observations.
 Complete replacement is still pending: remaining registries, legacy shared
 controls, owning container copies and CRT compatibility need further recovery.
+
+
+## Further checkpoints: r32–r37
+
+- 93b669f/c25ed99: C2DMapLayout registration now uses source Sqrat. Restored
+  read-only left/right and original asymmetric fractional chip setters: f_left
+  also truncates into left, f_top does not update top. r32 failed the shared new
+  contract because adjacent Squirrel statements lacked newlines; r33 passed 52/52.
+- 305bf9f: removed the retired map registry (22 functions, 10 globals, 1296
+  lines). CActResourceChip uses source registration and native ChipInfo access;
+  SetChipFlag preserves the original bit-zero-only condition. r34 passed 52/52.
+- 988cd99: removed the chip registry (19 functions, 22 globals, 836 lines).
+  CActResource2D/CActRenderTarget source property bindings replace detached
+  instance fields. Original load/unload ABI, suffix probing and ownership are
+  restored; the texture reader still maps DDS/BMP/PNG to CV2. r35 passed 52/52.
+- 4fd8e23: six resource publication virtual entries now use source instance
+  creation with explicit receivers. Ordinary slots permit the native name
+  fallback; raw script slots reject an empty name. r36 passed 52/52.
+- 02c8081: removed the texture registry (38 functions, 22 globals, 2595 lines).
+  Original C2DLayout/C2DMapLayout registration virtuals use explicit receivers,
+  distinct native wrappers and the original layer pointer aliases. Removed the
+  redundant no-op layout value publisher. r37 passed 52/52.
+
+DAT staging was verified for r33, r35 and r37. The user-owned r18 process is still
+running (observed PID 17656); it was not closed and no new gameplay result is
+claimed. IDA evidence for these entries is retained under r31/r33–r36.
