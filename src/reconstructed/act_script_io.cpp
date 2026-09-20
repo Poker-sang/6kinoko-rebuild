@@ -45,39 +45,47 @@ SQInteger write_bytecode(SQUserPointer context, SQUserPointer bytes, SQInteger s
 void quiet_print(HSQUIRRELVM, const SQChar*, ...) {}
 }
 
+extern "C" int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader) {
+    if (!script || !reader) return 0;
+    try {
+        uint8_t has_schema = 1;
+        if (!transfer(reader, has_schema)) return 0;
+        if (has_schema) {
+            uint32_t count = 0;
+            if (!transfer(reader, count) || count > 1024) return 0;
+            std::map<std::string, uint32_t> incoming;
+            for (uint32_t i = 0; i < count; ++i) {
+                std::string name;
+                uint32_t type = 0;
+                if (!read_string(reader, name, 4096) || !transfer(reader, type) || type > 3) return 0;
+                incoming[name] = type;
+            }
+            script_schema = std::move(incoming);
+        }
+        for (const auto& entry : script_schema) {
+            if (entry.second == 3) {
+                std::string text;
+                if (!read_string(reader, text, 0x100000)) return 0;
+                if (entry.first == "filePath")
+                    kinoko::legacy::StringView(pointer<void>(script + 64)).assign(text.data(), static_cast<uint32_t>(text.size()));
+            } else if (entry.second == 2) {
+                uint8_t value;
+                if (!transfer(reader, value)) return 0;
+                if (entry.first == "compiled") field<uint8_t>(script + 101) = value;
+            } else {
+                uint32_t ignored;
+                if (!transfer(reader, ignored)) return 0;
+            }
+        }
+        return 1;
+    } catch (...) { return 0; }
+}
+
 extern "C" int32_t __fastcall kinoko_method_read_act_script(
     int32_t script, void*, int32_t holder, int32_t version) {
     if (!script || !holder || version != 1) return 0;
     const auto reader = field<int32_t>(holder);
-    uint8_t has_schema = 1;
-    if (!transfer(reader, has_schema)) return 0;
-    if (has_schema) {
-        uint32_t count = 0;
-        if (!transfer(reader, count) || count > 1024) return 0;
-        std::map<std::string, uint32_t> incoming;
-        for (uint32_t i = 0; i < count; ++i) {
-            std::string name;
-            uint32_t type = 0;
-            if (!read_string(reader, name, 4096) || !transfer(reader, type) || type > 3) return 0;
-            incoming[name] = type;
-        }
-        script_schema = std::move(incoming);
-    }
-    for (const auto& entry : script_schema) {
-        if (entry.second == 3) {
-            std::string text;
-            if (!read_string(reader, text, 0x100000)) return 0;
-            if (entry.first == "filePath")
-                kinoko::legacy::StringView(pointer<void>(script + 64)).assign(text.data(), static_cast<uint32_t>(text.size()));
-        } else if (entry.second == 2) {
-            uint8_t value;
-            if (!transfer(reader, value)) return 0;
-            if (entry.first == "compiled") field<uint8_t>(script + 101) = value;
-        } else {
-            uint32_t ignored;
-            if (!transfer(reader, ignored)) return 0;
-        }
-    }
+    if (!kinoko_act_read_script_properties(script, reader)) return 0;
     uint32_t size = 0;
     if (!transfer(reader, size) || size > 0x1000000) return 0;
     void* bytes = std::calloc(1, size ? size : 1);

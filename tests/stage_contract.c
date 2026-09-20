@@ -4872,6 +4872,66 @@ static int test_chip_serialization(void) {
     return 0;
 }
 
+static int32_t __fastcall act_contract_no_script(int32_t self,void* unused,int32_t stream) {
+    (void)self; (void)unused; (void)stream; return 1;
+}
+static int32_t __fastcall act_contract_layer_id(int32_t self,void* unused,int32_t stream) {
+    (void)unused;
+    return script_io_transfer((struct script_io_stream*)(intptr_t)stream,NULL,(void*)(intptr_t)(self+104),4);
+}
+static int test_act_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t source[60]={0},loaded[60]={0};
+    source[0]=loaded[0]=PTR(&g285); source[9]=source[16]=loaded[9]=loaded[16]=15;
+    CHECK(retdec_construct_cact_script(PTR(source+25)) && retdec_construct_cact_script(PTR(loaded+25)));
+    source[1]=16; source[2]=640; source[3]=480;
+    source[18]=11; source[19]=22; source[20]=33; source[21]=44; ((uint8_t*)source)[96]=1;
+    const unsigned char saved=g673; const int32_t archives=g765; g673=0; g765=0;
+    CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
+    char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+    CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"act",0,path));
+    HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+        FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+    CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+    CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+    int32_t reader[7]={PTR(&g33),PTR(file)},holder=PTR(reader);
+    CHECK(retdec_call_thiscall2_result(loaded,(void*)g285.e1,PTR(&holder),1));
+    CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+    CHECK(loaded[1]==16 && loaded[2]==640 && loaded[3]==480);
+    CHECK(loaded[18]==11 && loaded[19]==22 && loaded[20]==33 && loaded[21]==44);
+    CHECK(CloseHandle(file));
+    /* Isolate the ACT container writer's original filter from script compilation
+       and nested-layer codecs. The stub emits a stable ID to check wire order. */
+    int32_t script_methods[1]={PTR(act_contract_no_script)};
+    int32_t layer_methods[1]={PTR(act_contract_layer_id)};
+    int32_t layers[3][36]={{0}},references[3];
+    for(int i=0;i<3;++i) { layers[i][0]=PTR(layer_methods); layers[i][26]=100+i; references[i]=PTR(layers[i]); }
+    ((uint8_t*)layers[0])[141]=1; ((uint8_t*)layers[1])[141]=2;
+    source[25]=PTR(script_methods); source[52]=PTR(references); source[53]=source[54]=PTR(references+3);
+    for(int compact=1;compact<=2;++compact) {
+        g673=(unsigned char)compact; stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
+        /* Sorted margins: bottom, left, right, top. These golden offsets come
+           from 427750, not the former apply_cact helper's incorrect mapping. */
+        CHECK(stream.bytes[0]==0 && *(int32_t*)(stream.bytes+1)==44);
+        CHECK(*(int32_t*)(stream.bytes+5)==11 && *(int32_t*)(stream.bytes+9)==33);
+        CHECK(*(int32_t*)(stream.bytes+13)==22);
+        uint32_t count=compact==1?2:3;
+        CHECK(*(uint32_t*)(stream.bytes+42)==count && stream.size==50+8*count);
+        for(uint32_t i=0;i<count;++i) {
+            CHECK(*(uint32_t*)(stream.bytes+46+i*8)==0x2618cf18u);
+            CHECK(*(int32_t*)(stream.bytes+50+i*8)==100+i+(compact==1));
+        }
+        CHECK(*(uint32_t*)(stream.bytes+46+8*count)==0);
+    }
+    source[52]=source[53]=source[54]=0;
+    retdec_destroy_cact_object(PTR(source)); retdec_destroy_cact_object(PTR(loaded));
+    g673=saved; g765=archives;
+    puts("PASS: CAct native reader, original margin offsets, debug-only filter and stable layer wire order");
+    return 0;
+}
+
 static int test_key_string_writers(void) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
@@ -5374,7 +5434,7 @@ int main(int argc, char **argv) {
         return test_portrait_regions(argv[2]);
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
         return test_texture_serialization(0) || test_texture_serialization(1) ||
-            test_chip_serialization() || test_layout_serialization() || test_key_string_writers();
+            test_chip_serialization() || test_layout_serialization() || test_key_string_writers() || test_act_serialization();
     if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
         return test_map_serialization() || test_map_set_layer();
     if(argc==2 && strcmp(argv[1],"--dynamic-layer")==0)

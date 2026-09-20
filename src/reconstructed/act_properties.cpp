@@ -208,16 +208,16 @@ void retdec_act_apply_cact(int32_t object_ptr,
             field<float>(object_ptr + 92) =
                 retdec_act_property_float(property);
         else if (std::strcmp(property->name, "marginBottom") == 0)
-            field<int32_t>(object_ptr + 72) =
+            field<int32_t>(object_ptr + 84) =
                 retdec_act_property_integer(property);
         else if (std::strcmp(property->name, "marginLeft") == 0)
-            field<int32_t>(object_ptr + 76) =
+            field<int32_t>(object_ptr + 72) =
                 retdec_act_property_integer(property);
         else if (std::strcmp(property->name, "marginRight") == 0)
             field<int32_t>(object_ptr + 80) =
                 retdec_act_property_integer(property);
         else if (std::strcmp(property->name, "marginTop") == 0)
-            field<int32_t>(object_ptr + 84) =
+            field<int32_t>(object_ptr + 76) =
                 retdec_act_property_integer(property);
         else if (std::strcmp(property->name, "visible") == 0)
             field<uint8_t>(object_ptr + 96) =

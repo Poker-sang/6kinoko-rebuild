@@ -47,18 +47,13 @@ using kinoko::legacy::field;
 
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t raw_size;
     unsigned char *raw_data;
 
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_script_properties(object_ptr, reader_ptr)) {
         retdec_trace("act:script-properties-failed");
         return 0;
     }
-    retdec_act_apply_script(object_ptr, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_read_u32(reader_ptr, &raw_size) ||
         raw_size > 0x1000000u) {
         retdec_trace("act:script-size-failed");
@@ -693,8 +688,6 @@ extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
 
     if (type != 0xc6fdb98au && type != 0xfbaaf527u) {
         retdec_trace_i32("act:unsupported-resource", (int32_t)type);
@@ -727,17 +720,14 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         field<int32_t>(resource + 92) = 15;
         field<uint8_t>(resource + 72) = 0;
     }
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    const auto loaded = type == 0xfbaaf527u
+        ? kinoko_method_read_chip_resource(resource, nullptr, address(&reader_ptr), 1)
+        : kinoko_method_read_texture_resource(resource, nullptr, address(&reader_ptr), 1);
+    if (!loaded) {
         retdec_trace("act:resource-properties-failed");
-        std::free(pointer<void>(resource));
+        retdec_destroy_cact_resource(resource);
         return 0;
     }
-    if (type == 0xfbaaf527u)
-        retdec_act_apply_chip_resource(resource, properties, property_count);
-    else
-        retdec_act_apply_resource(resource, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     if (type == 0xc6fdb98au) {
         // Original 446A84 clears auto-size after deserializing, including an
         // absent property block. Serialized atlas regions must survive LoadTexture.
@@ -887,8 +877,6 @@ int32_t retdec_act_prepare_vector(int32_t object_ptr,
 int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t layer_count;
     uint32_t resource_count;
     uint32_t index;
@@ -900,13 +888,10 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
         return 0;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_properties(this_ptr, reader_ptr)) {
         retdec_trace("act:cact-properties-failed");
         return 0;
     }
-    retdec_act_apply_cact(this_ptr, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_load_script(this_ptr + 100, reader_ptr)) {
         retdec_trace("act:cact-script-failed");
         return 0;
@@ -925,6 +910,8 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         }
         layer = retdec_act_make_layer();
         if (layer == 0 || !retdec_act_load_layer(layer, reader_ptr, version)) {
+            retdec_destroy_cact_layer(layer);
+            std::free(pointer<void>(layer));
             retdec_trace("act:layer-load-failed");
             return 0;
         }

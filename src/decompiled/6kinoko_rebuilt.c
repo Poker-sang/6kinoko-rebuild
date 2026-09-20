@@ -3706,8 +3706,8 @@ struct vtable_4ec0b0_type g277 = {
 
  // 0x4ec138
 struct vtable_4ec1d4_type g285 = {
-    .e0 = function_428720,
-    .e1 = function_428150,
+    .e0 = (int32_t (*)(int32_t))kinoko_method_write_act,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_act,
     .e2 = function_4461d0,
     .e3 = function_446210,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_destroy_act,

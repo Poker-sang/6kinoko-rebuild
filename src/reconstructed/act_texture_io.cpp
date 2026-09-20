@@ -53,6 +53,13 @@ Schema layer_schema{
     {"prev_x",{1,1,168}}, {"prev_y",{1,1,172}}, {"prev_z",{1,1,176}}
 };
 Schema key_schema{{"scriptFunction",{3,3,8}}};
+// 427750: marginLeft/Top/Right/Bottom are +72/+76/+80/+84.
+Schema act_schema{
+    {"resolutionMs",{0,0,4}}, {"screenWidth",{0,0,8}}, {"screenHeight",{0,0,12}},
+    {"stName",{3,3,16}}, {"offsetX",{1,1,88}}, {"offsetY",{1,1,92}},
+    {"marginLeft",{0,0,72}}, {"marginTop",{0,0,76}},
+    {"marginRight",{0,0,80}}, {"marginBottom",{0,0,84}}, {"visible",{2,2,96}}
+};
 // 43F770 registers alignment with the bool template 443CC0 AND offset 128,
 // aliasing addEdge (43F97D), despite the runtime integer living at 132.
 Schema string_layout_schema{
@@ -504,18 +511,21 @@ struct TypeName {
         if (text.is_heap()) std::free(text.data());
     }
 };
-bool layout_hash(int32_t layout,uint32_t& hash) {
+bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {
     const auto table=field<int32_t>(layout);
     const char* name=nullptr;
     if (table==address(kinoko_act_host_symbols()->layout_vtable)) name=".?AVC2DLayout@@";
     else if (table==address(kinoko_act_host_symbols()->map_layout_vtable)) name=".?AVC2DMapLayout@@";
     else if (table==address(&g350)) name=".?AVCStringLayout@@";
+    else if (table==address(kinoko_act_host_symbols()->texture_resource_vtable)) name=".?AVCActResource2D@@";
+    else if (table==address(kinoko_act_host_symbols()->chip_resource_vtable)) name=".?AVCActResourceChip@@";
+    else if (table==address(kinoko_act_host_symbols()->render_target_vtable)) name=".?AVCActRenderTarget@@";
     if (name) { hash=type_hash(name); return true; }
     // Original 426740 obtains the remaining registered types through virtual
     // GetType/GetName. Keep this boundary until their registries are migrated;
     // do not confuse modern compiler RTTI spelling with the original raw name.
     if (!table) return false;
-    const auto binder=retdec_call_thiscall0_result(pointer<void>(layout),field<void*>(table+16));
+    const auto binder=retdec_call_thiscall0_result(pointer<void>(layout),field<void*>(table+type_slot));
     if (!binder || !field<int32_t>(binder)) return false;
     TypeName result;
     retdec_call_thiscall1_result(pointer<void>(binder),field<void*>(field<int32_t>(binder)+4),address(result.bytes));
@@ -582,7 +592,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,int3
         if (!transfer(writer,present)) return 0;
         if (!layout) return 1;
         uint32_t hash=0;
-        if (!layout_hash(layout,hash) || !transfer(writer,hash)) return 0;
+        if (!object_hash(layout,hash,16) || !transfer(writer,hash)) return 0;
         return (retdec_call_thiscall1_result(pointer<void>(layout),
             field<void*>(field<int32_t>(layout)),writer)&0xff)!=0;
     } catch (...) { return 0; }
@@ -591,6 +601,56 @@ extern "C" int32_t __fastcall kinoko_method_write_string_layout(int32_t layout,v
     if (!layout || !writer) return 0;
     try { return write(layout,writer,string_layout_schema); }
     catch (...) { return 0; }
+}
+
+extern "C" int32_t kinoko_act_read_properties(int32_t act,int32_t reader) {
+    if (!act || !reader) return 0;
+    try { return read(act,reader,act_schema,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_read_act(int32_t act,void*,int32_t holder,int32_t version) {
+    return act && holder && version==1 ? retdec_act_load(act,field<int32_t>(holder),version) : 0;
+}
+namespace {
+std::vector<int32_t> object_vector(int32_t slot) {
+    const auto begin=field<uint32_t>(slot),end=field<uint32_t>(slot+4);
+    if (end<begin || (end-begin)%4 || (!begin && end) || (end-begin)/4>0x10000)
+        throw std::bad_alloc();
+    if (begin==end) return {};
+    return {pointer<int32_t>(begin),pointer<int32_t>(end)};
+}
+}
+extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t writer) {
+    if (!act || !writer) return 0;
+    try {
+        if (!write(act,writer,act_schema)) return 0;
+        const auto script=act+100;
+        if (!(retdec_call_thiscall1_result(pointer<void>(script),
+            field<void*>(field<int32_t>(script)),writer)&0xff)) return 0;
+        auto layers=object_vector(act+208);
+        // 4287D9/428822 omit only debugOnly==1 when g673==1. Values other
+        // than one are deliberately not treated as true by this filter.
+        if (g673==1) layers.erase(std::remove_if(layers.begin(),layers.end(),[](auto layer) {
+            return layer && field<uint8_t>(layer+141)==1;
+        }),layers.end());
+        auto count=static_cast<uint32_t>(layers.size());
+        if (!transfer(writer,count)) return 0;
+        auto hash=type_hash(".?AVCActLayer@@");
+        for (auto layer:layers) {
+            if (!transfer(writer,hash)) return 0;
+            if (layer) retdec_call_thiscall1_result(pointer<void>(layer),
+                field<void*>(field<int32_t>(layer)),writer);
+        }
+        const auto resources=object_vector(act+224);
+        count=static_cast<uint32_t>(resources.size());
+        if (!transfer(writer,count)) return 0;
+        for (auto resource:resources) {
+            if (!resource || !object_hash(resource,hash,20) || !transfer(writer,hash)) return 0;
+            retdec_call_thiscall1_result(pointer<void>(resource),
+                field<void*>(field<int32_t>(resource)),writer);
+        }
+        return 1;
+    } catch (...) { return 0; }
 }
 
 extern "C" {
