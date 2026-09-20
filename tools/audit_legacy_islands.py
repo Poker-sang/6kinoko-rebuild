@@ -208,7 +208,7 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
     text = git('show', commit + ':' + MAIN).decode()
     external, corpus = {}, {}
     for path in sorted(git('ls-tree', '-r', '--name-only', commit).decode().splitlines()):
-        if path == REFERENCE or not (path.startswith(('src/', 'include/', 'tests/', 'third_party/', 'tools/', '.github/'))
+        if path == REFERENCE or not (path.startswith(('src/', 'include/', 'tests/', 'third_party/', 'tools/', 'cmake/', '.github/'))
                                     or path == 'CMakeLists.txt'):
             continue
         data = git('show', commit + ':' + path)

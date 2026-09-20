@@ -5,6 +5,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from audit_legacy_islands import component, graph, interior_references
+from unittest.mock import patch
 
 SAMPLE = '''
 int32_t function_401000(void);
@@ -39,6 +40,19 @@ class GraphContract(unittest.TestCase):
     def test_unparsed_initializer_is_a_root(self):
         with self.assertRaisesRegex(ValueError, 'reachable'):
             self.selected(SAMPLE + 'Table unknown_table = { &g10 };\n')
+
+    def test_cmake_modules_participate_in_pinned_source_audit(self):
+        from audit_legacy_islands import audit, MAIN
+        commit = 'a' * 40
+        files = {MAIN: SAMPLE.encode(), 'cmake/Exports.cmake': b'function_401000'}
+        def fake_git(*args):
+            if args[0] == 'rev-parse': return commit.encode()
+            if args[0] == 'ls-tree': return ('\n'.join(files) + '\n').encode()
+            if args[0] == 'show': return files[args[1].split(':', 1)[1]]
+            raise AssertionError(args)
+        with patch('audit_legacy_islands.git', fake_git):
+            with self.assertRaisesRegex(ValueError, 'reachable'):
+                audit(commit, [], ['function_401000'])
 
     def test_comments_are_not_roots(self):
         self.assertEqual(len(self.selected(external={'notes.h': '// g10\n/* function_401000() */'})), 4)
