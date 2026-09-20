@@ -489,6 +489,60 @@ void mapped_method_contract(HSQUIRRELVM vm) {
     require(native[0] == 12 && native[1] == 34 && mapped[0] == 56 && mapped[1] == 78,
         "mapped method leaves native records intact");
 }
+// The instance's primary pointer is not necessarily the declaring base's
+// pointer. Original 4AA750 and the 20080713 getInstanceVarInfo use __ot.
+void mapped_property_contract(HSQUIRRELVM vm) {
+    StackTop stack(vm);
+    Object klass(vm), instance(vm), mapping(vm);
+    make_class(vm, klass, "MappedPropertyActor");
+    auto* declaring_type = kinoko_native_binding_type(-1);
+    function_460920(pointer<int32_t>(klass.location()), declaring_type, 4,
+        const_cast<char*>("value"), 0);
+    static int foreign_type;
+    klass.view().push(vm);
+    require(SQ_SUCCEEDED(sq_settypetag(vm, -1, &foreign_type)), "foreign property class tag");
+    sq_pop(vm, 1);
+    int32_t native[2] = {12, 34}, mapped[2] = {56, 78};
+    make_instance(vm, klass, instance, native);
+    require(get_slot(vm, klass.view(), "__ot", mapping.view()), "property receiver map");
+    mapping.view().push(vm); sq_pushinteger(vm, address(declaring_type));
+    sq_pushuserpointer(vm, mapped);
+    require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install declaring base pointer"); sq_pop(vm, 1);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    int32_t metadata = 0, source = 0;
+    require(retdec_resolve_instance_var(address(vm), 2, &metadata, &source) == 1 &&
+        source == address(mapped + 1), "original property resolver uses declaring base from __ot");
+    require(sq_gettop(vm) == 2 && metadata != 0, "mapped resolution preserves caller stack");
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == 78, "mapped property getter");
+    sq_settop(vm, 0);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1); sq_pushinteger(vm, -123);
+    require(function_4aafa0(address(vm)) == 1 && integer(vm) == -123 && mapped[1] == -123,
+        "mapped property setter");
+    require(native[0] == 12 && native[1] == 34 && mapped[0] == 56, "primary pointer and guards untouched");
+    sq_settop(vm, 0);
+    instance.view().push(vm); sq_setinstanceup(vm, -1, nullptr); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == -123,
+        "alternate base works without primary instance pointer"); sq_settop(vm, 0);
+    mapping.view().push(vm); sq_pushinteger(vm, address(declaring_type));
+    require(SQ_SUCCEEDED(sq_deleteslot(vm, -2, SQFalse)), "remove declaring base pointer"); sq_pop(vm, 1);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    metadata = source = 99;
+    require(!retdec_resolve_instance_var(address(vm), 2, &metadata, &source) && !metadata && !source,
+        "missing base mapping cannot fall back to primary pointer");
+    require(sq_gettop(vm) == 2, "failed base resolution preserves stack");
+    sq_getlasterror(vm); require(text(vm) == "Invalid Instance Type", "source type error retained");
+    sq_settop(vm, 0);
+    const auto info_address = function_45fab0(klass.location(), address("value"));
+    auto info = load<Variable>(info_address); info.flags = Static; info.offset = address(mapped + 1);
+    store(info_address, info);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == -123,
+        "static property skips typetag and __ot"); sq_settop(vm, 0);
+    info.flags = Constant; info.offset = 29; store(info_address, info);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == 29,
+        "constant property skips typetag and __ot");
+}
 void child_binding_contract(HSQUIRRELVM vm) {
     StackTop stack(vm);
     Object klass(vm), instance(vm);
@@ -540,7 +594,7 @@ int main() {
             Machine machine; auto* vm = machine.get();
             class_contract(vm); lookup_contract(vm); values_contract(vm);
             instance_contract(vm); methods_contract(vm); argument_guards(vm);
-            table_callback_contract(vm); mapped_method_contract(vm); child_binding_contract(vm);
+            table_callback_contract(vm); mapped_method_contract(vm); mapped_property_contract(vm); child_binding_contract(vm);
             require(sq_gettop(vm) == 0, "all binding contracts restore caller stack");
         }
         std::puts("Squirrel binding contracts passed: 8 full VM lifetimes, class/metadata/variables/methods/argument guards/table callbacks/mapped receivers/child VMs");
