@@ -1,3 +1,4 @@
+#include "kinoko/actor_pool.h"
 #include "kinoko/render_queue.h"
 #include "kinoko/ime_input.h"
 #include "kinoko/render_target.h"
@@ -556,11 +557,11 @@ struct vtable_4d5a68_type {
 };
 
 struct vtable_4d5a04_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, unsigned char);
     int32_t (*e1)(int32_t);
     int32_t (*e2)(uint32_t);
     int32_t (__fastcall *e3)(int32_t, void *, uint32_t);
-    int32_t (*e4)();
+    int32_t (__fastcall *e4)(int32_t, void *);
 };
 
 struct vtable_4d5a1c_type {
@@ -2191,7 +2192,6 @@ int32_t function_469870(void);
 int32_t function_469880(int32_t a1);
 int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_4698d0(char a1);
 int32_t function_469900(void);
 
 int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
@@ -2212,12 +2212,7 @@ int32_t function_46a140(void);
 int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
 int32_t function_46a260(int32_t a1, int32_t a2);
-static int32_t function_46a2d0_this(int32_t this_ptr);
-int32_t function_46a380(void);
-int32_t function_46a450(int32_t a1, int32_t a2);
-int32_t function_46a550(char a1);
 
-int32_t function_46a6f0_this(int32_t manager, uint32_t handle);
 
 int32_t function_46a7e0(char a1);
 int32_t function_46a9c0(void);
@@ -2449,7 +2444,7 @@ int32_t g13[6] = {
  // 0x4d55c8
 int32_t g23 = 0x44fd30; // 0x4d5884
 int32_t g25 = 0x44fd30; // 0x4d58ac
-int32_t g28 = 0x4698d0; // 0x4d59dc
+int32_t g28 = (int32_t)(intptr_t)&kinoko_method_actor_pool_base_delete; // 0x4d59dc
 /* CInputManager's vftable: destructor, then the per-frame input update. */
 int32_t g35[2] = {
     (int32_t)(intptr_t)&kinoko_method_delete_input_device,
@@ -3352,11 +3347,11 @@ struct vtable_4d59bc_type g27 = {
     .e0 = (int32_t (*)(int32_t))kinoko_method_render_layer_update
 }; // 0x4d59bc
 struct vtable_4d5a04_type g29 = {
-    .e0 = function_46a550,
+    .e0 = kinoko_method_actor_pool_delete,
     .e1 = (int32_t (*)(int32_t))kinoko_method_actor_manager_top,
     .e2 = (int32_t (*)(uint32_t))kinoko_method_actor_manager_remove,
     .e3 = kinoko_method_lookup_actor,
-    .e4 = function_46a380
+    .e4 = kinoko_method_actor_pool_count
 }; // 0x4d5a04
 struct vtable_4d5a1c_type g30 = {
     .e0 = function_46a7e0,
@@ -14767,17 +14762,7 @@ int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 
 
 // Address range: 0x4698d0 - 0x4698f2
-int32_t function_4698d0(char a1) {
-    // 0x4698d0
-    int32_t result; // 0x4698d0
-    *(int32_t *)result = (int32_t)&g28;
-    if ((a1 & 1) != 0) {
-        // 0x4698e2
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4698eb
-    return result;
-}
+
 
 // Address range: 0x469900 - 0x4699bf
 int32_t function_469900(void) {
@@ -15140,25 +15125,7 @@ int32_t function_46a260(int32_t a1, int32_t a2) {
 
 
 /* CHandleManagerEx<Actor> constructor with the original destination in ECX. */
-static int32_t function_46a2d0_this(int32_t this_ptr) {
-    int32_t sentinel;
 
-    if (this_ptr == 0)
-        return 0;
-    memset((void *)(intptr_t)this_ptr, 0, 80);
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g29;
-
-    sentinel = _3f__3f_2_40_YAPAXI_40_Z(12);
-    if (sentinel == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 36) = sentinel;
-    *(int32_t *)(intptr_t)sentinel = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-
-    function_4087e0_this(this_ptr + 52);
-    *(int32_t *)(intptr_t)(this_ptr + 48) = 0;
-    return this_ptr;
-}
 
 /* ActorManager's CRT constructor (0x46B0A0) builds several independent
    intrusive-list sentinels around the handle manager.  RetDec split the
@@ -15189,7 +15156,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 
     handle_manager = (int32_t)(intptr_t)calloc(1u, 80u);
     if (handle_manager == 0 ||
-        function_46a2d0_this(handle_manager) == 0)
+        kinoko_actor_pool_construct(handle_manager) == 0)
         return 0;
     *(int32_t *)(intptr_t)(this_ptr + 4) = handle_manager;
 
@@ -15238,9 +15205,8 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
     return this_ptr;
 }
 
-/* Small int32 vector helper for the two vectors embedded in the handle
-   manager. These vectors are reached through a lost __thiscall receiver in
-   the decompiled output, so the generic RetDec body cannot be reused here. */
+/* Remaining flat vector adapter for input-manager storage only. Actor pool
+   storage is owned by native standard containers in actor_pool.cpp. */
 static int32_t retdec_actor_vector_push_i32(int32_t vector_ptr,
                                             int32_t value) {
     int32_t begin;
@@ -15310,12 +15276,7 @@ static void retdec_actor_manager_clear_list(int32_t list_field) {
 // Address range: 0x46a380 - 0x46a38a
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-int32_t function_46a380(void) {
-    // 0x46a380
-    int32_t v1; // 0x46a380
-    int32_t v2 = v1;
-    return *(int32_t *)(v2 + 8) - *(int32_t *)(v2 + 4) >> 2;
-}
+
 
 // Address range: 0x46a390 - 0x46a44a
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
@@ -15325,129 +15286,12 @@ int32_t function_46a380(void) {
 // Address range: 0x46a450 - 0x46a549
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          constructor
-int32_t function_46a450(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x46a460
-    int32_t v2; // bp-4, 0x46a450
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-36, 0x46a46c
-    int32_t v4 = &v3; // 0x46a46c
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v5; // 0x46a450
-    int32_t * v6 = (int32_t *)v5; // 0x46a47b
-    *v6 = (int32_t)&g29;
-    int32_t * v7 = (int32_t *)(v5 + 8); // 0x46a481
-    int32_t v8 = *v7; // 0x46a481
-    int32_t * v9 = (int32_t *)(v5 + 4); // 0x46a484
-    int32_t v10 = *v9; // 0x46a484
-    int32_t v11 = 0; // 0x46a497
-    int32_t v12 = v4; // 0x46a497
-    if (v8 - v10 >= 4) {
-        int32_t v13 = v10; // 0x46a4a8
-        int32_t v14 = v8; // 0x46a4a8
-        int32_t v15 = v4; // 0x46a4a8
-        if (*(int32_t *)(4 * v11 + v10) != 0) {
-            // 0x46a4aa
-            v15 = v4 - 4;
-            *(int32_t *)v15 = 1;
-            v13 = *v9;
-            v14 = *v7;
-        }
-        int32_t v16 = v15;
-        int32_t v17 = v14; // 0x46a4b2
-        int32_t v18 = v13; // 0x46a4b5
-        v11++;
-        v12 = v16;
-        while (v11 < v17 - v18 >> 2) {
-            int32_t v19 = v16;
-            v13 = v18;
-            v14 = v17;
-            v15 = v19;
-            if (*(int32_t *)(4 * v11 + v18) != 0) {
-                // 0x46a4aa
-                v15 = v19 - 4;
-                *(int32_t *)v15 = 1;
-                v13 = *v9;
-                v14 = *v7;
-            }
-            // 0x46a4b2
-            v16 = v15;
-            v17 = v14;
-            v18 = v13;
-            v11++;
-            v12 = v16;
-        }
-    }
-    // 0x46a4c0
-    function_408830();
-    int32_t * v20 = (int32_t *)(v5 + 36); // 0x46a4cc
-    int32_t v21 = *v20; // 0x46a4cc
-    int32_t * v22 = (int32_t *)v21; // 0x46a4cf
-    int32_t v23 = *v22; // 0x46a4cf
-    *v22 = v21;
-    int32_t v24 = *v20; // 0x46a4d3
-    *(int32_t *)(v24 + 4) = v24;
-    *(int32_t *)(v5 + 40) = 0;
-    int32_t * v25 = (int32_t *)(v12 - 4);
-    int32_t v26 = v23; // 0x46a4df
-    if (v23 != *v20) {
-        int32_t v27 = *(int32_t *)v23; // 0x46a4e1
-        *v25 = v23;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        int32_t v28 = *v20; // 0x46a4ee
-        v26 = v28;
-        while (v27 != v28) {
-            int32_t v29 = v27;
-            v27 = *(int32_t *)v29;
-            *v25 = v29;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            v28 = *v20;
-            v26 = v28;
-        }
-    }
-    // 0x46a4f3
-    *v25 = v26;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    int32_t * v30 = (int32_t *)(v5 + 20); // 0x46a4fc
-    int32_t v31 = *v30; // 0x46a4fc
-    if (v31 != 0) {
-        // 0x46a506
-        *v25 = v31;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x46a50f
-    *v30 = 0;
-    *(int32_t *)(v5 + 24) = 0;
-    *(int32_t *)(v5 + 28) = 0;
-    int32_t v32 = *v9; // 0x46a518
-    int32_t result = 0; // 0x46a51d
-    if (v32 != 0) {
-        // 0x46a51f
-        *v25 = v32;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result = &g1224;
-    }
-    // 0x46a528
-    *v9 = 0;
-    *v7 = 0;
-    *(int32_t *)(v5 + 12) = 0;
-    *v6 = (int32_t)&g28;
-    __writefsdword(0, v1);
-    return result;
-}
+
 
 // Address range: 0x46a550 - 0x46a571
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-int32_t function_46a550(char a1) {
-    // 0x46a550
-    int32_t result; // 0x46a550
-    function_46a450(result, result);
-    if ((a1 & 1) != 0) {
-        // 0x46a561
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x46a56a
-    return result;
-}
+
 
 
 
@@ -15458,36 +15302,7 @@ int32_t function_46a550(char a1) {
 // Address range: 0x46a6f0 - 0x46a793
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
-int32_t function_46a6f0_this(int32_t manager, uint32_t handle) {
-    uint32_t index = handle & 0xffffu;
-    uint32_t generation = handle >> 16;
-    int32_t begin, generations, sentinel, node, actor;
-    int32_t result = 0;
-    if (manager == 0)
-        return 0;
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(manager + 52));
-    begin = *(int32_t *)(intptr_t)(manager + 4);
-    generations = *(int32_t *)(intptr_t)(manager + 20);
-    if (generation != 0 && begin != 0 && generations != 0 &&
-        index < (uint32_t)(*(int32_t *)(intptr_t)(manager + 8) - begin) / 4 &&
-        index < (uint32_t)(*(int32_t *)(intptr_t)(manager + 24) - generations) / 4 &&
-        *(uint32_t *)(intptr_t)(generations + index * 4) == generation) {
-        *(int32_t *)(intptr_t)(generations + index * 4) = 0;
-        actor = *(int32_t *)(intptr_t)(begin + index * 4);
-        function_45e460_this(actor);
-        sentinel = *(int32_t *)(intptr_t)(manager + 36);
-        node = function_4214a0(sentinel,
-            *(int32_t *)(intptr_t)(sentinel + 4), (int32_t *)&index);
-        if (node != 0) {
-            *(int32_t *)(intptr_t)(sentinel + 4) = node;
-            *(int32_t *)(intptr_t)*(int32_t *)(intptr_t)(node + 4) = node;
-            ++*(int32_t *)(intptr_t)(manager + 40);
-            result = 1;
-        }
-    }
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(intptr_t)(manager + 52));
-    return result;
-}
+
 
 
 // Address range: 0x46a7e0 - 0x46a829
@@ -15617,84 +15432,19 @@ int32_t function_46aae0(char a1) {
 
 /* CHandleManagerEx<Actor>::Get with the original ECX receiver restored. */
 int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
-    uint32_t index;
-    uint32_t generation;
     int32_t actor;
-
-    if (this_ptr == 0 || out_ptr == 0)
-        return 0;
-
-    if (g_retdec_actor_init_count < 3 ||
-        (g_retdec_actor_init_count & 63u) == 0) {
+    if (g_retdec_actor_init_count < 3 || (g_retdec_actor_init_count & 63u) == 0)
         retdec_trace_i32("actor:request", (int32_t)g_retdec_actor_init_count);
-    }
-
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)
-                          (intptr_t)(this_ptr + 52));
-    generation = (uint32_t)*(int32_t *)(intptr_t)(this_ptr + 48) + 1u;
-    if (generation >= 0x10000u)
-        generation = 1;
-    *(int32_t *)(intptr_t)(this_ptr + 48) = (int32_t)generation;
-
-    /* A free-list entry contains the reusable vector index. This is not used
-       during the initial 512-Actor population, but preserving it keeps the
-       handle manager usable after startup. */
-    if (*(int32_t *)(intptr_t)(this_ptr + 40) != 0) {
-        int32_t sentinel = *(int32_t *)(intptr_t)(this_ptr + 36);
-        int32_t node = sentinel != 0
-            ? *(int32_t *)(intptr_t)(sentinel + 4) : 0;
-        if (node != 0 && node != sentinel) {
-            int32_t next = *(int32_t *)(intptr_t)node;
-            int32_t previous = *(int32_t *)(intptr_t)(node + 4);
-            index = (uint32_t)*(int32_t *)(intptr_t)(node + 8);
-            *(int32_t *)(intptr_t)previous = next;
-            *(int32_t *)(intptr_t)(next + 4) = previous;
-            free((void *)(intptr_t)node);
-            --*(int32_t *)(intptr_t)(this_ptr + 40);
-            actor = *(int32_t *)(intptr_t)(
-                *(int32_t *)(intptr_t)(this_ptr + 4) + 4 * (int32_t)index);
-            if (actor != 0)
-                function_45e300_this(actor);
-        } else {
-            actor = 0;
-            index = 0;
-        }
-    } else {
-        int32_t begin = *(int32_t *)(intptr_t)(this_ptr + 4);
-        int32_t end = *(int32_t *)(intptr_t)(this_ptr + 8);
-        index = begin != 0 && end >= begin
-            ? (uint32_t)(end - begin) / 4u : 0;
-        actor = _3f__3f_2_40_YAPAXI_40_Z(0x220);
-        if (actor != 0) {
-            function_45e300_this(actor);
-            if (retdec_actor_vector_push_i32(this_ptr + 4, actor) == 0) {
-                free((void *)(intptr_t)actor);
-                actor = 0;
-            }
-        }
-    }
-
-    if (actor != 0) {
-        int32_t generations = *(int32_t *)(intptr_t)(this_ptr + 20);
-        uint32_t generation_count = generations != 0
-            ? (uint32_t)(*(int32_t *)(intptr_t)(this_ptr + 24) - generations) / 4 : 0;
-        if (index < generation_count)
-            *(int32_t *)(intptr_t)(generations + index * 4) = (int32_t)generation;
-        else if (retdec_actor_vector_push_i32(this_ptr + 20, (int32_t)generation) == 0)
-            actor = 0;
-        *(uint16_t *)(intptr_t)out_ptr = (uint16_t)index;
-        *(uint16_t *)(intptr_t)(out_ptr + 2) = (uint16_t)generation;
+    actor = kinoko_actor_pool_get(this_ptr, out_ptr);
+    if (actor) {
         ++g_retdec_actor_init_count;
-        if (g_retdec_actor_init_count <= 3 ||
-            (g_retdec_actor_init_count & 63u) == 0) {
-            retdec_trace_i32("actor:created",
-                             (int32_t)g_retdec_actor_init_count);
-        }
+        if (g_retdec_actor_init_count <= 3 || (g_retdec_actor_init_count & 63u) == 0)
+            retdec_trace_i32("actor:created", (int32_t)g_retdec_actor_init_count);
     }
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)
-                         (intptr_t)(this_ptr + 52));
     return actor;
 }
+
+
 
 /* The vtable call supplies ECX and no stack argument. */
 

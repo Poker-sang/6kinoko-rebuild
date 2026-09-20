@@ -190,6 +190,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_serializable.cpp
+    src/reconstructed/actor_pool.cpp
     src/reconstructed/legacy_container_memory.cpp
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp

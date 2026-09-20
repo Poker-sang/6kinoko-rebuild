@@ -5632,19 +5632,39 @@ static int test_map_virtual_clone(void) {
     return 0;
 }
 
+static int pool_retire_calls, pool_delete_calls;
+static int32_t __fastcall pool_actor_delete_probe(int32_t actor, void *unused, unsigned char flags) {
+    (void)unused;
+    if (flags & 1) { ++pool_delete_calls; free((void*)(intptr_t)actor); }
+    else ++pool_retire_calls;
+    return actor;
+}
 static int test_actor_handle_lookup(void) {
-    int32_t manager[19]={0};
-    int32_t actors[2]={0x12340000,0x23450000};
-    uint32_t generations[2]={0xbbbb,0xaaaa};
+    int32_t manager[20]={0}, first=0, second=0, reused=0;
+    int32_t probe=PTR(&pool_actor_delete_probe), a, b;
     int32_t value=0x11223344,node;
-    manager[0]=PTR(&g29);manager[1]=PTR(actors);manager[2]=PTR(actors+2);
-    manager[5]=PTR(generations);manager[6]=PTR(generations+2);
-    InitializeCriticalSection((LPCRITICAL_SECTION)((unsigned char*)manager+52));
-    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0001u)==actors[1]);
-    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0000u)==0);
-    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xbbbb0000u)==actors[0]);
-    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,(int32_t)0xaaaa0002u)==0);
-    DeleteCriticalSection((LPCRITICAL_SECTION)((unsigned char*)manager+52));
+    CHECK(kinoko_actor_pool_construct(PTR(manager))==PTR(manager));
+    a=function_46ab10_this(PTR(manager),PTR(&first));
+    b=function_46ab10_this(PTR(manager),PTR(&second));
+    CHECK(a && b && a!=b && first==0x10000 && second==0x20001);
+    CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,first)==a);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,second)==b);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20000)==0);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20002)==0);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    function_46a6f0_this(PTR(manager),first);
+    function_46a6f0_this(PTR(manager),second);
+    CHECK(pool_retire_calls==2);
+    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,first)==0);
+    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,second)==0);
+    function_46a6f0_this(PTR(manager),second);CHECK(pool_retire_calls==2);
+    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==b && reused==0x30001);
+    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==a && reused==0x40000);
+    CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e0,0)==PTR(manager));
+    CHECK(pool_delete_calls==2 && manager[0]==PTR(&g28) && manager[1]==0);
     node=function_4214a0(0x1111,0x2222,&value);CHECK(node);
     CHECK(((int32_t*)(intptr_t)node)[0]==0x1111);
     CHECK(((int32_t*)(intptr_t)node)[1]==0x2222);
@@ -6093,8 +6113,7 @@ int main(int argc, char **argv) {
         function_468620_this(PTR(g_514300_storage));
         {
             int32_t pool = *(int32_t *)(intptr_t)(manager + 4);
-            int32_t pool_bytes = *(int32_t *)(intptr_t)(pool + 8) -
-                                 *(int32_t *)(intptr_t)(pool + 4);
+            int32_t pool_count = kinoko_method_actor_pool_count(pool, NULL);
             int32_t (*reused)[8] = (int32_t (*)[8])calloc(600, 32);
             CHECK(reused != NULL);
             for (int i = 0; i < 600; ++i)
@@ -6104,10 +6123,7 @@ int main(int argc, char **argv) {
             for (int round = 0; round < 4; ++round) {
                 CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
                 CHECK(retdec_actor_manager_refresh(manager) == 600);
-                CHECK(*(int32_t *)(intptr_t)(pool + 8) -
-                      *(int32_t *)(intptr_t)(pool + 4) == pool_bytes);
-                CHECK(*(int32_t *)(intptr_t)(pool + 24) -
-                      *(int32_t *)(intptr_t)(pool + 20) == pool_bytes);
+                CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
                 kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 function_468620_this(PTR(g_514300_storage));
