@@ -837,3 +837,12 @@ IDA 410750/4109D0/4044D0 establishes the actual key protocol: CharLowerBuffA on 
 R91 failed compilation because zlib was linked only by downstream EXEs, so the library compiling archive_store.cpp did not inherit its include path. Declared kinoko_zlib directly on kinoko_squirrel_cpp_vm, which propagates its headers and link dependency to all consumers. Restored CloseHandle immediately after the index read, before decoding, as shown at original 410665. R91 is recorded as a failed, unstaged build; no success or runtime validation is claimed for it.
 
 Removed the now-unreferenced no-op _Init_locks destructor adapter using the R90 pinned-source/maps audit, after the obsolete atexit thunks were already deleted in R89.
+
+
+## R93 — genuine scene retirement list
+
+Recovered 40D5E0/40DA60/40E320 with IDA. The constructor now constructs the real list and scene critical section without the glued destructor/exception tail. Switching still swaps pending/current under the scene lock, calls old slot 5 with g870, appends the old scene, signals the actual g867 event, calls new slot 4 with g871 and finally copies g870 to g871. The decompiled SetEvent(&g1224) lost its real handle and is gone.
+
+A std::list owns queue nodes; its values remain scene pointers until the worker calls virtual deleting destructor slot 0 with flag 1. The single consumer keeps original callback-before-node-removal order. Standard-container push/front/pop operations reuse the existing scene critical section to avoid racing its internal links; callbacks and SetEvent run outside that lock. This synchronization is an explicit native-container adaptation, not a new game transition rule. No tests/game were run.
+
+The pinned source audit additionally proves the unused 46A830 legacy actor constructor island (201 lines) disconnected; removed its exact hash-verified body. The remaining vector allocation seeds were reachable and were retained, not silently deleted based on missing link symbols.
