@@ -68,6 +68,10 @@ HSQOBJECT take(SquirrelObject& object) {
     return result;
 }
 }
+int sqplus_variable_info(HSQUIRRELVM vm, void*& output) {
+    VmScope scope(vm); StackHandler stack(vm);
+    return SqPlus::ReadVariableInfoForHost(stack, output);
+}
 void* sqplus_create_variable(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name) {
     VmScope scope(vm); Borrowed object(receiver);
     try { return SqPlus::createVarRef(object, name ? name : "", sizeof(binding::Variable)); }

@@ -53,22 +53,33 @@ SQUserPointer ReadInstanceBaseForHost(SquirrelObject & instance,const VarRef & v
 }
 #endif
 
-#ifndef SQPLUS_HOST_OBJECT_ONLY
-// Standalone snapshot descriptors require its VM bootstrap and instance factory.
 static int getVarInfo(StackHandler & sa,VarRefPtr & vr) {
   HSQOBJECT htable = sa.GetObjectHandle(1);
   SquirrelObject table(htable);
   const SQChar * el = sa.GetString(2);
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+  SQChar varNameTag[258];
+#else
   ScriptStringVar256 varNameTag;
-  getVarNameTag(varNameTag,sizeof(varNameTag),el);
+#endif
+  getVarNameTag(varNameTag,sizeof(varNameTag),el ? el : _SC(""));
   SQUserPointer data=0;
-  if (!table.RawGetUserData(varNameTag,&data)) {
+  if (!table.RawGetUserData(varNameTag,&data,0,sizeof(VarRef))) {
     return sa.ThrowError(_SC("getVarInfo: Could not retrieve UserData")); // Results in variable not being found error.
   }
   vr = (VarRefPtr)data;
   return SQ_OK;
 } // getVarInfo
 
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+int ReadVariableInfoForHost(StackHandler & sa, void*& output) {
+  VarRefPtr value = 0;
+  int status = getVarInfo(sa,value);
+  if (status == SQ_OK) output = value;
+  return status;
+}
+#endif
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 static int getInstanceVarInfo(StackHandler & sa,VarRefPtr & vr,SQUserPointer & data) {
   HSQOBJECT ho = sa.GetObjectHandle(1);
   SquirrelObject instance(ho);

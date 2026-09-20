@@ -14,6 +14,7 @@ SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
 SQInteger sqplus_read_text(HSQUIRRELVM vm, const char* text);
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
+int sqplus_variable_info(HSQUIRRELVM vm, void*& output);
 void* sqplus_create_variable(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name);
 void sqplus_variable_handlers(HSQUIRRELVM vm, HSQOBJECT receiver, SQFUNCTION setter, SQFUNCTION getter);
 void sqplus_variable_metadata(HSQUIRRELVM vm, HSQOBJECT root,

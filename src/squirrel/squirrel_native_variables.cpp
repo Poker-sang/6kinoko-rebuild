@@ -13,13 +13,6 @@ bool context_has(const int32_t* context, SQInteger count) {
     return context && context[1] && context[0] >= count &&
         sq_gettop(pointer<SQVM>(context[1])) >= count;
 }
-int32_t userdata_variable(HSQUIRRELVM vm) {
-    if (sq_gettype(vm, -1) != OT_USERDATA ||
-        sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(Variable))) return 0;
-    SQUserPointer payload = nullptr;
-    if (SQ_FAILED(sq_getuserdata(vm, -1, &payload, nullptr))) return 0;
-    return address(payload);
-}
 int32_t table_access(int32_t vm_address, bool write) {
     auto* vm = pointer<SQVM>(vm_address);
     if (!vm) return -1;
@@ -49,18 +42,10 @@ int32_t instance_access(int32_t vm_address, bool write) {
 
 extern "C" int32_t function_4aa5e0(int32_t* context, int32_t* output) {
     if (!context || !output || !context[1]) return -1;
-    auto* vm = pointer<SQVM>(context[1]);
-    StackTop stack(vm);
-    const char* name = nullptr;
-    if (context_has(context, 2)) sq_getstring(vm, 2, &name);
-    const auto key = variable_key(name);
-    if (context_has(context, 1)) sq_push(vm, 1); else sq_pushnull(vm);
-    sq_pushstring(vm, key.data(), -1);
-    if (SQ_SUCCEEDED(sq_rawget(vm, -2))) {
-        const auto payload = userdata_variable(vm);
-        if (payload) { *output = payload; return 0; }
-    }
-    return sq_throwerror(vm, "getVarInfo: Could not retrieve UserData");
+    void* value = nullptr;
+    const auto status = upstream::sqplus_variable_info(pointer<SQVM>(context[1]), value);
+    if (status == SQ_OK) *output = address(value);
+    return status;
 }
 
 extern "C" int32_t retdec_get_var_info(int32_t* output, int32_t* context) {

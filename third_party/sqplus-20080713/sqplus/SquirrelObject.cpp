@@ -354,9 +354,15 @@ BOOL SquirrelObject::GetUserData(const SQChar * key,SQUserPointer * data,SQUserP
   return ret;
 } // SquirrelObject::GetUserData
 
-BOOL SquirrelObject::RawGetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag) {
+BOOL SquirrelObject::RawGetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag,INT minimumSize) {
   BOOL ret = false;
   if (RawGetSlot(key)) {
+    if (minimumSize && (sq_gettype(SquirrelVM::_VM,-1) != OT_USERDATA ||
+        sq_getsize(SquirrelVM::_VM,-1) < minimumSize)) {
+      *data = 0;
+      sq_pop(SquirrelVM::_VM,2);
+      return false;
+    }
     sq_getuserdata(SquirrelVM::_VM,-1,data,typetag);
     sq_pop(SquirrelVM::_VM,1);
     ret = true;

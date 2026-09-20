@@ -107,3 +107,10 @@ size check preserves an existing malformed slot without casting or replacing it.
 Host variable keys keep the recovered 258-byte capacity. String reads use the
 source getVar const-string arm; legacy string layouts are decoded by the host
 and supplied as a borrowed const char pointer, never overlaid with modern STL.
+
+The source getVarInfo lookup is compiled for the host and receives actual VM
+objects through a scoped context. Host keys retain their recovered capacity;
+RawGetUserData's optional minimum-size validation rejects malformed byte records
+before callers can interpret them. The original source error text and successful
+userdata identity remain unchanged. The table setter's separate silent lookup
+continues to preserve the existing VM error, pending original-call verification.

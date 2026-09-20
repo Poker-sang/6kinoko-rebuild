@@ -6,6 +6,7 @@ struct StackHandler;
 class SquirrelObject;
 namespace SqPlus {
 struct VarRef;
+int ReadVariableInfoForHost(StackHandler& stack, void*& output);
 SQUserPointer ReadInstanceBaseForHost(SquirrelObject& instance, const VarRef& metadata);
 int ReadScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value);
 using ScalarCommit = void (*)(void*) noexcept;
