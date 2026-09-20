@@ -3994,6 +3994,74 @@
           "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260921-r106-quiet",
+      "workspace": "C:\\Users\\poker\\.codex\\worktrees\\720f\\6kinoko-rebuild",
+      "source_commit": "147656b32c8c3aaf4595667aca8926cdf673c872",
+      "validation": "Complete quiet Win32 Release build exited 0. DAT files copied beside EXE and SHA256 verified. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "d4d91a15208ea3407157f0611aee0dce6ee03c4dafd8f6b7e643115f8dadfa8d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/configure.log",
+          "size": 981,
+          "sha256": "45dee7e340ee6fb972a497df65c9a03320f2354cb62501962ee0e20c3b650175"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/build.log",
+          "size": 353073,
+          "sha256": "a09489c02812648ab9382502c145932ea89c16def7041ba813fb83ae73ac10c3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/kinoko.map",
+          "size": 1018043,
+          "sha256": "9ab80690b12134c58801dfac4b1b17b31a8d3c65ea83eb09d0ad6ba775bfdd61"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/stage-contract.map",
+          "size": 1283227,
+          "sha256": "a8cd66791df379b91a995f95dd1d4b7037f34a25a24d225487d1b77710966cab"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/stage-dat.log",
+          "size": 479,
+          "sha256": "25adaccb98df885815a42c29fb7db77d5e4934edef5736b8a780d360de6ffd6a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846848,
+          "sha256": "5543300c24e95fba7d54159b67276cb9229e736e1d308540cc27891e07753352"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
     }
   ]
 }
