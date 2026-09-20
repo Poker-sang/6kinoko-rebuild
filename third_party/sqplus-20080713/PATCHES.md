@@ -89,3 +89,13 @@ formatting/checking and publication. Its SquirrelError now replaces the former
 hand-written oversized-mask fallback: original 4A940F/4A9421 also throws on a
 negative _snprintf result. At the C boundary, failure releases the captured
 reference, restores the stack, returns failure and retains the source error text.
+
+## Variable metadata registration
+
+VarRef accepts an explicit borrowed root object so the embedding uses its existing
+VM root instead of introducing the standalone root owner. The original constructor
+delegates to this overload in standalone builds. Field initialization and the
+__SqTypes lookup/create/type-name publication remain in the source constructor.
+An optional publication hook copies the initialized, aligned value into the old
+byte record before registry callbacks can observe it; it does not perform any
+registration. Contract fixtures now use actual source ClassType objects.

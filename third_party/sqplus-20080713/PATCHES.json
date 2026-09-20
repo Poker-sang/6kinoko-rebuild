@@ -17,7 +17,7 @@
   },
   "sqplus/sqplus.h": {
     "original_sha256": "c284abe781250b47ce21b466c4211b60c21d3d90923b7a944ff8cd4b565aae05",
-    "adapted_sha256": "a7c7bdaaa163cfce52b3878c42cfa2b47a4dd347ac682a350afe52cdb3787bb4"
+    "adapted_sha256": "37c952f3018186a58a886329fcb6b72a8384ac0167c5646368d1aa2dcf90d01e"
   },
   "sqplus/SquirrelVM.cpp": {
     "original_sha256": "28cefe7dd5c421bd1c298c16b8d6ee3954c0016e52dafc010634b99fced38163",

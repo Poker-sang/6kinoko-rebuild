@@ -13,6 +13,8 @@ SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                             const void* storage, int32_t immediate_value);
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
+void sqplus_variable_metadata(HSQUIRRELVM vm, HSQOBJECT root,
+    const binding::Variable& fields, void* output);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
 bool sqplus_bind_function(HSQUIRRELVM vm, SQFUNCTION function, const SQChar* name,
                            const SQChar* mask, void (*capture)(void*, HSQOBJECT), void* context);

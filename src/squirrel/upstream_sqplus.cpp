@@ -1,5 +1,6 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqplus.h>
+#include <cstring>
 #include "kinoko/sqplus_source_entries.hpp"
 #include "kinoko/squirrel_variable_record.hpp"
 
@@ -66,6 +67,18 @@ HSQOBJECT take(SquirrelObject& object) {
     sq_resetobject(&object.GetObjectHandle());
     return result;
 }
+}
+void sqplus_variable_metadata(HSQUIRRELVM vm, HSQOBJECT root,
+    const binding::Variable& fields, void* output) {
+    VmScope scope(vm); Borrowed borrowed(root);
+    SqPlus::VarRef metadata(reinterpret_cast<void*>(fields.offset),
+        static_cast<SqPlus::ScriptVarType>(fields.category),
+        reinterpret_cast<SqPlus::ClassTypeBase*>(fields.instance_type),
+        reinterpret_cast<SqPlus::ClassTypeBase*>(fields.value_type), fields.size,
+        static_cast<SqPlus::VarAccessType>(fields.flags), borrowed,
+        [](const SqPlus::VarRef& value, void* destination) {
+            std::memcpy(destination, &value, sizeof(value));
+        }, output);
 }
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept {
     std::array<char, 258> key{};

@@ -15,11 +15,6 @@ using namespace kinoko::script::binding;
 
 namespace {
 ObjectStorage root_storage{};
-int32_t __fastcall type_name(void* self, void*) {
-    return load<int32_t>(static_cast<unsigned char*>(self) + 8);
-}
-int32_t type_vtable[2]{};
-int32_t descriptors[4][6]{};
 void require(bool ok, const char* message) {
     if (!ok) throw std::runtime_error(message);
 }
@@ -39,15 +34,9 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
 int32_t function_4a8cc0(void) { return address(&root_storage); }
 int32_t function_4a8db0(int32_t vm) { g644 = pointer<char>(vm); return 1; }
 int32_t* kinoko_native_binding_type(int32_t category) {
-    const int index = category == -1 ? 0 : category == 0 ? 1 : category == 2 ? 2 : 3;
-    type_vtable[1] = address(reinterpret_cast<void*>(&type_name));
-    auto* descriptor = descriptors[index];
-    descriptor[0] = address(type_vtable);
-    const char* names[] = {nullptr, "int", "float", "bool"};
-    descriptor[2] = address(names[index]);
-    descriptor[4] = -1;
-    descriptor[5] = 1;
-    return descriptor;
+    return category == -1 ? kinoko_sqplus_game_type(0,
+        [](int32_t, int32_t source) -> int32_t { return source; }) :
+        kinoko_sqplus_scalar_type(category);
 }
 }
 

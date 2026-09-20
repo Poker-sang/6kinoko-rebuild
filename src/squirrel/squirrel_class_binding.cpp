@@ -128,23 +128,8 @@ extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,
     int32_t size, int32_t flags) {
     const Variable info{offset, category, instance_type, address(value_type),
         static_cast<uint16_t>(size), static_cast<uint16_t>(flags)};
-    store(output, info);
-    auto* vm = current_vm();
-    Object types(vm);
-    ObjectView root(function_4a8cc0());
-    get_slot(vm, root, "__SqTypes", types.view());
-    if (types.view().value()._type == OT_NULL) {
-        new_table(vm, types.view());
-        raw_store(vm, root, "__SqTypes", types.view());
-    }
-    int32_t name = 0;
-    if (value_type) {
-        const auto vtable = load<int32_t>(value_type);
-        if (vtable) name = retdec_call_thiscall0_result(value_type,
-            pointer(load<int32_t>(add_address(vtable, 4))));
-    }
-    // Integer descriptor identity is the key, never a string pointer.
-    function_4a9730_this(types.location(), address(value_type), name);
+    upstream::sqplus_variable_metadata(current_vm(),
+        ObjectView(function_4a8cc0()).value(), info, output);
     return output;
 }
 

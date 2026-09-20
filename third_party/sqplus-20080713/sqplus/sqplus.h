@@ -511,17 +511,23 @@ struct VarRef {
   short m_access;              // VarAccessType.
 
   VarRef() : offsetOrAddrOrConst(0), m_type(VAR_TYPE_NONE), instanceType(0/*(SQUserPointer)-1*/), /*copyFunc(0),*/ m_size(0), m_access(VAR_ACCESS_READ_WRITE) {}
-  VarRef(void * _offsetOrAddrOrConst, ScriptVarType _type, ClassTypeBase* _instanceType, ClassTypeBase* _varType, int _size, VarAccessType _access) :
+#ifndef SQPLUS_HOST_OBJECT_ONLY
+  VarRef(void * offset, ScriptVarType type, ClassTypeBase* instance, ClassTypeBase* value, int size, VarAccessType access) :
+    VarRef(offset, type, instance, value, size, access, SquirrelVM::GetRootTable()) {}
+#endif
+  VarRef(void * _offsetOrAddrOrConst, ScriptVarType _type, ClassTypeBase* _instanceType, ClassTypeBase* _varType, int _size, VarAccessType _access,
+         const SquirrelObject& borrowedRoot, void (*publish)(const VarRef&, void*) = 0, void* context = 0) :
          offsetOrAddrOrConst(_offsetOrAddrOrConst), m_type(_type), instanceType(_instanceType), varType(_varType), m_size(_size), m_access(_access) {
+    if (publish) publish(*this, context);
 #ifdef SQ_SUPPORT_INSTANCE_TYPE_INFO
-    SquirrelObject typeTable = SquirrelVM::GetRootTable().GetValue(SQ_PLUS_TYPE_TABLE);
+    SquirrelObject root = borrowedRoot;
+    SquirrelObject typeTable = root.GetValue(SQ_PLUS_TYPE_TABLE);
     if (typeTable.IsNull()) {
       typeTable = SquirrelVM::CreateTable();
-      SquirrelObject root = SquirrelVM::GetRootTable();
       root.SetValue(SQ_PLUS_TYPE_TABLE,typeTable);
-    } // if
-	typeTable.SetValue(INT((size_t)varType),varType->GetTypeName());
-#endif // SQ_SUPPORT_INSTANCE_TYPE_INFO
+    }
+    typeTable.SetValue(INT((size_t)varType),varType->GetTypeName());
+#endif
   }
 };
 
