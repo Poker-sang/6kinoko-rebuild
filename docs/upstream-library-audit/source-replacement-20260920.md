@@ -636,3 +636,7 @@ EBP capture adapter, frame candidate scanner, and their four obsolete test
 variants are deleted. New substring contracts cover independent ownership,
 embedded zeros, bounded counts, self-assignment and retained heap capacity.
 No VM trace call site is removed by this change.
+
+R73 (8b0ba35) completed the full quiet Win32 build, including all remaining
+contract targets; its three DATs were staged and SHA256 verified. No automated
+test or game session was run. Overall library replacement remains incomplete.
