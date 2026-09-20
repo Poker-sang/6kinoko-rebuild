@@ -3187,7 +3187,7 @@ int32_t g235 = 0x4461d0; // 0x4ebb1c
 int32_t g237 = 0x4461d0; // 0x4ebb50
 int32_t g238 = 0x4461d0; // 0x4ebb68
 int32_t g239 = 0x42abe0; // 0x4ebb80
-int32_t g241 = 0x42abe0; // 0x4ebba8
+ // 0x4ebba8
 
 int32_t g254 = 0x41fe90; // 0x4ebea0
 int32_t g255 = 0x4252f0; // 0x4ebec4
@@ -3199,11 +3199,11 @@ int32_t g261 = 0x4461d0; // 0x4ebf2c
 int32_t g262 = 0x4461d0; // 0x4ebf44
 int32_t g263 = 0x4461d0; // 0x4ebf5c
 int32_t g264 = 0x42abe0; // 0x4ebf74
-int32_t g266 = 0x42abe0; // 0x4ebf9c
-int32_t g268 = 0x42abe0; // 0x4ebfc4
+ // 0x4ebf9c
+ // 0x4ebfc4
 int32_t g270 = 0x4258a0; // 0x4ec00c
 
-int32_t g276 = 0x42abe0; // 0x4ec08c
+ // 0x4ec08c
 int32_t g278 = 0x426b30; // 0x4ec0cc
 int32_t g280 = 0x426d70; // 0x4ec0fc
 int32_t g281 = 0x4461d0; // 0x4ec108
@@ -3216,8 +3216,8 @@ int32_t g291 = 0x4461d0; // 0x4ec268
 int32_t g292 = 0x4461d0; // 0x4ec280
 int32_t g293 = 0x4461d0; // 0x4ec298
 int32_t g294 = 0x42abe0; // 0x4ec2b0
-int32_t g296 = 0x42abe0; // 0x4ec2d8
-int32_t g298 = 0x42abe0; // 0x4ec300
+ // 0x4ec2d8
+ // 0x4ec300
 int32_t g300 = 0x42e6e0; // 0x4ec384
 int32_t g301 = 0x42c890; // 0x4ec398
 int32_t g302 = 0x42e6d0; // 0x4ec3bc
@@ -3226,7 +3226,7 @@ int32_t g305 = 0x453580; // 0x4ec3ec
 int32_t g306 = 0x4461d0; // 0x4ec3fc
 int32_t g307 = 0x4461d0; // 0x4ec414
 int32_t g308 = 0x42abe0; // 0x4ec42c
-int32_t g310 = 0x42abe0; // 0x4ec454
+ // 0x4ec454
 int32_t g311 = 47; // 0x4ec464
 int32_t g312 = 92; // 0x4ec468
 int32_t g314 = 0x430540; // 0x4ec578
@@ -3238,11 +3238,11 @@ int32_t g320 = 0x453580; // 0x4ec5ec
 int32_t g321 = 0x4461d0; // 0x4ec5fc
 int32_t g322 = 0x4461d0; // 0x4ec614
 int32_t g323 = 0x42abe0; // 0x4ec62c
-int32_t g325 = 0x42abe0; // 0x4ec654
+ // 0x4ec654
 int32_t g329 = 0x436710; // 0x4ec7e0
 int32_t g331 = 0x436940; // 0x4ec810
 int32_t g332 = 0x4461d0; // 0x4ec81c
-int32_t g338 = 0x42abe0; // 0x4ec898
+ // 0x4ec898
 int32_t g341 = 0x43cec0; // 0x4ec924
 int32_t g342 = 0x43e860; // 0x4ec948
 int32_t g344 = 0x4461d0; // 0x4ec960
@@ -3253,13 +3253,13 @@ char * g349 = "\x82l\x82r \x83S\x83V\x83\x62\x83N"; // 0x4ec9c4
 int32_t g350 = 0x43fbe0; // 0x4ecb30
 int32_t g351 = 0x441660; // 0x4ecb60
 
-int32_t g361 = 0x42abe0; // 0x4ecc38
-int32_t g363 = 0x42abe0; // 0x4ecc60
+ // 0x4ecc38
+ // 0x4ecc60
 int32_t g366 = 0x447340; // 0x4ecd30
 int32_t g368 = 0x447570; // 0x4ecd60
 int32_t g369 = 0x4461d0; // 0x4ecd6c
-int32_t g376 = 0x42abe0; // 0x4ece00
-int32_t g378 = 0x42abe0; // 0x4ece28
+ // 0x4ece00
+ // 0x4ece28
 int32_t g380 = 0x449f10; // 0x4ece88
 int32_t g381 = 0x44bf40; // 0x4eceac
 int32_t g383 = 0x4461d0; // 0x4ecec4
@@ -3269,12 +3269,12 @@ int32_t g386 = 0x4461d0; // 0x4ecefc
 int32_t g387 = 0x4461d0; // 0x4ecf14
 int32_t g388 = 0x4461d0; // 0x4ecf2c
 int32_t g389 = 0x42abe0; // 0x4ecf44
-int32_t g391 = 0x42abe0; // 0x4ecf6c
+ // 0x4ecf6c
 int32_t g393 = 0x457110; // 0x4ed038
 int32_t g395 = 0x44c870; // 0x4ed078
 int32_t g396 = 0x44ce70; // 0x4ed0a8
 
-int32_t g405 = 0x42abe0; // 0x4ed160
+ // 0x4ed160
 int32_t g408 = 0x453580; // 0x4ed2f8
 int32_t g409 = 0x453580; // 0x4ed308
 int32_t g410 = 0x4ab306; // 0x4ed324
@@ -4200,18 +4200,8 @@ struct vtable_4ebed0_type g256 = {
     .e0 = function_4200e0,
     .e1 = function_441cb0
 }; // 0x4ebed0
-struct vtable_4ebf88_type g265 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ebf88
-struct vtable_4ebfb0_type g267 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ebfb0
+ // 0x4ebf88
+ // 0x4ebfb0
 
 struct vtable_4ec0b0_type g277 = {
     .e0 = function_426740,
@@ -4243,18 +4233,8 @@ struct vtable_4ec22c_type g288 = {
     .e0 = function_4291c0,
     .e1 = function_441cb0
 }; // 0x4ec22c
-struct vtable_4ec2c4_type g295 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec2c4
-struct vtable_4ec2ec_type g297 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec2ec
+ // 0x4ec2c4
+ // 0x4ec2ec
 struct vtable_4ec358_type g299 = {
     .e0 = function_42c0a0,
     .e1 = function_42c030,
@@ -4271,12 +4251,7 @@ struct vtable_4ec3c8_type g303 = {
     .e0 = function_42cac0,
     .e1 = function_441cb0
 }; // 0x4ec3c8
-struct vtable_4ec440_type g309 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec440
+ // 0x4ec440
 struct vtable_4ec548_type g313 = {
     .e0 = function_42f970,
     .e1 = function_42f910,
@@ -4300,12 +4275,7 @@ struct vtable_4ec640_type g324 = {
     .e2 = function_415220,
     .e3 = function_419d30
 }; // 0x4ec640
-struct vtable_4ec668_type g326 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec668
+ // 0x4ec668
 struct vtable_4ec79c_type g327 = {
     .e0 = function_434a50,
     .e1 = function_434920,
@@ -4343,36 +4313,16 @@ struct vtable_4ec884_type g337 = {
     .e2 = function_415220,
     .e3 = function_419d30
 }; // 0x4ec884
-struct vtable_4ec8ac_type g339 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec8ac
+ // 0x4ec8ac
 
 struct vtable_4ec954_type g343 = {
     .e0 = (int32_t (*)(int32_t))function_43d110,
     .e1 = function_441cb0
 }; // 0x4ec954
-struct vtable_4ec9b4_type g348 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ec9b4
+ // 0x4ec9b4
 
-struct vtable_4ecc4c_type g362 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ecc4c
-struct vtable_4ecc74_type g364 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ecc74
+ // 0x4ecc4c
+ // 0x4ecc74
 struct vtable_4eccfc_type g365 = {
     .e0 = function_446a90,
     .e1 = function_446a30,
@@ -4405,12 +4355,7 @@ struct vtable_4ecdec_type g375 = {
     .e2 = function_415220,
     .e3 = function_419d30
 }; // 0x4ecdec
-struct vtable_4ece14_type g377 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ece14
+ // 0x4ece14
 struct vtable_4ece50_type g379 = {
     .e0 = function_449b10,
     .e1 = function_449ab0,
@@ -4436,12 +4381,7 @@ struct vtable_4ecf58_type g390 = {
     .e2 = function_415220,
     .e3 = function_419d30
 }; // 0x4ecf58
-struct vtable_4ecf80_type g392 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ecf80
+ // 0x4ecf80
 struct vtable_4ed04c_type g394 = {
     .e0 = function_44f8d0,
     .e1 = function_456360,
@@ -4455,12 +4395,7 @@ struct vtable_4ed04c_type g394 = {
     .e9 = function_456b60
 }; // 0x4ed04c
 
-struct vtable_4ed174_type g406 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4ed174
+ // 0x4ed174
 struct vtable_4ed2cc_type g407 = {
     .e0 = function_44fd30,
     .e1 = kinoko_quad_set_color,
