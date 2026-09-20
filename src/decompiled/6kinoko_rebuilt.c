@@ -67760,8 +67760,6 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static struct KinokoAudioHostSymbols symbols;
     symbols.critical_section_vtable = &g190;
-    symbols.handle_table_vtable = &g198;
-    symbols.decoder_vtable = &g208;
     symbols.device_error_message = g209;
     return &symbols;
 }

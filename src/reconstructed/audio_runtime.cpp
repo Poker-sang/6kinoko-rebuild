@@ -245,7 +245,6 @@ int32_t function_40a9f0(float80_t a1);
 int32_t function_40aaa0(void);
 int32_t function_40aac0(void);
 int32_t function_40aae0(void);
-int32_t function_40adb0(int32_t* storage);
 int32_t function_40b3a0(void);
 int32_t function_40b520(void);
 int32_t function_40b8a0(float80_t a1);
@@ -1587,11 +1586,9 @@ static const char* retdec_audio_buffer_path(const BufferRecord* buffer) noexcept
 
 static void retdec_audio_buffer_initialize(BufferRecord* buffer) noexcept {
     // Placement construction gives the malloc-backed native record its C++
-    // lifetime without changing any recovered bytes or decoder identity.
+    // lifetime. Decoder ownership lives in BgmTrack, not this request record.
     new (buffer) BufferRecord{};
     buffer->path.capacity = sizeof(buffer->path.storage.inline_text) - 1;
-    buffer->decoder_vtable = static_cast<std::uint32_t>(
-        reinterpret_cast<std::uintptr_t>(kinoko_audio_host_symbols()->decoder_vtable));
     buffer->gain = 1.0f;
     buffer->playback_state = 3;
 }
@@ -1701,7 +1698,6 @@ static void retdec_audio_manager_construct() {
     }
     const auto* symbols = kinoko_audio_host_symbols();
     state.handles.live_handles = handles.head;
-    state.handles.vtable = symbols->handle_table_vtable;
     state.handles.lock_vtable = symbols->critical_section_vtable;
     state.lock_vtable = symbols->critical_section_vtable;
     InitializeCriticalSection(&state.lock);
@@ -1999,25 +1995,6 @@ int32_t function_40aae0(void) {
     retdec_bgm_service_all_locked();
     LeaveCriticalSection(&g_retdec_audio_lock);
     return 0;
-}
-
-int32_t function_40adb0(int32_t* storage) {
-    auto* table = reinterpret_cast<HandleTable*>(storage);
-    // The outer manager has already value-initialized the whole record.
-    const auto* symbols = kinoko_audio_host_symbols();
-    table->vtable = symbols->handle_table_vtable;
-    table->buffers_begin = table->buffers_end = table->buffers_capacity = nullptr;
-    table->generations_begin = table->generations_end = table->generations_capacity = nullptr;
-    table->live_count = 0;
-    auto* node = static_cast<QueueNode*>(std::malloc(sizeof(QueueNode)));
-    if (!node) throw std::bad_alloc();
-    node->next = node->previous = node;
-    node->handle = 0;
-    table->live_handles = node;
-    table->next_generation = 0;
-    table->lock_vtable = symbols->critical_section_vtable;
-    InitializeCriticalSection(&table->lock);
-    return address(storage);
 }
 
 
