@@ -5084,6 +5084,42 @@ int main(int argc, char **argv) {
         function_469700();
     }
     {
+        int32_t source[136] = {0}, destination[136] = {0};
+        const int offsets[] = {44, 56, 68, 96, 108, 124, 136};
+        int32_t* allocation = (int32_t*)malloc(sizeof(int32_t));
+        CHECK(allocation != NULL);
+        *allocation = PTR(source);
+        source[6] = PTR(allocation);
+        kinoko_native_control_create(PTR(source + 7), PTR(allocation));
+        CHECK(source[7] != 0);
+        source[8] = PTR(allocation); source[9] = source[7];
+        kinoko_native_add_weak(source[9]);
+        source[135] = 1234567;
+        destination[93] = 98765; /* original copy skips Actor+372 */
+        for (int i = 0; i < 7; ++i) {
+            function_4a9500_this((int32_t*)((char*)source + offsets[i]), PTR(root + 1));
+            function_4a94e0_this(PTR((char*)destination + offsets[i]));
+        }
+        CHECK(function_460900(PTR(destination), PTR(source)) == PTR(destination));
+        CHECK(destination[135] == 1234567 && destination[93] == 98765);
+        CHECK(destination[7] == source[7] && destination[9] == source[9]);
+        CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
+        CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
+        CHECK(function_460900(PTR(destination), PTR(destination)) == PTR(destination));
+        CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
+        CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
+        for (int i = 0; i < 7; ++i) {
+            CHECK(memcmp((char*)destination + offsets[i] + 4,
+                         (char*)source + offsets[i] + 4, 8) == 0);
+            function_4a9d70_this(PTR((char*)destination + offsets[i]));
+            function_4a9d70_this(PTR((char*)source + offsets[i]));
+        }
+        kinoko_native_release_strong(destination[7]);
+        kinoko_native_release_weak(destination[9]);
+        kinoko_native_release_strong(source[7]);
+        kinoko_native_release_weak(source[9]);
+    }
+    {
         int32_t camera[128] = {0}, callback[3];
         CHECK(execute_source(vm, root + 2,
             "cameraProbeCount <- 0;\n"

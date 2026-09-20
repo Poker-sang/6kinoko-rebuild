@@ -56,6 +56,7 @@ CountedControl* create_owner_control(void* allocation) noexcept {
 }
 bool owns_control(const void* control) noexcept { return control && table(control) == owner_table(); }
 bool lock(CountedControl* control) noexcept { return control->add_ref_lock(); }
+void add_strong(CountedControl* control) noexcept { control->add_ref_copy(); }
 void add_weak(CountedControl* control) noexcept { control->weak_add_ref(); }
 void release_weak(CountedControl* control) noexcept { control->weak_release(); }
 void release_strong(CountedControl* control) noexcept { control->release(); }

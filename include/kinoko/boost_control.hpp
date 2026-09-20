@@ -9,6 +9,7 @@ using CountedControl = boost::detail::sp_counted_base;
 CountedControl* create_owner_control(void* allocation) noexcept;
 bool owns_control(const void* control) noexcept;
 bool lock(CountedControl* control) noexcept;
+void add_strong(CountedControl* control) noexcept;
 void add_weak(CountedControl* control) noexcept;
 void release_weak(CountedControl* control) noexcept;
 void release_strong(CountedControl* control) noexcept;

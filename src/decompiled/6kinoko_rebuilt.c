@@ -2744,7 +2744,7 @@ static int32_t function_45ec60(int32_t actor);
 
 
 int32_t function_45f3e0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4, int32_t a5, int32_t a6);
-int32_t function_45ffe0(int32_t a1);
+int32_t function_45ffe0_this(int32_t result, int32_t a1);
 
 int32_t function_460900(int32_t a1, int32_t a2);
 int32_t function_460e00(void);
@@ -2805,7 +2805,7 @@ int32_t function_466100(int32_t a1);
 int32_t function_466270(void);
 static int32_t function_466270_this(int32_t this_ptr);
 
-int32_t function_4664a0(int32_t a1);
+int32_t function_4664a0_this(int32_t result, int32_t a1);
 int32_t function_466540(int32_t a1, int32_t a2);
 int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_466890(int32_t a1);
@@ -2914,7 +2914,7 @@ int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment);
 int32_t function_46ff60(int32_t a1, int32_t result, int32_t result2);
 int32_t function_470030(int32_t a1);
 int32_t function_4700b0(int32_t a1, int32_t a2);
-int32_t function_470100(int32_t a1);
+int32_t function_470100_this(int32_t result, int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
 int32_t function_470390(int32_t result);
 
@@ -3001,7 +3001,6 @@ int32_t function_4a8cc0(void);
 int32_t function_4a8db0(int32_t a1);
 int32_t function_4a90c0(int32_t * a1, int32_t * a2);
 int32_t function_4a9570(void);
-int32_t function_4a95c0(int32_t a1);
 
 
 int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr);
@@ -55136,68 +55135,42 @@ static void retdec_trace_proto_metadata(const char *label, int32_t proto, int32_
 
 
 // Address range: 0x45ffe0 - 0x460535
-int32_t function_45ffe0(int32_t a1) {
+int32_t function_45ffe0_this(int32_t result, int32_t a1) {
     int32_t v1 = a1 == 0 ? 0 : a1 + 8;
-    int32_t result; // 0x45ffe0
     *(int32_t *)(result + 8) = *(int32_t *)v1;
     *(int32_t *)(result + 12) = *(int32_t *)(v1 + 4);
     *(int32_t *)(result + 16) = *(int32_t *)(a1 + 16);
     *(char *)(result + 20) = *(char *)(a1 + 20);
     *(char *)(result + 21) = *(char *)(a1 + 21);
     *(char *)(result + 22) = *(char *)(a1 + 22);
-    int32_t v2 = *(int32_t *)(a1 + 28); // 0x460019
-    if (v2 != 0) {
-        int32_t * v3 = (int32_t *)(v2 + 4); // 0x46002b
-        *v3 = *v3 + 1;
-    }
-    // 0x46002f
+    int32_t incoming = *(int32_t *)(a1 + 28);
+    kinoko_native_add_strong(incoming);
     *(int32_t *)(result + 24) = *(int32_t *)(a1 + 24);
-    int32_t * v4 = (int32_t *)(result + 28); // 0x460032
-    int32_t v5 = *v4; // 0x460032
-    *v4 = v2;
-    if (v5 != 0) {
-        int32_t * v6 = (int32_t *)(v5 + 4); // 0x460042
-        int32_t v7 = *v6 - 1; // 0x460042
-        *v6 = v7;
-        if (v7 == 0) {
-            int32_t * v8 = (int32_t *)(v5 + 8); // 0x460057
-            *v8 = *v8 - 1;
-        }
-    }
-    // 0x460066
+    int32_t previous = *(int32_t *)(result + 28);
+    *(int32_t *)(result + 28) = incoming;
+    kinoko_native_release_strong(previous);
     *(int32_t *)(result + 32) = *(int32_t *)(a1 + 32);
-    int32_t v9 = *(int32_t *)(a1 + 36); // 0x46006c
-    int32_t * v10 = (int32_t *)(result + 36); // 0x46006f
-    int32_t v11 = *v10;
-    if (v9 != v11) {
-        int32_t v12 = v11; // 0x460076
-        if (v9 != 0) {
-            int32_t * v13 = (int32_t *)(v9 + 8); // 0x460080
-            *v13 = *v13 + 1;
-            v12 = *v10;
-        }
-        // 0x460084
-        if (v12 != 0) {
-            int32_t * v14 = (int32_t *)(v12 + 8); // 0x460091
-            *v14 = *v14 - 1;
-        }
-        // 0x46009e
-        *v10 = v9;
+    incoming = *(int32_t *)(a1 + 36);
+    previous = *(int32_t *)(result + 36);
+    if (incoming != previous) {
+        kinoko_native_add_weak(incoming);
+        kinoko_native_release_weak(previous);
+        *(int32_t *)(result + 36) = incoming;
     }
     // 0x4600a1
     *(char *)(result + 40) = *(char *)(a1 + 40);
-    function_4a95c0(a1 + 44);
-    function_4a95c0(a1 + 56);
-    function_4a95c0(a1 + 68);
+    function_4a95c0_this(result + 44, a1 + 44);
+    function_4a95c0_this(result + 56, a1 + 56);
+    function_4a95c0_this(result + 68, a1 + 68);
     *(int32_t *)(result + 80) = *(int32_t *)(a1 + 80);
     *(int32_t *)(result + 84) = *(int32_t *)(a1 + 84);
     *(int32_t *)(result + 88) = *(int32_t *)(a1 + 88);
     *(int32_t *)(result + 92) = *(int32_t *)(a1 + 92);
-    function_4a95c0(a1 + 96);
-    function_4a95c0(a1 + 108);
+    function_4a95c0_this(result + 96, a1 + 96);
+    function_4a95c0_this(result + 108, a1 + 108);
     *(int32_t *)(result + 120) = *(int32_t *)(a1 + 120);
-    function_4a95c0(a1 + 124);
-    function_4a95c0(a1 + 136);
+    function_4a95c0_this(result + 124, a1 + 124);
+    function_4a95c0_this(result + 136, a1 + 136);
     *(int32_t *)(result + 148) = *(int32_t *)(a1 + 148);
     *(int32_t *)(result + 152) = *(int32_t *)(a1 + 152);
     *(int32_t *)(result + 156) = *(int32_t *)(a1 + 156);
@@ -55331,7 +55304,7 @@ int32_t function_45ffe0(int32_t a1) {
 // Address range: 0x460900 - 0x460911
 int32_t function_460900(int32_t a1, int32_t a2) {
     // 0x460900
-    return function_45ffe0(a2);
+    return function_45ffe0_this(a1, a2);
 }
 
 // Address range: 0x460920 - 0x4609be
@@ -58276,13 +58249,12 @@ static int32_t function_466270_this(int32_t this_ptr) {
 // Type:          virtual member function
 
 // Address range: 0x4664a0 - 0x466536
-int32_t function_4664a0(int32_t a1) {
+int32_t function_4664a0_this(int32_t result, int32_t a1) {
     // 0x4664a0
-    function_4a95c0(a1);
-    int32_t result; // 0x4664a0
+    function_4a95c0_this(result, a1);
     *(int32_t *)(result + 12) = *(int32_t *)(a1 + 12);
-    function_4a95c0(a1 + 16);
-    function_4a95c0(a1 + 28);
+    function_4a95c0_this(result + 16, a1 + 16);
+    function_4a95c0_this(result + 28, a1 + 28);
     *(int32_t *)(result + 40) = *(int32_t *)(a1 + 40);
     *(int32_t *)(result + 44) = *(int32_t *)(a1 + 44);
     *(int32_t *)(result + 48) = *(int32_t *)(a1 + 48);
@@ -58313,7 +58285,7 @@ int32_t function_4664a0(int32_t a1) {
 // Address range: 0x466540 - 0x466551
 int32_t function_466540(int32_t a1, int32_t a2) {
     // 0x466540
-    return function_4664a0(a2);
+    return function_4664a0_this(a1, a2);
 }
 
 
@@ -61274,10 +61246,9 @@ int32_t function_4700b0(int32_t a1, int32_t a2) {
 }
 
 // Address range: 0x470100 - 0x4701a5
-int32_t function_470100(int32_t a1) {
+int32_t function_470100_this(int32_t result, int32_t a1) {
     int32_t v1 = a1; // bp-20, 0x470109
-    function_4a95c0(a1);
-    int32_t result; // 0x470100
+    function_4a95c0_this(result, a1);
     *(int32_t *)(result + 12) = *(int32_t *)(a1 + 12);
     *(int32_t *)(result + 16) = *(int32_t *)(a1 + 16);
     int32_t * v2 = (int32_t *)(a1 + 20); // 0x47011d
@@ -61317,7 +61288,7 @@ int32_t function_470100(int32_t a1) {
 // Address range: 0x4701b0 - 0x4701c1
 int32_t function_4701b0(int32_t a1, int32_t a2) {
     // 0x4701b0
-    return function_470100(a2);
+    return function_470100_this(a1, a2);
 }
 
 // Address range: 0x4701d0 - 0x4701d6
@@ -64718,16 +64689,7 @@ int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void) {
 /* function_4a9570 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a95c0 - 0x4a9600
-int32_t function_4a95c0(int32_t a1) {
-    int32_t v1 = a1 + 4; // 0x4a95ce
-    function_48a400((int32_t)g644, v1);
-    int32_t result; // 0x4a95c0
-    int32_t v2 = result + 4; // 0x4a95e0
-    function_48a430((int32_t)g644, v2);
-    *(int32_t *)v2 = *(int32_t *)v1;
-    *(int32_t *)(result + 8) = *(int32_t *)(a1 + 8);
-    return result;
-}
+
 
 // Address range: 0x4a9600 - 0x4a9659
 

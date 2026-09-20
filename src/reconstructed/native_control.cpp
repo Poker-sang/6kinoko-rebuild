@@ -46,6 +46,10 @@ extern "C" int32_t* kinoko_native_weak_pair_lock(int32_t pair_address, int32_t* 
     return output_pair;
 }
 
+extern "C" void kinoko_native_add_strong(int32_t control_address) {
+    if (control_address) upstream::add_strong(native_control(static_cast<Address>(control_address)));
+}
+
 extern "C" void kinoko_native_add_weak(int32_t control_address) {
     if (control_address) upstream::add_weak(native_control(static_cast<Address>(control_address)));
 }
