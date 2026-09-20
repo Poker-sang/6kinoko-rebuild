@@ -57,3 +57,12 @@ Class specialization without constructing a second class registry.
 
 Including Class on current MSVC requires qualifying two dependent-base VM
 references in DerivedClass with this->; no runtime algorithm changes.
+
+## Class object factory
+
+Class's original reset/newclass/capture/addref/pop sequence is shared through
+CreateClassObject. Standalone Class construction still uses its registry and
+InitClass. The host uses the same factory with its existing per-game registries;
+an explicit keepOnStack option preserves the stack shape until host publication
+finishes. This replaces five handwritten class creation paths without overlaying
+source Class objects on the recovered record or adding another owning registry.

@@ -319,12 +319,10 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         retdec_sqrat_release_pair(vm, existing);
 
     base = sq_gettop(kinoko_vm(vm));
-    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
+    if (!retdec_sqrat_new_class(vm, class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
-    function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
@@ -403,12 +401,10 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm,
         retdec_sqrat_release_pair(vm, existing);
 
     base = sq_gettop(kinoko_vm(vm));
-    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
+    if (!retdec_sqrat_new_class(vm, class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
-    function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
@@ -477,12 +473,10 @@ int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     }
 
     base = sq_gettop(kinoko_vm(vm));
-    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base) {
+    if (!retdec_sqrat_new_class(vm, class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
         retdec_sqrat_trim_stack(vm, base);
         return 0;
     }
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
-    function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
         retdec_sqrat_trim_stack(vm, base);
@@ -577,10 +571,8 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     }
 
     base = sq_gettop(kinoko_vm(vm));
-    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) != 0 || sq_gettop(kinoko_vm(vm)) <= base)
+    if (!retdec_sqrat_new_class(vm, class_pair) || sq_gettop(kinoko_vm(vm)) <= base)
         return 0;
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(class_pair));
-    function_48a400(vm, address(class_pair));
     if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
         retdec_sqrat_release_pair(vm, class_pair);
         return 0;
@@ -1094,10 +1086,8 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
     if (get_pair(root, name, out) && out[0] == 0x08004000)
         return 1;
     retdec_sqrat_release_pair(vm, out);
-    if (sq_newclass(kinoko_vm(vm), ((0) != 0)) < 0)
+    if (!retdec_sqrat_new_class(vm, out))
         goto cleanup;
-    sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(out));
-    function_48a400(vm, address(out));
     if (!retdec_sqrat_new_table(vm, get_table) ||
         !retdec_sqrat_new_table(vm, set_table) ||
         !retdec_sqrat_set_pair(vm, out, "__getTable", get_table) ||

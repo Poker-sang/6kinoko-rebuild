@@ -38,6 +38,15 @@
 
 namespace Sqrat {
 
+    // Source constructor body shared with hosts that retain their class registry.
+    inline void CreateClassObject(HSQUIRRELVM vm, HSQOBJECT& classObj, bool keepOnStack = false) {
+        sq_resetobject(&classObj);
+        sq_newclass(vm, false);
+        sq_getstackobj(vm, -1, &classObj);
+        sq_addref(vm, &classObj); // retain before removing its stack reference
+        if (!keepOnStack) sq_pop(vm, 1);
+    }
+
 	/**
 		@tparam	C	class type to expose
 		@tparam A	allocator to use when instantiating and destroying class instances in Squirrel
@@ -58,12 +67,7 @@ namespace Sqrat {
 		Class(HSQUIRRELVM v = DefaultVM::Get(), bool createClass = true) : Object(v, false) {
 			if(createClass && !ClassType<C>::Initialized()) {
 				HSQOBJECT& classObj = ClassType<C>::ClassObject();
-				sq_resetobject(&classObj);
-
-				sq_newclass(vm, false);
-				sq_getstackobj(vm, -1, &classObj);
-				sq_addref(vm, &classObj); // must addref before the pop!
-				sq_pop(vm, 1);
+                CreateClassObject(vm, classObj);
 
 				InitClass();
 				ClassType<C>::Initialized() = true;

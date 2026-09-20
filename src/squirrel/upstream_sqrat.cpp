@@ -47,6 +47,11 @@ bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT&
 }
 HSQOBJECT sqrat_root(HSQUIRRELVM vm) { Detached<Sqrat::RootTable> root(vm); return root.take(); }
 HSQOBJECT sqrat_table(HSQUIRRELVM vm) { Detached<Sqrat::Table> table(vm); return table.take(); }
+HSQOBJECT sqrat_new_class(HSQUIRRELVM vm, bool keep_on_stack) {
+    HSQOBJECT value;
+    Sqrat::CreateClassObject(vm, value, keep_on_stack);
+    return value;
+}
 void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
                    SQBool raiseerror,
                    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {

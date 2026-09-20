@@ -68,6 +68,7 @@ HSQOBJECT sqplus_get_value(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key
 bool sqrat_get(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* key, HSQOBJECT& result);
 HSQOBJECT sqrat_root(HSQUIRRELVM vm);
 HSQOBJECT sqrat_table(HSQUIRRELVM vm);
+HSQOBJECT sqrat_new_class(HSQUIRRELVM vm, bool keep_on_stack);
 void sqrat_execute(HSQUIRRELVM vm, HSQOBJECT environment, HSQOBJECT closure,
                    SQBool raiseerror,
                    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));

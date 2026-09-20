@@ -53,6 +53,7 @@ int32_t retdec_sqrat_set_bool(int32_t vm, const int32_t *object_pair,
     const char *name, int32_t value);
 int32_t retdec_sqrat_set_string(int32_t vm, const int32_t *object_pair,
     const char *name, const char *value);
+int32_t retdec_sqrat_new_class(int32_t vm, int32_t* output);
 int32_t retdec_sqrat_new_table(int32_t vm, int32_t out_pair[2]);
 int32_t retdec_sqrat_set_delegate(int32_t vm,
     const int32_t *object_pair,
