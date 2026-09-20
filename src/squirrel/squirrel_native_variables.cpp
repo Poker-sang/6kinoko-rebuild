@@ -92,23 +92,9 @@ extern "C" int32_t retdec_get_var_value(int32_t* context, int32_t metadata, int3
     const auto info = load<Variable>(metadata);
     const bool immediate = (info.flags & Constant) != 0;
     switch (info.category) {
-    case 0: case 1: {
-        if (!immediate && !source) return -1;
-        const int32_t value = immediate ? source :
-            info.category == 0 && info.size == 1 ? load<int8_t>(source) :
-            info.category == 0 && info.size == 2 ? load<int16_t>(source) : load<int32_t>(source);
-        sq_pushinteger(vm, value);
-        return 1;
-    }
-    case 2:
-        if (!immediate && !source) return -1;
-        // Constant floats encode an INTEGER to convert, not IEEE-754 bits.
-        sq_pushfloat(vm, immediate ? static_cast<float>(source) : load<float>(source));
-        return 1;
-    case 3:
-        if (!immediate && !source) return -1;
-        sq_pushbool(vm, immediate ? source != 0 : load<uint8_t>(source) != 0);
-        return 1;
+    case 0: case 1: case 2: case 3:
+        return static_cast<int32_t>(upstream::sqplus_read_scalar(vm, info,
+            pointer<const void>(source), source));
     case 4:
         if (!source) return -1;
         sq_pushstring(vm, pointer<const char>(immediate ? source : load<int32_t>(source)), -1);
@@ -132,41 +118,8 @@ extern "C" int32_t retdec_set_var_value(int32_t* context, int32_t metadata, int3
     auto* vm = pointer<SQVM>(context[1]);
     const auto info = load<Variable>(metadata);
     if (info.flags & (ReadOnly | Constant)) return -1;
-    switch (info.category) {
-    case 0: case 1: {
-        // Match the recovered setter: failed integer conversion writes zero;
-        // successful float-to-integer conversion is allowed here (unlike the
-        // deliberately strict method-argument adapters).
-        SQInteger value = 0;
-        sq_getinteger(vm, 3, &value);
-        // Original 4AAD07/4AACF5 and snapshot setVar return the stored,
-        // sign-extended value. VAR_TYPE_UINT always stores four bytes.
-        if (info.category == 0 && info.size == 1) {
-            value = static_cast<int8_t>(value);
-            store(destination, static_cast<int8_t>(value));
-        } else if (info.category == 0 && info.size == 2) {
-            value = static_cast<int16_t>(value);
-            store(destination, static_cast<int16_t>(value));
-        } else store(destination, static_cast<int32_t>(value));
-        sq_pushinteger(vm, value);
-        return 1;
-    }
-    case 2: {
-        SQFloat value = 0;
-        if (SQ_FAILED(sq_getfloat(vm, 3, &value))) return -1;
-        store(destination, value);
-        sq_pushfloat(vm, value);
-        return 1;
-    }
-    case 3: {
-        SQBool value = SQFalse;
-        if (SQ_FAILED(sq_getbool(vm, 3, &value))) value = SQFalse;
-        store(destination, static_cast<uint8_t>(value != 0));
-        sq_pushbool(vm, value != 0);
-        return 1;
-    }
-    default: return -1;
-    }
+    return static_cast<int32_t>(upstream::sqplus_write_scalar(vm, info,
+        pointer<void>(destination)));
 }
 
 extern "C" int32_t retdec_resolve_instance_var(int32_t vm_address, int32_t top,

@@ -1,11 +1,18 @@
 #pragma once
 #include <squirrel.h>
 #include <array>
+#include "kinoko/squirrel_variable_record.hpp"
 
 // Values cross this boundary; neither the game's unaligned legacy records nor
 // internal SQObjectPtr references are overlaid with an upstream C++ object.
 // Each *_retain/new/assign result owns exactly one external VM reference.
 namespace kinoko::script::upstream {
+// Scalar values use upstream getVar/setVar, with aligned temporary storage.
+// immediate_value is used only for the host's Constant representation.
+SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
+                            const void* storage, int32_t immediate_value);
+SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
+                             void* storage);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
 HSQOBJECT sqplus_new_string(HSQUIRRELVM vm, const SQChar* text);

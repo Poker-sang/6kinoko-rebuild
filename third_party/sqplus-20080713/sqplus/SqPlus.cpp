@@ -1,5 +1,8 @@
 // KINOKO BUILD ADAPTATION: native callbacks return Squirrel 2.2.2 SQInteger.
 #include "sqplus.h"
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+#include "kinoko/sqplus_source_entries.hpp"
+#endif
 #include <stdio.h>
 
 #ifdef SQPLUS_SMARTPOINTER_OPT
@@ -82,15 +85,22 @@ static int getInstanceVarInfo(StackHandler & sa,VarRefPtr & vr,SQUserPointer & d
 } // getInstanceVarInfo
 
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 // If not static/global, message can (and will) disappear before arriving at catch (G++)
 static ScriptStringVar256 g_msg_throw;
+#endif
 
-static int setVar(StackHandler & sa,VarRef * vr,void * data) {
+template<class Stack>
+static int setVar(Stack & sa,VarRef * vr,void * data) {
+#ifndef SQPLUS_HOST_OBJECT_ONLY
   if (vr->m_access & (VAR_ACCESS_READ_ONLY|VAR_ACCESS_CONSTANT)) {
     const SQChar * el = sa.GetString(2);
     SCSNPRINTF(g_msg_throw.s,sizeof(g_msg_throw),_SC("setVar(): Cannot write to constant: %s"),el);
     throw SquirrelError(g_msg_throw.s);
   } // if
+#endif
   switch (vr->m_type) {
   case TypeInfo<INT>::TypeID: {
     INT * val = (INT *)data; // Address
@@ -133,6 +143,7 @@ static int setVar(StackHandler & sa,VarRef * vr,void * data) {
     } // if
     break;
   } // case
+#ifndef SQPLUS_HOST_OBJECT_ONLY
   case VAR_TYPE_INSTANCE: {
     HSQUIRRELVM v = sa.GetVMPtr();
     SQUserPointer src = sa.GetInstanceUp(3,(SQUserPointer)vr->varType); // Effectively performs: ClassType<>::type() == ClassType<>().
@@ -170,7 +181,8 @@ static int setVar(StackHandler & sa,VarRef * vr,void * data) {
    } // if
    break;
   } // case
-#endif      
+#endif
+#endif // !SQPLUS_HOST_OBJECT_ONLY
   } // switch
   return SQ_ERROR;
 } // setVar
@@ -234,6 +246,7 @@ static int getVar(StackHandler & sa,VarRef * vr,void * data) {
     } // if
     break;
   } // case
+#ifndef SQPLUS_HOST_OBJECT_ONLY
   case VAR_TYPE_INSTANCE:
     if (!CreateNativeClassInstance(sa.GetVMPtr(),vr->varType->GetTypeName(),data,0)) { // data = address. Allocates memory.
       SCSNPRINTF(g_msg_throw.s,sizeof(g_msg_throw),_SC("getVar(): Could not create instance: %s"),vr->varType->GetTypeName());
@@ -277,10 +290,35 @@ static int getVar(StackHandler & sa,VarRef * vr,void * data) {
     break;
   } // case
 #endif
+#endif // !SQPLUS_HOST_OBJECT_ONLY
   } // switch
   return SQ_ERROR;
 } // getVar
 
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+// Integration entries only. The scalar switch bodies above remain upstream.
+// Caller stages aligned values and applies the host's access/error policies.
+int ReadScalarForHost(StackHandler & sa,VarRef & vr,void * data) {
+  return getVar(sa,&vr,data);
+}
+struct ScalarWritebackStack : StackHandler {
+  ScalarCommit commit;
+  void * context;
+  ScalarWritebackStack(const StackHandler & sa,ScalarCommit fn,void * state)
+    : StackHandler(sa),commit(fn),context(state) {}
+  template<class Value> int Return(Value value) {
+    commit(context);
+    return StackHandler::Return(value);
+  }
+};
+int WriteScalarForHost(StackHandler & sa,VarRef & vr,void * data,
+                      ScalarCommit commit,void * context) {
+  ScalarWritebackStack stack(sa,commit,context);
+  return setVar(stack,&vr,data);
+}
+#endif
+
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 // === Global Vars ===
 
 SQInteger setVarFunc(HSQUIRRELVM v) {

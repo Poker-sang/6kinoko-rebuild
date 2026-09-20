@@ -19,7 +19,7 @@ records the reviewed replacement hashes. No bundled Squirrel 2.1.1 VM is used.
   the non-Windows contract build. The game remains the narrow-character Win32
   target and does not instantiate that case-insensitive string helper.
 
-* `SQPLUS_HOST_OBJECT_ONLY` gates standalone registration/variable helpers in
+* `SQPLUS_HOST_OBJECT_ONLY` gates standalone registration and non-scalar variable helpers in
   `SqPlus.cpp` and root-registry type-name overloads in `SquirrelObject.cpp`.
   They require the snapshot VM bootstrap, native ClassTypeBase objects and
   its string/error policies. The Win32 VarRef layout is in fact the same 20
@@ -38,3 +38,15 @@ records the reviewed replacement hashes. No bundled Squirrel 2.1.1 VM is used.
 The object copy/assignment/Reset, factory and CreateClass algorithms are unchanged.
 The host transfers *external* references by adopting/detaching public object
 handles; it never overlays an upstream polymorphic class on legacy storage.
+
+* `SqPlus.cpp`: compile the original signed/unsigned/float/bool getVar/setVar
+  switch arms and expose two narrow forwarding entries. No scalar conversion
+  or result algorithm is copied into the host. The host stages aligned scalar
+  objects from byte storage and normalizes its constant representation before
+  calling the source. Access rejection and failed float conversion remain host
+  policy; native-instance/string operations still require separate adaptation.
+  The setter is parameterized only on its stack handler: the host handler
+  commits staged bytes immediately before forwarding Return to StackHandler.
+  This preserves store-before-result-push ordering; narrowing and conversions
+  still execute the original source body once. The standalone instantiation
+  continues to use the original StackHandler.

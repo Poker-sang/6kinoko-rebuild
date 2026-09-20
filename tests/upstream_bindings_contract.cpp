@@ -1,4 +1,5 @@
 #include "kinoko/upstream_bindings.hpp"
+#include "kinoko/sqplus_source_entries.hpp"
 #include <sqplus.h>
 #include <sqrat/sqratTable.h>
 #include <atomic>
@@ -283,6 +284,104 @@ void variable_names() {
     const auto key = up::sqplus_variable_key(prefix.data());
     require(std::string(key.data()) == "_v" + std::string(255, 'b'), "bounded non-NUL prefix");
 }
+// Exercise source scalar switches through the same unaligned host adapter.
+// Expected narrowing comes from original 4AACF5/4AAD07, not a copy of the adapter.
+void scalar_variables(HSQUIRRELVM vm) {
+    using kinoko::script::binding::Variable;
+    namespace binding = kinoko::script::binding;
+    const auto original_top = sq_gettop(vm);
+    require(original_top == 0, "scalar fixture starts with empty stack");
+    std::array<unsigned char, 8> bytes{};
+    void* data = bytes.data() + 1;
+    auto integer_at = [&](SQInteger index) {
+        SQInteger value = 0;
+        require(SQ_SUCCEEDED(sq_getinteger(vm, index, &value)), "scalar integer result");
+        return value;
+    };
+    for (int category : {0, 1}) for (int size : {1, 2, 4}) {
+        Variable info{0, category, 0, 0, static_cast<uint16_t>(size), 0};
+        for (int32_t input : {-32769, -129, -1, 0, 127, 128, 32767, 65535, 65536}) {
+            bytes.fill(0xA5); sq_settop(vm, 0);
+            sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
+            const int32_t expected = category == 0 && size == 1 ? static_cast<int8_t>(input) :
+                category == 0 && size == 2 ? static_cast<int16_t>(input) : input;
+            require(up::sqplus_write_scalar(vm, info, data) == 1 && sq_gettop(vm) == 4,
+                    "source setter pushes one result");
+            require(integer_at(-1) == expected, "source setter returns stored integer");
+            const auto count = category == 1 ? 4 : size;
+            require(bytes[0] == 0xA5 && bytes[count + 1] == 0xA5, "scalar write canaries");
+            require(up::sqplus_read_scalar(vm, info, data, 0) == 1 &&
+                    integer_at(-1) == expected, "source integer getter round trip");
+            info.flags = binding::Constant;
+            require(up::sqplus_read_scalar(vm, info, nullptr, input) == 1 &&
+                    integer_at(-1) == input, "constant integers do not use narrow storage");
+            info.flags = 0;
+        }
+    }
+    Variable info{0, 0, 0, 0, 4, 0};
+    sq_settop(vm, 0); sq_pushnull(vm); sq_pushnull(vm); sq_pushstring(vm, "bad", -1);
+    require(up::sqplus_write_scalar(vm, info, data) == 1 && integer_at(-1) == 0,
+            "failed integer conversion follows source StackHandler zero policy");
+    sq_settop(vm, 2); sq_pushfloat(vm, 12.75f);
+    require(up::sqplus_write_scalar(vm, info, data) == 1 && integer_at(-1) == 12,
+            "source integer conversion accepts float");
+    info.category = 2;
+    sq_settop(vm, 2); sq_pushinteger(vm, 42);
+    require(up::sqplus_write_scalar(vm, info, data) == 1, "source float setter accepts integer");
+    float stored_float = 0; std::memcpy(&stored_float, data, sizeof(stored_float));
+    require(stored_float == 42, "source float storage");
+    const auto saved = bytes;
+    sq_settop(vm, 2); sq_pushstring(vm, "bad", -1);
+    require(SQ_FAILED(up::sqplus_write_scalar(vm, info, data)) && bytes == saved && sq_gettop(vm) == 3,
+            "host float rejection preserves destination and stack");
+    sq_getlasterror(vm); require(sq_gettype(vm, -1) == OT_STRING, "float rejection retains API error");
+    sq_settop(vm, 0); info.flags = binding::Constant;
+    require(up::sqplus_read_scalar(vm, info, nullptr, -42) == 1, "host float constant conversion");
+    SQFloat result_float = 0; sq_getfloat(vm, -1, &result_float);
+    require(result_float == -42.0f, "host float constant is numeric, not pointer-bit overlay");
+    info.category = 3; info.flags = 0; info.size = 1;
+    for (bool input : {false, true}) {
+        bytes.fill(0xA5); sq_settop(vm, 0);
+        sq_pushnull(vm); sq_pushnull(vm); sq_pushbool(vm, input);
+        require(up::sqplus_write_scalar(vm, info, data) == 1 && bytes[1] == input && bytes[2] == 0xA5,
+                "source bool store is one normalized byte");
+    }
+    for (int byte : {0, 1, 128, 255}) {
+        bytes[1] = static_cast<unsigned char>(byte);
+        require(up::sqplus_read_scalar(vm, info, data, 0) == 1, "byte-backed bool getter");
+        SQBool result = SQFalse; sq_getbool(vm, -1, &result);
+        require((result != 0) == (byte != 0), "arbitrary host bool byte is normalized before source read");
+        sq_pop(vm, 1);
+    }
+    info.flags = binding::Constant;
+    require(up::sqplus_read_scalar(vm, info, nullptr, 256) == 1, "host bool constant complete-word test");
+    SQBool result = SQFalse; sq_getbool(vm, -1, &result);
+    require(result == SQTrue, "constant bool does not inspect only low byte");
+    sq_settop(vm, 0);
+    sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, 1);
+    auto unchanged = bytes;
+    for (uint16_t flags : {binding::ReadOnly, binding::Constant}) {
+        info.flags = flags;
+        require(SQ_FAILED(up::sqplus_write_scalar(vm, info, data)) && bytes == unchanged && sq_gettop(vm) == 3,
+                "host readonly/constant rejection is not replaced by snapshot exception policy");
+    }
+    // Verify source writeback ordering independently: callback sees the narrowed
+    // temporary while the result has not yet been pushed to the actual VM.
+    struct CommitProbe {
+        HSQUIRRELVM vm; char* staged; bool observed = false;
+        static void run(void* state) noexcept {
+            auto& self = *static_cast<CommitProbe*>(state);
+            self.observed = *self.staged == -128 && sq_gettop(self.vm) == 3;
+        }
+    };
+    sq_settop(vm, 2); sq_pushinteger(vm, 128);
+    StackHandler stack(vm); SqPlus::VarRef metadata;
+    metadata.m_type = SqPlus::VAR_TYPE_INT; metadata.m_size = 1; metadata.varType = nullptr;
+    char staged = 0; CommitProbe probe{vm, &staged};
+    require(SqPlus::WriteScalarForHost(stack, metadata, &staged, &CommitProbe::run, &probe) == 1 &&
+            probe.observed && integer_at(-1) == -128, "commit occurs between original assignment and Return");
+    sq_settop(vm, original_top);
+}
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
@@ -290,6 +389,7 @@ void cycle() {
     slot_lifetime(root.vm);
     object_operations(root.vm);
     factories(root.vm);
+    scalar_variables(root.vm);
     // Child VM shares the original VM's ref table but has a separate stack.
     auto child = sq_newthread(root.vm, 32);
     require(child != nullptr, "child VM");
@@ -297,6 +397,7 @@ void cycle() {
     slot_lifetime(child);
     object_operations(child);
     factories(child);
+    scalar_variables(child);
     sq_pop(root.vm, 1);
 }
 }
