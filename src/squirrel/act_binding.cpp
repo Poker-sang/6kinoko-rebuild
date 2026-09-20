@@ -1309,6 +1309,41 @@ int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[
     return ok;
 }
 
+// Resource Object/Table publication recovered from 4467E0/446920 and the
+// corresponding Chip/RenderTarget entries. The Sqrat wrapper remains an ABI
+// record; source ClassType::PushInstance owns the actual instance operation.
+int32_t retdec_bind_original_resource(int32_t resource, int32_t object,
+    const char *name, const char *class_name, bool raw) {
+    if (!resource || !object || field<int32_t>(object + 8) == 0x01000001)
+        return static_cast<int32_t>(E_FAIL);
+    const int32_t vm = field<int32_t>(object + 4);
+    if (!vm || (raw && (!name || !*name))) return static_cast<int32_t>(E_FAIL);
+    if (!name || !*name) name = retdec_std_string_data(resource + 8);
+    int32_t root[5] = {}, klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    bool registered = get_pair(address(root), class_name, klass) && klass[0] == 0x08004000;
+    if (!registered) {
+        retdec_sqrat_release_pair(vm, klass);
+        registered = retdec_call_thiscall1_result(pointer<void>(resource),
+            field<void *>(field<int32_t>(resource) + 24), vm) >= 0 &&
+            get_pair(address(root), class_name, klass) && klass[0] == 0x08004000;
+    }
+    bool ok = false;
+    if (registered) {
+        if (raw) {
+            ok = retdec_create_unbound_instance(vm, klass, resource, instance) &&
+                retdec_sqrat_raw_set_pair(vm, pointer<const int32_t>(object + 8), name, instance);
+        } else {
+            ok = retdec_create_bound_instance(vm, pointer<const int32_t>(object + 8),
+                name, klass, resource, instance);
+        }
+    }
+    retdec_sqrat_release_pair(vm, instance);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
+}
+
 int32_t retdec_publish_act_resource_pairs(
     int32_t vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource)
@@ -2121,4 +2156,28 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
         address(root_object), resource_ptr);
     retdec_sqrat_object_release(address(root_object));
     return result;
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_42f6c0(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActResourceChip", false);
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_42f800(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActResourceChip", true);
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_4467e0(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActResource2D", false);
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_446920(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActResource2D", true);
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_449860(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActRenderTarget", false);
+}
+
+extern "C" int32_t __fastcall kinoko_method_resource_4499a0(int32_t resource, void *, int32_t object, const char *name) {
+    return retdec_bind_original_resource(resource, object, name, "CActRenderTarget", true);
 }

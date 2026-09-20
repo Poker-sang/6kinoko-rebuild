@@ -4276,6 +4276,23 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
     CHECK(resource[1] == 47 && ((float*)resource)[22] == 12.5f);
     resource[18] = 321;
     CHECK(execute_source(vm, root+2,"if(textureResourceB.image_width!=321) throw 2;\n"));
+    {
+        const int32_t vtables[] = {PTR(&g313), PTR(&g365), PTR(&g379)};
+        const char *names[] = {"chipBinding", "textureBinding", "targetBinding"};
+        for (int i = 0; i < 3; ++i) {
+            resource[0] = vtables[i];
+            void **methods = (void**)(intptr_t)vtables[i];
+            CHECK(retdec_call_thiscall2_result(resource, methods[7], PTR(root), 0) == (int32_t)E_FAIL);
+            CHECK(retdec_call_thiscall2_result(resource, methods[7], PTR(root), PTR(names[i])) == 0);
+            CHECK(retdec_call_thiscall2_result(resource, methods[8], PTR(root), 0) == 0);
+        }
+        CHECK(execute_source(vm, root+2,
+            "if(!(chipBinding instanceof CActResourceChip) || !(textureBinding instanceof CActResource2D) || !(targetBinding instanceof CActRenderTarget)) throw 5;\n"
+            "if(!(shared instanceof CActRenderTarget)) throw 6;\n"
+            "shared.resourceID=57; if(textureResourceA.resourceID!=57) throw 7;\n"
+            "delete chipBinding; delete textureBinding; delete targetBinding; delete shared;\n"));
+        resource[0] = PTR(&g365);
+    }
     int32_t old_device = g678; g678 = 0;
     resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
     CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));

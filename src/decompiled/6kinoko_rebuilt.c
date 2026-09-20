@@ -2008,8 +2008,6 @@ int32_t function_42f120(void);
 int32_t function_42f1b0(int32_t a1, int32_t a2, int32_t a3);
 
 int32_t function_42f350(int32_t a1);
-int32_t function_42f6c0(int32_t a1, int32_t a2);
-int32_t function_42f800(int32_t a1, int32_t a2);
 int32_t function_42f910(int32_t a1, int32_t a2);
 int32_t function_42f970(int32_t a1);
 int32_t function_42f9d0(void);
@@ -2283,8 +2281,6 @@ int32_t function_446220(void);
 int32_t function_4462c0(void);
 
 int32_t function_446520(int32_t a1);
-int32_t function_4467e0(int32_t a1, int32_t a2);
-int32_t function_446920(int32_t a1, int32_t a2);
 int32_t function_446a30(int32_t a1, int32_t a2);
 int32_t function_446a90(int32_t a1);
 int32_t function_446af0(void);
@@ -2324,8 +2320,6 @@ int32_t function_449310(void);
 int32_t function_449360(int32_t a1, int32_t a2, int32_t a3);
 
 int32_t function_4495a0(int32_t a1);
-int32_t function_449860(int32_t a1, int32_t a2);
-int32_t function_4499a0(int32_t a1, int32_t a2);
 int32_t function_449ab0(int32_t a1, int32_t a2);
 int32_t function_449b10(int32_t a1);
 int32_t function_449b70(void);
@@ -4188,8 +4182,8 @@ struct vtable_4ec548_type g313 = {
     .e4 = function_429840,
     .e5 = function_42e6f0,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_chip_resource,
-    .e7 = function_42f800,
-    .e8 = function_42f6c0,
+    .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f800,
+    .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f6c0,
     .e9 = function_42f9d0,
     .e10 = function_42fae0
 }; // 0x4ec548
@@ -4255,8 +4249,8 @@ struct vtable_4eccfc_type g365 = {
     .e4 = function_429720,
     .e5 = function_4461c0,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_texture_resource,
-    .e7 = function_446920,
-    .e8 = function_4467e0,
+    .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_446920,
+    .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4467e0,
     .e9 = function_446af0,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
     .e11 = (int32_t (*)(void))kinoko_method_unload_resource_texture
@@ -4288,8 +4282,8 @@ struct vtable_4ece50_type g379 = {
     .e4 = function_429780,
     .e5 = function_449310,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_render_target,
-    .e7 = function_4499a0,
-    .e8 = function_449860,
+    .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4499a0,
+    .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_449860,
     .e9 = function_449b70,
     .e10 = (int32_t (*)(int32_t))kinoko_method_load_resource_texture,
     .e11 = (int32_t (*)(void))kinoko_method_unload_resource_texture,
@@ -24998,142 +24992,6 @@ int32_t function_42f1b0(int32_t a1, int32_t a2, int32_t a3) {
 }
 
 
-// Address range: 0x42f6c0 - 0x42f7ff
-// From class:    .?AVCActResourceChip@@
-// Type:          virtual member function
-int32_t function_42f6c0(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x42f6d3
-    __writefsdword(0, (int32_t)&v1);
-    char * v2; // bp-80, 0x42f6c0
-    int32_t v3 = (int32_t)&v2; // bp-104, 0x42f6fc
-    int32_t v4 = &v3; // 0x42f6fc
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x42f709
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x42f723
-    if (v5 == 0) {
-        // 0x42f709
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x42f72a
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v6 = function_415480((int32_t)"CActResourceChip"); // 0x42f745
-    int32_t v7; // bp-84, 0x42f6c0
-    int32_t v8 = &v7; // bp-116, 0x42f758
-    v2 = (char *)&g39;
-    int32_t v9; // bp-120, 0x42f6c0
-    int32_t v10; // 0x42f6c0
-    char v11; // 0x42f6c0
-    if (v11 != 0) {
-        // 0x42f776
-        int32_t v12; // bp-72, 0x42f6c0
-        int32_t v13 = &v12; // 0x42f77e
-        v9 = v13;
-        function_48a430(v10, v13);
-    }
-    if (v11 != 0) {
-        // 0x42f79b
-        int32_t v14; // bp-52, 0x42f6c0
-        int32_t v15 = &v14; // 0x42f7a3
-        v9 = v15;
-        function_48a430(v10, v15);
-    }
-    // 0x42f7ad
-    int32_t v16; // bp-96, 0x42f6c0
-    int32_t v17 = g507 ^ (int32_t)&v16; // 0x42f6df
-    int32_t v18 = &v8; // 0x42f7b3
-    if (*(int32_t *)v6 == 0x1000001) {
-        // 0x42f7b5
-        v9 = v5;
-        v18 = &v9;
-        if (*(int32_t *)(*(int32_t *)v17 + 24) < 0) {
-            // 0x42f709
-            __writefsdword(0, *(int32_t *)(v18 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x42f7c7
-    int32_t v19; // 0x42f6c0
-    if (a2 == 0) {
-        goto lab_0x42f7d3;
-    } else {
-        // 0x42f7ce
-        v19 = a2;
-        if (*(char *)a2 != 0) {
-            goto lab_0x42f7de;
-        } else {
-            goto lab_0x42f7d3;
-        }
-    }
-  lab_0x42f7d3:;
-    int32_t v20 = v17 + 8; // 0x42f7d7
-    v19 = v20;
-    if (*(int32_t *)(v17 + 28) >= 16) {
-        // 0x42f7dc
-        v19 = *(int32_t *)v20;
-    }
-    goto lab_0x42f7de;
-  lab_0x42f7de:
-    // 0x42f7de
-    *(int32_t *)(v18 - 4) = v17;
-    *(int32_t *)(v18 - 8) = v19;
-    function_4331d0((int32_t)&g1224, (int32_t)&g1224);
-    __writefsdword(0, *(int32_t *)(v18 + 72));
-    return 0;
-}
-
-// Address range: 0x42f800 - 0x42f908
-// From class:    .?AVCActResourceChip@@
-// Type:          virtual member function
-int32_t function_42f800(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x42f813
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-80, 0x42f800
-    int32_t v3 = &v2; // bp-104, 0x42f83c
-    int32_t v4 = &v3; // 0x42f83c
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x42f849
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x42f863
-    if (a2 == 0 || v5 == 0 || *(char *)a2 == 0) {
-        // 0x42f849
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x42f876
-    int32_t v6; // bp-96, 0x42f800
-    int32_t v7 = g507 ^ (int32_t)&v6; // 0x42f81f
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v8 = function_415480((int32_t)"CActResourceChip"); // 0x42f891
-    int32_t v9; // bp-84, 0x42f800
-    int32_t v10 = &v9; // bp-116, 0x42f8a4
-    function_4029d0();
-    function_4029d0();
-    int32_t v11 = &v10; // 0x42f8d0
-    if (*(int32_t *)v8 == 0x1000001) {
-        int32_t v12 = v5; // bp-120, 0x42f8d7
-        v11 = &v12;
-        if (*(int32_t *)v7 < 0) {
-            // 0x42f849
-            __writefsdword(0, *(int32_t *)(v11 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x42f8e4
-    *(int32_t *)(v11 - 4) = v7;
-    *(int32_t *)(v11 - 8) = a2;
-    function_4325c0((int32_t)&g1224, (int32_t)&g1224);
-    __writefsdword(0, *(int32_t *)(v11 + 72));
-    return 0;
-}
-
 // Address range: 0x42f910 - 0x42f96b
 // From class:    .?AVCActResourceChip@@
 // Type:          virtual member function
@@ -36088,141 +35946,6 @@ int32_t function_4462c0(void) {
 }
 
 
-// Address range: 0x4467e0 - 0x44691f
-// From class:    .?AVCActResource2D@@
-// Type:          virtual member function
-int32_t function_4467e0(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x4467f3
-    __writefsdword(0, (int32_t)&v1);
-    char * v2; // bp-80, 0x4467e0
-    int32_t v3 = (int32_t)&v2; // bp-104, 0x44681c
-    int32_t v4 = &v3; // 0x44681c
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x446829
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x446843
-    if (v5 == 0) {
-        // 0x446829
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x44684a
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v6 = function_415480((int32_t)"CActResource2D"); // 0x446865
-    int32_t v7; // bp-84, 0x4467e0
-    int32_t v8 = &v7; // bp-116, 0x446878
-    v2 = (char *)&g39;
-    int32_t v9; // bp-120, 0x4467e0
-    int32_t v10; // 0x4467e0
-    char v11; // 0x4467e0
-    if (v11 != 0) {
-        // 0x446896
-        int32_t v12; // bp-72, 0x4467e0
-        int32_t v13 = &v12; // 0x44689e
-        v9 = v13;
-        function_48a430(v10, v13);
-    }
-    if (v11 != 0) {
-        // 0x4468bb
-        int32_t v14; // bp-52, 0x4467e0
-        int32_t v15 = &v14; // 0x4468c3
-        v9 = v15;
-        function_48a430(v10, v15);
-    }
-    // 0x4468cd
-    int32_t v16; // bp-96, 0x4467e0
-    int32_t v17 = g507 ^ (int32_t)&v16; // 0x4467ff
-    int32_t v18 = &v8; // 0x4468d3
-    if (*(int32_t *)v6 == 0x1000001) {
-        // 0x4468d5
-        v9 = v5;
-        v18 = &v9;
-        if (*(int32_t *)(*(int32_t *)v17 + 24) < 0) {
-            // 0x446829
-            __writefsdword(0, *(int32_t *)(v18 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x4468e7
-    int32_t v19; // 0x4467e0
-    if (a2 == 0) {
-        goto lab_0x4468f3;
-    } else {
-        // 0x4468ee
-        v19 = a2;
-        if (*(char *)a2 != 0) {
-            goto lab_0x4468fe;
-        } else {
-            goto lab_0x4468f3;
-        }
-    }
-  lab_0x4468f3:;
-    int32_t v20 = v17 + 8; // 0x4468f7
-    v19 = v20;
-    if (*(int32_t *)(v17 + 28) >= 16) {
-        // 0x4468fc
-        v19 = *(int32_t *)v20;
-    }
-    goto lab_0x4468fe;
-  lab_0x4468fe:
-    // 0x4468fe
-    *(int32_t *)(v18 - 4) = v17;
-    *(int32_t *)(v18 - 8) = v19;
-    __writefsdword(0, *(int32_t *)(v18 + 72));
-    return 0;
-}
-
-// Address range: 0x446920 - 0x446a28
-// From class:    .?AVCActResource2D@@
-// Type:          virtual member function
-int32_t function_446920(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x446933
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-80, 0x446920
-    int32_t v3 = &v2; // bp-104, 0x44695c
-    int32_t v4 = &v3; // 0x44695c
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x446969
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x446983
-    if (a2 == 0 || v5 == 0 || *(char *)a2 == 0) {
-        // 0x446969
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x446996
-    int32_t v6; // bp-96, 0x446920
-    int32_t v7 = g507 ^ (int32_t)&v6; // 0x44693f
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v8 = function_415480((int32_t)"CActResource2D"); // 0x4469b1
-    int32_t v9; // bp-84, 0x446920
-    int32_t v10 = &v9; // bp-116, 0x4469c4
-    function_4029d0();
-    function_4029d0();
-    int32_t v11 = &v10; // 0x4469f0
-    if (*(int32_t *)v8 == 0x1000001) {
-        int32_t v12 = v5; // bp-120, 0x4469f7
-        v11 = &v12;
-        if (*(int32_t *)v7 < 0) {
-            // 0x446969
-            __writefsdword(0, *(int32_t *)(v11 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x446a04
-    *(int32_t *)(v11 - 4) = v7;
-    *(int32_t *)(v11 - 8) = a2;
-    function_448910((int32_t)&g1224, (int32_t)&g1224);
-    __writefsdword(0, *(int32_t *)(v11 + 72));
-    return 0;
-}
-
 // Address range: 0x446a30 - 0x446a8f
 // From class:    .?AVCActResource2D@@
 // Type:          virtual member function
@@ -38046,142 +37769,6 @@ int32_t function_449360(int32_t a1, int32_t a2, int32_t a3) {
     return result;
 }
 
-
-// Address range: 0x449860 - 0x44999f
-// From class:    .?AVCActRenderTarget@@
-// Type:          virtual member function
-int32_t function_449860(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x449873
-    __writefsdword(0, (int32_t)&v1);
-    char * v2; // bp-80, 0x449860
-    int32_t v3 = (int32_t)&v2; // bp-104, 0x44989c
-    int32_t v4 = &v3; // 0x44989c
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x4498a9
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x4498c3
-    if (v5 == 0) {
-        // 0x4498a9
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x4498ca
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v6 = function_415480((int32_t)"CActRenderTarget"); // 0x4498e5
-    int32_t v7; // bp-84, 0x449860
-    int32_t v8 = &v7; // bp-116, 0x4498f8
-    v2 = (char *)&g39;
-    int32_t v9; // bp-120, 0x449860
-    int32_t v10; // 0x449860
-    char v11; // 0x449860
-    if (v11 != 0) {
-        // 0x449916
-        int32_t v12; // bp-72, 0x449860
-        int32_t v13 = &v12; // 0x44991e
-        v9 = v13;
-        function_48a430(v10, v13);
-    }
-    if (v11 != 0) {
-        // 0x44993b
-        int32_t v14; // bp-52, 0x449860
-        int32_t v15 = &v14; // 0x449943
-        v9 = v15;
-        function_48a430(v10, v15);
-    }
-    // 0x44994d
-    int32_t v16; // bp-96, 0x449860
-    int32_t v17 = g507 ^ (int32_t)&v16; // 0x44987f
-    int32_t v18 = &v8; // 0x449953
-    if (*(int32_t *)v6 == 0x1000001) {
-        // 0x449955
-        v9 = v5;
-        v18 = &v9;
-        if (*(int32_t *)(*(int32_t *)v17 + 24) < 0) {
-            // 0x4498a9
-            __writefsdword(0, *(int32_t *)(v18 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x449967
-    int32_t v19; // 0x449860
-    if (a2 == 0) {
-        goto lab_0x449973;
-    } else {
-        // 0x44996e
-        v19 = a2;
-        if (*(char *)a2 != 0) {
-            goto lab_0x44997e;
-        } else {
-            goto lab_0x449973;
-        }
-    }
-  lab_0x449973:;
-    int32_t v20 = v17 + 8; // 0x449977
-    v19 = v20;
-    if (*(int32_t *)(v17 + 28) >= 16) {
-        // 0x44997c
-        v19 = *(int32_t *)v20;
-    }
-    goto lab_0x44997e;
-  lab_0x44997e:
-    // 0x44997e
-    *(int32_t *)(v18 - 4) = v17;
-    *(int32_t *)(v18 - 8) = v19;
-    function_44bbc0((int32_t)&g1224, (int32_t)&g1224);
-    __writefsdword(0, *(int32_t *)(v18 + 72));
-    return 0;
-}
-
-// Address range: 0x4499a0 - 0x449aa8
-// From class:    .?AVCActRenderTarget@@
-// Type:          virtual member function
-int32_t function_4499a0(int32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x4499b3
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-80, 0x4499a0
-    int32_t v3 = &v2; // bp-104, 0x4499dc
-    int32_t v4 = &v3; // 0x4499dc
-    if (*(int32_t *)*(int32_t *)a1 == 0x1000001) {
-        // 0x4499e9
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    int32_t v5 = *(int32_t *)(a1 + 4); // 0x449a03
-    if (a2 == 0 || v5 == 0 || *(char *)a2 == 0) {
-        // 0x4499e9
-        __writefsdword(0, *(int32_t *)(v4 + 80));
-        return -0x7fffbffb;
-    }
-    // 0x449a16
-    int32_t v6; // bp-96, 0x4499a0
-    int32_t v7 = g507 ^ (int32_t)&v6; // 0x4499bf
-    function_41e200(v5);
-    v1 = 0;
-    int32_t v8 = function_415480((int32_t)"CActRenderTarget"); // 0x449a31
-    int32_t v9; // bp-84, 0x4499a0
-    int32_t v10 = &v9; // bp-116, 0x449a44
-    function_4029d0();
-    function_4029d0();
-    int32_t v11 = &v10; // 0x449a70
-    if (*(int32_t *)v8 == 0x1000001) {
-        int32_t v12 = v5; // bp-120, 0x449a77
-        v11 = &v12;
-        if (*(int32_t *)v7 < 0) {
-            // 0x4499e9
-            __writefsdword(0, *(int32_t *)(v11 + 80));
-            return -0x7fffbffb;
-        }
-    }
-    // 0x449a84
-    *(int32_t *)(v11 - 4) = v7;
-    *(int32_t *)(v11 - 8) = a2;
-    function_44b510((int32_t)&g1224, (int32_t)&g1224);
-    __writefsdword(0, *(int32_t *)(v11 + 72));
-    return 0;
-}
 
 // Address range: 0x449ab0 - 0x449b0f
 // From class:    .?AVCActRenderTarget@@
