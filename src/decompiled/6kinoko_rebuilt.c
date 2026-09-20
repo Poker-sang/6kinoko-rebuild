@@ -1,4 +1,5 @@
 #include "kinoko/render_target.h"
+#include "kinoko/archive_random.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
@@ -1537,7 +1538,6 @@ int32_t function_404090(char * lpCaption, int32_t lpText, int32_t a3);
 float32_t function_4040d0(float80_t a1);
 float32_t function_404130(float80_t a1);
 
-int32_t function_404230(void);
 
 int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4);
 int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
@@ -2793,7 +2793,6 @@ int32_t g529 = 0x412210; // 0x50f6d8
 int32_t g530 = 0x412350; // 0x50f6dc
 int32_t g531 = 0x4123a0; // 0x50f6e0
 int32_t g532 = 0x4123c0; // 0x50f6e4
-int32_t g533 = 625; // 0x50f6e8
 int32_t g534 = 0; // 0x50f6f0
 int32_t g535 = 0; // 0x50f6f4
 char g536 = 0; // 0x50f6f6
@@ -2875,10 +2874,8 @@ char * g646; // 0x5149f8
 char * g647; // 0x5151f9
 
 int32_t g664 = 0; // 0x51620c
-int32_t g665 = 0; // 0x516210
 int32_t g666 = 0; // 0x516214
 int32_t g667 = 0; // 0x516840
-bool g668 = false; // 0x516bcc
 float32_t * g669 = NULL; // 0x516bd0
 int32_t g670 = 0; // 0x5179e0
 float32_t g671 = 0.0f; // 0x5187f0
@@ -2963,12 +2960,6 @@ int32_t g755 = 0; // 0x51af0c
 int32_t g756 = 0; // 0x51af10
 int32_t g757 = 0; // 0x51af18
 struct retdec_RTL_CRITICAL_SECTION g758 = { 0 }; // 0x51af1c
-int32_t g759 = 0; // 0x51af34
-int32_t g760 = 0; // 0x51af38
-int32_t g761 = 0; // 0x51af3c
-int32_t g762 = 0; // 0x51af44
-int32_t g763 = 0; // 0x51af48
-int32_t g764 = 0; // 0x51af4c
 int32_t g765 = 0; // 0x51af54
 char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
@@ -4789,27 +4780,7 @@ float32_t function_404130(float80_t a1) {
 
 
 // Address range: 0x404230 - 0x404267
-int32_t function_404230(void) {
-    int32_t result = &g665; // 0x40423f
-    int32_t v1 = 1; // 0x40423f
-    int32_t v2; // 0x404230
-    uint32_t v3 = v2; // 0x404240
-    int32_t v4 = 0x6c078965 * (v3 / 0x40000000 ^ v3) + v1; // 0x40424f
-    result += 4;
-    *(int32_t *)result = v4;
-    v1++;
-    while (result < (int32_t)&g668) {
-        // 0x404240
-        v3 = v4;
-        v4 = 0x6c078965 * (v3 / 0x40000000 ^ v3) + v1;
-        result += 4;
-        *(int32_t *)result = v4;
-        v1++;
-    }
-    // 0x40425f
-    g533 = v1;
-    return result;
-}
+
 
 
 // Address range: 0x404390 - 0x404429
@@ -6227,8 +6198,7 @@ int32_t function_40d790(int32_t *state, const void *config) {
     retdec_sync_runtime_state_to_globals((const unsigned char *)state);
 
     timeBeginPeriod(1);
-    timeGetTime();
-    function_404230();
+    kinoko_seed_random(timeGetTime());
     retdec_trace("40d790:pre-coinit");
     if (CoInitialize(NULL) < 0) {
         retdec_trace("40d790:coinit-failed");
@@ -7116,46 +7086,12 @@ int32_t function_410260(void) {
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
 int32_t function_410270(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x410280
-    __writefsdword(0, (int32_t)&v1);
-    g757 = (int32_t)&g190;
-    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g758);
-    g759 = 0;
-    g760 = 0;
-    g761 = 0;
-    g764 = 0;
-    int32_t v2 = _3f__3f_2_40_YAPAXI_40_Z(40); // 0x4102d5
-    if (v2 != 0) {
-        // 0x4102e1
-        g763 = v2;
-        *(int32_t *)v2 = v2;
-        int32_t v3 = g763; // 0x4102e8
-        *(int32_t *)(v3 + 4) = v3;
-        int32_t v4 = g763; // 0x4102f0
-        *(int32_t *)(v4 + 8) = v4;
-        *(char *)(g763 + 36) = 1;
-        *(char *)(g763 + 37) = 1;
-        g765 = 0;
-        __writefsdword(0, v1);
-        return &g757;
-    }
-    // 0x410326
-    int32_t v5; // bp-36, 0x410270
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v5);
-    v5 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    int32_t v6 = __readfsdword(0); // bp-76, 0x410360
-    __writefsdword(0, (int32_t)&v6);
-    function_411040(*(int32_t *)0x401000, 0x401000);
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    __writefsdword(0, v6);
-    return &g1224;
+    g757=(int32_t)&g190;
+    InitializeCriticalSection((LPCRITICAL_SECTION)&g758);
+    // Active archive entries are owned by the native index below. Do not
+    // construct a second, disconnected VC8 vector/map and its fake unwind.
+    g765=0;
+    return (int32_t)&g757;
 }
 
 
@@ -7168,10 +7104,7 @@ typedef struct retdec_archive_entry {
     uint32_t size;
 } retdec_archive_entry;
 
-typedef struct retdec_mt_state {
-    uint32_t words[624];
-    uint32_t index;
-} retdec_mt_state;
+
 
 static char retdec_archive_paths[64][MAX_PATH];
 static uint32_t retdec_archive_count;
@@ -7205,58 +7138,11 @@ static int retdec_normalize_asset_path(const char *source, char *destination, si
     return 1;
 }
 
-static void retdec_mt_seed(retdec_mt_state *state, uint32_t seed)
-{
-    uint32_t i;
 
-    state->words[0] = seed;
-    for (i = 1; i < 624; ++i) {
-        state->words[i] = 0x6c078965u *
-            (state->words[i - 1] ^ (state->words[i - 1] >> 30)) + i;
-    }
-    state->index = 624;
-}
 
-static void retdec_mt_twist(retdec_mt_state *state)
-{
-    uint32_t i;
 
-    for (i = 0; i < 227; ++i) {
-        uint32_t mixed = state->words[i] ^
-            ((state->words[i] ^ state->words[i + 1]) & 0x7fffffffu);
-        state->words[i] = state->words[i + 397] ^ (mixed >> 1) ^
-            (mixed & 1u ? 0x9908b0dfu : 0u);
-    }
-    for (i = 227; i < 623; ++i) {
-        uint32_t mixed = state->words[i] ^
-            ((state->words[i] ^ state->words[i + 1]) & 0x7fffffffu);
-        state->words[i] = state->words[i - 227] ^ (mixed >> 1) ^
-            (mixed & 1u ? 0x9908b0dfu : 0u);
-    }
-    {
-        uint32_t mixed = state->words[623] ^
-            ((state->words[623] ^ state->words[0]) & 0x7fffffffu);
-        state->words[623] = state->words[396] ^ (mixed >> 1) ^
-            (mixed & 1u ? 0x9908b0dfu : 0u);
-    }
-}
 
-static uint8_t retdec_mt_next(retdec_mt_state *state)
-{
-    uint32_t value;
-    uint32_t mixed;
 
-    if (state->index >= 624) {
-        retdec_mt_twist(state);
-        state->index = 0;
-    }
-    value = state->words[state->index++];
-    mixed = value ^ (value >> 11);
-    mixed ^= (mixed & 0xff3a58adu) << 7;
-    mixed ^= (mixed & 0xffffdf8cu) << 15;
-    mixed ^= mixed >> 18;
-    return (uint8_t)mixed;
-}
 
 int32_t function_410500(char *file_name)
 {
@@ -7268,9 +7154,6 @@ int32_t function_410500(char *file_name)
     uint32_t archive_index;
     uint32_t cursor = 0;
     uint32_t entry_number;
-    retdec_mt_state random_state;
-    uint8_t first_key = 0xc5u;
-    uint8_t second_key = 0x89u;
 
     if (file_name == NULL) {
         return 0;
@@ -7304,13 +7187,7 @@ int32_t function_410500(char *file_name)
 
     archive_index = retdec_archive_count;
     strncpy_s(retdec_archive_paths[archive_index], MAX_PATH, file_name, _TRUNCATE);
-    retdec_mt_seed(&random_state, index_size + 6u);
-    for (entry_number = 0; entry_number < index_size; ++entry_number) {
-        index_data[entry_number] ^= retdec_mt_next(&random_state);
-        index_data[entry_number] ^= first_key;
-        first_key = (uint8_t)(first_key + second_key);
-        second_key = (uint8_t)(second_key + 0x49u);
-    }
+    kinoko_decode_archive_index(index_data, index_size);
     for (entry_number = 0; entry_number < entry_count; ++entry_number) {
         uint32_t offset;
         uint32_t size;

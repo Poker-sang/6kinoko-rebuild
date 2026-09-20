@@ -189,6 +189,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_serializable.cpp
+    src/reconstructed/archive_random.cpp
     src/reconstructed/render_target.cpp
     src/reconstructed/string_render.cpp
     src/reconstructed/string_font.cpp
