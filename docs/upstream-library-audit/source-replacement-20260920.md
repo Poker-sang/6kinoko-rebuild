@@ -354,3 +354,21 @@ requested that further runtime testing be left to them and explicitly reported
 "R59没问题". Record this as user validation, not an agent-completed first-level
 smoke test. Future binaries will be built/staged for the user; no further game
 input or automated test runs are performed unless the user requests them.
+
+## r60: dynamic CreateLayer2D
+
+2c7f34c includes 1c3c9f5 and 5880b5c. CreateLayer2D now uses native C++ RAII
+for its layer/key/layout allocations and the historical Sqrat source for root
+lookup, instance publication and lifetime. The shared 42B4A0 constructor is also
+used by the archive parser. Original locking, active gate, next layer ID,
+parent table requirement, native ownership and publication order are retained.
+Invalid-parent checking happens before allocation; failed allocation cleans up
+through native destructors. The obsolete 4517C0 body (148 lines) and its external
+declaration were removed after a pinned source audit. CreateLayerString remains
+on its old path; CStringLayout is not silently replaced with a 2D layout.
+
+The quiet Win32 build succeeds and DAT files are staged and hash-verified.
+New dynamic_layer_contract source compiles and covers active/inactive creation,
+long names, IDs, owned key/layout records and published property aliases.
+Per the user's testing handoff, neither this test nor any runtime/game test was
+executed for r60. The binary is offered for user testing, not marked validated.
