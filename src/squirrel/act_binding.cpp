@@ -740,6 +740,20 @@ int32_t create_layer_2d(int32_t player, const char* name) {
     kinoko_method_register_layout(native_layout, nullptr);
     return layer;
 }
+// Original 452010 stores the borrowed native instance in player+76. The
+// decompiled 4556C0 thunk lost the member call and returned conversion status.
+// Original instance conversion initializes a null argument to zero, allowing
+// SetRenderTarget(null) to select the default target again.
+int32_t set_render_target_native(int32_t vm) {
+    SQUserPointer player = nullptr, target = nullptr;
+    const auto machine = kinoko_vm(vm);
+    if (SQ_FAILED(sq_getinstanceup(machine, 1, &player, nullptr)) || !player)
+        return sq_throwerror(machine, "invalid SetRenderTarget receiver");
+    sq_getinstanceup(machine, 2, &target, nullptr);
+    field<int32_t>(address(player)+76) = address(target);
+    sq_pushbool(machine, SQTrue);
+    return 1;
+}
 int32_t create_layer_2d_native(int32_t vm) {
     int32_t player = 0;
     const SQChar* name = nullptr;
@@ -826,9 +840,8 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     function_460e00_register_actor_method(vm, class_object + 1, "BitBlt",
                                           address(kinoko_method_act_bitblt),
                                           address(function_4555a0), 0);
-    function_460e00_register_actor_method(vm, class_object + 1, "SetRenderTarget",
-                                          address(function_452010),
-                                          address(function_4556c0), 0);
+    retdec_sqrat_set_native_closure(vm, class_pair, "SetRenderTarget",
+        address(set_render_target_native), nullptr, 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "FindFirstFile",
         address(find_first_native), nullptr, 0);
     retdec_sqrat_set_native_closure(vm, class_pair, "FindNextFile",

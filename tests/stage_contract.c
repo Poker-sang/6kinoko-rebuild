@@ -4578,6 +4578,14 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
     CHECK(retdec_publish_acting_player_class(vm,PTR(root)));
     CHECK(retdec_publish_acting_player(vm,root+2,"dynamicPlayer",PTR(player),player_pair));
+    /* The original accepts a borrowed instance pointer and null to clear it.
+       Check the actual state change, not only the wrapper's return type. */
+    CHECK(execute_source(vm,root+2,
+        "if(!dynamicPlayer.SetRenderTarget(dynamicPlayer)) throw \"target set\";"));
+    CHECK(player[19]==PTR(player));
+    CHECK(execute_source(vm,root+2,
+        "if(!dynamicPlayer.SetRenderTarget(null)) throw \"target clear\";"));
+    CHECK(player[19]==0);
     CHECK(execute_source(vm,root+2,"inactiveLayer <- dynamicPlayer.CreateLayer2D(\"inactive\");"));
     CHECK(act[52]==0 && act[53]==0);
     ((uint8_t*)player)[8]=1;
