@@ -64826,7 +64826,6 @@ int32_t kinoko_sqrat_object_vtable(void) { return (int32_t)(intptr_t)&g39; }
 int32_t kinoko_sqrat_root_vtable(void) { return (int32_t)(intptr_t)&g40; }
 
 int32_t kinoko_actor_vtable(void) { return (int32_t)(intptr_t)&g17; }
-int32_t kinoko_actor_control_vtable(void) { return (int32_t)(intptr_t)&g15; }
 int32_t kinoko_actor_step_key(void) { return (int32_t)(intptr_t)&g601; }
 
 int32_t kinoko_squirrel_object_vtable(void) {

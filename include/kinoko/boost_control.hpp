@@ -2,15 +2,16 @@
 #include <cstddef>
 
 // The counted object is created by the upstream implementation, never overlaid
-// on an old byte buffer. Production Win32 has the recovered 16-byte layout.
+// on an old byte buffer. All count operations require a constructed Boost base. Production Win32 has the recovered 16-byte layout.
+namespace boost { namespace detail { class sp_counted_base; } }
 namespace kinoko::native::upstream {
-class OwnerControl;
-OwnerControl* create_owner_control(void* allocation) noexcept;
+using CountedControl = boost::detail::sp_counted_base;
+CountedControl* create_owner_control(void* allocation) noexcept;
 bool owns_control(const void* control) noexcept;
-bool lock(OwnerControl* control) noexcept;
-void add_weak(OwnerControl* control) noexcept;
-void release_weak(OwnerControl* control) noexcept;
-void release_strong(OwnerControl* control) noexcept;
-long use_count(const OwnerControl* control) noexcept;
-void* allocation(const OwnerControl* control) noexcept;
+bool lock(CountedControl* control) noexcept;
+void add_weak(CountedControl* control) noexcept;
+void release_weak(CountedControl* control) noexcept;
+void release_strong(CountedControl* control) noexcept;
+long use_count(const CountedControl* control) noexcept;
+void* allocation(const CountedControl* control) noexcept;
 } // namespace kinoko::native::upstream

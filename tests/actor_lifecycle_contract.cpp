@@ -2,6 +2,8 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "squirrel_bridge_test_support.hpp"
 #include <cstdlib>
+#include "kinoko/boost_control.hpp"
+#include <boost/smart_ptr/detail/sp_counted_base_w32.hpp>
 
 using namespace bridge_test;
 using kinoko::script::ObjectStorage;
@@ -19,7 +21,6 @@ char* g644 = nullptr;
 char g560 = 0;
 int32_t kinoko_squirrel_object_vtable(void) { return 0x12345678; }
 int32_t kinoko_actor_vtable(void) { return 0x14141414; }
-int32_t kinoko_actor_control_vtable(void) { return 0x15151515; }
 int32_t kinoko_actor_step_key(void) { return address(&step_key); }
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
@@ -39,9 +40,19 @@ namespace {
 int32_t exchange_vm(int32_t value) {
     const auto previous = address(g644); g644 = pointer<char>(value); receiver = value; return previous;
 }
-int32_t __fastcall dispose(int32_t, void*) { ++disposes; return 0; }
-int32_t __fastcall destroy(int32_t, void*) { ++destroys; return 0; }
-std::array<int32_t, 3> control_table{0, address(reinterpret_cast<void*>(dispose)), address(reinterpret_cast<void*>(destroy))};
+struct ControlFixture : boost::detail::sp_counted_base {
+    ControlFixture(int strong, int weak) {
+        for (int i = 1; i < strong; ++i) add_ref_copy();
+        for (int i = 1; i < weak; ++i) weak_add_ref();
+    }
+    void dispose() override { ++disposes; }
+    void destroy() override { ++destroys; }
+    void* get_deleter(const boost::detail::sp_typeinfo&) override { return nullptr; }
+    void* data() { return this; }
+    int32_t operator[](int slot) const {
+        return load<int32_t>(reinterpret_cast<const unsigned char*>(this) + 4 * slot);
+    }
+};
 SQInteger release_userdata(SQUserPointer, SQInteger) { ++userdata_releases; return 0; }
 
 KinokoOwnedObjectWords owned(HSQUIRRELVM vm, HSQOBJECT value) {
@@ -64,7 +75,7 @@ void initialize_key(HSQUIRRELVM vm) {
     sq_pushstring(vm, "step", -1); ObjectView(&step_key).capture(vm, -1); sq_pop(vm, 1);
 }
 void controls() {
-    std::array<int32_t, 4> custom{address(control_table.data()), 2, 2, 0};
+    ControlFixture custom(2, 2);
     auto old_disposes = disposes, old_destroys = destroys;
     kinoko_native_release_strong(address(custom.data()));
     require(custom[1] == 1 && disposes == old_disposes, "nonfinal strong release");
@@ -73,11 +84,13 @@ void controls() {
         "dispose before implicit weak release");
     kinoko_native_release_weak(address(custom.data()));
     require(custom[2] == 0 && destroys == old_destroys + 1, "last custom weak destruction");
-    auto* control = static_cast<int32_t*>(std::malloc(16)); require(control != nullptr, "control allocation");
-    control[0] = kinoko_actor_control_vtable(); control[1] = 1; control[2] = 2;
-    control[3] = address(std::malloc(4)); require(control[3] != 0, "owner-slot allocation");
+    auto* allocation = std::malloc(4); require(allocation != nullptr, "owner-slot allocation");
+    auto* control = kinoko::native::upstream::create_owner_control(allocation);
+    require(control != nullptr, "source control allocation");
+    kinoko_native_add_weak(address(control));
     kinoko_native_release_strong(address(control));
-    require(control[1] == 0 && control[2] == 1 && control[3] == 0, "special control frees owned slot, not Actor");
+    require(control->use_count() == 0 && kinoko::native::upstream::allocation(control) == nullptr,
+        "source control frees owned slot, not Actor");
     kinoko_native_release_weak(address(control));
     kinoko_native_release_weak(0); kinoko_native_release_strong(0);
 }
@@ -115,7 +128,7 @@ void lifecycle(HSQUIRRELVM vm) {
     for (auto offset : {44, 56, 68, 96, 108, 124, 136})
         require(ObjectView(actor + offset).value()._type == OT_NULL, "all seven wrappers initialized");
     initialize_table(vm, actor);
-    std::array<int32_t, 4> control{address(control_table.data()), 2, 3, 0};
+    ControlFixture control(2, 3);
     store(target.data() + 24, int32_t{0x12348765}); store(target.data() + 28, address(control.data()));
     Pair instance(vm), weak(vm);
     sq_newclass(vm, SQFalse); require(SQ_SUCCEEDED(sq_createinstance(vm, -1)), "real source instance");

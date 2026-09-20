@@ -1,6 +1,8 @@
 #include "kinoko/native_control.h"
 #include "kinoko/native_control.hpp"
 #include "kinoko/boost_control.hpp"
+#include <boost/smart_ptr/detail/sp_counted_base_w32.hpp>
+#include <new>
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -16,26 +18,28 @@ using Address = std::uint32_t;
 int32_t address(const void* pointer) { return static_cast<int32_t>(reinterpret_cast<std::uintptr_t>(pointer)); }
 void* pointer(Address value) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(value)); }
 void require(bool result, const char* message) { if (!result) throw std::runtime_error(message); }
-Address known_table_tag = 0;
-
-struct Fixture {
-    ControlRecord record;
+struct Fixture : boost::detail::sp_counted_base {
     std::atomic<unsigned> disposes{0}, destroys{0}, ordering_errors{0};
+    long weak_count() const {
+        std::int32_t value;
+        std::memcpy(&value, reinterpret_cast<const unsigned char*>(this) + 8, sizeof(value));
+        return value;
+    }
+    void dispose() override {
+        if (use_count() != 0 || weak_count() < 1) ++ordering_errors;
+        ++disposes;
+    }
+    void destroy() override {
+        if (use_count() != 0 || weak_count() != 0 || disposes != 1) ++ordering_errors;
+        ++destroys; // fixture storage belongs to its enclosing scope
+    }
+    void* get_deleter(const boost::detail::sp_typeinfo&) override { return nullptr; }
 };
-void __fastcall dispose(Fixture* fixture, void*) {
-    if (fixture->record.strong != 0 || fixture->record.weak < 1) ++fixture->ordering_errors;
-    ++fixture->disposes;
-}
-void __fastcall destroy(Fixture* fixture, void*) {
-    if (fixture->record.strong != 0 || fixture->record.weak != 0 || fixture->disposes != 1)
-        ++fixture->ordering_errors;
-    ++fixture->destroys;
-}
-const ControlTable custom_table{0, static_cast<Address>(address(reinterpret_cast<void*>(dispose))),
-                                  static_cast<Address>(address(reinterpret_cast<void*>(destroy)))};
 void initialize(Fixture& fixture, int strong = 1, int weak = 2) {
-    fixture.record = {static_cast<Address>(address(&custom_table)), strong, weak, 0};
-    fixture.disposes = 0; fixture.destroys = 0; fixture.ordering_errors = 0;
+    fixture.~Fixture();
+    new (&fixture) Fixture;
+    for (int i = 1; i < strong; ++i) fixture.add_ref_copy();
+    for (int i = 1; i < weak; ++i) fixture.weak_add_ref();
 }
 
 void owner_slot_and_unaligned_pairs() {
@@ -52,7 +56,6 @@ void owner_slot_and_unaligned_pairs() {
     require(control.get(&ControlRecord::strong) == 1 && control.get(&ControlRecord::weak) == 1,
             "one strong and one implicit weak reference");
     require(upstream::owns_control(pointer(control_address)) &&
-            control.get(&ControlRecord::vtable) != static_cast<Address>(address(&known_table_tag)) &&
             control.get(&ControlRecord::allocation) == static_cast<Address>(address(slot)), "original owner-slot layout");
     require(holder.front() == 0xa7 && holder.back() == 0xa7, "unaligned holder canaries");
     kinoko_native_add_weak(static_cast<int32_t>(control_address));
@@ -85,20 +88,16 @@ void owner_slot_and_unaligned_pairs() {
 void callback_order_and_aliases() {
     Fixture fixture; initialize(fixture, 2, 2);
     kinoko_native_release_strong(address(&fixture));
-    require(fixture.record.strong == 1 && fixture.disposes == 0, "custom nonfinal strong release");
+    require(fixture.use_count() == 1 && fixture.disposes == 0, "custom nonfinal strong release");
     ReferenceRecord pair{0x11223344, static_cast<Address>(address(&fixture))};
     kinoko_native_weak_pair_lock(address(&pair), reinterpret_cast<int32_t*>(&pair));
-    require(pair.allocation == 0 && pair.control == 0 && fixture.record.strong == 1,
+    require(pair.allocation == 0 && pair.control == 0 && fixture.use_count() == 1,
             "retain historical clear-before-read for an aliased pair");
     kinoko_native_release_strong(address(&fixture));
-    require(fixture.disposes == 1 && fixture.destroys == 0 && fixture.record.weak == 1,
+    require(fixture.disposes == 1 && fixture.destroys == 0 && fixture.weak_count() == 1,
             "custom dispose precedes implicit weak decrement");
     kinoko_native_release_weak(address(&fixture));
     require(fixture.destroys == 1 && fixture.ordering_errors == 0, "last weak owner invokes exact thiscall destroy");
-    ControlRecord no_table{0, 1, 1, 0x43214321};
-    kinoko_native_release_strong(address(&no_table));
-    require(no_table.strong == 0 && no_table.weak == 0 && no_table.allocation == 0x43214321,
-            "missing methods keep baseline count transitions and do not invent a deleter");
     initialize(fixture, 1, 1);
     kinoko_native_release_strong(address(&fixture));
     require(fixture.disposes == 1 && fixture.destroys == 1 && fixture.ordering_errors == 0,
@@ -128,11 +127,11 @@ void concurrent_locks(bool race_final_release) {
         if (race_final_release) kinoko_native_release_strong(address(&fixture));
         for (auto& worker : workers) worker.join();
         if (!race_final_release) {
-            require(successes == 4096 && fixture.record.strong == 1 && fixture.disposes == 0,
+            require(successes == 4096 && fixture.use_count() == 1 && fixture.disposes == 0,
                     "balanced strong refs under contention with a surviving strong owner");
             kinoko_native_release_strong(address(&fixture));
         }
-        require(errors == 0 && fixture.record.strong == 0 && fixture.record.weak == 1 &&
+        require(errors == 0 && fixture.use_count() == 0 && fixture.weak_count() == 1 &&
                 fixture.disposes == 1 && fixture.destroys == 0, "race releases exactly once, weak owner retains control");
         ReferenceRecord expired{1, 1};
         kinoko_native_weak_pair_lock(address(&weak), reinterpret_cast<int32_t*>(&expired));
@@ -142,7 +141,6 @@ void concurrent_locks(bool race_final_release) {
     }
 }
 }
-extern "C" int32_t kinoko_actor_control_vtable(void) { return address(&known_table_tag); }
 
 int main() {
     try {

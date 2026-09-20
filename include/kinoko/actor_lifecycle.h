@@ -23,7 +23,6 @@ int32_t __fastcall function_45f0c0(int32_t actor, void* unused_edx, unsigned cha
 int32_t __fastcall function_4606d0(int32_t actor, void* unused_edx, KinokoOwnedObjectWords object);
 /* Narrow legacy-data accessors avoid conflicting external declarations. */
 int32_t kinoko_actor_vtable(void);
-int32_t kinoko_actor_control_vtable(void);
 int32_t kinoko_actor_step_key(void);
 #ifdef __cplusplus
 }

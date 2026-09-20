@@ -531,12 +531,13 @@ add_test(NAME boost_control_contract COMMAND kinoko_boost_control_contract)
 set_tests_properties(boost_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
+target_include_directories(kinoko_native_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
-target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include
+target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include "${KINOKO_BOOST_ROOT}"
     "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
 target_link_libraries(kinoko_actor_lifecycle_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
 target_compile_options(kinoko_actor_lifecycle_contract PRIVATE /Od /RTC1)

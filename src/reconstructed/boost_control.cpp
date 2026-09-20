@@ -50,15 +50,15 @@ std::uintptr_t owner_table() noexcept {
     return value;
 }
 }
-OwnerControl* create_owner_control(void* allocation) noexcept {
+CountedControl* create_owner_control(void* allocation) noexcept {
     void* storage = std::malloc(sizeof(OwnerControl));
     return storage ? new (storage) OwnerControl(allocation) : nullptr;
 }
 bool owns_control(const void* control) noexcept { return control && table(control) == owner_table(); }
-bool lock(OwnerControl* control) noexcept { return control->add_ref_lock(); }
-void add_weak(OwnerControl* control) noexcept { control->weak_add_ref(); }
-void release_weak(OwnerControl* control) noexcept { control->weak_release(); }
-void release_strong(OwnerControl* control) noexcept { control->release(); }
-long use_count(const OwnerControl* control) noexcept { return control->use_count(); }
-void* allocation(const OwnerControl* control) noexcept { return control->allocation(); }
+bool lock(CountedControl* control) noexcept { return control->add_ref_lock(); }
+void add_weak(CountedControl* control) noexcept { control->weak_add_ref(); }
+void release_weak(CountedControl* control) noexcept { control->weak_release(); }
+void release_strong(CountedControl* control) noexcept { control->release(); }
+long use_count(const CountedControl* control) noexcept { return control->use_count(); }
+void* allocation(const CountedControl* control) noexcept { return static_cast<const OwnerControl*>(control)->allocation(); }
 } // namespace kinoko::native::upstream
