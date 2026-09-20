@@ -4,6 +4,7 @@
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
+#include "kinoko/boost_hash.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/sqrat_object_bridge.h"
@@ -708,15 +709,24 @@ extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
+    // Original 449C50 registers the raw RTTI name in the same Boost-hashed
+    // factory used by 428150. This type owns an independent property schema.
+    static const char target_name[] = ".?AVCActRenderTarget@@";
+    static const auto target_type = static_cast<uint32_t>(kinoko_boost_hash_range(
+        address(target_name), address(target_name + sizeof(target_name) - 1)));
+    const bool render_target = type == target_type;
+    const bool texture = type == 0xc6fdb98au || render_target;
 
-    if (type != 0xc6fdb98au && type != 0xfbaaf527u) {
+    if (!texture && type != 0xfbaaf527u) {
         retdec_trace_i32("act:unsupported-resource", (int32_t)type);
         return 0;
     }
     resource = address(std::calloc(1u, 100u));
     if (resource == 0)
         return 0;
-    field<int32_t>(resource) = type == 0xfbaaf527u
+    field<int32_t>(resource) = render_target
+        ? address(kinoko_act_host_symbols()->render_target_vtable)
+        : type == 0xfbaaf527u
         ? address(kinoko_act_host_symbols()->chip_resource_vtable)
         : address(kinoko_act_host_symbols()->texture_resource_vtable);
     field<int32_t>(resource + 4) = -1;
@@ -726,7 +736,7 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
     field<int32_t>(resource + 60) = 15;
     field<uint8_t>(resource + 8) = 0;
     field<uint8_t>(resource + 40) = 0;
-    if (type == 0xc6fdb98au) {
+    if (texture) {
         field<int32_t>(resource + 72) = 256;
         field<int32_t>(resource + 76) = 256;
         field<uint8_t>(resource + 96) = 1;
@@ -740,13 +750,21 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         field<int32_t>(resource + 92) = 15;
         field<uint8_t>(resource + 72) = 0;
     }
-    const auto loaded = type == 0xfbaaf527u
+    const auto loaded = render_target
+        ? kinoko_method_read_render_target(resource, nullptr, address(&reader_ptr), 1)
+        : type == 0xfbaaf527u
         ? kinoko_method_read_chip_resource(resource, nullptr, address(&reader_ptr), 1)
         : kinoko_method_read_texture_resource(resource, nullptr, address(&reader_ptr), 1);
     if (!loaded) {
         retdec_trace("act:resource-properties-failed");
         retdec_destroy_cact_resource(resource);
         return 0;
+    }
+    if (render_target) {
+        // 428150 only constructs/deserializes the target here. D3DX creation
+        // belongs to the separate virtual Create(width,height) entry; do not
+        // load stTextureName as a file or replace the serialized crop rectangle.
+        return resource;
     }
     if (type == 0xc6fdb98au) {
         // Original 446A84 clears auto-size after deserializing, including an

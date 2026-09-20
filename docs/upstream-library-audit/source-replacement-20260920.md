@@ -889,3 +889,10 @@ The IME dispatcher (original 4131E0) now receives HWND, message, WPARAM and LPAR
 Lesson: a security-cookie epilogue is not the function return value, and a scalar global at a buffer address is not the original storage extent. Recover callers, register arguments, buffers and return flags together before removing CRT boundaries. Game and contract tests remain delegated to the user; no runtime verification is claimed.
 
 R99: the R98 source/map audit confirms the final array-unwind and no-op report_gsfailure exports have no callers. Both definitions are deleted. The compatibility translation unit now retains seven real API/CRT forwards and the explicitly documented malloc-compatible legacy allocator; no simulated exception or security-failure export remains there. This does not certify remaining actor-container or ACT rendering migration as complete.
+
+
+### R100: connect CActRenderTarget to the native resource factory
+
+Original 428150 resolves every resource through the registered type-name hash, constructs it, then invokes its reader. 449C50/449F20 identify CActRenderTarget by the original raw RTTI spelling; 449320 supplies its 100-byte texture-derived defaults. The native factory previously rejected this type even though its modern std::map property schema, reader, clone and D3DX Create entry were implemented. It now hashes the original name through the actual Boost implementation and constructs/deserializes the correct vtable and independent schema. It does not eagerly load a target name as a texture file or create a D3D surface during deserialization: the original reader does neither.
+
+The existing full/compact serialization contract additionally exercises the factory, preserved dimensions/crop/name, complete stream consumption and zero handle before explicit creation. This contract is compiled only, not executed. Applying player render targets and the other unsupported resource/layout types remain separate unfinished work.

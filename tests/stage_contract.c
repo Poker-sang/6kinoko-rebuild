@@ -2,6 +2,7 @@
 #include "../src/decompiled/6kinoko_rebuilt.c"
 #include "stage_audio_contract.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
+#include "kinoko/boost_hash.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -5287,6 +5288,18 @@ static int test_texture_serialization(int render_target) {
         CHECK(memcmp(source+20,loaded+20,16)==0 && !((unsigned char*)loaded)[96]);
         CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"face_3")==0);
         CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
+        if (render_target) {
+            const char name[]=".?AVCActRenderTarget@@";
+            const uint32_t type=(uint32_t)kinoko_boost_hash_range(PTR(name),PTR(name+sizeof(name)-1));
+            stream.position=0;
+            int32_t *factory=(int32_t*)(intptr_t)retdec_act_make_resource(PTR(&stream),type);
+            CHECK(factory && factory[0]==PTR(&g379));
+            CHECK(stream.position==stream.size && factory[1]==15);
+            CHECK(factory[18]==512 && factory[19]==512 && factory[17]==0);
+            CHECK(memcmp(source+20,factory+20,16)==0 && !((unsigned char*)factory)[96]);
+            CHECK(strcmp(retdec_std_string_data(PTR(factory+10)),"Data/System/face1")==0);
+            retdec_destroy_cact_resource(PTR(factory));
+        }
     }
     /* Reordered schema: values are still in original std::map key order. */
     stream.position=stream.size=0; stream.reading=0;
