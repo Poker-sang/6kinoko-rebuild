@@ -4212,6 +4212,32 @@ static int test_map_registration(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_layout_registration_entries(int32_t vm) {
+    int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
+    CHECK(retdec_prepare_cact_layer_objects(vm, PTR(layer), environment));
+    CHECK(retdec_sqrat_new_table(vm, layer+84));
+    CHECK(kinoko_method_register_layout(PTR(layout), NULL) == (int32_t)E_FAIL);
+    layout[76] = PTR(layer);
+    for (int map = 0; map < 2; ++map) {
+        if (map) layout[78] = PTR(layer);
+        CHECK((map ? kinoko_method_register_map_layout(PTR(layout), NULL) :
+            kinoko_method_register_layout(PTR(layout), NULL)) == 0);
+        int32_t outer[2] = {g483,g484}, script[2] = {g483,g484};
+        CHECK(retdec_sqrat_get(PTR(layer+82), "layout", PTR(outer)));
+        CHECK(retdec_sqrat_get(PTR(layer+77), "layout", PTR(script)));
+        CHECK(outer[0] == OT_INSTANCE && script[0] == OT_INSTANCE && outer[1] != script[1]);
+        CHECK(retdec_sqrat_raw_set_int(vm, environment, "registrationMarker", 1));
+        CHECK(layer[13] == PTR(layout) + (map ? 320 : 284));
+        CHECK(layer[14] == PTR(layout) + (map ? 328 : 288));
+        CHECK(layer[1] == PTR(layout)+236 && layer[17] == PTR(layout)+300);
+        retdec_sqrat_release_pair(vm, outer); retdec_sqrat_release_pair(vm, script);
+    }
+    retdec_sqrat_object_release(PTR(layer+82));
+    retdec_sqrat_object_release(PTR(layer+77));
+    puts("PASS: original layout registrations create distinct wrappers and exact layer aliases");
+    return 0;
+}
+
 static int test_chip_resource_registration(int32_t vm, int32_t *root) {
     const int top = sq_gettop(kinoko_vm(vm));
     int32_t resource[17] = {0};
@@ -4412,6 +4438,7 @@ int main(int argc, char **argv) {
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
     CHECK(test_map_registration(vm, root) == 0);
+    CHECK(test_layout_registration_entries(vm) == 0);
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);
     {

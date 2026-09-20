@@ -26,6 +26,9 @@ int32_t __fastcall kinoko_method_resource_446920(int32_t receiver, void* unused_
 int32_t __fastcall kinoko_method_resource_449860(int32_t receiver, void* unused_edx, int32_t object, const char* name);
 int32_t __fastcall kinoko_method_resource_4499a0(int32_t receiver, void* unused_edx, int32_t object, const char* name);
 
+int32_t __fastcall kinoko_method_register_layout(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_register_map_layout(int32_t receiver, void* unused_edx);
+
 // function_42f350
 int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, int32_t vm);
 

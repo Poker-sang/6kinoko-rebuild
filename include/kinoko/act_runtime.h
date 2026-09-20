@@ -191,8 +191,7 @@ int32_t retdec_publish_acting_player_properties(int32_t vm,
 int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object);
 int32_t retdec_publish_c2dlayout_properties(
     int32_t vm, const int32_t class_pair[2]);
-void retdec_publish_c2dlayout_values(
-    int32_t vm, const int32_t layout_pair[2], int32_t layout);
+
 int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
                                                 int32_t out[2]);
 int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object);

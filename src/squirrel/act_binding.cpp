@@ -858,15 +858,41 @@ int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
     return 1;
 }
 
-void retdec_publish_c2dlayout_values(
-    int32_t vm, const int32_t layout_pair[2], int32_t layout)
-{
-    /* C2DLayout properties are native descriptor slots.  Writing mirrored
-       values into the instance would shadow _get/_set and leave animation
-       changes detached from the C2DLayout allocation. */
-    (void)vm;
-    (void)layout_pair;
-    (void)layout;
+int32_t retdec_bind_original_layout(int32_t layout, bool map) {
+    const int32_t layer = layout ? field<int32_t>(layout + (map ? 312 : 304)) : 0;
+    if (!layer || field<int32_t>(layer + 336) == 0x01000001) return static_cast<int32_t>(E_FAIL);
+    const int32_t vm = field<int32_t>(layer + 332);
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {}, klass[2] = {g483, g484};
+    int32_t outer[2] = {g483, g484}, script[2] = {g483, g484};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const bool registered = map
+        ? retdec_publish_c2dmaplayout_class(vm, address(root), klass) != 0
+        : retdec_publish_c2dlayout_class(vm, address(root)) && get_pair(address(root), "C2DLayout", klass);
+    const bool ok = registered &&
+        retdec_create_unbound_instance(vm, klass, layout, outer) &&
+        retdec_sqrat_raw_set_pair(vm, pointer<const int32_t>(layer + 336), "layout", outer) &&
+        retdec_create_bound_instance(vm, pointer<const int32_t>(layer + 316), "layout", klass, layout, script);
+    retdec_sqrat_release_pair(vm, script);
+    retdec_sqrat_release_pair(vm, outer);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    if (!ok) return static_cast<int32_t>(E_FAIL);
+    if (map) {
+        field<int32_t>(layer + 52) = layout + 320;
+        field<int32_t>(layer + 56) = layout + 328;
+    } else {
+        for (int offset = 4; offset <= 68; offset += 4)
+            field<int32_t>(layer + offset) = layout + 232 + offset;
+    }
+    return 0;
+}
+
+extern "C" int32_t __fastcall kinoko_method_register_layout(int32_t layout, void *) {
+    return retdec_bind_original_layout(layout, false);
+}
+extern "C" int32_t __fastcall kinoko_method_register_map_layout(int32_t layout, void *) {
+    return retdec_bind_original_layout(layout, true);
 }
 
 int32_t retdec_map_chip_count(int32_t vm) {
@@ -1715,7 +1741,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                             layout_pair)) {
             (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
                                              layout_pair);
-            retdec_publish_c2dlayout_values(vm, layout_pair, layout);
             retdec_sqrat_release_pair(vm, layout_pair);
 
             /* C2DLayout::Register repeats the same native association for
@@ -1733,7 +1758,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                 retdec_sqrat_object_release(address(root_object));
                 return 0;
             }
-            retdec_publish_c2dlayout_values(vm, script_layout_pair, layout);
             retdec_sqrat_release_pair(vm, script_layout_pair);
         } else {
             int32_t null_pair[2] = { g483, g484 };
