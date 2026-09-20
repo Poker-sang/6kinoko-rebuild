@@ -702,3 +702,7 @@ record and new staging log are under build-runs/*-r75-recovered; the original
 configuration/build logs and maps cannot be claimed retained. Earlier manifest
 entries remain historical records and do not guarantee current file presence.
 No tests or game session ran.
+
+The user confirmed manually cleaning the build artifacts and requested regeneration.
+R75-rebuilt-quiet (a519bab, same runtime source) completed successfully with new
+configure/build logs, both linker maps, staged DATs and SHA256 records. No tests ran.
