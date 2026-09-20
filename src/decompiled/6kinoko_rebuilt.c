@@ -2974,7 +2974,7 @@ int32_t g25 = 0x44fd30; // 0x4d58ac
 int32_t g28 = 0x4698d0; // 0x4d59dc
 /* CInputManager's vftable: destructor, then the per-frame input update. */
 int32_t g35[2] = {
-    (int32_t)(intptr_t)&function_407480,
+    (int32_t)(intptr_t)&kinoko_method_delete_input_device,
     (int32_t)(intptr_t)&function_407500
 }; // 0x4d5ad0
 char * g42 = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s"; // 0x4d5e9c
@@ -50291,11 +50291,6 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
 }
 
 
-// Address range: 0x46ed80 - 0x46ed91
-int32_t function_46ed80(int32_t a1, int32_t result) {
-    // 0x46ed80
-    return result;
-}
 
 // Address range: 0x46eda0 - 0x46eda6
 // From class:    .?AU?$ClassType@VInput@@@SqPlus@@
