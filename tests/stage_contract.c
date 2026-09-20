@@ -4245,6 +4245,56 @@ static int test_chip_resource_registration(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_texture_resource_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t resource[25] = {0}, texture[2] = {0};
+    IDirect3DBaseTexture9Vtbl texture_vtable = {0};
+    texture_vtable.Release = count_texture_release;
+    texture[0] = PTR(&texture_vtable);
+    resource[0] = PTR(&g365); resource[7] = 15; resource[15] = 15;
+    CHECK(function_446520(0) == (int32_t)E_INVALIDARG);
+    CHECK(function_4495a0(0) == (int32_t)E_INVALIDARG);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g365.e6, vm) == 0);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g379.e6, vm) == 0);
+    CHECK(function_446520(vm) == 0 && function_4495a0(vm) == 0);
+    const char *slots[] = {"textureResourceA", "textureResourceB"};
+    for (int i = 0; i < 2; ++i) {
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), slots[i], -1);
+        sq_pushstring(kinoko_vm(vm), "CActResource2D", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+        CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+        CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, resource)));
+        sq_remove(kinoko_vm(vm), -2);
+        CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+        sq_settop(kinoko_vm(vm), top);
+    }
+    CHECK(execute_source(vm, root+2,
+        "textureResourceA.resourceID=47; textureResourceA.src_width=12.5;\n"
+        "textureResourceA.stName=\"shared\";\n"
+        "if(textureResourceB.resourceID!=47 || textureResourceB.src_width!=12.5 || textureResourceB.stName!=\"shared\") throw 1;\n"));
+    CHECK(resource[1] == 47 && ((float*)resource)[22] == 12.5f);
+    resource[18] = 321;
+    CHECK(execute_source(vm, root+2,"if(textureResourceB.image_width!=321) throw 2;\n"));
+    int32_t old_device = g678; g678 = 0;
+    resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));
+    CHECK(resource[17] && texture[1] == 0); /* Empty name preserves ownership. */
+    memcpy(resource+10, "missing", 8); resource[14] = 7;
+    CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(\"data\")) throw 4;\n"));
+    CHECK(!resource[17] && texture[1] == 1); /* Failed reload releases old owner. */
+    int32_t borrowed = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    resource[17] = borrowed; ((unsigned char*)resource)[36] = 1;
+    CHECK(retdec_call_thiscall0_result(resource, (void*)g365.e11) == 1);
+    CHECK(!resource[17] && texture[1] == 1);
+    CHECK(kinoko_texture_release(borrowed) == 1 && texture[1] == 2);
+    g678 = old_device;
+    CHECK(execute_source(vm, root+2,"delete textureResourceA; delete textureResourceB;\n"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: texture resource native shared fields, original virtual ABI and reload ownership");
+    return 0;
+}
+
 static int owned_release_count, owned_release_order[2];
 static SQInteger owned_release(SQUserPointer payload, SQInteger size) {
     if (owned_release_count < 2) owned_release_order[owned_release_count] = *(int*)payload;
@@ -4346,6 +4396,7 @@ int main(int argc, char **argv) {
     CHECK(test_camera_map_bindings(vm, root) == 0);
     CHECK(test_map_registration(vm, root) == 0);
     CHECK(test_chip_resource_registration(vm, root) == 0);
+    CHECK(test_texture_resource_registration(vm, root) == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);

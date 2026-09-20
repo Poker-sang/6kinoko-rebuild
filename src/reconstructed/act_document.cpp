@@ -28,6 +28,8 @@
 #include "kinoko/map_render.h"
 #include "kinoko/sprite.h"
 #include "kinoko/game_math.h"
+#include "kinoko/legacy_abi.h"
+#include <string>
 #include <windows.h>
 #include <d3d9.h>
 #include <algorithm>
@@ -600,6 +602,51 @@ load_failed:
     return 0;
 }
 
+extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t resource, void *) {
+    if (!resource) return 0;
+    const int32_t handle = field<int32_t>(resource + 68);
+    if (!field<uint8_t>(resource + 36) && handle) kinoko_texture_release(handle);
+    field<int32_t>(resource + 68) = 0;
+    return 1;
+}
+
+extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
+    int32_t resource, void *, const char *prefix) {
+    if (!resource) return 0;
+    const char *name = retdec_std_string_data(resource + 40);
+    // 446C36 leaves the existing handle untouched for an empty texture name.
+    if (!name || !*name) return 0;
+    try {
+        std::string path(prefix && *prefix ? prefix : "./");
+        if (path.back() != '/' && path.back() != '\\') path += '/';
+        retdec_call_thiscall0(pointer<void>(resource),
+            field<void *>(field<int32_t>(resource) + 44));
+        field<uint8_t>(resource + 36) = 0;
+        path += name;
+        // 431D80 concatenates prefix/name; 40E540 appends each suffix. The
+        // texture reader, not this resource, maps DDS/BMP/PNG requests to CV2.
+        for (const char *suffix : {".dds", ".bmp", ".png"}) {
+            const auto candidate = path + suffix;
+            const int32_t handle = kinoko_texture_acquire(candidate.c_str());
+            field<int32_t>(resource + 68) = handle;
+            if (!handle) continue;
+            const auto &slot = kinoko_texture_slots[handle];
+            field<int32_t>(resource + 72) = slot.width;
+            field<int32_t>(resource + 76) = slot.height;
+            if (field<uint8_t>(resource + 96)) {
+                field<float>(resource + 80) = 0;
+                field<float>(resource + 84) = 0;
+                field<float>(resource + 88) = static_cast<float>(slot.width);
+                field<float>(resource + 92) = static_cast<float>(slot.height);
+            }
+            return 1;
+        }
+    } catch (...) {
+        return 0;
+    }
+    return 0;
+}
+
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
@@ -649,12 +696,8 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         retdec_act_apply_resource(resource, properties, property_count);
     retdec_act_free_properties(properties, property_count);
     if (type == 0xc6fdb98au) {
-        const char *texture_name = retdec_std_string_data(resource + 40);
-        int32_t texture_handle = 0;
-        if (texture_name != nullptr && *texture_name != 0)
-            texture_handle = retdec_load_act_texture(texture_name);
-        field<int32_t>(resource + 0x44) = texture_handle;
-        retdec_trace_i32("act:resource-handle", texture_handle);
+        kinoko_method_load_resource_texture(resource, nullptr, nullptr);
+        retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
     } else {
         const char *chip_file = retdec_std_string_data(resource + 36);
         if (!retdec_act_load_mcd(resource, chip_file)) {

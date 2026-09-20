@@ -29,6 +29,7 @@
 #include "kinoko/map_render.h"
 #include "kinoko/sprite.h"
 #include "kinoko/game_math.h"
+#include "kinoko/legacy_abi.h"
 #include "kinoko/upstream_bindings.hpp"
 #include <windows.h>
 #include <d3d9.h>
@@ -357,85 +358,72 @@ int32_t retdec_cact_associate_resource(int32_t vm)
     return 1;
 }
 
-int32_t retdec_publish_cact_resource2d_class(int32_t vm,
-                                                     int32_t root_object)
-{
-    static const char *const integer_names[] = {
-        "resourceID", "image_width", "image_height"
-    };
-    static const char *const float_names[] = {
-        "src_x", "src_y", "src_width", "src_height"
-    };
-    int32_t existing[2] = { g483, g484 };
-    int32_t class_pair[2] = { g483, g484 };
-    int32_t empty_pair[2] = { g483, g484 };
-    int32_t existing_result;
-    int32_t base;
-    size_t index;
-
-    if (vm == 0 || root_object == 0)
-        return 0;
-
-    existing_result = get_pair(root_object, "CActResource2D",
-                                       existing);
-    if (existing_result && existing[0] == 0x08004000 &&
-        existing[1] != 0) {
-        retdec_sqrat_assign_pair(vm, &g1079, existing);
-        g1037 = 1;
-        retdec_trace_i32("act:resource2d-class-existing", existing[1]);
-        retdec_sqrat_release_pair(vm, existing);
-        return 1;
-    }
-    if (existing_result)
-        retdec_sqrat_release_pair(vm, existing);
-
-    base = sq_gettop(kinoko_vm(vm));
-    if (!retdec_sqrat_new_class(vm, class_pair) || sq_gettop(kinoko_vm(vm)) <= base) {
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-    if (class_pair[0] != 0x08004000 || class_pair[1] == 0) {
-        retdec_sqrat_release_pair(vm, class_pair);
-        retdec_sqrat_trim_stack(vm, base);
-        return 0;
-    }
-
-    for (index = 0; index < sizeof(integer_names) / sizeof(integer_names[0]);
-         ++index) {
-        int32_t value = index == 0 ? 0 : 256;
-        if (!retdec_sqrat_set_int(vm, class_pair, integer_names[index],
-                                  value))
-            goto publish_failed;
-    }
-    for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
-         ++index) {
-        int32_t value_pair[2] = { 0x05000004, 0 };
-        if (!retdec_sqrat_set_pair(vm, class_pair, float_names[index],
-                                   value_pair))
-            goto publish_failed;
-    }
-    if (!retdec_sqrat_set_string(vm, class_pair, "stName", "") ||
-        !retdec_sqrat_set_string(vm, class_pair, "stTextureName", ""))
-        goto publish_failed;
-
-    /* 447C60 retains the class object independently of the root slot. */
-    retdec_sqrat_assign_pair(vm, &g1079, class_pair);
-    g1037 = 1;
-    if (!retdec_sqrat_set_pair(
-            vm, pointer<const int32_t>(root_object + 8),
-            "CActResource2D", class_pair)) {
-        retdec_sqrat_assign_pair(vm, &g1079, empty_pair);
-        goto publish_failed;
-    }
-    retdec_trace_i32("act:resource2d-class", class_pair[1]);
-    retdec_sqrat_release_pair(vm, class_pair);
-    retdec_sqrat_trim_stack(vm, base);
+int32_t retdec_resource_load_texture(int32_t vm) {
+    int32_t resource = 0;
+    const SQChar *prefix = nullptr;
+    if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm), 1, reinterpret_cast<SQUserPointer *>(&resource), nullptr)) ||
+        !resource || sq_gettop(kinoko_vm(vm)) < 2) return 0;
+    if (sq_gettype(kinoko_vm(vm), 2) != OT_NULL &&
+        SQ_FAILED(sq_getstring(kinoko_vm(vm), 2, &prefix))) return 0;
+    // 44FD20 forwards through virtual slot +40, retaining derived behavior.
+    const int32_t result = retdec_call_thiscall1_result(pointer<void>(resource),
+        field<void *>(field<int32_t>(resource) + 40), address(prefix));
+    sq_pushbool(kinoko_vm(vm), (result & 0xff) != 0);
     return 1;
+}
 
-publish_failed:
-    retdec_sqrat_release_pair(vm, class_pair);
-    retdec_sqrat_trim_stack(vm, base);
-    return 0;
+int32_t retdec_publish_texture_resource_class(int32_t vm, int32_t root,
+    const char *name, int32_t out[2]) {
+    static const retdec_native_view_property properties[] = {
+        {"resourceID", 4, 0}, {"stName", 8, 4},
+        {"image_width", 72, 0}, {"image_height", 76, 0},
+        {"src_x", 80, 1}, {"src_y", 84, 1},
+        {"src_width", 88, 1}, {"src_height", 92, 1}
+    };
+    if (get_pair(root, name, out) && out[0] == 0x08004000) return 1;
+    retdec_sqrat_release_pair(vm, out);
+    return retdec_publish_map_view_class(vm, root, name, properties,
+        sizeof(properties) / sizeof(properties[0]), 0, out) &&
+        retdec_sqrat_set_native_closure(vm, out, "LoadTexture",
+            address(retdec_resource_load_texture), nullptr, 0);
+}
+
+int32_t retdec_publish_cact_resource2d_class(int32_t vm, int32_t root) {
+    if (!vm || !root) return 0;
+    int32_t klass[2] = { g483, g484 };
+    const auto ok = retdec_publish_texture_resource_class(vm, root, "CActResource2D", klass);
+    if (ok) {
+        retdec_sqrat_assign_pair(vm, &g1079, klass);
+        g1037 = 1;
+    }
+    retdec_sqrat_release_pair(vm, klass);
+    return ok;
+}
+
+extern "C" int32_t function_446520(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {};
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_cact_resource2d_class(vm, address(root));
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
+}
+
+extern "C" int32_t function_4495a0(int32_t vm) {
+    if (!vm) return static_cast<int32_t>(E_INVALIDARG);
+    int32_t root[5] = {}, klass[2] = { g483, g484 };
+    if (!retdec_sqrat_root_construct(address(root), vm)) return static_cast<int32_t>(E_FAIL);
+    const auto ok = retdec_publish_texture_resource_class(vm, address(root), "CActRenderTarget", klass);
+    retdec_sqrat_release_pair(vm, klass);
+    retdec_sqrat_object_release(address(root));
+    return ok ? 0 : static_cast<int32_t>(E_FAIL);
+}
+
+extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, int32_t vm) {
+    return function_446520(vm);
+}
+extern "C" int32_t __fastcall kinoko_method_register_render_target(int32_t, void *, int32_t vm) {
+    return function_4495a0(vm);
 }
 
 int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
@@ -1321,46 +1309,6 @@ int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[
     return ok;
 }
 
-int32_t retdec_publish_act_resource_values(
-    int32_t vm, const int32_t resource_pair[2], int32_t resource)
-{
-    const char *st_name;
-    const char *texture_name;
-
-    if (vm == 0 || resource_pair == nullptr || resource == 0)
-        return 0;
-    if (field<int32_t>(resource) == address(kinoko_act_host_symbols()->chip_resource_vtable))
-        return 1;
-    st_name = retdec_std_string_data(resource + 8);
-    texture_name = retdec_std_string_data(resource + 40);
-    return retdec_sqrat_raw_set_int(
-               vm, resource_pair, "resourceID",
-               field<int32_t>(resource + 4)) &&
-           retdec_sqrat_raw_set_string(vm, resource_pair, "stName",
-                                       st_name != nullptr ? st_name : "") &&
-           retdec_sqrat_raw_set_string(
-               vm, resource_pair, "stTextureName",
-               texture_name != nullptr ? texture_name : "") &&
-           retdec_sqrat_raw_set_int(
-               vm, resource_pair, "image_width",
-               field<int32_t>(resource + 72)) &&
-           retdec_sqrat_raw_set_int(
-               vm, resource_pair, "image_height",
-               field<int32_t>(resource + 76)) &&
-           retdec_sqrat_raw_set_float(
-               vm, resource_pair, "src_x",
-               field<float>(resource + 80)) &&
-           retdec_sqrat_raw_set_float(
-               vm, resource_pair, "src_y",
-               field<float>(resource + 84)) &&
-           retdec_sqrat_raw_set_float(
-               vm, resource_pair, "src_width",
-               field<float>(resource + 88)) &&
-           retdec_sqrat_raw_set_float(
-               vm, resource_pair, "src_height",
-               field<float>(resource + 92));
-}
-
 int32_t retdec_publish_act_resource_pairs(
     int32_t vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource)
@@ -1384,8 +1332,7 @@ int32_t retdec_publish_act_resource_pairs(
     /* 4467E0 -> 448FB0 uses sq_newslot on the outer layer object. */
     if (!retdec_create_bound_instance(
             vm, layer_pair, "resource", resource_class_pair,
-            resource, outer_pair) ||
-        !retdec_publish_act_resource_values(vm, outer_pair, resource)) {
+            resource, outer_pair)) {
         retdec_sqrat_release_pair(vm, outer_pair);
         retdec_sqrat_release_pair(vm, resource_class_pair);
         return 0;
@@ -1396,8 +1343,6 @@ int32_t retdec_publish_act_resource_pairs(
     if (!retdec_create_unbound_instance(
             vm, resource_class_pair, resource,
             script_resource_pair) ||
-        !retdec_publish_act_resource_values(
-            vm, script_resource_pair, resource) ||
         !retdec_sqrat_raw_set_pair(
             vm, script_pair, "resource", script_resource_pair)) {
         retdec_sqrat_release_pair(vm, script_resource_pair);
@@ -1502,7 +1447,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                 retdec_get_act_resource_class(vm, resource, resource_class) &&
                 retdec_create_bound_instance(vm, resources, name, resource_class,
                                                resource, value)) {
-                retdec_publish_act_resource_values(vm, value, resource);
                 retdec_trace_squirrel_name("act:resource-published", address(name));
             }
             retdec_sqrat_release_pair(vm, value);

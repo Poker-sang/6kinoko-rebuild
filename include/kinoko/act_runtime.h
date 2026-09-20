@@ -177,8 +177,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
 int32_t retdec_publish_act_resource_pairs(
     int32_t vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource);
-int32_t retdec_publish_act_resource_values(
-    int32_t vm, const int32_t resource_pair[2], int32_t resource);
+
 int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environment);
 int32_t retdec_publish_acting_player(int32_t vm,
                                              const int32_t *act_pair,
