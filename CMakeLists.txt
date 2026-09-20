@@ -82,16 +82,10 @@ target_include_directories(kinoko_legacy_abi PUBLIC include)
 add_library(kinoko_retdec_support STATIC
     src/platform/retdec_memory.cpp
     src/platform/retdec_address_space.cpp
-    src/platform/legacy_frame_copy.cpp
-    src/platform/legacy_frame_entry.cpp
     src/platform/retdec_runtime_compat.cpp)
 target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
 target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(kinoko_retdec_support PRIVATE /Gy)
-# Only this transitional frame adapter needs fixed frames, never the callers.
-set_source_files_properties(src/platform/legacy_frame_entry.cpp
-    PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-")
-
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
 target_include_directories(kinoko_diagnostics PUBLIC include)
 target_compile_definitions(kinoko_diagnostics PRIVATE _CRT_SECURE_NO_WARNINGS
@@ -556,33 +550,6 @@ target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
-# Test actual register forwarding separately from deterministic candidate selection.
-# The entry contract supplies a scanner spy; the copy contract links the real one.
-foreach(policy IN ITEMS checked optimized)
-    foreach(boundary IN ITEMS copy entry)
-        set(contract kinoko_legacy_frame_${boundary}_${policy}_contract)
-        add_executable(${contract} tests/legacy_frame_${boundary}_contract.cpp)
-        target_include_directories(${contract} PRIVATE include)
-        if(boundary STREQUAL "entry")
-            # The scanner spy must not pull in a library containing the real
-            # scanner. Compile the actual production entry and validator here.
-            target_sources(${contract} PRIVATE
-                src/platform/legacy_frame_entry.cpp
-                src/platform/retdec_address_space.cpp)
-        else()
-            target_link_libraries(${contract} PRIVATE kinoko_retdec_support)
-        endif()
-        if(policy STREQUAL "checked")
-            target_compile_options(${contract} PRIVATE /Od /RTC1 /Oy-)
-        else()
-            target_compile_options(${contract} PRIVATE /O2 /Oy)
-        endif()
-        target_link_options(${contract} PRIVATE /OPT:REF /OPT:ICF)
-        add_test(NAME legacy_frame_${boundary}_${policy}_contract COMMAND ${contract})
-        set_tests_properties(legacy_frame_${boundary}_${policy}_contract PROPERTIES TIMEOUT 120)
-    endforeach()
-endforeach()
-
 set(KINOKO_TOOL_TARGETS
     kinoko_boost_control_contract
     kinoko_upstream_bindings_contract
@@ -596,8 +563,6 @@ set(KINOKO_TOOL_TARGETS
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract
-    kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract
-    kinoko_legacy_frame_entry_checked_contract kinoko_legacy_frame_entry_optimized_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract

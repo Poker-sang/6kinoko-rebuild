@@ -599,3 +599,40 @@ R71 (e027d10) enables MSVC's _HAS_AUTO_PTR_ETC solely for boost_hash.cpp, using
 the genuine standard-library compatibility declaration rather than a shim.
 Its quiet Win32 build succeeded and all three DAT hashes were verified. R70's
 failed artifacts remain intact. No automated tests or game sessions ran.
+
+
+## r72/r73: native ACT writers and removal of the frame-copy heuristic
+
+Layer (41F990), key (426740), and CStringLayout (43FBE0) writers now use native
+std::map schemas and actual Boost 1.44 hash_range for nested types. They preserve
+original list order, one-byte booleans, and ignoring individual layer-list
+writer results. CStringLayout's serialized alignment aliases addEdge at +128:
+43F97D uses the bool descriptor despite the runtime alignment integer at +132.
+The collapsed CStringLayout vtable and text renderer are NOT fully migrated.
+retired-act-writers.json proves removal of four functions and three data items.
+
+Actual file/package read virtual slots now use explicit ECX adapters. The
+compiled-only timeline fixture covers real Windows file handles and encrypted
+package payloads, not only the fake memory stream. R72 built the main EXE but
+failed the standalone method-entry contract link because the new adapters
+introduced game-host dependencies into the common ABI library. Their final
+location is the ACT implementation. R72 artifacts remain; no test ran.
+
+IDA 406CC0 is substring assignment with receiver, source, position, count.
+The new native StringView operation preserves self-assignment capacity and
+terminator, clamps counts, and explicitly receives all four arguments. The
+three remaining template callers at 4203B8, 427048 and 429498 copy var_54 to
+var_38; 445327 copies record+368. Their surrounding legacy functions still
+need migration and are not claimed repaired by this local argument correction.
+415315 terminates with a noreturn bad_alloc throw: RetDec erroneously attached
+an unrelated following string constructor. That bogus tail is removed; abort
+prevents falling through if the old exception compatibility entry returns.
+Invalid substring positions leave the target intact, following existing native
+string adapter policy rather than throwing through obsolete exception metadata.
+
+retired-substring-assignment.json audits removal of 406CC0 and its private
+4067F0 erase dependency. With the only production caller gone, _memcpy2, the
+EBP capture adapter, frame candidate scanner, and their four obsolete test
+variants are deleted. New substring contracts cover independent ownership,
+embedded zeros, bounded counts, self-assignment and retained heap capacity.
+No VM trace call site is removed by this change.

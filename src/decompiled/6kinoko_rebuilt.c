@@ -1576,10 +1576,8 @@ int32_t function_4065d0(char a1);
 int32_t function_406600(uint32_t a1, uint32_t a2, int32_t a3, uint32_t a4);
 
 int32_t function_406690(void);
-int32_t function_4067f0(uint32_t a1, uint32_t a2);
 int32_t function_406880(void);
 int32_t function_406ac0(int32_t a1, int32_t result2, int32_t * a3);
-int32_t function_406cc0(int32_t a1, uint32_t a2, uint32_t a3);
 
 int32_t function_407000(int32_t * a1);
 static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
@@ -7175,43 +7173,7 @@ int32_t function_406690(void) {
 // 4066F0: missing-length C callers use retdec_string_assign_cstr explicitly.
 
 // Address range: 0x4067f0 - 0x406872
-int32_t function_4067f0(uint32_t a1, uint32_t a2) {
-    // 0x4067f0
-    int32_t result; // 0x4067f0
-    int32_t * v1 = (int32_t *)(result + 16); // 0x4067f6
-    uint32_t v2 = *v1; // 0x4067f6
-    int32_t v3 = v2; // 0x4067ff
-    int32_t v4; // bp-12, 0x4067f0
-    int32_t v5 = &v4; // 0x4067ff
-    if (v2 < a1) {
-        char * v6 = "invalid string position"; // bp-16, 0x406801
-        v3 = retdec_Xinvalid_argument("invalid string position");
-        v5 = (int32_t)&v6;
-    }
-    uint32_t v7 = v3 - a1; // 0x40680e
-    int32_t v8 = v7 >= a2 ? a2 : v7;
-    if (v8 == 0) {
-        // 0x40686a
-        return result;
-    }
-    int32_t * v9 = (int32_t *)(result + 20); // 0x40681a
-    int32_t v10 = (*v9 < 16 ? result : a1) + a1; // 0x406836
-    *(int32_t *)(v5 - 8) = v7 - v8;
-    *(int32_t *)(v5 - 12) = v10 + v8;
-    *(int32_t *)(v5 - 16) = v10;
-    memmove(&g1224, &g1224, (int32_t)&g1224);
-    int32_t v11 = *v1 - v8; // 0x40684a
-    *v1 = v11;
-    if (*v9 >= 16) {
-        // 0x406856
-        *(char *)(v11 + a1) = 0;
-        return result;
-    }
-    // 0x406864
-    *(char *)(v11 + result) = 0;
-    // 0x40686a
-    return result;
-}
+
 
 // Address range: 0x406880 - 0x4068e4
 int32_t function_406880(void) {
@@ -7432,87 +7394,7 @@ int32_t function_406ac0(int32_t a1, int32_t result2, int32_t * a3) {
 }
 
 // Address range: 0x406cc0 - 0x406da7
-int32_t function_406cc0(int32_t a1, uint32_t a2, uint32_t a3) {
-    uint32_t v1 = *(int32_t *)(a1 + 16); // 0x406cce
-    int32_t v2; // bp-16, 0x406cc0
-    int32_t v3 = &v2; // 0x406cd3
-    if (v1 < a2) {
-        char * v4 = "invalid string position"; // bp-20, 0x406cd5
-        retdec_Xinvalid_argument("invalid string position");
-        v3 = (int32_t)&v4;
-    }
-    uint32_t v5 = v1 - a2; // 0x406ce2
-    uint32_t v6 = v5 <= a3 ? v5 : a3;
-    int32_t result; // 0x406cc0
-    if (result == a1) {
-        // 0x406cee
-        *(int32_t *)(v3 - 4) = -1;
-        *(int32_t *)(v3 - 8) = v6 + a2;
-        function_4067f0((int32_t)&g1224, (int32_t)&g1224);
-        *(int32_t *)(v3 - 12) = a2;
-        *(int32_t *)(v3 - 16) = 0;
-        function_4067f0((int32_t)&g1224, (int32_t)&g1224);
-        return result;
-    }
-    int32_t v7 = v3; // 0x406d10
-    if (v6 == -1) {
-        // 0x406d12
-        v7 = v3 - 4;
-        *(int32_t *)v7 = (int32_t)"string too long";
-        _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z((char *)&g1224);
-    }
-    int32_t * v8 = (int32_t *)(result + 20); // 0x406d1c
-    uint32_t v9 = *v8; // 0x406d1c
-    int32_t v10; // 0x406cc0
-    if (v9 >= v6) {
-        // 0x406d4b
-        v10 = v7;
-        if (v6 == 0) {
-            // 0x406d4f
-            *(int32_t *)(result + 16) = v6;
-            if (v9 < 16) {
-                // 0x406d65
-                *(char *)result = 0;
-                return result;
-            }
-            // 0x406d57
-            *(char *)a1 = 0;
-            return result;
-        }
-    } else {
-        // 0x406d23
-        *(int32_t *)(v7 - 4) = *(int32_t *)(result + 16);
-        int32_t v11 = v7 - 8; // 0x406d27
-        *(int32_t *)v11 = v6;
-        function_403ce0(result, v6, *(uint32_t *)(result + 16));
-        v10 = v11;
-        if (v6 == 0) {
-            // 0x406d9e
-            return result;
-        }
-    }
-    int32_t v12 = a1; // 0x406d3e
-    if (*(int32_t *)(a1 + 20) >= 16) {
-        // 0x406d40
-        v12 = *(int32_t *)a1;
-    }
-    // 0x406d42
-    *(int32_t *)(v10 - 4) = v6;
-    int32_t v13 = v12 + a2; // 0x406d74
-    *(int32_t *)(v10 - 8) = v13;
-    *(int32_t *)(v10 - 12) = *v8 < 16 ? result : v12;
-    _memcpy2();
-    *(int32_t *)(result + 16) = v6;
-    if (*v8 >= 16) {
-        // 0x406d89
-        *(char *)(v13 + v6) = 0;
-        return result;
-    }
-    // 0x406d98
-    *(char *)(v6 + result) = 0;
-    // 0x406d9e
-    return result;
-}
+
 
 
 // Address range: 0x406df0 - 0x406ed6
@@ -36662,7 +36544,6 @@ int32_t retdec_msvc_Finitlocks__YAXXZ14(void) {
 // void * malloc(size_t size);
 // void * memchr(void * s, int c, size_t n);
 // void * memcpy(void * restrict dest, const void * restrict src, size_t n);
-// int32_t _memcpy2(void);
 // errno_t memcpy_s(void * const Destination, _In_ rsize_t const DestinationSize, void const * const Source, _In_ rsize_t const SourceSize);
 // errno_t memmove_s(void * const Destination, _In_ rsize_t const DestinationSize, void const * const Source, _In_ rsize_t const SourceSize);
 // void * memset(void * s, int c, size_t n);
