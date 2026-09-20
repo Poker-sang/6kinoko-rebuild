@@ -53,13 +53,13 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 
+include(cmake/Xiph.cmake)
 add_library(kinoko_audio_runtime STATIC src/reconstructed/audio_runtime.cpp)
-set(KINOKO_STB_VORBIS_DIR "${CMAKE_SOURCE_DIR}/third_party/stb_vorbis-1.22")
-target_include_directories(kinoko_audio_runtime PUBLIC include PRIVATE "${KINOKO_STB_VORBIS_DIR}")
+target_include_directories(kinoko_audio_runtime PUBLIC include)
 target_compile_definitions(kinoko_audio_runtime PRIVATE _CRT_SECURE_NO_WARNINGS
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_DEFINITIONS>)
 target_compile_options(kinoko_audio_runtime PRIVATE /Gy)
-target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_actor_collision ole32 dxguid winmm user32)
+target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_vorbis_decoder kinoko_actor_collision ole32 dxguid winmm user32)
 
 add_library(kinoko_legacy_string STATIC
     src/reconstructed/legacy_string.cpp
@@ -332,7 +332,7 @@ add_executable(kinoko_stage_contract
     tests/stage_audio_contract.cpp
     src/decompiled/retdec_asm_stubs.c
 )
-target_include_directories(kinoko_stage_contract PRIVATE src/decompiled "${KINOKO_STB_VORBIS_DIR}"
+target_include_directories(kinoko_stage_contract PRIVATE src/decompiled
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,INCLUDE_DIRECTORIES>)
 target_compile_definitions(kinoko_stage_contract PRIVATE
     RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
@@ -420,10 +420,14 @@ add_executable(kinoko_com_owner_contract tests/com_owner_contract.cpp)
 target_include_directories(kinoko_com_owner_contract PRIVATE include)
 add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
 
+add_executable(kinoko_vorbis_decoder_contract tests/vorbis_decoder_contract.cpp)
+target_link_libraries(kinoko_vorbis_decoder_contract PRIVATE kinoko_vorbis_decoder kinoko_vorbisenc)
+add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract)
+
 add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
-target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled "${KINOKO_STB_VORBIS_DIR}")
+target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
 target_compile_definitions(kinoko_audio_runtime_contract PRIVATE _CRT_SECURE_NO_WARNINGS)
-target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_actor_collision ole32 dxguid winmm user32)
+target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_vorbis_decoder kinoko_actor_collision ole32 dxguid winmm user32)
 add_test(NAME audio_runtime_contract COMMAND kinoko_audio_runtime_contract)
 set_tests_properties(audio_runtime_contract PROPERTIES TIMEOUT 60)
 
@@ -557,6 +561,7 @@ foreach(policy IN ITEMS checked optimized)
 endforeach()
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_vorbis_decoder_contract
     kinoko_native_control_contract
     kinoko_legacy_string_contract
     kinoko_act_frame_contract
