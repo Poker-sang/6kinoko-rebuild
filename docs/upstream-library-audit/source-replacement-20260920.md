@@ -125,3 +125,28 @@ Original disassembly evidence for the next work is retained in r20:
 4517C0 (CreateLayer2D takes ECX plus a by-value old string and another argument),
 420A90/4216A0 (class initialization), and 46D750/46E530/46D2A0 (Input's nested
 container copy). These are still migration work, not completed functionality.
+
+
+## Further checkpoints: r24–r31
+
+- d7600fa/19e3c57: callback references now use source Sqrat::Function lifetime
+  operations, including script destruction. r24 and r25 passed 52/52.
+- 85f3a4e: original C2DLayout registration uses source binding; original spelling
+  is coS_z. r26 passed 51/52 because the new test script had invalid syntax.
+- efd3356: removed 14 functions/6 globals (1181 lines) in the closed C2DLayout
+  registry component. r27 passed 46/52; six moving-map tests crashed.
+- 3ac6a8c: global Sqrat handles now retain external VM references rather than
+  SQObjectPtr internal references. Necessary lifetime correction, but r28 still
+  passed only 46/52. GC was not the sole root cause of those failures.
+- 52431a9: the linker placed unrelated globals between separately declared
+  handle words. Writing a pair overwrote a different handle. Six pairs now use
+  explicit two-word arrays. r29 passed 52/52 with the same GC/registration order.
+- 396f28e: original CActLayer registration uses source NoConstructor and binding.
+  Removed invented layer thisAct field; original script-table thisAct remains.
+  r30 passed 52/52.
+- 572bac4: removed 9 functions/7 globals (643 lines) in the closed CActLayer
+  registry component. r31 passed 52/52. All failed artifacts are preserved.
+
+These are automated quiet-build checks, not additional gameplay observations.
+Complete replacement is still pending: remaining registries, legacy shared
+controls, owning container copies and CRT compatibility need further recovery.
