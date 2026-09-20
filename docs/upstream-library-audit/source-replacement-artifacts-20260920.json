@@ -1950,6 +1950,89 @@
           "sha256": "938bdc1b737293e66d01739ae1a1fbca17d6e0cc9b61d8c8982b30b65aa30f79"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-audit",
+      "source_commit": "ed65a1630bda39e8cdf61952dc560874bcf3f206",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit/source-commit.txt",
+          "size": 42,
+          "sha256": "059f005093998d9d3e0332eac241df0ea78d7ef5739964a17c1be518f14aae05"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit/tests.log",
+          "size": 3237,
+          "sha256": "c8d453c3516000700cbfe892f4d814dfadfd409f7b4d8a3920d9cd4bb9819307"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-audit-fixed",
+      "source_commit": "ab82fa64621a53efa1ad7ebba13e6b9bf65e6495",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit-fixed/source-commit.txt",
+          "size": 42,
+          "sha256": "f5fbe4ee7ce2256f10fa4a801927a197a0d1c71f0c688d657f0b33520a4d78e1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit-fixed/tests.log",
+          "size": 2476,
+          "sha256": "cf8941dbd9c7d882a135b60acc6b41dc3eeb7de68f40efdf50cb032cd6a71693"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-quiet",
+      "source_commit": "39cbcab8a06a81a9f618f84ce5b2cf0c9c7c1367",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "74a2228b9dbf7f8a720764a76af6d8ae7e215c445647db9b5bbff2e61ea06643"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/configure.log",
+          "size": 956,
+          "sha256": "b1e0d4245f1ed21c4743d666977bf2913d8d5834495fbc81323e9b6c2b0839d1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/build.log",
+          "size": 867475,
+          "sha256": "39eaa6d7b4a6624a6fd1ac11935c60dd18c239b4ac6d1e53ac5d6221baf34de1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/ctest.log",
+          "size": 6787,
+          "sha256": "2c00990adecd03f11da5b0870da9ab668f2dcf624dc163fcee57fe70e6002207"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/kinoko.map",
+          "size": 931276,
+          "sha256": "d1d4360fa6da4d55491a9cbc675cd4b74b756eb90eeb5106a55763d5fb02c7fc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/stage-contract.map",
+          "size": 1155297,
+          "sha256": "55f553d446f349535aba419a646e413fc433561dae199a855d9c9be1d6eaeea3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "d895a67d2020c032ffe8b1b3fbb774c995e37c1cd5a9b0e6966819b07fcf607e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/run-staged.log",
+          "size": 203,
+          "sha256": "4c9ab30b68bb631a63389a1361adb3b24bcb15389276885fddb29bada99ad0d1"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r59-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "0e84e70f37def29b0ceebb3e9d3b632b467dafcf7363a73b30ff74a8729339a2"
+        }
+      ]
     }
   ]
 }

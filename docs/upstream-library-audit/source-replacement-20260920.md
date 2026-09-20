@@ -328,3 +328,29 @@ contract for signed ordering, sparse IDs, cache replacement, compact/full wire
 forms, append behavior, truncation and empty extents. DAT staged and SHA256
 verified. Historical provenance and migration boundaries passed. No new gameplay
 claim; no user-owned game was touched. All batch artifacts are retained.
+
+## r59: map binding and user validation
+
+39cbcab includes ff9e200: the original 434380 map SetLayer virtual now uses
+native C++ vectors and the source MCD records. It preserves one-shot suppression
+at byte +460, type rejection, map record order, chip reference reset and original
+texture-reference append behavior. The source MCD loader already preloads its
+textures, so binding does not acquire texture handles a second time. Flat caches
+reuse the r58 helper without the writer's record sorting or extent changes.
+The existing active archive binding orchestrator is unchanged in this batch.
+
+ed65a16 makes addressless RetDec records conservative audit roots, retaining
+those records and all dependencies rather than inventing ranges. Initial audit
+unit tests exposed an old fixture with its original-range comment before the
+prototype, not beside the definition. ab82fa6 corrects the fixture; all 17 audit
+unit tests passed. Both failed and successful test batches are retained.
+The pinned source-only audit retired-map-binding.json retired 174 functions and
+42 data records (10602 lines), with no outside symbolic or original-address
+literal references under the documented lexical model.
+
+r59 quiet Win32 build passed 54/54 contracts; DAT staged and verified. Launched
+through run_staged.ps1 as PID 23428, with no subsequent UI input. The user then
+requested that further runtime testing be left to them and explicitly reported
+"R59没问题". Record this as user validation, not an agent-completed first-level
+smoke test. Future binaries will be built/staged for the user; no further game
+input or automated test runs are performed unless the user requests them.
