@@ -1,3 +1,4 @@
+#include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
