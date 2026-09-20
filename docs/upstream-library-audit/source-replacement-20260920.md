@@ -640,3 +640,26 @@ No VM trace call site is removed by this change.
 R73 (8b0ba35) completed the full quiet Win32 build, including all remaining
 contract targets; its three DATs were staged and SHA256 verified. No automated
 test or game session was run. Overall library replacement remains incomplete.
+
+
+## r74: shared layer/key property readers
+
+Both original layer/key virtual read slots now enter explicit-receiver native
+methods backed by the same source archive loader. Layer/key/2D/map properties
+use the native per-type std::map descriptors, preserving sorted wire values and
+retaining the last incoming schema for a following compact record. The old
+untyped parser previously returned immediately on a missing schema flag and
+could not consume those values. The standalone parser remains for other types
+and tooling; this is not a claim that all compact ACT graphs are supported.
+
+41F8B9 calls SetLayer immediately after each key is appended. The shared loader
+now also performs this call, before the archive's later resource association.
+Failed key/list loads destroy their owned strings/layouts, and successful script
+reads release the constructor's previous buffer. New compiled-only contracts
+cover full/compact keys through a real file and a full layer containing both a
+2D key and native timeline; they check the loaded layout's owner backlink.
+
+retired-layer-key-readers.json audits 13 functions and nine data records,
+including the obsolete property template/shared-pointer machinery. The native
+archive loader still accepts only its established 2D/map layout types; the old
+generic type registry and CStringLayout rendering remain unfinished work.
