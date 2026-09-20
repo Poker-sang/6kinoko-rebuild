@@ -2,6 +2,7 @@
 #include <sqrat/sqratTable.h>
 #include <sqrat/sqratFunction.h>
 #include <sqrat/sqratClass.h>
+#include <sqrat/sqratScript.h>
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 static_assert(sizeof(Sqrat::Object) == 20, "Sqrat 0.8.1 agrees with recovered Win32 size");
@@ -155,3 +156,21 @@ bool sqrat_bind_function(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name,
     return SQ_SUCCEEDED(object.bind(name, payload, size, function, static_slot));
 }
 } // namespace kinoko::script::upstream
+
+namespace kinoko::script::upstream {
+bool sqrat_compile_and_run(HSQUIRRELVM vm, const char *source, std::size_t size,
+    HSQOBJECT environment, SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
+    const SQInteger top = sq_gettop(vm);
+    bool ok = false;
+    try {
+        Sqrat::Script script(vm);
+        script.CompileString(std::string(source, size));
+        script.RunInEnvironment(environment, invoke);
+        ok = true;
+    } catch (const Sqrat::Exception&) {
+        // Keep the compiler/runtime's VM error object; do not cross the C ABI.
+    }
+    sq_settop(vm, top);
+    return ok;
+}
+}

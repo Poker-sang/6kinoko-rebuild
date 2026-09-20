@@ -738,31 +738,15 @@ int32_t retdec_publish_acting_player(int32_t vm,
 int32_t retdec_execute_act_source_script(
     int32_t vm, int32_t script_ptr, const int32_t *environment_pair)
 {
-    unsigned char *bytecode = nullptr;
-    int32_t bytecode_size = 0;
-    int32_t compiled_script[26] = { 0 };
-    const char *source;
-    const char *name;
-    int32_t size;
-    int32_t result;
-
-    if (vm == 0 || script_ptr == 0 || environment_pair == nullptr)
-        return 0;
-    source = field<const char *>(script_ptr + 92);
-    size = field<int32_t>(script_ptr + 96);
-    name = retdec_std_string_data(script_ptr + 64);
-    if (source == nullptr || size <= 0 || size > 0x1000000)
-        return 0;
-    if (!retdec_squirrel_compile_source(source, size,
-            name != nullptr && *name != 0 ? name : "ACT inline",
-            &bytecode, &bytecode_size))
-        return 0;
-    compiled_script[23] = address(bytecode);
-    compiled_script[24] = bytecode_size;
-    result = retdec_execute_embedded_act_script(
-        vm, address(compiled_script), environment_pair);
-    std::free(bytecode);
-    return result;
+    if (!vm || !script_ptr || !environment_pair) return 0;
+    const char *source = field<const char *>(script_ptr + 92);
+    const int32_t size = field<int32_t>(script_ptr + 96);
+    if (!source || size <= 0 || size > 0x1000000) return 0;
+    return kinoko::script::upstream::sqrat_compile_and_run(kinoko_vm(vm), source,
+        strnlen(source, size), kinoko_borrowed_object(environment_pair[0], environment_pair[1]),
+        [](HSQUIRRELVM target, SQInteger nargs, SQBool result, SQBool errors) -> SQRESULT {
+            return kinoko_sq_call(address(target), nargs, result, errors);
+        });
 }
 
 int32_t retdec_execute_act_callback(int32_t script_ptr,

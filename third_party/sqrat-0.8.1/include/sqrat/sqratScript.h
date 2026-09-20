@@ -56,10 +56,20 @@ namespace Sqrat {
 		}
 
 		void Run() {
+            HSQOBJECT environment;
+            sq_resetobject(&environment);
+            RunInEnvironment(environment, &sq_call);
+        }
+
+        // Embedding extension: recovered LocalScript uses an explicit object,
+        // or the root table for null. Keep the source execution/error sequence.
+        void RunInEnvironment(HSQOBJECT environment,
+                SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
 			if(!sq_isnull(obj)) {
 				sq_pushobject(vm, obj);
-				sq_pushroottable(vm);
-				if(SQ_FAILED(sq_call(vm, 1, false, true))) {
+                if(sq_isnull(environment)) sq_pushroottable(vm);
+                else sq_pushobject(vm, environment);
+				if(SQ_FAILED(invoke(vm, 1, false, true))) {
 					throw Exception(LastErrorString(vm));
 				}
 			}

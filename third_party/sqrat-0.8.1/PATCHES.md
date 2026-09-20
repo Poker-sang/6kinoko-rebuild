@@ -86,3 +86,8 @@ embedding after its lookup has completed. The host detaches the resulting two
 references into its byte record; callback replacement adopts those records into
 a real Function whose destructor executes the original null/Release policy.
 This avoids a duplicate lookup and keeps missing-slot behavior unchanged.
+
+Script::Run shares its source push/call/error sequence with RunInEnvironment.
+The embedding supplies the explicit environment used by original LocalScript
+4159F0 and the current-VM call adapter; ordinary Run still selects the root table.
+CompileString remains upstream code and compiles in the actual running VM.

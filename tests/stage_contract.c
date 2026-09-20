@@ -2886,6 +2886,19 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         "if(compilestring(\"return CompilerEnum.second;\")()!=9) throw 124;\n");
     expected_vm_error=0;
     CHECK(compile_result);
+    {
+        const char *text = "sameVmCompile <- CompilerSaved + CompilerEnum.first;";
+        int32_t script[26] = {0};
+        script[23] = PTR(text); script[24] = (int32_t)strlen(text);
+        CHECK(retdec_execute_act_source_script(vm, PTR(script), root+2));
+        CHECK(execute_source(vm, root+2, "if(sameVmCompile!=38) throw 125;\n"));
+        const char *bad = "local =;";
+        script[23] = PTR(bad); script[24] = (int32_t)strlen(bad);
+        expected_vm_error = 1;
+        CHECK(!retdec_execute_act_source_script(vm, PTR(script), root+2));
+        expected_vm_error = 0;
+        CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    }
     CHECK(function_48aa20(vm)==top);
     CHECK(retdec_explicit_vm==0);
     puts("PASS: source compiler current-VM constants/enums, callbacks, errors, closures and GC");
