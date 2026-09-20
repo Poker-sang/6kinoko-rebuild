@@ -151,6 +151,17 @@ extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t o
     write(pointer(out), value);
     return found;
 }
+extern "C" void retdec_sqrat_assign_pair(int32_t id, int32_t* destination, const int32_t* source) {
+    if (!id || !destination || !source) return;
+    const auto next = read<HSQOBJECT>(source);
+    const auto previous = read<HSQOBJECT>(destination);
+    auto vm = pointer<SQVM>(id);
+    // These are external Sqrat class/property handles. Internal SQObjectPtr
+    // counts do not register GC roots; retain before release also permits aliasing.
+    kinoko::script::upstream::sqrat_retain(vm, next);
+    kinoko::script::upstream::sqrat_release(vm, previous);
+    write(destination, next);
+}
 extern "C" void retdec_sqrat_release_pair(int32_t id, int32_t* pair) {
     if (!pair) return;
     auto value = read<HSQOBJECT>(pair);

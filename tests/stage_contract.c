@@ -4278,6 +4278,14 @@ int main(int argc, char **argv) {
         int32_t before = function_48aa20(vm);
         CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
         CHECK(function_42b6d0(vm) == 0);
+        /* Drop the script root and collect before replacing the native cached
+           class: source Sqrat references must keep the old class/tables alive. */
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), "C2DLayout", -1);
+        CHECK(SQ_SUCCEEDED(sq_deleteslot(kinoko_vm(vm), -2, SQFalse)));
+        sq_pop(kinoko_vm(vm), 1);
+        sq_collectgarbage(kinoko_vm(vm));
+        CHECK(function_42b6d0(vm) == 0);
         CHECK(function_42b6d0(vm) == 0);
         CHECK(function_48aa20(vm) == before);
         sq_pushroottable(kinoko_vm(vm));

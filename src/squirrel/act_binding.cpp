@@ -113,8 +113,8 @@ int32_t retdec_publish_cact_layer_members(
             retdec_sqrat_release_pair(vm, table_pair2);
             return 0;
         }
-        retdec_squirrel_assign(&g1151, table_pair);
-        retdec_squirrel_assign(&g1153, table_pair2);
+        retdec_sqrat_assign_pair(vm, &g1151, table_pair);
+        retdec_sqrat_assign_pair(vm, &g1153, table_pair2);
         retdec_sqrat_release_pair(vm, table_pair);
         retdec_sqrat_release_pair(vm, table_pair2);
     }
@@ -184,8 +184,8 @@ int32_t retdec_publish_cact_layer_members(
     return 1;
 
 failed:
-    retdec_squirrel_assign(&g1151, empty_pair);
-    retdec_squirrel_assign(&g1153, empty_pair);
+    retdec_sqrat_assign_pair(vm, &g1151, empty_pair);
+    retdec_sqrat_assign_pair(vm, &g1153, empty_pair);
     return 0;
 }
 
@@ -219,8 +219,8 @@ int32_t retdec_publish_c2dlayout_properties(
             retdec_sqrat_release_pair(vm, table_pair2);
             return 0;
         }
-        retdec_squirrel_assign(&g1141, table_pair);
-        retdec_squirrel_assign(&g1143, table_pair2);
+        retdec_sqrat_assign_pair(vm, &g1141, table_pair);
+        retdec_sqrat_assign_pair(vm, &g1143, table_pair2);
         retdec_sqrat_release_pair(vm, table_pair);
         retdec_sqrat_release_pair(vm, table_pair2);
     }
@@ -265,8 +265,8 @@ int32_t retdec_publish_c2dlayout_properties(
     return 1;
 
 failed:
-    retdec_squirrel_assign(&g1141, empty_pair);
-    retdec_squirrel_assign(&g1143, empty_pair);
+    retdec_sqrat_assign_pair(vm, &g1141, empty_pair);
+    retdec_sqrat_assign_pair(vm, &g1143, empty_pair);
     return 0;
 }
 
@@ -282,7 +282,7 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         return 0;
     existing_result = get_pair(root_object, "C2DLayout", existing);
     if (existing_result && existing[0] == 0x08004000 && existing[1] != 0) {
-        retdec_squirrel_assign(&g1145, existing);
+        retdec_sqrat_assign_pair(vm, &g1145, existing);
         class_pair[0] = existing[0];
         class_pair[1] = existing[1];
         retdec_sqrat_release_pair(vm, existing);
@@ -305,13 +305,13 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         return 0;
     }
 
-    retdec_squirrel_assign(&g1145, class_pair);
+    retdec_sqrat_assign_pair(vm, &g1145, class_pair);
     if (!retdec_publish_c2dlayout_properties(vm, class_pair))
         goto publish_failed;
     if (!retdec_sqrat_set_pair(
             vm, pointer<const int32_t>(root_object + 8),
             "C2DLayout", class_pair)) {
-        retdec_squirrel_assign(&g1145, empty_pair);
+        retdec_sqrat_assign_pair(vm, &g1145, empty_pair);
         goto publish_failed;
     }
     retdec_trace_i32("act:c2dlayout-class", class_pair[1]);
@@ -379,7 +379,7 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm,
                                        existing);
     if (existing_result && existing[0] == 0x08004000 &&
         existing[1] != 0) {
-        retdec_squirrel_assign(&g1079, existing);
+        retdec_sqrat_assign_pair(vm, &g1079, existing);
         g1037 = 1;
         retdec_trace_i32("act:resource2d-class-existing", existing[1]);
         retdec_sqrat_release_pair(vm, existing);
@@ -418,12 +418,12 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm,
         goto publish_failed;
 
     /* 447C60 retains the class object independently of the root slot. */
-    retdec_squirrel_assign(&g1079, class_pair);
+    retdec_sqrat_assign_pair(vm, &g1079, class_pair);
     g1037 = 1;
     if (!retdec_sqrat_set_pair(
             vm, pointer<const int32_t>(root_object + 8),
             "CActResource2D", class_pair)) {
-        retdec_squirrel_assign(&g1079, empty_pair);
+        retdec_sqrat_assign_pair(vm, &g1079, empty_pair);
         goto publish_failed;
     }
     retdec_trace_i32("act:resource2d-class", class_pair[1]);

@@ -19,6 +19,7 @@ int32_t retdec_sqrat_root_construct(int32_t object_ptr, int32_t vm);
 void retdec_sqrat_object_release(int32_t object_ptr);
 int32_t retdec_sqrat_get(int32_t object_ptr, const char *name,
     int32_t out_ptr);
+void retdec_sqrat_assign_pair(int32_t vm, int32_t* destination, const int32_t* source);
 void retdec_sqrat_release_pair(int32_t vm, int32_t pair[2]);
 int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t *object_pair,
     const char *name,
