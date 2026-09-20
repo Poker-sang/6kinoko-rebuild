@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/act_frame.h"
@@ -1969,7 +1970,6 @@ int32_t function_43e100(void);
 
 
 
-int32_t function_43e890(uint32_t a1, int32_t a2);
 
 
 
@@ -15475,121 +15475,7 @@ int32_t function_43e100(void) {
 // Address range: 0x43e860 - 0x43e868
 
 // Address range: 0x43e890 - 0x43eb80
-int32_t function_43e890(uint32_t a1, int32_t a2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x43e8a0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t result; // 0x43e890
-    *(int32_t *)result = (int32_t)&g350;
-    *(int32_t *)(result + 24) = 15;
-    *(int32_t *)(result + 20) = 0;
-    *(char *)(result + 4) = 0;
-    *(int32_t *)(result + 52) = 15;
-    *(int32_t *)(result + 48) = 0;
-    *(char *)(result + 32) = 0;
-    *(int32_t *)(result + 80) = 15;
-    *(int32_t *)(result + 76) = 0;
-    int32_t v2 = result + 60; // 0x43e8e5
-    *(char *)v2 = 0;
-    *(int32_t *)(result + 160) = 0;
-    *(int32_t *)(result + 164) = 0;
-    *(int32_t *)(result + 168) = 0;
-    int32_t v3 = result + 176; // 0x43e8fe
-    int32_t * v4 = (int32_t *)v3; // 0x43e906
-    *v4 = 0;
-    int32_t v5 = _3f__3f_2_40_YAPAXI_40_Z(8); // 0x43e908
-    if (v5 != 0) {
-        // 0x43e918
-        *v4 = v5;
-        *(int32_t *)(v5 + 4) = 0;
-        *(int32_t *)v5 = 0;
-        *(int32_t *)*v4 = v3;
-        *(int32_t *)(result + 180) = 0;
-        *(int32_t *)(result + 184) = 0;
-        *(int32_t *)(result + 188) = 0;
-        *(int32_t *)(result + 192) = 0;
-        *(float32_t *)(result + 152) = 1.0f;
-        *(int32_t *)(result + 148) = 0;
-        *(int32_t *)(result + 156) = 1;
-        retdec_string_assign_cstr((int32_t *)v2, (const char *)(&g349));
-        *(float32_t *)(result + 136) = 1.0f;
-        *(float32_t *)(result + 140) = 1.0f;
-        *(int32_t *)(result + 116) = 255;
-        *(int32_t *)(result + 112) = 255;
-        *(int32_t *)(result + 108) = 255;
-        *(int32_t *)(result + 88) = 16;
-        *(int32_t *)(result + 92) = 1;
-        *(int32_t *)(result + 96) = 0;
-        *(int32_t *)(result + 100) = 0;
-        *(int32_t *)(result + 104) = 0;
-        *(int32_t *)(result + 120) = 0;
-        *(int32_t *)(result + 124) = 2;
-        *(char *)(result + 128) = 0;
-        *(int32_t *)(result + 132) = 0;
-        *(int32_t *)(result + 144) = -1;
-        *(int32_t *)(result + 220) = 0;
-        *(int32_t *)(result + 224) = 0;
-        *(char *)(result + 228) = 0;
-        *(int32_t *)(result + 208) = 0;
-        *(int32_t *)(result + 204) = 0;
-        *(int32_t *)(result + 216) = 16;
-        *(int32_t *)(result + 212) = 0;
-        __writefsdword(0, v1);
-        return result;
-    }
-    // 0x43e9eb
-    int32_t v6; // bp-36, 0x43e890
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v6);
-    v6 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    int32_t v7 = __readfsdword(0); // bp-80, 0x43ea20
-    __writefsdword(0, (int32_t)&v7);
-    v6 = &g350;
-    int32_t v8; // bp-32, 0x43e890
-    retdec_string_assign_cstr(&v8, (const char *)(&g189));
-    int32_t v9; // bp-4, 0x43e890
-    retdec_string_assign_cstr(&v9, (const char *)(&g189));
-    function_4410c0(result);
-    int32_t v10 = &v6; // bp-128, 0x43ea92
-    function_441250(&v6);
-    function_442d20();
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    int32_t v11 = 0; // 0x43eaba
-    if (result != 0) {
-        // 0x43eaeb
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v11 = &g1224;
-    }
-    int32_t v12 = v11; // 0x43eb12
-    if (result >= 16) {
-        // 0x43eb14
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v12 = &g1224;
-    }
-    int32_t v13 = v12; // 0x43eb35
-    if (a1 >= 16) {
-        // 0x43eb37
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v13 = &g1224;
-    }
-    // 0x43eb45
-    v9 = 0;
-    int32_t v14 = &v8; // 0x43eb4f
-    int32_t * v15 = (int32_t *)(v14 + 20); // 0x43eb52
-    int32_t result2 = v13; // 0x43eb56
-    if (*v15 >= 16) {
-        // 0x43eb58
-        *(int32_t *)((int32_t)&v10 - 4) = v8;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result2 = &g1224;
-    }
-    // 0x43eb65
-    *v15 = 15;
-    *(int32_t *)(v14 + 16) = 0;
-    *(char *)&v8 = 0;
-    __writefsdword(0, v7);
-    return result2;
-}
+/* Native CStringLayout construction: string_glyph_cache.cpp. */
 
 
 // Address range: 0x43fbe0 - 0x43fc3a
@@ -16268,7 +16154,7 @@ int32_t function_451b70(int32_t a1) {
     _3f__3f_3_40_YAXPAX_40_Z(&g1224);
     int32_t v15 = _3f__3f_2_40_YAPAXI_40_Z(260); // 0x451d51
     if (v15 != 0) {
-        int32_t v16 = function_43e890(v15, (int32_t)&g1224); // 0x451d66
+        int32_t v16 = kinoko_construct_string_layout(v15); // 0x451d66
         if (v16 != 0) {
             int32_t * v17 = (int32_t *)*v14; // 0x451d86
             int32_t * v18 = (int32_t *)(*v17 + 4);

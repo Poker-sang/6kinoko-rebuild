@@ -4367,6 +4367,30 @@ static int test_input_copy(void) {
     return 0;
 }
 
+static int test_string_layout_lifetime(void) {
+    int32_t layout[65];memset(layout,0xa5,sizeof(layout));
+    CHECK(kinoko_construct_string_layout(PTR(layout))==PTR(layout));
+    CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]==15);
+    CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
+    const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
+    CHECK(memcmp(layout+15,face,sizeof(face))==0);
+    CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
+    CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
+    CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
+    CHECK(((int32_t*)(intptr_t)layout[44])[0]==PTR(layout)+176);
+    CHECK(((int32_t*)(intptr_t)layout[44])[1]==0 && layout[48]==0);
+    CHECK(kinoko_method_delete_string_layout(PTR(layout),NULL,0)==PTR(layout));
+    CHECK(layout[44]==0 && layout[40]==0 && layout[41]==0 && layout[42]==0);
+    CHECK(layout[19]==0 && layout[20]==15);
+    int32_t* cookie=(int32_t*)malloc(4+520);CHECK(cookie);cookie[0]=2;
+    CHECK(kinoko_construct_string_layout(PTR(cookie+1))==PTR(cookie+1));
+    CHECK(kinoko_construct_string_layout(PTR(cookie+66))==PTR(cookie+66));
+    CHECK(kinoko_method_delete_string_layout(PTR(cookie+1),NULL,2)==PTR(cookie));
+    CHECK(cookie[45]==0 && cookie[110]==0);free(cookie);
+    puts("PASS: CStringLayout original CP932 defaults, receiver, proxy and scalar/array destruction");
+    return 0;
+}
+
 static int test_string_glyph_cache(void) {
     int32_t layout[65]={0};
     int32_t* atlas=(int32_t*)calloc(1,436);
@@ -5516,6 +5540,7 @@ int main(int argc, char **argv) {
     CHECK(test_input_aggregation() == 0);
     CHECK(test_map_manager_copy() == 0);
     CHECK(test_string_glyph_cache() == 0);
+    CHECK(test_string_layout_lifetime() == 0);
     CHECK(test_input_copy() == 0);
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
