@@ -1677,7 +1677,6 @@ int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
                         uint32_t *a4, uint32_t *a5);
 
 
-int32_t function_40ed40(void);
 
 
 int32_t function_410230(void);
@@ -1785,11 +1784,9 @@ int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3);
 
 
 
-int32_t function_423f00(int32_t a1, int32_t a2);
 
 int32_t function_424320(int32_t a1);
 
-int32_t function_424720(int32_t a1, int32_t a2, int32_t result, int32_t result2);
 
 int32_t function_4252e0(void);
 
@@ -1999,10 +1996,8 @@ int32_t function_443560(void);
 
 
 
-int32_t function_444a50(int32_t a1);
 
 
-int32_t function_445230(int32_t result, int32_t a2);
 
 
 
@@ -9298,115 +9293,7 @@ int32_t retdec_load_act_texture(const char *texture_name)
 
 
 // Address range: 0x40ed40 - 0x40ee27
-int32_t function_40ed40(void) {
-    // 0x40ed40
-    int32_t v1; // bp-8, 0x40ed40
-    int32_t v2 = &v1; // 0x40ed43
-    int32_t v3; // 0x40ed40
-    int32_t * v4 = (int32_t *)(v3 + 352); // 0x40ed44
-    if (*v4 != 0) {
-        int32_t * v5 = (int32_t *)(v3 + 348); // 0x40ed50
-        int32_t * v6 = (int32_t *)(v2 - 4); // 0x40ed5b
-        *v6 = *(int32_t *)(*(int32_t *)*v5 + 8);
-        function_4ab330();
-        int32_t v7 = *v5; // 0x40ed61
-        int32_t v8 = *(int32_t *)v7; // 0x40ed67
-        int32_t v9; // 0x40ed40
-        int32_t * v10; // 0x40ed70
-        int32_t * v11; // 0x40ed73
-        int32_t v12; // 0x40ed88
-        if (v8 == v7) {
-            // 0x40ed50
-            v9 = *v4;
-        } else {
-            // 0x40ed70
-            v10 = (int32_t *)(v8 + 4);
-            v11 = (int32_t *)v8;
-            *(int32_t *)*v10 = *v11;
-            *v6 = v8;
-            *(int32_t *)(*v11 + 4) = *v10;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            v12 = *v4 - 1;
-            *v4 = v12;
-            v9 = v12;
-        }
-        while (v9 != 0) {
-            // 0x40ed50
-            *v6 = *(int32_t *)(*(int32_t *)*v5 + 8);
-            function_4ab330();
-            v7 = *v5;
-            v8 = *(int32_t *)v7;
-            if (v8 == v7) {
-                // 0x40ed50
-                v9 = *v4;
-            } else {
-                // 0x40ed70
-                v10 = (int32_t *)(v8 + 4);
-                v11 = (int32_t *)v8;
-                *(int32_t *)*v10 = *v11;
-                *v6 = v8;
-                *(int32_t *)(*v11 + 4) = *v10;
-                _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-                v12 = *v4 - 1;
-                *v4 = v12;
-                v9 = v12;
-            }
-        }
-    }
-    int32_t * v13 = (int32_t *)(v3 + 344); // 0x40ed96
-    int32_t v14 = *v13; // 0x40ed96
-    if (v14 != 0) {
-        // 0x40eda0
-        *(int32_t *)(v2 - 4) = v14;
-        function_4ab330();
-        *v13 = 0;
-    }
-    int32_t * v15 = (int32_t *)(v3 + 388); // 0x40edaf
-    int32_t v16 = v3 + 368;
-    int32_t * v17; // 0x40ed40
-    if (*v15 < 16) {
-        // 0x40edaf
-        v17 = (int32_t *)(v2 - 4);
-    } else {
-        int32_t * v18 = (int32_t *)(v2 - 4);
-        *v18 = *(int32_t *)v16;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v17 = v18;
-    }
-    // 0x40edc7
-    *v15 = 15;
-    *(int32_t *)(v3 + 384) = 0;
-    *(char *)v16 = 0;
-    int32_t * v19 = (int32_t *)(v3 + 348); // 0x40eddd
-    int32_t v20 = *v19; // 0x40eddd
-    int32_t * v21 = (int32_t *)v20; // 0x40ede3
-    int32_t v22 = *v21; // 0x40ede3
-    *v21 = v20;
-    int32_t v23 = *v19; // 0x40ede7
-    *(int32_t *)(v23 + 4) = v23;
-    *v4 = 0;
-    if (v22 == *v19) {
-        // 0x40ee15
-        *v17 = v22;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        return &g1224;
-    }
-    int32_t v24 = *(int32_t *)v22; // 0x40ee00
-    *v17 = v22;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    int32_t v25 = *v19; // 0x40ee0d
-    while (v24 != v25) {
-        int32_t v26 = v24;
-        v24 = *(int32_t *)v26;
-        *v17 = v26;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v25 = *v19;
-    }
-    // 0x40ee15
-    *v17 = v25;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    return &g1224;
-}
+
 
 
 // Address range: 0x4101e0 - 0x410230
@@ -12239,18 +12126,7 @@ int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3) {
 
 
 // Address range: 0x423f00 - 0x423f4d
-int32_t function_423f00(int32_t a1, int32_t a2) {
-    // 0x423f00
-    int32_t v1; // bp-4, 0x423f00
-    int32_t v2 = &v1; // 0x423f00
-    int32_t v3; // 0x423f00
-    *(int32_t *)(v3 + 4) = 0;
-    *(int32_t *)(v2 - 4) = a2;
-    *(int32_t *)(v2 - 8) = a2;
-    *(int32_t *)(v2 - 12) = a1;
-    int32_t result = function_424720((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224); // 0x423f44
-    return result;
-}
+
 
 // Address range: 0x424280 - 0x424311
 
@@ -12288,67 +12164,7 @@ int32_t function_424320(int32_t a1) {
 }
 
 // Address range: 0x424720 - 0x4247e5
-int32_t function_424720(int32_t a1, int32_t a2, int32_t result, int32_t result2) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x424730
-    int32_t v2; // bp-4, 0x424720
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-40, 0x42473e
-    __writefsdword(0, (int32_t)&v1);
-    if (result == result2) {
-        // 0x4247d1
-        __writefsdword(0, v1);
-        return result;
-    }
-    int32_t * v4 = (int32_t *)(a2 + 4); // 0x42476c
-    int32_t * v5 = (int32_t *)(a1 + 4);
-    int32_t v6 = result; // 0x4247a0
-    int32_t v7 = &v3;
-    *(int32_t *)(v7 - 4) = v6 + 8;
-    *(int32_t *)(v7 - 8) = *v4;
-    int32_t v8 = v7 - 12; // 0x424773
-    *(int32_t *)v8 = a2;
-    int32_t v9 = function_4214a0((int32_t)&g1224, (int32_t)&g1224, &g1224); // 0x424774
-    int32_t v10 = *v5; // 0x424779
-    int32_t v11 = v9; // 0x424786
-    int32_t v12 = v8; // 0x424786
-    if (v10 == 0x3ffffffe) {
-        // 0x424788
-        v12 = v7 - 16;
-        *(int32_t *)v12 = (int32_t)"list<T> too long";
-        v11 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z((char *)&g1224);
-    }
-    int32_t v13 = v11;
-    *v5 = v10 + 1;
-    *v4 = v13;
-    *(int32_t *)*(int32_t *)(v13 + 4) = v13;
-    v6 = *(int32_t *)v6;
-    while (v6 != result2) {
-        // 0x424765
-        v7 = v12;
-        *(int32_t *)(v7 - 4) = v6 + 8;
-        *(int32_t *)(v7 - 8) = *v4;
-        v8 = v7 - 12;
-        *(int32_t *)v8 = a2;
-        v9 = function_4214a0((int32_t)&g1224, (int32_t)&g1224, &g1224);
-        v10 = *v5;
-        v11 = v9;
-        v12 = v8;
-        if (v10 == 0x3ffffffe) {
-            // 0x424788
-            v12 = v7 - 16;
-            *(int32_t *)v12 = (int32_t)"list<T> too long";
-            v11 = _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z((char *)&g1224);
-        }
-        // 0x424792
-        v13 = v11;
-        *v5 = v10 + 1;
-        *v4 = v13;
-        *(int32_t *)*(int32_t *)(v13 + 4) = v13;
-        v6 = *(int32_t *)v6;
-    }
-    // 0x4247d1
-    __writefsdword(0, v1);
-    return result2;
-}
+
 
 // Address range: 0x4252e0 - 0x4252e5
 int32_t function_4252e0(void) {
@@ -15956,94 +15772,11 @@ int32_t function_443560(void) {
 
 
 // Address range: 0x444a50 - 0x444ac3
-int32_t function_444a50(int32_t a1) {
-    // 0x444a50
-    int32_t v1; // 0x444a50
-    if (v1 == a1) {
-        // 0x444abd
-        int32_t result; // 0x444a50
-        return result;
-    }
-    // 0x444a5e
-    int32_t v2; // bp-16, 0x444a50
-    int32_t v3 = &v2; // 0x444a5f
-    int32_t v4 = v1 + 8;
-    int32_t v5; // 0x444a50
-    *(int32_t *)v5 = *(int32_t *)(v4 - 8);
-    *(int32_t *)(v5 + 4) = *(int32_t *)(v4 - 4);
-    *(int32_t *)(v5 + 8) = *(int32_t *)v4;
-    *(int32_t *)(v5 + 12) = *(int32_t *)(v4 + 4);
-    *(int32_t *)(v5 + 16) = *(int32_t *)(v4 + 8);
-    *(int32_t *)(v3 - 4) = v4 + 16;
-    v3 -= 8;
-    *(int32_t *)v3 = v5 + 24;
-    *(int32_t *)(v5 + 20) = *(int32_t *)(v4 + 12);
-    function_445230((int32_t)&g1224, (int32_t)&g1224);
-    *(int32_t *)(v5 + 428) = *(int32_t *)(v4 + 420);
-    *(int32_t *)(v5 + 432) = *(int32_t *)(v4 + 424);
-    int32_t result2 = v5 + 436; // 0x444ab2
-    int32_t v6 = v4 + 436; // 0x444aba
-    while (v4 + 428 != a1) {
-        // 0x444a62
-        v4 = v6;
-        *(int32_t *)result2 = *(int32_t *)(v4 - 8);
-        *(int32_t *)(result2 + 4) = *(int32_t *)(v4 - 4);
-        *(int32_t *)(result2 + 8) = *(int32_t *)v4;
-        *(int32_t *)(result2 + 12) = *(int32_t *)(v4 + 4);
-        *(int32_t *)(result2 + 16) = *(int32_t *)(v4 + 8);
-        *(int32_t *)(v3 - 4) = v4 + 16;
-        v3 -= 8;
-        *(int32_t *)v3 = result2 + 24;
-        *(int32_t *)(result2 + 20) = *(int32_t *)(v4 + 12);
-        function_445230((int32_t)&g1224, (int32_t)&g1224);
-        *(int32_t *)(result2 + 428) = *(int32_t *)(v4 + 420);
-        *(int32_t *)(result2 + 432) = *(int32_t *)(v4 + 424);
-        result2 += 436;
-        v6 = v4 + 436;
-    }
-    // 0x444abd
-    return result2;
-}
+
 
 
 // Address range: 0x445230 - 0x445350
-int32_t function_445230(int32_t result, int32_t a2) {
-    // 0x445230
-    *(int32_t *)result = *(int32_t *)a2;
-    *(int32_t *)(result + 4) = *(int32_t *)(a2 + 4);
-    *(int32_t *)(result + 8) = *(int32_t *)(a2 + 8);
-    __asm_rep_movsd_memcpy((char *)(result + 12), (char *)(a2 + 12), 74);
-    *(int32_t *)(result + 308) = *(int32_t *)(a2 + 308);
-    *(int32_t *)(result + 312) = *(int32_t *)(a2 + 312);
-    *(int32_t *)(result + 316) = *(int32_t *)(a2 + 316);
-    *(int32_t *)(result + 320) = *(int32_t *)(a2 + 320);
-    *(int32_t *)(result + 324) = *(int32_t *)(a2 + 324);
-    *(int32_t *)(result + 328) = *(int32_t *)(a2 + 328);
-    *(int32_t *)(result + 332) = *(int32_t *)(a2 + 332);
-    *(int32_t *)(result + 336) = *(int32_t *)(a2 + 336);
-    *(int32_t *)(result + 340) = *(int32_t *)(a2 + 340);
-    *(int32_t *)(result + 344) = *(int32_t *)(a2 + 344);
-    int32_t v1; // bp-16, 0x445230
-    int32_t * v2 = &v1; // 0x4452df
-    if (result != a2) {
-        int32_t v3 = *(int32_t *)(a2 + 348); // 0x4452e4
-        int32_t v4 = *(int32_t *)v3; // 0x4452e6
-        int32_t v5 = v4; // bp-28, 0x4452ea
-        function_423f00(v4, v3);
-        v2 = &v5;
-    }
-    int32_t v6 = (int32_t)v2;
-    *(int32_t *)(result + 360) = *(int32_t *)(a2 + 360);
-    *(int32_t *)(v6 - 4) = -1;
-    *(char *)(result + 364) = *(char *)(a2 + 364);
-    *(int32_t *)(v6 - 8) = 0;
-    *(char *)(result + 365) = *(char *)(a2 + 365);
-    *(int32_t *)(v6 - 12) = a2 + 368;
-    kinoko_string_assign_substring(result + 368, a2 + 368, 0, UINT32_MAX);
-    *(int32_t *)(result + 396) = *(int32_t *)(a2 + 396);
-    *(int32_t *)(result + 400) = *(int32_t *)(a2 + 400);
-    return result;
-}
+
 
 
 // Address range: 0x445530 - 0x445580
