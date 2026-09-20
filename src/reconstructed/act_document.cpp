@@ -75,6 +75,7 @@ int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
         retdec_trace("act:script-data-failed");
         return 0;
     }
+    std::free(pointer<void>(field<int32_t>(object_ptr + 92)));
     field<int32_t>(object_ptr + 92) =
         address(raw_data);
     field<uint32_t>(object_ptr + 96) = raw_size;
@@ -186,25 +187,18 @@ int32_t retdec_construct_c2dlayout(int32_t layout) {
 
 int32_t retdec_act_make_layout(int32_t reader_ptr)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     const auto layout = address(std::calloc(1u, 316u));
     if (!retdec_construct_c2dlayout(layout)) return 0;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_method_read_layout_properties(layout, nullptr, address(&reader_ptr), 1)) {
         std::free(pointer<void>(layout));
         return 0;
     }
-    retdec_act_apply_layout(layout, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     return layout;
 }
 
 int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 {
     int32_t layout;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
 
     layout = address(std::calloc(1u, 464u));
     if (layout == 0)
@@ -217,13 +211,10 @@ int32_t retdec_act_make_map_layout(int32_t reader_ptr)
     field<float>(layout + 324) = 1.0f;
     field<int32_t>(layout + 328) = 1;
     field<int32_t>(layout + 452) = -1;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_map_properties(layout, reader_ptr)) {
         std::free(pointer<void>(layout));
         return 0;
     }
-    retdec_act_apply_map_layout(layout, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     return layout;
 }
 
@@ -297,23 +288,14 @@ int32_t retdec_act_read_map_records(int32_t layout,
 int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint8_t has_layout;
     uint32_t layout_type;
     int32_t layout;
 
-    (void)version;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!key || version != 1 || !kinoko_act_read_key_properties(key, reader_ptr)) {
         retdec_trace("act:key-properties-failed");
         return 0;
     }
-    for (uint32_t index = 0; index < property_count; ++index) {
-        if (std::strcmp(properties[index].name, "scriptFunction") == 0)
-            retdec_act_assign_string(key, 8, &properties[index]);
-    }
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_read_u8(reader_ptr, &has_layout)) {
         retdec_trace("act:key-layout-flag-failed");
         return 0;
@@ -354,7 +336,7 @@ int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version)
     field<int32_t>(key + 28) = 15;
     field<uint8_t>(key + 8) = 0;
     if (!retdec_act_load_key(key, reader_ptr, version)) {
-        std::free(pointer<void>(key));
+        retdec_destroy_cact_key(key);
         return 0;
     }
     return key;
@@ -363,20 +345,15 @@ int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version)
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                      int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t count;
     uint32_t index;
     uint32_t type;
     int32_t key;
 
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!layer || version != 1 || !kinoko_act_read_layer_properties(layer, reader_ptr)) {
         retdec_trace("act:layer-properties-failed");
         return 0;
     }
-    retdec_act_apply_layer(layer, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     retdec_trace_squirrel_name("act:layer-name",
                                address(retdec_std_string_data(
                                    layer + 112)));
@@ -392,9 +369,15 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         }
         key = retdec_act_make_key(reader_ptr, version);
         if (key == 0 || !retdec_act_append_list(layer + 0xb4, key)) {
+            retdec_destroy_cact_key(key);
             retdec_trace("act:layer-key-load-failed");
             return 0;
         }
+        // 41F8B9 binds every newly read layout to its containing layer before
+        // the next key. Resource association may happen later during ACT load.
+        const auto layout = field<int32_t>(key + 4);
+        if (layout) retdec_call_thiscall1_result(pointer<void>(layout),
+            field<void*>(field<int32_t>(layout) + 24), layer);
         retdec_trace_squirrel_name(
             "act:key-script", address(retdec_std_string_data(
                 key + 8)));

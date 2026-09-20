@@ -552,6 +552,27 @@ extern "C" int32_t __fastcall kinoko_method_write_act_layer(int32_t layer,void*,
             field<void*>(field<int32_t>(script)),writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
+extern "C" int32_t kinoko_act_read_layer_properties(int32_t layer,int32_t reader) {
+    if (!layer || !reader) return 0;
+    try { return read(layer,reader,layer_schema,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_read_key_properties(int32_t key,int32_t reader) {
+    if (!key || !reader) return 0;
+    try { return read(key,reader,key_schema,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_read_map_properties(int32_t layout,int32_t reader) {
+    if (!layout || !reader) return 0;
+    try { return read(layout,reader,map_schema,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,int32_t holder,int32_t version) {
+    return layer && holder && version==1 ? retdec_act_load_layer(layer,field<int32_t>(holder),version) : 0;
+}
+extern "C" int32_t __fastcall kinoko_method_read_act_key(int32_t key,void*,int32_t holder,int32_t version) {
+    return key && holder && version==1 ? retdec_act_load_key(key,field<int32_t>(holder),version) : 0;
+}
 extern "C" int32_t __fastcall kinoko_method_write_act_key(int32_t key,void*,int32_t writer) {
     if (!key || !writer) return 0;
     try {

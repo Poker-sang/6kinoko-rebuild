@@ -4727,6 +4727,35 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         }
         CHECK(event && retdec_act_append_list(source+192,event));
         *(int32_t*)(intptr_t)(source+196)=1;
+        {
+            int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+            struct script_io_stream stream={0}; stream.vtable=methods;
+            const unsigned char saved=g673; const int32_t archives=g765;
+            g673=0; g765=0;
+            CHECK(retdec_call_thiscall1_result((void*)(intptr_t)source,(void*)g252.e0,PTR(&stream)));
+            char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+            CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"lyr",0,path));
+            HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+                FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+            CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+            CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+            int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+            const int32_t loaded=retdec_act_make_layer(); CHECK(loaded);
+            CHECK(retdec_call_thiscall2_result((void*)(intptr_t)loaded,(void*)g252.e1,PTR(&holder),1));
+            CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+            CHECK(strcmp(retdec_std_string_data(loaded+112),retdec_std_string_data(source+112))==0);
+            CHECK(*(int32_t*)(intptr_t)(loaded+184)==1 && *(int32_t*)(intptr_t)(loaded+196)==1);
+            int32_t key_node=**(int32_t**)(intptr_t)(loaded+180);
+            int32_t loaded_key=*(int32_t*)(intptr_t)(key_node+8);
+            int32_t loaded_layout=*(int32_t*)(intptr_t)(loaded_key+4);
+            CHECK(loaded_layout && *(int32_t*)(intptr_t)(loaded_layout+304)==loaded);
+            int32_t event_node=**(int32_t**)(intptr_t)(loaded+192);
+            int32_t* restored_event=*(int32_t**)(intptr_t)(event_node+8);
+            CHECK(restored_event[0]==PTR(kinoko_act_timeline_vtable()) && restored_event[1]==17);
+            CHECK(memcmp((void*)(intptr_t)restored_event[3],timeline_pairs,16)==0);
+            retdec_destroy_cact_layer(loaded); free((void*)(intptr_t)loaded);
+            CHECK(CloseHandle(file)); g765=archives; g673=saved;
+        }
         for(int compiled=0;compiled<2;++compiled) {
             *(uint8_t*)(intptr_t)(source+305)=(uint8_t)compiled;
             const int32_t copy=retdec_call_thiscall0_result((void*)(intptr_t)source,(void*)g252.e5);
@@ -4863,6 +4892,32 @@ static int test_key_string_writers(void) {
     CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
     CHECK(stream.size==10+size && stream.bytes[5]==1);
     CHECK(memcmp(stream.bytes+10,expected,size)==0);
+    int32_t flat[79]={0};
+    CHECK(retdec_construct_c2dlayout(PTR(flat)));
+    ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
+    key[1]=PTR(flat);
+    retdec_string_assign_cstr(key+2,"independently owned callback name");
+    const int32_t archives=g765; g765=0;
+    for(int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact; stream.position=stream.size=0;
+        CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+        char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+        CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"key",0,path));
+        HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+            FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+        CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+        CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+        int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+        int32_t* copy=(int32_t*)calloc(1,36); CHECK(copy); copy[0]=PTR(&g277); copy[7]=15;
+        CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
+        CHECK(copy[1] && copy[1]!=key[1]);
+        CHECK(strcmp(retdec_std_string_data(PTR(copy+2)),retdec_std_string_data(PTR(key+2)))==0);
+        CHECK(*(float*)(intptr_t)(copy[1]+236)==0.625f && *(float*)(intptr_t)(copy[1]+284)==0.75f);
+        CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+        retdec_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
+    }
+    g765=archives;
+    if(key[7]>=16) free((void*)(intptr_t)key[2]);
     g673=saved;
     puts("PASS: key presence byte and CStringLayout original bool alias serialization");
     return 0;

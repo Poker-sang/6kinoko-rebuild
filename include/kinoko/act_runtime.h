@@ -84,6 +84,9 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
 int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version);
+int32_t kinoko_act_read_layer_properties(int32_t layer, int32_t reader);
+int32_t kinoko_act_read_key_properties(int32_t key, int32_t reader);
+int32_t kinoko_act_read_map_properties(int32_t layout, int32_t reader);
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                      int32_t version);
 int32_t retdec_act_load_mcd(int32_t resource,

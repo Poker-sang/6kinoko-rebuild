@@ -3690,7 +3690,7 @@ struct vtable_4ebe58_type g251 = {
 }; // 0x4ebe58
 struct vtable_4ebe68_type g252 = {
     .e0 = (int32_t (*)(int32_t))kinoko_method_write_act_layer,
-    .e1 = function_41f800,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_act_layer,
     .e2 = function_4461d0,
     .e3 = function_446210,
     .e4 = function_4209b0,
@@ -3713,7 +3713,7 @@ struct vtable_4ebed0_type g256 = {
 
 struct vtable_4ec0b0_type g277 = {
     .e0 = (int32_t (*)(int32_t))kinoko_method_write_act_key,
-    .e1 = function_426650,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_act_key,
     .e2 = function_4461d0,
     .e3 = function_446210,
     .e4 = function_420830,
