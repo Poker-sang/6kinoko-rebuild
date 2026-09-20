@@ -2075,7 +2075,7 @@
           "sha256": "30c904c2ab11be545b8c41628e0fccfccb6264700ac4ff2e1da9baf693fd748a"
         }
       ],
-      "user_validation": "User confirmed R60没问题; no agent-executed test"
+      "user_validation": "User confirmed R60\u6ca1\u95ee\u9898; no agent-executed test"
     },
     {
       "batch": "pr7-complete-20260920-r61-quiet",
@@ -2328,7 +2328,7 @@
           "sha256": "0bd1a73aba91bf4ccca38d7ed11834581f41f0cbd0fba6676a6576d918cd8797"
         }
       ],
-      "user_validation": "User confirmed 已确认无误 following r66 delivery; no agent-executed test"
+      "user_validation": "User confirmed \u5df2\u786e\u8ba4\u65e0\u8bef following r66 delivery; no agent-executed test"
     },
     {
       "batch": "pr7-complete-20260920-r67-quiet",
@@ -2369,6 +2369,48 @@
           "path": "runtime-builds/pr7-complete-20260920-r67-quiet/kinoko_retdec_rebuild.exe",
           "size": 840704,
           "sha256": "3080c6b8ac87cd5122a252cdac3af8a3665a00c999091539a941a7dba6070c8c"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r68-quiet",
+      "source_commit": "edac6e1e93f01496945b29b6e9d5a7cd01f0e730",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "3eeb219f7f71a032f3fe882f85849ad36784e1c3eb9435a706fa3a546ed523ad"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/configure.log",
+          "size": 956,
+          "sha256": "1a4ef7d2afea3855d1a973935150f3f056df7bd0a0d162b1ff0b3c580aaf227e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/build.log",
+          "size": 774128,
+          "sha256": "0b4fcd1ddab5e18fcffc454cb047b63476d1966b181d7d164c9d7a8374b2b792"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/kinoko.map",
+          "size": 963477,
+          "sha256": "af0a44263b0cc8b688b230ee4d0a9ffc1c0e623d8572c02d60b0d0b53cb8b5f6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/stage-contract.map",
+          "size": 1198810,
+          "sha256": "ca4507ce7cc45d3965185250e1e09268879e42778f5ceb9367e62ea3e5674518"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "07f9f8ce2aaf5850f51f0bd53e5da3e53977a153a64fb5a8803488f7f954fa28"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r68-quiet/kinoko_retdec_rebuild.exe",
+          "size": 840704,
+          "sha256": "1eaa612d2df1e6c9dbcc723d9f9d583633e97cd6392878f8defb8d23ad7cee30"
         }
       ]
     }

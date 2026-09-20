@@ -523,3 +523,24 @@ construction. For decompiler constant arguments, inspect the caller's actual
 push/register sequence before translating: temporary-string lengths can be
 lost even when the callee is understood. Original odd compiled-script behavior
 is preserved rather than replaced with an inferred intent.
+
+## r68: restore instance dispatch and retire legacy wrappers
+
+IDA 452010 stores its argument at ActingPlayer+76 and returns true. The old
+4556C0 reconstruction omitted the indirect member call, returning the status
+from sq_getinstanceup instead. SetRenderTarget now uses a source-backed Sqrat
+closure and real Squirrel instance conversion, stores the borrowed native
+pointer, and accepts null to clear it as the original zero-initialized argument
+does. It neither retains nor destroys the target. The dynamic-layer contract
+now checks both the actual stored pointer and null clearing.
+
+The already-recovered integer method bridges (445530/455330) moved to native
+C++, retaining the existing trace calls and explicit thiscall ABI boundary.
+They remain in the ACT module to avoid introducing game-host dependencies into
+the standalone Squirrel API contracts. Audits retired-instance-dispatch.json
+and retired-integer-dispatch.json verify deletion of six old functions,
+including two disconnected conversion-only wrappers.
+
+Source edac6e1 built successfully as quiet Win32 r68. Contract sources compiled;
+no automated tests or game session were executed. Three DAT files were staged
+and hash verified. Overall replacement is still incomplete.
