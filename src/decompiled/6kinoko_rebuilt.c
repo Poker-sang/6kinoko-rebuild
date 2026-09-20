@@ -1,6 +1,7 @@
 #include "kinoko/render_target.h"
 #include "kinoko/archive_random.h"
 #include "kinoko/scene_queue.h"
+#include "kinoko/timer_events.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
@@ -1705,7 +1706,7 @@ int32_t function_412610(void);
 
 
 int32_t function_412890(void);
-uint32_t function_412ad0(void *lpThreadParameter);
+DWORD WINAPI function_412ad0(LPVOID lpThreadParameter);
 int32_t function_412b80(int32_t a1);
 int32_t function_412c10(int32_t hEvent);
 int32_t function_412ca0(void);
@@ -3034,8 +3035,6 @@ int32_t g881 = 0; // 0x51b900
 int32_t g882 = 0; // 0x51b904
 int32_t g883 = 0; // 0x51b908
 int32_t g884 = 0; // 0x51b90c
-int32_t g885 = 0; // 0x51b910
-int32_t g886 = 0; // 0x51b914
 char g887 = 0; // 0x51b91c
  // 0x51b924
  // 0x51b928
@@ -7116,7 +7115,6 @@ int32_t function_412610(void) {
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
 int32_t function_412890(void) {
-    int32_t *sentinel;
     HANDLE thread;
     DWORD thread_id = 0;
 
@@ -7128,17 +7126,8 @@ int32_t function_412890(void) {
     retdec_trace("412890:cs-ready");
     g881 = 0;
     g882 = 0;
-    g886 = 0;
-    sentinel = (int32_t *)malloc(12);
-    if (sentinel == NULL) {
-        DeleteCriticalSection((LPCRITICAL_SECTION)&g880);
-        return 0;
-    }
-    sentinel[0] = (int32_t)(uintptr_t)sentinel;
-    sentinel[1] = (int32_t)(uintptr_t)sentinel;
-    sentinel[2] = 0;
-    g885 = (int32_t)(uintptr_t)sentinel;
-    retdec_trace_i32("412890:sentinel", g885);
+    kinoko_initialize_timer_events();
+    retdec_trace_i32("412890:sentinel",kinoko_timer_events_identity());
     g883 = 16;
     g884 = 0;
     g887 = 1;
@@ -7153,168 +7142,11 @@ int32_t function_412890(void) {
     retdec_trace_i32("412890:thread", g881);
     return (int32_t)(uintptr_t)&g879;
 
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4128a0
-    __writefsdword(0, (int32_t)&v1);
-    g879 = (int32_t)&g190;
-    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g880);
-    g881 = 0;
-    int32_t v2 = 12; // bp-56, 0x4128e2
-    g886 = 0;
-    int32_t v3 = _3f__3f_2_40_YAPAXI_40_Z(12); // 0x4128ea
-    if (v3 != 0) {
-        // 0x4128fa
-        g885 = v3;
-        *(int32_t *)v3 = v3;
-        int32_t v4 = g885; // 0x412901
-        *(int32_t *)(v4 + 4) = v4;
-        v2 = 1;
-        int32_t v5 = &v2; // 0x412909
-        g883 = 16;
-        g884 = 0;
-        g887 = 1;
-        timeBeginPeriod(1);
-        int32_t * v6 = (int32_t *)g885; // 0x41292e
-        int32_t v7 = *v6; // 0x41292e
-        *v6 = g885;
-        int32_t v8 = g885; // 0x412932
-        *(int32_t *)(v8 + 4) = v8;
-        g886 = 0;
-        int32_t * v9 = (int32_t *)(v5 - 4);
-        if (v7 != g885) {
-            int32_t v10 = *(int32_t *)v7; // 0x412950
-            *v9 = v7;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            int32_t v11 = v10; // 0x412963
-            while (v10 != g885) {
-                // 0x412950
-                v10 = *(int32_t *)v11;
-                *v9 = v11;
-                _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-                v11 = v10;
-            }
-        }
-        // 0x412965
-        function_412610();
-        *v9 = (int32_t)&g882;
-        *(int32_t *)(v5 - 8) = 0;
-        *(int32_t *)(v5 - 12) = 0;
-        *(int32_t *)(v5 - 16) = (int32_t)"Sj";
-        *(int32_t *)(v5 - 20) = 0;
-        *(int32_t *)(v5 - 24) = 0;
-        int32_t * threadHandle = (int32_t *)CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)function_412ad0, NULL, 0, (LPDWORD)&g884); // 0x41297d
-        int32_t v12 = (int32_t)threadHandle; // 0x41297d
-        *(int32_t *)(v5 - 28) = 15;
-        *(int32_t *)(v5 - 32) = v12;
-        g881 = v12;
-        SetThreadPriority(threadHandle, 15);
-        __writefsdword(0, v1);
-        return &g879;
-    }
-    // 0x4129a7
-    int32_t v13; // bp-20, 0x412890
-    v2 = &v13;
-    v13 = 0;
-    int32_t v14; // bp-36, 0x412890
-    _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z((char **)&v14);
-    v14 = (int32_t)&g22;
-    __CxxThrowException_40_8();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    __asm_int3();
-    g887 = 0;
-    function_412610();
-    struct retdec_RTL_CRITICAL_SECTION * v15 = (struct retdec_RTL_CRITICAL_SECTION *)&g880; // bp-76, 0x4129e3
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g880);
-    int32_t * v16 = (int32_t *)g885;
-    int32_t v17 = *v16; // 0x4129f3
-    int32_t * v18 = v16; // 0x4129f9
-    int32_t v19 = g885; // 0x4129f9
-    int32_t v20 = (int32_t)&v15; // 0x4129f9
-    if (v17 != g885) {
-        // 0x4129fb
-        int32_t v21; // bp-80, 0x412890
-        int32_t v22 = &v21; // 0x4129fc
-        int32_t v23 = v17; // 0x4129fc
-        int32_t * v24 = (int32_t *)(v23 + 8); // 0x412a02
-        v20 = v22 - 4;
-        *(int32_t *)v20 = *v24;
-        SetEvent(&g1224);
-        v22 -= 8;
-        *(int32_t *)v22 = *v24;
-        CloseHandle(&g1224);
-        v23 = *(int32_t *)v23;
-        while (v23 != g885) {
-            // 0x412a02
-            v24 = (int32_t *)(v23 + 8);
-            v20 = v22 - 4;
-            *(int32_t *)v20 = *v24;
-            SetEvent(&g1224);
-            v22 -= 8;
-            *(int32_t *)v22 = *v24;
-            CloseHandle(&g1224);
-            v23 = *(int32_t *)v23;
-        }
-        // 0x412a18
-        v18 = (int32_t *)g885;
-        v19 = *v18;
-    }
-    // 0x412a1e
-    *v18 = g885;
-    int32_t v25 = g885; // 0x412a22
-    *(int32_t *)(v25 + 4) = v25;
-    g886 = 0;
-    int32_t * v26 = (int32_t *)(v20 - 4);
-    if (v19 != g885) {
-        int32_t v27 = *(int32_t *)v19; // 0x412a40
-        *v26 = v19;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        while (v27 != g885) {
-            int32_t v28 = v27;
-            v27 = *(int32_t *)v28;
-            *v26 = v28;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        }
-    }
-    // 0x412a55
-    *v26 = (int32_t)&g880;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    int32_t * v29 = (int32_t *)g885; // 0x412a66
-    int32_t v30 = *v29; // 0x412a66
-    *v29 = g885;
-    int32_t v31 = g885; // 0x412a6a
-    *(int32_t *)(v31 + 4) = v31;
-    g886 = 0;
-    int32_t * v32 = (int32_t *)(v20 - 8);
-    int32_t v33 = v30; // 0x412a81
-    if (v30 != g885) {
-        int32_t v34 = *(int32_t *)v30; // 0x412a83
-        *v32 = v30;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        v33 = g885;
-        while (v34 != g885) {
-            int32_t v35 = v34;
-            v34 = *(int32_t *)v35;
-            *v32 = v35;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            v33 = g885;
-        }
-    }
-    // 0x412a9a
-    *v32 = v33;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    function_412610();
-    *v32 = (int32_t)&g880;
-    g879 = (int32_t)&g190;
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    return &g1224;
 }
 
 // Address range: 0x412ad0 - 0x412b73
-uint32_t function_412ad0(void *lpThreadParameter) {
+DWORD WINAPI function_412ad0(LPVOID lpThreadParameter) {
     HANDLE event_handle;
-    int32_t *sentinel;
     static volatile LONG trace_count;
     LONG trace_index;
 
@@ -7336,22 +7168,12 @@ uint32_t function_412ad0(void *lpThreadParameter) {
             retdec_trace("412ad0:before-lock");
         }
         EnterCriticalSection((LPCRITICAL_SECTION)&g880);
-        sentinel = (int32_t *)(uintptr_t)g885;
         if (trace_index <= 3) {
-            retdec_trace_i32("412ad0:sentinel", g885);
+            retdec_trace_i32("412ad0:sentinel", kinoko_timer_events_identity());
             retdec_trace_i32("412ad0:first",
-                             sentinel != NULL ? sentinel[0] : 0);
+                             kinoko_timer_events_first());
         }
-        if (sentinel != NULL) {
-            int32_t *node = (int32_t *)(uintptr_t)sentinel[0];
-            while (node != sentinel) {
-                HANDLE wait_event = (HANDLE)(uintptr_t)node[2];
-                if (wait_event != NULL) {
-                    SetEvent(wait_event);
-                }
-                node = (int32_t *)(uintptr_t)node[0];
-            }
-        }
+        kinoko_notify_timer_events();
         LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
         if (trace_index <= 3) {
             retdec_trace("412ad0:after-lock");
@@ -7360,201 +7182,13 @@ uint32_t function_412ad0(void *lpThreadParameter) {
     CloseHandle(event_handle);
     return 0;
 
-    struct retdec_SECURITY_ATTRIBUTES * v1 = NULL; // bp-20, 0x412ad7
-    int32_t v2 = (int32_t)CreateEventA(NULL, false, false, NULL); // 0x412ad9
-    if (g887 == 0) {
-        // 0x412b66
-        *(int32_t *)((int32_t)&v1 - 4) = v2;
-        CloseHandle(&g1224);
-        return 0;
-    }
-    // 0x412aea
-    int32_t v3; // bp-28, 0x412ad0
-    int32_t v4 = &v3;
-    int32_t v5; // 0x412ad0
-    int32_t v6; // 0x412b1c
-    int32_t v7; // 0x412b02
-    if (g884 == 0) {
-        // 0x412b15
-        *(int32_t *)(v4 - 4) = g883;
-        v6 = v4 - 8;
-        *(int32_t *)v6 = v2;
-        WaitForSingleObject(&g1224, (int32_t)&g1224);
-        v5 = v6;
-    } else {
-        // 0x412af9
-        *(int32_t *)(v4 - 4) = g883 + g884;
-        v7 = v4 - 8;
-        *(int32_t *)v7 = v2;
-        WaitForSingleObject(&g1224, (int32_t)&g1224);
-        g884 = 0;
-        v5 = v7;
-    }
-    int32_t v8 = v5 - 4; // 0x412b23
-    *(int32_t *)v8 = (int32_t)&g880;
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    int32_t v9 = *(int32_t *)g885; // 0x412b34
-    int32_t v10 = v8; // 0x412b38
-    int32_t v11 = v9; // 0x412b38
-    int32_t v12 = v8; // 0x412b38
-    int32_t v13; // 0x412b43
-    int32_t v14; // 0x412b4a
-    if (v9 != g885) {
-        v13 = v10 - 4;
-        *(int32_t *)v13 = *(int32_t *)(v11 + 8);
-        SetEvent(&g1224);
-        v14 = *(int32_t *)v11;
-        v10 = v13;
-        v11 = v14;
-        v12 = v13;
-        while (v14 != g885) {
-            // 0x412b40
-            v13 = v10 - 4;
-            *(int32_t *)v13 = *(int32_t *)(v11 + 8);
-            SetEvent(&g1224);
-            v14 = *(int32_t *)v11;
-            v10 = v13;
-            v11 = v14;
-            v12 = v13;
-        }
-    }
-    int32_t v15 = v12;
-    int32_t v16 = v15 - 4; // 0x412b50
-    *(int32_t *)v16 = (int32_t)&g880;
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    while (g887 != 0) {
-        // 0x412af0
-        v4 = v16;
-        if (g884 == 0) {
-            // 0x412b15
-            *(int32_t *)(v4 - 4) = g883;
-            v6 = v4 - 8;
-            *(int32_t *)v6 = v2;
-            WaitForSingleObject(&g1224, (int32_t)&g1224);
-            v5 = v6;
-        } else {
-            // 0x412af9
-            *(int32_t *)(v4 - 4) = g883 + g884;
-            v7 = v4 - 8;
-            *(int32_t *)v7 = v2;
-            WaitForSingleObject(&g1224, (int32_t)&g1224);
-            g884 = 0;
-            v5 = v7;
-        }
-        // 0x412b23
-        v8 = v5 - 4;
-        *(int32_t *)v8 = (int32_t)&g880;
-        EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-        v9 = *(int32_t *)g885;
-        v10 = v8;
-        v11 = v9;
-        v12 = v8;
-        if (v9 != g885) {
-            v13 = v10 - 4;
-            *(int32_t *)v13 = *(int32_t *)(v11 + 8);
-            SetEvent(&g1224);
-            v14 = *(int32_t *)v11;
-            v10 = v13;
-            v11 = v14;
-            v12 = v13;
-            while (v14 != g885) {
-                // 0x412b40
-                v13 = v10 - 4;
-                *(int32_t *)v13 = *(int32_t *)(v11 + 8);
-                SetEvent(&g1224);
-                v14 = *(int32_t *)v11;
-                v10 = v13;
-                v11 = v14;
-                v12 = v13;
-            }
-        }
-        // 0x412b50
-        v15 = v12;
-        v16 = v15 - 4;
-        *(int32_t *)v16 = (int32_t)&g880;
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g1224);
-    }
-    // 0x412b66
-    *(int32_t *)v15 = v2;
-    CloseHandle(&g1224);
-    return 0;
 }
 
 // Address range: 0x412b80 - 0x412c08
-int32_t function_412b80(int32_t a1) {
-    int32_t *node;
-    int32_t *sentinel;
-    HANDLE event_handle;
 
-    (void)a1;
-    retdec_trace("412b80:begin");
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    retdec_trace_i32("412b80:event", (int32_t)(uintptr_t)event_handle);
-    if (event_handle == NULL) {
-        return 0;
-    }
-
-    retdec_trace("412b80:before-lock");
-    if (TryEnterCriticalSection((LPCRITICAL_SECTION)&g880) == 0) {
-        retdec_trace("412b80:lock-busy");
-        CloseHandle(event_handle);
-        return 0;
-    }
-    retdec_trace_i32("412b80:sentinel", g885);
-    sentinel = (int32_t *)(uintptr_t)g885;
-    if (sentinel == NULL) {
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-        CloseHandle(event_handle);
-        return 0;
-    }
-    node = (int32_t *)malloc(12);
-    if (node == NULL) {
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-        CloseHandle(event_handle);
-        return 0;
-    }
-    node[0] = sentinel[1];
-    node[1] = (int32_t)(uintptr_t)sentinel;
-    node[2] = (int32_t)(uintptr_t)event_handle;
-    *(int32_t *)(uintptr_t)node[0] = (int32_t)(uintptr_t)node;
-    sentinel[1] = (int32_t)(uintptr_t)node;
-    ++g886;
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-    retdec_trace("412b80:done");
-    return (int32_t)(uintptr_t)event_handle;
-}
 
 // Address range: 0x412c10 - 0x412ca0
-int32_t function_412c10(int32_t hEvent) {
-    int32_t *sentinel;
-    int32_t *node;
-    HANDLE event_handle;
-    BOOL closed;
 
-    if (hEvent == 0) {
-        return 0;
-    }
-    EnterCriticalSection((LPCRITICAL_SECTION)&g880);
-    sentinel = (int32_t *)(uintptr_t)g885;
-    node = sentinel != NULL ? (int32_t *)(uintptr_t)sentinel[0] : NULL;
-    while (node != NULL && node != sentinel && node[2] != hEvent) {
-        node = (int32_t *)(uintptr_t)node[0];
-    }
-    if (node == NULL || node == sentinel) {
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-        return 0;
-    }
-
-    event_handle = (HANDLE)(uintptr_t)node[2];
-    SetEvent(event_handle);
-    closed = CloseHandle(event_handle);
-    *(int32_t *)(uintptr_t)node[1] = node[0];
-    *(int32_t *)(uintptr_t)(node[0] + 4) = node[1];
-    free(node);
-    --g886;
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-    return closed ? 1 : 0;
-}
 
 // Address range: 0x412ca0 - 0x412d30
 int32_t function_412ca0(void) {
@@ -17566,7 +17200,7 @@ int32_t function_470f30(void) {
 // Address range: 0x470f60 - 0x470f78
 int32_t function_470f60(int32_t a1) {
     // 0x470f60
-    return function_404090("Message", a1, 0);
+    return MessageBoxA((int32_t *)g767, (char *)a1, "Message", 0);
 }
 
 // Address range: 0x470f80 - 0x470f8f
