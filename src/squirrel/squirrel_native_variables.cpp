@@ -94,8 +94,9 @@ extern "C" int32_t retdec_get_var_value(int32_t* context, int32_t metadata, int3
     switch (info.category) {
     case 0: case 1: {
         if (!immediate && !source) return -1;
-        const int32_t value = immediate ? source : info.size == 1 ? load<int8_t>(source) :
-            info.size == 2 ? load<int16_t>(source) : load<int32_t>(source);
+        const int32_t value = immediate ? source :
+            info.category == 0 && info.size == 1 ? load<int8_t>(source) :
+            info.category == 0 && info.size == 2 ? load<int16_t>(source) : load<int32_t>(source);
         sq_pushinteger(vm, value);
         return 1;
     }
@@ -138,9 +139,15 @@ extern "C" int32_t retdec_set_var_value(int32_t* context, int32_t metadata, int3
         // deliberately strict method-argument adapters).
         SQInteger value = 0;
         sq_getinteger(vm, 3, &value);
-        if (info.size == 1) store(destination, static_cast<uint8_t>(value));
-        else if (info.size == 2) store(destination, static_cast<uint16_t>(value));
-        else store(destination, static_cast<int32_t>(value));
+        // Original 4AAD07/4AACF5 and snapshot setVar return the stored,
+        // sign-extended value. VAR_TYPE_UINT always stores four bytes.
+        if (info.category == 0 && info.size == 1) {
+            value = static_cast<int8_t>(value);
+            store(destination, static_cast<int8_t>(value));
+        } else if (info.category == 0 && info.size == 2) {
+            value = static_cast<int16_t>(value);
+            store(destination, static_cast<int16_t>(value));
+        } else store(destination, static_cast<int32_t>(value));
         sq_pushinteger(vm, value);
         return 1;
     }
