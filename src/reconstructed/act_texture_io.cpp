@@ -571,3 +571,17 @@ extern "C" int32_t __fastcall kinoko_method_write_string_layout(int32_t layout,v
     try { return write(layout,writer,string_layout_schema); }
     catch (...) { return 0; }
 }
+
+extern "C" {
+int32_t function_4072d0(int32_t receiver, int32_t bytes, int32_t size);
+int32_t function_410b90(int32_t receiver, int32_t bytes, int32_t size);
+}
+// These recovered read bodies already take explicit receivers. A virtual
+// caller still passes this in ECX; never put the cdecl body directly in a slot.
+extern "C" int32_t __fastcall kinoko_method_read_file(int32_t receiver, void*, int32_t bytes, int32_t size) {
+    return function_4072d0(receiver,bytes,size);
+}
+extern "C" int32_t __fastcall kinoko_method_read_package(int32_t receiver, void*, int32_t bytes, int32_t size) {
+    return function_410b90(receiver,bytes,size);
+}
+

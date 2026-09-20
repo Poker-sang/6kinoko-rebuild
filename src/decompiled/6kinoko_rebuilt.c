@@ -12004,9 +12004,9 @@ int32_t function_4152a0(void) {
     __asm_int3();
     __asm_int3();
     __asm_int3();
-    v4 = 0;
-    function_406cc0((int32_t)&g443, 0, -1);
-    return &v4;
+    /* IDA 415315 ends this function in a noreturn throw. RetDec glued
+       the following, unrelated string constructor onto its failure path. */
+    abort();
 }
 
 // Address range: 0x415350 - 0x4153d9
@@ -13896,7 +13896,7 @@ int32_t function_4200e0(int32_t a1) {
         *v68 = 15;
         *v37 = 0;
         *(char *)(v36 + 68) = 0;
-        function_406cc0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        kinoko_string_assign_substring(v36 + 68, v36 + 40, 0, UINT32_MAX);
         int32_t v69 = *v40; // 0x4203bd
         *v37 = *v41;
         *v68 = v69;
@@ -15180,7 +15180,7 @@ int32_t function_426d70(int32_t a1) {
         *v68 = 15;
         *v37 = 0;
         *(char *)(v36 + 68) = 0;
-        function_406cc0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        kinoko_string_assign_substring(v36 + 68, v36 + 40, 0, UINT32_MAX);
         int32_t v69 = *v40; // 0x42704d
         *v37 = *v41;
         *v68 = v69;
@@ -17030,7 +17030,7 @@ int32_t function_4291c0(int32_t a1) {
         *v68 = 15;
         *v37 = 0;
         *(char *)(v36 + 68) = 0;
-        function_406cc0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+        kinoko_string_assign_substring(v36 + 68, v36 + 40, 0, UINT32_MAX);
         int32_t v69 = *v40; // 0x42949d
         *v37 = *v41;
         *v68 = v69;
@@ -22271,7 +22271,7 @@ int32_t function_445230(int32_t result, int32_t a2) {
     *(int32_t *)(v6 - 8) = 0;
     *(char *)(result + 365) = *(char *)(a2 + 365);
     *(int32_t *)(v6 - 12) = a2 + 368;
-    function_406cc0((int32_t)&g1224, (int32_t)&g1224, (int32_t)&g1224);
+    kinoko_string_assign_substring(result + 368, a2 + 368, 0, UINT32_MAX);
     *(int32_t *)(result + 396) = *(int32_t *)(a2 + 396);
     *(int32_t *)(result + 400) = *(int32_t *)(a2 + 400);
     return result;

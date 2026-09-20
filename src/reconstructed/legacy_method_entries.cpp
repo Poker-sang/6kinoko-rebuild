@@ -6,8 +6,6 @@ static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses
 // Only the ABI is adapted here. Recovered game/loading bodies remain the
 // single source of truth; the adapters do not add ordering or fallback logic.
 extern "C" {
-int32_t function_4072d0(int32_t receiver, int32_t bytes, int32_t size);
-int32_t function_410b90(int32_t receiver, int32_t bytes, int32_t size);
 int32_t retdec_destroy_cact_with_flags(int32_t receiver, unsigned char flags);
 int32_t retdec_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
 int32_t retdec_c2dlayout_update_faithful_impl(int32_t receiver);
@@ -25,15 +23,6 @@ int32_t function_469620_this(int32_t receiver, int32_t argument);
 int32_t function_46a6f0_this(int32_t receiver, uint32_t handle);
 int32_t function_46aa60_this(int32_t receiver);
 int32_t function_46ab10_this(int32_t receiver, int32_t output);
-}
-
-// These recovered read bodies already take explicit receivers. A virtual
-// caller still passes this in ECX; never put the cdecl body directly in a slot.
-extern "C" int32_t __fastcall kinoko_method_read_file(int32_t receiver, void*, int32_t bytes, int32_t size) {
-    return function_4072d0(receiver,bytes,size);
-}
-extern "C" int32_t __fastcall kinoko_method_read_package(int32_t receiver, void*, int32_t bytes, int32_t size) {
-    return function_410b90(receiver,bytes,size);
 }
 
 // retdec_cact_destructor_bridge
