@@ -4367,6 +4367,47 @@ static int test_input_copy(void) {
     return 0;
 }
 
+static int test_map_manager_copy(void) {
+    int32_t source[21]={0},target[21]={0};
+    int32_t source_head[4]={0},target_head[4]={0};
+    int32_t nodes[2][4]={{0}},values[3]={71,83,97};
+    function_4a94e0_this(PTR(source)); function_4a94e0_this(PTR(target));
+    source[3]=123; source[4]=456; source[5]=789;
+    source[6]=PTR(source_head);source[7]=2;target[6]=PTR(target_head);
+    source_head[0]=PTR(nodes[0]);source_head[1]=PTR(nodes[1]);
+    nodes[0][0]=PTR(nodes[1]);nodes[0][1]=PTR(source_head);nodes[0][2]=111;nodes[0][3]=222;
+    nodes[1][0]=PTR(source_head);nodes[1][1]=PTR(nodes[0]);nodes[1][2]=333;nodes[1][3]=444;
+    target_head[0]=target_head[1]=PTR(target_head);
+    source[9]=PTR(values);source[10]=source[11]=PTR(values)+sizeof(values);
+    source[8]=1;target[8]=2;source[12]=3;target[12]=4;
+    for(int i=13;i<21;++i) source[i]=100+i;
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(source[5]==0 && target[5]==789 && target[3]==123 && target[4]==456);
+    CHECK(target[8]==2 && target[12]==4 && target[7]==2);
+    int32_t* first=(int32_t*)(intptr_t)target_head[0];
+    int32_t* last=(int32_t*)(intptr_t)first[0];
+    CHECK(first!=nodes[0] && last!=nodes[1]);
+    CHECK(first[2]==PTR(&g37) && last[2]==PTR(&g37));
+    CHECK(first[3]==222 && last[3]==444 && last[0]==PTR(target_head));
+    CHECK(first[1]==PTR(target_head) && last[1]==PTR(first) && target_head[1]==PTR(last));
+    CHECK(target[9]!=source[9] && memcmp((void*)(intptr_t)target[9],values,sizeof(values))==0);
+    CHECK(memcmp(target+13,source+13,32)==0);
+    CHECK(function_4701b0(PTR(target),PTR(target))==PTR(target) && target[5]==789);
+    target[5]=0; /* borrowed test marker; no fabricated player destruction */
+    int32_t buffer=target[9],capacity=target[11];
+    source[10]=source[9]+4;source_head[0]=source_head[1]=PTR(source_head);source[7]=0;
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(target[7]==0 && target_head[0]==PTR(target_head) && target_head[1]==PTR(target_head));
+    CHECK(target[9]==buffer && target[10]==buffer+4 && target[11]==capacity);
+    source[10]=source[9];
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(target[9]==buffer && target[10]==buffer && target[11]==capacity);
+    free((void*)(intptr_t)buffer);
+    function_4a9d70_this(PTR(source));function_4a9d70_this(PTR(target));
+    puts("PASS: MapManager copy transfers player, copies 8-byte render objects and preserves vector capacity/proxies");
+    return 0;
+}
+
 static int test_input_aggregation(void) {
     int32_t cluster[50] = {0}, devices[3][42] = {{0}}, blocks[2][4] = {{0}}, map[2];
     map[0]=PTR(blocks[0]); map[1]=PTR(blocks[1]);
@@ -5442,6 +5483,7 @@ int main(int argc, char **argv) {
     CHECK(test_script_registrations(vm, root) == 0);
     CHECK(test_physical_input() == 0);
     CHECK(test_input_aggregation() == 0);
+    CHECK(test_map_manager_copy() == 0);
     CHECK(test_input_copy() == 0);
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
