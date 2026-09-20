@@ -85,7 +85,7 @@ this change does not represent those adapters as upstream implementations.
 
 Each batch is isolated under build-runs/pr7-complete-20260920-rN-quiet and the
 matching runtime-builds directory, with source-commit.txt and configure/build/
-ctest logs preserved. No gameplay smoke for this continuation is claimed yet.
+ctest logs preserved. See the later r18 user-run observation below.
 
 Remaining work includes old Sqrat registration/constructor paths still referenced
 by game vtables, additional recovered property-control tables, and incomplete
@@ -93,3 +93,35 @@ CRT/game-copy compatibility. An attempted dead-code audit correctly rejected
 4A95C0 because game copy functions still referenced it; those callers were fixed,
 not ignored. Input's original ClassType copy calls 46EBD0 (IDA), so the retained
 no-op game callback is not evidence of a completed copy implementation.
+
+## Further checkpoints: r14–r23
+
+- c2e1327/ee860c9 through 758ef20: source Sqrat value/function binding,
+  property dispatch, weakref and scalar conversions. r14 failed two lifetime
+  tests; 4f58186 fixed the borrowed-object copy ownership and r15 passed 52/52.
+  r16 did not compile; f34c3aa corrected class specialization/dependent-base
+  lookup. r17 and r18 each passed 52/52 in quiet builds.
+- f6b000b/ae5dce8: source class creation and removal of 28 disconnected property
+  control tables (retired-property-controls.json). r19 quiet passed 52/52.
+- e553af2: source SqPlus instance-storage selection replaces the host's
+  static/constant/member-offset branch. r20 quiet passed 52/52.
+- 70e2257: native instance creation shares source ClassType::PushInstance's
+  operation sequence. r21 quiet passed 52/52.
+- 69962f9/68b8e62: source InitClass registration replaces four repeated host
+  registration blocks. IDA 421734/421785 confirms static property-table slots.
+  r22 passed 51/52: its new test incorrectly tried to change a locked class;
+  Squirrel 2.2.2's sq_newslot return did not prove the slot had changed. The
+  corrected test checks that an instance cannot overwrite the static table.
+  r23 quiet passed 52/52. Failed artifacts are preserved.
+
+The user launched the staged r18 quiet EXE and confirmed it worked. An observed
+frame showed an airborne actor and monsters, but was a later level. No automated
+jump, first-level verification, or clean exit is claimed for that run. The
+existing r18 gameplay.log records the earlier launch blocked by r5's named mutex
+(EXIT_CODE 1); it is not evidence of the user's subsequent successful launch.
+The user chose to close old games themselves; no game was forcibly closed.
+
+Original disassembly evidence for the next work is retained in r20:
+4517C0 (CreateLayer2D takes ECX plus a by-value old string and another argument),
+420A90/4216A0 (class initialization), and 46D750/46E530/46D2A0 (Input's nested
+container copy). These are still migration work, not completed functionality.
