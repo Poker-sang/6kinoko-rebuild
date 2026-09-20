@@ -1,4 +1,5 @@
 #include "kinoko/map_render.h"
+#include "kinoko/map_containers.h"
 #include "kinoko/act_layer_access.h"
 #include <cstddef>
 #include <cstdlib>
@@ -10,21 +11,11 @@ int32_t function_455890(int32_t holder);
 }
 
 namespace {
-struct MapRenderLayer {
-    void *vtable;
-    int32_t layout;
-};
-struct MapRenderNode {
-    MapRenderNode *next, *previous;
-    MapRenderLayer value;
-};
 struct MapManager {
     unsigned char script_object[12];
     void *source_act;
     int32_t source_holder;
     int32_t player;
-    MapRenderNode *render_layers;
-    uint32_t render_layer_count;
 };
 struct LayerName {
     union { char local[16]; const char *heap; } storage;
@@ -37,9 +28,7 @@ struct LayoutView {
     unsigned char prefix[308];
     unsigned char *layer;
 };
-static_assert(sizeof(MapRenderNode) == 16 && offsetof(MapRenderNode, value) == 8);
-static_assert(offsetof(MapManager, player) == 20 &&
-              offsetof(MapManager, render_layers) == 24);
+static_assert(offsetof(MapManager, player) == 20);
 static_assert(sizeof(LayerName) == 24 && offsetof(LayoutView, layer) == 312);
 }
 
@@ -68,22 +57,6 @@ extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
     const int32_t layout = kinoko_map_find_layout(manager_address, name);
     if (!layout)
         return 0;
-    auto *manager = reinterpret_cast<MapManager *>(manager_address);
-    auto *sentinel = manager->render_layers;
-    if (!sentinel)
-        return 0;
-    auto *node = static_cast<MapRenderNode *>(std::calloc(1, sizeof(MapRenderNode)));
-    if (!node)
-        return 0;
-
-    // Original 470030 appends a borrowed live layout. Its owner remains the
-    // ActingPlayer; the render list owns only this node, not the ACT or key.
-    node->next = sentinel;
-    node->previous = sentinel->previous;
-    node->value = {&g37, layout};
-    sentinel->previous->next = node;
-    sentinel->previous = node;
-    ++manager->render_layer_count;
-    return static_cast<int32_t>(reinterpret_cast<intptr_t>(&node->value));
+    // std::list preserves the returned eight-byte object's address on append.
+    return kinoko_map_append_render(manager_address, layout);
 }
-

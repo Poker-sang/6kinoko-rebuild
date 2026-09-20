@@ -1,3 +1,4 @@
+#include "kinoko/map_containers.h"
 #include "kinoko/actor_owner_list.h"
 #include "kinoko/actor_pool.h"
 #include "kinoko/render_queue.h"
@@ -15127,53 +15128,6 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
     return this_ptr;
 }
 
-/* Remaining flat vector adapter for input-manager storage only. Actor pool
-   storage is owned by native standard containers in actor_pool.cpp. */
-static int32_t retdec_actor_vector_push_i32(int32_t vector_ptr,
-                                            int32_t value) {
-    int32_t begin;
-    int32_t end;
-    int32_t capacity_end;
-    uint32_t count;
-    uint32_t capacity;
-    uint32_t new_capacity;
-    int32_t new_block;
-
-    if (vector_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)vector_ptr;
-    end = *(int32_t *)(intptr_t)(vector_ptr + 4);
-    capacity_end = *(int32_t *)(intptr_t)(vector_ptr + 8);
-    count = begin != 0 && end >= begin ? (uint32_t)(end - begin) / 4u : 0;
-    capacity = begin != 0 && capacity_end >= begin
-        ? (uint32_t)(capacity_end - begin) / 4u : 0;
-    if (capacity <= count) {
-        new_capacity = capacity != 0 ? capacity * 2u : 4u;
-        if (new_capacity <= count)
-            new_capacity = count + 1u;
-        new_block = _3f__3f_2_40_YAPAXI_40_Z(new_capacity * 4u);
-        if (new_block == 0)
-            return 0;
-        if (count != 0) {
-            memcpy((void *)(intptr_t)new_block,
-                   (const void *)(intptr_t)begin, count * 4u);
-        }
-        if (begin != 0)
-            free((void *)(intptr_t)begin);
-        begin = new_block;
-        end = new_block + (int32_t)(count * 4u);
-        capacity_end = new_block + (int32_t)(new_capacity * 4u);
-        *(int32_t *)(intptr_t)vector_ptr = begin;
-        *(int32_t *)(intptr_t)(vector_ptr + 8) = capacity_end;
-    }
-    *(int32_t *)(intptr_t)end = value;
-    end += 4;
-    *(int32_t *)(intptr_t)(vector_ptr + 4) = end;
-    return end - 4;
-}
-
-
-
 // Address range: 0x46a380 - 0x46a38a
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
 // Type:          virtual member function
@@ -15432,23 +15386,10 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
    fields below are the offsets used by the original 0x46f620/0x46edc0
    methods: a current map object, two vector bounds, and a list sentinel. */
 static int32_t function_46f4c0_this(int32_t this_ptr) {
-    int32_t sentinel;
-
-    if (this_ptr == 0)
-        return 0;
-    memset((void *)(intptr_t)this_ptr, 0,
-           sizeof(g_retdec_map_manager_state));
+    if (this_ptr == 0) return 0;
+    memset((void *)(intptr_t)this_ptr, 0, sizeof(g_retdec_map_manager_state));
     function_4a94e0_this(this_ptr);
-    sentinel = _3f__3f_2_40_YAPAXI_40_Z(16);
-    if (sentinel == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 24) = sentinel;
-    *(int32_t *)(intptr_t)sentinel = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-    *(int32_t *)(intptr_t)(this_ptr + 28) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 36) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 40) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 44) = 0;
+    kinoko_map_containers_construct(this_ptr);
     *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
     *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
     *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
@@ -15499,12 +15440,11 @@ int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
 // Address range: 0x46ef40 - 0x46efc4
 static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
     uint32_t index, int32_t count_ptr) {
-    int32_t begin = *(int32_t *)(intptr_t)(manager + 36);
-    uint32_t layer_count = (uint32_t)(*(int32_t *)(intptr_t)(manager + 40) - begin) / 4;
+    uint32_t layer_count = kinoko_map_event_count(manager);
     int32_t scratch[12] = {0}, cached = 0, count = 0, layout;
     KinokoCollisionRecord *records;
     *(int32_t *)(intptr_t)(manager + 56) = -1;
-    if (index >= layer_count || (layout = *(int32_t *)(intptr_t)(begin + 4 * index)) == 0)
+    if (index >= layer_count || (layout = kinoko_map_event_at(manager, index)) == 0)
         return 0;
     /* 4355F0 queries around the point, then uses half-open chip rectangles. */
     if (!retdec_collision_query_rect((int32_t)(intptr_t)scratch, layout, &cached,
@@ -15602,33 +15542,9 @@ int32_t function_46f140(int32_t name_ptr) {
 
 
 static int32_t function_46f620_this(int32_t this_ptr) {
-    int32_t sentinel;
-    int32_t node;
-
-    if (this_ptr == 0)
-        return 0;
+    if (this_ptr == 0) return 0;
     function_4a9570_this(this_ptr);
-
-    /* The original vector clear keeps its allocated block and moves finish
-       back to begin. */
-    if (*(int32_t *)(intptr_t)(this_ptr + 36) !=
-        *(int32_t *)(intptr_t)(this_ptr + 40)) {
-        *(int32_t *)(intptr_t)(this_ptr + 40) =
-            *(int32_t *)(intptr_t)(this_ptr + 36);
-    }
-
-    sentinel = *(int32_t *)(intptr_t)(this_ptr + 24);
-    if (sentinel != 0) {
-        node = *(int32_t *)(intptr_t)sentinel;
-        *(int32_t *)(intptr_t)sentinel = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-        *(int32_t *)(intptr_t)(this_ptr + 28) = 0;
-        while (node != 0 && node != sentinel) {
-            int32_t next = *(int32_t *)(intptr_t)node;
-            free((void *)(intptr_t)node);
-            node = next;
-        }
-    }
+    kinoko_map_containers_clear(this_ptr);
 
     if (*(int32_t *)(intptr_t)(this_ptr + 20) != 0) {
         retdec_destroy_act_runtime(*(int32_t *)(intptr_t)(this_ptr + 20));
@@ -15838,9 +15754,7 @@ int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment) {
     int32_t count;
     int32_t completed = 0;
     /* 46FDB1..46FDB7 registers even callback-free and missing event layers. */
-    if (!retdec_actor_vector_push_i32(
-        (int32_t)(intptr_t)g_retdec_map_manager_state + 36, layout))
-        return -1;
+    kinoko_map_append_event((int32_t)(intptr_t)g_retdec_map_manager_state, layout);
     if (layout == 0 || function[1] != 0x08000100)
         return 0;
     count = (*(int32_t *)(intptr_t)(layout + 268) -

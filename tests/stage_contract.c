@@ -4492,43 +4492,47 @@ static int test_string_glyph_cache(void) {
 }
 
 static int test_map_manager_copy(void) {
-    int32_t source[21]={0},target[21]={0};
-    int32_t source_head[4]={0},target_head[4]={0};
-    int32_t nodes[2][4]={{0}},values[3]={71,83,97};
+    int32_t source[21]={0},target[21]={0},first,last;
+    uint32_t capacity;
     function_4a94e0_this(PTR(source)); function_4a94e0_this(PTR(target));
+    kinoko_map_containers_construct(PTR(source));kinoko_map_containers_construct(PTR(target));
     source[3]=123; source[4]=456; source[5]=789;
-    source[6]=PTR(source_head);source[7]=2;target[6]=PTR(target_head);
-    source_head[0]=PTR(nodes[0]);source_head[1]=PTR(nodes[1]);
-    nodes[0][0]=PTR(nodes[1]);nodes[0][1]=PTR(source_head);nodes[0][2]=111;nodes[0][3]=222;
-    nodes[1][0]=PTR(source_head);nodes[1][1]=PTR(nodes[0]);nodes[1][2]=333;nodes[1][3]=444;
-    target_head[0]=target_head[1]=PTR(target_head);
-    source[9]=PTR(values);source[10]=source[11]=PTR(values)+sizeof(values);
+    first=kinoko_map_append_render(PTR(source),222);
+    last=kinoko_map_append_render(PTR(source),444);
+    CHECK(first!=last && kinoko_map_render_at(PTR(source),0)==first);
+    *(int32_t*)(intptr_t)first=111;*(int32_t*)(intptr_t)last=333;
+    kinoko_map_append_event(PTR(source),71);kinoko_map_append_event(PTR(source),83);
+    kinoko_map_append_event(PTR(source),97);
     source[8]=1;target[8]=2;source[12]=3;target[12]=4;
     for(int i=13;i<21;++i) source[i]=100+i;
     CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
     CHECK(source[5]==0 && target[5]==789 && target[3]==123 && target[4]==456);
-    CHECK(target[8]==2 && target[12]==4 && target[7]==2);
-    int32_t* first=(int32_t*)(intptr_t)target_head[0];
-    int32_t* last=(int32_t*)(intptr_t)first[0];
-    CHECK(first!=nodes[0] && last!=nodes[1]);
-    CHECK(first[2]==PTR(&g37) && last[2]==PTR(&g37));
-    CHECK(first[3]==222 && last[3]==444 && last[0]==PTR(target_head));
-    CHECK(first[1]==PTR(target_head) && last[1]==PTR(first) && target_head[1]==PTR(last));
-    CHECK(target[9]!=source[9] && memcmp((void*)(intptr_t)target[9],values,sizeof(values))==0);
+    CHECK(target[8]==2 && target[12]==4 && kinoko_map_render_count(PTR(target))==2);
+    CHECK(kinoko_map_render_at(PTR(target),0)!=first);
+    first=kinoko_map_render_at(PTR(target),0);last=kinoko_map_render_at(PTR(target),1);
+    CHECK(*(int32_t*)(intptr_t)first==PTR(&g37) && *(int32_t*)(intptr_t)last==PTR(&g37));
+    CHECK(*(int32_t*)(intptr_t)(first+4)==222 && *(int32_t*)(intptr_t)(last+4)==444);
+    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),1)==83);
     CHECK(memcmp(target+13,source+13,32)==0);
     CHECK(function_4701b0(PTR(target),PTR(target))==PTR(target) && target[5]==789);
-    target[5]=0; /* borrowed test marker; no fabricated player destruction */
-    int32_t buffer=target[9],capacity=target[11];
-    source[10]=source[9]+4;source_head[0]=source_head[1]=PTR(source_head);source[7]=0;
+    CHECK(kinoko_map_render_at(PTR(target),0)==first);
+    target[5]=0; /* borrowed marker; no fabricated player destruction */
+    capacity=kinoko_map_event_capacity(PTR(target));
+    kinoko_map_containers_clear(PTR(source));kinoko_map_append_event(PTR(source),71);
     CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
-    CHECK(target[7]==0 && target_head[0]==PTR(target_head) && target_head[1]==PTR(target_head));
-    CHECK(target[9]==buffer && target[10]==buffer+4 && target[11]==capacity);
-    source[10]=source[9];
+    CHECK(kinoko_map_render_count(PTR(target))==0);
+    CHECK(kinoko_map_event_count(PTR(target))==1 && kinoko_map_event_at(PTR(target),0)==71);
+    CHECK(kinoko_map_event_capacity(PTR(target))==capacity);
+    kinoko_map_containers_clear(PTR(source));
     CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
-    CHECK(target[9]==buffer && target[10]==buffer && target[11]==capacity);
-    free((void*)(intptr_t)buffer);
+    CHECK(kinoko_map_event_count(PTR(target))==0 && kinoko_map_event_capacity(PTR(target))==capacity);
+    kinoko_map_append_event(PTR(target),0);kinoko_map_append_event(PTR(target),71);
+    kinoko_map_append_event(PTR(target),71);
+    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),0)==0);
+    CHECK(kinoko_map_event_at(PTR(target),1)==71 && kinoko_map_event_at(PTR(target),2)==71);
+    kinoko_map_containers_destroy(PTR(source));kinoko_map_containers_destroy(PTR(target));
     function_4a9d70_this(PTR(source));function_4a9d70_this(PTR(target));
-    puts("PASS: MapManager copy transfers player, copies 8-byte render objects and preserves vector capacity/proxies");
+    puts("PASS: native map list/vector copies, stable render addresses, duplicates/nulls and capacity retention");
     return 0;
 }
 
@@ -5965,10 +5969,8 @@ int main(int argc, char **argv) {
         int32_t source_layout[116] = {0}, source_key[9] = {0};
         int32_t source_head[3] = {0}, source_node[3] = {0};
         int32_t source_layers[1] = {PTR(source_layer)}, source_holder = PTR(source_act);
-        int32_t render_head[4] = {0};
         int32_t saved_head = *(int32_t *)(g_retdec_map_manager_state + 24);
-        int32_t saved_count = *(int32_t *)(g_retdec_map_manager_state + 28);
-        int32_t render, second, node_address;
+        int32_t render, second;
         memcpy(source_layer + 28, "en", 3);
         source_layer[32] = 2; source_layer[33] = 15;
         source_layer[45] = PTR(source_head); source_layer[46] = 1;
@@ -5977,17 +5979,15 @@ int main(int argc, char **argv) {
         source_key[1] = PTR(source_layout);
         source_layout[0] = PTR(&g327); source_layout[78] = PTR(source_layer);
         source_act[52] = PTR(source_layers); source_act[53] = PTR(source_layers + 1);
-        render_head[0] = render_head[1] = PTR(render_head);
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(source_act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(&source_holder);
-        *(int32_t *)(g_retdec_map_manager_state + 24) = PTR(render_head);
-        *(int32_t *)(g_retdec_map_manager_state + 28) = 0;
+        kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
         render = function_470030(PTR("en"));
         CHECK(render != 0 && *(int32_t *)(intptr_t)render == PTR(&g37));
         CHECK(*(int32_t *)(intptr_t)(render + 4) == PTR(layout));
         CHECK(*(int32_t *)(intptr_t)(render + 4) != PTR(source_layout));
         CHECK(function_470030(PTR("missing")) == 0);
-        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 1);
+        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state)) == 1);
         /* A script-side mutation must be visible through the render binding,
            while the template stays independent for the next activation. */
         *(float *)((unsigned char *)layer + 148) = -172.0f;
@@ -5996,17 +5996,14 @@ int main(int argc, char **argv) {
         CHECK(*(float *)((unsigned char *)source_layer + 148) == 0.0f);
         *(float *)((unsigned char *)layer + 148) = 0.0f;
         second = function_470030(PTR("en"));
-        CHECK(second != 0 && render_head[0] == render - 8 && render_head[1] == second - 8);
-        CHECK(*(int32_t *)(intptr_t)(render - 8) == second - 8);
-        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 2);
-        while ((node_address = render_head[0]) != PTR(render_head)) {
-            render_head[0] = *(int32_t *)(intptr_t)node_address;
-            free((void *)(intptr_t)node_address);
-        }
+        CHECK(second != 0 && second != render);
+        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),0)==render);
+        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),1)==second);
+        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state))==2);
+        kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
         *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
-        *(int32_t *)(g_retdec_map_manager_state + 28) = saved_count;
         puts("PASS: render layers bind live ACT layouts without undoing clone isolation");
     }
     target = PTR(function_469d10);
@@ -6079,8 +6076,7 @@ int main(int argc, char **argv) {
         function_4a9840_this(PTR(root + 1), "eventProbe", query_actor + 44);
         layout[60] = 32;
         layout[61] = 48;
-        CHECK(*(int32_t *)(intptr_t)(map_state + 40) -
-            *(int32_t *)(intptr_t)(map_state + 36) == 4);
+        CHECK(kinoko_map_event_count(map_state) == 1);
         CHECK(execute_source(vm, root + 2, "eventProbe.GetChipID(0);"));
         CHECK(*(int32_t *)(intptr_t)(map_state + 56) == 0x443);
         CHECK(*(float *)(intptr_t)(map_state + 60) == 100);

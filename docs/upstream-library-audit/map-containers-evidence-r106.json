@@ -1,0 +1,191 @@
+{
+  "baseline": "bca048b",
+  "database": "beba8679",
+  "queries": [
+    {
+      "addr": "0x46ef40",
+      "code": "int __thiscall sub_46EF40(int this, int a2, int a3, unsigned int a4, int a5)\n{\n  int result; // eax\n  double v7; // st7\n  int v8; // eax\n  int v9; // [esp+4h] [ebp-Ch] BYREF\n  _DWORD *v10; // [esp+8h] [ebp-8h]\n\n  result = a4; /*0x46ef43*/\n  if ( a4 <= (*(_DWORD *)(this + 40) - *(_DWORD *)(this + 36)) >> 2 /*0x46ef79*/\n    && (sub_4355F0(a1: &v9, a2, a3, a4: a5), result = (int)v10, v10 != nullptr) )\n  {\n    *(_DWORD *)(this + 56) = *v10; /*0x46ef7d*/\n    *(float *)(this + 60) = (float)*(int *)(result + 4); /*0x46ef83*/\n    v7 = (double)*(int *)(result + 8); /*0x46ef86*/\n    v8 = v9; /*0x46ef89*/\n    *(float *)(this + 64) = v7; /*0x46ef8c*/\n    *(float *)(this + 68) = (double)*(__int16 *)(v8 + 12) + *(float *)(this + 60); /*0x46ef9c*/\n    result = *(__int16 *)(v8 + 14); /*0x46ef9f*/\n    *(float *)(this + 72) = (double)result + *(float *)(this + 64); /*0x46efac*/\n  }\n  else\n  {\n    *(_DWORD *)(this + 56) = -1; /*0x46efb6*/\n  }\n  return result; /*0x46efaf*/\n}",
+      "refs": [
+        {
+          "addr": "0x4355f0",
+          "name": "sub_4355F0"
+        }
+      ]
+    },
+    {
+      "addr": "0x46f4c0",
+      "code": "_DWORD *__thiscall sub_46F4C0(_DWORD *this)\n{\n  _DWORD *v2; // eax\n  _DWORD pExceptionObject[4]; // [esp+Ch] [ebp-20h] BYREF\n  char *v5; // [esp+1Ch] [ebp-10h] BYREF\n  int v6; // [esp+28h] [ebp-4h]\n\n  pExceptionObject[3] = this; /*0x46f4e9*/\n  sub_4A94E0(); /*0x46f4ec*/\n  v6 = 0; /*0x46f4f3*/\n  *(this + 5) = 0; /*0x46f4f6*/\n  LOBYTE(v6) = 1; /*0x46f4fb*/\n  *(this + 7) = 0; /*0x46f4ff*/\n  v2 = operator new(Size: 0x10u); /*0x46f502*/\n  if ( v2 == nullptr ) /*0x46f50c*/\n  {\n    v5 = nullptr; /*0x46f542*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v5); /*0x46f545*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x46f553*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46f55a*/\n  }\n  *(this + 6) = v2; /*0x46f50e*/\n  *v2 = v2; /*0x46f511*/\n  *(_DWORD *)(*(this + 6) + 4) = *(this + 6); /*0x46f516*/\n  *(this + 9) = 0; /*0x46f519*/\n  *(this + 10) = 0; /*0x46f51c*/\n  *(this + 11) = 0; /*0x46f51f*/\n  *(this + 3) = 0; /*0x46f522*/\n  *(this + 4) = 0; /*0x46f525*/\n  return this; /*0x46f52a*/\n}",
+      "refs": [
+        {
+          "addr": "0x4a94e0",
+          "name": "sub_4A94E0"
+        },
+        {
+          "addr": "0x4ab3fc",
+          "name": "??2@YAPAXI@Z"
+        },
+        {
+          "addr": "0x4abd0c",
+          "name": "??0exception@std@@QAE@ABQBD@Z"
+        },
+        {
+          "addr": "0x4d5878",
+          "name": "??_7bad_alloc@std@@6B@"
+        },
+        {
+          "addr": "0x4aba7b",
+          "name": "__CxxThrowException@8"
+        },
+        {
+          "addr": "0x4f7308",
+          "name": "__TI2?AVbad_alloc@std@@"
+        }
+      ]
+    },
+    {
+      "addr": "0x46f5b0",
+      "code": "int __thiscall sub_46F560(int this)\n{\n  void *v2; // eax\n  _DWORD **v3; // ecx\n  _DWORD *v4; // eax\n  _DWORD *v5; // edi\n  void *v6; // edi\n\n  v2 = *(void **)(this + 36); /*0x46f58b*/\n  if ( v2 != nullptr ) /*0x46f595*/\n    operator delete(a1: v2); /*0x46f598*/\n  *(_DWORD *)(this + 36) = 0; /*0x46f5a0*/\n  *(_DWORD *)(this + 40) = 0; /*0x46f5a3*/\n  *(_DWORD *)(this + 44) = 0; /*0x46f5a6*/\n  v3 = *(_DWORD ***)(this + 24); /*0x46f5a9*/\n  v4 = *v3; /*0x46f5ac*/\n  *v3 = v3; /*0x46f5ae*/\n  *(_DWORD *)(*(_DWORD *)(this + 24) + 4) = *(_DWORD *)(this + 24); /*0x46f5b3*/\n  *(_DWORD *)(this + 28) = 0; /*0x46f5b6*/\n  if ( v4 != *(_DWORD **)(this + 24) ) /*0x46f5bc*/\n  {\n    do /*0x46f5d0*/\n    {\n      v5 = (_DWORD *)*v4; /*0x46f5c0*/\n      operator delete(a1: v4); /*0x46f5c3*/\n      v4 = v5; /*0x46f5cb*/\n    }\n    while ( v5 != *(_DWORD **)(this + 24) ); /*0x46f5d0*/\n  }\n  operator delete(a1: *(void **)(this + 24)); /*0x46f5d6*/\n  v6 = *(void **)(this + 20); /*0x46f5db*/\n  if ( v6 != nullptr ) /*0x46f5e3*/\n  {\n    sub_450020(); /*0x46f5e7*/\n    operator delete(a1: v6); /*0x46f5ed*/\n  }\n  return sub_4A9D70(a1: this); /*0x46f603*/\n}",
+      "refs": [
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        },
+        {
+          "addr": "0x450020",
+          "name": "sub_450020"
+        },
+        {
+          "addr": "0x4a9d70",
+          "name": "sub_4A9D70"
+        }
+      ]
+    },
+    {
+      "addr": "0x46f620",
+      "code": "void __thiscall sub_46F620(int this)\n{\n  int v2; // edi\n  _DWORD **v3; // ecx\n  _DWORD *v4; // eax\n  _DWORD *v5; // edi\n  void *v6; // edi\n  int v7; // ecx\n\n  sub_4A9570(); /*0x46f625*/\n  v2 = *(_DWORD *)(this + 36); /*0x46f62d*/\n  if ( v2 != *(_DWORD *)(this + 40) ) /*0x46f632*/\n    *(_DWORD *)(this + 40) = v2; /*0x46f64f*/\n  v3 = *(_DWORD ***)(this + 24); /*0x46f652*/\n  v4 = *v3; /*0x46f655*/\n  *v3 = v3; /*0x46f657*/\n  *(_DWORD *)(*(_DWORD *)(this + 24) + 4) = *(_DWORD *)(this + 24); /*0x46f65c*/\n  *(_DWORD *)(this + 28) = 0; /*0x46f661*/\n  if ( v4 != *(_DWORD **)(this + 24) ) /*0x46f667*/\n  {\n    do /*0x46f680*/\n    {\n      v5 = (_DWORD *)*v4; /*0x46f670*/\n      operator delete(a1: v4); /*0x46f673*/\n      v4 = v5; /*0x46f67b*/\n    }\n    while ( v5 != *(_DWORD **)(this + 24) ); /*0x46f680*/\n  }\n  v6 = *(void **)(this + 20); /*0x46f682*/\n  if ( v6 != nullptr ) /*0x46f687*/\n  {\n    sub_450020(); /*0x46f68b*/\n    operator delete(a1: v6); /*0x46f691*/\n  }\n  *(_DWORD *)(this + 20) = 0; /*0x46f699*/\n  if ( *(_DWORD *)(this + 16) != 0 ) /*0x46f6a1*/\n  {\n    operator delete(a1: *(void **)(this + 16)); /*0x46f6a4*/\n    *(_DWORD *)(this + 16) = 0; /*0x46f6ac*/\n  }\n  v7 = *(_DWORD *)(this + 12); /*0x46f6af*/\n  if ( v7 != 0 ) /*0x46f6b4*/\n  {\n    (*(void (__thiscall **)(int, int))(*(_DWORD *)v7 + 16))(a1: v7, a2: 1); /*0x46f6bd*/\n    *(_DWORD *)(this + 12) = 0; /*0x46f6bf*/\n  }\n}",
+      "refs": [
+        {
+          "addr": "0x4a9570",
+          "name": "sub_4A9570"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        },
+        {
+          "addr": "0x450020",
+          "name": "sub_450020"
+        }
+      ]
+    },
+    {
+      "addr": "0x46fd70",
+      "code": "int __stdcall sub_46FD70(_DWORD *a1, int a2, int a3, int a4, char a5, int a6, int a7)\n{\n  _DWORD *v7; // edi\n  int v8; // eax\n  unsigned int v9; // eax\n  unsigned int i; // esi\n  int v11; // edx\n  int v12; // ebx\n  int v13; // esi\n  int v14; // eax\n  int v15; // edx\n  int v16; // ecx\n  int v17; // esi\n  int v19; // [esp-14h] [ebp-6Ch]\n  int v20; // [esp-10h] [ebp-68h]\n  int v21; // [esp-Ch] [ebp-64h]\n  _DWORD v22[5]; // [esp+0h] [ebp-58h] BYREF\n  char v23[12]; // [esp+14h] [ebp-44h] BYREF\n  char v24[12]; // [esp+20h] [ebp-38h] BYREF\n  unsigned int v25; // [esp+2Ch] [ebp-2Ch]\n  int v26; // [esp+30h] [ebp-28h] BYREF\n  int v27; // [esp+34h] [ebp-24h] BYREF\n  int v28; // [esp+38h] [ebp-20h]\n  int v29; // [esp+3Ch] [ebp-1Ch]\n  int v30; // [esp+40h] [ebp-18h] BYREF\n  unsigned int v31; // [esp+44h] [ebp-14h]\n  _DWORD *v32; // [esp+48h] [ebp-10h]\n  int v33; // [esp+54h] [ebp-4h]\n\n  v32 = v22; /*0x46fd98*/\n  v33 = 1; /*0x46fda1*/\n  a1 = (_DWORD *)sub_46F140(a1); /*0x46fdb4*/\n  sub_407000(&a1); /*0x46fdb7*/\n  v7 = a1; /*0x46fdbc*/\n  if ( a1 != nullptr && sub_4A9A30(a1: &a2) == 134217984 ) /*0x46fdd4*/\n  {\n    v22[4] = dword_5149DC; /*0x46fde7*/\n    sub_4A9500(a1: &a5); /*0x46fdea*/\n    LOBYTE(v33) = 2; /*0x46fdf6*/\n    sub_4A9500(a1: &a2); /*0x46fdfa*/\n    v8 = v7[67] - v7[66]; /*0x46fe05*/\n    LOBYTE(v33) = 3; /*0x46fe0b*/\n    v9 = v8 >> 5; /*0x46fe0f*/\n    v25 = v9; /*0x46fe12*/\n    for ( i = 0; ; i = v31 + 1 ) /*0x46fe15*/\n    {\n      v31 = i; /*0x46fe17*/\n      if ( i >= v9 ) /*0x46fe1c*/\n        break; /*0x46fe1c*/\n      v30 = 0; /*0x46fe22*/\n      v11 = v7[78]; /*0x46fe29*/\n      if ( *(_DWORD *)(v11 + 100) != 0 /*0x46fe80*/\n        && (*(unsigned __int8 (__thiscall **)(_DWORD, void *, int *))(**(_DWORD **)(v11 + 100) + 8))(\n             a1: *(_DWORD *)(v11 + 100),\n             a2: &CActResourceChip `RTTI Type Descriptor',\n             a3: &v30) != 0\n        && v30 != 0\n        && (v12 = *(_DWORD *)(v30 + 64)) != 0\n        && (v13 = 32 * i, v27 = *(_DWORD *)(v13 + v7[66]), sub_4300D0(a1: &v26, a2: &v27), v26 != *(_DWORD *)(v12 + 4)) )\n      {\n        v14 = v7[66]; /*0x46fe86*/\n        v15 = *(_DWORD *)(v14 + v13 + 4) + *(__int16 *)(v26 + 36); /*0x46fe90*/\n        v16 = *(_DWORD *)(v14 + v13 + 8) + *(__int16 *)(v26 + 38); /*0x46fe94*/\n        v29 = v15; /*0x46fe98*/\n        v28 = v16; /*0x46fe9b*/\n      }\n      else\n      {\n        v16 = v28; /*0x46fea0*/\n        v15 = v29; /*0x46fea3*/\n      }\n      v17 = v7[66]; /*0x46fea6*/\n      v21 = *(_DWORD *)(32 * v31 + v17 + 8); /*0x46febf*/\n      v20 = *(_DWORD *)(32 * v31 + v17 + 4); /*0x46fec0*/\n      v19 = *(_DWORD *)(32 * v31 + v17); /*0x46fec1*/\n      LOBYTE(v33) = 4; /*0x46fec5*/\n      sub_46EE20(pExceptionObject: v19, a2: v20, a3: v21, a4: v15, a5: v16); /*0x46fec9*/\n      v9 = v25; /*0x46fed1*/\n      v33 = 3; /*0x46fed4*/\n    }\n    LOBYTE(v33) = 6; /*0x46ff12*/\n    sub_4A9D70(a1: v24); /*0x46ff16*/\n    LOBYTE(v33) = 1; /*0x46ff1e*/\n    sub_4A9D70(a1: v23); /*0x46ff22*/\n  }\n  LOBYTE(v33) = 0; /*0x46ff2a*/\n  sub_4A9D70(a1: &a2); /*0x46ff2e*/\n  v33 = -1; /*0x46ff36*/\n  return sub_4A9D70(a1: &a5); /*0x46ff42*/\n}",
+      "refs": [
+        {
+          "addr": "0x46f140",
+          "name": "sub_46F140"
+        },
+        {
+          "addr": "0x407000",
+          "name": "sub_407000"
+        },
+        {
+          "addr": "0x5149dc",
+          "name": "dword_5149DC"
+        },
+        {
+          "addr": "0x4a9500",
+          "name": "sub_4A9500"
+        },
+        {
+          "addr": "0x5119a4",
+          "name": "??_R0?AVCActResourceChip@@@8"
+        },
+        {
+          "addr": "0x4300d0",
+          "name": "sub_4300D0"
+        },
+        {
+          "addr": "0x46ee20",
+          "name": "sub_46EE20"
+        },
+        {
+          "addr": "0x4a9d70",
+          "name": "sub_4A9D70"
+        },
+        {
+          "addr": "0x4a9a30",
+          "name": "sub_4A9A30"
+        }
+      ]
+    },
+    {
+      "addr": "0x470030",
+      "code": "int __thiscall sub_470030(_DWORD *this, int a2)\n{\n  int v3; // eax\n  int v4; // edi\n  int v5; // eax\n  int v6; // ecx\n  int v8; // [esp-Ch] [ebp-18h]\n  int v9[2]; // [esp+4h] [ebp-8h] BYREF\n\n  v3 = sub_46F140(a1: a2); /*0x47003d*/\n  if ( v3 == 0 ) /*0x470044*/\n    return 0; /*0x47009b*/\n  v4 = *(this + 6); /*0x470047*/\n  v8 = *(_DWORD *)(v4 + 4); /*0x470051*/\n  v9[0] = (int)&NamespaceGlobal::MapManager::MapManagerRenderLayer::`vftable'; /*0x470056*/\n  v9[1] = v3; /*0x47005d*/\n  v5 = sub_46F450(a1: (char *)v4, a2: v8, a3: (int)v9); /*0x470060*/\n  v6 = *(this + 7); /*0x470065*/\n  if ( v6 == 536870910 ) /*0x470072*/\n    std::_Xlength_error(a1: \"list<T> too long\"); /*0x470079*/\n  *(this + 7) = v6 + 1; /*0x47007f*/\n  *(_DWORD *)(v4 + 4) = v5; /*0x470082*/\n  **(_DWORD **)(v5 + 4) = v5; /*0x470088*/\n  return *(_DWORD *)(*(this + 6) + 4) + 8; /*0x470094*/\n}",
+      "refs": [
+        {
+          "addr": "0x46f140",
+          "name": "sub_46F140"
+        },
+        {
+          "addr": "0x4d5ba0",
+          "name": "??_7MapManagerRenderLayer@MapManager@NamespaceGlobal@@6B@"
+        },
+        {
+          "addr": "0x46f450",
+          "name": "sub_46F450"
+        },
+        {
+          "addr": "0x473e00",
+          "name": "?_Xlength_error@std@@YAXPBD@Z"
+        },
+        {
+          "addr": "0x4eb1c4",
+          "name": "aListTTooLong",
+          "string": "list<T> too long"
+        }
+      ]
+    },
+    {
+      "addr": "0x4700b0",
+      "code": "int __thiscall sub_4700B0(char ***this, int a2, int a3)\n{\n  char **v4; // ecx\n  char **v5; // eax\n  char **v6; // edi\n\n  v4 = *this; /*0x4700ba*/\n  v5 = (char **)*v4; /*0x4700bc*/\n  *v4 = (char *)v4; /*0x4700be*/\n  (*this)[1] = (char *)*this; /*0x4700c2*/\n  *(this + 1) = nullptr; /*0x4700c5*/\n  if ( v5 != *this ) /*0x4700ce*/\n  {\n    do /*0x4700e0*/\n    {\n      v6 = (char **)*v5; /*0x4700d1*/\n      operator delete(a1: v5); /*0x4700d4*/\n      v5 = v6; /*0x4700dc*/\n    }\n    while ( v6 != *this ); /*0x4700e0*/\n  }\n  return sub_46FF60(a1: **this, a2, a3, a4: a2); /*0x4700f8*/\n}",
+      "refs": [
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        },
+        {
+          "addr": "0x46ff60",
+          "name": "sub_46FF60"
+        }
+      ]
+    },
+    {
+      "addr": "0x470100",
+      "code": "int __thiscall sub_470100(int this, int a2)\n{\n  void *v4; // eax\n  void *v5; // ebx\n  void *v7; // [esp+14h] [ebp+8h]\n\n  sub_4A95C0(a1: a2); /*0x47010c*/\n  *(_DWORD *)(this + 12) = *(_DWORD *)(a2 + 12); /*0x470114*/\n  *(_DWORD *)(this + 16) = *(_DWORD *)(a2 + 16); /*0x47011a*/\n  v4 = *(void **)(a2 + 20); /*0x47011d*/\n  *(_DWORD *)(a2 + 20) = 0; /*0x470120*/\n  v5 = *(void **)(this + 20); /*0x470127*/\n  v7 = v4; /*0x47012a*/\n  if ( v4 != v5 && v5 != nullptr ) /*0x470133*/\n  {\n    sub_450020(); /*0x470137*/\n    operator delete(a1: v5); /*0x47013d*/\n    v4 = v7; /*0x470142*/\n  }\n  *(_DWORD *)(this + 20) = v4; /*0x470148*/\n  if ( this + 24 != a2 + 24 ) /*0x470153*/\n    sub_4700B0(a1: **(_DWORD **)(a2 + 24), a2: *(_DWORD *)(a2 + 24)); /*0x47015b*/\n  sub_46F320(a1: a2 + 36); /*0x470167*/\n  *(_DWORD *)(this + 52) = *(_DWORD *)(a2 + 52); /*0x47016f*/\n  *(_DWORD *)(this + 56) = *(_DWORD *)(a2 + 56); /*0x470175*/\n  *(float *)(this + 60) = *(float *)(a2 + 60); /*0x47017b*/\n  *(float *)(this + 64) = *(float *)(a2 + 64); /*0x470181*/\n  *(float *)(this + 68) = *(float *)(a2 + 68); /*0x470187*/\n  *(float *)(this + 72) = *(float *)(a2 + 72); /*0x47018d*/\n  *(_DWORD *)(this + 76) = *(_DWORD *)(a2 + 76); /*0x470193*/\n  *(_DWORD *)(this + 80) = *(_DWORD *)(a2 + 80); /*0x470199*/\n  return this; /*0x47019c*/\n}",
+      "refs": [
+        {
+          "addr": "0x4a95c0",
+          "name": "sub_4A95C0"
+        },
+        {
+          "addr": "0x450020",
+          "name": "sub_450020"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        },
+        {
+          "addr": "0x4700b0",
+          "name": "sub_4700B0"
+        },
+        {
+          "addr": "0x46f320",
+          "name": "sub_46F320"
+        }
+      ]
+    }
+  ]
+}
