@@ -26,7 +26,8 @@ jobs:
           git log -30 --format='%H %s' > snapshot/COMMITS.txt
           base=$(git merge-base origin/master HEAD)
           git diff --numstat "$base" HEAD > snapshot/DIFF_NUMSTAT.txt
-          git diff --check "$base" HEAD
+          # Record inherited whitespace diagnostics without blocking archival.
+          git diff --check "$base" HEAD > snapshot/DIFF_CHECK.txt || test "$?" -eq 2
           (cd snapshot && sha256sum source.tar.gz source.bundle > SHA256SUMS)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
