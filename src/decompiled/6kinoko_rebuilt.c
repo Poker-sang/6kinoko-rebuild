@@ -3788,7 +3788,7 @@ struct vtable_4ec0b0_type g277 = {
     .e2 = function_4461d0,
     .e3 = function_446210,
     .e4 = function_420830,
-    .e5 = function_4265e0
+    .e5 = (int32_t (*)(void))kinoko_method_clone_act_key
 }; // 0x4ec0b0
 
 struct vtable_4ec138_type g283 = {
@@ -3820,7 +3820,7 @@ struct vtable_4ec358_type g299 = {
     .e2 = function_4461d0,
     .e3 = function_42b480,
     .e4 = function_42b470,
-    .e5 = function_42b580,
+    .e5 = (int32_t (*)(void))kinoko_method_clone_c2d_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_layout_set_layer,
     .e7 = (int32_t (*)(void))kinoko_method_layout_update,
     .e8 = (int32_t (*)(float, float))kinoko_method_layout_draw,

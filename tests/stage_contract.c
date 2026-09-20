@@ -4557,6 +4557,21 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(*(int32_t*)(intptr_t)(layout+304)==layer);
         CHECK(*(float*)(intptr_t)(layout+260)==1.0f);
         CHECK(i ? *(int32_t*)(intptr_t)(layout+292)==17 : *(float*)(intptr_t)(layout+284)==0.375f);
+        const char key_name[]="a long key name\0with embedded bytes";
+        retdec_string_assign_n((int32_t*)(intptr_t)(key+8),key_name,sizeof(key_name)-1);
+        *(uint8_t*)(intptr_t)(key+32)=0xa5;
+        *(uint8_t*)(intptr_t)(layout+313)=0xa5;
+        int32_t cloned=retdec_call_thiscall0_result((void*)(intptr_t)key,(void*)g277.e5);
+        CHECK(cloned && cloned!=key && *(int32_t*)(intptr_t)cloned==PTR(&g277));
+        int32_t copied_layout=*(int32_t*)(intptr_t)(cloned+4);
+        CHECK(copied_layout && copied_layout!=layout && *(int32_t*)(intptr_t)copied_layout==PTR(&g299));
+        CHECK(memcmp((void*)(intptr_t)(copied_layout+8),(void*)(intptr_t)(layout+8),305)==0);
+        CHECK(*(uint8_t*)(intptr_t)(copied_layout+313)==0 && *(uint8_t*)(intptr_t)(cloned+32)==0);
+        CHECK(*(uint32_t*)(intptr_t)(cloned+24)==sizeof(key_name)-1);
+        CHECK(memcmp(retdec_std_string_data(cloned+8),key_name,sizeof(key_name)-1)==0);
+        CHECK(retdec_std_string_data(cloned+8)!=retdec_std_string_data(key+8));
+        free((void*)retdec_std_string_data(cloned+8));
+        free((void*)(intptr_t)copied_layout); free((void*)(intptr_t)cloned);
     }
     CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
     CHECK(execute_source(vm,root+2,

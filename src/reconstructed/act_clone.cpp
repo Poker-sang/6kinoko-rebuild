@@ -2,6 +2,11 @@
 #include "kinoko/texture_store.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/boost_control.hpp"
+#include "kinoko/act_host.h"
+#include "kinoko/legacy_abi.h"
+#include "kinoko/legacy_string.hpp"
+#include "kinoko/legacy_method_entries.h"
+#include <memory>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -218,6 +223,44 @@ private:
     std::vector<Address> chip_owners_;
     bool committed_=false;
 };
+}
+
+// Original 42B580/42B5C0/42B3F0. Keep both constructor vtables; the sprite
+// assignment copies offsets 8..235, and layout assignment copies 236..312.
+// Padding 313..315 is not part of the source assignment.
+extern "C" int32_t __fastcall kinoko_method_clone_c2d_layout(int32_t source, void*) {
+    if (!source) return 0;
+    auto* result=static_cast<unsigned char*>(std::calloc(1,316));
+    if (!result) return 0;
+    retdec_construct_c2dlayout(static_cast<int32_t>(address(result)));
+    std::memcpy(result+8,static_cast<unsigned char*>(pointer(source))+8,305);
+    return static_cast<int32_t>(address(result));
+}
+
+// Original 4265E0 copies the string and dispatches the layout's clone virtual.
+// It does not copy trailing key padding or treat every layout as C2DLayout.
+extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*) {
+    if (!source) return 0;
+    auto release=[](unsigned char* key) {
+        if (!key) return;
+        const kinoko::legacy::StringView name(key+8);
+        if (name.is_heap()) std::free(name.data());
+        std::free(key);
+    };
+    std::unique_ptr<unsigned char,decltype(release)> result(
+        static_cast<unsigned char*>(std::calloc(1,36)),release);
+    if (!result) return 0;
+    const auto key=address(result.get());
+    field<Address>(key)=address(kinoko_act_host_symbols()->key_vtable);
+    field<uint32_t>(key,28)=15;
+    const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+8);
+    const kinoko::legacy::StringView output(result.get()+8);
+    output.assign(input.data(),input.length());
+    if (output.length()!=input.length()) return 0;
+    const auto layout=field<Address>(source,4);
+    if (layout) field<int32_t>(key,4)=retdec_call_thiscall0_result(
+        pointer(layout),field<void*>(field<Address>(layout),20));
+    return static_cast<int32_t>(address(result.release()));
 }
 
 extern "C" int32_t __fastcall kinoko_act_clone(int32_t source,void *) {
