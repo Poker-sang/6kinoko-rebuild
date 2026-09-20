@@ -3132,6 +3132,38 @@
           "sha256": "1d4c4af6b296393ab3ff54b2ac8e1b77613c00bffdfbda3a675c2c6dcf9704b8"
         }
       ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r86-quiet",
+      "source_commit": "7a1f0929f05715d8b9c31b37f7304b5994b03234",
+      "validation": "Full build FAILED: isolated act_frame_contract host omitted g350. Main EXE and stage contract linked. No staging, tests or game execution.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "75512b90a4b82e0d19992ebc65d481e441b45706f3070bb728d765fb105668e7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/configure.log",
+          "size": 956,
+          "sha256": "31662f0283c3096a0739703bb634ab0b0bed3dd6a930fa5feec45bd3e04d6370"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/build.log",
+          "size": 582401,
+          "sha256": "f96e776215ece5821094dfebabbfa8eeff788b9a558bd3b58b1506d6fe4c330a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/kinoko.map",
+          "size": 1007737,
+          "sha256": "d7307e5946af52e9e40cf576c788feae1906b8db0288faf11511bc30e7465cb6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/stage-contract.map",
+          "size": 1264370,
+          "sha256": "0d8f4f5c6c79b86586aa5cbe6002793702026f8e2d94d4fd2ad1a9161eea1099"
+        }
+      ]
     }
   ]
 }

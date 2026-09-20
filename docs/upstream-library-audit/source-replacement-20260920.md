@@ -795,3 +795,7 @@ ACT key loading now accepts the original Boost 1.44 RTTI hash 9E695D47, construc
 Compiled-only contracts now cover real CreateLayerString closures and script aliases, key virtual cloning, and both full/compact key archives containing strings with embedded NUL bytes. The reader combines rendered/pending text without truncation and preserves the original serialized alignment/addEdge byte alias, leaving runtime alignment at its constructor value. No game or test executable ran.
 
 R86's main EXE and stage contract linked, but the independent act_frame_contract target failed to link because its controlled host fixture lacked the new g350 identity. The next batch adds that fixture symbol; R86 is recorded as a failed full build, not validated. No tests were executed.
+
+## R87 — remove the retired string factory call thunk
+
+After native CreateLayerString publication, removed its unused 455390 thunk, the two old class-pair globals, the transitive receiverless 40E3F0/41E0C0 helpers and two unreferenced deque iterator wrappers. Pinned-source hash/reachability evidence is in retired-string-call-helpers.json (five functions, two data records). Fixed R86's missing standalone frame fixture identity. No game or test execution.

@@ -1672,7 +1672,6 @@ int32_t function_40e2b0(void);
 int32_t function_40e2d0(void);
 
 DWORD WINAPI function_40e320(LPVOID parameter);
-int32_t function_40e3f0(void);
 int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
                         uint32_t *a4, uint32_t *a5);
 
@@ -1760,7 +1759,6 @@ int32_t function_4190e0(int32_t a1, int32_t a2);
 
 
 
-int32_t function_41e0c0(int32_t a1);
 int32_t function_41e390(int32_t a1);
 
 int32_t function_41ef20(int32_t a1);
@@ -1976,14 +1974,12 @@ int32_t function_441660(void);
 
 
 
-int32_t function_4422e0(void);
 
 int32_t function_4429b0(void);
 
 
 
 
-int32_t function_442f70(int32_t a1);
 
 
 int32_t function_443560(void);
@@ -2080,7 +2076,6 @@ int32_t function_453fe0(void);
 
 
 
-int32_t function_455390(int32_t a1);
 
 
 int32_t function_455880(int32_t this_ptr, int32_t value);
@@ -3261,8 +3256,8 @@ int32_t g1018 = 0; // 0x51bc78
  // 0x51bc88
  // 0x51bc90
 
-int32_t g1026 = 0; // 0x51bca0
-int32_t g1027 = 0; // 0x51bca4
+ // 0x51bca0
+ // 0x51bca4
  // 0x51bca8
 
  // 0x51bcb0
@@ -9072,40 +9067,7 @@ DWORD WINAPI function_40e320(LPVOID parameter) {
 }
 
 // Address range: 0x40e3f0 - 0x40e454
-int32_t function_40e3f0(void) {
-    // 0x40e3f0
-    int32_t result; // 0x40e3f0
-    // 0x40e451
-    return result;
-    int32_t * v1 = (int32_t *)(result + 20); // 0x40e3f4
-    if (*v1 >= 16) {
-        // 0x40e3fa
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x40e405
-    *v1 = 15;
-    int32_t * v2 = (int32_t *)(result + 16); // 0x40e40c
-    *v2 = 0;
-    *(char *)result = 0;
-    int32_t * v3 = (int32_t *)(result + 20); // 0x40e416
-    int32_t * v4; // 0x40e3f0
-    if (*v3 >= 16) {
-        // 0x40e42d
-        *(int32_t *)result = 0;
-        v4 = (int32_t *)(result + 16);
-    } else {
-        int32_t * v5 = (int32_t *)(result + 16);
-        memmove((int32_t *)result, (int32_t *)result, *v5 + 1);
-        v4 = v5;
-    }
-    // 0x40e437
-    *v2 = *v4;
-    *v1 = *v3;
-    *v4 = 0;
-    *v3 = 0;
-    // 0x40e451
-    return result;
-}
+
 
 // Address range: 0x40e460 - 0x40e535
 
@@ -11709,29 +11671,7 @@ int32_t function_4190e0(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x41e0c0 - 0x41e18e
-int32_t function_41e0c0(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x41e0d0
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // 0x41e0c0
-    *(int32_t *)(v2 + 20) = 15;
-    *(int32_t *)(v2 + 16) = 0;
-    *(char *)v2 = 0;
-    sq_tostring(kinoko_vm(a1), 2);
-    char * v3; // bp-52, 0x41e0c0
-    sq_getstring(kinoko_vm(a1), -1, (const SQChar**)((int32_t *)&v3));
-    int32_t * v4 = NULL; // bp-48, 0x41e12b
-    int32_t v5 = (int32_t)v3; // 0x41e12f
-    while (*(char *)v5 != 0) {
-        // 0x41e132
-        v5++;
-    }
-    // 0x41e139
-    retdec_string_assign_cstr((int32_t *)&v4, (const char *)(v3));
-    function_40e3f0();
-    kinoko_sq_pop(a1, 1);
-    __writefsdword(0, v1);
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x41e190 - 0x41e1de
 // From class:    .?AVTable@Sqrat@@
@@ -15420,13 +15360,7 @@ int32_t function_441660(void) {
 
 
 // Address range: 0x4422e0 - 0x4422f2
-int32_t function_4422e0(void) {
-    // 0x4422e0
-    int32_t result; // 0x4422e0
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 8) = *(int32_t *)(result + 12);
-    return result;
-}
+
 
 // Address range: 0x4429b0 - 0x4429c5
 int32_t function_4429b0(void) {
@@ -15444,25 +15378,7 @@ int32_t function_4429b0(void) {
 
 
 // Address range: 0x442f70 - 0x442fab
-int32_t function_442f70(int32_t a1) {
-    // 0x442f70
-    int32_t result; // 0x442f70
-    int32_t * v1 = (int32_t *)result; // 0x442f89
-    *v1 = 0;
-    *(int32_t *)(result + 4) = 0;
-    *(int32_t *)(result + 8) = *(int32_t *)(result + 8) + a1;
-    if (result == 0) {
-        // 0x442fa7
-        return result;
-    }
-    int32_t v2 = *(int32_t *)result; // 0x442f9d
-    if (v2 != 0) {
-        // 0x442fa3
-        *v1 = *(int32_t *)v2;
-    }
-    // 0x442fa7
-    return result;
-}
+
 
 
 // Address range: 0x443560 - 0x44357c
@@ -16069,33 +15985,7 @@ int32_t function_453fe0(void) {
 
 
 // Address range: 0x455390 - 0x4554a9
-int32_t function_455390(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-20, 0x4553a3
-    __writefsdword(0, (int32_t)&v1);
-    int32_t v2; // bp-64, 0x455390
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v2), (SQUserPointer*)kinoko_pointer(0));
-    uint32_t v3 = *(int32_t *)v2; // 0x4553de
-    int32_t v4 = 0; // bp-72, 0x4553ed
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v4), kinoko_pointer(0));
-    function_41e0c0(a1);
-    int32_t v5; // bp-124, 0x455390
-    v2 = &v5;
-    v5 = 0;
-    int32_t v6 = function_40e3f0(); // 0x45541f
-    if (v3 >= 16) {
-        // 0x455435
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x455442
-    v4 = 0;
-    sq_pushobject(kinoko_vm(a1), kinoko_borrowed_object(g1026, g1027));
-    sq_createinstance(kinoko_vm(a1), -1);
-    sq_remove(kinoko_vm(a1), -2);
-    sq_setinstanceup(kinoko_vm(a1), -1, kinoko_pointer(v6));
-    int32_t v7; // 0x455390
-    __writefsdword(0, v7);
-    return ___report_gsfailure();
-}
+
 
 // Address range: 0x4554b0 - 0x455519
 
