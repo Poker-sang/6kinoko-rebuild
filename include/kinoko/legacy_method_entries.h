@@ -43,6 +43,8 @@ int32_t __fastcall kinoko_method_read_chip_resource(int32_t receiver, void* unus
 int32_t __fastcall kinoko_method_write_chip_resource(int32_t receiver, void* unused_edx, int32_t writer);
 int32_t __fastcall kinoko_method_read_layout_properties(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_write_layout_properties(int32_t receiver, void* unused_edx, int32_t writer);
+int32_t __fastcall kinoko_method_read_map_layout(int32_t receiver, void* unused_edx, int32_t reader_holder, int32_t version);
+int32_t __fastcall kinoko_method_write_map_layout(int32_t receiver, void* unused_edx, int32_t writer);
 
 // function_42f350
 int32_t __fastcall kinoko_method_register_chip_resource(int32_t receiver, void* unused_edx, int32_t vm);

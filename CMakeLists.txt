@@ -370,6 +370,8 @@ add_test(NAME portrait_regions_contract
     COMMAND kinoko_stage_contract --portrait-regions "${KINOKO_REFERENCE_DIR}")
 add_test(NAME texture_serialization_contract
     COMMAND kinoko_stage_contract --texture-serialization)
+add_test(NAME map_serialization_contract
+    COMMAND kinoko_stage_contract --map-serialization)
 
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")

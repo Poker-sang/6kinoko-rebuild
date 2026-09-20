@@ -4457,6 +4457,67 @@ static int32_t __fastcall script_io_seek(struct script_io_stream* self, void* un
     return self->position;
 }
 
+static int test_map_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream), source[116]={0}, loaded[116]={0}, resource[25]={0};
+    struct retdec_mcd_chip chips[2]={0};
+    struct retdec_mcd_data data={2,chips,0,NULL};
+    int32_t records[4][8]={{9,100,-30,0,0,41,0,0},{2,-5,-20,0,0,42,0,0},
+                         {2,-5,-40,0,0,43,0,0},{99,200,-50,0,0,44,0,0}};
+    chips[0].chip_id=9; chips[1].chip_id=2;
+    *(int32_t*)(chips[0].bytes)=9; *(int32_t*)(chips[1].bytes)=2;
+    *(int16_t*)(chips[0].bytes+12)=16; *(int16_t*)(chips[0].bytes+14)=8;
+    *(int16_t*)(chips[1].bytes+12)=32; *(int16_t*)(chips[1].bytes+14)=12;
+    source[0]=loaded[0]=PTR(&g327); source[79]=PTR(resource); resource[16]=PTR(&data);
+    source[66]=PTR(records); source[67]=source[68]=PTR(records+4); source[113]=-1;
+    source[59]=7; ((float*)source)[80]=0.75f; ((float*)source)[81]=1.25f;
+    source[82]=3; loaded[82]=17;
+    const unsigned char saved=g673;
+    for (int compact=0; compact<2; ++compact) {
+        g673=(unsigned char)compact; stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g327.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        if (!compact) CHECK(*(uint32_t*)(stream.bytes+1)==9); /* No blend property. */
+        CHECK(records[0][1]==-5 && records[0][2]==-40 && records[0][5]==43);
+        CHECK(records[1][2]==-20 && records[2][0]==9 && records[3][0]==99);
+        CHECK(source[60]==32 && source[61]==12 && source[62]==-5 && source[63]==-50);
+        CHECK(source[64]==200 && source[65]==200); /* Original bottom starts at last X. */
+        CHECK(source[102]-source[101]==96 && source[110]-source[109]==40);
+        CHECK(*(int32_t*)(intptr_t)source[101]==2 && *(int32_t*)(intptr_t)(source[101]+48)==9);
+        CHECK(((int32_t*)(intptr_t)source[109])[2]==0 && ((int32_t*)(intptr_t)source[109])[9]==1);
+        CHECK(((int32_t*)(intptr_t)source[109])[1]==-1);
+        /* Writer emits only 12 bytes per map record. */
+        CHECK(*(uint32_t*)(stream.bytes+stream.size-56)==4);
+        CHECK(*(uint32_t*)(stream.bytes+stream.size-52)==12);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g327.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && loaded[82]==17);
+        CHECK(memcmp(source+59,loaded+59,7*4)==0 && ((float*)loaded)[80]==0.75f);
+        CHECK((loaded[67]-loaded[66])/32==(compact+1)*4); /* Read appends. */
+        int32_t *tail=(int32_t*)(intptr_t)(loaded[66]+compact*128);
+        for(int i=0;i<4;++i) {
+            CHECK(memcmp(tail+i*8,records[i],12)==0 && tail[i*8+5]==i);
+            CHECK(((uint8_t*)(tail+i*8))[24]==1 && ((float*)(tail+i*8))[7]==1.0f);
+        }
+    }
+    /* A truncated record fails without replacing the owned record allocation. */
+    int32_t before=loaded[66]; uint32_t available=stream.size;
+    stream.position=0; stream.size-=1;
+    CHECK(!retdec_call_thiscall2_result(loaded,(void*)g327.e1,PTR(&holder),1));
+    CHECK(loaded[66]==before && loaded[67]-loaded[66]==256);
+    stream.size=available;
+    source[67]=source[66]; stream.position=stream.size=0; stream.reading=0;
+    CHECK(retdec_call_thiscall1_result(source,(void*)g327.e0,PTR(&stream))==1);
+    CHECK(source[60]==INT_MIN && source[61]==INT_MIN);
+    CHECK(source[62]==0 && source[63]==0 && source[64]==0 && source[65]==0);
+    g673=saved;
+    free((void*)(intptr_t)loaded[66]);
+    free((void*)(intptr_t)source[101]); free((void*)(intptr_t)source[109]);
+    puts("PASS: map wire format, signed XY order, sparse MCD cache, original bounds and appended records");
+    return 0;
+}
+
 static int test_chip_serialization(void) {
     int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
     struct script_io_stream stream={0}; stream.vtable=methods;
@@ -4940,6 +5001,8 @@ int main(int argc, char **argv) {
     if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
         return test_texture_serialization(0) || test_texture_serialization(1) ||
             test_chip_serialization() || test_layout_serialization();
+    if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
+        return test_map_serialization();
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {

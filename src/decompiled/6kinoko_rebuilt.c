@@ -4062,8 +4062,8 @@ struct vtable_4ec548_type g313 = {
  // 0x4ec640
  // 0x4ec668
 struct vtable_4ec79c_type g327 = {
-    .e0 = function_434a50,
-    .e1 = function_434920,
+    .e0 = (int32_t (*)(int32_t))kinoko_method_write_map_layout,
+    .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_map_layout,
     .e2 = function_4461d0,
     .e3 = function_42b480,
     .e4 = function_433720,

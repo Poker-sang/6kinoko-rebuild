@@ -123,6 +123,13 @@ void retdec_destroy_cact_list(int32_t *list_slot)
                     field<int32_t>(layout + 332) = 0;
                     field<int32_t>(layout + 336) = 0;
                     field<int32_t>(layout + 340) = 0;
+                    // Native map serialization also owns these flat ABI caches.
+                    for (auto offset : {280, 296, 404, 436}) {
+                        std::free(pointer<void>(field<int32_t>(layout + offset)));
+                        field<int32_t>(layout + offset) = 0;
+                        field<int32_t>(layout + offset + 4) = 0;
+                        field<int32_t>(layout + offset + 8) = 0;
+                    }
                 }
                 std::free(pointer<void>(layout));
             }
