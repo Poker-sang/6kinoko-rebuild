@@ -197,6 +197,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/archive_store.cpp
     src/reconstructed/archive_random.cpp
     src/reconstructed/render_target.cpp
+    src/reconstructed/render_queue.cpp
     src/reconstructed/string_render.cpp
     src/reconstructed/string_font.cpp
     src/reconstructed/string_text.cpp

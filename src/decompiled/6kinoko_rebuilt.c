@@ -1,3 +1,4 @@
+#include "kinoko/render_queue.h"
 #include "kinoko/ime_input.h"
 #include "kinoko/render_target.h"
 #include "kinoko/archive_random.h"
@@ -2760,8 +2761,6 @@ int32_t g611[3] = { 0, 0, 0 }; // 0x513c88, global SquirrelObject
 /* SetGlobalUpdateFunction stores a VM pointer and two SquirrelObject values
    in this 28-byte SquirrelFunction object. */
 int32_t g612[7] = { 0 }; // 0x513c98
-int32_t g613 = 0; // 0x513cb4
-int32_t g614 = 0; // 0x513cb8
 /* Original global_var_514300, used as the collision-list receiver. */
 static int32_t g_514300_storage[30] = { 0 };
 /* ActorManager is a C++ global at 0x5143e0. RetDec split its fields into
@@ -14996,15 +14995,13 @@ int32_t function_469dd0(int32_t name,
 // Address range: 0x46a140 - 0x46a1c4
 int32_t function_46a140(void) {
     int32_t render_mask = function_471070();
-    int32_t sentinel = g613;
-    int32_t node;
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
 
     if (trace_index == 1) {
-        retdec_trace_i32("render:g613", g613);
+        retdec_trace_i32("render:g613", kinoko_render_queue_identity());
         retdec_trace_i32("render:g613-first",
-                         g613 != 0 ? *(int32_t *)(uintptr_t)g613 : 0);
+                         kinoko_render_queue_first());
     }
 
     function_4028d0(1, 0);
@@ -15021,25 +15018,7 @@ int32_t function_46a140(void) {
         (int32_t)(intptr_t)g_retdec_map_manager_state,
         (int32_t *)(intptr_t)g_retdec_camera_state);
 
-    node = sentinel != 0 ? *(int32_t *)(uintptr_t)sentinel : 0;
-    while (node != 0 && node != sentinel) {
-        int32_t object = *(int32_t *)(uintptr_t)(node + 8);
-        if (object != 0) {
-            int32_t *vtable = *(int32_t **)(uintptr_t)object;
-            if (vtable != NULL && vtable[0] != 0) {
-                retdec_call_thiscall1(
-                    (void *)(uintptr_t)object,
-                    (void *)(uintptr_t)vtable[0],
-                    (int32_t)(intptr_t)g_retdec_camera_state);
-            }
-        }
-        {
-            int32_t next = *(int32_t *)(uintptr_t)node;
-            if (next == node)
-                break;
-            node = next;
-        }
-    }
+    kinoko_draw_render_queue((int32_t)(intptr_t)g_retdec_camera_state);
 
     if ((render_mask & 0x40000000) != 0) {
         function_466090();
@@ -15049,22 +15028,7 @@ int32_t function_46a140(void) {
 }
 
 // Address range: 0x46a1d0 - 0x46a20d
-int32_t function_46a1d0(void) {
-    int32_t sentinel = g613;
-    int32_t node;
-    if (sentinel == 0)
-        return 0;
-    node = *(int32_t *)(intptr_t)sentinel;
-    *(int32_t *)(intptr_t)sentinel = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-    g614 = 0;
-    while (node != sentinel) {
-        int32_t next = *(int32_t *)(intptr_t)node;
-        _3f__3f_3_40_YAXPAX_40_Z((int32_t *)(intptr_t)node);
-        node = next;
-    }
-    return sentinel;
-}
+int32_t function_46a1d0(void) { return kinoko_clear_render_queue(); }
 
 // Address range: 0x46a210 - 0x46a254
 int32_t function_46a210(int32_t * a1) {
@@ -15073,27 +15037,9 @@ int32_t function_46a210(int32_t * a1) {
     if (trace_index <= 16) {
         retdec_trace("46a210:entry");
         retdec_trace_i32("46a210:value", a1 != NULL ? *a1 : 0);
-        retdec_trace_i32("46a210:g613", g613);
+        retdec_trace_i32("46a210:g613", kinoko_render_queue_identity());
     }
-    int32_t *sentinel;
-    int32_t *node;
-    int32_t *tail;
-
-    if (a1 == NULL || g613 == 0)
-        return 0;
-    sentinel = (int32_t *)(uintptr_t)g613;
-    tail = (int32_t *)(uintptr_t)sentinel[1];
-    node = (int32_t *)malloc(12);
-    if (node == NULL)
-        return 0;
-    node[0] = (int32_t)(uintptr_t)sentinel;
-    node[1] = (int32_t)(uintptr_t)tail;
-    node[2] = *a1;
-    /* 46A224 appends every layer at the tail, preserving script order. */
-    tail[0] = (int32_t)(uintptr_t)node;
-    sentinel[1] = (int32_t)(uintptr_t)node;
-    ++g614;
-    return (int32_t)(uintptr_t)node;
+    return a1 ? kinoko_append_render_queue(*a1) : 0;
 }
 
 // Address range: 0x46a260 - 0x46a2c5
@@ -20498,37 +20444,7 @@ int32_t function_4d4860(void) {
 }
 
 // Address range: 0x4d4930 - 0x4d4978
-int32_t function_4d4930(void) {
-    int32_t * v1 = (int32_t *)g613; // 0x4d4936
-    int32_t v2 = *v1; // 0x4d4936
-    *v1 = g613;
-    int32_t v3 = g613; // 0x4d493a
-    *(int32_t *)(v3 + 4) = v3;
-    g614 = 0;
-    if (v2 == g613) {
-        // 0x4d4970
-        int32_t v4; // 0x4d4930
-        *(int32_t *)(v4 - 4) = v2;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        return &g1224;
-    }
-    // 0x4d4957
-    int32_t v5; // bp-4, 0x4d4930
-    int32_t v6 = &v5; // 0x4d4957
-    int32_t v7 = *(int32_t *)v2; // 0x4d4958
-    *(int32_t *)(v6 - 4) = v2;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (v7 != g613) {
-        int32_t v8 = v7;
-        v7 = *(int32_t *)v8;
-        *(int32_t *)(v6 - 4) = v8;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4d4970
-    *(int32_t *)v6 = g613;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    return &g1224;
-}
+int32_t function_4d4930(void) { return kinoko_clear_render_queue(); }
 
 // Address range: 0x4d4980 - 0x4d498a
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)

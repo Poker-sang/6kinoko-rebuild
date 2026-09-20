@@ -1,3 +1,4 @@
+#include "kinoko/render_queue.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/actor_cleanup.h"
@@ -10,7 +11,6 @@ extern "C" {
 int32_t function_450020(int32_t resource);
 extern int32_t g603, g604;
 extern int32_t g638, g639;
-extern int32_t g613, g614;
 int32_t function_40b3a0(void);
 }
 
@@ -24,11 +24,6 @@ struct StageNode {
     StageNode *next, *previous;
     StageOwner *owner;
 };
-struct RenderQueueNode {
-    RenderQueueNode *next, *previous;
-    void *payload;
-};
-static_assert(sizeof(RenderQueueNode) == 12);
 static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
 static_assert(offsetof(StageOwner, runtime) == 8);
 
@@ -49,7 +44,7 @@ void release_list_storage(int32_t& slot, int32_t& count) {
 }
 
 void release_stage_list() { release_list_storage<StageNode>(g603, g604); }
-void release_render_queue() { release_list_storage<RenderQueueNode>(g613, g614); }
+void release_render_queue() { kinoko_clear_render_queue(); }
 void release_sound_tree() {
     // 4D49D0 -> 46A650's full-range branch -> 4636E0 / 429C70.
     auto* head = reinterpret_cast<int32_t*>(static_cast<uintptr_t>(g638));
@@ -83,16 +78,6 @@ void destroy_owner(StageOwner *owner) {
     }
     std::free(owner);
 }
-}
-
-// Original 4D3E50 owns a 12-byte circular list sentinel. 4D3EB0 is a
-// separate initializer; it must not be merged into this allocation's failure
-// path. The payload word is unused on the sentinel, as in the original.
-extern "C" void kinoko_initialize_render_queue() {
-    auto *head = static_cast<RenderQueueNode *>(std::malloc(sizeof(RenderQueueNode)));
-    if (!head) throw std::bad_alloc();
-    head->next = head->previous = head;
-    g613 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
 }
 
 // Use real CRT registration and callable source addresses; original absolute

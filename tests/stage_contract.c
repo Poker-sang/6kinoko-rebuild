@@ -2000,9 +2000,7 @@ static int test_branch_motion(int32_t manager) {
 static int test_map_transition(int32_t vm, int32_t *root) {
     const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
     int32_t map_state=PTR(g_retdec_map_manager_state);
-    int32_t render_head[3]={0};
-    render_head[0]=render_head[1]=PTR(render_head);
-    g613=PTR(render_head);
+    kinoko_initialize_render_queue();
     function_4a94e0_this(PTR(g722));
     function_4a95c0_this(PTR(g722),PTR(root+1));
     CHECK(function_46f4c0_this(map_state));
@@ -2038,7 +2036,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
         fprintf(stderr,"map transition %s\n",paths[i]);
         CHECK(execute_source(vm,root+2,i==1 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
         CHECK(*(int32_t *)(intptr_t)(map_state+12));
-        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),g614);
+        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),kinoko_render_queue_size());
         CHECK(execute_source(vm,root+2,
             "player <- {x=800.0,y=850.0,vx=2.5,vy=0.0,direction=1.0,hitBottom=1,\n"
             " left=792.0,right=808.0,top=818.0,bottom=850.0,take=100,\n"
@@ -2088,7 +2086,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     int32_t retired_environment[2]={g483,g484};
     CHECK(!retdec_sqrat_get(PTR(root),retired_name,retired_environment));
     function_46a1d0();
-    g613=0;
+    CHECK(kinoko_render_queue_size()==0);
     puts("PASS: first-stage passage load/release/reload, camera, actors, ACT update and draw transforms");
     return 0;
 }
@@ -2794,17 +2792,35 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int32_t render_queue_visits[4], render_queue_visit_count;
+static int32_t __fastcall visit_render_queue(int32_t *object, void *unused, int32_t camera) {
+    (void)unused;
+    if (render_queue_visit_count < 4)
+        render_queue_visits[render_queue_visit_count++] = object[1] + camera;
+    return 0;
+}
 static int test_global_callback_destructor(int32_t vm) {
     int32_t saved_callback[7];
     const int top = function_48aa20(vm);
-    const int32_t saved_queue = g613;
-    const int32_t saved_count = g614;
     CHECK(function_4d3e50() == 0);
-    CHECK(g613 != 0 && g614 == saved_count);
-    int32_t *sentinel = (int32_t *)(intptr_t)g613;
-    CHECK(sentinel[0] == g613 && sentinel[1] == g613);
-    free(sentinel);
-    g613 = saved_queue;
+    CHECK(kinoko_render_queue_size() == 0);
+    CHECK(kinoko_render_queue_first() == kinoko_render_queue_identity());
+    {
+        int32_t table[1]={PTR(visit_render_queue)};
+        int32_t a[2]={PTR(table),7}, b[2]={PTR(table),3};
+        int32_t a_ptr=PTR(a), b_ptr=PTR(b), null_ptr=0;
+        CHECK(function_46a210(&a_ptr));
+        CHECK(function_46a210(&b_ptr));
+        CHECK(function_46a210(&a_ptr));
+        CHECK(function_46a210(&null_ptr));
+        CHECK(kinoko_render_queue_size()==4);
+        render_queue_visit_count=0;
+        kinoko_draw_render_queue(100);
+        CHECK(render_queue_visit_count==3 && render_queue_visits[0]==107 &&
+              render_queue_visits[1]==103 && render_queue_visits[2]==107);
+        function_46a1d0();
+        CHECK(kinoko_render_queue_size()==0 && a[1]==7 && b[1]==3);
+    }
 
     memcpy(saved_callback, g612, sizeof(saved_callback));
     g612[0] = vm;
@@ -6663,4 +6679,3 @@ int main(int argc, char **argv) {
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
-
