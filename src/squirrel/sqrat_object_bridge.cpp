@@ -6,6 +6,7 @@
 #include "sqtable.h"
 #include "squserdata.h"
 #include <atomic>
+#include <cstdlib>
 
 extern "C" {
 extern char g560;
@@ -83,9 +84,6 @@ int32_t set_pair(int32_t id, const int32_t* object, const char* name,
     // Snapshot before pushing: the caller's borrowed pair may be stack-backed.
     const auto receiver = read<HSQOBJECT>(object), incoming = read<HSQOBJECT>(value);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver);
-    sq_pushstring(vm, name, -1);
-    sq_pushobject(vm, incoming);
     if (!raw) {
         static std::atomic<unsigned> traces{0};
         if (traces.fetch_add(1, std::memory_order_relaxed) < 96) {
@@ -95,8 +93,7 @@ int32_t set_pair(int32_t id, const int32_t* object, const char* name,
         }
     }
     // Logging must not do a second scripted get (especially _get on instances).
-    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
-    return SQ_SUCCEEDED(status);
+    return kinoko::script::upstream::sqrat_bind_value(vm, receiver, name, incoming, raw);
 }
 int32_t set_string(int32_t id, const int32_t* object, const char* name,
                    const char* value, bool raw) {
@@ -104,11 +101,7 @@ int32_t set_string(int32_t id, const int32_t* object, const char* name,
     auto vm = pointer<SQVM>(id);
     const auto receiver = read<HSQOBJECT>(object);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver);
-    sq_pushstring(vm, name, -1);
-    sq_pushstring(vm, value ? value : "", -1);
-    const SQRESULT status = raw ? sq_rawset(vm, -3) : sq_newslot(vm, -3, SQFalse);
-    return SQ_SUCCEEDED(status);
+    return kinoko::script::upstream::sqrat_bind_string(vm, receiver, name, value ? value : "", raw);
 }
 int32_t set_value(int32_t vm, const int32_t* object, const char* name,
                   const HSQOBJECT& value, bool raw) {
@@ -134,18 +127,16 @@ extern "C" int32_t retdec_sqrat_root_construct(int32_t storage, int32_t id) {
     object.vtable(kinoko_sqrat_object_vtable());
     object.vm(vm); object.owns(true); object.reset();
     object.vtable(kinoko_sqrat_root_vtable());
-    sq_pushroottable(vm);
-    HSQOBJECT root; sq_getstackobj(vm, -1, &root);
+    const auto root = kinoko::script::upstream::sqrat_root(vm);
     object.value(root);
-    sq_addref(vm, &root);
-    sq_pop(vm, 1);
     trace_pair("450e30:after-pop-type", "450e30:after-pop-data", root);
     return storage;
 }
 extern "C" void retdec_sqrat_object_release(int32_t storage) {
     if (!storage) return;
     ObjectView object(storage);
-    if (object.owns() && object.vm()) { auto value = object.value(); sq_release(object.vm(), &value); }
+    if (object.owns() && object.vm())
+        kinoko::script::upstream::sqrat_release(object.vm(), object.value());
     object.owns(false); object.reset(); object.vtable(kinoko_sqrat_object_vtable());
 }
 extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t out) {
@@ -155,17 +146,26 @@ extern "C" int32_t retdec_sqrat_get(int32_t storage, const char* name, int32_t o
     if (!vm) return 0;
     reset_pair(pointer(out));
     TrimStack stack(vm);
-    sq_pushobject(vm, object.value());
-    sq_pushstring(vm, name, -1);
-    if (SQ_FAILED(sq_get(vm, -2))) return 0;
-    HSQOBJECT value; sq_getstackobj(vm, -1, &value);
-    sq_addref(vm, &value); write(pointer(out), value);
-    return 1;
+    HSQOBJECT value;
+    const bool found = kinoko::script::upstream::sqrat_get(vm, object.value(), name, value);
+    write(pointer(out), value);
+    return found;
+}
+extern "C" void retdec_sqrat_assign_pair(int32_t id, int32_t* destination, const int32_t* source) {
+    if (!id || !destination || !source) return;
+    const auto next = read<HSQOBJECT>(source);
+    const auto previous = read<HSQOBJECT>(destination);
+    auto vm = pointer<SQVM>(id);
+    // These are external Sqrat class/property handles. Internal SQObjectPtr
+    // counts do not register GC roots; retain before release also permits aliasing.
+    kinoko::script::upstream::sqrat_retain(vm, next);
+    kinoko::script::upstream::sqrat_release(vm, previous);
+    write(destination, next);
 }
 extern "C" void retdec_sqrat_release_pair(int32_t id, int32_t* pair) {
     if (!pair) return;
     auto value = read<HSQOBJECT>(pair);
-    if (value._type != OT_NULL || data_bits(value) != 0) sq_release(pointer<SQVM>(id), &value);
+    if (value._type != OT_NULL || data_bits(value) != 0) kinoko::script::upstream::sqrat_release(pointer<SQVM>(id), value);
     reset_pair(pair);
 }
 extern "C" int32_t retdec_sqrat_set_pair(int32_t vm, const int32_t* object, const char* name, const int32_t* value) { return set_pair(vm, object, name, value, false); }
@@ -202,23 +202,34 @@ extern "C" int32_t retdec_sqrat_set_offset_closure(int32_t id, const int32_t* ta
     auto vm = pointer<SQVM>(id);
     const auto receiver = read<HSQOBJECT>(table);
     TrimStack stack(vm);
-    sq_pushobject(vm, receiver); sq_pushstring(vm, name, -1);
-    auto payload = sq_newuserdata(vm, sizeof(offset));
-    if (!payload) return 0;
-    write(payload, offset);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(function)), 1);
-    const auto result = sq_newslot(vm, -3, SQFalse);
-    if (SQ_SUCCEEDED(result)) kinoko_sq_pop(id, 1);
-    return SQ_SUCCEEDED(result);
+    return kinoko::script::upstream::sqrat_bind_function(vm, receiver, name,
+        &offset, sizeof(offset), reinterpret_cast<SQFUNCTION>(pointer(function)), false);
+}
+extern "C" int32_t retdec_sqrat_no_constructor(int32_t id) {
+    return kinoko::script::upstream::sqrat_no_constructor(pointer<SQVM>(id));
+}
+extern "C" int32_t retdec_sqrat_initialize_class(int32_t id, const int32_t* type,
+    const int32_t* set_table, const int32_t* get_table, int32_t constructor,
+    int32_t setter, int32_t getter, int32_t weakref) {
+    if (!id || !type || !set_table || !get_table || !setter || !getter) return 0;
+    auto callback = [](int32_t value) { return reinterpret_cast<SQFUNCTION>(pointer(value)); };
+    return kinoko::script::upstream::sqrat_initialize_class(pointer<SQVM>(id),
+        read<HSQOBJECT>(type), read<HSQOBJECT>(set_table), read<HSQOBJECT>(get_table),
+        callback(constructor), callback(setter), callback(getter), callback(weakref));
+}
+extern "C" int32_t retdec_sqrat_new_class(int32_t id, int32_t* output) {
+    if (!id || !output) return 0;
+    const auto value = kinoko::script::upstream::sqrat_new_class(pointer<SQVM>(id), true);
+    write(output, value);
+    return value._type == OT_CLASS;
 }
 extern "C" int32_t retdec_sqrat_new_table(int32_t id, int32_t* out) {
     if (!id || !out) return 0;
     auto vm = pointer<SQVM>(id);
     reset_pair(out);
     TrimStack stack(vm);
-    sq_newtable(vm);
-    HSQOBJECT value; sq_getstackobj(vm, -1, &value);
-    sq_addref(vm, &value); write(out, value);
+    const auto value = kinoko::script::upstream::sqrat_table(vm);
+    write(out, value);
     static std::atomic<unsigned> traces{0};
     if (traces.fetch_add(1, std::memory_order_relaxed) < 32)
         trace_pair("sqrat:new-table-type", "sqrat:new-table-data", value);
@@ -248,16 +259,30 @@ extern "C" int32_t function_415550_this(int32_t storage, int32_t name, int32_t s
     retdec_trace_squirrel_name("415550:name", name);
     retdec_trace_i32("415550:size", size);
     retdec_trace_i32("415550:native", function);
-    sq_pushobject(vm, object.value()); sq_pushstring(vm, pointer<const char>(name), -1);
-    auto payload = sq_newuserdata(vm, static_cast<SQUnsignedInteger>(size));
-    if (!payload) return 0; // Preserve this registration helper's failure stack.
-    if (size) std::memcpy(payload, pointer(source), static_cast<size_t>(size));
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(function)), 1);
-    // The last argument is a static-slot BYTE, not a native parameter count.
-    sq_newslot(vm, -3, static_slot & 255);
-    const auto result = kinoko_sq_pop(address(vm), 1); // Original returns VM, even on error.
+    // Execute Sqrat's actual BindFunc body, including userdata copy, closure,
+    // publication and pop. The legacy entry returns VM, not BindFunc's void.
+    kinoko::script::upstream::sqrat_bind_function(vm, object.value(),
+        pointer<const char>(name), pointer<const void>(source), static_cast<size_t>(size),
+        reinterpret_cast<SQFUNCTION>(pointer(function)), (static_slot & 255) != 0);
     trace_pair("415550:after-pop-type", "415550:after-pop-data", object.value());
-    return result;
+    return address(vm);
+}
+extern "C" int32_t __fastcall kinoko_sqrat_copy_object(int32_t receiver, void*, int32_t output) {
+    const ObjectView object(receiver);
+    write(pointer(output), kinoko::script::upstream::sqrat_object_value(object.vm(), object.value()));
+    return output;
+}
+extern "C" int32_t __fastcall kinoko_sqrat_object_reference(int32_t receiver, void*) {
+    // This slot returns a reference into the host record, not a temporary
+    // source Object. Only the legacy storage address crosses this ABI bridge.
+    return ObjectView(receiver).payload_address();
+}
+extern "C" int32_t __fastcall kinoko_sqrat_delete_object(int32_t receiver, void*, int32_t flags) {
+    ObjectView object(receiver);
+    object.vtable(kinoko_sqrat_object_vtable()); // visible during a release hook
+    kinoko::script::upstream::sqrat_destroy_object(object.vm(), object.value(), object.owns());
+    if (flags & 1) std::free(pointer(receiver));
+    return receiver;
 }
 extern "C" int32_t function_415810_this(int32_t storage) {
     if (!storage) return -1;
@@ -269,10 +294,10 @@ extern "C" int32_t function_415810_this(int32_t storage) {
         trace_pair("415810:env-type", "415810:env-data", callback.environment);
         trace_pair("415810:closure-type", "415810:closure-data", callback.closure);
     }
-    sq_pushobject(callback.vm, callback.closure);
-    sq_pushobject(callback.vm, callback.environment);
-    // Keep receiver switching for nested/child VMs, the original error-handler
-    // flag and return convention. Do not add a blanket stack reset on failure.
-    kinoko_sq_call(address(callback.vm), 1, 0, static_cast<int32_t>(g560));
-    return kinoko_sq_pop(address(callback.vm), 1);
+    kinoko::script::upstream::sqrat_execute(callback.vm, callback.environment,
+        callback.closure, g560 != 0,
+        [](HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) -> SQRESULT {
+            return kinoko_sq_call(address(vm), count, result, errors);
+        });
+    return address(callback.vm);
 }

@@ -1,0 +1,221 @@
+{
+  "source_commit": "3a34bd24e68f85dde7703dcf3cf6cca0b90353db",
+  "implementation_file": "src/platform/retdec_runtime_compat.cpp",
+  "implementation_sha256": "ca196b12be3af0548d8781383bbc87e212a28430b590a991a0310d10f1c62bdb",
+  "scanned_file_count": 651,
+  "scanned_source_sha256": "52ac952c2d586be31c32324a36c6d15b43871b23cb1d8ee318992043ee8e2f50",
+  "maps": [
+    {
+      "name": "kinoko.map",
+      "sha256": "a873d66efbf208527899eb96bce4705a57f55e85767f3c1117cc79539242d077"
+    },
+    {
+      "name": "stage-contract.map",
+      "sha256": "ad1208898cbae467d01717b7775641e96a5db2dafddb4765b59857482ba7d7d9"
+    }
+  ],
+  "candidates": [
+    {
+      "name": "__atof_l",
+      "line": 170,
+      "lines": 6,
+      "body_sha256": "dcb25964feceff0695799734b7c97ab97c6ba1ff1c3812ab482928d24cb865c9"
+    },
+    {
+      "name": "_3f__3f__L_40_YGXPAXIHP6EX0_40_Z1_40_Z",
+      "line": 221,
+      "lines": 13,
+      "body_sha256": "3900e77240d094023dd6230de36039be522f3cab3c12de05aaf8723ae1a1a31a"
+    }
+  ],
+  "retained": [
+    {
+      "name": "Direct3DCreate9",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "CoInitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoUninitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoCreateInstance",
+      "source_references": [
+        "src/reconstructed/audio_runtime.cpp",
+        "src/reconstructed/direct_input.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "timeGetTime",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_frame_update.cpp",
+        "src/reconstructed/act_resource.cpp",
+        "src/reconstructed/audio_runtime.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/global_registration.cpp",
+        "tests/act_frame_contract.cpp",
+        "tests/stage_contract.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "timeBeginPeriod",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "_vsprintf_compat",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_2_40_YAPAXI_40_Z",
+      "source_references": [
+        "include/kinoko/act_host.h",
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_layer_access.cpp",
+        "src/reconstructed/act_lifetime.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/squirrel_vm_bootstrap.cpp",
+        "tests/act_frame_contract.cpp"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__Tidy_40_exception_40_std_40__40_AAEXXZ",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "_3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z",
+      "source_references": [],
+      "local_references": 1,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "___report_gsfailure",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "__CxxThrowException_40_8",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "retdec_Xinvalid_argument",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r88-quiet\\kinoko.map",
+        "build-runs\\pr7-complete-20260920-r88-quiet\\stage-contract.map"
+      ]
+    },
+    {
+      "name": "unknown_fcd53371",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    }
+  ]
+}

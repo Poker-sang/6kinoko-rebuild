@@ -1,0 +1,17 @@
+{
+  "reason": "Defined bit arithmetic and bounded encoder interpolation; see PATCHES.md",
+  "files": {
+    "lib/sharedbook.c": {
+      "upstream_sha256": "22f064e5f05266b061abb787334ec04b0ed1d3de3ec71891b112065cc8c08ec9",
+      "patched_sha256": "f71cbb894151d33097e2e360433b22192de9df144cc82069907783bdbf649c2e"
+    },
+    "lib/floor1.c": {
+      "upstream_sha256": "ee5f80f0e21d89a98e88b00099ce5bdc4af0c22971c326718641e654a5ff3430",
+      "patched_sha256": "466217a1ae2c535c1dbaac942539f3f43da4294b78614317d4a7d6591c91ff93"
+    },
+    "lib/psy.c": {
+      "upstream_sha256": "4f6fd29a264511ee8bc705dd71764992c3ec3e41cf0e3ada6531113deebcd7be",
+      "patched_sha256": "ea22a1ba4dc1675cb67d4097f77dac8e21565255479d2e97b88b18b6748e19ab"
+    }
+  }
+}

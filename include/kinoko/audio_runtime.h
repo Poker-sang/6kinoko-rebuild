@@ -14,7 +14,6 @@ int32_t function_40a9f0(long double a1);
 int32_t function_40aaa0(void);
 int32_t function_40aac0(void);
 int32_t function_40aae0(void);
-int32_t function_40adb0(int32_t* storage);
 int32_t function_40b3a0(void);
 int32_t function_40b520(void);
 int32_t function_40b8a0(long double a1);

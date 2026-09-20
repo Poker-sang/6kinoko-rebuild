@@ -42,6 +42,18 @@ void StringView::assign(const char* source, std::uint32_t size) const {
     terminate(size);
 }
 
+void StringView::assign(StringView source, std::uint32_t position, std::uint32_t size) const {
+    if (!*this || !source || position > source.length()) return;
+    const auto count = (std::min)(source.length() - position, size);
+    if (storage() == source.storage()) {
+        // 406CC0 erases the suffix then prefix in place, retaining capacity.
+        if (count) std::memmove(data(), data() + position, count);
+        terminate(count);
+    } else {
+        assign(source.data() + position, count);
+    }
+}
+
 void StringView::append(const char* source, std::uint32_t size) const {
     if (!*this) return;
     const auto old_length = length();
@@ -145,6 +157,12 @@ extern "C" int32_t retdec_string_assign_n(int32_t* object, const char* source, u
 }
 extern "C" int32_t retdec_string_assign_cstr(int32_t* object, const char* source) {
     return retdec_string_assign_n(object, source, retdec_safe_c_string_length(source));
+}
+extern "C" int32_t kinoko_string_assign_substring(int32_t object, int32_t source,
+    uint32_t position, uint32_t size) {
+    if (!object || !source) return 0;
+    StringView(pointer(object)).assign(StringView(pointer(source)), position, size);
+    return object;
 }
 // Address range: 0x4038c0 - 0x4039d3
 extern "C" int32_t function_4038c0(int32_t object, const char* source, uint32_t size) {

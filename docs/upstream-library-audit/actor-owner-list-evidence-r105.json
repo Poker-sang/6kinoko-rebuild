@@ -1,0 +1,386 @@
+{
+  "baseline": "3929a81",
+  "database": "beba8679",
+  "queries": [
+    {
+      "addr": "0x463af0",
+      "code": "char __thiscall sub_463AF0(_DWORD *this)\n{\n  bool v2; // cf\n\n  v2 = *(this + 3) < 0x200u; /*0x463af3*/\n  *(this + 16) = -1; /*0x463afa*/\n  *(this + 29) = 0; /*0x463b01*/\n  if ( v2 ) /*0x463b08*/\n  {\n    do /*0x463b20*/\n      (*(void (__thiscall **)(_DWORD *))(*this + 4))(a1: this); /*0x463b17*/\n    while ( *(this + 3) < 0x200u ); /*0x463b20*/\n  }\n  sub_463580(a1: this + 2); /*0x463b28*/\n  return 1; /*0x463b2f*/\n}",
+      "refs": [
+        {
+          "addr": "0x463580",
+          "name": "sub_463580"
+        }
+      ]
+    },
+    {
+      "addr": "0x46aa60",
+      "code": "int __thiscall sub_46AA60(_DWORD *this)\n{\n  int v2; // ecx\n  int v3; // edi\n  int v4; // ebx\n  int v5; // eax\n  int v6; // ecx\n  int v8; // [esp-8h] [ebp-1Ch]\n  int v9; // [esp+Ch] [ebp-8h] BYREF\n  int v10; // [esp+10h] [ebp-4h] BYREF\n\n  v2 = *(this + 1); /*0x46aa6a*/\n  v10 = 0; /*0x46aa6d*/\n  v3 = (*(int (__thiscall **)(int, int *))(*(_DWORD *)v2 + 4))(a1: v2, a2: &v10); /*0x46aa83*/\n  *(_DWORD *)(v3 + 12) = v10; /*0x46aa85*/\n  *(_DWORD *)(v3 + 8) = 1; /*0x46aa88*/\n  v4 = *(this + 2); /*0x46aa8f*/\n  v8 = *(_DWORD *)(v4 + 4); /*0x46aa99*/\n  v9 = v3; /*0x46aa9e*/\n  v5 = sub_4214A0(a1: (char *)v4, a2: v8, a3: (int)&v9); /*0x46aaa1*/\n  v6 = *(this + 3); /*0x46aaa6*/\n  if ( v6 == 1073741822 ) /*0x46aab3*/\n    std::_Xlength_error(a1: \"list<T> too long\"); /*0x46aaba*/\n  *(this + 3) = v6 + 1; /*0x46aac0*/\n  *(_DWORD *)(v4 + 4) = v5; /*0x46aac3*/\n  **(_DWORD **)(v5 + 4) = v5; /*0x46aac9*/\n  return v3; /*0x46aacd*/\n}",
+      "refs": [
+        {
+          "addr": "0x4214a0",
+          "name": "sub_4214A0"
+        },
+        {
+          "addr": "0x473e00",
+          "name": "?_Xlength_error@std@@YAXPBD@Z"
+        },
+        {
+          "addr": "0x4eb1c4",
+          "name": "aListTTooLong",
+          "string": "list<T> too long"
+        }
+      ]
+    },
+    {
+      "addr": "0x46b0a0",
+      "code": "char *__thiscall sub_46B0A0(char *this)\n{\n  _DWORD *v2; // eax\n  char *v3; // eax\n  _DWORD *v4; // eax\n  _DWORD *v5; // eax\n  _DWORD *v6; // eax\n  _DWORD *v7; // eax\n  int v8; // ebx\n  _DWORD *v9; // eax\n  char *v10; // ecx\n  _DWORD v12[3]; // [esp+10h] [ebp-30h] BYREF\n  _DWORD pExceptionObject[4]; // [esp+1Ch] [ebp-24h] BYREF\n  char *v14; // [esp+2Ch] [ebp-14h] BYREF\n  char *v15; // [esp+30h] [ebp-10h] BYREF\n  int v16; // [esp+3Ch] [ebp-4h]\n\n  pExceptionObject[3] = this; /*0x46b0ca*/\n  *(_DWORD *)this = &TObjectManagerBase<Actor,Actor,1>::`vftable'; /*0x46b0cd*/\n  *((_DWORD *)this + 3) = 0; /*0x46b0d7*/\n  v2 = operator new(Size: 0xCu); /*0x46b0da*/\n  if ( v2 != nullptr ) /*0x46b0e4*/\n  {\n    *((_DWORD *)this + 2) = v2; /*0x46b0ea*/\n    *v2 = v2; /*0x46b0ed*/\n    *(_DWORD *)(*((_DWORD *)this + 2) + 4) = *((_DWORD *)this + 2); /*0x46b0f2*/\n    v16 = 1; /*0x46b0f7*/\n    v3 = (char *)operator new(Size: 0x50u); /*0x46b0fa*/\n    v14 = v3; /*0x46b102*/\n    if ( v3 != nullptr ) /*0x46b10b*/\n      v4 = sub_46A2D0(this: v3); /*0x46b10f*/\n    else\n      v4 = nullptr; /*0x46b116*/\n    *((_DWORD *)this + 1) = v4; /*0x46b118*/\n    *(_DWORD *)this = &ActorManager::`vftable'; /*0x46b11b*/\n    v16 = 3; /*0x46b123*/\n    *((_DWORD *)this + 11) = 0; /*0x46b12a*/\n    v5 = operator new(Size: 0x18u); /*0x46b12d*/\n    if ( v5 == nullptr ) /*0x46b137*/\n    {\n      v14 = nullptr; /*0x46b27d*/\n      std::exception::exception(this: (std::exception *)v12, a2: (const char *const *)&v14); /*0x46b280*/\n      v12[0] = &std::bad_alloc::`vftable'; /*0x46b28e*/\n      _CxxThrowException(pExceptionObject: v12, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46b295*/\n    }\n    *((_DWORD *)this + 10) = v5; /*0x46b13d*/\n    *v5 = v5; /*0x46b140*/\n    *(_DWORD *)(*((_DWORD *)this + 10) + 4) = *((_DWORD *)this + 10); /*0x46b145*/\n    *(_DWORD *)(*((_DWORD *)this + 10) + 8) = *((_DWORD *)this + 10); /*0x46b14b*/\n    *(_BYTE *)(*((_DWORD *)this + 10) + 20) = 1; /*0x46b151*/\n    *(_BYTE *)(*((_DWORD *)this + 10) + 21) = 1; /*0x46b158*/\n    LOBYTE(v16) = 4; /*0x46b15e*/\n    *((_DWORD *)this + 14) = 0; /*0x46b162*/\n    v6 = operator new(Size: 0x38u); /*0x46b165*/\n    if ( v6 == nullptr ) /*0x46b16f*/\n    {\n      v15 = nullptr; /*0x46b259*/\n      std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v15); /*0x46b25c*/\n      pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x46b26a*/\n      _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46b271*/\n    }\n    *((_DWORD *)this + 13) = v6; /*0x46b175*/\n    *v6 = v6; /*0x46b178*/\n    *(_DWORD *)(*((_DWORD *)this + 13) + 4) = *((_DWORD *)this + 13); /*0x46b17d*/\n    *((_DWORD *)this + 17) = 0; /*0x46b180*/\n    *((_DWORD *)this + 18) = 0; /*0x46b183*/\n    *((_DWORD *)this + 19) = 0; /*0x46b186*/\n    LOBYTE(v16) = 6; /*0x46b18b*/\n    *((_DWORD *)this + 23) = 0; /*0x46b18f*/\n    v7 = operator new(Size: 0x14u); /*0x46b192*/\n    if ( v7 != nullptr ) /*0x46b19c*/\n    {\n      *((_DWORD *)this + 22) = v7; /*0x46b1a2*/\n      *v7 = v7; /*0x46b1a5*/\n      *(_DWORD *)(*((_DWORD *)this + 22) + 4) = *((_DWORD *)this + 22); /*0x46b1aa*/\n      *(_DWORD *)(*((_DWORD *)this + 22) + 8) = *((_DWORD *)this + 22); /*0x46b1b0*/\n      *(_BYTE *)(*((_DWORD *)this + 22) + 16) = 1; /*0x46b1b6*/\n      *(_BYTE *)(*((_DWORD *)this + 22) + 17) = 1; /*0x46b1bd*/\n      *((_DWORD *)this + 25) = 0; /*0x46b1c1*/\n      *((_DWORD *)this + 26) = 0; /*0x46b1c4*/\n      *((_DWORD *)this + 27) = 0; /*0x46b1c7*/\n      *((_DWORD *)this + 31) = 0; /*0x46b1ca*/\n      *((_DWORD *)this + 32) = 0; /*0x46b1cd*/\n      *((_DWORD *)this + 33) = 0; /*0x46b1d3*/\n      LOBYTE(v16) = 9; /*0x46b1dc*/\n      v8 = 0; /*0x46b1e0*/\n      v15 = this + 20; /*0x46b1e2*/\n      do /*0x46b218*/\n      {\n        v9 = operator new(Size: 0x14u); /*0x46b1e7*/\n        if ( v9 != nullptr ) /*0x46b1f1*/\n        {\n          *v9 = &ActorManager::ActorManagerRenderLayer::`vftable'; /*0x46b1f3*/\n          v9[1] = this; /*0x46b1f9*/\n          v9[2] = v8; /*0x46b1fc*/\n          v9[3] = 0; /*0x46b1ff*/\n          v9[4] = 0; /*0x46b202*/\n        }\n        else\n        {\n          v9 = nullptr; /*0x46b207*/\n        }\n        v10 = v15; /*0x46b209*/\n        *(_DWORD *)v15 = v9; /*0x46b20c*/\n        ++v8; /*0x46b20e*/\n        v15 = v10 + 4; /*0x46b212*/\n      }\n      while ( v8 < 4 ); /*0x46b218*/\n      return this; /*0x46b21c*/\n    }\n  }\n  v15 = nullptr; /*0x46b235*/\n  std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v15); /*0x46b238*/\n  pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x46b246*/\n  _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46b24d*/\n}",
+      "refs": [
+        {
+          "addr": "0x4d5a5c",
+          "name": "??_7?$TObjectManagerBase@VActor@@V1@$00@@6B@"
+        },
+        {
+          "addr": "0x4ab3fc",
+          "name": "??2@YAPAXI@Z"
+        },
+        {
+          "addr": "0x46a2d0",
+          "name": "sub_46A2D0"
+        },
+        {
+          "addr": "0x4d5a68",
+          "name": "??_7ActorManager@@6B@"
+        },
+        {
+          "addr": "0x4abd0c",
+          "name": "??0exception@std@@QAE@ABQBD@Z"
+        },
+        {
+          "addr": "0x4d5878",
+          "name": "??_7bad_alloc@std@@6B@"
+        },
+        {
+          "addr": "0x4aba7b",
+          "name": "__CxxThrowException@8"
+        },
+        {
+          "addr": "0x4f7308",
+          "name": "__TI2?AVbad_alloc@std@@"
+        },
+        {
+          "addr": "0x4d59bc",
+          "name": "??_7ActorManagerRenderLayer@ActorManager@@6B@"
+        }
+      ]
+    },
+    {
+      "addr": "0x46a9c0",
+      "code": "void __thiscall sub_46A9C0(int this)\n{\n  void **v2; // esi\n  void (__thiscall ***v3)(_DWORD, int); // ecx\n  _DWORD *v4; // eax\n  _DWORD *v5; // edi\n\n  *(_DWORD *)this = &TObjectManagerBase<Actor,Actor,1>::`vftable'; /*0x46a9ea*/\n  v2 = (void **)(this + 8); /*0x46a9f0*/\n  sub_463580((_DWORD **)this, a2: (_DWORD **)(this + 8)); /*0x46a9fb*/\n  v3 = *(void (__thiscall ****)(_DWORD, int))(this + 4); /*0x46aa00*/\n  if ( v3 != nullptr ) /*0x46aa05*/\n    (**v3)(a1: v3, a2: 1); /*0x46aa0d*/\n  v4 = *(_DWORD **)*v2; /*0x46aa11*/\n  *(_DWORD *)*v2 = *v2; /*0x46aa13*/\n  *((_DWORD *)*v2 + 1) = *v2; /*0x46aa17*/\n  v2[1] = nullptr; /*0x46aa1a*/\n  if ( v4 != *v2 ) /*0x46aa23*/\n  {\n    do /*0x46aa34*/\n    {\n      v5 = (_DWORD *)*v4; /*0x46aa25*/\n      operator delete(a1: v4); /*0x46aa28*/\n      v4 = v5; /*0x46aa30*/\n    }\n    while ( v5 != *v2 ); /*0x46aa34*/\n  }\n  operator delete(a1: *v2); /*0x46aa39*/\n}",
+      "refs": [
+        {
+          "addr": "0x4d5a5c",
+          "name": "??_7?$TObjectManagerBase@VActor@@V1@$00@@6B@"
+        },
+        {
+          "addr": "0x463580",
+          "name": "sub_463580"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        }
+      ]
+    },
+    {
+      "addr": "0x463580",
+      "code": "_DWORD *__thiscall sub_463580(_DWORD **this, _DWORD **a2)\n{\n  _DWORD *i; // esi\n  int v4; // eax\n  _DWORD *result; // eax\n  _DWORD *v7; // esi\n\n  for ( i = (_DWORD *)**a2; i != *a2; i = (_DWORD *)*i ) /*0x463591*/\n  {\n    v4 = i[2]; /*0x463593*/\n    if ( (*(_DWORD *)(v4 + 8))-- == 1 ) /*0x463596*/\n      (*(void (__thiscall **)(_DWORD, _DWORD))(**(this + 1) + 8))(a1: *(this + 1), a2: *(_DWORD *)(i[2] + 12)); /*0x4635aa*/\n  }\n  result = (_DWORD *)**a2; /*0x4635b4*/\n  **a2 = *a2; /*0x4635b6*/\n  (*a2)[1] = *a2; /*0x4635ba*/\n  a2[1] = nullptr; /*0x4635bd*/\n  if ( result != *a2 ) /*0x4635c6*/\n  {\n    do /*0x4635d7*/\n    {\n      v7 = (_DWORD *)*result; /*0x4635c8*/\n      operator delete(a1: result); /*0x4635cb*/\n      result = v7; /*0x4635d3*/\n    }\n    while ( v7 != *a2 ); /*0x4635d7*/\n  }\n  return result; /*0x4635d9*/\n}",
+      "refs": [
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        }
+      ]
+    },
+    {
+      "addr": "0x46aae0",
+      "code": "void *__thiscall sub_46AAE0(void *this, char a2)\n{\n  sub_46A9C0(); /*0x46aae6*/\n  if ( (a2 & 1) != 0 ) /*0x46aaef*/\n    operator delete(a1: this); /*0x46aaf2*/\n  return this; /*0x46aafc*/\n}",
+      "refs": [
+        {
+          "addr": "0x46a9c0",
+          "name": "sub_46A9C0"
+        },
+        {
+          "addr": "0x4ab2a6",
+          "name": "??3@YAXPAX@Z"
+        }
+      ]
+    },
+    {
+      "addr": "0x463580",
+      "asm": {
+        "name": "sub_463580",
+        "start_ea": "0x463580",
+        "segment": ".text",
+        "lines": [
+          {
+            "addr": "463580",
+            "instruction": "push ebp",
+            "label": "sub_463580"
+          },
+          {
+            "addr": "463581",
+            "instruction": "mov ebp, esp"
+          },
+          {
+            "addr": "463583",
+            "instruction": "push ebx"
+          },
+          {
+            "addr": "463584",
+            "instruction": "push esi"
+          },
+          {
+            "addr": "463585",
+            "instruction": "push edi"
+          },
+          {
+            "addr": "463586",
+            "instruction": "mov edi, [ebp+arg_0]"
+          },
+          {
+            "addr": "463589",
+            "instruction": "mov eax, [edi]"
+          },
+          {
+            "addr": "46358b",
+            "instruction": "mov esi, [eax]"
+          },
+          {
+            "addr": "46358d",
+            "instruction": "mov ebx, ecx"
+          },
+          {
+            "addr": "46358f",
+            "instruction": "cmp esi, eax"
+          },
+          {
+            "addr": "463591",
+            "instruction": "jz short loc_4635B2",
+            "refs": [
+              {
+                "addr": "0x4635b2",
+                "name": "loc_4635B2"
+              }
+            ]
+          },
+          {
+            "addr": "463593",
+            "instruction": "mov eax, [esi+8]",
+            "label": "loc_463593"
+          },
+          {
+            "addr": "463596",
+            "instruction": "dec dword ptr [eax+8]"
+          },
+          {
+            "addr": "463599",
+            "instruction": "jnz short loc_4635AC",
+            "refs": [
+              {
+                "addr": "0x4635ac",
+                "name": "loc_4635AC"
+              }
+            ]
+          },
+          {
+            "addr": "46359b",
+            "instruction": "mov eax, [esi+8]"
+          },
+          {
+            "addr": "46359e",
+            "instruction": "mov eax, [eax+0Ch]"
+          },
+          {
+            "addr": "4635a1",
+            "instruction": "mov ecx, [ebx+4]"
+          },
+          {
+            "addr": "4635a4",
+            "instruction": "mov edx, [ecx]"
+          },
+          {
+            "addr": "4635a6",
+            "instruction": "push eax"
+          },
+          {
+            "addr": "4635a7",
+            "instruction": "mov eax, [edx+8]"
+          },
+          {
+            "addr": "4635aa",
+            "instruction": "call eax"
+          },
+          {
+            "addr": "4635ac",
+            "instruction": "mov esi, [esi]",
+            "label": "loc_4635AC"
+          },
+          {
+            "addr": "4635ae",
+            "instruction": "cmp esi, [edi]"
+          },
+          {
+            "addr": "4635b0",
+            "instruction": "jnz short loc_463593",
+            "refs": [
+              {
+                "addr": "0x463593",
+                "name": "loc_463593"
+              }
+            ]
+          },
+          {
+            "addr": "4635b2",
+            "instruction": "mov ecx, [edi]",
+            "label": "loc_4635B2"
+          },
+          {
+            "addr": "4635b4",
+            "instruction": "mov eax, [ecx]"
+          },
+          {
+            "addr": "4635b6",
+            "instruction": "mov [ecx], ecx"
+          },
+          {
+            "addr": "4635b8",
+            "instruction": "mov ecx, [edi]"
+          },
+          {
+            "addr": "4635ba",
+            "instruction": "mov [ecx+4], ecx"
+          },
+          {
+            "addr": "4635bd",
+            "instruction": "mov dword ptr [edi+4], 0"
+          },
+          {
+            "addr": "4635c4",
+            "instruction": "cmp eax, [edi]"
+          },
+          {
+            "addr": "4635c6",
+            "instruction": "jz short loc_4635D9",
+            "refs": [
+              {
+                "addr": "0x4635d9",
+                "name": "loc_4635D9"
+              }
+            ]
+          },
+          {
+            "addr": "4635c8",
+            "instruction": "mov esi, [eax]",
+            "label": "loc_4635C8"
+          },
+          {
+            "addr": "4635ca",
+            "instruction": "push eax; void *",
+            "comments": [
+              "void *"
+            ]
+          },
+          {
+            "addr": "4635cb",
+            "instruction": "call ??3@YAXPAX@Z; operator delete(void *)",
+            "refs": [
+              {
+                "addr": "0x4ab2a6",
+                "name": "??3@YAXPAX@Z"
+              }
+            ]
+          },
+          {
+            "addr": "4635d0",
+            "instruction": "add esp, 4"
+          },
+          {
+            "addr": "4635d3",
+            "instruction": "mov eax, esi"
+          },
+          {
+            "addr": "4635d5",
+            "instruction": "cmp esi, [edi]"
+          },
+          {
+            "addr": "4635d7",
+            "instruction": "jnz short loc_4635C8",
+            "refs": [
+              {
+                "addr": "0x4635c8",
+                "name": "loc_4635C8"
+              }
+            ]
+          },
+          {
+            "addr": "4635d9",
+            "instruction": "pop edi",
+            "label": "loc_4635D9"
+          },
+          {
+            "addr": "4635da",
+            "instruction": "pop esi"
+          },
+          {
+            "addr": "4635db",
+            "instruction": "pop ebx"
+          },
+          {
+            "addr": "4635dc",
+            "instruction": "pop ebp"
+          },
+          {
+            "addr": "4635dd",
+            "instruction": "retn 4"
+          }
+        ],
+        "stack_frame": [
+          {
+            "name": "__saved_registers",
+            "offset": "0xc",
+            "size": "0x4",
+            "type": "_DWORD"
+          },
+          {
+            "name": "__return_address",
+            "offset": "0x10",
+            "size": "0x4",
+            "type": "_UNKNOWN *"
+          },
+          {
+            "name": "arg_0",
+            "offset": "0x14",
+            "size": "0x4",
+            "type": "_DWORD"
+          }
+        ],
+        "return_type": "_DWORD *",
+        "arguments": [
+          {
+            "name": "this",
+            "type": "_DWORD **"
+          },
+          {
+            "name": "arg1",
+            "type": "_DWORD **"
+          }
+        ]
+      },
+      "instruction_count": 44,
+      "total_instructions": null,
+      "cursor": {
+        "done": true
+      }
+    }
+  ]
+}

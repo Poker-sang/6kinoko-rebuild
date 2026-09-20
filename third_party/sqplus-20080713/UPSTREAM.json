@@ -1,0 +1,31 @@
+{
+  "release": "sqplus-20080713",
+  "url": "https://sourceforge.net/projects/sqplus/files/latest/download",
+  "archive_sha256": "56b3c39fe77a19f5bad9ee0982e5ecb8e4f86625b3bfcd31945589e5c613cd56",
+  "files": {
+    "COPYRIGHT": "21c2769a74e903f446f741cf87c35214711caa2dfaf741f4820c7497c3b88734",
+    "sqplus/SqPlus.cpp": "aa286c545dc3655cdb81658f830d41053cde5e2ba25ba7ee3e90eaf9cce11aac",
+    "sqplus/SqPlusCallTemplates.h": "c13e2f29fb070660e1d3f3e6d35796c79fe6ad2c553b097f5b2e3d14aa10cf98",
+    "sqplus/SqPlusConst.h": "14b0f4a4a1e6d389ea4595d5e77a4aa08e7d6d176fdb8cc160a39a6907504290",
+    "sqplus/SqPlusFunctionCallImpl.h": "b802b88fc9b0155adbd060009c2c881ccf32e45fbcccd9c0a2b3bb4b87310efe",
+    "sqplus/SqPlusOCharBuf.cpp": "a46f06acc36a3d893222f3b22548eb7ab0ad697a2a061542f08618713136ae7c",
+    "sqplus/SqPlusOCharBuf.h": "879b04b3ccab9b108945f4dc94d31f52546b1ae1d7fecfb8400d8a7c5e42b553",
+    "sqplus/SqPlusOverload.h": "5b795035cf301fb030fa93e5a43f633537e58996b24797af66ff274c8112d7e2",
+    "sqplus/SqPlusSetup.h": "280a97ea44f2faa73369c6eddc261068061f7dfbd930858f98f41b75544a7bfb",
+    "sqplus/SqPlusSmartPointer.h": "02eeec65c477a57f5704992612bbd8fed5edd088e024aafc7bbad1df8c99565c",
+    "sqplus/SqPlusTypeMask.h": "98e582ee834c4b96d801354bb6366418087dc2e8a370b2602c7b77ee62ea1f6c",
+    "sqplus/SqPlusUtf8.cpp": "45ca451ea11be363e5cc2ae4514b6156f6d7397c94620349de076cf15917fa45",
+    "sqplus/SqPlusUtf8.h": "9a28bf5cc9baf5078d2dd73bc678fa498cf3f8eab28e55d4edbe6e5aa86cf59f",
+    "sqplus/SquirrelBindingsUtils.cpp": "eacbc90f97e59a751ccadfa548193dfa8a5627366d1dc91dfcff0b32ddae2dd0",
+    "sqplus/SquirrelBindingsUtils.h": "79f2bfaecb5d6695075606dad6ac64f547519836ac34463d99e5fe0aa6f7aa2d",
+    "sqplus/SquirrelBindingsUtilsWin32.cpp": "98665ee01a12448dbdaf723e456f17bc1f1748c0f7e85cea99d6f3e805b2f244",
+    "sqplus/SquirrelBindingsUtilsWin32.h": "4796f4615809b434cb6e2a9b818963b239fcc6380546590b66541a2584d09d4d",
+    "sqplus/SquirrelObject.cpp": "d0d7b7af772572faa72f59f965edd329150a6c060ca4cfcaece8035b15a79f06",
+    "sqplus/SquirrelObject.h": "55092ee5eff8b64230423fecb414acf3cf02328b770156d763d01cf3c6be1368",
+    "sqplus/SquirrelVM.cpp": "28cefe7dd5c421bd1c298c16b8d6ee3954c0016e52dafc010634b99fced38163",
+    "sqplus/SquirrelVM.h": "00b3e88ae1cd2c328b7424464fc297803411b8cf2a5c4f1e9cc6d6f8098bd32b",
+    "sqplus/changes.txt": "bed7bc449aedf163c238fea47a7c882b1ca222e25d7da4dd926cbb02c4231776",
+    "sqplus/sqplus.h": "c284abe781250b47ce21b466c4211b60c21d3d90923b7a944ff8cd4b565aae05",
+    "sqplus/sqplusWin32.h": "d6e4a04ce75df2921b76be5cb63b0828ad74b8f84011cdae28e1745185b26dd6"
+  }
+}

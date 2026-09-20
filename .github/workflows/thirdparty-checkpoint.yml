@@ -38,7 +38,7 @@ jobs:
           git push origin HEAD:refactor/legacy-library-boundaries-20260920
       - name: Check graph audit contracts after committing
         run: python -m unittest discover -s tests -p test_legacy_islands.py -v
-      - name: Run quiet and diagnostic Win32 verification
+      - name: Run quiet Win32 verification
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run windows-x86.yml --ref refactor/legacy-library-boundaries-20260920

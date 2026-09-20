@@ -1,0 +1,941 @@
+# Production source replacement, 2026-09-20
+
+This continuation implements source replacement after the earlier acceptance-only
+checkpoint. It does not claim that all remaining legacy ABI compatibility code
+has been removed.
+
+## Binding operations
+
+Production now executes Sqrat BindFunc, Object getters/destruction and Function
+execution, and SqPlus CreateArray, integer-key string SetValue, NewUserData,
+GetUserData/RawGetUserData, GetTypeTag, SetDelegate and CreateInstance through
+normally constructed upstream objects. The old operation bodies are deleted;
+remaining wrappers marshal unaligned host records and preserve the recovered
+return values, reference transfers and error policy. No upstream vtable is
+installed in a byte record. Three generated Sqrat virtuals (4029F0, 402A10,
+453580) are deleted and nine legacy vtables point at typed x86 entry adapters.
+
+IDA evidence: original 415810 pushes closure then environment, calls 48ACE0
+with one argument/no result/the byte at 5109DB, then pops one slot. The source
+Function body performs that same sequence; the host passes its existing scoped
+call entry and error flag without changing global Sqrat settings. Original
+4029F0 and 453580 use ECX receivers and callee stack cleanup, tested by invoking
+the replacement entries through thiscall function pointers. The instance factory
+uses the source exception path but catches it before the recovered C boundary.
+
+## Retired audio implementation
+
+The actual BgmTrack owns VorbisDecoder; its State destructor executes upstream
+ov_clear. BufferRecord is a request record, not an OggVorbis_File or a C++
+decoder. The private manager never dispatches through the old handle/decoder
+vtable words. Removing their assignments and host exports disconnects the
+superseded implementation. The unused exported handle-table constructor is also
+removed; native record sizes and used field offsets stay statically checked.
+
+[Closed-component evidence](retired-audio-island.json) records source commit
+f19c0aca93172fe3c172a334ae8378b50aa00c9b and both matching link maps. The audit
+includes named functions, all retained source roots, tables, address-taking,
+exact numeric addresses and interior literal references. It finds no external
+inbound references to the selected component: 33 functions, seven data records,
+1,595 definition lines. 27 nodes were still retained in those maps. All selected
+bodies, prototypes and tables are now deleted, including the old ov_clear path
+47AED0, codec teardown helpers, retired BgmBuffer/handle-manager virtuals and
+their private support. The immutable original decompilation remains available.
+This is a source-graph boundary proof, not proof for arbitrary computed pointers.
+
+## Validation checkpoints
+
+- 8c54ad6: r2 diagnostic/quiet builds, 52/52 CTests each.
+- 56417b8: r3 diagnostic/quiet builds, 52/52 CTests each; Sqrat virtual ABI cases.
+- f19c0ac: r4 diagnostic/quiet builds, 52/52 CTests each; retired audio identities.
+- 4a7b21efdb84c5975a62e9a499fabecf4c1f6422: independent r5 diagnostic/quiet
+  builds, 52/52 CTests each. DAT copied and SHA256-verified beside each EXE;
+  run_staged reports WORKING_DIRECTORY unset and EXIT_CODE 0 for both. The
+  assistant observed first-level frames with airborne actors and monsters in
+  both variants. User operated the game and separately confirmed both normal;
+  injected jump/close actions were blocked by concurrent user input, so they
+  are not claimed as successful automated actions. Quiet produced no trace.
+  All artifacts remain under their original build-runs/runtime-builds paths.
+  Hash index: [r5 artifacts](source-replacement-artifacts-20260920.json).
+- Following the user's updated instruction, future local and Windows CI
+  verification uses the quiet variant only. r5's already-generated diagnostic
+  artifacts remain retained; this does not require another dual run.
+
+Remaining game-specific Sqrat/SqPlus registration, native descriptors, legacy
+Boost blocks and CRT exception/RTTI compatibility are separate migration work;
+this change does not represent those adapters as upstream implementations.
+
+## Further source migration (continuation)
+
+- f4e5eb6/e125388: Actor ownership uses actual Boost counted objects; the manual
+  fallback and retired control vtable were removed. r7 quiet: 52/52.
+- e4560fe: source SqPlus native-instance/hierarchy/function factories. r8: 52/52.
+- 8351dc0/94a19e4: actual ClassType descriptors replace fabricated descriptor
+  records. The pinned closed-component audit removes 11 functions and 8 tables.
+  r9 quiet: 52/52.
+- c9054f2: source VarRef constructor registers metadata using a borrowed root.
+  r10 quiet: 52/52.
+- 94aa6af: source variable creation/handlers/string reads. r11 quiet: 52/52.
+- 085c2e1: source getVarInfo metadata lookup. r12 quiet: 52/52.
+- 002cc97: IDA recovered explicit Actor/Camera/MapManager copy receivers. The
+  receiverless SqPlus assignment implementation is deleted. Actor assignment
+  retains/releases actual Boost controls rather than manually editing counts.
+  r13 quiet: 52/52, including real-VM Actor assignment/self-assignment with
+  strong/weak counts, object references and the untouched +372 field checked.
+
+Each batch is isolated under build-runs/pr7-complete-20260920-rN-quiet and the
+matching runtime-builds directory, with source-commit.txt and configure/build/
+ctest logs preserved. See the later r18 user-run observation below.
+
+Remaining work includes old Sqrat registration/constructor paths still referenced
+by game vtables, additional recovered property-control tables, and incomplete
+CRT/game-copy compatibility. An attempted dead-code audit correctly rejected
+4A95C0 because game copy functions still referenced it; those callers were fixed,
+not ignored. Input's original ClassType copy calls 46EBD0 (IDA), so the retained
+no-op game callback is not evidence of a completed copy implementation.
+
+## Further checkpoints: r14–r23
+
+- c2e1327/ee860c9 through 758ef20: source Sqrat value/function binding,
+  property dispatch, weakref and scalar conversions. r14 failed two lifetime
+  tests; 4f58186 fixed the borrowed-object copy ownership and r15 passed 52/52.
+  r16 did not compile; f34c3aa corrected class specialization/dependent-base
+  lookup. r17 and r18 each passed 52/52 in quiet builds.
+- f6b000b/ae5dce8: source class creation and removal of 28 disconnected property
+  control tables (retired-property-controls.json). r19 quiet passed 52/52.
+- e553af2: source SqPlus instance-storage selection replaces the host's
+  static/constant/member-offset branch. r20 quiet passed 52/52.
+- 70e2257: native instance creation shares source ClassType::PushInstance's
+  operation sequence. r21 quiet passed 52/52.
+- 69962f9/68b8e62: source InitClass registration replaces four repeated host
+  registration blocks. IDA 421734/421785 confirms static property-table slots.
+  r22 passed 51/52: its new test incorrectly tried to change a locked class;
+  Squirrel 2.2.2's sq_newslot return did not prove the slot had changed. The
+  corrected test checks that an instance cannot overwrite the static table.
+  r23 quiet passed 52/52. Failed artifacts are preserved.
+
+The user launched the staged r18 quiet EXE and confirmed it worked. An observed
+frame showed an airborne actor and monsters, but was a later level. No automated
+jump, first-level verification, or clean exit is claimed for that run. The
+existing r18 gameplay.log records the earlier launch blocked by r5's named mutex
+(EXIT_CODE 1); it is not evidence of the user's subsequent successful launch.
+The user chose to close old games themselves; no game was forcibly closed.
+
+Original disassembly evidence for the next work is retained in r20:
+4517C0 (CreateLayer2D takes ECX plus a by-value old string and another argument),
+420A90/4216A0 (class initialization), and 46D750/46E530/46D2A0 (Input's nested
+container copy). These are still migration work, not completed functionality.
+
+
+## Further checkpoints: r24–r31
+
+- d7600fa/19e3c57: callback references now use source Sqrat::Function lifetime
+  operations, including script destruction. r24 and r25 passed 52/52.
+- 85f3a4e: original C2DLayout registration uses source binding; original spelling
+  is coS_z. r26 passed 51/52 because the new test script had invalid syntax.
+- efd3356: removed 14 functions/6 globals (1181 lines) in the closed C2DLayout
+  registry component. r27 passed 46/52; six moving-map tests crashed.
+- 3ac6a8c: global Sqrat handles now retain external VM references rather than
+  SQObjectPtr internal references. Necessary lifetime correction, but r28 still
+  passed only 46/52. GC was not the sole root cause of those failures.
+- 52431a9: the linker placed unrelated globals between separately declared
+  handle words. Writing a pair overwrote a different handle. Six pairs now use
+  explicit two-word arrays. r29 passed 52/52 with the same GC/registration order.
+- 396f28e: original CActLayer registration uses source NoConstructor and binding.
+  Removed invented layer thisAct field; original script-table thisAct remains.
+  r30 passed 52/52.
+- 572bac4: removed 9 functions/7 globals (643 lines) in the closed CActLayer
+  registry component. r31 passed 52/52. All failed artifacts are preserved.
+
+These are automated quiet-build checks, not additional gameplay observations.
+Complete replacement is still pending: remaining registries, legacy shared
+controls, owning container copies and CRT compatibility need further recovery.
+
+
+## Further checkpoints: r32–r37
+
+- 93b669f/c25ed99: C2DMapLayout registration now uses source Sqrat. Restored
+  read-only left/right and original asymmetric fractional chip setters: f_left
+  also truncates into left, f_top does not update top. r32 failed the shared new
+  contract because adjacent Squirrel statements lacked newlines; r33 passed 52/52.
+- 305bf9f: removed the retired map registry (22 functions, 10 globals, 1296
+  lines). CActResourceChip uses source registration and native ChipInfo access;
+  SetChipFlag preserves the original bit-zero-only condition. r34 passed 52/52.
+- 988cd99: removed the chip registry (19 functions, 22 globals, 836 lines).
+  CActResource2D/CActRenderTarget source property bindings replace detached
+  instance fields. Original load/unload ABI, suffix probing and ownership are
+  restored; the texture reader still maps DDS/BMP/PNG to CV2. r35 passed 52/52.
+- 4fd8e23: six resource publication virtual entries now use source instance
+  creation with explicit receivers. Ordinary slots permit the native name
+  fallback; raw script slots reject an empty name. r36 passed 52/52.
+- 02c8081: removed the texture registry (38 functions, 22 globals, 2595 lines).
+  Original C2DLayout/C2DMapLayout registration virtuals use explicit receivers,
+  distinct native wrappers and the original layer pointer aliases. Removed the
+  redundant no-op layout value publisher. r37 passed 52/52.
+
+DAT staging was verified for r33, r35 and r37. The user-owned r18 process is still
+running (observed PID 17656); it was not closed and no new gameplay result is
+claimed. IDA evidence for these entries is retained under r31/r33–r36.
+
+
+## Further checkpoints: r38–r42
+
+- 7e6ad94: removed 22 functions/15 globals (362 lines) in the retired resource
+  publication component. r38 passed 52/52.
+- b2ee5fc: ACT source compilation now uses real Sqrat::Script in the current VM,
+  preserving that VM's constants/enums. Source Run shares its operation sequence
+  with the embedding's explicit-environment entry. r39 passed 52/52.
+- c3113b7: embedded bytecode also executes through Script; current VM receiver
+  scope covers compilation/error callbacks. r40 passed 52/52.
+- 6168f06: original ACT registration and local CompileFile use source operations
+  and std::map for environment ownership. File compilation refreshes callbacks;
+  original bytecode files execute twice (416A8D then 416AE8), inline bytecode once.
+  The extension string is now a complete 28-byte record rather than separately
+  linked globals. r41 passed 52/52, including those behavioral contracts.
+- 38df4df: removed the old file-compiler component (5 functions, 1 global,
+  180 lines). Layer construction uses source Table and empty Instance records,
+  and script deletion uses explicit ECX receiver cleanup. r42 failed to compile:
+  act_document.cpp needed the source Squirrel type header. af56250 adds it.
+
+IDA's e8d7ff83 worker became unreachable; the required start/open scripts restored
+original analysis as session 3c59c915. Restored evidence is under r41. No gameplay
+claim is added for these batches; work has continued without closing the user's
+r18 game.
+
+## Further checkpoints: r43–r45
+
+- af56250: r43 passed 52/52 after the missing Squirrel type header fix; DAT staged.
+- d8ef184: removed the retired script ownership/registry component (9 functions,
+  2 globals, 1179 lines). r44 passed 52/52.
+- 845ca41: Input copy now retains its SqPlus object through source operations,
+  deep-copies device/key vectors, and preserves the shallow device-pointer deque.
+  Existing device vtables, allocator bytes and iterator proxy are preserved.
+  The original device deleting virtual now receives ECX explicitly. r45 passed
+  52/52, covering independent storage, wrap/growth, shrink, empty and self-copy.
+  DAT staged with size/SHA256 verification.
+
+The old Boost factory seeds are still source-reachable through ACT property
+reader virtuals, so none were deleted on linker absence. r45 source-graph.json
+records those paths. Original assembly evidence for Input and layer registration
+is retained under r44/r45. No additional gameplay run is claimed.
+
+## Further checkpoints: r46–r51
+
+- r46 (0cc56d7) recovered original CActLayer registration order and resource
+  publication virtuals. Build succeeded; the new fixture used the wrong embedded
+  script data offsets. r47 (8854f36) corrected the fixture and passed 52/52.
+- r48 (772995a) unified global/runtime ACT script registration through the source
+  Sqrat path, including recovered callback order. Passed 52/52. User subsequently
+  reported portrait mismatches in r45, r47 and r48; the old suite did not cover
+  this visual correspondence.
+- r49 (861ad1c) replaced ACT script read/write with native C++ streams, real
+  Sqrat::Script compilation and sq_writeclosure. Corrected heap filePath cleanup.
+  Build succeeded, but the new assertion script omitted a Squirrel statement
+  newline and failed. No r49 test-pass claim.
+- d0ed615 removed five audited unused Sqrat object helper bodies (94 lines).
+- r50 (c623101) fixed the portrait regression introduced in r35 (988cd99): the
+  recovered LoadTexture auto-size behavior requires the deserializer to clear
+  resource byte +96, as original 446A84 does. Added original nine-portrait DAT
+  coverage; corrected the r49 assertion newline. Passed 53/53; DAT staged.
+- eb5447d recorded the root cause and lifecycle migration rules in
+  portrait-regression-20260920.md before further migration.
+- r51 (1041ae4) removed eight functions/four data records (501 lines), now
+  superseded by the real script serialization path. The pinned c623101 source
+  audit proves no modeled outside references; map absence alone was not used.
+  Passed 53/53; DAT staged and verified. Launch through run_staged.ps1 displayed
+  the title and then a Stage 4 transition. User input was detected, so UI input
+  stopped. This is not a completed first-level gameplay validation and does not
+  establish visual correctness across all transformation modes.
+
+All batches, including failures, are retained. No user-owned game was closed.
+Historical-source and migration-boundary checks passed after the r51 removal.
+
+## Further checkpoints: r52–r56
+
+The user confirmed the portrait fix in actual gameplay before these migrations.
+
+- r52 (12edf87): CActResource2D property read/write now uses native C++ schema
+  ownership and explicit stream receivers. Original 447570 preserves known
+  descriptors, marks absent entries, consumes mismatched/unknown values, and
+  reads values in sorted map order. Full and compact wire forms, heap strings,
+  reordered headers and omitted fields are covered. Passed 54/54.
+- r53 (87f181a): CActRenderTarget uses the same recovered wire operations but
+  an independent schema, matching 4493F0/449AB0. Removed the closed texture
+  schema component (2 functions, 3 data records, 396 lines). Passed 54/54.
+- r54 (d997b99): chip resource properties use original ID/name/MCD-file fields
+  (42F2A0); the texture auto-size transition is deliberately class-specific.
+  Removed the retired render-target schema component (2 functions, 3 data
+  records, 394 lines). Passed 54/54.
+- 039c4c9: C2DLayout's 17 properties use native IO; original 42C084 sets the
+  transform-dirty byte after reading. Removed the old chip schema component
+  (4 functions, 4 data records, 408 lines).
+- r55 (8c66930): replaced the reconstructed single-integer chip reference count
+  with the real Boost 1.44 counted base and a native MCD destruction callback.
+  This differs from the Actor slot's free-only deleter. Source/clone teardown
+  tests confirm the final owner frees textures exactly once; weak ownership
+  tests confirm no resurrection or second disposal. Passed 54/54.
+- r56 (bcdc480): original chip loading virtual 42FAE0 now loads into a temporary
+  source-owned MCD and replaces only on success. Preserves live clones, old data
+  on failure, and original empty/default prefix and separator rules. The active
+  ACT loader uses this same path. Removed the retired layout schema component
+  (2 functions, 3 data records, 394 lines). Passed 54/54; DAT staged and verified.
+
+The supported property wire types remain the existing loader's 0–3; malformed
+input is bounded rather than following unsafe original allocation behavior.
+No new gameplay claim is made for r52–r56. All tests are quiet variants; every
+build and failed artifact from earlier batches remains available. Historical
+source hashes and migration boundaries passed after r56. The overall migration
+is still incomplete: remaining legacy paths are not declared replaced merely
+because these batches pass.
+
+## r57 and incoming PR updates
+
+- r57 (a877ff7, including 0824d7e): C3DLayout reads use native schema ownership.
+  Original trans/roll field aliasing is retained; the contract tests cover it.
+  Removed the obsolete copy ABI shim and its spy-only test, the retired 3D
+  schema (396 lines) and chip ownership factory (20 lines). Passed 53/53;
+  the reduced test count reflects removal of the obsolete shim test.
+  DAT files staged and verified. No gameplay validation claimed for r57.
+- Merged incoming PR #7 commits through 374e709 without conflicts. These add
+  guarded migration checkpoint automation and preserve source snapshots and
+  baseline whitespace diagnostics. Both local migration commits are retained.
+- Historical provenance (199 members) and migration boundaries (440 source/header
+  files) passed after this merge. The operand-selection heuristic remains pending.
+
+## r58: map serialization and preparation
+
+Source commit 1077d77 includes 1e3b909. Recovered original 434760/434920/434A50
+and 435860/435B20 through IDA against the original executable. Map property IO
+now owns native C++ descriptors; original schema has nine entries (no blend).
+Native std::sort replaces decompiled sorting and preparation builds flat caches
+from the source MCD, ordered by unsigned chip ID. Record ordering uses signed X
+then signed Y. Original bottom-bound initialization from last X is retained.
+The source ACT destructor frees the new cache buffers, and clones reset caches.
+
+The reader preserves original min(serialized_size,32) consumption and append
+semantics, setting per-record ordinal, visible byte and alpha. Unsafe counts are
+bounded; on a truncated record input existing records remain intact (deliberate
+failure safety, rather than original partial append). Writer emits 12-byte
+records after preparation and preserves original missing-resource behavior.
+
+Pinned source-only audit retired-map-serialization.json proves removal of a
+closed component: 18 functions, 4 data records, 1693 lines, including the old
+Boost property factory and MSVC vector/sort implementations. It makes no linker
+or runtime reachability claim. Other still-referenced map helpers remain pending.
+
+Quiet Win32 build passed 54/54 tests, including the new map serialization
+contract for signed ordering, sparse IDs, cache replacement, compact/full wire
+forms, append behavior, truncation and empty extents. DAT staged and SHA256
+verified. Historical provenance and migration boundaries passed. No new gameplay
+claim; no user-owned game was touched. All batch artifacts are retained.
+
+## r59: map binding and user validation
+
+39cbcab includes ff9e200: the original 434380 map SetLayer virtual now uses
+native C++ vectors and the source MCD records. It preserves one-shot suppression
+at byte +460, type rejection, map record order, chip reference reset and original
+texture-reference append behavior. The source MCD loader already preloads its
+textures, so binding does not acquire texture handles a second time. Flat caches
+reuse the r58 helper without the writer's record sorting or extent changes.
+The existing active archive binding orchestrator is unchanged in this batch.
+
+ed65a16 makes addressless RetDec records conservative audit roots, retaining
+those records and all dependencies rather than inventing ranges. Initial audit
+unit tests exposed an old fixture with its original-range comment before the
+prototype, not beside the definition. ab82fa6 corrects the fixture; all 17 audit
+unit tests passed. Both failed and successful test batches are retained.
+The pinned source-only audit retired-map-binding.json retired 174 functions and
+42 data records (10602 lines), with no outside symbolic or original-address
+literal references under the documented lexical model.
+
+r59 quiet Win32 build passed 54/54 contracts; DAT staged and verified. Launched
+through run_staged.ps1 as PID 23428, with no subsequent UI input. The user then
+requested that further runtime testing be left to them and explicitly reported
+"R59没问题". Record this as user validation, not an agent-completed first-level
+smoke test. Future binaries will be built/staged for the user; no further game
+input or automated test runs are performed unless the user requests them.
+
+## r60: dynamic CreateLayer2D
+
+2c7f34c includes 1c3c9f5 and 5880b5c. CreateLayer2D now uses native C++ RAII
+for its layer/key/layout allocations and the historical Sqrat source for root
+lookup, instance publication and lifetime. The shared 42B4A0 constructor is also
+used by the archive parser. Original locking, active gate, next layer ID,
+parent table requirement, native ownership and publication order are retained.
+Invalid-parent checking happens before allocation; failed allocation cleans up
+through native destructors. The obsolete 4517C0 body (148 lines) and its external
+declaration were removed after a pinned source audit. CreateLayerString remains
+on its old path; CStringLayout is not silently replaced with a 2D layout.
+
+The quiet Win32 build succeeds and DAT files are staged and hash-verified.
+New dynamic_layer_contract source compiles and covers active/inactive creation,
+long names, IDs, owned key/layout records and published property aliases.
+Per the user's testing handoff, neither this test nor any runtime/game test was
+executed for r60. The user subsequently confirmed "R60没问题"; this is user
+validation, not an agent-executed test.
+
+
+## r61: source-backed layer ordering
+
+Source f9ee133 includes 8501614. GetLayerOrder and SwapLayer now bind through
+native Sqrat closures using the upstream Squirrel API. IDA 451F30 preserves
+inactive zero and missing -1. 451F80/455990/455A20/455C40 establish locking,
+index bounds, ancestor rejection, child-vector rebuilding and root preorder.
+Native std::map/std::vector own the temporary hierarchy; no decompiled STL or
+recursive generated traversal is invoked. ABI child buffers retain native
+ownership and are prepared before committing changes. Malformed cyclic,
+missing-parent or duplicate-layer graphs fail without mutation, instead of
+original unchecked traversal; allocation failures also leave order unchanged.
+
+retired-layer-ordering.json removes five disconnected functions (129 definition
+lines) under the pinned source-only audit. Shared helpers still called by old
+CreateLayerString remain retained. The dynamic-layer contract source now covers
+hierarchical ordering, subtree movement, ancestor rejection, bad indices and
+inactive/missing results. It was compiled, not executed. The quiet build
+succeeded; all three DAT files were staged and SHA256-verified. Runtime testing
+remains delegated to the user.
+
+
+## r62: native file enumeration ownership
+
+Source 7a3b2b3 includes 3ded1c5. Original 452150/452220/452270/4522C0 and 455730
+were recovered in IDA. ActingPlayer now stores an actual std::map owning Win32
+find handles through RAII. IDs increment after successful FindFirstFile calls;
+lookup failure returns false/null, explicit close erases even if FindClose
+fails, and runtime destruction releases all outstanding searches. The four
+script methods use upstream Squirrel calls and native Sqrat closures. The old
+344-byte tree-node schema and manual tree cleanup are removed. The runtime's
++84 field now points to the actual C++ container; it is not an upstream vtable
+placed over legacy bytes. At ID wrap, replacement also closes the prior handle
+instead of leaking it. Constructor contracts now check observable enumeration
+and cleanup behavior rather than old red-black-tree node bytes.
+
+retired-file-enumeration.json proves deletion of 19 functions, 1154 definition
+lines. Quiet build and DAT staging succeeded; tests were compiled, not run.
+
+## r63: key and 2D layout clone virtuals
+
+Source bf2cba5 includes 6137c1d. Original 4265E0 now has an explicit receiver,
+RAII allocation and length-preserving native string copying, including embedded
+NULs. Layout cloning still dispatches through the source layout's virtual; a
+null clone result remains a key with null layout, matching the original.
+42B580/42B5C0/42B3F0 confirm C2DLayout copying covers offsets 8..312 while both
+constructor vtables remain intact. Trailing layout/key padding is not copied.
+The archive clone orchestrator remains separate in this batch.
+
+retired-key-layout-clones.json removes four functions (95 definition lines),
+including the obsolete constructor and the key clone's receiverless 406CC0
+call. Other 406CC0 callers and the final memcpy operand heuristic remain open.
+The dynamic-layer contract adds deep string/layout ownership and exact copying
+bounds. Quiet build and DAT staging succeeded; test source compiled but no test
+or game was executed by the agent.
+
+
+## r64: resource clone ownership
+
+Source ca1ba87 includes 92dd8a7. IDA confirms 42F9D0/42FA50 copies chip ID,
+three strings and shared MCD ownership; 446AF0/446B70/449B70 copy texture fields
+and mark cloned resources as borrowed. These virtuals now allocate through
+native RAII, use explicit receivers for length-preserving strings, and share
+MCD data through the actual Boost 1.44 control used by archive clones. Native
+texture references are retained to match the reconstructed handle store.
+The common resource destructor now frees the base name, which the earlier
+source implementation omitted for heap-backed names.
+
+retired-resource-clones.json removes seven functions (153 definition lines),
+including old constructors, string assignment callers and manual Boost count
+manipulation. Contracts cover virtual/whole-ACT sharing, independent long names,
+texture/render-target type and crop preservation, and final handle release.
+Quiet build and DAT staging succeeded; contracts were compiled, not executed.
+Explicit unload of the new borrowed texture clones needed the r66 follow-up.
+
+## r65: disconnected source-replaced property bindings
+
+Source d6d8519 removes 21 obsolete Sqrat property binders and string getter
+helper functions (348 definition lines). The pinned source-only audit
+retired-disconnected-bindings.json covers CActLayer, C2DLayout, map layout and
+texture property paths already registered through source-backed bindings.
+No outside symbolic or interior-literal references were found. This is removal
+of replaced library scaffolding, not a claim that remaining active templates
+have been replaced. Quiet build and DAT staging succeeded; no tests executed.
+
+## r66: explicit unload of borrowed native clones
+
+Source 1e4c172 fixes a lifecycle boundary found during source review of r64:
+the original borrowed flag suppresses an original owner release, but the native
+clone also retains a handle-store reference. Track that additional reference in
+a mutex-protected C++ owner set. Both explicit Unload and destruction consume it
+once; ordinary borrowed fixtures keep their previous behavior. Failed retains
+and allocation cleanup remove pending ownership entries. The new contract
+source unloads twice, then destroys the clone and verifies final release through
+its remaining owner; it was compiled, not executed.
+
+r66 quiet build succeeded and three DAT files were staged and SHA256-verified.
+The user can test r66 cumulatively; earlier binaries and logs remain retained.
+R61-r66 together retired 56 functions (1879 definition lines). No game or local
+automated test was run after the user's handoff. Overall replacement remains
+incomplete: CStringLayout, active property-template readers, remaining explicit
+string receivers/operand heuristic and CRT/RTTI compatibility still need work.
+
+
+## User confirmation after r66
+
+The user reported "已确认无误" after the r66 delivery. Record this as user
+validation of r66; the agent did not execute gameplay or automated tests.
+
+
+## r67: CActLayer clone virtual and key cleanup
+
+Source 69f1280 includes 155a217. IDA 41EA50/41ECA0 confirms constructor-owned
+layer storage, independent child-vector allocation with shallow parent/child
+links, deep key/event cloning through their virtuals, SetLayer on main keys
+only, and source-backed Sqrat Table/Instance reference assignment. The new
+act_layer_clone.cpp uses native RAII and standard containers; it never executes
+the old receiverless string/vector/list assignment scaffolding. This changes
+the standalone clone virtual, not the archive clone orchestrator.
+
+41EA50 obtains script text through 415EA0 and writes it through 415F60 after
+assignment. IDA disassembly resolves the apparently constant zero length in
+pseudocode: it is the returned string's length loaded at 41EAEE. Plain scripts
+copy through their first NUL; compiled scripts yield the exact original 63-byte
+comment, retain the compiled byte and set the dirty byte. The destination script
+filename is cleared. Callback environments retain constructor state. Malformed
+unbounded script buffers and list cycles are rejected instead of unchecked
+original reads/traversal; partial clones are destroyed through native owners.
+
+Source review also found the native key-list cleanup freeing key+24 (the string
+length) instead of the heap address at key+8. A shared key destructor now frees
+the correct buffer and is used by both list cleanup and failed clone insertion.
+The existing dynamic-layer fixture already exercised long names; its source is
+extended with main/event lists, child-vector independence, layout rebinding,
+shared Sqrat pairs, both script modes and source survival after clone teardown.
+
+The pinned source-only retired-layer-clone.json audit removes 27 functions and
+six data records (750 definition lines), including 416700 and 41ECA0's old string
+assignment callers and disconnected binding dependencies. No outside symbolic
+or interior-literal references were found under the documented audit model.
+Quiet Win32 build and DAT staging succeeded; all added contract source compiled,
+but no test or game was executed by the agent, per the user's handoff.
+
+Lessons: track owning pointers separately from length/capacity in legacy byte
+records, and exercise destruction of heap-backed strings, not just successful
+construction. For decompiler constant arguments, inspect the caller's actual
+push/register sequence before translating: temporary-string lengths can be
+lost even when the callee is understood. Original odd compiled-script behavior
+is preserved rather than replaced with an inferred intent.
+
+## r68: restore instance dispatch and retire legacy wrappers
+
+IDA 452010 stores its argument at ActingPlayer+76 and returns true. The old
+4556C0 reconstruction omitted the indirect member call, returning the status
+from sq_getinstanceup instead. SetRenderTarget now uses a source-backed Sqrat
+closure and real Squirrel instance conversion, stores the borrowed native
+pointer, and accepts null to clear it as the original zero-initialized argument
+does. It neither retains nor destroys the target. The dynamic-layer contract
+now checks both the actual stored pointer and null clearing.
+
+The already-recovered integer method bridges (445530/455330) moved to native
+C++, retaining the existing trace calls and explicit thiscall ABI boundary.
+They remain in the ACT module to avoid introducing game-host dependencies into
+the standalone Squirrel API contracts. Audits retired-instance-dispatch.json
+and retired-integer-dispatch.json verify deletion of six old functions,
+including two disconnected conversion-only wrappers.
+
+Source edac6e1 built successfully as quiet Win32 r68. Contract sources compiled;
+no automated tests or game session were executed. Three DAT files were staged
+and hash verified. Overall replacement is still incomplete.
+
+## r69: original CActTimeLine ownership and serialization
+
+IDA 4255E0 identifies the second layer-list binder as CActTimeLine, not CActKey.
+4253D0 allocates 28 bytes, copies beginTime/timeLength at +4/+8, and deeply copies
+an eight-byte-pair vector at +12/+16/+20. 425350 confirms the two integer schema
+offsets. 425420 appends serialized pairs; 425510 writes count then both words;
+420900 frees the vector. Its raw RTTI name hashes to 9902F2C0.
+
+Native timeline methods now use std::map for the property schema and std::vector
+for bounded read/clone staging, retaining only the flat buffers required by the
+original object ABI. Layer loading accepts this original second-list type;
+previously every nonempty second list failed. Both archive and standalone layer
+cloning preserve its distinct size and deep storage. Cleanup recognizes the
+timeline before treating +4 as a layout address. Reader batches reject malformed
+sizes and preserve the existing vector on truncation rather than partially
+appending. This safety difference does not alter valid-file layout/order.
+
+The shared property reader/writer now correctly assign known bool bytes and
+write bools as one byte. Existing texture/layout schemas contain no bools;
+this prepares the remaining layer/property migration without changing them.
+
+Correction/lesson from r67: its second-list fixture used a synthetic CActKey,
+which tested clone dispatch but did not establish the actual serialized type.
+The fixture now uses a real timeline with nonzero beginTime, independent pair
+storage, full/compact wire forms, append semantics and truncation checks. Never
+infer a polymorphic list's element layout from the other list or its C helper
+name; recover its factory/binder and allocation size first.
+
+Quiet Win32 r69 source 7591a5d built successfully and DATs were hash verified.
+Tests were compiled only; no game or automated test execution was performed.
+This does not claim that the remaining generic factory or CStringLayout is complete.
+
+## r70/r71: actual upstream Boost hash_range
+
+Boost 1.44's original functional/hash headers and their dependencies are now
+retained from the same SHA256-pinned release archive as the counted base (198
+manifested Boost members in total). The vendoring tool can refresh one release
+and permits only the same CRLF/LF checkout conversion as verify_upstream;
+other local modifications still fail closed. UPSTREAM.json records exact
+archive-member hashes. No Boost source was patched for this migration.
+
+The native Win32 bridge calls boost::hash_range<char const*> directly. All
+407210 call sites now use it and retired-boost-hash.json proves the old loop
+can be deleted. Its callers with incompletely recovered argument plumbing,
+including 405990, still require migration; replacing hashing does not repair
+those callers. Byte ranges, signed char behavior and 32-bit size_t are retained.
+The compiled-only contract adds original C2DLayout/CActTimeLine IDs, an empty
+range and a binary range containing a negative char and embedded zero.
+
+R70 (688300a) failed at compilation because C++17 removes std::unary_function.
+R71 (e027d10) enables MSVC's _HAS_AUTO_PTR_ETC solely for boost_hash.cpp, using
+the genuine standard-library compatibility declaration rather than a shim.
+Its quiet Win32 build succeeded and all three DAT hashes were verified. R70's
+failed artifacts remain intact. No automated tests or game sessions ran.
+
+
+## r72/r73: native ACT writers and removal of the frame-copy heuristic
+
+Layer (41F990), key (426740), and CStringLayout (43FBE0) writers now use native
+std::map schemas and actual Boost 1.44 hash_range for nested types. They preserve
+original list order, one-byte booleans, and ignoring individual layer-list
+writer results. CStringLayout's serialized alignment aliases addEdge at +128:
+43F97D uses the bool descriptor despite the runtime alignment integer at +132.
+The collapsed CStringLayout vtable and text renderer are NOT fully migrated.
+retired-act-writers.json proves removal of four functions and three data items.
+
+Actual file/package read virtual slots now use explicit ECX adapters. The
+compiled-only timeline fixture covers real Windows file handles and encrypted
+package payloads, not only the fake memory stream. R72 built the main EXE but
+failed the standalone method-entry contract link because the new adapters
+introduced game-host dependencies into the common ABI library. Their final
+location is the ACT implementation. R72 artifacts remain; no test ran.
+
+IDA 406CC0 is substring assignment with receiver, source, position, count.
+The new native StringView operation preserves self-assignment capacity and
+terminator, clamps counts, and explicitly receives all four arguments. The
+three remaining template callers at 4203B8, 427048 and 429498 copy var_54 to
+var_38; 445327 copies record+368. Their surrounding legacy functions still
+need migration and are not claimed repaired by this local argument correction.
+415315 terminates with a noreturn bad_alloc throw: RetDec erroneously attached
+an unrelated following string constructor. That bogus tail is removed; abort
+prevents falling through if the old exception compatibility entry returns.
+Invalid substring positions leave the target intact, following existing native
+string adapter policy rather than throwing through obsolete exception metadata.
+
+retired-substring-assignment.json audits removal of 406CC0 and its private
+4067F0 erase dependency. With the only production caller gone, _memcpy2, the
+EBP capture adapter, frame candidate scanner, and their four obsolete test
+variants are deleted. New substring contracts cover independent ownership,
+embedded zeros, bounded counts, self-assignment and retained heap capacity.
+No VM trace call site is removed by this change.
+
+R73 (8b0ba35) completed the full quiet Win32 build, including all remaining
+contract targets; its three DATs were staged and SHA256 verified. No automated
+test or game session was run. Overall library replacement remains incomplete.
+
+
+## r74: shared layer/key property readers
+
+Both original layer/key virtual read slots now enter explicit-receiver native
+methods backed by the same source archive loader. Layer/key/2D/map properties
+use the native per-type std::map descriptors, preserving sorted wire values and
+retaining the last incoming schema for a following compact record. The old
+untyped parser previously returned immediately on a missing schema flag and
+could not consume those values. The standalone parser remains for other types
+and tooling; this is not a claim that all compact ACT graphs are supported.
+
+41F8B9 calls SetLayer immediately after each key is appended. The shared loader
+now also performs this call, before the archive's later resource association.
+Failed key/list loads destroy their owned strings/layouts, and successful script
+reads release the constructor's previous buffer. New compiled-only contracts
+cover full/compact keys through a real file and a full layer containing both a
+2D key and native timeline; they check the loaded layout's owner backlink.
+
+retired-layer-key-readers.json audits 13 functions and nine data records,
+including the obsolete property template/shared-pointer machinery. The native
+archive loader still accepts only its established 2D/map layout types; the old
+generic type registry and CStringLayout rendering remain unfinished work.
+
+R74 (5e5560c) built successfully, with all three DAT files staged and hash
+verified. Contracts compiled only; no automated tests or game sessions ran.
+
+
+## r75: CAct serialization and shared script/resource schemas
+
+User confirmed R74 works. CAct's original 428150/428720 virtual slots now use
+native methods. The archive path shares native std::map property descriptors
+for CAct, script, texture and chip resources as well as layers/keys/layouts.
+The existing resource loading/lifetime services remain in place. This still
+does not add unsupported CStringLayout/mesh factories to the source loader.
+
+427750 assembly proves marginLeft/Top/Right/Bottom offsets +72/+76/+80/+84.
+The old source helper incorrectly mapped bottom/left/top to +72/+76/+84;
+both the active schema and retained standalone helper now match the original.
+Lesson: copied offset tables and tests derived from the same helper are not
+independent evidence. The compiled-only writer fixture checks sorted serialized
+margin values against assembly offsets, alongside a real-file CAct round trip.
+
+The native writer calls actual Boost hashing, preserves layer/resource vector
+order, and ignores nested element write results as 428720 does. It removes a
+debug-only layer only when BOTH the global output mode and the debugOnly byte
+are exactly one; byte value two remains included. A callback fixture verifies
+this predicate and emitted order independently of script compilation. Failed
+layer construction now frees its partial owned state.
+
+retired-act-serialization.json proves deletion of 50 functions and 16 data
+items, including obsolete generic type lookup/tree/property machinery. The
+remaining adapters and unsupported layout paths still require migration.
+
+R75 (ca2bf14) build command finished with exit 0. Before staging, the entire
+build-runs directory was observed missing; this task issued no cleanup. Only
+runtime directories r73/r74/r75 remained at that observation. The surviving
+R75 EXE was staged and DAT hashes verified. Its reconstructed source-commit
+record and new staging log are under build-runs/*-r75-recovered; the original
+configuration/build logs and maps cannot be claimed retained. Earlier manifest
+entries remain historical records and do not guarantee current file presence.
+No tests or game session ran.
+
+The user confirmed manually cleaning the build artifacts and requested regeneration.
+R75-rebuilt-quiet (a519bab, same runtime source) completed successfully with new
+configure/build logs, both linker maps, staged DATs and SHA256 records. No tests ran.
+
+
+## r76: explicit serializable type identity and deleting-destructor ABI
+
+User confirmed R75 works. Original 4461D0 compares the actual dynamic type,
+not base-class compatibility; 4AB2E2 compares RTTI descriptor names starting
+at byte nine (skipping the raw name's prefix). Native queries now obtain the
+recovered object's dynamic identity from its concrete vtable and compare the
+original decorated name. This is an ABI metadata adapter, not applying modern
+C++ typeid to unconstructed legacy storage. Timeline queries use the same name
+comparison rule. The __RTtypeid and type_info equality stubs that merely returned
+an input pointer are deleted after their sole old consumer is disconnected.
+
+446210 dispatches the deleting destructor at slot four with flags=1. Native
+key/layer/resource entries now accept their ECX receiver, preserve scalar vs
+reverse-order array destruction, and free the array cookie only when bit one
+is set. Key size36, layer348 and resource100 are verified from original
+420830/4209B0/429720/429780/429840. Layout tables have different slot semantics:
+42B480 destroys through the embedded sprite, so their primary Destroy slots
+use the existing source-owned 2D/map cleanup rather than the slot-four adapter.
+Unsupported CStringLayout/mesh lifetimes remain unfinished.
+
+In-place cleanup resets strings and list counts without freeing the object.
+The texture filename's length/capacity reset is corrected to +56=0/+60=15;
+its former helper assigned 15 to the length. Existing clone/texture ownership
+tracking is retained. Compiled-only contracts cover all ten migrated dynamic
+type queries, rejecting a base-class descriptor, prefix-byte equivalence,
+null outputs, array keys, scalar resources and virtual Destroy dispatch.
+retired-act-rtti-destruction.json audits 13 functions and 19 data records.
+
+## R77 — remove superseded untyped ACT property parser
+
+After R74/R75, the untyped parser and apply helpers have no production callers. Removed the duplicate implementation, obsolete public property record/API and its isolated contract target. The live scalar byte/dword reads now reside in act_document.cpp. Production readers continue using the shared native std::map schemas and existing stage contracts for full/compact archives. Removed tests covered only the retired parser; their former truncation/coercion results are not claimed for the replacement. Reference scan covered src, include, tests and tools. Build only; runtime testing remains with the user.
+
+## R78 — MapManager copy and retired container templates
+
+Recovered 470100/4700B0/46F320/46F450/46EFD0 through live IDA. SqPlus now calls native C++ map_copy.cpp with explicit destination/source. Preserves source player ownership transfer, scalar fields and container proxies; list copy owns new 16-byte nodes with complete 8-byte RenderLayer values (vtable restored, layout borrowed). Vector assignment uses the standard copy algorithm through the old ABI view, retaining capacity on shrink/empty assignment. Old destination player is destroyed and its actual allocation freed, replacing the erroneous g1224 delete argument.
+
+Lesson: identify the list element constructor before choosing a pointer-list adapter. 46F450 copies layout at element+4 and installs the RenderLayer vtable; copying just node+8 would lose the layout and corrupt correspondence. Added a compiled-only contract for node identity, values/order, player transfer/self-copy, proxy preservation, vector growth/shrink/empty. The source-only audit retires seven unreachable old container/copy functions; no runtime claim. Modern STL objects cannot directly overlay VC8 object storage, so the remaining flat container view is explicit ABI adaptation rather than a binary reinterpretation as std::vector.
+
+## R79 — genuine CRT exit registration
+
+Replaced the last four `_atexit` placeholder call sites with three recovered native initializers using std::atexit and callable source callbacks. IDA 4D47F0/4D4930 frees list nodes/sentinels only, never the borrowed payloads; 4D49D0 calls the full-tree erase path (46A650 -> 4636E0 -> 429C70) before freeing its sentinel. Reused the verified native tree eraser, without invoking audio teardown again from a late CRT callback. Removed the no-op `_atexit` shim entirely. The apparent fourth callback (4D4A30) was a glued neighboring initializer beyond the allocation-failure throw/padding; it is not registered by 4D3F50. The real initialization path registers callbacks in original order. No runtime/exit validation claimed; quiet build only and user testing pending.
+
+## R80 — CStringLayout glyph cache lifetime and pending-text rebuild
+
+R79 user-confirmed. IDA 441250/4410C0/442D20/4422E0/442F70 verifies the VC8 one-sprite-per-block deque at +176, its wrap-around map and atlas references at sprite+252. Native C++ now preserves the original minimum queued page comparison, signed nonpositive reference condition, forward 436-byte atlas assignment, and restart-from-begin erase order. 445230/423F00/424720 copy renderer list nodes with shallow pixel pointers, while 40ED40 frees owned pixel buffers, temporary renderer buffer, embedded string and sentinel. This original asymmetric assignment is retained, not silently changed to deep ownership. Rebuild concatenates text/back-queue with std::string, applies the original strlen truncation, releases sprite atlas references and deque storage, and retains the deque proxy.
+
+Added a compiled-only contract for wrapped sprite queue, live-atlas preservation, reference release, pending byte order, cursor reset and buffer/proxy retention. Five obsolete renderer/container helper functions deleted by source reachability and exact-body hash audit. Full CStringLayout constructor/vtable/drawing/factory migration is still pending; this batch does not claim complete text rendering support. Original 43E890 and 43EA10 are distinct constructor/destructor functions incorrectly glued together by RetDec; their boundary is recorded for the next migration.
+
+## R81 — recover CStringLayout constructor/destructor boundaries
+
+Native constructor receives the explicit allocation pointer; 451D66 now passes the actual 260-byte allocation. Removed RetDec's combined 43E890 constructor/43EA10 destructor body. The native lifetime implementation follows original CP932 face bytes, exact initialized offsets (leaving padding untouched), 8-byte deque proxy and array-cookie scalar/vector deleting destructor flags. Uses the recovered glyph-cache cleanup before releasing remaining atlas renderer storage and strings. Added compiled-only lifetime contracts, including array retain-storage destruction.
+
+The g350 identity remains the existing collapsed writer entry until all virtual methods and the factory are recovered; this batch does not introduce guessed DrawText rendering or pretend that CStringLayout's full vtable is already available. Original 440910 disassembly exposed a missing successful glyph branch in decompiler output: widths/heights are output parameters of 405F80, not constant zero. Future rasterization work must follow 440A9B–440BF4 assembly for sprite creation, atlas reference, character ID and cursor advancement.
+
+## R82 — native text operations, property reader and genuine Sqrat publication
+
+Recovered all seven CStringLayout script methods and property registration from 43EDA0 and individual accessors. Added the class publisher through the existing actual Sqrat bridge, native byte-string editing, deque value replication and shared std::map property reading. Read combines stText/stBackQueue with embedded NUL preservation; rebuild's strlen behavior remains separate. Replica copies 256-byte sprite values while preserving existing vtables and installing CSpriteEx on newly constructed elements, owns separate blocks/proxy and borrows atlas pointers with balanced references. Growth follows 442BD0's max(capacity/2,8), old-first preservation and 0xFFFFFF element limit.
+
+Assembly-derived quirks: pending-text PopFront erases CharNextA byte width minus one (4406AA); Clear defers glyph destruction until rebuild; queueCount returns pending byte length at +48 (4410B0), not glyph deque size +192; font setters clamp but do not automatically rebuild. Added compiled-only real-VM/Sqrat contract code and native replica lifecycle checks. Publisher/reader are prepared for the full factory/vtable integration; the production factory still awaits completed render/update/clone, so no complete CStringLayout support is claimed in this batch.
+
+## R83 — original GDI rasterization for the CStringLayout atlas path
+
+Recovered 40EC70/40EE30/40F1C0/40F370/40F2E0/40FE30/40FFB0 and the D3DX texture/upload path through IDA. Added a deliberately single-character renderer matching CStringLayout's caller: original CP932 code assembly, GGO_GRAY4_BITMAP coverage multiplier, font/DC selection lifetime, four-neighbor outline, managed 512-square D3DX texture and locked-region row copies. Temporary bitmaps use std::vector and COM references use the existing source-owned RAII wrapper. This does not claim to implement the generic rich-text renderer: tags/accent/ruby are unreachable when the caller supplies one character, and a lone '<' follows the original missing-tag-end path.
+
+The original unguarded glyph-height division and retained gradient allocation on equal RGB endpoints are preserved and documented. No speculative space-width substitution, DrawText replacement or metrics normalization is introduced. This internal rasterizer is compiled in preparation for the atlas/update integration; it is not yet attached to the production CStringLayout vtable. No test or game execution.
+
+## R84 — glyph atlas queue, layout update and draw
+
+Restored the missing 440A9B–440BF4 assembly path: atlas reference and character ID, sprite source rectangle, cursor/line height and width-after-wrap order. Atlas growth uses the original 1.5x capacity rule and renderer copy/destruction; deque blocks use the existing source-owned adapter. Added 43FC40 pending-text consumption, byte-color/alpha composition, integer world-position conversion, alignment and CSpriteEx scale/translation. Added 440180 draw-state save/restore and the exact 42AC20 blend transition table (case 32 differs from the nearby 402770 helper), plus sampler cache behavior. No generic rich-text implementation is claimed; the CStringLayout path passes a single character.
+
+This batch prepares callable native virtual methods; full class-table/factory wiring and clone ownership are the next integration step. Original atlas relocation does not rebase borrowed glyph atlas pointers; the recovered shallow-copy behavior is documented rather than silently changed. Quiet build only, no runtime validation.
+
+## R85 — live CStringLayout factory and full virtual dispatch
+
+Replaced the collapsed writer-only g350 with all eleven original virtual slots, including native clone, read, query, destroy, SetLayer, Update, Draw, Register and deleting destructor. The type slot retains the original 51BA08 binder address; serialized type naming/hash continues through the existing recovered RTTI metadata adapter. Native CreateLayerString now uses the same source-owned layer/key/ACT insertion machinery as CreateLayer2D and actual Sqrat instances, and lazy CStringLayout publication binds both outer/script layout objects and the original alpha/blend/RGB aliases. This connects the renderer to the production dynamic factory rather than merely adding unused code.
+
+43EB80/43EC30 clone copies strings/style/tail and container values, then clears copied atlas values without releasing borrowed textures, retains vector capacity, and releases the copied deque storage without changing atlas counts. Generic ACT key destruction now recognizes CStringLayout. Added compiled-only clone/virtual prerequisites/tab/newline coverage. Serialized ACT factory and activation clone support are handled in the following integration batch; no runtime test is claimed.
+
+The pinned-source audit retired fourteen unreachable legacy factory/Sqrat Object/RootTable/auto_ptr/list helpers (retired-string-factory.json). Bodies were removed only after their exact pinned SHA256 and unique current-source match were verified; this is source reachability evidence, not runtime coverage.
+
+## R86 — serialized CStringLayout and ACT activation integration
+
+ACT key loading now accepts the original Boost 1.44 RTTI hash 9E695D47, constructs CStringLayout and invokes its native shared-schema reader. ACT activation cloning recognizes the 260-byte string object instead of copying it as a 316-byte C2DLayout; rollback owns and destroys its nested strings/proxy. Binding selects CStringLayout SetLayer and actual Sqrat class publication, including alpha/blend/RGB aliases. Trace calls remain in place, but their texture argument no longer reads C2DLayout+308 beyond a CStringLayout allocation.
+
+Compiled-only contracts now cover real CreateLayerString closures and script aliases, key virtual cloning, and both full/compact key archives containing strings with embedded NUL bytes. The reader combines rendered/pending text without truncation and preserves the original serialized alignment/addEdge byte alias, leaving runtime alignment at its constructor value. No game or test executable ran.
+
+R86's main EXE and stage contract linked, but the independent act_frame_contract target failed to link because its controlled host fixture lacked the new g350 identity. The next batch adds that fixture symbol; R86 is recorded as a failed full build, not validated. No tests were executed.
+
+## R87 — remove the retired string factory call thunk
+
+After native CreateLayerString publication, removed its unused 455390 thunk, the two old class-pair globals, the transitive receiverless 40E3F0/41E0C0 helpers and two unreferenced deque iterator wrappers. Pinned-source hash/reachability evidence is in retired-string-call-helpers.json (five functions, two data records). Fixed R86's missing standalone frame fixture identity. No game or test execution.
+
+## R88 — real renderer sets and render-target texture ownership
+
+IDA 401850 distinguishes the live constructor from its glued exception tail. Its two unsigned-handle registries now use normally constructed std::set containers; original scalar cache defaults remain in the host. The real texture store already owns textures with std::array/std::string/COM RAII, so startup no longer constructs a second decompiled CHandleManager solely to initialize its eight borrowed sampler-stage caches.
+
+Recovered 449C10/401DC0 with explicit ECX receiver and width/height arguments. The render-target virtual entry now calls D3DXCreateTexture with usage RENDERTARGET, A8R8G8B8, DEFAULT pool and one mip level. Square-only device caps affect texture dimensions, while resource image dimensions retain the requested size. Registration adopts the texture reference; renderer set insertion borrows the handle without an additional retain. Original true return on D3DX failure and no automatic release of an overwritten resource handle are preserved. Cleanup of the disconnected old handle/tree graph follows its pinned-source audit; no runtime test was run.
+
+The pinned closed-component audit finds 56 functions and 33 data records (2,481 definition lines) disconnected after this replacement, including the duplicate texture/sound/mesh handle tables, VC8 red-black tree and deque scaffolding, old render-target creation and an unused CSV numeric iterator path. Each body was verified against its pinned SHA256 and unique current-source occurrence before removal. The source corpus includes all conditional/vendor/test/header roots and literal addresses; no arbitrary runtime pointer reachability or test success is inferred.
+
+
+## R89 — genuine device listener list and recovered reset callbacks
+
+Replaced the VC8 device-reset observer list with std::list of borrowed object addresses, preserving insertion order, duplicate suppression and first-match erase under the original graphics critical section. Original 401660 throws std::length_error at 0x3ffffffe elements; the native adapter now uses that real exception instead of the old no-op invalid-argument substitute. The original 401040 constructor ends at 4010C7; its glued destructor/exception tail is no longer executed as constructor code.
+
+IDA 4013D0 confirms two virtual callback passes around swap-chain release, device Reset and GetSwapChain. Recovered those actual calls, and the renderer's 401DA0 surface releases / 401BA0 state restoration. Renderer state uses explicit split host globals, never a memcpy across unrelated globals. The existing full D3DPRESENT_PARAMETERS object supplies Reset; Windowed and BackBufferFormat follow the original toggle fields. Original 40DA39 passes the renderer in ESI to unregister; shutdown now passes it explicitly, after the two surface releases visible at 40DA1F–40DA37. Callback order and borrowed ownership are unchanged. No game or test executable has been run.
+
+Pinned R88 maps/source identify two unused CRT adapters (__atof_l and array constructor loop), both removed after exact body hash checks. A separate closed-component source audit retires eleven unused tree/atexit-lock helper functions (637 lines), preserving every remaining referenced CRT boundary. These audits do not establish runtime coverage or completion of library replacement.
+
+
+## R90 — actual standard MT19937 and archive initializer cleanup
+
+DAT index decoding now uses std::mt19937 instead of the copied 624-word recurrence, twist and temper implementation. IDA 404230/404270 confirms the standard seed multiplier, 624/397 recurrence, twist constant and temper masks; compile-time assertions show the shifted original masks equal 9D2C5680/EFC60000. At 41066F the original seeds EAX with index_size+6, consumes one engine result per byte (AL), then applies the C5/89/+49 byte recurrence in a separate pass. The native decoder retains those two passes and the shared original generator. 40D7D5–40D7DB confirms startup seeds from timeGetTime; the receiverless seed routine that wrote past a collapsed global is removed.
+
+Removed the disconnected legacy archive map/vector initialization from 410270 while retaining the host critical section and archive count. Active archive path/entry storage remains the existing native loader; this batch does not claim a redesign or new runtime validation of DAT parsing. Closed-component deletion of the old tree follows a pinned-source audit.
+
+
+## R91 — native archive containers and actual zlib CRC buckets
+
+Replaced the active fixed 64-path/8192-entry C arrays and linear scan with real std::vector<std::string> archive ownership, std::map<uint32_t,std::list<Entry>> CRC buckets and vector-owned decrypted index bytes. File handles use scope ownership. The existing malformed-file length/read checks remain; artificial container capacity limits are gone. On a malformed entry after registration the archive and earlier entries remain, consistent with the original nontransactional loader rather than a fabricated rollback.
+
+IDA 410750/4109D0/4044D0 establishes the actual key protocol: CharLowerBuffA on a copy, actual upstream zlib CRC32 including the terminating NUL, unsigned map comparison, retained original path spelling, case-insensitive duplicate overwrite, and insertion-ordered collision successors. Lookup strips exactly ./ before replacing backslashes. The original skips name comparison for a bucket with no successor; that behavior is retained. Lookup publishes size/offset before opening and performs the original SetFilePointer call without inventing a new seek-failure branch. This removes the previously approximate globally normalized, linear-search implementation. Runtime coverage is pending user validation; no tests or game were executed.
+
+
+## R92 — declare the archive module's zlib dependency
+
+R91 failed compilation because zlib was linked only by downstream EXEs, so the library compiling archive_store.cpp did not inherit its include path. Declared kinoko_zlib directly on kinoko_squirrel_cpp_vm, which propagates its headers and link dependency to all consumers. Restored CloseHandle immediately after the index read, before decoding, as shown at original 410665. R91 is recorded as a failed, unstaged build; no success or runtime validation is claimed for it.
+
+Removed the now-unreferenced no-op _Init_locks destructor adapter using the R90 pinned-source/maps audit, after the obsolete atexit thunks were already deleted in R89.
+
+
+## R93 — genuine scene retirement list
+
+Recovered 40D5E0/40DA60/40E320 with IDA. The constructor now constructs the real list and scene critical section without the glued destructor/exception tail. Switching still swaps pending/current under the scene lock, calls old slot 5 with g870, appends the old scene, signals the actual g867 event, calls new slot 4 with g871 and finally copies g870 to g871. The decompiled SetEvent(&g1224) lost its real handle and is gone.
+
+A std::list owns queue nodes; its values remain scene pointers until the worker calls virtual deleting destructor slot 0 with flag 1. The single consumer keeps original callback-before-node-removal order. Standard-container push/front/pop operations reuse the existing scene critical section to avoid racing its internal links; callbacks and SetEvent run outside that lock. This synchronization is an explicit native-container adaptation, not a new game transition rule. No tests/game were run.
+
+The pinned source audit additionally proves the unused 46A830 legacy actor constructor island (201 lines) disconnected; removed its exact hash-verified body. The remaining vector allocation seeds were reachable and were retained, not silently deleted based on missing link symbols.
+
+
+## R94 — recover the complete map-layout virtual clone
+
+Recovered 433AA0/433AE0, all element-copy helpers and 4338D0/437D90/43C1C0 from IDA. The virtual clone now receives its actual ECX object, copies all ten vector contents independently and preserves borrowed pointers/scalar fields. Unlike ACT activation's separate cache-reset path, this full clone copies runtime caches. 232-byte sprite elements restore CSpriteEx identity; 288-byte elements copy only the original 281 initialized bytes, leaving seven padding bytes untouched. The clone forces dirty byte 460 to one. Standard array/unique_ptr ownership rolls back partial allocations; flat malloc-compatible vector views remain solely for interoperability with existing native map update storage, not reinterpreted modern STL objects.
+
+The native destructor clears every vector in original reverse order, including four cache vectors omitted by the earlier generic ACT cleanup. Sprite texture handles remain borrowed. The secondary sprite deleting entry adjusts this by -4 and implements scalar/array cookie flags and reverse element destruction. Added compiled-only coverage for deep cache independence, scalar preservation, secondary identity and scalar/array retain-storage destruction. No tests/game ran. The now-disconnected old clone/container helpers are removed only after a pinned-source audit.
+
+R94 pinned audit retires 44 functions and one obsolete vtable record (1,535 definition lines), including the old map clone, its vector copy/allocator/destructor graph and fake exception callers. Exact body hashes were verified before deletion.
+
+
+## R95 — native timer-event list and original shutdown lifecycle
+
+Replaced the hand-linked timer list with std::list<HANDLE> under its existing graphics-independent critical section. IDA 412B80 inserts a null node before CreateEventA under a blocking EnterCriticalSection; restored that order and real std::length_error instead of the prior TryEnter fallback and reverse-linked node approximation. 412C10 still selects the first matching event, signals it, closes it and erases only that node. The worker signals events in insertion order. Existing useful timer trace calls remain, with diagnostic list/first-element identities obtained through explicit native accessors rather than pretending modern STL has VC8 layout.
+
+Recovered original 4129D0: stop and join the timer, signal/close queued events, clear nodes, delete the critical section. Registered this shutdown through actual std::atexit so the worker cannot race destruction of the standard list. Corrected the Win32 thread entry to WINAPI. Removed the unreachable merged RetDec tails after the already-recovered constructor/worker returns, including their fake exception call. The script MessageBox path directly invokes its actual MessageBoxA with the same caption/text/flags; its never-requested throw branch becomes an auditable dead helper. No tests/game were executed.
+
+
+## R96 — real allocation/range exceptions at the remaining actor ABI boundary
+
+IDA 46A390 accepts ECX manager plus a single packed 32-bit handle, not two independent 16-bit stack arguments. Its native virtual entry checks the low-word slot against generation count and the high-word generation before accessing actor storage; the original inconsistent-vector case now throws actual std::out_of_range. A scoped critical-section guard restores unlock during unwind. Compiled-only cases exercise packed generation matching, stale/out-of-range slots and the virtual ABI.
+
+Replaced 4214A0's allocation/aggregate construction with a native C++ flat-node adapter, std::malloc paired with existing actor iterators' free and actual std::bad_alloc on failure. The unrelated 421500 vector-reserve routine had been glued after its exception path and is no longer part of that allocator. Moved actor append 46AA60 to native C++ and actual std::length_error, with cleanup of an unlinked allocation on failure. These explicit twelve-byte boundary records remain necessary for existing actor iteration; they are not claimed to be modern std::list objects. Retired old exception/allocator helpers only after source reachability audit. No game or tests ran.
+
+
+## R97 — native C2DLayout secondary vtable and removal of false audit roots
+
+IDA reads of 4EC384–4EC390 confirm the four secondary virtual slots: deleting destructor, solid color, vertex colors and color modulation. The collapsed integer containing original address 42E6E0 is now a real table using the existing native color methods and a native lifetime entry. This adjusts this by -4, resets the concrete/IColor identities and implements 316-byte reverse array destruction and cookie/free flags, replacing the obsolete runtime array-unwind adapter. Compiled-only cases cover the secondary virtual call and retained scalar/array storage; no tests/game ran.
+
+The source audit conservatively treated parser unit-test string fixtures named function_401000/401010 as possible dynamic references to the real exception helpers. Renamed only those synthetic fixture addresses/symbols to the disjoint 0x60xxxx range, preserving their relationships and test assertions. The audit algorithm and its string/literal root policy are unchanged. Removed the standalone unused unknown_fcd53371 declaration so the export can be audited independently. The following pinned component audit covers the obsolete exception and secondary-layout helpers; no runtime reachability claim is made.
+
+
+### R97 / R98: layout lifetime, CRT exception removal and IME recovery
+
+R97 replaces the complete C2DLayout secondary vtable with native addresses and restores the this-minus-four adjustment and reverse array-cookie destruction. The pinned audit removes eight obsolete functions and four data records. Its quiet executable was compiled and staged, not run.
+
+R98 removes seven unreferenced simulated CRT exports, including the no-op CxxThrowException and exception constructor/tidy helpers; the R97 source/map audit records the evidence. Remaining allocation and API adapters are not claimed to be fully migrated.
+
+The IME dispatcher (original 4131E0) now receives HWND, message, WPARAM and LPARAM explicitly. Seven damaged RetDec handlers are replaced by native C++ using actual Win32 IMM and CRT functions and std::array storage. IDA confirms 1024-byte local text tails, 256-byte composition/attribute buffers, CP932 lead-byte rules, the EAX direction parameter of 413000, and the distinct handled results for WM_KEYDOWN/WM_CHAR. Original text-limit/strncpy_s behavior is retained; negative IMM error results are rejected before indexing buffers. Input enabling is not invented: the existing enabled flag still controls dispatch. Native compiler stack protection replaces the erroneous calls to a no-op report_gsfailure shim.
+
+Lesson: a security-cookie epilogue is not the function return value, and a scalar global at a buffer address is not the original storage extent. Recover callers, register arguments, buffers and return flags together before removing CRT boundaries. Game and contract tests remain delegated to the user; no runtime verification is claimed.
+
+R99: the R98 source/map audit confirms the final array-unwind and no-op report_gsfailure exports have no callers. Both definitions are deleted. The compatibility translation unit now retains seven real API/CRT forwards and the explicitly documented malloc-compatible legacy allocator; no simulated exception or security-failure export remains there. This does not certify remaining actor-container or ACT rendering migration as complete.
+
+
+### R100: connect CActRenderTarget to the native resource factory
+
+Original 428150 resolves every resource through the registered type-name hash, constructs it, then invokes its reader. 449C50/449F20 identify CActRenderTarget by the original raw RTTI spelling; 449320 supplies its 100-byte texture-derived defaults. The native factory previously rejected this type even though its modern std::map property schema, reader, clone and D3DX Create entry were implemented. It now hashes the original name through the actual Boost implementation and constructs/deserializes the correct vtable and independent schema. It does not eagerly load a target name as a texture file or create a D3D surface during deserialization: the original reader does neither.
+
+The existing full/compact serialization contract additionally exercises the factory, preserved dimensions/crop/name, complete stream consumption and zero handle before explicit creation. This contract is compiled only, not executed. Applying player render targets and the other unsupported resource/layout types remain separate unfinished work.
+
+
+### R101: apply the player's render target during native drawing
+
+IDA 4525D0 reads the borrowed CActRenderTarget pointer at player+76, selects its texture handle (+68), clears D3DCLEAR_TARGET to 0xff000000, then restores target zero after restoring draw states. 401E60 obtains texture surface level zero and releases that temporary COM reference; zero selects cached g718 rather than saving/restoring an arbitrary previous target.
+
+The native renderer now implements these real IDirect3DTexture9/IDirect3DDevice9 operations using ComOwner for the surface reference. RuntimeRecord names and asserts the recovered +76 field. DrawTarget spans the ACT draw pass under the existing player lock, including the clear before visibility checks; destruction restores the cached backbuffer after DrawStates. Early exits also restore the target, avoiding leaking device state on invalid/inactive ACT paths. The API adapter returns HRESULTs for invalid handles or failed GetSurfaceLevel instead of dereferencing null COM pointers; the draw caller retains the original ignored-HRESULT behavior. No game or contract executable was run.
+
+R101 overall build failed because the isolated ACT frame contract had no definition for the newly introduced renderer boundary; the game itself linked. Its artifact record is corrected accordingly. R102 supplies a recording renderer boundary and a D3D Clear fixture, adding compiled-only assertions for target selection, opaque-black clear and restoration order. No contract was executed. Future artifact recording rejects compiler/linker errors rather than inferring overall success from an existing main EXE.
+
+
+### R103: actual std::list owns the render-order queue
+
+Original 46A210 appends all values to a 12-byte VC8 list node and throws length_error at 0x3ffffffe; duplicates are retained. The queue is borrowed render-layer pointers, not ownership of the layers. Its manual sentinel/node allocations, draw traversal, clear and atexit cleanup are now backed by std::list<int32_t>. The g613/g614 emulated container globals and the broken 4D4930 free loop are removed. Existing C entry points retain their trace calls and delegate to the native queue. Diagnostic identities are opaque addresses, never exposed as old STL node layouts. Initialization and shutdown clear only container storage.
+
+The stage contract no longer installs a fake stack sentinel; it uses the native queue interface. Added compiled-only coverage checks A/B/A insertion order, duplicate preservation, null skipping during draw, camera forwarding, and that clearing does not destroy payloads. No tests or game were run. This migrates the render-order list; actor handle free lists and actor ownership containers remain separate work.
+
+
+### R104: actual standard containers own the complete actor handle pool
+
+Recovered constructor 46A2D0, Get 46AB10, release 46A6F0, lookup 46A390, size 46A380, destructor 46A450/46A550 and the base deleting entry. Evidence is retained in actor-pool-evidence-r104.json. Two real std::vector objects own actor pointers and generations; std::list owns recycled slot indices. The 80-byte C host contains only an opaque state pointer and a native critical section, not emulated VC8 vector/list layouts. No production consumer outside this component reads its old container fields; contract fixtures now use public lifecycle/accessor calls.
+
+Get publishes low16 slot/high16 generation before allocation/reset, wraps the generation to one, pops the free-list tail, and updates the reused generation before Actor construction. Release invalidates the generation, invokes the actual Actor virtual deleting entry with flag zero, then appends the slot. Lookup preserves generation checks; size counts allocated slots, not live actors, and now receives ECX explicitly. Destruction invokes flag one on every non-null slot before deleting lock and containers; the base deleting entry is a real native address. Retained existing request/created trace calls. Out-of-range release handles retain a safe rejection rather than reproducing an unchecked original memory read; original valid-handle ordering is preserved. The native lock is directly at +52, while original +52 held a CCriticalSection wrapper with its Windows lock at +56; the opaque boundary has no external lock users.
+
+Deleted the replaced decompiled constructor, size and destructor bodies and the hand-linked pool Get/release implementations. Correction from the complete R106 call-site audit: the remaining flat-vector push helper serves map-event registration, not input storage. The outer ActorManager ownership list, priority tree, resource list, ACT grid/3D and rich-text paths remain unfinished; this is not a claim of complete library replacement. Added compiled-only lifecycle coverage for packed handles, stale lookup, LIFO reuse, allocated count and virtual destruction. No game, ctest or contract executable was run.
+
+
+### R105: native ActorManager base ownership list and pool retirement
+
+Replaced the complete TObjectManagerBase<Actor> list lifecycle (46B0A0 initialization, 46AA60 append, 463580 clear, 46A9C0/46AAE0 base destruction) with actual std::list storage behind an opaque +8 pointer. Init uses its size accessor; no old linked-node traversal/count mirror remains in this component. Original evidence confirms clear decrements every actor's reference count and calls the handle pool's virtual release when it reaches zero, before deleting list nodes. The former reconstruction lost that indirect call and left all 512 initial slots unavailable for reuse. The native clear restores it, retaining insertion order and preserving actors with another reference.
+
+Base destruction now receives its receiver, clears owned references, invokes the pool's virtual deleting destructor, deletes list storage, and honors scalar storage flags. Removed the damaged generated 463580/46A9C0/46AAE0 bodies and the C list-clear approximation. The separate 12-byte allocator is still used by stage-owner lists, so it is explicitly retained and is not called a standard-container replacement. Outer ActorManager animation/priority trees and derived shutdown remain separate migration work; no new atexit shutdown order is invented.
+
+Compiled-only coverage checks clear-to-pool retirement, retention of additional references, reuse of the released slot, and native base virtual destruction. Pool destruction also reloads the vector size by index across virtual callbacks, matching original iteration instead of retaining invalidatable range iterators. No game or test executable was run.
+
+
+### R106: actual map render list and event vector, including copy and clear
+
+MapManager now owns native std::list<RenderLayer> and std::vector<int32_t> storage through an opaque state at +24. Recovered 46F4C0 construction, 470030 stable-address render append, 46FD70 event registration, 46EF40 indexed event lookup, 46F620 clear, and 470100/4700B0 copy together. Clear drops event values before render objects and retains vector capacity; both contain borrowed layouts. Render copies reconstruct the original eight-byte vtable/layout values; pointers returned for render objects stay stable during subsequent appends. Event registration retains duplicates and null entries even without a callback. The existing player transfer, scalar/proxy fields and script-object assignment order remain unchanged. Explicit container destruction releases both standard containers; application-wide MapManager final shutdown wiring is not newly invented by this batch.
+
+Removed the final retdec_actor_vector_push_i32 call and implementation, manual map vector assignment/reallocation and map render sentinel/node allocation/copy/clear loops. The preceding handoff incorrectly identified this helper's residual caller as input management; direct source inspection identified the actual map-event registration caller and this record corrects that claim. Input cluster/deque migration remains independent unfinished work.
+
+Updated compiled-only contracts to use real container operations and verify independent copies, insertion order, duplicate/null event entries, render address stability, vtable restoration, self-assignment and shrinking/empty vector capacity retention. These are compilation targets only, not executed tests. No game or local test executable was run.

@@ -1,0 +1,137 @@
+{
+  "source_commit": "8f9756da2e9d5cbc1600672606439b356eea3956",
+  "artifacts": [
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/source-commit.txt",
+      "size": 42,
+      "sha256": "0f7ec64afe76986afc15b47694d425ea260e6ce1edde8c967cdfbcf92e5e8c29"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/configure.log",
+      "size": 957,
+      "sha256": "88a8226af6354c4f6b7fb65a63efabd71dc10a7c833a91a93941a18fb3718b73"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/build.log",
+      "size": 1602523,
+      "sha256": "de953d4dbad7996f94f8ddceb79237ee02ab10f538ec7f15cb1358adfa149fd6"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/ctest.log",
+      "size": 6539,
+      "sha256": "1298e58001c35698117134cfb5e395e9f954778ed97d36515e5f0f880b5a7013"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/stage.log",
+      "size": 455,
+      "sha256": "82c289a722cd6dc724b3e3eb2f5a270604a2b25f3cb9c9bf8c6b77503004b28e"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/launch.log",
+      "size": 203,
+      "sha256": "1dbd3e90439e35b837022c7a12b763341af1afab7fed1abefc0dcbb77850eac1"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-local-20260920-r1-diagnostic/vorbis-snapshot.bin",
+      "size": 133876,
+      "sha256": "aafe9128b7d35d65b37e176dec26dd92e943f414c06a3c8234ed309f1968d010"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-local-20260920-r1-diagnostic/kinoko_retdec_rebuild.exe",
+      "size": 863232,
+      "sha256": "9fa3bc587978131204bc35ed7ca0ddbfb34897f83ce077e7b689b3fb2750d609"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-local-20260920-r1-diagnostic/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-local-20260920-r1-diagnostic/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-local-20260920-r1-diagnostic/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/source-commit.txt",
+      "size": 42,
+      "sha256": "0f7ec64afe76986afc15b47694d425ea260e6ce1edde8c967cdfbcf92e5e8c29"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/configure.log",
+      "size": 952,
+      "sha256": "78b641fdd7be0f9e6066f321e8c713f77f5b5ea2b99b9b186d79e468c36ba139"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/build.log",
+      "size": 1572693,
+      "sha256": "e65fcd4a3e3178284ec013edd90a4b3a2f489440177d6ead2b410f20dba5a1a1"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/ctest.log",
+      "size": 6534,
+      "sha256": "4c2427f2963d5d93a22e46d82ad452786d68cee13cc964f20b3913754281e32c"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/stage.log",
+      "size": 450,
+      "sha256": "ea72528e646baef5518f4d9c7be955431de6b93edd788b38a4bba31c22603fa0"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/launch.log",
+      "size": 199,
+      "sha256": "68203a05c24a17ce1f04f251fabf6c59bdd92b15c55bd4190c128f170253d5bb"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-local-20260920-r1-quiet/vorbis-snapshot.bin",
+      "size": 133876,
+      "sha256": "aafe9128b7d35d65b37e176dec26dd92e943f414c06a3c8234ed309f1968d010"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-local-20260920-r1-quiet/kinoko_retdec_rebuild.exe",
+      "size": 863232,
+      "sha256": "0ff59ea12b97fa46f0bf83855af80254d8aa85fdda88503d1219e5c1e11b23d1"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-local-20260920-r1-quiet/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-local-20260920-r1-quiet/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-local-20260920-r1-quiet/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    }
+  ]
+}

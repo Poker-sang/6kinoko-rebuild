@@ -11,7 +11,7 @@ std::vector<unsigned char> fixture;
 int fixture_reader[4]{};
 std::size_t fixture_offset = 0;
 int reader_destroys = 0;
-int identities[3]{};
+int critical_section_identity{};
 #define CHECK(value) do { if (!(value)) { \
     std::fprintf(stderr, "audio contract line %d: %s\n", __LINE__, #value); return 1; \
 } } while (0)
@@ -26,7 +26,7 @@ int32_t g637 = 0, g765 = 1, g876 = 0, g878 = 0;
 char* g877 = nullptr;
 char g874 = 0;
 const KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
-    static const KinokoAudioHostSymbols symbols{identities, identities + 1, identities + 2, "test"};
+    static const KinokoAudioHostSymbols symbols{&critical_section_identity, "test"};
     return &symbols;
 }
 int32_t function_407370(int32_t slot, const char*) {

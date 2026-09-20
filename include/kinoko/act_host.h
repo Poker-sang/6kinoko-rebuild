@@ -32,17 +32,28 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void);
 extern char  g1037;
 extern int32_t  g1049;
 extern int32_t  g1050;
-extern int32_t  g1079;
-extern int32_t  g1080;
-extern int32_t  g1141;
-extern int32_t  g1142;
-extern int32_t  g1143;
-extern int32_t  g1144;
-extern int32_t  g1145;
-extern int32_t  g1151;
-extern int32_t  g1152;
-extern int32_t  g1153;
-extern int32_t  g1154;
+extern int32_t kinoko_resource2d_class_pair[2];
+#define g1079 (kinoko_resource2d_class_pair[0])
+#define g1080 (kinoko_resource2d_class_pair[1])
+extern int32_t kinoko_layout_set_pair[2];
+#define g1141 (kinoko_layout_set_pair[0])
+#define g1142 (kinoko_layout_set_pair[1])
+extern int32_t kinoko_layout_get_pair[2];
+#define g1143 (kinoko_layout_get_pair[0])
+#define g1144 (kinoko_layout_get_pair[1])
+extern int32_t kinoko_layout_class_pair[2];
+#define g1145 (kinoko_layout_class_pair[0])
+#define g1146 (kinoko_layout_class_pair[1])
+extern int32_t kinoko_layer_set_pair[2];
+#define g1151 (kinoko_layer_set_pair[0])
+#define g1152 (kinoko_layer_set_pair[1])
+extern int32_t kinoko_layer_get_pair[2];
+#define g1153 (kinoko_layer_get_pair[0])
+#define g1154 (kinoko_layer_get_pair[1])
+extern int32_t kinoko_act_script_extension[7];
+#define g554 (kinoko_act_script_extension[0])
+#define g555 (kinoko_act_script_extension[4])
+#define g556 (kinoko_act_script_extension[5])
 extern int32_t  g1224;
 extern int32_t  g483;
 extern int32_t  g484;
@@ -59,24 +70,8 @@ float function_404130(long double a1);
 int32_t function_407370(int32_t reader_slot_address, const char *file_name);
 int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4252e0(void);
-int32_t function_445530(int32_t a1);
-int32_t function_4455e0(int32_t a1);
-int32_t function_445650(int32_t a1);
-int32_t function_4517c0(int32_t a1);
-int32_t function_451b70(int32_t a1);
-int32_t function_451f30(int32_t a1);
-int32_t function_451f80(int32_t a1, int32_t a2);
-int32_t function_452010(int32_t a1);
-int32_t function_452150(int32_t lpFileName);
-int32_t function_452220(void);
-int32_t function_452270(void);
-int32_t function_4522c0(void);
-int32_t function_455330(int32_t a1);
-int32_t function_455390(int32_t a1);
-int32_t function_4554b0(int32_t a1);
-int32_t function_455520(int32_t a1);
-int32_t function_4556c0(int32_t a1);
-int32_t function_455730(int32_t a1);
+int32_t kinoko_sqrat_call_integer0(int32_t a1);
+int32_t kinoko_sqrat_call_integer1(int32_t a1);
 int32_t function_458330(int32_t a1, int32_t a2, int32_t result);
 void retdec_destroy_reader(int32_t *reader);
 int32_t retdec_is_release_watch_data(int32_t data);

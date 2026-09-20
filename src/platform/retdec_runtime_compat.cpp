@@ -167,109 +167,34 @@ int _vsprintf_compat(char *buffer, const char *format, va_list args)
     return vsprintf_s(buffer, 0x7fffffff, format, args);
 }
 
-double __atof_l(const char *text, void *locale, void *unused)
-{
-    (void)locale;
-    (void)unused;
-    return strtod(text, nullptr);
-}
 
-int _atexit(void (*function)(void))
-{
-    (void)function;
-    return 0;
-}
 
-/* Remaining C++ ABI/locale adapters are referenced by recovered callers.
-   Several signatures and exception semantics are still incomplete. They are
-   NOT equivalent to the modern STL or a working native exception runtime;
-   keep the boundary until its complete caller/object/unwind contract is known.
-   See docs/legacy-library-audit-20260920.md. */
+/* Legacy allocation spelling remains malloc-compatible with the recovered
+   callers and their free-based cleanup. This is not modern operator new. */
 int32_t _3f__3f_2_40_YAPAXI_40_Z(uint32_t size)
 {
     return (int32_t)(uintptr_t)malloc(size);
 }
 
-int32_t _3f__3f_0exception_40_std_40__40_QAE_40_ABQBD_40_Z(void *result)
-{
-    return (int32_t)(uintptr_t)result;
-}
 
-int32_t _3f__3f_1_Init_locks_40_std_40__40_QAE_40_XZ(void)
-{
-    return 0;
-}
 
-int32_t _3f__3f_8type_info_40__40_QBE_NABV0_40__40_Z(void *value)
-{
-    return (int32_t)(uintptr_t)value;
-}
 
-int32_t _3f__Tidy_40_exception_40_std_40__40_AAEXXZ(void)
-{
-    return 0;
-}
 
-int32_t _3f__Xinvalid_argument_40_std_40__40_YAXPBD_40_Z(char *message)
-{
-    (void)message;
-    return 0;
-}
 
-int32_t _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
-    void *object, int32_t count, int32_t size, void (*destroy)(int32_t *))
-{
-    int32_t i;
-    (void)size;
-    if (destroy != nullptr) {
-        for (i = count - 1; i >= 0; --i) {
-            destroy((int32_t *)((unsigned char *)object + (size_t)i * (size_t)size));
-        }
-    }
-    return 0;
-}
 
-int32_t _3f__3f__L_40_YGXPAXIHP6EX0_40_Z1_40_Z(
-    void *object, int32_t count, int32_t size,
-    void (*construct)(int32_t *), void (*destroy)(int32_t *))
-{
-    int32_t i;
-    (void)destroy;
-    if (construct != nullptr) {
-        for (i = 0; i < count; ++i) {
-            construct((int32_t *)((unsigned char *)object + (size_t)i * (size_t)size));
-        }
-    }
-    return 0;
-}
 
-int32_t _3f__3f__M_40_YGXPAXIHP6EX0_40_Z_40_Z(
-    void *object, int32_t count, int32_t size, void (*destroy)(int32_t *))
-{
-    return _3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z(
-        object, count, size, destroy);
-}
 
-int32_t ___report_gsfailure(void) { return 0; }
-int32_t __CxxThrowException_40_8(void) { return 0; }
 
-int32_t ___RTtypeid(int32_t a1, int32_t a2, int32_t a3, int32_t a4)
-{
-    (void)a2;
-    (void)a3;
-    (void)a4;
-    return a1;
-}
 
-int32_t retdec_Xinvalid_argument(char *message)
-{
-    (void)message;
-    return 0;
-}
 
-int32_t unknown_fcd53371(void)
-{
-    return 0;
-}
+
+
+
+
+
+
+
+
+
 
 } // extern "C"

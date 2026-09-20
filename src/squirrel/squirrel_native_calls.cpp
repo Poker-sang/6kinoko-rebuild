@@ -93,14 +93,10 @@ int32_t property_dispatch(int32_t id, bool write) {
     auto vm = pointer<SQVM>(id);
     // [instance, key, (value), captured lookup table]. Never index a short frame.
     if (!vm || sq_gettop(vm) < (write ? 4 : 3)) return error(vm, "Member Variable not found");
-    sq_push(vm, 2);
-    if (SQ_FAILED(sq_get(vm, -2))) return error(vm, "Member Variable not found");
-    sq_push(vm, 1);
-    if (write) sq_push(vm, 3);
-    // The recovered callbacks intentionally ignore the inner call's status and
-    // leave cleanup to the outer native frame. Do not invent error propagation.
-    kinoko_sq_call(id, write ? 2 : 1, write ? 0 : 1, static_cast<int32_t>(g560));
-    return write ? 0 : 1;
+    return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(g560),
+        [](HSQUIRRELVM machine, SQInteger count, SQBool result, SQBool raiseerror) -> SQRESULT {
+            return kinoko_sq_call(address(machine), count, result, raiseerror);
+        });
 }
 }
 
@@ -109,8 +105,7 @@ extern "C" int32_t function_41e2c0(int32_t vm) { return property_dispatch(vm, tr
 extern "C" int32_t function_431650(int32_t id) {
     auto vm = pointer<SQVM>(id);
     if (!vm || sq_gettop(vm) < 1) return -1;
-    sq_weakref(vm, -1);
-    return 1;
+    return upstream::sqrat_weakref(vm);
 }
 extern "C" int32_t function_445730(int32_t id) {
     auto vm = pointer<SQVM>(id);
@@ -411,3 +406,4 @@ extern "C" int32_t function_472140(int32_t id) {
     auto vm = pointer<SQVM>(id);
     return function_471a60(target(vm), id, 2);
 }
+

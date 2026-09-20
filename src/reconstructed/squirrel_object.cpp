@@ -17,22 +17,11 @@ using namespace kinoko::script;
 // type for which sq_getsize has a meaning. Operate on the existing game VM.
 extern "C" int32_t kinoko_squirrel_object_size(int32_t object, int32_t vm_address) {
     if (!object || !vm_address) return 0;
-    ObjectView value(object);
-    const auto type = value.value()._type;
-    if (type != OT_ARRAY && type != OT_TABLE && type != OT_STRING) return 0;
-    auto* vm = pointer<SQVM>(vm_address);
-    value.push(vm);
-    const auto size = sq_getsize(vm, -1);
-    kinoko_sq_pop(vm_address, 1);
-    return size;
+    return upstream::sqplus_length(pointer<SQVM>(vm_address), ObjectView(object).value());
 }
 
 extern "C" int32_t kinoko_squirrel_object_reverse(int32_t object, int32_t vm_address) {
-    auto* vm = pointer<SQVM>(vm_address);
-    ObjectView(object).push(vm);
-    const auto result = sq_arrayreverse(vm, -1);
-    kinoko_sq_pop(vm_address, 1);
-    return result == SQ_OK;
+    return upstream::sqplus_reverse(pointer<SQVM>(vm_address), ObjectView(object).value());
 }
 
 extern "C" int32_t kinoko_squirrel_object_destroy(int32_t object, int32_t vm_address, int32_t vtable) {

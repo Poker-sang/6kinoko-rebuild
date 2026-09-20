@@ -5,8 +5,8 @@
 #include "kinoko/squirrel_pair.hpp"
 #include <cstdlib>
 #include <new>
-
-extern "C" int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
+#include <map>
+#include <memory>
 
 namespace {
 using namespace kinoko::act;
@@ -18,21 +18,61 @@ RecordView<RuntimeRecord> runtime(int32_t value) { return RecordView<RuntimeReco
 int32_t* object_bytes(const RecordView<RuntimeRecord>& view) {
     return reinterpret_cast<int32_t*>(view.bytes(&RuntimeRecord::environment));
 }
-void release_find_tree(Address node) {
-    for (;;) {
-        const RecordView<FindNode> item(pointer<void>(node));
-        if (item.get(&FindNode::sentinel)) return;
-        const auto left = item.get(&FindNode::left);
-        release_find_tree(item.get(&FindNode::right));
-        FindClose(item.get(&FindNode::handle));
-        std::free(item.data());
-        node = left;
-    }
+struct FindEntry {
+    HANDLE handle=INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATAA data{};
+    ~FindEntry() { if (handle!=INVALID_HANDLE_VALUE) FindClose(handle); }
+};
+using FindMap=std::map<int32_t,std::unique_ptr<FindEntry>>;
+FindMap* finds(int32_t storage) {
+    return storage ? pointer<FindMap>(runtime(storage).get(&RuntimeRecord::find_storage)) : nullptr;
 }
 void release_vector(const RecordView<VectorStorage>& vector) {
     std::free(pointer<void>(vector.get(&VectorStorage::begin)));
     vector.clear();
 }
+}
+
+// Original 452150..4522C0. IDs count successful starts, independently of the
+// number of live handles. FindNext writes the same per-search WIN32 data.
+extern "C" int32_t kinoko_act_find_first(int32_t storage, const char* pattern) {
+    auto* entries=finds(storage);
+    if (!entries || !pattern) return 0;
+    try {
+        auto entry=std::make_unique<FindEntry>();
+        entry->handle=FindFirstFileA(pattern,&entry->data);
+        if (entry->handle==INVALID_HANDLE_VALUE) return 0;
+        const auto view=runtime(storage);
+        const auto id=view.get(&RuntimeRecord::next_find_id)+uint32_t{1};
+        view.set(&RuntimeRecord::next_find_id,id);
+        // Original map assignment replaces an entry if the 32-bit ID wraps.
+        (*entries)[static_cast<int32_t>(id)]=std::move(entry);
+        view.set(&RuntimeRecord::find_count,static_cast<uint32_t>(entries->size()));
+        return static_cast<int32_t>(id);
+    } catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_find_next(int32_t storage, int32_t id) {
+    auto* entries=finds(storage);
+    if (!entries) return 0;
+    const auto found=entries->find(id);
+    return found!=entries->end() && FindNextFileA(found->second->handle,&found->second->data);
+}
+extern "C" int32_t kinoko_act_find_close(int32_t storage, int32_t id) {
+    auto* entries=finds(storage);
+    if (!entries) return 0;
+    const auto found=entries->find(id);
+    if (found==entries->end()) return 0;
+    const auto handle=found->second->handle;
+    found->second->handle=INVALID_HANDLE_VALUE;
+    entries->erase(found); // Original erases even if the OS close fails.
+    runtime(storage).set(&RuntimeRecord::find_count,static_cast<uint32_t>(entries->size()));
+    return FindClose(handle)!=0;
+}
+extern "C" const char* kinoko_act_find_name(int32_t storage, int32_t id) {
+    auto* entries=finds(storage);
+    if (!entries) return nullptr;
+    const auto found=entries->find(id);
+    return found==entries->end() ? nullptr : found->second->data.cFileName;
 }
 
 // Original 44FDE0 writes selected members, not all 192 bytes. Keep unknown
@@ -45,15 +85,7 @@ extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
     view.view(&RuntimeRecord::draw_commands).clear();
     view.view(&RuntimeRecord::draw_sprites).clear();
     view.set(&RuntimeRecord::find_count, uint32_t{0});
-    const int32_t head = _3f__3f_2_40_YAPAXI_40_Z(sizeof(FindNode));
-    if (!head) throw std::bad_alloc();
-    view.set(&RuntimeRecord::find_head, static_cast<Address>(head));
-    const RecordView<FindNode> sentinel(pointer<void>(head));
-    sentinel.set(&FindNode::left, static_cast<Address>(head));
-    sentinel.set(&FindNode::parent, static_cast<Address>(head));
-    sentinel.set(&FindNode::right, static_cast<Address>(head));
-    sentinel.set(&FindNode::color, uint8_t{1});
-    sentinel.set(&FindNode::sentinel, uint8_t{1});
+    view.set(&RuntimeRecord::find_storage,static_cast<Address>(address(new FindMap)));
     view.set(&RuntimeRecord::name_capacity, uint32_t{15});
     view.set(&RuntimeRecord::name_length, uint32_t{0});
     *view.bytes(&RuntimeRecord::name_storage) = 0;
@@ -61,8 +93,8 @@ extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
     view.set(&RuntimeRecord::vm, Address{0});
     view.set(&RuntimeRecord::stage_active, uint8_t{0});
     kinoko::script::pair::reset(object_bytes(view));
-    view.set(&RuntimeRecord::field76, uint32_t{0});
-    view.set(&RuntimeRecord::field96, uint32_t{0});
+    view.set(&RuntimeRecord::render_target, uint32_t{0});
+    view.set(&RuntimeRecord::next_find_id, uint32_t{0});
     view.set(&RuntimeRecord::wake_time, uint32_t{0});
     view.set(&RuntimeRecord::hidden, uint8_t{0});
     view.set(&RuntimeRecord::stage_state, std::array<uint32_t, 11>{});
@@ -92,13 +124,9 @@ extern "C" void retdec_destroy_act_runtime(int32_t storage) {
         sq_deleteslot(vm, -2, SQFalse);
         sq_settop(vm, top);
     }
-    if (const auto head = view.get(&RuntimeRecord::find_head)) {
-        const RecordView<FindNode> sentinel(pointer<void>(head));
-        release_find_tree(sentinel.get(&FindNode::parent));
-        std::free(sentinel.data());
-        view.set(&RuntimeRecord::find_head, Address{0});
-        view.set(&RuntimeRecord::find_count, uint32_t{0});
-    }
+    delete finds(storage);
+    view.set(&RuntimeRecord::find_storage, Address{0});
+    view.set(&RuntimeRecord::find_count, uint32_t{0});
     DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(view.bytes(&RuntimeRecord::lock)));
     if (view.get(&RuntimeRecord::name_capacity) >= 16) {
         Address heap_name;

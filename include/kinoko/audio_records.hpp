@@ -6,6 +6,7 @@
 
 namespace kinoko::audio {
 // These records are the verified native Win32 boundary, NOT VM objects.
+// Retired vtable words are reserved layout only; no legacy objects live here.
 // Unknown regions stay opaque. The DSP/decoder state itself lives in C++ owners.
 struct PathRecord {
     union { char inline_text[16]; char* allocated_text; } storage;
@@ -22,7 +23,7 @@ struct BufferRecord {
     std::uint32_t playback_state;
     std::uint8_t ready;
     std::uint8_t reserved21[3];
-    std::uint32_t decoder_vtable;
+    std::uint32_t retired_decoder_vtable;
     std::uint8_t decoder_storage[0x134c - 0x28];
     std::uint8_t looping;
     std::uint8_t reserved134d[3];
@@ -49,7 +50,7 @@ struct QueueRecord {
     std::uint32_t reserved;
 };
 struct HandleTable {
-    const void* vtable;
+    std::uint32_t retired_handle_vtable;
     BufferRecord** buffers_begin;
     BufferRecord** buffers_end;
     BufferRecord** buffers_capacity;
@@ -87,7 +88,7 @@ static_assert(std::is_trivial_v<BufferRecord>);
 KINOKO_AUDIO_FIELD(PathRecord, capacity, 20);
 KINOKO_AUDIO_FIELD(BufferRecord, playback_state, 0x1c);
 KINOKO_AUDIO_FIELD(BufferRecord, ready, 0x20);
-KINOKO_AUDIO_FIELD(BufferRecord, decoder_vtable, 0x24);
+KINOKO_AUDIO_FIELD(BufferRecord, retired_decoder_vtable, 0x24);
 KINOKO_AUDIO_FIELD(BufferRecord, looping, 0x134c);
 KINOKO_AUDIO_FIELD(BufferRecord, start_time, 0x1350);
 KINOKO_AUDIO_FIELD(BufferRecord, fade_started, 0x1354);

@@ -3,6 +3,7 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/squirrel_source_runtime.h"
 #include "kinoko/sqrat_object_bridge.h"
+#include "kinoko/upstream_bindings.hpp"
 #include <algorithm>
 
 extern "C" {
@@ -53,10 +54,7 @@ bool valid_class(HSQUIRRELVM vm, const int32_t* input, int32_t native, int32_t* 
 }
 bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, int32_t native,
                      HSQOBJECT& result) {
-    sq_pushobject(vm, type);
-    if (SQ_FAILED(sq_createinstance(vm, -1))) return false; // NOT sq_call / constructor.
-    sq_remove(vm, -2); // Remove the class, keep the instance.
-    if (SQ_FAILED(sq_setinstanceup(vm, -1, pointer(native)))) return false;
+    if (!upstream::sqrat_push_instance(vm, type, pointer(native))) return false;
     sq_getstackobj(vm, -1, &result);
     sq_addref(vm, &result);
     return true;
@@ -114,21 +112,22 @@ extern "C" int32_t retdec_create_unbound_instance(int32_t id, const int32_t* typ
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }
+extern "C" void retdec_release_act_callback(int32_t record) {
+    if (!record) return;
+    auto callback = read<ActCallback>(pointer(record));
+    if (callback.closure._type == OT_NULL) return;
+    if (callback.vm) upstream::sqrat_release_function(pointer<SQVM>(callback.vm),
+        callback.environment, callback.closure);
+    callback.environment = empty(); callback.closure = empty();
+    write(pointer(record), callback);
+}
 extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t offset,
     int32_t global, const char* name) {
     auto vm = pointer<SQVM>(id);
     if (!vm || !script || !global || !name) return;
     auto* destination = bytes(script) + offset;
+    retdec_release_act_callback(address(destination));
     auto callback = read<ActCallback>(destination);
-    if (callback.closure._type != OT_NULL) {
-        if (callback.vm) {
-            auto previous_vm = pointer<SQVM>(callback.vm);
-            sq_release(previous_vm, &callback.environment);
-            sq_release(previous_vm, &callback.closure);
-        }
-        callback.environment = empty(); callback.closure = empty();
-        write(destination, callback);
-    }
     int32_t pair[2]; write(pair, empty());
     const auto found = retdec_sqrat_get(global, name, address(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
@@ -138,7 +137,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
         callback.vm = id;
         callback.environment = read<HSQOBJECT>(bytes(global) + 8);
         callback.closure = read<HSQOBJECT>(pair);
-        sq_addref(vm, &callback.environment); sq_addref(vm, &callback.closure);
+        upstream::sqrat_retain_function(vm, callback.environment, callback.closure);
         write(destination, callback);
     }
     retdec_sqrat_release_pair(id, pair);
@@ -161,8 +160,8 @@ extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
     retdec_trace_i32("450e30:root-vm", id);
     return 1;
 }
-extern "C" int32_t retdec_execute_embedded_act_script(int32_t id, int32_t script,
-    const int32_t* environment) {
+static int32_t execute_embedded_act_script(int32_t id, int32_t script,
+    const int32_t* environment, int runs) {
     auto vm = pointer<SQVM>(id);
     if (!vm || !script || !environment) return 0;
     const auto data = read<uint32_t>(bytes(script) + script_data_offset);
@@ -176,13 +175,26 @@ extern "C" int32_t retdec_execute_embedded_act_script(int32_t id, int32_t script
     if (SQ_FAILED(load) || sq_gettop(vm) <= restore.top()) return 0;
     HSQOBJECT closure = empty(); sq_getstackobj(vm, -1, &closure);
     if (closure._type != OT_CLOSURE || !data_bits(closure)) return 0;
-    // The read closure stays below a second closure and its environment, exactly
-    // as in the original call sequence. Do not substitute the VM root table.
-    sq_pushobject(vm, closure);
-    sq_pushobject(vm, read<HSQOBJECT>(environment));
-    const auto result = kinoko_sq_call(id, 1, SQFalse, SQTrue);
-    retdec_trace_i32("act-script:execute-result", result);
-    return SQ_SUCCEEDED(result);
+    // Source LocalScript::Run leaves the read closure below its own call pair.
+    bool result = false;
+    for (int run = 0; run < runs; ++run) {
+        result = upstream::sqrat_run_script(vm, closure, read<HSQOBJECT>(environment),
+            [](HSQUIRRELVM target, SQInteger count, SQBool value, SQBool errors) -> SQRESULT {
+                return kinoko_sq_call(address(target), count, value, errors);
+            });
+    }
+    retdec_trace_i32("act-script:execute-result", result ? SQ_OK : SQ_ERROR);
+    return result;
+}
+extern "C" int32_t retdec_execute_embedded_act_script(int32_t vm, int32_t script,
+    const int32_t* environment) {
+    return execute_embedded_act_script(vm, script, environment, 1);
+}
+extern "C" int32_t retdec_execute_act_file_bytecode(int32_t vm, int32_t script,
+    const int32_t* environment) {
+    // 416A8D calls the loaded closure, then 416AE8 calls LocalScript::Run on
+    // that same closure. The first call's failure is not used as a branch.
+    return execute_embedded_act_script(vm, script, environment, 2);
 }
 extern "C" int32_t function_45e020_this(int32_t state, int32_t temporary,
     int32_t type, int32_t data) {

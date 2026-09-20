@@ -2,6 +2,7 @@
 #include "../src/decompiled/6kinoko_rebuilt.c"
 #include "stage_audio_contract.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
+#include "kinoko/boost_hash.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -1999,9 +2000,7 @@ static int test_branch_motion(int32_t manager) {
 static int test_map_transition(int32_t vm, int32_t *root) {
     const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
     int32_t map_state=PTR(g_retdec_map_manager_state);
-    int32_t render_head[3]={0};
-    render_head[0]=render_head[1]=PTR(render_head);
-    g613=PTR(render_head);
+    kinoko_initialize_render_queue();
     function_4a94e0_this(PTR(g722));
     function_4a95c0_this(PTR(g722),PTR(root+1));
     CHECK(function_46f4c0_this(map_state));
@@ -2037,7 +2036,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
         fprintf(stderr,"map transition %s\n",paths[i]);
         CHECK(execute_source(vm,root+2,i==1 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
         CHECK(*(int32_t *)(intptr_t)(map_state+12));
-        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),g614);
+        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),kinoko_render_queue_size());
         CHECK(execute_source(vm,root+2,
             "player <- {x=800.0,y=850.0,vx=2.5,vy=0.0,direction=1.0,hitBottom=1,\n"
             " left=792.0,right=808.0,top=818.0,bottom=850.0,take=100,\n"
@@ -2087,7 +2086,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     int32_t retired_environment[2]={g483,g484};
     CHECK(!retdec_sqrat_get(PTR(root),retired_name,retired_environment));
     function_46a1d0();
-    g613=0;
+    CHECK(kinoko_render_queue_size()==0);
     puts("PASS: first-stage passage load/release/reload, camera, actors, ACT update and draw transforms");
     return 0;
 }
@@ -2793,17 +2792,35 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int32_t render_queue_visits[4], render_queue_visit_count;
+static int32_t __fastcall visit_render_queue(int32_t *object, void *unused, int32_t camera) {
+    (void)unused;
+    if (render_queue_visit_count < 4)
+        render_queue_visits[render_queue_visit_count++] = object[1] + camera;
+    return 0;
+}
 static int test_global_callback_destructor(int32_t vm) {
     int32_t saved_callback[7];
     const int top = function_48aa20(vm);
-    const int32_t saved_queue = g613;
-    const int32_t saved_count = g614;
     CHECK(function_4d3e50() == 0);
-    CHECK(g613 != 0 && g614 == saved_count);
-    int32_t *sentinel = (int32_t *)(intptr_t)g613;
-    CHECK(sentinel[0] == g613 && sentinel[1] == g613);
-    free(sentinel);
-    g613 = saved_queue;
+    CHECK(kinoko_render_queue_size() == 0);
+    CHECK(kinoko_render_queue_first() == kinoko_render_queue_identity());
+    {
+        int32_t table[1]={PTR(visit_render_queue)};
+        int32_t a[2]={PTR(table),7}, b[2]={PTR(table),3};
+        int32_t a_ptr=PTR(a), b_ptr=PTR(b), null_ptr=0;
+        CHECK(function_46a210(&a_ptr));
+        CHECK(function_46a210(&b_ptr));
+        CHECK(function_46a210(&a_ptr));
+        CHECK(function_46a210(&null_ptr));
+        CHECK(kinoko_render_queue_size()==4);
+        render_queue_visit_count=0;
+        kinoko_draw_render_queue(100);
+        CHECK(render_queue_visit_count==3 && render_queue_visits[0]==107 &&
+              render_queue_visits[1]==103 && render_queue_visits[2]==107);
+        function_46a1d0();
+        CHECK(kinoko_render_queue_size()==0 && a[1]==7 && b[1]==3);
+    }
 
     memcpy(saved_callback, g612, sizeof(saved_callback));
     g612[0] = vm;
@@ -2839,10 +2856,11 @@ static int32_t compiler_test_feed(int32_t context) {
 }
 static int compile_error_calls, compile_error_valid;
 static int32_t compile_error_vm;
+static const char *compile_error_source = "callback source";
 static void compiler_test_error(int32_t vm, const char *error, const char *source, int32_t line, int32_t column) {
     ++compile_error_calls;
     compile_error_valid = vm == compile_error_vm && retdec_stack_vm() == vm &&
-        error && *error && strcmp(source,"callback source")==0 && line>0 && column>0;
+        error && *error && strcmp(source,compile_error_source)==0 && line>0 && column>0;
 }
 static int test_compiler_receivers(int32_t vm, int32_t *root) {
     const int top=function_48aa20(vm);
@@ -2886,9 +2904,75 @@ static int test_compiler_receivers(int32_t vm, int32_t *root) {
         "if(compilestring(\"return CompilerEnum.second;\")()!=9) throw 124;\n");
     expected_vm_error=0;
     CHECK(compile_result);
+    {
+        const char *text = "sameVmCompile <- CompilerSaved + CompilerEnum.first;";
+        int32_t script[26] = {0};
+        script[23] = PTR(text); script[24] = (int32_t)strlen(text);
+        CHECK(retdec_execute_act_source_script(vm, PTR(script), root+2));
+        CHECK(execute_source(vm, root+2, "if(sameVmCompile!=38) throw 125;\n"));
+        const char *bad = "local =;";
+        script[23] = PTR(bad); script[24] = (int32_t)strlen(bad);
+        expected_vm_error = 1;
+        compile_error_source = "";
+        compile_error_calls = compile_error_valid = 0;
+        function_48afa0(vm, PTR(compiler_test_error));
+        CHECK(!retdec_execute_act_source_script(vm, PTR(script), root+2));
+        CHECK(compile_error_calls == 1 && compile_error_valid);
+        function_48afa0(vm, previous_handler);
+        compile_error_source = "callback source";
+        expected_vm_error = 0;
+        CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    }
     CHECK(function_48aa20(vm)==top);
     CHECK(retdec_explicit_vm==0);
     puts("PASS: source compiler current-VM constants/enums, callbacks, errors, closures and GC");
+    return 0;
+}
+
+static int test_act_script_source_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t script[26] = {0}, environment[2] = {g483,g484}, wrapper[5] = {0};
+    int32_t extension[7]; memcpy(extension, kinoko_act_script_extension, sizeof(extension));
+    int32_t old_archive = g765;
+    CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
+    retdec_string_assign_n(&g554, ".cv4", 4);
+    CHECK(g555 == 4 && g556 == 15 && strcmp((char*)&g554, ".cv4") == 0);
+    CHECK(retdec_sqrat_new_table(vm, environment));
+    wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
+    wrapper[2] = environment[0]; wrapper[3] = environment[1];
+    script[21] = 15;
+    CHECK(retdec_register_act_script(PTR(script), PTR(wrapper)) == 0); /* No source yet. */
+    const char *initial = "counter <- 0;\n function Init() { counter += 1; }\n";
+    script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
+    ((unsigned char*)script)[100] = 1;
+    CHECK(function_415fd0(PTR(script), PTR(wrapper)) == 0);
+    g765 = 0;
+    char actual[MAX_PATH], requested[MAX_PATH], command[512];
+    sprintf_s(actual,sizeof(actual),"act-source-%lu.cv4",GetCurrentProcessId());
+    sprintf_s(requested,sizeof(requested),"act-source-%lu.nut",GetCurrentProcessId());
+    FILE *file = NULL;
+    CHECK(fopen_s(&file,actual,"wb") == 0);
+    const char *source = "counter += 10;\n function Init() { counter += 20; }\n";
+    CHECK(fwrite(source,1,strlen(source),file) == strlen(source)); fclose(file);
+    sprintf_s(command,sizeof(command),"if(!CompileFile(\"%s\", this)) throw 1;\n",requested);
+    CHECK(execute_source(vm, environment, command));
+    CHECK(retdec_execute_act_callback(PTR(script),4,"test:act-compile-file"));
+    CHECK(execute_source(vm, environment,"if(counter!=30) throw 2;\n"));
+    unsigned char *bytecode = NULL; int32_t bytecode_size = 0;
+    const char *increment = "counter += 1;";
+    CHECK(retdec_squirrel_compile_source(increment,(int32_t)strlen(increment),"ACT file",&bytecode,&bytecode_size));
+    sprintf_s(actual,sizeof(actual),"act-bytecode-%lu.cv4",GetCurrentProcessId());
+    sprintf_s(requested,sizeof(requested),"act-bytecode-%lu.nut",GetCurrentProcessId());
+    CHECK(fopen_s(&file,actual,"wb") == 0);
+    CHECK(fwrite(bytecode,1,bytecode_size,file) == (size_t)bytecode_size); fclose(file); free(bytecode);
+    sprintf_s(command,sizeof(command),"if(!CompileFile(\"%s\", this)) throw 3;\n if(counter!=32) throw 4;\n",requested);
+    CHECK(execute_source(vm, environment, command));
+    CHECK(execute_source(vm, environment,"if(CompileFile(\"missing.nut\")) throw 5;\n"));
+    retdec_destroy_cact_script(PTR(script));
+    retdec_sqrat_release_pair(vm, environment);
+    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); g765 = old_archive;
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: original ACT script registration, extension rewrite, callback refresh and bytecode double execution");
     return 0;
 }
 
@@ -3166,10 +3250,19 @@ static int test_global_stage_cleanup(void) {
         CHECK(runtime[0] == PTR(owner) && runtime[3] == 0 && runtime[4] == 0);
         CHECK(runtime[38] == 0 && runtime[39] == OT_NULL && runtime[40] == 0);
         CHECK(runtime[45] == 0 && runtime[46] == 15);
-        int32_t *find_head = (int32_t *)(intptr_t)runtime[21];
-        CHECK(find_head && find_head[0] == PTR(find_head) && find_head[1] == PTR(find_head)
-              && find_head[2] == PTR(find_head));
-        CHECK(((unsigned char *)find_head)[340] == 1 && ((unsigned char *)find_head)[341] == 1);
+        CHECK(runtime[21] && runtime[22]==0 && runtime[24]==0);
+        CHECK(kinoko_act_find_first(PTR(runtime),"__kinoko_missing_find_contract__/*.none")==0);
+        CHECK(runtime[24]==0 && kinoko_act_find_name(PTR(runtime),1)==NULL);
+        CHECK(!kinoko_act_find_next(PTR(runtime),1) && !kinoko_act_find_close(PTR(runtime),1));
+        int32_t first=kinoko_act_find_first(PTR(runtime),"*");
+        int32_t second=kinoko_act_find_first(PTR(runtime),"*");
+        CHECK(first==1 && second==2 && runtime[22]==2);
+        CHECK(kinoko_act_find_name(PTR(runtime),first)!=NULL);
+        CHECK(kinoko_act_find_close(PTR(runtime),first) && runtime[22]==1);
+        CHECK(!kinoko_act_find_close(PTR(runtime),first));
+        CHECK(kinoko_act_find_name(PTR(runtime),first)==NULL);
+        CHECK(kinoko_act_find_first(PTR(runtime),"*")==3 && runtime[22]==2);
+        /* Two open searches remain for the runtime destructor to close. */
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));
         runtime[11] = PTR(malloc(36));
@@ -3910,6 +4003,118 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     return 0;
 }
 
+static int test_portrait_regions(const char *directory) {
+    char path[MAX_PATH];
+    for (char archive='a'; archive<='c'; ++archive) {
+        sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
+        CHECK(function_410500(path));
+    }
+    int32_t act[60]={0};
+    CHECK(function_427530(PTR(act)));
+    CHECK(function_428000(PTR(act),"data/system/playerimage.act"));
+    /* Independent values from the original PlayerImage ACT, not resource order.
+       Shared atlases must keep distinct crops after deserialization. */
+    const char *names[]={"face_1","face_2","face_3","face_4","face_5",
+                         "face_6","face_7","face_0","face_Default"};
+    const int ids[]={11,14,15,16,17,18,19,20,21};
+    const int atlas[]={1,1,1,2,2,3,2,3,3};
+    const float x[]={0,137,273,0,137,137,273,0,273};
+    CHECK((act[57]-act[56])/4==9);
+    for (int i=0;i<9;++i) {
+        int32_t resource=0;
+        for (int32_t entry=act[56];entry<act[57];entry+=4) {
+            const int32_t candidate=*(int32_t*)(intptr_t)entry;
+            if (strcmp(retdec_std_string_data(candidate+8),names[i])==0) resource=candidate;
+        }
+        CHECK(resource);
+        CHECK(*(int32_t*)(intptr_t)(resource+4)==ids[i]);
+        sprintf_s(path,sizeof(path),"Data/System/face%d",atlas[i]);
+        CHECK(strcmp(retdec_std_string_data(resource+40),path)==0);
+        CHECK(*(float*)(intptr_t)(resource+80)==x[i]);
+        CHECK(*(float*)(intptr_t)(resource+84)==0);
+        CHECK(*(float*)(intptr_t)(resource+88)==136);
+        CHECK(*(float*)(intptr_t)(resource+92)==480);
+        CHECK(*(uint8_t*)(intptr_t)(resource+96)==0);
+    }
+    retdec_destroy_cact_object(PTR(act));
+    puts("PASS: all nine original PlayerImage atlas regions preserve names, IDs and crop rectangles");
+    return 0;
+}
+
+static int test_chip_shared_ownership(void) {
+    int32_t source[60]={0}, texture[2]={0};
+    IDirect3DBaseTexture9Vtbl vtable={0}; vtable.Release=count_texture_release;
+    texture[0]=PTR(&vtable);
+    CHECK(function_427530(PTR(source)));
+    int32_t *resource=(int32_t*)calloc(1,100), *resources=(int32_t*)calloc(1,4);
+    struct retdec_mcd_data *data=(struct retdec_mcd_data*)calloc(1,sizeof(*data));
+    CHECK(resource && resources && data);
+    data->textures=(struct retdec_mcd_texture*)calloc(1,sizeof(*data->textures));
+    CHECK(data->textures);
+    data->texture_count=1;
+    data->textures[0].handle=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    CHECK(data->textures[0].handle);
+    resource[0]=PTR(&g313); resource[7]=resource[14]=resource[23]=15;
+    retdec_string_assign_cstr(resource+2,"a long named chip resource");
+    retdec_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
+    retdec_string_assign_cstr(resource+18,"a long shared resource prefix/");
+    resource[16]=PTR(data); resources[0]=PTR(resource);
+    source[56]=PTR(resources); source[57]=source[58]=PTR(resources+1);
+    int32_t virtual_copy=retdec_call_thiscall0_result(resource,(void*)g313.e9);
+    CHECK(virtual_copy && virtual_copy!=PTR(resource));
+    CHECK(*(int32_t*)(intptr_t)(virtual_copy+64)==PTR(data));
+    CHECK(*(int32_t*)(intptr_t)(virtual_copy+68)==resource[17] && resource[17]);
+    for(int i=0;i<3;++i) {
+        const int offsets[]={8,36,72};
+        CHECK(strcmp(retdec_std_string_data(virtual_copy+offsets[i]),retdec_std_string_data(PTR(resource)+offsets[i]))==0);
+        CHECK(retdec_std_string_data(virtual_copy+offsets[i])!=retdec_std_string_data(PTR(resource)+offsets[i]));
+    }
+    int32_t first=kinoko_act_clone(PTR(source),NULL);
+    int32_t second=kinoko_act_clone(PTR(source),NULL);
+    CHECK(first && second && resource[17]);
+    const int32_t first_resource=**(int32_t**)(intptr_t)(first+224);
+    const int32_t second_resource=**(int32_t**)(intptr_t)(second+224);
+    CHECK(*(int32_t*)(intptr_t)(first_resource+64)==PTR(data));
+    CHECK(*(int32_t*)(intptr_t)(second_resource+68)==resource[17]);
+    retdec_destroy_cact_object(PTR(source));
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_with_flags(first,1);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_with_flags(second,1);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_resource(virtual_copy);
+    CHECK(texture[1]==1);
+    texture[1]=0;
+    resource=(int32_t*)calloc(1,100);
+    CHECK(resource);
+    resource[0]=PTR(&g365); resource[7]=resource[15]=15;
+    resource[1]=47;
+    retdec_string_assign_cstr(resource+2,"a long texture resource name");
+    retdec_string_assign_cstr(resource+10,"data/system/a-long-texture-name");
+    resource[17]=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    resource[18]=64; resource[19]=64;
+    ((float*)resource)[20]=3.0f; ((float*)resource)[21]=7.0f;
+    ((float*)resource)[22]=12.0f; ((float*)resource)[23]=24.0f;
+    int32_t texture_copy=retdec_call_thiscall0_result(resource,(void*)g365.e9);
+    resource[0]=PTR(&g379);
+    int32_t target_copy=retdec_call_thiscall0_result(resource,(void*)g379.e9);
+    CHECK(texture_copy && target_copy);
+    CHECK(*(int32_t*)(intptr_t)texture_copy==PTR(&g365) && *(int32_t*)(intptr_t)target_copy==PTR(&g379));
+    CHECK(*(uint8_t*)(intptr_t)(texture_copy+36)==1 && *(uint8_t*)(intptr_t)(target_copy+36)==1);
+    CHECK(memcmp((void*)(intptr_t)(texture_copy+72),resource+18,25)==0);
+    CHECK(memcmp((void*)(intptr_t)(target_copy+72),resource+18,25)==0);
+    retdec_destroy_cact_resource(PTR(resource));
+    CHECK(retdec_call_thiscall0_result((void*)(intptr_t)texture_copy,(void*)g365.e11)==1);
+    CHECK(*(int32_t*)(intptr_t)(texture_copy+68)==0 && texture[1]==0);
+    CHECK(retdec_call_thiscall0_result((void*)(intptr_t)texture_copy,(void*)g365.e11)==1);
+    retdec_destroy_cact_resource(texture_copy);
+    CHECK(texture[1]==0);
+    retdec_destroy_cact_resource(target_copy);
+    CHECK(texture[1]==1);
+    puts("PASS: native resource clone virtuals, deep names, real Boost ownership and final texture release");
+    return 0;
+}
+
 static int test_act_reentry(const char *directory) {
     char path[MAX_PATH];
     const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
@@ -3953,6 +4158,28 @@ static int test_act_reentry(const char *directory) {
                 }
                 CHECK(on==oh && ln==lh);
             }
+        }
+        if (asset==1) {
+            int checked=0;
+            for (int32_t entry=source[56];entry<source[57];entry+=4) {
+                int32_t* original=*(int32_t**)(intptr_t)entry;
+                if(original[0]!=PTR(&g313)) continue;
+                const int index=(entry-source[56])/4;
+                int32_t* copy=*(int32_t**)(intptr_t)(*(int32_t*)(intptr_t)(runtime[3]+224)+index*4);
+                const int32_t previous=original[16];
+                CHECK(previous && copy[16]==previous && original[17]==copy[17]);
+                const uint32_t count=((struct retdec_mcd_data*)(intptr_t)previous)->chip_count;
+                CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("./"))==1);
+                CHECK(original[16] && original[16]!=previous && copy[16]==previous);
+                CHECK(((struct retdec_mcd_data*)(intptr_t)previous)->chip_count==count);
+                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                const int32_t refreshed=original[16];
+                CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("missing-prefix"))==0);
+                CHECK(original[16]==refreshed && copy[16]==previous);
+                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                ++checked;
+            }
+            CHECK(checked>0);
         }
         retdec_destroy_cact_with_flags(runtime[3],1);
         free((void *)(intptr_t)runtime[4]);
@@ -4095,6 +4322,220 @@ static int test_input_configuration(void) {
     return 0;
 }
 
+static int test_input_copy(void) {
+    int32_t source[378]={0}, target[378]={0}, empty[378]={0};
+    int32_t devices[2][42]={{0}}, map[12]={0}, blocks[12][4]={{0}};
+    unsigned char keys[9]={3,7,11,19,23,29,31,37,41};
+    function_4a94e0_this(PTR(source));
+    function_4a94e0_this(PTR(target));
+    function_4a94e0_this(PTR(empty));
+    source[3]=0x1111; target[3]=0x2222;
+    source[49]=0x3333; target[49]=0x4444;
+    memset((char*)source+16,0x17,164);
+    memset((char*)source+200,0x23,164);
+    memset((char*)source+392,0x35,1024);
+    memset((char*)source+1436,0x47,76);
+    devices[0][0]=devices[1][0]=PTR(g35);
+    devices[0][1]=101; devices[1][41]=303;
+    source[45]=PTR(devices); source[46]=source[47]=PTR(devices)+sizeof(devices);
+    source[48]=12345; target[48]=54321; /* vector allocator byte is not copied */
+    for(int i=0;i<12;++i) map[i]=PTR(blocks[i]);
+    for(int i=0;i<40;++i) blocks[((43+i)/4)%12][(43+i)%4]=PTR(devices[i%2]);
+    source[92]=PTR(map); source[93]=12; source[94]=43; source[95]=40;
+    source[91]=0x5555; target[91]=0x6666; /* preserve iterator proxy */
+    source[354]=PTR(keys); source[355]=source[356]=PTR(keys)+sizeof(keys);
+    source[357]=45678; target[357]=87654;
+    ((char*)source)[388]=9; ((char*)source)[1432]=1; ((char*)source)[1434]=3;
+    CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
+    CHECK(target[3]==0x2222 && target[49]==0x4444);
+    CHECK(target[48]==54321 && target[91]==0x6666 && target[357]==87654);
+    CHECK(memcmp((char*)target+16,(char*)source+16,164)==0);
+    CHECK(memcmp((char*)target+200,(char*)source+200,164)==0);
+    CHECK(memcmp((char*)target+392,(char*)source+392,1024)==0);
+    CHECK(memcmp((char*)target+1436,(char*)source+1436,76)==0);
+    CHECK(target[45]!=source[45] && target[354]!=source[354] && target[92]!=source[92]);
+    CHECK(memcmp((void*)(intptr_t)target[45],devices,sizeof(devices))==0);
+    CHECK(memcmp((void*)(intptr_t)target[354],keys,sizeof(keys))==0);
+    CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
+    for(int i=0;i<40;++i) {
+        int slot=target[94]+i;
+        int32_t block=((int32_t*)(intptr_t)target[92])[(slot/4)%target[93]];
+        CHECK(((int32_t*)(intptr_t)block)[slot%4]==PTR(devices[i%2]));
+    }
+    {
+        int32_t buffer=target[45], capacity=target[47], queue=target[92], byte_buffer=target[354];
+        source[46]-=168; source[95]=1; source[355]-=5;
+        devices[0][1]=909;
+        CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
+        CHECK(target[45]==buffer && target[47]==capacity && target[46]==buffer+168);
+        CHECK(target[92]==queue && target[95]==1 && target[354]==byte_buffer && target[355]==byte_buffer+4);
+        CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
+        CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && target[45]==buffer);
+        CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
+        CHECK(target[45]==buffer && target[46]==buffer && target[47]==capacity);
+        CHECK(target[92]==0 && target[93]==0 && target[94]==0 && target[95]==0);
+        CHECK(target[354]==byte_buffer && target[355]==byte_buffer);
+        free((void*)(intptr_t)buffer); free((void*)(intptr_t)byte_buffer);
+    }
+    function_4a9d70_this(PTR(source));
+    function_4a9d70_this(PTR(target));
+    function_4a9d70_this(PTR(empty));
+    puts("PASS: Input copy owns vectors, preserves device/proxy ABI, wraps/grows deque and keeps shallow device pointers");
+    return 0;
+}
+
+static int test_string_layout_binding(int32_t vm,int32_t* root) {
+    int32_t object[65]={0},copy[65]={0},klass[2]={g483,g484},instance[2]={g483,g484};
+    CHECK(kinoko_construct_string_layout(PTR(object))==PTR(object));
+    CHECK(kinoko_construct_string_layout(PTR(copy))==PTR(copy));
+    int32_t top=function_48aa20(vm);
+    CHECK(kinoko_publish_string_layout_class(vm,PTR(root),klass));
+    CHECK(retdec_create_bound_instance(vm,root+2,"StringProbe",klass,PTR(object),instance));
+    retdec_sqrat_release_pair(vm,instance);
+    CHECK(execute_source(vm,root+2,
+        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;"
+        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";"
+        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";"
+        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";"
+        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";"
+        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";"
+        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";"
+        "if(!StringProbe.Rebuild()) throw \"rebuild\";"));
+    CHECK(object[12]==1 && ((char*)(object+8))[0]=='A'); /* original ASCII PopFront erases zero */
+    CHECK(((unsigned char*)object)[228]==1);
+    int32_t atlas[109]={0};atlas[108]=2;
+    int32_t* map=(int32_t*)calloc(8,4);CHECK(map);
+    object[45]=PTR(map);object[46]=8;object[47]=7;object[48]=2;
+    for(int i=0;i<2;++i) { int slot=(7+i)%8;map[slot]=PTR(calloc(1,256));CHECK(map[slot]);
+        ((int32_t*)(intptr_t)map[slot])[0]=10+i;((int32_t*)(intptr_t)map[slot])[5]=PTR(&g25);
+        ((int32_t*)(intptr_t)map[slot])[63]=PTR(atlas); }
+    CHECK(kinoko_string_replicate(PTR(copy),PTR(object))==1 && atlas[108]==4 && copy[48]==2);
+    CHECK(copy[45]!=object[45] && copy[44]!=object[44]);
+    CHECK(((int32_t*)(intptr_t)((int32_t*)(intptr_t)copy[45])[0])[0]==10);
+    CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
+    CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && copy[48]==2);
+    kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
+    CHECK(execute_source(vm,root+2,"delete ::StringProbe;"));
+    retdec_sqrat_release_pair(vm,klass);kinoko_clear_string_layout(PTR(object));
+    CHECK(atlas[108]==0 && function_48aa20(vm)==top);
+    puts("PASS: actual Sqrat CStringLayout methods, property clamps, pending-text quirk and borrowed atlas replication");
+    return 0;
+}
+
+static int test_string_layout_lifetime(void) {
+    int32_t layout[65];memset(layout,0xa5,sizeof(layout));
+    CHECK(kinoko_construct_string_layout(PTR(layout))==PTR(layout));
+    CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]==15);
+    CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
+    const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
+    CHECK(memcmp(layout+15,face,sizeof(face))==0);
+    CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
+    CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
+    CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
+    CHECK(((int32_t*)(intptr_t)layout[44])[0]==PTR(layout)+176);
+    CHECK(((int32_t*)(intptr_t)layout[44])[1]==0 && layout[48]==0);
+    retdec_string_assign_cstr(layout+1,"rendered");
+    kinoko_string_push_back(PTR(layout),"pending");
+    layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
+    int32_t clone=kinoko_method_clone_string_layout(PTR(layout),NULL);CHECK(clone);
+    int32_t* copied=(int32_t*)(intptr_t)clone;
+    CHECK(copied[0]==PTR(g350) && copied[44]!=layout[44]);
+    CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
+    CHECK(copied[40]==copied[41] && copied[45]==0 && copied[48]==0);
+    CHECK(kinoko_method_set_string_layer(clone,NULL,0)<0);
+    CHECK(kinoko_method_update_string_layout(clone,NULL)<0);
+    CHECK(kinoko_method_draw_string_layout(clone,NULL,0,0)<0);
+    CHECK(kinoko_string_add_character(clone,"\t")==1 && copied[51]==64);
+    CHECK(kinoko_string_add_character(clone,"\n")==1 && copied[51]==0 && copied[52]==27);
+    kinoko_method_delete_string_layout(clone,NULL,1);
+    CHECK(kinoko_method_delete_string_layout(PTR(layout),NULL,0)==PTR(layout));
+    CHECK(layout[44]==0 && layout[40]==0 && layout[41]==0 && layout[42]==0);
+    CHECK(layout[19]==0 && layout[20]==15);
+    int32_t* cookie=(int32_t*)malloc(4+520);CHECK(cookie);cookie[0]=2;
+    CHECK(kinoko_construct_string_layout(PTR(cookie+1))==PTR(cookie+1));
+    CHECK(kinoko_construct_string_layout(PTR(cookie+66))==PTR(cookie+66));
+    CHECK(kinoko_method_delete_string_layout(PTR(cookie+1),NULL,2)==PTR(cookie));
+    CHECK(cookie[45]==0 && cookie[110]==0);free(cookie);
+    puts("PASS: CStringLayout original CP932 defaults, receiver, proxy and scalar/array destruction");
+    return 0;
+}
+
+static int test_string_glyph_cache(void) {
+    int32_t layout[65]={0};
+    int32_t* atlas=(int32_t*)calloc(1,436);
+    int32_t* head=(int32_t*)calloc(1,12);
+    int32_t* map=(int32_t*)calloc(8,4);
+    CHECK(atlas && head && map);
+    head[0]=head[1]=PTR(head);
+    atlas[(24+348)/4]=PTR(head);
+    atlas[(24+388)/4]=15;
+    atlas[(24+344)/4]=PTR(malloc(32));
+    atlas[5]=4;atlas[108]=2;
+    layout[6]=layout[13]=15;
+    retdec_string_assign_cstr(layout+1,"AB");
+    retdec_string_assign_cstr(layout+8,"CD");
+    layout[22]=19;layout[40]=PTR(atlas);layout[41]=layout[42]=PTR(atlas)+436;
+    layout[44]=0x1234;layout[45]=PTR(map);layout[46]=8;layout[47]=7;layout[48]=2;
+    map[7]=PTR(calloc(1,256));map[0]=PTR(calloc(1,256));
+    CHECK(map[7] && map[0]);
+    ((int32_t*)(intptr_t)map[7])[2]=4;((int32_t*)(intptr_t)map[0])[2]=4;
+    ((int32_t*)(intptr_t)map[7])[63]=PTR(atlas);((int32_t*)(intptr_t)map[0])[63]=PTR(atlas);
+    CHECK(function_441250(layout)==1 && layout[41]==PTR(atlas)+436);
+    CHECK(function_4410c0(PTR(layout))==1);
+    CHECK(layout[41]==layout[40] && layout[42]==PTR(atlas)+436);
+    CHECK(layout[44]==0x1234 && layout[45]==0 && layout[46]==0 && layout[47]==0 && layout[48]==0);
+    CHECK(layout[5]==0 && layout[12]==4 && memcmp(layout+8,"ABCD",5)==0);
+    CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
+    free(atlas);
+    puts("PASS: wrapped glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
+    return 0;
+}
+
+static int test_map_manager_copy(void) {
+    int32_t source[21]={0},target[21]={0},first,last;
+    uint32_t capacity;
+    function_4a94e0_this(PTR(source)); function_4a94e0_this(PTR(target));
+    kinoko_map_containers_construct(PTR(source));kinoko_map_containers_construct(PTR(target));
+    source[3]=123; source[4]=456; source[5]=789;
+    first=kinoko_map_append_render(PTR(source),222);
+    last=kinoko_map_append_render(PTR(source),444);
+    CHECK(first!=last && kinoko_map_render_at(PTR(source),0)==first);
+    *(int32_t*)(intptr_t)first=111;*(int32_t*)(intptr_t)last=333;
+    kinoko_map_append_event(PTR(source),71);kinoko_map_append_event(PTR(source),83);
+    kinoko_map_append_event(PTR(source),97);
+    source[8]=1;target[8]=2;source[12]=3;target[12]=4;
+    for(int i=13;i<21;++i) source[i]=100+i;
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(source[5]==0 && target[5]==789 && target[3]==123 && target[4]==456);
+    CHECK(target[8]==2 && target[12]==4 && kinoko_map_render_count(PTR(target))==2);
+    CHECK(kinoko_map_render_at(PTR(target),0)!=first);
+    first=kinoko_map_render_at(PTR(target),0);last=kinoko_map_render_at(PTR(target),1);
+    CHECK(*(int32_t*)(intptr_t)first==PTR(&g37) && *(int32_t*)(intptr_t)last==PTR(&g37));
+    CHECK(*(int32_t*)(intptr_t)(first+4)==222 && *(int32_t*)(intptr_t)(last+4)==444);
+    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),1)==83);
+    CHECK(memcmp(target+13,source+13,32)==0);
+    CHECK(function_4701b0(PTR(target),PTR(target))==PTR(target) && target[5]==789);
+    CHECK(kinoko_map_render_at(PTR(target),0)==first);
+    target[5]=0; /* borrowed marker; no fabricated player destruction */
+    capacity=kinoko_map_event_capacity(PTR(target));
+    kinoko_map_containers_clear(PTR(source));kinoko_map_append_event(PTR(source),71);
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(kinoko_map_render_count(PTR(target))==0);
+    CHECK(kinoko_map_event_count(PTR(target))==1 && kinoko_map_event_at(PTR(target),0)==71);
+    CHECK(kinoko_map_event_capacity(PTR(target))==capacity);
+    kinoko_map_containers_clear(PTR(source));
+    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK(kinoko_map_event_count(PTR(target))==0 && kinoko_map_event_capacity(PTR(target))==capacity);
+    kinoko_map_append_event(PTR(target),0);kinoko_map_append_event(PTR(target),71);
+    kinoko_map_append_event(PTR(target),71);
+    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),0)==0);
+    CHECK(kinoko_map_event_at(PTR(target),1)==71 && kinoko_map_event_at(PTR(target),2)==71);
+    kinoko_map_containers_destroy(PTR(source));kinoko_map_containers_destroy(PTR(target));
+    function_4a9d70_this(PTR(source));function_4a9d70_this(PTR(target));
+    puts("PASS: native map list/vector copies, stable render addresses, duplicates/nulls and capacity retention");
+    return 0;
+}
+
 static int test_input_aggregation(void) {
     int32_t cluster[50] = {0}, devices[3][42] = {{0}}, blocks[2][4] = {{0}}, map[2];
     map[0]=PTR(blocks[0]); map[1]=PTR(blocks[1]);
@@ -4175,6 +4616,942 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     return 0;
 }
 
+static int test_map_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t layout[84] = {0}, chips[16] = {0};
+    CHECK(function_433c90(0) == (int32_t)E_INVALIDARG);
+    CHECK(function_433c90(vm) == 0);
+    CHECK(function_433c90(vm) == 0);
+    const char *classes[] = {"C2DMapLayout", "ChipLayout"};
+    const char *slots[] = {"testMapLayout", "testChipLayout"};
+    void *objects[] = {layout, chips};
+    for (int i = 0; i < 2; ++i) {
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), slots[i], -1);
+        sq_pushstring(kinoko_vm(vm), classes[i], -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+        CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+        CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, objects[i])));
+        sq_remove(kinoko_vm(vm), -2);
+        CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+        sq_settop(kinoko_vm(vm), top);
+    }
+    CHECK(execute_source(vm, root+2,
+        "if(testMapLayout.left!=0 || testMapLayout.right!=0 || testMapLayout.chipCount!=0) throw 1;\n"
+        "testChipLayout.left=11; testChipLayout.top=19;\n"
+        "testChipLayout.f_left=-3.75; testChipLayout.f_top=2.5;\n"
+        "if(testChipLayout.left!=-3 || testChipLayout.top!=19) throw 2;\n"));
+    CHECK(chips[1] == -3 && chips[2] == 19);
+    CHECK(((float*)chips)[3] == -3.75f && ((float*)chips)[4] == 2.5f);
+    chips[1] = 12; chips[9] = 34;
+    layout[66] = PTR(chips); layout[67] = PTR(chips+16);
+    CHECK(execute_source(vm, root+2,
+        "if(testMapLayout.left!=12 || testMapLayout.right!=34 || testMapLayout.chipCount!=2) throw 3;\n"
+        "delete testMapLayout; delete testChipLayout;\n"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: original map registry, empty bounds and asymmetric fractional chip setters");
+    return 0;
+}
+
+struct script_io_stream {
+    int32_t* vtable;
+    uint32_t position, size;
+    int reading;
+    unsigned char bytes[8192];
+};
+static int32_t __fastcall script_io_transfer(struct script_io_stream* self, void* unused, void* data, uint32_t size) {
+    (void)unused;
+    if (size > sizeof(self->bytes)-self->position || (self->reading && size > self->size-self->position)) return 0;
+    if (size) {
+        if (self->reading) memcpy(data,self->bytes+self->position,size);
+        else memcpy(self->bytes+self->position,data,size);
+    }
+    self->position+=size;
+    if (!self->reading && self->position>self->size) self->size=self->position;
+    return 1;
+}
+static int32_t __fastcall script_io_seek(struct script_io_stream* self, void* unused, int32_t offset, int32_t origin) {
+    (void)unused;
+    self->position=(origin==0 ? 0 : origin==1 ? self->position : self->size)+offset;
+    return self->position;
+}
+
+static int test_map_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream), source[116]={0}, loaded[116]={0}, resource[25]={0};
+    struct retdec_mcd_chip chips[2]={0};
+    struct retdec_mcd_data data={2,chips,0,NULL};
+    int32_t records[4][8]={{9,100,-30,0,0,41,0,0},{2,-5,-20,0,0,42,0,0},
+                         {2,-5,-40,0,0,43,0,0},{99,200,-50,0,0,44,0,0}};
+    chips[0].chip_id=9; chips[1].chip_id=2;
+    *(int32_t*)(chips[0].bytes)=9; *(int32_t*)(chips[1].bytes)=2;
+    *(int16_t*)(chips[0].bytes+12)=16; *(int16_t*)(chips[0].bytes+14)=8;
+    *(int16_t*)(chips[1].bytes+12)=32; *(int16_t*)(chips[1].bytes+14)=12;
+    source[0]=loaded[0]=PTR(&g327); source[79]=PTR(resource); resource[16]=PTR(&data);
+    source[66]=PTR(records); source[67]=source[68]=PTR(records+4); source[113]=-1;
+    source[59]=7; ((float*)source)[80]=0.75f; ((float*)source)[81]=1.25f;
+    source[82]=3; loaded[82]=17;
+    const unsigned char saved=g673;
+    for (int compact=0; compact<2; ++compact) {
+        g673=(unsigned char)compact; stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g327.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        if (!compact) CHECK(*(uint32_t*)(stream.bytes+1)==9); /* No blend property. */
+        CHECK(records[0][1]==-5 && records[0][2]==-40 && records[0][5]==43);
+        CHECK(records[1][2]==-20 && records[2][0]==9 && records[3][0]==99);
+        CHECK(source[60]==32 && source[61]==12 && source[62]==-5 && source[63]==-50);
+        CHECK(source[64]==200 && source[65]==200); /* Original bottom starts at last X. */
+        CHECK(source[102]-source[101]==96 && source[110]-source[109]==40);
+        CHECK(*(int32_t*)(intptr_t)source[101]==2 && *(int32_t*)(intptr_t)(source[101]+48)==9);
+        CHECK(((int32_t*)(intptr_t)source[109])[2]==0 && ((int32_t*)(intptr_t)source[109])[9]==1);
+        CHECK(((int32_t*)(intptr_t)source[109])[1]==-1);
+        /* Writer emits only 12 bytes per map record. */
+        CHECK(*(uint32_t*)(stream.bytes+stream.size-56)==4);
+        CHECK(*(uint32_t*)(stream.bytes+stream.size-52)==12);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g327.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && loaded[82]==17);
+        CHECK(memcmp(source+59,loaded+59,7*4)==0 && ((float*)loaded)[80]==0.75f);
+        CHECK((loaded[67]-loaded[66])/32==(compact+1)*4); /* Read appends. */
+        int32_t *tail=(int32_t*)(intptr_t)(loaded[66]+compact*128);
+        for(int i=0;i<4;++i) {
+            CHECK(memcmp(tail+i*8,records[i],12)==0 && tail[i*8+5]==i);
+            CHECK(((uint8_t*)(tail+i*8))[24]==1 && ((float*)(tail+i*8))[7]==1.0f);
+        }
+    }
+    /* A truncated record fails without replacing the owned record allocation. */
+    int32_t before=loaded[66]; uint32_t available=stream.size;
+    stream.position=0; stream.size-=1;
+    CHECK(!retdec_call_thiscall2_result(loaded,(void*)g327.e1,PTR(&holder),1));
+    CHECK(loaded[66]==before && loaded[67]-loaded[66]==256);
+    stream.size=available;
+    source[67]=source[66]; stream.position=stream.size=0; stream.reading=0;
+    CHECK(retdec_call_thiscall1_result(source,(void*)g327.e0,PTR(&stream))==1);
+    CHECK(source[60]==INT_MIN && source[61]==INT_MIN);
+    CHECK(source[62]==0 && source[63]==0 && source[64]==0 && source[65]==0);
+    g673=saved;
+    free((void*)(intptr_t)loaded[66]);
+    free((void*)(intptr_t)source[101]); free((void*)(intptr_t)source[109]);
+    puts("PASS: map wire format, signed XY order, sparse MCD cache, original bounds and appended records");
+    return 0;
+}
+
+static int test_dynamic_layer(int32_t vm, int32_t* root) {
+    int32_t player[50]={0}, act[60]={0}, holder=PTR(act), player_pair[2]={g483,g484};
+    const int top=sq_gettop(kinoko_vm(vm));
+    player[4]=PTR(&holder); player[37]=kinoko_sqrat_object_vtable(); player[38]=vm;
+    player[39]=root[2]; player[40]=root[3]; player[46]=15;
+    retdec_string_assign_cstr(player+41,"dynamicHost");
+    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
+    CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
+    CHECK(retdec_publish_acting_player_class(vm,PTR(root)));
+    CHECK(retdec_publish_acting_player(vm,root+2,"dynamicPlayer",PTR(player),player_pair));
+    /* The original accepts a borrowed instance pointer and null to clear it.
+       Check the actual state change, not only the wrapper's return type. */
+    CHECK(execute_source(vm,root+2,
+        "if(!dynamicPlayer.SetRenderTarget(dynamicPlayer)) throw \"target set\";"));
+    CHECK(player[19]==PTR(player));
+    CHECK(execute_source(vm,root+2,
+        "if(!dynamicPlayer.SetRenderTarget(null)) throw \"target clear\";"));
+    CHECK(player[19]==0);
+    CHECK(execute_source(vm,root+2,"inactiveLayer <- dynamicPlayer.CreateLayer2D(\"inactive\");"));
+    CHECK(act[52]==0 && act[53]==0);
+    ((uint8_t*)player)[8]=1;
+    CHECK(execute_source(vm,root+2,
+        "dynamicFirst <- dynamicPlayer.CreateLayer2D(\"first\");\n"
+        "dynamicSecond <- dynamicPlayer.CreateLayer2D(\"a long dynamically created layer\");\n"
+        "if(dynamicFirst.layerID!=1 || dynamicSecond.layerID!=2) throw \"layer ids\";\n"
+        "dynamicFirst.alpha=0.375; dynamicSecond.colorR=17;\n"
+        "if(dynamicHost.first.alpha!=0.375 || dynamicFirst.layout.alpha!=0.375) throw \"layer alias\";\n"));
+    CHECK(act[53]-act[52]==8);
+    int32_t* layers=(int32_t*)(intptr_t)act[52];
+    for (int i=0;i<2;++i) {
+        int32_t layer=layers[i], head=*(int32_t*)(intptr_t)(layer+180);
+        int32_t key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
+        int32_t layout=*(int32_t*)(intptr_t)(key+4);
+        CHECK(*(int32_t*)(intptr_t)(layer+184)==1 && *(int32_t*)(intptr_t)key==PTR(&g277));
+        CHECK(*(int32_t*)(intptr_t)layout==PTR(&g299));
+        CHECK(*(int32_t*)(intptr_t)(layout+304)==layer);
+        CHECK(*(float*)(intptr_t)(layout+260)==1.0f);
+        CHECK(i ? *(int32_t*)(intptr_t)(layout+292)==17 : *(float*)(intptr_t)(layout+284)==0.375f);
+        const char key_name[]="a long key name\0with embedded bytes";
+        retdec_string_assign_n((int32_t*)(intptr_t)(key+8),key_name,sizeof(key_name)-1);
+        *(uint8_t*)(intptr_t)(key+32)=0xa5;
+        *(uint8_t*)(intptr_t)(layout+313)=0xa5;
+        int32_t cloned=retdec_call_thiscall0_result((void*)(intptr_t)key,(void*)g277.e5);
+        CHECK(cloned && cloned!=key && *(int32_t*)(intptr_t)cloned==PTR(&g277));
+        int32_t copied_layout=*(int32_t*)(intptr_t)(cloned+4);
+        CHECK(copied_layout && copied_layout!=layout && *(int32_t*)(intptr_t)copied_layout==PTR(&g299));
+        CHECK(memcmp((void*)(intptr_t)(copied_layout+8),(void*)(intptr_t)(layout+8),305)==0);
+        CHECK(*(uint8_t*)(intptr_t)(copied_layout+313)==0 && *(uint8_t*)(intptr_t)(cloned+32)==0);
+        CHECK(*(uint32_t*)(intptr_t)(cloned+24)==sizeof(key_name)-1);
+        CHECK(memcmp(retdec_std_string_data(cloned+8),key_name,sizeof(key_name)-1)==0);
+        CHECK(retdec_std_string_data(cloned+8)!=retdec_std_string_data(key+8));
+        free((void*)retdec_std_string_data(cloned+8));
+        free((void*)(intptr_t)copied_layout); free((void*)(intptr_t)cloned);
+    }
+    CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
+    CHECK(execute_source(vm,root+2,
+        "if(dynamicPlayer.GetLayerOrder(dynamicFirst)!=0 || dynamicPlayer.GetLayerOrder(dynamicSecond)!=1) throw \"initial order\";\n"
+        "if(dynamicPlayer.GetLayerOrder(inactiveLayer)!=-1) throw \"missing layer\";\n"
+        "if(dynamicPlayer.SwapLayer(-1,1) || dynamicPlayer.SwapLayer(0,2) || dynamicPlayer.SwapLayer(0,0)) throw \"invalid swap\";\n"
+        "dynamicThird <- dynamicPlayer.CreateLayer2D(\"third\");\n"
+        "dynamicFourth <- dynamicPlayer.CreateLayer2D(\"fourth\");\n"
+        "dynamicFifth <- dynamicPlayer.CreateLayer2D(\"fifth\");\n"
+        "dynamicSixth <- dynamicPlayer.CreateLayer2D(\"sixth\");\n"));
+    layers=(int32_t*)(intptr_t)act[52];
+    int32_t original_layers[6]; memcpy(original_layers,layers,sizeof(original_layers));
+    *(int32_t*)(intptr_t)(original_layers[2]+88)=original_layers[0];
+    *(int32_t*)(intptr_t)(original_layers[3]+88)=original_layers[1];
+    *(int32_t*)(intptr_t)(original_layers[4]+88)=original_layers[2];
+    *(int32_t*)(intptr_t)(original_layers[5]+88)=original_layers[0];
+    CHECK(execute_source(vm,root+2,
+        "if(dynamicPlayer.SwapLayer(0,4) || dynamicPlayer.SwapLayer(4,0)) throw \"ancestor swap\";\n"
+        "if(!dynamicPlayer.SwapLayer(0,1)) throw \"root swap\";\n"
+        "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.GetLayerOrder(dynamicFourth)!=1 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFirst)!=2 || dynamicPlayer.GetLayerOrder(dynamicThird)!=3 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFifth)!=4 || dynamicPlayer.GetLayerOrder(dynamicSixth)!=5) throw \"preorder\";\n"
+        "if(!dynamicPlayer.SwapLayer(3,5)) throw \"sibling swap\";\n"
+        "if(dynamicPlayer.GetLayerOrder(dynamicSixth)!=3 || dynamicPlayer.GetLayerOrder(dynamicThird)!=4 ||\n"
+        "dynamicPlayer.GetLayerOrder(dynamicFifth)!=5) throw \"subtree follows parent\";\n"
+        "if(!dynamicPlayer.SwapLayer(0,2)) throw \"second root swap\";\n"));
+    const int final_order[]={0,5,2,4,1,3};
+    for(int i=0;i<6;++i) CHECK(layers[i]==original_layers[final_order[i]]);
+    int32_t* children=(int32_t*)(intptr_t)*(int32_t*)(intptr_t)(original_layers[0]+72);
+    CHECK(children[0]==original_layers[5] && children[1]==original_layers[2]);
+    CHECK(*(int32_t*)(intptr_t)(original_layers[0]+76)==PTR(children+2));
+    {
+        const int32_t source=original_layers[0];
+        const char text[]="return 17;";
+        const char compiled_text[]="/* This script is compiled. Can't read this. Don't edit this.*/";
+        free((void*)(intptr_t)*(int32_t*)(intptr_t)(source+296));
+        char* raw=(char*)malloc(sizeof(text)); CHECK(raw);
+        memcpy(raw,text,sizeof(text));
+        *(int32_t*)(intptr_t)(source+296)=PTR(raw);
+        *(uint32_t*)(intptr_t)(source+300)=sizeof(text);
+        retdec_string_assign_cstr((int32_t*)(intptr_t)(source+268),"a long original script filename.nut");
+        const int32_t head=*(int32_t*)(intptr_t)(source+180);
+        const int32_t source_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
+        const int32_t event=kinoko_act_new_timeline();
+        CHECK(event);
+        int32_t* timeline=(int32_t*)(intptr_t)event;
+        timeline[1]=17; timeline[2]=51;
+        int32_t* timeline_pairs=(int32_t*)malloc(16); CHECK(timeline_pairs);
+        timeline_pairs[0]=3; timeline_pairs[1]=11;
+        timeline_pairs[2]=29; timeline_pairs[3]=47;
+        timeline[3]=PTR(timeline_pairs); timeline[4]=timeline[5]=PTR(timeline_pairs+4);
+        {
+            int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+            struct script_io_stream stream={0}; stream.vtable=methods;
+            const int32_t loaded=kinoko_act_new_timeline(); CHECK(loaded);
+            int32_t* restored=(int32_t*)(intptr_t)loaded;
+            const unsigned char saved=g673;
+            const int32_t* vtable=(const int32_t*)kinoko_act_timeline_vtable();
+            for(int compact=0;compact<2;++compact) {
+                g673=(unsigned char)compact;
+                stream.position=stream.size=0; stream.reading=0;
+                CHECK(retdec_call_thiscall1_result(timeline,(void*)(intptr_t)vtable[0],PTR(&stream))==1);
+                CHECK(stream.size==(compact?29:68));
+                CHECK(stream.bytes[0]==!compact);
+                stream.position=0; stream.reading=1;
+                CHECK(kinoko_act_load_timeline(loaded,PTR(&stream),1)==1);
+                CHECK(stream.position==stream.size && restored[1]==17 && restored[2]==51);
+                CHECK(restored[4]-restored[3]==16*(compact+1));
+                CHECK(memcmp((void*)(intptr_t)(restored[3]+16*compact),timeline_pairs,16)==0);
+                /* Exercise the real ECX virtual entry, including package XOR.
+                   A memory-only stream cannot detect a cdecl slot mismatch. */
+                for (int package=0;package<2;++package) {
+                    char directory[MAX_PATH],path[MAX_PATH];
+                    CHECK(GetTempPathA(sizeof(directory),directory));
+                    CHECK(GetTempFileNameA(directory,"tli",0,path));
+                    HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,
+                        OPEN_EXISTING,FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL);
+                    CHECK(file!=INVALID_HANDLE_VALUE);
+                    unsigned char payload[8192],prefix[32]={0}; DWORD written=0;
+                    for(uint32_t i=0;i<stream.size;++i) payload[i]=stream.bytes[i]^(package?0xa7:0);
+                    if(package) CHECK(WriteFile(file,prefix,sizeof(prefix),&written,NULL) && written==sizeof(prefix));
+                    CHECK(WriteFile(file,payload,stream.size,&written,NULL) && written==stream.size);
+                    CHECK(SetFilePointer(file,package?32:0,NULL,FILE_BEGIN)!=(DWORD)-1);
+                    int32_t reader[7]={0};
+                    reader[0]=package?PTR(&g205):PTR(&g33); reader[1]=PTR(file);
+                    reader[3]=stream.size; reader[4]=reader[5]=package?32:0;
+                    ((unsigned char*)reader)[24]=package?0xa7:0;
+                    int32_t actual=kinoko_act_new_timeline(); CHECK(actual);
+                    CHECK(kinoko_act_load_timeline(actual,PTR(reader),1));
+                    int32_t* value=(int32_t*)(intptr_t)actual;
+                    CHECK(value[1]==17 && value[2]==51 && value[4]-value[3]==16);
+                    CHECK(memcmp((void*)(intptr_t)value[3],timeline_pairs,16)==0);
+                    if(package) CHECK(reader[5]==32+stream.size);
+                    retdec_destroy_cact_key(actual); CHECK(CloseHandle(file));
+                }
+            }
+            const int32_t before=restored[3];
+            stream.position=0; --stream.size;
+            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),1));
+            CHECK(restored[3]==before && restored[4]-restored[3]==32);
+            CHECK(!kinoko_act_load_timeline(loaded,PTR(&stream),2));
+            g673=saved;
+            retdec_destroy_cact_key(loaded);
+        }
+        CHECK(event && retdec_act_append_list(source+192,event));
+        *(int32_t*)(intptr_t)(source+196)=1;
+        {
+            int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+            struct script_io_stream stream={0}; stream.vtable=methods;
+            const unsigned char saved=g673; const int32_t archives=g765;
+            g673=0; g765=0;
+            CHECK(retdec_call_thiscall1_result((void*)(intptr_t)source,(void*)g252.e0,PTR(&stream)));
+            char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+            CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"lyr",0,path));
+            HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+                FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+            CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+            CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+            int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+            const int32_t loaded=retdec_act_make_layer(); CHECK(loaded);
+            CHECK(retdec_call_thiscall2_result((void*)(intptr_t)loaded,(void*)g252.e1,PTR(&holder),1));
+            CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+            CHECK(strcmp(retdec_std_string_data(loaded+112),retdec_std_string_data(source+112))==0);
+            CHECK(*(int32_t*)(intptr_t)(loaded+184)==1 && *(int32_t*)(intptr_t)(loaded+196)==1);
+            int32_t key_node=**(int32_t**)(intptr_t)(loaded+180);
+            int32_t loaded_key=*(int32_t*)(intptr_t)(key_node+8);
+            int32_t loaded_layout=*(int32_t*)(intptr_t)(loaded_key+4);
+            CHECK(loaded_layout && *(int32_t*)(intptr_t)(loaded_layout+304)==loaded);
+            int32_t event_node=**(int32_t**)(intptr_t)(loaded+192);
+            int32_t* restored_event=*(int32_t**)(intptr_t)(event_node+8);
+            CHECK(restored_event[0]==PTR(kinoko_act_timeline_vtable()) && restored_event[1]==17);
+            CHECK(memcmp((void*)(intptr_t)restored_event[3],timeline_pairs,16)==0);
+            retdec_destroy_cact_layer(loaded); free((void*)(intptr_t)loaded);
+            CHECK(CloseHandle(file)); g765=archives; g673=saved;
+        }
+        for(int compiled=0;compiled<2;++compiled) {
+            *(uint8_t*)(intptr_t)(source+305)=(uint8_t)compiled;
+            const int32_t copy=retdec_call_thiscall0_result((void*)(intptr_t)source,(void*)g252.e5);
+            CHECK(copy && copy!=source);
+            CHECK(*(int32_t*)(intptr_t)(copy+72)!=PTR(children));
+            CHECK(memcmp((void*)(intptr_t)*(int32_t*)(intptr_t)(copy+72),children,8)==0);
+            CHECK(*(int32_t*)(intptr_t)(copy+316)==*(int32_t*)(intptr_t)(source+316));
+            CHECK(*(int32_t*)(intptr_t)(copy+320)==*(int32_t*)(intptr_t)(source+320));
+            CHECK(*(int32_t*)(intptr_t)(copy+340)==*(int32_t*)(intptr_t)(source+340));
+            CHECK(retdec_std_string_data(copy+268)[0]==0);
+            CHECK(strcmp((char*)(intptr_t)*(int32_t*)(intptr_t)(copy+296),compiled?compiled_text:text)==0);
+            CHECK(*(uint32_t*)(intptr_t)(copy+300)==(compiled?sizeof(compiled_text):sizeof(text)));
+            CHECK(*(uint8_t*)(intptr_t)(copy+304)==1 && *(uint8_t*)(intptr_t)(copy+305)==compiled);
+            for(int list=0;list<2;++list) {
+                const int offset=list?192:180;
+                const int32_t copy_head=*(int32_t*)(intptr_t)(copy+offset);
+                const int32_t copy_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)copy_head+8);
+                CHECK(copy_key!=source_key && copy_key!=event && *(int32_t*)(intptr_t)(copy+offset+4)==1);
+                if(list) {
+                    const int32_t* cloned_timeline=(int32_t*)(intptr_t)copy_key;
+                    CHECK(cloned_timeline[0]==PTR(kinoko_act_timeline_vtable()));
+                    CHECK(cloned_timeline[1]==17 && cloned_timeline[2]==51);
+                    CHECK(cloned_timeline[3]!=timeline[3] && cloned_timeline[4]-cloned_timeline[3]==16);
+                    CHECK(memcmp((void*)(intptr_t)cloned_timeline[3],timeline_pairs,16)==0);
+                } else {
+                    const int32_t layout=*(int32_t*)(intptr_t)(copy_key+4);
+                    CHECK(*(int32_t*)(intptr_t)(layout+304)==copy);
+                    CHECK(*(uint32_t*)(intptr_t)(copy_key+24)==*(uint32_t*)(intptr_t)(source_key+24));
+                    CHECK(retdec_std_string_data(copy_key+8)!=retdec_std_string_data(source_key+8));
+                }
+            }
+            retdec_destroy_cact_layer(copy); free((void*)(intptr_t)copy);
+        }
+        *(uint8_t*)(intptr_t)(source+305)=0;
+        CHECK(execute_source(vm,root+2,"if(dynamicFirst.alpha!=0.375) throw \"clone altered source\";"));
+    }
+    CHECK(execute_source(vm,root+2,
+        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");"
+        "dynamicText.alpha=0.625; dynamicText.colorR=73;"
+        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";"
+        "if(!dynamicText.layout.PushBack(\"native text\") || dynamicText.layout.queueCount!=11) throw \"text methods\";"));
+    layers=(int32_t*)(intptr_t)act[52];CHECK(act[53]-act[52]==28);
+    const int32_t text_layer=layers[6],text_head=*(int32_t*)(intptr_t)(text_layer+180);
+    const int32_t text_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)text_head+8);
+    const int32_t text_layout=*(int32_t*)(intptr_t)(text_key+4);
+    CHECK(*(int32_t*)(intptr_t)text_layout==PTR(g350));
+    CHECK(*(int32_t*)(intptr_t)(text_layout+148)==text_layer);
+    const int32_t text_copy=retdec_call_thiscall0_result((void*)(intptr_t)text_key,(void*)g277.e5);
+    CHECK(text_copy && *(int32_t*)(intptr_t)(text_copy+4)!=text_layout);
+    retdec_destroy_cact_key(text_copy);
+    CHECK(execute_source(vm,root+2,"delete dynamicText;"));
+    ((uint8_t*)player)[8]=0;
+    CHECK(execute_source(vm,root+2,
+        "if(dynamicPlayer.GetLayerOrder(dynamicSecond)!=0 || dynamicPlayer.SwapLayer(0,1)) throw \"inactive order\";"));
+    CHECK(execute_source(vm,root+2,
+        "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
+        "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
+    for(int i=0;i<7;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
+    free(layers); retdec_sqrat_release_pair(vm,player_pair);
+    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
+    CHECK(sq_gettop(kinoko_vm(vm))==top);
+    puts("PASS: dynamic 2D ownership, Sqrat aliases, layer order, ancestor rejection and subtree swaps");
+    return 0;
+}
+
+static int test_map_set_layer(void) {
+    int32_t layout[116]={0}, layer[87]={0}, resource[25]={0}, wrong[25]={0};
+    int32_t records[3][8]={{4,7,8},{999,1,2},{2,-3,-4}};
+    struct retdec_mcd_chip chips[2]={0};
+    struct retdec_mcd_texture textures[1]={{17,123}};
+    struct retdec_mcd_data data={2,chips,1,textures};
+    chips[0].chip_id=4; chips[1].chip_id=2;
+    *(uint32_t*)chips[0].bytes=4; *(uint32_t*)chips[1].bytes=2;
+    *(uint32_t*)(chips[0].bytes+4)=17; *(uint32_t*)(chips[1].bytes+4)=999;
+    layout[0]=PTR(&g327); resource[0]=PTR(&g313); wrong[0]=PTR(&g365);
+    layout[66]=PTR(records); layout[67]=layout[68]=PTR(records+3); layout[113]=-1;
+    resource[16]=PTR(&data); layer[25]=PTR(resource);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,0)==(int32_t)E_FAIL);
+    ((uint8_t*)layout)[460]=1;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[78]==PTR(layer) && layout[79]==0 && ((uint8_t*)layout)[460]==0);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[79]==PTR(resource) && layout[71]-layout[70]==12 && layout[75]-layout[74]==12);
+    CHECK(records[0][0]==4 && records[2][0]==2); /* Bind never sorts map records. */
+    int32_t *chip_refs=(int32_t*)(intptr_t)layout[70], *texture_refs=(int32_t*)(intptr_t)layout[74];
+    CHECK(chip_refs[0]==PTR(chips[0].bytes) && chip_refs[1]==0 && chip_refs[2]==PTR(chips[1].bytes));
+    CHECK(texture_refs[0]==PTR(textures) && texture_refs[1]==0 && texture_refs[2]==0);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[71]-layout[70]==12 && layout[75]-layout[74]==24);
+    layer[25]=PTR(wrong);
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==(int32_t)E_FAIL);
+    CHECK(layout[79]==0); /* Type failure does not reinterpret a texture as MCD. */
+    layer[25]=0;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
+    CHECK(layout[71]==layout[70] && layout[75]-layout[74]==24);
+    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; free((void*)(intptr_t)layout[slots[i]]); }
+    puts("PASS: map SetLayer one-shot suppression, type checks, sparse refs and original append behavior");
+    return 0;
+}
+
+static int test_chip_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream);
+    int32_t *source=(int32_t*)calloc(1,100), *loaded=(int32_t*)calloc(1,100);
+    CHECK(source && loaded);
+    source[0]=loaded[0]=PTR(&g313);
+    source[7]=source[14]=source[23]=loaded[7]=loaded[14]=loaded[23]=15;
+    source[1]=719;
+    retdec_string_assign_cstr(source+2,"map atlas");
+    retdec_string_assign_cstr(source+9,"data/worldmap/worldmap.mcd");
+    loaded[24]=0x5a;
+    const unsigned char saved=g673;
+    for (int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact;
+        stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g313.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g313.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && loaded[1]==719);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"map atlas")==0);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+9)),"data/worldmap/worldmap.mcd")==0);
+        CHECK(loaded[16]==0 && loaded[17]==0 && loaded[24]==0x5a);
+    }
+    g673=saved;
+    retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
+    puts("PASS: chip schema IO preserves independent native/MCD lifecycle fields");
+    return 0;
+}
+
+static int test_serializable_lifetime(void) {
+    const int32_t tables[]={PTR(&g231),PTR(&g252),PTR(&g277),PTR(&g285),PTR(&g299),
+        PTR(&g327),PTR(&g365),PTR(&g313),PTR(&g379),PTR(kinoko_act_timeline_vtable())};
+    const char* names[]={".?AVCActScript@@",".?AVCActLayer@@",".?AVCActKey@@",".?AVCAct@@",
+        ".?AVC2DLayout@@",".?AVC2DMapLayout@@",".?AVCActResource2D@@",".?AVCActResourceChip@@",
+        ".?AVCActRenderTarget@@",".?AVCActTimeLine@@"};
+    for(unsigned i=0;i<sizeof(tables)/sizeof(tables[0]);++i) {
+        int32_t object=tables[i],result=123; unsigned char descriptor[96]={0};
+        strcpy((char*)descriptor+8,names[i]);
+        const int32_t* table=(int32_t*)(intptr_t)tables[i];
+        CHECK(retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result))==1);
+        CHECK(result==PTR(&object));
+        descriptor[8]='!'; /* MSVC 4AB2E2 ignores the decorated-name prefix byte. */
+        CHECK(retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result))==1);
+        strcpy((char*)descriptor+8,".?AUISerializable@NamespaceProperty@@");
+        CHECK(!retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),PTR(&result)) && result==0);
+        CHECK(!retdec_call_thiscall2_result(&object,(void*)(intptr_t)table[2],PTR(descriptor),0));
+    }
+    for(int count=1;count<=2;++count) {
+        unsigned char* allocation=(unsigned char*)calloc(1,4+36*count); CHECK(allocation);
+        *(uint32_t*)allocation=count;
+        for(int i=0;i<count;++i) {
+            int32_t* key=(int32_t*)(allocation+4+36*i); key[0]=PTR(&g277); key[7]=15;
+            retdec_string_assign_cstr(key+2,"heap callback released by native destructor");
+            key[1]=PTR(calloc(1,316)); CHECK(retdec_construct_c2dlayout(key[1]));
+        }
+        CHECK(retdec_call_thiscall1_result(allocation+4,(void*)g277.e4,2)==PTR(allocation));
+        for(int i=0;i<count;++i) {
+            int32_t* key=(int32_t*)(allocation+4+36*i);
+            CHECK(key[1]==0 && key[6]==0 && key[7]==15 && ((char*)(key+2))[0]==0);
+        }
+        free(allocation);
+    }
+    for(int kind=0;kind<3;++kind) {
+        int32_t resource[25]={0}; resource[0]=kind==0?PTR(&g365):kind==1?PTR(&g313):PTR(&g379);
+        resource[7]=15;
+        if(kind==1) { resource[14]=15; resource[23]=15; }
+        else resource[15]=15;
+        retdec_string_assign_cstr(resource+2,"resource heap name released in place");
+        retdec_string_assign_cstr(resource+(kind==1?9:10),"independent long backing filename");
+        const int32_t* table=(int32_t*)(intptr_t)resource[0];
+        CHECK(retdec_call_thiscall1_result(resource,(void*)(intptr_t)table[4],0)==PTR(resource));
+        CHECK(resource[6]==0 && resource[7]==15);
+        CHECK(kind==1 ? resource[13]==0 && resource[14]==15 : resource[14]==0 && resource[15]==15);
+    }
+    const int32_t layer=retdec_act_make_layer(); CHECK(layer);
+    CHECK(retdec_call_thiscall1_result((void*)(intptr_t)layer,(void*)g252.e4,0)==layer);
+    CHECK(!*(int32_t*)(intptr_t)(layer+180) && !*(int32_t*)(intptr_t)(layer+192));
+    free((void*)(intptr_t)layer);
+    int32_t* key=(int32_t*)calloc(1,36); CHECK(key); key[0]=PTR(&g277); key[7]=15;
+    retdec_call_thiscall0_result(key,(void*)g277.e3); /* Destroy invokes deleting slot four with flags=1. */
+    puts("PASS: exact original RTTI name queries and explicit receiver scalar/array destruction");
+    return 0;
+}
+
+static int32_t __fastcall act_contract_no_script(int32_t self,void* unused,int32_t stream) {
+    (void)self; (void)unused; (void)stream; return 1;
+}
+static int32_t __fastcall act_contract_layer_id(int32_t self,void* unused,int32_t stream) {
+    (void)unused;
+    return script_io_transfer((struct script_io_stream*)(intptr_t)stream,NULL,(void*)(intptr_t)(self+104),4);
+}
+static int test_act_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t source[60]={0},loaded[60]={0};
+    source[0]=loaded[0]=PTR(&g285); source[9]=source[16]=loaded[9]=loaded[16]=15;
+    CHECK(retdec_construct_cact_script(PTR(source+25)) && retdec_construct_cact_script(PTR(loaded+25)));
+    source[1]=16; source[2]=640; source[3]=480;
+    source[18]=11; source[19]=22; source[20]=33; source[21]=44; ((uint8_t*)source)[96]=1;
+    const unsigned char saved=g673; const int32_t archives=g765; g673=0; g765=0;
+    CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
+    char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+    CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"act",0,path));
+    HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+        FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+    CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+    CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+    int32_t reader[7]={PTR(&g33),PTR(file)},holder=PTR(reader);
+    CHECK(retdec_call_thiscall2_result(loaded,(void*)g285.e1,PTR(&holder),1));
+    CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+    CHECK(loaded[1]==16 && loaded[2]==640 && loaded[3]==480);
+    CHECK(loaded[18]==11 && loaded[19]==22 && loaded[20]==33 && loaded[21]==44);
+    CHECK(CloseHandle(file));
+    /* Isolate the ACT container writer's original filter from script compilation
+       and nested-layer codecs. The stub emits a stable ID to check wire order. */
+    int32_t script_methods[1]={PTR(act_contract_no_script)};
+    int32_t layer_methods[1]={PTR(act_contract_layer_id)};
+    int32_t layers[3][36]={{0}},references[3];
+    for(int i=0;i<3;++i) { layers[i][0]=PTR(layer_methods); layers[i][26]=100+i; references[i]=PTR(layers[i]); }
+    ((uint8_t*)layers[0])[141]=1; ((uint8_t*)layers[1])[141]=2;
+    source[25]=PTR(script_methods); source[52]=PTR(references); source[53]=source[54]=PTR(references+3);
+    for(int compact=1;compact<=2;++compact) {
+        g673=(unsigned char)compact; stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
+        /* Sorted margins: bottom, left, right, top. These golden offsets come
+           from 427750, not the former apply_cact helper's incorrect mapping. */
+        CHECK(stream.bytes[0]==0 && *(int32_t*)(stream.bytes+1)==44);
+        CHECK(*(int32_t*)(stream.bytes+5)==11 && *(int32_t*)(stream.bytes+9)==33);
+        CHECK(*(int32_t*)(stream.bytes+13)==22);
+        uint32_t count=compact==1?2:3;
+        CHECK(*(uint32_t*)(stream.bytes+42)==count && stream.size==50+8*count);
+        for(uint32_t i=0;i<count;++i) {
+            CHECK(*(uint32_t*)(stream.bytes+46+i*8)==0x2618cf18u);
+            CHECK(*(int32_t*)(stream.bytes+50+i*8)==100+i+(compact==1));
+        }
+        CHECK(*(uint32_t*)(stream.bytes+46+8*count)==0);
+    }
+    source[52]=source[53]=source[54]=0;
+    retdec_destroy_cact_object(PTR(source)); retdec_destroy_cact_object(PTR(loaded));
+    g673=saved; g765=archives;
+    puts("PASS: CAct native reader, original margin offsets, debug-only filter and stable layer wire order");
+    return 0;
+}
+
+static int test_key_string_writers(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t key[9]={0},layout[65]={0};
+    key[0]=PTR(&g277); key[7]=15;
+    layout[0]=PTR(&g350); layout[6]=layout[13]=layout[20]=15;
+    ((unsigned char*)layout)[128]=1; layout[33]=0x12345678;
+    const unsigned char saved=g673; g673=1;
+    CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+    CHECK(stream.size==6 && stream.bytes[0]==0 && stream.bytes[5]==0);
+    stream.position=stream.size=0;
+    CHECK(retdec_call_thiscall1_result(layout,(void*)(intptr_t)g350[0],PTR(&stream))==1);
+    /* Sorted addEdge/alignment are both bytes from +128, not the int at +132. */
+    CHECK(stream.size==75 && stream.bytes[0]==0 && stream.bytes[1]==1 && stream.bytes[2]==1);
+    unsigned char expected[8192]; const uint32_t size=stream.size;
+    memcpy(expected,stream.bytes,size);
+    stream.position=stream.size=0; key[1]=PTR(layout);
+    CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+    CHECK(stream.size==10+size && stream.bytes[5]==1);
+    CHECK(memcmp(stream.bytes+10,expected,size)==0);
+    int32_t flat[79]={0};
+    CHECK(retdec_construct_c2dlayout(PTR(flat)));
+    ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
+    key[1]=PTR(flat);
+    retdec_string_assign_cstr(key+2,"independently owned callback name");
+    int32_t string_source[65]={0};kinoko_construct_string_layout(PTR(string_source));
+    retdec_string_assign_n(string_source+1,"A\0B",3);
+    retdec_string_assign_n(string_source+8,"C\0D",3);
+    ((uint8_t*)string_source)[128]=1;string_source[33]=2;
+    const int32_t archives=g765; g765=0;
+    for(int kind=0;kind<2;++kind) for(int compact=0;compact<2;++compact) {
+        key[1]=kind?PTR(string_source):PTR(flat);
+        g673=(unsigned char)compact; stream.position=stream.size=0;
+        CHECK(retdec_call_thiscall1_result(key,(void*)g277.e0,PTR(&stream))==1);
+        char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
+        CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"key",0,path));
+        HANDLE file=CreateFileA(path,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,
+            FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
+        CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
+        CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
+        int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+        int32_t* copy=(int32_t*)calloc(1,36); CHECK(copy); copy[0]=PTR(&g277); copy[7]=15;
+        CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
+        CHECK(copy[1] && copy[1]!=key[1]);
+        CHECK(strcmp(retdec_std_string_data(PTR(copy+2)),retdec_std_string_data(PTR(key+2)))==0);
+        if(kind) {
+            int32_t* text=(int32_t*)(intptr_t)copy[1];
+            CHECK(text[0]==PTR(g350) && text[5]==0 && text[12]==6);
+            CHECK(memcmp(retdec_std_string_data(copy[1]+32),"A\0BC\0D",6)==0);
+            CHECK(((uint8_t*)text)[128]==1 && text[33]==0); /* wire bool alias, not runtime alignment */
+        } else CHECK(*(float*)(intptr_t)(copy[1]+236)==0.625f && *(float*)(intptr_t)(copy[1]+284)==0.75f);
+        CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
+        retdec_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
+    }
+    g765=archives;
+    kinoko_clear_string_layout(PTR(string_source));
+    if(key[7]>=16) free((void*)(intptr_t)key[2]);
+    g673=saved;
+    puts("PASS: key presence byte and CStringLayout original bool alias serialization");
+    return 0;
+}
+
+static int test_layout_serialization(void) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream), source[79]={0}, loaded[79]={0};
+    source[0]=loaded[0]=PTR(&g299);
+    for (int i=59;i<72;++i) ((float*)source)[i]=(float)(i-61)*0.125f;
+    source[72]=3; source[73]=255; source[74]=128; source[75]=64;
+    const unsigned char saved=g673;
+    for (int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact;
+        stream.position=stream.size=0; stream.reading=0;
+        loaded[24]=0x12345678; loaded[78]=0;
+        CHECK(retdec_call_thiscall1_result(source,(void*)g299.e0,PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        stream.position=0; stream.reading=1;
+        CHECK(retdec_call_thiscall2_result(loaded,(void*)g299.e1,PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && memcmp(source+59,loaded+59,17*4)==0);
+        CHECK(loaded[78]==1 && loaded[24]==0x12345678);
+    }
+    g673=saved;
+    /* Original 43C6B0 aliases trans.x and roll.x. Sorted reads make trans.x
+       the final assignment even when the header lists it before roll.x. */
+    stream.position=stream.size=0; stream.reading=0;
+    {
+        uint8_t has=1; uint32_t count=2,len=7,type=1;
+        float roll=1.25f, trans=-3.5f;
+        CHECK(script_io_transfer(&stream,NULL,&has,1));
+        CHECK(script_io_transfer(&stream,NULL,&count,4));
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"trans.x",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        len=6;
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"roll.x",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        CHECK(script_io_transfer(&stream,NULL,&roll,4));
+        CHECK(script_io_transfer(&stream,NULL,&trans,4));
+    }
+    stream.position=0; stream.reading=1;
+    int32_t layout3d[13]={0}; layout3d[1]=123; layout3d[7]=456;
+    CHECK(retdec_call_thiscall2_result(layout3d,(void*)kinoko_method_layout3d_assign,PTR(&holder),1)==1);
+    CHECK(stream.position==stream.size && ((float*)layout3d)[4]==-3.5f);
+    CHECK(layout3d[1]==123 && layout3d[7]==456);
+    puts("PASS: all 17 layout properties round-trip and restore original transform-dirty state");
+    return 0;
+}
+
+static int test_texture_serialization(int render_target) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t holder=PTR(&stream);
+    int32_t *source=(int32_t*)calloc(1,100), *loaded=(int32_t*)calloc(1,100);
+    CHECK(source && loaded);
+    source[0]=loaded[0]=render_target ? PTR(&g379) : PTR(&g365);
+    void **vtable=(void**)(intptr_t)source[0];
+    source[7]=source[15]=loaded[7]=loaded[15]=15;
+    source[1]=15; source[18]=source[19]=512;
+    ((float*)source)[20]=273; ((float*)source)[21]=0;
+    ((float*)source)[22]=136; ((float*)source)[23]=480;
+    retdec_string_assign_cstr(source+2,"face_3");
+    retdec_string_assign_cstr(source+10,"Data/System/face1");
+    const unsigned char saved=g673;
+    for (int compact=0;compact<2;++compact) {
+        g673=(unsigned char)compact;
+        stream.position=stream.size=0; stream.reading=0;
+        CHECK(retdec_call_thiscall1_result(source,vtable[0],PTR(&stream))==1);
+        CHECK(stream.bytes[0]==!compact);
+        stream.position=0; stream.reading=1;
+        ((unsigned char*)loaded)[96]=1;
+        CHECK(retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),1)==1);
+        CHECK(stream.position==stream.size && loaded[1]==15);
+        CHECK(loaded[18]==512 && loaded[19]==512);
+        CHECK(memcmp(source+20,loaded+20,16)==0 && !((unsigned char*)loaded)[96]);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"face_3")==0);
+        CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
+        if (render_target) {
+            const char name[]=".?AVCActRenderTarget@@";
+            const uint32_t type=(uint32_t)kinoko_boost_hash_range(PTR(name),PTR(name+sizeof(name)-1));
+            stream.position=0;
+            int32_t *factory=(int32_t*)(intptr_t)retdec_act_make_resource(PTR(&stream),type);
+            CHECK(factory && factory[0]==PTR(&g379));
+            CHECK(stream.position==stream.size && factory[1]==15);
+            CHECK(factory[18]==512 && factory[19]==512 && factory[17]==0);
+            CHECK(memcmp(source+20,factory+20,16)==0 && !((unsigned char*)factory)[96]);
+            CHECK(strcmp(retdec_std_string_data(PTR(factory+10)),"Data/System/face1")==0);
+            retdec_destroy_cact_resource(PTR(factory));
+        }
+    }
+    /* Reordered schema: values are still in original std::map key order. */
+    stream.position=stream.size=0; stream.reading=0;
+    {
+        uint8_t has=1; uint32_t count=2,len=5,type=1,id=321; float x=137;
+        CHECK(script_io_transfer(&stream,NULL,&has,1));
+        CHECK(script_io_transfer(&stream,NULL,&count,4));
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"src_x",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        len=10; type=0;
+        CHECK(script_io_transfer(&stream,NULL,&len,4));
+        CHECK(script_io_transfer(&stream,NULL,"resourceID",len));
+        CHECK(script_io_transfer(&stream,NULL,&type,4));
+        CHECK(script_io_transfer(&stream,NULL,&id,4));
+        CHECK(script_io_transfer(&stream,NULL,&x,4));
+    }
+    stream.position=0; stream.reading=1;
+    CHECK(retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),1)==1);
+    CHECK(stream.position==stream.size && loaded[1]==321 && ((float*)loaded)[20]==137);
+    CHECK(((float*)loaded)[22]==136 && ((float*)loaded)[23]==480);
+    CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
+    CHECK(!retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),2));
+    g673=saved;
+    retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
+    puts("PASS: native texture property IO, full/compact schemas, sorted values, heap strings and crop lifecycle");
+    return 0;
+}
+static int test_script_serialization(int32_t vm, int32_t* root) {
+    int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
+    struct script_io_stream stream={0}; stream.vtable=methods;
+    int32_t script[26]={0}, loaded[26]={0}, holder=PTR(&stream);
+    const char source[]="ioCompiledValue <- 42;\n";
+    const char path[]="a-long-script-path-for-serialization.cv4";
+    CHECK(retdec_construct_cact_script(PTR(script)) && retdec_construct_cact_script(PTR(loaded)));
+    free((void*)(intptr_t)script[23]); script[23]=PTR(malloc(sizeof(source))); CHECK(script[23]);
+    memcpy((void*)(intptr_t)script[23],source,sizeof(source)); script[24]=sizeof(source); script[25]=1;
+    retdec_string_assign_cstr(script+16,path);
+    const unsigned char previous=g673; g673=0;
+    CHECK(retdec_call_thiscall1_result(script,(void*)g231.e0,PTR(&stream))==1);
+    CHECK(stream.bytes[0]==1 && *(uint32_t*)(stream.bytes+1)==2);
+    CHECK(memcmp(stream.bytes+9,"compiled",8)==0);
+    CHECK(((unsigned char*)script)[101]==0);
+    stream.reading=1; stream.position=0;
+    CHECK(retdec_call_thiscall2_result(loaded,(void*)g231.e1,PTR(&holder),1)==1);
+    CHECK(stream.position==stream.size && loaded[24]==sizeof(source));
+    CHECK(strcmp(retdec_std_string_data(PTR(loaded)+64),path)==0);
+    CHECK(memcmp((void*)(intptr_t)loaded[23],source,sizeof(source))==0);
+    CHECK(loaded[23]!=script[23] && ((unsigned char*)loaded)[100]==1);
+    CHECK(kinoko_method_read_act_script(PTR(loaded),NULL,PTR(&holder),2)==0);
+    stream.reading=0; stream.position=stream.size=0; g673=1;
+    CHECK(kinoko_method_write_act_script(PTR(script),NULL,PTR(&stream))==1);
+    CHECK(stream.bytes[0]==0 && stream.bytes[1]==1 && ((unsigned char*)script)[101]==0);
+    {
+        uint32_t prefix=1+1+4+(uint32_t)strlen(path);
+        CHECK(*(uint32_t*)(stream.bytes+prefix)==stream.size-prefix);
+        CHECK(*(uint16_t*)(stream.bytes+prefix+4)==0xfafa);
+        int32_t compiled[26]={0};
+        compiled[23]=PTR(stream.bytes+prefix+4); compiled[24]=stream.size-prefix-4;
+        CHECK(retdec_execute_embedded_act_script(vm,PTR(compiled),root+2));
+        CHECK(execute_source(vm,root+2,"if(ioCompiledValue!=42) throw \"serialized closure\";\n"
+            "delete ioCompiledValue;\n"));
+    }
+    g673=previous;
+    retdec_destroy_cact_script(PTR(loaded)); retdec_destroy_cact_script(PTR(script));
+    puts("PASS: original script virtual read/write, heap path ownership, source compile and inclusive bytecode length");
+    return 0;
+}
+
+static int test_original_layer_constructor(int32_t vm) {
+    int32_t *layer = malloc(348);
+    CHECK(layer); memset(layer, 0xcd, 348);
+    const int32_t previous = g664; g664 = vm;
+    CHECK(function_41e390(PTR(layer)) == PTR(layer)); g664 = previous;
+    CHECK(layer[24] == -1 && layer[26] == -1 && layer[27] == -1);
+    CHECK(strcmp(retdec_std_string_data(PTR(layer)+112), "Layer_") == 0);
+    CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
+    CHECK(layer[52] == vm && layer[57] == vm && layer[62] == vm);
+    int32_t missing[2] = {g483,g484};
+    CHECK(!retdec_sqrat_get(PTR(layer)+308,"CompileFile",PTR(missing)));
+    retdec_sqrat_release_pair(vm, missing);
+    {
+        int32_t parent[5]={PTR(kinoko_act_host_symbols()->sq_object_vtable),vm,g483,g484,1};
+        const char text[]="registered <- thisAct.marker;\nsawLayer <- (\"layer\" in this);\n";
+        CHECK(retdec_sqrat_new_table(vm,parent+2));
+        CHECK(retdec_sqrat_set_int(vm,parent+2,"marker",73));
+        layer[74]=PTR(malloc(sizeof(text))); CHECK(layer[74]);
+        memcpy((void*)(intptr_t)layer[74],text,sizeof(text)); layer[76]=1; layer[75]=sizeof(text)-1;
+        ((float*)layer)[36]=13.0f; ((float*)layer)[37]=17.0f;
+        CHECK(retdec_call_thiscall2_result(layer,(void*)g252.e8,PTR(parent),0)==0);
+        CHECK(((float*)layer)[39]==13.0f && ((float*)layer)[40]==17.0f);
+        CHECK(execute_source(vm,parent+2,
+            "if(Layer_.script.registered!=73 || Layer_.script.sawLayer) throw \"layer order\";\n"
+            "if(Layer_.script.thisAct!=this || Layer_.script.layer==Layer_) throw \"layer identity\";\n"
+            "if(\"filePath\" in Layer_.script) throw \"invented script field\";\n"));
+        CHECK(kinoko_method_register_act_layer(PTR(layer),NULL,0,0)==(int32_t)E_FAIL);
+        retdec_sqrat_object_release(PTR(parent));
+    }
+    retdec_destroy_cact_layer(PTR(layer)); free(layer);
+    int32_t *script = calloc(26, sizeof(int32_t));
+    CHECK(script && retdec_construct_cact_script(PTR(script)));
+    CHECK(retdec_call_thiscall0_result(script, (void*)g231.e3) == 0);
+    puts("PASS: original layer constructor source Table, empty Instance, default name and script deleting ABI");
+    return 0;
+}
+
+static int test_layout_registration_entries(int32_t vm) {
+    int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
+    CHECK(retdec_prepare_cact_layer_objects(vm, PTR(layer), environment));
+    CHECK(retdec_sqrat_new_table(vm, layer+84));
+    CHECK(kinoko_method_register_layout(PTR(layout), NULL) == (int32_t)E_FAIL);
+    layout[76] = PTR(layer);
+    for (int map = 0; map < 2; ++map) {
+        if (map) layout[78] = PTR(layer);
+        CHECK((map ? kinoko_method_register_map_layout(PTR(layout), NULL) :
+            kinoko_method_register_layout(PTR(layout), NULL)) == 0);
+        int32_t outer[2] = {g483,g484}, script[2] = {g483,g484};
+        CHECK(retdec_sqrat_get(PTR(layer+82), "layout", PTR(outer)));
+        CHECK(retdec_sqrat_get(PTR(layer+77), "layout", PTR(script)));
+        CHECK(outer[0] == OT_INSTANCE && script[0] == OT_INSTANCE && outer[1] != script[1]);
+        CHECK(retdec_sqrat_raw_set_int(vm, environment, "registrationMarker", 1));
+        CHECK(layer[13] == PTR(layout) + (map ? 320 : 284));
+        CHECK(layer[14] == PTR(layout) + (map ? 328 : 288));
+        CHECK(layer[1] == PTR(layout)+236 && layer[17] == PTR(layout)+300);
+        retdec_sqrat_release_pair(vm, outer); retdec_sqrat_release_pair(vm, script);
+    }
+    retdec_sqrat_object_release(PTR(layer+82));
+    retdec_sqrat_object_release(PTR(layer+77));
+    puts("PASS: original layout registrations create distinct wrappers and exact layer aliases");
+    return 0;
+}
+
+static int test_chip_resource_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t resource[17] = {0};
+    struct retdec_mcd_chip chip = {0};
+    struct retdec_mcd_data data = {0};
+    chip.chip_id = 7;
+    data.chip_count = 1; data.chips = &chip;
+    resource[16] = PTR(&data);
+    CHECK(function_42f350(0) == (int32_t)E_INVALIDARG);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g313.e6, vm) == 0);
+    CHECK(function_42f350(vm) == 0);
+    sq_pushroottable(kinoko_vm(vm));
+    sq_pushstring(kinoko_vm(vm), "testChipResource", -1);
+    sq_pushstring(kinoko_vm(vm), "CActResourceChip", -1);
+    CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+    CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+    CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, resource)));
+    sq_remove(kinoko_vm(vm), -2);
+    CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+    sq_settop(kinoko_vm(vm), top);
+    CHECK(execute_source(vm, root+2,
+        "local info=testChipResource.GetChipInfo(7);\n"
+        "info.flag0=6; info.flag1=123;\n"
+        "if(!testChipResource.SetChipFlag(7,0,true) || info.flag0!=7 || info.flag1!=123) throw 1;\n"
+        "if(testChipResource.SetChipFlag(7,1,true) || testChipResource.SetChipFlag(7,-1,true)) throw 2;\n"
+        "if(testChipResource.SetChipFlag(999,0,true)) throw 3;\n"
+        "if(!testChipResource.SetChipFlag(7,0,false) || info.flag0!=6) throw 4;\n"
+        "delete testChipResource;\n"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: chip resource virtual ABI, native ChipInfo and original bit-zero-only SetChipFlag");
+    return 0;
+}
+
+static int test_texture_resource_registration(int32_t vm, int32_t *root) {
+    const int top = sq_gettop(kinoko_vm(vm));
+    int32_t resource[25] = {0}, texture[2] = {0};
+    IDirect3DBaseTexture9Vtbl texture_vtable = {0};
+    texture_vtable.Release = count_texture_release;
+    texture[0] = PTR(&texture_vtable);
+    resource[0] = PTR(&g365); resource[7] = 15; resource[15] = 15;
+    CHECK(function_446520(0) == (int32_t)E_INVALIDARG);
+    CHECK(function_4495a0(0) == (int32_t)E_INVALIDARG);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g365.e6, vm) == 0);
+    CHECK(retdec_call_thiscall1_result(resource, (void*)g379.e6, vm) == 0);
+    CHECK(function_446520(vm) == 0 && function_4495a0(vm) == 0);
+    const char *slots[] = {"textureResourceA", "textureResourceB"};
+    for (int i = 0; i < 2; ++i) {
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), slots[i], -1);
+        sq_pushstring(kinoko_vm(vm), "CActResource2D", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -3)));
+        CHECK(SQ_SUCCEEDED(sq_createinstance(kinoko_vm(vm), -1)));
+        CHECK(SQ_SUCCEEDED(sq_setinstanceup(kinoko_vm(vm), -1, resource)));
+        sq_remove(kinoko_vm(vm), -2);
+        CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
+        sq_settop(kinoko_vm(vm), top);
+    }
+    CHECK(execute_source(vm, root+2,
+        "textureResourceA.resourceID=47; textureResourceA.src_width=12.5;\n"
+        "textureResourceA.stName=\"shared\";\n"
+        "if(textureResourceB.resourceID!=47 || textureResourceB.src_width!=12.5 || textureResourceB.stName!=\"shared\") throw 1;\n"));
+    CHECK(resource[1] == 47 && ((float*)resource)[22] == 12.5f);
+    resource[18] = 321;
+    CHECK(execute_source(vm, root+2,"if(textureResourceB.image_width!=321) throw 2;\n"));
+    {
+        const int32_t vtables[] = {PTR(&g313), PTR(&g365), PTR(&g379)};
+        const char *names[] = {"chipBinding", "textureBinding", "targetBinding"};
+        for (int i = 0; i < 3; ++i) {
+            resource[0] = vtables[i];
+            void **methods = (void**)(intptr_t)vtables[i];
+            CHECK(retdec_call_thiscall2_result(resource, methods[7], PTR(root), 0) == (int32_t)E_FAIL);
+            CHECK(retdec_call_thiscall2_result(resource, methods[7], PTR(root), PTR(names[i])) == 0);
+            CHECK(retdec_call_thiscall2_result(resource, methods[8], PTR(root), 0) == 0);
+        }
+        CHECK(execute_source(vm, root+2,
+            "if(!(chipBinding instanceof CActResourceChip) || !(textureBinding instanceof CActResource2D) || !(targetBinding instanceof CActRenderTarget)) throw 5;\n"
+            "if(!(shared instanceof CActRenderTarget)) throw 6;\n"
+            "shared.resourceID=57; if(textureResourceA.resourceID!=57) throw 7;\n"
+            "delete chipBinding; delete textureBinding; delete targetBinding; delete shared;\n"));
+        resource[0] = PTR(&g365);
+    }
+    int32_t old_device = g678; g678 = 0;
+    resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));
+    CHECK(resource[17] && texture[1] == 0); /* Empty name preserves ownership. */
+    memcpy(resource+10, "missing", 8); resource[14] = 7;
+    CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(\"data\")) throw 4;\n"));
+    CHECK(!resource[17] && texture[1] == 1); /* Failed reload releases old owner. */
+    int32_t borrowed = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    resource[17] = borrowed; ((unsigned char*)resource)[36] = 1;
+    CHECK(retdec_call_thiscall0_result(resource, (void*)g365.e11) == 1);
+    CHECK(!resource[17] && texture[1] == 1);
+    CHECK(kinoko_texture_release(borrowed) == 1 && texture[1] == 2);
+    g678 = old_device;
+    CHECK(execute_source(vm, root+2,"delete textureResourceA; delete textureResourceB;\n"));
+    CHECK(sq_gettop(kinoko_vm(vm)) == top);
+    puts("PASS: texture resource native shared fields, original virtual ABI and reload ownership");
+    return 0;
+}
+
 static int owned_release_count, owned_release_order[2];
 static SQInteger owned_release(SQUserPointer payload, SQInteger size) {
     if (owned_release_count < 2) owned_release_order[owned_release_count] = *(int*)payload;
@@ -4215,7 +5592,130 @@ static int test_owned_states(int at_exit) {
     return 0;
 }
 
+/* Compiled-only until the user runs the contract: full map virtual clone,
+   independent cache storage, borrowed scalar pointers and deleting flags. */
+static int test_map_virtual_clone(void) {
+    const int offsets[]={264,280,296,332,348,364,384,404,420,436};
+    const int widths[]={32,4,4,232,4,12,288,48,4,4};
+    unsigned char *source=(unsigned char*)calloc(1,464);
+    int32_t clone; int i; CHECK(source);
+    *(int32_t*)source=PTR(&g327);*(int32_t*)(source+4)=PTR(&g328);
+    *(int32_t*)(source+236)=0x12345678;*(int32_t*)(source+452)=37;
+    for(i=0;i<10;++i) {
+        unsigned char *data=(unsigned char*)malloc(widths[i]*2);CHECK(data);
+        memset(data,0x31+i,widths[i]*2);
+        *(int32_t*)(source+offsets[i])=PTR(data);
+        *(int32_t*)(source+offsets[i]+4)=PTR(data+widths[i]*2);
+        *(int32_t*)(source+offsets[i]+8)=PTR(data+widths[i]*2);
+    }
+    clone=retdec_call_thiscall0_result(source,(void*)g327.e5);CHECK(clone);
+    CHECK(*(int32_t*)(intptr_t)clone==PTR(&g327));
+    CHECK(*(int32_t*)(intptr_t)(clone+4)==PTR(&g328));
+    CHECK(*(int32_t*)(intptr_t)(clone+236)==0x12345678);
+    CHECK(*(int32_t*)(intptr_t)(clone+452)==37);
+    CHECK(*(unsigned char*)(intptr_t)(clone+460)==1);
+    for(i=0;i<10;++i) {
+        unsigned char *copied=(unsigned char*)(intptr_t)*(int32_t*)(intptr_t)(clone+offsets[i]);
+        unsigned char *original=(unsigned char*)(intptr_t)*(int32_t*)(source+offsets[i]);
+        int skip=(widths[i]==232 || widths[i]==288)?4:0;
+        int length=widths[i]==288?281:widths[i];
+        CHECK(copied!=original);
+        CHECK(memcmp(copied+skip,original+skip,length-skip)==0);
+        CHECK(memcmp(copied+widths[i]+skip,original+widths[i]+skip,length-skip)==0);
+        if(skip) CHECK(*(int32_t*)copied==PTR(&g25));
+    }
+    CHECK(kinoko_delete_map_sprite(clone+4,NULL,0)==clone);
+    for(i=0;i<10;++i) CHECK(*(int32_t*)(intptr_t)(clone+offsets[i])==0);
+    free((void*)(intptr_t)clone);kinoko_clear_map_layout(PTR(source));free(source);
+    {
+        unsigned char *array=(unsigned char*)calloc(1,4+2*464);CHECK(array);
+        *(uint32_t*)array=2;
+        CHECK(kinoko_delete_map_sprite(PTR(array+8),NULL,2)==PTR(array));
+        CHECK(*(uint32_t*)array==2);free(array);
+    }
+    return 0;
+}
+
+static int pool_retire_calls, pool_delete_calls;
+static int32_t __fastcall pool_actor_delete_probe(int32_t actor, void *unused, unsigned char flags) {
+    (void)unused;
+    if (flags & 1) { ++pool_delete_calls; free((void*)(intptr_t)actor); }
+    else ++pool_retire_calls;
+    return actor;
+}
+static int test_actor_handle_lookup(void) {
+    int32_t manager[20]={0}, first=0, second=0, reused=0;
+    int32_t probe=PTR(&pool_actor_delete_probe), a, b;
+    int32_t value=0x11223344,node;
+    CHECK(kinoko_actor_pool_construct(PTR(manager))==PTR(manager));
+    a=function_46ab10_this(PTR(manager),PTR(&first));
+    b=function_46ab10_this(PTR(manager),PTR(&second));
+    CHECK(a && b && a!=b && first==0x10000 && second==0x20001);
+    CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,first)==a);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,second)==b);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20000)==0);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20002)==0);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    function_46a6f0_this(PTR(manager),first);
+    function_46a6f0_this(PTR(manager),second);
+    CHECK(pool_retire_calls==2);
+    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,first)==0);
+    CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,second)==0);
+    function_46a6f0_this(PTR(manager),second);CHECK(pool_retire_calls==2);
+    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==b && reused==0x30001);
+    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==a && reused==0x40000);
+    CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e0,0)==PTR(manager));
+    CHECK(pool_delete_calls==2 && manager[0]==PTR(&g28) && manager[1]==0);
+    node=function_4214a0(0x1111,0x2222,&value);CHECK(node);
+    CHECK(((int32_t*)(intptr_t)node)[0]==0x1111);
+    CHECK(((int32_t*)(intptr_t)node)[1]==0x2222);
+    CHECK(((int32_t*)(intptr_t)node)[2]==value);free((void*)(intptr_t)node);
+    return 0;
+}
+
+static int test_actor_owner_list(void) {
+    int32_t manager[4]={0}, handle=0, probe=PTR(&pool_actor_delete_probe), a, b;
+    int32_t *pool=(int32_t*)calloc(1,80);
+    CHECK(pool);pool_retire_calls=pool_delete_calls=0;
+    CHECK(kinoko_actor_pool_construct(PTR(pool))==PTR(pool));
+    manager[0]=PTR(&g31);manager[1]=PTR(pool);
+    kinoko_actor_owner_list_construct(PTR(manager));
+    a=function_46aa60_this(PTR(manager));b=function_46aa60_this(PTR(manager));
+    CHECK(a && b && kinoko_actor_owner_list_size(PTR(manager))==2);
+    *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
+    CHECK(*(int32_t*)(intptr_t)(a+8)==1 && *(int32_t*)(intptr_t)(b+8)==1);
+    *(int32_t*)(intptr_t)(b+8)=2;
+    kinoko_actor_owner_list_clear(PTR(manager));
+    CHECK(kinoko_actor_owner_list_size(PTR(manager))==0 && pool_retire_calls==1);
+    CHECK(*(int32_t*)(intptr_t)(b+8)==1);
+    CHECK(function_46ab10_this(PTR(pool),PTR(&handle))==a);
+    *(int32_t*)(intptr_t)a=PTR(&probe);
+    CHECK(retdec_call_thiscall1_result(manager,(void*)g31.e0,0)==PTR(manager));
+    CHECK(pool_delete_calls==2 && manager[1]==0 && manager[2]==0);
+    return 0;
+}
+
+static int test_layout_secondary_lifetime(void) {
+    unsigned char *layout=(unsigned char*)calloc(1,316);
+    unsigned char *array=(unsigned char*)calloc(1,4+2*316);CHECK(layout && array);
+    *(int32_t*)layout=PTR(&g299);*(int32_t*)(layout+4)=PTR(&g300);
+    CHECK(retdec_call_thiscall1_result(layout+4,(void*)g300.e0,0)==PTR(layout));
+    CHECK(*(int32_t*)layout==PTR(&g299));CHECK(*(int32_t*)(layout+4)==PTR(&g23));
+    free(layout);*(uint32_t*)array=2;
+    CHECK(kinoko_delete_layout_sprite(PTR(array+8),NULL,2)==PTR(array));
+    CHECK(*(int32_t*)(array+8)==PTR(&g23));
+    CHECK(*(int32_t*)(array+8+316)==PTR(&g23));free(array);
+    return 0;
+}
+
 int main(int argc, char **argv) {
+    CHECK(test_layout_secondary_lifetime()==0);
+    CHECK(test_actor_handle_lookup()==0);
+    CHECK(test_actor_owner_list()==0);
+    CHECK(test_map_virtual_clone()==0);
     if (argc == 2 && strcmp(argv[1], "--owned-state-exit") == 0)
         return test_owned_states(1);
     if (argc == 2 && strcmp(argv[1], "--texture-lifetime-probe") == 0)
@@ -4259,11 +5759,13 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_string_layout_binding(vm, root)==0);
     CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_receiver_operations(vm, root) == 0);
     CHECK(test_thread_receivers(vm, root) == 0);
     CHECK(test_csv_receivers(vm, root) == 0);
     CHECK(test_compiler_receivers(vm, root) == 0);
+    CHECK(test_act_script_source_registration(vm, root) == 0);
     CHECK(test_native_instance_receivers(vm, root) == 0);
     CHECK(test_global_callback_destructor(vm) == 0);
     CHECK(test_global_script_cleanup(vm, root) == 0);
@@ -4271,11 +5773,62 @@ int main(int argc, char **argv) {
     CHECK(test_script_registrations(vm, root) == 0);
     CHECK(test_physical_input() == 0);
     CHECK(test_input_aggregation() == 0);
+    CHECK(test_map_manager_copy() == 0);
+    CHECK(test_string_glyph_cache() == 0);
+    CHECK(test_string_layout_lifetime() == 0);
+    CHECK(test_input_copy() == 0);
     CHECK(test_input_configuration() == 0);
     CHECK(test_table_serialization(vm, root) == 0);
     CHECK(test_camera_map_bindings(vm, root) == 0);
+    CHECK(test_map_registration(vm, root) == 0);
+    CHECK(test_original_layer_constructor(vm) == 0);
+    CHECK(test_script_serialization(vm, root) == 0);
+    CHECK(test_layout_registration_entries(vm) == 0);
+    CHECK(test_chip_resource_registration(vm, root) == 0);
+    CHECK(test_texture_resource_registration(vm, root) == 0);
+    CHECK(test_chip_shared_ownership() == 0);
+    {
+        int32_t before = function_48aa20(vm);
+        CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);
+        CHECK(function_41eff0(vm) == 0);
+        CHECK(function_41eff0(vm) == 0);
+        CHECK(function_42b6d0(0) == (int32_t)E_INVALIDARG);
+        CHECK(function_42b6d0(vm) == 0);
+        /* Drop the script root and collect before replacing the native cached
+           class: source Sqrat references must keep the old class/tables alive. */
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), "C2DLayout", -1);
+        CHECK(SQ_SUCCEEDED(sq_deleteslot(kinoko_vm(vm), -2, SQFalse)));
+        sq_pop(kinoko_vm(vm), 1);
+        sq_collectgarbage(kinoko_vm(vm));
+        CHECK(function_42b6d0(vm) == 0);
+        CHECK(function_42b6d0(vm) == 0);
+        CHECK(function_48aa20(vm) == before);
+        sq_pushroottable(kinoko_vm(vm));
+        sq_pushstring(kinoko_vm(vm), "C2DLayout", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -2)));
+        CHECK(sq_gettype(kinoko_vm(vm), -1) == OT_CLASS);
+        sq_pushstring(kinoko_vm(vm), "__getTable", -1);
+        CHECK(SQ_SUCCEEDED(sq_get(kinoko_vm(vm), -2)));
+        sq_pushstring(kinoko_vm(vm), "coS_z", -1);
+        CHECK(SQ_SUCCEEDED(sq_rawget(kinoko_vm(vm), -2)));
+        sq_pop(kinoko_vm(vm), 1);
+        sq_pushstring(kinoko_vm(vm), "cos_z", -1);
+        CHECK(SQ_FAILED(sq_rawget(kinoko_vm(vm), -2)));
+        sq_settop(kinoko_vm(vm), before);
+    }
     if(argc==3 && strcmp(argv[1],"--act-reentry")==0)
         return test_act_reentry(argv[2]);
+    if(argc==3 && strcmp(argv[1],"--portrait-regions")==0)
+        return test_portrait_regions(argv[2]);
+    if(argc==2 && strcmp(argv[1],"--texture-serialization")==0)
+        return test_texture_serialization(0) || test_texture_serialization(1) ||
+            test_chip_serialization() || test_layout_serialization() || test_key_string_writers() || test_act_serialization() ||
+            test_serializable_lifetime();
+    if(argc==2 && strcmp(argv[1],"--map-serialization")==0)
+        return test_map_serialization() || test_map_set_layer();
+    if(argc==2 && strcmp(argv[1],"--dynamic-layer")==0)
+        return test_dynamic_layer(vm,root);
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
@@ -4416,10 +5969,8 @@ int main(int argc, char **argv) {
         int32_t source_layout[116] = {0}, source_key[9] = {0};
         int32_t source_head[3] = {0}, source_node[3] = {0};
         int32_t source_layers[1] = {PTR(source_layer)}, source_holder = PTR(source_act);
-        int32_t render_head[4] = {0};
         int32_t saved_head = *(int32_t *)(g_retdec_map_manager_state + 24);
-        int32_t saved_count = *(int32_t *)(g_retdec_map_manager_state + 28);
-        int32_t render, second, node_address;
+        int32_t render, second;
         memcpy(source_layer + 28, "en", 3);
         source_layer[32] = 2; source_layer[33] = 15;
         source_layer[45] = PTR(source_head); source_layer[46] = 1;
@@ -4428,17 +5979,15 @@ int main(int argc, char **argv) {
         source_key[1] = PTR(source_layout);
         source_layout[0] = PTR(&g327); source_layout[78] = PTR(source_layer);
         source_act[52] = PTR(source_layers); source_act[53] = PTR(source_layers + 1);
-        render_head[0] = render_head[1] = PTR(render_head);
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(source_act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(&source_holder);
-        *(int32_t *)(g_retdec_map_manager_state + 24) = PTR(render_head);
-        *(int32_t *)(g_retdec_map_manager_state + 28) = 0;
+        kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
         render = function_470030(PTR("en"));
         CHECK(render != 0 && *(int32_t *)(intptr_t)render == PTR(&g37));
         CHECK(*(int32_t *)(intptr_t)(render + 4) == PTR(layout));
         CHECK(*(int32_t *)(intptr_t)(render + 4) != PTR(source_layout));
         CHECK(function_470030(PTR("missing")) == 0);
-        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 1);
+        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state)) == 1);
         /* A script-side mutation must be visible through the render binding,
            while the template stays independent for the next activation. */
         *(float *)((unsigned char *)layer + 148) = -172.0f;
@@ -4447,17 +5996,14 @@ int main(int argc, char **argv) {
         CHECK(*(float *)((unsigned char *)source_layer + 148) == 0.0f);
         *(float *)((unsigned char *)layer + 148) = 0.0f;
         second = function_470030(PTR("en"));
-        CHECK(second != 0 && render_head[0] == render - 8 && render_head[1] == second - 8);
-        CHECK(*(int32_t *)(intptr_t)(render - 8) == second - 8);
-        CHECK(*(int32_t *)(g_retdec_map_manager_state + 28) == 2);
-        while ((node_address = render_head[0]) != PTR(render_head)) {
-            render_head[0] = *(int32_t *)(intptr_t)node_address;
-            free((void *)(intptr_t)node_address);
-        }
+        CHECK(second != 0 && second != render);
+        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),0)==render);
+        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),1)==second);
+        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state))==2);
+        kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
         *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
-        *(int32_t *)(g_retdec_map_manager_state + 28) = saved_count;
         puts("PASS: render layers bind live ACT layouts without undoing clone isolation");
     }
     target = PTR(function_469d10);
@@ -4530,8 +6076,7 @@ int main(int argc, char **argv) {
         function_4a9840_this(PTR(root + 1), "eventProbe", query_actor + 44);
         layout[60] = 32;
         layout[61] = 48;
-        CHECK(*(int32_t *)(intptr_t)(map_state + 40) -
-            *(int32_t *)(intptr_t)(map_state + 36) == 4);
+        CHECK(kinoko_map_event_count(map_state) == 1);
         CHECK(execute_source(vm, root + 2, "eventProbe.GetChipID(0);"));
         CHECK(*(int32_t *)(intptr_t)(map_state + 56) == 0x443);
         CHECK(*(float *)(intptr_t)(map_state + 60) == 100);
@@ -4587,8 +6132,7 @@ int main(int argc, char **argv) {
         function_468620_this(PTR(g_514300_storage));
         {
             int32_t pool = *(int32_t *)(intptr_t)(manager + 4);
-            int32_t pool_bytes = *(int32_t *)(intptr_t)(pool + 8) -
-                                 *(int32_t *)(intptr_t)(pool + 4);
+            int32_t pool_count = kinoko_method_actor_pool_count(pool, NULL);
             int32_t (*reused)[8] = (int32_t (*)[8])calloc(600, 32);
             CHECK(reused != NULL);
             for (int i = 0; i < 600; ++i)
@@ -4598,10 +6142,7 @@ int main(int argc, char **argv) {
             for (int round = 0; round < 4; ++round) {
                 CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
                 CHECK(retdec_actor_manager_refresh(manager) == 600);
-                CHECK(*(int32_t *)(intptr_t)(pool + 8) -
-                      *(int32_t *)(intptr_t)(pool + 4) == pool_bytes);
-                CHECK(*(int32_t *)(intptr_t)(pool + 24) -
-                      *(int32_t *)(intptr_t)(pool + 20) == pool_bytes);
+                CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
                 kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 function_468620_this(PTR(g_514300_storage));
@@ -5084,6 +6625,42 @@ int main(int argc, char **argv) {
         function_469700();
     }
     {
+        int32_t source[136] = {0}, destination[136] = {0};
+        const int offsets[] = {44, 56, 68, 96, 108, 124, 136};
+        int32_t* allocation = (int32_t*)malloc(sizeof(int32_t));
+        CHECK(allocation != NULL);
+        *allocation = PTR(source);
+        source[6] = PTR(allocation);
+        kinoko_native_control_create(PTR(source + 7), PTR(allocation));
+        CHECK(source[7] != 0);
+        source[8] = PTR(allocation); source[9] = source[7];
+        kinoko_native_add_weak(source[9]);
+        source[135] = 1234567;
+        destination[93] = 98765; /* original copy skips Actor+372 */
+        for (int i = 0; i < 7; ++i) {
+            function_4a9500_this((int32_t*)((char*)source + offsets[i]), PTR(root + 1));
+            function_4a94e0_this(PTR((char*)destination + offsets[i]));
+        }
+        CHECK(function_460900(PTR(destination), PTR(source)) == PTR(destination));
+        CHECK(destination[135] == 1234567 && destination[93] == 98765);
+        CHECK(destination[7] == source[7] && destination[9] == source[9]);
+        CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
+        CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
+        CHECK(function_460900(PTR(destination), PTR(destination)) == PTR(destination));
+        CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
+        CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
+        for (int i = 0; i < 7; ++i) {
+            CHECK(memcmp((char*)destination + offsets[i] + 4,
+                         (char*)source + offsets[i] + 4, 8) == 0);
+            function_4a9d70_this(PTR((char*)destination + offsets[i]));
+            function_4a9d70_this(PTR((char*)source + offsets[i]));
+        }
+        kinoko_native_release_strong(destination[7]);
+        kinoko_native_release_weak(destination[9]);
+        kinoko_native_release_strong(source[7]);
+        kinoko_native_release_weak(source[9]);
+    }
+    {
         int32_t camera[128] = {0}, callback[3];
         CHECK(execute_source(vm, root + 2,
             "cameraProbeCount <- 0;\n"
@@ -5137,4 +6714,3 @@ int main(int argc, char **argv) {
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
-

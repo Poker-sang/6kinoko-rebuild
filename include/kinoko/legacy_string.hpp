@@ -42,6 +42,7 @@ public:
         return result;
     }
     void assign(const char* source, std::uint32_t size) const;
+    void assign(StringView source, std::uint32_t position, std::uint32_t size) const;
     void append(const char* source, std::uint32_t size) const;
     void append(StringView source, std::uint32_t position, std::uint32_t size) const;
     bool reserve(std::uint32_t capacity, bool shrink) const;

@@ -1,5 +1,6 @@
 #include "kinoko/sqrat_object_bridge.h"
 #include "squirrel_bridge_test_support.hpp"
+#include <cstdlib>
 
 extern "C" {
 char g560 = 0;
@@ -25,6 +26,38 @@ SQInteger captured(HSQUIRRELVM vm) {
 }
 SQInteger plain(HSQUIRRELVM vm) { require(sq_gettop(vm) == 1, "zero capture count"); sq_pushinteger(vm, 99); return 1; }
 SQInteger handler(HSQUIRRELVM vm) { require(receiver == address(vm), "error handler VM receiver"); ++error_handler_calls; return 0; }
+
+void virtual_entries(HSQUIRRELVM vm) {
+    Top restore(vm);
+    Pair value(vm);
+    sq_newuserdata(vm, 8); sq_setreleasehook(vm, -1, release); value.capture();
+    auto object = wrapper(vm, value);
+    std::array<unsigned char, 12> output{};
+    // Invoke exactly as the original vtable caller: ECX=this, hidden output
+    // pointer on the stack, and callee cleanup. Neither getter acquires a ref.
+    using CopySlot = int32_t (__thiscall*)(void*, int32_t);
+    using ReferenceSlot = int32_t (__thiscall*)(void*);
+    using DeleteSlot = int32_t (__thiscall*)(void*, int32_t);
+    const auto copy = reinterpret_cast<CopySlot>(&kinoko_sqrat_copy_object);
+    const auto reference = reinterpret_cast<ReferenceSlot>(&kinoko_sqrat_object_reference);
+    const auto destroy = reinterpret_cast<DeleteSlot>(&kinoko_sqrat_delete_object);
+    require(copy(object.data(), address(output.data() + 1)) == address(output.data() + 1), "const virtual returns hidden output address");
+    require(load<HSQOBJECT>(output.data() + 1)._unVal.pUserData == value.get()._unVal.pUserData, "const virtual copies borrowed object");
+    require(reference(object.data()) == address(object.data() + 2), "reference virtual addresses host pair");
+    const auto before = released;
+    const auto borrowed = object;
+    require(destroy(object.data(), 0) == address(object.data()), "borrowed destructor returns receiver");
+    require(released == before && object[2] == borrowed[2] && object[3] == borrowed[3] && object[4] == 0, "borrowed destructor does not release or overwrite pair");
+    require(object[0] == kinoko_sqrat_object_vtable(), "destructor restores base vtable");
+    // Transfer the sole external owner to a real heap record; the deleting
+    // slot must release it once and use the recovered allocation family.
+    auto* heap = static_cast<int32_t*>(std::malloc(sizeof(object)));
+    require(heap != nullptr, "heap wrapper allocation");
+    std::memcpy(heap, object.data(), sizeof(object)); heap[4] = 1;
+    sq_resetobject(reinterpret_cast<HSQOBJECT*>(value.data()));
+    const auto heap_address = address(heap);
+    require(destroy(heap, 1) == heap_address && released == before + 1, "owning deleting destructor releases exactly once");
+}
 
 void ownership(HSQUIRRELVM vm) {
     Top restore(vm);
@@ -168,8 +201,15 @@ int main() {
     try {
         bridge_test::Machine machine;
         for (int repeat = 0; repeat < 8; ++repeat) {
+            virtual_entries(machine.get());
             ownership(machine.get()); setters(machine.get()); delegates(machine.get());
             closures(machine.get()); callback(machine.get());
+            // Source Function must use the child's actual VM and restore the
+            // outer receiver even on the error-handler path.
+            Pair child(machine.get()); sq_newthread(machine.get(), 32); child.capture();
+            const auto previous_receiver = receiver;
+            callback(child.get()._unVal.pThread);
+            require(receiver == previous_receiver, "child Function restores outer receiver");
         }
         std::puts("Sqrat source object/registration/callback contracts passed (8 repetitions)");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }

@@ -1,3 +1,4 @@
+#include "kinoko/render_queue.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/actor_cleanup.h"
@@ -10,7 +11,6 @@ extern "C" {
 int32_t function_450020(int32_t resource);
 extern int32_t g603, g604;
 extern int32_t g638, g639;
-extern int32_t g613;
 int32_t function_40b3a0(void);
 }
 
@@ -24,13 +24,35 @@ struct StageNode {
     StageNode *next, *previous;
     StageOwner *owner;
 };
-struct RenderQueueNode {
-    RenderQueueNode *next, *previous;
-    void *payload;
-};
-static_assert(sizeof(RenderQueueNode) == 12);
 static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
 static_assert(offsetof(StageOwner, runtime) == 8);
+
+// Original 4D47F0 / 4D4930 only destroy container storage, not payloads.
+// Stage ownership cleanup is a separate game shutdown operation (465F70).
+template<class Node>
+void release_list_storage(int32_t& slot, int32_t& count) {
+    auto* head = reinterpret_cast<Node*>(static_cast<uintptr_t>(slot));
+    if (!head) return;
+    auto* node = head->next;
+    while (node != head) {
+        auto* next = node->next;
+        std::free(node);
+        node = next;
+    }
+    std::free(head);
+    slot = count = 0;
+}
+
+void release_stage_list() { release_list_storage<StageNode>(g603, g604); }
+void release_render_queue() { kinoko_clear_render_queue(); }
+void release_sound_tree() {
+    // 4D49D0 -> 46A650's full-range branch -> 4636E0 / 429C70.
+    auto* head = reinterpret_cast<int32_t*>(static_cast<uintptr_t>(g638));
+    if (!head) return;
+    kinoko_erase_animation_tree(head[1]);
+    std::free(head);
+    g638 = g639 = 0;
+}
 
 void destroy_owner(StageOwner *owner) {
     if (!owner) return;
@@ -58,14 +80,29 @@ void destroy_owner(StageOwner *owner) {
 }
 }
 
-// Original 4D3E50 owns a 12-byte circular list sentinel. 4D3EB0 is a
-// separate initializer; it must not be merged into this allocation's failure
-// path. The payload word is unused on the sentinel, as in the original.
-extern "C" void kinoko_initialize_render_queue() {
-    auto *head = static_cast<RenderQueueNode *>(std::malloc(sizeof(RenderQueueNode)));
+// Use real CRT registration and callable source addresses; original absolute
+// executable addresses cannot be registered in the reconstructed process.
+extern "C" int32_t function_4d3ce0() {
+    auto* head = static_cast<StageNode*>(std::malloc(sizeof(StageNode)));
     if (!head) throw std::bad_alloc();
     head->next = head->previous = head;
-    g613 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
+    g603 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
+    return std::atexit(release_stage_list);
+}
+
+extern "C" int32_t function_4d3e50() {
+    kinoko_initialize_render_queue();
+    return std::atexit(release_render_queue);
+}
+
+extern "C" int32_t function_4d3f50() {
+    auto* head = static_cast<int32_t*>(std::malloc(24));
+    if (!head) throw std::bad_alloc();
+    g638 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
+    head[0] = head[1] = head[2] = g638;
+    reinterpret_cast<unsigned char*>(head)[20] = 1;
+    reinterpret_cast<unsigned char*>(head)[21] = 1;
+    return std::atexit(release_sound_tree);
 }
 
 // 465F70: destroy payloads first, reset the list, then release its nodes.

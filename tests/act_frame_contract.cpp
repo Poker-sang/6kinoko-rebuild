@@ -58,6 +58,8 @@ static Fixture* current;
 enum Mutation { none, append, shrink, deactivate, replace_source, fail };
 static Mutation mutation;
 static std::vector<int32_t> callbacks, draws;
+static std::vector<int32_t> target_events;
+static bool target_clear_valid;
 static int32_t replacement_source[60], replacement_holder;
 static bool allocation_fails;
 static int32_t draw_result;
@@ -71,6 +73,13 @@ static char texture_identity, target_identity, color_identity;
 static KinokoActHostSymbols symbols{};
 static IDirect3DDevice9Vtbl device_vtable{};
 static IDirect3DDevice9 device{&device_vtable};
+static HRESULT WINAPI clear_target(IDirect3DDevice9*, DWORD count, const D3DRECT*,
+    DWORD flags, D3DCOLOR color, float depth, DWORD stencil) {
+    target_clear_valid = count == 0 && flags == D3DCLEAR_TARGET && color == 0xff000000u &&
+        depth == 1.0f && stencil == 0;
+    target_events.push_back(-1);
+    return S_OK;
+}
 static HRESULT WINAPI get_render(IDirect3DDevice9*, D3DRENDERSTATETYPE state, DWORD* out) {
     *out = render_states[state]; return S_OK;
 }
@@ -122,7 +131,11 @@ static bool restored() {
 
 extern "C" {
 int32_t g678;
+int32_t g350[11]{}; // CStringLayout identity used by the diagnostic texture view.
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
+int32_t kinoko_set_render_target(int32_t handle) {
+    test::target_events.push_back(handle); return S_OK;
+}
 const KinokoActHostSymbols* kinoko_act_host_symbols() { return &test::symbols; }
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
     return test::allocation_fails ? 0 : address(std::malloc(size));
@@ -226,6 +239,14 @@ static int test_storage_and_draw() {
     CHECK(function_4525d0(address(fixture.runtime), 100, 200) == 0);
     CHECK(draw_state_valid && restored() && draws.size() == 2 && draws[0] == address(fixture.layouts[1]));
     CHECK(sprite_draws == 6 && texture_unbinds == 1 && observed_x == 113 && observed_y == 224);
+    int32_t target[25]{}; target[17]=123;
+    fixture.runtime[19]=address(target);
+    device_vtable.Clear=clear_target;
+    target_events.clear(); target_clear_valid=false;
+    CHECK(function_4525d0(address(fixture.runtime),100,200)==0);
+    CHECK(target_clear_valid && target_events==std::vector<int32_t>({123,-1,0}));
+    CHECK(restored());
+    fixture.runtime[19]=0;
     const DWORD blends[6][3] = {{D3DBLEND_ONE,D3DBLEND_ZERO,D3DBLENDOP_ADD},
         {D3DBLEND_SRCALPHA,D3DBLEND_INVSRCALPHA,D3DBLENDOP_ADD},
         {D3DBLEND_SRCALPHA,D3DBLEND_ONE,D3DBLENDOP_ADD},

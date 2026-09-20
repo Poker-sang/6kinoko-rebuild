@@ -15,11 +15,6 @@ using namespace kinoko::script::binding;
 
 namespace {
 ObjectStorage root_storage{};
-int32_t __fastcall type_name(void* self, void*) {
-    return load<int32_t>(static_cast<unsigned char*>(self) + 8);
-}
-int32_t type_vtable[2]{};
-int32_t descriptors[4][6]{};
 void require(bool ok, const char* message) {
     if (!ok) throw std::runtime_error(message);
 }
@@ -39,15 +34,9 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
 int32_t function_4a8cc0(void) { return address(&root_storage); }
 int32_t function_4a8db0(int32_t vm) { g644 = pointer<char>(vm); return 1; }
 int32_t* kinoko_native_binding_type(int32_t category) {
-    const int index = category == -1 ? 0 : category == 0 ? 1 : category == 2 ? 2 : 3;
-    type_vtable[1] = address(reinterpret_cast<void*>(&type_name));
-    auto* descriptor = descriptors[index];
-    descriptor[0] = address(type_vtable);
-    const char* names[] = {nullptr, "int", "float", "bool"};
-    descriptor[2] = address(names[index]);
-    descriptor[4] = -1;
-    descriptor[5] = 1;
-    return descriptor;
+    return category == -1 ? kinoko_sqplus_game_type(0,
+        [](int32_t, int32_t source) -> int32_t { return source; }) :
+        kinoko_sqplus_scalar_type(category);
 }
 }
 
@@ -126,6 +115,15 @@ void publish(HSQUIRRELVM vm, const char* name, Object& value) {
 }
 SQInteger noop(HSQUIRRELVM) { return 0; }
 
+thread_local int32_t publishing_output = 0;
+thread_local bool saw_published_output = false;
+SQInteger inspect_publication(HSQUIRRELVM vm) {
+    HSQOBJECT value; sq_getstackobj(vm, 3, &value);
+    const auto output = ObjectView(publishing_output).value();
+    saw_published_output = output._type == OT_NATIVECLOSURE && data_bits(output) == data_bits(value);
+    sq_push(vm, 2); sq_push(vm, 3);
+    return SQ_SUCCEEDED(sq_rawset(vm, 1)) ? 0 : -1;
+}
 void class_contract(HSQUIRRELVM vm) {
     const auto top = sq_gettop(vm);
     Object base(vm), derived(vm), failed(vm), table(vm), closure(vm);
@@ -169,13 +167,29 @@ void class_contract(HSQUIRRELVM vm) {
     { StackTop call(vm); typed.view().push(vm); table.view().push(vm); sq_pushfloat(vm, 7);
       require(SQ_FAILED(kinoko_sq_call(address(vm), 2, 0, 0)), "typed closure rejects float"); }
     const std::string longmask(100, 'i');
-    function_4a9490(pointer<int32_t>(overflow.location()), table.location(), address(reinterpret_cast<void*>(&noop)),
-        const_cast<char*>("overflow"), const_cast<char*>(longmask.c_str()));
-    overflow.view().push(vm); table.view().push(vm);
-    require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 0, 0)), "oversized mask preserves receiver-only fallback"); sq_pop(vm, 1);
+    require(function_4a9490(pointer<int32_t>(overflow.location()), table.location(),
+        address(reinterpret_cast<void*>(&noop)), const_cast<char*>("overflow"),
+        const_cast<char*>(longmask.c_str())) == 0, "source rejects oversized parameter mask");
+    require(overflow.view().value()._type == OT_NULL, "failed registration releases captured closure");
+    sq_getlasterror(vm);
+    require(text(vm) == "CreateFunction: typeMask string too long.", "original SquirrelError text preserved");
+    sq_pop(vm, 1);
+    require(!has_slot(vm, table.view(), "overflow"), "failed function is not published");
     Object string(vm);
     require(function_4a9250(string.location(), address("bound string")) == string.location(), "string object return");
     string.view().push(vm); require(text(vm) == "bound string", "string object value"); sq_pop(vm, 1);
+    Object delegate(vm), published(vm);
+    new_table(vm, delegate.view());
+    delegate.view().push(vm); sq_pushstring(vm, "_newslot", -1);
+    sq_newclosure(vm, inspect_publication, 0);
+    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "install real publication callback");
+    sq_pop(vm, 1); table.view().push(vm); delegate.view().push(vm);
+    require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "registration table delegate"); sq_pop(vm, 1);
+    publishing_output = published.location(); saw_published_output = false;
+    function_4a9490(pointer<int32_t>(published.location()), table.location(),
+        address(reinterpret_cast<void*>(&noop)), const_cast<char*>("published"), nullptr);
+    publishing_output = 0;
+    require(saw_published_output, "legacy output captured before _newslot publication callback");
     require(sq_gettop(vm) == top, "all class helpers balanced");
 }
 
@@ -230,12 +244,29 @@ void values_contract(HSQUIRRELVM vm) {
         for (int32_t input : {-32769, -129, -1, 0, 127, 128, 32767, 65535, 65536}) {
             bytes.fill(0xA5); sq_settop(vm, 0); sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
             require(retdec_set_var_value(context, info_addr, value_addr) == 1, "integer setter returns one");
-            require(integer(vm) == input, "setter returns full value before narrowing");
+            const int32_t expected = size == 1 ? static_cast<int8_t>(input) : size == 2 ? static_cast<int16_t>(input) : input;
+            require(integer(vm) == expected, "original setter returns stored signed narrow value");
             sq_pop(vm, 1);
             require(retdec_get_var_value(context, info_addr, value_addr) == 1, "integer getter returns one");
-            const int32_t expected = size == 1 ? static_cast<int8_t>(input) : size == 2 ? static_cast<int16_t>(input) : input;
             require(integer(vm) == expected, "signed narrow integer round trip");
             require(bytes.front() == 0xA5 && bytes[size + 1] == 0xA5, "unaligned narrow store canaries");
+        }
+    }
+    // Original 4AAD1B and snapshot VAR_TYPE_UINT always use unsigned32,
+    // independent of m_size. SQInteger is signed32 on the game's Win32 ABI.
+    for (int size : {1, 2, 4}) {
+        const Variable unsigned_info{0, 1, 0, 0, static_cast<uint16_t>(size), 0};
+        store(info_addr, unsigned_info);
+        for (int32_t input : {-1, 0, 128, 65535, 0x12345678}) {
+            bytes.fill(0xA5); sq_settop(vm, 0);
+            sq_pushnull(vm); sq_pushnull(vm); sq_pushinteger(vm, input);
+            require(retdec_set_var_value(context, info_addr, value_addr) == 1 && integer(vm) == input,
+                    "unsigned32 setter preserves all 32 bits");
+            require(load<int32_t>(value_addr) == input && bytes.front() == 0xA5 && bytes[5] == 0xA5,
+                    "unsigned32 uses four bytes even when metadata size is narrow");
+            sq_pop(vm, 1);
+            require(retdec_get_var_value(context, info_addr, value_addr) == 1 && integer(vm) == input,
+                    "unsigned32 getter ignores signed-small-integer width");
         }
     }
     Variable info{0, 0, 0, 0, 4, 0}; store(info_addr, info);
@@ -451,6 +482,60 @@ void mapped_method_contract(HSQUIRRELVM vm) {
     require(native[0] == 12 && native[1] == 34 && mapped[0] == 56 && mapped[1] == 78,
         "mapped method leaves native records intact");
 }
+// The instance's primary pointer is not necessarily the declaring base's
+// pointer. Original 4AA750 and the 20080713 getInstanceVarInfo use __ot.
+void mapped_property_contract(HSQUIRRELVM vm) {
+    StackTop stack(vm);
+    Object klass(vm), instance(vm), mapping(vm);
+    make_class(vm, klass, "MappedPropertyActor");
+    auto* declaring_type = kinoko_native_binding_type(-1);
+    function_460920(pointer<int32_t>(klass.location()), declaring_type, 4,
+        const_cast<char*>("value"), 0);
+    static int foreign_type;
+    klass.view().push(vm);
+    require(SQ_SUCCEEDED(sq_settypetag(vm, -1, &foreign_type)), "foreign property class tag");
+    sq_pop(vm, 1);
+    int32_t native[2] = {12, 34}, mapped[2] = {56, 78};
+    make_instance(vm, klass, instance, native);
+    require(get_slot(vm, klass.view(), "__ot", mapping.view()), "property receiver map");
+    mapping.view().push(vm); sq_pushinteger(vm, address(declaring_type));
+    sq_pushuserpointer(vm, mapped);
+    require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install declaring base pointer"); sq_pop(vm, 1);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    int32_t metadata = 0, source = 0;
+    require(retdec_resolve_instance_var(address(vm), 2, &metadata, &source) == 1 &&
+        source == address(mapped + 1), "original property resolver uses declaring base from __ot");
+    require(sq_gettop(vm) == 2 && metadata != 0, "mapped resolution preserves caller stack");
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == 78, "mapped property getter");
+    sq_settop(vm, 0);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1); sq_pushinteger(vm, -123);
+    require(function_4aafa0(address(vm)) == 1 && integer(vm) == -123 && mapped[1] == -123,
+        "mapped property setter");
+    require(native[0] == 12 && native[1] == 34 && mapped[0] == 56, "primary pointer and guards untouched");
+    sq_settop(vm, 0);
+    instance.view().push(vm); sq_setinstanceup(vm, -1, nullptr); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == -123,
+        "alternate base works without primary instance pointer"); sq_settop(vm, 0);
+    mapping.view().push(vm); sq_pushinteger(vm, address(declaring_type));
+    require(SQ_SUCCEEDED(sq_deleteslot(vm, -2, SQFalse)), "remove declaring base pointer"); sq_pop(vm, 1);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    metadata = source = 99;
+    require(!retdec_resolve_instance_var(address(vm), 2, &metadata, &source) && !metadata && !source,
+        "missing base mapping cannot fall back to primary pointer");
+    require(sq_gettop(vm) == 2, "failed base resolution preserves stack");
+    sq_getlasterror(vm); require(text(vm) == "Invalid Instance Type", "source type error retained");
+    sq_settop(vm, 0);
+    const auto info_address = function_45fab0(klass.location(), address("value"));
+    auto info = load<Variable>(info_address); info.flags = Static; info.offset = address(mapped + 1);
+    store(info_address, info);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == -123,
+        "static property skips typetag and __ot"); sq_settop(vm, 0);
+    info.flags = Constant; info.offset = 29; store(info_address, info);
+    instance.view().push(vm); sq_pushstring(vm, "value", -1);
+    require(function_4aabd0(address(vm)) == 1 && integer(vm) == 29,
+        "constant property skips typetag and __ot");
+}
 void child_binding_contract(HSQUIRRELVM vm) {
     StackTop stack(vm);
     Object klass(vm), instance(vm);
@@ -502,7 +587,7 @@ int main() {
             Machine machine; auto* vm = machine.get();
             class_contract(vm); lookup_contract(vm); values_contract(vm);
             instance_contract(vm); methods_contract(vm); argument_guards(vm);
-            table_callback_contract(vm); mapped_method_contract(vm); child_binding_contract(vm);
+            table_callback_contract(vm); mapped_method_contract(vm); mapped_property_contract(vm); child_binding_contract(vm);
             require(sq_gettop(vm) == 0, "all binding contracts restore caller stack");
         }
         std::puts("Squirrel binding contracts passed: 8 full VM lifetimes, class/metadata/variables/methods/argument guards/table callbacks/mapped receivers/child VMs");

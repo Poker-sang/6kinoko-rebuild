@@ -1,0 +1,1402 @@
+{
+  "source_commit": "f19c0aca93172fe3c172a334ae8378b50aa00c9b",
+  "source_sha256": "2cba049f3f01893cbf288e35a49ec5052e4a692a99839454e90330de3beccd73",
+  "policy": "Read-only, pinned-source audit of closed generated-code/data components.\n\nC tables are graph nodes, not automatic entry points. A linked table can keep a\nwhole retired library alive without a call from the program. All unmodelled\nsource, all conditional branches and other runtime/vendor/test/build files are\nroots. Calls, address-taking, string lookup names and original numeric addresses\nare references. Maps are reported (including linked candidates), not used to\ninfer runtime execution. This is a lexical proof under the recovered C symbols\nand literal-address model, not an arbitrary pointer-arithmetic/runtime oracle.\nNo code is deleted by this tool. Review the selected component before removal.\n",
+  "seeds": [
+    "function_47aed0"
+  ],
+  "include_named_functions": true,
+  "source_files": {
+    ".github/README.md": "a8db2a9335e6718e0e019a8663ca51beba725a5efaaf482a8fd8f50745fcd4ee",
+    ".github/README.zh-CN.md": "57f201ed8d51e4ada04b427efca0f7b5ef6f085b5432fb399b673f0d1968869d",
+    ".github/workflows/source-snapshot.yml": "4fe8e716bdfc65b2e1f5b457151cd8a7cb0ceaabc7f1269aad5bd8d2c4fcd282",
+    ".github/workflows/thirdparty-checkpoint.yml": "31e143348c05f29b40901c3250226b0202ccedba7f204afdfae59601d80308d0",
+    ".github/workflows/windows-x86.yml": "a517d3b12950c7e79100f274be18f64399a59974a56c55c21f8614860fdf6c8d",
+    "CMakeLists.txt": "a3522c90d9186cd7acec70661845680fd325531916dde4d6b8b88e2094786fef",
+    "cmake/Bindings.cmake": "cbb462db8eea630dd260a3321fe17b6b9215744c5a647bed04327269d2be0921",
+    "cmake/BoostCount.cmake": "d2283077d4aedadcb857d45030d0773255f0a0fc40ee2776c7d27df2e870cdc7",
+    "cmake/Xiph.cmake": "20ca0db4586b3aef2e6272972c4c4830528d8fffc4b4facf5aa42e86a6b97f15",
+    "include/kinoko/act_clone.h": "fd7372e2f0a3c67ed5fdbf61f822f8e570a1b73c19afed172005189ddc8d9650",
+    "include/kinoko/act_draw_records.hpp": "151fb0424a3ee425ffbd3acc4ca0785cfa1925c4db1cdfdb532539edd449744b",
+    "include/kinoko/act_frame.h": "9cf0241793ab630c42e66d9133d76954a4e6cf8ebde399226001bce5574d8b5d",
+    "include/kinoko/act_host.h": "89a72d65c8b077d058e71b2c3dae99832fedddfca0129e0370618a9862f8675c",
+    "include/kinoko/act_layer_access.h": "6c492a17d471299862753a26db0455cd01f32dc43496f677b954f995d5181079",
+    "include/kinoko/act_layer_records.hpp": "c6ab913d2d348ad766f9d47bdacb5bd490d4e3e8c37adacd1a14210daab06cdc",
+    "include/kinoko/act_resource.h": "01492ba6fe878aa31c68a1c641da071ad4800ec100f39bf5bee34fb4920845e6",
+    "include/kinoko/act_resource_records.hpp": "3c6f11bd031fca549e81bc890090ff4a8cedaf33f0019e463d0a9bbdf3dd6c41",
+    "include/kinoko/act_runtime.h": "0e5875b9757ed0dd2a3e3860e2dbd5b4c797f31afbd1da83a921468a2bbcd130",
+    "include/kinoko/actor_animation.h": "e0c83c4add57dd4d4e16cebea5e877a13ed930ac2a64cfe0c57f12fe6ccf5419",
+    "include/kinoko/actor_cleanup.h": "7e937a2a00df6fefef085d0da4b45f2ba3dad409e9da89cc81fd7f3fd5c0cb46",
+    "include/kinoko/actor_collision.h": "689554560ac51cdace9f1ea1c576cd19a49b7879e34cbf6d58a80fde738e129a",
+    "include/kinoko/actor_lifecycle.h": "1926d85fabde3201f879c70372710f2050d7544eb62000506cac5788ee481004",
+    "include/kinoko/actor_methods.h": "f340f5d7e12296d86f5bd00cbeefef97a4f89dc9ecdd241398cc3d425c02638b",
+    "include/kinoko/actor_records.hpp": "b74e932c655d978669440f9670b3a04323ca9807aa8fa9a54dbbcaa20bd52dfb",
+    "include/kinoko/archive.hpp": "a86fa4b47451979d6fbefaadb7617b44abbdac4e91f2f6553e1e368d79aefdf6",
+    "include/kinoko/audio_host.h": "22edc46724472554fb40b7f49f7154efd11afdbc006c63dc8f5e8ab29058a127",
+    "include/kinoko/audio_math.h": "3f49161eeaf600418589f49fadcb09965df108d80d5fd8d217eea9d175bc59e5",
+    "include/kinoko/audio_records.hpp": "1b14d497eb01a58a686594e6d22f492cdc25fd50b15fbe8d1484a31b9d738c10",
+    "include/kinoko/audio_runtime.h": "da6e04e326d9833b9372bad4e3959af70b1066abd76f9648730702db962c83bf",
+    "include/kinoko/boost_control.hpp": "fcca78c24c276576d7f37c2dd548712747991712bee3fc524242812d90e87ec1",
+    "include/kinoko/com_owner.hpp": "7546386b5b043c4bbd7ea4f7e2ad69925fcbb04e52b11462685439772a20bf43",
+    "include/kinoko/csv_bridge.h": "a983cb5dea8538007b65153bda6321d161fbb1d37248d3e4778cb979510b433a",
+    "include/kinoko/diagnostics.h": "71c4de987bc2f904f6644331be1fa88ff705c13a4fed696c7317d16cce868b7d",
+    "include/kinoko/diagnostics_filter.hpp": "e88d7e00403c065014adbe0d57ce7ec6e8580eabf5030f2ce9f1d135b8efeabf",
+    "include/kinoko/game_math.h": "00152c236e75b8be5c413b56c71198e23ec034c65b1b5f67697b65bfc3231ca6",
+    "include/kinoko/legacy_abi.h": "435c1f0e658c9a00678f411f84abbe4fb3e299262e655cc616060830b854e98f",
+    "include/kinoko/legacy_copy_entries.h": "ebbde48bc9afb2f79a25f63f09194d3e4c64554164b51d89a0327fcdf92380f3",
+    "include/kinoko/legacy_frame_copy.h": "25822e62454dad0576ee7dc3160ae7fa2db1fc6cd7132a81138cd396214f3712",
+    "include/kinoko/legacy_memory.hpp": "33af0564b2e18a0cec580d561e7114b95755dc675d3fa8b46661ca44222bef1b",
+    "include/kinoko/legacy_method_entries.h": "81478a5c30dcc614161803f33c1f8feb0afc11775c5f9eb5bd8f4376a5fbe0d1",
+    "include/kinoko/legacy_string.h": "ff9e39307b1f6837d5de7587c279ba2e6312653db8dd593d9e7e44951bd16eab",
+    "include/kinoko/legacy_string.hpp": "4dad418ed86f7933c41b86518f83695554c3082c33ec9038ea176b45e892791c",
+    "include/kinoko/map_render.h": "37d6a5c7b35ee82b3ad00573ef234851ad2af17e803467c8321e628bb900e248",
+    "include/kinoko/native_control.h": "8cf40795fdcb76475d557094a97f3fa8538f2128588ed11e80a2c1c817c87f45",
+    "include/kinoko/native_control.hpp": "85c6c5a69210a37356742e0e0e51ee16a94bd4530a1656cde6a18d5e73e2a5e8",
+    "include/kinoko/native_property_bridge.h": "6b8009bea47a25afc45a06dc557a0a1ce6481c429c60f41bcc3b3831586eabea",
+    "include/kinoko/native_property_callbacks.h": "d57ea4c96269e3f4e203a4aa45d69a6895905580d30ca87cc793fd160829a10f",
+    "include/kinoko/native_record_view.hpp": "e38a2d57e7c0e4a001e6863fa3d17fad55fc3a603b8f49d973562960aa2b8931",
+    "include/kinoko/retdec_memory.h": "d7073500582641c77793215fc8890305c20e5663eb9c9f2c63aa7c0dfbece2fd",
+    "include/kinoko/script_callbacks.h": "17333b65a818c988af130b32b3492de223429c86aede6296b7784eea9ed0ff89",
+    "include/kinoko/script_registration.h": "2964f62b8b06add22457db86ee8055e1932f9367789fcaf0df96fe799f572006",
+    "include/kinoko/sprite.h": "dda7e3186cdc84eebf40b1e6f85bbde26b0a464c992eda9512dd77032f09abb0",
+    "include/kinoko/sqplus_source_entries.hpp": "374cacf42875de50c28c0c23c2ac08f63470be56383aa71985810ef7d283f8d3",
+    "include/kinoko/sqrat_object_bridge.h": "56c79eb80a97c9dd899871e5530fd6cdf9e8693b78a63fed6bfb4951f66e153a",
+    "include/kinoko/squirrel_api_types.h": "950251a530170e31aefd3a07ce8823ced9f1c8f7e6bd6e5dad5bce86dc2c6905",
+    "include/kinoko/squirrel_binding.h": "c11bde9f6e6493586e9ea5d451569c247de9212590e460c26486aa8589acc34f",
+    "include/kinoko/squirrel_binding_detail.hpp": "6278ff2fd95f82c93eb4e1e56b2aaa7196bc45ccbd11cc7917ac827877cc8284",
+    "include/kinoko/squirrel_compile_bridge.h": "d2683535b8e13ad842910eed6d4ba4de4f265acc2d872c1445123166a84c6a31",
+    "include/kinoko/squirrel_game_objects.h": "549412fc13a09d87da2ebbdefc3e5b0fd599d7b70c1951ce42a77a45523ebb3e",
+    "include/kinoko/squirrel_gc_bridge.h": "b1f3c9fe1a348136ced26ff2cf975e56c7453daba596191132cfc80bc383b510",
+    "include/kinoko/squirrel_host_compat.h": "3ea044667686a73b26d1d9308dae5b01e72b2aa6336af70bc39dc6d91820ae4f",
+    "include/kinoko/squirrel_host_object.hpp": "b3fdfe5addbedce17b9d9a89f2d36d8df0ae95b601621ac784460063d93c5caf",
+    "include/kinoko/squirrel_legacy_api.h": "d05ddc1879ca04685e68f47302496811549bec5b5ffb7a96f45b7a92ff661297",
+    "include/kinoko/squirrel_native_arguments.h": "cce9c5923fd74668c48c0e2d6e9dd8fdeb6bad2ac2696c4678c331b9019b5717",
+    "include/kinoko/squirrel_native_calls.h": "6792a48ff56376f9db645cc39323c35bdb9bda831703528480ce2c9bc4c97618",
+    "include/kinoko/squirrel_object.h": "f35cd9f380de234d7c52f828396e5b2712a4f81ab17daf6512050b72d9219f56",
+    "include/kinoko/squirrel_pair.hpp": "85683e3ddd97beca3b6d11237ff3a1e39ee4db7dde629198a07c9d27f85a8d45",
+    "include/kinoko/squirrel_source_runtime.h": "a60e9bd7de51c74ab15c312834a39084bc966b98be03e52d4a738598afae57b7",
+    "include/kinoko/squirrel_value_bridge.h": "75730bc97f184808fa383e044547288f84377bcef5cb47332a5da0d9ede3ceb7",
+    "include/kinoko/squirrel_variable_record.hpp": "7c3064f09f8cfa6f331e4942489e496f20a9d19c5ba79629ddb37319202423ac",
+    "include/kinoko/squirrel_vm_bootstrap.h": "f56c7341f7958e06a2e66b3852002818a77fd85803259d26b266bf44d06abf59",
+    "include/kinoko/squirrel_vm_lifecycle.h": "a94da93973c03e6d8c3f7fbfdd366b8382d39f87561df3c6c2785cd9e99075c5",
+    "include/kinoko/stage_cleanup.h": "cabad708d77c06fcc2266fb5862fe59b7ff2a15dbc35803fac846adfb96b35df",
+    "include/kinoko/texture_store.h": "23371f5f33923f66b4c95c0fc8697fd256b33329b6d8fc619bac41ae731227c8",
+    "include/kinoko/upstream_bindings.hpp": "4b9b64e8eca7a6ef03c7e67bf71efda739d9050dc572893864f19faf3a35f451",
+    "include/kinoko/vorbis_decoder.hpp": "74d7805157e909bd2f9bc6a14b492f857c47991b4026063e206ae54d55a1756c",
+    "include/kinoko/windows_owner.hpp": "e46b038050996c2833460517398012eefc98a5cefb84a2364bedf6884f06af69",
+    "src/decompiled/6kinoko_rebuilt.c": "2cba049f3f01893cbf288e35a49ec5052e4a692a99839454e90330de3beccd73",
+    "src/decompiled/retdec_asm_stubs.c": "adc55ac6bc05661a4a223d7821a269e5bce1da20118fbbae03bdabfc9d0a5cf0",
+    "src/decompiled/retdec_asm_stubs.h": "e764bc606e13c7ff8ec24ec6018586d74ead66487463f441faca41b71d85016f",
+    "src/decompiled/unistd.h": "81613cfc6abe16aecc7e02ea856d2780bb9bee75ee368ec32d85a2048a3fd37c",
+    "src/platform/audio_math.cpp": "2beb5e70718f5b73a872c6ff011f0205e97685e3c8bf370ff14506893fd0f4c0",
+    "src/platform/diagnostics.cpp": "26f60eeca53ca786fb6f8f4a78a43c9f63198a8a5ee8a3c963012906bf8da11e",
+    "src/platform/game_math.cpp": "25beca62ba8c4c78726454a03a6a0842c6e3eb8824acc3a0a31330612cccb24b",
+    "src/platform/legacy_frame_copy.cpp": "5feca5098f3e3e234f44fb1a4eb5167d226937210a68506fe6d57c03c073d528",
+    "src/platform/legacy_frame_entry.cpp": "8bc727d69e6889d6877cbe8e0ccfddc16271eadc65d4585194d20471f6dd92db",
+    "src/platform/legacy_string_scan.cpp": "244fe27736332a92b4f617a8a66a1943ba040b117c3632a0560f8bf63834f203",
+    "src/platform/resources/resource.h": "a8ab0f51f0db96469e7097842aab1ccd78bf0d057b24f8f9ca1eaeab81eafab2",
+    "src/platform/resources/windows_resources.rc": "3ad65101542514bd4ddcd85700ce86ee80eb0cf09a7c6a16d4d75f3ab7250ef5",
+    "src/platform/retdec_address_space.cpp": "029bac29af0029e4e1724c2b596ea65bba02a29bb8b1810a747708fb922a5437",
+    "src/platform/retdec_memory.cpp": "3539fffd25bc2418eb8d322d933c46fbebbaebd6974693dd291d01c9e9e523fc",
+    "src/platform/retdec_runtime_compat.cpp": "478539a87c452fdc2e6c32de2123b9645c701d2af9c99d157effc450c9e7699e",
+    "src/platform/windows_entry.cpp": "3a8a491ba00fd87292ae0e96feca5479d51cef2e3c301bd389658b618f0bfc9b",
+    "src/reconstructed/act_clone.cpp": "b501b11ef3b4db476caf30b809611582669984f0ca8615bb17b34e63a6704ec4",
+    "src/reconstructed/act_containers.cpp": "5b473c991b1deec312eea8c81349a6cc642bc55c15b16e445ac048f0d6a3f6d3",
+    "src/reconstructed/act_document.cpp": "ea57ef1ca49d76b6af760ecbcd8107f49548564b0b15b689e4afbf87e609043a",
+    "src/reconstructed/act_draw_storage.cpp": "66ca128eb84e52af021f3aa41da205e80a0640e23d3d0972e186df2adbfc864b",
+    "src/reconstructed/act_frame_render.cpp": "efa11158c9957c5c97cf0fef2b7d5b32b1a22502b73e4cc87a48fa1bcea5f2c1",
+    "src/reconstructed/act_frame_update.cpp": "570eb556cf0fa78f00e56209e4b9eeb4b53ea7af60f91edf5d9b9dfcc559a5a8",
+    "src/reconstructed/act_layer_access.cpp": "ab365459886a93321d5135e24af43d782c4b54611d08dabd05fe48c3ec587d22",
+    "src/reconstructed/act_layout.cpp": "7a75a6e9f48498a175470a1a95f27cde6dc35db908aad94f9cc5e5413a39734d",
+    "src/reconstructed/act_lifetime.cpp": "51c8f8d2ed1a9e0c9c546bf6c028d4a85e1d8840ac3589c4fc41efb117dd09c0",
+    "src/reconstructed/act_map.cpp": "f6c614682e176e167403bbc51749acf4f73abd5ff8ad2b7065ab4ac71a5158f8",
+    "src/reconstructed/act_properties.cpp": "55072b190c9c3491c474d8eeaed144c7e51ceb71641366c296c747c21ef66516",
+    "src/reconstructed/act_resource.cpp": "bd313d9d78f0a89708e0a3e9a421c09815ba293724d4cfac47e967d359b957a4",
+    "src/reconstructed/act_runtime_lifecycle.cpp": "c5b7332c510e76608141a5b17646eeda3a84941d96b29d4f3ebdc0613355e058",
+    "src/reconstructed/actor_animation.cpp": "6b9bf8960137977fb6790f6d9475750abfb1abcd68ffef684304fc5de15b3525",
+    "src/reconstructed/actor_cleanup.cpp": "53516642a0594a9d6cda0e992de8c63eadc643589627bc1732563f8c60f7e62b",
+    "src/reconstructed/actor_collision.cpp": "5f07d2ce03d4a2e6babcfecc293fac00f9fa706f6a623a2cc15baa4ca05f7f96",
+    "src/reconstructed/actor_methods.cpp": "aa1e8d785ec6c062d3a152b1ecf9eb9575bc5f9986ffdfd8aa826e0305d23dbf",
+    "src/reconstructed/archive.cpp": "e226fcd7ae6c5eb7a811f6b2e99f4da08011f2efa9a28111f3e554cfc9495efe",
+    "src/reconstructed/asset_store.cpp": "8119089315926090976b748a03a7dccef863f1206107fbcae3e3809773efbd19",
+    "src/reconstructed/audio_runtime.cpp": "1d7c68143dc2346eccb10b27e01a51419893f46bb0a1f7f534111bf40cbe2d30",
+    "src/reconstructed/boost_control.cpp": "ced6ccf0f823fd60b239b80f44408fc686c4f538806636c3bdba5887bdb81338",
+    "src/reconstructed/direct_input.cpp": "00c0ad0dfc38bc3586bf09a1b1ab33b913973be4d34e9fa1a251c5460bb9c107",
+    "src/reconstructed/input_aggregation.cpp": "cf5f52404dd102a9c2eb8467c3dcc19fc07d0fdaab1e43da2017889d753acf09",
+    "src/reconstructed/input_runtime.cpp": "7963b03f69274782ad421bd08eb73c183f74e6ac8094769ff5c17adc22d674ad",
+    "src/reconstructed/legacy_abi.cpp": "0c724b680e40569253858129706bf25ae43a30dc3fc479d5409c7c692e28fd9c",
+    "src/reconstructed/legacy_copy_entries.cpp": "e7ca4795c1dbec988bc40133366d3935ae9ef4125a9cec27f0f7986a087c0ab6",
+    "src/reconstructed/legacy_method_entries.cpp": "8e77dc9640a03d7813f4b6ceb405783d648de174fa424d01858c834b785288e6",
+    "src/reconstructed/legacy_string.cpp": "e0ed12ce340518219390e01cecf8fdd49c0918f122deefde3eb8e544aee1444d",
+    "src/reconstructed/map_layers.cpp": "50516cc2dfb2cd569fecb62da1c4523e97c132ab1a52c006b974a557ff199ade",
+    "src/reconstructed/map_render.cpp": "3742c900bcea4a0b8f9ad92bff86f711f3646a8a0dab7e569c8a51756ede7f9b",
+    "src/reconstructed/native_control.cpp": "b1b6e69c2a14254d14509ec9d79c5406cb15f2574b4a79060c8913d9cd848193",
+    "src/reconstructed/native_instance.cpp": "ff4ebea55e5e310493e1bfe4aef89c66434bcb17d2eec172a8a210db5853ba87",
+    "src/reconstructed/physical_input.cpp": "f6b73857bd97a89f3495b64882086a653ea853c7d92ce1893cdedf074a1fa990",
+    "src/reconstructed/script_callbacks.cpp": "915e370f0e371972f0f67ffa44c064085264cc653ce32128c629620068ac0fa0",
+    "src/reconstructed/sprite.cpp": "2977079b678dd3c85a0fadfdf56611ee9d5f0f1f42b927dd543c70a843c97132",
+    "src/reconstructed/sprite_color.cpp": "25ecb664b79808d9480a79841cd0c322757d67df640c46d17ece6ef9a342d4ae",
+    "src/reconstructed/sprite_rect.cpp": "9c574d2126cedb69f1b34430e2fe46bb2ff35dc29f3bdacaae366da80d117e73",
+    "src/reconstructed/squirrel_object.cpp": "98f515513acb798a0cf2af9ea2535ca5a212c81842cd79dfc6093caa8f9d3af7",
+    "src/reconstructed/stage_cleanup.cpp": "e5f89269898b0c8a06a6ec029d5be6c941fd729e365f1c6502efdbe6d09826ec",
+    "src/reconstructed/texture_store.cpp": "da97306708d244d5ca7112392f30cb419a4096926930aafc350a1dc3337ae482",
+    "src/reconstructed/vorbis_decoder.cpp": "16f6a3dc10584723aa82cea2bfb04165c73c51c2ba7aba2a960280fd3ae8eb5c",
+    "src/squirrel/act_binding.cpp": "f9d2d9f637bff9f6e298eee571985057cceacd364a7b77e03d8caeb257e22917",
+    "src/squirrel/actor_lifecycle.cpp": "8e8a6a890c13aa5527acaa210a87e93dae6d1806018b2209901790e4e16eaeda",
+    "src/squirrel/actor_registration.cpp": "b03924052625f0036b5d5391c288db62699d9b5f4f6a19f43fc88c0e96392f5a",
+    "src/squirrel/camera_map_binding.cpp": "18ea2fbd2118413ce7138166f660a4f59cf7f3f6b3da783cd01aed2334eceaaf",
+    "src/squirrel/global_registration.cpp": "27574808092e3d9c3fc1f916e0a6a93a9a2ec6f8fded7f6ce1b17315a5ba6962",
+    "src/squirrel/input_registration.cpp": "df074fbb0b1a55dbd8a9e55f4f8457fd0bccc7411a5e21e9857593aa7970f0ff",
+    "src/squirrel/native_property_bridge.cpp": "2be646d662bd55ccea0e77422fd57d5cdf149bb8d094560f499b6dd88595cfcc",
+    "src/squirrel/script_registration_host.hpp": "543ffcf23c0d54a567618dd5a4a937f2389b94ebc8ac0f2e7e469df9e170b5ad",
+    "src/squirrel/sqrat_object_bridge.cpp": "e3dcb1b1f2784b1f407f7e21fdb37e4772e2416b1b7e0f7fc90da93142959a48",
+    "src/squirrel/squirrel_array_bridge.cpp": "c1d64066083b157707aed96e6c7af75ca52e6877e1e2d6f41698fe732656831f",
+    "src/squirrel/squirrel_class_binding.cpp": "4f8edcc418d41ea77d71abeb767fa3bf19646869591a90e8b68f6493eb3d5ebd",
+    "src/squirrel/squirrel_compile_bridge.cpp": "41a34360960fb23ca700197e27cb74043445fd5693ff7bf82a16bc31f5804ec2",
+    "src/squirrel/squirrel_csv.cpp": "698c61f271e1c9f2b5ffca5dff7c3f9e226b4db3cb10c7403f898fa309ae3e6f",
+    "src/squirrel/squirrel_game_objects.cpp": "9015233df467049aec5c7ac3199457dd8b4f046c5b14fac120db42514a919247",
+    "src/squirrel/squirrel_generator_bridge.cpp": "fc353a24e7a303b49cd11899343e1319fc934f485230c1bd53f0e18f78966920",
+    "src/squirrel/squirrel_host_compat.cpp": "67c46b5d5014b908e6a228c02e7d81d67420626a035e4de3dd9422b34e68ada8",
+    "src/squirrel/squirrel_legacy_api.cpp": "44d86b0205cf4209afccaa40ff52068ee144a35b9b336cdac0bce33a4dadb248",
+    "src/squirrel/squirrel_method_dispatch.cpp": "3f28006672afdf655baee1da70885f50094500f6aa82b3ccc1f7af2ffd0193ec",
+    "src/squirrel/squirrel_native_arguments.cpp": "10acac045ede27f06dde04609d869632af783da61777ba19ca52d7f47e2a8e00",
+    "src/squirrel/squirrel_native_calls.cpp": "021a91c1bf67fb5fe21befa40e26d5c323ac585a257ffab2b1b5fbf24f6d6fdf",
+    "src/squirrel/squirrel_native_variables.cpp": "40ae8292dfd2801762acf0379ff4451b899a8c7f539c47650c7933f4772ece11",
+    "src/squirrel/squirrel_operations.cpp": "612bddb707ff5b066c8808d8e5453a0417e34be3054408fa030b9b4840b761b6",
+    "src/squirrel/squirrel_source_gc.cpp": "4ae54c891f7470ed7f79f5aecc737c7eb4b6562846789220296f4f74301b87c2",
+    "src/squirrel/squirrel_source_runtime.cpp": "54d87006ad90848f28bd08ae71ed6146139d595b6efbfb943cbbde88c95f5ecc",
+    "src/squirrel/squirrel_table_values.cpp": "7b71fdb51fb6b394b98b826637ed783fa2e2cc40c49432b22344bda1cd22351e",
+    "src/squirrel/squirrel_thread.cpp": "199201e3276ced3b3b551b8fdd69dc2acde8211899a0774d5e7a116d37921c59",
+    "src/squirrel/squirrel_value_bridge.cpp": "6d5c12a0d4ca5ea4467cce9ef8fe389dff1351dcb5b1f0df5d015a5e1a496aac",
+    "src/squirrel/squirrel_vm_bootstrap.cpp": "021ee17db268cf9280b956e6ddacaddbee8c17e16eb76f8c35f0cf1629df0754",
+    "src/squirrel/table_serialization.cpp": "90ced9ecaeef443634c65b5a78e1d4ec3d1ae00b11bf729d0454a721d322e3e7",
+    "src/squirrel/upstream_sqplus.cpp": "bb7a8a20e58f0d89e2428e58a6f3886b34cd1361981aef121e51ba697f1f452e",
+    "src/squirrel/upstream_sqplus_scalars.cpp": "bb2d22bbd7bc948a41b3a93ce2e4f294e6ba4a773af3a7250fa5369f38b127a6",
+    "src/squirrel/upstream_sqrat.cpp": "30e956d0ee7025168d456b9f1c9ab738f21cffbb9d575c12548cb1104536b018",
+    "tests/act_frame_contract.cpp": "10c5f8377e4e8bc0cc2ee4abbb77674e407bf77e15b4c6db51f52c0af274ef04",
+    "tests/act_properties_contract.cpp": "abe0bc6d54aafa63f59f979d3d528e1f8448ab453e6b1bd15b48274e89823168",
+    "tests/actor_lifecycle_contract.cpp": "cb67b72dab3933b884fdb717001f059a0f8994361763994b5ca309d8c5467a81",
+    "tests/actor_records_contract.cpp": "9e1545abb3714cbaf3c79e9ec408e200da0deeb440709f4be0628534e006ef25",
+    "tests/archive_smoke.cpp": "5d6108bf57ddb12ca1ba252a0f2dd827f984272d6f1803f48c7402fe8db6575e",
+    "tests/audio_runtime_contract.cpp": "ae520cf463ec9c94df5d83a1dbaf967357e3ae440230bece9bdd27972688bea0",
+    "tests/boost_control_contract.cpp": "03d16da2cfff51e3045c79be2afab8d01dcb9112b281998c0dace896790df5b5",
+    "tests/com_owner_contract.cpp": "7f11ab12b1c4aa265c0ad986d5395b4d209dc2eca0911424ae1bd2025ec4445d",
+    "tests/diagnostics_capture.cpp": "b68632f0c8b371196d0e825105bac8616e37fec7e8e46add6d800cb675c34707",
+    "tests/diagnostics_filter_contract.cpp": "450676fca4a1b5f216c8f8232dedef5c7e935b51e911e8b2f376709eea8af317",
+    "tests/directsound_fixture.hpp": "ed21feb6bf480069928d98aff64738e0de26fa9b2a9bda15e02de241751c4c46",
+    "tests/game_math_contract.cpp": "3dbeb8042b43215352d4451665e556d01f709e201a4c4369012a12f9ed66b18c",
+    "tests/legacy_abi_contract.cpp": "91175f69199aa893d06739ddad1250cfd14cd2c2adc17f35ba68c5385a616581",
+    "tests/legacy_copy_entries_contract.cpp": "412984e1d580b16ba0f38bc4f45bc0fa8cff3b99a340cb39c6df678b3ad18804",
+    "tests/legacy_frame_copy_contract.cpp": "d06ec99ec9959761bd79d8c12f77f0caaf4c65198059e1a217ac4e63c0cb6039",
+    "tests/legacy_frame_entry_contract.cpp": "756cff8e3a83aa6f4ea02758c3b8e0caf1962f9da0f8403381533493d74b25be",
+    "tests/legacy_method_entries_contract.cpp": "64c620a2627d03868d7eac397dcf08d2fcb413f7814144699e0ce238204fa83b",
+    "tests/legacy_string_contract.cpp": "5f3f84e8457f7fc46150757273256c00cf9e086d200f63f767ba80963f5fb742",
+    "tests/native_control_contract.cpp": "a615873f8c696200459388b7a720c972e116ce58d057b68ae4a1ab0eb66761a2",
+    "tests/native_property_contract.cpp": "b1772d78ecae69c018038cde8e482c33b6fefc15aa0ec92563669a29bdd6d00f",
+    "tests/native_record_view_contract.cpp": "bc0b6407f90d0d758899286fabb17f04658a07aafa6188342a2f407cfe8ba170",
+    "tests/original_actor_reset.nut": "a0a806fc62a1746dbcb6a359c5087294290767d86c5b9beb23d1a9c2e1af9121",
+    "tests/original_collision.nut": "457c30a396a64f363ed4b37189ca44546c0e1537ee3a3a0c6b7506b96fc2670e",
+    "tests/retdec_memory_contract.cpp": "d427f66ba90e661bd5d8f0db61f43c3c4ace2d2202e08f18f720706cb047f860",
+    "tests/sqrat_object_contract.cpp": "b8813910007b43b6ce607423f34e390456e60b6056862f924d11e30fb99d0cda",
+    "tests/squirrel_binding_contract.cpp": "ad6ff6989b5416dad45a75745d3c50d7fb41f1dab326a00e7bc26a9d4828af12",
+    "tests/squirrel_bridge_test_support.hpp": "5d7658df91815cb7a43641c83a9d1cb8bd00277d9d3e8c010d2dd3af0590287d",
+    "tests/squirrel_c_api_contract.c": "44cbec0eb63a1d1f408de5722c7c392378229070e1e7949d9464ce241816af76",
+    "tests/squirrel_c_api_driver.cpp": "dbf52b791582427d3305fc0f2853ffd0b8887f0bfb32316cd65635235cd8ac61",
+    "tests/squirrel_game_objects_contract.cpp": "28ca019ec8ba015956ff545a895630f67075f74a07c14567c022240a2485268c",
+    "tests/squirrel_host_object_contract.cpp": "b6819d4a347269992b98d5782cfe152adb5dfe919267c924d712c55362e4b76f",
+    "tests/squirrel_native_calls_contract.cpp": "c1073487443c329f13d231744261658aa1516a7f152e8a47aec20ac33ff13ea6",
+    "tests/squirrel_pair_contract.cpp": "b3570eeba12af1d036bc39845a05d8f5889c9d279c9c14c7312556a2c1d5c649",
+    "tests/squirrel_refcount_contract.cpp": "109273b39fbfbcff3861429441729ecb40f2805b63df26a14706c4e3628a22ab",
+    "tests/squirrel_source_vm_contract.cpp": "08a15c2e6f1dc3acb7c87463b806c2b2b228da5fa2e52b88593e3638843747ea",
+    "tests/stage_audio_contract.cpp": "4d36d643bd45323ce1ab47184bd1f960410d1657ceb4c24c6ba4d214f43ff0d3",
+    "tests/stage_audio_contract.h": "70f42fd7b9ae0cbaaa2bf5f881e1ea0b53948b17cea31cc315ffd9fd809b1e4b",
+    "tests/stage_contract.c": "5dab61d3137ec71c60ca2a3b80f896d56820b39a12373a2cf9b36e7bdca6a51a",
+    "tests/test_legacy_islands.py": "b824c79964e8a193f5aed1cb177c4242d3d9757e495ced8d17da0c23622482de",
+    "tests/test_legacy_reachability.py": "1c17e4e272095aa1feeea87d5330478766cb2b0bb5004e138d6dc68498e7aa09",
+    "tests/test_replacement_mapping.py": "5be23a79b133764080b1a66ecf5287918cf87c4e456c90294782c6ea803d9061",
+    "tests/test_upstream_provenance.py": "ca81cdd4f4ed9bac95b74282ac77ca1ed97c1c883f1a58dd7c3270959651ff0c",
+    "tests/texture_store_contract.cpp": "a6b397151143bc2b201270a8d54044a7053fdb5a0c9b87f0f645871af15f68ab",
+    "tests/upstream/CMakeLists.txt": "1f7c5ce3259e7c68f6caa59bbcf1d2ab9b30d0deb423d4877a599fb653658689",
+    "tests/upstream/direct_native_invoke.cpp": "571982a718832b85f825084baf0e3960d144f8408484a5292985d8ded808e031",
+    "tests/upstream/vm_allocator_declarations.hpp": "3f36d687dfd85cbd967294252ba57c5aee7333af323cf10ec5c3b4726c350104",
+    "tests/upstream_bindings_contract.cpp": "bd490a84623d6be578b0e82e4ba92a795818de616a6f096fa8f9a2ccbab5afa6",
+    "tests/vorbis_decoder_contract.cpp": "59e48024fd4a57550bc28060ac3db011635ab82becfae0084f50c14e26f70a14",
+    "third_party/boost-1.44.0/LICENSE_1_0.txt": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+    "third_party/boost-1.44.0/UPSTREAM.json": "1336a2f5a9f83d255c993250b9f4d569aa9164f8759d8c061b9434b204b326f6",
+    "third_party/boost-1.44.0/boost/config.hpp": "43f064be144ddb6a17e7142745a05349c39f102e54afeeef3b9f44110f63aabf",
+    "third_party/boost-1.44.0/boost/config/abi/borland_prefix.hpp": "9bcb32c03327907d1a79f1a687d1e889f048f89a02f01c9306ffccd270ccd53a",
+    "third_party/boost-1.44.0/boost/config/abi/borland_suffix.hpp": "ddf73eec710e6a40e5649e70ff0f5ee262b92648ab5b1ab2abb563a5fb6bc556",
+    "third_party/boost-1.44.0/boost/config/abi/msvc_prefix.hpp": "0846f71a84d25120bd54ae29095b33af1e9691f162a3a81d518b044a76037613",
+    "third_party/boost-1.44.0/boost/config/abi/msvc_suffix.hpp": "e401a3cc760fde65b6ff0681094eaab365a5716632d8526d4847e98f842927ac",
+    "third_party/boost-1.44.0/boost/config/abi_prefix.hpp": "7cab389037c481b96573401da49f75d2309e6df2947f3c63db396ff5d2a04cff",
+    "third_party/boost-1.44.0/boost/config/abi_suffix.hpp": "3f301ea93528e4dbf8cada69033f4cda44920ec5f82f6bc4f1e87d88b60cfeea",
+    "third_party/boost-1.44.0/boost/config/auto_link.hpp": "825f646d7396b247c186bda6e928f0564d6d1f943bcd2ce77dd38573e570f81e",
+    "third_party/boost-1.44.0/boost/config/compiler/borland.hpp": "0dce8be856aab44660d138c39a9056618077fa5a4d1f0ec9f79542b986f6e7ea",
+    "third_party/boost-1.44.0/boost/config/compiler/clang.hpp": "23b0fee028776acb251768625d232d99bd30e2829eae02db8808df09a4862654",
+    "third_party/boost-1.44.0/boost/config/compiler/codegear.hpp": "b0851b2f9cebfa7ed91e00dc7fddd315548b6e78beaad5028b8a4d900ce2fde3",
+    "third_party/boost-1.44.0/boost/config/compiler/comeau.hpp": "4da3c57fa8925b085752168ac34f85f2228cc1e49bf8a69aff3a721c0e2e14ce",
+    "third_party/boost-1.44.0/boost/config/compiler/common_edg.hpp": "4a4b5be1b166458517b2870c37bb8c466adad09156b19c813ba0ca205fab210f",
+    "third_party/boost-1.44.0/boost/config/compiler/compaq_cxx.hpp": "adf9869f073df5c05d1d03606e1d2462029cae44f8c7aa7f44458a01e637658d",
+    "third_party/boost-1.44.0/boost/config/compiler/digitalmars.hpp": "ffeb897071119b7a4e682ec98aaa7e60c5683b5d9d86d124eaeb84c869a47f45",
+    "third_party/boost-1.44.0/boost/config/compiler/gcc.hpp": "cb74baaa96f004a1a78db2a306814909eda5b08fb33cdf591a99b8fa79eebb0e",
+    "third_party/boost-1.44.0/boost/config/compiler/gcc_xml.hpp": "b1a13db75113550615b98cf631fcf3a4878a6e320b1bdc20dbe3835e4368661b",
+    "third_party/boost-1.44.0/boost/config/compiler/greenhills.hpp": "9c4757c95427bed7ef0d63b6e14f08cc53f38660c0f048a900ef4a61c28529c7",
+    "third_party/boost-1.44.0/boost/config/compiler/hp_acc.hpp": "4d7f19d9b4bfe2abd330a5b5f1e9b0618ca8a32f9f4aa6e98c261d0af331f9cf",
+    "third_party/boost-1.44.0/boost/config/compiler/intel.hpp": "f0068a1b381995fdfcced89f10f15fc6fc8a46c472681af438e3237b590a0a6c",
+    "third_party/boost-1.44.0/boost/config/compiler/kai.hpp": "079cd6578b07597ba01f783491af34a662b13433789a11824007c6eab86eac71",
+    "third_party/boost-1.44.0/boost/config/compiler/metrowerks.hpp": "05616a2c0b1af7d637755cb5ee883d215700015d81dc9cc5102e568c844b3aed",
+    "third_party/boost-1.44.0/boost/config/compiler/mpw.hpp": "b45109bb421c1a9a1941303420ce64ab7e675535d2db9a929c90595cf78b73ef",
+    "third_party/boost-1.44.0/boost/config/compiler/nvcc.hpp": "5f83d2b15bfdd1653971f1ae0dd7924cf86d8772db7ac548163391de01975c79",
+    "third_party/boost-1.44.0/boost/config/compiler/pgi.hpp": "e7b21ed1edb30ef926d967cff9b61b071b6bdbe368619f59100ace5c97c66066",
+    "third_party/boost-1.44.0/boost/config/compiler/sgi_mipspro.hpp": "3b5de12899cfd8713c16772d18f2316c844e83c8e096752541d2116819069090",
+    "third_party/boost-1.44.0/boost/config/compiler/sunpro_cc.hpp": "621f2beef0509333a9fa1cb5607cd7c0dcfe8434e4eeb7bbb7306bf67d705071",
+    "third_party/boost-1.44.0/boost/config/compiler/vacpp.hpp": "49b407a488f8de4d206cf56212e5464997703b34bbf52ec13b7fa8c755af3f0b",
+    "third_party/boost-1.44.0/boost/config/compiler/visualc.hpp": "66225eafe105351be4282653ace54cdee56bc0394102156321ce85d7b5d11c21",
+    "third_party/boost-1.44.0/boost/config/no_tr1/cmath.hpp": "88333f68b514da159a18b2aac33be864f279ce4efc215c3f8425baf2c9ea1fa4",
+    "third_party/boost-1.44.0/boost/config/no_tr1/complex.hpp": "c91b0824f8f22581547c364626decc91d94092518be46aa5ed473046565ac0dd",
+    "third_party/boost-1.44.0/boost/config/no_tr1/functional.hpp": "aa14f93ad82f3ef4d5be7107e388f4636e057cc056602527ae82319bd6d91949",
+    "third_party/boost-1.44.0/boost/config/no_tr1/memory.hpp": "a0be3cb94459966b29df1a4c36d4bf7bc18d57d2a06a433c12e1ed60ec29851c",
+    "third_party/boost-1.44.0/boost/config/no_tr1/utility.hpp": "f2f768cf5c0a2800fb8bee3bd521e1e77feb1ca8dc7120d3fed4c7b2a70cacde",
+    "third_party/boost-1.44.0/boost/config/platform/aix.hpp": "47a1eccbfbb53151cde1cc0f475188d7d71e1d1c260bb048b1454c7ce71f7914",
+    "third_party/boost-1.44.0/boost/config/platform/amigaos.hpp": "281591f1f79e5560b06fbc5671ed86596e10c0ecd02215f3c5e12c101165ea0b",
+    "third_party/boost-1.44.0/boost/config/platform/beos.hpp": "10479b01c3ff934974210a0595cab0cb9914f2d83242028e22a05ce8ff2202d6",
+    "third_party/boost-1.44.0/boost/config/platform/bsd.hpp": "f9abfab4efe28e31ef885a94845cf54f3fba654af6ae73f5a3605837af59d318",
+    "third_party/boost-1.44.0/boost/config/platform/cygwin.hpp": "c77eff41d697f5e997dca8d589c32e4583f374ed09532d7eadd73a98ca043e2b",
+    "third_party/boost-1.44.0/boost/config/platform/hpux.hpp": "0947c1868ca9acca4247320e365588bb2e4eea65c29b70be96cec1dff776926c",
+    "third_party/boost-1.44.0/boost/config/platform/irix.hpp": "570bea1cb4e8f4a1e9bcc2bc409ba9899834d3183a6f01d98d909c8d5be96a95",
+    "third_party/boost-1.44.0/boost/config/platform/linux.hpp": "8763321237f367e6f8cc059f687c2122b722d6a72db92b4a37805a35af8b3af2",
+    "third_party/boost-1.44.0/boost/config/platform/macos.hpp": "69c4c8555d0be1e3881e5a376f2fdf49ea818321ba7604c753e051df87a025cf",
+    "third_party/boost-1.44.0/boost/config/platform/qnxnto.hpp": "05b902bffee816003e6ab60ec00a9c713b97c318b4aa0ffa3029a53446379602",
+    "third_party/boost-1.44.0/boost/config/platform/solaris.hpp": "3613b888024f823d2f5ecee07db98783af4a84452be83f8bdbd7f8e78a6e9280",
+    "third_party/boost-1.44.0/boost/config/platform/symbian.hpp": "9186ba0f4220b1fe35abb0d3387594cd65d7235c086ce3eef8976bfdd9ba51d9",
+    "third_party/boost-1.44.0/boost/config/platform/vxworks.hpp": "71462ecdb1835ceb5fb882a9bb0fd3fc8e8e2c37729ff3f427e372dbf40c6d29",
+    "third_party/boost-1.44.0/boost/config/platform/win32.hpp": "3fc7299e470b302b85c8c2902dbc8a2a8ce13e813136d8ec9cd0025bfdebe6cc",
+    "third_party/boost-1.44.0/boost/config/posix_features.hpp": "bba105d0af558c09307941fe64ce5ce9d775990b96684708adf4a9a92070fc0a",
+    "third_party/boost-1.44.0/boost/config/requires_threads.hpp": "ff5b6b123e00b032d58d5f0c2daa299d99036618d9c90260cb4c7693d05a985c",
+    "third_party/boost-1.44.0/boost/config/select_compiler_config.hpp": "14ae6949673e001683c61c3662700a0847bc0acb5fcdeee1c30ee89025f247b9",
+    "third_party/boost-1.44.0/boost/config/select_platform_config.hpp": "b3930821a12dbcd6c28d3d8ee197327fdcc8ddc01e9abec1225f9eb3aaa4f4c9",
+    "third_party/boost-1.44.0/boost/config/select_stdlib_config.hpp": "2cecdbf75afed3d4c3b9d58f033425a1bb0068f42f54de347331f916d64bffcd",
+    "third_party/boost-1.44.0/boost/config/stdlib/dinkumware.hpp": "8abd206e62963c884bcd0b3955651eddcd2754cafc70f9868fc4b8b02b1948b5",
+    "third_party/boost-1.44.0/boost/config/stdlib/libcomo.hpp": "f41f11d8d841fc1655485e9e46ae42a76d9564c12093c3f27211af1392844864",
+    "third_party/boost-1.44.0/boost/config/stdlib/libstdcpp3.hpp": "bc7ec6684ab4d5739fba9a709022eb468f89a96f68673c6f7eb306f8f4167bd5",
+    "third_party/boost-1.44.0/boost/config/stdlib/modena.hpp": "543717b1d0b7e5e5e01f1cc3485b0e298a54edd46df919be8706734ab5e1a117",
+    "third_party/boost-1.44.0/boost/config/stdlib/msl.hpp": "59f03f62e204df704dfb010dd567aef7fc23cb76a02ffd9a83c417d7716fb389",
+    "third_party/boost-1.44.0/boost/config/stdlib/roguewave.hpp": "bf41396bd33931f0b9603ff2f0cebb10ecc3fda7da269ae6e4f2c6cc63c16035",
+    "third_party/boost-1.44.0/boost/config/stdlib/sgi.hpp": "c291ff29b3089811e4357a6f0640d3eecdf15d5d605a2b4bfc846cc9117d98f2",
+    "third_party/boost-1.44.0/boost/config/stdlib/stlport.hpp": "9364950c2e37171e789a44dc1abdc2132dc0b7694f99639ceba8a5216c467147",
+    "third_party/boost-1.44.0/boost/config/stdlib/vacpp.hpp": "b7148c5871b028a3596f98267aea6542e879ae39fedcb91a8f5675fd72612147",
+    "third_party/boost-1.44.0/boost/config/suffix.hpp": "37ae91f8c2f1f59e3176b3d18a191f854b477521cb2bb27c0356367a430c37d0",
+    "third_party/boost-1.44.0/boost/config/user.hpp": "3c46154e91c0955238d9626185691f560378fdf8928d72a33cb8d67ffc889fb8",
+    "third_party/boost-1.44.0/boost/config/warning_disable.hpp": "f061a11012c79777b12d7fb36ed210395dcb1e3c9c49b72f88c36376bca8902a",
+    "third_party/boost-1.44.0/boost/current_function.hpp": "726e0d338960b19a94d874f0e5e3178db4f4a0fb6c651d2dcc489e42c52a4b96",
+    "third_party/boost-1.44.0/boost/detail/interlocked.hpp": "e5141f87acb7000098da21eeec009beecd8fab6d8619cd1c189f4bad5aefab40",
+    "third_party/boost-1.44.0/boost/detail/sp_typeinfo.hpp": "ee51abfd8c14d5c56ee2f4976c2d0f5fb318cc9a376923b062fde4633dff33a0",
+    "third_party/boost-1.44.0/boost/detail/workaround.hpp": "058f148d21b2e86a7a8dc56b8289d2855326911e440a92888059b0c1321213a5",
+    "third_party/boost-1.44.0/boost/non_type.hpp": "43b22e6e5d9aeea3de85d2c7874b6055b62f646122e81f004e94f8737ec7d898",
+    "third_party/boost-1.44.0/boost/smart_ptr/detail/sp_counted_base_pt.hpp": "b1272e95dcc82b423c2b521e8005e26ac44cec7cda17fc6fcffe0468a5346943",
+    "third_party/boost-1.44.0/boost/smart_ptr/detail/sp_counted_base_w32.hpp": "28a12f05d08a93cfea865fadef57d62c9fdfdbcfddcf532cbc90fa63c8cd42e4",
+    "third_party/boost-1.44.0/boost/type.hpp": "7c4b3b417c1c11424334d738032aa405b6d514fb97eddc92b166bba22c9fd16c",
+    "third_party/boost-1.44.0/boost/version.hpp": "eb146f1e3369b0f097e11db397ae19f23827bb04ca26be65b3150c222ef4f64d",
+    "third_party/d3dx9_33.def": "fa4188a4194172121b8182baa8f1b7f4a32d474e9248166d490d8237d6707ce1",
+    "third_party/libogg-1.1.3/AUTHORS": "c7d1d72433b8302a68a5eb3e2a1ee40bde9369a1de84ffe4c1720bd4cecdc6fd",
+    "third_party/libogg-1.1.3/CHANGES": "1cd12ac3488ff83063e58e6c796f671349aea5c939cd3f098c060527aaacb942",
+    "third_party/libogg-1.1.3/COPYING": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+    "third_party/libogg-1.1.3/PATCHES.json": "b67f255e0e492c54a45dc411baece05353cd395a70264a41c8c454b181b94d4d",
+    "third_party/libogg-1.1.3/PATCHES.md": "651bec929f45d64d3c69761d4b8583c5460a2d8826b30187794a3a47871794b4",
+    "third_party/libogg-1.1.3/README": "7bd152d3a6301a6efe405ecd43032e3784736698cc1b77209f00b9ef1599580a",
+    "third_party/libogg-1.1.3/UPSTREAM.json": "8a53b103a57f678578eb691f285953cfe76e7f9f4b9dc9816b814d4bdbd14e29",
+    "third_party/libogg-1.1.3/include/Makefile.in": "1b42d9353a8c07fc1c1832a522f5aab2a2fee67e5bf898ca8398f1911bc4a972",
+    "third_party/libogg-1.1.3/include/ogg/Makefile.in": "62edaf0f90f37039b255d933712065d1496fdd117f0f868eabc164ad6292f010",
+    "third_party/libogg-1.1.3/include/ogg/config_types.h.in": "9fb6f6b041d78afa556650fb2665caabc200c69c62ae5ba50a82bd700f3caac9",
+    "third_party/libogg-1.1.3/include/ogg/ogg.h": "16a323de342efa04626ac87eb422841ee837176075ee877be7b798f2620b9588",
+    "third_party/libogg-1.1.3/include/ogg/os_types.h": "5b1b91ef657dfd9bbb0fe52232197c5e69bc9a6022fb999dcffe45b6f23f131c",
+    "third_party/libogg-1.1.3/src/Makefile.am": "fda24968739504193a19bd1d2e43e4ba6856c535e43ff082c3a8c4205db79a08",
+    "third_party/libogg-1.1.3/src/bitwise.c": "05fd7815c17e65d75b685fd7c5a4a64f49026e65b6906e4f0ee5c2177b81b982",
+    "third_party/libogg-1.1.3/src/framing.c": "2e6dc459b178e310a957df4de1e96ffb6c8df8b62b487876c2e60fd6df0575d0",
+    "third_party/libvorbis-1.2.0/AUTHORS": "f5cab9f16035f770f50299f85cf2938c06dc3a9a30425961067788102ec896d3",
+    "third_party/libvorbis-1.2.0/CHANGES": "d909d8affa3fe39013636297805c295a5c5d9d8b96f9f2c3bc9be5e2e332f01a",
+    "third_party/libvorbis-1.2.0/COPYING": "045268414de7e90eb43968f749e99b9d463d64a4c3b2029087043e2686eccec6",
+    "third_party/libvorbis-1.2.0/PATCHES.json": "4d644d7150cd2751ea8e55864a34748e8406e9ceec02b80d4b229c20c2eee092",
+    "third_party/libvorbis-1.2.0/PATCHES.md": "5a2109edfc3ec50a50ffba9a8824e3e079e83b32b9bd3c433bcd074ca2615bbe",
+    "third_party/libvorbis-1.2.0/README": "2eb4475547e6198bb1fcfe8d94f4a36a97f4e208bd9afdbb2dbfafd00bc30d3d",
+    "third_party/libvorbis-1.2.0/UPSTREAM.json": "a6f9d3435c823c8c9d25b51af3d9067560124b0359d68b72f22f802ecd202a95",
+    "third_party/libvorbis-1.2.0/include/Makefile.in": "b5de9023a501c03345ddece68054fd1ef901d72c718a9e78bad5ab2033a2b17c",
+    "third_party/libvorbis-1.2.0/include/vorbis/Makefile.in": "e036181204bd203906668584f7d9d26dc89ff664cecf01ac4d6458c9b62a921a",
+    "third_party/libvorbis-1.2.0/include/vorbis/codec.h": "748c4498b26b0ccdab225a99340bd55db9baff426d82ffbc338ae94fd110337f",
+    "third_party/libvorbis-1.2.0/include/vorbis/vorbisenc.h": "1d9ee65ea6174e7ade8234489010badd8c78d2d1b42a5d756b45072f74f56e2d",
+    "third_party/libvorbis-1.2.0/include/vorbis/vorbisfile.h": "b28d67b098a5ef0380c92c125bc1181d19ee8ff28dc463cdd41b74048cdb9b29",
+    "third_party/libvorbis-1.2.0/lib/Makefile.am": "c1c4c9066e3bc1c855650713048975778e2a884b9582091f1a507e12ed3a1831",
+    "third_party/libvorbis-1.2.0/lib/analysis.c": "6f555f71e74c57933848dfcf11975680fca0fe57711adf2c55ebe67b2febc499",
+    "third_party/libvorbis-1.2.0/lib/backends.h": "8c240f32a4d6fcbb1ac43535c6076f4a3c4cf7c562b28ee9dd7a633cede651cc",
+    "third_party/libvorbis-1.2.0/lib/bitrate.c": "2700688144c17a092b050637fc172dfce2ac5d2c22f5955f899f056dcf506ed0",
+    "third_party/libvorbis-1.2.0/lib/bitrate.h": "306a3291543e7c10906a3971e087a011160323a56bb40f2b53f79a155c6c2ad6",
+    "third_party/libvorbis-1.2.0/lib/block.c": "e63fe5fbe92b676fa489d476ab6151a3b42126040d640115edcbdf8d6331ec31",
+    "third_party/libvorbis-1.2.0/lib/books/coupled/res_books_stereo.h": "341177bdbe5b73d517fd837d16838826084cd0d7f8d35b70a80420a11c7e44af",
+    "third_party/libvorbis-1.2.0/lib/books/floor/floor_books.h": "2b61926cab5a10fd5f208e0c256dc56e0077267ae3615f6ddf4e8944b0efdaea",
+    "third_party/libvorbis-1.2.0/lib/books/uncoupled/res_books_uncoupled.h": "83c9f1cfff53d13fcc47c03d6f42bbc950d2424cb09ea9b66681f1bc53dc4a66",
+    "third_party/libvorbis-1.2.0/lib/codebook.c": "d72d61b796be12c037f95520f70c852cbeaf262f447d37be1849b78fec04177d",
+    "third_party/libvorbis-1.2.0/lib/codebook.h": "1e432a17bee2299ae2a15830260c10980696b9ad4b1ac5cd45132f6bcf78baa0",
+    "third_party/libvorbis-1.2.0/lib/codec_internal.h": "1634944ea26de39ccec7ba77816bdcdba6c75942ecbd242bc71a06cf884965d1",
+    "third_party/libvorbis-1.2.0/lib/envelope.c": "df9501b6f2e31080f443642bf7d250715ec2b56ca2cf76b2f28ca5cc1a6a386e",
+    "third_party/libvorbis-1.2.0/lib/envelope.h": "74c0a35cf244bb408cde7cddd894b164836b96e08494aa382b7ca331003ff0f6",
+    "third_party/libvorbis-1.2.0/lib/floor0.c": "382128dc745c0e5458d652e30663df7756db0dea8dd4efcb157d4ee6c32a5abc",
+    "third_party/libvorbis-1.2.0/lib/floor1.c": "466217a1ae2c535c1dbaac942539f3f43da4294b78614317d4a7d6591c91ff93",
+    "third_party/libvorbis-1.2.0/lib/highlevel.h": "c0016725ab15dbdae1cde5925160f1669506ee0e0eaf2d700fb0f53e47327506",
+    "third_party/libvorbis-1.2.0/lib/info.c": "4b1e5df8e9035753161d30d7827ff50f670e875436433fa7ccc988e4a27fd891",
+    "third_party/libvorbis-1.2.0/lib/lookup.c": "efe21d6925d338fba2698dc2281a5dff11dbf6969f193a3357edc11c68f371ec",
+    "third_party/libvorbis-1.2.0/lib/lookup.h": "e669774fe4aca012493ea21b48fcf808d7c4722ef5755c003d0438f638917514",
+    "third_party/libvorbis-1.2.0/lib/lookup_data.h": "0c2ef3c6c954442f79d662c93985cd477630b83feea7832f594e361f45a0d7f4",
+    "third_party/libvorbis-1.2.0/lib/lpc.c": "ed97ccfdac46fd4cb6230c140257895adcf11bcc38fa6021eddc9f664421025a",
+    "third_party/libvorbis-1.2.0/lib/lpc.h": "449ff0ccdaf8303bc612f567b5f24121cc1e08f76a0047b77c47670eb8047b11",
+    "third_party/libvorbis-1.2.0/lib/lsp.c": "f8b7b7ae246680ff044c54e6d07a436435b81e457a0535844f29d8a04ffa7abe",
+    "third_party/libvorbis-1.2.0/lib/lsp.h": "a270d027b88ef09d2408c6d6ca461c772b9a77a3e1895a353ed860cca98a9cf7",
+    "third_party/libvorbis-1.2.0/lib/mapping0.c": "49a58b7051949dc8aa1359ce5de16e0f2fd14787da3fc992e77cdc70849b5561",
+    "third_party/libvorbis-1.2.0/lib/masking.h": "8d516ca2f9b233d086295605d8c3564e45269bc6e85307939ee5e9a7ecbcea8e",
+    "third_party/libvorbis-1.2.0/lib/mdct.c": "d10eef900299b835bdcbe55454aed747f0d3051775309f28fa3564466b60ba60",
+    "third_party/libvorbis-1.2.0/lib/mdct.h": "e79f154da1b5917654188200090e5c00adbcd1c265b038c0236c22ae4f163149",
+    "third_party/libvorbis-1.2.0/lib/misc.h": "79ede0086236bab19cbf48ab90716bed6b2205e76f242cf6f44ab84c8486a426",
+    "third_party/libvorbis-1.2.0/lib/modes/floor_all.h": "af0872aa981a277e25e836e283151345a17141aa28b4b8d2b9fbf13f4e427a23",
+    "third_party/libvorbis-1.2.0/lib/modes/psych_11.h": "f14d64b232153a4782966812c2972261a0bd9ae32f9124e5fd2183ac66d55a55",
+    "third_party/libvorbis-1.2.0/lib/modes/psych_16.h": "8a987ec907e5c2044f4abf5edac3b390523c8c0e7e1bcc3e1f06b098d379c7e6",
+    "third_party/libvorbis-1.2.0/lib/modes/psych_44.h": "4d4e06df27d98a78c0499d24efa889709b4143b8f35c7b1cd85e72bbc00407d1",
+    "third_party/libvorbis-1.2.0/lib/modes/psych_8.h": "afd4477d6fbbd27d4c4e093020c9b1a1f100cafba40a69df819716bb2f95a144",
+    "third_party/libvorbis-1.2.0/lib/modes/residue_16.h": "c5111fbc332dbbf27068a406df7e9e9a32e9bd73d29d2584cb5a2b4d052fdb60",
+    "third_party/libvorbis-1.2.0/lib/modes/residue_44.h": "2eeefd4063448d24c67447180786ce9e60366348b5018ccb52427f175ea5c7ec",
+    "third_party/libvorbis-1.2.0/lib/modes/residue_44u.h": "9e9c9c2700e7cffa835e5b438c440a5f5b67ae8dcb7c1a7b408813c3d45905d1",
+    "third_party/libvorbis-1.2.0/lib/modes/residue_8.h": "5e25f3150e5035ef1bc88fcb6be33fe998305cc67c4f8690f7b1811067905f27",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_11.h": "2016a54d58d580b1fdc7df6265a8c0d7c33c5ddc826067f7ef82efc57acac4ad",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_16.h": "2ccd3008a01e9a5382d5948410d6eed7af733b1aaaf184579a63c7a21631f9a0",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_22.h": "039f819b5b00c8435b774d21d903805d8874e02d6a4c7eb2262cea073703b96a",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_32.h": "2f83676ad7df991deb74d318bc972ef09dbb123cb90670c57b8a39a0d69221cd",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_44.h": "9a913d6f831e474b69cfe11156e2c528719a20256a81065afb23aceb239fae76",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_44u.h": "607e906870fa7bb192f78d6e99b14e1ee5797faecaf8ad75f15bbe2d614d06a0",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_8.h": "b48350dbe4745aa41b6ebc986818086df35a019462765623c08619bfe9d254aa",
+    "third_party/libvorbis-1.2.0/lib/modes/setup_X.h": "75336c125c7c8eb03214bc4be326a25aa5d63ccfd8ee52606c6d6d03b500cbf6",
+    "third_party/libvorbis-1.2.0/lib/os.h": "cb8ecc2fb374d421915d6749492e099aee0461d6383bad5bc85893b504dbb32e",
+    "third_party/libvorbis-1.2.0/lib/psy.c": "ea22a1ba4dc1675cb67d4097f77dac8e21565255479d2e97b88b18b6748e19ab",
+    "third_party/libvorbis-1.2.0/lib/psy.h": "a4a7eab1bb70fbc45241971d38e0f4453c870835c5f2c0ebd6b3d7159244d2ab",
+    "third_party/libvorbis-1.2.0/lib/registry.c": "9b5c72b2e43c3c6406e48f824a343dd680c63b2b45924cc2693475bcaf1d97a3",
+    "third_party/libvorbis-1.2.0/lib/registry.h": "3be72d6fe5da877d98fce25be3d18e4ab32ddaaf86db3bc62656ceeb166f9a5e",
+    "third_party/libvorbis-1.2.0/lib/res0.c": "4e1c25bb498ad7036a845e7b8d8c329e91fbaa56830af4b28a530d9e3dd07bdf",
+    "third_party/libvorbis-1.2.0/lib/scales.h": "9b0cf18ac7873e2eaf601ff621829c1d04ab9e2256612d38e621846eb0b4fcbb",
+    "third_party/libvorbis-1.2.0/lib/sharedbook.c": "f71cbb894151d33097e2e360433b22192de9df144cc82069907783bdbf649c2e",
+    "third_party/libvorbis-1.2.0/lib/smallft.c": "824e47229d68eb2c5f8e5177a039a8a95299c2c105242a98d7c68a64c89a3824",
+    "third_party/libvorbis-1.2.0/lib/smallft.h": "0c43931d80f546663839bb8461b00e35283adfc06e5ed3a9060ad4442995560d",
+    "third_party/libvorbis-1.2.0/lib/synthesis.c": "642c58a9daea6ed6aa65aeb1d570267c44e9bffbe3cd0e20df7c757f121f97bc",
+    "third_party/libvorbis-1.2.0/lib/vorbisenc.c": "037064cbedea3b828e1a942208958806d9e65709d6836f7dac7fafad62086ab2",
+    "third_party/libvorbis-1.2.0/lib/vorbisfile.c": "ac23e894d576250cc6e08f3baef055d1d63bd345068df023b0bab34e200dc832",
+    "third_party/libvorbis-1.2.0/lib/window.c": "6508717cd5722670e2eeccde72c57e8e6d74df457daac72065e2e66b72942574",
+    "third_party/libvorbis-1.2.0/lib/window.h": "aaabc9b0bc7c1351c5a025c50fd77c1a0efb850af24b4ef6829d3372d378cda4",
+    "third_party/sqplus-20080713/COPYRIGHT": "21c2769a74e903f446f741cf87c35214711caa2dfaf741f4820c7497c3b88734",
+    "third_party/sqplus-20080713/PATCHES.json": "cfccc8c33e1dddc0808c3e82dad6a49e8c75564c88a837ba24271d22845697c6",
+    "third_party/sqplus-20080713/PATCHES.md": "6f2c026247b9768daf07a4bd86501ee54c826d9a37ff9b1808b6beb6496f259a",
+    "third_party/sqplus-20080713/UPSTREAM.json": "fac986e3ad3ab8607953dd3b415ccf40505ecede559360d55264e36bcdd03e7e",
+    "third_party/sqplus-20080713/sqplus/SqPlus.cpp": "dab8c0e4acc8e0dfa62c4637c80b5c944a7d41022247d23f975e5e961ae415ea",
+    "third_party/sqplus-20080713/sqplus/SqPlusCallTemplates.h": "c13e2f29fb070660e1d3f3e6d35796c79fe6ad2c553b097f5b2e3d14aa10cf98",
+    "third_party/sqplus-20080713/sqplus/SqPlusConst.h": "14b0f4a4a1e6d389ea4595d5e77a4aa08e7d6d176fdb8cc160a39a6907504290",
+    "third_party/sqplus-20080713/sqplus/SqPlusFunctionCallImpl.h": "768e8b9de1aa1d7192612134b1758a6ad0428eb5cdbed07ed5f1c36bce5619cc",
+    "third_party/sqplus-20080713/sqplus/SqPlusOCharBuf.cpp": "a46f06acc36a3d893222f3b22548eb7ab0ad697a2a061542f08618713136ae7c",
+    "third_party/sqplus-20080713/sqplus/SqPlusOCharBuf.h": "879b04b3ccab9b108945f4dc94d31f52546b1ae1d7fecfb8400d8a7c5e42b553",
+    "third_party/sqplus-20080713/sqplus/SqPlusOverload.h": "5b795035cf301fb030fa93e5a43f633537e58996b24797af66ff274c8112d7e2",
+    "third_party/sqplus-20080713/sqplus/SqPlusSetup.h": "280a97ea44f2faa73369c6eddc261068061f7dfbd930858f98f41b75544a7bfb",
+    "third_party/sqplus-20080713/sqplus/SqPlusSmartPointer.h": "02eeec65c477a57f5704992612bbd8fed5edd088e024aafc7bbad1df8c99565c",
+    "third_party/sqplus-20080713/sqplus/SqPlusTypeMask.h": "98e582ee834c4b96d801354bb6366418087dc2e8a370b2602c7b77ee62ea1f6c",
+    "third_party/sqplus-20080713/sqplus/SqPlusUtf8.cpp": "45ca451ea11be363e5cc2ae4514b6156f6d7397c94620349de076cf15917fa45",
+    "third_party/sqplus-20080713/sqplus/SqPlusUtf8.h": "9a28bf5cc9baf5078d2dd73bc678fa498cf3f8eab28e55d4edbe6e5aa86cf59f",
+    "third_party/sqplus-20080713/sqplus/SquirrelBindingsUtils.cpp": "eacbc90f97e59a751ccadfa548193dfa8a5627366d1dc91dfcff0b32ddae2dd0",
+    "third_party/sqplus-20080713/sqplus/SquirrelBindingsUtils.h": "79f2bfaecb5d6695075606dad6ac64f547519836ac34463d99e5fe0aa6f7aa2d",
+    "third_party/sqplus-20080713/sqplus/SquirrelBindingsUtilsWin32.cpp": "98665ee01a12448dbdaf723e456f17bc1f1748c0f7e85cea99d6f3e805b2f244",
+    "third_party/sqplus-20080713/sqplus/SquirrelBindingsUtilsWin32.h": "4796f4615809b434cb6e2a9b818963b239fcc6380546590b66541a2584d09d4d",
+    "third_party/sqplus-20080713/sqplus/SquirrelObject.cpp": "29afe2540630b99108450d58c0fc3b6551f07d7dd0742eae49e954b278739b11",
+    "third_party/sqplus-20080713/sqplus/SquirrelObject.h": "55092ee5eff8b64230423fecb414acf3cf02328b770156d763d01cf3c6be1368",
+    "third_party/sqplus-20080713/sqplus/SquirrelVM.cpp": "5f18d5407093f0c01d76d676e45a80d04ab3448f1024569b8040bc7f51a0ad4e",
+    "third_party/sqplus-20080713/sqplus/SquirrelVM.h": "95f88ce54f55bb874ffb4b22c6f122d3b6ea48325c8cb2a417210bfd71b1161c",
+    "third_party/sqplus-20080713/sqplus/changes.txt": "bed7bc449aedf163c238fea47a7c882b1ca222e25d7da4dd926cbb02c4231776",
+    "third_party/sqplus-20080713/sqplus/sqplus.h": "007cbfbe9e5c6ad9faa936c6a9cfb49443eee0a4d0ee239a6e922af3f5e214b5",
+    "third_party/sqplus-20080713/sqplus/sqplusWin32.h": "d6e4a04ce75df2921b76be5cb63b0828ad74b8f84011cdae28e1745185b26dd6",
+    "third_party/sqrat-0.8.1/PATCHES.json": "d2c92cf1fd0c8533e59900f75ce77b2b44c43552472eb9c04c1bf1e4e9a29447",
+    "third_party/sqrat-0.8.1/PATCHES.md": "f82977a2372e3aa8c1200d8e40f1118c7330611c1aec2b43b95b4389fea1f4df",
+    "third_party/sqrat-0.8.1/UPSTREAM.json": "0d824d9be7bc4abfd3ccadd6cd0850814a6f2efbcf88a5a654ec1b6f33d0ac79",
+    "third_party/sqrat-0.8.1/docs/History.txt": "2722e9ce7abf78b3ea4968848a3b7debecab7decb3bffa517e56fe204230a647",
+    "third_party/sqrat-0.8.1/docs/binding.html": "5d2077082d44cec17cc1d16a72c48abed0d01ddb6e581595a5867f96350f5a13",
+    "third_party/sqrat-0.8.1/docs/index.html": "ff3091dc37095e9e52154ec55708226551d1bd662de32d6c4cb1a0021a7570fd",
+    "third_party/sqrat-0.8.1/include/sqrat.h": "3643fdf17b79c5cd57acf687d3f7bdab5e4cafccad86b6e1e08db4e506395200",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratAllocator.h": "ed585dce14a5382bdf00d24736364c87808621e3b9b99de0d96f02e500256b0a",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratClass.h": "c2e6bf52364006f6633ebd73770bad3df758d18dea0e67903f3a3bcc77568802",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratClassType.h": "138debf437e4c36909f07b97407d2a641dacf8887e0c0d52ac6aadcdcf0fa492",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratConst.h": "77bd6006db991354d9f607a31017b3f49291dbf6e5a6363f9cb6df49f360cd20",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratFunction.h": "9a6ebb5fca502326c8c424bd8a08385b4969512f196130d04a8d10b7a8f83bdf",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratGlobalMethods.h": "4c48ff890c4ccc9cddac473e8fbdb89b4cfa549de8a6f296695ce5c21238065b",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratMemberMethods.h": "104c833839b0600f28f89b1cc021aad509bd77d3c7ebf82fd28cad8a0fa4d547",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratObject.h": "c673fa57a2089997ba4217f828e8d90d78445abc9ae5c853d35a9af8216902c0",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratOverloadMethods.h": "4cde5628db1c808c68eedf93df7ee5d662a2aa2bed6e11b8a5c611aa3754f268",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratScript.h": "f29378c2cec8c259fb410bf6e366f5338c50db99c3b5be82a208cae651994c0f",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratTable.h": "74ecc1b0513fd94e90de7893e6369d9c1c087c8e4b3ea5f01ccdf36ba26dbc50",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratTypes.h": "d5a55be33f97eeabc15ebf40fde80e3dcc35239e108305513cb0ce3f496dacfb",
+    "third_party/sqrat-0.8.1/include/sqrat/sqratUtil.h": "fd02d9f80373d07c92e6f326c08cd9ac6013b697237fd2bd7fc70b7ec6415958",
+    "third_party/squirrel-2.2.2/COPYRIGHT": "3f5a2aa1d53322a972e302c1a69c7684d24b0718c54c5f71e68af80a19460325",
+    "third_party/squirrel-2.2.2/HISTORY": "e20f2e532fd869e2f8bceb8d1d04bfd64984bd39723a803b5052e438f3c6ae58",
+    "third_party/squirrel-2.2.2/README.kinoko.md": "46e29e6aa1b33300545338848d742e90328b27dc77150156752ed6b1aeb40103",
+    "third_party/squirrel-2.2.2/include/sqstdaux.h": "21de4476067ab3bdb33046b821f4dea14170a78eec0fd1ea4547ac9e30ac312b",
+    "third_party/squirrel-2.2.2/include/sqstdblob.h": "ac008a8eb76e0e3f37fce1b4587fb4dd1cd58c39be7f0e0a2de256ee91b9f8bc",
+    "third_party/squirrel-2.2.2/include/sqstdio.h": "8bb9ed54734dbb7ec406a0efd4a2f0ec70fd4528612af18cd1c1f183a64553fc",
+    "third_party/squirrel-2.2.2/include/sqstdmath.h": "e76bcc502e7d11abd318e3efee66e821b5b2807d39d3b5ba1f1d62414bfb8826",
+    "third_party/squirrel-2.2.2/include/sqstdstring.h": "fbf7002e8d0857e710e9bb004047f2359fe97f3628af9038999d132f5372bd1e",
+    "third_party/squirrel-2.2.2/include/sqstdsystem.h": "eadf691e660dc4fe61470df8809025ca398a0d016e9f515629a781fae499e237",
+    "third_party/squirrel-2.2.2/include/squirrel.h": "2061ec02fcfffe4568d73146fab12b365f92a3961a58f17ff823786c38c3e1c0",
+    "third_party/squirrel-2.2.2/sqstdlib-provenance.json": "59a8f3b9116da6b2270ec6518e4caeb0d57ec9ac15e4959204c4f10f89f7c91e",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdaux.cpp": "501019843de3979d1ca697ce7314ad7c60cd5e0ce71eb5883c44058afc264f15",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdblob.cpp": "4d6ca2f94725587544ab29d80fdc5b1f86b29c08edf24437267c7585c966ab17",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdblobimpl.h": "e793bbfc5d5e511dd5684284e113a3b7728709c76441e2dedaf34d589e0bff8c",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdio.cpp": "8c2897381aa2956ecdce8166760796e640ed9d035995408fda13efeb66e146ab",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdmath.cpp": "ef8607e92e19f9f9d6e010a9970b503f19c62396228c00873003f44b0fd4975a",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdrex.cpp": "af82751e53ede9f044523e082253c5dcd8c30b6c077027bbe254aa2951b4497f",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstream.cpp": "72258ab8593c971a169a339c03b37f5e09f29aaddbc4b054e5e9e073b67a33e9",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstream.h": "ab6805aad3b9346393a67d437379f2af8d87ea748eb3464a95f80b6b1341773d",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdstring.cpp": "3735dce0e39e1012be491d085c9b01baba7a251d9a9d9fcf749264b7633a2e34",
+    "third_party/squirrel-2.2.2/sqstdlib/sqstdsystem.cpp": "be8d926804fa1e0a96e68786b664831d2a473988df51672546e3f1f5e6e22591",
+    "third_party/squirrel-2.2.2/squirrel/Makefile": "37434e0d4339e6223d1f9dea0dcafcc65820ae723c5a71d9ae9b47db2155be49",
+    "third_party/squirrel-2.2.2/squirrel/sqapi.cpp": "7cbee5e90f05fc619e8de0739632d830f00bbf4f2ef02fe8daaf76ff85560236",
+    "third_party/squirrel-2.2.2/squirrel/sqarray.h": "a555734898421c097241c19147b7985207a5b576b986e2cc6c41db03f55ac80d",
+    "third_party/squirrel-2.2.2/squirrel/sqbaselib.cpp": "9f0c7728cf78a06aa74233ea4fea4aa1c2cc9475453b79112af55a03002e7df0",
+    "third_party/squirrel-2.2.2/squirrel/sqclass.cpp": "56f6f620030f54abb2cbfa48beda8eeda7056dcacf610c2d12a56295df0bb4c1",
+    "third_party/squirrel-2.2.2/squirrel/sqclass.h": "2ec1c780d5c95ba600ba6f7af16edfb36c28d232922099b2eaa67be5a8d63641",
+    "third_party/squirrel-2.2.2/squirrel/sqclosure.h": "06bd0dab636c24f213b93f954213b844705acf7b8c6c49de6a1e0821b17e6cd5",
+    "third_party/squirrel-2.2.2/squirrel/sqcompiler.cpp": "2200826c9147e68d58c13760ef2d2ea274bc74c6732c60f47c8bbc717124779e",
+    "third_party/squirrel-2.2.2/squirrel/sqcompiler.h": "91d79b33d97b23890eb87477a1658aa9961c12a9fb81c515d1452919f96dd1b0",
+    "third_party/squirrel-2.2.2/squirrel/sqdebug.cpp": "f245a667883d6b1b67352ddaf00bb334e9c9ec62990406ce05ee622fe51773a3",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncproto.h": "1c63b0709634323b4c72535be3ab31db500c7c379ce0931098e937dead971afd",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncstate.cpp": "b2a7bb8eeaf9ef38141f89801d2d3c11ea45664b04e987d17286c14f97a9300a",
+    "third_party/squirrel-2.2.2/squirrel/sqfuncstate.h": "aaee962c67088b2f7c8973a80ab4cd60978a5d07bf914edda27986e88f03c38b",
+    "third_party/squirrel-2.2.2/squirrel/sqlexer.cpp": "165d48e89a208fcd8222490375a97519e970116ab80631aa807d30f6dbb05851",
+    "third_party/squirrel-2.2.2/squirrel/sqlexer.h": "a6b6f9155dc9902e3916e48789993ac034a0ae7ba0f021fea915f730ff4c6291",
+    "third_party/squirrel-2.2.2/squirrel/sqmem.cpp": "06d77d7fd4164756916b80f361ce80df5b512dce22c268bf0ccebd9dca82bcd5",
+    "third_party/squirrel-2.2.2/squirrel/sqobject.cpp": "eb9249f872a0e52c6c909324ab63a73b610594665caab04d21941123bed182bf",
+    "third_party/squirrel-2.2.2/squirrel/sqobject.h": "24ab4baf2e03b25550572a9ba47ef1dcfd4f9b4abffaed018190f0c63b4e6d7e",
+    "third_party/squirrel-2.2.2/squirrel/sqopcodes.h": "f66cb5d682a4b2d0d3decad4eba45a5d29384168c6d4780e5427d57a9adcd59a",
+    "third_party/squirrel-2.2.2/squirrel/sqpcheader.h": "e8a9b8cfba72258d16bcfde8972718e2f4fe287996ab572b4fb07e8d890f62d1",
+    "third_party/squirrel-2.2.2/squirrel/sqstate.cpp": "83fd121a093275918d24f0e24c6199f3f8602f877b2120021e336a195b2792db",
+    "third_party/squirrel-2.2.2/squirrel/sqstate.h": "7afe300c2c49cdfa04574326fa79614647342be3606dd0cec133193fa25459a5",
+    "third_party/squirrel-2.2.2/squirrel/sqstring.h": "5aef32b57b3c97e2d096ca12b0fc59ec2ef6672f5d3ab3986d4dfcee15a52d7b",
+    "third_party/squirrel-2.2.2/squirrel/sqtable.cpp": "e2ac36678e1f876739ecef6832839dbfcd63a02d3e7fb4f1f5b9a45404fee8b8",
+    "third_party/squirrel-2.2.2/squirrel/sqtable.h": "2d251fdf475294bc84b0a5efd8cefffd9915dfa1913e5293e2bd89d4feed533a",
+    "third_party/squirrel-2.2.2/squirrel/squirrel.dsp": "665a7254c5f8752f61f080fdeb8884a4bf9fc3a3f009473cb242a12d3522ad9b",
+    "third_party/squirrel-2.2.2/squirrel/squserdata.h": "987700bdd6808d3ff7611f4cb9b7bfa875f241316a47b66cbc2a7e5d14d35099",
+    "third_party/squirrel-2.2.2/squirrel/squtils.h": "bcc6d7cecaa77810afbf7aaf3f064a248be636497551c66bd070650862a60449",
+    "third_party/squirrel-2.2.2/squirrel/sqvm.cpp": "8eae095597b0589821922ab2783ac153394cf659fda0a1fb222a3cc584ebbef9",
+    "third_party/squirrel-2.2.2/squirrel/sqvm.h": "f7414bf815266e7173a3112ed56bebb1179359c8c53d811f89e8b724c64f498d",
+    "third_party/zlib-1.2.3/README": "365db9b693fda6c66ddd97d81ae3eb17be32c890909553973a77439d85900494",
+    "third_party/zlib-1.2.3/adler32.c": "00c99977ac0c230d4a4e7a8e6ceea805a177d2c152f96d65b9120606ba568e59",
+    "third_party/zlib-1.2.3/compress.c": "d1b6b94695a515f7dbc242ec3899110f443e6d61ad331a7731022acb2922269b",
+    "third_party/zlib-1.2.3/crc32.c": "72fed7e11dbcbc2523a643f40dfb076360128f819455378d65492cc2f31855c9",
+    "third_party/zlib-1.2.3/crc32.h": "b8252ca25db989e06910c09b031a328a18ab9c32fb3ab6e6f5c98c0e2b0089cb",
+    "third_party/zlib-1.2.3/deflate.c": "9a7b00ada17c00871dddfd5607e17de22ca22bf57fe16b4e3baae042669a44d6",
+    "third_party/zlib-1.2.3/deflate.h": "21b874a8ed5c2e0157e65d2290f5dd99398583c556466d693f38b2a18dd85194",
+    "third_party/zlib-1.2.3/inffast.c": "42466c76b7c4c330167c7e7e5758b1444140c7adcb4f41d6c6b9f082a8f0f617",
+    "third_party/zlib-1.2.3/inffast.h": "b338cc7381a11473014404298bc89c5c3d6d4f3f5bd4e5c7ca3a8c1c1216ad6a",
+    "third_party/zlib-1.2.3/inffixed.h": "88a340c8e628d56682a99c3a9a38e44fafeb8b4c609e0df85ea17c66011e0f42",
+    "third_party/zlib-1.2.3/inflate.c": "ea0f06889e0e479379b4e7b14df5771825f3d95355c31487076d1d9955c37b33",
+    "third_party/zlib-1.2.3/inflate.h": "664cd98c729e0201f801aa4534f7797bde53190867a33b5336e23025e4271c5d",
+    "third_party/zlib-1.2.3/inftrees.c": "f256499c66a70ca0f63fa575112efaf313d44f69447bea544e4d85a54f289dde",
+    "third_party/zlib-1.2.3/inftrees.h": "f29ebb99a776d4500446d6926155df48dcac9fa7d396ac7fabe31e5bd60cebbe",
+    "third_party/zlib-1.2.3/kinoko-source.md": "7756c553a250951e099e7e794d0e863186d5182f0206f22a09002a40bfdd6d82",
+    "third_party/zlib-1.2.3/trees.c": "1d42f8cb2cf319854d3acbb8e45c821107682fe065ab22c61432a849ecde8133",
+    "third_party/zlib-1.2.3/trees.h": "81579041310716219bbbf7c98849d91f5aeabdd7eadb1f8e9d7e2aa57724b58b",
+    "third_party/zlib-1.2.3/zconf.h": "dd6fc06ec36207bd5af7aa31557553665cc5d294e881a80052a108cff5dd303e",
+    "third_party/zlib-1.2.3/zlib.h": "ebceab9efa0d906fcc28dabb864ae63d99da8e5efe56e030cb9cb96578622245",
+    "third_party/zlib-1.2.3/zutil.c": "e779dcf163308a4565e53d6d462ae19e4896b6f1c759312105bce758404ae075",
+    "third_party/zlib-1.2.3/zutil.h": "5b3ffa91e57686861114a1da30a5ef8327acf2926535241f18de050249af9ac3",
+    "tools/README.md": "df2dfa5dda56fa40a8ffcc6909f1f1890a1bc847d475f4c1672203b650038615",
+    "tools/audit_legacy_islands.py": "df92cbfc6f06ec37e7a2bf1264608757a4948a7bb8c51f460c9743d20a901fe5",
+    "tools/audit_legacy_reachability.py": "daa1e6f767c8a6c643c9ab4c741ec4f98b22d7a0b69334799686d7955d5c1a59",
+    "tools/audit_replacement_mapping.py": "d717667930375e9fd72ef13017871aa839b359bcb6ca71deee3137641629b9c8",
+    "tools/audit_unused_crt.py": "15856e9a79cf00e11d4d27e46bfe0b486f19060b8d85df4d1fcfc811b4a38e18",
+    "tools/capture_loopback.py": "d2dd431f48876276bc38828d9ed6ddeb2dc4a54f619c3e7193b438173597b32a",
+    "tools/capture_process_dump.cpp": "360ff28dd36c9ee4af945f34b0ae764520be88dbe387922bccac017bc5d45610",
+    "tools/check_migration_boundaries.py": "b6deca792529ae0b7235c26d9b0737e766c32406a0869f033831c96454980a67",
+    "tools/exercise_game_window.py": "22b9e7dfce8e74301283429a28649d9eda272a98dedf4f7fb64503980794c209",
+    "tools/export_world_atlas.py": "25bf348c4cd139362962e41f99974e3e2298ae16da160e9c46184fceb55599a2",
+    "tools/ida_query.ps1": "657fca1cf3b3975fd827b57f2b0e9c28e02995b780a8a90ac2abcd049e2d2a52",
+    "tools/inspect_archive.cpp": "1ec67add60d4e0be1e7bc5a7425c59160dc6fb2303ade691f15fc43dbcf76f91",
+    "tools/inspect_cv4.py": "1117e2638c37a95717ee6f4f2cecf2d16f4a0d9a49340d01450cd0d0c7600beb",
+    "tools/inspect_minidump.cpp": "0324082bb44956fd933dd4eecff51da2bfbd8fee99811c864677b6178b4b0f58",
+    "tools/original_vm_oracle.cpp": "0a865c854985654d8ed1617a25166c9018942f87b4bdfa6c6c260ecaa452c636",
+    "tools/original_vm_oracle_host.cpp": "057ce5908c15f04e397c5ef1cc20a3dfc4580b0f5da50dc95132e2113010cb81",
+    "tools/prepare_ci_directx.ps1": "72e8310ea5ade1969d8f5c7b185194a857f456c6c4cbd63c0f4c34d5de20968e",
+    "tools/probe_asset.cpp": "f11bf4ec23abc5187b4fbf0e660a21a1ca56f11967a1c70ee2e375a4603781ea",
+    "tools/run_staged.ps1": "3981d3b948ae392ec25202ae0997f336fb6fdd46546928cb2b4e6a77aee0fdb4",
+    "tools/sample_actor_state.py": "7ec64497852627ae03a3f8584081558ddd65173132f15e2d1703857ea59ea417",
+    "tools/stage_dat.ps1": "37fa616972e71897a774de4f88ef6f4abc7315b153f339bc722492e737a7a7bd",
+    "tools/vendor_audio_sources.py": "2fbbc578b66312e63b6edb558e20d066a6fae1977df4b4eac928f0f006c4b3c3",
+    "tools/vendor_binding_sources.py": "23a9fbcb90b4379505efc07d9aa9bc5e08adb2e3ea90e2c99b47ccf37d9736ad",
+    "tools/verify_upstream.py": "b5f742992cccecb197906be5008053ba9d0af92243e5e889962352f264b96fe3",
+    "tools/x64dbg_query.py": "e97e3aab75e5b87a1eaf4f91d536a4918109da467e93e5f5c695fb500a91e975"
+  },
+  "maps": [
+    {
+      "name": "kinoko.map",
+      "sha256": "f726b98e8fbd9c7f65e9a7385103b6a3f15f35e53b3ac6ce3eb6047f7eef4d45",
+      "source_commit": "f19c0aca93172fe3c172a334ae8378b50aa00c9b"
+    },
+    {
+      "name": "kinoko.map",
+      "sha256": "a9bf3021575228f8bc5310abf2cbc672a39d31f4ea2d0913d3220fb5fc84c394",
+      "source_commit": "f19c0aca93172fe3c172a334ae8378b50aa00c9b"
+    }
+  ],
+  "graph_nodes": 2076,
+  "root_nodes": 265,
+  "source_reachable": 1372,
+  "outside_inbound": [],
+  "interior_literal_ranges": {
+    "g199": [
+      5158324,
+      5158348
+    ],
+    "g206": [
+      5158580,
+      5158612
+    ],
+    "g213": [
+      5158800,
+      5158832
+    ],
+    "g214": [
+      5158832,
+      5158872
+    ],
+    "g198": [
+      5158300,
+      5158324
+    ],
+    "g208": [
+      5158640,
+      5158648
+    ],
+    "g215": [
+      5158872,
+      5158884
+    ],
+    "function_4094e0": [
+      4232416,
+      4232510
+    ],
+    "function_409540": [
+      4232512,
+      4232727
+    ],
+    "function_40ae70": [
+      4238960,
+      4239214
+    ],
+    "function_40af80": [
+      4239232,
+      4239265
+    ],
+    "function_40afb0": [
+      4239280,
+      4239314
+    ],
+    "function_40afe0": [
+      4239328,
+      4239700
+    ],
+    "function_40b160": [
+      4239712,
+      4239874
+    ],
+    "function_40b210": [
+      4239888,
+      4240063
+    ],
+    "function_4119a0": [
+      4266400,
+      4266456
+    ],
+    "function_411a10": [
+      4266512,
+      4266656
+    ],
+    "function_411ff0": [
+      4268016,
+      4268127
+    ],
+    "function_412680": [
+      4269696,
+      4269852
+    ],
+    "function_4127b0": [
+      4270000,
+      4270214
+    ],
+    "function_47aed0": [
+      4697808,
+      4698054
+    ],
+    "function_47d1c0": [
+      4706752,
+      4706860
+    ],
+    "function_47d280": [
+      4706944,
+      4707299
+    ],
+    "function_47da20": [
+      4708896,
+      4709001
+    ],
+    "function_47da90": [
+      4709008,
+      4709089
+    ],
+    "function_47de90": [
+      4710032,
+      4710581
+    ],
+    "function_47eaf0": [
+      4713200,
+      4713231
+    ],
+    "function_47eb10": [
+      4713232,
+      4713263
+    ],
+    "function_47f8a0": [
+      4716704,
+      4716896
+    ],
+    "function_481710": [
+      4724496,
+      4724689
+    ],
+    "function_4817e0": [
+      4724704,
+      4724733
+    ],
+    "function_481800": [
+      4724736,
+      4724832
+    ],
+    "function_482990": [
+      4729232,
+      4729443
+    ],
+    "function_482a90": [
+      4729488,
+      4729581
+    ],
+    "function_4840a0": [
+      4735136,
+      4735189
+    ],
+    "function_4842c0": [
+      4735680,
+      4735739
+    ],
+    "function_4c4cf0": [
+      5000432,
+      5000501
+    ],
+    "function_4c4e70": [
+      5000816,
+      5000838
+    ],
+    "function_4c4e90": [
+      5000848,
+      5000885
+    ],
+    "function_4c5700": [
+      5003008,
+      5003043
+    ]
+  },
+  "outside_interior_literal_references": [],
+  "reference_sha256": "504d899c97d12700aad88d88edbc072f95c600184b684c0bf15bad7471821014",
+  "data_interval_policy": "Original address to next original global address",
+  "candidates": [
+    {
+      "name": "g199",
+      "kind": "data",
+      "start": 121768,
+      "end": 121792,
+      "line": 3219,
+      "original_address": 5158324,
+      "sha256": "0e06b763f52654b71fed14427a84b623004b2aa004d2c5eaa223945c5b7412b3",
+      "lines": 1,
+      "references": [
+        "function_40afb0"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g206",
+      "kind": "data",
+      "start": 121919,
+      "end": 121999,
+      "line": 3223,
+      "original_address": 5158580,
+      "sha256": "3befd5dce9d99f8c2e1775da5f4c75b004dc5df5814947bdceb1edf6f5b4ef60",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g213",
+      "kind": "data",
+      "start": 122288,
+      "end": 122410,
+      "line": 3229,
+      "original_address": 5158800,
+      "sha256": "59765717dea110d389eb6f36d5680b2dd5234691bd4cf05e155013049441e817",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g214",
+      "kind": "data",
+      "start": 122423,
+      "end": 122505,
+      "line": 3230,
+      "original_address": 5158832,
+      "sha256": "ba04f7847700e12fd1a38a6f453cbace276570ddd9f9f34b1d73c264d60aaf24",
+      "lines": 1,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g198",
+      "kind": "data",
+      "start": 156039,
+      "end": 156210,
+      "line": 4272,
+      "original_address": 5158300,
+      "sha256": "b812ee5151183e17c7948b6e5a4275a5f656a0b95e98c31faa3e0039986053e3",
+      "lines": 7,
+      "references": [
+        "function_40af80",
+        "function_40afe0",
+        "function_40b160",
+        "function_40b210",
+        "function_46a380"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g208",
+      "kind": "data",
+      "start": 156857,
+      "end": 156947,
+      "line": 4302,
+      "original_address": 5158640,
+      "sha256": "a4239ccc10897b218a67d31bf142ceae9d45285f7050248d17138f0e3945ac84",
+      "lines": 4,
+      "references": [
+        "function_4119a0",
+        "function_411a10"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "g215",
+      "kind": "data",
+      "start": 156960,
+      "end": 157050,
+      "line": 4306,
+      "original_address": 5158872,
+      "sha256": "6241176c31ea22be5c7c35bf56027120e2f82e940e24b8c9a8b141f91dc90b85",
+      "lines": 4,
+      "references": [
+        "function_412680",
+        "function_4127b0"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_4094e0",
+      "start": 325781,
+      "end": 326543,
+      "line": 9647,
+      "kind": "function",
+      "original_address": 4232416,
+      "sha256": "e182bb2e6b4fa9f75c9712802247ad3700437705f76941eefb3f16a1332efe89",
+      "lines": 23,
+      "references": [
+        "g208"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_409540",
+      "start": 326583,
+      "end": 328407,
+      "line": 9672,
+      "kind": "function",
+      "original_address": 4232512,
+      "sha256": "65335323acd010bc5970a031a6b332f1dafa1a2bb3502129e6a8a9bba54de6ea",
+      "lines": 66,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_47aed0",
+        "g1224",
+        "g208",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_40ae70",
+      "start": 330390,
+      "end": 333963,
+      "line": 9827,
+      "kind": "function",
+      "original_address": 4238960,
+      "sha256": "83bb2cf42692a78c0a1e0c4747ff00ddd208fa274eda7ae6e8b63daccf3c5bbd",
+      "lines": 118,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_409540",
+        "g1224",
+        "g190",
+        "g198",
+        "g199",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_40af80",
+      "start": 334102,
+      "end": 334337,
+      "line": 9950,
+      "kind": "function",
+      "original_address": 4239232,
+      "sha256": "0a20f3ca6bd90129f6a66086b112303f63f5a3393eeb21c4df243ec150170f32",
+      "lines": 11,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_40ae70",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_40afb0",
+      "start": 334377,
+      "end": 334630,
+      "line": 9963,
+      "kind": "function",
+      "original_address": 4239280,
+      "sha256": "6981aab7f52c2c5bdbf2cc6cee3e2c834a0bf1cb9d1f63b47001f81e4a818b7a",
+      "lines": 11,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "g1224",
+        "g199"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_40afe0",
+      "start": 334768,
+      "end": 338776,
+      "line": 9978,
+      "kind": "function",
+      "original_address": 4239328,
+      "sha256": "e339fd7c02e823bbd1a65d854e679a21fc34a24c59cef23bf648d3bfeff6e18c",
+      "lines": 105,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "function_407000",
+        "function_4094e0",
+        "function_4295d0",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_40b160",
+      "start": 338914,
+      "end": 341216,
+      "line": 10087,
+      "kind": "function",
+      "original_address": 4239712,
+      "sha256": "24c66234a625e43d9fbab38dafcc5da350331cf08246830f74e1bdfb4decaadc",
+      "lines": 58,
+      "references": [
+        "function_409540",
+        "function_4214a0",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_40b210",
+      "start": 341354,
+      "end": 342992,
+      "line": 10149,
+      "kind": "function",
+      "original_address": 4239888,
+      "sha256": "e19e94fd8028008541df92ee2549933b6a031a2eea6c33ec98c7a34b7e0eb7ae",
+      "lines": 41,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_4119a0",
+      "start": 435441,
+      "end": 435813,
+      "line": 13135,
+      "kind": "function",
+      "original_address": 4266400,
+      "sha256": "75f4a9d598c74935564c3df5a186b31340634df4d305ed3149d82340d5eac781",
+      "lines": 16,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "g1224",
+        "g208"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_411a10",
+      "start": 435930,
+      "end": 436265,
+      "line": 13156,
+      "kind": "function",
+      "original_address": 4266512,
+      "sha256": "ae1cdb6ea377b14ea1fb24b3ad87f520bf8336549e187ae5420dc63fcdb7e447",
+      "lines": 11,
+      "references": [
+        "function_411ff0",
+        "g206"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_411ff0",
+      "start": 436465,
+      "end": 436769,
+      "line": 13181,
+      "kind": "function",
+      "original_address": 4268016,
+      "sha256": "2efcc7abb78e7eadf63a8b24e0e589db6b9a83e77cbbb66696610c680d1dd436",
+      "lines": 11,
+      "references": [
+        "g213",
+        "g877"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_412680",
+      "start": 438442,
+      "end": 439383,
+      "line": 13262,
+      "kind": "function",
+      "original_address": 4269696,
+      "sha256": "49ed2be5891cb2ee07905edade60c5c350e850d7e7de0f42607b2e59d37b87aa",
+      "lines": 33,
+      "references": [
+        "_3f__3f_3_40_YAXPAX_40_Z",
+        "g1224",
+        "g208",
+        "g215",
+        "g507"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_4127b0",
+      "start": 439502,
+      "end": 440081,
+      "line": 13300,
+      "kind": "function",
+      "original_address": 4270000,
+      "sha256": "280c6332e5b8b31affddd869e0d22d1aa460ab5bbfb1b277e4174c5684f3249d",
+      "lines": 19,
+      "references": [
+        "function_411ff0",
+        "g206",
+        "g214"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_47aed0",
+      "start": 2031134,
+      "end": 2034152,
+      "line": 62764,
+      "kind": "function",
+      "original_address": 4697808,
+      "sha256": "65b11f1c570528536277a8f7e4dc9436b80afccdb12a017d5fa5192301cef5d2",
+      "lines": 101,
+      "references": [
+        "function_47d1c0",
+        "function_47d280",
+        "function_47da90",
+        "function_47de90",
+        "function_4c4cf0",
+        "function_4c4e90",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_47d1c0",
+      "start": 2035192,
+      "end": 2036652,
+      "line": 62942,
+      "kind": "function",
+      "original_address": 4706752,
+      "sha256": "6e956ebc6b51f5482d61e713eeef645c2ede55937aa58bf4a6cbd1203edbc2d2",
+      "lines": 62,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_47d280",
+      "start": 2036772,
+      "end": 2041367,
+      "line": 63012,
+      "kind": "function",
+      "original_address": 4706944,
+      "sha256": "b0973aea1f031002252b43eb964f6f018a67d2b56ee1656e52debcc73139dcae",
+      "lines": 166,
+      "references": [
+        "function_47eb10",
+        "function_4817e0",
+        "function_481800",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_47da20",
+      "start": 2041687,
+      "end": 2043228,
+      "line": 63201,
+      "kind": "function",
+      "original_address": 4708896,
+      "sha256": "bcf9f0a183487c84ae49a5034051ab785a40180d1696df9407ea9be580e48203",
+      "lines": 51,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_47da90",
+      "start": 2043268,
+      "end": 2043881,
+      "line": 63254,
+      "kind": "function",
+      "original_address": 4709008,
+      "sha256": "9b8c1d7c20da633d5c9fe61a5c184cdefc3d388802692945b27aef4963c7f232",
+      "lines": 25,
+      "references": [
+        "function_47da20",
+        "function_4c5700"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_47de90",
+      "start": 2043961,
+      "end": 2051473,
+      "line": 63284,
+      "kind": "function",
+      "original_address": 4710032,
+      "sha256": "168903ee2fb67426010297f1528bb3b2548d5715d074c49c5a41204450e6b092",
+      "lines": 237,
+      "references": [
+        "function_47eaf0",
+        "function_47f8a0",
+        "function_482990",
+        "function_482a90",
+        "function_4840a0",
+        "function_4842c0",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_47eaf0",
+      "start": 2051833,
+      "end": 2052088,
+      "line": 63547,
+      "kind": "function",
+      "original_address": 4713200,
+      "sha256": "3fa3950e743ccfbf0c7ac3e8944f3783ebe697d1929be82341398b52cfe11104",
+      "lines": 11,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_47eb10",
+      "start": 2052128,
+      "end": 2052385,
+      "line": 63560,
+      "kind": "function",
+      "original_address": 4713232,
+      "sha256": "319ab429ba9b9d024039cf39ed48cbea7d1abf399f1b6f1934a2c677c455fc4e",
+      "lines": 11,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_47f8a0",
+      "start": 2052625,
+      "end": 2054422,
+      "line": 63588,
+      "kind": "function",
+      "original_address": 4716704,
+      "sha256": "9f1807eebfa5f4eafbe13cc459a47283191ad45293945f29a8e73b37661f88b2",
+      "lines": 70,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_481710",
+      "start": 2055462,
+      "end": 2056762,
+      "line": 63735,
+      "kind": "function",
+      "original_address": 4724496,
+      "sha256": "2abd73f6391a94371ff9730b61e5e190df675a7f804ea3bf731b2033fe5a918c",
+      "lines": 45,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4817e0",
+      "start": 2056802,
+      "end": 2057059,
+      "line": 63782,
+      "kind": "function",
+      "original_address": 4724704,
+      "sha256": "8954a8723dc3198e7935ca27ce8c7db1a4956e98b07d3c47a429b44b38d2db74",
+      "lines": 11,
+      "references": [
+        "function_481710",
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_481800",
+      "start": 2057099,
+      "end": 2057985,
+      "line": 63795,
+      "kind": "function",
+      "original_address": 4724736,
+      "sha256": "2076f5c846d7d1e9a3b68c7ba008a2d276a96a8b6c432ff9bf583b27efb26961",
+      "lines": 35,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_482990",
+      "start": 2058465,
+      "end": 2060944,
+      "line": 63865,
+      "kind": "function",
+      "original_address": 4729232,
+      "sha256": "56d9bb0a148da75f296e5d74ac927490598244e5e71b479c5a70d6a46b5f624c",
+      "lines": 89,
+      "references": [
+        "function_4c5700",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_482a90",
+      "start": 2061024,
+      "end": 2061755,
+      "line": 63959,
+      "kind": "function",
+      "original_address": 4729488,
+      "sha256": "ad2aba5b91b0c91e8ba079081b12a86c6e41bd6235a8d8994fa5b17dcc2dde51",
+      "lines": 29,
+      "references": [
+        "function_4842c0",
+        "g1224"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4840a0",
+      "start": 2062195,
+      "end": 2062754,
+      "line": 64020,
+      "kind": "function",
+      "original_address": 4735136,
+      "sha256": "4b228287fd316c850d49df270c416e61cd199188c9bf1ac39c2e8117a9f6cef4",
+      "lines": 25,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4842c0",
+      "start": 2062834,
+      "end": 2063455,
+      "line": 64050,
+      "kind": "function",
+      "original_address": 4735680,
+      "sha256": "a23db3cfc9efa064f3caa683c799d975c690a61861ad49326bf21cc33f0ecf48",
+      "lines": 27,
+      "references": [],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "function_4c4cf0",
+      "start": 2122616,
+      "end": 2123182,
+      "line": 66655,
+      "kind": "function",
+      "original_address": 5000432,
+      "sha256": "d31b3b301fcc54ac5b6be51146f1543c71b5368b3e03ccbe9eff9c0d40478714",
+      "lines": 25,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4c4e70",
+      "start": 2123223,
+      "end": 2123387,
+      "line": 66683,
+      "kind": "function",
+      "original_address": 5000816,
+      "sha256": "89eb1ea5fe8b0a5ac08b25233de293a5f8e30dd1885c68386459a078cbb16bb2",
+      "lines": 8,
+      "references": [],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4c4e90",
+      "start": 2123427,
+      "end": 2123719,
+      "line": 66693,
+      "kind": "function",
+      "original_address": 5000848,
+      "sha256": "e612cca361e9375c0322fffc46886198b0a67966459d01b195768060acc581d5",
+      "lines": 15,
+      "references": [
+        "function_4c4e70"
+      ],
+      "linked_maps": []
+    },
+    {
+      "name": "function_4c5700",
+      "start": 2123760,
+      "end": 2124025,
+      "line": 66711,
+      "kind": "function",
+      "original_address": 5003008,
+      "sha256": "23d7f552a75de73be4788110e31395a1e4445a33e8e2dcb0939ef8cbaffcd7ac",
+      "lines": 10,
+      "references": [
+        "g1224"
+      ],
+      "linked_maps": [
+        "0",
+        "1"
+      ]
+    }
+  ],
+  "functions": 33,
+  "data": 7,
+  "selected_lines": 1595,
+  "linked_candidates": 27
+}

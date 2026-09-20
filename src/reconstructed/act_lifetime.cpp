@@ -1,3 +1,5 @@
+#include "kinoko/map_render.h"
+#include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
@@ -70,50 +72,69 @@ int32_t retdec_construct_cact_script(int32_t this_ptr)
 
 void retdec_destroy_cact_script(int32_t script_ptr)
 {
-    int32_t vm;
 
     if (script_ptr == 0)
         return;
 
+    retdec_forget_act_script(script_ptr);
     field<int32_t>(script_ptr) = address(kinoko_act_host_symbols()->script_vtable);
-    if (field<int32_t>(script_ptr + 56) != g483) {
-        vm = field<int32_t>(script_ptr + 44);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 48);
-            function_48a430(vm, script_ptr + 56);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 48));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 56));
-    }
-    if (field<int32_t>(script_ptr + 36) != g483) {
-        vm = field<int32_t>(script_ptr + 24);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 28);
-            function_48a430(vm, script_ptr + 36);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 28));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 36));
-    }
-    if (field<int32_t>(script_ptr + 16) != g483) {
-        vm = field<int32_t>(script_ptr + 4);
-        if (vm != 0) {
-            function_48a430(vm, script_ptr + 8);
-            function_48a430(vm, script_ptr + 16);
-        }
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 8));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(script_ptr + 16));
-    }
+    retdec_release_act_callback(script_ptr + 44);
+    retdec_release_act_callback(script_ptr + 24);
+    retdec_release_act_callback(script_ptr + 4);
 
     std::free(pointer<void>(field<int32_t>(script_ptr + 92)));
     field<int32_t>(script_ptr + 92) = 0;
     field<int32_t>(script_ptr + 96) = 0;
     if (field<int32_t>(script_ptr + 84) >= 16)
-        std::free(pointer<void>(field<int32_t>(script_ptr + 80)));
+        std::free(pointer<void>(field<int32_t>(script_ptr + 64)));
     field<int32_t>(script_ptr + 80) = 0;
     field<int32_t>(script_ptr + 84) = 15;
     field<unsigned char>(script_ptr + 64) = 0;
     field<unsigned char>(script_ptr + 100) = 0;
     field<unsigned char>(script_ptr + 101) = 0;
+}
+
+extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
+    if (script) {
+        retdec_destroy_cact_script(script);
+        std::free(pointer<void>(script));
+    }
+    return 0;
+}
+
+namespace {
+void clear_layout(int32_t layout) {
+    if (!layout) return;
+    if (field<int32_t>(layout)==address(g350)) { kinoko_clear_string_layout(layout);return; }
+    if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
+        kinoko_clear_map_layout(layout);
+    }
+}
+void clear_key(int32_t value) {
+    if (!value) return;
+    field<int32_t>(value)=address(kinoko_act_host_symbols()->key_vtable);
+    const auto layout=field<int32_t>(value+4);
+    clear_layout(layout);
+    std::free(pointer<void>(layout));
+    field<int32_t>(value+4)=0;
+    if (field<uint32_t>(value+28)>=16) std::free(pointer<void>(field<int32_t>(value+8)));
+    field<uint8_t>(value+8)=0;
+    field<uint32_t>(value+24)=0;
+    field<uint32_t>(value+28)=15;
+}
+}
+void retdec_destroy_cact_key(int32_t value) {
+    if (!value) return;
+    // The layer's second list owns CActTimeLine, not a key with a layout.
+    if (field<int32_t>(value)==address(kinoko_act_timeline_vtable()))
+        std::free(pointer<void>(field<int32_t>(value+12)));
+    else clear_key(value);
+    std::free(pointer<void>(value));
+}
+extern "C" int32_t __fastcall kinoko_method_destroy_layout(int32_t layout,void*) {
+    clear_layout(layout);
+    std::free(pointer<void>(layout));
+    return layout;
 }
 
 void retdec_destroy_cact_list(int32_t *list_slot)
@@ -127,25 +148,7 @@ void retdec_destroy_cact_list(int32_t *list_slot)
     node = field<int32_t>(sentinel);
     while (node != 0 && node != sentinel) {
         int32_t next = field<int32_t>(node);
-        int32_t value = field<int32_t>(node + 8);
-        if (value != 0) {
-            int32_t layout = field<int32_t>(value + 4);
-            if (layout != 0) {
-                if (field<int32_t>(layout) ==
-                        address(kinoko_act_host_symbols()->map_layout_vtable)) {
-                    retdec_act_free_map_records(layout);
-                    if (field<int32_t>(layout + 332) != 0)
-                        std::free(pointer<void>(field<int32_t>(layout + 332)));
-                    field<int32_t>(layout + 332) = 0;
-                    field<int32_t>(layout + 336) = 0;
-                    field<int32_t>(layout + 340) = 0;
-                }
-                std::free(pointer<void>(layout));
-            }
-            if (field<int32_t>(value + 28) >= 16)
-                std::free(pointer<void>(field<int32_t>(value + 24)));
-            std::free(pointer<void>(value));
-        }
+        retdec_destroy_cact_key(field<int32_t>(node + 8));
         std::free(pointer<void>(node));
         node = next;
     }
@@ -176,6 +179,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     retdec_destroy_cact_script(layer + 204);
     retdec_destroy_cact_list(pointer<int32_t>(layer + 180));
     retdec_destroy_cact_list(pointer<int32_t>(layer + 192));
+    field<uint32_t>(layer+184)=field<uint32_t>(layer+196)=0;
     if (field<int32_t>(layer + 132) >= 16)
         std::free(pointer<void>(field<int32_t>(layer + 112)));
     field<int32_t>(layer + 112) = 0;
@@ -187,10 +191,16 @@ void retdec_destroy_cact_layer(int32_t layer)
     field<int32_t>(layer + 80) = 0;
 }
 
-void retdec_destroy_cact_resource(int32_t resource)
+static void clear_resource(int32_t resource)
 {
     if (resource == 0)
         return;
+    // Every resource owns the base name, including long names in native clones.
+    if (field<uint32_t>(resource + 28) >= 16)
+        std::free(pointer<void>(field<int32_t>(resource + 8)));
+    field<int32_t>(resource + 8) = 0;
+    field<uint32_t>(resource + 24) = 0;
+    field<uint32_t>(resource + 28) = 15;
     if (field<int32_t>(resource) ==
             address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         if (kinoko_act_release_chip_data(resource))
@@ -206,15 +216,20 @@ void retdec_destroy_cact_resource(int32_t resource)
         field<int32_t>(resource + 72) = 0;
         field<int32_t>(resource + 88) = 0;
         field<int32_t>(resource + 92) = 15;
-        std::free(pointer<void>(resource));
         return;
     }
-    kinoko_texture_release(field<int32_t>(resource + 68));
+    if (!kinoko_act_release_cloned_texture(resource))
+        kinoko_texture_release(field<int32_t>(resource + 68));
     field<int32_t>(resource + 68) = 0;
     if (field<int32_t>(resource + 60) >= 16)
         std::free(pointer<void>(field<int32_t>(resource + 40)));
     field<int32_t>(resource + 40) = 0;
-    field<int32_t>(resource + 56) = 15;
+    field<int32_t>(resource + 56) = 0;
+    field<int32_t>(resource + 60) = 15;
+}
+
+void retdec_destroy_cact_resource(int32_t resource) {
+    clear_resource(resource);
     std::free(pointer<void>(resource));
 }
 
@@ -284,4 +299,54 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
     if ((flags & 1) != 0)
         std::free(pointer<void>(object_ptr));
     return object_ptr;
+}
+
+namespace {
+template<void (*Clear)(int32_t)>
+int32_t delete_with_flags(int32_t object,uint32_t size,unsigned char flags) {
+    if (!object) return 0;
+    if (flags&2) {
+        const auto count=field<uint32_t>(object-4);
+        for (auto i=count;i>0;--i) Clear(object+(i-1)*size);
+        if (flags&1) std::free(pointer<void>(object-4));
+        return object-4;
+    }
+    Clear(object);
+    if (flags&1) std::free(pointer<void>(object));
+    return object;
+}
+}
+// Original deleting-destructor sizes: 420830=36, 4209B0=348,
+// 429720/429780/429840=100. Bit two destroys arrays in reverse order;
+// bit one releases the allocation, including its four-byte array cookie.
+extern "C" int32_t __fastcall kinoko_method_delete_act_key(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<clear_key>(object,36,flags);
+}
+extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<retdec_destroy_cact_layer>(object,348,flags);
+}
+extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
+    return delete_with_flags<clear_resource>(object,100,flags);
+}
+
+
+extern "C" { extern unsigned char g23; }
+extern "C" int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite,void*,int32_t flags) {
+    const int32_t layout=sprite-4;
+    const auto destroy=[](int32_t object) {
+        field<int32_t>(object)=address(kinoko_act_host_symbols()->layout_vtable);
+        field<int32_t>(object+4)=address(&g23);
+    };
+    // Original 42E6E0 -> 42D1C0: secondary this adjustment and array cookie.
+    // C2DLayout has no owned nested buffers; its texture handle is borrowed.
+    if(flags&2) {
+        const int32_t allocation=layout-4;
+        const uint32_t count=field<uint32_t>(allocation);
+        for(uint32_t i=count;i>0;--i) destroy(layout+316*(i-1));
+        if(flags&1) std::free(pointer<void>(allocation));
+        return allocation;
+    }
+    destroy(layout);
+    if(flags&1) std::free(pointer<void>(layout));
+    return layout;
 }

@@ -1,7 +1,10 @@
+#include "kinoko/string_layout.h"
+#include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
+#include "kinoko/boost_hash.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/sqrat_object_bridge.h"
@@ -28,6 +31,9 @@
 #include "kinoko/map_render.h"
 #include "kinoko/sprite.h"
 #include "kinoko/game_math.h"
+#include "kinoko/legacy_abi.h"
+#include <string>
+#include <memory>
 #include <windows.h>
 #include <d3d9.h>
 #include <algorithm>
@@ -39,22 +45,26 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 
-// ACT property parsing/mapping lives in act_properties.cpp.
+// Scalar archive reads shared by the native schema loaders.
+int32_t retdec_act_read_u8(int32_t reader_ptr, uint8_t *value)
+{
+    return retdec_reader_read_exact(reader_ptr, value, 1);
+}
+
+int32_t retdec_act_read_u32(int32_t reader_ptr, uint32_t *value)
+{
+    return retdec_reader_read_exact(reader_ptr, value, sizeof(*value));
+}
 
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t raw_size;
     unsigned char *raw_data;
 
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_script_properties(object_ptr, reader_ptr)) {
         retdec_trace("act:script-properties-failed");
         return 0;
     }
-    retdec_act_apply_script(object_ptr, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_read_u32(reader_ptr, &raw_size) ||
         raw_size > 0x1000000u) {
         retdec_trace("act:script-size-failed");
@@ -71,6 +81,7 @@ int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
         retdec_trace("act:script-data-failed");
         return 0;
     }
+    std::free(pointer<void>(field<int32_t>(object_ptr + 92)));
     field<int32_t>(object_ptr + 92) =
         address(raw_data);
     field<uint32_t>(object_ptr + 96) = raw_size;
@@ -117,45 +128,56 @@ int32_t retdec_act_append_list(int32_t list_slot, int32_t value)
     return 1;
 }
 
-int32_t retdec_act_make_layer(void)
-{
-    int32_t layer;
-
-    layer = address(std::calloc(1u, 348u));
-    if (layer == 0)
-        return 0;
+int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
+    if (!layer) return 0;
+    std::memset(pointer<void>(layer), 0, 348);
     field<int32_t>(layer) = address(kinoko_act_host_symbols()->layer_vtable);
-    field<int32_t>(layer + 0x60) = -1;
-    field<int32_t>(layer + 0x68) = -1;
-    field<int32_t>(layer + 0x6c) = -1;
-    field<int32_t>(layer + 0x80) = 0;
-    field<int32_t>(layer + 0x84) = 15;
-    field<uint8_t>(layer + 0x70) = 0;
-    field<uint16_t>(layer + 0x8c) = 1;
-    field<uint8_t>(layer + 0x5c) = 1;
-    if (!retdec_act_make_list(pointer<int32_t>(layer + 0xb4)) ||
-        !retdec_act_make_list(pointer<int32_t>(layer + 0xc0))) {
-        std::free(pointer<void>(layer));
+    field<int32_t>(layer + 96) = -1;
+    field<int32_t>(layer + 104) = -1;
+    field<int32_t>(layer + 108) = -1;
+    field<int32_t>(layer + 132) = 15;
+    retdec_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
+    field<uint16_t>(layer + 140) = 1;
+    field<uint8_t>(layer + 92) = 1;
+    if (!retdec_act_make_list(pointer<int32_t>(layer + 180)) ||
+        !retdec_act_make_list(pointer<int32_t>(layer + 192))) {
+        std::free(pointer<void>(field<int32_t>(layer + 180)));
+        std::free(pointer<void>(field<int32_t>(layer + 192)));
+        field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
         return 0;
     }
-    field<int32_t>(layer + 0xb8) = 0;
-    field<int32_t>(layer + 0xc4) = 0;
-    if (retdec_construct_cact_script(layer + 0xcc) == 0) {
+    retdec_construct_cact_script(layer + 204);
+    for (int32_t offset : {208, 228, 248}) field<int32_t>(layer + offset) = vm;
+    field<int32_t>(layer + 308) = address(kinoko_act_host_symbols()->layer_ref_vtable);
+    field<int32_t>(layer + 312) = vm;
+    field<uint8_t>(layer + 324) = 1;
+    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 316)));
+    field<int32_t>(layer + 328) = address(kinoko_act_host_symbols()->layer_layout_vtable);
+    field<int32_t>(layer + 332) = vm;
+    field<uint8_t>(layer + 344) = 1;
+    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
+    if (vm && !retdec_sqrat_new_table(vm, pointer<int32_t>(layer + 316))) {
+        retdec_destroy_cact_layer(layer);
+        return 0;
+    }
+    return layer;
+}
+
+int32_t retdec_act_make_layer(void) {
+    const int32_t layer = address(std::calloc(1u, 348u));
+    // The archive parser can run before VM creation; publication creates its
+    // script table once a VM is available. Original native callers pass g664.
+    if (!retdec_construct_cact_layer(layer, 0)) {
         std::free(pointer<void>(layer));
         return 0;
     }
     return layer;
 }
 
-int32_t retdec_act_make_layout(int32_t reader_ptr)
-{
-    int32_t layout;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
-
-    layout = address(std::calloc(1u, 316u));
-    if (layout == 0)
-        return 0;
+int32_t retdec_construct_c2dlayout(int32_t layout) {
+    if (!layout) return 0;
+    // 42B4A0: shared constructor for archive and dynamic layer creation.
+    std::memset(pointer<void>(layout), 0, 316);
     field<int32_t>(layout) = address(kinoko_act_host_symbols()->layout_vtable);
     field<int32_t>(layout + 4) = address(kinoko_act_host_symbols()->layout_sprite_vtable);
     field<float>(layout + 0x104) = 1.0f;
@@ -166,21 +188,23 @@ int32_t retdec_act_make_layout(int32_t reader_ptr)
     field<int32_t>(layout + 0x124) = 255;
     field<int32_t>(layout + 0x128) = 255;
     field<int32_t>(layout + 0x12c) = 255;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    return layout;
+}
+
+int32_t retdec_act_make_layout(int32_t reader_ptr)
+{
+    const auto layout = address(std::calloc(1u, 316u));
+    if (!retdec_construct_c2dlayout(layout)) return 0;
+    if (!kinoko_method_read_layout_properties(layout, nullptr, address(&reader_ptr), 1)) {
         std::free(pointer<void>(layout));
         return 0;
     }
-    retdec_act_apply_layout(layout, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     return layout;
 }
 
 int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 {
     int32_t layout;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
 
     layout = address(std::calloc(1u, 464u));
     if (layout == 0)
@@ -193,13 +217,10 @@ int32_t retdec_act_make_map_layout(int32_t reader_ptr)
     field<float>(layout + 324) = 1.0f;
     field<int32_t>(layout + 328) = 1;
     field<int32_t>(layout + 452) = -1;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_map_properties(layout, reader_ptr)) {
         std::free(pointer<void>(layout));
         return 0;
     }
-    retdec_act_apply_map_layout(layout, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     return layout;
 }
 
@@ -273,23 +294,14 @@ int32_t retdec_act_read_map_records(int32_t layout,
 int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint8_t has_layout;
     uint32_t layout_type;
     int32_t layout;
 
-    (void)version;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!key || version != 1 || !kinoko_act_read_key_properties(key, reader_ptr)) {
         retdec_trace("act:key-properties-failed");
         return 0;
     }
-    for (uint32_t index = 0; index < property_count; ++index) {
-        if (std::strcmp(properties[index].name, "scriptFunction") == 0)
-            retdec_act_assign_string(key, 8, &properties[index]);
-    }
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_read_u8(reader_ptr, &has_layout)) {
         retdec_trace("act:key-layout-flag-failed");
         return 0;
@@ -298,11 +310,21 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         return 1;
     if (!retdec_act_read_u32(reader_ptr, &layout_type) ||
         (layout_type != 0x655cd5b0u &&
-         layout_type != 0xc9ca5c20u)) {
+         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u)) {
         retdec_trace_i32("act:unsupported-layout", (int32_t)layout_type);
         return 0;
     }
-    if (layout_type == 0xc9ca5c20u) {
+    if(layout_type==0x9e695d47u) {
+        // Original Boost hash of .?AVCStringLayout@@; use the genuine native
+        // reader through its recovered holder/version ABI.
+        layout=address(std::calloc(1,260));
+        if(layout) {
+            kinoko_construct_string_layout(layout);
+            if(!kinoko_method_read_string_layout(layout,nullptr,address(&reader_ptr),version)) {
+                kinoko_clear_string_layout(layout);std::free(pointer<void>(layout));layout=0;
+            }
+        }
+    } else if (layout_type == 0xc9ca5c20u) {
         layout = retdec_act_make_map_layout(reader_ptr);
         if (layout != 0 && !retdec_act_read_map_records(layout, reader_ptr)) {
             retdec_act_free_map_records(layout);
@@ -330,7 +352,7 @@ int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version)
     field<int32_t>(key + 28) = 15;
     field<uint8_t>(key + 8) = 0;
     if (!retdec_act_load_key(key, reader_ptr, version)) {
-        std::free(pointer<void>(key));
+        retdec_destroy_cact_key(key);
         return 0;
     }
     return key;
@@ -339,20 +361,15 @@ int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version)
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                      int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t count;
     uint32_t index;
     uint32_t type;
     int32_t key;
 
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!layer || version != 1 || !kinoko_act_read_layer_properties(layer, reader_ptr)) {
         retdec_trace("act:layer-properties-failed");
         return 0;
     }
-    retdec_act_apply_layer(layer, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     retdec_trace_squirrel_name("act:layer-name",
                                address(retdec_std_string_data(
                                    layer + 112)));
@@ -368,9 +385,15 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         }
         key = retdec_act_make_key(reader_ptr, version);
         if (key == 0 || !retdec_act_append_list(layer + 0xb4, key)) {
+            retdec_destroy_cact_key(key);
             retdec_trace("act:layer-key-load-failed");
             return 0;
         }
+        // 41F8B9 binds every newly read layout to its containing layer before
+        // the next key. Resource association may happen later during ACT load.
+        const auto layout = field<int32_t>(key + 4);
+        if (layout) retdec_call_thiscall1_result(pointer<void>(layout),
+            field<void*>(field<int32_t>(layout) + 24), layer);
         retdec_trace_squirrel_name(
             "act:key-script", address(retdec_std_string_data(
                 key + 8)));
@@ -392,11 +415,20 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         retdec_trace("act:layer-extra-count-failed");
         return 0;
     }
-    /* The second layer list is empty in Logo.act.  Its object types are not
-       needed to load a 2D title layer, but reject rather than desynchronize. */
-    if (count != 0) {
-        retdec_trace_i32("act:layer-extra-count", (int32_t)count);
-        return 0;
+    // 41F800's second factory loop loads CActTimeLine, whose raw RTTI name
+    // .?AVCActTimeLine@@ hashes to 9902F2C0 with the original Boost algorithm.
+    for (index = 0; index < count; ++index) {
+        if (!retdec_act_read_u32(reader_ptr, &type) || type != 0x9902f2c0u) {
+            retdec_trace_i32("act:unsupported-timeline", (int32_t)type);
+            return 0;
+        }
+        const auto timeline = kinoko_act_new_timeline();
+        if (!timeline || !kinoko_act_load_timeline(timeline, reader_ptr, version) ||
+            !retdec_act_append_list(layer + 192, timeline)) {
+            retdec_destroy_cact_key(timeline);
+            return 0;
+        }
+        ++field<int32_t>(layer + 196);
     }
     return retdec_act_load_script(layer + 0xcc, reader_ptr);
 }
@@ -600,20 +632,101 @@ load_failed:
     return 0;
 }
 
+extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t resource, void *) {
+    if (!resource) return 0;
+    const int32_t handle = field<int32_t>(resource + 68);
+    if (!kinoko_act_release_cloned_texture(resource) && !field<uint8_t>(resource + 36) && handle)
+        kinoko_texture_release(handle);
+    field<int32_t>(resource + 68) = 0;
+    return 1;
+}
+
+extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
+    int32_t resource, void*, const char* prefix) {
+    if (!resource) return 0;
+    const char* name = retdec_std_string_data(resource+36);
+    if (!name || !*name) return 0;
+    try {
+        // 42FB4E uses an empty default prefix. Append '/' only to a nonempty
+        // prefix that lacks either accepted separator (42FC5A..42FC71).
+        std::string base(prefix ? prefix : "");
+        if (!base.empty() && base.back()!='/' && base.back()!='\\') base += '/';
+        const std::string path = base + name;
+        auto destroy = [](int32_t* value) { retdec_destroy_cact_resource(address(value)); };
+        std::unique_ptr<int32_t, decltype(destroy)> temporary(
+            static_cast<int32_t*>(std::calloc(1,100)), destroy);
+        if (!temporary) return 0;
+        temporary.get()[0] = address(kinoko_act_host_symbols()->chip_resource_vtable);
+        temporary.get()[7] = temporary.get()[14] = temporary.get()[23] = 15;
+        // Original loads into a temporary owner and only replaces on success.
+        if (!retdec_act_load_mcd(address(temporary.get()), path.c_str())) return 0;
+        retdec_string_assign_cstr(pointer<int32_t>(resource+72), base.c_str());
+        if (kinoko_act_release_chip_data(resource))
+            retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource+64)));
+        field<int32_t>(resource+64) = temporary.get()[16];
+        temporary.get()[16] = 0;
+        return 1;
+    } catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
+    int32_t resource, void *, const char *prefix) {
+    if (!resource) return 0;
+    const char *name = retdec_std_string_data(resource + 40);
+    // 446C36 leaves the existing handle untouched for an empty texture name.
+    if (!name || !*name) return 0;
+    try {
+        std::string path(prefix && *prefix ? prefix : "./");
+        if (path.back() != '/' && path.back() != '\\') path += '/';
+        retdec_call_thiscall0(pointer<void>(resource),
+            field<void *>(field<int32_t>(resource) + 44));
+        field<uint8_t>(resource + 36) = 0;
+        path += name;
+        // 431D80 concatenates prefix/name; 40E540 appends each suffix. The
+        // texture reader, not this resource, maps DDS/BMP/PNG requests to CV2.
+        for (const char *suffix : {".dds", ".bmp", ".png"}) {
+            const auto candidate = path + suffix;
+            const int32_t handle = kinoko_texture_acquire(candidate.c_str());
+            field<int32_t>(resource + 68) = handle;
+            if (!handle) continue;
+            const auto &slot = kinoko_texture_slots[handle];
+            field<int32_t>(resource + 72) = slot.width;
+            field<int32_t>(resource + 76) = slot.height;
+            if (field<uint8_t>(resource + 96)) {
+                field<float>(resource + 80) = 0;
+                field<float>(resource + 84) = 0;
+                field<float>(resource + 88) = static_cast<float>(slot.width);
+                field<float>(resource + 92) = static_cast<float>(slot.height);
+            }
+            return 1;
+        }
+    } catch (...) {
+        return 0;
+    }
+    return 0;
+}
+
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
+    // Original 449C50 registers the raw RTTI name in the same Boost-hashed
+    // factory used by 428150. This type owns an independent property schema.
+    static const char target_name[] = ".?AVCActRenderTarget@@";
+    static const auto target_type = static_cast<uint32_t>(kinoko_boost_hash_range(
+        address(target_name), address(target_name + sizeof(target_name) - 1)));
+    const bool render_target = type == target_type;
+    const bool texture = type == 0xc6fdb98au || render_target;
 
-    if (type != 0xc6fdb98au && type != 0xfbaaf527u) {
+    if (!texture && type != 0xfbaaf527u) {
         retdec_trace_i32("act:unsupported-resource", (int32_t)type);
         return 0;
     }
     resource = address(std::calloc(1u, 100u));
     if (resource == 0)
         return 0;
-    field<int32_t>(resource) = type == 0xfbaaf527u
+    field<int32_t>(resource) = render_target
+        ? address(kinoko_act_host_symbols()->render_target_vtable)
+        : type == 0xfbaaf527u
         ? address(kinoko_act_host_symbols()->chip_resource_vtable)
         : address(kinoko_act_host_symbols()->texture_resource_vtable);
     field<int32_t>(resource + 4) = -1;
@@ -623,7 +736,7 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
     field<int32_t>(resource + 60) = 15;
     field<uint8_t>(resource + 8) = 0;
     field<uint8_t>(resource + 40) = 0;
-    if (type == 0xc6fdb98au) {
+    if (texture) {
         field<int32_t>(resource + 72) = 256;
         field<int32_t>(resource + 76) = 256;
         field<uint8_t>(resource + 96) = 1;
@@ -637,27 +750,31 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         field<int32_t>(resource + 92) = 15;
         field<uint8_t>(resource + 72) = 0;
     }
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    const auto loaded = render_target
+        ? kinoko_method_read_render_target(resource, nullptr, address(&reader_ptr), 1)
+        : type == 0xfbaaf527u
+        ? kinoko_method_read_chip_resource(resource, nullptr, address(&reader_ptr), 1)
+        : kinoko_method_read_texture_resource(resource, nullptr, address(&reader_ptr), 1);
+    if (!loaded) {
         retdec_trace("act:resource-properties-failed");
-        std::free(pointer<void>(resource));
+        retdec_destroy_cact_resource(resource);
         return 0;
     }
-    if (type == 0xfbaaf527u)
-        retdec_act_apply_chip_resource(resource, properties, property_count);
-    else
-        retdec_act_apply_resource(resource, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
+    if (render_target) {
+        // 428150 only constructs/deserializes the target here. D3DX creation
+        // belongs to the separate virtual Create(width,height) entry; do not
+        // load stTextureName as a file or replace the serialized crop rectangle.
+        return resource;
+    }
     if (type == 0xc6fdb98au) {
-        const char *texture_name = retdec_std_string_data(resource + 40);
-        int32_t texture_handle = 0;
-        if (texture_name != nullptr && *texture_name != 0)
-            texture_handle = retdec_load_act_texture(texture_name);
-        field<int32_t>(resource + 0x44) = texture_handle;
-        retdec_trace_i32("act:resource-handle", texture_handle);
+        // Original 446A84 clears auto-size after deserializing, including an
+        // absent property block. Serialized atlas regions must survive LoadTexture.
+        field<uint8_t>(resource + 96) = 0;
+        kinoko_method_load_resource_texture(resource, nullptr, nullptr);
+        retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
     } else {
         const char *chip_file = retdec_std_string_data(resource + 36);
-        if (!retdec_act_load_mcd(resource, chip_file)) {
+        if (!kinoko_method_load_chip_resource(resource, nullptr, nullptr)) {
             retdec_trace("act:chip-resource-load-failed");
             retdec_destroy_cact_resource(resource);
             return 0;
@@ -748,7 +865,9 @@ int32_t retdec_act_bind_layouts(int32_t act)
             int32_t layout = key == 0 ? 0 :
                 field<int32_t>(key + 4);
             if (layout != 0) {
-                if (field<int32_t>(layout) ==
+                if(field<int32_t>(layout)==address(g350))
+                    kinoko_method_set_string_layer(layout,nullptr,layer);
+                else if (field<int32_t>(layout) ==
                         address(kinoko_act_host_symbols()->map_layout_vtable))
                     retdec_c2dmaplayout_set_layer_impl(layout, layer);
                 else
@@ -757,7 +876,7 @@ int32_t retdec_act_bind_layouts(int32_t act)
                     retdec_trace_i32("act:layout", layout);
                     retdec_trace_i32("act:layout-layer", layer);
                     retdec_trace_i32("act:layout-texture",
-                                     field<int32_t>(layout + 0x134));
+                                     field<int32_t>(layout)==address(g350)?0:field<int32_t>(layout + 0x134));
                 }
             }
             node = field<int32_t>(node);
@@ -798,8 +917,6 @@ int32_t retdec_act_prepare_vector(int32_t object_ptr,
 int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version)
 {
-    struct retdec_act_property *properties = nullptr;
-    uint32_t property_count = 0;
     uint32_t layer_count;
     uint32_t resource_count;
     uint32_t index;
@@ -811,13 +928,10 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
         return 0;
-    if (!retdec_act_read_properties(reader_ptr, &properties,
-                                    &property_count)) {
+    if (!kinoko_act_read_properties(this_ptr, reader_ptr)) {
         retdec_trace("act:cact-properties-failed");
         return 0;
     }
-    retdec_act_apply_cact(this_ptr, properties, property_count);
-    retdec_act_free_properties(properties, property_count);
     if (!retdec_act_load_script(this_ptr + 100, reader_ptr)) {
         retdec_trace("act:cact-script-failed");
         return 0;
@@ -836,6 +950,8 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         }
         layer = retdec_act_make_layer();
         if (layer == 0 || !retdec_act_load_layer(layer, reader_ptr, version)) {
+            retdec_destroy_cact_layer(layer);
+            std::free(pointer<void>(layer));
             retdec_trace("act:layer-load-failed");
             return 0;
         }

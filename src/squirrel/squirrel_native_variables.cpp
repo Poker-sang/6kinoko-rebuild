@@ -13,13 +13,6 @@ bool context_has(const int32_t* context, SQInteger count) {
     return context && context[1] && context[0] >= count &&
         sq_gettop(pointer<SQVM>(context[1])) >= count;
 }
-int32_t userdata_variable(HSQUIRRELVM vm) {
-    if (sq_gettype(vm, -1) != OT_USERDATA ||
-        sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(Variable))) return 0;
-    SQUserPointer payload = nullptr;
-    if (SQ_FAILED(sq_getuserdata(vm, -1, &payload, nullptr))) return 0;
-    return address(payload);
-}
 int32_t table_access(int32_t vm_address, bool write) {
     auto* vm = pointer<SQVM>(vm_address);
     if (!vm) return -1;
@@ -49,18 +42,10 @@ int32_t instance_access(int32_t vm_address, bool write) {
 
 extern "C" int32_t function_4aa5e0(int32_t* context, int32_t* output) {
     if (!context || !output || !context[1]) return -1;
-    auto* vm = pointer<SQVM>(context[1]);
-    StackTop stack(vm);
-    const char* name = nullptr;
-    if (context_has(context, 2)) sq_getstring(vm, 2, &name);
-    const auto key = variable_key(name);
-    if (context_has(context, 1)) sq_push(vm, 1); else sq_pushnull(vm);
-    sq_pushstring(vm, key.data(), -1);
-    if (SQ_SUCCEEDED(sq_rawget(vm, -2))) {
-        const auto payload = userdata_variable(vm);
-        if (payload) { *output = payload; return 0; }
-    }
-    return sq_throwerror(vm, "getVarInfo: Could not retrieve UserData");
+    void* value = nullptr;
+    const auto status = upstream::sqplus_variable_info(pointer<SQVM>(context[1]), value);
+    if (status == SQ_OK) *output = address(value);
+    return status;
 }
 
 extern "C" int32_t retdec_get_var_info(int32_t* output, int32_t* context) {
@@ -92,36 +77,20 @@ extern "C" int32_t retdec_get_var_value(int32_t* context, int32_t metadata, int3
     const auto info = load<Variable>(metadata);
     const bool immediate = (info.flags & Constant) != 0;
     switch (info.category) {
-    case 0: case 1: {
-        if (!immediate && !source) return -1;
-        const int32_t value = immediate ? source : info.size == 1 ? load<int8_t>(source) :
-            info.size == 2 ? load<int16_t>(source) : load<int32_t>(source);
-        sq_pushinteger(vm, value);
-        return 1;
-    }
-    case 2:
-        if (!immediate && !source) return -1;
-        // Constant floats encode an INTEGER to convert, not IEEE-754 bits.
-        sq_pushfloat(vm, immediate ? static_cast<float>(source) : load<float>(source));
-        return 1;
-    case 3:
-        if (!immediate && !source) return -1;
-        sq_pushbool(vm, immediate ? source != 0 : load<uint8_t>(source) != 0);
-        return 1;
+    case 0: case 1: case 2: case 3:
+        return static_cast<int32_t>(upstream::sqplus_read_scalar(vm, info,
+            pointer<const void>(source), source));
     case 4:
         if (!source) return -1;
-        sq_pushstring(vm, pointer<const char>(immediate ? source : load<int32_t>(source)), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, pointer<const char>(immediate ? source : load<int32_t>(source)));
     case 5:
         if (!source) return -1;
-        sq_pushstring(vm, pointer<const char>(add_address(source, 1)), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, pointer<const char>(add_address(source, 1)));
     case 8:
         if (!source) return -1;
         // This is the original 24-byte MSVC string record, NOT std::string
         // from the current toolchain. Preserve its inline/heap discriminator.
-        sq_pushstring(vm, kinoko::legacy::StringView(pointer<void>(source)).data(), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, kinoko::legacy::StringView(pointer<void>(source)).data());
     default: return -1;
     }
 }
@@ -131,35 +100,8 @@ extern "C" int32_t retdec_set_var_value(int32_t* context, int32_t metadata, int3
     auto* vm = pointer<SQVM>(context[1]);
     const auto info = load<Variable>(metadata);
     if (info.flags & (ReadOnly | Constant)) return -1;
-    switch (info.category) {
-    case 0: case 1: {
-        // Match the recovered setter: failed integer conversion writes zero;
-        // successful float-to-integer conversion is allowed here (unlike the
-        // deliberately strict method-argument adapters).
-        SQInteger value = 0;
-        sq_getinteger(vm, 3, &value);
-        if (info.size == 1) store(destination, static_cast<uint8_t>(value));
-        else if (info.size == 2) store(destination, static_cast<uint16_t>(value));
-        else store(destination, static_cast<int32_t>(value));
-        sq_pushinteger(vm, value);
-        return 1;
-    }
-    case 2: {
-        SQFloat value = 0;
-        if (SQ_FAILED(sq_getfloat(vm, 3, &value))) return -1;
-        store(destination, value);
-        sq_pushfloat(vm, value);
-        return 1;
-    }
-    case 3: {
-        SQBool value = SQFalse;
-        if (SQ_FAILED(sq_getbool(vm, 3, &value))) value = SQFalse;
-        store(destination, static_cast<uint8_t>(value != 0));
-        sq_pushbool(vm, value != 0);
-        return 1;
-    }
-    default: return -1;
-    }
+    return static_cast<int32_t>(upstream::sqplus_write_scalar(vm, info,
+        pointer<void>(destination)));
 }
 
 extern "C" int32_t retdec_resolve_instance_var(int32_t vm_address, int32_t top,
@@ -173,13 +115,11 @@ extern "C" int32_t retdec_resolve_instance_var(int32_t vm_address, int32_t top,
     int32_t metadata = 0;
     if (function_4aa5e0(context, &metadata) || !metadata) return 0;
     const auto info = load<Variable>(metadata);
-    SQUserPointer native = nullptr;
-    sq_getinstanceup(vm, 1, &native, nullptr);
-    if (info.flags & (Constant | Static)) *output_source = info.offset;
-    else {
-        if (!native) return 0;
-        *output_source = add_address(address(native), info.offset);
-    }
+    HSQOBJECT instance{};
+    sq_getstackobj(vm, 1, &instance);
+    SQUserPointer storage = nullptr;
+    if (!upstream::sqplus_instance_storage(vm, instance, info, storage)) return 0;
+    *output_source = address(storage);
     *output_metadata = metadata;
     return 1;
 }

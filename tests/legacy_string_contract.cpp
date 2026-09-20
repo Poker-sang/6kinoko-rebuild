@@ -145,6 +145,30 @@ void deterministic_sequences() {
         left.check(a); right.check(b);
     }
 }
+void substring_assignment() {
+    Fixture source, target;
+    const std::string binary("ab\0cdefghijklmnopqrstuvwxyz", 27);
+    source.assign(binary);
+    for (uint32_t position=0;position<=binary.size();++position) {
+        for (uint32_t count : {0u,1u,15u,16u,UINT32_MAX}) {
+            target.assign("previous heap allocation must stay independent");
+            require(kinoko_string_assign_substring(target.id(),source.id(),position,count)==target.id(),
+                "substring returns explicit receiver");
+            target.check(binary.substr(position,count)); source.check(binary);
+            target.assign(binary);
+            const auto buffer=target.view().data(); const auto capacity=target.view().capacity();
+            kinoko_string_assign_substring(target.id(),target.id(),position,count);
+            target.check(binary.substr(position,count));
+            require(target.view().data()==buffer && target.view().capacity()==capacity,
+                "self substring erases in place without allocation");
+        }
+    }
+    target.assign("unchanged");
+    kinoko_string_assign_substring(target.id(),source.id(),UINT32_MAX,1);
+    target.check("unchanged");
+    require(!kinoko_string_assign_substring(0,source.id(),0,1),"missing receiver");
+}
+
 void scanner_contract() {
     require(retdec_safe_c_string_length(nullptr) == 0, "null missing-length source");
     SYSTEM_INFO system{}; GetSystemInfo(&system);
@@ -171,7 +195,7 @@ void scanner_contract() {
 }
 int main() {
     try {
-        growth_and_aliases(); reserve_and_failure_results(); deterministic_sequences(); scanner_contract();
+        growth_and_aliases(); reserve_and_failure_results(); deterministic_sequences(); substring_assignment(); scanner_contract();
         std::puts("Legacy string contracts passed: unaligned records, aliases, growth, 4000 sequences, bounded scans");
     } catch (const std::exception& e) { std::fprintf(stderr, "%s\n", e.what()); return 1; }
 }

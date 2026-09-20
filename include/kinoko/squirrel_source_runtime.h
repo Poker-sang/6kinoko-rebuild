@@ -10,6 +10,7 @@ extern "C" {
 typedef int32_t (*kinoko_sq_context_exchange)(int32_t vm);
 void kinoko_sq_set_context_exchange(kinoko_sq_context_exchange exchange);
 int32_t kinoko_sq_open(int32_t stack_size);
+int32_t kinoko_sq_compile_act_source(int32_t vm, const char *text, int32_t length, const int32_t environment[2]);
 int32_t kinoko_sq_shared_state(int32_t vm);
 void kinoko_sq_delete_shared_state(int32_t state);
 /* Existing embedding constructor: intentionally returns no values. */

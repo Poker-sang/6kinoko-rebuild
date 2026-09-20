@@ -39,31 +39,24 @@ extern "C" int32_t function_4a9250(int32_t output, int32_t text) {
     auto* vm = current_vm();
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    StackTop stack(vm);
-    sq_pushstring(vm, pointer<const char>(text), -1);
-    result.capture(vm, -1);
+    result.write(upstream::sqplus_new_string(vm, pointer<const char>(text)));
     return output;
 }
 
 extern "C" int32_t function_4a9370(int32_t output, int32_t native,
                                     int32_t name, int32_t mask_address) {
     auto* vm = current_vm();
-    sq_pushstring(vm, pointer<const char>(name), -1);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(native)), 0);
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    result.capture(vm, -1);
-    const auto* mask = pointer<const char>(mask_address);
-    if (!mask || mask[0] != '*') {
-        // The recovered overflow branch falls back to the receiver-only mask
-        // after its no-op exception stub. Preserve that behavior without
-        // writing through invented stack-frame temporaries or a truncated C
-        // string. All in-game masks fit the original 64-byte buffer.
-        const std::string complete = std::string("t|y|x") + (mask ? mask : "");
-        sq_setparamscheck(vm, SQ_MATCHTYPEMASKSTRING,
-            complete.size() < 64 ? complete.c_str() : "t|y|x");
+    const bool bound = upstream::sqplus_bind_function(vm,
+        reinterpret_cast<SQFUNCTION>(pointer(native)), pointer<const char>(name),
+        pointer<const char>(mask_address), [](void* storage, HSQOBJECT value) {
+            ObjectView(storage).write(value);
+        }, pointer(output));
+    if (!bound) {
+        result.release(vm); result.reset();
+        return 0;
     }
-    sq_newslot(vm, -3, SQFalse);
     return output;
 }
 
@@ -71,91 +64,41 @@ extern "C" int32_t function_4a9490(int32_t* output, int32_t object,
                                     int32_t native, char* name, char* mask) {
     auto* vm = current_vm();
     ObjectView(object).push(vm);
-    function_4a9370(address(output), native, address(name), address(mask));
+    const auto result = function_4a9370(address(output), native, address(name), address(mask));
     sq_pop(vm, 1);
-    return address(output);
+    return result;
 }
 
 extern "C" int32_t function_4aa540(int32_t vm_address, int32_t output,
                                     int32_t* type, int32_t name, int32_t parent) {
     auto* vm = pointer<SQVM>(vm_address);
     StackTop stack(vm);
-    sq_pushroottable(vm);
-    sq_pushstring(vm, pointer<const char>(name), -1);
-    if (parent) {
-        sq_pushstring(vm, pointer<const char>(parent), -1);
-        if (SQ_FAILED(sq_get(vm, -3))) return 0;
-    }
-    if (SQ_FAILED(sq_newclass(vm, parent ? SQTrue : SQFalse))) return 0;
-    ObjectView(output).capture(vm, -1);
-    sq_settypetag(vm, -1, type);
-    sq_newslot(vm, -3, SQFalse);
+    ObjectView result(output);
+    auto value = result.value();
+    const bool created = upstream::sqplus_create_class(vm, value, type,
+        pointer<const char>(name), pointer<const char>(parent));
+    result.write(value);
     // The original reports successful class creation, not newslot's status.
-    return 1;
+    return created;
 }
 
 extern "C" int32_t function_45f4f0(int32_t object) {
-    auto* vm = current_vm();
-    if (has_slot(vm, ObjectView(object), "_set")) return 1;
-    int32_t temporary[3];
-    function_4a9490(temporary, object, address(reinterpret_cast<void*>(&function_4aafa0)),
-        const_cast<char*>("_set"), const_cast<char*>("sn|b|s|x"));
-    function_4a9d70_this(address(temporary));
-    function_4a9490(temporary, object, address(reinterpret_cast<void*>(&function_4aabd0)),
-        const_cast<char*>("_get"), const_cast<char*>("s"));
-    return function_4a9d70_this(address(temporary));
+    upstream::sqplus_variable_handlers(current_vm(), ObjectView(object).value(),
+        reinterpret_cast<SQFUNCTION>(&function_4aafa0), reinterpret_cast<SQFUNCTION>(&function_4aabd0));
+    return 1;
 }
 
 extern "C" int32_t function_45f640(int32_t* root_object) {
-    auto* vm = current_vm();
     const ObjectView root(root_object);
-    if (!has_slot(vm, root, "__ot")) {
-        Object mapping(vm);
-        new_table(vm, mapping.view());
-        raw_store(vm, root, "__ot", mapping.view());
-    }
-    {
-        Object ancestors(vm);
-        if (has_slot(vm, root, "__ca")) {
-            get_slot(vm, root, "__ca", ancestors.view());
-        } else {
-            StackTop stack(vm);
-            sq_newarray(vm, 0);
-            ancestors.view().capture(vm, -1);
-            raw_store(vm, root, "__ca", ancestors.view());
-        }
-        // Inherited __ca is intentionally reused, not cloned. This ordering
-        // drives the existing native instance mapping in native_instance.cpp.
-        if (ancestors.view().value()._type == OT_ARRAY) {
-            StackTop stack(vm);
-            ancestors.view().push(vm); root.push(vm);
-            sq_arrayappend(vm, -2);
-        }
-    }
-    // This function consumes its by-value SquirrelObject argument.
-    root.release(vm); root.reset();
+    const auto value = root.value();
+    root.reset(); // transfer this by-value argument's owned reference
+    upstream::sqplus_setup_hierarchy(current_vm(), value);
     return root.payload_address();
 }
 
 extern "C" int32_t function_45fab0(int32_t object, int32_t name_address) {
-    auto* vm = current_vm();
-    const auto key = variable_key(pointer<const char>(name_address));
-    auto lookup = [&]() -> std::pair<bool, int32_t> {
-        StackTop stack(vm);
-        ObjectView(object).push(vm); sq_pushstring(vm, key.data(), -1);
-        if (SQ_FAILED(sq_get(vm, -2))) return {false, 0};
-        SQUserPointer payload = nullptr;
-        if (SQ_FAILED(sq_getuserdata(vm, -1, &payload, nullptr)) ||
-            sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(Variable)))
-            return {true, 0};
-        return {true, address(payload)};
-    };
-    auto found = lookup();
-    if (!found.first) {
-        function_4a9950(object, address(key.data()), sizeof(Variable), 0);
-        found = lookup();
-    }
-    return found.second;
+    return address(upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(),
+        pointer<const char>(name_address)));
 }
 
 extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,
@@ -163,23 +106,8 @@ extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,
     int32_t size, int32_t flags) {
     const Variable info{offset, category, instance_type, address(value_type),
         static_cast<uint16_t>(size), static_cast<uint16_t>(flags)};
-    store(output, info);
-    auto* vm = current_vm();
-    Object types(vm);
-    ObjectView root(function_4a8cc0());
-    get_slot(vm, root, "__SqTypes", types.view());
-    if (types.view().value()._type == OT_NULL) {
-        new_table(vm, types.view());
-        raw_store(vm, root, "__SqTypes", types.view());
-    }
-    int32_t name = 0;
-    if (value_type) {
-        const auto vtable = load<int32_t>(value_type);
-        if (vtable) name = retdec_call_thiscall0_result(value_type,
-            pointer(load<int32_t>(add_address(vtable, 4))));
-    }
-    // Integer descriptor identity is the key, never a string pointer.
-    function_4a9730_this(types.location(), address(value_type), name);
+    upstream::sqplus_variable_metadata(current_vm(),
+        ObjectView(function_4a8cc0()).value(), info, output);
     return output;
 }
 

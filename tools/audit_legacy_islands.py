@@ -7,7 +7,9 @@ roots. Calls, address-taking, string lookup names and original numeric addresses
 are references. Maps are reported (including linked candidates), not used to
 infer runtime execution. This is a lexical proof under the recovered C symbols
 and literal-address model, not an arbitrary pointer-arithmetic/runtime oracle.
-No code is deleted by this tool. Review the selected component before removal.
+Records without an original address are retained as roots, together with their
+dependencies. No code is deleted by this tool. Review the selected component
+before removal.
 """
 import argparse
 from collections import defaultdict
@@ -112,6 +114,12 @@ def graph(text, external, *, include_named_functions=False):
         if not any(e['start'] <= match.start() < e['end'] for e in entities):
             remainder[match.start():match.end()] = ' ' * (match.end() - match.start())
     root_sources = defaultdict(set)
+    for entry in entities:
+        if entry['original_address'] is None:
+            # Do not invent a numeric range for RetDec synthetic globals. Keep
+            # the record and everything it references; unrelated dead callers
+            # can still be audited using their own verified original ranges.
+            root_sources[entry['name']].add(MAIN + ':unknown-original-address')
     for name in references(''.join(remainder)):
         root_sources[name].add(MAIN + ':unmodelled')
     for path, source in external.items():
@@ -208,7 +216,7 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
     text = git('show', commit + ':' + MAIN).decode()
     external, corpus = {}, {}
     for path in sorted(git('ls-tree', '-r', '--name-only', commit).decode().splitlines()):
-        if path == REFERENCE or not (path.startswith(('src/', 'include/', 'tests/', 'third_party/', 'tools/', '.github/'))
+        if path == REFERENCE or not (path.startswith(('src/', 'include/', 'tests/', 'third_party/', 'tools/', 'cmake/', '.github/'))
                                     or path == 'CMakeLists.txt'):
             continue
         data = git('show', commit + ':' + path)
@@ -230,8 +238,6 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
         raise ValueError('Outside literal points into selected records: ' + repr(interior_hits))
     linked = defaultdict(list)
     map_reports = []
-    if not maps:
-        raise ValueError('Matching maps are required to report linker retention')
     for path in maps:
         recorded = path.with_name('source-commit.txt').read_text(encoding='utf-8-sig').strip()
         if recorded != commit:
@@ -253,7 +259,8 @@ def audit(source_ref, maps, seeds, *, include_named_functions=False):
                 functions=sum(e['kind'] == 'function' for e in entries),
                 data=sum(e['kind'] == 'data' for e in entries),
                 selected_lines=sum(e['lines'] for e in entries),
-                linked_candidates=sum(bool(e['linked_maps']) for e in entries))
+                linker_evidence_available=bool(maps),
+                linked_candidates=sum(bool(e['linked_maps']) for e in entries) if maps else None)
 
 
 def main():
@@ -261,15 +268,18 @@ def main():
     parser.add_argument('--source-ref', required=True)
     parser.add_argument('--include-named-functions', action='store_true',
                         help='Also model recovered CRT names; unmodelled functions remain roots')
-    parser.add_argument('--map', type=Path, action='append', required=True, dest='maps')
+    parser.add_argument('--map', type=Path, action='append', default=[], dest='maps',
+                        help='Optional matching linker evidence; source reachability is always checked')
     parser.add_argument('--seed', action='append', required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     report = audit(args.source_ref, args.maps, args.seed, include_named_functions=args.include_named_functions)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
+    linker = (f"{report['linked_candidates']} linker-retained nodes" if args.maps
+              else 'source-only audit; linker retention not measured')
     print(f"Closed component: {report['functions']} functions, {report['data']} data records; "
-          f"{report['linked_candidates']} linker-retained nodes; NO runtime claim.")
+          f"{linker}; NO runtime claim.")
 
 
 if __name__ == '__main__':

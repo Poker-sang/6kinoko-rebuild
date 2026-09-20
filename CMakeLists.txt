@@ -36,10 +36,12 @@ endif()
 add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
     src/reconstructed/act_clone.cpp
+    src/reconstructed/act_layer_clone.cpp
     src/reconstructed/actor_methods.cpp
     src/reconstructed/physical_input.cpp
     src/reconstructed/direct_input.cpp
     src/reconstructed/input_aggregation.cpp
+    src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/actor_cleanup.cpp
@@ -49,17 +51,20 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp
+    src/reconstructed/map_containers.cpp
+    src/reconstructed/map_copy.cpp
     src/reconstructed/map_layers.cpp
+    src/reconstructed/map_layout_lifetime.cpp
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
 
+include(cmake/Xiph.cmake)
 add_library(kinoko_audio_runtime STATIC src/reconstructed/audio_runtime.cpp)
-set(KINOKO_STB_VORBIS_DIR "${CMAKE_SOURCE_DIR}/third_party/stb_vorbis-1.22")
-target_include_directories(kinoko_audio_runtime PUBLIC include PRIVATE "${KINOKO_STB_VORBIS_DIR}")
+target_include_directories(kinoko_audio_runtime PUBLIC include)
 target_compile_definitions(kinoko_audio_runtime PRIVATE _CRT_SECURE_NO_WARNINGS
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,COMPILE_DEFINITIONS>)
 target_compile_options(kinoko_audio_runtime PRIVATE /Gy)
-target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_actor_collision ole32 dxguid winmm user32)
+target_link_libraries(kinoko_audio_runtime PUBLIC kinoko_vorbis_decoder kinoko_actor_collision ole32 dxguid winmm user32)
 
 add_library(kinoko_legacy_string STATIC
     src/reconstructed/legacy_string.cpp
@@ -69,26 +74,21 @@ target_compile_options(kinoko_legacy_string PRIVATE /Gy)
 
 add_library(kinoko_native_control STATIC src/reconstructed/native_control.cpp)
 target_include_directories(kinoko_native_control PUBLIC include)
+include(cmake/BoostCount.cmake)
+target_link_libraries(kinoko_native_control PUBLIC kinoko_boost_count)
 
 add_library(kinoko_legacy_abi STATIC
     src/reconstructed/legacy_abi.cpp
-    src/reconstructed/legacy_method_entries.cpp
-    src/reconstructed/legacy_copy_entries.cpp)
+    src/reconstructed/legacy_method_entries.cpp)
 target_include_directories(kinoko_legacy_abi PUBLIC include)
 
 add_library(kinoko_retdec_support STATIC
     src/platform/retdec_memory.cpp
     src/platform/retdec_address_space.cpp
-    src/platform/legacy_frame_copy.cpp
-    src/platform/legacy_frame_entry.cpp
     src/platform/retdec_runtime_compat.cpp)
 target_include_directories(kinoko_retdec_support PUBLIC include PRIVATE src/decompiled)
 target_compile_definitions(kinoko_retdec_support PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(kinoko_retdec_support PRIVATE /Gy)
-# Only this transitional frame adapter needs fixed frames, never the callers.
-set_source_files_properties(src/platform/legacy_frame_entry.cpp
-    PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-")
-
 add_library(kinoko_diagnostics STATIC src/platform/diagnostics.cpp)
 target_include_directories(kinoko_diagnostics PUBLIC include)
 target_compile_definitions(kinoko_diagnostics PRIVATE _CRT_SECURE_NO_WARNINGS
@@ -190,8 +190,24 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_layer_access.cpp
     src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
+    src/reconstructed/act_serializable.cpp
+    src/reconstructed/actor_owner_list.cpp
+    src/reconstructed/actor_pool.cpp
+    src/reconstructed/legacy_container_memory.cpp
+    src/reconstructed/timer_events.cpp
+    src/reconstructed/ime_input.cpp
+    src/reconstructed/scene_queue.cpp
+    src/reconstructed/archive_store.cpp
+    src/reconstructed/archive_random.cpp
+    src/reconstructed/render_target.cpp
+    src/reconstructed/render_queue.cpp
+    src/reconstructed/string_render.cpp
+    src/reconstructed/string_font.cpp
+    src/reconstructed/string_text.cpp
+    src/reconstructed/string_glyph_cache.cpp
     src/reconstructed/act_document.cpp
-    src/reconstructed/act_properties.cpp
+    src/reconstructed/act_script_io.cpp
+    src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
     src/reconstructed/act_containers.cpp
     src/reconstructed/act_layout.cpp
@@ -245,7 +261,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqtable.cpp"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel/sqvm.cpp"
 )
-target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_native_control)
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_native_control kinoko_zlib)
 target_include_directories(kinoko_squirrel_cpp_vm PRIVATE
     "${KINOKO_SQUIRREL2_ROOT}/include"
     "${KINOKO_SQUIRREL2_ROOT}/squirrel"
@@ -259,7 +275,8 @@ if(MSVC)
         /permissive /Gy /wd4100 /wd4244 /wd4267 /wd4706
     )
 endif()
-target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_legacy_string)
+include(cmake/Bindings.cmake)
+target_link_libraries(kinoko_squirrel_cpp_vm PUBLIC kinoko_legacy_string kinoko_upstream_bindings)
 target_link_libraries(kinoko_retdec_rebuild PRIVATE kinoko_squirrel_cpp_vm)
 target_compile_options(kinoko_retdec_rebuild PRIVATE
     $<$<COMPILE_LANGUAGE:C>:/TC>
@@ -332,7 +349,7 @@ add_executable(kinoko_stage_contract
     tests/stage_audio_contract.cpp
     src/decompiled/retdec_asm_stubs.c
 )
-target_include_directories(kinoko_stage_contract PRIVATE src/decompiled "${KINOKO_STB_VORBIS_DIR}"
+target_include_directories(kinoko_stage_contract PRIVATE src/decompiled
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,INCLUDE_DIRECTORIES>)
 target_compile_definitions(kinoko_stage_contract PRIVATE
     RETDEC_DISABLE_TRACE RETDEC_DISABLE_RENDER_CAPTURE)
@@ -361,6 +378,14 @@ add_test(NAME water_alpha_contract
     COMMAND kinoko_stage_contract --water-alpha "${KINOKO_REFERENCE_DIR}")
 add_test(NAME act_reentry_contract
     COMMAND kinoko_stage_contract --act-reentry "${KINOKO_REFERENCE_DIR}")
+add_test(NAME portrait_regions_contract
+    COMMAND kinoko_stage_contract --portrait-regions "${KINOKO_REFERENCE_DIR}")
+add_test(NAME texture_serialization_contract
+    COMMAND kinoko_stage_contract --texture-serialization)
+add_test(NAME map_serialization_contract
+    COMMAND kinoko_stage_contract --map-serialization)
+add_test(NAME dynamic_layer_contract
+    COMMAND kinoko_stage_contract --dynamic-layer)
 
 add_test(NAME moving_map_water_contract
     COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}")
@@ -399,6 +424,13 @@ add_executable(kinoko_diagnostics_capture tests/diagnostics_capture.cpp)
 target_link_libraries(kinoko_diagnostics_capture PRIVATE kinoko_diagnostics dbghelp)
 add_test(NAME diagnostics_capture COMMAND kinoko_diagnostics_capture)
 
+add_executable(kinoko_upstream_bindings_contract tests/upstream_bindings_contract.cpp)
+target_include_directories(kinoko_upstream_bindings_contract PRIVATE "${KINOKO_SQPLUS_DIR}"
+    "${KINOKO_BINDING_ROOT}/third_party/sqrat-0.8.1/include")
+target_link_libraries(kinoko_upstream_bindings_contract PRIVATE kinoko_squirrel_cpp_vm)
+add_test(NAME upstream_bindings_contract COMMAND kinoko_upstream_bindings_contract)
+set_tests_properties(upstream_bindings_contract PROPERTIES TIMEOUT 120)
+
 add_executable(kinoko_squirrel_source_vm_contract tests/squirrel_source_vm_contract.cpp)
 target_include_directories(kinoko_squirrel_source_vm_contract PRIVATE
     include "${KINOKO_SQUIRREL2_ROOT}/include")
@@ -420,10 +452,14 @@ add_executable(kinoko_com_owner_contract tests/com_owner_contract.cpp)
 target_include_directories(kinoko_com_owner_contract PRIVATE include)
 add_test(NAME com_owner_contract COMMAND kinoko_com_owner_contract)
 
+add_executable(kinoko_vorbis_decoder_contract tests/vorbis_decoder_contract.cpp)
+target_link_libraries(kinoko_vorbis_decoder_contract PRIVATE kinoko_vorbis_decoder kinoko_vorbisenc)
+add_test(NAME vorbis_decoder_contract COMMAND kinoko_vorbis_decoder_contract --snapshot "${CMAKE_BINARY_DIR}/vorbis-snapshot.bin")
+
 add_executable(kinoko_audio_runtime_contract tests/audio_runtime_contract.cpp)
-target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled "${KINOKO_STB_VORBIS_DIR}")
+target_include_directories(kinoko_audio_runtime_contract PRIVATE include src/decompiled)
 target_compile_definitions(kinoko_audio_runtime_contract PRIVATE _CRT_SECURE_NO_WARNINGS)
-target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_actor_collision ole32 dxguid winmm user32)
+target_link_libraries(kinoko_audio_runtime_contract PRIVATE kinoko_vorbis_decoder kinoko_actor_collision ole32 dxguid winmm user32)
 add_test(NAME audio_runtime_contract COMMAND kinoko_audio_runtime_contract)
 set_tests_properties(audio_runtime_contract PROPERTIES TIMEOUT 60)
 
@@ -475,14 +511,6 @@ target_link_options(kinoko_squirrel_pair_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME squirrel_pair_contract COMMAND kinoko_squirrel_pair_contract)
 set_tests_properties(squirrel_pair_contract PROPERTIES TIMEOUT 60)
 
-add_executable(kinoko_act_properties_contract tests/act_properties_contract.cpp)
-target_include_directories(kinoko_act_properties_contract PRIVATE include
-    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
-target_sources(kinoko_act_properties_contract PRIVATE src/reconstructed/act_properties.cpp)
-target_link_options(kinoko_act_properties_contract PRIVATE /OPT:REF /OPT:ICF)
-add_test(NAME act_properties_contract COMMAND kinoko_act_properties_contract)
-set_tests_properties(act_properties_contract PROPERTIES TIMEOUT 60)
-
 foreach(contract IN ITEMS sqrat_object native_property)
     add_executable(kinoko_${contract}_contract tests/${contract}_contract.cpp)
     target_include_directories(kinoko_${contract}_contract PRIVATE include
@@ -510,13 +538,20 @@ foreach(contract IN ITEMS squirrel_native_calls squirrel_game_objects)
 endforeach()
 
 # /RTC1 checks caller/callee stack agreement without hand-written ESP probes.
+add_executable(kinoko_boost_control_contract tests/boost_control_contract.cpp)
+target_include_directories(kinoko_boost_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
+target_link_libraries(kinoko_boost_control_contract PRIVATE kinoko_boost_count)
+add_test(NAME boost_control_contract COMMAND kinoko_boost_control_contract)
+set_tests_properties(boost_control_contract PROPERTIES TIMEOUT 120)
+
 add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
+target_include_directories(kinoko_native_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
-target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include
+target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include "${KINOKO_BOOST_ROOT}"
     "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
 target_link_libraries(kinoko_actor_lifecycle_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
 target_compile_options(kinoko_actor_lifecycle_contract PRIVATE /Od /RTC1)
@@ -524,39 +559,10 @@ target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
-add_executable(kinoko_legacy_copy_entries_contract tests/legacy_copy_entries_contract.cpp)
-target_link_libraries(kinoko_legacy_copy_entries_contract PRIVATE kinoko_legacy_abi)
-target_compile_options(kinoko_legacy_copy_entries_contract PRIVATE /Od /RTC1)
-add_test(NAME legacy_copy_entries_contract COMMAND kinoko_legacy_copy_entries_contract)
-
-# Test actual register forwarding separately from deterministic candidate selection.
-# The entry contract supplies a scanner spy; the copy contract links the real one.
-foreach(policy IN ITEMS checked optimized)
-    foreach(boundary IN ITEMS copy entry)
-        set(contract kinoko_legacy_frame_${boundary}_${policy}_contract)
-        add_executable(${contract} tests/legacy_frame_${boundary}_contract.cpp)
-        target_include_directories(${contract} PRIVATE include)
-        if(boundary STREQUAL "entry")
-            # The scanner spy must not pull in a library containing the real
-            # scanner. Compile the actual production entry and validator here.
-            target_sources(${contract} PRIVATE
-                src/platform/legacy_frame_entry.cpp
-                src/platform/retdec_address_space.cpp)
-        else()
-            target_link_libraries(${contract} PRIVATE kinoko_retdec_support)
-        endif()
-        if(policy STREQUAL "checked")
-            target_compile_options(${contract} PRIVATE /Od /RTC1 /Oy-)
-        else()
-            target_compile_options(${contract} PRIVATE /O2 /Oy)
-        endif()
-        target_link_options(${contract} PRIVATE /OPT:REF /OPT:ICF)
-        add_test(NAME legacy_frame_${boundary}_${policy}_contract COMMAND ${contract})
-        set_tests_properties(legacy_frame_${boundary}_${policy}_contract PROPERTIES TIMEOUT 120)
-    endforeach()
-endforeach()
-
 set(KINOKO_TOOL_TARGETS
+    kinoko_boost_control_contract
+    kinoko_upstream_bindings_contract
+    kinoko_vorbis_decoder_contract
     kinoko_native_control_contract
     kinoko_legacy_string_contract
     kinoko_act_frame_contract
@@ -565,9 +571,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_com_owner_contract
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
-    kinoko_actor_lifecycle_contract kinoko_legacy_copy_entries_contract
-    kinoko_legacy_frame_copy_checked_contract kinoko_legacy_frame_copy_optimized_contract
-    kinoko_legacy_frame_entry_checked_contract kinoko_legacy_frame_entry_optimized_contract
+    kinoko_actor_lifecycle_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract
@@ -577,7 +581,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_legacy_method_entries_contract kinoko_retdec_memory_contract
     kinoko_diagnostics_filter_contract kinoko_squirrel_refcount_contract
     kinoko_squirrel_host_object_contract
-    kinoko_squirrel_pair_contract kinoko_act_properties_contract
+    kinoko_squirrel_pair_contract
     kinoko_sqrat_object_contract kinoko_native_property_contract
     kinoko_squirrel_binding_contract
     kinoko_squirrel_native_calls_contract kinoko_squirrel_game_objects_contract

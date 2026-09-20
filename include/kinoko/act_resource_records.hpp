@@ -20,9 +20,11 @@ struct RuntimeRecord {
     VectorStorage draw_commands;
     uint32_t unknown56;
     VectorStorage draw_sprites;
-    uint32_t unknown72, field76, unknown80;
-    Address find_head;
-    uint32_t find_count, unknown92, field96, wake_time;
+    uint32_t unknown72;
+    Address render_target; // borrowed CActRenderTarget, texture handle at +68
+    uint32_t unknown80;
+    Address find_storage; // owned C++ find map, never an emulated STL tree
+    uint32_t find_count, unknown92, next_find_id, wake_time;
     uint8_t hidden;
     std::array<uint8_t, 3> unknown105;
     std::array<uint32_t, 11> stage_state;
@@ -31,31 +33,21 @@ struct RuntimeRecord {
     std::array<uint8_t, 16> name_storage;
     uint32_t name_length, name_capacity, unknown188;
 };
-struct FindNode {
-    Address left, parent, right;
-    uint32_t key;
-    HANDLE handle;
-    std::array<uint8_t, 320> unknown20;
-    uint8_t color, sentinel;
-    std::array<uint8_t, 2> padding;
-};
 static_assert(sizeof(void*) == 4 && sizeof(CRITICAL_SECTION) == 24);
-static_assert(sizeof(RuntimeRecord) == 192 && sizeof(FindNode) == 344);
+static_assert(sizeof(RuntimeRecord) == 192);
 #define KINOKO_ACT_FIELD(T, M, O) static_assert(offsetof(T, M) == O)
 KINOKO_ACT_FIELD(RuntimeRecord, act, 12);
 KINOKO_ACT_FIELD(RuntimeRecord, lock, 20);
 KINOKO_ACT_FIELD(RuntimeRecord, draw_commands, 44);
 KINOKO_ACT_FIELD(RuntimeRecord, draw_sprites, 60);
-KINOKO_ACT_FIELD(RuntimeRecord, find_head, 84);
-KINOKO_ACT_FIELD(RuntimeRecord, field96, 96);
+KINOKO_ACT_FIELD(RuntimeRecord, render_target, 76);
+KINOKO_ACT_FIELD(RuntimeRecord, find_storage, 84);
+KINOKO_ACT_FIELD(RuntimeRecord, next_find_id, 96);
 KINOKO_ACT_FIELD(RuntimeRecord, stage_state, 108);
 KINOKO_ACT_FIELD(RuntimeRecord, vm, 152);
 KINOKO_ACT_FIELD(RuntimeRecord, environment, 156);
 KINOKO_ACT_FIELD(RuntimeRecord, name_storage, 164);
 KINOKO_ACT_FIELD(RuntimeRecord, name_length, 180);
 KINOKO_ACT_FIELD(RuntimeRecord, name_capacity, 184);
-KINOKO_ACT_FIELD(FindNode, handle, 16);
-KINOKO_ACT_FIELD(FindNode, color, 340);
-KINOKO_ACT_FIELD(FindNode, sentinel, 341);
 #undef KINOKO_ACT_FIELD
 }

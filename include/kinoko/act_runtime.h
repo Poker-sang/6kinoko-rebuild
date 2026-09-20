@@ -4,15 +4,6 @@
 
 /* Recovered ACT/MCD records shared by the loader, native renderer and Sqrat
  * bindings. Pointer-bearing records require the original Win32 ABI. */
-struct retdec_act_property {
-    char *name;
-    uint32_t type;
-    int32_t integer;
-    float real;
-    char *string;
-    uint32_t string_length;
-};
-
 struct retdec_mcd_chip {
     uint32_t chip_id;
     unsigned char bytes[48];
@@ -53,44 +44,31 @@ int32_t kinoko_map_update(
     int32_t layout, int32_t view_left, int32_t view_top,
     int32_t view_right, int32_t view_bottom);
 int32_t retdec_act_append_list(int32_t list_slot, int32_t value);
-void retdec_act_apply_cact(int32_t object_ptr,
-                                  struct retdec_act_property *properties,
-                                  uint32_t count);
-void retdec_act_apply_chip_resource(
-    int32_t object_ptr, struct retdec_act_property *properties,
-    uint32_t count);
-void retdec_act_apply_layer(int32_t object_ptr,
-                                   struct retdec_act_property *properties,
-                                   uint32_t count);
-void retdec_act_apply_layout(int32_t object_ptr,
-                                    struct retdec_act_property *properties,
-                                    uint32_t count);
-void retdec_act_apply_map_layout(
-    int32_t object_ptr, struct retdec_act_property *properties,
-    uint32_t count);
-void retdec_act_apply_resource(
-    int32_t object_ptr, struct retdec_act_property *properties,
-    uint32_t count);
-void retdec_act_apply_script(int32_t object_ptr,
-                                    struct retdec_act_property *properties,
-                                    uint32_t count);
-void retdec_act_assign_string(int32_t object_ptr, uint32_t offset,
-                                     const struct retdec_act_property *property);
 int32_t retdec_act_bind_layouts(int32_t act);
+int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite, void *unused, int32_t flags);
 void retdec_act_free_map_records(int32_t layout);
-void retdec_act_free_properties(struct retdec_act_property *properties,
-                                        uint32_t count);
 int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                                int32_t version);
 int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version);
+int32_t kinoko_act_read_layer_properties(int32_t layer, int32_t reader);
+int32_t kinoko_act_read_key_properties(int32_t key, int32_t reader);
+int32_t kinoko_act_read_map_properties(int32_t layout, int32_t reader);
+int32_t kinoko_act_read_properties(int32_t act, int32_t reader);
+int32_t kinoko_act_read_script_properties(int32_t script, int32_t reader);
+const char* kinoko_act_serialized_type_name(int32_t object);
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                      int32_t version);
 int32_t retdec_act_load_mcd(int32_t resource,
                                    const char *file_name);
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr);
 int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version);
+const void* kinoko_act_timeline_vtable(void);
+int32_t kinoko_act_new_timeline(void);
+int32_t kinoko_act_load_timeline(int32_t timeline, int32_t reader, int32_t version);
 int32_t retdec_act_make_layer(void);
+int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm);
+int32_t retdec_construct_c2dlayout(int32_t layout);
 int32_t retdec_act_make_layout(int32_t reader_ptr);
 int32_t retdec_act_make_list(int32_t *list_slot);
 int32_t retdec_act_make_map_layout(int32_t reader_ptr);
@@ -100,15 +78,8 @@ int32_t retdec_act_prepare_vector(int32_t object_ptr,
                                          uint32_t end_offset,
                                          uint32_t capacity_offset,
                                          uint32_t count);
-float retdec_act_property_float(
-    const struct retdec_act_property *property);
-int32_t retdec_act_property_integer(
-    const struct retdec_act_property *property);
 int32_t retdec_act_read_map_records(int32_t layout,
                                            int32_t reader_ptr);
-int32_t retdec_act_read_properties(
-    int32_t reader_ptr, struct retdec_act_property **properties_out,
-    uint32_t *count_out);
 int32_t retdec_act_read_u32(int32_t reader_ptr, uint32_t *value);
 int32_t retdec_act_read_u8(int32_t reader_ptr, uint8_t *value);
 int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage);
@@ -133,9 +104,12 @@ int32_t retdec_compare_strings32(int32_t left_object,
                                         int32_t right_object);
 int32_t retdec_construct_cact_script(int32_t this_ptr);
 void retdec_destroy_cact_layer(int32_t layer);
+void retdec_destroy_cact_key(int32_t key);
 void retdec_destroy_cact_list(int32_t *list_slot);
 void retdec_destroy_cact_object(int32_t object_ptr);
 void retdec_destroy_cact_resource(int32_t resource);
+int32_t retdec_register_act_script(int32_t script, int32_t object);
+void retdec_forget_act_script(int32_t script);
 void retdec_destroy_cact_script(int32_t script_ptr);
 int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
@@ -177,8 +151,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
 int32_t retdec_publish_act_resource_pairs(
     int32_t vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource);
-int32_t retdec_publish_act_resource_values(
-    int32_t vm, const int32_t resource_pair[2], int32_t resource);
+
 int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environment);
 int32_t retdec_publish_acting_player(int32_t vm,
                                              const int32_t *act_pair,
@@ -192,8 +165,7 @@ int32_t retdec_publish_acting_player_properties(int32_t vm,
 int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object);
 int32_t retdec_publish_c2dlayout_properties(
     int32_t vm, const int32_t class_pair[2]);
-void retdec_publish_c2dlayout_values(
-    int32_t vm, const int32_t layout_pair[2], int32_t layout);
+
 int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
                                                 int32_t out[2]);
 int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object);

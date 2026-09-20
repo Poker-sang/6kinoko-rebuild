@@ -14,6 +14,7 @@ void retdec_trace_i32(const char*, int32_t);
 namespace {
 using kinoko::script::pointer;
 using kinoko::script::address;
+namespace upstream = kinoko::script::upstream;
 template<class T> T read(const void* storage) {
     T value; std::memcpy(&value, storage, sizeof(value)); return value;
 }
@@ -68,10 +69,10 @@ private:
     unsigned char* storage_;
 };
 template<class T> bool argument(HSQUIRRELVM vm, T& value);
-template<> bool argument<SQInteger>(HSQUIRRELVM vm, SQInteger& value) { return SQ_SUCCEEDED(sq_getinteger(vm, 2, &value)); }
-template<> bool argument<SQFloat>(HSQUIRRELVM vm, SQFloat& value) { return SQ_SUCCEEDED(sq_getfloat(vm, 2, &value)); }
-void push(HSQUIRRELVM vm, SQInteger value) { sq_pushinteger(vm, value); }
-void push(HSQUIRRELVM vm, SQFloat value) { sq_pushfloat(vm, value); }
+template<> bool argument<SQInteger>(HSQUIRRELVM vm, SQInteger& value) { return upstream::sqrat_integer_argument(vm, 2, value); }
+template<> bool argument<SQFloat>(HSQUIRRELVM vm, SQFloat& value) { return upstream::sqrat_float_argument(vm, 2, value); }
+void push(HSQUIRRELVM vm, SQInteger value) { upstream::sqrat_push_integer(vm, value); }
+void push(HSQUIRRELVM vm, SQFloat value) { upstream::sqrat_push_float(vm, value); }
 template<class T> int32_t get_number(int32_t id, bool trace, bool indirect = false) {
     NativeField field(id, trace, indirect);
     if (!field.storage()) return 0;
@@ -87,12 +88,12 @@ template<class T> int32_t set_number(int32_t id, bool trace, bool indirect = fal
 int32_t get_bool(int32_t id, bool trace) {
     NativeField field(id, trace);
     if (!field.storage()) return 0;
-    sq_pushbool(field.vm(), field.value<uint8_t>() != 0); return 1;
+    upstream::sqrat_push_bool(field.vm(), field.value<uint8_t>() != 0); return 1;
 }
 int32_t set_bool(int32_t id, bool trace) {
     NativeField field(id, trace, false, true);
     if (!field.storage()) return 0;
-    SQBool value; sq_tobool(field.vm(), 2, &value);
+    const bool value = upstream::sqrat_bool_argument(field.vm(), 2);
     field.value<uint8_t>(value != 0);
     if (trace && (field.offset() == 0x8c || field.offset() == 0x8d)) {
         static std::atomic<unsigned> count{0};

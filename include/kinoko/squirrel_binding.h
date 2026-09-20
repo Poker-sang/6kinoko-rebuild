@@ -7,7 +7,9 @@ extern "C" {
 
 /* Recovered SqPlus class, property and native-method boundaries. The legacy
    numeric exports remain only for callers in the generated game code. */
-/* Original descriptor identities remain owned by the embedding. */
+/* Stable identities of constructed upstream ClassType objects. */
+int32_t* kinoko_sqplus_scalar_type(int32_t category);
+int32_t* kinoko_sqplus_game_type(int32_t kind, int32_t (*copy)(int32_t, int32_t));
 int32_t* kinoko_native_binding_type(int32_t category);
 
 int32_t function_4a9250(int32_t result, int32_t a2);

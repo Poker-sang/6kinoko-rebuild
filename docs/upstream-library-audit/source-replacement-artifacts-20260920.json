@@ -1,0 +1,4067 @@
+{
+  "source_commit": "4a7b21efdb84c5975a62e9a499fabecf4c1f6422",
+  "artifacts": [
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/build.log",
+      "size": 1564473,
+      "sha256": "96512de002e89cd9828f64b710d3445caa555bb9635cdfbbdf20f17ba8d4eb0b"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/configure.log",
+      "size": 958,
+      "sha256": "3193572f719158ce780e1003d78a2f87492f1319460f4db4126e6b0615eb9567"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/ctest.log",
+      "size": 6431,
+      "sha256": "9392d54a5151276be2a9f52abfe6eea15acb1e8f5dfcc0667faebcc524ec0261"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/kinoko.map",
+      "size": 857748,
+      "sha256": "469fd1a4aa25e35f8582164ddb929d9f3896ad15b04f2c4256f31565c96552ed"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/run.log",
+      "size": 207,
+      "sha256": "42a43bed084a54979f618c38b8be38f4538a51ab4c3563f48a62778ed7915d91"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/source-commit.txt",
+      "size": 42,
+      "sha256": "ddd62f9b80751cdc32fae1e6442273c0999eda637d84ce287883a69502278f34"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "build-runs/pr7-source-20260920-r5-diagnostic/stage-dat.log",
+      "size": 456,
+      "sha256": "eada9587e7595549e7a61d38560f3d44392369e48bbc14099f40a355f7a094a7"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-source-20260920-r5-diagnostic/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-source-20260920-r5-diagnostic/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-source-20260920-r5-diagnostic/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-source-20260920-r5-diagnostic/kinoko_retdec_rebuild.exe",
+      "size": 861696,
+      "sha256": "d7eec860cbe76ccb0f8c26dabc6908a0f6dd94ea6742322afdcb0c375505282b"
+    },
+    {
+      "variant": "diagnostic",
+      "path": "runtime-builds/pr7-source-20260920-r5-diagnostic/retdec_trace.log",
+      "size": 1988,
+      "sha256": "7c95c6c759d8dc093709258a64e752c986e9a577e1379b85a418a38572a9a4fc"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/build.log",
+      "size": 1535418,
+      "sha256": "3072fc051aa3776766daad56476d5da1edcea50ae28e58a1263c52be94592de9"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/configure.log",
+      "size": 953,
+      "sha256": "303c08974e298d5f125992e2e37fc9234bef5055ae074d5f1b1f2c6f1006423b"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/ctest.log",
+      "size": 6426,
+      "sha256": "3f63a83867c7e06246e543aa08e2cb3676f5d666ecc19519ca69bc864c98e558"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/kinoko.map",
+      "size": 857748,
+      "sha256": "245ae748405524e421eba45a59980b6486a0ea1ff4fe32e322b113ddff12fae3"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/run.log",
+      "size": 202,
+      "sha256": "c9990510261037e5445668046a3d51505abb20ab24acc40b3ab8716e91400884"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/source-commit.txt",
+      "size": 42,
+      "sha256": "ddd62f9b80751cdc32fae1e6442273c0999eda637d84ce287883a69502278f34"
+    },
+    {
+      "variant": "quiet",
+      "path": "build-runs/pr7-source-20260920-r5-quiet/stage-dat.log",
+      "size": 451,
+      "sha256": "a9e94363c8eb70925bff465306ec93b9c24846c3d281e0e5a0e75a62d1051012"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-source-20260920-r5-quiet/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-source-20260920-r5-quiet/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-source-20260920-r5-quiet/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "variant": "quiet",
+      "path": "runtime-builds/pr7-source-20260920-r5-quiet/kinoko_retdec_rebuild.exe",
+      "size": 861696,
+      "sha256": "155f2d5cca5771883f7ea19db549443b11a45ff9695b492f88735f65ea89bb91"
+    }
+  ],
+  "continuation_batches": [
+    {
+      "batch": "pr7-complete-20260920-r14-quiet",
+      "source_commit": "ee860c997251aa7705f218528e3249888cae1ca6",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r14-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "9fe9ef7756bfbf938e4944edd965a18f4c576a1d2eb88fbfa1d1195f216040eb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r14-quiet/configure.log",
+          "size": 956,
+          "sha256": "6d9325c5a68da5951bd32bf80a55f0e7114eaf0c9e293bf13d1231bd2a6402cf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r14-quiet/build.log",
+          "size": 1563710,
+          "sha256": "74a839dada76edfa7fd43bd09003f19e5f5c0323cac6704fbf4de2db49c4f055"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r14-quiet/ctest.log",
+          "size": 6631,
+          "sha256": "f2c68910a88bbb8d11984fe2ce17397ad120331ae65251c158c364947ed96368"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r14-quiet/kinoko.map",
+          "size": 881191,
+          "sha256": "8b71ea42c2b8888bfd970fab089ae87025fc7cd236edea1d5f28a4b448d6d65d"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r14-quiet/kinoko_retdec_rebuild.exe",
+          "size": 868864,
+          "sha256": "8a53fa02b57893c373c6bf3d581530e02e7da5872c6938a4231aba57f6ad9234"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r15-quiet",
+      "source_commit": "4f58186055d26ab237f7731abde3ca4d11937c8b",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r15-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "4146a44c9b469767719b53121afbad6b7c6f41316f7f557faa5a15a59a907936"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r15-quiet/configure.log",
+          "size": 956,
+          "sha256": "91262823db6da4f94ea19bb0573cfd923761e75df29fd6816af7b2630e9d01d7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r15-quiet/build.log",
+          "size": 1563710,
+          "sha256": "84d494e8d60dec43e37f67e2536f2788dcfb240c80b5cc54f2e0d42566051548"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r15-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "833e6977c2cb7990a7a3996cc1706933fb8a50261305e28275746c25844399ef"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r15-quiet/kinoko.map",
+          "size": 881191,
+          "sha256": "b17bb1973eb566721e0f090be39f3ae5c22e0a97d016948c472dbd8ac2d7cf89"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r15-quiet/kinoko_retdec_rebuild.exe",
+          "size": 868864,
+          "sha256": "db320b3bc72782e90e851a3af64bd2c118637f9ac6cf61afed1e5142fbafba45"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r16-quiet",
+      "source_commit": "c2e13279c3f31f253a7d414484328e2a1b0d9f66",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r16-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "c4b6d809aa4e9b9fd63b69ce7184801695b565f55c405c257df410ef68ae244b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r16-quiet/configure.log",
+          "size": 956,
+          "sha256": "96d60b430a884f51bf9748d6e246ac646cecb69e79030ae9606aca32767907c3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r16-quiet/build.log",
+          "size": 186012,
+          "sha256": "b3dbd98d89f1791c848ccd5077569c9350f04c2d21683b4f350881a6219cb16b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r17-quiet",
+      "source_commit": "f34c3aaa156458f0243c1a328c75071ddd833372",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r17-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "47ca27e1d8689cb54fa2ba3672f41fb1ca6c37b1e63d78a785865fba6d12dbe8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r17-quiet/configure.log",
+          "size": 956,
+          "sha256": "cdf9654f6a9d713a412a64fb4affcdc4bc8bde9dafb377f7b1ee495fd7ca67d9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r17-quiet/build.log",
+          "size": 1563710,
+          "sha256": "93a6975bcf658c5a30e17956189652d6b1424833926deafbf524ec890de1f2fe"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r17-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "2e076a8e66c24c2ba4aba9fd916cc224c73d4fa86050db927f758845c1948577"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r17-quiet/kinoko.map",
+          "size": 881523,
+          "sha256": "a2a5823a4258916b2ef8fcf23b2a8199a004be53ac4db84a5493db632fc2d423"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r17-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869376,
+          "sha256": "ae5aedfb0941f7db77b4c5086d04e6ecd55a6642b2d54b565a62f4c23b936915"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r18-quiet",
+      "source_commit": "758ef20200984097fb75c68afa317eec7339807a",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r18-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "c9e7d0963ff394b78b0e2aae2cee1d257e2aaf884f8a6d12eb53978d74d30034"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r18-quiet/configure.log",
+          "size": 956,
+          "sha256": "0ab3a8ee5fb2be0e43514e86a15c1486c2a9b0cd6c889c02374baf7b4799b9e2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r18-quiet/build.log",
+          "size": 1563710,
+          "sha256": "b7c69ece755695815f987fa501f239c4778403024fd61fe1308d12ee499e81d6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r18-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "4cb8aa0593595ff94ff78b33bccd7ace6b22732c30eb8a423f2efa2a77270ba8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r18-quiet/kinoko.map",
+          "size": 882369,
+          "sha256": "422d7965859d45d3718fe930fa20486981a7afa381bacfd4bec01e67fdf7d46c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r18-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869376,
+          "sha256": "ffd79d938981932665cc9ae827903cd5135880242929c896520017afdeb58a05"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r19-quiet",
+      "source_commit": "ae5dce84056e45b7ee413ef7bf8339e4167f4b2a",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r19-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "7a4223d5adc39f6291f5f4e2f1e28c23703ea9cbff0389d831acf074706bff30"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r19-quiet/configure.log",
+          "size": 956,
+          "sha256": "d8cedf3e120b774e1d4845b6cf5583b2d29971bb830a0d56ba8026ae60b8439a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r19-quiet/build.log",
+          "size": 1563710,
+          "sha256": "15a710568cbfccb8845a7cd3d7b8b814306f080743678a1f80013379ce606817"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r19-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "8ef8dbc52d8944b2a89c241d9d84af8ea9d4d3958d7c28602e58fb030bec5365"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r19-quiet/kinoko.map",
+          "size": 880334,
+          "sha256": "f842524a1ba3a62388c27a7759d4ab75bf71636341a0440b7ccb6e79a0431a58"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r19-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869376,
+          "sha256": "4beea5590e1fbdfc7d515562d5ec57ae640e9bb1dc36e4ec2a5c61e707050a54"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r20-quiet",
+      "source_commit": "e553af285af18c829db0643bca480920dcd95368",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r20-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "a298033790c7020997bdd5ff98ae1f877c23f82c3f83e61eca9782e8730084aa"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r20-quiet/configure.log",
+          "size": 956,
+          "sha256": "e25eab1322aac41b2d6aeb8e23440382a302a60c5b8f8e9bb69a3d677ddc091c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r20-quiet/build.log",
+          "size": 1563710,
+          "sha256": "0c3f13a5c592fcac06132b002ba6b7307502e2c6cdb3b778883cd1e009a53622"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r20-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "27b01fec84a2c411ad744669eccf0d7372c95327da7f79fa4c6e2f9fffe71b7f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r20-quiet/kinoko.map",
+          "size": 880665,
+          "sha256": "6a8d488d70dbbeb320a2ed50e3dca2d3a8f1688e42cef378dac8969caf35511c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r20-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869376,
+          "sha256": "0160fe89686e2826566e4e6f2718dedde8e92a8c39ae198fc9c37f65fcf84f83"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r21-quiet",
+      "source_commit": "70e2257b7b58c61babc2e6e691f4223d05b35615",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r21-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "31dc2e7aa50de15c1fb610e697b8fae8f9cf9f9ec327813dade506107a022f73"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r21-quiet/configure.log",
+          "size": 956,
+          "sha256": "d17636ac26fec759f0a069ae4abc153315b797f4ea2953abf1599f1782bea7d8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r21-quiet/build.log",
+          "size": 1563710,
+          "sha256": "2dda741aa4abbec98050dccc3b7588df779a1407e9c03d1c3fbbccac4768b14c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r21-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "c38049b1dbd9afcb9a82587a9f3f2ba9f2cbff0d12ff1f8a9175427868d06c6e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r21-quiet/kinoko.map",
+          "size": 880669,
+          "sha256": "679496077bd57457f0f94fa253967dd7f38b9fb7ffea8efe1d349b3afee04d84"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r21-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869376,
+          "sha256": "8907211c90ea06f7a2a114ff86ce9766538bb598fe7d9f1a76af9504038b0759"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r22-quiet",
+      "source_commit": "69962f98c536ab92078cdbbea4db4aaf54d446e5",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r22-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "cb0b331fc2f3088a46205c145e639b347c4eb4e6dcea3302a168307b633a1284"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r22-quiet/configure.log",
+          "size": 956,
+          "sha256": "f8ecbd4b188b3aec6e181aafc5d7357412b02092bffb9d7a0f655d1a92dc2b82"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r22-quiet/build.log",
+          "size": 1563710,
+          "sha256": "997097eaa3d9fcb1631565b41e64139551aca863f0e4ade4461d337ea9023ddf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r22-quiet/ctest.log",
+          "size": 6556,
+          "sha256": "c6d8329b920769ce06f8a9833399caead5aa76fdf706b309d5d8f0352b214bfc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r22-quiet/kinoko.map",
+          "size": 881101,
+          "sha256": "8a8c6b83cdbfccc881e35e5de8905953ddd3d76a58072e55a9e47e117be4e714"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r22-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869888,
+          "sha256": "a1efb07d7cb744dee97756b82634ea0be6456fdf724a7f99f463bcb93c8806e8"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r23-quiet",
+      "source_commit": "68b8e6217976e52b7c1ad2aebab5430ddaca6afd",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r23-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1942c6ca262801eb2a9930e7a86390bbd83f15abe49e60911b5c975e5d7db645"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r23-quiet/configure.log",
+          "size": 956,
+          "sha256": "b965668e6dc2503904a9cd6ac568b8b30f51e6e2bef50aad78ebd69a08e2dfb4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r23-quiet/build.log",
+          "size": 1563710,
+          "sha256": "e8f104a1294ce4cc1f3663fe7a118cde0f65173fb8bae512b9a7c0c3685a853d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r23-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "b3bbb5a1a56056d3517f01aba7d40c2461128791708973f165765709363d9c5b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r23-quiet/kinoko.map",
+          "size": 881101,
+          "sha256": "949ffdd73c78208cd1e93d877c03cfb846c64be910d119031f118c6328965a34"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r23-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869888,
+          "sha256": "22f85c9ba5de24274b302bac71685aa568772faa43032039088cc4a7c9021055"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r24-quiet",
+      "source_commit": "d7600faed20343a769e2c534370cb12624915a07",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "98cf3b4cf73b328eb48d19ff2f707fde9f16d0132a59b394df8017488dc8ddf1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/configure.log",
+          "size": 956,
+          "sha256": "74a8aecc254c1a781bd26d440f59e565b8e1d882f329dd0f7d54bb733868de36"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/build.log",
+          "size": 1563710,
+          "sha256": "d6b003b438b73cdc26b928d4f8290aea8abfc8b1417ee0c50cc1c13d81d5572f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "27bfc281b8eeb34801deed07cf6a60b96235f775142ccaef7623a1ce7c71400a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/kinoko.map",
+          "size": 881414,
+          "sha256": "f093f381c007e50e83aa8d2b95d505c3c505a544d004fbf8cbd4b3ad7c4a8153"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r24-quiet/stage-contract.map",
+          "size": 1062791,
+          "sha256": "0586b66c31bac63f121e35c7647c584239e8935fbf27e2a17023945220de395d"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r24-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869888,
+          "sha256": "22d7bb9e518818f763f6117e4c12d1537d703ba297b7b34ade83396ee5daf3eb"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r25-quiet",
+      "source_commit": "19e3c575bc77269449e450eb37386d86c6347406",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "98b12b812818d3d999a469c9e9d7818620104a2dd7281dd6c7aae186a78fd707"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/configure.log",
+          "size": 956,
+          "sha256": "81b5cba041c06e1b98ce7e183d71e0c56eb1a2d0ae1d0002b6f0d058ecb323c2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/build.log",
+          "size": 1563710,
+          "sha256": "a4c0f3c76e07ae751ce8bcb5808f1e43a2d6b3feed93b996b3e22dc592f8627e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "567668c8345df3eb5f6c17ea79699265cacdf5c2a556c224ea34095942685ead"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/kinoko.map",
+          "size": 881527,
+          "sha256": "29fc3bac8cb1afaadd8de12068e6e0a2a3a024ceb4cd159729ff84c113c1140a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r25-quiet/stage-contract.map",
+          "size": 1062904,
+          "sha256": "d025c41659970cd3f6391ab089cd38b3dc3aa2cf6d9e67fe4c837954627edc29"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r25-quiet/kinoko_retdec_rebuild.exe",
+          "size": 869888,
+          "sha256": "c7dce9a5c884be7c459c8fe9e9fc907cf3ba13d5cdde05ab7a74ee9311cd71a9"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r26-quiet",
+      "source_commit": "85f3a4ed7934be6013b758ec7f2e7e734ad53ff3",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "a87d0f25053d8a164d64464dad7e2a1f9a03700d639f2ea9a4853e63364f443b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/configure.log",
+          "size": 956,
+          "sha256": "48ba46738f02f9d331e738180ce67c7029b62391591300c72368ebc5e7cc81f5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/build.log",
+          "size": 1559505,
+          "sha256": "0906742deea1a9553d8e6afbd5aa66ef04617d6c3d3dac267b311ad03e3f61a9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/ctest.log",
+          "size": 9387,
+          "sha256": "c5c79f0dd0417c457a6fa90f990ab496461711ff823d1e1c18bae91b36900320"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/kinoko.map",
+          "size": 880909,
+          "sha256": "c9f574361e3fbf5a6e24a0281d9b32002eaca7b5839a2a03eb29857238162cd6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r26-quiet/stage-contract.map",
+          "size": 1062905,
+          "sha256": "e90d88a25d78a2cdda98fce4e27f71b21d791c6f58019c7ace4399498ef12af8"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r26-quiet/kinoko_retdec_rebuild.exe",
+          "size": 865792,
+          "sha256": "21db96dd4c517870d1e67e0f91889769d23d23611e2ea1e1483c4548bf3a547a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r27-quiet",
+      "source_commit": "efd33564e491c13a7c10a4831757afc2d4b8e518",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "525bb3d2b1baab05a3e51b4256171c3ca1fbb87a7fe7cf1312265d68d8ed3ac8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/configure.log",
+          "size": 956,
+          "sha256": "2e4b9ede37ab0e2604062766b7ccd56345894df353ef2dedc175de0ad3353255"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/build.log",
+          "size": 1542170,
+          "sha256": "ba8b31e1db238ec7a381179c04df7bd2718ece2bc13c52598598d86bc68d62a2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/ctest.log",
+          "size": 8647,
+          "sha256": "72775f8bef0a50ad9f2e38e35d9e9f27635f08b791e1a8e8b8abbf48f060a070"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/kinoko.map",
+          "size": 880417,
+          "sha256": "e3d44babe309d658d84d6e47c383022bcb31ed441208fb6101fc49f7b695b1ed"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r27-quiet/stage-contract.map",
+          "size": 1062486,
+          "sha256": "f1648a11dc8fd3e2905427486f0f857cf4cc8f7837044164845bf249e34ecc41"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r27-quiet/kinoko_retdec_rebuild.exe",
+          "size": 865792,
+          "sha256": "eda115bdce66212c152ad0d08a0b622de21c1ce95f89de1ce622096c77789e60"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r28-quiet",
+      "source_commit": "3ac6a8c4bf8fd97b94d6b5fb8ba9893fcda7cd97",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "5d3c680ceb9fb817cd93d712d884c15975aced199ee98d1ca1fa081a8dbf69e6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/configure.log",
+          "size": 956,
+          "sha256": "d5c0e5daba596c6881043bc5ba1423d64dd5e5b42ab198f34f75a12297237ea7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/build.log",
+          "size": 1542170,
+          "sha256": "9ee0a79225d2d4094f2ee714f89d2160ae7f03eb40cf2c65e08b2feb4d524052"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/ctest.log",
+          "size": 9151,
+          "sha256": "d7b5edaa4f02b0b0fdc2baa4894e12a7a6105c6fabe66839f3dd18e1855e412e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/kinoko.map",
+          "size": 880563,
+          "sha256": "2d07280167c418dba03a79a3274c18264c6e0f23701cb92cbe174aa429d9155d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r28-quiet/stage-contract.map",
+          "size": 1062853,
+          "sha256": "c929a19114f6cfb65a2293a6b9303b84d7c86ec8768b99ef5bcfd7b3b6a2d978"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r28-quiet/kinoko_retdec_rebuild.exe",
+          "size": 865792,
+          "sha256": "15533403775848d613ca82f24eabd5366d2afdfeaecc6aefd7c281afdcf39447"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r29-quiet",
+      "source_commit": "52431a95d0d4cfc17a955af50921fb97441f6f3d",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "2d0513a17e3781a66cbbde80e23b8d5bd1c2d5a61d0e76bfefee294d4dc9b870"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/configure.log",
+          "size": 956,
+          "sha256": "36bc4f62881da76d55723ae0b6cb4e5d14299dc4b30f7664375e1c8ab0d55be1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/build.log",
+          "size": 1542170,
+          "sha256": "f178e12a81b6a4172a12ca414cdae6fd8ce6cccea6cc6641019c14c154fa3654"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "0c9a85f3bc6a626111b7b0af275c75a4aaa595ec7c1092a7890a0a7f6ef5a81b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/kinoko.map",
+          "size": 880074,
+          "sha256": "6c56a0196dac16f42834f27308bd037090e0f539100e2299974225eb81b5ed83"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r29-quiet/stage-contract.map",
+          "size": 1062370,
+          "sha256": "df85810e5b1358f883b35f4fc07e0da51cf49b96be81446579e9b1660e085078"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r29-quiet/kinoko_retdec_rebuild.exe",
+          "size": 865792,
+          "sha256": "eadb1614b9e177c371ec927bc1cfa236dc9e3dc28a9d1e5fbc87cd2193272e07"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r30-quiet",
+      "source_commit": "396f28edff0ff2e674f7e6affeab6662510de0bc",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "5437ab7c782a73c4b9b935c34c07031c100269f0d2ee347825ebb19ecf27a981"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/configure.log",
+          "size": 956,
+          "sha256": "e85bf2f094ec38396116577d813710e2490808260797defa873255438226b455"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/build.log",
+          "size": 1537493,
+          "sha256": "57c14453d2c583a835fd5883ec362410af9a51301fff4b81aaa87d7658006a05"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "b6f865ec42d0edd46a36fd054dd9b61ac318d0107b7ca7c87668c70ce4fc10f5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/kinoko.map",
+          "size": 878719,
+          "sha256": "07ba2eeb27471045d791e46f0ae9572063ae4141f6b3f0c61edceaf9c9748444"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r30-quiet/stage-contract.map",
+          "size": 1061384,
+          "sha256": "23274ed9e640f3cbab7c30659bfa9657a26eeaf0ac8b5a995ffcd91abda5c442"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r30-quiet/kinoko_retdec_rebuild.exe",
+          "size": 860160,
+          "sha256": "85bf451e7a493233b70e4d56735cce3e44df9211c9819c6eda10782530eec8cd"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r31-quiet",
+      "source_commit": "572bac466b59a241fba799e5f5456a622ecab8c8",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "8e1ca91719d1ab48f39c324612871683c42c413865b07bd64677f6abce0f2e58"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/configure.log",
+          "size": 956,
+          "sha256": "b96b309d67490a3cb93339623e47d08c4ba7209aabd8a1b1738bb945e3291f49"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/build.log",
+          "size": 1525883,
+          "sha256": "aab226b2458a2c7f396bf49975002d3b04c439d47f0bdf8c7a4ba41f0e3db4a6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "3af7613ea48749a7048d2073eee996dbde143971ac7293b14f077b17bef0dc33"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/kinoko.map",
+          "size": 878145,
+          "sha256": "9dbd61c14894c4711af81df77a363626f7ffd992e9467a77bd7bf0e9e94dd661"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r31-quiet/stage-contract.map",
+          "size": 1060817,
+          "sha256": "422b9cb2e73cd6f085c0a591ea08c71d578ff0b54d0b08826c21b0eaf08d236e"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r31-quiet/kinoko_retdec_rebuild.exe",
+          "size": 860160,
+          "sha256": "3faaac6f42da7d535fa3493d51033aba3bf7f90e68e9d798701d50ee6d82d9c3"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r32-quiet",
+      "source_commit": "93b669f7982961df7b1092bfefa8a4521788d5e1",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "ea398909a57a5b7f96e33d9f73a207e83d84cf891b780cbe07a5001eac83d61e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/configure.log",
+          "size": 956,
+          "sha256": "690afc9b4ef0527c0eca3243a59312c60502ffdcaf31ac6532fce49f92c530bb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/build.log",
+          "size": 1521095,
+          "sha256": "e360ab7a94459186344826e85b378b9988cf7512d003e0d57d7933cffecc4f8c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/ctest.log",
+          "size": 54875,
+          "sha256": "51b27ee82d929a4f73938865aa52808c11a32be7dc4e1778743da63ebf43f85d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/kinoko.map",
+          "size": 877918,
+          "sha256": "4643798d3f65c80e22c39001700b6b0a6b412954967e5704646a6aba270ba13c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r32-quiet/stage-contract.map",
+          "size": 1062536,
+          "sha256": "f9f3c91600efa89012fb031d6c201529836a9a8105be853a40d0861987704c84"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r32-quiet/kinoko_retdec_rebuild.exe",
+          "size": 854528,
+          "sha256": "79b8683c08e06d0e553389147b4dd7ec79b7e4ec3ecf0c5289d1052139cff853"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r33-quiet",
+      "source_commit": "c25ed993e1b4b219e458ed936906a120095749d2",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "52f01093e07ccfb2a4cc32932f3b237d2fd44653820cf388dfce01773e0f7f46"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/configure.log",
+          "size": 956,
+          "sha256": "31d6ad66fb4575ec0423b6805e985db4c4818d7d5409dfa6aca029a82f2b9ea7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/build.log",
+          "size": 1521095,
+          "sha256": "70eca0f4a9ff9600845928731d5c780f0c9170163a6668cc2f11268c958d7e78"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "36cdc14ff3648d3398a16b0cd1605b5f68f0ffb469ac27187290b85395141e80"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/kinoko.map",
+          "size": 877918,
+          "sha256": "5b8d224bb703153f9a87b9af82f68e847a0e7d1f4487f81a2b0d3dcbbd3e8a4e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/stage-contract.map",
+          "size": 1062536,
+          "sha256": "f945f27a18312f8c4922b0fbca1a6ef01054f672567d5259c5da36fb85404e7f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r33-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "5040e9ad52b7f45d339eefe75824a3b293faa4dcbe4a91dc577e8b330934e24c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r33-quiet/kinoko_retdec_rebuild.exe",
+          "size": 854528,
+          "sha256": "4f6f90c9de54e9f71a58aee52dab82d4b0757f35f7f8453d10f1ce53b2de44c8"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r34-quiet",
+      "source_commit": "305bf9f7875dd82c717b585845e937bd1cd4f54e",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "03d0d755dbabe631ab58e1d7874c547073411bbef3c10aef978e53b1b83f377c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/configure.log",
+          "size": 956,
+          "sha256": "a4c680ca279c0b4d731c256993fe2f9cc38caec84c6ed10928c157e29cfc8004"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/build.log",
+          "size": 1493895,
+          "sha256": "9c2c9d68aef20711eaa2fd7dd6809bcb189de0c8d404323fbc370abb9f29e1de"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "bc38ff87c810f4c0e342ea2987597813fd18fdce64213ccc19bd64312186bcaf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/kinoko.map",
+          "size": 876325,
+          "sha256": "3e27a0a434b3ae6354a1d6b554f44486a49921dd407f633bc2c6dc682b1fe0a0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r34-quiet/stage-contract.map",
+          "size": 1062181,
+          "sha256": "bd58f561fb3836158502c0d4b434a89b61cec06f5e12ea803f1c50df3d33e6e2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r34-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850432,
+          "sha256": "53d986bd715e5519cabd4a22e7c8a950c1421faed81c3ad35023d4d51a43b88e"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r35-quiet",
+      "source_commit": "988cd99d40383dd3ce83fefb98b292b6fe0cecca",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "e8bb8d463484ea698fd5339aa8592e14babed380cee1bc43812a059e18a30464"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/configure.log",
+          "size": 956,
+          "sha256": "1a60beb2053ede08217895ca65ed662a49e822e1fed2e345334c0d07b78e9e52"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/build.log",
+          "size": 1463920,
+          "sha256": "ae240137cedcd6bab825638b2af8d8c4865ed20c20281ceec8421e279f39852e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "c833e9d8be6ec788086428eb99be354951af1693ab563bdeacf358f6b43a5bd4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/kinoko.map",
+          "size": 872308,
+          "sha256": "ef3957c698bd3d1b8821cc2bb46f53c9636679531fe52f19507b09e503091810"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/stage-contract.map",
+          "size": 1061513,
+          "sha256": "cd0a6b3f5d87bc3cb6b46fe03c4d2dc2e4258eea6400fe2d2715b6371a47bf73"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r35-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "d2a8d7562dced2f1712f44070d3e1404c102505f73d52398cd9ee7bb4d5d32ed"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r35-quiet/kinoko_retdec_rebuild.exe",
+          "size": 841216,
+          "sha256": "966cd63da85abd5ef21a8d1cadf030fa1e332f159158d482fe2411371362030a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r36-quiet",
+      "source_commit": "4fd8e230a9ff4e815a276e708fb185c47d72f0e7",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "b2c92383f1eac2842975046ff79f52b4929f8759cafa33c0261bc45aa1211a79"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/configure.log",
+          "size": 956,
+          "sha256": "58f0ee413028ae8155e72cfda06a1987bbb85c96e7a7a0a94502cb3ba501e2b5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/build.log",
+          "size": 1425901,
+          "sha256": "97ecf0a9d354b0b42024254b280f558a66f0d41cecac727b0978e3b1828b8ff0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "f5975f08ca1af38294334f2dd9305c1c1ed9e8175ffedc666170ac579f279952"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/kinoko.map",
+          "size": 872641,
+          "sha256": "64c5f1e0e2467c9a5a6fc802cfa5e8e70f1bc723cc67af3b470b4383662cb72a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r36-quiet/stage-contract.map",
+          "size": 1062650,
+          "sha256": "a99db7f51377aac851e7db6ba3632e85f0d2688e2f3e32084dc223b9c97c6510"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r36-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839680,
+          "sha256": "e388e1aefcaa651b6404d4307d8392e0fc1439d2e7ff23c062829410869074c2"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r37-quiet",
+      "source_commit": "02c8081018a7e1bc20c26b66155b3096cb0af4ff",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "9ceed5b8538d74a8407f7f8607d19955a57984b2af4b54326675cacc4c5f9018"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/configure.log",
+          "size": 956,
+          "sha256": "45f1e292cb96dfade4e81eb08c4d2ffd690c6c37cccc83139ff29988b02b074c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/build.log",
+          "size": 1370047,
+          "sha256": "5fb438a9ae424b76c835b19ed5faffc66ffb5df3ee2bddc10f1366a0155b47f5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "eafc0241332c9be4d2de62ea2075cec34c85a719654d8c62fcc9382d75c02ab8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/kinoko.map",
+          "size": 870594,
+          "sha256": "a92b68721da2714f0d58fbc27e2a35441288c8a03583b695166d89f69f9405e6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/stage-contract.map",
+          "size": 1062828,
+          "sha256": "9c2b9c58e683a7da3388f64d3779e2d91712c18b18ad9fc0fb4d3445d12fddc7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r37-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "0e227f9ae8a26bc1dbce78b33fdf42cbb17817ab4d03ddf0348a4e7a261db6a1"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r37-quiet/kinoko_retdec_rebuild.exe",
+          "size": 838656,
+          "sha256": "b35275a5c3dd74e50872eb78c618226092bfc25582d29bc9bcfe9f7a81ad03f2"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r38-quiet",
+      "source_commit": "7e6ad9465593e0312110b0541115b8ca895d94e1",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "f240509136f28c5fa3d4fc38ac200086a9f1da23d5dfdd3d6be48f878e12c878"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/configure.log",
+          "size": 956,
+          "sha256": "22ec6ede6166ddae75423c8b87795c39a6911eeafcbe0139f82292cb0bcf61b9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/build.log",
+          "size": 1360783,
+          "sha256": "df5609e41438fc15079d575e85b859d5877b77020c05e7ff21f3ade3e788018a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "9ec5013b0ee1ea96bf2d7163bd437228519adc12ee435eaf63da57edb5c33b84"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/kinoko.map",
+          "size": 869363,
+          "sha256": "9db7ded661eb89b344516f2431b75ae2d6a0cb464c7244cea4951ec987a97a74"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r38-quiet/stage-contract.map",
+          "size": 1061569,
+          "sha256": "32d55df6d5d79f55c6aa7c8da102fd6006bb58c230bc6ad8a25cfcc498ca956c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r38-quiet/kinoko_retdec_rebuild.exe",
+          "size": 838656,
+          "sha256": "db676b8f3517eb070d7374a51da28fb074f478a7415f700df45836d3c1cea04a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r39-quiet",
+      "source_commit": "b2ee5fc24159045cafc6cb68c7ceb521099a1112",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "715d7b44e15d20d5e22230fa77aebe3aa5492ac0a646a0064613681f638dc37d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/configure.log",
+          "size": 956,
+          "sha256": "320d3789907052f36a7f3a69add71180d940d072c9dbee2511cfbf3eea9f92be"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/build.log",
+          "size": 1360783,
+          "sha256": "9d4ef35e0267448bcfbc9f163431d0955815489649d8b9194974d7cbdd43d201"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "f30589abb6136ae9d5cfe1747f8efc8e3250818c11fa723e8ce2bf1ed5a3b563"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/kinoko.map",
+          "size": 871715,
+          "sha256": "e813b10904329373ed3cbf971bdee5436bac3657705750d4078b890ff976f48f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r39-quiet/stage-contract.map",
+          "size": 1066317,
+          "sha256": "95d2a4f5a592a2c8a66273614a15ffe8afe6981014e950ab6d9a65089fc9e9e4"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r39-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839168,
+          "sha256": "7d1aac605ca95b59420172ca29249080de7e1f16266e5866b1f685ffe7e514f5"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r40-quiet",
+      "source_commit": "c3113b767ef78c4db4c2217404c3f57b029bfc3f",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "2e6a199d873901b7732f4e140b52956f63df239fce0e9a998eaf982abcaae3f2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/configure.log",
+          "size": 956,
+          "sha256": "f26d541d0067ecb89234a3c7ddc3f4c3b839d9e7e95a0009cdeed20915ce4b83"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/build.log",
+          "size": 1360783,
+          "sha256": "251b2d43f9d29e7e662d8577047724724d9b3a60ef89dad94c04534b92c7e6f2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "c5f84f77a95d9ef30f0faaa20c423b84dd9ebef0380406d0c416519ca17fb5ca"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/kinoko.map",
+          "size": 876574,
+          "sha256": "271a742a156888d157663c3f8a42160c4885a580abebc59e324653f4e16ef81b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r40-quiet/stage-contract.map",
+          "size": 1071380,
+          "sha256": "af9341c4950be1aa60278cf3775af1ff2a9195dcf5cda27de63d3b6593c07fe1"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r40-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839680,
+          "sha256": "b4a0642562d1968f37cc3b0a511b8dda813a64412941dcb31745db821ea5208a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r41-quiet",
+      "source_commit": "6168f062d88723fcbc733db7157e832d2708d3c3",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1c2281ea214f46211afc9c9daf355d8064d586622f14893f09398d786c8bc2eb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/configure.log",
+          "size": 956,
+          "sha256": "d8f88cdd6140d69b719b1ad7dd78510741630c4293b32e655f02b3a46cb3b127"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/build.log",
+          "size": 1350423,
+          "sha256": "f60fb48a6132294da40b409556e9f6a6da224870e203f36bcafaa2aab691e984"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "f99bb6c852ed7f7d080e239b6dc8a1e512147d5da8aba637c61779d00b4a1d62"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/kinoko.map",
+          "size": 883786,
+          "sha256": "57d82f6a11704e5aaf701c3e499f49992d2feab250cb51c10ded926aba7074df"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r41-quiet/stage-contract.map",
+          "size": 1081876,
+          "sha256": "4b2a19ac4720619d7381c24fcd1a6cca90d13057d66b46406bb417d912728e2a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r41-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850432,
+          "sha256": "f724f09966ff3f72c3bfa003008184b5a3d70c9736059d0dcd09c511e67f1473"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r42-quiet",
+      "source_commit": "38df4df85248e17f119ffb19faf56c75c06345e7",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r42-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "98baa26337341a20ab0a2fded60d88ea65507df0aac85a959282a84cc81b8059"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r42-quiet/configure.log",
+          "size": 956,
+          "sha256": "db17077003b91905f7a9b2eff6d49739986c96408217aba7bac586385d385aac"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r42-quiet/build.log",
+          "size": 187099,
+          "sha256": "28d44ce0525b606b3966cdff1bd2bf65101a18733bb700c91d0048d362ab634b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r43-quiet",
+      "source_commit": "af5625043706bfa5bbed06bf9d126a83e38d1c5f",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "7800c12388258e59280b7c53ba5bace5eddef3163df5a9b73ba63784ca3dd45b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/configure.log",
+          "size": 956,
+          "sha256": "13b70c5745b8a5b81409f3af1e2f887c78e7d3336077fca1e2e2bb2abe664b40"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/build.log",
+          "size": 1334837,
+          "sha256": "2af8630c8e8d28cc3cafa5cddb89206333c72c9d15d262729e7fd4fc90dbd3b3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "3798d7ac9418d5d3508a1d4f38537d11f60863975d001b07ab3f8caf3173f5aa"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/kinoko.map",
+          "size": 883439,
+          "sha256": "485b2fdb72abc7c1de532b9726e69b4897960dcb142fec1dc74d539eec4446d2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/stage-contract.map",
+          "size": 1082840,
+          "sha256": "962e01e60eeeec7ae41f1f8911fde15e70815ca3858632dc3864be394c8efb3f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r43-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e8589dc6942183685b4da821abe8176e3326a37f2e8534b9beb3de006959243f"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r43-quiet/kinoko_retdec_rebuild.exe",
+          "size": 848384,
+          "sha256": "795f42237937ee9c66d7d59ff72c89b21e204b78a3338a2fad5bbcc9d05a14a1"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r44-quiet",
+      "source_commit": "d8ef1848012790b2c35e014da193eaeacd686511",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "da785e4996d3e72a6d7cc69d32da7a0272c1750b4f9ba60078147baf427cd825"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/configure.log",
+          "size": 956,
+          "sha256": "7a055d4725131702f40bf7430e053da879fdd47115f624b44c957239bb329c07"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/build.log",
+          "size": 1319040,
+          "sha256": "ac8c57eafe7b4296bcdcb3dc4601b330bb548429fdd34f61429dfa7684651e49"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "19460a9a5b9d3e5a8136bfd2154d59c7bb2a03b331741522dfccc42751d20142"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/kinoko.map",
+          "size": 883193,
+          "sha256": "9d40bbfd500e0d302622249a9a61ed308a0f56b36791ff1a3bb860c5a859f5ad"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r44-quiet/stage-contract.map",
+          "size": 1082597,
+          "sha256": "3baa5b3f8b69b1b64d8c628f7ed4718dffd7593dda862dd292f3177046662b81"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r44-quiet/kinoko_retdec_rebuild.exe",
+          "size": 848384,
+          "sha256": "98adedb2c05477bee58fba20b02730d6043b3ea6addecc29ffdd3254fef846b9"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r45-quiet",
+      "source_commit": "845ca41cc9b77019ea3a2b8e5a56d64ecd9228ea",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "f7e42168ad92409c811ea73d7304c76de248107aac75059e125b51f016524361"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/configure.log",
+          "size": 956,
+          "sha256": "f17f88e5201b2b85e89783d9b617cd39cc9037a4b0d2d7d01f9a2cf3fd653962"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/build.log",
+          "size": 1319058,
+          "sha256": "9519c7e0c5dfacc1405889eb0c3bf6f68869da34aaf2813b8f00b85fec63b62c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "c80f0ecaa76334dd4873627cbece5a32ba2537810dcbfeffc8b2ad720a14b3ae"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/kinoko.map",
+          "size": 886107,
+          "sha256": "8426dd516f83717461221ff20d83dd0c132cda7530419308e639c95045095129"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/stage-contract.map",
+          "size": 1088453,
+          "sha256": "2e9bedbbc33de29ff4a89510d86b5a3b09b06ae481c8edffbef3bcecfd10e7c0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r45-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "73409613b1d2a549db347a1f689de06ac65a59360d09a55dc5f5946755777063"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r45-quiet/kinoko_retdec_rebuild.exe",
+          "size": 849920,
+          "sha256": "371dbd73ea7be0ccd241e03536bdf2f766b3de67051b76e82098197eae1d25d1"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r46-quiet",
+      "source_commit": "0cc56d78d152cfd9906202f3c3ce6e16e77d3724",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "417b28852386cd19e248ac3fad3ac9bc1834f33b398ff3221aa7766d5ba1f0de"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/configure.log",
+          "size": 956,
+          "sha256": "ca45f588623d01a46ae516b00fa5448b9a9d4548341be52e36542a1a89495b4f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/build.log",
+          "size": 1313155,
+          "sha256": "941dbd90d5fef2f36541dc2feaa47eed1780ea7b8240b3b2dc89fbff61ac4c65"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/ctest.log",
+          "size": 58907,
+          "sha256": "f14007cace5aa0d0e4fd3d66b0bc245616ab5534687e21b08a6be449e541c979"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/kinoko.map",
+          "size": 883114,
+          "sha256": "578750a9e7ce0c297dd3ed0f52b49c92c630ed9bdb9eeacb32ed1ce68e6c8f85"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r46-quiet/stage-contract.map",
+          "size": 1086831,
+          "sha256": "496eab48f5e5f247708277ed8511c2e561481d3d60cd78561b456d5ca4718fcb"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r46-quiet/kinoko_retdec_rebuild.exe",
+          "size": 847872,
+          "sha256": "ebcfccd97daf25ca435924e5802ffb47e5f38c180e4d0146fecb4a64c174c36c"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r47-quiet",
+      "source_commit": "8854f367a1d3bb555b4dc2023c9bc505b8f25859",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "0c6ee84e7a73179898abbe4bde9107c01a69411d3036828e27106e9f0b7c0f81"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/configure.log",
+          "size": 956,
+          "sha256": "c85bb91eb1987bb3a74356d13b0c0b188c8c3c3aab694186ec50a92dd8b8bc29"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/build.log",
+          "size": 1313155,
+          "sha256": "f8dbca7699115328c1746475b4799addbf07088d773e8432ff39e0761d3908eb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "a07afea6a5aa6fb670cc497bb336d7d284c1225e5945155abf89c08bc55f82fc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/kinoko.map",
+          "size": 883114,
+          "sha256": "f028068b7bdd724abf344992abc5ea05ffa7ad5e9c78ac618eba8dfa4f15b4e1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r47-quiet/stage-contract.map",
+          "size": 1086831,
+          "sha256": "37e3665ed2999057a399c0209f83eb1222b17355d9be56ed8e344dae5f13c68d"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r47-quiet/kinoko_retdec_rebuild.exe",
+          "size": 847872,
+          "sha256": "616499d2217bc4f7299a6d7c4daf8f329373f96ade374273e88fc50b4c972e5b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r48-quiet",
+      "source_commit": "772995ae3a1928708afc9571ce90e84f11161967",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "fc0c4238d613fe0c419dc0fd18705b32e59ed4b72ac1e1ce86f9fdcf589ab2a1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/configure.log",
+          "size": 956,
+          "sha256": "915b57149e603c94f9385a7656e38740f7059e618d11baacacdc9c42e8c55635"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/build.log",
+          "size": 1310771,
+          "sha256": "5d4885aca87cf4dfe2a63535526a00f71605c4c6be8b0efea35f3726dd20daeb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/ctest.log",
+          "size": 6429,
+          "sha256": "bfd41155b4fa7a77d7d69bdcd67a4692dcdff69a37e74e80c63c3d794b589922"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/kinoko.map",
+          "size": 884764,
+          "sha256": "ea6c40e909f3a2a515dc555655f729132fed892e0a245c301b988cd7dcb50b5e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r48-quiet/stage-contract.map",
+          "size": 1088488,
+          "sha256": "8168af9f4c023285ab34a0b4fff6776bc797ac7f71a572c061b1e7a09c49e123"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r48-quiet/kinoko_retdec_rebuild.exe",
+          "size": 847360,
+          "sha256": "a119163da649e21d33385a74ed7a8141ca649aab5ae0748f808e2660ab04119b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r49-quiet",
+      "source_commit": "861ad1c0c23cf245bda3819f5eb0b5708f03513e",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "253dc901980108602f591c1e2dcb40d2dd415157623a78a691548227c47f4636"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/configure.log",
+          "size": 956,
+          "sha256": "a118a5be8d71eef1f4cc1e25a88e7d1b9f6c711af55f668f11cd560843a337ea"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/build.log",
+          "size": 1302865,
+          "sha256": "ffb5982bcce97d00f9bd76ce258de40615bacc5475018fb3c273c6834ec7b596"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/ctest.log",
+          "size": 58315,
+          "sha256": "7b378d8ef50b1444e46e5eee9b6e8a502efddd1e48f2912f8143534081bddcc1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/kinoko.map",
+          "size": 894310,
+          "sha256": "b262e54734780c8e8710202cbfee9e6c38827c38a3db2a6befc9d2904b4af3e8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r49-quiet/stage-contract.map",
+          "size": 1100991,
+          "sha256": "c22ab1b811c3abbf5d3821541a3b3c0558c379274970d5509a0f3424817024f3"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r49-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850944,
+          "sha256": "3d771aef1462f0e78761b0e1373dc2913cbe3a2b972436d0b157fa5081f2e4ea"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r50-quiet",
+      "source_commit": "c6231018dbabdfcd806316e133250d0a07419ca3",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "29b65252748ce624ae7dd8b015c94631283bf0dfb8bce01f0662916e81fb1540"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/configure.log",
+          "size": 956,
+          "sha256": "db9604f19518669f0c354eea4533379fe78ca58d38897ad15c92dbc15738656c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/build.log",
+          "size": 1299523,
+          "sha256": "f71fd5d786c7dac8ec924372d5a6d0f7dc0381739af3a1d910bd22153fe2b97a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/ctest.log",
+          "size": 6661,
+          "sha256": "b1af9f0bae61843af202739c70f20bbab14f5bc4d42d068f0f67973b5b9b13d8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/kinoko.map",
+          "size": 894310,
+          "sha256": "6d28900916c7eb20dd7f426a2657b41333aa69f60ec4e5ca6fea8cb70734ed85"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/stage-contract.map",
+          "size": 1104203,
+          "sha256": "4d141d92f85a909c47e3c7d49c6d4a929d3c2e83fd3b6de04a7f2e71c23a0669"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r50-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "1b45b369842ea19174ef0dbd08f0f34d7f1733f102a959bf26516983b4f00c75"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r50-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850944,
+          "sha256": "00b29a79cabd24824b3de8d121067cfcd27ff8f39ea4a9697c169a206428b5d8"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r51-quiet",
+      "source_commit": "1041ae45e93735bb755c99b71bfc018edc9392f9",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "d84461d4f4a4731388ffb3952c50dd01f58145cfd7a5b7400e6c44a611472b44"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/configure.log",
+          "size": 956,
+          "sha256": "fa2e2be21974e35c9c9fe41c1e239262f2b31cc88f7478c194007e64da4c5316"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/build.log",
+          "size": 1288622,
+          "sha256": "60683ae8af19afa2700acbddefde258e46e1e15458388fa9763371cf7aa3f7a3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/ctest.log",
+          "size": 6661,
+          "sha256": "58c754629e0947528d5c0455e273bba47fb259454328a96df98d0e72158cb109"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/kinoko.map",
+          "size": 893982,
+          "sha256": "b62a43cc866f8a2e656a70e0a3c430296f6935250d9b166d63962af9b3f818de"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/stage-contract.map",
+          "size": 1103879,
+          "sha256": "dbeb51973386244e6252113643b121e47421b90a17dd1148033e9d54d713ea65"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r51-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e37ab4553d452c9de6e0e38ada7cf77f38f7645560dfd878f234d6c467761ba6"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r51-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850944,
+          "sha256": "b0028eb116d77f500f949d4bf804fe23a41a15f5f45ecd14ae90617e83160221"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r52-quiet",
+      "source_commit": "12edf8759b6285477ad2237b6b71be58cbea728c",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "785a37202175769b4c6acfec5b620fa4094067ca9643fcbf0fe5750655d99095"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/configure.log",
+          "size": 956,
+          "sha256": "9d043240cd0d4aeb8096ab5f58b3477a802914b37f264d8f8f1ef0f2f9c716bd"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/build.log",
+          "size": 1286062,
+          "sha256": "e191a1c789af7923858f16ca569e52eac133a8d5a8c9ca0f165ca4741795b665"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/ctest.log",
+          "size": 6789,
+          "sha256": "f3f873205f73b5ed1cdc6d441c6c868102715f4e933e4cd351630d1d3883b1b2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/kinoko.map",
+          "size": 903831,
+          "sha256": "93804f4a11450f61030b03cd59df9f3ca777f1fff79654da4ae7c0f813d60536"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r52-quiet/stage-contract.map",
+          "size": 1116169,
+          "sha256": "19152f5ff6cccea3bd6a43f64481c50a31b10e61335391f5161c843e38af152a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r52-quiet/kinoko_retdec_rebuild.exe",
+          "size": 854528,
+          "sha256": "cbfc13d63d665abb2e4902da945d9899d7a101df546090e5dd3f9df8aed01860"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r53-quiet",
+      "source_commit": "87f181a0194ff5287083cf14d4cb6c0173199b6e",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "0de6e209db3e8917fb5844f822f370543d2eafbb3a1ef3a212ed33304782dc78"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/configure.log",
+          "size": 956,
+          "sha256": "b5638dfca9387025544859202914b4344fe762315a76345fbebbf626c367b78a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/build.log",
+          "size": 1278754,
+          "sha256": "0a61d908152e8d2a4174bc77b4eafa5c44657f8b85231b70ff91eadd49cbaad7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/ctest.log",
+          "size": 6789,
+          "sha256": "23e51f3f33128e08f9cf90b0f1678b2d284666d5a4150eb5f5fd5d2eedfea4bc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/kinoko.map",
+          "size": 916138,
+          "sha256": "86d6047f06d5bef970b06557bc7c03ad9754d516d8b2861e3ae12b2eff7c6267"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r53-quiet/stage-contract.map",
+          "size": 1128482,
+          "sha256": "28fd4da722805318a197a33d4e634ecd2b089bdee9ad5070d0ab601cf0c92813"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r53-quiet/kinoko_retdec_rebuild.exe",
+          "size": 855040,
+          "sha256": "1d35f1df08d04914fb6ca79aeb9da426725caf9983d5cc96f1c3575ceb4e0617"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r54-quiet",
+      "source_commit": "d997b99de72a28a6d23dcdccf1cef0a701a64027",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1d7057fadc925a03726cf091b9cb47409fd7b30185918c29ea5eb3850902b162"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/configure.log",
+          "size": 956,
+          "sha256": "bf7702980a89317ec605e3b0e512541c5b5529ca49d691c48edb57f0f2a7db24"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/build.log",
+          "size": 1271922,
+          "sha256": "91acbf7882bbb9d4f02162c49315ea9284b424562258a7861b7e7992a4cea689"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/ctest.log",
+          "size": 6789,
+          "sha256": "ac9e7a91decd643aec02cb43d223f2f51b3a903d066a2b5cfac35a2f998bfdba"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/kinoko.map",
+          "size": 920859,
+          "sha256": "60934986c86cd3c8cd78b877befc2130849fe95bf2e72ba60f5eb59657e838fe"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r54-quiet/stage-contract.map",
+          "size": 1134302,
+          "sha256": "d30fc3551f66fdf70bee800a3621d3ed5381f374492d40dbac17220952da781c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r54-quiet/kinoko_retdec_rebuild.exe",
+          "size": 855040,
+          "sha256": "dc16e71f943806529dd5eb467715a581ab4724f2fe1f68e602c2f32ab1bf3560"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r55-quiet",
+      "source_commit": "8c669306c58aa0101e727a51c4965df9423a3702",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "d0205a8b52292a924e516ae9078435c0c7555cd938073fcbf42a1cf40f65390b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/configure.log",
+          "size": 956,
+          "sha256": "e912304e991de6d7d9f5aeacdbfc38ed4156675f5aadc660a12ac7501be9ee33"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/build.log",
+          "size": 1264616,
+          "sha256": "285a665c35eba9bc55e218bbee424d4e1c9715211bc88002b8a93dc31d0f4a14"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/ctest.log",
+          "size": 6789,
+          "sha256": "76483a7e606d15887e5d4507e548f92189451488481a982a77edf5e695396ad5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/kinoko.map",
+          "size": 928622,
+          "sha256": "e6886bda5d4e6f841b529cecb88df7d40cf18a2e6b04a2d3553adb73e3ea6e4b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r55-quiet/stage-contract.map",
+          "size": 1144156,
+          "sha256": "323950370bc53770d2720c9b9561e78d38344381236afddd2b7cbee2dfd4c471"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r55-quiet/kinoko_retdec_rebuild.exe",
+          "size": 859136,
+          "sha256": "eb7ea3b526c35773ec07f9ebc004f6513d33e4929cd6078d6a33b1a29ae7b0c4"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r56-quiet",
+      "source_commit": "bcdc4801b312a7f4d0e5065385c8710365ed1006",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1efd4023a496d2eb5ff39f79824f336ddf6f7a2485f2992675afcc4f38251e22"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/configure.log",
+          "size": 956,
+          "sha256": "621af62975b924df416b37139c7f3bf1189fd2e0802cb80f70fe721eef52d4ca"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/build.log",
+          "size": 1251144,
+          "sha256": "1b876c72b04817cac17b7356b124113682392dfced5d1811e812b0b434bfa4bd"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/ctest.log",
+          "size": 6789,
+          "sha256": "62e09ba6bf1814068b6726b0d9406d47b97b9ae0cc75d52ce04ada496d5c9582"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/kinoko.map",
+          "size": 929148,
+          "sha256": "a863b9b187cba587607b35556c37b3e713c0f3084ed6cb12656567e2f6275528"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/stage-contract.map",
+          "size": 1145695,
+          "sha256": "4cc449e57d5368aa93ac7142072ecae09dcc7a80f7566b11443cf31793ced76b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r56-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "8f9d6070ea3125f424fbb539ff374de2440241756f33e244a1b0d9653b42906d"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r56-quiet/kinoko_retdec_rebuild.exe",
+          "size": 856064,
+          "sha256": "6a737504cbcfd391d14d3ea4fac015d80c421ea581ab68b47374ece0c7c5fdb9"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r57-quiet",
+      "source_commit": "a877ff718689fe0b513debcf9ab28552164bf507",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "144efa7d2a5c4bc2f43bd9314a4d896f2a90cae29c560ae5990ac79193c8be4d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/configure.log",
+          "size": 956,
+          "sha256": "bc28766a87b0e56957c7c7c67e6ba898b48e4b25d01596cfc61138fef5ad4398"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/build.log",
+          "size": 1244502,
+          "sha256": "6eaf817b2d643efc7dacf4ac98534e18f32c38a96a5a95f35437951a681464bb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/ctest.log",
+          "size": 6663,
+          "sha256": "263dc8ed3d036bd9d2ab55337b5c67990a5394be3fa7ce9bbedd848a39acbf3c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/kinoko.map",
+          "size": 932400,
+          "sha256": "fef33886b556ca49b5e8ac8a93d4ed2adfaf5d67983a7c0faa6751e0db129b57"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/stage-contract.map",
+          "size": 1150591,
+          "sha256": "255ab67b33ad4224f78dbe10e4812e0b1d77046aba443f7e1bc78bd291427013"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r57-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e099b3293d553c57814e57b31e43627ddf748b3dd0ea86be1bd85d64eef5cb24"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r57-quiet/kinoko_retdec_rebuild.exe",
+          "size": 857600,
+          "sha256": "57470a111d10fc96bfdf92f15786396eadad9f418b6e7bfa8e9a6c043cc08b94"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r58-quiet",
+      "source_commit": "1077d77e775e8219aeaa41e9797632648281d0ea",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1950ee447f7857a2295fdf9bba21ce85c7465eb96a0c156ed18c2fbf5675518b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/configure.log",
+          "size": 956,
+          "sha256": "3bbf9dc72622ded0a1afca23c987abadefc54b6222fb548f963c593e26ee3211"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/build.log",
+          "size": 1204137,
+          "sha256": "e3457d0456973f657be2ba261c8fda31cbda6d87cc63e822599e4e88ae7b9c70"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/ctest.log",
+          "size": 6787,
+          "sha256": "5ec5d820eced29aa56cf74aaca6375abe80b0804ca2002a654016be917ed46d8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/kinoko.map",
+          "size": 943020,
+          "sha256": "916e81d5fb52215fcaa359542bbe9335ade9728310b835beb29d29d33f2e987c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/stage-contract.map",
+          "size": 1165130,
+          "sha256": "b215767468a4c6104ea6e2687425d6314e0857f98a4646616c6d6fbf60aafe0d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r58-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "5c62bf67d61ffba31d40cc496bafadbd6550a241da1abbd7147ad7ec04b85aa0"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r58-quiet/kinoko_retdec_rebuild.exe",
+          "size": 861184,
+          "sha256": "938bdc1b737293e66d01739ae1a1fbca17d6e0cc9b61d8c8982b30b65aa30f79"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-audit",
+      "source_commit": "ed65a1630bda39e8cdf61952dc560874bcf3f206",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit/source-commit.txt",
+          "size": 42,
+          "sha256": "059f005093998d9d3e0332eac241df0ea78d7ef5739964a17c1be518f14aae05"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit/tests.log",
+          "size": 3237,
+          "sha256": "c8d453c3516000700cbfe892f4d814dfadfd409f7b4d8a3920d9cd4bb9819307"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-audit-fixed",
+      "source_commit": "ab82fa64621a53efa1ad7ebba13e6b9bf65e6495",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit-fixed/source-commit.txt",
+          "size": 42,
+          "sha256": "f5fbe4ee7ce2256f10fa4a801927a197a0d1c71f0c688d657f0b33520a4d78e1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-audit-fixed/tests.log",
+          "size": 2476,
+          "sha256": "cf8941dbd9c7d882a135b60acc6b41dc3eeb7de68f40efdf50cb032cd6a71693"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r59-quiet",
+      "source_commit": "39cbcab8a06a81a9f618f84ce5b2cf0c9c7c1367",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "74a2228b9dbf7f8a720764a76af6d8ae7e215c445647db9b5bbff2e61ea06643"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/configure.log",
+          "size": 956,
+          "sha256": "b1e0d4245f1ed21c4743d666977bf2913d8d5834495fbc81323e9b6c2b0839d1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/build.log",
+          "size": 867475,
+          "sha256": "39eaa6d7b4a6624a6fd1ac11935c60dd18c239b4ac6d1e53ac5d6221baf34de1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/ctest.log",
+          "size": 6787,
+          "sha256": "2c00990adecd03f11da5b0870da9ab668f2dcf624dc163fcee57fe70e6002207"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/kinoko.map",
+          "size": 931276,
+          "sha256": "d1d4360fa6da4d55491a9cbc675cd4b74b756eb90eeb5106a55763d5fb02c7fc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/stage-contract.map",
+          "size": 1155297,
+          "sha256": "55f553d446f349535aba419a646e413fc433561dae199a855d9c9be1d6eaeea3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "d895a67d2020c032ffe8b1b3fbb774c995e37c1cd5a9b0e6966819b07fcf607e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r59-quiet/run-staged.log",
+          "size": 203,
+          "sha256": "4c9ab30b68bb631a63389a1361adb3b24bcb15389276885fddb29bada99ad0d1"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r59-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "0e84e70f37def29b0ceebb3e9d3b632b467dafcf7363a73b30ff74a8729339a2"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r60-quiet",
+      "source_commit": "2c7f34c3876ddaa1ce41c84fe1e3668f699dcf20",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "8176f4f8359be8492f5b527b86b946d84a8d3a59dbf8a33341db9e4f95e8dae2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/configure.log",
+          "size": 956,
+          "sha256": "406ef8627a92b788cabd625396e88909a83749266deffc8063c25e091d0440eb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/build.log",
+          "size": 857792,
+          "sha256": "5e1d2dc09d6568865bdf39135fca525df19f4722c2d448937dbbc52d450b8eba"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/kinoko.map",
+          "size": 933746,
+          "sha256": "eba0f8bbfa4ca6a4b8674307685b767eb9322e7e193bc2672ed48fcc4c44f83a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/stage-contract.map",
+          "size": 1160598,
+          "sha256": "0ba5df8f6872d3cd5b68c8dd623bf91091cd90326cbcba3d851d75ab8b365d39"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r60-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "db41ae0223c7009ff92299533e0633208b4f087d6b3e79c87491e9c8dc245391"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r60-quiet/kinoko_retdec_rebuild.exe",
+          "size": 834048,
+          "sha256": "30c904c2ab11be545b8c41628e0fccfccb6264700ac4ff2e1da9baf693fd748a"
+        }
+      ],
+      "user_validation": "User confirmed R60没问题; no agent-executed test"
+    },
+    {
+      "batch": "pr7-complete-20260920-r61-quiet",
+      "source_commit": "f9ee1335b3206cc1da52b12acc4fcae5eef3abbf",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "254c178b2a7f2a48014f974a41bcf64fd5a7072f53f0a6d5cc2b30b5f00c2985"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/configure.log",
+          "size": 956,
+          "sha256": "5e5a7befa03dc5568e6c7ccc5caec76d0d1f5c9fa26eb975f5213a3d490f611a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/build.log",
+          "size": 850101,
+          "sha256": "a2909bf6deb1763db173c16445eebfb91dab3eb4598c56a59a4828da1d10e326"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/kinoko.map",
+          "size": 943421,
+          "sha256": "67b6ff77a3a2a0062d91038b82cade9cf7918e70d27806eb8c59f02e82faba18"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/stage-contract.map",
+          "size": 1171461,
+          "sha256": "2b62764cbd087ade8f9e0656b789ccc75e1112b72470f4b0af72fe1ebe12e8c3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r61-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "ffa5587278636c47b8819249e5eb37d20f28539deadc56eea8482434cc9946ac"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r61-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839168,
+          "sha256": "0cc5b87c4887e511fc447da131c6b2dac4169928810bdf5da1bcaa2e62d9929c"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r62-quiet",
+      "source_commit": "7a3b2b39699dbdf189ed3da10cc88bf7c7e61731",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "c32fe3fe8996055186d94fceedda9a6cbf262fd8f273e053d6b1ab4dedd3d9a2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/configure.log",
+          "size": 956,
+          "sha256": "590be0a0443ab4253d1257e2d37ef4d3efbb89dd09f8fa40968fd9a1de14c314"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/build.log",
+          "size": 832522,
+          "sha256": "d5bd53d078376e4b80df6c94ad514d3acb462cae3cb6c4ada559ddf027d90c6a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/kinoko.map",
+          "size": 948384,
+          "sha256": "3a57b59f21993aaf1844640c3346740e20cc343eba6231631e6b8157fa5de95a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/stage-contract.map",
+          "size": 1177568,
+          "sha256": "00aa5265a27f80ec12b7a0e521e4b8905c6ec8401c408fd990bc65ae6c95dfb3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r62-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "3b2a3a9d7362954d3b6497fd72c91ffac2a7e266886c2a16c034334f8c20231a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r62-quiet/kinoko_retdec_rebuild.exe",
+          "size": 838144,
+          "sha256": "ad9b5eab9a68a15564925e9d6434fb16a91c83fd531758d807b23985b701cde2"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r63-quiet",
+      "source_commit": "bf2cba59fd3f9f2d922a7e3a6c697f5b05ade535",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "13c25bed247d355111273c514c03a6e98cc3ef1952bb47a9921a2185ee08ef9b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/configure.log",
+          "size": 956,
+          "sha256": "a16743d962f0e24f4732f6d167db376cc207ce0b72f1a542dd30e08bf57a663a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/build.log",
+          "size": 830477,
+          "sha256": "53f7fdfb82b3668d1e442d8647ecaf821d862c2436368733b6b04dd8ba4b9971"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/kinoko.map",
+          "size": 948345,
+          "sha256": "dcc1dc8d9aa8ca09896f2bfef2484862779bf26841eee2af42c9daca607605a1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/stage-contract.map",
+          "size": 1178517,
+          "sha256": "32be0937f55add50be005663978fe54b7321ef37bfa746557c8071335c6ae4d6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r63-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "cbe5d1b101422c55ffd0a39713964ef0f16ae286b70ff7431928f0e187e83209"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r63-quiet/kinoko_retdec_rebuild.exe",
+          "size": 838144,
+          "sha256": "f1da025293142351b6a9293f435771f47f016a6f7210ac743145b6a4c86e1829"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r64-quiet",
+      "source_commit": "ca1ba8745aa52b455698fc83933fa378db544cf9",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "00b2ba8cc80abfdc8dbfcc698d47799dc3926cb3caa94d69def39f1f68784044"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/configure.log",
+          "size": 956,
+          "sha256": "05e01744053e59e5959e5e03a6775647744c84079faf203d8da653041e7bad75"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/build.log",
+          "size": 817431,
+          "sha256": "ef103dfbc3a839be34626af546402a36478a1ad5490120f73903ce29cd1de52f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/kinoko.map",
+          "size": 951372,
+          "sha256": "6c55735c6e61f4f04eceb38842a5122ae33bfd047934b64799fb98e27ba54e8e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/stage-contract.map",
+          "size": 1183307,
+          "sha256": "bc037e2640990c639a0ae8bc11e0e24a217179c32457a952f100d767e088732c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r64-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "24eb8e7a56c78d6fab3b307bdddf3ae92cadb0fb3d4deaec9b7ffbe12f52c2c7"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r64-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839168,
+          "sha256": "982d73e99e50e05d53401905aed7ffca4f805a47c0b583320ce470ce27b5cd55"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r65-quiet",
+      "source_commit": "d6d8519a2f613dbbc56a16a7678de5ce965bba1a",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "f9030237b3f99d9bfa6757ebcf11c66232766f1b5c602b96048c22e3062171f0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/configure.log",
+          "size": 956,
+          "sha256": "1cbf953eaa636b294a7dfaea698700f4daaa2a07ab75b3295ae3a7b0e3f53587"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/build.log",
+          "size": 801768,
+          "sha256": "ac82bcf7c636efb30a82e5f88280d0b75bb46d12164141433b8b8d5e7053453a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/kinoko.map",
+          "size": 951328,
+          "sha256": "d8814c579b2fb53ad8c8c73fbe1b3dd618835fc1df94e09c10cd61de1f47c927"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/stage-contract.map",
+          "size": 1183266,
+          "sha256": "218dd05502ba7439f4ae09bcf3e4a56b7001e20e099e267241a3c14e32f6f283"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r65-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "c2e13860282f8e594bdcace900be2bdee5b6ff7ddccd44cc25ed9c0e8d772276"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r65-quiet/kinoko_retdec_rebuild.exe",
+          "size": 839168,
+          "sha256": "ece794dac510d846fdca6a57d72e1c1a5c786e3e4a3bef5b1fdf73fd5e5ce857"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r66-quiet",
+      "source_commit": "1e4c17298126f03a4b8917d6e55d8e919c741624",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "e674160e974e5d32cd5fe515c9cd8d73fdc273611905921920531fe5c07dc6a4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/configure.log",
+          "size": 956,
+          "sha256": "cc0f0f72b3a6771b8f0d57ceb9d6e2238d41866acd51f9aee242c419c80a1067"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/build.log",
+          "size": 801768,
+          "sha256": "21a287cb670a3e6f1459f65faa568c172f305c361812dd7c435ef0ac9b6c79cb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/kinoko.map",
+          "size": 957316,
+          "sha256": "c2e4138717d6507946d9066c3b113000aa14bdcc272b9ac86f5609f780df0b18"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/stage-contract.map",
+          "size": 1189495,
+          "sha256": "d44e5aef8fbba4448f572d8247d02ae6b8214b6fa4ce6f55fe217b9cfaf9fb07"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r66-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "aaebf72606ecff7f48a88d1d5325fa1369c70a4673f0b875b217781d3c69f462"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r66-quiet/kinoko_retdec_rebuild.exe",
+          "size": 841216,
+          "sha256": "0bd1a73aba91bf4ccca38d7ed11834581f41f0cbd0fba6676a6576d918cd8797"
+        }
+      ],
+      "user_validation": "User confirmed 已确认无误 following r66 delivery; no agent-executed test"
+    },
+    {
+      "batch": "pr7-complete-20260920-r67-quiet",
+      "source_commit": "69f1280d2010d693804d5ac599168a6b36010ba3",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "db5f7defc002b85988077e6b78968611d1ebdddf15d91eedc70dff96dc87a67f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/configure.log",
+          "size": 956,
+          "sha256": "80cc55460b3473c9722a131eeb3d16fb81b1747ae84b5be123571a0372a0d9d0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/build.log",
+          "size": 774602,
+          "sha256": "b3fea18df9f902c63506a34b549bbd9f074716827f92ff3e2b61f13ad0f96d37"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/kinoko.map",
+          "size": 963129,
+          "sha256": "004128acde46407054bb41838e0d90cf0114eef345b934aa9448e9b32fae5b4d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/stage-contract.map",
+          "size": 1197754,
+          "sha256": "f6466c740a115d38e840c2453f5271233ce6ab231d2bca318cebffc194aa35be"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r67-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "c35a18528eb6526252d36cddb73cd366850c0c120ff6aa629bc84c2452eff1da"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r67-quiet/kinoko_retdec_rebuild.exe",
+          "size": 840704,
+          "sha256": "3080c6b8ac87cd5122a252cdac3af8a3665a00c999091539a941a7dba6070c8c"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r68-quiet",
+      "source_commit": "edac6e1e93f01496945b29b6e9d5a7cd01f0e730",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "3eeb219f7f71a032f3fe882f85849ad36784e1c3eb9435a706fa3a546ed523ad"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/configure.log",
+          "size": 956,
+          "sha256": "1a4ef7d2afea3855d1a973935150f3f056df7bd0a0d162b1ff0b3c580aaf227e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/build.log",
+          "size": 774128,
+          "sha256": "0b4fcd1ddab5e18fcffc454cb047b63476d1966b181d7d164c9d7a8374b2b792"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/kinoko.map",
+          "size": 963477,
+          "sha256": "af0a44263b0cc8b688b230ee4d0a9ffc1c0e623d8572c02d60b0d0b53cb8b5f6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/stage-contract.map",
+          "size": 1198810,
+          "sha256": "ca4507ce7cc45d3965185250e1e09268879e42778f5ceb9367e62ea3e5674518"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r68-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "07f9f8ce2aaf5850f51f0bd53e5da3e53977a153a64fb5a8803488f7f954fa28"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r68-quiet/kinoko_retdec_rebuild.exe",
+          "size": 840704,
+          "sha256": "1eaa612d2df1e6c9dbcc723d9f9d583633e97cd6392878f8defb8d23ad7cee30"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r69-quiet",
+      "source_commit": "7591a5d6ce1c70ff4fc3ca8afbd2f5e6bbc86d2f",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "713abffb7b34196256224ac1587ed52964e24fdd2cd29e8464268dcebd111d0d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/configure.log",
+          "size": 956,
+          "sha256": "17f3086e918b22058f1257a314cdc27264f647bc1251be8299a72387f119facf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/build.log",
+          "size": 774345,
+          "sha256": "798b5f5530991e49fa6a591f41ee39773d2fb9106815f85e1093c096bd515c87"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/kinoko.map",
+          "size": 970628,
+          "sha256": "8edbc4342b8970725362549ed475afdeaa32aff3009fc340d094e46923e99931"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/stage-contract.map",
+          "size": 1207709,
+          "sha256": "ce6537549d7340743f95d9a86727b3ee969156fc3a83a5eef88b4fe346c02efc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r69-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e6a883a3ae3b8f077e316197412c963d7f86f739d2095b0b186e3502062ed6b9"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r69-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844800,
+          "sha256": "197ea737dd32c77d453e16e7e6820b055e066116bb8aca156ee12bb4dff9971b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r70-quiet",
+      "source_commit": "688300acc3c4f008c3607a58d8e14e931511e218",
+      "validation": "Build failed: old Boost unary_function requires MSVC compatibility declaration; all artifacts retained",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "842d007713a2810ba51c94cee1a6c043c862674dad2615d1247bc0a44e12977e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/configure.log",
+          "size": 956,
+          "sha256": "ecf11ffb916a452b54dd6d2862394d3715709ecb5655aa3aff640f5a89daae3e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r70-quiet/build.log",
+          "size": 199236,
+          "sha256": "a47bd43756f9d7ff80ddb5ad5f163c77abf01875a6fb6c8a0b39fe1781f83f42"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r71-quiet",
+      "source_commit": "e027d10dc0d8f5871ced8040757ea8dc4cdfe8ef",
+      "validation": "Build and DAT staging only; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "26c444dee58f8f5f00dd739accd572ef427a5cff7b1d8a8a2c787b6b4122a257"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/configure.log",
+          "size": 956,
+          "sha256": "330072820ccad76148fe44ea1c34673cfe070a0c2d78195f74bf84c43115f0d4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/build.log",
+          "size": 774447,
+          "sha256": "a0f17b3df1a85108afb7097a8a13f2cfb139a2b511c99da796b2e231c67e80c5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/kinoko.map",
+          "size": 970642,
+          "sha256": "4a33ddb1e00302207faedf14300b26394051d1c340c0fa6e7b1ed5b96cb87046"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/stage-contract.map",
+          "size": 1207724,
+          "sha256": "74a541bc1cc91cb11296aecb64a7306bd2e7ae4e27fab290763308ea91e082f0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r71-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "89f5e57b3efb57adc14380dc174f5948f4bd8c9e8356cbe06f096f9d9bbeb823"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r71-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844800,
+          "sha256": "9f8d5a20e64d03080f1949271a805adab973bf31aa9ae3f49efc54729ee31617"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r72-quiet",
+      "source_commit": "f3006fa587ceaf42935360a5710354039e9c8654",
+      "validation": "Main EXE built and DAT staged, but standalone method-entry contract link failed; no tests run",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "8582ff187b0aa5447e226f30883f5be42871aea3f0635d10928aa10b605c336d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/configure.log",
+          "size": 956,
+          "sha256": "7f6b68cd9661434fb3a06ef0655a3939acf226700b328321649151a474ff492c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/build.log",
+          "size": 768772,
+          "sha256": "7225d604e670927003f750cce85fa9097679ba4b0d76b374d453951c7dfd9bc6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/kinoko.map",
+          "size": 986591,
+          "sha256": "badb6da6c82edc36f7a0a202ea09b8e224bffad739010bfd448e64d8a133b1c6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/stage-contract.map",
+          "size": 1225937,
+          "sha256": "52f376c8e1c85a65d08d13bb9fc89a46e8986861340ac78a29188f793d9f2b8f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r72-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "d40330afaee89a8b95fbf1d42b5c1d363441bd7d908e773cc9a25c7b25ff5ff0"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r72-quiet/kinoko_retdec_rebuild.exe",
+          "size": 854528,
+          "sha256": "948b63ff9d7aa6823d3a245cd8cca6a02a88fd736e549c698d13b88f9ea373a1"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r73-quiet",
+      "source_commit": "8b0ba3538e03b5cafb78e387232001b050d4a2f0",
+      "validation": "Full quiet Win32 build and DAT staging succeeded; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "32e2b1836fee0912371a0d1c573ce92d83e467e2ca425f12979910381a20e8f9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/configure.log",
+          "size": 956,
+          "sha256": "d590bd5c1e85e29d29e628628ab8ace0a5e89ee29f80083cc6a1f912134d7548"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/build.log",
+          "size": 762452,
+          "sha256": "7d017b847d762727f96e6f5a352d136fc5e75d14c09c863e33bfbaa54b1b1794"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/kinoko.map",
+          "size": 986243,
+          "sha256": "1496cbb03a691de48135d40d19d5975e153c61274906121536d3d27e4e8d75e2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/stage-contract.map",
+          "size": 1225277,
+          "sha256": "f25a5bbc7161ad807f49e5aa81513d3f4195433a8a2dc28102c2a745c1e180a2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r73-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "e7528cc6d1ecaaa3987e220e7c854ccd1bacc99ab46e0702c5309f8e39378ea2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r73-quiet/kinoko_retdec_rebuild.exe",
+          "size": 852992,
+          "sha256": "871cc592ad2c9c55807c6b237356378b6ba51de0cc9d36a57ce4d041a640bdc7"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r74-quiet",
+      "source_commit": "5e5560c3f1d447821fffdc69d825b1f4497a9b64",
+      "validation": "Full quiet Win32 build and DAT staging succeeded; tests delegated to user",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "ff21d328e07ae6ff7d5b3fbc99f6eea9c1b246928b98153e6d6f6a42e8b2f576"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/configure.log",
+          "size": 956,
+          "sha256": "1385fbc77596b435b43d06e97da752ee62219a62b73bd2f415f52c12e153794b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/build.log",
+          "size": 743229,
+          "sha256": "7fe9d115ace8a47295ff9c0096a113891de7492d44be225306b122caf0011d31"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/kinoko.map",
+          "size": 987022,
+          "sha256": "131674f11d9c599488c1e6da91e27b34754188e4f92109a81ff22ae1c4348361"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/stage-contract.map",
+          "size": 1228638,
+          "sha256": "f84505dc7f94011b58c8e3efc1d083cb30ac98162493d597c46456f1c2c7ce3d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r74-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "5d53d788e05a14a8c893fc8b0d41e30325a9f135fbc688ec40b20ffc4c48da38"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r74-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845824,
+          "sha256": "2fe2d797e40855841d13a2ae46fe0dcce1d73ef7e596dfce57ff6903d9031cb9"
+        }
+      ],
+      "user_confirmation": "User reported r74 has no problems on 2026-09-20."
+    },
+    {
+      "batch": "pr7-complete-20260920-r75-quiet",
+      "source_commit": "ca2bf1422e2d3ba77320884285efe40423938b8a",
+      "validation": "Build command completed with exit 0; no tests run. Original build-runs directory disappeared before artifact recording. Recovered source-commit record uses the recorded build invocation; original logs and maps unavailable. Surviving EXE staged and DAT hashes verified.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-recovered/source-commit.txt",
+          "size": 42,
+          "sha256": "5d77097a3aacbac267e0a6642d46023c9fd1ee3a8071fc9e1b2f531f0f86819c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-recovered/stage-dat.log",
+          "size": 454,
+          "sha256": "e3f7633112e1c9dda744b37d33d42c6e01e1d14a9ae1332e4ce50b2fede39a89"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r75-quiet/kinoko_retdec_rebuild.exe",
+          "size": 837120,
+          "sha256": "cbb5f261a7098d9855e8b16acdec3e1a256aebaf6456871f4f56aa8ab7cc2cac"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r75-rebuilt-quiet",
+      "source_commit": "a519bab06ea887e61f73b5c0fc6589367c74c35b",
+      "validation": "User requested regeneration after confirming manual cleanup. Full quiet Win32 build and DAT staging succeeded; no tests run.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "3b3084b546dbb1248ff011701d00935341c45cf4f015a5c63c94eec88b6d0c4f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/configure.log",
+          "size": 964,
+          "sha256": "03bd0fbb579b26d98b0518d4c56b40c96aa08033dbcd7098549637e5e22d44e6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/build.log",
+          "size": 683233,
+          "sha256": "196bd1354d079680c8e76ead601ccf5d53631954d468f18e1f96c58d2cc6d62e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/kinoko.map",
+          "size": 990199,
+          "sha256": "55e034918a3d05bd9220c1d338f671bb3e6eafd17cc10cb2402c63ed1d09e6e7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/stage-contract.map",
+          "size": 1233964,
+          "sha256": "b446ed4595081c8fd29a0d09f5dba971e926cded7c87422c40823f1d7a60b3ca"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r75-rebuilt-quiet/stage-dat.log",
+          "size": 462,
+          "sha256": "d765a3532e030d2ee8c0f9dfc8b8e64a41c35e25ca2b9fb22749c275a8914af2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r75-rebuilt-quiet/kinoko_retdec_rebuild.exe",
+          "size": 837120,
+          "sha256": "a52843532be53f7b519b4be901106df2300a81bd306ddea18b392a0ce104e2b7"
+        }
+      ],
+      "user_confirmation": "User reported version 75 has no problems on 2026-09-20."
+    },
+    {
+      "batch": "pr7-complete-20260920-r76-quiet",
+      "source_commit": "a98be2adccf0e2910662045405016d3b00471d96",
+      "validation": "Quiet Win32 build succeeded; DAT staging verified sizes and SHA256. No tests or game executed; user handles runtime validation.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "39a35f095786f868f5709caa1551adbe4de14c56c3aba82e9566a4998a64250d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/configure.log",
+          "size": 956,
+          "sha256": "c054c57425db1e6a467bdd251b1afea247a073481aebc3689a06ab9a8e3ec4f0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/build.log",
+          "size": 638984,
+          "sha256": "a5377e5c6ed67af9dc0931d00796e0f4a9512181cbfd517bd1334d5693a7e925"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/kinoko.map",
+          "size": 989303,
+          "sha256": "f2586dee040b1b8eab1552337a05da9472ef492ab340975507b7936023d62549"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/stage-contract.map",
+          "size": 1235040,
+          "sha256": "e1aa119429512b54a8afab10cc59a0a01c11613d79b3046613185ffff310b311"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r76-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "8b8130a9c8c9206a1baf6e43ef7db9d829a53639f8e81990548b093e908dac6c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r76-quiet/kinoko_retdec_rebuild.exe",
+          "size": 836096,
+          "sha256": "9425ac15955f19a1084f26b4d23727d9bd8574ea09d1729d14fcfae9c5aff634"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r77-quiet",
+      "source_commit": "97968d2e5dff75e29148b56f4fb08f22f640b125",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. No tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "786c84d46b51ff1d3811af52d110679d1f64db0d58d3c7c2a0460847abc7dbc8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/configure.log",
+          "size": 956,
+          "sha256": "fe8d6d92d7fca4ad46c54eca9492ce1df4dac511b384bc51fc3820e7734cc609"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/build.log",
+          "size": 638654,
+          "sha256": "d1846a78694fe6293ed3f7a091f5a7c2e967f4e1cb4d8f70879d79b7ff483af6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/kinoko.map",
+          "size": 989095,
+          "sha256": "262db7fed49e07d85bfb01f5c36d1f59a5a5b77b43af21ae10826618d6fd5c02"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/stage-contract.map",
+          "size": 1234832,
+          "sha256": "743c892b03eeb907c2de4ea72b0bea398681cc090bae29f7972571540200b767"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r77-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "43167238550fe087f980313b1cb650739b3093869fb35c9ee19e668f02140557"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r77-quiet/kinoko_retdec_rebuild.exe",
+          "size": 836096,
+          "sha256": "79b440b315733c0bab41a03eb25f6ec78dccb61367a141169fa80db6befb508a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r78-quiet",
+      "source_commit": "18286171ab3ed16a9f37737e60e986b9b93e2185",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Map copy contract compiled, not executed. No tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "127a05c2b96a8a340d2ef047a99d690cfb3e99157f568a133476338438876fd8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/configure.log",
+          "size": 956,
+          "sha256": "9c9573189c8cd09e8abe61579899d70f8600478f1fd272ea8c0c90329f3ce633"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/build.log",
+          "size": 628478,
+          "sha256": "b754f408c1042d4f4bdcf54a28984c0229829e154df69d30bb23620701c2b5da"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/kinoko.map",
+          "size": 989028,
+          "sha256": "c38b5fb6a812deeb693c3ff85e51aac845df621a5cd94853c16d14fe9a5b19cf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/stage-contract.map",
+          "size": 1236846,
+          "sha256": "4b5f2d07b3926c6c023a438310dc212a185b700defd426573487f17a4749cb71"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r78-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "6fbf3feb9b56133ef08aeecabd0e6b3a619728decde7368dee981550c36e7525"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r78-quiet/kinoko_retdec_rebuild.exe",
+          "size": 836096,
+          "sha256": "3930c32b7310f5e99f304d4961ecdc3bb0102679bf7565db6e48c02b2ba8f77a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r79-quiet",
+      "source_commit": "2408551b00d06ee83333367ab08a0e80a4320991",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. No tests or game executed; native exit callbacks await user runtime validation.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "89ab84cb5d3c8770ec05d06ea542948c89f9bf146737ac72a55f81076be4e9c2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/configure.log",
+          "size": 956,
+          "sha256": "95aa901fcbe529d8b1f5e52f03a52c2057f8b61cae978be5c73b6cee3f674efa"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/build.log",
+          "size": 628152,
+          "sha256": "3187813cdc6dda451652bbebfb08d27385bcaa1f8e6d4eefc3d6a4bfeb5863db"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/kinoko.map",
+          "size": 989464,
+          "sha256": "d77c3556041b2074a98df35a31754fb7856efa877e1ef9f4c0bc61208e3c8d9c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/stage-contract.map",
+          "size": 1236848,
+          "sha256": "4b7084d79df1a66c09c6880366935fdb035c5b75557df52f43328f304574aa1d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r79-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "b9c101f89ce08c2dac93af619e4b1ed9d65a442c8ab63e0a35366f19cad30754"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r79-quiet/kinoko_retdec_rebuild.exe",
+          "size": 836096,
+          "sha256": "9c1f4f23ab838af3ef2f9fba8c2c879874db477c4aad77e9da3905edfd514a03"
+        }
+      ],
+      "user_confirmation": "User reported R79 has no problems."
+    },
+    {
+      "batch": "pr7-complete-20260920-r80-quiet",
+      "source_commit": "6a46107b5db869ad1bb66dd3dbcaf314fbe29a0b",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Glyph cache/rebuild contract compiled only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "b67e9e237a374b48cc84a45918fc8ed6dc4bd31ef48a68482f846ea6a348e4c5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/configure.log",
+          "size": 956,
+          "sha256": "ef0f63a24bb29d669f08710d8a61becfad898658dde16f1d621d202b7e6684c4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/build.log",
+          "size": 613721,
+          "sha256": "c42eb100c5d566aacac3b3954cbc7b67222c4d880a76d2b275224c61df80da5b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/kinoko.map",
+          "size": 989020,
+          "sha256": "43fbba19ade381750e26e6385355394ad8d5c44054aff99ebba9f1566f9e6138"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/stage-contract.map",
+          "size": 1237903,
+          "sha256": "ec652d6c08664b894a3659071a2b431c20a47312b9aa3204f40fc4f5718cbadb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r80-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "b8bfdf9ce827088f5577ee9d7632fe5bf1b862d4827fff758ac4928b2f6094ec"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r80-quiet/kinoko_retdec_rebuild.exe",
+          "size": 835072,
+          "sha256": "d31885718651d9faeae24c62007c8e1503eaf220fb047b767139b28b78ecc000"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r81-quiet",
+      "source_commit": "c7193b75e887516925990fb7033325499a0c8f50",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Lifetime contracts compiled only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "d1f3800bdfd095f4a6e58a72b7165220ab6742d49071ff5589738630280cc999"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/configure.log",
+          "size": 956,
+          "sha256": "c2f2034055242e9fadcbf6e2f1ec9e4718c6829f4c0866171a769231e240dac1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/build.log",
+          "size": 605906,
+          "sha256": "f4a26eb42d3373a5b70987095bfd786c3951f18f3beecde59a7cd2b63128aff8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/kinoko.map",
+          "size": 988893,
+          "sha256": "74984fe9c5cc3680ee768df3bee1c964c625e409c9bb1b76a764a56e79edc150"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/stage-contract.map",
+          "size": 1241280,
+          "sha256": "0dac17313a43f9281486b5b78b5b92a344fb30d829d4ebc6dba53de9f2eaebb2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r81-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "fac06dec8d5dc89581cdc9acfc9ea16036a1c7373897563272c205b891eaa8b2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r81-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "8780199bdf28a95f2a6ed86dbe586d6c1a1d73110ad45473fe7ea1830ce3c816"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r82-quiet",
+      "source_commit": "ae151d8c2d384c14db6fc980a045019d574e91b1",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Native text and Sqrat contracts compiled only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "c4a6e6e154801806659ba3503059f2f3eeb14e0d324477c7ae33c7e829aded0d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/configure.log",
+          "size": 956,
+          "sha256": "bd4b59149817469841e2f092b643503704d7db3315351749fc4c59c2288f9586"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/build.log",
+          "size": 605925,
+          "sha256": "86d8290c7535f8b3413426abd29c827af87e16b60f437b21272359f420cc02a5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/kinoko.map",
+          "size": 988944,
+          "sha256": "7db68868b4f7846d025766477b1e66729a1d321e092abc14a5f0e48849dd613a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/stage-contract.map",
+          "size": 1249987,
+          "sha256": "bc3bb78d4a2f743f1e00cdbd3813566798f2bf072576421899b2b76f32dfcd2e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r82-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "783b060fdba84bf5f522969654bd99dc53232aabc05e031c1f398aa71667a796"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r82-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "925fdd75fd8158c581c48d98d00b72434e841bc6cc15576efc06ef0d7212936d"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r83-quiet",
+      "source_commit": "25f6771bd623d1457b55bdf731563e3bf75156ff",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "4d8db851868e1101897406c1b3b3f2f15027d0a71248986e2905ff8858d26925"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/configure.log",
+          "size": 956,
+          "sha256": "a5fa828244c766ce83721eaa698259eed3e8d998092f39f90105f015f0b163a4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/build.log",
+          "size": 606761,
+          "sha256": "cd17c6a904d4067227359253614b24480007fb10f6cdd64121ffcdaa2115b136"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/kinoko.map",
+          "size": 988944,
+          "sha256": "bb22fee62479810b4ba819808d0e6139d5ca9fee3c56dd194f9e38e19da57f2d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/stage-contract.map",
+          "size": 1249987,
+          "sha256": "8d578d79af2dee1d94a23514ceda2c10abda04e9d520273b4004c47177350783"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r83-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "565470a8d5d28650b0057b8c4e2a3f300a3960b7a27b136a1a6a889ec71afcf2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r83-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "dd29b59cbb3ba0277d4bcd5383ab0ac65bbe65407c34d9012a9aba182d261ef5"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r84-quiet",
+      "source_commit": "5525e1e3cdbc944f0ece7f3202042529c6cf7d23",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "aaf851bbc58cf7b5ccdb5e46c4e712fe71988494f6f7a9433a7339346e1d0dc3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/configure.log",
+          "size": 956,
+          "sha256": "c6045c67384485e4343e49b436cb024baf87b7d4cbea67dc5e32ac36d78ee431"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/build.log",
+          "size": 608034,
+          "sha256": "1273bc703da8d098a7e7abd1d2111c0742a63b904d2062c8968fcdc104f4f3d7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/kinoko.map",
+          "size": 989118,
+          "sha256": "060b280bede09e5f1c5fc4490797a2fae02a2a394c07e3bce4ad235d8dad731b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/stage-contract.map",
+          "size": 1250392,
+          "sha256": "5576e531b7d61777ae0c2346d4f894e3fc25c23904698d1594b3f4cd8f5861a1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r84-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "cda0b44376c64862a0878d90c269c17c2a2cd3a6f7554302d96a801b297c2eae"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r84-quiet/kinoko_retdec_rebuild.exe",
+          "size": 833024,
+          "sha256": "c9689ffe94e6bb86111bb791528f8aba0da82f337becb7a5e494dee42a069de2"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r85-quiet",
+      "source_commit": "2586668fc0f22844c39b62b6c2d6d5066937368a",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "27ca26cdb3cc74732dea7093818aab5ce5a36efb25ba6f556d3c8d4bc13834bf"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/configure.log",
+          "size": 956,
+          "sha256": "5bb1bc8281305b97145be7d36945a9189f79b216d17e05d81656c231a2a2b834"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/build.log",
+          "size": 581646,
+          "sha256": "7c55e382a65634662774f617beb4608983923998178dd648a798a6686a6aa5f8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/kinoko.map",
+          "size": 1007014,
+          "sha256": "9a3ba8835a654b1044b397da29dcff5d6fb38e51882172818a67b1ca35244f6b"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/stage-contract.map",
+          "size": 1262139,
+          "sha256": "af67e0b9e427383f5af3b362ff819a11ab47e10a9d02bb7f2e3aa8082c464879"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r85-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "4d72ee03b5c0353f98e2968a77c4870300d7c0e10e7c6a60ab92f8a19353ad0a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r85-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850944,
+          "sha256": "1d4c4af6b296393ab3ff54b2ac8e1b77613c00bffdfbda3a675c2c6dcf9704b8"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r86-quiet",
+      "source_commit": "7a1f0929f05715d8b9c31b37f7304b5994b03234",
+      "validation": "Full build FAILED: isolated act_frame_contract host omitted g350. Main EXE and stage contract linked. No staging, tests or game execution.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "75512b90a4b82e0d19992ebc65d481e441b45706f3070bb728d765fb105668e7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/configure.log",
+          "size": 956,
+          "sha256": "31662f0283c3096a0739703bb634ab0b0bed3dd6a930fa5feec45bd3e04d6370"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/build.log",
+          "size": 582401,
+          "sha256": "f96e776215ece5821094dfebabbfa8eeff788b9a558bd3b58b1506d6fe4c330a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/kinoko.map",
+          "size": 1007737,
+          "sha256": "d7307e5946af52e9e40cf576c788feae1906b8db0288faf11511bc30e7465cb6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r86-quiet/stage-contract.map",
+          "size": 1264370,
+          "sha256": "0d8f4f5c6c79b86586aa5cbe6002793702026f8e2d94d4fd2ad1a9161eea1099"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r87-quiet",
+      "source_commit": "60c21c2378ee5cf0cac1009ea44e82f3d817fc04",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "7b683364807defb1315086a302ef87f12846e9c9685bb603215c06aec76c67f6"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/configure.log",
+          "size": 956,
+          "sha256": "f17a1c633c1ad4361504f59ce5fab25589a792aafe108aed8134dd70f1304a35"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/build.log",
+          "size": 573396,
+          "sha256": "fcc4de45a2f2496d0a6dbe52555f5eb7f13058e660b2a881dadcb260bc268e66"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/kinoko.map",
+          "size": 1007573,
+          "sha256": "674b4798249a8edfa01cd15d133eb4c22e9819a9508894c181404b93e1de2f98"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/stage-contract.map",
+          "size": 1264208,
+          "sha256": "269ab2db85bac97a6b4f4072905606c5d24d715f62231dd132968ec94b5b117f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r87-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "af4dc7343a152de9e5ddfadc43069f0b49cddfc1f845bd77091db494dba57f54"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r87-quiet/kinoko_retdec_rebuild.exe",
+          "size": 851456,
+          "sha256": "3f550e2c6e5c311f30a6be99524b25599c701b870ba60d7556ed9fdbcef11548"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r88-quiet",
+      "source_commit": "3a34bd24e68f85dde7703dcf3cf6cca0b90353db",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "59b95430986dba77047d3de67a5cdd244eb0297b917042495fbc43ecc66e29a8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/configure.log",
+          "size": 956,
+          "sha256": "5cacbc880b17587521adbee45d29d5392d94b95f3b35277c8d12695780c92d87"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/build.log",
+          "size": 478274,
+          "sha256": "666cd0f9c3166cb9c0c4a804167a705125a2d1ce760864270d6d52087aa32862"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/kinoko.map",
+          "size": 1006468,
+          "sha256": "a873d66efbf208527899eb96bce4705a57f55e85767f3c1117cc79539242d077"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/stage-contract.map",
+          "size": 1263077,
+          "sha256": "ad1208898cbae467d01717b7775641e96a5db2dafddb4765b59857482ba7d7d9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r88-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "41b3ded11709ca3e5f72bbc677022ca56f32e247e68eb519df861b11c8e8a219"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r88-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844288,
+          "sha256": "1a07b074a58bcf5e53e42030c5dec62a83a06120caf0fd3283c36501b885e56d"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r89-quiet",
+      "source_commit": "59484dedcd4159903b06957bd8d8a3dcbe959f72",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "b4b45cddbb025ff585bfb88508fd62ac8fa0e23b3a6b3bbcd39fa9a97559d3a9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/configure.log",
+          "size": 956,
+          "sha256": "2af2c99a7efb42bee1de8f816acfc570c8efb7c2b332afd82f5023b26df47b29"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/build.log",
+          "size": 453063,
+          "sha256": "9f74b299c4558f0add69e8cb3e6512bc238ee3ce9f068dcf633101b12101d580"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/kinoko.map",
+          "size": 1006876,
+          "sha256": "ee7d98c2fb0140351c656e705d3c6c9141deed5376d2fc2749e41c4ece7cc7ea"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/stage-contract.map",
+          "size": 1263114,
+          "sha256": "61cfa4e8f8e9905c512fe22788924175940fdf6dd8c6ec4107de7d7dbbe18293"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r89-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "4de7e3b54bb280acafd03485dbcd6b4ec09d2c2c2439620cf150dc5214f87fdd"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r89-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844800,
+          "sha256": "e8740a132a46963501d27539e884dc32005a25f4d9e584c456e3b0269bfed52f"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r90-quiet",
+      "source_commit": "13942396d697562652c626574362abe84d5d6ec0",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "c6c132f279d1dfc16ad8f105e6c4859a896ee2710daead3fc9aba4a1bff77532"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/configure.log",
+          "size": 956,
+          "sha256": "f14927cca32955452df463648f68fa09ff911956eb50c26fb1be8beac4370422"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/build.log",
+          "size": 437364,
+          "sha256": "77c73c6d0180a65ac4f116d6e69eeb4a2c56c7ba990475b0329adb9c8c996d3a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/kinoko.map",
+          "size": 1006394,
+          "sha256": "5bde8ba7fdf336630bc0b741e990f0825cc49f014d6cc509810a7e4b0ee18103"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/stage-contract.map",
+          "size": 1263057,
+          "sha256": "eaf28c2ac59f447f7e53b4fe211f62ae191ec3b057b95ecce4fd43438fbfdb66"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r90-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "ed658d91303e353a14fdac40775d590433ebffb9b01e0e3e80d769478a8cc81c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r90-quiet/kinoko_retdec_rebuild.exe",
+          "size": 847872,
+          "sha256": "57622e1b16e3111a3092d38f9185c9a3e7ead83f058b1455c22ae9f7ac5f6b09"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r91-quiet",
+      "source_commit": "f650a14df2e1985800e4ce6f31c01459adcb5d31",
+      "validation": "Build failed: archive_store.cpp could not find zlib.h because the owning static library lacked the zlib target dependency. Not staged; no tests/game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "1ac6553148219642ea21db19195e8957981e4395dd5f85ec6657a49e36afb776"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/configure.log",
+          "size": 956,
+          "sha256": "4555c62bf0dbf0a684b761ad88b9a477129bcfcbd902af391a0168a6d075a078"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r91-quiet/build.log",
+          "size": 189501,
+          "sha256": "a4e62a69dea03f81fd7590a214da83b1d5399e15dcb5437ef9d515555c3d84f4"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r92-quiet",
+      "source_commit": "211d38bec0dde49caaaced8a145578b0b44d84ac",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "da16d91dd3dae75b877ab8ff9f47488287b67a270fe242586ebd18e63bd6d78a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/configure.log",
+          "size": 956,
+          "sha256": "7adf840f73046add1ef06645b1ef52ef05e10b4ce13e93ed166cbfef2518abe3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/build.log",
+          "size": 437383,
+          "sha256": "b20b40d82aa9f0dced80b64ce53991855fa6f8a84e5e823119d1a8c5adb4fe40"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/kinoko.map",
+          "size": 1014092,
+          "sha256": "6d96b0fcb8fd80a5191e6a69c2d2f911846764852eafa7204f13e313805d157a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/stage-contract.map",
+          "size": 1270642,
+          "sha256": "eddf87cd93d66340aa75943ea2778c92696b7fe357947a3f35ba777647d8c184"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r92-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "c7f413086efd732e9e9ab166729c2a108fc2b50d009d7afd43455676a6d33cd6"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r92-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850944,
+          "sha256": "6e2070711af55588f860b205f7cc47a45ed8cad7eca05435ddb4aa823893538e"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r93-quiet",
+      "source_commit": "8f3c9227995a6a91e8d46c1074489f2d60b10b50",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "91ca138d90ae88525fda12b15e31b1706ad26f0cddcaf9bd2fc9e29b23b5e466"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/configure.log",
+          "size": 956,
+          "sha256": "4061511efc1beab1d308860de111088d40b5a1ec6393117ca5c6fb30858ba8fe"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/build.log",
+          "size": 424433,
+          "sha256": "f30a7bfcc0d1a6f0276f228fdd081d80c4e4b6e5c4583911df6340f17b0b893c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/kinoko.map",
+          "size": 1014624,
+          "sha256": "e42df496b886c7412be978f5e10562b144f796e8f7cea94fb115b13d0ea26468"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/stage-contract.map",
+          "size": 1270923,
+          "sha256": "07acb9c247dbbd3986ba0fd08d978d8fd872d1e42fd17c99397fe40cbba1a556"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r93-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "8c04e2c1a086f83c5b05f5777115e55abab39d62aa470a3ac009d9c04fc17b4d"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r93-quiet/kinoko_retdec_rebuild.exe",
+          "size": 850432,
+          "sha256": "9c25905a16220ec4690f9d3406394028ee9b5b73f731eb1b029ed8fdeddd3eed"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r94-quiet",
+      "source_commit": "6da1db6c17d41092fbe7556865a6d6ed57ce3eaa",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "bf9644232bedd7d3b5eaeb2c320eab5d3a1a0cd7fc2f23dff07f19808f650588"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/configure.log",
+          "size": 956,
+          "sha256": "1ff754b227f085f1a5254c1792d94ef05a37f79d69f6f0deacfd08aec6d57700"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/build.log",
+          "size": 377968,
+          "sha256": "0466499351e303a0b59a3d38e04342ccb9e9014f336f49d93b2927be95eef765"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/kinoko.map",
+          "size": 1013815,
+          "sha256": "85c5df0d84f99c5ec65ab7c7f215137b58a2a10265243c6a30c23267875c56f1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/stage-contract.map",
+          "size": 1272372,
+          "sha256": "9354687c1615c2404b96ba9d5c10c0395e6f9ad8b79f0ec6cd0d47effa7c8626"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r94-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "8d192111f81234650fb502ad37ff49bb9ff401f8ef73af5abe200f63619b05c6"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r94-quiet/kinoko_retdec_rebuild.exe",
+          "size": 844800,
+          "sha256": "df55242e43b87d0fb6ba15b0d92588f53b850035634f18d54cd0935f3c897844"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r95-quiet",
+      "source_commit": "0f0f56f846ae9e0d5925290ab095b6b084f8da5b",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "5550ad374886a2c9d8dae71f2e732c3dce2510880e82ae4988e4e3a25ea05328"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/configure.log",
+          "size": 956,
+          "sha256": "bccf200adad979161edf1175d0055cd755ed32152b9cab31300c1147f65d17af"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/build.log",
+          "size": 348752,
+          "sha256": "7c0eaad05d60df9e69585d29772b3e3b8a91f1b741d912f58aa94ed2aefaa2aa"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/kinoko.map",
+          "size": 1014659,
+          "sha256": "eae1af3e26a8da4d6c9342753558b8ca7dbf3e220d780f646fb25a5c5c38d6f5"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/stage-contract.map",
+          "size": 1272682,
+          "sha256": "2390fa7b1cd547430084adf9798f23df0cd3c5cb4cae8cc6b0b5c59a485deea0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r95-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "de4c2eba1666797a12b9a6e020765cd398b2a24f505457581202be967884aad8"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r95-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845312,
+          "sha256": "b8608c88f39a423e6c37599df94b5e81a99a48fcf1ff2995fe3976c35dd2b9a9"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r96-quiet",
+      "source_commit": "7160c021e4c4fb669fa319f725a18529834defd2",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "a0a481f588b53f955cb4dc3d678cdb19863cfcc4bf8cde79d1bd3584c49901d9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/configure.log",
+          "size": 956,
+          "sha256": "768b0b3ccf83e8449f138ed903a68d39bc10e2af491254fe9a82ac9fb5101d6d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/build.log",
+          "size": 335266,
+          "sha256": "1c7669f2078b40972e5ec3becd1e337eece196070be14259e4e41731b8ba899e"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/kinoko.map",
+          "size": 1015961,
+          "sha256": "e88c38164217042ebda7af42b2d13165ac3d3632b5a69918c61a34316d5900af"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/stage-contract.map",
+          "size": 1275128,
+          "sha256": "94168c484540be0dec31611c4fcbe36a8196ee12dcdd759db6fe08adae18bbf4"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r96-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "87027a99ea1fbd6cdbc5e30650dcccac2e191c925fbe1bfcb0282f01ccc72077"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r96-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845312,
+          "sha256": "8638bbb582a70daa8fb9b9d927b3694f9978514f405dd2571565903fbbb7511a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r97-quiet",
+      "source_commit": "e51e83f3488d06622f35eeb49800b7c1a6a79b08",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "b57e5c42e594fcffb31a9c7df69b9ee5c5073dddb8acdf70d28707ac200663cc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/configure.log",
+          "size": 956,
+          "sha256": "d4b529cbfea7b77ffa148ad3b330ba330b99ac7971b96eb56a4b004fc59ef487"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/build.log",
+          "size": 328863,
+          "sha256": "618aa0eac1bf49c25d2e1ad3057eb132077c765b2aba7eda2a1765e77bd2eec3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/kinoko.map",
+          "size": 1015470,
+          "sha256": "4e377d061ae35eedf740e3aa2e64483bba84325a0a103fd9c23df354b525a126"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/stage-contract.map",
+          "size": 1275620,
+          "sha256": "f75733ab532a97e89017d6be4ea28b6cc858785eee7875a52ea46620a112b8ec"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r97-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "c23a915d089239f621907cde166c700a9cc97d8df39a7a440056f782fd6213b0"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r97-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845312,
+          "sha256": "13224d679e223443aaaf165b1fa81be4d4a298df22e01161f310a6fdde0691d3"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r98-quiet",
+      "source_commit": "7fe22a6abe79da234e9a2f5bfed9ef65b016eded",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "13623e30b95ce2aa619657b2c004d6f1bbe8cc537116aaac2d19e04b95e813fa"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/configure.log",
+          "size": 956,
+          "sha256": "05af2245151b4a8d860e6db26ad3bf4eb38bcce52281656eb9c1fd69b3d0c50f"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/build.log",
+          "size": 315158,
+          "sha256": "327a000ac27c1c5e7045c861b10a0b807e22c2fde6b6a08c4f5985812b2086b7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/kinoko.map",
+          "size": 1015303,
+          "sha256": "3634098c06864ab12394fc051ead3b3fc4ef3c7f63e2f9133c60f510a6b73adb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/stage-contract.map",
+          "size": 1275498,
+          "sha256": "016d04c5733bfc588063e87978433d8c379833cbba8fdc586f798750f8854d25"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r98-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "aba73a9788bc799f8dde857a907c48742bff0bea254735a014e229b74966727e"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r98-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845824,
+          "sha256": "017ce120d18baf7c70bf9d7915d4d75717933267c17f414b8f967fc32af1f130"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r99-quiet",
+      "source_commit": "9561b9776e5da1ad842536050df31f412766511c",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "eecaba8d49e76e3f15037beb049e5fc106e723adce7664d8aa8a877f6c6d9bcb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/configure.log",
+          "size": 956,
+          "sha256": "a03db882bc422f697067995cb01b4e496729928cfc9e3f2ad21c4d48b632b4c2"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/build.log",
+          "size": 315158,
+          "sha256": "22b693e1986172393b2fae5978adb587e5d81d960f417bdad03adba49cfe62c9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/kinoko.map",
+          "size": 1015303,
+          "sha256": "58d8393d67824635bda8a54c26a07e3b515a50ed02f967dc8664a5c353e0c498"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/stage-contract.map",
+          "size": 1275498,
+          "sha256": "e3e949ea6395310246bcc09c138ada3b32c7a0ece42cb4a2e68374fba6d58569"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r99-quiet/stage-dat.log",
+          "size": 454,
+          "sha256": "b04c7217e843175aabcbe5607b45c56f678019c65e3ad4ae45322b53bb0ac556"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r99-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845824,
+          "sha256": "0e7add1c0f6a644843939924d4013f7f90fb2a0e712d0fb74ca56a3bf6bef89e"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r100-quiet",
+      "source_commit": "54913cc555eb4a8ecbeed7233506676a24f897ed",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "9cf5be61248a36bc883006418b30f9b56849386bf693061476e8cf707b09f326"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/configure.log",
+          "size": 957,
+          "sha256": "d4234719719cf9e5af41d8b855bb389c1e84cb531ca80886e1a664640b40a8b7"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/build.log",
+          "size": 316243,
+          "sha256": "b5a65279541ded0cd4f7a11a05800261e8e110609f594ee52035f021a2ee1451"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/kinoko.map",
+          "size": 1015671,
+          "sha256": "a4725b7055ee0edd18f2fe1210683bfc9316c4219620c1ca52502093bde10cbb"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/stage-contract.map",
+          "size": 1276495,
+          "sha256": "661172abbc903d7be96aafdaeb3426373697f39a581af6811ea0eaead9588db0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r100-quiet/stage-dat.log",
+          "size": 455,
+          "sha256": "e6c9ca5afa7eb3c30f42cf89d78f735f5266891bdf4f20b51252538cbfb45aa0"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r100-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845824,
+          "sha256": "fdc9a5eda52eef814ab460628e01ca73d83f6eed5e6b597fc67a1156d3a1fe7b"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r101-quiet",
+      "source_commit": "6b44c05ec1bbe117b407b78ac584d3dd1ff598b2",
+      "validation": "Overall Win32 build FAILED: isolated kinoko_act_frame_contract lacks kinoko_set_render_target boundary definition (LNK2019). Main game and stage contract executables linked, and main EXE DAT staging succeeded. No tests or game executed. R102 supplies the test boundary.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "cee54d0c7e24d02bf272abb749aab6dfb798fa25b1c220118b3bc84ff0eba5b0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/configure.log",
+          "size": 957,
+          "sha256": "6588af5c8328efda265b210a5a751ba49db1c048be80deb2d6b963fb9a73dd09"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/build.log",
+          "size": 316700,
+          "sha256": "f32ab46a79638a8b4d3a5309b371ac6374b69c07c5399b52a73fd5e66044d8a1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/kinoko.map",
+          "size": 1016127,
+          "sha256": "005dec4f17e6a516cea0addc35b85b328aec12b9e4c07f72674ba261e0b1dbc3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/stage-contract.map",
+          "size": 1276951,
+          "sha256": "9db3ce9ec4cdc8e68fd9c4855b980d0db7f6e5797999fe058ef812f62ea23984"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r101-quiet/stage-dat.log",
+          "size": 455,
+          "sha256": "1727ec86ebe71bfc51ed8e590f0e28ab98c9f7a236c2de674756f53ca4ca22ab"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r101-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846336,
+          "sha256": "78c2c08a2338aabea2f6f28d3b607a57dcf0a33effd2345fd5b9379c1a07f2bc"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r102-quiet",
+      "source_commit": "f0c7126e98cf225040406daf4d7cdbea17fa1068",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "27bb9c9adcd8f4179d01a7564205f9faa39711bb926f63ce93583bae5c775236"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/configure.log",
+          "size": 957,
+          "sha256": "dd430be165072ef8edb91734e0f716ef0b4eae2280a1af1cedaf09c3d1170afc"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/build.log",
+          "size": 316243,
+          "sha256": "aa4db2579a2e9da2a7ecfdbfbf7a56627895da8e6cd2b16b0bcb7330165d5966"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/kinoko.map",
+          "size": 1016127,
+          "sha256": "5d48fb220dda3e4064338083eae9fdbfd29156981055bcf43964adb46552efbe"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/stage-contract.map",
+          "size": 1276951,
+          "sha256": "ce60f572be96524e1c04903663160a67ae21b22f2f291af0ccb94f27188d9c5d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r102-quiet/stage-dat.log",
+          "size": 455,
+          "sha256": "41fa2a3140786568a7430bb2ede41df81a4561e701690a5e0f2aa38a3acc93b0"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r102-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846336,
+          "sha256": "1e30906cfa0ccfa6a1edd5582777a34a9375d16db9e16c35183bd4d258005e42"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260920-r103-quiet",
+      "source_commit": "2498316fa115535e44603e96b6cc0e6071dc7190",
+      "validation": "Quiet Win32 build and verified DAT staging succeeded. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "af89084f178cb30122bc398f98ec5674b56b76b914b05ae9692357b42704b235"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/configure.log",
+          "size": 957,
+          "sha256": "1e25668f98919b67706fe68d6328d2f778964809d06169d8bb100f8a92b015f8"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/build.log",
+          "size": 314041,
+          "sha256": "bd78640f029c812a27fb01e09b0b7b620ee6287e920e49b7546258b920526ce9"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/kinoko.map",
+          "size": 1017051,
+          "sha256": "5870e50574a70607a470be60ca53303735622c627d2b4d7ed73c5bb752da96c0"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/stage-contract.map",
+          "size": 1279002,
+          "sha256": "d29a571da79d60fccd0157759a72b5df767a866ffc4cab659796eaeffac26eb1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260920-r103-quiet/stage-dat.log",
+          "size": 455,
+          "sha256": "0737a57de3dc40e32148ca32be0271ad93ea798722043fff7eafc9c6396fbebb"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260920-r103-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846336,
+          "sha256": "e3bf7d80f32c84afd711910b3d2093d83e099091534f24b1e7995e60daa6789a"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260921-r104-quiet",
+      "workspace": "C:\\Users\\poker\\.codex\\worktrees\\720f\\6kinoko-rebuild",
+      "source_commit": "3929a81a7881d926ce86794af3f66642dba544fa",
+      "validation": "Complete quiet Win32 Release build exited 0. DAT files copied beside EXE and SHA256 verified. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "9821b6de271529f1de47cd7ee60d933552f749f04593072aaa2b157aa866038a"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/configure.log",
+          "size": 981,
+          "sha256": "c6dd1285ef324237d1849f5cd69a81e5c9b766f6c81ec01e546bccff4e6c7b69"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/build.log",
+          "size": 357591,
+          "sha256": "9ad5e850fc2f427a84db704caab2b8255fdcae3ebfc9dcc5c39ee224a954b291"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/kinoko.map",
+          "size": 1015893,
+          "sha256": "ac70e0fa27a6baaa6e0c6fa5d64dde7553fe837ae1e7d7e7fcb427aa7a04c63c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/stage-contract.map",
+          "size": 1278943,
+          "sha256": "0db2d104cea002148644c27362b30ced457668fb281e63d73a184b0b0875b665"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r104-quiet/stage-dat.log",
+          "size": 479,
+          "sha256": "140bea508d8c882c85b43bccfd3ecf4b1b8ecb82282ad6d093e424fdf2f547bd"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r104-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846336,
+          "sha256": "e8f3408f4855ca16562465220aa0dffb394da1a9d80b47c22b37198ad2f35bf9"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r104-quiet/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r104-quiet/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r104-quiet/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260921-r105-quiet",
+      "workspace": "C:\\Users\\poker\\.codex\\worktrees\\720f\\6kinoko-rebuild",
+      "source_commit": "2e47ad3b345a12eb93e31c76744c2c12de41f468",
+      "validation": "Complete quiet Win32 Release build exited 0. DAT files copied beside EXE and SHA256 verified. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "8547ce10511d698d2aa681419f147fa3845332d5e5fd9b8ddfc6256530efa287"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/configure.log",
+          "size": 981,
+          "sha256": "1185f529e898adab4fd312adc3c5fe1bdca1a214d395355915771a4307bd8263"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/build.log",
+          "size": 352569,
+          "sha256": "807838adbbe86080a3140cc68124cacf4a38202ecc231acf0410edeeafa85f5c"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/kinoko.map",
+          "size": 1015599,
+          "sha256": "78c233f51984725d21eabeea8759b0318af9e93a10766e8414b4c9af0ad322f1"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/stage-contract.map",
+          "size": 1280218,
+          "sha256": "dc1cd7418a2b28ffb595bb2901526bfe0910447f880a64be4dc30b6ca07228c3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r105-quiet/stage-dat.log",
+          "size": 479,
+          "sha256": "1336f5ef617b6d252f463f971bed697b5a7e230f832927a04361337eda36206c"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r105-quiet/kinoko_retdec_rebuild.exe",
+          "size": 845824,
+          "sha256": "0166359dcce7dff33647ef8210a4ad0e6bf66369912c62adbaa2bb9b41cf7d04"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r105-quiet/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r105-quiet/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r105-quiet/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
+    },
+    {
+      "batch": "pr7-complete-20260921-r106-quiet",
+      "workspace": "C:\\Users\\poker\\.codex\\worktrees\\720f\\6kinoko-rebuild",
+      "source_commit": "147656b32c8c3aaf4595667aca8926cdf673c872",
+      "validation": "Complete quiet Win32 Release build exited 0. DAT files copied beside EXE and SHA256 verified. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "d4d91a15208ea3407157f0611aee0dce6ee03c4dafd8f6b7e643115f8dadfa8d"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/configure.log",
+          "size": 981,
+          "sha256": "45dee7e340ee6fb972a497df65c9a03320f2354cb62501962ee0e20c3b650175"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/build.log",
+          "size": 353073,
+          "sha256": "a09489c02812648ab9382502c145932ea89c16def7041ba813fb83ae73ac10c3"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/kinoko.map",
+          "size": 1018043,
+          "sha256": "9ab80690b12134c58801dfac4b1b17b31a8d3c65ea83eb09d0ad6ba775bfdd61"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/stage-contract.map",
+          "size": 1283227,
+          "sha256": "a8cd66791df379b91a995f95dd1d4b7037f34a25a24d225487d1b77710966cab"
+        },
+        {
+          "path": "build-runs/pr7-complete-20260921-r106-quiet/stage-dat.log",
+          "size": 479,
+          "sha256": "25adaccb98df885815a42c29fb7db77d5e4934edef5736b8a780d360de6ffd6a"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/kinoko_retdec_rebuild.exe",
+          "size": 846848,
+          "sha256": "5543300c24e95fba7d54159b67276cb9229e736e1d308540cc27891e07753352"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds/pr7-complete-20260921-r106-quiet/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
+    }
+  ]
+}
