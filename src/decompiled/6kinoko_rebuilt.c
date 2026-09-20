@@ -4099,12 +4099,7 @@ char g1227;
 int32_t zinflate_distanceExtraBits_at_4d8cb8[30] = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13}; // 0x4d8cb8
 // Detected cryptographic pattern: zinflate_lengthExtraBits (32-bit, little endian)
 int32_t zinflate_lengthExtraBits_at_4d8c30[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0}; // 0x4d8c30
-struct vtable_4d5484_type g15 = {
-    .e0 = function_42abe0,
-    .e1 = function_43e850,
-    .e2 = function_415220,
-    .e3 = function_419d30
-}; // 0x4d5484
+ // 0x4d5484
 struct vtable_4d54a4_type g16 = {
     .e0 = (int32_t (*)(char))kinoko_squirrel_object_delete
 }; // 0x4d54a4
