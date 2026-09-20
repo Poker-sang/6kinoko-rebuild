@@ -544,3 +544,35 @@ including two disconnected conversion-only wrappers.
 Source edac6e1 built successfully as quiet Win32 r68. Contract sources compiled;
 no automated tests or game session were executed. Three DAT files were staged
 and hash verified. Overall replacement is still incomplete.
+
+## r69: original CActTimeLine ownership and serialization
+
+IDA 4255E0 identifies the second layer-list binder as CActTimeLine, not CActKey.
+4253D0 allocates 28 bytes, copies beginTime/timeLength at +4/+8, and deeply copies
+an eight-byte-pair vector at +12/+16/+20. 425350 confirms the two integer schema
+offsets. 425420 appends serialized pairs; 425510 writes count then both words;
+420900 frees the vector. Its raw RTTI name hashes to 9902F2C0.
+
+Native timeline methods now use std::map for the property schema and std::vector
+for bounded read/clone staging, retaining only the flat buffers required by the
+original object ABI. Layer loading accepts this original second-list type;
+previously every nonempty second list failed. Both archive and standalone layer
+cloning preserve its distinct size and deep storage. Cleanup recognizes the
+timeline before treating +4 as a layout address. Reader batches reject malformed
+sizes and preserve the existing vector on truncation rather than partially
+appending. This safety difference does not alter valid-file layout/order.
+
+The shared property reader/writer now correctly assign known bool bytes and
+write bools as one byte. Existing texture/layout schemas contain no bools;
+this prepares the remaining layer/property migration without changing them.
+
+Correction/lesson from r67: its second-list fixture used a synthetic CActKey,
+which tested clone dispatch but did not establish the actual serialized type.
+The fixture now uses a real timeline with nonzero beginTime, independent pair
+storage, full/compact wire forms, append semantics and truncation checks. Never
+infer a polymorphic list's element layout from the other list or its C helper
+name; recover its factory/binder and allocation size first.
+
+Quiet Win32 r69 source 7591a5d built successfully and DATs were hash verified.
+Tests were compiled only; no game or automated test execution was performed.
+This does not claim that the remaining generic factory or CStringLayout is complete.
