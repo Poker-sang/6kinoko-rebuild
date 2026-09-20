@@ -11,8 +11,10 @@ target_include_directories(kinoko_upstream_bindings PUBLIC "${KINOKO_BINDING_ROO
     "${KINOKO_SQUIRREL2_ROOT}/include" PRIVATE
     "${KINOKO_SQUIRREL2_ROOT}/squirrel" "${KINOKO_SQPLUS_DIR}"
     "${KINOKO_BINDING_ROOT}/third_party/sqrat-0.8.1/include")
-# Unused snapshot APIs require its separate VM bootstrap and old variable
-# descriptors. They are not part of the game ABI and are not linked in.
+# The host keeps its existing descriptors and VM bootstrap. Exclude only
+# standalone snapshot registration helpers, not their unresolved-symbol stubs.
+# MSVC diagnoses references even in otherwise-discardable COMDAT sections.
+target_compile_definitions(kinoko_upstream_bindings PRIVATE SQPLUS_HOST_OBJECT_ONLY)
 if(MSVC)
     target_compile_options(kinoko_upstream_bindings PRIVATE /Gy)
     target_compile_definitions(kinoko_upstream_bindings PRIVATE _CRT_SECURE_NO_WARNINGS)

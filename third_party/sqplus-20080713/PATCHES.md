@@ -19,6 +19,12 @@ records the reviewed replacement hashes. No bundled Squirrel 2.1.1 VM is used.
   the non-Windows contract build. The game remains the narrow-character Win32
   target and does not instantiate that case-insensitive string helper.
 
+* `SQPLUS_HOST_OBJECT_ONLY` gates standalone registration/variable helpers in
+  `SqPlus.cpp` and root-registry type-name overloads in `SquirrelObject.cpp`.
+  They require the snapshot VM bootstrap and a different VarRef ABI. MSVC
+  resolves even discardable COMDAT references, so dead-stripping alone is not
+  sufficient. No zero-return replacement implementations are supplied.
+
 The object copy/assignment/Reset and CreateClass algorithms are unchanged.
 The host transfers *external* references by adopting/detaching public object
 handles; it never overlays an upstream polymorphic class on legacy storage.

@@ -645,6 +645,8 @@ const SQChar * SquirrelObject::GetTypeName(const SQChar * key) {
 #endif
 } // SquirrelObject::GetTypeName
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
+// These overloads use the standalone snapshot type registry/owned root.
 const SQChar * SquirrelObject::GetTypeName(INT key) {
   SquirrelObject so = GetValue(key);
   if (so.IsNull()) return NULL;
@@ -662,6 +664,8 @@ const SQChar * SquirrelObject::GetTypeName(void) {
   } // if
   return NULL;
 } // SquirrelObject::GetTypeName
+
+#endif // !SQPLUS_HOST_OBJECT_ONLY
 
 SquirrelObject SquirrelObject::GetBase(void)
 {

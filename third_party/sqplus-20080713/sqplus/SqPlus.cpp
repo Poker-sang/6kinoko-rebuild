@@ -9,6 +9,8 @@
 
 namespace SqPlus {
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
+// Standalone snapshot descriptors require its VM bootstrap and instance factory.
 static int getVarInfo(StackHandler & sa,VarRefPtr & vr) {
   HSQOBJECT htable = sa.GetObjectHandle(1);
   SquirrelObject table(htable);
@@ -333,6 +335,8 @@ SQInteger getInstanceVarFunc(HSQUIRRELVM v) {
   return SQ_ERROR;
 } // getInstanceVarFunc
 
+#endif // !SQPLUS_HOST_OBJECT_ONLY
+
 // === Classes ===
 
 BOOL CreateClass(HSQUIRRELVM v,SquirrelObject & newClass,SQUserPointer classType,const SQChar * name,const SQChar * baseName) {
@@ -358,6 +362,7 @@ BOOL CreateClass(HSQUIRRELVM v,SquirrelObject & newClass,SQUserPointer classType
   return TRUE;
 } // CreateClass
 
+#ifndef SQPLUS_HOST_OBJECT_ONLY
 SquirrelObject RegisterClassType(HSQUIRRELVM v,const SQChar * scriptClassName,SQUserPointer classType,SQFUNCTION constructor) {
   SquirrelVM::Init(v);  // For handling multi-VM setting right
   int top = sq_gettop(v);
@@ -368,6 +373,7 @@ SquirrelObject RegisterClassType(HSQUIRRELVM v,const SQChar * scriptClassName,SQ
   sq_settop(v,top);
   return newClass;
 } // RegisterClassType
+#endif // !SQPLUS_HOST_OBJECT_ONLY
 
 
 ///////////////////////////////////////////////////////////////////////////
