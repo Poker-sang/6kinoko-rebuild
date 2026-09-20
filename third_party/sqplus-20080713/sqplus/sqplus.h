@@ -571,12 +571,17 @@ inline void createTableSetGetHandlers(SquirrelObject & so) {
   } // if
 } // createTableSetGetHandlers
 
-inline VarRefPtr createVarRef(SquirrelObject & so,const SQChar * scriptVarName) {
+inline VarRefPtr createVarRef(SquirrelObject & so,const SQChar * scriptVarName,INT minimumSize=0) {
   VarRefPtr pvr=0;
-  ScriptStringVar256 scriptVarTagName; getVarNameTag(scriptVarTagName,sizeof(scriptVarTagName),scriptVarName);
-  if (!so.GetUserData(scriptVarTagName,(SQUserPointer *)&pvr)) {
+  #ifdef SQPLUS_HOST_OBJECT_ONLY
+  SQChar scriptVarTagName[258];
+#else
+  ScriptStringVar256 scriptVarTagName;
+#endif
+  getVarNameTag(scriptVarTagName,sizeof(scriptVarTagName),scriptVarName);
+  if (!so.GetUserData(scriptVarTagName,(SQUserPointer *)&pvr,0,minimumSize)) {
     so.NewUserData(scriptVarTagName,sizeof(*pvr));
-    if (!so.GetUserData(scriptVarTagName,(SQUserPointer *)&pvr)) throw SquirrelError(_SC("Could not create UserData."));
+    if (!so.GetUserData(scriptVarTagName,(SQUserPointer *)&pvr,0,minimumSize)) throw SquirrelError(_SC("Could not create UserData."));
   } // if
   return pvr;
 } // createVarRef
@@ -594,10 +599,10 @@ void validateConstantType(T constant) {
   } // case
 } // validateConstantType
 
-inline void createInstanceSetGetHandlers(SquirrelObject & so) {
+inline void createInstanceSetGetHandlers(SquirrelObject & so, SQFUNCTION setter=setInstanceVarFunc, SQFUNCTION getter=getInstanceVarFunc) {
   if (!so.Exists(_SC("_set"))) {
-    SquirrelVM::CreateFunction(so,setInstanceVarFunc,_SC("_set"),_SC("sn|b|s|x")); // String var name = number(int or float) or bool or string or instance.
-    SquirrelVM::CreateFunction(so,getInstanceVarFunc,_SC("_get"),_SC("s"));      // String var name.
+    SquirrelVM::CreateFunction(so,setter,_SC("_set"),_SC("sn|b|s|x")); // String var name = number(int or float) or bool or string or instance.
+    SquirrelVM::CreateFunction(so,getter,_SC("_get"),_SC("s"));      // String var name.
   } // if
 } // createInstanceSetGetHandlers
 

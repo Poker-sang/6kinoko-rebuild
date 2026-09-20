@@ -52,7 +52,7 @@ public:
   SQUserPointer GetUserPointer(INT key);
 
   BOOL NewUserData(const SQChar * key,INT size,SQUserPointer * typetag=0);
-  BOOL GetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag=0);
+  BOOL GetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag=0,INT minimumSize=0);
   BOOL RawGetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag=0);
 
   // === BEGIN Arrays ===

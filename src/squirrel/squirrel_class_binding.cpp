@@ -83,15 +83,9 @@ extern "C" int32_t function_4aa540(int32_t vm_address, int32_t output,
 }
 
 extern "C" int32_t function_45f4f0(int32_t object) {
-    auto* vm = current_vm();
-    if (has_slot(vm, ObjectView(object), "_set")) return 1;
-    int32_t temporary[3];
-    function_4a9490(temporary, object, address(reinterpret_cast<void*>(&function_4aafa0)),
-        const_cast<char*>("_set"), const_cast<char*>("sn|b|s|x"));
-    function_4a9d70_this(address(temporary));
-    function_4a9490(temporary, object, address(reinterpret_cast<void*>(&function_4aabd0)),
-        const_cast<char*>("_get"), const_cast<char*>("s"));
-    return function_4a9d70_this(address(temporary));
+    upstream::sqplus_variable_handlers(current_vm(), ObjectView(object).value(),
+        reinterpret_cast<SQFUNCTION>(&function_4aafa0), reinterpret_cast<SQFUNCTION>(&function_4aabd0));
+    return 1;
 }
 
 extern "C" int32_t function_45f640(int32_t* root_object) {
@@ -103,24 +97,8 @@ extern "C" int32_t function_45f640(int32_t* root_object) {
 }
 
 extern "C" int32_t function_45fab0(int32_t object, int32_t name_address) {
-    auto* vm = current_vm();
-    const auto key = variable_key(pointer<const char>(name_address));
-    auto lookup = [&]() -> std::pair<bool, int32_t> {
-        StackTop stack(vm);
-        ObjectView(object).push(vm); sq_pushstring(vm, key.data(), -1);
-        if (SQ_FAILED(sq_get(vm, -2))) return {false, 0};
-        SQUserPointer payload = nullptr;
-        if (SQ_FAILED(sq_getuserdata(vm, -1, &payload, nullptr)) ||
-            sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(Variable)))
-            return {true, 0};
-        return {true, address(payload)};
-    };
-    auto found = lookup();
-    if (!found.first) {
-        function_4a9950(object, address(key.data()), sizeof(Variable), 0);
-        found = lookup();
-    }
-    return found.second;
+    return address(upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(),
+        pointer<const char>(name_address)));
 }
 
 extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,

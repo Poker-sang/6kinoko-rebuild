@@ -11,8 +11,11 @@ namespace kinoko::script::upstream {
 // immediate_value is used only for the host's Constant representation.
 SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                             const void* storage, int32_t immediate_value);
+SQInteger sqplus_read_text(HSQUIRRELVM vm, const char* text);
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,
                              void* storage);
+void* sqplus_create_variable(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name);
+void sqplus_variable_handlers(HSQUIRRELVM vm, HSQOBJECT receiver, SQFUNCTION setter, SQFUNCTION getter);
 void sqplus_variable_metadata(HSQUIRRELVM vm, HSQOBJECT root,
     const binding::Variable& fields, void* output);
 std::array<char, 258> sqplus_variable_key(const SQChar* name) noexcept;

@@ -97,18 +97,15 @@ extern "C" int32_t retdec_get_var_value(int32_t* context, int32_t metadata, int3
             pointer<const void>(source), source));
     case 4:
         if (!source) return -1;
-        sq_pushstring(vm, pointer<const char>(immediate ? source : load<int32_t>(source)), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, pointer<const char>(immediate ? source : load<int32_t>(source)));
     case 5:
         if (!source) return -1;
-        sq_pushstring(vm, pointer<const char>(add_address(source, 1)), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, pointer<const char>(add_address(source, 1)));
     case 8:
         if (!source) return -1;
         // This is the original 24-byte MSVC string record, NOT std::string
         // from the current toolchain. Preserve its inline/heap discriminator.
-        sq_pushstring(vm, kinoko::legacy::StringView(pointer<void>(source)).data(), -1);
-        return 1;
+        return upstream::sqplus_read_text(vm, kinoko::legacy::StringView(pointer<void>(source)).data());
     default: return -1;
     }
 }

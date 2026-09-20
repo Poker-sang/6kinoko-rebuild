@@ -68,6 +68,15 @@ HSQOBJECT take(SquirrelObject& object) {
     return result;
 }
 }
+void* sqplus_create_variable(HSQUIRRELVM vm, HSQOBJECT receiver, const SQChar* name) {
+    VmScope scope(vm); Borrowed object(receiver);
+    try { return SqPlus::createVarRef(object, name ? name : "", sizeof(binding::Variable)); }
+    catch (const SquirrelError& error) { sq_throwerror(vm, error.desc); return nullptr; }
+}
+void sqplus_variable_handlers(HSQUIRRELVM vm, HSQOBJECT receiver, SQFUNCTION setter, SQFUNCTION getter) {
+    VmScope scope(vm); Borrowed object(receiver);
+    SqPlus::createInstanceSetGetHandlers(object, setter, getter);
+}
 void sqplus_variable_metadata(HSQUIRRELVM vm, HSQOBJECT root,
     const binding::Variable& fields, void* output) {
     VmScope scope(vm); Borrowed borrowed(root);

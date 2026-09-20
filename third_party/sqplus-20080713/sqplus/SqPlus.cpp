@@ -267,6 +267,7 @@ static int getVar(StackHandler & sa,VarRef * vr,void * data) {
       throw SquirrelError(g_msg_throw.s);
     } // if
     return 1;
+#endif // !SQPLUS_HOST_OBJECT_ONLY (instance construction)
   case TypeInfo<SQUserPointer>::TypeID: 
     return sa.Return(data); // The address of member variable, not the variable itself.
   case TypeInfo<ScriptStringVarBase>::TypeID: {
@@ -304,7 +305,6 @@ static int getVar(StackHandler & sa,VarRef * vr,void * data) {
     break;
   } // case
 #endif
-#endif // !SQPLUS_HOST_OBJECT_ONLY
   } // switch
   return SQ_ERROR;
 } // getVar

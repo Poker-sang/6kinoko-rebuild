@@ -99,3 +99,11 @@ __SqTypes lookup/create/type-name publication remain in the source constructor.
 An optional publication hook copies the initialized, aligned value into the old
 byte record before registry callbacks can observe it; it does not perform any
 registration. Contract fixtures now use actual source ClassType objects.
+
+Variable userdata creation and instance handler installation now use createVarRef
+and createInstanceSetGetHandlers. The host supplies its ABI callbacks to the
+latter; default standalone callbacks are unchanged. An optional minimum userdata
+size check preserves an existing malformed slot without casting or replacing it.
+Host variable keys keep the recovered 258-byte capacity. String reads use the
+source getVar const-string arm; legacy string layouts are decoded by the host
+and supplied as a borrowed const char pointer, never overlaid with modern STL.

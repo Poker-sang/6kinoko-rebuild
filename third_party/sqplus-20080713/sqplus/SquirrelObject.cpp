@@ -341,10 +341,12 @@ BOOL SquirrelObject::NewUserData(const SQChar * key,INT size,SQUserPointer * typ
   _SETVALUE_STR_END
 } // SquirrelObject::NewUserData
 
-BOOL SquirrelObject::GetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag) {
+BOOL SquirrelObject::GetUserData(const SQChar * key,SQUserPointer * data,SQUserPointer * typetag,INT minimumSize) {
   BOOL ret = false;
   if (GetSlot(key)) {
-    sq_getuserdata(SquirrelVM::_VM,-1,data,typetag);
+    if (minimumSize && (sq_gettype(SquirrelVM::_VM,-1) != OT_USERDATA ||
+        sq_getsize(SquirrelVM::_VM,-1) < minimumSize)) *data = 0;
+    else sq_getuserdata(SquirrelVM::_VM,-1,data,typetag);
     sq_pop(SquirrelVM::_VM,1);
     ret = true;
   } // if

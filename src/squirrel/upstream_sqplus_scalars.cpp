@@ -72,6 +72,15 @@ SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const Variable& info,
     });
 }
 
+SQInteger sqplus_read_text(HSQUIRRELVM vm, const char* text) {
+    StackHandler stack(vm);
+    SqPlus::VarRef metadata;
+    metadata.varType = nullptr;
+    metadata.m_type = SqPlus::VAR_TYPE_CONST_STRING;
+    metadata.m_access = SqPlus::VAR_ACCESS_READ_ONLY;
+    return SqPlus::ReadScalarForHost(stack, metadata, &text);
+}
+
 SQInteger sqplus_write_scalar(HSQUIRRELVM vm, const Variable& info, void* storage) {
     if (!vm || !storage || sq_gettop(vm) < 3 ||
         (info.flags & (binding::ReadOnly | binding::Constant))) return SQ_ERROR;
