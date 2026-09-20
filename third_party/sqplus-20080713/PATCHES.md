@@ -50,3 +50,12 @@ handles; it never overlays an upstream polymorphic class on legacy storage.
   This preserves store-before-result-push ordering; narrowing and conversions
   still execute the original source body once. The standalone instantiation
   continues to use the original StackHandler.
+
+## Shared declaring-base selection
+
+`SqPlus.cpp` factors the existing typetag / `__ot` branch from
+`getInstanceVarInfo` into `instanceVarPointer`; the original standalone caller
+and `ReadInstanceBaseForHost` call that same source body. It does not construct
+snapshot descriptors in the old byte records or reinterpret the host vtable.
+The host checks metadata and converts `SquirrelError` to the native VM error
+boundary. Field-offset arithmetic and static/constant bypass stay outside.

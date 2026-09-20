@@ -1,9 +1,12 @@
 #pragma once
+#include <squirrel.h>
 // Narrow build integration with the historical SqPlus translation unit.
 // Definitions delegate to its original getVar/setVar scalar switch bodies.
 struct StackHandler;
+class SquirrelObject;
 namespace SqPlus {
 struct VarRef;
+SQUserPointer ReadInstanceBaseForHost(SquirrelObject& instance, const VarRef& metadata);
 int ReadScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value);
 using ScalarCommit = void (*)(void*) noexcept;
 int WriteScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value,

@@ -26,6 +26,10 @@ bool sqplus_create_class(HSQUIRRELVM vm, HSQOBJECT& output, SQUserPointer tag,
                          const SQChar* name, const SQChar* parent);
 // Borrowed receiver/arguments. Only GetValue/GetDelegate/GetSlot results own
 // a new external reference; returned native pointers/strings remain borrowed.
+// Select the declaring base via the snapshot's typetag/__ot branch. This
+// excludes field offsets, static/constants and legacy metadata representation.
+bool sqplus_instance_base(HSQUIRRELVM vm, HSQOBJECT receiver,
+                          SQUserPointer declaring_type, SQUserPointer& result);
 int sqplus_length(HSQUIRRELVM vm, HSQOBJECT receiver);
 bool sqplus_reverse(HSQUIRRELVM vm, HSQOBJECT receiver);
 void sqplus_append(HSQUIRRELVM vm, HSQOBJECT receiver, HSQOBJECT value);

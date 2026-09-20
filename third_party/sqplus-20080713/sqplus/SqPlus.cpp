@@ -12,6 +12,47 @@
 
 namespace SqPlus {
 
+// KINOKO SOURCE FACTORING: share the original declaring-base selection with
+// checked host metadata. Field offset and access policy remain in the caller.
+static char * instanceVarPointer(SquirrelObject & instance,const VarRef * vr) {
+  char * up;
+    SQUserPointer typetag; 
+    instance.GetTypeTag(&typetag);
+
+#if defined(SQ_USE_CLASS_INHERITANCE) 
+    if (typetag != vr->instanceType) {
+      SquirrelObject typeTable = instance.GetValue(SQ_CLASS_OBJECT_TABLE_NAME);
+      up = (char *)typeTable.GetUserPointer(INT((size_t)vr->instanceType)); // <TODO> 64-bit compatible version.
+      if (!up) {
+        throw SquirrelError(_SC("Invalid Instance Type"));
+      }
+    } else {
+      up = (char *)instance.GetInstanceUP(0);
+    } // if
+
+#elif defined(SQ_USE_CLASS_INHERITANCE_SIMPLE)
+    ClassTypeBase *ctb = (ClassTypeBase*)vr->instanceType;
+    up = (char *)instance.GetInstanceUP(0);
+    // Walk base classes until type tag match, adjust for inheritence offset
+    while(ctb && typetag!=ctb) {
+      up = (char*)up - ctb->m_offset;
+      ctb = ctb->m_pbase;
+    }
+    if (!ctb) {
+      throw SquirrelError(_SC("Invalid Instance Type"));
+    }
+#else
+    up = (char *)instance.GetInstanceUP(0);
+#endif
+
+  return up;
+}
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+SQUserPointer ReadInstanceBaseForHost(SquirrelObject & instance,const VarRef & vr) {
+  return instanceVarPointer(instance,&vr);
+}
+#endif
+
 #ifndef SQPLUS_HOST_OBJECT_ONLY
 // Standalone snapshot descriptors require its VM bootstrap and instance factory.
 static int getVarInfo(StackHandler & sa,VarRefPtr & vr) {
@@ -42,34 +83,7 @@ static int getInstanceVarInfo(StackHandler & sa,VarRefPtr & vr,SQUserPointer & d
 
   char * up;
   if (!(vr->m_access & (VAR_ACCESS_STATIC|VAR_ACCESS_CONSTANT))) {
-    SQUserPointer typetag; 
-    instance.GetTypeTag(&typetag);
-
-#if defined(SQ_USE_CLASS_INHERITANCE) 
-    if (typetag != vr->instanceType) {
-      SquirrelObject typeTable = instance.GetValue(SQ_CLASS_OBJECT_TABLE_NAME);
-      up = (char *)typeTable.GetUserPointer(INT((size_t)vr->instanceType)); // <TODO> 64-bit compatible version.
-      if (!up) {
-        throw SquirrelError(_SC("Invalid Instance Type"));
-      }
-    } else {
-      up = (char *)instance.GetInstanceUP(0);
-    } // if
-
-#elif defined(SQ_USE_CLASS_INHERITANCE_SIMPLE)
-    ClassTypeBase *ctb = (ClassTypeBase*)vr->instanceType;
-    up = (char *)instance.GetInstanceUP(0);
-    // Walk base classes until type tag match, adjust for inheritence offset
-    while(ctb && typetag!=ctb) {
-      up = (char*)up - ctb->m_offset;
-      ctb = ctb->m_pbase;
-    }
-    if (!ctb) {
-      throw SquirrelError(_SC("Invalid Instance Type"));
-    }
-#else
-    up = (char *)instance.GetInstanceUP(0);
-#endif
+    up = instanceVarPointer(instance,vr);
 
 #ifdef SQPLUS_SMARTPOINTER_OPT
 #define SQPLUS_SMARTPOINTER_INSTANCE_VARINFO

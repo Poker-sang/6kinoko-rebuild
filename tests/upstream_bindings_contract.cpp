@@ -385,6 +385,46 @@ void scalar_variables(HSQUIRRELVM vm) {
             probe.observed && integer_at(-1) == -128, "commit occurs between original assignment and Return");
     sq_settop(vm, original_top);
 }
+void instance_bases(HSQUIRRELVM vm) {
+    const auto top = sq_gettop(vm);
+    int tag = 0, base_tag = 0, primary = 11, alternate = 29;
+    sq_newclass(vm, SQFalse); sq_settypetag(vm, -1, &tag);
+    sq_pushstring(vm, "__ot", -1); sq_newtable(vm);
+    HSQOBJECT mapping; sq_getstackobj(vm, -1, &mapping);
+    sq_pushinteger(vm, static_cast<INT>(reinterpret_cast<size_t>(&base_tag)));
+    sq_pushuserpointer(vm, &alternate);
+    require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "base mapping entry");
+    require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "base mapping class slot");
+    require(SQ_SUCCEEDED(sq_createinstance(vm, -1)), "receiver instance");
+    sq_setinstanceup(vm, -1, &primary);
+    HSQOBJECT instance; sq_getstackobj(vm, -1, &instance);
+    const auto call_top = sq_gettop(vm);
+    SQUserPointer result = nullptr;
+    require(up::sqplus_instance_base(vm, instance, &tag, result) && result == &primary,
+        "source equal typetag selects primary pointer");
+    require(up::sqplus_instance_base(vm, instance, &base_tag, result) && result == &alternate,
+        "source mismatched typetag selects mapped base pointer");
+    require(sq_gettop(vm) == call_top && SquirrelVM::GetVMPtr() == nullptr,
+        "base resolution restores stack and borrowed VM context");
+    sq_setinstanceup(vm, -1, nullptr);
+    require(up::sqplus_instance_base(vm, instance, &base_tag, result) && result == &alternate,
+        "mapped pointer does not depend on primary pointer");
+    require(!up::sqplus_instance_base(vm, instance, &tag, result) && !result,
+        "host still rejects null matched primary pointer");
+    sq_pushobject(vm, mapping);
+    sq_pushinteger(vm, static_cast<INT>(reinterpret_cast<size_t>(&base_tag)));
+    require(SQ_SUCCEEDED(sq_deleteslot(vm, -2, SQFalse)), "remove base mapping"); sq_pop(vm, 1);
+    require(!up::sqplus_instance_base(vm, instance, &base_tag, result) && !result,
+        "source missing base cannot silently select primary pointer");
+    sq_getlasterror(vm); const char* error = nullptr; sq_getstring(vm, -1, &error);
+    require(error && std::strcmp(error, "Invalid Instance Type") == 0, "source error translated to VM");
+    sq_pop(vm, 1);
+    require(sq_gettop(vm) == call_top && SquirrelVM::GetVMPtr() == nullptr,
+        "source exception restores borrowed object and VM context");
+    require(!up::sqplus_instance_base(vm, empty(), &tag, result) && !result,
+        "non-instance rejected before source accessor");
+    sq_settop(vm, top);
+}
 void cycle() {
     Machine root, independent;
     objects(root.vm, independent.vm);
@@ -393,6 +433,7 @@ void cycle() {
     object_operations(root.vm);
     factories(root.vm);
     scalar_variables(root.vm);
+    instance_bases(root.vm);
     // Child VM shares the original VM's ref table but has a separate stack.
     auto child = sq_newthread(root.vm, 32);
     require(child != nullptr, "child VM");
@@ -401,6 +442,7 @@ void cycle() {
     object_operations(child);
     factories(child);
     scalar_variables(child);
+    instance_bases(child);
     sq_pop(root.vm, 1);
 }
 }

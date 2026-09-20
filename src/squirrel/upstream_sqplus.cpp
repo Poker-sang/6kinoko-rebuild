@@ -1,5 +1,6 @@
 #include "kinoko/upstream_bindings.hpp"
 #include <sqplus.h>
+#include "kinoko/sqplus_source_entries.hpp"
 #include "kinoko/squirrel_variable_record.hpp"
 
 // We use the existing source VM and its bootstrap, not the snapshot's VM owner,
@@ -115,6 +116,25 @@ bool sqplus_create_class(HSQUIRRELVM vm, HSQOBJECT& output, SQUserPointer tag,
     const bool created = SqPlus::CreateClass(vm, target, tag, name, parent) != 0;
     output = target.detach();
     return created;
+}
+bool sqplus_instance_base(HSQUIRRELVM vm, HSQOBJECT receiver,
+                          SQUserPointer declaring_type, SQUserPointer& result) {
+    result = nullptr;
+    if (!vm || receiver._type != OT_INSTANCE) return false;
+    VmScope context(vm);
+    Borrowed instance(receiver);
+    SqPlus::VarRef metadata;
+    metadata.instanceType = static_cast<SqPlus::ClassTypeBase*>(declaring_type);
+    metadata.varType = nullptr;
+    try {
+        result = SqPlus::ReadInstanceBaseForHost(instance, metadata);
+        return result != nullptr;
+    } catch (const SquirrelError& error) {
+        // Native source exceptions cannot escape the recovered C callback ABI.
+        // Preserve the source text while returning the VM's error status.
+        sq_throwerror(vm, error.desc);
+        return false;
+    }
 }
 int sqplus_length(HSQUIRRELVM vm, HSQOBJECT receiver) {
     VmScope context(vm); Borrowed object(receiver);
