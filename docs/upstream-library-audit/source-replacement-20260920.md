@@ -218,3 +218,34 @@ The old Boost factory seeds are still source-reachable through ACT property
 reader virtuals, so none were deleted on linker absence. r45 source-graph.json
 records those paths. Original assembly evidence for Input and layer registration
 is retained under r44/r45. No additional gameplay run is claimed.
+
+## Further checkpoints: r46–r51
+
+- r46 (0cc56d7) recovered original CActLayer registration order and resource
+  publication virtuals. Build succeeded; the new fixture used the wrong embedded
+  script data offsets. r47 (8854f36) corrected the fixture and passed 52/52.
+- r48 (772995a) unified global/runtime ACT script registration through the source
+  Sqrat path, including recovered callback order. Passed 52/52. User subsequently
+  reported portrait mismatches in r45, r47 and r48; the old suite did not cover
+  this visual correspondence.
+- r49 (861ad1c) replaced ACT script read/write with native C++ streams, real
+  Sqrat::Script compilation and sq_writeclosure. Corrected heap filePath cleanup.
+  Build succeeded, but the new assertion script omitted a Squirrel statement
+  newline and failed. No r49 test-pass claim.
+- d0ed615 removed five audited unused Sqrat object helper bodies (94 lines).
+- r50 (c623101) fixed the portrait regression introduced in r35 (988cd99): the
+  recovered LoadTexture auto-size behavior requires the deserializer to clear
+  resource byte +96, as original 446A84 does. Added original nine-portrait DAT
+  coverage; corrected the r49 assertion newline. Passed 53/53; DAT staged.
+- eb5447d recorded the root cause and lifecycle migration rules in
+  portrait-regression-20260920.md before further migration.
+- r51 (1041ae4) removed eight functions/four data records (501 lines), now
+  superseded by the real script serialization path. The pinned c623101 source
+  audit proves no modeled outside references; map absence alone was not used.
+  Passed 53/53; DAT staged and verified. Launch through run_staged.ps1 displayed
+  the title and then a Stage 4 transition. User input was detected, so UI input
+  stopped. This is not a completed first-level gameplay validation and does not
+  establish visual correctness across all transformation modes.
+
+All batches, including failures, are retained. No user-owned game was closed.
+Historical-source and migration-boundary checks passed after the r51 removal.
