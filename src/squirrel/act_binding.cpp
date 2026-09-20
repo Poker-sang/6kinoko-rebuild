@@ -1879,7 +1879,6 @@ int32_t retdec_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
     int32_t parent[2] = { g483, g484 }, global[2] = { g483, g484 };
     int32_t object[5] = { 0, vm, 0, 0, 0 };
     int32_t script = act + 100, result = 0;
-    const char *path = retdec_std_string_data(script + 64);
     root[2] = field<int32_t>(resource_ptr + 156);
     root[3] = field<int32_t>(resource_ptr + 160);
     if (!get_pair(address(root), retdec_std_string_data(act + 16), parent))
@@ -1887,26 +1886,9 @@ int32_t retdec_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
     object[2] = parent[0]; object[3] = parent[1];
     if (!get_pair(address(object), "global", global))
         goto done;
-    if (path && *path) {
-        int32_t environment[3] = { address(kinoko_act_host_symbols()->sq_object_vtable), global[0], global[1] };
-        function_402d40(const_cast<char*>(path), address(environment));
-    } else if (field<uint8_t>(script + 100)) {
-        int32_t bytes = field<int32_t>(script + 92);
-        int32_t size = field<int32_t>(script + 96);
-        int32_t executed;
-        if (field<uint8_t>(script + 101) && bytes && size >= 2 &&
-            field<uint16_t>(bytes) == 0xfafa)
-            executed = retdec_execute_embedded_act_script(vm, script, global);
-        else
-            executed = retdec_execute_act_source_script(vm, script, global);
-        if (!executed) goto done;
-    }
     object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
     object[2] = global[0]; object[3] = global[1];
-    retdec_copy_act_callback(vm, script, 4, address(object), "Init");
-    retdec_copy_act_callback(vm, script, 24, address(object), "Update");
-    retdec_copy_act_callback(vm, script, 44, address(object), "OnCreate");
-    result = 1;
+    result = retdec_register_act_script(script, address(object)) >= 0;
 done:
     retdec_sqrat_release_pair(vm, global);
     retdec_sqrat_release_pair(vm, parent);
@@ -2008,7 +1990,6 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     const char *act_name;
     const char *script_path;
     int32_t global_object[5] = { 0, 0, g483, g484, 1 };
-    int32_t script_environment[3] = { 0, g483, g484 };
     int32_t script_ptr;
     int32_t result = 0;
     int32_t vm;
@@ -2093,55 +2074,17 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
 
     script_ptr = act + 100;
     script_path = retdec_std_string_data(script_ptr + 64);
-    if (script_path != nullptr && *script_path != 0) {
-        script_environment[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
-        script_environment[1] = global_pair[0];
-        script_environment[2] = global_pair[1];
-        retdec_trace_squirrel_name("450f30:script-path",
-                                   address(script_path));
-        function_402d40(const_cast<char*>(script_path),
-                        address(script_environment));
-        global_object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
-        global_object[1] = vm;
-        global_object[2] = global_pair[0];
-        global_object[3] = global_pair[1];
-        retdec_copy_act_callback(vm, script_ptr, 4,
-                                 address(global_object), "Init");
-        retdec_copy_act_callback(vm, script_ptr, 24,
-                                 address(global_object), "Update");
-        retdec_copy_act_callback(vm, script_ptr, 44,
-                                 address(global_object), "OnCreate");
-        retdec_execute_act_callback(script_ptr, 44,
-                                    "act:callback-oncreate");
-    } else if (field<uint8_t>(script_ptr + 100) != 0) {
-        int32_t environment_pair[2] = { global_pair[0], global_pair[1] };
-        int32_t script_result;
-        if (field<uint8_t>(script_ptr + 101) != 0 &&
-            field<int32_t>(script_ptr + 92) != 0 &&
-            field<int32_t>(script_ptr + 96) >= 2 &&
-            field<uint16_t>(field<int32_t>(script_ptr + 92)) ==
-                0xFAFAu) {
-            script_result = retdec_execute_embedded_act_script(
-                vm, script_ptr, environment_pair);
-        } else {
-            script_result = retdec_execute_act_source_script(
-                vm, script_ptr, environment_pair);
-        }
-        retdec_trace_i32("450f30:embedded-script-result", script_result);
-        if (script_result) {
-            global_object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
-            global_object[1] = vm;
-            global_object[2] = global_pair[0];
-            global_object[3] = global_pair[1];
-            retdec_copy_act_callback(vm, script_ptr, 4,
-                                     address(global_object), "Init");
-            retdec_copy_act_callback(vm, script_ptr, 24,
-                                     address(global_object), "Update");
-            retdec_copy_act_callback(vm, script_ptr, 44,
-                                     address(global_object), "OnCreate");
-            retdec_execute_act_callback(script_ptr, 44,
-                                        "act:callback-oncreate");
-        }
+    if (script_path && *script_path)
+        retdec_trace_squirrel_name("450f30:script-path", address(script_path));
+    global_object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
+    global_object[1] = vm;
+    global_object[2] = global_pair[0];
+    global_object[3] = global_pair[1];
+    {
+        // 451214 ignores Register's HRESULT, then invokes any captured OnCreate.
+        const auto registered = retdec_register_act_script(script_ptr, address(global_object));
+        retdec_trace_i32("450f30:embedded-script-result", registered >= 0);
+        retdec_execute_act_callback(script_ptr, 44, "act:callback-oncreate");
     }
 
     /* 466100 only publishes the ACT.  BeginStage is a script-facing
