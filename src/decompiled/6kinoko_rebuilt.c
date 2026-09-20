@@ -1986,7 +1986,6 @@ int32_t function_4422e0(void);
 int32_t function_4429b0(void);
 
 
-int32_t function_442d20(void);
 
 
 int32_t function_442f70(int32_t a1);
@@ -15528,86 +15527,7 @@ int32_t function_4429b0(void) {
 
 
 // Address range: 0x442d20 - 0x442d99
-int32_t function_442d20(void) {
-    // 0x442d20
-    int32_t v1; // 0x442d20
-    int32_t * v2 = (int32_t *)(v1 + 16); // 0x442d24
-    int32_t v3 = *v2;
-    int32_t * v4; // 0x442d20
-    int32_t * v5; // 0x442d20
-    if (v3 == 0) {
-        // 0x442d20
-        v4 = (int32_t *)(v1 + 4);
-        v5 = (int32_t *)(v1 + 8);
-    } else {
-        int32_t * v6 = (int32_t *)(v1 + 12);
-        int32_t * v7 = (int32_t *)(v1 + 8);
-        int32_t * v8 = (int32_t *)(v1 + 4);
-        int32_t v9 = v3;
-        v4 = v8;
-        v5 = v7;
-        while (v9 != 0) {
-            uint32_t v10 = v9 - 1 + *v6; // 0x442d3b
-            uint32_t v11 = *v7; // 0x442d3f
-            int32_t v12 = *(int32_t *)(4 * (v10 - (v10 < v11 ? 0 : v11)) + *v8); // 0x442d4b
-            *(int32_t *)(v12 + 20) = (int32_t)&g23;
-            int32_t v13 = *v2 - 1; // 0x442d51
-            *v2 = v13;
-            int32_t v14 = v13; // 0x442d54
-            if (v13 == 0) {
-                // 0x442d56
-                *v6 = 0;
-                v14 = *v2;
-            }
-            // 0x442d59
-            v9 = v14;
-            v4 = v8;
-            v5 = v7;
-            if (v9 == 0) {
-                // break -> 0x442d5e
-                break;
-            }
-            v4 = v8;
-            v5 = v7;
-        }
-    }
-    // 0x442d5e
-    int32_t v15; // bp-8, 0x442d20
-    int32_t v16 = &v15; // 0x442d23
-    int32_t v17 = *v5; // 0x442d5e
-    if (v17 != 0) {
-        int32_t v18 = v17; // 0x442d68
-        v18--;
-        int32_t v19 = *(int32_t *)(4 * v18 + *v4); // 0x442d69
-        if (v19 != 0) {
-            // 0x442d71
-            *(int32_t *)(v16 - 4) = v19;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        }
-        while (v18 != 0) {
-            // 0x442d65
-            v18--;
-            v19 = *(int32_t *)(4 * v18 + *v4);
-            if (v19 != 0) {
-                // 0x442d71
-                *(int32_t *)(v16 - 4) = v19;
-                _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            }
-        }
-    }
-    int32_t v20 = *v4; // 0x442d80
-    int32_t result = 0; // 0x442d85
-    if (v20 != 0) {
-        // 0x442d87
-        *(int32_t *)(v16 - 4) = v20;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result = &g1224;
-    }
-    // 0x442d90
-    *v4 = 0;
-    *v5 = 0;
-    return result;
-}
+
 
 
 // Address range: 0x442f70 - 0x442fab
