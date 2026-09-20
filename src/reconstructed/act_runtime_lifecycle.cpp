@@ -93,7 +93,7 @@ extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
     view.set(&RuntimeRecord::vm, Address{0});
     view.set(&RuntimeRecord::stage_active, uint8_t{0});
     kinoko::script::pair::reset(object_bytes(view));
-    view.set(&RuntimeRecord::field76, uint32_t{0});
+    view.set(&RuntimeRecord::render_target, uint32_t{0});
     view.set(&RuntimeRecord::next_find_id, uint32_t{0});
     view.set(&RuntimeRecord::wake_time, uint32_t{0});
     view.set(&RuntimeRecord::hidden, uint8_t{0});

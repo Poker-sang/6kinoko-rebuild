@@ -20,7 +20,9 @@ struct RuntimeRecord {
     VectorStorage draw_commands;
     uint32_t unknown56;
     VectorStorage draw_sprites;
-    uint32_t unknown72, field76, unknown80;
+    uint32_t unknown72;
+    Address render_target; // borrowed CActRenderTarget, texture handle at +68
+    uint32_t unknown80;
     Address find_storage; // owned C++ find map, never an emulated STL tree
     uint32_t find_count, unknown92, next_find_id, wake_time;
     uint8_t hidden;
@@ -38,6 +40,7 @@ KINOKO_ACT_FIELD(RuntimeRecord, act, 12);
 KINOKO_ACT_FIELD(RuntimeRecord, lock, 20);
 KINOKO_ACT_FIELD(RuntimeRecord, draw_commands, 44);
 KINOKO_ACT_FIELD(RuntimeRecord, draw_sprites, 60);
+KINOKO_ACT_FIELD(RuntimeRecord, render_target, 76);
 KINOKO_ACT_FIELD(RuntimeRecord, find_storage, 84);
 KINOKO_ACT_FIELD(RuntimeRecord, next_find_id, 96);
 KINOKO_ACT_FIELD(RuntimeRecord, stage_state, 108);

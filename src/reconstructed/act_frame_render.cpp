@@ -8,6 +8,7 @@
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/texture_store.h"
+#include "kinoko/render_target.h"
 #include "kinoko/windows_owner.hpp"
 #include <d3d9.h>
 
@@ -35,6 +36,21 @@ Address method(int32_t object, unsigned index) {
     const auto table = load<Address>(pointer(object));
     return table ? load<Address>(pointer<unsigned char>(table) + index * sizeof(Address)) : 0;
 }
+class DrawTarget final {
+    bool selected_;
+public:
+    DrawTarget(Address target, IDirect3DDevice9* device) : selected_(target != 0) {
+        if (!selected_) return;
+        const RecordView<TextureResourcePrefix> resource(pointer(target));
+        kinoko_set_render_target(resource.get(&TextureResourcePrefix::texture));
+        // 452636/452659 clear the selected target to opaque black before
+        // checking stage/ACT visibility. The original ignores these HRESULTs.
+        if (device) device->Clear(0, nullptr, D3DCLEAR_TARGET, 0xff000000u, 1.0f, 0);
+    }
+    ~DrawTarget() { if (selected_) kinoko_set_render_target(0); }
+    DrawTarget(const DrawTarget&) = delete;
+    DrawTarget& operator=(const DrawTarget&) = delete;
+};
 // Original 452670..452720 / 4529FB..452A84 save these states around the
 // whole ACT pass, including layout virtual calls, not only BitBlt sprites.
 class DrawStates final {
@@ -155,6 +171,7 @@ extern "C" int32_t function_4525d0(int32_t self, float x, float y) {
     const auto trace_index = InterlockedIncrement(&trace_count);
     trace_draw(self, resource, actor_index, trace_index);
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
+    DrawTarget target(resource.get(&RuntimeRecord::render_target), device);
     if (!resource.get(&RuntimeRecord::stage_active)) return 0;
     const auto act = resource.get(&RuntimeRecord::act);
     if (!act) return E_FAIL;

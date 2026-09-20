@@ -56,6 +56,20 @@ extern "C" void kinoko_initialize_texture_cache(void) {
     // remain visible through the decompiled host ABI (4059C0).
     g746=g747=g748=g749=g750=g751=g752=g753=0;
 }
+extern "C" int32_t kinoko_set_render_target(int32_t handle) {
+    // 401E60 selects level zero, releases the temporary surface reference,
+    // and restores the renderer's cached backbuffer for handle zero.
+    auto* device=pointer<IDirect3DDevice9>(g702);
+    if(!device) return E_FAIL;
+    if(!handle) return device->SetRenderTarget(0,pointer<IDirect3DSurface9>(g718));
+    if(handle<0 || handle>=KINOKO_TEXTURE_CAPACITY) return E_INVALIDARG;
+    auto* texture=static_cast<IDirect3DTexture9*>(kinoko_texture_slots[handle].texture);
+    if(!texture) return E_INVALIDARG;
+    kinoko::ComOwner<IDirect3DSurface9> surface;
+    const auto status=texture->GetSurfaceLevel(0,surface.put());
+    if(FAILED(status)) return status;
+    return device->SetRenderTarget(0,surface.get());
+}
 extern "C" int32_t __fastcall kinoko_method_create_render_target(int32_t resource,void*,int32_t width,int32_t height) {
     // 449C10 returns true even if D3DX creation fails; never reinterpret that
     // return as handle != 0. Requested image dimensions remain unsquared.
