@@ -50,6 +50,8 @@ bool sqplus_create_class(HSQUIRRELVM vm, HSQOBJECT& output, SQUserPointer tag,
 // excludes field offsets, static/constants and legacy metadata representation.
 bool sqplus_instance_base(HSQUIRRELVM vm, HSQOBJECT receiver,
                           SQUserPointer declaring_type, SQUserPointer& result);
+bool sqplus_instance_storage(HSQUIRRELVM vm, HSQOBJECT receiver,
+                             const binding::Variable& fields, SQUserPointer& result);
 int sqplus_length(HSQUIRRELVM vm, HSQOBJECT receiver);
 bool sqplus_reverse(HSQUIRRELVM vm, HSQOBJECT receiver);
 void sqplus_append(HSQUIRRELVM vm, HSQOBJECT receiver, HSQOBJECT value);

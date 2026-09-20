@@ -8,6 +8,7 @@ namespace SqPlus {
 struct VarRef;
 int ReadVariableInfoForHost(StackHandler& stack, void*& output);
 SQUserPointer ReadInstanceBaseForHost(SquirrelObject& instance, const VarRef& metadata);
+int ReadInstanceStorageForHost(SquirrelObject& instance, const VarRef& metadata, void*& output);
 int ReadScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value);
 using ScalarCommit = void (*)(void*) noexcept;
 int WriteScalarForHost(StackHandler& stack, VarRef& metadata, void* aligned_value,

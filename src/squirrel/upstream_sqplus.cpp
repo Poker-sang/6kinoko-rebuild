@@ -233,6 +233,21 @@ bool sqplus_instance_base(HSQUIRRELVM vm, HSQOBJECT receiver,
         return false;
     }
 }
+bool sqplus_instance_storage(HSQUIRRELVM vm, HSQOBJECT receiver,
+                             const binding::Variable& fields, SQUserPointer& result) {
+    result = nullptr;
+    if (!vm || receiver._type != OT_INSTANCE) return false;
+    VmScope context(vm);
+    Borrowed instance(receiver);
+    SqPlus::VarRef metadata;
+    std::memcpy(&metadata, &fields, sizeof(metadata));
+    try {
+        return SQ_SUCCEEDED(SqPlus::ReadInstanceStorageForHost(instance, metadata, result));
+    } catch (const SquirrelError& error) {
+        sq_throwerror(vm, error.desc);
+        return false;
+    }
+}
 int sqplus_length(HSQUIRRELVM vm, HSQOBJECT receiver) {
     VmScope context(vm); Borrowed object(receiver);
     return object.Len();

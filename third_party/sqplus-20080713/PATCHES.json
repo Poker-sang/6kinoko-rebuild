@@ -1,7 +1,7 @@
 {
   "sqplus/SqPlus.cpp": {
     "original_sha256": "aa286c545dc3655cdb81658f830d41053cde5e2ba25ba7ee3e90eaf9cce11aac",
-    "adapted_sha256": "e51e88c83ec1f2ecc0b5b8ecaa8f842a0bbc6a18c6111bad0692d95e8ba3a56e"
+    "adapted_sha256": "80ab2694261b70b2bf472cb7f6028bc0a30e4e4357b68b7c3daac65ed0e94c7b"
   },
   "sqplus/SqPlusFunctionCallImpl.h": {
     "original_sha256": "b802b88fc9b0155adbd060009c2c881ccf32e45fbcccd9c0a2b3bb4b87310efe",

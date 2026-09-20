@@ -13,7 +13,7 @@
 namespace SqPlus {
 
 // KINOKO SOURCE FACTORING: share the original declaring-base selection with
-// checked host metadata. Field offset and access policy remain in the caller.
+// checked host metadata. Storage selection below shares the original offset policy.
 static char * instanceVarPointer(SquirrelObject & instance,const VarRef * vr) {
   char * up;
     SQUserPointer typetag; 
@@ -50,6 +50,34 @@ static char * instanceVarPointer(SquirrelObject & instance,const VarRef * vr) {
 #ifdef SQPLUS_HOST_OBJECT_ONLY
 SQUserPointer ReadInstanceBaseForHost(SquirrelObject & instance,const VarRef & vr) {
   return instanceVarPointer(instance,&vr);
+}
+#endif
+
+// Shared original instance-storage selection; checked hosts reject a null native
+// receiver before applying an offset. Standalone source behavior is unchanged.
+static int instanceVarStorage(SquirrelObject & instance,const VarRef * vr,
+                              SQUserPointer & data,bool requireNative) {
+  char * up;
+  if (!(vr->m_access & (VAR_ACCESS_STATIC|VAR_ACCESS_CONSTANT))) {
+    up = instanceVarPointer(instance,vr);
+    if (requireNative && !up) return SQ_ERROR;
+
+#ifdef SQPLUS_SMARTPOINTER_OPT
+#define SQPLUS_SMARTPOINTER_INSTANCE_VARINFO
+#include "SqPlusSmartPointer.h"
+#endif
+
+    up += (size_t)vr->offsetOrAddrOrConst;         // Offset
+  } else {
+    up = (char *)vr->offsetOrAddrOrConst; // Address
+  } // if
+  data = up;
+  return SQ_OK;
+}
+#ifdef SQPLUS_HOST_OBJECT_ONLY
+int ReadInstanceStorageForHost(SquirrelObject & instance,const VarRef & vr,
+                               SQUserPointer & data) {
+  return instanceVarStorage(instance,&vr,data,true);
 }
 #endif
 
@@ -92,21 +120,7 @@ static int getInstanceVarInfo(StackHandler & sa,VarRefPtr & vr,SQUserPointer & d
   }
   vr = (VarRefPtr)ivrData;
 
-  char * up;
-  if (!(vr->m_access & (VAR_ACCESS_STATIC|VAR_ACCESS_CONSTANT))) {
-    up = instanceVarPointer(instance,vr);
-
-#ifdef SQPLUS_SMARTPOINTER_OPT
-#define SQPLUS_SMARTPOINTER_INSTANCE_VARINFO
-#include "SqPlusSmartPointer.h"
-#endif
-
-    up += (size_t)vr->offsetOrAddrOrConst;         // Offset
-  } else {
-    up = (char *)vr->offsetOrAddrOrConst; // Address
-  } // if
-  data = up;
-  return SQ_OK;
+  return instanceVarStorage(instance,vr,data,false);
 } // getInstanceVarInfo
 
 

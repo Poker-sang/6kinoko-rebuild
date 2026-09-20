@@ -115,15 +115,11 @@ extern "C" int32_t retdec_resolve_instance_var(int32_t vm_address, int32_t top,
     int32_t metadata = 0;
     if (function_4aa5e0(context, &metadata) || !metadata) return 0;
     const auto info = load<Variable>(metadata);
-    if (info.flags & (Constant | Static)) *output_source = info.offset;
-    else {
-        HSQOBJECT instance{};
-        sq_getstackobj(vm, 1, &instance);
-        SQUserPointer native = nullptr;
-        if (!upstream::sqplus_instance_base(vm, instance,
-            pointer<void>(info.instance_type), native)) return 0;
-        *output_source = add_address(address(native), info.offset);
-    }
+    HSQOBJECT instance{};
+    sq_getstackobj(vm, 1, &instance);
+    SQUserPointer storage = nullptr;
+    if (!upstream::sqplus_instance_storage(vm, instance, info, storage)) return 0;
+    *output_source = address(storage);
     *output_metadata = metadata;
     return 1;
 }

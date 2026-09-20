@@ -114,3 +114,9 @@ RawGetUserData's optional minimum-size validation rejects malformed byte records
 before callers can interpret them. The original source error text and successful
 userdata identity remain unchanged. The table setter's separate silent lookup
 continues to preserve the existing VM error, pending original-call verification.
+
+Instance storage selection is shared with the original getInstanceVarInfo body:
+static/constant addresses, declaring-base selection, optional smart-pointer
+unwrapping and field offsets execute in SqPlus.cpp. The host copies its packed
+metadata into an aligned VarRef and requests null-native rejection before offset
+arithmetic; the standalone caller retains its original unchecked behavior.
