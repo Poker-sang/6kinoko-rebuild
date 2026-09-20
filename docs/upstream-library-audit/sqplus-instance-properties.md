@@ -12,7 +12,7 @@ checks exact pointers, getter/setter results, guard words, null primary
 pointer, missing mappings and the Static/Constant bypass. It is committed
 before the fix to demonstrate the old behavior fails without real game data.
 
-The correction will call the original SqPlus receiver-selection body, factored
+The correction calls the original SqPlus receiver-selection body, factored
 within its source translation unit. The host must still keep checked metadata,
 32-bit modulo field-address calculation and its null-primary-pointer guard.
 The snapshot native exception is converted at the host boundary to the same

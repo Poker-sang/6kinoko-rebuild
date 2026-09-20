@@ -120,8 +120,11 @@ module is imported simply to replace an already-retired component. Boost RTTI
 comments alone are not an executing call path. Remaining CRT exception
 placeholders are a separate problem and must not be hidden by that deletion.
 
-No original EXE/three DAT gameplay comparison was run here. CI does not verify
-visual parity, actual audio output or the AGENTS first-stage/jump/monster smoke.
-Keep EXE-relative DAT staging and perform that limited check before accepting
-gameplay parity. This document is an implementation audit, not a completion
-certificate for the entire library/engine migration.
+Local Windows acceptance was completed on 2026-09-20 at `8f9756da`: both
+configurations passed all 52 contracts with the original DAT available, and
+the user confirmed both short gameplay runs were normal. See
+[the local acceptance record](local-acceptance-20260920.md) for exact commits,
+artifact locations, observed versus user-confirmed checks, and limitations.
+CI alone does not verify gameplay or audio. This closes the local acceptance
+gap for this PR's upstream integration; it does not certify every remaining
+library/engine ABI boundary or exhaustive original-game parity.
