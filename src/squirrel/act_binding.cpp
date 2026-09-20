@@ -1,3 +1,4 @@
+#include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
@@ -2456,4 +2457,110 @@ extern "C" int32_t kinoko_sqrat_call_integer1(int32_t a1) {
         argument);
     sq_pushinteger(kinoko_vm(a1), result);
     return 1;
+}
+
+
+namespace {
+int32_t string_property_set(int32_t vm) {
+    int32_t offset=0;
+    const int32_t object=retdec_c2dlayout_property_offset(vm,&offset);
+    if(!object) return 0;
+    SQInteger value=0;
+    if(!kinoko::script::upstream::sqrat_integer_argument(kinoko_vm(vm),2,value)) return 0;
+    if(offset==88) value=std::clamp(value,1,127);
+    else if(offset==92) value=(std::max)(value,1);
+    else if(offset>=96 && offset<=116) value=std::clamp(value,0,255);
+    else if(offset==120 || offset==124) value=(std::max)(value,0);
+    field<int32_t>(object+offset)=value;
+    return 0;
+}
+int32_t string_value_get(int32_t vm) {
+    int32_t offset=0;
+    const int32_t object=retdec_c2dlayout_property_offset(vm,&offset);
+    if(!object) return 0;
+    sq_pushstring(kinoko_vm(vm),kinoko::legacy::StringView(pointer<void>(object+offset)).data(),-1);
+    return 1;
+}
+int32_t string_face_set(int32_t vm) {
+    int32_t offset=0;
+    const int32_t object=retdec_c2dlayout_property_offset(vm,&offset);
+    const SQChar* value=nullptr;
+    if(!object || SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&value))) return 0;
+    static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
+    if(!*value) value=face;
+    kinoko::legacy::StringView(pointer<void>(object+60)).assign(value,static_cast<uint32_t>(std::strlen(value)));
+    return 0;
+}
+template<int Method> int32_t string_method(int32_t vm) {
+    const auto machine=kinoko_vm(vm);
+    int32_t object=0;
+    if(SQ_FAILED(sq_getinstanceup(machine,1,reinterpret_cast<SQUserPointer*>(&object),nullptr)) || !object)
+        return sq_throwerror(machine,"invalid CStringLayout receiver");
+    if constexpr(Method==0 || Method==2 || Method==3 || Method==4 || Method==5)
+        if(sq_gettop(machine)<2) return sq_throwerror(machine,"missing CStringLayout argument");
+    try {
+        int32_t result=0;
+        if constexpr(Method==0 || Method==4) {
+            const SQChar* text=nullptr;
+            if(sq_gettype(machine,2)!=OT_NULL && SQ_FAILED(sq_getstring(machine,2,&text)))
+                return sq_throwerror(machine,"expected text");
+            if constexpr(Method==0) result=kinoko_string_push_back(object,text);
+            else { sq_pushinteger(machine,kinoko_string_character_bytes(text));return 1; }
+        } else if constexpr(Method==1) result=kinoko_string_clear(object);
+        else if constexpr(Method==2 || Method==3) {
+            SQInteger count=0;
+            if(!kinoko::script::upstream::sqrat_integer_argument(machine,2,count)) return sq_throwerror(machine,"expected count");
+            result=kinoko_string_pop(object,count,Method==2);
+        } else if constexpr(Method==5) {
+            int32_t source=0;
+            if(sq_gettype(machine,2)!=OT_NULL && SQ_FAILED(sq_getinstanceup(machine,2,reinterpret_cast<SQUserPointer*>(&source),nullptr)))
+                return sq_throwerror(machine,"expected CStringLayout");
+            result=kinoko_string_replicate(object,source);
+        } else result=kinoko_string_mark_rebuild(object);
+        sq_pushbool(machine,result!=0);return 1;
+    } catch(...) { return sq_throwerror(machine,"CStringLayout allocation failed"); }
+}
+}
+
+// 43EDA0 publishes a non-owning Sqrat class. Actual method/descriptor creation
+// uses the vendored Sqrat bridge; no original code addresses or class registry.
+extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,int32_t* out) {
+    if(!vm || !root || !out) return 0;
+    if(get_pair(root,"CStringLayout",out) && out[0]==0x08004000) return 1;
+    retdec_sqrat_release_pair(vm,out);
+    const int32_t top=sq_gettop(kinoko_vm(vm));
+    int32_t setters[2]={g483,g484},getters[2]={g483,g484};
+    bool ok=retdec_sqrat_new_class(vm,out) && retdec_sqrat_new_table(vm,setters) && retdec_sqrat_new_table(vm,getters) &&
+        retdec_sqrat_initialize_class(vm,out,setters,getters,address(retdec_sqrat_no_constructor),
+            address(function_41e2c0),address(function_41e260),address(function_431650));
+    struct Property { const char* name; int32_t offset,kind; bool readonly; };
+    static const Property properties[]={
+        {"alpha",152,1,false},{"blend",156,0,false},{"alignment",132,0,false},
+        {"scaleX",136,1,false},{"scaleY",140,1,false},{"wordBreakWidth",144,0,false},
+        {"stText",4,3,false},{"stFontFaceName",60,3,false},{"fontHeight",88,0,false},
+        {"fontWeight",92,0,false},{"colorR",96,0,false},{"colorG",100,0,false},
+        {"colorB",104,0,false},{"baseR",108,0,false},{"baseG",112,0,false},{"baseB",116,0,false},
+        {"charactorSpace",120,0,false},{"lineSpace",124,0,false},{"addEdge",128,2,false},
+        {"cursorX",204,0,true},{"cursorY",208,0,true},{"queueCount",48,0,true}
+    };
+    for(const auto& p:properties) {
+        const auto getter=p.kind==1?address(retdec_c2dlayout_get_float):p.kind==2?address(retdec_cact_layer_get_bool):
+            p.kind==3?address(string_value_get):address(retdec_c2dlayout_get_int);
+        const auto setter=p.kind==1?address(retdec_c2dlayout_set_float):p.kind==2?address(retdec_cact_layer_set_bool):
+            p.kind==3?(p.offset==60?address(string_face_set):address(retdec_cact_layer_set_string)):address(string_property_set);
+        if(ok) ok=retdec_sqrat_set_offset_closure(vm,getters,p.name,p.offset,getter) &&
+            (p.readonly || retdec_sqrat_set_offset_closure(vm,setters,p.name,p.offset,setter));
+    }
+    struct Method { const char* name; int32_t (*call)(int32_t); };
+    static const Method methods[]={
+        {"PushBack",string_method<0>},{"Clear",string_method<1>},{"PopFront",string_method<2>},
+        {"PopBack",string_method<3>},{"GetCharacterBytes",string_method<4>},
+        {"ReplicateText",string_method<5>},{"Rebuild",string_method<6>}
+    };
+    for(const auto& m:methods) if(ok) ok=retdec_sqrat_set_native_closure(vm,out,m.name,address(m.call),nullptr,0);
+    if(ok) ok=retdec_sqrat_set_pair(vm,pointer<const int32_t>(root+8),"CStringLayout",out);
+    retdec_sqrat_release_pair(vm,getters);retdec_sqrat_release_pair(vm,setters);
+    retdec_sqrat_trim_stack(vm,top);
+    if(!ok) retdec_sqrat_release_pair(vm,out);
+    return ok;
 }

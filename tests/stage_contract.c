@@ -4367,6 +4367,44 @@ static int test_input_copy(void) {
     return 0;
 }
 
+static int test_string_layout_binding(int32_t vm,int32_t* root) {
+    int32_t object[65]={0},copy[65]={0},klass[2]={g483,g484},instance[2]={g483,g484};
+    CHECK(kinoko_construct_string_layout(PTR(object))==PTR(object));
+    CHECK(kinoko_construct_string_layout(PTR(copy))==PTR(copy));
+    int32_t top=function_48aa20(vm);
+    CHECK(kinoko_publish_string_layout_class(vm,PTR(root),klass));
+    CHECK(retdec_create_bound_instance(vm,root+2,"StringProbe",klass,PTR(object),instance));
+    retdec_sqrat_release_pair(vm,instance);
+    CHECK(execute_source(vm,root+2,
+        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;"
+        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";"
+        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";"
+        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";"
+        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";"
+        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";"
+        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";"
+        "if(!StringProbe.Rebuild()) throw \"rebuild\";"));
+    CHECK(object[12]==1 && ((char*)(object+8))[0]=='A'); /* original ASCII PopFront erases zero */
+    CHECK(((unsigned char*)object)[228]==1);
+    int32_t atlas[109]={0};atlas[108]=2;
+    int32_t* map=(int32_t*)calloc(8,4);CHECK(map);
+    object[45]=PTR(map);object[46]=8;object[47]=7;object[48]=2;
+    for(int i=0;i<2;++i) { int slot=(7+i)%8;map[slot]=PTR(calloc(1,256));CHECK(map[slot]);
+        ((int32_t*)(intptr_t)map[slot])[0]=10+i;((int32_t*)(intptr_t)map[slot])[5]=PTR(&g25);
+        ((int32_t*)(intptr_t)map[slot])[63]=PTR(atlas); }
+    CHECK(kinoko_string_replicate(PTR(copy),PTR(object))==1 && atlas[108]==4 && copy[48]==2);
+    CHECK(copy[45]!=object[45] && copy[44]!=object[44]);
+    CHECK(((int32_t*)(intptr_t)((int32_t*)(intptr_t)copy[45])[0])[0]==10);
+    CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
+    CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && copy[48]==2);
+    kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
+    CHECK(execute_source(vm,root+2,"delete ::StringProbe;"));
+    retdec_sqrat_release_pair(vm,klass);kinoko_clear_string_layout(PTR(object));
+    CHECK(atlas[108]==0 && function_48aa20(vm)==top);
+    puts("PASS: actual Sqrat CStringLayout methods, property clamps, pending-text quirk and borrowed atlas replication");
+    return 0;
+}
+
 static int test_string_layout_lifetime(void) {
     int32_t layout[65];memset(layout,0xa5,sizeof(layout));
     CHECK(kinoko_construct_string_layout(PTR(layout))==PTR(layout));
@@ -5525,6 +5563,7 @@ int main(int argc, char **argv) {
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
     CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK(test_string_layout_binding(vm, root)==0);
     CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_receiver_operations(vm, root) == 0);
     CHECK(test_thread_receivers(vm, root) == 0);
