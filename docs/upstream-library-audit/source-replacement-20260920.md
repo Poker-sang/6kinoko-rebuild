@@ -663,3 +663,6 @@ retired-layer-key-readers.json audits 13 functions and nine data records,
 including the obsolete property template/shared-pointer machinery. The native
 archive loader still accepts only its established 2D/map layout types; the old
 generic type registry and CStringLayout rendering remain unfinished work.
+
+R74 (5e5560c) built successfully, with all three DAT files staged and hash
+verified. Contracts compiled only; no automated tests or game sessions ran.
