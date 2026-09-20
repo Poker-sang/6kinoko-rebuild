@@ -1,0 +1,117 @@
+{
+  "source_commit": "7fe22a6abe79da234e9a2f5bfed9ef65b016eded",
+  "implementation_file": "src/platform/retdec_runtime_compat.cpp",
+  "implementation_sha256": "a5939b4bbfb6cf46d8290ca40e7b2ee04a0042b7b1d1d0aa6ad7c54b815dbf37",
+  "scanned_file_count": 663,
+  "scanned_source_sha256": "cb68ce78f266de98c8286761aff944223f0bada9b0062f2dbdae5ec0a1d13d4a",
+  "maps": [
+    {
+      "name": "kinoko.map",
+      "sha256": "3634098c06864ab12394fc051ead3b3fc4ef3c7f63e2f9133c60f510a6b73adb"
+    }
+  ],
+  "candidates": [
+    {
+      "name": "_3f___ArrayUnwind_40__40_YGXPAXIHP6EX0_40_Z_40_Z",
+      "line": 190,
+      "lines": 12,
+      "body_sha256": "4ad61bf9d9d6f64a6398e13ff54baaa4ef1e5118cbe6aed4c650e7900063e80b"
+    },
+    {
+      "name": "___report_gsfailure",
+      "line": 207,
+      "lines": 1,
+      "body_sha256": "1e16fc4e765f05a87b68d069f35fa446676400aff73abbe98efdf1b3fc25d6a0"
+    }
+  ],
+  "retained": [
+    {
+      "name": "Direct3DCreate9",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r98-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "CoInitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoUninitialize",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/audio_runtime.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "CoCreateInstance",
+      "source_references": [
+        "src/reconstructed/audio_runtime.cpp",
+        "src/reconstructed/direct_input.cpp"
+      ],
+      "local_references": 3,
+      "linked": []
+    },
+    {
+      "name": "timeGetTime",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_frame_update.cpp",
+        "src/reconstructed/act_resource.cpp",
+        "src/reconstructed/audio_runtime.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/global_registration.cpp",
+        "tests/act_frame_contract.cpp",
+        "tests/stage_contract.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r98-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "timeBeginPeriod",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 1,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r98-quiet\\kinoko.map"
+      ]
+    },
+    {
+      "name": "_vsprintf_compat",
+      "source_references": [
+        "src/decompiled/6kinoko_rebuilt.c"
+      ],
+      "local_references": 0,
+      "linked": []
+    },
+    {
+      "name": "_3f__3f_2_40_YAPAXI_40_Z",
+      "source_references": [
+        "include/kinoko/act_host.h",
+        "src/decompiled/6kinoko_rebuilt.c",
+        "src/reconstructed/act_layer_access.cpp",
+        "src/reconstructed/act_lifetime.cpp",
+        "src/squirrel/act_binding.cpp",
+        "src/squirrel/squirrel_vm_bootstrap.cpp",
+        "tests/act_frame_contract.cpp"
+      ],
+      "local_references": 0,
+      "linked": [
+        "build-runs\\pr7-complete-20260920-r98-quiet\\kinoko.map"
+      ]
+    }
+  ]
+}
