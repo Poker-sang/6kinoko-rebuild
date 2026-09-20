@@ -64,3 +64,32 @@ This is a source-graph boundary proof, not proof for arbitrary computed pointers
 Remaining game-specific Sqrat/SqPlus registration, native descriptors, legacy
 Boost blocks and CRT exception/RTTI compatibility are separate migration work;
 this change does not represent those adapters as upstream implementations.
+
+## Further source migration (continuation)
+
+- f4e5eb6/e125388: Actor ownership uses actual Boost counted objects; the manual
+  fallback and retired control vtable were removed. r7 quiet: 52/52.
+- e4560fe: source SqPlus native-instance/hierarchy/function factories. r8: 52/52.
+- 8351dc0/94a19e4: actual ClassType descriptors replace fabricated descriptor
+  records. The pinned closed-component audit removes 11 functions and 8 tables.
+  r9 quiet: 52/52.
+- c9054f2: source VarRef constructor registers metadata using a borrowed root.
+  r10 quiet: 52/52.
+- 94aa6af: source variable creation/handlers/string reads. r11 quiet: 52/52.
+- 085c2e1: source getVarInfo metadata lookup. r12 quiet: 52/52.
+- 002cc97: IDA recovered explicit Actor/Camera/MapManager copy receivers. The
+  receiverless SqPlus assignment implementation is deleted. Actor assignment
+  retains/releases actual Boost controls rather than manually editing counts.
+  r13 quiet: 52/52, including real-VM Actor assignment/self-assignment with
+  strong/weak counts, object references and the untouched +372 field checked.
+
+Each batch is isolated under build-runs/pr7-complete-20260920-rN-quiet and the
+matching runtime-builds directory, with source-commit.txt and configure/build/
+ctest logs preserved. No gameplay smoke for this continuation is claimed yet.
+
+Remaining work includes old Sqrat registration/constructor paths still referenced
+by game vtables, additional recovered property-control tables, and incomplete
+CRT/game-copy compatibility. An attempted dead-code audit correctly rejected
+4A95C0 because game copy functions still referenced it; those callers were fixed,
+not ignored. Input's original ClassType copy calls 46EBD0 (IDA), so the retained
+no-op game callback is not evidence of a completed copy implementation.
