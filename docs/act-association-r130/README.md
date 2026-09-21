@@ -57,4 +57,14 @@ exactly one layout bind. These tests are compiled only, not executed.
 Existing parser allocation/size guards, class factory coverage, exception behavior
 and clone-specific mapping are not claimed fully original by this batch. In
 particular native container representation differs from historical MSVC storage.
-Build provenance and DAT hashes will be recorded after a committed quiet build.
+## Build delivery
+
+Source commit: c43373bcc53507021470449316b40712f7db49fc. The independent
+Release Win32 quiet build in build-runs/act-association-r130-quiet completed
+successfully (all targets, including regression contracts). No tests or game
+were executed; runtime behavior remains for user verification.
+
+Executable: runtime-builds/act-association-r130-quiet/kinoko_retdec_rebuild.exe.
+The three original DAT files were copied beside it by tools/stage_dat.ps1,
+with sizes and SHA256 verified. Exact artifacts and log paths are recorded in
+artifacts.json. Previous build and runtime artifacts are preserved.
