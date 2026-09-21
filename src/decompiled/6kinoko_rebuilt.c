@@ -10,7 +10,6 @@
 #include "kinoko/archive_random.h"
 #include "kinoko/scene_queue.h"
 #include "kinoko/timer_events.h"
-#include "kinoko/legacy_container_memory.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/legacy_string.h"
@@ -1757,7 +1756,6 @@ int32_t function_41eff0(int32_t a1);
 
 
 
-int32_t function_4214a0(int32_t a1, int32_t a2, int32_t * a3);
 
 
 
@@ -13773,7 +13771,7 @@ int32_t function_465f70(void) {
 
 // Address range: 0x466050 - 0x466082
 int32_t function_466050(void) {
-    int32_t v1 = *(int32_t *)g603; // 0x466056
+    int32_t v1 = kinoko_stage_list_first(); // 0x466056
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
 
@@ -13792,7 +13790,7 @@ int32_t function_466050(void) {
     int32_t v2 = v1; // 0x46605a
     int32_t result = g603;
     while (v2 != g603) {
-        int32_t object_list_node = *(int32_t *)(intptr_t)(v2 + 8);
+        int32_t object_list_node = kinoko_stage_list_value(v2);
         int32_t resource = object_list_node != 0
             ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
         if (resource != 0) {
@@ -13817,7 +13815,7 @@ int32_t function_466050(void) {
                 retdec_trace_i32("466050:update-result", result);
         }
         // 0x466060
-        v2 = *(int32_t *)(intptr_t)v2;
+        v2 = kinoko_stage_list_next(v2);
     }
     // 0x466080
     return result;
@@ -13830,28 +13828,28 @@ int32_t function_466090(void) {
     if (trace_index == 1) {
         retdec_trace_i32("render:g603", g603);
         retdec_trace_i32("render:g603-first",
-                         g603 != 0 ? *(int32_t *)(uintptr_t)g603 : 0);
+                         kinoko_stage_list_first());
     }
     if (g603 == 0)
         return 0;
-    int32_t v1 = *(int32_t *)g603; // 0x466096
+    int32_t v1 = kinoko_stage_list_first(); // 0x466096
     if (v1 == g603) {
         // 0x4660b5
         return g603;
     }
-    int32_t object_list_node = *(int32_t *)(intptr_t)(v1 + 8);
+    int32_t object_list_node = kinoko_stage_list_value(v1);
     int32_t resource = object_list_node != 0
         ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
     int32_t v2 = v1; // 0x46609a
     int32_t result = resource != 0 ? function_4522f0(resource) : 0;
-    v2 = *(int32_t *)v2;
+    v2 = kinoko_stage_list_next(v2);
     while (v2 != g603) {
         // 0x4660a0
-        object_list_node = *(int32_t *)(intptr_t)(v2 + 8);
+        object_list_node = kinoko_stage_list_value(v2);
         resource = object_list_node != 0
             ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
         result = resource != 0 ? function_4522f0(resource) : 0;
-        v2 = *(int32_t *)v2;
+        v2 = kinoko_stage_list_next(v2);
     }
     // 0x4660b5
     return result;
@@ -13864,15 +13862,15 @@ int32_t function_4660c0(void) {
     if (trace_index == 1) {
         retdec_trace_i32("render:g603-float", g603);
         retdec_trace_i32("render:g603-float-first",
-                         g603 != 0 ? *(int32_t *)(uintptr_t)g603 : 0);
+                         kinoko_stage_list_first());
     }
     if (g603 == 0)
         return 0;
-    int32_t node = *(int32_t *)g603; // 0x4660c6
+    int32_t node = kinoko_stage_list_first(); // 0x4660c6
     int32_t result = g603;
     int32_t node_index = 0;
     while (node != g603) {
-        int32_t object_list_node = *(int32_t *)(intptr_t)(node + 8);
+        int32_t object_list_node = kinoko_stage_list_value(node);
         int32_t resource = object_list_node != 0
             ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
         if (resource != 0) {
@@ -13893,7 +13891,7 @@ int32_t function_4660c0(void) {
             result = function_4525d0(resource, 0.0f, 0.0f);
         }
         ++node_index;
-        node = *(int32_t *)(intptr_t)node;
+        node = kinoko_stage_list_next(node);
     }
     // 0x4660f1
     return result;
@@ -13972,29 +13970,8 @@ int32_t function_466100(int32_t a1) {
 
     if (g603 == 0)
         return (int32_t)(intptr_t)object_list_node;
-    if (trace_index <= 8) {
-        retdec_trace_i32("466100:list-before", g603);
-        retdec_trace_i32("466100:list-tail",
-                         *(int32_t *)(intptr_t)(g603 + 4));
-    }
-    list_value = (int32_t)(intptr_t)object_list_node;
-    list_node = function_4214a0(
-        g603, *(int32_t *)(intptr_t)(g603 + 4), &list_value);
-    if (trace_index <= 8)
-        retdec_trace_i32("466100:list-node", list_node);
-    if (list_node != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(list_node + 4)) =
-            list_node;
-        *(int32_t *)(intptr_t)(g603 + 4) = list_node;
-        ++g604;
-        if (trace_index <= 8) {
-            retdec_trace_i32("466100:list-first",
-                             *(int32_t *)(intptr_t)g603);
-            retdec_trace_i32("466100:list-tail-after",
-                             *(int32_t *)(intptr_t)(g603 + 4));
-            retdec_trace_i32("466100:list-count", g604);
-        }
-    }
+    list_node=kinoko_stage_list_append((int32_t)(intptr_t)object_list_node);
+    if (trace_index<=8) retdec_trace_i32("466100:list-node",list_node);
     return (int32_t)(intptr_t)object_list_node;
 }
 
@@ -19711,39 +19688,6 @@ int32_t function_4d4400(void) {
 
 
 // Address range: 0x4d47f0 - 0x4d4838
-int32_t function_4d47f0(void) {
-    int32_t * v1 = (int32_t *)g603; // 0x4d47f6
-    int32_t v2 = *v1; // 0x4d47f6
-    *v1 = g603;
-    int32_t v3 = g603; // 0x4d47fa
-    *(int32_t *)(v3 + 4) = v3;
-    g604 = 0;
-    if (v2 == g603) {
-        // 0x4d4830
-        int32_t v4; // 0x4d47f0
-        *(int32_t *)(v4 - 4) = v2;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        return &g1224;
-    }
-    // 0x4d4817
-    int32_t v5; // bp-4, 0x4d47f0
-    int32_t v6 = &v5; // 0x4d4817
-    int32_t v7 = *(int32_t *)v2; // 0x4d4818
-    *(int32_t *)(v6 - 4) = v2;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    while (v7 != g603) {
-        int32_t v8 = v7;
-        v7 = *(int32_t *)v8;
-        *(int32_t *)(v6 - 4) = v8;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4d4830
-    *(int32_t *)v6 = g603;
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    return &g1224;
-}
-
-
 // Address range: 0x4d4850 - 0x4d485a
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
 void retdec_msvc_Finitlocks__YAXXZ7(void) {

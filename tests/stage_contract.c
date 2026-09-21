@@ -3227,17 +3227,14 @@ static int32_t __fastcall release_stage_owner(void *self, void *unused, int32_t 
 
 static int test_global_stage_cleanup(void) {
     int32_t saved_head = g603, saved_count = g604;
-    int32_t *head = calloc(3, 4), *tail = head;
     void *vtable[5] = {NULL, NULL, NULL, NULL, release_stage_owner};
-    CHECK(head);
-    head[0] = head[1] = PTR(head);
-    g603 = PTR(head);
-    g604 = 0;
+    kinoko_stage_list_construct();
+    const int32_t identity=g603;
     stage_owner_releases = 0;
     for (int i = 0; i < 2; ++i) {
-        int32_t *node = calloc(3, 4), *owner = calloc(3, 4);
+        int32_t *owner = calloc(3, 4);
         int32_t *source = calloc(2, 4), *runtime = calloc(48, 4);
-        CHECK(node && owner && source && runtime);
+        CHECK(owner && source && runtime);
         source[0] = PTR(vtable);
         source[1] = PTR(owner);
         owner[0] = PTR(source);
@@ -3270,21 +3267,14 @@ static int test_global_stage_cleanup(void) {
         runtime[4] = PTR(malloc(24));
         runtime[11] = PTR(malloc(36));
         runtime[12] = runtime[11];
-        node[0] = PTR(head);
-        node[1] = PTR(tail);
-        node[2] = PTR(owner);
-        tail[0] = PTR(node);
-        head[1] = PTR(node);
-        tail = node;
-        ++g604;
+        kinoko_stage_list_append(PTR(owner));
     }
-    CHECK(function_465f70() == PTR(head));
-    CHECK(stage_owner_releases == 2 && g604 == 0);
-    CHECK(head[0] == PTR(head) && head[1] == PTR(head));
-    CHECK(function_465f70() == PTR(head) && stage_owner_releases == 2);
-    g603 = saved_head;
-    g604 = saved_count;
-    free(head);
+    CHECK(function_465f70()==identity);
+    CHECK(stage_owner_releases==2 && g604==0);
+    CHECK(kinoko_stage_list_first()==identity);
+    CHECK(function_465f70()==identity && stage_owner_releases==2);
+    kinoko_stage_list_destroy();
+    g603=saved_head;g604=saved_count;
     puts("PASS: global stage owners, runtime receivers, shared ACT ownership and repeated clear");
     return 0;
 }
@@ -3450,9 +3440,8 @@ static int test_texture_lifetime(void) {
 
 static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     int32_t closure[3], actors[2];
-    int32_t act_head[3] = {0};
-    act_head[0] = act_head[1] = PTR(act_head);
-    g603 = PTR(act_head);
+    const int32_t saved_stages=g603,saved_stage_count=g604;
+    kinoko_stage_list_construct();
     CHECK(execute_source(vm, root + 2,
         "maskActors <- [];\n"
         "function InitMaskActor(group) { updateGroup=group; user={steps=0}; vx=1.0; "
@@ -3485,6 +3474,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     function_469900();
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
     CHECK(vm_failures == 0);
+    kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
 }
@@ -5694,10 +5684,6 @@ static int test_actor_handle_lookup(void) {
     *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
     CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e0,0)==PTR(manager));
     CHECK(pool_delete_calls==2 && manager[0]==PTR(&g28) && manager[1]==0);
-    node=function_4214a0(0x1111,0x2222,&value);CHECK(node);
-    CHECK(((int32_t*)(intptr_t)node)[0]==0x1111);
-    CHECK(((int32_t*)(intptr_t)node)[1]==0x2222);
-    CHECK(((int32_t*)(intptr_t)node)[2]==value);free((void*)(intptr_t)node);
     return 0;
 }
 

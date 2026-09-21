@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <new>
+#include <list>
+#include "kinoko/legacy_memory.hpp"
 
 extern "C" {
 int32_t function_450020(int32_t resource);
@@ -20,30 +22,13 @@ struct StageOwner {
     void *data;   // owned auxiliary allocation
     void *runtime; // owned runtime allocation; may borrow source during setup
 };
-struct StageNode {
-    StageNode *next, *previous;
-    StageOwner *owner;
-};
-static_assert(sizeof(StageNode) == 12 && sizeof(StageOwner) == 12);
-static_assert(offsetof(StageOwner, runtime) == 8);
-
-// Original 4D47F0 / 4D4930 only destroy container storage, not payloads.
-// Stage ownership cleanup is a separate game shutdown operation (465F70).
-template<class Node>
-void release_list_storage(int32_t& slot, int32_t& count) {
-    auto* head = reinterpret_cast<Node*>(static_cast<uintptr_t>(slot));
-    if (!head) return;
-    auto* node = head->next;
-    while (node != head) {
-        auto* next = node->next;
-        std::free(node);
-        node = next;
-    }
-    std::free(head);
-    slot = count = 0;
+struct StageEntry;
+using StageList=std::list<StageEntry>;
+struct StageEntry { StageOwner* owner; StageList::iterator position; };
+StageList* stages() { return kinoko::legacy::pointer<StageList>(g603); }
+void release_stage_list() {
+    delete stages();g603=g604=0;
 }
-
-void release_stage_list() { release_list_storage<StageNode>(g603, g604); }
 void release_render_queue() { kinoko_clear_render_queue(); }
 void release_sound_tree() {
     // 4D49D0 -> 46A650's full-range branch -> 4636E0 / 429C70.
@@ -83,10 +68,7 @@ void destroy_owner(StageOwner *owner) {
 // Use real CRT registration and callable source addresses; original absolute
 // executable addresses cannot be registered in the reconstructed process.
 extern "C" int32_t function_4d3ce0() {
-    auto* head = static_cast<StageNode*>(std::malloc(sizeof(StageNode)));
-    if (!head) throw std::bad_alloc();
-    head->next = head->previous = head;
-    g603 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
+    kinoko_stage_list_construct();
     return std::atexit(release_stage_list);
 }
 
@@ -107,21 +89,9 @@ extern "C" int32_t function_4d3f50() {
 
 // 465F70: destroy payloads first, reset the list, then release its nodes.
 extern "C" int32_t kinoko_clear_global_stages() {
-    auto *head = reinterpret_cast<StageNode *>(static_cast<uintptr_t>(static_cast<uint32_t>(g603)));
-    if (!head) return 0;
-    for (auto *node = head->next; node != head; node = node->next) {
-        destroy_owner(node->owner);
-        node->owner = nullptr;
-    }
-    auto *node = head->next;
-    head->next = head->previous = head;
-    g604 = 0;
-    while (node != head) {
-        auto *next = node->next;
-        std::free(node);
-        node = next;
-    }
-    return g603;
+    if(!stages()) return 0;
+    for(auto& entry:*stages()) { destroy_owner(entry.owner);entry.owner=nullptr; }
+    stages()->clear();g604=0;return g603;
 }
 
 // 470890: the rebuilt sound manager owns buffers in its SE pool and BGM
@@ -136,4 +106,25 @@ extern "C" int32_t kinoko_clear_global_sound() {
     }
     g639 = 0;
     return 1;
+}
+
+extern "C" void kinoko_stage_list_construct() { g603=kinoko::legacy::address(new StageList);g604=0; }
+extern "C" void kinoko_stage_list_destroy() { release_stage_list(); }
+extern "C" int32_t kinoko_stage_list_first() {
+    return stages() && !stages()->empty()?kinoko::legacy::address(&stages()->front()):g603;
+}
+extern "C" int32_t kinoko_stage_list_next(int32_t token) {
+    auto position=kinoko::legacy::pointer<StageEntry>(token)->position;
+    ++position;return position==stages()->end()?g603:kinoko::legacy::address(&*position);
+}
+extern "C" int32_t kinoko_stage_list_value(int32_t token) {
+    return kinoko::legacy::address(kinoko::legacy::pointer<StageEntry>(token)->owner);
+}
+extern "C" int32_t kinoko_stage_list_append(int32_t owner) {
+    stages()->emplace_back();auto position=std::prev(stages()->end());
+    position->owner=kinoko::legacy::pointer<StageOwner>(owner);position->position=position;
+    g604=static_cast<int32_t>(stages()->size());return kinoko::legacy::address(&*position);
+}
+extern "C" int32_t function_4d47f0() {
+    if(stages()) stages()->clear();g604=0;return g603;
 }
