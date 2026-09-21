@@ -4,6 +4,11 @@ Baseline: master 6635f26, including the R125 source build at 8ad4aaf6.
 The user confirmed R125 on 2026-09-21. This batch prioritizes decompiler
 artifacts over further third-party replacement.
 
+The user clarified that "raw pointers" means hardcoded numerical pointer
+addresses, not ordinary T* types. Valid typed/borrowed pointers and actual
+virtual dispatch remain appropriate. Record views here address recovered
+byte layouts and alignment, not a blanket prohibition on pointer types.
+
 ## Address mapping
 
 | Original | Current implementation |
@@ -67,3 +72,15 @@ Existing frame contracts now call semantic entries. The stage contract adds
 empty-list/null-owner cases to protect traversal return policies. Following
 the user's handoff, contracts are compiled only; no test/game is executed.
 Build commit, quiet EXE, and DAT hashes are recorded separately after building.
+
+## Build result
+
+Source commit: 3f312a6. Both complete Win32 Release build attempts exited 0;
+the first had a literal output-directory argument and its complete outputs
+were preserved under runtime-builds/decompiler-cleanup-r126-initial-output.
+The final independent build uses explicit absolute paths. Delivery:
+runtime-builds/decompiler-cleanup-r126-final-quiet/kinoko_retdec_rebuild.exe.
+All three DAT files are beside each game EXE and were hash-verified by
+stage_dat.ps1. The final link map contains all seven semantic entries.
+See artifacts.json for commits, logs, maps, sizes and SHA256 hashes.
+No contract executable, ctest, or game was run.
