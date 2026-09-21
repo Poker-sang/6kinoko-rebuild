@@ -47,7 +47,7 @@ extern "C" int32_t function_41efb0(int32_t object) {
 
 // Original 451640: the root callback belongs to the source ACT, while layer
 // holders come from the active runtime. Callbacks can change either container.
-extern "C" int32_t function_451640(int32_t self) {
+extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     const RuntimeView resource(pointer(self));
     static volatile LONG trace_count;
     const auto trace_index = InterlockedIncrement(&trace_count);

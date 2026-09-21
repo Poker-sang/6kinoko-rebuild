@@ -54,6 +54,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
+    src/reconstructed/stage_runtime.cpp
     src/reconstructed/script_callbacks.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp

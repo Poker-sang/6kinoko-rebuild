@@ -132,7 +132,7 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
 }
 }
 
-extern "C" int32_t function_4522f0(int32_t self) {
+extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     if (!self) return E_FAIL;
     const RuntimeView resource(pointer(self));
     if (resource.get(&RuntimeRecord::hidden)) return 0;
@@ -161,7 +161,7 @@ extern "C" int32_t function_4522f0(int32_t self) {
     return result;
 }
 
-extern "C" int32_t function_4525d0(int32_t self, float x, float y) {
+extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     auto* device = pointer<IDirect3DDevice9>(g678);
     if (!self) return E_FAIL;
     const RuntimeView resource(pointer(self));

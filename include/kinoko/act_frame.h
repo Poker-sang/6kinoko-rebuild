@@ -8,10 +8,12 @@ KinokoDrawSpan kinoko_act_command_span(int32_t resource);
 KinokoDrawSpan kinoko_act_sprite_span(int32_t resource);
 void kinoko_act_commands_clear(int32_t resource);
 void kinoko_act_draw_storage_destroy(int32_t resource);
-int32_t function_451640(int32_t resource);
+/* Original 451640, 4522F0, 4525D0; update, preparation and drawing are
+   separate passes. The public C ABI still accepts borrowed record tokens. */
+int32_t kinoko_act_update_frame(int32_t resource);
 int32_t function_41efb0(int32_t layer);
-int32_t function_4522f0(int32_t resource);
-int32_t function_4525d0(int32_t resource, float x, float y);
+int32_t kinoko_act_prepare_draw(int32_t resource);
+int32_t kinoko_act_draw(int32_t resource, float x, float y);
 int32_t function_452c20(int32_t vector, uint32_t requested);
 int32_t function_455230(int32_t first, int32_t last, int32_t output);
 int32_t retdec_act_clear_layout_vector(int32_t vector);

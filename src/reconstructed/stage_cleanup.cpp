@@ -1,6 +1,7 @@
 #include "kinoko/integer_map.h"
 #include "kinoko/render_queue.h"
 #include "kinoko/stage_cleanup.h"
+#include "kinoko/stage_records.hpp"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/actor_cleanup.h"
 #include "kinoko/act_resource_records.hpp"
@@ -18,14 +19,12 @@ int32_t function_40b3a0(void);
 }
 
 namespace {
-struct StageOwner {
-    void *source; // owned ACT source; released through its original destructor
-    void *data;   // owned auxiliary allocation
-    void *runtime; // owned runtime allocation; may borrow source during setup
-};
+using namespace kinoko::stage;
+using kinoko::native::RecordView;
+using kinoko::legacy::pointer;
 struct StageEntry;
 using StageList=std::list<StageEntry>;
-struct StageEntry { StageOwner* owner; StageList::iterator position; };
+struct StageEntry { void* owner; StageList::iterator position; };
 StageList* stages() { return kinoko::legacy::pointer<StageList>(g603); }
 void release_stage_list() {
     delete stages();g603=g604=0;
@@ -35,29 +34,36 @@ void release_sound_tree() {
     kinoko_integer_map_destroy(g638);g638=g639=0;
 }
 
-void destroy_owner(StageOwner *owner) {
-    if (!owner) return;
-    std::free(owner->data);
-    owner->data = nullptr;
+void destroy_owner(void *storage) {
+    if (!storage) return;
+    const OwnerView owner(storage);
+    const auto source = owner.get(&OwnerRecord::document);
+    auto runtime_address = owner.get(&OwnerRecord::runtime);
+    std::free(pointer(owner.get(&OwnerRecord::holder)));
+    owner.set(&OwnerRecord::holder, uint32_t{0});
     // Detach legacy borrowed fixtures before destroying their source;
     // BeginStage clones remain independently owned by the runtime.
-    if (owner->runtime) {
-        const kinoko::native::RecordView<kinoko::act::RuntimeRecord> runtime(owner->runtime);
-        if (runtime.get(&kinoko::act::RuntimeRecord::act) ==
-                reinterpret_cast<uintptr_t>(owner->source))
+    if (runtime_address) {
+        const RecordView<kinoko::act::RuntimeRecord> runtime(pointer(runtime_address));
+        if (runtime.get(&kinoko::act::RuntimeRecord::act) == source)
             runtime.set(&kinoko::act::RuntimeRecord::act, uint32_t{0});
     }
-    if (owner->source) {
-        auto **vtable = *static_cast<void ***>(owner->source);
-        retdec_call_thiscall1(owner->source, vtable[4], 1);
-        owner->source = nullptr;
+    if (source) {
+        const RecordView<DocumentPrefix> document(pointer(source));
+        const RecordView<DocumentVirtuals> methods(pointer(document.get(&DocumentPrefix::vtable)));
+        // The destructor is genuinely virtual (465FCC), including contract
+        // fixtures. Preserve dispatch, but name and verify its ABI slot.
+        retdec_call_thiscall1(pointer(source), pointer(methods.get(&DocumentVirtuals::deleting_destructor)), 1);
+        owner.set(&OwnerRecord::document, uint32_t{0});
     }
-    if (owner->runtime) {
-        function_450020(static_cast<int32_t>(reinterpret_cast<uintptr_t>(owner->runtime)));
-        std::free(owner->runtime);
-        owner->runtime = nullptr;
+    // The source destructor is a callback and may update the owner record.
+    runtime_address = owner.get(&OwnerRecord::runtime);
+    if (runtime_address) {
+        function_450020(static_cast<int32_t>(runtime_address));
+        std::free(pointer(runtime_address));
+        owner.set(&OwnerRecord::runtime, uint32_t{0});
     }
-    std::free(owner);
+    std::free(storage);
 }
 }
 
@@ -109,7 +115,7 @@ extern "C" int32_t kinoko_stage_list_value(int32_t token) {
 }
 extern "C" int32_t kinoko_stage_list_append(int32_t owner) {
     stages()->emplace_back();auto position=std::prev(stages()->end());
-    position->owner=kinoko::legacy::pointer<StageOwner>(owner);position->position=position;
+    position->owner=kinoko::legacy::pointer(owner);position->position=position;
     g604=static_cast<int32_t>(stages()->size());return kinoko::legacy::address(&*position);
 }
 extern "C" int32_t function_4d47f0() {

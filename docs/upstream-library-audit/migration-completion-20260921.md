@@ -53,3 +53,6 @@ shutdown wiring. Those must be recovered separately from original evidence.
 
 R123 (`a6addb2`) was subsequently reported normal by the user on 2026-09-21.
 This does not imply that the user tested the later R124/R125 builds.
+
+R125 (`8ad4aaf6ee086365719c4ea31fd625daf3b3c037`) was subsequently confirmed
+normal by the user on 2026-09-21. This is user feedback, not agent-run testing.

@@ -2132,10 +2132,6 @@ static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1);
 int32_t function_464e20(int32_t this_ptr);
 int32_t function_464f80(int32_t a1, int32_t * a2);
 int32_t function_465f70(void);
-int32_t function_466050(void);
-int32_t function_466090(void);
-int32_t function_4660c0(void);
-int32_t function_466100(int32_t a1);
 int32_t function_466270(void);
 static int32_t function_466270_this(int32_t this_ptr);
 
@@ -13305,210 +13301,16 @@ int32_t function_465f70(void) {
 }
 
 // Address range: 0x466050 - 0x466082
-int32_t function_466050(void) {
-    int32_t v1 = kinoko_stage_list_first(); // 0x466056
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
 
-    if (trace_index <= 8) {
-        retdec_trace("466050:entry");
-        retdec_trace_i32("466050:g603", g603);
-        retdec_trace_i32("466050:first", v1);
-        retdec_trace_i32("466050:update-mask", g459);
-    }
-    if (v1 == g603) {
-        // 0x466080
-        if (trace_index <= 8)
-            retdec_trace("466050:empty");
-        return g603;
-    }
-    int32_t v2 = v1; // 0x46605a
-    int32_t result = g603;
-    while (v2 != g603) {
-        int32_t object_list_node = kinoko_stage_list_value(v2);
-        int32_t resource = object_list_node != 0
-            ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
-        if (resource != 0) {
-            if (trace_index <= 8) {
-                int32_t act = *(int32_t *)(intptr_t)(resource + 12);
-                retdec_trace_i32("466050:resource", resource);
-                retdec_trace_i32("466050:active",
-                                 *(int32_t *)(intptr_t)(resource + 8));
-                retdec_trace_i32("466050:suspend",
-                                 *(int32_t *)(intptr_t)(resource + 104));
-                retdec_trace_i32("466050:time",
-                                 *(int32_t *)(intptr_t)(resource + 100));
-                retdec_trace_i32("466050:act", act);
-                if (act != 0)
-                    retdec_trace_squirrel_name(
-                        "466050:act-name",
-                        (int32_t)(intptr_t)retdec_std_string_data(act + 16));
-            }
-            function_451620(resource);
-            result = function_451640(resource); // 0x466071
-            if (trace_index <= 8)
-                retdec_trace_i32("466050:update-result", result);
-        }
-        // 0x466060
-        v2 = kinoko_stage_list_next(v2);
-    }
-    // 0x466080
-    return result;
-}
 
 // Address range: 0x466090 - 0x4660b7
-int32_t function_466090(void) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index == 1) {
-        retdec_trace_i32("render:g603", g603);
-        retdec_trace_i32("render:g603-first",
-                         kinoko_stage_list_first());
-    }
-    if (g603 == 0)
-        return 0;
-    int32_t v1 = kinoko_stage_list_first(); // 0x466096
-    if (v1 == g603) {
-        // 0x4660b5
-        return g603;
-    }
-    int32_t object_list_node = kinoko_stage_list_value(v1);
-    int32_t resource = object_list_node != 0
-        ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
-    int32_t v2 = v1; // 0x46609a
-    int32_t result = resource != 0 ? function_4522f0(resource) : 0;
-    v2 = kinoko_stage_list_next(v2);
-    while (v2 != g603) {
-        // 0x4660a0
-        object_list_node = kinoko_stage_list_value(v2);
-        resource = object_list_node != 0
-            ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
-        result = resource != 0 ? function_4522f0(resource) : 0;
-        v2 = kinoko_stage_list_next(v2);
-    }
-    // 0x4660b5
-    return result;
-}
+
 
 // Address range: 0x4660c0 - 0x4660f3
-int32_t function_4660c0(void) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index == 1) {
-        retdec_trace_i32("render:g603-float", g603);
-        retdec_trace_i32("render:g603-float-first",
-                         kinoko_stage_list_first());
-    }
-    if (g603 == 0)
-        return 0;
-    int32_t node = kinoko_stage_list_first(); // 0x4660c6
-    int32_t result = g603;
-    int32_t node_index = 0;
-    while (node != g603) {
-        int32_t object_list_node = kinoko_stage_list_value(node);
-        int32_t resource = object_list_node != 0
-            ? *(int32_t *)(intptr_t)(object_list_node + 8) : 0;
-        if (resource != 0) {
-            if (trace_index <= 3) {
-                int32_t act = *(int32_t *)(intptr_t)(resource + 12);
-                retdec_trace_i32("4660c0:index", node_index);
-                retdec_trace_i32("4660c0:resource", resource);
-                retdec_trace_i32("4660c0:active",
-                                 *(int32_t *)(intptr_t)(resource + 8));
-                retdec_trace_i32("4660c0:suspend",
-                                 *(int32_t *)(intptr_t)(resource + 104));
-                retdec_trace_i32("4660c0:act", act);
-                if (act != 0)
-                    retdec_trace_squirrel_name(
-                        "4660c0:act-name",
-                        (int32_t)(intptr_t)retdec_std_string_data(act + 16));
-            }
-            result = function_4525d0(resource, 0.0f, 0.0f);
-        }
-        ++node_index;
-        node = kinoko_stage_list_next(node);
-    }
-    // 0x4660f1
-    return result;
-}
+
 
 // Address range: 0x466100 - 0x466262
-int32_t function_466100(int32_t a1) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    int32_t *object_list_node;
-    int32_t act;
-    int32_t holder;
-    int32_t resource = 0;
-    int32_t list_value;
-    int32_t list_node;
 
-    if (trace_index <= 8) {
-        retdec_trace("466100:entry");
-        retdec_trace_squirrel_name("466100:file", a1);
-    }
-
-    object_list_node = (int32_t *)(intptr_t)
-        _3f__3f_2_40_YAPAXI_40_Z(12);
-    if (object_list_node == NULL)
-        return 0;
-    object_list_node[0] = 0;
-    object_list_node[1] = 0;
-    object_list_node[2] = 0;
-
-    act = _3f__3f_2_40_YAPAXI_40_Z(240);
-    if (act == 0) {
-        free(object_list_node);
-        return 0;
-    }
-    act = function_427530(act);
-    object_list_node[0] = act;
-    if (act == 0) {
-        free(object_list_node);
-        return 0;
-    }
-
-    if (!function_428000(act, (const char *)(intptr_t)a1)) {
-        retdec_trace("466100:act-header-failed");
-        /* Do not publish or execute callbacks from a partially parsed CAct.
-           The current loader can reject a layout after it has initialized
-           the outer object; keeping that object detached is safer than
-           passing invalid vectors into the renderer. */
-        retdec_trace("466100:skip-invalid-act");
-        free(object_list_node);
-        return 0;
-    } else {
-        retdec_trace("466100:act-header-ok");
-    }
-
-    /* 455880/455E40 form the holder/resource pair owned by the list node.
-       Their original ECX receivers are explicit here. */
-    holder = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (holder != 0) {
-        function_455880(holder, act);
-        object_list_node[1] = holder;
-        function_455e40(holder, (int32_t)(intptr_t)&resource, 0);
-        object_list_node[2] = resource;
-    }
-    retdec_trace_i32("466100:act", act);
-    retdec_trace_i32("466100:holder", holder);
-    retdec_trace_i32("466100:resource", resource);
-
-    /* Original 466100 calls 450E30 before linking the CAct node. */
-    if (resource != 0 && g644 != NULL) {
-        int32_t register_result = retdec_call_thiscall2_result(
-            (void *)(intptr_t)resource,
-            (void *)(intptr_t)kinoko_method_root_table_construct,
-            (int32_t)(intptr_t)g644, 0);
-        retdec_trace_i32("466100:450e30-result", register_result);
-    }
-
-    if (g603 == 0)
-        return (int32_t)(intptr_t)object_list_node;
-    list_node=kinoko_stage_list_append((int32_t)(intptr_t)object_list_node);
-    if (trace_index<=8) retdec_trace_i32("466100:list-node",list_node);
-    return (int32_t)(intptr_t)object_list_node;
-}
 
 // Address range: 0x466270 - 0x466311
 int32_t function_466270(void) {
@@ -14020,7 +13822,7 @@ int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
 // Address range: 0x469820 - 0x469837
 int32_t function_469820(int32_t a1) {
     // 0x469820
-    return function_466100(a1) != 0;
+    return kinoko_stage_load((const char *)(intptr_t)a1) != 0;
 }
 
 // Address range: 0x469840 - 0x469858
@@ -14129,7 +13931,7 @@ int32_t function_469900(void) {
         // 0x4699a8
         if (trace_index <= 16)
             retdec_trace("469900:global-update");
-        result = function_466050();
+        result = kinoko_stages_update();
     }
     if (trace_index <= 16)
         retdec_trace_i32("469900:result", result);
@@ -14313,8 +14115,8 @@ int32_t function_46a140(void) {
     kinoko_draw_render_queue((int32_t)(intptr_t)g_retdec_camera_state);
 
     if ((render_mask & 0x40000000) != 0) {
-        function_466090();
-        function_4660c0();
+        kinoko_stages_prepare_draw();
+        kinoko_stages_draw();
     }
     return 1;
 }
@@ -14777,7 +14579,7 @@ int32_t function_46f0b0(int32_t this_ptr) {
     // 0x46f0c0
     int32_t resource = *(int32_t *)(intptr_t)(this_ptr + 20);
     function_451620(resource);
-    int32_t result = function_451640(resource);
+    int32_t result = kinoko_act_update_frame(resource);
     if (trace_index <= 16)
         retdec_trace_i32("46f0b0:result", result);
     return result;

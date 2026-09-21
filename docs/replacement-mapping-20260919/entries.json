@@ -334,7 +334,7 @@
       "status": "semantic_replacement",
       "replacement": {
         "path": "src/reconstructed/act_frame_update.cpp",
-        "symbol": "function_451640",
+        "symbol": "kinoko_act_update_frame",
         "note": "Command vector clear was folded into its caller; see act-frame-20260919/report.md."
       },
       "evidence": "Original-address source comments/header mapping and recorded migration commit. ABI adapters may still delegate to C."

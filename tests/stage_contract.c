@@ -3239,6 +3239,16 @@ static int test_global_stage_cleanup(void) {
     void *vtable[5] = {NULL, NULL, NULL, NULL, release_stage_owner};
     kinoko_stage_list_construct();
     const int32_t identity=g603;
+    CHECK(kinoko_stages_update()==identity);
+    CHECK(kinoko_stages_prepare_draw()==identity);
+    CHECK(kinoko_stages_draw()==identity);
+    /* Empty payloads preserve the distinct return policies of each pass:
+       preparation reports zero, update/draw retain the sentinel result. */
+    kinoko_stage_list_append(0);
+    CHECK(kinoko_stages_update()==identity);
+    CHECK(kinoko_stages_prepare_draw()==0);
+    CHECK(kinoko_stages_draw()==identity);
+    CHECK(kinoko_clear_global_stages()==identity && g604==0);
     stage_owner_releases = 0;
     for (int i = 0; i < 2; ++i) {
         int32_t *owner = calloc(3, 4);
@@ -6412,10 +6422,10 @@ int main(int argc, char **argv) {
         act_resource[3] = PTR(act);
         act[24] = 0;
         InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(act_resource + 5));
-        CHECK(function_4525d0(PTR(act_resource), 0, 0) == 0);
+        CHECK(kinoko_act_draw(PTR(act_resource), 0, 0) == 0);
         CHECK(draw_count == 0);
         act[24] = 1;
-        CHECK(function_4525d0(PTR(act_resource), 0, 0) == 0);
+        CHECK(kinoko_act_draw(PTR(act_resource), 0, 0) == 0);
         CHECK(draw_count == 1);
         DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(act_resource + 5));
     }

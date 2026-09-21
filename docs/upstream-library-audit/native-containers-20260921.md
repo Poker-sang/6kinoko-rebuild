@@ -94,3 +94,6 @@ published character view. These contracts are compiled only, not executed.
 ## User runtime feedback (2026-09-21)
 
 The user reported “R123没问题” for R123 (`a6addb20b1909f428470647dffe14d76098eb8eb`). This is user-confirmed runtime feedback, not an agent-run smoke test and not validation of R124/R125. The agent only built those later revisions and staged/verified their DAT files.
+
+The user subsequently confirmed R125 (`8ad4aaf6ee086365719c4ea31fd625daf3b3c037`)
+on 2026-09-21. R125 is now user-confirmed; no agent-run game/test execution is claimed.
