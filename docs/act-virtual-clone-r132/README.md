@@ -66,4 +66,14 @@ order, exactly one early layout bind, source-resource visibility at bind time,
 null-slot compaction, constructor defaults, deep document name, unchanged source,
 and both document/layer script compiled-flag behaviors. Existing association,
 map/string layout, timeline, texture and chip ownership contracts remain.
-All contracts will be compiled only; none will be executed in this batch.
+All contract targets compiled successfully; none were executed in this batch.
+
+## Delivery
+
+Source commit: 335d71d946ae9e4b8e04cda28560affa814333f3.
+The independent Release Win32 quiet build completed successfully for all targets.
+EXE: runtime-builds/act-virtual-clone-r132-quiet/kinoko_retdec_rebuild.exe.
+tools/stage_dat.ps1 copied all three DAT files beside the executable and verified
+their sizes and SHA256 against the original. Exact artifact hashes and log paths
+are recorded in artifacts.json. No game or automated tests were executed, and
+R132 has not yet received user runtime verification. Previous artifacts remain.
