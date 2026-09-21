@@ -22,6 +22,12 @@ using namespace kinoko::stage;
 using kinoko::act::RuntimeRecord;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
+struct DestroyStageOwner {
+    void operator()(KinokoStageOwner *owner) const noexcept {
+        kinoko_stage_owner_destroy(owner);
+    }
+};
+using StageOwner = std::unique_ptr<KinokoStageOwner, DestroyStageOwner>;
 
 KinokoActRuntime *stage_runtime(const KinokoStageNode *node) {
     const auto owner = kinoko_stage_list_value(node);
@@ -128,7 +134,7 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
     }
     // Own the unpublished record until it is transferred to the stage list
     // (or returned to the caller when the list is absent, as in R125).
-    Allocation<KinokoStageOwner> allocation(static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord))));
+    StageOwner allocation(static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord))));
     if (!allocation) return nullptr;
     const OwnerView owner(allocation.get());
     owner.clear();
@@ -136,7 +142,9 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
     auto *act = kinoko_act_document_create();
     owner.set(&OwnerRecord::document, act);
     if (!act) return nullptr;
-    // Partial-load cleanup policy is intentionally unchanged in this batch.
+    // Until publication this owner also owns the partial document. The scoped
+    // reader in load closes first; failure/unwind then destroys the ACT using
+    // the same virtual cleanup path as a published stage.
     if (!kinoko_act_document_load(act, file_name)) {
         retdec_trace("466100:act-header-failed");
         retdec_trace("466100:skip-invalid-act");

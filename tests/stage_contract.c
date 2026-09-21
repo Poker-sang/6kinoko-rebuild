@@ -5735,7 +5735,11 @@ static int test_layout_secondary_lifetime(void) {
     return 0;
 }
 
+#include "act_document_file_contract.h"
+
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--act-document-lifetime") == 0)
+        return test_act_document_file_lifetime();
     CHECK(test_layout_secondary_lifetime()==0);
     CHECK(test_actor_handle_lookup()==0);
     CHECK(test_actor_owner_list()==0);

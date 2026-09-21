@@ -39,9 +39,14 @@ extern "C" int32_t kinoko_act_source_layer_count(const KinokoActSourceHolder *ho
 // 455E40: the recovered second stack argument is unused. Both callers took
 // the single runtime pointer out of the temporary result; return it directly.
 extern "C" KinokoActRuntime *kinoko_act_source_create_runtime(KinokoActSourceHolder *holder) {
-    auto *storage = static_cast<KinokoActRuntime *>(std::malloc(sizeof(RuntimeRecord)));
+    kinoko::legacy::Allocation<KinokoActRuntime> storage(
+        static_cast<KinokoActRuntime *>(std::malloc(sizeof(RuntimeRecord))));
     if (!storage) return nullptr;
     // Remaining constructor ABI boundary; no integer pointer storage inside
     // the holder/owner or the public source API.
-    return pointer<KinokoActRuntime>(function_44fde0(address(storage), address(holder)));
+    // 44FDE0 may throw while allocating its FindMap, before the caller has
+    // received a runtime to own. Release the raw allocation on that unwind.
+    auto *result = pointer<KinokoActRuntime>(function_44fde0(address(storage.get()), address(holder)));
+    if (result) storage.release();
+    return result;
 }

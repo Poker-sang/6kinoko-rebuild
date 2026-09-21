@@ -497,7 +497,9 @@ add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
 set_source_files_properties(
     src/reconstructed/act_document_io.cpp
     src/reconstructed/stage_runtime.cpp
+    src/reconstructed/act_source.cpp
     tests/act_document_contract.cpp
+    tests/stage_owner_contract.cpp
     PROPERTIES COMPILE_OPTIONS "/EHsc-")
 
 add_executable(kinoko_act_document_contract
@@ -507,6 +509,24 @@ target_include_directories(kinoko_act_document_contract PRIVATE include)
 target_link_libraries(kinoko_act_document_contract PRIVATE kinoko_legacy_string)
 target_compile_options(kinoko_act_document_contract PRIVATE /Od /RTC1)
 add_test(NAME act_document_contract COMMAND kinoko_act_document_contract)
+add_executable(kinoko_act_document_optimized_contract
+    tests/act_document_contract.cpp src/reconstructed/act_document_io.cpp)
+target_include_directories(kinoko_act_document_optimized_contract PRIVATE include)
+target_link_libraries(kinoko_act_document_optimized_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_document_optimized_contract PRIVATE /O2)
+add_test(NAME act_document_optimized_contract COMMAND kinoko_act_document_optimized_contract)
+
+add_executable(kinoko_stage_owner_contract
+    tests/stage_owner_contract.cpp src/reconstructed/stage_runtime.cpp
+    src/reconstructed/stage_cleanup.cpp src/reconstructed/act_source.cpp)
+target_include_directories(kinoko_stage_owner_contract PRIVATE include "${KINOKO_SQUIRREL2_ROOT}/include")
+target_compile_options(kinoko_stage_owner_contract PRIVATE /O2)
+add_test(NAME stage_owner_contract COMMAND kinoko_stage_owner_contract)
+# This is the real CFileReader + ACT payload + source/runtime/cleanup path.
+# Its generated ACT fixture needs neither DAT files nor graphics/VM startup.
+add_test(NAME act_document_lifetime_contract
+    COMMAND kinoko_stage_contract --act-document-lifetime)
+
 set_tests_properties(legacy_string_contract PROPERTIES TIMEOUT 60)
 
 add_executable(kinoko_retdec_memory_contract tests/retdec_memory_contract.cpp)
@@ -587,6 +607,8 @@ add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_act_document_optimized_contract
+    kinoko_stage_owner_contract
     kinoko_act_document_contract
     kinoko_boost_control_contract
     kinoko_upstream_bindings_contract
