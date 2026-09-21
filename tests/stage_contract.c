@@ -2286,21 +2286,18 @@ static int test_shutdown_tree_cleanup(void) {
     }
 
     int32_t manager[40] = {0};
-    int32_t list_head[14] = {0}, textures[2] = {7, 13}, iteration[3] = {0};
-    int32_t *list_node = (int32_t *)calloc(1, 56);
-    unsigned char *frames = (unsigned char *)calloc(2, 248);
-    CHECK(list_node && frames);
+    int32_t textures[2] = {7, 13}, iteration[3] = {0};
+    kinoko_animation_list_construct(PTR(manager)+52);
+    int32_t animation=kinoko_animation_create(2);
+    kinoko_animation_adopt(PTR(manager)+52,animation);
+    unsigned char *frames=*(unsigned char**)(intptr_t)(animation+8);
+    CHECK(animation && frames);
     *(int32_t *)(frames + 244) = PTR(malloc(12));
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     /* No live Actor in this fixture; the priority node is still reclaimed. */
-    list_head[0] = list_head[1] = PTR(list_node);
-    list_node[0] = list_node[1] = PTR(list_head);
-    list_node[4] = PTR(frames);
-    list_node[5] = list_node[6] = PTR(frames + 496);
     manager[10]=kinoko_integer_map_create();
-    kinoko_integer_map_put(manager[10],42,PTR(list_node+2));manager[11]=1;
-    manager[13] = PTR(list_head); manager[14] = 1;
+    kinoko_integer_map_put(manager[10],42,animation);manager[11]=1;
     manager[17] = PTR(textures); manager[18] = manager[19] = PTR(textures + 2);
     kinoko_priority_construct(PTR(manager)+84);
     int32_t absent=0,inserted[2];
@@ -2310,12 +2307,12 @@ static int test_shutdown_tree_cleanup(void) {
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK(function_464e20(PTR(manager)) == PTR(iteration));
         CHECK(kinoko_integer_map_size(manager[10])==0);
-        CHECK(list_head[0] == PTR(list_head) && list_head[1] == PTR(list_head));
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(manager[18] == PTR(textures) && manager[19] == PTR(textures + 2));
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
     }
+    kinoko_animation_list_destroy(PTR(manager)+52);
     kinoko_integer_map_destroy(manager[10]);
     kinoko_priority_destroy(PTR(manager)+84);
     {

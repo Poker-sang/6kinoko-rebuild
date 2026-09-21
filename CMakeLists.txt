@@ -45,6 +45,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
+    src/reconstructed/animation_storage.cpp
     src/reconstructed/integer_map.cpp
     src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_cleanup.cpp
