@@ -1,11 +1,18 @@
 #pragma once
 
 #include <stdint.h>
+#include "kinoko/act_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* 44FDE0: initialize fresh caller-owned 192-byte Win32 runtime storage.
+   The holder is borrowed; initialization neither clones nor loads a document.
+   On C++ constructor failure the caller still owns the raw storage. */
+KinokoActRuntime *kinoko_act_runtime_initialize(
+    KinokoActRuntime *storage, KinokoActSourceHolder *source_holder);
+/* Compatibility port for remaining integer-slot callers/test fixtures only. */
 int32_t function_44fde0(int32_t storage, int32_t source_holder);
 int32_t function_450020(int32_t resource);
 void retdec_destroy_act_runtime(int32_t resource);

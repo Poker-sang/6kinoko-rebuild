@@ -2,7 +2,11 @@
 
 Baseline: R127 (`825b039`), with source-snapshot bookkeeping in `95842c3`.
 
-## Batch 1: representation and reader lifetime only
+Read [EVIDENCE-AUDIT.md](EVIDENCE-AUDIT.md) for the corrected distinction between
+original evidence, inherited reconstruction and added safety behavior. In
+particular, reader/owner exception cleanup is not a literal original recovery.
+
+## Batch 1: representation and reader lifetime
 
 * Replace the C `427530` initializer with `kinoko_act_document_initialize` and
   `kinoko_act_document_create`. The complete 240-byte schema gives recovered
@@ -26,7 +30,9 @@ Baseline: R127 (`825b039`), with source-snapshot bookkeeping in `95842c3`.
 ## Evidence and boundaries
 
 The original decompiler reference remains unmodified. Its `427530` range and
-R127's recovered initializer agree on record size/defaults. Serialized names
+R127's recovered initializer agree on the listed scalar/string defaults. The
+240-byte allocation size is independently visible at original 46614E. Whole-record
+zeroing comes from R127, not from the original initializer. Serialized names
 are independently present in `act_texture_io.cpp`: resolutionMs/screenWidth/
 screenHeight/stName, four margins, two offsets and visible. The string at 44
 is used as the path by `4289C0`; byte 204 is the suspend/resume flag in

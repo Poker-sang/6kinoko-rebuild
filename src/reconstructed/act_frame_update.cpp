@@ -20,7 +20,7 @@ using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
 int32_t source_document(const RuntimeView& resource) {
     const auto holder = resource.get(&RuntimeRecord::source_holder);
-    return holder ? load<int32_t>(pointer(holder)) : 0;
+    return holder ? address(load<KinokoActDocument *>(holder)) : 0;
 }
 int32_t layer_count(int32_t document) {
     if (!document) return 0;

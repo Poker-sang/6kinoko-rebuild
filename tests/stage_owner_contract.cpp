@@ -5,6 +5,8 @@
 #include "kinoko/act_document_records.hpp"
 #include "kinoko/act_resource_records.hpp"
 #include "kinoko/act_source.h"
+#include "kinoko/act_resource.h"
+#include <type_traits>
 #include "kinoko/legacy_memory.hpp"
 #include <cstdio>
 #include <cstdlib>
@@ -17,6 +19,9 @@ using kinoko::act::DocumentRecord;
 using kinoko::act::DocumentView;
 using kinoko::act::RuntimeRecord;
 using RuntimeView = kinoko::native::RecordView<RuntimeRecord>;
+static_assert(std::is_same_v<decltype(RuntimeRecord::source_holder), KinokoActSourceHolder *>);
+static_assert(std::is_same_v<decltype(&kinoko_act_runtime_initialize),
+    KinokoActRuntime *(*)(KinokoActRuntime *, KinokoActSourceHolder *)>);
 namespace {
 bool fail_next_new = false;
 struct State {
@@ -42,7 +47,7 @@ int32_t __fastcall delete_document(KinokoActDocument *document, void *, int32_t 
         auto *replacement = static_cast<KinokoActRuntime *>(std::calloc(1, sizeof(RuntimeRecord)));
         CHECK(replacement && state.owner);
         const RuntimeView runtime(replacement);
-        runtime.set(&RuntimeRecord::source_holder, static_cast<uint32_t>(address(state.holder)));
+        runtime.set(&RuntimeRecord::source_holder, state.holder);
         runtime.set(&RuntimeRecord::act, static_cast<uint32_t>(address(document)));
         std::free(state.latest_runtime); // fixture contains no runtime-owned objects
         state.latest_runtime = replacement;
@@ -78,13 +83,13 @@ int32_t kinoko_act_document_load(KinokoActDocument *, const char *) {
     return state.reject ? 0 : 1;
 }
 const char *kinoko_act_document_name(const KinokoActDocument *) { return "fixture"; }
-int32_t function_44fde0(int32_t storage, int32_t holder) {
+KinokoActRuntime *kinoko_act_runtime_initialize(KinokoActRuntime *storage, KinokoActSourceHolder *holder) {
     if (state.throw_runtime) throw std::bad_alloc();
-    state.holder = pointer<KinokoActSourceHolder>(holder);
-    state.latest_runtime = pointer<KinokoActRuntime>(storage);
+    state.holder = holder;
+    state.latest_runtime = storage;
     const RuntimeView runtime(state.latest_runtime);
     runtime.clear();
-    runtime.set(&RuntimeRecord::source_holder, static_cast<uint32_t>(holder));
+    runtime.set(&RuntimeRecord::source_holder, holder);
     runtime.set(&RuntimeRecord::act, static_cast<uint32_t>(address(state.holder->document)));
     ++state.runtimes;
     return storage;

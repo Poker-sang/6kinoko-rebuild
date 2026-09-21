@@ -33,16 +33,16 @@ void release_sound_tree() {
     kinoko_integer_map_destroy(g638);g638=g639=0;
 }
 
-// RuntimeRecord::source_holder and (before BeginStage) ::act are borrowed.
-// Its destructor consults source_holder, so detach the holder before its free.
+// REBUILD SAFETY, not an instruction recovered from 465F70: the current
+// runtime destructor consults source_holder, so detach our borrow before free.
+// Keep this distinction separate from the original normal cleanup order.
 void detach_source_borrows(KinokoActRuntime *runtime_pointer,
     KinokoActDocument *source, KinokoActSourceHolder *holder) {
     if (!runtime_pointer) return;
     const RecordView<kinoko::act::RuntimeRecord> runtime(runtime_pointer);
     using kinoko::act::RuntimeRecord;
-    if (runtime.get(&RuntimeRecord::source_holder) ==
-            static_cast<uint32_t>(kinoko::legacy::address(holder)))
-        runtime.set(&RuntimeRecord::source_holder, uint32_t{0});
+    if (runtime.get(&RuntimeRecord::source_holder) == holder)
+        runtime.set(&RuntimeRecord::source_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     if (runtime.get(&RuntimeRecord::act) ==
             static_cast<uint32_t>(kinoko::legacy::address(source)))
         runtime.set(&RuntimeRecord::act, uint32_t{0});

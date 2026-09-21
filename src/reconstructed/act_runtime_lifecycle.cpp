@@ -76,9 +76,10 @@ extern "C" const char* kinoko_act_find_name(int32_t storage, int32_t id) {
 
 // Original 44FDE0 writes selected members, not all 192 bytes. Keep unknown
 // bytes untouched and let the C++ compiler implement bad_alloc unwinding.
-extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
-    const auto view = runtime(storage);
-    view.set(&RuntimeRecord::source_holder, static_cast<Address>(source_holder));
+extern "C" KinokoActRuntime *kinoko_act_runtime_initialize(
+    KinokoActRuntime *storage, KinokoActSourceHolder *source_holder) {
+    const RecordView<RuntimeRecord> view(storage);
+    view.set(&RuntimeRecord::source_holder, source_holder);
     view.set(&RuntimeRecord::act, Address{0});
     view.set(&RuntimeRecord::owned_storage, Address{0});
     view.view(&RuntimeRecord::draw_commands).clear();
@@ -101,13 +102,23 @@ extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
     return storage;
 }
 
+// Old C fixtures still exchange integer address slots. Production source-holder
+// creation calls the typed initializer above directly.
+extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
+    return address(kinoko_act_runtime_initialize(
+        pointer<KinokoActRuntime>(storage), pointer<KinokoActSourceHolder>(source_holder)));
+}
+
 // Preserve the recovered 450020/4513F0 order: stop, unregister, find handles,
 // lock, name, vectors, storage, cloned ACT, then the external VM reference.
 extern "C" void retdec_destroy_act_runtime(int32_t storage) {
     const auto view = runtime(storage);
     const auto vm = pointer<SQVM>(view.get(&RuntimeRecord::vm));
     const auto holder = view.get(&RuntimeRecord::source_holder);
-    const Address source = holder ? *pointer<Address>(holder) : 0;
+    // The holder stores a real document pointer. Convert only at the remaining
+    // RuntimeRecord::act integer slot; byte load does not overlay a C++ object.
+    const Address source = holder
+        ? static_cast<Address>(address(kinoko::legacy::load<KinokoActDocument *>(holder))) : 0;
     kinoko_act_end_stage(storage, nullptr);
     auto environment = kinoko::script::pair::read(object_bytes(view));
     if (vm && sq_type(environment) == OT_TABLE && view.get(&RuntimeRecord::name_length)) {

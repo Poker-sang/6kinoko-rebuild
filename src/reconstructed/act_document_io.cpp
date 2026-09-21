@@ -33,7 +33,9 @@ DocumentView view_of(const KinokoActDocument *document) {
 extern "C" KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *document) {
     if (!document) return nullptr;
     const DocumentView view(document);
-    // Preserve R127's whole-record zeroing, including still-unidentified bytes.
+    // R127 rebuild behavior, NOT an original 427530 memset: that decompilation
+    // writes selected fields only. Preserve the inherited zeroing in this type
+    // migration without assigning meanings to still-unidentified bytes.
     view.clear();
     view.set(&DocumentRecord::vtable, kinoko_act_host_symbols()->act_vtable);
     StringRecord empty{};
@@ -70,6 +72,8 @@ extern "C" int32_t kinoko_act_document_load(KinokoActDocument *document, const c
     const ReaderOwner reader(pointer<ArchiveReader>(legacy_reader_slot));
     if (!opened) return 0;
 
+    // Preserve R127's header policy. RetDec's original 428000 body is truncated;
+    // this check sequence alone is not proof of the original implementation.
     uint32_t magic = 0, version = 0, payload_offset = 0;
     const auto borrowed_reader = address(reader.get());
     if (!retdec_reader_read_exact(borrowed_reader, &magic, sizeof(magic)) ||

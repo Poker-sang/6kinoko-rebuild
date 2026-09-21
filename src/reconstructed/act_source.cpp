@@ -42,11 +42,10 @@ extern "C" KinokoActRuntime *kinoko_act_source_create_runtime(KinokoActSourceHol
     kinoko::legacy::Allocation<KinokoActRuntime> storage(
         static_cast<KinokoActRuntime *>(std::malloc(sizeof(RuntimeRecord))));
     if (!storage) return nullptr;
-    // Remaining constructor ABI boundary; no integer pointer storage inside
-    // the holder/owner or the public source API.
-    // 44FDE0 may throw while allocating its FindMap, before the caller has
-    // received a runtime to own. Release the raw allocation on that unwind.
-    auto *result = pointer<KinokoActRuntime>(function_44fde0(address(storage.get()), address(holder)));
+    // Rebuild safety retained from batch 2, not a proven original unwind path:
+    // release raw storage if the current C++ FindMap construction throws.
+    // The initializer borrows holder; neither parameter crosses an integer ABI.
+    auto *result = kinoko_act_runtime_initialize(storage.get(), holder);
     if (result) storage.release();
     return result;
 }
