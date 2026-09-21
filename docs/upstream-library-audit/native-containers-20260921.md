@@ -51,3 +51,7 @@ Original 464F80 inserts animation records into manager+52's owning list (465347.
 ## R117 — Actor texture handles and retired ACT hash emulation
 
 ActorManager texture handles now use an opaque std::vector<int32_t>; PAT append, frame resource lookup, load offsets and ordered texture release use its data/size accessors. Removed manual doubling/realloc. Removed act_containers.cpp and generated 458330: source-reference audit found no active consumer outside this retired helper group. It contained manual hash buckets, rehashing, list splicing, byte comparisons and repeated vector insertion, all unreachable after earlier source-backed ACT migrations. Declarations and obsolete forwarding comments are removed together. This retires dead library emulation, not an implementation of missing ACT engine features.
+
+## R118 — ACT key/timeline list storage
+
+ACT key and timeline list nodes are now values owned by std::list<Link>; no manually allocated list nodes remain in document construction or deep cloning. The list owner publishes separate borrowed next/previous/value records for the existing C traversal boundary; these are not overlaid STL internals. Native append grows the actual standard list before publishing those links. Payload destruction stays with CActKey/CActTimeLine; list-storage destruction frees only native list values. Clone rollback tracks native list owners separately from raw game-record allocations. A compiled-only contract checks 128 entries, forward/backward links and stable boundary tokens.

@@ -1,3 +1,4 @@
+#include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -89,45 +90,6 @@ int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
     return 1;
 }
 
-int32_t retdec_act_make_list(int32_t *list_slot)
-{
-    int32_t *sentinel;
-
-    if (list_slot == nullptr)
-        return 0;
-    sentinel = (int32_t *)std::malloc(12u);
-    if (sentinel == nullptr)
-        return 0;
-    sentinel[0] = address(sentinel);
-    sentinel[1] = address(sentinel);
-    sentinel[2] = 0;
-    *list_slot = address(sentinel);
-    return 1;
-}
-
-int32_t retdec_act_append_list(int32_t list_slot, int32_t value)
-{
-    int32_t sentinel;
-    int32_t previous;
-    int32_t *node;
-
-    if (list_slot == 0)
-        return 0;
-    sentinel = field<int32_t>(list_slot);
-    if (sentinel == 0)
-        return 0;
-    previous = field<int32_t>(sentinel + 4);
-    node = (int32_t *)std::malloc(12u);
-    if (node == nullptr)
-        return 0;
-    node[0] = sentinel;
-    node[1] = previous;
-    node[2] = value;
-    field<int32_t>(sentinel + 4) = address(node);
-    field<int32_t>(previous) = address(node);
-    return 1;
-}
-
 int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     if (!layer) return 0;
     std::memset(pointer<void>(layer), 0, 348);
@@ -141,8 +103,8 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     field<uint8_t>(layer + 92) = 1;
     if (!retdec_act_make_list(pointer<int32_t>(layer + 180)) ||
         !retdec_act_make_list(pointer<int32_t>(layer + 192))) {
-        std::free(pointer<void>(field<int32_t>(layer + 180)));
-        std::free(pointer<void>(field<int32_t>(layer + 192)));
+        kinoko_act_list_drop_storage(field<int32_t>(layer+180));
+        kinoko_act_list_drop_storage(field<int32_t>(layer+192));
         field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
         return 0;
     }

@@ -1,3 +1,4 @@
+#include "kinoko/act_list.h"
 #include "kinoko/map_render.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
@@ -149,10 +150,9 @@ void retdec_destroy_cact_list(int32_t *list_slot)
     while (node != 0 && node != sentinel) {
         int32_t next = field<int32_t>(node);
         retdec_destroy_cact_key(field<int32_t>(node + 8));
-        std::free(pointer<void>(node));
         node = next;
     }
-    std::free(pointer<void>(sentinel));
+    kinoko_act_list_drop_storage(sentinel);
     *list_slot = 0;
 }
 
