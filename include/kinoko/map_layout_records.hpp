@@ -25,7 +25,9 @@ struct ChipDefinition {
     uint32_t chip_id, texture_id;
     int16_t source_left, source_top, width, height;
     uint32_t flags;
-    std::array<uint8_t, 28> remaining;
+    std::array<uint8_t, 14> unknown20;
+    int16_t shape;
+    std::array<uint8_t, 12> unknown36;
 };
 // native_buffer owns the flat storage; begin/end borrow from it. The third
 // word is the reconstructed owner, NOT the original vector capacity pointer.
@@ -71,6 +73,7 @@ static_assert(sizeof(Placement) == 32 && offsetof(Placement, alpha) == 28);
 static_assert(offsetof(Placement, fractional_left) == 12 && offsetof(Placement, visible) == 24);
 static_assert(sizeof(ChipDefinition) == 48 && offsetof(ChipDefinition, width) == 12);
 static_assert(offsetof(ChipDefinition, height) == 14 && offsetof(ChipDefinition, flags) == 16);
+static_assert(offsetof(ChipDefinition, shape) == 34);
 static_assert(offsetof(LayoutRecord, max_chip_width) == 240);
 static_assert(offsetof(LayoutRecord, placements) == 264);
 static_assert(offsetof(LayoutRecord, owning_layer) == 312);

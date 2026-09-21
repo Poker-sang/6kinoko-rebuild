@@ -1,4 +1,5 @@
 #include "kinoko/script_callbacks.h"
+#include "kinoko/actor_records.hpp"
 
 #include <cstddef>
 
@@ -99,9 +100,9 @@ void clear(ScriptCallback &callback) {
 }
 
 constexpr int32_t script_closure_type = 0x08000100;
-constexpr uint32_t actor_object_offset = 44;
+constexpr uint32_t actor_object_offset = offsetof(kinoko::actor::ActorRecord, script_object);
 constexpr uint32_t actor_update_offset = 92;
-constexpr uint32_t actor_collision_offset = 120;
+constexpr uint32_t actor_collision_offset = offsetof(kinoko::actor::ActorRecord, collision_vm);
 constexpr uint32_t camera_update_offset = 12;
 }
 

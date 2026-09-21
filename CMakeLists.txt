@@ -68,6 +68,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/map_activation.cpp
     src/reconstructed/map_collision.cpp
     src/reconstructed/collision_manager.cpp
+    src/reconstructed/collision_queries.cpp
+    src/reconstructed/actor_motion.cpp
     src/reconstructed/map_layout_lifetime.cpp
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
@@ -198,6 +200,7 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/squirrel/collision_callbacks.cpp
     src/reconstructed/act_frame_update.cpp
     src/reconstructed/act_frame_render.cpp
     src/reconstructed/act_draw_storage.cpp

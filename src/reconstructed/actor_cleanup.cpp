@@ -46,9 +46,9 @@ extern "C" int32_t kinoko_clear_actor_manager(int32_t manager) {
     kinoko_clear_animation_list(address(state.bytes(&ManagerPrefix::animations)));
     kinoko_priority_clear(address(actors.data()));
     const auto iteration = state.view(&ManagerPrefix::iteration);
-    const auto iteration_begin = iteration.get(&VectorIndex::begin);
-    iteration.set(&VectorIndex::end, iteration_begin);
-    state.set(&ManagerPrefix::iteration_state, int32_t{0});
+    const auto iteration_begin = iteration.get(&ActorIterationBuffer::begin);
+    iteration.set(&ActorIterationBuffer::end, iteration_begin);
+    state.set(&ManagerPrefix::iteration_count, int32_t{0});
     state.set(&ManagerPrefix::cleanup_pending, uint8_t{0});
-    return static_cast<int32_t>(iteration_begin);
+    return address(iteration_begin);
 }

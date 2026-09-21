@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 
+struct KinokoActor;
+struct SQVM;
+
 namespace kinoko::actor {
 using Address = std::uint32_t; // serialized native Win32 address, never an owner
 using ScriptStorage = std::array<unsigned char, 12>; // external refs: ObjectView
@@ -33,8 +36,8 @@ struct ActorRecord {
     ScriptStorage script_object, update_callback, collision_callback;
     std::array<unsigned char, 16> unknown80;
     ScriptStorage object96, object108;
-    std::array<unsigned char, 4> unknown120;
-    ScriptStorage object124, object136;
+    SQVM *collision_vm; // callback state prefix, borrowed
+    ScriptStorage collision_environment, collision_function;
     Address manager;              // borrowed; manager owns the live Actor set
     Address sprite_frame;         // borrowed from manager-owned animation frames
     std::array<unsigned char, 12> unknown156;
@@ -42,13 +45,18 @@ struct ActorRecord {
     std::array<unsigned char, 20> unknown180;
     Address animation, current_frame; // borrowed, never freed by Actor
     std::int32_t take, frame_index, frame_time, animation_flags;
-    std::array<unsigned char, 4> unknown224;
+    int32_t id;
     std::int32_t priority;
     std::uint32_t update_group, flags;
     float x, y;
-    std::array<unsigned char, 24> unknown248;
+    float previous_x, previous_y;
+    float velocity_x, velocity_y, parent_velocity_x, parent_velocity_y;
     float direction;
-    std::array<unsigned char, 36> unknown276;
+    float pitch, pitch_top;
+    std::array<int32_t, 4> hits; // left, top, right, bottom
+    uint8_t crushed;
+    std::array<uint8_t, 3> padding301;
+    float free_width, free_height;
     std::uint32_t collision_group, collision_mask, callback_group, callback_mask;
     Address collision_records, collision_slots;
     std::int32_t collision_index;
@@ -88,6 +96,8 @@ struct TreeIndex {
 };
 struct ListIndex { Address head; std::uint32_t count; };
 struct VectorIndex { Address begin, end, capacity; };
+// Manager iteration storage is native_buffer-owned; entries borrow live Actors.
+struct ActorIterationBuffer { KinokoActor **begin, **end; void *storage_owner; };
 // Only the verified prefix of the manager is described, not a new allocation
 // size. Index nodes and animation lists have distinct ownership semantics.
 struct ManagerPrefix {
@@ -100,23 +110,24 @@ struct ManagerPrefix {
     std::array<unsigned char, 4> unknown80;
     TreeIndex actors;          // live actor/priority tree
     std::array<unsigned char, 4> unknown96;
-    VectorIndex iteration;    // transient borrowed actor addresses
+    ActorIterationBuffer iteration;
     std::array<unsigned char, 4> unknown112;
-    std::int32_t iteration_state;
+    std::int32_t iteration_count;
     std::uint8_t cleanup_pending;
     std::array<unsigned char, 3> unknown121;
+    ActorIterationBuffer callback_candidates;
 };
 using ActorView = native::RecordView<ActorRecord>;
 using ManagerView = native::RecordView<ManagerPrefix>;
 inline constexpr std::array<ScriptStorage ActorRecord::*, 7> script_members{
     &ActorRecord::script_object, &ActorRecord::update_callback,
     &ActorRecord::collision_callback, &ActorRecord::object96,
-    &ActorRecord::object108, &ActorRecord::object124, &ActorRecord::object136};
+    &ActorRecord::object108, &ActorRecord::collision_environment, &ActorRecord::collision_function};
 
 static_assert(sizeof(InitialData) == 48 && sizeof(ActorRecord) == 0x220);
 static_assert(sizeof(ControlRecord) == 16 && sizeof(ControlTable) == 12);
 static_assert(sizeof(AnimationRecord) == 48 && sizeof(FrameRecord) == 248);
-static_assert(sizeof(ManagerPrefix) == 124);
+static_assert(sizeof(ManagerPrefix) == 136);
 #define KINOKO_ACTOR_FIELD(T, M, O) static_assert(offsetof(T, M) == O)
 KINOKO_ACTOR_FIELD(ActorRecord, type, 8);
 KINOKO_ACTOR_FIELD(ActorRecord, registration_flag20, 20);
@@ -136,8 +147,8 @@ KINOKO_ACTOR_FIELD(ActorRecord, update_callback, 56);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_callback, 68);
 KINOKO_ACTOR_FIELD(ActorRecord, object96, 96);
 KINOKO_ACTOR_FIELD(ActorRecord, object108, 108);
-KINOKO_ACTOR_FIELD(ActorRecord, object124, 124);
-KINOKO_ACTOR_FIELD(ActorRecord, object136, 136);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_environment, 124);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_function, 136);
 KINOKO_ACTOR_FIELD(ActorRecord, manager, 148);
 KINOKO_ACTOR_FIELD(ActorRecord, sprite_frame, 152);
 KINOKO_ACTOR_FIELD(ActorRecord, scale, 168);
@@ -145,6 +156,16 @@ KINOKO_ACTOR_FIELD(ActorRecord, animation, 200);
 KINOKO_ACTOR_FIELD(ActorRecord, frame_time, 216);
 KINOKO_ACTOR_FIELD(ActorRecord, priority, 228);
 KINOKO_ACTOR_FIELD(ActorRecord, x, 240);
+KINOKO_ACTOR_FIELD(ActorRecord, previous_x, 248);
+KINOKO_ACTOR_FIELD(ActorRecord, previous_y, 252);
+KINOKO_ACTOR_FIELD(ActorRecord, velocity_x, 256);
+KINOKO_ACTOR_FIELD(ActorRecord, parent_velocity_y, 268);
+KINOKO_ACTOR_FIELD(ActorRecord, pitch, 276);
+KINOKO_ACTOR_FIELD(ActorRecord, hits, 284);
+KINOKO_ACTOR_FIELD(ActorRecord, crushed, 300);
+KINOKO_ACTOR_FIELD(ActorRecord, free_width, 304);
+KINOKO_ACTOR_FIELD(ActorRecord, free_height, 308);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_vm, 120);
 KINOKO_ACTOR_FIELD(ActorRecord, direction, 272);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_records, 328);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_slots, 332);
@@ -167,7 +188,8 @@ KINOKO_ACTOR_FIELD(ManagerPrefix, animations, 52);
 KINOKO_ACTOR_FIELD(ManagerPrefix, textures, 68);
 KINOKO_ACTOR_FIELD(ManagerPrefix, actors, 84);
 KINOKO_ACTOR_FIELD(ManagerPrefix, iteration, 100);
-KINOKO_ACTOR_FIELD(ManagerPrefix, iteration_state, 116);
+KINOKO_ACTOR_FIELD(ManagerPrefix, iteration_count, 116);
 KINOKO_ACTOR_FIELD(ManagerPrefix, cleanup_pending, 120);
+KINOKO_ACTOR_FIELD(ManagerPrefix, callback_candidates, 124);
 #undef KINOKO_ACTOR_FIELD
 }

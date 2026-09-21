@@ -2,6 +2,7 @@
 #define KINOKO_ACTOR_COLLISION_H
 
 #include <stdint.h>
+typedef struct KinokoActor KinokoActor;
 
 typedef struct KinokoCollisionRecord {
     const unsigned char *chip;
@@ -14,7 +15,7 @@ extern "C" {
 #endif
 
 /* Original 4689D0 narrow phase, using the native Actor and ChipLayout fields. */
-int32_t kinoko_actor_collision_move(void *actor,
+int32_t kinoko_actor_collision_move(KinokoActor *actor,
     const KinokoCollisionRecord *records, int32_t count, float dx, float dy);
 
 #ifdef __cplusplus

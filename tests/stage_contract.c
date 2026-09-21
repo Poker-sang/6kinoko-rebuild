@@ -5738,8 +5738,11 @@ static int test_layout_secondary_lifetime(void) {
 #include "act_document_file_contract.h"
 #include "act_virtual_clone_contract.h"
 #include "map_lazy_binding_contract.h"
+#include "collision_lifecycle_contract.h"
 
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--collision-lifecycle") == 0)
+        return test_collision_lifecycle();
     if (argc == 2 && strcmp(argv[1], "--map-lazy-binding") == 0) {
         int32_t vm = function_48a170(1024), root[5];
         CHECK(vm);
@@ -5751,6 +5754,7 @@ int main(int argc, char **argv) {
         return test_act_virtual_clone();
     if (argc == 2 && strcmp(argv[1], "--act-document-lifetime") == 0)
         return test_act_document_file_lifetime();
+    CHECK(test_collision_lifecycle()==0);
     CHECK(test_layout_secondary_lifetime()==0);
     CHECK(test_actor_handle_lookup()==0);
     CHECK(test_actor_owner_list()==0);
@@ -6251,6 +6255,16 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 4 || hits[0] != 12 || hits[1] != 21 || "
             "hits[2] != 23 || hits[3] != 32) throw \"collision pair order\";"));
+        /* R140: failure clears only the failing callback and restores the VM
+           stack before the reciprocal callback. Then restore the fixture. */
+        CHECK(execute_source(vm, root + 2,
+            "hits.clear(); probe[0].SetCollisionCallbackFunction(function(other) { throw \"collision probe\"; });"));
+        function_462ce0(pair_actors[0], pair_actors[1]);
+        CHECK(function_48aa20(vm) == top);
+        CHECK(function_4a9a30_this(pair_actors[0]+136) != 0x08000100);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len()!=1 || hits[0]!=21) throw \"reciprocal callback after failure\";"
+            "probe[0].SetCollisionCallbackFunction(::Contact);"));
         CHECK(execute_source(vm, root + 2,
             "hits.clear();\nprobe[1].InterrputCollisionCallback();\n"
             "if (hits.len()!=4 || hits[0]!=21 || hits[1]!=12 || hits[2]!=23 || hits[3]!=32) "

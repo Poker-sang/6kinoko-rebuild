@@ -146,8 +146,7 @@ int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
 void retdec_trace_star_state(const char *phase, int32_t actor);
-static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
-                                          uint32_t stride);
+
 int32_t retdec_function_45df10_impl(int32_t this_ptr,
                                             int32_t source_ptr);
 int32_t retdec_actor_step_callback(int32_t state_ptr);
@@ -11330,139 +11329,30 @@ static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
         (KinokoActor *)(intptr_t)actor, dx, dy);
 }
 
-/* Shared by original Actor::Move (45DBD0) and Actor::Update (45EC60). */
 static void retdec_actor_refresh_bounds(int32_t actor) {
-    float width_scale;
-    float height_scale;
-    float left;
-    float right;
-    float top;
-    float bottom;
-    width_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 172);
-    height_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 176);
-    if (0.0f >= *(float32_t *)(intptr_t)(actor + 272)) {
-        left = *(float32_t *)(intptr_t)(actor + 424) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-        right = *(float32_t *)(intptr_t)(actor + 432) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-    } else {
-        left = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 432) * width_scale;
-        right = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 424) * width_scale;
-    }
-    top = *(float32_t *)(intptr_t)(actor + 428) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    bottom = *(float32_t *)(intptr_t)(actor + 436) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    *(float32_t *)(intptr_t)(actor + 440) = left;
-    *(float32_t *)(intptr_t)(actor + 444) = top;
-    *(float32_t *)(intptr_t)(actor + 448) = right;
-    *(float32_t *)(intptr_t)(actor + 452) = bottom;
-    *(float32_t *)(intptr_t)(actor + 352) = left;
-    *(float32_t *)(intptr_t)(actor + 356) = top;
-    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(right - left);
-    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
+    kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)actor);
 }
 
-int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
-    while (dx != 0.0f || dy != 0.0f) {
-        int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
-        memcpy((void *)(intptr_t)(actor + 248), (const void *)(intptr_t)(actor + 240), 8);
-        memcpy((void *)(intptr_t)(actor + 456), (const void *)(intptr_t)(actor + 440), 16);
-        if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
-            *(uint8_t *)(intptr_t)(animation + 25) != 0) {
-            float step_x, step_y;
-            if (dx > 8.0f) { step_x = 8.0f; dx -= 8.0f; }
-            else if (dx < -8.0f) { step_x = -8.0f; dx += 8.0f; }
-            else { step_x = dx; dx = 0.0f; }
-            if (dy > 8.0f) { step_y = 8.0f; dy -= 8.0f; }
-            else if (dy < -8.0f) { step_y = -8.0f; dy += 8.0f; }
-            else { step_y = dy; dy = 0.0f; }
-            retdec_actor_collide_move(actor, step_x, step_y);
-        } else {
-            *(float *)(intptr_t)(actor + 240) += dx;
-            *(float *)(intptr_t)(actor + 244) += dy;
-            memset((void *)(intptr_t)(actor + 284), 0, 16);
-            dx = dy = 0.0f;
-        }
-        retdec_actor_refresh_bounds(actor);
-    }
-    return 0;
+int32_t function_45dbd0_this(int32_t actor, float dx, float dy) {
+    return kinoko_actor_move((KinokoCollisionState *)g_514300_storage,
+        (KinokoActor *)(intptr_t)actor, dx, dy);
 }
 
-/* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
-static int32_t function_45ec60(int32_t actor)
-{
-    float parent_dx = 0.0f;
-    float parent_dy = 0.0f;
-    int32_t parent_pair[2] = { 0, 0 };
-    int32_t parent_slot;
-    int32_t parent;
+static int32_t function_45ec60(int32_t actor) {
+    return kinoko_actor_update_motion((KinokoCollisionState *)g_514300_storage,
+        (KinokoActor *)(intptr_t)actor);
+}
+
+uint32_t kinoko_actor_motion_update_mask(void) { return (uint32_t)function_471060(); }
+
+void kinoko_actor_trace_motion(KinokoActor *receiver, int32_t phase) {
+    int32_t actor = (int32_t)(intptr_t)receiver;
     static volatile LONG trace_count;
     LONG trace_index;
-
-    if (actor == 0)
-        return 0;
-
-    retdec_trace_invalid_actor("before-motion",actor);
-    retdec_trace_star_state("before-motion",actor);
-
-    *(float32_t *)(intptr_t)(actor + 248) =
-        *(float32_t *)(intptr_t)(actor + 240);
-    *(float32_t *)(intptr_t)(actor + 252) =
-        *(float32_t *)(intptr_t)(actor + 244);
-    *(float32_t *)(intptr_t)(actor + 456) =
-        *(float32_t *)(intptr_t)(actor + 440);
-    *(float32_t *)(intptr_t)(actor + 460) =
-        *(float32_t *)(intptr_t)(actor + 444);
-    *(float32_t *)(intptr_t)(actor + 464) =
-        *(float32_t *)(intptr_t)(actor + 448);
-    *(float32_t *)(intptr_t)(actor + 468) =
-        *(float32_t *)(intptr_t)(actor + 452);
-
-    kinoko_native_weak_pair_lock(actor + 32, parent_pair);
-    parent_slot = parent_pair[0];
-    parent = parent_slot != 0
-        ? *(int32_t *)(intptr_t)parent_slot : 0;
-    if (parent != 0 &&
-        (*(int32_t *)(intptr_t)(parent + 232) &
-         (int32_t)function_471060()) != 0) {
-        parent_dx = *(float32_t *)(intptr_t)(parent + 240) -
-            *(float32_t *)(intptr_t)(parent + 248);
-        parent_dy = *(float32_t *)(intptr_t)(parent + 244) -
-            *(float32_t *)(intptr_t)(parent + 252);
-    }
-    *(float32_t *)(intptr_t)(actor + 264) = parent_dx;
-    *(float32_t *)(intptr_t)(actor + 268) = parent_dy;
-
-    int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
-    if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
-        *(uint8_t *)(intptr_t)(animation + 25) != 0) {
-        float vx = *(float *)(intptr_t)(actor + 256);
-        float dx = vx + parent_dx;
-        float dy = *(float *)(intptr_t)(actor + 260) + parent_dy;
-        if (((*(uint32_t *)(intptr_t)(actor + 392) |
-              *(uint32_t *)(intptr_t)(actor + 236)) & 0x800000u) == 0 &&
-            *(int32_t *)(intptr_t)(actor + 296) != 0 && vx != 0) {
-            float slope_dy = fabsf(*(float *)(intptr_t)(actor + 276) * vx);
-            dy += fminf(fabsf(vx), slope_dy);
-        }
-        retdec_actor_collide_move(actor, dx, dy);
-    } else {
-        *(float32_t *)(intptr_t)(actor + 240) +=
-            *(float32_t *)(intptr_t)(actor + 256) + parent_dx;
-        *(float32_t *)(intptr_t)(actor + 244) +=
-            *(float32_t *)(intptr_t)(actor + 260) + parent_dy;
-        *(float32_t *)(intptr_t)(actor + 284) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 288) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 292) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 296) = 0.0f;
-    }
-
-    retdec_actor_refresh_bounds(actor);
+    if (phase == 0) {
+        retdec_trace_invalid_actor("before-motion", actor);
+        retdec_trace_star_state("before-motion", actor);
+    } else if (phase == 1) {
     trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 16) {
         int32_t before_x;
@@ -11476,14 +11366,10 @@ static int32_t function_45ec60(int32_t actor)
         retdec_trace_i32("actor:motion-before-x", before_x);
         retdec_trace_i32("actor:motion-after-x", after_x);
     }
-    if (parent != 0 && !function_4045c0(parent + 440, actor + 440)) {
-        int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-        function_4606d0_this(actor, (int32_t)(intptr_t)empty);
+    } else {
+        retdec_trace_invalid_actor("after-motion", actor);
+        retdec_trace_star_state("after-motion", actor);
     }
-    kinoko_native_release_strong(parent_pair[1]);
-    retdec_trace_invalid_actor("after-motion",actor);
-    retdec_trace_star_state("after-motion",actor);
-    return 0;
 }
 
 static void retdec_actor_collect_tree(int32_t manager, int32_t node,
@@ -11547,7 +11433,7 @@ static int32_t retdec_actor_manager_refresh(int32_t manager)
         int32_t end = *(int32_t *)(intptr_t)(manager + offset + 4);
         if (begin == 0 || (end - begin) / 4 < count) {
             if (count > INT32_MAX / 8 ||
-                !retdec_collision_reserve(manager + offset, (uint32_t)count * 2, 4))
+                !kinoko_native_buffer_ensure(manager + offset, (uint32_t)count * 8))
                 return 0;
             begin = *(int32_t *)(intptr_t)(manager + offset);
             *(int32_t *)(intptr_t)(manager + offset + 4) = begin + count * 8;
@@ -12049,76 +11935,25 @@ static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
 
 
 // Address range: 0x462ce0 - 0x462e3e
-static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
-    int32_t argument[3];
-    int32_t vm = *(int32_t *)(intptr_t)(actor + 120);
-    int32_t base = sq_gettop(kinoko_vm(vm));
-    int32_t result;
-    retdec_trace_invalid_actor("before-collision",actor);
-    function_4a9500_this(argument, other + 44);
-    result = function_45e020_this(actor + 120, (int32_t)(intptr_t)argument,
-                                  argument[1], argument[2]);
-    retdec_trace_invalid_actor("after-collision",actor);
-    if (result < 0) {
-        retdec_trace("actor:collision-callback-failed");
-        sq_settop(kinoko_vm(vm), (SQInteger)(base));
-        /* Original 462D9C/462E3E clears a failing callback before continuing. */
-        kinoko_actor_set_collision_callback(actor, NULL, (int32_t)(intptr_t)&g16, g483, g484);
-    }
-    return result;
+void kinoko_actor_trace_collision(KinokoActor *actor, int32_t after) {
+    retdec_trace_invalid_actor(after ? "after-collision" : "before-collision", (int32_t)(intptr_t)actor);
+}
+
+void kinoko_actor_clear_failed_collision_callback(KinokoActor *actor) {
+    kinoko_actor_set_collision_callback((int32_t)(intptr_t)actor, NULL,
+        (int32_t)(intptr_t)&g16, g483, g484);
 }
 
 int32_t function_462ce0(int32_t first, int32_t second) {
-    int32_t result = 0;
-    if ((*(int32_t *)(intptr_t)(second + 320) &
-         *(int32_t *)(intptr_t)(first + 324) |
-         *(int32_t *)(intptr_t)(second + 324) &
-         *(int32_t *)(intptr_t)(first + 320)) == 0 ||
-        !function_4045c0(first + 440, second + 440))
-        return 0;
-
-    if ((*(int32_t *)(intptr_t)(first + 324) &
-         *(int32_t *)(intptr_t)(second + 320)) != 0 &&
-        function_4a9a30_this(first + 136) == 0x08000100)
-        result = retdec_actor_collision_callback(first, second);
-    /* The first callback may change masks; original 462DEA reads them again. */
-    if ((*(int32_t *)(intptr_t)(first + 320) &
-         *(int32_t *)(intptr_t)(second + 324)) != 0 &&
-        function_4a9a30_this(second + 136) == 0x08000100)
-        result = retdec_actor_collision_callback(second, first);
-    return result;
+    return kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)first, (KinokoActor *)(intptr_t)second);
 }
 
-
-// Address range: 0x462e80 - 0x462f21
 int32_t function_462e80(int32_t manager) {
-    int32_t count = *(int32_t *)(intptr_t)(manager + 116);
-    int32_t *actors = *(int32_t **)(intptr_t)(manager + 100);
-    int32_t *candidates = *(int32_t **)(intptr_t)(manager + 124);
-    int32_t candidate_count = 0;
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t actor = actors[index];
-        if (*(unsigned char *)(intptr_t)(actor + 40) != 0 &&
-            (*(int32_t *)(intptr_t)(actor + 320) |
-             *(int32_t *)(intptr_t)(actor + 324)) != 0)
-            candidates[candidate_count++] = actor;
-    }
-    for (int32_t first = 0; first < candidate_count; ++first)
-        for (int32_t second = first + 1; second < candidate_count; ++second)
-            function_462ce0(candidates[first], candidates[second]);
-    return candidate_count;
+    return kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)manager);
 }
 
-// Address range: 0x462f30 - 0x462f76
 static int32_t function_462f30_this(int32_t manager, int32_t actor) {
-    int32_t result = 0;
-    int32_t actors = *(int32_t *)(intptr_t)(manager + 100);
-    for (uint32_t i = 0; i < *(uint32_t *)(intptr_t)(manager + 116); ++i) {
-        int32_t other = *(int32_t *)(intptr_t)(actors + 4 * i);
-        if (*(uint8_t *)(intptr_t)(other + 40) && other != actor)
-            result = function_462ce0(actor, other);
-    }
-    return result;
+    return kinoko_collision_dispatch_actor((KinokoActorManager *)(intptr_t)manager, (KinokoActor *)(intptr_t)actor);
 }
 
 int32_t function_462f30(int32_t actor) {
@@ -13012,69 +12847,15 @@ int32_t function_466540(int32_t a1, int32_t a2) {
 
 // Address range: 0x4681e0 - 0x468297
 static int32_t function_4681e0_this(int32_t state, int32_t actor) {
-    int32_t count = 0;
-    int32_t begin = *(int32_t *)(intptr_t)(state + 4);
-    int32_t end = *(int32_t *)(intptr_t)(state + 8);
-    uint32_t flags = 0;
-    KinokoCollisionRecord *records;
-
-    for (int32_t entry = begin; entry != end; entry += 4) {
-        int32_t layout = *(int32_t *)(intptr_t)entry;
-        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-        if (*(uint8_t *)(intptr_t)(layer + 140)) {
-            /* GetChipFlag uses the unexpanded actor rectangle, unlike motion's 24-pixel query. */
-            if (!retdec_collision_query_rect(state, layout,
-                (int32_t *)(intptr_t)(actor + 480 + entry - begin),
-                (int32_t)*(float *)(intptr_t)(actor + 440),
-                (int32_t)*(float *)(intptr_t)(actor + 444),
-                (int32_t)*(float *)(intptr_t)(actor + 448),
-                (int32_t)*(float *)(intptr_t)(actor + 452), &count))
-                return 0;
-        }
-    }
-    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
-    for (int32_t i = 0; i < count; ++i) {
-        if (records[i].chip != NULL)
-            flags |= *(const uint32_t *)(records[i].chip + 16);
-    }
-    return (int32_t)flags;
+    return (int32_t)kinoko_collision_chip_flags((KinokoCollisionState *)(intptr_t)state,
+        (KinokoActor *)(intptr_t)actor);
 }
 
-
-// Address range: 0x4682a0 - 0x4683b2
 static int32_t function_4682a0_this(int32_t state, int32_t actor,
-    float32_t left, float32_t top, float32_t right, float32_t bottom) {
-    int32_t count = 0;
-    int32_t begin = *(int32_t *)(intptr_t)(state + 4);
-    int32_t end = *(int32_t *)(intptr_t)(state + 8);
-    int32_t actors = *(int32_t *)(intptr_t)(state + 68);
-    int32_t actor_count = *(int32_t *)(intptr_t)(state + 84);
-
-    for (int32_t entry = begin; entry != end; entry += 4) {
-        int32_t layout = *(int32_t *)(intptr_t)entry;
-        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-        if (*(uint8_t *)(intptr_t)(layer + 140)) {
-            if (!retdec_collision_query_rect(state, layout,
-                (int32_t *)(intptr_t)(actor + 480 + entry - begin),
-                (int32_t)left, (int32_t)top, (int32_t)right, (int32_t)bottom,
-                &count))
-                return 0;
-            if (count > 0)
-                return 1;
-        }
-    }
-    /* 468343..468385 includes touching edges and excludes only the receiver. */
-    for (int32_t i = 0; i < actor_count; ++i) {
-        int32_t other = *(int32_t *)(intptr_t)(actors + 4 * i);
-        if (*(float32_t *)(intptr_t)(other + 448) >= left &&
-            *(float32_t *)(intptr_t)(other + 440) <= right &&
-            *(float32_t *)(intptr_t)(other + 452) >= top &&
-            *(float32_t *)(intptr_t)(other + 444) <= bottom && other != actor)
-            return 1;
-    }
-    return 0;
+    float left, float top, float right, float bottom) {
+    return kinoko_collision_has_chip((KinokoCollisionState *)(intptr_t)state,
+        (KinokoActor *)(intptr_t)actor, left, top, right, bottom);
 }
-
 
 // Address range: 0x468620 - 0x468788
 int32_t function_468620(void) {
@@ -13082,129 +12863,18 @@ int32_t function_468620(void) {
 }
 
 static int32_t function_468620_this(int32_t this_ptr) {
-    int32_t *source_pairs;
-    int32_t *items;
-    int32_t root;
-    uint32_t pair_count;
-    uint32_t i;
-
-    if (this_ptr == 0)
-        return 0;
-
-    source_pairs = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 52);
-    if (source_pairs != NULL) {
-        int32_t begin = *(int32_t *)(this_ptr + 4);
-        int32_t end = *(int32_t *)(this_ptr + 8);
-        pair_count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
-        for (i = 0; i < pair_count; ++i) {
-            int32_t pair[2] = { 0, 0 };
-            int32_t *member = (int32_t *)(intptr_t)(source_pairs + 2 * i);
-            int32_t *actor_slot;
-            int32_t actor;
-            int32_t config;
-
-            kinoko_native_weak_pair_lock((int32_t)(intptr_t)member, pair);
-            actor_slot = (int32_t *)(intptr_t)pair[0];
-            if (actor_slot != NULL) {
-                actor = *actor_slot;
-                if (actor != 0) {
-                    *(float32_t *)(intptr_t)(actor + 248) =
-                        *(float32_t *)(intptr_t)(actor + 240);
-                    *(float32_t *)(intptr_t)(actor + 252) =
-                        *(float32_t *)(intptr_t)(actor + 244);
-                    items = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 4);
-                    if (items != NULL) {
-                        int32_t item = items[i];
-                        config = item != 0
-                            ? *(int32_t *)(intptr_t)(item + 312) : 0;
-                        if (config != 0) {
-                            *(float32_t *)(intptr_t)(actor + 240) =
-                                *(float32_t *)(intptr_t)(config + 144);
-                            *(float32_t *)(intptr_t)(actor + 244) =
-                                *(float32_t *)(intptr_t)(config + 148);
-                        }
-                    }
-                }
-            }
-            kinoko_native_release_strong(pair[1]);
-        }
-    }
-
-    root = *(int32_t *)(this_ptr + 0);
-    if (root == 0) {
-        *(int32_t *)(this_ptr + 84) = 0;
-        return 0;
-    }
-
-    pair_count = (uint32_t)*(int32_t *)(root + 116);
-    *(int32_t *)(this_ptr + 84) = 0;
-    if (pair_count == 0)
-        return root;
-
-    {
-        int32_t vector_ptr = this_ptr + 68;
-        int32_t begin = *(int32_t *)(vector_ptr + 0);
-        int32_t end = *(int32_t *)(vector_ptr + 4);
-        uint32_t count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
-        if (count < pair_count) {
-            if(pair_count>INT32_MAX/4 || !kinoko_native_buffer_resize(vector_ptr,pair_count*4))
-                return root;
-            begin=*(int32_t *)(intptr_t)vector_ptr;
-        }
-
-        items = (int32_t *)(intptr_t)*(int32_t *)(root + 100);
-        if (items == NULL)
-            return root;
-        uint32_t written = 0;
-        int32_t last = root;
-        for (i = 0; i < pair_count; ++i) {
-            int32_t item = items[i];
-            if (item != 0 && *(int32_t *)(intptr_t)(item + 312) != 0) {
-                *(int32_t *)(intptr_t)(begin + 4 * written) = item;
-                last = item;
-                ++written;
-            }
-        }
-        *(int32_t *)(this_ptr + 84) = (int32_t)written;
-        return last;
-    }
+    return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);
 }
 
-
-static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr)
-{
-    int32_t begin;
-    int32_t end;
-    int32_t pair_begin;
-    int32_t pair_end;
-
-    if (this_ptr == 0 || actor_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(this_ptr + 4);
-    end = *(int32_t *)(intptr_t)(this_ptr + 8);
-    if (begin != end)
-        *(int32_t *)(intptr_t)(this_ptr + 8) = begin;
-    pair_begin = *(int32_t *)(intptr_t)(this_ptr + 52);
-    pair_end = *(int32_t *)(intptr_t)(this_ptr + 56);
-    for (int32_t cursor = pair_begin; cursor != pair_end; cursor += 8) {
-        int32_t control = *(int32_t *)(intptr_t)(cursor + 4);
-        kinoko_native_release_weak(control);
-    }
-    *(int32_t *)(intptr_t)(this_ptr + 56) = pair_begin;
-    *(int32_t *)(intptr_t)this_ptr = actor_ptr;
-    *(int32_t *)(intptr_t)(this_ptr + 84) = 0;
-    return 1;
+static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr) {
+    return kinoko_collision_reset((KinokoCollisionState *)(intptr_t)this_ptr,
+        (KinokoActorManager *)(intptr_t)actor_ptr);
 }
 
 // Address range: 0x4689d0 - 0x46939a
 
 
 // Address range: 0x4693a0 - 0x469615
-static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
-                                          uint32_t stride) {
-    if (!stride || count > INT32_MAX / stride) return 0;
-    return kinoko_native_buffer_ensure(vector,count*stride);
-}
 
 int32_t function_4693a0(int32_t layout) {
     return (int32_t)(intptr_t)kinoko_collision_register_map(
@@ -14040,39 +13710,8 @@ static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
 // Address range: 0x46ef40 - 0x46efc4
 static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
     uint32_t index, int32_t count_ptr) {
-    uint32_t layer_count = kinoko_map_event_count(manager);
-    int32_t scratch[12] = {0}, cached = 0, count = 0, layout;
-    KinokoCollisionRecord *records;
-    *(int32_t *)(intptr_t)(manager + 56) = -1;
-    if (index >= layer_count || (layout = kinoko_map_event_at(manager, index)) == 0)
-        return 0;
-    /* 4355F0 queries around the point, then uses half-open chip rectangles. */
-    if (!retdec_collision_query_rect((int32_t)(intptr_t)scratch, layout, &cached,
-        x - *(int32_t *)(intptr_t)(layout + 240), y - *(int32_t *)(intptr_t)(layout + 244),
-        x + *(int32_t *)(intptr_t)(layout + 240), y + *(int32_t *)(intptr_t)(layout + 244),
-        &count)) {
-        kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
-        return 0;
-    }
-    if (count_ptr != 0) *(int32_t *)(intptr_t)count_ptr = count;
-    records = (KinokoCollisionRecord *)(intptr_t)scratch[9];
-    for (int32_t i = 0; i < count; ++i) {
-        int32_t record = (int32_t)(intptr_t)records[i].layout;
-        const unsigned char *chip = records[i].chip;
-        int32_t left = *(int32_t *)(intptr_t)(record + 4);
-        int32_t top = *(int32_t *)(intptr_t)(record + 8);
-        int32_t width = retdec_mcd_i16(chip + 12), height = retdec_mcd_i16(chip + 14);
-        if (left <= x && left + width > x && top <= y && top + height > y) {
-            *(int32_t *)(intptr_t)(manager + 56) = *(int32_t *)(intptr_t)record;
-            *(float32_t *)(intptr_t)(manager + 60) = (float32_t)left;
-            *(float32_t *)(intptr_t)(manager + 64) = (float32_t)top;
-            *(float32_t *)(intptr_t)(manager + 68) = (float32_t)(left + width);
-            *(float32_t *)(intptr_t)(manager + 72) = (float32_t)(top + height);
-            break;
-        }
-    }
-    kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
-    return 0;
+    return kinoko_collision_event_at_point((KinokoMapManager *)(intptr_t)manager,
+        x, y, index, (int32_t *)(intptr_t)count_ptr);
 }
 
 int32_t function_46ef40(int32_t x, int32_t y, uint32_t index, int32_t count_ptr) {
