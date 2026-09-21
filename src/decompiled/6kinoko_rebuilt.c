@@ -1,3 +1,4 @@
+#include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
 #include "kinoko/input_cluster.h"
 #include "kinoko/map_containers.h"
@@ -15128,7 +15129,17 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     default_record[11] = 0xff;
     memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
            sizeof(default_record));
+    kinoko_input_devices_construct(this_ptr);
+    kinoko_input_devices_resize(this_ptr, (uint32_t)g782);
     kinoko_input_cluster_construct(this_ptr + 196);
+    for (int32_t i=0; i<g782; ++i) {
+        int32_t device=kinoko_input_devices_begin(this_ptr)+168*i;
+        uint32_t record[17]={0};
+        record[0]=(uint8_t)i;
+        for (int32_t key=0; key<12; ++key) record[key+5]=key;
+        memcpy((void *)(intptr_t)(device+4), record, sizeof(record));
+        kinoko_input_cluster_append(this_ptr+196,device);
+    }
     kinoko_input_cluster_append(this_ptr + 196, this_ptr + 12);
     retdec_initialize_input_aggregate(this_ptr + 392);
     g_retdec_input_manager_initialized = 1;
