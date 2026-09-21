@@ -49,6 +49,42 @@ void DocumentLoadAssociations::bind_resources(KinokoActDocument *document, uint3
         load<SetResource>(table + 6 * sizeof(void *))(layer, found->second);
     }
 }
+
+void DocumentCloneAssociations::add_layer(KinokoActLayer *layer) {
+    layers_.emplace(LayerView(layer).get(&LayerAssociationRecord::layer_id), layer);
+}
+void DocumentCloneAssociations::add_resource(KinokoActResource *resource) {
+    resources_.emplace(load<ResourceIdentityRecord>(resource).id, resource);
+}
+void DocumentCloneAssociations::bind(KinokoActDocument *document) {
+    using SetResource = int32_t (__thiscall *)(KinokoActLayer *, KinokoActResource *);
+    const DocumentView doc(document);
+    for (int32_t i = 0; i < layer_distance(doc.get(&DocumentRecord::layers)); ++i) {
+        auto *layer = layer_at(doc.get(&DocumentRecord::layers), i);
+        if (!layer) continue; // Native clone arrays retain source null slots.
+        const LayerView view(layer);
+        // 427D49..427DAF: resource callback precedes this layer's hierarchy.
+        const auto found = resources_.find(view.get(&LayerAssociationRecord::resource_id));
+        if (found != resources_.end()) {
+            const auto *table = static_cast<const unsigned char *>(view.get(&LayerAssociationRecord::vtable));
+            load<SetResource>(table + 6 * sizeof(void *))(layer, found->second);
+        }
+        if (auto *parent = view.get(&LayerAssociationRecord::parent)) {
+            const auto id = LayerView(parent).get(&LayerAssociationRecord::layer_id);
+            view.set(&LayerAssociationRecord::parent, layers_[id]);
+        }
+        // 427DFE..427E89 replaces slots in place, preserving order and count.
+        // Missing IDs insert null; parent_id is not recomputed here.
+        for (int32_t child = 0;
+             child < layer_distance(view.get(&LayerAssociationRecord::children)); ++child) {
+            const auto children = view.get(&LayerAssociationRecord::children);
+            auto *source = layer_at(children, child);
+            const auto id = LayerView(source).get(&LayerAssociationRecord::layer_id);
+            kinoko::legacy::store(reinterpret_cast<unsigned char *>(children.begin)
+                + child * sizeof(KinokoActLayer *), layers_[id]);
+        }
+    }
+}
 }
 
 extern "C" int32_t __fastcall kinoko_act_layer_set_resource(

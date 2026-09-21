@@ -42,4 +42,16 @@ private:
     // Original resource index is constructed after the parent pass/count read.
     std::optional<std::map<int32_t, KinokoActResource *>> resources_;
 };
+
+// 427950 uses cloned IDs to replace the shallow hierarchy references. These
+// indices borrow objects owned by Clone; they never detach or append children.
+class DocumentCloneAssociations {
+public:
+    void add_layer(KinokoActLayer *layer);
+    void add_resource(KinokoActResource *resource);
+    void bind(KinokoActDocument *document);
+private:
+    std::map<int32_t, KinokoActResource *> resources_;
+    std::map<int32_t, KinokoActLayer *> layers_;
+};
 }

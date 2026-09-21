@@ -3,6 +3,7 @@
 #include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_clone.h"
+#include "kinoko/act_document_association.hpp"
 #include "kinoko/texture_store.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/boost_control.hpp"
@@ -15,7 +16,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <new>
-#include <unordered_map>
 #include <unordered_set>
 #include <mutex>
 #include <vector>
@@ -72,24 +72,24 @@ public:
         field<uint8_t>(result,204)=0;
         const auto resources=clone_array(result,source,act_resources);
         const auto layers=clone_array(result,source,act_layers);
-        std::unordered_map<Address,Address> layer_map;
+        kinoko::act::DocumentCloneAssociations associations;
         for(Address slot=resources.begin;slot!=resources.end;slot+=4) {
             const auto original=field<Address>(slot);
-            if(original) field<Address>(slot)=resource(original);
+            if(original) {
+                field<Address>(slot)=resource(original);
+                associations.add_resource(static_cast<KinokoActResource *>(pointer(field<Address>(slot))));
+            }
         }
         for(Address slot=layers.begin;slot!=layers.end;slot+=4) {
             const auto original=field<Address>(slot);
-            if(original) field<Address>(slot)=layer_map[original]=layer(original);
+            if(original) {
+                field<Address>(slot)=layer(original);
+                associations.add_layer(static_cast<KinokoActLayer *>(pointer(field<Address>(slot))));
+            }
         }
-        for(const auto &pair:layer_map) {
-            auto &parent=field<Address>(pair.second,layer_parent);
-            if(parent) parent=layer_map.at(parent);
-            const auto &children=field<Vector>(pair.second,layer_children);
-            for(Address slot=children.begin;slot!=children.end;slot+=4)
-                field<Address>(slot)=layer_map.at(field<Address>(slot));
-        }
-        // Reassociate resources by ID and rebind each copied layout's layer,
-        // including its alpha/blend pointer properties (original 427D49..E89).
+        associations.bind(static_cast<KinokoActDocument *>(pointer(result)));
+        // Native Clone::layer still copies raw layouts. Keep its required
+        // rebind separate from the original 427D49..E89 association phase.
         if (!retdec_act_bind_cloned_layouts(static_cast<int32_t>(result))) throw std::bad_alloc();
         committed_=true;
         return result;

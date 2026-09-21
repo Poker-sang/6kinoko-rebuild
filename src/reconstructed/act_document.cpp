@@ -754,15 +754,9 @@ int32_t retdec_act_bind_cloned_layouts(int32_t act)
 {
     int32_t layer_begin;
     int32_t layer_end;
-    int32_t resource_begin;
-    int32_t resource_end;
     int32_t layer_count;
-    int32_t resource_count;
     int32_t layer_index;
-    int32_t resource_index;
     int32_t layer;
-    int32_t resource;
-    int32_t resource_id;
     int32_t layer_sentinel;
     int32_t node;
     uint32_t trace_count = 0;
@@ -771,29 +765,14 @@ int32_t retdec_act_bind_cloned_layouts(int32_t act)
         return 0;
     layer_begin = field<int32_t>(act + 208);
     layer_end = field<int32_t>(act + 212);
-    resource_begin = field<int32_t>(act + 224);
-    resource_end = field<int32_t>(act + 228);
-    if (layer_end < layer_begin || resource_end < resource_begin)
+    if (layer_end < layer_begin)
         return 0;
     layer_count = (layer_end - layer_begin) / 4;
-    resource_count = (resource_end - resource_begin) / 4;
 
     for (layer_index = 0; layer_index < layer_count; ++layer_index) {
         layer = field<int32_t>(layer_begin + layer_index * 4);
         if (layer == 0)
             continue;
-        resource_id = field<int32_t>(layer + 0x60);
-        resource = 0;
-        for (resource_index = 0; resource_index < resource_count;
-             ++resource_index) {
-            int32_t candidate = field<int32_t>(resource_begin + resource_index * 4);
-            if (candidate != 0 &&
-                field<int32_t>(candidate + 4) == resource_id) {
-                resource = candidate;
-                break;
-            }
-        }
-        field<int32_t>(layer + 0x64) = resource;
         layer_sentinel = field<int32_t>(layer + 0xb4);
         if (layer_sentinel == 0)
             continue;
