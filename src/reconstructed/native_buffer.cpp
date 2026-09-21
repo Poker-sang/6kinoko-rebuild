@@ -39,3 +39,16 @@ extern "C" void kinoko_native_buffer_replace(int32_t slot,const void* data,uint3
 extern "C" void kinoko_native_buffer_destroy(int32_t slot) {
     delete field<Buffer*>(slot+8);publish(slot,nullptr);
 }
+
+extern "C" int32_t kinoko_native_buffer_ensure(int32_t slot,uint32_t bytes) {
+    try {
+        check(bytes);
+        auto* owner=field<Buffer*>(slot+8);
+        const auto used=field<uint32_t>(slot+4)-field<uint32_t>(slot);
+        if(used%4 || used>bytes && (!owner || used>owner->size()*4)) return 0;
+        if(owner && owner->size()*4>=bytes) return 1;
+        if(!kinoko_native_buffer_resize(slot,bytes)) return 0;
+        field<uint32_t>(slot+4)=field<uint32_t>(slot)+used;
+        return 1;
+    } catch(...) {return 0;}
+}

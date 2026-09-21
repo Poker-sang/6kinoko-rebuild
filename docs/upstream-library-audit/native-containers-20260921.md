@@ -67,3 +67,7 @@ ACT layer/resource arrays and layer child arrays now own actual std::vector<int3
 ## R121 — Map-layout and timeline record buffers
 
 Replaced all ten map-layout vector stores and timeline pair storage with actual word-aligned std::vector<uint32_t> ownership. Borrowed byte spans remain the engine boundary; the third word is an opaque owner. Map records, render sprites, reference/cache rebuilding, full virtual cloning, activation cloning and reverse destruction now share that lifetime API. Sprite vtable reset and 281-byte copy semantics remain unchanged. Temporary serialization vectors no longer transfer into malloc-owned copies. Updated owning fixtures to use native storage. The flat records are game data, not overlays of modern STL internals.
+
+## R122 — Collision and actor iteration buffers
+
+Removed manual realloc/growth arithmetic from collision records, layout/scratch/weak-pair arrays, candidate arrays and ActorManager iteration arrays. Native word vectors own their storage and preserve logical end independently of allocated elements, including stage resets that retain capacity. Temporary point-query buffers now delete their native owners on success and failure. Existing collision scanning, actor ordering, pair rotation and weak-reference release order remain unchanged.

@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
 #include "kinoko/integer_map.h"
@@ -13829,15 +13830,9 @@ static int32_t function_468620_this(int32_t this_ptr) {
         int32_t end = *(int32_t *)(vector_ptr + 4);
         uint32_t count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
         if (count < pair_count) {
-            int32_t block = function_498590(begin, (int32_t)(4 * pair_count));
-            if (block == 0)
+            if(pair_count>INT32_MAX/4 || !kinoko_native_buffer_resize(vector_ptr,pair_count*4))
                 return root;
-            *(int32_t *)(vector_ptr + 0) = block;
-            *(int32_t *)(vector_ptr + 4) =
-                block + (int32_t)(4 * pair_count);
-            *(int32_t *)(vector_ptr + 8) =
-                block + (int32_t)(4 * pair_count);
-            begin = block;
+            begin=*(int32_t *)(intptr_t)vector_ptr;
         }
 
         items = (int32_t *)(intptr_t)*(int32_t *)(root + 100);
@@ -13890,28 +13885,8 @@ static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr)
 // Address range: 0x4693a0 - 0x469615
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
                                           uint32_t stride) {
-    int32_t begin = *(int32_t *)(intptr_t)vector;
-    int32_t end = *(int32_t *)(intptr_t)(vector + 4);
-    int32_t limit = *(int32_t *)(intptr_t)(vector + 8);
-    uint32_t used = begin ? (uint32_t)(end - begin) : 0;
-    uint32_t capacity = begin ? (uint32_t)(limit - begin) / stride : 0;
-    uint32_t grown;
-    void *block;
-    if (count <= capacity)
-        return 1;
-    if (count > INT32_MAX / stride)
-        return 0;
-    grown = capacity + capacity / 2;
-    if (grown < count || grown > INT32_MAX / stride)
-        grown = count;
-    block = realloc((void *)(intptr_t)begin, (size_t)grown * stride);
-    if (block == NULL)
-        return 0;
-    begin = (int32_t)(intptr_t)block;
-    *(int32_t *)(intptr_t)vector = begin;
-    *(int32_t *)(intptr_t)(vector + 4) = begin + used;
-    *(int32_t *)(intptr_t)(vector + 8) = begin + (int32_t)(grown * stride);
-    return 1;
+    if (!stride || count > INT32_MAX / stride) return 0;
+    return kinoko_native_buffer_ensure(vector,count*stride);
 }
 
 int32_t function_4693a0(int32_t layout) {
@@ -14817,7 +14792,7 @@ static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
         x - *(int32_t *)(intptr_t)(layout + 240), y - *(int32_t *)(intptr_t)(layout + 244),
         x + *(int32_t *)(intptr_t)(layout + 240), y + *(int32_t *)(intptr_t)(layout + 244),
         &count)) {
-        free((void *)(intptr_t)scratch[9]);
+        kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
         return 0;
     }
     if (count_ptr != 0) *(int32_t *)(intptr_t)count_ptr = count;
@@ -14837,7 +14812,7 @@ static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
             break;
         }
     }
-    free((void *)(intptr_t)scratch[9]);
+    kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
     return 0;
 }
 
