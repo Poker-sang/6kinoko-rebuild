@@ -22,12 +22,6 @@ using namespace kinoko::stage;
 using kinoko::act::RuntimeRecord;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
-struct DestroyStageOwner {
-    void operator()(KinokoStageOwner *owner) const noexcept {
-        kinoko_stage_owner_destroy(owner);
-    }
-};
-using StageOwner = std::unique_ptr<KinokoStageOwner, DestroyStageOwner>;
 
 KinokoActRuntime *stage_runtime(const KinokoStageNode *node) {
     const auto owner = kinoko_stage_list_value(node);
@@ -132,25 +126,16 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
         retdec_trace("466100:entry");
         retdec_trace_squirrel_name("466100:file", address(file_name));
     }
-    // Own the unpublished record until it is transferred to the stage list
-    // (or returned to the caller when the list is absent, as in R125).
-    StageOwner allocation(static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord))));
+    // 466100 owns only constructor storage during unwind, not the whole
+    // partially loaded stage. In particular it does not reject Load returning 0.
+    auto *allocation = static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord)));
     if (!allocation) return nullptr;
-    const OwnerView owner(allocation.get());
+    const OwnerView owner(allocation);
     owner.clear();
-
     auto *act = kinoko_act_document_create();
     owner.set(&OwnerRecord::document, act);
-    if (!act) return nullptr;
-    // Until publication this owner also owns the partial document. The scoped
-    // reader in load closes first; failure/unwind then destroys the ACT using
-    // the same virtual cleanup path as a published stage.
-    if (!kinoko_act_document_load(act, file_name)) {
-        retdec_trace("466100:act-header-failed");
-        retdec_trace("466100:skip-invalid-act");
-        return nullptr;
-    }
-    retdec_trace("466100:act-header-ok");
+    kinoko_act_document_load(act, file_name);
+    kinoko_act_document_load_resources(act, ""); // 46618A, result ignored
 
     KinokoActRuntime *resource = nullptr;
     auto *holder = static_cast<KinokoActSourceHolder *>(std::malloc(sizeof(SourceHolderRecord)));
@@ -171,8 +156,8 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
         retdec_trace_i32("466100:450e30-result", result);
     }
     if (g603) {
-        const auto node = kinoko_stage_list_append(allocation.get());
+        const auto node = kinoko_stage_list_append(allocation);
         if (trace_index <= 8) retdec_trace_i32("466100:list-node", address(node));
     }
-    return allocation.release();
+    return allocation;
 }

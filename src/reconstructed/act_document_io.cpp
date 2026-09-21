@@ -33,15 +33,14 @@ DocumentView view_of(const KinokoActDocument *document) {
 extern "C" KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *document) {
     if (!document) return nullptr;
     const DocumentView view(document);
-    // R127 rebuild behavior, NOT an original 427530 memset: that decompilation
-    // writes selected fields only. Preserve the inherited zeroing in this type
-    // migration without assigning meanings to still-unidentified bytes.
-    view.clear();
+    // 427530 initializes members selectively; padding/unknown words are untouched.
     view.set(&DocumentRecord::vtable, kinoko_act_host_symbols()->act_vtable);
-    StringRecord empty{};
-    empty.capacity = StringView::inline_capacity;
-    view.set(&DocumentRecord::name, empty);
-    view.set(&DocumentRecord::resource_path, empty);
+    for (auto member : {&DocumentRecord::name, &DocumentRecord::resource_path}) {
+        const auto string = view.view(member);
+        string.set(&StringRecord::capacity, uint32_t{15});
+        string.set(&StringRecord::length, uint32_t{0});
+        *string.bytes(&StringRecord::characters) = 0;
+    }
     retdec_construct_cact_script(address(view.bytes(&DocumentRecord::script)));
     view.set(&DocumentRecord::layers, kinoko::act::DocumentPointerSpan<KinokoActLayer>{});
     view.set(&DocumentRecord::resources, kinoko::act::DocumentPointerSpan<kinoko::act::ResourceRecord>{});
@@ -62,7 +61,11 @@ extern "C" KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *
 
 extern "C" KinokoActDocument *kinoko_act_document_create() {
     auto *document = static_cast<KinokoActDocument *>(std::malloc(sizeof(DocumentRecord)));
-    return kinoko_act_document_initialize(document);
+    // 46615E/46F716 and their unwind entries free the raw constructor storage.
+    kinoko::legacy::Allocation<KinokoActDocument> allocation(document);
+    auto *result = kinoko_act_document_initialize(document);
+    allocation.release();
+    return result;
 }
 
 extern "C" int32_t kinoko_act_document_load(KinokoActDocument *document, const char *file_name) {
@@ -72,23 +75,27 @@ extern "C" int32_t kinoko_act_document_load(KinokoActDocument *document, const c
     const ReaderOwner reader(pointer<ArchiveReader>(legacy_reader_slot));
     if (!opened) return 0;
 
-    // Preserve R127's header policy. RetDec's original 428000 body is truncated;
-    // this check sequence alone is not proof of the original implementation.
+    // 428000 checks magic and offset reads, but not the seek return value.
+    // Version starts at zero to avoid reproducing an indeterminate stack read
+    // on truncated input; its value, not the read result, controls acceptance.
     uint32_t magic = 0, version = 0, payload_offset = 0;
     const auto borrowed_reader = address(reader.get());
-    if (!retdec_reader_read_exact(borrowed_reader, &magic, sizeof(magic)) ||
-        magic != 0x31544341u ||
-        !retdec_reader_read_exact(borrowed_reader, &version, sizeof(version)) ||
-        version != 1u ||
-        !retdec_reader_read_exact(borrowed_reader, &payload_offset, sizeof(payload_offset)) ||
-        !retdec_reader_seek_relative(borrowed_reader, payload_offset))
+    if (!retdec_reader_read_exact(borrowed_reader, &magic, sizeof(magic)) || magic != 0x31544341u)
         return 0;
+    retdec_reader_read_exact(borrowed_reader, &version, sizeof(version));
+    if (version != 1u) return 0;
+    if (!retdec_reader_read_exact(borrowed_reader, &payload_offset, sizeof(payload_offset)))
+        return 0;
+    retdec_reader_seek_relative(borrowed_reader, payload_offset);
 
     // Retain these calls in quiet builds: only the diagnostic sink is silent.
     retdec_trace_i32("act:header-magic", static_cast<int32_t>(magic));
     retdec_trace_i32("act:header-version", static_cast<int32_t>(version));
     retdec_trace_i32("act:header-offset", static_cast<int32_t>(payload_offset));
-    const auto result = retdec_act_load(address(document), borrowed_reader, static_cast<int32_t>(version));
+    using ReadDocument = uint8_t (__thiscall *)(KinokoActDocument *, int32_t *, int32_t);
+    const auto *table = static_cast<const unsigned char *>(view_of(document).get(&DocumentRecord::vtable));
+    const auto read = kinoko::legacy::load<ReadDocument>(table + sizeof(void *));
+    const auto result = read(document, &legacy_reader_slot, static_cast<int32_t>(version));
     retdec_trace_i32("act:load-result", result);
     return result; // reader closes after the payload loader/last trace, once
 }

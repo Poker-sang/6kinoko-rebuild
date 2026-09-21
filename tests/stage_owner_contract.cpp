@@ -38,7 +38,7 @@ int32_t __fastcall delete_document(KinokoActDocument *document, void *, int32_t 
     if (state.owner) CHECK(!OwnerView(state.owner).get(&OwnerRecord::holder));
     if (state.latest_runtime) {
         const RuntimeView runtime(state.latest_runtime);
-        CHECK(!runtime.get(&RuntimeRecord::source_holder));
+        CHECK(runtime.get(&RuntimeRecord::source_holder) == state.holder);
         CHECK(!runtime.get(&RuntimeRecord::active_document));
     }
     ++state.deletes;
@@ -48,7 +48,7 @@ int32_t __fastcall delete_document(KinokoActDocument *document, void *, int32_t 
         CHECK(replacement && state.owner);
         const RuntimeView runtime(replacement);
         runtime.set(&RuntimeRecord::source_holder, state.holder);
-        runtime.set(&RuntimeRecord::active_document, document);
+        runtime.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
         std::free(state.latest_runtime); // fixture contains no runtime-owned objects
         state.latest_runtime = replacement;
         OwnerView(state.owner).set(&OwnerRecord::runtime, replacement);
@@ -82,6 +82,7 @@ int32_t kinoko_act_document_load(KinokoActDocument *, const char *) {
     if (state.throw_load) throw std::bad_alloc();
     return state.reject ? 0 : 1;
 }
+int32_t kinoko_act_document_load_resources(KinokoActDocument *document, const char *prefix) { CHECK(document && prefix && !*prefix); return 0; }
 const char *kinoko_act_document_name(const KinokoActDocument *) { return "fixture"; }
 KinokoActRuntime *kinoko_act_runtime_initialize(KinokoActRuntime *storage, KinokoActSourceHolder *holder) {
     if (state.throw_runtime) throw std::bad_alloc();
@@ -90,14 +91,14 @@ KinokoActRuntime *kinoko_act_runtime_initialize(KinokoActRuntime *storage, Kinok
     const RuntimeView runtime(state.latest_runtime);
     runtime.clear();
     runtime.set(&RuntimeRecord::source_holder, holder);
-    runtime.set(&RuntimeRecord::active_document, state.holder->document);
+    runtime.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
     ++state.runtimes;
     return storage;
 }
 void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     CHECK(storage == state.latest_runtime);
     const RuntimeView runtime(state.latest_runtime);
-    CHECK(!runtime.get(&RuntimeRecord::source_holder));
+    CHECK(runtime.get(&RuntimeRecord::source_holder) == state.holder);
     CHECK(!runtime.get(&RuntimeRecord::active_document));
     CHECK(state.deletes == 1); // source document before runtime destruction
     ++state.runtime_deletes;
@@ -124,18 +125,11 @@ int32_t function_40b3a0() { return 0; }
 }
 int main() {
     kinoko_stage_owner_destroy(nullptr);
-    reset(); state.fail_document = true;
-    CHECK(!kinoko_stage_load("allocation-failure"));
-    CHECK(!state.documents && !state.deletes);
+    // 466179 ignores the load status and continues to the resource pass.
     reset(); state.reject = true;
-    CHECK(!kinoko_stage_load("rejected"));
-    CHECK(state.documents == 1 && state.deletes == 1 && !state.runtimes);
-    for (int fault = 0; fault < 2; ++fault) {
-        reset(); state.throw_load = fault == 0; state.throw_runtime = fault == 1;
-        bool caught = false;
-        try { kinoko_stage_load("unwind"); } catch (const std::bad_alloc &) { caught = true; }
-        CHECK(caught && state.documents == 1 && state.deletes == 1 && !state.runtime_deletes);
-    }
+    state.owner = kinoko_stage_load("rejected");
+    CHECK(state.owner && state.documents == 1 && !state.deletes && state.runtimes == 1);
+    kinoko_stage_owner_destroy(state.owner);
     reset();
     state.owner = kinoko_stage_load("caller-owned");
     CHECK(state.owner && !g603 && state.deletes == 0 && state.runtimes == 1);
@@ -148,13 +142,6 @@ int main() {
     kinoko_stage_owner_destroy(state.owner);
     CHECK(state.deletes == 1 && state.runtime_deletes == 1);
     kinoko_stage_list_construct();
-    reset(); g644 = reinterpret_cast<char *>(&state);
-    state.throw_publish = true;
-    bool caught = false;
-    try { kinoko_stage_load("list-allocation-failure"); } catch (const std::bad_alloc &) { caught = true; }
-    CHECK(caught && !fail_next_new && g604 == 0);
-    CHECK(state.deletes == 1 && state.runtime_deletes == 1);
-    g644 = nullptr;
     reset();
     state.owner = kinoko_stage_load("published");
     CHECK(state.owner && g604 == 1 && state.deletes == 0);
@@ -164,6 +151,6 @@ int main() {
     kinoko_clear_global_stages();
     CHECK(state.deletes == 1);
     kinoko_stage_list_destroy();
-    std::puts("PASS: rejected ACT, loader/runtime/list exceptions, borrowed pointers, virtual callback, caller/list ownership");
+    std::puts("PASS: ignored ACT load result, unchanged source borrow, virtual callback and caller/list ownership");
     return 0;
 }

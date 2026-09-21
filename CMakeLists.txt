@@ -216,6 +216,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/string_glyph_cache.cpp
     src/reconstructed/act_document.cpp
     src/reconstructed/act_document_io.cpp
+    src/reconstructed/act_document_resources.cpp
     src/reconstructed/act_script_io.cpp
     src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
@@ -513,6 +514,13 @@ target_include_directories(kinoko_act_clock_contract PRIVATE include)
 target_compile_options(kinoko_act_clock_contract PRIVATE /O2)
 add_test(NAME act_clock_contract COMMAND kinoko_act_clock_contract)
 
+add_executable(kinoko_act_resource_pass_contract
+    tests/act_resource_pass_contract.cpp src/reconstructed/act_document_resources.cpp)
+target_include_directories(kinoko_act_resource_pass_contract PRIVATE include)
+target_link_libraries(kinoko_act_resource_pass_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_resource_pass_contract PRIVATE /O2)
+add_test(NAME act_resource_pass_contract COMMAND kinoko_act_resource_pass_contract)
+
 add_executable(kinoko_act_document_contract
     tests/act_document_contract.cpp
     src/reconstructed/act_document_io.cpp)
@@ -621,6 +629,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_act_layer_contract
     kinoko_act_clock_contract
     kinoko_act_document_optimized_contract
+    kinoko_act_resource_pass_contract
     kinoko_stage_owner_contract
     kinoko_act_document_contract
     kinoko_boost_control_contract

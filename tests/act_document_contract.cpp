@@ -23,7 +23,10 @@ using kinoko::legacy::pointer;
 void require(bool value, const char *message) {
     if (!value) throw std::runtime_error(message);
 }
-const int vtable_identity = 7;
+uint8_t __fastcall read_document(KinokoActDocument *document, void *, int32_t *reader, int32_t version) {
+    return static_cast<uint8_t>(retdec_act_load(address(document), *reader, version));
+}
+void *vtable_identity[2] = {nullptr, reinterpret_cast<void *>(read_document)};
 KinokoActHostSymbols host{};
 int script_constructions = 0;
 void *last_script = nullptr;
@@ -93,11 +96,11 @@ void initialization() {
     const auto layers = v.get(&DocumentRecord::layers);
     const auto resources = v.get(&DocumentRecord::resources);
     require(!layers.begin && !layers.end && !layers.storage && !resources.begin && !resources.end && !resources.storage, "empty pointer spans");
-    require(!v.get(&DocumentRecord::unknown40) && !v.get(&DocumentRecord::unknown68) &&
-        !v.get(&DocumentRecord::unknown220) && !v.get(&DocumentRecord::unknown236), "unidentified bytes still zero");
+    require(v.get(&DocumentRecord::unknown40) == 0xa5a5a5a5u && v.get(&DocumentRecord::unknown68) == 0xa5a5a5a5u &&
+        v.get(&DocumentRecord::unknown220) == 0xa5a5a5a5u && v.get(&DocumentRecord::unknown236) == 0xa5a5a5a5u, "unidentified bytes untouched");
     for (auto b : v.get(&DocumentRecord::script)) require(b == 0x39, "do not overwrite script constructor result");
-    for (auto b : v.get(&DocumentRecord::padding97)) require(b == 0, "first padding zero");
-    for (auto b : v.get(&DocumentRecord::padding205)) require(b == 0, "second padding zero");
+    for (auto b : v.get(&DocumentRecord::padding97)) require(b == 0xa5, "first padding untouched");
+    for (auto b : v.get(&DocumentRecord::padding205)) require(b == 0xa5, "second padding untouched");
     require(f.bytes.front() == 0xa5 && f.bytes.back() == 0xa5, "unaligned fixture guards intact");
     auto *created = kinoko_act_document_create();
     require(created != nullptr && kinoko_act_document_screen_height(created) == 720, "factory returns initialized storage");
@@ -124,10 +127,10 @@ void header_failures() {
         require(state.closes == 1 && state.seeks == 0 && !state.live, "unsupported header closes before seek");
     }
     reset(f.document()); state.seek_ok = false;
-    require(!kinoko_act_document_load(f.document(), "bad-offset.act"), "seek failure");
-    require(state.seeks == 1 && state.closes == 1 && state.payloads == 0, "seek failure closes once");
+    require(kinoko_act_document_load(f.document(), "bad-offset.act"), "original ignores seek status");
+    require(state.seeks == 1 && state.closes == 1 && state.payloads == 1, "seek failure still reaches payload and closes once");
     reset(f.document()); write_word(8, UINT32_MAX);
-    require(!kinoko_act_document_load(f.document(), "overflow-offset.act"), "offset out of range");
+    require(kinoko_act_document_load(f.document(), "overflow-offset.act"), "original forwards failed seek to parser");
     require(state.skip == UINT32_MAX && state.closes == 1, "offset forwarded without truncation");
 }
 void payload_results() {
@@ -135,7 +138,7 @@ void payload_results() {
     for (const int result : {0, 1, 23, -7}) {
         reset(f.document()); state.result = result;
         const char path[] = "Source/stage.act";
-        require(kinoko_act_document_load(f.document(), path) == result, "forward payload result unchanged");
+        require(kinoko_act_document_load(f.document(), path) == static_cast<uint8_t>(result), "original bool result is returned in AL");
         require(state.path == path && state.opens == 1, "path borrowed unchanged; no directory fallback");
         require(state.payload_position == 15 && state.skip == 3 && state.reads == 3, "seek is relative to twelve-byte header");
         require(state.events == "ORRRSTTTPTC", "read/trace/parse/close order");
@@ -189,7 +192,7 @@ extern "C" void retdec_trace_i32(const char *label, int32_t value) {
     require(state.live, "reader remains alive through final diagnostic call");
     constexpr const char *labels[] = {"act:header-magic", "act:header-version", "act:header-offset", "act:load-result"};
     require(state.traces < 4 && std::strcmp(label, labels[state.traces]) == 0, "diagnostic call sites preserved");
-    const int32_t values[] = {0x31544341, 1, 3, state.result};
+    const int32_t values[] = {0x31544341, 1, static_cast<int32_t>(state.skip), static_cast<uint8_t>(state.result)};
     require(value == values[state.traces], "diagnostic values unchanged");
     ++state.traces; state.events += 'T';
 }

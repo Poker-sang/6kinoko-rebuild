@@ -90,10 +90,9 @@ public:
         kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION *>(record_.bytes(&RuntimeRecord::lock)));
         record_.set(&RuntimeRecord::stage_active, uint8_t{0});
         record_.set(&RuntimeRecord::stage_state, std::array<uint32_t, 11>{});
-        // Preserve the inherited published-vector write in this type-only
-        // change. Native container semantics are audited separately.
-        const auto commands = record_.view(&RuntimeRecord::draw_commands);
-        commands.set(&kinoko::act::VectorStorage::end, commands.get(&kinoko::act::VectorStorage::begin));
+        // 450DE9 clears command elements. Word 44 is now a vector owner,
+        // so changing word 48 would not clear the native container.
+        kinoko_act_commands_clear(address(storage_));
         retdec_act_clear_layout_vector(address(record_.bytes(&RuntimeRecord::draw_sprites)));
         return 0;
     }

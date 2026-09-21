@@ -14,6 +14,9 @@ KinokoActDocument *kinoko_act_document_create(void);
    call, including failure/unwind. A partial document remains caller-owned;
    this interface neither destroys it nor publishes a stage/map runtime. */
 int32_t kinoko_act_document_load(KinokoActDocument *document, const char *file_name);
+/* Dispatch original slot 0x18, separately from deserialization. */
+int32_t kinoko_act_document_load_resources(KinokoActDocument *document, const char *prefix);
+int32_t __fastcall kinoko_method_load_act_resources(KinokoActDocument *document, void *unused, const char *prefix);
 const char *kinoko_act_document_name(const KinokoActDocument *document);
 int32_t kinoko_act_document_screen_width(const KinokoActDocument *document);
 int32_t kinoko_act_document_screen_height(const KinokoActDocument *document);

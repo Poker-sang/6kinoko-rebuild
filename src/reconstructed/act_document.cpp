@@ -719,19 +719,9 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         // Original 446A84 clears auto-size after deserializing, including an
         // absent property block. Serialized atlas regions must survive LoadTexture.
         field<uint8_t>(resource + 96) = 0;
-        kinoko_method_load_resource_texture(resource, nullptr, nullptr);
-        retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
-    } else {
-        const char *chip_file = retdec_std_string_data(resource + 36);
-        if (!kinoko_method_load_chip_resource(resource, nullptr, nullptr)) {
-            retdec_trace("act:chip-resource-load-failed");
-            retdec_destroy_cact_resource(resource);
-            return 0;
-        }
-        retdec_trace_squirrel_name(
-            "act:chip-resource-file", address(chip_file));
-        retdec_trace("act:chip-resource-loaded");
     }
+    // 428150 deserializes and publishes resources. Loading is the later
+    // 4289C0 virtual pass, after every resource has been parsed and bound.
     return resource;
 }
 

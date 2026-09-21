@@ -63,7 +63,10 @@ static int test_act_document_file_lifetime(void) {
     for (DWORD length = 0; length < total; ++length) {
         CHECK(act_file_write(short_path, encoded, length));
         const int before = act_file_deletes;
-        CHECK(!kinoko_stage_load(short_path));
+        /* 466100 continues after failed parse; cleanup occurs only on clear. */
+        CHECK(kinoko_stage_load(short_path));
+        CHECK(act_file_deletes == before && g604 == 1);
+        kinoko_clear_global_stages();
         CHECK(act_file_deletes == before + 1 && !act_file_close_error);
         CHECK(g604 == 0 && kinoko_stage_list_first() == kinoko_stage_list_end());
     }

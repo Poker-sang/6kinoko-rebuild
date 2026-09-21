@@ -60,8 +60,8 @@ class ActEvidence(unittest.TestCase):
         for offset in (40, 68, 220, 236):
             self.assertNotRegex(original, r'\*\([^\n]+\)\(result \+ ' + str(offset) + r'\)\s*=')
         migrated = (ROOT / 'src/reconstructed/act_document_io.cpp').read_text()
-        self.assertIn('view.clear();', migrated)  # inherited baseline, not original proof
-        self.assertIn('NOT an original 427530 memset', migrated)
+        self.assertNotIn('view.clear();', migrated)
+        self.assertIn('padding/unknown words are untouched', migrated)
 
     def test_original_post_load_sequence(self):
         functions = json.loads(CAPTURE.read_text())['functions']

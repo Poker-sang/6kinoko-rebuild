@@ -20,11 +20,13 @@ static DWORD WINAPI clock_now() { return test_clock; }
 namespace test {
 int32_t cleared_slot;
 int32_t suspended, resumed;
-int clears;
+int clears, command_clears;
+int32_t command_runtime;
 void put(void *p, uint32_t value) { std::memcpy(p, &value, sizeof(value)); }
 uint32_t word(const void *p) { uint32_t value; std::memcpy(&value, p, sizeof(value)); return value; }
 }
 extern "C" {
+void kinoko_act_commands_clear(int32_t runtime) { test::command_runtime = runtime; ++test::command_clears; }
 void retdec_trace_i32(const char *, int32_t) {}
 int32_t retdec_act_clear_layout_vector(int32_t slot) { test::cleared_slot = slot; ++test::clears; return 0; }
 int32_t retdec_act_suspend_this(int32_t p) { test::suspended = p; return 17; }
@@ -90,7 +92,8 @@ int main() {
     CHECK(kinoko_act_end_stage(runtime, nullptr) == 0);
     CHECK(aligned[8] == 0 && aligned[9] == 0xa5);
     for (int i=108; i<152; ++i) CHECK(aligned[i] == 0);
-    CHECK(word(aligned+48) == word(aligned+44));
+    CHECK(command_clears == 1 && command_runtime == kinoko::legacy::address(runtime));
+    CHECK(word(aligned+48) == 0x5678);
     CHECK(word(aligned+52) == 0xa5a5a5a5u);
     CHECK(clears == 1 && cleared_slot == kinoko::legacy::address(aligned+60));
     CHECK(lock->RecursionCount == 0);

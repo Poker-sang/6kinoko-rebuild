@@ -33,20 +33,7 @@ void release_sound_tree() {
     kinoko_integer_map_destroy(g638);g638=g639=0;
 }
 
-// REBUILD SAFETY, not an instruction recovered from 465F70: the current
-// runtime destructor consults source_holder, so detach our borrow before free.
-// Keep this distinction separate from the original normal cleanup order.
-void detach_source_borrows(KinokoActRuntime *runtime_pointer,
-    KinokoActDocument *source, KinokoActSourceHolder *holder) {
-    if (!runtime_pointer) return;
-    const RecordView<kinoko::act::RuntimeRecord> runtime(runtime_pointer);
-    using kinoko::act::RuntimeRecord;
-    if (runtime.get(&RuntimeRecord::source_holder) == holder)
-        runtime.set(&RuntimeRecord::source_holder, static_cast<KinokoActSourceHolder *>(nullptr));
-    if (runtime.get(&RuntimeRecord::active_document) ==
-            source)
-        runtime.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
-}
+
 }
 
 extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
@@ -55,7 +42,6 @@ extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
     const auto source = owner.get(&OwnerRecord::document);
     auto *runtime_pointer = owner.get(&OwnerRecord::runtime);
     const auto holder = owner.get(&OwnerRecord::holder);
-    detach_source_borrows(runtime_pointer, source, holder);
     std::free(holder);
     owner.set(&OwnerRecord::holder, static_cast<KinokoActSourceHolder *>(nullptr));
     if (source) {
@@ -68,13 +54,8 @@ extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
     // The source destructor is a callback and may update the owner record.
     runtime_pointer = owner.get(&OwnerRecord::runtime);
     if (runtime_pointer) {
-        // A virtual document destructor may replace the runtime. Do not use
-        // the stale captured pointer, or let the replacement retain our freed
-        // source/holder. Independently cloned ACTs are deliberately untouched.
-        detach_source_borrows(runtime_pointer, source, holder);
         kinoko_act_runtime_dispose(runtime_pointer);
         std::free(runtime_pointer);
-        owner.set(&OwnerRecord::runtime, static_cast<KinokoActRuntime *>(nullptr));
     }
     std::free(storage);
 }

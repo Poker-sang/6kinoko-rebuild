@@ -20,7 +20,7 @@ struct RuntimeRecord {
     int32_t current_time;
     uint8_t stage_active;
     std::array<uint8_t, 3> unknown9;
-    KinokoActDocument *active_document; // owned clone, or a legacy borrowed fixture
+    KinokoActDocument *active_document; // owned clone; destructor never consults source_holder
     KinokoActSourceHolder *active_holder; // owned wrapper; borrows active_document
     CRITICAL_SECTION lock;
     VectorStorage draw_commands;

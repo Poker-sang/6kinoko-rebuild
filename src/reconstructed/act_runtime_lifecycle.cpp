@@ -116,10 +116,6 @@ extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     if (!storage) return;
     const auto view = runtime(storage);
     const auto vm = view.get(&RuntimeRecord::vm);
-    const auto holder = view.get(&RuntimeRecord::source_holder);
-    const auto source = holder
-        ? RecordView<kinoko::stage::SourceHolderRecord>(holder).get(&kinoko::stage::SourceHolderRecord::document)
-        : nullptr;
     kinoko_act_end_stage(storage, nullptr);
     auto environment = kinoko::script::pair::read(object_bytes(view));
     const kinoko::legacy::StringView name(view.bytes(&RuntimeRecord::name));
@@ -143,7 +139,7 @@ extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     std::free(view.get(&RuntimeRecord::active_holder));
     view.set(&RuntimeRecord::active_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     const auto act = view.get(&RuntimeRecord::active_document);
-    if (act && act != source) retdec_destroy_cact_with_flags(address(act), 1);
+    if (act) retdec_destroy_cact_with_flags(address(act), 1);
     view.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
     environment = kinoko::script::pair::read(object_bytes(view));
     if (vm && (sq_type(environment) & SQOBJECT_REF_COUNTED))

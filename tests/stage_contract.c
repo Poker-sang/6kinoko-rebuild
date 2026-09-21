@@ -3283,7 +3283,7 @@ static int test_global_stage_cleanup(void) {
         CHECK(kinoko_act_find_name((KinokoActRuntime *)runtime,first)==NULL);
         CHECK(kinoko_act_find_first((KinokoActRuntime *)runtime,"*")==3 && runtime[22]==2);
         /* Two open searches remain for the runtime destructor to close. */
-        runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
+        runtime[3] = 0; /* fresh runtime has no active clone; source remains borrowed through word 0 */
         runtime[4] = PTR(malloc(24));
         kinoko_stage_list_append((KinokoStageOwner *)owner);
     }
