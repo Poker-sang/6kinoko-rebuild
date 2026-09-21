@@ -1,5 +1,10 @@
 # R132: original ACT constructor and virtual clone chain
 
+**Withdrawn after user regression report:** R131 was confirmed normal; R132
+lost backgrounds and played music incorrectly, making the game unplayable.
+R133 restores R131 runtime code. See ../act-r132-regression-r133/README.md.
+The build-only results below do not establish runtime correctness.
+
 Scope: replace native Clone's bulk record copying with the original 427950
 constructor and resource/layer clone virtuals. R130 is user-confirmed working;
 R131 has not been explicitly confirmed. No tests or game are run by the agent.

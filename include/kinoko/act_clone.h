@@ -1,11 +1,9 @@
 #pragma once
-#include "kinoko/act_types.h"
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* 427950: owns the returned document; source remains borrowed. */
-KinokoActDocument *__fastcall kinoko_act_clone(KinokoActDocument *source, void *unused);
+int32_t __fastcall kinoko_act_clone(int32_t source, void *unused);
 /* Returns true only for uncounted data the caller must free directly.
    Counted data is destroyed by the upstream control's final strong release. */
 int32_t kinoko_act_release_chip_data(int32_t resource);

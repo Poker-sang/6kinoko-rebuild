@@ -61,6 +61,7 @@ void DocumentCloneAssociations::bind(KinokoActDocument *document) {
     const DocumentView doc(document);
     for (int32_t i = 0; i < layer_distance(doc.get(&DocumentRecord::layers)); ++i) {
         auto *layer = layer_at(doc.get(&DocumentRecord::layers), i);
+        if (!layer) continue; // Native clone arrays retain source null slots.
         const LayerView view(layer);
         // 427D49..427DAF: resource callback precedes this layer's hierarchy.
         const auto found = resources_.find(view.get(&LayerAssociationRecord::resource_id));

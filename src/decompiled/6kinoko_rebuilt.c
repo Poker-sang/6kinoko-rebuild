@@ -142,6 +142,7 @@ int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
 int32_t retdec_c2dlayout_update_impl(int32_t layout);
 int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
+int32_t retdec_act_bind_cloned_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
 void retdec_trace_star_state(const char *phase, int32_t actor);
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
@@ -896,7 +897,7 @@ struct vtable_4ec1d4_type {
     int32_t (*e2)(int32_t, int32_t);
     int32_t (*e3)();
     int32_t (*e4)(char);
-    KinokoActDocument *(__fastcall *e5)(KinokoActDocument *, void *);
+    int32_t (__fastcall *e5)(int32_t, void *);
     int32_t (*e6)(int32_t);
     int32_t (*e7)();
     int32_t (*e8)();
@@ -7618,7 +7619,7 @@ int32_t function_426b30(void) {
 /* ACT document creation/loading: kinoko/act_document.h. */
 
 
-// CAct::Clone (427950) is implemented in reconstructed/act_document_clone.cpp.
+// CAct::Clone (427950) is implemented in reconstructed/act_clone.cpp.
 
 
 
@@ -7692,6 +7693,7 @@ int32_t function_426b30(void) {
 
 /* retdec_c2dmaplayout_set_layer_impl is implemented in native C++ (kinoko/act_runtime.h). */
 
+/* retdec_act_bind_cloned_layouts is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* retdec_act_prepare_vector is implemented in native C++ (kinoko/act_runtime.h). */
 

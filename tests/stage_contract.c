@@ -4076,8 +4076,8 @@ static int test_chip_shared_ownership(void) {
         CHECK(strcmp(retdec_std_string_data(virtual_copy+offsets[i]),retdec_std_string_data(PTR(resource)+offsets[i]))==0);
         CHECK(retdec_std_string_data(virtual_copy+offsets[i])!=retdec_std_string_data(PTR(resource)+offsets[i]));
     }
-    int32_t first=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
-    int32_t second=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
+    int32_t first=kinoko_act_clone(PTR(source),NULL);
+    int32_t second=kinoko_act_clone(PTR(source),NULL);
     CHECK(first && second && resource[17]);
     const int32_t first_resource=**(int32_t**)(intptr_t)(first+224);
     const int32_t second_resource=**(int32_t**)(intptr_t)(second+224);
@@ -5736,11 +5736,8 @@ static int test_layout_secondary_lifetime(void) {
 }
 
 #include "act_document_file_contract.h"
-#include "act_virtual_clone_contract.h"
 
 int main(int argc, char **argv) {
-    if (argc == 2 && strcmp(argv[1], "--act-virtual-clone") == 0)
-        return test_act_virtual_clone();
     if (argc == 2 && strcmp(argv[1], "--act-document-lifetime") == 0)
         return test_act_document_file_lifetime();
     CHECK(test_layout_secondary_lifetime()==0);
@@ -5818,7 +5815,6 @@ int main(int argc, char **argv) {
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);
     CHECK(test_chip_shared_ownership() == 0);
-    CHECK(test_act_virtual_clone() == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);
