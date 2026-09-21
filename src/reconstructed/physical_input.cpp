@@ -1,3 +1,4 @@
+#include "kinoko/input_keys.h"
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
@@ -77,8 +78,8 @@ extern "C" int32_t __fastcall function_407500(int32_t self) {
 }
 
 extern "C" int32_t function_408320(int32_t self) {
-    for (int32_t cursor = field<int32_t>(self, 1024); cursor != field<int32_t>(self, 1028); ++cursor) {
-        const auto scan = field<uint8_t>(cursor);
+    for (uint32_t index = 0; index < kinoko_input_keys_size(self); ++index) {
+        const auto scan = kinoko_input_keys_at(self, index);
         auto& count = field<int32_t>(self, 4u * scan);
         count = key(scan) ? advance(count, 1) : 0;
     }

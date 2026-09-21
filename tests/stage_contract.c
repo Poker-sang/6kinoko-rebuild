@@ -1,3 +1,4 @@
+#include "kinoko/input_keys.h"
 /* Exercise the actual reconstructed functions without WinMain, graphics or DAT startup. */
 #include "../src/decompiled/6kinoko_rebuilt.c"
 #include "stage_audio_contract.h"
@@ -4266,7 +4267,8 @@ static int test_physical_input(void) {
     CHECK(((unsigned char*)device)[130] == 0);
     function_407500(PTR(device));
     CHECK(((unsigned char*)device)[128] == 0);
-    tracker[256] = PTR(scans); tracker[257] = PTR(scans + 2);
+    kinoko_input_keys_construct(PTR(tracker));
+    for (i=0;i<2;++i) kinoko_input_keys_add(PTR(tracker),scans[i]);
     g_retdec_keyboard_state[0xff] = g_retdec_keyboard_state[0x9d] = 0x80;
     CHECK(function_408320(PTR(tracker)) == 1);
     CHECK(tracker[255] == 1 && tracker[128] == 0);
@@ -4288,6 +4290,11 @@ static int test_physical_input(void) {
     device[1] = -2;
     function_407500(PTR(device));
     for (i = 18; i < 42; ++i) CHECK(device[i] == 0);
+    kinoko_input_keys_clear(PTR(tracker));
+    for(i=0;i<256;++i) { kinoko_input_keys_add(PTR(tracker),(uint8_t)i); kinoko_input_keys_add(PTR(tracker),(uint8_t)i); }
+    CHECK(kinoko_input_keys_size(PTR(tracker))==256);
+    for(i=0;i<256;++i) CHECK(kinoko_input_keys_at(PTR(tracker),i)==i);
+    kinoko_input_keys_destroy(PTR(tracker));
     g783 = saved_states; g782 = saved_count;
     memcpy(g_retdec_keyboard_state, saved_keys, 256);
     return 0;
@@ -4333,6 +4340,9 @@ static int test_input_copy(void) {
     source[49]=0x3333; target[49]=0x4444;
     memset((char*)source+16,0x17,164);
     memset((char*)source+200,0x23,164);
+    kinoko_input_keys_construct(PTR(source)+392);
+    kinoko_input_keys_construct(PTR(target)+392);
+    kinoko_input_keys_construct(PTR(empty)+392);
     memset((char*)source+392,0x35,1024);
     memset((char*)source+1436,0x47,76);
     devices[0][0]=devices[1][0]=PTR(g35);
@@ -4344,7 +4354,7 @@ static int test_input_copy(void) {
     kinoko_input_cluster_construct(PTR(empty)+196);
     for(int i=0;i<40;++i) kinoko_input_cluster_append(PTR(source)+196,PTR(devices[i%2]));
     source[91]=0x5555; target[91]=0x6666; /* preserve iterator proxy */
-    source[354]=PTR(keys); source[355]=source[356]=PTR(keys)+sizeof(keys);
+    for(int i=0;i<9;++i) kinoko_input_keys_add(PTR(source)+392,keys[i]);
     source[357]=45678; target[357]=87654;
     ((char*)source)[388]=9; ((char*)source)[1432]=1; ((char*)source)[1434]=3;
     CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
@@ -4356,27 +4366,31 @@ static int test_input_copy(void) {
     CHECK(memcmp((char*)target+1436,(char*)source+1436,76)==0);
     CHECK(target[45]!=source[45] && target[354]!=source[354] && target[92]!=source[92]);
     CHECK(memcmp((void*)(intptr_t)target[45],devices,sizeof(devices))==0);
-    CHECK(memcmp((void*)(intptr_t)target[354],keys,sizeof(keys))==0);
+    CHECK(kinoko_input_keys_size(PTR(target)+392)==9);
+    for(int i=0;i<9;++i) CHECK(kinoko_input_keys_at(PTR(target)+392,i)==keys[i]);
     CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
     CHECK(kinoko_input_cluster_size(PTR(target)+196)==40);
     for(int i=0;i<40;++i)
         CHECK(kinoko_input_cluster_at(PTR(target)+196,i)==PTR(devices[i%2]));
     {
         int32_t buffer=target[45], capacity=target[47], queue=target[92], byte_buffer=target[354];
-        source[46]-=168; source[355]-=5;
+        source[46]-=168;
+        kinoko_input_keys_clear(PTR(source)+392);
+        for(int i=0;i<4;++i) kinoko_input_keys_add(PTR(source)+392,keys[i]);
+        CHECK(kinoko_input_keys_size(PTR(target)+392)==9);
         kinoko_input_cluster_clear(PTR(source)+196);
         kinoko_input_cluster_append(PTR(source)+196,PTR(devices[0]));
         devices[0][1]=909;
         CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
         CHECK(target[45]==buffer && target[47]==capacity && target[46]==buffer+168);
-        CHECK(target[92]==queue && kinoko_input_cluster_size(PTR(target)+196)==1 && target[354]==byte_buffer && target[355]==byte_buffer+4);
+        CHECK(target[92]==queue && kinoko_input_cluster_size(PTR(target)+196)==1 && target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==4);
         CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
         CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && target[45]==buffer);
         CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
         CHECK(target[45]==buffer && target[46]==buffer && target[47]==capacity);
         CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
-        CHECK(target[354]==byte_buffer && target[355]==byte_buffer);
-        free((void*)(intptr_t)buffer); free((void*)(intptr_t)byte_buffer);
+        CHECK(target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==0);
+        free((void*)(intptr_t)buffer);
     }
     function_4a9d70_this(PTR(source));
     function_4a9d70_this(PTR(target));
@@ -4384,6 +4398,9 @@ static int test_input_copy(void) {
     kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
+    kinoko_input_keys_destroy(PTR(source)+392);
+    kinoko_input_keys_destroy(PTR(target)+392);
+    kinoko_input_keys_destroy(PTR(empty)+392);
     puts("PASS: Input copy owns vectors and native deque while keeping shallow device pointers");
     return 0;
 }

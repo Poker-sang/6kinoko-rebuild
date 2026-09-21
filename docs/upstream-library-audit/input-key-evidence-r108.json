@@ -1,0 +1,83 @@
+{
+  "408430": {
+    "addr": "0x408430",
+    "code": "char *__thiscall sub_408430(int *this, char a2)\n{\n  char v2; // bl\n  int *v3; // esi\n  unsigned int v4; // edi\n  char *result; // eax\n  unsigned int v6; // ecx\n  unsigned int v7; // eax\n  int v8; // edx\n  int v9; // ecx\n  char *v10; // edi\n  int v11; // eax\n  size_t v12; // eax\n  unsigned int v13; // ecx\n  size_t v14; // ecx\n  int v15; // ecx\n  int v16; // eax\n  size_t v17; // eax\n  unsigned int v18; // ecx\n  size_t v19; // ecx\n\n  v2 = a2; /*0x408434*/\n  v3 = this + 256; /*0x408438*/\n  v4 = *(this + 256); /*0x408442*/\n  result = nullptr; /*0x408444*/\n  v6 = *(this + 257) - v4; /*0x408446*/\n  if ( v6 != 0 ) /*0x408448*/\n  {\n    while ( result[v4] != a2 ) /*0x408451*/\n    {\n      if ( v6 <= (unsigned int)++result ) /*0x40845a*/\n        goto LABEL_4; /*0x40845a*/\n    }\n  }\n  else\n  {\nLABEL_4:\n    v7 = v3[1]; /*0x40845c*/\n    if ( (unsigned int)&a2 >= v7 || (v8 = *v3, v4 > (unsigned int)&a2) ) /*0x40846a*/\n    {\n      v15 = v3[2]; /*0x4084d0*/\n      if ( v7 == v15 ) /*0x4084d5*/\n      {\n        v16 = v7 - v4; /*0x4084d9*/\n        if ( v16 == -1 ) /*0x4084de*/\n          std::_Xlength_error(a1: \"vector<T> too long\"); /*0x4084e5*/\n        v17 = v16 + 1; /*0x4084ea*/\n        v18 = v15 - v4; /*0x4084eb*/\n        if ( v17 > v18 ) /*0x4084ef*/\n        {\n          if ( -1 - (v18 >> 1) >= v18 ) /*0x4084fc*/\n            v19 = (v18 >> 1) + v18; /*0x408502*/\n          else\n            v19 = 0; /*0x4084fe*/\n          if ( v19 < v17 ) /*0x408506*/\n            v19 = v17; /*0x408508*/\n          sub_408590(Size: v19); /*0x40850b*/\n        }\n      }\n      result = (char *)v3[1]; /*0x408510*/\n      if ( result != nullptr ) /*0x408515*/\n        *result = v2; /*0x408517*/\n    }\n    else\n    {\n      v9 = v3[2]; /*0x40846e*/\n      v10 = &a2 - v8; /*0x408471*/\n      if ( v7 == v9 ) /*0x408475*/\n      {\n        v11 = v7 - v8; /*0x408477*/\n        if ( v11 == -1 ) /*0x40847c*/\n          std::_Xlength_error(a1: \"vector<T> too long\"); /*0x408483*/\n        v12 = v11 + 1; /*0x408492*/\n        v13 = v9 - v8; /*0x408493*/\n        if ( v12 > v13 ) /*0x408497*/\n        {\n          if ( -1 - (v13 >> 1) >= v13 ) /*0x4084a4*/\n            v14 = (v13 >> 1) + v13; /*0x4084aa*/\n          else\n            v14 = 0; /*0x4084a6*/\n          if ( v14 < v12 ) /*0x4084ae*/\n            v14 = v12; /*0x4084b0*/\n          sub_408590(Size: v14); /*0x4084b3*/\n        }\n      }\n      result = (char *)v3[1]; /*0x4084b8*/\n      if ( result != nullptr ) /*0x4084bd*/\n      {\n        *result = v10[*v3]; /*0x4084c5*/\n        ++v3[1]; /*0x4084c7*/\n        return result; /*0x4084cd*/\n      }\n    }\n    ++v3[1]; /*0x408519*/\n  }\n  return result; /*0x4084c4*/\n}",
+    "refs": [
+      {
+        "addr": "0x473e00",
+        "name": "?_Xlength_error@std@@YAXPBD@Z"
+      },
+      {
+        "addr": "0x4eb374",
+        "name": "aVectorTTooLong",
+        "string": "vector<T> too long"
+      },
+      {
+        "addr": "0x408590",
+        "name": "sub_408590"
+      }
+    ]
+  },
+  "4082d0": {
+    "addr": "0x4082d0",
+    "code": "int __thiscall sub_4082D0(void *this)\n{\n  int result; // eax\n  int v3; // ebx\n\n  memset(a1: this, Val: 0, Size: 0x400u); /*0x4082dc*/\n  result = *((_DWORD *)this + 257); /*0x4082e1*/\n  v3 = *((_DWORD *)this + 256); /*0x4082e7*/\n  if ( v3 != result ) /*0x4082f2*/\n  {\n    result = *((_DWORD *)this + 256); /*0x4082fc*/\n    *((_DWORD *)this + 257) = v3; /*0x408306*/\n  }\n  *((_WORD *)this + 520) = 0; /*0x40830d*/\n  *((_BYTE *)this + 1042) = 0; /*0x408316*/\n  return result; /*0x40831d*/\n}",
+    "refs": [
+      {
+        "addr": "0x4abad0",
+        "name": "_memset"
+      }
+    ]
+  },
+  "46d2a0": {
+    "addr": "0x46d2a0",
+    "code": "_DWORD *__thiscall sub_46D2A0(_DWORD *this, int a2)\n{\n  _DWORD *v2; // ebx\n  _DWORD *v3; // eax\n  int v4; // ecx\n  int i; // edx\n  const void **v6; // edi\n  void **v7; // esi\n  char *v8; // eax\n  unsigned int v9; // edx\n  void *v10; // ecx\n  char *v11; // ebx\n  size_t v12; // edi\n  char *v13; // eax\n  size_t v14; // ebx\n  char *v15; // eax\n  const void *v16; // ecx\n  size_t v18; // [esp+Ch] [ebp-Ch]\n\n  v2 = this; /*0x46d2a8*/\n  v3 = this; /*0x46d2b3*/\n  v4 = a2 - (_DWORD)this; /*0x46d2b5*/\n  for ( i = 256; i != 0; --i ) /*0x46d2b7*/\n  {\n    *v3 = *(_DWORD *)((char *)v3 + v4); /*0x46d2c3*/\n    ++v3; /*0x46d2c5*/\n  }\n  v6 = (const void **)(a2 + 1024); /*0x46d2cb*/\n  v7 = (void **)(v2 + 256); /*0x46d2d1*/\n  if ( v2 + 256 == (_DWORD *)(a2 + 1024) ) /*0x46d2d9*/\n    goto LABEL_17; /*0x46d2d9*/\n  v8 = (char *)*v6; /*0x46d2e2*/\n  v9 = *(_DWORD *)(a2 + 1028) - *(_DWORD *)(a2 + 1024); /*0x46d2e4*/\n  v10 = *v7; /*0x46d2e6*/\n  if ( v9 != 0 ) /*0x46d2e8*/\n  {\n    v18 = v2[257] - (_DWORD)v10; /*0x46d317*/\n    if ( v9 > v18 ) /*0x46d31c*/\n    {\n      if ( v9 > v2[258] - (int)v10 ) /*0x46d344*/\n      {\n        if ( v10 != nullptr ) /*0x46d36e*/\n          operator delete(a1: v10); /*0x46d371*/\n        v14 = *(_DWORD *)(a2 + 1028) - *(_DWORD *)(a2 + 1024); /*0x46d37c*/\n        *v7 = nullptr; /*0x46d383*/\n        v7[1] = nullptr; /*0x46d385*/\n        v7[2] = nullptr; /*0x46d388*/\n        if ( v14 == 0 ) /*0x46d38b*/\n          goto LABEL_16; /*0x46d38b*/\n        v15 = (char *)sub_408600(Size: v14); /*0x46d3a0*/\n        *v7 = v15; /*0x46d3a8*/\n        v7[1] = v15; /*0x46d3aa*/\n        v7[2] = &v15[v14]; /*0x46d3ad*/\n        v16 = *v6; /*0x46d3b0*/\n        v12 = *(_DWORD *)(a2 + 1028) - *(_DWORD *)(a2 + 1024); /*0x46d3b5*/\n        v13 = (char *)memcpy(a1: v15, Src: v16, Size: v12); /*0x46d3ba*/\n      }\n      else\n      {\n        v11 = &v8[v18]; /*0x46d349*/\n        memcpy(a1: v10, Src: v8, Size: v18); /*0x46d352*/\n        v12 = *(_DWORD *)(a2 + 1028) - (_DWORD)v11; /*0x46d35d*/\n        v13 = (char *)memcpy(a1: v7[1], Src: v11, Size: v12); /*0x46d362*/\n      }\n      v7[1] = &v13[v12]; /*0x46d3c4*/\n    }\n    else\n    {\n      memcpy(a1: v10, Src: v8, Size: *(_DWORD *)(a2 + 1028) - (_DWORD)v8); /*0x46d326*/\n      v2[257] = *(_DWORD *)(a2 + 1028) + v2[256] - *(_DWORD *)(a2 + 1024); /*0x46d335*/\n    }\nLABEL_16:\n    v2 = this; /*0x46d3c7*/\n    goto LABEL_17; /*0x46d3c7*/\n  }\n  if ( v10 != (void *)v2[257] ) /*0x46d2f2*/\n    v2[257] = *v7; /*0x46d30a*/\nLABEL_17:\n  *((_BYTE *)v2 + 1040) = *(_BYTE *)(a2 + 1040); /*0x46d3ca*/\n  *((_BYTE *)v2 + 1041) = *(_BYTE *)(a2 + 1041); /*0x46d3e0*/\n  *((_BYTE *)v2 + 1042) = *(_BYTE *)(a2 + 1042); /*0x46d3ef*/\n  return v2; /*0x46d3ed*/\n}",
+    "refs": [
+      {
+        "addr": "0x4ab2a6",
+        "name": "??3@YAXPAX@Z"
+      },
+      {
+        "addr": "0x408600",
+        "name": "sub_408600"
+      },
+      {
+        "addr": "0x4abef0",
+        "name": "_memcpy"
+      }
+    ]
+  },
+  "408320": {
+    "addr": "0x408320",
+    "code": "int __thiscall sub_408320(int this)\n{\n  int v1; // edx\n  unsigned int v2; // esi\n  int v3; // eax\n  bool v4; // al\n  bool v5; // al\n\n  v1 = *(_DWORD *)(this + 1024); /*0x408320*/\n  v2 = 0; /*0x40832e*/\n  if ( *(_DWORD *)(this + 1028) != v1 ) /*0x408330*/\n  {\n    do /*0x408363*/\n    {\n      v3 = *(unsigned __int8 *)(v1 + v2); /*0x40833a*/\n      if ( byte_51B088[v3] < 0 ) /*0x408344*/\n        ++*(_DWORD *)(this + 4 * v3); /*0x408346*/\n      else\n        *(_DWORD *)(this + 4 * v3) = 0; /*0x40834b*/\n      v1 = *(_DWORD *)(this + 1024); /*0x408352*/\n      ++v2; /*0x40835e*/\n    }\n    while ( *(_DWORD *)(this + 1028) - v1 > v2 ); /*0x408363*/\n  }\n  v4 = byte_51B0B2 < 0 || byte_51B0BE < 0; /*0x408383*/\n  *(_BYTE *)(this + 1040) = v4; /*0x408388*/\n  v5 = byte_51B0C0 < 0 || byte_51B140 < 0; /*0x4083a2*/\n  *(_BYTE *)(this + 1041) = v5; /*0x4083a7*/\n  if ( byte_51B0A5 < 0 || byte_51B125 < 0 ) /*0x4083bb*/\n  {\n    *(_BYTE *)(this + 1042) = 1; /*0x4083ce*/\n    return 1; /*0x4083c8*/\n  }\n  else\n  {\n    *(_BYTE *)(this + 1042) = 0; /*0x4083c0*/\n    return 0; /*0x4083bd*/\n  }\n}",
+    "refs": [
+      {
+        "addr": "0x51b088",
+        "name": "byte_51B088"
+      },
+      {
+        "addr": "0x51b0b2",
+        "name": "byte_51B0B2"
+      },
+      {
+        "addr": "0x51b0be",
+        "name": "byte_51B0BE"
+      },
+      {
+        "addr": "0x51b0c0",
+        "name": "byte_51B0C0"
+      },
+      {
+        "addr": "0x51b140",
+        "name": "byte_51B140"
+      },
+      {
+        "addr": "0x51b0a5",
+        "name": "byte_51B0A5"
+      },
+      {
+        "addr": "0x51b125",
+        "name": "byte_51B125"
+      }
+    ]
+  }
+}

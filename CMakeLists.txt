@@ -41,6 +41,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/physical_input.cpp
     src/reconstructed/direct_input.cpp
     src/reconstructed/input_aggregation.cpp
+    src/reconstructed/input_keys.cpp
     src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
