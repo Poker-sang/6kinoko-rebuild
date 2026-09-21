@@ -3,19 +3,23 @@
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
+#include <string>
+#include <list>
+#include <memory>
+#include <vector>
 
 namespace kinoko::audio {
 // These records are the verified native Win32 boundary, NOT VM objects.
 // Retired vtable words are reserved layout only; no legacy objects live here.
 // Unknown regions stay opaque. The DSP/decoder state itself lives in C++ owners.
 struct PathRecord {
-    union { char inline_text[16]; char* allocated_text; } storage;
-    std::uint32_t length;
-    std::uint32_t capacity;
-    const char* c_str() const noexcept {
-        return capacity < sizeof(storage.inline_text)
-            ? storage.inline_text : storage.allocated_text;
-    }
+    std::string* value = new std::string;
+    std::uint8_t reserved[20]{};
+    PathRecord() = default;
+    PathRecord(const PathRecord&) = delete;
+    PathRecord& operator=(const PathRecord&) = delete;
+    ~PathRecord() { delete value; }
+    const char* c_str() const noexcept { return value->c_str(); }
 };
 struct BufferRecord {
     PathRecord path;
@@ -39,27 +43,21 @@ struct BufferRecord {
     std::uint32_t successor;
     std::uint32_t predecessor;
 };
-struct QueueNode {
-    QueueNode* next;
-    QueueNode* previous;
-    std::uint32_t handle;
+using HandleQueue=std::list<std::uint32_t>;
+struct BufferStore {
+    std::vector<std::unique_ptr<BufferRecord>> buffers;
+    std::vector<std::uint32_t> generations;
 };
 struct QueueRecord {
-    QueueNode* head;
+    HandleQueue* head;
     std::uint32_t count;
     std::uint32_t reserved;
 };
 struct HandleTable {
     std::uint32_t retired_handle_vtable;
-    BufferRecord** buffers_begin;
-    BufferRecord** buffers_end;
-    BufferRecord** buffers_capacity;
-    std::uint32_t reserved10;
-    std::uint32_t* generations_begin;
-    std::uint32_t* generations_end;
-    std::uint32_t* generations_capacity;
-    std::uint32_t reserved20;
-    QueueNode* live_handles;
+    BufferStore* storage;
+    std::uint8_t retired_vectors[28];
+    HandleQueue* live_handles;
     std::uint32_t live_count;
     std::uint32_t reserved2c;
     std::uint32_t next_generation;
@@ -79,13 +77,12 @@ struct alignas(8) ManagerRecord {
     std::uint8_t tail[0x140 - 0xb4];
 };
 static_assert(sizeof(void*) == 4 && sizeof(CRITICAL_SECTION) == 24);
-static_assert(sizeof(PathRecord) == 24 && sizeof(QueueNode) == 12);
+static_assert(sizeof(PathRecord) == 24);
 static_assert(sizeof(BufferRecord) == 0x1378);
 static_assert(sizeof(HandleTable) == 0x50 && sizeof(ManagerRecord) == 0x140);
 static_assert(std::is_standard_layout_v<BufferRecord>);
-static_assert(std::is_trivial_v<BufferRecord>);
+
 #define KINOKO_AUDIO_FIELD(Type, Field, Offset) static_assert(offsetof(Type, Field) == Offset)
-KINOKO_AUDIO_FIELD(PathRecord, capacity, 20);
 KINOKO_AUDIO_FIELD(BufferRecord, playback_state, 0x1c);
 KINOKO_AUDIO_FIELD(BufferRecord, ready, 0x20);
 KINOKO_AUDIO_FIELD(BufferRecord, retired_decoder_vtable, 0x24);
@@ -100,12 +97,6 @@ KINOKO_AUDIO_FIELD(BufferRecord, volume, 0x1368);
 KINOKO_AUDIO_FIELD(BufferRecord, fade_pending, 0x136c);
 KINOKO_AUDIO_FIELD(BufferRecord, successor, 0x1370);
 KINOKO_AUDIO_FIELD(BufferRecord, predecessor, 0x1374);
-KINOKO_AUDIO_FIELD(HandleTable, buffers_begin, 4);
-KINOKO_AUDIO_FIELD(HandleTable, buffers_end, 8);
-KINOKO_AUDIO_FIELD(HandleTable, buffers_capacity, 0xc);
-KINOKO_AUDIO_FIELD(HandleTable, generations_begin, 0x14);
-KINOKO_AUDIO_FIELD(HandleTable, generations_end, 0x18);
-KINOKO_AUDIO_FIELD(HandleTable, generations_capacity, 0x1c);
 KINOKO_AUDIO_FIELD(HandleTable, live_handles, 0x24);
 KINOKO_AUDIO_FIELD(HandleTable, next_generation, 0x30);
 KINOKO_AUDIO_FIELD(HandleTable, lock, 0x38);
