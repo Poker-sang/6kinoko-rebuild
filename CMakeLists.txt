@@ -39,6 +39,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/act_array.cpp
     src/reconstructed/act_list.cpp
     src/reconstructed/act_clone.cpp
+    src/reconstructed/act_document_clone.cpp
     src/reconstructed/act_layer_clone.cpp
     src/reconstructed/actor_methods.cpp
     src/reconstructed/physical_input.cpp
@@ -395,6 +396,8 @@ add_test(NAME texture_serialization_contract
     COMMAND kinoko_stage_contract --texture-serialization)
 add_test(NAME map_serialization_contract
     COMMAND kinoko_stage_contract --map-serialization)
+add_test(NAME map_lazy_binding_contract
+    COMMAND kinoko_stage_contract --map-lazy-binding)
 add_test(NAME dynamic_layer_contract
     COMMAND kinoko_stage_contract --dynamic-layer)
 

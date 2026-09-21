@@ -1,4 +1,5 @@
 #include "kinoko/native_buffer.h"
+#include "kinoko/legacy_abi.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -155,10 +156,23 @@ int32_t kinoko_map_update(
                                           field<int32_t>(layout + 264)) / 0x20)
                              : 0);
     }
-    if (layer == 0 || resource == 0)
+    if (layer == 0)
         return -0x7fffbffb;
     if (field<uint8_t>(layer + 0x8c) == 0)
         return 0;
+    // 434B93..434BAF: Clone's first SetLayer consumes +460 and leaves
+    // +316 empty. Bind lazily now, after document resource reassociation.
+    // The original ignores SetLayer's HRESULT and re-reads the cached pointer.
+    if (!resource) {
+        retdec_call_thiscall1_result(pointer<void>(layout),
+            field<void*>(field<int32_t>(layout) + 24), layer);
+        resource = field<int32_t>(layout + 316);
+        if (!resource) return -0x7fffbffb;
+    }
+    // 434BB1..434BBE: a non-null stale binding is rejected, not rebound.
+    layer = field<int32_t>(layout + 312);
+    if (!layer || field<int32_t>(layer + 100) != resource)
+        return -0x7fffbffb;
     data = pointer<retdec_mcd_data>(field<int32_t>(resource + 64));
     if (data == nullptr)
         return -0x7fffbffb;

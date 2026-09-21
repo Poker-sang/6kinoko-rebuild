@@ -1,5 +1,4 @@
-/* Withdrawn R132 path: compiled in R132, never executed. Preserved for future
-   investigation; deliberately not included by the R133 recovery build. */
+/* Real CAct -> resource/layer -> key/layout virtuals, compiled only in R132. */
 static char act_clone_events[32];
 static int act_clone_event_count;
 static int32_t act_clone_bound_resource;

@@ -1,0 +1,94 @@
+/* R134 regression source. Builds with stage_contract; execution is user-owned.
+   Exercise actual document/layer/key/map virtual clones, without manually
+   performing the second SetLayer that masked the missing consumer behavior. */
+static int test_map_lazy_binding(int32_t vm, int32_t *root) {
+    const int32_t previous_default_vm = g664;
+    g664 = vm;
+    int32_t source[60] = {0};
+    int32_t *resource = (int32_t*)calloc(1,100);
+    struct retdec_mcd_data *data = (struct retdec_mcd_data*)calloc(1,sizeof(*data));
+    int32_t layer = retdec_act_make_layer();
+    int32_t *key = (int32_t*)calloc(1,36);
+    int32_t *map = (int32_t*)calloc(1,464);
+    int32_t records[1][8] = {{4,7,8,0,0,0,1,0}};
+    CHECK(resource && data && layer && key && map);
+    CHECK(kinoko_act_document_initialize((KinokoActDocument*)source));
+    data->chip_count = 1;
+    data->chips = (struct retdec_mcd_chip*)calloc(1,sizeof(*data->chips));
+    CHECK(data->chips);
+    data->chips[0].chip_id = 4;
+    *(uint32_t*)data->chips[0].bytes = 4;
+    *(int16_t*)(data->chips[0].bytes+12) = 16;
+    *(int16_t*)(data->chips[0].bytes+14) = 16;
+    resource[0] = PTR(&g313); resource[1] = 42;
+    resource[7] = resource[14] = resource[23] = 15;
+    resource[16] = PTR(data);
+    *(int32_t*)(intptr_t)(layer+96) = 42;
+    *(int32_t*)(intptr_t)(layer+100) = PTR(resource);
+    *(int32_t*)(intptr_t)(layer+104) = 9;
+    map[0] = PTR(&g327); map[1] = PTR(&g328); map[113] = -1;
+    kinoko_native_buffer_replace(PTR(map)+264,records,sizeof(records));
+    key[0] = PTR(&g277); key[1] = PTR(map); key[7] = 15;
+    CHECK(retdec_act_append_list(layer+180,PTR(key)));
+    *(int32_t*)(intptr_t)(layer+184) = 1;
+    kinoko_act_array_append(PTR(source)+224,PTR(resource));
+    kinoko_act_array_append(PTR(source)+208,layer);
+
+    for (int query = 0; query != 2; ++query) {
+        KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument*)source,NULL);
+        CHECK(copy);
+        int32_t *doc = (int32_t*)copy;
+        int32_t cloned_layer = *(int32_t*)(intptr_t)doc[52];
+        int32_t cloned_resource = *(int32_t*)(intptr_t)doc[56];
+        int32_t head = *(int32_t*)(intptr_t)(cloned_layer+180);
+        int32_t node = *(int32_t*)(intptr_t)head;
+        int32_t cloned_key = *(int32_t*)(intptr_t)(node+8);
+        int32_t *layout = *(int32_t**)(intptr_t)(cloned_key+4);
+        CHECK(cloned_resource != PTR(resource));
+        CHECK(*(int32_t*)(intptr_t)(cloned_layer+100) == cloned_resource);
+        CHECK(layout[78] == cloned_layer && layout[79] == 0);
+        CHECK(((uint8_t*)layout)[460] == 0);
+        if (!query) {
+            /* Invisible Update must not consume the pending binding. */
+            *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
+            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == 0);
+            CHECK(layout[79] == 0);
+            *(uint8_t*)(intptr_t)(cloned_layer+140) = 1;
+            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == 0);
+            CHECK(layout[79] == cloned_resource);
+            /* A non-null stale resource must fail without rebinding. */
+            layout[79] = PTR(resource);
+            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == (int32_t)E_FAIL);
+            CHECK(layout[79] == PTR(resource));
+            layout[79] = 0;
+            *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
+            CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == (int32_t)E_FAIL);
+            CHECK(layout[79] == 0);
+            *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
+        } else {
+            int32_t klass[2] = {g483,g484}, instance[2] = {g483,g484};
+            *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
+            CHECK(retdec_publish_c2dmaplayout_class(vm,PTR(root),klass));
+            CHECK(retdec_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
+            CHECK(execute_source(vm,root+2,
+                "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";"
+                "if (LazyMapProbe.GetChipByPosition(100,100) != -1) throw \"outside map\";"));
+            CHECK(layout[79] == cloned_resource);
+            layout[79] = 0;
+            *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
+            CHECK(execute_source(vm,root+2,
+                "if (LazyMapProbe.GetChipByPosition(8,9) != -1) throw \"missing resource\";"));
+            CHECK(layout[79] == 0);
+            *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
+            CHECK(execute_source(vm,root+2,"delete LazyMapProbe;"));
+            retdec_sqrat_release_pair(vm,instance);
+            retdec_sqrat_release_pair(vm,klass);
+        }
+        CHECK(map[79] == 0); /* No mutation of the source layout's cache. */
+        retdec_destroy_cact_with_flags(PTR(copy),1);
+    }
+    retdec_destroy_cact_object(PTR(source));
+    g664 = previous_default_vm;
+    puts("PASS: virtual ACT clone lazy map binding in Update and invisible event query");
+    return 0;
+}

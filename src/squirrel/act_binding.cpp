@@ -1294,9 +1294,19 @@ struct retdec_mcd_data *retdec_map_chip_data(int32_t layout) {
 int32_t retdec_map_get_chip_by_position(int32_t vm) {
     int32_t x = 0, y = 0;
     int32_t layout = retdec_map_layout_argument(vm, &x);
+    // GetChipByPosition calls 435220, whose 435243..435265 prologue binds
+    // an empty cache even for invisible event layers. Other chip-data users
+    // (e.g. PreArrangement) do not have this lazy-binding contract.
+    const bool valid_position = layout &&
+        sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&y)) >= 0;
+    if (valid_position &&
+        !field<int32_t>(layout + 316)) {
+        retdec_call_thiscall1_result(pointer<void>(layout),
+            field<void*>(field<int32_t>(layout) + 24), field<int32_t>(layout + 312));
+    }
     struct retdec_mcd_data *data = retdec_map_chip_data(layout);
     int32_t found = -1;
-    if (layout != 0 && data != nullptr && sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&y)) >= 0) {
+    if (valid_position && data != nullptr) {
         int32_t layer = field<int32_t>(layout + 312);
         for (int32_t index = 0, record; (record = retdec_map_record_at(layout, index)) != 0; ++index) {
             struct retdec_mcd_chip *chip = retdec_mcd_find_chip(data, field<uint32_t>(record));
@@ -2057,7 +2067,7 @@ int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
         return 0;
 
     source = act;
-    act = kinoko_act_clone(source, nullptr);
+    act = address(kinoko_act_clone(pointer<KinokoActDocument>(source), nullptr));
     if (!act) return 0;
     link = _3f__3f_2_40_YAPAXI_40_Z(4);
     retdec_trace_i32("450950:bind-new-link", link);
