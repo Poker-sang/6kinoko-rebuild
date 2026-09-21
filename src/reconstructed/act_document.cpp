@@ -1,3 +1,4 @@
+#include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
@@ -853,27 +854,8 @@ int32_t retdec_act_prepare_vector(int32_t object_ptr,
                                          uint32_t capacity_offset,
                                          uint32_t count)
 {
-    int32_t *values;
-
-    if (count > 0x10000u) {
-        return 0;
-    }
-    if (count == 0) {
-        field<int32_t>(object_ptr + (int32_t)begin_offset) = 0;
-        field<int32_t>(object_ptr + (int32_t)end_offset) = 0;
-        field<int32_t>(object_ptr + (int32_t)capacity_offset) = 0;
-        return 1;
-    }
-    values = (int32_t *)std::calloc((size_t)count, sizeof(*values));
-    if (values == nullptr)
-        return 0;
-    field<int32_t>(object_ptr + (int32_t)begin_offset) =
-        address(values);
-    field<int32_t>(object_ptr + (int32_t)end_offset) =
-        address(values);
-    field<int32_t>(object_ptr + (int32_t)capacity_offset) =
-        address((values + count));
-    return 1;
+    if (end_offset!=begin_offset+4 || capacity_offset!=begin_offset+8) return 0;
+    return kinoko_act_array_prepare(object_ptr+begin_offset,count);
 }
 
 int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,

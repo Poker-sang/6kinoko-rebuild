@@ -1,3 +1,4 @@
+#include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_clone.h"
@@ -55,6 +56,7 @@ public:
         for(auto texture: textures_) kinoko_texture_release(texture);
         for(auto resource: chip_owners_) kinoko_act_release_chip_data(static_cast<int32_t>(resource));
         for(auto object:string_layouts_) kinoko_method_delete_string_layout(static_cast<int32_t>(object),nullptr,1);
+        for(auto slot: arrays_) kinoko_act_array_destroy(slot);
         for(auto head: lists_) kinoko_act_list_drop_storage(static_cast<int32_t>(head));
         for(auto allocation: allocations_) std::free(allocation);
     }
@@ -65,8 +67,8 @@ public:
         string(result,source,44);
         script(result+act_script,source+act_script);
         field<uint8_t>(result,204)=0;
-        const auto resources=clone_vector(result,source,act_resources);
-        const auto layers=clone_vector(result,source,act_layers);
+        const auto resources=clone_array(result,source,act_resources);
+        const auto layers=clone_array(result,source,act_layers);
         std::unordered_map<Address,Address> layer_map;
         for(Address slot=resources.begin;slot!=resources.end;slot+=4) {
             const auto original=field<Address>(slot);
@@ -118,6 +120,13 @@ private:
         }
         if(input.size) std::memcpy(target,text,input.size);
         target[input.size]=0;
+    }
+    Vector clone_array(Address dest,Address source,size_t offset) {
+        field<Vector>(dest,offset)={};
+        kinoko_act_array_clone(dest+offset,source+offset);
+        try { arrays_.push_back(dest+offset); }
+        catch(...) { kinoko_act_array_destroy(dest+offset);throw; }
+        return field<Vector>(dest,offset);
     }
     Vector clone_vector(Address dest,Address source,size_t offset) {
         const auto input=field<Vector>(source,offset);
@@ -191,7 +200,7 @@ private:
     }
     Address layer(Address source) {
         const auto result=copy(source,348);
-        clone_vector(result,source,layer_children);
+        clone_array(result,source,layer_children);
         string(result,source,layer_name);
         list(result,source,layer_keys);
         list(result,source,layer_events);
@@ -232,6 +241,7 @@ private:
         }
         return result;
     }
+    std::vector<Address> arrays_;
     std::vector<Address> lists_;
     std::vector<void *> allocations_;
     std::vector<int32_t> textures_;

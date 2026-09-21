@@ -1,3 +1,4 @@
+#include "kinoko/act_array.hpp"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -614,34 +615,16 @@ bool swap_layers(int32_t player, int32_t first, int32_t second) {
         if (found!=children.end())
             pending.insert(pending.end(),found->second.rbegin(),found->second.rend());
     }
-    // Allocate any enlarged ABI buffers before changing live records. STL owns
-    // all temporary collections; only the native record boundary uses malloc.
-    std::map<int32_t,kinoko::legacy::Allocation<int32_t>> replacements;
-    for (const auto& entry: children) {
-        const auto child_begin=field<uint32_t>(entry.first+72);
-        const auto child_capacity=field<uint32_t>(entry.first+80);
-        if (child_capacity<child_begin || (child_capacity-child_begin)%4 ||
-            (!child_begin && child_capacity)) return false;
-        if (entry.second.size()>(child_capacity-child_begin)/4) {
-            kinoko::legacy::Allocation<int32_t> buffer(
-                static_cast<int32_t*>(std::malloc(entry.second.size()*4)));
-            if (!buffer) return false;
-            replacements.emplace(entry.first,std::move(buffer));
-        }
-    }
+    // Prepare every replacement before publishing any hierarchy mutation.
+    std::map<int32_t,std::unique_ptr<kinoko::ActArray>> replacements;
     for (const auto layer: layers) {
+        auto values=std::make_unique<kinoko::ActArray>();
         const auto found=children.find(layer);
-        const auto size=found==children.end() ? 0u : found->second.size();
-        auto replacement=replacements.find(layer);
-        if (replacement!=replacements.end()) {
-            std::free(pointer<void>(field<int32_t>(layer+72)));
-            field<int32_t>(layer+72)=address(replacement->second.release());
-            field<uint32_t>(layer+80)=field<uint32_t>(layer+72)+size*4;
-        }
-        const auto child_begin=field<uint32_t>(layer+72);
-        if (size) std::memcpy(pointer<void>(child_begin),found->second.data(),size*4);
-        field<uint32_t>(layer+76)=child_begin+size*4;
+        if(found!=children.end()) *values=found->second;
+        replacements.emplace(layer,std::move(values));
     }
+    for(auto& entry:replacements)
+        kinoko::replace_act_array(entry.first+72,std::move(entry.second));
     std::memcpy(pointer<void>(begin),ordered.data(),ordered.size()*4);
     return true;
 }
@@ -736,13 +719,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
         if (old_layer) maximum = std::max(maximum, field<int32_t>(old_layer+104));
     }
     field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
-    kinoko::legacy::Allocation<int32_t> layers(static_cast<int32_t*>(std::malloc((count+1)*4)));
-    if (!layers) return 0;
-    if (count) std::memcpy(layers.get(), pointer<void>(begin), count*4);
-    layers.get()[count] = layer;
-    std::free(pointer<void>(begin));
-    field<int32_t>(act+208) = address(layers.release());
-    field<uint32_t>(act+212) = field<uint32_t>(act+216) = field<uint32_t>(act+208)+(count+1)*4;
+    kinoko_act_array_append(act+208,layer);
     owned.release(); // ACT owns the layer before either publication callback.
     if constexpr(string_layout) kinoko_method_set_string_layer(native_layout,nullptr,layer);
     else kinoko_method_layout_set_layer(native_layout, nullptr, layer);

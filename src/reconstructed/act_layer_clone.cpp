@@ -1,3 +1,4 @@
+#include "kinoko/act_array.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
@@ -96,15 +97,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         std::unique_ptr<unsigned char,LayerDelete> owned(storage.release());
         const auto result=address(owned.get());
         std::memcpy(pointer<void>(result+4),pointer<void>(source+4),68);
-        const auto begin=field<uint32_t>(source+72),end=field<uint32_t>(source+76);
-        if (end<begin || (end-begin)%4 || (!begin && end) || (end-begin)/4>0x10000) return 0;
-        if (end!=begin) {
-            kinoko::legacy::Allocation<unsigned char> children(static_cast<unsigned char*>(std::malloc(end-begin)));
-            if (!children) return 0;
-            std::memcpy(children.get(),pointer<void>(begin),end-begin);
-            field<int32_t>(result+72)=address(children.release());
-            field<uint32_t>(result+76)=field<uint32_t>(result+80)=field<uint32_t>(result+72)+(end-begin);
-        }
+        kinoko_act_array_clone(result+72,source+72);
         field<int32_t>(result+88)=field<int32_t>(source+88);
         field<uint8_t>(result+92)=field<uint8_t>(source+92);
         std::memcpy(pointer<void>(result+96),pointer<void>(source+96),16);
