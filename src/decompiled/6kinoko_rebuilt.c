@@ -1490,8 +1490,6 @@ struct vtable_4ed700_type {
 
 // ------------------- Function Prototypes --------------------
 
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void);
-void retdec_msvc_Finitlocks__YAXXZ(void);
 void retdec_msvc_Finitlocks__YAXXZ2(void);
 void retdec_msvc_Finitlocks__YAXXZ7(void);
 void retdec_msvc_Finitlocks__YAXXZ8(void);
@@ -1836,17 +1834,6 @@ int32_t function_430540(void);
 
 
 
-
-
-
-
-
-
-
-
-
-
-int32_t function_431d80(int32_t * a1, int32_t a2, int32_t a3);
 
 
 
@@ -2315,9 +2302,6 @@ static int32_t retdec_execute_clean_vm(
     int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume);
 
 
-int32_t function_498590(int32_t a1, int32_t a2);
-
-
 int32_t function_4a8c50(void);
 int32_t function_4a8c90(int32_t vm, const char *format, ...);
 int32_t function_4a8cc0(void);
@@ -2358,23 +2342,9 @@ int32_t function_4d3f50(void);
 
 
 
-int32_t function_4d4290(void);
-
-
-
-int32_t function_4d4400(void);
-
-
-
-
-
 int32_t function_4d47f0(void);
 int32_t function_4d4860(void);
 int32_t function_4d4930(void);
-
-int32_t function_4d4a30(void);
-
-
 
 // --------------------- Global Variables ---------------------
 
@@ -2683,7 +2653,7 @@ char (*g503)[5] = "call"; // 0x50d488
 char (*g504)[14] = "getattributes"; // 0x50d4e8
 char (*g505)[9] = "getclass"; // 0x50d558
 char (*g506)[4] = "ref"; // 0x50d5a8
-int32_t g507 = -0x44bf19b2; // 0x50d658
+ // 0x50d658
 float64_t g508 = 0.5; // 0x50d6f0
 
 // 0x50f108
@@ -2720,9 +2690,9 @@ char g547 = 0; // 0x5100fd
 char g548 = 0; // 0x5100fe
 char g549 = 0; // 0x5100ff
 int32_t g550 = 0; // 0x510100
-int32_t g551 = 0; // 0x510104
-int32_t g552 = 0; // 0x510114
-int32_t g553 = 15; // 0x510118
+ // 0x510104
+ // 0x510114
+ // 0x510118
 /* One original 28-byte std::string; separate globals are not adjacent. */
 int32_t kinoko_act_script_extension[7] = {0, 0, 0, 0, 0, 15, 0};
 int32_t g557 = 0; // 0x51013c
@@ -8678,54 +8648,7 @@ int32_t function_430540(void) {
 
 
 // Address range: 0x431d80 - 0x431e36
-int32_t function_431d80(int32_t * a1, int32_t a2, int32_t a3) {
-    int32_t result = (int32_t)a1;
-    int32_t v1 = __readfsdword(0); // bp-16, 0x431d90
-    int32_t v2; // bp-4, 0x431d80
-    int32_t v3 = g507 ^ (int32_t)&v2; // bp-32, 0x431d9b
-    int32_t v4 = &v3; // 0x431d9b
-    __writefsdword(0, (int32_t)&v1);
-    int32_t * v5 = (int32_t *)(result + 20); // 0x431daf
-    *v5 = 15;
-    int32_t * v6 = (int32_t *)(result + 16); // 0x431db6
-    *v6 = 0;
-    *(char *)a1 = 0;
-    uint32_t v7 = *v6; // 0x431dd3
-    int32_t v8 = *(int32_t *)(a3 + 16) + *(int32_t *)(a2 + 16); // 0x431dd6
-    int32_t v9 = v4; // 0x431de1
-    if (v7 <= v8) {
-        // 0x431de3
-        v9 = v4;
-        if (*v5 != v8) {
-            int32_t v10 = v8; // bp-40, 0x431dea
-            int32_t v11 = &v10; // 0x431dea
-            v9 = v11;
-            if ((char)function_4039e0((int32_t)a1, (uint32_t)v8, 1) != 0) {
-                // 0x431df6
-                *v6 = v7;
-                int32_t v12 = result; // 0x431dfd
-                if (*v5 >= 16) {
-                    // 0x431dff
-                    v12 = *a1;
-                }
-                // 0x431e05
-                *(char *)(v12 + v7) = 0;
-                v9 = v11;
-            }
-        }
-    }
-    // 0x431e09
-    *(int32_t *)(v9 - 4) = -1;
-    *(int32_t *)(v9 - 8) = 0;
-    *(int32_t *)(v9 - 12) = a2;
-    function_403bf0((int32_t)a1, (int32_t)a2, 0, UINT32_MAX);
-    *(int32_t *)(v9 - 16) = -1;
-    *(int32_t *)(v9 - 20) = 0;
-    *(int32_t *)(v9 - 24) = a3;
-    function_403bf0((int32_t)a1, (int32_t)a3, 0, UINT32_MAX);
-    __writefsdword(0, v1);
-    return result;
-}
+
 
 // Address range: 0x431e40 - 0x431ed1
 
@@ -17776,17 +17699,7 @@ static int32_t retdec_execute_clean_vm(
 
 
 // Address range: 0x498590 - 0x4985a5
-int32_t function_498590(int32_t a1, int32_t a2) {
-    int32_t result;
-    int32_t caller = (int32_t)(uintptr_t)_ReturnAddress();
 
-    // 0x498590
-    result = (int32_t)(intptr_t)realloc((void *)(intptr_t)a1,
-                                          (size_t)(uint32_t)a2);
-    retdec_trace_i32("498590:caller", caller);
-    retdec_trace_realloc_state("498590", a1, -1, a2, result);
-    return result;
-}
 
 // Address range: 0x4985b0 - 0x4985c1
 
@@ -18452,11 +18365,7 @@ int32_t kinoko_squirrel_object_vtable(void) {
 // Type:          destructor
 // Demangled:     public: __thiscall std::_Init_locks::_Init_locks(void)
 
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void) {
-    // Transitional wrapper for call sites whose hidden this pointer is not
-    // restored yet. These callers are fixed incrementally from original IDA.
-    return retdec_msvc_0_Init_locks_std__QAE_XZ5_this(0);
-}
+
 
 // Address range: 0x4a9500 - 0x4a9534
 // From class:    .?AVSquirrelObject@@
@@ -19141,28 +19050,12 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 
 
 // Address range: 0x4d4290 - 0x4d42ea
-int32_t function_4d4290(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4d42a0
-    __writefsdword(0, (int32_t)&v1);
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    __writefsdword(0, v1);
-    return &g1224;
-}
+
 
 
 // Address range: 0x4d4320 - 0x4d434e
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
-void retdec_msvc_Finitlocks__YAXXZ(void) {
-    // 0x4d4320
-    if ((uint32_t)g553 >= 16) {
-        // 0x4d4329
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4d4337
-    g553 = 15;
-    g552 = 0;
-    *(char *)&g551 = 0;
-}
+
 
 // Address range: 0x4d4350 - 0x4d437e
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
@@ -19176,13 +19069,7 @@ void retdec_msvc_Finitlocks__YAXXZ2(void) {
 
 
 // Address range: 0x4d4400 - 0x4d445a
-int32_t function_4d4400(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x4d4410
-    __writefsdword(0, (int32_t)&v1);
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    __writefsdword(0, v1);
-    return &g1224;
-}
+
 
 
 // Address range: 0x4d4470 - 0x4d44ca
@@ -19232,23 +19119,7 @@ void retdec_msvc_Finitlocks__YAXXZ9(void) {
 
 
 // Address range: 0x4d4a30 - 0x4d4a54
-int32_t function_4d4a30(void) {
-    // 0x4d4a30
-    if (((int32_t)g483 & 0x8000000) == 0) {
-        // 0x4d4a53
-        int32_t result; // 0x4d4a30
-        return result;
-    }
-    int32_t * v1 = (int32_t *)(g484 + 4); // 0x4d4a41
-    int32_t v2 = *v1 - 1; // 0x4d4a41
-    *v1 = v2;
-    if (v2 != 0) {
-        // 0x4d4a53
-        return g484;
-    }
-    // 0x4d4a46
-    return *(int32_t *)g484;
-}
+
 
 
 // Address range: 0x4d4b30 - 0x4d4b7c

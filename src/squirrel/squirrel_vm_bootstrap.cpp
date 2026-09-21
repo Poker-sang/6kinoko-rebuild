@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <list>
 
 extern "C" {
 extern char g642;
@@ -23,16 +24,11 @@ namespace {
 using kinoko::script::address;
 using kinoko::script::pointer;
 HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); }
-struct OwnedState {
-    int32_t state;
-    OwnedState* next;
-};
-static_assert(sizeof(OwnedState) == 8);
-void delete_owned_states(OwnedState* node) {
-    if (!node) return;
-    kinoko_sq_delete_shared_state(node->state);
-    delete_owned_states(node->next);
-    std::free(node);
+// Actual standard-list values own the deferred VM state identities. g643
+// publishes only the newest identity token; no legacy next-pointer node exists.
+std::list<int32_t>& owned_states() {
+    static std::list<int32_t> values;
+    return values;
 }
 int32_t function_address(void* value) noexcept {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(value));
@@ -41,8 +37,10 @@ int32_t function_address(void* value) noexcept {
 extern "C" void kinoko_sq_release_owned_states(void) {
     // Original CRT exit handler 4D4B30 and node destructor 4A8D60.
     // Ordinary 4A8C50 only releases wrappers; it must not destroy these VMs.
-    delete_owned_states(pointer<OwnedState>(g643));
-    g643 = 0;
+    std::list<int32_t> pending;
+    pending.splice(pending.end(),owned_states());
+    g643=0;
+    for(const auto state:pending) kinoko_sq_delete_shared_state(state);
 }
 extern "C" int32_t function_4a8c50(void) {
     if (g645 != 0) {
@@ -85,13 +83,15 @@ extern "C" int32_t function_4a8db0(int32_t requested_vm) {
     if (requested_vm == 0) {
         current = function_48a170(1024);
         if (current == 0) return 0;
-        const int32_t node = _3f__3f_2_40_YAPAXI_40_Z(8);
-        if (node != 0) {
-            static const int registered = std::atexit(kinoko_sq_release_owned_states);
+        try {
+            auto& values=owned_states();
+            values.push_front(kinoko_sq_shared_state(current));
+            static const int registered=std::atexit(kinoko_sq_release_owned_states);
             (void)registered;
-            *pointer<int32_t>(node) = kinoko_sq_shared_state(current);
-            *pointer<int32_t>(node + 4) = g643;
-            g643 = node;
+            g643=address(&values.front());
+        } catch(...) {
+            kinoko_sq_delete_shared_state(kinoko_sq_shared_state(current));
+            return 0;
         }
         sq_setprintfunc(kinoko_vm(current), (SQPRINTFUNCTION)kinoko_pointer(function_address(reinterpret_cast<void*>(&function_4a8c90))));
         sq_pushroottable(kinoko_vm(current));
