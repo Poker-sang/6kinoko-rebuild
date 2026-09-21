@@ -1,0 +1,66 @@
+[
+  {
+    "version": "r128",
+    "source_commit": "d16dfc773c9744f4e8bd2c9f0d0098e5845b7b66",
+    "build_exit_code": 0,
+    "configuration": "Win32 Release, RETDEC_DISABLE_TRACE",
+    "build_tree": "build-runs/original-act-r128-quiet",
+    "build_log": "build-runs/original-act-r128-quiet/build.log",
+    "exe": {
+      "path": "runtime-builds/original-act-r128-quiet/kinoko_retdec_rebuild.exe",
+      "size": 861184,
+      "sha256": "fd59d10c32be78e53375ec788b0695aad4820a31ed202e7953c3643d4a734b9e"
+    },
+    "dat": [
+      {
+        "path": "runtime-builds/original-act-r128-quiet/6kinoko_a.dat",
+        "size": 163424746,
+        "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+      },
+      {
+        "path": "runtime-builds/original-act-r128-quiet/6kinoko_b.dat",
+        "size": 44681244,
+        "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+      },
+      {
+        "path": "runtime-builds/original-act-r128-quiet/6kinoko_c.dat",
+        "size": 11796163,
+        "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+      }
+    ],
+    "local_tests_executed": false,
+    "game_executed": false
+  },
+  {
+    "version": "r129",
+    "source_commit": "d61ea3296dbf9176eb685061eaeecb2244090ccf",
+    "build_exit_code": 0,
+    "configuration": "Win32 Release, RETDEC_DISABLE_TRACE",
+    "build_tree": "build-runs/original-act-r129-quiet",
+    "build_log": "build-runs/original-act-r129-quiet/build.log",
+    "exe": {
+      "path": "runtime-builds/original-act-r129-quiet/kinoko_retdec_rebuild.exe",
+      "size": 861184,
+      "sha256": "caa066a304e963809dc5bdd3b49cf7961e173c44060f27ecdaa922e66115992f"
+    },
+    "dat": [
+      {
+        "path": "runtime-builds/original-act-r129-quiet/6kinoko_a.dat",
+        "size": 163424746,
+        "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+      },
+      {
+        "path": "runtime-builds/original-act-r129-quiet/6kinoko_b.dat",
+        "size": 44681244,
+        "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+      },
+      {
+        "path": "runtime-builds/original-act-r129-quiet/6kinoko_c.dat",
+        "size": 11796163,
+        "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+      }
+    ],
+    "local_tests_executed": false,
+    "game_executed": false
+  }
+]

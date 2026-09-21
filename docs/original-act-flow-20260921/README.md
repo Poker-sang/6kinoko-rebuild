@@ -76,3 +76,25 @@ serialized values survive only when the original initialized flag says so.
 The existing layer-property aliases remain outside this bounded correction.
 0x42bd70.json is a retained exploratory capture inside 42BD00 property registration,
 not the update evidence; 42C100/42C470/42BCC0 are the applicable captures.
+
+
+## Build handoff
+
+R128 source `d16dfc7` and R129 source `d61ea32` each completed an independent
+all-target quiet Win32 Release build (exit 0), including the new resource-pass
+contract and updated contracts. Existing compiler warnings remain. No ctest,
+contract executable, Python regression suite or game was run. Build logs,
+executables and DAT staging logs remain in their separate build/run directories.
+
+Final delivery: `runtime-builds/original-act-r129-quiet/kinoko_retdec_rebuild.exe`.
+All three original DAT were copied alongside each EXE using stage_dat.ps1 and
+verified by size/SHA256. No reference working directory or data-dir override.
+Hashes and source commits are in artifacts.json. No immediate user test required.
+Additional 415B80 capture confirms embedded script selective initialization,
+which remains unchanged after removing the outer document memset.
+
+Known boundaries retained: malformed short-version input is initialized safely;
+existing absent-global-list/VM and allocation guards remain reconstruction
+boundaries. This batch does not claim global removal of every inherited guard
+or complete original behavior equivalence. Source-field detachment and complete
+partial-stage cleanup added in PR #9 have been removed as requested.
