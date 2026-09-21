@@ -1,3 +1,4 @@
+#include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/map_render.h"
 #include "kinoko/string_layout.h"
@@ -185,7 +186,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     field<int32_t>(layer + 112) = 0;
     field<int32_t>(layer + 128) = 0;
     field<int32_t>(layer + 132) = 15;
-    std::free(pointer<void>(field<int32_t>(layer + 72)));
+    kinoko_act_array_destroy(layer+72);
     field<int32_t>(layer + 72) = 0;
     field<int32_t>(layer + 76) = 0;
     field<int32_t>(layer + 80) = 0;
@@ -253,7 +254,7 @@ void retdec_destroy_cact_object(int32_t object_ptr)
             std::free(pointer<void>(layer));
         }
     }
-    std::free(pointer<void>(begin));
+    kinoko_act_array_destroy(object_ptr+208);
     field<int32_t>(object_ptr + 208) = 0;
     field<int32_t>(object_ptr + 212) = 0;
     field<int32_t>(object_ptr + 216) = 0;
@@ -263,7 +264,7 @@ void retdec_destroy_cact_object(int32_t object_ptr)
     for (cursor = begin; begin != 0 && end >= begin && cursor < end;
          cursor += 4)
         retdec_destroy_cact_resource(field<int32_t>(cursor));
-    std::free(pointer<void>(begin));
+    kinoko_act_array_destroy(object_ptr+224);
     field<int32_t>(object_ptr + 224) = 0;
     field<int32_t>(object_ptr + 228) = 0;
     field<int32_t>(object_ptr + 232) = 0;

@@ -59,3 +59,7 @@ ACT key and timeline list nodes are now values owned by std::list<Link>; no manu
 ## R119 — ACT draw command/sprite vectors
 
 Replaced draw-command realloc and sprite-vector allocation with std::vector<BlitCommand> and std::vector<Sprite>. Runtime slots own opaque native containers; render consumers use borrowed spans computed from actual data/size/capacity. Sprite construction/destruction retains the existing vtable transitions and borrowed texture semantics. Per-frame command reset uses clear, and runtime destruction deletes both owners. Updated draw contracts rebuild sprites after shrink/regrowth rather than reading erased elements outside their lifetime. No local executable test or game is run.
+
+## R120 — ACT document and hierarchy arrays
+
+ACT layer/resource arrays and layer child arrays now own actual std::vector<int32_t> objects. The first two boundary words expose borrowed begin/end views; the third owns the opaque container rather than an allocation limit. Archive loading still publishes only successfully loaded payloads. Deep clone rollback destroys native owners separately, dynamic CreateLayer appends through vector, and SwapLayer prepares all replacements before an allocation-free commit. Layer/document destruction deletes vector storage after payload cleanup. Ownership fixtures use the new API; read-only synthetic spans remain supported. Full build only; no game or contract executable is run.

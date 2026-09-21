@@ -35,6 +35,7 @@ endif()
 
 add_library(kinoko_native_methods STATIC
     src/reconstructed/act_resource.cpp
+    src/reconstructed/act_array.cpp
     src/reconstructed/act_list.cpp
     src/reconstructed/act_clone.cpp
     src/reconstructed/act_layer_clone.cpp

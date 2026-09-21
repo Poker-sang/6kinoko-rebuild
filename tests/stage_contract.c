@@ -1,3 +1,4 @@
+#include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_font.h"
 #include "kinoko/input_devices.h"
@@ -4040,9 +4041,9 @@ static int test_chip_shared_ownership(void) {
     IDirect3DBaseTexture9Vtbl vtable={0}; vtable.Release=count_texture_release;
     texture[0]=PTR(&vtable);
     CHECK(function_427530(PTR(source)));
-    int32_t *resource=(int32_t*)calloc(1,100), *resources=(int32_t*)calloc(1,4);
+    int32_t *resource=(int32_t*)calloc(1,100);
     struct retdec_mcd_data *data=(struct retdec_mcd_data*)calloc(1,sizeof(*data));
-    CHECK(resource && resources && data);
+    CHECK(resource && data);
     data->textures=(struct retdec_mcd_texture*)calloc(1,sizeof(*data->textures));
     CHECK(data->textures);
     data->texture_count=1;
@@ -4052,8 +4053,8 @@ static int test_chip_shared_ownership(void) {
     retdec_string_assign_cstr(resource+2,"a long named chip resource");
     retdec_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
     retdec_string_assign_cstr(resource+18,"a long shared resource prefix/");
-    resource[16]=PTR(data); resources[0]=PTR(resource);
-    source[56]=PTR(resources); source[57]=source[58]=PTR(resources+1);
+    resource[16]=PTR(data);
+    kinoko_act_array_append(PTR(source)+224,PTR(resource));
     int32_t virtual_copy=retdec_call_thiscall0_result(resource,(void*)g313.e9);
     CHECK(virtual_copy && virtual_copy!=PTR(resource));
     CHECK(*(int32_t*)(intptr_t)(virtual_copy+64)==PTR(data));
@@ -4999,7 +5000,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
         "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
     for(int i=0;i<7;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
-    free(layers); retdec_sqrat_release_pair(vm,player_pair);
+    kinoko_act_array_destroy(PTR(act)+208); retdec_sqrat_release_pair(vm,player_pair);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
     puts("PASS: dynamic 2D ownership, Sqrat aliases, layer order, ancestor rejection and subtree swaps");
