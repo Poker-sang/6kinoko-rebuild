@@ -1,3 +1,4 @@
+#include "kinoko/input_keys.h"
 #include "kinoko/input_cluster.h"
 #include "kinoko/map_containers.h"
 #include "kinoko/actor_owner_list.h"
@@ -1622,8 +1623,7 @@ int32_t function_408bf0(void);
 int32_t function_408c80(void);
 int32_t function_408d00(void);
 void retdec_poll_fallback_keyboard(void);
-static int32_t retdec_input_aggregate_add(int32_t aggregate_ptr,
-                                           int32_t key_code);
+
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
 int32_t function_408e60(int32_t a1);
 int32_t function_408e80(int32_t a1);
@@ -2892,8 +2892,6 @@ unsigned char g_retdec_keyboard_state[256];
 /* CInputManager::CInputManagerCluster owns a vector of unique key codes.
    Keep the vector storage separate from the manager so its pointers remain
    valid while the Squirrel object is updated. */
-static unsigned char g_retdec_input_key_codes[32];
-static uint32_t g_retdec_input_key_code_count;
 char g776 = 0; // 0x51b0a5
 char g777 = 0; // 0x51b0b2
 char g778 = 0; // 0x51b0be
@@ -5401,35 +5399,6 @@ void retdec_poll_fallback_keyboard(void)
 
 /* The original cluster keeps a vector of the physical key codes used by its
    derived button states.  The key set is fixed during CInputManager::Init. */
-static int32_t retdec_input_aggregate_add(int32_t aggregate_ptr,
-                                          int32_t key_code)
-{
-    int32_t begin;
-    int32_t end;
-    int32_t capacity;
-    int32_t count;
-    int32_t index;
-
-    if (aggregate_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(aggregate_ptr + 1024);
-    end = *(int32_t *)(intptr_t)(aggregate_ptr + 1028);
-    capacity = *(int32_t *)(intptr_t)(aggregate_ptr + 1032);
-    if (begin == 0 || end < begin || capacity < end)
-        return 0;
-    count = end - begin;
-    for (index = 0; index < count; ++index) {
-        if (*(unsigned char *)(intptr_t)(begin + index) ==
-            (unsigned char)key_code)
-            return 1;
-    }
-    if (end >= capacity)
-        return 0;
-    *(unsigned char *)(intptr_t)end = (unsigned char)key_code;
-    *(int32_t *)(intptr_t)(aggregate_ptr + 1028) = end + 1;
-    return 1;
-}
-
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 {
     static const unsigned char key_codes[] = {
@@ -5437,24 +5406,11 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
         87, 88, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
     };
     size_t index;
-    int32_t begin;
+    if (aggregate_ptr == 0) return;
+    kinoko_input_keys_construct(aggregate_ptr);
+    for (index = 0; index < sizeof(key_codes); ++index)
+        kinoko_input_keys_add(aggregate_ptr, key_codes[index]);
 
-    if (aggregate_ptr == 0)
-        return;
-    memset((void *)(intptr_t)aggregate_ptr, 0, 0x400);
-    memset(g_retdec_input_key_codes, 0, sizeof(g_retdec_input_key_codes));
-    begin = (int32_t)(intptr_t)g_retdec_input_key_codes;
-    *(int32_t *)(intptr_t)(aggregate_ptr + 1024) = begin;
-    *(int32_t *)(intptr_t)(aggregate_ptr + 1028) = begin;
-    *(int32_t *)(intptr_t)(aggregate_ptr + 1032) =
-        begin + (int32_t)sizeof(g_retdec_input_key_codes);
-    g_retdec_input_key_code_count = 0;
-    for (index = 0; index < sizeof(key_codes); ++index) {
-        if (retdec_input_aggregate_add(aggregate_ptr, key_codes[index]) != 0)
-            ++g_retdec_input_key_code_count;
-    }
-    *(uint16_t *)(intptr_t)(aggregate_ptr + 1040) = 0;
-    *(unsigned char *)(intptr_t)(aggregate_ptr + 1042) = 0;
 }
 
 /* CInputManagerCluster::Update.  This preserves the original data contract:

@@ -1,3 +1,4 @@
+#include "kinoko/input_keys.h"
 #include "kinoko/input_cluster.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_abi.h"
@@ -52,17 +53,6 @@ void assign_devices(Vector& out, const Vector& in) {
     if (bytes < old_bytes) destroy_devices(out.begin + bytes, out.end);
     out.end = out.begin + bytes;
 }
-void assign_bytes(Vector& out, const Vector& in) {
-    const auto bytes = in.end - in.begin;
-    if (bytes > out.capacity - out.begin) {
-        std::free(pointer<void>(out.begin));
-        out = {};
-        out.begin = allocate(bytes);
-        out.capacity = out.begin + bytes;
-    }
-    if (bytes) std::copy_n(pointer<unsigned char>(in.begin), bytes, pointer<unsigned char>(out.begin));
-    out.end = out.begin + bytes;
-}
 
 }
 
@@ -84,9 +74,7 @@ extern "C" int32_t function_46ed80(int32_t destination, int32_t source) {
     std::copy_n(in + 200, 164, out + 200);
     kinoko_input_cluster_assign(destination + 196, source + 196);
     out[388] = in[388];
-    std::copy_n(in + 392, 1024, out + 392);
-    assign_bytes(*reinterpret_cast<Vector*>(out + 1416), *reinterpret_cast<const Vector*>(in + 1416));
-    std::copy_n(in + 1432, 3, out + 1432);
+    kinoko_input_keys_assign(destination + 392, source + 392);
     std::copy_n(in + 1436, 76, out + 1436);
     return destination;
 }
