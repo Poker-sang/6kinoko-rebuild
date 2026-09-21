@@ -748,60 +748,6 @@ int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     return 0;
 }
 
-// Clone::layer copies raw key/layout records and needs a separate rebind.
-// Deserialization already binds each key at 41F8B9 and must not call this.
-int32_t retdec_act_bind_cloned_layouts(int32_t act)
-{
-    int32_t layer_begin;
-    int32_t layer_end;
-    int32_t layer_count;
-    int32_t layer_index;
-    int32_t layer;
-    int32_t layer_sentinel;
-    int32_t node;
-    uint32_t trace_count = 0;
-
-    if (act == 0)
-        return 0;
-    layer_begin = field<int32_t>(act + 208);
-    layer_end = field<int32_t>(act + 212);
-    if (layer_end < layer_begin)
-        return 0;
-    layer_count = (layer_end - layer_begin) / 4;
-
-    for (layer_index = 0; layer_index < layer_count; ++layer_index) {
-        layer = field<int32_t>(layer_begin + layer_index * 4);
-        if (layer == 0)
-            continue;
-        layer_sentinel = field<int32_t>(layer + 0xb4);
-        if (layer_sentinel == 0)
-            continue;
-        node = field<int32_t>(layer_sentinel);
-        while (node != 0 && node != layer_sentinel) {
-            int32_t key = field<int32_t>(node + 8);
-            int32_t layout = key == 0 ? 0 :
-                field<int32_t>(key + 4);
-            if (layout != 0) {
-                if(field<int32_t>(layout)==address(g350))
-                    kinoko_method_set_string_layer(layout,nullptr,layer);
-                else if (field<int32_t>(layout) ==
-                        address(kinoko_act_host_symbols()->map_layout_vtable))
-                    retdec_c2dmaplayout_set_layer_impl(layout, layer);
-                else
-                    retdec_c2dlayout_set_layer_impl(layout, layer);
-                if (trace_count++ < 32u) {
-                    retdec_trace_i32("act:layout", layout);
-                    retdec_trace_i32("act:layout-layer", layer);
-                    retdec_trace_i32("act:layout-texture",
-                                     field<int32_t>(layout)==address(g350)?0:field<int32_t>(layout + 0x134));
-                }
-            }
-            node = field<int32_t>(node);
-        }
-    }
-    return 1;
-}
-
 int32_t retdec_act_prepare_vector(int32_t object_ptr,
                                          uint32_t begin_offset,
                                          uint32_t end_offset,

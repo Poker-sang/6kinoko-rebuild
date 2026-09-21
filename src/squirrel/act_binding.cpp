@@ -2057,7 +2057,7 @@ int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
         return 0;
 
     source = act;
-    act = kinoko_act_clone(source, nullptr);
+    act = address(kinoko_act_clone(pointer<KinokoActDocument>(source), nullptr));
     if (!act) return 0;
     link = _3f__3f_2_40_YAPAXI_40_Z(4);
     retdec_trace_i32("450950:bind-new-link", link);
