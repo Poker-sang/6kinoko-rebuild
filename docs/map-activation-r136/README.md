@@ -59,3 +59,9 @@ R136 is built as Release Win32 with trace disabled in independent directories
 `runtime-builds/map-activation-r136-quiet`. Three original DAT files are staged
 beside the EXE and verified by size/SHA256. See artifacts.json for the exact
 source commit and outputs. Compilation is not a runtime-success claim.
+
+## Subsequent user confirmation
+
+The user confirmed R136 restored gameplay after receiving this build. This is
+user validation, not an agent-run game or automated test. R137 uses it as its
+behavior baseline.

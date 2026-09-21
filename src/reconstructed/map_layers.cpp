@@ -1,6 +1,7 @@
 #include "kinoko/map_render.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_memory.hpp"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/act_source.h"
 #include "kinoko/map_containers.h"
 #include "kinoko/act_layer_access.h"
@@ -19,23 +20,13 @@ struct MapManager {
     KinokoActSourceHolder *source_holder;
     KinokoActRuntime *player;
 };
-struct LayerName {
-    union { char local[16]; const char *heap; } storage;
-    uint32_t size, capacity;
-
-    const char *data() const { return capacity < 16 ? storage.local : storage.heap; }
-};
-struct LayoutView {
-    void *vtable;
-    unsigned char prefix[308];
-    unsigned char *layer;
-};
+using namespace kinoko::map;
 static_assert(offsetof(MapManager, player) == 20);
-static_assert(sizeof(LayerName) == 24 && offsetof(LayoutView, layer) == 312);
+
 }
 
-extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
-    const auto *manager = reinterpret_cast<const MapManager *>(manager_address);
+extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, const char *name) {
+    const auto *manager = reinterpret_cast<const MapManager *>(storage);
     if (!manager || !manager->source_act || !name)
         return 0;
 
@@ -44,14 +35,20 @@ extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *n
     const int32_t count = kinoko_act_source_layer_count(manager->source_holder);
     for (int32_t index = 0; index < count; ++index) {
         auto *borrowed_layout = kinoko_act_layer_layout(manager->player, index);
-        const auto *layout = reinterpret_cast<const LayoutView *>(borrowed_layout);
-        if (!layout || layout->vtable != &g327 || !layout->layer)
-            continue;
-        const auto &layer_name = *reinterpret_cast<const LayerName *>(layout->layer + 112);
+        if (!borrowed_layout) continue;
+        const LayoutView layout(borrowed_layout);
+        auto *layer = layout.get(&LayoutRecord::owning_layer);
+        if (layout.get(&LayoutRecord::methods) != &g327 || !layer) continue;
+        const kinoko::legacy::StringView layer_name(LayerView(layer).bytes(&LayerRecord::name));
         if (std::strcmp(layer_name.data(), name) == 0)
-            return static_cast<int32_t>(reinterpret_cast<uintptr_t>(borrowed_layout));
+            return borrowed_layout;
     }
     return 0;
+}
+
+extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
+    return kinoko::legacy::address(kinoko_map_lookup_layout(
+        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
 }
 
 extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
@@ -65,45 +62,43 @@ extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
 
 namespace {
 using kinoko::legacy::load;
-struct ChipDataPrefix { unsigned char prefix[64]; retdec_mcd_data *data; };
-struct LayerResourcePrefix { unsigned char prefix[100]; KinokoActResource *resource; };
-struct MapResourcePrefix {
-    const unsigned char *vtable;
-    unsigned char prefix[308];
-    KinokoActLayer *layer;
-    KinokoActResource *cached_resource;
-};
 using QueryResource = uint8_t (__thiscall *)(KinokoActResource *, const void *, KinokoActResource **);
 using SetMapLayer = int32_t (__thiscall *)(KinokoActLayout *, KinokoActLayer *);
 struct ChipTypeDescriptor { void *table, *cache; char name[sizeof(".?AVCActResourceChip@@")]; };
 const ChipTypeDescriptor chip_type{{}, {}, ".?AVCActResourceChip@@"};
-static_assert(offsetof(MapResourcePrefix, layer) == 312);
-static_assert(offsetof(MapResourcePrefix, cached_resource) == 316);
-static_assert(offsetof(LayerResourcePrefix, resource) == 100);
-static_assert(offsetof(ChipDataPrefix, data) == 64);
+struct ResourceMethods { void *prefix[2]; QueryResource query; };
+struct LayoutMethods { void *prefix[6]; SetMapLayer set_layer; };
+static_assert(offsetof(ResourceMethods, query) == 8);
+static_assert(offsetof(LayoutMethods, set_layer) == 24);
 }
 
 extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
-    const auto map = load<MapResourcePrefix>(layout);
-    if (!map.layer) return nullptr;
-    auto *resource = load<LayerResourcePrefix>(map.layer).resource;
+    auto *layer = LayoutView(layout).get(&LayoutRecord::owning_layer);
+    if (!layer) return nullptr;
+    auto *resource = LayerView(layer).get(&LayerRecord::resource);
     if (!resource) return nullptr;
-    // The original uses the resource's virtual QueryType, independently of
-    // the map layout's lazy +316 binding. The output is a borrowed pointer.
-    const auto *methods = load<const unsigned char *>(resource);
-    auto query = load<QueryResource>(methods + 8);
+    // Original virtual QueryType; this does not read or populate the cache.
+    const auto *methods = ChipResourceView(resource).get(&ChipResourceRecord::methods);
+    auto query = load<QueryResource>(methods + offsetof(ResourceMethods, query));
     KinokoActResource *chip = nullptr;
     if (!query(resource, &chip_type, &chip) || !chip) return nullptr;
-    return load<ChipDataPrefix>(chip).data;
+    return ChipResourceView(chip).get(&ChipResourceRecord::data);
+}
+
+extern "C" retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
+    if (!layout) return nullptr;
+    auto *resource = LayoutView(layout).get(&LayoutRecord::cached_chip_resource);
+    return resource ? ChipResourceView(resource).get(&ChipResourceRecord::data) : nullptr;
 }
 
 extern "C" retdec_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
     if (!layout) return nullptr;
-    auto map = load<MapResourcePrefix>(layout);
-    if (!map.cached_resource) {
-        load<SetMapLayer>(map.vtable + 24)(layout, map.layer);
-        map = load<MapResourcePrefix>(layout);
+    const LayoutView map(layout);
+    if (!map.get(&LayoutRecord::cached_chip_resource)) {
+        auto bind = load<SetMapLayer>(map.get(&LayoutRecord::methods) + offsetof(LayoutMethods, set_layer));
+        bind(layout, map.get(&LayoutRecord::owning_layer));
     }
-    return map.cached_resource ? load<ChipDataPrefix>(map.cached_resource).data : nullptr;
+    // Read again after virtual SetLayer. A non-null cache is not rebound.
+    return kinoko_map_cached_chip_data(layout);
 }

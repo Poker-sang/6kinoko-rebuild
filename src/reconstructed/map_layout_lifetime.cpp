@@ -1,5 +1,6 @@
 #include "kinoko/native_buffer.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include <array>
 #include <vector>
@@ -47,7 +48,7 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
 
     }
     // Fourth words between vector views are untouched, as in 433780/433AE0.
-    field<uint8_t>(result+460)=1;
+    kinoko::map::LayoutView(output.get()).set(&kinoko::map::LayoutRecord::suppress_next_binding, uint8_t{1});
     try {
         for(size_t i=0;i<vectors.size();++i)
             kinoko_native_buffer_replace(result+vectors[i].offset,buffers[i].data(),static_cast<uint32_t>(buffers[i].size()*4));

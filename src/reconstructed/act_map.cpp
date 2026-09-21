@@ -1,3 +1,4 @@
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -130,9 +131,11 @@ int32_t kinoko_map_update(
 
     if (layout == 0)
         return -0x7fffbffb;
+    using namespace kinoko::map;
+    const LayoutView map(pointer<KinokoActLayout>(layout));
     trace_index = InterlockedIncrement(&trace_count);
-    layer = field<int32_t>(layout + 312);
-    resource = field<int32_t>(layout + 316);
+    layer = address(map.get(&LayoutRecord::owning_layer));
+    resource = address(map.get(&LayoutRecord::cached_chip_resource));
     entry_sample_index = InterlockedIncrement(&entry_sample_count);
     if (entry_sample_index <= 8) {
         retdec_trace_i32("map:entry-layout", layout);
@@ -166,14 +169,14 @@ int32_t kinoko_map_update(
     if (!resource) {
         retdec_call_thiscall1_result(pointer<void>(layout),
             field<void*>(field<int32_t>(layout) + 24), layer);
-        resource = field<int32_t>(layout + 316);
+        resource = address(map.get(&LayoutRecord::cached_chip_resource));
         if (!resource) return -0x7fffbffb;
     }
     // 434BB1..434BBE: a non-null stale binding is rejected, not rebound.
-    layer = field<int32_t>(layout + 312);
-    if (!layer || field<int32_t>(layer + 100) != resource)
+    layer = address(map.get(&LayoutRecord::owning_layer));
+    if (!layer || address(LayerView(pointer<KinokoActLayer>(layer)).get(&LayerRecord::resource)) != resource)
         return -0x7fffbffb;
-    data = pointer<retdec_mcd_data>(field<int32_t>(resource + 64));
+    data = kinoko_map_cached_chip_data(pointer<KinokoActLayout>(layout));
     if (data == nullptr)
         return -0x7fffbffb;
 

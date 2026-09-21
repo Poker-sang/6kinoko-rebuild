@@ -1,3 +1,4 @@
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
@@ -360,24 +361,27 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
     constexpr int32_t fail = static_cast<int32_t>(0x80004005u);
     if (!layout || !layer) return fail;
     try {
-        const auto resource = field<int32_t>(layer+100);
-        field<int32_t>(layout+316) = 0;
-        if (!resource || field<uint8_t>(layout+460)) {
+        using namespace kinoko::map;
+        const LayoutView map(pointer<KinokoActLayout>(layout));
+        auto *owner = pointer<KinokoActLayer>(layer);
+        auto *resource = LayerView(owner).get(&LayerRecord::resource);
+        map.set(&LayoutRecord::cached_chip_resource, static_cast<KinokoActResource *>(nullptr));
+        if (!resource || map.get(&LayoutRecord::suppress_next_binding)) {
             // Original one-shot suppression is distinct from an invalid type.
-            field<uint8_t>(layout+460) = 0;
+            map.set(&LayoutRecord::suppress_next_binding, uint8_t{0});
         } else {
-            if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable))
+            if (ChipResourceView(resource).get(&ChipResourceRecord::methods) != kinoko_act_host_symbols()->chip_resource_vtable)
                 return fail;
-            field<int32_t>(layout+316) = resource;
+            map.set(&LayoutRecord::cached_chip_resource, resource);
             // Source MCD loading already loads each texture once. The original
             // sorted/unique texture preload therefore needs no second acquire.
             rebuild_map_cache(layout);
         }
-        field<int32_t>(layout+312) = layer;
+        map.set(&LayoutRecord::owning_layer, owner);
         field<int32_t>(layout+284) = field<int32_t>(layout+280);
-        if (!field<int32_t>(layout+316)) return 0;
+        if (!map.get(&LayoutRecord::cached_chip_resource)) return 0;
         const auto count = record_count(layout);
-        const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
+        const auto data = ChipResourceView(resource).get(&ChipResourceRecord::data);
         if (!data && count) return fail;
         auto records = pointer<MapRecord>(field<int32_t>(layout+264));
         std::vector<int32_t> chip_refs, texture_refs;

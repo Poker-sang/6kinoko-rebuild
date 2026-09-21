@@ -84,6 +84,7 @@
 #include "resource.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_activation.h"
 
 static volatile LONG retdec_actor_step_trace_active;
 
@@ -2202,8 +2203,7 @@ static int32_t function_46e6f0_this(int32_t this_ptr);
 int32_t function_46ed80(int32_t a1, int32_t result);
 
 static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
-int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
-                         int32_t top, int32_t right, int32_t bottom);
+
 int32_t function_46ef40(int32_t a1, int32_t a2, uint32_t result, int32_t a4);
 
 int32_t function_46f0b0(int32_t this_ptr);
@@ -12420,51 +12420,21 @@ static int32_t function_463b40_this(
 
 
 // Address range: 0x463e60 - 0x4641c9
+/* Integer slots remain only at the legacy host boundary. */
 int32_t function_463e60(int32_t manager, int32_t layout, int32_t environment) {
-    int32_t count;
-    int32_t created = 0;
-    if (layout == 0 || *(int32_t *)(intptr_t)(layout + 312) == 0)
-        return 0;
-    count = (*(int32_t *)(intptr_t)(layout + 268) -
-             *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    retdec_trace_i32("actor:map-records", count);
+    return kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager,
+        (KinokoActLayout *)(intptr_t)layout,
+        (const KinokoSquirrelObject *)(intptr_t)environment);
+}
 
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t record = retdec_map_record_at(layout, index);
-        int32_t closure[3];
-        int32_t id = *(int32_t *)(intptr_t)record;
-        int32_t init_source = 0;
-        float x, y;
-        char name[256];
-        struct retdec_mcd_chip *chip;
-
-        sprintf_s(name, sizeof(name), "Init%04x", (unsigned int)id);
-        function_4aa3a0_this(environment, (int32_t)(intptr_t)closure, name);
-        if (closure[1] != 0x08000100) {
-            function_4a9d70_this((int32_t)(intptr_t)closure);
-            continue;
-        }
-
-        x = (float)*(int32_t *)(intptr_t)(record + 4);
-        y = (float)*(int32_t *)(intptr_t)(record + 8);
-        chip = retdec_mcd_find_chip(kinoko_map_layer_chip_data(
-            (KinokoActLayout *)(intptr_t)layout), (uint32_t)id);
-        if (chip != NULL) {
-            /* 463FD4..464049 uses signed MCD dimensions and flag 0x10000. */
-            x = (float)((double)x + retdec_mcd_i16(chip->bytes + 12) * 0.5 + 1.0);
-            y = (float)((double)y + retdec_mcd_i16(chip->bytes + 14) *
-                ((retdec_mcd_u32(chip->bytes + 16) & 0x10000u) ? 0.5 : 1.0));
-            init_source = (int32_t)(intptr_t)chip->bytes;
-        }
-
-        if (function_463b40_this(manager, closure[0], closure[1], closure[2],
-                x, y, -1.0f, (int32_t)(intptr_t)&g16, 0x05000002, id,
-                init_source) != 0)
-            ++created;
-        function_4a9d70_this((int32_t)(intptr_t)closure);
-    }
-    retdec_trace_i32("actor:map-created", created);
-    return created;
+KinokoActor *kinoko_actor_create_map_instance(KinokoActorManager *manager,
+    const KinokoSquirrelObject *callback, float x, float y, int32_t chip_id,
+    const unsigned char *initialization_data) {
+    const int32_t *words = (const int32_t *)callback;
+    return (KinokoActor *)(intptr_t)function_463b40_this((int32_t)(intptr_t)manager,
+        words[0], words[1], words[2], x, y, -1.0f,
+        (int32_t)(intptr_t)&g16, 0x05000002, chip_id,
+        (int32_t)(intptr_t)initialization_data);
 }
 
 
@@ -14224,23 +14194,7 @@ static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
 }
 
 // Address range: 0x46ee20 - 0x46eec1
-int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
-                         int32_t top, int32_t right, int32_t bottom) {
-    int32_t *call = (int32_t *)(intptr_t)state;
-    int32_t vm = call[0];
-    int32_t base = sq_gettop(kinoko_vm(vm));
-    int32_t result;
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[5], call[6]));
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[2], call[3]));
-    sq_pushinteger(kinoko_vm(vm), id);
-    sq_pushinteger(kinoko_vm(vm), left);
-    sq_pushinteger(kinoko_vm(vm), top);
-    sq_pushinteger(kinoko_vm(vm), right);
-    sq_pushinteger(kinoko_vm(vm), bottom);
-    result = kinoko_sq_call(vm, 6, 1, 1);
-    sq_settop(kinoko_vm(vm), (SQInteger)(base));
-    return result;
-}
+/* Event callback dispatch is implemented in reconstructed/map_activation.cpp. */
 
 // Address range: 0x46ef40 - 0x46efc4
 static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
@@ -14549,42 +14503,12 @@ int32_t function_46f6d0(int32_t a1) {
 
 // Address range: 0x46fd70 - 0x46ff56
 int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment) {
-    int32_t layout = function_46f140(name);
-    int32_t *function = (int32_t *)(intptr_t)closure;
-    int32_t *receiver = (int32_t *)(intptr_t)environment;
-    int32_t state[7] = {
-        (int32_t)(intptr_t)g644, receiver[0], receiver[1], receiver[2],
-        function[0], function[1], function[2]
-    };
-    int32_t count;
-    int32_t completed = 0;
-    /* 46FDB1..46FDB7 registers even callback-free and missing event layers. */
-    kinoko_map_append_event((int32_t)(intptr_t)g_retdec_map_manager_state, layout);
-    if (layout == 0 || function[1] != 0x08000100)
-        return 0;
-    count = (*(int32_t *)(intptr_t)(layout + 268) -
-             *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t record = retdec_map_record_at(layout, index);
-        int32_t id = *(int32_t *)(intptr_t)record;
-        int32_t left = *(int32_t *)(intptr_t)(record + 4);
-        int32_t top = *(int32_t *)(intptr_t)(record + 8);
-        struct retdec_mcd_chip *chip = retdec_mcd_find_chip(
-            kinoko_map_layer_chip_data((KinokoActLayout *)(intptr_t)layout), (uint32_t)id);
-        /* Valid event records have MCD rectangles; never use uninitialized bounds. */
-        if (chip == NULL) {
-            retdec_trace_i32("map:event-missing-chip", id);
-            return -1;
-        }
-        if (function_46ee20((int32_t)(intptr_t)state, id, left, top,
-                left + retdec_mcd_i16(chip->bytes + 12),
-                top + retdec_mcd_i16(chip->bytes + 14)) < 0)
-            return -1;
-        ++completed;
-    }
-    retdec_trace_i32("map:event-created", completed);
-    return completed;
+    return kinoko_map_create_events((KinokoMapManager *)g_retdec_map_manager_state,
+        (struct SQVM *)g644, (const char *)(intptr_t)name,
+        (const KinokoSquirrelObject *)(intptr_t)closure,
+        (const KinokoSquirrelObject *)(intptr_t)environment);
 }
+
 
 // Address range: 0x46ff60 - 0x470029
 

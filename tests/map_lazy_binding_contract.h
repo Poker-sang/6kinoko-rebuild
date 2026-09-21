@@ -1,4 +1,4 @@
-/* R134/R135/R136 regression source. Builds with stage_contract; execution is user-owned.
+/* R134/R135/R136/R137 regression source. Builds with stage_contract; execution is user-owned.
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
 static int test_map_lazy_binding(int32_t vm, int32_t *root) {
@@ -53,6 +53,20 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         CHECK(layout[78] == cloned_layer && layout[79] == 0);
         CHECK(((uint8_t*)layout)[460] == 0);
         CHECK(kinoko_map_layer_chip_data((KinokoActLayout*)layout) == data);
+        CHECK(kinoko_map_cached_chip_data((KinokoActLayout*)layout) == NULL);
+        /* Creation consults the owner even when a different cache is present.
+           Query preserves a non-null cache; only Update rejects stale binding. */
+        {
+            struct retdec_mcd_data other_data = {0};
+            int32_t other_resource[17] = {0};
+            other_resource[16] = PTR(&other_data);
+            layout[79] = PTR(other_resource);
+            CHECK(kinoko_map_layer_chip_data((KinokoActLayout*)layout) == data);
+            CHECK(kinoko_map_cached_chip_data((KinokoActLayout*)layout) == &other_data);
+            CHECK(kinoko_map_query_chip_data((KinokoActLayout*)layout) == &other_data);
+            CHECK(layout[79] == PTR(other_resource));
+            layout[79] = 0;
+        }
         CHECK(layout[79] == 0); /* Layer lookup must not prime render caches. */
         *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
         CHECK(kinoko_map_layer_chip_data((KinokoActLayout*)layout) == NULL);

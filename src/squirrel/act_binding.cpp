@@ -30,6 +30,7 @@
 #include "kinoko/squirrel_object.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/sprite.h"
 #include "kinoko/game_math.h"
 #include "kinoko/legacy_abi.h"
@@ -1217,8 +1218,9 @@ int32_t retdec_bind_original_layout(int32_t layout, bool map) {
     retdec_sqrat_object_release(address(root));
     if (!ok) return static_cast<int32_t>(E_FAIL);
     if (map) {
-        field<int32_t>(layer + 52) = layout + 320;
-        field<int32_t>(layer + 56) = layout + 328;
+        const kinoko::map::LayoutView view(pointer<KinokoActLayout>(layout));
+        field<float*>(layer + 52) = reinterpret_cast<float*>(view.bytes(&kinoko::map::LayoutRecord::alpha));
+        field<int32_t*>(layer + 56) = reinterpret_cast<int32_t*>(view.bytes(&kinoko::map::LayoutRecord::blend));
     } else {
         for (int offset = 4; offset <= 68; offset += 4)
             field<int32_t>(layer + offset) = layout + 232 + offset;
@@ -1237,8 +1239,7 @@ int32_t retdec_map_chip_count(int32_t vm) {
     int32_t layout = 0;
     if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0)
         return 0;
-    sq_pushinteger(kinoko_vm(vm), (field<int32_t>(layout + 268) -
-                         field<int32_t>(layout + 264)) / 32);
+    sq_pushinteger(kinoko_vm(vm), kinoko::map::placement_count(pointer<KinokoActLayout>(layout)));
     return 1;
 }
 
@@ -1281,14 +1282,11 @@ int32_t retdec_map_layout_argument(int32_t vm, int32_t *index) {
 }
 
 int32_t retdec_map_record_at(int32_t layout, int32_t index) {
-    int32_t begin = layout ? field<int32_t>(layout + 264) : 0;
-    int32_t end = layout ? field<int32_t>(layout + 268) : 0;
-    return index >= 0 && index < (end - begin) / 32 ? begin + index * 32 : 0;
+    return address(kinoko::map::placement_at(pointer<KinokoActLayout>(layout), index));
 }
 
 struct retdec_mcd_data *retdec_map_chip_data(int32_t layout) {
-    int32_t resource = layout ? field<int32_t>(layout + 316) : 0;
-    return resource ? field<retdec_mcd_data *>(resource + 64) : nullptr;
+    return kinoko_map_cached_chip_data(pointer<KinokoActLayout>(layout));
 }
 
 int32_t retdec_map_get_chip_by_position(int32_t vm) {
