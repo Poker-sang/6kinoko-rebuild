@@ -59,3 +59,17 @@ continue to exercise the virtual callback and borrowed-source detach boundary.
 No local tests or game will be executed. Quiet Win32 Release build status,
 source commit, artifact hashes and staged DAT verification are recorded after
 the build. All prior build/run directories are retained.
+
+## Build result
+
+Final source commit: c4eafa7. The complete quiet Win32 Release build, including
+contracts, exited 0. All three DAT files were copied beside the EXE and their
+size/SHA256 verified. Delivery:
+runtime-builds/decompiler-cleanup-r127-typed-quiet/kinoko_retdec_rebuild.exe.
+
+The first batch (643e5aa) failed because the generated C host did not include
+the typed declarations. The second (634709f) built but review found implicit
+stage-list declarations in the contract. c4eafa7 adds explicit includes in
+both callers; the final log has no implicit-declaration warnings for the
+stage/source APIs. Other existing project warnings remain. All three batches
+are preserved and described by artifacts.json. No test/game was executed.

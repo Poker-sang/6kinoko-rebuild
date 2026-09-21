@@ -1,0 +1,191 @@
+{
+  "batches": [
+    {
+      "build_directory": "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\decompiler-cleanup-r127-quiet",
+      "runtime_directory": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\decompiler-cleanup-r127-quiet",
+      "source_commit": "643e5aad4da319a7b04c2b63c50e8a837db6f692",
+      "configure_exit": 0,
+      "build_exit": 1,
+      "validation": "Build only. No tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-quiet\\source-commit.txt",
+          "size": 42,
+          "sha256": "45f00c08172adcdc17921f18b20d1408f532f623c643a010ae86b054047a9ff8"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-quiet\\configure.log",
+          "size": 954,
+          "sha256": "af36b9f5fc6a6b575e6ce718ba17573086a24820ecd9522f06fad49e7381d50c"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-quiet\\configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-quiet\\build.log",
+          "size": 273833,
+          "sha256": "714c048da10bc16482f6f14fc1d0822e0ee4a2f041a7cacafca189567d4dcd18"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-quiet\\build-exit-code.txt",
+          "size": 3,
+          "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+        }
+      ]
+    },
+    {
+      "build_directory": "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\decompiler-cleanup-r127-final-quiet",
+      "runtime_directory": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\decompiler-cleanup-r127-final-quiet",
+      "source_commit": "634709f5fc94c857d53b24e890b4f4a517c3aae1",
+      "configure_exit": 0,
+      "build_exit": 0,
+      "validation": "Build only. No tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\source-commit.txt",
+          "size": 42,
+          "sha256": "1420492becb33b87dea108fc1bc944d625c93d4caf02355f773b425870e230b6"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\configure.log",
+          "size": 960,
+          "sha256": "07a20b74722a806ca555d535473f50c090f8536b56b9e3b15121de67b4f0632e"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\build.log",
+          "size": 297135,
+          "sha256": "70749481dc9b6d30c84d03f7adf3ec0910235093a7eec7d823988fb7061f24b9"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\kinoko.map",
+          "size": 1064733,
+          "sha256": "286d2aa9fe99d70758b78c4ba424f810f2c40f2b1f05abaca8d4a32d372ccb48"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\stage-contract.map",
+          "size": 1331623,
+          "sha256": "8fa419166af0b1c7c4a1456e6179be9edb1a132090a44006a12ba5b461cc282b"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-final-quiet\\stage-dat.log",
+          "size": 458,
+          "sha256": "632a96c269cdcb195a263fefba49101feff78ab0a5e3215ce8028dd6234e1003"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-final-quiet\\kinoko_retdec_rebuild.exe",
+          "size": 861184,
+          "sha256": "8e2e7c7b1d0592e8c22bf2cb184ca6ab8f2ae866fe995e6171f34b8a22cff9c7"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-final-quiet\\6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-final-quiet\\6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-final-quiet\\6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
+    },
+    {
+      "build_directory": "C:\\WorkSpace\\6kinoko-rebuild\\build-runs\\decompiler-cleanup-r127-typed-quiet",
+      "runtime_directory": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\decompiler-cleanup-r127-typed-quiet",
+      "source_commit": "c4eafa779ae0e639e4336fadae005dc85e103eeb",
+      "configure_exit": 0,
+      "build_exit": 0,
+      "validation": "Build only. No tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\source-commit.txt",
+          "size": 42,
+          "sha256": "e7a5d1fa9fc8499cf31066507daa182cc49d4a91c76390c525649533e39da5fe"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\configure.log",
+          "size": 960,
+          "sha256": "f7a431b9456889f566fb1c759a4a90d9777abca83961e435416752d34ff00597"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\build.log",
+          "size": 295885,
+          "sha256": "e81faf5e149594642eaa5757f9ef5c2a6361224574242614bf3b561da656bf88"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\kinoko.map",
+          "size": 1064733,
+          "sha256": "1803a582df01766f4a90b963cab71c8e7471b72636bb48ac4b8a7ea44ccf391d"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\stage-contract.map",
+          "size": 1331623,
+          "sha256": "29fb9b4e27f184be69ede94c2ffdbc038a9b3a729b888b42200af751453a5926"
+        },
+        {
+          "path": "build-runs\\decompiler-cleanup-r127-typed-quiet\\stage-dat.log",
+          "size": 458,
+          "sha256": "1baea438e674068f81dd9113a5f2905f3d6228a0b8f558d2ebf29c4dd76ff0ec"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-typed-quiet\\kinoko_retdec_rebuild.exe",
+          "size": 861184,
+          "sha256": "dec388b44a1c06000953764d128e81c2e2d90936ec852ad95f220486d42af968"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-typed-quiet\\6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-typed-quiet\\6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds\\decompiler-cleanup-r127-typed-quiet\\6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
+    }
+  ],
+  "linked_entries": {
+    "kinoko_act_source_initialize": "0001:0006c720       _kinoko_act_source_initialize 0046d720 f   kinoko_native_methods:act_source.obj",
+    "kinoko_act_source_layer_count": "0001:0006c740       _kinoko_act_source_layer_count 0046d740 f   kinoko_native_methods:act_source.obj",
+    "kinoko_act_source_create_runtime": "0001:0006c6f0       _kinoko_act_source_create_runtime 0046d6f0 f   kinoko_native_methods:act_source.obj",
+    "kinoko_stage_load": "0001:0006bee0       _kinoko_stage_load         0046cee0 f   kinoko_native_methods:stage_runtime.obj",
+    "kinoko_stage_list_first": "0001:0006c6b0       _kinoko_stage_list_first   0046d6b0 f   kinoko_native_methods:stage_cleanup.obj",
+    "kinoko_stage_list_next": "0001:0006c6d0       _kinoko_stage_list_next    0046d6d0 f   kinoko_native_methods:stage_cleanup.obj",
+    "kinoko_stage_list_value": "0001:00027070       _kinoko_stage_list_value   00428070 f   kinoko_native_methods:stage_cleanup.obj",
+    "kinoko_stage_list_append": "0001:0006c630       _kinoko_stage_list_append  0046d630 f   kinoko_native_methods:stage_cleanup.obj"
+  },
+  "target_api_implicit_declaration_warnings": [],
+  "execution": "No local tests or game executed."
+}
