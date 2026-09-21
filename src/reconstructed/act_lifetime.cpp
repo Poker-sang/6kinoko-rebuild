@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/map_render.h"
@@ -129,7 +130,7 @@ void retdec_destroy_cact_key(int32_t value) {
     if (!value) return;
     // The layer's second list owns CActTimeLine, not a key with a layout.
     if (field<int32_t>(value)==address(kinoko_act_timeline_vtable()))
-        std::free(pointer<void>(field<int32_t>(value+12)));
+        kinoko_native_buffer_destroy(value+12);
     else clear_key(value);
     std::free(pointer<void>(value));
 }

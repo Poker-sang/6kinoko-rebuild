@@ -1,6 +1,8 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/map_render.h"
 #include "kinoko/legacy_memory.hpp"
 #include <array>
+#include <vector>
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -29,24 +31,30 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
     std::memcpy(pointer<void>(result+8),pointer<void>(source+8),228);
     for(auto range: {std::pair<int,int>{236,28},{312,20},{380,4},{400,4},{452,8}})
         std::memcpy(pointer<void>(result+range.first),pointer<void>(source+range.first),range.second);
-    std::array<Owned,vectors.size()> buffers;
+    std::array<std::vector<uint32_t>,vectors.size()> buffers;
     for(size_t i=0;i<vectors.size();++i) {
         const auto spec=vectors[i];const auto in=field<VectorView>(source+spec.offset);
         const auto bytes=static_cast<uint32_t>(in.end)-static_cast<uint32_t>(in.begin);
         if(in.end<in.begin || bytes%spec.width || bytes>0x7fffffffu) throw std::bad_alloc();
         auto &out=field<VectorView>(result+spec.offset);out={};
         if(!bytes) continue;
-        buffers[i]=allocate(bytes);
-        const auto begin=address(buffers[i].get());
+        buffers[i].resize(bytes/4);
+        const auto begin=address(buffers[i].data());
         for(uint32_t pos=0;pos<bytes;pos+=spec.width) {
             std::memcpy(pointer<void>(begin+pos),pointer<void>(in.begin+pos),spec.copy_bytes);
             if(spec.width==232 || spec.width==288) field<int32_t>(begin+pos)=address(&g25);
         }
-        out={begin,begin+static_cast<int32_t>(bytes),begin+static_cast<int32_t>(bytes)};
+
     }
     // Fourth words between vector views are untouched, as in 433780/433AE0.
     field<uint8_t>(result+460)=1;
-    for(auto &buffer:buffers) buffer.release();
+    try {
+        for(size_t i=0;i<vectors.size();++i)
+            kinoko_native_buffer_replace(result+vectors[i].offset,buffers[i].data(),static_cast<uint32_t>(buffers[i].size()*4));
+    } catch(...) {
+        for(auto spec:vectors) kinoko_native_buffer_destroy(result+spec.offset);
+        throw;
+    }
     return address(output.release());
 }
 extern "C" void kinoko_clear_map_layout(int32_t layout) {
@@ -58,7 +66,7 @@ extern "C" void kinoko_clear_map_layout(int32_t layout) {
         // their texture handles are borrowed, so no texture retain/release.
         if(it->width==232 || it->width==288)
             for(int32_t p=view.begin;p!=view.end;p+=it->width) field<int32_t>(p)=address(&g23);
-        std::free(pointer<void>(view.begin));view={};
+        kinoko_native_buffer_destroy(layout+it->offset);
     }
     field<int32_t>(layout+4)=address(&g23);
 }

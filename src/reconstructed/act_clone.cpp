@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
@@ -56,6 +57,7 @@ public:
         for(auto texture: textures_) kinoko_texture_release(texture);
         for(auto resource: chip_owners_) kinoko_act_release_chip_data(static_cast<int32_t>(resource));
         for(auto object:string_layouts_) kinoko_method_delete_string_layout(static_cast<int32_t>(object),nullptr,1);
+        for(auto slot: buffers_) kinoko_native_buffer_destroy(slot);
         for(auto slot: arrays_) kinoko_act_array_destroy(slot);
         for(auto head: lists_) kinoko_act_list_drop_storage(static_cast<int32_t>(head));
         for(auto allocation: allocations_) std::free(allocation);
@@ -131,13 +133,13 @@ private:
     Vector clone_vector(Address dest,Address source,size_t offset) {
         const auto input=field<Vector>(source,offset);
         if(input.end<input.begin) throw std::bad_alloc();
-        const auto bytes=input.end-input.begin;
-        auto &out=field<Vector>(dest,offset);
-        if(!input.begin && !bytes) { out={}; return out; }
-        out.begin=copy(input.begin,bytes);
-        out.end=out.capacity=out.begin+bytes;
+        auto &out=field<Vector>(dest,offset);out={};
+        kinoko_native_buffer_replace(dest+offset,pointer(input.begin),input.end-input.begin);
+        try { buffers_.push_back(dest+offset); }
+        catch(...) {kinoko_native_buffer_destroy(dest+offset);throw;}
         return out;
     }
+
     void script(Address dest,Address source) {
         // 416700 copies script text/bytecode, not live callback environments.
         std::memcpy(pointer(dest),pointer(source),104);
@@ -241,6 +243,7 @@ private:
         }
         return result;
     }
+    std::vector<Address> buffers_;
     std::vector<Address> arrays_;
     std::vector<Address> lists_;
     std::vector<void *> allocations_;

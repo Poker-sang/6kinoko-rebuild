@@ -63,3 +63,7 @@ Replaced draw-command realloc and sprite-vector allocation with std::vector<Blit
 ## R120 — ACT document and hierarchy arrays
 
 ACT layer/resource arrays and layer child arrays now own actual std::vector<int32_t> objects. The first two boundary words expose borrowed begin/end views; the third owns the opaque container rather than an allocation limit. Archive loading still publishes only successfully loaded payloads. Deep clone rollback destroys native owners separately, dynamic CreateLayer appends through vector, and SwapLayer prepares all replacements before an allocation-free commit. Layer/document destruction deletes vector storage after payload cleanup. Ownership fixtures use the new API; read-only synthetic spans remain supported. Full build only; no game or contract executable is run.
+
+## R121 — Map-layout and timeline record buffers
+
+Replaced all ten map-layout vector stores and timeline pair storage with actual word-aligned std::vector<uint32_t> ownership. Borrowed byte spans remain the engine boundary; the third word is an opaque owner. Map records, render sprites, reference/cache rebuilding, full virtual cloning, activation cloning and reverse destruction now share that lifetime API. Sprite vtable reset and 281-byte copy semantics remain unchanged. Temporary serialization vectors no longer transfer into malloc-owned copies. Updated owning fixtures to use native storage. The flat records are game data, not overlays of modern STL internals.

@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_font.h"
@@ -4854,10 +4855,10 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(event);
         int32_t* timeline=(int32_t*)(intptr_t)event;
         timeline[1]=17; timeline[2]=51;
-        int32_t* timeline_pairs=(int32_t*)malloc(16); CHECK(timeline_pairs);
+        int32_t timeline_pairs[4];
         timeline_pairs[0]=3; timeline_pairs[1]=11;
         timeline_pairs[2]=29; timeline_pairs[3]=47;
-        timeline[3]=PTR(timeline_pairs); timeline[4]=timeline[5]=PTR(timeline_pairs+4);
+        kinoko_native_buffer_replace(event+12,timeline_pairs,sizeof(timeline_pairs));
         {
             int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
             struct script_io_stream stream={0}; stream.vtable=methods;
@@ -5037,7 +5038,7 @@ static int test_map_set_layer(void) {
     layer[25]=0;
     CHECK(retdec_call_thiscall1_result(layout,(void*)g327.e6,PTR(layer))==0);
     CHECK(layout[71]==layout[70] && layout[75]-layout[74]==24);
-    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; free((void*)(intptr_t)layout[slots[i]]); }
+    for (int i=0;i<4;++i) { const int slots[]={70,74,101,109}; kinoko_native_buffer_destroy(PTR(layout)+slots[i]*4); }
     puts("PASS: map SetLayer one-shot suppression, type checks, sparse refs and original append behavior");
     return 0;
 }
@@ -5621,9 +5622,8 @@ static int test_map_virtual_clone(void) {
     for(i=0;i<10;++i) {
         unsigned char *data=(unsigned char*)malloc(widths[i]*2);CHECK(data);
         memset(data,0x31+i,widths[i]*2);
-        *(int32_t*)(source+offsets[i])=PTR(data);
-        *(int32_t*)(source+offsets[i]+4)=PTR(data+widths[i]*2);
-        *(int32_t*)(source+offsets[i]+8)=PTR(data+widths[i]*2);
+        kinoko_native_buffer_replace(PTR(source)+offsets[i],data,widths[i]*2);
+        free(data);
     }
     clone=retdec_call_thiscall0_result(source,(void*)g327.e5);CHECK(clone);
     CHECK(*(int32_t*)(intptr_t)clone==PTR(&g327));
