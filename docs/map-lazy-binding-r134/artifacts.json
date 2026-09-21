@@ -1,0 +1,44 @@
+{
+  "version": "R134",
+  "source_commit": "9f3def49f376fbc19b38ccb49baedb1f49dc5555",
+  "build_tree": "build-runs/map-lazy-binding-r134-quiet",
+  "configuration": "Release",
+  "platform": "Win32",
+  "disable_trace": true,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "regression_sources_compiled": true,
+  "tests_executed": false,
+  "game_executed": false,
+  "build_log": "build-runs/map-lazy-binding-r134-quiet/build.log",
+  "configure_log": "build-runs/map-lazy-binding-r134-configure.log",
+  "staging_log": "build-runs/map-lazy-binding-r134-quiet/stage-dat.log",
+  "dat_size_and_sha256_verified": true,
+  "files": [
+    {
+      "path": "runtime-builds\\map-lazy-binding-r134-quiet\\kinoko_retdec_rebuild.exe",
+      "size": 857088,
+      "sha256": "3A3CA9CB02E7457EB59E7F520BA3F9FA0E119A63DDC6EE2B105610FB9748ED73"
+    },
+    {
+      "path": "runtime-builds\\map-lazy-binding-r134-quiet\\6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "path": "runtime-builds\\map-lazy-binding-r134-quiet\\6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "path": "runtime-builds\\map-lazy-binding-r134-quiet\\6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    },
+    {
+      "path": "runtime-builds\\map-lazy-binding-r134-quiet\\tools\\kinoko_stage_contract.exe",
+      "size": 1190400,
+      "sha256": "32C37C6C1F7A551F1D7966354E635F2644BCBD47FE3BB9AB2E6E8CBEEEE5E698"
+    }
+  ]
+}

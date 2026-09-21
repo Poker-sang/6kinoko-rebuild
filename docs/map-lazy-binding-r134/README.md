@@ -31,6 +31,9 @@ The changes do not add a BGM override or scene-specific behavior. The music
 symptom was not independently established as an audio defect; runtime recovery
 of that symptom must not be claimed from a successful build.
 
-Build delivery: independent Release Win32 quiet R134 tree/run directory;
-the exact source commit and hashes are recorded in artifacts.json after build.
-No game or local automated tests are run by the agent, per user instructions.
+Build delivery: source commit 9f3def4. All targets built successfully in the
+independent Release Win32 quiet build-runs/map-lazy-binding-r134-quiet tree.
+EXE: runtime-builds/map-lazy-binding-r134-quiet/kinoko_retdec_rebuild.exe.
+The three original DATs were copied beside the EXE and their sizes and SHA256
+verified by stage_dat.ps1. Exact source commit and hashes are in artifacts.json.
+Regression sources compiled; no game or local automated tests were executed.
