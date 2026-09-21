@@ -33,3 +33,7 @@ Removed manually linked audio handle queues and per-insertion reallocation of pa
 ## R113 — Global stage owner list
 
 Replaced the global stage-owner list with std::list<StageEntry>. Opaque entry tokens hold native iterators, so update/draw walks retain insertion order and stable traversal without exposing an STL layout. Stage insertion and all three C update/draw consumers now use accessors. Payload destruction remains separate from list-storage destruction as in 465F70/4D47F0. Removed the receiverless generated list clear and the final manual 4214A0 node allocator. Cleanup/update fixtures now construct native storage. No game or local automated test is executed.
+
+## R114 — Actor priority index
+
+Replaced the hand-written unbalanced priority tree with std::multimap<int32_t, unique_ptr<Entry>>. Entry tokens hold real map iterators, and actors retain opaque tokens for priority reset/erase. Original 463610 compares signed priorities; normal insertion puts equal keys after existing entries, while the insert-left variant puts equal keys first. lower_bound/upper_bound hints preserve both policies. Refresh and shutdown use native ordered traversal and preserve actor reference/handle release order. Removed manual parent/left/right rewiring, extrema maintenance and recursive priority-node frees. Compiled-only contracts cover signed ordering, equal-key insertion policy, successor erase and repeated clear.

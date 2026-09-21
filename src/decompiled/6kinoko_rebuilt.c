@@ -1,3 +1,4 @@
+#include "kinoko/actor_priority.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
 #include "kinoko/input_cluster.h"
@@ -2121,15 +2122,9 @@ int32_t function_462e80(int32_t this_ptr);
 int32_t function_462f30(int32_t a1);
 
 
-static int32_t function_463210_this(int32_t tree_ptr, int32_t source_ptr);
-int32_t function_4634d0(int32_t a1);
 
 
 
-static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
-                                    int32_t node_ptr);
-static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
-                                    int32_t node_ptr, int32_t insert_left);
 static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr);
 static int32_t function_463b40_this(
     int32_t manager_ptr, int32_t first_vtable,
@@ -11973,23 +11968,9 @@ static void retdec_actor_collect_tree(int32_t manager, int32_t node,
     if (manager == 0 || node == 0 || node == sentinel ||
         actors == NULL || count == NULL)
         return;
-    while (*(int32_t *)(intptr_t)node != sentinel)
-        node = *(int32_t *)(intptr_t)node;
     while (node != sentinel) {
-        int32_t actor = *(int32_t *)(intptr_t)(node + 12);
-        int32_t next = *(int32_t *)(intptr_t)(node + 8);
-        if (next != sentinel) {
-            while (*(int32_t *)(intptr_t)next != sentinel)
-                next = *(int32_t *)(intptr_t)next;
-        } else {
-            int32_t child = node;
-            next = *(int32_t *)(intptr_t)(child + 4);
-            while (next != sentinel &&
-                   child == *(int32_t *)(intptr_t)(next + 8)) {
-                child = next;
-                next = *(int32_t *)(intptr_t)(next + 4);
-            }
-        }
+        int32_t actor=kinoko_priority_value(node);
+        int32_t next=kinoko_priority_next(manager+84,node);
         if (*(unsigned char *)(intptr_t)(actor + 22) == 0) {
             if (*count < capacity)
                 actors[(*count)++] = actor;
@@ -12052,7 +12033,7 @@ static int32_t retdec_actor_manager_refresh(int32_t manager)
                 *(int32_t *)(intptr_t)(manager + 100)) / 4;
     active_count = 0;
     retdec_actor_collect_tree(
-        manager, *(int32_t *)(intptr_t)(sentinel + 4), sentinel,
+        manager, kinoko_priority_first(manager+84), sentinel,
         actors, capacity, &active_count);
 
     back_count = 0;
@@ -12622,224 +12603,6 @@ int32_t function_462f30(int32_t actor) {
 
 
 
-/* std::_Tree_node allocation used by ActorManager's priority tree. */
-static int32_t function_463210_this(int32_t tree_ptr, int32_t source_ptr)
-{
-    int32_t sentinel;
-    int32_t node;
-
-    if (tree_ptr == 0 || source_ptr == 0)
-        return 0;
-
-    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
-    if (sentinel == 0) {
-        sentinel = _3f__3f_2_40_YAPAXI_40_Z(20);
-        if (sentinel == 0)
-            return 0;
-        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 12) = 0;
-        *(uint16_t *)(intptr_t)(sentinel + 16) = 1;
-        *(int32_t *)(intptr_t)(tree_ptr + 4) = sentinel;
-        *(int32_t *)(intptr_t)(tree_ptr + 8) = 0;
-    }
-
-    node = _3f__3f_2_40_YAPAXI_40_Z(20);
-    if (node == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(node + 0) = sentinel;
-    *(int32_t *)(intptr_t)(node + 4) = sentinel;
-    *(int32_t *)(intptr_t)(node + 8) = sentinel;
-    *(int32_t *)(intptr_t)(node + 12) =
-        *(int32_t *)(intptr_t)source_ptr;
-    *(uint16_t *)(intptr_t)(node + 16) = 0;
-    return node;
-}
-
-
-
-// Address range: 0x4634d0 - 0x463508
-int32_t function_4634d0(int32_t a1) {
-    return kinoko_erase_priority_tree(a1);
-}
-
-
-// Address range: 0x463580 - 0x4635e0
-
-
-
-/* Insert an Actor node into the priority tree.  The original uses an MSVC
-   red-black tree; retain the same sentinel/root/extrema layout and ordering
-   for the recovered startup and update iterators. */
-static int32_t function_463610_this(int32_t tree_ptr, int32_t result_ptr,
-                                    int32_t node_ptr, int32_t insert_left)
-{
-    int32_t sentinel;
-    int32_t parent;
-    int32_t current;
-    int32_t actor;
-    int32_t key;
-    int32_t current_actor;
-    int32_t current_key;
-
-    (void)insert_left;
-    if (tree_ptr == 0 || result_ptr == 0 || node_ptr == 0)
-        return 0;
-
-    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
-    if (sentinel == 0) {
-        free((void *)(intptr_t)node_ptr);
-        *(int32_t *)(intptr_t)(result_ptr + 0) = 0;
-        *(int32_t *)(intptr_t)(result_ptr + 4) = 0;
-        return 0;
-    }
-
-    actor = *(int32_t *)(intptr_t)(node_ptr + 12);
-    key = actor != 0 ? *(int32_t *)(intptr_t)(actor + 228) : 0;
-    parent = sentinel;
-    current = *(int32_t *)(intptr_t)(sentinel + 4);
-    while (current != sentinel && current != 0) {
-        parent = current;
-        current_actor = *(int32_t *)(intptr_t)(current + 12);
-        current_key = current_actor != 0
-            ? *(int32_t *)(intptr_t)(current_actor + 228) : 0;
-        if (key < current_key)
-            current = *(int32_t *)(intptr_t)(current + 0);
-        else
-            current = *(int32_t *)(intptr_t)(current + 8);
-    }
-
-    *(int32_t *)(intptr_t)(node_ptr + 0) = sentinel;
-    *(int32_t *)(intptr_t)(node_ptr + 4) = parent;
-    *(int32_t *)(intptr_t)(node_ptr + 8) = sentinel;
-    *(uint16_t *)(intptr_t)(node_ptr + 16) = 0;
-
-    if (parent == sentinel) {
-        *(int32_t *)(intptr_t)(sentinel + 0) = node_ptr;
-        *(int32_t *)(intptr_t)(sentinel + 4) = node_ptr;
-        *(int32_t *)(intptr_t)(sentinel + 8) = node_ptr;
-    } else {
-        current_actor = *(int32_t *)(intptr_t)(parent + 12);
-        current_key = current_actor != 0
-            ? *(int32_t *)(intptr_t)(current_actor + 228) : 0;
-        if (key < current_key) {
-            *(int32_t *)(intptr_t)(parent + 0) = node_ptr;
-            if (*(int32_t *)(intptr_t)(sentinel + 0) == parent)
-                *(int32_t *)(intptr_t)(sentinel + 0) = node_ptr;
-        } else {
-            *(int32_t *)(intptr_t)(parent + 8) = node_ptr;
-            if (*(int32_t *)(intptr_t)(sentinel + 8) == parent)
-                *(int32_t *)(intptr_t)(sentinel + 8) = node_ptr;
-        }
-    }
-
-    ++*(int32_t *)(intptr_t)(tree_ptr + 8);
-    retdec_trace_i32("actor:tree-ptr", tree_ptr);
-    retdec_trace_i32("actor:tree-sentinel", sentinel);
-    retdec_trace_i32("actor:tree-count-after",
-                     *(int32_t *)(intptr_t)(tree_ptr + 8));
-    *(int32_t *)(intptr_t)(result_ptr + 0) = node_ptr;
-    *(int32_t *)(intptr_t)(result_ptr + 4) = 1;
-    return result_ptr;
-}
-
-/* Remove one node from the same priority tree representation used by
- * function_463610_this.  The original erase routine is a __thiscall and the
- * generated body lost that receiver, so its tree accesses are unusable. */
-static int32_t function_463280_this(int32_t tree_ptr, int32_t result_ptr,
-                                    int32_t node_ptr)
-{
-    int32_t sentinel;
-    int32_t left;
-    int32_t right;
-    int32_t replacement;
-    int32_t parent;
-    int32_t root;
-    int32_t minimum;
-    int32_t maximum;
-
-    if (tree_ptr == 0 || result_ptr == 0 || node_ptr == 0)
-        return 0;
-    sentinel = *(int32_t *)(intptr_t)(tree_ptr + 4);
-    if (sentinel == 0 || node_ptr == sentinel)
-        return 0;
-
-    left = *(int32_t *)(intptr_t)(node_ptr + 0);
-    right = *(int32_t *)(intptr_t)(node_ptr + 8);
-    replacement = sentinel;
-    parent = *(int32_t *)(intptr_t)(node_ptr + 4);
-
-    if (left == sentinel) {
-        replacement = right;
-        if (right != sentinel)
-            *(int32_t *)(intptr_t)(right + 4) = parent;
-        if (parent == sentinel)
-            *(int32_t *)(intptr_t)(sentinel + 4) = right;
-        else if (*(int32_t *)(intptr_t)parent == node_ptr)
-            *(int32_t *)(intptr_t)(parent + 0) = right;
-        else
-            *(int32_t *)(intptr_t)(parent + 8) = right;
-    } else if (right == sentinel) {
-        replacement = left;
-        if (left != sentinel)
-            *(int32_t *)(intptr_t)(left + 4) = parent;
-        if (parent == sentinel)
-            *(int32_t *)(intptr_t)(sentinel + 4) = left;
-        else if (*(int32_t *)(intptr_t)parent == node_ptr)
-            *(int32_t *)(intptr_t)(parent + 0) = left;
-        else
-            *(int32_t *)(intptr_t)(parent + 8) = left;
-    } else {
-        replacement = right;
-        while (*(int32_t *)(intptr_t)(replacement + 0) != sentinel)
-            replacement = *(int32_t *)(intptr_t)(replacement + 0);
-
-        parent = *(int32_t *)(intptr_t)(replacement + 4);
-        if (parent != node_ptr) {
-            int32_t successor_right =
-                *(int32_t *)(intptr_t)(replacement + 8);
-            *(int32_t *)(intptr_t)(parent + 0) = successor_right;
-            if (successor_right != sentinel)
-                *(int32_t *)(intptr_t)(successor_right + 4) = parent;
-            *(int32_t *)(intptr_t)(replacement + 8) = right;
-            *(int32_t *)(intptr_t)(right + 4) = replacement;
-        }
-
-        parent = *(int32_t *)(intptr_t)(node_ptr + 4);
-        *(int32_t *)(intptr_t)(replacement + 4) = parent;
-        *(int32_t *)(intptr_t)(replacement + 0) = left;
-        *(int32_t *)(intptr_t)(left + 4) = replacement;
-        if (parent == sentinel)
-            *(int32_t *)(intptr_t)(sentinel + 4) = replacement;
-        else if (*(int32_t *)(intptr_t)parent == node_ptr)
-            *(int32_t *)(intptr_t)(parent + 0) = replacement;
-        else
-            *(int32_t *)(intptr_t)(parent + 8) = replacement;
-    }
-
-    root = *(int32_t *)(intptr_t)(sentinel + 4);
-    if (root == 0 || root == sentinel) {
-        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
-    } else {
-        minimum = root;
-        while (*(int32_t *)(intptr_t)(minimum + 0) != sentinel)
-            minimum = *(int32_t *)(intptr_t)(minimum + 0);
-        maximum = root;
-        while (*(int32_t *)(intptr_t)(maximum + 8) != sentinel)
-            maximum = *(int32_t *)(intptr_t)(maximum + 8);
-        *(int32_t *)(intptr_t)(sentinel + 0) = minimum;
-        *(int32_t *)(intptr_t)(sentinel + 8) = maximum;
-    }
-    if (*(int32_t *)(intptr_t)(tree_ptr + 8) > 0)
-        --*(int32_t *)(intptr_t)(tree_ptr + 8);
-    *(int32_t *)(intptr_t)result_ptr = replacement;
-    free((void *)(intptr_t)node_ptr);
-    return result_ptr;
-}
-
 /* ActorManager::ResetPriority removes the old node and inserts it again
  * using the changed actor priority. */
 static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
@@ -12882,34 +12645,17 @@ int32_t function_463730(int32_t tree) {
     int32_t node, root;
     if (sentinel == 0)
         return 0;
-    node = *(int32_t *)(intptr_t)sentinel;
-    while (node != sentinel) {
-        int32_t actor = *(int32_t *)(intptr_t)(node + 12);
-        int32_t next = *(int32_t *)(intptr_t)(node + 8);
-        if (next != sentinel) {
-            while (*(int32_t *)(intptr_t)next != sentinel)
-                next = *(int32_t *)(intptr_t)next;
-        } else {
-            int32_t child = node;
-            next = *(int32_t *)(intptr_t)(child + 4);
-            while (next != sentinel &&
-                   child == *(int32_t *)(intptr_t)(next + 8)) {
-                child = next;
-                next = *(int32_t *)(intptr_t)(next + 4);
-            }
-        }
+    node=kinoko_priority_first(tree);
+    while(node!=sentinel) {
+        int32_t actor=kinoko_priority_value(node);
+        int32_t next=kinoko_priority_next(tree,node);
         /* 463747..46375B releases the handle when the tree drops its last owner. */
         if (actor != 0 && --*(int32_t *)(intptr_t)(actor + 8) == 0)
             function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4),
                                  (uint32_t)*(int32_t *)(intptr_t)(actor + 12));
         node = next;
     }
-    root = *(int32_t *)(intptr_t)(sentinel + 4);
-    function_4634d0(root);
-    *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-    *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
-    *(int32_t *)(intptr_t)(tree + 8) = 0;
+    kinoko_priority_clear(tree);
     return sentinel;
 }
 
@@ -13024,8 +12770,7 @@ static int32_t function_463b40_this(
         retdec_trace_i32("actor-create:tree-sentinel",
                          *(int32_t *)(intptr_t)(manager_ptr + 88));
         retdec_trace_i32("actor-create:tree-root",
-                         *(int32_t *)(intptr_t)
-                             (*(int32_t *)(intptr_t)(manager_ptr + 88) + 4));
+                         kinoko_priority_first(manager_ptr+84));
         retdec_trace_i32("actor-create:success", actor);
     }
     return actor;
@@ -14882,16 +14627,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
     *(int32_t *)(intptr_t)(resource_list + 4) = resource_list;
     *(int32_t *)(intptr_t)(this_ptr + 52) = resource_list;
 
-    /* Priority tree sentinel used by CreateActor's ordered insertion. */
-    priority_tree = (int32_t)(intptr_t)calloc(1u, 20u);
-    if (priority_tree == 0)
-        return 0;
-    *(int32_t *)(intptr_t)priority_tree = priority_tree;
-    *(int32_t *)(intptr_t)(priority_tree + 4) = priority_tree;
-    *(int32_t *)(intptr_t)(priority_tree + 8) = priority_tree;
-    *(unsigned char *)(intptr_t)(priority_tree + 16) = 1;
-    *(unsigned char *)(intptr_t)(priority_tree + 17) = 1;
-    *(int32_t *)(intptr_t)(this_ptr + 88) = priority_tree;
+    kinoko_priority_construct(this_ptr+84);
 
     /* The four ActorManagerRenderLayer instances are the objects returned by
        CreateRenderLayer("actor_back"/"actor_middle"/...). */

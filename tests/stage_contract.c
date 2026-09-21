@@ -2274,7 +2274,7 @@ static int test_gc_mark_link(void) {
 }
 
 static int test_shutdown_tree_cleanup(void) {
-    for (int layout = 0; layout < 2; ++layout) {
+    for (int layout = 1; layout < 2; ++layout) {
         unsigned char sentinel[24] = {0};
         int32_t *nodes[7];
         int sentinel_offset = layout ? 21 : 17;
@@ -2290,31 +2290,26 @@ static int test_shutdown_tree_cleanup(void) {
             nodes[i][2] = PTR(nodes[2*i+2]);
             nodes[2*i+1][1] = nodes[2*i+2][1] = PTR(nodes[i]);
         }
-        CHECK((layout ? function_429c70(PTR(nodes[0])) : function_4634d0(PTR(nodes[0])))
+        CHECK(function_429c70(PTR(nodes[0]))
             == sentinel_address);
         CHECK(sentinel[sentinel_offset] == 1);
-        CHECK((layout ? function_429c70(sentinel_address) : function_4634d0(sentinel_address))
+        CHECK(function_429c70(sentinel_address)
             == sentinel_address);
     }
 
-    int32_t manager[40] = {0}, animation_head[6] = {0}, priority_head[5] = {0};
+    int32_t manager[40] = {0}, animation_head[6] = {0};
     int32_t list_head[14] = {0}, textures[2] = {7, 13}, iteration[3] = {0};
     int32_t *animation_node = (int32_t *)calloc(1, 24);
-    int32_t *priority_node = (int32_t *)calloc(1, 20);
     int32_t *list_node = (int32_t *)calloc(1, 56);
     unsigned char *frames = (unsigned char *)calloc(2, 248);
-    CHECK(animation_node && priority_node && list_node && frames);
+    CHECK(animation_node && list_node && frames);
     *(int32_t *)(frames + 244) = PTR(malloc(12));
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     ((unsigned char *)animation_head)[21] = 1;
-    ((unsigned char *)priority_head)[17] = 1;
     animation_head[0] = animation_head[1] = animation_head[2] = PTR(animation_node);
-    priority_head[0] = priority_head[1] = priority_head[2] = PTR(priority_node);
     animation_node[0] = animation_node[1] = animation_node[2] = PTR(animation_head);
-    priority_node[0] = priority_node[1] = priority_node[2] = PTR(priority_head);
     /* No live Actor in this fixture; the priority node is still reclaimed. */
-    priority_node[3] = 0;
     list_head[0] = list_head[1] = PTR(list_node);
     list_node[0] = list_node[1] = PTR(list_head);
     list_node[4] = PTR(frames);
@@ -2323,20 +2318,38 @@ static int test_shutdown_tree_cleanup(void) {
     manager[10] = PTR(animation_head); manager[11] = 1;
     manager[13] = PTR(list_head); manager[14] = 1;
     manager[17] = PTR(textures); manager[18] = manager[19] = PTR(textures + 2);
-    manager[22] = PTR(priority_head); manager[23] = 1;
+    kinoko_priority_construct(PTR(manager)+84);
+    int32_t absent=0,inserted[2];
+    function_463610_this(PTR(manager)+84,PTR(inserted),function_463210_this(PTR(manager)+84,PTR(&absent)),0);
     manager[25] = PTR(iteration); manager[26] = manager[27] = PTR(iteration + 3);
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK(function_464e20(PTR(manager)) == PTR(iteration));
         for (int i = 0; i < 3; ++i) {
             CHECK(animation_head[i] == PTR(animation_head));
-            CHECK(priority_head[i] == PTR(priority_head));
         }
         CHECK(list_head[0] == PTR(list_head) && list_head[1] == PTR(list_head));
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(manager[18] == PTR(textures) && manager[19] == PTR(textures + 2));
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
+    }
+    kinoko_priority_destroy(PTR(manager)+84);
+    {
+        int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];
+        const int priorities[]={7,-2,7,7};
+        kinoko_priority_construct(PTR(tree));
+        for(int i=0;i<4;++i) {
+            actors[i][57]=priorities[i];int32_t actor=PTR(actors[i]);
+            nodes[i]=function_463210_this(PTR(tree),PTR(&actor));
+            function_463610_this(PTR(tree),PTR(result),nodes[i],i==3);
+        }
+        const int order[]={1,3,0,2};int32_t node=kinoko_priority_first(PTR(tree));
+        for(int i=0;i<4;++i) { CHECK(kinoko_priority_value(node)==PTR(actors[order[i]]));node=kinoko_priority_next(PTR(tree),node); }
+        CHECK(node==tree[1] && tree[2]==4);
+        function_463280_this(PTR(tree),PTR(result),nodes[3]);CHECK(tree[2]==3 && result[0]==nodes[0]);
+        kinoko_priority_clear(PTR(tree));CHECK(tree[2]==0 && kinoko_priority_first(PTR(tree))==tree[1]);
+        kinoko_priority_destroy(PTR(tree));
     }
     puts("PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear");
     return 0;

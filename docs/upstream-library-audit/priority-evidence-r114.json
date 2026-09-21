@@ -1,0 +1,10 @@
+{
+  "addr": "0x463610",
+  "code": "int __thiscall sub_463610(int *this, int a2, _DWORD *a3, char a4)\n{\n  int v4; // eax\n  int v5; // esi\n  int v6; // edi\n  int v7; // edx\n  bool v8; // dl\n  char v10; // [esp+4h] [ebp-4h]\n\n  v4 = *(_DWORD *)(*(this + 1) + 4); /*0x463617*/\n  v5 = *(this + 1); /*0x46361f*/\n  v10 = 1; /*0x463621*/\n  if ( *(_BYTE *)(v4 + 17) == 0 ) /*0x463625*/\n  {\n    v6 = *(_DWORD *)(a3[3] + 228); /*0x463632*/\n    do /*0x463667*/\n    {\n      v7 = *(_DWORD *)(v4 + 12); /*0x463638*/\n      v5 = v4; /*0x46363b*/\n      if ( a4 != 0 ) /*0x46363f*/\n        v8 = *(_DWORD *)(v7 + 228) >= v6; /*0x463647*/\n      else\n        v8 = v6 < *(_DWORD *)(v7 + 228); /*0x463652*/\n      v10 = v8; /*0x463655*/\n      if ( v8 ) /*0x46365a*/\n        v4 = *(_DWORD *)v4; /*0x46365c*/\n      else\n        v4 = *(_DWORD *)(v4 + 8); /*0x463660*/\n    }\n    while ( *(_BYTE *)(v4 + 17) == 0 ); /*0x463667*/\n  }\n  *(_DWORD *)a2 = *(_DWORD *)sub_462FE0(a1: (int)&a4, a2: v10, a3: v5, a4: a3); /*0x463682*/\n  *(_BYTE *)(a2 + 4) = 1; /*0x463684*/\n  return a2; /*0x463688*/\n}",
+  "refs": [
+    {
+      "addr": "0x462fe0",
+      "name": "sub_462FE0"
+    }
+  ]
+}

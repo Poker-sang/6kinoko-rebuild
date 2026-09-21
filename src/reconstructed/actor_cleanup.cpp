@@ -1,3 +1,4 @@
+#include "kinoko/actor_priority.h"
 #include "kinoko/actor_cleanup.h"
 #include "kinoko/actor_records.hpp"
 
@@ -19,11 +20,6 @@ struct AnimationTreeNode {
     int32_t key, value;
     uint8_t color, sentinel;
 };
-struct PriorityTreeNode {
-    PriorityTreeNode *left, *parent, *right;
-    int32_t value;
-    uint8_t color, sentinel;
-};
 struct AnimationListNode {
     AnimationListNode *next, *previous;
     uint8_t unknown[8];
@@ -37,8 +33,6 @@ struct AnimationList {
 static_assert(sizeof(void *) == 4);
 static_assert(sizeof(AnimationTreeNode) == 24);
 static_assert(offsetof(AnimationTreeNode, sentinel) == 21);
-static_assert(sizeof(PriorityTreeNode) == 20);
-static_assert(offsetof(PriorityTreeNode, sentinel) == 17);
 static_assert(offsetof(AnimationListNode, frames_begin) == 16);
 
 template <typename T>
@@ -77,10 +71,6 @@ void clear_tree(Node *head, int32_t &size) {
 extern "C" int32_t kinoko_erase_animation_tree(int32_t node) {
     return address(erase_subtree(pointer<AnimationTreeNode>(node)));
 }
-extern "C" int32_t kinoko_erase_priority_tree(int32_t node) {
-    return address(erase_subtree(pointer<PriorityTreeNode>(node)));
-}
-
 // 464D90: unlink the owning list before releasing frame payloads and storage.
 extern "C" int32_t kinoko_clear_animation_list(int32_t list_address) {
     if (!list_address)
@@ -133,9 +123,7 @@ extern "C" int32_t kinoko_clear_actor_manager(int32_t manager) {
     clear_tree(pointer<AnimationTreeNode>(static_cast<int32_t>(animations.get(&TreeIndex::head))), animation_count);
     animations.set(&TreeIndex::count, animation_count);
     kinoko_clear_animation_list(address(state.bytes(&ManagerPrefix::animations)));
-    auto actor_count = actors.get(&TreeIndex::count);
-    clear_tree(pointer<PriorityTreeNode>(static_cast<int32_t>(actors.get(&TreeIndex::head))), actor_count);
-    actors.set(&TreeIndex::count, actor_count);
+    kinoko_priority_clear(address(actors.data()));
     const auto iteration = state.view(&ManagerPrefix::iteration);
     const auto iteration_begin = iteration.get(&VectorIndex::begin);
     iteration.set(&VectorIndex::end, iteration_begin);

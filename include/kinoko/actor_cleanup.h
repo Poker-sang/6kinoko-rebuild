@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 int32_t kinoko_erase_animation_tree(int32_t node);
-int32_t kinoko_erase_priority_tree(int32_t node);
 int32_t kinoko_clear_animation_list(int32_t list);
 int32_t kinoko_clear_actor_manager(int32_t manager);
 
