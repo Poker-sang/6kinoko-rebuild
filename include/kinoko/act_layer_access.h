@@ -14,6 +14,9 @@ KinokoActKeyHolder **kinoko_act_key_holder(
 // 452040/452020: borrowed first key and its layout; no ownership transfer.
 KinokoActKey *kinoko_act_first_key(KinokoActRuntime *runtime, int32_t index);
 KinokoActLayout *kinoko_act_layer_layout(KinokoActRuntime *runtime, int32_t index);
+/* 41EF20: borrowed resource; updates resourceID only for a non-null resource. */
+int32_t __fastcall kinoko_act_layer_set_resource(
+    KinokoActLayer *layer, void *unused, KinokoActResource *resource);
 #ifdef __cplusplus
 }
 #endif

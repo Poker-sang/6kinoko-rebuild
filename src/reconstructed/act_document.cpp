@@ -1,3 +1,4 @@
+#include "kinoko/act_document_association.hpp"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -747,7 +748,9 @@ int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     return 0;
 }
 
-int32_t retdec_act_bind_layouts(int32_t act)
+// Clone::layer copies raw key/layout records and needs a separate rebind.
+// Deserialization already binds each key at 41F8B9 and must not call this.
+int32_t retdec_act_bind_cloned_layouts(int32_t act)
 {
     int32_t layer_begin;
     int32_t layer_end;
@@ -857,6 +860,8 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         retdec_trace("act:layer-vector-failed");
         return 0;
     }
+    kinoko::act::DocumentLoadAssociations associations;
+    auto *document = pointer<KinokoActDocument>(this_ptr);
     layers = pointer<int32_t>(field<int32_t>(this_ptr + 208));
     for (index = 0; index < layer_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type) ||
@@ -873,6 +878,7 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         }
         layers[index] = layer;
         field<int32_t>(this_ptr + 212) += 4;
+        associations.add_layer(pointer<KinokoActLayer>(layer));
         if (index < 8) {
             retdec_trace_i32("act:layer-id",
                              field<int32_t>(layer + 0x68));
@@ -880,12 +886,15 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                              field<int32_t>(layer + 0x60));
         }
     }
+    // 428310..428346: resolve parents before even reading resource_count.
+    associations.bind_loaded_parents(document, layer_count);
     if (!retdec_act_read_u32(reader_ptr, &resource_count) ||
         !retdec_act_prepare_vector(this_ptr, 224, 228, 232,
                                    resource_count)) {
         retdec_trace("act:resource-vector-failed");
         return 0;
     }
+    associations.begin_resources();
     resources = pointer<int32_t>(field<int32_t>(this_ptr + 224));
     for (index = 0; index < resource_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type)) {
@@ -897,6 +906,7 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
             return 0;
         resources[index] = resource;
         field<int32_t>(this_ptr + 228) += 4;
+        associations.add_resource(pointer<KinokoActResource>(resource));
         if (index < 8) {
             retdec_trace_i32("act:resource-id",
                              field<int32_t>(resource + 4));
@@ -906,9 +916,6 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     }
     retdec_trace_i32("act:loaded-layers", (int32_t)layer_count);
     retdec_trace_i32("act:loaded-resources", (int32_t)resource_count);
-    if (!retdec_act_bind_layouts(this_ptr)) {
-        retdec_trace("act:layout-bind-failed");
-        return 0;
-    }
+    associations.bind_resources(document, layer_count);
     return 1;
 }

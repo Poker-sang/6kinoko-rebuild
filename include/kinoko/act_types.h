@@ -7,6 +7,7 @@ typedef struct KinokoActSourceHolder KinokoActSourceHolder;
 typedef struct KinokoStageOwner KinokoStageOwner;
 typedef struct KinokoStageNode KinokoStageNode;
 typedef struct KinokoActLayer KinokoActLayer;
+typedef struct KinokoActResource KinokoActResource;
 typedef struct KinokoActKey KinokoActKey;
 typedef struct KinokoActLayout KinokoActLayout;
 typedef struct KinokoActLayerHolder KinokoActLayerHolder;

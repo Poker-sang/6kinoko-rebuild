@@ -142,7 +142,7 @@ int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
 int32_t retdec_c2dlayout_update_impl(int32_t layout);
 int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
-int32_t retdec_act_bind_layouts(int32_t act);
+int32_t retdec_act_bind_cloned_layouts(int32_t act);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);
 void retdec_trace_star_state(const char *phase, int32_t actor);
 static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
@@ -1752,7 +1752,6 @@ int32_t function_4190e0(int32_t a1, int32_t a2);
 
 int32_t function_41e390(int32_t a1);
 
-int32_t function_41ef20(int32_t a1);
 int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_41eff0(int32_t a1);
 
@@ -3408,7 +3407,7 @@ struct vtable_4ebe68_type g252 = {
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_layer,
     .e5 = (int32_t (*)(void))kinoko_method_clone_act_layer,
-    .e6 = function_41ef20,
+    .e6 = (int32_t (*)(int32_t))kinoko_act_layer_set_resource,
     .e7 = function_41ef50,
     .e8 = (int32_t (*)(int32_t))kinoko_method_register_act_layer
 }; // 0x4ebe68
@@ -7310,21 +7309,7 @@ int32_t function_41e390(int32_t storage) {
 // Address range: 0x41eed0 - 0x41ef17
 
 
-// Address range: 0x41ef20 - 0x41ef42
-// From class:    .?AVCActLayer@@
-// Type:          virtual member function
-int32_t function_41ef20(int32_t a1) {
-    // 0x41ef20
-    if (a1 == 0) {
-        // 0x41ef2a
-        return -0x7fffbffb;
-    }
-    // 0x41ef33
-    int32_t v1; // 0x41ef20
-    *(int32_t *)(v1 + 100) = a1;
-    *(int32_t *)(v1 + 96) = *(int32_t *)(a1 + 4);
-    return 0;
-}
+/* 41EF20: typed receiver/resource in act_document_association.cpp. */
 
 // Address range: 0x41ef50 - 0x41efab
 // From class:    .?AVCActLayer@@
@@ -7708,7 +7693,7 @@ int32_t function_426b30(void) {
 
 /* retdec_c2dmaplayout_set_layer_impl is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_bind_layouts is implemented in native C++ (kinoko/act_runtime.h). */
+/* retdec_act_bind_cloned_layouts is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* retdec_act_prepare_vector is implemented in native C++ (kinoko/act_runtime.h). */
 

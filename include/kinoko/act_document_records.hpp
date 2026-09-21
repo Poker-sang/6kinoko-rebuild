@@ -11,7 +11,7 @@ namespace kinoko::act {
 // Representation schemas only, never constructed over legacy/test storage.
 // Layer/resource implementations are still migrated independently.
 
-struct ResourceRecord;
+using ResourceRecord = KinokoActResource;
 // act_array.cpp publishes begin/end views and owns a native vector in word 3.
 // The last word is NOT an end-of-capacity pointer from the original VC8 vector.
 template<class T> struct DocumentPointerSpan {

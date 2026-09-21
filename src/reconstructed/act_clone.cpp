@@ -23,7 +23,7 @@
 extern "C" {
 extern unsigned char g327, g313;
 extern int32_t g483, g484;
-int32_t retdec_act_bind_layouts(int32_t act);
+int32_t retdec_act_bind_cloned_layouts(int32_t act);
 }
 
 namespace {
@@ -90,7 +90,7 @@ public:
         }
         // Reassociate resources by ID and rebind each copied layout's layer,
         // including its alpha/blend pointer properties (original 427D49..E89).
-        if (!retdec_act_bind_layouts(static_cast<int32_t>(result))) throw std::bad_alloc();
+        if (!retdec_act_bind_cloned_layouts(static_cast<int32_t>(result))) throw std::bad_alloc();
         committed_=true;
         return result;
     }
