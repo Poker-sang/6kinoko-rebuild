@@ -50,3 +50,6 @@ The user's r59/r60/r66 gameplay confirmations are historical user verification.
 Library replacement does not finish game-specific ACT grid/3D/rich text,
 original audio scheduling, lost-receiver engine paths or application-wide final
 shutdown wiring. Those must be recovered separately from original evidence.
+
+R123 (`a6addb2`) was subsequently reported normal by the user on 2026-09-21.
+This does not imply that the user tested the later R124/R125 builds.

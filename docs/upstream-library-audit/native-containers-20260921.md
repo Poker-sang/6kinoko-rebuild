@@ -90,3 +90,7 @@ clone string-assignment failure before rollback registration. Both are fixed.
 Updated the remaining contract observations that read short text directly from
 record bytes (font face, pending text and global script extension) to use the
 published character view. These contracts are compiled only, not executed.
+
+## User runtime feedback (2026-09-21)
+
+The user reported “R123没问题” for R123 (`a6addb20b1909f428470647dffe14d76098eb8eb`). This is user-confirmed runtime feedback, not an agent-run smoke test and not validation of R124/R125. The agent only built those later revisions and staged/verified their DAT files.
