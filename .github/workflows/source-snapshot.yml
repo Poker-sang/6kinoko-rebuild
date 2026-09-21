@@ -22,6 +22,7 @@ jobs:
           mkdir -p snapshot
           git rev-parse HEAD > snapshot/SOURCE_REVISION.txt
           git ls-tree -r HEAD > snapshot/SOURCE_TREE.txt
+          sha256sum src/decompiled/6kinoko.exe.c docs/decompiler-cleanup-r126/original-stage-evidence.json > snapshot/ORIGINAL_EVIDENCE_SHA256.txt
           git archive --format=tar.gz --output=snapshot/source.tar.gz HEAD
           git bundle create snapshot/source.bundle HEAD
           git log -30 --format='%H %s' > snapshot/COMMITS.txt
