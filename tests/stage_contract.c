@@ -1,3 +1,4 @@
+#include "kinoko/string_font.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
 /* Exercise the actual reconstructed functions without WinMain, graphics or DAT startup. */
@@ -4469,7 +4470,7 @@ static int test_string_layout_lifetime(void) {
     int32_t* copied=(int32_t*)(intptr_t)clone;
     CHECK(copied[0]==PTR(g350) && copied[44]!=layout[44]);
     CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
-    CHECK(copied[40]==copied[41] && kinoko_string_queue_size(clone)==0);
+    CHECK(kinoko_string_atlas_size(clone)==0 && kinoko_string_queue_size(clone)==0);
     CHECK(kinoko_method_set_string_layer(clone,NULL,0)<0);
     CHECK(kinoko_method_update_string_layout(clone,NULL)<0);
     CHECK(kinoko_method_draw_string_layout(clone,NULL,0,0)<0);
@@ -4490,32 +4491,26 @@ static int test_string_layout_lifetime(void) {
 
 static int test_string_glyph_cache(void) {
     int32_t layout[65]={0};
-    int32_t* atlas=(int32_t*)calloc(1,436);
-    int32_t* head=(int32_t*)calloc(1,12);
-    CHECK(atlas && head);
-    kinoko_string_queue_construct(PTR(layout));
-    head[0]=head[1]=PTR(head);
-    atlas[(24+348)/4]=PTR(head);
-    atlas[(24+388)/4]=15;
+    kinoko_construct_string_layout(PTR(layout));
+    int32_t* atlas=(int32_t*)(intptr_t)kinoko_string_append_atlas(PTR(layout));
     atlas[(24+344)/4]=PTR(malloc(32));
     atlas[5]=4;atlas[108]=2;
     layout[6]=layout[13]=15;
     retdec_string_assign_cstr(layout+1,"AB");
     retdec_string_assign_cstr(layout+8,"CD");
-    layout[22]=19;layout[40]=PTR(atlas);layout[41]=layout[42]=PTR(atlas)+436;
+    layout[22]=19;
     const int32_t storage=layout[44];
     for(int i=0;i<2;++i) {
         int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(layout));
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
-    CHECK(function_441250(layout)==1 && layout[41]==PTR(atlas)+436);
+    CHECK(function_441250(layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
     CHECK(function_4410c0(PTR(layout))==1);
-    CHECK(layout[41]==layout[40] && layout[42]==PTR(atlas)+436);
+    CHECK(kinoko_string_atlas_size(PTR(layout))==0);
     CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
     CHECK(layout[5]==0 && layout[12]==4 && memcmp(layout+8,"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
-    kinoko_string_queue_destroy(PTR(layout));
-    free(atlas);
+    kinoko_clear_string_layout(PTR(layout));
     puts("PASS: native glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
     return 0;
 }

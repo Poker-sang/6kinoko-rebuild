@@ -91,8 +91,8 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         field<int32_t>(layout+216)=field<int32_t>(layout+88);return 1;
     }
     for(;;) {
-        if(field<int32_t>(layout+160)==field<int32_t>(layout+164)) new_page(layout);
-        const int32_t page=field<int32_t>(layout+164)-436;
+        if(kinoko_string_atlas_size(layout)==0) new_page(layout);
+        const int32_t page=kinoko_string_atlas_at(layout,kinoko_string_atlas_size(layout)-1);
         kinoko_string_font_configure(page+24,layout);
         int32_t width=0,height=0;
         kinoko_string_font_upload(page+24,field<int32_t>(page+428),character,
