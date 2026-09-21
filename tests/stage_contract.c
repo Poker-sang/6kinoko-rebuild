@@ -3272,8 +3272,6 @@ static int test_global_stage_cleanup(void) {
         /* Two open searches remain for the runtime destructor to close. */
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));
-        runtime[11] = PTR(malloc(36));
-        runtime[12] = runtime[11];
         kinoko_stage_list_append(PTR(owner));
     }
     CHECK(function_465f70()==identity);

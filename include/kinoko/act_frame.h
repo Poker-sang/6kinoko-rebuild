@@ -3,6 +3,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef struct KinokoDrawSpan { uint32_t begin,end,capacity; } KinokoDrawSpan;
+KinokoDrawSpan kinoko_act_command_span(int32_t resource);
+KinokoDrawSpan kinoko_act_sprite_span(int32_t resource);
+void kinoko_act_commands_clear(int32_t resource);
+void kinoko_act_draw_storage_destroy(int32_t resource);
 int32_t function_451640(int32_t resource);
 int32_t function_41efb0(int32_t layer);
 int32_t function_4522f0(int32_t resource);

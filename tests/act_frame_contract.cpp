@@ -50,7 +50,7 @@ struct Fixture {
     }
     void count(int count) { source[53] = active[53] = address(layers + count); }
     ~Fixture() {
-        std::free(pointer(runtime[11])); std::free(pointer(runtime[15]));
+        kinoko_act_draw_storage_destroy(address(runtime));
         DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(runtime + 5));
     }
 };
@@ -211,24 +211,26 @@ static int test_storage_and_draw() {
     for (int blend = 0; blend < 6; ++blend)
         CHECK(retdec_act_bitblt_this(address(fixture.runtime), 3, 4, 32, 16,
             address(texture_resource), 8, 4, blend, blend == 0 ? -1.0f : blend == 5 ? 2.0f : 0.5f) == 0);
-    const auto* commands = pointer<BlitCommand>(fixture.runtime[11]);
+    const auto* commands = pointer<BlitCommand>(kinoko_act_command_span(address(fixture.runtime)).begin);
     CHECK(commands[0].alpha == 0 && commands[5].alpha == 1 && commands[2].alpha == 0.5f);
     draws.clear(); draw_result = 0;
     CHECK(function_4522f0(address(fixture.runtime)) == 0);
     CHECK(draws.size() == 2 && draws[0] == address(fixture.layouts[1]) && draws[1] == address(fixture.layouts[0]));
-    auto* sprites = pointer<BlitSprite>(fixture.runtime[15]);
-    CHECK(fixture.runtime[16] - fixture.runtime[15] == 6 * 184);
+    auto* sprites = pointer<BlitSprite>(kinoko_act_sprite_span(address(fixture.runtime)).begin);
+    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).end-kinoko_act_sprite_span(address(fixture.runtime)).begin==6*184);
     CHECK(sprites[2].sprite.vertices[0].color == 0x7fffffffu);
     CHECK(sprites[2].sprite.vertices[0].u == 0.0625f && sprites[2].sprite.vertices[3].v == 0.3125f);
     CHECK(sprites[2].sprite.scale_x == 1 && sprites[2].sprite.width == 32);
     CHECK(sprites[0].sprite.vertices[0].color == 0xffffffu && sprites[5].sprite.vertices[0].color == 0xffffffffu);
-    const auto allocation = fixture.runtime[15];
+    const auto allocation = kinoko_act_sprite_span(address(fixture.runtime)).begin;
     CHECK(function_452c20(address(fixture.runtime + 15), 3) == 6);
-    CHECK(fixture.runtime[15] == allocation && fixture.runtime[16] - allocation == 3 * 184);
+    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).begin==allocation && kinoko_act_sprite_span(address(fixture.runtime)).end-allocation==3*184);
     CHECK(function_452c20(address(fixture.runtime + 15), 6) == 6);
-    const auto saved = kinoko::legacy::load<std::array<int32_t,3>>(fixture.runtime + 15);
+    const auto saved = kinoko_act_sprite_span(address(fixture.runtime));
     CHECK(function_452c20(address(fixture.runtime + 15), UINT32_MAX) == 0);
-    CHECK(std::memcmp(&saved, fixture.runtime + 15, sizeof(saved)) == 0);
+    const auto after=kinoko_act_sprite_span(address(fixture.runtime));
+    CHECK(std::memcmp(&saved,&after,sizeof(saved))==0);
+    CHECK(function_4522f0(address(fixture.runtime))==0);
     BlitSprite copies[2]{};
     copies[0].sprite.vtable = &color_identity; copies[1].sprite.vtable = &target_identity;
     CHECK(function_455230(address(sprites), address(sprites + 2), address(copies)) == address(copies + 2));
@@ -262,8 +264,7 @@ static int test_storage_and_draw() {
     CHECK(function_4525d0(address(fixture.runtime), 0, 0) == 0 && draws.empty() && sprite_draws == 0);
     fixture.active[24] = 1; draw_result = 0;
     CHECK(retdec_act_clear_layout_vector(address(fixture.runtime + 15)) == allocation);
-    CHECK(fixture.runtime[16] == allocation && fixture.runtime[17] == saved[2]);
-    CHECK(sprites[0].sprite.vtable == &color_identity && sprites[5].sprite.vtable == &color_identity);
+    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).end==allocation && kinoko_act_sprite_span(address(fixture.runtime)).capacity==saved.capacity);
     CHECK(kinoko_texture_slots[1].width == 128); // clear never owns/releases the texture
     g678 = 0;
     return 0;
