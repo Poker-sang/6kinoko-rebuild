@@ -1,6 +1,5 @@
 #include "kinoko/actor_pool.h"
 #include "kinoko/actor_lifecycle.h"
-#include "kinoko/legacy_container_memory.h"
 #include "kinoko/legacy_memory.hpp"
 #include <windows.h>
 #include <list>

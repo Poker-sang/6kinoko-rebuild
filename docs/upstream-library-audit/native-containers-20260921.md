@@ -29,3 +29,7 @@ CStringLayout now owns std::vector<Atlas>; native element constructors, assignme
 ## R112 — Audio request container ownership
 
 Removed manually linked audio handle queues and per-insertion reallocation of parallel handle arrays. std::list<uint32_t> owns queue nodes; BufferStore owns std::vector<unique_ptr<BufferRecord>> and std::vector<uint32_t> generations. Buffer paths now own real std::string storage through a pointer-sized boundary field, retaining the surrounding verified buffer offsets. Queue nodes carry handles only; decoder and DirectSound ownership remains in BgmTrack. Construction failures do not publish partial handles. Existing generation/lookup and FIFO contract sources now address native containers and strings. This replaces container ownership in the reconstructed manager; it does not claim the full original audio manager scheduling/recycling policy is reconstructed.
+
+## R113 — Global stage owner list
+
+Replaced the global stage-owner list with std::list<StageEntry>. Opaque entry tokens hold native iterators, so update/draw walks retain insertion order and stable traversal without exposing an STL layout. Stage insertion and all three C update/draw consumers now use accessors. Payload destruction remains separate from list-storage destruction as in 465F70/4D47F0. Removed the receiverless generated list clear and the final manual 4214A0 node allocator. Cleanup/update fixtures now construct native storage. No game or local automated test is executed.
