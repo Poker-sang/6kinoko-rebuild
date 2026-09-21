@@ -5,9 +5,10 @@ This is the active PR #7 audit, based on master
 not a current inventory. Original `src/decompiled/6kinoko.exe.c` is unchanged.
 Vendoring a header is not counted as replacing an executing implementation.
 
-The latest continuation is [actual source replacement and old-body removal](source-replacement-20260920.md):
-source callback/instance factories, three Sqrat virtuals and a 33-function retired
-audio island. Future verification defaults to quiet only per the user's update.
+The latest continuation is [native containers and strings](native-containers-20260921.md).
+Earlier source replacement and retirement work is recorded in
+[source replacement](source-replacement-20260920.md). Verification follows the
+user's handoff: quiet builds only, with execution delegated to the user.
 
 ## Implementations actually used by production
 
@@ -104,25 +105,34 @@ original game. Final CI revision and artifact digests are recorded in the PR;
 each artifact contains source-commit.txt and CTest logs. Failed and successful
 batches are retained rather than overwritten locally.
 
-## What is still not replaced
+## Current migration boundary (R124, 2026-09-21)
 
-Do not report all third-party compatibility code as gone. The generated C
-still contains live container/error paths; retdec_runtime_compat.cpp still
-contains referenced legacy exception/RTTI/array-helper placeholders, including
-`__CxxThrowException_40_8`, `___RTtypeid` and exception-object helpers. Their
-signatures/caller unwinding need recovery before native throws are introduced.
-Custom Sqrat/SqPlus registration and native descriptor/ABI policies still have
-host implementations. The zero-argument frame-copy operand heuristic also
-remains; typed library entry points do not make that boundary disappear.
+The identified active third-party implementations now use their actual source:
+Squirrel 2.2.2, zlib 1.2.3, Vorbis 1.2.0/Ogg 1.1.3, Sqrat 0.8.1,
+SqPlus 20080713 and the retained Boost 1.44.0 components. Recovered STL
+containers and mutable strings use actual C++ standard-library ownership.
+See [the completion inventory](migration-completion-20260921.md) and
+[the per-batch record](native-containers-20260921.md).
 
-Conversely, do not carry forward stale claims that the old 41A010/41A1D0 and
-424430/424640 lexical-cast/stream component is still active: it was removed in
-merged commit `27e229a4ab65f33cc21a824e4216bf67a7689209`, with a closed-component
-report in `docs/legacy-library-audit-20260920/retired-conversion-island.json`
-(135 functions, 48 data definitions). No new Boost lexical_cast or exception
-module is imported simply to replace an already-retired component. Boost RTTI
-comments alone are not an executing call path. Remaining CRT exception
-placeholders are a separate problem and must not be hidden by that deletion.
+The previous claims about live exception/RTTI/array/security placeholders in
+retdec_runtime_compat.cpp became stale after R97–R99. It now contains real
+Windows/CRT forwarding calls and a documented malloc-compatible allocation
+adapter. Old ABI names and borrowed record views remain where game callers
+need them; they are not independent implementations of STL or the imported
+libraries. Read-only diagnostic snapshots still inspect legacy VM fields;
+quiet mode silences their output without removing VM trace calls.
+
+This completes the identified library-replacement work, not all game reverse
+engineering. Game-specific Sqrat/SqPlus registration, native descriptors,
+unsupported ACT types, exact audio scheduling and some shutdown integration
+remain engine/ABI work. Process-lifetime owners are not newly wired to guessed
+original destructors. No claim of complete behavioral equivalence follows
+from replacing their containers. The old lexical-cast/stream island was
+already retired in 27e229a4; it is not reintroduced.
+
+R107 onward follows the user's test handoff: quiet Win32 Release builds and
+SHA256-verified DAT staging only. Regression contracts are compiled, **not
+executed**. Historical checks below apply only to their recorded commits.
 
 Local Windows acceptance was completed on 2026-09-20 at `8f9756da`: both
 configurations passed all 52 contracts with the original DAT available, and

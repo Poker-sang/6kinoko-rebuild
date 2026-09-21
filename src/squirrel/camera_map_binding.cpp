@@ -7,7 +7,6 @@ extern "C" {
 extern int32_t g611[3], g636[3];
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_table_entries(const char*, int32_t);
-int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5(void);
 int32_t function_466890(int32_t);
 }
 namespace {
@@ -176,7 +175,7 @@ extern "C" int32_t function_46fac0(void) {
     construct(state, "Map", kinoko_map_binding_type());
     function_4a95c0_this(address(g636), address(state + 2));
     bind_fields(state + 2, kinoko_map_binding_type(), map_fields);
-    retdec_msvc_0_Init_locks_std__QAE_XZ5();
+    // Original 46FD05 constructs this local exactly once with an explicit receiver.
     function_4a94e0_this(address(layer));
     function_4a9840_this(address(g636), "layer_name", address(layer));
     function_4a9d70_this(address(layer));
