@@ -1,0 +1,11 @@
+[
+  {
+    "build_tree": "build-runs/collision-module-r140-quiet",
+    "runtime_dir": "runtime-builds/collision-module-r140-quiet",
+    "source_commit": "19e3ad32a5b0a27e69b8dd8d19cbad65067f300b",
+    "build_exit_code": 1,
+    "reason": "actor_records_contract fixture still used integer begin/end and old capacity field; main runtime and stage_contract compiled, but full build failed",
+    "tests_executed": false,
+    "game_executed": false
+  }
+]
