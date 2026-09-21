@@ -213,8 +213,8 @@ static void retdec_bgm_archive_current_track(void);
 static void retdec_bgm_stop(int reset_position);
 static ManagerRecord* retdec_audio_manager_this() noexcept;
 static bool retdec_audio_manager_list_init(QueueRecord& queue);
-static void retdec_audio_list_push(QueueNode* list, std::uint32_t value);
-static bool retdec_audio_list_pop(QueueNode* list, std::uint32_t* value);
+static void retdec_audio_list_push(HandleQueue* list, std::uint32_t value);
+static bool retdec_audio_list_pop(HandleQueue* list, std::uint32_t* value);
 static const char* retdec_audio_buffer_path(const BufferRecord* buffer) noexcept;
 static void retdec_audio_buffer_initialize(BufferRecord* buffer) noexcept;
 static BufferRecord* retdec_audio_handle_lookup(HandleTable* manager,
@@ -264,30 +264,11 @@ int32_t function_470ab0(int32_t a1);
 
 // The ABI records are table-owned allocations. Request/fade queues carry only
 // handles; they must never free a BufferRecord or a decoder a second time.
-static void retdec_audio_clear_queue(QueueNode*& head) noexcept {
-    if (!head) return;
-    while (head->next != head) {
-        auto* node = head->next;
-        head->next = node->next;
-        std::free(node);
-    }
-    std::free(std::exchange(head, nullptr));
+static void retdec_audio_clear_queue(HandleQueue*& head) noexcept {
+    delete std::exchange(head,nullptr);
 }
 static void retdec_audio_clear_handle_allocations(HandleTable& table) noexcept {
-    if (table.buffers_begin) {
-        for (auto** it = table.buffers_begin; it != table.buffers_end; ++it) {
-            auto* buffer = *it;
-            if (!buffer) continue;
-            if (buffer->path.capacity >= sizeof(buffer->path.storage.inline_text))
-                std::free(buffer->path.storage.allocated_text);
-            buffer->~BufferRecord();
-            std::free(buffer);
-        }
-    }
-    std::free(table.buffers_begin);
-    std::free(table.generations_begin);
-    table.buffers_begin = table.buffers_end = table.buffers_capacity = nullptr;
-    table.generations_begin = table.generations_end = table.generations_capacity = nullptr;
+    delete std::exchange(table.storage,nullptr);
     retdec_audio_clear_queue(table.live_handles);
 }
 static void retdec_audio_manager_destroy() noexcept {
@@ -1546,38 +1527,15 @@ static ManagerRecord* retdec_audio_manager_this() noexcept {
 
 
 static bool retdec_audio_manager_list_init(QueueRecord& queue) {
-    auto* node = static_cast<QueueNode*>(std::malloc(sizeof(QueueNode)));
-    if (!node) return false;
-    node->next = node;
-    node->previous = node;
-    node->handle = 0;
-    queue.head = node;
-    return true;
+    try { queue.head=new HandleQueue;return true; } catch(const std::bad_alloc&) { return false; }
 }
-
-
-static void retdec_audio_list_push(QueueNode* list, std::uint32_t value) {
-    if (!list) return;
-    auto* node = static_cast<QueueNode*>(std::malloc(sizeof(QueueNode)));
-    if (!node) return;
-    node->next = list;
-    node->previous = list->previous;
-    node->handle = value;
-    node->previous->next = node;
-    list->previous = node;
+static void retdec_audio_list_push(HandleQueue* list, std::uint32_t value) {
+    if(list) list->push_back(value);
 }
-
-
-static bool retdec_audio_list_pop(QueueNode* list, std::uint32_t* value) {
-    if (!list || list->next == list) return false;
-    auto* node = list->next;
-    node->previous->next = node->next;
-    node->next->previous = node->previous;
-    if (value) *value = node->handle;
-    std::free(node);
-    return true;
+static bool retdec_audio_list_pop(HandleQueue* list,std::uint32_t* value) {
+    if(!list || list->empty()) return false;
+    if(value) *value=list->front();list->pop_front();return true;
 }
-
 
 static const char* retdec_audio_buffer_path(const BufferRecord* buffer) noexcept {
     return buffer ? buffer->path.c_str() : nullptr;
@@ -1585,10 +1543,6 @@ static const char* retdec_audio_buffer_path(const BufferRecord* buffer) noexcept
 
 
 static void retdec_audio_buffer_initialize(BufferRecord* buffer) noexcept {
-    // Placement construction gives the malloc-backed native record its C++
-    // lifetime. Decoder ownership lives in BgmTrack, not this request record.
-    new (buffer) BufferRecord{};
-    buffer->path.capacity = sizeof(buffer->path.storage.inline_text) - 1;
     buffer->gain = 1.0f;
     buffer->playback_state = 3;
 }
@@ -1599,82 +1553,29 @@ static BufferRecord* retdec_audio_handle_lookup(HandleTable* manager,
     if (!manager) return nullptr;
     const auto index = handle & 0xffffu;
     const auto generation = handle >> 16;
-    const auto begin = reinterpret_cast<std::uintptr_t>(manager->buffers_begin);
-    const auto end = reinterpret_cast<std::uintptr_t>(manager->buffers_end);
-    auto* generations = manager->generations_begin;
-    retdec_trace_i32("audio:lookup-manager", address(manager));
-    retdec_trace_i32("audio:lookup-handle", static_cast<std::int32_t>(handle));
-    retdec_trace_i32("audio:lookup-begin", static_cast<std::int32_t>(begin));
-    retdec_trace_i32("audio:lookup-end", static_cast<std::int32_t>(end));
-    retdec_trace_i32("audio:lookup-generations", address(generations));
-    if (!begin || end < begin || index >= (end - begin) / sizeof(BufferRecord*))
-        return nullptr;
-    if (!generations || generations[index] != generation) {
-        retdec_trace_i32("audio:lookup-generation", generations
-            ? static_cast<std::int32_t>(generations[index]) : 0);
-        return nullptr;
-    }
-    auto* buffer = manager->buffers_begin[index];
-    retdec_trace_i32("audio:lookup-buffer", address(buffer));
-    return buffer;
+    if(!manager->storage || index>=manager->storage->buffers.size()) return nullptr;
+    if(manager->storage->generations[index]!=generation) return nullptr;
+    return manager->storage->buffers[index].get();
 }
 
-
-static bool retdec_audio_handle_create(HandleTable* manager, std::uint32_t* output) {
-    if (!manager || !output) return false;
-    const auto begin = reinterpret_cast<std::uintptr_t>(manager->buffers_begin);
-    const auto end = reinterpret_cast<std::uintptr_t>(manager->buffers_end);
-    const auto count = (!begin || end < begin) ? std::size_t{0}
-        : (end - begin) / sizeof(BufferRecord*);
-    retdec_trace_i32("audio:create-manager", address(manager));
-    retdec_trace_i32("audio:create-count", static_cast<std::int32_t>(count));
-    // The low half of the original handle is the slot index. Never allocate a
-    // slot that would alias another handle or overflow the allocation size.
-    if (count > 0xffffu) return false;
-    kinoko::legacy::Allocation<BufferRecord> buffer(
-        static_cast<BufferRecord*>(std::malloc(sizeof(BufferRecord))));
-    if (!buffer) return false;
-    retdec_audio_buffer_initialize(buffer.get());
-    kinoko::legacy::Allocation<BufferRecord*> buffers(
-        static_cast<BufferRecord**>(std::malloc((count + 1) * sizeof(BufferRecord*))));
-    kinoko::legacy::Allocation<std::uint32_t> generations(
-        static_cast<std::uint32_t*>(std::malloc((count + 1) * sizeof(std::uint32_t))));
-    if (!buffers || !generations) return false;
-    if (count) {
-        std::memcpy(buffers.get(), manager->buffers_begin, count * sizeof(BufferRecord*));
-        const auto first = reinterpret_cast<std::uintptr_t>(manager->generations_begin);
-        const auto last = reinterpret_cast<std::uintptr_t>(manager->generations_end);
-        if (first && last >= first) {
-            // Reject a truncated generation table instead of reading past it.
-            if ((last - first) / sizeof(std::uint32_t) < count) return false;
-            std::memcpy(generations.get(), manager->generations_begin,
-                        count * sizeof(std::uint32_t));
-        } else {
-            std::memset(generations.get(), 0, count * sizeof(std::uint32_t));
-        }
-    }
-    auto generation = (manager->next_generation + 1) & 0xffffu;
-    if (!generation) generation = 1;
-    const auto handle = static_cast<std::uint32_t>(count) | (generation << 16);
-    buffers.get()[count] = buffer.get();
-    generations.get()[count] = generation;
-    retdec_trace_i32("audio:create-handle", static_cast<std::int32_t>(handle));
-    retdec_trace_i32("audio:create-buffer", address(buffer.get()));
-    retdec_trace_i32("audio:create-buffer-table", address(buffers.get()));
-    retdec_trace_i32("audio:create-generation-table", address(generations.get()));
-    std::free(manager->buffers_begin);
-    std::free(manager->generations_begin);
-    manager->buffers_begin = buffers.release();
-    manager->buffers_end = manager->buffers_begin + count + 1;
-    manager->buffers_capacity = manager->buffers_end;
-    manager->generations_begin = generations.release();
-    manager->generations_end = manager->generations_begin + count + 1;
-    manager->generations_capacity = manager->generations_end;
-    manager->next_generation = generation;
-    buffer.release(); // exclusive ownership transfers to the manager table
-    retdec_audio_list_push(manager->live_handles, handle);
-    *output = handle;
-    return true;
+static bool retdec_audio_handle_create(HandleTable* manager,std::uint32_t* output) {
+    if(!manager || !output) return false;
+    try {
+        if(!manager->storage) manager->storage=new BufferStore;
+        auto& store=*manager->storage;
+        const size_t count=store.buffers.size();
+        if(count>0xffffu) return false;
+        auto buffer=std::make_unique<BufferRecord>();
+        retdec_audio_buffer_initialize(buffer.get());
+        auto generation=(manager->next_generation+1)&0xffffu;
+        if(!generation) generation=1;
+        const uint32_t handle=static_cast<uint32_t>(count)|(generation<<16);
+        store.buffers.reserve(count+1);store.generations.reserve(count+1);
+        retdec_audio_list_push(manager->live_handles,handle);
+        store.generations.push_back(generation);store.buffers.push_back(std::move(buffer));
+        manager->next_generation=generation;
+        ++manager->live_count;*output=handle;return true;
+    } catch(const std::bad_alloc&) { return false; }
 }
 
 
@@ -1745,8 +1646,7 @@ static int32_t retdec_audio_method_40a6c0(ManagerRecord* this_ptr,
     }
     path_length = retdec_safe_c_string_length(path);
     retdec_trace_i32("470220:path-length", (int32_t)path_length);
-    retdec_string_assign_n(reinterpret_cast<int32_t*>(&buffer->path),
-                           path, path_length);
+    buffer->path.value->assign(path, path_length);
     retdec_trace("470220:path-assigned");
     buffer->ready = 0;
     gain = this_ptr->stream_gain *

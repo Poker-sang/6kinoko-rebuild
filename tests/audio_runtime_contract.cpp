@@ -45,22 +45,6 @@ int32_t retdec_reader_read_exact(int32_t, void* output, uint32_t size) {
 }
 void retdec_destroy_reader(int32_t*) { ++reader_destroys; }
 uint32_t retdec_safe_c_string_length(const char* text) { return text ? static_cast<uint32_t>(std::strlen(text)) : 0; }
-int32_t retdec_string_assign_n(int32_t* object, const char* text, uint32_t size) {
-    auto& path = *reinterpret_cast<PathRecord*>(object);
-    if (path.capacity >= 16) std::free(path.storage.allocated_text);
-    if (size < 16) {
-        path.capacity = 15;
-        std::memcpy(path.storage.inline_text, text, size);
-        path.storage.inline_text[size] = 0;
-    } else {
-        path.capacity = size;
-        path.storage.allocated_text = static_cast<char*>(std::malloc(size + 1));
-        std::memcpy(path.storage.allocated_text, text, size);
-        path.storage.allocated_text[size] = 0;
-    }
-    path.length = size;
-    return kinoko::legacy::address(object);
-}
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_hresult(const char*, long) {}
@@ -70,7 +54,7 @@ void retdec_trace_squirrel_name(const char*, int32_t) {}
 int main() {
     QueueRecord queue{};
     CHECK(retdec_audio_manager_list_init(queue));
-    CHECK(queue.head->next == queue.head && queue.head->previous == queue.head);
+    CHECK(queue.head->empty());
     std::uint32_t value = 77;
     CHECK(!retdec_audio_list_pop(queue.head, &value) && value == 77);
     for (std::uint32_t n = 0; n < 128; ++n) retdec_audio_list_push(queue.head, n);
@@ -78,7 +62,7 @@ int main() {
         CHECK(retdec_audio_list_pop(queue.head, &value));
         CHECK(value == n);
     }
-    CHECK(queue.head->next == queue.head && queue.head->previous == queue.head);
+    CHECK(queue.head->empty());
     retdec_audio_clear_queue(queue.head);
     CHECK(queue.head == nullptr);
 
@@ -92,11 +76,11 @@ int main() {
     CHECK(first == 0x10000 && second == 0x20001);
     auto* record = retdec_audio_handle_lookup(&manager.handles, first);
     CHECK(record && record->gain == 1 && record->playback_state == 3 && !record->ready);
-    CHECK(record->path.capacity == 15 && record->path.length == 0);
+    CHECK(record->path.value->empty());
     CHECK(!retdec_audio_handle_lookup(&manager.handles, first + 0x10000));
     CHECK(!retdec_audio_handle_lookup(&manager.handles, 0xffff));
     const char path[] = "long-path-owned-by-buffer.cv3";
-    retdec_string_assign_n(reinterpret_cast<int32_t*>(&record->path), path, sizeof(path) - 1);
+    record->path.value->assign(path, sizeof(path) - 1);
     CHECK(std::strcmp(retdec_audio_buffer_path(record), path) == 0);
 
     Buffer source;
