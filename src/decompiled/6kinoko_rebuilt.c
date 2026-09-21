@@ -1,5 +1,6 @@
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_runtime.h"
+#include "kinoko/stage_cleanup.h"
 #include "kinoko/act_source.h"
 #include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"

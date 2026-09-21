@@ -1,4 +1,5 @@
 #include "kinoko/native_buffer.h"
+#include "kinoko/stage_cleanup.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_font.h"
