@@ -2948,7 +2948,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     int32_t old_archive = g765;
     CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
     retdec_string_assign_n(&g554, ".cv4", 4);
-    CHECK(g555 == 4 && g556 == 15 && strcmp((char*)&g554, ".cv4") == 0);
+    CHECK(g555 == 4 && g556 >= 16 && strcmp(retdec_std_string_data(PTR(&g554)), ".cv4") == 0);
     CHECK(retdec_sqrat_new_table(vm, environment));
     wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
     wrapper[2] = environment[0]; wrapper[3] = environment[1];
@@ -4425,7 +4425,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
         "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";"
         "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";"
         "if(!StringProbe.Rebuild()) throw \"rebuild\";"));
-    CHECK(object[12]==1 && ((char*)(object+8))[0]=='A'); /* original ASCII PopFront erases zero */
+    CHECK(object[12]==1 && retdec_std_string_data(PTR(object)+32)[0]=='A'); /* original ASCII PopFront erases zero */
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
     for(int i=0;i<2;++i) {
@@ -4451,7 +4451,7 @@ static int test_string_layout_lifetime(void) {
     CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]>=16);
     CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
     const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
-    CHECK(memcmp(layout+15,face,sizeof(face))==0);
+    CHECK(memcmp(retdec_std_string_data(PTR(layout)+60),face,sizeof(face))==0);
     CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
     CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
     CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
@@ -4501,7 +4501,7 @@ static int test_string_glyph_cache(void) {
     CHECK(function_4410c0(PTR(layout))==1);
     CHECK(kinoko_string_atlas_size(PTR(layout))==0);
     CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
-    CHECK(layout[5]==0 && layout[12]==4 && memcmp(layout+8,"ABCD",5)==0);
+    CHECK(layout[5]==0 && layout[12]==4 && memcmp(retdec_std_string_data(PTR(layout)+32),"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
     kinoko_clear_string_layout(PTR(layout));
     puts("PASS: native glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
