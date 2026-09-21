@@ -1,3 +1,4 @@
+#include "kinoko/animation_storage.h"
 #include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/input_devices.h"
@@ -13258,17 +13259,6 @@ static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
     return 1;
 }
 
-static void retdec_pat_free_node(int32_t node)
-{
-    int32_t frames = *(int32_t *)(intptr_t)(node + 8);
-    int32_t end = *(int32_t *)(intptr_t)(node + 12);
-
-    for (int32_t frame = frames; frame != end; frame += 248)
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(frame + 244));
-    free((void *)(intptr_t)frames);
-    free((void *)(intptr_t)node);
-}
-
 /* Shared by the packaged loader and the graphics-free PAT contract test. */
 static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
                                           uint32_t base_resource_count)
@@ -13313,20 +13303,11 @@ static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
                 !retdec_pat_read_u32(reader_slot, &frame_count) ||
                 frame_count > 4096u)
                 goto cleanup;
-            node = (int32_t)(intptr_t)calloc(1u, 56u);
-            if (node == 0)
-                goto cleanup;
-            pending_node = node;
-            *(unsigned char *)(intptr_t)(node + 24) = loop_flag;
-            frames = frame_count != 0
-                ? (int32_t)(intptr_t)calloc((size_t)frame_count, 248u) : 0;
-            if (frame_count != 0 && frames == 0)
-                goto cleanup;
-            *(int32_t *)(intptr_t)(node + 8) = frames;
-            *(int32_t *)(intptr_t)(node + 12) =
-                frames + (int32_t)((size_t)frame_count * 248u);
-            *(int32_t *)(intptr_t)(node + 16) =
-                *(int32_t *)(intptr_t)(node + 12);
+            node=kinoko_animation_create(frame_count);
+            if(!node) goto cleanup;
+            pending_node=node;
+            *(unsigned char *)(intptr_t)(node+24)=loop_flag;
+            frames=*(int32_t *)(intptr_t)(node+8);
             for (frame_index = 0; frame_index < frame_count; ++frame_index) {
                 if (!retdec_pat_read_frame(
                         reader_slot, manager, node,
@@ -13349,6 +13330,7 @@ static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
                 head = node;
                 *(int32_t *)(intptr_t)node = node;
             }
+            kinoko_animation_adopt(manager+52,node);
             tail = node;
             pending_node = 0;
         }
@@ -13370,7 +13352,7 @@ static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
 
 cleanup:
     if (pending_node != 0)
-        retdec_pat_free_node(pending_node);
+        kinoko_animation_discard(pending_node);
     free(aliases);
     return result;
 }
@@ -14549,13 +14531,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 
     *(int32_t *)(intptr_t)(this_ptr+40)=kinoko_integer_map_create();
 
-    /* ActorManager's second intrusive list is constructed empty. */
-    resource_list = (int32_t)(intptr_t)calloc(1u, 56u);
-    if (resource_list == 0)
-        return 0;
-    *(int32_t *)(intptr_t)resource_list = resource_list;
-    *(int32_t *)(intptr_t)(resource_list + 4) = resource_list;
-    *(int32_t *)(intptr_t)(this_ptr + 52) = resource_list;
+    kinoko_animation_list_construct(this_ptr+52);
 
     kinoko_priority_construct(this_ptr+84);
 

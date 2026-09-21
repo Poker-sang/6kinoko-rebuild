@@ -43,3 +43,7 @@ R114 build note: the game and stage contract linked, but the complete build fail
 ## R115 — Animation and sound integer lookup maps
 
 Replaced the hand-written animation lookup BST and empty sound lookup tree with std::map<int32_t,int32_t>. Put retains stable mapped-value addresses and replaces duplicate values; lookup returns the opaque container identity on a miss, preserving call-site branching. PAT aliases, SetTake, manager cleanup and sound shutdown all use native storage. Removed generated 4706C0 pointer traversal, 429C70 recursive frees and sentinel allocation. actor_records_contract now uses the real lookup map instead of a fake node-layout stub. Contracts also cover negative keys, overwrite, growth without mapped-address invalidation and missing lookups.
+
+## R116 — Owning animation list and frame vectors
+
+Original 464F80 inserts animation records into manager+52's owning list (465347..465377) separately from the engine's next/previous animation links. The reconstructed parser had allocated detached records and never linked that owning list. It now adopts completed records into std::list<unique_ptr<Animation>>, with std::vector<FrameRecord> owning each fixed-size frame array. AnimationRecord publishes borrowed begin/end pointers for engine readers; it is not a modern STL overlay. Failed pending records use the same destructor to free frame payloads and storage. Manager clear releases actors before animation ownership, as before. Cleanup contract fixtures use actual native owners.

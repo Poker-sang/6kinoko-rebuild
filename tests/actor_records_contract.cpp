@@ -1,3 +1,4 @@
+#include "kinoko/animation_storage.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/integer_map.h"
 #include "kinoko/actor_records.hpp"
@@ -113,9 +114,7 @@ int main() {
     CHECK(bytes.front() == 0xa7 && bytes.back() == 0xa7);
 
     kinoko_priority_construct(address(&manager.actors));
-    struct ListHead { ListHead* next; ListHead* previous; } list;
-    list.next = list.previous = &list;
-    manager.animations.head = static_cast<Address>(address(&list));
+    kinoko_animation_list_construct(address(&manager.animations));
     std::array<int32_t, 2> textures{27, 81};
     manager.textures.begin = static_cast<Address>(address(textures.data()));
     manager.textures.end = manager.textures.capacity = manager.textures.begin + sizeof(textures);
@@ -125,8 +124,9 @@ int main() {
     CHECK((cleanup_order == std::vector<int32_t>{27, 81, -1}));
     CHECK(manager.textures.end == manager.textures.begin && manager.textures.capacity == manager.textures.begin + sizeof(textures));
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.capacity == 0x12340080);
-    CHECK(!manager.cleanup_pending && list.next == &list && list.previous == &list);
+    CHECK(!manager.cleanup_pending && manager.animations.count==0);
     CHECK(kinoko_integer_map_size(manager.animation_lookup.head)==0 && manager.actors.count==0);
+    kinoko_animation_list_destroy(address(&manager.animations));
     kinoko_integer_map_destroy(manager.animation_lookup.head);
     kinoko_priority_destroy(address(&manager.actors));
     std::puts("PASS: typed Actor animation, original bounds/timing/clamps, deferred ownership and cleanup order");

@@ -1,3 +1,4 @@
+#include "kinoko/animation_storage.h"
 #include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/actor_cleanup.h"
@@ -16,19 +17,6 @@ namespace {
 using namespace kinoko::actor;
 using kinoko::native::RecordView;
 
-struct AnimationListNode {
-    AnimationListNode *next, *previous;
-    uint8_t unknown[8];
-    uint32_t frames_begin, frames_end, frames_capacity;
-};
-struct AnimationList {
-    AnimationListNode *head;
-    uint32_t size;
-};
-
-static_assert(sizeof(void *) == 4);
-static_assert(offsetof(AnimationListNode, frames_begin) == 16);
-
 template <typename T>
 T *pointer(int32_t address) {
     return reinterpret_cast<T *>(static_cast<uintptr_t>(static_cast<uint32_t>(address)));
@@ -37,39 +25,6 @@ int32_t address(const void *value) {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(value));
 }
 
-}
-
-// 464D90: unlink the owning list before releasing frame payloads and storage.
-extern "C" int32_t kinoko_clear_animation_list(int32_t list_address) {
-    if (!list_address)
-        return 0;
-    auto &list = *pointer<AnimationList>(list_address);
-    auto *head = list.head;
-    if (!head) {
-        list.size = 0;
-        return 0;
-    }
-    auto *node = head->next;
-    head->next = head;
-    head->previous = head;
-    list.size = 0;
-    while (node && node != head) {
-        auto *next = node->next;
-        const int32_t begin = static_cast<int32_t>(node->frames_begin);
-        const int32_t end = static_cast<int32_t>(node->frames_end);
-        if (begin && end >= begin) {
-            for (uint32_t frame = node->frames_begin; frame != node->frames_end; frame += sizeof(FrameRecord)) {
-                const RecordView<FrameRecord> item(pointer<void>(static_cast<int32_t>(frame)));
-                std::free(pointer<void>(static_cast<int32_t>(item.get(&FrameRecord::owned_payload))));
-                item.set(&FrameRecord::vtable, static_cast<Address>(g23));
-            }
-            std::free(pointer<void>(begin));
-        }
-        node->frames_begin = node->frames_end = node->frames_capacity = 0;
-        std::free(node);
-        node = next;
-    }
-    return 0;
 }
 
 // 464E20: texture handles, live actors, nonowning lookup, owning animations,
