@@ -105,5 +105,29 @@ class ActEvidence(unittest.TestCase):
         self.assertIn('sizeof(RuntimeRecord) == 192', schema)
 
 
+    def test_runtime_pointer_and_clock_migration(self):
+        schema = (ROOT / 'include/kinoko/act_resource_records.hpp').read_text()
+        for declaration in ('KinokoActDocument *active_document;',
+                            'KinokoActSourceHolder *active_holder;',
+                            'SQVM *vm;', 'FindState *find_state;'):
+            self.assertIn(declaration, schema)
+        for name, offset in (('active_document', 12), ('active_holder', 16),
+                             ('find_state', 84), ('vm', 152), ('name', 164)):
+            self.assertIn(f'KINOKO_ACT_FIELD(RuntimeRecord, {name}, {offset});', schema)
+        header = (ROOT / 'include/kinoko/act_resource.h').read_text()
+        lifecycle = (ROOT / 'src/reconstructed/act_runtime_lifecycle.cpp').read_text()
+        for old in ('function_44fde0(', 'function_450020(', 'retdec_destroy_act_runtime('):
+            self.assertNotIn(old, header + lifecycle)
+        self.assertIn('kinoko_act_runtime_dispose(KinokoActRuntime *', header)
+        clock = (ROOT / 'src/reconstructed/act_resource.cpp').read_text()
+        self.assertNotIn('enum Offset', clock)
+        self.assertNotIn('address_ +', clock)
+        self.assertIn('RecordView<RuntimeRecord>', clock)
+        original = original_function('function_450d80')
+        for offset in range(108, 152, 4):
+            self.assertIn(f'*(int32_t *)(v1 + {offset}) = 0;', original)
+        self.assertIn('*(int32_t *)(v1 + 100) = result;', original_function('function_4515a0'))
+
+
 if __name__ == '__main__':
     unittest.main()

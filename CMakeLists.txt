@@ -502,6 +502,11 @@ set_source_files_properties(
     tests/stage_owner_contract.cpp
     PROPERTIES COMPILE_OPTIONS "/EHsc-")
 
+add_executable(kinoko_act_clock_contract tests/act_clock_contract.cpp)
+target_include_directories(kinoko_act_clock_contract PRIVATE include)
+target_compile_options(kinoko_act_clock_contract PRIVATE /O2)
+add_test(NAME act_clock_contract COMMAND kinoko_act_clock_contract)
+
 add_executable(kinoko_act_document_contract
     tests/act_document_contract.cpp
     src/reconstructed/act_document_io.cpp)
@@ -607,6 +612,7 @@ add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_act_clock_contract
     kinoko_act_document_optimized_contract
     kinoko_stage_owner_contract
     kinoko_act_document_contract

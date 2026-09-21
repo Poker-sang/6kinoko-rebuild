@@ -60,7 +60,7 @@ extern "C" int32_t kinoko_stages_update() {
         if (resource) {
             const RuntimeView runtime(resource);
             if (trace_index <= 8) {
-                auto *act = pointer<KinokoActDocument>(runtime.get(&RuntimeRecord::act));
+                auto *act = runtime.get(&RuntimeRecord::active_document);
                 retdec_trace_i32("466050:resource", address(resource));
                 // Keep historical four-byte diagnostic snapshots (including
                 // padding) without confusing them with one-byte game flags.
@@ -70,7 +70,7 @@ extern "C" int32_t kinoko_stages_update() {
                 retdec_trace_i32("466050:act", address(act));
                 if (act) retdec_trace_squirrel_name("466050:act-name", address(document_name(act)));
             }
-            kinoko_act_increment_frame(address(resource), nullptr);
+            kinoko_act_increment_frame(resource, nullptr);
             result = kinoko_act_update_frame(address(resource));
             if (trace_index <= 8) retdec_trace_i32("466050:update-result", result);
         }
@@ -112,7 +112,7 @@ extern "C" int32_t kinoko_stages_draw() {
         if (!resource) continue;
         const RuntimeView runtime(resource);
         if (trace_index <= 3) {
-            auto *act = pointer<KinokoActDocument>(runtime.get(&RuntimeRecord::act));
+            auto *act = runtime.get(&RuntimeRecord::active_document);
             retdec_trace_i32("4660c0:index", index);
             retdec_trace_i32("4660c0:resource", address(resource));
             retdec_trace_i32("4660c0:active", load<int32_t>(runtime.bytes(&RuntimeRecord::stage_active)));

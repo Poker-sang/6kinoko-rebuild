@@ -651,7 +651,7 @@ int32_t swap_layers_native(int32_t vm) {
 }
 
 int32_t find_first_native(int32_t vm) {
-    int32_t player=0;
+    KinokoActRuntime *player=nullptr;
     const SQChar* pattern=nullptr;
     if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getstring(kinoko_vm(vm),2,&pattern)))
@@ -661,7 +661,7 @@ int32_t find_first_native(int32_t vm) {
 }
 enum class FindOperation { Next, Close, Name };
 template<FindOperation operation> int32_t find_by_id_native(int32_t vm) {
-    int32_t player=0;
+    KinokoActRuntime *player=nullptr;
     SQInteger id=0;
     if (SQ_FAILED(sq_getinstanceup(kinoko_vm(vm),1,reinterpret_cast<SQUserPointer*>(&player),nullptr)) ||
         SQ_FAILED(sq_getinteger(kinoko_vm(vm),2,&id)))

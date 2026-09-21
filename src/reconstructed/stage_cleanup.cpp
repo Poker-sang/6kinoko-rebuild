@@ -4,6 +4,7 @@
 #include "kinoko/stage_records.hpp"
 #include "kinoko/actor_cleanup.h"
 #include "kinoko/act_resource_records.hpp"
+#include "kinoko/act_resource.h"
 #include <cstddef>
 #include <cstdlib>
 #include <new>
@@ -11,7 +12,6 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-int32_t function_450020(int32_t resource);
 extern int32_t g603, g604;
 extern int32_t g638, g639;
 int32_t function_40b3a0(void);
@@ -43,9 +43,9 @@ void detach_source_borrows(KinokoActRuntime *runtime_pointer,
     using kinoko::act::RuntimeRecord;
     if (runtime.get(&RuntimeRecord::source_holder) == holder)
         runtime.set(&RuntimeRecord::source_holder, static_cast<KinokoActSourceHolder *>(nullptr));
-    if (runtime.get(&RuntimeRecord::act) ==
-            static_cast<uint32_t>(kinoko::legacy::address(source)))
-        runtime.set(&RuntimeRecord::act, uint32_t{0});
+    if (runtime.get(&RuntimeRecord::active_document) ==
+            source)
+        runtime.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
 }
 }
 
@@ -72,7 +72,7 @@ extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
         // the stale captured pointer, or let the replacement retain our freed
         // source/holder. Independently cloned ACTs are deliberately untouched.
         detach_source_borrows(runtime_pointer, source, holder);
-        function_450020(kinoko::legacy::address(runtime_pointer));
+        kinoko_act_runtime_dispose(runtime_pointer);
         std::free(runtime_pointer);
         owner.set(&OwnerRecord::runtime, static_cast<KinokoActRuntime *>(nullptr));
     }

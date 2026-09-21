@@ -69,7 +69,7 @@ extern "C" int32_t function_452040(int32_t resource, int32_t index) {
     retdec_trace_i32("452040:resource", resource);
     retdec_trace_i32("452040:index", index);
     if (!resource || index < 0 || !view<RuntimeRecord>(resource).get(&RuntimeRecord::stage_active)) return 0;
-    const auto holder = view<RuntimeRecord>(resource).get(&RuntimeRecord::owned_storage);
+    const auto holder = address(view<RuntimeRecord>(resource).get(&RuntimeRecord::active_holder));
     if (!has_layer(pointee(holder), index)) return 0;
     int32_t temporary = 0;
     kinoko_act_layer_holder(holder, index, address(&temporary));

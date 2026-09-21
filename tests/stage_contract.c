@@ -2086,7 +2086,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     *(int32_t *)(intptr_t)(runtime+60)=sprites;
     *(int32_t *)(intptr_t)(runtime+64)=sprites+2*184;
     *(int32_t *)(intptr_t)(runtime+68)=sprites+2*184;
-    CHECK(kinoko_act_end_stage(runtime, NULL)==0);
+    CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)runtime, NULL)==0);
     CHECK(*(int32_t *)(intptr_t)(runtime+64)==sprites);
     CHECK(*(int32_t *)(intptr_t)(runtime+68)==sprites+2*184);
     function_469860();
@@ -2582,15 +2582,15 @@ static int test_act_resource_methods(void) {
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_get_current_frame) == 3);
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_increment_frame) == 0);
     CHECK(words[1] == 47);
-    kinoko_act_set_current_time(address, NULL, -31);
-    CHECK(kinoko_act_get_current_frame(address, NULL) == -3);
+    kinoko_act_set_current_time((KinokoActRuntime *)(intptr_t)address, NULL, -31);
+    CHECK(kinoko_act_get_current_frame((KinokoActRuntime *)(intptr_t)address, NULL) == -3);
     words[1] = INT32_MAX - 4;
-    kinoko_act_increment_frame(address, NULL);
+    kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)address, NULL);
     CHECK(words[1] == INT32_MIN + 5);
     act[1] = 0;
-    CHECK(kinoko_act_get_current_frame(address, NULL) == 0);
+    CHECK(kinoko_act_get_current_frame((KinokoActRuntime *)(intptr_t)address, NULL) == 0);
     words[0] = 0;
-    CHECK(kinoko_act_increment_frame(address, NULL) == 0);
+    CHECK(kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)address, NULL) == 0);
     CHECK(words[1] == INT32_MIN + 5);
 
     uint32_t before = timeGetTime();
@@ -2611,7 +2611,7 @@ static int test_act_resource_methods(void) {
     CHECK(resource[8] == 0 && words[12] == 1234 && words[13] == 9000);
     for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
     CHECK(words[38] == 4321);
-    CHECK(kinoko_act_end_stage(address, NULL) == (int32_t)E_FAIL);
+    CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)address, NULL) == (int32_t)E_FAIL);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");
     return 0;
@@ -3264,24 +3264,24 @@ static int test_global_stage_cleanup(void) {
         const int untouched[] = {9, 10, 11, 56, 72, 80, 92, 105, 106, 107, 188};
         for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
             ((unsigned char *)runtime)[untouched[u]] = 0xa5;
-        CHECK(function_44fde0(PTR(runtime), PTR(owner)) == PTR(runtime));
+        CHECK(kinoko_act_runtime_initialize((KinokoActRuntime *)runtime, (KinokoActSourceHolder *)owner) == (KinokoActRuntime *)runtime);
         for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
             CHECK(((unsigned char *)runtime)[untouched[u]] == 0xa5);
         CHECK(runtime[0] == PTR(owner) && runtime[3] == 0 && runtime[4] == 0);
         CHECK(runtime[38] == 0 && runtime[39] == OT_NULL && runtime[40] == 0);
         CHECK(runtime[45] == 0 && runtime[46] == 15);
         CHECK(runtime[21] && runtime[22]==0 && runtime[24]==0);
-        CHECK(kinoko_act_find_first(PTR(runtime),"__kinoko_missing_find_contract__/*.none")==0);
-        CHECK(runtime[24]==0 && kinoko_act_find_name(PTR(runtime),1)==NULL);
-        CHECK(!kinoko_act_find_next(PTR(runtime),1) && !kinoko_act_find_close(PTR(runtime),1));
-        int32_t first=kinoko_act_find_first(PTR(runtime),"*");
-        int32_t second=kinoko_act_find_first(PTR(runtime),"*");
+        CHECK(kinoko_act_find_first((KinokoActRuntime *)runtime,"__kinoko_missing_find_contract__/*.none")==0);
+        CHECK(runtime[24]==0 && kinoko_act_find_name((KinokoActRuntime *)runtime,1)==NULL);
+        CHECK(!kinoko_act_find_next((KinokoActRuntime *)runtime,1) && !kinoko_act_find_close((KinokoActRuntime *)runtime,1));
+        int32_t first=kinoko_act_find_first((KinokoActRuntime *)runtime,"*");
+        int32_t second=kinoko_act_find_first((KinokoActRuntime *)runtime,"*");
         CHECK(first==1 && second==2 && runtime[22]==2);
-        CHECK(kinoko_act_find_name(PTR(runtime),first)!=NULL);
-        CHECK(kinoko_act_find_close(PTR(runtime),first) && runtime[22]==1);
-        CHECK(!kinoko_act_find_close(PTR(runtime),first));
-        CHECK(kinoko_act_find_name(PTR(runtime),first)==NULL);
-        CHECK(kinoko_act_find_first(PTR(runtime),"*")==3 && runtime[22]==2);
+        CHECK(kinoko_act_find_name((KinokoActRuntime *)runtime,first)!=NULL);
+        CHECK(kinoko_act_find_close((KinokoActRuntime *)runtime,first) && runtime[22]==1);
+        CHECK(!kinoko_act_find_close((KinokoActRuntime *)runtime,first));
+        CHECK(kinoko_act_find_name((KinokoActRuntime *)runtime,first)==NULL);
+        CHECK(kinoko_act_find_first((KinokoActRuntime *)runtime,"*")==3 && runtime[22]==2);
         /* Two open searches remain for the runtime destructor to close. */
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));

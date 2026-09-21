@@ -107,14 +107,14 @@ int32_t prepare_sprite(int32_t item, const BlitCommand& command) {
     return 0;
 }
 void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
-    const auto act = resource.get(&RuntimeRecord::act);
-    const DocumentView document(pointer(act));
+    const auto act = resource.get(&RuntimeRecord::active_document);
+    const DocumentView document(act);
     if (actor_index <= 64) {
         retdec_trace_i32("4525d0:actor-index", actor_index);
         retdec_trace_i32("4525d0:flag-68", load<int32_t>(resource.bytes(&RuntimeRecord::hidden)));
         retdec_trace_i32("4525d0:flag-8", load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)));
-        retdec_trace_i32("4525d0:field-10", resource.get(&RuntimeRecord::owned_storage));
-        retdec_trace_i32("4525d0:act", act);
+        retdec_trace_i32("4525d0:field-10", address(resource.get(&RuntimeRecord::active_holder)));
+        retdec_trace_i32("4525d0:act", address(act));
         if (act) {
             retdec_trace_squirrel_name("4525d0:actor-name", address(retdec_std_string_data(address(document.bytes(&DocumentLayers::name)))));
             retdec_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentLayers::visible)));
@@ -125,9 +125,9 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
     if (trace_index <= 8) {
         retdec_trace("4525d0:live-entry");
         retdec_trace_i32("4525d0:live-resource", self);
-        retdec_trace_i32("4525d0:live-act", act);
+        retdec_trace_i32("4525d0:live-act", address(act));
         if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(retdec_std_string_data(address(document.bytes(&DocumentLayers::name)))));
-        retdec_trace_squirrel_name("4525d0:live-resource-name", address(retdec_std_string_data(address(resource.bytes(&RuntimeRecord::name_storage)))));
+        retdec_trace_squirrel_name("4525d0:live-resource-name", address(retdec_std_string_data(address(resource.bytes(&RuntimeRecord::name)))));
     }
 }
 }
@@ -137,9 +137,9 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     const RuntimeView resource(pointer(self));
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
-    const auto act = resource.get(&RuntimeRecord::act);
+    const auto act = resource.get(&RuntimeRecord::active_document);
     if (!resource.get(&RuntimeRecord::stage_active) || !act) return 0;
-    const DocumentView document(pointer(act));
+    const DocumentView document(act);
     if (!document.get(&DocumentLayers::visible)) return 0;
     int32_t result = 0;
     const auto layers = document.get(&DocumentLayers::layers);
@@ -173,9 +173,9 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     DrawTarget target(resource.get(&RuntimeRecord::render_target), device);
     if (!resource.get(&RuntimeRecord::stage_active)) return 0;
-    const auto act = resource.get(&RuntimeRecord::act);
+    const auto act = resource.get(&RuntimeRecord::active_document);
     if (!act) return E_FAIL;
-    const DocumentView document(pointer(act));
+    const DocumentView document(act);
     if (!document.get(&DocumentLayers::visible)) return 0;
     const auto layers = document.get(&DocumentLayers::layers);
     if (!layers.begin || static_cast<int32_t>(layers.end) < static_cast<int32_t>(layers.begin)) return 0;

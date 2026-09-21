@@ -1964,9 +1964,7 @@ int32_t function_44fd20(void);
 int32_t function_44fd30(char a1);
 
 
-int32_t function_44fde0(int32_t result, int32_t a2);
 
-int32_t function_450020(int32_t resource);
 
 int32_t kinoko_clear_global_stages(void);
 int32_t kinoko_clear_global_sound(void);
@@ -9638,7 +9636,7 @@ int32_t retdec_act_resume_this(int32_t resource_ptr)
 
 // Address range: 0x451620 - 0x45162d
 int32_t function_451620(int32_t this_ptr) {
-    return kinoko_act_increment_frame(this_ptr, NULL);
+    return kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)this_ptr, NULL);
 }
 
 
@@ -14519,7 +14517,7 @@ static int32_t function_46f620_this(int32_t this_ptr) {
     kinoko_map_containers_clear(this_ptr);
 
     if (*(int32_t *)(intptr_t)(this_ptr + 20) != 0) {
-        retdec_destroy_act_runtime(*(int32_t *)(intptr_t)(this_ptr + 20));
+        kinoko_act_runtime_dispose(*(KinokoActRuntime **)(intptr_t)(this_ptr + 20));
         free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 20));
         *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
     }

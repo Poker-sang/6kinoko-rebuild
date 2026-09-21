@@ -1,5 +1,6 @@
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/map_containers.h"
+#include "kinoko/act_resource.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -8,7 +9,6 @@
 
 extern "C" {
 extern unsigned char g37;
-int32_t function_450020(int32_t player);
 }
 
 namespace {
@@ -34,7 +34,7 @@ extern "C" int32_t function_4701b0(int32_t destination,int32_t source) {
     const int32_t player=in.player;
     in.player=0;
     if(player!=out.player && out.player) {
-        function_450020(out.player);
+        kinoko_act_runtime_dispose(reinterpret_cast<KinokoActRuntime *>(out.player));
         std::free(reinterpret_cast<void*>(out.player));
     }
     out.player=player;

@@ -2,6 +2,7 @@
 #include "kinoko/act_frame.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/act_resource_records.hpp"
+#include "kinoko/stage_records.hpp"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/squirrel_pair.hpp"
@@ -10,31 +11,37 @@
 #include <map>
 #include <memory>
 
+namespace kinoko::act {
+struct FindEntry {
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATAA data{};
+    ~FindEntry() { if (handle != INVALID_HANDLE_VALUE) FindClose(handle); }
+};
+struct FindState {
+    std::map<int32_t, std::unique_ptr<FindEntry>> entries;
+};
+}
+
 namespace {
 using namespace kinoko::act;
 using kinoko::native::RecordView;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 
-RecordView<RuntimeRecord> runtime(int32_t value) { return RecordView<RuntimeRecord>(pointer<void>(value)); }
+RecordView<RuntimeRecord> runtime(KinokoActRuntime *value) { return RecordView<RuntimeRecord>(value); }
 int32_t* object_bytes(const RecordView<RuntimeRecord>& view) {
     return reinterpret_cast<int32_t*>(view.bytes(&RuntimeRecord::environment));
 }
-struct FindEntry {
-    HANDLE handle=INVALID_HANDLE_VALUE;
-    WIN32_FIND_DATAA data{};
-    ~FindEntry() { if (handle!=INVALID_HANDLE_VALUE) FindClose(handle); }
-};
-using FindMap=std::map<int32_t,std::unique_ptr<FindEntry>>;
-FindMap* finds(int32_t storage) {
-    return storage ? pointer<FindMap>(runtime(storage).get(&RuntimeRecord::find_storage)) : nullptr;
+using FindMap = decltype(FindState::entries);
+FindMap *finds(KinokoActRuntime *storage) {
+    const auto state = storage ? runtime(storage).get(&RuntimeRecord::find_state) : nullptr;
+    return state ? &state->entries : nullptr;
 }
-
 }
 
 // Original 452150..4522C0. IDs count successful starts, independently of the
 // number of live handles. FindNext writes the same per-search WIN32 data.
-extern "C" int32_t kinoko_act_find_first(int32_t storage, const char* pattern) {
+extern "C" int32_t kinoko_act_find_first(KinokoActRuntime *storage, const char* pattern) {
     auto* entries=finds(storage);
     if (!entries || !pattern) return 0;
     try {
@@ -50,13 +57,13 @@ extern "C" int32_t kinoko_act_find_first(int32_t storage, const char* pattern) {
         return static_cast<int32_t>(id);
     } catch (...) { return 0; }
 }
-extern "C" int32_t kinoko_act_find_next(int32_t storage, int32_t id) {
+extern "C" int32_t kinoko_act_find_next(KinokoActRuntime *storage, int32_t id) {
     auto* entries=finds(storage);
     if (!entries) return 0;
     const auto found=entries->find(id);
     return found!=entries->end() && FindNextFileA(found->second->handle,&found->second->data);
 }
-extern "C" int32_t kinoko_act_find_close(int32_t storage, int32_t id) {
+extern "C" int32_t kinoko_act_find_close(KinokoActRuntime *storage, int32_t id) {
     auto* entries=finds(storage);
     if (!entries) return 0;
     const auto found=entries->find(id);
@@ -67,7 +74,7 @@ extern "C" int32_t kinoko_act_find_close(int32_t storage, int32_t id) {
     runtime(storage).set(&RuntimeRecord::find_count,static_cast<uint32_t>(entries->size()));
     return FindClose(handle)!=0;
 }
-extern "C" const char* kinoko_act_find_name(int32_t storage, int32_t id) {
+extern "C" const char* kinoko_act_find_name(KinokoActRuntime *storage, int32_t id) {
     auto* entries=finds(storage);
     if (!entries) return nullptr;
     const auto found=entries->find(id);
@@ -80,17 +87,18 @@ extern "C" KinokoActRuntime *kinoko_act_runtime_initialize(
     KinokoActRuntime *storage, KinokoActSourceHolder *source_holder) {
     const RecordView<RuntimeRecord> view(storage);
     view.set(&RuntimeRecord::source_holder, source_holder);
-    view.set(&RuntimeRecord::act, Address{0});
-    view.set(&RuntimeRecord::owned_storage, Address{0});
+    view.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
+    view.set(&RuntimeRecord::active_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     view.view(&RuntimeRecord::draw_commands).clear();
     view.view(&RuntimeRecord::draw_sprites).clear();
     view.set(&RuntimeRecord::find_count, uint32_t{0});
-    view.set(&RuntimeRecord::find_storage,static_cast<Address>(address(new FindMap)));
-    view.set(&RuntimeRecord::name_capacity, uint32_t{15});
-    view.set(&RuntimeRecord::name_length, uint32_t{0});
-    *view.bytes(&RuntimeRecord::name_storage) = 0;
+    view.set(&RuntimeRecord::find_state, new FindState);
+    const auto name = view.view(&RuntimeRecord::name);
+    name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+    name.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+    *name.bytes(&kinoko::legacy::StringRecord::characters) = 0;
     view.set(&RuntimeRecord::current_time, int32_t{0});
-    view.set(&RuntimeRecord::vm, Address{0});
+    view.set(&RuntimeRecord::vm, static_cast<HSQUIRRELVM>(nullptr));
     view.set(&RuntimeRecord::stage_active, uint8_t{0});
     kinoko::script::pair::reset(object_bytes(view));
     view.set(&RuntimeRecord::render_target, uint32_t{0});
@@ -102,61 +110,44 @@ extern "C" KinokoActRuntime *kinoko_act_runtime_initialize(
     return storage;
 }
 
-// Old C fixtures still exchange integer address slots. Production source-holder
-// creation calls the typed initializer above directly.
-extern "C" int32_t function_44fde0(int32_t storage, int32_t source_holder) {
-    return address(kinoko_act_runtime_initialize(
-        pointer<KinokoActRuntime>(storage), pointer<KinokoActSourceHolder>(source_holder)));
-}
-
 // Preserve the recovered 450020/4513F0 order: stop, unregister, find handles,
 // lock, name, vectors, storage, cloned ACT, then the external VM reference.
-extern "C" void retdec_destroy_act_runtime(int32_t storage) {
+extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
+    if (!storage) return;
     const auto view = runtime(storage);
-    const auto vm = pointer<SQVM>(view.get(&RuntimeRecord::vm));
+    const auto vm = view.get(&RuntimeRecord::vm);
     const auto holder = view.get(&RuntimeRecord::source_holder);
-    // The holder stores a real document pointer. Convert only at the remaining
-    // RuntimeRecord::act integer slot; byte load does not overlay a C++ object.
-    const Address source = holder
-        ? static_cast<Address>(address(kinoko::legacy::load<KinokoActDocument *>(holder))) : 0;
+    const auto source = holder
+        ? RecordView<kinoko::stage::SourceHolderRecord>(holder).get(&kinoko::stage::SourceHolderRecord::document)
+        : nullptr;
     kinoko_act_end_stage(storage, nullptr);
     auto environment = kinoko::script::pair::read(object_bytes(view));
-    if (vm && sq_type(environment) == OT_TABLE && view.get(&RuntimeRecord::name_length)) {
+    const kinoko::legacy::StringView name(view.bytes(&RuntimeRecord::name));
+    if (vm && sq_type(environment) == OT_TABLE && name.length()) {
         const auto top = sq_gettop(vm);
         sq_pushobject(vm, environment);
-        const auto* name = view.bytes(&RuntimeRecord::name_storage);
-        Address heap_name;
-        if (view.get(&RuntimeRecord::name_capacity) >= 16) {
-            std::memcpy(&heap_name, name, sizeof(heap_name));
-            name = pointer<unsigned char>(heap_name);
-        }
-        sq_pushstring(vm, reinterpret_cast<const SQChar*>(name), -1);
+        sq_pushstring(vm, name.data(), -1);
         sq_deleteslot(vm, -2, SQFalse);
         sq_settop(vm, top);
     }
-    delete finds(storage);
-    view.set(&RuntimeRecord::find_storage, Address{0});
+    delete view.get(&RuntimeRecord::find_state);
+    view.set(&RuntimeRecord::find_state, static_cast<FindState *>(nullptr));
     view.set(&RuntimeRecord::find_count, uint32_t{0});
     DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(view.bytes(&RuntimeRecord::lock)));
-    kinoko::legacy::StringView(view.bytes(&RuntimeRecord::name_storage)).destroy();
+    name.destroy();
     // The existing recovered cleanup clears the first word, not the whole SSO buffer.
-    std::memset(view.bytes(&RuntimeRecord::name_storage), 0, sizeof(Address));
-    view.set(&RuntimeRecord::name_length, uint32_t{0});
-    view.set(&RuntimeRecord::name_capacity, uint32_t{15});
-    kinoko_act_draw_storage_destroy(storage);
-    std::free(pointer<void>(view.get(&RuntimeRecord::owned_storage)));
-    view.set(&RuntimeRecord::owned_storage, Address{0});
-    const auto act = view.get(&RuntimeRecord::act);
-    if (act && act != source) retdec_destroy_cact_with_flags(act, 1);
-    view.set(&RuntimeRecord::act, Address{0});
+    std::memset(view.bytes(&RuntimeRecord::name), 0, sizeof(Address));
+    view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+    view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+    kinoko_act_draw_storage_destroy(address(storage));
+    std::free(view.get(&RuntimeRecord::active_holder));
+    view.set(&RuntimeRecord::active_holder, static_cast<KinokoActSourceHolder *>(nullptr));
+    const auto act = view.get(&RuntimeRecord::active_document);
+    if (act && act != source) retdec_destroy_cact_with_flags(address(act), 1);
+    view.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
     environment = kinoko::script::pair::read(object_bytes(view));
     if (vm && (sq_type(environment) & SQOBJECT_REF_COUNTED))
         kinoko::script::pair::release(vm, object_bytes(view));
     kinoko::script::pair::reset(object_bytes(view));
-    view.set(&RuntimeRecord::vm, Address{0});
-}
-
-extern "C" int32_t function_450020(int32_t resource) {
-    if (resource) retdec_destroy_act_runtime(resource);
-    return resource;
+    view.set(&RuntimeRecord::vm, static_cast<HSQUIRRELVM>(nullptr));
 }

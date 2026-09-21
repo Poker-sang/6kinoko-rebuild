@@ -39,7 +39,7 @@ int32_t __fastcall delete_document(KinokoActDocument *document, void *, int32_t 
     if (state.latest_runtime) {
         const RuntimeView runtime(state.latest_runtime);
         CHECK(!runtime.get(&RuntimeRecord::source_holder));
-        CHECK(!runtime.get(&RuntimeRecord::act));
+        CHECK(!runtime.get(&RuntimeRecord::active_document));
     }
     ++state.deletes;
     // The real cleanup must re-read owner.runtime after this virtual callback.
@@ -48,7 +48,7 @@ int32_t __fastcall delete_document(KinokoActDocument *document, void *, int32_t 
         CHECK(replacement && state.owner);
         const RuntimeView runtime(replacement);
         runtime.set(&RuntimeRecord::source_holder, state.holder);
-        runtime.set(&RuntimeRecord::act, static_cast<uint32_t>(address(document)));
+        runtime.set(&RuntimeRecord::active_document, document);
         std::free(state.latest_runtime); // fixture contains no runtime-owned objects
         state.latest_runtime = replacement;
         OwnerView(state.owner).set(&OwnerRecord::runtime, replacement);
@@ -90,19 +90,19 @@ KinokoActRuntime *kinoko_act_runtime_initialize(KinokoActRuntime *storage, Kinok
     const RuntimeView runtime(state.latest_runtime);
     runtime.clear();
     runtime.set(&RuntimeRecord::source_holder, holder);
-    runtime.set(&RuntimeRecord::act, static_cast<uint32_t>(address(state.holder->document)));
+    runtime.set(&RuntimeRecord::active_document, state.holder->document);
     ++state.runtimes;
     return storage;
 }
-int32_t function_450020(int32_t storage) {
-    CHECK(pointer<KinokoActRuntime>(storage) == state.latest_runtime);
+void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
+    CHECK(storage == state.latest_runtime);
     const RuntimeView runtime(state.latest_runtime);
     CHECK(!runtime.get(&RuntimeRecord::source_holder));
-    CHECK(!runtime.get(&RuntimeRecord::act));
+    CHECK(!runtime.get(&RuntimeRecord::active_document));
     CHECK(state.deletes == 1); // source document before runtime destruction
     ++state.runtime_deletes;
     state.latest_runtime = nullptr;
-    return storage; // production stage cleanup owns the raw runtime allocation
+    // production stage cleanup owns the raw runtime allocation
 }
 int32_t retdec_root_table_construct_this(int32_t, int32_t, int32_t) {
     if (state.throw_publish) fail_next_new = true;
@@ -111,7 +111,7 @@ int32_t retdec_root_table_construct_this(int32_t, int32_t, int32_t) {
 void retdec_trace(const char *) {}
 void retdec_trace_i32(const char *, int32_t) {}
 void retdec_trace_squirrel_name(const char *, int32_t) {}
-int32_t __fastcall kinoko_act_increment_frame(int32_t, void *) { return 0; }
+int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *, void *) { return 0; }
 int32_t kinoko_act_update_frame(int32_t) { return 0; }
 int32_t kinoko_act_prepare_draw(int32_t) { return 0; }
 int32_t kinoko_act_draw(int32_t, float, float) { return 0; }

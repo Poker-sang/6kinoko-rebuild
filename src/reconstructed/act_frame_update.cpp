@@ -52,22 +52,22 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     static volatile LONG trace_count;
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 48) {
-        const auto act = self ? resource.get(&RuntimeRecord::act) : 0;
+        const auto act = self ? resource.get(&RuntimeRecord::active_document) : 0;
         retdec_trace_i32("451640:resource", self);
         retdec_trace_i32("451640:active", self ? load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)) : 0);
         retdec_trace_i32("451640:suspend", self ? load<int32_t>(resource.bytes(&RuntimeRecord::hidden)) : 0);
         retdec_trace_i32("451640:time", self ? resource.get(&RuntimeRecord::wake_time) : 0);
         retdec_trace_i32("451640:current", self ? resource.get(&RuntimeRecord::current_time) : 0);
-        retdec_trace_i32("451640:act", act);
+        retdec_trace_i32("451640:act", address(act));
         if (act) retdec_trace_squirrel_name("451640:act-name", address(retdec_std_string_data(
-            address(RecordView<DocumentLayers>(pointer(act)).bytes(&DocumentLayers::name)))));
+            address(RecordView<DocumentLayers>(act).bytes(&DocumentLayers::name)))));
     }
     if (!self || resource.get(&RuntimeRecord::hidden)) {
         if (trace_index <= 48) retdec_trace("451640:skip-suspended");
         return 0;
     }
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
-    if (!resource.get(&RuntimeRecord::stage_active) || !resource.get(&RuntimeRecord::owned_storage)) return E_FAIL;
+    if (!resource.get(&RuntimeRecord::stage_active) || !resource.get(&RuntimeRecord::active_holder)) return E_FAIL;
     kinoko_act_commands_clear(self);
     // 4516C4 is JNB: compare DWORDs, including uptime above 0x80000000.
     if (resource.get(&RuntimeRecord::wake_time) >= timeGetTime()) {
@@ -90,9 +90,9 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     if (trace_index <= 48) retdec_trace_i32("451640:layer-count", count < 0 ? -1 : count);
     if (count <= 0) return 0;
     for (int32_t index = 0;;) {
-        if (resource.get(&RuntimeRecord::stage_active) && resource.get(&RuntimeRecord::owned_storage)) {
+        if (resource.get(&RuntimeRecord::stage_active) && resource.get(&RuntimeRecord::active_holder)) {
             int32_t temporary = 0;
-            kinoko_act_layer_holder(resource.get(&RuntimeRecord::owned_storage), index, address(&temporary));
+            kinoko_act_layer_holder(address(resource.get(&RuntimeRecord::active_holder)), index, address(&temporary));
             Allocation<int32_t> holder(pointer<int32_t>(temporary));
             if (!holder) return 0;
             if (function_41efb0(load<int32_t>(holder.get())) < 0) return E_FAIL;
