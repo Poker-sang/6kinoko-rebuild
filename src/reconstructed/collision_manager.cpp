@@ -1,0 +1,151 @@
+#include "kinoko/collision_records.hpp"
+#include "kinoko/actor_records.hpp"
+#include "kinoko/actor_methods.h"
+#include "kinoko/map_layout_records.hpp"
+#include "kinoko/legacy_memory.hpp"
+#include "kinoko/native_buffer.h"
+#include "kinoko/native_control.h"
+#include <climits>
+#include <cstring>
+
+extern "C" void retdec_trace_i32(const char *, int32_t);
+
+namespace {
+using namespace kinoko::collision;
+using namespace kinoko::actor;
+using namespace kinoko::map;
+using kinoko::legacy::address;
+using kinoko::legacy::pointer;
+
+template<class T> int32_t buffer_count(const Buffer<T>& buffer) {
+    const uint32_t bytes = static_cast<uint32_t>(address(buffer.end)) -
+        static_cast<uint32_t>(address(buffer.begin));
+    return kinoko::legacy::load<int32_t>(&bytes) / static_cast<int32_t>(sizeof(T));
+}
+template<class T> bool reserve(kinoko::native::RecordView<Buffer<T>> buffer, uint32_t count) {
+    return count <= INT32_MAX / sizeof(T) &&
+        kinoko_native_buffer_ensure(address(buffer.data()), count * sizeof(T));
+}
+
+// A successful lock owns precisely one temporary strong reference. The native
+// pair ABI uses integer words; convert only here, never retain the borrowed Actor.
+class LockedParent final {
+    int32_t words_[2]{};
+public:
+    explicit LockedParent(ActorReference *reference) {
+        kinoko_native_weak_pair_lock(address(reference), words_);
+    }
+    ~LockedParent() { kinoko_native_release_strong(words_[1]); }
+    LockedParent(const LockedParent&) = delete;
+    LockedParent& operator=(const LockedParent&) = delete;
+    KinokoActor *actor() const {
+        return words_[0] ? kinoko::legacy::load<KinokoActor *>(pointer(words_[0])) : nullptr;
+    }
+    bool has_slot() const { return words_[0] != 0; }
+};
+}
+
+extern "C" KinokoActor *kinoko_collision_register_map(KinokoCollisionState *state,
+    KinokoActLayout *layout) {
+    if (!layout) return nullptr;
+    const StateView collision(state);
+    const int32_t count = buffer_count(collision.get(&StateRecord::layouts));
+    const auto layouts = collision.view(&StateRecord::layouts);
+    const auto parents = collision.view(&StateRecord::map_parents);
+    const auto ends = collision.view(&StateRecord::layer_hit_ends);
+    const uint32_t required = static_cast<uint32_t>(count) + 1;
+    if (!reserve(layouts, required) || !reserve(parents, required) || !reserve(ends, required))
+        return nullptr;
+    for (int32_t index = 0; auto *record = placement_at(layout, index); ++index) {
+        const PlacementView placement(record);
+        placement.set(&Placement::fractional_left, static_cast<float>(placement.get(&Placement::left)));
+        placement.set(&Placement::fractional_top, static_cast<float>(placement.get(&Placement::top)));
+    }
+    auto *actor = kinoko_actor_create_collision_proxy(collision.get(&StateRecord::manager));
+    if (!actor) return nullptr;
+    const ActorView proxy(actor);
+    proxy.set(&ActorRecord::world_bounds, Bounds{-65535.0f, -65535.0f, 65535.0f, 65535.0f});
+    proxy.set(&ActorRecord::update_group, uint32_t{0x80000000u});
+    proxy.set(&ActorRecord::active, uint8_t{0});
+    proxy.set(&ActorRecord::registration_flag20, uint8_t{1});
+    kinoko_actor_reset_priority(address(actor), -1);
+
+    // 4684A0/468580: move existing entries without changing their weak counts.
+    auto *layout_records = layouts.get(&Buffer<KinokoActLayout *>::begin);
+    auto *parent_records = parents.get(&Buffer<ActorReference>::begin);
+    std::memmove(layout_records + 1, layout_records, count * sizeof(*layout_records));
+    std::memmove(parent_records + 1, parent_records, count * sizeof(*parent_records));
+    layout_records[0] = layout;
+    parent_records[0] = ReferenceView(proxy.bytes(&ActorRecord::owner)).load();
+    kinoko_native_add_weak(address(parent_records[0].control));
+    layouts.set(&Buffer<KinokoActLayout *>::end, layout_records + required);
+    parents.set(&Buffer<ActorReference>::end, parent_records + required);
+    auto *hit_ends = ends.get(&Buffer<int32_t>::begin);
+    hit_ends[count] = 0;
+    ends.set(&Buffer<int32_t>::end, hit_ends + required);
+    retdec_trace_i32("actor:collision-layout-count", count + 1);
+    return actor;
+}
+
+extern "C" int32_t kinoko_collision_query_actor_map(KinokoCollisionState *state,
+    KinokoActLayout *layout, KinokoActor *actor, int32_t layer_index, int32_t *count) {
+    const ActorView view(actor);
+    const auto bounds = view.get(&ActorRecord::world_bounds);
+    // Original per-layer cache starts at 480. Retain the caller's layer-index
+    // contract; do not add an invented cap to the legacy address calculation.
+    auto *cached = reinterpret_cast<int32_t *>(view.bytes(&ActorRecord::collision_scan_cache) +
+        sizeof(int32_t) * layer_index);
+    return kinoko_map_collision_query(state, layout, cached,
+        static_cast<int32_t>(bounds.left - 24.0f), static_cast<int32_t>(bounds.top - 24.0f),
+        static_cast<int32_t>(bounds.right + 24.0f), static_cast<int32_t>(bounds.bottom + 24.0f), count);
+}
+
+extern "C" int32_t kinoko_collision_move_actor(KinokoCollisionState *state,
+    KinokoActor *actor, float dx, float dy) {
+    const StateView collision(state);
+    const ActorView moving(actor);
+    int32_t count = 0;
+    const int32_t layer_count = buffer_count(collision.get(&StateRecord::layouts));
+    if (moving.get(&ActorRecord::collision_mask) & 1) {
+        for (int32_t index = 0; index < layer_count; ++index) {
+            auto *layout = collision.get(&StateRecord::layouts).begin[index];
+            auto *layer = LayoutView(layout).get(&LayoutRecord::owning_layer);
+            if (!layer || !LayerView(layer).get(&LayerRecord::visible)) continue;
+            auto *parent = collision.get(&StateRecord::map_parents).begin + index;
+            if (!kinoko_collision_query_actor_map(state, layout, actor, index, &count)) return 0;
+            collision.get(&StateRecord::layer_hit_ends).begin[index] = count;
+            const auto step = ReferenceView(moving.bytes(&ActorRecord::step)).load();
+            if (step.slot == parent->slot && step.control)
+                kinoko_actor_set_collision_parent(actor, nullptr);
+        }
+    }
+    for (int32_t index = 0; index < collision.get(&StateRecord::actor_count); ++index) {
+        auto *other = collision.get(&StateRecord::actors).begin[index];
+        const ActorView candidate(other);
+        if (other == actor || !(candidate.get(&ActorRecord::collision_group) &
+                               moving.get(&ActorRecord::collision_mask))) continue;
+        const auto other_bounds = candidate.get(&ActorRecord::world_bounds);
+        const auto bounds = moving.get(&ActorRecord::world_bounds);
+        if (other_bounds.right + 24 >= bounds.left && other_bounds.left - 24 <= bounds.right) {
+            // The old ActorRecord still exposes these slots as serialized words;
+            // read their established pointer layout at this explicit boundary.
+            const auto record = kinoko::native::RecordView<KinokoCollisionRecord>(
+                candidate.bytes(&ActorRecord::collision_records)).load();
+            if (!kinoko_map_collision_append(state, &count, record.chip, record.layout, record.index)) return 0;
+        }
+    }
+    const int32_t support = kinoko_actor_collision_move(actor,
+        collision.get(&StateRecord::hits).begin, count, dx, dy);
+    if (support >= 0 && (moving.get(&ActorRecord::collision_mask) & 1)) {
+        for (int32_t index = 0; index < layer_count; ++index) {
+            if (support < collision.get(&StateRecord::layer_hit_ends).begin[index]) {
+                const LockedParent parent(collision.get(&StateRecord::map_parents).begin + index);
+                if (parent.has_slot()) {
+                    kinoko_actor_set_collision_parent(actor, parent.actor());
+                    break;
+                }
+            }
+        }
+    }
+    return 1;
+}

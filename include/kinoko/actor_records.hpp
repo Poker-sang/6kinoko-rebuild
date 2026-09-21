@@ -23,11 +23,13 @@ struct ActorRecord {
     Address vtable;
     std::array<unsigned char, 4> unknown4;
     std::int32_t type;
-    std::array<unsigned char, 10> unknown12;
+    std::array<unsigned char, 8> unknown12;
+    std::uint8_t registration_flag20, visible;
     std::uint8_t release_pending, unknown23;
     Address owner, owner_control; // strong native control; not a VM reference
     Address step, step_control;   // weak native control
-    std::array<unsigned char, 4> unknown40;
+    std::uint8_t active;
+    std::array<unsigned char, 3> unknown41;
     ScriptStorage script_object, update_callback, collision_callback;
     std::array<unsigned char, 16> unknown80;
     ScriptStorage object96, object108;
@@ -42,19 +44,22 @@ struct ActorRecord {
     std::int32_t take, frame_index, frame_time, animation_flags;
     std::array<unsigned char, 4> unknown224;
     std::int32_t priority;
-    std::array<unsigned char, 8> unknown232;
+    std::uint32_t update_group, flags;
     float x, y;
     std::array<unsigned char, 24> unknown248;
     float direction;
-    std::array<unsigned char, 52> unknown276;
+    std::array<unsigned char, 36> unknown276;
+    std::uint32_t collision_group, collision_mask, callback_group, callback_mask;
     Address collision_records, collision_slots;
-    std::array<unsigned char, 4> unknown336;
+    std::int32_t collision_index;
     std::array<unsigned char, 12> inline_slots;
     float bounds_anchor_x, bounds_anchor_y;
     std::array<unsigned char, 16> unknown360;
     InitialData initial;
     Bounds local_bounds, world_bounds;
-    std::array<unsigned char, 56> unknown456;
+    Bounds previous_bounds;
+    std::uint32_t collision_flags, unknown476;
+    std::array<int32_t, 8> collision_scan_cache;
     // Remaining storage begins with the layer cache. No new bound check or
     // guessed supported layer count is imposed on the original GetChipID ABI.
     std::array<unsigned char, 32> chip_cache_storage;
@@ -114,6 +119,13 @@ static_assert(sizeof(AnimationRecord) == 48 && sizeof(FrameRecord) == 248);
 static_assert(sizeof(ManagerPrefix) == 124);
 #define KINOKO_ACTOR_FIELD(T, M, O) static_assert(offsetof(T, M) == O)
 KINOKO_ACTOR_FIELD(ActorRecord, type, 8);
+KINOKO_ACTOR_FIELD(ActorRecord, registration_flag20, 20);
+KINOKO_ACTOR_FIELD(ActorRecord, active, 40);
+KINOKO_ACTOR_FIELD(ActorRecord, update_group, 232);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_group, 312);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_mask, 316);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_index, 336);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_scan_cache, 480);
 KINOKO_ACTOR_FIELD(ActorRecord, release_pending, 22);
 KINOKO_ACTOR_FIELD(ActorRecord, owner, 24);
 KINOKO_ACTOR_FIELD(ActorRecord, owner_control, 28);

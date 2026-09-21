@@ -6171,6 +6171,27 @@ int main(int argc, char **argv) {
         retired_layout[67] = PTR(records + 2);
         proxy = function_4693a0(PTR(retired_layout));
         CHECK(proxy != 0);
+        /* R139: front insertion keeps map/weak-parent pairs aligned. */
+        int32_t second_layout[116];
+        memcpy(second_layout, retired_layout, sizeof(second_layout));
+        int32_t first_count = (g_514300_storage[2] - g_514300_storage[1]) / 4;
+        int32_t second_proxy = function_4693a0(PTR(second_layout));
+        CHECK(second_proxy != 0);
+        CHECK((g_514300_storage[2] - g_514300_storage[1]) / 4 == first_count + 1);
+        CHECK((g_514300_storage[14] - g_514300_storage[13]) / 8 == first_count + 1);
+        CHECK((g_514300_storage[6] - g_514300_storage[5]) / 4 == first_count + 1);
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[1])[0] == PTR(second_layout));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[1])[1] == PTR(retired_layout));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[13])[0] == *(int32_t*)(intptr_t)(second_proxy+24));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[13])[2] == *(int32_t*)(intptr_t)(proxy+24));
+        CHECK(*(uint32_t*)(intptr_t)(second_proxy+232) == 0x80000000u);
+        CHECK(*(uint8_t*)(intptr_t)(second_proxy+40) == 0);
+        CHECK(*(uint8_t*)(intptr_t)(second_proxy+20) == 1);
+        CHECK(*(float*)(intptr_t)(second_proxy+440) == -65535.0f);
+        CHECK(*(float*)(intptr_t)(second_proxy+452) == 65535.0f);
+        CHECK(*(int32_t*)(intptr_t)(second_proxy+228) == -1);
+        CHECK(((float*)records[0])[3] == (float)records[0][1]);
+        CHECK(((float*)records[0])[4] == (float)records[0][2]);
         control = *(int32_t *)(intptr_t)(proxy + 28);
         CHECK(*(int32_t *)(intptr_t)(control + 4) == 1);
         function_469700();
@@ -6273,7 +6294,7 @@ int main(int argc, char **argv) {
     }
     function_4a9d70_this(PTR(closure));
     {
-        int32_t actor, animation[7] = {0};
+        int32_t actor, map_proxy, animation[7] = {0};
         function_469700();
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         layout[66] = PTR(records);
@@ -6288,7 +6309,8 @@ int main(int argc, char **argv) {
         *(int16_t *)(chips[0].bytes + 14) = 32;
         *(int16_t *)(chips[0].bytes + 34) = 0;
         *(uint32_t *)(chips[0].bytes + 16) = 0;
-        CHECK(function_4693a0(PTR(layout)));
+        map_proxy = function_4693a0(PTR(layout));
+        CHECK(map_proxy);
         actor = function_463b40_this(manager, PTR(&g16), g483, g484,
             50, 40, -1, PTR(&g16), g483, g484, 0);
         CHECK(actor);
@@ -6314,6 +6336,9 @@ int main(int argc, char **argv) {
         CHECK(*(float *)(intptr_t)(actor + 244) == 100);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         CHECK(*(int32_t *)(intptr_t)(actor + 36) != 0);
+        CHECK(*(int32_t *)(intptr_t)g_514300_storage[5] == 1);
+        CHECK(*(int32_t *)(intptr_t)(actor+32) == *(int32_t *)(intptr_t)(map_proxy+24));
+        CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(map_proxy+28)+4) == 1);
         *(float *)(intptr_t)(actor + 260) = -6;
         function_45ec60(actor);
         CHECK(*(float *)(intptr_t)(actor + 244) == 94);
@@ -6396,6 +6421,22 @@ int main(int argc, char **argv) {
             CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
             found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
             CHECK(count == 1 && found[0].index == 2);
+        }
+        {
+            /* Complete the R139 query chain with two registered layers. */
+            int32_t second_map[116];
+            memcpy(second_map, layout, sizeof(second_map));
+            CHECK(function_4693a0(PTR(second_map)));
+            *(int16_t *)(chips[0].bytes + 34) = 0;
+            position_actor(actor, 144, 100);
+            CHECK(retdec_actor_collide_move(actor, 0.0f, 0.0f));
+            int32_t *ends = (int32_t*)(intptr_t)g_514300_storage[5];
+            KinokoCollisionRecord *found = (KinokoCollisionRecord*)(intptr_t)g_514300_storage[9];
+            CHECK(ends[0] == 1 && ends[1] == 2);
+            CHECK(found[0].index == 2 && found[1].index == 2);
+            /* Retire the borrowed stack layout before leaving this scope. */
+            function_469700();
+            CHECK(function_468950_this(PTR(g_514300_storage), manager));
         }
         function_469700();
         function_468950_this(PTR(g_514300_storage), manager);

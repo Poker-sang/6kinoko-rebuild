@@ -4,20 +4,12 @@
 #include "kinoko/actor_collision.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/native_buffer.h"
+#include "kinoko/collision_records.hpp"
 #include <climits>
 
 namespace {
 using namespace kinoko::map;
-struct HitBuffer {
-    KinokoCollisionRecord *begin, *end;
-    void *storage_owner; // native_buffer owns allocation; hits borrow map storage
-};
-struct CollisionStateRecord {
-    std::array<uint8_t, 36> actor_and_layer_buffers;
-    HitBuffer hits;
-};
-using StateView = kinoko::native::RecordView<CollisionStateRecord>;
-static_assert(offsetof(CollisionStateRecord, hits) == 36);
+using namespace kinoko::collision;
 static_assert(sizeof(HitBuffer) == 12 && sizeof(KinokoCollisionRecord) == 12);
 }
 
@@ -25,7 +17,7 @@ extern "C" int32_t kinoko_map_collision_append(KinokoCollisionState *state,
     int32_t *count, const unsigned char *chip, const void *placement, int32_t index) {
     const uint32_t required = static_cast<uint32_t>(*count) + 1;
     if (required > INT32_MAX / sizeof(KinokoCollisionRecord)) return 0;
-    auto hits = StateView(state).view(&CollisionStateRecord::hits);
+    auto hits = StateView(state).view(&StateRecord::hits);
     // The sole integer-pointer boundary is the existing native_buffer ABI.
     if (!kinoko_native_buffer_ensure(kinoko::legacy::address(hits.data()),
             required * sizeof(KinokoCollisionRecord))) return 0;
