@@ -1,4 +1,4 @@
-/* R134 regression source. Builds with stage_contract; execution is user-owned.
+/* R134/R135 regression source. Builds with stage_contract; execution is user-owned.
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
 static int test_map_lazy_binding(int32_t vm, int32_t *root) {
@@ -13,6 +13,9 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     int32_t records[1][8] = {{4,7,8,0,0,0,1,0}};
     CHECK(resource && data && layer && key && map);
     CHECK(kinoko_act_document_initialize((KinokoActDocument*)source));
+    retdec_string_assign_n(source+4,"RegistrationProbe",17);
+    retdec_string_assign_n((int32_t*)(intptr_t)(layer+112),"mapProbe",8);
+    ((float*)map)[80] = 1.0f;
     data->chip_count = 1;
     data->chips = (struct retdec_mcd_chip*)calloc(1,sizeof(*data->chips));
     CHECK(data->chips);
@@ -34,7 +37,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     kinoko_act_array_append(PTR(source)+224,PTR(resource));
     kinoko_act_array_append(PTR(source)+208,layer);
 
-    for (int query = 0; query != 2; ++query) {
+    for (int query = 0; query != 4; ++query) {
         KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument*)source,NULL);
         CHECK(copy);
         int32_t *doc = (int32_t*)copy;
@@ -65,7 +68,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(kinoko_map_update(PTR(layout),0,0,100,100) == (int32_t)E_FAIL);
             CHECK(layout[79] == 0);
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
-        } else {
+        } else if (query == 1) {
             int32_t klass[2] = {g483,g484}, instance[2] = {g483,g484};
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
             CHECK(retdec_publish_c2dmaplayout_class(vm,PTR(root),klass));
@@ -84,11 +87,44 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             retdec_sqrat_release_pair(vm,instance);
             retdec_sqrat_release_pair(vm,klass);
         }
+        if (query >= 2) {
+            int32_t runtime[48] = {0}, parent[2] = {g483,g484}, active = 0;
+            CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
+            CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
+            CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
+            CHECK(retdec_sqrat_new_table(vm,parent));
+            CHECK(retdec_sqrat_set_pair(vm,root+2,"RegistrationProbe",parent));
+            CHECK(execute_source(vm,parent,"resource <- {};"));
+            runtime[39] = root[2]; runtime[40] = root[3];
+            /* Original 452040 excludes layers with timeline extras. */
+            if (query == 3) *(int32_t*)(intptr_t)(cloned_layer+196) = 1;
+            CHECK(retdec_publish_act_layers(vm,PTR(copy),PTR(runtime),&active));
+            CHECK(active == 1);
+            if (query == 2) {
+                CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == PTR(layout)+320);
+                CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == PTR(layout)+328);
+                CHECK(layout[79] == 0); /* Register does not force SetLayer. */
+                CHECK(execute_source(vm,parent,
+                    "if (mapProbe.layout == mapProbe.script.layout) throw \"shared wrapper\";"
+                    "mapProbe.alpha -= 0.25; mapProbe.blend = 1;"
+                    "if (mapProbe.layout.alpha != 0.75 || mapProbe.script.layout.alpha != 0.75) throw \"alpha alias\";"
+                    "if (mapProbe.layout.blend != 1) throw \"blend alias\";"
+                    "mapProbe.script.layout.alpha = 0.5;"
+                    "if (mapProbe.alpha != 0.5) throw \"reverse alpha alias\";"));
+                CHECK(((float*)map)[80] == 1.0f);
+            } else {
+                CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
+                CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
+                *(int32_t*)(intptr_t)(cloned_layer+196) = 0;
+            }
+            CHECK(execute_source(vm,root+2,"delete RegistrationProbe;"));
+            retdec_sqrat_release_pair(vm,parent);
+        }
         CHECK(map[79] == 0); /* No mutation of the source layout's cache. */
         retdec_destroy_cact_with_flags(PTR(copy),1);
     }
     retdec_destroy_cact_object(PTR(source));
     g664 = previous_default_vm;
-    puts("PASS: virtual ACT clone lazy map binding in Update and invisible event query");
+    puts("PASS: virtual ACT clone lazy map binding and publication property aliases");
     return 0;
 }

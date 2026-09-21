@@ -1879,9 +1879,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     for (int32_t index = 0; index < layer_count; ++index) {
         int32_t layer = field<int32_t>(layer_begin + index * 4);
         int32_t layer_pair[2] = { g483, g484 };
-        int32_t script_pair[2] = { g483, g484 };
-        int32_t layout_pair[2] = { g483, g484 };
-        int32_t script_layout_pair[2] = { g483, g484 };
         int32_t script_ptr;
         int32_t node;
         int32_t sentinel;
@@ -1907,8 +1904,6 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         layer_pair[0] = field<int32_t>(layer + 336);
         layer_pair[1] = field<int32_t>(layer + 340);
         function_48a400(vm, address(layer_pair));
-        script_pair[0] = field<int32_t>(layer + 316);
-        script_pair[1] = field<int32_t>(layer + 320);
         script_ptr = layer + 204;
         script_path = retdec_std_string_data(script_ptr + 64);
         layer_name = retdec_std_string_data(layer + 112);
@@ -1967,7 +1962,10 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
             retdec_trace_i32("act:publish-layer-list-count",
                              field<int32_t>(layer + 0xb8));
         }
-        while (node != 0 && node != sentinel) {
+        // 450C62 -> 452040 selects only the first key of a non-timeline
+        // layer. Do not search later keys for a supported concrete type.
+        if (field<int32_t>(layer + 196) == 0 &&
+            field<int32_t>(layer + 184) != 0 && node != 0 && node != sentinel) {
             int32_t key = field<int32_t>(node + 8);
             int32_t candidate = key != 0
                 ? field<int32_t>(key + 4) : 0;
@@ -1979,61 +1977,20 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                  candidate != 0
                                      ? field<int32_t>(candidate) : 0);
             }
-            if (candidate != 0 &&
-                (field<int32_t>(candidate) == address(kinoko_act_host_symbols()->layout_vtable) ||
-                 field<int32_t>(candidate) == address(kinoko_act_host_symbols()->map_layout_vtable) ||
-                 field<int32_t>(candidate) == address(g350))) {
-                layout = candidate;
-                have_layout = 1;
-                break;
-            }
-            node = field<int32_t>(node);
+            layout = candidate;
+            have_layout = layout != 0;
         }
         if (index < 16) {
             retdec_trace_i32("act:publish-layer-have-layout", have_layout);
             retdec_trace_i32("act:publish-layer-layout", layout);
         }
-        retdec_sqrat_release_pair(vm, layout_class_pair);
-        if(have_layout && field<int32_t>(layout)==address(g350))
-            kinoko_publish_string_layout_class(vm,address(root_object),layout_class_pair);
-        else if (have_layout && field<int32_t>(layout) == address(kinoko_act_host_symbols()->map_layout_vtable))
-            retdec_publish_c2dmaplayout_class(vm, address(root_object), layout_class_pair);
-        else
-            get_pair(address(root_object), "C2DLayout", layout_class_pair);
-        if (have_layout && layout_class_pair[0] == 0x08004000 &&
-            layout_class_pair[1] != 0 &&
-            retdec_create_unbound_instance(vm, layout_class_pair, layout,
-                                            layout_pair)) {
-            if(field<int32_t>(layout)==address(g350)) {
-                field<int32_t>(layer+52)=layout+152;field<int32_t>(layer+56)=layout+156;
-                field<int32_t>(layer+60)=layout+96;field<int32_t>(layer+64)=layout+100;field<int32_t>(layer+68)=layout+104;
-            }
-            (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
-                                             layout_pair);
-            retdec_sqrat_release_pair(vm, layout_pair);
-
-            /* C2DLayout::Register repeats the same native association for
-               the script table, producing a distinct C2DLayout instance. */
-            if (!retdec_create_unbound_instance(
-                    vm, layout_class_pair, layout, script_layout_pair) ||
-                !retdec_sqrat_set_pair(vm, script_pair, "layout",
-                                       script_layout_pair)) {
-                retdec_trace_i32("act:script-layout-publish-failed", index);
-                retdec_sqrat_release_pair(vm, script_layout_pair);
-                retdec_sqrat_release_pair(vm, layer_pair);
-                retdec_sqrat_release_pair(vm, parent_pair);
-                retdec_sqrat_release_pair(vm, layout_class_pair);
-                retdec_sqrat_release_pair(vm, class_pair);
-                retdec_sqrat_object_release(address(root_object));
-                return 0;
-            }
-            retdec_sqrat_release_pair(vm, script_layout_pair);
-        } else {
-            int32_t null_pair[2] = { g483, g484 };
-            (void)retdec_sqrat_raw_set_pair(vm, layer_pair, "layout",
-                                             null_pair);
-            if (have_layout)
-                retdec_trace_i32("act:layout-instance-missing", index);
+        if (have_layout) {
+            // 450C79 dispatches Register, not just the two SQ wrappers.
+            // Derived registration also binds the layer's property aliases
+            // to this cloned layout (4341F0 for map alpha/blend).
+            const int32_t result = retdec_call_thiscall0_result(
+                pointer<void>(layout), field<void*>(field<int32_t>(layout) + 36));
+            retdec_trace_i32("act:layout-register-result", result);
         }
         retdec_trace_i32("act:layer-published", index);
         if (active_count != nullptr)
