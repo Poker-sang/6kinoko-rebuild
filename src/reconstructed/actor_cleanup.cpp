@@ -1,3 +1,4 @@
+#include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/actor_cleanup.h"
 #include "kinoko/actor_records.hpp"
@@ -15,11 +16,6 @@ namespace {
 using namespace kinoko::actor;
 using kinoko::native::RecordView;
 
-struct AnimationTreeNode {
-    AnimationTreeNode *left, *parent, *right;
-    int32_t key, value;
-    uint8_t color, sentinel;
-};
 struct AnimationListNode {
     AnimationListNode *next, *previous;
     uint8_t unknown[8];
@@ -31,8 +27,6 @@ struct AnimationList {
 };
 
 static_assert(sizeof(void *) == 4);
-static_assert(sizeof(AnimationTreeNode) == 24);
-static_assert(offsetof(AnimationTreeNode, sentinel) == 21);
 static_assert(offsetof(AnimationListNode, frames_begin) == 16);
 
 template <typename T>
@@ -43,34 +37,8 @@ int32_t address(const void *value) {
     return static_cast<int32_t>(reinterpret_cast<uintptr_t>(value));
 }
 
-// Original 429C70/4634D0: recurse right, then delete while walking left.
-// The sentinel and payloads are owned by the surrounding container.
-template <typename Node>
-Node *erase_subtree(Node *node) {
-    while (node && !node->sentinel) {
-        erase_subtree(node->right);
-        Node *next = node->left;
-        std::free(node);
-        node = next;
-    }
-    return node;
 }
 
-template <typename Node>
-void clear_tree(Node *head, int32_t &size) {
-    if (head) {
-        erase_subtree(head->parent);
-        head->left = head;
-        head->parent = head;
-        head->right = head;
-    }
-    size = 0;
-}
-}
-
-extern "C" int32_t kinoko_erase_animation_tree(int32_t node) {
-    return address(erase_subtree(pointer<AnimationTreeNode>(node)));
-}
 // 464D90: unlink the owning list before releasing frame payloads and storage.
 extern "C" int32_t kinoko_clear_animation_list(int32_t list_address) {
     if (!list_address)
@@ -119,9 +87,8 @@ extern "C" int32_t kinoko_clear_actor_manager(int32_t manager) {
     const auto actors = state.view(&ManagerPrefix::actors);
     function_463730(address(actors.data()));
     const auto animations = state.view(&ManagerPrefix::animation_lookup);
-    auto animation_count = animations.get(&TreeIndex::count);
-    clear_tree(pointer<AnimationTreeNode>(static_cast<int32_t>(animations.get(&TreeIndex::head))), animation_count);
-    animations.set(&TreeIndex::count, animation_count);
+    kinoko_integer_map_clear(animations.get(&TreeIndex::head));
+    animations.set(&TreeIndex::count,int32_t{0});
     kinoko_clear_animation_list(address(state.bytes(&ManagerPrefix::animations)));
     kinoko_priority_clear(address(actors.data()));
     const auto iteration = state.view(&ManagerPrefix::iteration);

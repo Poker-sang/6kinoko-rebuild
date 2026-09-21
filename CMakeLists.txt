@@ -45,6 +45,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
+    src/reconstructed/integer_map.cpp
+    src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/script_callbacks.cpp
@@ -193,7 +195,6 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_serializable.cpp
     src/reconstructed/actor_owner_list.cpp
-    src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_pool.cpp
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp

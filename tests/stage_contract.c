@@ -166,7 +166,7 @@ static int32_t pat_lookup(int32_t manager, int32_t take) {
     int32_t entry = 0;
     function_4706c0_this(manager + 36, &entry, &take);
     return entry == *(int32_t *)(intptr_t)(manager + 40) ? 0 :
-        *(int32_t *)(intptr_t)(entry + 16);
+        *(int32_t *)(intptr_t)entry;
 }
 
 static int test_pat_records(int32_t manager) {
@@ -2274,48 +2274,32 @@ static int test_gc_mark_link(void) {
 }
 
 static int test_shutdown_tree_cleanup(void) {
-    for (int layout = 1; layout < 2; ++layout) {
-        unsigned char sentinel[24] = {0};
-        int32_t *nodes[7];
-        int sentinel_offset = layout ? 21 : 17;
-        int32_t sentinel_address = PTR(sentinel);
-        sentinel[sentinel_offset] = 1;
-        for (int i = 0; i < 7; ++i) {
-            nodes[i] = (int32_t *)calloc(1, layout ? 24 : 20);
-            CHECK(nodes[i]);
-            nodes[i][0] = nodes[i][1] = nodes[i][2] = sentinel_address;
-        }
-        for (int i = 0; i < 3; ++i) {
-            nodes[i][0] = PTR(nodes[2*i+1]);
-            nodes[i][2] = PTR(nodes[2*i+2]);
-            nodes[2*i+1][1] = nodes[2*i+2][1] = PTR(nodes[i]);
-        }
-        CHECK(function_429c70(PTR(nodes[0]))
-            == sentinel_address);
-        CHECK(sentinel[sentinel_offset] == 1);
-        CHECK(function_429c70(sentinel_address)
-            == sentinel_address);
+    {
+        int32_t map=kinoko_integer_map_create();
+        int32_t slot=kinoko_integer_map_put(map,-7,12);
+        CHECK(kinoko_integer_map_find(map,-7)==slot && *(int32_t*)(intptr_t)slot==12);
+        CHECK(kinoko_integer_map_put(map,-7,19)==slot && kinoko_integer_map_size(map)==1);
+        for(int i=0;i<256;++i) kinoko_integer_map_put(map,i,i*3);
+        CHECK(kinoko_integer_map_find(map,-8)==map && *(int32_t*)(intptr_t)slot==19);
+        kinoko_integer_map_clear(map);CHECK(kinoko_integer_map_size(map)==0);
+        kinoko_integer_map_destroy(map);
     }
 
-    int32_t manager[40] = {0}, animation_head[6] = {0};
+    int32_t manager[40] = {0};
     int32_t list_head[14] = {0}, textures[2] = {7, 13}, iteration[3] = {0};
-    int32_t *animation_node = (int32_t *)calloc(1, 24);
     int32_t *list_node = (int32_t *)calloc(1, 56);
     unsigned char *frames = (unsigned char *)calloc(2, 248);
-    CHECK(animation_node && list_node && frames);
+    CHECK(list_node && frames);
     *(int32_t *)(frames + 244) = PTR(malloc(12));
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
-    ((unsigned char *)animation_head)[21] = 1;
-    animation_head[0] = animation_head[1] = animation_head[2] = PTR(animation_node);
-    animation_node[0] = animation_node[1] = animation_node[2] = PTR(animation_head);
     /* No live Actor in this fixture; the priority node is still reclaimed. */
     list_head[0] = list_head[1] = PTR(list_node);
     list_node[0] = list_node[1] = PTR(list_head);
     list_node[4] = PTR(frames);
     list_node[5] = list_node[6] = PTR(frames + 496);
-    animation_node[4] = PTR(list_node + 2);
-    manager[10] = PTR(animation_head); manager[11] = 1;
+    manager[10]=kinoko_integer_map_create();
+    kinoko_integer_map_put(manager[10],42,PTR(list_node+2));manager[11]=1;
     manager[13] = PTR(list_head); manager[14] = 1;
     manager[17] = PTR(textures); manager[18] = manager[19] = PTR(textures + 2);
     kinoko_priority_construct(PTR(manager)+84);
@@ -2325,15 +2309,14 @@ static int test_shutdown_tree_cleanup(void) {
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK(function_464e20(PTR(manager)) == PTR(iteration));
-        for (int i = 0; i < 3; ++i) {
-            CHECK(animation_head[i] == PTR(animation_head));
-        }
+        CHECK(kinoko_integer_map_size(manager[10])==0);
         CHECK(list_head[0] == PTR(list_head) && list_head[1] == PTR(list_head));
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(manager[18] == PTR(textures) && manager[19] == PTR(textures + 2));
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
     }
+    kinoko_integer_map_destroy(manager[10]);
     kinoko_priority_destroy(PTR(manager)+84);
     {
         int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];
@@ -3294,16 +3277,12 @@ static int test_global_stage_cleanup(void) {
 
 static int test_global_sound_cleanup(void) {
     int32_t old_head = g638, old_size = g639;
-    int32_t *head = calloc(1, 24), *node = calloc(1, 24);
-    CHECK(head && node);
-    g638 = PTR(head); g639 = 1;
-    head[0] = head[1] = head[2] = PTR(node);
-    ((unsigned char *)head)[21] = 1;
-    node[0] = node[1] = node[2] = PTR(head);
-    CHECK(kinoko_test_sound_cleanup(function_470890) == 0);
-    CHECK(g639 == 0 && head[0] == PTR(head) && head[1] == PTR(head) && head[2] == PTR(head));
-    g638 = old_head; g639 = old_size;
-    free(head);
+    g638=kinoko_integer_map_create();g639=1;
+    kinoko_integer_map_put(g638,1,123);
+    CHECK(kinoko_test_sound_cleanup(function_470890)==0);
+    CHECK(g639==0 && kinoko_integer_map_size(g638)==0);
+    kinoko_integer_map_destroy(g638);
+    g638=old_head;g639=old_size;
     puts("PASS: SE buffers, streaming pool, sound lookup sentinel and repeatable shutdown");
     return 0;
 }

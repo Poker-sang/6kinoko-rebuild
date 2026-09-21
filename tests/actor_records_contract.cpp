@@ -1,3 +1,5 @@
+#include "kinoko/actor_priority.h"
+#include "kinoko/integer_map.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/actor_animation.h"
 #include "kinoko/actor_methods.h"
@@ -13,8 +15,7 @@ using namespace kinoko::actor;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
 namespace {
-std::array<int32_t, 6> lookup_node{};
-int32_t lookup_result = 0, expected_tree = 0, looked_up_key = 0;
+int32_t lookup_result = 0;
 int32_t chip_x = 0, chip_y = 0, chip_layer = 0, chip_cache = 0;
 int priority_updates = 0, object_releases = 0;
 std::vector<int32_t> cleanup_order;
@@ -23,9 +24,6 @@ void require(bool condition) { if (!condition) std::abort(); }
 }
 extern "C" {
 int32_t g23 = 0x12345678;
-int32_t function_4706c0_this(int32_t tree, int32_t* entry, int32_t* key) {
-    require(tree == expected_tree); looked_up_key = *key; *entry = lookup_result; return 0;
-}
 int32_t function_469780(int32_t actor, int32_t same) { require(actor == same); ++priority_updates; return actor; }
 int32_t function_4697a0(int32_t actor) { return actor; }
 int32_t function_4697c0(int32_t actor) { return actor; }
@@ -49,8 +47,7 @@ int main() {
     ManagerPrefix manager{};
     const ManagerView manager_view(&manager);
     const auto lookup = manager_view.view(&ManagerPrefix::animation_lookup);
-    expected_tree = address(lookup.data());
-    lookup.set(&TreeIndex::head, Address{0x55550000});
+    lookup.set(&TreeIndex::head,static_cast<Address>(kinoko_integer_map_create()));
     actor.set(&ActorRecord::manager, static_cast<Address>(address(&manager)));
     actor.set(&ActorRecord::x, 10.25f); actor.set(&ActorRecord::y, 20.75f);
     actor.set(&ActorRecord::scale, 2.0f);
@@ -62,10 +59,9 @@ int main() {
     animation.frames_end = animation.frames_begin + sizeof(frames);
     animation.left = 1; animation.top = 2; animation.right = 5; animation.bottom = 8;
     animation.flags = 0x1234; animation.has_bounds = 1;
-    lookup_node[4] = address(&animation);
-    lookup_result = address(lookup_node.data());
+    kinoko_integer_map_put(lookup.get(&TreeIndex::head),37,address(&animation));
     CHECK(kinoko_actor_set_take(actor_address, 37) == address(frames.data()));
-    CHECK(looked_up_key == 37 && actor.get(&ActorRecord::take) == 37);
+    CHECK(actor.get(&ActorRecord::take) == 37);
     const auto local = actor.get(&ActorRecord::local_bounds);
     const auto world = actor.get(&ActorRecord::world_bounds);
     CHECK(local.left == 0.5f && local.top == 2 && local.right == 5.5f && local.bottom == 9);
@@ -116,15 +112,7 @@ int main() {
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::chip_flags) == -17);
     CHECK(bytes.front() == 0xa7 && bytes.back() == 0xa7);
 
-    // Empty sentinels are container-owned and must survive manager clearing.
-    std::array<int32_t, 6> animation_head{};
-    std::array<int32_t, 5> actor_head{};
-    animation_head[0] = animation_head[1] = animation_head[2] = address(animation_head.data());
-    actor_head[0] = actor_head[1] = actor_head[2] = address(actor_head.data());
-    reinterpret_cast<unsigned char*>(animation_head.data())[21] = 1;
-    reinterpret_cast<unsigned char*>(actor_head.data())[17] = 1;
-    manager.animation_lookup.head = static_cast<Address>(address(animation_head.data()));
-    manager.actors.head = static_cast<Address>(address(actor_head.data()));
+    kinoko_priority_construct(address(&manager.actors));
     struct ListHead { ListHead* next; ListHead* previous; } list;
     list.next = list.previous = &list;
     manager.animations.head = static_cast<Address>(address(&list));
@@ -138,6 +126,8 @@ int main() {
     CHECK(manager.textures.end == manager.textures.begin && manager.textures.capacity == manager.textures.begin + sizeof(textures));
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.capacity == 0x12340080);
     CHECK(!manager.cleanup_pending && list.next == &list && list.previous == &list);
-    CHECK(animation_head[1] == address(animation_head.data()) && actor_head[1] == address(actor_head.data()));
+    CHECK(kinoko_integer_map_size(manager.animation_lookup.head)==0 && manager.actors.count==0);
+    kinoko_integer_map_destroy(manager.animation_lookup.head);
+    kinoko_priority_destroy(address(&manager.actors));
     std::puts("PASS: typed Actor animation, original bounds/timing/clamps, deferred ownership and cleanup order");
 }

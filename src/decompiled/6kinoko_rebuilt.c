@@ -1,3 +1,4 @@
+#include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
@@ -1794,7 +1795,6 @@ int32_t function_428f80(void);
 
 int32_t function_4298d0(void);
 
-int32_t function_429c70(int32_t a1);
 
 
 
@@ -8337,9 +8337,7 @@ int32_t function_4298d0(void) {
 
 
 // Address range: 0x429c70 - 0x429ca8
-int32_t function_429c70(int32_t a1) {
-    return kinoko_erase_animation_tree(a1);
-}
+
 
 // Address range: 0x429cb0 - 0x429d01
 
@@ -12893,71 +12891,12 @@ static int32_t retdec_pat_skip_bytes(int32_t reader, uint32_t size)
     return 1;
 }
 
-/* ActorManager's animation tree is a std::_Tree<int, CAnimationNode*>.
-   Search only needs the sentinel/root/extrema layout; insertion balancing is
-   not observable until the tree is modified again, so keep the recovered
-   node layout and ordered links here. */
-static int32_t retdec_pat_tree_put(int32_t manager, int32_t key,
-                                   int32_t value)
-{
-    int32_t tree = manager + 36;
-    int32_t sentinel = *(int32_t *)(intptr_t)(tree + 4);
-    int32_t current;
-    int32_t parent;
-    int32_t node;
-    int32_t direction;
-
-    if (sentinel == 0) {
-        sentinel = (int32_t)(intptr_t)calloc(1u, 24u);
-        if (sentinel == 0)
-            return 0;
-        *(int32_t *)(intptr_t)(sentinel + 0) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 4) = sentinel;
-        *(int32_t *)(intptr_t)(sentinel + 8) = sentinel;
-        *(unsigned char *)(intptr_t)(sentinel + 20) = 1;
-        *(unsigned char *)(intptr_t)(sentinel + 21) = 1;
-        *(int32_t *)(intptr_t)(tree + 4) = sentinel;
-        *(int32_t *)(intptr_t)(tree + 8) = 0;
-    }
-
-    current = *(int32_t *)(intptr_t)(sentinel + 4);
-    parent = sentinel;
-    direction = 0;
-    while (current != sentinel && current != 0) {
-        int32_t current_key = *(int32_t *)(intptr_t)(current + 12);
-        if (key == current_key) {
-            *(int32_t *)(intptr_t)(current + 16) = value;
-            return current + 16;
-        }
-        parent = current;
-        direction = key < current_key ? 0 : 1;
-        current = *(int32_t *)(intptr_t)(current + (direction != 0 ? 8 : 0));
-    }
-
-    node = (int32_t)(intptr_t)calloc(1u, 24u);
-    if (node == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(node + 0) = sentinel;
-    *(int32_t *)(intptr_t)(node + 4) = parent;
-    *(int32_t *)(intptr_t)(node + 8) = sentinel;
-    *(int32_t *)(intptr_t)(node + 12) = key;
-    *(int32_t *)(intptr_t)(node + 16) = value;
-
-    if (parent == sentinel) {
-        *(int32_t *)(intptr_t)(sentinel + 0) = node;
-        *(int32_t *)(intptr_t)(sentinel + 4) = node;
-        *(int32_t *)(intptr_t)(sentinel + 8) = node;
-    } else if (direction == 0) {
-        *(int32_t *)(intptr_t)(parent + 0) = node;
-        if (*(int32_t *)(intptr_t)(sentinel + 0) == parent)
-            *(int32_t *)(intptr_t)(sentinel + 0) = node;
-    } else {
-        *(int32_t *)(intptr_t)(parent + 8) = node;
-        if (*(int32_t *)(intptr_t)(sentinel + 8) == parent)
-            *(int32_t *)(intptr_t)(sentinel + 8) = node;
-    }
-    ++*(int32_t *)(intptr_t)(tree + 8);
-    return node + 16;
+static int32_t retdec_pat_tree_put(int32_t manager,int32_t key,int32_t value) {
+    int32_t* map=(int32_t*)(intptr_t)(manager+40);
+    if(!*map) *map=kinoko_integer_map_create();
+    int32_t result=kinoko_integer_map_put(*map,key,value);
+    *(int32_t*)(intptr_t)(manager+44)=kinoko_integer_map_size(*map);
+    return result;
 }
 
 static int32_t retdec_pat_append_resource(int32_t manager, int32_t handle)
@@ -13423,7 +13362,7 @@ static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
         function_4706c0_this(manager + 36, &entry, &aliases[alias_count][1]);
         if (entry != *(int32_t *)(intptr_t)(manager + 40) &&
             retdec_pat_tree_put(manager, aliases[alias_count][0],
-                *(int32_t *)(intptr_t)(entry + 16)) == 0)
+                *(int32_t *)(intptr_t)entry) == 0)
             goto cleanup;
     }
     retdec_trace_i32("animation:items", (int32_t)item_count);
@@ -14608,16 +14547,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
         return 0;
     *(int32_t *)(intptr_t)(this_ptr + 4) = handle_manager;
 
-    /* TObjectManagerBase's render-layer list sentinel. */
-    render_list = (int32_t)(intptr_t)calloc(1u, 24u);
-    if (render_list == 0)
-        return 0;
-    *(int32_t *)(intptr_t)render_list = render_list;
-    *(int32_t *)(intptr_t)(render_list + 4) = render_list;
-    *(int32_t *)(intptr_t)(render_list + 8) = render_list;
-    *(unsigned char *)(intptr_t)(render_list + 20) = 1;
-    *(unsigned char *)(intptr_t)(render_list + 21) = 1;
-    *(int32_t *)(intptr_t)(this_ptr + 40) = render_list;
+    *(int32_t *)(intptr_t)(this_ptr+40)=kinoko_integer_map_create();
 
     /* ActorManager's second intrusive list is constructed empty. */
     resource_list = (int32_t)(intptr_t)calloc(1u, 56u);
@@ -15339,52 +15269,6 @@ int32_t function_470030(int32_t name_ptr)
 
 
 // Address range: 0x470390 - 0x4703ac
-
-
-/* The original tree object starts at 0x5144B8; its sentinel and size are
- * represented here by the adjacent g638/g639 globals. */
-static int32_t retdec_map_tree_this(void) {
-    return (int32_t)(intptr_t)&g637;
-}
-
-
-// Address range: 0x4706c0 - 0x470722
-int32_t function_4706c0_this(int32_t this_ptr,
-                                    int32_t *a1, int32_t *a2) {
-    int32_t result = (int32_t)a1;
-    int32_t v1 = this_ptr; // 0x4706c0
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4706c4
-    int32_t v3 = *(int32_t *)(v2 + 4); // 0x4706c7
-    if (*(char *)(v3 + 21) != 0) {
-        // 0x47070e
-        *a1 = v2;
-        return result;
-    }
-    int32_t v4 = *a2; // 0x4706d5
-    int32_t v5 = v2; // 0x4706d5
-    int32_t v6 = v3;
-    int32_t v7 = *(int32_t *)(v6 + 12); // 0x4706d7
-    v5 = v7 < v4 ? v5 : v6;
-    int32_t v8 = *(int32_t *)(v7 < v4 ? v6 + 8 : v6);
-    while (*(char *)(v8 + 21) == 0) {
-        // 0x4706d7
-        v6 = v8;
-        v7 = *(int32_t *)(v6 + 12);
-        v5 = v7 < v4 ? v5 : v6;
-        v8 = *(int32_t *)(v7 < v4 ? v6 + 8 : v6);
-    }
-    if (v5 == v2 || v4 < *(int32_t *)(v5 + 12)) {
-        // 0x47070e
-        *a1 = v2;
-        return result;
-    }
-    // 0x4706fd
-    *a1 = v5;
-    return result;
-}
-
-/* The standalone helper uses the original global tree object.  462280 has
-   a different receiver and calls the _this variant above directly. */
 
 
 // Address range: 0x470890 - 0x470972
