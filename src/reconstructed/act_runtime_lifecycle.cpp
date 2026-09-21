@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.hpp"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/act_resource_records.hpp"
@@ -126,11 +127,7 @@ extern "C" void retdec_destroy_act_runtime(int32_t storage) {
     view.set(&RuntimeRecord::find_storage, Address{0});
     view.set(&RuntimeRecord::find_count, uint32_t{0});
     DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(view.bytes(&RuntimeRecord::lock)));
-    if (view.get(&RuntimeRecord::name_capacity) >= 16) {
-        Address heap_name;
-        std::memcpy(&heap_name, view.bytes(&RuntimeRecord::name_storage), sizeof(heap_name));
-        std::free(pointer<void>(heap_name));
-    }
+    kinoko::legacy::StringView(view.bytes(&RuntimeRecord::name_storage)).destroy();
     // The existing recovered cleanup clears the first word, not the whole SSO buffer.
     std::memset(view.bytes(&RuntimeRecord::name_storage), 0, sizeof(Address));
     view.set(&RuntimeRecord::name_length, uint32_t{0});

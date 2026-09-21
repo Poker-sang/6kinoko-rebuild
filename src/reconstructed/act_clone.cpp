@@ -57,6 +57,7 @@ public:
         for(auto texture: textures_) kinoko_texture_release(texture);
         for(auto resource: chip_owners_) kinoko_act_release_chip_data(static_cast<int32_t>(resource));
         for(auto object:string_layouts_) kinoko_method_delete_string_layout(static_cast<int32_t>(object),nullptr,1);
+        for(auto slot: strings_) kinoko::legacy::StringView(pointer(slot)).destroy();
         for(auto slot: buffers_) kinoko_native_buffer_destroy(slot);
         for(auto slot: arrays_) kinoko_act_array_destroy(slot);
         for(auto head: lists_) kinoko_act_list_drop_storage(static_cast<int32_t>(head));
@@ -107,22 +108,15 @@ private:
         return result;
     }
     void string(Address dest,Address source,size_t offset) {
-        const auto &input=field<String>(source,offset);
-        auto &output=field<String>(dest,offset);
-        output={};
-        output.size=input.size;
-        output.capacity=input.size<16 ? 15 : input.size;
-        const char *text=input.capacity<16 ? input.storage :
-            static_cast<const char *>(pointer(field<Address>(source,offset)));
-        char *target=output.storage;
-        if(input.size>=16) {
-            const auto buffer=allocate(static_cast<size_t>(input.size)+1);
-            field<Address>(dest,offset)=buffer;
-            target=static_cast<char *>(pointer(buffer));
-        }
-        if(input.size) std::memcpy(target,text,input.size);
-        target[input.size]=0;
+        auto &output=field<String>(dest,offset);output={};output.capacity=15;
+        const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+offset);
+        const kinoko::legacy::StringView target(static_cast<unsigned char*>(pointer(dest))+offset);
+        target.assign(input.data(),input.length());
+        if(target.length()!=input.length()) throw std::bad_alloc();
+        try {strings_.push_back(dest+offset);}
+        catch(...) {target.destroy();throw;}
     }
+
     Vector clone_array(Address dest,Address source,size_t offset) {
         field<Vector>(dest,offset)={};
         kinoko_act_array_clone(dest+offset,source+offset);
@@ -243,6 +237,7 @@ private:
         }
         return result;
     }
+    std::vector<Address> strings_;
     std::vector<Address> buffers_;
     std::vector<Address> arrays_;
     std::vector<Address> lists_;
@@ -273,7 +268,7 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_key(int32_t source, void*)
     auto release=[](unsigned char* key) {
         if (!key) return;
         const kinoko::legacy::StringView name(key+8);
-        if (name.is_heap()) std::free(name.data());
+        name.destroy();
         std::free(key);
     };
     std::unique_ptr<unsigned char,decltype(release)> result(

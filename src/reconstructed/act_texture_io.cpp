@@ -504,7 +504,7 @@ struct TypeName {
     TypeName() { field<uint32_t>(address(bytes)+20)=15; }
     ~TypeName() {
         const kinoko::legacy::StringView text(bytes);
-        if (text.is_heap()) std::free(text.data());
+        text.destroy();
     }
 };
 bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {

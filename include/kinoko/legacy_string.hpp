@@ -2,10 +2,13 @@
 #include "kinoko/native_record_view.hpp"
 #include <cstdint>
 #include <limits>
+#include <string>
 
 namespace kinoko::legacy {
-// Layout schema, never placement-new'd over C byte storage. A heap pointer
-// occupies the first four bytes of characters when capacity >= inline_bytes.
+// Boundary schema only: native strings publish data at +0, own a std::string
+// at +4 and expose length/capacity at +16/+20. Capacity >=16 selects the
+// borrowed data pointer even when std::string uses its own short storage.
+// Untouched empty records and read-only legacy fixtures may still be inline.
 struct StringRecord final {
     unsigned char characters[16];
     std::uint32_t length;
@@ -41,6 +44,7 @@ public:
         std::memcpy(&result, bytes, sizeof(result));
         return result;
     }
+    void destroy() const noexcept;
     void assign(const char* source, std::uint32_t size) const;
     void assign(StringView source, std::uint32_t position, std::uint32_t size) const;
     void append(const char* source, std::uint32_t size) const;
@@ -50,9 +54,9 @@ public:
     // short-storage branch. Callers must not treat this result as ownership.
     std::uintptr_t grow(std::uint32_t capacity, std::uint32_t old_length) const;
 private:
-    void length(std::uint32_t value) const noexcept { record_.set(&StringRecord::length, value); }
-    void capacity(std::uint32_t value) const noexcept { record_.set(&StringRecord::capacity, value); }
-    void terminate(std::uint32_t size) const noexcept { length(size); data()[size] = 0; }
+    std::string* owner() const noexcept;
+    std::string& ensure_owner() const;
+    void publish(std::string* value) const noexcept;
     kinoko::native::RecordView<StringRecord> record_;
 };
 } // namespace kinoko::legacy

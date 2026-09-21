@@ -37,7 +37,7 @@ void destroy_renderer(int32_t renderer) {
     std::free(field<void*>(renderer+344));
     field<void*>(renderer+344)=nullptr;
     StringView text(pointer<void>(renderer+368));
-    if(text.is_heap()) std::free(text.data());
+    text.destroy();
     field<uint32_t>(renderer+388)=15;
     field<uint32_t>(renderer+384)=0;
     field<uint8_t>(renderer+368)=0;
@@ -142,7 +142,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     delete atlases(layout);atlases(layout)=nullptr;
     for(int offset : {60,32,4}) {
         StringView value(pointer<void>(layout+offset));
-        if(value.is_heap()) std::free(value.data());
+        value.destroy();
         field<uint32_t>(layout+offset+20)=15;
         field<uint32_t>(layout+offset+16)=0;
         field<uint8_t>(layout+offset)=0;
