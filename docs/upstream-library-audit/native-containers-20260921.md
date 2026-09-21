@@ -47,3 +47,7 @@ Replaced the hand-written animation lookup BST and empty sound lookup tree with 
 ## R116 — Owning animation list and frame vectors
 
 Original 464F80 inserts animation records into manager+52's owning list (465347..465377) separately from the engine's next/previous animation links. The reconstructed parser had allocated detached records and never linked that owning list. It now adopts completed records into std::list<unique_ptr<Animation>>, with std::vector<FrameRecord> owning each fixed-size frame array. AnimationRecord publishes borrowed begin/end pointers for engine readers; it is not a modern STL overlay. Failed pending records use the same destructor to free frame payloads and storage. Manager clear releases actors before animation ownership, as before. Cleanup contract fixtures use actual native owners.
+
+## R117 — Actor texture handles and retired ACT hash emulation
+
+ActorManager texture handles now use an opaque std::vector<int32_t>; PAT append, frame resource lookup, load offsets and ordered texture release use its data/size accessors. Removed manual doubling/realloc. Removed act_containers.cpp and generated 458330: source-reference audit found no active consumer outside this retired helper group. It contained manual hash buckets, rehashing, list splicing, byte comparisons and repeated vector insertion, all unreachable after earlier source-backed ACT migrations. Declarations and obsolete forwarding comments are removed together. This retires dead library emulation, not an implementation of missing ACT engine features.

@@ -31,13 +31,6 @@ struct retdec_native_view_property {
 extern "C" {
 #endif
 
-int32_t function_44e780(uint32_t count,
-                        int32_t *vector,
-                        int32_t position,
-                        int32_t value);
-int32_t function_458090(int32_t a1, int32_t result, int32_t a3, int32_t a4);
-int32_t function_458200(int32_t a1);
-int32_t function_4583a0(int32_t this_ptr, int32_t result);
 int32_t kinoko_map_draw(int32_t layout,
                                              float x, float y);
 int32_t kinoko_map_update(
@@ -97,11 +90,6 @@ void retdec_c2dlayout_world_position(int32_t layer,
 int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
                                                    int32_t layer);
 int32_t retdec_cact_associate_resource(int32_t vm);
-int32_t retdec_compare_bytes32(const unsigned char *left,
-                                      const unsigned char *right,
-                                      size_t length);
-int32_t retdec_compare_strings32(int32_t left_object,
-                                        int32_t right_object);
 int32_t retdec_construct_cact_script(int32_t this_ptr);
 void retdec_destroy_cact_layer(int32_t layer);
 void retdec_destroy_cact_key(int32_t key);
@@ -113,9 +101,6 @@ void retdec_forget_act_script(int32_t script);
 void retdec_destroy_cact_script(int32_t script_ptr);
 int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
-int32_t retdec_erase_node32(int32_t list_base,
-                                   int32_t result,
-                                   int32_t node);
 int32_t retdec_execute_act_callback(int32_t script_ptr,
                                             int32_t offset,
                                             const char *trace_label);
@@ -211,13 +196,6 @@ void retdec_sprite_translate_faithful(int32_t sprite,
                                               float x,
                                               float y,
                                               float z);
-const unsigned char *retdec_string_data32(int32_t object);
-uint32_t retdec_string_hash32(int32_t object);
-uint32_t retdec_string_length32(int32_t object);
-int32_t retdec_vector_insert32(uint32_t count,
-                                      int32_t *vector,
-                                      int32_t position,
-                                      int32_t value);
 
 #ifdef __cplusplus
 }

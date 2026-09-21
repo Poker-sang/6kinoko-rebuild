@@ -1,3 +1,4 @@
+#include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
 #include "kinoko/actor_priority.h"
 #include "kinoko/integer_map.h"
@@ -116,16 +117,17 @@ int main() {
     kinoko_priority_construct(address(&manager.actors));
     kinoko_animation_list_construct(address(&manager.animations));
     std::array<int32_t, 2> textures{27, 81};
-    manager.textures.begin = static_cast<Address>(address(textures.data()));
-    manager.textures.end = manager.textures.capacity = manager.textures.begin + sizeof(textures);
+    kinoko_integer_vector_construct(address(&manager.textures));
+    for(auto handle:textures) kinoko_integer_vector_append(address(&manager.textures),handle);
     manager.iteration.begin = 0x12340000; manager.iteration.end = 0x12340004;
     manager.iteration.capacity = 0x12340080;
     CHECK(kinoko_clear_actor_manager(address(&manager)) == 0x12340000);
     CHECK((cleanup_order == std::vector<int32_t>{27, 81, -1}));
-    CHECK(manager.textures.end == manager.textures.begin && manager.textures.capacity == manager.textures.begin + sizeof(textures));
+    CHECK(kinoko_integer_vector_size(address(&manager.textures))==0);
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.capacity == 0x12340080);
     CHECK(!manager.cleanup_pending && manager.animations.count==0);
     CHECK(kinoko_integer_map_size(manager.animation_lookup.head)==0 && manager.actors.count==0);
+    kinoko_integer_vector_destroy(address(&manager.textures));
     kinoko_animation_list_destroy(address(&manager.animations));
     kinoko_integer_map_destroy(manager.animation_lookup.head);
     kinoko_priority_destroy(address(&manager.actors));

@@ -884,7 +884,7 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader=0;
     unsigned char version;
     unsigned short texture_count;
-    int32_t resource_base=(*(int32_t *)(intptr_t)(manager+72)-*(int32_t *)(intptr_t)(manager+68))/4;
+    int32_t resource_base=kinoko_integer_vector_size(manager+68);
     CHECK(function_407370(PTR(&reader),"data/actor/item/item.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&texture_count));
     CHECK(retdec_pat_skip_bytes(reader,texture_count*128u));
@@ -2298,7 +2298,8 @@ static int test_shutdown_tree_cleanup(void) {
     /* No live Actor in this fixture; the priority node is still reclaimed. */
     manager[10]=kinoko_integer_map_create();
     kinoko_integer_map_put(manager[10],42,animation);manager[11]=1;
-    manager[17] = PTR(textures); manager[18] = manager[19] = PTR(textures + 2);
+    kinoko_integer_vector_construct(PTR(manager)+68);
+    for(int i=0;i<2;++i) kinoko_integer_vector_append(PTR(manager)+68,textures[i]);
     kinoko_priority_construct(PTR(manager)+84);
     int32_t absent=0,inserted[2];
     function_463610_this(PTR(manager)+84,PTR(inserted),function_463210_this(PTR(manager)+84,PTR(&absent)),0);
@@ -2308,10 +2309,11 @@ static int test_shutdown_tree_cleanup(void) {
         CHECK(function_464e20(PTR(manager)) == PTR(iteration));
         CHECK(kinoko_integer_map_size(manager[10])==0);
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
-        CHECK(manager[18] == PTR(textures) && manager[19] == PTR(textures + 2));
+        CHECK(kinoko_integer_vector_size(PTR(manager)+68)==0);
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
     }
+    kinoko_integer_vector_destroy(PTR(manager)+68);
     kinoko_animation_list_destroy(PTR(manager)+52);
     kinoko_integer_map_destroy(manager[10]);
     kinoko_priority_destroy(PTR(manager)+84);
