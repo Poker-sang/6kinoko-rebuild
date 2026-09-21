@@ -1,0 +1,81 @@
+{
+  "source_commit": "671f741ddad5ff884f6e21829f824a8132531ede",
+  "scope": "Static inventory of original collision C entry bodies; no executable or regression tests run",
+  "entries": [
+    {
+      "name": "retdec_collision_query_rect",
+      "line": 11303,
+      "body": "static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,\n    int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,\n    int32_t *count)\n{\n    return kinoko_map_collision_query((KinokoCollisionState *)(intptr_t)state,\n        (KinokoActLayout *)(intptr_t)layout, cached, left, top, right, bottom, count);\n}"
+    },
+    {
+      "name": "retdec_collision_query_map",
+      "line": 11311,
+      "body": "static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,\n    int32_t layer_index, int32_t *count)\n{\n    return kinoko_collision_query_actor_map((KinokoCollisionState *)g_514300_storage,\n        (KinokoActLayout *)(intptr_t)layout, (KinokoActor *)(intptr_t)actor, layer_index, count);\n}"
+    },
+    {
+      "name": "retdec_actor_collide_move",
+      "line": 11326,
+      "body": "static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)\n{\n    return kinoko_collision_move_actor((KinokoCollisionState *)g_514300_storage,\n        (KinokoActor *)(intptr_t)actor, dx, dy);\n}"
+    },
+    {
+      "name": "retdec_actor_refresh_bounds",
+      "line": 11332,
+      "body": "static void retdec_actor_refresh_bounds(int32_t actor) {\n    kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)actor);\n}"
+    },
+    {
+      "name": "function_45dbd0_this",
+      "line": 11336,
+      "body": "int32_t function_45dbd0_this(int32_t actor, float dx, float dy) {\n    return kinoko_actor_move((KinokoCollisionState *)g_514300_storage,\n        (KinokoActor *)(intptr_t)actor, dx, dy);\n}"
+    },
+    {
+      "name": "function_45ec60",
+      "line": 11341,
+      "body": "static int32_t function_45ec60(int32_t actor) {\n    return kinoko_actor_update_motion((KinokoCollisionState *)g_514300_storage,\n        (KinokoActor *)(intptr_t)actor);\n}"
+    },
+    {
+      "name": "function_462ce0",
+      "line": 11947,
+      "body": "int32_t function_462ce0(int32_t first, int32_t second) {\n    return kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)first, (KinokoActor *)(intptr_t)second);\n}"
+    },
+    {
+      "name": "function_462e80",
+      "line": 11951,
+      "body": "int32_t function_462e80(int32_t manager) {\n    return kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)manager);\n}"
+    },
+    {
+      "name": "function_462f30_this",
+      "line": 11955,
+      "body": "static int32_t function_462f30_this(int32_t manager, int32_t actor) {\n    return kinoko_collision_dispatch_actor((KinokoActorManager *)(intptr_t)manager, (KinokoActor *)(intptr_t)actor);\n}"
+    },
+    {
+      "name": "function_4681e0_this",
+      "line": 12849,
+      "body": "static int32_t function_4681e0_this(int32_t state, int32_t actor) {\n    return (int32_t)kinoko_collision_chip_flags((KinokoCollisionState *)(intptr_t)state,\n        (KinokoActor *)(intptr_t)actor);\n}"
+    },
+    {
+      "name": "function_4682a0_this",
+      "line": 12854,
+      "body": "static int32_t function_4682a0_this(int32_t state, int32_t actor,\n    float left, float top, float right, float bottom) {\n    return kinoko_collision_has_chip((KinokoCollisionState *)(intptr_t)state,\n        (KinokoActor *)(intptr_t)actor, left, top, right, bottom);\n}"
+    },
+    {
+      "name": "function_468620_this",
+      "line": 12865,
+      "body": "static int32_t function_468620_this(int32_t this_ptr) {\n    return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);\n}"
+    },
+    {
+      "name": "function_468950_this",
+      "line": 12869,
+      "body": "static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr) {\n    return kinoko_collision_reset((KinokoCollisionState *)(intptr_t)this_ptr,\n        (KinokoActorManager *)(intptr_t)actor_ptr);\n}"
+    },
+    {
+      "name": "function_4693a0",
+      "line": 12879,
+      "body": "int32_t function_4693a0(int32_t layout) {\n    return (int32_t)(intptr_t)kinoko_collision_register_map(\n        (KinokoCollisionState *)g_514300_storage, (KinokoActLayout *)(intptr_t)layout);\n}"
+    },
+    {
+      "name": "function_46ef40_this",
+      "line": 13711,
+      "body": "static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,\n    uint32_t index, int32_t count_ptr) {\n    return kinoko_collision_event_at_point((KinokoMapManager *)(intptr_t)manager,\n        x, y, index, (int32_t *)(intptr_t)count_ptr);\n}"
+    }
+  ]
+}

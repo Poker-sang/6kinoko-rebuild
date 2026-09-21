@@ -7,5 +7,12 @@
     "reason": "actor_records_contract fixture still used integer begin/end and old capacity field; main runtime and stage_contract compiled, but full build failed",
     "tests_executed": false,
     "game_executed": false
+  },
+  {
+    "source_commit": "671f741ddad5ff884f6e21829f824a8132531ede",
+    "build_tree": "build-runs/collision-module-r140b-quiet",
+    "build_exit_code": 0,
+    "tests_executed": false,
+    "game_executed": false
   }
 ]

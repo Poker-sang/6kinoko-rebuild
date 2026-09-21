@@ -99,3 +99,12 @@ clearing. All these are compiled only. The agent runs no tests or game.
 
 Final source commit, build result, staged DAT hashes and executable paths are
 recorded in artifacts.json. Only the completed R140 batch is handed off.
+
+Final build: all Release Win32 targets compiled from `671f741ddad5ff884f6e21829f824a8132531ede`.
+Executable: `runtime-builds/collision-module-r140b-quiet/kinoko_retdec_rebuild.exe`.
+The first build attempt failed only in the old actor-record fixture; its build
+and logs remain preserved. The final independent build includes the corrected
+typed-pointer fixture. Both attempts are in build-attempts.json.
+Three DATs are staged and size/SHA256 verified. Tests and game were not executed.
+remaining-c-adapters.json records all 15 collision C implementation entries now
+forwarding to the named module, separately from generic host bridges/diagnostics.

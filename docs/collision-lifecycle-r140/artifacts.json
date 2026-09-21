@@ -1,0 +1,50 @@
+{
+  "version": "R140",
+  "source_commit": "671f741ddad5ff884f6e21829f824a8132531ede",
+  "accepted_baseline": "R139",
+  "build_tree": "build-runs/collision-module-r140b-quiet",
+  "configuration": "Release",
+  "platform": "Win32",
+  "disable_trace": true,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "regression_sources_compiled": true,
+  "tests_executed": false,
+  "game_executed": false,
+  "dat_size_and_sha256_verified": true,
+  "build_log": "build-runs/collision-module-r140b-quiet/build.log",
+  "configure_log": "build-runs/collision-module-r140b-quiet/configure.log",
+  "staging_log": "build-runs/collision-module-r140b-quiet/stage-dat.log",
+  "files": [
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/kinoko_retdec_rebuild.exe",
+      "size": 856064,
+      "sha256": "729a0583ff6e00a8feeb6213bc15bc753308df765e6fd5eccb0d38e8926660aa"
+    },
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/tools/kinoko_stage_contract.exe",
+      "size": 1200128,
+      "sha256": "2b771c41927c226f3574bbea624932ac35a62d2ef1b800c1b7de24a4282c387f"
+    },
+    {
+      "path": "runtime-builds/collision-module-r140b-quiet/tools/kinoko_actor_records_contract.exe",
+      "size": 22528,
+      "sha256": "c85d403b2cb1eb328024cee46cbf538f54f734319aa8aa2b7bb82aaa462671ed"
+    }
+  ]
+}
