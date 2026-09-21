@@ -1,3 +1,4 @@
+#include "kinoko/input_cluster.h"
 #include "kinoko/map_containers.h"
 #include "kinoko/actor_owner_list.h"
 #include "kinoko/actor_pool.h"
@@ -567,7 +568,7 @@ struct vtable_4d5a04_type {
 };
 
 struct vtable_4d5a1c_type {
-    int32_t (*e0)(char);
+    int32_t (__fastcall *e0)(int32_t, void *, unsigned char);
     int32_t (*e1)();
 };
 
@@ -1591,7 +1592,6 @@ int32_t function_407310(char a1);
 int32_t function_407360(char * a1);
 int32_t function_407370(int32_t reader_slot, const char *file_name);
 
-int32_t function_4074b0(void);
 
 int32_t __fastcall function_407500(int32_t this_ptr);
 int32_t __fastcall function_4077c0(int32_t this_ptr);
@@ -1625,7 +1625,6 @@ void retdec_poll_fallback_keyboard(void);
 static int32_t retdec_input_aggregate_add(int32_t aggregate_ptr,
                                            int32_t key_code);
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
-int32_t retdec_update_input_cluster(int32_t cluster_ptr);
 int32_t function_408e60(int32_t a1);
 int32_t function_408e80(int32_t a1);
 
@@ -2212,10 +2211,8 @@ int32_t function_469dd0(int32_t name,
 int32_t function_46a140(void);
 int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
-int32_t function_46a260(int32_t a1, int32_t a2);
 
 
-int32_t function_46a7e0(char a1);
 int32_t function_46aa60_this(int32_t this_ptr);
 int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr);
 
@@ -3352,7 +3349,7 @@ struct vtable_4d5a04_type g29 = {
     .e4 = kinoko_method_actor_pool_count
 }; // 0x4d5a04
 struct vtable_4d5a1c_type g30 = {
-    .e0 = function_46a7e0,
+    .e0 = kinoko_input_cluster_delete,
     .e1 = (int32_t (*)())&function_4077c0
 }; // 0x4d5a1c
 struct vtable_4d5a5c_type g31 = {
@@ -5356,12 +5353,7 @@ int32_t retdec_reader_seek_relative(int32_t reader_ptr,
 
 
 // Address range: 0x4074b0 - 0x4074b7
-int32_t function_4074b0(void) {
-    // 0x4074b0
-    int32_t result; // 0x4074b0
-    *(int32_t *)result = (int32_t)&g35;
-    return result;
-}
+
 
 
 /* DirectInput is unavailable on some modern desktop sessions.  This is only
@@ -5468,64 +5460,7 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 /* CInputManagerCluster::Update.  This preserves the original data contract:
    the default keyboard record is always included, then optional physical
    records are merged by button count/edge and by absolute axis magnitude. */
-int32_t retdec_update_input_cluster(int32_t cluster_ptr)
-{
-    unsigned char *cluster = (unsigned char *)(intptr_t)cluster_ptr;
-    unsigned char *manager;
-    unsigned char *output;
-    unsigned char *record;
-    int32_t begin;
-    int32_t end;
-    int32_t record_count;
-    int32_t index;
-    int32_t field;
 
-    if (cluster == NULL)
-        return 0;
-    manager = cluster - 196;
-    output = cluster + 72;
-    memset(output, 0, 96);
-
-    record_count = *(int32_t *)(intptr_t)(manager + 380);
-    if (record_count <= 0)
-        return cluster_ptr;
-
-    record = manager + 12;
-    memcpy(output, record + 72, 96);
-    begin = *(int32_t *)(intptr_t)(manager + 180);
-    end = *(int32_t *)(intptr_t)(manager + 184);
-    if (begin == 0 || end < begin)
-        return cluster_ptr;
-
-    for (index = 0; begin + index * 168 < end; ++index) {
-        unsigned char *source = (unsigned char *)(intptr_t)(
-            begin + index * 168);
-        int32_t *output_counts = (int32_t *)(void *)output;
-        int32_t *source_counts = (int32_t *)(void *)(source + 72);
-        unsigned char *output_edges = output + 56;
-        unsigned char *source_edges = source + 128;
-        float32_t *output_axes = (float32_t *)(void *)(output + 72);
-        float32_t *source_axes = (float32_t *)(void *)(source + 144);
-
-        for (field = 0; field < 12; ++field) {
-            if (source_counts[field] > output_counts[field]) {
-                output_counts[field] = source_counts[field];
-                output_edges[field] = source_edges[field];
-            } else if (source_counts[field] == output_counts[field]) {
-                output_edges[field] |= source_edges[field];
-            }
-        }
-        for (field = 0; field < 6; ++field) {
-            float32_t source_abs = source_axes[field] < 0.0f
-                ? -source_axes[field] : source_axes[field];
-            float32_t output_abs = output_axes[field] < 0.0f
-                ? -output_axes[field] : output_axes[field];
-            if (source_abs > output_abs)
-                output_axes[field] = source_axes[field];
-        }
-    }
-    return cluster_ptr;
-}
 
 // Address range: 0x407500 - 0x4077b5
 
@@ -14957,96 +14892,7 @@ int32_t function_46a210(int32_t * a1) {
 }
 
 // Address range: 0x46a260 - 0x46a2c5
-int32_t function_46a260(int32_t a1, int32_t a2) {
-    // 0x46a260
-    int32_t v1; // 0x46a260
-    int32_t * v2 = (int32_t *)(v1 + 16); // 0x46a264
-    int32_t v3 = *v2; // 0x46a264
-    if (v3 != 0) {
-        int32_t v4 = v3; // 0x46a272
-        int32_t v5 = 0; // 0x46a272
-        int32_t v6; // 0x46a274
-        if (v3 != 0) {
-            // 0x46a274
-            v6 = v3 - 1;
-            *v2 = v6;
-            v4 = v6;
-            v5 = v6;
-            if (v6 == 0) {
-                // 0x46a27a
-                *(int32_t *)(v1 + 12) = 0;
-                v4 = *v2;
-                v5 = v6;
-            }
-        }
-        int32_t v7 = v4; // 0x46a27d
-        while (v7 != 0) {
-            int32_t v8 = v5;
-            v4 = v7;
-            v5 = 0;
-            if (v8 != 0) {
-                // 0x46a274
-                v6 = v8 - 1;
-                *v2 = v6;
-                v4 = v6;
-                v5 = v6;
-                if (v6 == 0) {
-                    // 0x46a27a
-                    *(int32_t *)(v1 + 12) = 0;
-                    v4 = *v2;
-                    v5 = v6;
-                }
-            }
-            // 0x46a27d
-            v7 = v4;
-        }
-    }
-    int32_t * v9 = (int32_t *)(v1 + 8); // 0x46a283
-    int32_t v10 = *v9; // 0x46a283
-    int32_t * v11; // 0x46a260
-    int32_t v12; // bp-12, 0x46a260
-    if (v10 == 0) {
-        // 0x46a282
-        v11 = (int32_t *)(v1 + 4);
-    } else {
-        int32_t * v13 = (int32_t *)(v1 + 4);
-        int32_t * v14 = (int32_t *)((int32_t)&v12 - 4);
-        int32_t v15 = v10; // 0x46a293
-        v15--;
-        int32_t v16 = *(int32_t *)(4 * v15 + *v13); // 0x46a294
-        if (v16 != 0) {
-            // 0x46a29c
-            *v14 = v16;
-            _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        }
-        // 0x46a2a7
-        v11 = v13;
-        while (v15 != 0) {
-            // 0x46a290
-            v15--;
-            v16 = *(int32_t *)(4 * v15 + *v13);
-            if (v16 != 0) {
-                // 0x46a29c
-                *v14 = v16;
-                _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-            }
-            // 0x46a2a7
-            v11 = v13;
-        }
-    }
-    int32_t v17 = *v11; // 0x46a2ab
-    int32_t result = 0; // 0x46a2b1
-    if (v17 != 0) {
-        // 0x46a2b3
-        v12 = v17;
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-        result = &g1224;
-    }
-    // 0x46a2bc
-    *v11 = 0;
-    *v9 = 0;
-    return result;
-}
+
 
 // Address range: 0x46a2d0 - 0x46a380
 // From class:    .?AV?$CHandleManagerEx@VActor@@@@
@@ -15163,20 +15009,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 // Address range: 0x46a7e0 - 0x46a829
 // From class:    .?AVCInputManagerCluster@@
 // Type:          virtual member function
-int32_t function_46a7e0(char a1) {
-    // 0x46a7e0
-    int32_t result; // 0x46a7e0
-    function_46a260(result, result);
-    _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    *(int32_t *)(result + 168) = 0;
-    function_4074b0();
-    if ((a1 & 1) != 0) {
-        // 0x46a818
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x46a821
-    return result;
-}
+
 
 /* CreateRenderLayer is a plain Squirrel callback.  Keep its layer-name
    dispatch explicit; the generated body lost the comparison temporaries in
@@ -15339,7 +15172,8 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     default_record[11] = 0xff;
     memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
            sizeof(default_record));
-    *(int32_t *)(intptr_t)(this_ptr + 380) = 1;
+    kinoko_input_cluster_construct(this_ptr + 196);
+    kinoko_input_cluster_append(this_ptr + 196, this_ptr + 12);
     retdec_initialize_input_aggregate(this_ptr + 392);
     g_retdec_input_manager_initialized = 1;
 }

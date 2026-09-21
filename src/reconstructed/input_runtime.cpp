@@ -1,3 +1,4 @@
+#include "kinoko/input_cluster.h"
 #include <windows.h>
 #include <cstdint>
 #include <cstring>
@@ -8,7 +9,6 @@ extern int32_t g782;
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
-int32_t retdec_update_input_cluster(int32_t);
 int32_t function_408320(int32_t);
 int32_t function_4083e0(int32_t, int32_t, int32_t, int32_t, int32_t);
 int32_t function_408e60(int32_t);
@@ -104,7 +104,7 @@ extern "C" int32_t function_46b9a0(int32_t self) {
     };
     for (int i = 0; i < count; ++i) update_device(begin + i*device_stride);
     update_device(self + 12);
-    retdec_update_input_cluster(self + 196);
+    function_4077c0(self + 196);
     function_408320(self + 392);
     // Publish the same directional/button counters and release edges.
     constexpr int copies[][2] = {{1444,276},{1436,268},{1440,272},{1456,288},

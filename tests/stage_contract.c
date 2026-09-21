@@ -4324,7 +4324,7 @@ static int test_input_configuration(void) {
 
 static int test_input_copy(void) {
     int32_t source[378]={0}, target[378]={0}, empty[378]={0};
-    int32_t devices[2][42]={{0}}, map[12]={0}, blocks[12][4]={{0}};
+    int32_t devices[2][42]={{0}};
     unsigned char keys[9]={3,7,11,19,23,29,31,37,41};
     function_4a94e0_this(PTR(source));
     function_4a94e0_this(PTR(target));
@@ -4339,9 +4339,10 @@ static int test_input_copy(void) {
     devices[0][1]=101; devices[1][41]=303;
     source[45]=PTR(devices); source[46]=source[47]=PTR(devices)+sizeof(devices);
     source[48]=12345; target[48]=54321; /* vector allocator byte is not copied */
-    for(int i=0;i<12;++i) map[i]=PTR(blocks[i]);
-    for(int i=0;i<40;++i) blocks[((43+i)/4)%12][(43+i)%4]=PTR(devices[i%2]);
-    source[92]=PTR(map); source[93]=12; source[94]=43; source[95]=40;
+    kinoko_input_cluster_construct(PTR(source)+196);
+    kinoko_input_cluster_construct(PTR(target)+196);
+    kinoko_input_cluster_construct(PTR(empty)+196);
+    for(int i=0;i<40;++i) kinoko_input_cluster_append(PTR(source)+196,PTR(devices[i%2]));
     source[91]=0x5555; target[91]=0x6666; /* preserve iterator proxy */
     source[354]=PTR(keys); source[355]=source[356]=PTR(keys)+sizeof(keys);
     source[357]=45678; target[357]=87654;
@@ -4357,30 +4358,33 @@ static int test_input_copy(void) {
     CHECK(memcmp((void*)(intptr_t)target[45],devices,sizeof(devices))==0);
     CHECK(memcmp((void*)(intptr_t)target[354],keys,sizeof(keys))==0);
     CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
-    for(int i=0;i<40;++i) {
-        int slot=target[94]+i;
-        int32_t block=((int32_t*)(intptr_t)target[92])[(slot/4)%target[93]];
-        CHECK(((int32_t*)(intptr_t)block)[slot%4]==PTR(devices[i%2]));
-    }
+    CHECK(kinoko_input_cluster_size(PTR(target)+196)==40);
+    for(int i=0;i<40;++i)
+        CHECK(kinoko_input_cluster_at(PTR(target)+196,i)==PTR(devices[i%2]));
     {
         int32_t buffer=target[45], capacity=target[47], queue=target[92], byte_buffer=target[354];
-        source[46]-=168; source[95]=1; source[355]-=5;
+        source[46]-=168; source[355]-=5;
+        kinoko_input_cluster_clear(PTR(source)+196);
+        kinoko_input_cluster_append(PTR(source)+196,PTR(devices[0]));
         devices[0][1]=909;
         CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
         CHECK(target[45]==buffer && target[47]==capacity && target[46]==buffer+168);
-        CHECK(target[92]==queue && target[95]==1 && target[354]==byte_buffer && target[355]==byte_buffer+4);
+        CHECK(target[92]==queue && kinoko_input_cluster_size(PTR(target)+196)==1 && target[354]==byte_buffer && target[355]==byte_buffer+4);
         CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
         CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && target[45]==buffer);
         CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
         CHECK(target[45]==buffer && target[46]==buffer && target[47]==capacity);
-        CHECK(target[92]==0 && target[93]==0 && target[94]==0 && target[95]==0);
+        CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
         CHECK(target[354]==byte_buffer && target[355]==byte_buffer);
         free((void*)(intptr_t)buffer); free((void*)(intptr_t)byte_buffer);
     }
     function_4a9d70_this(PTR(source));
     function_4a9d70_this(PTR(target));
     function_4a9d70_this(PTR(empty));
-    puts("PASS: Input copy owns vectors, preserves device/proxy ABI, wraps/grows deque and keeps shallow device pointers");
+    kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
+    kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
+    kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
+    puts("PASS: Input copy owns vectors and native deque while keeping shallow device pointers");
     return 0;
 }
 
@@ -4537,10 +4541,9 @@ static int test_map_manager_copy(void) {
 }
 
 static int test_input_aggregation(void) {
-    int32_t cluster[50] = {0}, devices[3][42] = {{0}}, blocks[2][4] = {{0}}, map[2];
-    map[0]=PTR(blocks[0]); map[1]=PTR(blocks[1]);
-    cluster[43]=PTR(map); cluster[44]=2; cluster[45]=7; cluster[46]=3;
-    blocks[1][3]=PTR(devices[0]); blocks[0][0]=PTR(devices[1]); blocks[0][1]=PTR(devices[2]);
+    int32_t cluster[50] = {0}, devices[3][42] = {{0}};
+    kinoko_input_cluster_construct(PTR(cluster));
+    for(int i=0;i<3;++i) kinoko_input_cluster_append(PTR(cluster),PTR(devices[i]));
     ((uint8_t*)devices[0])[4]=10; ((uint8_t*)devices[1])[4]=20; ((uint8_t*)devices[2])[4]=30;
     devices[0][18]=-5; devices[1][18]=5; devices[2][18]=3;
     devices[0][19]=2; devices[1][19]=-6;
@@ -4556,11 +4559,13 @@ static int test_input_aggregation(void) {
     CHECK(((uint8_t*)cluster)[130]==0 && ((uint8_t*)cluster)[131]==1);
     CHECK(((uint8_t*)cluster)[192]==30);
     CHECK(((float*)cluster)[36]==-0.75f && ((float*)cluster)[41]==-0.9f);
-    cluster[46]=0;
+    kinoko_input_cluster_clear(PTR(cluster));
     CHECK(function_4077c0(PTR(cluster))==PTR(cluster)+72);
     for(int i=18;i<42;++i) CHECK(cluster[i]==0);
     CHECK(((uint8_t*)cluster)[192]==30); /* Last device survives an empty frame. */
-    puts("PASS: original InputCluster deque wrap, signed axes, 12 buttons, release edges and device precedence");
+    CHECK(kinoko_input_cluster_delete(PTR(cluster),NULL,0)==PTR(cluster));
+    CHECK(cluster[0]==PTR(g35) && cluster[43]==0);
+    puts("PASS: native InputCluster deque, signed axes, 12 buttons, release edges and device precedence");
     return 0;
 }
 
