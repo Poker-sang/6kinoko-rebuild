@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
@@ -108,6 +109,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
         kinoko_act_list_drop_storage(field<int32_t>(layer+180));
         kinoko_act_list_drop_storage(field<int32_t>(layer+192));
         field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
+        kinoko_string_destroy(layer+112);
         return 0;
     }
     retdec_construct_cact_script(layer + 204);

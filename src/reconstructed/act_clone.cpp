@@ -112,7 +112,7 @@ private:
         const kinoko::legacy::StringView input(static_cast<unsigned char*>(pointer(source))+offset);
         const kinoko::legacy::StringView target(static_cast<unsigned char*>(pointer(dest))+offset);
         target.assign(input.data(),input.length());
-        if(target.length()!=input.length()) throw std::bad_alloc();
+        if(target.length()!=input.length()) {target.destroy();throw std::bad_alloc();}
         try {strings_.push_back(dest+offset);}
         catch(...) {target.destroy();throw;}
     }

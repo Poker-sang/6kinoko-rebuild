@@ -81,3 +81,12 @@ Replaced the recovered VC8 string allocator, SSO mutation and growth arithmetic 
 The deferred VM cleanup chain now uses std::list<int32_t>; it releases states newest first, detaches the pending list before callbacks and leaves externally supplied VMs unowned. g643 remains an identity token rather than a manually allocated linked node. A pinned-source reachability audit across production, tests, headers and both R123 link maps identifies six closed old string/realloc/CRT/Squirrel cleanup functions and four associated globals. No function is linked; four data symbols are linker-retained but have no external source or interior-address consumers. The closed component is removed with its audit report retained. This is dead-code retirement, not an implementation of omitted engine behavior.
 
 IDA 46FAC0 additionally confirms one explicit SquirrelObject constructor at 46FD05. Removed the duplicate zero-receiver transitional call from Map class binding and its no-argument shim; the actual 4A94E0 source-backed constructor remains. No missing receiver or exception machinery is invented.
+
+## R125 — String migration failure-path review
+
+The final source review found two allocation-failure cleanup paths that must
+now destroy a native short-string owner: layer list-construction failure and
+clone string-assignment failure before rollback registration. Both are fixed.
+Updated the remaining contract observations that read short text directly from
+record bytes (font face, pending text and global script extension) to use the
+published character view. These contracts are compiled only, not executed.
