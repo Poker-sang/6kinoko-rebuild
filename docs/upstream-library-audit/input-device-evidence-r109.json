@@ -1,0 +1,121 @@
+{
+  "46e480": {
+    "addr": "0x46e480",
+    "code": "int __thiscall sub_46E480(_DWORD *this, unsigned int a2)\n{\n  unsigned int v2; // esi\n  int v4; // ebx\n  int v5; // ecx\n  int result; // eax\n\n  v2 = a2; /*0x46e485*/\n  v4 = *(this + 1); /*0x46e48b*/\n  v5 = v4 - *this; /*0x46e490*/\n  result = v5 / 168; /*0x46e4a1*/\n  if ( v5 / 168 > a2 ) /*0x46e4a5*/\n    return sub_46D130(a1: &a2, a2: *this + 168 * a2, a3: v4); /*0x46e4b7*/\n  if ( v5 / 168 < a2 ) /*0x46e4c3*/\n  {\n    sub_46D6D0(a1: a2 - result); /*0x46e4cc*/\n    sub_46C400(a1: *(this + 1), a2: v2 - (*(this + 1) - *this) / 168); /*0x46e4fb*/\n    result = (*(this + 1) - *this) / 168; /*0x46e516*/\n    *(this + 1) += 168 * (v2 - result); /*0x46e525*/\n  }\n  return result; /*0x46e4bc*/\n}",
+    "refs": [
+      {
+        "addr": "0x46d130",
+        "name": "sub_46D130"
+      },
+      {
+        "addr": "0x46d6d0",
+        "name": "sub_46D6D0"
+      },
+      {
+        "addr": "0x46c400",
+        "name": "sub_46C400"
+      }
+    ]
+  },
+  "46e6f0": {
+    "addr": "0x46e6f0",
+    "code": "int __thiscall sub_46E6F0(_DWORD *this)\n{\n  unsigned int v2; // edx\n  int i; // eax\n  int v4; // edx\n  int v5; // eax\n  unsigned int v6; // eax\n  unsigned int v7; // edx\n  unsigned int v8; // ecx\n  unsigned int v9; // edx\n  char **v10; // eax\n  int v11; // eax\n  unsigned int v12; // eax\n  unsigned int v13; // edx\n  unsigned int v14; // ecx\n  unsigned int v15; // edx\n  _DWORD *v16; // eax\n  int v17; // eax\n  int result; // eax\n  _BYTE v19[12]; // [esp+10h] [ebp-84h] BYREF\n  unsigned int v20; // [esp+1Ch] [ebp-78h]\n  _DWORD pExceptionObject[3]; // [esp+20h] [ebp-74h] BYREF\n  char *v22; // [esp+2Ch] [ebp-68h] BYREF\n  char *v23; // [esp+30h] [ebp-64h] BYREF\n  int v24; // [esp+34h] [ebp-60h]\n  unsigned int v25; // [esp+38h] [ebp-5Ch]\n  unsigned int v26; // [esp+3Ch] [ebp-58h]\n  _DWORD v27[17]; // [esp+40h] [ebp-54h] BYREF\n  int v28; // [esp+90h] [ebp-4h]\n\n  sub_46E480(a1: dword_51B188); /*0x46e729*/\n  v2 = (int)((unsigned __int64)(818089009LL * (*(this + 46) - *(this + 45))) >> 32) >> 5; /*0x46e741*/\n  v25 = 0; /*0x46e74b*/\n  if ( v2 + (v2 >> 31) != 0 ) /*0x46e752*/\n  {\n    v24 = 0; /*0x46e758*/\n    do /*0x46e86f*/\n    {\n      memset(a1: v27, Val: 0, Size: sizeof(v27)); /*0x46e767*/\n      LOBYTE(v27[0]) = v25; /*0x46e772*/\n      for ( i = 0; i < 12; ++i ) /*0x46e775*/\n        v27[i + 5] = i; /*0x46e777*/\n      sub_4074C0(a1: v27); /*0x46e78e*/\n      v4 = *(this + 94); /*0x46e79c*/\n      v23 = (char *)(v24 + *(this + 45)); /*0x46e7a2*/\n      v5 = *(this + 95); /*0x46e7a5*/\n      if ( (((_BYTE)v5 + (_BYTE)v4) & 3) == 0 && *(this + 93) <= (unsigned int)(v5 + 4) >> 2 ) /*0x46e7be*/\n        sub_46C220(a1: (char *)1); /*0x46e7c8*/\n      v6 = *(this + 94) + *(this + 95); /*0x46e7d3*/\n      v7 = *(this + 93); /*0x46e7d9*/\n      v8 = v6 >> 2; /*0x46e7e1*/\n      v20 = v6; /*0x46e7e4*/\n      v26 = v6 >> 2; /*0x46e7e7*/\n      if ( v7 <= v6 >> 2 ) /*0x46e7ec*/\n      {\n        v8 -= v7; /*0x46e7ee*/\n        v26 = v8; /*0x46e7f0*/\n      }\n      if ( *(_DWORD *)(*(this + 92) + 4 * v8) == 0 ) /*0x46e7fd*/\n      {\n        v6 = (unsigned int)operator new(Size: 0x10u); /*0x46e801*/\n        if ( v6 == 0 ) /*0x46e80b*/\n        {\n          v22 = nullptr; /*0x46eb8a*/\n          std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v22); /*0x46eb91*/\n          pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x46eb9f*/\n          _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46eba6*/\n        }\n        v9 = v26; /*0x46e817*/\n        *(_DWORD *)(*(this + 92) + 4 * v26) = v6; /*0x46e81a*/\n        LOBYTE(v6) = v20; /*0x46e81d*/\n        v8 = v9; /*0x46e820*/\n      }\n      v10 = (char **)(*(_DWORD *)(*(this + 92) + 4 * v8) + 4 * (v6 & 3)); /*0x46e82e*/\n      if ( v10 != nullptr ) /*0x46e833*/\n        *v10 = v23; /*0x46e838*/\n      v24 += 168; /*0x46e83a*/\n      ++*(this + 95); /*0x46e846*/\n      ++v25; /*0x46e84c*/\n    }\n    while ( v25 < (*(this + 46) - *(this + 45)) / 168 ); /*0x46e86f*/\n  }\n  memset(a1: v27, Val: 0, Size: sizeof(v27)); /*0x46e87d*/\n  LOBYTE(v27[0]) = -1; /*0x46e891*/\n  v27[1] = 200; /*0x46e895*/\n  v27[2] = 208; /*0x46e89c*/\n  v27[3] = 203; /*0x46e8a3*/\n  v27[4] = 205; /*0x46e8aa*/\n  v27[5] = 44; /*0x46e8b1*/\n  v27[6] = 30; /*0x46e8b8*/\n  v27[7] = 46; /*0x46e8bf*/\n  v27[8] = 45; /*0x46e8c6*/\n  v27[9] = 255; /*0x46e8cd*/\n  v27[10] = 255; /*0x46e8d0*/\n  v27[11] = 255; /*0x46e8d3*/\n  sub_4074C0(a1: v27); /*0x46e8d6*/\n  v11 = *(this + 95); /*0x46e8db*/\n  if ( (((_BYTE)v11 + *((_BYTE *)this + 376)) & 3) == 0 && *(this + 93) <= (unsigned int)(v11 + 4) >> 2 ) /*0x46e8fa*/\n    sub_46C220(a1: (char *)1); /*0x46e904*/\n  v12 = *(this + 94) + *(this + 95); /*0x46e90f*/\n  v13 = *(this + 93); /*0x46e915*/\n  v14 = v12 >> 2; /*0x46e91d*/\n  v22 = (char *)v12; /*0x46e920*/\n  v26 = v12 >> 2; /*0x46e923*/\n  if ( v13 <= v12 >> 2 ) /*0x46e928*/\n  {\n    v14 -= v13; /*0x46e92a*/\n    v26 = v14; /*0x46e92c*/\n  }\n  if ( *(_DWORD *)(*(this + 92) + 4 * v14) == 0 ) /*0x46e93a*/\n  {\n    v12 = (unsigned int)operator new(Size: 0x10u); /*0x46e93e*/\n    if ( v12 == 0 ) /*0x46e948*/\n    {\n      v23 = nullptr; /*0x46ebb2*/\n      std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v23); /*0x46ebb5*/\n      pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x46ebc3*/\n      _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x46ebca*/\n    }\n    v15 = v26; /*0x46e954*/\n    *(_DWORD *)(*(this + 92) + 4 * v26) = v12; /*0x46e957*/\n    LOBYTE(v12) = (_BYTE)v22; /*0x46e95a*/\n    v14 = v15; /*0x46e95d*/\n  }\n  v16 = (_DWORD *)(*(_DWORD *)(*(this + 92) + 4 * v14) + 4 * (v12 & 3)); /*0x46e96b*/\n  if ( v16 != nullptr ) /*0x46e970*/\n    *v16 = this + 3; /*0x46e975*/\n  ++*(this + 95); /*0x46e977*/\n  sub_4082D0(a1: this + 98); /*0x46e983*/\n  sub_408430(a1: 59); /*0x46e990*/\n  sub_408430(a1: 60); /*0x46e99d*/\n  sub_408430(a1: 61); /*0x46e9aa*/\n  sub_408430(a1: 62); /*0x46e9b7*/\n  sub_408430(a1: 63); /*0x46e9c4*/\n  sub_408430(a1: 64); /*0x46e9d1*/\n  sub_408430(a1: 65); /*0x46e9de*/\n  sub_408430(a1: 66); /*0x46e9eb*/\n  sub_408430(a1: 67); /*0x46e9f8*/\n  sub_408430(a1: 68); /*0x46ea05*/\n  sub_408430(a1: 87); /*0x46ea12*/\n  sub_408430(a1: 88); /*0x46ea1f*/\n  sub_408430(a1: 2); /*0x46ea2c*/\n  sub_408430(a1: 3); /*0x46ea39*/\n  sub_408430(a1: 4); /*0x46ea46*/\n  sub_408430(a1: 5); /*0x46ea53*/\n  sub_408430(a1: 6); /*0x46ea60*/\n  sub_408430(a1: 7); /*0x46ea6d*/\n  sub_408430(a1: 8); /*0x46ea7a*/\n  sub_408430(a1: 9); /*0x46ea87*/\n  sub_408430(a1: 10); /*0x46ea94*/\n  sub_408430(a1: 11); /*0x46eaa1*/\n  v17 = sub_4A90C0(a1: v19, a2: &unk_514484); /*0x46eab2*/\n  v28 = 0; /*0x46eabd*/\n  sub_4A95C0(a1: v17); /*0x46eac0*/\n  v28 = -1; /*0x46eac5*/\n  sub_4A9D70(a1: v19); /*0x46ead2*/\n  sub_4A9BB0(a1: this); /*0x46eada*/\n  sub_402D30(); /*0x46eae5*/\n  result = sub_4A9840(Src: \"input\", a2: (int)this); /*0x46eaec*/\n  *(this + 360) = 0; /*0x46eaf1*/\n  *(this + 359) = 0; /*0x46eaf7*/\n  *(this + 366) = 0; /*0x46eafd*/\n  *(this + 365) = 0; /*0x46eb03*/\n  *(this + 364) = 0; /*0x46eb09*/\n  *(this + 363) = 0; /*0x46eb0f*/\n  *(this + 362) = 0; /*0x46eb15*/\n  *(this + 361) = 0; /*0x46eb1b*/\n  *(this + 367) = 0; /*0x46eb21*/\n  *(this + 377) = 0; /*0x46eb2b*/\n  *(this + 376) = 0; /*0x46eb31*/\n  *(this + 375) = 0; /*0x46eb37*/\n  *(this + 374) = 0; /*0x46eb3d*/\n  *(this + 373) = 0; /*0x46eb43*/\n  *(this + 372) = 0; /*0x46eb49*/\n  *(this + 371) = 0; /*0x46eb4f*/\n  *(this + 370) = 0; /*0x46eb55*/\n  *(this + 369) = 0; /*0x46eb5b*/\n  *(this + 368) = 0; /*0x46eb61*/\n  return result; /*0x46eb67*/\n}",
+    "refs": [
+      {
+        "addr": "0x46e480",
+        "name": "sub_46E480"
+      },
+      {
+        "addr": "0x51b188",
+        "name": "dword_51B188"
+      },
+      {
+        "addr": "0x4abad0",
+        "name": "_memset"
+      },
+      {
+        "addr": "0x4074c0",
+        "name": "sub_4074C0"
+      },
+      {
+        "addr": "0x46c220",
+        "name": "sub_46C220"
+      },
+      {
+        "addr": "0x4ab3fc",
+        "name": "??2@YAPAXI@Z"
+      },
+      {
+        "addr": "0x4abd0c",
+        "name": "??0exception@std@@QAE@ABQBD@Z"
+      },
+      {
+        "addr": "0x4d5878",
+        "name": "??_7bad_alloc@std@@6B@"
+      },
+      {
+        "addr": "0x4aba7b",
+        "name": "__CxxThrowException@8"
+      },
+      {
+        "addr": "0x4f7308",
+        "name": "__TI2?AVbad_alloc@std@@"
+      },
+      {
+        "addr": "0x4082d0",
+        "name": "sub_4082D0"
+      },
+      {
+        "addr": "0x408430",
+        "name": "sub_408430"
+      },
+      {
+        "addr": "0x4a90c0",
+        "name": "sub_4A90C0"
+      },
+      {
+        "addr": "0x514484",
+        "name": "unk_514484"
+      },
+      {
+        "addr": "0x4a95c0",
+        "name": "sub_4A95C0"
+      },
+      {
+        "addr": "0x4a9d70",
+        "name": "sub_4A9D70"
+      },
+      {
+        "addr": "0x4a9bb0",
+        "name": "sub_4A9BB0"
+      },
+      {
+        "addr": "0x402d30",
+        "name": "sub_402D30"
+      },
+      {
+        "addr": "0x4a9840",
+        "name": "sub_4A9840"
+      },
+      {
+        "addr": "0x4d5b94",
+        "name": "aInput_0",
+        "string": "input"
+      }
+    ]
+  },
+  "4074c0": {
+    "addr": "0x4074c0",
+    "code": "int __thiscall sub_4074C0(_BYTE *this, const void *a2)\n{\n  _BYTE *v2; // ebx\n  int result; // eax\n\n  v2 = this + 4; /*0x4074c8*/\n  qmemcpy(this + 4, a2, 0x44u); /*0x4074d3*/\n  result = (char)*(this + 4); /*0x4074d5*/\n  if ( result >= dword_51B188 ) /*0x4074de*/\n  {\n    result = (int)memset(a1: v2, Val: 0, Size: 0x44u); /*0x4074e5*/\n    *v2 = -2; /*0x4074ed*/\n  }\n  return result; /*0x4074f0*/\n}",
+    "refs": [
+      {
+        "addr": "0x4abad0",
+        "name": "_memset"
+      },
+      {
+        "addr": "0x51b188",
+        "name": "dword_51B188"
+      }
+    ]
+  }
+}

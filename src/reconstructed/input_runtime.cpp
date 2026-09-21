@@ -1,3 +1,4 @@
+#include "kinoko/input_devices.h"
 #include "kinoko/input_cluster.h"
 #include <windows.h>
 #include <cstdint>
@@ -37,8 +38,8 @@ extern "C" int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName) {
     DWORD transferred = 0;
     WriteFile(file_handle, (LPCVOID)(intptr_t)(this_ptr + 0x10), 0x44,
               &transferred, NULL);
-    int32_t begin = *(int32_t *)(intptr_t)(this_ptr + 0xb4);
-    int32_t end = *(int32_t *)(intptr_t)(this_ptr + 0xb8);
+    int32_t begin = kinoko_input_devices_begin(this_ptr);
+    int32_t end = kinoko_input_devices_end(this_ptr);
     if (begin != end)
         WriteFile(file_handle, (LPCVOID)(intptr_t)(begin + 4), 0x44,
                   &transferred, NULL);
@@ -74,8 +75,8 @@ extern "C" int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
         // same 0x44-byte value to every registered device record.
         if (ReadFile(file_handle, record, sizeof(record), &transferred,
                      NULL) && transferred == sizeof(record)) {
-            int32_t begin = *(int32_t *)(intptr_t)(this_ptr + 0xb4);
-            int32_t end = *(int32_t *)(intptr_t)(this_ptr + 0xb8);
+            int32_t begin = kinoko_input_devices_begin(this_ptr);
+            int32_t end = kinoko_input_devices_end(this_ptr);
             if ((int32_t)(int8_t)record[0] >= g782) {
                 memset(record, 0, sizeof(record));
                 record[0] = 0xfe;
@@ -94,7 +95,7 @@ extern "C" int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
 
 extern "C" int32_t function_46b9a0(int32_t self) {
     if (!self) return 0;
-    const int32_t begin = word(self, 180), end = word(self, 184);
+    const int32_t begin = kinoko_input_devices_begin(self), end = kinoko_input_devices_end(self);
     const int count = begin && end >= begin && (end-begin)%device_stride == 0
         ? (end-begin)/device_stride : 0;
     auto update_device = [](int32_t device) {
@@ -122,8 +123,8 @@ extern "C" int32_t function_46bbe0(int32_t this_ptr, int32_t device,
     if (this_ptr == 0 || field < 0 || field >= 12)
         return 0;
 
-    int32_t begin = *(int32_t *)(intptr_t)(this_ptr + 0xb4);
-    int32_t end = *(int32_t *)(intptr_t)(this_ptr + 0xb8);
+    int32_t begin = kinoko_input_devices_begin(this_ptr);
+    int32_t end = kinoko_input_devices_end(this_ptr);
     int32_t count = (begin != 0 && end >= begin)
                         ? (end - begin) / 0xa8
                         : 0;
@@ -166,8 +167,8 @@ extern "C" int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t fie
         }
         return 0;
     }
-    begin = *(int32_t *)(intptr_t)(this_ptr + 180);
-    end = *(int32_t *)(intptr_t)(this_ptr + 184);
+    begin = kinoko_input_devices_begin(this_ptr);
+    end = kinoko_input_devices_end(this_ptr);
     if (device >= 0 && device < (end - begin) / 168) {
         for (int32_t index = 0; index < (end - begin) / 168; ++index) {
             int32_t state = function_408e80(index);
@@ -189,8 +190,8 @@ extern "C" int32_t function_46be40(int32_t this_ptr, int32_t device, int32_t fie
     if (this_ptr == 0 || field < 0 || field >= 12)
         return -1;
 
-    int32_t begin = *(int32_t *)(intptr_t)(this_ptr + 0xb4);
-    int32_t end = *(int32_t *)(intptr_t)(this_ptr + 0xb8);
+    int32_t begin = kinoko_input_devices_begin(this_ptr);
+    int32_t end = kinoko_input_devices_end(this_ptr);
     int32_t count = (begin != 0 && end >= begin)
                         ? (end - begin) / 0xa8
                         : 0;

@@ -13,3 +13,7 @@ Compiled-only contracts cover deque growth through forty pointers, shrinking/emp
 ## R108 — Input key registration
 
 Replaced the fixed 32-byte global registration buffer and emulated byte-vector assignment with std::vector<uint8_t>, owned through tracker+1024. Original 408430 suppresses duplicate scan codes and grows dynamically; 4082D0 clears 256 counters, registration and three modifiers. Copy retains independent registration storage and copies counters/modifiers. Per-frame 408320 now uses native accessors. The old proxy slot is not interpreted as a modern STL object. Contracts register all 256 scan codes twice and check uniqueness/order, independent copy, smaller/empty/self assignment and destruction; they are compiled only. The process-global Input remains process-lifetime storage, as before.
+
+## R109 — Input device records
+
+Replaced manual contiguous buffer assignment/allocation/destruction with std::vector<Device> behind manager+180. Device copy construction installs the base vtable, assignment preserves existing identity and destruction dispatches the original scalar destructor. Configuration read/write, assignment, per-frame update and copy use native storage accessors. Initialization now sizes the vector to the enumerated controller count and follows original 46E6F0: twelve default button bindings per controller, controller pointers first and keyboard last in the cluster deque. Copy still intentionally keeps shallow cluster pointers. Input container contracts are updated for native construction/destruction and compiled only.
