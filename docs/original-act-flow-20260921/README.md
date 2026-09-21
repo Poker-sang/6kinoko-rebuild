@@ -59,3 +59,20 @@ This batch is not a claim that all existing parser guards, layout logic, memory
 allocation failure behavior or audio/shutdown behavior have been recovered.
 Historical documents remain historical; their missing-46618A and safety claims
 are superseded here. Old artifacts are retained. Build provenance follows.
+
+
+## R129 follow-up: layout must not reload resources
+
+R128 source d16dfc7 built all quiet Win32 Release targets successfully; no
+contracts/game were executed. Its EXE and staged, hash-verified DAT are retained
+in runtime-builds/original-act-r128-quiet, with build/staging logs in its build tree.
+
+Fresh 42C100 -> 42C470 evidence shows only QueryType and existing-handle checks;
+there is no file-load fallback. Removed that fallback from both layout update
+entries. Restored 42C470's four initial half-size writes (+248/+252/+272/+276)
+and one-time flag, and 42BCC0's conditional binding without resetting that flag.
+The old comment attributing a special zero-origin policy to Fader is withdrawn:
+serialized values survive only when the original initialized flag says so.
+The existing layer-property aliases remain outside this bounded correction.
+0x42bd70.json is a retained exploratory capture inside 42BD00 property registration,
+not the update evidence; 42C100/42C470/42BCC0 are the applicable captures.

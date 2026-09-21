@@ -39,6 +39,37 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 
+namespace {
+// 42C470: bind only an already-loaded CActResource2D. This helper never opens
+// a file; loading belongs to the document's separate 4289C0 resource pass.
+int32_t bind_loaded_texture(int32_t layout) {
+    const auto layer = field<int32_t>(layout + 304);
+    if (!layer) return E_FAIL;
+    const auto resource = field<int32_t>(layer + 100);
+    if (!resource) return E_FAIL;
+    struct Descriptor { void *vtable, *cache; char name[sizeof(".?AVCActResource2D@@")]; };
+    static const Descriptor type{nullptr, nullptr, ".?AVCActResource2D@@"};
+    using Query = uint8_t (__thiscall *)(void *, const void *, void **);
+    const auto *table = field<const unsigned char *>(resource);
+    void *converted = nullptr;
+    if (!kinoko::legacy::load<Query>(table + 8)(pointer(resource), &type, &converted)) return E_FAIL;
+    const auto texture = address(converted);
+    const auto handle = field<int32_t>(texture + 68);
+    if (!handle) return E_FAIL;
+    if (!field<uint8_t>(layout + 312)) {
+        const auto half_width = field<float>(texture + 88) * 0.5f;
+        const auto half_height = field<float>(texture + 92) * 0.5f;
+        field<float>(layout + 248) = half_width;
+        field<float>(layout + 252) = half_height;
+        field<float>(layout + 272) = half_width;
+        field<float>(layout + 276) = half_height;
+        field<uint8_t>(layout + 312) = 1;
+    }
+    field<int32_t>(layout + 308) = handle;
+    return 0;
+}
+}
+
 int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer)
 {
@@ -48,7 +79,6 @@ int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
     if (layout == 0 || layer == 0)
         return -0x7fffbffb;
     field<int32_t>(layout + 0x130) = layer;
-    field<uint8_t>(layout + 0x138) = 0;
     /* CActLayerLayout is a pointer view over the active C2DLayout.  The
        original 42BA50 writes these aliases before layer properties are
        accessed through CActLayer's _get/_set tables. */
@@ -70,20 +100,9 @@ int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
     field<int32_t>(layer + 64) = layout + 296;
     field<int32_t>(layer + 68) = layout + 300;
     resource = field<int32_t>(layer + 0x64);
-    handle = resource == 0 ? 0 :
-        field<int32_t>(resource + 0x44);
-    field<int32_t>(layout + 0x134) = handle;
-    if (resource != 0 && handle != 0 &&
-        field<uint8_t>(layout + 312) == 0) {
-        field<float>(layout + 248) =
-            field<float>(resource + 88) * 0.5f;
-        field<float>(layout + 252) =
-            field<float>(resource + 92) * 0.5f;
-        /* cos_x/cos_y are serialized layout properties.  The original
-           binding path does not replace them when a resource is already
-           resolved; Fader relies on its zero origin for screen coverage. */
-        field<uint8_t>(layout + 312) = 1;
-    }
+    // 42BCC0 only attempts binding when this layout has no cached handle.
+    if (!field<int32_t>(layout + 308)) bind_loaded_texture(layout);
+    handle = field<int32_t>(layout + 308);
     retdec_trace_i32("layout:bind-layer", layer);
     retdec_trace_i32("layout:bind-resource", resource);
     retdec_trace_i32("layout:bind-texture", handle);
@@ -150,14 +169,9 @@ int32_t retdec_c2dlayout_update_impl(int32_t layout)
     if (resource == 0)
         return -0x7fffbffb;
     handle = field<int32_t>(resource + 0x44);
-    if (handle == 0) {
-        const char *texture_name = retdec_std_string_data(resource + 40);
-        if (texture_name != nullptr && *texture_name != 0) {
-            handle = retdec_load_act_texture(texture_name);
-            field<int32_t>(resource + 0x44) = handle;
-            field<int32_t>(layout + 0x134) = handle;
-        }
-    }
+    if (!field<int32_t>(layout + 308) || field<int32_t>(layout + 308) != handle)
+        bind_loaded_texture(layout);
+    handle = field<int32_t>(layout + 308);
     if (handle == 0)
         return -0x7fffbffb;
 
@@ -470,13 +484,9 @@ int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
         return -0x7fffbffb;
 
     handle = field<int32_t>(resource + 0x44);
-    if (handle == 0) {
-        const char *texture_name = retdec_std_string_data(resource + 40);
-        if (texture_name != nullptr && *texture_name != 0) {
-            handle = retdec_load_act_texture(texture_name);
-            field<int32_t>(resource + 0x44) = handle;
-        }
-    }
+    if (!field<int32_t>(layout + 308) || field<int32_t>(layout + 308) != handle)
+        bind_loaded_texture(layout);
+    handle = field<int32_t>(layout + 308);
     if (handle == 0)
         return -0x7fffbffb;
     field<int32_t>(layout + 0x134) = handle;
