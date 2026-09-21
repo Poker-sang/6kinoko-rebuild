@@ -19167,15 +19167,7 @@ void retdec_msvc_Finitlocks__YAXXZ(void) {
 // Address range: 0x4d4350 - 0x4d437e
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
 void retdec_msvc_Finitlocks__YAXXZ2(void) {
-    // 0x4d4350
-    if ((uint32_t)g556 >= 16) {
-        // 0x4d4359
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x4d4367
-    g556 = 15;
-    g555 = 0;
-    *(char *)&g554 = 0;
+    kinoko_string_destroy((int32_t)(intptr_t)&g554);
 }
 
 

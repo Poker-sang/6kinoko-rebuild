@@ -71,3 +71,7 @@ Replaced all ten map-layout vector stores and timeline pair storage with actual 
 ## R122 — Collision and actor iteration buffers
 
 Removed manual realloc/growth arithmetic from collision records, layout/scratch/weak-pair arrays, candidate arrays and ActorManager iteration arrays. Native word vectors own their storage and preserve logical end independently of allocated elements, including stage resets that retain capacity. Temporary point-query buffers now delete their native owners on success and failure. Existing collision scanning, actor ordering, pair rotation and weak-reference release order remain unchanged.
+
+## R123 — Native string ownership
+
+Replaced the recovered VC8 string allocator, SSO mutation and growth arithmetic with actual std::string objects. Game records publish a borrowed character pointer, opaque owner, length and selector/capacity; modern STL objects are never overlaid on unaligned records. Untouched empty records and read-only legacy fixtures retain their inline interpretation. Assign/append snapshot aliasing input before mutation, preserve embedded NULs and guard length overflow. Reserve keeps the exposed truncation/clear behavior; historical allocation sizes are no longer contractual. ACT resources, scripts, layers, runtimes, keys, clone rollback, font atlases and string-layout destruction release native owners. Compilation-only contracts now check content, aliasing, ownership, capacity bounds and unaligned canaries instead of old allocator growth constants.

@@ -7,6 +7,7 @@ extern "C" {
 
 /* The game's 24-byte Win32 string record is not today's std::string.
    These functions borrow caller-owned, possibly unaligned record storage. */
+void kinoko_string_destroy(int32_t object);
 const char* retdec_std_string_data(int32_t object);
 uint32_t retdec_safe_c_string_length(const char* source);
 int32_t retdec_string_assign_n(int32_t* object, const char* source, uint32_t size);

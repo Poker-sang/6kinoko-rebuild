@@ -4448,7 +4448,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
 static int test_string_layout_lifetime(void) {
     int32_t layout[65];memset(layout,0xa5,sizeof(layout));
     CHECK(kinoko_construct_string_layout(PTR(layout))==PTR(layout));
-    CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]==15);
+    CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]>=16);
     CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
     const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
     CHECK(memcmp(layout+15,face,sizeof(face))==0);
@@ -4749,8 +4749,8 @@ static int test_map_serialization(void) {
     CHECK(source[60]==INT_MIN && source[61]==INT_MIN);
     CHECK(source[62]==0 && source[63]==0 && source[64]==0 && source[65]==0);
     g673=saved;
-    free((void*)(intptr_t)loaded[66]);
-    free((void*)(intptr_t)source[101]); free((void*)(intptr_t)source[109]);
+    kinoko_native_buffer_destroy(PTR(loaded)+264);
+    kinoko_native_buffer_destroy(PTR(source)+404); kinoko_native_buffer_destroy(PTR(source)+436);
     puts("PASS: map wire format, signed XY order, sparse MCD cache, original bounds and appended records");
     return 0;
 }
@@ -4806,7 +4806,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(*(uint32_t*)(intptr_t)(cloned+24)==sizeof(key_name)-1);
         CHECK(memcmp(retdec_std_string_data(cloned+8),key_name,sizeof(key_name)-1)==0);
         CHECK(retdec_std_string_data(cloned+8)!=retdec_std_string_data(key+8));
-        free((void*)retdec_std_string_data(cloned+8));
+        kinoko_string_destroy(cloned+8);
         free((void*)(intptr_t)copied_layout); free((void*)(intptr_t)cloned);
     }
     CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
@@ -5245,7 +5245,7 @@ static int test_key_string_writers(void) {
     }
     g765=archives;
     kinoko_clear_string_layout(PTR(string_source));
-    if(key[7]>=16) free((void*)(intptr_t)key[2]);
+    kinoko_string_destroy(PTR(key)+8);
     g673=saved;
     puts("PASS: key presence byte and CStringLayout original bool alias serialization");
     return 0;

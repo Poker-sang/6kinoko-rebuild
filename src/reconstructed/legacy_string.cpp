@@ -1,141 +1,85 @@
-// Recovered MSVC/Dinkumware string operations. The layout/growth evidence is
-// in original 4038C0, 4039E0, 403BF0, 403CE0/403DBC and 4066F0; see the audit.
-// Do not replace these byte records with the current toolchain's std::string.
+// Native std::string owns all mutable text. The 24-byte game record exposes
+// borrowed data and an opaque owner; no historical SSO/growth allocator remains.
 #include "kinoko/legacy_string.h"
 #include "kinoko/legacy_string.hpp"
 #include <algorithm>
-#include <cstdlib>
 #include <memory>
-
+#include <stdexcept>
 namespace kinoko::legacy {
-namespace {
-struct FreeBuffer final {
-    void operator()(char* buffer) const noexcept { std::free(buffer); }
-};
-using Buffer = std::unique_ptr<char, FreeBuffer>;
-Buffer allocate(std::uint32_t capacity) {
-    return Buffer(static_cast<char*>(std::malloc(static_cast<std::size_t>(capacity) + 1)));
-}
-}
-
-void StringView::assign(const char* source, std::uint32_t size) const {
-    if (!*this || size > maximum_size) return;
-    const auto old_length = length();
-    const auto old_capacity = capacity();
-    const auto* old_data = data();
-    Buffer temporary;
-    // An assignment may refer to the old allocation, including its NUL byte.
-    // Retain the snapshot and allocation-failure behavior before any growth.
-    if (source && size) {
-        const auto from = reinterpret_cast<std::uintptr_t>(source);
-        const auto begin = reinterpret_cast<std::uintptr_t>(old_data);
-        const auto end = begin + static_cast<std::uintptr_t>(old_length) + 1;
-        if (from >= begin && from < end && from <= UINTPTR_MAX - size && from + size <= end) {
-            temporary.reset(static_cast<char*>(std::malloc(size)));
-            if (!temporary) return;
-            std::memcpy(temporary.get(), source, size);
-            source = temporary.get();
-        }
-    }
-    if (old_capacity < size && !grow(size, old_length)) return;
-    if (size && source) std::memmove(data(), source, size);
-    terminate(size);
-}
-
-void StringView::assign(StringView source, std::uint32_t position, std::uint32_t size) const {
-    if (!*this || !source || position > source.length()) return;
-    const auto count = (std::min)(source.length() - position, size);
-    if (storage() == source.storage()) {
-        // 406CC0 erases the suffix then prefix in place, retaining capacity.
-        if (count) std::memmove(data(), data() + position, count);
-        terminate(count);
-    } else {
-        assign(source.data() + position, count);
-    }
-}
-
-void StringView::append(const char* source, std::uint32_t size) const {
-    if (!*this) return;
-    const auto old_length = length();
-    const auto from = reinterpret_cast<std::uintptr_t>(source);
-    const auto begin = reinterpret_cast<std::uintptr_t>(data());
-    // Numeric comparisons preserve Win32 address ordering without comparing
-    // pointers into unrelated allocations as C++ array iterators.
-    if (source && from >= begin && from < begin + old_length) {
-        append(*this, static_cast<std::uint32_t>(from - begin), size);
-        return;
-    }
-    if (size > invalid_size - old_length) return;
-    const auto new_length = old_length + size;
-    if (new_length == invalid_size) return;
-    if (capacity() < new_length && !grow(new_length, old_length)) return;
-    if (size && source) std::memmove(data() + old_length, source, size);
-    terminate(new_length);
-}
-
-void StringView::append(StringView source, std::uint32_t position, std::uint32_t size) const {
-    if (!*this || !source || position > source.length()) return;
-    const auto count = (std::min)(source.length() - position, size);
-    if (!count) return;
-    const auto old_length = length();
-    if (count > invalid_size - old_length) return;
-    const auto new_length = old_length + count;
-    if (capacity() < new_length && !grow(new_length, old_length)) return;
-    // Resolve both buffers AFTER growth. The source may be this very string.
-    std::memmove(data() + old_length, source.data() + position, count);
-    terminate(new_length);
-}
-
-bool StringView::reserve(std::uint32_t requested, bool shrink) const {
-    if (!*this || requested == invalid_size) return false;
-    const auto old_capacity = capacity();
-    const auto old_length = length();
-    if (old_capacity < requested) return grow(requested, old_length) != 0;
-    if (requested >= inline_bytes || !shrink) {
-        if (!requested) terminate(0);
-        return requested != 0;
-    }
-    const auto kept = (std::min)(old_length, requested);
-    if (is_heap()) {
-        Buffer old(data());
-        if (kept) std::memmove(record_.bytes(&StringRecord::characters), old.get(), kept);
-    }
-    capacity(inline_capacity);
-    terminate(kept);
-    return requested != 0;
-}
-
-std::uintptr_t StringView::grow(std::uint32_t requested, std::uint32_t old_length) const {
-    if (!*this) return 0;
-    const auto old_capacity = capacity();
-    auto adjusted = requested | inline_capacity;
-    if (adjusted != invalid_size) {
-        const auto half = old_capacity / 2;
-        if (half > adjusted / 3)
-            adjusted = old_capacity > maximum_size - half ? maximum_size : old_capacity + half;
-    } else {
-        adjusted = requested;
-    }
-    if (adjusted == invalid_size) return 0;
-    auto next = allocate(adjusted);
-    if (!next) return 0;
-    if (old_length) std::memcpy(next.get(), data(), old_length);
-    if (is_heap()) std::free(data());
-    // The historical return is an address, not the retained buffer in every
-    // branch. Capture its integer representation before a possible free.
-    const auto result = reinterpret_cast<std::uintptr_t>(next.get());
-    const auto* allocation = next.get();
-    std::memcpy(record_.bytes(&StringRecord::characters), &allocation, sizeof(allocation));
-    capacity(adjusted);
-    length(old_length);
-    if (adjusted < inline_bytes) {
-        if (old_length) std::memcpy(record_.bytes(&StringRecord::characters), next.get(), old_length);
-        data()[old_length] = 0;
-    } else {
-        next.get()[old_length] = 0;
-        next.release(); // Ownership transfers to the containing legacy record.
-    }
+std::string* StringView::owner() const noexcept {
+    std::string* result=nullptr;
+    if(*this && is_heap()) std::memcpy(&result,static_cast<char*>(storage())+4,sizeof(result));
     return result;
+}
+void StringView::publish(std::string* value) const noexcept {
+    char* bytes=value->data();
+    std::memcpy(storage(),&bytes,sizeof(bytes));
+    std::memcpy(static_cast<char*>(storage())+4,&value,sizeof(value));
+    record_.set(&StringRecord::length,static_cast<uint32_t>(value->size()));
+    record_.set(&StringRecord::capacity,(std::max)(16u,static_cast<uint32_t>(value->capacity())));
+}
+std::string& StringView::ensure_owner() const {
+    if(auto* value=owner()) return *value;
+    auto value=std::make_unique<std::string>(data(),length());
+    auto* result=value.release();publish(result);return *result;
+}
+void StringView::destroy() const noexcept {
+    if(!*this) return;
+    delete owner();
+    StringRecord empty{};empty.capacity=inline_capacity;
+    std::memcpy(storage(),&empty,sizeof(empty));
+}
+void StringView::assign(const char* source,uint32_t size) const {
+    if(!*this || size>maximum_size) return;
+    try {
+        // Snapshot first: source may be any range in our current buffer,
+        // including the old terminator, or our boundary's inline bytes.
+        std::string snapshot;
+        if(size) {if(source) snapshot.assign(source,size);else snapshot.resize(size);}
+        auto& value=ensure_owner();value.assign(snapshot);publish(&value);
+    } catch(...) {}
+}
+void StringView::assign(StringView source,uint32_t position,uint32_t size) const {
+    if(!*this || !source || position>source.length()) return;
+    assign(source.data()+position,(std::min)(source.length()-position,size));
+}
+void StringView::append(const char* source,uint32_t size) const {
+    if(!*this) return;
+    const auto from=reinterpret_cast<uintptr_t>(source),begin=reinterpret_cast<uintptr_t>(data());
+    if(source && from>=begin && from<begin+length()) {
+        size=(std::min)(size,length()-static_cast<uint32_t>(from-begin));
+    }
+    if(size>maximum_size-length()) return;
+    try {
+        std::string snapshot;
+        if(size) {if(source) snapshot.assign(source,size);else snapshot.resize(size);}
+        auto& value=ensure_owner();value.append(snapshot);publish(&value);
+    } catch(...) {}
+}
+void StringView::append(StringView source,uint32_t position,uint32_t size) const {
+    if(!*this || !source || position>source.length()) return;
+    append(source.data()+position,(std::min)(source.length()-position,size));
+}
+bool StringView::reserve(uint32_t requested,bool shrink) const {
+    if(!*this || requested==invalid_size) return false;
+    try {
+        if(shrink && requested<inline_bytes) {
+            // Keep the original truncation request, but storage belongs to STL.
+            auto& value=ensure_owner();value.resize((std::min)(value.size(),static_cast<size_t>(requested)));
+            value.shrink_to_fit();publish(&value);
+        } else {
+            auto& value=ensure_owner();value.reserve(requested);
+            if(!requested) value.clear();publish(&value);
+        }
+        return requested!=0;
+    } catch(...) {return false;}
+}
+uintptr_t StringView::grow(uint32_t requested,uint32_t old_length) const {
+    if(!*this || requested==invalid_size || old_length>length()) return 0;
+    try {
+        auto& value=ensure_owner();value.reserve(requested);value.resize(old_length);publish(&value);
+        return reinterpret_cast<uintptr_t>(value.data());
+    } catch(...) {return 0;}
 }
 } // namespace kinoko::legacy
 
@@ -182,4 +126,8 @@ extern "C" int32_t function_403bf0(int32_t object, int32_t source, uint32_t posi
 // Address range: 0x403ce0 - 0x403e18 (includes original cleanup 403DBC)
 extern "C" int32_t function_403ce0(int32_t object, uint32_t capacity, uint32_t old_length) {
     return static_cast<int32_t>(StringView(pointer(object)).grow(capacity, old_length));
+}
+
+extern "C" void kinoko_string_destroy(int32_t object) {
+    StringView(pointer(object)).destroy();
 }

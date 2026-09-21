@@ -149,7 +149,7 @@ void player_and_strings(HSQUIRRELVM vm) {
         "short assignment retains the original heap allocation");
     f.set_int("name_set", 5);
     require(f.get_string("name_get") == "short", "string setter rejects wrong type");
-    owned_name.reserve(0, true);
+    owned_name.destroy();
     f.bind("layer_name_get", 177, retdec_cact_layer_get_string); f.bind("layer_name_set", 177, retdec_cact_layer_set_string);
     std::memcpy(f.object() + 177, "layer", 6);
     store<uint32_t>(f.object() + 193, 5); store<uint32_t>(f.object() + 197, 15);
@@ -160,7 +160,7 @@ void player_and_strings(HSQUIRRELVM vm) {
     require(f.get_string("layer_name_get") == long_name, "unaligned layer heap assignment");
     f.set_string("layer_name_set", "");
     require(f.get_string("layer_name_get").empty(), "layer empty assignment");
-    kinoko::legacy::StringView(f.object() + 177).reserve(0, true);
+    kinoko::legacy::StringView(f.object() + 177).destroy();
     store<void*>(f.object() + 177, nullptr); store<uint32_t>(f.object() + 197, 31);
     require(f.get_string("layer_name_get").empty(), "layer null heap pointer becomes empty text");
     store<void*>(name, nullptr); store<uint32_t>(name + 20, 31);
@@ -230,7 +230,7 @@ void coercing_string_fields(HSQUIRRELVM vm) {
     auto* storage = f.object() + 101;
     std::memset(storage, 0, sizeof(kinoko::legacy::StringRecord));
     store<uint32_t>(storage + 20, 15);
-    struct Cleanup { kinoko::legacy::StringView value; ~Cleanup() { value.reserve(0, true); } } cleanup{kinoko::legacy::StringView(storage)};
+    struct Cleanup { kinoko::legacy::StringView value; ~Cleanup() { value.destroy(); } } cleanup{kinoko::legacy::StringView(storage)};
     f.bind("string_get", 101, kinoko_sqrat_get_string);
     f.bind("string_set", 101, kinoko_sqrat_set_string);
     f.set_int("string_set", -2147483647);
