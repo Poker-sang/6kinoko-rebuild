@@ -11321,7 +11321,7 @@ static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
     int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,
     int32_t *count)
 {
-    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
+    struct retdec_mcd_data *data = kinoko_map_query_chip_data((KinokoActLayout *)(intptr_t)layout);
     int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
     int32_t total = (*(int32_t *)(intptr_t)(layout + 268) -
                      *(int32_t *)(intptr_t)(layout + 264)) / 32;
@@ -11330,7 +11330,9 @@ static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
     int32_t max_height = *(int32_t *)(intptr_t)(layout + 244);
     float offset_x, offset_y;
     int32_t offset_ix, offset_iy;
-    if (data == NULL || layer == 0 || total <= 0)
+    if (data == NULL || layer == 0)
+        return 0;
+    if (total <= 0)
         return 1;
     offset_x = *(float *)(intptr_t)(layer + 144);
     offset_y = *(float *)(intptr_t)(layer + 148);
@@ -12445,7 +12447,8 @@ int32_t function_463e60(int32_t manager, int32_t layout, int32_t environment) {
 
         x = (float)*(int32_t *)(intptr_t)(record + 4);
         y = (float)*(int32_t *)(intptr_t)(record + 8);
-        chip = retdec_mcd_find_chip(retdec_map_chip_data(layout), (uint32_t)id);
+        chip = retdec_mcd_find_chip(kinoko_map_layer_chip_data(
+            (KinokoActLayout *)(intptr_t)layout), (uint32_t)id);
         if (chip != NULL) {
             /* 463FD4..464049 uses signed MCD dimensions and flag 0x10000. */
             x = (float)((double)x + retdec_mcd_i16(chip->bytes + 12) * 0.5 + 1.0);
@@ -14567,7 +14570,7 @@ int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment) {
         int32_t left = *(int32_t *)(intptr_t)(record + 4);
         int32_t top = *(int32_t *)(intptr_t)(record + 8);
         struct retdec_mcd_chip *chip = retdec_mcd_find_chip(
-            retdec_map_chip_data(layout), (uint32_t)id);
+            kinoko_map_layer_chip_data((KinokoActLayout *)(intptr_t)layout), (uint32_t)id);
         /* Valid event records have MCD rectangles; never use uninitialized bounds. */
         if (chip == NULL) {
             retdec_trace_i32("map:event-missing-chip", id);

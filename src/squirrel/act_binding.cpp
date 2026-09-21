@@ -1299,12 +1299,8 @@ int32_t retdec_map_get_chip_by_position(int32_t vm) {
     // (e.g. PreArrangement) do not have this lazy-binding contract.
     const bool valid_position = layout &&
         sq_getinteger(kinoko_vm(vm), 3, (SQInteger*)(&y)) >= 0;
-    if (valid_position &&
-        !field<int32_t>(layout + 316)) {
-        retdec_call_thiscall1_result(pointer<void>(layout),
-            field<void*>(field<int32_t>(layout) + 24), field<int32_t>(layout + 312));
-    }
-    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
+    struct retdec_mcd_data *data = valid_position
+        ? kinoko_map_query_chip_data(pointer<KinokoActLayout>(layout)) : nullptr;
     int32_t found = -1;
     if (valid_position && data != nullptr) {
         int32_t layer = field<int32_t>(layout + 312);

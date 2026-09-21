@@ -1,4 +1,4 @@
-/* R134/R135 regression source. Builds with stage_contract; execution is user-owned.
+/* R134/R135/R136 regression source. Builds with stage_contract; execution is user-owned.
    Exercise actual document/layer/key/map virtual clones, without manually
    performing the second SetLayer that masked the missing consumer behavior. */
 static int test_map_lazy_binding(int32_t vm, int32_t *root) {
@@ -16,6 +16,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     retdec_string_assign_n(source+4,"RegistrationProbe",17);
     retdec_string_assign_n((int32_t*)(intptr_t)(layer+112),"mapProbe",8);
     ((float*)map)[80] = 1.0f;
+    map[60] = map[61] = 16;
     data->chip_count = 1;
     data->chips = (struct retdec_mcd_chip*)calloc(1,sizeof(*data->chips));
     CHECK(data->chips);
@@ -37,7 +38,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     kinoko_act_array_append(PTR(source)+224,PTR(resource));
     kinoko_act_array_append(PTR(source)+208,layer);
 
-    for (int query = 0; query != 4; ++query) {
+    for (int query = 0; query != 5; ++query) {
         KinokoActDocument *copy = kinoko_act_clone((KinokoActDocument*)source,NULL);
         CHECK(copy);
         int32_t *doc = (int32_t*)copy;
@@ -51,6 +52,11 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         CHECK(*(int32_t*)(intptr_t)(cloned_layer+100) == cloned_resource);
         CHECK(layout[78] == cloned_layer && layout[79] == 0);
         CHECK(((uint8_t*)layout)[460] == 0);
+        CHECK(kinoko_map_layer_chip_data((KinokoActLayout*)layout) == data);
+        CHECK(layout[79] == 0); /* Layer lookup must not prime render caches. */
+        *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
+        CHECK(kinoko_map_layer_chip_data((KinokoActLayout*)layout) == NULL);
+        *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         if (!query) {
             /* Invisible Update must not consume the pending binding. */
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
@@ -87,7 +93,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             retdec_sqrat_release_pair(vm,instance);
             retdec_sqrat_release_pair(vm,klass);
         }
-        if (query >= 2) {
+        if (query == 2 || query == 3) {
             int32_t runtime[48] = {0}, parent[2] = {g483,g484}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
@@ -119,6 +125,21 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             }
             CHECK(execute_source(vm,root+2,"delete RegistrationProbe;"));
             retdec_sqrat_release_pair(vm,parent);
+        }
+        if (query == 4) {
+            int32_t scratch[12] = {0}, cached = 0, hits = 0;
+            *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
+            CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+            CHECK(layout[79] == cloned_resource && hits == 1);
+            KinokoCollisionRecord *hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
+            CHECK(hit[0].index == 0 && hit[0].chip == data->chips[0].bytes);
+            kinoko_native_buffer_destroy(PTR(scratch)+36);
+            layout[79] = 0;
+            *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
+            hits = 0;
+            CHECK(!retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+            CHECK(hits == 0 && layout[79] == 0);
+            *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         }
         CHECK(map[79] == 0); /* No mutation of the source layout's cache. */
         retdec_destroy_cact_with_flags(PTR(copy),1);

@@ -5974,6 +5974,8 @@ int main(int argc, char **argv) {
     layout[67] = PTR(records + 4);
     layout[78] = PTR(layer);
     layout[79] = PTR(resource);
+    layer[25] = PTR(resource);
+    resource[0] = PTR(&g313);
     resource[16] = PTR(&data);
     chips[0].chip_id = 0x443;
     chips[1].chip_id = 0xc8a;
@@ -6047,6 +6049,8 @@ int main(int argc, char **argv) {
         *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
         puts("PASS: render layers bind live ACT layouts without undoing clone isolation");
     }
+    /* R136: spawn from the layer resource before any render-cache binding. */
+    layout[79] = 0;
     target = PTR(function_469d10);
     CHECK(function_415550_this(PTR(root), PTR("CreateActorFromMap"),
         PTR(&target), 4, PTR(function_471e50), 0) >= 0);
@@ -6054,6 +6058,8 @@ int main(int argc, char **argv) {
         "CreateActorFromMap(\"missing\", registry);\n"
         "CreateActorFromMap(\"en\", other);\n"
         "CreateActorFromMap(\"en\", registry);\n"));
+    CHECK(layout[79] == 0);
+    layout[79] = PTR(resource);
     created = *(int32_t *)(intptr_t)(manager + 92);
     CHECK(created == 3);
     CHECK(function_48aa20(vm) == top);
@@ -6099,6 +6105,7 @@ int main(int argc, char **argv) {
     CHECK(function_415550_this(PTR(root), PTR("CreateEvent"),
         PTR(&target), 4, PTR(function_471f70), 0) >= 0);
     layout[67] = PTR(records + 2);
+    layout[79] = 0;
     CHECK(execute_source(vm, root + 2,
         "events <- { bounds = [] };\n"
         "function Event(id, x1, y1, x2, y2) { bounds.append([id,x1,y1,x2,y2]); }\n"
@@ -6109,6 +6116,8 @@ int main(int argc, char **argv) {
         "events.bounds[1][2] != 400 || events.bounds[1][3] != 331 || "
         "events.bounds[1][4] != 447) throw \"event bounds/environment mismatch\";"));
     CHECK(function_48aa20(vm) == top);
+    CHECK(layout[79] == 0);
+    layout[79] = PTR(resource);
     {
         int32_t map_state = PTR(g_retdec_map_manager_state);
         int32_t query_actor = function_463b40_this(manager, PTR(&g16), g483, g484,
