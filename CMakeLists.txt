@@ -490,6 +490,16 @@ target_link_libraries(kinoko_legacy_string_contract PRIVATE kinoko_legacy_string
 target_compile_options(kinoko_legacy_string_contract PRIVATE /Od /RTC1)
 add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
 
+# These scoped owners call reconstructed C++ functions through C-linkage ports.
+# /EHsc incorrectly promises that such ports cannot throw; /EHsc- retains
+# synchronous C++ unwinding without enabling asynchronous SEH recovery.
+# Apply to the production sources as well as the fault-injection test caller.
+set_source_files_properties(
+    src/reconstructed/act_document_io.cpp
+    src/reconstructed/stage_runtime.cpp
+    tests/act_document_contract.cpp
+    PROPERTIES COMPILE_OPTIONS "/EHsc-")
+
 add_executable(kinoko_act_document_contract
     tests/act_document_contract.cpp
     src/reconstructed/act_document_io.cpp)
