@@ -55,3 +55,7 @@ ActorManager texture handles now use an opaque std::vector<int32_t>; PAT append,
 ## R118 — ACT key/timeline list storage
 
 ACT key and timeline list nodes are now values owned by std::list<Link>; no manually allocated list nodes remain in document construction or deep cloning. The list owner publishes separate borrowed next/previous/value records for the existing C traversal boundary; these are not overlaid STL internals. Native append grows the actual standard list before publishing those links. Payload destruction stays with CActKey/CActTimeLine; list-storage destruction frees only native list values. Clone rollback tracks native list owners separately from raw game-record allocations. A compiled-only contract checks 128 entries, forward/backward links and stable boundary tokens.
+
+## R119 — ACT draw command/sprite vectors
+
+Replaced draw-command realloc and sprite-vector allocation with std::vector<BlitCommand> and std::vector<Sprite>. Runtime slots own opaque native containers; render consumers use borrowed spans computed from actual data/size/capacity. Sprite construction/destruction retains the existing vtable transitions and borrowed texture semantics. Per-frame command reset uses clear, and runtime destruction deletes both owners. Updated draw contracts rebuild sprites after shrink/regrowth rather than reading erased elements outside their lifetime. No local executable test or game is run.

@@ -150,10 +150,10 @@ extern "C" int32_t function_4522f0(int32_t self) {
             if (update && retdec_call_thiscall0_result(pointer(layout), pointer(update)) < 0) result = E_FAIL;
         }
     }
-    const auto commands = resource.get(&RuntimeRecord::draw_commands);
+    const auto commands = kinoko_act_command_span(self);
     const auto count = static_cast<int32_t>(commands.end - commands.begin) / 36;
     function_452c20(address(resource.bytes(&RuntimeRecord::draw_sprites)), count);
-    const auto sprites = resource.get(&RuntimeRecord::draw_sprites);
+    const auto sprites = kinoko_act_sprite_span(self);
     if (static_cast<int32_t>(sprites.end - sprites.begin) / 184 != count) return E_OUTOFMEMORY;
     for (int32_t i = 0; i < count; ++i)
         if (prepare_sprite(sprites.begin + i * sizeof(BlitSprite),
@@ -201,8 +201,8 @@ extern "C" int32_t function_4525d0(int32_t self, float x, float y) {
     if (document.get(&DocumentLayers::visible)) {
         auto* blit_device = pointer<IDirect3DDevice9>(g678);
         if (blit_device) {
-            for (auto item = resource.get(&RuntimeRecord::draw_sprites).begin;
-                 item != resource.get(&RuntimeRecord::draw_sprites).end; item += sizeof(BlitSprite)) {
+            for (auto item = kinoko_act_sprite_span(self).begin;
+                 item != kinoko_act_sprite_span(self).end; item += sizeof(BlitSprite)) {
                 const RecordView<BlitSprite> entry(pointer(item));
                 const auto command = entry.get(&BlitSprite::command);
                 const auto sprite = address(entry.bytes(&BlitSprite::sprite));

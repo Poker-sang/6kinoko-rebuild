@@ -1,3 +1,4 @@
+#include "kinoko/act_frame.h"
 #include "kinoko/act_resource.h"
 #include "kinoko/act_resource_records.hpp"
 #include "kinoko/act_runtime.h"
@@ -27,10 +28,7 @@ using FindMap=std::map<int32_t,std::unique_ptr<FindEntry>>;
 FindMap* finds(int32_t storage) {
     return storage ? pointer<FindMap>(runtime(storage).get(&RuntimeRecord::find_storage)) : nullptr;
 }
-void release_vector(const RecordView<VectorStorage>& vector) {
-    std::free(pointer<void>(vector.get(&VectorStorage::begin)));
-    vector.clear();
-}
+
 }
 
 // Original 452150..4522C0. IDs count successful starts, independently of the
@@ -137,8 +135,7 @@ extern "C" void retdec_destroy_act_runtime(int32_t storage) {
     std::memset(view.bytes(&RuntimeRecord::name_storage), 0, sizeof(Address));
     view.set(&RuntimeRecord::name_length, uint32_t{0});
     view.set(&RuntimeRecord::name_capacity, uint32_t{15});
-    release_vector(view.view(&RuntimeRecord::draw_sprites));
-    release_vector(view.view(&RuntimeRecord::draw_commands));
+    kinoko_act_draw_storage_destroy(storage);
     std::free(pointer<void>(view.get(&RuntimeRecord::owned_storage)));
     view.set(&RuntimeRecord::owned_storage, Address{0});
     const auto act = view.get(&RuntimeRecord::act);
