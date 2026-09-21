@@ -17,3 +17,7 @@ Replaced the fixed 32-byte global registration buffer and emulated byte-vector a
 ## R109 — Input device records
 
 Replaced manual contiguous buffer assignment/allocation/destruction with std::vector<Device> behind manager+180. Device copy construction installs the base vtable, assignment preserves existing identity and destruction dispatches the original scalar destructor. Configuration read/write, assignment, per-frame update and copy use native storage accessors. Initialization now sizes the vector to the enumerated controller count and follows original 46E6F0: twelve default button bindings per controller, controller pointers first and keyboard last in the cluster deque. Copy still intentionally keeps shallow cluster pointers. Input container contracts are updated for native construction/destruction and compiled only.
+
+## R110 — String glyph deque
+
+CStringLayout owns std::deque<Glyph> through layout+176; manual block maps, rotation, capacity growth and spare block ownership are removed. Glyph is the 256-byte engine record, with copy construction installing CSpriteEx and assignment preserving the destination vtable. Sprite destruction resets base identity but owns no atlas/texture. Replication and pop retain the original explicit atlas reference accounting; clone copy/drop intentionally makes no reference adjustment. Render, layer assignment, cache collection and rebuild traverse native accessors. Updated lifetime/replication/cache contract sources are compiled only. Atlas vector and renderer pixel list remain separate pending migration.

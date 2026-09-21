@@ -4434,16 +4434,15 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(object[12]==1 && ((char*)(object+8))[0]=='A'); /* original ASCII PopFront erases zero */
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
-    int32_t* map=(int32_t*)calloc(8,4);CHECK(map);
-    object[45]=PTR(map);object[46]=8;object[47]=7;object[48]=2;
-    for(int i=0;i<2;++i) { int slot=(7+i)%8;map[slot]=PTR(calloc(1,256));CHECK(map[slot]);
-        ((int32_t*)(intptr_t)map[slot])[0]=10+i;((int32_t*)(intptr_t)map[slot])[5]=PTR(&g25);
-        ((int32_t*)(intptr_t)map[slot])[63]=PTR(atlas); }
-    CHECK(kinoko_string_replicate(PTR(copy),PTR(object))==1 && atlas[108]==4 && copy[48]==2);
-    CHECK(copy[45]!=object[45] && copy[44]!=object[44]);
-    CHECK(((int32_t*)(intptr_t)((int32_t*)(intptr_t)copy[45])[0])[0]==10);
+    for(int i=0;i<2;++i) {
+        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(object));
+        glyph[0]=10+i;glyph[2]=0;glyph[63]=PTR(atlas);
+    }
+    CHECK(kinoko_string_replicate(PTR(copy),PTR(object))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
+    CHECK(copy[44]!=object[44]);
+    CHECK(((int32_t*)(intptr_t)kinoko_string_queue_at(PTR(copy),0))[0]==10);
     CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
-    CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && copy[48]==2);
+    CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
     kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
     CHECK(execute_source(vm,root+2,"delete ::StringProbe;"));
     retdec_sqrat_release_pair(vm,klass);kinoko_clear_string_layout(PTR(object));
@@ -4462,8 +4461,7 @@ static int test_string_layout_lifetime(void) {
     CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
     CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
     CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
-    CHECK(((int32_t*)(intptr_t)layout[44])[0]==PTR(layout)+176);
-    CHECK(((int32_t*)(intptr_t)layout[44])[1]==0 && layout[48]==0);
+    CHECK(layout[44]!=0 && kinoko_string_queue_size(PTR(layout))==0);
     retdec_string_assign_cstr(layout+1,"rendered");
     kinoko_string_push_back(PTR(layout),"pending");
     layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
@@ -4471,7 +4469,7 @@ static int test_string_layout_lifetime(void) {
     int32_t* copied=(int32_t*)(intptr_t)clone;
     CHECK(copied[0]==PTR(g350) && copied[44]!=layout[44]);
     CHECK(copied[5]==8 && copied[12]==7 && copied[50]==91 && copied[53]==37);
-    CHECK(copied[40]==copied[41] && copied[45]==0 && copied[48]==0);
+    CHECK(copied[40]==copied[41] && kinoko_string_queue_size(clone)==0);
     CHECK(kinoko_method_set_string_layer(clone,NULL,0)<0);
     CHECK(kinoko_method_update_string_layout(clone,NULL)<0);
     CHECK(kinoko_method_draw_string_layout(clone,NULL,0,0)<0);
@@ -4494,8 +4492,8 @@ static int test_string_glyph_cache(void) {
     int32_t layout[65]={0};
     int32_t* atlas=(int32_t*)calloc(1,436);
     int32_t* head=(int32_t*)calloc(1,12);
-    int32_t* map=(int32_t*)calloc(8,4);
-    CHECK(atlas && head && map);
+    CHECK(atlas && head);
+    kinoko_string_queue_construct(PTR(layout));
     head[0]=head[1]=PTR(head);
     atlas[(24+348)/4]=PTR(head);
     atlas[(24+388)/4]=15;
@@ -4505,19 +4503,20 @@ static int test_string_glyph_cache(void) {
     retdec_string_assign_cstr(layout+1,"AB");
     retdec_string_assign_cstr(layout+8,"CD");
     layout[22]=19;layout[40]=PTR(atlas);layout[41]=layout[42]=PTR(atlas)+436;
-    layout[44]=0x1234;layout[45]=PTR(map);layout[46]=8;layout[47]=7;layout[48]=2;
-    map[7]=PTR(calloc(1,256));map[0]=PTR(calloc(1,256));
-    CHECK(map[7] && map[0]);
-    ((int32_t*)(intptr_t)map[7])[2]=4;((int32_t*)(intptr_t)map[0])[2]=4;
-    ((int32_t*)(intptr_t)map[7])[63]=PTR(atlas);((int32_t*)(intptr_t)map[0])[63]=PTR(atlas);
+    const int32_t storage=layout[44];
+    for(int i=0;i<2;++i) {
+        int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(layout));
+        glyph[2]=4;glyph[63]=PTR(atlas);
+    }
     CHECK(function_441250(layout)==1 && layout[41]==PTR(atlas)+436);
     CHECK(function_4410c0(PTR(layout))==1);
     CHECK(layout[41]==layout[40] && layout[42]==PTR(atlas)+436);
-    CHECK(layout[44]==0x1234 && layout[45]==0 && layout[46]==0 && layout[47]==0 && layout[48]==0);
+    CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
     CHECK(layout[5]==0 && layout[12]==4 && memcmp(layout+8,"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
+    kinoko_string_queue_destroy(PTR(layout));
     free(atlas);
-    puts("PASS: wrapped glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
+    puts("PASS: native glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
     return 0;
 }
 

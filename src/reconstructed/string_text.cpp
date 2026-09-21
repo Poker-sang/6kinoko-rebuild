@@ -3,6 +3,7 @@
 #include "kinoko/legacy_string.hpp"
 #include <windows.h>
 #include <algorithm>
+#include <deque>
 #include <cstdlib>
 #include <new>
 #include <stdexcept>
@@ -14,65 +15,34 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::StringView;
-struct Deque { int32_t proxy; int32_t* map; uint32_t capacity, first, size; };
-static_assert(sizeof(Deque)==20);
-Deque& queue(int32_t layout) { return field<Deque>(layout+176); }
-int32_t sprite(const Deque& q,uint32_t i) { return q.map[(q.first+i)%q.capacity]; }
+struct Glyph {
+    alignas(4) unsigned char bytes[256];
+    Glyph() { field<void*>(address(bytes)+20)=&g25;field<int32_t>(address(bytes)+24)=0; }
+    Glyph(const Glyph& other) : Glyph() { *this=other; }
+    Glyph& operator=(const Glyph& other) {
+        std::copy_n(other.bytes,20,bytes);
+        std::copy_n(other.bytes+24,232,bytes+24);return *this;
+    }
+    ~Glyph() { field<void*>(address(bytes)+20)=&g23; }
+};
+using Deque=std::deque<Glyph>;
+Deque*& storage(int32_t layout) { return field<Deque*>(layout+176); }
+Deque& queue(int32_t layout) { return *storage(layout); }
+int32_t sprite(const Deque& q,uint32_t i) { return address(q[i].bytes); }
 void references(const Deque& q,int delta) {
-    for(uint32_t i=0;i<q.size;++i) {
+    for(uint32_t i=0;i<q.size();++i) {
         const int32_t atlas=field<int32_t>(sprite(q,i)+252);
         if(atlas) field<int32_t>(atlas+432)+=delta;
     }
 }
 void pop(Deque& q,bool front) {
-    const int32_t value=sprite(q,front?0:q.size-1);
+    const int32_t value=sprite(q,front?0:static_cast<uint32_t>(q.size()-1));
     const int32_t atlas=field<int32_t>(value+252);
     if(atlas) --field<int32_t>(atlas+432);
-    field<void*>(value+20)=&g23;
-    if(front) q.first=(q.first+1)%q.capacity;
-    if(!--q.size) q.first=0;
+    if(front) q.pop_front();else q.pop_back();
 }
-void grow(Deque& q) {
-    // 442BD0 preserves first and rotates all allocated blocks, including spare
-    // blocks. Its maximum is for 256-byte elements, not pointer elements.
-    uint32_t increment=(std::max)(q.capacity/2,8u);
-    if(q.capacity==0xffffffu) throw std::length_error("deque<T> too long");
-    if(q.capacity>0xffffffu-increment) increment=1;
-    const uint32_t capacity=q.capacity+increment;
-    auto* map=static_cast<int32_t*>(std::calloc(capacity,4));
-    if(!map) throw std::bad_alloc();
-    for(uint32_t i=0;i<q.capacity;++i)
-        map[(q.first+i)%capacity]=q.map[(q.first+i)%q.capacity];
-    std::free(q.map);q.map=map;q.capacity=capacity;
-}
-void assign(Deque& out,const Deque& in) {
-    if(&out==&in) return;
-    if(!in.size) {
-        for(uint32_t i=out.capacity;i>0;--i) std::free(pointer<void>(out.map[i-1]));
-        std::free(out.map);out.map=nullptr;out.capacity=out.first=out.size=0;
-        return;
-    }
-    const uint32_t common=(std::min)(out.size,in.size);
-    for(uint32_t i=0;i<in.size;++i) {
-        if(i>=common) {
-            if(out.capacity<=out.size+1) grow(out);
-            auto& block=out.map[(out.first+out.size)%out.capacity];
-            if(!block) {
-                block=address(std::malloc(256));
-                if(!block) throw std::bad_alloc();
-            }
-            field<void*>(block+20)=&g25;
-            ++out.size;
-        }
-        // 445A30 preserves existing sprite vtables; copy construction installs
-        // CSpriteEx. All other 252 bytes are value/borrowed fields.
-        const int32_t from=sprite(in,i),to=sprite(out,i);
-        std::copy_n(pointer<unsigned char>(from),20,pointer<unsigned char>(to));
-        std::copy_n(pointer<unsigned char>(from+24),232,pointer<unsigned char>(to+24));
-    }
-    for(uint32_t i=in.size;i<out.size;++i) field<void*>(sprite(out,i)+20)=&g23;
-    out.size=in.size;
-}
+void assign(Deque& out,const Deque& in) { if(&out!=&in) out=in; }
+
 }
 
 extern "C" int32_t kinoko_string_push_back(int32_t object,const char* text) {
@@ -99,7 +69,7 @@ extern "C" int32_t kinoko_string_pop(int32_t object,int32_t count,int32_t front)
     if(!count) return 1;
     auto& q=queue(object);
     StringView pending(pointer<void>(object+32));
-    if(front) while(count && q.size) { pop(q,true);--count; }
+    if(front) while(count && !q.empty()) { pop(q,true);--count; }
     while(count && pending.length()) {
         const uint32_t size=pending.length();
         const char* data=pending.data();
@@ -114,7 +84,7 @@ extern "C" int32_t kinoko_string_pop(int32_t object,int32_t count,int32_t front)
         }
         --count;
     }
-    if(!front) while(count && q.size) { pop(q,false);--count; }
+    if(!front) while(count && !q.empty()) { pop(q,false);--count; }
     return function_441250(pointer<int32_t>(object));
 }
 extern "C" int32_t kinoko_string_replicate(int32_t object,int32_t source) {
@@ -130,12 +100,8 @@ extern "C" int32_t kinoko_string_replicate(int32_t object,int32_t source) {
 // The original leaves non-vtable/default-texture fields for 404EE0 to fill.
 extern "C" int32_t kinoko_string_append_glyph(int32_t layout) {
     auto& q=queue(layout);
-    if(q.capacity<=q.size+1) grow(q);
-    auto& block=q.map[(q.first+q.size)%q.capacity];
-    if(!block) { block=address(std::malloc(256));if(!block) throw std::bad_alloc(); }
-    field<void*>(block+20)=&g25;field<int32_t>(block+24)=0;
-    ++q.size;
-    return block;
+    q.emplace_back();
+    return address(q.back().bytes);
 }
 
 // 43EC30 copies deque values without adjusting atlas references; 43EB80
@@ -144,5 +110,10 @@ extern "C" void kinoko_string_copy_queue_storage(int32_t object,int32_t source) 
     assign(queue(object),queue(source));
 }
 extern "C" void kinoko_string_drop_queue_storage(int32_t object) {
-    const Deque empty{};assign(queue(object),empty);
+    queue(object).clear();
 }
+
+extern "C" void kinoko_string_queue_construct(int32_t object) { storage(object)=new Deque; }
+extern "C" void kinoko_string_queue_destroy(int32_t object) { delete storage(object);storage(object)=nullptr; }
+extern "C" uint32_t kinoko_string_queue_size(int32_t object) { return static_cast<uint32_t>(queue(object).size()); }
+extern "C" int32_t kinoko_string_queue_at(int32_t object,uint32_t index) { return address(queue(object).at(index).bytes); }

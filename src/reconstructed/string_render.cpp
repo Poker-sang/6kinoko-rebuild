@@ -17,7 +17,7 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
 int32_t glyph_at(int32_t layout,uint32_t index) {
-    return field<int32_t*>(layout+180)[(field<uint32_t>(layout+188)+index)%field<uint32_t>(layout+184)];
+    return kinoko_string_queue_at(layout,index);
 }
 int32_t new_page(int32_t layout) {
     const int32_t page=kinoko_string_append_atlas(layout);
@@ -144,7 +144,7 @@ extern "C" int32_t __fastcall kinoko_method_update_string_layout(int32_t layout,
     if(!field<uint8_t>(layer+140)) return 0;
     const uint32_t color=(static_cast<uint32_t>(static_cast<int64_t>(field<float>(layout+152)*255.0))<<24)|
         (uint32_t(field<uint8_t>(layout+108))<<16)|(uint32_t(field<uint8_t>(layout+112))<<8)|field<uint8_t>(layout+116);
-    const uint32_t count=field<uint32_t>(layout+192);
+    const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i)
         for(int offset:{24,52,80,108}) field<uint32_t>(glyph_at(layout,i)+20+offset)=color;
     float x=0,y=0,z=0;
@@ -183,7 +183,7 @@ extern "C" int32_t __fastcall kinoko_method_draw_string_layout(int32_t layout,vo
         for(auto type:{D3DSAMP_MAGFILTER,D3DSAMP_MINFILTER,D3DSAMP_MIPFILTER}) cached->SetSamplerState(0,type,2);
         g704=2;
     }
-    const uint32_t count=field<uint32_t>(layout+192);
+    const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) retdec_layout_submit_impl(glyph_at(layout,i)+20,x,y);
     for(int i=0;i<4;++i) device->SetRenderState(states[i],saved[i]);
     return 0;
