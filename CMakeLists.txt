@@ -215,6 +215,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/string_text.cpp
     src/reconstructed/string_glyph_cache.cpp
     src/reconstructed/act_document.cpp
+    src/reconstructed/act_document_io.cpp
     src/reconstructed/act_script_io.cpp
     src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
@@ -488,6 +489,14 @@ add_executable(kinoko_legacy_string_contract tests/legacy_string_contract.cpp)
 target_link_libraries(kinoko_legacy_string_contract PRIVATE kinoko_legacy_string)
 target_compile_options(kinoko_legacy_string_contract PRIVATE /Od /RTC1)
 add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
+
+add_executable(kinoko_act_document_contract
+    tests/act_document_contract.cpp
+    src/reconstructed/act_document_io.cpp)
+target_include_directories(kinoko_act_document_contract PRIVATE include)
+target_link_libraries(kinoko_act_document_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_document_contract PRIVATE /Od /RTC1)
+add_test(NAME act_document_contract COMMAND kinoko_act_document_contract)
 set_tests_properties(legacy_string_contract PROPERTIES TIMEOUT 60)
 
 add_executable(kinoko_retdec_memory_contract tests/retdec_memory_contract.cpp)
@@ -568,6 +577,7 @@ add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_act_document_contract
     kinoko_boost_control_contract
     kinoko_upstream_bindings_contract
     kinoko_vorbis_decoder_contract

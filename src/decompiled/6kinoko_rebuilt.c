@@ -1,3 +1,4 @@
+#include "kinoko/act_document.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_cleanup.h"
@@ -1782,10 +1783,8 @@ int32_t function_426b30(void);
 
 
 
-int32_t function_427530(int32_t this_ptr);
 
 
-int32_t function_428000(int32_t this_ptr, const char *file_name);
 int32_t function_4289c0(int32_t a1);
 int32_t function_428af0(void);
 int32_t function_428bd0(void);
@@ -7635,41 +7634,7 @@ int32_t function_426b30(void) {
 
 
 // Address range: 0x427530 - 0x42760c
-int32_t function_427530(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-
-    memset((void *)(intptr_t)this_ptr, 0, 0xf0u);
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g285;
-    *(int32_t *)(intptr_t)(this_ptr + 36) = 15;
-    *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
-    *(unsigned char *)(intptr_t)(this_ptr + 16) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 64) = 15;
-    *(int32_t *)(intptr_t)(this_ptr + 60) = 0;
-    *(unsigned char *)(intptr_t)(this_ptr + 44) = 0;
-    retdec_construct_cact_script(this_ptr + 100);
-
-    *(int32_t *)(intptr_t)(this_ptr + 208) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 212) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 216) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 224) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 228) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 232) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = 16;
-    *(int32_t *)(intptr_t)(this_ptr + 8) = 1280;
-    *(int32_t *)(intptr_t)(this_ptr + 12) = 720;
-    retdec_string_assign_n((int32_t *)(intptr_t)(this_ptr + 16),
-                           "act", 3);
-    *(float32_t *)(intptr_t)(this_ptr + 88) = 0.0f;
-    *(int32_t *)(intptr_t)(this_ptr + 72) = 128;
-    *(float32_t *)(intptr_t)(this_ptr + 92) = 0.0f;
-    *(int32_t *)(intptr_t)(this_ptr + 76) = 128;
-    *(int32_t *)(intptr_t)(this_ptr + 80) = 128;
-    *(int32_t *)(intptr_t)(this_ptr + 84) = 128;
-    *(unsigned char *)(intptr_t)(this_ptr + 96) = 1;
-    *(unsigned char *)(intptr_t)(this_ptr + 204) = 0;
-    return this_ptr;
-}
+/* ACT document creation/loading: kinoko/act_document.h. */
 
 
 // CAct::Clone (427950) is implemented in reconstructed/act_clone.cpp.
@@ -7754,35 +7719,7 @@ int32_t function_427530(int32_t this_ptr) {
 
 
 // Address range: 0x428000 - 0x428146
-int32_t function_428000(int32_t this_ptr, const char *file_name) {
-    int32_t reader_slot = 0;
-    uint32_t magic = 0;
-    uint32_t version = 0;
-    uint32_t payload_offset = 0;
-    int32_t result;
-
-    if (this_ptr == 0 || file_name == NULL)
-        return 0;
-    if (function_407370((int32_t)(intptr_t)&reader_slot, file_name) == 0)
-        return 0;
-    if (!retdec_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
-        magic != 0x31544341u ||
-        !retdec_reader_read_exact(reader_slot, &version, sizeof(version)) ||
-        version != 1u ||
-        !retdec_reader_read_exact(reader_slot, &payload_offset,
-                                  sizeof(payload_offset)) ||
-        !retdec_reader_seek_relative(reader_slot, payload_offset)) {
-        retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
-        return 0;
-    }
-    retdec_trace_i32("act:header-magic", (int32_t)magic);
-    retdec_trace_i32("act:header-version", (int32_t)version);
-    retdec_trace_i32("act:header-offset", (int32_t)payload_offset);
-    result = retdec_act_load(this_ptr, reader_slot, (int32_t)version);
-    retdec_trace_i32("act:load-result", result);
-    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
-    return result;
-}
+/* ACT document creation/loading: kinoko/act_document.h. */
 
 // Address range: 0x428150 - 0x428720
 // From class:    .?AVCAct@@
@@ -14639,8 +14576,8 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
 {
     int32_t map_state = (int32_t)(intptr_t)g_retdec_map_manager_state;
     int32_t vm = (int32_t)(intptr_t)g644;
-    int32_t act;
-    int32_t holder;
+    KinokoActDocument *act;
+    KinokoActSourceHolder *holder;
     int32_t resource = 0;
     int32_t map_object[3] = { 0, 0, 0 };
     int32_t layer_names[3] = { 0, 0, 0 };
@@ -14655,29 +14592,25 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
         return 0;
 
     function_46f620_this(map_state);
-    act = _3f__3f_2_40_YAPAXI_40_Z(240);
-    if (act == 0 || function_427530(act) == 0) {
-        if (act != 0)
-            free((void *)(intptr_t)act);
+    act = kinoko_act_document_create();
+    if (act == NULL)
         return 0;
-    }
-    *(int32_t *)(intptr_t)(map_state + 12) = act;
-    if (!function_428000(act, (const char *)(intptr_t)path_ptr)) {
+    /* The not-yet-migrated map state still publishes integer ABI slots. */
+    *(int32_t *)(intptr_t)(map_state + 12) = (int32_t)(intptr_t)act;
+    if (!kinoko_act_document_load(act, (const char *)(intptr_t)path_ptr)) {
         retdec_trace("map:act-load-failed");
         function_46f620_this(map_state);
         return 0;
     }
 
-    holder = _3f__3f_2_40_YAPAXI_40_Z(4);
+    holder = (KinokoActSourceHolder *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(sizeof(void *));
     if (holder == 0) {
         function_46f620_this(map_state);
         return 0;
     }
-    kinoko_act_source_initialize((KinokoActSourceHolder *)(intptr_t)holder,
-        (KinokoActDocument *)(intptr_t)act);
-    *(int32_t *)(intptr_t)(map_state + 16) = holder;
-    resource = (int32_t)(intptr_t)kinoko_act_source_create_runtime(
-        (KinokoActSourceHolder *)(intptr_t)holder);
+    kinoko_act_source_initialize(holder, act);
+    *(int32_t *)(intptr_t)(map_state + 16) = (int32_t)(intptr_t)holder;
+    resource = (int32_t)(intptr_t)kinoko_act_source_create_runtime(holder);
     *(int32_t *)(intptr_t)(map_state + 20) = resource;
     /* Restore the original resource registration and immediate BeginStage. */
     if (resource == 0 ||
@@ -14697,9 +14630,9 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     }
 
     *(int32_t *)(intptr_t)(map_state + 76) =
-        *(int32_t *)(intptr_t)(act + 8);
+        kinoko_act_document_screen_width(act);
     *(int32_t *)(intptr_t)(map_state + 80) =
-        *(int32_t *)(intptr_t)(act + 12);
+        kinoko_act_document_screen_height(act);
 
     /* CMapManager is also the Map Squirrel instance. */
     if (g636[1] == 0 ||
@@ -14714,12 +14647,12 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     function_4a9bb0_this(map_state, map_state);
 
     retdec_trace_i32("map:instance", map_state);
-    retdec_trace_i32("map:act", act);
+    retdec_trace_i32("map:act", (int32_t)(intptr_t)act);
     retdec_trace_squirrel_name("map:path", path_ptr);
     function_4a9840_this((int32_t)(intptr_t)&g722, "map", map_state);
 
     function_4a92e0_this((int32_t *)(intptr_t)layer_names, 0);
-    layer_count = kinoko_act_source_layer_count((const KinokoActSourceHolder *)(intptr_t)holder);
+    layer_count = kinoko_act_source_layer_count(holder);
     for (index = 0; index < layer_count; ++index) {
         int32_t layout = function_452020(resource, index);
         if (layout == 0)
@@ -14749,7 +14682,7 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     function_4a94e0_this((int32_t)(intptr_t)root_object);
     function_4a95c0_this((int32_t)(intptr_t)root_object,
                           (int32_t)(intptr_t)&g722);
-    act_name = retdec_std_string_data(act + 16);
+    act_name = kinoko_act_document_name(act);
     if (act_name != NULL && *act_name != 0) {
         function_4aa3a0_this((int32_t)(intptr_t)root_object,
                              (int32_t)(intptr_t)current_map, act_name);

@@ -1,3 +1,4 @@
+#include "kinoko/act_document.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/stage_records.hpp"
@@ -13,15 +14,12 @@
 extern "C" {
 extern int32_t g603, g459;
 extern char *g644;
-int32_t function_427530(int32_t document);
-int32_t function_428000(int32_t document, const char *file_name);
 }
 
 namespace {
 using namespace kinoko::legacy;
 using namespace kinoko::stage;
 using kinoko::act::RuntimeRecord;
-using kinoko::act::DocumentLayers;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
 
@@ -31,8 +29,7 @@ KinokoActRuntime *stage_runtime(const KinokoStageNode *node) {
 }
 
 const char *document_name(KinokoActDocument *document) {
-    const RecordView<DocumentLayers> view(document);
-    return retdec_std_string_data(address(view.bytes(&DocumentLayers::name)));
+    return kinoko_act_document_name(document);
 }
 }
 
@@ -136,15 +133,11 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
     const OwnerView owner(allocation.get());
     owner.clear();
 
-    // CAct remains a legacy allocation; this batch does not reconstruct its
-    // full class or alter the pre-existing partial-load failure policy.
-    constexpr int32_t document_allocation_size = 240; // 466146: push 0F0h
-    auto *act = static_cast<KinokoActDocument *>(std::malloc(document_allocation_size));
-    if (!act) return nullptr;
-    act = pointer<KinokoActDocument>(function_427530(address(act)));
+    auto *act = kinoko_act_document_create();
     owner.set(&OwnerRecord::document, act);
     if (!act) return nullptr;
-    if (!function_428000(address(act), file_name)) {
+    // Partial-load cleanup policy is intentionally unchanged in this batch.
+    if (!kinoko_act_document_load(act, file_name)) {
         retdec_trace("466100:act-header-failed");
         retdec_trace("466100:skip-invalid-act");
         return nullptr;

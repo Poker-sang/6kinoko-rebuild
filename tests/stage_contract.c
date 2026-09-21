@@ -451,8 +451,8 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             CHECK(function_410500(path));
         }
         CHECK(g678 == 0);
-        function_427530(PTR(act));
-        CHECK(function_428000(PTR(act), stage_path));
+        kinoko_act_document_initialize((KinokoActDocument *)act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)act, stage_path));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
@@ -922,8 +922,8 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
         if(kind==2) {
             function_469700();
             function_468950_this(PTR(g_514300_storage),manager);
-            function_427530(PTR(actual_map));
-            CHECK(function_428000(PTR(actual_map),"data/map/w1-c01a.act"));
+            kinoko_act_document_initialize((KinokoActDocument *)actual_map);
+            CHECK(kinoko_act_document_load((KinokoActDocument *)actual_map,"data/map/w1-c01a.act"));
             for(int32_t slot=actual_map[52];slot!=actual_map[53];slot+=4) {
                 int32_t actual_layer=*(int32_t *)(intptr_t)slot;
                 const char *name=retdec_std_string_data(actual_layer+112);
@@ -1031,8 +1031,8 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     g874 = 1;
     CHECK(function_415550_this(PTR(root), PTR("CompileFile"), PTR(&compile_target),
         4, PTR(retdec_compile_file_native), 0) >= 0);
-    function_427530(PTR(act));
-    CHECK(function_428000(PTR(act), "data/map/w1-c01a.act"));
+    kinoko_act_document_initialize((KinokoActDocument *)act);
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act, "data/map/w1-c01a.act"));
     for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
         int32_t layer = *(int32_t *)(intptr_t)slot;
         if (strcmp(retdec_std_string_data(layer + 112), "hidden") == 0) hidden = layer;
@@ -1954,8 +1954,8 @@ static int test_branch_motion(int32_t manager) {
     const char *paths[] = {"data/map/w1-c01a.act", "data/map/w1-c01b.act", "data/map/w1-c01a.act"};
     for (int round = 0; round < 3; ++round) {
         int32_t act[60];
-        function_427530(PTR(act));
-        CHECK(function_428000(PTR(act), paths[round]));
+        kinoko_act_document_initialize((KinokoActDocument *)act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)act, paths[round]));
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
             int32_t layer = *(int32_t *)(intptr_t)slot;
@@ -3642,8 +3642,8 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         : "riderWater <- false; riderType <- TYPE_USA;"));
 
     int32_t act[60]={0}, moving_layer=0, moving_layout=0, vector_layout=0;
-    function_427530(PTR(act));
-    CHECK(function_428000(PTR(act),"data/map/w3-c02b.act"));
+    kinoko_act_document_initialize((KinokoActDocument *)act);
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act,"data/map/w3-c02b.act"));
     for(int32_t slot=act[52];slot!=act[53];slot+=4) {
         int32_t layer=*(int32_t *)(intptr_t)slot;
         const char *name=retdec_std_string_data(layer+112);
@@ -3764,8 +3764,8 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         function_4a9d70_this(PTR(map_object));
         function_4a9bb0_this(map_state,map_state);
         function_4a9840_this(PTR(root+1),"map",map_state);
-        function_427530(PTR(map_act));
-        CHECK(function_428000(PTR(map_act),"data/map/w2-c05b.act"));
+        kinoko_act_document_initialize((KinokoActDocument *)map_act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)map_act,"data/map/w2-c05b.act"));
         *(int32_t *)(intptr_t)(map_state+76)=map_act[2];
         *(int32_t *)(intptr_t)(map_state+80)=map_act[3];
         for(int32_t slot=map_act[52];slot!=map_act[53];slot+=4) {
@@ -4017,8 +4017,8 @@ static int test_portrait_regions(const char *directory) {
         CHECK(function_410500(path));
     }
     int32_t act[60]={0};
-    CHECK(function_427530(PTR(act)));
-    CHECK(function_428000(PTR(act),"data/system/playerimage.act"));
+    CHECK(kinoko_act_document_initialize((KinokoActDocument *)act));
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act,"data/system/playerimage.act"));
     /* Independent values from the original PlayerImage ACT, not resource order.
        Shared atlases must keep distinct crops after deserialization. */
     const char *names[]={"face_1","face_2","face_3","face_4","face_5",
@@ -4052,7 +4052,7 @@ static int test_chip_shared_ownership(void) {
     int32_t source[60]={0}, texture[2]={0};
     IDirect3DBaseTexture9Vtbl vtable={0}; vtable.Release=count_texture_release;
     texture[0]=PTR(&vtable);
-    CHECK(function_427530(PTR(source)));
+    CHECK(kinoko_act_document_initialize((KinokoActDocument *)source));
     int32_t *resource=(int32_t*)calloc(1,100);
     struct retdec_mcd_data *data=(struct retdec_mcd_data*)calloc(1,sizeof(*data));
     CHECK(resource && data);
@@ -4131,8 +4131,8 @@ static int test_act_reentry(const char *directory) {
     }
     for(int asset=0;asset<2;++asset) {
         int32_t source[60]={0}, runtime[48]={0}, holder=PTR(source);
-        CHECK(function_427530(PTR(source)));
-        CHECK(function_428000(PTR(source),assets[asset]));
+        CHECK(kinoko_act_document_initialize((KinokoActDocument *)source));
+        CHECK(kinoko_act_document_load((KinokoActDocument *)source,assets[asset]));
         runtime[0]=PTR(&holder);
         for(int visit=0;visit<3;++visit) {
             CHECK(retdec_bind_act_resource_object(PTR(runtime)));
