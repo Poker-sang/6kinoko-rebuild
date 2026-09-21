@@ -1,3 +1,4 @@
+#include "kinoko/integer_map.h"
 #include "kinoko/render_queue.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/legacy_abi.h"
@@ -31,12 +32,7 @@ void release_stage_list() {
 }
 void release_render_queue() { kinoko_clear_render_queue(); }
 void release_sound_tree() {
-    // 4D49D0 -> 46A650's full-range branch -> 4636E0 / 429C70.
-    auto* head = reinterpret_cast<int32_t*>(static_cast<uintptr_t>(g638));
-    if (!head) return;
-    kinoko_erase_animation_tree(head[1]);
-    std::free(head);
-    g638 = g639 = 0;
+    kinoko_integer_map_destroy(g638);g638=g639=0;
 }
 
 void destroy_owner(StageOwner *owner) {
@@ -78,12 +74,7 @@ extern "C" int32_t function_4d3e50() {
 }
 
 extern "C" int32_t function_4d3f50() {
-    auto* head = static_cast<int32_t*>(std::malloc(24));
-    if (!head) throw std::bad_alloc();
-    g638 = static_cast<int32_t>(reinterpret_cast<uintptr_t>(head));
-    head[0] = head[1] = head[2] = g638;
-    reinterpret_cast<unsigned char*>(head)[20] = 1;
-    reinterpret_cast<unsigned char*>(head)[21] = 1;
+    g638=kinoko_integer_map_create();g639=0;
     return std::atexit(release_sound_tree);
 }
 
@@ -99,11 +90,7 @@ extern "C" int32_t kinoko_clear_global_stages() {
 // the non-owning original ID lookup tree, preserving its sentinel.
 extern "C" int32_t kinoko_clear_global_sound() {
     function_40b3a0();
-    auto *head = reinterpret_cast<int32_t *>(static_cast<uintptr_t>(static_cast<uint32_t>(g638)));
-    if (head) {
-        kinoko_erase_animation_tree(head[1]);
-        head[0] = head[1] = head[2] = g638;
-    }
+    kinoko_integer_map_clear(g638);
     g639 = 0;
     return 1;
 }

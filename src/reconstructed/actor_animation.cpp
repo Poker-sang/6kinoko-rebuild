@@ -10,15 +10,6 @@ using kinoko::legacy::address;
 using kinoko::legacy::pointer;
 using kinoko::native::RecordView;
 
-struct AnimationLookupNode {
-    Address left, parent, right;
-    int32_t key;
-    Address animation;
-    uint8_t color, sentinel;
-};
-static_assert(offsetof(AnimationLookupNode, animation) == 16);
-static_assert(sizeof(AnimationLookupNode) == 24);
-
 int32_t frame_count(const AnimationRecord& animation) {
     return static_cast<int32_t>(animation.frames_end - animation.frames_begin) /
         static_cast<int32_t>(sizeof(FrameRecord));
@@ -91,8 +82,7 @@ extern "C" int32_t kinoko_actor_set_take(int32_t value, int32_t take) {
     int32_t entry = 0;
     function_4706c0_this(address(lookup.data()), &entry, &take);
     if (static_cast<Address>(entry) == lookup.get(&TreeIndex::head)) return entry;
-    const RecordView<AnimationLookupNode> node(pointer(entry));
-    const auto selected = node.get(&AnimationLookupNode::animation);
+    const auto selected = *pointer<Address>(entry);
     actor.set(&ActorRecord::animation, selected);
     const auto animation = animation_at(selected);
     actor.set(&ActorRecord::animation_flags, animation.flags);

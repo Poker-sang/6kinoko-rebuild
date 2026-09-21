@@ -37,3 +37,9 @@ Replaced the global stage-owner list with std::list<StageEntry>. Opaque entry to
 ## R114 — Actor priority index
 
 Replaced the hand-written unbalanced priority tree with std::multimap<int32_t, unique_ptr<Entry>>. Entry tokens hold real map iterators, and actors retain opaque tokens for priority reset/erase. Original 463610 compares signed priorities; normal insertion puts equal keys after existing entries, while the insert-left variant puts equal keys first. lower_bound/upper_bound hints preserve both policies. Refresh and shutdown use native ordered traversal and preserve actor reference/handle release order. Removed manual parent/left/right rewiring, extrema maintenance and recursive priority-node frees. Compiled-only contracts cover signed ordering, equal-key insertion policy, successor erase and repeated clear.
+
+R114 build note: the game and stage contract linked, but the complete build failed because actor_records_contract could not resolve kinoko_priority_clear. R114 is not a successful full-build artifact. Its build/run directories, logs and staged resources are retained. R115 moves the standalone container implementations into kinoko_native_methods so every consumer links them.
+
+## R115 — Animation and sound integer lookup maps
+
+Replaced the hand-written animation lookup BST and empty sound lookup tree with std::map<int32_t,int32_t>. Put retains stable mapped-value addresses and replaces duplicate values; lookup returns the opaque container identity on a miss, preserving call-site branching. PAT aliases, SetTake, manager cleanup and sound shutdown all use native storage. Removed generated 4706C0 pointer traversal, 429C70 recursive frees and sentinel allocation. actor_records_contract now uses the real lookup map instead of a fake node-layout stub. Contracts also cover negative keys, overwrite, growth without mapped-address invalidation and missing lookups.
