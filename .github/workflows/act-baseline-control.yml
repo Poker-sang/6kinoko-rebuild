@@ -1,0 +1,91 @@
+name: ACT pre-migration control
+on:
+  push:
+    branches: [refactor/act-document-loading-20260921]
+    paths: [.github/workflows/act-baseline-control.yml]
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 825b0397384944a34a828a23b77bf3432ab0ae05
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Commit only the script-fixture separator before testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/stage_contract.c')
+          s=p.read_text()
+          a=s.index('static int test_string_layout_binding(')
+          b=s.index('\nstatic int test_string_layout_lifetime(',a)
+          section=s[a:b].replace(';"',';'+chr(92)+'n"')
+          p.write_text(s[:a]+section+s[b:])
+          PY
+          git config user.name OpenAI
+          git config user.email noreply@openai.com
+          git add tests/stage_contract.c
+          git commit -m "test: separate Squirrel fixture statements for baseline control"
+          mkdir -p build-runs/act-baseline-control
+          git rev-parse HEAD > build-runs/act-baseline-control/source-commit.txt
+          git diff 825b0397384944a34a828a23b77bf3432ab0ae05 HEAD > build-runs/act-baseline-control/test-only.patch
+          git diff --exit-code 825b0397384944a34a828a23b77bf3432ab0ae05 HEAD -- src include third_party CMakeLists.txt
+          git bundle create build-runs/act-baseline-control/source.bundle HEAD
+      - name: Select installed MSVC x86 tools
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $installation) { throw 'MSVC x86 toolchain missing.' }
+          $devcmd = Join-Path $installation 'Common7/Tools/VsDevCmd.bat'
+          $batch = Join-Path $env:RUNNER_TEMP 'act-control-msvc.cmd'
+          @('@echo off', "call `"$devcmd`" -no_logo -host_arch=x64 -arch=x86 >nul", 'if errorlevel 1 exit /b 1', 'set') | Set-Content -Encoding ascii $batch
+          $environment = & cmd.exe /d /c $batch
+          if ($LASTEXITCODE -ne 0) { throw 'VsDevCmd failed.' }
+          foreach ($line in $environment) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              $name, $value = $Matches[1], $Matches[2]
+              if ($name -notmatch '^(GITHUB_|RUNNER_|CI$)') { "$name=$value" >> $env:GITHUB_ENV }
+            }
+          }
+      - name: Configure and build quiet baseline stage executable
+        shell: pwsh
+        run: |
+          cmake -S . -B build-runs/act-baseline-control -G Ninja -DCMAKE_BUILD_TYPE=Release `
+            -DKINOKO_RETDEC_DISABLE_TRACE=ON -DKINOKO_RETDEC_TRACE_FILTER=ON `
+            -DKINOKO_REFERENCE_DIR="${{ github.workspace }}/ci-no-proprietary-assets" `
+            -DKINOKO_RUNTIME_DIR="${{ github.workspace }}/runtime-builds/act-baseline-control" `
+            2>&1 | Tee-Object build-runs/act-baseline-control/configure.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build-runs/act-baseline-control --target kinoko_stage_contract --parallel 4 `
+            2>&1 | Tee-Object build-runs/act-baseline-control/build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage authenticated DirectX dependency
+        shell: pwsh
+        run: ./tools/prepare_ci_directx.ps1 -Destination "$env:RUNNER_TEMP/act-control-directx"
+      - name: Execute the same two broad contracts without ACT migration
+        shell: pwsh
+        run: |
+          ctest --test-dir build-runs/act-baseline-control -C Release --output-on-failure --no-tests=error --timeout 120 `
+            -R '^(stage_native_contract|damage_pause_contract)$' `
+            2>&1 | Tee-Object build-runs/act-baseline-control/ctest.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: act-pre-migration-control-${{ github.run_id }}
+          retention-days: 30
+          path: |
+            build-runs/act-baseline-control/*.log
+            build-runs/act-baseline-control/*.map
+            build-runs/act-baseline-control/*.txt
+            build-runs/act-baseline-control/*.patch
+            build-runs/act-baseline-control/*.bundle
+            build-runs/act-baseline-control/Testing/Temporary/
+            runtime-builds/act-baseline-control/
