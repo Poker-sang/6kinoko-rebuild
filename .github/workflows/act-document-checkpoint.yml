@@ -1,0 +1,53 @@
+name: ACT document migration checkpoint
+on:
+  push:
+    branches: [refactor/act-document-loading-20260921]
+    paths: [tools/act-document-step.py]
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: act-document-migration-checkpoint
+  cancel-in-progress: false
+jobs:
+  checkpoint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: refactor/act-document-loading-20260921
+          fetch-depth: 0
+      - name: Apply guarded migration and commit before testing
+        run: |
+          set -euo pipefail
+          test -f tools/act-document-step.py
+          git config user.name OpenAI
+          git config user.email noreply@openai.com
+          message=$(sed -n 's/^# commit: //p' tools/act-document-step.py | head -1)
+          test -n "$message"
+          python tools/act-document-step.py
+          git diff --check
+          git add src include tests tools docs CMakeLists.txt
+          git rm tools/act-document-step.py
+          git commit -m "$message"
+          git rev-parse HEAD > source-commit.txt
+          git bundle create act-document-source.bundle HEAD
+          git push origin HEAD:refactor/act-document-loading-20260921
+      - name: Validate committed boundaries and provenance
+        run: |
+          python tools/check_migration_boundaries.py
+          python -m unittest discover -s tests -p test_legacy_islands.py -v
+          python -m unittest discover -s tests -p test_upstream_provenance.py -v
+      - name: Dispatch quiet Win32 verification of committed source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run windows-x86.yml --ref refactor/act-document-loading-20260921
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: act-document-checkpoint-${{ github.run_id }}
+          retention-days: 30
+          path: |
+            act-document-source.bundle
+            source-commit.txt
