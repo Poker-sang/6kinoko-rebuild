@@ -5,7 +5,7 @@
 
 typedef struct KinokoCollisionRecord {
     const unsigned char *chip;
-    const void *layout;
+    const void *layout; /* Borrowed placement record, not the owning map layout. */
     int32_t index;
 } KinokoCollisionRecord;
 

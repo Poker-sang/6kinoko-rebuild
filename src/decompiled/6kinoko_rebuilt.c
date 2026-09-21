@@ -70,6 +70,7 @@
 #include "kinoko/squirrel_compile_bridge.h"
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
+#include "kinoko/map_collision.h"
 #include "kinoko/game_math.h"
 #include "kinoko/audio_math.h"
 #include "kinoko/actor_methods.h"
@@ -11303,80 +11304,16 @@ static void retdec_actor_tick(int32_t actor)
 static int32_t retdec_collision_append(int32_t state, int32_t *count,
     const unsigned char *chip, const void *layout, int32_t index)
 {
-    KinokoCollisionRecord *records;
-    if (!retdec_collision_reserve(state + 36, (uint32_t)*count + 1, 12))
-        return 0;
-    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
-    records[*count].chip = chip;
-    records[*count].layout = layout;
-    records[*count].index = index;
-    ++*count;
-    if (*(int32_t *)(intptr_t)(state + 40) < (int32_t)(intptr_t)(records + *count))
-        *(int32_t *)(intptr_t)(state + 40) = (int32_t)(intptr_t)(records + *count);
-    return 1;
+    return kinoko_map_collision_append((KinokoCollisionState *)(intptr_t)state,
+        count, chip, layout, index);
 }
 
-/* 435220/436290/4362F0: resume at the cached index, scan forward, then backward. */
 static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
     int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,
     int32_t *count)
 {
-    struct retdec_mcd_data *data = kinoko_map_query_chip_data((KinokoActLayout *)(intptr_t)layout);
-    int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-    int32_t total = (*(int32_t *)(intptr_t)(layout + 268) -
-                     *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    int32_t start = *cached, forward = 1, backward = 0;
-    int32_t max_width = *(int32_t *)(intptr_t)(layout + 240);
-    int32_t max_height = *(int32_t *)(intptr_t)(layout + 244);
-    float offset_x, offset_y;
-    int32_t offset_ix, offset_iy;
-    if (data == NULL || layer == 0)
-        return 0;
-    if (total <= 0)
-        return 1;
-    offset_x = *(float *)(intptr_t)(layer + 144);
-    offset_y = *(float *)(intptr_t)(layer + 148);
-    offset_ix = (int32_t)offset_x;
-    offset_iy = (int32_t)offset_y;
-    if (start > 0 && start < total) {
-        int32_t record = retdec_map_record_at(layout, start);
-        int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
-        forward = right >= x;
-        backward = (int64_t)left - max_width <= x;
-    }
-    *cached = 0;
-    for (int32_t pass = 0; pass < 2; ++pass) {
-        int32_t step = pass == 0 ? 1 : -1;
-        int32_t index = pass == 0 ? start : start - forward;
-        int32_t first = 1;
-        if ((pass == 0 && !forward) || (pass == 1 && !backward))
-            continue;
-        for (; index >= 0 && index < total; index += step) {
-            int32_t record = retdec_map_record_at(layout, index);
-            int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
-            int32_t y = *(int32_t *)(intptr_t)(record + 8) + offset_iy;
-            struct retdec_mcd_chip *chip;
-            if ((step > 0 && x > right) ||
-                (step < 0 && x < (int64_t)left - max_width))
-                break;
-            if (x < (int64_t)left - max_width || x > right ||
-                y < (int64_t)top - max_height || y > bottom)
-                continue;
-            chip = retdec_mcd_find_chip(data, *(uint32_t *)(intptr_t)record);
-            if (chip == NULL)
-                continue;
-            *(float *)(intptr_t)(record + 12) =
-                (float)*(int32_t *)(intptr_t)(record + 4) + offset_x;
-            *(float *)(intptr_t)(record + 16) =
-                (float)*(int32_t *)(intptr_t)(record + 8) + offset_y;
-            if (!retdec_collision_append(state, count, chip->bytes, (void *)(intptr_t)record, index))
-                return 0;
-            if (pass != 0 || first)
-                *cached = index;
-            first = 0;
-        }
-    }
-    return 1;
+    return kinoko_map_collision_query((KinokoCollisionState *)(intptr_t)state,
+        (KinokoActLayout *)(intptr_t)layout, cached, left, top, right, bottom, count);
 }
 
 static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,

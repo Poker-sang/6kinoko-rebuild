@@ -51,6 +51,10 @@ struct LayerRecord {
     KinokoActResource *resource; // document-owned; authoritative for creation
     std::array<uint8_t, 8> unknown104;
     kinoko::legacy::StringRecord name;
+    uint32_t unknown136;
+    uint8_t visible;
+    std::array<uint8_t, 3> padding141;
+    float position_x, position_y;
 };
 struct ChipResourceRecord {
     const unsigned char *methods;
@@ -74,6 +78,8 @@ static_assert(offsetof(LayoutRecord, cached_chip_resource) == 316);
 static_assert(offsetof(LayoutRecord, alpha) == 320 && offsetof(LayoutRecord, blend) == 328);
 static_assert(offsetof(LayoutRecord, suppress_next_binding) == 460 && sizeof(LayoutRecord) == 464);
 static_assert(offsetof(LayerRecord, resource) == 100 && offsetof(LayerRecord, name) == 112);
+static_assert(offsetof(LayerRecord, visible) == 140 && offsetof(LayerRecord, position_x) == 144);
+static_assert(offsetof(LayerRecord, position_y) == 148);
 static_assert(offsetof(ChipResourceRecord, data) == 64);
 
 inline int32_t placement_count(KinokoActLayout *layout) {

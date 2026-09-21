@@ -147,6 +147,45 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(layout[79] == cloned_resource && hits == 1);
             KinokoCollisionRecord *hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
             CHECK(hit[0].index == 0 && hit[0].chip == data->chips[0].bytes);
+            /* R138: order, inclusive bounds, fractional coordinates and buffer
+               cursor reuse. Source only: execution remains user-owned. */
+            {
+                int32_t scan_records[5][8] = {
+                    {4,-20,8,0,0,0,1,0}, {4,0,8,0,0,0,1,0},
+                    {4,20,8,0,0,0,1,0}, {4,40,24,0,0,0,1,0},
+                    {4,60,8,0,0,0,1,0}};
+                kinoko_native_buffer_replace(PTR(layout)+264,scan_records,sizeof(scan_records));
+                *(float*)(intptr_t)(cloned_layer+144) = 0.5f;
+                *(float*)(intptr_t)(cloned_layer+148) = -0.5f;
+                cached = 2; hits = 0;
+                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
+                hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
+                CHECK(hits == 3 && cached == 1);
+                CHECK(hit[0].index == 2 && hit[1].index == 3 && hit[2].index == 1);
+                CHECK(hit[0].layout == (void*)(intptr_t)(layout[66]+2*32));
+                CHECK(((const float*)hit[0].layout)[3] == 20.5f);
+                CHECK(((const float*)hit[0].layout)[4] == 7.5f);
+                cached = 4; hits = 0;
+                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
+                hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
+                CHECK(hits == 3 && cached == 1);
+                CHECK(hit[0].index == 3 && hit[1].index == 2 && hit[2].index == 1);
+                cached = 0; hits = 0;
+                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,56,24,56,24,&hits));
+                hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
+                CHECK(hits == 1 && cached == 3 && hit[0].index == 3);
+                CHECK(scratch[10] == PTR(hit+3)); /* Published end is retained. */
+                cached = 0;
+                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,24,0,24,&hits));
+                hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
+                CHECK(hits == 2 && hit[0].index == 3 && hit[1].index == 1);
+                /* Existing internal empty-map contract leaves both cursors. */
+                int32_t saved_end = layout[67];
+                layout[67] = layout[66]; cached = 99;
+                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+                CHECK(hits == 2 && cached == 99);
+                layout[67] = saved_end;
+            }
             kinoko_native_buffer_destroy(PTR(scratch)+36);
             layout[79] = 0;
             *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
