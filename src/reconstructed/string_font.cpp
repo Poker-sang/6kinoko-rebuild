@@ -10,6 +10,7 @@
 #include <cstring>
 #include <new>
 #include <vector>
+#include <list>
 
 extern "C" {
 extern int32_t g678;
@@ -22,15 +23,11 @@ namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
-struct Node { Node *next,*previous; void *pixels; };
+using Pixels=std::list<void*>;
+Pixels*& pixels(int32_t renderer) { return field<Pixels*>(renderer+348); }
 void clear_pixels(int32_t r) {
-    auto* head=field<Node*>(r+348);
-    while(head->next!=head) {
-        auto* node=head->next;
-        head->next=node->next;node->next->previous=head;
-        std::free(node->pixels);std::free(node);
-    }
-    field<int32_t>(r+352)=0;
+    for(void* value:*pixels(r)) std::free(value);
+    pixels(r)->clear();
 }
 struct GraphicsLock {
     GraphicsLock() { EnterCriticalSection(&g676); }
@@ -121,9 +118,7 @@ extern "C" void kinoko_string_font_construct(int32_t r) {
     field<int32_t>(r+280)=400;field<uint16_t>(r+284)=0;field<uint8_t>(r+286)=0;
     for(int offset:{292,296,300,304,352,384,0,4,8,324,340,344}) field<int32_t>(r+offset)=0;
     field<int32_t>(r+288)=100000;field<int32_t>(r+388)=15;field<uint8_t>(r+368)=0;
-    auto* head=static_cast<Node*>(std::malloc(sizeof(Node)));
-    if(!head) throw std::bad_alloc();
-    head->next=head->previous=head;field<Node*>(r+348)=head;
+    pixels(r)=new Pixels;
 }
 extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     // 440910/440CA0 preserve the other config bytes and set equal RGB endpoints.
@@ -215,4 +210,13 @@ extern "C" void kinoko_string_font_upload(int32_t r,int32_t handle,const char* c
                 *width*bytes_per_pixel);
     } catch(...) { texture->UnlockRect(0);throw; }
     texture->UnlockRect(0);
+}
+
+extern "C" void kinoko_string_font_copy_pixels(int32_t out,int32_t in) {
+    // Original list assignment copies borrowed pixel pointers. It destroys old
+    // list nodes without releasing their pointed-to allocations.
+    *pixels(out)=*pixels(in);
+}
+extern "C" void kinoko_string_font_destroy_pixels(int32_t renderer) {
+    clear_pixels(renderer);delete pixels(renderer);pixels(renderer)=nullptr;
 }

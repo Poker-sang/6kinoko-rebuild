@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <new>
 #include <string>
+#include <vector>
 
 extern "C" int32_t function_405d60(int32_t texture);
 
@@ -15,32 +16,13 @@ namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
-struct Node { Node *next, *previous; void* pixels; };
-static_assert(sizeof(Node)==12);
 
 // 445230 / 423F00: the original assignment copies pixel pointers, not pixel
 // buffers. Keep that ownership contract; atlas compaction is not a deep clone.
 void assign_renderer(int32_t out,int32_t in) {
     if(out==in) return;
     std::copy_n(pointer<unsigned char>(in),348,pointer<unsigned char>(out));
-    auto* head=field<Node*>(out+348);
-    auto* source=field<Node*>(in+348);
-    auto* node=head->next;
-    head->next=head->previous=head;
-    field<uint32_t>(out+352)=0;
-    while(node!=head) {
-        auto* next=node->next;
-        std::free(node);
-        node=next;
-    }
-    for(node=source->next;node!=source;node=node->next) {
-        auto* copy=static_cast<Node*>(std::malloc(sizeof(Node)));
-        if(!copy) throw std::bad_alloc();
-        *copy={head,head->previous,node->pixels};
-        head->previous->next=copy;
-        head->previous=copy;
-        ++field<uint32_t>(out+352);
-    }
+    kinoko_string_font_copy_pixels(out,in);
     field<uint32_t>(out+360)=field<uint32_t>(in+360);
     field<uint8_t>(out+364)=field<uint8_t>(in+364);
     field<uint8_t>(out+365)=field<uint8_t>(in+365);
@@ -51,15 +33,7 @@ void assign_renderer(int32_t out,int32_t in) {
 
 // 40ED40 receives its renderer in ESI. The old C signature lost it entirely.
 void destroy_renderer(int32_t renderer) {
-    auto* head=field<Node*>(renderer+348);
-    auto* node=head->next;
-    while(node!=head) {
-        auto* next=node->next;
-        std::free(node->pixels);
-        std::free(node);
-        node=next;
-    }
-    field<uint32_t>(renderer+352)=0;
+    kinoko_string_font_destroy_pixels(renderer);
     std::free(field<void*>(renderer+344));
     field<void*>(renderer+344)=nullptr;
     StringView text(pointer<void>(renderer+368));
@@ -67,8 +41,24 @@ void destroy_renderer(int32_t renderer) {
     field<uint32_t>(renderer+388)=15;
     field<uint32_t>(renderer+384)=0;
     field<uint8_t>(renderer+368)=0;
-    std::free(head);
 }
+struct Atlas {
+    alignas(4) unsigned char bytes[436];
+    int32_t address() const { return kinoko::legacy::address(bytes); }
+    Atlas() { kinoko_string_font_construct(address()+24);field<int32_t>(address()+428)=0; }
+    Atlas(const Atlas& other) : Atlas() { *this=other; }
+    Atlas& operator=(const Atlas& other) {
+        if(this==&other) return *this;
+        std::copy_n(other.bytes,24,bytes);
+        assign_renderer(address()+24,other.address()+24);
+        std::copy_n(other.bytes+428,8,bytes+428);return *this;
+    }
+    ~Atlas() { destroy_renderer(address()+24); }
+};
+static_assert(sizeof(Atlas)==436);
+using Atlases=std::vector<Atlas>;
+Atlases*& atlases(int32_t layout) { return field<Atlases*>(layout+160); }
+
 }
 
 // 441250: VC8 deque<256-byte glyph sprite> has one sprite per block. Its
@@ -81,24 +71,13 @@ extern "C" int32_t function_441250(int32_t* object) {
         const int32_t sprite=kinoko_string_queue_at(layout,i);
         minimum=(std::min)(minimum,field<int32_t>(sprite+8));
     }
-    const int32_t begin=field<int32_t>(layout+160);
-    auto& end=field<int32_t>(layout+164);
-    for(int32_t atlas=begin;atlas!=end;) {
-        if(field<int32_t>(atlas+20)>=minimum || field<int32_t>(atlas+432)>0) {
-            atlas+=436;
-            continue;
-        }
+    auto& pages=*atlases(layout);
+    for(size_t i=0;i<pages.size();) {
+        const int32_t atlas=pages[i].address();
+        if(field<int32_t>(atlas+20)>=minimum || field<int32_t>(atlas+432)>0) { ++i;continue; }
         function_405d60(field<int32_t>(atlas+428));
-        // 444A50 assigns forward through existing renderer/list/string storage.
-        for(int32_t out=atlas,in=atlas+436;in!=end;out+=436,in+=436) {
-            std::copy_n(pointer<unsigned char>(in),24,pointer<unsigned char>(out));
-            assign_renderer(out+24,in+24);
-            field<uint32_t>(out+428)=field<uint32_t>(in+428);
-            field<uint32_t>(out+432)=field<uint32_t>(in+432);
-        }
-        destroy_renderer(end-436+24);
-        end-=436;
-        atlas=begin;
+        pages.erase(pages.begin()+i);
+        i=0;
     }
     return 1;
 }
@@ -137,6 +116,7 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
         field<uint8_t>(layout+offset)=0;
     }
     for(int offset : {160,164,168,176,180,184,188,192}) field<int32_t>(layout+offset)=0;
+    atlases(layout)=new Atlases;
     kinoko_string_queue_construct(layout);
     // Original CP932 face name, 13 bytes before its NUL terminator.
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
@@ -159,11 +139,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     function_4410c0(layout);
     function_441250(pointer<int32_t>(layout));
     kinoko_string_queue_destroy(layout);
-    const int32_t end=field<int32_t>(layout+164);
-    for(int32_t atlas=field<int32_t>(layout+160);atlas!=end;atlas+=436)
-        destroy_renderer(atlas+24);
-    std::free(field<void*>(layout+160));
-    field<int32_t>(layout+160)=field<int32_t>(layout+164)=field<int32_t>(layout+168)=0;
+    delete atlases(layout);atlases(layout)=nullptr;
     for(int offset : {60,32,4}) {
         StringView value(pointer<void>(layout+offset));
         if(value.is_heap()) std::free(value.data());
@@ -185,39 +161,12 @@ extern "C" int32_t __fastcall kinoko_method_delete_string_layout(int32_t object,
     return object;
 }
 
-// 442930/442FE0 grow the 436-byte atlas vector using the recovered 1.5x
-// capacity rule and renderer copy construction. Glyph pointers are borrowed:
-// the original vector relocation does not repair them or retain textures.
+// Glyph pointers remain borrowed, including across original atlas relocation.
 extern "C" int32_t kinoko_string_append_atlas(int32_t layout) {
-    using kinoko::legacy::address;
-    int32_t begin=field<int32_t>(layout+160),end=field<int32_t>(layout+164);
-    const uint32_t count=(end-begin)/436;
-    const uint32_t capacity=(field<int32_t>(layout+168)-begin)/436;
-    if(count==9850842u) throw std::length_error("vector<T> too long");
-    if(count==capacity) {
-        uint32_t next=capacity<=9850842u-capacity/2?capacity+capacity/2:0;
-        next=(std::max)(next,count+1);
-        const int32_t replacement=address(std::malloc(size_t(next)*436));
-        if(!replacement) throw std::bad_alloc();
-        for(uint32_t i=0;i<count;++i) {
-            const int32_t from=begin+i*436,to=replacement+i*436;
-            kinoko_string_font_construct(to+24);
-            std::copy_n(pointer<unsigned char>(from),24,pointer<unsigned char>(to));
-            assign_renderer(to+24,from+24);
-            field<uint32_t>(to+428)=field<uint32_t>(from+428);
-            field<uint32_t>(to+432)=field<uint32_t>(from+432);
-        }
-        for(uint32_t i=0;i<count;++i) destroy_renderer(begin+i*436+24);
-        std::free(pointer<void>(begin));
-        begin=replacement;end=begin+count*436;
-        field<int32_t>(layout+160)=begin;field<int32_t>(layout+164)=end;
-        field<int32_t>(layout+168)=begin+next*436;
-    }
-    kinoko_string_font_construct(end+24);
-    field<int32_t>(end+428)=0;
-    field<int32_t>(layout+164)=end+436;
-    return end;
+    atlases(layout)->emplace_back();return atlases(layout)->back().address();
 }
+extern "C" uint32_t kinoko_string_atlas_size(int32_t layout) { return static_cast<uint32_t>(atlases(layout)->size()); }
+extern "C" int32_t kinoko_string_atlas_at(int32_t layout,uint32_t index) { return atlases(layout)->at(index).address(); }
 
 extern "C" void kinoko_string_copy_queue_storage(int32_t object,int32_t source);
 extern "C" void kinoko_string_drop_queue_storage(int32_t object);
@@ -233,30 +182,12 @@ extern "C" int32_t __fastcall kinoko_method_clone_string_layout(int32_t source,v
     std::copy_n(pointer<unsigned char>(source+88),40,pointer<unsigned char>(out+88));
     field<uint8_t>(out+128)=field<uint8_t>(source+128);
     std::copy_n(pointer<unsigned char>(source+132),28,pointer<unsigned char>(out+132));
-    const int32_t source_begin=field<int32_t>(source+160),end=field<int32_t>(source+164);
-    const uint32_t bytes=end-source_begin;
-    if(bytes) {
-        const int32_t allocation=address(std::malloc(bytes));
-        if(!allocation) throw std::bad_alloc();
-        field<int32_t>(out+160)=field<int32_t>(out+164)=allocation;
-        field<int32_t>(out+168)=allocation+bytes;
-    }
-    for(int32_t from=source_begin;from!=end;from+=436) {
-        const int32_t to=field<int32_t>(out+164);
-        kinoko_string_font_construct(to+24);
-        field<int32_t>(out+164)+=436;
-        std::copy_n(pointer<unsigned char>(from),24,pointer<unsigned char>(to));
-        assign_renderer(to+24,from+24);
-        field<uint32_t>(to+428)=field<uint32_t>(from+428);
-        field<uint32_t>(to+432)=field<uint32_t>(from+432);
-    }
+    *atlases(out)=*atlases(source);
     kinoko_string_copy_queue_storage(out,source);
     std::copy_n(pointer<unsigned char>(source+200),60,pointer<unsigned char>(out+200));
     // 43EB80 clears cloned atlas values (retains vector capacity, no texture
     // Release), then frees deque blocks/map while retaining its own proxy.
-    for(int32_t page=field<int32_t>(out+160);page!=field<int32_t>(out+164);page+=436)
-        destroy_renderer(page+24);
-    field<int32_t>(out+164)=field<int32_t>(out+160);
+    atlases(out)->clear();
     kinoko_string_drop_queue_storage(out);
     return out;
 }

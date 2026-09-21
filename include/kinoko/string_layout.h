@@ -14,6 +14,8 @@ uint32_t kinoko_string_queue_size(int32_t object);
 int32_t kinoko_string_queue_at(int32_t object, uint32_t index);
 void kinoko_string_drop_queue_storage(int32_t object);
 int32_t kinoko_string_append_glyph(int32_t object);
+uint32_t kinoko_string_atlas_size(int32_t layout);
+int32_t kinoko_string_atlas_at(int32_t layout, uint32_t index);
 int32_t kinoko_string_append_atlas(int32_t object);
 int32_t kinoko_string_add_character(int32_t object, const char *character);
 int32_t __fastcall kinoko_method_update_string_layout(int32_t object, void *unused);

@@ -1,0 +1,26 @@
+{
+  "444a50": {
+    "addr": "0x444a50",
+    "code": "_DWORD *__usercall sub_444A50@<eax>(_DWORD *a1@<eax>, _DWORD *a2@<ecx>, _DWORD *a3)\n{\n  _DWORD *v4; // esi\n  int v5; // eax\n\n  if ( a1 != a3 ) /*0x444a5c*/\n  {\n    v4 = a1 + 2; /*0x444a5f*/\n    do /*0x444aba*/\n    {\n      *a2 = *(v4 - 2); /*0x444a65*/\n      a2[1] = *(v4 - 1); /*0x444a6a*/\n      a2[2] = *v4; /*0x444a6f*/\n      a2[3] = v4[1]; /*0x444a75*/\n      a2[4] = v4[2]; /*0x444a7b*/\n      a2[5] = v4[3]; /*0x444a89*/\n      sub_445230(a1: a2 + 6, a2: v4 + 4); /*0x444a8c*/\n      a2[107] = v4[105]; /*0x444a97*/\n      v5 = v4[106]; /*0x444a9d*/\n      v4 += 109; /*0x444aa3*/\n      a2[108] = v5; /*0x444aa9*/\n      a2 += 109; /*0x444ab2*/\n    }\n    while ( v4 - 2 != a3 ); /*0x444aba*/\n  }\n  return a2; /*0x444abf*/\n}",
+    "refs": [
+      {
+        "addr": "0x445230",
+        "name": "sub_445230"
+      }
+    ]
+  },
+  "445230": {
+    "addr": "0x445230",
+    "code": "int __stdcall sub_445230(int a1, int a2)\n{\n  int v2; // eax\n\n  v2 = a2; /*0x445233*/\n  *(_DWORD *)a1 = *(_DWORD *)a2; /*0x44523c*/\n  *(_DWORD *)(a1 + 4) = *(_DWORD *)(a2 + 4); /*0x445241*/\n  *(_DWORD *)(a1 + 8) = *(_DWORD *)(a2 + 8); /*0x445247*/\n  qmemcpy((void *)(a1 + 12), (const void *)(a2 + 12), 0x150u); /*0x445257*/\n  if ( a1 + 348 != a2 + 348 ) /*0x4452df*/\n  {\n    sub_423F00(a1: **(_DWORD **)(a2 + 348), a2: *(_DWORD *)(a2 + 348), a3: a2); /*0x4452eb*/\n    v2 = a2; /*0x4452f0*/\n  }\n  *(_DWORD *)(a1 + 360) = *(_DWORD *)(v2 + 360); /*0x4452f9*/\n  *(_BYTE *)(a1 + 364) = *(_BYTE *)(v2 + 364); /*0x445307*/\n  *(_BYTE *)(a1 + 365) = *(_BYTE *)(v2 + 365); /*0x44531a*/\n  sub_406CC0(a1: v2 + 368, a2: 0, a3: -1); /*0x445327*/\n  *(_DWORD *)(a1 + 396) = *(_DWORD *)(a2 + 396); /*0x445335*/\n  *(_DWORD *)(a1 + 400) = *(_DWORD *)(a2 + 400); /*0x445342*/\n  return a1; /*0x445341*/\n}",
+    "refs": [
+      {
+        "addr": "0x423f00",
+        "name": "sub_423F00"
+      },
+      {
+        "addr": "0x406cc0",
+        "name": "sub_406CC0"
+      }
+    ]
+  }
+}

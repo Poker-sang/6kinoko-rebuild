@@ -5,6 +5,8 @@ extern "C" {
 #endif
 /* Internal CStringLayout atlas path. Input is one CharNextA character (or
    empty for atlas initialization), not the generic rich-text renderer. */
+void kinoko_string_font_copy_pixels(int32_t destination, int32_t source);
+void kinoko_string_font_destroy_pixels(int32_t renderer);
 void kinoko_string_font_construct(int32_t renderer);
 void kinoko_string_font_configure(int32_t renderer, int32_t layout);
 void kinoko_string_font_rasterize(int32_t renderer, const char *character,
