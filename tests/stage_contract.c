@@ -4428,14 +4428,14 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(retdec_create_bound_instance(vm,root+2,"StringProbe",klass,PTR(object),instance));
     retdec_sqrat_release_pair(vm,instance);
     CHECK(execute_source(vm,root+2,
-        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;"
-        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";"
-        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";"
-        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";"
-        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";"
-        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";"
-        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";"
-        "if(!StringProbe.Rebuild()) throw \"rebuild\";"));
+        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;\n"
+        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";\n"
+        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";\n"
+        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";\n"
+        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";\n"
+        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";\n"
+        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";\n"
+        "if(!StringProbe.Rebuild()) throw \"rebuild\";\n"));
     CHECK(object[12]==1 && retdec_std_string_data(PTR(object)+32)[0]=='A'); /* original ASCII PopFront erases zero */
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
@@ -4449,7 +4449,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
     CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
     kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
-    CHECK(execute_source(vm,root+2,"delete ::StringProbe;"));
+    CHECK(execute_source(vm,root+2,"delete ::StringProbe;\n"));
     retdec_sqrat_release_pair(vm,klass);kinoko_clear_string_layout(PTR(object));
     CHECK(atlas[108]==0 && function_48aa20(vm)==top);
     puts("PASS: actual Sqrat CStringLayout methods, property clamps, pending-text quirk and borrowed atlas replication");

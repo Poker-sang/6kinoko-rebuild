@@ -113,6 +113,7 @@ int32_t kinoko_act_draw(int32_t, float, float) { return 0; }
 int32_t kinoko_integer_map_create() { return 0; }
 void kinoko_integer_map_destroy(int32_t) {}
 void kinoko_integer_map_clear(int32_t) {}
+void kinoko_initialize_render_queue() {}
 int32_t kinoko_clear_render_queue() { return 0; }
 int32_t function_40b3a0() { return 0; }
 }

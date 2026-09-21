@@ -82,6 +82,10 @@ int main() {
     animation.loops = 1;
     for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation(actor_address, 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 0 && actor.get(&ActorRecord::current_frame) == animation.frames_begin);
+    // The flipped take must resolve before its bounds can be recomputed.
+    // Keep the genuinely missing take (999) below as a separate contract.
+    kinoko_integer_map_put(lookup.get(&TreeIndex::head), 38, address(&animation));
+    CHECK(kinoko_integer_map_find(lookup.get(&TreeIndex::head), 38) == address(&animation));
     actor.set(&ActorRecord::direction, 1.0f);
     kinoko_actor_set_take(actor_address, 38);
     CHECK(actor.get(&ActorRecord::world_bounds).left == 4.75f);
