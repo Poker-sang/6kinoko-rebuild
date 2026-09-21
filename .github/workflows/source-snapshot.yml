@@ -21,6 +21,7 @@ jobs:
           set -euo pipefail
           mkdir -p snapshot
           git rev-parse HEAD > snapshot/SOURCE_REVISION.txt
+          git ls-tree -r HEAD > snapshot/SOURCE_TREE.txt
           git archive --format=tar.gz --output=snapshot/source.tar.gz HEAD
           git bundle create snapshot/source.bundle HEAD
           git log -30 --format='%H %s' > snapshot/COMMITS.txt
