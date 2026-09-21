@@ -4742,6 +4742,74 @@
           "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
         }
       ]
+    },
+    {
+      "batch": "native-containers-20260921-r118-quiet",
+      "workspace": "C:\\Users\\poker\\.codex\\worktrees\\720f\\6kinoko-rebuild",
+      "source_commit": "3976632e7a2d7fc10131f5aa79f4af3ff22d5d1f",
+      "validation": "Complete quiet Win32 Release build exited 0. DAT files copied beside EXE and SHA256 verified. Build only; no tests or game executed.",
+      "artifacts": [
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/source-commit.txt",
+          "size": 42,
+          "sha256": "48511537fd920a34a4a583df373fab830f89a975f8dfba9b115551dcaf5a538a"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/configure.log",
+          "size": 986,
+          "sha256": "03dad892330b41be1d40a8f2e82a0b94577aaabd7fbe06b86430f3f83cf13bfc"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/configure-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/build.log",
+          "size": 357804,
+          "sha256": "53e6fad35f68f1ae88d3d51f6b402807e8917baa8075ccfde4b08397593ecd5b"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/build-exit-code.txt",
+          "size": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/kinoko.map",
+          "size": 1047796,
+          "sha256": "b1c601de35988a2c0327c40dbead5f4d66f8388e8fdd1ae7e25cd027228bd126"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/stage-contract.map",
+          "size": 1314116,
+          "sha256": "49ea4e87a6d1b07b9155916c3f0002b679cf5fad9a93208492c3d92071e87e95"
+        },
+        {
+          "path": "build-runs/native-containers-20260921-r118-quiet/stage-dat.log",
+          "size": 484,
+          "sha256": "c6bb7ffc587ae54005da40c2731e7de22b60fb7e4940e42350278f750b28ccb0"
+        },
+        {
+          "path": "runtime-builds/native-containers-20260921-r118-quiet/kinoko_retdec_rebuild.exe",
+          "size": 855552,
+          "sha256": "0b8dfc35894ba939f48f449920b34db79b1092a6ae1a2bb1aa491281c8e7e53f"
+        },
+        {
+          "path": "runtime-builds/native-containers-20260921-r118-quiet/6kinoko_a.dat",
+          "size": 163424746,
+          "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+        },
+        {
+          "path": "runtime-builds/native-containers-20260921-r118-quiet/6kinoko_b.dat",
+          "size": 44681244,
+          "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+        },
+        {
+          "path": "runtime-builds/native-containers-20260921-r118-quiet/6kinoko_c.dat",
+          "size": 11796163,
+          "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+        }
+      ]
     }
   ]
 }
