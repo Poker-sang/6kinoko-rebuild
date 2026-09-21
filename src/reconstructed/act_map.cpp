@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -162,11 +163,7 @@ int32_t kinoko_map_update(
     if (data == nullptr)
         return -0x7fffbffb;
 
-    if (field<int32_t>(layout + 332) != 0)
-        std::free(pointer<void>(field<int32_t>(layout + 332)));
-    field<int32_t>(layout + 332) = 0;
-    field<int32_t>(layout + 336) = 0;
-    field<int32_t>(layout + 340) = 0;
+    kinoko_native_buffer_destroy(layout+332);
     field<int32_t>(layout + 380) = 0;
 
     begin = field<int32_t>(layout + 264);
@@ -176,9 +173,8 @@ int32_t kinoko_map_update(
     map_count = (uint32_t)((end - begin) / 0x20);
     if (map_count == 0 || map_count > UINT32_MAX / 232u)
         return 0;
-    render_block = address(std::calloc((size_t)map_count, 232u));
-    if (render_block == 0)
-        return -0x7fffbffb;
+    if(!kinoko_native_buffer_resize(layout+332,map_count*232u)) return -0x7fffbffb;
+    render_block=field<int32_t>(layout+332);
 
     layer_x = 0.0f;
     layer_y = 0.0f;
@@ -329,14 +325,13 @@ int32_t kinoko_map_update(
         ++output_count;
     }
     if (output_count == 0) {
-        std::free(pointer<void>(render_block));
+        kinoko_native_buffer_destroy(layout+332);
         return 0;
     }
     field<int32_t>(layout + 332) = render_block;
     field<int32_t>(layout + 336) =
         render_block + (int32_t)output_count * 232;
-    field<int32_t>(layout + 340) =
-        render_block + (int32_t)map_count * 232;
+
     field<int32_t>(layout + 380) = (int32_t)output_count;
     if (trace_index <= 48) {
         retdec_trace_squirrel_name(

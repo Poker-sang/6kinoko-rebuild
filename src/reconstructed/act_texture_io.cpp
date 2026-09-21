@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_method_entries.h"
@@ -104,13 +105,7 @@ uint32_t record_count(int32_t layout) {
     return (end-begin)/32;
 }
 void replace_buffer(int32_t slot, const void* bytes, size_t size) {
-    kinoko::legacy::Allocation<unsigned char> allocation(
-        size ? static_cast<unsigned char*>(std::malloc(size)) : nullptr);
-    if (size && !allocation) throw std::bad_alloc();
-    if (size) std::memcpy(allocation.get(), bytes, size);
-    std::free(pointer<void>(field<int32_t>(slot)));
-    field<int32_t>(slot) = address(allocation.release());
-    field<uint32_t>(slot+4) = field<uint32_t>(slot+8) = field<uint32_t>(slot)+size;
+    kinoko_native_buffer_replace(slot,bytes,static_cast<uint32_t>(size));
 }
 // Original 435860/435B20, adapted to the source-owned MCD rather than an old
 // MSVC tree. The ABI caches still contain flat records and an ID/index vector.
@@ -451,7 +446,7 @@ int32_t __fastcall query_timeline(int32_t timeline,void*,int32_t type,int32_t ou
     return match;
 }
 void clear_timeline(int32_t timeline) {
-    std::free(pointer<void>(field<int32_t>(timeline+12)));
+    kinoko_native_buffer_destroy(timeline+12);
     std::memset(pointer<void>(timeline+12),0,12);
 }
 int32_t __fastcall delete_timeline(int32_t timeline,void*,int32_t flags) {

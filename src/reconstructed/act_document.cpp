@@ -1,3 +1,4 @@
+#include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
@@ -189,20 +190,7 @@ int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 
 void retdec_act_free_map_records(int32_t layout)
 {
-    int32_t begin;
-    int32_t end;
-
-    if (layout == 0)
-        return;
-    begin = field<int32_t>(layout + 264);
-    end = field<int32_t>(layout + 268);
-    (void)end;
-    /* C2DMapLayout stores CActMapChip records inline in one vector. */
-    if (begin != 0)
-        std::free(pointer<void>(begin));
-    field<int32_t>(layout + 264) = 0;
-    field<int32_t>(layout + 268) = 0;
-    field<int32_t>(layout + 272) = 0;
+    if(layout) kinoko_native_buffer_destroy(layout+264);
 }
 
 int32_t retdec_act_read_map_records(int32_t layout,
@@ -219,24 +207,21 @@ int32_t retdec_act_read_map_records(int32_t layout,
         !retdec_act_read_u32(reader_ptr, &serialized_size) ||
         count > 0x10000u || serialized_size > 0x20u)
         return 0;
-    field<int32_t>(layout + 264) = 0;
-    field<int32_t>(layout + 268) = 0;
-    field<int32_t>(layout + 272) = 0;
+    kinoko_native_buffer_destroy(layout+264);
     if (count == 0)
         return 1;
 
     if (serialized_size > 0x20u ||
         count > UINT32_MAX / 0x20u)
         return 0;
-    records = (unsigned char *)std::calloc((size_t)count, 0x20u);
-    if (records == nullptr)
-        return 0;
+    if(!kinoko_native_buffer_resize(layout+264,count*0x20u)) return 0;
+    records=pointer<unsigned char>(field<int32_t>(layout+264));
     read_size = serialized_size;
     for (index = 0; index < count; ++index) {
         unsigned char *record = records + (size_t)index * 0x20u;
         if (read_size != 0 &&
             !retdec_reader_read_exact(reader_ptr, record, read_size)) {
-            std::free(records);
+            kinoko_native_buffer_destroy(layout+264);
             return 0;
         }
         *(uint32_t *)(void *)(record + 0x14) = index;
@@ -247,8 +232,7 @@ int32_t retdec_act_read_map_records(int32_t layout,
         address(records);
     field<int32_t>(layout + 268) =
         address((records + (size_t)count * 0x20u));
-    field<int32_t>(layout + 272) =
-        address((records + (size_t)count * 0x20u));
+
     retdec_trace_i32("act:map-record-count", (int32_t)count);
     retdec_trace_i32("act:map-record-size", (int32_t)serialized_size);
     return 1;
@@ -762,11 +746,7 @@ int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     /* 4341F0 exposes alpha/blend through CActLayer's pointer properties. */
     field<int32_t>(layer + 52) = layout + 320;
     field<int32_t>(layer + 56) = layout + 328;
-    if (field<int32_t>(layout + 332) != 0)
-        std::free(pointer<void>(field<int32_t>(layout + 332)));
-    field<int32_t>(layout + 332) = 0;
-    field<int32_t>(layout + 336) = 0;
-    field<int32_t>(layout + 340) = 0;
+    kinoko_native_buffer_destroy(layout+332);
     field<int32_t>(layout + 380) = 0;
     retdec_trace_i32("map-layout:bind-layer", layer);
     retdec_trace_i32("map-layout:bind-resource", resource);
