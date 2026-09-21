@@ -56,3 +56,8 @@ hit grouping. Borrowed stack layouts are retired before leaving test scope.
 The user requested one complete batch before testing. No intermediate executable
 was handed off. All tests/game execution remain user-owned; build success is not
 test success. Final source commit and hashes are recorded in artifacts.json.
+
+Build result: all Release Win32 targets compiled successfully from `7e7bd389ccddc9bfa52e929ba8aa4440bf37fbe4`.
+Executable: `runtime-builds/collision-manager-r139-quiet/kinoko_retdec_rebuild.exe`.
+Three DAT files were copied beside it and verified by size and SHA256.
+No tests or game were executed. See artifacts.json for binaries and logs.
