@@ -76,12 +76,9 @@ void destroy_renderer(int32_t renderer) {
 extern "C" int32_t function_441250(int32_t* object) {
     const int32_t layout=static_cast<int32_t>(reinterpret_cast<intptr_t>(object));
     int32_t minimum=INT_MAX;
-    const uint32_t count=field<uint32_t>(layout+192);
-    const uint32_t first=field<uint32_t>(layout+188);
-    const uint32_t map_size=field<uint32_t>(layout+184);
-    auto* map=field<int32_t*>(layout+180);
+    const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
-        const int32_t sprite=map[(first+i)%map_size];
+        const int32_t sprite=kinoko_string_queue_at(layout,i);
         minimum=(std::min)(minimum,field<int32_t>(sprite+8));
     }
     const int32_t begin=field<int32_t>(layout+160);
@@ -120,22 +117,13 @@ extern "C" int32_t function_4410c0(int32_t layout) {
     field<int32_t>(layout+212)=0;
     // Original passes the concatenated buffer through strlen (441160).
     queue.append(pending.c_str(),static_cast<uint32_t>(std::strlen(pending.c_str())));
-    const uint32_t count=field<uint32_t>(layout+192);
-    const uint32_t first=field<uint32_t>(layout+188);
-    const uint32_t map_size=field<uint32_t>(layout+184);
-    auto* map=field<int32_t*>(layout+180);
+    const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
-        const int32_t sprite=map[(first+i)%map_size];
+        const int32_t sprite=kinoko_string_queue_at(layout,i);
         const int32_t atlas=field<int32_t>(sprite+252);
         if(atlas) --field<int32_t>(atlas+432);
     }
-    // 442D20 clears all allocated one-element deque blocks and the map, but
-    // retains its proxy at +176. Sprite destruction owns no atlas or texture.
-    for(uint32_t i=map_size;i>0;--i) std::free(pointer<void>(map[i-1]));
-    std::free(map);
-    field<int32_t>(layout+180)=field<int32_t>(layout+184)=0;
-    if(count) field<int32_t>(layout+188)=0;
-    field<int32_t>(layout+192)=0;
+    kinoko_string_drop_queue_storage(layout);
     return function_441250(pointer<int32_t>(layout));
 }
 
@@ -149,10 +137,7 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
         field<uint8_t>(layout+offset)=0;
     }
     for(int offset : {160,164,168,176,180,184,188,192}) field<int32_t>(layout+offset)=0;
-    auto* proxy=static_cast<int32_t*>(std::malloc(8));
-    if(!proxy) throw std::bad_alloc();
-    proxy[0]=layout+176;proxy[1]=0;
-    field<void*>(layout+176)=proxy;
+    kinoko_string_queue_construct(layout);
     // Original CP932 face name, 13 bytes before its NUL terminator.
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
     StringView(pointer<void>(layout+60)).assign(face,13);
@@ -173,8 +158,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     StringView(pointer<void>(layout+32)).assign("",0);
     function_4410c0(layout);
     function_441250(pointer<int32_t>(layout));
-    std::free(field<void*>(layout+176));
-    field<void*>(layout+176)=nullptr;
+    kinoko_string_queue_destroy(layout);
     const int32_t end=field<int32_t>(layout+164);
     for(int32_t atlas=field<int32_t>(layout+160);atlas!=end;atlas+=436)
         destroy_renderer(atlas+24);

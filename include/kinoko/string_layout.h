@@ -8,6 +8,11 @@ int32_t __fastcall kinoko_method_clone_string_layout(int32_t object, void *unuse
 int32_t __fastcall kinoko_method_destroy_string_layout(int32_t object, void *unused);
 int32_t __fastcall kinoko_method_string_layout_type(int32_t object, void *unused);
 int32_t __fastcall kinoko_method_register_string_layout(int32_t object, void *unused);
+void kinoko_string_queue_construct(int32_t object);
+void kinoko_string_queue_destroy(int32_t object);
+uint32_t kinoko_string_queue_size(int32_t object);
+int32_t kinoko_string_queue_at(int32_t object, uint32_t index);
+void kinoko_string_drop_queue_storage(int32_t object);
 int32_t kinoko_string_append_glyph(int32_t object);
 int32_t kinoko_string_append_atlas(int32_t object);
 int32_t kinoko_string_add_character(int32_t object, const char *character);
