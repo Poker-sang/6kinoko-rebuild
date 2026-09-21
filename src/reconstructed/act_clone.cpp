@@ -1,3 +1,4 @@
+#include "kinoko/act_list.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_clone.h"
 #include "kinoko/texture_store.h"
@@ -54,6 +55,7 @@ public:
         for(auto texture: textures_) kinoko_texture_release(texture);
         for(auto resource: chip_owners_) kinoko_act_release_chip_data(static_cast<int32_t>(resource));
         for(auto object:string_layouts_) kinoko_method_delete_string_layout(static_cast<int32_t>(object),nullptr,1);
+        for(auto head: lists_) kinoko_act_list_drop_storage(static_cast<int32_t>(head));
         for(auto allocation: allocations_) std::free(allocation);
     }
 
@@ -175,19 +177,15 @@ private:
         return result;
     }
     void list(Address dest,Address source,size_t offset) {
-        const auto head=allocate(sizeof(Node));
-        field<Node>(head)={head,head,0};
-        field<Address>(dest,offset)=head;
-        field<uint32_t>(dest,offset+4)=0;
+        int32_t head=0;
+        if(!retdec_act_make_list(&head)) throw std::bad_alloc();
+        try { lists_.push_back(head); } catch(...) { kinoko_act_list_drop_storage(head);throw; }
+        field<Address>(dest,offset)=head;field<uint32_t>(dest,offset+4)=0;
         const auto source_head=field<Address>(source,offset);
         if(!source_head) return;
         for(auto node=field<Node>(source_head).next;node!=source_head;node=field<Node>(node).next) {
             const auto value=field<Node>(node).value;
-            const auto clone_node=allocate(sizeof(Node));
-            auto &sentinel=field<Node>(head);
-            field<Node>(clone_node)={head,sentinel.previous,value ? key(value) : 0};
-            field<Node>(sentinel.previous).next=clone_node;
-            sentinel.previous=clone_node;
+            if(!retdec_act_append_list(dest+offset,value?key(value):0)) throw std::bad_alloc();
             ++field<uint32_t>(dest,offset+4);
         }
     }
@@ -234,6 +232,7 @@ private:
         }
         return result;
     }
+    std::vector<Address> lists_;
     std::vector<void *> allocations_;
     std::vector<int32_t> textures_;
     std::vector<Address> chip_owners_;

@@ -1,3 +1,4 @@
+#include "kinoko/act_list.h"
 #include "kinoko/string_font.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_keys.h"
@@ -2285,6 +2286,17 @@ static int test_shutdown_tree_cleanup(void) {
         kinoko_integer_map_destroy(map);
     }
 
+    {
+        int32_t list=0;CHECK(retdec_act_make_list(&list));
+        int32_t* head=(int32_t*)(intptr_t)list;
+        for(int i=0;i<128;++i) CHECK(retdec_act_append_list(PTR(&list),i+1));
+        int32_t token=head[0],previous=list;
+        for(int i=0;i<128;++i) {
+            int32_t* link=(int32_t*)(intptr_t)token;
+            CHECK(link[1]==previous && link[2]==i+1);previous=token;token=link[0];
+        }
+        CHECK(token==list && head[1]==previous);kinoko_act_list_drop_storage(list);
+    }
     int32_t manager[40] = {0};
     int32_t textures[2] = {7, 13}, iteration[3] = {0};
     kinoko_animation_list_construct(PTR(manager)+52);
