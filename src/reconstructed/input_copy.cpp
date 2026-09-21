@@ -1,3 +1,4 @@
+#include "kinoko/input_cluster.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_abi.h"
 #include <algorithm>
@@ -18,9 +19,8 @@ Address allocate(size_t bytes) {
     return address(p);
 }
 struct Vector { Address begin, end, capacity; };
-struct Deque { Address proxy, map; uint32_t map_size, first, size; };
 struct Device { Address vtable; unsigned char value[164]; };
-static_assert(sizeof(Device) == 168 && sizeof(Deque) == 20);
+static_assert(sizeof(Device) == 168);
 
 void destroy_devices(Address begin, Address end) {
     for (; begin != end; begin += sizeof(Device)) {
@@ -63,51 +63,7 @@ void assign_bytes(Vector& out, const Vector& in) {
     if (bytes) std::copy_n(pointer<unsigned char>(in.begin), bytes, pointer<unsigned char>(out.begin));
     out.end = out.begin + bytes;
 }
-Address& deque_slot(const Deque& q, uint32_t offset) {
-    const auto block = (offset / 4) % q.map_size;
-    return pointer<Address>(pointer<Address>(q.map)[block])[offset % 4];
-}
-void clear(Deque& q) {
-    auto* map = pointer<Address>(q.map);
-    for (auto i = q.map_size; i; --i) std::free(pointer<void>(map[i - 1]));
-    std::free(map);
-    q.map = q.map_size = q.first = q.size = 0;
-}
-void grow(Deque& q) {
-    // 46C220 grows by max(old_size / 2, 8) and keeps the first offset.
-    const auto increment = (std::max)(q.map_size / 2, 8u);
-    if (q.map_size > 0x0fffffff - increment) throw std::length_error("deque<T> too long");
-    const auto count = q.map_size + increment;
-    const auto storage = allocate(count * sizeof(Address));
-    auto* target = pointer<Address>(storage);
-    auto* source = pointer<Address>(q.map);
-    const auto start = q.first / 4;
-    for (uint32_t i = 0; i < q.map_size; ++i) {
-        const auto old_slot = (start + i) % q.map_size;
-        target[(start + i) % count] = source[old_slot];
-    }
-    std::free(source);
-    q.map = storage;
-    q.map_size = count;
-}
-void append(Deque& q, Address value) {
-    const auto end = q.first + q.size;
-    if (end % 4 == 0 && q.map_size <= (q.size + 4) / 4) grow(q);
-    const auto block = (end / 4) % q.map_size;
-    auto& storage = pointer<Address>(q.map)[block];
-    if (!storage) storage = allocate(4 * sizeof(Address));
-    pointer<Address>(storage)[end % 4] = value;
-    ++q.size;
-}
-void assign_deque(Deque& out, const Deque& in) {
-    if (!in.size) { clear(out); return; }
-    const auto common = (std::min)(out.size, in.size);
-    for (uint32_t i = 0; i < common; ++i)
-        deque_slot(out, out.first + i) = deque_slot(in, in.first + i);
-    for (uint32_t i = common; i < in.size; ++i) append(out, deque_slot(in, in.first + i));
-    // Erasing trailing pointer elements preserves allocated blocks and proxy.
-    out.size = in.size;
-}
+
 }
 
 extern "C" int32_t __fastcall kinoko_method_delete_input_device(int32_t receiver, void*, unsigned char flags) {
@@ -126,7 +82,7 @@ extern "C" int32_t function_46ed80(int32_t destination, int32_t source) {
     std::copy_n(in + 16, 164, out + 16);
     assign_devices(*reinterpret_cast<Vector*>(out + 180), *reinterpret_cast<const Vector*>(in + 180));
     std::copy_n(in + 200, 164, out + 200);
-    assign_deque(*reinterpret_cast<Deque*>(out + 364), *reinterpret_cast<const Deque*>(in + 364));
+    kinoko_input_cluster_assign(destination + 196, source + 196);
     out[388] = in[388];
     std::copy_n(in + 392, 1024, out + 392);
     assign_bytes(*reinterpret_cast<Vector*>(out + 1416), *reinterpret_cast<const Vector*>(in + 1416));
