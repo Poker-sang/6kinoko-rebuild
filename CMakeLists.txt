@@ -193,6 +193,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_lifetime.cpp
     src/reconstructed/act_serializable.cpp
     src/reconstructed/actor_owner_list.cpp
+    src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_pool.cpp
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp
