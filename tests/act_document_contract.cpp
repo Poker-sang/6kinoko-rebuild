@@ -92,7 +92,7 @@ void initialization() {
     require(v.get(&DocumentRecord::visible) == 1 && v.get(&DocumentRecord::resources_suspended) == 0, "flags");
     const auto layers = v.get(&DocumentRecord::layers);
     const auto resources = v.get(&DocumentRecord::resources);
-    require(!layers.begin && !layers.end && !layers.capacity && !resources.begin && !resources.end && !resources.capacity, "empty pointer spans");
+    require(!layers.begin && !layers.end && !layers.storage && !resources.begin && !resources.end && !resources.storage, "empty pointer spans");
     require(!v.get(&DocumentRecord::unknown40) && !v.get(&DocumentRecord::unknown68) &&
         !v.get(&DocumentRecord::unknown220) && !v.get(&DocumentRecord::unknown236), "unidentified bytes still zero");
     for (auto b : v.get(&DocumentRecord::script)) require(b == 0x39, "do not overwrite script constructor result");

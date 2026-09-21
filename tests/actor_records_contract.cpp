@@ -85,7 +85,9 @@ int main() {
     // The flipped take must resolve before its bounds can be recomputed.
     // Keep the genuinely missing take (999) below as a separate contract.
     kinoko_integer_map_put(lookup.get(&TreeIndex::head), 38, address(&animation));
-    CHECK(kinoko_integer_map_find(lookup.get(&TreeIndex::head), 38) == address(&animation));
+    const auto flipped_slot = kinoko_integer_map_find(lookup.get(&TreeIndex::head), 38);
+    CHECK(flipped_slot != static_cast<int32_t>(lookup.get(&TreeIndex::head)));
+    CHECK(*pointer<int32_t>(flipped_slot) == address(&animation));
     actor.set(&ActorRecord::direction, 1.0f);
     kinoko_actor_set_take(actor_address, 38);
     CHECK(actor.get(&ActorRecord::world_bounds).left == 4.75f);

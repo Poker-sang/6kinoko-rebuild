@@ -1,5 +1,6 @@
 #pragma once
 #include "kinoko/act_types.h"
+#include "kinoko/act_array.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/native_record_view.hpp"
 #include <array>
@@ -11,7 +12,12 @@ namespace kinoko::act {
 // Layer/resource implementations are still migrated independently.
 struct LayerRecord;
 struct ResourceRecord;
-template<class T> struct DocumentPointerSpan { T **begin, **end, **capacity; };
+// act_array.cpp publishes begin/end views and owns a native vector in word 3.
+// The last word is NOT an end-of-capacity pointer from the original VC8 vector.
+template<class T> struct DocumentPointerSpan {
+    T **begin, **end;
+    kinoko::ActArray *storage;
+};
 struct DocumentRecord {
     const void *vtable;
     int32_t resolution_ms;
@@ -38,6 +44,7 @@ using DocumentView = kinoko::native::RecordView<DocumentRecord>;
 static_assert(sizeof(void *) == 4, "CAct is a Win32 record");
 static_assert(sizeof(DocumentRecord) == 240);
 static_assert(sizeof(DocumentPointerSpan<LayerRecord>) == 12);
+static_assert(offsetof(DocumentPointerSpan<LayerRecord>, storage) == 8);
 #define KINOKO_DOCUMENT_FIELD(M, O) static_assert(offsetof(DocumentRecord, M) == O)
 KINOKO_DOCUMENT_FIELD(vtable, 0);
 KINOKO_DOCUMENT_FIELD(resolution_ms, 4);
