@@ -3284,11 +3284,11 @@ static int test_global_stage_cleanup(void) {
         /* Two open searches remain for the runtime destructor to close. */
         runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
         runtime[4] = PTR(malloc(24));
-        kinoko_stage_list_append(PTR(owner));
+        kinoko_stage_list_append((KinokoStageOwner *)owner);
     }
     CHECK(function_465f70()==identity);
     CHECK(stage_owner_releases==2 && g604==0);
-    CHECK(kinoko_stage_list_first()==identity);
+    CHECK(kinoko_stage_list_first()==kinoko_stage_list_end());
     CHECK(function_465f70()==identity && stage_owner_releases==2);
     kinoko_stage_list_destroy();
     g603=saved_head;g604=saved_count;

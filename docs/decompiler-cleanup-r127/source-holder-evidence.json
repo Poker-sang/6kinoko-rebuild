@@ -1,0 +1,32 @@
+{
+  "input": "C:\\rs-ida\\64d46b3b-6kinoko.exe",
+  "address": "0x455890",
+  "assembly": [
+    {
+      "address": "0x455890",
+      "instruction": "mov     ecx, [ecx]"
+    },
+    {
+      "address": "0x455892",
+      "instruction": "mov     eax, [ecx+0D4h]"
+    },
+    {
+      "address": "0x455898",
+      "instruction": "sub     eax, [ecx+0D0h]"
+    },
+    {
+      "address": "0x45589e",
+      "instruction": "sar     eax, 2"
+    },
+    {
+      "address": "0x4558a1",
+      "instruction": "retn"
+    }
+  ],
+  "callers": [
+    "0x46f165",
+    "0x46f1d3",
+    "0x46f870",
+    "0x46f913"
+  ]
+}

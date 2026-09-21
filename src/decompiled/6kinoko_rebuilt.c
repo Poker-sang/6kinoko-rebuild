@@ -2003,9 +2003,6 @@ int32_t function_451620(int32_t this_ptr);
 
 
 
-int32_t function_455880(int32_t this_ptr, int32_t value);
-int32_t function_455890(int32_t holder_ptr);
-int32_t function_455e40(int32_t this_ptr, int32_t result_ptr, int32_t flags);
 
 
 
@@ -9847,32 +9844,12 @@ int32_t function_451620(int32_t this_ptr) {
 
 
 // Address range: 0x455880 - 0x45588e
-int32_t function_455880(int32_t this_ptr, int32_t value) {
-    /* This is the one-word holder constructor used by CActResource. */
-    if (this_ptr != 0)
-        *(int32_t *)(intptr_t)this_ptr = value;
-    return this_ptr;
-}
+
 
 // Address range: 0x455890 - 0x4558a2
 // The original receives the one-word CAct holder in ECX.  RetDec emitted
 // an unbound receiver, which made the map layer count depend on stack junk.
-int32_t function_455890(int32_t holder_ptr) {
-    int32_t cact;
-    int32_t begin;
-    int32_t end;
 
-    if (holder_ptr == 0)
-        return 0;
-    cact = *(int32_t *)(intptr_t)holder_ptr;
-    if (cact == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(cact + 208);
-    end = *(int32_t *)(intptr_t)(cact + 212);
-    if (begin == 0 || end < begin)
-        return 0;
-    return (end - begin) / 4;
-}
 
 // Address range: 0x4558b0 - 0x455989
 
@@ -9896,18 +9873,7 @@ int32_t function_455890(int32_t holder_ptr) {
 
 
 // Address range: 0x455e40 - 0x455eb5
-int32_t function_455e40(int32_t this_ptr, int32_t result_ptr,
-                         int32_t flags) {
-    int32_t resource;
 
-    (void)flags;
-    resource = _3f__3f_2_40_YAPAXI_40_Z(192);
-    if (resource != 0)
-        resource = function_44fde0(resource, this_ptr);
-    if (result_ptr != 0)
-        *(int32_t *)(intptr_t)result_ptr = resource;
-    return result_ptr;
-}
 
 
 // Address range: 0x455ee0 - 0x455f48
@@ -14704,9 +14670,11 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
         function_46f620_this(map_state);
         return 0;
     }
-    function_455880(holder, act);
+    kinoko_act_source_initialize((KinokoActSourceHolder *)(intptr_t)holder,
+        (KinokoActDocument *)(intptr_t)act);
     *(int32_t *)(intptr_t)(map_state + 16) = holder;
-    function_455e40(holder, (int32_t)(intptr_t)&resource, 0);
+    resource = (int32_t)(intptr_t)kinoko_act_source_create_runtime(
+        (KinokoActSourceHolder *)(intptr_t)holder);
     *(int32_t *)(intptr_t)(map_state + 20) = resource;
     /* Restore the original resource registration and immediate BeginStage. */
     if (resource == 0 ||
@@ -14748,7 +14716,7 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     function_4a9840_this((int32_t)(intptr_t)&g722, "map", map_state);
 
     function_4a92e0_this((int32_t *)(intptr_t)layer_names, 0);
-    layer_count = function_455890(holder);
+    layer_count = kinoko_act_source_layer_count((const KinokoActSourceHolder *)(intptr_t)holder);
     for (index = 0; index < layer_count; ++index) {
         int32_t layout = function_452020(resource, index);
         if (layout == 0)

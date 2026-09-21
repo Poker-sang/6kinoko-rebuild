@@ -1,23 +1,27 @@
 #pragma once
+#include "kinoko/act_types.h"
 #include "kinoko/native_record_view.hpp"
 #include <array>
 #include <cstdint>
 
-namespace kinoko::stage {
 // 466100 publishes three independently allocated objects; 465F70 destroys
 // holder, document (virtual deleting destructor), runtime, then this record.
 // A schema only, never a C++ object overlaid on a C allocation/test fixture.
-struct OwnerRecord {
-    uint32_t document;
-    uint32_t holder;
-    uint32_t runtime;
+struct KinokoStageOwner {
+    KinokoActDocument *document;
+    KinokoActSourceHolder *holder;
+    KinokoActRuntime *runtime;
 };
-struct SourceHolderRecord { uint32_t document; };
+struct KinokoActSourceHolder { KinokoActDocument *document; };
+namespace kinoko::stage {
+using OwnerRecord = KinokoStageOwner;
+using SourceHolderRecord = KinokoActSourceHolder;
+using DeleteDocument = int32_t (__thiscall *)(KinokoActDocument *, int32_t flags);
 struct DocumentVirtuals {
-    std::array<uint32_t, 4> preceding_methods;
-    uint32_t deleting_destructor;
+    std::array<void *, 4> preceding_methods;
+    DeleteDocument deleting_destructor;
 };
-struct DocumentPrefix { uint32_t vtable; };
+struct DocumentPrefix { const DocumentVirtuals *vtable; };
 using OwnerView = kinoko::native::RecordView<OwnerRecord>;
 static_assert(sizeof(OwnerRecord) == 12);
 static_assert(offsetof(OwnerRecord, holder) == 4);

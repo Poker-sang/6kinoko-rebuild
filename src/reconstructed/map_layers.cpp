@@ -1,4 +1,5 @@
 #include "kinoko/map_render.h"
+#include "kinoko/act_source.h"
 #include "kinoko/map_containers.h"
 #include "kinoko/act_layer_access.h"
 #include <cstddef>
@@ -7,14 +8,13 @@
 
 extern "C" {
 extern unsigned char g327, g37;
-int32_t function_455890(int32_t holder);
 }
 
 namespace {
 struct MapManager {
     unsigned char script_object[12];
-    void *source_act;
-    int32_t source_holder;
+    KinokoActDocument *source_act;
+    KinokoActSourceHolder *source_holder;
     int32_t player;
 };
 struct LayerName {
@@ -39,7 +39,7 @@ extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *n
 
     // 46F140 uses the source holder only for the layer count. 452020 resolves
     // the key from player+16 (the live ACT holder), after BeginStage's clone.
-    const int32_t count = function_455890(manager->source_holder);
+    const int32_t count = kinoko_act_source_layer_count(manager->source_holder);
     for (int32_t index = 0; index < count; ++index) {
         const int32_t address = function_452020(manager->player, index);
         const auto *layout = reinterpret_cast<const LayoutView *>(address);
