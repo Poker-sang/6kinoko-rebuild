@@ -32,3 +32,8 @@ borrowed result identity, output overwrite/append, high-water end and empty-map
 cursors. Existing invisible-query lazy binding and missing-resource cases remain.
 All test execution and gameplay validation remain assigned to the user. This
 batch compiles the regression target only; it does not run tests or the game.
+
+Build result: all Release Win32 targets compiled successfully from `7b78e0a6ca3a0cf54516ebfa7088b21ad8a0278a`.
+Quiet executable: `runtime-builds/map-collision-r138-quiet/kinoko_retdec_rebuild.exe`.
+Three DAT files were copied beside it and verified by size and SHA256.
+`artifacts.json` records binaries, hashes, build logs and the compile-only boundary.

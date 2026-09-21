@@ -1,0 +1,45 @@
+{
+  "version": "R138",
+  "source_commit": "7b78e0a6ca3a0cf54516ebfa7088b21ad8a0278a",
+  "user_confirmed_baseline": "R137",
+  "build_tree": "build-runs/map-collision-r138-quiet",
+  "configuration": "Release",
+  "platform": "Win32",
+  "disable_trace": true,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "regression_sources_compiled": true,
+  "tests_executed": false,
+  "game_executed": false,
+  "dat_size_and_sha256_verified": true,
+  "build_log": "build-runs/map-collision-r138-quiet/build.log",
+  "configure_log": "build-runs/map-collision-r138-quiet/configure.log",
+  "staging_log": "build-runs/map-collision-r138-quiet/stage-dat.log",
+  "files": [
+    {
+      "path": "runtime-builds/map-collision-r138-quiet/kinoko_retdec_rebuild.exe",
+      "size": 855552,
+      "sha256": "2cfe56983e27caaf96f804dcec84dc2327382f3d0a481055bc8f4688b5949318"
+    },
+    {
+      "path": "runtime-builds/map-collision-r138-quiet/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "path": "runtime-builds/map-collision-r138-quiet/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "path": "runtime-builds/map-collision-r138-quiet/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "path": "runtime-builds/map-collision-r138-quiet/tools/kinoko_stage_contract.exe",
+      "size": 1193984,
+      "sha256": "29b3e8f0fcb66d6e48091f9df405ad8beab22ae25c51d47d1278079c843befb9"
+    }
+  ]
+}
