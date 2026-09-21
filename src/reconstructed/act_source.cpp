@@ -8,7 +8,7 @@
 namespace {
 using kinoko::stage::SourceHolderRecord;
 using kinoko::native::RecordView;
-using kinoko::act::DocumentLayers;
+using kinoko::act::DocumentRecord;
 using kinoko::act::RuntimeRecord;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
@@ -27,13 +27,9 @@ extern "C" int32_t kinoko_act_source_layer_count(const KinokoActSourceHolder *ho
     // memcpy reads tolerate legacy records that were not C++-constructed.
     const auto document = kinoko::legacy::load<SourceHolderRecord>(holder).document;
     if (!document) return 0;
-    const auto layers = RecordView<DocumentLayers>(document).get(&DocumentLayers::layers);
-    // The R126 guards and signed Win32 arithmetic are retained until the
-    // broader vector record itself has a typed representation.
-    const auto begin = static_cast<int32_t>(layers.begin);
-    const auto end = static_cast<int32_t>(layers.end);
-    if (!begin || end < begin) return 0;
-    return (end - begin) / static_cast<int32_t>(sizeof(void *));
+    const auto layers = RecordView<DocumentRecord>(document).get(&DocumentRecord::layers);
+    // Keep the inherited signed-range guard; no new acceptance/rejection policy.
+    return kinoko::act::ordered_layers(layers) ? kinoko::act::layer_distance(layers) : 0;
 }
 
 // 455E40: the recovered second stack argument is unused. Both callers took

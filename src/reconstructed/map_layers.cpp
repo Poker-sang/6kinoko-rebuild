@@ -15,7 +15,7 @@ struct MapManager {
     unsigned char script_object[12];
     KinokoActDocument *source_act;
     KinokoActSourceHolder *source_holder;
-    int32_t player;
+    KinokoActRuntime *player;
 };
 struct LayerName {
     union { char local[16]; const char *heap; } storage;
@@ -41,13 +41,13 @@ extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *n
     // the key from player+16 (the live ACT holder), after BeginStage's clone.
     const int32_t count = kinoko_act_source_layer_count(manager->source_holder);
     for (int32_t index = 0; index < count; ++index) {
-        const int32_t address = function_452020(manager->player, index);
-        const auto *layout = reinterpret_cast<const LayoutView *>(address);
+        auto *borrowed_layout = kinoko_act_layer_layout(manager->player, index);
+        const auto *layout = reinterpret_cast<const LayoutView *>(borrowed_layout);
         if (!layout || layout->vtable != &g327 || !layout->layer)
             continue;
         const auto &layer_name = *reinterpret_cast<const LayerName *>(layout->layer + 112);
         if (std::strcmp(layer_name.data(), name) == 0)
-            return address;
+            return static_cast<int32_t>(reinterpret_cast<uintptr_t>(borrowed_layout));
     }
     return 0;
 }

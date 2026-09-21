@@ -129,5 +129,19 @@ class ActEvidence(unittest.TestCase):
         self.assertIn('*(int32_t *)(v1 + 100) = result;', original_function('function_4515a0'))
 
 
+    def test_typed_layer_chain_uses_shared_document_schema(self):
+        files = ('act_layer_access.cpp', 'act_frame_update.cpp', 'act_frame_render.cpp', 'act_source.cpp')
+        source = ''.join((ROOT / 'src/reconstructed' / name).read_text(encoding='utf-8') for name in files)
+        self.assertNotIn('DocumentLayers', source)
+        for name in ('function_452020(', 'function_452040(', 'function_41efb0('):
+            self.assertNotIn(name, source)
+        self.assertIn('DocumentRecord::layers', source)
+        original = original_function('function_455f50')
+        self.assertIn('+ 184', original)
+        self.assertIn('+ 180', original)
+        self.assertIn('_3f__3f_2_40_YAPAXI_40_Z(4)', original)
+        self.assertIn('*(int32_t *)(result + 4)', original_function('function_452020'))
+
+
 if __name__ == '__main__':
     unittest.main()

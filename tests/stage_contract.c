@@ -1065,11 +1065,11 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
     CHECK(execute_source(vm, root + 2,
         "player <- { left=2232.0, right=2264.0, top=800.0, bottom=832.0 };"));
-    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    for (int frame = 0; frame < 24; ++frame) CHECK(kinoko_act_layer_update((KinokoActLayer *)(intptr_t)hidden) >= 0);
     CHECK(vm_failures == failures);
     CHECK(*(float *)(intptr_t)(layout + 320) <= 0.001f);
     CHECK(execute_source(vm, root + 2, "player.left=100.0; player.right=120.0;"));
-    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    for (int frame = 0; frame < 24; ++frame) CHECK(kinoko_act_layer_update((KinokoActLayer *)(intptr_t)hidden) >= 0);
     CHECK(*(float *)(intptr_t)(layout + 320) >= 0.999f);
     CHECK(vm_failures == failures && function_48aa20(vm) == stack_top);
     retdec_sqrat_release_pair(vm, parent);
@@ -2526,46 +2526,46 @@ static int test_act_layer_access(void) {
     head[0] = PTR(first); head[1] = PTR(second);
     first[0] = PTR(second); first[1] = PTR(head); first[2] = PTR(key);
     second[0] = PTR(head); second[1] = PTR(first); second[2] = PTR(second_key);
-    CHECK(function_452040(0, 0) == 0);
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* inactive */
+    CHECK(kinoko_act_first_key(NULL, 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* inactive */
     *((unsigned char *)runtime + 8) = 1;
     for (int i = 0; i < 1000; ++i) {
-        CHECK(function_452040(PTR(runtime), 0) == PTR(key));
-        CHECK(function_452020(PTR(runtime), 0) == PTR(layout));
+        CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == (KinokoActKey *)key);
+        CHECK(kinoko_act_layer_layout((KinokoActRuntime *)runtime, 0) == (KinokoActLayout *)layout);
     }
     CHECK(key[0] == 7 && layout[0] == 123 && first[2] == PTR(key));
-    CHECK(function_452040(PTR(runtime), -1) == 0);
-    CHECK(function_452040(PTR(runtime), 1) == 0); /* null layer */
-    CHECK(function_452040(PTR(runtime), 2) == 0); /* past end */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, -1) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 1) == 0); /* null layer */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 2) == 0); /* past end */
     layer[49] = 1;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* extra tracks */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* extra tracks */
     layer[49] = 0; layer[46] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* empty keys */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* empty keys */
     layer[46] = 2; first[2] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* null first key */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* null first key */
     first[2] = PTR(key);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output && *(int32_t *)(intptr_t)output == PTR(second_key));
     free((void *)(intptr_t)output);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 2, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 2, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0);
-    CHECK(kinoko_act_key_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)1, -1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0); /* reject index before touching invalid holder */
-    CHECK(kinoko_act_layer_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_layer_holder((KinokoActSourceHolder *)1, -1, (KinokoActLayerHolder **)&output) == (KinokoActLayerHolder **)&output);
     CHECK(output == 0);
-    CHECK(kinoko_act_layer_holder(PTR(&document_holder), 0, 0) == 0);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 0, 0) == 0);
+    CHECK(kinoko_act_layer_holder((KinokoActSourceHolder *)&document_holder, 0, 0) == 0);
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 0, 0) == 0);
     head[0] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* missing node */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* missing node */
     head[0] = PTR(first); first[0] = 0;
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0); /* broken chain guard retained */
     document[53] = document[52] - 4;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* reversed vector */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* reversed vector */
     document_holder = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0);
     runtime[4] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0);
     puts("PASS: ACT layer/key query bounds, borrowed records and temporary holder ownership");
     return 0;
 }

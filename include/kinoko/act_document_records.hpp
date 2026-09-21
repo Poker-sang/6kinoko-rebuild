@@ -10,7 +10,7 @@
 namespace kinoko::act {
 // Representation schemas only, never constructed over legacy/test storage.
 // Layer/resource implementations are still migrated independently.
-struct LayerRecord;
+
 struct ResourceRecord;
 // act_array.cpp publishes begin/end views and owns a native vector in word 3.
 // The last word is NOT an end-of-capacity pointer from the original VC8 vector.
@@ -35,7 +35,7 @@ struct DocumentRecord {
     std::array<uint8_t, 104> script;
     uint8_t resources_suspended; // 428AF0/428BD0
     std::array<uint8_t, 3> padding205;
-    DocumentPointerSpan<LayerRecord> layers;
+    DocumentPointerSpan<KinokoActLayer> layers;
     uint32_t unknown220;
     DocumentPointerSpan<ResourceRecord> resources;
     uint32_t unknown236;
@@ -43,8 +43,8 @@ struct DocumentRecord {
 using DocumentView = kinoko::native::RecordView<DocumentRecord>;
 static_assert(sizeof(void *) == 4, "CAct is a Win32 record");
 static_assert(sizeof(DocumentRecord) == 240);
-static_assert(sizeof(DocumentPointerSpan<LayerRecord>) == 12);
-static_assert(offsetof(DocumentPointerSpan<LayerRecord>, storage) == 8);
+static_assert(sizeof(DocumentPointerSpan<KinokoActLayer>) == 12);
+static_assert(offsetof(DocumentPointerSpan<KinokoActLayer>, storage) == 8);
 #define KINOKO_DOCUMENT_FIELD(M, O) static_assert(offsetof(DocumentRecord, M) == O)
 KINOKO_DOCUMENT_FIELD(vtable, 0);
 KINOKO_DOCUMENT_FIELD(resolution_ms, 4);

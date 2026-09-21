@@ -1,15 +1,19 @@
 #pragma once
 #include <stdint.h>
+#include "kinoko/act_types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
-// Original 455DC0/455F50: output owns a malloc-compatible one-word holder;
-// the pointed-to layer/key remains borrowed from the ACT container.
-int32_t kinoko_act_layer_holder(int32_t act_holder, int32_t index, int32_t output);
-int32_t kinoko_act_key_holder(int32_t layer_holder, int32_t index, int32_t output);
-// Borrowed first key / its layout. Neither result transfers ownership.
-int32_t function_452040(int32_t runtime, int32_t index);
-int32_t function_452020(int32_t runtime, int32_t index);
+// 455DC0/455F50: output receives an owned, malloc-compatible one-word wrapper.
+// Its layer/key is borrowed. Returns the output slot even for a missing item;
+// a null output slot is rejected before accessing the holder.
+KinokoActLayerHolder **kinoko_act_layer_holder(
+    const KinokoActSourceHolder *source, int32_t index, KinokoActLayerHolder **output);
+KinokoActKeyHolder **kinoko_act_key_holder(
+    const KinokoActLayerHolder *layer, int32_t index, KinokoActKeyHolder **output);
+// 452040/452020: borrowed first key and its layout; no ownership transfer.
+KinokoActKey *kinoko_act_first_key(KinokoActRuntime *runtime, int32_t index);
+KinokoActLayout *kinoko_act_layer_layout(KinokoActRuntime *runtime, int32_t index);
 #ifdef __cplusplus
 }
 #endif

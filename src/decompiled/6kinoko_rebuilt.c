@@ -14652,7 +14652,7 @@ static int32_t retdec_load_map_fixed(int32_t path_ptr)
     function_4a92e0_this((int32_t *)(intptr_t)layer_names, 0);
     layer_count = kinoko_act_source_layer_count(holder);
     for (index = 0; index < layer_count; ++index) {
-        int32_t layout = function_452020(resource, index);
+        int32_t layout = (int32_t)(intptr_t)kinoko_act_layer_layout((KinokoActRuntime *)(intptr_t)resource, index);
         if (layout == 0)
             continue;
         /* C2DMapLayout exposes its layer name through the same string field
