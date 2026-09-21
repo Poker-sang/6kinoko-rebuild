@@ -1,3 +1,4 @@
+#include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
 #include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
@@ -32,12 +33,10 @@ int32_t address(const void *value) {
 extern "C" int32_t kinoko_clear_actor_manager(int32_t manager) {
     const ManagerView state(pointer<void>(manager));
     const auto textures = state.view(&ManagerPrefix::textures);
-    const auto first = textures.get(&VectorIndex::begin);
-    const auto last = textures.get(&VectorIndex::end);
-    const auto count = static_cast<int32_t>(last - first) / static_cast<int32_t>(sizeof(int32_t));
-    for (int32_t index = 0; index < count; ++index)
-        function_405d60(pointer<int32_t>(static_cast<int32_t>(first))[index]);
-    textures.set(&VectorIndex::end, first);
+    const int32_t texture_slot=address(textures.data());
+    const auto* handles=pointer<int32_t>(kinoko_integer_vector_data(texture_slot));
+    for(uint32_t i=0;i<kinoko_integer_vector_size(texture_slot);++i) function_405d60(handles[i]);
+    kinoko_integer_vector_clear(texture_slot);
     // Actor destruction precedes releasing animations that actors only borrow.
     const auto actors = state.view(&ManagerPrefix::actors);
     function_463730(address(actors.data()));

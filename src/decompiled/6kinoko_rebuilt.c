@@ -1,3 +1,4 @@
+#include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
 #include "kinoko/integer_map.h"
 #include "kinoko/actor_priority.h"
@@ -1963,7 +1964,6 @@ int32_t function_449f10(void);
 int32_t function_44ce70(void);
 
 
-int32_t function_44e780(uint32_t count, int32_t * vector, int32_t position, int32_t value);
 
 
 
@@ -2025,11 +2025,7 @@ int32_t function_455e40(int32_t this_ptr, int32_t result_ptr, int32_t flags);
 
 
 
-int32_t function_458090(int32_t a1, int32_t result, int32_t a3, int32_t a4);
-int32_t function_458200(int32_t a1);
 
-int32_t function_458330(int32_t a1, int32_t a2, int32_t result);
-int32_t function_4583a0(int32_t this_ptr, int32_t result);
 
 
 
@@ -10189,18 +10185,7 @@ int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
 
 
 // Address range: 0x458330 - 0x45839f
-int32_t function_458330(int32_t a1, int32_t a2, int32_t result) {
-    int32_t * v1 = (int32_t *)(a2 + 4); // 0x45835c
-    *(int32_t *)*v1 = result;
-    int32_t * v2 = (int32_t *)(result + 4); // 0x458367
-    *(int32_t *)*v2 = a1;
-    int32_t * v3 = (int32_t *)(a1 + 4); // 0x458372
-    *(int32_t *)*v3 = a2;
-    *v3 = *v2;
-    *v2 = *v1;
-    *v1 = *v3;
-    return result;
-}
+
 
 
 // Address range: 0x4583f0 - 0x458405
@@ -12900,39 +12885,8 @@ static int32_t retdec_pat_tree_put(int32_t manager,int32_t key,int32_t value) {
     return result;
 }
 
-static int32_t retdec_pat_append_resource(int32_t manager, int32_t handle)
-{
-    int32_t *begin = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 68);
-    int32_t *end = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 72);
-    int32_t *capacity_end = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 76);
-    size_t count = begin != NULL && end >= begin
-        ? (size_t)(end - begin) : 0;
-    size_t capacity = begin != NULL && capacity_end >= begin
-        ? (size_t)(capacity_end - begin) : 0;
-
-    if (count == capacity) {
-        size_t new_capacity = capacity != 0 ? capacity * 2u : 4u;
-        int32_t *new_begin;
-
-        if (new_capacity <= count ||
-            new_capacity > (size_t)0x3fffffff)
-            return 0;
-        new_begin = (int32_t *)realloc(begin,
-                                       new_capacity * sizeof(*new_begin));
-        if (new_begin == NULL)
-            return 0;
-        begin = new_begin;
-        *(int32_t *)(intptr_t)(manager + 68) = (int32_t)(intptr_t)begin;
-        *(int32_t *)(intptr_t)(manager + 76) =
-            (int32_t)(intptr_t)(begin + new_capacity);
-    }
-    begin[count] = handle;
-    *(int32_t *)(intptr_t)(manager + 72) =
-        (int32_t)(intptr_t)(begin + count + 1u);
-    return 1;
+static int32_t retdec_pat_append_resource(int32_t manager,int32_t handle) {
+    kinoko_integer_vector_append(manager+68,handle);return 1;
 }
 
 static int32_t retdec_pat_load_texture(const char *directory,
@@ -12990,12 +12944,8 @@ static int32_t retdec_pat_build_frame(
     *(uint32_t *)(intptr_t)(frame + 80) = 0xffffffffu;
     *(uint32_t *)(intptr_t)(frame + 108) = 0xffffffffu;
 
-    resource_begin = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 68);
-    resource_end = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 72);
-    resource_count = resource_begin != NULL && resource_end >= resource_begin
-        ? (uint32_t)(resource_end - resource_begin) : 0;
+    resource_begin=(int32_t*)(intptr_t)kinoko_integer_vector_data(manager+68);
+    resource_count=kinoko_integer_vector_size(manager+68);
     if (fields->resource_index < resource_count &&
         resource_base <= resource_count - fields->resource_index)
         handle = resource_begin[resource_base + fields->resource_index];
@@ -13385,12 +13335,7 @@ static int32_t retdec_pat_load_file(int32_t manager, const char *file_name,
         goto cleanup;
     resource_count = resource_count16;
     base_resource_count = 0;
-    resource_begin = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 68);
-    resource_end = (int32_t *)(intptr_t)
-        *(int32_t *)(intptr_t)(manager + 72);
-    if (resource_begin != NULL && resource_end >= resource_begin)
-        base_resource_count = (uint32_t)(resource_end - resource_begin);
+    base_resource_count=kinoko_integer_vector_size(manager+68);
     if (resource_count > 4096u)
         goto cleanup;
     for (index = 0; index < resource_count; ++index) {
@@ -14532,6 +14477,7 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
     *(int32_t *)(intptr_t)(this_ptr+40)=kinoko_integer_map_create();
 
     kinoko_animation_list_construct(this_ptr+52);
+    kinoko_integer_vector_construct(this_ptr+68);
 
     kinoko_priority_construct(this_ptr+84);
 
@@ -19528,27 +19474,16 @@ int32_t function_4d4a30(void) {
  * prototypes for the original MSVC code while keeping the surrounding
  * generated translation unit intact.
  */
-/* retdec_string_length32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_string_data32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_compare_bytes32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_compare_strings32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_string_hash32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_vector_insert32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_erase_node32 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* function_44e780 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* function_458090 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* function_458200 is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* function_4583a0 is implemented in native C++ (kinoko/act_runtime.h). */
 
 
 /* Explicit VM boundaries for C++ coroutine adapters. Nested calls restore the

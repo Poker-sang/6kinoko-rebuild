@@ -46,6 +46,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_runtime.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/animation_storage.cpp
+    src/reconstructed/integer_vector.cpp
     src/reconstructed/integer_map.cpp
     src/reconstructed/actor_priority.cpp
     src/reconstructed/actor_cleanup.cpp
@@ -212,7 +213,6 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_script_io.cpp
     src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
-    src/reconstructed/act_containers.cpp
     src/reconstructed/act_layout.cpp
     src/squirrel/act_binding.cpp
     src/squirrel/squirrel_legacy_api.cpp
