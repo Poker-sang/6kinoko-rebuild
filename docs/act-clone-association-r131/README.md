@@ -38,3 +38,14 @@ references to source objects outside the cloned array, missing references,
 unchanged parent_id, child order/count, resource-before-hierarchy callbacks,
 missing-resource preservation, and untouched key/layout bytes. Contracts are
 to be compiled only, not executed.
+
+## Delivery
+
+Source commit: 5efa9a4ace97b158ad68128b8ce60681ee1c3fc4.
+All Release Win32 quiet targets built successfully, including the extended
+association contract. Tests and game were not executed.
+
+EXE: runtime-builds/act-clone-association-r131-quiet/kinoko_retdec_rebuild.exe.
+tools/stage_dat.ps1 copied and verified the three DAT files beside the EXE.
+See artifacts.json for exact hashes, sizes and log paths. All previous artifacts
+are retained. R131 runtime behavior has not yet been verified by the user.
