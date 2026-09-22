@@ -32,7 +32,7 @@ int32_t kinoko_renderer_initialize() { return 0; }
 int32_t __fastcall kinoko_renderer_before_reset(KinokoRenderer*, void*) { return 0; }
 void kinoko_remove_device_listener(KinokoDeviceListener*) {}
 int32_t kinoko_ime_dispatch(int32_t, uint32_t, uint32_t, int32_t) { return 0; }
-unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) { return 0; }
+unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) noexcept(false) { return 0; }
 int32_t function_408650(void*, HWND) { return 0; }
 int32_t function_408930(HWND, HINSTANCE) { return 0; }
 int32_t function_4089c0() { return 0; }

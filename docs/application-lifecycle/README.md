@@ -78,3 +78,9 @@ runtime directory. No executable was run.
 R2 compiles the production application/scene-queue sources directly into that
 contract and supplies explicit mock ports for unrelated devices, timer and boot
 services. This corrects contract isolation; it does not change game behavior.
+
+R2 source `de19dc5` built the game, but the contract mock omitted the explicit
+`noexcept(false)` specification used by `kinoko_run_game_math`; MSVC rejected
+that redeclaration. R3 matches the production declaration. Game source remains
+unchanged from R1; no game or contract was run in either unsuccessful build.
+The R1/R2 game executables are retained with their required staged DAT files.
