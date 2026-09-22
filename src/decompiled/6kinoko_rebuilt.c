@@ -1,3 +1,4 @@
+#include "kinoko/script_file.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/map_manager.h"
 #include "kinoko/scene_operations.h"
@@ -1519,13 +1520,13 @@ int32_t function_402770(int32_t result);
 int32_t function_4028d0(int32_t a1, int32_t a2);
 
 int32_t function_402970(int32_t a1);
-int32_t function_402aa0(void);
-int32_t function_402ac0(void);
+void* kinoko_script_initialize_root(void);
+int32_t kinoko_script_close_vm(void);
 
-int32_t function_402af0(void);
+int32_t kinoko_script_show_call_stack(void);
 
-int32_t function_402d30(void);
-int32_t function_402d40(char * a1, int32_t a2);
+void* kinoko_script_root(void);
+int32_t kinoko_script_load_file(const char* path, const void* environment);
 int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 
 
@@ -2135,7 +2136,7 @@ int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index);
 
 int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
-int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
+int32_t kinoko_script_compile_file_argument(int32_t path, int32_t object_vtable, int32_t vm,
                        int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
@@ -3553,149 +3554,7 @@ int32_t function_402970(int32_t a1) { return kinoko_render_set_cull(a1); }
 
 
 // Address range: 0x402aa0 - 0x402abb
-int32_t function_402aa0(void) {
-    // 0x402aa0
-    retdec_trace("402aa0:begin");
-    kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(0));
-    retdec_trace("402aa0:after-debug");
-    // sub_4A95C0 is a __thiscall SquirrelObject copy constructor.  RetDec
-    // dropped ECX from the call, which made the generated body use an
-    // uninitialized destination and corrupt the stack during VM startup.
-    retdec_trace("402aa0:before-4a8cc0");
-    int32_t source = (int32_t)(intptr_t)(kinoko_sqplus_root_object());
-    retdec_trace_i32("402aa0:source", source);
-    retdec_trace("402aa0:after-4a8cc0");
-    int32_t result = (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)((int32_t)&g722), (const void *)(intptr_t)(source)));
-    retdec_trace("402aa0:done");
-    return result;
-}
-
-// Address range: 0x402ac0 - 0x402aca
-int32_t function_402ac0(void) {
-    // 0x402ac0
-    kinoko_sqplus_release_vm_wrappers();
-    return kinoko_sqplus_release_vm_wrappers();
-}
-
-
-// Address range: 0x402af0 - 0x402b85
-int32_t function_402af0(void) {
-    /* Error reporting is outside the title path.  The original builds a
-       std::string here, but the decompiler lost that object and the old
-       translation passed a one-byte char as a 1 KiB string destination.
-       Keep the error-handler callback non-destructive so the VM can return
-       its actual script error to function_402d40. */
-    retdec_trace("402af0:entry");
-    return 0;
-}
-
-
-// Address range: 0x402d30 - 0x402d36
-int32_t function_402d30(void) {
-    // 0x402d30
-    return &g722;
-}
-
-// Address range: 0x402d40 - 0x402ff7
-
-
-int32_t function_402d40(char * a1, int32_t a2) {
-    char lookup_path[MAX_PATH];
-    const char *file_name = a1;
-    KinokoArchiveReader *reader_slot = NULL;
-    KinokoArchiveReader *reader;
-    uint32_t blob_size;
-    unsigned char *blob;
-    int32_t stream_state[3];
-    int32_t script_value[2] = { 0x01000001, 0 };
-    int32_t load_result = -1;
-    int32_t execute_result = -1;
-    size_t path_length;
-
-    retdec_trace("402d40:entry");
-    retdec_trace_i32("402d40:archives", kinoko_archive_count);
-    if (a1 == NULL)
-        return 0;
-
-    retdec_trace_squirrel_name("402d40:file",
-                               (int32_t)(intptr_t)a1);
-
-    if (g874 != 0) {
-        path_length = strlen(a1);
-        if (path_length + 1 > sizeof(lookup_path))
-            return 0;
-        memcpy(lookup_path, a1, path_length + 1);
-        if (path_length >= 3) {
-            lookup_path[path_length - 3] = 'c';
-            lookup_path[path_length - 2] = 'v';
-            lookup_path[path_length - 1] = '4';
-        }
-        file_name = lookup_path;
-    }
-
-    if (kinoko_reader_open(&reader_slot, file_name) == 0) {
-        retdec_trace("402d40:reader-failed");
-        return 0;
-    }
-    reader = reader_slot;
-    if (reader == NULL)
-        return 0;
-    blob_size = kinoko_reader_size(reader);
-    retdec_trace_i32("402d40:size", (int32_t)blob_size);
-    if (blob_size == 0 || blob_size > 64u * 1024u * 1024u) {
-        kinoko_reader_close(reader);
-        return 0;
-    }
-
-    blob = (unsigned char *)malloc(blob_size + 1u);
-    if (blob == NULL ||
-        !kinoko_reader_read_exact(reader_slot, blob, blob_size)) {
-        free(blob);
-        kinoko_reader_close(reader);
-        return 0;
-    }
-    blob[blob_size] = 0;
-
-    if (*(uint16_t *)blob == 0xFAFAu) {
-        stream_state[0] = (int32_t)(intptr_t)blob;
-        stream_state[1] = (int32_t)blob_size;
-        stream_state[2] = (int32_t)(intptr_t)blob;
-        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)(intptr_t)script_value));
-        load_result = sq_readclosure(kinoko_vm((int32_t)(intptr_t)g644), (SQREADFUNC)kinoko_pointer((int32_t)(intptr_t)function_402a50), stream_state);
-        retdec_trace_i32("402d40:compiled-result", load_result);
-        if (load_result >= 0 && g644 != NULL) {
-            sq_getstackobj(kinoko_vm((int32_t)(intptr_t)g644), -1, (HSQOBJECT*)(script_value));
-            if (script_value[0] != 0x01000001) {
-                sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(script_value[0], script_value[1]));
-                if (a2 == 0 || *(int32_t *)(intptr_t)(a2 + 4) ==
-                        0x01000001) {
-                    sq_pushroottable(kinoko_vm((int32_t)(intptr_t)g644));
-                } else {
-                    sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(*(int32_t *)(intptr_t)(a2 + 4), *(int32_t *)(intptr_t)(a2 + 8)));
-                }
-                execute_result = kinoko_sq_call((int32_t)(intptr_t)g644, 1, 0, 1);
-                retdec_trace_i32("402d40:execute-result", execute_result);
-                if (execute_result < 0 &&
-                    *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 64) ==
-                        0x08000010) {
-                    retdec_trace_squirrel_name(
-                        "402d40:error",
-                        *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 68) +
-                            28);
-                }
-            }
-        }
-    } else {
-        retdec_trace("402d40:plain-script");
-        free(blob);
-        kinoko_reader_close(reader);
-        return 0;
-    }
-
-    free(blob);
-    kinoko_reader_close(reader);
-    return 1;
-}
+/* Script lifecycle, file execution and ShowCallStack: squirrel/script_file.cpp. */
 
 // Address range: 0x403000 - 0x40378b
 // From class:    .?AVbad_alloc@std@@
@@ -8482,24 +8341,6 @@ int32_t function_471080(void) {
 
 
 // Address range: 0x471b30 - 0x471bbe
-int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
-                       int32_t type, int32_t data, char owns_reference) {
-    int32_t environment[3] = { (int32_t)(intptr_t)&g16, type, data };
-    int32_t result;
-
-    (void)object_vtable;
-    /* 419E60 passes a Sqrat::Object by value.  471B30 copies its value
-       into the SquirrelObject consumed by the DAT script loader. */
-    function_48a400(vm, (int32_t)(intptr_t)(environment + 1));
-    result = function_402d40((char *)(intptr_t)path,
-                             (int32_t)(intptr_t)environment);
-    function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
-    if (owns_reference)
-        function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
-    return (unsigned char)result;
-}
-
-
 /* Sqrat appends the native closure's userdata after the user arguments. */
 
 
@@ -8515,7 +8356,7 @@ int32_t retdec_compile_file_native(int32_t vm) {
     if (sq_gettop(kinoko_vm(vm)) > 3 &&
         sq_getstackobj(kinoko_vm(vm), 3, (HSQOBJECT*)(environment)) < 0)
         return -1;
-    result = function_471b30(path, (int32_t)(intptr_t)&g39, vm,
+    result = kinoko_script_compile_file_argument(path, (int32_t)(intptr_t)&g39, vm,
                              environment[0], environment[1], 0);
     sq_pushbool(kinoko_vm(vm), ((result) != 0));
     return 1;
@@ -12528,7 +12369,7 @@ int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
 int32_t kinoko_game_update_input(KinokoInputManager *input) {
     return function_46b9a0((int32_t)(intptr_t)input);
 }
-int32_t kinoko_game_load_boot_script(void) { return function_402d40("data/script/boot.nut", 0); }
+int32_t kinoko_game_load_boot_script(void) { return kinoko_script_load_file("data/script/boot.nut", 0); }
 void kinoko_game_update_callback(int32_t trace_index) {
     if (kinoko_sqplus_object_type(g612 + 4) ==
         0x08000100) {
@@ -12569,7 +12410,7 @@ void kinoko_game_release_script_reference(uint32_t index) {
     int32_t *references[] = { g602, g629, g611, g636 };
     if (index < 4) (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)((int32_t)(intptr_t)references[index])));
 }
-int32_t kinoko_game_close_vm(void) { return function_402ac0(); }
+int32_t kinoko_game_close_vm(void) { return kinoko_script_close_vm(); }
 
 /* Borrowed legacy globals and the remaining map/path/movement implementations. */
 KinokoScriptCallback *kinoko_game_global_callback(void) { return (KinokoScriptCallback *)g612; }

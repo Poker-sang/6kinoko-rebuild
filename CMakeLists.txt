@@ -264,6 +264,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/actor_diagnostics.cpp
     src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
+    src/squirrel/script_file.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
     src/squirrel/sqrat_object_bridge.cpp

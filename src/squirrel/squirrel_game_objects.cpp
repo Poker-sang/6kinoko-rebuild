@@ -14,7 +14,7 @@ void retdec_trace_i32(const char*, int32_t);
 namespace {
 using namespace kinoko::script;
 // These are byte-copyable ABI records, not overlaid C++ objects.
-struct MemoryReader { uint32_t base; int32_t size; uint32_t cursor; };
+using MemoryReader = KinokoScriptMemoryReader;
 struct ActCallback { int32_t vm; HSQOBJECT environment; HSQOBJECT closure; };
 struct ResourceRoot { int32_t vm; HSQOBJECT root; };
 static_assert(sizeof(MemoryReader) == 12 && sizeof(ActCallback) == 20);
@@ -45,7 +45,7 @@ private:
     HSQUIRRELVM vm_; SQInteger top_;
 };
 SQInteger read_bytecode(SQUserPointer state, SQUserPointer output, SQInteger count) {
-    return function_402a50(address(state), address(output), count);
+    return kinoko_script_read_memory(state, output, count);
 }
 bool valid_class(HSQUIRRELVM vm, const int32_t* input, int32_t native, int32_t* output) {
     if (!vm || !input || !native || !output) return false;
@@ -67,18 +67,20 @@ extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
     // Original return is the pushed stack SLOT address, not the VM address.
     return kinoko_sq_get_up(id, -1);
 }
-extern "C" int32_t function_402a50(int32_t id, int32_t destination, int32_t requested) {
-    if (!id || requested <= 0) return 0;
-    auto state = read<MemoryReader>(pointer(id));
-    if (!state.base || state.size < 0 || state.cursor < state.base) return 0;
-    const auto consumed = state.cursor - state.base;
+extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
+    if (!stream || requested <= 0) return 0;
+    auto state = read<MemoryReader>(stream);
+    const auto base = reinterpret_cast<uintptr_t>(state.base);
+    const auto cursor = reinterpret_cast<uintptr_t>(state.cursor);
+    if (!base || state.size < 0 || cursor < base) return 0;
+    const auto consumed = cursor - base;
     if (consumed > static_cast<uint32_t>(state.size)) return 0;
     const auto count = std::min(static_cast<uint32_t>(requested),
-        static_cast<uint32_t>(state.size) - consumed);
+        static_cast<uint32_t>(state.size) - static_cast<uint32_t>(consumed));
     if (!count || !destination) return 0;
-    std::memcpy(pointer(destination), pointer(static_cast<int32_t>(state.cursor)), count);
+    std::memcpy(destination, state.cursor, count);
     state.cursor += count;
-    write(pointer(id), state);
+    write(stream, state);
     return static_cast<int32_t>(count);
 }
 extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* parent,
@@ -168,7 +170,7 @@ static int32_t execute_embedded_act_script(int32_t id, int32_t script,
     const auto size = read<int32_t>(bytes(script) + script_size_offset);
     if (!data || size < 2 || read<uint16_t>(pointer(static_cast<int32_t>(data))) != SQ_BYTECODE_STREAM_TAG)
         return 0;
-    MemoryReader reader{data, size, data};
+    MemoryReader reader{pointer<const unsigned char>(data), size, pointer<const unsigned char>(data)};
     TrimStack restore(vm);
     const auto load = sq_readclosure(vm, read_bytecode, &reader);
     retdec_trace_i32("act-script:readclosure-result", load);

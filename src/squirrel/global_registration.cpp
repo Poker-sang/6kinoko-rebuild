@@ -53,9 +53,9 @@ constexpr Constant constants[] = {
 } // namespace
 
 extern "C" void kinoko_register_global_methods(int32_t root_table) {
-    int32_t target = entry(function_402af0);
+    int32_t target = entry(kinoko_script_show_call_stack);
     kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("ShowCallStack"), (const void *)(&target), 4, (void *)(intptr_t)(entry(function_470ee0)), 0);
-    target = entry(function_471b30);
+    target = entry(kinoko_script_compile_file_argument);
     kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("CompileFile"), (const void *)(&target), 4, (void *)(intptr_t)(entry(retdec_compile_file_native)), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
@@ -70,7 +70,7 @@ extern "C" void kinoko_register_global_methods(int32_t root_table) {
 
 extern "C" int32_t function_473010(void) {
     retdec_trace("473010:enter");
-    function_402aa0();
+    kinoko_script_initialize_root();
     g664 = address(g644);
     int32_t root_table[5];
     root_table[0] = kinoko_sqrat_object_vtable();
@@ -110,6 +110,6 @@ extern "C" int32_t function_473010(void) {
     function_46d950();
     function_4669d0();
     function_46fac0();
-    function_402d40(const_cast<char*>("data/script/class_def.nut"), function_402d30());
+    kinoko_script_load_file(const_cast<char*>("data/script/class_def.nut"), kinoko_script_root());
     return function_48a430(address(g644), address(root_table + 2));
 }

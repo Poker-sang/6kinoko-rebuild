@@ -1072,7 +1072,7 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
 static int test_hidden_layer(int32_t vm, int32_t *root) {
     int32_t act[60], resource[48] = {0}, parent[2] = {g483,g484};
     int32_t hidden = 0, active = 0, layout = 0, script[3];
-    int32_t compile_target = PTR(function_471b30), stack_top = function_48aa20(vm);
+    int32_t compile_target = PTR(kinoko_script_compile_file_argument), stack_top = function_48aa20(vm);
     int failures = vm_failures;
     g874 = 1;
     CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CompileFile")), (const void *)(intptr_t)(PTR(&compile_target)), 4, (void *)(intptr_t)(PTR(retdec_compile_file_native)), 0)) >= 0);
@@ -5960,7 +5960,7 @@ int main(int argc, char **argv) {
         CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
         kinoko_actor_register_script_class();
         CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
-        int32_t compile_target=PTR(function_471b30);
+        int32_t compile_target=PTR(kinoko_script_compile_file_argument);
         CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CompileFile")), (const void *)(intptr_t)(PTR(&compile_target)), 4, (void *)(intptr_t)(PTR(retdec_compile_file_native)), 0))>=0);
         g874=1;
         CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));

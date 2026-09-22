@@ -165,12 +165,44 @@ void embedded(HSQUIRRELVM vm) {
     require(!retdec_execute_embedded_act_script(address(vm),address(script.data()),environment.data()),"script execution failure reported"); top(vm,base,"throwing closure cleanup");
     unsigned char raw[5]={1,2,3,4,5}, result[9]; std::memset(result,0xa7,sizeof(result));
     std::array<int32_t,3> stream{address(raw),5,address(raw)};
-    require(function_402a50(address(stream.data()),address(result+1),3)==3,"partial stream read");
-    require(function_402a50(address(stream.data()),address(result+4),9)==2,"clamped final stream read");
-    require(function_402a50(address(stream.data()),address(result+6),1)==0,"stream EOF");
+    require(kinoko_script_read_memory(stream.data(),result+1,3)==3,"partial stream read");
+    require(kinoko_script_read_memory(stream.data(),result+4,9)==2,"clamped final stream read");
+    require(kinoko_script_read_memory(stream.data(),result+6,1)==0,"stream EOF");
     require(result[0]==0xa7 && result[6]==0xa7 && std::memcmp(result+1,raw,5)==0,"read length and canaries");
     const auto exhausted=stream;
-    require(function_402a50(address(stream.data()),address(result),-1)==0 && stream==exhausted,"negative request is nonmutating");
+    require(kinoko_script_read_memory(stream.data(),result,-1)==0 && stream==exhausted,"negative request is nonmutating");
+}
+SQRESULT text_call(HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) {
+    require(count == 1 && result == SQTrue && errors == SQTrue, "text script call flags");
+    return kinoko_sq_call(address(vm), count, result, errors);
+}
+void text_scripts(HSQUIRRELVM vm) {
+    Top restore(vm);
+    const auto base = sq_gettop(vm);
+    auto run = [&](const char* source, const HSQOBJECT* environment) {
+        kinoko::script::upstream::sqplus_compile_and_run(vm, source,
+            "script-file-contract.nut", environment, text_call);
+    };
+    run("return 42;", nullptr);
+    top(vm, base, "text root execution balances stack");
+    Pair environment(vm); sq_newtable(vm); environment.capture();
+    auto scope = environment.get();
+    run("this.answer <- 713; return this;", &scope);
+    top(vm, base, "text custom environment balances stack");
+    environment.push(); sq_pushstring(vm, "answer", -1);
+    require(SQ_SUCCEEDED(sq_get(vm, -2)) && get_integer(vm) == 713,
+        "text executes in supplied environment");
+    sq_pop(vm, 2);
+    HSQOBJECT null_scope; sq_resetobject(&null_scope);
+    run("if (this != null) throw \"unexpected root fallback\";", &null_scope);
+    top(vm, base, "text explicit null does not use root");
+    for (const char* source : {"local = ;", "throw \"text failure\";"}) {
+        bool threw = false;
+        try { run(source, nullptr); } catch (...) { threw = true; }
+        require(threw, "text compile/run failures preserve SqPlus exception policy");
+        top(vm, base + 1, "SqPlus exception retains last-error object");
+        sq_settop(vm, base);
+    }
 }
 void values(HSQUIRRELVM vm) {
     Top restore(vm); std::array<int32_t,3> object{},copy{};
@@ -218,7 +250,7 @@ int main() {
         for(int pass=0;pass<8;++pass) {
             Machine machine; auto vm=machine.get();
             g644=reinterpret_cast<char*>(vm); receiver=address(vm); kinoko_sq_set_context_exchange(exchange_vm);
-            constructors(vm); resource_roots(vm); callbacks(vm); embedded(vm); values(vm); callback_call(vm);
+            constructors(vm); resource_roots(vm); callbacks(vm); embedded(vm); values(vm); callback_call(vm); text_scripts(vm);
             sq_newthread(vm,64); HSQUIRRELVM child=nullptr; sq_getthread(vm,-1,&child);
             embedded(child); callbacks(child);
             require(g644==reinterpret_cast<char*>(vm),"child execution restores host VM");

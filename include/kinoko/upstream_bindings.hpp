@@ -7,6 +7,9 @@
 // internal SQObjectPtr references are overlaid with an upstream C++ object.
 // Each *_retain/new/assign result owns exactly one external VM reference.
 namespace kinoko::script::upstream {
+void sqplus_compile_and_run(HSQUIRRELVM vm, const char* text, const char* source,
+    const HSQOBJECT* environment,
+    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool));
 // Scalar values use upstream getVar/setVar, with aligned temporary storage.
 // immediate_value is used only for the host's Constant representation.
 SQInteger sqplus_read_scalar(HSQUIRRELVM vm, const binding::Variable& metadata,

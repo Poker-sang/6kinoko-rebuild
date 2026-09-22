@@ -64,7 +64,7 @@ extern int32_t retdec_release_watch_data[8];
 extern int32_t retdec_release_watch_count;
 
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
-int32_t function_402d40(char * a1, int32_t a2);
+int32_t kinoko_script_load_file(const char* path, const void* environment);
 float function_4040d0(long double a1);
 float function_404130(long double a1);
 int32_t function_4252e0(void);

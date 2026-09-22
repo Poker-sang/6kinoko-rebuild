@@ -6,7 +6,12 @@ extern "C" {
 
 /* Fixed-layout embedding records stay at this C boundary, never in the VM. */
 int32_t function_4029b0(int32_t vm, int32_t* object);
-int32_t function_402a50(int32_t stream, int32_t destination, int32_t requested);
+typedef struct KinokoScriptMemoryReader {
+    const unsigned char* base;
+    int32_t size;
+    const unsigned char* cursor;
+} KinokoScriptMemoryReader;
+int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested);
 int32_t retdec_create_bound_instance(int32_t vm, const int32_t* parent_pair,
     const char* name, const int32_t* class_pair, int32_t native, int32_t output[2]);
 int32_t retdec_create_unbound_instance(int32_t vm, const int32_t* class_pair,

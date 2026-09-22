@@ -4,10 +4,10 @@
 #include "kinoko/squirrel_native_calls.h"
 #include "kinoko/audio_runtime.h"
 extern "C" {
-int32_t function_402aa0(void);
-int32_t function_402af0(void);
-int32_t function_402d30(void);
-int32_t function_402d40(char * a1, int32_t a2);
+void* kinoko_script_initialize_root(void);
+int32_t kinoko_script_show_call_stack(void);
+void* kinoko_script_root(void);
+int32_t kinoko_script_load_file(const char* path, const void* environment);
 int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 int32_t function_43e100(void);
 int32_t kinoko_actor_register_script_class(void);
@@ -24,7 +24,7 @@ int32_t function_470f60(int32_t a1);
 int32_t function_470f80(int32_t dwMilliseconds);
 int32_t function_470f90(void);
 int32_t function_471080(void);
-int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
+int32_t kinoko_script_compile_file_argument(int32_t path, int32_t object_vtable, int32_t vm,
                        int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);

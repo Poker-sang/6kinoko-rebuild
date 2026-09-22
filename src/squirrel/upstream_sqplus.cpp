@@ -68,6 +68,28 @@ HSQOBJECT take(SquirrelObject& object) {
     return result;
 }
 }
+void sqplus_compile_and_run(HSQUIRRELVM vm, const char* text, const char* source,
+    const HSQOBJECT* environment,
+    SQRESULT (*invoke)(HSQUIRRELVM, SQInteger, SQBool, SQBool)) {
+    VmScope scope(vm);
+    // Original 4A8EA0 / 4A8F90, matching SqPlus CompileBuffer / RunScript.
+    // Keep the host invocation bridge: its trace-bearing frames are intentional.
+    SquirrelObject closure;
+    if (SQ_FAILED(sq_compilebuffer(vm, text, static_cast<SQInteger>(std::strlen(text)), source, SQTrue)))
+        throw SquirrelError();
+    closure.AttachToStackObject(-1);
+    sq_pop(vm, 1);
+    SquirrelObject result;
+    sq_pushobject(vm, closure.GetObjectHandle());
+    if (environment) sq_pushobject(vm, *environment);
+    else sq_pushroottable(vm);
+    if (SQ_FAILED(invoke(vm, 1, SQTrue, SQTrue))) {
+        sq_pop(vm, 1);
+        throw SquirrelError();
+    }
+    result.AttachToStackObject(-1);
+    sq_pop(vm, 2);
+}
 int sqplus_variable_info(HSQUIRRELVM vm, void*& output) {
     VmScope scope(vm); StackHandler stack(vm);
     return SqPlus::ReadVariableInfoForHost(stack, output);
