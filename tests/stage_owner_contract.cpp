@@ -121,7 +121,7 @@ void kinoko_integer_map_destroy(int32_t) {}
 void kinoko_integer_map_clear(int32_t) {}
 void kinoko_initialize_render_queue() {}
 int32_t kinoko_clear_render_queue() { return 0; }
-int32_t function_40b3a0() { return 0; }
+int32_t kinoko_audio_shutdown_resources() { return 0; }
 }
 int main() {
     kinoko_stage_owner_destroy(nullptr);

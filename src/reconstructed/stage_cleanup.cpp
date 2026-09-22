@@ -14,7 +14,7 @@
 extern "C" {
 extern int32_t g603, g604;
 extern int32_t g638, g639;
-int32_t function_40b3a0(void);
+int32_t kinoko_audio_shutdown_resources(void);
 }
 
 using StageList = std::list<KinokoStageNode>;
@@ -88,7 +88,7 @@ extern "C" int32_t kinoko_clear_global_stages() {
 // track records. Join its workers before releasing that storage; then clear
 // the non-owning original ID lookup tree, preserving its sentinel.
 extern "C" int32_t kinoko_clear_global_sound() {
-    function_40b3a0();
+    kinoko_audio_shutdown_resources();
     kinoko_integer_map_clear(g638);
     g639 = 0;
     return 1;

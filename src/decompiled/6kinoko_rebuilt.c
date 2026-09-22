@@ -5225,7 +5225,7 @@ int32_t function_40d790(int32_t *state, const void *config) {
     if (*(unsigned char *)((unsigned char *)state + 42) != 0) {
         int32_t audio_available;
         retdec_trace("40d790:audio");
-        audio_available = function_411d80(
+        audio_available = kinoko_audio_initialize_device(
             (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
             *(int32_t *)((unsigned char *)state + 24));
         retdec_trace(audio_available != 0 ? "40d790:audio-ready" :
@@ -5399,7 +5399,7 @@ void function_40d940(int32_t *state) {
     if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
         ImmReleaseContext((HWND)(uintptr_t)g767, (HIMC)(uintptr_t)g534);
     }
-    function_411f90();
+    kinoko_audio_shutdown_device();
     function_4089c0();
     kinoko_renderer_before_reset(&kinoko_renderer, NULL);
     kinoko_remove_device_listener((KinokoDeviceListener *)&kinoko_renderer);
@@ -10700,7 +10700,7 @@ int32_t function_469640(void) {
         g_retdec_startup_vm = (int32_t)(intptr_t)g644;
     retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
     retdec_trace("469640:audio-begin");
-    function_4701e0();
+    kinoko_audio_initialize_playback();
     retdec_trace("469640:audio-done");
     retdec_trace("469640:sqrat-begin");
     retdec_trace("469640:before-473010");

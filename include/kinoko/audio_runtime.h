@@ -6,28 +6,23 @@ extern "C" {
 #endif
 /* C ABI entry points only; state and resources are owned by audio_runtime.cpp. */
 void retdec_bgm_update_fade(void);
-int32_t function_40a0f0(void);
-int32_t function_40a3d0(void);
-int32_t function_40a460(void);
-int32_t function_40a5d0(int32_t result);
-int32_t function_40a9f0(long double a1);
-int32_t function_40aaa0(void);
-int32_t function_40aac0(void);
-int32_t function_40aae0(void);
-int32_t function_40b3a0(void);
-int32_t function_40b520(void);
-int32_t function_40b8a0(long double a1);
-int32_t function_411d80(HWND hwnd, int32_t options);
-int32_t function_411f90(void);
-int32_t function_4701e0(void);
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5);
-int32_t function_470300(void);
-int32_t function_470320(int32_t a1, int32_t a2);
-int32_t function_470360(void);
-int32_t function_470980(int32_t id);
-int32_t function_470ab0(int32_t a1);
+HANDLE kinoko_audio_start_workers(void);
+int32_t kinoko_audio_stop_workers(void);
+int32_t kinoko_audio_set_bgm_volume(float gain);
+int32_t kinoko_audio_shutdown_resources(void);
+int32_t kinoko_audio_initialize_sound_pool(void);
+int32_t kinoko_audio_set_sound_volume(float gain);
+int32_t kinoko_audio_initialize_device(HWND hwnd, int32_t options);
+int32_t kinoko_audio_shutdown_device(void);
+int32_t kinoko_audio_initialize_playback(void);
+int32_t kinoko_audio_play_bgm(const char* path, int32_t delay_ms, int32_t unused, int32_t looping);
+int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t delay_ms, int32_t fade_delay_ms, int32_t unused,
+                        int32_t looping);
+int32_t kinoko_audio_pause_bgm(void);
+int32_t kinoko_audio_fade_bgm(int32_t duration_ms, int32_t volume_percent);
+int32_t kinoko_audio_stop_bgm(void);
+int32_t kinoko_audio_play_sound(int32_t id);
+int32_t kinoko_audio_load_sound_table(const char* path);
 #ifdef __cplusplus
 }
 #endif

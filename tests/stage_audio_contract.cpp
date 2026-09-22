@@ -86,12 +86,12 @@ extern "C" int kinoko_test_bgm_pause(void) {
     track.buffered_bytes = 32768;
     track.write_window_start = 32768;
     buffer.status = DSBSTATUS_PLAYING;
-    function_470300();
+    kinoko_audio_pause_bgm();
     const bool paused = buffer.stops == 1 && !buffer.status && !track.playing;
     retdec_bgm_service_track(&track);
     const bool serviced = buffer.plays == 0 && buffer.position == 4096 &&
         track.play_offset == 4096 && track.buffered_bytes == 32768 && buffer.locks == 0;
-    function_470300();
+    kinoko_audio_pause_bgm();
     const bool resumed = buffer.plays == 1 && buffer.status == DSBSTATUS_PLAYING &&
         buffer.position == 4096 && track.playing && track.started;
     retdec_bgm_stop_for_handle(123);

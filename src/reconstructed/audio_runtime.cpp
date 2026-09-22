@@ -26,6 +26,10 @@ using kinoko::legacy::address;
 using kinoko::legacy::pointer;
 using kinoko::windows::CriticalLock;
 
+static int32_t run_audio_update_worker();
+static int32_t run_audio_loader_worker();
+static int32_t service_audio_tick();
+
 namespace {
 constexpr DWORD RETDEC_BGM_BUFFER_BYTES = 0x100000u;
 constexpr DWORD RETDEC_BGM_CHUNK_BYTES = 0x8000u;
@@ -78,6 +82,8 @@ struct BgmTrack {
     DWORD fade_started = 0;
     DWORD fade_duration = 0;
     int playing = 0;
+    bool retire_after_fade = false;
+    bool retirement_requested = false;
 };
 struct SoundSlot {
     kinoko::ComOwner<IDirectSoundBuffer> buffer;
@@ -118,24 +124,44 @@ SoundPool g_retdec_se_pool;
 SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
 int g_retdec_se_entry_count = 0;
 BgmTrack g_retdec_bgm_track;
-BgmTrack g_retdec_bgm_fading_tracks[31];
-kinoko::windows::HandleOwner g_retdec_audio_queue_event;
-kinoko::windows::HandleOwner g_retdec_audio_stop_event;
-kinoko::windows::HandleOwner g_retdec_audio_update_thread;
-kinoko::windows::HandleOwner g_retdec_audio_loader_thread;
+std::list<BgmTrack> fading_tracks;
+// Own both workers, their wake events and the lock protecting playback state.
+// Events and the lock outlive the joined workers, including partial startup.
+struct AudioWorkers {
+    kinoko::windows::HandleOwner queue_event, stop_event, update_thread, loader_thread;
+    volatile LONG running = 0;
+    bool initialized = false;
+    CRITICAL_SECTION lock{};
+    AudioWorkers() { InitializeCriticalSection(&lock); }
+    bool is_running() { return InterlockedCompareExchange(&running, 0, 0) != 0; }
+    void notify_loader() { if (queue_event) SetEvent(queue_event.get()); }
+    void stop_and_join() {
+        InterlockedExchange(&running, 0);
+        if (stop_event) SetEvent(stop_event.get());
+        notify_loader();
+        for (auto* thread : {&update_thread, &loader_thread}) {
+            if (*thread) {
+                WaitForSingleObject(thread->get(), INFINITE);
+                thread->reset();
+            }
+        }
+        queue_event.reset();
+        stop_event.reset();
+        initialized = false;
+    }
+    ~AudioWorkers() { stop_and_join(); DeleteCriticalSection(&lock); }
+    AudioWorkers(const AudioWorkers&) = delete;
+    AudioWorkers& operator=(const AudioWorkers&) = delete;
+} audio_workers;
 float g_retdec_audio_master_volume = 1.0f;
-volatile LONG g_retdec_audio_running = 0;
-int g_retdec_audio_threads_initialized = 0;
-CRITICAL_SECTION g_retdec_audio_lock{};
-int g_retdec_audio_lock_initialized = 0;
 void sync_audio_device_aliases() noexcept {
     // Read-only borrows for not-yet-migrated C entry points, never extra owners.
     g876 = address(g_audio_device.primary.get());
     g877 = reinterpret_cast<char*>(g_audio_device.device.get());
     g878 = address(g_audio_device.listener.get());
 }
-DWORD WINAPI audio_update_worker(void*) { return function_40aaa0(); }
-DWORD WINAPI audio_loader_worker(void*) { return function_40aac0(); }
+DWORD WINAPI audio_update_worker(void*) { return run_audio_update_worker(); }
+DWORD WINAPI audio_loader_worker(void*) { return run_audio_loader_worker(); }
 }
 static void retdec_trace_audio_text(const char *label, const char *value);
 static LONG retdec_audio_volume_db(float gain);
@@ -193,14 +219,15 @@ static void retdec_bgm_update_fade_locked(void);
 void retdec_bgm_update_fade(void);
 static void retdec_bgm_begin_fade_locked(BgmTrack *track,
                                          DWORD duration, float target,
-                                         DWORD start_delay);
+                                         DWORD start_delay, bool retire_after_fade = false);
 static void retdec_bgm_begin_fade(DWORD duration, float target);
 static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
                                              DWORD duration,
                                              DWORD start_delay,
-                                             float target);
+                                             float target, bool retire_after_fade = false);
 static void retdec_bgm_stop_for_handle(uint32_t handle);
 static void retdec_bgm_release_for_handle(uint32_t handle);
+static void retire_playback_request(uint32_t handle);
 static int retdec_bgm_prepare_track_default_math(uint32_t handle, const char *path,
                                     int looping, float32_t volume);
 static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
@@ -221,46 +248,23 @@ static BufferRecord* retdec_audio_handle_lookup(HandleTable* manager,
                                                std::uint32_t handle);
 static bool retdec_audio_handle_create(HandleTable* manager, std::uint32_t* output);
 static void retdec_audio_manager_construct();
-static std::uint32_t* retdec_audio_method_40a5d0(ManagerRecord* manager,
+static std::uint32_t* allocate_playback_handle(ManagerRecord* manager,
                                               std::uint32_t* output);
-static int32_t retdec_audio_method_40a6c0(ManagerRecord* this_ptr,
+static int32_t prepare_playback_request(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           const char* source,
                                           int32_t buffer_flag,
                                           int32_t queue_mode,
                                           float32_t volume);
-static int32_t retdec_audio_method_40a7f0(ManagerRecord* this_ptr,
+static int32_t schedule_playback_start(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           int32_t delay);
-static int32_t retdec_audio_method_40a950(ManagerRecord* this_ptr,
+static int32_t fade_out_playback(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           int32_t duration,
                                           int32_t start_delay,
                                           float32_t target);
-int32_t function_40a0f0(void);
-int32_t function_40a3d0(void);
-int32_t function_40a460(void);
-int32_t function_40a5d0(int32_t result);
-int32_t function_40a9f0(float80_t a1);
-int32_t function_40aaa0(void);
-int32_t function_40aac0(void);
-int32_t function_40aae0(void);
-int32_t function_40b3a0(void);
-int32_t function_40b520(void);
-int32_t function_40b8a0(float80_t a1);
-int32_t function_411d80(HWND hwnd, int32_t options);
-int32_t function_411f90(void);
-int32_t function_4701e0(void);
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
-                        int32_t a5);
-int32_t function_470300(void);
-int32_t function_470320(int32_t a1, int32_t a2);
-int32_t function_470360(void);
-int32_t function_470980(int32_t id);
 static void retdec_loadse_blob(const char *source);
-int32_t function_470ab0(int32_t a1);
-
 
 // The ABI records are table-owned allocations. Request/fade queues carry only
 // handles; they must never free a BufferRecord or a decoder a second time.
@@ -627,11 +631,8 @@ static BgmTrack *retdec_bgm_find_track(uint32_t handle)
     if (g_retdec_bgm_track.buffer.get() != NULL &&
         g_retdec_bgm_track.handle == handle)
         return &g_retdec_bgm_track;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer.get() != NULL &&
-            g_retdec_bgm_fading_tracks[index].handle == handle)
-            return &g_retdec_bgm_fading_tracks[index];
-    }
+    for (auto& track : fading_tracks)
+        if (track.buffer && track.handle == handle) return &track;
     return NULL;
 }
 
@@ -642,10 +643,6 @@ static void retdec_bgm_apply_state_volume(BgmTrack *track,
 
     if (track == NULL || track->buffer.get() == NULL)
         return;
-    if (gain < 0.0f)
-        gain = 0.0f;
-    if (gain > 1.0f)
-        gain = 1.0f;
     track->volume = gain;
     effective_gain = gain * g_retdec_audio_master_volume;
     retdec_set_dsound_volume(track->buffer.get(), effective_gain);
@@ -824,7 +821,7 @@ static void retdec_bgm_release_track_locked(void)
 
 static void retdec_bgm_release_track(void)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_release_track_locked();
 
 }
@@ -834,14 +831,14 @@ static void retdec_bgm_release_all_tracks_locked(void)
     int index;
 
     retdec_bgm_release_state(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[index]);
+    for (auto& track : fading_tracks) retdec_bgm_release_state(&track);
+    fading_tracks.clear();
     g637 = 0;
 }
 
 static void retdec_bgm_release_all_tracks(void)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_release_all_tracks_locked();
 
 }
@@ -1082,72 +1079,59 @@ static void retdec_bgm_apply_track_volume(float gain)
     g_retdec_audio_master_volume = gain;
     retdec_bgm_apply_state_volume(&g_retdec_bgm_track,
                                   g_retdec_bgm_track.volume);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_apply_state_volume(&g_retdec_bgm_fading_tracks[index],
-                                      g_retdec_bgm_fading_tracks[index].volume);
+    for (auto& track : fading_tracks)
+        retdec_bgm_apply_state_volume(&track, track.volume);
 }
 
-static void retdec_bgm_update_fade_locked(void)
-{
-    DWORD now = timeGetTime();
-    int index;
-
-    for (index = -1; index < 31; ++index) {
-        BgmTrack *track = index < 0
-            ? &g_retdec_bgm_track : &g_retdec_bgm_fading_tracks[index];
-        DWORD elapsed;
-        float ratio;
-
-        if (track->buffer.get() == NULL || track->fade_duration == 0)
-            continue;
-        if ((int32_t)(now - track->fade_started) < 0)
-            continue;
-        elapsed = now - track->fade_started;
-        if (elapsed >= track->fade_duration) {
-            retdec_bgm_apply_state_volume(track, track->fade_to);
-            track->fade_duration = 0;
-            if (track->fade_to <= 0.0f) {
-                if (track == &g_retdec_bgm_track)
-                    g637 = 0;
-                retdec_bgm_release_state(track);
-            }
-            continue;
-        }
-        ratio = (float)elapsed / (float)track->fade_duration;
-        retdec_bgm_apply_state_volume(
-            track, track->fade_from +
-            (track->fade_to - track->fade_from) * ratio);
+// 409C12..409CE6: ordinary fades never imply release, even at zero gain.
+static void update_track_fade(BgmTrack& track, DWORD now) {
+    if (!track.buffer || !track.fade_duration || track.retirement_requested ||
+        track.start_time || now <= track.fade_started) return;
+    const DWORD elapsed = now - track.fade_started;
+    if (elapsed >= track.fade_duration) {
+        retdec_bgm_apply_state_volume(&track, track.fade_to);
+        track.fade_duration = 0;
+        track.retirement_requested = track.retire_after_fade;
+    } else {
+        const float ratio = static_cast<float>(elapsed) / track.fade_duration;
+        retdec_bgm_apply_state_volume(&track,
+            track.fade_from + (track.fade_to - track.fade_from) * ratio);
     }
+}
+static void retdec_bgm_update_fade_locked(void) {
+    const DWORD now = timeGetTime();
+    update_track_fade(g_retdec_bgm_track, now);
+    for (auto& track : fading_tracks) update_track_fade(track, now);
 }
 
 void retdec_bgm_update_fade(void)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_update_fade_locked();
 
 }
 
 static void retdec_bgm_begin_fade_locked(BgmTrack *track,
                                          DWORD duration, float target,
-                                         DWORD start_delay)
+                                         DWORD start_delay, bool retire_after_fade)
 {
     if (track == NULL || track->buffer.get() == NULL)
         return;
-    if (target < 0.0f)
-        target = 0.0f;
-    if (target > 1.0f)
-        target = 1.0f;
+    // 4098AD changes gain immediately without replacing an existing envelope.
+    if (duration == 0) {
+        retdec_bgm_apply_state_volume(track, target);
+        return;
+    }
+    track->retire_after_fade = retire_after_fade;
     track->fade_from = track->volume;
     track->fade_to = target;
     track->fade_started = timeGetTime() + start_delay;
     track->fade_duration = duration;
-    if (duration == 0)
-        retdec_bgm_apply_state_volume(track, target);
 }
 
 static void retdec_bgm_begin_fade(DWORD duration, float target)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_update_fade_locked();
     retdec_bgm_begin_fade_locked(&g_retdec_bgm_track, duration, target, 0);
 
@@ -1156,19 +1140,19 @@ static void retdec_bgm_begin_fade(DWORD duration, float target)
 static void retdec_bgm_begin_fade_for_handle(uint32_t handle,
                                              DWORD duration,
                                              DWORD start_delay,
-                                             float target)
+                                             float target, bool retire_after_fade)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_update_fade_locked();
     retdec_bgm_begin_fade_locked(retdec_bgm_find_track(handle), duration,
-                                 target, start_delay);
+                                 target, start_delay, retire_after_fade);
 
 }
 
 // Original 40A8D0 toggles the hardware state without rewinding the ring.
 static void retdec_bgm_toggle_pause(uint32_t handle)
 {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     auto* track = retdec_bgm_find_track(handle);
     if (!track || !track->buffer.get()) return;
     DWORD status = 0;
@@ -1186,7 +1170,7 @@ static void retdec_bgm_stop_for_handle(uint32_t handle)
     BgmTrack *track;
 
 
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     track = retdec_bgm_find_track(handle);
     if (track != NULL && track->buffer.get() != NULL) {
 
@@ -1203,10 +1187,10 @@ static void retdec_bgm_release_for_handle(uint32_t handle)
 {
     BgmTrack *track;
 
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+    CriticalLock lock(&audio_workers.lock);
     track = retdec_bgm_find_track(handle);
-    if (track != NULL)
-        retdec_bgm_release_state(track);
+    if (track != NULL) track->retirement_requested = true;
+    retire_playback_request(handle);
     if (handle == g637)
         g637 = 0;
 
@@ -1335,6 +1319,31 @@ static int retdec_bgm_prepare_track(uint32_t handle, const char *path,
                                 handle, path, looping, volume);
 }
 
+static void retire_playback_request(uint32_t handle) {
+    auto& manager = g_retdec_audio_manager_state;
+    if (!retdec_audio_handle_lookup(&manager.handles, handle)) return;
+    if (manager.active.head) manager.active.head->remove(handle);
+    if (manager.retired.head && std::find(manager.retired.head->begin(),
+            manager.retired.head->end(), handle) == manager.retired.head->end())
+        manager.retired.head->push_back(handle);
+    audio_workers.notify_loader();
+}
+
+static void release_retired_requests_locked() {
+    auto& manager = g_retdec_audio_manager_state;
+    uint32_t handle;
+    while (retdec_audio_list_pop(manager.retired.head, &handle)) {
+        if (auto* track = retdec_bgm_find_track(handle)) retdec_bgm_release_state(track);
+        if (retdec_audio_handle_lookup(&manager.handles, handle)) {
+            manager.handles.storage->buffers[handle & 0xffffu].reset();
+            manager.handles.live_handles->remove(handle);
+            --manager.handles.live_count;
+        }
+        fading_tracks.remove_if([](const BgmTrack& track) { return !track.buffer; });
+        if (static_cast<uint32_t>(g637) == handle) g637 = 0;
+    }
+}
+
 static void retdec_bgm_process_pending_locked(void)
 {
     auto* list = g_retdec_audio_manager_state.pending.head;
@@ -1359,9 +1368,10 @@ static void retdec_bgm_process_pending_locked(void)
 
         retdec_bgm_update_fade_locked();
         retdec_bgm_archive_current_track();
-        if (!retdec_bgm_prepare_track((uint32_t)handle, path, looping,
-                                      volume))
+        if (!retdec_bgm_prepare_track((uint32_t)handle, path, looping, volume)) {
+            retire_playback_request(handle);
             continue;
+        }
         buffer->ready = 1;
         track = &g_retdec_bgm_track;
         track->start_time = buffer->start_time;
@@ -1404,15 +1414,16 @@ static void retdec_bgm_service_track(BgmTrack *track)
        Waiting for the ring to drain can let the hardware read stale PCM. */
     if (track->source_ended && !track->looping) {
         retdec_trace_i32("bgm:stop-at-eof", (int32_t)track->handle);
-        if (track == &g_retdec_bgm_track)
-            g637 = 0;
-        retdec_bgm_release_state(track);
+        track->retirement_requested = true;
         return;
     }
     if (!track->started) {
-        if (track->start_time == 0 ||
-            (int32_t)(timeGetTime() - track->start_time) >= 0)
+        const DWORD now = timeGetTime();
+        if (track->start_time == 0 || now > track->start_time) {
             retdec_bgm_start_track(track);
+            track->start_time = 0;
+            if (track->fade_started < now) track->fade_started = now;
+        }
         if (!track->started)
             return;
     }
@@ -1458,53 +1469,26 @@ static void retdec_bgm_service_track(BgmTrack *track)
 
 static void retdec_bgm_service_all_locked(void)
 {
-#if defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
-    return;
-#else
-    int index;
-
+#if !defined(RETDEC_DIAGNOSTIC_NO_BGM_SERVICE)
     retdec_bgm_update_fade_locked();
-    retdec_bgm_service_track(&g_retdec_bgm_track);
-    for (index = 0; index < 31; ++index)
-        retdec_bgm_service_track(&g_retdec_bgm_fading_tracks[index]);
-
-    if (g_retdec_bgm_track.buffer.get() != NULL &&
-        g_retdec_bgm_track.source_ended &&
-        !g_retdec_bgm_track.looping &&
-        g_retdec_bgm_track.buffered_bytes == 0) {
-        retdec_bgm_release_state(&g_retdec_bgm_track);
-        g637 = 0;
-    }
-    for (index = 0; index < 31; ++index) {
-        BgmTrack *track = &g_retdec_bgm_fading_tracks[index];
-        if (track->buffer.get() != NULL && track->source_ended &&
-            !track->looping && track->buffered_bytes == 0)
-            retdec_bgm_release_state(track);
+    auto* active = g_retdec_audio_manager_state.active.head;
+    if (!active) return;
+    // 40AAE0 traverses active handles, not every slot in the backing store.
+    for (auto cursor = active->begin(); cursor != active->end();) {
+        const auto handle = *cursor++;
+        auto* track = retdec_bgm_find_track(handle);
+        if (!track) continue;
+        if (!track->retirement_requested) retdec_bgm_service_track(track);
+        if (track->retirement_requested) retire_playback_request(handle);
     }
 #endif
 }
 
-static void retdec_bgm_archive_current_track(void)
-{
-    int index;
-
-    if (g_retdec_bgm_track.buffer.get() == NULL)
-        return;
-    for (index = 0; index < 31; ++index) {
-        if (g_retdec_bgm_fading_tracks[index].buffer.get() == NULL) {
-            g_retdec_bgm_fading_tracks[index] = std::move(g_retdec_bgm_track);
-            g_retdec_bgm_track = BgmTrack{};
-            return;
-        }
-    }
-    /* The original manager is bounded by the 32 preallocated buffers.  If
-       callers replace tracks faster than the fade window, reclaim the oldest
-       fading slot so the new handle can still be created. */
-    retdec_bgm_release_state(&g_retdec_bgm_fading_tracks[0]);
-    for (index = 1; index < 31; ++index)
-        g_retdec_bgm_fading_tracks[index - 1] =
-            std::move(g_retdec_bgm_fading_tracks[index]);
-    g_retdec_bgm_fading_tracks[30] = std::move(g_retdec_bgm_track);
+static void retdec_bgm_archive_current_track(void) {
+    if (!g_retdec_bgm_track.buffer) return;
+    // The BGM manager uses handle lists. The 32 fixed slots belong to the SE
+    // pool, not to BGM: never evict an unrelated fading stream at slot 32.
+    fading_tracks.emplace_back(std::move(g_retdec_bgm_track));
     g_retdec_bgm_track = BgmTrack{};
 }
 
@@ -1608,8 +1592,9 @@ static void retdec_audio_manager_construct() {
 }
 
 
-static std::uint32_t* retdec_audio_method_40a5d0(ManagerRecord* manager,
+static std::uint32_t* allocate_playback_handle(ManagerRecord* manager,
                                               std::uint32_t* output) {
+    CriticalLock lock(&audio_workers.lock);
     if (!output) return nullptr;
     *output = 0;
     if (!g_retdec_audio_manager_initialized) retdec_audio_manager_construct();
@@ -1619,13 +1604,14 @@ static std::uint32_t* retdec_audio_method_40a5d0(ManagerRecord* manager,
 }
 
 
-static int32_t retdec_audio_method_40a6c0(ManagerRecord* this_ptr,
+static int32_t prepare_playback_request(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           const char* source,
                                           int32_t buffer_flag,
                                           int32_t queue_mode,
                                           float32_t volume)
 {
+    CriticalLock lock(&audio_workers.lock);
     BufferRecord* buffer;
     const char *path = source;
     uint32_t path_length;
@@ -1666,14 +1652,13 @@ static int32_t retdec_audio_method_40a6c0(ManagerRecord* this_ptr,
     if (queue_mode != 0) {
         retdec_audio_list_push(
             g_retdec_audio_manager_state.pending.head, handle);
-        if (g_retdec_audio_queue_event.get() != NULL)
-            SetEvent(g_retdec_audio_queue_event.get());
+        if (audio_workers.queue_event.get() != NULL)
+            SetEvent(audio_workers.queue_event.get());
         return 1;
     }
 
     /* a5 == 0 is the original synchronous path: prepare the new buffer
        before it is inserted into the active list. */
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
     retdec_bgm_update_fade_locked();
     retdec_bgm_archive_current_track();
     prepared = retdec_bgm_prepare_track(
@@ -1685,16 +1670,18 @@ static int32_t retdec_audio_method_40a6c0(ManagerRecord* this_ptr,
             g_retdec_audio_manager_state.active.head, handle);
         retdec_trace("470220:prepared-sync");
     } else {
+        retire_playback_request(handle);
         retdec_trace("470220:prepare-failed");
     }
 
     return 1;
 }
 
-static int32_t retdec_audio_method_40a7f0(ManagerRecord* this_ptr,
+static int32_t schedule_playback_start(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           int32_t delay)
 {
+    CriticalLock lock(&audio_workers.lock);
     BufferRecord* buffer;
     BgmTrack *track;
     DWORD start_time;
@@ -1708,7 +1695,6 @@ static int32_t retdec_audio_method_40a7f0(ManagerRecord* this_ptr,
     if (buffer == 0) {
         return 0;
     }
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
     track = retdec_bgm_find_track((uint32_t)handle);
     buffer->playback_state = 0;
     if (delay != 0) {
@@ -1730,7 +1716,7 @@ static int32_t retdec_audio_method_40a7f0(ManagerRecord* this_ptr,
     return 1;
 }
 
-static int32_t retdec_audio_method_40a950(ManagerRecord* this_ptr,
+static int32_t fade_out_playback(ManagerRecord* this_ptr,
                                           int32_t handle,
                                           int32_t duration,
                                           int32_t start_delay,
@@ -1740,182 +1726,138 @@ static int32_t retdec_audio_method_40a950(ManagerRecord* this_ptr,
     (void)target;
     retdec_bgm_begin_fade_for_handle((uint32_t)handle,
                                      duration > 0 ? (DWORD)duration : 0,
-                                     start_delay > 0 ? (DWORD)start_delay : 0,
-                                     0.0f);
+                                     static_cast<DWORD>(start_delay),
+                                     0.0f, true);
     return 1;
 }
 
-int32_t function_40a0f0(void) {
-    /* The RetDec body below lost the constructor's this pointer.  The
-       recovered manager storage above is the live object used by the audio
-       methods, so construct it once and return without executing that stale
-       stack-based reconstruction. */
-    retdec_audio_manager_construct();
-    return address(retdec_audio_manager_this());
-}
 
-int32_t function_40a3d0(void) {
-    if (g_retdec_audio_threads_initialized)
-        return (int32_t)(intptr_t)g_retdec_audio_queue_event.get();
-    if (!g_retdec_audio_lock_initialized) {
-        InitializeCriticalSection(&g_retdec_audio_lock);
-        g_retdec_audio_lock_initialized = 1;
-    }
-    g_retdec_audio_queue_event.reset(CreateEventA(NULL, FALSE, FALSE, NULL));
-    g_retdec_audio_stop_event.reset(CreateEventA(NULL, TRUE, FALSE, NULL));
-    if (g_retdec_audio_queue_event.get() == NULL ||
-        g_retdec_audio_stop_event.get() == NULL) {
-        if (g_retdec_audio_queue_event.get() != NULL)
-            g_retdec_audio_queue_event.reset();
-        if (g_retdec_audio_stop_event.get() != NULL)
-            g_retdec_audio_stop_event.reset();
-        g_retdec_audio_queue_event.reset(NULL);
-        g_retdec_audio_stop_event.reset(NULL);
+HANDLE kinoko_audio_start_workers(void) {
+    if (audio_workers.initialized)
+        return audio_workers.queue_event.get();
+    audio_workers.queue_event.reset(CreateEventA(NULL, FALSE, FALSE, NULL));
+    audio_workers.stop_event.reset(CreateEventA(NULL, TRUE, FALSE, NULL));
+    if (audio_workers.queue_event.get() == NULL ||
+        audio_workers.stop_event.get() == NULL) {
+        if (audio_workers.queue_event.get() != NULL)
+            audio_workers.queue_event.reset();
+        if (audio_workers.stop_event.get() != NULL)
+            audio_workers.stop_event.reset();
+        audio_workers.queue_event.reset(NULL);
+        audio_workers.stop_event.reset(NULL);
         retdec_trace("40a3d0:audio-events-failed");
         return 0;
     }
-    InterlockedExchange(&g_retdec_audio_running, 1);
-    g_retdec_audio_update_thread.reset(CreateThread(
+    InterlockedExchange(&audio_workers.running, 1);
+    audio_workers.update_thread.reset(CreateThread(
         NULL, 0, audio_update_worker, NULL, 0, NULL));
-    if (g_retdec_audio_update_thread.get() != NULL)
-        SetThreadPriority(g_retdec_audio_update_thread.get(), 15);
-    g_retdec_audio_loader_thread.reset(CreateThread(
+    if (audio_workers.update_thread.get() != NULL)
+        SetThreadPriority(audio_workers.update_thread.get(), 15);
+    audio_workers.loader_thread.reset(CreateThread(
         NULL, 0, audio_loader_worker, NULL, 0, NULL));
-    if (g_retdec_audio_update_thread.get() == NULL ||
-        g_retdec_audio_loader_thread.get() == NULL) {
-        InterlockedExchange(&g_retdec_audio_running, 0);
-        SetEvent(g_retdec_audio_stop_event.get());
-        SetEvent(g_retdec_audio_queue_event.get());
-        if (g_retdec_audio_update_thread.get() != NULL) {
-            WaitForSingleObject(g_retdec_audio_update_thread.get(), INFINITE);
-            g_retdec_audio_update_thread.reset();
-        }
-        if (g_retdec_audio_loader_thread.get() != NULL) {
-            WaitForSingleObject(g_retdec_audio_loader_thread.get(), INFINITE);
-            g_retdec_audio_loader_thread.reset();
-        }
-        g_retdec_audio_queue_event.reset();
-        g_retdec_audio_stop_event.reset();
-        g_retdec_audio_queue_event.reset(NULL);
-        g_retdec_audio_stop_event.reset(NULL);
+    if (audio_workers.update_thread.get() == NULL ||
+        audio_workers.loader_thread.get() == NULL) {
+        audio_workers.stop_and_join();
         retdec_trace("40a3d0:audio-threads-failed");
         return 0;
     }
-    g_retdec_audio_threads_initialized = 1;
+    audio_workers.initialized = 1;
     retdec_trace("40a3d0:audio-threads-ready");
-    return (int32_t)(intptr_t)g_retdec_audio_queue_event.get();
+    return audio_workers.queue_event.get();
 }
 
-int32_t function_40a460(void) {
-    if (!g_retdec_audio_threads_initialized)
-        return 1;
-
-    InterlockedExchange(&g_retdec_audio_running, 0);
-    if (g_retdec_audio_stop_event.get() != NULL)
-        SetEvent(g_retdec_audio_stop_event.get());
-    if (g_retdec_audio_queue_event.get() != NULL)
-        SetEvent(g_retdec_audio_queue_event.get());
-    if (g_retdec_audio_update_thread.get() != NULL) {
-        WaitForSingleObject(g_retdec_audio_update_thread.get(), INFINITE);
-        g_retdec_audio_update_thread.reset();
+int32_t kinoko_audio_stop_workers(void) {
+    audio_workers.stop_and_join();
+    // 40A460 joins before releasing active, pending and retired resources.
+    CriticalLock lock(&audio_workers.lock);
+    retdec_bgm_release_all_tracks_locked();
+    auto& manager = g_retdec_audio_manager_state;
+    for (auto* queue : {&manager.active, &manager.pending, &manager.retired}) {
+        if (queue->head) queue->head->clear();
+        queue->count = 0;
     }
-    if (g_retdec_audio_loader_thread.get() != NULL) {
-        WaitForSingleObject(g_retdec_audio_loader_thread.get(), INFINITE);
-        g_retdec_audio_loader_thread.reset();
-    }
-    if (g_retdec_audio_queue_event.get() != NULL) {
-        g_retdec_audio_queue_event.reset();
-    }
-    if (g_retdec_audio_stop_event.get() != NULL) {
-        g_retdec_audio_stop_event.reset();
-    }
-    g_retdec_audio_threads_initialized = 0;
-    /* 40A4A8 releases the manager's active, pending and retired buffers
-       after joining its workers, rather than waiting for CRT destruction. */
-    retdec_bgm_release_all_tracks();
+    delete std::exchange(manager.handles.storage, nullptr);
+    if (manager.handles.live_handles) manager.handles.live_handles->clear();
+    manager.handles.live_count = 0;
     return 1;
 }
 
-int32_t function_40a5d0(int32_t result) {
-    // 0x40a5d0
-    *(int32_t *)result = 0;
-    return result;
-}
 
-int32_t function_40a9f0(float80_t a1) {
-    CriticalLock lock(g_retdec_audio_lock_initialized ? &g_retdec_audio_lock : nullptr);
+int32_t kinoko_audio_set_bgm_volume(float gain) {
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_update_fade_locked();
-    retdec_bgm_apply_track_volume((float)a1);
+    retdec_bgm_apply_track_volume(gain);
 
     return 1;
 }
 
-int32_t function_40aaa0(void) {
+int32_t run_audio_update_worker(void) {
     if (SUCCEEDED(CoInitialize(NULL))) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
-            if (g_retdec_audio_stop_event.get() == NULL ||
-                WaitForSingleObject(g_retdec_audio_stop_event.get(), 16) ==
+        while (InterlockedCompareExchange(&audio_workers.running, 0, 0)) {
+            if (audio_workers.stop_event.get() == NULL ||
+                WaitForSingleObject(audio_workers.stop_event.get(), 16) ==
                     WAIT_OBJECT_0)
                 break;
-            function_40aae0();
+            service_audio_tick();
         }
         CoUninitialize();
     }
     return 0;
 }
 
-int32_t function_40aac0(void) {
+int32_t run_audio_loader_worker(void) {
     if (SUCCEEDED(CoInitialize(NULL))) {
-        while (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0)) {
+        while (InterlockedCompareExchange(&audio_workers.running, 0, 0)) {
             HANDLE handles[2];
             DWORD wait_result;
 
-            handles[0] = g_retdec_audio_queue_event.get();
-            handles[1] = g_retdec_audio_stop_event.get();
+            handles[0] = audio_workers.queue_event.get();
+            handles[1] = audio_workers.stop_event.get();
             if (handles[0] == NULL || handles[1] == NULL)
                 break;
             wait_result = WaitForMultipleObjects(2, handles, FALSE,
                                                  INFINITE);
             if (wait_result != WAIT_OBJECT_0)
                 break;
-            EnterCriticalSection(&g_retdec_audio_lock);
-            if (InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
+            CriticalLock lock(&audio_workers.lock);
+            if (audio_workers.is_running()) {
                 retdec_bgm_process_pending_locked();
-            LeaveCriticalSection(&g_retdec_audio_lock);
+                release_retired_requests_locked();
+            }
+
         }
         CoUninitialize();
     }
     return 0;
 }
 
-int32_t function_40aae0(void) {
-    if (!InterlockedCompareExchange(&g_retdec_audio_running, 0, 0))
+int32_t service_audio_tick(void) {
+    if (!InterlockedCompareExchange(&audio_workers.running, 0, 0))
         return 0;
-    EnterCriticalSection(&g_retdec_audio_lock);
+    CriticalLock lock(&audio_workers.lock);
     retdec_bgm_service_all_locked();
-    LeaveCriticalSection(&g_retdec_audio_lock);
     return 0;
 }
 
 
-int32_t function_40b3a0(void) {
-    function_40a460(); // join both workers before touching any owned resource
+int32_t kinoko_audio_shutdown_resources(void) {
+    kinoko_audio_stop_workers(); // join both workers before touching any owned resource
     retdec_bgm_release_all_tracks();
     retdec_se_pool_release();
     retdec_audio_manager_destroy();
     return 1;
 }
 
-int32_t function_40b520(void) {
+int32_t kinoko_audio_initialize_sound_pool(void) {
     return retdec_se_pool_initialize();
 }
 
-int32_t function_40b8a0(float80_t a1) {
-    retdec_se_pool_set_volume((float)a1);
+int32_t kinoko_audio_set_sound_volume(float gain) {
+    retdec_se_pool_set_volume(gain);
     return 1;
 }
 
-int32_t function_411d80(HWND hwnd, int32_t options) {
+int32_t kinoko_audio_initialize_device(HWND hwnd, int32_t options) {
     g_audio_device.reset();
     sync_audio_device_aliases();
     auto& owner = g_audio_device;
@@ -1980,9 +1922,9 @@ int32_t function_411d80(HWND hwnd, int32_t options) {
 }
 
 
-int32_t function_411f90(void) {
+int32_t kinoko_audio_shutdown_device(void) {
     const auto result = address(g_audio_device.device.get());
-    function_40b3a0();
+    kinoko_audio_shutdown_resources();
     // Shutdown has already joined the audio workers. Release the listener,
     // primary buffer and device in that order before unloading the module.
     g_audio_device.reset();
@@ -1991,53 +1933,53 @@ int32_t function_411f90(void) {
 }
 
 
-int32_t function_4701e0(void) {
+int32_t kinoko_audio_initialize_playback(void) {
     retdec_trace("4701e0:audio-begin");
-    function_40b520();
-    function_40b8a0(0.80000001L);
-    function_40a3d0();
-    int32_t result = function_40a9f0(0.80000001L);
+    kinoko_audio_initialize_sound_pool();
+    kinoko_audio_set_sound_volume(0.80000001L);
+    kinoko_audio_start_workers();
+    int32_t result = kinoko_audio_set_bgm_volume(0.80000001L);
     retdec_trace("4701e0:audio-ready");
     return result;
 }
 
-int32_t function_470220(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
+int32_t kinoko_audio_play_bgm(const char* path, int32_t a2, int32_t a3, int32_t a4) {
     auto* manager = retdec_audio_manager_this();
     std::uint32_t new_handle = 0;
 
     (void)a3;
     if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, 0, 1.0f);
-    retdec_audio_method_40a5d0(manager, &new_handle);
+        fade_out_playback(manager, g637, 1000, 0, 1.0f);
+    allocate_playback_handle(manager, &new_handle);
     g637 = new_handle;
     /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
-    retdec_audio_method_40a6c0(manager, g637, pointer<const char>(a1), a4, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
+    prepare_playback_request(manager, g637, path, a4, 0, 1.0f);
+    schedule_playback_start(manager, g637, a2);
     return 0;
 }
 
-int32_t function_470290(int32_t a1, int32_t a2, int32_t a3, int32_t a4,
+int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t a2, int32_t a3, int32_t a4,
                         int32_t a5) {
     auto* manager = retdec_audio_manager_this();
     std::uint32_t new_handle = 0;
 
     if (g637 != 0)
-        retdec_audio_method_40a950(manager, g637, 1000, a3, 1.0f);
-    retdec_audio_method_40a5d0(manager, &new_handle);
+        fade_out_playback(manager, g637, 1000, a3, 1.0f);
+    allocate_playback_handle(manager, &new_handle);
     g637 = new_handle;
-    retdec_audio_method_40a6c0(manager, g637, pointer<const char>(a1), a5, 0, 1.0f);
-    retdec_audio_method_40a7f0(manager, g637, a2);
+    prepare_playback_request(manager, g637, path, a5, 0, 1.0f);
+    schedule_playback_start(manager, g637, a2);
     return 0;
 }
 
-int32_t function_470300(void) {
+int32_t kinoko_audio_pause_bgm(void) {
     if (g637 != 0) {
         retdec_bgm_toggle_pause((uint32_t)g637);
     }
     return 0;
 }
 
-int32_t function_470320(int32_t a1, int32_t a2) {
+int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
     if (g637 != 0) {
         float target = (float)a2 / 100.0f;
         retdec_bgm_begin_fade_for_handle((uint32_t)g637,
@@ -2047,7 +1989,7 @@ int32_t function_470320(int32_t a1, int32_t a2) {
     return 0;
 }
 
-int32_t function_470360(void) {
+int32_t kinoko_audio_stop_bgm(void) {
     if (g637 != 0) {
         uint32_t handle = (uint32_t)g637;
         retdec_bgm_stop_for_handle(handle);
@@ -2056,7 +1998,7 @@ int32_t function_470360(void) {
     return 0;
 }
 
-int32_t function_470980(int32_t id) {
+int32_t kinoko_audio_play_sound(int32_t id) {
     retdec_trace_i32("470980:se-id", id);
     for (int index = 0; index < g_retdec_se_entry_count; ++index) {
         const auto& entry = g_retdec_se_entries[index];
@@ -2190,9 +2132,9 @@ static void retdec_loadse_blob(const char *source)
     retdec_destroy_reader(reader);
 }
 
-int32_t function_470ab0(int32_t a1) {
+int32_t kinoko_audio_load_sound_table(const char* path) {
     /* LoadSE builds the same ID -> CDSBuffer table that PlaySE consumes. */
-    retdec_loadse_blob((const char *)(intptr_t)a1);
+    retdec_loadse_blob(path);
     return 0;
 }
 
@@ -2200,11 +2142,7 @@ namespace {
 // Constructed last and destroyed first: workers cannot race member destruction.
 struct AudioRuntimeShutdown {
     ~AudioRuntimeShutdown() {
-        function_40b3a0();
-        if (g_retdec_audio_lock_initialized) {
-            DeleteCriticalSection(&g_retdec_audio_lock);
-            g_retdec_audio_lock_initialized = 0;
-        }
+        kinoko_audio_shutdown_resources();
     }
 } audio_runtime_shutdown;
 }
