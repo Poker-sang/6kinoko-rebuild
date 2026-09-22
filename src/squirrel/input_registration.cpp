@@ -10,11 +10,11 @@ template<class Function> int32_t entry(Function function) {
 }
 struct InputMethod { const char* name; int32_t target; int32_t wrapper; };
 const InputMethod methods[] = {
-    {"Save", entry(function_46b7c0), entry(function_46ce70)},
-    {"Load", entry(function_46b880), entry(function_46ce70)},
-    {"SetAssign", entry(function_46bbe0), entry(function_46cec0)},
-    {"WaitAssign", entry(function_46bc90), entry(function_46cf10)},
-    {"GetAssign", entry(function_46be40), entry(function_46cf60)},
+    {"Save", entry(kinoko_input_save_config), entry(function_46ce70)},
+    {"Load", entry(kinoko_input_load_config), entry(function_46ce70)},
+    {"SetAssign", entry(kinoko_input_set_assignment), entry(function_46cec0)},
+    {"WaitAssign", entry(kinoko_input_wait_assignment), entry(function_46cf10)},
+    {"GetAssign", entry(kinoko_input_get_assignment), entry(function_46cf60)},
 };
 struct Field { const char* name; int32_t offset; bool boolean; };
 // Original 46D950 order: s0 follows s9; button/key names intentionally alias.

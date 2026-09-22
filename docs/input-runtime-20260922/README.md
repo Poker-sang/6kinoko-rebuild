@@ -90,3 +90,19 @@ integer-layout boundary; later batches remove those runtime conversions.
 input_copy_contract covers owner independence, retained buffer/virtual identity,
 shallow cluster targets, reserved fields, self-assignment and virtual destruction
 on shrink. It and the existing stage copy fixture are compiled only.
+
+## Batch 5: configuration and assignment
+
+Five address-named entries become typed manager/path interfaces. Assignment
+records use fields instead of integer-address arithmetic; the config handle
+has scoped ownership. Keep the existing complete-record checks and safe failure
+returns, the two-record file format and first-controller broadcast.
+
+Fresh assembly at 46BC3C and 46BE6C confirms a correction to the previous
+reconstruction: any in-range controller selector accesses the FIRST controller
+for SetAssign/GetAssign. WaitAssign broadcasts the first record to every device.
+4074C0 copies and sanitizes signed low-byte IDs on all assignment paths,
+including WaitAssign. The keyboard setter addresses buttons, while keyboard
+wait/get include four direction fields. Retain excluded scans 148/58/112.
+The stage contract now checks first-record selection and invalid selectors;
+its prior config roundtrip/excluded-key assertions remain. Compiled only.

@@ -2046,13 +2046,7 @@ int32_t function_46a210(int32_t * a1);
 
 
 
-int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
-int32_t function_46b880(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b9a0(int32_t this_ptr);
-int32_t function_46bbe0(int32_t this_ptr, int32_t device,
-                        int32_t field, int32_t value);
-int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t field);
-int32_t function_46be40(int32_t this_ptr, int32_t device, int32_t field);
 
 
 int32_t function_46d950(void);

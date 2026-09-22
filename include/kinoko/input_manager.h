@@ -21,6 +21,11 @@ typedef struct KinokoInputManager {
 #ifdef __cplusplus
 extern "C" {
 #endif
+int32_t kinoko_input_save_config(KinokoInputManager*, const char* path);
+int32_t kinoko_input_load_config(KinokoInputManager*, const char* path);
+int32_t kinoko_input_set_assignment(KinokoInputManager*, int32_t device, int32_t field, int32_t value);
+int32_t kinoko_input_wait_assignment(KinokoInputManager*, int32_t device, int32_t field);
+int32_t kinoko_input_get_assignment(KinokoInputManager*, int32_t device, int32_t field);
 KinokoInputManager *kinoko_input_manager_assign(KinokoInputManager*, const KinokoInputManager*);
 #ifdef __cplusplus
 }

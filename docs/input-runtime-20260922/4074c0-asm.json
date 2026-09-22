@@ -1,0 +1,160 @@
+{
+  "addr": "0x4074c0",
+  "asm": {
+    "name": "sub_4074C0",
+    "start_ea": "0x4074c0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "4074c0",
+        "instruction": "push ebp",
+        "label": "sub_4074C0"
+      },
+      {
+        "addr": "4074c1",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "4074c3",
+        "instruction": "push ebx"
+      },
+      {
+        "addr": "4074c4",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "4074c5",
+        "instruction": "mov esi, [ebp+arg_0]"
+      },
+      {
+        "addr": "4074c8",
+        "instruction": "lea ebx, [ecx+4]"
+      },
+      {
+        "addr": "4074cb",
+        "instruction": "push edi"
+      },
+      {
+        "addr": "4074cc",
+        "instruction": "mov ecx, 11h"
+      },
+      {
+        "addr": "4074d1",
+        "instruction": "mov edi, ebx"
+      },
+      {
+        "addr": "4074d3",
+        "instruction": "rep movsd"
+      },
+      {
+        "addr": "4074d5",
+        "instruction": "movsx eax, byte ptr [ebx]"
+      },
+      {
+        "addr": "4074d8",
+        "instruction": "cmp eax, dword_51B188",
+        "refs": [
+          {
+            "addr": "0x51b188",
+            "name": "dword_51B188"
+          }
+        ]
+      },
+      {
+        "addr": "4074de",
+        "instruction": "jl short loc_4074F0",
+        "refs": [
+          {
+            "addr": "0x4074f0",
+            "name": "loc_4074F0"
+          }
+        ]
+      },
+      {
+        "addr": "4074e0",
+        "instruction": "push 44h ; 'D'; Size",
+        "comments": [
+          "Size"
+        ]
+      },
+      {
+        "addr": "4074e2",
+        "instruction": "push 0; Val",
+        "comments": [
+          "Val"
+        ]
+      },
+      {
+        "addr": "4074e4",
+        "instruction": "push ebx; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "4074e5",
+        "instruction": "call _memset",
+        "refs": [
+          {
+            "addr": "0x4abad0",
+            "name": "_memset"
+          }
+        ]
+      },
+      {
+        "addr": "4074ea",
+        "instruction": "add esp, 0Ch"
+      },
+      {
+        "addr": "4074ed",
+        "instruction": "mov byte ptr [ebx], 0FEh"
+      },
+      {
+        "addr": "4074f0",
+        "instruction": "pop edi",
+        "label": "loc_4074F0"
+      },
+      {
+        "addr": "4074f1",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "4074f2",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "4074f3",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "4074f4",
+        "instruction": "retn 4"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__saved_registers",
+        "offset": "0xc",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0x10",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_0",
+        "offset": "0x14",
+        "size": "0x4",
+        "type": "_DWORD"
+      }
+    ]
+  },
+  "instruction_count": 24,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}
