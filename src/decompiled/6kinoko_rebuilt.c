@@ -1136,7 +1136,7 @@ struct vtable_4ed2cc_type {
     uint32_t (__fastcall *e3)(KinokoColoredQuad *, void *, uint32_t);
     int32_t (__fastcall *e4)(KinokoSprite *, void *, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
     int32_t (__fastcall *e5)(KinokoSprite *, void *, int32_t, int32_t, int32_t, int32_t, int32_t);
-    int32_t (*e6)(float32_t, float32_t, float32_t, float32_t);
+    int32_t (__fastcall *e6)(KinokoSprite *, void *, float, float, float, float);
     int32_t (__fastcall *e7)(KinokoSprite *, void *, float32_t, float32_t);
     int32_t (__fastcall *e8)(KinokoSprite *, void *, float32_t, float32_t);
     int32_t (__fastcall *e9)(KinokoSprite *, void *, float32_t, float32_t);
