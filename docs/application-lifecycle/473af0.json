@@ -1,0 +1,1 @@
+{"addr":"0x473af0","code":"LRESULT __stdcall sub_473AF0(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)\n{\n  return sub_40E130(a1: (int)&dword_51B708, hWnd, Msg, wParam, lParam); /*0x473b0d*/\n}","refs":[{"addr":"0x40e130","name":"sub_40E130"},{"addr":"0x51b708","name":"dword_51B708"}]}

@@ -228,6 +228,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/actor_pool.cpp
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp
+    src/reconstructed/application_runtime.cpp
     src/reconstructed/scene_queue.cpp
     src/reconstructed/archive_store.cpp
     src/reconstructed/archive_random.cpp
@@ -375,6 +376,12 @@ set(KINOKO_REFERENCE_DIR "${CMAKE_SOURCE_DIR}/../6kinoko" CACHE PATH "Directory 
 set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime-builds/default" CACHE PATH
     "Directory for built runtime executables")
 enable_testing()
+add_executable(kinoko_application_contract tests/application_contract.cpp)
+target_include_directories(kinoko_application_contract PRIVATE include)
+target_compile_options(kinoko_application_contract PRIVATE /Gy /O2)
+target_link_options(kinoko_application_contract PRIVATE /OPT:REF /OPT:ICF)
+target_link_libraries(kinoko_application_contract PRIVATE kinoko_squirrel_cpp_vm user32 ole32)
+add_test(NAME application_contract COMMAND kinoko_application_contract)
 add_test(
     NAME archive_smoke
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
@@ -737,7 +744,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract
-    kinoko_actor_manager_contract
+    kinoko_actor_manager_contract kinoko_application_contract
     kinoko_actor_render_contract
     kinoko_act_layout_render_contract
     kinoko_mesh_layout_contract

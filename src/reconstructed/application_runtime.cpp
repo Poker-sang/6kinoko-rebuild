@@ -1,0 +1,344 @@
+#include "kinoko/application.h"
+#include "kinoko/application_runtime.hpp"
+#include "kinoko/audio_runtime.h"
+#include "kinoko/graphics_device.h"
+#include "kinoko/graphics_lock.hpp"
+#include "kinoko/renderer.h"
+#include "kinoko/render_target.h"
+#include "kinoko/scene_queue.h"
+#include "kinoko/ime_input.h"
+#include "kinoko/archive_random.h"
+#include "kinoko/game_math.h"
+#include "kinoko/legacy_memory.hpp"
+#include "../platform/resources/resource.h"
+#include <mmsystem.h>
+#include <imm.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+
+extern "C" {
+void retdec_trace(const char*);
+int32_t function_408650(void*, HWND);
+int32_t function_408930(HWND, HINSTANCE);
+int32_t function_4089c0(void);
+int32_t function_408b30(void);
+int32_t function_408bf0(void);
+int32_t function_408d00(void);
+int32_t function_408c80(void);
+int32_t function_412ca0(void);
+int32_t function_412b80(int32_t);
+int32_t function_412c10(int32_t);
+int32_t function_45da00(void);
+int32_t function_45da40(void);
+int32_t function_45da50(int32_t);
+extern int32_t g534;
+extern char g874;
+}
+
+namespace kinoko::application {
+State state;
+namespace {
+using kinoko::windows::CriticalLock;
+using kinoko::windows::HandleOwner;
+using kinoko::legacy::address;
+// The generated SceneManager implementations are cdecl ports. Adapt once at
+// the real virtual boundary; do not call a cdecl stack-argument function as thiscall.
+int32_t __fastcall manager_initialize(Manager*, void*) { return function_45da00(); }
+int32_t __fastcall manager_shutdown(Manager*, void*) { return function_45da40(); }
+int32_t __fastcall manager_update(Manager*, void*) { return 0; }
+int32_t __fastcall manager_draw(Manager*, void*) { return 1; }
+Scene* __fastcall manager_create(Manager*, void*, int32_t id) {
+    return kinoko::legacy::pointer<Scene>(function_45da50(id));
+}
+const ManagerMethods manager_methods{
+    reinterpret_cast<decltype(ManagerMethods::initialize)>(manager_initialize),
+    reinterpret_cast<decltype(ManagerMethods::shutdown)>(manager_shutdown),
+    reinterpret_cast<decltype(ManagerMethods::update)>(manager_update),
+    reinterpret_cast<decltype(ManagerMethods::draw)>(manager_draw),
+    reinterpret_cast<decltype(ManagerMethods::create_scene)>(manager_create)
+};
+struct ComScope {
+    HRESULT status = CoInitialize(nullptr);
+    ~ComScope() { if (SUCCEEDED(status)) CoUninitialize(); }
+    explicit operator bool() const { return SUCCEEDED(status); }
+};
+void join(HandleOwner& thread) {
+    if (!thread) return;
+    WaitForSingleObject(thread.get(), INFINITE);
+    thread.reset();
+}
+DWORD WINAPI load_scene_worker(void*) {
+    ComScope com;
+    if (com && state.config.manager) {
+        auto* next = state.config.manager->methods->create_scene(
+            state.config.manager, state.requested_scene);
+        CriticalLock lock(&state.scene_lock);
+        state.pending_scene = next;
+    }
+    return 0;
+}
+void update_statistics() {
+    const DWORD now = timeGetTime();
+    if (!state.config.show_fps || now - state.statistics_time < 1000) return;
+    state.statistics_time += 1000;
+    char title[256];
+    std::snprintf(title, sizeof(title), "%s    Game:%uFPS    Draw:%u+%uFPS",
+        kinoko_application_title(), state.frame_count, state.draw_count, state.present_count);
+    SetWindowTextA(state.config.window, title);
+    state.frame_count = state.draw_count = state.present_count = 0;
+}
+DWORD WINAPI game_loop(void*) {
+    // This is a timer-registry borrow: unregister it, never close it separately.
+    const int32_t frame_event = function_412b80(0);
+    retdec_trace("game:entry");
+    while (state.is_running()) {
+        update_statistics();
+        update_frame();
+        if (!state.config.separate_draw) draw_frame();
+        kinoko_math_checkpoint("render-done", 0);
+        if (frame_event) WaitForSingleObject(kinoko::legacy::pointer<void>(frame_event), INFINITE);
+        else Sleep(16); // Retained reconstruction fallback for event allocation failure.
+    }
+    if (frame_event) function_412c10(frame_event);
+    retdec_trace("game:exit");
+    return 0;
+}
+DWORD WINAPI game_worker(void*) {
+    ComScope com;
+    if (com) kinoko_run_game_math(game_loop, nullptr);
+    return 0;
+}
+DWORD WINAPI display_worker(void*) {
+    ComScope com;
+    if (!com) return 0;
+    HandleOwner retry(CreateEventA(nullptr, FALSE, FALSE, nullptr));
+    while (state.is_running()) {
+        if (state.config.separate_draw) {
+            if (TryEnterCriticalSection(&state.scene_lock)) {
+                if (state.scene && draw_frame() && kinoko_graphics_present()) ++state.draw_count;
+                LeaveCriticalSection(&state.scene_lock);
+            }
+            WaitForSingleObject(state.display_event.get(), 1);
+        } else {
+            if (WaitForSingleObject(state.display_event.get(), INFINITE) != WAIT_OBJECT_0 ||
+                !state.is_running()) break;
+            // 40E090..40E0E2: retry nonblocking presentation at most eight times.
+            for (unsigned attempt = 0; attempt < 8 && state.is_running(); ++attempt) {
+                if (kinoko_graphics_present()) { ++state.present_count; break; }
+                if (retry) WaitForSingleObject(retry.get(), 1);
+                else Sleep(1);
+            }
+        }
+    }
+    return 0;
+}
+DWORD WINAPI retire_worker(void*) {
+    ComScope com;
+    if (!com) return 0;
+    while (state.is_running()) {
+        if (WaitForSingleObject(state.retire_event.get(), INFINITE) != WAIT_OBJECT_0) break;
+        kinoko_destroy_retired_scenes();
+    }
+    return 0;
+}
+bool initialize(const Configuration& configuration) {
+    state.config = configuration;
+    g874 = configuration.archives != 0;
+    state.timer_period = timeBeginPeriod(1) == TIMERR_NOERROR;
+    kinoko_seed_random(timeGetTime());
+    state.com_initialized = SUCCEEDED(CoInitialize(nullptr));
+    if (!state.com_initialized) return false;
+    function_408650(configuration.instance, configuration.window);
+    if (!configuration.show_cursor) ShowCursor(FALSE);
+    InterlockedExchange(&state.running, 1);
+    if (configuration.graphics) {
+        if (!kinoko_graphics_create(configuration.window, configuration.width, configuration.height)) return false;
+        state.graphics_initialized = true;
+        kinoko_renderer_initialize();
+        state.renderer_initialized = true;
+    }
+    if (configuration.input) {
+        state.input_initialized = function_408930(configuration.window, configuration.instance) != 0;
+        // Preserve the existing reconstruction's missing-device degradation.
+        if (state.input_initialized) { function_408b30(); function_408bf0(); function_408d00(); }
+    }
+    if (configuration.audio) kinoko_audio_initialize_device(configuration.window, configuration.audio_options);
+    if (configuration.ime) { function_412ca0(); state.ime_initialized = true; }
+    state.statistics_time = timeGetTime();
+    if (configuration.manager) configuration.manager->methods->initialize(configuration.manager);
+    if (configuration.transition) configuration.transition->methods->initialize(configuration.transition);
+    state.requested_scene = configuration.initial_scene;
+    state.current_scene = -1;
+    state.pending_scene = configuration.manager
+        ? configuration.manager->methods->create_scene(configuration.manager, configuration.initial_scene) : nullptr;
+    // Publish wake events before starting workers: shutdown must never signal a
+    // null slot while its worker is just about to create and wait on that event.
+    state.retire_event.reset(CreateEventA(nullptr, FALSE, FALSE, nullptr));
+    if (configuration.graphics) state.display_event.reset(CreateEventA(nullptr, FALSE, FALSE, nullptr));
+    if (!state.retire_event || (configuration.graphics && !state.display_event)) return false;
+    state.retire_thread.reset(CreateThread(nullptr, 0, retire_worker, nullptr, 0, nullptr));
+    if (state.retire_thread) SetThreadPriority(state.retire_thread.get(), THREAD_PRIORITY_IDLE);
+    state.game_thread.reset(CreateThread(nullptr, 0, game_worker, nullptr, 0, nullptr));
+    if (configuration.graphics) {
+        state.display_thread.reset(CreateThread(nullptr, 0, display_worker, nullptr, 0, nullptr));
+        if (state.display_thread) SetThreadPriority(state.display_thread.get(), THREAD_PRIORITY_IDLE);
+    }
+    return state.retire_thread && state.game_thread && (!configuration.graphics || state.display_thread);
+}
+void message_loop() {
+    HandleOwner idle(CreateEventA(nullptr, FALSE, FALSE, nullptr));
+    if (!idle) return;
+    MSG message{};
+    while (state.is_running()) {
+        if (PeekMessageA(&message, nullptr, 0, 0, PM_NOREMOVE)) {
+            if (GetMessageA(&message, nullptr, 0, 0) <= 0) break;
+            TranslateMessage(&message);
+            DispatchMessageA(&message);
+        } else {
+            kinoko_graphics_poll();
+            WaitForSingleObject(idle.get(), 16);
+        }
+    }
+}
+LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM key, LPARAM parameter) {
+    return dispatch_message(window, message, key, parameter);
+}
+}
+
+void update_frame() {
+    if (state.config.input) function_408c80();
+    kinoko_math_checkpoint("input-done", 0);
+    auto* manager = state.config.manager;
+    auto* transition = state.config.transition;
+    if (manager) manager->methods->update(manager);
+    if (state.current_scene != state.requested_scene) {
+        if (!transition || transition->methods->ready(transition)) activate_pending_scene();
+    } else {
+        if (transition) transition->methods->update(transition);
+        if (state.scene) {
+            state.requested_scene = state.scene->methods->update(state.scene);
+            if (state.requested_scene == -1) InterlockedExchange(&state.running, 0);
+            else ++state.frame_count;
+        }
+        if (state.requested_scene != -1 && state.requested_scene != state.current_scene) {
+            join(state.load_thread);
+            state.load_thread.reset(CreateThread(nullptr, 0, load_scene_worker, nullptr, 0, nullptr));
+        }
+    }
+    kinoko_math_checkpoint("scene-done", 0);
+}
+bool draw_frame() {
+    { kinoko::graphics::Lock lock; kinoko_renderer.present_pending = 0; }
+    int32_t ready = 1;
+    if (state.scene) ready = state.scene->methods->draw(state.scene) & 1;
+    if (state.config.manager) ready &= state.config.manager->methods->draw(state.config.manager);
+    if (state.config.transition) ready &= state.config.transition->methods->draw(state.config.transition);
+    if (ready) {
+        { kinoko::graphics::Lock lock; kinoko_renderer.present_pending = 1; }
+        if (!state.config.separate_draw && state.display_event) SetEvent(state.display_event.get());
+    }
+    return ready != 0;
+}
+LRESULT dispatch_message(HWND window, UINT message, WPARAM key, LPARAM parameter) {
+    if (state.config.ime && static_cast<uint8_t>(kinoko_ime_dispatch(address(window), message,
+            static_cast<uint32_t>(key), static_cast<int32_t>(parameter)))) return 0;
+    switch (message) {
+    case WM_SYSKEYDOWN:
+        if (key == VK_RETURN) {
+            const bool was_fullscreen = !kinoko_graphics.present.Windowed;
+            { CriticalLock lock(&state.scene_lock); kinoko_graphics_toggle_window(); }
+            if (state.config.show_cursor && was_fullscreen != !kinoko_graphics.present.Windowed)
+                ShowCursor(kinoko_graphics.present.Windowed != 0);
+            return 0;
+        }
+        if (key != VK_F4) return 0;
+        break;
+    case WM_DESTROY: PostQuitMessage(0); return 0;
+    case WM_CREATE: case WM_QUIT: case WM_SYSKEYUP: case WM_IME_NOTIFY: return 0;
+    case WM_SYSCOMMAND:
+        if (key == SC_MONITORPOWER || key == SC_SCREENSAVE) return 1;
+        break;
+    }
+    return DefWindowProcA(window, message, key, parameter);
+}
+}
+
+extern "C" void kinoko_application_construct() {
+    if (kinoko::application::state.constructed) return;
+    kinoko_initialize_scene_queue();
+    kinoko::application::state.constructed = true;
+}
+extern "C" int32_t kinoko_application_frame_count() {
+    return static_cast<int32_t>(kinoko::application::state.frame_count);
+}
+extern "C" void kinoko_application_shutdown() {
+    using namespace kinoko::application;
+    InterlockedExchange(&state.running, 0);
+    join(state.game_thread);
+    join(state.load_thread);
+    if (state.retire_event) SetEvent(state.retire_event.get());
+    join(state.retire_thread);
+    if (state.display_event) SetEvent(state.display_event.get());
+    join(state.display_thread);
+    kinoko_destroy_retired_scenes();
+    state.retire_event.reset(); state.display_event.reset();
+    {
+        kinoko::windows::CriticalLock lock(&state.scene_lock);
+        if (state.scene) state.scene->methods->destroy(state.scene, 1);
+        state.scene = nullptr;
+        if (state.pending_scene) state.pending_scene->methods->destroy(state.pending_scene, 1);
+        state.pending_scene = nullptr;
+    }
+    if (auto* manager = state.config.manager) {
+        manager->methods->shutdown(manager); std::free(manager); state.config.manager = nullptr;
+    }
+    if (auto* transition = state.config.transition) {
+        transition->methods->shutdown(transition); std::free(transition); state.config.transition = nullptr;
+    }
+    if (state.ime_initialized) { ImmReleaseContext(state.config.window, reinterpret_cast<HIMC>(static_cast<intptr_t>(g534))); state.ime_initialized = false; }
+    kinoko_audio_shutdown_device();
+    if (state.input_initialized) { function_4089c0(); state.input_initialized = false; }
+    if (state.renderer_initialized) {
+        kinoko_renderer_before_reset(&kinoko_renderer, nullptr);
+        kinoko_remove_device_listener(reinterpret_cast<KinokoDeviceListener*>(&kinoko_renderer));
+        state.renderer_initialized = false;
+    }
+    if (state.graphics_initialized) { kinoko_graphics_release(); state.graphics_initialized = false; }
+    if (state.com_initialized) { CoUninitialize(); state.com_initialized = false; }
+    if (state.timer_period) { timeEndPeriod(1); state.timer_period = false; }
+}
+extern "C" int kinoko_application_run(HINSTANCE instance, int show_command) {
+    using namespace kinoko::application;
+    kinoko_application_initialize_host();
+    kinoko::windows::HandleOwner singleton(CreateMutexA(nullptr, TRUE, kinoko_application_title()));
+    if (GetLastError() == ERROR_ALREADY_EXISTS) return 1;
+    char executable[MAX_PATH]{};
+    const DWORD length = GetModuleFileNameA(nullptr, executable, MAX_PATH);
+    if (length && length < MAX_PATH) {
+        if (auto* slash = std::strrchr(executable, '\\')) { slash[1] = 0; SetCurrentDirectoryA(executable); }
+    }
+    WNDCLASSEXA cls{};
+    cls.cbSize = sizeof(cls); cls.hInstance = instance; cls.lpszClassName = "Marisaland2";
+    cls.lpfnWndProc = window_proc;
+    cls.hIcon = cls.hIconSm = LoadIconA(instance, MAKEINTRESOURCEA(IDI_KINOKO));
+    cls.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+    cls.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+    if (!RegisterClassExA(&cls)) return 0;
+    const int width = 640 + GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CXDLGFRAME) + GetSystemMetrics(SM_CXBORDER);
+    const int height = 480 + GetSystemMetrics(SM_CYEDGE) + GetSystemMetrics(SM_CYDLGFRAME) + GetSystemMetrics(SM_CYBORDER) + GetSystemMetrics(SM_CYCAPTION);
+    HWND window = CreateWindowExA(WS_EX_APPWINDOW, cls.lpszClassName, kinoko_application_title(),
+        WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT,
+        width, height, nullptr, nullptr, instance, nullptr);
+    if (!window) return 0;
+    ShowWindow(window, show_command); UpdateWindow(window);
+    Configuration config;
+    config.window = window; config.instance = instance;
+    config.manager = static_cast<Manager*>(std::malloc(sizeof(Manager)));
+    if (config.manager) config.manager->methods = &manager_methods;
+    kinoko_application_open_archives();
+    if (!config.manager || !initialize(config)) MessageBoxA(window, kinoko_application_error(), "Error", MB_OK);
+    else message_loop();
+    kinoko_application_shutdown();
+    return 0;
+}

@@ -1,3 +1,4 @@
+#include "kinoko/application.h"
 #include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
@@ -1509,7 +1510,6 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
 
-int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
 int32_t function_401040(void);
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height);
@@ -1671,19 +1671,8 @@ int32_t function_40d520(int32_t lpFileName);
 int32_t function_40d560(int32_t lpBuffer, int32_t nNumberOfBytesToWrite);
 int32_t function_40d590(int32_t lDistanceToMove, int32_t dwMoveMethod);
 int32_t function_40d5b0(char a1);
-int32_t function_40d5e0(void);
-int32_t function_40d790(int32_t * a1, const void *config);
-void function_40d940(int32_t *state);
-int32_t function_40da60(void);
-BOOL function_40db30(unsigned char *state);
-int32_t function_40dbe0(void);
 
-LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPARAM a5);
-int32_t function_40e220(int32_t *state, char toggle);
-int32_t function_40e2b0(void);
-int32_t function_40e2d0(void);
 
-DWORD WINAPI function_40e320(LPVOID parameter);
 int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
                         uint32_t *a4, uint32_t *a5);
 
@@ -2284,8 +2273,6 @@ int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
 
 int32_t function_473010(void);
-LRESULT CALLBACK function_473af0(HWND a1, UINT a2, WPARAM a3, LPARAM a4);
-int32_t function_473b20(void);
 
 
 int32_t function_48a170(int32_t a1);
@@ -2873,43 +2860,6 @@ int32_t g829 = 0; // 0x51b6e0
 int32_t g830 = 0; // 0x51b6e8
 int32_t g831 = 0; // 0x51b6ec
 int32_t g832 = 0; // 0x51b6f0
-int32_t g833 = 0; // 0x51b708
-int32_t g834 = 0; // 0x51b710
-int32_t g835 = 0; // 0x51b714
-int32_t g836 = 0; // 0x51b718
-int32_t g837 = 0; // 0x51b71c
-int32_t g838 = 0; // 0x51b720
-int32_t g839 = 0; // 0x51b724
-int32_t g840 = 0; // 0x51b728
-int32_t g841 = 0; // 0x51b72c
-int32_t g842 = 0; // 0x51b730
-char g843 = 0; // 0x51b731
-int32_t g844 = 0; // 0x51b734
-char g845 = 0; // 0x51b735
-char g846 = 0; // 0x51b736
-int32_t g847 = 0; // 0x51b738
-int32_t g848 = 0; // 0x51b73c
-int32_t g849 = 0; // 0x51b740
-int32_t g850 = 0; // 0x51b744
-int32_t g851 = 0; // 0x51b748
-int32_t g852 = 0; // 0x51b74c
-int32_t g853 = 0; // 0x51b750
-char g854 = 0; // 0x51b754
-int32_t g855 = 0; // 0x51b758
-int32_t g856 = 0; // 0x51b760
-int32_t g857 = 0; // 0x51b768
-int32_t g858 = 0; // 0x51b76c
-int32_t g859 = 0; // 0x51b770
-int32_t g860 = 0; // 0x51b774
-int32_t g861 = 0; // 0x51b77c
-int32_t g862 = 0; // 0x51b780
-int32_t g863 = 0; // 0x51b784
-int32_t g864 = 0; // 0x51b788
-int32_t g867 = 0; // 0x51b798
-int32_t g868 = 0; // 0x51b79c
-struct retdec_RTL_CRITICAL_SECTION g869 = { 0 }; // 0x51b7a0
-int32_t g870 = 0; // 0x51b7b8
-int32_t g871 = 0; // 0x51b7bc
 int32_t g872 = 0; // 0x51b7c8
 int32_t g873 = 0; // 0x51b7cd
 char g874 = 0; // 0x51b7d0
@@ -3309,13 +3259,7 @@ struct vtable_4d5c80_type g40 = {
     .e1 = kinoko_sqrat_object_reference,
     .e2 = kinoko_sqrat_copy_object
 }; // 0x4d5c80
-struct vtable_4d5e88_type g41 = {
-    .e0 = function_45da00,
-    .e1 = function_45da40,
-    .e2 = function_43e100,
-    .e3 = function_473b20,
-    .e4 = function_45da50
-}; // 0x4d5e88
+ // 0x4d5e88
 struct vtable_4d9eb0_type g65 = {
     .e0 = (int32_t (*)(char))kinoko_sq_delete_refcounted,
     .e1 = __purecall
@@ -3581,13 +3525,11 @@ int32_t D3DXMatrixTranslation(int32_t * a1, float80_t a2, float80_t a3, float80_
 
 // The generated file split the original runtime object across unrelated
 // globals. Keep a real backing block for the fields addressed by this+N.
-__declspec(align(8)) static unsigned char g_retdec_runtime_state[0x200];
 /* CInputManager is a CRT-constructed global in the original image.  RetDec
    did not emit its constructor, so keep the receiver and its embedded
    containers in stable storage rather than passing an uninitialised ECX. */
 __declspec(align(8)) static unsigned char g_retdec_input_manager_state[0x600];
 static int g_retdec_runtime_initialized = 0;
-static int g_retdec_state_cs_initialized = 0;
 static int g_retdec_input_manager_initialized = 0;
 static int g_retdec_map_manager_initialized = 0;
 static int32_t g_retdec_startup_vm = 0;
@@ -3596,60 +3538,8 @@ static uint32_t g_retdec_actor_init_count;
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
 #define g_retdec_act_texture_slots kinoko_texture_slots
 
-static void retdec_sync_runtime_state_to_globals(const unsigned char *state);
-static void retdec_sync_globals_to_runtime_state(unsigned char *state);
 static void retdec_initialize_runtime_objects(void);
 // ------------------------ Functions -------------------------
-
-static void retdec_sync_runtime_state_to_globals(const unsigned char *state)
-{
-    if (state == NULL) {
-        return;
-    }
-    g833 = *(const int32_t *)(state + 0);
-    g843 = *(const char *)(state + 41);
-    g845 = *(const char *)(state + 45);
-    g846 = *(const char *)(state + 46);
-    g854 = *(const char *)(state + 76);
-    g855 = *(const int32_t *)(state + 80);
-    g856 = *(const int32_t *)(state + 88);
-    g857 = *(const int32_t *)(state + 96);
-    g858 = *(const int32_t *)(state + 100);
-    g859 = *(const int32_t *)(state + 104);
-    g860 = *(const int32_t *)(state + 108);
-    g861 = *(const int32_t *)(state + 116);
-    g862 = *(const int32_t *)(state + 120);
-    g863 = *(const int32_t *)(state + 124);
-    g864 = *(const int32_t *)(state + 128);
-    g867 = *(const int32_t *)(state + 144);
-    g870 = *(const int32_t *)(state + 176);
-    g871 = *(const int32_t *)(state + 180);
-}
-
-static void retdec_sync_globals_to_runtime_state(unsigned char *state)
-{
-    if (state == NULL) {
-        return;
-    }
-    *(int32_t *)(state + 0) = g833;
-    *(char *)(state + 41) = g843;
-    *(char *)(state + 45) = g845;
-    *(char *)(state + 46) = g846;
-    *(char *)(state + 76) = g854;
-    *(int32_t *)(state + 80) = g855;
-    *(int32_t *)(state + 88) = g856;
-    *(int32_t *)(state + 96) = g857;
-    *(int32_t *)(state + 100) = g858;
-    *(int32_t *)(state + 104) = g859;
-    *(int32_t *)(state + 108) = g860;
-    *(int32_t *)(state + 116) = g861;
-    *(int32_t *)(state + 120) = g862;
-    *(int32_t *)(state + 124) = g863;
-    *(int32_t *)(state + 128) = g864;
-    *(int32_t *)(state + 144) = g867;
-    *(int32_t *)(state + 176) = g870;
-    *(int32_t *)(state + 180) = g871;
-}
 
 static void retdec_initialize_runtime_objects(void)
 {
@@ -3657,7 +3547,6 @@ static void retdec_initialize_runtime_objects(void)
         return;
     }
 
-    memset(g_retdec_runtime_state, 0, sizeof(g_retdec_runtime_state));
 
     // These are the constructors normally reached through the original
     // C++ CRT initializer table. The replacement entry point does not run
@@ -3672,7 +3561,7 @@ static void retdec_initialize_runtime_objects(void)
        LoadSE.  Without this sentinel the reconstructed 470ab0 path derefs
        address 0x4 on its first lookup. */
     function_4d3f50();
-    function_40d5e0();
+    kinoko_application_construct();
     function_412890();
 
     /* MapManager is a CRT-constructed global in the original image.  Its
@@ -5123,634 +5012,7 @@ int32_t function_40d5b0(char a1) {
     return result;
 }
 
-// Address range: 0x40d5e0 - 0x40d78a
-int32_t function_40d5e0(void) {
-    g834=g835=g836=g837=0;
-    g842=0x10101;g844=1;
-    g838=g840=g839=g841=0;
-    g855=g856=g858=g860=0;
-    kinoko_initialize_scene_queue();
-    g868=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g869);
-    g863=g864=0;g854=1;
-    return (int32_t)&g833;
-}
-
-// Address range: 0x40d790 - 0x40d93e
-int32_t function_40d790(int32_t *state, const void *config) {
-    int32_t config_value;
-    int32_t *scene_manager;
-    int32_t *scene;
-    HANDLE resource_thread;
-    HANDLE game_thread;
-    HANDLE display_thread;
-    int32_t dinput_available;
-
-    if (state == NULL || config == NULL) {
-        return 0;
-    }
-
-    retdec_trace("40d790:begin");
-
-    memcpy((unsigned char *)state + 8, config, 0x28);
-    *(int32_t *)((unsigned char *)state + 0) =
-        *(int32_t *)((unsigned char *)state + 8);
-    *(int32_t *)((unsigned char *)state + 4) =
-        *(int32_t *)((unsigned char *)state + 12);
-    g874 = *(unsigned char *)((unsigned char *)state + 47) != 0;
-    *(int32_t *)((unsigned char *)state + 116) =
-        *(int32_t *)((unsigned char *)state + 28);
-    *(int32_t *)((unsigned char *)state + 120) =
-        *(int32_t *)((unsigned char *)state + 36);
-
-    if (g_retdec_state_cs_initialized == 0) {
-        InitializeCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        g_retdec_state_cs_initialized = 1;
-    }
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-
-    timeBeginPeriod(1);
-    kinoko_seed_random(timeGetTime());
-    retdec_trace("40d790:pre-coinit");
-    if (CoInitialize(NULL) < 0) {
-        retdec_trace("40d790:coinit-failed");
-        return 0;
-    }
-    function_408650((void *)(uintptr_t)*(int32_t *)
-        ((unsigned char *)state + 4),
-        (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0));
-    if (*(unsigned char *)((unsigned char *)state + 44) == 0) {
-        ShowCursor(FALSE);
-    }
-    *(unsigned char *)((unsigned char *)state + 76) = 1;
-
-    if (*(unsigned char *)((unsigned char *)state + 40) != 0) {
-        retdec_trace("40d790:d3d");
-        if ((char)function_4011b0(
-                (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-                *(int32_t *)((unsigned char *)state + 16),
-                *(int32_t *)((unsigned char *)state + 20)) == 0) {
-            retdec_trace("40d790:d3d-failed");
-            return 0;
-        }
-        function_401ae0();
-    }
-    if (*(unsigned char *)((unsigned char *)state + 41) != 0) {
-        retdec_trace("40d790:dinput");
-        retdec_trace("40d790:dinput-create");
-        dinput_available = function_408930(
-                (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-                (HINSTANCE)(uintptr_t)*(int32_t *)((unsigned char *)state + 4));
-        if ((char)dinput_available == 0) {
-            retdec_trace("40d790:dinput-create-failed");
-            retdec_trace("40d790:dinput-degraded");
-        } else {
-            retdec_trace("40d790:dinput-keyboard");
-            if ((char)function_408b30() == 0) {
-                retdec_trace("40d790:dinput-keyboard-failed");
-                retdec_trace("40d790:dinput-degraded");
-            }
-            retdec_trace("40d790:dinput-controllers");
-            if ((char)function_408bf0() == 0) {
-                retdec_trace("40d790:dinput-controllers-failed");
-            }
-            retdec_trace("40d790:dinput-mouse");
-            if ((char)function_408d00() == 0) {
-                retdec_trace("40d790:dinput-mouse-failed");
-            }
-            retdec_trace("40d790:dinput-ready");
-        }
-    }
-    if (*(unsigned char *)((unsigned char *)state + 42) != 0) {
-        int32_t audio_available;
-        retdec_trace("40d790:audio");
-        audio_available = kinoko_audio_initialize_device(
-            (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-            *(int32_t *)((unsigned char *)state + 24));
-        retdec_trace(audio_available != 0 ? "40d790:audio-ready" :
-                     "40d790:audio-failed");
-        if (audio_available == 0) {
-            retdec_trace("40d790:audio-degraded");
-        }
-    }
-    if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
-        function_412ca0();
-    }
-
-    *(int32_t *)((unsigned char *)state + 56) = (int32_t)timeGetTime();
-    config_value = *(int32_t *)((unsigned char *)state + 32);
-    *(int32_t *)((unsigned char *)state + 176) = config_value;
-    *(int32_t *)((unsigned char *)state + 124) = 0;
-    *(int32_t *)((unsigned char *)state + 128) = 0;
-    *(int32_t *)((unsigned char *)state + 180) = -1;
-
-    scene_manager = (int32_t *)(uintptr_t)
-        *(int32_t *)((unsigned char *)state + 116);
-    retdec_trace_i32("40d790:scene-manager", (int32_t)(uintptr_t)scene_manager);
-    if (scene_manager != NULL) {
-        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
-        retdec_trace_i32("40d790:scene-vtable",
-                         scene_manager_vtable != NULL ?
-                             (int32_t)(uintptr_t)scene_manager_vtable : 0);
-        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
-            retdec_trace_i32("40d790:scene-init-method",
-                             scene_manager_vtable[0]);
-            retdec_call_thiscall0(
-                (void *)scene_manager,
-                (void *)(uintptr_t)scene_manager_vtable[0]);
-            retdec_trace("40d790:scene-init-called");
-        }
-    }
-    scene_manager = (int32_t *)(uintptr_t)
-        *(int32_t *)((unsigned char *)state + 120);
-    if (scene_manager != NULL) {
-        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
-        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
-            retdec_call_thiscall0(
-                (void *)scene_manager,
-                (void *)(uintptr_t)scene_manager_vtable[0]);
-        }
-    }
-    retdec_trace("40d790:scene-init");
-    scene = (int32_t *)(uintptr_t)function_45da50(config_value);
-    retdec_trace_i32("40d790:scene-created",
-                     (int32_t)(uintptr_t)scene);
-    *(int32_t *)((unsigned char *)state + 128) =
-        (int32_t)(uintptr_t)scene;
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-    retdec_trace("40d790:threads");
-
-    resource_thread = CreateThread(NULL, 0, function_40e320, NULL, 0,
-        (LPDWORD)((unsigned char *)state + 112));
-    *(HANDLE *)((unsigned char *)state + 108) = resource_thread;
-    g860 = (int32_t)(uintptr_t)resource_thread;
-    if (resource_thread != NULL) {
-        SetThreadPriority(resource_thread, -15);
-    }
-    game_thread = CreateThread(NULL, 0,
-        (LPTHREAD_START_ROUTINE)function_40e2b0, NULL, 0,
-        (LPDWORD)((unsigned char *)state + 84));
-    *(HANDLE *)((unsigned char *)state + 80) = game_thread;
-    g855 = (int32_t)(uintptr_t)game_thread;
-    if (*(unsigned char *)((unsigned char *)state + 40) != 0) {
-        display_thread = CreateThread(NULL, 0,
-            (LPTHREAD_START_ROUTINE)function_40e2d0, NULL, 0,
-            (LPDWORD)((unsigned char *)state + 92));
-        *(HANDLE *)((unsigned char *)state + 88) = display_thread;
-        g856 = (int32_t)(uintptr_t)display_thread;
-        if (display_thread != NULL) {
-            SetThreadPriority(display_thread, -15);
-        }
-    }
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-    retdec_trace(resource_thread != NULL && game_thread != NULL
-                     ? "40d790:success"
-                     : "40d790:thread-failed");
-    return (resource_thread != NULL && game_thread != NULL) ? 1 : 0;
-}
-
-// Address range: 0x40d940 - 0x40da51
-void function_40d940(int32_t *state) {
-    if (state == NULL) {
-        return;
-    }
-
-    *(unsigned char *)((unsigned char *)state + 76) = 0;
-    g854 = 0;
-    if (g867 != 0) {
-        SetEvent((HANDLE)(uintptr_t)g867);
-    }
-    if (g857 != 0) {
-        SetEvent((HANDLE)(uintptr_t)g857);
-    }
-
-    // The original helper waits for each worker and closes its handle. The
-    // generated zero-argument calls lost the HANDLE* register argument, so
-    // perform that lifetime operation explicitly here.
-    if (g860 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g860, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g860);
-        g860 = 0;
-    }
-    if (g855 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g855, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g855);
-        g855 = 0;
-    }
-    if (g856 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g856, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g856);
-        g856 = 0;
-    }
-    retdec_sync_globals_to_runtime_state((unsigned char *)state);
-
-    int32_t object;
-    int32_t *vtable;
-    if (g_retdec_state_cs_initialized != 0) {
-        EnterCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        object = *(int32_t *)((unsigned char *)state + 124);
-        if (object != 0) {
-            vtable = *(int32_t **)(uintptr_t)object;
-            if (vtable != NULL && vtable[0] != 0) {
-                retdec_call_thiscall1(
-                    (void *)(uintptr_t)object,
-                    (void *)(uintptr_t)vtable[0], 1);
-            }
-            *(int32_t *)((unsigned char *)state + 124) = 0;
-        }
-        object = *(int32_t *)((unsigned char *)state + 128);
-        if (object != 0) {
-            vtable = *(int32_t **)(uintptr_t)object;
-            if (vtable != NULL && vtable[0] != 0) {
-                retdec_call_thiscall1(
-                    (void *)(uintptr_t)object,
-                    (void *)(uintptr_t)vtable[0], 1);
-            }
-            *(int32_t *)((unsigned char *)state + 128) = 0;
-        }
-        LeaveCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-    }
-
-    object = *(int32_t *)((unsigned char *)state + 116);
-    if (object != 0) {
-        vtable = *(int32_t **)(uintptr_t)object;
-        if (vtable != NULL && vtable[1] != 0) {
-            retdec_call_thiscall0(
-                (void *)(uintptr_t)object,
-                (void *)(uintptr_t)vtable[1]);
-        }
-        free((void *)(uintptr_t)object);
-        *(int32_t *)((unsigned char *)state + 116) = 0;
-    }
-    object = *(int32_t *)((unsigned char *)state + 120);
-    if (object != 0) {
-        vtable = *(int32_t **)(uintptr_t)object;
-        if (vtable != NULL && vtable[1] != 0) {
-            retdec_call_thiscall0(
-                (void *)(uintptr_t)object,
-                (void *)(uintptr_t)vtable[1]);
-        }
-        free((void *)(uintptr_t)object);
-        *(int32_t *)((unsigned char *)state + 120) = 0;
-    }
-    if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
-        ImmReleaseContext((HWND)(uintptr_t)g767, (HIMC)(uintptr_t)g534);
-    }
-    kinoko_audio_shutdown_device();
-    function_4089c0();
-    kinoko_renderer_before_reset(&kinoko_renderer, NULL);
-    kinoko_remove_device_listener((KinokoDeviceListener *)&kinoko_renderer);
-    function_401600();
-    CoUninitialize();
-    if (g_retdec_state_cs_initialized != 0) {
-        DeleteCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        g_retdec_state_cs_initialized = 0;
-    }
-}
-
-// Address range: 0x40da60 - 0x40db2a
-
-
-// Address range: 0x40db30 - 0x40dbd7
-BOOL function_40db30(unsigned char *state) {
-    HANDLE event_handle;
-    MSG message;
-
-    if (state == NULL) {
-        return FALSE;
-    }
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    if (event_handle == NULL) {
-        return FALSE;
-    }
-    while (*(volatile unsigned char *)(state + 76) != 0) {
-        retdec_bgm_update_fade();
-        if (PeekMessageA(&message, NULL, 0, 0, PM_NOREMOVE)) {
-            if (!GetMessageA(&message, NULL, 0, 0)) {
-                break;
-            }
-            TranslateMessage(&message);
-            DispatchMessageA(&message);
-            continue;
-        }
-        kinoko_graphics_poll();
-        WaitForSingleObject(event_handle, 16);
-    }
-    CloseHandle(event_handle);
-    return TRUE;
-}
-
-// Address range: 0x40dbe0 - 0x40df4c
-static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter);
-int32_t function_40dbe0(void) {
-    return (int32_t)kinoko_run_game_math(retdec_game_loop_fixed, NULL);
-}
-
-
-static int32_t retdec_render_scene_frame(void)
-{
-    int32_t scene;
-    int32_t *vtable;
-    int32_t result;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    scene = g863;
-    if (scene == 0 || kinoko_graphics.device == 0)
-        return 0;
-    vtable = *(int32_t **)(uintptr_t)scene;
-    if (vtable == NULL || vtable[2] == 0)
-        return 0;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 3)
-        retdec_trace("render:scene-vtable2");
-    result = retdec_call_thiscall0_result(
-        (void *)(uintptr_t)scene,
-        (void *)(uintptr_t)vtable[2]);
-    if (trace_index <= 3)
-        retdec_trace_i32("render:scene-result", result);
-    return (result & 1) != 0;
-}
-
-static void retdec_activate_pending_scene(void)
-{
-    if (g871 != g870) {
-        function_40da60();
-        retdec_trace("scene:activated");
-    }
-}
-
-static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
-{
-    LONG frame_index = 0;
-    HANDLE frame_event;
-
-    (void)parameter;
-    retdec_trace("game:entry");
-    frame_event = (HANDLE)(intptr_t)function_412b80(0);
-    kinoko_math_checkpoint("event-created",0);
-    while (g854 != 0) {
-        int32_t *vtable;
-        unsigned char can_draw;
-
-        if (frame_event != NULL) {
-            if (WaitForSingleObject(frame_event, INFINITE) != WAIT_OBJECT_0)
-                break;
-        } else {
-            Sleep(16);
-        }
-
-        kinoko_math_checkpoint("frame-ready",0);
-        if (g843 != 0)
-            function_408c80();
-
-        kinoko_math_checkpoint("input-done",0);
-        if (g861 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g861;
-            if (vtable != NULL && vtable[2] != 0)
-                retdec_call_thiscall0(
-                    (void *)(uintptr_t)g861,
-                    (void *)(uintptr_t)vtable[2]);
-        }
-
-        kinoko_math_checkpoint("manager-done",0);
-        if (g871 != g870) {
-            if (g862 == 0) {
-                retdec_activate_pending_scene();
-            } else {
-                vtable = *(int32_t **)(uintptr_t)g862;
-                if (vtable != NULL && vtable[3] != 0 &&
-                    (retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[3]) & 1) != 0)
-                    retdec_activate_pending_scene();
-            }
-        } else {
-            if (g862 != 0) {
-                vtable = *(int32_t **)(uintptr_t)g862;
-                if (vtable != NULL && vtable[2] != 0)
-                    retdec_call_thiscall0(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[2]);
-            }
-            if (g863 != 0) {
-                vtable = *(int32_t **)(uintptr_t)g863;
-                if (vtable != NULL && vtable[1] != 0)
-                    retdec_call_thiscall0(
-                        (void *)(uintptr_t)g863,
-                        (void *)(uintptr_t)vtable[1]);
-            }
-        }
-
-        kinoko_math_checkpoint("scene-done",0);
-        kinoko_renderer.present_pending = 0;
-        can_draw = 1;
-        if (g845 == 0 && g863 != 0)
-            can_draw = (unsigned char)(
-                retdec_render_scene_frame() != 0);
-        if (g845 == 0 && g861 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g861;
-            if (vtable != NULL && vtable[3] != 0)
-                can_draw &= (unsigned char)(
-                    retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g861,
-                        (void *)(uintptr_t)vtable[3]) & 1);
-        }
-        if (g845 == 0 && g862 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g862;
-            if (vtable != NULL && vtable[4] != 0)
-                can_draw &= (unsigned char)(
-                    retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[4]) & 1);
-        }
-        if (g845 == 0 && can_draw != 0) {
-            kinoko_renderer.present_pending = 1;
-            g852++;
-            if (g857 != 0)
-                SetEvent((HANDLE)(uintptr_t)g857);
-        }
-        kinoko_math_checkpoint("render-done",0);
-        ++g848;
-        ++frame_index;
-        if (frame_index <= 3 || (frame_index & 63) == 0)
-            retdec_trace_i32("game:frame", frame_index);
-    }
-    if (frame_event != NULL)
-        function_412c10((int32_t)(intptr_t)frame_event);
-    retdec_trace("game:exit");
-    return 0;
-}
-
-static DWORD WINAPI retdec_display_loop_fixed(LPVOID parameter)
-{
-    HANDLE wake_event;
-    LONG frame_index = 0;
-
-    (void)parameter;
-    retdec_trace("display:entry");
-    wake_event = CreateEventA(NULL, FALSE, FALSE, NULL);
-    g857 = (int32_t)(uintptr_t)wake_event;
-    retdec_trace_i32("display:event", g857);
-    if (wake_event == NULL)
-        return 0;
-
-    while (g854 != 0) {
-        if (WaitForSingleObject(wake_event, INFINITE) != WAIT_OBJECT_0)
-            break;
-        if (g854 == 0)
-            break;
-        if (kinoko_renderer.present_pending != 0 && function_4017b0() != 0)
-            ++g852;
-        ++frame_index;
-        if (frame_index <= 3 || (frame_index & 63) == 0)
-            retdec_trace_i32("display:frame", frame_index);
-    }
-
-    CloseHandle(wake_event);
-    if (g857 == (int32_t)(uintptr_t)wake_event)
-        g857 = 0;
-    retdec_trace("display:exit");
-    return 0;
-}
-
-// Address range: 0x40e130 - 0x40e21b
-LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPARAM a5) {
-    // The original function is a regular Win32 window procedure. The old
-    // RetDec output modeled its register arguments as a fake stack frame,
-    // which caused the default window procedure to receive invalid values.
-    if (a1 != NULL && *(unsigned char *)((unsigned char *)a1 + 43) != 0 &&
-        (char)kinoko_ime_dispatch((int32_t)(uintptr_t)a2, a3, (uint32_t)a4, (int32_t)a5) != 0) {
-        return 0;
-    }
-
-    if (a3 == WM_SYSKEYDOWN) {
-        if (a4 == VK_RETURN) {
-            function_40e220(a1, (char)(kinoko_graphics.present.Windowed == 0));
-            return 0;
-        }
-        if (a4 != VK_F4) {
-            return 0;
-        }
-        return DefWindowProcA(a2, a3, a4, a5);
-    }
-    if (a3 == WM_CREATE || a3 == WM_NCMOUSEMOVE || a3 == WM_DISPLAYCHANGE) {
-        return 0;
-    }
-    if (a3 == WM_DESTROY) {
-        PostQuitMessage(0);
-        return 0;
-    }
-    if (a3 == WM_SYSCOMMAND) {
-        if (a4 == SC_MONITORPOWER || a4 == SC_SCREENSAVE) {
-            return 1;
-        }
-        return DefWindowProcA(a2, a3, a4, a5);
-    }
-    if (a3 == 642) {
-        return 0;
-    }
-    if (a3 == WM_QUIT) {
-        return 0;
-    }
-    return DefWindowProcA(a2, a3, a4, a5);
-}
-
-// Address range: 0x40e220 - 0x40e2a4
-int32_t function_40e220(int32_t *state, char toggle) {
-    bool old_fullscreen;
-
-    if (state == NULL) {
-        return 0;
-    }
-    old_fullscreen = kinoko_graphics.present.Windowed == 0;
-    if ((toggle != 0 && kinoko_graphics.present.Windowed != 0) || (toggle == 0 && kinoko_graphics.present.Windowed == 0)) {
-        return 0;
-    }
-
-    EnterCriticalSection((LPCRITICAL_SECTION)
-        ((unsigned char *)state + 152));
-    function_4014d0();
-    LeaveCriticalSection((LPCRITICAL_SECTION)
-        ((unsigned char *)state + 152));
-
-    if (*(unsigned char *)((unsigned char *)state + 44) != 0) {
-        if (old_fullscreen && kinoko_graphics.present.Windowed != 0) {
-            ShowCursor(TRUE);
-            return 1;
-        }
-        if (!old_fullscreen && kinoko_graphics.present.Windowed == 0) {
-            ShowCursor(FALSE);
-            return 0;
-        }
-    }
-    return kinoko_graphics.present.Windowed != 0;
-}
-
-// Address range: 0x40e2b0 - 0x40e2cc
-int32_t function_40e2b0(void) {
-    // 0x40e2b0
-    retdec_trace("40e2b0:entry");
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40e2bc
-        retdec_trace("40e2b0:before-game");
-        function_40dbe0();
-        retdec_trace("40e2b0:after-game");
-        CoUninitialize();
-    }
-    // 0x40e2c7
-    return 0;
-}
-
-// Address range: 0x40e2d0 - 0x40e2ec
-int32_t function_40e2d0(void) {
-    // 0x40e2d0
-    retdec_trace("40e2d0:entry");
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40e2dc
-        retdec_trace("40e2d0:before-display");
-        retdec_display_loop_fixed(NULL);
-        retdec_trace("40e2d0:after-display");
-        CoUninitialize();
-    }
-    // 0x40e2e7
-    return 0;
-}
-
-
-// Address range: 0x40e320 - 0x40e3eb
-DWORD WINAPI function_40e320(LPVOID parameter) {
-    HANDLE event_handle;
-
-    (void)parameter;
-    retdec_trace("40e320:entry");
-    if (CoInitialize(NULL) < 0) {
-        retdec_trace("40e320:coinit-failed");
-        return 0;
-    }
-
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    retdec_trace_i32("40e320:event", (int32_t)(uintptr_t)event_handle);
-    g867 = (int32_t)(uintptr_t)event_handle;
-    if (g_retdec_runtime_initialized != 0) {
-        *(int32_t *)(g_retdec_runtime_state + 144) = g867;
-    }
-    if (event_handle != NULL) {
-        while (g854 != 0) {
-            WaitForSingleObject(event_handle, INFINITE);
-
-            kinoko_destroy_retired_scenes();
-        }
-        CloseHandle(event_handle);
-    }
-    CoUninitialize();
-    return 0;
-}
+// Application lifecycle and worker loops: application_runtime.cpp.
 
 // Address range: 0x40e3f0 - 0x40e454
 
@@ -9932,7 +9194,7 @@ void retdec_trace_star_state(const char *phase, int32_t actor) {
         observed[index].samples=0;
         observed[index].hits=-1;
     }
-    if(!release && ((observed[index].hits==hits && g848%10!=0) || observed[index].samples>=256)) return;
+    if(!release && ((observed[index].hits==hits && kinoko_application_frame_count()%10!=0) || observed[index].samples>=256)) return;
     observed[index].hits=hits;
     ++observed[index].samples;
     sprite=*(int32_t *)(intptr_t)(actor+204);
@@ -9941,7 +9203,7 @@ void retdec_trace_star_state(const char *phase, int32_t actor) {
         "hits=(%d,%d,%d,%d) bounds=(%.6g,%.6g,%.6g,%.6g) "
         "active=%d visible=%d release=%d priority=%d alpha=%d texture=%d spriteY=(%.6g,%.6g) "
         "mapHeight=%d camera=(%.6g,%.6g,%.6g,%.6g)",
-        g848,phase,handle,*(float *)(intptr_t)(actor+240),*(float *)(intptr_t)(actor+244),
+        kinoko_application_frame_count(),phase,handle,*(float *)(intptr_t)(actor+240),*(float *)(intptr_t)(actor+244),
         *(float *)(intptr_t)(actor+256),*(float *)(intptr_t)(actor+260),
         *(int32_t *)(intptr_t)(actor+284),*(int32_t *)(intptr_t)(actor+288),
         *(int32_t *)(intptr_t)(actor+292),hits,
@@ -9986,7 +9248,7 @@ static void retdec_trace_invalid_actor(const char *phase, int32_t actor) {
             "actor:invalid-state frame=%d phase=%s actor=%08X take=%d "
             "xy=%08X,%08X v=%08X,%08X parentDelta=%08X,%08X free=%08X,%08X "
             "bounds=%08X,%08X,%08X,%08X step=%08X,%08X",
-            g848,phase,(uint32_t)actor,*(int32_t *)(intptr_t)(actor+208),
+            kinoko_application_frame_count(),phase,(uint32_t)actor,*(int32_t *)(intptr_t)(actor+208),
             bits[0],bits[1],bits[2],bits[3],bits[4],bits[5],bits[6],bits[7],
             bits[8],bits[9],bits[10],bits[11],
             *(uint32_t *)(intptr_t)(actor+112),*(uint32_t *)(intptr_t)(actor+116));
@@ -10065,7 +9327,7 @@ void kinoko_actor_trace_step_end(KinokoActor *receiver, int32_t step_result, int
                 sprintf_s(message, sizeof(message),
                     "actor:update-failed frame=%d actor=%08X id=%X take=%d "
                     "xy=(%.3f,%.3f) v=(%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f)",
-                    g848, (uint32_t)actor, *(uint32_t *)(intptr_t)(actor + 224),
+                    kinoko_application_frame_count(), (uint32_t)actor, *(uint32_t *)(intptr_t)(actor + 224),
                     *(int32_t *)(intptr_t)(actor + 208),
                     *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
                     *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
@@ -10188,7 +9450,7 @@ static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
     int32_t node;
     int32_t value;
 
-    if (actor == 0 || g848 < 540 || g848 > 820 || (g848 % 10) != 0)
+    if (actor == 0 || kinoko_application_frame_count() < 540 || kinoko_application_frame_count() > 820 || (kinoko_application_frame_count() % 10) != 0)
         return;
     id = *(int32_t *)(intptr_t)(actor + 224);
     if (id < 0x200 || id > 0x207)
@@ -10196,7 +9458,7 @@ static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
 
     frame = *(int32_t *)(intptr_t)(actor + 204);
     node = *(int32_t *)(intptr_t)(actor + 200);
-    retdec_trace_i32("actor:diag-frame-counter", g848);
+    retdec_trace_i32("actor:diag-frame-counter", kinoko_application_frame_count());
     retdec_trace_i32("actor:diag-phase", phase);
     retdec_trace_i32("actor:diag-id", id);
     retdec_trace_i32("actor:diag-address", actor);
@@ -10262,7 +9524,7 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
     if (!transition && *(float *)(intptr_t)(actor + 256) == 0 && *(float *)(intptr_t)(actor + 260) == 0 &&
         *(float *)(intptr_t)(actor + 304) >= 12 &&
         !(*(int32_t *)(intptr_t)(actor + 288) && *(int32_t *)(intptr_t)(actor + 296)) &&
-        g848 % 60 != 0)
+        kinoko_application_frame_count() % 60 != 0)
         return;
     if (InterlockedIncrement(&count) > 6000 && !transition)
         return;
@@ -10272,7 +9534,7 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
         "actor:player-state frame=%d phase=%s actor=%08X take=%d xy=(%.3f,%.3f) "
         "v=(%.3f,%.3f) free=(%.3f,%.3f) hits=(%d,%d,%d,%d) flags=%08X "
         "bounds=(%.3f,%.3f,%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f) xyBits=%08X,%08X",
-        g848, phase, (uint32_t)actor, *(int32_t *)(intptr_t)(actor + 208),
+        kinoko_application_frame_count(), phase, (uint32_t)actor, *(int32_t *)(intptr_t)(actor + 208),
         *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
         *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
         *(float *)(intptr_t)(actor + 304), *(float *)(intptr_t)(actor + 308),
@@ -12136,116 +11398,7 @@ int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
 // Type:          constructor
 
 
-// Address range: 0x473af0 - 0x473b11
-LRESULT CALLBACK function_473af0(HWND a1, UINT a2, WPARAM a3, LPARAM a4) {
-    // 0x473af0
-    return function_40e130(
-        (int32_t *)g_retdec_runtime_state, a1, a2, a3, a4);
-}
-
-// Address range: 0x473b20 - 0x473b23
-// From class:    .?AVSceneManager@@
-// Type:          virtual member function
-int32_t function_473b20(void) {
-    // 0x473b20
-    int32_t v1; // 0x473b20
-    return v1 & -256 | 1;
-}
-
-// Address range: 0x473b30 - 0x473dd7
-int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x473b30
-    int32_t config[10] = { 0 };
-    int32_t *scene_manager = NULL;
-    int32_t *scene_manager_storage;
-
-    retdec_initialize_runtime_objects();
-    CreateMutexA(NULL, TRUE, g43);
-    if (GetLastError() == 183) {
-        // 0x473b6a
-        return 1;
-    }
-    // 0x473b7e
-    char lpFilename[260] = { 0 }; // bp-272, 0x473b30
-    DWORD module_path_length = GetModuleFileNameA(
-        NULL, lpFilename, (DWORD)sizeof(lpFilename));
-    if (module_path_length != 0 && module_path_length < sizeof(lpFilename)) {
-        DWORD separator_index = module_path_length;
-        while (separator_index != 0 &&
-               lpFilename[separator_index - 1] != '\\') {
-            --separator_index;
-        }
-        if (separator_index != 0) {
-            lpFilename[separator_index] = '\0';
-            SetCurrentDirectoryA(lpFilename);
-        }
-    }
-    int32_t v1 = GetSystemMetrics(45); // 0x473bbc
-    int32_t v2 = GetSystemMetrics(7); // 0x473bc2
-    int32_t v3 = GetSystemMetrics(5); // 0x473bc8
-    int32_t v4 = GetSystemMetrics(46); // 0x473bd9
-    int32_t v5 = GetSystemMetrics(8); // 0x473bdf
-    int32_t v6 = GetSystemMetrics(6); // 0x473be5
-    int32_t v7 = GetSystemMetrics(4); // 0x473beb
-    HINSTANCE hInstance = (HINSTANCE)(intptr_t)a1;
-    WNDCLASSEXA window_class = { 0 };
-    window_class.cbSize = sizeof(window_class);
-    window_class.hInstance = hInstance;
-    window_class.lpszClassName = "Marisaland2";
-    window_class.lpfnWndProc = function_473af0;
-    window_class.style = 0;
-    window_class.hIcon = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
-    window_class.hIconSm = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
-    window_class.hCursor = LoadCursorA(NULL, (LPCSTR)0x7f00);
-    window_class.lpszMenuName = NULL;
-    window_class.cbClsExtra = 0;
-    window_class.cbWndExtra = 0;
-    window_class.hbrBackground = (HBRUSH)GetStockObject(4);
-    if (RegisterClassExA(&window_class) == 0) {
-        // 0x473dc2
-        return 0;
-    }
-    HWND windowHandle = CreateWindowExA(0x40000, "Marisaland2", g43, 0xca0000, -0x80000000, -0x80000000, v1 + 640 + v2 + v3, v4 + 480 + v5 + v6 + v7, NULL, NULL, hInstance, NULL); // 0x473cbe
-    if (windowHandle == NULL) {
-        // 0x473dc2
-        return 0;
-    }
-    // 0x473cce
-    ShowWindow(windowHandle, a4);
-    UpdateWindow(windowHandle);
-    config[0] = (int32_t)(intptr_t)windowHandle;
-    config[1] = (int32_t)(intptr_t)hInstance;
-    config[8] = 0x00010101;
-    /* WinMain writes 1, then sets byte 1 to 0 and byte 3 to 1.  The final
-       DWORD is therefore 0x01000001; its high byte selects DAT resources. */
-    config[9] = 0x01000001;
-
-    scene_manager_storage = (int32_t *)(uintptr_t)
-        _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (scene_manager_storage != NULL) {
-        *scene_manager_storage = (int32_t)(intptr_t)&g41;
-        scene_manager = scene_manager_storage;
-    }
-    config[5] = (int32_t)(intptr_t)scene_manager;
-
-    // 0x473d46
-    function_407360("6kinoko_a.dat");
-    function_407360("6kinoko_b.dat");
-    function_407360("6kinoko_c.dat");
-    retdec_string_assign_n(&g554, ".cv4", 4);
-    if ((char)function_40d790(
-            (int32_t *)g_retdec_runtime_state, config) == 0) {
-        // 0x473da6
-        MessageBoxA(windowHandle, g42, "Error", 0);
-    } else {
-        // 0x473d9a
-        function_40db30(g_retdec_runtime_state);
-    }
-    // 0x473db8
-    function_40d940((int32_t *)g_retdec_runtime_state);
-    // 0x473dc2
-    return 0;
-}
+// Window procedure / WinMain: application_runtime.cpp and windows_entry.cpp.
 
 // Address range: 0x473dd8 - 0x473dde
 
@@ -16106,4 +15259,15 @@ void kinoko_actor_manager_trace_actor(int32_t phase, KinokoActor *actor, KinokoC
     retdec_trace_actor_window_state(phase, (int32_t)(intptr_t)actor, mask);
     retdec_trace_player_state(phase == 1 ? "before-script" : phase == 2 ? "after-script" : "after-motion",
         (int32_t)(intptr_t)actor, (int32_t)(intptr_t)camera);
+}
+
+// Explicit C-host boundaries: native app code does not index RetDec globals.
+void kinoko_application_initialize_host(void) { retdec_initialize_runtime_objects(); }
+const char *kinoko_application_title(void) { return g43; }
+const char *kinoko_application_error(void) { return g42; }
+void kinoko_application_open_archives(void) {
+    function_407360("6kinoko_a.dat");
+    function_407360("6kinoko_b.dat");
+    function_407360("6kinoko_c.dat");
+    retdec_string_assign_n(&g554, ".cv4", 4);
 }
