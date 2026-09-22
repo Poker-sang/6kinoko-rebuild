@@ -11,6 +11,7 @@ typedef struct KinokoInputCluster {
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern const KinokoInputDeviceMethods kinoko_input_cluster_methods;
 void kinoko_input_cluster_construct(KinokoInputCluster *cluster);
 void kinoko_input_cluster_clear(KinokoInputCluster *cluster);
 void kinoko_input_cluster_append(KinokoInputCluster *cluster, KinokoInputDevice *device);

@@ -3,7 +3,7 @@
 #include <limits>
 #include <cstdio>
 #define CHECK(x) do { if(!(x)) { std::fprintf(stderr,"cluster line %d\n",__LINE__);return 1; } } while(0)
-extern "C" int32_t g35[2]{};
+extern "C" const KinokoInputDeviceMethods kinoko_input_device_methods{};
 int main() {
     KinokoInputCluster cluster{},copy{};
     KinokoInputDevice first{},second{},third{};

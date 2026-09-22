@@ -3502,7 +3502,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     int32_t closure[3], actors[2];
     /* This fixture skips game startup, but Update always visits Input first. */
     const int32_t input = PTR(kinoko_game_objects()->input);
-    kinoko_input_devices_construct(input);
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(input));
     kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(input + 196));
     kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(input + 392));
     const int32_t saved_stages=g603,saved_stage_count=g604;
@@ -3541,7 +3541,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(input + 392));
     kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(input + 196), NULL, 0);
-    kinoko_input_devices_destroy(input);
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(input));
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
 }
@@ -4361,9 +4361,9 @@ static int test_physical_input(void) {
 
 static int test_input_configuration(void) {
     int32_t manager[384]={0};
-    kinoko_input_devices_construct(PTR(manager));
-    kinoko_input_devices_resize(PTR(manager),2);
-    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)kinoko_input_devices_begin(PTR(manager));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(manager)));
+    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(manager)),2);
+    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(manager)));
     char path[MAX_PATH]; GetModuleFileNameA(NULL,path,MAX_PATH);
     char *filename=strrchr(path,'\\'); CHECK(filename!=NULL);
     sprintf_s(filename+1,MAX_PATH-(filename+1-path),"input-contract-%lu.dat",GetCurrentProcessId());
@@ -4386,18 +4386,18 @@ static int test_input_configuration(void) {
     g_retdec_keyboard_state[149]=0x80;
     CHECK(function_46bc90(PTR(manager),-1,3)==1 && manager[8]==149);
     memcpy(g_retdec_keyboard_state,previous,256); kinoko_input_snapshot.controller_count=old_count;
-    kinoko_input_devices_destroy(PTR(manager));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(manager)));
     puts("PASS: Input config two-record format/broadcast, assignment offsets and original excluded keys");
     return 0;
 }
 
 static int test_input_copy(void) {
     int32_t source[378]={0}, target[378]={0}, empty[378]={0};
-    kinoko_input_devices_construct(PTR(source));
-    kinoko_input_devices_construct(PTR(target));
-    kinoko_input_devices_construct(PTR(empty));
-    kinoko_input_devices_resize(PTR(source),2);
-    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)kinoko_input_devices_begin(PTR(source));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(source)));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(target)));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(empty)));
+    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(source)),2);
+    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(source)));
     unsigned char keys[9]={3,7,11,19,23,29,31,37,41};
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(source)));
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(target)));
@@ -4411,7 +4411,7 @@ static int test_input_copy(void) {
     kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(PTR(empty)+392));
     memset((char*)source+392,0x35,1024);
     memset((char*)source+1436,0x47,76);
-    devices[0][0]=devices[1][0]=PTR(g35);
+    devices[0][0]=devices[1][0]=PTR(&kinoko_input_device_methods);
     devices[0][1]=101; devices[1][41]=303;
     source[48]=12345; target[48]=54321; /* vector allocator byte is not copied */
     kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
@@ -4422,7 +4422,7 @@ static int test_input_copy(void) {
     for(int i=0;i<9;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
     source[357]=45678; target[357]=87654;
     ((char*)source)[388]=9; ((char*)source)[1432]=1; ((char*)source)[1434]=3;
-    CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)source)==PTR(target));
     CHECK(target[3]==0x2222 && target[49]==0x4444);
     CHECK(target[48]==54321 && target[91]==0x6666 && target[357]==87654);
     CHECK(memcmp((char*)target+16,(char*)source+16,164)==0);
@@ -4430,7 +4430,7 @@ static int test_input_copy(void) {
     CHECK(memcmp((char*)target+392,(char*)source+392,1024)==0);
     CHECK(memcmp((char*)target+1436,(char*)source+1436,76)==0);
     CHECK(target[45]!=source[45] && target[354]!=source[354] && target[92]!=source[92]);
-    CHECK(memcmp((void*)(intptr_t)kinoko_input_devices_begin(PTR(target)),devices,336)==0);
+    CHECK(memcmp((void*)(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target))),devices,336)==0);
     CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
     for(int i=0;i<9;++i) CHECK(kinoko_input_keys_at((KinokoKeyTracker *)(intptr_t)(PTR(target)+392),i)==keys[i]);
     CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
@@ -4438,21 +4438,21 @@ static int test_input_copy(void) {
     for(int i=0;i<40;++i)
         CHECK(kinoko_input_cluster_at((KinokoInputCluster *)(intptr_t)(PTR(target)+196),i)==(KinokoInputDevice*)devices[i%2]);
     {
-        int32_t buffer=kinoko_input_devices_begin(PTR(target)), queue=target[92], byte_buffer=target[354];
-        kinoko_input_devices_resize(PTR(source),1);
+        int32_t buffer=(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target))), queue=target[92], byte_buffer=target[354];
+        kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(source)),1);
         kinoko_input_keys_clear((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
         for(int i=0;i<4;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
         CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
         kinoko_input_cluster_clear((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
         kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(source)+196),(KinokoInputDevice *)(intptr_t)(PTR(devices[0])));
         devices[0][1]=909;
-        CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
-        CHECK(kinoko_input_devices_begin(PTR(target))==buffer && kinoko_input_devices_end(PTR(target))==buffer+168);
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)source)==PTR(target));
+        CHECK((int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer && (int32_t)(intptr_t)kinoko_input_devices_end((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer+168);
         CHECK(target[92]==queue && kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==1 && target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==4);
         CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
-        CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && kinoko_input_devices_begin(PTR(target))==buffer);
-        CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
-        CHECK(kinoko_input_devices_begin(PTR(target))==kinoko_input_devices_end(PTR(target)));
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)target)==PTR(target) && (int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer);
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)empty)==PTR(target));
+        CHECK((int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==(int32_t)(intptr_t)kinoko_input_devices_end((KinokoInputManager *)(intptr_t)(PTR(target))));
         CHECK(kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==0);
         CHECK(target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==0);
     }
@@ -4465,9 +4465,9 @@ static int test_input_copy(void) {
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(target)+392));
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(empty)+392));
-    kinoko_input_devices_destroy(PTR(source));
-    kinoko_input_devices_destroy(PTR(target));
-    kinoko_input_devices_destroy(PTR(empty));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(source)));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(target)));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(empty)));
     puts("PASS: Input copy owns vectors and native deque while keeping shallow device pointers");
     return 0;
 }
@@ -4642,7 +4642,7 @@ static int test_input_aggregation(void) {
     for(int i=18;i<42;++i) CHECK(cluster[i]==0);
     CHECK(((uint8_t*)cluster)[192]==30); /* Last device survives an empty frame. */
     CHECK(kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(cluster)),NULL,0)==(KinokoInputCluster*)cluster);
-    CHECK(cluster[0]==PTR(g35) && cluster[43]==0);
+    CHECK(cluster[0]==PTR(&kinoko_input_device_methods) && cluster[43]==0);
     puts("PASS: native InputCluster deque, signed axes, 12 buttons, release edges and device precedence");
     return 0;
 }

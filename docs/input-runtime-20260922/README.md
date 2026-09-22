@@ -67,3 +67,26 @@ the last device byte on an empty frame. Deletion frees only the deque owner,
 restores the base method identity and optionally frees the receiver itself.
 input_cluster_contract covers ties, releases, axis NaN, signed limits, copied
 borrows and empty frames; it is compiled, never executed by this batch.
+
+## Batch 4: Input owner, copy and real virtual methods
+
+KinokoInputManager restores the 1512-byte layout: 12-byte SqPlus boundary,
+keyboard +12, native vector owner +180, cluster +196, keys +392 and published
+state +1436. Published counters, release bytes and digits have named fields.
+The old vector/deque/key padding stays reserved and is not copied as payload.
+Device vectors own normally constructed elements with virtual destruction;
+copy construction installs base methods while assignment preserves destination
+methods and copies only assignment/state. The new methods tables contain real
+typed virtual entries instead of g35/g30 integer arrays.
+
+46ED80/46EBD0 becomes pointer-valued kinoko_input_manager_assign, preserving
+SqPlus external-reference assignment first, then keyboard, device owner,
+cluster, last-device byte, key owner and published state. A single explicit
+copy callback converts at the still-integer shared SqPlus descriptor ABI.
+Container APIs take true manager pointers and return borrowed device pointers.
+Legacy runtime and historical fixtures temporarily retain conversions at their
+integer-layout boundary; later batches remove those runtime conversions.
+
+input_copy_contract covers owner independence, retained buffer/virtual identity,
+shallow cluster targets, reserved fields, self-assignment and virtual destruction
+on shrink. It and the existing stage copy fixture are compiled only.

@@ -586,10 +586,6 @@ struct vtable_4d5a04_type {
     int32_t (__fastcall *e4)(int32_t, void *);
 };
 
-struct vtable_4d5a1c_type {
-    int32_t (__fastcall *e0)(int32_t, void *, unsigned char);
-    int32_t (*e1)();
-};
 
 struct vtable_4d5a5c_type {
     int32_t (__fastcall *e0)(int32_t, void *, unsigned char);
@@ -2063,7 +2059,6 @@ int32_t function_46d950(void);
 
 static int32_t function_46e6f0_this(int32_t this_ptr);
 
-int32_t function_46ed80(int32_t a1, int32_t result);
 
 
 
@@ -3005,10 +3000,6 @@ struct vtable_4d5a04_type g29 = {
     .e3 = kinoko_method_lookup_actor,
     .e4 = kinoko_method_actor_pool_count
 }; // 0x4d5a04
-struct vtable_4d5a1c_type g30 = {
-    .e0 = (int32_t (__fastcall *)(int32_t, void*, unsigned char))kinoko_input_cluster_delete,
-    .e1 = (int32_t (*)())&kinoko_input_cluster_update
-}; // 0x4d5a1c
 struct vtable_4d5a5c_type g31 = {
     .e0 = kinoko_method_actor_owner_delete,
     .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
@@ -7560,8 +7551,8 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g16;
     *(int32_t *)(intptr_t)(this_ptr + 4) = g483;
     *(int32_t *)(intptr_t)(this_ptr + 8) = g484;
-    *(int32_t *)(intptr_t)(this_ptr + 12) = (int32_t)(intptr_t)&g35;
-    *(int32_t *)(intptr_t)(this_ptr + 196) = (int32_t)(intptr_t)&g30;
+    *(int32_t *)(intptr_t)(this_ptr + 12) = (int32_t)(intptr_t)&kinoko_input_device_methods;
+    *(int32_t *)(intptr_t)(this_ptr + 196) = (int32_t)(intptr_t)&kinoko_input_cluster_methods;
     /* CInputManager always owns one logical default keyboard record, even
        when DirectInput enumerates zero optional controllers. */
     default_record[0] = 0xff;
@@ -7578,11 +7569,11 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     default_record[11] = 0xff;
     memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
            sizeof(default_record));
-    kinoko_input_devices_construct(this_ptr);
-    kinoko_input_devices_resize(this_ptr, (uint32_t)kinoko_input_snapshot.controller_count);
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(this_ptr));
+    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(this_ptr), (uint32_t)kinoko_input_snapshot.controller_count);
     kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(this_ptr + 196));
     for (int32_t i=0; i<kinoko_input_snapshot.controller_count; ++i) {
-        int32_t device=kinoko_input_devices_begin(this_ptr)+168*i;
+        int32_t device=(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(this_ptr))+168*i;
         uint32_t record[17]={0};
         record[0]=(uint8_t)i;
         for (int32_t key=0; key<12; ++key) record[key+5]=key;
@@ -11801,8 +11792,12 @@ const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
 }
 
 /* Original Input ClassType identity, shared by class and property registration. */
+static int32_t kinoko_input_copy_abi(int32_t destination, int32_t source) {
+    return (int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)(intptr_t)destination,
+        (const KinokoInputManager*)(intptr_t)source);
+}
 int32_t *kinoko_input_binding_type(void) {
-    return kinoko_sqplus_game_type(2, function_46ed80);
+    return kinoko_sqplus_game_type(2, kinoko_input_copy_abi);
 }
 
 int32_t *kinoko_camera_binding_type(void) {

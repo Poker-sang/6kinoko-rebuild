@@ -20,9 +20,15 @@ typedef struct KinokoInputDevice {
     KinokoInputAssignment assignment;
     KinokoInputState state;
 } KinokoInputDevice;
+struct KinokoInputDeviceMethods {
+    KinokoInputDevice *(__thiscall *destroy)(KinokoInputDevice*, unsigned char flags);
+    int32_t (__thiscall *update)(KinokoInputDevice*);
+};
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern const KinokoInputDeviceMethods kinoko_input_device_methods;
+KinokoInputDevice *__fastcall kinoko_input_device_delete(KinokoInputDevice*, void*, unsigned char flags);
 /* True ECX receiver; EDX padding adapts the original thiscall virtual slot.
    Return retains original mixed EAX (device id or end pointer), not ownership. */
 int32_t __fastcall kinoko_input_device_update(KinokoInputDevice *device, void *unused);

@@ -4,7 +4,6 @@
 #include <cstring>
 #include <cmath>
 
-extern "C" int32_t g35[2]; // remaining native methods-table boundary
 struct KinokoInputClusterStorage { std::deque<KinokoInputDevice*> devices; };
 namespace {
 // Original CDQ/XOR/SUB, including signed comparison of INT_MIN's bits.
@@ -44,7 +43,7 @@ extern "C" KinokoInputDevice* kinoko_input_cluster_at(const KinokoInputCluster* 
 extern "C" KinokoInputCluster* __fastcall kinoko_input_cluster_delete(KinokoInputCluster* cluster,void*,unsigned char flags) {
     delete cluster->devices;cluster->devices=nullptr;
     // 46A7E0 -> 4074B0 restores the base identity after destroying the deque.
-    cluster->device.methods=reinterpret_cast<const KinokoInputDeviceMethods*>(g35);
+    cluster->device.methods=&kinoko_input_device_methods;
     if (flags&1) std::free(cluster);
     return cluster;
 }
@@ -58,3 +57,7 @@ extern "C" int32_t __fastcall kinoko_input_cluster_update(KinokoInputCluster* cl
     for (const auto* device:cluster->devices->devices) merge_device(*cluster,*device);
     return static_cast<int32_t>(count);
 }
+
+extern "C" const KinokoInputDeviceMethods kinoko_input_cluster_methods{
+    reinterpret_cast<decltype(KinokoInputDeviceMethods::destroy)>(kinoko_input_cluster_delete),
+    reinterpret_cast<decltype(KinokoInputDeviceMethods::update)>(kinoko_input_cluster_update)};
