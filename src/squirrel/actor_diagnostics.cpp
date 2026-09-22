@@ -43,7 +43,7 @@ extern "C" void retdec_trace_star_state(const char *phase, int32_t actor) {
     if (!actor || actor_bits<int32_t>(actor, &ActorRecord::take)!=1060) return;
     release=strcmp(phase,"release")==0;
     if (actor_bits<int32_t>(actor, &ActorRecord::update_function, offsetof(KinokoOwnedObjectWords, type))==0x08000100)
-        proto=kinoko::script::address(kinoko::legacy::pointer<SQClosure>(actor_bits<int32_t>(actor, &ActorRecord::update_function, offsetof(KinokoOwnedObjectWords, value)))->_function);
+        proto=kinoko::script::address(_funcproto(kinoko::legacy::pointer<SQClosure>(actor_bits<int32_t>(actor, &ActorRecord::update_function, offsetof(KinokoOwnedObjectWords, value)))->_function));
     if (!release && (!proto || kinoko::legacy::pointer<SQFunctionProto>(proto)->_name._type!=0x08000010 ||
         strcmp(_stringval(kinoko::legacy::pointer<SQFunctionProto>(proto)->_name),"UpdateWalk")!=0)) return;
     handle=actor_bits<uint32_t>(actor, &ActorRecord::pool_handle);
@@ -83,7 +83,7 @@ extern "C" void retdec_trace_star_state(const char *phase, int32_t actor) {
         for (SQInteger i=frames-1;i>=0 && i>=frames-5;--i) {
             const auto& frame=vm->_callsstack[i];
             if (sq_type(frame._closure)==OT_CLOSURE) {
-                auto *caller=_closure(frame._closure)->_function;
+                auto *caller=_funcproto(_closure(frame._closure)->_function);
                 retdec_trace_squirrel_name("actor:star-release-source",kinoko::script::address(
                     sq_type(caller->_sourcename)==OT_STRING?_stringval(caller->_sourcename):"<unknown>"));
                 retdec_trace_squirrel_name("actor:star-release-function",kinoko::script::address(
@@ -280,7 +280,7 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
     if (actor == 0 || actor_bits<int32_t>(actor, &ActorRecord::update_function, offsetof(KinokoOwnedObjectWords, type)) != 0x08000100)
         return;
     closure = actor_bits<int32_t>(actor, &ActorRecord::update_function, offsetof(KinokoOwnedObjectWords, value));
-    proto = kinoko::script::address(kinoko::legacy::pointer<SQClosure>(closure)->_function);
+    proto = kinoko::script::address(_funcproto(kinoko::legacy::pointer<SQClosure>(closure)->_function));
     if (proto == 0 || kinoko::legacy::pointer<SQFunctionProto>(proto)->_sourcename._type != 0x08000010 ||
         kinoko::legacy::pointer<SQFunctionProto>(proto)->_name._type != 0x08000010)
         return;
