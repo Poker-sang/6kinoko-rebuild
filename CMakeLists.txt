@@ -69,6 +69,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/device_initialization.cpp
     src/reconstructed/quad_submit.cpp
     src/reconstructed/act_render_state.cpp
+    src/reconstructed/act_layout_3d.cpp
+    src/reconstructed/mesh_model.cpp
     src/reconstructed/render_state.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
@@ -672,6 +674,12 @@ target_include_directories(kinoko_act_layout_render_contract PRIVATE include)
 target_link_libraries(kinoko_act_layout_render_contract PRIVATE kinoko_legacy_string user32)
 add_test(NAME act_layout_render_contract COMMAND kinoko_act_layout_render_contract)
 
+add_executable(kinoko_mesh_layout_contract tests/mesh_layout_contract.cpp
+    src/reconstructed/mesh_model.cpp src/reconstructed/act_layout_3d.cpp)
+target_include_directories(kinoko_mesh_layout_contract PRIVATE include)
+target_link_libraries(kinoko_mesh_layout_contract PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3dx9_33.lib")
+add_test(NAME mesh_layout_contract COMMAND kinoko_mesh_layout_contract)
+
 add_executable(kinoko_map_chip_cache_contract tests/map_chip_cache_contract.cpp
     src/reconstructed/map_chip_cache.cpp src/reconstructed/act_map.cpp
     src/reconstructed/map_layout_lifetime.cpp src/reconstructed/native_buffer.cpp)
@@ -731,6 +739,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_manager_contract
     kinoko_actor_render_contract
     kinoko_act_layout_render_contract
+    kinoko_mesh_layout_contract
     kinoko_map_chip_cache_contract
     kinoko_map_visible_contract
     kinoko_camera_contract

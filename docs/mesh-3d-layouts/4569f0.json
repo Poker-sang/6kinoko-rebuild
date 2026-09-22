@@ -1,0 +1,1 @@
+{"addr":"0x4569f0","code":"char __thiscall sub_4569F0(_BYTE *this, char a2)\n{\n  char result; // al\n\n  result = *(this + 36); /*0x4569f6*/\n  *(this + 36) = a2; /*0x4569f9*/\n  return result; /*0x4569fc*/\n}"}
