@@ -1,3 +1,4 @@
+#include "kinoko/script_callbacks.h"
 #include "kinoko/squirrel_game_objects.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/sqrat_object_bridge.h"
@@ -204,7 +205,7 @@ void callback_call(HSQUIRRELVM vm) {
         ObjectView value(temporary.data()); value.initialize(kinoko_squirrel_object_vtable());
         sq_newuserdata(vm,4); sq_setreleasehook(vm,-1,release_userdata); value.capture(vm,-1); sq_pop(vm,1);
         const auto before=releases; const auto base=sq_gettop(vm);
-        const auto result=function_45e020_this(address(state.data()),address(temporary.data()),OT_INTEGER,93);
+        const auto result=kinoko_script_callback_invoke_owned((KinokoScriptCallback *)(intptr_t)(address(state.data())), (KinokoOwnedObjectWords *)(intptr_t)(address(temporary.data())), OT_INTEGER, 93);
         require(fail ? SQ_FAILED(result) : SQ_SUCCEEDED(result),"callback forwards call status");
         require(releases==before+1 && value.value()._type==OT_NULL,"temporary consumed on either call result");
         top(vm,base+(fail ? 1 : 0),"success pops closure/result; failure retains closure");

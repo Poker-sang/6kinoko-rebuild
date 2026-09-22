@@ -63,7 +63,6 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
-    src/reconstructed/script_callbacks.cpp
     src/reconstructed/renderer.cpp
     src/reconstructed/device_runtime.cpp
     src/reconstructed/device_initialization.cpp
@@ -259,6 +258,9 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_host_compat.cpp
     src/squirrel/squirrel_vm_bootstrap.cpp
     src/squirrel/actor_initialization.cpp
+    src/reconstructed/script_callbacks.cpp
+    src/squirrel/actor_state.cpp
+    src/squirrel/actor_diagnostics.cpp
     src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
     src/squirrel/squirrel_game_objects.cpp
@@ -770,7 +772,13 @@ target_include_directories(kinoko_map_manager_contract PRIVATE include)
 target_compile_options(kinoko_map_manager_contract PRIVATE /O2 /fp:strict)
 add_test(NAME map_manager_contract COMMAND kinoko_map_manager_contract)
 
+add_executable(kinoko_actor_state_contract tests/actor_state_contract.cpp src/squirrel/actor_state.cpp)
+target_include_directories(kinoko_actor_state_contract PRIVATE include)
+target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
+add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_actor_state_contract
     kinoko_map_manager_contract
     kinoko_scene_operations_contract
     kinoko_game_script_contract

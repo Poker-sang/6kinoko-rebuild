@@ -1,3 +1,4 @@
+#include "kinoko/script_callbacks.h"
 #include "kinoko/map_collision.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/legacy_memory.hpp"
@@ -19,8 +20,8 @@ int32_t invoke(KinokoActor *receiver, KinokoActor *other) {
     function_4a9500_this(argument, address(ActorView(other).bytes(&ActorRecord::script_object)));
     // Existing call helper consumes this copied external reference, including
     // failures. Do not add a second destructor or force stack reset on success.
-    const int32_t result = function_45e020_this(address(actor.bytes(&ActorRecord::collision_vm)),
-        address(argument), argument[1], argument[2]);
+    const int32_t result = kinoko_script_callback_invoke_owned(reinterpret_cast<KinokoScriptCallback *>(actor.bytes(&ActorRecord::collision_vm)),
+        reinterpret_cast<KinokoOwnedObjectWords *>(argument), argument[1], argument[2]);
     kinoko_actor_trace_collision(receiver, 1);
     if (result < 0) {
         retdec_trace("actor:collision-callback-failed");

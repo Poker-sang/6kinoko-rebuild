@@ -95,7 +95,7 @@ int32_t __fastcall kinoko_method_update_children(int32_t receiver, void* unused_
 // function_45dbd0
 int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* unused_edx, float dx, float dy);
 // function_45eb00
-int32_t __fastcall kinoko_method_actor_destroy_state(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_actor_reset_method(int32_t receiver, void* unused_edx);
 // function_466490
 int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* unused_edx);
 // function_469620

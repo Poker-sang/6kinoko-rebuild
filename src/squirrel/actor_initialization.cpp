@@ -1,3 +1,5 @@
+#include "kinoko/map_activation.h"
+#include <squirrel.h>
 #include "kinoko/actor_manager.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/actor_animation.h"
@@ -7,7 +9,7 @@
 #include "kinoko/legacy_memory.hpp"
 #include <cstdlib>
 
-extern "C" int32_t retdec_function_45df10_impl(int32_t,int32_t);
+
 namespace {
 using namespace kinoko::actor;
 using kinoko::legacy::address;
@@ -26,13 +28,13 @@ extern "C" void kinoko_actor_tick(KinokoActor *actor) {
     if (!actor) return;
     const ActorView view(actor);
     const auto take=view.get(&ActorRecord::take);
-    const auto type=function_4a9a30_this(address(view.bytes(&ActorRecord::object108)));
+    const auto type=function_4a9a30_this(address(view.bytes(&ActorRecord::update_function)));
     const auto trace=kinoko_actor_trace_step_begin(actor,type);
     if (type==0x08000100) {
-        const auto result=kinoko_actor_step_callback(address(actor));
+        const auto result=kinoko_actor_step_callback(actor);
         kinoko_actor_trace_step_end(actor,result,trace);
     }
-    kinoko_actor_advance_animation(address(actor),take);
+    kinoko_actor_advance_animation(actor,take);
 }
 
 // 45E5E0. Keep initialization before the callback and bounds publication after
@@ -61,15 +63,15 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     kinoko_native_control_create(address(&control),address(slot));
     if (!control) { std::free(slot);return 0; }
     const auto old_control=view.get(&ActorRecord::owner_control);
-    view.set(&ActorRecord::owner,static_cast<Address>(address(slot)));
-    view.set(&ActorRecord::owner_control,static_cast<Address>(control));
-    kinoko_native_release_strong(old_control);
+    view.set(&ActorRecord::owner,slot);
+    view.set(&ActorRecord::owner_control,pointer<ControlRecord>(control));
+    kinoko_native_release_strong(address(old_control));
 
     view.set(&ActorRecord::active,static_cast<uint8_t>((view.get(&ActorRecord::initial).chip_flags&0x20000)==0));
     view.set(&ActorRecord::registration_flag20,uint8_t{0});
     view.set(&ActorRecord::visible,uint8_t{1});
-    assign(view.bytes(&ActorRecord::update_callback),&first);
-    assign(view.bytes(&ActorRecord::collision_callback),&second);
+    assign(view.bytes(&ActorRecord::initial_function),&first);
+    assign(view.bytes(&ActorRecord::initial_argument),&second);
     view.set(&ActorRecord::spawn_x,x);
     view.set(&ActorRecord::blend,int32_t{1});
     view.set(&ActorRecord::priority,int32_t{0});
@@ -109,13 +111,13 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     view.set(&ActorRecord::animation,static_cast<KinokoAnimation *>(nullptr));
     view.set(&ActorRecord::current_frame,static_cast<KinokoAnimationFrame *>(nullptr));
 
-    int32_t owner_state[7]{};
-    retdec_function_45df10_impl(address(owner_state),0);
-    view.set(&ActorRecord::update_vm,pointer<SQVM>(owner_state[0]));
-    assign(view.bytes(&ActorRecord::object96),owner_state+1);
-    assign(view.bytes(&ActorRecord::object108),owner_state+4);
-    release(owner_state+4);
-    release(owner_state+1);
+    KinokoScriptCallback owner_state{};
+    kinoko_script_callback_construct(&owner_state,nullptr);
+    view.set(&ActorRecord::update_vm,owner_state.vm);
+    assign(view.bytes(&ActorRecord::update_environment),&owner_state.environment);
+    assign(view.bytes(&ActorRecord::update_function),&owner_state.closure);
+    release(&owner_state.closure);
+    release(&owner_state.environment);
     view.view(&ActorRecord::initial).set(&InitialData::chip_bound_type,uint16_t{0xffff});
     view.set(&ActorRecord::hits,std::array<int32_t,4>{});
     view.set(&ActorRecord::local_bounds,Bounds{});
@@ -125,14 +127,14 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
 
     if (vm && function_4a9a30_this(address(&first))==0x08000100) {
         KinokoOwnedObjectWords callback_object{};
-        int32_t call_state[7]{};
+        KinokoScriptCallback call_state{};
         function_4a9540_this(address(&callback_object),second.type,second.value);
-        call_state[0]=address(vm);
-        function_4a9500_this(call_state+1,address(view.bytes(&ActorRecord::script_object)));
-        function_4a9500_this(call_state+4,address(&first));
-        function_45e020_this(address(call_state),address(&callback_object),callback_object.type,callback_object.value);
-        release(call_state+4);
-        release(call_state+1);
+        call_state.vm=vm;
+        function_4a9500_this(reinterpret_cast<int32_t *>(&call_state.environment),address(view.bytes(&ActorRecord::script_object)));
+        function_4a9500_this(reinterpret_cast<int32_t *>(&call_state.closure),address(&first));
+        kinoko_script_callback_invoke_owned(&call_state,&callback_object,callback_object.type,callback_object.value);
+        release(&call_state.closure);
+        release(&call_state.environment);
     }
     const auto local=view.get(&ActorRecord::local_bounds);
     const auto position_x=view.get(&ActorRecord::x),position_y=view.get(&ActorRecord::y);
@@ -144,4 +146,16 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     view.set(&ActorRecord::previous_x,position_x);
     view.set(&ActorRecord::previous_y,position_y);
     return 1;
+}
+
+extern "C" KinokoActor *kinoko_actor_create_map_instance(KinokoActorManager *manager,
+    const KinokoSquirrelObject *callback,float x,float y,int32_t chip_id,const unsigned char *initial_data) {
+    const auto function=kinoko::legacy::load<KinokoOwnedObjectWords>(callback);
+    const KinokoOwnedObjectWords argument{kinoko_squirrel_object_vtable(),OT_INTEGER,chip_id};
+    return kinoko_actor_manager_create(manager,&function,x,y,-1.0f,&argument,initial_data);
+}
+extern "C" KinokoActor *kinoko_actor_create_collision_proxy(KinokoActorManager *manager) {
+    KinokoOwnedObjectWords empty{};
+    function_4a94e0_this(address(&empty));
+    return kinoko_actor_manager_create(manager,&empty,0.0f,0.0f,1.0f,&empty,nullptr);
 }

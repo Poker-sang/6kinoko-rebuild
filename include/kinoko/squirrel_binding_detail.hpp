@@ -41,7 +41,7 @@ inline std::array<char, 258> variable_key(const char* name) noexcept {
 
 // A scoped EXTERNAL reference for locally owned SquirrelObject temporaries.
 // It cannot be used for by-value parameters whose ownership passes to a
-// native callee (see function_460b50).
+// native callee (see kinoko_sqplus_object_method).
 class Object final {
 public:
     explicit Object(HSQUIRRELVM vm) : vm_(vm) {

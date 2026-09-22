@@ -30,21 +30,23 @@ struct InitialData {
 // One schema shared by constructor, callbacks, animation and actor methods.
 // Opaque bytes are deliberately not assigned speculative semantics.
 struct ActorRecord {
-    Address vtable;
+    const void *vtable;
     std::array<unsigned char, 4> unknown4;
     std::int32_t owner_references;
     uint32_t pool_handle;
     void *priority_entry; // borrowed token; priority index owns it
     std::uint8_t registration_flag20, visible;
     std::uint8_t release_pending, unknown23;
-    Address owner, owner_control; // strong native control; not a VM reference
-    Address step, step_control;   // weak native control
+    KinokoActor **owner;
+    native::ControlRecord *owner_control; // strong native control; owns the Actor* slot
+    KinokoActor **step;
+    native::ControlRecord *step_control; // weak native control; never owns the Actor
     std::uint8_t active;
     std::array<unsigned char, 3> unknown41;
-    ScriptStorage script_object, update_callback, collision_callback;
+    ScriptStorage script_object, initial_function, initial_argument; // saved Init inputs
     float spawn_x, spawn_y, spawn_z;
     SQVM *update_vm;
-    ScriptStorage object96, object108;
+    ScriptStorage update_environment, update_function;
     SQVM *collision_vm; // callback state prefix, borrowed
     ScriptStorage collision_environment, collision_function;
     KinokoActorManager *manager;              // borrowed; manager owns the live Actor set
@@ -68,11 +70,13 @@ struct ActorRecord {
     std::array<uint8_t, 3> padding301;
     float free_width, free_height;
     std::uint32_t collision_group, collision_mask, callback_group, callback_mask;
-    Address collision_records, collision_slots;
+    const unsigned char *collision_chip;
+    const void *collision_placement;
     std::int32_t collision_index;
     std::array<unsigned char, 12> inline_slots;
     float bounds_anchor_x, bounds_anchor_y;
-    std::array<unsigned char, 16> unknown360;
+    std::array<unsigned char, 12> unknown360;
+    uint32_t unknown372;
     InitialData initial;
     Bounds local_bounds, world_bounds;
     Bounds previous_bounds;
@@ -151,9 +155,9 @@ struct ManagerPrefix {
 using ActorView = native::RecordView<ActorRecord>;
 using ManagerView = native::RecordView<ManagerPrefix>;
 inline constexpr std::array<ScriptStorage ActorRecord::*, 7> script_members{
-    &ActorRecord::script_object, &ActorRecord::update_callback,
-    &ActorRecord::collision_callback, &ActorRecord::object96,
-    &ActorRecord::object108, &ActorRecord::collision_environment, &ActorRecord::collision_function};
+    &ActorRecord::script_object, &ActorRecord::initial_function,
+    &ActorRecord::initial_argument, &ActorRecord::update_environment,
+    &ActorRecord::update_function, &ActorRecord::collision_environment, &ActorRecord::collision_function};
 
 static_assert(sizeof(InitialData) == 48 && sizeof(ActorRecord) == 0x220);
 static_assert(sizeof(ControlRecord) == 16 && sizeof(ControlTable) == 12);
@@ -184,10 +188,10 @@ KINOKO_ACTOR_FIELD(ActorRecord, owner_control, 28);
 KINOKO_ACTOR_FIELD(ActorRecord, step, 32);
 KINOKO_ACTOR_FIELD(ActorRecord, step_control, 36);
 KINOKO_ACTOR_FIELD(ActorRecord, script_object, 44);
-KINOKO_ACTOR_FIELD(ActorRecord, update_callback, 56);
-KINOKO_ACTOR_FIELD(ActorRecord, collision_callback, 68);
-KINOKO_ACTOR_FIELD(ActorRecord, object96, 96);
-KINOKO_ACTOR_FIELD(ActorRecord, object108, 108);
+KINOKO_ACTOR_FIELD(ActorRecord, initial_function, 56);
+KINOKO_ACTOR_FIELD(ActorRecord, initial_argument, 68);
+KINOKO_ACTOR_FIELD(ActorRecord, update_environment, 96);
+KINOKO_ACTOR_FIELD(ActorRecord, update_function, 108);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_environment, 124);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_function, 136);
 KINOKO_ACTOR_FIELD(ActorRecord, manager, 148);
@@ -208,8 +212,8 @@ KINOKO_ACTOR_FIELD(ActorRecord, free_width, 304);
 KINOKO_ACTOR_FIELD(ActorRecord, free_height, 308);
 KINOKO_ACTOR_FIELD(ActorRecord, collision_vm, 120);
 KINOKO_ACTOR_FIELD(ActorRecord, direction, 272);
-KINOKO_ACTOR_FIELD(ActorRecord, collision_records, 328);
-KINOKO_ACTOR_FIELD(ActorRecord, collision_slots, 332);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_chip, 328);
+KINOKO_ACTOR_FIELD(ActorRecord, collision_placement, 332);
 KINOKO_ACTOR_FIELD(ActorRecord, inline_slots, 340);
 KINOKO_ACTOR_FIELD(ActorRecord, bounds_anchor_x, 352);
 KINOKO_ACTOR_FIELD(ActorRecord, initial, 376);

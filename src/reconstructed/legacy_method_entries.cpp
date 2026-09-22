@@ -1,3 +1,7 @@
+#include "kinoko/actor_pool.h"
+#include "kinoko/actor_owner_list.h"
+#include "kinoko/actor_lifecycle.h"
+#include "kinoko/game_script_host.h"
 #include "kinoko/legacy_method_entries.h"
 #include <cstring>
 
@@ -16,12 +20,12 @@ int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t o
 int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
     int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha);
 int32_t function_457a10_impl(int32_t receiver, int32_t argument);
-int32_t function_45dbd0_this(int32_t receiver, float dx, float dy);
-int32_t function_45eb00_this(int32_t receiver);
-int32_t function_469620_this(int32_t receiver, int32_t argument);
-int32_t function_46a6f0_this(int32_t receiver, uint32_t handle);
-int32_t function_46aa60_this(int32_t receiver);
-int32_t function_46ab10_this(int32_t receiver, int32_t output);
+
+
+
+
+
+
 }
 
 // retdec_cact_destructor_bridge
@@ -84,12 +88,12 @@ extern "C" int32_t __fastcall kinoko_method_update_children(int32_t receiver, vo
 // function_45dbd0
 extern "C" int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* /* unused_edx */,
     float dx, float dy) {
-    return function_45dbd0_this(receiver, dx, dy);
+    return kinoko_actor_move(kinoko_game_collision_state(), reinterpret_cast<KinokoActor *>(receiver), dx, dy);
 }
 
 // function_45eb00
-extern "C" int32_t __fastcall kinoko_method_actor_destroy_state(int32_t receiver, void* /* unused_edx */) {
-    return function_45eb00_this(receiver);
+extern "C" int32_t __fastcall kinoko_actor_reset_method(int32_t receiver, void* /* unused_edx */) {
+    return kinoko_actor_reset(reinterpret_cast<KinokoActor *>(receiver));
 }
 
 // function_466490
@@ -106,22 +110,22 @@ extern "C" int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* /
 // function_469620
 extern "C" int32_t __fastcall kinoko_method_render_layer_update(int32_t receiver, void* /* unused_edx */,
     int32_t argument) {
-    return function_469620_this(receiver, argument);
+    return kinoko_actor_render_layer_update(reinterpret_cast<void *>(receiver), reinterpret_cast<KinokoCamera *>(argument));
 }
 
 // function_46a6f0
 extern "C" int32_t __fastcall kinoko_method_actor_manager_remove(int32_t receiver,
     void* /* unused_edx */, uint32_t handle) {
-    return function_46a6f0_this(receiver, handle);
+    return kinoko_actor_pool_retire(reinterpret_cast<KinokoActorPool *>(receiver), handle);
 }
 
 // retdec_actor_manager_vtable_push
 extern "C" int32_t __fastcall kinoko_method_actor_manager_push(int32_t receiver, void* /* unused_edx */) {
-    return function_46aa60_this(receiver);
+    return (int32_t)(intptr_t)kinoko_actor_owner_list_acquire(reinterpret_cast<KinokoActorManager *>(receiver));
 }
 
 // function_46ab10
 extern "C" int32_t __fastcall kinoko_method_actor_manager_top(int32_t receiver, void* /* unused_edx */,
     int32_t output) {
-    return function_46ab10_this(receiver, output);
+    return (int32_t)(intptr_t)kinoko_actor_pool_request(reinterpret_cast<KinokoActorPool *>(receiver), reinterpret_cast<uint32_t *>(output));
 }

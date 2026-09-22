@@ -111,15 +111,15 @@ extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,
     return output;
 }
 
-extern "C" int32_t function_460920(int32_t* object, int32_t* type,
+extern "C" int32_t kinoko_sqplus_bind_integer(int32_t* object, int32_t* type,
                                     int32_t offset, char* name, int32_t flags) {
     return bind_variable(object, type, offset, name, flags, 0, 4);
 }
-extern "C" int32_t function_4609c0(int32_t* object, int32_t* type,
+extern "C" int32_t kinoko_sqplus_bind_float(int32_t* object, int32_t* type,
                                     int32_t offset, char* name, int32_t flags) {
     return bind_variable(object, type, offset, name, flags, 2, 4);
 }
-extern "C" int32_t function_460a60(int32_t* object, int32_t* type,
+extern "C" int32_t kinoko_sqplus_bind_boolean(int32_t* object, int32_t* type,
                                     int32_t offset, char* name, int32_t flags) {
     return bind_variable(object, type, offset, name, flags, 3, 1);
 }
@@ -157,7 +157,7 @@ extern "C" int32_t function_460d10_this(int32_t output, const char* name, int32_
     return output;
 }
 
-extern "C" int32_t* function_460d10_actor(int32_t* output, const char* name, int32_t parent) {
+extern "C" int32_t* kinoko_sqplus_define_actor_class(int32_t* output, const char* name, int32_t parent) {
     if (!output) return nullptr;
     ClassBindingStorage state{};
     function_460d10_this(address(&state), name, parent);
@@ -167,7 +167,7 @@ extern "C" int32_t* function_460d10_actor(int32_t* output, const char* name, int
     return output;
 }
 
-extern "C" void function_460e00_register_actor_method(int32_t vm_address,
+extern "C" void kinoko_sqplus_register_actor_method(int32_t vm_address,
     int32_t* object, const char* name, int32_t native, int32_t wrapper, int32_t slot_flags) {
     auto* vm = pointer<SQVM>(vm_address);
     ObjectView(object).push(vm);

@@ -191,10 +191,9 @@ extern "C" int32_t kinoko_collision_move_actor(KinokoCollisionState *state,
         const auto other_bounds = candidate.get(&ActorRecord::world_bounds);
         const auto bounds = moving.get(&ActorRecord::world_bounds);
         if (other_bounds.right + 24 >= bounds.left && other_bounds.left - 24 <= bounds.right) {
-            // The old ActorRecord still exposes these slots as serialized words;
-            // read their established pointer layout at this explicit boundary.
+            // The Actor embeds the same three-word borrowed collision record.
             const auto record = kinoko::native::RecordView<KinokoCollisionRecord>(
-                candidate.bytes(&ActorRecord::collision_records)).load();
+                candidate.bytes(&ActorRecord::collision_chip)).load();
             if (!kinoko_map_collision_append(state, &count, record.chip, record.layout, record.index)) return 0;
         }
     }

@@ -64,7 +64,7 @@ void construct(int32_t state[12], const char* name, int32_t* descriptor) {
 }
 template<size_t N> void bind_fields(int32_t* object, int32_t* descriptor, const Field (&fields)[N]) {
     for (const auto& field : fields) {
-        auto bind = field.integer ? function_460920 : function_4609c0;
+        auto bind = field.integer ? kinoko_sqplus_bind_integer : kinoko_sqplus_bind_float;
         bind(object, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
 }

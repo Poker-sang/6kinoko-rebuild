@@ -68,7 +68,7 @@ public:
         const auto incoming_address = static_cast<int32_t>(
             reinterpret_cast<uintptr_t>(incoming));
         if (type == 0x0a008000 && view_.get(&ActorRecord::animation)) {
-            kinoko_actor_sync_animation_state(address(actor_), function_4a9b40_this(incoming_address, 0));
+            kinoko_actor_sync_animation_state(actor_, pointer<KinokoActor>(function_4a9b40_this(incoming_address, 0)));
         }
         // The by-value SqPlus object owns an external VM reference on entry.
         return function_4a9d70_this(incoming_address);

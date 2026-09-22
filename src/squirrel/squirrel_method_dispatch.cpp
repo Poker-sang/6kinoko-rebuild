@@ -138,13 +138,13 @@ extern "C" int32_t function_460540(int32_t vm) {
     static int32_t legacy_result[2];
     return function_460540_this(address(legacy_result), vm);
 }
-extern "C" int32_t function_460b00(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_void_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     retdec_call_thiscall0(receiver(method), pointer(method.method.function));
     return 0;
 }
-extern "C" int32_t function_460b50(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_object_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     if (sq_gettop(pointer<SQVM>(vm)) < 3) return argument_error(pointer<SQVM>(vm));
@@ -156,23 +156,23 @@ extern "C" int32_t function_460b50(int32_t vm) {
         arguments[0], arguments[1], arguments[2]);
     return 0;
 }
-extern "C" int32_t function_460bc0(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_integer_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     return function_45f850(method.receiver, method.method.function, method.method.receiver_offset, vm, 2);
 }
-extern "C" int32_t function_460c10(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_integer_result_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     sq_pushinteger(pointer<SQVM>(vm), retdec_call_thiscall0_result(receiver(method), pointer(method.method.function)));
     return 1;
 }
-extern "C" int32_t function_460c70(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_rectangle_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     return function_45f8c0(method.receiver, method.method.function, method.method.receiver_offset, vm, 2);
 }
-extern "C" int32_t function_460cc0(int32_t vm) {
+extern "C" int32_t kinoko_sqplus_move_method(int32_t vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);
     return function_45f9d0(method.receiver, method.method.function, method.method.receiver_offset, vm, 2);

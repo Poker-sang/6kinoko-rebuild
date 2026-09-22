@@ -92,7 +92,7 @@ extern "C" int32_t function_46d950(void) {
     }
     auto* descriptor = kinoko_input_binding_type();
     for (const auto& field : fields) {
-        auto bind = field.boolean ? function_460a60 : function_460920;
+        auto bind = field.boolean ? kinoko_sqplus_bind_boolean : kinoko_sqplus_bind_integer;
         bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
     function_4a95c0_this(address(g629), address(function_4aa3a0_this(address(root), address(temporary), "Input")));

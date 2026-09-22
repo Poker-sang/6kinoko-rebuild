@@ -76,8 +76,8 @@ void update_bounds(const ActorView& actor, const AnimationRecord& animation) {
 }
 
 // 462280: SetTake updates state before lookup, including failed lookups.
-extern "C" int32_t kinoko_actor_set_take(int32_t value, int32_t take) {
-    const ActorView actor(pointer(value));
+extern "C" int32_t kinoko_actor_set_take(KinokoActor *value, int32_t take) {
+    const ActorView actor(value);
     const ManagerView manager(actor.get(&ActorRecord::manager));
     actor.set(&ActorRecord::take, take);
     actor.set(&ActorRecord::frame_index, int32_t{0});
@@ -91,13 +91,13 @@ extern "C" int32_t kinoko_actor_set_take(int32_t value, int32_t take) {
     update_bounds(actor, animation);
     return address(select_frame(actor, animation, 0));
 }
-extern "C" int32_t __fastcall kinoko_actor_set_take_method(int32_t actor, void*, int32_t take) {
+extern "C" int32_t __fastcall kinoko_actor_set_take_method(KinokoActor *actor, void*, int32_t take) {
     return kinoko_actor_set_take(actor, take);
 }
 
 // A changed take defers ticking until the next update, as in 45E120.
-extern "C" void kinoko_actor_advance_animation(int32_t value, int32_t take_before_callback) {
-    const ActorView actor(pointer(value));
+extern "C" void kinoko_actor_advance_animation(KinokoActor *value, int32_t take_before_callback) {
+    const ActorView actor(value);
     const auto current = actor.get(&ActorRecord::current_frame);
     if (!current || actor.get(&ActorRecord::take) != take_before_callback) return;
     const auto time = increment(actor.get(&ActorRecord::frame_time));
@@ -124,8 +124,8 @@ extern "C" void kinoko_actor_advance_animation(int32_t value, int32_t take_befor
 }
 
 // 45FE80 has only an upper-bound clamp: do not invent a lower-bound policy.
-extern "C" void kinoko_actor_sync_animation_state(int32_t value, int32_t source_value) {
-    const ActorView actor(pointer(value)), source(pointer(source_value));
+extern "C" void kinoko_actor_sync_animation_state(KinokoActor *value, KinokoActor *source_value) {
+    const ActorView actor(value), source(source_value);
     auto frame = source.get(&ActorRecord::frame_index);
     actor.set(&ActorRecord::frame_time, source.get(&ActorRecord::frame_time));
     actor.set(&ActorRecord::frame_index, frame);

@@ -105,7 +105,7 @@ void make_instance(HSQUIRRELVM vm, Object& klass, Object& output, void* native) 
 }
 void install_method(HSQUIRRELVM vm, Object& klass, const char* name, void* method, void* wrapper) {
     const auto top = sq_gettop(vm);
-    function_460e00_register_actor_method(address(vm), pointer<int32_t>(klass.location()), name,
+    kinoko_sqplus_register_actor_method(address(vm), pointer<int32_t>(klass.location()), name,
         address(method), address(wrapper), 0);
     require(sq_gettop(vm) == top, "method registration preserves stack");
 }
@@ -146,7 +146,7 @@ void class_contract(HSQUIRRELVM vm) {
     require(state.front() == 0xA5 && state.back() == 0xA5, "48-byte binding canaries");
     require(load<int32_t>(state.data() + 1) == address(vm), "binding vm layout");
     for (int offset : {8, 24, 36}) ObjectView(state.data() + 1 + offset).release(vm);
-    require(function_460d10_actor(pointer<int32_t>(failed.location()), "ActorBinding", 0) == pointer<int32_t>(failed.location()), "actor class wrapper");
+    require(kinoko_sqplus_define_actor_class(pointer<int32_t>(failed.location()), "ActorBinding", 0) == pointer<int32_t>(failed.location()), "actor class wrapper");
     require(failed.view().value()._type == OT_CLASS, "actor binding assignment");
 
     new_table(vm, table.view());
@@ -317,9 +317,9 @@ void instance_contract(HSQUIRRELVM vm) {
     Object klass(vm), instance(vm);
     make_class(vm, klass, "PropertyActor");
     auto* type = kinoko_native_binding_type(-1);
-    function_460920(pointer<int32_t>(klass.location()), type, offsetof(Native, value), const_cast<char*>("value"), 0);
-    function_4609c0(pointer<int32_t>(klass.location()), type, offsetof(Native, x), const_cast<char*>("x"), 0);
-    function_460a60(pointer<int32_t>(klass.location()), type, offsetof(Native, enabled), const_cast<char*>("enabled"), 0);
+    kinoko_sqplus_bind_integer(pointer<int32_t>(klass.location()), type, offsetof(Native, value), const_cast<char*>("value"), 0);
+    kinoko_sqplus_bind_float(pointer<int32_t>(klass.location()), type, offsetof(Native, x), const_cast<char*>("x"), 0);
+    kinoko_sqplus_bind_boolean(pointer<int32_t>(klass.location()), type, offsetof(Native, enabled), const_cast<char*>("enabled"), 0);
     Native native;
     make_instance(vm, klass, instance, &native); publish(vm, "propertyActor", instance);
     run_script(vm, R"nut(
@@ -372,12 +372,12 @@ void methods_contract(HSQUIRRELVM vm) {
     StackTop stack(vm);
     Object klass(vm), instance(vm);
     make_class(vm, klass, "MethodActor");
-    install_method(vm, klass, "touch", reinterpret_cast<void*>(&no_args), reinterpret_cast<void*>(&function_460b00));
-    install_method(vm, klass, "value", reinterpret_cast<void*>(&no_args), reinterpret_cast<void*>(&function_460c10));
-    install_method(vm, klass, "set", reinterpret_cast<void*>(&one_int), reinterpret_cast<void*>(&function_460bc0));
-    install_method(vm, klass, "xy", reinterpret_cast<void*>(&two_float), reinterpret_cast<void*>(&function_460cc0));
-    install_method(vm, klass, "rect", reinterpret_cast<void*>(&four_float), reinterpret_cast<void*>(&function_460c70));
-    install_method(vm, klass, "consume", reinterpret_cast<void*>(&consume_object), reinterpret_cast<void*>(&function_460b50));
+    install_method(vm, klass, "touch", reinterpret_cast<void*>(&no_args), reinterpret_cast<void*>(&kinoko_sqplus_void_method));
+    install_method(vm, klass, "value", reinterpret_cast<void*>(&no_args), reinterpret_cast<void*>(&kinoko_sqplus_integer_result_method));
+    install_method(vm, klass, "set", reinterpret_cast<void*>(&one_int), reinterpret_cast<void*>(&kinoko_sqplus_integer_method));
+    install_method(vm, klass, "xy", reinterpret_cast<void*>(&two_float), reinterpret_cast<void*>(&kinoko_sqplus_move_method));
+    install_method(vm, klass, "rect", reinterpret_cast<void*>(&four_float), reinterpret_cast<void*>(&kinoko_sqplus_rectangle_method));
+    install_method(vm, klass, "consume", reinterpret_cast<void*>(&consume_object), reinterpret_cast<void*>(&kinoko_sqplus_object_method));
     Native native;
     make_instance(vm, klass, instance, &native); publish(vm, "methodActor", instance);
     run_script(vm, R"nut(
@@ -421,14 +421,14 @@ try { methodActor.xy(1,2.0);
         std::array<unsigned char, 10> result{}; result.fill(0xAB);
         function_460540_this(address(result.data()+1), address(vm));
         require(load<int32_t>(result.data()+5) == 0 && result.front()==0xAB && result.back()==0xAB, "short method descriptor rejected without overrunning result");
-        require(function_460b00(address(vm)) == -1, "short method descriptor reports invalid instance");
+        require(kinoko_sqplus_void_method(address(vm)) == -1, "short method descriptor reports invalid instance");
         sq_settop(vm, 0);
     }
     instance.view().push(vm);
     auto* payload = sq_newuserdata(vm, sizeof(Method));
     store(payload, Method{address(reinterpret_cast<void*>(&no_args)), 0});
     sq_settypetag(vm, -1, reinterpret_cast<void*>(1));
-    require(function_460b00(address(vm)) == -1, "tagged method descriptor rejected"); sq_settop(vm, 0);
+    require(kinoko_sqplus_void_method(address(vm)) == -1, "tagged method descriptor rejected"); sq_settop(vm, 0);
     int32_t output[2] = {99,99};
     function_460540_this(address(output), address(vm));
     require(!output[0] && !output[1], "empty method frame cleared");
@@ -474,7 +474,7 @@ void mapped_method_contract(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_rawset(vm, -3)), "install mapped actor receiver"); sq_pop(vm, 1);
     auto* payload = sq_newuserdata(vm, sizeof(Method));
     store(payload, Method{address(reinterpret_cast<void*>(&mapped_value)), 4});
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&function_460c10), 1);
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_integer_result_method), 1);
     instance.view().push(vm);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 1, 0)) && integer(vm) == 78,
         "foreign __ot mapping and descriptor receiver offset");
@@ -489,7 +489,7 @@ void mapped_property_contract(HSQUIRRELVM vm) {
     Object klass(vm), instance(vm), mapping(vm);
     make_class(vm, klass, "MappedPropertyActor");
     auto* declaring_type = kinoko_native_binding_type(-1);
-    function_460920(pointer<int32_t>(klass.location()), declaring_type, 4,
+    kinoko_sqplus_bind_integer(pointer<int32_t>(klass.location()), declaring_type, 4,
         const_cast<char*>("value"), 0);
     static int foreign_type;
     klass.view().push(vm);
@@ -540,7 +540,7 @@ void child_binding_contract(HSQUIRRELVM vm) {
     StackTop stack(vm);
     Object klass(vm), instance(vm);
     make_class(vm, klass, "ThreadBoundActor");
-    function_460920(pointer<int32_t>(klass.location()), kinoko_native_binding_type(-1),
+    kinoko_sqplus_bind_integer(pointer<int32_t>(klass.location()), kinoko_native_binding_type(-1),
         0, const_cast<char*>("score"), 0);
     int32_t native = 22;
     make_instance(vm, klass, instance, &native);

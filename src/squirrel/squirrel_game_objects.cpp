@@ -196,20 +196,3 @@ extern "C" int32_t retdec_execute_act_file_bytecode(int32_t vm, int32_t script,
     // that same closure. The first call's failure is not used as a branch.
     return execute_embedded_act_script(vm, script, environment, 2);
 }
-extern "C" int32_t function_45e020_this(int32_t state, int32_t temporary,
-    int32_t type, int32_t data) {
-    if (!state || !temporary) return -1;
-    const auto id = read<int32_t>(pointer(state));
-    if (!id) return -1;
-    auto vm = pointer<SQVM>(id);
-    // This state embeds TWO 12-byte SqPlus wrappers. It is NOT ActCallback.
-    sq_pushobject(vm, read<HSQOBJECT>(bytes(state) + 20));
-    sq_pushobject(vm, read<HSQOBJECT>(bytes(state) + 8));
-    sq_pushobject(vm, borrowed_value(type, data));
-    const auto result = kinoko_sq_call(id, 2, SQTrue, SQTrue);
-    if (SQ_SUCCEEDED(result)) sq_pop(vm, 2);
-    // Preserve failed-call stack state and the original embedding's current-VM
-    // destruction boundary (including its no-VM diagnostic behavior).
-    function_4a9d70_this(temporary);
-    return result;
-}

@@ -10,7 +10,7 @@ int32_t function_402d30(void);
 int32_t function_402d40(char * a1, int32_t a2);
 int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 int32_t function_43e100(void);
-int32_t function_460e00(void);
+int32_t kinoko_actor_register_script_class(void);
 int32_t function_4669d0(void);
 int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
 int32_t function_46b880(int32_t this_ptr, int32_t lpFileName);

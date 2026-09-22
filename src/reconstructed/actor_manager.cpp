@@ -38,18 +38,19 @@ void retire(const ManagerView manager, const ActorView actor) {
 // 46B0A0. The global host reserves 512 bytes, beyond the verified prefix.
 extern "C" KinokoActorManager *kinoko_actor_manager_construct(KinokoActorManager *manager) {
     if (!manager) return nullptr;
-    std::memset(manager,0,512);
+    // Clear only the verified host prefix; never overwrite caller tail storage.
+    ManagerView(manager).clear();
     const ManagerView state(manager);
     state.set(&ManagerPrefix::methods,kinoko_actor_owner_methods());
-    kinoko_actor_owner_list_construct(address(manager));
+    kinoko_actor_owner_list_construct(manager);
     auto *pool=static_cast<KinokoActorPool *>(std::calloc(1,80));
-    if (!pool || !kinoko_actor_pool_construct(address(pool))) return nullptr;
+    if (!pool || !kinoko_actor_pool_construct(pool)) return nullptr;
     state.set(&ManagerPrefix::pool,pool);
     state.view(&ManagerPrefix::animation_lookup).set(&TreeIndex::head,
         static_cast<Address>(kinoko_integer_map_create()));
     kinoko_animation_list_construct(address(state.bytes(&ManagerPrefix::animations)));
     kinoko_integer_vector_construct(address(state.bytes(&ManagerPrefix::textures)));
-    kinoko_priority_construct(address(state.bytes(&ManagerPrefix::actors)));
+    kinoko_priority_construct(state.bytes(&ManagerPrefix::actors));
     for (int32_t i=0;i<4;++i) {
         auto *layer=static_cast<RenderLayerRecord *>(std::calloc(1,sizeof(RenderLayerRecord)));
         if (!layer) return nullptr;
@@ -69,9 +70,9 @@ extern "C" int32_t kinoko_actor_manager_initialize(KinokoActorManager *manager) 
     const ManagerView state(manager);
     state.set(&ManagerPrefix::update_mask,int32_t{-1});
     state.set(&ManagerPrefix::iteration_count,int32_t{0});
-    while (kinoko_actor_owner_list_size(address(manager))<512)
-        if (!function_46aa60_this(address(manager))) break;
-    kinoko_actor_owner_list_clear(address(manager));
+    while (kinoko_actor_owner_list_size(manager)<512)
+        if (!kinoko_actor_owner_list_acquire(manager)) break;
+    kinoko_actor_owner_list_clear(manager);
     return 1;
 }
 
@@ -123,7 +124,7 @@ extern "C" void *kinoko_actor_manager_clear_actors(KinokoActorManager *manager) 
         }
         entry=next;
     }
-    kinoko_priority_clear(address(index));
+    kinoko_priority_clear(index);
     return sentinel;
 }
 

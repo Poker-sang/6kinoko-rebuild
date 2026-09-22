@@ -42,7 +42,7 @@ int32_t function_4a9b40_this(int32_t, int32_t) { return 0; }
 int32_t function_4a9d70_this(int32_t object) { ++object_releases; return object + 4; }
 void retdec_trace_star_state(const char*, int32_t) {}
 int32_t function_405d60(int32_t handle) { cleanup_order.push_back(handle); return 0; }
-int32_t function_463730(int32_t) { cleanup_order.push_back(-1); return 0; }
+void *kinoko_actor_manager_clear_actors(KinokoActorManager *) { cleanup_order.push_back(-1); return nullptr; }
 }
 
 int main() {
@@ -69,7 +69,7 @@ int main() {
     animation.left = 1; animation.top = 2; animation.right = 5; animation.bottom = 8;
     animation.duration_total = 0x1234; animation.has_bounds = 1;
     kinoko_integer_map_put(lookup.get(&TreeIndex::head),37,address(&animation));
-    CHECK(kinoko_actor_set_take(actor_address, 37) == address(frames.data()));
+    CHECK(kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 37) == address(frames.data()));
     CHECK(actor.get(&ActorRecord::take) == 37);
     const auto local = actor.get(&ActorRecord::local_bounds);
     const auto world = actor.get(&ActorRecord::world_bounds);
@@ -77,17 +77,17 @@ int main() {
     CHECK(world.left == 10.75f && world.right == 15.75f && world.top == 26.75f && world.bottom == 47.75f);
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::width) == 5);
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::height) == 21);
-    kinoko_actor_advance_animation(actor_address, 36);
+    kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(actor_address), 36);
     CHECK(actor.get(&ActorRecord::frame_time) == 0);
-    kinoko_actor_advance_animation(actor_address, 37);
+    kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(actor_address), 37);
     CHECK(actor.get(&ActorRecord::frame_time) == 1 && actor.get(&ActorRecord::frame_index) == 0);
-    kinoko_actor_advance_animation(actor_address, 37);
+    kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(actor_address), 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 1 && actor.get(&ActorRecord::frame_time) == 0);
     CHECK(actor.get(&ActorRecord::sprite_frame) == reinterpret_cast<KinokoAnimationFrame *>(frames.data()+1));
-    for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation(actor_address, 37);
+    for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(actor_address), 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 1 && actor.get(&ActorRecord::frame_time) == 0);
     animation.loops = 1;
-    for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation(actor_address, 37);
+    for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(actor_address), 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 0 && actor.get(&ActorRecord::current_frame) == animation.frames_begin);
     // The flipped take must resolve before its bounds can be recomputed.
     // Keep the genuinely missing take (999) below as a separate contract.
@@ -96,19 +96,19 @@ int main() {
     CHECK(flipped_slot != static_cast<int32_t>(lookup.get(&TreeIndex::head)));
     CHECK(*pointer<int32_t>(flipped_slot) == address(&animation));
     actor.set(&ActorRecord::direction, 1.0f);
-    kinoko_actor_set_take(actor_address, 38);
+    kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 38);
     CHECK(actor.get(&ActorRecord::world_bounds).left == 4.75f);
     CHECK(actor.get(&ActorRecord::world_bounds).right == 9.75f);
     lookup_result = static_cast<int32_t>(lookup.get(&TreeIndex::head));
     const auto previous_animation = actor.get(&ActorRecord::animation);
-    CHECK(kinoko_actor_set_take(actor_address, 999) == lookup_result);
+    CHECK(kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor_address), 999) == lookup_result);
     CHECK(actor.get(&ActorRecord::take) == 999 && actor.get(&ActorRecord::frame_time) == 0);
     CHECK(actor.get(&ActorRecord::animation) == previous_animation);
     ActorRecord source{}; source.frame_index = 100; source.frame_time = 71;
-    kinoko_actor_sync_animation_state(actor_address, address(&source));
+    kinoko_actor_sync_animation_state((KinokoActor *)(intptr_t)(actor_address), (KinokoActor *)(intptr_t)(address(&source)));
     CHECK(actor.get(&ActorRecord::frame_index) == 1 && actor.get(&ActorRecord::frame_time) == 71);
     source.frame_index = -1;
-    kinoko_actor_sync_animation_state(actor_address, address(&source));
+    kinoko_actor_sync_animation_state((KinokoActor *)(intptr_t)(actor_address), (KinokoActor *)(intptr_t)(address(&source)));
     CHECK(actor.get(&ActorRecord::frame_index) == -1);
     CHECK(actor.get(&ActorRecord::current_frame) == pointer<KinokoAnimationFrame>(address(frames.data())-sizeof(FrameRecord)));
     CHECK(kinoko_actor_set_chip_flags(pointer<KinokoActor>(actor_address), nullptr, -1) == -1);
@@ -128,7 +128,7 @@ int main() {
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::chip_flags) == -17);
     CHECK(bytes.front() == 0xa7 && bytes.back() == 0xa7);
 
-    kinoko_priority_construct(address(&manager.actors));
+    kinoko_priority_construct((void *)(intptr_t)(address(&manager.actors)));
     kinoko_animation_list_construct(address(&manager.animations));
     std::array<int32_t, 2> textures{27, 81};
     kinoko_integer_vector_construct(address(&manager.textures));
@@ -138,7 +138,7 @@ int main() {
     manager.iteration.begin = iteration_storage.data();
     manager.iteration.end = iteration_storage.data() + 1;
     manager.iteration.storage_owner = &iteration_owner_token;
-    CHECK(kinoko_clear_actor_manager(address(&manager)) == address(iteration_storage.data()));
+    CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(address(&manager)))) == address(iteration_storage.data()));
     CHECK((cleanup_order == std::vector<int32_t>{27, 81, -1}));
     CHECK(kinoko_integer_vector_size(address(&manager.textures))==0);
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.storage_owner == &iteration_owner_token);
@@ -147,6 +147,6 @@ int main() {
     kinoko_integer_vector_destroy(address(&manager.textures));
     kinoko_animation_list_destroy(address(&manager.animations));
     kinoko_integer_map_destroy(manager.animation_lookup.head);
-    kinoko_priority_destroy(address(&manager.actors));
+    kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
     std::puts("PASS: typed Actor animation, original bounds/timing/clamps, deferred ownership and cleanup order");
 }

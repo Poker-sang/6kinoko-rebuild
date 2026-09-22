@@ -34,11 +34,11 @@ extern "C" {
 // buffers below are production implementations. Integration remains in stage_contract.
 const void *kinoko_actor_owner_methods(void) { return nullptr; }
 const void *kinoko_actor_render_layer_methods(void) { return nullptr; }
-int32_t kinoko_actor_pool_construct(int32_t p) { return p; }
-void kinoko_actor_owner_list_construct(int32_t) {}
-uint32_t kinoko_actor_owner_list_size(int32_t) { return 512; }
-void kinoko_actor_owner_list_clear(int32_t) {}
-int32_t function_46aa60_this(int32_t) { return 0; }
+KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *p) { return p; }
+void kinoko_actor_owner_list_construct(KinokoActorManager *) {}
+uint32_t kinoko_actor_owner_list_size(KinokoActorManager *) { return 512; }
+void kinoko_actor_owner_list_clear(KinokoActorManager *) {}
+KinokoActor *kinoko_actor_owner_list_acquire(KinokoActorManager *) { return nullptr; }
 int32_t kinoko_integer_map_create(void) { return 0; }
 void kinoko_animation_list_construct(int32_t) {}
 void kinoko_integer_vector_construct(int32_t) {}
@@ -70,7 +70,7 @@ int main() {
     void *methods[]{reinterpret_cast<void *>(&delete_pool),reinterpret_cast<void *>(&acquire_pool),reinterpret_cast<void *>(&retire_pool)};
     void **pool=methods;
     manager.pool=reinterpret_cast<KinokoActorPool *>(&pool);
-    kinoko_priority_construct(address(&manager.actors));
+    kinoko_priority_construct((void *)(intptr_t)(address(&manager.actors)));
     std::array<RenderLayerRecord,4> layers{};
     for (size_t i=0;i<4;++i) manager.render_layers[i]=&layers[i];
     const int priorities[]{0xffff,-1,7,0x10000,7,0};
@@ -94,7 +94,7 @@ int main() {
     CHECK(manager.iteration.begin[1]==actor_at(4) && manager.iteration.begin[2]==actor_at(2));
     CHECK(kinoko_actor_manager_render_layer(receiver(),nullptr,1)==12);
     CHECK((renders==std::vector<int>{4,2}));
-    kinoko_priority_clear(address(&manager.actors));
+    kinoko_priority_clear((void *)(intptr_t)(address(&manager.actors)));
     for (auto &actor:actors) actor.priority_entry=nullptr;
     for (size_t i=0;i<4;++i) { actors[i].priority=0;CHECK(kinoko_actor_manager_reindex(receiver(),actor_at(i))); }
     actors[4].priority=0;
@@ -121,7 +121,7 @@ int main() {
     CHECK(kinoko_actor_activate(actor_at(5),reinterpret_cast<KinokoCamera *>(&camera),64));
     actors[5].world_bounds.left=74.01f;actors[5].active=0;
     CHECK(!kinoko_actor_activate(actor_at(5),reinterpret_cast<KinokoCamera *>(&camera),64));
-    kinoko_priority_destroy(address(&manager.actors));
+    kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));
     kinoko_native_buffer_destroy(address(&manager.iteration));
     kinoko_native_buffer_destroy(address(&manager.callback_candidates));
     std::puts("PASS: priority partitions, stable reinsertion, callback masks, deferred ownership and creation failure");

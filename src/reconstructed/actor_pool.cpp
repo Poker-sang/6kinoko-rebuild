@@ -39,18 +39,19 @@ struct Lock {
 };
 void destroy_actor(KinokoActor *actor, unsigned char flags) {
     using Delete = int32_t (__thiscall *)(void*, unsigned char);
-    auto method = field<Delete>(kinoko::actor::ActorView(actor).get(&kinoko::actor::ActorRecord::vtable));
+    auto method = kinoko::legacy::load<Delete>(kinoko::actor::ActorView(actor).get(&kinoko::actor::ActorRecord::vtable));
     method(actor, flags);
 }
 }
 
-extern "C" int32_t kinoko_actor_pool_construct(int32_t manager) {
+extern "C" KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *receiver) {
+    const auto manager=address(receiver);
     if (!manager) return 0;
     auto state = std::make_unique<Pool>();
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock)));
     host(manager).set(&PoolHost::methods,static_cast<const void *>(&g29));
     host(manager).set(&PoolHost::state,state.release());
-    return manager;
+    return receiver;
 }
 
 // Original 46AB10: publish the packed handle before constructing a new Actor;
@@ -67,7 +68,7 @@ extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uin
     if (fresh) {
         kinoko::legacy::Allocation<void> storage(std::malloc(sizeof(kinoko::actor::ActorRecord)));
         if (!storage) throw std::bad_alloc();
-        auto *actor = pointer<KinokoActor>(function_45e300_this(address(storage.get())));
+        auto *actor = kinoko_actor_construct(static_cast<KinokoActor *>(storage.get()));
         state.actors.push_back(actor);
         storage.release(); // ownership passes to the pool, including if the next push throws
         state.generations.push_back(state.generation);
@@ -75,13 +76,11 @@ extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uin
         state.free_slots.pop_back();
         state.generations.at(slot) = state.generation;
         const auto actor = state.actors.at(slot);
-        if (actor) function_45e300_this(address(actor));
+        if (actor) kinoko_actor_construct(actor);
     }
     return state.actors.at(slot);
 }
-extern "C" int32_t kinoko_actor_pool_get(int32_t manager,int32_t output) {
-    return address(kinoko_actor_pool_acquire(pointer<KinokoActorPool>(manager),pointer<uint32_t>(output)));
-}
+
 
 extern "C" int32_t __fastcall kinoko_method_lookup_actor(int32_t manager, void*, uint32_t handle) {
     Lock lock(manager);
@@ -106,9 +105,7 @@ extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t 
     state.free_slots.push_back(slot);
     return 1; // native callers ignore the original unspecified unlock result
 }
-extern "C" int32_t function_46a6f0_this(int32_t manager,uint32_t handle) {
-    return kinoko_actor_pool_retire(pointer<KinokoActorPool>(manager),handle);
-}
+
 
 extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, void*) {
     return static_cast<int32_t>(pool(manager).actors.size());
@@ -128,4 +125,16 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, v
     delete state;
     host(manager).set(&PoolHost::state,static_cast<Pool *>(nullptr));
     return kinoko_method_actor_pool_base_delete(manager, nullptr, flags);
+}
+
+extern "C" void retdec_trace_i32(const char *,int32_t);
+extern "C" KinokoActor *kinoko_actor_pool_request(KinokoActorPool *pool,uint32_t *handle) {
+    static uint32_t count;
+    if (count<3 || (count&63u)==0) retdec_trace_i32("actor:request",static_cast<int32_t>(count));
+    auto *actor=kinoko_actor_pool_acquire(pool,handle);
+    if (actor) {
+        ++count;
+        if (count<=3 || (count&63u)==0) retdec_trace_i32("actor:created",static_cast<int32_t>(count));
+    }
+    return actor;
 }

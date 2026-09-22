@@ -1,9 +1,6 @@
 #pragma once
 #include "kinoko/game_script_api.h"
-typedef struct KinokoScriptCallback {
-    struct SQVM *vm;
-    KinokoOwnedObjectWords environment, closure;
-} KinokoScriptCallback;
+#include "kinoko/script_callbacks.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

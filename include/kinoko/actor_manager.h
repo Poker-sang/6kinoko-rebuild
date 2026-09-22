@@ -19,6 +19,7 @@ int32_t kinoko_actor_initialize(KinokoActor *actor, KinokoActorManager *manager,
     const KinokoOwnedObjectWords *argument);
 int32_t kinoko_actor_manager_refresh(KinokoActorManager *manager);
 int32_t kinoko_actor_manager_update(KinokoActorManager *manager, KinokoCamera *camera);
+int32_t kinoko_actor_render_layer_update(void *layer, KinokoCamera *camera);
 int32_t kinoko_actor_manager_render_layer(KinokoActorManager *manager, KinokoCamera *camera, int32_t layer);
 int32_t kinoko_actor_manager_reindex(KinokoActorManager *manager, KinokoActor *actor);
 void *kinoko_actor_manager_clear_actors(KinokoActorManager *manager);

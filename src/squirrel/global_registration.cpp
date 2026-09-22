@@ -108,7 +108,7 @@ extern "C" int32_t function_473010(void) {
         function_472240(object, constant.value, const_cast<char*>(constant.name));
         function_4a9d70_this(address(object));
     }
-    function_460e00();
+    kinoko_actor_register_script_class();
     function_46d950();
     function_4669d0();
     function_46fac0();
