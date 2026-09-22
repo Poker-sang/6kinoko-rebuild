@@ -48,6 +48,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_keys.cpp
     src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
+    src/reconstructed/actor_render.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/animation_storage.cpp
     src/reconstructed/integer_vector.cpp
@@ -635,6 +636,11 @@ target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_contr
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_actor_render_contract tests/actor_render_contract.cpp)
+target_include_directories(kinoko_actor_render_contract PRIVATE include)
+target_link_libraries(kinoko_actor_render_contract PRIVATE kinoko_native_methods)
+add_test(NAME actor_render_contract COMMAND kinoko_actor_render_contract)
+
 add_executable(kinoko_actor_manager_contract tests/actor_manager_contract.cpp
     src/reconstructed/actor_manager.cpp src/reconstructed/actor_priority.cpp
     src/reconstructed/native_buffer.cpp)
@@ -672,6 +678,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract
     kinoko_actor_manager_contract
+    kinoko_actor_render_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract

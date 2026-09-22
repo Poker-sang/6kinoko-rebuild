@@ -1,3 +1,4 @@
+#include "kinoko/actor_render.h"
 #include "kinoko/actor_manager.h"
 #include "kinoko/act_document.h"
 #include "kinoko/native_buffer.h"
@@ -11336,34 +11337,13 @@ static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
     return kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)manager, (KinokoCamera *)(intptr_t)camera);
 }
 
-static int32_t retdec_actor_render(int32_t actor, int32_t camera)
-{
+int32_t kinoko_actor_render_trace_begin(KinokoActor *receiver, KinokoCamera *camera_pointer) {
+    int32_t actor = (int32_t)(intptr_t)receiver;
+    int32_t camera = (int32_t)(intptr_t)camera_pointer;
     int32_t frame;
-    float half_extent;
-    float camera_left;
-    float camera_top;
-    float camera_right;
-    float camera_bottom;
-    float depth_scale;
-    float pivot_x;
-    float pivot_y;
-    float scale_x;
-    float scale_y;
-    float angle;
-    float translate_x;
-    float translate_y;
-    float camera_offset_x = 0.0f;
-    float camera_offset_y = 0.0f;
-    float x[4];
-    float y[4];
-    float z[4];
-    int32_t color;
-    int32_t index;
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (actor == 0)
-        return 0;
+    if (!actor) return trace_index;
     frame = *(int32_t *)(intptr_t)(actor + 204);
     if (trace_index <= 16) {
         retdec_trace_i32("actor:render-actor", actor);
@@ -11396,123 +11376,18 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
                          camera != 0 ? *(int32_t *)(intptr_t)(camera + 84) : 0);
     }
     retdec_trace_star_state("render-entry",actor);
-    if (*(unsigned char *)(intptr_t)(actor + 40) == 0 ||
-        *(unsigned char *)(intptr_t)(actor + 21) == 0 || frame == 0 ||
-        *(int32_t *)(intptr_t)(frame + 4) == 0)
-        return 0;
-
-    half_extent = *(float32_t *)(intptr_t)(actor + 168) * 256.0f;
-    if (camera != 0) {
-        camera_left = *(float32_t *)(intptr_t)(camera + 72);
-        camera_top = *(float32_t *)(intptr_t)(camera + 76);
-        camera_right = *(float32_t *)(intptr_t)(camera + 80);
-        camera_bottom = *(float32_t *)(intptr_t)(camera + 84);
-        if (*(float32_t *)(intptr_t)(actor + 440) >
-                camera_right + half_extent ||
-            camera_left - half_extent >
-                *(float32_t *)(intptr_t)(actor + 448) ||
-            camera_bottom + half_extent <
-                *(float32_t *)(intptr_t)(actor + 444) ||
-            *(float32_t *)(intptr_t)(actor + 452) <
-                camera_top - half_extent)
-            return 0;
-        camera_offset_x = *(float32_t *)(intptr_t)(camera + 48) -
-            *(float32_t *)(intptr_t)(camera + 40) -
-            *(float32_t *)(intptr_t)(camera + 56);
-        camera_offset_y = *(float32_t *)(intptr_t)(camera + 52) -
-            *(float32_t *)(intptr_t)(camera + 44) -
-            *(float32_t *)(intptr_t)(camera + 60);
-    }
-
-    for (index = 0; index < 4; ++index) {
-        x[index] = *(float32_t *)(intptr_t)(frame + 128 + index * 12);
-        y[index] = *(float32_t *)(intptr_t)(frame + 132 + index * 12);
-        z[index] = *(float32_t *)(intptr_t)(frame + 136 + index * 12);
-    }
-
-    depth_scale = -*(float32_t *)(intptr_t)(actor + 272);
-    pivot_x = depth_scale *
-        (float)*(int16_t *)(intptr_t)(frame + 236);
-    pivot_y = (float)*(int16_t *)(intptr_t)(frame + 238);
-    for (index = 0; index < 4; ++index)
-        x[index] *= depth_scale;
-
-    scale_x = *(float32_t *)(intptr_t)(actor + 172) *
-        *(float32_t *)(intptr_t)(actor + 168);
-    scale_y = *(float32_t *)(intptr_t)(actor + 176) *
-        *(float32_t *)(intptr_t)(actor + 168);
-    for (index = 0; index < 4; ++index) {
-        x[index] = (x[index] - pivot_x) * scale_x + pivot_x;
-        y[index] = (y[index] - pivot_y) * scale_y + pivot_y;
-    }
-
-    angle = *(float32_t *)(intptr_t)(actor + 164) * depth_scale;
-    if (angle != 0.0f) {
-        /* Actor::Render calls 405320, whose trigonometric helpers take
-           degrees.  The script's rotate property uses the same units. */
-        float cosine = function_404130((float80_t)angle);
-        float sine = function_4040d0((float80_t)angle);
-        for (index = 0; index < 4; ++index) {
-            float old_x = x[index] - pivot_x;
-            float old_y = y[index] - pivot_y;
-            x[index] = old_x * cosine + pivot_x - old_y * sine;
-            y[index] = old_x * sine + pivot_y + old_y * cosine;
-        }
-    }
-
-    translate_x = *(float32_t *)(intptr_t)(actor + 156) * depth_scale +
-        *(float32_t *)(intptr_t)(actor + 240) - pivot_x + camera_offset_x;
-    translate_y = *(float32_t *)(intptr_t)(actor + 244) - pivot_y +
-        *(float32_t *)(intptr_t)(actor + 160) + camera_offset_y;
-    for (index = 0; index < 4; ++index) {
-        float x_coordinate = x[index] + translate_x;
-        float y_coordinate = y[index] + translate_y;
-        int32_t x_integral = (int32_t)x_coordinate;
-        int32_t y_integral = (int32_t)y_coordinate;
-        float computed_x;
-        float computed_y;
-
-        if ((float)x_integral > x_coordinate)
-            --x_integral;
-        if ((float)y_integral < y_coordinate)
-            ++y_integral;
-        computed_x = (float)x_integral;
-        computed_y = (float)y_integral;
-        *(float32_t *)(intptr_t)(frame + 176 + index * 12) =
-            computed_x;
-        *(float32_t *)(intptr_t)(frame + 180 + index * 12) =
-            computed_y;
-        *(float32_t *)(intptr_t)(frame + 184 + index * 12) = z[index];
-    }
-
-    color = *(int32_t *)(intptr_t)(actor + 192) |
-        ((*(int32_t *)(intptr_t)(actor + 188) |
-          ((*(int32_t *)(intptr_t)(actor + 184) |
-            (*(int32_t *)(intptr_t)(actor + 180) << 8)) << 8)) << 8);
-    kinoko_actor_frame_color((void *)(intptr_t)frame, (uint32_t)color);
-    retdec_trace_star_state("draw",actor);
-    {
-        int32_t blend_mode = *(int32_t *)(intptr_t)(actor + 196);
-        int32_t render_state = 1;
-        int32_t result;
-
-        /* 4627C0 calls Actor::Render, then Actor::Draw.  The latter selects
-           the actor blend mode, submits the prepared quad, and restores the
-           normal state for the next actor. */
-        if (blend_mode == 2)
-            render_state = 2;
-        else if (blend_mode == 3)
-            render_state = 3;
-        else if (blend_mode == 4)
-            render_state = 4;
-
-        function_402770(render_state);
-        result = retdec_layout_submit_impl(frame, 0.0f, 0.0f);
-        function_402770(1);
-        if (trace_index <= 16)
-            retdec_trace_i32("actor:render-submit", result);
-    }
-    return 1;
+    return trace_index;
+}
+void kinoko_actor_render_trace_draw(KinokoActor *actor) { retdec_trace_star_state("draw",(int32_t)(intptr_t)actor); }
+void kinoko_actor_render_trace_end(int32_t index, int32_t result) {
+    if (index <= 16) retdec_trace_i32("actor:render-submit",result);
+}
+void kinoko_actor_render_set_blend(int32_t mode) { function_402770(mode); }
+int32_t kinoko_actor_render_submit(KinokoAnimationFrame *frame) {
+    return retdec_layout_submit_impl((int32_t)(intptr_t)frame,0.0f,0.0f);
+}
+static int32_t retdec_actor_render(int32_t actor, int32_t camera) {
+    return kinoko_actor_render((KinokoActor *)(intptr_t)actor,(KinokoCamera *)(intptr_t)camera);
 }
 
 // Address range: 0x4627c0 - 0x462804

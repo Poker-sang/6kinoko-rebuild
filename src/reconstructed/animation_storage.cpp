@@ -15,7 +15,7 @@ struct Animation {
         record.frames_end=record.frames_begin+count*sizeof(FrameRecord);
         field<uint32_t>(address(&record)+16)=record.frames_end;
     }
-    ~Animation() { for(auto& frame:frames) std::free(pointer<void>(frame.owned_payload)); }
+    ~Animation() { for(auto& frame:frames) std::free(frame.owned_payload); }
 };
 static_assert(offsetof(Animation,record)==0);
 using Animations=std::list<std::unique_ptr<Animation>>;

@@ -1,6 +1,7 @@
 #pragma once
 #include "kinoko/native_record_view.hpp"
 #include "kinoko/native_control.hpp"
+#include "kinoko/sprite.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -86,13 +87,23 @@ struct AnimationRecord {
     std::array<unsigned char, 2> unknown26;
     std::int32_t left, top, right, bottom, flags;
 };
+struct FrameAppearance {
+    int32_t blend;
+    uint32_t color;
+    float scale_x, scale_y, roll_x, roll_y, roll_z;
+};
+struct Position3 { float x, y, z; };
 struct FrameRecord {
     Address vtable;
     std::int32_t texture; // borrowed handle; manager releases texture owners
-    std::array<unsigned char, 232> drawing_data;
+    std::array<KinokoSpriteVertex, 4> vertices;
+    float texture_width, texture_height;
+    std::array<Position3, 4> base_positions, positions;
+    float source_u_extent, source_v_extent;
+    int16_t sprite_x, sprite_y, pivot_x, pivot_y;
     std::int16_t duration;
     std::uint16_t unknown242;
-    Address owned_payload; // malloc-owned, released before frame storage
+    FrameAppearance *owned_payload; // malloc-owned, released before frame storage
 };
 struct TreeIndex {
     Address policy, head;
@@ -108,7 +119,8 @@ struct RenderLayerRecord {
     int32_t index, begin, end;
 };
 struct CameraBoundsRecord {
-    std::array<unsigned char, 72> prefix;
+    std::array<unsigned char, 40> prefix;
+    float x, y, center_x, center_y, offset_x, offset_y, width, height;
     Bounds bounds;
 };
 // Only the verified prefix of the manager is described, not a new allocation
@@ -145,6 +157,10 @@ inline constexpr std::array<ScriptStorage ActorRecord::*, 7> script_members{
 static_assert(sizeof(InitialData) == 48 && sizeof(ActorRecord) == 0x220);
 static_assert(sizeof(ControlRecord) == 16 && sizeof(ControlTable) == 12);
 static_assert(sizeof(AnimationRecord) == 48 && sizeof(FrameRecord) == 248);
+static_assert(sizeof(FrameAppearance) == 28 && offsetof(FrameAppearance, color) == 4);
+static_assert(offsetof(FrameRecord, vertices) == 8 && offsetof(FrameRecord, base_positions) == 128);
+static_assert(offsetof(FrameRecord, positions) == 176 && offsetof(FrameRecord, pivot_x) == 236);
+static_assert(offsetof(CameraBoundsRecord, x) == 40 && offsetof(CameraBoundsRecord, bounds) == 72);
 static_assert(sizeof(ManagerPrefix) == 136);
 static_assert(sizeof(RenderLayerRecord) == 20 && offsetof(RenderLayerRecord, begin) == 12);
 static_assert(offsetof(ManagerPrefix, pool) == 4 && offsetof(ManagerPrefix, owner_list) == 8);
