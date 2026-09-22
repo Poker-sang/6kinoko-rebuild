@@ -72,3 +72,19 @@ Compiler review flagged the C ABI timer initializer's explicit bad_alloc throw
 under /EHc. R3 declares `noexcept(false)` on that boundary (as already done for
 the game math boundary), preserving the failure path without the false nothrow
 assumption. There is no gameplay change from R2. All R1/R2 artifacts remain.
+
+## R3 handoff
+
+- Source commit: e23feca91cbde5827a69f1ea277631bc4d53f474.
+- Win32 Release, logging disabled, build tree: build-runs/input-timer-r3-quiet.
+- All targets compiled and linked successfully (exit 0), including the updated
+  input/configuration and application contract sources. No game or local test
+  executable was run. Existing unrelated compiler warnings remain; the new
+  timer initializer warning is resolved.
+- EXE: runtime-builds/input-timer-r3-quiet/kinoko_retdec_rebuild.exe.
+- EXE SHA256: ED25ED8693EB23CFA19BDCD2B5B37A8FB4D2B778A8974927BDAC243DF4D66AE2.
+- stage_dat.ps1 copied the three required DAT files beside the EXE and verified
+  size and SHA256 successfully. All prior build/runtime artifacts are retained.
+- Hardware/controller behavior and gameplay are not runtime-verified in this
+  batch; controller support follows the original attached DirectInput devices,
+  with no added XInput mapping or automatic hot-plug behavior.
