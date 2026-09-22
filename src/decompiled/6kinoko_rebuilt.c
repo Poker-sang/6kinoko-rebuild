@@ -2780,11 +2780,6 @@ char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
 unsigned char g_retdec_keyboard_state[256];
-/* CInputManager::CInputManagerCluster owns a vector of unique key codes.
-   Keep the vector storage separate from the manager so its pointers remain
-   valid while the Squirrel object is updated. */
-int32_t g788 = 0; // 0x51b1a4
-int32_t g789 = 0; // 0x51b1ac
 float80_t g790 = 0.0L; // 0x51b1c0
 int32_t g791 = 0; // 0x51b1c8
 int32_t g792 = 0; // 0x51b1d0

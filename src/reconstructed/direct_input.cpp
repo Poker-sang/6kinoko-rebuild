@@ -24,7 +24,7 @@ struct InputService {
     Device keyboard, mouse;
     std::vector<Device> controllers;
     std::vector<KinokoControllerState> states;
-    std::vector<DWORD> axis_counts;
+    std::vector<DWORD> button_counts;
 };
 InputService service;
 static_assert(sizeof(KinokoControllerState) == sizeof(DIJOYSTATE));
@@ -46,7 +46,7 @@ BOOL CALLBACK enumerate_controller(const DIDEVICEINSTANCEA* instance, void*) {
     device->SetCooperativeLevel(service.window, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
     DIDEVCAPS caps{}; caps.dwSize = sizeof(caps);
     device->GetCapabilities(&caps);
-    service.axis_counts.push_back(caps.dwAxes);
+    service.button_counts.push_back(caps.dwButtons); // 408FE3 reads DIDEVCAPS + 16.
     device->EnumObjects(configure_axis, device.get(), DIDFT_AXIS);
     service.controllers.push_back(std::move(device));
     return DIENUM_CONTINUE;
@@ -61,8 +61,9 @@ int32_t open_device(Device& destination, REFGUID guid, const DIDATAFORMAT& forma
     if (mouse) {
         DIPROPDWORD property{};
         property.diph = {sizeof(property), sizeof(DIPROPHEADER), 0, DIPH_DEVICE};
-        property.dwData = 1;
-        if (FAILED(device->SetProperty(DIPROP_BUFFERSIZE, &property.diph))) return 0;
+        property.dwData = DIPROPAXISMODE_REL;
+        // 408E1B uses property ID 2 (AXISMODE), not ID 1 (BUFFERSIZE).
+        if (FAILED(device->SetProperty(DIPROP_AXISMODE, &property.diph))) return 0;
     }
     // Original ignores Acquire failure (e.g. window not foreground yet).
     device->Acquire();
@@ -87,7 +88,7 @@ extern "C" int32_t kinoko_input_initialize(HWND window, HINSTANCE instance) {
 }
 extern "C" int32_t kinoko_input_shutdown(void) {
     service.mouse.reset(); service.keyboard.reset();
-    service.controllers.clear(); service.states.clear(); service.axis_counts.clear();
+    service.controllers.clear(); service.states.clear(); service.button_counts.clear();
     kinoko_input_snapshot = {};
     service.input.reset(); service.window = nullptr;
     return 1;

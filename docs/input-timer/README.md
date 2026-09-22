@@ -13,7 +13,7 @@ polling and the timer registry's try-lock-before-wait evidence.
   Acquire result as the original does, retaining devices for reacquisition.
 - 408BF0/408EB0 enumerate attached game controllers in enumeration order, create
   DIJOYSTATE devices with foreground/exclusive cooperation, retain capability
-  axis counts, and enumerate axes. 409030 applies the original -1000..1000 range
+  button counts (DIDEVCAPS + 16), and enumerate axes. 409030 applies the original -1000..1000 range
   by object ID; a failed range stops axis enumeration. Device creation failure
   stops controller enumeration. Format/cooperation/capability results are ignored
   by the original controller callback and remain so. No new mappings or POV logic.
@@ -21,6 +21,9 @@ polling and the timer registry's try-lock-before-wait evidence.
   on failure. 40DCDC then reads keyboard (clear on failure) and mouse (no clear).
   The old reconstruction discarded its mouse state; it now publishes a named
   20-byte cache. Controller count retains the original low-byte conversion.
+- 408E1B sets mouse DIPROP_AXISMODE (property ID 2) to DIPROPAXISMODE_REL.
+  The old reconstruction used DIPROP_BUFFERSIZE (ID 1) with the same value;
+  R2 corrects this property and the capability field after SDK/assembly review.
 - Existing mapping preserves +/-500 thresholds, six normalized axes, twelve
   configured buttons, and the saved controller record's broadcast semantics.
   Consumers use a typed snapshot and pointer instead of integer pointer math.
@@ -50,3 +53,16 @@ The existing physical-input/configuration contracts now use the typed cache and
 cover invalid controller indices as well as thresholds, normalization, releases,
 configuration broadcast and excluded keyboard keys. These are compile/link checks
 only for this batch. No game, CTest or contract executable is run, per user request.
+
+## R1 compilation and R2 review correction
+
+R1 source `6856e5c` compiled and linked all targets successfully; no executable
+was run. Its game EXE and verified three DATs remain in
+`runtime-builds/input-timer-r1-quiet` (EXE SHA256
+`8A45D69AFE98D048BE42BFCF6833BE131009A342DA7992ADF698F6325A7D51A2`).
+Final SDK/assembly comparison found two constants/fields to correct in R2:
+mouse property ID 2 means relative axis mode, and DIDEVCAPS offset 16 means
+button count. R2 also removes the two unused split globals now covered by
+native capability storage and the published mouse snapshot. Raw GUID/data-format
+evidence in `device-formats.json` confirms DirectInput8A and the 80/256/20-byte
+controller/keyboard/mouse formats.
