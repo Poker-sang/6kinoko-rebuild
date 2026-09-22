@@ -2221,11 +2221,6 @@ char * g11; // 0x4a8b9c
 int32_t g23 = 0x44fd30; // 0x4d5884
 int32_t g25 = 0x44fd30; // 0x4d58ac
 int32_t g28 = (int32_t)(intptr_t)&kinoko_method_actor_pool_base_delete; // 0x4d59dc
-/* CInputManager's vftable: destructor, then the per-frame input update. */
-int32_t g35[2] = {
-    (int32_t)(intptr_t)&kinoko_method_delete_input_device,
-    (int32_t)(intptr_t)&kinoko_input_device_update
-}; // 0x4d5ad0
 char * g42 = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s"; // 0x4d5e9c
 char * g43 = "\x96\x82\x97\x9d\x8d\xb9\x82\xc6\x82U\x82\xc2\x82\xcc\x83L\x83m\x83R"; // 0x4d5eec
 

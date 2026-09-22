@@ -21,8 +21,14 @@ typedef struct KinokoInputDevice {
     KinokoInputState state;
 } KinokoInputDevice;
 struct KinokoInputDeviceMethods {
+#ifdef __cplusplus
     KinokoInputDevice *(__thiscall *destroy)(KinokoInputDevice*, unsigned char flags);
     int32_t (__thiscall *update)(KinokoInputDevice*);
+#else
+    /* MSVC C cannot express thiscall. C consumers only store this table. */
+    void *destroy;
+    void *update;
+#endif
 };
 #ifdef __cplusplus
 extern "C" {
