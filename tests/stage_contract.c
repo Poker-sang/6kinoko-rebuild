@@ -2630,15 +2630,34 @@ static int test_act_resource_methods(void) {
     InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     resource[8] = 1;
     memset(resource + 108, 0x7f, 44);
-    words[11] = 1234;
-    words[12] = 5678;
-    words[13] = 9000;
+    /* Draw storage now owns native containers, not three raw vector words.
+       Populate both through their APIs so EndStage clears real elements. */
+    int32_t texture[25] = {0};
+    texture[0] = PTR(kinoko_act_host_symbols()->texture_resource_vtable);
+    texture[17] = 7;
+    CHECK(retdec_act_bitblt_this(address, 3, 4, 32, 16,
+        PTR(texture), 0, 0, 0, 1.0f) == 0);
+    function_452c20(address + 60, 2);
+    KinokoDrawSpan commands_before = kinoko_act_command_span(address);
+    KinokoDrawSpan sprites_before = kinoko_act_sprite_span(address);
+    CHECK(commands_before.end > commands_before.begin);
+    CHECK(sprites_before.end > sprites_before.begin);
+    const int32_t commands_owner = words[11], sprites_owner = words[15];
     words[38] = 4321;
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_end_stage) == 0);
-    CHECK(resource[8] == 0 && words[12] == 1234 && words[13] == 9000);
+    KinokoDrawSpan commands_after = kinoko_act_command_span(address);
+    KinokoDrawSpan sprites_after = kinoko_act_sprite_span(address);
+    CHECK(resource[8] == 0);
+    CHECK(commands_after.end == commands_after.begin);
+    CHECK(sprites_after.end == sprites_after.begin);
+    CHECK(words[11] == commands_owner && words[15] == sprites_owner);
+    CHECK(commands_after.capacity - commands_after.begin == commands_before.capacity - commands_before.begin);
+    CHECK(sprites_after.capacity - sprites_after.begin == sprites_before.capacity - sprites_before.begin);
     for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
     CHECK(words[38] == 4321);
     CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)address, NULL) == (int32_t)E_FAIL);
+    kinoko_act_draw_storage_destroy(address);
+    CHECK(words[11] == 0 && words[15] == 0);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");
     return 0;
