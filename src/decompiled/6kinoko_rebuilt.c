@@ -2069,8 +2069,6 @@ int32_t function_470030(int32_t a1);
 int32_t function_4701b0(int32_t a1, int32_t a2);
 
 
-int32_t function_4706c0_this(int32_t this_ptr,
-                                    int32_t *a1, int32_t *a2);
 
 
 int32_t function_470890(void);
@@ -2535,7 +2533,7 @@ int32_t g617 = 0; // 0x5143e0
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
 int32_t g637 = 0; // 0x5144b4
-int32_t g638 = 0; // 0x5144bc
+KinokoIntegerMap* g638 = NULL; // 0x5144bc
 int32_t g639 = 0; // 0x5144c0
 int32_t g640 = 0; // 0x5148cc
 char * g641; // 0x5148d0

@@ -44,3 +44,15 @@ resource indexing and manager cleanup carry that pointer directly. Handles
 remain integers and the manager releases textures before clearing storage.
 Clear retains capacity; the two reserved words remain untouched. Existing PAT,
 actor record and stage ownership contracts are updated and compiled only.
+
+## Batch 5: integer map owner and original iterator boundary
+
+Native maps now expose a typed opaque owner and borrowed int32_t value slots;
+find returns nullptr on missing keys. AnimationIndex and the global sound
+lookup store owner pointers, while the separate actor-priority tree retains
+its own schema. Original 4706C0 writes an iterator and returns its address:
+kinoko_integer_map_lookup_index isolates that legacy integer output/sentinel
+contract. SetTake's mixed integer return remains converted at that explicit
+boundary. Animation values remain integer slots at the legacy record boundary,
+not additional animation ownership. Existing alias, node-stability, missing-key
+and cleanup contracts are compiled only.

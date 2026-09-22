@@ -68,9 +68,9 @@ int main() {
     CHECK(stream.cursor==stream.bytes.size() && closes==1 && loads==1);
     CHECK(loaded_path=="data/player\\sprite.png");
     CHECK(manager.animations.count==2 && manager.animation_lookup.count==2);
-    const auto lookup=manager.animation_lookup.head;
-    const auto head_address=*pointer<int32_t>(kinoko_integer_map_find(lookup,20));
-    CHECK(*pointer<int32_t>(kinoko_integer_map_find(lookup,10))==head_address);
+    const auto lookup=manager.animation_lookup.owner;
+    const auto head_address=*kinoko_integer_map_find(lookup,20);
+    CHECK(*kinoko_integer_map_find(lookup,10)==head_address);
     const auto head=kinoko::native::RecordView<AnimationRecord>(pointer<void>(head_address)).load();
     CHECK(head.duration_total==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
     CHECK(head.next && head.previous==nullptr);
@@ -93,7 +93,7 @@ int main() {
     }
     CHECK(!kinoko_pat_read_animations(&stream,receiver,1));
     CHECK(manager.animations.count==3);
-    CHECK(kinoko_integer_map_find(lookup,40)==static_cast<int32_t>(lookup));
+    CHECK(kinoko_integer_map_find(lookup,40)==nullptr);
     kinoko_integer_map_clear(lookup);
     kinoko_clear_animation_list(address(&manager.animations));
     CHECK(manager.animations.count==0);

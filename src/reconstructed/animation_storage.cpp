@@ -54,20 +54,20 @@ extern "C" void kinoko_animation_manager_adopt(KinokoActorManager *manager,Kinok
 }
 extern "C" int32_t kinoko_animation_bind(KinokoActorManager *manager,int32_t take,KinokoAnimation *animation) {
     const auto index=ManagerView(manager).view(&ManagerPrefix::animation_lookup);
-    auto head=index.get(&TreeIndex::head);
+    auto head=index.get(&KinokoIntegerMapIndex::owner);
     if (!head) {
-        head=static_cast<Address>(kinoko_integer_map_create());index.set(&TreeIndex::head,head);
+        head=kinoko_integer_map_create();index.set(&KinokoIntegerMapIndex::owner,head);
     }
     // The legacy map owns integer slots, not the pointed-to animations.
     const auto result=kinoko_integer_map_put(head,take,address(animation));
-    index.set(&TreeIndex::count,static_cast<int32_t>(kinoko_integer_map_size(head)));
+    index.set(&KinokoIntegerMapIndex::count,static_cast<int32_t>(kinoko_integer_map_size(head)));
     return result!=0;
 }
 extern "C" KinokoAnimation *kinoko_animation_find(KinokoActorManager *manager,int32_t take) {
-    const auto head=ManagerView(manager).get(&ManagerPrefix::animation_lookup).head;
+    const auto head=ManagerView(manager).get(&ManagerPrefix::animation_lookup).owner;
     if (!head) return nullptr;
     const auto slot=kinoko_integer_map_find(head,take);
-    return static_cast<Address>(slot)==head?nullptr:pointer<KinokoAnimation>(*pointer<int32_t>(slot));
+    return slot?pointer<KinokoAnimation>(*slot):nullptr;
 }
 extern "C" void kinoko_animation_add_texture(KinokoActorManager *manager,int32_t handle) {
     kinoko_integer_vector_append((KinokoIntegerVector*)(ManagerView(manager).bytes(&ManagerPrefix::textures)), handle);

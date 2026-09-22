@@ -225,7 +225,7 @@ static void pat_frame(struct pat_fixture *pat, int16_t duration,
 
 static int32_t pat_lookup(int32_t manager, int32_t take) {
     int32_t entry = 0;
-    function_4706c0_this(manager + 36, &entry, &take);
+    kinoko_integer_map_lookup_index((const KinokoIntegerMapIndex*)(intptr_t)(manager + 36), &entry, &take);
     return entry == *(int32_t *)(intptr_t)(manager + 40) ? 0 :
         *(int32_t *)(intptr_t)entry;
 }
@@ -2306,12 +2306,12 @@ static int test_gc_mark_link(void) {
 
 static int test_shutdown_tree_cleanup(void) {
     {
-        int32_t map=kinoko_integer_map_create();
-        int32_t slot=kinoko_integer_map_put(map,-7,12);
+        KinokoIntegerMap* map=kinoko_integer_map_create();
+        int32_t* slot=kinoko_integer_map_put(map, -7, 12);
         CHECK(kinoko_integer_map_find(map,-7)==slot && *(int32_t*)(intptr_t)slot==12);
-        CHECK(kinoko_integer_map_put(map,-7,19)==slot && kinoko_integer_map_size(map)==1);
-        for(int i=0;i<256;++i) kinoko_integer_map_put(map,i,i*3);
-        CHECK(kinoko_integer_map_find(map,-8)==map && *(int32_t*)(intptr_t)slot==19);
+        CHECK(kinoko_integer_map_put(map, -7, 19)==slot && kinoko_integer_map_size(map)==1);
+        for(int i=0;i<256;++i) kinoko_integer_map_put(map, i, i*3);
+        CHECK(kinoko_integer_map_find(map,-8)==NULL && *(int32_t*)(intptr_t)slot==19);
         kinoko_integer_map_clear(map);CHECK(kinoko_integer_map_size(map)==0);
         kinoko_integer_map_destroy(map);
     }
@@ -2338,8 +2338,8 @@ static int test_shutdown_tree_cleanup(void) {
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     /* No live Actor in this fixture; the priority node is still reclaimed. */
-    manager[10]=kinoko_integer_map_create();
-    kinoko_integer_map_put(manager[10],42,animation);manager[11]=1;
+    manager[10]=(int32_t)(intptr_t)kinoko_integer_map_create();
+    kinoko_integer_map_put((KinokoIntegerMap*)(intptr_t)(manager[10]), 42, animation);manager[11]=1;
     kinoko_integer_vector_construct((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     for(int i=0;i<2;++i) kinoko_integer_vector_append((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68), textures[i]);
     kinoko_priority_construct((void *)(intptr_t)(PTR(manager)+84));
@@ -2349,7 +2349,7 @@ static int test_shutdown_tree_cleanup(void) {
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(PTR(manager)))) == PTR(iteration));
-        CHECK(kinoko_integer_map_size(manager[10])==0);
+        CHECK(kinoko_integer_map_size((KinokoIntegerMap*)(intptr_t)(manager[10]))==0);
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(kinoko_integer_vector_size((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68))==0);
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
@@ -2357,7 +2357,7 @@ static int test_shutdown_tree_cleanup(void) {
     }
     kinoko_integer_vector_destroy((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     kinoko_animation_list_destroy(PTR(manager)+52);
-    kinoko_integer_map_destroy(manager[10]);
+    kinoko_integer_map_destroy((KinokoIntegerMap*)(intptr_t)(manager[10]));
     kinoko_priority_destroy((void *)(intptr_t)(PTR(manager)+84));
     {
         int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];
@@ -3343,9 +3343,10 @@ static int test_global_stage_cleanup(void) {
 }
 
 static int test_global_sound_cleanup(void) {
-    int32_t old_head = g638, old_size = g639;
+    KinokoIntegerMap* old_head = g638;
+    int32_t old_size = g639;
     g638=kinoko_integer_map_create();g639=1;
-    kinoko_integer_map_put(g638,1,123);
+    kinoko_integer_map_put(g638, 1, 123);
     CHECK(kinoko_test_sound_cleanup(function_470890)==0);
     CHECK(g639==0 && kinoko_integer_map_size(g638)==0);
     kinoko_integer_map_destroy(g638);

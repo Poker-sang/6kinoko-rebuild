@@ -42,8 +42,8 @@ extern "C" KinokoActor **kinoko_actor_manager_clear_resources(KinokoActorManager
     const auto actors = state.view(&ManagerPrefix::actors);
     kinoko_actor_manager_clear_actors(manager);
     const auto animations = state.view(&ManagerPrefix::animation_lookup);
-    kinoko_integer_map_clear(animations.get(&TreeIndex::head));
-    animations.set(&TreeIndex::count,int32_t{0});
+    kinoko_integer_map_clear(animations.get(&KinokoIntegerMapIndex::owner));
+    animations.set(&KinokoIntegerMapIndex::count,int32_t{0});
     kinoko_clear_animation_list(address(state.bytes(&ManagerPrefix::animations)));
     kinoko_priority_clear((void *)(intptr_t)(address(actors.data())));
     const auto iteration = state.view(&ManagerPrefix::iteration);

@@ -1,3 +1,4 @@
+#include "kinoko/integer_map.h"
 #include "kinoko/actor_manager.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/actor_pool_dispatch.hpp"
@@ -39,7 +40,7 @@ void kinoko_actor_owner_list_construct(KinokoActorManager *) {}
 uint32_t kinoko_actor_owner_list_size(KinokoActorManager *) { return 512; }
 void kinoko_actor_owner_list_clear(KinokoActorManager *) {}
 KinokoActor *kinoko_actor_owner_list_acquire(KinokoActorManager *) { return nullptr; }
-int32_t kinoko_integer_map_create(void) { return 0; }
+KinokoIntegerMap* kinoko_integer_map_create(void) { return 0; }
 void kinoko_animation_list_construct(int32_t) {}
 void kinoko_integer_vector_construct(KinokoIntegerVector*) {}
 KinokoActor* kinoko_actor_set_init_data(KinokoActor* a,const void*) { return a; }

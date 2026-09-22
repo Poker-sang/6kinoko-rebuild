@@ -13,7 +13,8 @@
 
 extern "C" {
 extern int32_t g603, g604;
-extern int32_t g638, g639;
+extern KinokoIntegerMap* g638;
+extern int32_t g639;
 int32_t kinoko_audio_shutdown_resources(void);
 }
 
@@ -30,7 +31,7 @@ void release_stage_list() {
 }
 void release_render_queue() { kinoko_clear_render_queue(); }
 void release_sound_tree() {
-    kinoko_integer_map_destroy(g638);g638=g639=0;
+    kinoko_integer_map_destroy(g638);g638=nullptr;g639=0;
 }
 
 
