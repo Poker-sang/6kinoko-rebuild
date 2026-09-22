@@ -67,3 +67,8 @@ boundaries. Existing stage integration covers real VM callbacks, child creation,
 Per user instruction, no game, CTest, or regression executable is run. Build and
 DAT verification results, source commit and executable hash are recorded in
 `artifacts.json` after compilation. All build attempts and outputs are retained.
+
+The first R141 build (`cfcc95a`) compiled all targets successfully. Its new
+manager regression executable used CMake's default output under the build tree.
+The follow-up adds that target to the shared runtime/tools output policy. A
+separate R141b build preserves the first attempt without overwriting it.
