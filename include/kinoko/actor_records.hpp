@@ -6,6 +6,8 @@
 #include <cstdint>
 
 struct KinokoActor;
+struct KinokoActorPool;
+struct KinokoActorManager;
 struct SQVM;
 
 namespace kinoko::actor {
@@ -25,8 +27,9 @@ struct InitialData {
 struct ActorRecord {
     Address vtable;
     std::array<unsigned char, 4> unknown4;
-    std::int32_t type;
-    std::array<unsigned char, 8> unknown12;
+    std::int32_t owner_references;
+    uint32_t pool_handle;
+    void *priority_entry; // borrowed token; priority index owns it
     std::uint8_t registration_flag20, visible;
     std::uint8_t release_pending, unknown23;
     Address owner, owner_control; // strong native control; not a VM reference
@@ -34,15 +37,16 @@ struct ActorRecord {
     std::uint8_t active;
     std::array<unsigned char, 3> unknown41;
     ScriptStorage script_object, update_callback, collision_callback;
-    std::array<unsigned char, 16> unknown80;
+    float spawn_x, spawn_y, spawn_z;
+    SQVM *update_vm;
     ScriptStorage object96, object108;
     SQVM *collision_vm; // callback state prefix, borrowed
     ScriptStorage collision_environment, collision_function;
     Address manager;              // borrowed; manager owns the live Actor set
     Address sprite_frame;         // borrowed from manager-owned animation frames
-    std::array<unsigned char, 12> unknown156;
+    float offset_x, offset_y, rotation;
     float scale, scale_x, scale_y;
-    std::array<unsigned char, 20> unknown180;
+    int32_t alpha, red, green, blue, blend;
     Address animation, current_frame; // borrowed, never freed by Actor
     std::int32_t take, frame_index, frame_time, animation_flags;
     int32_t id;
@@ -98,14 +102,28 @@ struct ListIndex { Address head; std::uint32_t count; };
 struct VectorIndex { Address begin, end, capacity; };
 // Manager iteration storage is native_buffer-owned; entries borrow live Actors.
 struct ActorIterationBuffer { KinokoActor **begin, **end; void *storage_owner; };
+struct RenderLayerRecord {
+    const void *methods;
+    KinokoActorManager *manager;
+    int32_t index, begin, end;
+};
+struct CameraBoundsRecord {
+    std::array<unsigned char, 72> prefix;
+    Bounds bounds;
+};
 // Only the verified prefix of the manager is described, not a new allocation
 // size. Index nodes and animation lists have distinct ownership semantics.
 struct ManagerPrefix {
-    std::array<unsigned char, 36> unknown0;
+    const void *methods;
+    KinokoActorPool *pool;
+    void *owner_list;
+    std::array<unsigned char, 8> unknown12;
+    std::array<RenderLayerRecord *, 4> render_layers;
     TreeIndex animation_lookup; // owns nodes; values borrow animation list items
     std::array<unsigned char, 4> unknown48;
     ListIndex animations;       // owns animation items, frames and payloads
-    std::array<unsigned char, 8> unknown60;
+    uint32_t unknown60;
+    int32_t update_mask;
     VectorIndex textures;      // owns texture handles, retains vector capacity
     std::array<unsigned char, 4> unknown80;
     TreeIndex actors;          // live actor/priority tree
@@ -128,8 +146,14 @@ static_assert(sizeof(InitialData) == 48 && sizeof(ActorRecord) == 0x220);
 static_assert(sizeof(ControlRecord) == 16 && sizeof(ControlTable) == 12);
 static_assert(sizeof(AnimationRecord) == 48 && sizeof(FrameRecord) == 248);
 static_assert(sizeof(ManagerPrefix) == 136);
+static_assert(sizeof(RenderLayerRecord) == 20 && offsetof(RenderLayerRecord, begin) == 12);
+static_assert(offsetof(ManagerPrefix, pool) == 4 && offsetof(ManagerPrefix, owner_list) == 8);
+static_assert(offsetof(ManagerPrefix, render_layers) == 20 && offsetof(ManagerPrefix, update_mask) == 64);
+static_assert(offsetof(ActorRecord, pool_handle) == 12 && offsetof(ActorRecord, priority_entry) == 16);
+static_assert(offsetof(ActorRecord, spawn_x) == 80 && offsetof(ActorRecord, update_vm) == 92);
+static_assert(offsetof(ActorRecord, rotation) == 164 && offsetof(ActorRecord, blend) == 196);
 #define KINOKO_ACTOR_FIELD(T, M, O) static_assert(offsetof(T, M) == O)
-KINOKO_ACTOR_FIELD(ActorRecord, type, 8);
+KINOKO_ACTOR_FIELD(ActorRecord, owner_references, 8);
 KINOKO_ACTOR_FIELD(ActorRecord, registration_flag20, 20);
 KINOKO_ACTOR_FIELD(ActorRecord, active, 40);
 KINOKO_ACTOR_FIELD(ActorRecord, update_group, 232);

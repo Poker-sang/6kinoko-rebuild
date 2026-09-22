@@ -53,6 +53,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/integer_vector.cpp
     src/reconstructed/integer_map.cpp
     src/reconstructed/actor_priority.cpp
+    src/reconstructed/actor_manager.cpp
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/stage_runtime.cpp
@@ -233,6 +234,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
     src/squirrel/squirrel_vm_bootstrap.cpp
+    src/squirrel/actor_initialization.cpp
     src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
     src/squirrel/squirrel_game_objects.cpp
@@ -632,6 +634,13 @@ target_include_directories(kinoko_native_control_contract PRIVATE "${KINOKO_BOOS
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
+
+add_executable(kinoko_actor_manager_contract tests/actor_manager_contract.cpp
+    src/reconstructed/actor_manager.cpp src/reconstructed/actor_priority.cpp
+    src/reconstructed/native_buffer.cpp)
+target_include_directories(kinoko_actor_manager_contract PRIVATE include)
+target_compile_options(kinoko_actor_manager_contract PRIVATE /Od /RTC1)
+add_test(NAME actor_manager_contract COMMAND kinoko_actor_manager_contract)
 
 add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
 target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include "${KINOKO_BOOST_ROOT}"

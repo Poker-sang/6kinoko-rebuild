@@ -1,3 +1,4 @@
+#include "kinoko/actor_manager.h"
 #include "kinoko/act_document.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_runtime.h"
@@ -10519,170 +10520,10 @@ static int32_t function_45e5e0_this(
     float32_t x, float32_t y, float32_t z,
     int32_t second_vtable, int32_t second_type, int32_t second_data)
 {
-    int32_t first_object[3] = { first_vtable, first_type, first_data };
-    int32_t second_object[3] = { second_vtable, second_type, second_data };
-    int32_t actor_type[3] = { 0, 0, 0 };
-    int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-    int32_t shared_holder = 0;
-    int32_t control_ptr;
-    int32_t vm = (int32_t)(intptr_t)g644;
-    int32_t index;
-
-    if (actor_ptr == 0)
-        return 0;
-    if (first_vtable == 0)
-        first_object[0] = (int32_t)(intptr_t)&g16;
-    if (second_vtable == 0)
-        second_object[0] = (int32_t)(intptr_t)&g16;
-
-    *(int32_t *)(intptr_t)(actor_ptr + 224) =
-        *(uint16_t *)(intptr_t)(actor_ptr + 12);
-    *(int32_t *)(intptr_t)(actor_ptr + 148) = manager_ptr;
-
-    function_4a90c0_this((int32_t)(intptr_t)actor_type,
-                         (int32_t)(intptr_t)&g602);
-    function_4a95c0_this(actor_ptr + 44,
-                         (int32_t)(intptr_t)actor_type);
-    function_4a9d70_this((int32_t)(intptr_t)actor_type);
-    function_4a9bb0_this(actor_ptr + 44, actor_ptr);
-
-    /* 45E65F..45E715 owns an Actor* slot separately from its control block. */
-    int32_t actor_slot = (int32_t)(intptr_t)malloc(sizeof(int32_t));
-    if (actor_slot == 0)
-        return 0;
-    *(int32_t *)(intptr_t)actor_slot = actor_ptr;
-    kinoko_native_control_create((int32_t)(intptr_t)&shared_holder, actor_slot);
-    control_ptr = shared_holder;
-    if (control_ptr == 0) {
-        free((void *)(intptr_t)actor_slot);
-        return 0;
-    }
-    int32_t old_control = *(int32_t *)(intptr_t)(actor_ptr + 28);
-    *(int32_t *)(intptr_t)(actor_ptr + 24) = actor_slot;
-    *(int32_t *)(intptr_t)(actor_ptr + 28) = control_ptr;
-    kinoko_native_release_strong(old_control);
-
-    *(char *)(intptr_t)(actor_ptr + 40) =
-        (*(int32_t *)(intptr_t)(actor_ptr + 392) & 0x20000) == 0;
-    *(uint16_t *)(intptr_t)(actor_ptr + 20) = 256;
-    function_4a95c0_this(actor_ptr + 56,
-                         (int32_t)(intptr_t)first_object);
-    function_4a95c0_this(actor_ptr + 68,
-                         (int32_t)(intptr_t)second_object);
-
-    *(float32_t *)(intptr_t)(actor_ptr + 80) = x;
-    *(int32_t *)(intptr_t)(actor_ptr + 196) = 1;
-    *(int32_t *)(intptr_t)(actor_ptr + 228) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 84) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 216) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 212) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 88) = z;
-    *(int32_t *)(intptr_t)(actor_ptr + 220) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 312) = 0;
-
-    *(float32_t *)(intptr_t)(actor_ptr + 176) = 1.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 172) = 1.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 168) = 1.0f;
-    *(int32_t *)(intptr_t)(actor_ptr + 316) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 320) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 324) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 236) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 164) = 0.0f;
-    *(int32_t *)(intptr_t)(actor_ptr + 472) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 160) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 156) = 0.0f;
-
-    *(int32_t *)(intptr_t)(actor_ptr + 192) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 188) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 184) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 180) = 255;
-    *(float32_t *)(intptr_t)(actor_ptr + 240) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 448) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 440) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 244) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 232) = -1;
-    *(float32_t *)(intptr_t)(actor_ptr + 452) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 476) = -1;
-    *(float32_t *)(intptr_t)(actor_ptr + 444) = y;
-    *(float32_t *)(intptr_t)(actor_ptr + 272) = z;
-    *(float32_t *)(intptr_t)(actor_ptr + 276) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 280) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 256) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 260) = 0.0f;
-
-    for (index = 480; index <= 540; index += 4)
-        *(int32_t *)(intptr_t)(actor_ptr + index) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 200) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 204) = 0;
-
-    retdec_function_45df10_impl((int32_t)(intptr_t)owner_state, 0);
-    *(int32_t *)(intptr_t)(actor_ptr + 92) = owner_state[0];
-    function_4a95c0_this(actor_ptr + 96,
-                         (int32_t)(intptr_t)(owner_state + 1));
-    function_4a95c0_this(actor_ptr + 108,
-                         (int32_t)(intptr_t)(owner_state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
-
-    *(int16_t *)(intptr_t)(actor_ptr + 410) = -1;
-    *(int32_t *)(intptr_t)(actor_ptr + 284) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 288) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 292) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 296) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 424) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 428) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 432) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 436) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 304) = 1000.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 308) = 1000.0f;
-    *(char *)(intptr_t)(actor_ptr + 300) = 0;
-
-    if (vm != 0 && function_4a9a30_this(
-            (int32_t)(intptr_t)first_object) == 0x08000100) {
-        int32_t callback_object[3] = { 0, 0, 0 };
-        int32_t call_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-        function_4a9540_this(callback_object, second_type, second_data);
-        call_state[0] = vm;
-        function_4a9500_this(call_state + 1, actor_ptr + 44);
-        function_4a9500_this(call_state + 4,
-                             (int32_t)(intptr_t)first_object);
-        function_45e020_this((int32_t)(intptr_t)call_state,
-                             (int32_t)(intptr_t)callback_object,
-                             callback_object[1], callback_object[2]);
-        function_4a9d70_this((int32_t)(intptr_t)(call_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(call_state + 1));
-    }
-
-    *(float32_t *)(intptr_t)(actor_ptr + 440) =
-        *(float32_t *)(intptr_t)(actor_ptr + 424) +
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(float32_t *)(intptr_t)(actor_ptr + 448) =
-        *(float32_t *)(intptr_t)(actor_ptr + 432) +
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(float32_t *)(intptr_t)(actor_ptr + 444) =
-        *(float32_t *)(intptr_t)(actor_ptr + 428) +
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(float32_t *)(intptr_t)(actor_ptr + 452) =
-        *(float32_t *)(intptr_t)(actor_ptr + 436) +
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(float32_t *)(intptr_t)(actor_ptr + 352) =
-        *(float32_t *)(intptr_t)(actor_ptr + 440);
-    *(int32_t *)(intptr_t)(actor_ptr + 456) =
-        *(int32_t *)(intptr_t)(actor_ptr + 440);
-    *(float32_t *)(intptr_t)(actor_ptr + 356) =
-        *(float32_t *)(intptr_t)(actor_ptr + 444);
-    *(int32_t *)(intptr_t)(actor_ptr + 460) =
-        *(int32_t *)(intptr_t)(actor_ptr + 444);
-    *(float32_t *)(intptr_t)(actor_ptr + 248) =
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(int32_t *)(intptr_t)(actor_ptr + 464) =
-        *(int32_t *)(intptr_t)(actor_ptr + 448);
-    *(float32_t *)(intptr_t)(actor_ptr + 252) =
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(int32_t *)(intptr_t)(actor_ptr + 468) =
-        *(int32_t *)(intptr_t)(actor_ptr + 452);
-    return 1;
+    const KinokoOwnedObjectWords callback = { first_vtable, first_type, first_data };
+    const KinokoOwnedObjectWords argument = { second_vtable, second_type, second_data };
+    return kinoko_actor_initialize((KinokoActor *)(intptr_t)actor_ptr,
+        (KinokoActorManager *)(intptr_t)manager_ptr, &callback, x, y, z, &argument);
 }
 
 
@@ -11222,22 +11063,10 @@ int32_t retdec_actor_step_callback(int32_t state_ptr)
     return kinoko_sq_pop(vm, 2);
 }
 
-static void retdec_actor_tick(int32_t actor)
-{
-    int32_t animation_key;
-    int32_t callback_type;
+int32_t kinoko_actor_trace_step_begin(KinokoActor *receiver, int32_t callback_type) {
+    const int32_t actor = (int32_t)(intptr_t)receiver;
     static volatile LONG step_trace_count;
     LONG step_trace_index;
-    int32_t step_result;
-
-    if (actor == 0)
-        return;
-
-    /* Actor::Step runs the script callback first.  A callback may replace
-       the selected animation, so the original compares the key captured
-       before the call with the key still stored afterwards. */
-    animation_key = *(int32_t *)(intptr_t)(actor + 208);
-    callback_type = function_4a9a30_this(actor + 108);
     step_trace_index = InterlockedIncrement(&step_trace_count);
     if (step_trace_index <= 64 &&
         *(int32_t *)(intptr_t)(actor + 224) >= 0x200 &&
@@ -11263,9 +11092,11 @@ static void retdec_actor_tick(int32_t actor)
                          *(int32_t *)(intptr_t)(actor + 36));
         retdec_trace_i32("actor:step-y-before", y_bits);
     }
-    if (callback_type == 0x08000100) {
-        retdec_trace_invalid_actor("before-script",actor);
-        step_result = kinoko_actor_step_callback(actor);
+    if (callback_type == 0x08000100) retdec_trace_invalid_actor("before-script",actor);
+    return step_trace_index;
+}
+void kinoko_actor_trace_step_end(KinokoActor *receiver, int32_t step_result, int32_t step_trace_index) {
+    const int32_t actor = (int32_t)(intptr_t)receiver;
         retdec_trace_invalid_actor("after-script",actor);
         /* Original 45E180 failure retirement is handled by the C++ adapter. */
         if (step_result < 0) {
@@ -11295,9 +11126,10 @@ static void retdec_actor_tick(int32_t actor)
                    sizeof(y_bits));
             retdec_trace_i32("actor:step-y-after", y_bits);
         }
-    }
 
-    kinoko_actor_advance_animation(actor, animation_key);
+}
+static void retdec_actor_tick(int32_t actor) {
+    kinoko_actor_tick((KinokoActor *)(intptr_t)actor);
 }
 
 static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
@@ -11372,151 +11204,18 @@ void kinoko_actor_trace_motion(KinokoActor *receiver, int32_t phase) {
     }
 }
 
-static void retdec_actor_collect_tree(int32_t manager, int32_t node,
-                                      int32_t sentinel, int32_t *actors,
-                                      int32_t capacity, int32_t *count)
-{
-    if (manager == 0 || node == 0 || node == sentinel ||
-        actors == NULL || count == NULL)
-        return;
-    while (node != sentinel) {
-        int32_t actor=kinoko_priority_value(node);
-        int32_t next=kinoko_priority_next(manager+84,node);
-        if (*(unsigned char *)(intptr_t)(actor + 22) == 0) {
-            if (*count < capacity)
-                actors[(*count)++] = actor;
-        } else {
-            int32_t removed = 0;
-            uint32_t handle = *(uint32_t *)(intptr_t)(actor + 12);
-            /* 463DC2..463DD5 erases the tree node and releases its pooled actor. */
-            function_463280_this(manager + 84, (int32_t)(intptr_t)&removed, node);
-            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4), handle);
-        }
-        node = next;
-    }
-}
+
 
 static int32_t retdec_actor_manager_refresh(int32_t manager)
 {
-    int32_t sentinel;
-    int32_t count;
-    int32_t capacity;
-    int32_t *actors;
-    int32_t index;
-    int32_t active_count;
-    int32_t back_count;
-    int32_t middle_count;
-    int32_t front_count;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (manager == 0)
-        return 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:refresh-dirty",
-                         *(int32_t *)(intptr_t)(manager + 120));
-        retdec_trace_i32("actor-manager:refresh-tree-count",
-                         *(int32_t *)(intptr_t)(manager + 92));
-    }
-    if (*(unsigned char *)(intptr_t)(manager + 120) == 0)
-        return *(int32_t *)(intptr_t)(manager + 116);
-    sentinel = *(int32_t *)(intptr_t)(manager + 88);
-    count = *(int32_t *)(intptr_t)(manager + 92);
-    if (sentinel == 0 || count <= 0) {
-        *(int32_t *)(intptr_t)(manager + 116) = 0;
-        *(unsigned char *)(intptr_t)(manager + 120) = 0;
-        return 0;
-    }
-    /* 463D77/463D85 grow the update and collision-candidate vectors together. */
-    for (int32_t offset = 100; offset <= 124; offset += 24) {
-        int32_t begin = *(int32_t *)(intptr_t)(manager + offset);
-        int32_t end = *(int32_t *)(intptr_t)(manager + offset + 4);
-        if (begin == 0 || (end - begin) / 4 < count) {
-            if (count > INT32_MAX / 8 ||
-                !kinoko_native_buffer_ensure(manager + offset, (uint32_t)count * 8))
-                return 0;
-            begin = *(int32_t *)(intptr_t)(manager + offset);
-            *(int32_t *)(intptr_t)(manager + offset + 4) = begin + count * 8;
-        }
-    }
-    actors = *(int32_t **)(intptr_t)(manager + 100);
-    capacity = (*(int32_t *)(intptr_t)(manager + 104) -
-                *(int32_t *)(intptr_t)(manager + 100)) / 4;
-    active_count = 0;
-    retdec_actor_collect_tree(
-        manager, kinoko_priority_first(manager+84), sentinel,
-        actors, capacity, &active_count);
-
-    back_count = 0;
-    middle_count = 0;
-    front_count = 0;
-    for (index = 0; index < active_count; ++index) {
-        int32_t actor = actors[index];
-        int32_t priority;
-
-        if (*(unsigned char *)(intptr_t)(actor + 22) != 0)
-            continue;
-        priority = *(int32_t *)(intptr_t)(actor + 228);
-        if (priority == -1)
-            ++back_count;
-        if (priority < 0xffff)
-            ++middle_count;
-        if (priority < 0x10000)
-            ++front_count;
-    }
-    *(int32_t *)(intptr_t)(manager + 116) = active_count;
-    if (*(int32_t *)(intptr_t)(manager + 20) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 12) = 0;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 16) =
-            back_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 24) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 12) =
-            back_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 16) =
-            middle_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 28) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 12) =
-            middle_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 16) =
-            front_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 32) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 12) =
-            front_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 16) =
-            active_count;
-    }
-    *(unsigned char *)(intptr_t)(manager + 120) = 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:refresh-active-count", active_count);
-        retdec_trace_i32("actor-manager:refresh-back-count", back_count);
-        retdec_trace_i32("actor-manager:refresh-middle-count", middle_count);
-        retdec_trace_i32("actor-manager:refresh-front-count", front_count);
-    }
-    return active_count;
+    return kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)manager);
 }
 
 static int32_t retdec_actor_activate_if_visible(int32_t actor,
                                                 int32_t camera,
                                                 float extent)
 {
-    if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 20) != 0)
-        return 0;
-    if (camera == 0 ||
-        (*(float32_t *)(intptr_t)(actor + 440) <=
-             *(float32_t *)(intptr_t)(camera + 80) + extent &&
-         *(float32_t *)(intptr_t)(camera + 72) - extent <=
-             *(float32_t *)(intptr_t)(actor + 448) &&
-         *(float32_t *)(intptr_t)(camera + 84) + extent >=
-             *(float32_t *)(intptr_t)(actor + 444) &&
-         *(float32_t *)(intptr_t)(actor + 452) >=
-             *(float32_t *)(intptr_t)(camera + 76) - extent)) {
-        *(unsigned char *)(intptr_t)(actor + 40) = 1;
-        return 1;
-    }
-    return 0;
+    return kinoko_actor_activate((KinokoActor *)(intptr_t)actor, (KinokoCamera *)(intptr_t)camera, extent);
 }
 
 /* Keep a narrow state snapshot for the opening actors while comparing the
@@ -11634,61 +11333,7 @@ static void retdec_trace_player_state(const char *phase, int32_t actor,
    the same order as the original 4641D0 call. */
 static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
 {
-    int32_t actors;
-    int32_t count;
-    int32_t update_mask;
-    int32_t index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 16)
-        retdec_trace_i32("actor-manager:update-entry", manager);
-    retdec_actor_manager_refresh(manager);
-    if (manager == 0)
-        return 0;
-
-    /* The original 4641D0 refreshes the vector, updates controller-owned
-       actors, then refreshes once more before stepping the visible actors. */
-    function_462e80(manager);
-    retdec_actor_manager_refresh(manager);
-
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    update_mask = *(int32_t *)(intptr_t)(manager + 64);
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:update-count", count);
-        retdec_trace_i32("actor-manager:update-mask", update_mask);
-    }
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        retdec_trace_actor_window_state(1, actor, update_mask);
-        retdec_trace_player_state("before-script", actor, camera);
-        if (actor != 0 &&
-            (*(unsigned char *)(intptr_t)(actor + 40) != 0 ||
-             retdec_actor_activate_if_visible(actor, camera, 64.0f)) &&
-            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
-            retdec_actor_tick(actor);
-        retdec_trace_actor_window_state(2, actor, update_mask);
-        retdec_trace_player_state("after-script", actor, camera);
-    }
-
-    /* 464285 refreshes after callbacks, which can create or release actors. */
-    retdec_actor_manager_refresh(manager);
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    function_469740();
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        if (actor != 0 &&
-            *(unsigned char *)(intptr_t)(actor + 40) != 0 &&
-            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
-            function_45ec60(actor);
-        retdec_trace_actor_window_state(3, actor, update_mask);
-        retdec_trace_player_state("after-motion", actor, camera);
-    }
-    return count;
+    return kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)manager, (KinokoCamera *)(intptr_t)camera);
 }
 
 static int32_t retdec_actor_render(int32_t actor, int32_t camera)
@@ -11877,50 +11522,7 @@ static int32_t retdec_actor_render(int32_t actor, int32_t camera)
 static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
                                     int32_t layer_index)
 {
-    int32_t layer;
-    int32_t begin;
-    int32_t end;
-    int32_t actors;
-    int32_t actor;
-    int32_t result = 0;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-update:manager", this_ptr);
-        retdec_trace_i32("actor-update:layer-index", layer_index);
-        retdec_trace_i32("actor-update:dirty", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 116) : 0);
-    }
-    if (this_ptr == 0 || layer_index < 0 ||
-        *(int32_t *)(intptr_t)(this_ptr + 116) == 0)
-        return 0;
-
-    layer = *(int32_t *)(intptr_t)(this_ptr + 20 + 4 * layer_index);
-    if (layer == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(layer + 12);
-    end = *(int32_t *)(intptr_t)(layer + 16);
-    actors = *(int32_t *)(intptr_t)(this_ptr + 100);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-update:layer", layer);
-        retdec_trace_i32("actor-update:begin", begin);
-        retdec_trace_i32("actor-update:end", end);
-        retdec_trace_i32("actor-update:actors", actors);
-    }
-    if (actors == 0 || begin < 0 || end < begin)
-        return 0;
-
-    while (begin < end) {
-        actor = *(int32_t *)(intptr_t)(actors + 4 * begin);
-        if (actor != 0) {
-            result = retdec_actor_render(actor, update_arg);
-            if (trace_index <= 32)
-                retdec_trace_i32("actor-update:actor", actor);
-        }
-        ++begin;
-    }
-    return result;
+    return kinoko_actor_manager_render_layer((KinokoActorManager *)(intptr_t)this_ptr, (KinokoCamera *)(intptr_t)update_arg, layer_index);
 }
 
 
@@ -11967,30 +11569,7 @@ int32_t function_462f30(int32_t actor) {
  * using the changed actor priority. */
 static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
 {
-    int32_t old_node;
-    int32_t erased;
-    int32_t actor_source;
-    int32_t node;
-    int32_t inserted[2] = { 0, 0 };
-
-    if (manager_ptr == 0 || actor_ptr == 0)
-        return 0;
-    old_node = *(int32_t *)(intptr_t)(actor_ptr + 16);
-    if (old_node != 0) {
-        erased = 0;
-        function_463280_this(manager_ptr + 84,
-                             (int32_t)(intptr_t)&erased, old_node);
-        *(int32_t *)(intptr_t)(actor_ptr + 16) = 0;
-    }
-    actor_source = actor_ptr;
-    node = function_463210_this(manager_ptr + 84,
-                                (int32_t)(intptr_t)&actor_source);
-    if (node == 0 || function_463610_this(
-            manager_ptr + 84, (int32_t)(intptr_t)inserted, node, 0) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 16) = inserted[0];
-    *(char *)(intptr_t)(manager_ptr + 120) = 1;
-    return (int32_t)(intptr_t)inserted;
+    return kinoko_actor_manager_reindex((KinokoActorManager *)(intptr_t)manager_ptr, (KinokoActor *)(intptr_t)actor_ptr);
 }
 
 
@@ -12000,35 +11579,12 @@ static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
 
 // Address range: 0x463730 - 0x4637f2
 int32_t function_463730(int32_t tree) {
-    int32_t manager = tree - 84;
-    int32_t sentinel = *(int32_t *)(intptr_t)(tree + 4);
-    int32_t node, root;
-    if (sentinel == 0)
-        return 0;
-    node=kinoko_priority_first(tree);
-    while(node!=sentinel) {
-        int32_t actor=kinoko_priority_value(node);
-        int32_t next=kinoko_priority_next(tree,node);
-        /* 463747..46375B releases the handle when the tree drops its last owner. */
-        if (actor != 0 && --*(int32_t *)(intptr_t)(actor + 8) == 0)
-            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4),
-                                 (uint32_t)*(int32_t *)(intptr_t)(actor + 12));
-        node = next;
-    }
-    kinoko_priority_clear(tree);
-    return sentinel;
+    return (int32_t)(intptr_t)kinoko_actor_manager_clear_actors((KinokoActorManager *)(intptr_t)(tree - 84));
 }
 
 // Address range: 0x463800 - 0x463819
 static int32_t function_463800_this(int32_t this_ptr) {
-    int32_t result;
-
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 116) = 0;
-    result = function_463730(this_ptr + 84);
-    *(char *)(intptr_t)(this_ptr + 120) = 1;
-    return result;
+    return (int32_t)(intptr_t)kinoko_actor_manager_reset((KinokoActorManager *)(intptr_t)this_ptr);
 }
 
 
@@ -12038,17 +11594,7 @@ static int32_t function_463800_this(int32_t this_ptr) {
 
 /* ActorManager::Init with the original global object supplied explicitly. */
 static int32_t function_463af0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-
-    *(int32_t *)(intptr_t)(this_ptr + 64) = -1;
-    *(int32_t *)(intptr_t)(this_ptr + 116) = 0;
-    while (kinoko_actor_owner_list_size(this_ptr) < 512) {
-        if (function_46aa60_this(this_ptr) == 0)
-            break;
-    }
-    kinoko_actor_owner_list_clear(this_ptr);
-    return 1;
+    return kinoko_actor_manager_initialize((KinokoActorManager *)(intptr_t)this_ptr);
 }
 
 
@@ -12060,80 +11606,10 @@ static int32_t function_463b40_this(
     int32_t second_vtable, int32_t second_type, int32_t second_data,
     int32_t init_source)
 {
-    int32_t handle[2] = { 0, 0 };
-    int32_t actor;
-    int32_t node;
-    int32_t inserted[2] = { 0, 0 };
-    int32_t handle_manager;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:manager", manager_ptr);
-        retdec_trace_i32("actor-create:handle-manager",
-                         manager_ptr != 0
-                             ? *(int32_t *)(intptr_t)(manager_ptr + 4) : 0);
-        retdec_trace_i32("actor-create:first-type", first_type);
-        retdec_trace_i32("actor-create:first-data", first_data);
-        retdec_trace_i32("actor-create:second-type", second_type);
-        retdec_trace_i32("actor-create:second-data", second_data);
-    }
-    if (manager_ptr == 0)
-        return 0;
-    handle_manager = *(int32_t *)(intptr_t)(manager_ptr + 4);
-    actor = function_46ab10_this(handle_manager,
-                                 (int32_t)(intptr_t)handle);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:handle-index", handle[0]);
-        retdec_trace_i32("actor-create:handle-generation", handle[1]);
-        retdec_trace_i32("actor-create:actor", actor);
-    }
-    if (actor == 0)
-        return 0;
-
-    *(int32_t *)(intptr_t)(actor + 12) = handle[0];
-    *(int32_t *)(intptr_t)(actor + 8) = 1;
-    if (init_source != 0)
-        kinoko_actor_set_init_data(actor, init_source);
-
-    if (!function_45e5e0_this(actor, manager_ptr,
-                              first_vtable, first_type, first_data,
-                              x, y, z,
-                              second_vtable, second_type, second_data))
-        return 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:post-init-node",
-                         *(int32_t *)(intptr_t)(actor + 200));
-        retdec_trace_i32("actor:post-init-frame",
-                         *(int32_t *)(intptr_t)(actor + 204));
-        retdec_trace_i32("actor:post-init-active",
-                         *(int32_t *)(intptr_t)(actor + 40));
-        retdec_trace_i32("actor:post-init-id",
-                         *(int32_t *)(intptr_t)(actor + 224));
-    }
-
-    node = function_463210_this(manager_ptr + 84,
-                                (int32_t)(intptr_t)&actor);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor-create:priority-node", node);
-    if (node == 0 || function_463610_this(manager_ptr + 84,
-                                          (int32_t)(intptr_t)inserted,
-                                          node, 0) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(actor + 16) = inserted[0];
-    *(char *)(intptr_t)(manager_ptr + 120) = 1;
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:priority-index", inserted[0]);
-        retdec_trace_i32("actor-create:tree-count",
-                         *(int32_t *)(intptr_t)(manager_ptr + 92));
-        retdec_trace_i32("actor-create:tree-sentinel",
-                         *(int32_t *)(intptr_t)(manager_ptr + 88));
-        retdec_trace_i32("actor-create:tree-root",
-                         kinoko_priority_first(manager_ptr+84));
-        retdec_trace_i32("actor-create:success", actor);
-    }
-    return actor;
+    const KinokoOwnedObjectWords callback = { first_vtable, first_type, first_data };
+    const KinokoOwnedObjectWords argument = { second_vtable, second_type, second_data };
+    return (int32_t)(intptr_t)kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)manager_ptr,
+        &callback, x, y, z, &argument, (const void *)(intptr_t)init_source);
 }
 
 
@@ -13373,47 +12849,7 @@ int32_t function_46a210(int32_t * a1) {
    cannot be called on the generated storage directly. */
 static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 {
-    int32_t handle_manager;
-    int32_t render_list;
-    int32_t resource_list;
-    int32_t priority_tree;
-    int32_t index;
-
-    if (this_ptr == 0)
-        return 0;
-
-    memset((void *)(intptr_t)this_ptr, 0,
-           sizeof(g_retdec_actor_manager_state));
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g31;
-
-    kinoko_actor_owner_list_construct(this_ptr);
-
-    handle_manager = (int32_t)(intptr_t)calloc(1u, 80u);
-    if (handle_manager == 0 ||
-        kinoko_actor_pool_construct(handle_manager) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = handle_manager;
-
-    *(int32_t *)(intptr_t)(this_ptr+40)=kinoko_integer_map_create();
-
-    kinoko_animation_list_construct(this_ptr+52);
-    kinoko_integer_vector_construct(this_ptr+68);
-
-    kinoko_priority_construct(this_ptr+84);
-
-    /* The four ActorManagerRenderLayer instances are the objects returned by
-       CreateRenderLayer("actor_back"/"actor_middle"/...). */
-    for (index = 0; index < 4; ++index) {
-        int32_t layer = (int32_t)(intptr_t)calloc(1u, 20u);
-        if (layer == 0)
-            return 0;
-        *(int32_t *)(intptr_t)layer = (int32_t)(intptr_t)&g27;
-        *(int32_t *)(intptr_t)(layer + 4) = this_ptr;
-        *(int32_t *)(intptr_t)(layer + 8) = index;
-        *(int32_t *)(intptr_t)(this_ptr + 20 + 4 * index) = layer;
-    }
-
-    return this_ptr;
+    return (int32_t)(intptr_t)kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)this_ptr);
 }
 
 // Address range: 0x46a380 - 0x46a38a
@@ -18361,4 +17797,20 @@ int32_t *kinoko_camera_binding_type(void) {
 
 int32_t *kinoko_map_binding_type(void) {
     return kinoko_sqplus_game_type(3, function_4701b0);
+}
+
+/* Host dependencies shared with the reconstructed ActorManager. */
+const void *kinoko_actor_owner_methods(void) { return &g31; }
+const void *kinoko_actor_render_layer_methods(void) { return &g27; }
+const void *kinoko_actor_class_object(void) { return &g602; }
+struct SQVM *kinoko_actor_default_vm(void) { return (struct SQVM *)g644; }
+void kinoko_actor_motion_host(KinokoActor *actor) { function_45ec60((int32_t)(intptr_t)actor); }
+int32_t kinoko_actor_render_host(KinokoActor *actor, KinokoCamera *camera) {
+    return retdec_actor_render((int32_t)(intptr_t)actor, (int32_t)(intptr_t)camera);
+}
+void kinoko_actor_manager_refresh_collision(void) { function_469740(); }
+void kinoko_actor_manager_trace_actor(int32_t phase, KinokoActor *actor, KinokoCamera *camera, int32_t mask) {
+    retdec_trace_actor_window_state(phase, (int32_t)(intptr_t)actor, mask);
+    retdec_trace_player_state(phase == 1 ? "before-script" : phase == 2 ? "after-script" : "after-motion",
+        (int32_t)(intptr_t)actor, (int32_t)(intptr_t)camera);
 }

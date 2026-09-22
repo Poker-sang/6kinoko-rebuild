@@ -55,7 +55,7 @@ extern "C" int32_t function_45e300_this(int32_t actor) {
     const ActorView view(pointer(actor));
     view.clear();
     view.set(&ActorRecord::vtable, static_cast<Address>(kinoko_actor_vtable()));
-    view.set(&ActorRecord::type, int32_t{1});
+    view.set(&ActorRecord::owner_references, int32_t{1});
     for (auto member : script_members)
         ObjectView(view.bytes(member)).initialize(kinoko_squirrel_object_vtable());
     view.set(&ActorRecord::collision_slots, static_cast<Address>(address(view.bytes(&ActorRecord::inline_slots))));

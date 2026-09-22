@@ -1,8 +1,14 @@
 #pragma once
 #include <stdint.h>
+typedef struct KinokoActor KinokoActor;
 #ifdef __cplusplus
 extern "C" {
 #endif
+void *kinoko_actor_priority_insert(void *index, KinokoActor *actor);
+void kinoko_actor_priority_erase(void *index, void *entry);
+void *kinoko_actor_priority_first(void *index);
+void *kinoko_actor_priority_next(void *index, void *entry);
+KinokoActor *kinoko_actor_priority_value(void *entry);
 void kinoko_priority_construct(int32_t tree);
 void kinoko_priority_destroy(int32_t tree);
 void kinoko_priority_clear(int32_t tree);
