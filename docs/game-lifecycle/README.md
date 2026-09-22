@@ -41,4 +41,18 @@ Scene；管理器、相机、地图、输入均为借用指针。
 同帧掩码快照、Actor 字段写入、设备丢失、BeginScene 失败、EndScene
 失败后的返回值，以及场景工厂和销毁标记。相关既有测试改用具名接口。
 按用户要求，仅构建，不执行测试程序或游戏；编译成功不代表测试通过。
-构建结果、源码提交及产物哈希在完成构建后记录。
+
+本批 R1：源码提交 `8b083e4fabbcef5de6c4437525c029799c890c20`。
+VS 2026 / Win32 / Release，全量构建退出码 0，包括新增检查程序及既有
+contract 的编译、链接。没有执行 CTest、contract 或游戏。
+
+- 构建树：`build-runs/game-lifecycle-r1-quiet`，构建日志 `build.log`。
+- EXE：`runtime-builds/game-lifecycle-r1-quiet/kinoko_retdec_rebuild.exe`。
+- EXE SHA256：`065B82363D154CFB33EFE94559DDD7C18523D9E5D7E63005D63C3B561ADF21AB`。
+- `KINOKO_RETDEC_DISABLE_TRACE=ON`；保留 trace 调用，仅静默输出。
+- `stage_dat.ps1` 已复制三个 DAT 到 EXE 同目录，并核对大小及 SHA256：
+  - a：163424746 字节，`DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64`。
+  - b：44681244 字节，`4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2`。
+  - c：11796163 字节，`80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E`。
+
+后续游戏验证交给用户，不将这次构建记录为运行验证。
