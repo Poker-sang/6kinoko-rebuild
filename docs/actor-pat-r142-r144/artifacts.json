@@ -1,0 +1,63 @@
+{
+  "version": "R144",
+  "source_commit": "6c89b7407bda2174f14e6bf405df00e3304f9ee6",
+  "batches": [
+    {
+      "commit": "936d245",
+      "scope": "Actor rendering and shared frame schema",
+      "version": "R142"
+    },
+    {
+      "commit": "b2b8453",
+      "scope": "PAT parsing, frame transforms and reader lifetime",
+      "version": "R143"
+    },
+    {
+      "commit": "6c89b74",
+      "scope": "Typed animation, frame ownership and lookup boundaries",
+      "version": "R144"
+    }
+  ],
+  "build_tree": "build-runs/actor-pat-r144-quiet",
+  "runtime_directory": "runtime-builds/actor-pat-r144-quiet",
+  "configuration": "Release Win32",
+  "trace_disabled": true,
+  "configure_exit_code": 0,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "new_contracts_compiled": [
+    "kinoko_actor_render_contract",
+    "kinoko_pat_animation_contract"
+  ],
+  "game_executed": false,
+  "tests_executed": false,
+  "dat_size_sha256_verified": true,
+  "files": [
+    {
+      "name": "kinoko_retdec_rebuild.exe",
+      "size": 854016,
+      "sha256": "023D58DA72080FB39DD32DCD1EAAF1DB0A8C562BE07F18EB9BB790FB96A2989B"
+    },
+    {
+      "name": "6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "name": "6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "name": "6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    }
+  ],
+  "logs": [
+    "build-runs/actor-pat-r144-quiet/configure.log",
+    "build-runs/actor-pat-r144-quiet/build.log",
+    "build-runs/actor-pat-r144-quiet/stage-dat.log"
+  ],
+  "warnings": "Legacy and third-party warnings remain; build success does not establish runtime equivalence."
+}
