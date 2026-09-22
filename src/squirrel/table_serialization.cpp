@@ -88,8 +88,8 @@ extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
 
     if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
         ok = 0;
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value)));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
 
     while (ok) {
         uint32_t value_type;
@@ -196,9 +196,9 @@ extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
 
     if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
         ok = 0;
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)container)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value)));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)container));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
 
     if (ok && !retdec_squirrel_object_from_pair(
                    container, object_type, object_data))

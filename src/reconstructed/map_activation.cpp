@@ -23,7 +23,7 @@ class InitCallback final {
     ObjectStorage object_{};
 public:
     InitCallback(const KinokoSquirrelObject *environment, const char *name) {
-        (int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(environment), (void *)(&object_), name));
+        kinoko_sqplus_object_get_value((void *)(environment), (void *)(&object_), name);
     }
     ~InitCallback() { kinoko_sqplus_object_destroy((void *)(&object_)); }
     InitCallback(const InitCallback&) = delete;

@@ -41,8 +41,8 @@ public:
 void assign(KinokoScriptCallback *destination,SQVM *vm,const void *environment,const void *closure) {
     const CallbackView view(destination);
     view.set(&KinokoScriptCallback::vm,vm);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::environment)), (const void *)(environment)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::closure)), (const void *)(closure)));
+    kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::environment)), (const void *)(environment));
+    kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::closure)), (const void *)(closure));
 }
 void bind(KinokoScriptCallback *destination,const void *environment,const void *closure) {
     LocalObject saved_environment(environment), saved_function(closure);
@@ -53,14 +53,14 @@ extern "C" KinokoScriptCallback *kinoko_script_callback_construct(KinokoScriptCa
     if (!callback) return nullptr;
     const CallbackView view(callback);
     view.set(&KinokoScriptCallback::vm,current_vm());
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(view.bytes(&KinokoScriptCallback::environment))));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(view.bytes(&KinokoScriptCallback::closure))));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::environment)), (const void *)(intptr_t)((int32_t)(intptr_t)(kinoko_sqplus_root_object()))));
+    kinoko_sqplus_object_initialize((void *)(view.bytes(&KinokoScriptCallback::environment)));
+    kinoko_sqplus_object_initialize((void *)(view.bytes(&KinokoScriptCallback::closure)));
+    kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::environment)), kinoko_sqplus_root_object());
     // Keep the established null-name compatibility path (zero words), including
     // its external-reference cleanup. Named lookup uses the original root.
     KinokoOwnedObjectWords temporary{};
     if (name) (int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(view.bytes(&KinokoScriptCallback::environment)), (void *)(&temporary), name));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::closure)), (const void *)(&temporary)));
+    kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::closure)), (const void *)(&temporary));
     kinoko_sqplus_object_destroy((void *)(&temporary));
     return callback;
 }
@@ -88,7 +88,7 @@ extern "C" int32_t kinoko_actor_clear_script(KinokoActor *actor) {
         kinoko_script_callback_clear(update(actor));
         kinoko_script_callback_clear(collision(actor));
         KinokoOwnedObjectWords empty{};
-        (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&empty)));
+        kinoko_sqplus_object_initialize((void *)(&empty));
         // 45FC7A/94 target the CLASS defaults, not the outgoing instance.
         kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g601), (const void *)(&empty));
         kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g600), (const void *)(&empty));
@@ -136,6 +136,6 @@ extern "C" int32_t __fastcall kinoko_camera_update(KinokoCamera *camera,void *) 
 
 extern "C" void kinoko_actor_clear_failed_collision_callback(KinokoActor *actor) {
     KinokoOwnedObjectWords empty{};
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&empty)));
+    kinoko_sqplus_object_initialize((void *)(&empty));
     kinoko_actor_set_collision_callback(actor,nullptr,empty.vtable,empty.type,empty.value);
 }

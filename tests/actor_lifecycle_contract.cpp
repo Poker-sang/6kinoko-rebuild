@@ -176,7 +176,7 @@ void lifecycle(HSQUIRRELVM vm) {
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "destruction boundaries");
     auto* allocation = std::malloc(0x220); require(allocation != nullptr, "Actor allocation");
     const auto allocated_actor = address(allocation), deleted = deletes;
-    (int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(allocated_actor)));
+    kinoko_actor_construct((KinokoActor *)(intptr_t)(allocated_actor));
     require(reinterpret_cast<Destroy>(kinoko_actor_delete_method)(allocated_actor, 1) == allocated_actor, "deleting entry returns receiver");
     require(deletes == deleted + 1 && deleted_address == allocated_actor, "deleting entry frees actual receiver, never g1224");
     top(vm, base, "lifecycle stack balanced");

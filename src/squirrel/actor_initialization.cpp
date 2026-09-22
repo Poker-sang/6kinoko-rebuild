@@ -17,7 +17,7 @@ using kinoko::legacy::pointer;
 // These are external SqPlus references, not SQObjectPtr values. Their release
 // order and the consuming initialization-call ABI match Squirrel 2.2.2.
 void assign(void *destination,const void *source) {
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(destination), (const void *)(source)));
+    kinoko_sqplus_object_assign((void *)(destination), (const void *)(source));
 }
 void release(void *object) { kinoko_sqplus_object_destroy((void *)(object)); }
 }
@@ -51,7 +51,7 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     view.set(&ActorRecord::id,static_cast<int32_t>(view.get(&ActorRecord::pool_handle)&0xffff));
     view.set(&ActorRecord::manager,manager);
     KinokoOwnedObjectWords instance{};
-    (int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(&instance), (const void *)(kinoko_actor_class_object())));
+    kinoko_sqplus_object_new_instance((void *)(&instance), (const void *)(kinoko_actor_class_object()));
     assign(view.bytes(&ActorRecord::script_object),&instance);
     release(&instance);
     kinoko_sqplus_object_set_instance((void *)(view.bytes(&ActorRecord::script_object)), (void *)(actor));
@@ -128,10 +128,10 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     if (vm && kinoko_sqplus_object_type((void *)(&first))==0x08000100) {
         KinokoOwnedObjectWords callback_object{};
         KinokoScriptCallback call_state{};
-        (int32_t)(intptr_t)(kinoko_sqplus_object_construct_value((void *)(&callback_object), second.type, second.value));
+        kinoko_sqplus_object_construct_value((void *)(&callback_object), second.type, second.value);
         call_state.vm=vm;
-        (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&call_state.environment)), (const void *)(view.bytes(&ActorRecord::script_object))));
-        (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&call_state.closure)), (const void *)(&first)));
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&call_state.environment)), (const void *)(view.bytes(&ActorRecord::script_object)));
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&call_state.closure)), (const void *)(&first));
         kinoko_script_callback_invoke_owned(&call_state,&callback_object,callback_object.type,callback_object.value);
         release(&call_state.closure);
         release(&call_state.environment);
@@ -156,6 +156,6 @@ extern "C" KinokoActor *kinoko_actor_create_map_instance(KinokoActorManager *man
 }
 extern "C" KinokoActor *kinoko_actor_create_collision_proxy(KinokoActorManager *manager) {
     KinokoOwnedObjectWords empty{};
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&empty)));
+    kinoko_sqplus_object_initialize((void *)(&empty));
     return kinoko_actor_manager_create(manager,&empty,0.0f,0.0f,1.0f,&empty,nullptr);
 }

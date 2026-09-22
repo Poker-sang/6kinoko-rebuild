@@ -132,10 +132,6 @@ extern "C" void * kinoko_sqplus_resolve_method(void * output_address, struct SQV
     store(output_address, result);
     return output_address;
 }
-extern "C" int32_t kinoko_sqplus_resolve_method_compat(struct SQVM * vm) {
-    static int32_t legacy_result[2];
-    return (int32_t)(intptr_t)(kinoko_sqplus_resolve_method(legacy_result, vm));
-}
 extern "C" int32_t kinoko_sqplus_void_method(struct SQVM * vm) {
     ResolvedMethod method;
     if (!resolve(vm, method)) return instance_error(vm);

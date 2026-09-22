@@ -96,9 +96,9 @@ void ownership(HSQUIRRELVM vm) {
     replacement.capture(vm);
     require((int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)(replacement.id()), (const void *)(intptr_t)(copy.id()))) == replacement.id(), "assign object result");
     require(userdata_releases == released + 1, "assignment releases previous value exactly once");
-    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(copy.id())));
+    kinoko_sqplus_object_reset((void *)(intptr_t)(copy.id()));
     require(userdata_releases == released + 1, "second owner keeps userdata alive");
-    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(replacement.id())));
+    kinoko_sqplus_object_reset((void *)(intptr_t)(replacement.id()));
     require(userdata_releases == released + 2, "last external reference releases userdata");
     require(kinoko_sqplus_object_destroy((void *)(intptr_t)(replacement.id())) == replacement.id() + 4, "destructor result");
     require((int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(0))) == 0, "null constructor/reset");
@@ -110,7 +110,7 @@ void ownership(HSQUIRRELVM vm) {
         std::array<unsigned char, 20> buffer;
         buffer.fill(0xa5);
         const int32_t slot = address(buffer.data() + 1 + offset);
-        require((int32_t)(intptr_t)(kinoko_sqplus_object_initialize_adapter((void *)(intptr_t)(slot))) == slot, "legacy default-constructor alias");
+        require((int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)(slot))) == slot, "legacy default-constructor alias");
         sq_pushstring(vm, "unaligned-owner", -1);
         HSQOBJECT borrowed;
         sq_getstackobj(vm, -1, &borrowed);
@@ -140,8 +140,8 @@ void tables_arrays_and_iteration(HSQUIRRELVM vm) {
     require(kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(table.id()), "answer", (const void *)(intptr_t)(value.id())) == 1, "string-key rawset");
     require((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(intptr_t)(table.id()), (void *)(intptr_t)(result.id()), "answer")) == result.words.data(), "named lookup result pointer");
     require(result.words[1] == OT_INTEGER && result.words[2] == 37, "named lookup copies entire pair");
-    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(result.id())));
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(intptr_t)(table.id()), (void *)(intptr_t)(result.id()), "missing"));
+    kinoko_sqplus_object_reset((void *)(intptr_t)(result.id()));
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(table.id()), (void *)(intptr_t)(result.id()), "missing");
     require(result.words[1] == OT_NULL, "missing named lookup initializes null");
     require(kinoko_sqplus_object_exists((void *)(intptr_t)(table.id()), "answer") == 1 && kinoko_sqplus_object_exists((void *)(intptr_t)(table.id()), "absent") == 0, "slot existence");
     require(kinoko_sqplus_object_size((void *)(intptr_t)(table.id())) == 3, "table size");
@@ -222,8 +222,8 @@ void userdata_delegates_and_types(HSQUIRRELVM vm) {
     require(kinoko_sqplus_object_typetag((void *)(intptr_t)(klass.id()), &out_tag) == 1 && out_tag == address(&tag), "class type tag");
     out_tag = 88;
     require(kinoko_sqplus_object_typetag((void *)(intptr_t)(scalar.id()), &out_tag) == 0 && out_tag == 88, "failed object tag leaves output");
-    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(instance.id())));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(instance.id()), (const void *)(intptr_t)(scalar.id())));
+    kinoko_sqplus_object_reset((void *)(intptr_t)(instance.id()));
+    kinoko_sqplus_object_new_instance((void *)(intptr_t)(instance.id()), (const void *)(intptr_t)(scalar.id()));
     require(instance.words[1] == OT_NULL, "invalid class produces null wrapper");
     sq_getlasterror(vm);
     require(sq_gettype(vm, -1) == OT_STRING, "source factory preserves invalid-class error");
@@ -265,7 +265,7 @@ void threads(HSQUIRRELVM vm) {
     while (static_cast<SQUnsignedInteger>(vm->_top) < vm->_stack.size()) sq_pushinteger(vm, 17);
     const auto full_top = sq_gettop(vm);
     const auto capacity = vm->_stack.size();
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign_thread((void *)(intptr_t)(thread_owner.id()), (struct SQVM *)(child)));
+    kinoko_sqplus_object_assign_thread((void *)(intptr_t)(thread_owner.id()), (struct SQVM *)(child));
     require_top(vm, full_top, "thread assignment after stack growth");
     require(vm->_stack.size() > capacity, "thread push reserves source VM stack");
     sq_settop(vm, top);

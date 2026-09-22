@@ -86,7 +86,7 @@ void ownership(HSQUIRRELVM vm) {
     require(kinoko_sqrat_set_pair((struct SQVM *)(vm), table.data(), "value", userdata.data()), "newslot userdata");
     kinoko_sqrat_release_pair((struct SQVM *)(vm), userdata.data());
     require(kinoko_sqrat_get((void *)(object.data()), "value", (void *)(intptr_t)(fetched.id())), "get externally owned pair");
-    require(kinoko_sqrat_set_int((struct SQVM *)(vm), table.data(), "value", 0), "replace table-owned userdata");
+    require(kinoko_sqrat_bind_int((struct SQVM *)(vm), table.data(), "value", 0), "replace table-owned userdata");
     require(released == before, "returned pair survives removal from table");
     kinoko_sqrat_release_pair((struct SQVM *)(vm), fetched.data());
     kinoko_sqrat_release_pair((struct SQVM *)(vm), fetched.data());
@@ -101,9 +101,9 @@ void ownership(HSQUIRRELVM vm) {
 void setters(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm);
     Pair root(vm); sq_pushroottable(vm); root.capture();
-    require(kinoko_sqrat_set_int((struct SQVM *)(vm), root.data(), "bridge_i", -123), "set integer");
-    require(kinoko_sqrat_set_bool((struct SQVM *)(vm), root.data(), "bridge_b", 7), "set true");
-    require(kinoko_sqrat_set_string((struct SQVM *)(vm), root.data(), "bridge_s", nullptr), "null text becomes empty string");
+    require(kinoko_sqrat_bind_int((struct SQVM *)(vm), root.data(), "bridge_i", -123), "set integer");
+    require(kinoko_sqrat_bind_bool((struct SQVM *)(vm), root.data(), "bridge_b", 7), "set true");
+    require(kinoko_sqrat_bind_string((struct SQVM *)(vm), root.data(), "bridge_s", nullptr), "null text becomes empty string");
     require(kinoko_sqrat_raw_set_int((struct SQVM *)(vm), root.data(), "bridge_i", 51), "raw integer");
     require(kinoko_sqrat_raw_set_float((struct SQVM *)(vm), root.data(), "bridge_f", -1.25f), "raw float");
     require(kinoko_sqrat_raw_set_bool((struct SQVM *)(vm), root.data(), "bridge_b", 0), "raw false");
@@ -115,7 +115,7 @@ void setters(HSQUIRRELVM vm) {
     require(!kinoko_sqrat_raw_set_int((struct SQVM *)(vm), instance.data(), "missing", 1), "raw instance unknown field fails");
     // 2.2.2 sq_newslot on an instance returns SQ_OK without publishing a slot.
     // The old diagnostic readback triggered _get even though the setter did not.
-    require(kinoko_sqrat_set_int((struct SQVM *)(vm), instance.data(), "pl", 42), "preserve instance newslot return");
+    require(kinoko_sqrat_bind_int((struct SQVM *)(vm), instance.data(), "pl", 42), "preserve instance newslot return");
     evaluate(vm, "if (bridge_reads != 0) throw \"diagnostics invoked _get\";");
     require(kinoko_sqrat_set_pair((struct SQVM *)(vm), root.data(), "bridge_instance", instance.data()), "publish instance");
     evaluate(vm, "if (bridge_instance.value != 7) throw \"raw field\";");
@@ -130,7 +130,7 @@ void delegates(HSQUIRRELVM vm) {
     Pair first(vm), second(vm), null(vm), wrong(vm), result(vm), userdata(vm);
     require(kinoko_sqrat_new_table((struct SQVM *)(vm), first.data()), "first delegate table");
     require(kinoko_sqrat_new_table((struct SQVM *)(vm), second.data()), "second delegate table");
-    kinoko_sqrat_set_int((struct SQVM *)(vm), second.data(), "inherited", 246);
+    kinoko_sqrat_bind_int((struct SQVM *)(vm), second.data(), "inherited", 246);
     require(kinoko_sqrat_set_delegate((struct SQVM *)(vm), first.data(), second.data()), "table delegate source method");
     auto object = wrapper(vm, first);
     require(kinoko_sqrat_get((void *)(object.data()), "inherited", (void *)(intptr_t)(result.id())), "inherited lookup");

@@ -11,7 +11,7 @@ template<class T> void copy(const ActorView& out,const ActorView& in,T ActorReco
     out.set(member,in.get(member));
 }
 void copy_script(const ActorView& out,const ActorView& in,ScriptStorage ActorRecord::*member) {
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(member)), (const void *)(in.bytes(member))));
+    kinoko_sqplus_object_assign((void *)(out.bytes(member)), (const void *)(in.bytes(member)));
 }
 }
 extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
@@ -28,8 +28,8 @@ extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
     // Init replaces these same references. Retain argument before callback and
     // release in reverse order, matching the original by-value temporaries.
     KinokoOwnedObjectWords argument{},callback{};
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&argument)), (const void *)(view.bytes(&ActorRecord::initial_argument))));
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&callback)), (const void *)(view.bytes(&ActorRecord::initial_function))));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&argument)), (const void *)(view.bytes(&ActorRecord::initial_argument)));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&callback)), (const void *)(view.bytes(&ActorRecord::initial_function)));
     kinoko_actor_initialize(actor,view.get(&ActorRecord::manager),&callback,
         view.get(&ActorRecord::spawn_x),view.get(&ActorRecord::spawn_y),view.get(&ActorRecord::spawn_z),&argument);
     kinoko_sqplus_object_destroy((void *)(&callback));

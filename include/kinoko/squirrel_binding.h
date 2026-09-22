@@ -30,10 +30,10 @@ void * kinoko_sqplus_construct_class_binding(void * this_ptr, const char *name, 
 int32_t *kinoko_sqplus_define_actor_class(int32_t *object_ptr, const char *name,
                                       int32_t parent_ptr);
 void  kinoko_sqplus_register_actor_method(struct SQVM * vm, int32_t *object_ptr, const char *name, void * native_function, void * type_wrapper, int32_t slot_flags);
-int32_t  kinoko_sqplus_find_variable(int32_t *context, int32_t *out_varinfo);
-int32_t  kinoko_sqplus_find_table_variable(int32_t *out_ptr, int32_t *context);
-int32_t  kinoko_sqplus_read_variable(int32_t *context, int32_t varinfo, int32_t source_ptr);
-int32_t  kinoko_sqplus_write_variable(int32_t *context, int32_t varinfo, int32_t source_ptr);
+int32_t  kinoko_sqplus_find_variable(const void *context, int32_t *out_varinfo);
+int32_t  kinoko_sqplus_find_table_variable(int32_t *out_ptr, const void *context);
+int32_t  kinoko_sqplus_read_variable(const void *context, int32_t varinfo, int32_t source_ptr);
+int32_t  kinoko_sqplus_write_variable(const void *context, int32_t varinfo, int32_t source_ptr);
 int32_t  kinoko_sqplus_resolve_instance_variable(int32_t vm, int32_t top, int32_t *out_varinfo, int32_t *out_source);
 int32_t  kinoko_sqplus_table_get(struct SQVM * a1);
 int32_t  kinoko_sqplus_instance_get(struct SQVM * a1);
@@ -47,7 +47,6 @@ int32_t  kinoko_sqplus_call_integer(void * a1, void * a2, int32_t a3, struct SQV
 int32_t  kinoko_sqplus_call_rectangle(void * a1, void * a2, int32_t a3, struct SQVM * a4, int32_t a5);
 int32_t  kinoko_sqplus_call_move(void * a1, void * a2, int32_t a3, struct SQVM * a4, int32_t a5);
 void * kinoko_sqplus_resolve_method(void * result_ptr, struct SQVM * vm);
-int32_t  kinoko_sqplus_resolve_method_compat(struct SQVM * vm);
 int32_t  kinoko_sqplus_void_method(struct SQVM * a1);
 int32_t  kinoko_sqplus_object_method(struct SQVM * a1);
 int32_t  kinoko_sqplus_integer_method(struct SQVM * a1);

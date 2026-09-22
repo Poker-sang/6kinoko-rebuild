@@ -261,7 +261,7 @@
     null
   ],
   "retdec_msvc_0_Init_locks_std__QAE_XZ5_this": [
-    "kinoko_sqplus_object_initialize_adapter",
+    "kinoko_sqplus_object_initialize",
     {
       "0": "void *"
     },
@@ -442,7 +442,7 @@
     "void *"
   ],
   "function_460540": [
-    "kinoko_sqplus_resolve_method_compat",
+    "removed unused static-result adapter; use kinoko_sqplus_resolve_method",
     {
       "0": "struct SQVM *"
     },
@@ -544,7 +544,7 @@
     null
   ],
   "function_4a90c0": [
-    "kinoko_sqplus_new_instance_adapter",
+    "kinoko_sqplus_object_new_instance",
     {},
     null
   ],
@@ -649,21 +649,21 @@
     null
   ],
   "retdec_sqrat_set_int": [
-    "kinoko_sqrat_set_int",
+    "kinoko_sqrat_bind_int",
     {
       "0": "struct SQVM *"
     },
     null
   ],
   "retdec_sqrat_set_bool": [
-    "kinoko_sqrat_set_bool",
+    "kinoko_sqrat_bind_bool",
     {
       "0": "struct SQVM *"
     },
     null
   ],
   "retdec_sqrat_set_string": [
-    "kinoko_sqrat_set_string",
+    "kinoko_sqrat_bind_string",
     {
       "0": "struct SQVM *"
     },

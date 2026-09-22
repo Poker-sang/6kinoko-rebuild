@@ -1015,7 +1015,7 @@ int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environme
         return 0;
     /* 415FD0:4160DC installs these in the script environment before loading. */
     for (int32_t value = 0; value < 6; ++value) {
-        if (!kinoko_sqrat_set_int((struct SQVM *)(intptr_t)(vm), environment, names[value], value))
+        if (!kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), environment, names[value], value))
             return 0;
     }
     return kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), environment, "CompileFile", address(retdec_local_compile_file_native), nullptr, 0);
@@ -2107,10 +2107,10 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
                                global_pair[0], global_pair[1]);
     }
 
-    kinoko_sqrat_set_string((struct SQVM *)(intptr_t)(vm), act_pair, "stName", act_name);
-    kinoko_sqrat_set_int((struct SQVM *)(intptr_t)(vm), act_pair, "resolutionMs", field<int32_t>(act + 4));
-    kinoko_sqrat_set_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenWidth", field<int32_t>(act + 8));
-    kinoko_sqrat_set_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenHeight", field<int32_t>(act + 12));
+    kinoko_sqrat_bind_string((struct SQVM *)(intptr_t)(vm), act_pair, "stName", act_name);
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "resolutionMs", field<int32_t>(act + 4));
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenWidth", field<int32_t>(act + 8));
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenHeight", field<int32_t>(act + 12));
     if (!kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), act_pair, "global", global_pair) ||
         !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), act_pair, "resource", resource_pair) ||
         !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), global_pair, "thisAct", act_pair) ||

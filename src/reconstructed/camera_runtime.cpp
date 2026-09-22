@@ -2,7 +2,7 @@
 #include "kinoko/legacy_memory.hpp"
 extern "C" {
 extern int32_t g611[3],g722[3];
-int32_t  kinoko_sqplus_new_instance_adapter(int32_t *, int32_t *);
+void* kinoko_sqplus_object_new_instance(void*, const void*);
 void * kinoko_sqplus_object_assign(void * , const void * );
 int32_t  kinoko_sqplus_object_destroy(void * );
 int32_t  kinoko_sqplus_object_set_instance(void * , void * );
@@ -17,8 +17,8 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     if (!camera) return 0;
     const View state(camera);
     int32_t temporary[3]{};
-    const auto object=kinoko_sqplus_new_instance_adapter(temporary, g611);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(state.bytes(&Record::script_object)), (const void *)(intptr_t)(object)));
+    auto* object=kinoko_sqplus_object_new_instance(temporary, g611);
+    kinoko_sqplus_object_assign((void *)(state.bytes(&Record::script_object)), object);
     kinoko_sqplus_object_destroy((void *)(temporary));
     kinoko_sqplus_object_set_instance((void *)(state.bytes(&Record::script_object)), (void *)(camera));
     const auto result=kinoko_sqplus_object_raw_set_name((void *)(g722), "camera", (const void *)(camera));
@@ -34,10 +34,10 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
 }
 extern "C" KinokoCamera *kinoko_camera_copy(KinokoCamera *destination,KinokoCamera *source) {
     const View out(destination),in(source);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::script_object)), (const void *)(in.bytes(&Record::script_object))));
+    kinoko_sqplus_object_assign((void *)(out.bytes(&Record::script_object)), (const void *)(in.bytes(&Record::script_object)));
     out.set(&Record::update_vm,in.get(&Record::update_vm));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_environment)), (const void *)(in.bytes(&Record::update_environment))));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_function)), (const void *)(in.bytes(&Record::update_function))));
+    kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_environment)), (const void *)(in.bytes(&Record::update_environment)));
+    kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_function)), (const void *)(in.bytes(&Record::update_function)));
     for(auto field:{&Record::x,&Record::y,&Record::center_x,&Record::center_y,
         &Record::offset_x,&Record::offset_y,&Record::width,&Record::height}) out.set(field,in.get(field));
     out.set(&Record::bounds,in.get(&Record::bounds));

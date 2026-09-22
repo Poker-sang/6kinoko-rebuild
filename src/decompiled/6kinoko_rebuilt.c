@@ -2177,7 +2177,6 @@ int32_t  kinoko_sqplus_release_vm_wrappers(void);
 int32_t  kinoko_sqplus_print(struct SQVM * vm, const char *format, ...);
 void * kinoko_sqplus_root_object(void);
 int32_t  kinoko_sqplus_select_vm(struct SQVM * a1);
-int32_t  kinoko_sqplus_new_instance_adapter(int32_t * a1, int32_t * a2);
 int32_t function_4a9570(void);
 
 
@@ -8253,10 +8252,10 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
     /* The input class constructor stores the native class object in g629.
        GetInstanceUp converts it to the CInputManager instance value used by
        both the native callbacks and the global Squirrel slot. */
-    (int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)((int32_t)(intptr_t)input_instance), (const void *)(intptr_t)((int32_t)(intptr_t)&g629)));
+    kinoko_sqplus_object_new_instance((void *)(intptr_t)((int32_t)(intptr_t)input_instance), (const void *)(intptr_t)((int32_t)(intptr_t)&g629));
     retdec_trace_i32("46e6f0:instance-type", input_instance[1]);
     retdec_trace_i32("46e6f0:instance-data", input_instance[2]);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)(this_ptr), (const void *)(intptr_t)((int32_t)(intptr_t)input_instance)));
+    kinoko_sqplus_object_assign((void *)(intptr_t)(this_ptr), (const void *)(intptr_t)((int32_t)(intptr_t)input_instance));
     kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_instance));
 
     kinoko_sqplus_object_set_instance((void *)(intptr_t)(this_ptr), (void *)(intptr_t)(this_ptr));
@@ -8384,17 +8383,17 @@ int32_t function_470d00(int32_t a1) {
     retdec_trace_i32("470d00:delegate-data", v3[2]);
     if (kinoko_sqplus_object_exists((void *)(intptr_t)((int32_t)(intptr_t)v3), "_set") == 0) {
         retdec_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
-        (int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(v2)));
+        kinoko_sqplus_object_new_table((void *)(intptr_t)(v2));
         retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)((int32_t)(intptr_t)v3), (const void *)(intptr_t)((int32_t)(intptr_t)v2)));
+        kinoko_sqplus_object_assign((void *)(intptr_t)((int32_t)(intptr_t)v3), (const void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_set), "_set", "sn|b|s"));
+        kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_set), "_set", "sn|b|s");
         retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
-        (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_get), "_get", "s"));
+        kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_get), "_get", "s");
         retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
@@ -11391,7 +11390,6 @@ typedef struct retdec_native_entry {
 
 
 // Address range: 0x4a90c0 - 0x4a91bc
-/* kinoko_sqplus_new_instance_adapter is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a91c0 - 0x4a9244
 
@@ -12532,7 +12530,7 @@ int32_t kinoko_game_update_input(KinokoInputManager *input) {
 }
 int32_t kinoko_game_load_boot_script(void) { return function_402d40("data/script/boot.nut", 0); }
 void kinoko_game_update_callback(int32_t trace_index) {
-    if (kinoko_sqplus_object_type((void *)(intptr_t)((int32_t)(intptr_t)(g612 + 4))) ==
+    if (kinoko_sqplus_object_type(g612 + 4) ==
         0x08000100) {
         // 0x46994b
         retdec_trace("stagevm:global-callback");
@@ -12577,7 +12575,7 @@ int32_t kinoko_game_close_vm(void) { return function_402ac0(); }
 KinokoScriptCallback *kinoko_game_global_callback(void) { return (KinokoScriptCallback *)g612; }
 KinokoCollisionState *kinoko_game_collision_state(void) { return (KinokoCollisionState *)g_514300_storage; }
 void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
-    (int32_t)(intptr_t)(kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)callback), (const char *)(intptr_t)(0)));
+    kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)callback), (const char *)(intptr_t)(0));
 }
 int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_load((KinokoMapManager *)g_retdec_map_manager_state, path, (struct SQVM *)g644, g636, &g722); }
 int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear((KinokoMapManager *)g_retdec_map_manager_state); return 0; }

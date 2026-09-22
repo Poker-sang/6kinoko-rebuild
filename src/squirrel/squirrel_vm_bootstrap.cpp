@@ -112,6 +112,3 @@ extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
     const int32_t owner_result = (int32_t)(intptr_t)(kinoko_sqplus_object_assign_thread(unk_5149EC, pointer<SQVM>(current)));
     return (owner_result & -256) | 1;
 }
-extern "C" int32_t kinoko_sqplus_new_instance_adapter(int32_t* object, int32_t* klass) {
-    return (int32_t)(intptr_t)(kinoko_sqplus_object_new_instance(object, (const void *)(klass)));
-}

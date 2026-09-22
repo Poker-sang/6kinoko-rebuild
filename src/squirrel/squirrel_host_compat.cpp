@@ -55,9 +55,6 @@ extern "C" void * kinoko_sqplus_object_initialize(void * object) {
     if (object) ObjectView(object).initialize(kinoko_squirrel_object_vtable());
     return object;
 }
-extern "C" void * kinoko_sqplus_object_initialize_adapter(void * object) {
-    return kinoko_sqplus_object_initialize(object);
-}
 extern "C" void * kinoko_sqplus_object_copy_construct(void * object, const void * source) {
     retdec_trace("4a9500:this-begin");
     retdec_trace_i32("4a9500:this", address(object));

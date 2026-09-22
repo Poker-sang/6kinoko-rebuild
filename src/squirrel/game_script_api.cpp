@@ -28,10 +28,10 @@ struct Reference {
     explicit Reference(KinokoOwnedObjectWords& value):object(&value) {}
 };
 void assign(void* destination,const void* source) {
-    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(destination), (const void *)(source)));
+    kinoko_sqplus_object_assign((void *)(destination), (const void *)(source));
 }
 void copy(KinokoOwnedObjectWords& destination,const KinokoOwnedObjectWords& source) {
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t*>(&destination)), (const void *)(&source)));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t*>(&destination)), (const void *)(&source));
 }
 }
 extern "C" int32_t kinoko_script_load_animation(const char* path) {
@@ -128,7 +128,7 @@ extern "C" KinokoOwnedObjectWords* kinoko_script_create_actor(KinokoOwnedObjectW
     // by-value parameters remain alive until after result's reference is acquired.
     auto* actor=kinoko_actor_manager_create(manager,&closure,x,y,z,&argument,nullptr);
     if(trace<=32) retdec_trace_i32("actor-create:callback-result",address(actor));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(result)));
+    kinoko_sqplus_object_initialize((void *)(result));
     if(actor) assign(result,kinoko::actor::ActorView(actor).bytes(&kinoko::actor::ActorRecord::script_object));
     return result;
 }

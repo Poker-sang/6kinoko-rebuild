@@ -111,7 +111,7 @@ void api_contract() {
     kinoko_script_set_init(0x2a,retain(fn),retain(env)); expect_last_release_order();
     sq_pushobject(vm,env); sq_pushstring(vm,"Init002a",-1);
     require(SQ_SUCCEEDED(sq_get(vm,-2)) && sq_gettype(vm,-1)==OT_CLOSURE,"Init hexadecimal name"); sq_pop(vm,2);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(actor.script_object.data())));
+    kinoko_sqplus_object_initialize((void *)(actor.script_object.data()));
     auto actor_value=retain(env); std::memcpy(actor.script_object.data(),&actor_value,sizeof(actor_value));
     KinokoOwnedObjectWords result{};
     kinoko_script_create_actor(&result,retain(fn),1.25f,-2.5f,3.0f,retain(env));

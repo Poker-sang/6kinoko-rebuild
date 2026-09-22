@@ -15,7 +15,6 @@ extern "C" {
    the embedded HSQOBJECT address as the original does. */
 int32_t kinoko_squirrel_object_vtable(void);
 void * kinoko_sqplus_object_initialize(void * object);
-void * kinoko_sqplus_object_initialize_adapter(void * object);
 void * kinoko_sqplus_object_copy_construct(void * object, const void * source);
 void * kinoko_sqplus_object_construct_value(void * object, int32_t type, int32_t data);
 void * kinoko_sqplus_object_reset(void * object);

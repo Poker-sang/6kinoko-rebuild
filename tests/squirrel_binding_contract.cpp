@@ -148,15 +148,15 @@ void class_contract(HSQUIRRELVM vm) {
     require(failed.view().value()._type == OT_CLASS, "actor binding assignment");
 
     new_table(vm, table.view());
-    (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(pointer<int32_t>(closure.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("default"), nullptr));
+    kinoko_sqplus_bind_object_function(pointer<int32_t>(closure.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("default"), nullptr);
     require(closure.view().value()._type == OT_NATIVECLOSURE, "capture created closure");
     closure.view().push(vm); table.view().push(vm);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 1, 0, 0)), "default receiver mask accepts table"); sq_pop(vm, 1);
     Object wildcard(vm), typed(vm), overflow(vm);
-    (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(pointer<int32_t>(wildcard.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("wild"), const_cast<char*>("*")));
+    kinoko_sqplus_bind_object_function(pointer<int32_t>(wildcard.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("wild"), const_cast<char*>("*"));
     wildcard.view().push(vm); sq_pushinteger(vm, 1); sq_pushinteger(vm, 2);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 0, 0)), "wildcard omits all parameter checks"); sq_pop(vm, 1);
-    (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(pointer<int32_t>(typed.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("typed"), const_cast<char*>("i")));
+    kinoko_sqplus_bind_object_function(pointer<int32_t>(typed.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("typed"), const_cast<char*>("i"));
     typed.view().push(vm); table.view().push(vm); sq_pushinteger(vm, 7);
     require(SQ_SUCCEEDED(kinoko_sq_call(address(vm), 2, 0, 0)), "typed closure accepts integer"); sq_pop(vm, 1);
     { StackTop call(vm); typed.view().push(vm); table.view().push(vm); sq_pushfloat(vm, 7);
@@ -179,7 +179,7 @@ void class_contract(HSQUIRRELVM vm) {
     sq_pop(vm, 1); table.view().push(vm); delegate.view().push(vm);
     require(SQ_SUCCEEDED(sq_setdelegate(vm, -2)), "registration table delegate"); sq_pop(vm, 1);
     publishing_output = published.location(); saw_published_output = false;
-    (int32_t)(intptr_t)(kinoko_sqplus_bind_object_function(pointer<int32_t>(published.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("published"), nullptr));
+    kinoko_sqplus_bind_object_function(pointer<int32_t>(published.location()), (void *)(intptr_t)(table.location()), (void *)(reinterpret_cast<void*>(&noop)), const_cast<char*>("published"), nullptr);
     publishing_output = 0;
     require(saw_published_output, "legacy output captured before _newslot publication callback");
     require(sq_gettop(vm) == top, "all class helpers balanced");
@@ -411,7 +411,7 @@ try { methodActor.xy(1,2.0);
     for (int size = 0; size < 8; ++size) {
         instance.view().push(vm); sq_newuserdata(vm, size);
         std::array<unsigned char, 10> result{}; result.fill(0xAB);
-        (int32_t)(intptr_t)(kinoko_sqplus_resolve_method((void *)(result.data()+1), (struct SQVM *)(vm)));
+        kinoko_sqplus_resolve_method((void *)(result.data()+1), (struct SQVM *)(vm));
         require(load<int32_t>(result.data()+5) == 0 && result.front()==0xAB && result.back()==0xAB, "short method descriptor rejected without overrunning result");
         require(kinoko_sqplus_void_method((struct SQVM *)(vm)) == -1, "short method descriptor reports invalid instance");
         sq_settop(vm, 0);
@@ -422,9 +422,8 @@ try { methodActor.xy(1,2.0);
     sq_settypetag(vm, -1, reinterpret_cast<void*>(1));
     require(kinoko_sqplus_void_method((struct SQVM *)(vm)) == -1, "tagged method descriptor rejected"); sq_settop(vm, 0);
     int32_t output[2] = {99,99};
-    (int32_t)(intptr_t)(kinoko_sqplus_resolve_method((void *)(output), (struct SQVM *)(vm)));
+    kinoko_sqplus_resolve_method((void *)(output), (struct SQVM *)(vm));
     require(!output[0] && !output[1], "empty method frame cleared");
-    require(load<int32_t>(kinoko_sqplus_resolve_method_compat((struct SQVM *)(vm))) == 0, "legacy result wrapper");
 }
 
 

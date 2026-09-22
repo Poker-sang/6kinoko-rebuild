@@ -54,9 +54,9 @@ constexpr Constant constants[] = {
 
 extern "C" void kinoko_register_global_methods(int32_t root_table) {
     int32_t target = entry(function_402af0);
-    (int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("ShowCallStack"), (const void *)(&target), 4, (void *)(intptr_t)(entry(function_470ee0)), 0));
+    kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("ShowCallStack"), (const void *)(&target), 4, (void *)(intptr_t)(entry(function_470ee0)), 0);
     target = entry(function_471b30);
-    (int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("CompileFile"), (const void *)(&target), 4, (void *)(intptr_t)(entry(retdec_compile_file_native)), 0));
+    kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("CompileFile"), (const void *)(&target), 4, (void *)(intptr_t)(entry(retdec_compile_file_native)), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
         sq_pushroottable(vm);
@@ -85,7 +85,7 @@ extern "C" int32_t function_473010(void) {
     sq_pop(current_vm(), 1);
     kinoko_register_global_methods(address(root_table));
     int32_t object[3];
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), (const void *)(intptr_t)((int32_t)(intptr_t)(kinoko_sqplus_root_object()))));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
     const auto update_result = function_4721a0(object, &kinoko_game_masks.update, const_cast<char*>("updateMask"), 0);
     retdec_trace_i32("473010:update-bind-result", update_result);
     retdec_trace_i32("473010:update-storage", kinoko_game_masks.update);
@@ -93,7 +93,7 @@ extern "C" int32_t function_473010(void) {
     retdec_trace_i32("473010:update-object-data", object[2]);
     retdec_trace_i32("473010:update-present", kinoko_sqplus_object_exists((void *)(object), "updateMask"));
     kinoko_sqplus_object_destroy((void *)(object));
-    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), (const void *)(intptr_t)((int32_t)(intptr_t)(kinoko_sqplus_root_object()))));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
     const auto render_result = function_4721a0(object, &kinoko_game_masks.render, const_cast<char*>("renderMask"), 0);
     retdec_trace_i32("473010:render-bind-result", render_result);
     retdec_trace_i32("473010:render-storage", kinoko_game_masks.render);
@@ -102,7 +102,7 @@ extern "C" int32_t function_473010(void) {
     retdec_trace_i32("473010:render-present", kinoko_sqplus_object_exists((void *)(object), "renderMask"));
     kinoko_sqplus_object_destroy((void *)(object));
     for (const auto& constant : constants) {
-        (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), (const void *)(intptr_t)((int32_t)(intptr_t)(kinoko_sqplus_root_object()))));
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
         function_472240(object, constant.value, const_cast<char*>(constant.name));
         kinoko_sqplus_object_destroy((void *)(object));
     }

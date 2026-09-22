@@ -29,9 +29,9 @@ int32_t  kinoko_sqrat_raw_set_bool(struct SQVM * vm, const int32_t *object_pair,
 int32_t  kinoko_sqrat_raw_set_string(struct SQVM * vm, const int32_t *object_pair, const char *name, const char *value);
 int32_t  kinoko_sqrat_set_native_closure(struct SQVM * vm, const int32_t *object_pair, const char *name, int32_t native_function, const int32_t *free_pair, int32_t free_count);
 int32_t  kinoko_sqrat_set_offset_closure(struct SQVM * vm, const int32_t *table_pair, const char *name, int32_t offset, int32_t callback);
-int32_t  kinoko_sqrat_set_int(struct SQVM * vm, const int32_t *object_pair, const char *name, int32_t value);
-int32_t  kinoko_sqrat_set_bool(struct SQVM * vm, const int32_t *object_pair, const char *name, int32_t value);
-int32_t  kinoko_sqrat_set_string(struct SQVM * vm, const int32_t *object_pair, const char *name, const char *value);
+int32_t  kinoko_sqrat_bind_int(struct SQVM * vm, const int32_t *object_pair, const char *name, int32_t value);
+int32_t  kinoko_sqrat_bind_bool(struct SQVM * vm, const int32_t *object_pair, const char *name, int32_t value);
+int32_t  kinoko_sqrat_bind_string(struct SQVM * vm, const int32_t *object_pair, const char *name, const char *value);
 int32_t  kinoko_sqrat_no_constructor(struct SQVM * vm);
 int32_t  kinoko_sqrat_initialize_class(struct SQVM * vm, const int32_t* type, const int32_t* set_table, const int32_t* get_table, int32_t constructor, int32_t setter, int32_t getter, int32_t weakref);
 int32_t  kinoko_sqrat_new_class(struct SQVM * vm, int32_t* output);

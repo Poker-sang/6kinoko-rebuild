@@ -170,15 +170,15 @@ extern "C" void kinoko_sqrat_release_pair(struct SQVM * id, int32_t* pair) {
 }
 extern "C" int32_t kinoko_sqrat_set_pair(struct SQVM * vm, const int32_t* object, const char* name, const int32_t* value) { return set_pair(vm, object, name, value, false); }
 extern "C" int32_t kinoko_sqrat_raw_set_pair(struct SQVM * vm, const int32_t* object, const char* name, const int32_t* value) { return set_pair(vm, object, name, value, true); }
-extern "C" int32_t kinoko_sqrat_set_int(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, integer(value), false); }
-extern "C" int32_t kinoko_sqrat_set_bool(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, boolean(value), false); }
+extern "C" int32_t kinoko_sqrat_bind_int(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, integer(value), false); }
+extern "C" int32_t kinoko_sqrat_bind_bool(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, boolean(value), false); }
 extern "C" int32_t kinoko_sqrat_raw_set_int(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, integer(value), true); }
 extern "C" int32_t kinoko_sqrat_raw_set_bool(struct SQVM * vm, const int32_t* object, const char* name, int32_t value) { return set_value(vm, object, name, boolean(value), true); }
 extern "C" int32_t kinoko_sqrat_raw_set_float(struct SQVM * vm, const int32_t* object, const char* name, float value) {
     HSQOBJECT o; o._type = OT_FLOAT; o._unVal.fFloat = value;
     return set_value(vm, object, name, o, true);
 }
-extern "C" int32_t kinoko_sqrat_set_string(struct SQVM * vm, const int32_t* object, const char* name, const char* value) { return set_string(vm, object, name, value, false); }
+extern "C" int32_t kinoko_sqrat_bind_string(struct SQVM * vm, const int32_t* object, const char* name, const char* value) { return set_string(vm, object, name, value, false); }
 extern "C" int32_t kinoko_sqrat_raw_set_string(struct SQVM * vm, const int32_t* object, const char* name, const char* value) { return set_string(vm, object, name, value, true); }
 extern "C" int32_t kinoko_sqrat_set_native_closure(struct SQVM * id, const int32_t* object, const char* name, int32_t function, const int32_t* free_pair, int32_t free_count) {
     // The recovered interface accepts ONE optional pair, not an array of pairs.
