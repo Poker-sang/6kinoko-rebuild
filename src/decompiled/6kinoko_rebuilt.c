@@ -1,3 +1,4 @@
+#include "kinoko/diagnostics.h"
 #include "kinoko/map_manager.h"
 #include "kinoko/scene_operations.h"
 #include "kinoko/game_script_api.h"
@@ -8132,101 +8133,8 @@ int32_t function_46a210(int32_t * a1) {
     return a1 ? kinoko_append_render_queue(*a1) : 0;
 }
 
-// Address range: 0x46a260 - 0x46a2c5
-
-
-// Address range: 0x46a2d0 - 0x46a380
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          constructor
-
-
-/* CHandleManagerEx<Actor> constructor with the original destination in ECX. */
-
-
-/* ActorManager's CRT constructor (0x46B0A0) builds several independent
-   intrusive-list sentinels around the handle manager.  RetDec split the
-   global object into unrelated scalar globals, so the normal constructor
-   cannot be called on the generated storage directly. */
-
-
-// Address range: 0x46a380 - 0x46a38a
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-// Address range: 0x46a390 - 0x46a44a
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-// Address range: 0x46a450 - 0x46a549
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          constructor
-
-
-// Address range: 0x46a550 - 0x46a571
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-
-
-
-// Address range: 0x46a650 - 0x46a6ee
-
-
-// Address range: 0x46a6f0 - 0x46a793
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-
-// Address range: 0x46a7e0 - 0x46a829
-// From class:    .?AVCInputManagerCluster@@
-// Type:          virtual member function
-
-
-/* Render layer dispatch now lives in scene_operations.cpp. */
-
-
-// Address range: 0x46a830 - 0x46a9ba
-
-
-// Address range: 0x46a9c0 - 0x46aa52
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          constructor
-
-
-// Address range: 0x46aa60 - 0x46aad4
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          virtual member function
-
-
-/* TObjectManagerBase<Actor>::Add with the hidden receiver restored. */
-
-
-
-// Address range: 0x46aae0 - 0x46ab01
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          virtual member function
-
-
-// Address range: 0x46ab10 - 0x46aca1
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-/* CHandleManagerEx<Actor>::Get with the original ECX receiver restored. */
-
-
-
-
-/* The vtable call supplies ECX and no stack argument. */
-
-
-
-
-
+/* Actor pool/owner-list implementations are in their named C++ modules.
+   Render-layer dispatch is in scene_operations.cpp. */
 
 // Address range: 0x46b450 - 0x46b48a
 /* Original 46B450 string conversion is inlined as sq_getstring in callers
