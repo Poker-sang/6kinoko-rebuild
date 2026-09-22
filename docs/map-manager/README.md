@@ -50,3 +50,18 @@
 - 全量构建失败：collision_queries.cpp 中 Actor / Map 的 ManagerView 名称冲突。
 - 新增 map_manager_contract 已编译链接，未执行。R1 全部产物保留。
 - 修正为 kinoko::map::ManagerView 后在独立 R2 目录重新构建。
+
+## R2 交接
+
+- 源码提交：`c59df5ab1931f9bd88c3c793db902d18fdafc199`。
+- VS 2026 / Win32 / Release，`KINOKO_RETDEC_DISABLE_TRACE=ON`。
+- 全量构建退出码 0；新增及既有回归目标均编译链接成功，未执行。
+- 构建日志：`build-runs/map-manager-r2-quiet/build.log`。
+- EXE：`runtime-builds/map-manager-r2-quiet/kinoko_retdec_rebuild.exe`（889856 字节）。
+- EXE SHA256：`CF67BE6CC7975D37D21E69FA7845C256917CA746B642083EBCABF1872DE79381`。
+- stage_dat.ps1 已将三个 DAT 复制到 EXE 同目录，并校验大小、SHA256：
+  - a：163424746 字节，`DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64`。
+  - b：44681244 字节，`4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2`。
+  - c：11796163 字节，`80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E`。
+
+未运行游戏、测试程序或 CTest。以上不代表运行验证通过。
