@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #define CINTERFACE
 #include "kinoko/mesh_model.hpp"
 #include "kinoko/act_layout_3d.hpp"
@@ -44,7 +45,7 @@ void format_contract(uint32_t version) {
     word(1);word(1);zeros(24); // shape: one position and normal
     word(1);word(0);word(1);word(0); // shape vertex/normal index arrays
     node_tail(version,"triangle",1);word(1);node_tail(version,"reference",0);
-    auto root=kinoko::mesh::read_model(1);
+    auto root=kinoko::mesh::read_model(reinterpret_cast<KinokoArchiveReader*>(1));
     require(root && cursor==bytes.size() && root->name=="root");
     require(root->reference_group==(version>=12?42:0));
     require(root->flags==(version>=14?71:0));
@@ -59,7 +60,7 @@ void format_contract(uint32_t version) {
     require(root->children[0]->children[0]->type==kinoko::mesh::NodeType::reference);
     bytes.pop_back();cursor=0;
     bool rejected=false;
-    try { (void)kinoko::mesh::read_model(1); } catch (const std::runtime_error &) { rejected=true; }
+    try { (void)kinoko::mesh::read_model(reinterpret_cast<KinokoArchiveReader*>(1)); } catch (const std::runtime_error &) { rejected=true; }
     require(rejected);
 }
 DWORD states[256]{};
@@ -103,7 +104,7 @@ void layout_contract() {
     std::free(copy);
 }
 }
-extern "C" int32_t retdec_reader_read_exact(int32_t,void *out,uint32_t size) {
+extern "C" int32_t kinoko_reader_read_exact(KinokoArchiveReader*,void *out,uint32_t size) {
     if (size>bytes.size()-cursor) return 0;
     std::memcpy(out,bytes.data()+cursor,size);cursor+=size;return 1;
 }

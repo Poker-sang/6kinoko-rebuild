@@ -1,0 +1,1 @@
+{"addr":"0x407300","code":"DWORD __thiscall sub_407300(HANDLE *this)\n{\n  return GetFileSize(hFile: *(this + 1), lpFileSizeHigh: nullptr); /*0x40730c*/\n}","refs":[{"addr":"0x4d5084","name":"GetFileSize"}]}

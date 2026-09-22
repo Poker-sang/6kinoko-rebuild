@@ -27,14 +27,14 @@ static int test_act_document_file_lifetime(void) {
     int32_t methods[6] = {0, 0, 0, PTR(script_io_transfer), 0, PTR(script_io_seek)};
     struct script_io_stream stream = {0}; stream.vtable = methods;
     const unsigned char saved_compact = g673;
-    const int32_t saved_archives = g765;
+    const int32_t saved_archives = kinoko_archive_count;
     char *saved_vm = g644;
     int32_t (*saved_delete)(unsigned char) = g285.e4;
     const char *valid_path = "act-document-generated.bin";
     const char *short_path = "act-document-truncated.bin";
     unsigned char encoded[8192 + 19] = {0};
     const uint32_t header[] = {0x31544341u, 1u, 7u};
-    g673 = 0; g765 = 0; g644 = NULL;
+    g673 = 0; kinoko_archive_count = 0; g644 = NULL;
     KinokoActDocument *source = kinoko_act_document_create();
     CHECK(source);
     const int32_t layer = retdec_act_make_layer();
@@ -118,7 +118,7 @@ static int test_act_document_file_lifetime(void) {
     kinoko_stage_owner_destroy(unpublished);
     CHECK(act_file_deletes == before + 2 && !act_file_close_error);
     kinoko_stage_owner_destroy(NULL);
-    g285.e4 = saved_delete; g673 = saved_compact; g765 = saved_archives; g644 = saved_vm;
+    g285.e4 = saved_delete; g673 = saved_compact; kinoko_archive_count = saved_archives; g644 = saved_vm;
     printf("PASS: real ACT file/payload, %lu truncated prefixes, reader-before-document release, stage publication and caller ownership\n", (unsigned long)total);
     return 0;
 }

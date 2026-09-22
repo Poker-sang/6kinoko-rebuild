@@ -1023,7 +1023,7 @@ extern "C" void retdec_forget_act_script(int32_t script) {
 
 int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *environment) {
     if (!vm || !path || !environment || environment[0] == 0x01000001) return 0;
-    int32_t reader = 0;
+    KinokoArchiveReader *reader = nullptr;
     try {
         std::string resolved(path);
         const char *extension = retdec_std_string_data(address(kinoko_act_script_extension));
@@ -1031,19 +1031,18 @@ int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *env
             const auto dot = resolved.rfind('.');
             if (dot != std::string::npos) resolved = resolved.substr(0, dot) + extension;
         }
-        if (!function_407370(address(&reader), resolved.c_str())) {
-            if (reader) retdec_destroy_reader(pointer<int32_t>(reader));
+        if (!kinoko_reader_open(&reader, resolved.c_str())) {
+            if (reader) kinoko_reader_close(reader);
             return 0;
         }
-        const uint32_t size = g765 ? field<uint32_t>(reader + 12)
-            : GetFileSize(field<HANDLE>(reader + 4), nullptr);
+        const uint32_t size = kinoko_reader_size(reader);
         if (size > 0x1000000) {
-            retdec_destroy_reader(pointer<int32_t>(reader));
+            kinoko_reader_close(reader);
             return 0;
         }
         std::vector<unsigned char> buffer(static_cast<size_t>(size) + 1, 0);
-        const bool read = !size || retdec_reader_read_exact(reader, buffer.data(), size);
-        retdec_destroy_reader(pointer<int32_t>(reader));
+        const bool read = !size || kinoko_reader_read_exact(reader, buffer.data(), size);
+        kinoko_reader_close(reader);
         reader = 0;
         if (!read) return 0;
         int32_t script[26] = {};
@@ -1057,7 +1056,7 @@ int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *env
         if (owner != act_script_owners.end()) refresh_act_script_callbacks(vm, owner->second, environment);
         return 1;
     } catch (...) {
-        if (reader) retdec_destroy_reader(pointer<int32_t>(reader));
+        if (reader) kinoko_reader_close(reader);
         return 0;
     }
 }

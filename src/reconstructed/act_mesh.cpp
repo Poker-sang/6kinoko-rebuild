@@ -24,9 +24,9 @@ using legacy::address;
 using legacy::pointer;
 using legacy::StringView;
 struct ReaderOwner {
-    int32_t reader{};
-    explicit ReaderOwner(const char *path) { function_407370(address(&reader),path); }
-    ~ReaderOwner() { retdec_destroy_reader(&reader); }
+    KinokoArchiveReader *reader{};
+    explicit ReaderOwner(const char *path) { kinoko_reader_open(&reader,path); }
+    ~ReaderOwner() { kinoko_reader_close(reader); }
 };
 template<class T> using Cache=std::map<std::string,std::weak_ptr<T>>;
 Cache<Node> models;

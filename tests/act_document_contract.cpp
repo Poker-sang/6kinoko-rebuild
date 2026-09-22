@@ -158,25 +158,25 @@ extern "C" int32_t retdec_construct_cact_script(int32_t script) {
     ++script_constructions; last_script = pointer<void>(script);
     std::memset(last_script, 0x39, 104); return script;
 }
-extern "C" int32_t function_407370(int32_t slot, const char *path) {
+extern "C" int32_t kinoko_reader_open(KinokoArchiveReader **slot, const char *path) {
     ++state.opens; state.events += 'O'; state.path = path;
-    require(*pointer<int32_t>(slot) == 0, "new reader slot starts null");
+    require(*slot == nullptr, "new reader slot starts null");
     if (!state.open_ok) return 0;
-    state.live = true; *pointer<int32_t>(slot) = address(&archive); return 1;
+    state.live = true; *slot = reinterpret_cast<KinokoArchiveReader*>(&archive); return 1;
 }
-extern "C" void retdec_destroy_reader(int32_t *reader) {
+extern "C" void kinoko_reader_close(KinokoArchiveReader *reader) {
     // Called by a noexcept owner: do not throw assertions out of a destructor.
-    if (reader != reinterpret_cast<int32_t *>(&archive) || !state.live) std::abort();
+    if (reader != reinterpret_cast<KinokoArchiveReader *>(&archive) || !state.live) std::abort();
     ++state.closes; state.live = false; state.events += 'C';
 }
-extern "C" int32_t retdec_reader_read_exact(int32_t reader, void *out, uint32_t size) {
-    valid_reader(reader); ++state.reads; state.events += 'R';
+extern "C" int32_t kinoko_reader_read_exact(KinokoArchiveReader *reader, void *out, uint32_t size) {
+    valid_reader(address(reader)); ++state.reads; state.events += 'R';
     require(size == 4, "header uses three four-byte reads");
     if (size > archive.data.size() - archive.position) return 0;
     std::memcpy(out, archive.data.data() + archive.position, size); archive.position += size; return 1;
 }
-extern "C" int32_t retdec_reader_seek_relative(int32_t reader, uint32_t offset) {
-    valid_reader(reader); ++state.seeks; state.events += 'S'; state.skip = offset;
+extern "C" int32_t kinoko_reader_seek_relative(KinokoArchiveReader *reader, uint32_t offset) {
+    valid_reader(address(reader)); ++state.seeks; state.events += 'S'; state.skip = offset;
     require(archive.position == 12, "relative seek begins after header");
     if (!state.seek_ok || offset > archive.data.size() - archive.position) return 0;
     archive.position += offset; return 1;

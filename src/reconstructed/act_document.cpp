@@ -450,7 +450,7 @@ void retdec_mcd_free(struct retdec_mcd_data *data)
 int32_t retdec_act_load_mcd(int32_t resource,
                                    const char *file_name)
 {
-    int32_t reader_slot = 0;
+    KinokoArchiveReader *reader_slot = nullptr;
     struct retdec_mcd_data *data = nullptr;
     uint32_t magic;
     uint32_t version;
@@ -463,33 +463,33 @@ int32_t retdec_act_load_mcd(int32_t resource,
 
     if (resource == 0 || file_name == nullptr || *file_name == 0)
         return 0;
-    if (!function_407370(address(&reader_slot), file_name)) {
+    if (!kinoko_reader_open(&reader_slot, file_name)) {
         retdec_trace_squirrel_name("mcd:open-failed",
                                    address(file_name));
         return 0;
     }
 
-    if (!retdec_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
+    if (!kinoko_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
         magic != 0x434d4432u ||
-        !retdec_reader_read_exact(reader_slot, &version, sizeof(version)) ||
+        !kinoko_reader_read_exact(reader_slot, &version, sizeof(version)) ||
         version > 1u ||
-        !retdec_reader_read_exact(reader_slot, &payload_offset,
+        !kinoko_reader_read_exact(reader_slot, &payload_offset,
                                   sizeof(payload_offset)) ||
         (payload_offset != 0 &&
-         !retdec_reader_seek_relative(reader_slot, payload_offset)) ||
-        !retdec_reader_read_exact(reader_slot, &chip_count,
+         !kinoko_reader_seek_relative(reader_slot, payload_offset)) ||
+        !kinoko_reader_read_exact(reader_slot, &chip_count,
                                   sizeof(chip_count)) ||
-        !retdec_reader_read_exact(reader_slot, &record_size,
+        !kinoko_reader_read_exact(reader_slot, &record_size,
                                   sizeof(record_size)) ||
         chip_count > 0x10000u || record_size > 48u) {
         retdec_trace("mcd:header-failed");
-        retdec_destroy_reader(pointer<int32_t>(reader_slot));
+        kinoko_reader_close(reader_slot);
         return 0;
     }
 
     data = (struct retdec_mcd_data *)std::calloc(1u, sizeof(*data));
     if (data == nullptr) {
-        retdec_destroy_reader(pointer<int32_t>(reader_slot));
+        kinoko_reader_close(reader_slot);
         return 0;
     }
     data->chip_count = chip_count;
@@ -505,8 +505,8 @@ int32_t retdec_act_load_mcd(int32_t resource,
         uint32_t next_record;
 
         if ((record_size != 0 &&
-             !retdec_reader_read_exact(reader_slot, record, record_size)) ||
-            !retdec_reader_read_exact(reader_slot, &next_record,
+             !kinoko_reader_read_exact(reader_slot, record, record_size)) ||
+            !kinoko_reader_read_exact(reader_slot, &next_record,
                                       sizeof(next_record)))
             goto load_failed;
         data->chips[index].chip_id = retdec_mcd_u32(record);
@@ -519,7 +519,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
         }
     }
 
-    if (!retdec_reader_read_exact(reader_slot, &texture_count,
+    if (!kinoko_reader_read_exact(reader_slot, &texture_count,
                                   sizeof(texture_count)) ||
         texture_count > 0x10000u)
         goto load_failed;
@@ -537,9 +537,9 @@ int32_t retdec_act_load_mcd(int32_t resource,
         char *name;
         int32_t handle;
 
-        if (!retdec_reader_read_exact(reader_slot, &texture_id,
+        if (!kinoko_reader_read_exact(reader_slot, &texture_id,
                                       sizeof(texture_id)) ||
-            !retdec_reader_read_exact(reader_slot, &name_length,
+            !kinoko_reader_read_exact(reader_slot, &name_length,
                                       sizeof(name_length)) ||
             name_length > 0x100000u)
             goto load_failed;
@@ -547,7 +547,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
         if (name == nullptr)
             goto load_failed;
         if (name_length != 0 &&
-            !retdec_reader_read_exact(reader_slot, name, name_length)) {
+            !kinoko_reader_read_exact(reader_slot, name, name_length)) {
             std::free(name);
             goto load_failed;
         }
@@ -572,7 +572,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
             ++loaded_texture_count;
     }
 
-    retdec_destroy_reader(pointer<int32_t>(reader_slot));
+    kinoko_reader_close(reader_slot);
     field<int32_t>(resource + 64) =
         address(data);
     retdec_string_assign_cstr(
@@ -583,7 +583,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
     return 1;
 
 load_failed:
-    retdec_destroy_reader(pointer<int32_t>(reader_slot));
+    kinoko_reader_close(reader_slot);
     retdec_mcd_free(data);
     retdec_trace("mcd:load-failed");
     return 0;

@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #pragma once
 #include <array>
 #include <cstdint>
@@ -56,6 +57,6 @@ struct Node {
 };
 // Borrowed archive reader; caller retains ownership. This decodes the original
 // versioned MSH stream, not a D3DX/X-file replacement format.
-std::unique_ptr<Node> read_model(int32_t archive_reader);
-std::unique_ptr<Material> read_material(int32_t archive_reader);
+std::unique_ptr<Node> read_model(KinokoArchiveReader *archive_reader);
+std::unique_ptr<Material> read_material(KinokoArchiveReader *archive_reader);
 }

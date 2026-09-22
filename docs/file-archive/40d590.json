@@ -1,0 +1,1 @@
+{"addr":"0x40d590","code":"DWORD __thiscall sub_40D590(HANDLE *this, LONG lDistanceToMove, DWORD dwMoveMethod)\n{\n  return SetFilePointer(hFile: *(this + 1), lDistanceToMove, lpDistanceToMoveHigh: nullptr, dwMoveMethod); /*0x40d5a7*/\n}","refs":[{"addr":"0x4d5088","name":"SetFilePointer"}]}

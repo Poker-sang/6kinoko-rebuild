@@ -14,12 +14,12 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::StringRecord;
 using kinoko::legacy::StringView;
 
-// Only the unconverted reader host ports exchange integer address slots.
-// The ACT interface and the scoped owner never represent ownership as int32_t.
-struct ArchiveReader;
+// The reader and its scoped owner share the typed file service. The document
+// payload dispatch remains the original virtual ABI.
+using ArchiveReader = KinokoArchiveReader;
 struct CloseReader {
     void operator()(ArchiveReader *reader) const noexcept {
-        retdec_destroy_reader(reinterpret_cast<int32_t *>(reader));
+        kinoko_reader_close(reader);
     }
 };
 using ReaderOwner = std::unique_ptr<ArchiveReader, CloseReader>;
@@ -70,32 +70,32 @@ extern "C" KinokoActDocument *kinoko_act_document_create() {
 
 extern "C" int32_t kinoko_act_document_load(KinokoActDocument *document, const char *file_name) {
     if (!document || !file_name) return 0;
-    int32_t legacy_reader_slot = 0;
-    const auto opened = function_407370(address(&legacy_reader_slot), file_name);
-    const ReaderOwner reader(pointer<ArchiveReader>(legacy_reader_slot));
+    KinokoArchiveReader *reader_slot = nullptr;
+    const auto opened = kinoko_reader_open(&reader_slot, file_name);
+    const ReaderOwner reader(reader_slot);
     if (!opened) return 0;
 
     // 428000 checks magic and offset reads, but not the seek return value.
     // Version starts at zero to avoid reproducing an indeterminate stack read
     // on truncated input; its value, not the read result, controls acceptance.
     uint32_t magic = 0, version = 0, payload_offset = 0;
-    const auto borrowed_reader = address(reader.get());
-    if (!retdec_reader_read_exact(borrowed_reader, &magic, sizeof(magic)) || magic != 0x31544341u)
+    const auto borrowed_reader = reader.get();
+    if (!kinoko_reader_read_exact(borrowed_reader, &magic, sizeof(magic)) || magic != 0x31544341u)
         return 0;
-    retdec_reader_read_exact(borrowed_reader, &version, sizeof(version));
+    kinoko_reader_read_exact(borrowed_reader, &version, sizeof(version));
     if (version != 1u) return 0;
-    if (!retdec_reader_read_exact(borrowed_reader, &payload_offset, sizeof(payload_offset)))
+    if (!kinoko_reader_read_exact(borrowed_reader, &payload_offset, sizeof(payload_offset)))
         return 0;
-    retdec_reader_seek_relative(borrowed_reader, payload_offset);
+    kinoko_reader_seek_relative(borrowed_reader, payload_offset);
 
     // Retain these calls in quiet builds: only the diagnostic sink is silent.
     retdec_trace_i32("act:header-magic", static_cast<int32_t>(magic));
     retdec_trace_i32("act:header-version", static_cast<int32_t>(version));
     retdec_trace_i32("act:header-offset", static_cast<int32_t>(payload_offset));
-    using ReadDocument = uint8_t (__thiscall *)(KinokoActDocument *, int32_t *, int32_t);
+    using ReadDocument = uint8_t (__thiscall *)(KinokoActDocument *, KinokoArchiveReader **, int32_t);
     const auto *table = static_cast<const unsigned char *>(view_of(document).get(&DocumentRecord::vtable));
     const auto read = kinoko::legacy::load<ReadDocument>(table + sizeof(void *));
-    const auto result = read(document, &legacy_reader_slot, static_cast<int32_t>(version));
+    const auto result = read(document, &reader_slot, static_cast<int32_t>(version));
     retdec_trace_i32("act:load-result", result);
     return result; // reader closes after the payload loader/last trace, once
 }

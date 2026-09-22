@@ -18,7 +18,7 @@ using kinoko::native::RecordView;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
 struct CloseReader {
-    void operator()(KinokoArchiveReader *reader) const { retdec_destroy_reader(reinterpret_cast<int32_t *>(reader)); }
+    void operator()(KinokoArchiveReader *reader) const { kinoko_reader_close(reader); }
 };
 struct DiscardAnimation {
     void operator()(KinokoAnimation *animation) const { kinoko_animation_release(animation); }
@@ -28,7 +28,7 @@ class Reader {
     KinokoArchiveReader *reader_; // borrowed; caller owns file lifetime
 public:
     explicit Reader(KinokoArchiveReader *reader):reader_(reader) {}
-    bool bytes(void *value,uint32_t size) const { return retdec_reader_read_exact(address(reader_),value,size)!=0; }
+    bool bytes(void *value,uint32_t size) const { return kinoko_reader_read_exact(reader_,value,size)!=0; }
     template<class T> bool read(T &value) const { return bytes(&value,sizeof(value)); }
     bool skip(uint32_t size) const {
         std::array<unsigned char,256> scratch;
@@ -155,9 +155,9 @@ extern "C" int32_t kinoko_pat_load(KinokoActorManager *receiver,const char *file
         retdec_trace_squirrel_name("actor:pat-path",address(file_name));
         retdec_trace_squirrel_name("actor:pat-directory",address(directory));
     }
-    int32_t reader_slot=0;
-    if (!function_407370(address(&reader_slot),file_name)) return 0;
-    const std::unique_ptr<KinokoArchiveReader,CloseReader> owner(pointer<KinokoArchiveReader>(reader_slot));
+    KinokoArchiveReader *reader_slot=nullptr;
+    if (!kinoko_reader_open(&reader_slot,file_name)) return 0;
+    const std::unique_ptr<KinokoArchiveReader,CloseReader> owner(reader_slot);
     const Reader reader(owner.get());
     const ManagerView manager(receiver);
     const auto resources=address(manager.bytes(&ManagerPrefix::textures));

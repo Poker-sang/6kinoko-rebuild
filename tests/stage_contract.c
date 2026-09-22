@@ -117,13 +117,13 @@ static int execute_asset(int32_t vm, const int32_t *environment, const char *pat
     int32_t reader = 0, script[26] = {0};
     unsigned char *bytes;
     int result;
-    if (!function_407370(PTR(&reader), path)) return 0;
+    if (!kinoko_reader_open((KinokoArchiveReader **)&reader, path)) return 0;
     script[24] = *(int32_t *)(intptr_t)(reader + 12);
     bytes = (unsigned char *)malloc((size_t)script[24]);
     result = bytes && retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]);
     script[23] = PTR(bytes);
     if (result) result = retdec_execute_embedded_act_script(vm, PTR(script), environment);
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
     return result;
 }
@@ -211,13 +211,14 @@ static int test_pat_records(int32_t manager) {
         OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
     CHECK(file != INVALID_HANDLE_VALUE);
     CHECK(WriteFile(file, pat.bytes, pat.size, &written, NULL) && written == pat.size);
+    reader[0] = PTR(&kinoko_package_reader_methods);
     reader[1] = PTR(file);
     reader[3] = pat.size;
-    g765 = 1;
+    kinoko_archive_count = 1;
     CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
     CHECK(reader[5] == reader[3]);
     CHECK(CloseHandle(file));
-    g765 = 0;
+    kinoko_archive_count = 0;
 
     head = pat_lookup(manager, base + 2);
     CHECK(head);
@@ -279,17 +280,18 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
     unsigned char version;
     unsigned short textures;
     CHECK(file != INVALID_HANDLE_VALUE);
+    reader[0] = PTR(&kinoko_package_reader_methods);
     reader[1] = PTR(file);
     reader[3] = GetFileSize(file, NULL);
     ((unsigned char *)reader)[24] = (unsigned char)((offset >> 1) | 0x23);
-    g765 = 1;
+    kinoko_archive_count = 1;
     CHECK(retdec_pat_read_u8(PTR(reader), &version) && version == 5);
     CHECK(retdec_pat_read_u16(PTR(reader), &textures));
     CHECK(retdec_pat_skip_bytes(PTR(reader), textures * 128u));
     CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
     CHECK(reader[5] == reader[3]);
     CHECK(CloseHandle(file));
-    g765 = 0;
+    kinoko_archive_count = 0;
     actor = function_463b40_this(manager, PTR(&g16), g483, g484,
         100, 200, -1, PTR(&g16), g483, g484, 0);
     CHECK(actor);
@@ -449,7 +451,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         char path[MAX_PATH];
         for (char archive = 'a'; archive <= 'c'; ++archive) {
             sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", reference_dir, archive);
-            CHECK(function_410500(path));
+            CHECK(kinoko_archive_mount(path));
         }
         CHECK(kinoko_graphics.device == 0);
         kinoko_act_document_initialize((KinokoActDocument *)act);
@@ -685,15 +687,15 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short textures;
     unsigned char *bytes;
-    CHECK(g765 != 0 && kinoko_graphics.device == 0);
-    CHECK(function_407370(PTR(&reader), "data/actor/item/item.pat"));
+    CHECK(kinoko_archive_count != 0 && kinoko_graphics.device == 0);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/item/item.pat"));
     CHECK(retdec_pat_read_u8(reader, &version));
     CHECK(retdec_pat_read_u16(reader, &textures));
     CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
     CHECK(retdec_pat_read_animations(reader, manager, 0));
     CHECK(*(int32_t *)(intptr_t)(reader + 20) - *(int32_t *)(intptr_t)(reader + 16) ==
         *(int32_t *)(intptr_t)(reader + 12));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     reader = 0;
     CHECK(pat_lookup(manager, 1130));
     CHECK(execute_source(vm, root + 2,
@@ -709,14 +711,14 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         "function CreateEffect(x,y,z,id) { ::stoneEffects.append(id); return {}; }"));
     function_4aa3a0_this(PTR(root + 1), PTR(rider_init), "InitStoneRider");
     function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
-    CHECK(function_407370(PTR(&reader), "data/script/bullet.cv4"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/script/bullet.cv4"));
     script[24] = *(int32_t *)(intptr_t)(reader + 12);
     bytes = (unsigned char *)malloc((size_t)script[24]);
     CHECK(bytes);
     CHECK(retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]));
     script[23] = PTR(bytes);
     CHECK(retdec_execute_embedded_act_script(vm, PTR(script), scripts + 1));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
     function_4aa3a0_this(PTR(scripts), PTR(init), "InitStone");
     CHECK(init[1] == 0x08000100);
@@ -890,14 +892,14 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short texture_count;
     int32_t resource_base=kinoko_integer_vector_size(manager+68);
-    CHECK(function_407370(PTR(&reader),"data/actor/item/item.pat"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/item/item.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&texture_count));
     CHECK(retdec_pat_skip_bytes(reader,texture_count*128u));
     g_retdec_act_texture_slots[1].width=1024;
     g_retdec_act_texture_slots[1].height=1024;
     for(int i=0;i<texture_count;++i) CHECK(retdec_pat_append_resource(manager,1));
     CHECK(retdec_pat_read_animations(reader,manager,resource_base));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     float native_camera[24]={0};
     native_camera[20]=2000;
     native_camera[21]=1200;
@@ -1107,12 +1109,12 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "function PlaySE(id) {}\n PR_FRONT <- 65535;\n stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
-    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader, &version));
     CHECK(retdec_pat_read_u16(reader, &textures));
     CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
     CHECK(retdec_pat_read_animations(reader, manager, 0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
     layout[66] = PTR(records); layout[67] = PTR(records + 1);
@@ -1239,11 +1241,11 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
         "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
         "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;\nfunction PlaySE(id) {}\neffectCount <- 0;\nfunction CreateEffect(x,y,z,id) { ++::effectCount; }\n"));
     CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
-    CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
     CHECK(retdec_pat_skip_bytes(reader,textures*128u));
     CHECK(retdec_pat_read_animations(reader,manager,0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_enemy");
     function_4aa3a0_this(PTR(scripts),PTR(init),name);
     CHECK(init[1]==0x08000100);
@@ -1307,12 +1309,12 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         "stageWaterLevel=10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
-    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/enemy/enemy.pat"));
     CHECK(retdec_pat_read_u8(reader, &version));
     CHECK(retdec_pat_read_u16(reader, &textures));
     CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
     CHECK(retdec_pat_read_animations(reader, manager, 0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
     layout[66] = PTR(records); layout[67] = PTR(records + 1);
@@ -2947,7 +2949,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     const int top = sq_gettop(kinoko_vm(vm));
     int32_t script[26] = {0}, environment[2] = {g483,g484}, wrapper[5] = {0};
     int32_t extension[7]; memcpy(extension, kinoko_act_script_extension, sizeof(extension));
-    int32_t old_archive = g765;
+    int32_t old_archive = kinoko_archive_count;
     CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
     retdec_string_assign_n(&g554, ".cv4", 4);
     CHECK(g555 == 4 && g556 >= 16 && strcmp(retdec_std_string_data(PTR(&g554)), ".cv4") == 0);
@@ -2960,7 +2962,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
     ((unsigned char*)script)[100] = 1;
     CHECK(function_415fd0(PTR(script), PTR(wrapper)) == 0);
-    g765 = 0;
+    kinoko_archive_count = 0;
     char actual[MAX_PATH], requested[MAX_PATH], command[512];
     sprintf_s(actual,sizeof(actual),"act-source-%lu.cv4",GetCurrentProcessId());
     sprintf_s(requested,sizeof(requested),"act-source-%lu.nut",GetCurrentProcessId());
@@ -2984,7 +2986,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     CHECK(execute_source(vm, environment,"if(CompileFile(\"missing.nut\")) throw 5;\n"));
     retdec_destroy_cact_script(PTR(script));
     retdec_sqrat_release_pair(vm, environment);
-    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); g765 = old_archive;
+    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); kinoko_archive_count = old_archive;
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     puts("PASS: original ACT script registration, extension rewrite, callback refresh and bytecode double execution");
     return 0;
@@ -3018,8 +3020,8 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
     // Exercise the actual four-word callback ABI and resource reader in both modes.
     const char *fixture="id,value\n,i\ncsvFile,47\n";
     const char saved_encoding=g874;
-    const int32_t saved_package=g765;
-    g765=0;
+    const int32_t saved_package=kinoko_archive_count;
+    kinoko_archive_count=0;
     for(int encoded=0;encoded<2;++encoded) {
         char path[MAX_PATH], actual[MAX_PATH];
         CHECK(GetTempFileNameA(".","csv",0,path)!=0);
@@ -3047,7 +3049,7 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,"if(csvFile.value!=47) throw 116;\n"));
     }
     g874=saved_encoding;
-    g765=saved_package;
+    kinoko_archive_count=saved_package;
     CHECK(function_48aa20(vm)==top);
     puts("PASS: original CSV quirks, typed rows, callback ownership and plain/encrypted readers");
     return 0;
@@ -3500,7 +3502,7 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     int32_t expected[64], expected_count = 0;
     for (char archive = 'a'; archive <= 'c'; ++archive) {
         sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", directory, archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(execute_asset(vm, root + 2, "data/script/stage.cv4"));
     CHECK(execute_source(vm, root + 2,
@@ -3594,7 +3596,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     char path[MAX_PATH];
     for(char archive='a';archive<='c';++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(kinoko_test_bgm_preserves_game_math()==0);
     CHECK(retdec_construct_actor_manager(manager));
@@ -3602,12 +3604,12 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null; player <- null;"));
     int32_t reader=0;
     uint8_t version; uint16_t textures;
-    CHECK(function_407370(PTR(&reader),"data/actor/marisa/marisa.pat"));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/marisa/marisa.pat"));
     CHECK(retdec_pat_read_u8(reader,&version));
     CHECK(retdec_pat_read_u16(reader,&textures));
     CHECK(retdec_pat_skip_bytes(reader,textures*128u));
     CHECK(retdec_pat_read_animations(reader,manager,0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
         int32_t player_scripts[3];
         CHECK(execute_source(vm,root+2,"t_player <- {};"));
@@ -3732,7 +3734,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     int32_t green_source=0;
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(retdec_construct_actor_manager(manager));
     function_460e00();
@@ -3746,12 +3748,12 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         int32_t reader=0;
         uint8_t version;
         uint16_t textures;
-        CHECK(function_407370(PTR(&reader),kind ? "data/actor/marisa/marisa.pat" : "data/actor/item/item.pat"));
+        CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,kind ? "data/actor/marisa/marisa.pat" : "data/actor/item/item.pat"));
         CHECK(retdec_pat_read_u8(reader,&version));
         CHECK(retdec_pat_read_u16(reader,&textures));
         CHECK(retdec_pat_skip_bytes(reader,textures*128u));
         CHECK(retdec_pat_read_animations(reader,manager,0));
-        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+        kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     }
     CHECK(pat_lookup(manager,1823));
     if(green) {
@@ -3959,19 +3961,19 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     const char *patterns[] = { "data/map/map.pat" };
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(retdec_construct_actor_manager(manager));
     for (int p=0; p<1; ++p) {
         int32_t reader=0;
         uint8_t version;
         uint16_t textures;
-        CHECK(function_407370(PTR(&reader),patterns[p]));
+        CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,patterns[p]));
         CHECK(retdec_pat_read_u8(reader,&version));
         CHECK(retdec_pat_read_u16(reader,&textures));
         CHECK(retdec_pat_skip_bytes(reader,textures*128u));
         CHECK(retdec_pat_read_animations(reader,manager,0));
-        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+        kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     }
     for (int take=9700; take<=9730; take+=10) {
         int32_t animation=pat_lookup(manager,take);
@@ -4015,7 +4017,7 @@ static int test_portrait_regions(const char *directory) {
     char path[MAX_PATH];
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     int32_t act[60]={0};
     CHECK(kinoko_act_document_initialize((KinokoActDocument *)act));
@@ -4128,7 +4130,7 @@ static int test_act_reentry(const char *directory) {
     const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
     for(char archive='a';archive<='c';++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     for(int asset=0;asset<2;++asset) {
         int32_t source[60]={0}, runtime[48]={0}, holder=PTR(source);
@@ -4907,7 +4909,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                     CHECK(WriteFile(file,payload,stream.size,&written,NULL) && written==stream.size);
                     CHECK(SetFilePointer(file,package?32:0,NULL,FILE_BEGIN)!=(DWORD)-1);
                     int32_t reader[7]={0};
-                    reader[0]=package?PTR(&g205):PTR(&g33); reader[1]=PTR(file);
+                    reader[0]=package?PTR(&kinoko_package_reader_methods):PTR(&kinoko_file_reader_methods); reader[1]=PTR(file);
                     reader[3]=stream.size; reader[4]=reader[5]=package?32:0;
                     ((unsigned char*)reader)[24]=package?0xa7:0;
                     int32_t actual=kinoko_act_new_timeline(); CHECK(actual);
@@ -4932,8 +4934,8 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         {
             int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
             struct script_io_stream stream={0}; stream.vtable=methods;
-            const unsigned char saved=g673; const int32_t archives=g765;
-            g673=0; g765=0;
+            const unsigned char saved=g673; const int32_t archives=kinoko_archive_count;
+            g673=0; kinoko_archive_count=0;
             CHECK(retdec_call_thiscall1_result((void*)(intptr_t)source,(void*)g252.e0,PTR(&stream)));
             char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
             CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"lyr",0,path));
@@ -4941,7 +4943,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                 FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
             CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
             CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-            int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+            int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)}, holder=PTR(reader);
             const int32_t loaded=retdec_act_make_layer(); CHECK(loaded);
             CHECK(retdec_call_thiscall2_result((void*)(intptr_t)loaded,(void*)g252.e1,PTR(&holder),1));
             CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
@@ -4956,7 +4958,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             CHECK(restored_event[0]==PTR(kinoko_act_timeline_vtable()) && restored_event[1]==17);
             CHECK(memcmp((void*)(intptr_t)restored_event[3],timeline_pairs,16)==0);
             retdec_destroy_cact_layer(loaded); free((void*)(intptr_t)loaded);
-            CHECK(CloseHandle(file)); g765=archives; g673=saved;
+            CHECK(CloseHandle(file)); kinoko_archive_count=archives; g673=saved;
         }
         for(int compiled=0;compiled<2;++compiled) {
             *(uint8_t*)(intptr_t)(source+305)=(uint8_t)compiled;
@@ -5159,7 +5161,7 @@ static int test_act_serialization(void) {
     CHECK(retdec_construct_cact_script(PTR(source+25)) && retdec_construct_cact_script(PTR(loaded+25)));
     source[1]=16; source[2]=640; source[3]=480;
     source[18]=11; source[19]=22; source[20]=33; source[21]=44; ((uint8_t*)source)[96]=1;
-    const unsigned char saved=g673; const int32_t archives=g765; g673=0; g765=0;
+    const unsigned char saved=g673; const int32_t archives=kinoko_archive_count; g673=0; kinoko_archive_count=0;
     CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
     char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
     CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"act",0,path));
@@ -5167,7 +5169,7 @@ static int test_act_serialization(void) {
         FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
     CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
     CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-    int32_t reader[7]={PTR(&g33),PTR(file)},holder=PTR(reader);
+    int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)},holder=PTR(reader);
     CHECK(retdec_call_thiscall2_result(loaded,(void*)g285.e1,PTR(&holder),1));
     CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
     CHECK(loaded[1]==16 && loaded[2]==640 && loaded[3]==480);
@@ -5199,7 +5201,7 @@ static int test_act_serialization(void) {
     }
     source[52]=source[53]=source[54]=0;
     retdec_destroy_cact_object(PTR(source)); retdec_destroy_cact_object(PTR(loaded));
-    g673=saved; g765=archives;
+    g673=saved; kinoko_archive_count=archives;
     puts("PASS: CAct native reader, original margin offsets, debug-only filter and stable layer wire order");
     return 0;
 }
@@ -5233,7 +5235,7 @@ static int test_key_string_writers(void) {
     retdec_string_assign_n(string_source+1,"A\0B",3);
     retdec_string_assign_n(string_source+8,"C\0D",3);
     ((uint8_t*)string_source)[128]=1;string_source[33]=2;
-    const int32_t archives=g765; g765=0;
+    const int32_t archives=kinoko_archive_count; kinoko_archive_count=0;
     for(int kind=0;kind<2;++kind) for(int compact=0;compact<2;++compact) {
         key[1]=kind?PTR(string_source):PTR(flat);
         g673=(unsigned char)compact; stream.position=stream.size=0;
@@ -5244,7 +5246,7 @@ static int test_key_string_writers(void) {
             FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
         CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
         CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-        int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+        int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)}, holder=PTR(reader);
         int32_t* copy=(int32_t*)calloc(1,36); CHECK(copy); copy[0]=PTR(&g277); copy[7]=15;
         CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
         CHECK(copy[1] && copy[1]!=key[1]);
@@ -5258,7 +5260,7 @@ static int test_key_string_writers(void) {
         CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
         retdec_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
     }
-    g765=archives;
+    kinoko_archive_count=archives;
     kinoko_clear_string_layout(PTR(string_source));
     kinoko_string_destroy(PTR(key)+8);
     g673=saved;
@@ -5903,7 +5905,7 @@ int main(int argc, char **argv) {
         char path[MAX_PATH];
         for(char archive='a';archive<='c';++archive) {
             sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",argv[2],archive);
-            CHECK(function_410500(path));
+            CHECK(kinoko_archive_mount(path));
         }
         CHECK(retdec_construct_actor_manager(manager));
         function_460e00();

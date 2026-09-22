@@ -347,47 +347,38 @@ static int retdec_read_asset_bytes(const char *path,
                                    unsigned char **data,
                                    DWORD *size)
 {
-    int32_t reader_slot = 0;
-    int32_t *reader;
+    KinokoArchiveReader *reader_slot = nullptr;
+    KinokoArchiveReader *reader;
     DWORD asset_size;
-    DWORD file_size;
     unsigned char *contents;
 
     if (data == NULL || size == NULL || path == NULL)
         return 0;
     *data = NULL;
     *size = 0;
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, path))
+    if (!kinoko_reader_open(&reader_slot, path))
         return 0;
 
-    reader = (int32_t *)(intptr_t)reader_slot;
-    if (reader == NULL || reader[1] == 0) {
-        retdec_destroy_reader(reader);
+    reader = reader_slot;
+    if (reader == NULL) {
+        kinoko_reader_close(reader);
         return 0;
     }
-    if (g765 != 0) {
-        asset_size = (DWORD)reader[3];
-    } else {
-        file_size = GetFileSize((HANDLE)(intptr_t)reader[1], NULL);
-        if (file_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
-            retdec_destroy_reader(reader);
-            return 0;
-        }
-        asset_size = file_size;
-    }
-    if (asset_size == 0) {
-        retdec_destroy_reader(reader);
+    SetLastError(NO_ERROR);
+    asset_size = kinoko_reader_size(reader);
+    if (asset_size == 0 || (asset_size == INVALID_FILE_SIZE && GetLastError() != NO_ERROR)) {
+        kinoko_reader_close(reader);
         return 0;
     }
 
     contents = (unsigned char *)malloc(asset_size);
     if (contents == NULL ||
-        !retdec_reader_read_exact(reader_slot, contents, asset_size)) {
+        !kinoko_reader_read_exact(reader_slot, contents, asset_size)) {
         free(contents);
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
-    retdec_destroy_reader(reader);
+    kinoko_reader_close(reader);
     *data = contents;
     *size = asset_size;
     return 1;
@@ -2023,8 +2014,8 @@ static void retdec_loadse_blob(const char *source)
 {
     char path[MAX_PATH];
     size_t length;
-    int32_t reader_slot = 0;
-    int32_t *reader;
+    KinokoArchiveReader *reader_slot = nullptr;
+    KinokoArchiveReader *reader;
     uint32_t size;
     unsigned char *blob;
     uint32_t index;
@@ -2046,21 +2037,20 @@ static void retdec_loadse_blob(const char *source)
         return;
     }
 
-    if (function_407370((int32_t)(intptr_t)&reader_slot, path) == 0) {
+    if (kinoko_reader_open(&reader_slot, path) == 0) {
         retdec_trace("loadse:reader-failed");
         return;
     }
-    reader = (int32_t *)(intptr_t)reader_slot;
-    size = g765 != 0 ? (uint32_t)reader[3] :
-        (uint32_t)function_407300(reader_slot);
+    reader = reader_slot;
+    size = kinoko_reader_size(reader);
     retdec_trace_squirrel_name("loadse:path", (int32_t)(intptr_t)path);
     retdec_trace_i32("loadse:size", (int32_t)size);
     if (size == 0 || size > 16u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return;
     }
     blob = (unsigned char *)malloc(size + 1u);
-    if (blob != NULL && retdec_reader_read_exact(reader_slot, blob, size)) {
+    if (blob != NULL && kinoko_reader_read_exact(reader_slot, blob, size)) {
         /* This is the same rolling transform used by sub_414930 before the
            CSV stream is handed to the original line parser. */
         for (index = 0; index < size; ++index) {
@@ -2129,7 +2119,7 @@ static void retdec_loadse_blob(const char *source)
         retdec_trace("loadse:blob-read-failed");
     }
     free(blob);
-    retdec_destroy_reader(reader);
+    kinoko_reader_close(reader);
 }
 
 int32_t kinoko_audio_load_sound_table(const char* path) {

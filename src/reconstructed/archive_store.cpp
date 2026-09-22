@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #include "kinoko/archive_random.h"
 #include <windows.h>
 #include <zlib.h>
@@ -8,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-extern "C" { extern int32_t g765; }
+extern "C" { int32_t kinoko_archive_count = 0; }
 namespace {
 struct Entry {
     std::string path;
@@ -55,12 +56,12 @@ uint32_t word(const uint8_t *p) {
     return uint32_t(p[0])|(uint32_t(p[1])<<8)|(uint32_t(p[2])<<16)|(uint32_t(p[3])<<24);
 }
 }
-extern "C" int32_t function_410750(char *path,int32_t archive,int32_t offset,int32_t size) {
+extern "C" int32_t kinoko_archive_insert(const char *path,uint32_t archive,uint32_t offset,uint32_t size) {
     if(!path) return 0;
     insert(path,static_cast<uint32_t>(archive),static_cast<uint32_t>(offset),static_cast<uint32_t>(size));
     return 1;
 }
-extern "C" int32_t function_410500(char *path) {
+extern "C" int32_t kinoko_archive_mount(const char *path) {
     if(!path) return 0;
     File file(path);if(!file.valid()) return 0;
     uint16_t count=0;uint32_t size=0;
@@ -72,7 +73,7 @@ extern "C" int32_t function_410500(char *path) {
     file.close();
     kinoko_decode_archive_index(bytes.data(),size);
     const auto archive=static_cast<uint32_t>(archives.size());
-    archives.emplace_back(path);g765=static_cast<int32_t>(archives.size());
+    archives.emplace_back(path);kinoko_archive_count=static_cast<int32_t>(archives.size());
     uint32_t cursor=0;
     for(uint32_t i=0;i<count;++i) {
         if(size-cursor<9u) return 0;
@@ -85,7 +86,7 @@ extern "C" int32_t function_410500(char *path) {
     }
     return 1;
 }
-extern "C" int32_t function_4109d0(const char *path,uint32_t *offset,uint32_t *size) {
+extern "C" HANDLE kinoko_archive_open_entry(const char *path,uint32_t *offset,uint32_t *size) {
     if(!path || !offset || !size) return 0;
     *offset=*size=0;
     // 410A07 strips exactly "./" before slash conversion, not ".\\".
@@ -103,7 +104,11 @@ extern "C" int32_t function_4109d0(const char *path,uint32_t *offset,uint32_t *s
         *offset=entry.offset;*size=entry.size;
         File file(archives[entry.archive].c_str());if(!file.valid()) return 0;
         SetFilePointer(file.get(),static_cast<LONG>(entry.offset),nullptr,FILE_BEGIN);
-        return static_cast<int32_t>(reinterpret_cast<intptr_t>(file.detach()));
+        return file.detach();
     }
     return 0;
+}
+
+extern "C" void kinoko_archive_initialize(void) {
+    entries.clear(); archives.clear(); kinoko_archive_count = 0;
 }

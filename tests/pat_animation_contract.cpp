@@ -1,3 +1,4 @@
+#include "kinoko/file_io.h"
 #include "kinoko/pat_animation.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/animation_storage.h"
@@ -36,10 +37,10 @@ void frame(int16_t duration,bool first) {
 }
 extern "C" {
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
-int32_t function_407370(int32_t output,const char *) { *pointer<int32_t>(output)=address(&stream);stream.cursor=0;return 1; }
-void retdec_destroy_reader(int32_t *) { ++closes; }
-int32_t retdec_reader_read_exact(int32_t source,void *output,uint32_t size) {
-    auto &reader=*pointer<KinokoArchiveReader>(source);
+int32_t kinoko_reader_open(KinokoArchiveReader **output,const char *) { *output=&stream;stream.cursor=0;return 1; }
+void kinoko_reader_close(KinokoArchiveReader *) { ++closes; }
+int32_t kinoko_reader_read_exact(KinokoArchiveReader *source,void *output,uint32_t size) {
+    auto &reader=*source;
     if (size>reader.bytes.size()-reader.cursor) return 0;
     std::memcpy(output,reader.bytes.data()+reader.cursor,size);reader.cursor+=size;return 1;
 }

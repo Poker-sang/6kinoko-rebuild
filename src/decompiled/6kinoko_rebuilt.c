@@ -1,3 +1,5 @@
+#include "kinoko/file_io_layout.h"
+#include "kinoko/file_io_legacy.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/application.h"
 #include "kinoko/renderer.h"
@@ -121,9 +123,6 @@ int32_t retdec_is_release_watch_data(int32_t data) {
 }
 
 
-void retdec_destroy_reader(int32_t *reader);
-int32_t retdec_reader_seek_relative(int32_t reader_ptr,
-                                            uint32_t offset);
 struct retdec_mcd_data;
 void retdec_mcd_free(struct retdec_mcd_data *data);
 void retdec_act_free_map_records(int32_t layout);
@@ -596,24 +595,7 @@ struct vtable_4d5a5c_type {
     int32_t (*e1)();
 };
 
-struct vtable_4d5a94_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t);
-    int32_t (*e6)();
-};
 
-struct vtable_4d5ab4_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t);
-};
 
 struct vtable_4d5adc_type {
     int32_t (*e0)();
@@ -814,15 +796,6 @@ struct vtable_4eb5fc_type {
     int32_t (*e4)();
 };
 
-struct vtable_4eb698_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t, int32_t);
-    int32_t (*e6)(int32_t);
-};
 
 struct vtable_4eb6f0_type {
     int32_t (*e0)(int32_t, int32_t);
@@ -1597,16 +1570,8 @@ static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 
 
 
-int32_t function_407270(int32_t lpFileName);
-int32_t function_4072b0(int32_t a1);
-int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
-                        int32_t nNumberOfBytesToRead);
-int32_t function_407300(int32_t reader);
-int32_t function_407310(char a1);
 
 
-int32_t function_407360(char * a1);
-int32_t function_407370(int32_t reader_slot, const char *file_name);
 
 
 int32_t __fastcall function_407500(int32_t this_ptr);
@@ -1660,10 +1625,6 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
 
 
 
-int32_t function_40d520(int32_t lpFileName);
-int32_t function_40d560(int32_t lpBuffer, int32_t nNumberOfBytesToWrite);
-int32_t function_40d590(int32_t lDistanceToMove, int32_t dwMoveMethod);
-int32_t function_40d5b0(char a1);
 
 
 int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
@@ -1672,17 +1633,9 @@ int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
 
 
 
-int32_t function_410260(void);
-int32_t function_410270(void);
 
 
-int32_t function_410500(char *file_name);
-int32_t function_410750(char *path, int32_t archive_index, int32_t offset, int32_t size);
 
-int32_t function_4109d0(const char *path, uint32_t *offset, uint32_t *size);
-int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2);
-int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
-                        int32_t a2);
 
 
 
@@ -2773,9 +2726,6 @@ int32_t g753 = 0; // 0x51af04
  // 0x51af08
  // 0x51af0c
  // 0x51af10
-int32_t g757 = 0; // 0x51af18
-struct retdec_RTL_CRITICAL_SECTION g758 = { 0 }; // 0x51af1c
-int32_t g765 = 0; // 0x51af54
 char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
@@ -3184,23 +3134,6 @@ struct vtable_4d5a5c_type g31 = {
     .e0 = kinoko_method_actor_owner_delete,
     .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
 }; // 0x4d5a5c
-struct vtable_4d5a94_type g33 = {
-    .e0 = function_407310,
-    .e1 = function_4072b0,
-    .e2 = function_407270,
-    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_file,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_40d590,
-    .e6 = function_407300
-}; // 0x4d5a94
-struct vtable_4d5ab4_type g34 = {
-    .e0 = function_40d5b0,
-    .e1 = function_4072b0,
-    .e2 = function_40d520,
-    .e3 = function_40d560,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_40d590
-}; // 0x4d5ab4
  // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
     .e0 = kinoko_map_render_layer_entry
@@ -3247,15 +3180,6 @@ struct vtable_4eb498_type g190 = {
  // 0x4eb59c
  // 0x4eb5cc
  // 0x4eb5fc
-struct vtable_4eb698_type g205 = {
-    .e0 = function_407310,
-    .e1 = function_4072b0,
-    .e2 = function_407270,
-    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_package,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_410c00,
-    .e6 = function_410260
-}; // 0x4eb698
  // 0x4eb6f0
  // 0x4eb7d8
 
@@ -3511,7 +3435,7 @@ static void retdec_initialize_runtime_objects(void)
     function_401040();
     function_401850();
     kinoko_initialize_texture_cache();
-    function_410270();
+    kinoko_archive_initialize();
     function_4d3ce0();
     function_4d3e50();
     /* CRT construction creates the LoadSE lookup tree before boot.nut calls
@@ -3765,47 +3689,13 @@ int32_t function_402d30(void) {
 }
 
 // Address range: 0x402d40 - 0x402ff7
-static int32_t retdec_read_script_blob(int32_t reader_ptr,
-                                       unsigned char *buffer,
-                                       uint32_t size)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    DWORD bytes_read = 0;
-    uint32_t i;
 
-    if (reader == NULL || buffer == NULL || size == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        LONG entry_offset = (LONG)reader[4];
-        if (SetFilePointer(file_handle, entry_offset, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER &&
-            GetLastError() != NO_ERROR) {
-            return 0;
-        }
-    }
-    if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-        bytes_read != size) {
-        return 0;
-    }
-    if (g765 != 0) {
-        unsigned char key = ((unsigned char *)reader)[24];
-        for (i = 0; i < size; ++i)
-            buffer[i] ^= key;
-    }
-    return 1;
-}
 
 int32_t function_402d40(char * a1, int32_t a2) {
     char lookup_path[MAX_PATH];
     const char *file_name = a1;
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    HANDLE file_handle;
+    KinokoArchiveReader *reader_slot = NULL;
+    KinokoArchiveReader *reader;
     uint32_t blob_size;
     unsigned char *blob;
     int32_t stream_state[3];
@@ -3815,7 +3705,7 @@ int32_t function_402d40(char * a1, int32_t a2) {
     size_t path_length;
 
     retdec_trace("402d40:entry");
-    retdec_trace_i32("402d40:archives", g765);
+    retdec_trace_i32("402d40:archives", kinoko_archive_count);
     if (a1 == NULL)
         return 0;
 
@@ -3835,31 +3725,25 @@ int32_t function_402d40(char * a1, int32_t a2) {
         file_name = lookup_path;
     }
 
-    if (function_407370((int32_t)(intptr_t)&reader_slot, file_name) == 0) {
+    if (kinoko_reader_open(&reader_slot, file_name) == 0) {
         retdec_trace("402d40:reader-failed");
         return 0;
     }
-    reader = (int32_t *)(intptr_t)reader_slot;
+    reader = reader_slot;
     if (reader == NULL)
         return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (g765 != 0) {
-        blob_size = (uint32_t)reader[3];
-    } else {
-        DWORD size_on_disk = GetFileSize(file_handle, NULL);
-        blob_size = size_on_disk == INVALID_FILE_SIZE ? 0 : size_on_disk;
-    }
+    blob_size = kinoko_reader_size(reader);
     retdec_trace_i32("402d40:size", (int32_t)blob_size);
     if (blob_size == 0 || blob_size > 64u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
 
     blob = (unsigned char *)malloc(blob_size + 1u);
     if (blob == NULL ||
-        !retdec_read_script_blob(reader_slot, blob, blob_size)) {
+        !kinoko_reader_read_exact(reader_slot, blob, blob_size)) {
         free(blob);
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
     blob[blob_size] = 0;
@@ -3896,12 +3780,12 @@ int32_t function_402d40(char * a1, int32_t a2) {
     } else {
         retdec_trace("402d40:plain-script");
         free(blob);
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
 
     free(blob);
-    retdec_destroy_reader(reader);
+    kinoko_reader_close(reader);
     return 1;
 }
 
@@ -4238,247 +4122,45 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 // Address range: 0x407270 - 0x4072ac
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_407270(int32_t lpFileName) {
-    int32_t * fileHandle = CreateFileA((char *)lpFileName, 1, 3, NULL, 3, 128, NULL); // 0x407289
-    int32_t v1 = (int32_t)fileHandle; // 0x407289
-    int32_t v2; // 0x407270
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x40728f
-    *v3 = v1;
-    if (fileHandle != (int32_t *)-1) {
-        // 0x4072a5
-        return v1 & -256 | 1;
-    }
-    // 0x407297
-    *v3 = 0;
-    return v1 & -256;
-}
+
 
 // Address range: 0x4072b0 - 0x4072ca
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072b0(int32_t reader) {
-    if (reader == 0)
-        return 0;
-    return *(int32_t *)(intptr_t)(reader + 8);
-}
+
 
 // Address range: 0x4072d0 - 0x4072f5
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
-                        int32_t nNumberOfBytesToRead) {
-    HANDLE file_handle;
 
-    if (reader == 0 || lpBuffer == 0 || nNumberOfBytesToRead < 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    return ReadFile(file_handle, (void *)(intptr_t)lpBuffer,
-                    (DWORD)nNumberOfBytesToRead,
-                    (LPDWORD)(intptr_t)(reader + 8), NULL);
-}
 
 // Address range: 0x407300 - 0x40730d
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_407300(int32_t reader) {
-    HANDLE file_handle;
 
-    if (reader == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    return (int32_t)GetFileSize(file_handle, NULL);
-}
 
 // Address range: 0x407310 - 0x407340
 // From class:    .?AVCFileReader@@
 // Type:          constructor
-int32_t function_407310(char a1) {
-    // 0x407310
-    int32_t result; // 0x407310
-    int32_t hObject = *(int32_t *)(result + 4); // 0x407316
-    *(int32_t *)result = (int32_t)&g33;
-    if (hObject != 0) {
-        // 0x407323
-        CloseHandle((int32_t *)hObject);
-    }
-    if ((a1 & 1) != 0) {
-        // 0x407330
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x407339
-    return result;
-}
+
 
 
 // Address range: 0x407360 - 0x40736c
-int32_t function_407360(char * a1) {
-    // 0x407360
-    return function_410500(a1);
-}
+
 
 // Address range: 0x407370 - 0x407443
-void retdec_destroy_reader(int32_t *reader)
-{
-    HANDLE file_handle;
 
-    if (reader == NULL) {
-        return;
-    }
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle != NULL && file_handle != INVALID_HANDLE_VALUE) {
-        CloseHandle(file_handle);
-    }
-    free(reader);
-}
 
-int32_t function_407370(int32_t reader_slot_address, const char *file_name)
-{
-    int32_t *reader_slot = (int32_t *)(intptr_t)reader_slot_address;
-    int32_t *reader = NULL;
-    HANDLE file_handle;
 
-    if (reader_slot == NULL || file_name == NULL) {
-        return 0;
-    }
-    if (*reader_slot != 0) {
-        retdec_destroy_reader((int32_t *)(intptr_t)*reader_slot);
-        *reader_slot = 0;
-    }
-
-    if (g765 == 0) {
-        reader = (int32_t *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(12);
-        if (reader != NULL) {
-            memset(reader, 0, 12);
-            reader[0] = (int32_t)(intptr_t)&g33;
-            file_handle = CreateFileA(file_name, GENERIC_READ,
-                                       FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                       NULL, OPEN_EXISTING,
-                                       FILE_ATTRIBUTE_NORMAL, NULL);
-            reader[1] = file_handle == INVALID_HANDLE_VALUE
-                ? 0 : (int32_t)(intptr_t)file_handle;
-        }
-    } else {
-        reader = (int32_t *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(28);
-        if (reader != NULL) {
-            uint32_t resource_offset = 0;
-            uint32_t resource_size = 0;
-
-            memset(reader, 0, 28);
-            reader[0] = (int32_t)(intptr_t)&g205;
-            file_handle = (HANDLE)(intptr_t)function_4109d0(
-                file_name, &resource_offset, &resource_size);
-            reader[1] = (int32_t)(intptr_t)file_handle;
-            /* CPackageFileReader stores the entry size at +0x0c and the
-               entry offset at +0x10; +0x14 tracks the current position. */
-            reader[3] = (int32_t)resource_size;
-            reader[4] = (int32_t)resource_offset;
-            reader[5] = (int32_t)resource_offset;
-            if (file_handle != NULL) {
-                ((unsigned char *)reader)[24] =
-                    (unsigned char)((resource_offset >> 1) | 0x23u);
-            }
-        }
-    }
-
-    *reader_slot = (int32_t)(intptr_t)reader;
-    if (reader != NULL && reader[1] != 0) {
-        return 1;
-    }
-    retdec_destroy_reader(reader);
-    *reader_slot = 0;
-    return 0;
-}
 
 /* Read through the same CFileReader/CPackageFileReader boundary used by the
    original image and ACT loaders.  The package reader keeps the entry size
    at +0x0c, the absolute archive offset at +0x10, and its current absolute
    position at +0x14. */
-int32_t retdec_reader_read_exact(int32_t reader_ptr, void *buffer,
-                                        uint32_t size)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    DWORD bytes_read = 0;
 
-    if (reader == NULL || buffer == NULL || size == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        uint32_t entry_size = (uint32_t)reader[3];
-        uint32_t entry_offset = (uint32_t)reader[4];
-        uint32_t position = (uint32_t)reader[5];
-        uint32_t entry_end = entry_offset + entry_size;
-
-        if (position < entry_offset || position > entry_end ||
-            size > entry_end - position)
-            return 0;
-        if (SetFilePointer(file_handle, (LONG)position, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-            bytes_read != size)
-            return 0;
-        for (uint32_t index = 0; index < size; ++index) {
-            ((unsigned char *)buffer)[index] ^=
-                ((unsigned char *)reader)[24];
-        }
-        reader[2] = (int32_t)bytes_read;
-        reader[5] = (int32_t)(position + bytes_read);
-        return 1;
-    }
-
-    if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-        bytes_read != size)
-        return 0;
-    reader[2] = (int32_t)bytes_read;
-    return 1;
-}
 
 /* CAct::Load passes origin=FILE_CURRENT after consuming the ACT header. */
-int32_t retdec_reader_seek_relative(int32_t reader_ptr,
-                                            uint32_t offset)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    uint32_t target;
 
-    if (reader == NULL)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        uint32_t entry_size = (uint32_t)reader[3];
-        uint32_t entry_offset = (uint32_t)reader[4];
-        uint32_t position = (uint32_t)reader[5];
-        uint32_t entry_end;
-
-        if (entry_size > UINT32_MAX - entry_offset)
-            return 0;
-        entry_end = entry_offset + entry_size;
-        if (position < entry_offset || position > entry_end ||
-            offset > entry_end - position)
-            return 0;
-        target = position + offset;
-        if (SetFilePointer(file_handle, (LONG)target, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        reader[5] = (int32_t)target;
-    } else {
-        if (SetFilePointer(file_handle, (LONG)offset, NULL, FILE_CURRENT) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-    }
-    return 1;
-}
 
 
 // Address range: 0x407480 - 0x4074a2
@@ -4907,59 +4589,22 @@ int32_t function_408830(void) {
 // Address range: 0x40d520 - 0x40d55f
 // From class:    .?AVCFileWriter@@
 // Type:          virtual member function
-int32_t function_40d520(int32_t lpFileName) {
-    int32_t * fileHandle = CreateFileA((char *)lpFileName, 0x40000000, 0, NULL, 2, 128, NULL); // 0x40d53c
-    int32_t v1 = (int32_t)fileHandle; // 0x40d53c
-    int32_t v2; // 0x40d520
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x40d542
-    *v3 = v1;
-    if (fileHandle != (int32_t *)-1) {
-        // 0x40d558
-        return v1 & -256 | 1;
-    }
-    // 0x40d54a
-    *v3 = 0;
-    return v1 & -256;
-}
+
 
 // Address range: 0x40d560 - 0x40d585
 // From class:    .?AVCFileWriter@@
 // Type:          virtual member function
-int32_t function_40d560(int32_t lpBuffer, int32_t nNumberOfBytesToWrite) {
-    // 0x40d560
-    int32_t v1; // 0x40d560
-    int32_t hFile = *(int32_t *)(v1 + 4); // 0x40d56b
-    return WriteFile((int32_t *)hFile, (int32_t *)lpBuffer, nNumberOfBytesToWrite, (int32_t *)(v1 + 8), NULL);
-}
+
 
 // Address range: 0x40d590 - 0x40d5ab
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_40d590(int32_t lDistanceToMove, int32_t dwMoveMethod) {
-    // 0x40d590
-    int32_t v1; // 0x40d590
-    return SetFilePointer((int32_t *)*(int32_t *)(v1 + 4), lDistanceToMove, NULL, dwMoveMethod);
-}
+
 
 // Address range: 0x40d5b0 - 0x40d5e0
 // From class:    .?AVCFileWriter@@
 // Type:          constructor
-int32_t function_40d5b0(char a1) {
-    // 0x40d5b0
-    int32_t result; // 0x40d5b0
-    int32_t hObject = *(int32_t *)(result + 4); // 0x40d5b6
-    *(int32_t *)result = (int32_t)&g34;
-    if (hObject != 0) {
-        // 0x40d5c3
-        CloseHandle((int32_t *)hObject);
-    }
-    if ((a1 & 1) != 0) {
-        // 0x40d5d0
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x40d5d9
-    return result;
-}
+
 
 // Application lifecycle and worker loops: application_runtime.cpp.
 
@@ -5149,23 +4794,12 @@ int32_t retdec_load_act_texture(const char *texture_name)
 // Address range: 0x410260 - 0x410264
 // From class:    .?AUSQBlob@@
 // Type:          virtual member function
-int32_t function_410260(void) {
-    // 0x410260
-    int32_t v1; // 0x410260
-    return *(int32_t *)(v1 + 12);
-}
+
 
 // Address range: 0x410270 - 0x4103ad
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_410270(void) {
-    g757=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g758);
-    // Active archive entries are owned by the native index below. Do not
-    // construct a second, disconnected VC8 vector/map and its fake unwind.
-    g765=0;
-    return (int32_t)&g757;
-}
+
 
 
 // Address range: 0x410500 - 0x410747
@@ -5197,85 +4831,12 @@ int32_t function_410270(void) {
 // Address range: 0x410b90 - 0x410bf5
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2) {
-    HANDLE file_handle;
-    uint32_t offset;
-    uint32_t size;
-    uint32_t position;
-    uint32_t requested;
-    uint32_t readable;
-    DWORD bytes_read = 0;
-    uint32_t index;
 
-    if (reader == 0 || lpBuffer == 0 || a2 <= 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
-    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
-    position = (uint32_t)*(int32_t *)(intptr_t)(reader + 20);
-    requested = (uint32_t)a2;
-    readable = position < offset + size ? offset + size - position : 0;
-    if (requested > readable)
-        requested = readable;
-    if (requested == 0)
-        return 0;
-
-    if (!ReadFile(file_handle, (void *)(intptr_t)lpBuffer, requested,
-                  &bytes_read, NULL) || bytes_read == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(reader + 8) = (int32_t)bytes_read;
-    *(int32_t *)(intptr_t)(reader + 20) =
-        (int32_t)(position + (uint32_t)bytes_read);
-    for (index = 0; index < bytes_read; ++index) {
-        ((unsigned char *)(intptr_t)lpBuffer)[index] ^=
-            ((unsigned char *)(intptr_t)reader)[24];
-    }
-    return 1;
-}
 
 // Address range: 0x410c00 - 0x410c7b
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
-                        int32_t a2) {
-    HANDLE file_handle;
-    LONG absolute_position;
-    uint32_t offset;
-    uint32_t size;
-    DWORD position;
 
-    if (reader == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
-    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
-    if (a2 == 0) {
-        absolute_position = (LONG)(offset + (uint32_t)lDistanceToMove);
-    } else if (a2 == 1) {
-        position = SetFilePointer(file_handle, (LONG)lDistanceToMove,
-                                  NULL, FILE_CURRENT);
-        if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        absolute_position = (LONG)position;
-    } else if (a2 == 2) {
-        absolute_position = (LONG)(offset + size -
-                                   (uint32_t)lDistanceToMove);
-    } else {
-        return 0;
-    }
-    position = SetFilePointer(file_handle, absolute_position, NULL,
-                              FILE_BEGIN);
-    if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-        return 0;
-    *(int32_t *)(intptr_t)(reader + 20) =
-        (int32_t)((uint32_t)position - offset);
-    return *(int32_t *)(intptr_t)(reader + 20);
-}
 
 
 // Address range: 0x410e00 - 0x410e77
@@ -5449,8 +5010,8 @@ int32_t function_412ca0(void) {
 
 // Address range: 0x414010 - 0x4141d9
 int32_t function_414010(int32_t this_ptr, const char *file_name) {
-    int32_t reader_slot = 0;
-    int32_t *reader;
+    KinokoArchiveReader *reader_slot = NULL;
+    KinokoArchiveReader *reader;
     uint8_t bit_depth;
     uint32_t width;
     uint32_t height;
@@ -5462,18 +5023,18 @@ int32_t function_414010(int32_t this_ptr, const char *file_name) {
 
     if (this_ptr == 0 || file_name == NULL)
         return 0;
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name))
+    if (!kinoko_reader_open(&reader_slot, file_name))
         return 0;
-    reader = (int32_t *)(intptr_t)reader_slot;
+    reader = reader_slot;
 
-    if (!retdec_reader_read_exact(reader_slot, &bit_depth, 1) ||
-        !retdec_reader_read_exact(reader_slot, &width, sizeof(width)) ||
-        !retdec_reader_read_exact(reader_slot, &height, sizeof(height)) ||
-        !retdec_reader_read_exact(reader_slot, &row_width,
+    if (!kinoko_reader_read_exact(reader_slot, &bit_depth, 1) ||
+        !kinoko_reader_read_exact(reader_slot, &width, sizeof(width)) ||
+        !kinoko_reader_read_exact(reader_slot, &height, sizeof(height)) ||
+        !kinoko_reader_read_exact(reader_slot, &row_width,
                                   sizeof(row_width)) ||
-        !retdec_reader_read_exact(reader_slot, &payload_size,
+        !kinoko_reader_read_exact(reader_slot, &payload_size,
                                   sizeof(payload_size))) {
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
 
@@ -5494,7 +5055,7 @@ int32_t function_414010(int32_t this_ptr, const char *file_name) {
     }
     if (allocation_size == 0 || allocation_size > 256u * 1024u * 1024u ||
         (uint64_t)width * height > 64u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
 
@@ -5503,14 +5064,14 @@ int32_t function_414010(int32_t this_ptr, const char *file_name) {
         free(old_pixels);
     pixels = malloc(allocation_size);
     if (pixels == NULL ||
-        !retdec_reader_read_exact(reader_slot, pixels, allocation_size)) {
+        !kinoko_reader_read_exact(reader_slot, pixels, allocation_size)) {
         free(pixels);
         *(void **)(intptr_t)(this_ptr + 28) = NULL;
-        retdec_destroy_reader(reader);
+        kinoko_reader_close(reader);
         return 0;
     }
     *(void **)(intptr_t)(this_ptr + 28) = pixels;
-    retdec_destroy_reader(reader);
+    kinoko_reader_close(reader);
     return 1;
 }
 
@@ -15061,14 +14622,13 @@ int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror) {
 
 /* Original 414850/414930 resource boundary, shared by the C++ CSV loader. */
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes) {
-    int32_t slot = 0;
+    KinokoArchiveReader *reader = NULL;
     *bytes = NULL;
-    if (!function_407370((int32_t)(intptr_t)&slot, path)) return 0;
-    int32_t *reader = (int32_t *)(intptr_t)slot;
-    uint32_t size = g765 != 0 ? (uint32_t)reader[3] : (uint32_t)function_407300(slot);
+    if (!kinoko_reader_open(&reader, path)) return 0;
+    uint32_t size = kinoko_reader_size(reader);
     char *buffer = size < UINT32_MAX ? (char *)malloc((size_t)size + 1) : NULL;
-    int32_t ok = buffer != NULL && (size == 0 || retdec_reader_read_exact(slot, buffer, size));
-    retdec_destroy_reader(reader);
+    int32_t ok = buffer != NULL && (size == 0 || kinoko_reader_read_exact(reader, buffer, size));
+    kinoko_reader_close(reader);
     if (!ok) { free(buffer); return 0; }
     if (g874 != 0) {
         unsigned char key = 0x8b, step = 0x71;
@@ -15150,8 +14710,8 @@ void kinoko_application_initialize_host(void) { retdec_initialize_runtime_object
 const char *kinoko_application_title(void) { return g43; }
 const char *kinoko_application_error(void) { return g42; }
 void kinoko_application_open_archives(void) {
-    function_407360("6kinoko_a.dat");
-    function_407360("6kinoko_b.dat");
-    function_407360("6kinoko_c.dat");
+    kinoko_archive_mount("6kinoko_a.dat");
+    kinoko_archive_mount("6kinoko_b.dat");
+    kinoko_archive_mount("6kinoko_c.dat");
     retdec_string_assign_n(&g554, ".cv4", 4);
 }

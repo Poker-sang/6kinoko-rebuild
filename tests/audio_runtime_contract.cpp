@@ -23,28 +23,28 @@ static_assert(std::is_nothrow_move_constructible_v<BgmTrack>);
 }
 
 extern "C" {
-int32_t g637 = 0, g765 = 1, g876 = 0, g878 = 0;
+int32_t g637 = 0, kinoko_archive_count = 1, g876 = 0, g878 = 0;
 char* g877 = nullptr;
 char g874 = 0;
 const KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static const KinokoAudioHostSymbols symbols{&critical_section_identity, "test"};
     return &symbols;
 }
-int32_t function_407370(int32_t slot, const char*) {
+int32_t kinoko_reader_open(KinokoArchiveReader **slot, const char*) {
     fixture_offset = 0;
     fixture_reader[1] = 1;
     fixture_reader[3] = static_cast<int32_t>(fixture.size());
-    *kinoko::legacy::pointer<int32_t>(slot) = kinoko::legacy::address(fixture_reader);
+    *slot = reinterpret_cast<KinokoArchiveReader*>(fixture_reader);
     return 1;
 }
-int32_t function_407300(int32_t) { return 0; }
-int32_t retdec_reader_read_exact(int32_t, void* output, uint32_t size) {
+uint32_t kinoko_reader_size(KinokoArchiveReader*) { return static_cast<uint32_t>(fixture.size()); }
+int32_t kinoko_reader_read_exact(KinokoArchiveReader*, void* output, uint32_t size) {
     if (fixture_offset + size > fixture.size()) return 0;
     std::memcpy(output, fixture.data() + fixture_offset, size);
     fixture_offset += size;
     return 1;
 }
-void retdec_destroy_reader(int32_t*) { ++reader_destroys; }
+void kinoko_reader_close(KinokoArchiveReader*) { ++reader_destroys; }
 uint32_t retdec_safe_c_string_length(const char* text) { return text ? static_cast<uint32_t>(std::strlen(text)) : 0; }
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}

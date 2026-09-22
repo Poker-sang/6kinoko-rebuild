@@ -1,0 +1,1 @@
+{"addr":"0x466490","code":"int __thiscall sub_466490(_DWORD *this)\n{\n  return *(this + 2); /*0x466493*/\n}"}

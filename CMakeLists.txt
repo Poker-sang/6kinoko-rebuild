@@ -230,6 +230,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
     src/reconstructed/scene_queue.cpp
+    src/reconstructed/file_io.cpp
     src/reconstructed/archive_store.cpp
     src/reconstructed/archive_random.cpp
     src/reconstructed/render_target.cpp
@@ -725,7 +726,17 @@ target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
+
+# Compile-only handoff: execution remains user-controlled.
+add_executable(kinoko_file_archive_contract tests/file_archive_contract.cpp
+    src/reconstructed/file_io.cpp src/reconstructed/archive_store.cpp
+    src/reconstructed/archive_random.cpp)
+target_include_directories(kinoko_file_archive_contract PRIVATE include)
+target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
+add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_file_archive_contract
     kinoko_act_layer_contract
     kinoko_act_clock_contract
     kinoko_act_document_optimized_contract
