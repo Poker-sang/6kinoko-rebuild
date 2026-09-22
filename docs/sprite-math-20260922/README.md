@@ -13,3 +13,16 @@ Batch 2: 404180 initializes 3600 float cosine entries using pi=3.1415926535 and 
 Batch 2 validation: source c4fe751, build-runs/angle-math-r3-quiet; full Release build, 44/44 selected contracts passed, DAT copied/hash-verified. Migration-boundary check passed (738 files; 322 upstream members). A pre-existing GBK dash in act_mesh.cpp's ORIGINAL BUG FIX comment was replaced with ASCII; no mesh behavior changed.
 
 Batch 3: move ACT quad scale/rotate/translate out of integer-address wrappers and fixed offset arrays into typed QuadRecord/Position3 operations. Preserve scale pivots, full Z/Y/X rotation passes, and translation including depth. Original references: 405180/405220/4052C0, 405320, 405080 (additional IDA session 2536085b). Remove the unused damaged RetDec 405080 body after confirming that all rebuilt callers already use recovered paths; no original functionality is discarded. Actor and PAT retain their specialized transform sequences. The unused 4045C0 rectangle helper is intentionally outside this batch. New tests cover combined-axis order, negative/zero scale, pivots, z translation, and retained vertices/base positions. Add the newly validated asset-free rendering/texture contracts to push CI; keep the PR trigger disabled.
+
+Final validation / handoff
+--------------------------
+- Source commit: 5df200f (quad transform R1). Branch: codex/sprite-math-cleanup. No push performed.
+- Full Win32 Release quiet build succeeded: build-runs/quad-transform-r1-quiet. source-commit.txt records the exact code revision.
+- Current workflow regex executed locally: 45/45 asset-free CTest contracts passed. No game or DAT-dependent playthrough tests launched.
+- Migration boundaries passed: 741 source/header files, 322 historical upstream members; zero handwritten assembly/naked entries or literal native callback addresses.
+- Python suites: legacy islands 17/17; upstream provenance 5/5; ACT evidence 8/8.
+- Latest executable: runtime-builds/quad-transform-r1-quiet/kinoko_retdec_rebuild.exe
+- EXE SHA256: F0C136D3F5A543FBACCE2249109B6BEEEF213A1E17988BADA0C46E66C553B1D2
+- stage_dat.ps1 copied and hash-verified all three original DAT files beside the EXE. Game behavior remains for user validation; automated contract success is not a claim of a completed playthrough.
+- All build/test revisions and failed artifacts were retained. Earlier full builds with a generated game EXE (sprite-draw R2/R6, angle-math R2/R3) also received the checked DAT set. R3-R5 sprite builds were contract-only diagnostics.
+- Remaining precision limit: the lookup restores original quantization and cardinal overrides but uses the current CRT to generate cosine values; no original-vs-modern CRT bitwise table comparison has been claimed.
