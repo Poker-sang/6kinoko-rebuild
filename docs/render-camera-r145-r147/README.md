@@ -33,3 +33,18 @@ Inherited reconstruction boundaries: invalid texture dimensions/handles and
 missing chip data are rejected. The existing MCD representation still supplies
 static chip textures; original animated-chip resource caches (435D00/435E80)
 are a separate resource feature, not newly claimed implemented here.
+
+## R146: camera
+
+One verified 88-byte schema supplies native consumers and script property
+offsets. Camera initializer and copy use real pointers; copied script slots
+retain the existing SqPlus external-reference helpers (Squirrel 2.2.2-backed),
+while update_vm is borrowed. Initialization no longer clears the whole 512-byte
+backing allocation: 466270 resets position, center, offsets and bounds only,
+leaving dimensions and callback intact. Startup storage remains zero-initialized.
+Camera Update keeps the exact closure-only dispatch at 466470; no native
+following/clamping algorithm is invented. The game-loop order remains input,
+global callback, mask read, camera callback, Actors, map and stage updates.
+Projection 466320 is shared, with separate translation and X-floor/Y-ceil.
+New camera contract checks reference-call order, retained dimensions/callback,
+negative projection and copied borrowed VM. Compiled only at final handoff.

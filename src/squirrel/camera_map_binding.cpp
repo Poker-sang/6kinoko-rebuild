@@ -1,3 +1,4 @@
+#include "kinoko/camera_records.hpp"
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "kinoko/script_registration.h"
 #include "kinoko/script_callbacks.h"
@@ -15,18 +16,18 @@ using namespace kinoko::script::binding;
 template<class T> int32_t entry(T target) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(target)); }
 struct Field { const char* name; int32_t offset; bool integer; };
 constexpr Field camera_fields[] = {
-    {"x", 40, false},
-    {"y", 44, false},
-    {"cx", 48, false},
-    {"cy", 52, false},
-    {"offset_x", 56, false},
-    {"offset_y", 60, false},
-    {"left", 72, false},
-    {"top", 76, false},
-    {"right", 80, false},
-    {"bottom", 84, false},
-    {"width", 64, false},
-    {"height", 68, false},
+    {"x", offsetof(kinoko::camera::Record, x), false},
+    {"y", offsetof(kinoko::camera::Record, y), false},
+    {"cx", offsetof(kinoko::camera::Record, center_x), false},
+    {"cy", offsetof(kinoko::camera::Record, center_y), false},
+    {"offset_x", offsetof(kinoko::camera::Record, offset_x), false},
+    {"offset_y", offsetof(kinoko::camera::Record, offset_y), false},
+    {"left", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, left), false},
+    {"top", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, top), false},
+    {"right", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, right), false},
+    {"bottom", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, bottom), false},
+    {"width", offsetof(kinoko::camera::Record, width), false},
+    {"height", offsetof(kinoko::camera::Record, height), false},
 };
 constexpr Field map_fields[] = {
     {"width", 76, true},

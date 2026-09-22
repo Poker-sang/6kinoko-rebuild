@@ -1,3 +1,4 @@
+#include "kinoko/camera.h"
 #pragma once
 
 #include <stdint.h>
@@ -12,9 +13,9 @@ int32_t __fastcall kinoko_actor_set_update_callback(int32_t actor, void *unused,
     int32_t vtable, int32_t type, int32_t value);
 int32_t __fastcall kinoko_actor_set_collision_callback(int32_t actor, void *unused,
     int32_t vtable, int32_t type, int32_t value);
-int32_t __fastcall kinoko_camera_set_update_callback(int32_t camera, void *unused,
+int32_t __fastcall kinoko_camera_set_update_callback(KinokoCamera *camera, void *unused,
     int32_t vtable, int32_t type, int32_t value);
-int32_t __fastcall kinoko_camera_update(int32_t camera, void *unused);
+int32_t __fastcall kinoko_camera_update(KinokoCamera *camera, void *unused);
 int32_t kinoko_actor_step_callback(int32_t actor);
 int32_t kinoko_actor_clear_script(int32_t actor);
 int32_t kinoko_destroy_script_callback(int32_t callback);

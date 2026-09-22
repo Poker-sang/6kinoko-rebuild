@@ -103,7 +103,7 @@ constexpr int32_t script_closure_type = 0x08000100;
 constexpr uint32_t actor_object_offset = offsetof(kinoko::actor::ActorRecord, script_object);
 constexpr uint32_t actor_update_offset = 92;
 constexpr uint32_t actor_collision_offset = offsetof(kinoko::actor::ActorRecord, collision_vm);
-constexpr uint32_t camera_update_offset = 12;
+constexpr uint32_t camera_update_offset = offsetof(kinoko::camera::Record, update_vm);
 }
 
 // Original 4D4860 destroys the global callback at 513C98: function first
@@ -177,25 +177,25 @@ extern "C" int32_t __fastcall kinoko_actor_set_collision_callback(
 
 // 4663C0: Camera.SetUpdateFunction uses the same binding with different offsets.
 extern "C" int32_t __fastcall kinoko_camera_set_update_callback(
-    int32_t camera, void *, int32_t vtable, int32_t type, int32_t value) {
+    KinokoCamera *camera, void *, int32_t vtable, int32_t type, int32_t value) {
     if (!camera)
         return 0;
     LocalObject incoming(vtable, type, value);
     retdec_trace("4663c0:begin");
-    retdec_trace_i32("4663c0:this", camera);
+    retdec_trace_i32("4663c0:this", address(camera));
     retdec_trace_i32("4663c0:argument-type", vtable);
     retdec_trace_i32("4663c0:argument-data", type);
     retdec_trace_i32("4663c0:argument-aux", value);
-    bind(at<ScriptCallback>(camera, camera_update_offset),
-         at<ScriptObject>(camera), incoming.value());
+    bind(at<ScriptCallback>(address(camera), camera_update_offset),
+         at<ScriptObject>(address(camera)), incoming.value());
     incoming.release();
     retdec_trace("4663c0:end");
     return 0;
 }
 
 // 466470: native closures and empty callbacks are not dispatched here.
-extern "C" int32_t __fastcall kinoko_camera_update(int32_t camera, void *) {
-    const auto &callback = at<ScriptCallback>(camera, camera_update_offset);
+extern "C" int32_t __fastcall kinoko_camera_update(KinokoCamera *camera, void *) {
+    const auto &callback = at<ScriptCallback>(address(camera), camera_update_offset);
     if (callback.function.type != script_closure_type)
         return callback.function.type;
     return retdec_actor_step_callback(address(&callback));

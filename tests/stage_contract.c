@@ -2050,7 +2050,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             " user={hold=null,water=false,deadCount=0,take=0}};\nInitCamera(player);\n"));
         for(int frame=0;frame<180;++frame) {
             CHECK(execute_source(vm,root+2,"player.x+=2.5; player.left+=2.5; player.right+=2.5;"));
-            CHECK(kinoko_camera_update(PTR(g_retdec_camera_state), NULL)>=0);
+            CHECK(kinoko_camera_update((KinokoCamera *)g_retdec_camera_state, NULL)>=0);
             retdec_actor_manager_update(PTR(g_retdec_actor_manager_state),PTR(g_retdec_camera_state));
             CHECK(function_46f0b0(map_state)>=0);
             int32_t manager=PTR(g_retdec_actor_manager_state);
@@ -6780,7 +6780,7 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"camera update callback skipped\";"));
         function_4a9d70_this(PTR(camera + 7));
-        CHECK(kinoko_camera_update(PTR(camera), NULL) == g483);
+        CHECK(kinoko_camera_update((KinokoCamera *)camera, NULL) == g483);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"empty camera callback executed\";"));
         function_4a9d70_this(PTR(camera + 4));

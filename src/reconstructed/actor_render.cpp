@@ -20,15 +20,12 @@ extern "C" int32_t kinoko_actor_render(KinokoActor *receiver,KinokoCamera *camer
     if (!actor.get(&ActorRecord::active) || !actor.get(&ActorRecord::visible) || !frame_pointer) return 0;
     const RecordView<FrameRecord> frame(frame_pointer);
     if (!frame.get(&FrameRecord::texture)) return 0; // existing missing-texture guard
-    float camera_x=0.0f,camera_y=0.0f;
     if (camera) {
         const auto view=RecordView<CameraBoundsRecord>(camera).load();
         const auto bounds=actor.get(&ActorRecord::world_bounds);
         const float extent=actor.get(&ActorRecord::scale)*256.0f;
         if (bounds.left>view.bounds.right+extent || view.bounds.left-extent>bounds.right ||
             view.bounds.bottom+extent<bounds.top || bounds.bottom<view.bounds.top-extent) return 0;
-        camera_x=view.center_x-view.x-view.offset_x;
-        camera_y=view.center_y-view.y-view.offset_y;
     }
     auto positions=frame.get(&FrameRecord::base_positions);
     const float facing=-actor.get(&ActorRecord::direction);
@@ -61,10 +58,9 @@ extern "C" int32_t kinoko_actor_render(KinokoActor *receiver,KinokoCamera *camer
     const float translate_y=actor.get(&ActorRecord::y)-pivot_y+actor.get(&ActorRecord::offset_y);
     for (auto &p:positions) {
         p.x+=translate_x;p.y+=translate_y;
-        p.x+=camera_x;p.y+=camera_y;
-        p.x=std::floor(p.x);p.y=std::ceil(p.y);
     }
     frame.set(&FrameRecord::positions,positions);
+    kinoko_camera_project(camera,reinterpret_cast<KinokoQuad *>(frame_pointer));
     kinoko_actor_render_trace_draw(receiver);
     const auto blend=actor.get(&ActorRecord::blend);
     kinoko_actor_render_set_blend(blend>=2 && blend<=4?blend:1);

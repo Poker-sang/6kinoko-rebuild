@@ -3,6 +3,7 @@
 #include "kinoko/native_control.hpp"
 #include "kinoko/sprite.h"
 #include "kinoko/quad_records.hpp"
+#include "kinoko/camera_records.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -17,7 +18,7 @@ struct SQVM;
 namespace kinoko::actor {
 using Address = std::uint32_t; // serialized native Win32 address, never an owner
 using ScriptStorage = std::array<unsigned char, 12>; // external refs: ObjectView
-struct Bounds { float left, top, right, bottom; };
+using Bounds = kinoko::camera::Bounds;
 struct InitialData {
     std::array<unsigned char, 12> unknown;
     std::int16_t width, height;
@@ -122,11 +123,7 @@ struct RenderLayerRecord {
     KinokoActorManager *manager;
     int32_t index, begin, end;
 };
-struct CameraBoundsRecord {
-    std::array<unsigned char, 40> prefix;
-    float x, y, center_x, center_y, offset_x, offset_y, width, height;
-    Bounds bounds;
-};
+using CameraBoundsRecord = kinoko::camera::Record;
 // Only the verified prefix of the manager is described, not a new allocation
 // size. Index nodes and animation lists have distinct ownership semantics.
 struct ManagerPrefix {

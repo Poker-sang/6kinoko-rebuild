@@ -50,6 +50,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_runtime.cpp
     src/reconstructed/pat_animation.cpp
     src/reconstructed/pat_frame.cpp
+    src/reconstructed/camera_runtime.cpp
+    src/reconstructed/camera_projection.cpp
     src/reconstructed/actor_render.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/animation_storage.cpp
@@ -638,6 +640,11 @@ target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_contr
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_camera_contract tests/camera_contract.cpp
+    src/reconstructed/camera_runtime.cpp src/reconstructed/camera_projection.cpp)
+target_include_directories(kinoko_camera_contract PRIVATE include)
+add_test(NAME camera_contract COMMAND kinoko_camera_contract)
+
 add_executable(kinoko_map_visible_contract tests/map_visible_contract.cpp)
 target_include_directories(kinoko_map_visible_contract PRIVATE include)
 add_test(NAME map_visible_contract COMMAND kinoko_map_visible_contract)
@@ -691,6 +698,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_manager_contract
     kinoko_actor_render_contract
     kinoko_map_visible_contract
+    kinoko_camera_contract
     kinoko_pat_animation_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract

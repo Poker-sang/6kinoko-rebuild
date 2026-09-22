@@ -1,3 +1,4 @@
+#include "kinoko/camera.h"
 #include "kinoko/act_layer_access.h"
 #include "kinoko/pat_animation.h"
 #include "kinoko/actor_render.h"
@@ -11549,33 +11550,7 @@ int32_t function_466270(void) {
 
 /* Camera global initialization with the original ECX receiver restored. */
 static int32_t function_466270_this(int32_t this_ptr) {
-    int32_t temporary[3] = { 0, 0, 0 };
-    int32_t result;
-
-    if (this_ptr == 0)
-        return 0;
-    memset((void *)(intptr_t)this_ptr, 0, sizeof(g_retdec_camera_state));
-    result = function_4a90c0(temporary, g611);
-    function_4a95c0_this(this_ptr, result);
-    function_4a9d70_this((int32_t)(intptr_t)temporary);
-    function_4a9bb0_this(this_ptr, this_ptr);
-    result = function_4a9840_this((int32_t)(intptr_t)&g722,
-                                  "camera", this_ptr);
-    *(float32_t *)(intptr_t)(this_ptr + 44) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 40) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 52) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 48) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 84) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 80) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 76) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 72) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 56) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 60) = 0.0f;
-    retdec_trace_i32("actor:camera-init-left",
-                     *(int32_t *)(intptr_t)(this_ptr + 72));
-    retdec_trace_i32("actor:camera-init-right",
-                     *(int32_t *)(intptr_t)(this_ptr + 80));
-    return result;
+    return kinoko_camera_initialize((KinokoCamera *)(intptr_t)this_ptr);
 }
 
 
@@ -11585,36 +11560,8 @@ static int32_t function_466270_this(int32_t this_ptr) {
 
 // Address range: 0x4664a0 - 0x466536
 int32_t function_4664a0_this(int32_t result, int32_t a1) {
-    // 0x4664a0
-    function_4a95c0_this(result, a1);
-    *(int32_t *)(result + 12) = *(int32_t *)(a1 + 12);
-    function_4a95c0_this(result + 16, a1 + 16);
-    function_4a95c0_this(result + 28, a1 + 28);
-    *(int32_t *)(result + 40) = *(int32_t *)(a1 + 40);
-    *(int32_t *)(result + 44) = *(int32_t *)(a1 + 44);
-    *(int32_t *)(result + 48) = *(int32_t *)(a1 + 48);
-    *(int32_t *)(result + 52) = *(int32_t *)(a1 + 52);
-    *(int32_t *)(result + 56) = *(int32_t *)(a1 + 56);
-    *(int32_t *)(result + 60) = *(int32_t *)(a1 + 60);
-    *(int32_t *)(result + 64) = *(int32_t *)(a1 + 64);
-    *(int32_t *)(result + 68) = *(int32_t *)(a1 + 68);
-    int32_t * v1 = (int32_t *)(a1 + 72);
-    int32_t * v2 = (int32_t *)(result + 72);
-    *v2 = *v1;
-    int32_t * v3 = (int32_t *)(a1 + 76);
-    int32_t * v4 = (int32_t *)(result + 76);
-    *v4 = *v3;
-    int32_t * v5 = (int32_t *)(a1 + 80);
-    int32_t * v6 = (int32_t *)(result + 80);
-    *v6 = *v5;
-    int32_t * v7 = (int32_t *)(a1 + 84);
-    int32_t * v8 = (int32_t *)(result + 84);
-    *v8 = *v7;
-    *v2 = *v1;
-    *v4 = *v3;
-    *v6 = *v5;
-    *v8 = *v7;
-    return result;
+    return (int32_t)(intptr_t)kinoko_camera_copy((KinokoCamera *)(intptr_t)result,
+        (KinokoCamera *)(intptr_t)a1);
 }
 
 // Address range: 0x466540 - 0x466551
@@ -11931,7 +11878,7 @@ int32_t function_469900(void) {
     int32_t v3 = v2; // 0x469969
     if ((v2 & 0x20000000) != 0) {
         // 0x46996b
-        v3 = kinoko_camera_update((int32_t)(intptr_t)g_retdec_camera_state, NULL);
+        v3 = kinoko_camera_update((KinokoCamera *)g_retdec_camera_state, NULL);
     }
     int32_t v4 = v3; // 0x46997b
     if ((v2 & 0x1fffffff) != 0) {
