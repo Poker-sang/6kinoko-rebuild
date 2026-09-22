@@ -32,3 +32,16 @@ claim to migrate all unrelated ACT loading or execution code.
 The existing clock contract source now checks suspension callback order,
 return propagation, hidden state and wake reset. Per user instruction, only
 compile/link validation is authorized: no game, CTest or automated test execution.
+
+## Build handoff
+
+- Source commit: `252402dccc789683522f4abc148a26ba50fb8513`.
+- Build: `build-runs/act-stage-control-r1-quiet`, Win32 Release, trace disabled.
+- All targets compiled and linked successfully (exit 0), including contract
+  executables. Contracts were not executed.
+- EXE: `runtime-builds/act-stage-control-r1-quiet/kinoko_retdec_rebuild.exe`.
+- EXE SHA256: `BD7A39AB5F00323CC892471B7306F9762D840CBC2C6CD51F3C376493D1656905`.
+- `stage_dat.ps1` copied all three DAT files beside the EXE and verified their
+  sizes and SHA256 values (exit 0). No game or local test execution.
+- This executable includes the preceding Mesh / 3D batch and its documented
+  original-bug correction. All prior build/runtime artifacts are retained.
