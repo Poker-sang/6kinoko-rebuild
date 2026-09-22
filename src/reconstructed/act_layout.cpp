@@ -1,3 +1,4 @@
+#include "kinoko/quad_render.h"
 #include "kinoko/act_layer_access.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
@@ -732,7 +733,7 @@ int32_t retdec_c2dlayout_draw_impl(int32_t layout,
     }
     if (trace_index <= 16)
         retdec_trace("c2d:submit");
-    result = retdec_layout_submit_impl(layout + 4, x, y);
+    result = kinoko_quad_submit(pointer<KinokoQuad>(layout + 4), x, y);
 
 restore_render_state:
     retdec_set_texture_stage(0, 0);

@@ -1,12 +1,16 @@
 #include "kinoko/render_queue.h"
-#include "kinoko/legacy_abi.h"
+#include "kinoko/camera.h"
 #include "kinoko/legacy_memory.hpp"
 #include <list>
 #include <stdexcept>
 
 namespace {
 // 46A210 appends every borrowed layer; duplicates and insertion order matter.
-std::list<int32_t> layers;
+struct RenderLayer;
+using DrawLayer = int32_t (__thiscall *)(RenderLayer *,KinokoCamera *);
+struct LayerMethods { DrawLayer draw; };
+struct RenderLayer { const LayerMethods *methods; };
+std::list<RenderLayer *> layers; // borrowed; queue never destroys a layer
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
@@ -23,14 +27,13 @@ extern "C" int32_t kinoko_clear_render_queue(void) {
 }
 extern "C" int32_t kinoko_append_render_queue(int32_t object) {
     if(layers.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
-    layers.push_back(object);
+    layers.push_back(pointer<RenderLayer>(object));
     return address(&layers.back());
 }
 extern "C" void kinoko_draw_render_queue(int32_t camera) {
-    for(const int32_t object:layers) {
+    for(auto *object:layers) {
         if(!object) continue;
-        const auto table=field<int32_t>(object);
-        if(table && field<int32_t>(table))
-            retdec_call_thiscall1(pointer<void>(object),pointer<void>(field<int32_t>(table)),camera);
+        const auto *methods=kinoko::legacy::load<const LayerMethods *>(object);
+        if(methods && methods->draw) methods->draw(object,pointer<KinokoCamera>(camera));
     }
 }

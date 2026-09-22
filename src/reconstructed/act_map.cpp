@@ -1,3 +1,4 @@
+#include "kinoko/quad_render.h"
 #include "kinoko/map_render.h"
 #include "kinoko/map_layout_records.hpp"
 #include "kinoko/map_query.hpp"
@@ -11,10 +12,6 @@
 #include <vector>
 #include <cstring>
 
-extern "C" {
-int32_t function_402770(int32_t mode);
-int32_t function_4028d0(int32_t blend, int32_t test);
-}
 namespace {
 using namespace kinoko::map;
 using namespace kinoko::render;
@@ -139,16 +136,15 @@ extern "C" int32_t kinoko_map_draw_visible(KinokoActLayout *layout,float x,float
     device->GetSamplerState(0,D3DSAMP_ADDRESSV,&address_v);
     device->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_WRAP);
     device->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_WRAP);
-    device->SetRenderState(D3DRS_ZENABLE,FALSE);
-    device->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
-    function_402770(1);
-    function_4028d0(1,0);
+    kinoko_render_set_depth(0,0);
+    kinoko_render_set_blend(1);
+    kinoko_render_set_alpha(1,0);
     const auto blend=map.get(&LayoutRecord::blend);
-    if (blend>=1 && blend<=4) function_402770(blend);
+    if (blend>=1 && blend<=4) kinoko_render_set_blend(blend);
     auto *quads=map.get(&LayoutRecord::render_quads).begin;
     for (int32_t index=0;index<map.get(&LayoutRecord::render_count);++index) {
         if (QuadView(quads+index).get(&QuadRecord::texture))
-            retdec_layout_submit_impl(address(quads+index),x,y);
+            kinoko_quad_submit(reinterpret_cast<KinokoQuad *>(quads+index),x,y);
     }
     retdec_set_texture_stage(0,0);
     device->SetSamplerState(0,D3DSAMP_ADDRESSU,address_u);

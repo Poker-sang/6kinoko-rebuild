@@ -64,6 +64,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
     src/reconstructed/script_callbacks.cpp
+    src/reconstructed/quad_submit.cpp
+    src/reconstructed/render_state.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
@@ -640,6 +642,11 @@ target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_contr
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_quad_submit_contract tests/quad_submit_contract.cpp
+    src/reconstructed/quad_submit.cpp src/reconstructed/render_state.cpp)
+target_include_directories(kinoko_quad_submit_contract PRIVATE include)
+add_test(NAME quad_submit_contract COMMAND kinoko_quad_submit_contract)
+
 add_executable(kinoko_camera_contract tests/camera_contract.cpp
     src/reconstructed/camera_runtime.cpp src/reconstructed/camera_projection.cpp)
 target_include_directories(kinoko_camera_contract PRIVATE include)
@@ -699,6 +706,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_render_contract
     kinoko_map_visible_contract
     kinoko_camera_contract
+    kinoko_quad_submit_contract
     kinoko_pat_animation_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract

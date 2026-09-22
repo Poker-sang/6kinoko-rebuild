@@ -1,3 +1,4 @@
+#include "kinoko/quad_render.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/string_font.h"
 #include "kinoko/legacy_memory.hpp"
@@ -10,7 +11,6 @@
 extern "C" {
 extern int32_t g678,g702,g703,g704;
 int32_t function_4410c0(int32_t layout);
-int32_t retdec_layout_submit_impl(int32_t sprite,float x,float y);
 }
 namespace {
 using kinoko::legacy::field;
@@ -184,7 +184,7 @@ extern "C" int32_t __fastcall kinoko_method_draw_string_layout(int32_t layout,vo
         g704=2;
     }
     const uint32_t count=kinoko_string_queue_size(layout);
-    for(uint32_t i=0;i<count;++i) retdec_layout_submit_impl(glyph_at(layout,i)+20,x,y);
+    for(uint32_t i=0;i<count;++i) kinoko_quad_submit(kinoko::legacy::pointer<KinokoQuad>(glyph_at(layout,i)+20),x,y);
     for(int i=0;i<4;++i) device->SetRenderState(states[i],saved[i]);
     return 0;
 }

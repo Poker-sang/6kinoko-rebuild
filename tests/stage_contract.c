@@ -3440,12 +3440,12 @@ static int test_texture_lifetime(void) {
         retdec_destroy_cact_resource(PTR(resource));
         CHECK(texture[1] == 5003);
         int32_t layer[88] = {0}, layout[116] = {0}, render_layer[2] = {0}, camera[24] = {0};
-        layout[78] = PTR(layer); layout[79] = 1;
+        layout[0] = PTR(&g327); layout[78] = PTR(layer); layout[79] = 1;
         render_layer[1] = PTR(layout);
-        CHECK(retdec_call_thiscall0_result(layout, kinoko_map_entry_434b40) == 0);
-        CHECK(retdec_call_thiscall4_result(layout, kinoko_map_entry_434b60, 1, 2, 3, 4) == 0);
-        CHECK(retdec_call_thiscall2_result(layout, kinoko_map_entry_434f40, 0, 0) == 0);
-        CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_entry_46eed0, PTR(camera)) == 0);
+        CHECK(retdec_call_thiscall0_result(layout, kinoko_map_update_all_entry) == 0);
+        CHECK(retdec_call_thiscall4_result(layout, kinoko_map_update_visible_entry, 1, 2, 3, 4) == 0);
+        CHECK(retdec_call_thiscall2_result(layout, kinoko_map_draw_entry, 0, 0) == 0);
+        CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_render_layer_entry, PTR(camera)) == 0);
     }
     g678 = old_device;
     puts("PASS: 5000 texture load/unload cycles release COM objects and reuse handles");

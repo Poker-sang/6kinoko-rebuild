@@ -48,3 +48,19 @@ global callback, mask read, camera callback, Actors, map and stage updates.
 Projection 466320 is shared, with separate translation and X-floor/Y-ceil.
 New camera contract checks reference-call order, retained dimensions/callback,
 negative projection and copied borrowed VM. Compiled only at final handoff.
+
+## R147: shared quad submission and state
+
+405800 is a typed Quad submit path shared by maps, Actor/PAT, ACT layouts and
+text glyphs. Only the C integer-slot compatibility shim remains. Preserve XY
+half-pixel subtraction, Z+0.5, RHW=1, untouched UV/color, texture binding,
+FVF 324 and a two-triangle strip with 28-byte stride. Restore original behavior
+of ignoring texture/FVF setup HRESULTs and returning the draw HRESULT.
+402770 blend transitions now name D3D states and values, preserving partial
+writes and the cache. Alpha/depth methods preserve flags and modulation.
+Render queue stores borrowed pointers and calls real typed virtual draw methods;
+map layer rendering likewise uses its layout's Update/Draw virtual slots.
+Named map entry points replace address names. Duplicate/order semantics remain.
+New fake-device contract checks setup failure still submits, exact vertices,
+UV/color preservation, blend transitions and repeated-state writes. No D3D
+window is required; this contract is compiled but not executed by the agent.

@@ -1,3 +1,4 @@
+#include "kinoko/quad_render.h"
 #include "kinoko/camera.h"
 #include "kinoko/act_layer_access.h"
 #include "kinoko/pat_animation.h"
@@ -3330,7 +3331,7 @@ struct vtable_4d5ab4_type g34 = {
 }; // 0x4d5ab4
  // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
-    .e0 = kinoko_map_entry_46eed0
+    .e0 = kinoko_map_render_layer_entry
 }; // 0x4d5ba0
  // 0x4d5ba8
 struct vtable_4d5c68_type g39 = {
@@ -3486,10 +3487,10 @@ struct vtable_4ec79c_type g327 = {
     .e4 = function_433720,
     .e5 = kinoko_clone_map_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_map_set_layer,
-    .e7 = kinoko_map_entry_434b40,
-    .e8 = kinoko_map_entry_434f40,
+    .e7 = kinoko_map_update_all_entry,
+    .e8 = kinoko_map_draw_entry,
     .e9 = (int32_t (*)(void))kinoko_method_register_map_layout,
-    .e10 = kinoko_map_entry_434b60
+    .e10 = kinoko_map_update_visible_entry
 }; // 0x4ec79c
 struct vtable_4ec7cc_type g328 = {
     .e0 = kinoko_delete_map_sprite,
@@ -4214,136 +4215,12 @@ int32_t function_4026e0(int32_t a1) {
 
 // Address range: 0x402770 - 0x402873
 int32_t function_402770(int32_t result) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-    int32_t key;
-
-    /* RetDec lost the __thiscall ECX object; g703 is this + 0x0c. */
-    if (g703 == result) {
-        return result;
-    }
-    key = result - 1 + 8 * g703;
-    if (device != NULL) {
-        switch (key) {
-        case 0:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 1:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 2:
-        case 34:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 3:
-        case 27:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 3);
-            break;
-        case 9:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 10:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 11:
-        case 19:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 3);
-            break;
-        case 16:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 18:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            break;
-        case 24:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 25:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            break;
-        case 32:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 33:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        default:
-            break;
-        }
-    }
-    g703 = result;
-    return (int32_t)hr;
+    return kinoko_render_set_blend(result);
 }
 
 // Address range: 0x4028d0 - 0x40292f
 int32_t function_4028d0(int32_t a1, int32_t a2) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-    unsigned char first = (unsigned char)a1;
-    unsigned char second = (unsigned char)a2;
-    unsigned char *state = (unsigned char *)&g709;
-
-    /* The original method stores byte flags at this + 0x24/+0x25. */
-    if (state[0] != first) {
-        state[0] = first;
-        if (device != NULL) {
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)27, first);
-        }
-    }
-    if (state[1] != second) {
-        state[1] = second;
-        if (device != NULL) {
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)15, second);
-        }
-    }
-    if (device != NULL) {
-        hr = device->lpVtbl->SetTextureStageState(
-            device, 0, (D3DTEXTURESTAGESTATETYPE)4, 4);
-    }
-    return (int32_t)hr;
+    return kinoko_render_set_alpha(a1,a2);
 }
 
 
@@ -4734,160 +4611,7 @@ float80_t function_405080(float80_t a1, float80_t a2, float80_t a3) {
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float32_t x, float32_t y)
 {
-    IDirect3DDevice9 *device;
-    int32_t texture_handle;
-    HRESULT result;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (vertex_buffer == 0 || g678 == 0)
-        return -0x7fffbffb;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 8) {
-        retdec_trace_i32("draw:vertex-buffer", vertex_buffer);
-        retdec_trace_i32("draw:handle",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 4));
-        retdec_trace_i32("draw:v0-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 8));
-        retdec_trace_i32("draw:v0-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 12));
-        retdec_trace_i32("draw:v0-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 16));
-        retdec_trace_i32("draw:v0-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 20));
-        retdec_trace_i32("draw:v0-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 24));
-        retdec_trace_i32("draw:v0-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 28));
-        retdec_trace_i32("draw:v0-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 32));
-        retdec_trace_i32("draw:v1-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 36));
-        retdec_trace_i32("draw:v1-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 40));
-        retdec_trace_i32("draw:v1-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 44));
-        retdec_trace_i32("draw:v1-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 52));
-        retdec_trace_i32("draw:v1-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 56));
-        retdec_trace_i32("draw:v1-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 60));
-        retdec_trace_i32("draw:v2-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 64));
-        retdec_trace_i32("draw:v2-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 68));
-        retdec_trace_i32("draw:v2-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 72));
-        retdec_trace_i32("draw:v2-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 80));
-        retdec_trace_i32("draw:v2-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 84));
-        retdec_trace_i32("draw:v2-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 88));
-        retdec_trace_i32("draw:v3-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 92));
-        retdec_trace_i32("draw:v3-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 96));
-        retdec_trace_i32("draw:v3-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 100));
-        retdec_trace_i32("draw:v3-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 108));
-        retdec_trace_i32("draw:v3-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 112));
-        retdec_trace_i32("draw:v3-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 116));
-    }
-
-    *(float32_t *)(intptr_t)(vertex_buffer + 8) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 176) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 12) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 180) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 36) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 188) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 40) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 192) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 64) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 200) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 68) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 204) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 92) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 212) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 96) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 216) + y - 0.5f;
-
-    *(float32_t *)(intptr_t)(vertex_buffer + 16) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 184) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 44) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 196) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 72) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 208) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 100) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 220) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 20) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 48) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 76) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 104) = 1.0f;
-
-    if (trace_index <= 8) {
-        retdec_trace_i32("draw:final-v0-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 8));
-        retdec_trace_i32("draw:final-v0-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 12));
-        retdec_trace_i32("draw:final-v0-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 16));
-        retdec_trace_i32("draw:final-v0-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 20));
-        retdec_trace_i32("draw:final-v0-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 24));
-        retdec_trace_i32("draw:final-v1-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 36));
-        retdec_trace_i32("draw:final-v1-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 40));
-        retdec_trace_i32("draw:final-v1-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 44));
-        retdec_trace_i32("draw:final-v1-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 48));
-        retdec_trace_i32("draw:final-v2-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 64));
-        retdec_trace_i32("draw:final-v2-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 68));
-        retdec_trace_i32("draw:final-v2-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 72));
-        retdec_trace_i32("draw:final-v2-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 76));
-        retdec_trace_i32("draw:final-v3-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 92));
-        retdec_trace_i32("draw:final-v3-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 96));
-        retdec_trace_i32("draw:final-v3-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 100));
-        retdec_trace_i32("draw:final-v3-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 104));
-    }
-
-    texture_handle = *(int32_t *)(intptr_t)(vertex_buffer + 4);
-    result = (HRESULT)retdec_set_texture_stage(0, texture_handle);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:set-texture-hr", result);
-    if (FAILED(result))
-        return (int32_t)result;
-
-    device = (IDirect3DDevice9 *)(uintptr_t)(uint32_t)g678;
-    if (device == NULL || device->lpVtbl == NULL)
-        return -0x7fffbffb;
-    result = device->lpVtbl->SetFVF(device, 0x144u);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:set-fvf-hr", result);
-    if (FAILED(result))
-        return (int32_t)result;
-    result = device->lpVtbl->DrawPrimitiveUP(
-        device, D3DPT_TRIANGLESTRIP, 2,
-        (const void *)(intptr_t)(vertex_buffer + 8), 28);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:primitive-hr", result);
-    return (int32_t)result;
+    return kinoko_quad_submit((KinokoQuad *)(intptr_t)vertex_buffer,x,y);
 }
 
 
@@ -11321,9 +11045,9 @@ void kinoko_actor_render_trace_draw(KinokoActor *actor) { retdec_trace_star_stat
 void kinoko_actor_render_trace_end(int32_t index, int32_t result) {
     if (index <= 16) retdec_trace_i32("actor:render-submit",result);
 }
-void kinoko_actor_render_set_blend(int32_t mode) { function_402770(mode); }
+void kinoko_actor_render_set_blend(int32_t mode) { kinoko_render_set_blend(mode); }
 int32_t kinoko_actor_render_submit(KinokoAnimationFrame *frame) {
-    return retdec_layout_submit_impl((int32_t)(intptr_t)frame,0.0f,0.0f);
+    return kinoko_quad_submit((KinokoQuad *)frame,0.0f,0.0f);
 }
 static int32_t retdec_actor_render(int32_t actor, int32_t camera) {
     return kinoko_actor_render((KinokoActor *)(intptr_t)actor,(KinokoCamera *)(intptr_t)camera);

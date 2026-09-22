@@ -25,12 +25,12 @@ KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *manager, const char 
 /* Compatibility boundary for remaining integer-slot callers. */
 int32_t kinoko_map_find_layout(int32_t manager, const char *name);
 int32_t kinoko_map_create_render_layer(int32_t manager, const char *name);
-int32_t __fastcall kinoko_map_entry_434b40(int32_t layout, void *unused);
-int32_t __fastcall kinoko_map_entry_434b60(int32_t layout, void *unused,
+int32_t __fastcall kinoko_map_update_all_entry(int32_t layout, void *unused);
+int32_t __fastcall kinoko_map_update_visible_entry(int32_t layout, void *unused,
     int32_t left, int32_t top, int32_t right, int32_t bottom);
-int32_t __fastcall kinoko_map_entry_434f40(int32_t layout, void *unused,
+int32_t __fastcall kinoko_map_draw_entry(int32_t layout, void *unused,
     float x, float y);
-int32_t __fastcall kinoko_map_entry_46eed0(int32_t layer, void *unused,
+int32_t __fastcall kinoko_map_render_layer_entry(int32_t layer, void *unused,
     int32_t camera);
 #ifdef __cplusplus
 }
