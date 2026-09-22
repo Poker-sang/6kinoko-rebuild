@@ -102,7 +102,7 @@ extern "C" int32_t function_46b9a0(int32_t self) {
     };
     for (int i = 0; i < count; ++i) update_device(begin + i*device_stride);
     update_device(self + 12);
-    function_4077c0(self + 196);
+    kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(self + 196), NULL);
     kinoko_input_keys_update((KinokoKeyTracker *)(intptr_t)(self + 392));
     // Publish the same directional/button counters and release edges.
     constexpr int copies[][2] = {{1444,276},{1436,268},{1440,272},{1456,288},

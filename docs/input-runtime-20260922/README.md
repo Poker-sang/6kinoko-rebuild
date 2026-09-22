@@ -50,3 +50,20 @@ precedence, sign-change count reset, overflow bits, one-frame releases, disabled
 mapping state retention, six normalized controller axes, keyboard extra-axis
 zeroes, absent-controller no-write and disabled-device state clearing.
 input_device_contract and the updated legacy stage fixture compile only.
+
+## Batch 3: borrowed device aggregation
+
+4077C0 becomes kinoko_input_cluster_update. KinokoInputCluster names its base
+device, separate deque owner (+172) and last winning device byte (+192), with
+the 196-byte layout asserted. The deque stores actual borrowed device pointers;
+copying owns a new list, but retains the same borrowed targets as the original.
+All cluster APIs now take pointers, and at/delete return real pointers. The
+update's old mixed count/empty-state EAX remains an explicit ABI result.
+
+Keep registration order, signed absolute comparison (including INT_MIN bits),
+strict greater-than tie rules, all twelve buttons, accumulated release flags
+only on zero count, independent absolute float-axis selection and retention of
+the last device byte on an empty frame. Deletion frees only the deque owner,
+restores the base method identity and optionally frees the receiver itself.
+input_cluster_contract covers ties, releases, axis NaN, signed limits, copied
+borrows and empty frames; it is compiled, never executed by this batch.

@@ -831,7 +831,12 @@ add_executable(kinoko_input_device_contract tests/input_device_contract.cpp src/
 target_include_directories(kinoko_input_device_contract PRIVATE include)
 add_test(NAME input_device_contract COMMAND kinoko_input_device_contract)
 
+add_executable(kinoko_input_cluster_contract tests/input_cluster_contract.cpp src/reconstructed/input_aggregation.cpp)
+target_include_directories(kinoko_input_cluster_contract PRIVATE include)
+add_test(NAME input_cluster_contract COMMAND kinoko_input_cluster_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_input_cluster_contract
     kinoko_input_device_contract
     kinoko_input_keys_contract
     kinoko_texture_binding_contract

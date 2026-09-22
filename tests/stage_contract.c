@@ -3503,7 +3503,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     /* This fixture skips game startup, but Update always visits Input first. */
     const int32_t input = PTR(kinoko_game_objects()->input);
     kinoko_input_devices_construct(input);
-    kinoko_input_cluster_construct(input + 196);
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(input + 196));
     kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(input + 392));
     const int32_t saved_stages=g603,saved_stage_count=g604;
     kinoko_stage_list_construct();
@@ -3540,7 +3540,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(vm_failures == 0);
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(input + 392));
-    kinoko_input_cluster_delete(input + 196, NULL, 0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(input + 196), NULL, 0);
     kinoko_input_devices_destroy(input);
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
@@ -4414,10 +4414,10 @@ static int test_input_copy(void) {
     devices[0][0]=devices[1][0]=PTR(g35);
     devices[0][1]=101; devices[1][41]=303;
     source[48]=12345; target[48]=54321; /* vector allocator byte is not copied */
-    kinoko_input_cluster_construct(PTR(source)+196);
-    kinoko_input_cluster_construct(PTR(target)+196);
-    kinoko_input_cluster_construct(PTR(empty)+196);
-    for(int i=0;i<40;++i) kinoko_input_cluster_append(PTR(source)+196,PTR(devices[i%2]));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(target)+196));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(empty)+196));
+    for(int i=0;i<40;++i) kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(source)+196),(KinokoInputDevice *)(intptr_t)(PTR(devices[i%2])));
     source[91]=0x5555; target[91]=0x6666; /* preserve iterator proxy */
     for(int i=0;i<9;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
     source[357]=45678; target[357]=87654;
@@ -4434,34 +4434,34 @@ static int test_input_copy(void) {
     CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
     for(int i=0;i<9;++i) CHECK(kinoko_input_keys_at((KinokoKeyTracker *)(intptr_t)(PTR(target)+392),i)==keys[i]);
     CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
-    CHECK(kinoko_input_cluster_size(PTR(target)+196)==40);
+    CHECK(kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==40);
     for(int i=0;i<40;++i)
-        CHECK(kinoko_input_cluster_at(PTR(target)+196,i)==PTR(devices[i%2]));
+        CHECK(kinoko_input_cluster_at((KinokoInputCluster *)(intptr_t)(PTR(target)+196),i)==(KinokoInputDevice*)devices[i%2]);
     {
         int32_t buffer=kinoko_input_devices_begin(PTR(target)), queue=target[92], byte_buffer=target[354];
         kinoko_input_devices_resize(PTR(source),1);
         kinoko_input_keys_clear((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
         for(int i=0;i<4;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
         CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
-        kinoko_input_cluster_clear(PTR(source)+196);
-        kinoko_input_cluster_append(PTR(source)+196,PTR(devices[0]));
+        kinoko_input_cluster_clear((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
+        kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(source)+196),(KinokoInputDevice *)(intptr_t)(PTR(devices[0])));
         devices[0][1]=909;
         CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
         CHECK(kinoko_input_devices_begin(PTR(target))==buffer && kinoko_input_devices_end(PTR(target))==buffer+168);
-        CHECK(target[92]==queue && kinoko_input_cluster_size(PTR(target)+196)==1 && target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==4);
+        CHECK(target[92]==queue && kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==1 && target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==4);
         CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
         CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && kinoko_input_devices_begin(PTR(target))==buffer);
         CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
         CHECK(kinoko_input_devices_begin(PTR(target))==kinoko_input_devices_end(PTR(target)));
-        CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
+        CHECK(kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==0);
         CHECK(target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==0);
     }
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty))));
-    kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
-    kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
-    kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(source)+196),NULL,0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(target)+196),NULL,0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(empty)+196),NULL,0);
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(target)+392));
     kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(empty)+392));
@@ -4620,8 +4620,8 @@ static int test_map_manager_copy(void) {
 
 static int test_input_aggregation(void) {
     int32_t cluster[50] = {0}, devices[3][42] = {{0}};
-    kinoko_input_cluster_construct(PTR(cluster));
-    for(int i=0;i<3;++i) kinoko_input_cluster_append(PTR(cluster),PTR(devices[i]));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(cluster)));
+    for(int i=0;i<3;++i) kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(cluster)),(KinokoInputDevice *)(intptr_t)(PTR(devices[i])));
     ((uint8_t*)devices[0])[4]=10; ((uint8_t*)devices[1])[4]=20; ((uint8_t*)devices[2])[4]=30;
     devices[0][18]=-5; devices[1][18]=5; devices[2][18]=3;
     devices[0][19]=2; devices[1][19]=-6;
@@ -4632,16 +4632,16 @@ static int test_input_aggregation(void) {
     ((float*)devices[0])[36]=-0.75f; ((float*)devices[1])[36]=0.75f;
     ((float*)devices[2])[41]=-0.9f;
     cluster[48]=99;
-    CHECK(function_4077c0(PTR(cluster))==3);
+    CHECK(kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(PTR(cluster)), NULL)==3);
     CHECK(cluster[18]==-5 && cluster[19]==-6 && cluster[20]==9 && cluster[31]==7);
     CHECK(((uint8_t*)cluster)[130]==0 && ((uint8_t*)cluster)[131]==1);
     CHECK(((uint8_t*)cluster)[192]==30);
     CHECK(((float*)cluster)[36]==-0.75f && ((float*)cluster)[41]==-0.9f);
-    kinoko_input_cluster_clear(PTR(cluster));
-    CHECK(function_4077c0(PTR(cluster))==PTR(cluster)+72);
+    kinoko_input_cluster_clear((KinokoInputCluster *)(intptr_t)(PTR(cluster)));
+    CHECK(kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(PTR(cluster)), NULL)==PTR(cluster)+72);
     for(int i=18;i<42;++i) CHECK(cluster[i]==0);
     CHECK(((uint8_t*)cluster)[192]==30); /* Last device survives an empty frame. */
-    CHECK(kinoko_input_cluster_delete(PTR(cluster),NULL,0)==PTR(cluster));
+    CHECK(kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(cluster)),NULL,0)==(KinokoInputCluster*)cluster);
     CHECK(cluster[0]==PTR(g35) && cluster[43]==0);
     puts("PASS: native InputCluster deque, signed axes, 12 buttons, release edges and device precedence");
     return 0;
