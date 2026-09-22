@@ -66,7 +66,7 @@ extern "C" int32_t function_46ed80(int32_t destination, int32_t source) {
     std::copy_n(in + 200, 164, out + 200);
     kinoko_input_cluster_assign(destination + 196, source + 196);
     out[388] = in[388];
-    kinoko_input_keys_assign(destination + 392, source + 392);
+    kinoko_input_keys_assign((KinokoKeyTracker *)(intptr_t)(destination + 392),(KinokoKeyTracker *)(intptr_t)(source + 392));
     std::copy_n(in + 1436, 76, out + 1436);
     return destination;
 }

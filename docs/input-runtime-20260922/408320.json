@@ -1,0 +1,34 @@
+{
+  "addr": "0x408320",
+  "code": "int __thiscall sub_408320(int this)\n{\n  int v1; // edx\n  unsigned int v2; // esi\n  int v3; // eax\n  bool v4; // al\n  bool v5; // al\n\n  v1 = *(_DWORD *)(this + 1024); /*0x408320*/\n  v2 = 0; /*0x40832e*/\n  if ( *(_DWORD *)(this + 1028) != v1 ) /*0x408330*/\n  {\n    do /*0x408363*/\n    {\n      v3 = *(unsigned __int8 *)(v1 + v2); /*0x40833a*/\n      if ( byte_51B088[v3] < 0 ) /*0x408344*/\n        ++*(_DWORD *)(this + 4 * v3); /*0x408346*/\n      else\n        *(_DWORD *)(this + 4 * v3) = 0; /*0x40834b*/\n      v1 = *(_DWORD *)(this + 1024); /*0x408352*/\n      ++v2; /*0x40835e*/\n    }\n    while ( *(_DWORD *)(this + 1028) - v1 > v2 ); /*0x408363*/\n  }\n  v4 = byte_51B0B2 < 0 || byte_51B0BE < 0; /*0x408383*/\n  *(_BYTE *)(this + 1040) = v4; /*0x408388*/\n  v5 = byte_51B0C0 < 0 || byte_51B140 < 0; /*0x4083a2*/\n  *(_BYTE *)(this + 1041) = v5; /*0x4083a7*/\n  if ( byte_51B0A5 < 0 || byte_51B125 < 0 ) /*0x4083bb*/\n  {\n    *(_BYTE *)(this + 1042) = 1; /*0x4083ce*/\n    return 1; /*0x4083c8*/\n  }\n  else\n  {\n    *(_BYTE *)(this + 1042) = 0; /*0x4083c0*/\n    return 0; /*0x4083bd*/\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x51b088",
+      "name": "byte_51B088"
+    },
+    {
+      "addr": "0x51b0b2",
+      "name": "byte_51B0B2"
+    },
+    {
+      "addr": "0x51b0be",
+      "name": "byte_51B0BE"
+    },
+    {
+      "addr": "0x51b0c0",
+      "name": "byte_51B0C0"
+    },
+    {
+      "addr": "0x51b140",
+      "name": "byte_51B140"
+    },
+    {
+      "addr": "0x51b0a5",
+      "name": "byte_51B0A5"
+    },
+    {
+      "addr": "0x51b125",
+      "name": "byte_51B125"
+    }
+  ]
+}

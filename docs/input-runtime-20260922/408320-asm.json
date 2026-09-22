@@ -1,0 +1,390 @@
+{
+  "addr": "0x408320",
+  "asm": {
+    "name": "sub_408320",
+    "start_ea": "0x408320",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "408320",
+        "instruction": "mov edx, [ecx+400h]",
+        "label": "sub_408320"
+      },
+      {
+        "addr": "408326",
+        "instruction": "mov eax, [ecx+404h]"
+      },
+      {
+        "addr": "40832c",
+        "instruction": "push ebx"
+      },
+      {
+        "addr": "40832d",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "40832e",
+        "instruction": "xor esi, esi"
+      },
+      {
+        "addr": "408330",
+        "instruction": "sub eax, edx"
+      },
+      {
+        "addr": "408332",
+        "instruction": "mov bl, 80h"
+      },
+      {
+        "addr": "408334",
+        "instruction": "jz short loc_408365",
+        "refs": [
+          {
+            "addr": "0x408365",
+            "name": "loc_408365"
+          }
+        ]
+      },
+      {
+        "addr": "408336",
+        "instruction": "cmp eax, esi"
+      },
+      {
+        "addr": "408338",
+        "instruction": "jbe short loc_408379",
+        "refs": [
+          {
+            "addr": "0x408379",
+            "name": "loc_408379"
+          }
+        ]
+      },
+      {
+        "addr": "40833a",
+        "instruction": "movzx eax, byte ptr [edx+esi]",
+        "label": "loc_40833A"
+      },
+      {
+        "addr": "40833e",
+        "instruction": "test byte_51B088[eax], bl",
+        "refs": [
+          {
+            "addr": "0x51b088",
+            "name": "byte_51B088"
+          }
+        ]
+      },
+      {
+        "addr": "408344",
+        "instruction": "jz short loc_40834B",
+        "refs": [
+          {
+            "addr": "0x40834b",
+            "name": "loc_40834B"
+          }
+        ]
+      },
+      {
+        "addr": "408346",
+        "instruction": "inc dword ptr [ecx+eax*4]"
+      },
+      {
+        "addr": "408349",
+        "instruction": "jmp short loc_408352",
+        "refs": [
+          {
+            "addr": "0x408352",
+            "name": "loc_408352"
+          }
+        ]
+      },
+      {
+        "addr": "40834b",
+        "instruction": "mov dword ptr [ecx+eax*4], 0",
+        "label": "loc_40834B"
+      },
+      {
+        "addr": "408352",
+        "instruction": "mov edx, [ecx+400h]",
+        "label": "loc_408352"
+      },
+      {
+        "addr": "408358",
+        "instruction": "mov eax, [ecx+404h]"
+      },
+      {
+        "addr": "40835e",
+        "instruction": "inc esi"
+      },
+      {
+        "addr": "40835f",
+        "instruction": "sub eax, edx"
+      },
+      {
+        "addr": "408361",
+        "instruction": "cmp eax, esi"
+      },
+      {
+        "addr": "408363",
+        "instruction": "ja short loc_40833A",
+        "refs": [
+          {
+            "addr": "0x40833a",
+            "name": "loc_40833A"
+          }
+        ]
+      },
+      {
+        "addr": "408365",
+        "instruction": "test byte_51B0B2, bl",
+        "label": "loc_408365",
+        "refs": [
+          {
+            "addr": "0x51b0b2",
+            "name": "byte_51B0B2"
+          }
+        ]
+      },
+      {
+        "addr": "40836b",
+        "instruction": "jnz short loc_408383",
+        "refs": [
+          {
+            "addr": "0x408383",
+            "name": "loc_408383"
+          }
+        ]
+      },
+      {
+        "addr": "40836d",
+        "instruction": "test byte_51B0BE, bl",
+        "refs": [
+          {
+            "addr": "0x51b0be",
+            "name": "byte_51B0BE"
+          }
+        ]
+      },
+      {
+        "addr": "408373",
+        "instruction": "jnz short loc_408383",
+        "refs": [
+          {
+            "addr": "0x408383",
+            "name": "loc_408383"
+          }
+        ]
+      },
+      {
+        "addr": "408375",
+        "instruction": "xor eax, eax"
+      },
+      {
+        "addr": "408377",
+        "instruction": "jmp short loc_408388",
+        "refs": [
+          {
+            "addr": "0x408388",
+            "name": "loc_408388"
+          }
+        ]
+      },
+      {
+        "addr": "408379",
+        "instruction": "push offset aInvalidVectorT; \"invalid vector<T> subscript\"",
+        "label": "loc_408379",
+        "refs": [
+          {
+            "addr": "0x4eb428",
+            "name": "aInvalidVectorT",
+            "string": "invalid vector<T> subscript"
+          }
+        ]
+      },
+      {
+        "addr": "40837e",
+        "instruction": "call ?_Xout_of_range@std@@YAXPBD@Z; std::_Xout_of_range(char const *)",
+        "refs": [
+          {
+            "addr": "0x473e4d",
+            "name": "?_Xout_of_range@std@@YAXPBD@Z"
+          }
+        ]
+      },
+      {
+        "addr": "408383",
+        "instruction": "mov eax, 1",
+        "label": "loc_408383"
+      },
+      {
+        "addr": "408388",
+        "instruction": "mov [ecx+410h], al",
+        "label": "loc_408388"
+      },
+      {
+        "addr": "40838e",
+        "instruction": "test byte_51B0C0, bl",
+        "refs": [
+          {
+            "addr": "0x51b0c0",
+            "name": "byte_51B0C0"
+          }
+        ]
+      },
+      {
+        "addr": "408394",
+        "instruction": "jnz short loc_4083A2",
+        "refs": [
+          {
+            "addr": "0x4083a2",
+            "name": "loc_4083A2"
+          }
+        ]
+      },
+      {
+        "addr": "408396",
+        "instruction": "test byte_51B140, bl",
+        "refs": [
+          {
+            "addr": "0x51b140",
+            "name": "byte_51B140"
+          }
+        ]
+      },
+      {
+        "addr": "40839c",
+        "instruction": "jnz short loc_4083A2",
+        "refs": [
+          {
+            "addr": "0x4083a2",
+            "name": "loc_4083A2"
+          }
+        ]
+      },
+      {
+        "addr": "40839e",
+        "instruction": "xor eax, eax"
+      },
+      {
+        "addr": "4083a0",
+        "instruction": "jmp short loc_4083A7",
+        "refs": [
+          {
+            "addr": "0x4083a7",
+            "name": "loc_4083A7"
+          }
+        ]
+      },
+      {
+        "addr": "4083a2",
+        "instruction": "mov eax, 1",
+        "label": "loc_4083A2"
+      },
+      {
+        "addr": "4083a7",
+        "instruction": "mov [ecx+411h], al",
+        "label": "loc_4083A7"
+      },
+      {
+        "addr": "4083ad",
+        "instruction": "test byte_51B0A5, bl",
+        "refs": [
+          {
+            "addr": "0x51b0a5",
+            "name": "byte_51B0A5"
+          }
+        ]
+      },
+      {
+        "addr": "4083b3",
+        "instruction": "jnz short loc_4083C8",
+        "refs": [
+          {
+            "addr": "0x4083c8",
+            "name": "loc_4083C8"
+          }
+        ]
+      },
+      {
+        "addr": "4083b5",
+        "instruction": "test byte_51B125, bl",
+        "refs": [
+          {
+            "addr": "0x51b125",
+            "name": "byte_51B125"
+          }
+        ]
+      },
+      {
+        "addr": "4083bb",
+        "instruction": "jnz short loc_4083C8",
+        "refs": [
+          {
+            "addr": "0x4083c8",
+            "name": "loc_4083C8"
+          }
+        ]
+      },
+      {
+        "addr": "4083bd",
+        "instruction": "xor eax, eax"
+      },
+      {
+        "addr": "4083bf",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "4083c0",
+        "instruction": "mov [ecx+412h], al"
+      },
+      {
+        "addr": "4083c6",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "4083c7",
+        "instruction": "retn"
+      },
+      {
+        "addr": "4083c8",
+        "instruction": "mov eax, 1",
+        "label": "loc_4083C8"
+      },
+      {
+        "addr": "4083cd",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "4083ce",
+        "instruction": "mov [ecx+412h], al"
+      },
+      {
+        "addr": "4083d4",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "4083d5",
+        "instruction": "retn"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__return_address",
+        "offset": "0x8",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      }
+    ],
+    "return_type": "int",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "int"
+      }
+    ]
+  },
+  "instruction_count": 54,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

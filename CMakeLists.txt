@@ -823,7 +823,12 @@ target_include_directories(kinoko_actor_state_contract PRIVATE include)
 target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
 add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
 
+add_executable(kinoko_input_keys_contract tests/input_keys_contract.cpp src/reconstructed/input_keys.cpp)
+target_include_directories(kinoko_input_keys_contract PRIVATE include)
+add_test(NAME input_keys_contract COMMAND kinoko_input_keys_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_input_keys_contract
     kinoko_texture_binding_contract
     kinoko_texture_image_contract
     kinoko_bitmap_contract

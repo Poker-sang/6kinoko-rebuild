@@ -1,0 +1,22 @@
+{
+  "addr": "0x46ebd0",
+  "code": "int __thiscall sub_46EBD0(int this, int a2)\n{\n  sub_4A95C0(a1: a2); /*0x46ebdc*/\n  qmemcpy((void *)(this + 16), (const void *)(a2 + 16), 0x44u); /*0x46ebef*/\n  qmemcpy((void *)(this + 84), (const void *)(a2 + 84), 0x60u); /*0x46ec01*/\n  sub_46D750(a1: a2 + 180); /*0x46ec0a*/\n  qmemcpy((void *)(this + 200), (const void *)(a2 + 200), 0x44u); /*0x46ec23*/\n  qmemcpy((void *)(this + 268), (const void *)(a2 + 268), 0x60u); /*0x46ec3b*/\n  sub_46E530(a1: a2 + 364); /*0x46ec44*/\n  *(_BYTE *)(this + 388) = *(_BYTE *)(a2 + 388); /*0x46ec60*/\n  sub_46D2A0(a1: a2 + 392); /*0x46ec66*/\n  *(_DWORD *)(this + 1436) = *(_DWORD *)(a2 + 1436); /*0x46ec71*/\n  *(_DWORD *)(this + 1440) = *(_DWORD *)(a2 + 1440); /*0x46ec7d*/\n  *(_DWORD *)(this + 1444) = *(_DWORD *)(a2 + 1444); /*0x46ec89*/\n  *(_DWORD *)(this + 1448) = *(_DWORD *)(a2 + 1448); /*0x46ec95*/\n  *(_DWORD *)(this + 1452) = *(_DWORD *)(a2 + 1452); /*0x46eca1*/\n  *(_DWORD *)(this + 1456) = *(_DWORD *)(a2 + 1456); /*0x46ecad*/\n  *(_DWORD *)(this + 1460) = *(_DWORD *)(a2 + 1460); /*0x46ecb9*/\n  *(_DWORD *)(this + 1464) = *(_DWORD *)(a2 + 1464); /*0x46ecc5*/\n  *(_BYTE *)(this + 1468) = *(_BYTE *)(a2 + 1468); /*0x46ecd2*/\n  *(_BYTE *)(this + 1469) = *(_BYTE *)(a2 + 1469); /*0x46ecde*/\n  *(_BYTE *)(this + 1470) = *(_BYTE *)(a2 + 1470); /*0x46eceb*/\n  *(_BYTE *)(this + 1471) = *(_BYTE *)(a2 + 1471); /*0x46ecf8*/\n  *(_DWORD *)(this + 1472) = *(_DWORD *)(a2 + 1472); /*0x46ed04*/\n  *(_DWORD *)(this + 1476) = *(_DWORD *)(a2 + 1476); /*0x46ed10*/\n  *(_DWORD *)(this + 1480) = *(_DWORD *)(a2 + 1480); /*0x46ed1c*/\n  *(_DWORD *)(this + 1484) = *(_DWORD *)(a2 + 1484); /*0x46ed28*/\n  *(_DWORD *)(this + 1488) = *(_DWORD *)(a2 + 1488); /*0x46ed34*/\n  *(_DWORD *)(this + 1492) = *(_DWORD *)(a2 + 1492); /*0x46ed40*/\n  *(_DWORD *)(this + 1496) = *(_DWORD *)(a2 + 1496); /*0x46ed4c*/\n  *(_DWORD *)(this + 1500) = *(_DWORD *)(a2 + 1500); /*0x46ed58*/\n  *(_DWORD *)(this + 1504) = *(_DWORD *)(a2 + 1504); /*0x46ed64*/\n  *(_DWORD *)(this + 1508) = *(_DWORD *)(a2 + 1508); /*0x46ed72*/\n  return this; /*0x46ed70*/\n}",
+  "refs": [
+    {
+      "addr": "0x4a95c0",
+      "name": "sub_4A95C0"
+    },
+    {
+      "addr": "0x46d750",
+      "name": "sub_46D750"
+    },
+    {
+      "addr": "0x46e530",
+      "name": "sub_46E530"
+    },
+    {
+      "addr": "0x46d2a0",
+      "name": "sub_46D2A0"
+    }
+  ]
+}

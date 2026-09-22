@@ -1,3 +1,4 @@
+#include "kinoko/input_keys.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_cluster.h"
@@ -10,8 +11,6 @@ extern "C" {
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
-int32_t function_408320(int32_t);
-int32_t function_4083e0(int32_t, int32_t, int32_t, int32_t, int32_t);
 }
 namespace {
 // Original Input record: 4-byte vtable, 68-byte assignment, 96-byte state.
@@ -104,15 +103,15 @@ extern "C" int32_t function_46b9a0(int32_t self) {
     for (int i = 0; i < count; ++i) update_device(begin + i*device_stride);
     update_device(self + 12);
     function_4077c0(self + 196);
-    function_408320(self + 392);
+    kinoko_input_keys_update((KinokoKeyTracker *)(intptr_t)(self + 392));
     // Publish the same directional/button counters and release edges.
     constexpr int copies[][2] = {{1444,276},{1436,268},{1440,272},{1456,288},
         {1448,280},{1452,284},{1460,292},{1464,296}};
     for (const auto& offsets : copies) word(self, offsets[0]) = word(self, offsets[1]);
     for (int i = 0; i < 4; ++i) byte(self, 1468+i) = byte(self, 326+i);
-    word(self, 1472) = function_4083e0(self+392, 11, 0, 0, 0);
+    word(self, 1472) = kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(self+392), 11, 0, 0, 0);
     for (int i = 1; i < 10; ++i)
-        word(self, 1472+i*4) = function_4083e0(self+392, i+1, 0, 0, 0);
+        word(self, 1472+i*4) = kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(self+392), i+1, 0, 0, 0);
     return word(self, 1508);
 }
 

@@ -1,0 +1,10 @@
+{
+  "addr": "0x46bbe0",
+  "code": "int __thiscall sub_46BBE0(_DWORD *this, int a2, int a3, int a4)\n{\n  int result; // eax\n  int v5; // esi\n  _DWORD v6[17]; // [esp+14h] [ebp-48h] BYREF\n\n  result = a3; /*0x46bbf0*/\n  if ( a2 < 0 || (v5 = *(this + 45), result = 818089009 * (*(this + 46) - v5), a2 >= (*(this + 46) - v5) / 168) ) /*0x46bc23*/\n  {\n    if ( a2 == -1 ) /*0x46bc4b*/\n    {\n      qmemcpy(v6, this + 4, sizeof(v6)); /*0x46bc5e*/\n      v6[a3 + 5] = a4; /*0x46bc64*/\n      return sub_4074C0(a1: v6); /*0x46bc6b*/\n    }\n  }\n  else\n  {\n    qmemcpy(v6, (const void *)(v5 + 4), sizeof(v6)); /*0x46bc36*/\n    v6[a3 + 5] = a4; /*0x46bc42*/\n    return sub_4074C0(a1: v6); /*0x46bc46*/\n  }\n  return result; /*0x46bc70*/\n}",
+  "refs": [
+    {
+      "addr": "0x4074c0",
+      "name": "sub_4074C0"
+    }
+  ]
+}

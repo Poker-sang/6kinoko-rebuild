@@ -75,20 +75,3 @@ extern "C" int32_t __fastcall function_407500(int32_t self) {
     return self + 128;
 }
 
-extern "C" int32_t function_408320(int32_t self) {
-    for (uint32_t index = 0; index < kinoko_input_keys_size(self); ++index) {
-        const auto scan = kinoko_input_keys_at(self, index);
-        auto& count = field<int32_t>(self, 4u * scan);
-        count = key(scan) ? advance(count, 1) : 0;
-    }
-    field<uint8_t>(self, 1040) = key(0x2a) || key(0x36);
-    field<uint8_t>(self, 1041) = key(0x38) || key(0xb8);
-    return field<uint8_t>(self, 1042) = key(0x1d) || key(0x9d);
-}
-
-extern "C" int32_t function_4083e0(int32_t self, int32_t scan, int32_t shift, int32_t alt, int32_t ctrl) {
-    return field<int32_t>(self, 4u * uint8_t(scan)) == 1
-        && (!uint8_t(shift) || field<uint8_t>(self, 1040))
-        && (!uint8_t(alt) || field<uint8_t>(self, 1041))
-        && (!uint8_t(ctrl) || field<uint8_t>(self, 1042));
-}

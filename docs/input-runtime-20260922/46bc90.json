@@ -1,0 +1,18 @@
+{
+  "addr": "0x46bc90",
+  "code": "char __thiscall sub_46BC90(_DWORD *this, int a2, int a3)\n{\n  int v4; // eax\n  int v5; // edi\n  int v6; // eax\n  int i; // edx\n  int v9; // ebx\n  int v10; // ecx\n  unsigned int v11; // esi\n  int v12; // edi\n  int v13; // ebx\n  _DWORD v15[17]; // [esp+14h] [ebp-48h] BYREF\n\n  if ( a2 >= 0 ) /*0x46bcb3*/\n  {\n    v4 = (*(this + 46) - *(this + 45)) / 168; /*0x46bcd4*/\n    if ( a2 < v4 ) /*0x46bcd8*/\n    {\n      v5 = 0; /*0x46bcde*/\n      if ( v4 != 0 ) /*0x46bce2*/\n      {\n        while ( 2 ) /*0x46bce4*/\n        {\n          v6 = sub_408E80(a1: v5); /*0x46bce4*/\n          for ( i = 0; i < 32; ++i ) /*0x46bcef*/\n          {\n            if ( *(_BYTE *)(v6 + i + 48) != 0 ) /*0x46bcf6*/\n            {\n              v9 = *(this + 45); /*0x46bd35*/\n              qmemcpy(v15, (const void *)(v9 + 4), sizeof(v15)); /*0x46bd49*/\n              v10 = *(this + 46); /*0x46bd4e*/\n              v15[a3 + 5] = i; /*0x46bd54*/\n              v11 = 0; /*0x46bd69*/\n              if ( (v10 - v9) / 168 != 0 ) /*0x46bd6d*/\n              {\n                v12 = 0; /*0x46bd6f*/\n                do /*0x46bda8*/\n                {\n                  sub_4074C0(a1: v15); /*0x46bd78*/\n                  ++v11; /*0x46bd9d*/\n                  v12 += 168; /*0x46bda0*/\n                }\n                while ( v11 < (*(this + 46) - *(this + 45)) / 168 ); /*0x46bda8*/\n              }\n              return 1; /*0x46bdbc*/\n            }\n          }\n          if ( ++v5 < (unsigned int)((*(this + 46) - *(this + 45)) / 168) ) /*0x46bd1e*/\n            continue; /*0x46bd1e*/\n          break;\n        }\n      }\n      return 0; /*0x46bd1e*/\n    }\n  }\n  if ( a2 != -1 ) /*0x46bdc2*/\n    return 0; /*0x46bd32*/\n  v13 = 0; /*0x46bdc8*/\n  while ( v13 == 148 || v13 == 58 || v13 == 112 || (unsigned __int8)sub_408E60(a1: v13) == 0 ) /*0x46bdef*/\n  {\n    if ( ++v13 >= 256 ) /*0x46bdf8*/\n      return 0; /*0x46bdf8*/\n  }\n  qmemcpy(v15, this + 4, sizeof(v15)); /*0x46be0a*/\n  v15[a3 + 1] = v13; /*0x46be0f*/\n  sub_4074C0(a1: v15); /*0x46be1d*/\n  return 1; /*0x46bd20*/\n}",
+  "refs": [
+    {
+      "addr": "0x408e80",
+      "name": "sub_408E80"
+    },
+    {
+      "addr": "0x4074c0",
+      "name": "sub_4074C0"
+    },
+    {
+      "addr": "0x408e60",
+      "name": "sub_408E60"
+    }
+  ]
+}

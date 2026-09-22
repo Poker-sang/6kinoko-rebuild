@@ -1567,9 +1567,6 @@ int32_t __fastcall function_407500(int32_t this_ptr);
 int32_t __fastcall function_4077c0(int32_t this_ptr);
 
 
-int32_t function_408320(int32_t this_ptr);
-int32_t function_4083e0(int32_t this_ptr, int32_t a1, int32_t a2,
-                       int32_t a3, int32_t a4);
 
 
 
@@ -3808,9 +3805,9 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
     };
     size_t index;
     if (aggregate_ptr == 0) return;
-    kinoko_input_keys_construct(aggregate_ptr);
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(aggregate_ptr));
     for (index = 0; index < sizeof(key_codes); ++index)
-        kinoko_input_keys_add(aggregate_ptr, key_codes[index]);
+        kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(aggregate_ptr), key_codes[index]);
 
 }
 
