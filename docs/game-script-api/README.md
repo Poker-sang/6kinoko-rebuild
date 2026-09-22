@@ -48,4 +48,18 @@ RecordView 访问原有存储。
 经过新入口的参数与结果。既有 stage_contract 改用新接口。
 按用户要求只编译链接，不执行这些检查，不启动游戏。
 
-本批构建、DAT 和源码提交记录待构建完成后补充。
+## 本批 R1 交接
+
+- 源码提交：`ffe85ea8361bc95716782e5151dd78e41ab553dc`。
+- VS 2026 / Win32 / Release；`KINOKO_RETDEC_DISABLE_TRACE=ON`。
+- 全量构建退出码 0，新增 game_script_contract 及既有目标均完成编译链接。
+- 构建树和日志：`build-runs/game-script-api-r1-quiet/build.log`。
+- EXE：`runtime-builds/game-script-api-r1-quiet/kinoko_retdec_rebuild.exe`。
+- EXE SHA256：`B08DD3AA9C3B17EC550EF33F643B8F03FEED3A4BF5AB098CB500DEF335B72A72`。
+- 三个 DAT 通过 stage_dat.ps1 复制到 EXE 同目录并校验：
+  - a：163424746 字节，`DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64`。
+  - b：44681244 字节，`4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2`。
+  - c：11796163 字节，`80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E`。
+
+未执行 CTest、检查程序或游戏。以上记录仅证明编译链接和资源校验成功，
+不代表运行检查通过；后续游戏验证由用户执行。
