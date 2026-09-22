@@ -3500,6 +3500,11 @@ static int test_texture_lifetime(void) {
 
 static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     int32_t closure[3], actors[2];
+    /* This fixture skips game startup, but Update always visits Input first. */
+    const int32_t input = PTR(kinoko_game_objects()->input);
+    kinoko_input_devices_construct(input);
+    kinoko_input_cluster_construct(input + 196);
+    kinoko_input_keys_construct(input + 392);
     const int32_t saved_stages=g603,saved_stage_count=g604;
     kinoko_stage_list_construct();
     CHECK(execute_source(vm, root + 2,
@@ -3534,6 +3539,9 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
     CHECK(vm_failures == 0);
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
+    kinoko_input_keys_destroy(input + 392);
+    kinoko_input_cluster_delete(input + 196, NULL, 0);
+    kinoko_input_devices_destroy(input);
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
 }
@@ -6076,6 +6084,7 @@ int main(int argc, char **argv) {
     node[0] = PTR(sentinel);
     node[2] = PTR(layout_key);
     layout_key[1] = PTR(layout);
+    kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
     *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
     *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
     *(int32_t *)(g_retdec_map_manager_state + 20) = PTR(act_resource);
@@ -6877,6 +6886,7 @@ int main(int argc, char **argv) {
     CHECK(vm_failures == 0);
     CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
     CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
+    kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }
