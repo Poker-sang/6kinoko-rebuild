@@ -35,7 +35,7 @@ void trace_value(const char* type_label, const char* data_label, ObjectView obje
 // A real Squirrel userdata payload is never null; failed conversions leave it
 // null and must leave both caller outputs untouched.
 bool get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const char* key,
-                  int32_t* output, int32_t tag_output, bool raw) {
+                  int32_t* output, void* tag_output, bool raw) {
     SQUserPointer data = nullptr, tag = nullptr;
     const bool found = upstream::sqplus_get_userdata(vm, receiver, key, &data,
         tag_output ? &tag : nullptr, raw);
@@ -44,7 +44,7 @@ bool get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const char* key,
         std::memcpy(output, &bits, sizeof(bits));
         if (tag_output) {
             const auto tag_bits = address(tag);
-            std::memcpy(pointer(tag_output), &tag_bits, sizeof(tag_bits));
+            std::memcpy(tag_output, &tag_bits, sizeof(tag_bits));
         }
     }
     return found;
@@ -116,7 +116,7 @@ extern "C" int32_t kinoko_sqplus_object_capture(void * object, int32_t index) {
     retdec_trace("4a9660:this-begin");
     retdec_trace_i32("4a9660:this", address(object));
     retdec_trace_i32("4a9660:this-index", index);
-    return address(object) ? ObjectView(object).capture(current_vm(), index) : 0;
+    return object ? ObjectView(object).capture(current_vm(), index) : 0;
 }
 extern "C" struct SQVM * kinoko_sqplus_object_append(void * object, const void * source) {
     const auto receiver = ObjectView(object).value();
@@ -187,7 +187,7 @@ extern "C" int32_t kinoko_sqplus_object_new_userdata(void * object, const char *
     return result;
 }
 extern "C" int32_t kinoko_sqplus_object_type(void * object) {
-    return address(object) ? ObjectView(object).value()._type : 0;
+    return object ? ObjectView(object).value()._type : 0;
 }
 extern "C" int32_t kinoko_sqplus_object_get_index_integer(void * object, int32_t key) {
     auto* vm = current_vm();
@@ -315,7 +315,7 @@ extern "C" int32_t kinoko_sqplus_object_get_userdata(void * object, const char *
     auto* vm = current_vm();
     retdec_trace_i32("4aa080:stack-before", sq_gettop(vm));
     const int32_t result = get_userdata(vm, ObjectView(object).value(),
-        static_cast<const char *>(key), static_cast<int32_t *>(output), address(tag_output), false);
+        static_cast<const char *>(key), static_cast<int32_t *>(output), tag_output, false);
     retdec_trace_i32("4aa080:result", result);
     retdec_trace_i32("4aa080:stack-after", sq_gettop(vm));
     return result;
@@ -323,7 +323,7 @@ extern "C" int32_t kinoko_sqplus_object_get_userdata(void * object, const char *
 extern "C" int32_t kinoko_sqplus_object_raw_get_userdata(void * object, const char* key, int32_t* output, void * tag_output) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
-    return get_userdata(vm, ObjectView(object).value(), key, output, address(tag_output), true);
+    return get_userdata(vm, ObjectView(object).value(), key, output, tag_output, true);
 }
 extern "C" int32_t kinoko_sqplus_object_exists(void * object, const char* key) {
     return upstream::sqplus_exists(current_vm(), ObjectView(object).value(), key);

@@ -121,8 +121,8 @@ void setters(HSQUIRRELVM vm) {
     evaluate(vm, "if (bridge_instance.value != 7) throw \"raw field\";");
     Pair not_object(vm); sq_pushinteger(vm, 3); not_object.capture();
     require(!kinoko_sqrat_raw_set_string((struct SQVM *)(vm), not_object.data(), "key", "text"), "wrong receiver fails");
-    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), not_object.data(), 2), "reject more captures than supplied");
-    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), nullptr, 1), "reject missing capture");
+    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", (void *)(intptr_t)(address(reinterpret_cast<void*>(captured))), not_object.data(), 2), "reject more captures than supplied");
+    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", (void *)(intptr_t)(address(reinterpret_cast<void*>(captured))), nullptr, 1), "reject missing capture");
     top(vm, base, "all setter success and failure stacks restored");
 }
 void delegates(HSQUIRRELVM vm) {
@@ -151,9 +151,9 @@ void closures(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm);
     Pair root(vm), capture(vm); sq_pushroottable(vm); root.capture();
     sq_pushinteger(vm, 40); capture.capture();
-    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_capture", address(reinterpret_cast<void*>(captured)), capture.data(), 1), "register one captured pair");
-    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_plain", address(reinterpret_cast<void*>(plain)), nullptr, 0), "register no captures");
-    require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), root.data(), "bridge_offset", 30, address(reinterpret_cast<void*>(captured))), "register offset userdata");
+    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_capture", (void *)(intptr_t)(address(reinterpret_cast<void*>(captured))), capture.data(), 1), "register one captured pair");
+    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_plain", (void *)(intptr_t)(address(reinterpret_cast<void*>(plain))), nullptr, 0), "register no captures");
+    require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), root.data(), "bridge_offset", 30, (void *)(intptr_t)(address(reinterpret_cast<void*>(captured)))), "register offset userdata");
     auto object = wrapper(vm, root);
     std::array<unsigned char, 8> source{}; store<int32_t>(source.data() + 1, 70);
     require((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(object.data()), (const char *)("bridge_registered"), (const void *)(source.data() + 1), 4, (void *)(reinterpret_cast<void*>(captured)), 0x100)) == address(vm), "registration returns VM and masks static byte");

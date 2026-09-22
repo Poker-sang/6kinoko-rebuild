@@ -56,7 +56,8 @@ int32_t create_class(int32_t* output, int32_t vm, int32_t name, int32_t parent, 
 void construct(int32_t state[12], const char* name, int32_t* descriptor) {
     state[0] = address(g644); state[1] = address(name); state[5] = 0;
     kinoko_sqplus_object_initialize((void *)(state + 2));
-    kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 6))); (int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 9));
+    kinoko_sqplus_object_new_table(state + 6);
+    kinoko_sqplus_object_new_table(state + 9);
     int32_t temporary[3]{};
     create_class(temporary, state[0], state[1], 0, descriptor);
     kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));

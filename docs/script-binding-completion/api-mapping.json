@@ -637,14 +637,16 @@
   "retdec_sqrat_set_native_closure": [
     "kinoko_sqrat_set_native_closure",
     {
-      "0": "struct SQVM *"
+      "0": "struct SQVM *",
+      "3": "void *"
     },
     null
   ],
   "retdec_sqrat_set_offset_closure": [
     "kinoko_sqrat_set_offset_closure",
     {
-      "0": "struct SQVM *"
+      "0": "struct SQVM *",
+      "4": "void *"
     },
     null
   ],
@@ -679,7 +681,11 @@
   "retdec_sqrat_initialize_class": [
     "kinoko_sqrat_initialize_class",
     {
-      "0": "struct SQVM *"
+      "0": "struct SQVM *",
+      "4": "void *",
+      "5": "void *",
+      "6": "void *",
+      "7": "void *"
     },
     null
   ],

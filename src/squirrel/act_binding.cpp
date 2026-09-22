@@ -66,8 +66,8 @@ int32_t retdec_publish_cact_layer_property(
     if (g1151 != 0x0A000020 || g1152 == 0 ||
         g1153 != 0x0A000020 || g1154 == 0)
         return 0;
-    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1153, name, offset, getter) ||
-        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1151, name, offset, setter))
+    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1153, name, offset, (void *)(intptr_t)(getter)) ||
+        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1151, name, offset, (void *)(intptr_t)(setter)))
         return 0;
     return 1;
 }
@@ -128,7 +128,7 @@ int32_t retdec_publish_cact_layer_members(
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
     }
 
-    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1151, (const int32_t *)&g1153, address(kinoko_sqrat_no_constructor), address(function_41e2c0), address(function_41e260), address(function_431650)))
+    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1151, (const int32_t *)&g1153, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650))))
         goto failed;
 
     if (!retdec_publish_cact_layer_property(
@@ -230,22 +230,22 @@ int32_t retdec_publish_c2dlayout_properties(
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
     }
 
-    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1141, (const int32_t *)&g1143, address(kinoko_sqrat_no_constructor), address(function_41e2c0), address(function_41e260), address(function_431650)))
+    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1141, (const int32_t *)&g1143, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650))))
         goto failed;
 
     for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
          ++index) {
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, float_names[index], float_offsets[index], address(retdec_c2dlayout_get_float)) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, float_names[index], float_offsets[index], address(retdec_c2dlayout_set_float)))
+        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, float_names[index], float_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_get_float))) ||
+            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, float_names[index], float_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_set_float))))
             goto failed;
     }
-    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, "blend", 288, address(retdec_c2dlayout_get_int)) ||
-        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, "blend", 288, address(retdec_c2dlayout_set_int)))
+    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, "blend", 288, (void *)(intptr_t)(address(retdec_c2dlayout_get_int))) ||
+        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, "blend", 288, (void *)(intptr_t)(address(retdec_c2dlayout_set_int))))
         goto failed;
     for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
          ++index) {
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, color_names[index], color_offsets[index], address(retdec_c2dlayout_get_int)) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, color_names[index], color_offsets[index], address(retdec_c2dlayout_set_color)))
+        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, color_names[index], color_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_get_int))) ||
+            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, color_names[index], color_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_set_color))))
             goto failed;
     }
     return 1;
@@ -366,7 +366,7 @@ int32_t retdec_publish_texture_resource_class(int32_t vm, int32_t root,
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), out);
     return retdec_publish_map_view_class(vm, root, name, properties,
         sizeof(properties) / sizeof(properties[0]), 0, out) &&
-        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "LoadTexture", address(retdec_resource_load_texture), nullptr, 0);
+        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "LoadTexture", (void *)(intptr_t)(address(retdec_resource_load_texture)), nullptr, 0);
 }
 
 int32_t retdec_publish_cact_resource2d_class(int32_t vm, int32_t root) {
@@ -488,11 +488,11 @@ int32_t retdec_publish_acting_player_properties(int32_t vm,
     int32_t ok = 0;
     if (!kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), get_table) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), set_table) ||
-        !kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, set_table, get_table, 0, address(function_41e2c0), address(function_41e260), 0))
+        !kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, set_table, get_table, (void *)(intptr_t)(0), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(0)))
         goto cleanup;
     for (size_t i = 0; i < sizeof(offsets) / sizeof(offsets[0]); ++i) {
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), get_table, names[i], offsets[i], address(retdec_acting_player_get_property)) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), set_table, names[i], offsets[i], address(retdec_acting_player_set_property)))
+        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), get_table, names[i], offsets[i], (void *)(intptr_t)(address(retdec_acting_player_get_property))) ||
+            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), set_table, names[i], offsets[i], (void *)(intptr_t)(address(retdec_acting_player_set_property))))
             goto cleanup;
     }
     ok = 1;
@@ -770,16 +770,16 @@ int32_t retdec_publish_acting_player_class(int32_t vm,
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "GetCurrentFrame", (void *)(kinoko_act_get_current_frame), (void *)(kinoko_sqrat_call_integer0), 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "BeginStage", (void *)(kinoko_method_begin_stage), (void *)(kinoko_sqrat_call_integer1), 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "EndStage", (void *)(kinoko_act_end_stage), (void *)(kinoko_sqrat_call_integer0), 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "CreateLayer2D", address(create_layer_native<false>), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "CreateLayerString", address(create_layer_native<true>), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "GetLayerOrder", address(get_layer_order_native), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "SwapLayer", address(swap_layers_native), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "CreateLayer2D", (void *)(intptr_t)(address(create_layer_native<false>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "CreateLayerString", (void *)(intptr_t)(address(create_layer_native<true>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "GetLayerOrder", (void *)(intptr_t)(address(get_layer_order_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "SwapLayer", (void *)(intptr_t)(address(swap_layers_native)), nullptr, 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "BitBlt", (void *)(kinoko_method_act_bitblt), (void *)(function_4555a0), 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "SetRenderTarget", address(set_render_target_native), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindFirstFile", address(find_first_native), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindNextFile", address(find_by_id_native<FindOperation::Next>), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindClose", address(find_by_id_native<FindOperation::Close>), nullptr, 0);
-    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "GetFindFileName", address(find_by_id_native<FindOperation::Name>), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "SetRenderTarget", (void *)(intptr_t)(address(set_render_target_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindFirstFile", (void *)(intptr_t)(address(find_first_native)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindNextFile", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Next>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "FindClose", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Close>)), nullptr, 0);
+    kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), class_pair, "GetFindFileName", (void *)(intptr_t)(address(find_by_id_native<FindOperation::Name>)), nullptr, 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "timeGetTime", (void *)(timeGetTime), (void *)(kinoko_sqrat_call_integer0), 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "Sleep", (void *)(kinoko_act_sleep), (void *)(function_445730), 0);
     kinoko_sqplus_register_actor_method((struct SQVM *)(intptr_t)(vm), class_object + 1, "SleepTo", (void *)(kinoko_act_sleep_to), (void *)(function_445730), 0);
@@ -1018,7 +1018,7 @@ int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environme
         if (!kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), environment, names[value], value))
             return 0;
     }
-    return kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), environment, "CompileFile", address(retdec_local_compile_file_native), nullptr, 0);
+    return kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), environment, "CompileFile", (void *)(intptr_t)(address(retdec_local_compile_file_native)), nullptr, 0);
 }
 
 extern "C" int32_t retdec_register_act_script(int32_t script, int32_t object) {
@@ -1372,7 +1372,7 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
         goto cleanup;
     if (!kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), get_table) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), set_table) ||
-        !kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), out, set_table, get_table, address(kinoko_sqrat_no_constructor), address(function_41e2c0), address(function_41e260), address(function_431650)))
+        !kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), out, set_table, get_table, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650))))
         goto cleanup;
     for (int32_t i = 0; i < property_count; ++i) {
         const struct retdec_native_view_property *p = properties + i;
@@ -1386,24 +1386,24 @@ int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
             p->kind == 3 ? address(retdec_native_view_set_short) :
             p->kind == 4 ? address(retdec_cact_layer_set_string) :
                           address(retdec_c2dlayout_set_int);
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), get_table, p->name, p->offset, getter) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), set_table, p->name, p->offset, setter))
+        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), get_table, p->name, p->offset, (void *)(intptr_t)(getter)) ||
+            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), set_table, p->name, p->offset, (void *)(intptr_t)(setter)))
             goto cleanup;
     }
     if (!is_map && std::strcmp(name, "ChipLayout") == 0 &&
-        !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), set_table, "f_left", address(retdec_chip_set_fractional_left), nullptr, 0))
+        !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), set_table, "f_left", (void *)(intptr_t)(address(retdec_chip_set_fractional_left)), nullptr, 0))
         goto cleanup;
     if (is_map &&
-        (!kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "left", address(retdec_map_get_left), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "right", address(retdec_map_get_right), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "PreArrangement", address(retdec_map_prearrangement), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "chipCount", address(retdec_map_chip_count), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipLayout", address(retdec_map_get_chip_layout), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipByPosition", address(retdec_map_get_chip_by_position), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipRect", address(retdec_map_set_chip_rect), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipLayout", address(retdec_map_set_chip_layout), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipID", address(retdec_map_set_chip_id), nullptr, 0) ||
-         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipID", address(retdec_map_get_chip_id), nullptr, 0)))
+        (!kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "left", (void *)(intptr_t)(address(retdec_map_get_left)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "right", (void *)(intptr_t)(address(retdec_map_get_right)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "PreArrangement", (void *)(intptr_t)(address(retdec_map_prearrangement)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), get_table, "chipCount", (void *)(intptr_t)(address(retdec_map_chip_count)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipLayout", (void *)(intptr_t)(address(retdec_map_get_chip_layout)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipByPosition", (void *)(intptr_t)(address(retdec_map_get_chip_by_position)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipRect", (void *)(intptr_t)(address(retdec_map_set_chip_rect)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipLayout", (void *)(intptr_t)(address(retdec_map_set_chip_layout)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipID", (void *)(intptr_t)(address(retdec_map_set_chip_id)), nullptr, 0) ||
+         !kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipID", (void *)(intptr_t)(address(retdec_map_get_chip_id)), nullptr, 0)))
         goto cleanup;
     ok = kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), pointer<const int32_t>(root + 8), name, out);
 cleanup:
@@ -1508,8 +1508,8 @@ int32_t retdec_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
         info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
         retdec_publish_map_view_class(vm, root, "CActResourceChip",
             resource_properties, sizeof(resource_properties) / sizeof(resource_properties[0]), 0, out) &&
-        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipInfo", address(retdec_resource_get_chip_info), nullptr, 0) &&
-        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipFlag", address(retdec_resource_set_chip_flag), nullptr, 0);
+        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "GetChipInfo", (void *)(intptr_t)(address(retdec_resource_get_chip_info)), nullptr, 0) &&
+        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetChipFlag", (void *)(intptr_t)(address(retdec_resource_set_chip_flag)), nullptr, 0);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), info);
     return ok;
 }
@@ -2351,7 +2351,7 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
     const int32_t top=sq_gettop(kinoko_vm(vm));
     int32_t setters[2]={g483,g484},getters[2]={g483,g484};
     bool ok=kinoko_sqrat_new_class((struct SQVM *)(intptr_t)(vm), out) && kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), setters) && kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), getters) &&
-        kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), out, setters, getters, address(kinoko_sqrat_no_constructor), address(function_41e2c0), address(function_41e260), address(function_431650));
+        kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), out, setters, getters, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650)));
     struct Property { const char* name; int32_t offset,kind; bool readonly; };
     static const Property properties[]={
         {"alpha",152,1,false},{"blend",156,0,false},{"alignment",132,0,false},
@@ -2367,8 +2367,8 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
             p.kind==3?address(string_value_get):address(retdec_c2dlayout_get_int);
         const auto setter=p.kind==1?address(retdec_c2dlayout_set_float):p.kind==2?address(retdec_cact_layer_set_bool):
             p.kind==3?(p.offset==60?address(string_face_set):address(retdec_cact_layer_set_string)):address(string_property_set);
-        if(ok) ok=kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), getters, p.name, p.offset, getter) &&
-            (p.readonly || kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), setters, p.name, p.offset, setter));
+        if(ok) ok=kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), getters, p.name, p.offset, (void *)(intptr_t)(getter)) &&
+            (p.readonly || kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), setters, p.name, p.offset, (void *)(intptr_t)(setter)));
     }
     struct Method { const char* name; int32_t (*call)(int32_t); };
     static const Method methods[]={
@@ -2376,7 +2376,7 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
         {"PopBack",string_method<3>},{"GetCharacterBytes",string_method<4>},
         {"ReplicateText",string_method<5>},{"Rebuild",string_method<6>}
     };
-    for(const auto& m:methods) if(ok) ok=kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, m.name, address(m.call), nullptr, 0);
+    for(const auto& m:methods) if(ok) ok=kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, m.name, (void *)(intptr_t)(address(m.call)), nullptr, 0);
     if(ok) ok=kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), pointer<const int32_t>(root+8), "CStringLayout", out);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), getters);kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), setters);
     kinoko_sqrat_trim_stack((struct SQVM *)(intptr_t)(vm), top);
@@ -2422,8 +2422,8 @@ extern "C" int32_t kinoko_publish_mesh_resource_class(int32_t vm,int32_t root,in
         {"resourceID",4,0},{"stName",8,4},{"stMeshName",36,4}
     };
     return retdec_publish_map_view_class(vm,root,"CActResourceMesh",properties,3,0,out) &&
-        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "LoadMesh", address(retdec_resource_load_texture), nullptr, 0) &&
-        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetReplaceTexture", address(mesh_replace_texture), nullptr, 0);
+        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "LoadMesh", (void *)(intptr_t)(address(retdec_resource_load_texture)), nullptr, 0) &&
+        kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), out, "SetReplaceTexture", (void *)(intptr_t)(address(mesh_replace_texture)), nullptr, 0);
 }
 extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,int32_t vm) {
     if(!vm) return E_INVALIDARG;

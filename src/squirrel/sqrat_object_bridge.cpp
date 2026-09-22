@@ -180,7 +180,7 @@ extern "C" int32_t kinoko_sqrat_raw_set_float(struct SQVM * vm, const int32_t* o
 }
 extern "C" int32_t kinoko_sqrat_bind_string(struct SQVM * vm, const int32_t* object, const char* name, const char* value) { return set_string(vm, object, name, value, false); }
 extern "C" int32_t kinoko_sqrat_raw_set_string(struct SQVM * vm, const int32_t* object, const char* name, const char* value) { return set_string(vm, object, name, value, true); }
-extern "C" int32_t kinoko_sqrat_set_native_closure(struct SQVM * id, const int32_t* object, const char* name, int32_t function, const int32_t* free_pair, int32_t free_count) {
+extern "C" int32_t kinoko_sqrat_set_native_closure(struct SQVM * id, const int32_t* object, const char* name, void * function, const int32_t* free_pair, int32_t free_count) {
     // The recovered interface accepts ONE optional pair, not an array of pairs.
     // Larger counts used to consume the name/receiver and underflow the stack.
     if (!id || !object || !name || !function || free_count < 0 || free_count > 1 ||
@@ -192,23 +192,23 @@ extern "C" int32_t kinoko_sqrat_set_native_closure(struct SQVM * id, const int32
     TrimStack stack(vm);
     sq_pushobject(vm, receiver); sq_pushstring(vm, name, -1);
     if (free_count) sq_pushobject(vm, capture);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(function)), free_count);
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(function), free_count);
     return SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse));
 }
-extern "C" int32_t kinoko_sqrat_set_offset_closure(struct SQVM * id, const int32_t* table, const char* name, int32_t offset, int32_t function) {
+extern "C" int32_t kinoko_sqrat_set_offset_closure(struct SQVM * id, const int32_t* table, const char* name, int32_t offset, void * function) {
     if (!id || !table || !name || !function) return 0;
     auto vm = static_cast<SQVM *>(id);
     const auto receiver = read<HSQOBJECT>(table);
     TrimStack stack(vm);
     return kinoko::script::upstream::sqrat_bind_function(vm, receiver, name,
-        &offset, sizeof(offset), reinterpret_cast<SQFUNCTION>(pointer(function)), false);
+        &offset, sizeof(offset), reinterpret_cast<SQFUNCTION>(function), false);
 }
 extern "C" int32_t kinoko_sqrat_no_constructor(struct SQVM * id) {
     return kinoko::script::upstream::sqrat_no_constructor(static_cast<SQVM *>(id));
 }
-extern "C" int32_t kinoko_sqrat_initialize_class(struct SQVM * id, const int32_t* type, const int32_t* set_table, const int32_t* get_table, int32_t constructor, int32_t setter, int32_t getter, int32_t weakref) {
+extern "C" int32_t kinoko_sqrat_initialize_class(struct SQVM * id, const int32_t* type, const int32_t* set_table, const int32_t* get_table, void * constructor, void * setter, void * getter, void * weakref) {
     if (!id || !type || !set_table || !get_table || !setter || !getter) return 0;
-    auto callback = [](int32_t value) { return reinterpret_cast<SQFUNCTION>(pointer(value)); };
+    auto callback = [](void* value) { return reinterpret_cast<SQFUNCTION>(value); };
     return kinoko::script::upstream::sqrat_initialize_class(static_cast<SQVM *>(id),
         read<HSQOBJECT>(type), read<HSQOBJECT>(set_table), read<HSQOBJECT>(get_table),
         callback(constructor), callback(setter), callback(getter), callback(weakref));

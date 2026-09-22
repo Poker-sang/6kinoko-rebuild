@@ -1645,7 +1645,7 @@ static int test_array_sort(int32_t vm, int32_t *root) {
         "local expected=[-2,1,1,3,5,8];\n"
         "foreach(i,v in expected) if(sortValues[i]!=v) throw \"comparator order\";"));
     CHECK(function_48aa20(vm)==top);
-    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root+2, "SortNativeCompare", PTR(sort_native_compare), NULL, 0));
+    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root+2, "SortNativeCompare", (void *)(intptr_t)(PTR(sort_native_compare)), NULL, 0));
     CHECK(execute_source(vm,root+2,
         "[].sort(); [3].sort();\n"
         "sortValues.sort(SortNativeCompare);\n"
@@ -1970,7 +1970,7 @@ static int32_t relocate_vm_stack(int32_t vm) {
 }
 
 static int test_native_stack_relocation(int32_t vm, int32_t *root) {
-    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root + 2, "RelocateStack", PTR(relocate_vm_stack), NULL, 0));
+    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root + 2, "RelocateStack", (void *)(intptr_t)(PTR(relocate_vm_stack)), NULL, 0));
     CHECK(execute_source(vm,root+2,
         "relocationResult <- RelocateStack();\n"
         "if(relocationResult!=12345) throw \"native return used retired stack\";"));
