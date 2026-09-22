@@ -1,0 +1,70 @@
+{
+  "addr": "0x40e630",
+  "code": "int __fastcall sub_40E630(int a1, const char *a2, _DWORD *a3, unsigned int *a4, unsigned int *a5)\n{\n  unsigned int v5; // edi\n  char v6; // al\n  unsigned int v8; // ecx\n  unsigned int v9; // eax\n  _DWORD *v10; // ebx\n  unsigned int v11; // edi\n  unsigned int v12; // esi\n  int v13; // [esp+3Ch] [ebp-3Ch]\n  _DWORD v14[2]; // [esp+40h] [ebp-38h] BYREF\n  void **v15; // [esp+48h] [ebp-30h] BYREF\n  char v16; // [esp+4Ch] [ebp-2Ch]\n  unsigned int v17; // [esp+50h] [ebp-28h]\n  unsigned int v18; // [esp+54h] [ebp-24h]\n  int v19; // [esp+5Ch] [ebp-1Ch]\n  void *v20; // [esp+60h] [ebp-18h]\n  void *v21; // [esp+64h] [ebp-14h]\n  int v22; // [esp+74h] [ebp-4h]\n\n  v13 = -2005530516; /*0x40e663*/\n  v15 = &CBitmapData::`vftable'; /*0x40e66b*/\n  v16 = 0; /*0x40e66f*/\n  v21 = nullptr; /*0x40e673*/\n  v20 = nullptr; /*0x40e677*/\n  v19 = 0; /*0x40e67b*/\n  v22 = 0; /*0x40e67f*/\n  if ( dword_51B7C8 != nullptr ) /*0x40e68a*/\n    v20 = dword_51B7C8; /*0x40e68c*/\n  if ( byte_51B7D0 != 0 ) /*0x40e696*/\n  {\n    v5 = strlen(a2); /*0x40e69a*/\n    strcpy_s(Destination: Destination, SizeInBytes: 0x104u, Source: a2); /*0x40e6b6*/\n    *(_DWORD *)((char *)&unk_51B7CD + v5) = 846619438; /*0x40e6bb*/\n    v6 = ((int (__thiscall *)(void ***, char *))v15[2])(a1: &v15, a2: Destination); /*0x40e6d8*/\n  }\n  else\n  {\n    v6 = sub_413500(lpFileName: a2); /*0x40e6e1*/\n  }\n  if ( v6 == 0 ) /*0x40e6e9*/\n  {\n    v15 = &CBitmapData::`vftable'; /*0x40e6ef*/\n    if ( v21 != nullptr ) /*0x40e6f5*/\n      operator delete[](a1: v21); /*0x40e6f8*/\n    return -2005530516; /*0x40e717*/\n  }\n  v8 = v17; /*0x40e71d*/\n  if ( a4 != nullptr ) /*0x40e723*/\n    *a4 = v17; /*0x40e725*/\n  v9 = v18; /*0x40e72a*/\n  if ( a5 != nullptr ) /*0x40e730*/\n    *a5 = v18; /*0x40e732*/\n  if ( (dword_51AC7C & 0x20) != 0 ) /*0x40e73d*/\n  {\n    if ( v8 >= v9 ) /*0x40e741*/\n      v9 = v8; /*0x40e747*/\n    else\n      v8 = v9; /*0x40e743*/\n  }\n  if ( v16 == 32 || v16 == 24 ) /*0x40e755*/\n  {\n    v11 = v8; /*0x40e77c*/\n    v12 = v9; /*0x40e77e*/\n    if ( (dword_51AC7C & 0x20) != 0 ) /*0x40e782*/\n    {\n      if ( v8 >= v9 ) /*0x40e786*/\n        v12 = v8; /*0x40e78c*/\n      else\n        v11 = v9; /*0x40e788*/\n    }\n    EnterCriticalSection(lpCriticalSection: &CriticalSection); /*0x40e793*/\n    v10 = a3; /*0x40e799*/\n    v13 = D3DXCreateTexture(a1: dword_51AC38, a2: v11, a3: v12, a4: 1, a5: 0, a6: 21, a7: 1, a8: a3); /*0x40e7b8*/\n    LeaveCriticalSection(lpCriticalSection: &CriticalSection); /*0x40e7bc*/\n    goto LABEL_28; /*0x40e7bc*/\n  }\n  if ( v16 == 8 || v16 == 16 ) /*0x40e75f*/\n  {\n    v10 = a3; /*0x40e765*/\n    v13 = sub_40E5D0(a1: 1, a2: 0, a3: 25, a4: 1, a5: a3); /*0x40e776*/\nLABEL_28:\n    if ( v13 >= 0 /*0x40e7e0*/\n      && (*(int (__stdcall **)(_DWORD, _DWORD, _DWORD *, _DWORD, _DWORD))(*(_DWORD *)*v10 + 76))(\n           a1: *v10,\n           a2: 0,\n           a3: v14,\n           a4: 0,\n           a5: 0) == 0 )\n    {\n      if ( v16 == 8 && dword_51B7C8 != nullptr ) /*0x40e7f2*/\n        v20 = dword_51B7C8; /*0x40e7f4*/\n      sub_4141E0(a1: &v15, a2: v14[1]); /*0x40e806*/\n      (*(void (__stdcall **)(_DWORD, _DWORD))(*(_DWORD *)*v10 + 80))(a1: *v10, a2: 0); /*0x40e815*/\n    }\n  }\n  v15 = &CBitmapData::`vftable'; /*0x40e817*/\n  if ( v21 != nullptr ) /*0x40e825*/\n    operator delete[](a1: v21); /*0x40e828*/\n  return v13; /*0x40e705*/\n}",
+  "refs": [
+    {
+      "addr": "0x4eb7e4",
+      "name": "??_7CBitmapData@@6B@"
+    },
+    {
+      "addr": "0x51b7c8",
+      "name": "dword_51B7C8"
+    },
+    {
+      "addr": "0x4aca2d",
+      "name": "_strcpy_s"
+    },
+    {
+      "addr": "0x51b7d1",
+      "name": "Destination"
+    },
+    {
+      "addr": "0x51b7cd",
+      "name": "unk_51B7CD"
+    },
+    {
+      "addr": "0x413500",
+      "name": "sub_413500"
+    },
+    {
+      "addr": "0x51b7d0",
+      "name": "byte_51B7D0"
+    },
+    {
+      "addr": "0x4ab330",
+      "name": "??_V@YAXPAX@Z"
+    },
+    {
+      "addr": "0x51ac7c",
+      "name": "dword_51AC7C"
+    },
+    {
+      "addr": "0x4d50b0",
+      "name": "EnterCriticalSection"
+    },
+    {
+      "addr": "0x51ac1c",
+      "name": "CriticalSection"
+    },
+    {
+      "addr": "0x4d521c",
+      "name": "D3DXCreateTexture"
+    },
+    {
+      "addr": "0x51ac38",
+      "name": "dword_51AC38"
+    },
+    {
+      "addr": "0x4d50ac",
+      "name": "LeaveCriticalSection"
+    },
+    {
+      "addr": "0x40e5d0",
+      "name": "sub_40E5D0"
+    },
+    {
+      "addr": "0x4141e0",
+      "name": "sub_4141E0"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+#include "kinoko/bitmap.h"
 #include "kinoko/base_utilities.h"
 #include "kinoko/critical_section.h"
 #include "kinoko/script_file.h"
@@ -1652,7 +1653,6 @@ int32_t function_4123c0(int32_t a1);
 int32_t function_412ca0(void);
 
 
-int32_t function_414010(int32_t a1, const char *file_name);
 
 
 
@@ -4205,7 +4205,7 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 int32_t function_40e630(int32_t unused, const char *file_name,
                         int32_t texture_out, uint32_t *width_out,
                         uint32_t *height_out) {
-    unsigned char bitmap[32] = { 0 };
+    KinokoBitmap bitmap = { 0 };
     char lookup_path[MAX_PATH];
     size_t path_length;
     uint32_t width;
@@ -4230,13 +4230,13 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     lookup_path[path_length - 3] = 'c';
     lookup_path[path_length - 2] = 'v';
     lookup_path[path_length - 1] = '2';
-    if (!function_414010((int32_t)(intptr_t)bitmap, lookup_path))
+    if (!kinoko_bitmap_load_cv2(&bitmap, lookup_path))
         return -0x7789f794;
 
-    bit_depth = bitmap[4];
-    width = *(uint32_t *)(bitmap + 8);
-    height = *(uint32_t *)(bitmap + 12);
-    row_width = *(uint32_t *)(bitmap + 16);
+    bit_depth = bitmap.bit_depth;
+    width = bitmap.width;
+    height = bitmap.height;
+    row_width = bitmap.row_width;
     /* CV2's 16-bit branch is the native A1R5G5B5 texture path used by
        CBitmapData::Load.  It is not an 8-bit grayscale stream. */
     if (bit_depth == 16) {
@@ -4248,7 +4248,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     }
     if (width == 0 || height == 0 || row_width < width || source_pitch == 0 ||
         (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return -0x7789f794;
     }
     if (width_out != NULL)
@@ -4261,13 +4261,13 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     retdec_trace_hresult("texture:create-hr", result);
     retdec_trace_i32("texture:create-object", texture_value);
     if (result < 0 || texture_value == 0) {
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return result;
     }
     texture = (IDirect3DTexture9 *)(intptr_t)texture_value;
     if (texture->lpVtbl == NULL) {
         retdec_trace("texture:create-no-vtable");
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     memset(&locked_rect, 0, sizeof(locked_rect));
@@ -4279,21 +4279,21 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     retdec_trace_i32("texture:lock-pitch", locked_rect.Pitch);
     if (result < 0) {
         texture->lpVtbl->Release(texture);
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return result;
     }
     if (locked_rect.pBits == NULL || locked_rect.Pitch <= 0) {
         retdec_trace("texture:lock-invalid-surface");
         texture->lpVtbl->UnlockRect(texture, 0);
         texture->lpVtbl->Release(texture);
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     for (row = 0; row < height; ++row) {
         unsigned char *destination = (unsigned char *)locked_rect.pBits +
             (size_t)row * (size_t)locked_rect.Pitch;
         const unsigned char *source =
-            (const unsigned char *)(*(void **)(bitmap + 28)) +
+            bitmap.pixels +
             (size_t)row * source_pitch;
         if (bit_depth == 16) {
             /* 414482 copies pairs of A1R5G5B5 pixels and advances by the
@@ -4314,11 +4314,11 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     retdec_trace_i32("texture:unlock-object", (int32_t)(intptr_t)texture);
     if (texture == NULL || texture->lpVtbl == NULL) {
         retdec_trace("texture:unlock-no-object");
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     texture->lpVtbl->UnlockRect(texture, 0);
-    free(*(void **)(bitmap + 28));
+    kinoko_bitmap_release_pixels(&bitmap);
     *(int32_t *)(intptr_t)texture_out = texture_value;
     return result;
 }
@@ -4582,71 +4582,7 @@ int32_t function_412ca0(void) {
 
 
 // Address range: 0x414010 - 0x4141d9
-int32_t function_414010(int32_t this_ptr, const char *file_name) {
-    KinokoArchiveReader *reader_slot = NULL;
-    KinokoArchiveReader *reader;
-    uint8_t bit_depth;
-    uint32_t width;
-    uint32_t height;
-    uint32_t row_width;
-    uint32_t payload_size;
-    uint32_t allocation_size;
-    void *old_pixels;
-    void *pixels;
-
-    if (this_ptr == 0 || file_name == NULL)
-        return 0;
-    if (!kinoko_reader_open(&reader_slot, file_name))
-        return 0;
-    reader = reader_slot;
-
-    if (!kinoko_reader_read_exact(reader_slot, &bit_depth, 1) ||
-        !kinoko_reader_read_exact(reader_slot, &width, sizeof(width)) ||
-        !kinoko_reader_read_exact(reader_slot, &height, sizeof(height)) ||
-        !kinoko_reader_read_exact(reader_slot, &row_width,
-                                  sizeof(row_width)) ||
-        !kinoko_reader_read_exact(reader_slot, &payload_size,
-                                  sizeof(payload_size))) {
-        kinoko_reader_close(reader);
-        return 0;
-    }
-
-    *(uint8_t *)(intptr_t)(this_ptr + 4) = bit_depth;
-    *(uint32_t *)(intptr_t)(this_ptr + 8) = width;
-    *(uint32_t *)(intptr_t)(this_ptr + 12) = height;
-    *(uint32_t *)(intptr_t)(this_ptr + 16) = row_width;
-    *(uint32_t *)(intptr_t)(this_ptr + 20) = payload_size;
-
-    if (payload_size != 0) {
-        allocation_size = payload_size;
-    } else if (bit_depth < 24) {
-        uint64_t total_bits = (uint64_t)row_width * height * bit_depth;
-        allocation_size = (uint32_t)(total_bits / 8u);
-    } else {
-        uint64_t total_bytes = (uint64_t)row_width * height * 4u;
-        allocation_size = (uint32_t)total_bytes;
-    }
-    if (allocation_size == 0 || allocation_size > 256u * 1024u * 1024u ||
-        (uint64_t)width * height > 64u * 1024u * 1024u) {
-        kinoko_reader_close(reader);
-        return 0;
-    }
-
-    old_pixels = *(void **)(intptr_t)(this_ptr + 28);
-    if (old_pixels != NULL)
-        free(old_pixels);
-    pixels = malloc(allocation_size);
-    if (pixels == NULL ||
-        !kinoko_reader_read_exact(reader_slot, pixels, allocation_size)) {
-        free(pixels);
-        *(void **)(intptr_t)(this_ptr + 28) = NULL;
-        kinoko_reader_close(reader);
-        return 0;
-    }
-    *(void **)(intptr_t)(this_ptr + 28) = pixels;
-    kinoko_reader_close(reader);
-    return 1;
-}
+/* CBitmapData CV2 loading: reconstructed/bitmap.cpp. */
 
 // Address range: 0x415130 - 0x415183
 

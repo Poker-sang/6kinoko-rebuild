@@ -1,0 +1,18 @@
+{
+  "addr": "0x405e30",
+  "code": "int __userpurge sub_405E30@<eax>(int a1@<edi>, int a2)\n{\n  int result; // eax\n  int v3; // esi\n  _DWORD *v4; // eax\n\n  result = a2; /*0x405e33*/\n  if ( a2 != 0 ) /*0x405e38*/\n  {\n    if ( a2 != dword_51AEE8[a1] ) /*0x405e62*/\n    {\n      v3 = *(_DWORD *)dword_51AC38; /*0x405e71*/\n      v4 = (_DWORD *)(*(int (__thiscall **)(int *, int))(dword_51AE48 + 12))(a1: &dword_51AE48, a2); /*0x405e7c*/\n      result = (*(int (__stdcall **)(int, int, _DWORD))(v3 + 260))(a1: dword_51AC38, a2: a1, a3: *v4); /*0x405e8f*/\n      dword_51AEE8[a1] = a2; /*0x405e94*/\n    }\n  }\n  else\n  {\n    (*(void (__stdcall **)(int, int, _DWORD))(*(_DWORD *)dword_51AC38 + 260))(a1: dword_51AC38, a2: a1, a3: 0); /*0x405e4b*/\n    dword_51AEE8[a1] = 0; /*0x405e50*/\n    return 0; /*0x405e4d*/\n  }\n  return result; /*0x405e57*/\n}",
+  "refs": [
+    {
+      "addr": "0x51ac38",
+      "name": "dword_51AC38"
+    },
+    {
+      "addr": "0x51ae48",
+      "name": "dword_51AE48"
+    },
+    {
+      "addr": "0x51aee8",
+      "name": "dword_51AEE8"
+    }
+  ]
+}
