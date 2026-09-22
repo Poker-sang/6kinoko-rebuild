@@ -1,4 +1,3 @@
-#include "kinoko/bitmap.h"
 #include "kinoko/base_utilities.h"
 #include "kinoko/critical_section.h"
 #include "kinoko/script_file.h"
@@ -1623,8 +1622,6 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
 
 
 
-int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
-                        uint32_t *a4, uint32_t *a5);
 
 
 
@@ -4202,126 +4199,7 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 
 // Address range: 0x40e630 - 0x40e849
 
-int32_t function_40e630(int32_t unused, const char *file_name,
-                        int32_t texture_out, uint32_t *width_out,
-                        uint32_t *height_out) {
-    KinokoBitmap bitmap = { 0 };
-    char lookup_path[MAX_PATH];
-    size_t path_length;
-    uint32_t width;
-    uint32_t height;
-    uint32_t bit_depth;
-    uint32_t row_width;
-    uint32_t source_pitch;
-    uint32_t row;
-    int32_t texture_value = 0;
-    int32_t result;
-    D3DFORMAT texture_format;
-    IDirect3DTexture9 *texture;
-    D3DLOCKED_RECT locked_rect;
-
-    (void)unused;
-    if (file_name == NULL || texture_out == 0 || kinoko_graphics.device == 0)
-        return -0x7789f794;
-    path_length = strlen(file_name);
-    if (path_length < 3 || path_length + 1 > sizeof(lookup_path))
-        return -0x7789f794;
-    memcpy(lookup_path, file_name, path_length + 1);
-    lookup_path[path_length - 3] = 'c';
-    lookup_path[path_length - 2] = 'v';
-    lookup_path[path_length - 1] = '2';
-    if (!kinoko_bitmap_load_cv2(&bitmap, lookup_path))
-        return -0x7789f794;
-
-    bit_depth = bitmap.bit_depth;
-    width = bitmap.width;
-    height = bitmap.height;
-    row_width = bitmap.row_width;
-    /* CV2's 16-bit branch is the native A1R5G5B5 texture path used by
-       CBitmapData::Load.  It is not an 8-bit grayscale stream. */
-    if (bit_depth == 16) {
-        source_pitch = (row_width / 2u) * 4u;
-        texture_format = D3DFMT_A1R5G5B5;
-    } else {
-        source_pitch = bit_depth >= 24 ? row_width * 4u : row_width;
-        texture_format = D3DFMT_A8R8G8B8;
-    }
-    if (width == 0 || height == 0 || row_width < width || source_pitch == 0 ||
-        (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
-        kinoko_bitmap_release_pixels(&bitmap);
-        return -0x7789f794;
-    }
-    if (width_out != NULL)
-        *width_out = width;
-    if (height_out != NULL)
-        *height_out = height;
-
-    result = D3DXCreateTexture((int32_t)(intptr_t)kinoko_graphics.device, (int32_t)width, (int32_t)height, 1, 0,
-                               texture_format, 1, &texture_value);
-    retdec_trace_hresult("texture:create-hr", result);
-    retdec_trace_i32("texture:create-object", texture_value);
-    if (result < 0 || texture_value == 0) {
-        kinoko_bitmap_release_pixels(&bitmap);
-        return result;
-    }
-    texture = (IDirect3DTexture9 *)(intptr_t)texture_value;
-    if (texture->lpVtbl == NULL) {
-        retdec_trace("texture:create-no-vtable");
-        kinoko_bitmap_release_pixels(&bitmap);
-        return (int32_t)E_FAIL;
-    }
-    memset(&locked_rect, 0, sizeof(locked_rect));
-    result = texture->lpVtbl->LockRect(texture, 0, &locked_rect, NULL, 0);
-    retdec_trace_hresult("texture:lock-hr", result);
-    retdec_trace_i32("texture:lock-object", (int32_t)(intptr_t)texture);
-    retdec_trace_i32("texture:lock-bits",
-                     (int32_t)(intptr_t)locked_rect.pBits);
-    retdec_trace_i32("texture:lock-pitch", locked_rect.Pitch);
-    if (result < 0) {
-        texture->lpVtbl->Release(texture);
-        kinoko_bitmap_release_pixels(&bitmap);
-        return result;
-    }
-    if (locked_rect.pBits == NULL || locked_rect.Pitch <= 0) {
-        retdec_trace("texture:lock-invalid-surface");
-        texture->lpVtbl->UnlockRect(texture, 0);
-        texture->lpVtbl->Release(texture);
-        kinoko_bitmap_release_pixels(&bitmap);
-        return (int32_t)E_FAIL;
-    }
-    for (row = 0; row < height; ++row) {
-        unsigned char *destination = (unsigned char *)locked_rect.pBits +
-            (size_t)row * (size_t)locked_rect.Pitch;
-        const unsigned char *source =
-            bitmap.pixels +
-            (size_t)row * source_pitch;
-        if (bit_depth == 16) {
-            /* 414482 copies pairs of A1R5G5B5 pixels and advances by the
-               stored row width.  CV2 rows can be wider than the image. */
-            memcpy(destination, source, (size_t)(width / 2u) * 4u);
-        } else if (bit_depth == 32 || bit_depth == 24) {
-            memcpy(destination, source, (size_t)width * 4u);
-        } else {
-            for (uint32_t column = 0; column < width; ++column) {
-                unsigned char value = source[column];
-                destination[column * 4u + 0] = value;
-                destination[column * 4u + 1] = value;
-                destination[column * 4u + 2] = value;
-                destination[column * 4u + 3] = 0xff;
-            }
-        }
-    }
-    retdec_trace_i32("texture:unlock-object", (int32_t)(intptr_t)texture);
-    if (texture == NULL || texture->lpVtbl == NULL) {
-        retdec_trace("texture:unlock-no-object");
-        kinoko_bitmap_release_pixels(&bitmap);
-        return (int32_t)E_FAIL;
-    }
-    texture->lpVtbl->UnlockRect(texture, 0);
-    kinoko_bitmap_release_pixels(&bitmap);
-    *(int32_t *)(intptr_t)texture_out = texture_value;
-    return result;
-}
+/* CV2 image upload: reconstructed/texture_image.cpp. */
 
 /* ACT stores texture names without a file extension.  Its CActResource2D
    loader asks the asset system for the corresponding CV2 bitmap, then keeps a

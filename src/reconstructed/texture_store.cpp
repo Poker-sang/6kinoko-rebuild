@@ -1,5 +1,6 @@
 #include "kinoko/graphics_device.h"
 #include "kinoko/texture_store.h"
+#include "kinoko/texture_image.h"
 #include "kinoko/com_owner.hpp"
 
 #include <array>
@@ -8,8 +9,6 @@
 #include <d3d9.h>
 
 extern "C" {
-int32_t function_40e630(int32_t unused, const char *path, int32_t texture_out,
-                      uint32_t *width, uint32_t *height);
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY] = {};
 }
 
@@ -58,15 +57,15 @@ extern "C" int32_t kinoko_texture_acquire(const char *path) {
                 return handle;
             }
         }
-        int32_t texture_value = 0;
+        IDirect3DTexture9 *texture_value = nullptr;
         uint32_t width = 0, height = 0;
-        if (function_40e630(0, path, reinterpret_cast<int32_t>(&texture_value),
+        if (kinoko_texture_load_image(path, &texture_value,
                            &width, &height) < 0 || !texture_value)
             return 0;
         // Loading transfers one COM reference. Registration adopts it only on
         // success; a full store leaves the temporary responsible for release.
         kinoko::ComOwner<IDirect3DBaseTexture9> texture(
-            reinterpret_cast<IDirect3DBaseTexture9 *>(texture_value));
+            static_cast<IDirect3DBaseTexture9 *>(texture_value));
         const auto handle = kinoko_texture_register(texture.get(), width, height);
         if (!handle) return 0;
         texture.detach();

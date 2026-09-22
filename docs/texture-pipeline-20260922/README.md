@@ -54,3 +54,28 @@ uses square-only device caps and calls 4141E0 for raw or run-length upload.
 The inherited rebuilt uploader currently has raw 16/24/32 paths and an 8-bit
 grayscale fallback. Merely typing its interfaces does not close these original
 mode/palette/RLE gaps. They must remain explicit until separately recovered.
+
+## Batch 2: texture image upload
+
+40E630 is now kinoko_texture_load_image with a real IDirect3DTexture9** result,
+typed source dimensions and scoped Bitmap/ComOwner lifetimes. The store adopts
+that reference directly; no texture pointer crosses an integer ABI. Integer
+casts remain only at the existing diagnostic address output boundary.
+The bitmap pixels are released on every exit; a failed LockRect or invalid
+surface releases the created COM reference, while success transfers it to the
+caller and registration then transfers it into the texture store.
+
+Original assembly restores two concrete omissions in the prior C uploader:
+SQUAREONLY caps square the allocation after source dimensions are published,
+and the existing recursive graphics lock surrounds D3DXCreateTexture. The
+managed pool, one mip level, raw 16-bit pair copies and padded source row
+strides remain. The existing uploader returns LockRect status and ignores
+UnlockRect status; original's differing failure-return policy is not claimed
+recovered here. Invalid COM objects with no methods retain the previous
+non-releasable boundary rather than calling an invalid Release function.
+
+texture_image_contract uses fake COM/bitmap inputs to cover 16/24/32-bit rows,
+odd-width 16-bit untouched tails, source versus square dimensions, lock scope,
+create/lock/bits failures and single reference transfer. texture_store_contract
+now stubs the typed loader. Both are compile-only. RLE, indexed palette and
+loose BMP mode remain outside this batch as described above.

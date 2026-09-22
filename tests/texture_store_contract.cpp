@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <d3d9.h>
 #include "kinoko/texture_store.h"
+#include "kinoko/texture_image.h"
 #include <cstdio>
 #include <cstring>
 
@@ -40,11 +41,11 @@ static HRESULT WINAPI set_texture(IDirect3DDevice9 *, DWORD stage,
 static IDirect3DBaseTexture9Vtbl texture_vtable = {};
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-int32_t function_40e630(int32_t, const char *path, int32_t out,
+HRESULT kinoko_texture_load_image(const char *path, IDirect3DTexture9 **out,
                       uint32_t *width, uint32_t *height) {
     if (std::strstr(path, "missing")) return E_FAIL;
     auto *texture = new Texture{&texture_vtable, 1};
-    *reinterpret_cast<Texture **>(out) = texture;
+    *out = reinterpret_cast<IDirect3DTexture9 *>(texture);
     *width = 256; *height = 128; ++loads;
     return S_OK;
 }

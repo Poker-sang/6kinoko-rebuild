@@ -75,6 +75,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
+    src/reconstructed/texture_image.cpp
     src/reconstructed/bitmap.cpp
     src/reconstructed/texture_store.cpp
     src/reconstructed/map_containers.cpp
@@ -491,6 +492,10 @@ add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
 
+add_executable(kinoko_texture_image_contract tests/texture_image_contract.cpp src/reconstructed/texture_image.cpp)
+target_include_directories(kinoko_texture_image_contract PRIVATE include)
+add_test(NAME texture_image_contract COMMAND kinoko_texture_image_contract)
+
 add_executable(kinoko_bitmap_contract tests/bitmap_contract.cpp src/reconstructed/bitmap.cpp)
 target_include_directories(kinoko_bitmap_contract PRIVATE include)
 add_test(NAME bitmap_contract COMMAND kinoko_bitmap_contract)
@@ -797,6 +802,7 @@ target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
 add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_texture_image_contract
     kinoko_bitmap_contract
     kinoko_actor_state_contract
     kinoko_map_manager_contract
