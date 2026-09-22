@@ -149,7 +149,6 @@ int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
 int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer);
-int32_t retdec_c2dlayout_update_impl(int32_t layout);
 int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
 static int32_t retdec_construct_actor_manager(int32_t this_ptr);

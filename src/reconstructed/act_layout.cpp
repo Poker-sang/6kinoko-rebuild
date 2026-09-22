@@ -1,318 +1,25 @@
+#include "kinoko/act_layout_render.hpp"
+#include "kinoko/act_draw_records.hpp"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
-#include "kinoko/act_layer_access.h"
-// Native C++ continuation of the recovered ACT path. Original function names
-// remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
-#include "kinoko/act_host.h"
-#include "kinoko/diagnostics.h"
-#include "kinoko/legacy_memory.hpp"
-#include "kinoko/sqrat_object_bridge.h"
-#include "kinoko/native_property_bridge.h"
-#include "kinoko/squirrel_binding.h"
-#include "kinoko/squirrel_native_calls.h"
-#include "kinoko/squirrel_game_objects.h"
-#include "kinoko/squirrel_native_arguments.h"
-#include "kinoko/squirrel_host_compat.h"
-#include "kinoko/squirrel_legacy_api.h"
-#include "kinoko/squirrel_source_runtime.h"
-#include "kinoko/squirrel_compile_bridge.h"
-#include "kinoko/squirrel_value_bridge.h"
-#include "kinoko/actor_methods.h"
-#include "kinoko/actor_animation.h"
-#include "kinoko/actor_cleanup.h"
-#include "kinoko/act_clone.h"
-#include "kinoko/act_resource.h"
-#include "kinoko/actor_lifecycle.h"
-#include "kinoko/legacy_method_entries.h"
-#include "kinoko/script_callbacks.h"
-#include "kinoko/squirrel_object.h"
+#include "kinoko/act_layer_access.h"
 #include "kinoko/texture_store.h"
-#include "kinoko/map_render.h"
-#include "kinoko/sprite.h"
+#include "kinoko/diagnostics.h"
 #include "kinoko/game_math.h"
-#include <windows.h>
-#include <d3d9.h>
 #include <algorithm>
-#include <cmath>
 #include <cstring>
-#include <cstdlib>
-
+using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
-using kinoko::legacy::field;
-
-namespace {
-// 42C470: bind only an already-loaded CActResource2D. This helper never opens
-// a file; loading belongs to the document's separate 4289C0 resource pass.
-int32_t bind_loaded_texture(int32_t layout) {
-    const auto layer = field<int32_t>(layout + 304);
-    if (!layer) return E_FAIL;
-    const auto resource = field<int32_t>(layer + 100);
-    if (!resource) return E_FAIL;
-    struct Descriptor { void *vtable, *cache; char name[sizeof(".?AVCActResource2D@@")]; };
-    static const Descriptor type{nullptr, nullptr, ".?AVCActResource2D@@"};
-    using Query = uint8_t (__thiscall *)(void *, const void *, void **);
-    const auto *table = field<const unsigned char *>(resource);
-    void *converted = nullptr;
-    if (!kinoko::legacy::load<Query>(table + 8)(pointer(resource), &type, &converted)) return E_FAIL;
-    const auto texture = address(converted);
-    const auto handle = field<int32_t>(texture + 68);
-    if (!handle) return E_FAIL;
-    if (!field<uint8_t>(layout + 312)) {
-        const auto half_width = field<float>(texture + 88) * 0.5f;
-        const auto half_height = field<float>(texture + 92) * 0.5f;
-        field<float>(layout + 248) = half_width;
-        field<float>(layout + 252) = half_height;
-        field<float>(layout + 272) = half_width;
-        field<float>(layout + 276) = half_height;
-        field<uint8_t>(layout + 312) = 1;
-    }
-    field<int32_t>(layout + 308) = handle;
-    return 0;
+extern "C" float function_404130(long double);
+extern "C" float function_4040d0(long double);
+extern "C" int32_t retdec_set_texture_stage(int32_t,int32_t);
+extern "C" void retdec_trace_i32(const char *,int32_t);
+float retdec_sprite_scale_about(float value,float pivot,float scale) {
+    return (value-pivot)*scale+pivot;
 }
-}
-
-int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
-                                                int32_t layer)
-{
-    int32_t resource;
-    int32_t handle;
-
-    if (layout == 0 || layer == 0)
-        return -0x7fffbffb;
-    field<int32_t>(layout + 0x130) = layer;
-    /* CActLayerLayout is a pointer view over the active C2DLayout.  The
-       original 42BA50 writes these aliases before layer properties are
-       accessed through CActLayer's _get/_set tables. */
-    field<int32_t>(layer + 4) = layout + 236;
-    field<int32_t>(layer + 8) = layout + 240;
-    field<int32_t>(layer + 12) = layout + 244;
-    field<int32_t>(layer + 16) = layout + 248;
-    field<int32_t>(layer + 20) = layout + 252;
-    field<int32_t>(layer + 24) = layout + 256;
-    field<int32_t>(layer + 28) = layout + 260;
-    field<int32_t>(layer + 32) = layout + 264;
-    field<int32_t>(layer + 36) = layout + 268;
-    field<int32_t>(layer + 40) = layout + 272;
-    field<int32_t>(layer + 44) = layout + 276;
-    field<int32_t>(layer + 48) = layout + 280;
-    field<int32_t>(layer + 52) = layout + 284;
-    field<int32_t>(layer + 56) = layout + 288;
-    field<int32_t>(layer + 60) = layout + 292;
-    field<int32_t>(layer + 64) = layout + 296;
-    field<int32_t>(layer + 68) = layout + 300;
-    resource = field<int32_t>(layer + 0x64);
-    // 42BCC0 only attempts binding when this layout has no cached handle.
-    if (!field<int32_t>(layout + 308)) bind_loaded_texture(layout);
-    handle = field<int32_t>(layout + 308);
-    retdec_trace_i32("layout:bind-layer", layer);
-    retdec_trace_i32("layout:bind-resource", resource);
-    retdec_trace_i32("layout:bind-texture", handle);
-    return 0;
-}
-
-void retdec_c2dlayout_world_position(int32_t layer,
-                                             float *x,
-                                             float *y,
-                                             float *z)
-{
-    kinoko_act_layer_world_position(pointer<KinokoActLayer>(layer), nullptr, x, y, z);
-}
-
-int32_t retdec_c2dlayout_update_impl(int32_t layout)
-{
-    int32_t layer;
-    int32_t resource;
-    int32_t handle;
-    uint32_t texture_width = 0;
-    uint32_t texture_height = 0;
-    float source_x;
-    float source_y;
-    float source_width;
-    float source_height;
-    float scale_x;
-    float scale_y;
-    float world_x;
-    float world_y;
-    float world_z;
-    float left;
-    float top;
-    float right;
-    float bottom;
-    float angle;
-    uint32_t color;
-    int32_t sprite;
-    float *vertex;
-    unsigned int alpha;
-    int32_t red;
-    int32_t green;
-    int32_t blue;
-
-    if (layout == 0)
-        return -0x7fffbffb;
-    layer = field<int32_t>(layout + 0x130);
-    if (layer == 0)
-        return -0x7fffbffb;
-    if (field<uint8_t>(layer + 0x8c) == 0)
-        return 0;
-    resource = field<int32_t>(layer + 0x64);
-    if (resource == 0)
-        return -0x7fffbffb;
-    handle = field<int32_t>(resource + 0x44);
-    if (!field<int32_t>(layout + 308) || field<int32_t>(layout + 308) != handle)
-        bind_loaded_texture(layout);
-    handle = field<int32_t>(layout + 308);
-    if (handle == 0)
-        return -0x7fffbffb;
-
-    if ((uint32_t)handle < KINOKO_TEXTURE_CAPACITY) {
-        texture_width = kinoko_texture_slots[(uint32_t)handle].width;
-        texture_height = kinoko_texture_slots[(uint32_t)handle].height;
-    }
-    if (texture_width == 0)
-        texture_width = (uint32_t)field<int32_t>(resource + 72);
-    if (texture_height == 0)
-        texture_height = (uint32_t)field<int32_t>(resource + 76);
-    if (texture_width == 0 || texture_height == 0)
-        return -0x7fffbffb;
-
-    source_x = field<float>(resource + 80);
-    source_y = field<float>(resource + 84);
-    source_width = field<float>(resource + 88);
-    source_height = field<float>(resource + 92);
-    if (source_width <= 0.0f)
-        source_width = (float)field<int32_t>(resource + 72);
-    if (source_height <= 0.0f)
-        source_height = (float)field<int32_t>(resource + 76);
-    if (source_width <= 0.0f || source_height <= 0.0f)
-        return -0x7fffbffb;
-
-    sprite = layout + 4;
-    field<int32_t>(sprite + 4) = handle;
-    field<float>(sprite + 120) = (float)texture_width;
-    field<float>(sprite + 124) = (float)texture_height;
-    field<float>(sprite + 224) =
-        source_width / (float)texture_width;
-    field<float>(sprite + 228) =
-        source_height / (float)texture_height;
-    field<float>(sprite + 28) =
-        source_x / (float)texture_width;
-    field<float>(sprite + 32) =
-        source_y / (float)texture_height;
-    field<float>(sprite + 56) =
-        (source_x + source_width) / (float)texture_width;
-    field<float>(sprite + 60) =
-        source_y / (float)texture_height;
-    field<float>(sprite + 84) =
-        field<float>(sprite + 28);
-    field<float>(sprite + 88) =
-        (source_y + source_height) / (float)texture_height;
-    field<float>(sprite + 112) =
-        field<float>(sprite + 56);
-    field<float>(sprite + 116) =
-        field<float>(sprite + 88);
-
-    /* Keep the source rectangle in the CSpriteEx fields used by 405800's
-       original callers, then write the transformed positions in the fields
-       consumed by the userpurge draw routine. */
-    field<float>(sprite + 128) = 0.0f;
-    field<float>(sprite + 132) = 0.0f;
-    field<float>(sprite + 136) = 0.0f;
-    field<float>(sprite + 140) = source_width;
-    field<float>(sprite + 144) = 0.0f;
-    field<float>(sprite + 148) = 0.0f;
-    field<float>(sprite + 152) = 0.0f;
-    field<float>(sprite + 156) = source_height;
-    field<float>(sprite + 160) = 0.0f;
-    field<float>(sprite + 164) = source_width;
-    field<float>(sprite + 168) = source_height;
-    field<float>(sprite + 172) = 0.0f;
-
-    retdec_c2dlayout_world_position(layer, &world_x, &world_y, &world_z);
-    scale_x = field<float>(layout + 260);
-    scale_y = field<float>(layout + 264);
-    if (scale_x == 0.0f)
-        scale_x = 1.0f;
-    if (scale_y == 0.0f)
-        scale_y = 1.0f;
-    right = world_x + source_width * scale_x;
-    bottom = world_y + source_height * scale_y;
-    left = world_x;
-    top = world_y;
-
-    angle = field<float>(layout + 244);
-    if (angle != 0.0f) {
-        float pivot_x = world_x +
-            field<float>(layout + 248) * scale_x;
-        float pivot_y = world_y +
-            field<float>(layout + 252) * scale_y;
-        float cosine = cosf(angle);
-        float sine = sinf(angle);
-        float points[4][2] = {
-            { left, top }, { right, top },
-            { left, bottom }, { right, bottom }
-        };
-        unsigned int index;
-        for (index = 0; index < 4; ++index) {
-            float dx = points[index][0] - pivot_x;
-            float dy = points[index][1] - pivot_y;
-            points[index][0] = pivot_x + dx * cosine - dy * sine;
-            points[index][1] = pivot_y + dx * sine + dy * cosine;
-        }
-        field<float>(layout + 180) = points[0][0];
-        field<float>(layout + 184) = points[0][1];
-        field<float>(layout + 192) = points[1][0];
-        field<float>(layout + 196) = points[1][1];
-        field<float>(layout + 204) = points[2][0];
-        field<float>(layout + 208) = points[2][1];
-        field<float>(layout + 216) = points[3][0];
-        field<float>(layout + 220) = points[3][1];
-    } else {
-        field<float>(layout + 180) = left;
-        field<float>(layout + 184) = top;
-        field<float>(layout + 192) = right;
-        field<float>(layout + 196) = top;
-        field<float>(layout + 204) = left;
-        field<float>(layout + 208) = bottom;
-        field<float>(layout + 216) = right;
-        field<float>(layout + 220) = bottom;
-    }
-    field<float>(layout + 188) = world_z;
-    field<float>(layout + 200) = world_z;
-    field<float>(layout + 212) = world_z;
-    field<float>(layout + 224) = world_z;
-
-    alpha = (unsigned int)(field<float>(layout + 284) * 255.0f);
-    if (alpha > 255u)
-        alpha = 255u;
-    red = field<int32_t>(layout + 292);
-    green = field<int32_t>(layout + 296);
-    blue = field<int32_t>(layout + 300);
-    if (red < 0) red = 0;
-    if (green < 0) green = 0;
-    if (blue < 0) blue = 0;
-    if (red > 255) red = 255;
-    if (green > 255) green = 255;
-    if (blue > 255) blue = 255;
-    color = (alpha << 24) | ((uint32_t)red << 16) |
-            ((uint32_t)green << 8) | (uint32_t)blue;
-    vertex = pointer<float>(sprite + 8);
-    field<uint32_t>(sprite + 24) = color;
-    field<uint32_t>(sprite + 52) = color;
-    field<uint32_t>(sprite + 80) = color;
-    field<uint32_t>(sprite + 108) = color;
-    (void)vertex;
-    return 0;
-}
-
-float retdec_sprite_scale_about(float value,
-                                           float pivot,
-                                           float scale)
-{
-    return (value - pivot) * scale + pivot;
-}
-
 void retdec_sprite_scale_faithful(int32_t sprite,
                                           float scale_x,
                                           float pivot_x,
@@ -430,319 +137,134 @@ void retdec_sprite_translate_faithful(int32_t sprite,
     }
 }
 
-int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
-{
-    int32_t layer;
-    int32_t resource;
-    int32_t handle;
-    uint32_t texture_width = 0;
-    uint32_t texture_height = 0;
-    float source_x;
-    float source_y;
-    float source_width;
-    float source_height;
-    float scale_x;
-    float scale_y;
-    float scale_z;
-    float world_x = 0.0f;
-    float world_y = 0.0f;
-    float world_z = 0.0f;
-    int32_t source_left;
-    int32_t source_top;
-    int32_t source_width_i;
-    int32_t source_height_i;
-    int32_t sprite;
-    unsigned int alpha;
-    int32_t alpha_value;
-    int32_t red;
-    int32_t green;
-    int32_t blue;
-    uint32_t color;
-    uint32_t index;
-    static volatile LONG diagnostic_count;
-    LONG diagnostic_index;
 
-    if (layout == 0)
-        return -0x7fffbffb;
-    diagnostic_index = InterlockedIncrement(&diagnostic_count);
-    layer = field<int32_t>(layout + 0x130);
-    if (layer == 0)
-        return -0x7fffbffb;
-    if (field<uint8_t>(layer + 0x8c) == 0)
-        return 0;
-    resource = field<int32_t>(layer + 0x64);
-    if (resource == 0)
-        return -0x7fffbffb;
-
-    handle = field<int32_t>(resource + 0x44);
-    if (!field<int32_t>(layout + 308) || field<int32_t>(layout + 308) != handle)
-        bind_loaded_texture(layout);
-    handle = field<int32_t>(layout + 308);
-    if (handle == 0)
-        return -0x7fffbffb;
-    field<int32_t>(layout + 0x134) = handle;
-
-    if ((uint32_t)handle < KINOKO_TEXTURE_CAPACITY) {
-        texture_width = kinoko_texture_slots[(uint32_t)handle].width;
-        texture_height = kinoko_texture_slots[(uint32_t)handle].height;
+namespace kinoko::act {
+namespace {
+using native::RecordView;
+using View=RecordView<Layout2DRecord>;
+using LayerView=kinoko::map::LayerView;
+using Layer=kinoko::map::LayerRecord;
+using Texture=TextureResourcePrefix;
+KinokoActResource *texture_resource(KinokoActLayer *layer) {
+    auto *resource=LayerView(layer).get(&Layer::resource);
+    if(!resource) return nullptr;
+    using Query=uint8_t (__thiscall *)(KinokoActResource *,const void *,KinokoActResource **);
+    struct Descriptor { void *methods,*cache;char name[sizeof(".?AVCActResource2D@@")]; };
+    static const Descriptor type{nullptr,nullptr,".?AVCActResource2D@@"};
+    struct Methods { void *prefix[2];Query query; };
+    const auto *methods=legacy::load<const Methods *>(resource);
+    KinokoActResource *converted=nullptr;
+    return methods->query(resource,&type,&converted) ? converted : nullptr;
+}
+int32_t bind_texture(KinokoActLayout *layout) {
+    const View view(layout);
+    auto *layer=view.get(&Layout2DRecord::layer);
+    if(!layer) return E_FAIL;
+    auto *resource=texture_resource(layer);
+    if(!resource) return E_FAIL;
+    const RecordView<Texture> texture(resource);
+    const auto handle=texture.get(&Texture::texture);
+    if(!handle) return E_FAIL;
+    if(!view.get(&Layout2DRecord::pivots_initialized)) {
+        auto rotation=view.get(&Layout2DRecord::rotation_pivot);
+        auto scale=view.get(&Layout2DRecord::scale_pivot);
+        rotation.x=scale.x=texture.get(&Texture::source_width)*0.5f;
+        rotation.y=scale.y=texture.get(&Texture::source_height)*0.5f;
+        view.set(&Layout2DRecord::rotation_pivot,rotation);view.set(&Layout2DRecord::scale_pivot,scale);
+        view.set(&Layout2DRecord::pivots_initialized,uint8_t{1});
     }
-    if (texture_width == 0)
-        texture_width = (uint32_t)field<int32_t>(resource + 72);
-    if (texture_height == 0)
-        texture_height = (uint32_t)field<int32_t>(resource + 76);
-    if (texture_width == 0 || texture_height == 0)
-        return -0x7fffbffb;
-
-    source_x = field<float>(resource + 80);
-    source_y = field<float>(resource + 84);
-    source_width = field<float>(resource + 88);
-    source_height = field<float>(resource + 92);
-    if (source_width <= 0.0f)
-        source_width = (float)field<int32_t>(resource + 72);
-    if (source_height <= 0.0f)
-        source_height = (float)field<int32_t>(resource + 76);
-    if (source_width <= 0.0f || source_height <= 0.0f)
-        return -0x7fffbffb;
-
-    if (diagnostic_index <= 8) {
-        retdec_trace_i32("c2d:diag-layout", layout);
-        retdec_trace_i32("c2d:diag-layer", layer);
-        retdec_trace_i32("c2d:diag-dst-x",
-                         field<int32_t>(layer + 0x90));
-        retdec_trace_i32("c2d:diag-dst-y",
-                         field<int32_t>(layer + 0x94));
-        retdec_trace_i32("c2d:diag-dst-z",
-                         field<int32_t>(layer + 0x98));
-        retdec_trace_i32("c2d:diag-scale-x",
-                         field<int32_t>(layout + 260));
-        retdec_trace_i32("c2d:diag-scale-y",
-                         field<int32_t>(layout + 264));
-        retdec_trace_i32("c2d:diag-scale-z",
-                         field<int32_t>(layout + 268));
-        retdec_trace_i32("c2d:diag-pivot-x",
-                         field<int32_t>(layout + 272));
-        retdec_trace_i32("c2d:diag-pivot-y",
-                         field<int32_t>(layout + 276));
-        retdec_trace_i32("c2d:diag-pivot-z",
-                         field<int32_t>(layout + 280));
-        retdec_trace_i32("c2d:diag-angle-x",
-                         field<int32_t>(layout + 236));
-        retdec_trace_i32("c2d:diag-angle-y",
-                         field<int32_t>(layout + 240));
-        retdec_trace_i32("c2d:diag-angle-z",
-                         field<int32_t>(layout + 244));
-    }
-
-    /* 404EE0 receives the ACT rectangle as four truncated integers. */
-    source_left = (int32_t)source_x;
-    source_top = (int32_t)source_y;
-    source_width_i = (int32_t)source_width;
-    source_height_i = (int32_t)source_height;
-    sprite = layout + 4;
-    field<int32_t>(sprite + 4) = handle;
-    field<float>(sprite + 120) = (float)texture_width;
-    field<float>(sprite + 124) = (float)texture_height;
-    field<float>(sprite + 224) =
-        (float)source_width_i / (float)texture_width;
-    field<float>(sprite + 228) =
-        (float)source_height_i / (float)texture_height;
-    field<float>(sprite + 28) =
-        (float)source_left / (float)texture_width;
-    field<float>(sprite + 32) =
-        (float)source_top / (float)texture_height;
-    field<float>(sprite + 56) =
-        (float)(source_left + source_width_i) /
-        (float)texture_width;
-    field<float>(sprite + 60) =
-        (float)source_top / (float)texture_height;
-    field<float>(sprite + 84) =
-        field<float>(sprite + 28);
-    field<float>(sprite + 88) =
-        (float)(source_top + source_height_i) /
-        (float)texture_height;
-    field<float>(sprite + 112) =
-        field<float>(sprite + 56);
-    field<float>(sprite + 116) =
-        field<float>(sprite + 88);
-
-    field<float>(sprite + 128) = 0.0f;
-    field<float>(sprite + 132) = 0.0f;
-    field<float>(sprite + 136) = 0.0f;
-    field<float>(sprite + 140) = (float)source_width_i;
-    field<float>(sprite + 144) = 0.0f;
-    field<float>(sprite + 148) = 0.0f;
-    field<float>(sprite + 152) = 0.0f;
-    field<float>(sprite + 156) = (float)source_height_i;
-    field<float>(sprite + 160) = 0.0f;
-    field<float>(sprite + 164) = (float)source_width_i;
-    field<float>(sprite + 168) = (float)source_height_i;
-    field<float>(sprite + 172) = 0.0f;
-
-    /* 42C100 copies the untransformed sprite geometry before applying the
-       scale, Euler rotations, and layer translation in that order. */
-    std::memcpy(pointer<void>(layout + 180),
-           pointer<const void>(layout + 132), 12u * sizeof(float));
-    scale_x = field<float>(layout + 260);
-    scale_y = field<float>(layout + 264);
-    scale_z = field<float>(layout + 268);
-    if (scale_x == 0.0f) scale_x = 1.0f;
-    if (scale_y == 0.0f) scale_y = 1.0f;
-    if (scale_z == 0.0f) scale_z = 1.0f;
-    retdec_sprite_scale_faithful(
-        sprite, scale_x, field<float>(layout + 272),
-        scale_y, field<float>(layout + 276),
-        scale_z, field<float>(layout + 280));
-    retdec_sprite_rotate_faithful(
-        sprite,
-        field<float>(layout + 236),
-        field<float>(layout + 240),
-        field<float>(layout + 244),
-        field<float>(layout + 248),
-        field<float>(layout + 252),
-        field<float>(layout + 256));
-
-    // Shared recovered 41EF50 parent-chain position calculation.
-    retdec_c2dlayout_world_position(layer, &world_x, &world_y, &world_z);
-    retdec_sprite_translate_faithful(sprite, world_x, world_y, world_z);
-
-    alpha_value = (int32_t)(field<float>(layout + 284) * 255.0f);
-    if (alpha_value < 0) alpha_value = 0;
-    if (alpha_value > 255) alpha_value = 255;
-    alpha = (unsigned int)alpha_value;
-    red = field<int32_t>(layout + 292);
-    green = field<int32_t>(layout + 296);
-    blue = field<int32_t>(layout + 300);
-    if (red < 0) red = 0;
-    if (green < 0) green = 0;
-    if (blue < 0) blue = 0;
-    if (red > 255) red = 255;
-    if (green > 255) green = 255;
-    if (blue > 255) blue = 255;
-    color = (alpha << 24) | ((uint32_t)red << 16) |
-            ((uint32_t)green << 8) | (uint32_t)blue;
-    for (index = 0; index < 4; ++index)
-        field<uint32_t>(sprite + 24u + index * 28u) = color;
-    if (diagnostic_index <= 8) {
-        retdec_trace_i32("c2d:diag-v0-x",
-                         field<int32_t>(layout + 180));
-        retdec_trace_i32("c2d:diag-v0-y",
-                         field<int32_t>(layout + 184));
-        retdec_trace_i32("c2d:diag-v1-x",
-                         field<int32_t>(layout + 192));
-        retdec_trace_i32("c2d:diag-v1-y",
-                         field<int32_t>(layout + 196));
-        retdec_trace_i32("c2d:diag-v2-x",
-                         field<int32_t>(layout + 204));
-        retdec_trace_i32("c2d:diag-v2-y",
-                         field<int32_t>(layout + 208));
-        retdec_trace_i32("c2d:diag-v3-x",
-                         field<int32_t>(layout + 216));
-        retdec_trace_i32("c2d:diag-v3-y",
-                         field<int32_t>(layout + 220));
-    }
+    view.set(&Layout2DRecord::texture,handle);return 0;
+}
+}
+int32_t bind_layout_2d(KinokoActLayout *layout,KinokoActLayer *layer) {
+    if(!layout || !layer) return E_FAIL;
+    const View view(layout);
+    view.set(&Layout2DRecord::layer,layer);
+    // 42BA50 exposes aliases to 17 consecutive transform/color property words.
+    struct Aliases { const void *methods;std::array<void *,17> properties; };
+    const RecordView<Aliases> aliases(layer);
+    auto pointers=aliases.get(&Aliases::properties);
+    auto *first=view.bytes(&Layout2DRecord::rotation);
+    for(size_t i=0;i<pointers.size();++i) pointers[i]=first+i*sizeof(float);
+    aliases.set(&Aliases::properties,pointers);
+    if(!view.get(&Layout2DRecord::texture)) bind_texture(layout);
     return 0;
 }
-
-int32_t retdec_c2dlayout_draw_impl(int32_t layout,
-                                           float x, float y)
-{
-    int32_t result;
-    int32_t layer;
-    int32_t visibility_layer;
-    uint32_t guard = 0;
-    int32_t *vtable;
-    IDirect3DDevice9 *device;
-    DWORD old_src_blend = 0;
-    DWORD old_dest_blend = 0;
-    DWORD old_blend_op = 0;
-    DWORD old_alpha_blend = 0;
-    int states_saved = 0;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (layout == 0)
-        return -0x7fffbffb;
-    layer = field<int32_t>(layout + 0x130);
-    if (layer == 0)
-        return -0x7fffbffb;
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 16) {
-        retdec_trace_i32("c2d:layout", layout);
-        retdec_trace_i32("c2d:layer", layer);
-        retdec_trace_i32("c2d:layer-id",
-                         field<int32_t>(layer + 0x68));
-        retdec_trace_i32("c2d:parent-id",
-                         field<int32_t>(layer + 0x6c));
-        retdec_trace_i32("c2d:visible",
-                         field<int32_t>(layer + 0x8c));
-        retdec_trace_i32("c2d:resource",
-                         field<int32_t>(layer + 0x64));
-        retdec_trace_i32("c2d:handle",
-                         field<int32_t>(layout + 0x134));
-        retdec_trace_i32("c2d:blend",
-                         field<int32_t>(layout + 0x120));
-        retdec_trace_squirrel_name(
-            "c2d:layer-name",
-            address(retdec_std_string_data(layer + 0x70)));
-        if (field<int32_t>(layer + 0x64) != 0) {
-            int32_t bound_resource =
-                field<int32_t>(layer + 0x64);
-            retdec_trace_squirrel_name(
-                "c2d:texture-name",
-                address(retdec_std_string_data(
-                    bound_resource + 40)));
-        }
-    }
-    visibility_layer = layer;
-    while (visibility_layer != 0 && guard++ < 64u) {
-        if (field<uint8_t>(visibility_layer + 0x8c) == 0) {
-            if (trace_index <= 16)
-                retdec_trace("c2d:skip-invisible");
-            return 0;
-        }
-        visibility_layer =
-            field<int32_t>(visibility_layer + 0x58);
-    }
-
-    /* 42C300 surrounds every sprite with the renderer's alpha-blend state.
-       Without this, the A8R8G8B8 ACT textures are submitted but their
-       transparent pixels become opaque black/white rectangles. */
-    device = kinoko_graphics.device;
-    if (device != nullptr &&
-        SUCCEEDED(device->GetRenderState(D3DRS_SRCBLEND, &old_src_blend)) &&
-        SUCCEEDED(device->GetRenderState(D3DRS_DESTBLEND, &old_dest_blend)) &&
-        SUCCEEDED(device->GetRenderState(D3DRS_BLENDOP, &old_blend_op)) &&
-        SUCCEEDED(device->GetRenderState(D3DRS_ALPHABLENDENABLE, &old_alpha_blend))) {
-        states_saved = 1;
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-        device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-        /* ACT layout blend=1 is the normal source-alpha composition mode. */
-        if (field<int32_t>(layout + 0x120) == 1) {
-            device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-            device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-        }
-    }
-    result = retdec_c2dlayout_update_faithful_impl(layout);
-    if (trace_index <= 16)
-        retdec_trace_i32("c2d:update-result", result);
-    if (result < 0)
-        goto restore_render_state;
-    vtable = field<int32_t *>(layout + 0);
-    if (vtable == nullptr) {
-        result = -0x7fffbffb;
-        goto restore_render_state;
-    }
-    if (trace_index <= 16)
-        retdec_trace("c2d:submit");
-    result = kinoko_quad_submit(pointer<KinokoQuad>(layout + 4), x, y);
-
-restore_render_state:
-    retdec_set_texture_stage(0, 0);
-    if (states_saved) {
-        device->SetRenderState(D3DRS_SRCBLEND, old_src_blend);
-        device->SetRenderState(D3DRS_DESTBLEND, old_dest_blend);
-        device->SetRenderState(D3DRS_BLENDOP, old_blend_op);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, old_alpha_blend);
-    }
-    return result;
+int32_t update_layout_2d(KinokoActLayout *layout) {
+    if(!layout) return E_FAIL;
+    const View view(layout);
+    auto *layer=view.get(&Layout2DRecord::layer);
+    if(!layer) return E_FAIL;
+    if(!LayerView(layer).get(&Layer::visible)) return 0;
+    auto *resource=texture_resource(layer);
+    if(!resource) return E_FAIL;
+    const auto texture=RecordView<Texture>(resource).load();
+    if(!view.get(&Layout2DRecord::texture) || view.get(&Layout2DRecord::texture)!=texture.texture) bind_texture(layout);
+    const int handle=view.get(&Layout2DRecord::texture);
+    if(!handle || static_cast<uint32_t>(handle)>=KINOKO_TEXTURE_CAPACITY) return E_FAIL;
+    const auto &slot=kinoko_texture_slots[handle];
+    if(!slot.width || !slot.height) return E_FAIL; // inherited invalid-texture boundary
+    auto quad=view.get(&Layout2DRecord::quad);
+    quad.texture=handle;quad.texture_width=static_cast<float>(slot.width);quad.texture_height=static_cast<float>(slot.height);
+    const auto left=static_cast<int32_t>(texture.source_x),top=static_cast<int32_t>(texture.source_y);
+    const auto width=static_cast<int32_t>(texture.source_width),height=static_cast<int32_t>(texture.source_height);
+    const float u=left/quad.texture_width,v=top/quad.texture_height;
+    quad.source_u_extent=width/quad.texture_width;quad.source_v_extent=height/quad.texture_height;
+    quad.vertices[0].u=quad.vertices[2].u=u;quad.vertices[0].v=quad.vertices[1].v=v;
+    quad.vertices[1].u=quad.vertices[3].u=u+quad.source_u_extent;
+    quad.vertices[2].v=quad.vertices[3].v=v+quad.source_v_extent;
+    quad.base_positions={{{-0.0f,-0.0f,0},{static_cast<float>(width),-0.0f,0},
+        {-0.0f,static_cast<float>(height),0},{static_cast<float>(width),static_cast<float>(height),0}}};
+    quad.positions=quad.base_positions;
+    const auto scale=view.get(&Layout2DRecord::scale),pivot=view.get(&Layout2DRecord::scale_pivot);
+    retdec_sprite_scale_faithful(address(&quad),scale.x,pivot.x,scale.y,pivot.y,scale.z,pivot.z);
+    const auto rotation=view.get(&Layout2DRecord::rotation),center=view.get(&Layout2DRecord::rotation_pivot);
+    retdec_sprite_rotate_faithful(address(&quad),rotation.x,rotation.y,rotation.z,center.x,center.y,center.z);
+    Position3 world{};
+    using Position=void (__thiscall *)(KinokoActLayer *,float *,float *,float *);
+    const auto *methods=LayerView(layer).get(&Layer::methods);
+    legacy::load<Position>(methods+7*sizeof(void*))(layer,&world.x,&world.y,&world.z);
+    retdec_sprite_translate_faithful(address(&quad),world.x,world.y,world.z);
+    const auto alpha=std::clamp(static_cast<int32_t>(static_cast<double>(view.get(&Layout2DRecord::alpha))*255.0),0,255);
+    // Original uses the LOW BYTE of each integer color, not saturation.
+    const uint32_t color=(static_cast<uint32_t>(alpha)<<24)|
+        (uint32_t(static_cast<uint8_t>(view.get(&Layout2DRecord::red)))<<16)|
+        (uint32_t(static_cast<uint8_t>(view.get(&Layout2DRecord::green)))<<8)|
+        static_cast<uint8_t>(view.get(&Layout2DRecord::blue));
+    for(auto &vertex:quad.vertices) vertex.color=color;
+    view.set(&Layout2DRecord::quad,quad);
+    return 0;
+}
+int32_t draw_layout_2d(KinokoActLayout *layout,float x,float y) {
+    if(!layout) return E_FAIL;
+    const View view(layout);
+    auto *layer=view.get(&Layout2DRecord::layer);
+    if(!layer) return E_FAIL;
+    if(!LayerView(layer).get(&Layer::visible)) return 0;
+    if(!texture_resource(layer)) return E_FAIL;
+    auto *device=kinoko_graphics.device;
+    if(!device) return E_FAIL; // inherited absent-device boundary
+    const D3DRENDERSTATETYPE types[]={D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_BLENDOP,D3DRS_ALPHABLENDENABLE};
+    DWORD saved[4]{};
+    for(int i=0;i<4;++i) device->GetRenderState(types[i],&saved[i]);
+    device->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    set_layout_blend(view.get(&Layout2DRecord::blend));
+    retdec_set_texture_stage(0,view.get(&Layout2DRecord::texture));
+    kinoko_quad_submit(reinterpret_cast<KinokoQuad *>(view.bytes(&Layout2DRecord::quad)),x,y);
+    retdec_set_texture_stage(0,0);
+    for(int i=0;i<4;++i) device->SetRenderState(types[i],saved[i]);
+    return 0; // original ignores submit HRESULT; update belongs to PrepareDraw
+}
+}
+extern "C" int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,int32_t layer) {
+    return kinoko::act::bind_layout_2d(pointer<KinokoActLayout>(layout),pointer<KinokoActLayer>(layer));
+}
+extern "C" int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout) {
+    return kinoko::act::update_layout_2d(pointer<KinokoActLayout>(layout));
+}
+extern "C" int32_t retdec_c2dlayout_draw_impl(int32_t layout,float x,float y) {
+    return kinoko::act::draw_layout_2d(pointer<KinokoActLayout>(layout),x,y);
+}
+extern "C" void retdec_c2dlayout_world_position(int32_t layer,float *x,float *y,float *z) {
+    kinoko_act_layer_world_position(pointer<KinokoActLayer>(layer),nullptr,x,y,z);
 }

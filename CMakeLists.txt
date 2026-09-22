@@ -68,6 +68,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/device_runtime.cpp
     src/reconstructed/device_initialization.cpp
     src/reconstructed/quad_submit.cpp
+    src/reconstructed/act_render_state.cpp
     src/reconstructed/render_state.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
@@ -229,6 +230,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/archive_random.cpp
     src/reconstructed/render_target.cpp
     src/reconstructed/render_queue.cpp
+    src/reconstructed/string_layout_render.cpp
     src/reconstructed/string_render.cpp
     src/reconstructed/string_font.cpp
     src/reconstructed/string_text.cpp
@@ -663,6 +665,13 @@ add_executable(kinoko_camera_contract tests/camera_contract.cpp
 target_include_directories(kinoko_camera_contract PRIVATE include)
 add_test(NAME camera_contract COMMAND kinoko_camera_contract)
 
+add_executable(kinoko_act_layout_render_contract tests/act_layout_render_contract.cpp
+    src/reconstructed/act_layout.cpp src/reconstructed/string_layout_render.cpp
+    src/reconstructed/act_render_state.cpp src/reconstructed/render_state.cpp)
+target_include_directories(kinoko_act_layout_render_contract PRIVATE include)
+target_link_libraries(kinoko_act_layout_render_contract PRIVATE kinoko_legacy_string user32)
+add_test(NAME act_layout_render_contract COMMAND kinoko_act_layout_render_contract)
+
 add_executable(kinoko_map_chip_cache_contract tests/map_chip_cache_contract.cpp
     src/reconstructed/map_chip_cache.cpp src/reconstructed/act_map.cpp
     src/reconstructed/map_layout_lifetime.cpp src/reconstructed/native_buffer.cpp)
@@ -721,6 +730,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_lifecycle_contract
     kinoko_actor_manager_contract
     kinoko_actor_render_contract
+    kinoko_act_layout_render_contract
     kinoko_map_chip_cache_contract
     kinoko_map_visible_contract
     kinoko_camera_contract

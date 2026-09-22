@@ -245,7 +245,7 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version)
 {
     uint8_t has_layout;
-    uint32_t layout_type;
+    uint32_t layout_type = 0;
     int32_t layout;
 
     if (!key || version != 1 || !kinoko_act_read_key_properties(key, reader_ptr)) {
