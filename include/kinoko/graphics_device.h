@@ -19,6 +19,7 @@ typedef struct KinokoGraphics {
     int32_t unknown_state;
 } KinokoGraphics;
 extern KinokoGraphics kinoko_graphics;
+void kinoko_graphics_initialize_runtime(void);
 int32_t kinoko_graphics_create(HWND window,int32_t width,int32_t height);
 int32_t kinoko_graphics_release(void);
 int32_t kinoko_graphics_reset(void);

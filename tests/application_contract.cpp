@@ -1,3 +1,4 @@
+#include "kinoko/critical_section.h"
 #include "kinoko/game_runtime.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/timer_events.h"
@@ -12,7 +13,7 @@
 
 extern "C" {
 KinokoRenderer kinoko_renderer{};
-CRITICAL_SECTION g676{};
+KinokoCriticalSection kinoko_graphics_lock{};
 KinokoGraphics kinoko_graphics{};
 int32_t g534 = 0;
 char g874 = 0;
@@ -36,7 +37,7 @@ int32_t __fastcall kinoko_renderer_before_reset(KinokoRenderer*, void*) { return
 void kinoko_remove_device_listener(KinokoDeviceListener*) {}
 int32_t kinoko_ime_dispatch(int32_t, uint32_t, uint32_t, int32_t) { return 0; }
 unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) noexcept(false) { return 0; }
-int32_t function_408650(void*, HWND) { return 0; }
+int32_t kinoko_process_initialize(HINSTANCE, HWND) { return 0; }
 int32_t kinoko_input_initialize(HWND, HINSTANCE) { return 0; }
 int32_t kinoko_input_shutdown() { return 0; }
 int32_t kinoko_input_open_keyboard() { return 0; }
@@ -66,7 +67,7 @@ template<class T, class U> T method(U callback) { return reinterpret_cast<T>(cal
 }
 int main() {
     using namespace kinoko::application;
-    InitializeCriticalSection(&g676);
+    InitializeCriticalSection(&kinoko_graphics_lock.native);
     ManagerMethods manager_methods{};
     manager_methods.update = method<decltype(manager_methods.update)>(manager_update);
     manager_methods.draw = method<decltype(manager_methods.draw)>(manager_draw);
@@ -104,7 +105,7 @@ int main() {
     update_frame();
     CHECK(!state.is_running() && state.requested_scene == -1 && state.frame_count == 1);
     state.scene = nullptr; state.config.manager = nullptr; state.config.transition = nullptr;
-    DeleteCriticalSection(&g676);
+    DeleteCriticalSection(&kinoko_graphics_lock.native);
     std::puts("PASS: typed application callbacks, transition IDs, deferred destruction and scene exit");
 }
 

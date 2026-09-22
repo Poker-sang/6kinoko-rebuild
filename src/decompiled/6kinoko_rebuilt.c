@@ -1,3 +1,5 @@
+#include "kinoko/base_utilities.h"
+#include "kinoko/critical_section.h"
 #include "kinoko/script_file.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/map_manager.h"
@@ -773,9 +775,7 @@ struct vtable_4eb45c_type {
     int32_t (*e4)();
 };
 
-struct vtable_4eb498_type {
-    int32_t (*e0)(char);
-};
+
 
 struct vtable_4eb59c_type {
     int32_t (*e0)(char);
@@ -1490,7 +1490,6 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
 
 
-int32_t function_401040(void);
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height);
 int32_t function_4013d0(void);
 int32_t function_4014d0(void);
@@ -1539,8 +1538,6 @@ float32_t function_4040d0(float80_t a1);
 float32_t function_404130(float80_t a1);
 
 
-int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4);
-int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4045c0(int32_t a1, int32_t a2);
 
 
@@ -1587,17 +1584,10 @@ int32_t function_408320(int32_t this_ptr);
 int32_t function_4083e0(int32_t this_ptr, int32_t a1, int32_t a2,
                        int32_t a3, int32_t a4);
 
-int32_t function_408530(int32_t result);
-int32_t function_408550(int32_t result, int32_t a2);
 
 
-int32_t function_408650(void *this_ptr, HWND hwnd);
-int32_t function_4086e0(int32_t a1, int32_t * a2, int32_t a3);
 
 
-static int32_t function_4087e0_this(int32_t this_ptr);
-int32_t function_408800(char a1);
-int32_t function_408830(void);
 
 
 
@@ -2608,8 +2598,7 @@ char g673 = 0; // 0x51ac10
 char g674 = 0; // 0x51ac11
 KinokoRenderer kinoko_renderer = {0};
 KinokoGraphics kinoko_graphics = {0};
-int32_t g675 = 0; // 0x51ac18
-struct retdec_RTL_CRITICAL_SECTION g676 = { 0 }; // 0x51ac1c
+KinokoCriticalSection kinoko_graphics_lock = { 0 }; // 0x51ac18
  // 0x51ae0c
 int32_t g722[3] = { 0, 0, 0 }; // 0x51ae34
 int32_t g723 = 0; // 0x51ae40
@@ -2646,7 +2635,6 @@ int32_t g753 = 0; // 0x51af04
  // 0x51af08
  // 0x51af0c
  // 0x51af10
-char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
 unsigned char g_retdec_keyboard_state[256];
@@ -3094,9 +3082,7 @@ struct vtable_4eb20c_type g184 = {
 }; // 0x4eb20c
  // 0x4eb330
  // 0x4eb45c
-struct vtable_4eb498_type g190 = {
-    .e0 = function_408800
-}; // 0x4eb498
+ // 0x4eb498
  // 0x4eb59c
  // 0x4eb5cc
  // 0x4eb5fc
@@ -3351,7 +3337,7 @@ static void retdec_initialize_runtime_objects(void)
     // These are the constructors normally reached through the original
     // C++ CRT initializer table. The replacement entry point does not run
     // that table, so initialize the subsystems before loading the DATs.
-    function_401040();
+    kinoko_graphics_initialize_runtime();
     function_401850();
     kinoko_initialize_texture_cache();
     kinoko_archive_initialize();
@@ -3407,14 +3393,6 @@ static void retdec_initialize_runtime_objects(void)
 // Address range: 0x401040 - 0x4011a5
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_401040(void) {
-    g675=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g676);
-    kinoko_initialize_device_listeners();
-    kinoko_graphics.factory=NULL;kinoko_graphics.device=NULL;kinoko_graphics.swap_chain=NULL;kinoko_graphics.unknown_state=0;
-    return (int32_t)&g675;
-}
-
 // Address range: 0x4011b0 - 0x4013c5
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
     return kinoko_graphics_create(hwnd,width,height);
@@ -3600,47 +3578,6 @@ float32_t function_404130(float80_t a1) {
 
 
 // Address range: 0x404390 - 0x404429
-int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {
-    z_stream stream = { 0 };
-    int status;
-    int32_t written;
-    if (a1 == 0 || a2 < 0 || a3 == NULL || a4 <= 0 ||
-        deflateInit(&stream, Z_DEFAULT_COMPRESSION) != Z_OK)
-        return 0;
-    stream.next_in = (Bytef *)(intptr_t)a1;
-    stream.avail_in = (uInt)a2;
-    stream.next_out = (Bytef *)a3;
-    stream.avail_out = (uInt)a4;
-    status = deflate(&stream, Z_FINISH);
-    written = a4 - (int32_t)stream.avail_out;
-    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
-        deflateEnd(&stream);
-        return 0;
-    }
-    return deflateEnd(&stream) == Z_OK ? written : 0;
-}
-
-// Address range: 0x404430 - 0x4044c7
-int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    z_stream stream = { 0 };
-    int status;
-    int32_t written;
-    if (a1 == 0 || a2 <= 0 || a3 == 0 || a4 <= 0 ||
-        inflateInit(&stream) != Z_OK)
-        return 0;
-    stream.next_in = (Bytef *)(intptr_t)a1;
-    stream.avail_in = (uInt)a2;
-    stream.next_out = (Bytef *)(intptr_t)a3;
-    stream.avail_out = (uInt)a4;
-    status = inflate(&stream, Z_NO_FLUSH);
-    written = a4 - (int32_t)stream.avail_out;
-    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
-        inflateEnd(&stream);
-        return 0;
-    }
-    return inflateEnd(&stream) == Z_OK ? written : 0;
-}
-
 // Address range: 0x4044d0 - 0x4045bd
 
 
@@ -4018,137 +3955,6 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 
 
 // Address range: 0x408530 - 0x40854b
-int32_t function_408530(int32_t result) {
-    // 0x408530
-    *(int32_t *)(result + 4) = 0;
-    int32_t v1; // 0x408530
-    *(int32_t *)(result + 8) = *(int32_t *)(v1 + 12);
-    return result;
-}
-
-// Address range: 0x408550 - 0x40858e
-int32_t function_408550(int32_t result, int32_t a2) {
-    int32_t * v1 = (int32_t *)result; // 0x40856c
-    *v1 = 0;
-    *(int32_t *)(result + 4) = 0;
-    int32_t v2; // 0x408550
-    *(int32_t *)(result + 8) = *(int32_t *)(v2 + 8) + a2;
-    if (v2 == 0) {
-        // 0x40858a
-        return result;
-    }
-    int32_t v3 = *(int32_t *)v2; // 0x408580
-    if (v3 != 0) {
-        // 0x408586
-        *v1 = *(int32_t *)v3;
-    }
-    // 0x40858a
-    return result;
-}
-
-
-// Address range: 0x408650 - 0x4086d8
-int32_t function_408650(void *this_ptr, HWND hwnd) {
-    char module_path[MAX_PATH];
-    char *separator;
-    DWORD length;
-
-    (void)this_ptr;
-    g767 = (char *)hwnd;
-    ZeroMemory(module_path, sizeof(module_path));
-    length = GetModuleFileNameA(NULL, module_path, (DWORD)sizeof(module_path));
-    if (length == 0 || length >= sizeof(module_path)) {
-        g766[0] = 0;
-        return 0;
-    }
-
-    separator = strrchr(module_path, '\\');
-    if (separator == NULL) {
-        separator = strrchr(module_path, '/');
-    }
-    if (separator != NULL) {
-        separator[1] = 0;
-    } else {
-        module_path[0] = 0;
-    }
-    strcpy_s(g766, sizeof(g766), module_path);
-    if (g766[0] != 0) {
-        SetCurrentDirectoryA(g766);
-    }
-    return 1;
-}
-
-// Address range: 0x4086e0 - 0x4087a6
-int32_t function_4086e0(int32_t a1, int32_t * a2, int32_t a3) {
-    char drive[260] = { 0 };
-    char directory[260] = { 0 };
-    char filename[260] = { 0 };
-    char extension[260] = { 0 };
-    const char *path = (const char *)(intptr_t)a1;
-    char *output = (char *)(intptr_t)a2;
-
-    if (path == NULL || output == NULL)
-        return 0;
-    if (_splitpath_s(path, drive, sizeof(drive), directory,
-                     sizeof(directory), filename, sizeof(filename),
-                     extension, sizeof(extension)) != 0) {
-        output[0] = 0;
-        if (a3 != 0)
-            *(char *)(intptr_t)a3 = 0;
-        return 0;
-    }
-    if (a3 == 0) {
-        strcpy_s(output, 260, drive);
-        strcat_s(output, 260, directory);
-    } else {
-        strcpy_s((char *)(intptr_t)a3, 260, filename);
-        strcat_s((char *)(intptr_t)a3, 260, extension);
-        strcpy_s(output, 260, drive);
-        strcat_s(output, 260, directory);
-    }
-    return 0;
-}
-
-
-/* Common::CCriticalSection constructor with its original __thiscall
-   receiver restored. */
-static int32_t function_4087e0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g190;
-    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)
-                               (intptr_t)(this_ptr + 4));
-    return this_ptr;
-}
-
-// Address range: 0x408800 - 0x40882c
-// From class:    .?AVCCriticalSection@Common@@
-// Type:          constructor
-int32_t function_408800(char a1) {
-    // 0x408800
-    int32_t result; // 0x408800
-    *(int32_t *)result = (int32_t)&g190;
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(result + 4));
-    if ((a1 & 1) != 0) {
-        // 0x40881c
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x408825
-    return result;
-}
-
-// Address range: 0x408830 - 0x408841
-// From class:    .?AVCCriticalSection@Common@@
-// Type:          constructor
-int32_t function_408830(void) {
-    // 0x408830
-    int32_t v1; // 0x408830
-    *(int32_t *)v1 = (int32_t)&g190;
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(v1 + 4));
-    return &g1224;
-}
-
-
 // Address range: 0x408930 - 0x4089be
 
 
@@ -12295,7 +12101,7 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 /* Immutable host identities; audio code owns no retdec global VM state. */
 const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static struct KinokoAudioHostSymbols symbols;
-    symbols.critical_section_vtable = &g190;
+    symbols.critical_section_vtable = &kinoko_critical_section_methods;
     symbols.device_error_message = g209;
     return &symbols;
 }
@@ -12422,5 +12228,5 @@ int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_
 int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear((KinokoMapManager *)g_retdec_map_manager_state); return 0; }
 
 void kinoko_game_split_path(const char *path, char *directory) {
-    function_4086e0((int32_t)(intptr_t)path, (int32_t *)directory, 0);
+    kinoko_path_split(path, directory, NULL);
 }

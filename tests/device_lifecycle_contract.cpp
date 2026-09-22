@@ -1,3 +1,4 @@
+#include "kinoko/critical_section.h"
 // Compiled with the build; execution is reserved for the user.
 #define CINTERFACE
 #include "kinoko/renderer.h"
@@ -8,7 +9,7 @@
 extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
-CRITICAL_SECTION g676;
+KinokoCriticalSection kinoko_graphics_lock{};
 int32_t g746,g747,g748,g749,g750,g751,g752,g753;
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 int32_t kinoko_texture_register(void*,uint32_t,uint32_t) { return 0; }
@@ -37,7 +38,7 @@ static HRESULT STDMETHODCALLTYPE stage(IDirect3DDevice9*,DWORD,D3DTEXTURESTAGEST
 static HRESULT STDMETHODCALLTYPE clear(IDirect3DDevice9*,DWORD,const D3DRECT*,DWORD flags,D3DCOLOR,float,DWORD) { calls.push_back(4000+flags);return 23; }
 #define CHECK(x) do { if(!(x)) { std::fprintf(stderr,"device line %d\n",__LINE__);return 1; } } while(0)
 int main() {
-    InitializeCriticalSection(&g676);
+    InitializeCriticalSection(&kinoko_graphics_lock.native);
     IDirect3DDevice9Vtbl methods{};
     methods.Reset=reset;methods.GetSwapChain=get_chain;methods.SetRenderTarget=bind;
     methods.GetRenderTarget=render_surface;methods.GetDepthStencilSurface=depth_surface;
@@ -82,6 +83,6 @@ int main() {
     CHECK(kinoko_renderer.present_pending==0);
     calls.clear();CHECK(kinoko_renderer_before_reset(&kinoko_renderer,nullptr)==17);
     CHECK((calls==std::vector<int>{8,8}) && kinoko_renderer.backbuffer==&surface);
-    DeleteCriticalSection(&g676);
+    DeleteCriticalSection(&kinoko_graphics_lock.native);
     return 0;
 }

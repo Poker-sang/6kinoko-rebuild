@@ -1,10 +1,14 @@
 #include "kinoko/script_callbacks.h"
+#include "kinoko/script_file.h"
 #include "kinoko/squirrel_game_objects.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/sqrat_object_bridge.h"
 #include "squirrel_bridge_test_support.hpp"
 #include <cstdlib>
 #include <vector>
+
+static_assert(!noexcept(kinoko_script_load_file(nullptr, nullptr)), "SqPlus file load may throw across C linkage");
+static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), "owning argument must unwind on file errors");
 
 extern "C" {
 char* g644 = nullptr;

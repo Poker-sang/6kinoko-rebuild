@@ -142,6 +142,15 @@ add_library(kinoko_zlib STATIC
 )
 target_include_directories(kinoko_zlib PUBLIC ${KINOKO_ZLIB_DIR})
 
+add_library(kinoko_base_utilities STATIC
+    src/reconstructed/buffer_codec.cpp
+    src/reconstructed/process_paths.cpp
+    src/reconstructed/critical_section.cpp)
+target_include_directories(kinoko_base_utilities PUBLIC include)
+target_compile_options(kinoko_base_utilities PRIVATE /Gy)
+target_link_libraries(kinoko_base_utilities PUBLIC kinoko_zlib)
+target_link_libraries(kinoko_native_methods PUBLIC kinoko_base_utilities)
+
 add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
     src/decompiled/retdec_asm_stubs.c
@@ -687,6 +696,9 @@ add_test(NAME boost_control_contract COMMAND kinoko_boost_control_contract)
 set_tests_properties(boost_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
+add_executable(kinoko_base_utilities_contract tests/base_utilities_contract.cpp)
+target_link_libraries(kinoko_base_utilities_contract PRIVATE kinoko_base_utilities)
+add_test(NAME base_utilities_contract COMMAND kinoko_base_utilities_contract)
 target_include_directories(kinoko_native_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
@@ -805,7 +817,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract
-    kinoko_actor_manager_contract kinoko_application_contract
+    kinoko_actor_manager_contract kinoko_application_contract kinoko_base_utilities_contract
     kinoko_actor_render_contract
     kinoko_act_layout_render_contract
     kinoko_mesh_layout_contract

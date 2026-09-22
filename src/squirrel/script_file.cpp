@@ -51,7 +51,7 @@ private:
 };
 }
 
-extern "C" void* kinoko_script_initialize_root() {
+extern "C" void* kinoko_script_initialize_root() noexcept(false) {
     retdec_trace("402aa0:begin");
     kinoko_sqplus_select_vm(nullptr);
     retdec_trace("402aa0:after-debug");
@@ -70,7 +70,7 @@ extern "C" int32_t kinoko_script_close_vm() {
     return kinoko_sqplus_release_vm_wrappers();
 }
 
-extern "C" int32_t kinoko_script_load_file(const char* path, const void* environment) {
+extern "C" int32_t kinoko_script_load_file(const char* path, const void* environment) noexcept(false) {
     retdec_trace("402d40:entry");
     retdec_trace_i32("402d40:archives", kinoko_archive_count);
     if (!path) return 0;
@@ -132,7 +132,7 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
 }
 
 extern "C" int32_t kinoko_script_compile_file_argument(int32_t path, int32_t,
-    int32_t argument_vm, int32_t type, int32_t data, char owns_reference) {
+    int32_t argument_vm, int32_t type, int32_t data, char owns_reference) noexcept(false) {
     const auto value = borrowed_value(type, data);
     // Destruction order: SqPlus temporary first, incoming Sqrat argument last.
     HSQOBJECT incoming;
@@ -144,7 +144,7 @@ extern "C" int32_t kinoko_script_compile_file_argument(int32_t path, int32_t,
     return static_cast<unsigned char>(kinoko_script_load_file(pointer<const char>(path), &environment));
 }
 
-extern "C" int32_t kinoko_script_show_call_stack() {
+extern "C" int32_t kinoko_script_show_call_stack() noexcept(false) {
     retdec_trace("402af0:entry");
     auto vm = reinterpret_cast<HSQUIRRELVM>(g644);
     const auto root = ObjectView(kinoko_sqplus_root_object()).value();

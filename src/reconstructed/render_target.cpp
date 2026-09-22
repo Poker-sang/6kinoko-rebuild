@@ -1,3 +1,4 @@
+#include "kinoko/critical_section.h"
 #include "kinoko/renderer.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/act_draw_records.hpp"
@@ -16,7 +17,7 @@
 #include "kinoko/legacy_abi.h"
 extern "C" {
 extern int32_t g746,g747,g748,g749,g750,g751,g752,g753;
-extern CRITICAL_SECTION g676;
+
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
                                 D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
 }

@@ -1,3 +1,4 @@
+#include "kinoko/base_utilities.h"
 #include "kinoko/game_runtime.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/timer_events.h"
@@ -22,7 +23,6 @@
 
 extern "C" {
 void retdec_trace(const char*);
-int32_t function_408650(void*, HWND);
 int32_t function_412ca0(void);
 extern int32_t g534;
 extern char g874;
@@ -125,7 +125,7 @@ bool initialize(const Configuration& configuration) {
     kinoko_seed_random(timeGetTime());
     state.com_initialized = SUCCEEDED(CoInitialize(nullptr));
     if (!state.com_initialized) return false;
-    function_408650(configuration.instance, configuration.window);
+    kinoko_process_initialize(configuration.instance, configuration.window);
     if (!configuration.show_cursor) ShowCursor(FALSE);
     InterlockedExchange(&state.running, 1);
     if (configuration.graphics) {

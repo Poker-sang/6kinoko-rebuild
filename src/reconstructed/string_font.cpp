@@ -1,3 +1,4 @@
+#include "kinoko/critical_section.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/string_font.h"
 #include "kinoko/legacy_memory.hpp"
@@ -15,7 +16,7 @@
 
 extern "C" {
 extern char *g767;
-extern CRITICAL_SECTION g676;
+
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
                                 D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
 }
@@ -30,8 +31,8 @@ void clear_pixels(int32_t r) {
     pixels(r)->clear();
 }
 struct GraphicsLock {
-    GraphicsLock() { EnterCriticalSection(&g676); }
-    ~GraphicsLock() { LeaveCriticalSection(&g676); }
+    GraphicsLock() { EnterCriticalSection(&kinoko_graphics_lock.native); }
+    ~GraphicsLock() { LeaveCriticalSection(&kinoko_graphics_lock.native); }
 };
 // 40F1C0/40F2E0. Each character creates/selects a font, then restores the DC.
 struct FontSession {

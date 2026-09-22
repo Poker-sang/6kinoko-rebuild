@@ -1,3 +1,4 @@
+#include "kinoko/critical_section.h"
 #include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/graphics_lock.hpp"
@@ -52,24 +53,24 @@ extern "C" int32_t kinoko_graphics_toggle_window(void) {
 }
 
 extern "C" int32_t kinoko_graphics_begin_scene(void) {
-    EnterCriticalSection(&g676);
+    EnterCriticalSection(&kinoko_graphics_lock.native);
     auto *device=kinoko_graphics.device;
-    if (!device) { LeaveCriticalSection(&g676);return 0; }
+    if (!device) { LeaveCriticalSection(&kinoko_graphics_lock.native);return 0; }
     const auto status=device->BeginScene();
     static volatile LONG traces;
     if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("401760:beginscene-hr",status);
     // 40177D compares exactly against zero, not merely SUCCEEDED(status).
-    if (status!=D3D_OK) { LeaveCriticalSection(&g676);return 0; }
+    if (status!=D3D_OK) { LeaveCriticalSection(&kinoko_graphics_lock.native);return 0; }
     return 1;
 }
 extern "C" int32_t kinoko_graphics_end_scene(void) {
     if (auto *device=kinoko_graphics.device)
         retdec_trace_hresult("401790:endscene-hr",device->EndScene());
-    LeaveCriticalSection(&g676);
+    LeaveCriticalSection(&kinoko_graphics_lock.native);
     return 0;
 }
 extern "C" int32_t kinoko_graphics_present(void) {
-    if (!kinoko_renderer.present_pending || !TryEnterCriticalSection(&g676)) return 0;
+    if (!kinoko_renderer.present_pending || !TryEnterCriticalSection(&kinoko_graphics_lock.native)) return 0;
     auto *swap_chain=kinoko_graphics.swap_chain;
     // Retain the existing null-swap-chain startup boundary. The normal path
     // clears pending only on D3D_OK, retaining it on WASSTILLDRAWING/failure.
@@ -78,7 +79,7 @@ extern "C" int32_t kinoko_graphics_present(void) {
     static volatile LONG traces;
     if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("4017b0:present-hr",status);
     if (status==D3D_OK) kinoko_renderer.present_pending=0;
-    LeaveCriticalSection(&g676);
+    LeaveCriticalSection(&kinoko_graphics_lock.native);
     return status==D3D_OK;
 }
 extern "C" int32_t kinoko_graphics_clear(void) {

@@ -1,3 +1,5 @@
+#include "kinoko/critical_section.h"
+#include "kinoko/render_target.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/diagnostics.h"
 #include <cstring>
@@ -77,4 +79,14 @@ extern "C" int32_t kinoko_graphics_release(void) {
     ULONG result=0;
     if (state.factory) { result=state.factory->Release();state.factory=nullptr; }
     return static_cast<int32_t>(result);
+}
+
+// 401040, invoked once by the reconstructed CRT initialization sequence.
+extern "C" void kinoko_graphics_initialize_runtime() {
+    kinoko_critical_section_construct(&kinoko_graphics_lock);
+    kinoko_initialize_device_listeners();
+    kinoko_graphics.factory = nullptr;
+    kinoko_graphics.device = nullptr;
+    kinoko_graphics.swap_chain = nullptr;
+    kinoko_graphics.unknown_state = 0;
 }

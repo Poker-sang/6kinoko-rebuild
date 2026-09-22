@@ -1,3 +1,4 @@
+#include "kinoko/base_utilities.h"
 #include <windows.h>
 #include <cstdint>
 #include <cstdlib>
@@ -10,8 +11,6 @@ extern "C" {
 extern char* g644;
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
-int32_t function_404390(int32_t, int32_t, int32_t*, int32_t);
-int32_t function_404430(int32_t, int32_t, int32_t, int32_t);
 int32_t function_4722e0(int32_t*, int32_t, int32_t, int32_t);
 int32_t function_472820(int32_t*, int32_t, int32_t, int32_t);
 }
@@ -321,9 +320,7 @@ extern "C" int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
         bytes_read != encoded_size)
         goto cleanup;
 
-    stream[2] = function_404430((int32_t)(intptr_t)encoded,
-                          (int32_t)encoded_size,
-                          (int32_t)(intptr_t)decoded, 0x20000);
+    stream[2] = kinoko_decompress_buffer(encoded, (int32_t)encoded_size, decoded, 0x20000);
     retdec_trace_i32("savedata:decoded-size", stream[2]);
     if (stream[2] <= 0)
         goto cleanup;
@@ -379,9 +376,7 @@ extern "C" int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                          table_object[2]))
         goto cleanup;
     retdec_trace_i32("savedata:raw-size", input_stream[1]);
-    encoded_size = (DWORD)function_404390(
-        (int32_t)(intptr_t)raw, input_stream[1],
-        (int32_t *)(intptr_t)encoded, 0x20000);
+    encoded_size = (DWORD)kinoko_compress_buffer(raw, input_stream[1], encoded, 0x20000);
     retdec_trace_i32("savedata:encoded-size", (int32_t)encoded_size);
     if (encoded_size == 0 || encoded_size > 0x20000)
         goto cleanup;
