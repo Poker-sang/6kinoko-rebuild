@@ -38,20 +38,20 @@ void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*,int32_t) {}
 void retdec_trace_squirrel_name(const char*,int32_t) {}
 int32_t kinoko_squirrel_object_vtable() { return 0x12345678; }
-int32_t function_4a94e0_this(int32_t id) { kinoko::script::ObjectView(id).initialize(kinoko_squirrel_object_vtable()); return id; }
-int32_t* function_4a9500_this(int32_t* out,int32_t source) {
+void * kinoko_sqplus_object_initialize(void * id) { kinoko::script::ObjectView(id).initialize(kinoko_squirrel_object_vtable()); return id; }
+void * kinoko_sqplus_object_copy_construct(void * out, const void * source) {
     kinoko::script::ObjectView(out).initialize(kinoko_squirrel_object_vtable());
-    auto v=kinoko::script::ObjectView(source).value(); sq_addref(vm,&v); kinoko::script::ObjectView(out).write(v); return out;
+    auto v=kinoko::script::ObjectView(source).value(); sq_addref(vm,&v); kinoko::script::ObjectView(out).write(v); return (void *)(intptr_t)(out);
 }
-int32_t function_4a95c0_this(int32_t destination,int32_t source) {
-    const kinoko::script::ObjectView dst(destination),src(source);
+void * kinoko_sqplus_object_assign(void * destination, const void * source) {
+    const kinoko::script::ObjectView dst((int32_t)(intptr_t)(destination)),src((int32_t)(intptr_t)(source));
     auto incoming=src.value(),old=dst.value(); sq_addref(vm,&incoming); sq_release(vm,&old); dst.write(incoming); return destination;
 }
-int32_t function_4a9d70_this(int32_t id) {
-    const kinoko::script::ObjectView object(id); auto v=object.value();
-    releases.push_back(v._type); sq_release(vm,&v); object.reset(); return id;
+int32_t  kinoko_sqplus_object_destroy(void * id) {
+    const kinoko::script::ObjectView object((int32_t)(intptr_t)(id)); auto v=object.value();
+    releases.push_back(v._type); sq_release(vm,&v); object.reset(); return (int32_t)(intptr_t)(id);
 }
-int32_t function_4a9840_this(int32_t table,const char* key,int32_t object) {
+int32_t  kinoko_sqplus_object_raw_set_name(void * table, const char* key, const void * object) {
     kinoko::script::ObjectView(table).push(vm); sq_pushstring(vm,key,-1); kinoko::script::ObjectView(object).push(vm);
     const auto result=sq_newslot(vm,-3,SQFalse); sq_pop(vm,1); return SQ_SUCCEEDED(result);
 }
@@ -61,7 +61,7 @@ SQVM* kinoko_actor_default_vm() { return vm; }
 KinokoScriptCallback* kinoko_game_global_callback() { return &callback; }
 KinokoCollisionState* kinoko_game_collision_state() { return reinterpret_cast<KinokoCollisionState*>(&collision_token); }
 void kinoko_game_initialize_callback(KinokoScriptCallback* result) {
-    result->vm=vm; function_4a94e0_this(address(&result->environment)); function_4a94e0_this(address(&result->closure));
+    result->vm=vm; (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&result->environment))); (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&result->closure)));
     sq_pushroottable(vm); result->environment=retain(borrow(-1)); sq_pop(vm,1);
 }
 KinokoActor* kinoko_actor_manager_create(KinokoActorManager* owner,const KinokoOwnedObjectWords* closure,
@@ -111,12 +111,12 @@ void api_contract() {
     kinoko_script_set_init(0x2a,retain(fn),retain(env)); expect_last_release_order();
     sq_pushobject(vm,env); sq_pushstring(vm,"Init002a",-1);
     require(SQ_SUCCEEDED(sq_get(vm,-2)) && sq_gettype(vm,-1)==OT_CLOSURE,"Init hexadecimal name"); sq_pop(vm,2);
-    function_4a94e0_this(address(actor.script_object.data()));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(actor.script_object.data())));
     auto actor_value=retain(env); std::memcpy(actor.script_object.data(),&actor_value,sizeof(actor_value));
     KinokoOwnedObjectWords result{};
     kinoko_script_create_actor(&result,retain(fn),1.25f,-2.5f,3.0f,retain(env));
     require(result.type==OT_TABLE && created==1,"successful actor reference"); expect_last_release_order();
-    function_4a9d70_this(address(&result));
+    kinoko_sqplus_object_destroy((void *)(&result));
     fail_actor=true;
     kinoko_script_create_actor(&result,retain(fn),1.25f,-2.5f,3.0f,retain(env));
     require(result.type==OT_NULL && created==2,"failed actor returns null"); expect_last_release_order();
@@ -136,8 +136,8 @@ void api_contract() {
     require(created==3,"actual VM native adapter");
     evaluate(vm,"setUpdate(null, {});");
     require(callback.closure.type==OT_NULL && callback.environment.type==OT_TABLE,"non closure restores default environment");
-    function_4a9d70_this(address(&callback.closure)); function_4a9d70_this(address(&callback.environment));
-    function_4a9d70_this(address(actor.script_object.data())); sq_pop(vm,2);
+    kinoko_sqplus_object_destroy((void *)(&callback.closure)); kinoko_sqplus_object_destroy((void *)(&callback.environment));
+    kinoko_sqplus_object_destroy((void *)(actor.script_object.data())); sq_pop(vm,2);
     top(vm,0,"balanced API and adapter frames");
 }
 }

@@ -34,13 +34,13 @@ bool publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_st
     {
         Object instance(vm);
         if (!ObjectView(map_class).value()._type ||
-            !function_4a90c0_this(instance.location(), address(map_class))) return false;
-        function_4a95c0_this(address(storage), instance.location());
+            !(int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(instance.location()), (const void *)(map_class)))) return false;
+        (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(storage), (const void *)(intptr_t)(instance.location())));
     }
-    function_4a9bb0_this(address(storage), address(storage));
-    function_4a9840_this(address(root_storage), "map", address(storage));
+    kinoko_sqplus_object_set_instance((void *)(storage), (void *)(storage));
+    kinoko_sqplus_object_raw_set_name((void *)(root_storage), "map", (const void *)(storage));
     Object names(vm);
-    function_4a92e0_this(pointer<int32_t>(names.location()), 0);
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_new_array((void *)(intptr_t)(pointer<int32_t>(names.location())), 0));
     // Original re-reads the holder/count and runtime on every iteration.
     for (int32_t index = 0; index < kinoko_act_source_layer_count(manager.get(&ManagerRecord::source_holder)); ++index) {
         auto *layout = as_map(kinoko_act_layer_layout(manager.get(&ManagerRecord::player), index));
@@ -52,18 +52,18 @@ bool publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_st
         sq_pushstring(vm, name.data(), -1); // Empty names are also present in the original array.
         text.view().capture(vm, -1);
         sq_pop(vm, 1);
-        function_4a9600_this(names.location(), text.location());
+        (int32_t)(intptr_t)(kinoko_sqplus_object_append((void *)(intptr_t)(names.location()), (const void *)(intptr_t)(text.location())));
     }
-    function_4a99f0(names.location());
-    function_4a9840_this(address(storage), "layer_name", names.location());
+    kinoko_sqplus_object_reverse((void *)(intptr_t)(names.location()));
+    kinoko_sqplus_object_raw_set_name((void *)(storage), "layer_name", (const void *)(intptr_t)(names.location()));
     Object root(vm);
-    function_4a95c0_this(root.location(), address(root_storage));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)(root.location()), (const void *)(root_storage)));
     Object current(vm);
     const auto *name = kinoko_act_document_name(manager.get(&ManagerRecord::source_act));
-    function_4aa3a0_this(root.location(), current.location(), name);
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(intptr_t)(root.location()), (void *)(intptr_t)(current.location()), name));
     // 46F99A -> 46F9AF always publishes the lookup result (including null).
     // The old reconstruction indexed current_map+4 in a three-word array.
-    function_4a9840_this(root.location(), "currentMap", current.location());
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(root.location()), "currentMap", (const void *)(intptr_t)(current.location()));
     retdec_trace_squirrel_name("map:act-name", address(name));
     retdec_trace_i32("map:current-map-type", current.view().value()._type);
     retdec_trace_i32("map:current-map-data", data_bits(current.view().value()));

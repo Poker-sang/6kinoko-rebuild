@@ -104,16 +104,16 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(layout[79] == 0);
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
             CHECK(execute_source(vm,root+2,"delete LazyMapProbe;"));
-            retdec_sqrat_release_pair(vm,instance);
-            retdec_sqrat_release_pair(vm,klass);
+            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), instance);
+            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);
         }
         if (query == 2 || query == 3) {
             int32_t runtime[48] = {0}, parent[2] = {g483,g484}, active = 0;
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+52) == 0);
             CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == 0);
             CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
-            CHECK(retdec_sqrat_new_table(vm,parent));
-            CHECK(retdec_sqrat_set_pair(vm,root+2,"RegistrationProbe",parent));
+            CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
+            CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "RegistrationProbe", parent));
             CHECK(execute_source(vm,parent,"resource <- {};"));
             runtime[39] = root[2]; runtime[40] = root[3];
             /* Original 452040 excludes layers with timeline extras. */
@@ -138,7 +138,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
                 *(int32_t*)(intptr_t)(cloned_layer+196) = 0;
             }
             CHECK(execute_source(vm,root+2,"delete RegistrationProbe;"));
-            retdec_sqrat_release_pair(vm,parent);
+            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), parent);
         }
         if (query == 4) {
             int32_t scratch[12] = {0}, cached = 0, hits = 0;

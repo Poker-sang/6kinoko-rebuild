@@ -148,10 +148,10 @@ const char* retdec_std_string_data(int32_t) { return "fixture"; }
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle) {
     if (!stage && !handle) ++test::texture_unbinds; return 0;
 }
-int32_t function_415810_this(int32_t callback) {
+int32_t  kinoko_sqrat_invoke_callback(const void * callback) {
     using namespace test;
-    callbacks.push_back(callback);
-    if (callback == address(current->a + 57)) {
+    callbacks.push_back((int32_t)(intptr_t)(callback));
+    if ((int32_t)(intptr_t)(callback) == address(current->a + 57)) {
         if (mutation == append) current->count(3);
         if (mutation == shrink) current->count(1);
         if (mutation == deactivate) current->runtime[2] = 0;

@@ -20,9 +20,9 @@ void kinoko_native_add_strong(int32_t p) { events.push_back(10); events.push_bac
 void kinoko_native_release_strong(int32_t p) { events.push_back(11); events.push_back(p); }
 void kinoko_native_add_weak(int32_t p) { events.push_back(12); events.push_back(p); }
 void kinoko_native_release_weak(int32_t p) { events.push_back(13); events.push_back(p); }
-int32_t function_4a95c0_this(int32_t out,int32_t in) { std::memmove(pointer(out),pointer(in),12); return out; }
-int32_t *function_4a9500_this(int32_t *out,int32_t in) { std::memcpy(out,pointer(in),12); events.push_back(out[1]); return out; }
-int32_t function_4a9d70_this(int32_t p) { events.push_back(pointer<int32_t>(p)[1]); return p; }
+void * kinoko_sqplus_object_assign(void * out, const void * in) { std::memmove(out,in,12); return out; }
+void * kinoko_sqplus_object_copy_construct(void * out, const void * in) { std::memcpy(out,in,12); events.push_back(out[1]); return (void *)(intptr_t)(out); }
+int32_t  kinoko_sqplus_object_destroy(void * p) { events.push_back(static_cast<int32_t *>(p)[1]); return (int32_t)(intptr_t)(p); }
 int32_t kinoko_actor_clear_script(KinokoActor *actor) {
     CHECK(actor==reinterpret_cast<KinokoActor *>(reset_actor));
     CHECK(!reset_actor->owner && !reset_actor->owner_control && !reset_actor->step && !reset_actor->step_control);

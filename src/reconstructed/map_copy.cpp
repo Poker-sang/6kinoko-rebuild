@@ -9,7 +9,7 @@ using namespace kinoko::map;
 using kinoko::legacy::address;
 extern "C" void kinoko_map_manager_assign(KinokoMapManager *destination, KinokoMapManager *source) {
     const ManagerView out(destination), in(source);
-    function_4a95c0_this(address(destination), address(source));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(destination), (const void *)(source)));
     out.set(&ManagerRecord::source_act, in.get(&ManagerRecord::source_act));
     out.set(&ManagerRecord::source_holder, in.get(&ManagerRecord::source_holder));
     // 470100 copies the two raw owners but transfers auto_ptr's runtime.

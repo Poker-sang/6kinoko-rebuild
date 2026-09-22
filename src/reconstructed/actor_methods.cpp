@@ -8,8 +8,8 @@
 #include <cstring>
 
 extern "C" {
-int32_t function_4a9b40_this(int32_t object, int32_t index);
-int32_t function_4a9d70_this(int32_t object);
+void * kinoko_sqplus_object_instance(void * object, void * index);
+int32_t  kinoko_sqplus_object_destroy(void * object);
 void retdec_trace_star_state(const char *phase, int32_t actor);
 }
 
@@ -68,10 +68,10 @@ public:
         const auto incoming_address = static_cast<int32_t>(
             reinterpret_cast<uintptr_t>(incoming));
         if (type == 0x0a008000 && view_.get(&ActorRecord::animation)) {
-            kinoko_actor_sync_animation_state(actor_, pointer<KinokoActor>(function_4a9b40_this(incoming_address, 0)));
+            kinoko_actor_sync_animation_state(actor_, pointer<KinokoActor>((int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(incoming_address), (void *)(intptr_t)(0)))));
         }
         // The by-value SqPlus object owns an external VM reference on entry.
-        return function_4a9d70_this(incoming_address);
+        return kinoko_sqplus_object_destroy((void *)(intptr_t)(incoming_address));
     }
 
 private:

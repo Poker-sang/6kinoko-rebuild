@@ -2,11 +2,11 @@
 #include "kinoko/legacy_memory.hpp"
 extern "C" {
 extern int32_t g611[3],g722[3];
-int32_t function_4a90c0(int32_t *,int32_t *);
-int32_t function_4a95c0_this(int32_t,int32_t);
-int32_t function_4a9d70_this(int32_t);
-int32_t function_4a9bb0_this(int32_t,int32_t);
-int32_t function_4a9840_this(int32_t,const char *,int32_t);
+int32_t  kinoko_sqplus_new_instance_adapter(int32_t *, int32_t *);
+void * kinoko_sqplus_object_assign(void * , const void * );
+int32_t  kinoko_sqplus_object_destroy(void * );
+int32_t  kinoko_sqplus_object_set_instance(void * , void * );
+int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * );
 void retdec_trace_i32(const char *,int32_t);
 }
 namespace {
@@ -17,11 +17,11 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     if (!camera) return 0;
     const View state(camera);
     int32_t temporary[3]{};
-    const auto object=function_4a90c0(temporary,g611);
-    function_4a95c0_this(address(state.bytes(&Record::script_object)),object);
-    function_4a9d70_this(address(temporary));
-    function_4a9bb0_this(address(state.bytes(&Record::script_object)),address(camera));
-    const auto result=function_4a9840_this(address(g722),"camera",address(camera));
+    const auto object=kinoko_sqplus_new_instance_adapter(temporary, g611);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(state.bytes(&Record::script_object)), (const void *)(intptr_t)(object)));
+    kinoko_sqplus_object_destroy((void *)(temporary));
+    kinoko_sqplus_object_set_instance((void *)(state.bytes(&Record::script_object)), (void *)(camera));
+    const auto result=kinoko_sqplus_object_raw_set_name((void *)(g722), "camera", (const void *)(camera));
     // 466270 resets only these fields. Width/height and callback remain intact;
     // the global backing storage is already zero-initialized at process startup.
     state.set(&Record::y,0.0f);state.set(&Record::x,0.0f);
@@ -34,10 +34,10 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
 }
 extern "C" KinokoCamera *kinoko_camera_copy(KinokoCamera *destination,KinokoCamera *source) {
     const View out(destination),in(source);
-    function_4a95c0_this(address(out.bytes(&Record::script_object)),address(in.bytes(&Record::script_object)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::script_object)), (const void *)(in.bytes(&Record::script_object))));
     out.set(&Record::update_vm,in.get(&Record::update_vm));
-    function_4a95c0_this(address(out.bytes(&Record::update_environment)),address(in.bytes(&Record::update_environment)));
-    function_4a95c0_this(address(out.bytes(&Record::update_function)),address(in.bytes(&Record::update_function)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_environment)), (const void *)(in.bytes(&Record::update_environment))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(out.bytes(&Record::update_function)), (const void *)(in.bytes(&Record::update_function))));
     for(auto field:{&Record::x,&Record::y,&Record::center_x,&Record::center_y,
         &Record::offset_x,&Record::offset_y,&Record::width,&Record::height}) out.set(field,in.get(field));
     out.set(&Record::bounds,in.get(&Record::bounds));

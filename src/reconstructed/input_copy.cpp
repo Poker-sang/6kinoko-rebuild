@@ -60,7 +60,7 @@ extern "C" int32_t function_46ed80(int32_t destination, int32_t source) {
     if (destination == source) return destination;
     auto* out = pointer<unsigned char>(destination);
     const auto* in = pointer<unsigned char>(source);
-    function_4a95c0_this(destination, source);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(intptr_t)(destination), (const void *)(intptr_t)(source)));
     std::copy_n(in + 16, 164, out + 16);
     kinoko_input_devices_assign(destination, source);
     std::copy_n(in + 200, 164, out + 200);

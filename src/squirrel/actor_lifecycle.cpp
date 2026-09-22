@@ -83,8 +83,8 @@ extern "C" KinokoActor *kinoko_actor_dispose(KinokoActor *actor) {
     const ActorView view(actor);
     // Keep the established source-backed reset/destructor diagnostic boundary.
     // Do not compile away trace calls globally or clear VM internals.
-    function_4a9570_this(address(view.bytes(&ActorRecord::initial_function)));
-    function_4a9570_this(address(view.bytes(&ActorRecord::initial_argument)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(view.bytes(&ActorRecord::initial_function))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(view.bytes(&ActorRecord::initial_argument))));
     kinoko_actor_clear_script(actor);
     const auto parent_control = view.get(&ActorRecord::step_control);
     view.set(&ActorRecord::step, static_cast<KinokoActor **>(nullptr));
@@ -151,7 +151,7 @@ extern "C" int32_t __fastcall kinoko_actor_set_step_method(KinokoActor *actor, v
 
 extern "C" void kinoko_actor_set_collision_parent(KinokoActor *actor,KinokoActor *parent) {
     KinokoOwnedObjectWords object{};
-    function_4a94e0_this(address(&object));
-    if (parent) function_4a9500_this(reinterpret_cast<int32_t *>(&object),address(ActorView(parent).bytes(&ActorRecord::script_object)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(&object)));
+    if (parent) (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&object)), (const void *)(ActorView(parent).bytes(&ActorRecord::script_object))));
     kinoko_actor_set_step_owned(actor,&object);
 }

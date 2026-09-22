@@ -65,13 +65,13 @@ void ownership(HSQUIRRELVM vm) {
     for (int misalignment = 0; misalignment < 4; ++misalignment) {
         std::array<unsigned char, 32> bytes; bytes.fill(0xa7);
         auto* object = bytes.data() + 4 + misalignment;
-        require(retdec_sqrat_root_construct(address(object), address(vm)) == address(object), "construct returns object");
+        require((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(object), (struct SQVM *)(vm))) == address(object), "construct returns object");
         require(load<int32_t>(object) == kinoko_sqrat_root_vtable(), "root vtable identity");
         require(load<int32_t>(object + 4) == address(vm), "stored owning VM");
         require(load<HSQOBJECT>(object + 8)._type == OT_TABLE && object[16] == 1, "root pair and ownership");
         top(vm, base, "root construction balances stack");
-        retdec_sqrat_object_release(address(object));
-        retdec_sqrat_object_release(address(object));
+        kinoko_sqrat_object_release((void *)(object));
+        kinoko_sqrat_object_release((void *)(object));
         require(load<int32_t>(object) == kinoko_sqrat_object_vtable(), "base vtable after release");
         require(load<int32_t>(object + 4) == address(vm), "release preserves VM field");
         require(load<HSQOBJECT>(object + 8)._type == OT_NULL && load<int32_t>(object + 12) == 0 && object[16] == 0, "idempotent null release");
@@ -79,84 +79,84 @@ void ownership(HSQUIRRELVM vm) {
             require(bytes[i] == 0xa7, "unaligned wrapper padding/canaries untouched");
     }
     Pair table(vm), fetched(vm), userdata(vm);
-    require(retdec_sqrat_new_table(address(vm), table.data()) == 1, "externally owned table");
+    require(kinoko_sqrat_new_table((struct SQVM *)(vm), table.data()) == 1, "externally owned table");
     auto object = wrapper(vm, table);
     sq_newuserdata(vm, 8); sq_setreleasehook(vm, -1, release); userdata.capture();
     const auto before = released;
-    require(retdec_sqrat_set_pair(address(vm), table.data(), "value", userdata.data()), "newslot userdata");
-    retdec_sqrat_release_pair(address(vm), userdata.data());
-    require(retdec_sqrat_get(address(object.data()), "value", fetched.id()), "get externally owned pair");
-    require(retdec_sqrat_set_int(address(vm), table.data(), "value", 0), "replace table-owned userdata");
+    require(kinoko_sqrat_set_pair((struct SQVM *)(vm), table.data(), "value", userdata.data()), "newslot userdata");
+    kinoko_sqrat_release_pair((struct SQVM *)(vm), userdata.data());
+    require(kinoko_sqrat_get((void *)(object.data()), "value", (void *)(intptr_t)(fetched.id())), "get externally owned pair");
+    require(kinoko_sqrat_set_int((struct SQVM *)(vm), table.data(), "value", 0), "replace table-owned userdata");
     require(released == before, "returned pair survives removal from table");
-    retdec_sqrat_release_pair(address(vm), fetched.data());
-    retdec_sqrat_release_pair(address(vm), fetched.data());
+    kinoko_sqrat_release_pair((struct SQVM *)(vm), fetched.data());
+    kinoko_sqrat_release_pair((struct SQVM *)(vm), fetched.data());
     require(released == before + 1, "external value released exactly once");
-    require(!retdec_sqrat_get(address(object.data()), "missing", fetched.id()), "missing lookup");
+    require(!kinoko_sqrat_get((void *)(object.data()), "missing", (void *)(intptr_t)(fetched.id())), "missing lookup");
     require(fetched.get()._type == OT_NULL && fetched.words[1] == 0, "missing lookup resets output");
     top(vm, base, "ownership stack");
     // A depleted stack must not be padded out by the recovered trim helper.
-    retdec_sqrat_trim_stack(address(vm), base + 2); top(vm, base, "trim does not grow");
-    sq_pushinteger(vm, 123); retdec_sqrat_trim_stack(address(vm), base); top(vm, base, "trim pops excess");
+    kinoko_sqrat_trim_stack((struct SQVM *)(vm), base + 2); top(vm, base, "trim does not grow");
+    sq_pushinteger(vm, 123); kinoko_sqrat_trim_stack((struct SQVM *)(vm), base); top(vm, base, "trim pops excess");
 }
 void setters(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm);
     Pair root(vm); sq_pushroottable(vm); root.capture();
-    require(retdec_sqrat_set_int(address(vm), root.data(), "bridge_i", -123), "set integer");
-    require(retdec_sqrat_set_bool(address(vm), root.data(), "bridge_b", 7), "set true");
-    require(retdec_sqrat_set_string(address(vm), root.data(), "bridge_s", nullptr), "null text becomes empty string");
-    require(retdec_sqrat_raw_set_int(address(vm), root.data(), "bridge_i", 51), "raw integer");
-    require(retdec_sqrat_raw_set_float(address(vm), root.data(), "bridge_f", -1.25f), "raw float");
-    require(retdec_sqrat_raw_set_bool(address(vm), root.data(), "bridge_b", 0), "raw false");
-    require(retdec_sqrat_raw_set_string(address(vm), root.data(), "bridge_s", "hello"), "raw string");
+    require(kinoko_sqrat_set_int((struct SQVM *)(vm), root.data(), "bridge_i", -123), "set integer");
+    require(kinoko_sqrat_set_bool((struct SQVM *)(vm), root.data(), "bridge_b", 7), "set true");
+    require(kinoko_sqrat_set_string((struct SQVM *)(vm), root.data(), "bridge_s", nullptr), "null text becomes empty string");
+    require(kinoko_sqrat_raw_set_int((struct SQVM *)(vm), root.data(), "bridge_i", 51), "raw integer");
+    require(kinoko_sqrat_raw_set_float((struct SQVM *)(vm), root.data(), "bridge_f", -1.25f), "raw float");
+    require(kinoko_sqrat_raw_set_bool((struct SQVM *)(vm), root.data(), "bridge_b", 0), "raw false");
+    require(kinoko_sqrat_raw_set_string((struct SQVM *)(vm), root.data(), "bridge_s", "hello"), "raw string");
     evaluate(vm, "if (bridge_i != 51 || bridge_f != -1.25 || bridge_b || bridge_s != \"hello\") throw \"setters\";");
     Pair instance(vm);
     evaluate(vm, "bridge_reads <- 0;\nclass BridgeClass { value = 0; function _get(k) { ::bridge_reads++; return 77; } }\nreturn BridgeClass();", &instance);
-    require(retdec_sqrat_raw_set_int(address(vm), instance.data(), "value", 7), "raw instance existing field");
-    require(!retdec_sqrat_raw_set_int(address(vm), instance.data(), "missing", 1), "raw instance unknown field fails");
+    require(kinoko_sqrat_raw_set_int((struct SQVM *)(vm), instance.data(), "value", 7), "raw instance existing field");
+    require(!kinoko_sqrat_raw_set_int((struct SQVM *)(vm), instance.data(), "missing", 1), "raw instance unknown field fails");
     // 2.2.2 sq_newslot on an instance returns SQ_OK without publishing a slot.
     // The old diagnostic readback triggered _get even though the setter did not.
-    require(retdec_sqrat_set_int(address(vm), instance.data(), "pl", 42), "preserve instance newslot return");
+    require(kinoko_sqrat_set_int((struct SQVM *)(vm), instance.data(), "pl", 42), "preserve instance newslot return");
     evaluate(vm, "if (bridge_reads != 0) throw \"diagnostics invoked _get\";");
-    require(retdec_sqrat_set_pair(address(vm), root.data(), "bridge_instance", instance.data()), "publish instance");
+    require(kinoko_sqrat_set_pair((struct SQVM *)(vm), root.data(), "bridge_instance", instance.data()), "publish instance");
     evaluate(vm, "if (bridge_instance.value != 7) throw \"raw field\";");
     Pair not_object(vm); sq_pushinteger(vm, 3); not_object.capture();
-    require(!retdec_sqrat_raw_set_string(address(vm), not_object.data(), "key", "text"), "wrong receiver fails");
-    require(!retdec_sqrat_set_native_closure(address(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), not_object.data(), 2), "reject more captures than supplied");
-    require(!retdec_sqrat_set_native_closure(address(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), nullptr, 1), "reject missing capture");
+    require(!kinoko_sqrat_raw_set_string((struct SQVM *)(vm), not_object.data(), "key", "text"), "wrong receiver fails");
+    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), not_object.data(), 2), "reject more captures than supplied");
+    require(!kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bad", address(reinterpret_cast<void*>(captured)), nullptr, 1), "reject missing capture");
     top(vm, base, "all setter success and failure stacks restored");
 }
 void delegates(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm);
     Pair first(vm), second(vm), null(vm), wrong(vm), result(vm), userdata(vm);
-    require(retdec_sqrat_new_table(address(vm), first.data()), "first delegate table");
-    require(retdec_sqrat_new_table(address(vm), second.data()), "second delegate table");
-    retdec_sqrat_set_int(address(vm), second.data(), "inherited", 246);
-    require(retdec_sqrat_set_delegate(address(vm), first.data(), second.data()), "table delegate source method");
+    require(kinoko_sqrat_new_table((struct SQVM *)(vm), first.data()), "first delegate table");
+    require(kinoko_sqrat_new_table((struct SQVM *)(vm), second.data()), "second delegate table");
+    kinoko_sqrat_set_int((struct SQVM *)(vm), second.data(), "inherited", 246);
+    require(kinoko_sqrat_set_delegate((struct SQVM *)(vm), first.data(), second.data()), "table delegate source method");
     auto object = wrapper(vm, first);
-    require(retdec_sqrat_get(address(object.data()), "inherited", result.id()), "inherited lookup");
+    require(kinoko_sqrat_get((void *)(object.data()), "inherited", (void *)(intptr_t)(result.id())), "inherited lookup");
     require(result.get()._type == OT_INTEGER && result.words[1] == 246, "delegate value");
     sq_throwerror(vm, "unchanged-error");
-    require(!retdec_sqrat_set_delegate(address(vm), second.data(), first.data()), "reject delegate cycle");
+    require(!kinoko_sqrat_set_delegate((struct SQVM *)(vm), second.data(), first.data()), "reject delegate cycle");
     sq_getlasterror(vm); require(get_string(vm) == "unchanged-error", "cycle rejection preserves last error"); sq_pop(vm, 1);
     sq_pushinteger(vm, 1); wrong.capture();
-    require(!retdec_sqrat_set_delegate(address(vm), first.data(), wrong.data()), "wrong delegate type");
-    require(!retdec_sqrat_set_delegate(address(vm), wrong.data(), second.data()), "wrong receiver type");
+    require(!kinoko_sqrat_set_delegate((struct SQVM *)(vm), first.data(), wrong.data()), "wrong delegate type");
+    require(!kinoko_sqrat_set_delegate((struct SQVM *)(vm), wrong.data(), second.data()), "wrong receiver type");
     sq_newuserdata(vm, 4); userdata.capture();
-    require(retdec_sqrat_set_delegate(address(vm), userdata.data(), second.data()), "userdata delegate source method");
-    require(retdec_sqrat_set_delegate(address(vm), first.data(), null.data()), "clear table delegate");
-    require(retdec_sqrat_set_delegate(address(vm), userdata.data(), null.data()), "clear userdata delegate");
+    require(kinoko_sqrat_set_delegate((struct SQVM *)(vm), userdata.data(), second.data()), "userdata delegate source method");
+    require(kinoko_sqrat_set_delegate((struct SQVM *)(vm), first.data(), null.data()), "clear table delegate");
+    require(kinoko_sqrat_set_delegate((struct SQVM *)(vm), userdata.data(), null.data()), "clear userdata delegate");
     top(vm, base, "delegate paths balance stack");
 }
 void closures(HSQUIRRELVM vm) {
     Top restore(vm); const auto base = sq_gettop(vm);
     Pair root(vm), capture(vm); sq_pushroottable(vm); root.capture();
     sq_pushinteger(vm, 40); capture.capture();
-    require(retdec_sqrat_set_native_closure(address(vm), root.data(), "bridge_capture", address(reinterpret_cast<void*>(captured)), capture.data(), 1), "register one captured pair");
-    require(retdec_sqrat_set_native_closure(address(vm), root.data(), "bridge_plain", address(reinterpret_cast<void*>(plain)), nullptr, 0), "register no captures");
-    require(retdec_sqrat_set_offset_closure(address(vm), root.data(), "bridge_offset", 30, address(reinterpret_cast<void*>(captured))), "register offset userdata");
+    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_capture", address(reinterpret_cast<void*>(captured)), capture.data(), 1), "register one captured pair");
+    require(kinoko_sqrat_set_native_closure((struct SQVM *)(vm), root.data(), "bridge_plain", address(reinterpret_cast<void*>(plain)), nullptr, 0), "register no captures");
+    require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), root.data(), "bridge_offset", 30, address(reinterpret_cast<void*>(captured))), "register offset userdata");
     auto object = wrapper(vm, root);
     std::array<unsigned char, 8> source{}; store<int32_t>(source.data() + 1, 70);
-    require(function_415550_this(address(object.data()), address("bridge_registered"), address(source.data() + 1), 4, address(reinterpret_cast<void*>(captured)), 0x100) == address(vm), "registration returns VM and masks static byte");
+    require((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(object.data()), (const char *)("bridge_registered"), (const void *)(source.data() + 1), 4, (void *)(reinterpret_cast<void*>(captured)), 0x100)) == address(vm), "registration returns VM and masks static byte");
     evaluate(vm, "if (bridge_capture(2) != 42 || bridge_plain() != 99 || bridge_offset(12) != 42 || bridge_registered(3) != 73) throw \"closures\";");
     const auto before = capture_calls;
     Pair child(vm); sq_newthread(vm, 16); child.capture();
@@ -166,8 +166,8 @@ void closures(HSQUIRRELVM vm) {
     Pair klass(vm), klass_function(vm);
     evaluate(vm, "return class {};", &klass);
     auto class_object = wrapper(vm, klass);
-    require(function_415550_this(address(class_object.data()), address("static_capture"), address(source.data() + 1), 4, address(reinterpret_cast<void*>(captured)), 0x101) == address(vm), "class static flag byte");
-    require(retdec_sqrat_set_pair(address(vm), root.data(), "BridgeStatic", klass.data()), "publish static class");
+    require((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(class_object.data()), (const char *)("static_capture"), (const void *)(source.data() + 1), 4, (void *)(reinterpret_cast<void*>(captured)), 0x101)) == address(vm), "class static flag byte");
+    require(kinoko_sqrat_set_pair((struct SQVM *)(vm), root.data(), "BridgeStatic", klass.data()), "publish static class");
     evaluate(vm, "if (BridgeStatic.static_capture(2) != 72) throw \"static slot\";");
     top(vm, base, "closure registration stack");
 }
@@ -178,7 +178,7 @@ void callback(HSQUIRRELVM vm) {
     require(SQ_SUCCEEDED(sq_compilebuffer(vm, "bridge_callback <- 123;", static_cast<SQInteger>(std::strlen("bridge_callback <- 123;")), "callback", SQFalse)), "compile callback");
     closure.capture();
     std::array<int32_t, 5> words{address(vm), environment.words[0], environment.words[1], closure.words[0], closure.words[1]};
-    require(function_415810_this(address(words.data())) == address(vm), "call helper returns VM");
+    require(kinoko_sqrat_invoke_callback((const void *)(words.data())) == address(vm), "call helper returns VM");
     top(vm, base, "successful callback stack");
     evaluate(vm, "if (bridge_callback != 123) throw \"callback env\";");
     const char* script = "throw \"callback-failure\";";
@@ -187,12 +187,12 @@ void callback(HSQUIRRELVM vm) {
     sq_newclosure(vm, handler, 0); sq_seterrorhandler(vm);
     const int errors = error_handler_calls;
     g560 = 0;
-    require(function_415810_this(address(words.data())) == address(vm), "failing call still returns VM");
+    require(kinoko_sqrat_invoke_callback((const void *)(words.data())) == address(vm), "failing call still returns VM");
     require(error_handler_calls == errors, "zero error handler flag");
     sq_getlasterror(vm); require(get_string(vm) == "callback-failure", "failed callback preserves source error"); sq_pop(vm, 1);
-    g560 = 1; function_415810_this(address(words.data())); g560 = 0;
+    g560 = 1; kinoko_sqrat_invoke_callback((const void *)(words.data())); g560 = 0;
     require(error_handler_calls == errors + 1, "original handler flag honored");
-    require(function_415810_this(0) == -1, "null callback guard");
+    require(kinoko_sqrat_invoke_callback((const void *)(intptr_t)(0)) == -1, "null callback guard");
     top(vm, base, "failure callback stack");
     sq_pushnull(vm); sq_seterrorhandler(vm);
 }

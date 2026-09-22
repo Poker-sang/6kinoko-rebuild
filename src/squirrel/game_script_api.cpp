@@ -23,15 +23,15 @@ using namespace kinoko::script;
 // declaration order releases closure before environment, as in the original.
 struct Reference {
     KinokoOwnedObjectWords *object;
-    ~Reference() { function_4a9d70_this(address(object)); }
+    ~Reference() { kinoko_sqplus_object_destroy((void *)(object)); }
     Reference(const Reference&)=delete;
     explicit Reference(KinokoOwnedObjectWords& value):object(&value) {}
 };
 void assign(void* destination,const void* source) {
-    function_4a95c0_this(address(destination),address(source));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(destination), (const void *)(source)));
 }
 void copy(KinokoOwnedObjectWords& destination,const KinokoOwnedObjectWords& source) {
-    function_4a9500_this(reinterpret_cast<int32_t*>(&destination),address(&source));
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t*>(&destination)), (const void *)(&source)));
 }
 }
 extern "C" int32_t kinoko_script_load_animation(const char* path) {
@@ -105,7 +105,7 @@ extern "C" int32_t kinoko_script_set_init(int32_t id,KinokoOwnedObjectWords clos
     int32_t result=0;
     if(closure.type==OT_CLOSURE && environment.type==OT_TABLE) {
         char name[256]; sprintf_s(name,sizeof(name),"Init%04x",static_cast<unsigned>(id));
-        result=function_4a9840_this(address(&environment),name,address(&closure));
+        result=kinoko_sqplus_object_raw_set_name((void *)(&environment), name, (const void *)(&closure));
         retdec_trace_i32("actor:init-registration-id",id); retdec_trace_i32("actor:init-registration-result",result);
     }
     return result;
@@ -128,7 +128,7 @@ extern "C" KinokoOwnedObjectWords* kinoko_script_create_actor(KinokoOwnedObjectW
     // by-value parameters remain alive until after result's reference is acquired.
     auto* actor=kinoko_actor_manager_create(manager,&closure,x,y,z,&argument,nullptr);
     if(trace<=32) retdec_trace_i32("actor-create:callback-result",address(actor));
-    function_4a94e0_this(address(result));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(result)));
     if(actor) assign(result,kinoko::actor::ActorView(actor).bytes(&kinoko::actor::ActorRecord::script_object));
     return result;
 }

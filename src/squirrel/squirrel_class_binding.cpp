@@ -9,10 +9,10 @@ using namespace kinoko::script;
 using namespace kinoko::script::binding;
 
 struct ClassBindingStorage {
-    int32_t vm;
-    int32_t name;
+    SQVM* vm;
+    const char* name;
     ObjectStorage klass;
-    int32_t parent;
+    const char* parent;
     ObjectStorage members;
     ObjectStorage methods;
 };
@@ -23,36 +23,34 @@ static_assert(offsetof(ClassBindingStorage, methods) == 36);
 
 int32_t bind_variable(int32_t* object, int32_t* instance_type, int32_t offset,
                       const char* name, int32_t flags, int32_t category, int32_t size) {
-    const auto payload = function_45fab0(address(object), address(name));
+    const auto payload = (int32_t)(intptr_t)(kinoko_sqplus_create_variable(object, name));
     // Existing slots are never overwritten with replacement userdata. A wrong
     // type/short payload is an invalid binding, not permission to corrupt it.
     if (!payload) return 0;
     Variable info{};
-    function_45f3e0_this(reinterpret_cast<int32_t*>(&info), offset, category,
-        address(instance_type), kinoko_native_binding_type(category), size, flags);
+    kinoko_sqplus_initialize_variable(reinterpret_cast<int32_t*>(&info), offset, category, address(instance_type), kinoko_native_binding_type(category), size, flags);
     store(payload, info);
-    return function_45f4f0(address(object));
+    return kinoko_sqplus_install_variable_handlers(object);
 }
 } // namespace
 
-extern "C" int32_t function_4a9250(int32_t output, int32_t text) {
+extern "C" void * kinoko_sqplus_new_string(void * output, const char * text) {
     auto* vm = current_vm();
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    result.write(upstream::sqplus_new_string(vm, pointer<const char>(text)));
+    result.write(upstream::sqplus_new_string(vm, static_cast<const char *>(text)));
     return output;
 }
 
-extern "C" int32_t function_4a9370(int32_t output, int32_t native,
-                                    int32_t name, int32_t mask_address) {
+extern "C" void * kinoko_sqplus_bind_function(void * output, void * native, const char * name, const char * mask_address) {
     auto* vm = current_vm();
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
     const bool bound = upstream::sqplus_bind_function(vm,
-        reinterpret_cast<SQFUNCTION>(pointer(native)), pointer<const char>(name),
-        pointer<const char>(mask_address), [](void* storage, HSQOBJECT value) {
+        reinterpret_cast<SQFUNCTION>(native), static_cast<const char *>(name),
+        static_cast<const char *>(mask_address), [](void* storage, HSQOBJECT value) {
             ObjectView(storage).write(value);
-        }, pointer(output));
+        }, output);
     if (!bound) {
         result.release(vm); result.reset();
         return 0;
@@ -60,35 +58,33 @@ extern "C" int32_t function_4a9370(int32_t output, int32_t native,
     return output;
 }
 
-extern "C" int32_t function_4a9490(int32_t* output, int32_t object,
-                                    int32_t native, char* name, char* mask) {
+extern "C" void * kinoko_sqplus_bind_object_function(int32_t* output, void * object, void * native, char* name, char* mask) {
     auto* vm = current_vm();
     ObjectView(object).push(vm);
-    const auto result = function_4a9370(address(output), native, address(name), address(mask));
+    auto* result = kinoko_sqplus_bind_function(output, native, name, mask);
     sq_pop(vm, 1);
     return result;
 }
 
-extern "C" int32_t function_4aa540(int32_t vm_address, int32_t output,
-                                    int32_t* type, int32_t name, int32_t parent) {
-    auto* vm = pointer<SQVM>(vm_address);
+extern "C" int32_t kinoko_sqplus_create_class(struct SQVM * vm_address, void * output, int32_t* type, const char * name, const char * parent) {
+    auto* vm = static_cast<SQVM *>(vm_address);
     StackTop stack(vm);
     ObjectView result(output);
     auto value = result.value();
     const bool created = upstream::sqplus_create_class(vm, value, type,
-        pointer<const char>(name), pointer<const char>(parent));
+        static_cast<const char *>(name), static_cast<const char *>(parent));
     result.write(value);
     // The original reports successful class creation, not newslot's status.
     return created;
 }
 
-extern "C" int32_t function_45f4f0(int32_t object) {
+extern "C" int32_t kinoko_sqplus_install_variable_handlers(void * object) {
     upstream::sqplus_variable_handlers(current_vm(), ObjectView(object).value(),
-        reinterpret_cast<SQFUNCTION>(&function_4aafa0), reinterpret_cast<SQFUNCTION>(&function_4aabd0));
+        reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_instance_set), reinterpret_cast<SQFUNCTION>(&kinoko_sqplus_instance_get));
     return 1;
 }
 
-extern "C" int32_t function_45f640(int32_t* root_object) {
+extern "C" int32_t kinoko_sqplus_setup_hierarchy(int32_t* root_object) {
     const ObjectView root(root_object);
     const auto value = root.value();
     root.reset(); // transfer this by-value argument's owned reference
@@ -96,18 +92,15 @@ extern "C" int32_t function_45f640(int32_t* root_object) {
     return root.payload_address();
 }
 
-extern "C" int32_t function_45fab0(int32_t object, int32_t name_address) {
-    return address(upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(),
-        pointer<const char>(name_address)));
+extern "C" void * kinoko_sqplus_create_variable(void * object, const char * name_address) {
+    return upstream::sqplus_create_variable(current_vm(), ObjectView(object).value(), name_address);
 }
 
-extern "C" int32_t* function_45f3e0_this(int32_t* output, int32_t offset,
-    int32_t category, int32_t instance_type, int32_t* value_type,
-    int32_t size, int32_t flags) {
+extern "C" int32_t* kinoko_sqplus_initialize_variable(int32_t* output, int32_t offset, int32_t category, int32_t instance_type, int32_t* value_type, int32_t size, int32_t flags) {
     const Variable info{offset, category, instance_type, address(value_type),
         static_cast<uint16_t>(size), static_cast<uint16_t>(flags)};
     upstream::sqplus_variable_metadata(current_vm(),
-        ObjectView(function_4a8cc0()).value(), info, output);
+        ObjectView((int32_t)(intptr_t)(kinoko_sqplus_root_object())).value(), info, output);
     return output;
 }
 
@@ -124,35 +117,35 @@ extern "C" int32_t kinoko_sqplus_bind_boolean(int32_t* object, int32_t* type,
     return bind_variable(object, type, offset, name, flags, 3, 1);
 }
 
-extern "C" int32_t function_4607e0(int32_t* output, int32_t vm_address,
-                                    int32_t name, int32_t parent) {
-    auto* vm = pointer<SQVM>(vm_address);
+extern "C" void * kinoko_sqplus_create_actor_class(int32_t* output, struct SQVM * vm_address, const char * name, const char * parent) {
+    auto* vm = static_cast<SQVM *>(vm_address);
     StackTop stack(vm);
     ObjectView result(output);
     result.initialize(kinoko_squirrel_object_vtable());
-    if (function_4aa540(vm_address, address(output), kinoko_native_binding_type(-1), name, parent)) {
+    if (kinoko_sqplus_create_class(vm_address, output, kinoko_native_binding_type(-1), name, parent)) {
         ObjectStorage copy{};
         ObjectView copy_view(&copy);
         copy_view.initialize(kinoko_squirrel_object_vtable());
         copy_view.assign(vm, result.value());
-        function_45f640(reinterpret_cast<int32_t*>(&copy));
+        kinoko_sqplus_setup_hierarchy(reinterpret_cast<int32_t*>(&copy));
     }
-    return address(output);
+    return output;
 }
 
-extern "C" int32_t function_460d10_this(int32_t output, const char* name, int32_t parent) {
+extern "C" void * kinoko_sqplus_construct_class_binding(void * output, const char* name, const char * parent) {
     if (!output) return 0;
     auto* vm = current_vm();
-    store(output, address(vm));
-    store(add_address(output, 4), address(name));
-    store(add_address(output, 20), parent);
-    ObjectView klass(add_address(output, 8));
-    ObjectView members(add_address(output, 24));
-    ObjectView methods(add_address(output, 36));
+    const kinoko::native::RecordView<ClassBindingStorage> state(output);
+    state.set(&ClassBindingStorage::vm, vm);
+    state.set(&ClassBindingStorage::name, name);
+    state.set(&ClassBindingStorage::parent, parent);
+    ObjectView klass(state.bytes(&ClassBindingStorage::klass));
+    ObjectView members(state.bytes(&ClassBindingStorage::members));
+    ObjectView methods(state.bytes(&ClassBindingStorage::methods));
     for (auto view : {klass, members, methods}) view.initialize(kinoko_squirrel_object_vtable());
     new_table(vm, members); new_table(vm, methods);
     Object temporary(vm);
-    function_4607e0(pointer<int32_t>(temporary.location()), address(vm), address(name), parent);
+    kinoko_sqplus_create_actor_class(pointer<int32_t>(temporary.location()), vm, name, parent);
     klass.assign(vm, temporary.view().value());
     return output;
 }
@@ -160,21 +153,20 @@ extern "C" int32_t function_460d10_this(int32_t output, const char* name, int32_
 extern "C" int32_t* kinoko_sqplus_define_actor_class(int32_t* output, const char* name, int32_t parent) {
     if (!output) return nullptr;
     ClassBindingStorage state{};
-    function_460d10_this(address(&state), name, parent);
+    kinoko_sqplus_construct_class_binding(&state, name, pointer<const char>(parent));
     auto* vm = current_vm();
     ObjectView(output).assign(vm, ObjectView(&state.klass).value());
     for (auto* object : {&state.klass, &state.members, &state.methods}) ObjectView(object).release(vm);
     return output;
 }
 
-extern "C" void kinoko_sqplus_register_actor_method(int32_t vm_address,
-    int32_t* object, const char* name, int32_t native, int32_t wrapper, int32_t slot_flags) {
-    auto* vm = pointer<SQVM>(vm_address);
+extern "C" void kinoko_sqplus_register_actor_method(struct SQVM * vm_address, int32_t* object, const char* name, void * native, void * wrapper, int32_t slot_flags) {
+    auto* vm = static_cast<SQVM *>(vm_address);
     ObjectView(object).push(vm);
     sq_pushstring(vm, name, -1);
-    const Method method{native, 0};
+    const Method method{address(native), 0};
     if (auto* payload = sq_newuserdata(vm, sizeof(method))) store(payload, method);
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(pointer(wrapper)), 1);
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(wrapper), 1);
     // This last argument is sq_newslot's static flag, NOT a parameter count.
     sq_newslot(vm, -3, slot_flags);
     sq_pop(vm, 1);

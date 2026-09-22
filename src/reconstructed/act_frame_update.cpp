@@ -11,7 +11,7 @@ extern "C" {
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
 const char* retdec_std_string_data(int32_t);
-int32_t function_415810_this(int32_t);
+int32_t  kinoko_sqrat_invoke_callback(const void * );
 }
 
 namespace {
@@ -43,7 +43,7 @@ extern "C" int32_t kinoko_act_layer_update(KinokoActLayer *object) {
     }
     layer.set(&LayerKeys::previous_position, layer.get(&LayerKeys::position));
     return layer.get(&LayerKeys::update_callback)[3] != 0x1000001
-        ? function_415810_this(address(layer.bytes(&LayerKeys::update_callback))) : 0;
+        ? kinoko_sqrat_invoke_callback((const void *)(layer.bytes(&LayerKeys::update_callback))) : 0;
 }
 
 // Original 451640: the root callback belongs to the source ACT, while layer
@@ -85,7 +85,7 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     const auto callback_type = source.get(&ScriptUpdatePrefix::update_callback)[3];
     if (trace_index <= 48) retdec_trace_i32("451640:root-update-type", callback_type);
     if (callback_type != 0x1000001) {
-        const auto result = function_415810_this(address(source.bytes(&ScriptUpdatePrefix::update_callback)));
+        const auto result = kinoko_sqrat_invoke_callback((const void *)(source.bytes(&ScriptUpdatePrefix::update_callback)));
         if (trace_index <= 48) retdec_trace_i32("451640:root-update-result", result);
     }
     const auto count = layer_count(source_document(resource));

@@ -11,11 +11,11 @@ using kinoko::legacy::pointer;
 static std::vector<int> calls;
 extern "C" {
 int32_t g611[3]{},g722[3]{};
-int32_t function_4a90c0(int32_t *out,int32_t *) { calls.push_back(1);return address(out); }
-int32_t function_4a95c0_this(int32_t out,int32_t in) { calls.push_back(2);std::memcpy(pointer<void>(out),pointer<void>(in),12);return out; }
-int32_t function_4a9d70_this(int32_t) { calls.push_back(3);return 0; }
-int32_t function_4a9bb0_this(int32_t,int32_t) { calls.push_back(4);return 0; }
-int32_t function_4a9840_this(int32_t,const char *,int32_t) { calls.push_back(5);return 77; }
+int32_t  kinoko_sqplus_new_instance_adapter(int32_t *out, int32_t *) { calls.push_back(1);return address(out); }
+void * kinoko_sqplus_object_assign(void * out, const void * in) { calls.push_back(2);std::memcpy(static_cast<void *>(out),static_cast<void *>(in),12);return out; }
+int32_t  kinoko_sqplus_object_destroy(void * ) { calls.push_back(3);return 0; }
+int32_t  kinoko_sqplus_object_set_instance(void * , void * ) { calls.push_back(4);return 0; }
+int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * ) { calls.push_back(5);return 77; }
 void retdec_trace_i32(const char *,int32_t) {}
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"camera line %d\n",__LINE__);return 1; } } while(0)

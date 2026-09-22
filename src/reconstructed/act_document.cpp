@@ -124,7 +124,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     field<int32_t>(layer + 332) = vm;
     field<uint8_t>(layer + 344) = 1;
     sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
-    if (vm && !retdec_sqrat_new_table(vm, pointer<int32_t>(layer + 316))) {
+    if (vm && !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), pointer<int32_t>(layer + 316))) {
         retdec_destroy_cact_layer(layer);
         return 0;
     }

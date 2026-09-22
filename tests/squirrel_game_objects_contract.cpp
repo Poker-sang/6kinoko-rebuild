@@ -91,7 +91,7 @@ void callbacks(HSQUIRRELVM vm) {
     Pair table(vm), closure(vm), weak_table(vm), weak_closure(vm);
     sq_newtable(vm); table.capture();
     evaluate(vm,"return function() { return 17; };",&closure);
-    require(retdec_sqrat_set_pair(address(vm),table.data(),"Update",closure.data()),"publish callback");
+    require(kinoko_sqrat_set_pair((struct SQVM *)(vm), table.data(), "Update", closure.data()),"publish callback");
     auto object=wrapper(vm,table);
     std::array<unsigned char,84> script; script.fill(0xa7);
     const auto offset=25; store(script.data()+offset,address(vm));
@@ -181,18 +181,18 @@ void values(HSQUIRRELVM vm) {
     require(retdec_squirrel_object_copy(copy.data(),copy.data()),"self-copy keeps owned value");
     const auto slot=function_4029b0(address(vm),copy.data());
     require(slot==kinoko_sq_get_up(address(vm),-1) && get_string(vm)=="ab","push returns source slot address"); sq_pop(vm,1);
-    function_4a9d70_this(address(object.data()));
+    kinoko_sqplus_object_destroy((void *)(object.data()));
     require(retdec_squirrel_object_string(copy.data(),&text) && std::string(text)=="ab","copy survives source destruction");
-    function_4a9d70_this(address(copy.data()));
+    kinoko_sqplus_object_destroy((void *)(copy.data()));
     require(retdec_squirrel_object_from_pair(object.data(),OT_INTEGER,-71),"integer pair construction");
     text=raw; require(!retdec_squirrel_object_string(object.data(),&text) && text==raw,"failed string conversion leaves output");
     const auto previous=object;
     require(!retdec_squirrel_object_from_string(object.data(),raw,0x1000001u) && object==previous,"oversized length rejected before read/write");
-    function_4a9d70_this(address(object.data()));
+    kinoko_sqplus_object_destroy((void *)(object.data()));
     require(retdec_squirrel_object_from_string(object.data(),raw,0),"empty string construction");
-    require(retdec_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); function_4a9d70_this(address(object.data()));
+    require(retdec_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); kinoko_sqplus_object_destroy((void *)(object.data()));
     require(retdec_squirrel_object_from_string(object.data(),raw,2),"nonterminated bounded prefix");
-    require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); function_4a9d70_this(address(object.data()));
+    require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); kinoko_sqplus_object_destroy((void *)(object.data()));
 }
 void callback_call(HSQUIRRELVM vm) {
     Top restore(vm); Pair closure(vm), environment(vm); root(vm,environment);

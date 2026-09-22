@@ -26,9 +26,9 @@ extern "C" {
 unsigned char g37;
 void retdec_trace(const char *) {}
 void retdec_trace_i32(const char *, int32_t) {}
-int32_t function_4a94e0_this(int32_t) { calls.push_back(0); return 0; }
-int32_t function_4a9570_this(int32_t) { calls.push_back(1); return 0; }
-int32_t function_4a95c0_this(int32_t, int32_t) { return 0; }
+void * kinoko_sqplus_object_initialize(void * ) { calls.push_back(0); return (void *)(intptr_t)(0); }
+void * kinoko_sqplus_object_reset(void * ) { calls.push_back(1); return (void *)(intptr_t)(0); }
+void * kinoko_sqplus_object_assign(void * , const void * ) { return (void *)(intptr_t)(0); }
 void kinoko_act_runtime_dispose(KinokoActRuntime *player) {
     CHECK(player == expected_player);
     CHECK(kinoko_map_render_count(address(active)) == 0);

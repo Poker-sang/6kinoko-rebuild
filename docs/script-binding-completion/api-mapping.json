@@ -1,0 +1,746 @@
+{
+  "function_4a94e0_this": [
+    "kinoko_sqplus_object_initialize",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a9500_this": [
+    "kinoko_sqplus_object_copy_construct",
+    {
+      "0": "void *",
+      "1": "const void *"
+    },
+    "void *"
+  ],
+  "function_4a9540_this": [
+    "kinoko_sqplus_object_construct_value",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a9570_this": [
+    "kinoko_sqplus_object_reset",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a95c0_this": [
+    "kinoko_sqplus_object_assign",
+    {
+      "0": "void *",
+      "1": "const void *"
+    },
+    "void *"
+  ],
+  "function_4a9600_this": [
+    "kinoko_sqplus_object_append",
+    {
+      "0": "void *",
+      "1": "const void *"
+    },
+    "struct SQVM *"
+  ],
+  "function_4a9660_this": [
+    "kinoko_sqplus_object_capture",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a96c0_this": [
+    "kinoko_sqplus_object_is_null",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a96d0": [
+    "kinoko_sqplus_object_size",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a99f0": [
+    "kinoko_sqplus_object_reverse",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9730_this": [
+    "kinoko_sqplus_object_set_index_string",
+    {
+      "0": "void *",
+      "2": "const char *"
+    },
+    null
+  ],
+  "function_4a97b0_this": [
+    "kinoko_sqplus_object_raw_set_object",
+    {
+      "0": "void *",
+      "1": "const void *",
+      "2": "const void *"
+    },
+    null
+  ],
+  "function_4a9840_this": [
+    "kinoko_sqplus_object_raw_set_name",
+    {
+      "0": "void *",
+      "2": "const void *"
+    },
+    null
+  ],
+  "function_4a9950": [
+    "kinoko_sqplus_object_new_userdata",
+    {
+      "0": "void *",
+      "1": "const char *",
+      "3": "void *"
+    },
+    null
+  ],
+  "function_4a9a30_this": [
+    "kinoko_sqplus_object_type",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9a40_this": [
+    "kinoko_sqplus_object_get_index_integer",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9ac0_this": [
+    "kinoko_sqplus_object_get_index_string",
+    {
+      "0": "void *"
+    },
+    "const char *"
+  ],
+  "function_4aa000_this": [
+    "kinoko_sqplus_object_get_index_userpointer",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a9b40_this": [
+    "kinoko_sqplus_object_instance",
+    {
+      "0": "void *",
+      "1": "void *"
+    },
+    "void *"
+  ],
+  "function_4a9bb0_this": [
+    "kinoko_sqplus_object_set_instance",
+    {
+      "0": "void *",
+      "1": "void *"
+    },
+    null
+  ],
+  "function_4a9c10_this": [
+    "kinoko_sqplus_object_begin_iteration",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9c60": [
+    "kinoko_sqplus_object_next",
+    {},
+    null
+  ],
+  "function_4a9d30_this": [
+    "kinoko_sqplus_object_typetag",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9d50": [
+    "kinoko_sqplus_object_end_iteration",
+    {},
+    null
+  ],
+  "function_4a9d70_this": [
+    "kinoko_sqplus_object_destroy",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4a9e30_this": [
+    "kinoko_sqplus_object_assign_thread",
+    {
+      "0": "void *",
+      "1": "struct SQVM *"
+    },
+    "void *"
+  ],
+  "function_4a9f60": [
+    "kinoko_sqplus_object_set_delegate",
+    {
+      "0": "void *",
+      "1": "const void *"
+    },
+    null
+  ],
+  "function_4aa080": [
+    "kinoko_sqplus_object_get_userdata",
+    {
+      "0": "void *",
+      "1": "const char *",
+      "2": "void *",
+      "3": "void *"
+    },
+    null
+  ],
+  "function_4aa1a0": [
+    "kinoko_sqplus_object_exists",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_4aa210_this": [
+    "kinoko_sqplus_object_get_delegate",
+    {
+      "0": "void *",
+      "1": "void *"
+    },
+    "void *"
+  ],
+  "function_4aa3a0_this": [
+    "kinoko_sqplus_object_get_value",
+    {
+      "0": "void *",
+      "1": "void *"
+    },
+    "void *"
+  ],
+  "function_4a90c0_this": [
+    "kinoko_sqplus_object_new_instance",
+    {
+      "0": "void *",
+      "1": "const void *"
+    },
+    "void *"
+  ],
+  "function_4a91c0_this": [
+    "kinoko_sqplus_object_new_table",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a92e0_this": [
+    "kinoko_sqplus_object_new_array",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "retdec_function_4aa110_this": [
+    "kinoko_sqplus_object_raw_get_userdata",
+    {
+      "0": "void *",
+      "3": "void *"
+    },
+    null
+  ],
+  "retdec_msvc_0_Init_locks_std__QAE_XZ5_this": [
+    "kinoko_sqplus_object_initialize_adapter",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "function_4a9250": [
+    "kinoko_sqplus_new_string",
+    {
+      "0": "void *",
+      "1": "const char *"
+    },
+    "void *"
+  ],
+  "function_4a9370": [
+    "kinoko_sqplus_bind_function",
+    {
+      "0": "void *",
+      "1": "void *",
+      "2": "const char *",
+      "3": "const char *"
+    },
+    "void *"
+  ],
+  "function_4a9490": [
+    "kinoko_sqplus_bind_object_function",
+    {
+      "1": "void *",
+      "2": "void *"
+    },
+    "void *"
+  ],
+  "function_4aa540": [
+    "kinoko_sqplus_create_class",
+    {
+      "0": "struct SQVM *",
+      "1": "void *",
+      "3": "const char *",
+      "4": "const char *"
+    },
+    null
+  ],
+  "function_45f4f0": [
+    "kinoko_sqplus_install_variable_handlers",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "function_45f640": [
+    "kinoko_sqplus_setup_hierarchy",
+    {},
+    null
+  ],
+  "function_45fab0": [
+    "kinoko_sqplus_create_variable",
+    {
+      "0": "void *",
+      "1": "const char *"
+    },
+    "void *"
+  ],
+  "function_45f3e0_this": [
+    "kinoko_sqplus_initialize_variable",
+    {},
+    null
+  ],
+  "function_4607e0": [
+    "kinoko_sqplus_create_actor_class",
+    {
+      "1": "struct SQVM *",
+      "2": "const char *",
+      "3": "const char *"
+    },
+    "void *"
+  ],
+  "function_460d10_this": [
+    "kinoko_sqplus_construct_class_binding",
+    {
+      "0": "void *",
+      "2": "const char *"
+    },
+    "void *"
+  ],
+  "function_4aa5e0": [
+    "kinoko_sqplus_find_variable",
+    {},
+    null
+  ],
+  "function_4aab60": [
+    "kinoko_sqplus_table_get",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_4aabd0": [
+    "kinoko_sqplus_instance_get",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_4aaf30": [
+    "kinoko_sqplus_table_set",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_4aafa0": [
+    "kinoko_sqplus_instance_set",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f560": [
+    "kinoko_sqplus_argument_integer",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f5a0": [
+    "kinoko_sqplus_argument_float",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f5e0": [
+    "kinoko_sqplus_argument_object",
+    {
+      "2": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f5e0_at": [
+    "kinoko_sqplus_argument_object_at",
+    {
+      "2": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f850": [
+    "kinoko_sqplus_call_integer",
+    {
+      "0": "void *",
+      "1": "void *",
+      "3": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f8c0": [
+    "kinoko_sqplus_call_rectangle",
+    {
+      "0": "void *",
+      "1": "void *",
+      "3": "struct SQVM *"
+    },
+    null
+  ],
+  "function_45f9d0": [
+    "kinoko_sqplus_call_move",
+    {
+      "0": "void *",
+      "1": "void *",
+      "3": "struct SQVM *"
+    },
+    null
+  ],
+  "function_460540_this": [
+    "kinoko_sqplus_resolve_method",
+    {
+      "0": "void *",
+      "1": "struct SQVM *"
+    },
+    "void *"
+  ],
+  "function_460540": [
+    "kinoko_sqplus_resolve_method_compat",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_get_var_info": [
+    "kinoko_sqplus_find_table_variable",
+    {},
+    null
+  ],
+  "retdec_get_var_value": [
+    "kinoko_sqplus_read_variable",
+    {},
+    null
+  ],
+  "retdec_set_var_value": [
+    "kinoko_sqplus_write_variable",
+    {},
+    null
+  ],
+  "retdec_resolve_instance_var": [
+    "kinoko_sqplus_resolve_instance_variable",
+    {},
+    null
+  ],
+  "kinoko_sqplus_void_method": [
+    "kinoko_sqplus_void_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_object_method": [
+    "kinoko_sqplus_object_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_integer_method": [
+    "kinoko_sqplus_integer_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_integer_result_method": [
+    "kinoko_sqplus_integer_result_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_rectangle_method": [
+    "kinoko_sqplus_rectangle_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_move_method": [
+    "kinoko_sqplus_move_method",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "kinoko_sqplus_register_actor_method": [
+    "kinoko_sqplus_register_actor_method",
+    {
+      "0": "struct SQVM *",
+      "3": "void *",
+      "4": "void *"
+    },
+    null
+  ],
+  "function_4a8c50": [
+    "kinoko_sqplus_release_vm_wrappers",
+    {},
+    null
+  ],
+  "function_4a8c90": [
+    "kinoko_sqplus_print",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_4a8cc0": [
+    "kinoko_sqplus_root_object",
+    {},
+    "void *"
+  ],
+  "function_4a8db0": [
+    "kinoko_sqplus_select_vm",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_4a90c0": [
+    "kinoko_sqplus_new_instance_adapter",
+    {},
+    null
+  ],
+  "retdec_sqrat_trim_stack": [
+    "kinoko_sqrat_trim_stack",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_root_construct": [
+    "kinoko_sqrat_root_construct",
+    {
+      "0": "void *",
+      "1": "struct SQVM *"
+    },
+    "void *"
+  ],
+  "retdec_sqrat_object_release": [
+    "kinoko_sqrat_object_release",
+    {
+      "0": "void *"
+    },
+    null
+  ],
+  "retdec_sqrat_get": [
+    "kinoko_sqrat_get",
+    {
+      "0": "void *",
+      "2": "void *"
+    },
+    null
+  ],
+  "retdec_sqrat_assign_pair": [
+    "kinoko_sqrat_assign_pair",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_release_pair": [
+    "kinoko_sqrat_release_pair",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_pair": [
+    "kinoko_sqrat_set_pair",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_raw_set_pair": [
+    "kinoko_sqrat_raw_set_pair",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_raw_set_int": [
+    "kinoko_sqrat_raw_set_int",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_raw_set_float": [
+    "kinoko_sqrat_raw_set_float",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_raw_set_bool": [
+    "kinoko_sqrat_raw_set_bool",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_raw_set_string": [
+    "kinoko_sqrat_raw_set_string",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_native_closure": [
+    "kinoko_sqrat_set_native_closure",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_offset_closure": [
+    "kinoko_sqrat_set_offset_closure",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_int": [
+    "kinoko_sqrat_set_int",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_bool": [
+    "kinoko_sqrat_set_bool",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_string": [
+    "kinoko_sqrat_set_string",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_no_constructor": [
+    "kinoko_sqrat_no_constructor",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_initialize_class": [
+    "kinoko_sqrat_initialize_class",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_new_class": [
+    "kinoko_sqrat_new_class",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_new_table": [
+    "kinoko_sqrat_new_table",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_sqrat_set_delegate": [
+    "kinoko_sqrat_set_delegate",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "function_415550_this": [
+    "kinoko_sqrat_bind_object_function",
+    {
+      "0": "void *",
+      "1": "const char *",
+      "2": "const void *",
+      "4": "void *"
+    },
+    "struct SQVM *"
+  ],
+  "function_415810_this": [
+    "kinoko_sqrat_invoke_callback",
+    {
+      "0": "const void *"
+    },
+    null
+  ],
+  "kinoko_sqrat_copy_object": [
+    "kinoko_sqrat_copy_object",
+    {
+      "0": "void *",
+      "2": "void *"
+    },
+    "void *"
+  ],
+  "kinoko_sqrat_object_reference": [
+    "kinoko_sqrat_object_reference",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ],
+  "kinoko_sqrat_delete_object": [
+    "kinoko_sqrat_delete_object",
+    {
+      "0": "void *"
+    },
+    "void *"
+  ]
+}

@@ -56,30 +56,30 @@ constexpr Field fields[] = {
 void construct_input_class(int32_t state[12]) {
     state[0] = address(g644);
     state[1] = address("Input");
-    function_4a94e0_this(address(state + 2));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(state + 2)));
     state[5] = 0;
-    function_4a91c0_this(state + 6);
-    function_4a91c0_this(state + 9);
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 6)));
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 9)));
     auto* vm = current_vm();
     const auto top = sq_gettop(vm);
     int32_t temporary[3]{}, nested[3]{};
-    function_4a94e0_this(address(temporary));
-    if (function_4aa540(state[0], address(temporary), kinoko_input_binding_type(), state[1], 0)) {
-        function_4a94e0_this(address(nested));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(temporary)));
+    if (kinoko_sqplus_create_class((struct SQVM *)(intptr_t)(state[0]), (void *)(temporary), kinoko_input_binding_type(), (const char *)(intptr_t)(state[1]), (const char *)(intptr_t)(0))) {
+        (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(nested)));
         ObjectView(temporary).push(vm);
-        function_4a9660_this(address(nested), -1);
+        kinoko_sqplus_object_capture((void *)(nested), -1);
         sq_pop(vm, 1);
-        function_45f640(nested);
+        kinoko_sqplus_setup_hierarchy(nested);
     }
     sq_settop(vm, top);
-    function_4a95c0_this(address(state + 2), address(temporary));
-    function_4a9d70_this(address(temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary)));
+    kinoko_sqplus_object_destroy((void *)(temporary));
 }
 } // namespace
 
 extern "C" int32_t function_46d950(void) {
     int32_t root[3]{}, state[12]{}, temporary[3]{};
-    function_4a9500_this(root, function_4a8cc0());
+    (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(root), (const void *)(intptr_t)((int32_t)(intptr_t)(kinoko_sqplus_root_object()))));
     construct_input_class(state);
     auto* vm = pointer<SQVM>(state[0]);
     for (const auto& method : methods) {
@@ -95,8 +95,8 @@ extern "C" int32_t function_46d950(void) {
         auto bind = field.boolean ? kinoko_sqplus_bind_boolean : kinoko_sqplus_bind_integer;
         bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
-    function_4a95c0_this(address(g629), address(function_4aa3a0_this(address(root), address(temporary), "Input")));
-    function_4a9d70_this(address(temporary));
-    for (int offset : {9, 6, 2}) function_4a9d70_this(address(state + offset));
-    return function_4a9d70_this(address(root));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_assign((void *)(g629), (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input")))));
+    kinoko_sqplus_object_destroy((void *)(temporary));
+    for (int offset : {9, 6, 2}) kinoko_sqplus_object_destroy((void *)(state + offset));
+    return kinoko_sqplus_object_destroy((void *)(root));
 }

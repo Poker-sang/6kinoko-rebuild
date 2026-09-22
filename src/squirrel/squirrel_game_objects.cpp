@@ -129,7 +129,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
     retdec_release_act_callback(address(destination));
     auto callback = read<ActCallback>(destination);
     int32_t pair[2]; write(pair, empty());
-    const auto found = retdec_sqrat_get(global, name, address(pair));
+    const auto found = kinoko_sqrat_get((void *)(intptr_t)(global), name, (void *)(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
     retdec_trace_i32("act:copy-update-script", script);
     retdec_trace_i32("act:copy-update-result", found);
@@ -140,7 +140,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
         upstream::sqrat_retain_function(vm, callback.environment, callback.closure);
         write(destination, callback);
     }
-    retdec_sqrat_release_pair(id, pair);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(id), pair);
 }
 extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
     const int32_t* pair) {

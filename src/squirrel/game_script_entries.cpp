@@ -44,6 +44,6 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
     using Function=KinokoOwnedObjectWords* (__cdecl *)(KinokoOwnedObjectWords*,KinokoOwnedObjectWords,float,float,float,KinokoOwnedObjectWords);
     reinterpret_cast<Function>(pointer(target))(&result,fn,x,y,z,arg);
     function_4029b0(address(vm),reinterpret_cast<int32_t*>(&result));
-    function_4a9d70_this(address(&result));
+    kinoko_sqplus_object_destroy((void *)(&result));
     return 1;
 }
