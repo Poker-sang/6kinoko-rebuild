@@ -1,3 +1,4 @@
+#include "kinoko/graphics_lock.hpp"
 #include "kinoko/graphics_device.h"
 #include "kinoko/render_target.h"
 #include "kinoko/texture_store.h"
@@ -27,11 +28,8 @@ using kinoko::legacy::pointer;
 // value. It does not AddRef/retain the texture; the set owns only its nodes.
 std::set<uint32_t> render_targets;
 std::set<uint32_t> depth_targets;
-std::list<int32_t> device_listeners;
-struct GraphicsLock {
-    GraphicsLock() { EnterCriticalSection(&g676); }
-    ~GraphicsLock() { LeaveCriticalSection(&g676); }
-};
+std::list<KinokoDeviceListener *> device_listeners;
+using GraphicsLock=kinoko::graphics::Lock;
 int32_t create(uint32_t width,uint32_t height) {
     if(kinoko_graphics.capabilities.TextureCaps&0x20) width=height=(std::max)(width,height);
     kinoko::ComOwner<IDirect3DTexture9> texture;
@@ -84,25 +82,30 @@ extern "C" int32_t __fastcall kinoko_method_create_render_target(int32_t resourc
 
 // 401660/4016E0: insertion order, duplicate suppression and borrowed objects.
 extern "C" void kinoko_initialize_device_listeners(void) { device_listeners.clear(); }
-extern "C" int32_t kinoko_add_device_listener(int32_t object) {
+extern "C" int32_t kinoko_add_device_listener(KinokoDeviceListener *object) {
     GraphicsLock lock;
     if(std::find(device_listeners.begin(),device_listeners.end(),object)!=device_listeners.end()) return 0;
     if(device_listeners.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
     device_listeners.push_back(object);
     return 1;
 }
-extern "C" void kinoko_remove_device_listener(int32_t object) {
+extern "C" void kinoko_remove_device_listener(KinokoDeviceListener *object) {
     GraphicsLock lock;
     const auto found=std::find(device_listeners.begin(),device_listeners.end(),object);
     if(found!=device_listeners.end()) device_listeners.erase(found);
 }
-extern "C" void kinoko_notify_device_listeners(int32_t slot) {
-    // The caller holds the original recursive graphics critical section.
-    for(const int32_t object:device_listeners) {
-        const int32_t table=field<int32_t>(object);
-        retdec_call_thiscall0(pointer<void>(object),pointer<void>(field<int32_t>(table+4*slot)));
+extern "C" void kinoko_notify_device_listeners(KinokoDeviceEvent event) {
+    using Callback=void (__thiscall *)(KinokoDeviceListener *);
+    struct Methods { Callback before_reset,after_reset; };
+    // Queue owns nodes, not listeners; preserve registration order and actual
+    // virtual dispatch. The caller already holds the recursive graphics lock.
+    for (auto *object:device_listeners) {
+        const auto *methods=kinoko::legacy::load<const Methods *>(object);
+        const auto callback=event==KINOKO_DEVICE_BEFORE_RESET ? methods->before_reset : methods->after_reset;
+        callback(object);
     }
 }
+
 extern "C" int32_t __fastcall kinoko_renderer_before_reset(int32_t,void*) {
     // Original 401DA0 does not null these two borrowed cache fields.
     pointer<IDirect3DSurface9>(g718)->Release();

@@ -3728,11 +3728,7 @@ static void retdec_initialize_runtime_objects(void)
     g_retdec_runtime_initialized = 1;
 }
 
-static ULONG retdec_release_d3d_object(void *object)
-{
-    IUnknown *unknown = (IUnknown *)object;
-    return unknown == NULL ? 0 : unknown->lpVtbl->Release(unknown);
-}
+
 
 // Address range: 0x401000 - 0x40100b
 // From class:    .?AVbad_alloc@std@@
@@ -3761,54 +3757,10 @@ int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
 }
 
 // Address range: 0x4013d0 - 0x4014c3
-int32_t function_4013d0(void) {
-    IDirect3DDevice9 *device=kinoko_graphics.device;
-    if(kinoko_graphics.factory==0 || device==NULL || kinoko_graphics.cooperative_status==(int32_t)D3DERR_DEVICELOST) return 0;
-    kinoko_graphics.present.BackBufferFormat=kinoko_graphics.present.Windowed==0 ? D3DFMT_X8R8G8B8 : kinoko_graphics.display.Format;
-    EnterCriticalSection((LPCRITICAL_SECTION)&g676);
-    kinoko_notify_device_listeners(0);
-    if(kinoko_graphics.swap_chain) { retdec_release_d3d_object((void *)(uintptr_t)kinoko_graphics.swap_chain);kinoko_graphics.swap_chain=0; }
-    if(FAILED(device->lpVtbl->Reset(device,&kinoko_graphics.present))) {
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g676);return 0;
-    }
-    device->lpVtbl->GetSwapChain(device,0,(IDirect3DSwapChain9 **)&kinoko_graphics.swap_chain);
-    kinoko_notify_device_listeners(1);
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-    return 1;
-}
+int32_t function_4013d0(void) { return kinoko_graphics_reset(); }
 
 // Address range: 0x4014d0 - 0x4015fb
-int32_t function_4014d0(void) {
-    // 0x4014d0
-    kinoko_graphics.present.Windowed = kinoko_graphics.present.Windowed == 0;
-    int32_t result = function_4013d0(); // 0x4014e4
-    int32_t v1 = kinoko_graphics.present.Windowed;
-    if ((char)result == 0) {
-        // 0x4014ed
-        kinoko_graphics.present.Windowed = v1 == 0;
-        return result;
-    }
-    int32_t v2 = GetSystemMetrics(45);
-    int32_t v3 = GetSystemMetrics(7);
-    if (v1 != 0) {
-        int32_t cx = v3 + v2 + GetSystemMetrics(5) + kinoko_graphics.present.BackBufferWidth; // 0x401526
-        int32_t v4 = GetSystemMetrics(46); // 0x40152e
-        int32_t cy = GetSystemMetrics(8) + v4 + GetSystemMetrics(6) + GetSystemMetrics(4) + kinoko_graphics.present.BackBufferHeight; // 0x40154c
-        int32_t v5 = GetSystemMetrics(0) - cx; // 0x401554
-        int32_t v6 = GetSystemMetrics(1) - cy; // 0x401562
-        return SetWindowPos((int32_t *)kinoko_graphics.present.hDeviceWindow, (int32_t *)-2, (v5 - (v5 >> 31)) / 2, (v6 - (v6 >> 31)) / 2, cx, cy, 32);
-    }
-    // 0x401587
-    GetSystemMetrics(5);
-    GetSystemMetrics(46);
-    GetSystemMetrics(8);
-    GetSystemMetrics(6);
-    GetSystemMetrics(4);
-    int32_t v7 = GetSystemMetrics(7) + GetSystemMetrics(45) + GetSystemMetrics(5); // 0x4015b1
-    int32_t v8 = GetSystemMetrics(8) + GetSystemMetrics(46) + GetSystemMetrics(6); // 0x4015cc
-    int32_t v9 = GetSystemMetrics(4); // 0x4015d7
-    return SetWindowPos((int32_t *)kinoko_graphics.present.hDeviceWindow, NULL, -(((v7 - (v7 >> 31)) / 2)), -((v9 + (v8 - (v8 >> 31)) / 2)), 0, 0, 33);
-}
+int32_t function_4014d0(void) { return kinoko_graphics_toggle_window(); }
 
 // Address range: 0x401600 - 0x401652
 int32_t function_401600(void) {
@@ -3823,95 +3775,17 @@ int32_t function_401600(void) {
 
 
 // Address range: 0x401760 - 0x401790
-int32_t function_401760(void) {
-    /* sub_401760 enters the render lock, begins the scene, and leaves the
-       lock held until sub_401790 finishes the frame. */
-    IDirect3DDevice9 *device;
-    HRESULT hr;
-
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-    device = kinoko_graphics.device;
-    if (device == NULL || device->lpVtbl == NULL) {
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        return 0;
-    }
-    hr = device->lpVtbl->BeginScene(device);
-    {
-        static volatile LONG begin_scene_trace_count;
-        LONG trace_index = InterlockedIncrement(&begin_scene_trace_count);
-        if (trace_index <= 5)
-            retdec_trace_hresult("401760:beginscene-hr", hr);
-    }
-    if (FAILED(hr)) {
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        return 0;
-    }
-    return 1;
-}
+int32_t function_401760(void) { return kinoko_graphics_begin_scene(); }
 
 // Address range: 0x401790 - 0x4017aa
-int32_t function_401790(void) {
-    IDirect3DDevice9 *device = kinoko_graphics.device;
-    if (device != NULL && device->lpVtbl != NULL) {
-        HRESULT hr = device->lpVtbl->EndScene(device);
-        retdec_trace_hresult("401790:endscene-hr", hr);
-    }
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-    return 0;
-}
+int32_t function_401790(void) { return kinoko_graphics_end_scene(); }
 
 
 // Address range: 0x4017b0 - 0x401814
-int32_t function_4017b0(void) {
-    IDirect3DSwapChain9 *swap_chain;
-    HRESULT hr;
-
-    if (g713 == 0 ||
-        TryEnterCriticalSection((LPCRITICAL_SECTION)&g676) == 0) {
-        return 0;
-    }
-
-    swap_chain = kinoko_graphics.swap_chain;
-    if (swap_chain == NULL || swap_chain->lpVtbl == NULL) {
-        g713 = 0;
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-        return 1;
-    }
-
-    hr = swap_chain->lpVtbl->Present(
-        swap_chain, NULL, NULL, NULL, NULL, D3DPRESENT_DONOTWAIT);
-    {
-        static volatile LONG present_trace_count;
-        LONG present_index = InterlockedIncrement(&present_trace_count);
-        if (present_index <= 5)
-            retdec_trace_hresult("4017b0:present-hr", hr);
-    }
-    if (hr == D3D_OK) {
-        g713 = 0;
-    }
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-    return hr == D3D_OK ? 1 : 0;
-}
+int32_t function_4017b0(void) { return kinoko_graphics_present(); }
 
 // Address range: 0x401820 - 0x401843
-int32_t function_401820(void) {
-    IDirect3DDevice9 *device = kinoko_graphics.device;
-    HRESULT hr;
-
-    if (device == NULL || device->lpVtbl == NULL)
-        return (int32_t)D3DERR_INVALIDCALL;
-    /* Original sub_401820 is the per-frame Clear call.  g714 is the
-       renderer object's +0x38 clear color (dword_51AE08). */
-    hr = device->lpVtbl->Clear(device, 0, NULL, 3,
-                               (D3DCOLOR)g714, 1.0f, 0);
-    {
-        static volatile LONG clear_trace_count;
-        LONG trace_index = InterlockedIncrement(&clear_trace_count);
-        if (trace_index <= 5)
-            retdec_trace_hresult("401820:clear-hr", hr);
-    }
-    return (int32_t)hr;
-}
+int32_t function_401820(void) { return kinoko_graphics_clear(); }
 
 // Address range: 0x401850 - 0x401a2f
 // From class:    .?AVCRenderer@@
@@ -3942,7 +3816,7 @@ int32_t function_401ae0(void) {
     }
     g702 = (int32_t)(intptr_t)kinoko_graphics.device;
     retdec_trace("401ae0:pre-list");
-    kinoko_add_device_listener((int32_t)(uintptr_t)&g701);
+    kinoko_add_device_listener((KinokoDeviceListener *)&g701);
     retdec_trace("401ae0:post-list");
     g714 = 0;
     g713 = 0;
@@ -5625,7 +5499,7 @@ void function_40d940(int32_t *state) {
     function_411f90();
     function_4089c0();
     kinoko_renderer_before_reset((int32_t)(uintptr_t)&g701, NULL);
-    kinoko_remove_device_listener((int32_t)(uintptr_t)&g701);
+    kinoko_remove_device_listener((KinokoDeviceListener *)&g701);
     function_401600();
     CoUninitialize();
     if (g_retdec_state_cs_initialized != 0) {
@@ -5660,16 +5534,7 @@ BOOL function_40db30(unsigned char *state) {
             DispatchMessageA(&message);
             continue;
         }
-        if (kinoko_graphics.device != 0) {
-            int32_t *vtable = *(int32_t **)(uintptr_t)kinoko_graphics.device;
-            if (vtable != NULL && vtable[3] != 0) {
-                kinoko_graphics.cooperative_status = ((int32_t (__stdcall *)(int32_t))(uintptr_t)vtable[3])(
-                    (int32_t)(intptr_t)kinoko_graphics.device);
-            }
-        }
-        if (kinoko_graphics.cooperative_status == -2005530519) {
-            function_4013d0();
-        }
+        kinoko_graphics_poll();
         WaitForSingleObject(event_handle, 16);
     }
     CloseHandle(event_handle);

@@ -64,6 +64,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
     src/reconstructed/script_callbacks.cpp
+    src/reconstructed/device_runtime.cpp
     src/reconstructed/device_initialization.cpp
     src/reconstructed/quad_submit.cpp
     src/reconstructed/render_state.cpp

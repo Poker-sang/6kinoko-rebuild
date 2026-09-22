@@ -18,3 +18,19 @@ Client dimensions use the actual window rectangle, without invented 640x480
 fallback. Keep the existing valid WINDOWINFO size and startup failure cleanup
 as reconstruction boundaries. Release order is swap chain, device, factory.
 TextureCaps now refers to GetDeviceCaps output, not an unpopulated split byte.
+
+## R149: device reset and frame lifecycle
+
+Message-loop poll calls TestCooperativeLevel and only resets on
+DEVICENOTRESET, retaining that status until the next poll. Reset holds the
+original recursive graphics lock, notifies listeners before Reset, releases
+swap chain, calls Reset, reacquires swap chain, then notifies after Reset.
+Failure skips reacquisition/after callbacks; DEVICELOST returns without locking.
+Window toggle reverts Windowed on failure and retains the original metric-based
+positioning on success. No invented window style change or resize policy.
+Listeners now borrow actual pointers and call typed virtual entries in original
+registration order, suppressing duplicates. Original xrefs show only renderer
+registration; no speculative extra texture reload listener is introduced.
+BeginScene holds the lock only on exact D3D_OK; EndScene releases it. Present
+uses DONOTWAIT and preserves pending on failure. Existing null-device/swap-chain
+startup guards remain explicit compatibility boundaries.
