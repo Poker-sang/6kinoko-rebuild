@@ -1,6 +1,8 @@
 #include "kinoko/application_runtime.hpp"
 #include "kinoko/renderer.h"
 #include "kinoko/scene_queue.h"
+#include "kinoko/render_target.h"
+#include "kinoko/game_math.h"
 #include <array>
 #include <cstdio>
 #include <vector>
@@ -8,7 +10,42 @@
 extern "C" {
 KinokoRenderer kinoko_renderer{};
 CRITICAL_SECTION g676{};
+KinokoGraphics kinoko_graphics{};
+int32_t g534 = 0;
+char g874 = 0;
+// Isolated host/device ports. No game startup, timer or device is invoked by
+// this contract; only the callback/state functions below are under examination.
+void retdec_trace(const char*) {}
+void kinoko_application_initialize_host() {}
+void kinoko_application_open_archives() {}
+const char* kinoko_application_title() { return "fixture"; }
+const char* kinoko_application_error() { return "fixture"; }
+void kinoko_seed_random(uint32_t) {}
+int32_t kinoko_audio_initialize_device(HWND, int32_t) { return 0; }
+int32_t kinoko_audio_shutdown_device() { return 0; }
+int32_t kinoko_graphics_create(HWND, int32_t, int32_t) { return 0; }
+int32_t kinoko_graphics_release() { return 0; }
+int32_t kinoko_graphics_toggle_window() { return 0; }
+HRESULT kinoko_graphics_poll() { return S_OK; }
+int32_t kinoko_graphics_present() { return 0; }
+int32_t kinoko_renderer_initialize() { return 0; }
+int32_t __fastcall kinoko_renderer_before_reset(KinokoRenderer*, void*) { return 0; }
+void kinoko_remove_device_listener(KinokoDeviceListener*) {}
+int32_t kinoko_ime_dispatch(int32_t, uint32_t, uint32_t, int32_t) { return 0; }
+unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) { return 0; }
+int32_t function_408650(void*, HWND) { return 0; }
+int32_t function_408930(HWND, HINSTANCE) { return 0; }
+int32_t function_4089c0() { return 0; }
+int32_t function_408b30() { return 0; }
+int32_t function_408bf0() { return 0; }
+int32_t function_408d00() { return 0; }
 int32_t function_408c80() { return 0; }
+int32_t function_412ca0() { return 0; }
+int32_t function_412b80(int32_t) { return 0; }
+int32_t function_412c10(int32_t) { return 0; }
+int32_t function_45da00() { return 0; }
+int32_t function_45da40() { return 0; }
+int32_t function_45da50(int32_t) { return 0; }
 }
 namespace {
 using namespace kinoko::application;

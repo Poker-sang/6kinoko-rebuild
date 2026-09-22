@@ -66,3 +66,15 @@ The new contract source checks update/draw callback order, readiness accumulatio
 old/new scene IDs, deferred destruction and the `-1` exit request using synthetic
 objects. It will be compiled/linked only. Per user instruction, do not execute
 the game, CTest or any local contract executable. Runtime behavior is unverified.
+
+## R1 / R2 build history
+
+R1 source `bdc0519` compiled and linked the game executable and existing stage
+contract, but all-target build failed because the new isolated application
+contract linked the full host-dependent library without its required host ports.
+R1 files remain in `build-runs/application-lifecycle-r1-quiet` and the matching
+runtime directory. No executable was run.
+
+R2 compiles the production application/scene-queue sources directly into that
+contract and supplies explicit mock ports for unrelated devices, timer and boot
+services. This corrects contract isolation; it does not change game behavior.

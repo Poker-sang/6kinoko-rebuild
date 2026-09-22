@@ -376,11 +376,12 @@ set(KINOKO_REFERENCE_DIR "${CMAKE_SOURCE_DIR}/../6kinoko" CACHE PATH "Directory 
 set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime-builds/default" CACHE PATH
     "Directory for built runtime executables")
 enable_testing()
-add_executable(kinoko_application_contract tests/application_contract.cpp)
+add_executable(kinoko_application_contract tests/application_contract.cpp
+    src/reconstructed/application_runtime.cpp src/reconstructed/scene_queue.cpp)
 target_include_directories(kinoko_application_contract PRIVATE include)
 target_compile_options(kinoko_application_contract PRIVATE /Gy /O2)
 target_link_options(kinoko_application_contract PRIVATE /OPT:REF /OPT:ICF)
-target_link_libraries(kinoko_application_contract PRIVATE kinoko_squirrel_cpp_vm user32 ole32)
+target_link_libraries(kinoko_application_contract PRIVATE user32 gdi32 ole32 winmm imm32)
 add_test(NAME application_contract COMMAND kinoko_application_contract)
 add_test(
     NAME archive_smoke
