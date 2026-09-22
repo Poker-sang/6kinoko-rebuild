@@ -31,3 +31,23 @@ Adjacent JSON files are IDA MCP decompile/disassembly output for original
 The x87 disassembly is used when decompiler temporaries alias the sine/cosine
 results. Existing Squirrel 2.2.2-backed object and callback adapters are reused;
 this work does not introduce a second VM or new script reference ownership.
+
+## R143: PAT reading and frame construction
+
+pat_animation.cpp owns the scoped reader and pending animation, reads the same
+ordered fields (including skipped editor records), keeps the first bounds block,
+links -2 continuation nodes and resolves -1 aliases in reverse order. Texture
+names remain relative to the supplied resource directory; a missing texture
+still occupies its resource slot. Existing 4096-count guards and partial-load
+publication behavior are preserved as reconstruction compatibility boundaries.
+
+pat_frame.cpp constructs UVs and frame appearance through the shared schema.
+The original quad rotation uses Z then Y then X. Disassembly confirms Y/X use
+`axis*cos + z*sin` and `z*cos - axis*sin`; the previous helper used reversed
+signs for both axes. Resource lookup also rejects base+index==count, fixing the
+previous one-past-end guard. This only affects malformed resource references.
+
+New PAT contract source covers exact reader consumption, nonzero resource base,
+forward alias, continuation links, signed duration, first bounds, two-axis
+rotation, resource limits and cleanup of a truncated pending animation. Existing
+stage fixtures retain their real-reader/VM integration entry points.

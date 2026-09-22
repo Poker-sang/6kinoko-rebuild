@@ -9,6 +9,7 @@
 struct KinokoActor;
 struct KinokoActorPool;
 struct KinokoActorManager;
+struct KinokoAnimation;
 struct SQVM;
 
 namespace kinoko::actor {
@@ -80,7 +81,7 @@ struct ActorRecord {
 using native::ControlRecord;
 using native::ControlTable;
 struct AnimationRecord {
-    std::array<unsigned char, 8> unknown0;
+    KinokoAnimation *next, *previous; // borrowed links; owning animation list is separate
     Address frames_begin, frames_end;
     std::array<unsigned char, 8> unknown16;
     std::uint8_t loops, has_bounds;
