@@ -22,7 +22,7 @@ void kinoko_native_add_weak(int32_t p) { events.push_back(12); events.push_back(
 void kinoko_native_release_weak(int32_t p) { events.push_back(13); events.push_back(p); }
 void * kinoko_sqplus_object_assign(void * out, const void * in) { std::memmove(out,in,12); return out; }
 void * kinoko_sqplus_object_copy_construct(void * out, const void * in) { std::memcpy(out,in,12); events.push_back(static_cast<int32_t *>(out)[1]); return (void *)(intptr_t)(out); }
-int32_t  kinoko_sqplus_object_destroy(void * p) { events.push_back(static_cast<int32_t *>(p)[1]); return (int32_t)(intptr_t)(p); }
+void*  kinoko_sqplus_object_destroy(void * p) { events.push_back(static_cast<int32_t *>(p)[1]); return (void*)(intptr_t)((int32_t)(intptr_t)(p)); }
 int32_t kinoko_actor_clear_script(KinokoActor *actor) {
     CHECK(actor==reinterpret_cast<KinokoActor *>(reset_actor));
     CHECK(!reset_actor->owner && !reset_actor->owner_control && !reset_actor->step && !reset_actor->step_control);

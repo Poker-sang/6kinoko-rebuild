@@ -42,7 +42,7 @@ extern "C" void kinoko_sq_release_owned_states(void) {
 }
 extern "C" int32_t kinoko_sqplus_release_vm_wrappers(void) {
     if (g645 != 0) {
-        kinoko_sqplus_object_destroy(pointer<void>(g645));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy(pointer<void>(g645)));
         std::free(pointer<void>(g645));
         g645 = 0;
     }
@@ -77,7 +77,7 @@ extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
     // while the outgoing VM is still current. This cache is allocated by
     // kinoko_sqplus_root_object; release its external root before freeing it.
     if (g645 != 0) {
-        kinoko_sqplus_object_destroy(pointer<void>(g645));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy(pointer<void>(g645)));
         std::free(pointer<void>(g645));
         g645 = 0;
     }

@@ -592,8 +592,8 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         retdec_destroy_cact_object(PTR(act));
         printf("PASS: original %s terrain walking in both directions (TYPE_2HEAD)\n", stage_path);
     }
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original ground scripts walking, turning and stopping on a flat floor");
     return 0;
 }
@@ -725,8 +725,8 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(execute_source(vm,root+2,
         "if(resetCalls!=34 || resetTicks!=33) throw \"post-Reset callback continuation\";"));
     kinoko_script_clear_actors();
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(seed)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(seed))));
     puts("PASS: Reset replays initialization and retires old references across 32 resets");
     return 0;
 }
@@ -849,9 +849,9 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         "if (stoneSounds.len() != 12 || stoneEffects.len() != 8) throw \"stone media calls\";\n"
         "foreach (id in stoneSounds) if (id != 33 && id != 35) throw \"stone sound id\";\n"
         "foreach (id in stoneEffects) if (id != 1960) throw \"stone effect id\";"));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original stone callbacks/PAT, eight placements/rides, walk-off and bound release");
     return 0;
 }
@@ -903,8 +903,8 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
                         kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(user)), (void *)(intptr_t)(PTR(count)), "count");
                         fprintf(stderr, "float kind=%d round=%d frame=%d delta=(%g,%g) v=(%g,%g) count=%d\n",
                             kind, round, frame, dx, dy, vx, vy, count[2]);
-                        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(count)));
-                        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(user)));
+                        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(count))));
+                        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(user))));
                     }
                     CHECK(vx * dx + vy * dy > 0.0f);
                     CHECK(fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f);
@@ -916,14 +916,14 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 0);
             CHECK(function_48aa20(vm) == stack_top);
         }
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
     CHECK(execute_source(vm, root + 2,
         "if (floatRewards[0]!=4 || floatRewards[1]!=4 || floatRewards[2]!=4 || "
         "floatNumbers.len()!=12) throw \"floating reward count\";\n"
         "foreach (i,n in floatNumbers) if (n != (i<4 ? 100 : (i<8 ? 0 : 10000))) "
         "throw \"floating reward value\";"));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original point/save/1up scripts return to player before reward/release (12 flights)");
     return 0;
 }
@@ -1014,8 +1014,8 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(actor);
             CHECK(execute_source(vm,root+2,"player.x=0;"));
             kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(bumper));
-            kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy))); kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init)));
-            kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(bumper_init)));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init))));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(bumper_init))));
         }
         int contacts=0, bounces=0;
         CHECK(actor && vm_failures==failures);
@@ -1059,12 +1059,12 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
         if(block) kinoko_actor_release((KinokoActor *)(intptr_t)block, NULL);
         if(bumper) kinoko_actor_release((KinokoActor *)(intptr_t)bumper, NULL);
         kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
     kinoko_script_clear_actors();
     function_468950_this(PTR(g_514300_storage),manager);
     retdec_destroy_cact_object(PTR(actual_map));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original moving stars land, bounce and remain collectible");
     return 0;
 }
@@ -1105,7 +1105,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(script)), (void *)(intptr_t)(PTR(layout_object)), "layout");
     layout = (int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(PTR(layout_object)), (void *)(intptr_t)(0)));
     CHECK(layout && retdec_map_chip_data(layout));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(layout_object)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(layout_object))));
     CHECK(retdec_execute_act_callback(hidden + 204, 4, NULL) >= 0);
     CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
     CHECK(execute_source(vm, root + 2,
@@ -1207,7 +1207,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
                 *(uint8_t *)(intptr_t)(ball+40),*(uint8_t *)(intptr_t)(ball+21),
                 *(uint8_t *)(intptr_t)(ball+22),*(float *)(intptr_t)(ball+240),
                 *(float *)(intptr_t)(ball+244),*(int32_t *)(intptr_t)(ball+112));
-            kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(obj)));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(obj))));
         }
         printf("PASS: ball generation %d\n",round); fflush(stdout);
         // Original map flags make a reset actor wait for native visibility.
@@ -1254,9 +1254,9 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(*(float *)(intptr_t)(fairy+244)>160);
     CHECK(*(float *)(intptr_t)(fairy+260)>0);
     puts("PASS: original collision death rises briefly then falls under gravity");
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(death_init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(death_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     kinoko_script_clear_actors();
     return 0;
 }
@@ -1398,7 +1398,7 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(execute_source(vm, root + 2,
         "if (enemyA.direction!=1.0 || enemyA.vx<=0.0 || enemyB.direction!=-1.0) "
         "throw \"enemy wall reversal\";"));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "Init0101");
     actors[2] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 600, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x101}, (const void *)(intptr_t)(0)));
     CHECK(actors[2] && vm_failures == failures);
@@ -1479,8 +1479,8 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     memcpy(g_retdec_camera_state+72,saved_camera,sizeof(saved_camera));
     kinoko_script_clear_actors();
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: fairy/white kedama walking, ledge falling, collisions and 48 offscreen resets");
     return 0;
 }
@@ -1568,9 +1568,9 @@ static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
         "throw \"stone did not activate original block callback\";"));
     kinoko_script_clear_actors();
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy))); kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(item)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init))); kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(stone_init)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(item))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(stone_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init))));
     puts("PASS: original stone ride/walk-off/fall, block callback, region query and item spawn");
     return 0;
 }
@@ -1624,7 +1624,7 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(margin_calls==32 && margin_args[0]==1000 && margin_args[1]==2000 &&
         margin_args[2]==100 && margin_args[3]==1);
     kinoko_script_clear_actors();
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     puts("PASS: original eight-head expiry, SetType/SetTake and native BGM adapter (32 transitions)");
     return 0;
 }
@@ -1686,7 +1686,7 @@ static int test_array_sort(int32_t vm, int32_t *root) {
     CHECK(retired_vm_stack);
     free(retired_vm_stack); retired_vm_stack=NULL;
     for(int i=0;i<6;++i) CHECK(*(int32_t *)(intptr_t)(objects[i]+4)==refs[i]);
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     expected_vm_error=1;
     CHECK(execute_source(vm,root+2,
         "local caught=0;\n"
@@ -1918,7 +1918,7 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,
             "if(replacementCalls!=0) throw \"original failure retirement changed\";"));
         kinoko_script_clear_actors();
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
     {
         int32_t transition[2]={g483,g484};
@@ -2047,7 +2047,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,"classFixture <- {Actor={},Camera=Camera};"));
         kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(class_environment)), "classFixture");
         CHECK(execute_asset(vm,class_environment+1,"data/script/class_def.cv4"));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(class_environment)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(class_environment))));
     }
     function_466270();
     CHECK(execute_asset(vm,root+2,"data/script/camera.cv4"));
@@ -2187,8 +2187,8 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     CHECK((int32_t)(intptr_t)(kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)(PTR(empty)), (const char *)(intptr_t)(0))) == PTR(empty));
     empty_type = empty[5];
     empty_value = empty[6];
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 4)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 1)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 4))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 1))));
     int32_t first_refs = callback_external_refs(vm, first);
     int32_t second_refs = callback_external_refs(vm, second);
     int32_t root_refs = callback_external_refs(vm, root + 1);
@@ -2227,18 +2227,18 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
         retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), g483, g484);
         CHECK(callbacks[i][5] == (i == 1 ? empty_type : g483));
         CHECK(callbacks[i][6] == (i == 1 ? empty_value : g484));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 4)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 1)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 4))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 1))));
     }
     CHECK(callback_external_refs(vm, first) == first_refs);
     CHECK(callback_external_refs(vm, second) == second_refs);
     CHECK(callback_external_refs(vm, root + 1) == root_refs);
     CHECK(function_48aa20(vm) == stack_top);
     CHECK(retdec_call_thiscall0_result(camera, kinoko_camera_update) == g483);
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(actor + 11)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(second)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(first)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(actor + 11))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(second))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(first))));
     puts("PASS: C++ callback ABI, replacement/self-assignment, external refs, clear and Camera dispatch");
     return 0;
 }
@@ -2812,8 +2812,8 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         CHECK(slot[1] == pointer);
         function_48aa30(vm, 2);
     }
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance))));
     function_48c910(vm, top);
     CHECK(native_instance_releases == 1 && native_instance_release_pointer == pointer);
     CHECK(execute_source(vm, root+2, "if(nativeConstructorCalls!=0) throw 130;\n"));
@@ -2824,8 +2824,8 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
         kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
         CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 1);
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance))));
         function_48c910(vm, top);
     }
     puts("PASS: native instance type maps, skipped constructor, failure stack and external-reference lifetime");
@@ -3184,7 +3184,7 @@ static int test_receiver_operations(int32_t vm, int32_t *root) {
     /* Aliased source/output must keep the original alive until copying ends. */
     CHECK(kinoko_sq_clone(vm,PTR(destination),PTR(destination)));
     function_489f30_this(PTR(destination));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     expected_vm_error=1;
     int result=execute_source(vm,root+2,
         "function ReceiverBadIndex(index,...) { return vargv[index]; }\n"
@@ -3244,8 +3244,8 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(heap)), "entry_array");
     int32_t heap_address = PTR(heap);
     CHECK(retdec_call_thiscall1_result(heap, (void *)(intptr_t)g16.e0, 1) == heap_address);
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(text)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(text))));
     CHECK(function_48aa20(vm) == stack_before);
     puts("PASS: recovered size/reverse, pair assignment/release, and virtual wrapper destruction");
     return 0;
@@ -3385,8 +3385,8 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
         int32_t *array = (int32_t *)(intptr_t)list[2];
         CHECK(array[7] == (frame < 2 ? 1 : 0));
         CHECK(steps[2] == (frame < 2 ? frame + 1 : 3));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(steps)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(list)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(steps))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(list))));
         CHECK(function_48aa20(vm) == top);
     }
     CHECK(execute_source(vm, root + 2,
@@ -3494,7 +3494,7 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(actors[i]);
         *(uint8_t *)(intptr_t)(actors[i] + 40) = 1;
     }
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
     /* Exercise 469900 itself: writing only g622 used to leave manager+64=-1. */
     kinoko_game_masks.update = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
     for (int frame = 0; frame < 30; ++frame) kinoko_game_update();
@@ -3563,8 +3563,8 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     CHECK(*(int32_t *)(intptr_t)(schedule[2] + 28) == 0);
     CHECK(execute_source(vm, root + 2,
         "if(stageSwitchCount!=0 || stageSwitchBlue!=2) throw \"switch expiration\";"));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(schedule)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(ticks)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(schedule))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(ticks))));
     CHECK(vm_failures == 0);
     puts("PASS: original 900-frame blue-crystal countdown consumes all 44 timestamps at the original cadence");
     return 0;
@@ -3608,7 +3608,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     int32_t value = 0;
     CHECK(function_48a7d0(vm, -1, &value) == 0 && value == 20);
     function_48c910(vm, top);
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     puts("PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push");
     return 0;
 }
@@ -3644,7 +3644,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts))));
         CHECK(execute_source(vm,root+2,
 
             "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
@@ -3690,7 +3690,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     function_46fac0();
     CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(g636)))));
     kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
     kinoko_sqplus_object_set_instance((void *)(intptr_t)(map_state), (void *)(intptr_t)(map_state));
     kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "map", (const void *)(intptr_t)(map_state));
     CHECK(vector_layout);
@@ -3786,7 +3786,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         function_46fac0();
         CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(g636)))));
         kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
         kinoko_sqplus_object_set_instance((void *)(intptr_t)(map_state), (void *)(intptr_t)(map_state));
         kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "map", (const void *)(intptr_t)(map_state));
         kinoko_act_document_initialize((KinokoActDocument *)map_act);
@@ -3849,7 +3849,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts))));
         CHECK(execute_source(vm,root+2,
 
             "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
@@ -4429,9 +4429,9 @@ static int test_input_copy(void) {
         CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
         CHECK(target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==0);
     }
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target)));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty))));
     kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
@@ -4586,7 +4586,7 @@ static int test_map_manager_copy(void) {
     CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),0)==0);
     CHECK(kinoko_map_event_at(PTR(target),1)==71 && kinoko_map_event_at(PTR(target),2)==71);
     kinoko_map_containers_destroy(PTR(source));kinoko_map_containers_destroy(PTR(target));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source)));kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));(int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
     puts("PASS: native map list/vector copies, stable render addresses, duplicates/nulls and capacity retention");
     return 0;
 }
@@ -4641,7 +4641,7 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
         "serializationTarget.a.len()!=4 || serializationTarget.a[0]!=4 || "
         "serializationTarget.a[1]!=null || serializationTarget.a[2]!=false || "
         "serializationTarget.a[3]!=\"tail\" || (\"empty\" in serializationTarget)) throw \"save format\";"));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))); kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
     puts("PASS: original compressed table format nested arrays/tables/scalars and skipped null values");
     return 0;
 }
@@ -4665,7 +4665,7 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
     CHECK(((float*)camera)[10]==12.5f && ((float*)camera)[15]==-3.0f && ((float*)camera)[20]==640.0f);
     CHECK(map[19]==321 && map[14]==27 && ((float*)map)[18]==123.5f);
     CHECK(camera[8]==0x08000100); /* Callback is retained through the real native receiver. */
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+7))); kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+4)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+7)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+4))));
     CHECK(execute_source(vm,root+2,"delete moduleCamera; delete moduleMap;"));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
     puts("PASS: Camera/Map native fields and Camera SetUpdateFunction receiver ownership");
@@ -5980,7 +5980,7 @@ int main(int argc, char **argv) {
         expected_vm_error=1;
         CHECK(!execute_source(vm,root+2,"anonymousError();"));
         expected_vm_error=0;
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(anonymous)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(anonymous))));
         puts("PASS: anonymous script failure diagnostics and unwind");
     }
     CHECK(test_native_stack_relocation(vm, root) == 0);
@@ -6012,7 +6012,7 @@ int main(int argc, char **argv) {
     CHECK(environment[1] == 0x0A000020);
     kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(environment)), (void *)(intptr_t)(PTR(closure)), "Init0443");
     CHECK(closure[1] == 0x08000100);
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
 
     if (argc > 1) {
         CHECK(execute_file(vm, root + 2, argv[1]));
@@ -6354,7 +6354,7 @@ int main(int argc, char **argv) {
         CHECK(*(int32_t *)(intptr_t)(pair_actors[1] + 28) == 0);
         CHECK(function_48aa20(vm) == top);
     }
-    kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
     {
         int32_t actor, map_proxy, animation[7] = {0};
         kinoko_script_clear_actors();
@@ -6799,8 +6799,8 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 7; ++i) {
             CHECK(memcmp((char*)destination + offsets[i] + 4,
                          (char*)source + offsets[i] + 4, 8) == 0);
-            kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)destination + offsets[i])));
-            kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)source + offsets[i])));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)destination + offsets[i]))));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)source + offsets[i]))));
         }
         kinoko_native_release_strong(destination[7]);
         kinoko_native_release_weak(destination[9]);
@@ -6821,12 +6821,12 @@ int main(int argc, char **argv) {
         CHECK(function_48aa20(vm) == camera_top);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"camera update callback skipped\";"));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 7)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 7))));
         CHECK(kinoko_camera_update((KinokoCamera *)camera, NULL) == g483);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"empty camera callback executed\";"));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 4)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 4))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera))));
     }
     if (argc > 4)
         CHECK(test_player_pat(manager, argv[3], strtoul(argv[4], NULL, 0)) == 0);

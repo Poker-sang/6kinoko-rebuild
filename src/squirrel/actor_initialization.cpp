@@ -19,7 +19,7 @@ using kinoko::legacy::pointer;
 void assign(void *destination,const void *source) {
     kinoko_sqplus_object_assign((void *)(destination), (const void *)(source));
 }
-void release(void *object) { kinoko_sqplus_object_destroy((void *)(object)); }
+void release(void *object) { (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object))); }
 }
 
 // 45E120 captures the take before invoking script, so replacing the take in

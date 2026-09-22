@@ -48,7 +48,7 @@ int32_t create_class(int32_t* output, int32_t vm, int32_t name, int32_t parent, 
         ObjectView(output).push(current_vm());
         kinoko_sqplus_object_capture((void *)(temporary), -1);
         sq_pop(current_vm(), 1);
-        kinoko_sqplus_setup_hierarchy(temporary); // Consumes its by-value object.
+        (int32_t)(intptr_t)(kinoko_sqplus_setup_hierarchy(temporary)); // Consumes its by-value object.
     }
     sq_settop(pointer<SQVM>(vm), top);
     return address(output);
@@ -61,7 +61,7 @@ void construct(int32_t state[12], const char* name, int32_t* descriptor) {
     int32_t temporary[3]{};
     create_class(temporary, state[0], state[1], 0, descriptor);
     kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));
-    kinoko_sqplus_object_destroy((void *)(temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
 }
 template<size_t N> void bind_fields(int32_t* object, int32_t* descriptor, const Field (&fields)[N]) {
     for (const auto& field : fields) {
@@ -99,9 +99,9 @@ void camera_receiver(int32_t result[2], int32_t vm_address) {
         int32_t inherited[3]{};
         kinoko_sqplus_object_get_value((void *)(object), (void *)(inherited), "__ot");
         result[0] = (int32_t)(intptr_t)(kinoko_sqplus_object_get_index_userpointer((void *)(inherited), address(kinoko_camera_binding_type())));
-        kinoko_sqplus_object_destroy((void *)(inherited));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(inherited)));
     }
-    kinoko_sqplus_object_destroy((void *)(object));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
 }
 } // namespace
 
@@ -133,7 +133,7 @@ extern "C" int32_t function_466890(int32_t a1) {
         return sq_throwerror(pointer<SQVM>(a1), "Invalid Instance Type");
 
     // 0x4668b3: the native callback is __thiscall with three SQ arguments.
-    kinoko_sqplus_argument_object(arguments, 0, (struct SQVM *)(intptr_t)(a1));
+    (int32_t)(intptr_t)(kinoko_sqplus_argument_object(arguments, 0, (struct SQVM *)(intptr_t)(a1)));
     if (camera_native_trace_count < 16) {
         retdec_trace_i32("466890:vm", a1);
         retdec_trace_i32("466890:native-instance", native_instance);
@@ -169,8 +169,8 @@ extern "C" int32_t function_4669d0(void) {
         retdec_trace_i32("camera-class:data", state[4]);
         retdec_trace_squirrel_table_entries("camera-class-members", load<int32_t>(state[4]+24));
     }
-    for (int offset : {9,6,2}) kinoko_sqplus_object_destroy((void *)(state + offset));
-    kinoko_sqplus_object_destroy((void *)(root));
+    for (int offset : {9,6,2}) (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + offset)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(root)));
     return 0;
 }
 extern "C" int32_t function_46fac0(void) {
@@ -181,8 +181,8 @@ extern "C" int32_t function_46fac0(void) {
     // Original 46FD05 constructs this local exactly once with an explicit receiver.
     kinoko_sqplus_object_initialize((void *)(layer));
     kinoko_sqplus_object_raw_set_name((void *)(g636), "layer_name", (const void *)(layer));
-    kinoko_sqplus_object_destroy((void *)(layer));
-    kinoko_sqplus_object_destroy((void *)(state + 9));
-    kinoko_sqplus_object_destroy((void *)(state + 6));
-    return kinoko_sqplus_object_destroy((void *)(state + 2));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(layer)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 9)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 6)));
+    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 2)));
 }

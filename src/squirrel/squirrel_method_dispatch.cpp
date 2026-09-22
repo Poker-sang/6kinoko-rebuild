@@ -56,11 +56,11 @@ extern "C" long double  kinoko_sqplus_argument_float(struct SQVM * vm_address, i
     sq_getfloat(vm, index, &value);
     return value;
 }
-extern "C" int32_t kinoko_sqplus_argument_object(int32_t* target, int32_t unused, struct SQVM * vm) {
+extern "C" void* kinoko_sqplus_argument_object(int32_t* target, int32_t unused, struct SQVM * vm) {
     return kinoko_sqplus_argument_object_at(target, unused, vm, 2);
 }
-extern "C" int32_t kinoko_sqplus_argument_object_at(int32_t* target, int32_t, struct SQVM * vm, int32_t index) {
-    return kinoko_squirrel_pair_from_stack(vm, index, target) ? address(target) : 0;
+extern "C" void* kinoko_sqplus_argument_object_at(int32_t* target, int32_t, struct SQVM * vm, int32_t index) {
+    return kinoko_squirrel_pair_from_stack(vm, index, target) ? target : nullptr;
 }
 extern "C" int32_t kinoko_sqplus_call_integer(void * object, void * method, int32_t offset, struct SQVM * vm_address, int32_t index) {
     auto* vm = static_cast<SQVM *>(vm_address);

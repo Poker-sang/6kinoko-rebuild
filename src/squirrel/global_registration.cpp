@@ -92,7 +92,7 @@ extern "C" int32_t function_473010(void) {
     retdec_trace_i32("473010:update-object-type", object[1]);
     retdec_trace_i32("473010:update-object-data", object[2]);
     retdec_trace_i32("473010:update-present", kinoko_sqplus_object_exists((void *)(object), "updateMask"));
-    kinoko_sqplus_object_destroy((void *)(object));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
     kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
     const auto render_result = function_4721a0(object, &kinoko_game_masks.render, const_cast<char*>("renderMask"), 0);
     retdec_trace_i32("473010:render-bind-result", render_result);
@@ -100,11 +100,11 @@ extern "C" int32_t function_473010(void) {
     retdec_trace_i32("473010:render-object-type", object[1]);
     retdec_trace_i32("473010:render-object-data", object[2]);
     retdec_trace_i32("473010:render-present", kinoko_sqplus_object_exists((void *)(object), "renderMask"));
-    kinoko_sqplus_object_destroy((void *)(object));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
     for (const auto& constant : constants) {
         kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
         function_472240(object, constant.value, const_cast<char*>(constant.name));
-        kinoko_sqplus_object_destroy((void *)(object));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
     }
     kinoko_actor_register_script_class();
     function_46d950();

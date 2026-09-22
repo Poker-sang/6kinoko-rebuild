@@ -32,8 +32,8 @@ extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
     kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&callback)), (const void *)(view.bytes(&ActorRecord::initial_function)));
     kinoko_actor_initialize(actor,view.get(&ActorRecord::manager),&callback,
         view.get(&ActorRecord::spawn_x),view.get(&ActorRecord::spawn_y),view.get(&ActorRecord::spawn_z),&argument);
-    kinoko_sqplus_object_destroy((void *)(&callback));
-    kinoko_sqplus_object_destroy((void *)(&argument));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&callback)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&argument)));
     return kinoko_actor_reset_priority(actor,view.get(&ActorRecord::priority));
 }
 extern "C" KinokoActor *kinoko_actor_assign(KinokoActor *destination,KinokoActor *source) {

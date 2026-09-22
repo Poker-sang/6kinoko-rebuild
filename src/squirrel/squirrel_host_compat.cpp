@@ -250,8 +250,8 @@ extern "C" int32_t kinoko_sqplus_object_typetag(void * object, int32_t* tag) {
     }
     return result;
 }
-extern "C" int32_t kinoko_sqplus_object_destroy(void * object) {
-    return kinoko_squirrel_object_destroy(address(object), address(current_vm()), kinoko_squirrel_object_vtable());
+extern "C" void* kinoko_sqplus_object_destroy(void * object) {
+    return (void*)(intptr_t)(kinoko_squirrel_object_destroy(address(object), address(current_vm()), kinoko_squirrel_object_vtable()));
 }
 extern "C" void * kinoko_sqplus_object_assign_thread(void * object, struct SQVM * thread_address) {
     retdec_trace("4a9e30:begin");

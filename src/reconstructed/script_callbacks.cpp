@@ -36,7 +36,7 @@ public:
     ~LocalObject() { if (!released_) release(); }
     const void *data() const { return &value_; }
     void copy_from(const void *source) { (int32_t*)(intptr_t)(kinoko_sqplus_object_copy_construct((void *)(intptr_t)(reinterpret_cast<int32_t *>(&value_)), (const void *)(source))); }
-    int32_t release() { released_=true; return kinoko_sqplus_object_destroy((void *)(&value_)); }
+    int32_t release() { released_=true; return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&value_))); }
 };
 void assign(KinokoScriptCallback *destination,SQVM *vm,const void *environment,const void *closure) {
     const CallbackView view(destination);
@@ -61,7 +61,7 @@ extern "C" KinokoScriptCallback *kinoko_script_callback_construct(KinokoScriptCa
     KinokoOwnedObjectWords temporary{};
     if (name) (int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(view.bytes(&KinokoScriptCallback::environment)), (void *)(&temporary), name));
     kinoko_sqplus_object_assign((void *)(view.bytes(&KinokoScriptCallback::closure)), (const void *)(&temporary));
-    kinoko_sqplus_object_destroy((void *)(&temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&temporary)));
     return callback;
 }
 extern "C" void kinoko_script_callback_clear(KinokoScriptCallback *callback) {
@@ -72,8 +72,8 @@ extern "C" void kinoko_script_callback_clear(KinokoScriptCallback *callback) {
 }
 extern "C" int32_t kinoko_destroy_script_callback(KinokoScriptCallback *callback) {
     const CallbackView view(callback);
-    kinoko_sqplus_object_destroy((void *)(view.bytes(&KinokoScriptCallback::closure)));
-    return kinoko_sqplus_object_destroy((void *)(view.bytes(&KinokoScriptCallback::environment)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(view.bytes(&KinokoScriptCallback::closure))));
+    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(view.bytes(&KinokoScriptCallback::environment))));
 }
 extern "C" int32_t kinoko_actor_step_callback(KinokoActor *actor) {
     auto *callback=update(actor);
@@ -92,7 +92,7 @@ extern "C" int32_t kinoko_actor_clear_script(KinokoActor *actor) {
         // 45FC7A/94 target the CLASS defaults, not the outgoing instance.
         kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g601), (const void *)(&empty));
         kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g600), (const void *)(&empty));
-        kinoko_sqplus_object_destroy((void *)(&empty));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&empty)));
     }
     return (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(instance)));
 }

@@ -36,6 +36,6 @@ extern "C" int32_t kinoko_script_callback_invoke_owned(KinokoScriptCallback *cal
     const auto result=kinoko_sq_call(address(vm),2,SQTrue,SQTrue);
     if (SQ_SUCCEEDED(result)) sq_pop(vm,2);
     // Preserve failed-call stack contents and the current-VM release boundary.
-    kinoko_sqplus_object_destroy((void *)(argument));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(argument)));
     return result;
 }

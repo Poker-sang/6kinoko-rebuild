@@ -358,7 +358,7 @@ int32_t __fastcall four_float(void* object, void*, int32_t a, int32_t b, int32_t
 int32_t __fastcall consume_object(void* object, void*, int32_t vtable, int32_t type, int32_t data) {
     auto& native = *static_cast<Native*>(object); ++native.calls;
     require(vtable == kinoko_squirrel_object_vtable() && type == OT_USERDATA, "by-value object ABI");
-    int32_t value[3] = {vtable, type, data}; kinoko_sqplus_object_destroy((void *)(value)); return 0;
+    int32_t value[3] = {vtable, type, data}; (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(value))); return 0;
 }
 void methods_contract(HSQUIRRELVM vm) {
     StackTop stack(vm);
@@ -561,12 +561,12 @@ void argument_guards(HSQUIRRELVM vm) {
     require(!kinoko_native_string_arg((struct SQVM *)(intptr_t)(0), 1, &output), "null VM string argument");
     for (int size = 0; size < 4; ++size) {
         sq_newuserdata(vm, size);
-        require(kinoko_native_target_from_userdata(vm) == 0, "undersized native target rejected");
-        require(kinoko_native_callback_from_stack(vm) == 0, "undersized callback rejected");
+        require((int32_t)(intptr_t)(kinoko_native_target_from_userdata(vm)) == 0, "undersized native target rejected");
+        require((int32_t)(intptr_t)(kinoko_native_callback_from_stack(vm)) == 0, "undersized callback rejected");
         sq_pop(vm, 1);
     }
     auto* payload = sq_newuserdata(vm, 4); store(payload, int32_t{123});
-    require(kinoko_native_target_from_userdata(vm) == 123 && kinoko_native_callback_from_stack(vm) == 123, "four-byte native payload retained");
+    require((int32_t)(intptr_t)(kinoko_native_target_from_userdata(vm)) == 123 && (int32_t)(intptr_t)(kinoko_native_callback_from_stack(vm)) == 123, "four-byte native payload retained");
     sq_pop(vm, 1); sq_pushinteger(vm, 17);
     require(kinoko_native_integer_arg(vm, -1, &output) == 1 && output == 17, "valid negative argument index retained");
 }

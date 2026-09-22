@@ -23,7 +23,7 @@ using namespace kinoko::script;
 // declaration order releases closure before environment, as in the original.
 struct Reference {
     KinokoOwnedObjectWords *object;
-    ~Reference() { kinoko_sqplus_object_destroy((void *)(object)); }
+    ~Reference() { (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object))); }
     Reference(const Reference&)=delete;
     explicit Reference(KinokoOwnedObjectWords& value):object(&value) {}
 };

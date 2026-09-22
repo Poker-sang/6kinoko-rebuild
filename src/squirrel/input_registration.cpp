@@ -69,11 +69,11 @@ void construct_input_class(int32_t state[12]) {
         ObjectView(temporary).push(vm);
         kinoko_sqplus_object_capture((void *)(nested), -1);
         sq_pop(vm, 1);
-        kinoko_sqplus_setup_hierarchy(nested);
+        (int32_t)(intptr_t)(kinoko_sqplus_setup_hierarchy(nested));
     }
     sq_settop(vm, top);
     kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));
-    kinoko_sqplus_object_destroy((void *)(temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
 }
 } // namespace
 
@@ -96,7 +96,7 @@ extern "C" int32_t function_46d950(void) {
         bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
     kinoko_sqplus_object_assign((void *)(g629), (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input"))));
-    kinoko_sqplus_object_destroy((void *)(temporary));
-    for (int offset : {9, 6, 2}) kinoko_sqplus_object_destroy((void *)(state + offset));
-    return kinoko_sqplus_object_destroy((void *)(root));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
+    for (int offset : {9, 6, 2}) (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + offset)));
+    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(root)));
 }

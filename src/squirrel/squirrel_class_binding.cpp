@@ -84,12 +84,12 @@ extern "C" int32_t kinoko_sqplus_install_variable_handlers(void * object) {
     return 1;
 }
 
-extern "C" int32_t kinoko_sqplus_setup_hierarchy(int32_t* root_object) {
+extern "C" void* kinoko_sqplus_setup_hierarchy(int32_t* root_object) {
     const ObjectView root(root_object);
     const auto value = root.value();
     root.reset(); // transfer this by-value argument's owned reference
     upstream::sqplus_setup_hierarchy(current_vm(), value);
-    return root.payload_address();
+    return (void*)(intptr_t)(root.payload_address());
 }
 
 extern "C" void * kinoko_sqplus_create_variable(void * object, const char * name_address) {
@@ -127,7 +127,7 @@ extern "C" void * kinoko_sqplus_create_actor_class(int32_t* output, struct SQVM 
         ObjectView copy_view(&copy);
         copy_view.initialize(kinoko_squirrel_object_vtable());
         copy_view.assign(vm, result.value());
-        kinoko_sqplus_setup_hierarchy(reinterpret_cast<int32_t*>(&copy));
+        (int32_t)(intptr_t)(kinoko_sqplus_setup_hierarchy(reinterpret_cast<int32_t*>(&copy)));
     }
     return output;
 }

@@ -55,7 +55,7 @@ private:
 class HostObject final {
 public:
     HostObject() { (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)(id()))); }
-    ~HostObject() { kinoko_sqplus_object_destroy((void *)(intptr_t)(id())); }
+    ~HostObject() { (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(id()))); }
     HostObject(const HostObject&) = delete;
     HostObject& operator=(const HostObject&) = delete;
     int32_t id() { return address(words.data()); }
@@ -100,9 +100,9 @@ void ownership(HSQUIRRELVM vm) {
     require(userdata_releases == released + 1, "second owner keeps userdata alive");
     kinoko_sqplus_object_reset((void *)(intptr_t)(replacement.id()));
     require(userdata_releases == released + 2, "last external reference releases userdata");
-    require(kinoko_sqplus_object_destroy((void *)(intptr_t)(replacement.id())) == replacement.id() + 4, "destructor result");
+    require((int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(replacement.id()))) == replacement.id() + 4, "destructor result");
     require((int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)(0))) == 0, "null constructor/reset");
-    require(kinoko_sqplus_object_destroy((void *)(intptr_t)(0)) == 0 && kinoko_sqplus_object_capture((void *)(intptr_t)(0), 1) == 0, "null destroy/capture");
+    require((int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(0))) == 0 && kinoko_sqplus_object_capture((void *)(intptr_t)(0), 1) == 0, "null destroy/capture");
     require_top(vm, top, "ownership preserves VM stack");
 
     // Real external references through deliberately unaligned legacy storage.
@@ -117,7 +117,7 @@ void ownership(HSQUIRRELVM vm) {
         require((int32_t)(intptr_t)(kinoko_sqplus_object_construct_value((void *)(intptr_t)(slot), borrowed._type, data_bits(borrowed))) == slot, "pair constructor");
         sq_pop(vm, 1);
         require(kinoko_sqplus_object_size((void *)(intptr_t)(slot)) == 15, "unaligned object uses actual string length");
-        kinoko_sqplus_object_destroy((void *)(intptr_t)(slot));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(slot)));
         for (int i = 0; i < 20; ++i)
             if (i < 1 + offset || i >= 13 + offset) require(buffer[i] == 0xa5, "wrapper canary");
     }
@@ -281,8 +281,8 @@ SQInteger argument_callback(HSQUIRRELVM vm) {
     const auto id = address(vm);
     int32_t integer = 0, text = 0, borrowed[2] = {};
     float number = 0;
-    if (sq_gettop(vm) != 5 || kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) != callback_identity ||
-        kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) != callback_identity ||
+    if (sq_gettop(vm) != 5 || (int32_t)(intptr_t)(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id))) != callback_identity ||
+        (int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id))) != callback_identity ||
         !kinoko_native_integer_arg((struct SQVM *)(intptr_t)(id), 2, &integer) || integer != 19 ||
         !kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), 3, &number) || number != 2.5f ||
         !kinoko_native_string_arg((struct SQVM *)(intptr_t)(id), 4, &text) || std::string(pointer<const char>(text)) != "ok" ||
@@ -297,8 +297,8 @@ SQInteger argument_callback(HSQUIRRELVM vm) {
 void native_arguments(HSQUIRRELVM vm) {
     const auto top = sq_gettop(vm);
     const auto id = address(vm);
-    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(0)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(0)) == 0, "null native VM");
-    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "empty native stack");
+    require((int32_t)(intptr_t)(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(0))) == 0, "null native VM");
+    require((int32_t)(intptr_t)(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id))) == 0 && (int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id))) == 0, "empty native stack");
     int32_t integer = 91, text = 92, pair[2] = {93, 94};
     float number = 9.5f;
     sq_pushfloat(vm, 2.5f);
@@ -307,7 +307,7 @@ void native_arguments(HSQUIRRELVM vm) {
     require(kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), -1, &number) && number == 2.5f, "float argument");
     require(!kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), -1, nullptr), "null float output rejected");
     // The old first-call diagnostic used an uninitialized userdata pointer here.
-    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "wrong userdata type safe in diagnostics");
+    require((int32_t)(intptr_t)(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id))) == 0 && (int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id))) == 0, "wrong userdata type safe in diagnostics");
     require(!kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 0, pair) && !kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 2, pair), "argument index bounds");
     require(pair[0] == 93 && pair[1] == 94, "invalid borrowed pair unchanged");
     require(!kinoko_native_value_pair((struct SQVM *)(intptr_t)(0), 1, pair) && !kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 1, nullptr), "borrowed output guards");
@@ -328,10 +328,10 @@ void native_arguments(HSQUIRRELVM vm) {
     sq_pop(vm, 1);
     void* payload = sq_newuserdata(vm, sizeof(int32_t));
     std::memcpy(payload, &callback_identity, sizeof(callback_identity));
-    require(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == callback_identity, "untagged callback payload");
+    require((int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id))) == callback_identity, "untagged callback payload");
     sq_settypetag(vm, -1, &integer);
-    require(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "callback tag must be null");
-    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == callback_identity, "target wrapper accepts original tagged payload");
+    require((int32_t)(intptr_t)(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id))) == 0, "callback tag must be null");
+    require((int32_t)(intptr_t)(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id))) == callback_identity, "target wrapper accepts original tagged payload");
     sq_pop(vm, 1);
 
     sq_pushroottable(vm);

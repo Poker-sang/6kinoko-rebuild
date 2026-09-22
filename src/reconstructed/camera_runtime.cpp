@@ -4,7 +4,7 @@ extern "C" {
 extern int32_t g611[3],g722[3];
 void* kinoko_sqplus_object_new_instance(void*, const void*);
 void * kinoko_sqplus_object_assign(void * , const void * );
-int32_t  kinoko_sqplus_object_destroy(void * );
+void*  kinoko_sqplus_object_destroy(void *);
 int32_t  kinoko_sqplus_object_set_instance(void * , void * );
 int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * );
 void retdec_trace_i32(const char *,int32_t);
@@ -19,7 +19,7 @@ extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     int32_t temporary[3]{};
     auto* object=kinoko_sqplus_object_new_instance(temporary, g611);
     kinoko_sqplus_object_assign((void *)(state.bytes(&Record::script_object)), object);
-    kinoko_sqplus_object_destroy((void *)(temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
     kinoko_sqplus_object_set_instance((void *)(state.bytes(&Record::script_object)), (void *)(camera));
     const auto result=kinoko_sqplus_object_raw_set_name((void *)(g722), "camera", (const void *)(camera));
     // 466270 resets only these fields. Width/height and callback remain intact;

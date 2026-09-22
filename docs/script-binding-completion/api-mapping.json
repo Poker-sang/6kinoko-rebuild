@@ -179,7 +179,7 @@
     {
       "0": "void *"
     },
-    null
+    "void *"
   ],
   "function_4a9e30_this": [
     "kinoko_sqplus_object_assign_thread",
@@ -313,7 +313,7 @@
   "function_45f640": [
     "kinoko_sqplus_setup_hierarchy",
     {},
-    null
+    "void *"
   ],
   "function_45fab0": [
     "kinoko_sqplus_create_variable",
@@ -397,14 +397,14 @@
     {
       "2": "struct SQVM *"
     },
-    null
+    "void *"
   ],
   "function_45f5e0_at": [
     "kinoko_sqplus_argument_object_at",
     {
       "2": "struct SQVM *"
     },
-    null
+    "void *"
   ],
   "function_45f850": [
     "kinoko_sqplus_call_integer",
@@ -754,14 +754,14 @@
     {
       "0": "struct SQVM *"
     },
-    null
+    "void *"
   ],
   "retdec_native_callback_from_stack": [
     "kinoko_native_callback_from_stack",
     {
       "0": "struct SQVM *"
     },
-    null
+    "void *"
   ],
   "retdec_native_string_arg": [
     "kinoko_native_string_arg",

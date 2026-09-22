@@ -8256,7 +8256,7 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
     retdec_trace_i32("46e6f0:instance-type", input_instance[1]);
     retdec_trace_i32("46e6f0:instance-data", input_instance[2]);
     kinoko_sqplus_object_assign((void *)(intptr_t)(this_ptr), (const void *)(intptr_t)((int32_t)(intptr_t)input_instance));
-    kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_instance));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_instance)));
 
     kinoko_sqplus_object_set_instance((void *)(intptr_t)(this_ptr), (void *)(intptr_t)(this_ptr));
     kinoko_sqplus_object_raw_set_name((void *)(intptr_t)((int32_t)(intptr_t)&g722), "input", (const void *)(intptr_t)(this_ptr));
@@ -8387,21 +8387,21 @@ int32_t function_470d00(int32_t a1) {
         retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_object_assign((void *)(intptr_t)((int32_t)(intptr_t)v3), (const void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_set), "_set", "sn|b|s");
         retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
         kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_get), "_get", "s");
         retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
-        kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
         setdelegate_result = kinoko_sqplus_object_set_delegate((void *)(intptr_t)(a1), (const void *)(intptr_t)((int32_t)(intptr_t)v3));
         retdec_trace_i32("470d00:setdelegate-result", setdelegate_result);
         retdec_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
     }
-    int32_t result = kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v3));
+    int32_t result = (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v3)));
     retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }

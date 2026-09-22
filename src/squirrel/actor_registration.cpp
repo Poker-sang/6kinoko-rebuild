@@ -106,11 +106,11 @@ extern "C" int32_t kinoko_actor_register_script_class(void) {
     int32_t null_object[3]{}, key[3]{};
     kinoko_sqplus_object_initialize((void *)(null_object));
     kinoko_sqplus_object_assign((void *)(g601), kinoko_sqplus_new_string((void *)(key), (const char *)("step")));
-    kinoko_sqplus_object_destroy((void *)(key));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(key)));
     kinoko_sqplus_object_assign((void *)(g600), kinoko_sqplus_new_string((void *)(key), (const char *)("user")));
-    kinoko_sqplus_object_destroy((void *)(key));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(key)));
     kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g601), (const void *)(null_object));
     kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g600), (const void *)(null_object));
-    kinoko_sqplus_object_destroy((void *)(null_object));
-    return kinoko_sqplus_object_destroy((void *)(actor));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(null_object)));
+    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(actor)));
 }

@@ -9,8 +9,8 @@ extern "C" {
 /* Recovered native closure argument boundaries. Numeric conversions are
    deliberately strict: accepting a float where an integer was required would
    change the original host API, even though sq_getinteger permits coercion. */
-int32_t kinoko_native_target_from_userdata(struct SQVM * vm);
-int32_t kinoko_native_callback_from_stack(struct SQVM * vm);
+void* kinoko_native_target_from_userdata(struct SQVM * vm);
+void* kinoko_native_callback_from_stack(struct SQVM * vm);
 int32_t kinoko_native_string_arg(struct SQVM * vm, int32_t index, int32_t* value);
 int32_t kinoko_native_integer_arg(struct SQVM * vm, int32_t index, int32_t* value);
 int32_t kinoko_native_float_arg(struct SQVM * vm, int32_t index, float* value);

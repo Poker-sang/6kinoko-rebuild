@@ -38,7 +38,7 @@ int32_t  kinoko_sqplus_object_begin_iteration(void * object);
 int32_t  kinoko_sqplus_object_next(int32_t* key, int32_t* value);
 int32_t  kinoko_sqplus_object_typetag(void * object, int32_t* tag);
 int32_t  kinoko_sqplus_object_end_iteration(void);
-int32_t  kinoko_sqplus_object_destroy(void * object);
+void*  kinoko_sqplus_object_destroy(void * object);
 void * kinoko_sqplus_object_assign_thread(void * object, struct SQVM * thread);
 int32_t  kinoko_sqplus_object_set_delegate(void * object, const void * delegate);
 int32_t  kinoko_sqplus_object_get_userdata(void * object, const char * key, void * output, void * tag_output);

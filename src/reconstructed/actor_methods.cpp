@@ -9,7 +9,7 @@
 
 extern "C" {
 void * kinoko_sqplus_object_instance(void * object, void * index);
-int32_t  kinoko_sqplus_object_destroy(void * object);
+void*  kinoko_sqplus_object_destroy(void * object);
 void retdec_trace_star_state(const char *phase, int32_t actor);
 }
 
@@ -71,7 +71,7 @@ public:
             kinoko_actor_sync_animation_state(actor_, pointer<KinokoActor>((int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(incoming_address), (void *)(intptr_t)(0)))));
         }
         // The by-value SqPlus object owns an external VM reference on entry.
-        return kinoko_sqplus_object_destroy((void *)(intptr_t)(incoming_address));
+        return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(incoming_address)));
     }
 
 private:

@@ -34,12 +34,12 @@ int32_t argument(HSQUIRRELVM vm, SQInteger index, SQObjectType expected,
 }
 } // namespace
 
-extern "C" int32_t kinoko_native_target_from_userdata(struct SQVM * vm_address) {
+extern "C" void* kinoko_native_target_from_userdata(struct SQVM * vm_address) {
     static int trace_count;
     auto* vm = vm_address;
-    if (!vm) return 0;
+    if (!vm) return (void*)(intptr_t)(0);
     const auto top = sq_gettop(vm);
-    if (top <= 0) return 0;
+    if (top <= 0) return (void*)(intptr_t)(0);
     // CallNative appends the captured userdata AFTER all user arguments.
     // Initialize before querying: failed conversion does not write the output.
     SQUserPointer payload = nullptr;
@@ -56,16 +56,16 @@ extern "C" int32_t kinoko_native_target_from_userdata(struct SQVM * vm_address) 
             retdec_trace_i32("native-userdata:value", payload_word(payload));
         ++trace_count;
     }
-    return readable ? payload_word(payload) : 0;
+    return (void*)(intptr_t)(readable ? payload_word(payload) : 0);
 }
-extern "C" int32_t kinoko_native_callback_from_stack(struct SQVM * vm_address) {
+extern "C" void* kinoko_native_callback_from_stack(struct SQVM * vm_address) {
     auto* vm = vm_address;
-    if (!vm || sq_gettop(vm) <= 0) return 0;
+    if (!vm || sq_gettop(vm) <= 0) return (void*)(intptr_t)(0);
     SQUserPointer payload = nullptr, tag = nullptr;
     if (SQ_FAILED(sq_getuserdata(vm, sq_gettop(vm), &payload, &tag)) || tag || !payload ||
         sq_getsize(vm, -1) < static_cast<SQInteger>(sizeof(int32_t)))
-        return 0;
-    return payload_word(payload);
+        return (void*)(intptr_t)(0);
+    return (void*)(intptr_t)(payload_word(payload));
 }
 extern "C" int32_t kinoko_native_string_arg(struct SQVM * vm_address, int32_t index, int32_t* output) {
     static int trace_count;

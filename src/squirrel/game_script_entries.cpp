@@ -16,17 +16,17 @@ bool read(HSQUIRRELVM vm,int index,HSQOBJECT& result) {
 }
 }
 extern "C" int32_t kinoko_script_global_update_entry(SQVM* vm) {
-    const auto target=kinoko_native_target_from_userdata(vm);
+    auto* target=kinoko_native_target_from_userdata(vm);
     HSQOBJECT environment{},closure{};
     if(!target || !read(vm,3,environment) || !read(vm,2,closure)) return 0;
     // 471CE4 constructs slot 3 first, but passes closure(slot 2) before it.
     const auto env=transfer(vm,environment),fn=transfer(vm,closure);
     using Function=int32_t (__cdecl *)(KinokoOwnedObjectWords,KinokoOwnedObjectWords);
-    reinterpret_cast<Function>(pointer(target))(fn,env);
+    reinterpret_cast<Function>(target)(fn,env);
     return 0;
 }
 extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
-    const auto target=kinoko_native_target_from_userdata(vm);
+    auto* target=kinoko_native_target_from_userdata(vm);
     HSQOBJECT closure{},argument{};
     float x{},y{},z{};
     const auto top=vm ? sq_gettop(vm) : 0;
@@ -42,8 +42,8 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
     const auto arg=transfer(vm,argument),fn=transfer(vm,closure);
     KinokoOwnedObjectWords result{kinoko_squirrel_object_vtable(),OT_NULL,0};
     using Function=KinokoOwnedObjectWords* (__cdecl *)(KinokoOwnedObjectWords*,KinokoOwnedObjectWords,float,float,float,KinokoOwnedObjectWords);
-    reinterpret_cast<Function>(pointer(target))(&result,fn,x,y,z,arg);
+    reinterpret_cast<Function>(target)(&result,fn,x,y,z,arg);
     function_4029b0(address(vm),reinterpret_cast<int32_t*>(&result));
-    kinoko_sqplus_object_destroy((void *)(&result));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&result)));
     return 1;
 }
