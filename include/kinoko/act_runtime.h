@@ -171,31 +171,6 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
                                                  int32_t output_ptr);
 int32_t retdec_root_table_register_resource(int32_t root_object,
                                                     int32_t resource_ptr);
-void retdec_sprite_rotate_faithful(int32_t sprite,
-                                           float angle_x,
-                                           float angle_y,
-                                           float angle_z,
-                                           float pivot_x,
-                                           float pivot_y,
-                                           float pivot_z);
-void retdec_sprite_rotate_xy(float *x, float *y,
-                                    float pivot_x, float pivot_y,
-                                    float angle);
-float retdec_sprite_scale_about(float value,
-                                           float pivot,
-                                           float scale);
-void retdec_sprite_scale_faithful(int32_t sprite,
-                                          float scale_x,
-                                          float pivot_x,
-                                          float scale_y,
-                                          float pivot_y,
-                                          float scale_z,
-                                          float pivot_z);
-void retdec_sprite_translate_faithful(int32_t sprite,
-                                              float x,
-                                              float y,
-                                              float z);
-
 #ifdef __cplusplus
 }
 #endif

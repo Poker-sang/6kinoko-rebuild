@@ -1534,7 +1534,6 @@ int32_t function_4045c0(int32_t a1, int32_t a2);
 
 
 
-float80_t function_405080(float80_t a1, float80_t a2, float80_t a3);
 
 
 
@@ -3568,32 +3567,7 @@ int32_t function_4045c0(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x405080 - 0x40513e
-float80_t function_405080(float80_t a1, float80_t a2, float80_t a3) {
-    // 0x405080
-    int32_t v1; // 0x405080
-    *(float32_t *)(v1 + 176) = (float32_t)a1;
-    float32_t * v2 = (float32_t *)(v1 + 180); // 0x405094
-    *v2 = (float32_t)((float80_t)*v2 + a2);
-    float32_t * v3 = (float32_t *)(v1 + 184); // 0x4050a9
-    *v3 = (float32_t)((float80_t)*v3 + a3);
-    float32_t v4 = a3; // 0x4050c6
-    *(float32_t *)(v1 + 188) = v4;
-    float32_t * v5 = (float32_t *)(v1 + 192); // 0x4050cc
-    *v5 = (float32_t)a2;
-    float32_t * v6 = (float32_t *)(v1 + 196); // 0x4050da
-    float80_t v7; // 0x405080
-    *v6 = (float32_t)v7;
-    float32_t * v8 = (float32_t *)(v1 + 200); // 0x4050e8
-    *v8 = (float32_t)v7;
-    *(float32_t *)(v1 + 204) = (float32_t)v7;
-    *(float32_t *)(v1 + 208) = (float32_t)v7;
-    float32_t * v9 = (float32_t *)(v1 + 212); // 0x405112
-    *v9 = (float32_t)(v7 + (float80_t)*v5 + (float80_t)*v9);
-    *(float32_t *)(v1 + 216) = v4;
-    float32_t * v10 = (float32_t *)(v1 + 220); // 0x40512e
-    *v10 = (float32_t)(v7 + (float80_t)*v8);
-    return v7 + (float80_t)*v6 + (float80_t)*v10;
-}
+/* Recovered by render::translate_quad; no legacy callers remain. */
 
 
 /* 405800 is a userpurge routine: EAX is the vertex buffer and the two

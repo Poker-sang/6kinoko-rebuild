@@ -1,4 +1,4 @@
-#include "kinoko/angle_math.h"
+#include "kinoko/quad_transform.hpp"
 #include "kinoko/act_layout_render.hpp"
 #include "kinoko/act_draw_records.hpp"
 #include "kinoko/map_layout_records.hpp"
@@ -15,127 +15,6 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 extern "C" void retdec_trace_i32(const char *,int32_t);
-float retdec_sprite_scale_about(float value,float pivot,float scale) {
-    return (value-pivot)*scale+pivot;
-}
-void retdec_sprite_scale_faithful(int32_t sprite,
-                                          float scale_x,
-                                          float pivot_x,
-                                          float scale_y,
-                                          float pivot_y,
-                                          float scale_z,
-                                          float pivot_z)
-{
-    static const uint32_t x_offsets[4] = { 176, 188, 200, 212 };
-    static const uint32_t y_offsets[4] = { 180, 192, 204, 216 };
-    static const uint32_t z_offsets[4] = { 184, 196, 208, 220 };
-    uint32_t index;
-
-    for (index = 0; index < 4; ++index) {
-        float *x = pointer<float>(sprite + x_offsets[index]);
-        float *y = pointer<float>(sprite + y_offsets[index]);
-        float *z = pointer<float>(sprite + z_offsets[index]);
-        *x = retdec_sprite_scale_about(*x, pivot_x, scale_x);
-        *y = retdec_sprite_scale_about(*y, pivot_y, scale_y);
-        *z = retdec_sprite_scale_about(*z, pivot_z, scale_z);
-    }
-}
-
-void retdec_sprite_rotate_xy(float *x, float *y,
-                                    float pivot_x, float pivot_y,
-                                    float angle)
-{
-    float cosine;
-    float sine;
-    float old_x;
-    float old_y;
-    float dx;
-    float dy;
-
-    if (angle == 0.0f || x == nullptr || y == nullptr)
-        return;
-    cosine = kinoko_cos_degrees(angle);
-    sine = kinoko_sin_degrees(angle);
-    old_x = *x;
-    old_y = *y;
-    dx = old_x - pivot_x;
-    dy = old_y - pivot_y;
-    *x = dx * cosine + pivot_x - dy * sine;
-    *y = dx * sine + pivot_y + dy * cosine;
-}
-
-void retdec_sprite_rotate_faithful(int32_t sprite,
-                                           float angle_x,
-                                           float angle_y,
-                                           float angle_z,
-                                           float pivot_x,
-                                           float pivot_y,
-                                           float pivot_z)
-{
-    static const uint32_t x_offsets[4] = { 176, 188, 200, 212 };
-    static const uint32_t y_offsets[4] = { 180, 192, 204, 216 };
-    static const uint32_t z_offsets[4] = { 184, 196, 208, 220 };
-    float cosine;
-    float sine;
-    uint32_t index;
-
-    /* 405320 applies Z, then Y, then X rotation around the supplied pivot. */
-    if (angle_z != 0.0f) {
-        for (index = 0; index < 4; ++index) {
-            retdec_sprite_rotate_xy(
-                pointer<float>(sprite + x_offsets[index]),
-                pointer<float>(sprite + y_offsets[index]),
-                pivot_x, pivot_y, angle_z);
-        }
-    }
-    if (angle_y != 0.0f) {
-        cosine = kinoko_cos_degrees(angle_y);
-        sine = kinoko_sin_degrees(angle_y);
-        for (index = 0; index < 4; ++index) {
-            float *x = pointer<float>(sprite + x_offsets[index]);
-            float *z = pointer<float>(sprite + z_offsets[index]);
-            float old_x = *x;
-            float old_z = *z;
-            float dx = old_x - pivot_x;
-            float dz = old_z - pivot_z;
-            *x = dx * cosine + pivot_x + dz * sine;
-            *z = dz * cosine + pivot_z - dx * sine;
-        }
-    }
-    if (angle_x != 0.0f) {
-        cosine = kinoko_cos_degrees(angle_x);
-        sine = kinoko_sin_degrees(angle_x);
-        for (index = 0; index < 4; ++index) {
-            float *y = pointer<float>(sprite + y_offsets[index]);
-            float *z = pointer<float>(sprite + z_offsets[index]);
-            float old_y = *y;
-            float old_z = *z;
-            float dy = old_y - pivot_y;
-            float dz = old_z - pivot_z;
-            *y = dy * cosine + pivot_y + dz * sine;
-            *z = dz * cosine + pivot_z - dy * sine;
-        }
-    }
-}
-
-void retdec_sprite_translate_faithful(int32_t sprite,
-                                              float x,
-                                              float y,
-                                              float z)
-{
-    static const uint32_t x_offsets[4] = { 176, 188, 200, 212 };
-    static const uint32_t y_offsets[4] = { 180, 192, 204, 216 };
-    static const uint32_t z_offsets[4] = { 184, 196, 208, 220 };
-    uint32_t index;
-
-    for (index = 0; index < 4; ++index) {
-        field<float>(sprite + x_offsets[index]) += x;
-        field<float>(sprite + y_offsets[index]) += y;
-        field<float>(sprite + z_offsets[index]) += z;
-    }
-}
-
-
 namespace kinoko::act {
 namespace {
 using native::RecordView;
@@ -215,14 +94,14 @@ int32_t update_layout_2d(KinokoActLayout *layout) {
         {-0.0f,static_cast<float>(height),0},{static_cast<float>(width),static_cast<float>(height),0}}};
     quad.positions=quad.base_positions;
     const auto scale=view.get(&Layout2DRecord::scale),pivot=view.get(&Layout2DRecord::scale_pivot);
-    retdec_sprite_scale_faithful(address(&quad),scale.x,pivot.x,scale.y,pivot.y,scale.z,pivot.z);
+    render::scale_quad(quad,scale,pivot);
     const auto rotation=view.get(&Layout2DRecord::rotation),center=view.get(&Layout2DRecord::rotation_pivot);
-    retdec_sprite_rotate_faithful(address(&quad),rotation.x,rotation.y,rotation.z,center.x,center.y,center.z);
+    render::rotate_quad(quad,rotation,center);
     Position3 world{};
     using Position=void (__thiscall *)(KinokoActLayer *,float *,float *,float *);
     const auto *methods=LayerView(layer).get(&Layer::methods);
     legacy::load<Position>(methods+7*sizeof(void*))(layer,&world.x,&world.y,&world.z);
-    retdec_sprite_translate_faithful(address(&quad),world.x,world.y,world.z);
+    render::translate_quad(quad,world);
     const auto alpha=std::clamp(static_cast<int32_t>(static_cast<double>(view.get(&Layout2DRecord::alpha))*255.0),0,255);
     // Original uses the LOW BYTE of each integer color, not saturation.
     const uint32_t color=(static_cast<uint32_t>(alpha)<<24)|

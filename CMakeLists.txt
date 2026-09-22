@@ -34,6 +34,7 @@ endif()
 
 
 add_library(kinoko_native_methods STATIC
+    src/reconstructed/quad_transform.cpp
     src/reconstructed/angle_math.cpp
     src/reconstructed/act_resource.cpp
     src/reconstructed/native_buffer.cpp
@@ -485,6 +486,10 @@ foreach(position IN ITEMS "2200,559" "2400,559" "2600,559" "2770,463")
         COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}" ${coordinates})
 endforeach()
 
+add_executable(kinoko_quad_transform_contract tests/quad_transform_contract.cpp src/reconstructed/quad_transform.cpp src/reconstructed/angle_math.cpp)
+target_include_directories(kinoko_quad_transform_contract PRIVATE include)
+add_test(NAME quad_transform_contract COMMAND kinoko_quad_transform_contract)
+
 add_executable(kinoko_angle_math_contract tests/angle_math_contract.cpp src/reconstructed/angle_math.cpp)
 target_include_directories(kinoko_angle_math_contract PRIVATE include)
 target_compile_options(kinoko_angle_math_contract PRIVATE /fp:strict)
@@ -747,6 +752,7 @@ target_include_directories(kinoko_camera_contract PRIVATE include)
 add_test(NAME camera_contract COMMAND kinoko_camera_contract)
 
 add_executable(kinoko_act_layout_render_contract tests/act_layout_render_contract.cpp
+    src/reconstructed/quad_transform.cpp
     src/reconstructed/angle_math.cpp
     src/reconstructed/act_layout.cpp src/reconstructed/string_layout_render.cpp
     src/reconstructed/act_render_state.cpp src/reconstructed/render_state.cpp)
