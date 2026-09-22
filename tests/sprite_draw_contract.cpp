@@ -15,17 +15,20 @@ static DWORD fvf;
 static const void *submitted;
 static bool valid;
 extern "C" int32_t kinoko_texture_bind_stage(int32_t stage, int32_t texture) {
+    std::fprintf(stderr,"bind step=%d stage=%d\n",step,stage);
     valid &= step++ == 0 && stage == 0;
     bound = texture;
     return E_FAIL; // Original still sets FVF and draws after a failed bind.
 }
 static HRESULT WINAPI set_fvf(IDirect3DDevice9 *, DWORD value) {
+    std::fprintf(stderr,"fvf step=%d\n",step);
     valid &= step++ == 1;
     fvf = value;
     return E_FAIL;
 }
 static HRESULT WINAPI draw_up(IDirect3DDevice9 *, D3DPRIMITIVETYPE type,
     UINT count, const void *vertices, UINT stride) {
+    std::fprintf(stderr,"submit step=%d type=%d count=%u stride=%u\n",step,type,count,stride);
     valid &= step++ == 2 && type == D3DPT_TRIANGLESTRIP && count == 2 && stride == 28;
     submitted = vertices;
     return S_FALSE;
