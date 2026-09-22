@@ -6188,7 +6188,7 @@ int main(int argc, char **argv) {
         }
         layout[66] = PTR(many);
         layout[67] = PTR(many + 600);
-        CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
+        CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
         CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 605);
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2,
@@ -6246,7 +6246,7 @@ int main(int argc, char **argv) {
             layout[66] = PTR(reused);
             layout[67] = PTR(reused + 600);
             for (int round = 0; round < 4; ++round) {
-                CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
+                CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
                 CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 600);
                 CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
                 kinoko_native_weak_pair_lock(g_514300_storage[13], pair);

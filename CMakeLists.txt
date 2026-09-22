@@ -259,6 +259,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_vm_bootstrap.cpp
     src/squirrel/actor_initialization.cpp
     src/reconstructed/script_callbacks.cpp
+    src/squirrel/script_callback_invocation.cpp
     src/squirrel/actor_state.cpp
     src/squirrel/actor_diagnostics.cpp
     src/squirrel/actor_lifecycle.cpp

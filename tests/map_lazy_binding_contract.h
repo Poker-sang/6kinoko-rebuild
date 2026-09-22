@@ -143,7 +143,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
         if (query == 4) {
             int32_t scratch[12] = {0}, cached = 0, hits = 0;
             *(uint8_t*)(intptr_t)(cloned_layer+140) = 0;
-            CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+            CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
             CHECK(layout[79] == cloned_resource && hits == 1);
             KinokoCollisionRecord *hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
             CHECK(hit[0].index == 0 && hit[0].chip == data->chips[0].bytes);
@@ -158,7 +158,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
                 *(float*)(intptr_t)(cloned_layer+144) = 0.5f;
                 *(float*)(intptr_t)(cloned_layer+148) = -0.5f;
                 cached = 2; hits = 0;
-                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
+                CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
                 hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
                 CHECK(hits == 3 && cached == 1);
                 CHECK(hit[0].index == 2 && hit[1].index == 3 && hit[2].index == 1);
@@ -166,23 +166,23 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
                 CHECK(((const float*)hit[0].layout)[3] == 20.5f);
                 CHECK(((const float*)hit[0].layout)[4] == 7.5f);
                 cached = 4; hits = 0;
-                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
+                CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,16,24,40,24,&hits));
                 hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
                 CHECK(hits == 3 && cached == 1);
                 CHECK(hit[0].index == 3 && hit[1].index == 2 && hit[2].index == 1);
                 cached = 0; hits = 0;
-                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,56,24,56,24,&hits));
+                CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,56,24,56,24,&hits));
                 hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
                 CHECK(hits == 1 && cached == 3 && hit[0].index == 3);
                 CHECK(scratch[10] == PTR(hit+3)); /* Published end is retained. */
                 cached = 0;
-                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,24,0,24,&hits));
+                CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,24,0,24,&hits));
                 hit = (KinokoCollisionRecord*)(intptr_t)scratch[9];
                 CHECK(hits == 2 && hit[0].index == 3 && hit[1].index == 1);
                 /* Existing internal empty-map contract leaves both cursors. */
                 int32_t saved_end = layout[67];
                 layout[67] = layout[66]; cached = 99;
-                CHECK(retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+                CHECK(fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
                 CHECK(hits == 2 && cached == 99);
                 layout[67] = saved_end;
             }
@@ -190,7 +190,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             layout[79] = 0;
             *(int32_t*)(intptr_t)(cloned_layer+100) = 0;
             hits = 0;
-            CHECK(!retdec_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
+            CHECK(!fixture_collision_query_rect(PTR(scratch),PTR(layout),&cached,0,0,100,100,&hits));
             CHECK(hits == 0 && layout[79] == 0);
             *(int32_t*)(intptr_t)(cloned_layer+100) = cloned_resource;
         }
