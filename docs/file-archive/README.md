@@ -78,3 +78,18 @@ layout header. R2 keeps the method table opaque in C and exposes its full typed
 virtual methods only in C++, where dispatch is implemented. This is a header
 compatibility correction; no stream behavior change. No executable was run;
 R1 artifacts/logs remain under file-archive-r1-quiet. R1 produced no game EXE.
+
+## R2 build handoff
+
+- Source commit: d6e27502cca8e9b5c3da21dede1a3438d6aa22d5.
+- Build tree: build-runs/file-archive-r2-quiet; Win32 Release, logging disabled.
+- All targets compiled and linked successfully (exit 0), including the new
+  file_archive_contract and updated ACT/PAT/mesh/audio/stage contracts.
+  No game, CTest or local contract executable was run. Existing unrelated
+  compiler warnings remain; no new file/archive source warning was reported.
+- Game EXE: runtime-builds/file-archive-r2-quiet/kinoko_retdec_rebuild.exe.
+- EXE SHA256: DA5440A97F89D38E806E1186466862B22FD25C4AEBE808583AE07ADB2512CC1A.
+- stage_dat.ps1 copied exactly 6kinoko_a.dat, 6kinoko_b.dat and 6kinoko_c.dat
+  beside this EXE and verified all three sizes and SHA256 values successfully.
+- All prior successful/failed build and runtime directories are retained.
+  This is compilation/staging evidence only; gameplay remains user-verified.
