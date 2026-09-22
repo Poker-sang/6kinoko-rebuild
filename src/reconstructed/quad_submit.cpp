@@ -1,17 +1,17 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/quad_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/diagnostics.h"
 #include <d3d9.h>
 extern "C" {
-extern int32_t g678;
 int32_t retdec_set_texture_stage(int32_t,int32_t);
 void retdec_trace_i32(const char *,int32_t);
 }
 
 // 405800: IColor + borrowed texture + four transformed 28-byte vertices.
 extern "C" int32_t kinoko_quad_submit(KinokoQuad *storage,float x,float y) {
-    if (!storage || !g678) return E_FAIL; // inherited unavailable-device boundary
+    if (!storage || !kinoko_graphics.device) return E_FAIL; // inherited unavailable-device boundary
     const kinoko::render::QuadView quad(storage);
     using kinoko::render::QuadRecord;
     auto vertices=quad.get(&QuadRecord::vertices);
@@ -31,7 +31,7 @@ extern "C" int32_t kinoko_quad_submit(KinokoQuad *storage,float x,float y) {
     quad.set(&QuadRecord::vertices,vertices);
     const auto texture_result=retdec_set_texture_stage(0,quad.get(&QuadRecord::texture));
     if (trace) retdec_trace_hresult("draw:set-texture-hr",texture_result);
-    auto *device=kinoko::legacy::pointer<IDirect3DDevice9>(g678);
+    auto *device=kinoko_graphics.device;
     if (!device || !kinoko::legacy::load<const void *>(device)) return E_FAIL;
     const auto format_result=device->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1);
     if (trace) retdec_trace_hresult("draw:set-fvf-hr",format_result);

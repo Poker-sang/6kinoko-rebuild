@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #pragma once
 #include "kinoko/legacy_string.h"
 #include <stdint.h>
@@ -57,7 +58,6 @@ extern int32_t kinoko_act_script_extension[7];
 extern int32_t  g1224;
 extern int32_t  g483;
 extern int32_t  g484;
-extern int32_t  g678;
 extern int32_t  g765;
 extern int32_t retdec_primary_shared_state;
 extern int32_t retdec_release_watch_data[8];

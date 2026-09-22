@@ -1,10 +1,10 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/sprite.h"
 
 #include <cstddef>
 #include <d3d9.h>
 
 extern "C" {
-extern int32_t g678;
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 float function_404130(long double angle);
 float function_4040d0(long double angle);
@@ -44,8 +44,7 @@ int32_t draw(KinokoSprite *sprite, float x, float y, DWORD format) {
     if (!sprite)
         return 0;
     kinoko_sprite_transform(sprite, x, y);
-    auto *device = reinterpret_cast<IDirect3DDevice9 *>(static_cast<uintptr_t>(
-        static_cast<uint32_t>(g678)));
+    auto *device = kinoko_graphics.device;
     if (!device || !*reinterpret_cast<void ***>(device))
         return 0;
     if (retdec_set_texture_stage(0, sprite->texture) < 0)

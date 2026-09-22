@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/act_array.h"
@@ -450,7 +451,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", reference_dir, archive);
             CHECK(function_410500(path));
         }
-        CHECK(g678 == 0);
+        CHECK(kinoko_graphics.device == 0);
         kinoko_act_document_initialize((KinokoActDocument *)act);
         CHECK(kinoko_act_document_load((KinokoActDocument *)act, stage_path));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
@@ -684,7 +685,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short textures;
     unsigned char *bytes;
-    CHECK(g765 != 0 && g678 == 0);
+    CHECK(g765 != 0 && kinoko_graphics.device == 0);
     CHECK(function_407370(PTR(&reader), "data/actor/item/item.pat"));
     CHECK(retdec_pat_read_u8(reader, &version));
     CHECK(retdec_pat_read_u16(reader, &textures));
@@ -2625,7 +2626,7 @@ static int test_sprite_geometry(void) {
     const float rotated_y[4] = {191.5f, 255.5f, 191.5f, 255.5f};
     void *methods[3] = {g407.e7, g407.e8, g407.e9};
     union { float f; int32_t bits; } x = {100.0f}, y = {200.0f};
-    int32_t saved_device = g678;
+    IDirect3DDevice9 *saved_device = kinoko_graphics.device;
 
     sprite.width = 32;
     sprite.height = 48;
@@ -2640,7 +2641,7 @@ static int test_sprite_geometry(void) {
         sprite.vertices[i].u = 0.125f;
         sprite.vertices[i].v = 0.75f;
     }
-    g678 = 0;
+    kinoko_graphics.device = 0;
     for (int method = 0; method < 3; ++method) {
         sprite.angle = 0;
         CHECK(retdec_call_thiscall2_result(&sprite, methods[method], x.bits, y.bits) == 0);
@@ -2662,7 +2663,7 @@ static int test_sprite_geometry(void) {
     sprite.scale_x = -2;
     kinoko_sprite_transform(&sprite, x.f, y.f);
     CHECK(sprite.vertices[0].x == 107.5f && sprite.vertices[1].x == 43.5f);
-    g678 = saved_device;
+    kinoko_graphics.device = saved_device;
     puts("PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes");
     return 0;
 }
@@ -3409,10 +3410,10 @@ static ULONG WINAPI count_texture_release(IDirect3DBaseTexture9 *texture) {
 static int test_texture_lifetime(void) {
     IDirect3DBaseTexture9Vtbl vtable = {0};
     int32_t texture[2] = {0};
-    int32_t old_device = g678;
+    IDirect3DDevice9 *old_device = kinoko_graphics.device;
     vtable.Release = count_texture_release;
     texture[0] = PTR(&vtable);
-    g678 = 0;
+    kinoko_graphics.device = 0;
     for (int cycle = 0; cycle < 5000; ++cycle) {
         int32_t handle = retdec_register_act_texture(
             (IDirect3DBaseTexture9 *)texture, 256, 256);
@@ -3447,7 +3448,7 @@ static int test_texture_lifetime(void) {
         CHECK(retdec_call_thiscall2_result(layout, kinoko_map_draw_entry, 0, 0) == 0);
         CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_render_layer_entry, PTR(camera)) == 0);
     }
-    g678 = old_device;
+    kinoko_graphics.device = old_device;
     puts("PASS: 5000 texture load/unload cycles release COM objects and reuse handles");
     return 0;
 }
@@ -5562,7 +5563,7 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
             "delete chipBinding; delete textureBinding; delete targetBinding; delete shared;\n"));
         resource[0] = PTR(&g365);
     }
-    int32_t old_device = g678; g678 = 0;
+    IDirect3DDevice9 *old_device = kinoko_graphics.device; kinoko_graphics.device = 0;
     resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
     CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));
     CHECK(resource[17] && texture[1] == 0); /* Empty name preserves ownership. */
@@ -5574,7 +5575,7 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
     CHECK(retdec_call_thiscall0_result(resource, (void*)g365.e11) == 1);
     CHECK(!resource[17] && texture[1] == 1);
     CHECK(kinoko_texture_release(borrowed) == 1 && texture[1] == 2);
-    g678 = old_device;
+    kinoko_graphics.device = old_device;
     CHECK(execute_source(vm, root+2,"delete textureResourceA; delete textureResourceB;\n"));
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     puts("PASS: texture resource native shared fields, original virtual ABI and reload ownership");

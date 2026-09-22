@@ -1,6 +1,7 @@
 // Exercise the actual update body with a deterministic WinMM clock. Container
 // callbacks and D3D are controlled boundaries, not replacements for the loop.
 #define CINTERFACE
+#include "kinoko/graphics_device.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <d3d9.h>
@@ -130,7 +131,7 @@ static bool restored() {
 }
 
 extern "C" {
-int32_t g678;
+KinokoGraphics kinoko_graphics{};
 int32_t g350[11]{}; // CStringLayout identity used by the diagnostic texture view.
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
 int32_t kinoko_set_render_target(int32_t handle) {
@@ -237,7 +238,7 @@ static int test_storage_and_draw() {
     CHECK(copies[0].sprite.vtable == &color_identity && copies[1].sprite.vtable == &target_identity);
     CHECK(copies[1].sprite.texture == 1 && copies[1].sprite.vertices[0].color == sprites[1].sprite.vertices[0].color);
     CHECK(function_455230(address(sprites), address(sprites), address(copies)) == address(copies));
-    g678 = address(&device); setup_device(); draws.clear(); sprite_draws = texture_unbinds = 0;
+    kinoko_graphics.device = reinterpret_cast<IDirect3DDevice9 *>(&device); setup_device(); draws.clear(); sprite_draws = texture_unbinds = 0;
     CHECK(kinoko_act_draw(address(fixture.runtime), 100, 200) == 0);
     CHECK(draw_state_valid && restored() && draws.size() == 2 && draws[0] == address(fixture.layouts[1]));
     CHECK(sprite_draws == 6 && texture_unbinds == 1 && observed_x == 113 && observed_y == 224);
@@ -266,7 +267,7 @@ static int test_storage_and_draw() {
     CHECK(retdec_act_clear_layout_vector(address(fixture.runtime + 15)) == allocation);
     CHECK(kinoko_act_sprite_span(address(fixture.runtime)).end==allocation && kinoko_act_sprite_span(address(fixture.runtime)).capacity==saved.capacity);
     CHECK(kinoko_texture_slots[1].width == 128); // clear never owns/releases the texture
-    g678 = 0;
+    kinoko_graphics.device = 0;
     return 0;
 }
 

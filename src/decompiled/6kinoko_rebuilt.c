@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/camera.h"
 #include "kinoko/act_layer_access.h"
@@ -2756,30 +2757,9 @@ float32_t g671 = 0.0f; // 0x5187f0
 int32_t g672 = 0; // 0x519600
 char g673 = 0; // 0x51ac10
 char g674 = 0; // 0x51ac11
+KinokoGraphics kinoko_graphics = {0};
 int32_t g675 = 0; // 0x51ac18
 struct retdec_RTL_CRITICAL_SECTION g676 = { 0 }; // 0x51ac1c
-int32_t g677 = 0; // 0x51ac34
-int32_t g678 = 0; // 0x51ac38
-int32_t g679 = 0; // 0x51ac3c
-unsigned char g680[0x140] = { 0 }; // 0x51ac40
-char g681 = 0; // 0x51ac7c
-int32_t g682 = 0; // 0x51ad70
-int32_t g683 = 0; // 0x51ad74
-int32_t g684 = 0; // 0x51ad78
-int32_t g685 = 0; // 0x51ad7c
-int32_t g686 = 0; // 0x51ad80
-int32_t g687 = 0; // 0x51ad88
-int32_t g688 = 0; // 0x51ad8c
-int32_t g689 = 0; // 0x51ad90
-int32_t g690 = 0; // 0x51ad94
-int32_t g691 = 0; // 0x51ad98
-int32_t g692 = 0; // 0x51ad9c
-int32_t g693 = 0; // 0x51ada0
-int32_t g694 = 0; // 0x51ada4
-int32_t g695 = 0; // 0x51adb4
-int32_t g696 = 0; // 0x51adb8
-int32_t g697 = 0; // 0x51adbc
-int32_t g698 = 0; // 0x51adc0
 int32_t g701 = 0; // 0x51add0
 int32_t g702 = 0; // 0x51add4
 int32_t g703 = 0; // 0x51addc
@@ -3627,8 +3607,6 @@ static int g_retdec_input_manager_initialized = 0;
 static int g_retdec_map_manager_initialized = 0;
 static int32_t g_retdec_startup_vm = 0;
 static uint32_t g_retdec_actor_init_count;
-static D3DDISPLAYMODE g_retdec_display_mode;
-static D3DPRESENT_PARAMETERS g_retdec_present_parameters;
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
 #define g_retdec_act_texture_slots kinoko_texture_slots
@@ -3773,152 +3751,27 @@ int32_t function_401040(void) {
     g675=(int32_t)&g190;
     InitializeCriticalSection((LPCRITICAL_SECTION)&g676);
     kinoko_initialize_device_listeners();
-    g677=g678=g679=g698=0;
+    kinoko_graphics.factory=NULL;kinoko_graphics.device=NULL;kinoko_graphics.swap_chain=NULL;kinoko_graphics.unknown_state=0;
     return (int32_t)&g675;
 }
 
 // Address range: 0x4011b0 - 0x4013c5
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
-    IDirect3D9 *d3d;
-    IDirect3DDevice9 *device = NULL;
-    IDirect3DSwapChain9 *swap_chain = NULL;
-    D3DDEVTYPE device_type = D3DDEVTYPE_HAL;
-    WINDOWINFO window_info;
-    HRESULT hr;
-
-    if (hwnd == NULL) {
-        return 0;
-    }
-
-    g688 = (int32_t)(intptr_t)hwnd;
-    g696 = GetWindowLongA(hwnd, GWL_STYLE);
-    retdec_trace("4011b0:pre-d3d-create");
-    d3d = (IDirect3D9 *)(uintptr_t)Direct3DCreate9(D3D_SDK_VERSION);
-    retdec_trace(d3d != NULL ? "4011b0:post-d3d-create" :
-                 "4011b0:d3d-create-failed");
-    g677 = (int32_t)(intptr_t)d3d;
-    if (d3d == NULL) {
-        MessageBoxA(hwnd, "Direct3DCreate9 failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    ZeroMemory(&g_retdec_display_mode, sizeof(g_retdec_display_mode));
-    retdec_trace("4011b0:pre-display-mode");
-    hr = d3d->lpVtbl->GetAdapterDisplayMode(
-        d3d, D3DADAPTER_DEFAULT, &g_retdec_display_mode);
-    retdec_trace(FAILED(hr) ? "4011b0:display-mode-failed" :
-                 "4011b0:post-display-mode");
-    if (FAILED(hr)) {
-        retdec_release_d3d_object(d3d);
-        g677 = 0;
-        MessageBoxA(hwnd, "GetAdapterDisplayMode failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    /* WinMain passes zero dimensions.  4011B0 then takes the actual client
-       rectangle, which keeps the swap chain aligned with the window. */
-    if (width <= 0 || height <= 0) {
-        ZeroMemory(&window_info, sizeof(window_info));
-        window_info.cbSize = sizeof(window_info);
-        if (GetWindowInfo(hwnd, &window_info)) {
-            width = window_info.rcClient.right - window_info.rcClient.left;
-            height = window_info.rcClient.bottom - window_info.rcClient.top;
-        }
-    }
-    retdec_trace_i32("4011b0:client-width", width);
-    retdec_trace_i32("4011b0:client-height", height);
-    g695 = (int32_t)g_retdec_display_mode.Format;
-    g682 = width > 0 ? width : 640;
-    g683 = height > 0 ? height : 480;
-    g684 = g695;
-    g685 = 1;
-    g686 = 0;
-    g687 = 1;
-    g689 = 1;
-    g690 = 1;
-    g691 = (int32_t)D3DFMT_D24S8;
-    g692 = 2;
-    g693 = 0;
-    g694 = 1;
-
-    ZeroMemory(&g_retdec_present_parameters,
-               sizeof(g_retdec_present_parameters));
-    g_retdec_present_parameters.BackBufferWidth = (UINT)g682;
-    g_retdec_present_parameters.BackBufferHeight = (UINT)g683;
-    g_retdec_present_parameters.BackBufferFormat =
-        g_retdec_display_mode.Format;
-    g_retdec_present_parameters.BackBufferCount = 1;
-    g_retdec_present_parameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-    g_retdec_present_parameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    g_retdec_present_parameters.hDeviceWindow = hwnd;
-    g_retdec_present_parameters.Windowed = TRUE;
-    g_retdec_present_parameters.EnableAutoDepthStencil = TRUE;
-    g_retdec_present_parameters.AutoDepthStencilFormat = D3DFMT_D24S8;
-    g_retdec_present_parameters.Flags = (DWORD)g692;
-    g_retdec_present_parameters.FullScreen_RefreshRateInHz = 0;
-    g_retdec_present_parameters.PresentationInterval =
-        D3DPRESENT_INTERVAL_ONE;
-
-    retdec_trace("4011b0:pre-create-device");
-    hr = d3d->lpVtbl->CreateDevice(
-        d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 68,
-        &g_retdec_present_parameters, &device);
-    retdec_trace(FAILED(hr) ? "4011b0:create-device-1-failed" :
-                 "4011b0:create-device-1-ok");
-    if (FAILED(hr)) {
-        hr = d3d->lpVtbl->CreateDevice(
-            d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 36,
-            &g_retdec_present_parameters, &device);
-        retdec_trace(FAILED(hr) ? "4011b0:create-device-2-failed" :
-                     "4011b0:create-device-2-ok");
-    }
-    if (FAILED(hr)) {
-        device_type = D3DDEVTYPE_REF;
-        hr = d3d->lpVtbl->CreateDevice(
-            d3d, D3DADAPTER_DEFAULT, device_type, hwnd, 36,
-            &g_retdec_present_parameters, &device);
-        retdec_trace(FAILED(hr) ? "4011b0:create-device-ref-failed" :
-                     "4011b0:create-device-ref-ok");
-    }
-    if (FAILED(hr) || device == NULL) {
-        retdec_release_d3d_object(d3d);
-        g677 = 0;
-        g678 = 0;
-        MessageBoxA(hwnd, "CreateDevice failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    g678 = (int32_t)(intptr_t)device;
-    ZeroMemory(g680, sizeof(g680));
-    retdec_trace("4011b0:pre-device-caps");
-    device->lpVtbl->GetDeviceCaps(device, (D3DCAPS9 *)g680);
-    retdec_trace("4011b0:post-device-caps");
-    retdec_trace("4011b0:pre-swap-chain");
-    if (FAILED(device->lpVtbl->GetSwapChain(device, 0, &swap_chain))) {
-        swap_chain = NULL;
-    }
-    retdec_trace(swap_chain != NULL ? "4011b0:post-swap-chain" :
-                 "4011b0:swap-chain-failed");
-    g679 = (int32_t)(intptr_t)swap_chain;
-    g697 = 0;
-    retdec_trace("4011b0:done");
-    return 1;
+    return kinoko_graphics_create(hwnd,width,height);
 }
 
 // Address range: 0x4013d0 - 0x4014c3
 int32_t function_4013d0(void) {
-    IDirect3DDevice9 *device=(IDirect3DDevice9 *)(uintptr_t)g678;
-    if(g677==0 || device==NULL || g697==(int32_t)D3DERR_DEVICELOST) return 0;
-    g684=g689==0 ? 22 : g695;
-    g_retdec_present_parameters.BackBufferFormat=(D3DFORMAT)g684;
-    g_retdec_present_parameters.Windowed=g689;
+    IDirect3DDevice9 *device=kinoko_graphics.device;
+    if(kinoko_graphics.factory==0 || device==NULL || kinoko_graphics.cooperative_status==(int32_t)D3DERR_DEVICELOST) return 0;
+    kinoko_graphics.present.BackBufferFormat=kinoko_graphics.present.Windowed==0 ? D3DFMT_X8R8G8B8 : kinoko_graphics.display.Format;
     EnterCriticalSection((LPCRITICAL_SECTION)&g676);
     kinoko_notify_device_listeners(0);
-    if(g679) { retdec_release_d3d_object((void *)(uintptr_t)g679);g679=0; }
-    if(FAILED(device->lpVtbl->Reset(device,&g_retdec_present_parameters))) {
+    if(kinoko_graphics.swap_chain) { retdec_release_d3d_object((void *)(uintptr_t)kinoko_graphics.swap_chain);kinoko_graphics.swap_chain=0; }
+    if(FAILED(device->lpVtbl->Reset(device,&kinoko_graphics.present))) {
         LeaveCriticalSection((LPCRITICAL_SECTION)&g676);return 0;
     }
-    device->lpVtbl->GetSwapChain(device,0,(IDirect3DSwapChain9 **)&g679);
+    device->lpVtbl->GetSwapChain(device,0,(IDirect3DSwapChain9 **)&kinoko_graphics.swap_chain);
     kinoko_notify_device_listeners(1);
     LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
     return 1;
@@ -3927,23 +3780,23 @@ int32_t function_4013d0(void) {
 // Address range: 0x4014d0 - 0x4015fb
 int32_t function_4014d0(void) {
     // 0x4014d0
-    g689 = g689 == 0;
+    kinoko_graphics.present.Windowed = kinoko_graphics.present.Windowed == 0;
     int32_t result = function_4013d0(); // 0x4014e4
-    int32_t v1 = g689;
+    int32_t v1 = kinoko_graphics.present.Windowed;
     if ((char)result == 0) {
         // 0x4014ed
-        g689 = v1 == 0;
+        kinoko_graphics.present.Windowed = v1 == 0;
         return result;
     }
     int32_t v2 = GetSystemMetrics(45);
     int32_t v3 = GetSystemMetrics(7);
     if (v1 != 0) {
-        int32_t cx = v3 + v2 + GetSystemMetrics(5) + g682; // 0x401526
+        int32_t cx = v3 + v2 + GetSystemMetrics(5) + kinoko_graphics.present.BackBufferWidth; // 0x401526
         int32_t v4 = GetSystemMetrics(46); // 0x40152e
-        int32_t cy = GetSystemMetrics(8) + v4 + GetSystemMetrics(6) + GetSystemMetrics(4) + g683; // 0x40154c
+        int32_t cy = GetSystemMetrics(8) + v4 + GetSystemMetrics(6) + GetSystemMetrics(4) + kinoko_graphics.present.BackBufferHeight; // 0x40154c
         int32_t v5 = GetSystemMetrics(0) - cx; // 0x401554
         int32_t v6 = GetSystemMetrics(1) - cy; // 0x401562
-        return SetWindowPos((int32_t *)g688, (int32_t *)-2, (v5 - (v5 >> 31)) / 2, (v6 - (v6 >> 31)) / 2, cx, cy, 32);
+        return SetWindowPos((int32_t *)kinoko_graphics.present.hDeviceWindow, (int32_t *)-2, (v5 - (v5 >> 31)) / 2, (v6 - (v6 >> 31)) / 2, cx, cy, 32);
     }
     // 0x401587
     GetSystemMetrics(5);
@@ -3954,35 +3807,12 @@ int32_t function_4014d0(void) {
     int32_t v7 = GetSystemMetrics(7) + GetSystemMetrics(45) + GetSystemMetrics(5); // 0x4015b1
     int32_t v8 = GetSystemMetrics(8) + GetSystemMetrics(46) + GetSystemMetrics(6); // 0x4015cc
     int32_t v9 = GetSystemMetrics(4); // 0x4015d7
-    return SetWindowPos((int32_t *)g688, NULL, -(((v7 - (v7 >> 31)) / 2)), -((v9 + (v8 - (v8 >> 31)) / 2)), 0, 0, 33);
+    return SetWindowPos((int32_t *)kinoko_graphics.present.hDeviceWindow, NULL, -(((v7 - (v7 >> 31)) / 2)), -((v9 + (v8 - (v8 >> 31)) / 2)), 0, 0, 33);
 }
 
 // Address range: 0x401600 - 0x401652
 int32_t function_401600(void) {
-    int32_t object;
-    int32_t result = 0;
-
-    /* The three globals are interface pointers. RetDec lost the temporary
-       stack slots used to call their virtual Release methods. */
-    object = g679;
-    if (object != 0) {
-        ((void (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g679 = 0;
-    }
-    object = g678;
-    if (object != 0) {
-        ((void (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g678 = 0;
-    }
-    object = g677;
-    if (object != 0) {
-        result = ((int32_t (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g677 = 0;
-    }
-    return result;
+    return kinoko_graphics_release();
 }
 
 // Address range: 0x401660 - 0x4016d7
@@ -4000,7 +3830,7 @@ int32_t function_401760(void) {
     HRESULT hr;
 
     EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-    device = (IDirect3DDevice9 *)(uintptr_t)g678;
+    device = kinoko_graphics.device;
     if (device == NULL || device->lpVtbl == NULL) {
         LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
         return 0;
@@ -4021,7 +3851,7 @@ int32_t function_401760(void) {
 
 // Address range: 0x401790 - 0x4017aa
 int32_t function_401790(void) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g678;
+    IDirect3DDevice9 *device = kinoko_graphics.device;
     if (device != NULL && device->lpVtbl != NULL) {
         HRESULT hr = device->lpVtbl->EndScene(device);
         retdec_trace_hresult("401790:endscene-hr", hr);
@@ -4041,7 +3871,7 @@ int32_t function_4017b0(void) {
         return 0;
     }
 
-    swap_chain = (IDirect3DSwapChain9 *)(uintptr_t)g679;
+    swap_chain = kinoko_graphics.swap_chain;
     if (swap_chain == NULL || swap_chain->lpVtbl == NULL) {
         g713 = 0;
         LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
@@ -4065,7 +3895,7 @@ int32_t function_4017b0(void) {
 
 // Address range: 0x401820 - 0x401843
 int32_t function_401820(void) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g678;
+    IDirect3DDevice9 *device = kinoko_graphics.device;
     HRESULT hr;
 
     if (device == NULL || device->lpVtbl == NULL)
@@ -4106,11 +3936,11 @@ int32_t function_401ae0(void) {
     if (g702 != 0) {
         return 0;
     }
-    device = (IDirect3DDevice9 *)(uintptr_t)g678;
+    device = kinoko_graphics.device;
     if (device == NULL) {
         return 0;
     }
-    g702 = g678;
+    g702 = (int32_t)(intptr_t)kinoko_graphics.device;
     retdec_trace("401ae0:pre-list");
     kinoko_add_device_listener((int32_t)(uintptr_t)&g701);
     retdec_trace("401ae0:post-list");
@@ -4665,9 +4495,9 @@ int32_t retdec_set_texture_stage(int32_t stage, int32_t handle)
     IDirect3DBaseTexture9 *texture;
     HRESULT result;
 
-    if (stage < 0 || stage >= 16 || g678 == 0)
+    if (stage < 0 || stage >= 16 || kinoko_graphics.device == 0)
         return -0x7fffbffb;
-    device = (IDirect3DDevice9 *)(uintptr_t)(uint32_t)g678;
+    device = kinoko_graphics.device;
     if (device == NULL || device->lpVtbl == NULL)
         return -0x7fffbffb;
     texture = handle == 0 ? NULL : retdec_resolve_texture_handle(handle);
@@ -5830,14 +5660,14 @@ BOOL function_40db30(unsigned char *state) {
             DispatchMessageA(&message);
             continue;
         }
-        if (g678 != 0) {
-            int32_t *vtable = *(int32_t **)(uintptr_t)g678;
+        if (kinoko_graphics.device != 0) {
+            int32_t *vtable = *(int32_t **)(uintptr_t)kinoko_graphics.device;
             if (vtable != NULL && vtable[3] != 0) {
-                g697 = ((int32_t (__stdcall *)(int32_t))(uintptr_t)vtable[3])(
-                    g678);
+                kinoko_graphics.cooperative_status = ((int32_t (__stdcall *)(int32_t))(uintptr_t)vtable[3])(
+                    (int32_t)(intptr_t)kinoko_graphics.device);
             }
         }
-        if (g697 == -2005530519) {
+        if (kinoko_graphics.cooperative_status == -2005530519) {
             function_4013d0();
         }
         WaitForSingleObject(event_handle, 16);
@@ -5862,7 +5692,7 @@ static int32_t retdec_render_scene_frame(void)
     LONG trace_index;
 
     scene = g863;
-    if (scene == 0 || g678 == 0)
+    if (scene == 0 || kinoko_graphics.device == 0)
         return 0;
     vtable = *(int32_t **)(uintptr_t)scene;
     if (vtable == NULL || vtable[2] == 0)
@@ -6033,7 +5863,7 @@ LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPAR
 
     if (a3 == WM_SYSKEYDOWN) {
         if (a4 == VK_RETURN) {
-            function_40e220(a1, (char)(g689 == 0));
+            function_40e220(a1, (char)(kinoko_graphics.present.Windowed == 0));
             return 0;
         }
         if (a4 != VK_F4) {
@@ -6070,8 +5900,8 @@ int32_t function_40e220(int32_t *state, char toggle) {
     if (state == NULL) {
         return 0;
     }
-    old_fullscreen = g689 == 0;
-    if ((toggle != 0 && g689 != 0) || (toggle == 0 && g689 == 0)) {
+    old_fullscreen = kinoko_graphics.present.Windowed == 0;
+    if ((toggle != 0 && kinoko_graphics.present.Windowed != 0) || (toggle == 0 && kinoko_graphics.present.Windowed == 0)) {
         return 0;
     }
 
@@ -6082,16 +5912,16 @@ int32_t function_40e220(int32_t *state, char toggle) {
         ((unsigned char *)state + 152));
 
     if (*(unsigned char *)((unsigned char *)state + 44) != 0) {
-        if (old_fullscreen && g689 != 0) {
+        if (old_fullscreen && kinoko_graphics.present.Windowed != 0) {
             ShowCursor(TRUE);
             return 1;
         }
-        if (!old_fullscreen && g689 == 0) {
+        if (!old_fullscreen && kinoko_graphics.present.Windowed == 0) {
             ShowCursor(FALSE);
             return 0;
         }
     }
-    return g689 != 0;
+    return kinoko_graphics.present.Windowed != 0;
 }
 
 // Address range: 0x40e2b0 - 0x40e2cc
@@ -6194,7 +6024,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     D3DLOCKED_RECT locked_rect;
 
     (void)unused;
-    if (file_name == NULL || texture_out == 0 || g678 == 0)
+    if (file_name == NULL || texture_out == 0 || kinoko_graphics.device == 0)
         return -0x7789f794;
     path_length = strlen(file_name);
     if (path_length < 3 || path_length + 1 > sizeof(lookup_path))
@@ -6229,7 +6059,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     if (height_out != NULL)
         *height_out = height;
 
-    result = D3DXCreateTexture(g678, (int32_t)width, (int32_t)height, 1, 0,
+    result = D3DXCreateTexture((int32_t)(intptr_t)kinoko_graphics.device, (int32_t)width, (int32_t)height, 1, 0,
                                texture_format, 1, &texture_value);
     retdec_trace_hresult("texture:create-hr", result);
     retdec_trace_i32("texture:create-object", texture_value);
@@ -6305,7 +6135,7 @@ int32_t retdec_load_act_texture(const char *texture_name)
     const char *extension;
     size_t length;
 
-    if (texture_name == NULL || g678 == 0)
+    if (texture_name == NULL || kinoko_graphics.device == 0)
         return 0;
     length = strlen(texture_name);
     if (length == 0 || length + 5 > sizeof(path))
@@ -10013,7 +9843,7 @@ int32_t function_45d970_this(int32_t this_ptr, char flags) {
 // Address range: 0x45d9a0 - 0x45d9b1
 int32_t function_45d9a0(void) {
     // 0x45d9a0
-    if (g697 == 0) {
+    if (kinoko_graphics.cooperative_status == 0) {
         // 0x45d9a9
         function_469900();
     }

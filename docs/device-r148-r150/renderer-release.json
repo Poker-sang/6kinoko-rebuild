@@ -1,0 +1,1 @@
+{"addr":"0x401da0","code":"int __thiscall sub_401DA0(_DWORD **this)\n{\n  (*(void (__stdcall **)(_DWORD))(**(this + 19) + 8))(a1: *(this + 19)); /*0x401dac*/\n  return (*(int (__stdcall **)(_DWORD))(**(this + 24) + 8))(a1: *(this + 24)); /*0x401db9*/\n}"}

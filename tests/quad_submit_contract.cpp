@@ -1,4 +1,5 @@
 #define CINTERFACE
+#include "kinoko/graphics_device.h"
 #include <d3d9.h>
 #include "kinoko/quad_render.h"
 #include "kinoko/quad_records.hpp"
@@ -10,7 +11,8 @@ static std::vector<int> calls;
 static QuadRecord *expected;
 static bool valid;
 extern "C" {
-int32_t g678=0,g702=0,g703=0,g707=0,g709=0;
+KinokoGraphics kinoko_graphics{};
+int32_t g702=0,g703=0,g707=0,g709=0;
 int32_t retdec_set_texture_stage(int32_t stage,int32_t texture) { calls.push_back(1);valid=valid && stage==0 && texture==17;return E_FAIL; }
 void retdec_trace_i32(const char *,int32_t) {}
 void retdec_trace_hresult(const char *,long) {}
@@ -29,7 +31,7 @@ static HRESULT STDMETHODCALLTYPE texture_state(IDirect3DDevice9 *,DWORD stage,D3
 int main() {
     IDirect3DDevice9Vtbl methods{};methods.SetFVF=format;methods.DrawPrimitiveUP=draw;
     methods.SetRenderState=state;methods.SetTextureStageState=texture_state;
-    IDirect3DDevice9 device{&methods};g678=g702=kinoko::legacy::address(&device);
+    IDirect3DDevice9 device{&methods};kinoko_graphics.device=&device;g702=kinoko::legacy::address(&device);
     QuadRecord quad{};quad.texture=17;quad.positions[0]={1,2,3};
     quad.vertices[0].u=0.25f;quad.vertices[0].v=0.75f;quad.vertices[0].color=0x12785634;
     expected=&quad;valid=true;

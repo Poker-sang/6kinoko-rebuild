@@ -1,0 +1,1 @@
+{"addr":"0x401790","code":"void __thiscall sub_401790(_DWORD **this)\n{\n  (*(void (__stdcall **)(_DWORD))(**(this + 1) + 168))(a1: *(this + 1)); /*0x40179c*/\n  LeaveCriticalSection(lpCriticalSection: &CriticalSection); /*0x4017a3*/\n}","refs":[{"addr":"0x4d50ac","name":"LeaveCriticalSection"},{"addr":"0x51ac1c","name":"CriticalSection"}]}

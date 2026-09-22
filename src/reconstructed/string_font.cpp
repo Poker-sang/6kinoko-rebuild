@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/string_font.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
@@ -13,7 +14,6 @@
 #include <list>
 
 extern "C" {
-extern int32_t g678;
 extern char *g767;
 extern CRITICAL_SECTION g676;
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
@@ -166,7 +166,7 @@ extern "C" int32_t kinoko_string_font_texture(int32_t r) {
     IDirect3DTexture9* value=nullptr;
     {
         GraphicsLock lock;
-        if(FAILED(D3DXCreateTexture(pointer<IDirect3DDevice9>(g678),512,512,1,0,
+        if(FAILED(D3DXCreateTexture(kinoko_graphics.device,512,512,1,0,
             D3DFMT_A8R8G8B8,D3DPOOL_MANAGED,&value))) return 0;
     }
     texture.reset(value);

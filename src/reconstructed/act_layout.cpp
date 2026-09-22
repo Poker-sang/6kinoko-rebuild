@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/act_layer_access.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -706,7 +707,7 @@ int32_t retdec_c2dlayout_draw_impl(int32_t layout,
     /* 42C300 surrounds every sprite with the renderer's alpha-blend state.
        Without this, the A8R8G8B8 ACT textures are submitted but their
        transparent pixels become opaque black/white rectangles. */
-    device = pointer<IDirect3DDevice9>(g678);
+    device = kinoko_graphics.device;
     if (device != nullptr &&
         SUCCEEDED(device->GetRenderState(D3DRS_SRCBLEND, &old_src_blend)) &&
         SUCCEEDED(device->GetRenderState(D3DRS_DESTBLEND, &old_dest_blend)) &&

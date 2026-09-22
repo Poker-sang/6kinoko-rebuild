@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_draw_records.hpp"
@@ -162,7 +163,7 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
 }
 
 extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
-    auto* device = pointer<IDirect3DDevice9>(g678);
+    auto* device = kinoko_graphics.device;
     if (!self) return E_FAIL;
     const RuntimeView resource(pointer(self));
     if (resource.get(&RuntimeRecord::hidden)) return 0;
@@ -199,7 +200,7 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
         if (status < 0) result = status;
     }
     if (document.get(&DocumentRecord::visible)) {
-        auto* blit_device = pointer<IDirect3DDevice9>(g678);
+        auto* blit_device = kinoko_graphics.device;
         if (blit_device) {
             for (auto item = kinoko_act_sprite_span(self).begin;
                  item != kinoko_act_sprite_span(self).end; item += sizeof(BlitSprite)) {

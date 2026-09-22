@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/map_render.h"
 #include "kinoko/map_layout_records.hpp"
@@ -129,7 +130,7 @@ extern "C" int32_t kinoko_map_draw_visible(KinokoActLayout *layout,float x,float
     if (!owner.get(&LayerRecord::visible)) return 0;
     if (!owner.get(&LayerRecord::resource) || owner.get(&LayerRecord::resource)!=
         map.get(&LayoutRecord::cached_chip_resource)) return E_FAIL;
-    auto *device=pointer<IDirect3DDevice9>(g678);
+    auto *device=kinoko_graphics.device;
     if (!device) return E_FAIL; // inherited unavailable-device boundary
     DWORD address_u=0,address_v=0;
     device->GetSamplerState(0,D3DSAMP_ADDRESSU,&address_u);

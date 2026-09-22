@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/render_target.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/legacy_memory.hpp"
@@ -10,7 +11,6 @@
 #include <stdexcept>
 #include "kinoko/legacy_abi.h"
 extern "C" {
-extern int32_t g678,g681;
 extern int32_t g702,g703,g704,g705,g706,g707,g708,g709,g710,g711,g712,g718,g721;
 extern char g713;
 int32_t function_4026e0(int32_t);
@@ -33,11 +33,11 @@ struct GraphicsLock {
     ~GraphicsLock() { LeaveCriticalSection(&g676); }
 };
 int32_t create(uint32_t width,uint32_t height) {
-    if(g681&0x20) width=height=(std::max)(width,height);
+    if(kinoko_graphics.capabilities.TextureCaps&0x20) width=height=(std::max)(width,height);
     kinoko::ComOwner<IDirect3DTexture9> texture;
     {
         GraphicsLock lock;
-        if(FAILED(D3DXCreateTexture(pointer<IDirect3DDevice9>(g678),width,height,1,
+        if(FAILED(D3DXCreateTexture(kinoko_graphics.device,width,height,1,
             D3DUSAGE_RENDERTARGET,D3DFMT_A8R8G8B8,D3DPOOL_DEFAULT,texture.put()))) return 0;
     }
     const int32_t handle=kinoko_texture_register(texture.get(),width,height);
@@ -112,7 +112,7 @@ extern "C" int32_t __fastcall kinoko_renderer_after_reset(int32_t,void*) {
     // This process has the single original renderer. Its RetDec globals are
     // separate objects, not a contiguous CRenderer; never memcpy from &g703.
     auto *device=pointer<IDirect3DDevice9>(g702);
-    for(DWORD stage=0;stage<8;++stage) pointer<IDirect3DDevice9>(g678)->SetTexture(stage,nullptr);
+    for(DWORD stage=0;stage<8;++stage) kinoko_graphics.device->SetTexture(stage,nullptr);
     kinoko_initialize_texture_cache();
     const int32_t saved[]={g703,g704,g705,g706,g707,g708,g709,g710,g711,g712};
     g703=g704=g705=g706=g707=g708=g709=g710=g711=g712=0;g713=0;
@@ -133,7 +133,7 @@ extern "C" int32_t __fastcall kinoko_renderer_after_reset(int32_t,void*) {
     state(D3DRS_ZFUNC,saved[5]);g708=saved[5];
     function_4026e0(saved[1]);function_402770(saved[0]);
     if(saved[2]) {
-        if(saved[2]>=1 && saved[2]<=3) pointer<IDirect3DDevice9>(g678)->SetRenderState(D3DRS_CULLMODE,saved[2]);
+        if(saved[2]>=1 && saved[2]<=3) kinoko_graphics.device->SetRenderState(D3DRS_CULLMODE,saved[2]);
         g705=saved[2];
     }
     state(D3DRS_STENCILMASK,255);

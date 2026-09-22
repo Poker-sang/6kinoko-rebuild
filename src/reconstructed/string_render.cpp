@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/string_font.h"
@@ -9,7 +10,7 @@
 #include <algorithm>
 #include <cstring>
 extern "C" {
-extern int32_t g678,g702,g703,g704;
+extern int32_t g702,g703,g704;
 int32_t function_4410c0(int32_t layout);
 }
 namespace {
@@ -50,7 +51,7 @@ void rectangle(int32_t s,int32_t handle,int32_t x,int32_t y,int32_t w,int32_t h)
     for(int offset:{136,148,160,172}) field<float>(s+offset)=0;
 }
 void blend(int32_t mode) {
-    auto* device=pointer<IDirect3DDevice9>(g678);
+    auto* device=kinoko_graphics.device;
     if(mode<1 || mode>4) {
         device->SetRenderState(D3DRS_BLENDOP,D3DBLENDOP_ADD);
         device->SetRenderState(D3DRS_SRCBLEND,mode==5?D3DBLEND_DESTCOLOR:D3DBLEND_ONE);
@@ -173,7 +174,7 @@ extern "C" int32_t __fastcall kinoko_method_draw_string_layout(int32_t layout,vo
     const int32_t layer=field<int32_t>(layout+148);
     if(!layer) return E_FAIL;
     if(!field<uint8_t>(layer+140)) return 0;
-    auto* device=pointer<IDirect3DDevice9>(g678);
+    auto* device=kinoko_graphics.device;
     DWORD saved[4]{};
     const D3DRENDERSTATETYPE states[]={D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_BLENDOP,D3DRS_ALPHABLENDENABLE};
     for(int i=0;i<4;++i) device->GetRenderState(states[i],&saved[i]);
