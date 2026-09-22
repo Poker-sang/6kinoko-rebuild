@@ -94,7 +94,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(retdec_publish_c2dmaplayout_class(vm,PTR(root),klass));
             CHECK(retdec_create_bound_instance(vm,root+2,"LazyMapProbe",klass,PTR(layout),instance));
             CHECK(execute_source(vm,root+2,
-                "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";"
+                "if (LazyMapProbe.GetChipByPosition(8,9) != 0) throw \"unbound event map\";\n"
                 "if (LazyMapProbe.GetChipByPosition(100,100) != -1) throw \"outside map\";"));
             CHECK(layout[79] == cloned_resource);
             layout[79] = 0;
