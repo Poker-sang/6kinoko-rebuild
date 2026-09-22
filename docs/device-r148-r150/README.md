@@ -53,3 +53,18 @@ on creation failure. Listener ownership remains borrowed; sets own only nodes.
 Added a fake-COM contract covering reset order, duplicate listeners, reset failure,
 DEVICELOST, temporary surface release and exact reset-state writes. It is to be
 compiled only. No game, CTest, or automated test execution is authorized here.
+
+## Build handoff (2026-09-22)
+
+- R148 commit: c929f54; R149 commit: 4ecc34d.
+- R150 source commit: be9e4405de7ea20cc4c33ddb91bdbb9861ec3297.
+- Build tree: build-runs/device-r150-quiet (fresh, retained).
+- Generator: Visual Studio 18 2026, Win32 Release, RETDEC_DISABLE_TRACE=ON.
+- EXE: runtime-builds/device-r150-quiet/kinoko_retdec_rebuild.exe.
+- EXE SHA256: 2E48FDD01AD55C7C554AC086639D70CCCE60FBCA8FAE54F6B46981E9E3182242.
+- All build targets completed, including device_lifecycle_contract. No compiler
+  or linker errors found; existing warning output retained in build.log.
+- Configure/build/DAT logs retained under the build tree. stage_dat.ps1 copied
+  all three DAT files next to the EXE and verified sizes/SHA256 successfully.
+- No game, CTest, or local automated tests executed. Contracts are compiled only;
+  runtime behavior remains for user validation. Older artifacts retained.
