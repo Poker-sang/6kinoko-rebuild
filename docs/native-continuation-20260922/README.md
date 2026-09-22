@@ -14,3 +14,13 @@ return the receiver pointer. StringView retains snapshot-before-mutation for
 self-aliasing, substring clamping and original overflow guards. Source record
 is const and borrowed; neither the view nor return value owns storage. Existing
 unaligned/alias/overflow contract cases now call the pointer interfaces directly.
+
+## Batch 2: string capacity and borrowed growth buffer
+
+4039E0/403CE0 take actual storage pointers; growth returns char* all the way
+through StringView, with no integer round trip. The pointer is borrowed from
+the native string, not an allocation for the caller to delete. Reserve keeps
+zero-request clearing, small shrink truncation and the existing invalid-size /
+allocation-failure guards. Modern STL capacity policy remains intentional;
+this does not claim VC8 allocation sizes or exception behavior are identical.
+Existing capacity/shrink/null/overflow contracts are compiled only.

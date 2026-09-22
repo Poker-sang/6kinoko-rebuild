@@ -62,7 +62,7 @@ void growth_and_aliases() {
     kinoko_string_append_n(f.storage(), "y", 1); f.check(std::string(47, 'z') + 'y');
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(first);
-    function_4039e0(f.id(), 15, 1); f.check(first);
+    kinoko_string_reserve(f.storage(), 15, 1); f.check(first);
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     kinoko_string_append_substring(f.storage(), f.storage(), 0, UINT32_MAX); expected = first + first;
     f.check(expected); require(f.view().capacity() >= f.view().length(), "native capacity covers content");
@@ -82,16 +82,16 @@ void growth_and_aliases() {
 void reserve_and_failure_results() {
     Fixture f; f.assign(std::string(40, 'r'));
     const auto allocation = f.view().data(); const auto capacity = f.view().capacity();
-    require(function_4039e0(f.id(), 0, 0) == 0, "zero capacity returns false even on successful clear");
+    require(kinoko_string_reserve(f.storage(), 0, 0) == 0, "zero capacity returns false even on successful clear");
     f.check(""); require(f.view().data() == allocation && f.view().capacity() == capacity,
         "clear without shrink retains allocation");
     f.assign(std::string(30, 't'));
-    function_4039e0(f.id(), 20, 1); f.check(std::string(30, 't'));
+    kinoko_string_reserve(f.storage(), 20, 1); f.check(std::string(30, 't'));
     require(f.view().capacity() == capacity, "large shrink request does not truncate");
-    function_4039e0(f.id(), 8, 1); f.check(std::string(8, 't'));
+    kinoko_string_reserve(f.storage(), 8, 1); f.check(std::string(8, 't'));
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    require(function_4039e0(f.id(), UINT32_MAX, 1) == 0, "invalid reserve result");
-    require(function_403ce0(f.id(), UINT32_MAX, f.view().length()) == 0, "invalid grow result");
+    require(kinoko_string_reserve(f.storage(), UINT32_MAX, 1) == 0, "invalid reserve result");
+    require(kinoko_string_grow(f.storage(), UINT32_MAX, f.view().length()) == 0, "invalid grow result");
     require(kinoko_string_append_n(f.storage(), "x", UINT32_MAX) == f.storage(), "overflow append returns receiver");
     require(kinoko_string_append_substring(f.storage(), f.storage(), 900, 1) == f.storage(), "out-of-range append returns receiver");
     require(retdec_string_assign_n(static_cast<int32_t*>(f.storage()), "x", UINT32_MAX) == f.id(),
@@ -99,13 +99,13 @@ void reserve_and_failure_results() {
     f.check(std::string(8, 't'));
     require(!retdec_string_assign_n(nullptr, "x", 1), "null assignment receiver");
     require(!retdec_std_string_data(0) && !kinoko_string_append_n(0, "x", 1), "null string view/append");
-    require(!function_4039e0(0, 10, 0) && !function_403ce0(0, 10, 0), "null reserve/grow");
+    require(!kinoko_string_reserve(0, 10, 0) && !kinoko_string_grow(0, 10, 0), "null reserve/grow");
     require(!kinoko_string_append_substring(f.storage(), 0, 0, 1) && !kinoko_string_append_substring(0, f.storage(), 0, 1),
         "null substring endpoints");
     retdec_string_assign_cstr(static_cast<int32_t*>(f.storage()), nullptr); f.check("");
     // Exercise the recovered opaque return in the unusual zero-capacity case.
     StringRecord zero{};
-    require(function_403ce0(address(&zero), 0, 0) != 0, "short grow preserves nonzero opaque result");
+    require(kinoko_string_grow(&zero, 0, 0) != 0, "short grow returns a borrowed buffer");
     require(StringView(&zero).capacity() >= 16 && StringView(&zero).data()[0] == 0,
         "short grow publishes native storage");
     StringView(&zero).destroy();
@@ -137,9 +137,9 @@ void deterministic_sequences() {
                 static_cast<uint32_t>(count));
             a = a.substr(pos, count); break;
         }
-        case 5: function_4039e0(left.id(), 0, 0); a.clear(); break;
+        case 5: kinoko_string_reserve(left.storage(), 0, 0); a.clear(); break;
         case 6:
-            function_4039e0(left.id(), 8, 1);
+            kinoko_string_reserve(left.storage(), 8, 1);
             if (a.size() > 8) a.resize(8);
             break;
         }

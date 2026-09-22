@@ -74,11 +74,11 @@ bool StringView::reserve(uint32_t requested,bool shrink) const {
         return requested!=0;
     } catch(...) {return false;}
 }
-uintptr_t StringView::grow(uint32_t requested,uint32_t old_length) const {
+char* StringView::grow(uint32_t requested,uint32_t old_length) const {
     if(!*this || requested==invalid_size || old_length>length()) return 0;
     try {
         auto& value=ensure_owner();value.reserve(requested);value.resize(old_length);publish(&value);
-        return reinterpret_cast<uintptr_t>(value.data());
+        return value.data();
     } catch(...) {return 0;}
 }
 } // namespace kinoko::legacy
@@ -114,8 +114,8 @@ extern "C" void* kinoko_string_append_n(void* object, const char* source, uint32
     return object;
 }
 // Address range: 0x4039e0 - 0x403a8b
-extern "C" int32_t function_4039e0(int32_t object, uint32_t capacity, int32_t shrink) {
-    return StringView(pointer(object)).reserve(capacity, shrink != 0);
+extern "C" int32_t kinoko_string_reserve(void* object, uint32_t capacity, int32_t shrink) {
+    return StringView(object).reserve(capacity, shrink != 0);
 }
 // Address range: 0x403bf0 - 0x403cd3
 extern "C" void* kinoko_string_append_substring(void* object, const void* source, uint32_t position, uint32_t size) {
@@ -124,8 +124,8 @@ extern "C" void* kinoko_string_append_substring(void* object, const void* source
     return object;
 }
 // Address range: 0x403ce0 - 0x403e18 (includes original cleanup 403DBC)
-extern "C" int32_t function_403ce0(int32_t object, uint32_t capacity, uint32_t old_length) {
-    return static_cast<int32_t>(StringView(pointer(object)).grow(capacity, old_length));
+extern "C" char* kinoko_string_grow(void* object, uint32_t capacity, uint32_t old_length) {
+    return StringView(object).grow(capacity, old_length);
 }
 
 extern "C" void kinoko_string_destroy(int32_t object) {
