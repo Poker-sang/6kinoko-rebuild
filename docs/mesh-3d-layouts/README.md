@@ -118,3 +118,15 @@ binding and shape-reader evidence. R3 includes:
 Scope is the ACT-reachable Mesh loading/drawing chain. General standalone mesh
 controller animation/editor APIs are not implicitly exposed by ACT. No game or
 local automated tests will be executed, per the user's latest request.
+
+## R3 build handoff
+
+- Source: `23b9d5d8204fda4a7737ad32adbce73852677c3d`.
+- Build: `build-runs/mesh-3d-layouts-r3-quiet`, Win32 Release, quiet,
+  all targets compiled and linked successfully (exit 0).
+- EXE: `runtime-builds/mesh-3d-layouts-r3-quiet/kinoko_retdec_rebuild.exe`.
+- SHA256: `C81AF73AF6482D033A4EADC85DEDBD15FC3181FA2E61D2F39A1E80D6CF303067`.
+- Required DAT files copied beside EXE with size/SHA256 verification (exit 0).
+- No game, CTest, or local automated test execution. Compiled-only evidence.
+- Continue directly with the next batch: ACT suspend/resume and stage-control
+  dispatch, replacing known receiver-losing C remnants with original callbacks.
