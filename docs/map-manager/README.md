@@ -42,3 +42,11 @@
 清理后字段/容器容量保留、更新顺序、相机 floor 和自赋值所有权。
 既有 stage_contract 的迁移入口同步更新，保留地图切换和 x87 平衡检查。
 按用户要求仅构建，不执行测试程序、CTest 或游戏；运行效果由用户验证。
+
+## R1 构建记录
+
+- 源码提交：`fdebb98`。
+- 构建目录：`build-runs/map-manager-r1-quiet`，日志 `build.log`。
+- 全量构建失败：collision_queries.cpp 中 Actor / Map 的 ManagerView 名称冲突。
+- 新增 map_manager_contract 已编译链接，未执行。R1 全部产物保留。
+- 修正为 kinoko::map::ManagerView 后在独立 R2 目录重新构建。

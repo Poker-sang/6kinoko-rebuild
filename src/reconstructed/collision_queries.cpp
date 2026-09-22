@@ -74,7 +74,7 @@ extern "C" int32_t kinoko_collision_has_chip(KinokoCollisionState *state, Kinoko
 extern "C" int32_t kinoko_collision_event_at_point(KinokoMapManager *manager,
     int32_t x, int32_t y, uint32_t layer_index, int32_t *output_count) {
     const uint32_t layer_count = kinoko_map_event_count(address(manager));
-    const ManagerView result(manager);
+    const kinoko::map::ManagerView result(manager);
     result.set(&ManagerRecord::last_id, int32_t{-1});
     if (layer_index >= layer_count) return 0;
     auto *layout = kinoko::legacy::pointer<KinokoActLayout>(kinoko_map_event_at(address(manager), layer_index));
