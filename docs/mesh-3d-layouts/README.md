@@ -68,3 +68,17 @@ contract target. Source compilation succeeded, but its link failed; this is not
 a passing build. R2 preserves the DLL's stdcall ABI and explicitly aliases the
 decorated import references to the undecorated symbols in the existing library.
 The R1 build log and products are retained.
+
+## R2 compiled checkpoint (2026-09-22)
+
+- Source commit: `d52b5cf1827a8fed07a038456e142251cc5d3c3e`.
+- Win32 Release all-target quiet build: exit 0, including the new contract.
+- Build tree: `build-runs/mesh-3d-layouts-r2-quiet`.
+- EXE: `runtime-builds/mesh-3d-layouts-r2-quiet/kinoko_retdec_rebuild.exe`.
+- EXE SHA256: `5C6448363366CAAA642FD684A252112F3F664A44AC9F30C9CD9E43C3C9AF9FA5`.
+- Three original DAT files staged beside the EXE by `tools/stage_dat.ps1`;
+  sizes and SHA256 verified, exit 0.
+- No game or contract test execution. The contract is compiled, not passed.
+- The new decoder and 3D core are not reachable through the current factories.
+  This artifact is a retained checkpoint, not a completed Mesh-enabled release.
+  The clarification about correcting the original pointer mismatch remains open.
