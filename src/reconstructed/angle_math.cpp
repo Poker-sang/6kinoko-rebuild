@@ -6,7 +6,7 @@
 namespace {
 constexpr int table_size = 3600;
 // 404180 builds this before the update thread changes its rounding mode.
-const std::array<float, table_size> cosine_table = [] {
+std::array<float, table_size> make_cosine_table() {
     std::array<float, table_size> values{};
     const double tenths = 10.0, pi = 3.1415926535, half_turn = 180.0;
     for (int index = 0; index < table_size; ++index) {
@@ -26,7 +26,8 @@ const std::array<float, table_size> cosine_table = [] {
     values[1800] = -1.0f;
     values[2700] = 0.0f;
     return values;
-}();
+}
+const auto cosine_table = make_cosine_table();
 
 float lookup(float degrees, float phase) {
     const float tenths = 10.0f;

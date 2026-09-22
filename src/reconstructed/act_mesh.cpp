@@ -212,7 +212,7 @@ uint8_t load_resource(Resource *resource,const char *prefix) {
         state.root->registry_index=static_cast<int32_t>(state.registry.size());
         state.registry.push_back(state.root.get());state.named[model->name]=state.root.get();
         load_materials(*state.root,path.c_str());
-        // ORIGINAL BUG FIX ¡ª explicitly authorized by user on 2026-09-22.
+        // ORIGINAL BUG FIX -- explicitly authorized by user on 2026-09-22.
         // 44CA41 used controller+20 (integer registry_index) as a model pointer.
         // Use controller+24's model instead. See ORIGINAL-BUG-FIX.md.
         collect_renders(*resource,state.root->model);
