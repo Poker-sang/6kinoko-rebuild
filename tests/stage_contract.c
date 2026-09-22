@@ -5618,6 +5618,16 @@ static void check_owned_exit(void) {
         abort();
     puts("PASS: CRT exit destroys owned states newest first, once each");
 }
+static int root_cache_release_count;
+static HSQUIRRELVM root_cache_release_vm;
+static int32_t root_cache_release_identity;
+static SQInteger release_cached_root_probe(SQUserPointer payload, SQInteger size) {
+    (void)payload; (void)size;
+    ++root_cache_release_count;
+    root_cache_release_vm = (HSQUIRRELVM)g644;
+    root_cache_release_identity = g645;
+    return 0;
+}
 static int test_owned_states(int at_exit) {
     CHECK(g643 == 0);
     if (at_exit) CHECK(atexit(check_owned_exit) == 0);
@@ -5634,6 +5644,25 @@ static int test_owned_states(int at_exit) {
     const int32_t head = g643;
     CHECK(kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(PTR(external))) & 1);
     CHECK(g643 == head);
+    /* Switching VM must destroy the cached external object while its VM is
+       still current. A same-VM selection must preserve that cached owner. */
+    {
+        HSQUIRRELVM next = sq_open(64);
+        void *cache = kinoko_sqplus_root_object();
+        CHECK(next && cache && PTR(cache) == g645);
+        sq_newuserdata(external, 4);
+        sq_setreleasehook(external, -1, release_cached_root_probe);
+        kinoko_sqplus_object_capture(cache, -1);
+        sq_pop(external, 1);
+        CHECK(kinoko_sqplus_select_vm(external) & 1);
+        CHECK(root_cache_release_count == 0 && PTR(cache) == g645);
+        CHECK(kinoko_sqplus_select_vm(next) & 1);
+        CHECK(root_cache_release_count == 1 && root_cache_release_vm == external);
+        CHECK(root_cache_release_identity == PTR(cache) && g645 == 0);
+        kinoko_sqplus_release_vm_wrappers();
+        sq_close(next);
+        CHECK(kinoko_sqplus_select_vm(external) & 1);
+    }
     kinoko_sqplus_release_vm_wrappers();
     kinoko_sq_release_owned_states();
     check_owned_exit();

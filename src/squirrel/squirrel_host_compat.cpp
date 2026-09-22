@@ -166,12 +166,12 @@ extern "C" int32_t kinoko_sqplus_object_set_index_string(void * object, int32_t 
 }
 extern "C" int32_t kinoko_sqplus_object_raw_set_object(void * object, const void * key, const void * value) {
     if (!object || !key || !value) return 0;
-    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).address(value)(),
-                                   ObjectView(key).address(value)(), ObjectView(value).address(value)());
+    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
+                                   ObjectView(key).value(), ObjectView(value).value());
 }
 extern "C" int32_t kinoko_sqplus_object_raw_set_name(void * object, const char* key, const void * value) {
-    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).address(value)(),
-                                   key, ObjectView(value).address(value)());
+    return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
+                                   key, ObjectView(value).value());
 }
 extern "C" int32_t kinoko_sqplus_object_new_userdata(void * object, const char * key, int32_t size, void * tag) {
     auto* vm = current_vm();

@@ -32,7 +32,7 @@ void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t* p) { std::free(p); }
 void * kinoko_sqplus_root_object(void) { return (void *)(intptr_t)(address(&root_storage)); }
-int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { g644 = static_cast<char *>(vm); return 1; }
+int32_t  kinoko_sqplus_select_vm(struct SQVM * vm) { g644 = reinterpret_cast<char *>(vm); return 1; }
 int32_t* kinoko_native_binding_type(int32_t category) {
     return category == -1 ? kinoko_sqplus_game_type(0,
         [](int32_t, int32_t source) -> int32_t { return source; }) :

@@ -12,7 +12,7 @@ static std::vector<int> calls;
 extern "C" {
 int32_t g611[3]{},g722[3]{};
 int32_t  kinoko_sqplus_new_instance_adapter(int32_t *out, int32_t *) { calls.push_back(1);return address(out); }
-void * kinoko_sqplus_object_assign(void * out, const void * in) { calls.push_back(2);std::memcpy(static_cast<void *>(out),static_cast<void *>(in),12);return out; }
+void * kinoko_sqplus_object_assign(void * out, const void * in) { calls.push_back(2);std::memcpy(static_cast<void *>(out),in,12);return out; }
 int32_t  kinoko_sqplus_object_destroy(void * ) { calls.push_back(3);return 0; }
 int32_t  kinoko_sqplus_object_set_instance(void * , void * ) { calls.push_back(4);return 0; }
 int32_t  kinoko_sqplus_object_raw_set_name(void * , const char *, const void * ) { calls.push_back(5);return 77; }

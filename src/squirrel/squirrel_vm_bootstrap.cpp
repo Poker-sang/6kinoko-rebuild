@@ -44,7 +44,7 @@ extern "C" void kinoko_sq_release_owned_states(void) {
 }
 extern "C" int32_t kinoko_sqplus_release_vm_wrappers(void) {
     if (g645 != 0) {
-        kinoko_sqplus_object_reset(g645);
+        kinoko_sqplus_object_reset(pointer<void>(g645));
         std::free(pointer<void>(g645));
         g645 = 0;
     }
@@ -61,16 +61,16 @@ extern "C" int32_t kinoko_sqplus_print(struct SQVM * , const char* format, ...) 
     return std::puts(message);
 }
 extern "C" void * kinoko_sqplus_root_object(void) {
-    if (g645 != 0) return g645;
+    if (g645 != 0) return pointer<void>(g645);
     auto* vm = current_vm();
     if (!vm) return 0;
     sq_pushroottable(vm);
-    const int32_t storage = _3f__3f_2_40_YAPAXI_40_Z(12);
+    auto* storage = pointer<void>(_3f__3f_2_40_YAPAXI_40_Z(sizeof(kinoko::script::ObjectStorage)));
     if (storage != 0) (int32_t)(intptr_t)(kinoko_sqplus_object_initialize(storage));
-    g645 = storage;
+    g645 = address(storage);
     kinoko_sqplus_object_capture(storage, -1);
     sq_pop(vm, 1);
-    return g645;
+    return pointer<void>(g645);
 }
 extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
     int32_t current = address(requested_vm);
@@ -85,7 +85,7 @@ extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
     }
     if (g642 == 0) (int32_t)(intptr_t)(kinoko_sqplus_object_reset(unk_5149EC));
     g644 = nullptr;
-    if (address(requested_vm) == 0) {
+    if (!requested_vm) {
         current = function_48a170(1024);
         if (current == 0) return 0;
         try {
