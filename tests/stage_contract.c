@@ -3460,13 +3460,13 @@ static int test_texture_lifetime(void) {
     texture[0] = PTR(&vtable);
     kinoko_graphics.device = 0;
     for (int cycle = 0; cycle < 5000; ++cycle) {
-        int32_t handle = retdec_register_act_texture(
+        int32_t handle = kinoko_texture_register(
             (IDirect3DBaseTexture9 *)texture, 256, 256);
         CHECK(handle != 0);
-        CHECK(retdec_resolve_texture_handle(handle) == (IDirect3DBaseTexture9 *)texture);
-        CHECK(function_405d60(handle) == 1);
+        CHECK(kinoko_texture_slots[handle].texture == (IDirect3DBaseTexture9 *)texture);
+        CHECK(kinoko_texture_release(handle) == 1);
         CHECK(texture[1] == cycle + 1);
-        CHECK(retdec_resolve_texture_handle(handle) == NULL);
+        CHECK(kinoko_texture_slots[handle].texture == NULL);
     }
     {
         struct retdec_mcd_data *data = calloc(1, sizeof(*data));
@@ -3475,14 +3475,14 @@ static int test_texture_lifetime(void) {
         data->textures = calloc(2, sizeof(*data->textures));
         CHECK(data->textures);
         for (int i = 0; i < 2; ++i)
-            data->textures[i].handle = retdec_register_act_texture(
+            data->textures[i].handle = kinoko_texture_register(
                 (IDirect3DBaseTexture9 *)texture, 64, 64);
         retdec_mcd_free(data);
         CHECK(texture[1] == 5002);
         int32_t *resource = calloc(1, 100);
         CHECK(resource);
         resource[0] = PTR(&g365);
-        resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9 *)texture, 64, 64);
+        resource[17] = kinoko_texture_register((IDirect3DBaseTexture9 *)texture, 64, 64);
         retdec_destroy_cact_resource(PTR(resource));
         CHECK(texture[1] == 5003);
         int32_t layer[88] = {0}, layout[116] = {0}, render_layer[2] = {0}, camera[24] = {0};
@@ -4109,7 +4109,7 @@ static int test_chip_shared_ownership(void) {
     data->textures=(struct retdec_mcd_texture*)calloc(1,sizeof(*data->textures));
     CHECK(data->textures);
     data->texture_count=1;
-    data->textures[0].handle=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    data->textures[0].handle=kinoko_texture_register((IDirect3DBaseTexture9*)texture,64,64);
     CHECK(data->textures[0].handle);
     resource[0]=PTR(&g313); resource[7]=resource[14]=resource[23]=15;
     retdec_string_assign_cstr(resource+2,"a long named chip resource");
@@ -4148,7 +4148,7 @@ static int test_chip_shared_ownership(void) {
     resource[1]=47;
     retdec_string_assign_cstr(resource+2,"a long texture resource name");
     retdec_string_assign_cstr(resource+10,"data/system/a-long-texture-name");
-    resource[17]=retdec_register_act_texture((IDirect3DBaseTexture9*)texture,64,64);
+    resource[17]=kinoko_texture_register((IDirect3DBaseTexture9*)texture,64,64);
     resource[18]=64; resource[19]=64;
     ((float*)resource)[20]=3.0f; ((float*)resource)[21]=7.0f;
     ((float*)resource)[22]=12.0f; ((float*)resource)[23]=24.0f;
@@ -5617,13 +5617,13 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
         resource[0] = PTR(&g365);
     }
     IDirect3DDevice9 *old_device = kinoko_graphics.device; kinoko_graphics.device = 0;
-    resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    resource[17] = kinoko_texture_register((IDirect3DBaseTexture9*)texture, 64, 64);
     CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));
     CHECK(resource[17] && texture[1] == 0); /* Empty name preserves ownership. */
     memcpy(resource+10, "missing", 8); resource[14] = 7;
     CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(\"data\")) throw 4;\n"));
     CHECK(!resource[17] && texture[1] == 1); /* Failed reload releases old owner. */
-    int32_t borrowed = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
+    int32_t borrowed = kinoko_texture_register((IDirect3DBaseTexture9*)texture, 64, 64);
     resource[17] = borrowed; ((unsigned char*)resource)[36] = 1;
     CHECK(retdec_call_thiscall0_result(resource, (void*)g365.e11) == 1);
     CHECK(!resource[17] && texture[1] == 1);

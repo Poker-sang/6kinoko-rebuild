@@ -1,3 +1,4 @@
+#include "kinoko/texture_store.h"
 #include "kinoko/actor_manager.h"
 #include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
@@ -10,7 +11,6 @@
 #include <cstdlib>
 
 extern "C" {
-int32_t function_405d60(int32_t texture_handle);
 
 extern int32_t g23;
 }
@@ -36,7 +36,7 @@ extern "C" KinokoActor **kinoko_actor_manager_clear_resources(KinokoActorManager
     const auto textures = state.view(&ManagerPrefix::textures);
     const int32_t texture_slot=address(textures.data());
     const auto* handles=pointer<int32_t>(kinoko_integer_vector_data(texture_slot));
-    for(uint32_t i=0;i<kinoko_integer_vector_size(texture_slot);++i) function_405d60(handles[i]);
+    for(uint32_t i=0;i<kinoko_integer_vector_size(texture_slot);++i) kinoko_texture_release(handles[i]);
     kinoko_integer_vector_clear(texture_slot);
     // Actor destruction precedes releasing animations that actors only borrow.
     const auto actors = state.view(&ManagerPrefix::actors);

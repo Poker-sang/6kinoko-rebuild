@@ -1,3 +1,4 @@
+#include "kinoko/texture_store.h"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/mesh_model.hpp"
 #include "kinoko/act_layout_3d.hpp"
@@ -120,11 +121,11 @@ uint8_t __fastcall draw_mesh(Renderer *render,void *) {
         const auto material=attribute.materials.front();
         if(material<0 || static_cast<size_t>(material)>=mesh.material_names.size()) continue;
         const auto found=render->replacements.find(mesh.material_names[material]);
-        retdec_set_texture_stage(0,found==render->replacements.end()?0:found->second);
+        kinoko_texture_bind_stage(0,found==render->replacements.end()?0:found->second);
         device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,0,attribute.minimum_vertex,
             attribute.vertex_count,attribute.start_index,attribute.primitive_count);
     }
-    retdec_set_texture_stage(0,0);retdec_set_texture_stage(0,0);
+    kinoko_texture_bind_stage(0,0);kinoko_texture_bind_stage(0,0);
     // 45662A..45665A retains the original final XYZ/RHW/diffuse triangle.
     struct DebugVertex { float x,y,z,rhw;DWORD color; };
     static const DebugVertex triangle[]={{200,10,1,1,0xffff0000},{400,200,1,1,0xffff0000},{10,200,1,1,0xffff0000}};
@@ -211,7 +212,7 @@ uint8_t load_resource(Resource *resource,const char *prefix) {
         state.root->registry_index=static_cast<int32_t>(state.registry.size());
         state.registry.push_back(state.root.get());state.named[model->name]=state.root.get();
         load_materials(*state.root,path.c_str());
-        // ORIGINAL BUG FIX â€” explicitly authorized by user on 2026-09-22.
+        // ORIGINAL BUG FIX ¡ª explicitly authorized by user on 2026-09-22.
         // 44CA41 used controller+20 (integer registry_index) as a model pointer.
         // Use controller+24's model instead. See ORIGINAL-BUG-FIX.md.
         collect_renders(*resource,state.root->model);

@@ -1,4 +1,5 @@
 #define CINTERFACE
+#include "kinoko/texture_store.h"
 #include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include <d3d9.h>
@@ -14,7 +15,7 @@ static bool valid;
 extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
-int32_t retdec_set_texture_stage(int32_t stage,int32_t texture) { calls.push_back(1);valid=valid && stage==0 && texture==17;return E_FAIL; }
+int32_t kinoko_texture_bind_stage(int32_t stage,int32_t texture) { calls.push_back(1);valid=valid && stage==0 && texture==17;return E_FAIL; }
 void retdec_trace_i32(const char *,int32_t) {}
 void retdec_trace_hresult(const char *,long) {}
 }

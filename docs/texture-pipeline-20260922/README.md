@@ -79,3 +79,36 @@ odd-width 16-bit untouched tails, source versus square dimensions, lock scope,
 create/lock/bits failures and single reference transfer. texture_store_contract
 now stubs the typed loader. Both are compile-only. RLE, indexed palette and
 loose BMP mode remain outside this batch as described above.
+
+## Batch 3: stage binding and cache lifetime
+
+405E30's EDI texture stage is explicit in kinoko_texture_bind_stage. Original
+4059C0's eight split globals become a named array of borrowed handle keys.
+All ACT/map/mesh/sprite/quad consumers use the authoritative texture header;
+405D60 texture-release bridges and the test-only registration bridge are retired.
+Actor cleanup and glyph-atlas cleanup call the actual release interface.
+Texture slots and registration now take IDirect3DBaseTexture9*, with real COM
+inheritance for production consumers and explicit reinterpretation only in
+fake-COM test fixtures.
+
+Original 405E30 behavior: zero always calls SetTexture and returns zero;
+unchanged nonzero returns its handle without calling D3D; changed nonzero
+returns SetTexture's result and updates the key even on failure. The rebuilt
+path formerly always called SetTexture and tracked only stage zero on success.
+The named implementation restores the original cache semantics and preserves
+the inherited missing-device/invalid-handle diagnostics. Stage bounds now
+correspond to the original eight-entry cache (all current production calls use
+stage zero). It does not add any new COM AddRef/Release for borrowed cache keys.
+
+Original 405D60 clears matching keys before final texture Release. The store
+now invalidates those keys in addition to its existing GetTexture/all-stage
+unbind path, so reusing a handle slot cannot suppress its first new binding.
+The inherited actual-device query remains a compatibility boundary: unlike the
+original, it can also find direct bindings that bypassed the key cache.
+Renderer reset clears the same cache after its original eight null binds.
+
+texture_binding_contract covers stages 0/7, duplicate keys, repeated zeros,
+failed-bind caching, targeted invalidation, full reset and invalid input.
+texture_store_contract additionally covers cache invalidation through real
+final release and handle reuse. Existing device/draw/ACT fixtures use the new
+interface; they are compiled only. Runtime verification remains with the user.

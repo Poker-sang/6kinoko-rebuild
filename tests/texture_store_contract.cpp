@@ -14,7 +14,7 @@ struct Texture {
     IDirect3DBaseTexture9Vtbl *vtable;
     unsigned references;
 };
-static unsigned loads, releases, unbinds;
+static unsigned loads, releases, unbinds, binds;
 static IDirect3DBaseTexture9 *bound_textures[8];
 static IDirect3DBaseTexture9 *&bound_texture = bound_textures[0];
 static ULONG WINAPI release_texture(IDirect3DBaseTexture9 *raw) {
@@ -31,16 +31,20 @@ static HRESULT WINAPI get_texture(IDirect3DDevice9 *, DWORD stage,
 }
 static HRESULT WINAPI set_texture(IDirect3DDevice9 *, DWORD stage,
                                   IDirect3DBaseTexture9 *texture) {
-    if (!texture && bound_textures[stage]) {
-        ++unbinds;
+    ++binds;
+    if (texture == bound_textures[stage]) return S_OK;
+    if (bound_textures[stage]) {
+        if (!texture) ++unbinds;
         release_texture(bound_textures[stage]);
-        bound_textures[stage] = nullptr;
     }
+    bound_textures[stage] = texture;
+    if (texture) ++reinterpret_cast<Texture *>(texture)->references;
     return S_OK;
 }
 static IDirect3DBaseTexture9Vtbl texture_vtable = {};
 extern "C" {
 KinokoGraphics kinoko_graphics{};
+void retdec_trace_i32(const char*,int32_t) {}
 HRESULT kinoko_texture_load_image(const char *path, IDirect3DTexture9 **out,
                       uint32_t *width, uint32_t *height) {
     if (std::strstr(path, "missing")) return E_FAIL;
@@ -98,12 +102,27 @@ int main() {
     CHECK(kinoko_texture_release(other) == 1);
     CHECK(releases == before_release + 2 && unbinds == before_unbind + 3);
 
+    // Exercise the real cache with final release and handle-slot reuse. A new
+    // texture at the same handle must not inherit the retired binding key.
+    kinoko_initialize_texture_cache();
+    const auto cached = kinoko_texture_acquire("cached.cv2");
+    auto before_binds = binds;
+    CHECK(kinoko_texture_bind_stage(0,cached) == S_OK);
+    CHECK(kinoko_texture_bind_stage(7,cached) == S_OK);
+    CHECK(kinoko_texture_bind_stage(0,cached) == cached && binds==before_binds+2);
+    CHECK(kinoko_texture_release(cached)==1 && !bound_textures[0] && !bound_textures[7]);
+    const auto reused = kinoko_texture_acquire("cached.cv2");
+    CHECK(reused==cached);
+    before_binds=binds;
+    CHECK(kinoko_texture_bind_stage(0,reused)==S_OK && binds==before_binds+1);
+    CHECK(kinoko_texture_release(reused)==1 && !bound_textures[0]);
+
     // A full store must release a successfully loaded, but unregistered,
     // texture exactly once. Existing slots must stay owned and unchanged.
     int32_t handles[KINOKO_TEXTURE_CAPACITY - 1]{};
     for (auto &handle : handles) {
         auto *raw = new Texture{&texture_vtable, 1};
-        handle = kinoko_texture_register(raw, 1, 1);
+        handle = kinoko_texture_register(reinterpret_cast<IDirect3DBaseTexture9*>(raw), 1, 1);
         CHECK(handle != 0);
     }
     const auto full_releases = releases, full_loads = loads;

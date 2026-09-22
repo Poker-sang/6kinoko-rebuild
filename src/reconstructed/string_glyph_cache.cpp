@@ -1,3 +1,4 @@
+#include "kinoko/texture_store.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/string_layout.h"
@@ -10,7 +11,6 @@
 #include <string>
 #include <vector>
 
-extern "C" int32_t function_405d60(int32_t texture);
 
 namespace {
 using kinoko::legacy::field;
@@ -75,7 +75,7 @@ extern "C" int32_t function_441250(int32_t* object) {
     for(size_t i=0;i<pages.size();) {
         const int32_t atlas=pages[i].address();
         if(field<int32_t>(atlas+20)>=minimum || field<int32_t>(atlas+432)>0) { ++i;continue; }
-        function_405d60(field<int32_t>(atlas+428));
+        kinoko_texture_release(field<int32_t>(atlas+428));
         pages.erase(pages.begin()+i);
         i=0;
     }

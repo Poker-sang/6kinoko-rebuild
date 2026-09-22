@@ -15,7 +15,6 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 extern "C" float function_404130(long double);
 extern "C" float function_4040d0(long double);
-extern "C" int32_t retdec_set_texture_stage(int32_t,int32_t);
 extern "C" void retdec_trace_i32(const char *,int32_t);
 float retdec_sprite_scale_about(float value,float pivot,float scale) {
     return (value-pivot)*scale+pivot;
@@ -249,9 +248,9 @@ int32_t draw_layout_2d(KinokoActLayout *layout,float x,float y) {
     for(int i=0;i<4;++i) device->GetRenderState(types[i],&saved[i]);
     device->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
     set_layout_blend(view.get(&Layout2DRecord::blend));
-    retdec_set_texture_stage(0,view.get(&Layout2DRecord::texture));
+    kinoko_texture_bind_stage(0,view.get(&Layout2DRecord::texture));
     kinoko_quad_submit(reinterpret_cast<KinokoQuad *>(view.bytes(&Layout2DRecord::quad)),x,y);
-    retdec_set_texture_stage(0,0);
+    kinoko_texture_bind_stage(0,0);
     for(int i=0;i<4;++i) device->SetRenderState(types[i],saved[i]);
     return 0; // original ignores submit HRESULT; update belongs to PrepareDraw
 }

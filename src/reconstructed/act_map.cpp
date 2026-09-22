@@ -129,7 +129,7 @@ extern "C" int32_t kinoko_map_draw_visible(KinokoActLayout *layout,float x,float
         if (QuadView(quads+index).get(&QuadRecord::texture))
             kinoko_quad_submit(reinterpret_cast<KinokoQuad *>(quads+index),x,y);
     }
-    retdec_set_texture_stage(0,0);
+    kinoko_texture_bind_stage(0,0);
     device->SetSamplerState(0,D3DSAMP_ADDRESSU,address_u);
     device->SetSamplerState(0,D3DSAMP_ADDRESSV,address_v);
     return 0; // original ignores per-quad HRESULT and continues

@@ -35,7 +35,7 @@ std::string resource_key(const char *path) {
 }
 
 extern "C" int32_t kinoko_texture_register(
-    void *texture, uint32_t width, uint32_t height) {
+    IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height) {
     if (!texture) return 0;
     for (int32_t handle = 1; handle < KINOKO_TEXTURE_CAPACITY; ++handle) {
         if (owners[handle].references) continue;
@@ -99,6 +99,7 @@ extern "C" int32_t kinoko_texture_release(int32_t handle) {
             }
         }
     }
+    kinoko_texture_forget_bindings(handle); // original final-release cache invalidation
     texture.reset(); // Preserve final Release before clearing the slot/name.
     slot = {};
     owner.name.clear();

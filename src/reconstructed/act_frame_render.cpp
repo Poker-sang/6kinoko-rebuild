@@ -17,7 +17,6 @@ extern "C" {
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
 const char* retdec_std_string_data(int32_t);
-int32_t retdec_set_texture_stage(int32_t, int32_t);
 }
 
 namespace {
@@ -212,7 +211,7 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
                 if (draw && retdec_call_thiscall2_result(pointer(sprite), pointer(draw),
                     float_bits(draw_x + command.x), float_bits(draw_y + command.y)) < 0) result = E_FAIL;
             }
-            retdec_set_texture_stage(0, 0);
+            kinoko_texture_bind_stage(0, 0);
         }
     }
     return result;

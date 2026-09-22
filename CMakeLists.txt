@@ -75,6 +75,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
+    src/reconstructed/texture_binding.cpp
     src/reconstructed/texture_image.cpp
     src/reconstructed/bitmap.cpp
     src/reconstructed/texture_store.cpp
@@ -492,6 +493,10 @@ add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
 
+add_executable(kinoko_texture_binding_contract tests/texture_binding_contract.cpp src/reconstructed/texture_binding.cpp)
+target_include_directories(kinoko_texture_binding_contract PRIVATE include)
+add_test(NAME texture_binding_contract COMMAND kinoko_texture_binding_contract)
+
 add_executable(kinoko_texture_image_contract tests/texture_image_contract.cpp src/reconstructed/texture_image.cpp)
 target_include_directories(kinoko_texture_image_contract PRIVATE include)
 add_test(NAME texture_image_contract COMMAND kinoko_texture_image_contract)
@@ -715,7 +720,7 @@ add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_device_lifecycle_contract tests/device_lifecycle_contract.cpp
-    src/reconstructed/device_runtime.cpp src/reconstructed/render_target.cpp
+    src/reconstructed/device_runtime.cpp src/reconstructed/render_target.cpp src/reconstructed/texture_binding.cpp
     src/reconstructed/render_state.cpp src/reconstructed/renderer.cpp)
 target_include_directories(kinoko_device_lifecycle_contract PRIVATE include)
 target_link_libraries(kinoko_device_lifecycle_contract PRIVATE user32)
@@ -802,6 +807,7 @@ target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
 add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_texture_binding_contract
     kinoko_texture_image_contract
     kinoko_bitmap_contract
     kinoko_actor_state_contract

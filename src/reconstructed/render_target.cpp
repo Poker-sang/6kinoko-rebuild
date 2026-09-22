@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include "kinoko/legacy_abi.h"
 extern "C" {
-extern int32_t g746,g747,g748,g749,g750,g751,g752,g753;
 
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
                                 D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
@@ -47,12 +46,6 @@ int32_t create(uint32_t width,uint32_t height) {
 }
 extern "C" void kinoko_initialize_renderer_sets(void) {
     render_targets.clear();depth_targets.clear();
-}
-extern "C" void kinoko_initialize_texture_cache(void) {
-    // Actual texture ownership is constructed by the standard array/string
-    // objects in texture_store.cpp. Only these eight borrowed stage caches
-    // remain visible through the decompiled host ABI (4059C0).
-    g746=g747=g748=g749=g750=g751=g752=g753=0;
 }
 extern "C" int32_t kinoko_set_render_target(int32_t handle) {
     // 401E60 selects level zero, releases the temporary surface reference,

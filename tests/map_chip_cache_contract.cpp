@@ -33,7 +33,7 @@ void retdec_trace_i32(const char*,int32_t) {}
 int32_t kinoko_render_set_depth(int32_t,int32_t) { return 0; }
 int32_t kinoko_render_set_alpha(int32_t,int32_t) { return 0; }
 int32_t kinoko_render_set_blend(int32_t) { return 0; }
-int32_t retdec_set_texture_stage(int32_t,int32_t) { return 0; }
+int32_t kinoko_texture_bind_stage(int32_t,int32_t) { return 0; }
 int32_t kinoko_quad_submit(KinokoQuad*,float,float) { return 0; }
 }
 static void __fastcall world(KinokoActLayer*,void*,float *x,float *y,float *z) { *x=3;*y=4;*z=0; }

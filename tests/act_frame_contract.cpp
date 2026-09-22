@@ -145,7 +145,7 @@ void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
 const char* retdec_std_string_data(int32_t) { return "fixture"; }
-int32_t retdec_set_texture_stage(int32_t stage, int32_t handle) {
+int32_t kinoko_texture_bind_stage(int32_t stage, int32_t handle) {
     if (!stage && !handle) ++test::texture_unbinds; return 0;
 }
 int32_t  kinoko_sqrat_invoke_callback(const void * callback) {

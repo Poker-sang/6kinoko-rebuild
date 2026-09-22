@@ -1,3 +1,4 @@
+#include "kinoko/texture_store.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/quad_records.hpp"
@@ -5,7 +6,6 @@
 #include "kinoko/diagnostics.h"
 #include <d3d9.h>
 extern "C" {
-int32_t retdec_set_texture_stage(int32_t,int32_t);
 void retdec_trace_i32(const char *,int32_t);
 }
 
@@ -29,7 +29,7 @@ extern "C" int32_t kinoko_quad_submit(KinokoQuad *storage,float x,float y) {
         vertices[i].rhw=1.0f;
     }
     quad.set(&QuadRecord::vertices,vertices);
-    const auto texture_result=retdec_set_texture_stage(0,quad.get(&QuadRecord::texture));
+    const auto texture_result=kinoko_texture_bind_stage(0,quad.get(&QuadRecord::texture));
     if (trace) retdec_trace_hresult("draw:set-texture-hr",texture_result);
     auto *device=kinoko_graphics.device;
     if (!device || !kinoko::legacy::load<const void *>(device)) return E_FAIL;

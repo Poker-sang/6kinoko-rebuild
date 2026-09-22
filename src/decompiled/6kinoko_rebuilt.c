@@ -148,14 +148,7 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm,
 
 
 int32_t retdec_load_act_texture(const char *texture_name);
-static int32_t retdec_register_act_texture(
-    IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height)
-{
-    return kinoko_texture_register(texture, width, height);
-}
 
-static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle);
-int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
 int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
@@ -1553,8 +1546,6 @@ float80_t function_405080(float80_t a1, float80_t a2, float80_t a3);
 
 
 
-int32_t function_405d60(int32_t a1);
-int32_t function_405e30(int32_t result);
 
 
 
@@ -2621,14 +2612,6 @@ int32_t g742 = 0; // 0x51aec4
  // 0x51aed8
  // 0x51aedc
 int32_t g745 = 0; // 0x51aee0
-int32_t g746 = 0; // 0x51aee8
-int32_t g747 = 0; // 0x51aeec
-int32_t g748 = 0; // 0x51aef0
-int32_t g749 = 0; // 0x51aef4
-int32_t g750 = 0; // 0x51aef8
-int32_t g751 = 0; // 0x51aefc
-int32_t g752 = 0; // 0x51af00
-int32_t g753 = 0; // 0x51af04
  // 0x51af08
  // 0x51af0c
  // 0x51af10
@@ -3608,7 +3591,7 @@ int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4) 
     *(float32_t *)(v2 + 68) = v5;
     *(float32_t *)(v2 + 92) = v4;
     *(float32_t *)(v2 + 96) = v5;
-    function_405e30(*(int32_t *)(v2 + 4));
+    kinoko_texture_bind_stage(0, *(int32_t *)(v2 + 4));
     return (int32_t)(intptr_t)kinoko_renderer.device;
 }
 
@@ -3671,53 +3654,9 @@ int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
 
 
 
-/* CHandleManager::Release is a bookkeeping operation.  The reconstructed
-   texture manager currently stores the native texture lifetime in the ACT
-   resource/renderer path, so do not dereference the split RetDec globals as
-   if they were the original contiguous manager object. */
-int32_t function_405d60(int32_t handle)
-{
-    return kinoko_texture_release(handle);
-}
+/* Texture ownership and stage caches: reconstructed/texture_store.cpp. */
 
-// Address range: 0x405e30 - 0x405ea0
-/* The original also carries the texture stage in EDI.  All live reconstructed
-   callers use stage zero, so keep the public C boundary explicit and route
-   the actual device call through the same handle table as 405800. */
-int32_t function_405e30(int32_t result)
-{
-    return retdec_set_texture_stage(0, result);
-}
-
-static IDirect3DBaseTexture9 *retdec_resolve_texture_handle(int32_t handle)
-{
-    if (handle <= 0 || (uint32_t)handle >=
-        RETDEC_ACT_TEXTURE_SLOT_COUNT)
-        return NULL;
-    return g_retdec_act_texture_slots[(uint32_t)handle].texture;
-}
-
-int32_t retdec_set_texture_stage(int32_t stage, int32_t handle)
-{
-    IDirect3DDevice9 *device;
-    IDirect3DBaseTexture9 *texture;
-    HRESULT result;
-
-    if (stage < 0 || stage >= 16 || kinoko_graphics.device == 0)
-        return -0x7fffbffb;
-    device = kinoko_graphics.device;
-    if (device == NULL || device->lpVtbl == NULL)
-        return -0x7fffbffb;
-    texture = handle == 0 ? NULL : retdec_resolve_texture_handle(handle);
-    if (handle != 0 && texture == NULL) {
-        retdec_trace_i32("texture:unresolved-handle", handle);
-        return (int32_t)E_FAIL;
-    }
-    result = device->lpVtbl->SetTexture(device, (DWORD)stage, texture);
-    if (stage == 0 && SUCCEEDED(result))
-        g746 = handle;
-    return (int32_t)result;
-}
+/* Texture stage binding: reconstructed/texture_binding.cpp. */
 
 // Address range: 0x405ea0 - 0x405f71
 

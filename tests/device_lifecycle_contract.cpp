@@ -10,9 +10,9 @@ extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
 KinokoCriticalSection kinoko_graphics_lock{};
-int32_t g746,g747,g748,g749,g750,g751,g752,g753;
+void retdec_trace_i32(const char*,int32_t) {}
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
-int32_t kinoko_texture_register(void*,uint32_t,uint32_t) { return 0; }
+int32_t kinoko_texture_register(IDirect3DBaseTexture9*,uint32_t,uint32_t) { return 0; }
 void retdec_trace(const char*) {}
 void retdec_trace_hresult(const char*,long) {}
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,D3DFORMAT,D3DPOOL,IDirect3DTexture9**) { return E_FAIL; }
@@ -67,7 +67,7 @@ int main() {
     CHECK(kinoko_graphics_reset()==0 && calls.empty());
     kinoko_remove_device_listener(listener);
     kinoko_renderer.device=&device;kinoko_renderer.backbuffer=&surface;
-    kinoko_texture_slots[1].texture=&target;
+    kinoko_texture_slots[1].texture=reinterpret_cast<IDirect3DBaseTexture9*>(&target);
     CHECK(kinoko_set_render_target(1)==17);
     CHECK((calls==std::vector<int>{6,7,8}));
     calls.clear();CHECK(kinoko_set_render_target(0)==E_FAIL);

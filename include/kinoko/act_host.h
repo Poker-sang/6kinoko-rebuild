@@ -74,7 +74,6 @@ int32_t retdec_is_release_watch_data(int32_t data);
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
 int32_t retdec_load_act_texture(const char *texture_name);
-int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 __declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value);
 void retdec_trace_ref_watch(const char *label, int32_t shared_state,

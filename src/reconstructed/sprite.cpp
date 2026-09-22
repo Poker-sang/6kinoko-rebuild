@@ -1,3 +1,4 @@
+#include "kinoko/texture_store.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/sprite.h"
 
@@ -5,7 +6,6 @@
 #include <d3d9.h>
 
 extern "C" {
-int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 float function_404130(long double angle);
 float function_4040d0(long double angle);
 }
@@ -47,7 +47,7 @@ int32_t draw(KinokoSprite *sprite, float x, float y, DWORD format) {
     auto *device = kinoko_graphics.device;
     if (!device || !*reinterpret_cast<void ***>(device))
         return 0;
-    if (retdec_set_texture_stage(0, sprite->texture) < 0)
+    if (kinoko_texture_bind_stage(0, sprite->texture) < 0)
         return E_FAIL;
     device->SetFVF(format);
     return device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, sprite->vertices,

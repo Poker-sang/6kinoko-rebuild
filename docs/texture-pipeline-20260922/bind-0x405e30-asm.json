@@ -1,0 +1,270 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"addr\":\"0x405e30\",\"asm\":{\"name\":\"sub_405E30\",\"start_ea\":\"0x405e30\",\"segment\":\".text\",\"lines\":[{\"addr\":\"405e30\",\"instruction\":\"push ebp\",\"label\":\"sub_405E30\"},{\"addr\":\"405e31\",\"instruction\":\"mov ebp, esp\"},{\"addr\":\"405e33\",\"instruction\":\"mov eax, [ebp+arg_0]\"},{\"addr\":\"405e36\",\"instruction\":\"test eax, eax\"},{\"addr\":\"405e38\",\"instruction\":\"jnz short loc_405E5B\",\"refs\":[{\"addr\":\"0x405e5b\",\"name\":\"loc_405E5B\"}]},{\"addr\":\"405e3a\",\"instruction\":\"mov eax, dword_51AC38\",\"refs\":[{\"addr\":\"0x51ac38\",\"name\":\"dword_51AC38\"}]},{\"addr\":\"405e3f\",\"instruction\":\"mov ecx, [eax]\"},{\"addr\":\"405e41\",\"instruction\":\"mov edx, [ecx+104h]\"},{\"addr\":\"405e47\",\"instruction\":\"push 0\"},{\"addr\":\"405e49\",\"instruction\":\"push edi\"},{\"addr\":\"405e4a\",\"instruction\":\"push eax\"},{\"addr\":\"405e4b\",\"instruction\":\"call edx\"},{\"addr\":\"405e4d\",\"instruction\":\"mov eax, [ebp+arg_0]\"},{\"addr\":\"405e50\",\"instruction\":\"mov dword_51AEE8[edi*4], eax\",\"refs\":[{\"addr\":\"0x51aee8\",\"name\":\"dword_51AEE8\"}]},{\"addr\":\"405e57\",\"instruction\":\"pop ebp\"},{\"addr\":\"405e58\",\"instruction\":\"retn 4\"},{\"addr\":\"405e5b\",\"instruction\":\"cmp eax, dword_51AEE8[edi*4]\",\"label\":\"loc_405E5B\",\"refs\":[{\"addr\":\"0x51aee8\",\"name\":\"dword_51AEE8\"}]},{\"addr\":\"405e62\",\"instruction\":\"jz short loc_405E9C\",\"refs\":[{\"addr\":\"0x405e9c\",\"name\":\"loc_405E9C\"}]},{\"addr\":\"405e64\",\"instruction\":\"mov ecx, dword_51AC38\",\"refs\":[{\"addr\":\"0x51ac38\",\"name\":\"dword_51AC38\"}]},{\"addr\":\"405e6a\",\"instruction\":\"mov edx, dword_51AE48\",\"refs\":[{\"addr\":\"0x51ae48\",\"name\":\"dword_51AE48\"}]},{\"addr\":\"405e70\",\"instruction\":\"push esi\"},{\"addr\":\"405e71\",\"instruction\":\"mov esi, [ecx]\"},{\"addr\":\"405e73\",\"instruction\":\"push eax\"},{\"addr\":\"405e74\",\"instruction\":\"mov eax, [edx+0Ch]\"},{\"addr\":\"405e77\",\"instruction\":\"mov ecx, offset dword_51AE48\",\"refs\":[{\"addr\":\"0x51ae48\",\"name\":\"dword_51AE48\"}]},{\"addr\":\"405e7c\",\"instruction\":\"call eax\"},{\"addr\":\"405e7e\",\"instruction\":\"mov ecx, [eax]\"},{\"addr\":\"405e80\",\"instruction\":\"mov edx, dword_51AC38\",\"refs\":[{\"addr\":\"0x51ac38\",\"name\":\"dword_51AC38\"}]},{\"addr\":\"405e86\",\"instruction\":\"mov eax, [esi+104h]\"},{\"addr\":\"405e8c\",\"instruction\":\"push ecx\"},{\"addr\":\"405e8d\",\"instruction\":\"push edi\"},{\"addr\":\"405e8e\",\"instruction\":\"push edx\"},{\"addr\":\"405e8f\",\"instruction\":\"call eax\"},{\"addr\":\"405e91\",\"instruction\":\"mov ecx, [ebp+arg_0]\"},{\"addr\":\"405e94\",\"instruction\":\"mov dword_51AEE8[edi*4], ecx\",\"refs\":[{\"addr\":\"0x51aee8\",\"name\":\"dword_51AEE8\"}]},{\"addr\":\"405e9b\",\"instruction\":\"pop esi\"},{\"addr\":\"405e9c\",\"instruction\":\"pop ebp\",\"label\":\"loc_405E9C\"},{\"addr\":\"405e9d\",\"instruction\":\"retn 4\"}],\"stack_frame\":[{\"name\":\"__saved_registers\",\"offset\":\"0x0\",\"size\":\"0x4\",\"type\":\"_DWORD\"},{\"name\":\"__return_address\",\"offset\":\"0x4\",\"size\":\"0x4\",\"type\":\"_UNKNOWN *\"},{\"name\":\"arg_0\",\"offset\":\"0x8\",\"size\":\"0x4\",\"type\":\"_DWORD\"}],\"return_type\":\"int\",\"arguments\":[{\"name\":\"arg0\",\"type\":\"int\"},{\"name\":\"arg1\",\"type\":\"int\"}]},\"instruction_count\":38,\"total_instructions\":null,\"cursor\":{\"done\":true}}"
+    }
+  ],
+  "structuredContent": {
+    "addr": "0x405e30",
+    "asm": {
+      "name": "sub_405E30",
+      "start_ea": "0x405e30",
+      "segment": ".text",
+      "lines": [
+        {
+          "addr": "405e30",
+          "instruction": "push ebp",
+          "label": "sub_405E30"
+        },
+        {
+          "addr": "405e31",
+          "instruction": "mov ebp, esp"
+        },
+        {
+          "addr": "405e33",
+          "instruction": "mov eax, [ebp+arg_0]"
+        },
+        {
+          "addr": "405e36",
+          "instruction": "test eax, eax"
+        },
+        {
+          "addr": "405e38",
+          "instruction": "jnz short loc_405E5B",
+          "refs": [
+            {
+              "addr": "0x405e5b",
+              "name": "loc_405E5B"
+            }
+          ]
+        },
+        {
+          "addr": "405e3a",
+          "instruction": "mov eax, dword_51AC38",
+          "refs": [
+            {
+              "addr": "0x51ac38",
+              "name": "dword_51AC38"
+            }
+          ]
+        },
+        {
+          "addr": "405e3f",
+          "instruction": "mov ecx, [eax]"
+        },
+        {
+          "addr": "405e41",
+          "instruction": "mov edx, [ecx+104h]"
+        },
+        {
+          "addr": "405e47",
+          "instruction": "push 0"
+        },
+        {
+          "addr": "405e49",
+          "instruction": "push edi"
+        },
+        {
+          "addr": "405e4a",
+          "instruction": "push eax"
+        },
+        {
+          "addr": "405e4b",
+          "instruction": "call edx"
+        },
+        {
+          "addr": "405e4d",
+          "instruction": "mov eax, [ebp+arg_0]"
+        },
+        {
+          "addr": "405e50",
+          "instruction": "mov dword_51AEE8[edi*4], eax",
+          "refs": [
+            {
+              "addr": "0x51aee8",
+              "name": "dword_51AEE8"
+            }
+          ]
+        },
+        {
+          "addr": "405e57",
+          "instruction": "pop ebp"
+        },
+        {
+          "addr": "405e58",
+          "instruction": "retn 4"
+        },
+        {
+          "addr": "405e5b",
+          "instruction": "cmp eax, dword_51AEE8[edi*4]",
+          "label": "loc_405E5B",
+          "refs": [
+            {
+              "addr": "0x51aee8",
+              "name": "dword_51AEE8"
+            }
+          ]
+        },
+        {
+          "addr": "405e62",
+          "instruction": "jz short loc_405E9C",
+          "refs": [
+            {
+              "addr": "0x405e9c",
+              "name": "loc_405E9C"
+            }
+          ]
+        },
+        {
+          "addr": "405e64",
+          "instruction": "mov ecx, dword_51AC38",
+          "refs": [
+            {
+              "addr": "0x51ac38",
+              "name": "dword_51AC38"
+            }
+          ]
+        },
+        {
+          "addr": "405e6a",
+          "instruction": "mov edx, dword_51AE48",
+          "refs": [
+            {
+              "addr": "0x51ae48",
+              "name": "dword_51AE48"
+            }
+          ]
+        },
+        {
+          "addr": "405e70",
+          "instruction": "push esi"
+        },
+        {
+          "addr": "405e71",
+          "instruction": "mov esi, [ecx]"
+        },
+        {
+          "addr": "405e73",
+          "instruction": "push eax"
+        },
+        {
+          "addr": "405e74",
+          "instruction": "mov eax, [edx+0Ch]"
+        },
+        {
+          "addr": "405e77",
+          "instruction": "mov ecx, offset dword_51AE48",
+          "refs": [
+            {
+              "addr": "0x51ae48",
+              "name": "dword_51AE48"
+            }
+          ]
+        },
+        {
+          "addr": "405e7c",
+          "instruction": "call eax"
+        },
+        {
+          "addr": "405e7e",
+          "instruction": "mov ecx, [eax]"
+        },
+        {
+          "addr": "405e80",
+          "instruction": "mov edx, dword_51AC38",
+          "refs": [
+            {
+              "addr": "0x51ac38",
+              "name": "dword_51AC38"
+            }
+          ]
+        },
+        {
+          "addr": "405e86",
+          "instruction": "mov eax, [esi+104h]"
+        },
+        {
+          "addr": "405e8c",
+          "instruction": "push ecx"
+        },
+        {
+          "addr": "405e8d",
+          "instruction": "push edi"
+        },
+        {
+          "addr": "405e8e",
+          "instruction": "push edx"
+        },
+        {
+          "addr": "405e8f",
+          "instruction": "call eax"
+        },
+        {
+          "addr": "405e91",
+          "instruction": "mov ecx, [ebp+arg_0]"
+        },
+        {
+          "addr": "405e94",
+          "instruction": "mov dword_51AEE8[edi*4], ecx",
+          "refs": [
+            {
+              "addr": "0x51aee8",
+              "name": "dword_51AEE8"
+            }
+          ]
+        },
+        {
+          "addr": "405e9b",
+          "instruction": "pop esi"
+        },
+        {
+          "addr": "405e9c",
+          "instruction": "pop ebp",
+          "label": "loc_405E9C"
+        },
+        {
+          "addr": "405e9d",
+          "instruction": "retn 4"
+        }
+      ],
+      "stack_frame": [
+        {
+          "name": "__saved_registers",
+          "offset": "0x0",
+          "size": "0x4",
+          "type": "_DWORD"
+        },
+        {
+          "name": "__return_address",
+          "offset": "0x4",
+          "size": "0x4",
+          "type": "_UNKNOWN *"
+        },
+        {
+          "name": "arg_0",
+          "offset": "0x8",
+          "size": "0x4",
+          "type": "_DWORD"
+        }
+      ],
+      "return_type": "int",
+      "arguments": [
+        {
+          "name": "arg0",
+          "type": "int"
+        },
+        {
+          "name": "arg1",
+          "type": "int"
+        }
+      ]
+    },
+    "instruction_count": 38,
+    "total_instructions": null,
+    "cursor": {
+      "done": true
+    }
+  },
+  "isError": false
+}
