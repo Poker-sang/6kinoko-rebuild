@@ -1,3 +1,4 @@
+#include "kinoko/input_device.h"
 #include "kinoko/base_utilities.h"
 #include "kinoko/critical_section.h"
 #include "kinoko/script_file.h"
@@ -1563,7 +1564,6 @@ static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 
 
 
-int32_t __fastcall function_407500(int32_t this_ptr);
 int32_t __fastcall function_4077c0(int32_t this_ptr);
 
 
@@ -2230,7 +2230,7 @@ int32_t g28 = (int32_t)(intptr_t)&kinoko_method_actor_pool_base_delete; // 0x4d5
 /* CInputManager's vftable: destructor, then the per-frame input update. */
 int32_t g35[2] = {
     (int32_t)(intptr_t)&kinoko_method_delete_input_device,
-    (int32_t)(intptr_t)&function_407500
+    (int32_t)(intptr_t)&kinoko_input_device_update
 }; // 0x4d5ad0
 char * g42 = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s"; // 0x4d5e9c
 char * g43 = "\x96\x82\x97\x9d\x8d\xb9\x82\xc6\x82U\x82\xc2\x82\xcc\x83L\x83m\x83R"; // 0x4d5eec

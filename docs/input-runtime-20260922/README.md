@@ -36,3 +36,17 @@ compiles only. Runtime/manager/copy consumers use the new APIs.
 Planned next ownership chains: physical device state; borrowed cluster devices;
 manager-owned device vector/copy; assignment files and capture; frame publication
 and script field descriptors. Each gets a separate committed build and DAT set.
+
+## Batch 2: physical keyboard/controller state
+
+407500 now has a typed KinokoInputDevice ECX receiver and named 68-byte
+assignment / 96-byte state records. Shared schema pins counters +72, releases
++128 and axes +144. Typed ordinary pointers replace the lost-receiver integer
+port. The virtual adapter retains the original mixed EAX value (id or pointer)
+because that register is not uniformly a returned object; callers consume state.
+
+Original evidence preserves -500/500 inclusive dead zone, negative-direction
+precedence, sign-change count reset, overflow bits, one-frame releases, disabled
+mapping state retention, six normalized controller axes, keyboard extra-axis
+zeroes, absent-controller no-write and disabled-device state clearing.
+input_device_contract and the updated legacy stage fixture compile only.

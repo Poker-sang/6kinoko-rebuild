@@ -827,7 +827,12 @@ add_executable(kinoko_input_keys_contract tests/input_keys_contract.cpp src/reco
 target_include_directories(kinoko_input_keys_contract PRIVATE include)
 add_test(NAME input_keys_contract COMMAND kinoko_input_keys_contract)
 
+add_executable(kinoko_input_device_contract tests/input_device_contract.cpp src/reconstructed/physical_input.cpp)
+target_include_directories(kinoko_input_device_contract PRIVATE include)
+add_test(NAME input_device_contract COMMAND kinoko_input_device_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_input_device_contract
     kinoko_input_keys_contract
     kinoko_texture_binding_contract
     kinoko_texture_image_contract
