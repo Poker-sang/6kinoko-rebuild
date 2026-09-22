@@ -24,3 +24,13 @@ zero-request clearing, small shrink truncation and the existing invalid-size /
 allocation-failure guards. Modern STL capacity policy remains intentional;
 this does not claim VC8 allocation sizes or exception behavior are identical.
 Existing capacity/shrink/null/overflow contracts are compiled only.
+
+## Batch 3: string ownership and remaining public interfaces
+
+Assign/data/destroy now use actual record pointers; assignment returns the
+receiver and data accepts const borrowed storage. The two active owner fields
+are named and accessed through unaligned-safe RecordView, replacing +4 pointer
+loads. ACT, text, script properties and fixtures use the authoritative header.
+Legacy integer-layout callers convert only at their record boundary; native
+storage callers pass pointers directly. Native std::string owns characters;
+borrowed data remains invalidated by mutation. No allocation policy changes.

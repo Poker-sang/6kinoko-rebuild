@@ -163,8 +163,8 @@ void player_and_strings(HSQUIRRELVM vm) {
     store<void*>(f.object() + 177, nullptr); store<uint32_t>(f.object() + 197, 31);
     require(f.get_string("layer_name_get").empty(), "layer null heap pointer becomes empty text");
     store<void*>(name, nullptr); store<uint32_t>(name + 20, 31);
-    require(retdec_std_string_data(address(name)) == nullptr, "string view does not invent heap buffer");
-    require(retdec_std_string_data(0) == nullptr, "null legacy string view");
+    require(kinoko_string_data((const void*)(name)) == nullptr, "string view does not invent heap buffer");
+    require(kinoko_string_data(0) == nullptr, "null legacy string view");
     f.require_canaries(); top(vm, base, "player/string stack");
 }
 void typed_source_callbacks(HSQUIRRELVM vm) {

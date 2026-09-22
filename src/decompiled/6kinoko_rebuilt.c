@@ -3594,7 +3594,7 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
         v1++;
     }
     // 0x406167
-    retdec_string_assign_cstr(result, (const char *)(a2));
+    kinoko_string_assign_cstr(result, (const char *)(a2));
     return result2;
 }
 
@@ -3632,7 +3632,7 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 // Address range: 0x406690 - 0x4066ec
 
 
-// 4066F0: missing-length C callers use retdec_string_assign_cstr explicitly.
+// 4066F0: missing-length C callers use kinoko_string_assign_cstr explicitly.
 
 // Address range: 0x4067f0 - 0x406872
 
@@ -11385,7 +11385,7 @@ typedef void (__cdecl *retdec_sq_print_fn)(int32_t vm, const char *format, ...);
 // Address range: 0x4d4350 - 0x4d437e
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
 void retdec_msvc_Finitlocks__YAXXZ2(void) {
-    kinoko_string_destroy((int32_t)(intptr_t)&g554);
+    kinoko_string_destroy((void*)(intptr_t)((int32_t)(intptr_t)&g554));
 }
 
 
@@ -11766,7 +11766,7 @@ void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_a.dat");
     kinoko_archive_mount("6kinoko_b.dat");
     kinoko_archive_mount("6kinoko_c.dat");
-    retdec_string_assign_n(&g554, ".cv4", 4);
+    kinoko_string_assign_n(&g554, ".cv4", 4);
 }
 
 /* Game lifecycle ports: borrowed global objects, no new allocation/ownership. */

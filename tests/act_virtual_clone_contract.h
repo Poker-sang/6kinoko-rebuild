@@ -39,9 +39,9 @@ static int test_act_virtual_clone(void) {
     for (int compiled = 0; compiled != 2; ++compiled) {
         int32_t source[60] = {0};
         CHECK(kinoko_act_document_initialize((KinokoActDocument *)source));
-        retdec_string_assign_cstr(source + 4, "a document clone with a long name");
-        retdec_string_assign_cstr(source + 11, "original resource prefix/");
-        retdec_string_assign_cstr(source + 41, "original script file.nut");
+        kinoko_string_assign_cstr(source + 4, "a document clone with a long name");
+        kinoko_string_assign_cstr(source + 11, "original resource prefix/");
+        kinoko_string_assign_cstr(source + 41, "original script file.nut");
         source[1] = 37; source[2] = 900; source[3] = 600;
         source[18] = 3; source[19] = 5; source[20] = 7; source[21] = 11;
         ((float *)source)[22] = 1.25f; ((float *)source)[23] = -2.5f;
@@ -53,7 +53,7 @@ static int test_act_virtual_clone(void) {
 
         int32_t *resource = (int32_t *)calloc(1, 100); CHECK(resource);
         resource[0] = PTR(&g365); resource[1] = 42; resource[7] = resource[15] = 15;
-        retdec_string_assign_cstr(resource + 2, "cloned resource");
+        kinoko_string_assign_cstr(resource + 2, "cloned resource");
         int32_t layer = retdec_act_make_layer(); CHECK(layer);
         *(int32_t *)(intptr_t)(layer + 96) = 42;
         *(int32_t *)(intptr_t)(layer + 100) = PTR(resource);
@@ -95,10 +95,10 @@ static int test_act_virtual_clone(void) {
         CHECK(act_clone_bound_resource == PTR(resource)); // bind before resource reassociation
         CHECK(cloned[53] - cloned[52] == 4 && cloned[57] - cloned[56] == 4);
         CHECK(cloned[0] == PTR(&g285) && cloned[1] == 37 && cloned[2] == 900 && cloned[3] == 600);
-        CHECK(strcmp(retdec_std_string_data(PTR(copy) + 16), retdec_std_string_data(PTR(source) + 16)) == 0);
-        CHECK(retdec_std_string_data(PTR(copy) + 16) != retdec_std_string_data(PTR(source) + 16));
-        CHECK(retdec_std_string_data(PTR(copy) + 44)[0] == 0);
-        CHECK(retdec_std_string_data(PTR(copy) + 164)[0] == 0);
+        CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 16)), kinoko_string_data((const void*)(intptr_t)(PTR(source) + 16))) == 0);
+        CHECK(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 16)) != kinoko_string_data((const void*)(intptr_t)(PTR(source) + 16)));
+        CHECK(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 44))[0] == 0);
+        CHECK(kinoko_string_data((const void*)(intptr_t)(PTR(copy) + 164))[0] == 0);
         CHECK(memcmp(cloned + 18, source + 18, 24) == 0);
         CHECK(((const uint8_t *)copy)[96] == 0 && ((const uint8_t *)copy)[204] == 0);
         CHECK(((const uint8_t *)copy)[200] == 1 && ((const uint8_t *)copy)[201] == 0);

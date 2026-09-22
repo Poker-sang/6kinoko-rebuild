@@ -106,7 +106,7 @@ int32_t set_bool(int32_t id, bool trace) {
     return 0;
 }
 void assign_string(void* field, const char* value) {
-    retdec_string_assign_cstr(static_cast<int32_t*>(field), value);
+    kinoko_string_assign_cstr(static_cast<int32_t*>(field), value);
 }
 }
 
@@ -129,7 +129,7 @@ extern "C" int32_t retdec_cact_layer_set_bool(int32_t id) { return set_bool(id, 
 extern "C" int32_t retdec_cact_layer_get_string(int32_t id) {
     NativeField field(id, true);
     if (!field.storage()) return 0;
-    const auto value = retdec_std_string_data(address(field.storage()));
+    const auto value = kinoko_string_data(field.storage());
     sq_pushstring(field.vm(), value ? value : "", -1);
     // Preserve the legacy signed stack-slot-address comparison, not an assumed
     // SQRESULT (sq_pushstring is void). Its unusual return ABI is not changed.
@@ -159,7 +159,7 @@ extern "C" int32_t retdec_acting_player_get_property(int32_t id) {
     auto vm = pointer<SQVM>(id);
     if (offset == 8 || offset == 132) sq_pushbool(vm, read<uint8_t>(storage) != 0);
     else if (offset == 124 || offset == 128) sq_pushfloat(vm, read<SQFloat>(storage));
-    else if (offset == 148) sq_pushstring(vm, retdec_std_string_data(address(storage)), -1);
+    else if (offset == 148) sq_pushstring(vm, kinoko_string_data((const void*)(storage)), -1);
     else sq_pushinteger(vm, read<SQInteger>(storage));
     return 1;
 }

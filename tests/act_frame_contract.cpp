@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 // Exercise the actual update body with a deterministic WinMM clock. Container
 // callbacks and D3D are controlled boundaries, not replacements for the loop.
 #define CINTERFACE
@@ -144,7 +145,7 @@ int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
-const char* retdec_std_string_data(int32_t) { return "fixture"; }
+const char* kinoko_string_data(const void*) { return "fixture"; }
 int32_t kinoko_texture_bind_stage(int32_t stage, int32_t handle) {
     if (!stage && !handle) ++test::texture_unbinds; return 0;
 }

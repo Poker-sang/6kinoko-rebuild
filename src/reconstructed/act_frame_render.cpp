@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_frame.h"
@@ -16,7 +17,7 @@
 extern "C" {
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
-const char* retdec_std_string_data(int32_t);
+
 }
 
 namespace {
@@ -116,7 +117,7 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
         retdec_trace_i32("4525d0:field-10", address(resource.get(&RuntimeRecord::active_holder)));
         retdec_trace_i32("4525d0:act", address(act));
         if (act) {
-            retdec_trace_squirrel_name("4525d0:actor-name", address(retdec_std_string_data(address(document.bytes(&DocumentRecord::name)))));
+            retdec_trace_squirrel_name("4525d0:actor-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
             retdec_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentRecord::visible)));
             retdec_trace_i32("4525d0:act-begin", address(document.get(&DocumentRecord::layers).begin));
             retdec_trace_i32("4525d0:act-end", address(document.get(&DocumentRecord::layers).end));
@@ -126,8 +127,8 @@ void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LON
         retdec_trace("4525d0:live-entry");
         retdec_trace_i32("4525d0:live-resource", self);
         retdec_trace_i32("4525d0:live-act", address(act));
-        if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(retdec_std_string_data(address(document.bytes(&DocumentRecord::name)))));
-        retdec_trace_squirrel_name("4525d0:live-resource-name", address(retdec_std_string_data(address(resource.bytes(&RuntimeRecord::name)))));
+        if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(kinoko_string_data((const void*)(document.bytes(&DocumentRecord::name)))));
+        retdec_trace_squirrel_name("4525d0:live-resource-name", address(kinoko_string_data((const void*)(resource.bytes(&RuntimeRecord::name)))));
     }
 }
 }

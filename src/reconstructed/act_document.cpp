@@ -103,7 +103,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     field<int32_t>(layer + 104) = -1;
     field<int32_t>(layer + 108) = -1;
     field<int32_t>(layer + 132) = 15;
-    retdec_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
+    kinoko_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
     field<uint16_t>(layer + 140) = 1;
     field<uint8_t>(layer + 92) = 1;
     if (!retdec_act_make_list(pointer<int32_t>(layer + 180)) ||
@@ -111,7 +111,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
         kinoko_act_list_drop_storage(field<int32_t>(layer+180));
         kinoko_act_list_drop_storage(field<int32_t>(layer+192));
         field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
-        kinoko_string_destroy(layer+112);
+        kinoko_string_destroy((void*)(intptr_t)(layer+112));
         return 0;
     }
     retdec_construct_cact_script(layer + 204);
@@ -328,8 +328,7 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         return 0;
     }
     retdec_trace_squirrel_name("act:layer-name",
-                               address(retdec_std_string_data(
-                                   layer + 112)));
+                               address(kinoko_string_data((const void*)(intptr_t)(layer + 112))));
     if (!retdec_act_read_u32(reader_ptr, &count) || count > 0x10000u) {
         retdec_trace("act:layer-key-count-failed");
         return 0;
@@ -352,8 +351,7 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         if (layout) retdec_call_thiscall1_result(pointer<void>(layout),
             field<void*>(field<int32_t>(layout) + 24), layer);
         retdec_trace_squirrel_name(
-            "act:key-script", address(retdec_std_string_data(
-                key + 8)));
+            "act:key-script", address(kinoko_string_data((const void*)(intptr_t)(key + 8))));
         retdec_trace_i32("act:key-layout", field<int32_t>(key + 4));
         if (field<int32_t>(key + 4) != 0 &&
             field<int32_t>(field<int32_t>(key + 4)) ==
@@ -575,7 +573,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
     kinoko_reader_close(reader_slot);
     field<int32_t>(resource + 64) =
         address(data);
-    retdec_string_assign_cstr(
+    kinoko_string_assign_cstr(
         pointer<int32_t>(resource + 72), file_name);
     retdec_trace_i32("mcd:chip-count", (int32_t)chip_count);
     retdec_trace_i32("mcd:texture-count", (int32_t)texture_count);
@@ -601,7 +599,7 @@ extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t reso
 extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
     int32_t resource, void*, const char* prefix) {
     if (!resource) return 0;
-    const char* name = retdec_std_string_data(resource+36);
+    const char* name = kinoko_string_data((const void*)(intptr_t)(resource+36));
     if (!name || !*name) return 0;
     try {
         // 42FB4E uses an empty default prefix. Append '/' only to a nonempty
@@ -617,7 +615,7 @@ extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
         temporary.get()[7] = temporary.get()[14] = temporary.get()[23] = 15;
         // Original loads into a temporary owner and only replaces on success.
         if (!retdec_act_load_mcd(address(temporary.get()), path.c_str())) return 0;
-        retdec_string_assign_cstr(pointer<int32_t>(resource+72), base.c_str());
+        kinoko_string_assign_cstr(pointer<int32_t>(resource+72), base.c_str());
         if (kinoko_act_release_chip_data(resource))
             retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource+64)));
         field<int32_t>(resource+64) = temporary.get()[16];
@@ -629,7 +627,7 @@ extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
 extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
     int32_t resource, void *, const char *prefix) {
     if (!resource) return 0;
-    const char *name = retdec_std_string_data(resource + 40);
+    const char *name = kinoko_string_data((const void*)(intptr_t)(resource + 40));
     // 446C36 leaves the existing handle untouched for an empty texture name.
     if (!name || !*name) return 0;
     try {

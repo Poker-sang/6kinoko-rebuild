@@ -13,8 +13,8 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
     int32_t records[1][8] = {{4,7,8,0,0,0,1,0}};
     CHECK(resource && data && layer && key && map);
     CHECK(kinoko_act_document_initialize((KinokoActDocument*)source));
-    retdec_string_assign_n(source+4,"RegistrationProbe",17);
-    retdec_string_assign_n((int32_t*)(intptr_t)(layer+112),"mapProbe",8);
+    kinoko_string_assign_n(source+4,"RegistrationProbe",17);
+    kinoko_string_assign_n((int32_t*)(intptr_t)(layer+112),"mapProbe",8);
     ((float*)map)[80] = 1.0f;
     map[60] = map[61] = 16;
     data->chip_count = 1;

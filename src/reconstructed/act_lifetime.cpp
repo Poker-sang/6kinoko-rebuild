@@ -90,7 +90,7 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     std::free(pointer<void>(field<int32_t>(script_ptr + 92)));
     field<int32_t>(script_ptr + 92) = 0;
     field<int32_t>(script_ptr + 96) = 0;
-    kinoko_string_destroy(script_ptr + 64);
+    kinoko_string_destroy((void*)(intptr_t)(script_ptr + 64));
     field<int32_t>(script_ptr + 80) = 0;
     field<int32_t>(script_ptr + 84) = 15;
     field<unsigned char>(script_ptr + 64) = 0;
@@ -121,7 +121,7 @@ void clear_key(int32_t value) {
     clear_layout(layout);
     std::free(pointer<void>(layout));
     field<int32_t>(value+4)=0;
-    kinoko_string_destroy(value+8);
+    kinoko_string_destroy((void*)(intptr_t)(value+8));
     field<uint8_t>(value+8)=0;
     field<uint32_t>(value+24)=0;
     field<uint32_t>(value+28)=15;
@@ -183,7 +183,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     retdec_destroy_cact_list(pointer<int32_t>(layer + 180));
     retdec_destroy_cact_list(pointer<int32_t>(layer + 192));
     field<uint32_t>(layer+184)=field<uint32_t>(layer+196)=0;
-    kinoko_string_destroy(layer + 112);
+    kinoko_string_destroy((void*)(intptr_t)(layer + 112));
     field<int32_t>(layer + 112) = 0;
     field<int32_t>(layer + 128) = 0;
     field<int32_t>(layer + 132) = 15;
@@ -201,7 +201,7 @@ static void clear_resource(int32_t resource)
         kinoko::mesh::clear_resource(pointer<kinoko::mesh::Resource>(resource));return;
     }
     // Every resource owns the base name, including long names in native clones.
-    kinoko_string_destroy(resource + 8);
+    kinoko_string_destroy((void*)(intptr_t)(resource + 8));
     field<int32_t>(resource + 8) = 0;
     field<uint32_t>(resource + 24) = 0;
     field<uint32_t>(resource + 28) = 15;
@@ -210,11 +210,11 @@ static void clear_resource(int32_t resource)
         if (kinoko_act_release_chip_data(resource))
             retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource + 64)));
         field<int32_t>(resource + 64) = 0;
-        kinoko_string_destroy(resource + 36);
+        kinoko_string_destroy((void*)(intptr_t)(resource + 36));
         field<int32_t>(resource + 36) = 0;
         field<int32_t>(resource + 52) = 0;
         field<int32_t>(resource + 56) = 15;
-        kinoko_string_destroy(resource + 72);
+        kinoko_string_destroy((void*)(intptr_t)(resource + 72));
         field<int32_t>(resource + 72) = 0;
         field<int32_t>(resource + 88) = 0;
         field<int32_t>(resource + 92) = 15;
@@ -223,7 +223,7 @@ static void clear_resource(int32_t resource)
     if (!kinoko_act_release_cloned_texture(resource))
         kinoko_texture_release(field<int32_t>(resource + 68));
     field<int32_t>(resource + 68) = 0;
-    kinoko_string_destroy(resource + 40);
+    kinoko_string_destroy((void*)(intptr_t)(resource + 40));
     field<int32_t>(resource + 40) = 0;
     field<int32_t>(resource + 56) = 0;
     field<int32_t>(resource + 60) = 15;
@@ -270,11 +270,11 @@ void retdec_destroy_cact_object(int32_t object_ptr)
     field<int32_t>(object_ptr + 232) = 0;
 
     retdec_destroy_cact_script(object_ptr + 100);
-    kinoko_string_destroy(object_ptr + 44);
+    kinoko_string_destroy((void*)(intptr_t)(object_ptr + 44));
     field<int32_t>(object_ptr + 44) = 0;
     field<int32_t>(object_ptr + 60) = 0;
     field<int32_t>(object_ptr + 64) = 15;
-    kinoko_string_destroy(object_ptr + 16);
+    kinoko_string_destroy((void*)(intptr_t)(object_ptr + 16));
     field<int32_t>(object_ptr + 16) = 0;
     field<int32_t>(object_ptr + 32) = 0;
     field<int32_t>(object_ptr + 36) = 15;

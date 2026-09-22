@@ -331,9 +331,9 @@ int32_t retdec_cact_associate_resource(int32_t vm)
         field<int32_t>(layer + 100) = resource;
         field<int32_t>(layer + 96) = field<int32_t>(resource + 4);
         retdec_trace_squirrel_name("act:associate-layer",
-            address(retdec_std_string_data(layer + 112)));
+            address(kinoko_string_data((const void*)(intptr_t)(layer + 112))));
         retdec_trace_squirrel_name("act:associate-resource",
-            address(retdec_std_string_data(resource + 8)));
+            address(kinoko_string_data((const void*)(intptr_t)(resource + 8))));
         result = 0;
     }
     sq_pushinteger(kinoko_vm(vm), result);
@@ -651,7 +651,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     const auto vm = field<int32_t>(player+152);
     if (!act || !vm) return 0;
     DynamicLayerParent parent(vm);
-    if (!get_pair(player+148, retdec_std_string_data(player+164), parent.object+2) ||
+    if (!get_pair(player+148, kinoko_string_data((const void*)(intptr_t)(player+164)), parent.object+2) ||
         parent.object[2] != 0x0a000020) return 0;
     kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,348)));
     if (!storage || !retdec_construct_cact_layer(address(storage.get()), vm)) return 0;
@@ -954,7 +954,7 @@ int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *env
     KinokoArchiveReader *reader = nullptr;
     try {
         std::string resolved(path);
-        const char *extension = retdec_std_string_data(address(kinoko_act_script_extension));
+        const char *extension = kinoko_string_data((const void*)(kinoko_act_script_extension));
         if (extension && *extension) {
             const auto dot = resolved.rfind('.');
             if (dot != std::string::npos) resolved = resolved.substr(0, dot) + extension;
@@ -1031,7 +1031,7 @@ extern "C" int32_t retdec_register_act_script(int32_t script, int32_t object) {
     if (field<uint8_t>(script + 101)) {
         ok = retdec_execute_embedded_act_script(vm, script, environment) != 0;
     } else {
-        const char *path = retdec_std_string_data(script + 64);
+        const char *path = kinoko_string_data((const void*)(intptr_t)(script + 64));
         ok = path && *path ? retdec_compile_act_file(vm, path, environment) != 0
                           : retdec_execute_act_source_script(vm, script, environment) != 0;
     }
@@ -1099,7 +1099,7 @@ extern "C" int32_t __fastcall kinoko_method_register_act_layer(
     bool ok = retdec_publish_cact_layer_class(vm, address(root)) &&
         get_pair(address(root), "CActLayer", klass) &&
         retdec_create_bound_instance(vm, pointer<const int32_t>(parent + 8),
-            retdec_std_string_data(layer + 112), klass, layer, outer) &&
+            kinoko_string_data((const void*)(intptr_t)(layer + 112)), klass, layer, outer) &&
         retdec_prepare_cact_layer_objects(vm, layer, script);
     if (ok) {
         kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), pointer<int32_t>(layer + 336), outer);
@@ -1560,7 +1560,7 @@ int32_t retdec_bind_original_resource(int32_t resource, int32_t object,
         return static_cast<int32_t>(E_FAIL);
     const int32_t vm = field<int32_t>(object + 4);
     if (!vm || (raw && (!name || !*name))) return static_cast<int32_t>(E_FAIL);
-    if (!name || !*name) name = retdec_std_string_data(resource + 8);
+    if (!name || !*name) name = kinoko_string_data((const void*)(intptr_t)(resource + 8));
     int32_t root[5] = {}, klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return static_cast<int32_t>(E_FAIL);
     bool registered = get_pair(address(root), class_name, klass) && klass[0] == 0x08004000;
@@ -1661,7 +1661,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     /* The parent passed to sq_newslot is the ACT's published Squirrel table,
        not the native CAct allocation.  450E30 stored the root table pair on
        the resource, so resolve the ACT by its native stName here. */
-    act_name = retdec_std_string_data(act + 16);
+    act_name = kinoko_string_data((const void*)(intptr_t)(act + 16));
     if (resource_ptr == 0 || act_name == nullptr || *act_name == 0 ||
         field<int32_t>(resource_ptr + 156) != 0x0A000020 ||
          field<int32_t>(resource_ptr + 160) == 0) {
@@ -1714,7 +1714,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         for (int32_t slot = begin; slot != 0 && slot < end; slot += 4) {
             int32_t resource = field<int32_t>(slot);
             int32_t value[2] = { g483, g484 };
-            const char *name = retdec_std_string_data(resource + 8);
+            const char *name = kinoko_string_data((const void*)(intptr_t)(resource + 8));
             resource_class[0] = g483;
             resource_class[1] = g484;
             if (name != nullptr && *name != 0 &&
@@ -1770,8 +1770,8 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         layer_pair[1] = field<int32_t>(layer + 340);
         function_48a400(vm, address(layer_pair));
         script_ptr = layer + 204;
-        script_path = retdec_std_string_data(script_ptr + 64);
-        layer_name = retdec_std_string_data(layer + 112);
+        script_path = kinoko_string_data((const void*)(intptr_t)(script_ptr + 64));
+        layer_name = kinoko_string_data((const void*)(intptr_t)(layer + 112));
         retdec_trace_i32("act:layer-script-result", script_result >= 0);
         if (index < 96) {
             int32_t raw_data = field<int32_t>(script_ptr + 92);
@@ -1941,7 +1941,7 @@ int32_t retdec_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
     int32_t script = act + 100, result = 0;
     root[2] = field<int32_t>(resource_ptr + 156);
     root[3] = field<int32_t>(resource_ptr + 160);
-    if (!get_pair(address(root), retdec_std_string_data(act + 16), parent))
+    if (!get_pair(address(root), kinoko_string_data((const void*)(intptr_t)(act + 16)), parent))
         goto done;
     object[2] = parent[0]; object[3] = parent[1];
     if (!get_pair(address(object), "global", global))
@@ -2022,7 +2022,7 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
     {
         int32_t act = field<int32_t>(resource_ptr + 12);
         const char *act_name = act != 0
-            ? retdec_std_string_data(act + 16) : nullptr;
+            ? kinoko_string_data((const void*)(intptr_t)(act + 16)) : nullptr;
         retdec_trace_squirrel_name("450950:act-name",
                                    address(act_name));
         retdec_trace_i32("450950:user", resource_ptr);
@@ -2076,11 +2076,11 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     act = holder != 0 ? field<int32_t>(holder) : 0;
     if (act == 0)
         goto cleanup;
-    act_name = retdec_std_string_data(act + 16);
+    act_name = kinoko_string_data((const void*)(intptr_t)(act + 16));
     if (act_name == nullptr || *act_name == 0)
         goto cleanup;
     /* 451022..45104A retains the registration key for 4513F0 teardown. */
-    retdec_string_assign_cstr(pointer<int32_t>(resource_ptr + 164), act_name);
+    kinoko_string_assign_cstr(pointer<int32_t>(resource_ptr + 164), act_name);
     retdec_trace_squirrel_name("450f30:act-name", address(act_name));
 
     if (!retdec_publish_cact_layer_class(vm, root_object) ||
@@ -2128,7 +2128,7 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
 
     script_ptr = act + 100;
-    script_path = retdec_std_string_data(script_ptr + 64);
+    script_path = kinoko_string_data((const void*)(intptr_t)(script_ptr + 64));
     if (script_path && *script_path)
         retdec_trace_squirrel_name("450f30:script-path", address(script_path));
     global_object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);

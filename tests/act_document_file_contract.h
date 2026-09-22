@@ -55,7 +55,7 @@ static int test_act_document_file_lifetime(void) {
     *(int32_t *)(intptr_t)(key + 28) = 15;
     CHECK(retdec_act_append_list(layer + 180, key));
     ++*(int32_t *)(intptr_t)(layer + 184);
-    retdec_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
+    kinoko_string_assign_cstr((int32_t *)(intptr_t)(layer + 112),
         "heap-owned layer from generated ACT");
     CHECK(kinoko_method_write_act(PTR(source), NULL, PTR(&stream)));
     memcpy(encoded, header, sizeof(header));
