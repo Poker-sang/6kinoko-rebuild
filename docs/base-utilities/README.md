@@ -77,3 +77,8 @@ path decomposition and directory-only cases, lock recursion/layout canaries, and
 deleting/nondeleting virtual calls. Existing application/device contracts use the
 new lock record; script contracts assert the throwing C++ declarations.
 No game, CTest or contract executable is run by the agent.
+
+R1 source d471c55 reached a compile error in MSVC's generic native-entry address
+template after the explicit throwing declarations were added. R2 stores these
+two callback addresses directly at the existing integer ABI boundary. R1's build
+tree and log are retained; it is not a successful game build.

@@ -53,9 +53,11 @@ constexpr Constant constants[] = {
 } // namespace
 
 extern "C" void kinoko_register_global_methods(int32_t root_table) {
-    int32_t target = entry(kinoko_script_show_call_stack);
+    // Store the address directly: MSVC's generic entry deduction can lose the
+    // explicit throwing C-linkage function type under /EHsc.
+    int32_t target = static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_script_show_call_stack));
     kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("ShowCallStack"), (const void *)(&target), 4, (void *)(intptr_t)(entry(function_470ee0)), 0);
-    target = entry(kinoko_script_compile_file_argument);
+    target = static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_script_compile_file_argument));
     kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("CompileFile"), (const void *)(&target), 4, (void *)(intptr_t)(entry(retdec_compile_file_native)), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
