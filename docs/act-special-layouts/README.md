@@ -63,3 +63,18 @@ zero scale, nonpositive crop, low-byte colors, one-time pivots, property aliases
 no update during draw, failed submission with state restoration, own visibility,
 failed resource query, special blend transition, hidden pending-text processing
 and glyph alignment. It is compiled only, not executed by the agent.
+
+## R1 build handoff (2026-09-22)
+
+- Artifact source commit: `90436e74817a6990da6975e0d4e3065e66b42395`.
+- Build tree: `build-runs/act-special-layouts-r1-quiet`.
+- Runtime EXE: `runtime-builds/act-special-layouts-r1-quiet/kinoko_retdec_rebuild.exe`.
+- EXE SHA256: `9FD832CA7ED8080A60693E0E4C67E1E01430358217E57E7E3067234E919D3BC9`.
+- Win32 Release quiet all-target build completed with exit code 0. Existing
+  unused-function warnings remain. The new layout render contract compiled.
+- `tools/stage_dat.ps1` completed with exit code 0; all three original DAT files
+  were copied beside the EXE and their sizes and SHA256 values verified.
+- No game launch, CTest, or local automated test execution was performed.
+  Runtime behavior awaits user verification; compilation is not a runtime pass.
+- Next dependency: original Mesh resource factory, reader/loader and render-node
+  ownership, followed by C3DLayout factory/binding/update/draw integration.
