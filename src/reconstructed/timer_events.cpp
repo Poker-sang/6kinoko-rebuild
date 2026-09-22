@@ -52,7 +52,7 @@ void shutdown() {
     timer.initialized = timer.period_requested = false;
 }
 }
-extern "C" void kinoko_frame_timer_initialize(void) {
+extern "C" void kinoko_frame_timer_initialize(void) noexcept(false) {
     if (timer.initialized) return;
     InitializeCriticalSection(&timer.lock);
     if (std::atexit(shutdown) != 0) { DeleteCriticalSection(&timer.lock); throw std::bad_alloc(); }

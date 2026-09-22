@@ -66,3 +66,9 @@ button count. R2 also removes the two unused split globals now covered by
 native capability storage and the published mouse snapshot. Raw GUID/data-format
 evidence in `device-formats.json` confirms DirectInput8A and the 80/256/20-byte
 controller/keyboard/mouse formats.
+
+R2 source `7218c62` also compiled/linked all targets and its DATs were staged.
+Compiler review flagged the C ABI timer initializer's explicit bad_alloc throw
+under /EHc. R3 declares `noexcept(false)` on that boundary (as already done for
+the game math boundary), preserving the failure path without the false nothrow
+assumption. There is no gameplay change from R2. All R1/R2 artifacts remain.
