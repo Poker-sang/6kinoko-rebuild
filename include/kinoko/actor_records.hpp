@@ -2,6 +2,7 @@
 #include "kinoko/native_record_view.hpp"
 #include "kinoko/native_control.hpp"
 #include "kinoko/sprite.h"
+#include "kinoko/quad_records.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -95,7 +96,7 @@ struct FrameAppearance {
     uint32_t color;
     float scale_x, scale_y, roll_x, roll_y, roll_z;
 };
-struct Position3 { float x, y, z; };
+using Position3 = kinoko::render::Position3;
 struct FrameRecord {
     Address vtable;
     std::int32_t texture; // borrowed handle; manager releases texture owners

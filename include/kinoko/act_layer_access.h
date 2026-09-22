@@ -4,6 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+KinokoActLayer *__fastcall kinoko_act_layer_world_position(KinokoActLayer *layer,
+    void *unused, float *x, float *y, float *z);
 // 455DC0/455F50: output receives an owned, malloc-compatible one-word wrapper.
 // Its layer/key is borrowed. Returns the output slot even for a missing item;
 // a null output slot is rejected before accessing the holder.

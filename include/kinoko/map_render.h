@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 struct retdec_mcd_data;
+int32_t kinoko_map_update_visible(KinokoActLayout *layout, int32_t left, int32_t top,
+    int32_t right, int32_t bottom);
+int32_t kinoko_map_draw_visible(KinokoActLayout *layout, float x, float y);
 /* 463E60/46FD70: consult the owning layer, without touching render caches. */
 struct retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout);
 /* Inspect only: never binds, retains, or releases a resource. */

@@ -1,3 +1,4 @@
+#include "kinoko/act_layer_access.h"
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
@@ -114,19 +115,7 @@ void retdec_c2dlayout_world_position(int32_t layer,
                                              float *y,
                                              float *z)
 {
-    uint32_t guard = 0;
-
-    if (x == nullptr || y == nullptr || z == nullptr)
-        return;
-    *x = 0.0f;
-    *y = 0.0f;
-    *z = 0.0f;
-    while (layer != 0 && guard++ < 64u) {
-        *x += field<float>(layer + 0x90);
-        *y += field<float>(layer + 0x94);
-        *z += field<float>(layer + 0x98);
-        layer = field<int32_t>(layer + 0x58);
-    }
+    kinoko_act_layer_world_position(pointer<KinokoActLayer>(layer), nullptr, x, y, z);
 }
 
 int32_t retdec_c2dlayout_update_impl(int32_t layout)
@@ -610,9 +599,7 @@ int32_t retdec_c2dlayout_update_faithful_impl(int32_t layout)
         field<float>(layout + 252),
         field<float>(layout + 256));
 
-    /* function_41ef50 is the layer +1C virtual method in the original.  Its
-       reconstructed body still loses ECX, so use the same +90/+94/+98 and
-       +58 walk explicitly until that method has its own bridge. */
+    // Shared recovered 41EF50 parent-chain position calculation.
     retdec_c2dlayout_world_position(layer, &world_x, &world_y, &world_z);
     retdec_sprite_translate_faithful(sprite, world_x, world_y, world_z);
 

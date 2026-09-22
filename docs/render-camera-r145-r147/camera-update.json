@@ -1,0 +1,1 @@
+{"addr":"0x466470","code":"int __thiscall sub_466470(char *this)\n{\n  int result; // eax\n\n  result = sub_4A9A30(a1: this + 28); /*0x466476*/\n  if ( result == 134217984 ) /*0x466480*/\n    return sub_45DFB0(a1: this + 12); /*0x466486*/\n  return result; /*0x466485*/\n}","refs":[{"addr":"0x4a9a30","name":"sub_4A9A30"},{"addr":"0x45dfb0","name":"sub_45DFB0"}]}

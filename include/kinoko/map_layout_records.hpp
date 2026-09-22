@@ -1,5 +1,6 @@
 #pragma once
 #include "kinoko/act_types.h"
+#include "kinoko/quad_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/native_record_view.hpp"
@@ -32,6 +33,8 @@ struct ChipDefinition {
 // native_buffer owns the flat storage; begin/end borrow from it. The third
 // word is the reconstructed owner, NOT the original vector capacity pointer.
 struct PlacementBuffer { Placement *begin, *end; void *storage_owner; };
+struct QuadBuffer { render::QuadRecord *begin, *end; void *storage_owner; };
+struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;
     std::array<uint8_t, 232> sprite_and_base;
@@ -44,19 +47,27 @@ struct LayoutRecord {
     KinokoActResource *cached_chip_resource;
     float alpha, scale;
     int32_t blend;
-    std::array<uint8_t, 128> render_and_lookup_buffers;
+    QuadBuffer render_quads;
+    uint32_t unknown344;
+    std::array<uint8_t, 32> render_reference_buffers;
+    int32_t render_count;
+    std::array<uint8_t, 72> animation_buffers;
+    int32_t render_scan_cache;
     uint8_t suppress_next_binding;
     std::array<uint8_t, 3> padding461;
 };
 struct LayerRecord {
-    std::array<uint8_t, 100> prefix;
+    const unsigned char *methods;
+    std::array<uint8_t, 84> prefix;
+    KinokoActLayer *parent;
+    std::array<uint8_t, 8> unknown92;
     KinokoActResource *resource; // document-owned; authoritative for creation
     std::array<uint8_t, 8> unknown104;
     kinoko::legacy::StringRecord name;
     uint32_t unknown136;
     uint8_t visible;
     std::array<uint8_t, 3> padding141;
-    float position_x, position_y;
+    float position_x, position_y, position_z;
 };
 struct ChipResourceRecord {
     const unsigned char *methods;
@@ -79,6 +90,8 @@ static_assert(offsetof(LayoutRecord, placements) == 264);
 static_assert(offsetof(LayoutRecord, owning_layer) == 312);
 static_assert(offsetof(LayoutRecord, cached_chip_resource) == 316);
 static_assert(offsetof(LayoutRecord, alpha) == 320 && offsetof(LayoutRecord, blend) == 328);
+static_assert(offsetof(LayoutRecord, render_quads) == 332 && offsetof(LayoutRecord, render_count) == 380);
+static_assert(offsetof(LayoutRecord, render_scan_cache) == 456);
 static_assert(offsetof(LayoutRecord, suppress_next_binding) == 460 && sizeof(LayoutRecord) == 464);
 static_assert(offsetof(LayerRecord, resource) == 100 && offsetof(LayerRecord, name) == 112);
 static_assert(offsetof(LayerRecord, visible) == 140 && offsetof(LayerRecord, position_x) == 144);

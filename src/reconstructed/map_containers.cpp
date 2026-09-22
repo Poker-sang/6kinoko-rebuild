@@ -1,4 +1,5 @@
 #include "kinoko/map_containers.h"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include <list>
 #include <vector>
@@ -9,7 +10,7 @@ extern "C" unsigned char g37;
 namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::address;
-struct RenderLayer { void* vtable; int32_t layout; };
+using RenderLayer = kinoko::map::RenderLayerRecord;
 static_assert(sizeof(RenderLayer) == 8);
 struct Containers {
     std::list<RenderLayer> layers;
@@ -42,7 +43,7 @@ extern "C" void kinoko_map_containers_assign(int32_t destination, int32_t source
 extern "C" int32_t kinoko_map_append_render(int32_t manager, int32_t layout) {
     auto& layers = state(manager).layers;
     if (layers.size() == 0x1ffffffeu) throw std::length_error("list<T> too long");
-    layers.push_back({&g37, layout});
+    layers.push_back({&g37, kinoko::legacy::pointer<KinokoActLayout>(layout)});
     return address(&layers.back());
 }
 extern "C" uint32_t kinoko_map_render_count(int32_t manager) {

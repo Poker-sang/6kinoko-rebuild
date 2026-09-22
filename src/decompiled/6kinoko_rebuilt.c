@@ -1,3 +1,4 @@
+#include "kinoko/act_layer_access.h"
 #include "kinoko/pat_animation.h"
 #include "kinoko/actor_render.h"
 #include "kinoko/actor_manager.h"
@@ -1755,7 +1756,7 @@ int32_t function_4190e0(int32_t a1, int32_t a2);
 
 int32_t function_41e390(int32_t a1);
 
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
+
 int32_t function_41eff0(int32_t a1);
 
 
@@ -3410,7 +3411,7 @@ struct vtable_4ebe68_type g252 = {
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_layer,
     .e5 = (int32_t (*)(void))kinoko_method_clone_act_layer,
     .e6 = (int32_t (*)(int32_t))kinoko_act_layer_set_resource,
-    .e7 = function_41ef50,
+    .e7 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_act_layer_world_position,
     .e8 = (int32_t (*)(int32_t))kinoko_method_register_act_layer
 }; // 0x4ebe68
 struct vtable_4ebe90_type g253 = {
@@ -7316,70 +7317,6 @@ int32_t function_41e390(int32_t storage) {
 // Address range: 0x41ef50 - 0x41efab
 // From class:    .?AVCActLayer@@
 // Type:          virtual member function
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
-    // 0x41ef50
-    if (a1 == 0 || a2 == 0 || a3 == 0) {
-        // 0x41efa6
-        int32_t result; // 0x41ef50
-        return result;
-    }
-    // 0x41ef6c
-    int3_t v1; // 0x41ef50
-    int3_t v2 = v1 - 1; // 0x41ef6c
-    __frontend_reg_store_fpr(v2, 0.0L);
-    float80_t v3 = __frontend_reg_load_fpr(v2); // 0x41ef6e
-    float32_t * v4 = (float32_t *)a1; // 0x41ef6e
-    *v4 = (float32_t)v3;
-    float80_t v5 = __frontend_reg_load_fpr(v2); // 0x41ef70
-    float32_t * v6 = (float32_t *)a2; // 0x41ef70
-    *v6 = (float32_t)v5;
-    float80_t v7 = __frontend_reg_load_fpr(v2); // 0x41ef72
-    float32_t * v8 = (float32_t *)a3; // 0x41ef72
-    *v8 = (float32_t)v7;
-    int32_t v9; // 0x41ef50
-    if (v9 == 0) {
-        // 0x41efa6
-        return 0;
-    }
-    int3_t v10; // 0x41ef50
-    int3_t v11 = v10 - 1; // 0x41ef80
-    int32_t v12; // 0x41ef50
-    __frontend_reg_store_fpr(v11, (float80_t)*(float32_t *)(v12 + 144));
-    __frontend_reg_store_fpr(v11, __frontend_reg_load_fpr(v11) + (float80_t)*v4);
-    *v4 = (float32_t)__frontend_reg_load_fpr(v10);
-    __frontend_reg_store_fpr(v10, (float80_t)*(float32_t *)(v12 + 148));
-    float80_t v13 = __frontend_reg_load_fpr(v10); // 0x41ef90
-    __frontend_reg_store_fpr(v10, v13 + (float80_t)*v6);
-    int3_t v14 = v10 + 1; // 0x41ef90
-    *v6 = (float32_t)__frontend_reg_load_fpr(v14);
-    __frontend_reg_store_fpr(v14, (float80_t)*(float32_t *)(v12 + 152));
-    __frontend_reg_store_fpr(v14, __frontend_reg_load_fpr(v14) + (float80_t)*v8);
-    *v8 = (float32_t)__frontend_reg_load_fpr(v10 + 2);
-    int32_t result2 = *(int32_t *)(v12 + 88); // 0x41ef9e
-    v10 += 3;
-    while (result2 != 0) {
-        // 0x41ef80
-        v11 = v10 - 1;
-        __frontend_reg_store_fpr(v11, (float80_t)*(float32_t *)(result2 + 144));
-        __frontend_reg_store_fpr(v11, __frontend_reg_load_fpr(v11) + (float80_t)*v4);
-        *v4 = (float32_t)__frontend_reg_load_fpr(v10);
-        __frontend_reg_store_fpr(v10, (float80_t)*(float32_t *)(result2 + 148));
-        v13 = __frontend_reg_load_fpr(v10);
-        __frontend_reg_store_fpr(v10, v13 + (float80_t)*v6);
-        v14 = v10 + 1;
-        *v6 = (float32_t)__frontend_reg_load_fpr(v14);
-        __frontend_reg_store_fpr(v14, (float80_t)*(float32_t *)(result2 + 152));
-        __frontend_reg_store_fpr(v14, __frontend_reg_load_fpr(v14) + (float80_t)*v8);
-        *v8 = (float32_t)__frontend_reg_load_fpr(v10 + 2);
-        result2 += 88;
-        v10 += 3;
-    }
-    // 0x41efa6
-    return result2;
-}
-
-
-
 // Address range: 0x41eff0 - 0x41f57f
 
 

@@ -1,19 +1,11 @@
 #include "kinoko/map_render.h"
 #include <cstddef>
+#include "kinoko/map_layout_records.hpp"
+#include "kinoko/actor_records.hpp"
 
 namespace {
-struct MapRenderLayer {
-    void *vtable;
-    int32_t layout;
-};
-struct Camera {
-    unsigned char prefix[56];
-    float offset_x, offset_y;
-    float reserved[2];
-    float left, top, right, bottom;
-};
-static_assert(offsetof(MapRenderLayer, layout) == 4);
-static_assert(offsetof(Camera, left) == 72 && offsetof(Camera, bottom) == 84);
+using MapRenderLayer = kinoko::map::RenderLayerRecord;
+using Camera = kinoko::actor::CameraBoundsRecord;
 }
 
 extern "C" int32_t __fastcall kinoko_map_entry_434b40(int32_t layout, void *) {
@@ -40,13 +32,13 @@ extern "C" int32_t __fastcall kinoko_map_entry_46eed0(
     int32_t left = 0, top = 0, right = 0, bottom = 0;
     float x = 0, y = 0;
     if (camera) {
-        left = static_cast<int32_t>(camera->left);
-        top = static_cast<int32_t>(camera->top);
-        right = static_cast<int32_t>(camera->right) + 32;
-        bottom = static_cast<int32_t>(camera->bottom) + 32;
+        left = static_cast<int32_t>(camera->bounds.left);
+        top = static_cast<int32_t>(camera->bounds.top);
+        right = static_cast<int32_t>(camera->bounds.right) + 32;
+        bottom = static_cast<int32_t>(camera->bounds.bottom) + 32;
         x = -camera->offset_x;
         y = -camera->offset_y;
     }
-    kinoko_map_update(layer->layout, left, top, right, bottom);
-    return kinoko_map_draw(layer->layout, x, y);
+    kinoko_map_update_visible(layer->layout, left, top, right, bottom);
+    return kinoko_map_draw_visible(layer->layout, x, y);
 }

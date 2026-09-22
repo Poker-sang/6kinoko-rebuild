@@ -1,0 +1,35 @@
+# Map rendering, camera and shared draw submission: R145¨CR147
+
+Base: R144 source 6c89b74, documentation e3b9fbc. User authorized all three
+batches. Commit before build; compile only, no game or automated tests run.
+
+## Evidence
+
+IDA MCP session 5adc1098, original EXE SHA256
+2db975a408e260499d52126f25ecf2fbc529cad52d1bffc2a0b7ca2ff695f155.
+Adjacent JSON files are raw MCP evidence. E-imports: imports.json contains
+Win32 file/window/thread/CRT, D3D9/D3DX, WinMM and COM imports; no static
+network/crypto/process-injection API family. LoadLibrary/GetProcAddress exist.
+survey.json records PE32 image metadata. No original executable was run.
+
+## R145: map visible rendering
+
+Shared typed layout, placement and 232-byte quad schemas; render slots borrow
+textures and native_buffer owns their storage. 434B60 now uses 435220's cached
+forward/backward visible query, shared with the already recovered collision
+consumer. Preserve query order, invisible slots, owner/cache validation and
+lazy SetLayer. Apply world translation before scaling; zero scale stays zero.
+41EF50 now has its actual this receiver and parent-chain implementation; map
+world-position uses the original virtual method. Other ACT consumers share it.
+
+434F40 saves/restores sampler ADDRESSU/V, selects wrap, disables depth,
+selects standard blending then the layer mode, submits every textured slot,
+unbinds texture and returns success regardless of individual draw HRESULTs.
+Removed the previous unverified blend save/restore and first-failure break.
+46EED0 retains camera rectangle conversion, +32 right/bottom and negative
+camera offset. Map layer list ownership and duplicate insertion are unchanged.
+
+Inherited reconstruction boundaries: invalid texture dimensions/handles and
+missing chip data are rejected. The existing MCD representation still supplies
+static chip textures; original animated-chip resource caches (435D00/435E80)
+are a separate resource feature, not newly claimed implemented here.

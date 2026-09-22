@@ -68,7 +68,6 @@ int32_t function_402d40(char * a1, int32_t a2);
 float function_4040d0(long double a1);
 float function_404130(long double a1);
 int32_t function_407370(int32_t reader_slot_address, const char *file_name);
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4252e0(void);
 int32_t kinoko_sqrat_call_integer0(int32_t a1);
 int32_t kinoko_sqrat_call_integer1(int32_t a1);

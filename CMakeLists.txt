@@ -638,6 +638,10 @@ target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_contr
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_map_visible_contract tests/map_visible_contract.cpp)
+target_include_directories(kinoko_map_visible_contract PRIVATE include)
+add_test(NAME map_visible_contract COMMAND kinoko_map_visible_contract)
+
 add_executable(kinoko_actor_render_contract tests/actor_render_contract.cpp)
 target_include_directories(kinoko_actor_render_contract PRIVATE include)
 target_link_libraries(kinoko_actor_render_contract PRIVATE kinoko_native_methods)
@@ -686,6 +690,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_lifecycle_contract
     kinoko_actor_manager_contract
     kinoko_actor_render_contract
+    kinoko_map_visible_contract
     kinoko_pat_animation_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
