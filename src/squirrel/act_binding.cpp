@@ -1,3 +1,4 @@
+#include "kinoko/map_chip_cache.hpp"
 #include "kinoko/act_array.hpp"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
@@ -1325,20 +1326,15 @@ int32_t retdec_map_get_chip_by_position(int32_t vm) {
 int32_t retdec_map_set_chip_rect(int32_t vm) {
     int32_t id = 0, rectangle[4];
     int32_t layout = retdec_map_layout_argument(vm, &id);
-    struct retdec_mcd_chip *chip = retdec_mcd_find_chip(retdec_map_chip_data(layout), (uint32_t)id);
-    if (chip != nullptr) {
-        for (int32_t i = 0; i < 4; ++i) {
-            if (sq_getinteger(kinoko_vm(vm), i + 3, (SQInteger*)(rectangle + i)) < 0) {
-                sq_pushbool(kinoko_vm(vm), ((0) != 0));
-                return 1;
-            }
-        }
-        for (int32_t i = 0; i < 4; ++i) {
-            int16_t component = (int16_t)rectangle[i];
-            std::memcpy(chip->bytes + 8 + i * 2, &component, sizeof(component));
+    for (int32_t i=0;i<4;++i) {
+        if (sq_getinteger(kinoko_vm(vm),i+3,(SQInteger*)(rectangle+i))<0) {
+            sq_pushbool(kinoko_vm(vm),SQFalse);return 1;
         }
     }
-    sq_pushbool(kinoko_vm(vm), ((chip != nullptr) != 0));
+    const bool ok=kinoko::map::set_chip_rectangle(pointer<KinokoActLayout>(layout),id,
+        static_cast<int16_t>(rectangle[0]),static_cast<int16_t>(rectangle[1]),
+        static_cast<int16_t>(rectangle[2]),static_cast<int16_t>(rectangle[3]));
+    sq_pushbool(kinoko_vm(vm),ok ? SQTrue : SQFalse);
     return 1;
 }
 
@@ -1375,55 +1371,14 @@ int32_t retdec_map_get_chip_id(int32_t vm) {
     return 1;
 }
 
-int retdec_map_compare_records(const void *a, const void *b) {
-    const int32_t *left = (const int32_t *)a;
-    const int32_t *right = (const int32_t *)b;
-    if (left[1] != right[1])
-        return left[1] < right[1] ? -1 : 1;
-    return left[2] < right[2] ? -1 : left[2] != right[2];
-}
-
 int32_t retdec_map_prearrangement(int32_t vm) {
     int32_t layout = retdec_map_layout_argument(vm, nullptr);
     struct retdec_mcd_data *data = retdec_map_chip_data(layout);
-    int32_t begin, count;
     if (layout == 0 || data == nullptr) {
         sq_pushinteger(kinoko_vm(vm), (int32_t)E_FAIL);
         return 1;
     }
-    begin = field<int32_t>(layout + 264);
-    count = (field<int32_t>(layout + 268) - begin) / 32;
-    if (count > 1)
-        std::qsort(pointer<void>(begin), (size_t)count, 32, retdec_map_compare_records);
-    field<int32_t>(layout + 240) = INT32_MIN;
-    field<int32_t>(layout + 244) = INT32_MIN;
-    std::memset(pointer<void>(layout + 248), 0, 16);
-    if (count != 0) {
-        field<int32_t>(layout + 248) = field<int32_t>(begin + 4);
-        field<int32_t>(layout + 252) = field<int32_t>(begin + 8);
-        field<int32_t>(layout + 256) = field<int32_t>(begin + 32 * (count - 1) + 4);
-        field<int32_t>(layout + 260) = field<int32_t>(layout + 256);
-    }
-    for (int32_t i = 0; i < count; ++i) {
-        int32_t *record = pointer<int32_t>(begin + i * 32);
-        struct retdec_mcd_chip *chip = retdec_mcd_find_chip(data, (uint32_t)record[0]);
-        if (chip != nullptr) {
-            int32_t width = retdec_mcd_i16(chip->bytes + 12);
-            int32_t height = retdec_mcd_i16(chip->bytes + 14);
-            if (field<int32_t>(layout + 240) < width)
-                field<int32_t>(layout + 240) = width;
-            if (field<int32_t>(layout + 244) < height)
-                field<int32_t>(layout + 244) = height;
-            if (field<int32_t>(layout + 256) < record[1] + width)
-                field<int32_t>(layout + 256) = record[1] + width;
-            if (field<int32_t>(layout + 260) < record[2] + height)
-                field<int32_t>(layout + 260) = record[2] + height;
-        }
-        if (field<int32_t>(layout + 248) > record[1])
-            field<int32_t>(layout + 248) = record[1];
-        if (field<int32_t>(layout + 252) > record[2])
-            field<int32_t>(layout + 252) = record[2];
-    }
+    kinoko::map::prepare_placements(pointer<KinokoActLayout>(layout));
     sq_pushinteger(kinoko_vm(vm), 0);
     return 1;
 }

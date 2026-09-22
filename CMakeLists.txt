@@ -81,6 +81,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/collision_manager.cpp
     src/reconstructed/collision_queries.cpp
     src/reconstructed/actor_motion.cpp
+    src/reconstructed/map_chip_cache.cpp
     src/reconstructed/map_layout_lifetime.cpp
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
@@ -662,6 +663,12 @@ add_executable(kinoko_camera_contract tests/camera_contract.cpp
 target_include_directories(kinoko_camera_contract PRIVATE include)
 add_test(NAME camera_contract COMMAND kinoko_camera_contract)
 
+add_executable(kinoko_map_chip_cache_contract tests/map_chip_cache_contract.cpp
+    src/reconstructed/map_chip_cache.cpp src/reconstructed/act_map.cpp
+    src/reconstructed/map_layout_lifetime.cpp src/reconstructed/native_buffer.cpp)
+target_include_directories(kinoko_map_chip_cache_contract PRIVATE include)
+add_test(NAME map_chip_cache_contract COMMAND kinoko_map_chip_cache_contract)
+
 add_executable(kinoko_map_visible_contract tests/map_visible_contract.cpp)
 target_include_directories(kinoko_map_visible_contract PRIVATE include)
 add_test(NAME map_visible_contract COMMAND kinoko_map_visible_contract)
@@ -714,6 +721,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_lifecycle_contract
     kinoko_actor_manager_contract
     kinoko_actor_render_contract
+    kinoko_map_chip_cache_contract
     kinoko_map_visible_contract
     kinoko_camera_contract
     kinoko_device_lifecycle_contract

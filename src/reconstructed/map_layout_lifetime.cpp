@@ -17,7 +17,10 @@ using kinoko::legacy::pointer;
 struct VectorView { int32_t begin,end,capacity; };
 struct Spec { int offset,width,copy_bytes; };
 constexpr std::array<Spec,10> vectors={{{264,32,32},{280,4,4},{296,4,4},
-    {332,232,232},{348,4,4},{364,12,12},{384,288,281},{404,48,48},{420,4,4},{436,4,4}}};
+    {332,232,232},{348,4,4},{364,12,12},{offsetof(kinoko::map::LayoutRecord,chip_sprites),sizeof(kinoko::map::ChipSpriteCache),281},
+    {offsetof(kinoko::map::LayoutRecord,chip_definitions),sizeof(kinoko::map::ChipDefinition),48},
+    {offsetof(kinoko::map::LayoutRecord,changed_chips),sizeof(kinoko::map::ChipDefinition*),4},
+    {offsetof(kinoko::map::LayoutRecord,chip_indices),sizeof(int32_t),4}}};
 struct Free { void operator()(void *p) const { std::free(p); } };
 using Owned=std::unique_ptr<void,Free>;
 Owned allocate(size_t size) {

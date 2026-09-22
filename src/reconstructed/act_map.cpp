@@ -1,6 +1,7 @@
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_chip_cache.hpp"
 #include "kinoko/map_layout_records.hpp"
 #include "kinoko/map_query.hpp"
 #include "kinoko/act_host.h"
@@ -18,37 +19,7 @@ using namespace kinoko::map;
 using namespace kinoko::render;
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
-struct VisibleChip { retdec_mcd_chip *chip; Placement *placement; };
-
-bool initialize_quad(QuadRecord *storage, int32_t handle, const unsigned char *bytes) {
-    if (!storage || !bytes || handle <= 0 || static_cast<uint32_t>(handle) >= KINOKO_TEXTURE_CAPACITY)
-        return false;
-    const auto &texture = kinoko_texture_slots[handle];
-    if (!texture.width || !texture.height) return false;
-    const auto chip = ChipView(const_cast<unsigned char *>(bytes)).load();
-    if (chip.width <= 0 || chip.height <= 0) return false;
-    const QuadView quad(storage);
-    quad.clear();
-    quad.set(&QuadRecord::texture, handle);
-    quad.set(&QuadRecord::texture_width, static_cast<float>(texture.width));
-    quad.set(&QuadRecord::texture_height, static_cast<float>(texture.height));
-    const float u0 = static_cast<float>(chip.source_left) / texture.width;
-    const float v0 = static_cast<float>(chip.source_top) / texture.height;
-    const float u1 = static_cast<float>(chip.source_left + chip.width) / texture.width;
-    const float v1 = static_cast<float>(chip.source_top + chip.height) / texture.height;
-    std::array<KinokoSpriteVertex, 4> vertices{};
-    vertices[0].u=u0; vertices[0].v=v0;
-    vertices[1].u=u1; vertices[1].v=v0;
-    vertices[2].u=u0; vertices[2].v=v1;
-    vertices[3].u=u1; vertices[3].v=v1;
-    for (auto &vertex : vertices) vertex.color=0xffffffffu;
-    quad.set(&QuadRecord::vertices, vertices);
-    const float width=static_cast<float>(chip.width), height=static_cast<float>(chip.height);
-    const std::array<Position3,4> positions={{{0,0,0},{width,0,0},{0,height,0},{width,height,0}}};
-    quad.set(&QuadRecord::base_positions, positions);
-    quad.set(&QuadRecord::positions, positions);
-    return true;
-}
+struct VisibleChip { retdec_mcd_chip *chip; Placement *placement; int32_t index; };
 
 Position3 world_position(KinokoActLayer *layer) {
     Position3 result{};
@@ -63,7 +34,7 @@ Position3 world_position(KinokoActLayer *layer) {
 }
 
 extern "C" int32_t retdec_map_sprite_init(int32_t sprite, int32_t handle, const unsigned char *bytes) {
-    return initialize_quad(pointer<QuadRecord>(sprite),handle,bytes);
+    return initialize_chip_quad(pointer<QuadRecord>(sprite),handle,reinterpret_cast<const ChipDefinition *>(bytes));
 }
 
 extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
@@ -78,11 +49,12 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
     if (!data || !layer || LayerView(layer).get(&LayerRecord::resource) !=
         map.get(&LayoutRecord::cached_chip_resource)) return E_FAIL;
 
+    flush_changed_chips(layout);
     std::vector<VisibleChip> visible;
     auto cache=map.get(&LayoutRecord::render_scan_cache);
     if (!query_visible(layout,&cache,left,top,right,bottom,
-        [&](retdec_mcd_chip *chip, Placement *record, int32_t) {
-            visible.push_back({chip,record}); return true;
+        [&](retdec_mcd_chip *chip, Placement *record, int32_t index) {
+            visible.push_back({chip,record,index}); return true;
         })) return E_FAIL;
     map.set(&LayoutRecord::render_scan_cache,cache);
     map.set(&LayoutRecord::render_count,int32_t{0});
@@ -100,8 +72,18 @@ extern "C" int32_t kinoko_map_update_visible(KinokoActLayout *layout,
         const auto record=PlacementView(visible[i].placement).load();
         if (!record.visible) continue;
         const auto chip=ChipView(visible[i].chip->bytes).load();
-        auto *texture=retdec_mcd_find_texture(data,chip.texture_id);
-        if (!texture || !initialize_quad(output+i,texture->handle,visible[i].chip->bytes)) continue;
+        const auto *definition=reinterpret_cast<const ChipDefinition *>(visible[i].chip->bytes);
+        if (const auto *cached=find_chip_sprite(layout,definition)) {
+            // 42B3F0 copies the sprite payload, preserving destination identity.
+            const auto identity=quad.get(&QuadRecord::vtable);
+            std::memcpy(output+i,cached,sizeof(QuadRecord));
+            quad.set(&QuadRecord::vtable,identity);
+        } else {
+            const auto references=map.get(&LayoutRecord::texture_references);
+            auto *texture=references.begin!=references.end ? references.begin[visible[i].index] :
+                retdec_mcd_find_texture(data,chip.texture_id);
+            if (!texture || !initialize_chip_quad(output+i,texture->handle,definition)) continue;
+        }
         // 434DC7/434DDA store integer subtraction + world origin before translation.
         const float x=static_cast<float>(static_cast<double>(record.left)-left+origin.x);
         const float y=static_cast<float>(static_cast<double>(record.top)-top+origin.y);

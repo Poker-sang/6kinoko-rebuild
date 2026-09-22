@@ -9,6 +9,7 @@
 #include <cstdint>
 
 struct retdec_mcd_data;
+struct retdec_mcd_texture;
 
 namespace kinoko::map {
 // Schemas for existing Win32 storage, not objects constructed over its bytes.
@@ -34,6 +35,19 @@ struct ChipDefinition {
 // word is the reconstructed owner, NOT the original vector capacity pointer.
 struct PlacementBuffer { Placement *begin, *end; void *storage_owner; };
 struct QuadBuffer { render::QuadRecord *begin, *end; void *storage_owner; };
+struct ChipSpriteCache {
+    render::QuadRecord quad;
+    ChipDefinition definition;
+    uint8_t valid;
+    std::array<uint8_t,7> padding281;
+};
+template<class T> struct Buffer { T *begin, *end; void *storage_owner; };
+using ChipSpriteBuffer=Buffer<ChipSpriteCache>;
+using ChipDefinitionBuffer=Buffer<ChipDefinition>;
+using ChangedChipBuffer=Buffer<const ChipDefinition *>;
+using ChipIndexBuffer=Buffer<int32_t>;
+using ChipReferenceBuffer=Buffer<const ChipDefinition *>;
+using TextureReferenceBuffer=Buffer<retdec_mcd_texture *>;
 struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;
@@ -42,7 +56,11 @@ struct LayoutRecord {
     int32_t max_chip_width, max_chip_height;
     int32_t chip_left, chip_top, chip_right, chip_bottom;
     PlacementBuffer placements;
-    std::array<uint8_t, 36> reference_buffers;
+    uint32_t unknown276;
+    ChipReferenceBuffer chip_references;
+    uint32_t unknown292;
+    TextureReferenceBuffer texture_references;
+    uint32_t unknown308;
     KinokoActLayer *owning_layer;
     KinokoActResource *cached_chip_resource;
     float alpha, scale;
@@ -51,7 +69,16 @@ struct LayoutRecord {
     uint32_t unknown344;
     std::array<uint8_t, 32> render_reference_buffers;
     int32_t render_count;
-    std::array<uint8_t, 72> animation_buffers;
+    ChipSpriteBuffer chip_sprites;
+    uint32_t unknown396;
+    int32_t chip_sprite_count;
+    ChipDefinitionBuffer chip_definitions;
+    uint32_t unknown416;
+    ChangedChipBuffer changed_chips; // borrows definitions from shared MCD
+    uint32_t unknown432;
+    ChipIndexBuffer chip_indices;
+    uint32_t unknown448;
+    int32_t maximum_chip_id;
     int32_t render_scan_cache;
     uint8_t suppress_next_binding;
     std::array<uint8_t, 3> padding461;
@@ -80,6 +107,12 @@ using PlacementView = kinoko::native::RecordView<Placement>;
 using ChipView = kinoko::native::RecordView<ChipDefinition>;
 using ChipResourceView = kinoko::native::RecordView<ChipResourceRecord>;
 
+static_assert(sizeof(ChipSpriteCache)==288 && offsetof(ChipSpriteCache,definition)==232);
+static_assert(offsetof(ChipSpriteCache,valid)==280);
+static_assert(offsetof(LayoutRecord,chip_references)==280 && offsetof(LayoutRecord,texture_references)==296);
+static_assert(offsetof(LayoutRecord,chip_sprites)==384 && offsetof(LayoutRecord,chip_sprite_count)==400);
+static_assert(offsetof(LayoutRecord,chip_definitions)==404 && offsetof(LayoutRecord,changed_chips)==420);
+static_assert(offsetof(LayoutRecord,chip_indices)==436 && offsetof(LayoutRecord,maximum_chip_id)==452);
 static_assert(sizeof(Placement) == 32 && offsetof(Placement, alpha) == 28);
 static_assert(offsetof(Placement, fractional_left) == 12 && offsetof(Placement, visible) == 24);
 static_assert(sizeof(ChipDefinition) == 48 && offsetof(ChipDefinition, width) == 12);
