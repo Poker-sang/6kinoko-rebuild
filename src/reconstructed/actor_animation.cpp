@@ -78,7 +78,7 @@ void update_bounds(const ActorView& actor, const AnimationRecord& animation) {
 // 462280: SetTake updates state before lookup, including failed lookups.
 extern "C" int32_t kinoko_actor_set_take(int32_t value, int32_t take) {
     const ActorView actor(pointer(value));
-    const ManagerView manager(pointer(static_cast<int32_t>(actor.get(&ActorRecord::manager))));
+    const ManagerView manager(actor.get(&ActorRecord::manager));
     actor.set(&ActorRecord::take, take);
     actor.set(&ActorRecord::frame_index, int32_t{0});
     actor.set(&ActorRecord::frame_time, int32_t{0});

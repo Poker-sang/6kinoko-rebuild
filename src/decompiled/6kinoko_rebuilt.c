@@ -1,3 +1,4 @@
+#include "kinoko/scene_operations.h"
 #include "kinoko/game_script_api.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/game_runtime.h"
@@ -2032,13 +2033,11 @@ int32_t function_460e00(void);
 
 int32_t function_462ce0(int32_t a1, int32_t a2);
 int32_t function_462e80(int32_t this_ptr);
-int32_t function_462f30(int32_t a1);
 
 
 
 
 
-static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr);
 static int32_t function_463b40_this(
     int32_t manager_ptr, int32_t first_vtable,
     int32_t first_type, int32_t first_data,
@@ -2077,12 +2076,6 @@ static int32_t function_468620_this(int32_t this_ptr);
 
 static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr);
 int32_t function_4693a0(int32_t a1);
-int32_t function_469780(int32_t a1, int32_t a2);
-int32_t function_4697a0(int32_t a1);
-int32_t function_4697c0(int32_t a1);
-int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
-    float32_t right, float32_t bottom);
-int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
 
 
@@ -2111,7 +2104,6 @@ int32_t function_46ed80(int32_t a1, int32_t result);
 
 static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
 
-int32_t function_46ef40(int32_t a1, int32_t a2, uint32_t result, int32_t a4);
 
 int32_t function_46f0b0(int32_t this_ptr);
 
@@ -2595,10 +2587,6 @@ __declspec(align(8)) static unsigned char g_retdec_camera_state[0x200] = { 0 };
 int32_t g615 = 0; // 0x514388
 int32_t g616 = 0; // 0x514394
 int32_t g617 = 0; // 0x5143e0
-int32_t g618 = 0; // 0x5143f4
-int32_t g619 = 0; // 0x5143f8
-int32_t g620 = 0; // 0x5143fc
-int32_t g621 = 0; // 0x514400
 /* ActorManager update_mask now uses the typed ManagerPrefix field. */
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
@@ -3406,18 +3394,9 @@ static void retdec_initialize_runtime_objects(void)
         retdec_trace("actor-manager:construct-failed");
     }
 
-    /* RetDec split these four ActorManager fields into standalone globals.
-       The original addresses are object offsets +0x14..+0x20, so mirror the
-       constructed RenderLayer pointers before boot.nut registers layers. */
+    /* RenderLayer pointers are read from the constructed ActorManager fields. */
     g617 = (int32_t)(intptr_t)g_retdec_actor_manager_state;
-    g618 = *(int32_t *)(g_retdec_actor_manager_state + 20);
-    g619 = *(int32_t *)(g_retdec_actor_manager_state + 24);
-    g620 = *(int32_t *)(g_retdec_actor_manager_state + 28);
-    g621 = *(int32_t *)(g_retdec_actor_manager_state + 32);
-    retdec_trace_i32("actor:layer-back", g618);
-    retdec_trace_i32("actor:layer-middle", g619);
-    retdec_trace_i32("actor:layer-front", g620);
-    retdec_trace_i32("actor:layer-water", g621);
+    kinoko_actor_trace_render_layers((KinokoActorManager *)g_retdec_actor_manager_state);
 
     g_retdec_runtime_initialized = 1;
 }
@@ -8087,7 +8066,7 @@ int32_t function_45eb00_this(int32_t actor) {
         initial_argument[0], initial_argument[1], initial_argument[2]);
     function_4a9d70_this((int32_t)(intptr_t)initial_function);
     function_4a9d70_this((int32_t)(intptr_t)initial_argument);
-    return kinoko_actor_reset_priority(actor, *(int32_t *)(intptr_t)(actor + 228));
+    return kinoko_actor_reset_priority((KinokoActor *)(intptr_t)actor, *(int32_t *)(intptr_t)(actor + 228));
 }
 
 
@@ -8412,76 +8391,7 @@ static int32_t function_462280_this(int32_t actor, int32_t take) {
 
 
 
-static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
-                                          float32_t dx, float32_t dy)
-{
-    int32_t actors;
-    int32_t count;
-    int32_t index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
 
-    if (manager == 0 || camera == 0)
-        return;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:move-dx", *(int32_t *)(intptr_t)&dx);
-        retdec_trace_i32("actor:move-dy", *(int32_t *)(intptr_t)&dy);
-        retdec_trace_i32("actor:move-camera-left-before",
-                         *(int32_t *)(intptr_t)(camera + 72));
-        retdec_trace_i32("actor:move-camera-right-before",
-                         *(int32_t *)(intptr_t)(camera + 80));
-    }
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 40) == 0 ||
-            *(unsigned char *)(intptr_t)(actor + 20) != 0 ||
-            *(int32_t *)(intptr_t)(actor + 232) == 0 ||
-            *(float32_t *)(intptr_t)(camera + 80) + 64.0f <
-                *(float32_t *)(intptr_t)(actor + 440) ||
-            *(float32_t *)(intptr_t)(camera + 72) - 64.0f >
-                *(float32_t *)(intptr_t)(actor + 448) ||
-            *(float32_t *)(intptr_t)(camera + 84) + 64.0f <
-                *(float32_t *)(intptr_t)(actor + 444) ||
-            *(float32_t *)(intptr_t)(camera + 76) - 64.0f >
-                *(float32_t *)(intptr_t)(actor + 452))
-            continue;
-
-        *(float32_t *)(intptr_t)(actor + 240) += dx;
-        *(float32_t *)(intptr_t)(actor + 244) += dy;
-        *(float32_t *)(intptr_t)(actor + 440) += dx;
-        *(float32_t *)(intptr_t)(actor + 448) += dx;
-        *(float32_t *)(intptr_t)(actor + 444) += dy;
-        *(float32_t *)(intptr_t)(actor + 452) += dy;
-        *(float32_t *)(intptr_t)(actor + 248) =
-            *(float32_t *)(intptr_t)(actor + 240);
-        *(float32_t *)(intptr_t)(actor + 252) =
-            *(float32_t *)(intptr_t)(actor + 244);
-        *(float32_t *)(intptr_t)(actor + 456) =
-            *(float32_t *)(intptr_t)(actor + 440);
-        *(float32_t *)(intptr_t)(actor + 460) =
-            *(float32_t *)(intptr_t)(actor + 444);
-        *(float32_t *)(intptr_t)(actor + 464) =
-            *(float32_t *)(intptr_t)(actor + 448);
-        *(float32_t *)(intptr_t)(actor + 468) =
-            *(float32_t *)(intptr_t)(actor + 452);
-    }
-
-    *(float32_t *)(intptr_t)(camera + 40) += dx;
-    *(float32_t *)(intptr_t)(camera + 44) += dy;
-    *(float32_t *)(intptr_t)(camera + 72) += dx;
-    *(float32_t *)(intptr_t)(camera + 76) += dy;
-    *(float32_t *)(intptr_t)(camera + 80) += dx;
-    *(float32_t *)(intptr_t)(camera + 84) += dy;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:move-camera-left-after",
-                         *(int32_t *)(intptr_t)(camera + 72));
-        retdec_trace_i32("actor:move-camera-right-after",
-                         *(int32_t *)(intptr_t)(camera + 80));
-    }
-}
 
 /* 45E120 is Actor::Step.  The callback is a SquirrelFunction stored at
    Actor+0x5c; invoking it is what lets title actors update their own y
@@ -8962,23 +8872,15 @@ int32_t function_462e80(int32_t manager) {
     return kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)manager);
 }
 
-static int32_t function_462f30_this(int32_t manager, int32_t actor) {
-    return kinoko_collision_dispatch_actor((KinokoActorManager *)(intptr_t)manager, (KinokoActor *)(intptr_t)actor);
-}
-
-int32_t function_462f30(int32_t actor) {
-    return function_462f30_this((int32_t)(intptr_t)g_retdec_actor_manager_state, actor);
-}
 
 
 
 
-/* ActorManager::ResetPriority removes the old node and inserts it again
- * using the changed actor priority. */
-static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
-{
-    return kinoko_actor_manager_reindex((KinokoActorManager *)(intptr_t)manager_ptr, (KinokoActor *)(intptr_t)actor_ptr);
-}
+
+
+
+
+
 
 
 
@@ -9190,16 +9092,9 @@ int32_t function_466540(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x4681e0 - 0x468297
-static int32_t function_4681e0_this(int32_t state, int32_t actor) {
-    return (int32_t)kinoko_collision_chip_flags((KinokoCollisionState *)(intptr_t)state,
-        (KinokoActor *)(intptr_t)actor);
-}
 
-static int32_t function_4682a0_this(int32_t state, int32_t actor,
-    float left, float top, float right, float bottom) {
-    return kinoko_collision_has_chip((KinokoCollisionState *)(intptr_t)state,
-        (KinokoActor *)(intptr_t)actor, left, top, right, bottom);
-}
+
+
 
 // Address range: 0x468620 - 0x468788
 int32_t function_468620(void) {
@@ -9282,32 +9177,6 @@ int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
 // Address range: 0x469750 - 0x46977f
 
 
-// Address range: 0x469780 - 0x469793
-int32_t function_469780(int32_t a1, int32_t a2) {
-    /* The original thunk receives the actor on the stack and loads the
-       ActorManager global into ECX before calling ResetPriority. */
-    (void)a2;
-    return function_463cf0_this(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state, a1);
-}
-
-// Address range: 0x4697a0 - 0x4697b3
-int32_t function_4697a0(int32_t a1) {
-    // 0x4697a0
-    return function_462f30(a1);
-}
-
-// Address range: 0x4697c0 - 0x4697d3
-int32_t function_4697c0(int32_t a1) {
-    return function_4681e0_this((int32_t)(intptr_t)g_514300_storage, a1);
-}
-
-// Address range: 0x4697e0 - 0x469811
-int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
-    float32_t right, float32_t bottom) {
-    return function_4682a0_this((int32_t)(intptr_t)g_514300_storage,
-        actor, left, top, right, bottom);
-}
 
 
 
@@ -9319,11 +9188,14 @@ int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
 
 
 
-// Address range: 0x4698a0 - 0x4698bf
-int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x4698a0
-    return function_46ef40(a1, a2, a3, a4);
-}
+
+
+
+
+
+
+
+
 
 
 // Address range: 0x4698d0 - 0x4698f2
@@ -9425,32 +9297,8 @@ static int32_t retdec_construct_actor_manager(int32_t this_ptr)
 // Type:          virtual member function
 
 
-/* CreateRenderLayer is a plain Squirrel callback.  Keep its layer-name
-   dispatch explicit; the generated body lost the comparison temporaries in
-   the actor_back/actor_middle branches and never reached MapManager for the
-   six map layers. */
-int32_t retdec_create_render_layer_fixed(int32_t name_ptr)
-{
-    const char *name = (const char *)(intptr_t)name_ptr;
-    int32_t value = 0;
+/* Render layer dispatch now lives in scene_operations.cpp. */
 
-    if (name == NULL)
-        return 0;
-    if (strcmp(name, "actor_back") == 0)
-        value = g618;
-    else if (strcmp(name, "actor_middle") == 0)
-        value = g619;
-    else if (strcmp(name, "actor_front") == 0)
-        value = g620;
-    else if (strcmp(name, "actor_water") == 0)
-        value = g621;
-    else
-        value = function_470030(name_ptr);
-    if (value == 0)
-        return 0;
-    retdec_trace_squirrel_name("map:render-order-layer", name_ptr);
-    return function_46a210(&value);
-}
 
 // Address range: 0x46a830 - 0x46a9ba
 
@@ -9680,16 +9528,9 @@ static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
 /* Event callback dispatch is implemented in reconstructed/map_activation.cpp. */
 
 // Address range: 0x46ef40 - 0x46efc4
-static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
-    uint32_t index, int32_t count_ptr) {
-    return kinoko_collision_event_at_point((KinokoMapManager *)(intptr_t)manager,
-        x, y, index, (int32_t *)(intptr_t)count_ptr);
-}
 
-int32_t function_46ef40(int32_t x, int32_t y, uint32_t index, int32_t count_ptr) {
-    return function_46ef40_this((int32_t)(intptr_t)g_retdec_map_manager_state,
-        x, y, index, count_ptr);
-}
+
+
 
 // Address range: 0x46efd0 - 0x46f01e
 
@@ -14242,10 +14083,7 @@ void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
 }
 int32_t kinoko_game_load_map_file(const char *path) { return retdec_load_map_fixed((int32_t)(intptr_t)path); }
 int32_t kinoko_game_release_map_state(void) { return function_46f620_this((int32_t)(intptr_t)g_retdec_map_manager_state); }
-void kinoko_game_move_actor_camera(KinokoActorManager *manager, KinokoCamera *camera, float dx, float dy) {
-    retdec_actor_move_camera_impl((int32_t)(intptr_t)manager, (int32_t)(intptr_t)camera, dx, dy);
-}
+
 void kinoko_game_split_path(const char *path, char *directory) {
     function_4086e0((int32_t)(intptr_t)path, (int32_t *)directory, 0);
 }
-int32_t kinoko_game_add_render_layer(const char *name) { return retdec_create_render_layer_fixed((int32_t)(intptr_t)name); }

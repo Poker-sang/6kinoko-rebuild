@@ -1012,9 +1012,9 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(vm_failures==failures && *(uint8_t *)(intptr_t)(actor+22));
             CHECK(execute_source(vm,root+2,"if(starRewards!=1) throw \"star pickup reward\";"));
         }
-        kinoko_actor_release(actor, NULL);
-        if(block) kinoko_actor_release(block, NULL);
-        if(bumper) kinoko_actor_release(bumper, NULL);
+        kinoko_actor_release((KinokoActor *)(intptr_t)actor, NULL);
+        if(block) kinoko_actor_release((KinokoActor *)(intptr_t)block, NULL);
+        if(bumper) kinoko_actor_release((KinokoActor *)(intptr_t)bumper, NULL);
         retdec_actor_manager_refresh(manager);
         function_4a9d70_this(PTR(init));
     }
@@ -1996,7 +1996,7 @@ static int test_branch_motion(int32_t manager) {
                 if (*(int32_t *)(intptr_t)(actor + 296) && *vy >= 0) *vy = -9;
                 else if (*vy < 9) *vy += 0.38f;
             }
-            kinoko_actor_release(actor, NULL);
+            kinoko_actor_release((KinokoActor *)(intptr_t)actor, NULL);
             retdec_actor_manager_refresh(manager);
         }
         kinoko_script_clear_actors();
@@ -2026,7 +2026,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     function_466270();
     CHECK(execute_asset(vm,root+2,"data/script/camera.cv4"));
     int32_t targets[]={PTR(kinoko_script_load_map),PTR(kinoko_script_clear_actors),PTR(kinoko_script_clear_collision),
-        PTR(kinoko_script_clear_render_layers),PTR(retdec_create_render_layer_fixed),PTR(kinoko_script_create_collision),PTR(kinoko_script_create_map_actors)};
+        PTR(kinoko_script_clear_render_layers),PTR(kinoko_script_create_render_layer),PTR(kinoko_script_create_collision),PTR(kinoko_script_create_map_actors)};
     int32_t adapters[]={PTR(function_471d90),PTR(function_471bc0),PTR(function_471bc0),
         PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};
     const char *names[]={"LoadMap","ClearActor","ClearCollision","ClearRenderLayer", "CreateRenderLayer",
@@ -2418,10 +2418,10 @@ static int test_actor_state_fields(void) {
     memset(actor, 0x5a, sizeof(actor));
     memcpy(expected, actor, sizeof(actor));
     memcpy(expected + 376, source, sizeof(source));
-    CHECK(kinoko_actor_set_init_data(PTR(actor), PTR(source)) == PTR(actor));
+    CHECK(kinoko_actor_set_init_data((KinokoActor *)actor, source) == (KinokoActor *)actor);
     CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
-    CHECK(kinoko_actor_set_init_data(PTR(actor), 0) == 0);
-    CHECK(kinoko_actor_set_init_data(0, PTR(source)) == 0);
+    CHECK(kinoko_actor_set_init_data((KinokoActor *)actor, 0) == 0);
+    CHECK(kinoko_actor_set_init_data(0, source) == 0);
     CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
     memset(actor, 0, sizeof(actor));
     *(int32_t *)(actor + 148) = PTR(manager);

@@ -87,7 +87,7 @@ extern "C" KinokoActor *kinoko_actor_manager_create(KinokoActorManager *manager,
     const ActorView view(actor);
     view.set(&ActorRecord::pool_handle,handle);
     view.set(&ActorRecord::owner_references,int32_t{1});
-    if (initial_data) kinoko_actor_set_init_data(address(actor),address(initial_data));
+    if (initial_data) kinoko_actor_set_init_data(actor,initial_data);
     // 463CB6 explicitly retires the handle when initialization fails.
     if (!kinoko_actor_initialize(actor,manager,callback,x,y,z,argument)) {
         pool_methods(pool).retire(pool,handle);

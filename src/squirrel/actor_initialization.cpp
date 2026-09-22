@@ -47,7 +47,7 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     if (!second.vtable) second.vtable=kinoko_squirrel_object_vtable();
     const ActorView view(actor);
     view.set(&ActorRecord::id,static_cast<int32_t>(view.get(&ActorRecord::pool_handle)&0xffff));
-    view.set(&ActorRecord::manager,static_cast<Address>(address(manager)));
+    view.set(&ActorRecord::manager,manager);
     KinokoOwnedObjectWords instance{};
     function_4a90c0_this(address(&instance),address(kinoko_actor_class_object()));
     assign(view.bytes(&ActorRecord::script_object),&instance);

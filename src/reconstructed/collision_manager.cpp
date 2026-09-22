@@ -132,7 +132,7 @@ extern "C" KinokoActor *kinoko_collision_register_map(KinokoCollisionState *stat
     proxy.set(&ActorRecord::update_group, uint32_t{0x80000000u});
     proxy.set(&ActorRecord::active, uint8_t{0});
     proxy.set(&ActorRecord::registration_flag20, uint8_t{1});
-    kinoko_actor_reset_priority(address(actor), -1);
+    kinoko_actor_reset_priority(actor, -1);
 
     // 4684A0/468580: move existing entries without changing their weak counts.
     auto *layout_records = layouts.get(&Buffer<KinokoActLayout *>::begin);

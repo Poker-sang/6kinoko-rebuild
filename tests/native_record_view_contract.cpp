@@ -15,12 +15,12 @@ int main() {
         storage.fill(0xa7);
         ActorView view(storage.data() + shift);
         view.clear();
-        view.set(&ActorRecord::manager, Address{0xfedcba98});
+        view.set(&ActorRecord::manager, reinterpret_cast<KinokoActorManager*>(uintptr_t{0xfedcba98}));
         view.set(&ActorRecord::x, -123.5f);
         const auto initial = view.view(&ActorRecord::initial);
         initial.set(&InitialData::chip_flags, std::int64_t{-42});
         initial.set(&InitialData::chip_bound_type, std::uint16_t{0xffff});
-        CHECK(view.get(&ActorRecord::manager) == 0xfedcba98);
+        CHECK(reinterpret_cast<uintptr_t>(view.get(&ActorRecord::manager)) == 0xfedcba98);
         CHECK(view.get(&ActorRecord::x) == -123.5f);
         CHECK(initial.get(&InitialData::chip_flags) == -42);
         CHECK(initial.get(&InitialData::chip_bound_type) == 0xffff);
@@ -38,7 +38,7 @@ int main() {
         for (std::size_t index = shift + sizeof(ActorRecord); index < storage.size(); ++index)
             CHECK(storage[index] == 0xa7);
         const auto copy = view.load();
-        CHECK(copy.manager == 0xfedcba98 && copy.initial.chip_flags == -42);
+        CHECK(reinterpret_cast<uintptr_t>(copy.manager) == 0xfedcba98 && copy.initial.chip_flags == -42);
         CHECK(copy.x == -123.5f);
     }
     std::array<unsigned char, sizeof(ManagerPrefix) + 2> manager{};

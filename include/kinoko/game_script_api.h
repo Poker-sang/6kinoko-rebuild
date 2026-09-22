@@ -23,7 +23,7 @@ int32_t kinoko_script_load_act(const char *path);
 int32_t kinoko_script_load_map(const char *path);
 int32_t kinoko_script_release_map(void);
 int32_t kinoko_script_clear_render_layers(void);
-int32_t kinoko_script_create_render_layer(const char *name);
+void *kinoko_script_create_render_layer(const char *name);
 /* Native Squirrel closure adapters; VM pointer is real, userdata is the ABI boundary. */
 int32_t kinoko_script_global_update_entry(struct SQVM *vm);
 int32_t kinoko_script_create_actor_entry(struct SQVM *vm);

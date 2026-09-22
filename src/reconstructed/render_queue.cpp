@@ -25,10 +25,13 @@ extern "C" int32_t kinoko_clear_render_queue(void) {
     layers.clear();
     return address(&layers);
 }
-extern "C" int32_t kinoko_append_render_queue(int32_t object) {
+extern "C" void *kinoko_render_queue_append(KinokoRenderLayer *object) {
     if(layers.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
-    layers.push_back(pointer<RenderLayer>(object));
-    return address(&layers.back());
+    layers.push_back(reinterpret_cast<RenderLayer *>(object));
+    return &layers.back();
+}
+extern "C" int32_t kinoko_append_render_queue(int32_t object) {
+    return address(kinoko_render_queue_append(pointer<KinokoRenderLayer>(object)));
 }
 extern "C" void kinoko_draw_render_queue(int32_t camera) {
     for(auto *object:layers) {

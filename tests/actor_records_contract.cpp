@@ -1,3 +1,5 @@
+#include "kinoko/game_host.h"
+#include "kinoko/game_script_host.h"
 #include "kinoko/integer_vector.h"
 #include "kinoko/animation_storage.h"
 #include "kinoko/actor_priority.h"
@@ -26,12 +28,15 @@ void require(bool condition) { if (!condition) std::abort(); }
 }
 extern "C" {
 int32_t g23 = 0x12345678;
-int32_t function_469780(int32_t actor, int32_t same) { require(actor == same); ++priority_updates; return actor; }
-int32_t function_4697a0(int32_t actor) { return actor; }
-int32_t function_4697c0(int32_t actor) { return actor; }
-int32_t function_4697e0(int32_t actor, float, float, float, float) { return actor; }
-int32_t function_4698a0(int32_t x, int32_t y, int32_t layer, int32_t cache) {
-    chip_x = x; chip_y = y; chip_layer = layer; chip_cache = cache; return 17;
+static KinokoGameObjects objects{};
+const KinokoGameObjects* kinoko_game_objects() { return &objects; }
+KinokoCollisionState* kinoko_game_collision_state() { return nullptr; }
+int32_t kinoko_actor_manager_reindex(KinokoActorManager* manager,KinokoActor* actor) { require(manager==objects.actors); ++priority_updates; return address(actor); }
+int32_t kinoko_collision_dispatch_actor(KinokoActorManager*,KinokoActor* actor) { return address(actor); }
+uint32_t kinoko_collision_chip_flags(KinokoCollisionState*,KinokoActor* actor) { return address(actor); }
+int32_t kinoko_collision_has_chip(KinokoCollisionState*,KinokoActor* actor,float,float,float,float) { return address(actor); }
+int32_t kinoko_collision_event_at_point(KinokoMapManager*,int32_t x,int32_t y,uint32_t layer,int32_t* cache) {
+    chip_x=x; chip_y=y; chip_layer=layer; chip_cache=address(cache); return 17;
 }
 int32_t function_4a9b40_this(int32_t, int32_t) { return 0; }
 int32_t function_4a9d70_this(int32_t object) { ++object_releases; return object + 4; }
@@ -50,7 +55,9 @@ int main() {
     const ManagerView manager_view(&manager);
     const auto lookup = manager_view.view(&ManagerPrefix::animation_lookup);
     lookup.set(&TreeIndex::head,static_cast<Address>(kinoko_integer_map_create()));
-    actor.set(&ActorRecord::manager, static_cast<Address>(address(&manager)));
+    ManagerPrefix global_manager{};
+    objects.actors=reinterpret_cast<KinokoActorManager*>(&global_manager);
+    actor.set(&ActorRecord::manager, reinterpret_cast<KinokoActorManager*>(&manager));
     actor.set(&ActorRecord::x, 10.25f); actor.set(&ActorRecord::y, 20.75f);
     actor.set(&ActorRecord::scale, 2.0f);
     actor.set(&ActorRecord::scale_x, 0.5f); actor.set(&ActorRecord::scale_y, 1.5f);
@@ -104,18 +111,19 @@ int main() {
     kinoko_actor_sync_animation_state(actor_address, address(&source));
     CHECK(actor.get(&ActorRecord::frame_index) == -1);
     CHECK(actor.get(&ActorRecord::current_frame) == pointer<KinokoAnimationFrame>(address(frames.data())-sizeof(FrameRecord)));
-    CHECK(kinoko_actor_set_chip_flags(actor_address, nullptr, -1) == -1);
+    CHECK(kinoko_actor_set_chip_flags(pointer<KinokoActor>(actor_address), nullptr, -1) == -1);
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::chip_flags) == -1);
-    CHECK(kinoko_actor_set_chip_bound_type(actor_address, nullptr, 0xffff) == 0xffff);
-    CHECK(kinoko_actor_get_chip_id(actor_address, nullptr, 2) == 17);
+    CHECK(kinoko_actor_set_chip_bound_type(pointer<KinokoActor>(actor_address), nullptr, 0xffff) == 0xffff);
+    CHECK(kinoko_actor_get_chip_id(pointer<KinokoActor>(actor_address), nullptr, 2) == 17);
     CHECK(chip_x == 10 && chip_y == 20 && chip_layer == 2);
     CHECK(chip_cache == actor_address + 512 + 2 * sizeof(int32_t));
-    CHECK(kinoko_actor_reset_priority(actor_address, 42) == actor_address && priority_updates == 1);
+    CHECK(kinoko_actor_reset_priority(pointer<KinokoActor>(actor_address), 42) == actor_address && priority_updates == 1);
     CHECK(actor.get(&ActorRecord::priority) == 42);
-    CHECK(kinoko_actor_release(actor_address, nullptr) == 1);
+    CHECK(kinoko_actor_release(pointer<KinokoActor>(actor_address), nullptr) == 1);
     CHECK(actor.get(&ActorRecord::release_pending) && manager.cleanup_pending);
+    CHECK(!global_manager.cleanup_pending); // Release uses actor owner; ResetPriority uses the global manager.
     InitialData initial{}; initial.width = 123; initial.chip_flags = -17;
-    CHECK(kinoko_actor_set_init_data(actor_address, address(&initial)) == actor_address);
+    CHECK(kinoko_actor_set_init_data(pointer<KinokoActor>(actor_address), &initial) == pointer<KinokoActor>(actor_address));
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::width) == 123);
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::chip_flags) == -17);
     CHECK(bytes.front() == 0xa7 && bytes.back() == 0xa7);

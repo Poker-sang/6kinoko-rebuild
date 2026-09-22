@@ -1,0 +1,1 @@
+{"addr":"0x469780","code":"int __cdecl sub_469780(char a1)\n{\n  return sub_463CF0(a1); /*0x469791*/\n}","refs":[{"addr":"0x463cf0","name":"sub_463CF0"}]}

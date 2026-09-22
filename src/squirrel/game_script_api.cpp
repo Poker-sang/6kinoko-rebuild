@@ -1,6 +1,7 @@
 #include "kinoko/game_script_api.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/game_host.h"
+#include "kinoko/scene_operations.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/map_activation.h"
 #include "kinoko/map_render.h"
@@ -49,7 +50,7 @@ extern "C" int32_t kinoko_script_load_animation(const char* path) {
 extern "C" void* kinoko_script_clear_actors() { return kinoko_actor_manager_reset(kinoko_game_objects()->actors); }
 extern "C" int32_t kinoko_script_move_actors(float dx,float dy) {
     const auto& objects=*kinoko_game_objects();
-    kinoko_game_move_actor_camera(objects.actors,objects.camera,dx,dy); return 0;
+    kinoko_actor_move_with_camera(objects.actors,objects.camera,dx,dy); return 0;
 }
 extern "C" void* kinoko_script_refresh_collision() { return kinoko_collision_refresh(kinoko_game_collision_state()); }
 extern "C" int32_t kinoko_script_clear_collision() { return kinoko_collision_reset(kinoko_game_collision_state(),kinoko_game_objects()->actors); }
@@ -66,7 +67,7 @@ extern "C" int32_t kinoko_script_load_map(const char* path) {
 }
 extern "C" int32_t kinoko_script_release_map() { return kinoko_game_release_map_state(); }
 extern "C" int32_t kinoko_script_clear_render_layers() { return kinoko_clear_render_queue(); }
-extern "C" int32_t kinoko_script_create_render_layer(const char* name) { return kinoko_game_add_render_layer(name); }
+extern "C" void* kinoko_script_create_render_layer(const char* name) { return kinoko_scene_create_render_layer(name); }
 
 extern "C" int32_t kinoko_script_set_global_update(KinokoOwnedObjectWords closure,KinokoOwnedObjectWords environment) {
     Reference environment_owner(environment),closure_owner(closure);

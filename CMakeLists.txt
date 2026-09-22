@@ -230,6 +230,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
     src/reconstructed/game_runtime.cpp
+    src/reconstructed/scene_operations.cpp
     src/squirrel/game_script_api.cpp
     src/squirrel/game_script_entries.cpp
     src/reconstructed/scene_queue.cpp
@@ -400,6 +401,12 @@ target_include_directories(kinoko_game_script_contract PRIVATE include
 target_link_libraries(kinoko_game_script_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
 target_link_options(kinoko_game_script_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME game_script_contract COMMAND kinoko_game_script_contract)
+
+add_executable(kinoko_scene_operations_contract tests/scene_operations_contract.cpp
+    src/reconstructed/scene_operations.cpp src/reconstructed/render_queue.cpp)
+target_include_directories(kinoko_scene_operations_contract PRIVATE include)
+target_compile_options(kinoko_scene_operations_contract PRIVATE /O2 /fp:strict)
+add_test(NAME scene_operations_contract COMMAND kinoko_scene_operations_contract)
 add_test(
     NAME archive_smoke
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
@@ -548,6 +555,8 @@ add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
 # /EHsc incorrectly promises that such ports cannot throw; /EHsc- retains
 # synchronous C++ unwinding without enabling asynchronous SEH recovery.
 # Apply to the production sources as well as the fault-injection test caller.
+set_source_files_properties(src/reconstructed/scene_operations.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+
 set_source_files_properties(
     src/squirrel/game_script_api.cpp
     src/reconstructed/act_document_io.cpp
@@ -753,6 +762,7 @@ target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
 add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_scene_operations_contract
     kinoko_game_script_contract
     kinoko_game_lifecycle_contract
     kinoko_file_archive_contract

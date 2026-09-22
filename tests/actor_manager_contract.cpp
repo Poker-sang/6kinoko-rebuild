@@ -42,7 +42,7 @@ int32_t function_46aa60_this(int32_t) { return 0; }
 int32_t kinoko_integer_map_create(void) { return 0; }
 void kinoko_animation_list_construct(int32_t) {}
 void kinoko_integer_vector_construct(int32_t) {}
-int32_t kinoko_actor_set_init_data(int32_t a,int32_t) { return a; }
+KinokoActor* kinoko_actor_set_init_data(KinokoActor* a,const void*) { return a; }
 int32_t kinoko_actor_initialize(KinokoActor *,KinokoActorManager *,const KinokoOwnedObjectWords *,float,float,float,const KinokoOwnedObjectWords *) { return initialize_ok; }
 int32_t kinoko_collision_dispatch_all(KinokoActorManager *) { phases.push_back(1);return 0; }
 void kinoko_actor_manager_refresh_collision(void) { phases.push_back(2); }

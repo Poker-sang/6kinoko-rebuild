@@ -53,11 +53,17 @@ extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *n
 
 extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
                                                    const char *name) {
-    const int32_t layout = kinoko_map_find_layout(manager_address, name);
+    return kinoko::legacy::address(kinoko_map_make_render_layer(
+        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
+}
+extern "C" KinokoRenderLayer *kinoko_map_make_render_layer(KinokoMapManager *manager,
+                                                          const char *name) {
+    auto *layout = kinoko_map_lookup_layout(manager, name);
     if (!layout)
         return 0;
     // std::list preserves the returned eight-byte object's address on append.
-    return kinoko_map_append_render(manager_address, layout);
+    return kinoko::legacy::pointer<KinokoRenderLayer>(kinoko_map_append_render(
+        kinoko::legacy::address(manager), kinoko::legacy::address(layout)));
 }
 
 namespace {

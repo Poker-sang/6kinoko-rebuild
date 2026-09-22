@@ -13,9 +13,7 @@ KinokoCollisionState *kinoko_game_collision_state(void);
 void kinoko_game_initialize_callback(KinokoScriptCallback *callback);
 int32_t kinoko_game_load_map_file(const char *path);
 int32_t kinoko_game_release_map_state(void);
-void kinoko_game_move_actor_camera(KinokoActorManager *manager, KinokoCamera *camera, float dx, float dy);
 void kinoko_game_split_path(const char *path, char *directory);
-int32_t kinoko_game_add_render_layer(const char *name);
 #ifdef __cplusplus
 }
 static_assert(sizeof(KinokoScriptCallback)==28);

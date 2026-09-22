@@ -47,7 +47,7 @@ struct ActorRecord {
     ScriptStorage object96, object108;
     SQVM *collision_vm; // callback state prefix, borrowed
     ScriptStorage collision_environment, collision_function;
-    Address manager;              // borrowed; manager owns the live Actor set
+    KinokoActorManager *manager;              // borrowed; manager owns the live Actor set
     KinokoAnimationFrame *sprite_frame; // borrowed from manager-owned animation frames
     float offset_x, offset_y, rotation;
     float scale, scale_x, scale_y;

@@ -1,6 +1,7 @@
 #include "kinoko/game_script_api.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/game_host.h"
+#include "kinoko/scene_operations.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/map_activation.h"
 #include "kinoko/map_render.h"
@@ -71,7 +72,7 @@ KinokoActor* kinoko_actor_manager_create(KinokoActorManager* owner,const KinokoO
     return fail_actor ? nullptr : reinterpret_cast<KinokoActor*>(&actor);
 }
 void* kinoko_actor_manager_reset(KinokoActorManager* owner) { require(owner==objects.actors,"clear owner"); return owner; }
-void kinoko_game_move_actor_camera(KinokoActorManager* owner,KinokoCamera* camera,float,float) { require(owner==objects.actors && camera==objects.camera,"move borrowed objects"); }
+void kinoko_actor_move_with_camera(KinokoActorManager* owner,KinokoCamera* camera,float,float) { require(owner==objects.actors && camera==objects.camera,"move borrowed objects"); }
 void* kinoko_collision_refresh(KinokoCollisionState* state) { require(state==kinoko_game_collision_state(),"refresh state"); return state; }
 int32_t kinoko_collision_reset(KinokoCollisionState* state,KinokoActorManager* owner) { require(state==kinoko_game_collision_state() && owner==objects.actors,"collision reset"); return 1; }
 KinokoActor* kinoko_collision_register_map(KinokoCollisionState*,KinokoActLayout* layout) { return layout ? reinterpret_cast<KinokoActor*>(&actor) : nullptr; }
@@ -88,7 +89,7 @@ KinokoStageOwner* kinoko_stage_load(const char*) { return nullptr; }
 int32_t kinoko_game_load_map_file(const char*) { return map_result; }
 int32_t kinoko_game_release_map_state() { return 1; }
 int32_t kinoko_clear_render_queue() { return 0; }
-int32_t kinoko_game_add_render_layer(const char*) { return 1; }
+void* kinoko_scene_create_render_layer(const char*) { return &layout_token; }
 }
 namespace {
 void register_entry(const char* name,int32_t (*entry)(SQVM*),const void* target) {
