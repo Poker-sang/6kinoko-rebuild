@@ -1,0 +1,1 @@
+{"addr":"0x469740","code":"int __cdecl sub_469740(int a1, int a2)\n{\n  return sub_468620(a1, a2);\n}","refs":[{"addr":"0x468620","name":"sub_468620"}]}

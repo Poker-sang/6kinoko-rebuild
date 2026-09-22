@@ -1,3 +1,5 @@
+#include "kinoko/game_script_api.h"
+#include "kinoko/game_script_host.h"
 #include "kinoko/game_runtime.h"
 #include "kinoko/game_host.h"
 #include "kinoko/file_io_layout.h"
@@ -2075,38 +2077,16 @@ static int32_t function_468620_this(int32_t this_ptr);
 
 static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr);
 int32_t function_4693a0(int32_t a1);
-int32_t function_4696b0(int32_t a1);
-int32_t function_469700(void);
-int32_t function_469710(float32_t a1, float32_t a2);
-int32_t function_469740(void);
 int32_t function_469780(int32_t a1, int32_t a2);
 int32_t function_4697a0(int32_t a1);
 int32_t function_4697c0(int32_t a1);
 int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
     float32_t right, float32_t bottom);
-int32_t function_469820(int32_t a1);
-int32_t function_469840(int32_t a1);
-int32_t function_469860(void);
-int32_t function_469870(void);
-int32_t function_469880(int32_t a1);
 int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
 
-int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4, int32_t a5, int32_t a6);
 
-int32_t function_469b40(
-    int32_t result,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data);
-int32_t function_469d10(int32_t name, int32_t environment_vtable,
-                         int32_t environment_type, int32_t environment_data);
-int32_t function_469dd0(int32_t name,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
 
-int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
 
 
@@ -2161,9 +2141,6 @@ int32_t function_470ee0(int32_t a1);
 int32_t function_470f60(int32_t a1);
 int32_t function_470f80(int32_t dwMilliseconds);
 int32_t function_470f90(void);
-int32_t function_470fa0(int32_t id,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
 int32_t function_471080(void);
 
 
@@ -2178,9 +2155,7 @@ int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
                        int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
-int32_t function_471c70(int32_t a1);
 int32_t function_471d90(int32_t a1);
-int32_t function_471df0(int32_t a1);
 int32_t function_471eb0(int32_t a1);
 int32_t function_471f10(int32_t a1);
 int32_t function_471fd0(int32_t a1);
@@ -9296,43 +9271,13 @@ int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
 
 
 
-// Address range: 0x4696b0 - 0x4696fc
-int32_t function_4696b0(int32_t a1) {
-    char path_buffer[260] = { 0 };
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor:load-animation-entry", a1);
-        retdec_trace_squirrel_name("actor:load-animation-path", a1);
-    }
-    function_4086e0(a1, (int32_t *)(intptr_t)path_buffer, 0);
-    int32_t result = function_464f80(a1, (int32_t *)(intptr_t)path_buffer);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor:load-animation-result", result);
-    return 0;
-}
 
-// Address range: 0x469700 - 0x46970a
-int32_t function_469700(void) {
-    /* The original 469700 thunk loads the global ActorManager into ECX
-     * before entering ActorManager::Clear. */
-    return function_463800_this(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-}
 
-// Address range: 0x469710 - 0x469734
-int32_t function_469710(float32_t a1, float32_t a2) {
-    retdec_actor_move_camera_impl(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state,
-        (int32_t)(intptr_t)g_retdec_camera_state, a1, a2);
-    return 0;
-}
 
-// Address range: 0x469740 - 0x46974a
-int32_t function_469740(void) {
-    // 0x469740
-    return function_468620();
-}
+
+
+
+
 
 // Address range: 0x469750 - 0x46977f
 
@@ -9364,49 +9309,15 @@ int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
         actor, left, top, right, bottom);
 }
 
-// Address range: 0x469820 - 0x469837
-int32_t function_469820(int32_t a1) {
-    // 0x469820
-    return kinoko_stage_load((const char *)(intptr_t)a1) != 0;
-}
 
-// Address range: 0x469840 - 0x469858
-int32_t function_469840(int32_t a1) {
-    static int32_t trace_count;
-    int32_t v1;
 
-    if (trace_count < 32) {
-        retdec_trace("469840:LoadMap-entry");
-        retdec_trace_squirrel_name("469840:path", a1);
-    }
-    v1 = function_46f6d0(a1); // 0x46984c
-    if (trace_count < 32) {
-        retdec_trace_i32("469840:LoadMap-result", v1);
-        ++trace_count;
-    }
-    return v1 & -256 | (int32_t)((char)v1 != 0);
-}
 
-// Address range: 0x469860 - 0x46986a
-int32_t function_469860(void) {
-    // 0x469860
-    return function_46f620_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state);
-}
 
-// Address range: 0x469870 - 0x469880
-int32_t function_469870(void) {
-    // 0x469870
-    return function_468950_this(
-        (int32_t)(intptr_t)g_514300_storage,
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-}
 
-// Address range: 0x469880 - 0x46989e
-int32_t function_469880(int32_t a1) {
-    // 0x469880
-    return function_4693a0(function_46f140(a1));
-}
+
+
+
+
 
 // Address range: 0x4698a0 - 0x4698bf
 int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
@@ -9421,146 +9332,21 @@ int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 
 
 
-// Address range: 0x469a20 - 0x469b21
 /* SetGlobalUpdateFunction receives two SquirrelObject values through the
    471C70 adapter.  The original call lays out six dwords on the stack; use
    explicit parameters here so the object boundaries are preserved. */
-int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4, int32_t a5, int32_t a6)
-{
-    static volatile LONG trace_count;
-    int32_t first[3] = { a1, a2, a3 };
-    int32_t second[3] = { a4, a5, a6 };
-    int32_t first_copy[3] = { 0, 0, 0 };
-    int32_t second_copy[3] = { 0, 0, 0 };
-    int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-    if (InterlockedIncrement(&trace_count) <= 8) {
-        retdec_trace("stagevm:set-global-update");
-        retdec_trace_i32("stagevm:set-global-first-type", first[1]);
-        retdec_trace_i32("stagevm:set-global-first-data", first[2]);
-        retdec_trace_i32("stagevm:set-global-second-type", second[1]);
-        retdec_trace_i32("stagevm:set-global-second-data", second[2]);
-    }
-
-    if (first[1] == 0x08000100) {
-        function_4a9500_this(second_copy, (int32_t)(intptr_t)second);
-        function_4a9500_this(first_copy, (int32_t)(intptr_t)first);
-        *(int32_t *)&g612 = (int32_t)(intptr_t)g644;
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
-                             (int32_t)(intptr_t)second_copy);
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
-                             (int32_t)(intptr_t)first_copy);
-    } else {
-        retdec_function_45df10_impl(
-            (int32_t)(intptr_t)owner_state, 0);
-        *(int32_t *)&g612 = owner_state[0];
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
-                             (int32_t)(intptr_t)(owner_state + 1));
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
-                             (int32_t)(intptr_t)(owner_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
-    }
-
-    function_4a9d70_this((int32_t)(intptr_t)second_copy);
-    function_4a9d70_this((int32_t)(intptr_t)first_copy);
-    function_4a9d70_this((int32_t)(intptr_t)first);
-    function_4a9d70_this((int32_t)(intptr_t)second);
-    if (trace_count <= 8) {
-        retdec_trace_i32("stagevm:set-global-vm", g612[0]);
-        retdec_trace_i32("stagevm:set-global-env-type", g612[2]);
-        retdec_trace_i32("stagevm:set-global-env-data", g612[3]);
-        retdec_trace_i32("stagevm:set-global-func-type", g612[5]);
-        retdec_trace_i32("stagevm:set-global-func-data", g612[6]);
-    }
-    return 0;
-}
 
 
-// Address range: 0x469b40 - 0x469d0a
+
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-int32_t function_469b40(
-    int32_t result,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data)
-{
-    int32_t actor;
-    int32_t manager = (int32_t)(intptr_t)g_retdec_actor_manager_state;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    int32_t first_object[3] = {
-        first_vtable, first_type, first_data
-    };
-    int32_t second_object[3] = {
-        second_vtable, second_type, second_data
-    };
 
-    if (result == 0)
-        return 0;
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:result-object", result);
-        retdec_trace_i32("actor-create:manager-state", manager);
-        retdec_trace_i32("actor-create:first-type", first_type);
-        retdec_trace_i32("actor-create:first-data", first_data);
-        retdec_trace_i32("actor-create:second-type", second_type);
-        retdec_trace_i32("actor-create:second-data", second_data);
-    }
-    if (first_object[0] == 0)
-        first_object[0] = (int32_t)(intptr_t)&g16;
-    if (second_object[0] == 0)
-        second_object[0] = (int32_t)(intptr_t)&g16;
 
-    actor = function_463b40_this(
-        manager,
-        first_object[0], first_object[1], first_object[2],
-        x, y, z,
-        second_object[0], second_object[1], second_object[2],
-        0);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor-create:callback-result", actor);
 
-    function_4a94e0_this(result);
-    if (actor != 0)
-        function_4a95c0_this(result, actor + 44);
-    return result;
-}
 
-// Address range: 0x469d10 - 0x469dc1
-int32_t function_469d10(int32_t name, int32_t environment_vtable,
-                         int32_t environment_type, int32_t environment_data) {
-    int32_t environment[3] = {
-        environment_vtable, environment_type, environment_data
-    };
-    int32_t layout = function_46f140(name);
-    int32_t result = 0;
-
-    retdec_trace_squirrel_name("actor:map-layer", name);
-    retdec_trace_i32("actor:map-layout", layout);
-    if (layout != 0)
-        result = function_463e60(
-            (int32_t)(intptr_t)g_retdec_actor_manager_state, layout,
-            (int32_t)(intptr_t)environment);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
-
-// Address range: 0x469dd0 - 0x469ec5
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-int32_t function_469dd0(int32_t name,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data) {
-    int32_t closure[3] = { closure_vtable, closure_type, closure_data };
-    int32_t environment[3] = { environment_vtable, environment_type, environment_data };
-    int32_t result = function_46fd70(name, (int32_t)(intptr_t)closure,
-                                     (int32_t)(intptr_t)environment);
-    function_4a9d70_this((int32_t)(intptr_t)closure);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
+
 
 
 // Address range: 0x469ef0 - 0x46a13d
@@ -9568,8 +9354,7 @@ int32_t function_469dd0(int32_t name,
 
 
 
-// Address range: 0x46a1d0 - 0x46a20d
-int32_t function_46a1d0(void) { return kinoko_clear_render_queue(); }
+
 
 // Address range: 0x46a210 - 0x46a254
 int32_t function_46a210(int32_t * a1) {
@@ -10306,30 +10091,7 @@ int32_t function_470f90(void) {
     return timeGetTime();
 }
 
-// Address range: 0x470fa0 - 0x471054
-int32_t function_470fa0(int32_t id,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data)
-{
-    int32_t closure[3] = { closure_vtable, closure_type, closure_data };
-    int32_t environment[3] = {
-        environment_vtable, environment_type, environment_data
-    };
-    char name[256];
-    int32_t result = 0;
 
-    /* 470FCB..47101B registers only a script closure in the supplied table. */
-    if (closure_type == 0x08000100 && environment_type == 0x0A000020) {
-        sprintf_s(name, sizeof(name), "Init%04x", (unsigned int)id);
-        result = function_4a9840_this((int32_t)(intptr_t)environment,
-                                      name, (int32_t)(intptr_t)closure);
-        retdec_trace_i32("actor:init-registration-id", id);
-        retdec_trace_i32("actor:init-registration-result", result);
-    }
-    function_4a9d70_this((int32_t)(intptr_t)closure);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
 
 
 
@@ -10423,26 +10185,7 @@ int32_t retdec_compile_file_native(int32_t vm) {
 // Address range: 0x471c10 - 0x471c6c
 /* function_471c10 is implemented in native C++ (squirrel_native_calls.cpp). */
 
-// Address range: 0x471c70 - 0x471d27
-int32_t function_471c70(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t first[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    int32_t second[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
 
-    if (target == 0 ||
-        !retdec_squirrel_pair_from_stack(a1, 3, first) ||
-        !retdec_squirrel_pair_from_stack(a1, 2, second))
-        return 0;
-
-    /* 469A20 receives the closure first and its environment second.  The
-       original 471C70 builds the two by-value temporaries from stack slots
-       3 and 2 respectively, so the raw extraction order is reversed here. */
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)target)(
-        second[0], second[1], second[2],
-        first[0], first[1], first[2]);
-    return 0;
-}
 
 // Address range: 0x471d30 - 0x471d8c
 
@@ -10450,43 +10193,7 @@ int32_t function_471c70(int32_t a1) {
 // Address range: 0x471d90 - 0x471dec
 /* function_471d90 is implemented in native C++ (squirrel_native_calls.cpp). */
 
-// Address range: 0x471df0 - 0x471e4c
-int32_t function_471df0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t first[2];
-    int32_t second[2];
-    int32_t result_object[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    float32_t first_float;
-    float32_t second_float;
-    float32_t third_float;
-    int32_t top = sq_gettop(kinoko_vm(a1));
 
-    retdec_trace_i32("native-471df0:top", top);
-    retdec_trace_i32("native-471df0:type2", sq_gettype(kinoko_vm(a1), 2));
-    retdec_trace_i32("native-471df0:type3", sq_gettype(kinoko_vm(a1), 3));
-    retdec_trace_i32("native-471df0:type4", sq_gettype(kinoko_vm(a1), 4));
-    retdec_trace_i32("native-471df0:type5", sq_gettype(kinoko_vm(a1), 5));
-
-    if (target == 0 || top < 6 ||
-        !retdec_native_value_pair(a1, 2, first) ||
-        !retdec_native_float_arg(a1, 3, &first_float) ||
-        !retdec_native_float_arg(a1, 4, &second_float) ||
-        !retdec_native_float_arg(a1, 5, &third_float) ||
-        !retdec_native_value_pair(a1, 6, second))
-        return 0;
-
-    ((int32_t (__cdecl *)(int32_t,
-                          int32_t, int32_t, int32_t,
-                          float32_t, float32_t, float32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)target)(
-        (int32_t)(intptr_t)result_object,
-        (int32_t)(intptr_t)&g16, first[0], first[1],
-        first_float, second_float, third_float,
-        (int32_t)(intptr_t)&g16, second[0], second[1]);
-    function_4029b0(a1, result_object);
-    function_4a9d70_this((int32_t)(intptr_t)result_object);
-    return 1;
-}
 
 // Address range: 0x471e50 - 0x471eac
 
@@ -14433,7 +14140,7 @@ void kinoko_actor_motion_host(KinokoActor *actor) { function_45ec60((int32_t)(in
 int32_t kinoko_actor_render_host(KinokoActor *actor, KinokoCamera *camera) {
     return retdec_actor_render((int32_t)(intptr_t)actor, (int32_t)(intptr_t)camera);
 }
-void kinoko_actor_manager_refresh_collision(void) { function_469740(); }
+void kinoko_actor_manager_refresh_collision(void) { kinoko_script_refresh_collision(); }
 void kinoko_actor_manager_trace_actor(int32_t phase, KinokoActor *actor, KinokoCamera *camera, int32_t mask) {
     retdec_trace_actor_window_state(phase, (int32_t)(intptr_t)actor, mask);
     retdec_trace_player_state(phase == 1 ? "before-script" : phase == 2 ? "after-script" : "after-motion",
@@ -14526,3 +14233,19 @@ void kinoko_game_release_script_reference(uint32_t index) {
     if (index < 4) function_4a9570_this((int32_t)(intptr_t)references[index]);
 }
 int32_t kinoko_game_close_vm(void) { return function_402ac0(); }
+
+/* Borrowed legacy globals and the remaining map/path/movement implementations. */
+KinokoScriptCallback *kinoko_game_global_callback(void) { return (KinokoScriptCallback *)g612; }
+KinokoCollisionState *kinoko_game_collision_state(void) { return (KinokoCollisionState *)g_514300_storage; }
+void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
+    retdec_function_45df10_impl((int32_t)(intptr_t)callback, 0);
+}
+int32_t kinoko_game_load_map_file(const char *path) { return retdec_load_map_fixed((int32_t)(intptr_t)path); }
+int32_t kinoko_game_release_map_state(void) { return function_46f620_this((int32_t)(intptr_t)g_retdec_map_manager_state); }
+void kinoko_game_move_actor_camera(KinokoActorManager *manager, KinokoCamera *camera, float dx, float dy) {
+    retdec_actor_move_camera_impl((int32_t)(intptr_t)manager, (int32_t)(intptr_t)camera, dx, dy);
+}
+void kinoko_game_split_path(const char *path, char *directory) {
+    function_4086e0((int32_t)(intptr_t)path, (int32_t *)directory, 0);
+}
+int32_t kinoko_game_add_render_layer(const char *name) { return retdec_create_render_layer_fixed((int32_t)(intptr_t)name); }

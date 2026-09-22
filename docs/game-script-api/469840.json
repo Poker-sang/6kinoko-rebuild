@@ -1,0 +1,1 @@
+{"addr":"0x469840","code":"bool __cdecl sub_469840(LPCSTR lpFileName)\n{\n  return (unsigned __int8)sub_46F6D0(lpFileName) != 0; /*0x469856*/\n}","refs":[{"addr":"0x46f6d0","name":"sub_46F6D0"}]}

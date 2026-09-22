@@ -230,6 +230,8 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
     src/reconstructed/game_runtime.cpp
+    src/squirrel/game_script_api.cpp
+    src/squirrel/game_script_entries.cpp
     src/reconstructed/scene_queue.cpp
     src/reconstructed/file_io.cpp
     src/reconstructed/archive_store.cpp
@@ -391,6 +393,13 @@ add_executable(kinoko_game_lifecycle_contract tests/game_lifecycle_contract.cpp
 target_include_directories(kinoko_game_lifecycle_contract PRIVATE include)
 target_compile_options(kinoko_game_lifecycle_contract PRIVATE /O2)
 add_test(NAME game_lifecycle_contract COMMAND kinoko_game_lifecycle_contract)
+
+add_executable(kinoko_game_script_contract tests/game_script_contract.cpp)
+target_include_directories(kinoko_game_script_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_game_script_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+target_link_options(kinoko_game_script_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME game_script_contract COMMAND kinoko_game_script_contract)
 add_test(
     NAME archive_smoke
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
@@ -540,6 +549,7 @@ add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
 # synchronous C++ unwinding without enabling asynchronous SEH recovery.
 # Apply to the production sources as well as the fault-injection test caller.
 set_source_files_properties(
+    src/squirrel/game_script_api.cpp
     src/reconstructed/act_document_io.cpp
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
@@ -743,6 +753,7 @@ target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
 add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_game_script_contract
     kinoko_game_lifecycle_contract
     kinoko_file_archive_contract
     kinoko_act_layer_contract
