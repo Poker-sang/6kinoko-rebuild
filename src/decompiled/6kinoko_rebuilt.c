@@ -1572,7 +1572,6 @@ static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 
 void retdec_poll_fallback_keyboard(void);
 
-static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
 
 
 
@@ -2046,10 +2045,9 @@ int32_t function_46a210(int32_t * a1);
 
 
 
-int32_t function_46b9a0(int32_t this_ptr);
 
 
-int32_t function_46d950(void);
+int32_t kinoko_register_input_class(void);
 
 static int32_t function_46e6f0_this(int32_t this_ptr);
 
@@ -3776,20 +3774,6 @@ void retdec_poll_fallback_keyboard(void)
 
 /* The original cluster keeps a vector of the physical key codes used by its
    derived button states.  The key set is fixed during CInputManager::Init. */
-static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
-{
-    static const unsigned char key_codes[] = {
-        59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
-        87, 88, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-    };
-    size_t index;
-    if (aggregate_ptr == 0) return;
-    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(aggregate_ptr));
-    for (index = 0; index < sizeof(key_codes); ++index)
-        kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(aggregate_ptr), key_codes[index]);
-
-}
-
 /* CInputManagerCluster::Update.  This preserves the original data contract:
    the default keyboard record is always included, then optional physical
    records are merged by button count/edge and by absolute axis magnitude. */
@@ -7528,49 +7512,14 @@ int32_t function_46a210(int32_t * a1) {
 
 
 
-static void retdec_initialize_input_manager_state(int32_t this_ptr) {
-    uint32_t default_record[17] = { 0 };
-
-    if (g_retdec_input_manager_initialized != 0 || this_ptr == 0)
-        return;
-
-    memset((void *)(intptr_t)this_ptr, 0,
-           sizeof(g_retdec_input_manager_state));
-    /* The first three words are the SquirrelObject base of CInputManager. */
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g16;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = g483;
-    *(int32_t *)(intptr_t)(this_ptr + 8) = g484;
-    *(int32_t *)(intptr_t)(this_ptr + 12) = (int32_t)(intptr_t)&kinoko_input_device_methods;
-    *(int32_t *)(intptr_t)(this_ptr + 196) = (int32_t)(intptr_t)&kinoko_input_cluster_methods;
-    /* CInputManager always owns one logical default keyboard record, even
-       when DirectInput enumerates zero optional controllers. */
-    default_record[0] = 0xff;
-    default_record[1] = 200;
-    default_record[2] = 208;
-    default_record[3] = 203;
-    default_record[4] = 205;
-    default_record[5] = 44;
-    default_record[6] = 30;
-    default_record[7] = 46;
-    default_record[8] = 45;
-    default_record[9] = 0xff;
-    default_record[10] = 0xff;
-    default_record[11] = 0xff;
-    memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
-           sizeof(default_record));
-    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(this_ptr));
-    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(this_ptr), (uint32_t)kinoko_input_snapshot.controller_count);
-    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(this_ptr + 196));
-    for (int32_t i=0; i<kinoko_input_snapshot.controller_count; ++i) {
-        int32_t device=(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(this_ptr))+168*i;
-        uint32_t record[17]={0};
-        record[0]=(uint8_t)i;
-        for (int32_t key=0; key<12; ++key) record[key+5]=key;
-        memcpy((void *)(intptr_t)(device+4), record, sizeof(record));
-        kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(this_ptr+196),(KinokoInputDevice *)(intptr_t)(device));
-    }
-    kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(this_ptr + 196),(KinokoInputDevice *)(intptr_t)(this_ptr + 12));
-    retdec_initialize_input_aggregate(this_ptr + 392);
+static void retdec_initialize_input_manager_state(KinokoInputManager *manager) {
+    if (g_retdec_input_manager_initialized != 0 || manager == NULL) return;
+    /* Keep the host's full 0x600-byte allocation, including its tail padding. */
+    memset(manager, 0, sizeof(g_retdec_input_manager_state));
+    /* Explicit boundary for the existing SqPlus base object layout. */
+    const int32_t script_object[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
+    memcpy(manager->script_object, script_object, sizeof(script_object));
+    kinoko_input_manager_construct_devices(manager, (uint32_t)kinoko_input_snapshot.controller_count);
     g_retdec_input_manager_initialized = 1;
 }
 
@@ -7581,7 +7530,7 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
 
     if (this_ptr == 0)
         return 0;
-    retdec_initialize_input_manager_state(this_ptr);
+    retdec_initialize_input_manager_state((KinokoInputManager*)(intptr_t)this_ptr);
     retdec_trace("46e6f0:begin");
     retdec_trace_i32("46e6f0:this", this_ptr);
     retdec_trace_i32("46e6f0:g644", (int32_t)(intptr_t)g644);
@@ -11851,7 +11800,7 @@ int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
     return function_46e6f0_this((int32_t)(intptr_t)input);
 }
 int32_t kinoko_game_update_input(KinokoInputManager *input) {
-    return function_46b9a0((int32_t)(intptr_t)input);
+    return kinoko_input_manager_update(input);
 }
 int32_t kinoko_game_load_boot_script(void) { return kinoko_script_load_file("data/script/boot.nut", 0); }
 void kinoko_game_update_callback(int32_t trace_index) {

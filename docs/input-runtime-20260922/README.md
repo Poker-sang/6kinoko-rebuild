@@ -106,3 +106,24 @@ including WaitAssign. The keyboard setter addresses buttons, while keyboard
 wait/get include four direction fields. Retain excluded scans 148/58/112.
 The stage contract now checks first-record selection and invalid selectors;
 its prior config roundtrip/excluded-key assertions remain. Compiled only.
+
+## Batch 6: frame publication, native setup and script fields
+
+46B9A0 becomes kinoko_input_manager_update, using genuine virtual calls for
+controllers, keyboard AND cluster (46BA23), followed by the key tracker. Named
+state/publication fields replace fixed offsets; retain six button counters,
+four release bytes, scan 11 for digit zero and scans 2..10 for digits 1..9.
+
+Move native device/key/cluster setup into C++ with explicit ownership and
+controller-before-keyboard registration. Preserve default assignments, zero
+controller behavior and the 22 registered scans. The host retains its existing
+one-time guard, full 0x600-byte zeroing and explicit 12-byte SqPlus boundary.
+
+Input class registration uses offsetof-derived fields, preserving aliases and
+s1..s9,s0 order. Small explicit adapters isolate the shared SqPlus integer-slot
+callback ABI from typed native receiver/path interfaces. Class registration is
+now named kinoko_register_input_class; SqPlus reference handling is unchanged.
+
+input_frame_contract checks defaults, empty-controller setup, virtual dispatch
+order (including a substituted cluster), same-frame key changes, all published
+fields and the null receiver. It is compiled only, never executed here.

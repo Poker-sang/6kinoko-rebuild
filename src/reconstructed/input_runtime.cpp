@@ -5,24 +5,12 @@
 #include <windows.h>
 #include <cstdint>
 #include <cstring>
-#include "kinoko/legacy_abi.h"
 
 extern "C" {
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
 }
-namespace {
-// Original Input record: 4-byte vtable, 68-byte assignment, 96-byte state.
-constexpr int device_stride = 168;
-int32_t& word(int32_t base, int offset) {
-    return *reinterpret_cast<int32_t*>(static_cast<intptr_t>(base) + offset);
-}
-uint8_t& byte(int32_t base, int offset) {
-    return *reinterpret_cast<uint8_t*>(static_cast<intptr_t>(base) + offset);
-}
-} // namespace
-
 namespace {
 // 4074C0 validates the signed low byte, not the full integer identifier.
 void apply_assignment(KinokoInputDevice& device, KinokoInputAssignment record) {
@@ -149,30 +137,5 @@ extern "C" int32_t kinoko_input_get_assignment(KinokoInputManager* manager, int3
     auto* target = assignment_target(manager, device);
     if (!target) return -1;
     return device == -1 ? keyboard_field(target->assignment, field) : target->assignment.buttons[field];
-}
-
-extern "C" int32_t function_46b9a0(int32_t self) {
-    if (!self) return 0;
-    const int32_t begin = (int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(self)), end = (int32_t)(intptr_t)kinoko_input_devices_end((KinokoInputManager *)(intptr_t)(self));
-    const int count = begin && end >= begin && (end-begin)%device_stride == 0
-        ? (end-begin)/device_stride : 0;
-    auto update_device = [](int32_t device) {
-        const auto* vtable = reinterpret_cast<const int32_t*>(word(device, 0));
-        if (vtable && vtable[1]) retdec_call_thiscall0(
-            reinterpret_cast<void*>(device), reinterpret_cast<void*>(vtable[1]));
-    };
-    for (int i = 0; i < count; ++i) update_device(begin + i*device_stride);
-    update_device(self + 12);
-    kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(self + 196), NULL);
-    kinoko_input_keys_update((KinokoKeyTracker *)(intptr_t)(self + 392));
-    // Publish the same directional/button counters and release edges.
-    constexpr int copies[][2] = {{1444,276},{1436,268},{1440,272},{1456,288},
-        {1448,280},{1452,284},{1460,292},{1464,296}};
-    for (const auto& offsets : copies) word(self, offsets[0]) = word(self, offsets[1]);
-    for (int i = 0; i < 4; ++i) byte(self, 1468+i) = byte(self, 326+i);
-    word(self, 1472) = kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(self+392), 11, 0, 0, 0);
-    for (int i = 1; i < 10; ++i)
-        word(self, 1472+i*4) = kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(self+392), i+1, 0, 0, 0);
-    return word(self, 1508);
 }
 

@@ -8,48 +8,61 @@ using namespace kinoko::script::binding;
 template<class Function> int32_t entry(Function function) {
     return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
 }
+// Explicit boundary to shared SqPlus wrappers that still carry integer slots.
+KinokoInputManager* input_receiver(int32_t self) { return reinterpret_cast<KinokoInputManager*>(static_cast<intptr_t>(self)); }
+int32_t save_config(int32_t self, const char* path) { return kinoko_input_save_config(input_receiver(self), path); }
+int32_t load_config(int32_t self, const char* path) { return kinoko_input_load_config(input_receiver(self), path); }
+int32_t set_assignment(int32_t self, int32_t device, int32_t field, int32_t value) {
+    return kinoko_input_set_assignment(input_receiver(self), device, field, value);
+}
+int32_t wait_assignment(int32_t self, int32_t device, int32_t field) {
+    return kinoko_input_wait_assignment(input_receiver(self), device, field);
+}
+int32_t get_assignment(int32_t self, int32_t device, int32_t field) {
+    return kinoko_input_get_assignment(input_receiver(self), device, field);
+}
 struct InputMethod { const char* name; int32_t target; int32_t wrapper; };
 const InputMethod methods[] = {
-    {"Save", entry(kinoko_input_save_config), entry(function_46ce70)},
-    {"Load", entry(kinoko_input_load_config), entry(function_46ce70)},
-    {"SetAssign", entry(kinoko_input_set_assignment), entry(function_46cec0)},
-    {"WaitAssign", entry(kinoko_input_wait_assignment), entry(function_46cf10)},
-    {"GetAssign", entry(kinoko_input_get_assignment), entry(function_46cf60)},
+    {"Save", entry(save_config), entry(function_46ce70)},
+    {"Load", entry(load_config), entry(function_46ce70)},
+    {"SetAssign", entry(set_assignment), entry(function_46cec0)},
+    {"WaitAssign", entry(wait_assignment), entry(function_46cf10)},
+    {"GetAssign", entry(get_assignment), entry(function_46cf60)},
 };
 struct Field { const char* name; int32_t offset; bool boolean; };
 // Original 46D950 order: s0 follows s9; button/key names intentionally alias.
 constexpr Field fields[] = {
-    {"x", 1436, false},
-    {"y", 1440, false},
-    {"br0", 1468, true},
-    {"br1", 1469, true},
-    {"br2", 1470, true},
-    {"br3", 1471, true},
-    {"b0", 1444, false},
-    {"b1", 1448, false},
-    {"b2", 1452, false},
-    {"b3", 1456, false},
-    {"b4", 1460, false},
-    {"kr0", 1468, true},
-    {"kr1", 1469, true},
-    {"kr2", 1470, true},
-    {"kr3", 1471, true},
-    {"k0", 1444, false},
-    {"k1", 1448, false},
-    {"k2", 1452, false},
-    {"k3", 1456, false},
-    {"k4", 1460, false},
-    {"k5", 1464, false},
-    {"s1", 1476, false},
-    {"s2", 1480, false},
-    {"s3", 1484, false},
-    {"s4", 1488, false},
-    {"s5", 1492, false},
-    {"s6", 1496, false},
-    {"s7", 1500, false},
-    {"s8", 1504, false},
-    {"s9", 1508, false},
-    {"s0", 1472, false},
+    {"x", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, x)), false},
+    {"y", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, y)), false},
+    {"br0", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[0])), true},
+    {"br1", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[1])), true},
+    {"br2", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[2])), true},
+    {"br3", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[3])), true},
+    {"b0", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[0])), false},
+    {"b1", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[1])), false},
+    {"b2", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[2])), false},
+    {"b3", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[3])), false},
+    {"b4", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[4])), false},
+    {"kr0", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[0])), true},
+    {"kr1", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[1])), true},
+    {"kr2", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[2])), true},
+    {"kr3", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, released[3])), true},
+    {"k0", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[0])), false},
+    {"k1", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[1])), false},
+    {"k2", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[2])), false},
+    {"k3", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[3])), false},
+    {"k4", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[4])), false},
+    {"k5", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, buttons[5])), false},
+    {"s1", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[1])), false},
+    {"s2", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[2])), false},
+    {"s3", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[3])), false},
+    {"s4", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[4])), false},
+    {"s5", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[5])), false},
+    {"s6", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[6])), false},
+    {"s7", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[7])), false},
+    {"s8", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[8])), false},
+    {"s9", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[9])), false},
+    {"s0", static_cast<int32_t>(offsetof(KinokoInputManager, published) + offsetof(KinokoInputPublishedState, digits[0])), false},
 };
 
 // Original 46CFB0 class builder: 48-byte SqPlus class binding storage.
@@ -77,7 +90,7 @@ void construct_input_class(int32_t state[12]) {
 }
 } // namespace
 
-extern "C" int32_t function_46d950(void) {
+extern "C" int32_t kinoko_register_input_class(void) {
     int32_t root[3]{}, state[12]{}, temporary[3]{};
     kinoko_sqplus_object_copy_construct((void *)(intptr_t)(root), kinoko_sqplus_root_object());
     construct_input_class(state);

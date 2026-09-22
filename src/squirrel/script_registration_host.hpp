@@ -10,7 +10,7 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 int32_t function_43e100(void);
 int32_t kinoko_actor_register_script_class(void);
 int32_t function_4669d0(void);
-int32_t function_46d950(void);
+int32_t kinoko_register_input_class(void);
 int32_t function_46fac0(void);
 int32_t function_470f60(int32_t a1);
 int32_t function_470f80(int32_t dwMilliseconds);

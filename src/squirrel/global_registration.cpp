@@ -109,7 +109,7 @@ extern "C" int32_t function_473010(void) {
         (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
     }
     kinoko_actor_register_script_class();
-    function_46d950();
+    kinoko_register_input_class();
     function_4669d0();
     function_46fac0();
     kinoko_script_load_file(const_cast<char*>("data/script/class_def.nut"), kinoko_script_root());

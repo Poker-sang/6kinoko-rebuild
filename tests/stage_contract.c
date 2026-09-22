@@ -4269,7 +4269,7 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     }
     int32_t input[384] = {0};
     input[8] = 73; /* Original GetAssign(-1,3): record +16, then (3+1)*4. */
-    function_46d950();
+    kinoko_register_input_class();
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     sq_pushroottable(kinoko_vm(vm));
     sq_pushstring(kinoko_vm(vm), "registrationInput", -1);
