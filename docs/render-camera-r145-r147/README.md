@@ -64,3 +64,27 @@ Named map entry points replace address names. Duplicate/order semantics remain.
 New fake-device contract checks setup failure still submits, exact vertices,
 UV/color preservation, blend transitions and repeated-state writes. No D3D
 window is required; this contract is compiled but not executed by the agent.
+
+## Delivery
+
+Source commit: `8b9312536c63af2be4a9608625cb3389e8134819`.
+Independent quiet Win32 Release build: `build-runs/render-camera-r147-quiet`.
+Executable: `runtime-builds/render-camera-r147-quiet/kinoko_retdec_rebuild.exe`.
+Configure, complete ALL build and DAT staging all exited 0. All existing
+contract targets and the three new contracts compiled successfully. No game,
+CTest or contract executable was run. Build contains existing compiler warnings;
+no compilation/link failures occurred. Prior products were not modified.
+Three DAT sizes/SHA256 match the reference; no saves/index.dat were copied.
+See artifacts.json for executable hash, source commit and resource checksums.
+
+Evidence naming: depth-state.json is 4028D0 (alpha blend/test), alpha-state.json
+is 402930 (depth test/write); the addresses, not those initial query labels,
+identify the methods. quad-draw.json (405320 rotation) and
+render-queue-candidate.json (469DD0) are retained exploratory queries, not proof
+for submit/queue. The actual proofs are quad-submit.json (405800) and
+render-queue.json (46A140). update-order.json (469900) confirms callback order.
+
+Checklist: original metadata/imports recorded; typed layout/ABI assertions
+compiled; source changes committed before build; diagnostic output remains
+quiet without removing VM trace calls; isolated products retained; DAT staged;
+execution handed to the user. Device loss/recreation remains a separate batch.
