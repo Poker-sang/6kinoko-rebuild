@@ -1,0 +1,10 @@
+{
+  "addr": "0x4701b0",
+  "code": "int __cdecl sub_4701B0(int a1, int a2)\n{\n  return sub_470100(this: a1, a2); /*0x4701bf*/\n}",
+  "refs": [
+    {
+      "addr": "0x470100",
+      "name": "sub_470100"
+    }
+  ]
+}

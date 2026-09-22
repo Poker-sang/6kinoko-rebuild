@@ -1,0 +1,27 @@
+{
+  "addr": "0x4039e0",
+  "code": "BOOL __thiscall sub_4039E0(_DWORD *this, void *a2, char a3)\n{\n  void *v3; // ebx\n  _DWORD *v4; // esi\n  unsigned int v5; // eax\n  size_t v7; // edi\n  void *v8; // ebx\n\n  v3 = a2; /*0x4039e4*/\n  v4 = this; /*0x4039e8*/\n  if ( a2 == (void *)-1 ) /*0x4039ed*/\n    std::_Xlength_error(a1: \"string too long\"); /*0x4039f4*/\n  v5 = *(this + 5); /*0x4039f9*/\n  if ( v5 >= (unsigned int)a2 ) /*0x4039fe*/\n  {\n    if ( a3 != 0 && (unsigned int)a2 < 0x10 ) /*0x403a21*/\n    {\n      v7 = *(this + 4); /*0x403a24*/\n      if ( (unsigned int)a2 < v7 ) /*0x403a29*/\n        v7 = (size_t)a2; /*0x403a2b*/\n      if ( v5 >= 0x10 ) /*0x403a30*/\n      {\n        v8 = (void *)*this; /*0x403a32*/\n        if ( v7 != 0 ) /*0x403a36*/\n          memcpy_0(a1: this, Src: v8, Size: v7); /*0x403a3b*/\n        operator delete(a1: v8); /*0x403a44*/\n        v3 = a2; /*0x403a49*/\n      }\n      v4[4] = v7; /*0x403a4f*/\n      v4[5] = 15; /*0x403a52*/\n      *((_BYTE *)v4 + v7) = 0; /*0x403a5b*/\n      return v3 != nullptr; /*0x403a65*/\n    }\n    else\n    {\n      if ( a2 == nullptr ) /*0x403a6e*/\n      {\n        *(this + 4) = 0; /*0x403a70*/\n        if ( v5 >= 0x10 ) /*0x403a76*/\n          v4 = (_DWORD *)*this; /*0x403a78*/\n        *(_BYTE *)v4 = 0; /*0x403a7a*/\n      }\n      return a2 != nullptr; /*0x403a84*/\n    }\n  }\n  else\n  {\n    sub_403CE0(a1: a2, Size: *(this + 4)); /*0x403a05*/\n    return a2 != nullptr; /*0x403a11*/\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x473e00",
+      "name": "?_Xlength_error@std@@YAXPBD@Z"
+    },
+    {
+      "addr": "0x4eb31c",
+      "name": "aStringTooLong",
+      "string": "string too long"
+    },
+    {
+      "addr": "0x4ac4c0",
+      "name": "_memcpy_0"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x403ce0",
+      "name": "sub_403CE0"
+    }
+  ]
+}

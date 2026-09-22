@@ -52,21 +52,21 @@ void growth_and_aliases() {
     const std::string first = "123456789abcdef";
     f.assign(first); f.check(first);
     require(f.view().capacity() >= 15 && f.view().data() != f.storage(), "text belongs to native string");
-    require(function_4038c0(f.id(), "g", 1) == f.id(), "append receiver");
+    require(kinoko_string_append_n(f.storage(), "g", 1) == f.storage(), "append receiver");
     auto expected = first + 'g'; f.check(expected);
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(std::string(31, 'x'));
-    function_4038c0(f.id(), "y", 1); f.check(std::string(31, 'x') + 'y');
+    kinoko_string_append_n(f.storage(), "y", 1); f.check(std::string(31, 'x') + 'y');
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(std::string(47, 'z'));
-    function_4038c0(f.id(), "y", 1); f.check(std::string(47, 'z') + 'y');
+    kinoko_string_append_n(f.storage(), "y", 1); f.check(std::string(47, 'z') + 'y');
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(first);
     function_4039e0(f.id(), 15, 1); f.check(first);
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    function_403bf0(f.id(), f.id(), 0, UINT32_MAX); expected = first + first;
+    kinoko_string_append_substring(f.storage(), f.storage(), 0, UINT32_MAX); expected = first + first;
     f.check(expected); require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    function_4038c0(f.id(), f.view().data() + 5, UINT32_MAX);
+    kinoko_string_append_n(f.storage(), f.view().data() + 5, UINT32_MAX);
     expected += expected.substr(5); f.check(expected);
     const auto self = f.view().data();
     retdec_string_assign_n(static_cast<int32_t*>(f.storage()), self + 3, 11);
@@ -92,15 +92,15 @@ void reserve_and_failure_results() {
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     require(function_4039e0(f.id(), UINT32_MAX, 1) == 0, "invalid reserve result");
     require(function_403ce0(f.id(), UINT32_MAX, f.view().length()) == 0, "invalid grow result");
-    require(function_4038c0(f.id(), "x", UINT32_MAX) == f.id(), "overflow append returns receiver");
-    require(function_403bf0(f.id(), f.id(), 900, 1) == f.id(), "out-of-range append returns receiver");
+    require(kinoko_string_append_n(f.storage(), "x", UINT32_MAX) == f.storage(), "overflow append returns receiver");
+    require(kinoko_string_append_substring(f.storage(), f.storage(), 900, 1) == f.storage(), "out-of-range append returns receiver");
     require(retdec_string_assign_n(static_cast<int32_t*>(f.storage()), "x", UINT32_MAX) == f.id(),
         "invalid assignment returns receiver");
     f.check(std::string(8, 't'));
     require(!retdec_string_assign_n(nullptr, "x", 1), "null assignment receiver");
-    require(!retdec_std_string_data(0) && !function_4038c0(0, "x", 1), "null string view/append");
+    require(!retdec_std_string_data(0) && !kinoko_string_append_n(0, "x", 1), "null string view/append");
     require(!function_4039e0(0, 10, 0) && !function_403ce0(0, 10, 0), "null reserve/grow");
-    require(!function_403bf0(f.id(), 0, 0, 1) && !function_403bf0(0, f.id(), 0, 1),
+    require(!kinoko_string_append_substring(f.storage(), 0, 0, 1) && !kinoko_string_append_substring(0, f.storage(), 0, 1),
         "null substring endpoints");
     retdec_string_assign_cstr(static_cast<int32_t*>(f.storage()), nullptr); f.check("");
     // Exercise the recovered opaque return in the unusual zero-capacity case.
@@ -121,13 +121,13 @@ void deterministic_sequences() {
         case 1: b = std::string(n, static_cast<char>(random() & 255)); right.assign(b); break;
         case 2: {
             const auto pos = random() % (b.size() + 1);
-            function_403bf0(left.id(), right.id(), static_cast<uint32_t>(pos), n);
+            kinoko_string_append_substring(left.storage(), right.storage(), static_cast<uint32_t>(pos), n);
             a += b.substr(pos, n); break;
         }
         case 3: {
             const auto pos = random() % (a.size() + 1);
             const auto suffix = a.substr(pos, n);
-            function_403bf0(left.id(), left.id(), static_cast<uint32_t>(pos), n);
+            kinoko_string_append_substring(left.storage(), left.storage(), static_cast<uint32_t>(pos), n);
             a += suffix; break;
         }
         case 4: {

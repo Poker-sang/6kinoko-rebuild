@@ -1,0 +1,26 @@
+{
+  "addr": "0x470100",
+  "code": "int __thiscall sub_470100(int this, int a2)\n{\n  void *v4; // eax\n  void *v5; // ebx\n  void *v7; // [esp+14h] [ebp+8h]\n\n  sub_4A95C0(a1: a2); /*0x47010c*/\n  *(_DWORD *)(this + 12) = *(_DWORD *)(a2 + 12); /*0x470114*/\n  *(_DWORD *)(this + 16) = *(_DWORD *)(a2 + 16); /*0x47011a*/\n  v4 = *(void **)(a2 + 20); /*0x47011d*/\n  *(_DWORD *)(a2 + 20) = 0; /*0x470120*/\n  v5 = *(void **)(this + 20); /*0x470127*/\n  v7 = v4; /*0x47012a*/\n  if ( v4 != v5 && v5 != nullptr ) /*0x470133*/\n  {\n    sub_450020(); /*0x470137*/\n    operator delete(a1: v5); /*0x47013d*/\n    v4 = v7; /*0x470142*/\n  }\n  *(_DWORD *)(this + 20) = v4; /*0x470148*/\n  if ( this + 24 != a2 + 24 ) /*0x470153*/\n    sub_4700B0(a1: **(_DWORD **)(a2 + 24), a2: *(_DWORD *)(a2 + 24)); /*0x47015b*/\n  sub_46F320(a1: a2 + 36); /*0x470167*/\n  *(_DWORD *)(this + 52) = *(_DWORD *)(a2 + 52); /*0x47016f*/\n  *(_DWORD *)(this + 56) = *(_DWORD *)(a2 + 56); /*0x470175*/\n  *(float *)(this + 60) = *(float *)(a2 + 60); /*0x47017b*/\n  *(float *)(this + 64) = *(float *)(a2 + 64); /*0x470181*/\n  *(float *)(this + 68) = *(float *)(a2 + 68); /*0x470187*/\n  *(float *)(this + 72) = *(float *)(a2 + 72); /*0x47018d*/\n  *(_DWORD *)(this + 76) = *(_DWORD *)(a2 + 76); /*0x470193*/\n  *(_DWORD *)(this + 80) = *(_DWORD *)(a2 + 80); /*0x470199*/\n  return this; /*0x47019c*/\n}",
+  "refs": [
+    {
+      "addr": "0x4a95c0",
+      "name": "sub_4A95C0"
+    },
+    {
+      "addr": "0x450020",
+      "name": "sub_450020"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4700b0",
+      "name": "sub_4700B0"
+    },
+    {
+      "addr": "0x46f320",
+      "name": "sub_46F320"
+    }
+  ]
+}

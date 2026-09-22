@@ -16,9 +16,9 @@ int32_t kinoko_string_assign_substring(int32_t object, int32_t source,
     uint32_t position, uint32_t size);
 
 /* Original-address exports retained only for the remaining C/ABI callers. */
-int32_t function_4038c0(int32_t object, const char* source, uint32_t size);
+void* kinoko_string_append_n(void* object, const char* source, uint32_t size);
 int32_t function_4039e0(int32_t object, uint32_t capacity, int32_t shrink);
-int32_t function_403bf0(int32_t object, int32_t source, uint32_t position, uint32_t size);
+void* kinoko_string_append_substring(void* object, const void* source, uint32_t position, uint32_t size);
 int32_t function_403ce0(int32_t object, uint32_t capacity, uint32_t old_length);
 
 #ifdef __cplusplus

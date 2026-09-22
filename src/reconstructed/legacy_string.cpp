@@ -109,8 +109,8 @@ extern "C" int32_t kinoko_string_assign_substring(int32_t object, int32_t source
     return object;
 }
 // Address range: 0x4038c0 - 0x4039d3
-extern "C" int32_t function_4038c0(int32_t object, const char* source, uint32_t size) {
-    StringView(pointer(object)).append(source, size);
+extern "C" void* kinoko_string_append_n(void* object, const char* source, uint32_t size) {
+    StringView(object).append(source, size);
     return object;
 }
 // Address range: 0x4039e0 - 0x403a8b
@@ -118,9 +118,9 @@ extern "C" int32_t function_4039e0(int32_t object, uint32_t capacity, int32_t sh
     return StringView(pointer(object)).reserve(capacity, shrink != 0);
 }
 // Address range: 0x403bf0 - 0x403cd3
-extern "C" int32_t function_403bf0(int32_t object, int32_t source, uint32_t position, uint32_t size) {
+extern "C" void* kinoko_string_append_substring(void* object, const void* source, uint32_t position, uint32_t size) {
     if (!object || !source) return 0;
-    StringView(pointer(object)).append(StringView(pointer(source)), position, size);
+    StringView(object).append(StringView(const_cast<void*>(source)), position, size);
     return object;
 }
 // Address range: 0x403ce0 - 0x403e18 (includes original cleanup 403DBC)
