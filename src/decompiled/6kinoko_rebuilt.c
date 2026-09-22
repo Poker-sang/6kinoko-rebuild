@@ -8508,7 +8508,7 @@ int32_t retdec_compile_file_native(int32_t vm) {
     int32_t result;
     int32_t environment[2] = { g483, g484 };
 
-    if (!retdec_native_string_arg(vm, 2, &path))
+    if (!kinoko_native_string_arg((struct SQVM *)(intptr_t)(vm), 2, &path))
         return 0;
     /* The final stack entry is the native closure's userdata.  The optional
        script environment is argument 3, before that entry (419EA2). */

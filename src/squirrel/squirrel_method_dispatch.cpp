@@ -60,7 +60,7 @@ extern "C" int32_t kinoko_sqplus_argument_object(int32_t* target, int32_t unused
     return kinoko_sqplus_argument_object_at(target, unused, vm, 2);
 }
 extern "C" int32_t kinoko_sqplus_argument_object_at(int32_t* target, int32_t, struct SQVM * vm, int32_t index) {
-    return retdec_squirrel_pair_from_stack(address(vm), index, target) ? address(target) : 0;
+    return kinoko_squirrel_pair_from_stack(vm, index, target) ? address(target) : 0;
 }
 extern "C" int32_t kinoko_sqplus_call_integer(void * object, void * method, int32_t offset, struct SQVM * vm_address, int32_t index) {
     auto* vm = static_cast<SQVM *>(vm_address);

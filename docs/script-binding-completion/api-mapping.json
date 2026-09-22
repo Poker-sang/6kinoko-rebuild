@@ -748,5 +748,54 @@
       "0": "void *"
     },
     "void *"
+  ],
+  "retdec_native_target_from_userdata": [
+    "kinoko_native_target_from_userdata",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_native_callback_from_stack": [
+    "kinoko_native_callback_from_stack",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_native_string_arg": [
+    "kinoko_native_string_arg",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_native_integer_arg": [
+    "kinoko_native_integer_arg",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_native_float_arg": [
+    "kinoko_native_float_arg",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_native_value_pair": [
+    "kinoko_native_value_pair",
+    {
+      "0": "struct SQVM *"
+    },
+    null
+  ],
+  "retdec_squirrel_pair_from_stack": [
+    "kinoko_squirrel_pair_from_stack",
+    {
+      "0": "struct SQVM *"
+    },
+    null
   ]
 }

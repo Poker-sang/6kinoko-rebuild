@@ -281,15 +281,15 @@ SQInteger argument_callback(HSQUIRRELVM vm) {
     const auto id = address(vm);
     int32_t integer = 0, text = 0, borrowed[2] = {};
     float number = 0;
-    if (sq_gettop(vm) != 5 || retdec_native_target_from_userdata(id) != callback_identity ||
-        retdec_native_callback_from_stack(id) != callback_identity ||
-        !retdec_native_integer_arg(id, 2, &integer) || integer != 19 ||
-        !retdec_native_float_arg(id, 3, &number) || number != 2.5f ||
-        !retdec_native_string_arg(id, 4, &text) || std::string(pointer<const char>(text)) != "ok" ||
-        !retdec_native_value_pair(id, 2, borrowed) || borrowed[0] != OT_INTEGER || borrowed[1] != 19)
+    if (sq_gettop(vm) != 5 || kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) != callback_identity ||
+        kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) != callback_identity ||
+        !kinoko_native_integer_arg((struct SQVM *)(intptr_t)(id), 2, &integer) || integer != 19 ||
+        !kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), 3, &number) || number != 2.5f ||
+        !kinoko_native_string_arg((struct SQVM *)(intptr_t)(id), 4, &text) || std::string(pointer<const char>(text)) != "ok" ||
+        !kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 2, borrowed) || borrowed[0] != OT_INTEGER || borrowed[1] != 19)
         return sq_throwerror(vm, "native argument contract");
     HostObject owned;
-    if (!retdec_squirrel_pair_from_stack(id, 4, owned.words.data()) || kinoko_sqplus_object_size((void *)(intptr_t)(owned.id())) != 2)
+    if (!kinoko_squirrel_pair_from_stack((struct SQVM *)(intptr_t)(id), 4, owned.words.data()) || kinoko_sqplus_object_size((void *)(intptr_t)(owned.id())) != 2)
         return sq_throwerror(vm, "owning argument contract");
     sq_pushinteger(vm, integer + static_cast<int>(number));
     return 1;
@@ -297,41 +297,41 @@ SQInteger argument_callback(HSQUIRRELVM vm) {
 void native_arguments(HSQUIRRELVM vm) {
     const auto top = sq_gettop(vm);
     const auto id = address(vm);
-    require(retdec_native_target_from_userdata(0) == 0 && retdec_native_callback_from_stack(0) == 0, "null native VM");
-    require(retdec_native_target_from_userdata(id) == 0 && retdec_native_callback_from_stack(id) == 0, "empty native stack");
+    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(0)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(0)) == 0, "null native VM");
+    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "empty native stack");
     int32_t integer = 91, text = 92, pair[2] = {93, 94};
     float number = 9.5f;
     sq_pushfloat(vm, 2.5f);
-    require(!retdec_native_integer_arg(id, -1, &integer) && integer == 91, "do not coerce float to native integer");
-    require(!retdec_native_string_arg(id, -1, &text) && text == 92, "wrong string argument unchanged");
-    require(retdec_native_float_arg(id, -1, &number) && number == 2.5f, "float argument");
-    require(!retdec_native_float_arg(id, -1, nullptr), "null float output rejected");
+    require(!kinoko_native_integer_arg((struct SQVM *)(intptr_t)(id), -1, &integer) && integer == 91, "do not coerce float to native integer");
+    require(!kinoko_native_string_arg((struct SQVM *)(intptr_t)(id), -1, &text) && text == 92, "wrong string argument unchanged");
+    require(kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), -1, &number) && number == 2.5f, "float argument");
+    require(!kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), -1, nullptr), "null float output rejected");
     // The old first-call diagnostic used an uninitialized userdata pointer here.
-    require(retdec_native_target_from_userdata(id) == 0 && retdec_native_callback_from_stack(id) == 0, "wrong userdata type safe in diagnostics");
-    require(!retdec_native_value_pair(id, 0, pair) && !retdec_native_value_pair(id, 2, pair), "argument index bounds");
+    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == 0 && kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "wrong userdata type safe in diagnostics");
+    require(!kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 0, pair) && !kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 2, pair), "argument index bounds");
     require(pair[0] == 93 && pair[1] == 94, "invalid borrowed pair unchanged");
-    require(!retdec_native_value_pair(0, 1, pair) && !retdec_native_value_pair(id, 1, nullptr), "borrowed output guards");
+    require(!kinoko_native_value_pair((struct SQVM *)(intptr_t)(0), 1, pair) && !kinoko_native_value_pair((struct SQVM *)(intptr_t)(id), 1, nullptr), "borrowed output guards");
     HostObject invalid;
-    require(!retdec_squirrel_pair_from_stack(id, 2, invalid.words.data()) && invalid.words[1] == OT_NULL, "owning index bounds");
+    require(!kinoko_squirrel_pair_from_stack((struct SQVM *)(intptr_t)(id), 2, invalid.words.data()) && invalid.words[1] == OT_NULL, "owning index bounds");
     sq_pop(vm, 1);
     sq_pushinteger(vm, 11);
-    require(!retdec_native_float_arg(id, -1, &number) && number == 2.5f, "do not coerce integer to native float");
-    require(retdec_native_integer_arg(id, -1, &integer) && integer == 11, "strict integer argument");
-    require(!retdec_native_integer_arg(id, -1, nullptr), "null integer output rejected");
+    require(!kinoko_native_float_arg((struct SQVM *)(intptr_t)(id), -1, &number) && number == 2.5f, "do not coerce integer to native float");
+    require(kinoko_native_integer_arg((struct SQVM *)(intptr_t)(id), -1, &integer) && integer == 11, "strict integer argument");
+    require(!kinoko_native_integer_arg((struct SQVM *)(intptr_t)(id), -1, nullptr), "null integer output rejected");
     sq_getlasterror(vm);
     const SQChar* message = nullptr;
     require(SQ_SUCCEEDED(sq_getstring(vm, -1, &message)) && std::string(message) == "Incorrect function argument", "original native error text");
     sq_pop(vm, 2);
     sq_pushstring(vm, "native-text", -1);
-    require(retdec_native_string_arg(id, -1, &text) && std::string(pointer<const char>(text)) == "native-text", "strict string argument");
-    require(!retdec_native_string_arg(id, -1, nullptr), "null string output rejected");
+    require(kinoko_native_string_arg((struct SQVM *)(intptr_t)(id), -1, &text) && std::string(pointer<const char>(text)) == "native-text", "strict string argument");
+    require(!kinoko_native_string_arg((struct SQVM *)(intptr_t)(id), -1, nullptr), "null string output rejected");
     sq_pop(vm, 1);
     void* payload = sq_newuserdata(vm, sizeof(int32_t));
     std::memcpy(payload, &callback_identity, sizeof(callback_identity));
-    require(retdec_native_callback_from_stack(id) == callback_identity, "untagged callback payload");
+    require(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == callback_identity, "untagged callback payload");
     sq_settypetag(vm, -1, &integer);
-    require(retdec_native_callback_from_stack(id) == 0, "callback tag must be null");
-    require(retdec_native_target_from_userdata(id) == callback_identity, "target wrapper accepts original tagged payload");
+    require(kinoko_native_callback_from_stack((struct SQVM *)(intptr_t)(id)) == 0, "callback tag must be null");
+    require(kinoko_native_target_from_userdata((struct SQVM *)(intptr_t)(id)) == callback_identity, "target wrapper accepts original tagged payload");
     sq_pop(vm, 1);
 
     sq_pushroottable(vm);

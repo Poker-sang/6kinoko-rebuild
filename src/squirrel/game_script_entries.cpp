@@ -16,7 +16,7 @@ bool read(HSQUIRRELVM vm,int index,HSQOBJECT& result) {
 }
 }
 extern "C" int32_t kinoko_script_global_update_entry(SQVM* vm) {
-    const auto target=retdec_native_target_from_userdata(address(vm));
+    const auto target=kinoko_native_target_from_userdata(vm);
     HSQOBJECT environment{},closure{};
     if(!target || !read(vm,3,environment) || !read(vm,2,closure)) return 0;
     // 471CE4 constructs slot 3 first, but passes closure(slot 2) before it.
@@ -26,7 +26,7 @@ extern "C" int32_t kinoko_script_global_update_entry(SQVM* vm) {
     return 0;
 }
 extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
-    const auto target=retdec_native_target_from_userdata(address(vm));
+    const auto target=kinoko_native_target_from_userdata(vm);
     HSQOBJECT closure{},argument{};
     float x{},y{},z{};
     const auto top=vm ? sq_gettop(vm) : 0;
@@ -36,8 +36,8 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
         retdec_trace_i32(labels[i-2],vm && i<=top ? sq_gettype(vm,i) : OT_NULL);
     }
     if(!target || top<6 || !read(vm,2,closure) ||
-       !retdec_native_float_arg(address(vm),3,&x) || !retdec_native_float_arg(address(vm),4,&y) ||
-       !retdec_native_float_arg(address(vm),5,&z) || !read(vm,6,argument)) return 0;
+       !kinoko_native_float_arg(vm, 3, &x) || !kinoko_native_float_arg(vm, 4, &y) ||
+       !kinoko_native_float_arg(vm, 5, &z) || !read(vm,6,argument)) return 0;
     // Restore owning by-value arguments; the native manager below only borrows.
     const auto arg=transfer(vm,argument),fn=transfer(vm,closure);
     KinokoOwnedObjectWords result{kinoko_squirrel_object_vtable(),OT_NULL,0};

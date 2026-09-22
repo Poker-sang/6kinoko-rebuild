@@ -554,21 +554,21 @@ void argument_guards(HSQUIRRELVM vm) {
     StackTop stack(vm);
     int32_t output = 99; float f = 7;
     for (int index : {0, 1, -1, INT32_MIN, INT32_MAX}) {
-        require(!retdec_native_integer_arg(address(vm), index, &output) && output == 99, "invalid integer argument leaves output");
-        require(!retdec_native_string_arg(address(vm), index, &output) && output == 99, "invalid string argument leaves output");
-        require(!retdec_native_float_arg(address(vm), index, &f) && f == 7, "invalid float argument leaves output");
+        require(!kinoko_native_integer_arg(vm, index, &output) && output == 99, "invalid integer argument leaves output");
+        require(!kinoko_native_string_arg(vm, index, &output) && output == 99, "invalid string argument leaves output");
+        require(!kinoko_native_float_arg(vm, index, &f) && f == 7, "invalid float argument leaves output");
     }
-    require(!retdec_native_string_arg(0, 1, &output), "null VM string argument");
+    require(!kinoko_native_string_arg((struct SQVM *)(intptr_t)(0), 1, &output), "null VM string argument");
     for (int size = 0; size < 4; ++size) {
         sq_newuserdata(vm, size);
-        require(retdec_native_target_from_userdata(address(vm)) == 0, "undersized native target rejected");
-        require(retdec_native_callback_from_stack(address(vm)) == 0, "undersized callback rejected");
+        require(kinoko_native_target_from_userdata(vm) == 0, "undersized native target rejected");
+        require(kinoko_native_callback_from_stack(vm) == 0, "undersized callback rejected");
         sq_pop(vm, 1);
     }
     auto* payload = sq_newuserdata(vm, 4); store(payload, int32_t{123});
-    require(retdec_native_target_from_userdata(address(vm)) == 123 && retdec_native_callback_from_stack(address(vm)) == 123, "four-byte native payload retained");
+    require(kinoko_native_target_from_userdata(vm) == 123 && kinoko_native_callback_from_stack(vm) == 123, "four-byte native payload retained");
     sq_pop(vm, 1); sq_pushinteger(vm, 17);
-    require(retdec_native_integer_arg(address(vm), -1, &output) == 1 && output == 17, "valid negative argument index retained");
+    require(kinoko_native_integer_arg(vm, -1, &output) == 1 && output == 17, "valid negative argument index retained");
 }
 } // namespace
 
