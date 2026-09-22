@@ -4548,7 +4548,8 @@ static int test_string_glyph_cache(void) {
 static int test_map_manager_copy(void) {
     int32_t source[21]={0},target[21]={0},first,last;
     uint32_t capacity;
-    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(source)))); (int32_t)(intptr_t)(kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(target)));
+    kinoko_sqplus_object_initialize(source);
+    kinoko_sqplus_object_initialize(target);
     kinoko_map_containers_construct(PTR(source));kinoko_map_containers_construct(PTR(target));
     source[3]=123; source[4]=456; source[5]=789;
     first=kinoko_map_append_render(PTR(source),222);

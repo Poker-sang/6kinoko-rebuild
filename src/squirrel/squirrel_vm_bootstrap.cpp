@@ -42,7 +42,7 @@ extern "C" void kinoko_sq_release_owned_states(void) {
 }
 extern "C" int32_t kinoko_sqplus_release_vm_wrappers(void) {
     if (g645 != 0) {
-        kinoko_sqplus_object_reset(pointer<void>(g645));
+        kinoko_sqplus_object_destroy(pointer<void>(g645));
         std::free(pointer<void>(g645));
         g645 = 0;
     }
@@ -96,7 +96,8 @@ extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
             kinoko_sq_delete_shared_state(kinoko_sq_shared_state(address(current)));
             return 0;
         }
-        sq_setprintfunc(current, &kinoko_sqplus_print);
+        // The legacy printer returns puts' status; Squirrel's void callback ignores it.
+        sq_setprintfunc(current, reinterpret_cast<SQPRINTFUNCTION>(&kinoko_sqplus_print));
         sq_pushroottable(current);
         sqstd_register_iolib(current);
         sqstd_register_bloblib(current);
