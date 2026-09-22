@@ -2013,7 +2013,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     kinoko_initialize_render_queue();
     function_4a94e0_this(PTR(g722));
     function_4a95c0_this(PTR(g722),PTR(root+1));
-    CHECK(function_46f4c0_this(map_state));
+    CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
     function_46fac0();
     function_4669d0();
     {
@@ -2055,7 +2055,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             CHECK(execute_source(vm,root+2,"player.x+=2.5; player.left+=2.5; player.right+=2.5;"));
             CHECK(kinoko_camera_update((KinokoCamera *)g_retdec_camera_state, NULL)>=0);
             retdec_actor_manager_update(PTR(g_retdec_actor_manager_state),PTR(g_retdec_camera_state));
-            CHECK(function_46f0b0(map_state)>=0);
+            CHECK(kinoko_map_manager_update((KinokoMapManager *)(intptr_t)map_state)>=0);
             int32_t manager=PTR(g_retdec_actor_manager_state);
             int32_t *actors=*(int32_t **)(intptr_t)(manager+100);
             for(int n=0;n<*(int32_t *)(intptr_t)(manager+116);++n) {
@@ -2111,7 +2111,7 @@ static int test_map_camera_fpu(void) {
     *(float *)(camera + 13) = 203.5f;
     _fxsave(before);
     for (int frame = 0; frame < 600; ++frame) {
-        function_46edc0_this(PTR(manager), camera);
+        kinoko_map_manager_prepare((KinokoMapManager *)manager, (KinokoCamera *)camera);
         _fxsave(after);
         if (before[4] != after[4])
             fprintf(stderr, "map camera leaked x87 stack at frame %d: tag %02X -> %02X\n",
@@ -3663,7 +3663,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
     function_4a94e0_this(PTR(g722));
     function_4a95c0_this(PTR(g722),PTR(root+1));
-    CHECK(function_46f4c0_this(map_state));
+    CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
     function_46fac0();
     CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
     function_4a95c0_this(map_state,PTR(map_object));
@@ -3760,7 +3760,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
         function_4a94e0_this(PTR(g722));
         function_4a95c0_this(PTR(g722),PTR(root+1));
-        CHECK(function_46f4c0_this(map_state));
+        CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
         function_46fac0();
         CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
         function_4a95c0_this(map_state,PTR(map_object));

@@ -78,6 +78,8 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/sprite_color.cpp
     src/reconstructed/texture_store.cpp
     src/reconstructed/map_containers.cpp
+    src/reconstructed/map_manager.cpp
+    src/reconstructed/map_loading.cpp
     src/reconstructed/map_copy.cpp
     src/reconstructed/map_layers.cpp
     src/reconstructed/map_activation.cpp
@@ -761,7 +763,15 @@ target_include_directories(kinoko_file_archive_contract PRIVATE include)
 target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
 add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
+add_executable(kinoko_map_manager_contract tests/map_manager_contract.cpp
+    src/reconstructed/map_manager.cpp src/reconstructed/map_copy.cpp
+    src/reconstructed/map_containers.cpp)
+target_include_directories(kinoko_map_manager_contract PRIVATE include)
+target_compile_options(kinoko_map_manager_contract PRIVATE /O2 /fp:strict)
+add_test(NAME map_manager_contract COMMAND kinoko_map_manager_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_map_manager_contract
     kinoko_scene_operations_contract
     kinoko_game_script_contract
     kinoko_game_lifecycle_contract
@@ -833,3 +843,5 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
         PDB_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}/tools"
     )
 endforeach()
+
+set_source_files_properties(src/reconstructed/map_manager.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")

@@ -1,3 +1,4 @@
+#include "kinoko/map_manager_records.hpp"
 #include "kinoko/camera_records.hpp"
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "kinoko/script_registration.h"
@@ -30,13 +31,13 @@ constexpr Field camera_fields[] = {
     {"height", offsetof(kinoko::camera::Record, height), false},
 };
 constexpr Field map_fields[] = {
-    {"width", 76, true},
-    {"height", 80, true},
-    {"last_id", 56, true},
-    {"last_left", 60, false},
-    {"last_top", 64, false},
-    {"last_right", 68, false},
-    {"last_bottom", 72, false},
+    {"width", offsetof(kinoko::map::ManagerRecord, width), true},
+    {"height", offsetof(kinoko::map::ManagerRecord, height), true},
+    {"last_id", offsetof(kinoko::map::ManagerRecord, last_id), true},
+    {"last_left", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, left), false},
+    {"last_top", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, top), false},
+    {"last_right", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, right), false},
+    {"last_bottom", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, bottom), false},
 };
 int32_t create_class(int32_t* output, int32_t vm, int32_t name, int32_t parent, int32_t* descriptor) {
     const auto top = sq_gettop(pointer<SQVM>(vm));

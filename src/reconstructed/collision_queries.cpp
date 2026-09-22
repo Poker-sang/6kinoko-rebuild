@@ -1,3 +1,4 @@
+#include "kinoko/map_manager_records.hpp"
 #include "kinoko/collision_records.hpp"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/map_layout_records.hpp"
@@ -13,12 +14,6 @@ using kinoko::legacy::address;
 int32_t *scan_cache(const ActorView &actor, int32_t index) {
     return reinterpret_cast<int32_t *>(actor.bytes(&ActorRecord::collision_scan_cache) + index * sizeof(int32_t));
 }
-struct EventResultRecord {
-    std::array<uint8_t, 56> prefix;
-    int32_t chip_id;
-    Bounds bounds;
-};
-static_assert(offsetof(EventResultRecord, chip_id) == 56 && offsetof(EventResultRecord, bounds) == 60);
 class PointHits final {
     std::array<int32_t, 12> storage_{};
 public:
@@ -79,8 +74,8 @@ extern "C" int32_t kinoko_collision_has_chip(KinokoCollisionState *state, Kinoko
 extern "C" int32_t kinoko_collision_event_at_point(KinokoMapManager *manager,
     int32_t x, int32_t y, uint32_t layer_index, int32_t *output_count) {
     const uint32_t layer_count = kinoko_map_event_count(address(manager));
-    const kinoko::native::RecordView<EventResultRecord> result(manager);
-    result.set(&EventResultRecord::chip_id, int32_t{-1});
+    const ManagerView result(manager);
+    result.set(&ManagerRecord::last_id, int32_t{-1});
     if (layer_index >= layer_count) return 0;
     auto *layout = kinoko::legacy::pointer<KinokoActLayout>(kinoko_map_event_at(address(manager), layer_index));
     if (!layout) return 0;
@@ -101,8 +96,8 @@ extern "C" int32_t kinoko_collision_event_at_point(KinokoMapManager *manager,
         const int32_t bottom = top + chip.get(&ChipDefinition::height);
         // Point query uses local integer placement coordinates and half-open edges.
         if (left <= x && right > x && top <= y && bottom > y) {
-            result.set(&EventResultRecord::chip_id, static_cast<int32_t>(placement.get(&Placement::chip_id)));
-            result.set(&EventResultRecord::bounds, Bounds{static_cast<float>(left), static_cast<float>(top),
+            result.set(&ManagerRecord::last_id, static_cast<int32_t>(placement.get(&Placement::chip_id)));
+            result.set(&ManagerRecord::last_bounds, Bounds{static_cast<float>(left), static_cast<float>(top),
                 static_cast<float>(right), static_cast<float>(bottom)});
             break;
         }

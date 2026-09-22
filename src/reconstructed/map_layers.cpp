@@ -1,3 +1,4 @@
+#include "kinoko/map_manager_records.hpp"
 #include "kinoko/map_render.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_memory.hpp"
@@ -13,28 +14,19 @@ extern "C" {
 extern unsigned char g327, g37;
 }
 
-namespace {
-struct MapManager {
-    unsigned char script_object[12];
-    KinokoActDocument *source_act;
-    KinokoActSourceHolder *source_holder;
-    KinokoActRuntime *player;
-};
 using namespace kinoko::map;
-static_assert(offsetof(MapManager, player) == 20);
-
-}
 
 extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, const char *name) {
-    const auto *manager = reinterpret_cast<const MapManager *>(storage);
-    if (!manager || !manager->source_act || !name)
+    if (!storage) return nullptr;
+    const ManagerView manager(storage);
+    if (!manager.get(&ManagerRecord::source_act) || !name)
         return 0;
 
     // 46F140 uses the source holder only for the layer count. 452020 resolves
     // the key from player+16 (the live ACT holder), after BeginStage's clone.
-    const int32_t count = kinoko_act_source_layer_count(manager->source_holder);
+    const int32_t count = kinoko_act_source_layer_count(manager.get(&ManagerRecord::source_holder));
     for (int32_t index = 0; index < count; ++index) {
-        auto *borrowed_layout = kinoko_act_layer_layout(manager->player, index);
+        auto *borrowed_layout = kinoko_act_layer_layout(manager.get(&ManagerRecord::player), index);
         if (!borrowed_layout) continue;
         const LayoutView layout(borrowed_layout);
         auto *layer = layout.get(&LayoutRecord::owning_layer);

@@ -1,3 +1,4 @@
+#include "kinoko/map_manager.h"
 #include "kinoko/scene_operations.h"
 #include "kinoko/game_script_api.h"
 #include "kinoko/game_script_host.h"
@@ -2102,17 +2103,17 @@ static int32_t function_46e6f0_this(int32_t this_ptr);
 
 int32_t function_46ed80(int32_t a1, int32_t result);
 
-static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
 
 
-int32_t function_46f0b0(int32_t this_ptr);
+
+
 
 int32_t function_46f140(int32_t a1);
 int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 
-static int32_t function_46f620_this(int32_t this_ptr);
-int32_t function_46f6d0(int32_t a1);
-static int32_t function_46f4c0_this(int32_t this_ptr);
+
+
+
 int32_t function_46fac0(void);
 int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment);
 int32_t function_470030(int32_t a1);
@@ -3376,14 +3377,14 @@ static void retdec_initialize_runtime_objects(void)
        list sentinel must exist before the first scene frame, even though the
        current map handle remains null until a real LoadMap call. */
     if (g_retdec_map_manager_initialized == 0) {
-        if (function_46f4c0_this(
-                (int32_t)(intptr_t)g_retdec_map_manager_state) == 0) {
+        if (kinoko_map_manager_construct(
+                (KinokoMapManager *)g_retdec_map_manager_state) == 0) {
             retdec_trace("map-manager:init-failed");
         } else {
             g_retdec_map_manager_initialized = 1;
             retdec_trace_i32(
                 "map-manager:sentinel",
-                *(int32_t *)(g_retdec_map_manager_state + 24));
+                (int32_t)(intptr_t)kinoko_map_manager_containers((KinokoMapManager *)g_retdec_map_manager_state));
         }
     }
 
@@ -8436,7 +8437,7 @@ void retdec_trace_star_state(const char *phase, int32_t actor) {
         *(uint8_t *)(intptr_t)(actor+22),*(int32_t *)(intptr_t)(actor+228),
         *(int32_t *)(intptr_t)(actor+180),sprite ? *(int32_t *)(intptr_t)(sprite+4) : 0,
         sprite ? *(float *)(intptr_t)(sprite+180) : 0,sprite ? *(float *)(intptr_t)(sprite+216) : 0,
-        *(int32_t *)(g_retdec_map_manager_state+80),
+        kinoko_map_manager_height((KinokoMapManager *)g_retdec_map_manager_state),
         *(float *)(g_retdec_camera_state+72),*(float *)(g_retdec_camera_state+76),
         *(float *)(g_retdec_camera_state+80),*(float *)(g_retdec_camera_state+84));
     retdec_trace(message);
@@ -9488,92 +9489,7 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
 
 
 
-/* CMapManager's CRT constructor was omitted from the generated C.  The
-   fields below are the offsets used by the original 0x46f620/0x46edc0
-   methods: a current map object, two vector bounds, and a list sentinel. */
-static int32_t function_46f4c0_this(int32_t this_ptr) {
-    if (this_ptr == 0) return 0;
-    memset((void *)(intptr_t)this_ptr, 0, sizeof(g_retdec_map_manager_state));
-    function_4a94e0_this(this_ptr);
-    kinoko_map_containers_construct(this_ptr);
-    *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
-    return this_ptr;
-}
-
-
-/* MapManagerRenderLayer::Update.  The original receives MapManager in ECX
-   and the camera object as its stack argument. */
-static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
-    int32_t render_layer;
-
-    if (this_ptr == 0 || a1 == NULL)
-        return 0;
-    render_layer = *(int32_t *)(intptr_t)(this_ptr + 12);
-    if (render_layer == 0)
-        return 0;
-    *(float32_t *)(intptr_t)(render_layer + 88) =
-        (float32_t)floor((float64_t)(
-            *(float32_t *)((unsigned char *)(void *)a1 + 48) -
-            *(float32_t *)((unsigned char *)(void *)a1 + 40)));
-    *(float32_t *)(intptr_t)(render_layer + 92) =
-        (float32_t)floor((float64_t)(
-            *(float32_t *)((unsigned char *)(void *)a1 + 52) -
-            *(float32_t *)((unsigned char *)(void *)a1 + 44)));
-    return render_layer;
-}
-
-// Address range: 0x46ee20 - 0x46eec1
-/* Event callback dispatch is implemented in reconstructed/map_activation.cpp. */
-
-// Address range: 0x46ef40 - 0x46efc4
-
-
-
-
-// Address range: 0x46efd0 - 0x46f01e
-
-
-
-// Address range: 0x46f0b0 - 0x46f0d0
-int32_t function_46f0b0(int32_t this_ptr) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 16) {
-        retdec_trace("46f0b0:entry");
-        retdec_trace_i32("46f0b0:manager", this_ptr);
-        retdec_trace_i32("46f0b0:act",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 12) : 0);
-        retdec_trace_i32("46f0b0:holder",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 16) : 0);
-        retdec_trace_i32("46f0b0:resource",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 20) : 0);
-    }
-    // 0x46f0b0: MapManager owns the resource at offset 0x14.
-    if (this_ptr == 0 || *(int32_t *)(intptr_t)(this_ptr + 12) == 0
-        || *(int32_t *)(intptr_t)(this_ptr + 20) == 0) {
-        // 0x46f0ce
-        if (trace_index <= 16)
-            retdec_trace("46f0b0:skip");
-        return 0;
-    }
-    // 0x46f0c0
-    int32_t resource = *(int32_t *)(intptr_t)(this_ptr + 20);
-    function_451620(resource);
-    int32_t result = kinoko_act_update_frame(resource);
-    if (trace_index <= 16)
-        retdec_trace_i32("46f0b0:result", result);
-    return result;
-}
-
-// Address range: 0x46f0d0 - 0x46f0fb
-
-
+/* Map lifecycle/frame preparation: reconstructed/map_manager.cpp. */
 
 // Address range: 0x46f140 - 0x46f1f3
 int32_t function_46f140(int32_t name_ptr) {
@@ -9593,198 +9509,7 @@ int32_t function_46f140(int32_t name_ptr) {
 
 
 
-static int32_t function_46f620_this(int32_t this_ptr) {
-    if (this_ptr == 0) return 0;
-    function_4a9570_this(this_ptr);
-    kinoko_map_containers_clear(this_ptr);
-
-    if (*(int32_t *)(intptr_t)(this_ptr + 20) != 0) {
-        kinoko_act_runtime_dispose(*(KinokoActRuntime **)(intptr_t)(this_ptr + 20));
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 20));
-        *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
-    }
-    if (*(int32_t *)(intptr_t)(this_ptr + 16) != 0) {
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 16));
-        *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
-    }
-    if (*(int32_t *)(intptr_t)(this_ptr + 12) != 0) {
-        int32_t object = *(int32_t *)(intptr_t)(this_ptr + 12);
-        int32_t *vtable = *(int32_t **)(intptr_t)object;
-        if (vtable != NULL && vtable[4] != 0) {
-            retdec_call_thiscall1((void *)(intptr_t)object,
-                                  (void *)(intptr_t)vtable[4], 1);
-        }
-        *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
-    }
-    return 0;
-}
-
-// Address range: 0x46f6d0 - 0x46f9f0
-/* LoadMap is the other place where the generated C++ calls lost several
-   receivers at once.  Keep the original order explicit: construct the CAct,
-   create its CActResource wrapper, bind the VM root, BeginStage it, then
-   publish the Map instance and currentMap values used by stage.nut. */
-static int32_t retdec_map_bind_resource(int32_t resource_ptr, int32_t vm)
-{
-    int32_t root_object[5] = { 0, 0, g483, g484, 0 };
-    int32_t result;
-
-    if (resource_ptr == 0 || vm == 0)
-        return 0;
-    if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root_object, vm))
-        return 0;
-    result = retdec_bind_act_resource_root(resource_ptr, vm, root_object + 8);
-    retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
-    return result;
-}
-
-static int32_t retdec_map_make_string(int32_t output_ptr,
-                                      const char *source_ptr)
-{
-    int32_t vm = (int32_t)(intptr_t)g644;
-
-    if (output_ptr == 0 || source_ptr == NULL || vm == 0)
-        return 0;
-    function_4a94e0_this(output_ptr);
-    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)(intptr_t)source_ptr), -1);
-    function_4a9660_this(output_ptr, -1);
-    kinoko_sq_pop(vm, 1);
-    return 1;
-}
-
-static int32_t retdec_load_map_fixed(int32_t path_ptr)
-{
-    int32_t map_state = (int32_t)(intptr_t)g_retdec_map_manager_state;
-    int32_t vm = (int32_t)(intptr_t)g644;
-    KinokoActDocument *act;
-    KinokoActSourceHolder *holder;
-    int32_t resource = 0;
-    int32_t map_object[3] = { 0, 0, 0 };
-    int32_t layer_names[3] = { 0, 0, 0 };
-    int32_t layer_name[3] = { 0, 0, 0 };
-    int32_t root_object[3] = { 0, 0, 0 };
-    int32_t current_map[3] = { 0, 0, 0 };
-    const char *act_name;
-    int32_t layer_count;
-    int32_t index;
-
-    if (map_state == 0 || path_ptr == 0 || vm == 0)
-        return 0;
-
-    function_46f620_this(map_state);
-    act = kinoko_act_document_create();
-    if (act == NULL)
-        return 0;
-    /* The not-yet-migrated map state still publishes integer ABI slots. */
-    *(int32_t *)(intptr_t)(map_state + 12) = (int32_t)(intptr_t)act;
-    if (!kinoko_act_document_load(act, (const char *)(intptr_t)path_ptr)) {
-        retdec_trace("map:act-load-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-
-    kinoko_act_document_load_resources(act, ""); /* 46F76E; result ignored */
-
-    holder = (KinokoActSourceHolder *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(sizeof(void *));
-    if (holder == 0) {
-        function_46f620_this(map_state);
-        return 0;
-    }
-    kinoko_act_source_initialize(holder, act);
-    *(int32_t *)(intptr_t)(map_state + 16) = (int32_t)(intptr_t)holder;
-    resource = (int32_t)(intptr_t)kinoko_act_source_create_runtime(holder);
-    *(int32_t *)(intptr_t)(map_state + 20) = resource;
-    /* Restore the original resource registration and immediate BeginStage. */
-    if (resource == 0 ||
-        retdec_call_thiscall2_result(
-            (void *)(intptr_t)resource,
-            (void *)(intptr_t)kinoko_method_root_table_construct, vm, 0) < 0) {
-        retdec_trace("map:450e30-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-    if (retdec_call_thiscall1_result(
-            (void *)(intptr_t)resource,
-            (void *)(intptr_t)kinoko_method_begin_stage, 0) < 0) {
-        retdec_trace("map:450950-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-
-    *(int32_t *)(intptr_t)(map_state + 76) =
-        kinoko_act_document_screen_width(act);
-    *(int32_t *)(intptr_t)(map_state + 80) =
-        kinoko_act_document_screen_height(act);
-
-    /* CMapManager is also the Map Squirrel instance. */
-    if (g636[1] == 0 ||
-        function_4a90c0_this((int32_t)(intptr_t)map_object,
-                             (int32_t)(intptr_t)g636) == 0) {
-        retdec_trace("map:instance-copy-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-    function_4a95c0_this(map_state, (int32_t)(intptr_t)map_object);
-    function_4a9d70_this((int32_t)(intptr_t)map_object);
-    function_4a9bb0_this(map_state, map_state);
-
-    retdec_trace_i32("map:instance", map_state);
-    retdec_trace_i32("map:act", (int32_t)(intptr_t)act);
-    retdec_trace_squirrel_name("map:path", path_ptr);
-    function_4a9840_this((int32_t)(intptr_t)&g722, "map", map_state);
-
-    function_4a92e0_this((int32_t *)(intptr_t)layer_names, 0);
-    layer_count = kinoko_act_source_layer_count(holder);
-    for (index = 0; index < layer_count; ++index) {
-        int32_t layout = (int32_t)(intptr_t)kinoko_act_layer_layout((KinokoActRuntime *)(intptr_t)resource, index);
-        if (layout == 0)
-            continue;
-        /* C2DMapLayout exposes its layer name through the same string field
-           used by the original 46F020 helper.  Unsupported layer kinds are
-           intentionally skipped, matching the original RTTI test. */
-        if (*(int32_t *)(intptr_t)(layout + 312) != 0) {
-            int32_t string_object =
-                *(int32_t *)(intptr_t)(layout + 312) + 112;
-            const char *name = retdec_std_string_data(string_object);
-            if (name != NULL && *name != 0 &&
-                retdec_map_make_string((int32_t)(intptr_t)layer_name, name)) {
-                function_4a9600_this((int32_t *)(intptr_t)layer_names,
-                                     (int32_t)(intptr_t)layer_name);
-                function_4a9d70_this((int32_t)(intptr_t)layer_name);
-            }
-        }
-    }
-    /* 46F923 reverses the collected names before publishing them. */
-    function_4a99f0((int32_t)(intptr_t)layer_names);
-    function_4a9840_this(map_state, "layer_name", layer_names);
-    function_4a9d70_this((int32_t)(intptr_t)layer_names);
-
-    /* currentMap is root[act.stName].  This is the object that InitStage
-       receives as `op`, so setting the string alone is insufficient. */
-    function_4a94e0_this((int32_t)(intptr_t)root_object);
-    function_4a95c0_this((int32_t)(intptr_t)root_object,
-                          (int32_t)(intptr_t)&g722);
-    act_name = kinoko_act_document_name(act);
-    if (act_name != NULL && *act_name != 0) {
-        function_4aa3a0_this((int32_t)(intptr_t)root_object,
-                             (int32_t)(intptr_t)current_map, act_name);
-        if (*(int32_t *)(intptr_t)(current_map + 4) != g483) {
-            function_4a9840_this((int32_t)(intptr_t)root_object,
-                                 "currentMap", current_map);
-        }
-        retdec_trace_squirrel_name("map:act-name",
-                                   (int32_t)(intptr_t)act_name);
-        retdec_trace_i32("map:current-map-type", current_map[1]);
-        retdec_trace_i32("map:current-map-data", current_map[2]);
-    }
-    function_4a9d70_this((int32_t)(intptr_t)current_map);
-    function_4a9d70_this((int32_t)(intptr_t)root_object);
-    return 1;
-}
-
-int32_t function_46f6d0(int32_t a1) {
-    return retdec_load_map_fixed(a1);
-}
+/* Map loading/publication: reconstructed/map_loading.cpp. */
 
 // Address range: 0x46f9f0 - 0x46fabb
 // The original is a __thiscall constructor.  RetDec lost ECX and treated the
@@ -14050,13 +13775,13 @@ void kinoko_game_update_callback(int32_t trace_index) {
     }
 }
 int32_t kinoko_game_update_map(KinokoMapManager *map) {
-    return function_46f0b0((int32_t)(intptr_t)map);
+    return kinoko_map_manager_update(map);
 }
 void kinoko_game_prepare_map(KinokoMapManager *map, KinokoCamera *camera) {
-    function_46edc0_this((int32_t)(intptr_t)map, (int32_t *)camera);
+    kinoko_map_manager_prepare(map, camera);
 }
 void kinoko_game_clear_map(KinokoMapManager *map) {
-    function_46f620_this((int32_t)(intptr_t)map);
+    kinoko_map_manager_clear(map);
 }
 void kinoko_game_clear_actors(KinokoActorManager *actors) {
     kinoko_clear_actor_manager((int32_t)(intptr_t)actors);
@@ -14081,8 +13806,8 @@ KinokoCollisionState *kinoko_game_collision_state(void) { return (KinokoCollisio
 void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
     retdec_function_45df10_impl((int32_t)(intptr_t)callback, 0);
 }
-int32_t kinoko_game_load_map_file(const char *path) { return retdec_load_map_fixed((int32_t)(intptr_t)path); }
-int32_t kinoko_game_release_map_state(void) { return function_46f620_this((int32_t)(intptr_t)g_retdec_map_manager_state); }
+int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_load((KinokoMapManager *)g_retdec_map_manager_state, path, (struct SQVM *)g644, g636, &g722); }
+int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear((KinokoMapManager *)g_retdec_map_manager_state); return 0; }
 
 void kinoko_game_split_path(const char *path, char *directory) {
     function_4086e0((int32_t)(intptr_t)path, (int32_t *)directory, 0);
