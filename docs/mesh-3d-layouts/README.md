@@ -1,4 +1,8 @@
-# Mesh resources and 3D layouts: recovery in progress
+# Mesh resources and 3D layouts
+
+> **ORIGINAL BUG FIX / 原版缺陷修正：** 用户已授权修复控制器编号被误作模型
+> 指针的问题。见 [醒目标记与证据](ORIGINAL-BUG-FIX.md)。以下 R1/R2 是历史
+> 检查点；R3 接通 ACT 的 Mesh/C3D 运行链，仍不声称游戏实际使用了它。
 
 Batch directories use English names, starting with `mesh-3d-layouts-r1-quiet`.
 This is an implementation checkpoint, not a completed Mesh runtime handoff.
@@ -82,3 +86,35 @@ The R1 build log and products are retained.
 - The new decoder and 3D core are not reachable through the current factories.
   This artifact is a retained checkpoint, not a completed Mesh-enabled release.
   The clarification about correcting the original pointer mismatch remains open.
+
+## R3 implementation
+
+User authorization on 2026-09-22 resolves the historical pending question.
+Fresh IDA session `84a4091c` supplies remaining constructor, material, renderer,
+binding and shape-reader evidence. R3 includes:
+
+- ACT factory recognition by original decorated-name hashes; separate Mesh
+  property schema, C3D property writer, exact QueryType names and virtual slots.
+- Mesh resource construction, prefix reuse, cloning by reloading, reference-
+  counted model/material cache, controller reference expansion and postorder
+  registry, material acquisition, render-list ownership and cleanup.
+- Typed model and controller pointers; the authorized correction uses the root's
+  model, not its integer registry index. Raw original addresses are not called.
+- D3D managed index/position/normal/UV buffers and declaration, original first-
+  layer uploads, original 16-bit renderer even for 32-bit serialized indices,
+  indexed attribute drawing, borrowed multimap replacement textures, and original
+  final diffuse triangle. ACT does not bind a controller to its mesh renderer,
+  so this path has no added controller transforms or invented animation clock.
+- Original nonconstructible Mesh and C3D script classes, LoadMesh and replacement
+  texture methods, property access, object/table binding, and layout publication.
+- Shape vertex/normal index arrays after the position/normal payload, missed by
+  the R2 decoder, now consumed. Material versions <=15 and old/new color payloads
+  are represented; automatic texture acquisition is not invented in the material
+  reader (the original has a separate method for that).
+- Truncated/overflowing input, cyclic external references and oversized buffer
+  uploads fail rather than writing outside owned storage. These failure guards
+  do not replace successful asset behavior with guessed content.
+
+Scope is the ACT-reachable Mesh loading/drawing chain. General standalone mesh
+controller animation/editor APIs are not implicitly exposed by ACT. No game or
+local automated tests will be executed, per the user's latest request.

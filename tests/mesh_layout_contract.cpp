@@ -42,6 +42,7 @@ void format_contract(uint32_t version) {
     if(version>=11) { word(3);word(0x12345678);word(0x87654321);word(0xffaabbcc); }
     word(1);word(1);zeros(16);word(1);name("bone");matrix(); // skin
     word(1);word(1);zeros(24); // shape: one position and normal
+    word(1);word(0);word(1);word(0); // shape vertex/normal index arrays
     node_tail(version,"triangle",1);word(1);node_tail(version,"reference",0);
     auto root=kinoko::mesh::read_model(1);
     require(root && cursor==bytes.size() && root->name=="root");

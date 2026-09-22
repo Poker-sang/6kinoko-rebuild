@@ -71,6 +71,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/act_render_state.cpp
     src/reconstructed/act_layout_3d.cpp
     src/reconstructed/mesh_model.cpp
+    src/reconstructed/act_mesh.cpp
     src/reconstructed/render_state.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp

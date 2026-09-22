@@ -1,4 +1,5 @@
 #include "kinoko/map_layout_records.hpp"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/map_chip_cache.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
@@ -46,6 +47,8 @@ Schema render_target_schema = make_schema();
 // 42F2A0: chip resources serialize the base ID/name and the MCD filename.
 Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
                    {"stChipFile", {3,3,36}}};
+// 44C2A0: independent Mesh property header; the path prefix is runtime state.
+Schema mesh_schema{{"resourceID",{0,0,4}},{"stName",{3,3,8}},{"stMeshName",{3,3,36}}};
 // 425350: CActTimeLine has two integers followed by a vector of integer pairs.
 Schema timeline_schema{{"beginTime", {0,0,4}}, {"timeLength", {0,0,8}}};
 // 41E790, including the two byte-sized booleans and previous-position fields.
@@ -252,6 +255,19 @@ extern "C" int32_t function_43c860_this(int32_t layout, int32_t holder, int32_t 
     if (!layout || !holder || version != 1) return 0;
     try { return read(layout, field<int32_t>(holder), layout3d_schema, false); }
     catch (...) { return 0; }
+}
+
+extern "C" int32_t __fastcall kinoko_method_write_layout_3d(int32_t layout,void *,int32_t writer) {
+    if(!layout || !writer) return 0;
+    try{return write(layout,writer,layout3d_schema);}catch(...){return 0;}
+}
+extern "C" int32_t __fastcall kinoko_method_read_mesh_resource(int32_t resource,void *,int32_t holder,int32_t version) {
+    if(!resource || !holder || version!=1) return 0;
+    try{return read(resource,field<int32_t>(holder),mesh_schema,false);}catch(...){return 0;}
+}
+extern "C" int32_t __fastcall kinoko_method_write_mesh_resource(int32_t resource,void *,int32_t writer) {
+    if(!resource || !writer) return 0;
+    try{return write(resource,writer,mesh_schema);}catch(...){return 0;}
 }
 
 extern "C" int32_t __fastcall kinoko_method_read_map_layout(

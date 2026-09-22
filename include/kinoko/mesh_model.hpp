@@ -25,6 +25,11 @@ struct Skin {
 };
 struct Shape {
     std::vector<Vector3> positions, normals;
+    std::vector<int32_t> vertex_indices, normal_indices;
+};
+struct Material {
+    std::array<std::string,5> names;
+    std::array<float,16> colors{};
 };
 enum class NodeType : uint32_t { root = 0, reference = 1, mesh = 2, node = 3 };
 struct Geometry {
@@ -52,4 +57,5 @@ struct Node {
 // Borrowed archive reader; caller retains ownership. This decodes the original
 // versioned MSH stream, not a D3DX/X-file replacement format.
 std::unique_ptr<Node> read_model(int32_t archive_reader);
+std::unique_ptr<Material> read_material(int32_t archive_reader);
 }

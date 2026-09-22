@@ -67,6 +67,7 @@ void read_geometry(Reader &reader, Geometry &mesh, uint32_t version) {
     for (auto &shape : mesh.shapes) {
         const auto vertices = reader.count();
         reader.array(shape.positions, vertices); reader.array(shape.normals, vertices);
+        reader.array(shape.vertex_indices); reader.array(shape.normal_indices);
     }
 }
 
@@ -99,5 +100,23 @@ std::unique_ptr<Node> read_model(int32_t archive_reader) {
     const auto version = reader.count();
     // 4594F0 accepts all versions >= 10, not just the latest writer version.
     return version >= 10 ? read_node(reader, version, NodeType::root) : nullptr;
+}
+std::unique_ptr<Material> read_material(int32_t archive_reader) {
+    if (!archive_reader) return {};
+    Reader reader(archive_reader);
+    const auto version=reader.count();
+    if(version>15) return {};
+    auto material=std::make_unique<Material>();
+    if(version<12) material->names[1]=reader.string();
+    else {
+        for(size_t i=0;i!=4;++i) material->names[i]=reader.string();
+        if(version>=15) material->names[4]=reader.string();
+    }
+    if(version>=14) reader.value(material->colors);
+    else if(version==13) {
+        std::array<uint8_t,16> colors{};reader.value(colors);
+        for(size_t i=0;i!=16;++i) material->colors[i]=static_cast<float>(double(colors[i])/255.0);
+    }
+    return material;
 }
 }

@@ -1,4 +1,5 @@
 #include "kinoko/act_document_association.hpp"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -260,11 +261,17 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         return 1;
     if (!retdec_act_read_u32(reader_ptr, &layout_type) ||
         (layout_type != 0x655cd5b0u &&
-         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u)) {
+         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u &&
+         layout_type != kinoko::mesh::layout_type())) {
         retdec_trace_i32("act:unsupported-layout", (int32_t)layout_type);
         return 0;
     }
-    if(layout_type==0x9e695d47u) {
+    if(layout_type==kinoko::mesh::layout_type()) {
+        layout=address(kinoko::mesh::create_layout());
+        if(layout && !kinoko_method_layout3d_assign(layout,nullptr,address(&reader_ptr),version)) {
+            std::free(pointer<void>(layout));layout=0;
+        }
+    } else if(layout_type==0x9e695d47u) {
         // Original Boost hash of .?AVCStringLayout@@; use the genuine native
         // reader through its recovered holder/version ABI.
         layout=address(std::calloc(1,260));
@@ -659,6 +666,13 @@ extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
+    if(type==kinoko::mesh::resource_type()) {
+        auto *mesh=kinoko::mesh::create_resource();
+        if(mesh && !kinoko_method_read_mesh_resource(address(mesh),nullptr,address(&reader_ptr),1)) {
+            kinoko::mesh::clear_resource(mesh);std::free(mesh);return 0;
+        }
+        return address(mesh);
+    }
     // Original 449C50 registers the raw RTTI name in the same Boost-hashed
     // factory used by 428150. This type owns an independent property schema.
     static const char target_name[] = ".?AVCActRenderTarget@@";

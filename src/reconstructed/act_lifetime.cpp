@@ -8,6 +8,7 @@
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/act_host.h"
 #include "kinoko/diagnostics.h"
 #include "kinoko/legacy_memory.hpp"
@@ -196,6 +197,9 @@ static void clear_resource(int32_t resource)
 {
     if (resource == 0)
         return;
+    if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
+        kinoko::mesh::clear_resource(pointer<kinoko::mesh::Resource>(resource));return;
+    }
     // Every resource owns the base name, including long names in native clones.
     kinoko_string_destroy(resource + 8);
     field<int32_t>(resource + 8) = 0;

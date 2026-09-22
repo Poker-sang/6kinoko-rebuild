@@ -1,4 +1,5 @@
 #include "kinoko/map_chip_cache.hpp"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/act_array.hpp"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
@@ -1619,6 +1620,12 @@ extern "C" int32_t __fastcall kinoko_method_register_chip_resource(
 }
 
 int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[2]) {
+    if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
+        int32_t root[5]{};
+        if(!retdec_sqrat_root_construct(address(root),vm)) return 0;
+        const auto ok=kinoko_publish_mesh_resource_class(vm,address(root),out);
+        retdec_sqrat_object_release(address(root));return ok;
+    }
     if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         out[0] = g1079;
         out[1] = g1080;
@@ -2491,4 +2498,64 @@ extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layou
     field<int32_t>(layer+52)=layout+152;field<int32_t>(layer+56)=layout+156;
     field<int32_t>(layer+60)=layout+96;field<int32_t>(layer+64)=layout+100;field<int32_t>(layer+68)=layout+104;
     return 0;
+}
+
+namespace {
+int32_t mesh_replace_texture(int32_t vm) {
+    kinoko::mesh::Resource *resource=nullptr;
+    KinokoActResource *texture=nullptr;
+    const SQChar *name=nullptr;
+    auto *machine=kinoko_vm(vm);
+    if(SQ_FAILED(sq_getinstanceup(machine,1,reinterpret_cast<SQUserPointer*>(&resource),nullptr)) ||
+        SQ_FAILED(sq_getstring(machine,2,&name)) ||
+        SQ_FAILED(sq_getinstanceup(machine,3,reinterpret_cast<SQUserPointer*>(&texture),nullptr)) || !resource) return 0;
+    sq_pushinteger(machine,kinoko::mesh::replace_texture(resource,name,texture));return 1;
+}
+}
+extern "C" int32_t kinoko_publish_mesh_resource_class(int32_t vm,int32_t root,int32_t *out) {
+    if(get_pair(root,"CActResourceMesh",out) && out[0]==0x08004000) return 1;
+    retdec_sqrat_release_pair(vm,out);
+    static const retdec_native_view_property properties[]={
+        {"resourceID",4,0},{"stName",8,4},{"stMeshName",36,4}
+    };
+    return retdec_publish_map_view_class(vm,root,"CActResourceMesh",properties,3,0,out) &&
+        retdec_sqrat_set_native_closure(vm,out,"LoadMesh",address(retdec_resource_load_texture),nullptr,0) &&
+        retdec_sqrat_set_native_closure(vm,out,"SetReplaceTexture",address(mesh_replace_texture),nullptr,0);
+}
+extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,int32_t vm) {
+    if(!vm) return E_INVALIDARG;
+    int32_t root[5]{},klass[2]={g483,g484};
+    if(!retdec_sqrat_root_construct(address(root),vm)) return E_FAIL;
+    const auto ok=kinoko_publish_mesh_resource_class(vm,address(root),klass);
+    retdec_sqrat_release_pair(vm,klass);retdec_sqrat_object_release(address(root));
+    return ok?S_OK:E_FAIL;
+}
+extern "C" int32_t __fastcall kinoko_method_bind_mesh_object(int32_t resource,void *,int32_t object,const char *name) {
+    return retdec_bind_original_resource(resource,object,name,"CActResourceMesh",false);
+}
+extern "C" int32_t __fastcall kinoko_method_bind_mesh_table(int32_t resource,void *,int32_t object,const char *name) {
+    return retdec_bind_original_resource(resource,object,name,"CActResourceMesh",true);
+}
+extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,void *) {
+    const auto *record=pointer<kinoko::act::Layout3DRecord>(layout);
+    const auto layer=record?address(record->layer):0;
+    if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
+    const auto vm=field<int32_t>(layer+332);
+    if(!vm) return E_INVALIDARG;
+    int32_t root[5]{},klass[2]={g483,g484},outer[2]={g483,g484},script[2]={g483,g484};
+    if(!retdec_sqrat_root_construct(address(root),vm)) return E_FAIL;
+    // 43C2B0 spells the translation-Z script property "coS_z". Do not invent
+    // a trans_z alias or copy the serialized trans/roll offset alias into SQ.
+    static const retdec_native_view_property properties[]={
+        {"trans_x",4,1},{"trans_y",8,1},{"coS_z",12,1},
+        {"roll_x",16,1},{"roll_y",20,1},{"roll_z",24,1},
+        {"scale_x",28,1},{"scale_y",32,1},{"scale_z",36,1}
+    };
+    const bool ok=retdec_publish_map_view_class(vm,address(root),"C3DLayout",properties,9,0,klass) &&
+        retdec_create_unbound_instance(vm,klass,layout,outer) &&
+        retdec_sqrat_raw_set_pair(vm,pointer<const int32_t>(layer+336),"layout",outer) &&
+        retdec_create_bound_instance(vm,pointer<const int32_t>(layer+316),"layout",klass,layout,script);
+    retdec_sqrat_release_pair(vm,script);retdec_sqrat_release_pair(vm,outer);
+    retdec_sqrat_release_pair(vm,klass);retdec_sqrat_object_release(address(root));
+    return ok?S_OK:E_FAIL;
 }
