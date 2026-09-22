@@ -55,10 +55,16 @@ implementation changes are involved; the existing 2.2.2 source VM is retained.
   10/11/12/14, nested nodes and all mesh payload categories, truncation, matrix
   order, hidden updates, clone borrowing, and successful/failed draw state flow.
 
-These modules are compiled but the ACT key/resource factories are not changed.
+These modules have build targets, but the ACT key/resource factories are not changed.
 They cannot alter existing 2D/text behavior or admit a half-connected Mesh type.
 Remaining work after the decision: resource property/factory and script binding,
 model handle/controller ownership, material acquisition and render buffers,
 replacement texture mapping, then live Mesh/C3D factory integration and final
 all-target quiet build with staged DAT files. Do not count this checkpoint as
 completion of that chain or as runtime verification.
+
+R1 (`19dd23a`) exposed an import-library symbol decoration mismatch in the new
+contract target. Source compilation succeeded, but its link failed; this is not
+a passing build. R2 preserves the DLL's stdcall ABI and explicitly aliases the
+decorated import references to the undecorated symbols in the existing library.
+The R1 build log and products are retained.

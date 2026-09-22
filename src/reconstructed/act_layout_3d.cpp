@@ -5,6 +5,15 @@
 #include <cstdlib>
 #include <cstring>
 
+// The repository's import library exposes undecorated x86 symbols. The DLL
+// functions still use stdcall; keep that calling convention at every call site.
+#if defined(_MSC_VER) && defined(_M_IX86)
+#pragma comment(linker,"/alternatename:__imp__D3DXMatrixRotationYawPitchRoll@16=__imp__D3DXMatrixRotationYawPitchRoll")
+#pragma comment(linker,"/alternatename:__imp__D3DXMatrixTranslation@16=__imp__D3DXMatrixTranslation")
+#pragma comment(linker,"/alternatename:__imp__D3DXMatrixScaling@16=__imp__D3DXMatrixScaling")
+#pragma comment(linker,"/alternatename:__imp__D3DXMatrixMultiply@12=__imp__D3DXMatrixMultiply")
+#endif
+
 extern "C" {
 __declspec(dllimport) D3DMATRIX *__stdcall D3DXMatrixRotationYawPitchRoll(D3DMATRIX *,float,float,float);
 __declspec(dllimport) D3DMATRIX *__stdcall D3DXMatrixTranslation(D3DMATRIX *,float,float,float);
