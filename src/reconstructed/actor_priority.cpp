@@ -1,40 +1,43 @@
 #include "kinoko/actor_priority.h"
-#include "kinoko/legacy_memory.hpp"
+#include "kinoko/actor_records.hpp"
 #include <map>
 #include <memory>
 namespace {
-using namespace kinoko::legacy;
 struct Entry;
 using Tree=std::multimap<int32_t,std::unique_ptr<Entry>>;
-struct Entry { int32_t actor;Tree::iterator position; };
-Tree*& storage(int32_t tree) { return field<Tree*>(tree+4); }
-void count(int32_t tree) { field<int32_t>(tree+8)=static_cast<int32_t>(storage(tree)->size()); }
-int32_t token(int32_t tree,Tree::iterator position) {
-    return position==storage(tree)->end()?address(storage(tree)):address(position->second.get());
+struct Entry { KinokoActor *actor; Tree::iterator position; };
+struct Index { void *policy; Tree *storage; int32_t count; };
+static_assert(sizeof(Index)==sizeof(kinoko::actor::TreeIndex));
+using IndexView=kinoko::native::RecordView<Index>;
+Tree *storage(void *index) { return IndexView(index).get(&Index::storage); }
+void count(void *index) { IndexView(index).set(&Index::count,static_cast<int32_t>(storage(index)->size())); }
+void *token(void *index,Tree::iterator position) {
+    return position==storage(index)->end()?static_cast<void *>(storage(index)):position->second.get();
 }
 }
-extern "C" void kinoko_priority_construct(int32_t tree) { storage(tree)=new Tree;count(tree); }
-extern "C" void kinoko_priority_clear(int32_t tree) { if(storage(tree)) { storage(tree)->clear();count(tree); } }
-extern "C" void kinoko_priority_destroy(int32_t tree) { delete storage(tree);storage(tree)=nullptr;field<int32_t>(tree+8)=0; }
-extern "C" int32_t kinoko_priority_first(int32_t tree) { return storage(tree)?token(tree,storage(tree)->begin()):0; }
-extern "C" int32_t kinoko_priority_next(int32_t tree,int32_t value) { return token(tree,std::next(pointer<Entry>(value)->position)); }
-extern "C" int32_t kinoko_priority_value(int32_t value) { return pointer<Entry>(value)->actor; }
-extern "C" int32_t function_463210_this(int32_t tree,int32_t source) {
-    if(!storage(tree)) kinoko_priority_construct(tree);
-    return address(new Entry{field<int32_t>(source),{}});
-}
-extern "C" int32_t function_463610_this(int32_t tree,int32_t output,int32_t value,int32_t left) {
-    auto entry=std::unique_ptr<Entry>(pointer<Entry>(value));
-    const int32_t key=entry->actor?field<int32_t>(entry->actor+228):0;
-    auto& items=*storage(tree);
-    const auto hint=left?items.lower_bound(key):items.upper_bound(key);
+extern "C" void kinoko_priority_construct(void *index) { IndexView(index).set(&Index::storage,new Tree); count(index); }
+extern "C" void kinoko_priority_clear(void *index) { if(storage(index)) { storage(index)->clear();count(index); } }
+extern "C" void kinoko_priority_destroy(void *index) { delete storage(index);IndexView(index).set(&Index::storage,static_cast<Tree *>(nullptr));IndexView(index).set(&Index::count,int32_t{0}); }
+extern "C" void *kinoko_actor_priority_insert_ordered(void *index,KinokoActor *actor,int32_t insert_left) {
+    if (!storage(index)) kinoko_priority_construct(index);
+    auto entry=std::make_unique<Entry>(); entry->actor=actor;
+    const int32_t key=actor?kinoko::actor::ActorView(actor).get(&kinoko::actor::ActorRecord::priority):0;
+    auto& items=*storage(index);
+    const auto hint=insert_left?items.lower_bound(key):items.upper_bound(key);
     const auto position=items.emplace_hint(hint,key,std::move(entry));
-    position->second->position=position;count(tree);
-    field<int32_t>(output)=value;field<int32_t>(output+4)=1;return output;
+    position->second->position=position;count(index);
+    return position->second.get();
 }
-extern "C" int32_t function_463280_this(int32_t tree,int32_t output,int32_t value) {
-    if(!storage(tree) || value==address(storage(tree))) return 0;
-    auto position=pointer<Entry>(value)->position;
-    field<int32_t>(output)=token(tree,std::next(position));
-    storage(tree)->erase(position);count(tree);return output;
+extern "C" void *kinoko_actor_priority_insert(void *index,KinokoActor *actor) {
+    return kinoko_actor_priority_insert_ordered(index,actor,0);
 }
+extern "C" void *kinoko_actor_priority_erase_next(void *index,void *entry) {
+    if (!storage(index) || entry==storage(index)) return nullptr;
+    auto position=static_cast<Entry *>(entry)->position;
+    auto *next=token(index,std::next(position));
+    storage(index)->erase(position);count(index);return next;
+}
+extern "C" void kinoko_actor_priority_erase(void *index,void *entry) { kinoko_actor_priority_erase_next(index,entry); }
+extern "C" void *kinoko_actor_priority_first(void *index) { return storage(index)?token(index,storage(index)->begin()):nullptr; }
+extern "C" void *kinoko_actor_priority_next(void *index,void *entry) { return token(index,std::next(static_cast<Entry *>(entry)->position)); }
+extern "C" KinokoActor *kinoko_actor_priority_value(void *entry) { return static_cast<Entry *>(entry)->actor; }

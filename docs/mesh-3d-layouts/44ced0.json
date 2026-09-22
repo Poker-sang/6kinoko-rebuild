@@ -1,0 +1,1 @@
+{"addr":"0x44ced0","code":"int __stdcall sub_44CED0(int a1)\n{\n  return sub_44D0B0(a1); /*0x44ced6*/\n}","refs":[{"addr":"0x44d0b0","name":"sub_44D0B0"}]}

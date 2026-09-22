@@ -1,5 +1,13 @@
 # Native audio ownership
 
+Historical baseline below. The 2026-09-22 [audio scheduling batch](../audio-scheduling/README.md)
+supersedes the fixed 31 fading-track description with a stable owning list,
+consolidates worker/event/lock ownership, and restores explicit retirement of
+playback records. Its local validation was compilation and DAT staging only;
+no game or tests were executed. Original binary evidence is now available in
+that batch's directory; the earlier validation limitations below describe the
+earlier environment.
+
 The active audio path is compiled as C++ in `src/reconstructed/audio_runtime.cpp`.
 It replaces 82 functions formerly embedded in the generated C host. It calls the
 Windows SDK DirectSound interfaces, not manually indexed COM virtual tables.

@@ -1,4 +1,5 @@
 #define CINTERFACE
+#include "kinoko/graphics_device.h"
 #include <windows.h>
 #include <d3d9.h>
 #include "kinoko/texture_store.h"
@@ -38,7 +39,7 @@ static HRESULT WINAPI set_texture(IDirect3DDevice9 *, DWORD stage,
 }
 static IDirect3DBaseTexture9Vtbl texture_vtable = {};
 extern "C" {
-int32_t g678 = 0;
+KinokoGraphics kinoko_graphics{};
 int32_t function_40e630(int32_t, const char *path, int32_t out,
                       uint32_t *width, uint32_t *height) {
     if (std::strstr(path, "missing")) return E_FAIL;
@@ -55,7 +56,7 @@ int main() {
     device_vtable.GetTexture = get_texture;
     device_vtable.SetTexture = set_texture;
     IDirect3DDevice9 device = {&device_vtable};
-    g678 = reinterpret_cast<int32_t>(&device);
+    kinoko_graphics.device = &device;
     for (unsigned cycle = 0; cycle < 5000; ++cycle) {
         const auto first = kinoko_texture_acquire("data/map/terrain.cv2");
         CHECK(first != 0);

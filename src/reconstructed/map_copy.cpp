@@ -1,44 +1,37 @@
 #include "kinoko/squirrel_host_compat.h"
+#include "kinoko/map_manager_records.hpp"
 #include "kinoko/map_containers.h"
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
+#include "kinoko/act_resource.h"
+#include "kinoko/legacy_memory.hpp"
 #include <cstdlib>
-#include <new>
 
-extern "C" {
-extern unsigned char g37;
-int32_t function_450020(int32_t player);
-}
-
-namespace {
-struct Manager {
-    unsigned char script_object[12];
-    int32_t source_act, source_holder, player;
-    int32_t container_state;
-    int32_t reserved[6];
-    int32_t fields[8];
-};
-static_assert(offsetof(Manager,container_state)==24);
-static_assert(offsetof(Manager,fields)==52 && sizeof(Manager)==84);
-}
-
-// SqPlus's explicit destination/source callback (4701B0 -> 470100).
-extern "C" int32_t function_4701b0(int32_t destination,int32_t source) {
-    auto& out=*reinterpret_cast<Manager*>(destination);
-    auto& in=*reinterpret_cast<Manager*>(source);
-    function_4a95c0_this(destination,source);
-    out.source_act=in.source_act;
-    out.source_holder=in.source_holder;
-    // Original auto_ptr-style transfer is intentional, including self-copy.
-    const int32_t player=in.player;
-    in.player=0;
-    if(player!=out.player && out.player) {
-        function_450020(out.player);
-        std::free(reinterpret_cast<void*>(out.player));
+using namespace kinoko::map;
+using kinoko::legacy::address;
+extern "C" void kinoko_map_manager_assign(KinokoMapManager *destination, KinokoMapManager *source) {
+    const ManagerView out(destination), in(source);
+    kinoko_sqplus_object_assign((void *)(destination), (const void *)(source));
+    out.set(&ManagerRecord::source_act, in.get(&ManagerRecord::source_act));
+    out.set(&ManagerRecord::source_holder, in.get(&ManagerRecord::source_holder));
+    // 470100 copies the two raw owners but transfers auto_ptr's runtime.
+    // Preserve even self-copy: clearing source first prevents destruction.
+    auto *player = in.get(&ManagerRecord::player);
+    in.set(&ManagerRecord::player, static_cast<KinokoActRuntime *>(nullptr));
+    auto *previous = out.get(&ManagerRecord::player);
+    if (player != previous && previous) {
+        kinoko_act_runtime_dispose(previous);
+        std::free(previous);
     }
-    out.player=player;
-    kinoko_map_containers_assign(destination,source);
-    if(destination!=source) std::copy_n(in.fields,8,out.fields);
+    out.set(&ManagerRecord::player, player);
+    kinoko_map_containers_assign(address(destination), address(source));
+    out.set(&ManagerRecord::unknown52, in.get(&ManagerRecord::unknown52));
+    out.set(&ManagerRecord::last_id, in.get(&ManagerRecord::last_id));
+    out.set(&ManagerRecord::last_bounds, in.get(&ManagerRecord::last_bounds));
+    out.set(&ManagerRecord::width, in.get(&ManagerRecord::width));
+    out.set(&ManagerRecord::height, in.get(&ManagerRecord::height));
+}
+// SqPlus's explicit destination/source callback (4701B0 -> 470100).
+extern "C" int32_t function_4701b0(int32_t destination, int32_t source) {
+    kinoko_map_manager_assign(kinoko::legacy::pointer<KinokoMapManager>(destination),
+        kinoko::legacy::pointer<KinokoMapManager>(source));
     return destination;
 }

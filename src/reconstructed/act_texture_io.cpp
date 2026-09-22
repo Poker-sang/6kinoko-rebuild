@@ -1,3 +1,6 @@
+#include "kinoko/map_layout_records.hpp"
+#include "kinoko/act_mesh.hpp"
+#include "kinoko/map_chip_cache.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
@@ -44,6 +47,8 @@ Schema render_target_schema = make_schema();
 // 42F2A0: chip resources serialize the base ID/name and the MCD filename.
 Schema chip_schema{{"resourceID", {0,0,4}}, {"stName", {3,3,8}},
                    {"stChipFile", {3,3,36}}};
+// 44C2A0: independent Mesh property header; the path prefix is runtime state.
+Schema mesh_schema{{"resourceID",{0,0,4}},{"stName",{3,3,8}},{"stMeshName",{3,3,36}}};
 // 425350: CActTimeLine has two integers followed by a vector of integer pairs.
 Schema timeline_schema{{"beginTime", {0,0,4}}, {"timeLength", {0,0,8}}};
 // 41E790, including the two byte-sized booleans and previous-position fields.
@@ -106,67 +111,6 @@ uint32_t record_count(int32_t layout) {
 }
 void replace_buffer(int32_t slot, const void* bytes, size_t size) {
     kinoko_native_buffer_replace(slot,bytes,static_cast<uint32_t>(size));
-}
-// Original 435860/435B20, adapted to the source-owned MCD rather than an old
-// MSVC tree. The ABI caches still contain flat records and an ID/index vector.
-void rebuild_map_cache(int32_t layout) {
-    const auto resource = field<int32_t>(layout+316);
-    if (!resource || !field<int32_t>(resource+64)) return; // Writer ignores E_FAIL.
-    const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
-    std::vector<const retdec_mcd_chip*> chips;
-    for (uint32_t i=0; i<data->chip_count; ++i) chips.push_back(&data->chips[i]);
-    std::sort(chips.begin(), chips.end(), [](auto a, auto b) { return a->chip_id < b->chip_id; });
-    auto max_id = field<int32_t>(layout+452);
-    if (max_id < 0) for (auto chip : chips) max_id = std::max(max_id, static_cast<int32_t>(chip->chip_id));
-    if (max_id > 0x100000) throw std::bad_alloc();
-    std::vector<int32_t> indices(static_cast<size_t>(max_id+1), -1);
-    std::vector<std::array<unsigned char,48>> cache(chips.size());
-    for (size_t i=0; i<chips.size(); ++i) {
-        if (chips[i]->chip_id >= indices.size()) throw std::bad_alloc();
-        indices[chips[i]->chip_id] = static_cast<int32_t>(i);
-        std::memcpy(cache[i].data(), chips[i]->bytes, 48);
-    }
-    replace_buffer(layout+404, cache.data(), cache.size()*48);
-    replace_buffer(layout+436, indices.data(), indices.size()*4);
-    field<int32_t>(layout+452) = max_id;
-}
-void prepare_map(int32_t layout) {
-    const auto resource = field<int32_t>(layout+316);
-    if (!resource || !field<int32_t>(resource+64)) return;
-    const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
-    field<int32_t>(layout+284) = field<int32_t>(layout+280);
-    field<int32_t>(layout+300) = field<int32_t>(layout+296);
-    const auto count = record_count(layout);
-    auto records = pointer<MapRecord>(field<int32_t>(layout+264));
-    if (count) std::sort(records, records+count, [](const auto& a, const auto& b) {
-        return a[1] < b[1] || (a[1] == b[1] && a[2] < b[2]);
-    });
-    rebuild_map_cache(layout);
-    field<int32_t>(layout+240) = field<int32_t>(layout+244) = INT_MIN;
-    if (!count) {
-        for (auto offset : {248,252,256,260}) field<int32_t>(layout+offset) = 0;
-        return;
-    }
-    field<int32_t>(layout+248) = records[0][1];
-    field<int32_t>(layout+252) = records[0][2];
-    field<int32_t>(layout+256) = records[count-1][1];
-    // Original 4359FF initializes bottom from the last X, not Y.
-    field<int32_t>(layout+260) = records[count-1][1];
-    for (uint32_t i=0; i<count; ++i) {
-        const auto& record = records[i];
-        auto chip = retdec_mcd_find_chip(data, static_cast<uint32_t>(record[0]));
-        if (chip) {
-            const int32_t width = retdec_mcd_i16(chip->bytes+12), height = retdec_mcd_i16(chip->bytes+14);
-            field<int32_t>(layout+240) = std::max(field<int32_t>(layout+240), width);
-            field<int32_t>(layout+244) = std::max(field<int32_t>(layout+244), height);
-            const auto right = static_cast<int32_t>(static_cast<uint32_t>(record[1])+width);
-            const auto bottom = static_cast<int32_t>(static_cast<uint32_t>(record[2])+height);
-            field<int32_t>(layout+256) = std::max(field<int32_t>(layout+256), right);
-            field<int32_t>(layout+260) = std::max(field<int32_t>(layout+260), bottom);
-        }
-        field<int32_t>(layout+248) = std::min(field<int32_t>(layout+248), record[1]);
-        field<int32_t>(layout+252) = std::min(field<int32_t>(layout+252), record[2]);
-    }
 }
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
@@ -313,6 +257,19 @@ extern "C" int32_t function_43c860_this(int32_t layout, int32_t holder, int32_t 
     catch (...) { return 0; }
 }
 
+extern "C" int32_t __fastcall kinoko_method_write_layout_3d(int32_t layout,void *,int32_t writer) {
+    if(!layout || !writer) return 0;
+    try{return write(layout,writer,layout3d_schema);}catch(...){return 0;}
+}
+extern "C" int32_t __fastcall kinoko_method_read_mesh_resource(int32_t resource,void *,int32_t holder,int32_t version) {
+    if(!resource || !holder || version!=1) return 0;
+    try{return read(resource,field<int32_t>(holder),mesh_schema,false);}catch(...){return 0;}
+}
+extern "C" int32_t __fastcall kinoko_method_write_mesh_resource(int32_t resource,void *,int32_t writer) {
+    if(!resource || !writer) return 0;
+    try{return write(resource,writer,mesh_schema);}catch(...){return 0;}
+}
+
 extern "C" int32_t __fastcall kinoko_method_read_map_layout(
     int32_t layout, void*, int32_t holder, int32_t version) {
     if (!layout || !holder || version != 1) return 0;
@@ -343,7 +300,7 @@ extern "C" int32_t __fastcall kinoko_method_write_map_layout(
     int32_t layout, void*, int32_t writer) {
     if (!layout || !writer) return 0;
     try {
-        prepare_map(layout);
+        kinoko::map::prepare_placements(pointer<KinokoActLayout>(layout));
         if (!write(layout, writer, map_schema)) return 0;
         auto count = record_count(layout);
         uint32_t size = 12;
@@ -360,24 +317,27 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
     constexpr int32_t fail = static_cast<int32_t>(0x80004005u);
     if (!layout || !layer) return fail;
     try {
-        const auto resource = field<int32_t>(layer+100);
-        field<int32_t>(layout+316) = 0;
-        if (!resource || field<uint8_t>(layout+460)) {
+        using namespace kinoko::map;
+        const LayoutView map(pointer<KinokoActLayout>(layout));
+        auto *owner = pointer<KinokoActLayer>(layer);
+        auto *resource = LayerView(owner).get(&LayerRecord::resource);
+        map.set(&LayoutRecord::cached_chip_resource, static_cast<KinokoActResource *>(nullptr));
+        if (!resource || map.get(&LayoutRecord::suppress_next_binding)) {
             // Original one-shot suppression is distinct from an invalid type.
-            field<uint8_t>(layout+460) = 0;
+            map.set(&LayoutRecord::suppress_next_binding, uint8_t{0});
         } else {
-            if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable))
+            if (ChipResourceView(resource).get(&ChipResourceRecord::methods) != kinoko_act_host_symbols()->chip_resource_vtable)
                 return fail;
-            field<int32_t>(layout+316) = resource;
+            map.set(&LayoutRecord::cached_chip_resource, resource);
             // Source MCD loading already loads each texture once. The original
             // sorted/unique texture preload therefore needs no second acquire.
-            rebuild_map_cache(layout);
+            kinoko::map::rebuild_chip_index(pointer<KinokoActLayout>(layout));
         }
-        field<int32_t>(layout+312) = layer;
+        map.set(&LayoutRecord::owning_layer, owner);
         field<int32_t>(layout+284) = field<int32_t>(layout+280);
-        if (!field<int32_t>(layout+316)) return 0;
+        if (!map.get(&LayoutRecord::cached_chip_resource)) return 0;
         const auto count = record_count(layout);
-        const auto data = pointer<retdec_mcd_data>(field<int32_t>(resource+64));
+        const auto data = ChipResourceView(resource).get(&ChipResourceRecord::data);
         if (!data && count) return fail;
         auto records = pointer<MapRecord>(field<int32_t>(layout+264));
         std::vector<int32_t> chip_refs, texture_refs;
@@ -655,18 +615,5 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
         }
         return 1;
     } catch (...) { return 0; }
-}
-
-extern "C" {
-int32_t function_4072d0(int32_t receiver, int32_t bytes, int32_t size);
-int32_t function_410b90(int32_t receiver, int32_t bytes, int32_t size);
-}
-// These recovered read bodies already take explicit receivers. A virtual
-// caller still passes this in ECX; never put the cdecl body directly in a slot.
-extern "C" int32_t __fastcall kinoko_method_read_file(int32_t receiver, void*, int32_t bytes, int32_t size) {
-    return function_4072d0(receiver,bytes,size);
-}
-extern "C" int32_t __fastcall kinoko_method_read_package(int32_t receiver, void*, int32_t bytes, int32_t size) {
-    return function_410b90(receiver,bytes,size);
 }
 

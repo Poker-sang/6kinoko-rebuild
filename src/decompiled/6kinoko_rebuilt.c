@@ -1,3 +1,27 @@
+#include "kinoko/bitmap.h"
+#include "kinoko/base_utilities.h"
+#include "kinoko/critical_section.h"
+#include "kinoko/script_file.h"
+#include "kinoko/diagnostics.h"
+#include "kinoko/map_manager.h"
+#include "kinoko/scene_operations.h"
+#include "kinoko/game_script_api.h"
+#include "kinoko/game_script_host.h"
+#include "kinoko/game_runtime.h"
+#include "kinoko/game_host.h"
+#include "kinoko/file_io_layout.h"
+#include "kinoko/file_io_legacy.h"
+#include "kinoko/direct_input.h"
+#include "kinoko/application.h"
+#include "kinoko/renderer.h"
+#include "kinoko/graphics_device.h"
+#include "kinoko/quad_render.h"
+#include "kinoko/camera.h"
+#include "kinoko/act_layer_access.h"
+#include "kinoko/pat_animation.h"
+#include "kinoko/actor_render.h"
+#include "kinoko/actor_manager.h"
+#include "kinoko/act_document.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_cleanup.h"
@@ -69,6 +93,7 @@
 #include "kinoko/squirrel_compile_bridge.h"
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
+#include "kinoko/map_collision.h"
 #include "kinoko/game_math.h"
 #include "kinoko/audio_math.h"
 #include "kinoko/actor_methods.h"
@@ -83,8 +108,9 @@
 #include "resource.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_activation.h"
 
-static volatile LONG retdec_actor_step_trace_active;
+
 
 
 void retdec_trace_ref_watch(const char *label, int32_t shared_state,
@@ -108,9 +134,6 @@ int32_t retdec_is_release_watch_data(int32_t data) {
 }
 
 
-void retdec_destroy_reader(int32_t *reader);
-int32_t retdec_reader_seek_relative(int32_t reader_ptr,
-                                            uint32_t offset);
 struct retdec_mcd_data;
 void retdec_mcd_free(struct retdec_mcd_data *data);
 void retdec_act_free_map_records(int32_t layout);
@@ -123,8 +146,8 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t *active_count);
 int32_t retdec_publish_cact_resource2d_class(int32_t vm,
                                                      int32_t root_object);
-int32_t retdec_act_suspend_this(int32_t resource_ptr);
-int32_t retdec_act_resume_this(int32_t resource_ptr);
+
+
 int32_t retdec_load_act_texture(const char *texture_name);
 static int32_t retdec_register_act_texture(
     IDirect3DBaseTexture9 *texture, uint32_t width, uint32_t height)
@@ -138,17 +161,13 @@ int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
 int32_t retdec_c2dlayout_set_layer_impl(int32_t layout,
                                                 int32_t layer);
-int32_t retdec_c2dlayout_update_impl(int32_t layout);
 int32_t retdec_c2dlayout_draw_impl(int32_t layout,
                                            float x, float y);
-int32_t retdec_act_bind_layouts(int32_t act);
-static int32_t retdec_construct_actor_manager(int32_t this_ptr);
+
 void retdec_trace_star_state(const char *phase, int32_t actor);
-static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
-                                          uint32_t stride);
-int32_t retdec_function_45df10_impl(int32_t this_ptr,
-                                            int32_t source_ptr);
-int32_t retdec_actor_step_callback(int32_t state_ptr);
+
+
+
 
 // These wrappers intentionally use the C calling convention in the
 // compatibility translation unit.
@@ -228,8 +247,6 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
-int32_t function_45d970_this(int32_t this_ptr, char flags);
-static int32_t function_45d9f0_this(int32_t this_ptr);
 
 
 // ---------------- Integer Types Definitions -----------------
@@ -586,24 +603,7 @@ struct vtable_4d5a5c_type {
     int32_t (*e1)();
 };
 
-struct vtable_4d5a94_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t);
-    int32_t (*e6)();
-};
 
-struct vtable_4d5ab4_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t);
-};
 
 struct vtable_4d5adc_type {
     int32_t (*e0)();
@@ -758,8 +758,8 @@ struct vtable_4e50e4_type {
 };
 
 struct vtable_4eb20c_type {
-    int32_t (__fastcall *e0)(int32_t, void *);
-    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e0)(KinokoRenderer *, void *);
+    int32_t (__fastcall *e1)(KinokoRenderer *, void *);
 };
 
 struct vtable_4eb330_type {
@@ -776,9 +776,7 @@ struct vtable_4eb45c_type {
     int32_t (*e4)();
 };
 
-struct vtable_4eb498_type {
-    int32_t (*e0)(char);
-};
+
 
 struct vtable_4eb59c_type {
     int32_t (*e0)(char);
@@ -804,15 +802,6 @@ struct vtable_4eb5fc_type {
     int32_t (*e4)();
 };
 
-struct vtable_4eb698_type {
-    int32_t (*e0)(char);
-    int32_t (*e1)(int32_t);
-    int32_t (*e2)(int32_t);
-    int32_t (*e3)(int32_t, int32_t, int32_t);
-    int32_t (*e4)();
-    int32_t (*e5)(int32_t, int32_t, int32_t);
-    int32_t (*e6)(int32_t);
-};
 
 struct vtable_4eb6f0_type {
     int32_t (*e0)(int32_t, int32_t);
@@ -896,7 +885,7 @@ struct vtable_4ec1d4_type {
     int32_t (*e2)(int32_t, int32_t);
     int32_t (*e3)();
     int32_t (*e4)(char);
-    int32_t (__fastcall *e5)(int32_t, void *);
+    KinokoActDocument *(__fastcall *e5)(KinokoActDocument *, void *);
     int32_t (*e6)(int32_t);
     int32_t (*e7)();
     int32_t (*e8)();
@@ -1501,9 +1490,7 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
 
-int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_401040(void);
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height);
 int32_t function_4013d0(void);
 int32_t function_4014d0(void);
@@ -1533,13 +1520,13 @@ int32_t function_402770(int32_t result);
 int32_t function_4028d0(int32_t a1, int32_t a2);
 
 int32_t function_402970(int32_t a1);
-int32_t function_402aa0(void);
-int32_t function_402ac0(void);
+void* kinoko_script_initialize_root(void);
+int32_t kinoko_script_close_vm(void);
 
-int32_t function_402af0(void);
+int32_t kinoko_script_show_call_stack(void);
 
-int32_t function_402d30(void);
-int32_t function_402d40(char * a1, int32_t a2);
+void* kinoko_script_root(void);
+int32_t kinoko_script_load_file(const char* path, const void* environment);
 int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 
 
@@ -1552,8 +1539,6 @@ float32_t function_4040d0(float80_t a1);
 float32_t function_404130(float80_t a1);
 
 
-int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4);
-int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_4045c0(int32_t a1, int32_t a2);
 
 
@@ -1588,16 +1573,8 @@ static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 
 
 
-int32_t function_407270(int32_t lpFileName);
-int32_t function_4072b0(int32_t a1);
-int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
-                        int32_t nNumberOfBytesToRead);
-int32_t function_407300(int32_t reader);
-int32_t function_407310(char a1);
 
 
-int32_t function_407360(char * a1);
-int32_t function_407370(int32_t reader_slot, const char *file_name);
 
 
 int32_t __fastcall function_407500(int32_t this_ptr);
@@ -1608,31 +1585,16 @@ int32_t function_408320(int32_t this_ptr);
 int32_t function_4083e0(int32_t this_ptr, int32_t a1, int32_t a2,
                        int32_t a3, int32_t a4);
 
-int32_t function_408530(int32_t result);
-int32_t function_408550(int32_t result, int32_t a2);
 
 
-int32_t function_408650(void *this_ptr, HWND hwnd);
-int32_t function_4086e0(int32_t a1, int32_t * a2, int32_t a3);
 
 
-static int32_t function_4087e0_this(int32_t this_ptr);
-int32_t function_408800(char a1);
-int32_t function_408830(void);
 
 
-int32_t function_408930(HWND hwnd, HINSTANCE instance);
-int32_t function_4089c0(void);
 
-int32_t function_408b30(void);
-int32_t function_408bf0(void);
-int32_t function_408c80(void);
-int32_t function_408d00(void);
 void retdec_poll_fallback_keyboard(void);
 
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
-int32_t function_408e60(int32_t a1);
-int32_t function_408e80(int32_t a1);
 
 
 
@@ -1659,40 +1621,17 @@ int32_t function_408e80(int32_t a1);
 
 
 
-int32_t function_40d520(int32_t lpFileName);
-int32_t function_40d560(int32_t lpBuffer, int32_t nNumberOfBytesToWrite);
-int32_t function_40d590(int32_t lDistanceToMove, int32_t dwMoveMethod);
-int32_t function_40d5b0(char a1);
-int32_t function_40d5e0(void);
-int32_t function_40d790(int32_t * a1, const void *config);
-void function_40d940(int32_t *state);
-int32_t function_40da60(void);
-BOOL function_40db30(unsigned char *state);
-int32_t function_40dbe0(void);
 
-LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPARAM a5);
-int32_t function_40e220(int32_t *state, char toggle);
-int32_t function_40e2b0(void);
-int32_t function_40e2d0(void);
 
-DWORD WINAPI function_40e320(LPVOID parameter);
 int32_t function_40e630(int32_t a1, const char *a2, int32_t a3,
                         uint32_t *a4, uint32_t *a5);
 
 
 
 
-int32_t function_410260(void);
-int32_t function_410270(void);
 
 
-int32_t function_410500(char *file_name);
-int32_t function_410750(char *path, int32_t archive_index, int32_t offset, int32_t size);
 
-int32_t function_4109d0(const char *path, uint32_t *offset, uint32_t *size);
-int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2);
-int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
-                        int32_t a2);
 
 
 
@@ -1711,14 +1650,9 @@ int32_t function_4123c0(int32_t a1);
 
 
 
-int32_t function_412890(void);
-DWORD WINAPI function_412ad0(LPVOID lpThreadParameter);
-int32_t function_412b80(int32_t a1);
-int32_t function_412c10(int32_t hEvent);
 int32_t function_412ca0(void);
 
 
-int32_t function_414010(int32_t a1, const char *file_name);
 
 
 
@@ -1751,8 +1685,7 @@ int32_t function_4190e0(int32_t a1, int32_t a2);
 
 int32_t function_41e390(int32_t a1);
 
-int32_t function_41ef20(int32_t a1);
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
+
 int32_t function_41eff0(int32_t a1);
 
 
@@ -1782,13 +1715,10 @@ int32_t function_426b30(void);
 
 
 
-int32_t function_427530(int32_t this_ptr);
 
 
-int32_t function_428000(int32_t this_ptr, const char *file_name);
-int32_t function_4289c0(int32_t a1);
-int32_t function_428af0(void);
-int32_t function_428bd0(void);
+
+
 
 int32_t function_428f80(void);
 
@@ -1965,9 +1895,7 @@ int32_t function_44fd20(void);
 int32_t function_44fd30(char a1);
 
 
-int32_t function_44fde0(int32_t result, int32_t a2);
 
-int32_t function_450020(int32_t resource);
 
 int32_t kinoko_clear_global_stages(void);
 int32_t kinoko_clear_global_sound(void);
@@ -2063,37 +1991,6 @@ int32_t function_451620(int32_t this_ptr);
 
 
 
-int32_t __stdcall function_45d960(int32_t value);
-
-int32_t function_45d9a0(void);
-int32_t function_45d9c0(void);
-int32_t function_45d9f0(int32_t *this_ptr);
-int32_t function_45da00(void);
-int32_t function_45da40(void);
-int32_t function_45da50(int32_t a1);
-
-
-int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
-
-
-int32_t function_45df10(int32_t a1);
-
-
-
-static int32_t function_45e5e0_this(
-    int32_t actor_ptr, int32_t manager_ptr,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data);
-
-static int32_t function_45ec60(int32_t actor);
-
-
-int32_t function_45f3e0(int32_t a1, int32_t a2, int32_t a3, int32_t * a4, int32_t a5, int32_t a6);
-int32_t function_45ffe0_this(int32_t result, int32_t a1);
-
-int32_t function_460900(int32_t a1, int32_t a2);
-int32_t function_460e00(void);
 
 
 
@@ -2102,35 +1999,48 @@ int32_t function_460e00(void);
 
 
 
-int32_t function_462ce0(int32_t a1, int32_t a2);
-int32_t function_462e80(int32_t this_ptr);
-int32_t function_462f30(int32_t a1);
 
 
 
 
 
-static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr);
-static int32_t function_463b40_this(
-    int32_t manager_ptr, int32_t first_vtable,
-    int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data,
-    int32_t init_source);
-int32_t function_463730(int32_t a1);
 
 
 
 
-static int32_t function_463af0_this(int32_t this_ptr);
 
 
-int32_t function_463e60(int32_t manager, int32_t layout, int32_t environment);
+int32_t kinoko_actor_register_script_class(void);
 
-static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1);
 
-int32_t function_464e20(int32_t this_ptr);
-int32_t function_464f80(int32_t a1, int32_t * a2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int32_t function_465f70(void);
 int32_t function_466270(void);
 static int32_t function_466270_this(int32_t this_ptr);
@@ -2149,47 +2059,15 @@ static int32_t function_468620_this(int32_t this_ptr);
 
 static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr);
 int32_t function_4693a0(int32_t a1);
-int32_t function_469640(void);
-int32_t function_469680(void);
-int32_t function_4696b0(int32_t a1);
-int32_t function_469700(void);
-int32_t function_469710(float32_t a1, float32_t a2);
-int32_t function_469740(void);
-int32_t function_469780(int32_t a1, int32_t a2);
-int32_t function_4697a0(int32_t a1);
-int32_t function_4697c0(int32_t a1);
-int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
-    float32_t right, float32_t bottom);
-int32_t function_469820(int32_t a1);
-int32_t function_469840(int32_t a1);
-int32_t function_469860(void);
-int32_t function_469870(void);
-int32_t function_469880(int32_t a1);
-int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_469900(void);
 
-int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4, int32_t a5, int32_t a6);
 
-int32_t function_469b40(
-    int32_t result,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data);
-int32_t function_469d10(int32_t name, int32_t environment_vtable,
-                         int32_t environment_type, int32_t environment_data);
-int32_t function_469dd0(int32_t name,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
 
-int32_t function_46a140(void);
-int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
 
 
-int32_t function_46aa60_this(int32_t this_ptr);
-int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr);
+
+
 
 
 int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName);
@@ -2207,19 +2085,17 @@ static int32_t function_46e6f0_this(int32_t this_ptr);
 
 int32_t function_46ed80(int32_t a1, int32_t result);
 
-static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1);
-int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
-                         int32_t top, int32_t right, int32_t bottom);
-int32_t function_46ef40(int32_t a1, int32_t a2, uint32_t result, int32_t a4);
 
-int32_t function_46f0b0(int32_t this_ptr);
+
+
+
 
 int32_t function_46f140(int32_t a1);
 int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 
-static int32_t function_46f620_this(int32_t this_ptr);
-int32_t function_46f6d0(int32_t a1);
-static int32_t function_46f4c0_this(int32_t this_ptr);
+
+
+
 int32_t function_46fac0(void);
 int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment);
 int32_t function_470030(int32_t a1);
@@ -2237,15 +2113,9 @@ int32_t function_470d00(int32_t a1);
 int32_t function_470df0(int32_t a1, int32_t a2);
 int32_t function_470ee0(int32_t a1);
 
-int32_t function_470f30(void);
 int32_t function_470f60(int32_t a1);
 int32_t function_470f80(int32_t dwMilliseconds);
 int32_t function_470f90(void);
-int32_t function_470fa0(int32_t id,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
-int32_t function_471060(void);
-int32_t function_471070(void);
 int32_t function_471080(void);
 
 
@@ -2256,13 +2126,11 @@ int32_t function_471330(int32_t callback_ptr, int32_t vm, int32_t index);
 
 int32_t function_471880(int32_t callback_ptr, int32_t vm, int32_t index);
 int32_t function_471960(int32_t callback_ptr, int32_t vm, int32_t index);
-int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
+int32_t kinoko_script_compile_file_argument(int32_t path, int32_t object_vtable, int32_t vm,
                        int32_t type, int32_t data, char owns_reference);
 int32_t function_471bc0(int32_t a1);
 int32_t function_471c10(int32_t a1);
-int32_t function_471c70(int32_t a1);
 int32_t function_471d90(int32_t a1);
-int32_t function_471df0(int32_t a1);
 int32_t function_471eb0(int32_t a1);
 int32_t function_471f10(int32_t a1);
 int32_t function_471fd0(int32_t a1);
@@ -2283,8 +2151,6 @@ int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
 
 int32_t function_473010(void);
-LRESULT CALLBACK function_473af0(HWND a1, UINT a2, WPARAM a3, LPARAM a4);
-int32_t function_473b20(void);
 
 
 int32_t function_48a170(int32_t a1);
@@ -2298,11 +2164,10 @@ static int32_t retdec_execute_clean_vm(
     int32_t stackbase, int32_t outres, int32_t raiseerror, int32_t resume);
 
 
-int32_t function_4a8c50(void);
-int32_t function_4a8c90(int32_t vm, const char *format, ...);
-int32_t function_4a8cc0(void);
-int32_t function_4a8db0(int32_t a1);
-int32_t function_4a90c0(int32_t * a1, int32_t * a2);
+int32_t  kinoko_sqplus_release_vm_wrappers(void);
+int32_t  kinoko_sqplus_print(struct SQVM * vm, const char *format, ...);
+void * kinoko_sqplus_root_object(void);
+int32_t  kinoko_sqplus_select_vm(struct SQVM * a1);
 int32_t function_4a9570(void);
 
 
@@ -2371,24 +2236,7 @@ void (*g8)(int32_t *) = (void (*)(int32_t *))0xc7c18b; // 0x45cac0
 char * g9; // 0x49f418
 char * g10; // 0x4a5e8c
 char * g11; // 0x4a8b9c
-/* The original symbols at 0x4d53d0/0x4d53ec are six-entry MSVC vftables,
-   not scalar function-pointer globals.  Logo's render method is slot 2. */
-int32_t g12[6] = {
-    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
-    (int32_t)(intptr_t)&__purecall,
-    (int32_t)(intptr_t)&__purecall,
-    (int32_t)(intptr_t)&function_43e100,
-    (int32_t)(intptr_t)&function_45d960,
-    (int32_t)(intptr_t)&function_45d960
-}; // 0x4d53d0
-int32_t g13[6] = {
-    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
-    (int32_t)(intptr_t)&function_45d9a0,
-    (int32_t)(intptr_t)&function_45d9c0,
-    (int32_t)(intptr_t)&function_43e100,
-    (int32_t)(intptr_t)&function_45d960,
-    (int32_t)(intptr_t)&function_45d960
-}; // 0x4d53ec
+/* Scene virtual tables now live in game_runtime.cpp. */
  // 0x4d5448
 /* IDA shows the int and bool ClassType vtables as two adjacent function
    pointers. RetDec emitted only their first dword as g19/g21, so the
@@ -2596,8 +2444,6 @@ char * g443; // 0x4f7308
  // 0x4f7330
  // 0x4f7334
 
-int32_t g459 = -1; // 0x4fe4cc
-int32_t g460 = -1; // 0x4fe4d0
 int32_t g461 = 0; // 0x4fe594
 float32_t * g462 = (float32_t *)-0x3db40000; // 0x4fe5b8
 bool g463 = false; // 0x4fe6c8
@@ -2723,13 +2569,7 @@ __declspec(align(8)) static unsigned char g_retdec_camera_state[0x200] = { 0 };
 int32_t g615 = 0; // 0x514388
 int32_t g616 = 0; // 0x514394
 int32_t g617 = 0; // 0x5143e0
-int32_t g618 = 0; // 0x5143f4
-int32_t g619 = 0; // 0x5143f8
-int32_t g620 = 0; // 0x5143fc
-int32_t g621 = 0; // 0x514400
-/* Original 514420 is ActorManager(5143E0)+64, not an independent global.
-   469987 writes the frame mask here before 4641D0 filters actor update groups. */
-#define g622 (*(int32_t *)(void *)(g_retdec_actor_manager_state + 64))
+/* ActorManager update_mask now uses the typed ManagerPrefix field. */
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
 int32_t g637 = 0; // 0x5144b4
@@ -2756,47 +2596,10 @@ float32_t g671 = 0.0f; // 0x5187f0
 int32_t g672 = 0; // 0x519600
 char g673 = 0; // 0x51ac10
 char g674 = 0; // 0x51ac11
-int32_t g675 = 0; // 0x51ac18
-struct retdec_RTL_CRITICAL_SECTION g676 = { 0 }; // 0x51ac1c
-int32_t g677 = 0; // 0x51ac34
-int32_t g678 = 0; // 0x51ac38
-int32_t g679 = 0; // 0x51ac3c
-unsigned char g680[0x140] = { 0 }; // 0x51ac40
-char g681 = 0; // 0x51ac7c
-int32_t g682 = 0; // 0x51ad70
-int32_t g683 = 0; // 0x51ad74
-int32_t g684 = 0; // 0x51ad78
-int32_t g685 = 0; // 0x51ad7c
-int32_t g686 = 0; // 0x51ad80
-int32_t g687 = 0; // 0x51ad88
-int32_t g688 = 0; // 0x51ad8c
-int32_t g689 = 0; // 0x51ad90
-int32_t g690 = 0; // 0x51ad94
-int32_t g691 = 0; // 0x51ad98
-int32_t g692 = 0; // 0x51ad9c
-int32_t g693 = 0; // 0x51ada0
-int32_t g694 = 0; // 0x51ada4
-int32_t g695 = 0; // 0x51adb4
-int32_t g696 = 0; // 0x51adb8
-int32_t g697 = 0; // 0x51adbc
-int32_t g698 = 0; // 0x51adc0
-int32_t g701 = 0; // 0x51add0
-int32_t g702 = 0; // 0x51add4
-int32_t g703 = 0; // 0x51addc
-int32_t g704 = 0; // 0x51ade0
-int32_t g705 = 0; // 0x51ade4
-int32_t g706 = 0; // 0x51ade8
-int32_t g707 = 0; // 0x51adec
-int32_t g708 = 0; // 0x51adf0
-int32_t g709 = 0; // 0x51adf4
-int32_t g710 = 0; // 0x51adf8
-int32_t g711 = 0; // 0x51adfc
-int32_t g712 = 0; // 0x51ae00
-char g713 = 0; // 0x51ae06
-int32_t g714 = 0; // 0x51ae08
+KinokoRenderer kinoko_renderer = {0};
+KinokoGraphics kinoko_graphics = {0};
+KinokoCriticalSection kinoko_graphics_lock = { 0 }; // 0x51ac18
  // 0x51ae0c
-int32_t g718 = 0; // 0x51ae1c
-int32_t g721 = 0; // 0x51ae30
 int32_t g722[3] = { 0, 0, 0 }; // 0x51ae34
 int32_t g723 = 0; // 0x51ae40
  // 0x51ae48
@@ -2832,38 +2635,9 @@ int32_t g753 = 0; // 0x51af04
  // 0x51af08
  // 0x51af0c
  // 0x51af10
-int32_t g757 = 0; // 0x51af18
-struct retdec_RTL_CRITICAL_SECTION g758 = { 0 }; // 0x51af1c
-int32_t g765 = 0; // 0x51af54
-char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
-char * g768; // 0x51b068
-void * g769 = NULL; // 0x51b06c
-void * g770 = NULL; // 0x51b070
-void * g771 = NULL; // 0x51b074
-int32_t g772 = 0; // 0x51b078
-int32_t g773 = 0; // 0x51b07c
-int32_t g774 = 0; // 0x51b080
-char * g775; // 0x51b088
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
 unsigned char g_retdec_keyboard_state[256];
-/* CInputManager::CInputManagerCluster owns a vector of unique key codes.
-   Keep the vector storage separate from the manager so its pointers remain
-   valid while the Squirrel object is updated. */
-char g776 = 0; // 0x51b0a5
-char g777 = 0; // 0x51b0b2
-char g778 = 0; // 0x51b0be
-char g779 = 0; // 0x51b0c0
-char g780 = 0; // 0x51b125
-char g781 = 0; // 0x51b140
-int32_t g782 = 0; // 0x51b188
-char * g783; // 0x51b18c
-char * g784; // 0x51b190
-int32_t g785 = 0; // 0x51b194
-int32_t g786 = 0; // 0x51b19c
-int32_t g787 = 0; // 0x51b1a0
-int32_t g788 = 0; // 0x51b1a4
-int32_t g789 = 0; // 0x51b1ac
 float80_t g790 = 0.0L; // 0x51b1c0
 int32_t g791 = 0; // 0x51b1c8
 int32_t g792 = 0; // 0x51b1d0
@@ -2908,43 +2682,6 @@ int32_t g829 = 0; // 0x51b6e0
 int32_t g830 = 0; // 0x51b6e8
 int32_t g831 = 0; // 0x51b6ec
 int32_t g832 = 0; // 0x51b6f0
-int32_t g833 = 0; // 0x51b708
-int32_t g834 = 0; // 0x51b710
-int32_t g835 = 0; // 0x51b714
-int32_t g836 = 0; // 0x51b718
-int32_t g837 = 0; // 0x51b71c
-int32_t g838 = 0; // 0x51b720
-int32_t g839 = 0; // 0x51b724
-int32_t g840 = 0; // 0x51b728
-int32_t g841 = 0; // 0x51b72c
-int32_t g842 = 0; // 0x51b730
-char g843 = 0; // 0x51b731
-int32_t g844 = 0; // 0x51b734
-char g845 = 0; // 0x51b735
-char g846 = 0; // 0x51b736
-int32_t g847 = 0; // 0x51b738
-int32_t g848 = 0; // 0x51b73c
-int32_t g849 = 0; // 0x51b740
-int32_t g850 = 0; // 0x51b744
-int32_t g851 = 0; // 0x51b748
-int32_t g852 = 0; // 0x51b74c
-int32_t g853 = 0; // 0x51b750
-char g854 = 0; // 0x51b754
-int32_t g855 = 0; // 0x51b758
-int32_t g856 = 0; // 0x51b760
-int32_t g857 = 0; // 0x51b768
-int32_t g858 = 0; // 0x51b76c
-int32_t g859 = 0; // 0x51b770
-int32_t g860 = 0; // 0x51b774
-int32_t g861 = 0; // 0x51b77c
-int32_t g862 = 0; // 0x51b780
-int32_t g863 = 0; // 0x51b784
-int32_t g864 = 0; // 0x51b788
-int32_t g867 = 0; // 0x51b798
-int32_t g868 = 0; // 0x51b79c
-struct retdec_RTL_CRITICAL_SECTION g869 = { 0 }; // 0x51b7a0
-int32_t g870 = 0; // 0x51b7b8
-int32_t g871 = 0; // 0x51b7bc
 int32_t g872 = 0; // 0x51b7c8
 int32_t g873 = 0; // 0x51b7cd
 char g874 = 0; // 0x51b7d0
@@ -2952,13 +2689,6 @@ char * g875; // 0x51b7d1
 int32_t g876 = 0; // 0x51b8d8
 char * g877; // 0x51b8dc
 int32_t g878 = 0; // 0x51b8e0
-int32_t g879 = 0; // 0x51b8e4
-struct retdec_RTL_CRITICAL_SECTION g880 = { 0 }; // 0x51b8e8
-int32_t g881 = 0; // 0x51b900
-int32_t g882 = 0; // 0x51b904
-int32_t g883 = 0; // 0x51b908
-int32_t g884 = 0; // 0x51b90c
-char g887 = 0; // 0x51b91c
  // 0x51b924
  // 0x51b928
 int32_t g890 = 0; // 0x51b930
@@ -3287,7 +3017,7 @@ struct vtable_4d54a4_type g16 = {
     .e0 = (int32_t (*)(char))kinoko_squirrel_object_delete
 }; // 0x4d54a4
 struct vtable_4d54ac_type g17 = {
-    .e0 = (int32_t (*)(char))function_45f0c0
+    .e0 = (int32_t (*)(char))kinoko_actor_delete_method
 }; // 0x4d54ac
  // 0x4d55a4
  // 0x4d55bc
@@ -3312,26 +3042,9 @@ struct vtable_4d5a5c_type g31 = {
     .e0 = kinoko_method_actor_owner_delete,
     .e1 = (int32_t (*)(void))kinoko_method_actor_manager_push
 }; // 0x4d5a5c
-struct vtable_4d5a94_type g33 = {
-    .e0 = function_407310,
-    .e1 = function_4072b0,
-    .e2 = function_407270,
-    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_file,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_40d590,
-    .e6 = function_407300
-}; // 0x4d5a94
-struct vtable_4d5ab4_type g34 = {
-    .e0 = function_40d5b0,
-    .e1 = function_4072b0,
-    .e2 = function_40d520,
-    .e3 = function_40d560,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_40d590
-}; // 0x4d5ab4
  // 0x4d5adc
 struct vtable_4d5ba0_type g37 = {
-    .e0 = kinoko_map_entry_46eed0
+    .e0 = kinoko_map_render_layer_entry
 }; // 0x4d5ba0
  // 0x4d5ba8
 struct vtable_4d5c68_type g39 = {
@@ -3344,13 +3057,7 @@ struct vtable_4d5c80_type g40 = {
     .e1 = kinoko_sqrat_object_reference,
     .e2 = kinoko_sqrat_copy_object
 }; // 0x4d5c80
-struct vtable_4d5e88_type g41 = {
-    .e0 = function_45da00,
-    .e1 = function_45da40,
-    .e2 = function_43e100,
-    .e3 = function_473b20,
-    .e4 = function_45da50
-}; // 0x4d5e88
+ // 0x4d5e88
 struct vtable_4d9eb0_type g65 = {
     .e0 = (int32_t (*)(char))kinoko_sq_delete_refcounted,
     .e1 = __purecall
@@ -3375,21 +3082,10 @@ struct vtable_4eb20c_type g184 = {
 }; // 0x4eb20c
  // 0x4eb330
  // 0x4eb45c
-struct vtable_4eb498_type g190 = {
-    .e0 = function_408800
-}; // 0x4eb498
+ // 0x4eb498
  // 0x4eb59c
  // 0x4eb5cc
  // 0x4eb5fc
-struct vtable_4eb698_type g205 = {
-    .e0 = function_407310,
-    .e1 = function_4072b0,
-    .e2 = function_407270,
-    .e3 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_method_read_package,
-    .e4 = (int32_t (*)(void))kinoko_method_class_type,
-    .e5 = function_410c00,
-    .e6 = function_410260
-}; // 0x4eb698
  // 0x4eb6f0
  // 0x4eb7d8
 
@@ -3412,8 +3108,8 @@ struct vtable_4ebe68_type g252 = {
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_layer,
     .e5 = (int32_t (*)(void))kinoko_method_clone_act_layer,
-    .e6 = function_41ef20,
-    .e7 = function_41ef50,
+    .e6 = (int32_t (*)(int32_t))kinoko_act_layer_set_resource,
+    .e7 = (int32_t (*)(int32_t, int32_t, int32_t))kinoko_act_layer_world_position,
     .e8 = (int32_t (*)(int32_t))kinoko_method_register_act_layer
 }; // 0x4ebe68
 struct vtable_4ebe90_type g253 = {
@@ -3442,9 +3138,9 @@ struct vtable_4ec1d4_type g285 = {
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_destroy_act,
     .e5 = kinoko_act_clone,
-    .e6 = function_4289c0,
-    .e7 = function_428af0,
-    .e8 = function_428bd0
+    .e6 = (int32_t (*)(int32_t))kinoko_method_load_act_resources,
+    .e7 = (int32_t (*)(void))kinoko_method_suspend_act_resources,
+    .e8 = (int32_t (*)(void))kinoko_method_resume_act_resources
 }; // 0x4ec1d4
  // 0x4ec22c
  // 0x4ec2c4
@@ -3487,10 +3183,10 @@ struct vtable_4ec79c_type g327 = {
     .e4 = function_433720,
     .e5 = kinoko_clone_map_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_map_set_layer,
-    .e7 = kinoko_map_entry_434b40,
-    .e8 = kinoko_map_entry_434f40,
+    .e7 = kinoko_map_update_all_entry,
+    .e8 = kinoko_map_draw_entry,
     .e9 = (int32_t (*)(void))kinoko_method_register_map_layout,
-    .e10 = kinoko_map_entry_434b60
+    .e10 = kinoko_map_update_visible_entry
 }; // 0x4ec79c
 struct vtable_4ec7cc_type g328 = {
     .e0 = kinoko_delete_map_sprite,
@@ -3616,77 +3312,20 @@ int32_t D3DXMatrixTranslation(int32_t * a1, float80_t a2, float80_t a3, float80_
 
 // The generated file split the original runtime object across unrelated
 // globals. Keep a real backing block for the fields addressed by this+N.
-__declspec(align(8)) static unsigned char g_retdec_runtime_state[0x200];
 /* CInputManager is a CRT-constructed global in the original image.  RetDec
    did not emit its constructor, so keep the receiver and its embedded
    containers in stable storage rather than passing an uninitialised ECX. */
 __declspec(align(8)) static unsigned char g_retdec_input_manager_state[0x600];
 static int g_retdec_runtime_initialized = 0;
-static int g_retdec_state_cs_initialized = 0;
 static int g_retdec_input_manager_initialized = 0;
 static int g_retdec_map_manager_initialized = 0;
-static int32_t g_retdec_startup_vm = 0;
-static uint32_t g_retdec_actor_init_count;
-static D3DDISPLAYMODE g_retdec_display_mode;
-static D3DPRESENT_PARAMETERS g_retdec_present_parameters;
+
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
 #define g_retdec_act_texture_slots kinoko_texture_slots
 
-static void retdec_sync_runtime_state_to_globals(const unsigned char *state);
-static void retdec_sync_globals_to_runtime_state(unsigned char *state);
 static void retdec_initialize_runtime_objects(void);
 // ------------------------ Functions -------------------------
-
-static void retdec_sync_runtime_state_to_globals(const unsigned char *state)
-{
-    if (state == NULL) {
-        return;
-    }
-    g833 = *(const int32_t *)(state + 0);
-    g843 = *(const char *)(state + 41);
-    g845 = *(const char *)(state + 45);
-    g846 = *(const char *)(state + 46);
-    g854 = *(const char *)(state + 76);
-    g855 = *(const int32_t *)(state + 80);
-    g856 = *(const int32_t *)(state + 88);
-    g857 = *(const int32_t *)(state + 96);
-    g858 = *(const int32_t *)(state + 100);
-    g859 = *(const int32_t *)(state + 104);
-    g860 = *(const int32_t *)(state + 108);
-    g861 = *(const int32_t *)(state + 116);
-    g862 = *(const int32_t *)(state + 120);
-    g863 = *(const int32_t *)(state + 124);
-    g864 = *(const int32_t *)(state + 128);
-    g867 = *(const int32_t *)(state + 144);
-    g870 = *(const int32_t *)(state + 176);
-    g871 = *(const int32_t *)(state + 180);
-}
-
-static void retdec_sync_globals_to_runtime_state(unsigned char *state)
-{
-    if (state == NULL) {
-        return;
-    }
-    *(int32_t *)(state + 0) = g833;
-    *(char *)(state + 41) = g843;
-    *(char *)(state + 45) = g845;
-    *(char *)(state + 46) = g846;
-    *(char *)(state + 76) = g854;
-    *(int32_t *)(state + 80) = g855;
-    *(int32_t *)(state + 88) = g856;
-    *(int32_t *)(state + 96) = g857;
-    *(int32_t *)(state + 100) = g858;
-    *(int32_t *)(state + 104) = g859;
-    *(int32_t *)(state + 108) = g860;
-    *(int32_t *)(state + 116) = g861;
-    *(int32_t *)(state + 120) = g862;
-    *(int32_t *)(state + 124) = g863;
-    *(int32_t *)(state + 128) = g864;
-    *(int32_t *)(state + 144) = g867;
-    *(int32_t *)(state + 176) = g870;
-    *(int32_t *)(state + 180) = g871;
-}
 
 static void retdec_initialize_runtime_objects(void)
 {
@@ -3694,67 +3333,52 @@ static void retdec_initialize_runtime_objects(void)
         return;
     }
 
-    memset(g_retdec_runtime_state, 0, sizeof(g_retdec_runtime_state));
 
     // These are the constructors normally reached through the original
     // C++ CRT initializer table. The replacement entry point does not run
     // that table, so initialize the subsystems before loading the DATs.
-    function_401040();
+    kinoko_graphics_initialize_runtime();
     function_401850();
     kinoko_initialize_texture_cache();
-    function_410270();
+    kinoko_archive_initialize();
     function_4d3ce0();
     function_4d3e50();
     /* CRT construction creates the LoadSE lookup tree before boot.nut calls
        LoadSE.  Without this sentinel the reconstructed 470ab0 path derefs
        address 0x4 on its first lookup. */
     function_4d3f50();
-    function_40d5e0();
-    function_412890();
+    kinoko_application_construct();
+    kinoko_frame_timer_initialize();
 
     /* MapManager is a CRT-constructed global in the original image.  Its
        list sentinel must exist before the first scene frame, even though the
        current map handle remains null until a real LoadMap call. */
     if (g_retdec_map_manager_initialized == 0) {
-        if (function_46f4c0_this(
-                (int32_t)(intptr_t)g_retdec_map_manager_state) == 0) {
+        if (kinoko_map_manager_construct(
+                (KinokoMapManager *)g_retdec_map_manager_state) == 0) {
             retdec_trace("map-manager:init-failed");
         } else {
             g_retdec_map_manager_initialized = 1;
             retdec_trace_i32(
                 "map-manager:sentinel",
-                *(int32_t *)(g_retdec_map_manager_state + 24));
+                (int32_t)(intptr_t)kinoko_map_manager_containers((KinokoMapManager *)g_retdec_map_manager_state));
         }
     }
 
     /* This global is normally constructed by the MSVC CRT before WinMain.
        Recreate the complete object before boot.nut can call CreateActor. */
-    if (!retdec_construct_actor_manager(
-            (int32_t)(intptr_t)g_retdec_actor_manager_state)) {
+    if (!kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)((int32_t)(intptr_t)g_retdec_actor_manager_state))) {
         retdec_trace("actor-manager:construct-failed");
     }
 
-    /* RetDec split these four ActorManager fields into standalone globals.
-       The original addresses are object offsets +0x14..+0x20, so mirror the
-       constructed RenderLayer pointers before boot.nut registers layers. */
+    /* RenderLayer pointers are read from the constructed ActorManager fields. */
     g617 = (int32_t)(intptr_t)g_retdec_actor_manager_state;
-    g618 = *(int32_t *)(g_retdec_actor_manager_state + 20);
-    g619 = *(int32_t *)(g_retdec_actor_manager_state + 24);
-    g620 = *(int32_t *)(g_retdec_actor_manager_state + 28);
-    g621 = *(int32_t *)(g_retdec_actor_manager_state + 32);
-    retdec_trace_i32("actor:layer-back", g618);
-    retdec_trace_i32("actor:layer-middle", g619);
-    retdec_trace_i32("actor:layer-front", g620);
-    retdec_trace_i32("actor:layer-water", g621);
+    kinoko_actor_trace_render_layers((KinokoActorManager *)g_retdec_actor_manager_state);
 
     g_retdec_runtime_initialized = 1;
 }
 
-static ULONG retdec_release_d3d_object(void *object)
-{
-    IUnknown *unknown = (IUnknown *)object;
-    return unknown == NULL ? 0 : unknown->lpVtbl->Release(unknown);
-}
+
 
 // Address range: 0x401000 - 0x40100b
 // From class:    .?AVbad_alloc@std@@
@@ -3769,220 +3393,20 @@ static ULONG retdec_release_d3d_object(void *object)
 // Address range: 0x401040 - 0x4011a5
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_401040(void) {
-    g675=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g676);
-    kinoko_initialize_device_listeners();
-    g677=g678=g679=g698=0;
-    return (int32_t)&g675;
-}
-
 // Address range: 0x4011b0 - 0x4013c5
 int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
-    IDirect3D9 *d3d;
-    IDirect3DDevice9 *device = NULL;
-    IDirect3DSwapChain9 *swap_chain = NULL;
-    D3DDEVTYPE device_type = D3DDEVTYPE_HAL;
-    WINDOWINFO window_info;
-    HRESULT hr;
-
-    if (hwnd == NULL) {
-        return 0;
-    }
-
-    g688 = (int32_t)(intptr_t)hwnd;
-    g696 = GetWindowLongA(hwnd, GWL_STYLE);
-    retdec_trace("4011b0:pre-d3d-create");
-    d3d = (IDirect3D9 *)(uintptr_t)Direct3DCreate9(D3D_SDK_VERSION);
-    retdec_trace(d3d != NULL ? "4011b0:post-d3d-create" :
-                 "4011b0:d3d-create-failed");
-    g677 = (int32_t)(intptr_t)d3d;
-    if (d3d == NULL) {
-        MessageBoxA(hwnd, "Direct3DCreate9 failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    ZeroMemory(&g_retdec_display_mode, sizeof(g_retdec_display_mode));
-    retdec_trace("4011b0:pre-display-mode");
-    hr = d3d->lpVtbl->GetAdapterDisplayMode(
-        d3d, D3DADAPTER_DEFAULT, &g_retdec_display_mode);
-    retdec_trace(FAILED(hr) ? "4011b0:display-mode-failed" :
-                 "4011b0:post-display-mode");
-    if (FAILED(hr)) {
-        retdec_release_d3d_object(d3d);
-        g677 = 0;
-        MessageBoxA(hwnd, "GetAdapterDisplayMode failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    /* WinMain passes zero dimensions.  4011B0 then takes the actual client
-       rectangle, which keeps the swap chain aligned with the window. */
-    if (width <= 0 || height <= 0) {
-        ZeroMemory(&window_info, sizeof(window_info));
-        window_info.cbSize = sizeof(window_info);
-        if (GetWindowInfo(hwnd, &window_info)) {
-            width = window_info.rcClient.right - window_info.rcClient.left;
-            height = window_info.rcClient.bottom - window_info.rcClient.top;
-        }
-    }
-    retdec_trace_i32("4011b0:client-width", width);
-    retdec_trace_i32("4011b0:client-height", height);
-    g695 = (int32_t)g_retdec_display_mode.Format;
-    g682 = width > 0 ? width : 640;
-    g683 = height > 0 ? height : 480;
-    g684 = g695;
-    g685 = 1;
-    g686 = 0;
-    g687 = 1;
-    g689 = 1;
-    g690 = 1;
-    g691 = (int32_t)D3DFMT_D24S8;
-    g692 = 2;
-    g693 = 0;
-    g694 = 1;
-
-    ZeroMemory(&g_retdec_present_parameters,
-               sizeof(g_retdec_present_parameters));
-    g_retdec_present_parameters.BackBufferWidth = (UINT)g682;
-    g_retdec_present_parameters.BackBufferHeight = (UINT)g683;
-    g_retdec_present_parameters.BackBufferFormat =
-        g_retdec_display_mode.Format;
-    g_retdec_present_parameters.BackBufferCount = 1;
-    g_retdec_present_parameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-    g_retdec_present_parameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    g_retdec_present_parameters.hDeviceWindow = hwnd;
-    g_retdec_present_parameters.Windowed = TRUE;
-    g_retdec_present_parameters.EnableAutoDepthStencil = TRUE;
-    g_retdec_present_parameters.AutoDepthStencilFormat = D3DFMT_D24S8;
-    g_retdec_present_parameters.Flags = (DWORD)g692;
-    g_retdec_present_parameters.FullScreen_RefreshRateInHz = 0;
-    g_retdec_present_parameters.PresentationInterval =
-        D3DPRESENT_INTERVAL_ONE;
-
-    retdec_trace("4011b0:pre-create-device");
-    hr = d3d->lpVtbl->CreateDevice(
-        d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 68,
-        &g_retdec_present_parameters, &device);
-    retdec_trace(FAILED(hr) ? "4011b0:create-device-1-failed" :
-                 "4011b0:create-device-1-ok");
-    if (FAILED(hr)) {
-        hr = d3d->lpVtbl->CreateDevice(
-            d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, 36,
-            &g_retdec_present_parameters, &device);
-        retdec_trace(FAILED(hr) ? "4011b0:create-device-2-failed" :
-                     "4011b0:create-device-2-ok");
-    }
-    if (FAILED(hr)) {
-        device_type = D3DDEVTYPE_REF;
-        hr = d3d->lpVtbl->CreateDevice(
-            d3d, D3DADAPTER_DEFAULT, device_type, hwnd, 36,
-            &g_retdec_present_parameters, &device);
-        retdec_trace(FAILED(hr) ? "4011b0:create-device-ref-failed" :
-                     "4011b0:create-device-ref-ok");
-    }
-    if (FAILED(hr) || device == NULL) {
-        retdec_release_d3d_object(d3d);
-        g677 = 0;
-        g678 = 0;
-        MessageBoxA(hwnd, "CreateDevice failed", "DirectX-Error", MB_OK);
-        return 0;
-    }
-
-    g678 = (int32_t)(intptr_t)device;
-    ZeroMemory(g680, sizeof(g680));
-    retdec_trace("4011b0:pre-device-caps");
-    device->lpVtbl->GetDeviceCaps(device, (D3DCAPS9 *)g680);
-    retdec_trace("4011b0:post-device-caps");
-    retdec_trace("4011b0:pre-swap-chain");
-    if (FAILED(device->lpVtbl->GetSwapChain(device, 0, &swap_chain))) {
-        swap_chain = NULL;
-    }
-    retdec_trace(swap_chain != NULL ? "4011b0:post-swap-chain" :
-                 "4011b0:swap-chain-failed");
-    g679 = (int32_t)(intptr_t)swap_chain;
-    g697 = 0;
-    retdec_trace("4011b0:done");
-    return 1;
+    return kinoko_graphics_create(hwnd,width,height);
 }
 
 // Address range: 0x4013d0 - 0x4014c3
-int32_t function_4013d0(void) {
-    IDirect3DDevice9 *device=(IDirect3DDevice9 *)(uintptr_t)g678;
-    if(g677==0 || device==NULL || g697==(int32_t)D3DERR_DEVICELOST) return 0;
-    g684=g689==0 ? 22 : g695;
-    g_retdec_present_parameters.BackBufferFormat=(D3DFORMAT)g684;
-    g_retdec_present_parameters.Windowed=g689;
-    EnterCriticalSection((LPCRITICAL_SECTION)&g676);
-    kinoko_notify_device_listeners(0);
-    if(g679) { retdec_release_d3d_object((void *)(uintptr_t)g679);g679=0; }
-    if(FAILED(device->lpVtbl->Reset(device,&g_retdec_present_parameters))) {
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g676);return 0;
-    }
-    device->lpVtbl->GetSwapChain(device,0,(IDirect3DSwapChain9 **)&g679);
-    kinoko_notify_device_listeners(1);
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-    return 1;
-}
+int32_t function_4013d0(void) { return kinoko_graphics_reset(); }
 
 // Address range: 0x4014d0 - 0x4015fb
-int32_t function_4014d0(void) {
-    // 0x4014d0
-    g689 = g689 == 0;
-    int32_t result = function_4013d0(); // 0x4014e4
-    int32_t v1 = g689;
-    if ((char)result == 0) {
-        // 0x4014ed
-        g689 = v1 == 0;
-        return result;
-    }
-    int32_t v2 = GetSystemMetrics(45);
-    int32_t v3 = GetSystemMetrics(7);
-    if (v1 != 0) {
-        int32_t cx = v3 + v2 + GetSystemMetrics(5) + g682; // 0x401526
-        int32_t v4 = GetSystemMetrics(46); // 0x40152e
-        int32_t cy = GetSystemMetrics(8) + v4 + GetSystemMetrics(6) + GetSystemMetrics(4) + g683; // 0x40154c
-        int32_t v5 = GetSystemMetrics(0) - cx; // 0x401554
-        int32_t v6 = GetSystemMetrics(1) - cy; // 0x401562
-        return SetWindowPos((int32_t *)g688, (int32_t *)-2, (v5 - (v5 >> 31)) / 2, (v6 - (v6 >> 31)) / 2, cx, cy, 32);
-    }
-    // 0x401587
-    GetSystemMetrics(5);
-    GetSystemMetrics(46);
-    GetSystemMetrics(8);
-    GetSystemMetrics(6);
-    GetSystemMetrics(4);
-    int32_t v7 = GetSystemMetrics(7) + GetSystemMetrics(45) + GetSystemMetrics(5); // 0x4015b1
-    int32_t v8 = GetSystemMetrics(8) + GetSystemMetrics(46) + GetSystemMetrics(6); // 0x4015cc
-    int32_t v9 = GetSystemMetrics(4); // 0x4015d7
-    return SetWindowPos((int32_t *)g688, NULL, -(((v7 - (v7 >> 31)) / 2)), -((v9 + (v8 - (v8 >> 31)) / 2)), 0, 0, 33);
-}
+int32_t function_4014d0(void) { return kinoko_graphics_toggle_window(); }
 
 // Address range: 0x401600 - 0x401652
 int32_t function_401600(void) {
-    int32_t object;
-    int32_t result = 0;
-
-    /* The three globals are interface pointers. RetDec lost the temporary
-       stack slots used to call their virtual Release methods. */
-    object = g679;
-    if (object != 0) {
-        ((void (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g679 = 0;
-    }
-    object = g678;
-    if (object != 0) {
-        ((void (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g678 = 0;
-    }
-    object = g677;
-    if (object != 0) {
-        result = ((int32_t (__stdcall *)(int32_t))
-            (uintptr_t)(*(int32_t *)((uintptr_t)(*(int32_t *)(uintptr_t)object) + 8)))(object);
-        g677 = 0;
-    }
-    return result;
+    return kinoko_graphics_release();
 }
 
 // Address range: 0x401660 - 0x4016d7
@@ -3993,152 +3417,25 @@ int32_t function_401600(void) {
 
 
 // Address range: 0x401760 - 0x401790
-int32_t function_401760(void) {
-    /* sub_401760 enters the render lock, begins the scene, and leaves the
-       lock held until sub_401790 finishes the frame. */
-    IDirect3DDevice9 *device;
-    HRESULT hr;
-
-    EnterCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-    device = (IDirect3DDevice9 *)(uintptr_t)g678;
-    if (device == NULL || device->lpVtbl == NULL) {
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        return 0;
-    }
-    hr = device->lpVtbl->BeginScene(device);
-    {
-        static volatile LONG begin_scene_trace_count;
-        LONG trace_index = InterlockedIncrement(&begin_scene_trace_count);
-        if (trace_index <= 5)
-            retdec_trace_hresult("401760:beginscene-hr", hr);
-    }
-    if (FAILED(hr)) {
-        LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-        return 0;
-    }
-    return 1;
-}
+int32_t function_401760(void) { return kinoko_graphics_begin_scene(); }
 
 // Address range: 0x401790 - 0x4017aa
-int32_t function_401790(void) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g678;
-    if (device != NULL && device->lpVtbl != NULL) {
-        HRESULT hr = device->lpVtbl->EndScene(device);
-        retdec_trace_hresult("401790:endscene-hr", hr);
-    }
-    LeaveCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)&g676);
-    return 0;
-}
+int32_t function_401790(void) { return kinoko_graphics_end_scene(); }
 
 
 // Address range: 0x4017b0 - 0x401814
-int32_t function_4017b0(void) {
-    IDirect3DSwapChain9 *swap_chain;
-    HRESULT hr;
-
-    if (g713 == 0 ||
-        TryEnterCriticalSection((LPCRITICAL_SECTION)&g676) == 0) {
-        return 0;
-    }
-
-    swap_chain = (IDirect3DSwapChain9 *)(uintptr_t)g679;
-    if (swap_chain == NULL || swap_chain->lpVtbl == NULL) {
-        g713 = 0;
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-        return 1;
-    }
-
-    hr = swap_chain->lpVtbl->Present(
-        swap_chain, NULL, NULL, NULL, NULL, D3DPRESENT_DONOTWAIT);
-    {
-        static volatile LONG present_trace_count;
-        LONG present_index = InterlockedIncrement(&present_trace_count);
-        if (present_index <= 5)
-            retdec_trace_hresult("4017b0:present-hr", hr);
-    }
-    if (hr == D3D_OK) {
-        g713 = 0;
-    }
-    LeaveCriticalSection((LPCRITICAL_SECTION)&g676);
-    return hr == D3D_OK ? 1 : 0;
-}
+int32_t function_4017b0(void) { return kinoko_graphics_present(); }
 
 // Address range: 0x401820 - 0x401843
-int32_t function_401820(void) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g678;
-    HRESULT hr;
-
-    if (device == NULL || device->lpVtbl == NULL)
-        return (int32_t)D3DERR_INVALIDCALL;
-    /* Original sub_401820 is the per-frame Clear call.  g714 is the
-       renderer object's +0x38 clear color (dword_51AE08). */
-    hr = device->lpVtbl->Clear(device, 0, NULL, 3,
-                               (D3DCOLOR)g714, 1.0f, 0);
-    {
-        static volatile LONG clear_trace_count;
-        LONG trace_index = InterlockedIncrement(&clear_trace_count);
-        if (trace_index <= 5)
-            retdec_trace_hresult("401820:clear-hr", hr);
-    }
-    return (int32_t)hr;
-}
+int32_t function_401820(void) { return kinoko_graphics_clear(); }
 
 // Address range: 0x401850 - 0x401a2f
 // From class:    .?AVCRenderer@@
 // Type:          constructor
 int32_t function_401850(void) {
-    g701=(int32_t)&g184;
-    g703=g704=g705=g706=g707=g709=g711=g712=0;
-    g708=4;g710=8;
-    kinoko_initialize_renderer_sets();
-    g702=g718=g721=0;
-    return (int32_t)&g701;
+    return (int32_t)(intptr_t)kinoko_renderer_construct(&g184);
 }
-
-
-// Address range: 0x401ae0 - 0x401b9e
-int32_t function_401ae0(void) {
-    IDirect3DDevice9 *device;
-    IDirect3DSurface9 *render_target = NULL;
-    IDirect3DSurface9 *depth_stencil = NULL;
-    HRESULT hr;
-
-    if (g702 != 0) {
-        return 0;
-    }
-    device = (IDirect3DDevice9 *)(uintptr_t)g678;
-    if (device == NULL) {
-        return 0;
-    }
-    g702 = g678;
-    retdec_trace("401ae0:pre-list");
-    kinoko_add_device_listener((int32_t)(uintptr_t)&g701);
-    retdec_trace("401ae0:post-list");
-    g714 = 0;
-    g713 = 0;
-    retdec_trace("401ae0:pre-clear-1");
-    hr = device->lpVtbl->Clear(device, 0, NULL, 3, 0, 1.0f, 0);
-    retdec_trace(FAILED(hr) ? "401ae0:clear-1-failed" :
-                 "401ae0:clear-1-ok");
-    hr = device->lpVtbl->SetRenderState(
-        device, (D3DRENDERSTATETYPE)58, 255);
-    retdec_trace(FAILED(hr) ? "401ae0:set-render-state-failed" :
-                 "401ae0:set-render-state-ok");
-    hr = device->lpVtbl->Clear(device, 0, NULL, 4, 0, 1.0f, 0);
-    retdec_trace(FAILED(hr) ? "401ae0:clear-2-failed" :
-                 "401ae0:clear-2-ok");
-    hr = device->lpVtbl->GetRenderTarget(
-        device, 0, &render_target);
-    g718 = (int32_t)(uintptr_t)render_target;
-    retdec_trace(FAILED(hr) ? "401ae0:get-render-target-failed" :
-                 "401ae0:get-render-target-ok");
-    hr = device->lpVtbl->GetDepthStencilSurface(
-        device, &depth_stencil);
-    g721 = (int32_t)(uintptr_t)depth_stencil;
-    retdec_trace(FAILED(hr) ? "401ae0:get-depth-stencil-failed" :
-                 "401ae0:get-depth-stencil-ok");
-    return 1;
-}
+int32_t function_401ae0(void) { return kinoko_renderer_initialize(); }
 
 // Address range: 0x401ba0 - 0x401d96
 // From class:    .?AVCRenderer@@
@@ -4192,178 +3489,21 @@ int32_t function_401ae0(void) {
 
 
 // Address range: 0x4026e0 - 0x402768
-int32_t function_4026e0(int32_t a1) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-
-    /* RetDec lost the __thiscall ECX object; g704 is this + 0x10. */
-    if (g704 == a1) {
-        return 0;
-    }
-    g704 = a1;
-    if (device == NULL || (a1 != 1 && a1 != 2)) {
-        return 0;
-    }
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)5, (DWORD)a1);
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)6, (DWORD)a1);
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)7, (DWORD)a1);
-    return (int32_t)hr;
-}
+int32_t function_4026e0(int32_t a1) { return kinoko_render_set_filter(a1); }
 
 // Address range: 0x402770 - 0x402873
 int32_t function_402770(int32_t result) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-    int32_t key;
-
-    /* RetDec lost the __thiscall ECX object; g703 is this + 0x0c. */
-    if (g703 == result) {
-        return result;
-    }
-    key = result - 1 + 8 * g703;
-    if (device != NULL) {
-        switch (key) {
-        case 0:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 1:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 2:
-        case 34:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 3:
-        case 27:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 3);
-            break;
-        case 9:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 10:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        case 11:
-        case 19:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 3);
-            break;
-        case 16:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 18:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 3);
-            break;
-        case 24:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 25:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            break;
-        case 32:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)171, 1);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 6);
-            break;
-        case 33:
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)19, 5);
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)20, 2);
-            break;
-        default:
-            break;
-        }
-    }
-    g703 = result;
-    return (int32_t)hr;
+    return kinoko_render_set_blend(result);
 }
 
 // Address range: 0x4028d0 - 0x40292f
 int32_t function_4028d0(int32_t a1, int32_t a2) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-    unsigned char first = (unsigned char)a1;
-    unsigned char second = (unsigned char)a2;
-    unsigned char *state = (unsigned char *)&g709;
-
-    /* The original method stores byte flags at this + 0x24/+0x25. */
-    if (state[0] != first) {
-        state[0] = first;
-        if (device != NULL) {
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)27, first);
-        }
-    }
-    if (state[1] != second) {
-        state[1] = second;
-        if (device != NULL) {
-            hr = device->lpVtbl->SetRenderState(
-                device, (D3DRENDERSTATETYPE)15, second);
-        }
-    }
-    if (device != NULL) {
-        hr = device->lpVtbl->SetTextureStageState(
-            device, 0, (D3DTEXTURESTAGESTATETYPE)4, 4);
-    }
-    return (int32_t)hr;
+    return kinoko_render_set_alpha(a1,a2);
 }
 
 
 // Address range: 0x402970 - 0x4029af
-int32_t function_402970(int32_t a1) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-
-    /* RetDec lost the __thiscall ECX object; g705 is this + 0x14. */
-    if (g705 == a1) {
-        return 0;
-    }
-    g705 = a1;
-    if (device != NULL && a1 >= 1 && a1 <= 3) {
-        hr = device->lpVtbl->SetRenderState(
-            device, (D3DRENDERSTATETYPE)22, (DWORD)a1);
-    }
-    return (int32_t)hr;
-}
+int32_t function_402970(int32_t a1) { return kinoko_render_set_cull(a1); }
 
 // Address range: 0x4029b0 - 0x4029cc
 
@@ -4392,189 +3532,7 @@ int32_t function_402970(int32_t a1) {
 
 
 // Address range: 0x402aa0 - 0x402abb
-int32_t function_402aa0(void) {
-    // 0x402aa0
-    retdec_trace("402aa0:begin");
-    function_4a8db0(0);
-    retdec_trace("402aa0:after-debug");
-    // sub_4A95C0 is a __thiscall SquirrelObject copy constructor.  RetDec
-    // dropped ECX from the call, which made the generated body use an
-    // uninitialized destination and corrupt the stack during VM startup.
-    retdec_trace("402aa0:before-4a8cc0");
-    int32_t source = function_4a8cc0();
-    retdec_trace_i32("402aa0:source", source);
-    retdec_trace("402aa0:after-4a8cc0");
-    int32_t result = function_4a95c0_this((int32_t)&g722, source);
-    retdec_trace("402aa0:done");
-    return result;
-}
-
-// Address range: 0x402ac0 - 0x402aca
-int32_t function_402ac0(void) {
-    // 0x402ac0
-    function_4a8c50();
-    return function_4a8c50();
-}
-
-
-// Address range: 0x402af0 - 0x402b85
-int32_t function_402af0(void) {
-    /* Error reporting is outside the title path.  The original builds a
-       std::string here, but the decompiler lost that object and the old
-       translation passed a one-byte char as a 1 KiB string destination.
-       Keep the error-handler callback non-destructive so the VM can return
-       its actual script error to function_402d40. */
-    retdec_trace("402af0:entry");
-    return 0;
-}
-
-
-// Address range: 0x402d30 - 0x402d36
-int32_t function_402d30(void) {
-    // 0x402d30
-    return &g722;
-}
-
-// Address range: 0x402d40 - 0x402ff7
-static int32_t retdec_read_script_blob(int32_t reader_ptr,
-                                       unsigned char *buffer,
-                                       uint32_t size)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    DWORD bytes_read = 0;
-    uint32_t i;
-
-    if (reader == NULL || buffer == NULL || size == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        LONG entry_offset = (LONG)reader[4];
-        if (SetFilePointer(file_handle, entry_offset, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER &&
-            GetLastError() != NO_ERROR) {
-            return 0;
-        }
-    }
-    if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-        bytes_read != size) {
-        return 0;
-    }
-    if (g765 != 0) {
-        unsigned char key = ((unsigned char *)reader)[24];
-        for (i = 0; i < size; ++i)
-            buffer[i] ^= key;
-    }
-    return 1;
-}
-
-int32_t function_402d40(char * a1, int32_t a2) {
-    char lookup_path[MAX_PATH];
-    const char *file_name = a1;
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    HANDLE file_handle;
-    uint32_t blob_size;
-    unsigned char *blob;
-    int32_t stream_state[3];
-    int32_t script_value[2] = { 0x01000001, 0 };
-    int32_t load_result = -1;
-    int32_t execute_result = -1;
-    size_t path_length;
-
-    retdec_trace("402d40:entry");
-    retdec_trace_i32("402d40:archives", g765);
-    if (a1 == NULL)
-        return 0;
-
-    retdec_trace_squirrel_name("402d40:file",
-                               (int32_t)(intptr_t)a1);
-
-    if (g874 != 0) {
-        path_length = strlen(a1);
-        if (path_length + 1 > sizeof(lookup_path))
-            return 0;
-        memcpy(lookup_path, a1, path_length + 1);
-        if (path_length >= 3) {
-            lookup_path[path_length - 3] = 'c';
-            lookup_path[path_length - 2] = 'v';
-            lookup_path[path_length - 1] = '4';
-        }
-        file_name = lookup_path;
-    }
-
-    if (function_407370((int32_t)(intptr_t)&reader_slot, file_name) == 0) {
-        retdec_trace("402d40:reader-failed");
-        return 0;
-    }
-    reader = (int32_t *)(intptr_t)reader_slot;
-    if (reader == NULL)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (g765 != 0) {
-        blob_size = (uint32_t)reader[3];
-    } else {
-        DWORD size_on_disk = GetFileSize(file_handle, NULL);
-        blob_size = size_on_disk == INVALID_FILE_SIZE ? 0 : size_on_disk;
-    }
-    retdec_trace_i32("402d40:size", (int32_t)blob_size);
-    if (blob_size == 0 || blob_size > 64u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    blob = (unsigned char *)malloc(blob_size + 1u);
-    if (blob == NULL ||
-        !retdec_read_script_blob(reader_slot, blob, blob_size)) {
-        free(blob);
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    blob[blob_size] = 0;
-
-    if (*(uint16_t *)blob == 0xFAFAu) {
-        stream_state[0] = (int32_t)(intptr_t)blob;
-        stream_state[1] = (int32_t)blob_size;
-        stream_state[2] = (int32_t)(intptr_t)blob;
-        sq_resetobject((HSQOBJECT*)kinoko_pointer((int32_t)(intptr_t)script_value));
-        load_result = sq_readclosure(kinoko_vm((int32_t)(intptr_t)g644), (SQREADFUNC)kinoko_pointer((int32_t)(intptr_t)function_402a50), stream_state);
-        retdec_trace_i32("402d40:compiled-result", load_result);
-        if (load_result >= 0 && g644 != NULL) {
-            sq_getstackobj(kinoko_vm((int32_t)(intptr_t)g644), -1, (HSQOBJECT*)(script_value));
-            if (script_value[0] != 0x01000001) {
-                sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(script_value[0], script_value[1]));
-                if (a2 == 0 || *(int32_t *)(intptr_t)(a2 + 4) ==
-                        0x01000001) {
-                    sq_pushroottable(kinoko_vm((int32_t)(intptr_t)g644));
-                } else {
-                    sq_pushobject(kinoko_vm((int32_t)(intptr_t)g644), kinoko_borrowed_object(*(int32_t *)(intptr_t)(a2 + 4), *(int32_t *)(intptr_t)(a2 + 8)));
-                }
-                execute_result = kinoko_sq_call((int32_t)(intptr_t)g644, 1, 0, 1);
-                retdec_trace_i32("402d40:execute-result", execute_result);
-                if (execute_result < 0 &&
-                    *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 64) ==
-                        0x08000010) {
-                    retdec_trace_squirrel_name(
-                        "402d40:error",
-                        *(int32_t *)(intptr_t)((int32_t)(intptr_t)g644 + 68) +
-                            28);
-                }
-            }
-        }
-    } else {
-        retdec_trace("402d40:plain-script");
-        free(blob);
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    free(blob);
-    retdec_destroy_reader(reader);
-    return 1;
-}
+/* Script lifecycle, file execution and ShowCallStack: squirrel/script_file.cpp. */
 
 // Address range: 0x403000 - 0x40378b
 // From class:    .?AVbad_alloc@std@@
@@ -4620,47 +3578,6 @@ float32_t function_404130(float80_t a1) {
 
 
 // Address range: 0x404390 - 0x404429
-int32_t function_404390(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {
-    z_stream stream = { 0 };
-    int status;
-    int32_t written;
-    if (a1 == 0 || a2 < 0 || a3 == NULL || a4 <= 0 ||
-        deflateInit(&stream, Z_DEFAULT_COMPRESSION) != Z_OK)
-        return 0;
-    stream.next_in = (Bytef *)(intptr_t)a1;
-    stream.avail_in = (uInt)a2;
-    stream.next_out = (Bytef *)a3;
-    stream.avail_out = (uInt)a4;
-    status = deflate(&stream, Z_FINISH);
-    written = a4 - (int32_t)stream.avail_out;
-    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
-        deflateEnd(&stream);
-        return 0;
-    }
-    return deflateEnd(&stream) == Z_OK ? written : 0;
-}
-
-// Address range: 0x404430 - 0x4044c7
-int32_t function_404430(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    z_stream stream = { 0 };
-    int status;
-    int32_t written;
-    if (a1 == 0 || a2 <= 0 || a3 == 0 || a4 <= 0 ||
-        inflateInit(&stream) != Z_OK)
-        return 0;
-    stream.next_in = (Bytef *)(intptr_t)a1;
-    stream.avail_in = (uInt)a2;
-    stream.next_out = (Bytef *)(intptr_t)a3;
-    stream.avail_out = (uInt)a4;
-    status = inflate(&stream, Z_NO_FLUSH);
-    written = a4 - (int32_t)stream.avail_out;
-    if (status != Z_STREAM_END && (status != Z_OK || stream.avail_out == 0)) {
-        inflateEnd(&stream);
-        return 0;
-    }
-    return inflateEnd(&stream) == Z_OK ? written : 0;
-}
-
 // Address range: 0x4044d0 - 0x4045bd
 
 
@@ -4695,7 +3612,7 @@ int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4) 
     *(float32_t *)(v2 + 92) = v4;
     *(float32_t *)(v2 + 96) = v5;
     function_405e30(*(int32_t *)(v2 + 4));
-    return g702;
+    return (int32_t)(intptr_t)kinoko_renderer.device;
 }
 
 
@@ -4735,160 +3652,7 @@ float80_t function_405080(float80_t a1, float80_t a2, float80_t a3) {
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float32_t x, float32_t y)
 {
-    IDirect3DDevice9 *device;
-    int32_t texture_handle;
-    HRESULT result;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (vertex_buffer == 0 || g678 == 0)
-        return -0x7fffbffb;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 8) {
-        retdec_trace_i32("draw:vertex-buffer", vertex_buffer);
-        retdec_trace_i32("draw:handle",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 4));
-        retdec_trace_i32("draw:v0-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 8));
-        retdec_trace_i32("draw:v0-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 12));
-        retdec_trace_i32("draw:v0-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 16));
-        retdec_trace_i32("draw:v0-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 20));
-        retdec_trace_i32("draw:v0-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 24));
-        retdec_trace_i32("draw:v0-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 28));
-        retdec_trace_i32("draw:v0-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 32));
-        retdec_trace_i32("draw:v1-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 36));
-        retdec_trace_i32("draw:v1-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 40));
-        retdec_trace_i32("draw:v1-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 44));
-        retdec_trace_i32("draw:v1-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 52));
-        retdec_trace_i32("draw:v1-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 56));
-        retdec_trace_i32("draw:v1-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 60));
-        retdec_trace_i32("draw:v2-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 64));
-        retdec_trace_i32("draw:v2-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 68));
-        retdec_trace_i32("draw:v2-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 72));
-        retdec_trace_i32("draw:v2-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 80));
-        retdec_trace_i32("draw:v2-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 84));
-        retdec_trace_i32("draw:v2-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 88));
-        retdec_trace_i32("draw:v3-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 92));
-        retdec_trace_i32("draw:v3-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 96));
-        retdec_trace_i32("draw:v3-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 100));
-        retdec_trace_i32("draw:v3-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 108));
-        retdec_trace_i32("draw:v3-u-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 112));
-        retdec_trace_i32("draw:v3-v-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 116));
-    }
-
-    *(float32_t *)(intptr_t)(vertex_buffer + 8) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 176) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 12) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 180) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 36) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 188) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 40) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 192) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 64) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 200) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 68) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 204) + y - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 92) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 212) + x - 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 96) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 216) + y - 0.5f;
-
-    *(float32_t *)(intptr_t)(vertex_buffer + 16) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 184) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 44) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 196) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 72) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 208) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 100) =
-        *(float32_t *)(intptr_t)(vertex_buffer + 220) + 0.5f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 20) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 48) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 76) = 1.0f;
-    *(float32_t *)(intptr_t)(vertex_buffer + 104) = 1.0f;
-
-    if (trace_index <= 8) {
-        retdec_trace_i32("draw:final-v0-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 8));
-        retdec_trace_i32("draw:final-v0-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 12));
-        retdec_trace_i32("draw:final-v0-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 16));
-        retdec_trace_i32("draw:final-v0-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 20));
-        retdec_trace_i32("draw:final-v0-color",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 24));
-        retdec_trace_i32("draw:final-v1-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 36));
-        retdec_trace_i32("draw:final-v1-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 40));
-        retdec_trace_i32("draw:final-v1-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 44));
-        retdec_trace_i32("draw:final-v1-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 48));
-        retdec_trace_i32("draw:final-v2-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 64));
-        retdec_trace_i32("draw:final-v2-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 68));
-        retdec_trace_i32("draw:final-v2-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 72));
-        retdec_trace_i32("draw:final-v2-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 76));
-        retdec_trace_i32("draw:final-v3-x-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 92));
-        retdec_trace_i32("draw:final-v3-y-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 96));
-        retdec_trace_i32("draw:final-v3-z-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 100));
-        retdec_trace_i32("draw:final-v3-rhw-bits",
-                         *(int32_t *)(intptr_t)(vertex_buffer + 104));
-    }
-
-    texture_handle = *(int32_t *)(intptr_t)(vertex_buffer + 4);
-    result = (HRESULT)retdec_set_texture_stage(0, texture_handle);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:set-texture-hr", result);
-    if (FAILED(result))
-        return (int32_t)result;
-
-    device = (IDirect3DDevice9 *)(uintptr_t)(uint32_t)g678;
-    if (device == NULL || device->lpVtbl == NULL)
-        return -0x7fffbffb;
-    result = device->lpVtbl->SetFVF(device, 0x144u);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:set-fvf-hr", result);
-    if (FAILED(result))
-        return (int32_t)result;
-    result = device->lpVtbl->DrawPrimitiveUP(
-        device, D3DPT_TRIANGLESTRIP, 2,
-        (const void *)(intptr_t)(vertex_buffer + 8), 28);
-    if (trace_index <= 8)
-        retdec_trace_hresult("draw:primitive-hr", result);
-    return (int32_t)result;
+    return kinoko_quad_submit((KinokoQuad *)(intptr_t)vertex_buffer,x,y);
 }
 
 
@@ -4942,9 +3706,9 @@ int32_t retdec_set_texture_stage(int32_t stage, int32_t handle)
     IDirect3DBaseTexture9 *texture;
     HRESULT result;
 
-    if (stage < 0 || stage >= 16 || g678 == 0)
+    if (stage < 0 || stage >= 16 || kinoko_graphics.device == 0)
         return -0x7fffbffb;
-    device = (IDirect3DDevice9 *)(uintptr_t)(uint32_t)g678;
+    device = kinoko_graphics.device;
     if (device == NULL || device->lpVtbl == NULL)
         return -0x7fffbffb;
     texture = handle == 0 ? NULL : retdec_resolve_texture_handle(handle);
@@ -5062,247 +3826,45 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 // Address range: 0x407270 - 0x4072ac
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_407270(int32_t lpFileName) {
-    int32_t * fileHandle = CreateFileA((char *)lpFileName, 1, 3, NULL, 3, 128, NULL); // 0x407289
-    int32_t v1 = (int32_t)fileHandle; // 0x407289
-    int32_t v2; // 0x407270
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x40728f
-    *v3 = v1;
-    if (fileHandle != (int32_t *)-1) {
-        // 0x4072a5
-        return v1 & -256 | 1;
-    }
-    // 0x407297
-    *v3 = 0;
-    return v1 & -256;
-}
+
 
 // Address range: 0x4072b0 - 0x4072ca
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072b0(int32_t reader) {
-    if (reader == 0)
-        return 0;
-    return *(int32_t *)(intptr_t)(reader + 8);
-}
+
 
 // Address range: 0x4072d0 - 0x4072f5
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_4072d0(int32_t reader, int32_t lpBuffer,
-                        int32_t nNumberOfBytesToRead) {
-    HANDLE file_handle;
 
-    if (reader == 0 || lpBuffer == 0 || nNumberOfBytesToRead < 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    return ReadFile(file_handle, (void *)(intptr_t)lpBuffer,
-                    (DWORD)nNumberOfBytesToRead,
-                    (LPDWORD)(intptr_t)(reader + 8), NULL);
-}
 
 // Address range: 0x407300 - 0x40730d
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_407300(int32_t reader) {
-    HANDLE file_handle;
 
-    if (reader == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    return (int32_t)GetFileSize(file_handle, NULL);
-}
 
 // Address range: 0x407310 - 0x407340
 // From class:    .?AVCFileReader@@
 // Type:          constructor
-int32_t function_407310(char a1) {
-    // 0x407310
-    int32_t result; // 0x407310
-    int32_t hObject = *(int32_t *)(result + 4); // 0x407316
-    *(int32_t *)result = (int32_t)&g33;
-    if (hObject != 0) {
-        // 0x407323
-        CloseHandle((int32_t *)hObject);
-    }
-    if ((a1 & 1) != 0) {
-        // 0x407330
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x407339
-    return result;
-}
+
 
 
 // Address range: 0x407360 - 0x40736c
-int32_t function_407360(char * a1) {
-    // 0x407360
-    return function_410500(a1);
-}
+
 
 // Address range: 0x407370 - 0x407443
-void retdec_destroy_reader(int32_t *reader)
-{
-    HANDLE file_handle;
 
-    if (reader == NULL) {
-        return;
-    }
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle != NULL && file_handle != INVALID_HANDLE_VALUE) {
-        CloseHandle(file_handle);
-    }
-    free(reader);
-}
 
-int32_t function_407370(int32_t reader_slot_address, const char *file_name)
-{
-    int32_t *reader_slot = (int32_t *)(intptr_t)reader_slot_address;
-    int32_t *reader = NULL;
-    HANDLE file_handle;
 
-    if (reader_slot == NULL || file_name == NULL) {
-        return 0;
-    }
-    if (*reader_slot != 0) {
-        retdec_destroy_reader((int32_t *)(intptr_t)*reader_slot);
-        *reader_slot = 0;
-    }
-
-    if (g765 == 0) {
-        reader = (int32_t *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(12);
-        if (reader != NULL) {
-            memset(reader, 0, 12);
-            reader[0] = (int32_t)(intptr_t)&g33;
-            file_handle = CreateFileA(file_name, GENERIC_READ,
-                                       FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                       NULL, OPEN_EXISTING,
-                                       FILE_ATTRIBUTE_NORMAL, NULL);
-            reader[1] = file_handle == INVALID_HANDLE_VALUE
-                ? 0 : (int32_t)(intptr_t)file_handle;
-        }
-    } else {
-        reader = (int32_t *)(intptr_t)_3f__3f_2_40_YAPAXI_40_Z(28);
-        if (reader != NULL) {
-            uint32_t resource_offset = 0;
-            uint32_t resource_size = 0;
-
-            memset(reader, 0, 28);
-            reader[0] = (int32_t)(intptr_t)&g205;
-            file_handle = (HANDLE)(intptr_t)function_4109d0(
-                file_name, &resource_offset, &resource_size);
-            reader[1] = (int32_t)(intptr_t)file_handle;
-            /* CPackageFileReader stores the entry size at +0x0c and the
-               entry offset at +0x10; +0x14 tracks the current position. */
-            reader[3] = (int32_t)resource_size;
-            reader[4] = (int32_t)resource_offset;
-            reader[5] = (int32_t)resource_offset;
-            if (file_handle != NULL) {
-                ((unsigned char *)reader)[24] =
-                    (unsigned char)((resource_offset >> 1) | 0x23u);
-            }
-        }
-    }
-
-    *reader_slot = (int32_t)(intptr_t)reader;
-    if (reader != NULL && reader[1] != 0) {
-        return 1;
-    }
-    retdec_destroy_reader(reader);
-    *reader_slot = 0;
-    return 0;
-}
 
 /* Read through the same CFileReader/CPackageFileReader boundary used by the
    original image and ACT loaders.  The package reader keeps the entry size
    at +0x0c, the absolute archive offset at +0x10, and its current absolute
    position at +0x14. */
-int32_t retdec_reader_read_exact(int32_t reader_ptr, void *buffer,
-                                        uint32_t size)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    DWORD bytes_read = 0;
 
-    if (reader == NULL || buffer == NULL || size == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        uint32_t entry_size = (uint32_t)reader[3];
-        uint32_t entry_offset = (uint32_t)reader[4];
-        uint32_t position = (uint32_t)reader[5];
-        uint32_t entry_end = entry_offset + entry_size;
-
-        if (position < entry_offset || position > entry_end ||
-            size > entry_end - position)
-            return 0;
-        if (SetFilePointer(file_handle, (LONG)position, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-            bytes_read != size)
-            return 0;
-        for (uint32_t index = 0; index < size; ++index) {
-            ((unsigned char *)buffer)[index] ^=
-                ((unsigned char *)reader)[24];
-        }
-        reader[2] = (int32_t)bytes_read;
-        reader[5] = (int32_t)(position + bytes_read);
-        return 1;
-    }
-
-    if (!ReadFile(file_handle, buffer, size, &bytes_read, NULL) ||
-        bytes_read != size)
-        return 0;
-    reader[2] = (int32_t)bytes_read;
-    return 1;
-}
 
 /* CAct::Load passes origin=FILE_CURRENT after consuming the ACT header. */
-int32_t retdec_reader_seek_relative(int32_t reader_ptr,
-                                            uint32_t offset)
-{
-    int32_t *reader = (int32_t *)(intptr_t)reader_ptr;
-    HANDLE file_handle;
-    uint32_t target;
 
-    if (reader == NULL)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)reader[1];
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    if (g765 != 0) {
-        uint32_t entry_size = (uint32_t)reader[3];
-        uint32_t entry_offset = (uint32_t)reader[4];
-        uint32_t position = (uint32_t)reader[5];
-        uint32_t entry_end;
-
-        if (entry_size > UINT32_MAX - entry_offset)
-            return 0;
-        entry_end = entry_offset + entry_size;
-        if (position < entry_offset || position > entry_end ||
-            offset > entry_end - position)
-            return 0;
-        target = position + offset;
-        if (SetFilePointer(file_handle, (LONG)target, NULL, FILE_BEGIN) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        reader[5] = (int32_t)target;
-    } else {
-        if (SetFilePointer(file_handle, (LONG)offset, NULL, FILE_CURRENT) ==
-                INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-    }
-    return 1;
-}
 
 
 // Address range: 0x407480 - 0x4074a2
@@ -5323,7 +3885,7 @@ void retdec_poll_fallback_keyboard(void)
     memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
     /* 408B30 uses DISCL_FOREGROUND. Keep that contract in the fallback,
        and expose the full keyboard to the original WaitAssign scan. */
-    if (g768 != NULL && GetForegroundWindow() == (HWND)g768) {
+    if (kinoko_input_window() != NULL && GetForegroundWindow() == kinoko_input_window()) {
         for (UINT virtual_key = VK_BACK; virtual_key < 256; ++virtual_key) {
             UINT scan;
             if (virtual_key == VK_SHIFT || virtual_key == VK_CONTROL || virtual_key == VK_MENU ||
@@ -5393,137 +3955,6 @@ static void retdec_initialize_input_aggregate(int32_t aggregate_ptr)
 
 
 // Address range: 0x408530 - 0x40854b
-int32_t function_408530(int32_t result) {
-    // 0x408530
-    *(int32_t *)(result + 4) = 0;
-    int32_t v1; // 0x408530
-    *(int32_t *)(result + 8) = *(int32_t *)(v1 + 12);
-    return result;
-}
-
-// Address range: 0x408550 - 0x40858e
-int32_t function_408550(int32_t result, int32_t a2) {
-    int32_t * v1 = (int32_t *)result; // 0x40856c
-    *v1 = 0;
-    *(int32_t *)(result + 4) = 0;
-    int32_t v2; // 0x408550
-    *(int32_t *)(result + 8) = *(int32_t *)(v2 + 8) + a2;
-    if (v2 == 0) {
-        // 0x40858a
-        return result;
-    }
-    int32_t v3 = *(int32_t *)v2; // 0x408580
-    if (v3 != 0) {
-        // 0x408586
-        *v1 = *(int32_t *)v3;
-    }
-    // 0x40858a
-    return result;
-}
-
-
-// Address range: 0x408650 - 0x4086d8
-int32_t function_408650(void *this_ptr, HWND hwnd) {
-    char module_path[MAX_PATH];
-    char *separator;
-    DWORD length;
-
-    (void)this_ptr;
-    g767 = (char *)hwnd;
-    ZeroMemory(module_path, sizeof(module_path));
-    length = GetModuleFileNameA(NULL, module_path, (DWORD)sizeof(module_path));
-    if (length == 0 || length >= sizeof(module_path)) {
-        g766[0] = 0;
-        return 0;
-    }
-
-    separator = strrchr(module_path, '\\');
-    if (separator == NULL) {
-        separator = strrchr(module_path, '/');
-    }
-    if (separator != NULL) {
-        separator[1] = 0;
-    } else {
-        module_path[0] = 0;
-    }
-    strcpy_s(g766, sizeof(g766), module_path);
-    if (g766[0] != 0) {
-        SetCurrentDirectoryA(g766);
-    }
-    return 1;
-}
-
-// Address range: 0x4086e0 - 0x4087a6
-int32_t function_4086e0(int32_t a1, int32_t * a2, int32_t a3) {
-    char drive[260] = { 0 };
-    char directory[260] = { 0 };
-    char filename[260] = { 0 };
-    char extension[260] = { 0 };
-    const char *path = (const char *)(intptr_t)a1;
-    char *output = (char *)(intptr_t)a2;
-
-    if (path == NULL || output == NULL)
-        return 0;
-    if (_splitpath_s(path, drive, sizeof(drive), directory,
-                     sizeof(directory), filename, sizeof(filename),
-                     extension, sizeof(extension)) != 0) {
-        output[0] = 0;
-        if (a3 != 0)
-            *(char *)(intptr_t)a3 = 0;
-        return 0;
-    }
-    if (a3 == 0) {
-        strcpy_s(output, 260, drive);
-        strcat_s(output, 260, directory);
-    } else {
-        strcpy_s((char *)(intptr_t)a3, 260, filename);
-        strcat_s((char *)(intptr_t)a3, 260, extension);
-        strcpy_s(output, 260, drive);
-        strcat_s(output, 260, directory);
-    }
-    return 0;
-}
-
-
-/* Common::CCriticalSection constructor with its original __thiscall
-   receiver restored. */
-static int32_t function_4087e0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g190;
-    InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)
-                               (intptr_t)(this_ptr + 4));
-    return this_ptr;
-}
-
-// Address range: 0x408800 - 0x40882c
-// From class:    .?AVCCriticalSection@Common@@
-// Type:          constructor
-int32_t function_408800(char a1) {
-    // 0x408800
-    int32_t result; // 0x408800
-    *(int32_t *)result = (int32_t)&g190;
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(result + 4));
-    if ((a1 & 1) != 0) {
-        // 0x40881c
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x408825
-    return result;
-}
-
-// Address range: 0x408830 - 0x408841
-// From class:    .?AVCCriticalSection@Common@@
-// Type:          constructor
-int32_t function_408830(void) {
-    // 0x408830
-    int32_t v1; // 0x408830
-    *(int32_t *)v1 = (int32_t)&g190;
-    DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(v1 + 4));
-    return &g1224;
-}
-
-
 // Address range: 0x408930 - 0x4089be
 
 
@@ -5535,15 +3966,7 @@ int32_t function_408830(void) {
 
 
 // Address range: 0x408bf0 - 0x408c73
-int32_t function_408bf0(void) {
-    /* The original enumerates optional game controllers here. Keep the
-       controller list empty until its C++ container has been recovered. */
-    g782 = 0;
-    g772 = 0;
-    g773 = 0;
-    g774 = 0;
-    return 1;
-}
+
 
 // Address range: 0x408c80 - 0x408cf4
 
@@ -5739,697 +4162,24 @@ int32_t function_408bf0(void) {
 // Address range: 0x40d520 - 0x40d55f
 // From class:    .?AVCFileWriter@@
 // Type:          virtual member function
-int32_t function_40d520(int32_t lpFileName) {
-    int32_t * fileHandle = CreateFileA((char *)lpFileName, 0x40000000, 0, NULL, 2, 128, NULL); // 0x40d53c
-    int32_t v1 = (int32_t)fileHandle; // 0x40d53c
-    int32_t v2; // 0x40d520
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x40d542
-    *v3 = v1;
-    if (fileHandle != (int32_t *)-1) {
-        // 0x40d558
-        return v1 & -256 | 1;
-    }
-    // 0x40d54a
-    *v3 = 0;
-    return v1 & -256;
-}
+
 
 // Address range: 0x40d560 - 0x40d585
 // From class:    .?AVCFileWriter@@
 // Type:          virtual member function
-int32_t function_40d560(int32_t lpBuffer, int32_t nNumberOfBytesToWrite) {
-    // 0x40d560
-    int32_t v1; // 0x40d560
-    int32_t hFile = *(int32_t *)(v1 + 4); // 0x40d56b
-    return WriteFile((int32_t *)hFile, (int32_t *)lpBuffer, nNumberOfBytesToWrite, (int32_t *)(v1 + 8), NULL);
-}
+
 
 // Address range: 0x40d590 - 0x40d5ab
 // From class:    .?AVCFileReader@@
 // Type:          virtual member function
-int32_t function_40d590(int32_t lDistanceToMove, int32_t dwMoveMethod) {
-    // 0x40d590
-    int32_t v1; // 0x40d590
-    return SetFilePointer((int32_t *)*(int32_t *)(v1 + 4), lDistanceToMove, NULL, dwMoveMethod);
-}
+
 
 // Address range: 0x40d5b0 - 0x40d5e0
 // From class:    .?AVCFileWriter@@
 // Type:          constructor
-int32_t function_40d5b0(char a1) {
-    // 0x40d5b0
-    int32_t result; // 0x40d5b0
-    int32_t hObject = *(int32_t *)(result + 4); // 0x40d5b6
-    *(int32_t *)result = (int32_t)&g34;
-    if (hObject != 0) {
-        // 0x40d5c3
-        CloseHandle((int32_t *)hObject);
-    }
-    if ((a1 & 1) != 0) {
-        // 0x40d5d0
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x40d5d9
-    return result;
-}
-
-// Address range: 0x40d5e0 - 0x40d78a
-int32_t function_40d5e0(void) {
-    g834=g835=g836=g837=0;
-    g842=0x10101;g844=1;
-    g838=g840=g839=g841=0;
-    g855=g856=g858=g860=0;
-    kinoko_initialize_scene_queue();
-    g868=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g869);
-    g863=g864=0;g854=1;
-    return (int32_t)&g833;
-}
-
-// Address range: 0x40d790 - 0x40d93e
-int32_t function_40d790(int32_t *state, const void *config) {
-    int32_t config_value;
-    int32_t *scene_manager;
-    int32_t *scene;
-    HANDLE resource_thread;
-    HANDLE game_thread;
-    HANDLE display_thread;
-    int32_t dinput_available;
-
-    if (state == NULL || config == NULL) {
-        return 0;
-    }
-
-    retdec_trace("40d790:begin");
-
-    memcpy((unsigned char *)state + 8, config, 0x28);
-    *(int32_t *)((unsigned char *)state + 0) =
-        *(int32_t *)((unsigned char *)state + 8);
-    *(int32_t *)((unsigned char *)state + 4) =
-        *(int32_t *)((unsigned char *)state + 12);
-    g874 = *(unsigned char *)((unsigned char *)state + 47) != 0;
-    *(int32_t *)((unsigned char *)state + 116) =
-        *(int32_t *)((unsigned char *)state + 28);
-    *(int32_t *)((unsigned char *)state + 120) =
-        *(int32_t *)((unsigned char *)state + 36);
-
-    if (g_retdec_state_cs_initialized == 0) {
-        InitializeCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        g_retdec_state_cs_initialized = 1;
-    }
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-
-    timeBeginPeriod(1);
-    kinoko_seed_random(timeGetTime());
-    retdec_trace("40d790:pre-coinit");
-    if (CoInitialize(NULL) < 0) {
-        retdec_trace("40d790:coinit-failed");
-        return 0;
-    }
-    function_408650((void *)(uintptr_t)*(int32_t *)
-        ((unsigned char *)state + 4),
-        (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0));
-    if (*(unsigned char *)((unsigned char *)state + 44) == 0) {
-        ShowCursor(FALSE);
-    }
-    *(unsigned char *)((unsigned char *)state + 76) = 1;
-
-    if (*(unsigned char *)((unsigned char *)state + 40) != 0) {
-        retdec_trace("40d790:d3d");
-        if ((char)function_4011b0(
-                (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-                *(int32_t *)((unsigned char *)state + 16),
-                *(int32_t *)((unsigned char *)state + 20)) == 0) {
-            retdec_trace("40d790:d3d-failed");
-            return 0;
-        }
-        function_401ae0();
-    }
-    if (*(unsigned char *)((unsigned char *)state + 41) != 0) {
-        retdec_trace("40d790:dinput");
-        retdec_trace("40d790:dinput-create");
-        dinput_available = function_408930(
-                (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-                (HINSTANCE)(uintptr_t)*(int32_t *)((unsigned char *)state + 4));
-        if ((char)dinput_available == 0) {
-            retdec_trace("40d790:dinput-create-failed");
-            retdec_trace("40d790:dinput-degraded");
-        } else {
-            retdec_trace("40d790:dinput-keyboard");
-            if ((char)function_408b30() == 0) {
-                retdec_trace("40d790:dinput-keyboard-failed");
-                retdec_trace("40d790:dinput-degraded");
-            }
-            retdec_trace("40d790:dinput-controllers");
-            if ((char)function_408bf0() == 0) {
-                retdec_trace("40d790:dinput-controllers-failed");
-            }
-            retdec_trace("40d790:dinput-mouse");
-            if ((char)function_408d00() == 0) {
-                retdec_trace("40d790:dinput-mouse-failed");
-            }
-            retdec_trace("40d790:dinput-ready");
-        }
-    }
-    if (*(unsigned char *)((unsigned char *)state + 42) != 0) {
-        int32_t audio_available;
-        retdec_trace("40d790:audio");
-        audio_available = function_411d80(
-            (HWND)(uintptr_t)*(int32_t *)((unsigned char *)state + 0),
-            *(int32_t *)((unsigned char *)state + 24));
-        retdec_trace(audio_available != 0 ? "40d790:audio-ready" :
-                     "40d790:audio-failed");
-        if (audio_available == 0) {
-            retdec_trace("40d790:audio-degraded");
-        }
-    }
-    if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
-        function_412ca0();
-    }
-
-    *(int32_t *)((unsigned char *)state + 56) = (int32_t)timeGetTime();
-    config_value = *(int32_t *)((unsigned char *)state + 32);
-    *(int32_t *)((unsigned char *)state + 176) = config_value;
-    *(int32_t *)((unsigned char *)state + 124) = 0;
-    *(int32_t *)((unsigned char *)state + 128) = 0;
-    *(int32_t *)((unsigned char *)state + 180) = -1;
-
-    scene_manager = (int32_t *)(uintptr_t)
-        *(int32_t *)((unsigned char *)state + 116);
-    retdec_trace_i32("40d790:scene-manager", (int32_t)(uintptr_t)scene_manager);
-    if (scene_manager != NULL) {
-        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
-        retdec_trace_i32("40d790:scene-vtable",
-                         scene_manager_vtable != NULL ?
-                             (int32_t)(uintptr_t)scene_manager_vtable : 0);
-        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
-            retdec_trace_i32("40d790:scene-init-method",
-                             scene_manager_vtable[0]);
-            retdec_call_thiscall0(
-                (void *)scene_manager,
-                (void *)(uintptr_t)scene_manager_vtable[0]);
-            retdec_trace("40d790:scene-init-called");
-        }
-    }
-    scene_manager = (int32_t *)(uintptr_t)
-        *(int32_t *)((unsigned char *)state + 120);
-    if (scene_manager != NULL) {
-        int32_t *scene_manager_vtable = *(int32_t **)(uintptr_t)scene_manager;
-        if (scene_manager_vtable != NULL && scene_manager_vtable[0] != 0) {
-            retdec_call_thiscall0(
-                (void *)scene_manager,
-                (void *)(uintptr_t)scene_manager_vtable[0]);
-        }
-    }
-    retdec_trace("40d790:scene-init");
-    scene = (int32_t *)(uintptr_t)function_45da50(config_value);
-    retdec_trace_i32("40d790:scene-created",
-                     (int32_t)(uintptr_t)scene);
-    *(int32_t *)((unsigned char *)state + 128) =
-        (int32_t)(uintptr_t)scene;
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-    retdec_trace("40d790:threads");
-
-    resource_thread = CreateThread(NULL, 0, function_40e320, NULL, 0,
-        (LPDWORD)((unsigned char *)state + 112));
-    *(HANDLE *)((unsigned char *)state + 108) = resource_thread;
-    g860 = (int32_t)(uintptr_t)resource_thread;
-    if (resource_thread != NULL) {
-        SetThreadPriority(resource_thread, -15);
-    }
-    game_thread = CreateThread(NULL, 0,
-        (LPTHREAD_START_ROUTINE)function_40e2b0, NULL, 0,
-        (LPDWORD)((unsigned char *)state + 84));
-    *(HANDLE *)((unsigned char *)state + 80) = game_thread;
-    g855 = (int32_t)(uintptr_t)game_thread;
-    if (*(unsigned char *)((unsigned char *)state + 40) != 0) {
-        display_thread = CreateThread(NULL, 0,
-            (LPTHREAD_START_ROUTINE)function_40e2d0, NULL, 0,
-            (LPDWORD)((unsigned char *)state + 92));
-        *(HANDLE *)((unsigned char *)state + 88) = display_thread;
-        g856 = (int32_t)(uintptr_t)display_thread;
-        if (display_thread != NULL) {
-            SetThreadPriority(display_thread, -15);
-        }
-    }
-    retdec_sync_runtime_state_to_globals((const unsigned char *)state);
-    retdec_trace(resource_thread != NULL && game_thread != NULL
-                     ? "40d790:success"
-                     : "40d790:thread-failed");
-    return (resource_thread != NULL && game_thread != NULL) ? 1 : 0;
-}
-
-// Address range: 0x40d940 - 0x40da51
-void function_40d940(int32_t *state) {
-    if (state == NULL) {
-        return;
-    }
-
-    *(unsigned char *)((unsigned char *)state + 76) = 0;
-    g854 = 0;
-    if (g867 != 0) {
-        SetEvent((HANDLE)(uintptr_t)g867);
-    }
-    if (g857 != 0) {
-        SetEvent((HANDLE)(uintptr_t)g857);
-    }
-
-    // The original helper waits for each worker and closes its handle. The
-    // generated zero-argument calls lost the HANDLE* register argument, so
-    // perform that lifetime operation explicitly here.
-    if (g860 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g860, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g860);
-        g860 = 0;
-    }
-    if (g855 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g855, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g855);
-        g855 = 0;
-    }
-    if (g856 != 0) {
-        WaitForSingleObject((HANDLE)(uintptr_t)g856, INFINITE);
-        CloseHandle((HANDLE)(uintptr_t)g856);
-        g856 = 0;
-    }
-    retdec_sync_globals_to_runtime_state((unsigned char *)state);
-
-    int32_t object;
-    int32_t *vtable;
-    if (g_retdec_state_cs_initialized != 0) {
-        EnterCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        object = *(int32_t *)((unsigned char *)state + 124);
-        if (object != 0) {
-            vtable = *(int32_t **)(uintptr_t)object;
-            if (vtable != NULL && vtable[0] != 0) {
-                retdec_call_thiscall1(
-                    (void *)(uintptr_t)object,
-                    (void *)(uintptr_t)vtable[0], 1);
-            }
-            *(int32_t *)((unsigned char *)state + 124) = 0;
-        }
-        object = *(int32_t *)((unsigned char *)state + 128);
-        if (object != 0) {
-            vtable = *(int32_t **)(uintptr_t)object;
-            if (vtable != NULL && vtable[0] != 0) {
-                retdec_call_thiscall1(
-                    (void *)(uintptr_t)object,
-                    (void *)(uintptr_t)vtable[0], 1);
-            }
-            *(int32_t *)((unsigned char *)state + 128) = 0;
-        }
-        LeaveCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-    }
-
-    object = *(int32_t *)((unsigned char *)state + 116);
-    if (object != 0) {
-        vtable = *(int32_t **)(uintptr_t)object;
-        if (vtable != NULL && vtable[1] != 0) {
-            retdec_call_thiscall0(
-                (void *)(uintptr_t)object,
-                (void *)(uintptr_t)vtable[1]);
-        }
-        free((void *)(uintptr_t)object);
-        *(int32_t *)((unsigned char *)state + 116) = 0;
-    }
-    object = *(int32_t *)((unsigned char *)state + 120);
-    if (object != 0) {
-        vtable = *(int32_t **)(uintptr_t)object;
-        if (vtable != NULL && vtable[1] != 0) {
-            retdec_call_thiscall0(
-                (void *)(uintptr_t)object,
-                (void *)(uintptr_t)vtable[1]);
-        }
-        free((void *)(uintptr_t)object);
-        *(int32_t *)((unsigned char *)state + 120) = 0;
-    }
-    if (*(unsigned char *)((unsigned char *)state + 43) != 0) {
-        ImmReleaseContext((HWND)(uintptr_t)g767, (HIMC)(uintptr_t)g534);
-    }
-    function_411f90();
-    function_4089c0();
-    kinoko_renderer_before_reset((int32_t)(uintptr_t)&g701, NULL);
-    kinoko_remove_device_listener((int32_t)(uintptr_t)&g701);
-    function_401600();
-    CoUninitialize();
-    if (g_retdec_state_cs_initialized != 0) {
-        DeleteCriticalSection((LPCRITICAL_SECTION)
-            ((unsigned char *)state + 152));
-        g_retdec_state_cs_initialized = 0;
-    }
-}
-
-// Address range: 0x40da60 - 0x40db2a
 
 
-// Address range: 0x40db30 - 0x40dbd7
-BOOL function_40db30(unsigned char *state) {
-    HANDLE event_handle;
-    MSG message;
-
-    if (state == NULL) {
-        return FALSE;
-    }
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    if (event_handle == NULL) {
-        return FALSE;
-    }
-    while (*(volatile unsigned char *)(state + 76) != 0) {
-        retdec_bgm_update_fade();
-        if (PeekMessageA(&message, NULL, 0, 0, PM_NOREMOVE)) {
-            if (!GetMessageA(&message, NULL, 0, 0)) {
-                break;
-            }
-            TranslateMessage(&message);
-            DispatchMessageA(&message);
-            continue;
-        }
-        if (g678 != 0) {
-            int32_t *vtable = *(int32_t **)(uintptr_t)g678;
-            if (vtable != NULL && vtable[3] != 0) {
-                g697 = ((int32_t (__stdcall *)(int32_t))(uintptr_t)vtable[3])(
-                    g678);
-            }
-        }
-        if (g697 == -2005530519) {
-            function_4013d0();
-        }
-        WaitForSingleObject(event_handle, 16);
-    }
-    CloseHandle(event_handle);
-    return TRUE;
-}
-
-// Address range: 0x40dbe0 - 0x40df4c
-static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter);
-int32_t function_40dbe0(void) {
-    return (int32_t)kinoko_run_game_math(retdec_game_loop_fixed, NULL);
-}
-
-
-static int32_t retdec_render_scene_frame(void)
-{
-    int32_t scene;
-    int32_t *vtable;
-    int32_t result;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    scene = g863;
-    if (scene == 0 || g678 == 0)
-        return 0;
-    vtable = *(int32_t **)(uintptr_t)scene;
-    if (vtable == NULL || vtable[2] == 0)
-        return 0;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 3)
-        retdec_trace("render:scene-vtable2");
-    result = retdec_call_thiscall0_result(
-        (void *)(uintptr_t)scene,
-        (void *)(uintptr_t)vtable[2]);
-    if (trace_index <= 3)
-        retdec_trace_i32("render:scene-result", result);
-    return (result & 1) != 0;
-}
-
-static void retdec_activate_pending_scene(void)
-{
-    if (g871 != g870) {
-        function_40da60();
-        retdec_trace("scene:activated");
-    }
-}
-
-static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
-{
-    LONG frame_index = 0;
-    HANDLE frame_event;
-
-    (void)parameter;
-    retdec_trace("game:entry");
-    frame_event = (HANDLE)(intptr_t)function_412b80(0);
-    kinoko_math_checkpoint("event-created",0);
-    while (g854 != 0) {
-        int32_t *vtable;
-        unsigned char can_draw;
-
-        if (frame_event != NULL) {
-            if (WaitForSingleObject(frame_event, INFINITE) != WAIT_OBJECT_0)
-                break;
-        } else {
-            Sleep(16);
-        }
-
-        kinoko_math_checkpoint("frame-ready",0);
-        if (g843 != 0)
-            function_408c80();
-
-        kinoko_math_checkpoint("input-done",0);
-        if (g861 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g861;
-            if (vtable != NULL && vtable[2] != 0)
-                retdec_call_thiscall0(
-                    (void *)(uintptr_t)g861,
-                    (void *)(uintptr_t)vtable[2]);
-        }
-
-        kinoko_math_checkpoint("manager-done",0);
-        if (g871 != g870) {
-            if (g862 == 0) {
-                retdec_activate_pending_scene();
-            } else {
-                vtable = *(int32_t **)(uintptr_t)g862;
-                if (vtable != NULL && vtable[3] != 0 &&
-                    (retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[3]) & 1) != 0)
-                    retdec_activate_pending_scene();
-            }
-        } else {
-            if (g862 != 0) {
-                vtable = *(int32_t **)(uintptr_t)g862;
-                if (vtable != NULL && vtable[2] != 0)
-                    retdec_call_thiscall0(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[2]);
-            }
-            if (g863 != 0) {
-                vtable = *(int32_t **)(uintptr_t)g863;
-                if (vtable != NULL && vtable[1] != 0)
-                    retdec_call_thiscall0(
-                        (void *)(uintptr_t)g863,
-                        (void *)(uintptr_t)vtable[1]);
-            }
-        }
-
-        kinoko_math_checkpoint("scene-done",0);
-        g713 = 0;
-        can_draw = 1;
-        if (g845 == 0 && g863 != 0)
-            can_draw = (unsigned char)(
-                retdec_render_scene_frame() != 0);
-        if (g845 == 0 && g861 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g861;
-            if (vtable != NULL && vtable[3] != 0)
-                can_draw &= (unsigned char)(
-                    retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g861,
-                        (void *)(uintptr_t)vtable[3]) & 1);
-        }
-        if (g845 == 0 && g862 != 0) {
-            vtable = *(int32_t **)(uintptr_t)g862;
-            if (vtable != NULL && vtable[4] != 0)
-                can_draw &= (unsigned char)(
-                    retdec_call_thiscall0_result(
-                        (void *)(uintptr_t)g862,
-                        (void *)(uintptr_t)vtable[4]) & 1);
-        }
-        if (g845 == 0 && can_draw != 0) {
-            g713 = 1;
-            g852++;
-            if (g857 != 0)
-                SetEvent((HANDLE)(uintptr_t)g857);
-        }
-        kinoko_math_checkpoint("render-done",0);
-        ++g848;
-        ++frame_index;
-        if (frame_index <= 3 || (frame_index & 63) == 0)
-            retdec_trace_i32("game:frame", frame_index);
-    }
-    if (frame_event != NULL)
-        function_412c10((int32_t)(intptr_t)frame_event);
-    retdec_trace("game:exit");
-    return 0;
-}
-
-static DWORD WINAPI retdec_display_loop_fixed(LPVOID parameter)
-{
-    HANDLE wake_event;
-    LONG frame_index = 0;
-
-    (void)parameter;
-    retdec_trace("display:entry");
-    wake_event = CreateEventA(NULL, FALSE, FALSE, NULL);
-    g857 = (int32_t)(uintptr_t)wake_event;
-    retdec_trace_i32("display:event", g857);
-    if (wake_event == NULL)
-        return 0;
-
-    while (g854 != 0) {
-        if (WaitForSingleObject(wake_event, INFINITE) != WAIT_OBJECT_0)
-            break;
-        if (g854 == 0)
-            break;
-        if (g713 != 0 && function_4017b0() != 0)
-            ++g852;
-        ++frame_index;
-        if (frame_index <= 3 || (frame_index & 63) == 0)
-            retdec_trace_i32("display:frame", frame_index);
-    }
-
-    CloseHandle(wake_event);
-    if (g857 == (int32_t)(uintptr_t)wake_event)
-        g857 = 0;
-    retdec_trace("display:exit");
-    return 0;
-}
-
-// Address range: 0x40e130 - 0x40e21b
-LRESULT CALLBACK function_40e130(int32_t * a1, HWND a2, UINT a3, WPARAM a4, LPARAM a5) {
-    // The original function is a regular Win32 window procedure. The old
-    // RetDec output modeled its register arguments as a fake stack frame,
-    // which caused the default window procedure to receive invalid values.
-    if (a1 != NULL && *(unsigned char *)((unsigned char *)a1 + 43) != 0 &&
-        (char)kinoko_ime_dispatch((int32_t)(uintptr_t)a2, a3, (uint32_t)a4, (int32_t)a5) != 0) {
-        return 0;
-    }
-
-    if (a3 == WM_SYSKEYDOWN) {
-        if (a4 == VK_RETURN) {
-            function_40e220(a1, (char)(g689 == 0));
-            return 0;
-        }
-        if (a4 != VK_F4) {
-            return 0;
-        }
-        return DefWindowProcA(a2, a3, a4, a5);
-    }
-    if (a3 == WM_CREATE || a3 == WM_NCMOUSEMOVE || a3 == WM_DISPLAYCHANGE) {
-        return 0;
-    }
-    if (a3 == WM_DESTROY) {
-        PostQuitMessage(0);
-        return 0;
-    }
-    if (a3 == WM_SYSCOMMAND) {
-        if (a4 == SC_MONITORPOWER || a4 == SC_SCREENSAVE) {
-            return 1;
-        }
-        return DefWindowProcA(a2, a3, a4, a5);
-    }
-    if (a3 == 642) {
-        return 0;
-    }
-    if (a3 == WM_QUIT) {
-        return 0;
-    }
-    return DefWindowProcA(a2, a3, a4, a5);
-}
-
-// Address range: 0x40e220 - 0x40e2a4
-int32_t function_40e220(int32_t *state, char toggle) {
-    bool old_fullscreen;
-
-    if (state == NULL) {
-        return 0;
-    }
-    old_fullscreen = g689 == 0;
-    if ((toggle != 0 && g689 != 0) || (toggle == 0 && g689 == 0)) {
-        return 0;
-    }
-
-    EnterCriticalSection((LPCRITICAL_SECTION)
-        ((unsigned char *)state + 152));
-    function_4014d0();
-    LeaveCriticalSection((LPCRITICAL_SECTION)
-        ((unsigned char *)state + 152));
-
-    if (*(unsigned char *)((unsigned char *)state + 44) != 0) {
-        if (old_fullscreen && g689 != 0) {
-            ShowCursor(TRUE);
-            return 1;
-        }
-        if (!old_fullscreen && g689 == 0) {
-            ShowCursor(FALSE);
-            return 0;
-        }
-    }
-    return g689 != 0;
-}
-
-// Address range: 0x40e2b0 - 0x40e2cc
-int32_t function_40e2b0(void) {
-    // 0x40e2b0
-    retdec_trace("40e2b0:entry");
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40e2bc
-        retdec_trace("40e2b0:before-game");
-        function_40dbe0();
-        retdec_trace("40e2b0:after-game");
-        CoUninitialize();
-    }
-    // 0x40e2c7
-    return 0;
-}
-
-// Address range: 0x40e2d0 - 0x40e2ec
-int32_t function_40e2d0(void) {
-    // 0x40e2d0
-    retdec_trace("40e2d0:entry");
-    if ((uint32_t)CoInitialize(NULL) >= 0) {
-        // 0x40e2dc
-        retdec_trace("40e2d0:before-display");
-        retdec_display_loop_fixed(NULL);
-        retdec_trace("40e2d0:after-display");
-        CoUninitialize();
-    }
-    // 0x40e2e7
-    return 0;
-}
-
-
-// Address range: 0x40e320 - 0x40e3eb
-DWORD WINAPI function_40e320(LPVOID parameter) {
-    HANDLE event_handle;
-
-    (void)parameter;
-    retdec_trace("40e320:entry");
-    if (CoInitialize(NULL) < 0) {
-        retdec_trace("40e320:coinit-failed");
-        return 0;
-    }
-
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    retdec_trace_i32("40e320:event", (int32_t)(uintptr_t)event_handle);
-    g867 = (int32_t)(uintptr_t)event_handle;
-    if (g_retdec_runtime_initialized != 0) {
-        *(int32_t *)(g_retdec_runtime_state + 144) = g867;
-    }
-    if (event_handle != NULL) {
-        while (g854 != 0) {
-            WaitForSingleObject(event_handle, INFINITE);
-
-            kinoko_destroy_retired_scenes();
-        }
-        CloseHandle(event_handle);
-    }
-    CoUninitialize();
-    return 0;
-}
+// Application lifecycle and worker loops: application_runtime.cpp.
 
 // Address range: 0x40e3f0 - 0x40e454
 
@@ -6455,7 +4205,7 @@ DWORD WINAPI function_40e320(LPVOID parameter) {
 int32_t function_40e630(int32_t unused, const char *file_name,
                         int32_t texture_out, uint32_t *width_out,
                         uint32_t *height_out) {
-    unsigned char bitmap[32] = { 0 };
+    KinokoBitmap bitmap = { 0 };
     char lookup_path[MAX_PATH];
     size_t path_length;
     uint32_t width;
@@ -6471,7 +4221,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     D3DLOCKED_RECT locked_rect;
 
     (void)unused;
-    if (file_name == NULL || texture_out == 0 || g678 == 0)
+    if (file_name == NULL || texture_out == 0 || kinoko_graphics.device == 0)
         return -0x7789f794;
     path_length = strlen(file_name);
     if (path_length < 3 || path_length + 1 > sizeof(lookup_path))
@@ -6480,13 +4230,13 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     lookup_path[path_length - 3] = 'c';
     lookup_path[path_length - 2] = 'v';
     lookup_path[path_length - 1] = '2';
-    if (!function_414010((int32_t)(intptr_t)bitmap, lookup_path))
+    if (!kinoko_bitmap_load_cv2(&bitmap, lookup_path))
         return -0x7789f794;
 
-    bit_depth = bitmap[4];
-    width = *(uint32_t *)(bitmap + 8);
-    height = *(uint32_t *)(bitmap + 12);
-    row_width = *(uint32_t *)(bitmap + 16);
+    bit_depth = bitmap.bit_depth;
+    width = bitmap.width;
+    height = bitmap.height;
+    row_width = bitmap.row_width;
     /* CV2's 16-bit branch is the native A1R5G5B5 texture path used by
        CBitmapData::Load.  It is not an 8-bit grayscale stream. */
     if (bit_depth == 16) {
@@ -6498,7 +4248,7 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     }
     if (width == 0 || height == 0 || row_width < width || source_pitch == 0 ||
         (uint64_t)source_pitch * height > 256u * 1024u * 1024u) {
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return -0x7789f794;
     }
     if (width_out != NULL)
@@ -6506,18 +4256,18 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     if (height_out != NULL)
         *height_out = height;
 
-    result = D3DXCreateTexture(g678, (int32_t)width, (int32_t)height, 1, 0,
+    result = D3DXCreateTexture((int32_t)(intptr_t)kinoko_graphics.device, (int32_t)width, (int32_t)height, 1, 0,
                                texture_format, 1, &texture_value);
     retdec_trace_hresult("texture:create-hr", result);
     retdec_trace_i32("texture:create-object", texture_value);
     if (result < 0 || texture_value == 0) {
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return result;
     }
     texture = (IDirect3DTexture9 *)(intptr_t)texture_value;
     if (texture->lpVtbl == NULL) {
         retdec_trace("texture:create-no-vtable");
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     memset(&locked_rect, 0, sizeof(locked_rect));
@@ -6529,21 +4279,21 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     retdec_trace_i32("texture:lock-pitch", locked_rect.Pitch);
     if (result < 0) {
         texture->lpVtbl->Release(texture);
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return result;
     }
     if (locked_rect.pBits == NULL || locked_rect.Pitch <= 0) {
         retdec_trace("texture:lock-invalid-surface");
         texture->lpVtbl->UnlockRect(texture, 0);
         texture->lpVtbl->Release(texture);
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     for (row = 0; row < height; ++row) {
         unsigned char *destination = (unsigned char *)locked_rect.pBits +
             (size_t)row * (size_t)locked_rect.Pitch;
         const unsigned char *source =
-            (const unsigned char *)(*(void **)(bitmap + 28)) +
+            bitmap.pixels +
             (size_t)row * source_pitch;
         if (bit_depth == 16) {
             /* 414482 copies pairs of A1R5G5B5 pixels and advances by the
@@ -6564,11 +4314,11 @@ int32_t function_40e630(int32_t unused, const char *file_name,
     retdec_trace_i32("texture:unlock-object", (int32_t)(intptr_t)texture);
     if (texture == NULL || texture->lpVtbl == NULL) {
         retdec_trace("texture:unlock-no-object");
-        free(*(void **)(bitmap + 28));
+        kinoko_bitmap_release_pixels(&bitmap);
         return (int32_t)E_FAIL;
     }
     texture->lpVtbl->UnlockRect(texture, 0);
-    free(*(void **)(bitmap + 28));
+    kinoko_bitmap_release_pixels(&bitmap);
     *(int32_t *)(intptr_t)texture_out = texture_value;
     return result;
 }
@@ -6582,7 +4332,7 @@ int32_t retdec_load_act_texture(const char *texture_name)
     const char *extension;
     size_t length;
 
-    if (texture_name == NULL || g678 == 0)
+    if (texture_name == NULL || kinoko_graphics.device == 0)
         return 0;
     length = strlen(texture_name);
     if (length == 0 || length + 5 > sizeof(path))
@@ -6617,23 +4367,12 @@ int32_t retdec_load_act_texture(const char *texture_name)
 // Address range: 0x410260 - 0x410264
 // From class:    .?AUSQBlob@@
 // Type:          virtual member function
-int32_t function_410260(void) {
-    // 0x410260
-    int32_t v1; // 0x410260
-    return *(int32_t *)(v1 + 12);
-}
+
 
 // Address range: 0x410270 - 0x4103ad
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_410270(void) {
-    g757=(int32_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g758);
-    // Active archive entries are owned by the native index below. Do not
-    // construct a second, disconnected VC8 vector/map and its fake unwind.
-    g765=0;
-    return (int32_t)&g757;
-}
+
 
 
 // Address range: 0x410500 - 0x410747
@@ -6665,85 +4404,12 @@ int32_t function_410270(void) {
 // Address range: 0x410b90 - 0x410bf5
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410b90(int32_t reader, int32_t lpBuffer, int32_t a2) {
-    HANDLE file_handle;
-    uint32_t offset;
-    uint32_t size;
-    uint32_t position;
-    uint32_t requested;
-    uint32_t readable;
-    DWORD bytes_read = 0;
-    uint32_t index;
 
-    if (reader == 0 || lpBuffer == 0 || a2 <= 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
-    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
-    position = (uint32_t)*(int32_t *)(intptr_t)(reader + 20);
-    requested = (uint32_t)a2;
-    readable = position < offset + size ? offset + size - position : 0;
-    if (requested > readable)
-        requested = readable;
-    if (requested == 0)
-        return 0;
-
-    if (!ReadFile(file_handle, (void *)(intptr_t)lpBuffer, requested,
-                  &bytes_read, NULL) || bytes_read == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(reader + 8) = (int32_t)bytes_read;
-    *(int32_t *)(intptr_t)(reader + 20) =
-        (int32_t)(position + (uint32_t)bytes_read);
-    for (index = 0; index < bytes_read; ++index) {
-        ((unsigned char *)(intptr_t)lpBuffer)[index] ^=
-            ((unsigned char *)(intptr_t)reader)[24];
-    }
-    return 1;
-}
 
 // Address range: 0x410c00 - 0x410c7b
 // From class:    .?AVCPackageFileReader@@
 // Type:          virtual member function
-int32_t function_410c00(int32_t reader, int32_t lDistanceToMove,
-                        int32_t a2) {
-    HANDLE file_handle;
-    LONG absolute_position;
-    uint32_t offset;
-    uint32_t size;
-    DWORD position;
 
-    if (reader == 0)
-        return 0;
-    file_handle = (HANDLE)(intptr_t)*(int32_t *)(intptr_t)(reader + 4);
-    if (file_handle == NULL || file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-    offset = (uint32_t)*(int32_t *)(intptr_t)(reader + 12);
-    size = (uint32_t)*(int32_t *)(intptr_t)(reader + 16);
-    if (a2 == 0) {
-        absolute_position = (LONG)(offset + (uint32_t)lDistanceToMove);
-    } else if (a2 == 1) {
-        position = SetFilePointer(file_handle, (LONG)lDistanceToMove,
-                                  NULL, FILE_CURRENT);
-        if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-            return 0;
-        absolute_position = (LONG)position;
-    } else if (a2 == 2) {
-        absolute_position = (LONG)(offset + size -
-                                   (uint32_t)lDistanceToMove);
-    } else {
-        return 0;
-    }
-    position = SetFilePointer(file_handle, absolute_position, NULL,
-                              FILE_BEGIN);
-    if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-        return 0;
-    *(int32_t *)(intptr_t)(reader + 20) =
-        (int32_t)((uint32_t)position - offset);
-    return *(int32_t *)(intptr_t)(reader + 20);
-}
 
 
 // Address range: 0x410e00 - 0x410e77
@@ -6861,75 +4527,10 @@ int32_t function_4123c0(int32_t a1) {
 // Address range: 0x412890 - 0x412ac5
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_412890(void) {
-    HANDLE thread;
-    DWORD thread_id = 0;
 
-    /* IDA identifies this as the Common::CCriticalSection constructor. The
-       generated body below merged its destructor/error path and substituted
-       g1224 for several real globals, so keep the startup path explicit. */
-    g879 = (int32_t)(uintptr_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g880);
-    retdec_trace("412890:cs-ready");
-    g881 = 0;
-    g882 = 0;
-    kinoko_initialize_timer_events();
-    retdec_trace_i32("412890:sentinel",kinoko_timer_events_identity());
-    g883 = 16;
-    g884 = 0;
-    g887 = 1;
-    timeBeginPeriod(1);
-    thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)function_412ad0,
-                          NULL, 0, &thread_id);
-    g881 = (int32_t)(uintptr_t)thread;
-    g882 = (int32_t)thread_id;
-    if (thread != NULL) {
-        SetThreadPriority(thread, 15);
-    }
-    retdec_trace_i32("412890:thread", g881);
-    return (int32_t)(uintptr_t)&g879;
-
-}
 
 // Address range: 0x412ad0 - 0x412b73
-DWORD WINAPI function_412ad0(LPVOID lpThreadParameter) {
-    HANDLE event_handle;
-    static volatile LONG trace_count;
-    LONG trace_index;
 
-    (void)lpThreadParameter;
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    retdec_trace_i32("412ad0:event", (int32_t)(uintptr_t)event_handle);
-    if (event_handle == NULL) {
-        return 0;
-    }
-    while (g887 != 0) {
-        DWORD timeout = (DWORD)g883;
-        if (g884 != 0) {
-            timeout += (DWORD)g884;
-            g884 = 0;
-        }
-        WaitForSingleObject(event_handle, timeout);
-        trace_index = InterlockedIncrement(&trace_count);
-        if (trace_index <= 3) {
-            retdec_trace("412ad0:before-lock");
-        }
-        EnterCriticalSection((LPCRITICAL_SECTION)&g880);
-        if (trace_index <= 3) {
-            retdec_trace_i32("412ad0:sentinel", kinoko_timer_events_identity());
-            retdec_trace_i32("412ad0:first",
-                             kinoko_timer_events_first());
-        }
-        kinoko_notify_timer_events();
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-        if (trace_index <= 3) {
-            retdec_trace("412ad0:after-lock");
-        }
-    }
-    CloseHandle(event_handle);
-    return 0;
-
-}
 
 // Address range: 0x412b80 - 0x412c08
 
@@ -6981,71 +4582,7 @@ int32_t function_412ca0(void) {
 
 
 // Address range: 0x414010 - 0x4141d9
-int32_t function_414010(int32_t this_ptr, const char *file_name) {
-    int32_t reader_slot = 0;
-    int32_t *reader;
-    uint8_t bit_depth;
-    uint32_t width;
-    uint32_t height;
-    uint32_t row_width;
-    uint32_t payload_size;
-    uint32_t allocation_size;
-    void *old_pixels;
-    void *pixels;
-
-    if (this_ptr == 0 || file_name == NULL)
-        return 0;
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name))
-        return 0;
-    reader = (int32_t *)(intptr_t)reader_slot;
-
-    if (!retdec_reader_read_exact(reader_slot, &bit_depth, 1) ||
-        !retdec_reader_read_exact(reader_slot, &width, sizeof(width)) ||
-        !retdec_reader_read_exact(reader_slot, &height, sizeof(height)) ||
-        !retdec_reader_read_exact(reader_slot, &row_width,
-                                  sizeof(row_width)) ||
-        !retdec_reader_read_exact(reader_slot, &payload_size,
-                                  sizeof(payload_size))) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    *(uint8_t *)(intptr_t)(this_ptr + 4) = bit_depth;
-    *(uint32_t *)(intptr_t)(this_ptr + 8) = width;
-    *(uint32_t *)(intptr_t)(this_ptr + 12) = height;
-    *(uint32_t *)(intptr_t)(this_ptr + 16) = row_width;
-    *(uint32_t *)(intptr_t)(this_ptr + 20) = payload_size;
-
-    if (payload_size != 0) {
-        allocation_size = payload_size;
-    } else if (bit_depth < 24) {
-        uint64_t total_bits = (uint64_t)row_width * height * bit_depth;
-        allocation_size = (uint32_t)(total_bits / 8u);
-    } else {
-        uint64_t total_bytes = (uint64_t)row_width * height * 4u;
-        allocation_size = (uint32_t)total_bytes;
-    }
-    if (allocation_size == 0 || allocation_size > 256u * 1024u * 1024u ||
-        (uint64_t)width * height > 64u * 1024u * 1024u) {
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-
-    old_pixels = *(void **)(intptr_t)(this_ptr + 28);
-    if (old_pixels != NULL)
-        free(old_pixels);
-    pixels = malloc(allocation_size);
-    if (pixels == NULL ||
-        !retdec_reader_read_exact(reader_slot, pixels, allocation_size)) {
-        free(pixels);
-        *(void **)(intptr_t)(this_ptr + 28) = NULL;
-        retdec_destroy_reader(reader);
-        return 0;
-    }
-    *(void **)(intptr_t)(this_ptr + 28) = pixels;
-    retdec_destroy_reader(reader);
-    return 1;
-}
+/* CBitmapData CV2 loading: reconstructed/bitmap.cpp. */
 
 // Address range: 0x415130 - 0x415183
 
@@ -7314,89 +4851,11 @@ int32_t function_41e390(int32_t storage) {
 // Address range: 0x41eed0 - 0x41ef17
 
 
-// Address range: 0x41ef20 - 0x41ef42
-// From class:    .?AVCActLayer@@
-// Type:          virtual member function
-int32_t function_41ef20(int32_t a1) {
-    // 0x41ef20
-    if (a1 == 0) {
-        // 0x41ef2a
-        return -0x7fffbffb;
-    }
-    // 0x41ef33
-    int32_t v1; // 0x41ef20
-    *(int32_t *)(v1 + 100) = a1;
-    *(int32_t *)(v1 + 96) = *(int32_t *)(a1 + 4);
-    return 0;
-}
+/* 41EF20: typed receiver/resource in act_document_association.cpp. */
 
 // Address range: 0x41ef50 - 0x41efab
 // From class:    .?AVCActLayer@@
 // Type:          virtual member function
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3) {
-    // 0x41ef50
-    if (a1 == 0 || a2 == 0 || a3 == 0) {
-        // 0x41efa6
-        int32_t result; // 0x41ef50
-        return result;
-    }
-    // 0x41ef6c
-    int3_t v1; // 0x41ef50
-    int3_t v2 = v1 - 1; // 0x41ef6c
-    __frontend_reg_store_fpr(v2, 0.0L);
-    float80_t v3 = __frontend_reg_load_fpr(v2); // 0x41ef6e
-    float32_t * v4 = (float32_t *)a1; // 0x41ef6e
-    *v4 = (float32_t)v3;
-    float80_t v5 = __frontend_reg_load_fpr(v2); // 0x41ef70
-    float32_t * v6 = (float32_t *)a2; // 0x41ef70
-    *v6 = (float32_t)v5;
-    float80_t v7 = __frontend_reg_load_fpr(v2); // 0x41ef72
-    float32_t * v8 = (float32_t *)a3; // 0x41ef72
-    *v8 = (float32_t)v7;
-    int32_t v9; // 0x41ef50
-    if (v9 == 0) {
-        // 0x41efa6
-        return 0;
-    }
-    int3_t v10; // 0x41ef50
-    int3_t v11 = v10 - 1; // 0x41ef80
-    int32_t v12; // 0x41ef50
-    __frontend_reg_store_fpr(v11, (float80_t)*(float32_t *)(v12 + 144));
-    __frontend_reg_store_fpr(v11, __frontend_reg_load_fpr(v11) + (float80_t)*v4);
-    *v4 = (float32_t)__frontend_reg_load_fpr(v10);
-    __frontend_reg_store_fpr(v10, (float80_t)*(float32_t *)(v12 + 148));
-    float80_t v13 = __frontend_reg_load_fpr(v10); // 0x41ef90
-    __frontend_reg_store_fpr(v10, v13 + (float80_t)*v6);
-    int3_t v14 = v10 + 1; // 0x41ef90
-    *v6 = (float32_t)__frontend_reg_load_fpr(v14);
-    __frontend_reg_store_fpr(v14, (float80_t)*(float32_t *)(v12 + 152));
-    __frontend_reg_store_fpr(v14, __frontend_reg_load_fpr(v14) + (float80_t)*v8);
-    *v8 = (float32_t)__frontend_reg_load_fpr(v10 + 2);
-    int32_t result2 = *(int32_t *)(v12 + 88); // 0x41ef9e
-    v10 += 3;
-    while (result2 != 0) {
-        // 0x41ef80
-        v11 = v10 - 1;
-        __frontend_reg_store_fpr(v11, (float80_t)*(float32_t *)(result2 + 144));
-        __frontend_reg_store_fpr(v11, __frontend_reg_load_fpr(v11) + (float80_t)*v4);
-        *v4 = (float32_t)__frontend_reg_load_fpr(v10);
-        __frontend_reg_store_fpr(v10, (float80_t)*(float32_t *)(result2 + 148));
-        v13 = __frontend_reg_load_fpr(v10);
-        __frontend_reg_store_fpr(v10, v13 + (float80_t)*v6);
-        v14 = v10 + 1;
-        *v6 = (float32_t)__frontend_reg_load_fpr(v14);
-        __frontend_reg_store_fpr(v14, (float80_t)*(float32_t *)(result2 + 152));
-        __frontend_reg_store_fpr(v14, __frontend_reg_load_fpr(v14) + (float80_t)*v8);
-        *v8 = (float32_t)__frontend_reg_load_fpr(v10 + 2);
-        result2 += 88;
-        v10 += 3;
-    }
-    // 0x41efa6
-    return result2;
-}
-
-
-
 // Address range: 0x41eff0 - 0x41f57f
 
 
@@ -7635,44 +5094,10 @@ int32_t function_426b30(void) {
 
 
 // Address range: 0x427530 - 0x42760c
-int32_t function_427530(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-
-    memset((void *)(intptr_t)this_ptr, 0, 0xf0u);
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g285;
-    *(int32_t *)(intptr_t)(this_ptr + 36) = 15;
-    *(int32_t *)(intptr_t)(this_ptr + 32) = 0;
-    *(unsigned char *)(intptr_t)(this_ptr + 16) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 64) = 15;
-    *(int32_t *)(intptr_t)(this_ptr + 60) = 0;
-    *(unsigned char *)(intptr_t)(this_ptr + 44) = 0;
-    retdec_construct_cact_script(this_ptr + 100);
-
-    *(int32_t *)(intptr_t)(this_ptr + 208) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 212) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 216) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 224) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 228) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 232) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = 16;
-    *(int32_t *)(intptr_t)(this_ptr + 8) = 1280;
-    *(int32_t *)(intptr_t)(this_ptr + 12) = 720;
-    retdec_string_assign_n((int32_t *)(intptr_t)(this_ptr + 16),
-                           "act", 3);
-    *(float32_t *)(intptr_t)(this_ptr + 88) = 0.0f;
-    *(int32_t *)(intptr_t)(this_ptr + 72) = 128;
-    *(float32_t *)(intptr_t)(this_ptr + 92) = 0.0f;
-    *(int32_t *)(intptr_t)(this_ptr + 76) = 128;
-    *(int32_t *)(intptr_t)(this_ptr + 80) = 128;
-    *(int32_t *)(intptr_t)(this_ptr + 84) = 128;
-    *(unsigned char *)(intptr_t)(this_ptr + 96) = 1;
-    *(unsigned char *)(intptr_t)(this_ptr + 204) = 0;
-    return this_ptr;
-}
+/* ACT document creation/loading: kinoko/act_document.h. */
 
 
-// CAct::Clone (427950) is implemented in reconstructed/act_clone.cpp.
+// CAct::Clone (427950) is implemented in reconstructed/act_document_clone.cpp.
 
 
 
@@ -7746,7 +5171,6 @@ int32_t function_427530(int32_t this_ptr) {
 
 /* retdec_c2dmaplayout_set_layer_impl is implemented in native C++ (kinoko/act_runtime.h). */
 
-/* retdec_act_bind_layouts is implemented in native C++ (kinoko/act_runtime.h). */
 
 /* retdec_act_prepare_vector is implemented in native C++ (kinoko/act_runtime.h). */
 
@@ -7754,35 +5178,7 @@ int32_t function_427530(int32_t this_ptr) {
 
 
 // Address range: 0x428000 - 0x428146
-int32_t function_428000(int32_t this_ptr, const char *file_name) {
-    int32_t reader_slot = 0;
-    uint32_t magic = 0;
-    uint32_t version = 0;
-    uint32_t payload_offset = 0;
-    int32_t result;
-
-    if (this_ptr == 0 || file_name == NULL)
-        return 0;
-    if (function_407370((int32_t)(intptr_t)&reader_slot, file_name) == 0)
-        return 0;
-    if (!retdec_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
-        magic != 0x31544341u ||
-        !retdec_reader_read_exact(reader_slot, &version, sizeof(version)) ||
-        version != 1u ||
-        !retdec_reader_read_exact(reader_slot, &payload_offset,
-                                  sizeof(payload_offset)) ||
-        !retdec_reader_seek_relative(reader_slot, payload_offset)) {
-        retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
-        return 0;
-    }
-    retdec_trace_i32("act:header-magic", (int32_t)magic);
-    retdec_trace_i32("act:header-version", (int32_t)version);
-    retdec_trace_i32("act:header-offset", (int32_t)payload_offset);
-    result = retdec_act_load(this_ptr, reader_slot, (int32_t)version);
-    retdec_trace_i32("act:load-result", result);
-    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
-    return result;
-}
+/* ACT document creation/loading: kinoko/act_document.h. */
 
 // Address range: 0x428150 - 0x428720
 // From class:    .?AVCAct@@
@@ -7794,428 +5190,9 @@ int32_t function_428000(int32_t this_ptr, const char *file_name) {
 // Type:          virtual member function
 
 
-// Address range: 0x4289c0 - 0x428ae7
-// From class:    .?AVCAct@@
-// Type:          virtual member function
-int32_t function_4289c0(int32_t a1) {
-    int32_t v1 = a1;
-    int32_t v2 = a1; // 0x4289d1
-    int32_t v3; // 0x4289c0
-    int32_t v4; // 0x4289c0
-    int32_t v5; // 0x4289c0
-    int32_t v6; // 0x4289c0
-    if (a1 != 0) {
-        while (*(char *)v2 != 0) {
-            // 0x4289e8
-            v2++;
-        }
-        int32_t v7 = a1; // bp-28, 0x4289f8
-        v3 = retdec_string_assign_cstr((int32_t *)(v6 + 44), (const char *)(a1));
-        v5 = &v7;
-        v4 = a1;
-    } else {
-        // 0x4289d3
-        int32_t v8; // bp-20, 0x4289c0
-        int32_t v9 = &v8; // 0x4289c6
-        int32_t v10 = v6 + 44;
-        v5 = v9;
-        v4 = v10;
-        if (*(int32_t *)(v6 + 64) >= 16) {
-            // 0x4289d9
-            v5 = v9;
-            v4 = *(int32_t *)v10;
-        }
-    }
-    int32_t v11 = *(int32_t *)(v6 + 224); // 0x428a01
-    int32_t * v12 = (int32_t *)(v6 + 228); // 0x428a07
-    if (v11 == *v12) {
-        // 0x428adc
-        return 1 | v3 & -256;
-    }
-    int32_t v13 = &v1; // 0x428a24
-    int32_t v14 = 1;
-    int32_t v15 = v5; // 0x4289c0
-    int32_t v16 = v11; // 0x428acd
-    int32_t v17; // 0x4289c0
-    int32_t v18; // 0x4289c0
-    int32_t v19; // 0x4289c0
-    int32_t v20; // 0x4289c0
-    int32_t * v21; // 0x428a13
-    while (true) {
-      lab_0x428a13:
-        // 0x428a13
-        v20 = v15;
-        v18 = v14;
-        v21 = (int32_t *)v16;
-        v1 = 0;
-        *(int32_t *)(v20 - 4) = v13;
-        *(int32_t *)(v20 - 8) = (int32_t)&g565;
-        if ((char)*(int32_t *)(*(int32_t *)*v21 + 8) == 0) {
-            goto lab_0x428a46;
-        } else {
-            int32_t v22 = v1; // 0x428a30
-            if (v22 == 0) {
-                goto lab_0x428a46;
-            } else {
-                int32_t v23 = *(int32_t *)(*(int32_t *)v22 + 40); // 0x428a39
-                int32_t v24 = v20 - 12; // 0x428a3c
-                *(int32_t *)v24 = v4;
-                v17 = v23;
-                v19 = v18 & v23;
-                v15 = v24;
-                goto lab_0x428aca;
-            }
-        }
-    }
-  lab_0x428adc:;
-    // 0x428adc
-    int32_t v25; // 0x4289c0
-    int32_t v26; // 0x4289c0
-    return v26 & 255 | v25 & -256;
-  lab_0x428a46:
-    // 0x428a46
-    *(int32_t *)(v20 - 12) = v13;
-    *(int32_t *)(v20 - 16) = (int32_t)&g566;
-    if ((char)v13 == 0) {
-        // 0x428a9f
-        *(int32_t *)(v20 - 20) = v13;
-        *(int32_t *)(v20 - 24) = (int32_t)&g567;
-        goto lab_0x428a9f_2;
-    } else {
-        int32_t v27 = v1; // 0x428a5c
-        if (v27 == 0) {
-            // 0x428a8c
-            *(int32_t *)(v20 - 20) = v13;
-            *(int32_t *)(v20 - 24) = (int32_t)&g567;
-            int32_t v28 = v1; // 0x428a8c
-            if (v28 == 0) {
-                goto lab_0x428a9f_2;
-            } else {
-                int32_t v29 = *(int32_t *)v28; // 0x428a93
-                int32_t v30 = v20 - 28; // 0x428a98
-                *(int32_t *)v30 = v4;
-                v17 = v29;
-                v19 = v18 & v29;
-                v15 = v30;
-                goto lab_0x428aca;
-            }
-        } else {
-            int32_t v31 = *(int32_t *)(*(int32_t *)v27 + 48); // 0x428a68
-            *(int32_t *)(v20 - 20) = *(int32_t *)(v27 + 76);
-            int32_t v32 = v20 - 24; // 0x428a6f
-            *(int32_t *)v32 = *(int32_t *)(v27 + 72);
-            v17 = v31;
-            v19 = v18 & v31;
-            v15 = v32;
-            goto lab_0x428aca;
-        }
-    }
-  lab_0x428a9f_2:;
-    int32_t v33 = *(int32_t *)(*(int32_t *)*v21 + 8); // 0x428aa3
-    *(int32_t *)(v20 - 28) = v13;
-    int32_t v34 = v20 - 32; // 0x428aaa
-    *(int32_t *)v34 = (int32_t)&g568;
-    v17 = v33;
-    v19 = 0;
-    v15 = v34;
-    if ((char)v33 != 0) {
-        int32_t v35 = v1; // 0x428ab5
-        v17 = v33;
-        v19 = 0;
-        v15 = v34;
-        if (v35 != 0) {
-            int32_t v36 = *(int32_t *)(*(int32_t *)v35 + 40); // 0x428abe
-            int32_t v37 = v20 - 36; // 0x428ac1
-            *(int32_t *)v37 = v4;
-            v17 = v36;
-            v19 = v18 & v36;
-            v15 = v37;
-        }
-    }
-    goto lab_0x428aca;
-  lab_0x428aca:
-    // 0x428aca
-    v14 = v19;
-    v16 += 4;
-    v25 = v17;
-    v26 = v14;
-    if (v16 == *v12) {
-        // break -> 0x428adc
-        goto lab_0x428adc;
-    }
-    goto lab_0x428a13;
-}
+/* 4289C0: typed virtual resource pass in act_document_resources.cpp. */
 
-// Address range: 0x428af0 - 0x428bc9
-// From class:    .?AVCAct@@
-// Type:          virtual member function
-int32_t function_428af0(void) {
-    // 0x428af0
-    int32_t v1; // 0x428af0
-    int32_t result = v1 & -256; // 0x428af9
-    char * v2 = (char *)(v1 + 204); // 0x428afb
-    if (*v2 == 1) {
-        // 0x428b03
-        return result;
-    }
-    int32_t v3 = *(int32_t *)(v1 + 224); // 0x428b0b
-    *v2 = 1;
-    int32_t * v4 = (int32_t *)(v1 + 228); // 0x428b1a
-    if (v3 == *v4) {
-        // 0x428bc0
-        return (result | 1) & -256 | (int32_t)1;
-    }
-    // 0x428b26
-    int32_t v5; // bp-12, 0x428af0
-    int32_t v6 = &v5; // 0x428b3d
-    char v7 = 1; // 0x428b29
-    int32_t v8; // bp-24, 0x428af0
-    int32_t v9 = &v8; // 0x428b29
-    int32_t v10 = v3; // 0x428b29
-    int32_t v11; // 0x428af0
-    int32_t v12; // 0x428af0
-    char v13; // 0x428af0
-    char v14; // 0x428af0
-    int32_t * v15; // 0x428b30
-    while (true) {
-      lab_0x428b30:
-        // 0x428b30
-        v12 = v9;
-        v13 = v7;
-        v15 = (int32_t *)v10;
-        v5 = 0;
-        *(int32_t *)(v12 - 4) = v6;
-        int32_t v16 = v12 - 8; // 0x428b3e
-        *(int32_t *)v16 = (int32_t)&g565;
-        if ((char)*(int32_t *)(*(int32_t *)*v15 + 8) == 0) {
-            goto lab_0x428b5c;
-        } else {
-            int32_t v17 = v5; // 0x428b49
-            if (v17 == 0) {
-                goto lab_0x428b5c;
-            } else {
-                int32_t v18 = *(int32_t *)(*(int32_t *)v17 + 44); // 0x428b52
-                v14 = v13 & (char)v18;
-                v11 = v18;
-                v9 = v16;
-                goto lab_0x428bb0;
-            }
-        }
-    }
-  lab_0x428bc0:;
-    // 0x428bc0
-    int32_t v19; // 0x428af0
-    char v20; // 0x428af0
-    return v19 & -256 | (int32_t)v20;
-  lab_0x428b5c:
-    // 0x428b5c
-    *(int32_t *)(v12 - 12) = v6;
-    int32_t v21 = v12 - 16; // 0x428b67
-    *(int32_t *)v21 = (int32_t)&g566;
-    if ((char)v6 == 0) {
-        goto lab_0x428b77;
-    } else {
-        // 0x428b72
-        v14 = v13;
-        v11 = v6;
-        v9 = v21;
-        if (v5 != 0) {
-            goto lab_0x428bb0;
-        } else {
-            goto lab_0x428b77;
-        }
-    }
-  lab_0x428b77:;
-    int32_t v22 = *(int32_t *)(*(int32_t *)*v15 + 8); // 0x428b7b
-    *(int32_t *)(v12 - 20) = v6;
-    int32_t v23 = v12 - 24; // 0x428b82
-    *(int32_t *)v23 = (int32_t)&g567;
-    if ((char)v22 == 0) {
-        goto lab_0x428b92;
-    } else {
-        // 0x428b8d
-        v14 = v13;
-        v11 = v22;
-        v9 = v23;
-        if (v5 != 0) {
-            goto lab_0x428bb0;
-        } else {
-            goto lab_0x428b92;
-        }
-    }
-  lab_0x428b92:
-    // 0x428b92
-    *(int32_t *)(v12 - 28) = v6;
-    int32_t v24 = v12 - 32; // 0x428b9d
-    *(int32_t *)v24 = (int32_t)&g568;
-    if ((char)v6 == 0) {
-        goto lab_0x428bad;
-    } else {
-        // 0x428ba8
-        v14 = v13;
-        v11 = v6;
-        v9 = v24;
-        if (v5 != 0) {
-            goto lab_0x428bb0;
-        } else {
-            goto lab_0x428bad;
-        }
-    }
-  lab_0x428bb0:
-    // 0x428bb0
-    v7 = v14;
-    v10 += 4;
-    v20 = v7;
-    v19 = v11;
-    if (v10 == *v4) {
-        // break -> 0x428bc0
-        goto lab_0x428bc0;
-    }
-    goto lab_0x428b30;
-  lab_0x428bad:
-    // 0x428bad
-    v14 = 0;
-    v11 = v6;
-    v9 = v24;
-    goto lab_0x428bb0;
-}
-
-// Address range: 0x428bd0 - 0x428cb5
-// From class:    .?AVCAct@@
-// Type:          virtual member function
-int32_t function_428bd0(void) {
-    // 0x428bd0
-    int32_t v1; // 0x428bd0
-    char * v2 = (char *)(v1 + 204); // 0x428bd9
-    if (*v2 == 0) {
-        // 0x428be2
-        return v1 & -256;
-    }
-    int32_t v3 = v1 + 44; // 0x428bea
-    *v2 = 0;
-    int32_t v4 = v3; // 0x428bfb
-    if (*(int32_t *)(v1 + 64) >= 16) {
-        // 0x428bfd
-        v4 = *(int32_t *)v3;
-    }
-    int32_t v5 = *(int32_t *)(v1 + 224); // 0x428bff
-    int32_t * v6 = (int32_t *)(v1 + 228); // 0x428c08
-    if (v5 == *v6) {
-        // 0x428cac
-        return 1 | v4 & -256;
-    }
-    // 0x428c14
-    int32_t v7; // bp-8, 0x428bd0
-    int32_t v8 = &v7; // 0x428c16
-    int32_t v9 = 1;
-    int32_t v10; // bp-24, 0x428bd0
-    int32_t v11 = &v10; // 0x428bd0
-    int32_t v12 = v5; // 0x428c9d
-    int32_t v13; // 0x428bd0
-    int32_t v14; // 0x428bd0
-    int32_t v15; // 0x428bd0
-    int32_t v16; // 0x428bd0
-    int32_t v17; // 0x428bd0
-    while (true) {
-      lab_0x428c14:
-        // 0x428c14
-        v16 = v12;
-        v17 = v11;
-        v14 = v9;
-        v7 = 0;
-        *(int32_t *)(v17 - 4) = v8;
-        *(int32_t *)(v17 - 8) = (int32_t)&g565;
-        if ((char)v8 == 0) {
-            // 0x428c47
-            *(int32_t *)(v17 - 12) = v8;
-            *(int32_t *)(v17 - 16) = (int32_t)&g566;
-            goto lab_0x428c63;
-        } else {
-            int32_t v18 = v7; // 0x428c31
-            if (v18 == 0) {
-                // 0x428c5d
-                *(int32_t *)(v17 - 12) = v8;
-                int32_t v19 = v17 - 16; // 0x428c52
-                *(int32_t *)v19 = (int32_t)&g566;
-                v13 = v8;
-                v15 = v14;
-                v11 = v19;
-                if (v7 != 0) {
-                    goto lab_0x428c9d;
-                } else {
-                    goto lab_0x428c63;
-                }
-            } else {
-                int32_t v20 = *(int32_t *)(*(int32_t *)v18 + 40); // 0x428c3d
-                int32_t v21 = v17 - 12; // 0x428c40
-                *(int32_t *)v21 = v4;
-                v13 = v20;
-                v15 = v14 & 255 & v20;
-                v11 = v21;
-                goto lab_0x428c9d;
-            }
-        }
-    }
-  lab_0x428cac:;
-    // 0x428cac
-    int32_t v22; // 0x428bd0
-    int32_t v23; // 0x428bd0
-    return v23 & 255 | v22 & -256;
-  lab_0x428c63:;
-    int32_t v24 = *(int32_t *)(*(int32_t *)*(int32_t *)v16 + 8); // 0x428c67
-    *(int32_t *)(v17 - 20) = v8;
-    int32_t v25 = v17 - 24; // 0x428c6e
-    *(int32_t *)v25 = (int32_t)&g567;
-    if ((char)v24 == 0) {
-        goto lab_0x428c7f;
-    } else {
-        // 0x428c79
-        v13 = v24;
-        v15 = v14;
-        v11 = v25;
-        if (v7 != 0) {
-            goto lab_0x428c9d;
-        } else {
-            goto lab_0x428c7f;
-        }
-    }
-  lab_0x428c7f:
-    // 0x428c7f
-    *(int32_t *)(v17 - 28) = v8;
-    int32_t v26 = v17 - 32; // 0x428c8a
-    *(int32_t *)v26 = (int32_t)&g568;
-    if ((char)v8 == 0) {
-        goto lab_0x428c9b;
-    } else {
-        // 0x428c95
-        v13 = v8;
-        v15 = v14;
-        v11 = v26;
-        if (v7 != 0) {
-            goto lab_0x428c9d;
-        } else {
-            goto lab_0x428c9b;
-        }
-    }
-  lab_0x428c9d:
-    // 0x428c9d
-    v9 = v15;
-    v12 = v16 + 4;
-    v22 = v13;
-    v23 = v9;
-    if (v12 == *v6) {
-        // break -> 0x428cac
-        goto lab_0x428cac;
-    }
-    goto lab_0x428c14;
-  lab_0x428c9b:
-    // 0x428c9b
-    v13 = v8;
-    v15 = 0;
-    v11 = v26;
-    goto lab_0x428c9d;
-}
-
+// 428AF0/428BD0: typed resource suspend/resume in act_document_resources.cpp.
 
 // Address range: 0x428f80 - 0x428f86
 int32_t function_428f80(void) {
@@ -9663,45 +6640,11 @@ int32_t function_44fd30(char a1) {
 
 
 
-int32_t retdec_act_suspend_this(int32_t resource_ptr)
-{
-    int32_t act;
-
-    if (resource_ptr == 0)
-        return 0;
-    retdec_trace_i32("450950:suspend-resource", resource_ptr);
-    retdec_trace_i32("450950:suspend-before",
-                     *(int32_t *)(intptr_t)(resource_ptr + 104));
-    act = *(int32_t *)(intptr_t)(resource_ptr + 12);
-    /* Compatibility behavior retained during the C++ migration. Original
-       4515C0 also dispatches virtual methods on the resource's ACT objects;
-       those receivers still require reconstruction. */
-    *(uint8_t *)(intptr_t)(resource_ptr + 104) = 1;
-    retdec_trace_i32("450950:suspend-after",
-                     *(int32_t *)(intptr_t)(resource_ptr + 104));
-    return act != 0 ? *(int32_t *)(intptr_t)(act + 28) : 0;
-}
-
-int32_t retdec_act_resume_this(int32_t resource_ptr)
-{
-    int32_t act;
-
-    if (resource_ptr == 0)
-        return 0;
-    /* Compatibility behavior retained; original 4515F0 calls the optional
-       ACT object's virtual resume method after clearing this gate. */
-    *(int32_t *)(intptr_t)(resource_ptr + 100) = 0;
-    *(uint8_t *)(intptr_t)(resource_ptr + 104) = 0;
-    act = *(int32_t *)(intptr_t)(resource_ptr + 12);
-    return act != 0 ? *(int32_t *)(intptr_t)act : 0;
-}
-
-
-
+// 4515C0/4515F0: typed runtime suspend/resume in act_resource.cpp.
 
 // Address range: 0x451620 - 0x45162d
 int32_t function_451620(int32_t this_ptr) {
-    return kinoko_act_increment_frame(this_ptr, NULL);
+    return kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)this_ptr, NULL);
 }
 
 
@@ -10559,102 +7502,31 @@ int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
 
 
 
-// Address range: 0x45d960 - 0x45d963
-int32_t __stdcall function_45d960(int32_t value) {
-    /* IDA identifies this virtual null method as __stdcall/retn 4.  The
-       argument is the scene id supplied during activation. */
-    (void)value;
-    return 0;
-}
-
-// Address range: 0x45d970 - 0x45d992
-int32_t function_45d970_this(int32_t this_ptr, char flags) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g12;
-    if ((flags & 1) != 0)
-        free((void *)(intptr_t)this_ptr);
-    return this_ptr;
-}
 
 
-// Address range: 0x45d9a0 - 0x45d9b1
-int32_t function_45d9a0(void) {
-    // 0x45d9a0
-    if (g697 == 0) {
-        // 0x45d9a9
-        function_469900();
-    }
-    // 0x45d9ae
-    return 0;
-}
-
-// Address range: 0x45d9c0 - 0x45d9eb
-int32_t function_45d9c0(void) {
-    int32_t result = function_401760(); // 0x45d9c5
-    if ((char)result == 0) {
-        // 0x45d9ce
-        return result;
-    }
-    // 0x45d9cf
-    function_401820();
-    function_46a140();
-    return function_401790() & -256 | 1;
-}
-
-// Address range: 0x45d9f0 - 0x45d9f9
-int32_t function_45d9f0(int32_t *this_ptr) {
-    return function_45d9f0_this((int32_t)(intptr_t)this_ptr);
-}
-
-static int32_t function_45d9f0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g13;
-    return this_ptr;
-}
 
 
-// Address range: 0x45da00 - 0x45da37
+
+
+
+
+
+
+
+
+
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da00(void) {
-    // 0x45da00
-    retdec_trace("45da00:enter");
-    function_4028d0(1, 0);
-    function_402970(1);
-    function_402770(1);
-    function_4026e0(1);
-    retdec_trace("45da00:before-469640");
-    int32_t scene_result = function_469640();
-    retdec_trace_i32("45da00:after-469640", scene_result);
-    return scene_result;
-}
 
-// Address range: 0x45da40 - 0x45da45
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da40(void) {
-    // 0x45da40
-    return function_469680();
-}
 
-// Address range: 0x45da50 - 0x45dabb
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da50(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45da60
-    __writefsdword(0, (int32_t)&v1);
-    int32_t allocated = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (a1 != 0 || allocated == 0) {
-        // 0x45daa8
-        __writefsdword(0, v1);
-        return 0;
-    }
-    int32_t result = function_45d9f0((int32_t *)(uintptr_t)allocated); // 0x45da92
-    __writefsdword(0, v1);
-    return result;
-}
+
 
 // Address range: 0x45dac0 - 0x45db04
 
@@ -10663,338 +7535,8 @@ int32_t function_45da50(int32_t a1) {
 
 
 
-// Address range: 0x45dbd0 - 0x45de6d
-
-
-// Address range: 0x45df10 - 0x45dfac
-/* 45DF10 is a constructor-like __thiscall routine.  Its object contains a
-   VM pointer followed by two SquirrelObject members at +4 and +16. */
-int32_t retdec_function_45df10_impl(int32_t this_ptr,
-                                            int32_t source_ptr)
-{
-    int32_t temporary[3] = { 0, 0, 0 };
-
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)g644;
-    function_4a94e0_this(this_ptr + 4);
-    function_4a94e0_this(this_ptr + 16);
-    function_4a95c0_this(this_ptr + 4, function_4a8cc0());
-    if (source_ptr != 0)
-        function_4aa3a0_this(this_ptr + 4, (int32_t)(intptr_t)temporary,
-                             (const char *)(intptr_t)source_ptr);
-    function_4a95c0_this(this_ptr + 16, (int32_t)(intptr_t)temporary);
-    function_4a9d70_this((int32_t)(intptr_t)temporary);
-    return this_ptr;
-}
-
-int32_t function_45df10(int32_t source_ptr)
-{
-    /* Legacy generated callers lost ECX.  Keep a real object-shaped fallback
-       so those callers still obey SquirrelObject lifetime rules. */
-    static int32_t fallback_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-    if (fallback_state[1] != 0 || fallback_state[2] != 0)
-        function_4a9d70_this((int32_t)(intptr_t)&fallback_state[1]);
-    if (fallback_state[4] != 0 || fallback_state[5] != 0)
-        function_4a9d70_this((int32_t)(intptr_t)&fallback_state[4]);
-    memset(fallback_state, 0, sizeof(fallback_state));
-    return retdec_function_45df10_impl(
-        (int32_t)(intptr_t)fallback_state, source_ptr);
-}
-
-
-// Address range: 0x45e120 - 0x45e26e
-
-
-/* boost::shared_ptr<Actor>'s control-block constructor. */
-
-
-// Address range: 0x45e300 - 0x45e409
-// From class:    .?AVActor@@
-// Type:          destructor
-
-
-/* Actor constructor used by CHandleManagerEx::Get.  The original object is
-   0x220 bytes; the generated body lost ECX and consequently wrote through an
-   undefined local instead of the freshly allocated Actor. */
-
-
-/* Actor/SquirrelObject pair extraction with the original hidden receiver. */
-
-
-// Address range: 0x45e460 - 0x45e5d4
-// From class:    .?AVActor@@
-// Type:          constructor
-
-
-static void retdec_clear_script_callback(int32_t callback) {
-    int32_t state[7] = {0};
-    retdec_function_45df10_impl((int32_t)(intptr_t)state, 0);
-    *(int32_t *)(intptr_t)callback = state[0];
-    function_4a95c0_this(callback + 4, (int32_t)(intptr_t)(state + 1));
-    function_4a95c0_this(callback + 16, (int32_t)(intptr_t)(state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(state + 1));
-}
-
-/* 45E460 destroys the Actor in place; its allocation belongs to the handle pool. */
-
-
-/* SquirrelFunction::operator() for the Actor initialization callback. */
-
-
-/* Actor initialization with the original __thiscall receiver and argument
-   layout restored. */
-static int32_t function_45e5e0_this(
-    int32_t actor_ptr, int32_t manager_ptr,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data)
-{
-    int32_t first_object[3] = { first_vtable, first_type, first_data };
-    int32_t second_object[3] = { second_vtable, second_type, second_data };
-    int32_t actor_type[3] = { 0, 0, 0 };
-    int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-    int32_t shared_holder = 0;
-    int32_t control_ptr;
-    int32_t vm = (int32_t)(intptr_t)g644;
-    int32_t index;
-
-    if (actor_ptr == 0)
-        return 0;
-    if (first_vtable == 0)
-        first_object[0] = (int32_t)(intptr_t)&g16;
-    if (second_vtable == 0)
-        second_object[0] = (int32_t)(intptr_t)&g16;
-
-    *(int32_t *)(intptr_t)(actor_ptr + 224) =
-        *(uint16_t *)(intptr_t)(actor_ptr + 12);
-    *(int32_t *)(intptr_t)(actor_ptr + 148) = manager_ptr;
-
-    function_4a90c0_this((int32_t)(intptr_t)actor_type,
-                         (int32_t)(intptr_t)&g602);
-    function_4a95c0_this(actor_ptr + 44,
-                         (int32_t)(intptr_t)actor_type);
-    function_4a9d70_this((int32_t)(intptr_t)actor_type);
-    function_4a9bb0_this(actor_ptr + 44, actor_ptr);
-
-    /* 45E65F..45E715 owns an Actor* slot separately from its control block. */
-    int32_t actor_slot = (int32_t)(intptr_t)malloc(sizeof(int32_t));
-    if (actor_slot == 0)
-        return 0;
-    *(int32_t *)(intptr_t)actor_slot = actor_ptr;
-    kinoko_native_control_create((int32_t)(intptr_t)&shared_holder, actor_slot);
-    control_ptr = shared_holder;
-    if (control_ptr == 0) {
-        free((void *)(intptr_t)actor_slot);
-        return 0;
-    }
-    int32_t old_control = *(int32_t *)(intptr_t)(actor_ptr + 28);
-    *(int32_t *)(intptr_t)(actor_ptr + 24) = actor_slot;
-    *(int32_t *)(intptr_t)(actor_ptr + 28) = control_ptr;
-    kinoko_native_release_strong(old_control);
-
-    *(char *)(intptr_t)(actor_ptr + 40) =
-        (*(int32_t *)(intptr_t)(actor_ptr + 392) & 0x20000) == 0;
-    *(uint16_t *)(intptr_t)(actor_ptr + 20) = 256;
-    function_4a95c0_this(actor_ptr + 56,
-                         (int32_t)(intptr_t)first_object);
-    function_4a95c0_this(actor_ptr + 68,
-                         (int32_t)(intptr_t)second_object);
-
-    *(float32_t *)(intptr_t)(actor_ptr + 80) = x;
-    *(int32_t *)(intptr_t)(actor_ptr + 196) = 1;
-    *(int32_t *)(intptr_t)(actor_ptr + 228) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 84) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 216) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 212) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 88) = z;
-    *(int32_t *)(intptr_t)(actor_ptr + 220) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 312) = 0;
-
-    *(float32_t *)(intptr_t)(actor_ptr + 176) = 1.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 172) = 1.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 168) = 1.0f;
-    *(int32_t *)(intptr_t)(actor_ptr + 316) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 320) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 324) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 236) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 164) = 0.0f;
-    *(int32_t *)(intptr_t)(actor_ptr + 472) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 160) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 156) = 0.0f;
-
-    *(int32_t *)(intptr_t)(actor_ptr + 192) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 188) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 184) = 255;
-    *(int32_t *)(intptr_t)(actor_ptr + 180) = 255;
-    *(float32_t *)(intptr_t)(actor_ptr + 240) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 448) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 440) = x;
-    *(float32_t *)(intptr_t)(actor_ptr + 244) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 232) = -1;
-    *(float32_t *)(intptr_t)(actor_ptr + 452) = y;
-    *(int32_t *)(intptr_t)(actor_ptr + 476) = -1;
-    *(float32_t *)(intptr_t)(actor_ptr + 444) = y;
-    *(float32_t *)(intptr_t)(actor_ptr + 272) = z;
-    *(float32_t *)(intptr_t)(actor_ptr + 276) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 280) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 256) = 0.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 260) = 0.0f;
-
-    for (index = 480; index <= 540; index += 4)
-        *(int32_t *)(intptr_t)(actor_ptr + index) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 200) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 204) = 0;
-
-    retdec_function_45df10_impl((int32_t)(intptr_t)owner_state, 0);
-    *(int32_t *)(intptr_t)(actor_ptr + 92) = owner_state[0];
-    function_4a95c0_this(actor_ptr + 96,
-                         (int32_t)(intptr_t)(owner_state + 1));
-    function_4a95c0_this(actor_ptr + 108,
-                         (int32_t)(intptr_t)(owner_state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
-    function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
-
-    *(int16_t *)(intptr_t)(actor_ptr + 410) = -1;
-    *(int32_t *)(intptr_t)(actor_ptr + 284) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 288) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 292) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 296) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 424) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 428) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 432) = 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 436) = 0;
-    *(float32_t *)(intptr_t)(actor_ptr + 304) = 1000.0f;
-    *(float32_t *)(intptr_t)(actor_ptr + 308) = 1000.0f;
-    *(char *)(intptr_t)(actor_ptr + 300) = 0;
-
-    if (vm != 0 && function_4a9a30_this(
-            (int32_t)(intptr_t)first_object) == 0x08000100) {
-        int32_t callback_object[3] = { 0, 0, 0 };
-        int32_t call_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-        function_4a9540_this(callback_object, second_type, second_data);
-        call_state[0] = vm;
-        function_4a9500_this(call_state + 1, actor_ptr + 44);
-        function_4a9500_this(call_state + 4,
-                             (int32_t)(intptr_t)first_object);
-        function_45e020_this((int32_t)(intptr_t)call_state,
-                             (int32_t)(intptr_t)callback_object,
-                             callback_object[1], callback_object[2]);
-        function_4a9d70_this((int32_t)(intptr_t)(call_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(call_state + 1));
-    }
-
-    *(float32_t *)(intptr_t)(actor_ptr + 440) =
-        *(float32_t *)(intptr_t)(actor_ptr + 424) +
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(float32_t *)(intptr_t)(actor_ptr + 448) =
-        *(float32_t *)(intptr_t)(actor_ptr + 432) +
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(float32_t *)(intptr_t)(actor_ptr + 444) =
-        *(float32_t *)(intptr_t)(actor_ptr + 428) +
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(float32_t *)(intptr_t)(actor_ptr + 452) =
-        *(float32_t *)(intptr_t)(actor_ptr + 436) +
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(float32_t *)(intptr_t)(actor_ptr + 352) =
-        *(float32_t *)(intptr_t)(actor_ptr + 440);
-    *(int32_t *)(intptr_t)(actor_ptr + 456) =
-        *(int32_t *)(intptr_t)(actor_ptr + 440);
-    *(float32_t *)(intptr_t)(actor_ptr + 356) =
-        *(float32_t *)(intptr_t)(actor_ptr + 444);
-    *(int32_t *)(intptr_t)(actor_ptr + 460) =
-        *(int32_t *)(intptr_t)(actor_ptr + 444);
-    *(float32_t *)(intptr_t)(actor_ptr + 248) =
-        *(float32_t *)(intptr_t)(actor_ptr + 240);
-    *(int32_t *)(intptr_t)(actor_ptr + 464) =
-        *(int32_t *)(intptr_t)(actor_ptr + 448);
-    *(float32_t *)(intptr_t)(actor_ptr + 252) =
-        *(float32_t *)(intptr_t)(actor_ptr + 244);
-    *(int32_t *)(intptr_t)(actor_ptr + 468) =
-        *(int32_t *)(intptr_t)(actor_ptr + 452);
-    return 1;
-}
-
-
-// Address range: 0x45eb00 - 0x45ec5d
-// From class:    .?AVSquirrelObject@@
-// Type:          destructor
-int32_t function_45eb00_this(int32_t actor) {
-    int32_t initial_function[3], initial_argument[3];
-    int32_t parent_control = *(int32_t *)(intptr_t)(actor + 36);
-    int32_t owner_control;
-    *(int32_t *)(intptr_t)(actor + 32) = 0;
-    *(int32_t *)(intptr_t)(actor + 36) = 0;
-    kinoko_native_release_weak(parent_control);
-    owner_control = *(int32_t *)(intptr_t)(actor + 28);
-    *(int32_t *)(intptr_t)(actor + 24) = 0;
-    *(int32_t *)(intptr_t)(actor + 28) = 0;
-    kinoko_native_release_strong(owner_control);
-    kinoko_actor_clear_script(actor);
-
-    /* Init replaces these same fields, so retain both saved SquirrelObjects across the call. */
-    function_4a9500_this(initial_argument, actor + 68);
-    function_4a9500_this(initial_function, actor + 56);
-    function_45e5e0_this(actor, *(int32_t *)(intptr_t)(actor + 148),
-        initial_function[0], initial_function[1], initial_function[2],
-        *(float *)(intptr_t)(actor + 80), *(float *)(intptr_t)(actor + 84),
-        *(float *)(intptr_t)(actor + 88),
-        initial_argument[0], initial_argument[1], initial_argument[2]);
-    function_4a9d70_this((int32_t)(intptr_t)initial_function);
-    function_4a9d70_this((int32_t)(intptr_t)initial_argument);
-    return kinoko_actor_reset_priority(actor, *(int32_t *)(intptr_t)(actor + 228));
-}
-
-
-// Address range: 0x45ec60 - 0x45f0bc
-
-
-// Address range: 0x45f0c0 - 0x45f0e1
-// From class:    .?AVActor@@
-// Type:          virtual member function
-
-
-// Address range: 0x45f3e0 - 0x45f4e5
-int32_t function_45f3e0(int32_t a1, int32_t a2, int32_t a3, int32_t *a4,
-                        int32_t a5, int32_t a6) {
-    static __declspec(thread) int32_t result[5];
-    return (int32_t)(intptr_t)function_45f3e0_this(
-        result, a1, a2, a3, a4, a5, a6);
-}
-
-/* RetDec omitted the __thiscall destination from this constructor. */
-
-
-// Address range: 0x45f4f0 - 0x45f557
-
-
-// Address range: 0x45f560 - 0x45f59a
-
-
-// Address range: 0x45f5a0 - 0x45f5da
-
-
-// Address range: 0x45f5e0 - 0x45f634
-
-
-/* Exact form used by the native adapters.  The original fourth argument is
- * the stack index; the legacy three-argument wrapper above remains for the
- * generated call sites that were already recovered with index 2. */
-
-
-// Address range: 0x45f640 - 0x45f760
-
-
-// Address range: 0x45f850 - 0x45f8bf
-
-
-// Address range: 0x45f8c0 - 0x45f9c3
-
-
-// Address range: 0x45f9d0 - 0x45faa3
+/* Actor gameplay, ownership and diagnostics are implemented in C++.
+   Only shared diagnostic/global renderer ports remain here. */
 
 
 void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
@@ -11011,2275 +7553,18 @@ void retdec_trace_squirrel_name(const char *label, int32_t name_ptr) {
     retdec_trace(message);
 }
 
-static void retdec_trace_proto_metadata(const char *label, int32_t proto, int32_t offset) {
-    int32_t *value = (int32_t *)(intptr_t)(proto + offset);
-    retdec_trace_squirrel_name(label,
-        value[0] == 0x08000010 && value[1] != 0 ? value[1] + 28 :
-        (int32_t)(intptr_t)(offset == 20 ? "<anonymous>" : "<unknown>"));
+uint32_t kinoko_actor_motion_update_mask(void) { return (uint32_t)kinoko_game_masks.update; }
+
+void kinoko_actor_render_set_blend(int32_t mode) { kinoko_render_set_blend(mode); }
+int32_t kinoko_actor_render_submit(KinokoAnimationFrame *frame) {
+    return kinoko_quad_submit((KinokoQuad *)frame,0.0f,0.0f);
 }
 
+const void *kinoko_pat_frame_methods(void) { return &g407; }
 
-// Address range: 0x45fab0 - 0x45fb87
-
-
-// Address range: 0x45ff80 - 0x45ff8f
-
-
-// Address range: 0x45ff90 - 0x45ff96
-
-
-// Address range: 0x45ffa0 - 0x45ffaf
-
-
-// Address range: 0x45ffb0 - 0x45ffb6
-// From class:    .?AU?$ClassType@M@SqPlus@@
-// Type:          virtual member function
-
-
-// Address range: 0x45ffc0 - 0x45ffcf
-
-
-// Address range: 0x45ffd0 - 0x45ffd6
-
-
-// Address range: 0x45ffe0 - 0x460535
-int32_t function_45ffe0_this(int32_t result, int32_t a1) {
-    int32_t v1 = a1 == 0 ? 0 : a1 + 8;
-    *(int32_t *)(result + 8) = *(int32_t *)v1;
-    *(int32_t *)(result + 12) = *(int32_t *)(v1 + 4);
-    *(int32_t *)(result + 16) = *(int32_t *)(a1 + 16);
-    *(char *)(result + 20) = *(char *)(a1 + 20);
-    *(char *)(result + 21) = *(char *)(a1 + 21);
-    *(char *)(result + 22) = *(char *)(a1 + 22);
-    int32_t incoming = *(int32_t *)(a1 + 28);
-    kinoko_native_add_strong(incoming);
-    *(int32_t *)(result + 24) = *(int32_t *)(a1 + 24);
-    int32_t previous = *(int32_t *)(result + 28);
-    *(int32_t *)(result + 28) = incoming;
-    kinoko_native_release_strong(previous);
-    *(int32_t *)(result + 32) = *(int32_t *)(a1 + 32);
-    incoming = *(int32_t *)(a1 + 36);
-    previous = *(int32_t *)(result + 36);
-    if (incoming != previous) {
-        kinoko_native_add_weak(incoming);
-        kinoko_native_release_weak(previous);
-        *(int32_t *)(result + 36) = incoming;
-    }
-    // 0x4600a1
-    *(char *)(result + 40) = *(char *)(a1 + 40);
-    function_4a95c0_this(result + 44, a1 + 44);
-    function_4a95c0_this(result + 56, a1 + 56);
-    function_4a95c0_this(result + 68, a1 + 68);
-    *(int32_t *)(result + 80) = *(int32_t *)(a1 + 80);
-    *(int32_t *)(result + 84) = *(int32_t *)(a1 + 84);
-    *(int32_t *)(result + 88) = *(int32_t *)(a1 + 88);
-    *(int32_t *)(result + 92) = *(int32_t *)(a1 + 92);
-    function_4a95c0_this(result + 96, a1 + 96);
-    function_4a95c0_this(result + 108, a1 + 108);
-    *(int32_t *)(result + 120) = *(int32_t *)(a1 + 120);
-    function_4a95c0_this(result + 124, a1 + 124);
-    function_4a95c0_this(result + 136, a1 + 136);
-    *(int32_t *)(result + 148) = *(int32_t *)(a1 + 148);
-    *(int32_t *)(result + 152) = *(int32_t *)(a1 + 152);
-    *(int32_t *)(result + 156) = *(int32_t *)(a1 + 156);
-    *(int32_t *)(result + 160) = *(int32_t *)(a1 + 160);
-    *(int32_t *)(result + 164) = *(int32_t *)(a1 + 164);
-    *(int32_t *)(result + 168) = *(int32_t *)(a1 + 168);
-    *(int32_t *)(result + 172) = *(int32_t *)(a1 + 172);
-    *(int32_t *)(result + 176) = *(int32_t *)(a1 + 176);
-    *(int32_t *)(result + 180) = *(int32_t *)(a1 + 180);
-    *(int32_t *)(result + 184) = *(int32_t *)(a1 + 184);
-    *(int32_t *)(result + 188) = *(int32_t *)(a1 + 188);
-    *(int32_t *)(result + 192) = *(int32_t *)(a1 + 192);
-    *(int32_t *)(result + 196) = *(int32_t *)(a1 + 196);
-    *(int32_t *)(result + 200) = *(int32_t *)(a1 + 200);
-    *(int32_t *)(result + 204) = *(int32_t *)(a1 + 204);
-    *(int32_t *)(result + 208) = *(int32_t *)(a1 + 208);
-    *(int32_t *)(result + 212) = *(int32_t *)(a1 + 212);
-    *(int32_t *)(result + 216) = *(int32_t *)(a1 + 216);
-    *(int32_t *)(result + 220) = *(int32_t *)(a1 + 220);
-    *(int32_t *)(result + 224) = *(int32_t *)(a1 + 224);
-    *(int32_t *)(result + 228) = *(int32_t *)(a1 + 228);
-    *(int32_t *)(result + 232) = *(int32_t *)(a1 + 232);
-    *(int32_t *)(result + 236) = *(int32_t *)(a1 + 236);
-    *(int32_t *)(result + 240) = *(int32_t *)(a1 + 240);
-    *(int32_t *)(result + 244) = *(int32_t *)(a1 + 244);
-    *(int32_t *)(result + 248) = *(int32_t *)(a1 + 248);
-    *(int32_t *)(result + 252) = *(int32_t *)(a1 + 252);
-    *(int32_t *)(result + 256) = *(int32_t *)(a1 + 256);
-    *(int32_t *)(result + 260) = *(int32_t *)(a1 + 260);
-    *(int32_t *)(result + 264) = *(int32_t *)(a1 + 264);
-    *(int32_t *)(result + 268) = *(int32_t *)(a1 + 268);
-    *(int32_t *)(result + 272) = *(int32_t *)(a1 + 272);
-    *(int32_t *)(result + 276) = *(int32_t *)(a1 + 276);
-    *(int32_t *)(result + 280) = *(int32_t *)(a1 + 280);
-    int32_t * v15 = (int32_t *)(a1 + 284); // 0x4602a5
-    int32_t * v16 = (int32_t *)(result + 284); // 0x4602a8
-    *v16 = *v15;
-    int32_t * v17 = (int32_t *)(a1 + 288); // 0x4602ae
-    int32_t * v18 = (int32_t *)(result + 288); // 0x4602b1
-    *v18 = *v17;
-    int32_t * v19 = (int32_t *)(a1 + 292); // 0x4602b7
-    int32_t * v20 = (int32_t *)(result + 292); // 0x4602ba
-    *v20 = *v19;
-    int32_t * v21 = (int32_t *)(a1 + 296); // 0x4602c0
-    int32_t * v22 = (int32_t *)(result + 296); // 0x4602c3
-    *v22 = *v21;
-    *v16 = *v15;
-    *v18 = *v17;
-    *v20 = *v19;
-    *v22 = *v21;
-    *(char *)(result + 300) = *(char *)(a1 + 300);
-    *(int32_t *)(result + 304) = *(int32_t *)(a1 + 304);
-    *(int32_t *)(result + 308) = *(int32_t *)(a1 + 308);
-    *(int32_t *)(result + 312) = *(int32_t *)(a1 + 312);
-    *(int32_t *)(result + 316) = *(int32_t *)(a1 + 316);
-    *(int32_t *)(result + 320) = *(int32_t *)(a1 + 320);
-    *(int32_t *)(result + 324) = *(int32_t *)(a1 + 324);
-    *(int32_t *)(result + 328) = *(int32_t *)(a1 + 328);
-    *(int32_t *)(result + 332) = *(int32_t *)(a1 + 332);
-    *(int32_t *)(result + 336) = *(int32_t *)(a1 + 336);
-    __asm_rep_movsd_memcpy((char *)(result + 340), (char *)(a1 + 340), 8);
-    __asm_rep_movsd_memcpy((char *)(result + 376), (char *)(a1 + 376), 12);
-    *(int32_t *)(result + 424) = *(int32_t *)(a1 + 424);
-    *(int32_t *)(result + 428) = *(int32_t *)(a1 + 428);
-    *(int32_t *)(result + 432) = *(int32_t *)(a1 + 432);
-    *(int32_t *)(result + 436) = *(int32_t *)(a1 + 436);
-    int32_t * v23 = (int32_t *)(a1 + 440);
-    int32_t * v24 = (int32_t *)(result + 440);
-    *v24 = *v23;
-    int32_t * v25 = (int32_t *)(a1 + 444);
-    int32_t * v26 = (int32_t *)(result + 444);
-    *v26 = *v25;
-    int32_t * v27 = (int32_t *)(a1 + 448);
-    int32_t * v28 = (int32_t *)(result + 448);
-    *v28 = *v27;
-    int32_t * v29 = (int32_t *)(a1 + 452);
-    int32_t * v30 = (int32_t *)(result + 452);
-    *v30 = *v29;
-    *v24 = *v23;
-    *v26 = *v25;
-    *v28 = *v27;
-    *v30 = *v29;
-    int32_t * v31 = (int32_t *)(a1 + 456);
-    int32_t * v32 = (int32_t *)(result + 456);
-    *v32 = *v31;
-    int32_t * v33 = (int32_t *)(a1 + 460);
-    int32_t * v34 = (int32_t *)(result + 460);
-    *v34 = *v33;
-    int32_t * v35 = (int32_t *)(a1 + 464);
-    int32_t * v36 = (int32_t *)(result + 464);
-    *v36 = *v35;
-    int32_t * v37 = (int32_t *)(a1 + 468);
-    int32_t * v38 = (int32_t *)(result + 468);
-    *v38 = *v37;
-    *v32 = *v31;
-    *v34 = *v33;
-    *v36 = *v35;
-    *v38 = *v37;
-    *(int32_t *)(result + 472) = *(int32_t *)(a1 + 472);
-    *(int32_t *)(result + 476) = *(int32_t *)(a1 + 476);
-    *(int32_t *)(result + 480) = *(int32_t *)(a1 + 480);
-    *(int32_t *)(result + 484) = *(int32_t *)(a1 + 484);
-    *(int32_t *)(result + 488) = *(int32_t *)(a1 + 488);
-    *(int32_t *)(result + 492) = *(int32_t *)(a1 + 492);
-    *(int32_t *)(result + 496) = *(int32_t *)(a1 + 496);
-    *(int32_t *)(result + 500) = *(int32_t *)(a1 + 500);
-    *(int32_t *)(result + 504) = *(int32_t *)(a1 + 504);
-    *(int32_t *)(result + 508) = *(int32_t *)(a1 + 508);
-    *(int32_t *)(result + 512) = *(int32_t *)(a1 + 512);
-    *(int32_t *)(result + 516) = *(int32_t *)(a1 + 516);
-    *(int32_t *)(result + 520) = *(int32_t *)(a1 + 520);
-    *(int32_t *)(result + 524) = *(int32_t *)(a1 + 524);
-    *(int32_t *)(result + 528) = *(int32_t *)(a1 + 528);
-    *(int32_t *)(result + 532) = *(int32_t *)(a1 + 532);
-    *(int32_t *)(result + 536) = *(int32_t *)(a1 + 536);
-    *(int32_t *)(result + 540) = *(int32_t *)(a1 + 540);
-    return result;
-}
-
-
-/* SqPlus::ClassType<Actor>::GetInstance with its hidden output receiver
-   restored. */
-
-
-// Address range: 0x4606d0 - 0x4607dc
-
-
-// Address range: 0x4607e0 - 0x4608f1
-
-
-// Address range: 0x460900 - 0x460911
-int32_t function_460900(int32_t a1, int32_t a2) {
-    // 0x460900
-    return function_45ffe0_this(a1, a2);
-}
-
-// Address range: 0x460920 - 0x4609be
-
-
-// Address range: 0x4609c0 - 0x460a5f
-
-
-// Address range: 0x460a60 - 0x460afe
-
-
-// Address range: 0x460b00 - 0x460b44
-
-
-// Address range: 0x460b50 - 0x460bb9
-
-
-// Address range: 0x460bc0 - 0x460c0c
-
-
-// Address range: 0x460c10 - 0x460c61
-
-
-// Address range: 0x460c70 - 0x460cbc
-
-
-// Address range: 0x460cc0 - 0x460d0c
-
-
-// Address range: 0x460de0 - 0x460de6
-// From class:    .?AU?$ClassType@VActor@@@SqPlus@@
-// Type:          virtual member function
-
-
-// Address range: 0x460e00 - 0x462242
-
-
-
-// Address range: 0x462280 - 0x46247f
-static int32_t function_462280_this(int32_t actor, int32_t take) {
-    return kinoko_actor_set_take(actor, take);
-}
-
-
-
-
-
-
-
-
-// Address range: 0x462530 - 0x46254d
-
-
-// Address range: 0x462550 - 0x46259b
-
-
-
-static void retdec_actor_move_camera_impl(int32_t manager, int32_t camera,
-                                          float32_t dx, float32_t dy)
-{
-    int32_t actors;
-    int32_t count;
-    int32_t index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (manager == 0 || camera == 0)
-        return;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:move-dx", *(int32_t *)(intptr_t)&dx);
-        retdec_trace_i32("actor:move-dy", *(int32_t *)(intptr_t)&dy);
-        retdec_trace_i32("actor:move-camera-left-before",
-                         *(int32_t *)(intptr_t)(camera + 72));
-        retdec_trace_i32("actor:move-camera-right-before",
-                         *(int32_t *)(intptr_t)(camera + 80));
-    }
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 40) == 0 ||
-            *(unsigned char *)(intptr_t)(actor + 20) != 0 ||
-            *(int32_t *)(intptr_t)(actor + 232) == 0 ||
-            *(float32_t *)(intptr_t)(camera + 80) + 64.0f <
-                *(float32_t *)(intptr_t)(actor + 440) ||
-            *(float32_t *)(intptr_t)(camera + 72) - 64.0f >
-                *(float32_t *)(intptr_t)(actor + 448) ||
-            *(float32_t *)(intptr_t)(camera + 84) + 64.0f <
-                *(float32_t *)(intptr_t)(actor + 444) ||
-            *(float32_t *)(intptr_t)(camera + 76) - 64.0f >
-                *(float32_t *)(intptr_t)(actor + 452))
-            continue;
-
-        *(float32_t *)(intptr_t)(actor + 240) += dx;
-        *(float32_t *)(intptr_t)(actor + 244) += dy;
-        *(float32_t *)(intptr_t)(actor + 440) += dx;
-        *(float32_t *)(intptr_t)(actor + 448) += dx;
-        *(float32_t *)(intptr_t)(actor + 444) += dy;
-        *(float32_t *)(intptr_t)(actor + 452) += dy;
-        *(float32_t *)(intptr_t)(actor + 248) =
-            *(float32_t *)(intptr_t)(actor + 240);
-        *(float32_t *)(intptr_t)(actor + 252) =
-            *(float32_t *)(intptr_t)(actor + 244);
-        *(float32_t *)(intptr_t)(actor + 456) =
-            *(float32_t *)(intptr_t)(actor + 440);
-        *(float32_t *)(intptr_t)(actor + 460) =
-            *(float32_t *)(intptr_t)(actor + 444);
-        *(float32_t *)(intptr_t)(actor + 464) =
-            *(float32_t *)(intptr_t)(actor + 448);
-        *(float32_t *)(intptr_t)(actor + 468) =
-            *(float32_t *)(intptr_t)(actor + 452);
-    }
-
-    *(float32_t *)(intptr_t)(camera + 40) += dx;
-    *(float32_t *)(intptr_t)(camera + 44) += dy;
-    *(float32_t *)(intptr_t)(camera + 72) += dx;
-    *(float32_t *)(intptr_t)(camera + 76) += dy;
-    *(float32_t *)(intptr_t)(camera + 80) += dx;
-    *(float32_t *)(intptr_t)(camera + 84) += dy;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:move-camera-left-after",
-                         *(int32_t *)(intptr_t)(camera + 72));
-        retdec_trace_i32("actor:move-camera-right-after",
-                         *(int32_t *)(intptr_t)(camera + 80));
-    }
-}
-
-/* 45E120 is Actor::Step.  The callback is a SquirrelFunction stored at
-   Actor+0x5c; invoking it is what lets title actors update their own y
-   coordinates before the frame timer advances. */
-/* Observe the first invalid numeric state without changing gameplay or the VM. */
-void retdec_trace_star_state(const char *phase, int32_t actor) {
-    static struct { uint32_t handle; int hits, samples; } observed[32];
-    uint32_t handle;
-    int32_t sprite, proto=0;
-    int release, hits, index;
-    char message[768];
-    if (!actor || *(int32_t *)(intptr_t)(actor+208)!=1060) return;
-    release=strcmp(phase,"release")==0;
-    if (*(int32_t *)(intptr_t)(actor+112)==0x08000100)
-        proto=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actor+116)+36);
-    if (!release && (!proto || *(int32_t *)(intptr_t)(proto+20)!=0x08000010 ||
-        strcmp((const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto+24)+28),"UpdateWalk")!=0)) return;
-    handle=*(uint32_t *)(intptr_t)(actor+12);
-    index=(int)(handle%32);
-    hits=*(int32_t *)(intptr_t)(actor+296);
-    if(observed[index].handle!=handle) {
-        observed[index].handle=handle;
-        observed[index].samples=0;
-        observed[index].hits=-1;
-    }
-    if(!release && ((observed[index].hits==hits && g848%10!=0) || observed[index].samples>=256)) return;
-    observed[index].hits=hits;
-    ++observed[index].samples;
-    sprite=*(int32_t *)(intptr_t)(actor+204);
-    sprintf_s(message,sizeof(message),
-        "actor:star frame=%d phase=%s handle=%08X xy=(%.6g,%.6g) v=(%.6g,%.6g) "
-        "hits=(%d,%d,%d,%d) bounds=(%.6g,%.6g,%.6g,%.6g) "
-        "active=%d visible=%d release=%d priority=%d alpha=%d texture=%d spriteY=(%.6g,%.6g) "
-        "mapHeight=%d camera=(%.6g,%.6g,%.6g,%.6g)",
-        g848,phase,handle,*(float *)(intptr_t)(actor+240),*(float *)(intptr_t)(actor+244),
-        *(float *)(intptr_t)(actor+256),*(float *)(intptr_t)(actor+260),
-        *(int32_t *)(intptr_t)(actor+284),*(int32_t *)(intptr_t)(actor+288),
-        *(int32_t *)(intptr_t)(actor+292),hits,
-        *(float *)(intptr_t)(actor+440),*(float *)(intptr_t)(actor+444),
-        *(float *)(intptr_t)(actor+448),*(float *)(intptr_t)(actor+452),
-        *(uint8_t *)(intptr_t)(actor+40),*(uint8_t *)(intptr_t)(actor+21),
-        *(uint8_t *)(intptr_t)(actor+22),*(int32_t *)(intptr_t)(actor+228),
-        *(int32_t *)(intptr_t)(actor+180),sprite ? *(int32_t *)(intptr_t)(sprite+4) : 0,
-        sprite ? *(float *)(intptr_t)(sprite+180) : 0,sprite ? *(float *)(intptr_t)(sprite+216) : 0,
-        *(int32_t *)(g_retdec_map_manager_state+80),
-        *(float *)(g_retdec_camera_state+72),*(float *)(g_retdec_camera_state+76),
-        *(float *)(g_retdec_camera_state+80),*(float *)(g_retdec_camera_state+84));
-    retdec_trace(message);
-    if(release && g644) {
-        int32_t vm=(int32_t)(intptr_t)g644;
-        int32_t frames=*(int32_t *)(intptr_t)(vm+100);
-        for(int i=frames-1;i>=0 && i>=frames-5;--i) {
-            int32_t ci=*(int32_t *)(intptr_t)(vm+96)+48*i;
-            if(*(int32_t *)(intptr_t)(ci+8)==0x08000100) {
-                int32_t caller=*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(ci+12)+36);
-                retdec_trace_proto_metadata("actor:star-release-source",caller,12);
-                retdec_trace_proto_metadata("actor:star-release-function",caller,20);
-                retdec_trace_i32("actor:star-release-instruction",(*(int32_t *)(intptr_t)ci-caller-96)/8-1);
-            }
-        }
-    }
-}
-
-static void retdec_trace_invalid_actor(const char *phase, int32_t actor) {
-    static volatile LONG count;
-    static const int32_t offsets[]={240,244,256,260,264,268,304,308,440,444,448,452};
-    uint32_t bits[12];
-    int invalid=0;
-    if(!actor) return;
-    for(int i=0;i<12;++i) {
-        memcpy(bits+i,(const void *)(intptr_t)(actor+offsets[i]),4);
-        invalid |= (bits[i]&0x7f800000u)==0x7f800000u;
-    }
-    if(invalid && InterlockedIncrement(&count)<=32) {
-        char message[512];
-        sprintf_s(message,sizeof(message),
-            "actor:invalid-state frame=%d phase=%s actor=%08X take=%d "
-            "xy=%08X,%08X v=%08X,%08X parentDelta=%08X,%08X free=%08X,%08X "
-            "bounds=%08X,%08X,%08X,%08X step=%08X,%08X",
-            g848,phase,(uint32_t)actor,*(int32_t *)(intptr_t)(actor+208),
-            bits[0],bits[1],bits[2],bits[3],bits[4],bits[5],bits[6],bits[7],
-            bits[8],bits[9],bits[10],bits[11],
-            *(uint32_t *)(intptr_t)(actor+112),*(uint32_t *)(intptr_t)(actor+116));
-        retdec_trace(message);
-    }
-}
-
-int32_t retdec_actor_step_callback(int32_t state_ptr)
-{
-    int32_t vm;
-    int32_t result;
-    int32_t base;
-
-    if (state_ptr == 0)
-        return -1;
-    vm = *(int32_t *)(intptr_t)state_ptr;
-    if (vm == 0)
-        return -1;
-    base = sq_gettop(kinoko_vm(vm));
-
-    /* SquirrelFunction<> pushes its bound environment and callable, then
-       calls with one argument and removes the two temporary stack entries. */
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(*(int32_t *)(intptr_t)(state_ptr + 20), *(int32_t *)(intptr_t)(state_ptr + 24)));
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(*(int32_t *)(intptr_t)(state_ptr + 8), *(int32_t *)(intptr_t)(state_ptr + 12)));
-    InterlockedExchange(&retdec_actor_step_trace_active, 1);
-    result = kinoko_sq_call(vm, 1, 1, 1);
-    InterlockedExchange(&retdec_actor_step_trace_active, 0);
-    if (result < 0) {
-        retdec_trace_i32("actor:step-call-failed", result);
-        sq_settop(kinoko_vm(vm), (SQInteger)(base));
-        return result;
-    }
-    return kinoko_sq_pop(vm, 2);
-}
-
-static void retdec_actor_tick(int32_t actor)
-{
-    int32_t animation_key;
-    int32_t callback_type;
-    static volatile LONG step_trace_count;
-    LONG step_trace_index;
-    int32_t step_result;
-
-    if (actor == 0)
-        return;
-
-    /* Actor::Step runs the script callback first.  A callback may replace
-       the selected animation, so the original compares the key captured
-       before the call with the key still stored afterwards. */
-    animation_key = *(int32_t *)(intptr_t)(actor + 208);
-    callback_type = function_4a9a30_this(actor + 108);
-    step_trace_index = InterlockedIncrement(&step_trace_count);
-    if (step_trace_index <= 64 &&
-        *(int32_t *)(intptr_t)(actor + 224) >= 0x200 &&
-        *(int32_t *)(intptr_t)(actor + 224) <= 0x207) {
-        int32_t y_bits;
-
-        memcpy(&y_bits, (const void *)(intptr_t)(actor + 244),
-               sizeof(y_bits));
-        retdec_trace_i32("actor:step-id",
-                         *(int32_t *)(intptr_t)(actor + 224));
-        retdec_trace_i32("actor:step-type", callback_type);
-        retdec_trace_i32("actor:step-data",
-                         *(int32_t *)(intptr_t)(actor + 116));
-        retdec_trace_i32("actor:step-state-vm",
-                         *(int32_t *)(intptr_t)(actor + 92));
-        retdec_trace_i32("actor:step-state-type",
-                         *(int32_t *)(intptr_t)(actor + 100));
-        retdec_trace_i32("actor:step-state-data",
-                         *(int32_t *)(intptr_t)(actor + 104));
-        retdec_trace_i32("actor:step-callback-data",
-                         *(int32_t *)(intptr_t)(actor + 32));
-        retdec_trace_i32("actor:step-callback-delegate",
-                         *(int32_t *)(intptr_t)(actor + 36));
-        retdec_trace_i32("actor:step-y-before", y_bits);
-    }
-    if (callback_type == 0x08000100) {
-        retdec_trace_invalid_actor("before-script",actor);
-        step_result = kinoko_actor_step_callback(actor);
-        retdec_trace_invalid_actor("after-script",actor);
-        /* Original 45E180 failure retirement is handled by the C++ adapter. */
-        if (step_result < 0) {
-            static volatile LONG failure_count;
-            if (InterlockedIncrement(&failure_count) <= 64) {
-                char message[384];
-                sprintf_s(message, sizeof(message),
-                    "actor:update-failed frame=%d actor=%08X id=%X take=%d "
-                    "xy=(%.3f,%.3f) v=(%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f)",
-                    g848, (uint32_t)actor, *(uint32_t *)(intptr_t)(actor + 224),
-                    *(int32_t *)(intptr_t)(actor + 208),
-                    *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
-                    *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
-                    *(float *)(g_retdec_camera_state + 72), *(float *)(g_retdec_camera_state + 76),
-                    *(float *)(g_retdec_camera_state + 80), *(float *)(g_retdec_camera_state + 84));
-                retdec_trace(message);
-            }
-        }
-        if (step_trace_index <= 64)
-            retdec_trace_i32("actor:step-result", step_result);
-        if (step_trace_index <= 64 &&
-            *(int32_t *)(intptr_t)(actor + 224) >= 0x200 &&
-            *(int32_t *)(intptr_t)(actor + 224) <= 0x207) {
-            int32_t y_bits;
-
-            memcpy(&y_bits, (const void *)(intptr_t)(actor + 244),
-                   sizeof(y_bits));
-            retdec_trace_i32("actor:step-y-after", y_bits);
-        }
-    }
-
-    kinoko_actor_advance_animation(actor, animation_key);
-}
-
-static int32_t retdec_collision_append(int32_t state, int32_t *count,
-    const unsigned char *chip, const void *layout, int32_t index)
-{
-    KinokoCollisionRecord *records;
-    if (!retdec_collision_reserve(state + 36, (uint32_t)*count + 1, 12))
-        return 0;
-    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
-    records[*count].chip = chip;
-    records[*count].layout = layout;
-    records[*count].index = index;
-    ++*count;
-    if (*(int32_t *)(intptr_t)(state + 40) < (int32_t)(intptr_t)(records + *count))
-        *(int32_t *)(intptr_t)(state + 40) = (int32_t)(intptr_t)(records + *count);
-    return 1;
-}
-
-/* 435220/436290/4362F0: resume at the cached index, scan forward, then backward. */
-static int32_t retdec_collision_query_rect(int32_t state, int32_t layout,
-    int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,
-    int32_t *count)
-{
-    struct retdec_mcd_data *data = retdec_map_chip_data(layout);
-    int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-    int32_t total = (*(int32_t *)(intptr_t)(layout + 268) -
-                     *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    int32_t start = *cached, forward = 1, backward = 0;
-    int32_t max_width = *(int32_t *)(intptr_t)(layout + 240);
-    int32_t max_height = *(int32_t *)(intptr_t)(layout + 244);
-    float offset_x, offset_y;
-    int32_t offset_ix, offset_iy;
-    if (data == NULL || layer == 0 || total <= 0)
-        return 1;
-    offset_x = *(float *)(intptr_t)(layer + 144);
-    offset_y = *(float *)(intptr_t)(layer + 148);
-    offset_ix = (int32_t)offset_x;
-    offset_iy = (int32_t)offset_y;
-    if (start > 0 && start < total) {
-        int32_t record = retdec_map_record_at(layout, start);
-        int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
-        forward = right >= x;
-        backward = (int64_t)left - max_width <= x;
-    }
-    *cached = 0;
-    for (int32_t pass = 0; pass < 2; ++pass) {
-        int32_t step = pass == 0 ? 1 : -1;
-        int32_t index = pass == 0 ? start : start - forward;
-        int32_t first = 1;
-        if ((pass == 0 && !forward) || (pass == 1 && !backward))
-            continue;
-        for (; index >= 0 && index < total; index += step) {
-            int32_t record = retdec_map_record_at(layout, index);
-            int32_t x = *(int32_t *)(intptr_t)(record + 4) + offset_ix;
-            int32_t y = *(int32_t *)(intptr_t)(record + 8) + offset_iy;
-            struct retdec_mcd_chip *chip;
-            if ((step > 0 && x > right) ||
-                (step < 0 && x < (int64_t)left - max_width))
-                break;
-            if (x < (int64_t)left - max_width || x > right ||
-                y < (int64_t)top - max_height || y > bottom)
-                continue;
-            chip = retdec_mcd_find_chip(data, *(uint32_t *)(intptr_t)record);
-            if (chip == NULL)
-                continue;
-            *(float *)(intptr_t)(record + 12) =
-                (float)*(int32_t *)(intptr_t)(record + 4) + offset_x;
-            *(float *)(intptr_t)(record + 16) =
-                (float)*(int32_t *)(intptr_t)(record + 8) + offset_y;
-            if (!retdec_collision_append(state, count, chip->bytes, (void *)(intptr_t)record, index))
-                return 0;
-            if (pass != 0 || first)
-                *cached = index;
-            first = 0;
-        }
-    }
-    return 1;
-}
-
-static int32_t retdec_collision_query_map(int32_t layout, int32_t actor,
-                                           int32_t layer_index, int32_t *count)
-{
-    return retdec_collision_query_rect((int32_t)(intptr_t)g_514300_storage,
-        layout, (int32_t *)(intptr_t)(actor + 480 + 4 * layer_index),
-        (int32_t)(*(float *)(intptr_t)(actor + 440) - 24.0f),
-        (int32_t)(*(float *)(intptr_t)(actor + 444) - 24.0f),
-        (int32_t)(*(float *)(intptr_t)(actor + 448) + 24.0f),
-        (int32_t)(*(float *)(intptr_t)(actor + 452) + 24.0f), count);
-}
-
-static int32_t retdec_actor_collide_move(int32_t actor, float dx, float dy)
-{
-    int32_t count = 0;
-    int32_t layer_count = (g_514300_storage[2] - g_514300_storage[1]) / 4;
-    int32_t support;
-    if ((*(int32_t *)(intptr_t)(actor + 316) & 1) != 0) {
-        for (int32_t i = 0; i < layer_count; ++i) {
-            int32_t layout = *(int32_t *)(intptr_t)(g_514300_storage[1] + 4 * i);
-            int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-            if (layer != 0 && *(uint8_t *)(intptr_t)(layer + 140)) {
-                int32_t *map_parent = (int32_t *)(intptr_t)(g_514300_storage[13] + 8 * i);
-                if (!retdec_collision_query_map(layout, actor, i, &count))
-                    return 0;
-                *(int32_t *)(intptr_t)(g_514300_storage[5] + 4 * i) = count;
-                if (*(int32_t *)(intptr_t)(actor + 32) == map_parent[0] &&
-                    *(int32_t *)(intptr_t)(actor + 36) != 0) {
-                    int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-                    function_4606d0_this(actor, (int32_t)(intptr_t)empty);
-                }
-            }
-        }
-    }
-    for (int32_t i = 0; i < g_514300_storage[21]; ++i) {
-        int32_t other = *(int32_t *)(intptr_t)(g_514300_storage[17] + 4 * i);
-        if (other != actor &&
-            (*(int32_t *)(intptr_t)(other + 312) & *(int32_t *)(intptr_t)(actor + 316)) &&
-            *(float *)(intptr_t)(other + 448) + 24 >= *(float *)(intptr_t)(actor + 440) &&
-            *(float *)(intptr_t)(other + 440) - 24 <= *(float *)(intptr_t)(actor + 448)) {
-            if (!retdec_collision_append((int32_t)(intptr_t)g_514300_storage, &count,
-                *(const unsigned char **)(intptr_t)(other + 328),
-                *(const void **)(intptr_t)(other + 332),
-                *(int32_t *)(intptr_t)(other + 336)))
-                return 0;
-        }
-    }
-    support = kinoko_actor_collision_move((void *)(intptr_t)actor,
-        (const KinokoCollisionRecord *)(intptr_t)g_514300_storage[9], count, dx, dy);
-    if (support >= 0 && (*(int32_t *)(intptr_t)(actor + 316) & 1)) {
-        for (int32_t i = 0; i < layer_count; ++i) {
-            if (support < *(int32_t *)(intptr_t)(g_514300_storage[5] + 4 * i)) {
-                int32_t pair[2] = {0, 0};
-                kinoko_native_weak_pair_lock(g_514300_storage[13] + 8 * i, pair);
-                if (pair[0] != 0) {
-                    int32_t parent = *(int32_t *)(intptr_t)pair[0];
-                    int32_t object[3];
-                    function_4a9500_this(object, parent + 44);
-                    function_4606d0_this(actor, (int32_t)(intptr_t)object);
-                    kinoko_native_release_strong(pair[1]);
-                    break;
-                }
-                kinoko_native_release_strong(pair[1]);
-            }
-        }
-    }
-    return 1;
-}
-
-/* Shared by original Actor::Move (45DBD0) and Actor::Update (45EC60). */
-static void retdec_actor_refresh_bounds(int32_t actor) {
-    float width_scale;
-    float height_scale;
-    float left;
-    float right;
-    float top;
-    float bottom;
-    width_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 172);
-    height_scale = *(float32_t *)(intptr_t)(actor + 168) *
-        *(float32_t *)(intptr_t)(actor + 176);
-    if (0.0f >= *(float32_t *)(intptr_t)(actor + 272)) {
-        left = *(float32_t *)(intptr_t)(actor + 424) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-        right = *(float32_t *)(intptr_t)(actor + 432) * width_scale +
-            *(float32_t *)(intptr_t)(actor + 240);
-    } else {
-        left = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 432) * width_scale;
-        right = *(float32_t *)(intptr_t)(actor + 240) -
-            *(float32_t *)(intptr_t)(actor + 424) * width_scale;
-    }
-    top = *(float32_t *)(intptr_t)(actor + 428) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    bottom = *(float32_t *)(intptr_t)(actor + 436) * height_scale +
-        *(float32_t *)(intptr_t)(actor + 244);
-    *(float32_t *)(intptr_t)(actor + 440) = left;
-    *(float32_t *)(intptr_t)(actor + 444) = top;
-    *(float32_t *)(intptr_t)(actor + 448) = right;
-    *(float32_t *)(intptr_t)(actor + 452) = bottom;
-    *(float32_t *)(intptr_t)(actor + 352) = left;
-    *(float32_t *)(intptr_t)(actor + 356) = top;
-    *(int16_t *)(intptr_t)(actor + 388) = (int16_t)(right - left);
-    *(int16_t *)(intptr_t)(actor + 390) = (int16_t)(bottom - top);
-}
-
-int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy) {
-    while (dx != 0.0f || dy != 0.0f) {
-        int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
-        memcpy((void *)(intptr_t)(actor + 248), (const void *)(intptr_t)(actor + 240), 8);
-        memcpy((void *)(intptr_t)(actor + 456), (const void *)(intptr_t)(actor + 440), 16);
-        if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
-            *(uint8_t *)(intptr_t)(animation + 25) != 0) {
-            float step_x, step_y;
-            if (dx > 8.0f) { step_x = 8.0f; dx -= 8.0f; }
-            else if (dx < -8.0f) { step_x = -8.0f; dx += 8.0f; }
-            else { step_x = dx; dx = 0.0f; }
-            if (dy > 8.0f) { step_y = 8.0f; dy -= 8.0f; }
-            else if (dy < -8.0f) { step_y = -8.0f; dy += 8.0f; }
-            else { step_y = dy; dy = 0.0f; }
-            retdec_actor_collide_move(actor, step_x, step_y);
-        } else {
-            *(float *)(intptr_t)(actor + 240) += dx;
-            *(float *)(intptr_t)(actor + 244) += dy;
-            memset((void *)(intptr_t)(actor + 284), 0, 16);
-            dx = dy = 0.0f;
-        }
-        retdec_actor_refresh_bounds(actor);
-    }
-    return 0;
-}
-
-/* Actor::Update (45EC60): preserve previous state, resolve motion, rebuild bounds. */
-static int32_t function_45ec60(int32_t actor)
-{
-    float parent_dx = 0.0f;
-    float parent_dy = 0.0f;
-    int32_t parent_pair[2] = { 0, 0 };
-    int32_t parent_slot;
-    int32_t parent;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (actor == 0)
-        return 0;
-
-    retdec_trace_invalid_actor("before-motion",actor);
-    retdec_trace_star_state("before-motion",actor);
-
-    *(float32_t *)(intptr_t)(actor + 248) =
-        *(float32_t *)(intptr_t)(actor + 240);
-    *(float32_t *)(intptr_t)(actor + 252) =
-        *(float32_t *)(intptr_t)(actor + 244);
-    *(float32_t *)(intptr_t)(actor + 456) =
-        *(float32_t *)(intptr_t)(actor + 440);
-    *(float32_t *)(intptr_t)(actor + 460) =
-        *(float32_t *)(intptr_t)(actor + 444);
-    *(float32_t *)(intptr_t)(actor + 464) =
-        *(float32_t *)(intptr_t)(actor + 448);
-    *(float32_t *)(intptr_t)(actor + 468) =
-        *(float32_t *)(intptr_t)(actor + 452);
-
-    kinoko_native_weak_pair_lock(actor + 32, parent_pair);
-    parent_slot = parent_pair[0];
-    parent = parent_slot != 0
-        ? *(int32_t *)(intptr_t)parent_slot : 0;
-    if (parent != 0 &&
-        (*(int32_t *)(intptr_t)(parent + 232) &
-         (int32_t)function_471060()) != 0) {
-        parent_dx = *(float32_t *)(intptr_t)(parent + 240) -
-            *(float32_t *)(intptr_t)(parent + 248);
-        parent_dy = *(float32_t *)(intptr_t)(parent + 244) -
-            *(float32_t *)(intptr_t)(parent + 252);
-    }
-    *(float32_t *)(intptr_t)(actor + 264) = parent_dx;
-    *(float32_t *)(intptr_t)(actor + 268) = parent_dy;
-
-    int32_t animation = *(int32_t *)(intptr_t)(actor + 200);
-    if (*(int32_t *)(intptr_t)(actor + 316) != 0 && animation != 0 &&
-        *(uint8_t *)(intptr_t)(animation + 25) != 0) {
-        float vx = *(float *)(intptr_t)(actor + 256);
-        float dx = vx + parent_dx;
-        float dy = *(float *)(intptr_t)(actor + 260) + parent_dy;
-        if (((*(uint32_t *)(intptr_t)(actor + 392) |
-              *(uint32_t *)(intptr_t)(actor + 236)) & 0x800000u) == 0 &&
-            *(int32_t *)(intptr_t)(actor + 296) != 0 && vx != 0) {
-            float slope_dy = fabsf(*(float *)(intptr_t)(actor + 276) * vx);
-            dy += fminf(fabsf(vx), slope_dy);
-        }
-        retdec_actor_collide_move(actor, dx, dy);
-    } else {
-        *(float32_t *)(intptr_t)(actor + 240) +=
-            *(float32_t *)(intptr_t)(actor + 256) + parent_dx;
-        *(float32_t *)(intptr_t)(actor + 244) +=
-            *(float32_t *)(intptr_t)(actor + 260) + parent_dy;
-        *(float32_t *)(intptr_t)(actor + 284) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 288) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 292) = 0.0f;
-        *(float32_t *)(intptr_t)(actor + 296) = 0.0f;
-    }
-
-    retdec_actor_refresh_bounds(actor);
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 16) {
-        int32_t before_x;
-        int32_t after_x;
-        memcpy(&before_x, (const void *)(intptr_t)(actor + 248),
-               sizeof(before_x));
-        memcpy(&after_x, (const void *)(intptr_t)(actor + 240),
-               sizeof(after_x));
-        retdec_trace_i32("actor:motion-id",
-                         *(int32_t *)(intptr_t)(actor + 224));
-        retdec_trace_i32("actor:motion-before-x", before_x);
-        retdec_trace_i32("actor:motion-after-x", after_x);
-    }
-    if (parent != 0 && !function_4045c0(parent + 440, actor + 440)) {
-        int32_t empty[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-        function_4606d0_this(actor, (int32_t)(intptr_t)empty);
-    }
-    kinoko_native_release_strong(parent_pair[1]);
-    retdec_trace_invalid_actor("after-motion",actor);
-    retdec_trace_star_state("after-motion",actor);
-    return 0;
-}
-
-static void retdec_actor_collect_tree(int32_t manager, int32_t node,
-                                      int32_t sentinel, int32_t *actors,
-                                      int32_t capacity, int32_t *count)
-{
-    if (manager == 0 || node == 0 || node == sentinel ||
-        actors == NULL || count == NULL)
-        return;
-    while (node != sentinel) {
-        int32_t actor=kinoko_priority_value(node);
-        int32_t next=kinoko_priority_next(manager+84,node);
-        if (*(unsigned char *)(intptr_t)(actor + 22) == 0) {
-            if (*count < capacity)
-                actors[(*count)++] = actor;
-        } else {
-            int32_t removed = 0;
-            uint32_t handle = *(uint32_t *)(intptr_t)(actor + 12);
-            /* 463DC2..463DD5 erases the tree node and releases its pooled actor. */
-            function_463280_this(manager + 84, (int32_t)(intptr_t)&removed, node);
-            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4), handle);
-        }
-        node = next;
-    }
-}
-
-static int32_t retdec_actor_manager_refresh(int32_t manager)
-{
-    int32_t sentinel;
-    int32_t count;
-    int32_t capacity;
-    int32_t *actors;
-    int32_t index;
-    int32_t active_count;
-    int32_t back_count;
-    int32_t middle_count;
-    int32_t front_count;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (manager == 0)
-        return 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:refresh-dirty",
-                         *(int32_t *)(intptr_t)(manager + 120));
-        retdec_trace_i32("actor-manager:refresh-tree-count",
-                         *(int32_t *)(intptr_t)(manager + 92));
-    }
-    if (*(unsigned char *)(intptr_t)(manager + 120) == 0)
-        return *(int32_t *)(intptr_t)(manager + 116);
-    sentinel = *(int32_t *)(intptr_t)(manager + 88);
-    count = *(int32_t *)(intptr_t)(manager + 92);
-    if (sentinel == 0 || count <= 0) {
-        *(int32_t *)(intptr_t)(manager + 116) = 0;
-        *(unsigned char *)(intptr_t)(manager + 120) = 0;
-        return 0;
-    }
-    /* 463D77/463D85 grow the update and collision-candidate vectors together. */
-    for (int32_t offset = 100; offset <= 124; offset += 24) {
-        int32_t begin = *(int32_t *)(intptr_t)(manager + offset);
-        int32_t end = *(int32_t *)(intptr_t)(manager + offset + 4);
-        if (begin == 0 || (end - begin) / 4 < count) {
-            if (count > INT32_MAX / 8 ||
-                !retdec_collision_reserve(manager + offset, (uint32_t)count * 2, 4))
-                return 0;
-            begin = *(int32_t *)(intptr_t)(manager + offset);
-            *(int32_t *)(intptr_t)(manager + offset + 4) = begin + count * 8;
-        }
-    }
-    actors = *(int32_t **)(intptr_t)(manager + 100);
-    capacity = (*(int32_t *)(intptr_t)(manager + 104) -
-                *(int32_t *)(intptr_t)(manager + 100)) / 4;
-    active_count = 0;
-    retdec_actor_collect_tree(
-        manager, kinoko_priority_first(manager+84), sentinel,
-        actors, capacity, &active_count);
-
-    back_count = 0;
-    middle_count = 0;
-    front_count = 0;
-    for (index = 0; index < active_count; ++index) {
-        int32_t actor = actors[index];
-        int32_t priority;
-
-        if (*(unsigned char *)(intptr_t)(actor + 22) != 0)
-            continue;
-        priority = *(int32_t *)(intptr_t)(actor + 228);
-        if (priority == -1)
-            ++back_count;
-        if (priority < 0xffff)
-            ++middle_count;
-        if (priority < 0x10000)
-            ++front_count;
-    }
-    *(int32_t *)(intptr_t)(manager + 116) = active_count;
-    if (*(int32_t *)(intptr_t)(manager + 20) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 12) = 0;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 20) + 16) =
-            back_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 24) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 12) =
-            back_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 24) + 16) =
-            middle_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 28) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 12) =
-            middle_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 28) + 16) =
-            front_count;
-    }
-    if (*(int32_t *)(intptr_t)(manager + 32) != 0) {
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 12) =
-            front_count;
-        *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(manager + 32) + 16) =
-            active_count;
-    }
-    *(unsigned char *)(intptr_t)(manager + 120) = 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:refresh-active-count", active_count);
-        retdec_trace_i32("actor-manager:refresh-back-count", back_count);
-        retdec_trace_i32("actor-manager:refresh-middle-count", middle_count);
-        retdec_trace_i32("actor-manager:refresh-front-count", front_count);
-    }
-    return active_count;
-}
-
-static int32_t retdec_actor_activate_if_visible(int32_t actor,
-                                                int32_t camera,
-                                                float extent)
-{
-    if (actor == 0 || *(unsigned char *)(intptr_t)(actor + 20) != 0)
-        return 0;
-    if (camera == 0 ||
-        (*(float32_t *)(intptr_t)(actor + 440) <=
-             *(float32_t *)(intptr_t)(camera + 80) + extent &&
-         *(float32_t *)(intptr_t)(camera + 72) - extent <=
-             *(float32_t *)(intptr_t)(actor + 448) &&
-         *(float32_t *)(intptr_t)(camera + 84) + extent >=
-             *(float32_t *)(intptr_t)(actor + 444) &&
-         *(float32_t *)(intptr_t)(actor + 452) >=
-             *(float32_t *)(intptr_t)(camera + 76) - extent)) {
-        *(unsigned char *)(intptr_t)(actor + 40) = 1;
-        return 1;
-    }
-    return 0;
-}
-
-/* Keep a narrow state snapshot for the opening actors while comparing the
- * manager update path with the original.  The range and cadence are only
- * diagnostic; this helper does not participate in the update decision. */
-static void retdec_trace_actor_window_state(int32_t phase, int32_t actor,
-                                             int32_t update_mask)
-{
-    int32_t id;
-    int32_t frame;
-    int32_t node;
-    int32_t value;
-
-    if (actor == 0 || g848 < 540 || g848 > 820 || (g848 % 10) != 0)
-        return;
-    id = *(int32_t *)(intptr_t)(actor + 224);
-    if (id < 0x200 || id > 0x207)
-        return;
-
-    frame = *(int32_t *)(intptr_t)(actor + 204);
-    node = *(int32_t *)(intptr_t)(actor + 200);
-    retdec_trace_i32("actor:diag-frame-counter", g848);
-    retdec_trace_i32("actor:diag-phase", phase);
-    retdec_trace_i32("actor:diag-id", id);
-    retdec_trace_i32("actor:diag-address", actor);
-    retdec_trace_i32("actor:diag-animation-key",
-                     *(int32_t *)(intptr_t)(actor + 208));
-    retdec_trace_i32("actor:diag-frame-pointer", frame);
-    retdec_trace_i32("actor:diag-node-pointer", node);
-    retdec_trace_i32("actor:diag-frame-index",
-                     *(int32_t *)(intptr_t)(actor + 212));
-    retdec_trace_i32("actor:diag-timer",
-                     *(int32_t *)(intptr_t)(actor + 216));
-    value = frame != 0
-        ? (int32_t)*(int16_t *)(intptr_t)(frame + 240) : 0;
-    retdec_trace_i32("actor:diag-duration", value);
-    retdec_trace_i32("actor:diag-active",
-                     *(unsigned char *)(intptr_t)(actor + 40));
-    retdec_trace_i32("actor:diag-visible",
-                     *(unsigned char *)(intptr_t)(actor + 20));
-    retdec_trace_i32("actor:diag-removable",
-                     *(unsigned char *)(intptr_t)(actor + 22));
-    retdec_trace_i32("actor:diag-update-flags",
-                     *(int32_t *)(intptr_t)(actor + 232));
-    retdec_trace_i32("actor:diag-update-mask", update_mask);
-    retdec_trace_i32("actor:diag-mask-hit",
-                     (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0);
-    memcpy(&value, (const void *)(intptr_t)(actor + 240), sizeof(value));
-    retdec_trace_i32("actor:diag-x", value);
-    memcpy(&value, (const void *)(intptr_t)(actor + 244), sizeof(value));
-    retdec_trace_i32("actor:diag-y", value);
-    memcpy(&value, (const void *)(intptr_t)(actor + 440), sizeof(value));
-    retdec_trace_i32("actor:diag-left", value);
-    memcpy(&value, (const void *)(intptr_t)(actor + 444), sizeof(value));
-    retdec_trace_i32("actor:diag-top", value);
-    memcpy(&value, (const void *)(intptr_t)(actor + 448), sizeof(value));
-    retdec_trace_i32("actor:diag-right", value);
-    memcpy(&value, (const void *)(intptr_t)(actor + 452), sizeof(value));
-    retdec_trace_i32("actor:diag-bottom", value);
-}
-
-static void retdec_trace_player_state(const char *phase, int32_t actor,
-                                       int32_t camera) {
-    static volatile LONG count;
-    static int32_t last_actor, last_take;
-    int32_t closure, proto, take, transition;
-    uint32_t xy_bits[2];
-    const char *source, *name;
-    char message[896];
-    if (actor == 0 || *(int32_t *)(intptr_t)(actor + 112) != 0x08000100)
-        return;
-    closure = *(int32_t *)(intptr_t)(actor + 116);
-    proto = *(int32_t *)(intptr_t)(closure + 36);
-    if (proto == 0 || *(int32_t *)(intptr_t)(proto + 12) != 0x08000010 ||
-        *(int32_t *)(intptr_t)(proto + 20) != 0x08000010)
-        return;
-    source = (const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 16) + 28);
-    name = (const char *)(intptr_t)(*(int32_t *)(intptr_t)(proto + 24) + 28);
-    if (_stricmp(source, "data/script/player.nut") != 0 || strcmp(name, "Update") != 0)
-        return;
-    take = *(int32_t *)(intptr_t)(actor + 208);
-    transition = last_actor != actor || last_take != take;
-    last_actor = actor;
-    last_take = take;
-    if (!transition && *(float *)(intptr_t)(actor + 256) == 0 && *(float *)(intptr_t)(actor + 260) == 0 &&
-        *(float *)(intptr_t)(actor + 304) >= 12 &&
-        !(*(int32_t *)(intptr_t)(actor + 288) && *(int32_t *)(intptr_t)(actor + 296)) &&
-        g848 % 60 != 0)
-        return;
-    if (InterlockedIncrement(&count) > 6000 && !transition)
-        return;
-    memcpy(xy_bits, (const void *)(intptr_t)(actor + 240), sizeof(xy_bits));
-    /* Observe the inputs to the unchanged script death checks without touching the VM stack. */
-    sprintf_s(message, sizeof(message),
-        "actor:player-state frame=%d phase=%s actor=%08X take=%d xy=(%.3f,%.3f) "
-        "v=(%.3f,%.3f) free=(%.3f,%.3f) hits=(%d,%d,%d,%d) flags=%08X "
-        "bounds=(%.3f,%.3f,%.3f,%.3f) camera=(%.3f,%.3f,%.3f,%.3f) xyBits=%08X,%08X",
-        g848, phase, (uint32_t)actor, *(int32_t *)(intptr_t)(actor + 208),
-        *(float *)(intptr_t)(actor + 240), *(float *)(intptr_t)(actor + 244),
-        *(float *)(intptr_t)(actor + 256), *(float *)(intptr_t)(actor + 260),
-        *(float *)(intptr_t)(actor + 304), *(float *)(intptr_t)(actor + 308),
-        *(int32_t *)(intptr_t)(actor + 284), *(int32_t *)(intptr_t)(actor + 288),
-        *(int32_t *)(intptr_t)(actor + 292), *(int32_t *)(intptr_t)(actor + 296),
-        *(uint32_t *)(intptr_t)(actor + 472),
-        *(float *)(intptr_t)(actor + 440), *(float *)(intptr_t)(actor + 444),
-        *(float *)(intptr_t)(actor + 448), *(float *)(intptr_t)(actor + 452),
-        camera ? *(float *)(intptr_t)(camera + 72) : 0,
-        camera ? *(float *)(intptr_t)(camera + 76) : 0,
-        camera ? *(float *)(intptr_t)(camera + 80) : 0,
-        camera ? *(float *)(intptr_t)(camera + 84) : 0, xy_bits[0], xy_bits[1]);
-    retdec_trace(message);
-}
-
-/* ActorManager::Update keeps animation advancement and resource movement in
-   the same order as the original 4641D0 call. */
-static int32_t retdec_actor_manager_update(int32_t manager, int32_t camera)
-{
-    int32_t actors;
-    int32_t count;
-    int32_t update_mask;
-    int32_t index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 16)
-        retdec_trace_i32("actor-manager:update-entry", manager);
-    retdec_actor_manager_refresh(manager);
-    if (manager == 0)
-        return 0;
-
-    /* The original 4641D0 refreshes the vector, updates controller-owned
-       actors, then refreshes once more before stepping the visible actors. */
-    function_462e80(manager);
-    retdec_actor_manager_refresh(manager);
-
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    update_mask = *(int32_t *)(intptr_t)(manager + 64);
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor-manager:update-count", count);
-        retdec_trace_i32("actor-manager:update-mask", update_mask);
-    }
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        retdec_trace_actor_window_state(1, actor, update_mask);
-        retdec_trace_player_state("before-script", actor, camera);
-        if (actor != 0 &&
-            (*(unsigned char *)(intptr_t)(actor + 40) != 0 ||
-             retdec_actor_activate_if_visible(actor, camera, 64.0f)) &&
-            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
-            retdec_actor_tick(actor);
-        retdec_trace_actor_window_state(2, actor, update_mask);
-        retdec_trace_player_state("after-script", actor, camera);
-    }
-
-    /* 464285 refreshes after callbacks, which can create or release actors. */
-    retdec_actor_manager_refresh(manager);
-    actors = *(int32_t *)(intptr_t)(manager + 100);
-    count = *(int32_t *)(intptr_t)(manager + 116);
-    function_469740();
-    for (index = 0; actors != 0 && index < count; ++index) {
-        int32_t actor = *(int32_t *)(intptr_t)(actors + index * 4);
-
-        if (actor != 0 &&
-            *(unsigned char *)(intptr_t)(actor + 40) != 0 &&
-            (*(int32_t *)(intptr_t)(actor + 232) & update_mask) != 0)
-            function_45ec60(actor);
-        retdec_trace_actor_window_state(3, actor, update_mask);
-        retdec_trace_player_state("after-motion", actor, camera);
-    }
-    return count;
-}
-
-static int32_t retdec_actor_render(int32_t actor, int32_t camera)
-{
-    int32_t frame;
-    float half_extent;
-    float camera_left;
-    float camera_top;
-    float camera_right;
-    float camera_bottom;
-    float depth_scale;
-    float pivot_x;
-    float pivot_y;
-    float scale_x;
-    float scale_y;
-    float angle;
-    float translate_x;
-    float translate_y;
-    float camera_offset_x = 0.0f;
-    float camera_offset_y = 0.0f;
-    float x[4];
-    float y[4];
-    float z[4];
-    int32_t color;
-    int32_t index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (actor == 0)
-        return 0;
-    frame = *(int32_t *)(intptr_t)(actor + 204);
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:render-actor", actor);
-        retdec_trace_i32("actor:render-id",
-                         *(int32_t *)(intptr_t)(actor + 224));
-        retdec_trace_i32("actor:render-frame", frame);
-        retdec_trace_i32("actor:render-node",
-                         *(int32_t *)(intptr_t)(actor + 200));
-        retdec_trace_i32("actor:render-handle",
-                         frame != 0 ? *(int32_t *)(intptr_t)(frame + 4) : 0);
-        retdec_trace_i32("actor:render-active",
-                         *(int32_t *)(intptr_t)(actor + 40));
-        retdec_trace_i32("actor:render-visible",
-                         *(int32_t *)(intptr_t)(actor + 21));
-        retdec_trace_i32("actor:render-left",
-                         *(int32_t *)(intptr_t)(actor + 440));
-        retdec_trace_i32("actor:render-top",
-                         *(int32_t *)(intptr_t)(actor + 444));
-        retdec_trace_i32("actor:render-right",
-                         *(int32_t *)(intptr_t)(actor + 448));
-        retdec_trace_i32("actor:render-bottom",
-                         *(int32_t *)(intptr_t)(actor + 452));
-        retdec_trace_i32("actor:render-camera-left",
-                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 72) : 0);
-        retdec_trace_i32("actor:render-camera-top",
-                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 76) : 0);
-        retdec_trace_i32("actor:render-camera-right",
-                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 80) : 0);
-        retdec_trace_i32("actor:render-camera-bottom",
-                         camera != 0 ? *(int32_t *)(intptr_t)(camera + 84) : 0);
-    }
-    retdec_trace_star_state("render-entry",actor);
-    if (*(unsigned char *)(intptr_t)(actor + 40) == 0 ||
-        *(unsigned char *)(intptr_t)(actor + 21) == 0 || frame == 0 ||
-        *(int32_t *)(intptr_t)(frame + 4) == 0)
-        return 0;
-
-    half_extent = *(float32_t *)(intptr_t)(actor + 168) * 256.0f;
-    if (camera != 0) {
-        camera_left = *(float32_t *)(intptr_t)(camera + 72);
-        camera_top = *(float32_t *)(intptr_t)(camera + 76);
-        camera_right = *(float32_t *)(intptr_t)(camera + 80);
-        camera_bottom = *(float32_t *)(intptr_t)(camera + 84);
-        if (*(float32_t *)(intptr_t)(actor + 440) >
-                camera_right + half_extent ||
-            camera_left - half_extent >
-                *(float32_t *)(intptr_t)(actor + 448) ||
-            camera_bottom + half_extent <
-                *(float32_t *)(intptr_t)(actor + 444) ||
-            *(float32_t *)(intptr_t)(actor + 452) <
-                camera_top - half_extent)
-            return 0;
-        camera_offset_x = *(float32_t *)(intptr_t)(camera + 48) -
-            *(float32_t *)(intptr_t)(camera + 40) -
-            *(float32_t *)(intptr_t)(camera + 56);
-        camera_offset_y = *(float32_t *)(intptr_t)(camera + 52) -
-            *(float32_t *)(intptr_t)(camera + 44) -
-            *(float32_t *)(intptr_t)(camera + 60);
-    }
-
-    for (index = 0; index < 4; ++index) {
-        x[index] = *(float32_t *)(intptr_t)(frame + 128 + index * 12);
-        y[index] = *(float32_t *)(intptr_t)(frame + 132 + index * 12);
-        z[index] = *(float32_t *)(intptr_t)(frame + 136 + index * 12);
-    }
-
-    depth_scale = -*(float32_t *)(intptr_t)(actor + 272);
-    pivot_x = depth_scale *
-        (float)*(int16_t *)(intptr_t)(frame + 236);
-    pivot_y = (float)*(int16_t *)(intptr_t)(frame + 238);
-    for (index = 0; index < 4; ++index)
-        x[index] *= depth_scale;
-
-    scale_x = *(float32_t *)(intptr_t)(actor + 172) *
-        *(float32_t *)(intptr_t)(actor + 168);
-    scale_y = *(float32_t *)(intptr_t)(actor + 176) *
-        *(float32_t *)(intptr_t)(actor + 168);
-    for (index = 0; index < 4; ++index) {
-        x[index] = (x[index] - pivot_x) * scale_x + pivot_x;
-        y[index] = (y[index] - pivot_y) * scale_y + pivot_y;
-    }
-
-    angle = *(float32_t *)(intptr_t)(actor + 164) * depth_scale;
-    if (angle != 0.0f) {
-        /* Actor::Render calls 405320, whose trigonometric helpers take
-           degrees.  The script's rotate property uses the same units. */
-        float cosine = function_404130((float80_t)angle);
-        float sine = function_4040d0((float80_t)angle);
-        for (index = 0; index < 4; ++index) {
-            float old_x = x[index] - pivot_x;
-            float old_y = y[index] - pivot_y;
-            x[index] = old_x * cosine + pivot_x - old_y * sine;
-            y[index] = old_x * sine + pivot_y + old_y * cosine;
-        }
-    }
-
-    translate_x = *(float32_t *)(intptr_t)(actor + 156) * depth_scale +
-        *(float32_t *)(intptr_t)(actor + 240) - pivot_x + camera_offset_x;
-    translate_y = *(float32_t *)(intptr_t)(actor + 244) - pivot_y +
-        *(float32_t *)(intptr_t)(actor + 160) + camera_offset_y;
-    for (index = 0; index < 4; ++index) {
-        float x_coordinate = x[index] + translate_x;
-        float y_coordinate = y[index] + translate_y;
-        int32_t x_integral = (int32_t)x_coordinate;
-        int32_t y_integral = (int32_t)y_coordinate;
-        float computed_x;
-        float computed_y;
-
-        if ((float)x_integral > x_coordinate)
-            --x_integral;
-        if ((float)y_integral < y_coordinate)
-            ++y_integral;
-        computed_x = (float)x_integral;
-        computed_y = (float)y_integral;
-        *(float32_t *)(intptr_t)(frame + 176 + index * 12) =
-            computed_x;
-        *(float32_t *)(intptr_t)(frame + 180 + index * 12) =
-            computed_y;
-        *(float32_t *)(intptr_t)(frame + 184 + index * 12) = z[index];
-    }
-
-    color = *(int32_t *)(intptr_t)(actor + 192) |
-        ((*(int32_t *)(intptr_t)(actor + 188) |
-          ((*(int32_t *)(intptr_t)(actor + 184) |
-            (*(int32_t *)(intptr_t)(actor + 180) << 8)) << 8)) << 8);
-    kinoko_actor_frame_color((void *)(intptr_t)frame, (uint32_t)color);
-    retdec_trace_star_state("draw",actor);
-    {
-        int32_t blend_mode = *(int32_t *)(intptr_t)(actor + 196);
-        int32_t render_state = 1;
-        int32_t result;
-
-        /* 4627C0 calls Actor::Render, then Actor::Draw.  The latter selects
-           the actor blend mode, submits the prepared quad, and restores the
-           normal state for the next actor. */
-        if (blend_mode == 2)
-            render_state = 2;
-        else if (blend_mode == 3)
-            render_state = 3;
-        else if (blend_mode == 4)
-            render_state = 4;
-
-        function_402770(render_state);
-        result = retdec_layout_submit_impl(frame, 0.0f, 0.0f);
-        function_402770(1);
-        if (trace_index <= 16)
-            retdec_trace_i32("actor:render-submit", result);
-    }
-    return 1;
-}
-
-// Address range: 0x4627c0 - 0x462804
-/* ActorManager::UpdateLayer.  RetDec dropped ECX and emitted an unbound
-   local for the ActorManager receiver.  Keep the implementation explicit so
-   the 469620 vtable thunk can reproduce the original thiscall sequence. */
-static int32_t function_4627c0_this(int32_t this_ptr, int32_t update_arg,
-                                    int32_t layer_index)
-{
-    int32_t layer;
-    int32_t begin;
-    int32_t end;
-    int32_t actors;
-    int32_t actor;
-    int32_t result = 0;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-update:manager", this_ptr);
-        retdec_trace_i32("actor-update:layer-index", layer_index);
-        retdec_trace_i32("actor-update:dirty", this_ptr != 0
-                         ? *(int32_t *)(intptr_t)(this_ptr + 116) : 0);
-    }
-    if (this_ptr == 0 || layer_index < 0 ||
-        *(int32_t *)(intptr_t)(this_ptr + 116) == 0)
-        return 0;
-
-    layer = *(int32_t *)(intptr_t)(this_ptr + 20 + 4 * layer_index);
-    if (layer == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(layer + 12);
-    end = *(int32_t *)(intptr_t)(layer + 16);
-    actors = *(int32_t *)(intptr_t)(this_ptr + 100);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-update:layer", layer);
-        retdec_trace_i32("actor-update:begin", begin);
-        retdec_trace_i32("actor-update:end", end);
-        retdec_trace_i32("actor-update:actors", actors);
-    }
-    if (actors == 0 || begin < 0 || end < begin)
-        return 0;
-
-    while (begin < end) {
-        actor = *(int32_t *)(intptr_t)(actors + 4 * begin);
-        if (actor != 0) {
-            result = retdec_actor_render(actor, update_arg);
-            if (trace_index <= 32)
-                retdec_trace_i32("actor-update:actor", actor);
-        }
-        ++begin;
-    }
-    return result;
-}
-
-
-
-
-
-// Address range: 0x462910 - 0x462963
-
-
-// Address range: 0x462970 - 0x4629c7
-
-
-
-// Address range: 0x462ce0 - 0x462e3e
-static int32_t retdec_actor_collision_callback(int32_t actor, int32_t other) {
-    int32_t argument[3];
-    int32_t vm = *(int32_t *)(intptr_t)(actor + 120);
-    int32_t base = sq_gettop(kinoko_vm(vm));
-    int32_t result;
-    retdec_trace_invalid_actor("before-collision",actor);
-    function_4a9500_this(argument, other + 44);
-    result = function_45e020_this(actor + 120, (int32_t)(intptr_t)argument,
-                                  argument[1], argument[2]);
-    retdec_trace_invalid_actor("after-collision",actor);
-    if (result < 0) {
-        retdec_trace("actor:collision-callback-failed");
-        sq_settop(kinoko_vm(vm), (SQInteger)(base));
-        /* Original 462D9C/462E3E clears a failing callback before continuing. */
-        kinoko_actor_set_collision_callback(actor, NULL, (int32_t)(intptr_t)&g16, g483, g484);
-    }
-    return result;
-}
-
-int32_t function_462ce0(int32_t first, int32_t second) {
-    int32_t result = 0;
-    if ((*(int32_t *)(intptr_t)(second + 320) &
-         *(int32_t *)(intptr_t)(first + 324) |
-         *(int32_t *)(intptr_t)(second + 324) &
-         *(int32_t *)(intptr_t)(first + 320)) == 0 ||
-        !function_4045c0(first + 440, second + 440))
-        return 0;
-
-    if ((*(int32_t *)(intptr_t)(first + 324) &
-         *(int32_t *)(intptr_t)(second + 320)) != 0 &&
-        function_4a9a30_this(first + 136) == 0x08000100)
-        result = retdec_actor_collision_callback(first, second);
-    /* The first callback may change masks; original 462DEA reads them again. */
-    if ((*(int32_t *)(intptr_t)(first + 320) &
-         *(int32_t *)(intptr_t)(second + 324)) != 0 &&
-        function_4a9a30_this(second + 136) == 0x08000100)
-        result = retdec_actor_collision_callback(second, first);
-    return result;
-}
-
-
-// Address range: 0x462e80 - 0x462f21
-int32_t function_462e80(int32_t manager) {
-    int32_t count = *(int32_t *)(intptr_t)(manager + 116);
-    int32_t *actors = *(int32_t **)(intptr_t)(manager + 100);
-    int32_t *candidates = *(int32_t **)(intptr_t)(manager + 124);
-    int32_t candidate_count = 0;
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t actor = actors[index];
-        if (*(unsigned char *)(intptr_t)(actor + 40) != 0 &&
-            (*(int32_t *)(intptr_t)(actor + 320) |
-             *(int32_t *)(intptr_t)(actor + 324)) != 0)
-            candidates[candidate_count++] = actor;
-    }
-    for (int32_t first = 0; first < candidate_count; ++first)
-        for (int32_t second = first + 1; second < candidate_count; ++second)
-            function_462ce0(candidates[first], candidates[second]);
-    return candidate_count;
-}
-
-// Address range: 0x462f30 - 0x462f76
-static int32_t function_462f30_this(int32_t manager, int32_t actor) {
-    int32_t result = 0;
-    int32_t actors = *(int32_t *)(intptr_t)(manager + 100);
-    for (uint32_t i = 0; i < *(uint32_t *)(intptr_t)(manager + 116); ++i) {
-        int32_t other = *(int32_t *)(intptr_t)(actors + 4 * i);
-        if (*(uint8_t *)(intptr_t)(other + 40) && other != actor)
-            result = function_462ce0(actor, other);
-    }
-    return result;
-}
-
-int32_t function_462f30(int32_t actor) {
-    return function_462f30_this((int32_t)(intptr_t)g_retdec_actor_manager_state, actor);
-}
-
-
-
-
-/* ActorManager::ResetPriority removes the old node and inserts it again
- * using the changed actor priority. */
-static int32_t function_463cf0_this(int32_t manager_ptr, int32_t actor_ptr)
-{
-    int32_t old_node;
-    int32_t erased;
-    int32_t actor_source;
-    int32_t node;
-    int32_t inserted[2] = { 0, 0 };
-
-    if (manager_ptr == 0 || actor_ptr == 0)
-        return 0;
-    old_node = *(int32_t *)(intptr_t)(actor_ptr + 16);
-    if (old_node != 0) {
-        erased = 0;
-        function_463280_this(manager_ptr + 84,
-                             (int32_t)(intptr_t)&erased, old_node);
-        *(int32_t *)(intptr_t)(actor_ptr + 16) = 0;
-    }
-    actor_source = actor_ptr;
-    node = function_463210_this(manager_ptr + 84,
-                                (int32_t)(intptr_t)&actor_source);
-    if (node == 0 || function_463610_this(
-            manager_ptr + 84, (int32_t)(intptr_t)inserted, node, 0) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(actor_ptr + 16) = inserted[0];
-    *(char *)(intptr_t)(manager_ptr + 120) = 1;
-    return (int32_t)(intptr_t)inserted;
-}
-
-
-
-// Address range: 0x4636e0 - 0x46372d
-
-
-// Address range: 0x463730 - 0x4637f2
-int32_t function_463730(int32_t tree) {
-    int32_t manager = tree - 84;
-    int32_t sentinel = *(int32_t *)(intptr_t)(tree + 4);
-    int32_t node, root;
-    if (sentinel == 0)
-        return 0;
-    node=kinoko_priority_first(tree);
-    while(node!=sentinel) {
-        int32_t actor=kinoko_priority_value(node);
-        int32_t next=kinoko_priority_next(tree,node);
-        /* 463747..46375B releases the handle when the tree drops its last owner. */
-        if (actor != 0 && --*(int32_t *)(intptr_t)(actor + 8) == 0)
-            function_46a6f0_this(*(int32_t *)(intptr_t)(manager + 4),
-                                 (uint32_t)*(int32_t *)(intptr_t)(actor + 12));
-        node = next;
-    }
-    kinoko_priority_clear(tree);
-    return sentinel;
-}
-
-// Address range: 0x463800 - 0x463819
-static int32_t function_463800_this(int32_t this_ptr) {
-    int32_t result;
-
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 116) = 0;
-    result = function_463730(this_ptr + 84);
-    *(char *)(intptr_t)(this_ptr + 120) = 1;
-    return result;
-}
-
-
-// Address range: 0x4638b0 - 0x4638ef
-
-
-
-/* ActorManager::Init with the original global object supplied explicitly. */
-static int32_t function_463af0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-
-    *(int32_t *)(intptr_t)(this_ptr + 64) = -1;
-    *(int32_t *)(intptr_t)(this_ptr + 116) = 0;
-    while (kinoko_actor_owner_list_size(this_ptr) < 512) {
-        if (function_46aa60_this(this_ptr) == 0)
-            break;
-    }
-    kinoko_actor_owner_list_clear(this_ptr);
-    return 1;
-}
-
-
-/* ActorManager::CreateActor with the original ECX receiver made explicit. */
-static int32_t function_463b40_this(
-    int32_t manager_ptr, int32_t first_vtable,
-    int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data,
-    int32_t init_source)
-{
-    int32_t handle[2] = { 0, 0 };
-    int32_t actor;
-    int32_t node;
-    int32_t inserted[2] = { 0, 0 };
-    int32_t handle_manager;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:manager", manager_ptr);
-        retdec_trace_i32("actor-create:handle-manager",
-                         manager_ptr != 0
-                             ? *(int32_t *)(intptr_t)(manager_ptr + 4) : 0);
-        retdec_trace_i32("actor-create:first-type", first_type);
-        retdec_trace_i32("actor-create:first-data", first_data);
-        retdec_trace_i32("actor-create:second-type", second_type);
-        retdec_trace_i32("actor-create:second-data", second_data);
-    }
-    if (manager_ptr == 0)
-        return 0;
-    handle_manager = *(int32_t *)(intptr_t)(manager_ptr + 4);
-    actor = function_46ab10_this(handle_manager,
-                                 (int32_t)(intptr_t)handle);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:handle-index", handle[0]);
-        retdec_trace_i32("actor-create:handle-generation", handle[1]);
-        retdec_trace_i32("actor-create:actor", actor);
-    }
-    if (actor == 0)
-        return 0;
-
-    *(int32_t *)(intptr_t)(actor + 12) = handle[0];
-    *(int32_t *)(intptr_t)(actor + 8) = 1;
-    if (init_source != 0)
-        kinoko_actor_set_init_data(actor, init_source);
-
-    if (!function_45e5e0_this(actor, manager_ptr,
-                              first_vtable, first_type, first_data,
-                              x, y, z,
-                              second_vtable, second_type, second_data))
-        return 0;
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:post-init-node",
-                         *(int32_t *)(intptr_t)(actor + 200));
-        retdec_trace_i32("actor:post-init-frame",
-                         *(int32_t *)(intptr_t)(actor + 204));
-        retdec_trace_i32("actor:post-init-active",
-                         *(int32_t *)(intptr_t)(actor + 40));
-        retdec_trace_i32("actor:post-init-id",
-                         *(int32_t *)(intptr_t)(actor + 224));
-    }
-
-    node = function_463210_this(manager_ptr + 84,
-                                (int32_t)(intptr_t)&actor);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor-create:priority-node", node);
-    if (node == 0 || function_463610_this(manager_ptr + 84,
-                                          (int32_t)(intptr_t)inserted,
-                                          node, 0) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(actor + 16) = inserted[0];
-    *(char *)(intptr_t)(manager_ptr + 120) = 1;
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:priority-index", inserted[0]);
-        retdec_trace_i32("actor-create:tree-count",
-                         *(int32_t *)(intptr_t)(manager_ptr + 92));
-        retdec_trace_i32("actor-create:tree-sentinel",
-                         *(int32_t *)(intptr_t)(manager_ptr + 88));
-        retdec_trace_i32("actor-create:tree-root",
-                         kinoko_priority_first(manager_ptr+84));
-        retdec_trace_i32("actor-create:success", actor);
-    }
-    return actor;
-}
-
-
-// Address range: 0x463e60 - 0x4641c9
-int32_t function_463e60(int32_t manager, int32_t layout, int32_t environment) {
-    int32_t count;
-    int32_t created = 0;
-    if (layout == 0 || *(int32_t *)(intptr_t)(layout + 312) == 0)
-        return 0;
-    count = (*(int32_t *)(intptr_t)(layout + 268) -
-             *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    retdec_trace_i32("actor:map-records", count);
-
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t record = retdec_map_record_at(layout, index);
-        int32_t closure[3];
-        int32_t id = *(int32_t *)(intptr_t)record;
-        int32_t init_source = 0;
-        float x, y;
-        char name[256];
-        struct retdec_mcd_chip *chip;
-
-        sprintf_s(name, sizeof(name), "Init%04x", (unsigned int)id);
-        function_4aa3a0_this(environment, (int32_t)(intptr_t)closure, name);
-        if (closure[1] != 0x08000100) {
-            function_4a9d70_this((int32_t)(intptr_t)closure);
-            continue;
-        }
-
-        x = (float)*(int32_t *)(intptr_t)(record + 4);
-        y = (float)*(int32_t *)(intptr_t)(record + 8);
-        chip = retdec_mcd_find_chip(retdec_map_chip_data(layout), (uint32_t)id);
-        if (chip != NULL) {
-            /* 463FD4..464049 uses signed MCD dimensions and flag 0x10000. */
-            x = (float)((double)x + retdec_mcd_i16(chip->bytes + 12) * 0.5 + 1.0);
-            y = (float)((double)y + retdec_mcd_i16(chip->bytes + 14) *
-                ((retdec_mcd_u32(chip->bytes + 16) & 0x10000u) ? 0.5 : 1.0));
-            init_source = (int32_t)(intptr_t)chip->bytes;
-        }
-
-        if (function_463b40_this(manager, closure[0], closure[1], closure[2],
-                x, y, -1.0f, (int32_t)(intptr_t)&g16, 0x05000002, id,
-                init_source) != 0)
-            ++created;
-        function_4a9d70_this((int32_t)(intptr_t)closure);
-    }
-    retdec_trace_i32("actor:map-created", created);
-    return created;
-}
-
-
-static int32_t function_4641d0_this(int32_t this_ptr, int32_t *a1) {
-    return retdec_actor_manager_update(this_ptr, (int32_t)(intptr_t)a1);
-}
-
-
-
-// Address range: 0x464e20 - 0x464f7f
-int32_t function_464e20(int32_t this_ptr) {
-    return kinoko_clear_actor_manager(this_ptr);
-}
-
-/* The generated 0x464F80 body lost every indirect reader call, several
-   vector receivers, and the texture-manager receiver.  Rebuild the same
-   stream directly at this boundary so the native objects consumed by Actor
-   and the renderer are populated from the original .pat records. */
-struct retdec_pat_frame_fields {
-    uint32_t resource_index;
-    int16_t sprite_x;
-    int16_t sprite_y;
-    int16_t source_width;
-    int16_t source_height;
-    int16_t offset_x;
-    int16_t offset_y;
-    int16_t duration;
-    unsigned char type;
-    int16_t auxiliary_mode;
-    unsigned short auxiliary_values[5];
-    unsigned char auxiliary_bytes[4];
-};
-
-static int32_t retdec_pat_read_u8(int32_t reader, unsigned char *value)
-{
-    return retdec_reader_read_exact(reader, value, 1);
-}
-
-static int32_t retdec_pat_read_u16(int32_t reader, unsigned short *value)
-{
-    return retdec_reader_read_exact(reader, value, 2);
-}
-
-static int32_t retdec_pat_read_i16(int32_t reader, int16_t *value)
-{
-    unsigned short raw;
-
-    if (!retdec_pat_read_u16(reader, &raw))
-        return 0;
-    memcpy(value, &raw, sizeof(raw));
-    return 1;
-}
-
-static int32_t retdec_pat_read_u32(int32_t reader, uint32_t *value)
-{
-    return retdec_reader_read_exact(reader, value, 4);
-}
-
-static int32_t retdec_pat_skip_bytes(int32_t reader, uint32_t size)
-{
-    unsigned char buffer[256];
-
-    while (size != 0) {
-        uint32_t chunk = size < sizeof(buffer) ? size : sizeof(buffer);
-        if (!retdec_reader_read_exact(reader, buffer, chunk))
-            return 0;
-        size -= chunk;
-    }
-    return 1;
-}
-
-static int32_t retdec_pat_tree_put(int32_t manager,int32_t key,int32_t value) {
-    int32_t* map=(int32_t*)(intptr_t)(manager+40);
-    if(!*map) *map=kinoko_integer_map_create();
-    int32_t result=kinoko_integer_map_put(*map,key,value);
-    *(int32_t*)(intptr_t)(manager+44)=kinoko_integer_map_size(*map);
-    return result;
-}
-
-static int32_t retdec_pat_append_resource(int32_t manager,int32_t handle) {
-    kinoko_integer_vector_append(manager+68,handle);return 1;
-}
-
-static int32_t retdec_pat_load_texture(const char *directory,
-                                       const char *resource_name)
-{
-    char path[MAX_PATH];
-    size_t length;
-
-    if (directory == NULL || resource_name == NULL)
-        return 0;
-    retdec_trace_squirrel_name("actor:pat-texture", (int32_t)(intptr_t)
-                               resource_name);
-    path[0] = 0;
-    if (strcpy_s(path, sizeof(path), directory) != 0)
-        return 0;
-    length = strlen(path);
-    if (length != 0 && path[length - 1] != '/' && path[length - 1] != '\\') {
-        if (length + 1 >= sizeof(path))
-            return 0;
-        path[length++] = '\\';
-        path[length] = 0;
-    }
-    if (strcat_s(path, sizeof(path), resource_name) != 0)
-        return 0;
-    return kinoko_texture_acquire(path);
-}
-
-static int32_t retdec_pat_build_frame(
-    int32_t manager, int32_t frame, const struct retdec_pat_frame_fields *fields,
-    uint32_t resource_base)
-{
-    int32_t *resource_begin;
-    int32_t *resource_end;
-    uint32_t resource_count;
-    int32_t handle = 0;
-    uint32_t texture_width = 0;
-    uint32_t texture_height = 0;
-    float source_width;
-    float source_height;
-    static volatile LONG trace_count;
-    LONG trace_index;
-
-    if (manager == 0 || frame == 0 || fields == NULL)
-        return 0;
-    trace_index = InterlockedIncrement(&trace_count);
-    memset((void *)(intptr_t)frame, 0, 248u);
-    *(int32_t *)(intptr_t)frame = (int32_t)(intptr_t)&g407;
-    *(int16_t *)(intptr_t)(frame + 232) = fields->sprite_x;
-    *(int16_t *)(intptr_t)(frame + 234) = fields->sprite_y;
-    *(int16_t *)(intptr_t)(frame + 236) = fields->offset_x;
-    *(int16_t *)(intptr_t)(frame + 238) = fields->offset_y;
-    *(int16_t *)(intptr_t)(frame + 240) = fields->duration;
-    *(uint32_t *)(intptr_t)(frame + 24) = 0xffffffffu;
-    *(uint32_t *)(intptr_t)(frame + 52) = 0xffffffffu;
-    *(uint32_t *)(intptr_t)(frame + 80) = 0xffffffffu;
-    *(uint32_t *)(intptr_t)(frame + 108) = 0xffffffffu;
-
-    resource_begin=(int32_t*)(intptr_t)kinoko_integer_vector_data(manager+68);
-    resource_count=kinoko_integer_vector_size(manager+68);
-    if (fields->resource_index < resource_count &&
-        resource_base <= resource_count - fields->resource_index)
-        handle = resource_begin[resource_base + fields->resource_index];
-    if (trace_index <= 48) {
-        retdec_trace_i32("actor:pat-frame-resource", (int32_t)
-                         fields->resource_index);
-        retdec_trace_i32("actor:pat-frame-sprite-x", fields->sprite_x);
-        retdec_trace_i32("actor:pat-frame-sprite-y", fields->sprite_y);
-        retdec_trace_i32("actor:pat-frame-width", fields->source_width);
-        retdec_trace_i32("actor:pat-frame-height", fields->source_height);
-        retdec_trace_i32("actor:pat-frame-offset-x", fields->offset_x);
-        retdec_trace_i32("actor:pat-frame-offset-y", fields->offset_y);
-        retdec_trace_i32("actor:pat-frame-handle", handle);
-    }
-    if (handle > 0 && (uint32_t)handle < RETDEC_ACT_TEXTURE_SLOT_COUNT) {
-        texture_width = g_retdec_act_texture_slots[(uint32_t)handle].width;
-        texture_height = g_retdec_act_texture_slots[(uint32_t)handle].height;
-    }
-
-    if (handle != 0 && texture_width != 0 && texture_height != 0) {
-        source_width = (float)fields->source_width;
-        source_height = (float)fields->source_height;
-        *(int32_t *)(intptr_t)(frame + 4) = handle;
-        *(float32_t *)(intptr_t)(frame + 120) = (float)texture_width;
-        *(float32_t *)(intptr_t)(frame + 124) = (float)texture_height;
-        *(float32_t *)(intptr_t)(frame + 224) =
-            source_width / (float)texture_width;
-        *(float32_t *)(intptr_t)(frame + 228) =
-            source_height / (float)texture_height;
-        *(float32_t *)(intptr_t)(frame + 28) =
-            (float)fields->sprite_x / (float)texture_width;
-        *(float32_t *)(intptr_t)(frame + 32) =
-            (float)fields->sprite_y / (float)texture_height;
-        *(float32_t *)(intptr_t)(frame + 56) =
-            *(float32_t *)(intptr_t)(frame + 28) +
-            *(float32_t *)(intptr_t)(frame + 224);
-        *(float32_t *)(intptr_t)(frame + 60) =
-            *(float32_t *)(intptr_t)(frame + 32);
-        *(float32_t *)(intptr_t)(frame + 84) =
-            *(float32_t *)(intptr_t)(frame + 28);
-        *(float32_t *)(intptr_t)(frame + 88) =
-            *(float32_t *)(intptr_t)(frame + 32) +
-            *(float32_t *)(intptr_t)(frame + 228);
-        *(float32_t *)(intptr_t)(frame + 112) =
-            *(float32_t *)(intptr_t)(frame + 56);
-        *(float32_t *)(intptr_t)(frame + 116) =
-            *(float32_t *)(intptr_t)(frame + 88);
-        *(float32_t *)(intptr_t)(frame + 140) = source_width;
-        *(float32_t *)(intptr_t)(frame + 156) = source_height;
-        *(float32_t *)(intptr_t)(frame + 164) = source_width;
-        *(float32_t *)(intptr_t)(frame + 168) = source_height;
-
-        /* sub_464F80 initializes the working quad, applies the PAT frame
-           transform, then copies the result back to the base quad. */
-        memcpy((void *)(intptr_t)(frame + 176),
-               (const void *)(intptr_t)(frame + 128), 48u);
-    }
-
-    if (fields->type == 2) {
-        int32_t auxiliary = (int32_t)(intptr_t)calloc(1u, 28u);
-        int32_t mode = fields->auxiliary_mode;
-        int index;
-
-        if (auxiliary == 0)
-            return 0;
-        if (mode >= 0 && mode <= 2)
-            mode += 1;
-        *(int32_t *)(intptr_t)auxiliary = mode;
-        for (index = 0; index < 4; ++index)
-            *(unsigned char *)(intptr_t)(auxiliary + 4 + index) =
-                fields->auxiliary_bytes[index];
-        *(float32_t *)(intptr_t)(auxiliary + 8) =
-            (float)fields->auxiliary_values[0] / 100.0f;
-        *(float32_t *)(intptr_t)(auxiliary + 12) =
-            (float)fields->auxiliary_values[1] / 100.0f;
-        *(float32_t *)(intptr_t)(auxiliary + 16) =
-            (float)fields->auxiliary_values[2];
-        *(float32_t *)(intptr_t)(auxiliary + 20) =
-            (float)fields->auxiliary_values[3];
-        *(float32_t *)(intptr_t)(auxiliary + 24) =
-            (float)fields->auxiliary_values[4];
-        *(int32_t *)(intptr_t)(frame + 244) = auxiliary;
-    }
-
-    if (handle != 0 && texture_width != 0 && texture_height != 0) {
-        float *x0 = (float *)(intptr_t)(frame + 176);
-        float *y0 = (float *)(intptr_t)(frame + 180);
-        float *z0 = (float *)(intptr_t)(frame + 184);
-        float *x1 = (float *)(intptr_t)(frame + 188);
-        float *y1 = (float *)(intptr_t)(frame + 192);
-        float *z1 = (float *)(intptr_t)(frame + 196);
-        float *x2 = (float *)(intptr_t)(frame + 200);
-        float *y2 = (float *)(intptr_t)(frame + 204);
-        float *z2 = (float *)(intptr_t)(frame + 208);
-        float *x3 = (float *)(intptr_t)(frame + 212);
-        float *y3 = (float *)(intptr_t)(frame + 216);
-        float *z3 = (float *)(intptr_t)(frame + 220);
-        float *x_values[4] = { x0, x1, x2, x3 };
-        float *y_values[4] = { y0, y1, y2, y3 };
-        float *z_values[4] = { z0, z1, z2, z3 };
-        int index;
-
-        if (fields->type == 0) {
-            for (index = 0; index < 4; ++index) {
-                *x_values[index] *= 2.0f;
-                *y_values[index] *= 2.0f;
-            }
-        } else if (fields->type == 2 && *(int32_t *)(intptr_t)(frame + 244) != 0) {
-            int32_t auxiliary_ptr =
-                *(int32_t *)(intptr_t)(frame + 244);
-            float scale_x = *(float *)(intptr_t)(auxiliary_ptr + 8);
-            float scale_y = *(float *)(intptr_t)(auxiliary_ptr + 12);
-            float roll_x = *(float *)(intptr_t)(auxiliary_ptr + 16);
-            float roll_y = *(float *)(intptr_t)(auxiliary_ptr + 20);
-            float roll_z = *(float *)(intptr_t)(auxiliary_ptr + 24);
-            float pivot_x = (float)fields->offset_x;
-            float pivot_y = (float)fields->offset_y;
-            float cosine;
-            float sine;
-
-            for (index = 0; index < 4; ++index)
-                *x_values[index] =
-                    (*x_values[index] - pivot_x) * scale_x + pivot_x;
-            for (index = 0; index < 4; ++index)
-                *y_values[index] =
-                    (*y_values[index] - pivot_y) * scale_y + pivot_y;
-
-            if (roll_z != 0.0f) {
-                cosine = function_404130(roll_z);
-                sine = function_4040d0(roll_z);
-                for (index = 0; index < 4; ++index) {
-                    float old_x = *x_values[index] - pivot_x;
-                    float old_y = *y_values[index] - pivot_y;
-                    *x_values[index] = old_x * cosine + pivot_x -
-                        old_y * sine;
-                    *y_values[index] = old_x * sine + pivot_y +
-                        old_y * cosine;
-                }
-            }
-            if (roll_y != 0.0f) {
-                cosine = function_404130(roll_y);
-                sine = function_4040d0(roll_y);
-                for (index = 0; index < 4; ++index) {
-                    float old_x = *x_values[index] - pivot_x;
-                    float old_z = *z_values[index];
-                    *x_values[index] = old_x * cosine + pivot_x -
-                        old_z * sine;
-                    *z_values[index] = old_x * sine + old_z * cosine;
-                }
-            }
-            if (roll_x != 0.0f) {
-                cosine = function_404130(roll_x);
-                sine = function_4040d0(roll_x);
-                for (index = 0; index < 4; ++index) {
-                    float old_y = *y_values[index] - pivot_y;
-                    float old_z = *z_values[index];
-                    *y_values[index] = old_y * cosine + pivot_y -
-                        old_z * sine;
-                    *z_values[index] = old_y * sine + old_z * cosine;
-                }
-            }
-
-            memcpy((void *)(intptr_t)(frame + 24),
-                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
-            memcpy((void *)(intptr_t)(frame + 52),
-                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
-            memcpy((void *)(intptr_t)(frame + 80),
-                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
-            memcpy((void *)(intptr_t)(frame + 108),
-                   (const void *)(intptr_t)(auxiliary_ptr + 4), 4u);
-        }
-
-        memcpy((void *)(intptr_t)(frame + 128),
-               (const void *)(intptr_t)(frame + 176), 48u);
-    }
-    return 1;
-}
-
-static int32_t retdec_pat_read_frame(int32_t reader, int32_t manager,
-                                      int32_t node, int32_t frame,
-                                      int32_t *duration_total,
-                                      uint32_t resource_base)
-{
-    struct retdec_pat_frame_fields fields;
-    unsigned char first_block_flag;
-    unsigned char first_block[16];
-    unsigned char block_count;
-    unsigned char plain_block_count;
-    unsigned char has_extra;
-    unsigned char byte_value;
-    uint32_t value32;
-    uint32_t index;
-
-    memset(&fields, 0, sizeof(fields));
-    if (!retdec_pat_read_u32(reader, &fields.resource_index) ||
-        !retdec_pat_read_i16(reader, &fields.sprite_x) ||
-        !retdec_pat_read_i16(reader, &fields.sprite_y) ||
-        !retdec_pat_read_i16(reader, &fields.source_width) ||
-        !retdec_pat_read_i16(reader, &fields.source_height) ||
-        !retdec_pat_read_i16(reader, &fields.offset_x) ||
-        !retdec_pat_read_i16(reader, &fields.offset_y) ||
-        !retdec_pat_read_i16(reader, &fields.duration) ||
-        !retdec_pat_read_u8(reader, &fields.type))
-        return 0;
-    if (fields.type == 2) {
-        if (!retdec_pat_read_i16(reader, &fields.auxiliary_mode))
-            return 0;
-        for (index = 0; index < 4; ++index) {
-            if (!retdec_pat_read_u8(reader, &fields.auxiliary_bytes[3 - index]))
-                return 0;
-        }
-        for (index = 0; index < 5; ++index) {
-            if (!retdec_pat_read_u16(reader, &fields.auxiliary_values[index]))
-                return 0;
-        }
-    }
-    for (index = 0; index < 20; ++index) {
-        unsigned short value16;
-        if (!retdec_pat_read_u16(reader, &value16))
-            return 0;
-    }
-    if (!retdec_pat_read_u8(reader, &byte_value) ||
-        !retdec_pat_read_u32(reader, &value32) ||
-        !retdec_pat_read_u32(reader, &value32) ||
-        !retdec_pat_read_u8(reader, &first_block_flag))
-        return 0;
-    if (first_block_flag != 0) {
-        if (!retdec_reader_read_exact(reader, first_block, sizeof(first_block)))
-            return 0;
-        if (*(unsigned char *)(intptr_t)(node + 25) == 0) {
-            *(unsigned char *)(intptr_t)(node + 25) = 1;
-            memcpy((void *)(intptr_t)(node + 28), first_block,
-                   sizeof(first_block));
-        }
-    }
-    if (!retdec_pat_read_u8(reader, &plain_block_count) ||
-        !retdec_pat_skip_bytes(reader, (uint32_t)plain_block_count * 16u) ||
-        !retdec_pat_read_u8(reader, &block_count))
-        return 0;
-    for (index = 0; index < block_count; ++index) {
-        if (!retdec_pat_skip_bytes(reader, 16) ||
-            !retdec_pat_read_u8(reader, &has_extra))
-            return 0;
-        if (has_extra != 0 && !retdec_pat_skip_bytes(reader, 16))
-            return 0;
-    }
-    for (index = 0; index < 3; ++index) {
-        if (!retdec_pat_read_u32(reader, &value32) ||
-            !retdec_pat_read_u32(reader, &value32))
-            return 0;
-    }
-    for (index = 0; index < 3; ++index) {
-        unsigned short value16;
-        if (!retdec_pat_read_u16(reader, &value16))
-            return 0;
-    }
-    if (!retdec_pat_build_frame(manager, frame, &fields, resource_base))
-        return 0;
-    if (duration_total != NULL)
-        *duration_total += fields.duration;
-    return 1;
-}
-
-/* Shared by the packaged loader and the graphics-free PAT contract test. */
-static int32_t retdec_pat_read_animations(int32_t reader_slot, int32_t manager,
-                                          uint32_t base_resource_count)
-{
-    uint32_t item_count, index, alias_count = 0;
-    int32_t (*aliases)[2] = NULL;
-    int32_t head = 0, tail = 0, pending_node = 0;
-    int32_t result = 0;
-
-    if (!retdec_pat_read_u32(reader_slot, &item_count) ||
-        item_count > 4096u)
-        goto cleanup;
-    if (item_count != 0) {
-        aliases = (int32_t (*)[2])calloc(item_count, sizeof(*aliases));
-        if (aliases == NULL)
-            goto cleanup;
-    }
-    for (index = 0; index < item_count; ++index) {
-        int32_t control;
-
-        if (!retdec_reader_read_exact(reader_slot, &control, 4))
-            goto cleanup;
-        if (control == -1) {
-            if (!retdec_reader_read_exact(reader_slot, aliases[alias_count],
-                                          sizeof(*aliases)))
-                goto cleanup;
-            ++alias_count;
-            continue;
-        } else {
-            unsigned short header0;
-            unsigned short header1;
-            unsigned char loop_flag;
-            uint32_t frame_count;
-            uint32_t frame_index;
-            int32_t node;
-            int32_t frames;
-            int32_t duration_total = 0;
-
-            if (!retdec_pat_read_u16(reader_slot, &header0) ||
-                !retdec_pat_read_u16(reader_slot, &header1) ||
-                !retdec_pat_read_u8(reader_slot, &loop_flag) ||
-                !retdec_pat_read_u32(reader_slot, &frame_count) ||
-                frame_count > 4096u)
-                goto cleanup;
-            node=kinoko_animation_create(frame_count);
-            if(!node) goto cleanup;
-            pending_node=node;
-            *(unsigned char *)(intptr_t)(node+24)=loop_flag;
-            frames=*(int32_t *)(intptr_t)(node+8);
-            for (frame_index = 0; frame_index < frame_count; ++frame_index) {
-                if (!retdec_pat_read_frame(
-                        reader_slot, manager, node,
-                        frames + (int32_t)((size_t)frame_index * 248u),
-                        &duration_total,
-                        base_resource_count))
-                    goto cleanup;
-            }
-            *(int32_t *)(intptr_t)(node + 44) = duration_total;
-            if (control == -2) {
-                if (tail == 0)
-                    goto cleanup;
-                /* 46537A..465382 links the previous tail back through the head. */
-                *(int32_t *)(intptr_t)tail = node;
-                *(int32_t *)(intptr_t)node = head;
-                *(int32_t *)(intptr_t)(node + 4) = tail;
-            } else {
-                if (retdec_pat_tree_put(manager, control, node) == 0)
-                    goto cleanup;
-                head = node;
-                *(int32_t *)(intptr_t)node = node;
-            }
-            kinoko_animation_adopt(manager+52,node);
-            tail = node;
-            pending_node = 0;
-        }
-    }
-    /* 465DA9..465E7B pops both alias lists from the back after reading all nodes. */
-    while (alias_count != 0) {
-        int32_t entry = 0;
-        --alias_count;
-        if (*(int32_t *)(intptr_t)(manager + 40) == 0)
-            continue;
-        function_4706c0_this(manager + 36, &entry, &aliases[alias_count][1]);
-        if (entry != *(int32_t *)(intptr_t)(manager + 40) &&
-            retdec_pat_tree_put(manager, aliases[alias_count][0],
-                *(int32_t *)(intptr_t)entry) == 0)
-            goto cleanup;
-    }
-    retdec_trace_i32("animation:items", (int32_t)item_count);
-    result = 1;
-
-cleanup:
-    if (pending_node != 0)
-        kinoko_animation_discard(pending_node);
-    free(aliases);
-    return result;
-}
-
-static int32_t retdec_pat_load_file(int32_t manager, const char *file_name,
-                                    const char *directory)
-{
-    int32_t reader_slot = 0;
-    uint32_t resource_count;
-    uint32_t index;
-    uint32_t base_resource_count;
-    int32_t *resource_begin;
-    int32_t *resource_end;
-    int32_t result = 0;
-    unsigned char header_byte;
-    unsigned short resource_count16;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (manager == 0 || file_name == NULL || directory == NULL)
-        return 0;
-    if (trace_index <= 32) {
-        retdec_trace_squirrel_name("actor:pat-path", (int32_t)(intptr_t)file_name);
-        retdec_trace_squirrel_name("actor:pat-directory", (int32_t)(intptr_t)directory);
-    }
-    if (!function_407370((int32_t)(intptr_t)&reader_slot, file_name))
-        return 0;
-    if (!retdec_pat_read_u8(reader_slot, &header_byte) ||
-        !retdec_pat_read_u16(reader_slot, &resource_count16))
-        goto cleanup;
-    resource_count = resource_count16;
-    base_resource_count = 0;
-    base_resource_count=kinoko_integer_vector_size(manager+68);
-    if (resource_count > 4096u)
-        goto cleanup;
-    for (index = 0; index < resource_count; ++index) {
-        char resource_name[129];
-        int32_t handle;
-
-        memset(resource_name, 0, sizeof(resource_name));
-        if (!retdec_reader_read_exact(reader_slot, resource_name, 128))
-            goto cleanup;
-        resource_name[128] = 0;
-        handle = retdec_pat_load_texture(directory, resource_name);
-        if (!retdec_pat_append_resource(manager, handle))
-            goto cleanup;
-    }
-    if (!retdec_pat_read_animations(reader_slot, manager, base_resource_count))
-        goto cleanup;
-    retdec_trace_i32("animation:header", header_byte);
-    retdec_trace_i32("animation:resources", (int32_t)resource_count);
-    retdec_trace_i32("animation:resource-base",
-                     (int32_t)base_resource_count);
-    result = 1;
-
-cleanup:
-    if (trace_index <= 32)
-        retdec_trace_i32("actor:pat-result", result);
-    retdec_destroy_reader((int32_t *)(intptr_t)reader_slot);
-    return result;
-}
-
-// Address range: 0x464f80 - 0x465f70
-int32_t function_464f80(int32_t a1, int32_t * a2) {
-    retdec_trace_i32("464f80:path", a1);
-    retdec_trace_squirrel_name("464f80:path-text", a1);
-    retdec_trace_i32("464f80:directory", (int32_t)(intptr_t)a2);
-    return retdec_pat_load_file(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state,
-        (const char *)(intptr_t)a1, (const char *)(intptr_t)a2);
-}
-
-// Address range: 0x465f70 - 0x46604e
 int32_t function_465f70(void) {
     return kinoko_clear_global_stages();
 }
-
-// Address range: 0x466050 - 0x466082
-
-
-// Address range: 0x466090 - 0x4660b7
-
-
-// Address range: 0x4660c0 - 0x4660f3
-
-
-// Address range: 0x466100 - 0x466262
-
 
 // Address range: 0x466270 - 0x466311
 int32_t function_466270(void) {
@@ -13288,33 +7573,7 @@ int32_t function_466270(void) {
 
 /* Camera global initialization with the original ECX receiver restored. */
 static int32_t function_466270_this(int32_t this_ptr) {
-    int32_t temporary[3] = { 0, 0, 0 };
-    int32_t result;
-
-    if (this_ptr == 0)
-        return 0;
-    memset((void *)(intptr_t)this_ptr, 0, sizeof(g_retdec_camera_state));
-    result = function_4a90c0(temporary, g611);
-    function_4a95c0_this(this_ptr, result);
-    function_4a9d70_this((int32_t)(intptr_t)temporary);
-    function_4a9bb0_this(this_ptr, this_ptr);
-    result = function_4a9840_this((int32_t)(intptr_t)&g722,
-                                  "camera", this_ptr);
-    *(float32_t *)(intptr_t)(this_ptr + 44) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 40) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 52) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 48) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 84) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 80) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 76) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 72) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 56) = 0.0f;
-    *(float32_t *)(intptr_t)(this_ptr + 60) = 0.0f;
-    retdec_trace_i32("actor:camera-init-left",
-                     *(int32_t *)(intptr_t)(this_ptr + 72));
-    retdec_trace_i32("actor:camera-init-right",
-                     *(int32_t *)(intptr_t)(this_ptr + 80));
-    return result;
+    return kinoko_camera_initialize((KinokoCamera *)(intptr_t)this_ptr);
 }
 
 
@@ -13324,36 +7583,8 @@ static int32_t function_466270_this(int32_t this_ptr) {
 
 // Address range: 0x4664a0 - 0x466536
 int32_t function_4664a0_this(int32_t result, int32_t a1) {
-    // 0x4664a0
-    function_4a95c0_this(result, a1);
-    *(int32_t *)(result + 12) = *(int32_t *)(a1 + 12);
-    function_4a95c0_this(result + 16, a1 + 16);
-    function_4a95c0_this(result + 28, a1 + 28);
-    *(int32_t *)(result + 40) = *(int32_t *)(a1 + 40);
-    *(int32_t *)(result + 44) = *(int32_t *)(a1 + 44);
-    *(int32_t *)(result + 48) = *(int32_t *)(a1 + 48);
-    *(int32_t *)(result + 52) = *(int32_t *)(a1 + 52);
-    *(int32_t *)(result + 56) = *(int32_t *)(a1 + 56);
-    *(int32_t *)(result + 60) = *(int32_t *)(a1 + 60);
-    *(int32_t *)(result + 64) = *(int32_t *)(a1 + 64);
-    *(int32_t *)(result + 68) = *(int32_t *)(a1 + 68);
-    int32_t * v1 = (int32_t *)(a1 + 72);
-    int32_t * v2 = (int32_t *)(result + 72);
-    *v2 = *v1;
-    int32_t * v3 = (int32_t *)(a1 + 76);
-    int32_t * v4 = (int32_t *)(result + 76);
-    *v4 = *v3;
-    int32_t * v5 = (int32_t *)(a1 + 80);
-    int32_t * v6 = (int32_t *)(result + 80);
-    *v6 = *v5;
-    int32_t * v7 = (int32_t *)(a1 + 84);
-    int32_t * v8 = (int32_t *)(result + 84);
-    *v8 = *v7;
-    *v2 = *v1;
-    *v4 = *v3;
-    *v6 = *v5;
-    *v8 = *v7;
-    return result;
+    return (int32_t)(intptr_t)kinoko_camera_copy((KinokoCamera *)(intptr_t)result,
+        (KinokoCamera *)(intptr_t)a1);
 }
 
 // Address range: 0x466540 - 0x466551
@@ -13388,69 +7619,8 @@ int32_t function_466540(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x4681e0 - 0x468297
-static int32_t function_4681e0_this(int32_t state, int32_t actor) {
-    int32_t count = 0;
-    int32_t begin = *(int32_t *)(intptr_t)(state + 4);
-    int32_t end = *(int32_t *)(intptr_t)(state + 8);
-    uint32_t flags = 0;
-    KinokoCollisionRecord *records;
-
-    for (int32_t entry = begin; entry != end; entry += 4) {
-        int32_t layout = *(int32_t *)(intptr_t)entry;
-        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-        if (*(uint8_t *)(intptr_t)(layer + 140)) {
-            /* GetChipFlag uses the unexpanded actor rectangle, unlike motion's 24-pixel query. */
-            if (!retdec_collision_query_rect(state, layout,
-                (int32_t *)(intptr_t)(actor + 480 + entry - begin),
-                (int32_t)*(float *)(intptr_t)(actor + 440),
-                (int32_t)*(float *)(intptr_t)(actor + 444),
-                (int32_t)*(float *)(intptr_t)(actor + 448),
-                (int32_t)*(float *)(intptr_t)(actor + 452), &count))
-                return 0;
-        }
-    }
-    records = *(KinokoCollisionRecord **)(intptr_t)(state + 36);
-    for (int32_t i = 0; i < count; ++i) {
-        if (records[i].chip != NULL)
-            flags |= *(const uint32_t *)(records[i].chip + 16);
-    }
-    return (int32_t)flags;
-}
 
 
-// Address range: 0x4682a0 - 0x4683b2
-static int32_t function_4682a0_this(int32_t state, int32_t actor,
-    float32_t left, float32_t top, float32_t right, float32_t bottom) {
-    int32_t count = 0;
-    int32_t begin = *(int32_t *)(intptr_t)(state + 4);
-    int32_t end = *(int32_t *)(intptr_t)(state + 8);
-    int32_t actors = *(int32_t *)(intptr_t)(state + 68);
-    int32_t actor_count = *(int32_t *)(intptr_t)(state + 84);
-
-    for (int32_t entry = begin; entry != end; entry += 4) {
-        int32_t layout = *(int32_t *)(intptr_t)entry;
-        int32_t layer = *(int32_t *)(intptr_t)(layout + 312);
-        if (*(uint8_t *)(intptr_t)(layer + 140)) {
-            if (!retdec_collision_query_rect(state, layout,
-                (int32_t *)(intptr_t)(actor + 480 + entry - begin),
-                (int32_t)left, (int32_t)top, (int32_t)right, (int32_t)bottom,
-                &count))
-                return 0;
-            if (count > 0)
-                return 1;
-        }
-    }
-    /* 468343..468385 includes touching edges and excludes only the receiver. */
-    for (int32_t i = 0; i < actor_count; ++i) {
-        int32_t other = *(int32_t *)(intptr_t)(actors + 4 * i);
-        if (*(float32_t *)(intptr_t)(other + 448) >= left &&
-            *(float32_t *)(intptr_t)(other + 440) <= right &&
-            *(float32_t *)(intptr_t)(other + 452) >= top &&
-            *(float32_t *)(intptr_t)(other + 444) <= bottom && other != actor)
-            return 1;
-    }
-    return 0;
-}
 
 
 // Address range: 0x468620 - 0x468788
@@ -13459,639 +7629,97 @@ int32_t function_468620(void) {
 }
 
 static int32_t function_468620_this(int32_t this_ptr) {
-    int32_t *source_pairs;
-    int32_t *items;
-    int32_t root;
-    uint32_t pair_count;
-    uint32_t i;
-
-    if (this_ptr == 0)
-        return 0;
-
-    source_pairs = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 52);
-    if (source_pairs != NULL) {
-        int32_t begin = *(int32_t *)(this_ptr + 4);
-        int32_t end = *(int32_t *)(this_ptr + 8);
-        pair_count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
-        for (i = 0; i < pair_count; ++i) {
-            int32_t pair[2] = { 0, 0 };
-            int32_t *member = (int32_t *)(intptr_t)(source_pairs + 2 * i);
-            int32_t *actor_slot;
-            int32_t actor;
-            int32_t config;
-
-            kinoko_native_weak_pair_lock((int32_t)(intptr_t)member, pair);
-            actor_slot = (int32_t *)(intptr_t)pair[0];
-            if (actor_slot != NULL) {
-                actor = *actor_slot;
-                if (actor != 0) {
-                    *(float32_t *)(intptr_t)(actor + 248) =
-                        *(float32_t *)(intptr_t)(actor + 240);
-                    *(float32_t *)(intptr_t)(actor + 252) =
-                        *(float32_t *)(intptr_t)(actor + 244);
-                    items = (int32_t *)(intptr_t)*(int32_t *)(this_ptr + 4);
-                    if (items != NULL) {
-                        int32_t item = items[i];
-                        config = item != 0
-                            ? *(int32_t *)(intptr_t)(item + 312) : 0;
-                        if (config != 0) {
-                            *(float32_t *)(intptr_t)(actor + 240) =
-                                *(float32_t *)(intptr_t)(config + 144);
-                            *(float32_t *)(intptr_t)(actor + 244) =
-                                *(float32_t *)(intptr_t)(config + 148);
-                        }
-                    }
-                }
-            }
-            kinoko_native_release_strong(pair[1]);
-        }
-    }
-
-    root = *(int32_t *)(this_ptr + 0);
-    if (root == 0) {
-        *(int32_t *)(this_ptr + 84) = 0;
-        return 0;
-    }
-
-    pair_count = (uint32_t)*(int32_t *)(root + 116);
-    *(int32_t *)(this_ptr + 84) = 0;
-    if (pair_count == 0)
-        return root;
-
-    {
-        int32_t vector_ptr = this_ptr + 68;
-        int32_t begin = *(int32_t *)(vector_ptr + 0);
-        int32_t end = *(int32_t *)(vector_ptr + 4);
-        uint32_t count = end >= begin ? (uint32_t)(end - begin) >> 2 : 0;
-        if (count < pair_count) {
-            if(pair_count>INT32_MAX/4 || !kinoko_native_buffer_resize(vector_ptr,pair_count*4))
-                return root;
-            begin=*(int32_t *)(intptr_t)vector_ptr;
-        }
-
-        items = (int32_t *)(intptr_t)*(int32_t *)(root + 100);
-        if (items == NULL)
-            return root;
-        uint32_t written = 0;
-        int32_t last = root;
-        for (i = 0; i < pair_count; ++i) {
-            int32_t item = items[i];
-            if (item != 0 && *(int32_t *)(intptr_t)(item + 312) != 0) {
-                *(int32_t *)(intptr_t)(begin + 4 * written) = item;
-                last = item;
-                ++written;
-            }
-        }
-        *(int32_t *)(this_ptr + 84) = (int32_t)written;
-        return last;
-    }
+    return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);
 }
 
-
-static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr)
-{
-    int32_t begin;
-    int32_t end;
-    int32_t pair_begin;
-    int32_t pair_end;
-
-    if (this_ptr == 0 || actor_ptr == 0)
-        return 0;
-    begin = *(int32_t *)(intptr_t)(this_ptr + 4);
-    end = *(int32_t *)(intptr_t)(this_ptr + 8);
-    if (begin != end)
-        *(int32_t *)(intptr_t)(this_ptr + 8) = begin;
-    pair_begin = *(int32_t *)(intptr_t)(this_ptr + 52);
-    pair_end = *(int32_t *)(intptr_t)(this_ptr + 56);
-    for (int32_t cursor = pair_begin; cursor != pair_end; cursor += 8) {
-        int32_t control = *(int32_t *)(intptr_t)(cursor + 4);
-        kinoko_native_release_weak(control);
-    }
-    *(int32_t *)(intptr_t)(this_ptr + 56) = pair_begin;
-    *(int32_t *)(intptr_t)this_ptr = actor_ptr;
-    *(int32_t *)(intptr_t)(this_ptr + 84) = 0;
-    return 1;
+static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr) {
+    return kinoko_collision_reset((KinokoCollisionState *)(intptr_t)this_ptr,
+        (KinokoActorManager *)(intptr_t)actor_ptr);
 }
 
 // Address range: 0x4689d0 - 0x46939a
 
 
 // Address range: 0x4693a0 - 0x469615
-static int32_t retdec_collision_reserve(int32_t vector, uint32_t count,
-                                          uint32_t stride) {
-    if (!stride || count > INT32_MAX / stride) return 0;
-    return kinoko_native_buffer_ensure(vector,count*stride);
-}
 
 int32_t function_4693a0(int32_t layout) {
-    int32_t state = (int32_t)(intptr_t)g_514300_storage;
-    int32_t count, actor, control;
-    int32_t *layouts, *pairs, *scratch;
-
-    if (layout == 0)
-        return 0;
-    count = (g_514300_storage[2] - g_514300_storage[1]) / 4;
-    if (!retdec_collision_reserve(state + 4, (uint32_t)count + 1, 4) ||
-        !retdec_collision_reserve(state + 52, (uint32_t)count + 1, 8) ||
-        !retdec_collision_reserve(state + 20, (uint32_t)count + 1, 4))
-        return 0;
-
-    for (int32_t index = 0, record;
-         (record = retdec_map_record_at(layout, index)) != 0; ++index) {
-        *(float *)(intptr_t)(record + 12) =
-            (float)*(int32_t *)(intptr_t)(record + 4);
-        *(float *)(intptr_t)(record + 16) =
-            (float)*(int32_t *)(intptr_t)(record + 8);
-    }
-
-    actor = function_463b40_this(g_514300_storage[0],
-        (int32_t)(intptr_t)&g16, g483, g484, 0.0f, 0.0f, 1.0f,
-        (int32_t)(intptr_t)&g16, g483, g484, 0);
-    if (actor == 0)
-        return 0;
-    *(float *)(intptr_t)(actor + 440) = -65535.0f;
-    *(float *)(intptr_t)(actor + 444) = -65535.0f;
-    *(float *)(intptr_t)(actor + 448) = 65535.0f;
-    *(float *)(intptr_t)(actor + 452) = 65535.0f;
-    *(int32_t *)(intptr_t)(actor + 232) = (int32_t)0x80000000u;
-    *(unsigned char *)(intptr_t)(actor + 40) = 0;
-    *(unsigned char *)(intptr_t)(actor + 20) = 1;
-    kinoko_actor_reset_priority(actor, -1);
-
-    /* 4684A0/468580 rotate the appended entries to the front in lockstep. */
-    layouts = (int32_t *)(intptr_t)g_514300_storage[1];
-    pairs = (int32_t *)(intptr_t)g_514300_storage[13];
-    memmove(layouts + 1, layouts, (size_t)count * 4);
-    memmove(pairs + 2, pairs, (size_t)count * 8);
-    layouts[0] = layout;
-    pairs[0] = *(int32_t *)(intptr_t)(actor + 24);
-    pairs[1] = control = *(int32_t *)(intptr_t)(actor + 28);
-    kinoko_native_add_weak(control);
-    g_514300_storage[2] = g_514300_storage[1] + (count + 1) * 4;
-    g_514300_storage[14] = g_514300_storage[13] + (count + 1) * 8;
-    scratch = (int32_t *)(intptr_t)g_514300_storage[5];
-    scratch[count] = 0;
-    g_514300_storage[6] = g_514300_storage[5] + (count + 1) * 4;
-    retdec_trace_i32("actor:collision-layout-count", count + 1);
-    return actor;
+    return (int32_t)(intptr_t)kinoko_collision_register_map(
+        (KinokoCollisionState *)g_514300_storage, (KinokoActLayout *)(intptr_t)layout);
 }
+
+
 
 // Address range: 0x469620 - 0x469637
 // From class:    .?AVActorManagerRenderLayer@ActorManager@@
 // Type:          virtual member function
-int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
-{
-    int32_t actor_manager;
-    int32_t layer_index;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (this_ptr == 0)
-        return 0;
-    actor_manager = *(int32_t *)(intptr_t)(this_ptr + 4);
-    layer_index = *(int32_t *)(intptr_t)(this_ptr + 8);
-    if (trace_index <= 16) {
-        retdec_trace_i32("actor:layer-render-this", this_ptr);
-        retdec_trace_i32("actor:layer-render-arg", update_arg);
-        retdec_trace_i32("actor:layer-render-camera",
-                         (int32_t)(intptr_t)g_retdec_camera_state);
-        retdec_trace_i32("actor:camera-x",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 40));
-        retdec_trace_i32("actor:camera-y",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 44));
-        retdec_trace_i32("actor:camera-cx",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 48));
-        retdec_trace_i32("actor:camera-cy",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 52));
-        retdec_trace_i32("actor:camera-width",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 64));
-        retdec_trace_i32("actor:camera-height",
-                         *(int32_t *)(intptr_t)(g_retdec_camera_state + 68));
-    }
-    return function_4627c0_this(actor_manager, update_arg, layer_index);
-}
 
 
-// Address range: 0x469640 - 0x469678
-int32_t function_469640(void) {
-    // 0x469640
-    retdec_trace("469640:enter");
-    if (g_retdec_startup_vm == 0)
-        g_retdec_startup_vm = (int32_t)(intptr_t)g644;
-    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
-    retdec_trace("469640:audio-begin");
-    function_4701e0();
-    retdec_trace("469640:audio-done");
-    retdec_trace("469640:sqrat-begin");
-    retdec_trace("469640:before-473010");
-    function_473010();
-    retdec_trace("469640:after-473010");
-    /* Sqrat::RootTable creates the VM during this phase. Keep that newly
-       created receiver; only fall back to the saved VM if a cleanup path
-       cleared the alias without replacing it. */
-    if (g644 != NULL)
-        g_retdec_startup_vm = (int32_t)(intptr_t)g644;
-    else if (g_retdec_startup_vm != 0)
-        g644 = (char *)(intptr_t)g_retdec_startup_vm;
-    retdec_trace_i32("469640:vm-after-sqrat",
-                     (int32_t)(intptr_t)g644);
-    retdec_trace("469640:sqrat-done");
-    retdec_trace("469640:alloc-begin");
-    function_46e6f0_this((int32_t)(intptr_t)g_retdec_input_manager_state);
-    retdec_trace("469640:alloc-done");
-    retdec_trace("469640:actor-begin");
-    function_463af0_this((int32_t)(intptr_t)g_retdec_actor_manager_state);
-    retdec_trace("469640:actor-done");
-    retdec_trace("469640:global-begin");
-    function_466270();
-    retdec_trace("469640:global-done");
-    return function_402d40("data/script/boot.nut", 0);
-}
 
-// Address range: 0x469680 - 0x4696a3
-int32_t function_469680(void) {
-    // 0x469680
-    function_46f620_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state);
-    function_464e20(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-    function_465f70();
-    function_470890();
-    return function_470f30();
-}
 
-// Address range: 0x4696b0 - 0x4696fc
-int32_t function_4696b0(int32_t a1) {
-    char path_buffer[260] = { 0 };
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor:load-animation-entry", a1);
-        retdec_trace_squirrel_name("actor:load-animation-path", a1);
-    }
-    function_4086e0(a1, (int32_t *)(intptr_t)path_buffer, 0);
-    int32_t result = function_464f80(a1, (int32_t *)(intptr_t)path_buffer);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor:load-animation-result", result);
-    return 0;
-}
 
-// Address range: 0x469700 - 0x46970a
-int32_t function_469700(void) {
-    /* The original 469700 thunk loads the global ActorManager into ECX
-     * before entering ActorManager::Clear. */
-    return function_463800_this(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-}
 
-// Address range: 0x469710 - 0x469734
-int32_t function_469710(float32_t a1, float32_t a2) {
-    retdec_actor_move_camera_impl(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state,
-        (int32_t)(intptr_t)g_retdec_camera_state, a1, a2);
-    return 0;
-}
 
-// Address range: 0x469740 - 0x46974a
-int32_t function_469740(void) {
-    // 0x469740
-    return function_468620();
-}
+
+
+
+
+
+
+
 
 // Address range: 0x469750 - 0x46977f
 
 
-// Address range: 0x469780 - 0x469793
-int32_t function_469780(int32_t a1, int32_t a2) {
-    /* The original thunk receives the actor on the stack and loads the
-       ActorManager global into ECX before calling ResetPriority. */
-    (void)a2;
-    return function_463cf0_this(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state, a1);
-}
 
-// Address range: 0x4697a0 - 0x4697b3
-int32_t function_4697a0(int32_t a1) {
-    // 0x4697a0
-    return function_462f30(a1);
-}
 
-// Address range: 0x4697c0 - 0x4697d3
-int32_t function_4697c0(int32_t a1) {
-    return function_4681e0_this((int32_t)(intptr_t)g_514300_storage, a1);
-}
 
-// Address range: 0x4697e0 - 0x469811
-int32_t function_4697e0(int32_t actor, float32_t left, float32_t top,
-    float32_t right, float32_t bottom) {
-    return function_4682a0_this((int32_t)(intptr_t)g_514300_storage,
-        actor, left, top, right, bottom);
-}
 
-// Address range: 0x469820 - 0x469837
-int32_t function_469820(int32_t a1) {
-    // 0x469820
-    return kinoko_stage_load((const char *)(intptr_t)a1) != 0;
-}
 
-// Address range: 0x469840 - 0x469858
-int32_t function_469840(int32_t a1) {
-    static int32_t trace_count;
-    int32_t v1;
 
-    if (trace_count < 32) {
-        retdec_trace("469840:LoadMap-entry");
-        retdec_trace_squirrel_name("469840:path", a1);
-    }
-    v1 = function_46f6d0(a1); // 0x46984c
-    if (trace_count < 32) {
-        retdec_trace_i32("469840:LoadMap-result", v1);
-        ++trace_count;
-    }
-    return v1 & -256 | (int32_t)((char)v1 != 0);
-}
 
-// Address range: 0x469860 - 0x46986a
-int32_t function_469860(void) {
-    // 0x469860
-    return function_46f620_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state);
-}
 
-// Address range: 0x469870 - 0x469880
-int32_t function_469870(void) {
-    // 0x469870
-    return function_468950_this(
-        (int32_t)(intptr_t)g_514300_storage,
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-}
 
-// Address range: 0x469880 - 0x46989e
-int32_t function_469880(int32_t a1) {
-    // 0x469880
-    return function_4693a0(function_46f140(a1));
-}
 
-// Address range: 0x4698a0 - 0x4698bf
-int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x4698a0
-    return function_46ef40(a1, a2, a3, a4);
-}
+
+
+
+
+
+
+
+
+
 
 
 // Address range: 0x4698d0 - 0x4698f2
 
 
-// Address range: 0x469900 - 0x4699bf
-int32_t function_469900(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x469910
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    __writefsdword(0, (int32_t)&v1);
-    if (trace_index <= 16) {
-        retdec_trace("469900:entry");
-        retdec_trace_i32("469900:update-mask", g459);
-        retdec_trace_i32("469900:render-mask", g460);
-        retdec_trace_i32("469900:map-act",
-                         *(int32_t *)(g_retdec_map_manager_state + 12));
-        retdec_trace_i32("469900:map-resource",
-                         *(int32_t *)(g_retdec_map_manager_state + 20));
-    }
-    function_46b9a0((int32_t)(intptr_t)g_retdec_input_manager_state);
-    if (function_4a9a30_this((int32_t)(intptr_t)(g612 + 4)) ==
-        0x08000100) {
-        // 0x46994b
-        retdec_trace("stagevm:global-callback");
-        if (trace_index <= 16) {
-            retdec_trace_i32("stagevm:global-state-vm", g612[0]);
-            retdec_trace_i32("stagevm:global-env-type", g612[2]);
-            retdec_trace_i32("stagevm:global-env-data", g612[3]);
-            retdec_trace_i32("stagevm:global-func-type", g612[5]);
-            retdec_trace_i32("stagevm:global-func-data", g612[6]);
-        }
-        if (retdec_actor_step_callback((int32_t)(intptr_t)g612) < 0)
-            retdec_clear_script_callback((int32_t)(intptr_t)g612);
-    }
-    int32_t v2 = function_471060(); // 0x46995c
-    int32_t v3 = v2; // 0x469969
-    if ((v2 & 0x20000000) != 0) {
-        // 0x46996b
-        v3 = kinoko_camera_update((int32_t)(intptr_t)g_retdec_camera_state, NULL);
-    }
-    int32_t v4 = v3; // 0x46997b
-    if ((v2 & 0x1fffffff) != 0) {
-        // 0x46997d
-        g622 = v2;
-        v4 = function_4641d0_this(
-            (int32_t)(intptr_t)g_retdec_actor_manager_state,
-            (int32_t *)g_retdec_camera_state);
-    }
-    int32_t v5 = v4; // 0x469994
-    if (v2 < 0) {
-        // 0x469996
-        if (trace_index <= 16)
-            retdec_trace("469900:map-update");
-        v5 = function_46f0b0(
-            (int32_t)(intptr_t)g_retdec_map_manager_state);
-    }
-    int32_t result = v5; // 0x4699a6
-    if ((v2 & 0x40000000) != 0) {
-        // 0x4699a8
-        if (trace_index <= 16)
-            retdec_trace("469900:global-update");
-        result = kinoko_stages_update();
-    }
-    if (trace_index <= 16)
-        retdec_trace_i32("469900:result", result);
-    // 0x4699ad
-    __writefsdword(0, v1);
-    return result;
-}
 
 
-// Address range: 0x469a20 - 0x469b21
+
 /* SetGlobalUpdateFunction receives two SquirrelObject values through the
    471C70 adapter.  The original call lays out six dwords on the stack; use
    explicit parameters here so the object boundaries are preserved. */
-int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
-                        int32_t a4, int32_t a5, int32_t a6)
-{
-    static volatile LONG trace_count;
-    int32_t first[3] = { a1, a2, a3 };
-    int32_t second[3] = { a4, a5, a6 };
-    int32_t first_copy[3] = { 0, 0, 0 };
-    int32_t second_copy[3] = { 0, 0, 0 };
-    int32_t owner_state[7] = { 0, 0, 0, 0, 0, 0, 0 };
-
-    if (InterlockedIncrement(&trace_count) <= 8) {
-        retdec_trace("stagevm:set-global-update");
-        retdec_trace_i32("stagevm:set-global-first-type", first[1]);
-        retdec_trace_i32("stagevm:set-global-first-data", first[2]);
-        retdec_trace_i32("stagevm:set-global-second-type", second[1]);
-        retdec_trace_i32("stagevm:set-global-second-data", second[2]);
-    }
-
-    if (first[1] == 0x08000100) {
-        function_4a9500_this(second_copy, (int32_t)(intptr_t)second);
-        function_4a9500_this(first_copy, (int32_t)(intptr_t)first);
-        *(int32_t *)&g612 = (int32_t)(intptr_t)g644;
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
-                             (int32_t)(intptr_t)second_copy);
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
-                             (int32_t)(intptr_t)first_copy);
-    } else {
-        retdec_function_45df10_impl(
-            (int32_t)(intptr_t)owner_state, 0);
-        *(int32_t *)&g612 = owner_state[0];
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 1),
-                             (int32_t)(intptr_t)(owner_state + 1));
-        function_4a95c0_this((int32_t)(intptr_t)(g612 + 4),
-                             (int32_t)(intptr_t)(owner_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(owner_state + 4));
-        function_4a9d70_this((int32_t)(intptr_t)(owner_state + 1));
-    }
-
-    function_4a9d70_this((int32_t)(intptr_t)second_copy);
-    function_4a9d70_this((int32_t)(intptr_t)first_copy);
-    function_4a9d70_this((int32_t)(intptr_t)first);
-    function_4a9d70_this((int32_t)(intptr_t)second);
-    if (trace_count <= 8) {
-        retdec_trace_i32("stagevm:set-global-vm", g612[0]);
-        retdec_trace_i32("stagevm:set-global-env-type", g612[2]);
-        retdec_trace_i32("stagevm:set-global-env-data", g612[3]);
-        retdec_trace_i32("stagevm:set-global-func-type", g612[5]);
-        retdec_trace_i32("stagevm:set-global-func-data", g612[6]);
-    }
-    return 0;
-}
 
 
-// Address range: 0x469b40 - 0x469d0a
+
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-int32_t function_469b40(
-    int32_t result,
-    int32_t first_vtable, int32_t first_type, int32_t first_data,
-    float32_t x, float32_t y, float32_t z,
-    int32_t second_vtable, int32_t second_type, int32_t second_data)
-{
-    int32_t actor;
-    int32_t manager = (int32_t)(intptr_t)g_retdec_actor_manager_state;
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-    int32_t first_object[3] = {
-        first_vtable, first_type, first_data
-    };
-    int32_t second_object[3] = {
-        second_vtable, second_type, second_data
-    };
 
-    if (result == 0)
-        return 0;
-    if (trace_index <= 32) {
-        retdec_trace_i32("actor-create:result-object", result);
-        retdec_trace_i32("actor-create:manager-state", manager);
-        retdec_trace_i32("actor-create:first-type", first_type);
-        retdec_trace_i32("actor-create:first-data", first_data);
-        retdec_trace_i32("actor-create:second-type", second_type);
-        retdec_trace_i32("actor-create:second-data", second_data);
-    }
-    if (first_object[0] == 0)
-        first_object[0] = (int32_t)(intptr_t)&g16;
-    if (second_object[0] == 0)
-        second_object[0] = (int32_t)(intptr_t)&g16;
 
-    actor = function_463b40_this(
-        manager,
-        first_object[0], first_object[1], first_object[2],
-        x, y, z,
-        second_object[0], second_object[1], second_object[2],
-        0);
-    if (trace_index <= 32)
-        retdec_trace_i32("actor-create:callback-result", actor);
 
-    function_4a94e0_this(result);
-    if (actor != 0)
-        function_4a95c0_this(result, actor + 44);
-    return result;
-}
 
-// Address range: 0x469d10 - 0x469dc1
-int32_t function_469d10(int32_t name, int32_t environment_vtable,
-                         int32_t environment_type, int32_t environment_data) {
-    int32_t environment[3] = {
-        environment_vtable, environment_type, environment_data
-    };
-    int32_t layout = function_46f140(name);
-    int32_t result = 0;
-
-    retdec_trace_squirrel_name("actor:map-layer", name);
-    retdec_trace_i32("actor:map-layout", layout);
-    if (layout != 0)
-        result = function_463e60(
-            (int32_t)(intptr_t)g_retdec_actor_manager_state, layout,
-            (int32_t)(intptr_t)environment);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
-
-// Address range: 0x469dd0 - 0x469ec5
 // From class:    .?AVSquirrelObject@@
 // Type:          destructor
-int32_t function_469dd0(int32_t name,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data) {
-    int32_t closure[3] = { closure_vtable, closure_type, closure_data };
-    int32_t environment[3] = { environment_vtable, environment_type, environment_data };
-    int32_t result = function_46fd70(name, (int32_t)(intptr_t)closure,
-                                     (int32_t)(intptr_t)environment);
-    function_4a9d70_this((int32_t)(intptr_t)closure);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
+
 
 
 // Address range: 0x469ef0 - 0x46a13d
 
 
-// Address range: 0x46a140 - 0x46a1c4
-int32_t function_46a140(void) {
-    int32_t render_mask = function_471070();
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
 
-    if (trace_index == 1) {
-        retdec_trace_i32("render:g613", kinoko_render_queue_identity());
-        retdec_trace_i32("render:g613-first",
-                         kinoko_render_queue_first());
-    }
 
-    function_4028d0(1, 0);
-    function_402970(1);
-    function_402770(1);
-    function_4026e0(1);
 
-    /* Original sub_46A140 updates the active MapManager layer before it
-       walks the shared render-layer list. */
-    if (trace_index <= 3)
-        retdec_trace_i32("render:map-layer",
-                         *(int32_t *)(g_retdec_map_manager_state + 12));
-    function_46edc0_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state,
-        (int32_t *)(intptr_t)g_retdec_camera_state);
-
-    kinoko_draw_render_queue((int32_t)(intptr_t)g_retdec_camera_state);
-
-    if ((render_mask & 0x40000000) != 0) {
-        kinoko_stages_prepare_draw();
-        kinoko_stages_draw();
-    }
-    return 1;
-}
-
-// Address range: 0x46a1d0 - 0x46a20d
-int32_t function_46a1d0(void) { return kinoko_clear_render_queue(); }
 
 // Address range: 0x46a210 - 0x46a254
 int32_t function_46a210(int32_t * a1) {
@@ -14105,179 +7733,8 @@ int32_t function_46a210(int32_t * a1) {
     return a1 ? kinoko_append_render_queue(*a1) : 0;
 }
 
-// Address range: 0x46a260 - 0x46a2c5
-
-
-// Address range: 0x46a2d0 - 0x46a380
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          constructor
-
-
-/* CHandleManagerEx<Actor> constructor with the original destination in ECX. */
-
-
-/* ActorManager's CRT constructor (0x46B0A0) builds several independent
-   intrusive-list sentinels around the handle manager.  RetDec split the
-   global object into unrelated scalar globals, so the normal constructor
-   cannot be called on the generated storage directly. */
-static int32_t retdec_construct_actor_manager(int32_t this_ptr)
-{
-    int32_t handle_manager;
-    int32_t render_list;
-    int32_t resource_list;
-    int32_t priority_tree;
-    int32_t index;
-
-    if (this_ptr == 0)
-        return 0;
-
-    memset((void *)(intptr_t)this_ptr, 0,
-           sizeof(g_retdec_actor_manager_state));
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g31;
-
-    kinoko_actor_owner_list_construct(this_ptr);
-
-    handle_manager = (int32_t)(intptr_t)calloc(1u, 80u);
-    if (handle_manager == 0 ||
-        kinoko_actor_pool_construct(handle_manager) == 0)
-        return 0;
-    *(int32_t *)(intptr_t)(this_ptr + 4) = handle_manager;
-
-    *(int32_t *)(intptr_t)(this_ptr+40)=kinoko_integer_map_create();
-
-    kinoko_animation_list_construct(this_ptr+52);
-    kinoko_integer_vector_construct(this_ptr+68);
-
-    kinoko_priority_construct(this_ptr+84);
-
-    /* The four ActorManagerRenderLayer instances are the objects returned by
-       CreateRenderLayer("actor_back"/"actor_middle"/...). */
-    for (index = 0; index < 4; ++index) {
-        int32_t layer = (int32_t)(intptr_t)calloc(1u, 20u);
-        if (layer == 0)
-            return 0;
-        *(int32_t *)(intptr_t)layer = (int32_t)(intptr_t)&g27;
-        *(int32_t *)(intptr_t)(layer + 4) = this_ptr;
-        *(int32_t *)(intptr_t)(layer + 8) = index;
-        *(int32_t *)(intptr_t)(this_ptr + 20 + 4 * index) = layer;
-    }
-
-    return this_ptr;
-}
-
-// Address range: 0x46a380 - 0x46a38a
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-// Address range: 0x46a390 - 0x46a44a
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-// Address range: 0x46a450 - 0x46a549
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          constructor
-
-
-// Address range: 0x46a550 - 0x46a571
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-
-
-
-// Address range: 0x46a650 - 0x46a6ee
-
-
-// Address range: 0x46a6f0 - 0x46a793
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-
-// Address range: 0x46a7e0 - 0x46a829
-// From class:    .?AVCInputManagerCluster@@
-// Type:          virtual member function
-
-
-/* CreateRenderLayer is a plain Squirrel callback.  Keep its layer-name
-   dispatch explicit; the generated body lost the comparison temporaries in
-   the actor_back/actor_middle branches and never reached MapManager for the
-   six map layers. */
-int32_t retdec_create_render_layer_fixed(int32_t name_ptr)
-{
-    const char *name = (const char *)(intptr_t)name_ptr;
-    int32_t value = 0;
-
-    if (name == NULL)
-        return 0;
-    if (strcmp(name, "actor_back") == 0)
-        value = g618;
-    else if (strcmp(name, "actor_middle") == 0)
-        value = g619;
-    else if (strcmp(name, "actor_front") == 0)
-        value = g620;
-    else if (strcmp(name, "actor_water") == 0)
-        value = g621;
-    else
-        value = function_470030(name_ptr);
-    if (value == 0)
-        return 0;
-    retdec_trace_squirrel_name("map:render-order-layer", name_ptr);
-    return function_46a210(&value);
-}
-
-// Address range: 0x46a830 - 0x46a9ba
-
-
-// Address range: 0x46a9c0 - 0x46aa52
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          constructor
-
-
-// Address range: 0x46aa60 - 0x46aad4
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          virtual member function
-
-
-/* TObjectManagerBase<Actor>::Add with the hidden receiver restored. */
-
-
-
-// Address range: 0x46aae0 - 0x46ab01
-// From class:    .?AV?$TObjectManagerBase@VActor@@V1@$00@@
-// Type:          virtual member function
-
-
-// Address range: 0x46ab10 - 0x46aca1
-// From class:    .?AV?$CHandleManagerEx@VActor@@@@
-// Type:          virtual member function
-
-
-/* CHandleManagerEx<Actor>::Get with the original ECX receiver restored. */
-int32_t function_46ab10_this(int32_t this_ptr, int32_t out_ptr) {
-    int32_t actor;
-    if (g_retdec_actor_init_count < 3 || (g_retdec_actor_init_count & 63u) == 0)
-        retdec_trace_i32("actor:request", (int32_t)g_retdec_actor_init_count);
-    actor = kinoko_actor_pool_get(this_ptr, out_ptr);
-    if (actor) {
-        ++g_retdec_actor_init_count;
-        if (g_retdec_actor_init_count <= 3 || (g_retdec_actor_init_count & 63u) == 0)
-            retdec_trace_i32("actor:created", (int32_t)g_retdec_actor_init_count);
-    }
-    return actor;
-}
-
-
-
-/* The vtable call supplies ECX and no stack argument. */
-
-
-
-
-
+/* Actor pool/owner-list implementations are in their named C++ modules.
+   Render-layer dispatch is in scene_operations.cpp. */
 
 // Address range: 0x46b450 - 0x46b48a
 /* Original 46B450 string conversion is inlined as sq_getstring in callers
@@ -14364,9 +7821,9 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
            sizeof(default_record));
     kinoko_input_devices_construct(this_ptr);
-    kinoko_input_devices_resize(this_ptr, (uint32_t)g782);
+    kinoko_input_devices_resize(this_ptr, (uint32_t)kinoko_input_snapshot.controller_count);
     kinoko_input_cluster_construct(this_ptr + 196);
-    for (int32_t i=0; i<g782; ++i) {
+    for (int32_t i=0; i<kinoko_input_snapshot.controller_count; ++i) {
         int32_t device=kinoko_input_devices_begin(this_ptr)+168*i;
         uint32_t record[17]={0};
         record[0]=(uint8_t)i;
@@ -14396,15 +7853,14 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
     /* The input class constructor stores the native class object in g629.
        GetInstanceUp converts it to the CInputManager instance value used by
        both the native callbacks and the global Squirrel slot. */
-    function_4a90c0_this((int32_t)(intptr_t)input_instance,
-                          (int32_t)(intptr_t)&g629);
+    kinoko_sqplus_object_new_instance((void *)(intptr_t)((int32_t)(intptr_t)input_instance), (const void *)(intptr_t)((int32_t)(intptr_t)&g629));
     retdec_trace_i32("46e6f0:instance-type", input_instance[1]);
     retdec_trace_i32("46e6f0:instance-data", input_instance[2]);
-    function_4a95c0_this(this_ptr, (int32_t)(intptr_t)input_instance);
-    function_4a9d70_this((int32_t)(intptr_t)input_instance);
+    kinoko_sqplus_object_assign((void *)(intptr_t)(this_ptr), (const void *)(intptr_t)((int32_t)(intptr_t)input_instance));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_instance)));
 
-    function_4a9bb0_this(this_ptr, this_ptr);
-    function_4a9840_this((int32_t)(intptr_t)&g722, "input", this_ptr);
+    kinoko_sqplus_object_set_instance((void *)(intptr_t)(this_ptr), (void *)(intptr_t)(this_ptr));
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)((int32_t)(intptr_t)&g722), "input", (const void *)(intptr_t)(this_ptr));
     retdec_trace("46e6f0:done");
     return 1;
 }
@@ -14417,146 +7873,7 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
 
 
 
-/* CMapManager's CRT constructor was omitted from the generated C.  The
-   fields below are the offsets used by the original 0x46f620/0x46edc0
-   methods: a current map object, two vector bounds, and a list sentinel. */
-static int32_t function_46f4c0_this(int32_t this_ptr) {
-    if (this_ptr == 0) return 0;
-    memset((void *)(intptr_t)this_ptr, 0, sizeof(g_retdec_map_manager_state));
-    function_4a94e0_this(this_ptr);
-    kinoko_map_containers_construct(this_ptr);
-    *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
-    *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
-    return this_ptr;
-}
-
-
-/* MapManagerRenderLayer::Update.  The original receives MapManager in ECX
-   and the camera object as its stack argument. */
-static int32_t function_46edc0_this(int32_t this_ptr, int32_t *a1) {
-    int32_t render_layer;
-
-    if (this_ptr == 0 || a1 == NULL)
-        return 0;
-    render_layer = *(int32_t *)(intptr_t)(this_ptr + 12);
-    if (render_layer == 0)
-        return 0;
-    *(float32_t *)(intptr_t)(render_layer + 88) =
-        (float32_t)floor((float64_t)(
-            *(float32_t *)((unsigned char *)(void *)a1 + 48) -
-            *(float32_t *)((unsigned char *)(void *)a1 + 40)));
-    *(float32_t *)(intptr_t)(render_layer + 92) =
-        (float32_t)floor((float64_t)(
-            *(float32_t *)((unsigned char *)(void *)a1 + 52) -
-            *(float32_t *)((unsigned char *)(void *)a1 + 44)));
-    return render_layer;
-}
-
-// Address range: 0x46ee20 - 0x46eec1
-int32_t function_46ee20(int32_t state, int32_t id, int32_t left,
-                         int32_t top, int32_t right, int32_t bottom) {
-    int32_t *call = (int32_t *)(intptr_t)state;
-    int32_t vm = call[0];
-    int32_t base = sq_gettop(kinoko_vm(vm));
-    int32_t result;
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[5], call[6]));
-    sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(call[2], call[3]));
-    sq_pushinteger(kinoko_vm(vm), id);
-    sq_pushinteger(kinoko_vm(vm), left);
-    sq_pushinteger(kinoko_vm(vm), top);
-    sq_pushinteger(kinoko_vm(vm), right);
-    sq_pushinteger(kinoko_vm(vm), bottom);
-    result = kinoko_sq_call(vm, 6, 1, 1);
-    sq_settop(kinoko_vm(vm), (SQInteger)(base));
-    return result;
-}
-
-// Address range: 0x46ef40 - 0x46efc4
-static int32_t function_46ef40_this(int32_t manager, int32_t x, int32_t y,
-    uint32_t index, int32_t count_ptr) {
-    uint32_t layer_count = kinoko_map_event_count(manager);
-    int32_t scratch[12] = {0}, cached = 0, count = 0, layout;
-    KinokoCollisionRecord *records;
-    *(int32_t *)(intptr_t)(manager + 56) = -1;
-    if (index >= layer_count || (layout = kinoko_map_event_at(manager, index)) == 0)
-        return 0;
-    /* 4355F0 queries around the point, then uses half-open chip rectangles. */
-    if (!retdec_collision_query_rect((int32_t)(intptr_t)scratch, layout, &cached,
-        x - *(int32_t *)(intptr_t)(layout + 240), y - *(int32_t *)(intptr_t)(layout + 244),
-        x + *(int32_t *)(intptr_t)(layout + 240), y + *(int32_t *)(intptr_t)(layout + 244),
-        &count)) {
-        kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
-        return 0;
-    }
-    if (count_ptr != 0) *(int32_t *)(intptr_t)count_ptr = count;
-    records = (KinokoCollisionRecord *)(intptr_t)scratch[9];
-    for (int32_t i = 0; i < count; ++i) {
-        int32_t record = (int32_t)(intptr_t)records[i].layout;
-        const unsigned char *chip = records[i].chip;
-        int32_t left = *(int32_t *)(intptr_t)(record + 4);
-        int32_t top = *(int32_t *)(intptr_t)(record + 8);
-        int32_t width = retdec_mcd_i16(chip + 12), height = retdec_mcd_i16(chip + 14);
-        if (left <= x && left + width > x && top <= y && top + height > y) {
-            *(int32_t *)(intptr_t)(manager + 56) = *(int32_t *)(intptr_t)record;
-            *(float32_t *)(intptr_t)(manager + 60) = (float32_t)left;
-            *(float32_t *)(intptr_t)(manager + 64) = (float32_t)top;
-            *(float32_t *)(intptr_t)(manager + 68) = (float32_t)(left + width);
-            *(float32_t *)(intptr_t)(manager + 72) = (float32_t)(top + height);
-            break;
-        }
-    }
-    kinoko_native_buffer_destroy((int32_t)(intptr_t)scratch+36);
-    return 0;
-}
-
-int32_t function_46ef40(int32_t x, int32_t y, uint32_t index, int32_t count_ptr) {
-    return function_46ef40_this((int32_t)(intptr_t)g_retdec_map_manager_state,
-        x, y, index, count_ptr);
-}
-
-// Address range: 0x46efd0 - 0x46f01e
-
-
-
-// Address range: 0x46f0b0 - 0x46f0d0
-int32_t function_46f0b0(int32_t this_ptr) {
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
-
-    if (trace_index <= 16) {
-        retdec_trace("46f0b0:entry");
-        retdec_trace_i32("46f0b0:manager", this_ptr);
-        retdec_trace_i32("46f0b0:act",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 12) : 0);
-        retdec_trace_i32("46f0b0:holder",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 16) : 0);
-        retdec_trace_i32("46f0b0:resource",
-                         this_ptr != 0
-                             ? *(int32_t *)(intptr_t)(this_ptr + 20) : 0);
-    }
-    // 0x46f0b0: MapManager owns the resource at offset 0x14.
-    if (this_ptr == 0 || *(int32_t *)(intptr_t)(this_ptr + 12) == 0
-        || *(int32_t *)(intptr_t)(this_ptr + 20) == 0) {
-        // 0x46f0ce
-        if (trace_index <= 16)
-            retdec_trace("46f0b0:skip");
-        return 0;
-    }
-    // 0x46f0c0
-    int32_t resource = *(int32_t *)(intptr_t)(this_ptr + 20);
-    function_451620(resource);
-    int32_t result = kinoko_act_update_frame(resource);
-    if (trace_index <= 16)
-        retdec_trace_i32("46f0b0:result", result);
-    return result;
-}
-
-// Address range: 0x46f0d0 - 0x46f0fb
-
-
+/* Map lifecycle/frame preparation: reconstructed/map_manager.cpp. */
 
 // Address range: 0x46f140 - 0x46f1f3
 int32_t function_46f140(int32_t name_ptr) {
@@ -14576,200 +7893,7 @@ int32_t function_46f140(int32_t name_ptr) {
 
 
 
-static int32_t function_46f620_this(int32_t this_ptr) {
-    if (this_ptr == 0) return 0;
-    function_4a9570_this(this_ptr);
-    kinoko_map_containers_clear(this_ptr);
-
-    if (*(int32_t *)(intptr_t)(this_ptr + 20) != 0) {
-        retdec_destroy_act_runtime(*(int32_t *)(intptr_t)(this_ptr + 20));
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 20));
-        *(int32_t *)(intptr_t)(this_ptr + 20) = 0;
-    }
-    if (*(int32_t *)(intptr_t)(this_ptr + 16) != 0) {
-        free((void *)(intptr_t)*(int32_t *)(intptr_t)(this_ptr + 16));
-        *(int32_t *)(intptr_t)(this_ptr + 16) = 0;
-    }
-    if (*(int32_t *)(intptr_t)(this_ptr + 12) != 0) {
-        int32_t object = *(int32_t *)(intptr_t)(this_ptr + 12);
-        int32_t *vtable = *(int32_t **)(intptr_t)object;
-        if (vtable != NULL && vtable[4] != 0) {
-            retdec_call_thiscall1((void *)(intptr_t)object,
-                                  (void *)(intptr_t)vtable[4], 1);
-        }
-        *(int32_t *)(intptr_t)(this_ptr + 12) = 0;
-    }
-    return 0;
-}
-
-// Address range: 0x46f6d0 - 0x46f9f0
-/* LoadMap is the other place where the generated C++ calls lost several
-   receivers at once.  Keep the original order explicit: construct the CAct,
-   create its CActResource wrapper, bind the VM root, BeginStage it, then
-   publish the Map instance and currentMap values used by stage.nut. */
-static int32_t retdec_map_bind_resource(int32_t resource_ptr, int32_t vm)
-{
-    int32_t root_object[5] = { 0, 0, g483, g484, 0 };
-    int32_t result;
-
-    if (resource_ptr == 0 || vm == 0)
-        return 0;
-    if (!retdec_sqrat_root_construct((int32_t)(intptr_t)root_object, vm))
-        return 0;
-    result = retdec_bind_act_resource_root(resource_ptr, vm, root_object + 8);
-    retdec_sqrat_object_release((int32_t)(intptr_t)root_object);
-    return result;
-}
-
-static int32_t retdec_map_make_string(int32_t output_ptr,
-                                      const char *source_ptr)
-{
-    int32_t vm = (int32_t)(intptr_t)g644;
-
-    if (output_ptr == 0 || source_ptr == NULL || vm == 0)
-        return 0;
-    function_4a94e0_this(output_ptr);
-    sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer((int32_t)(intptr_t)source_ptr), -1);
-    function_4a9660_this(output_ptr, -1);
-    kinoko_sq_pop(vm, 1);
-    return 1;
-}
-
-static int32_t retdec_load_map_fixed(int32_t path_ptr)
-{
-    int32_t map_state = (int32_t)(intptr_t)g_retdec_map_manager_state;
-    int32_t vm = (int32_t)(intptr_t)g644;
-    int32_t act;
-    int32_t holder;
-    int32_t resource = 0;
-    int32_t map_object[3] = { 0, 0, 0 };
-    int32_t layer_names[3] = { 0, 0, 0 };
-    int32_t layer_name[3] = { 0, 0, 0 };
-    int32_t root_object[3] = { 0, 0, 0 };
-    int32_t current_map[3] = { 0, 0, 0 };
-    const char *act_name;
-    int32_t layer_count;
-    int32_t index;
-
-    if (map_state == 0 || path_ptr == 0 || vm == 0)
-        return 0;
-
-    function_46f620_this(map_state);
-    act = _3f__3f_2_40_YAPAXI_40_Z(240);
-    if (act == 0 || function_427530(act) == 0) {
-        if (act != 0)
-            free((void *)(intptr_t)act);
-        return 0;
-    }
-    *(int32_t *)(intptr_t)(map_state + 12) = act;
-    if (!function_428000(act, (const char *)(intptr_t)path_ptr)) {
-        retdec_trace("map:act-load-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-
-    holder = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (holder == 0) {
-        function_46f620_this(map_state);
-        return 0;
-    }
-    kinoko_act_source_initialize((KinokoActSourceHolder *)(intptr_t)holder,
-        (KinokoActDocument *)(intptr_t)act);
-    *(int32_t *)(intptr_t)(map_state + 16) = holder;
-    resource = (int32_t)(intptr_t)kinoko_act_source_create_runtime(
-        (KinokoActSourceHolder *)(intptr_t)holder);
-    *(int32_t *)(intptr_t)(map_state + 20) = resource;
-    /* Restore the original resource registration and immediate BeginStage. */
-    if (resource == 0 ||
-        retdec_call_thiscall2_result(
-            (void *)(intptr_t)resource,
-            (void *)(intptr_t)kinoko_method_root_table_construct, vm, 0) < 0) {
-        retdec_trace("map:450e30-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-    if (retdec_call_thiscall1_result(
-            (void *)(intptr_t)resource,
-            (void *)(intptr_t)kinoko_method_begin_stage, 0) < 0) {
-        retdec_trace("map:450950-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-
-    *(int32_t *)(intptr_t)(map_state + 76) =
-        *(int32_t *)(intptr_t)(act + 8);
-    *(int32_t *)(intptr_t)(map_state + 80) =
-        *(int32_t *)(intptr_t)(act + 12);
-
-    /* CMapManager is also the Map Squirrel instance. */
-    if (g636[1] == 0 ||
-        function_4a90c0_this((int32_t)(intptr_t)map_object,
-                             (int32_t)(intptr_t)g636) == 0) {
-        retdec_trace("map:instance-copy-failed");
-        function_46f620_this(map_state);
-        return 0;
-    }
-    function_4a95c0_this(map_state, (int32_t)(intptr_t)map_object);
-    function_4a9d70_this((int32_t)(intptr_t)map_object);
-    function_4a9bb0_this(map_state, map_state);
-
-    retdec_trace_i32("map:instance", map_state);
-    retdec_trace_i32("map:act", act);
-    retdec_trace_squirrel_name("map:path", path_ptr);
-    function_4a9840_this((int32_t)(intptr_t)&g722, "map", map_state);
-
-    function_4a92e0_this((int32_t *)(intptr_t)layer_names, 0);
-    layer_count = kinoko_act_source_layer_count((const KinokoActSourceHolder *)(intptr_t)holder);
-    for (index = 0; index < layer_count; ++index) {
-        int32_t layout = function_452020(resource, index);
-        if (layout == 0)
-            continue;
-        /* C2DMapLayout exposes its layer name through the same string field
-           used by the original 46F020 helper.  Unsupported layer kinds are
-           intentionally skipped, matching the original RTTI test. */
-        if (*(int32_t *)(intptr_t)(layout + 312) != 0) {
-            int32_t string_object =
-                *(int32_t *)(intptr_t)(layout + 312) + 112;
-            const char *name = retdec_std_string_data(string_object);
-            if (name != NULL && *name != 0 &&
-                retdec_map_make_string((int32_t)(intptr_t)layer_name, name)) {
-                function_4a9600_this((int32_t *)(intptr_t)layer_names,
-                                     (int32_t)(intptr_t)layer_name);
-                function_4a9d70_this((int32_t)(intptr_t)layer_name);
-            }
-        }
-    }
-    /* 46F923 reverses the collected names before publishing them. */
-    function_4a99f0((int32_t)(intptr_t)layer_names);
-    function_4a9840_this(map_state, "layer_name", layer_names);
-    function_4a9d70_this((int32_t)(intptr_t)layer_names);
-
-    /* currentMap is root[act.stName].  This is the object that InitStage
-       receives as `op`, so setting the string alone is insufficient. */
-    function_4a94e0_this((int32_t)(intptr_t)root_object);
-    function_4a95c0_this((int32_t)(intptr_t)root_object,
-                          (int32_t)(intptr_t)&g722);
-    act_name = retdec_std_string_data(act + 16);
-    if (act_name != NULL && *act_name != 0) {
-        function_4aa3a0_this((int32_t)(intptr_t)root_object,
-                             (int32_t)(intptr_t)current_map, act_name);
-        if (*(int32_t *)(intptr_t)(current_map + 4) != g483) {
-            function_4a9840_this((int32_t)(intptr_t)root_object,
-                                 "currentMap", current_map);
-        }
-        retdec_trace_squirrel_name("map:act-name",
-                                   (int32_t)(intptr_t)act_name);
-        retdec_trace_i32("map:current-map-type", current_map[1]);
-        retdec_trace_i32("map:current-map-data", current_map[2]);
-    }
-    function_4a9d70_this((int32_t)(intptr_t)current_map);
-    function_4a9d70_this((int32_t)(intptr_t)root_object);
-    return 1;
-}
-
-int32_t function_46f6d0(int32_t a1) {
-    return retdec_load_map_fixed(a1);
-}
+/* Map loading/publication: reconstructed/map_loading.cpp. */
 
 // Address range: 0x46f9f0 - 0x46fabb
 // The original is a __thiscall constructor.  RetDec lost ECX and treated the
@@ -14781,42 +7905,12 @@ int32_t function_46f6d0(int32_t a1) {
 
 // Address range: 0x46fd70 - 0x46ff56
 int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment) {
-    int32_t layout = function_46f140(name);
-    int32_t *function = (int32_t *)(intptr_t)closure;
-    int32_t *receiver = (int32_t *)(intptr_t)environment;
-    int32_t state[7] = {
-        (int32_t)(intptr_t)g644, receiver[0], receiver[1], receiver[2],
-        function[0], function[1], function[2]
-    };
-    int32_t count;
-    int32_t completed = 0;
-    /* 46FDB1..46FDB7 registers even callback-free and missing event layers. */
-    kinoko_map_append_event((int32_t)(intptr_t)g_retdec_map_manager_state, layout);
-    if (layout == 0 || function[1] != 0x08000100)
-        return 0;
-    count = (*(int32_t *)(intptr_t)(layout + 268) -
-             *(int32_t *)(intptr_t)(layout + 264)) / 32;
-    for (int32_t index = 0; index < count; ++index) {
-        int32_t record = retdec_map_record_at(layout, index);
-        int32_t id = *(int32_t *)(intptr_t)record;
-        int32_t left = *(int32_t *)(intptr_t)(record + 4);
-        int32_t top = *(int32_t *)(intptr_t)(record + 8);
-        struct retdec_mcd_chip *chip = retdec_mcd_find_chip(
-            retdec_map_chip_data(layout), (uint32_t)id);
-        /* Valid event records have MCD rectangles; never use uninitialized bounds. */
-        if (chip == NULL) {
-            retdec_trace_i32("map:event-missing-chip", id);
-            return -1;
-        }
-        if (function_46ee20((int32_t)(intptr_t)state, id, left, top,
-                left + retdec_mcd_i16(chip->bytes + 12),
-                top + retdec_mcd_i16(chip->bytes + 14)) < 0)
-            return -1;
-        ++completed;
-    }
-    retdec_trace_i32("map:event-created", completed);
-    return completed;
+    return kinoko_map_create_events((KinokoMapManager *)g_retdec_map_manager_state,
+        (struct SQVM *)g644, (const char *)(intptr_t)name,
+        (const KinokoSquirrelObject *)(intptr_t)closure,
+        (const KinokoSquirrelObject *)(intptr_t)environment);
 }
+
 
 // Address range: 0x46ff60 - 0x470029
 
@@ -14888,33 +7982,27 @@ int32_t function_470d00(int32_t a1) {
     retdec_trace_i32("470d00:after-4aa210-g582", (*kinoko_native_binding_type(0)));
     retdec_trace_i32("470d00:delegate-type", v3[1]);
     retdec_trace_i32("470d00:delegate-data", v3[2]);
-    if (function_4aa1a0((int32_t)(intptr_t)v3, "_set") == 0) {
+    if (kinoko_sqplus_object_exists((void *)(intptr_t)((int32_t)(intptr_t)v3), "_set") == 0) {
         retdec_trace_i32("470d00:after-4aa1a0-g582", (*kinoko_native_binding_type(0)));
-        function_4a91c0_this(v2);
+        kinoko_sqplus_object_new_table((void *)(intptr_t)(v2));
         retdec_trace_i32("470d00:after-4a91c0-g582", (*kinoko_native_binding_type(0)));
-        function_4a95c0_this((int32_t)(intptr_t)v3,
-                             (int32_t)(intptr_t)v2);
+        kinoko_sqplus_object_assign((void *)(intptr_t)((int32_t)(intptr_t)v3), (const void *)(intptr_t)((int32_t)(intptr_t)v2));
         retdec_trace_i32("470d00:after-4a95c0-g582", (*kinoko_native_binding_type(0)));
-        function_4a9d70_this((int32_t)(intptr_t)v2);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-first-dtor-g582", (*kinoko_native_binding_type(0)));
-        function_4a9490(v2, (int32_t)(intptr_t)v3,
-                        (int32_t)(intptr_t)&function_4aaf30,
-                        "_set", "sn|b|s");
+        kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_set), "_set", "sn|b|s");
         retdec_trace_i32("470d00:after-set-binding-g582", (*kinoko_native_binding_type(0)));
-        function_4a9d70_this((int32_t)(intptr_t)v2);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-second-dtor-g582", (*kinoko_native_binding_type(0)));
-        function_4a9490(v2, (int32_t)(intptr_t)v3,
-                        (int32_t)(intptr_t)&function_4aab60,
-                        "_get", "s");
+        kinoko_sqplus_bind_object_function(v2, (void *)(intptr_t)((int32_t)(intptr_t)v3), (void *)(intptr_t)((int32_t)(intptr_t)&kinoko_sqplus_table_get), "_get", "s");
         retdec_trace_i32("470d00:after-get-binding-g582", (*kinoko_native_binding_type(0)));
-        function_4a9d70_this((int32_t)(intptr_t)v2);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v2)));
         retdec_trace_i32("470d00:after-third-dtor-g582", (*kinoko_native_binding_type(0)));
-        setdelegate_result = function_4a9f60(
-            a1, (int32_t)(intptr_t)v3);
+        setdelegate_result = kinoko_sqplus_object_set_delegate((void *)(intptr_t)(a1), (const void *)(intptr_t)((int32_t)(intptr_t)v3));
         retdec_trace_i32("470d00:setdelegate-result", setdelegate_result);
         retdec_trace_i32("470d00:after-4a9f60-g582", (*kinoko_native_binding_type(0)));
     }
-    int32_t result = function_4a9d70_this((int32_t)(intptr_t)v3);
+    int32_t result = (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)v3)));
     retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }
@@ -14926,15 +8014,7 @@ int32_t function_470d00(int32_t a1) {
 /* function_470ee0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 
-// Address range: 0x470f30 - 0x470f5d
-int32_t function_470f30(void) {
-    /* Each original call loads a distinct global SquirrelObject receiver. */
-    function_4a9570_this((int32_t)(intptr_t)g602);
-    function_4a9570_this((int32_t)(intptr_t)g629);
-    function_4a9570_this((int32_t)(intptr_t)g611);
-    function_4a9570_this((int32_t)(intptr_t)g636);
-    return function_402ac0();
-}
+
 
 // Address range: 0x470f60 - 0x470f78
 int32_t function_470f60(int32_t a1) {
@@ -14955,42 +8035,11 @@ int32_t function_470f90(void) {
     return timeGetTime();
 }
 
-// Address range: 0x470fa0 - 0x471054
-int32_t function_470fa0(int32_t id,
-    int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
-    int32_t environment_vtable, int32_t environment_type, int32_t environment_data)
-{
-    int32_t closure[3] = { closure_vtable, closure_type, closure_data };
-    int32_t environment[3] = {
-        environment_vtable, environment_type, environment_data
-    };
-    char name[256];
-    int32_t result = 0;
 
-    /* 470FCB..47101B registers only a script closure in the supplied table. */
-    if (closure_type == 0x08000100 && environment_type == 0x0A000020) {
-        sprintf_s(name, sizeof(name), "Init%04x", (unsigned int)id);
-        result = function_4a9840_this((int32_t)(intptr_t)environment,
-                                      name, (int32_t)(intptr_t)closure);
-        retdec_trace_i32("actor:init-registration-id", id);
-        retdec_trace_i32("actor:init-registration-result", result);
-    }
-    function_4a9d70_this((int32_t)(intptr_t)closure);
-    function_4a9d70_this((int32_t)(intptr_t)environment);
-    return result;
-}
 
-// Address range: 0x471060 - 0x471066
-int32_t function_471060(void) {
-    // 0x471060
-    return g459;
-}
 
-// Address range: 0x471070 - 0x471076
-int32_t function_471070(void) {
-    // 0x471070
-    return g460;
-}
+
+
 
 // Address range: 0x471080 - 0x471093
 int32_t function_471080(void) {
@@ -15034,24 +8083,6 @@ int32_t function_471080(void) {
 
 
 // Address range: 0x471b30 - 0x471bbe
-int32_t function_471b30(int32_t path, int32_t object_vtable, int32_t vm,
-                       int32_t type, int32_t data, char owns_reference) {
-    int32_t environment[3] = { (int32_t)(intptr_t)&g16, type, data };
-    int32_t result;
-
-    (void)object_vtable;
-    /* 419E60 passes a Sqrat::Object by value.  471B30 copies its value
-       into the SquirrelObject consumed by the DAT script loader. */
-    function_48a400(vm, (int32_t)(intptr_t)(environment + 1));
-    result = function_402d40((char *)(intptr_t)path,
-                             (int32_t)(intptr_t)environment);
-    function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
-    if (owns_reference)
-        function_48a430(vm, (int32_t)(intptr_t)(environment + 1));
-    return (unsigned char)result;
-}
-
-
 /* Sqrat appends the native closure's userdata after the user arguments. */
 
 
@@ -15060,14 +8091,14 @@ int32_t retdec_compile_file_native(int32_t vm) {
     int32_t result;
     int32_t environment[2] = { g483, g484 };
 
-    if (!retdec_native_string_arg(vm, 2, &path))
+    if (!kinoko_native_string_arg((struct SQVM *)(intptr_t)(vm), 2, &path))
         return 0;
     /* The final stack entry is the native closure's userdata.  The optional
        script environment is argument 3, before that entry (419EA2). */
     if (sq_gettop(kinoko_vm(vm)) > 3 &&
         sq_getstackobj(kinoko_vm(vm), 3, (HSQOBJECT*)(environment)) < 0)
         return -1;
-    result = function_471b30(path, (int32_t)(intptr_t)&g39, vm,
+    result = kinoko_script_compile_file_argument(path, (int32_t)(intptr_t)&g39, vm,
                              environment[0], environment[1], 0);
     sq_pushbool(kinoko_vm(vm), ((result) != 0));
     return 1;
@@ -15080,26 +8111,7 @@ int32_t retdec_compile_file_native(int32_t vm) {
 // Address range: 0x471c10 - 0x471c6c
 /* function_471c10 is implemented in native C++ (squirrel_native_calls.cpp). */
 
-// Address range: 0x471c70 - 0x471d27
-int32_t function_471c70(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t first[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    int32_t second[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
 
-    if (target == 0 ||
-        !retdec_squirrel_pair_from_stack(a1, 3, first) ||
-        !retdec_squirrel_pair_from_stack(a1, 2, second))
-        return 0;
-
-    /* 469A20 receives the closure first and its environment second.  The
-       original 471C70 builds the two by-value temporaries from stack slots
-       3 and 2 respectively, so the raw extraction order is reversed here. */
-    ((int32_t (__cdecl *)(int32_t, int32_t, int32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)target)(
-        second[0], second[1], second[2],
-        first[0], first[1], first[2]);
-    return 0;
-}
 
 // Address range: 0x471d30 - 0x471d8c
 
@@ -15107,43 +8119,7 @@ int32_t function_471c70(int32_t a1) {
 // Address range: 0x471d90 - 0x471dec
 /* function_471d90 is implemented in native C++ (squirrel_native_calls.cpp). */
 
-// Address range: 0x471df0 - 0x471e4c
-int32_t function_471df0(int32_t a1) {
-    int32_t target = retdec_native_target_from_userdata(a1);
-    int32_t first[2];
-    int32_t second[2];
-    int32_t result_object[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    float32_t first_float;
-    float32_t second_float;
-    float32_t third_float;
-    int32_t top = sq_gettop(kinoko_vm(a1));
 
-    retdec_trace_i32("native-471df0:top", top);
-    retdec_trace_i32("native-471df0:type2", sq_gettype(kinoko_vm(a1), 2));
-    retdec_trace_i32("native-471df0:type3", sq_gettype(kinoko_vm(a1), 3));
-    retdec_trace_i32("native-471df0:type4", sq_gettype(kinoko_vm(a1), 4));
-    retdec_trace_i32("native-471df0:type5", sq_gettype(kinoko_vm(a1), 5));
-
-    if (target == 0 || top < 6 ||
-        !retdec_native_value_pair(a1, 2, first) ||
-        !retdec_native_float_arg(a1, 3, &first_float) ||
-        !retdec_native_float_arg(a1, 4, &second_float) ||
-        !retdec_native_float_arg(a1, 5, &third_float) ||
-        !retdec_native_value_pair(a1, 6, second))
-        return 0;
-
-    ((int32_t (__cdecl *)(int32_t,
-                          int32_t, int32_t, int32_t,
-                          float32_t, float32_t, float32_t,
-                          int32_t, int32_t, int32_t))(intptr_t)target)(
-        (int32_t)(intptr_t)result_object,
-        (int32_t)(intptr_t)&g16, first[0], first[1],
-        first_float, second_float, third_float,
-        (int32_t)(intptr_t)&g16, second[0], second[1]);
-    function_4029b0(a1, result_object);
-    function_4a9d70_this((int32_t)(intptr_t)result_object);
-    return 1;
-}
 
 // Address range: 0x471e50 - 0x471eac
 
@@ -15175,12 +8151,12 @@ int32_t function_471df0(int32_t a1) {
 // Address range: 0x4721a0 - 0x47223b
 int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
     int32_t v1 = (int32_t)a1;
-    int32_t v2 = function_45fab0(v1, (int32_t)a3); // 0x4721b0
+    int32_t v2 = (int32_t)(intptr_t)(kinoko_sqplus_create_variable((void *)(intptr_t)(v1), (const char *)(intptr_t)((int32_t)a3))); // 0x4721b0
     retdec_trace_i32("4721a0:userdata", v2);
     int32_t *type = kinoko_native_binding_type(0);
     int32_t v3[5];
     retdec_trace_i32("4721a0:g582-before", (*kinoko_native_binding_type(0)));
-    function_45f3e0_this(v3, (int32_t)a2, 0, 0, type, 4, a4);
+    kinoko_sqplus_initialize_variable(v3, (int32_t)a2, 0, 0, type, 4, a4);
     retdec_trace_i32("4721a0:g582-after", (*kinoko_native_binding_type(0)));
     retdec_trace_i32("4721a0:userdata-after-parse", v2);
     retdec_trace_i32("4721a0:parsed-type", v3[0]);
@@ -15195,11 +8171,11 @@ int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
 // Address range: 0x472240 - 0x4722d9
 int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
     int32_t v1 = (int32_t)a1;
-    int32_t v2 = function_45fab0(v1, (int32_t)a3); // 0x472250
+    int32_t v2 = (int32_t)(intptr_t)(kinoko_sqplus_create_variable((void *)(intptr_t)(v1), (const char *)(intptr_t)((int32_t)a3))); // 0x472250
     int32_t *type = kinoko_native_binding_type(0);
     int32_t v3[5];
     retdec_trace_i32("472240:g582-before", (*kinoko_native_binding_type(0)));
-    function_45f3e0_this(v3, a2, 0, 0, type, 4, 2);
+    kinoko_sqplus_initialize_variable(v3, a2, 0, 0, type, 4, 2);
     retdec_trace_i32("472240:g582-after", (*kinoko_native_binding_type(0)));
     *(int32_t *)v2 = v3[0];
     *(int32_t *)(v2 + 4) = v3[1];
@@ -15235,116 +8211,7 @@ int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
 // Type:          constructor
 
 
-// Address range: 0x473af0 - 0x473b11
-LRESULT CALLBACK function_473af0(HWND a1, UINT a2, WPARAM a3, LPARAM a4) {
-    // 0x473af0
-    return function_40e130(
-        (int32_t *)g_retdec_runtime_state, a1, a2, a3, a4);
-}
-
-// Address range: 0x473b20 - 0x473b23
-// From class:    .?AVSceneManager@@
-// Type:          virtual member function
-int32_t function_473b20(void) {
-    // 0x473b20
-    int32_t v1; // 0x473b20
-    return v1 & -256 | 1;
-}
-
-// Address range: 0x473b30 - 0x473dd7
-int32_t _WinMain_40_16(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x473b30
-    int32_t config[10] = { 0 };
-    int32_t *scene_manager = NULL;
-    int32_t *scene_manager_storage;
-
-    retdec_initialize_runtime_objects();
-    CreateMutexA(NULL, TRUE, g43);
-    if (GetLastError() == 183) {
-        // 0x473b6a
-        return 1;
-    }
-    // 0x473b7e
-    char lpFilename[260] = { 0 }; // bp-272, 0x473b30
-    DWORD module_path_length = GetModuleFileNameA(
-        NULL, lpFilename, (DWORD)sizeof(lpFilename));
-    if (module_path_length != 0 && module_path_length < sizeof(lpFilename)) {
-        DWORD separator_index = module_path_length;
-        while (separator_index != 0 &&
-               lpFilename[separator_index - 1] != '\\') {
-            --separator_index;
-        }
-        if (separator_index != 0) {
-            lpFilename[separator_index] = '\0';
-            SetCurrentDirectoryA(lpFilename);
-        }
-    }
-    int32_t v1 = GetSystemMetrics(45); // 0x473bbc
-    int32_t v2 = GetSystemMetrics(7); // 0x473bc2
-    int32_t v3 = GetSystemMetrics(5); // 0x473bc8
-    int32_t v4 = GetSystemMetrics(46); // 0x473bd9
-    int32_t v5 = GetSystemMetrics(8); // 0x473bdf
-    int32_t v6 = GetSystemMetrics(6); // 0x473be5
-    int32_t v7 = GetSystemMetrics(4); // 0x473beb
-    HINSTANCE hInstance = (HINSTANCE)(intptr_t)a1;
-    WNDCLASSEXA window_class = { 0 };
-    window_class.cbSize = sizeof(window_class);
-    window_class.hInstance = hInstance;
-    window_class.lpszClassName = "Marisaland2";
-    window_class.lpfnWndProc = function_473af0;
-    window_class.style = 0;
-    window_class.hIcon = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
-    window_class.hIconSm = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_KINOKO));
-    window_class.hCursor = LoadCursorA(NULL, (LPCSTR)0x7f00);
-    window_class.lpszMenuName = NULL;
-    window_class.cbClsExtra = 0;
-    window_class.cbWndExtra = 0;
-    window_class.hbrBackground = (HBRUSH)GetStockObject(4);
-    if (RegisterClassExA(&window_class) == 0) {
-        // 0x473dc2
-        return 0;
-    }
-    HWND windowHandle = CreateWindowExA(0x40000, "Marisaland2", g43, 0xca0000, -0x80000000, -0x80000000, v1 + 640 + v2 + v3, v4 + 480 + v5 + v6 + v7, NULL, NULL, hInstance, NULL); // 0x473cbe
-    if (windowHandle == NULL) {
-        // 0x473dc2
-        return 0;
-    }
-    // 0x473cce
-    ShowWindow(windowHandle, a4);
-    UpdateWindow(windowHandle);
-    config[0] = (int32_t)(intptr_t)windowHandle;
-    config[1] = (int32_t)(intptr_t)hInstance;
-    config[8] = 0x00010101;
-    /* WinMain writes 1, then sets byte 1 to 0 and byte 3 to 1.  The final
-       DWORD is therefore 0x01000001; its high byte selects DAT resources. */
-    config[9] = 0x01000001;
-
-    scene_manager_storage = (int32_t *)(uintptr_t)
-        _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (scene_manager_storage != NULL) {
-        *scene_manager_storage = (int32_t)(intptr_t)&g41;
-        scene_manager = scene_manager_storage;
-    }
-    config[5] = (int32_t)(intptr_t)scene_manager;
-
-    // 0x473d46
-    function_407360("6kinoko_a.dat");
-    function_407360("6kinoko_b.dat");
-    function_407360("6kinoko_c.dat");
-    retdec_string_assign_n(&g554, ".cv4", 4);
-    if ((char)function_40d790(
-            (int32_t *)g_retdec_runtime_state, config) == 0) {
-        // 0x473da6
-        MessageBoxA(windowHandle, g42, "Error", 0);
-    } else {
-        // 0x473d9a
-        function_40db30(g_retdec_runtime_state);
-    }
-    // 0x473db8
-    function_40d940((int32_t *)g_retdec_runtime_state);
-    // 0x473dc2
-    return 0;
-}
+// Window procedure / WinMain: application_runtime.cpp and windows_entry.cpp.
 
 // Address range: 0x473dd8 - 0x473dde
 
@@ -18085,19 +10952,19 @@ typedef struct retdec_native_entry {
 
 
 // Address range: 0x4a8c50 - 0x4a8c8a
-/* function_4a8c50 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
+/* kinoko_sqplus_release_vm_wrappers is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8c90 - 0x4a8cb4
-/* function_4a8c90 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
+/* kinoko_sqplus_print is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8cc0 - 0x4a8d54
-/* function_4a8cc0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
+/* kinoko_sqplus_root_object is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8d60 - 0x4a8da5
 
 
 // Address range: 0x4a8db0 - 0x4a8e97
-/* function_4a8db0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
+/* kinoko_sqplus_select_vm is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a8ea0 - 0x4a8f90
 
@@ -18106,7 +10973,6 @@ typedef struct retdec_native_entry {
 
 
 // Address range: 0x4a90c0 - 0x4a91bc
-/* function_4a90c0 is implemented in native C++ (squirrel_vm_bootstrap.cpp). */
 
 // Address range: 0x4a91c0 - 0x4a9244
 
@@ -18245,8 +11111,7 @@ int32_t kinoko_squirrel_object_vtable(void) {
 // From class:    .?AVSquirrelObject@@
 // Type:          constructor
 int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr) {
-    return (int32_t)(intptr_t)function_4aa210_this(
-        source_ptr, (int32_t)(intptr_t)target_ptr);
+    return (int32_t)(intptr_t)(int32_t*)(intptr_t)(kinoko_sqplus_object_get_delegate((void *)(intptr_t)(source_ptr), (void *)(intptr_t)((int32_t)(intptr_t)target_ptr)));
 }
 
 // Address range: 0x4aa2d0 - 0x4aa393
@@ -18303,7 +11168,7 @@ int32_t function_4aa210(int32_t source_ptr, int32_t *target_ptr) {
 // Original SqPlus ClassType identities retained at the C/C++ boundary.
 // The rest of class/property/method binding lives in src/squirrel/.
 int32_t *kinoko_native_binding_type(int32_t category) {
-    return category == -1 ? kinoko_sqplus_game_type(0, function_460900)
+    return category == -1 ? kinoko_sqplus_game_type(0, kinoko_actor_assign_instance)
                           : kinoko_sqplus_scalar_type(category);
 }
 
@@ -18315,7 +11180,7 @@ int32_t kinoko_native_void_type(void) {
 // Address range: 0x4ab170 - 0x4ab2a6
 int32_t function_4ab170(int32_t vm, int32_t class_name,
                         int32_t native_pointer, int32_t release_hook) {
-    function_4a8db0(vm);
+    kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(vm));
     return kinoko_native_instance_create(vm, class_name, native_pointer,
         release_hook, (int32_t)(intptr_t)&g16);
 }
@@ -18866,7 +11731,7 @@ void retdec_msvc_Finitlocks__YAXXZ7(void) {
 
 // Address range: 0x4d4860 - 0x4d48b3
 int32_t function_4d4860(void) {
-    return kinoko_destroy_script_callback((int32_t)(intptr_t)g612);
+    return kinoko_destroy_script_callback((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)g612));
 }
 
 // Address range: 0x4d4930 - 0x4d4978
@@ -19123,14 +11988,13 @@ int32_t kinoko_resume_game_vm(int32_t vm, int32_t out, int32_t raiseerror) {
 
 /* Original 414850/414930 resource boundary, shared by the C++ CSV loader. */
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes) {
-    int32_t slot = 0;
+    KinokoArchiveReader *reader = NULL;
     *bytes = NULL;
-    if (!function_407370((int32_t)(intptr_t)&slot, path)) return 0;
-    int32_t *reader = (int32_t *)(intptr_t)slot;
-    uint32_t size = g765 != 0 ? (uint32_t)reader[3] : (uint32_t)function_407300(slot);
+    if (!kinoko_reader_open(&reader, path)) return 0;
+    uint32_t size = kinoko_reader_size(reader);
     char *buffer = size < UINT32_MAX ? (char *)malloc((size_t)size + 1) : NULL;
-    int32_t ok = buffer != NULL && (size == 0 || retdec_reader_read_exact(slot, buffer, size));
-    retdec_destroy_reader(reader);
+    int32_t ok = buffer != NULL && (size == 0 || kinoko_reader_read_exact(reader, buffer, size));
+    kinoko_reader_close(reader);
     if (!ok) { free(buffer); return 0; }
     if (g874 != 0) {
         unsigned char key = 0x8b, step = 0x71;
@@ -19173,7 +12037,7 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 /* Immutable host identities; audio code owns no retdec global VM state. */
 const struct KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static struct KinokoAudioHostSymbols symbols;
-    symbols.critical_section_vtable = &g190;
+    symbols.critical_section_vtable = &kinoko_critical_section_methods;
     symbols.device_error_message = g209;
     return &symbols;
 }
@@ -19189,4 +12053,116 @@ int32_t *kinoko_camera_binding_type(void) {
 
 int32_t *kinoko_map_binding_type(void) {
     return kinoko_sqplus_game_type(3, function_4701b0);
+}
+
+/* Host dependencies shared with the reconstructed ActorManager. */
+const void *kinoko_actor_owner_methods(void) { return &g31; }
+const void *kinoko_actor_render_layer_methods(void) { return &g27; }
+const void *kinoko_actor_class_object(void) { return &g602; }
+struct SQVM *kinoko_actor_default_vm(void) { return (struct SQVM *)g644; }
+void kinoko_actor_motion_host(KinokoActor *actor) { kinoko_actor_update_motion(kinoko_game_collision_state(), actor); }
+int32_t kinoko_actor_render_host(KinokoActor *actor, KinokoCamera *camera) {
+    return kinoko_actor_render(actor, camera);
+}
+void kinoko_actor_manager_refresh_collision(void) { kinoko_script_refresh_collision(); }
+
+
+// Explicit C-host boundaries: native app code does not index RetDec globals.
+void kinoko_application_initialize_host(void) { retdec_initialize_runtime_objects(); }
+const char *kinoko_application_title(void) { return g43; }
+const char *kinoko_application_error(void) { return g42; }
+void kinoko_application_open_archives(void) {
+    kinoko_archive_mount("6kinoko_a.dat");
+    kinoko_archive_mount("6kinoko_b.dat");
+    kinoko_archive_mount("6kinoko_c.dat");
+    retdec_string_assign_n(&g554, ".cv4", 4);
+}
+
+/* Game lifecycle ports: borrowed global objects, no new allocation/ownership. */
+const KinokoGameObjects *kinoko_game_objects(void) {
+    static const KinokoGameObjects objects = {
+        (KinokoInputManager *)g_retdec_input_manager_state,
+        (KinokoActorManager *)g_retdec_actor_manager_state,
+        (KinokoCamera *)g_retdec_camera_state,
+        (KinokoMapManager *)g_retdec_map_manager_state
+    };
+    return &objects;
+}
+/* Existing reconstruction fallback: preserve a borrowed VM when an old cleanup
+   alias is cleared during registration. Do not create or own a second VM here. */
+static struct SQVM *game_startup_vm;
+void kinoko_game_prepare_scripts(void) {
+    if (!game_startup_vm) game_startup_vm = (struct SQVM *)g644;
+    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
+}
+void kinoko_game_register_scripts(void) {
+    retdec_trace("469640:sqrat-begin");
+    retdec_trace("469640:before-473010");
+    function_473010();
+    retdec_trace("469640:after-473010");
+    if (g644) game_startup_vm = (struct SQVM *)g644;
+    else if (game_startup_vm) g644 = (char *)game_startup_vm;
+    retdec_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)g644);
+    retdec_trace("469640:sqrat-done");
+}
+int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
+    return function_46e6f0_this((int32_t)(intptr_t)input);
+}
+int32_t kinoko_game_update_input(KinokoInputManager *input) {
+    return function_46b9a0((int32_t)(intptr_t)input);
+}
+int32_t kinoko_game_load_boot_script(void) { return kinoko_script_load_file("data/script/boot.nut", 0); }
+void kinoko_game_update_callback(int32_t trace_index) {
+    if (kinoko_sqplus_object_type(g612 + 4) ==
+        0x08000100) {
+        // 0x46994b
+        retdec_trace("stagevm:global-callback");
+        if (trace_index <= 16) {
+            retdec_trace_i32("stagevm:global-state-vm", g612[0]);
+            retdec_trace_i32("stagevm:global-env-type", g612[2]);
+            retdec_trace_i32("stagevm:global-env-data", g612[3]);
+            retdec_trace_i32("stagevm:global-func-type", g612[5]);
+            retdec_trace_i32("stagevm:global-func-data", g612[6]);
+        }
+        if (kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)g612)) < 0)
+            kinoko_script_callback_clear((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)g612));
+    }
+}
+int32_t kinoko_game_update_map(KinokoMapManager *map) {
+    return kinoko_map_manager_update(map);
+}
+void kinoko_game_prepare_map(KinokoMapManager *map, KinokoCamera *camera) {
+    kinoko_map_manager_prepare(map, camera);
+}
+void kinoko_game_clear_map(KinokoMapManager *map) {
+    kinoko_map_manager_clear(map);
+}
+void kinoko_game_clear_actors(KinokoActorManager *actors) {
+    kinoko_actor_manager_clear_resources(actors);
+}
+void kinoko_game_trace_map(KinokoMapManager *map, int32_t drawing) {
+    const int32_t *legacy = (const int32_t *)map;
+    if (drawing) retdec_trace_i32("render:map-layer", legacy[3]);
+    else {
+        retdec_trace_i32("469900:map-act", legacy[3]);
+        retdec_trace_i32("469900:map-resource", legacy[5]);
+    }
+}
+void kinoko_game_release_script_reference(uint32_t index) {
+    int32_t *references[] = { g602, g629, g611, g636 };
+    if (index < 4) (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(intptr_t)((int32_t)(intptr_t)references[index])));
+}
+int32_t kinoko_game_close_vm(void) { return kinoko_script_close_vm(); }
+
+/* Borrowed legacy globals and the remaining map/path/movement implementations. */
+KinokoScriptCallback *kinoko_game_global_callback(void) { return (KinokoScriptCallback *)g612; }
+KinokoCollisionState *kinoko_game_collision_state(void) { return (KinokoCollisionState *)g_514300_storage; }
+void kinoko_game_initialize_callback(KinokoScriptCallback *callback) {
+    kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)((int32_t)(intptr_t)callback), (const char *)(intptr_t)(0));
+}
+int32_t kinoko_game_load_map_file(const char *path) { return kinoko_map_manager_load((KinokoMapManager *)g_retdec_map_manager_state, path, (struct SQVM *)g644, g636, &g722); }
+int32_t kinoko_game_release_map_state(void) { kinoko_map_manager_clear((KinokoMapManager *)g_retdec_map_manager_state); return 0; }
+
+void kinoko_game_split_path(const char *path, char *directory) {
+    kinoko_path_split(path, directory, NULL);
 }

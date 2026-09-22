@@ -1,4 +1,8 @@
+#include "kinoko/map_manager_records.hpp"
 #include "kinoko/map_render.h"
+#include "kinoko/act_runtime.h"
+#include "kinoko/legacy_memory.hpp"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/act_source.h"
 #include "kinoko/map_containers.h"
 #include "kinoko/act_layer_access.h"
@@ -10,53 +14,89 @@ extern "C" {
 extern unsigned char g327, g37;
 }
 
-namespace {
-struct MapManager {
-    unsigned char script_object[12];
-    KinokoActDocument *source_act;
-    KinokoActSourceHolder *source_holder;
-    int32_t player;
-};
-struct LayerName {
-    union { char local[16]; const char *heap; } storage;
-    uint32_t size, capacity;
+using namespace kinoko::map;
 
-    const char *data() const { return capacity < 16 ? storage.local : storage.heap; }
-};
-struct LayoutView {
-    void *vtable;
-    unsigned char prefix[308];
-    unsigned char *layer;
-};
-static_assert(offsetof(MapManager, player) == 20);
-static_assert(sizeof(LayerName) == 24 && offsetof(LayoutView, layer) == 312);
-}
-
-extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
-    const auto *manager = reinterpret_cast<const MapManager *>(manager_address);
-    if (!manager || !manager->source_act || !name)
+extern "C" KinokoActLayout *kinoko_map_lookup_layout(KinokoMapManager *storage, const char *name) {
+    if (!storage) return nullptr;
+    const ManagerView manager(storage);
+    if (!manager.get(&ManagerRecord::source_act) || !name)
         return 0;
 
     // 46F140 uses the source holder only for the layer count. 452020 resolves
     // the key from player+16 (the live ACT holder), after BeginStage's clone.
-    const int32_t count = kinoko_act_source_layer_count(manager->source_holder);
+    const int32_t count = kinoko_act_source_layer_count(manager.get(&ManagerRecord::source_holder));
     for (int32_t index = 0; index < count; ++index) {
-        const int32_t address = function_452020(manager->player, index);
-        const auto *layout = reinterpret_cast<const LayoutView *>(address);
-        if (!layout || layout->vtable != &g327 || !layout->layer)
-            continue;
-        const auto &layer_name = *reinterpret_cast<const LayerName *>(layout->layer + 112);
+        auto *borrowed_layout = kinoko_act_layer_layout(manager.get(&ManagerRecord::player), index);
+        if (!borrowed_layout) continue;
+        const LayoutView layout(borrowed_layout);
+        auto *layer = layout.get(&LayoutRecord::owning_layer);
+        if (layout.get(&LayoutRecord::methods) != &g327 || !layer) continue;
+        const kinoko::legacy::StringView layer_name(LayerView(layer).bytes(&LayerRecord::name));
         if (std::strcmp(layer_name.data(), name) == 0)
-            return address;
+            return borrowed_layout;
     }
     return 0;
 }
 
+extern "C" int32_t kinoko_map_find_layout(int32_t manager_address, const char *name) {
+    return kinoko::legacy::address(kinoko_map_lookup_layout(
+        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
+}
+
 extern "C" int32_t kinoko_map_create_render_layer(int32_t manager_address,
                                                    const char *name) {
-    const int32_t layout = kinoko_map_find_layout(manager_address, name);
+    return kinoko::legacy::address(kinoko_map_make_render_layer(
+        kinoko::legacy::pointer<KinokoMapManager>(manager_address), name));
+}
+extern "C" KinokoRenderLayer *kinoko_map_make_render_layer(KinokoMapManager *manager,
+                                                          const char *name) {
+    auto *layout = kinoko_map_lookup_layout(manager, name);
     if (!layout)
         return 0;
     // std::list preserves the returned eight-byte object's address on append.
-    return kinoko_map_append_render(manager_address, layout);
+    return kinoko::legacy::pointer<KinokoRenderLayer>(kinoko_map_append_render(
+        kinoko::legacy::address(manager), kinoko::legacy::address(layout)));
+}
+
+namespace {
+using kinoko::legacy::load;
+using QueryResource = uint8_t (__thiscall *)(KinokoActResource *, const void *, KinokoActResource **);
+using SetMapLayer = int32_t (__thiscall *)(KinokoActLayout *, KinokoActLayer *);
+struct ChipTypeDescriptor { void *table, *cache; char name[sizeof(".?AVCActResourceChip@@")]; };
+const ChipTypeDescriptor chip_type{{}, {}, ".?AVCActResourceChip@@"};
+struct ResourceMethods { void *prefix[2]; QueryResource query; };
+struct LayoutMethods { void *prefix[6]; SetMapLayer set_layer; };
+static_assert(offsetof(ResourceMethods, query) == 8);
+static_assert(offsetof(LayoutMethods, set_layer) == 24);
+}
+
+extern "C" retdec_mcd_data *kinoko_map_layer_chip_data(KinokoActLayout *layout) {
+    if (!layout) return nullptr;
+    auto *layer = LayoutView(layout).get(&LayoutRecord::owning_layer);
+    if (!layer) return nullptr;
+    auto *resource = LayerView(layer).get(&LayerRecord::resource);
+    if (!resource) return nullptr;
+    // Original virtual QueryType; this does not read or populate the cache.
+    const auto *methods = ChipResourceView(resource).get(&ChipResourceRecord::methods);
+    auto query = load<QueryResource>(methods + offsetof(ResourceMethods, query));
+    KinokoActResource *chip = nullptr;
+    if (!query(resource, &chip_type, &chip) || !chip) return nullptr;
+    return ChipResourceView(chip).get(&ChipResourceRecord::data);
+}
+
+extern "C" retdec_mcd_data *kinoko_map_cached_chip_data(KinokoActLayout *layout) {
+    if (!layout) return nullptr;
+    auto *resource = LayoutView(layout).get(&LayoutRecord::cached_chip_resource);
+    return resource ? ChipResourceView(resource).get(&ChipResourceRecord::data) : nullptr;
+}
+
+extern "C" retdec_mcd_data *kinoko_map_query_chip_data(KinokoActLayout *layout) {
+    if (!layout) return nullptr;
+    const LayoutView map(layout);
+    if (!map.get(&LayoutRecord::cached_chip_resource)) {
+        auto bind = load<SetMapLayer>(map.get(&LayoutRecord::methods) + offsetof(LayoutMethods, set_layer));
+        bind(layout, map.get(&LayoutRecord::owning_layer));
+    }
+    // Read again after virtual SetLayer. A non-null cache is not rebound.
+    return kinoko_map_cached_chip_data(layout);
 }

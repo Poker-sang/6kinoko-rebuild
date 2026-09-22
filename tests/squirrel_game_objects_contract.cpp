@@ -1,9 +1,14 @@
+#include "kinoko/script_callbacks.h"
+#include "kinoko/script_file.h"
 #include "kinoko/squirrel_game_objects.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/sqrat_object_bridge.h"
 #include "squirrel_bridge_test_support.hpp"
 #include <cstdlib>
 #include <vector>
+
+static_assert(!noexcept(kinoko_script_load_file(nullptr, nullptr)), "SqPlus file load may throw across C linkage");
+static_assert(!noexcept(kinoko_script_compile_file_argument(0, 0, 0, 0, 0, 0)), "owning argument must unwind on file errors");
 
 extern "C" {
 char* g644 = nullptr;
@@ -90,7 +95,7 @@ void callbacks(HSQUIRRELVM vm) {
     Pair table(vm), closure(vm), weak_table(vm), weak_closure(vm);
     sq_newtable(vm); table.capture();
     evaluate(vm,"return function() { return 17; };",&closure);
-    require(retdec_sqrat_set_pair(address(vm),table.data(),"Update",closure.data()),"publish callback");
+    require(kinoko_sqrat_set_pair((struct SQVM *)(vm), table.data(), "Update", closure.data()),"publish callback");
     auto object=wrapper(vm,table);
     std::array<unsigned char,84> script; script.fill(0xa7);
     const auto offset=25; store(script.data()+offset,address(vm));
@@ -164,12 +169,44 @@ void embedded(HSQUIRRELVM vm) {
     require(!retdec_execute_embedded_act_script(address(vm),address(script.data()),environment.data()),"script execution failure reported"); top(vm,base,"throwing closure cleanup");
     unsigned char raw[5]={1,2,3,4,5}, result[9]; std::memset(result,0xa7,sizeof(result));
     std::array<int32_t,3> stream{address(raw),5,address(raw)};
-    require(function_402a50(address(stream.data()),address(result+1),3)==3,"partial stream read");
-    require(function_402a50(address(stream.data()),address(result+4),9)==2,"clamped final stream read");
-    require(function_402a50(address(stream.data()),address(result+6),1)==0,"stream EOF");
+    require(kinoko_script_read_memory(stream.data(),result+1,3)==3,"partial stream read");
+    require(kinoko_script_read_memory(stream.data(),result+4,9)==2,"clamped final stream read");
+    require(kinoko_script_read_memory(stream.data(),result+6,1)==0,"stream EOF");
     require(result[0]==0xa7 && result[6]==0xa7 && std::memcmp(result+1,raw,5)==0,"read length and canaries");
     const auto exhausted=stream;
-    require(function_402a50(address(stream.data()),address(result),-1)==0 && stream==exhausted,"negative request is nonmutating");
+    require(kinoko_script_read_memory(stream.data(),result,-1)==0 && stream==exhausted,"negative request is nonmutating");
+}
+SQRESULT text_call(HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) {
+    require(count == 1 && result == SQTrue && errors == SQTrue, "text script call flags");
+    return kinoko_sq_call(address(vm), count, result, errors);
+}
+void text_scripts(HSQUIRRELVM vm) {
+    Top restore(vm);
+    const auto base = sq_gettop(vm);
+    auto run = [&](const char* source, const HSQOBJECT* environment) {
+        kinoko::script::upstream::sqplus_compile_and_run(vm, source,
+            "script-file-contract.nut", environment, text_call);
+    };
+    run("return 42;", nullptr);
+    top(vm, base, "text root execution balances stack");
+    Pair environment(vm); sq_newtable(vm); environment.capture();
+    auto scope = environment.get();
+    run("this.answer <- 713; return this;", &scope);
+    top(vm, base, "text custom environment balances stack");
+    environment.push(); sq_pushstring(vm, "answer", -1);
+    require(SQ_SUCCEEDED(sq_get(vm, -2)) && get_integer(vm) == 713,
+        "text executes in supplied environment");
+    sq_pop(vm, 2);
+    HSQOBJECT null_scope; sq_resetobject(&null_scope);
+    run("if (this != null) throw \"unexpected root fallback\";", &null_scope);
+    top(vm, base, "text explicit null does not use root");
+    for (const char* source : {"local = ;", "throw \"text failure\";"}) {
+        bool threw = false;
+        try { run(source, nullptr); } catch (...) { threw = true; }
+        require(threw, "text compile/run failures preserve SqPlus exception policy");
+        top(vm, base + 1, "SqPlus exception retains last-error object");
+        sq_settop(vm, base);
+    }
 }
 void values(HSQUIRRELVM vm) {
     Top restore(vm); std::array<int32_t,3> object{},copy{};
@@ -180,18 +217,18 @@ void values(HSQUIRRELVM vm) {
     require(retdec_squirrel_object_copy(copy.data(),copy.data()),"self-copy keeps owned value");
     const auto slot=function_4029b0(address(vm),copy.data());
     require(slot==kinoko_sq_get_up(address(vm),-1) && get_string(vm)=="ab","push returns source slot address"); sq_pop(vm,1);
-    function_4a9d70_this(address(object.data()));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
     require(retdec_squirrel_object_string(copy.data(),&text) && std::string(text)=="ab","copy survives source destruction");
-    function_4a9d70_this(address(copy.data()));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(copy.data())));
     require(retdec_squirrel_object_from_pair(object.data(),OT_INTEGER,-71),"integer pair construction");
     text=raw; require(!retdec_squirrel_object_string(object.data(),&text) && text==raw,"failed string conversion leaves output");
     const auto previous=object;
     require(!retdec_squirrel_object_from_string(object.data(),raw,0x1000001u) && object==previous,"oversized length rejected before read/write");
-    function_4a9d70_this(address(object.data()));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
     require(retdec_squirrel_object_from_string(object.data(),raw,0),"empty string construction");
-    require(retdec_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); function_4a9d70_this(address(object.data()));
+    require(retdec_squirrel_object_string(object.data(),&text) && !*text,"zero length is empty"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
     require(retdec_squirrel_object_from_string(object.data(),raw,2),"nonterminated bounded prefix");
-    require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); function_4a9d70_this(address(object.data()));
+    require(retdec_squirrel_object_string(object.data(),&text) && std::string(text)=="ab","bounded no-overread text"); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object.data())));
 }
 void callback_call(HSQUIRRELVM vm) {
     Top restore(vm); Pair closure(vm), environment(vm); root(vm,environment);
@@ -204,7 +241,7 @@ void callback_call(HSQUIRRELVM vm) {
         ObjectView value(temporary.data()); value.initialize(kinoko_squirrel_object_vtable());
         sq_newuserdata(vm,4); sq_setreleasehook(vm,-1,release_userdata); value.capture(vm,-1); sq_pop(vm,1);
         const auto before=releases; const auto base=sq_gettop(vm);
-        const auto result=function_45e020_this(address(state.data()),address(temporary.data()),OT_INTEGER,93);
+        const auto result=kinoko_script_callback_invoke_owned((KinokoScriptCallback *)(intptr_t)(address(state.data())), (KinokoOwnedObjectWords *)(intptr_t)(address(temporary.data())), OT_INTEGER, 93);
         require(fail ? SQ_FAILED(result) : SQ_SUCCEEDED(result),"callback forwards call status");
         require(releases==before+1 && value.value()._type==OT_NULL,"temporary consumed on either call result");
         top(vm,base+(fail ? 1 : 0),"success pops closure/result; failure retains closure");
@@ -217,7 +254,7 @@ int main() {
         for(int pass=0;pass<8;++pass) {
             Machine machine; auto vm=machine.get();
             g644=reinterpret_cast<char*>(vm); receiver=address(vm); kinoko_sq_set_context_exchange(exchange_vm);
-            constructors(vm); resource_roots(vm); callbacks(vm); embedded(vm); values(vm); callback_call(vm);
+            constructors(vm); resource_roots(vm); callbacks(vm); embedded(vm); values(vm); callback_call(vm); text_scripts(vm);
             sq_newthread(vm,64); HSQUIRRELVM child=nullptr; sq_getthread(vm,-1,&child);
             embedded(child); callbacks(child);
             require(g644==reinterpret_cast<char*>(vm),"child execution restores host VM");

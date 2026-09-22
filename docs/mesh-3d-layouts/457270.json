@@ -1,0 +1,1 @@
+{"addr":"0x457270","code":"int __thiscall sub_457270(_DWORD **this)\n{\n  return (*(int (__thiscall **)(_DWORD))(**(this + 1) + 16))(a1: *(this + 1));\n}"}

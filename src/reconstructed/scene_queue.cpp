@@ -1,63 +1,52 @@
 #include "kinoko/scene_queue.h"
-#include "kinoko/legacy_abi.h"
-#include "kinoko/legacy_memory.hpp"
-#include <windows.h>
+#include "kinoko/application_runtime.hpp"
 #include <list>
 #include <stdexcept>
-extern "C" {
-extern int32_t g863,g864,g867,g870,g871;
-extern CRITICAL_SECTION g869;
-}
+
+namespace kinoko::application {
 namespace {
-using kinoko::legacy::field;
-using kinoko::legacy::pointer;
-std::list<int32_t> retired_scenes;
-struct SceneLock {
-    SceneLock() { EnterCriticalSection(&g869); }
-    ~SceneLock() { LeaveCriticalSection(&g869); }
-};
-int32_t call(int32_t object,int slot,int32_t argument) {
-    const auto table=field<int32_t>(object);
-    return retdec_call_thiscall1_result(pointer<void>(object),pointer<void>(field<int32_t>(table+4*slot)),argument);
+std::list<Scene*> retired_scenes;
+using kinoko::windows::CriticalLock;
 }
-}
-extern "C" void kinoko_initialize_scene_queue(void) { retired_scenes.clear(); }
-extern "C" int32_t function_40da60(void) {
-    if(!g864) return 0;
-    int32_t previous;
+void activate_pending_scene() {
+    Scene* previous;
     {
-        SceneLock lock;
-        previous=g863;g863=g864;g864=0;
+        CriticalLock lock(&state.scene_lock);
+        if (!state.pending_scene) return;
+        previous = state.scene;
+        state.scene = state.pending_scene;
+        state.pending_scene = nullptr;
     }
-    if(previous) {
-        call(previous,5,g870);
+    if (previous) {
+        previous->methods->leave(previous, state.requested_scene);
         {
-            // The standard list's cross-thread mutations need synchronization.
-            // Reuse the scene lock, never hold it during user callbacks.
-            SceneLock lock;
-            if(retired_scenes.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
+            // Protect native list mutations, but retain original callback order.
+            CriticalLock lock(&state.scene_lock);
+            if (retired_scenes.size() == 0x3ffffffeu) throw std::length_error("list<T> too long");
             retired_scenes.push_back(previous);
         }
-        SetEvent(pointer<void>(g867));
+        if (state.retire_event) SetEvent(state.retire_event.get());
     }
-    int32_t result=0;
-    if(g863) result=call(g863,4,g871);
-    g871=g870;
-    return result;
+    if (state.scene) state.scene->methods->enter(state.scene, state.current_scene);
+    state.current_scene = state.requested_scene;
 }
-extern "C" void kinoko_destroy_retired_scenes(void) {
-    for(;;) {
-        int32_t object;
+}
+extern "C" void kinoko_initialize_scene_queue() {
+    kinoko::application::retired_scenes.clear();
+}
+extern "C" void kinoko_destroy_retired_scenes() {
+    using namespace kinoko::application;
+    for (;;) {
+        Scene* object;
         {
-            SceneLock lock;
-            if(retired_scenes.empty()) return;
-            object=retired_scenes.front();
+            kinoko::windows::CriticalLock lock(&state.scene_lock);
+            if (retired_scenes.empty()) return;
+            object = retired_scenes.front();
         }
-        // Single consumer, insertion only at the back. Preserve original
-        // deleting-destructor-before-node-removal order (40E377-40E3AC).
-        if(object) call(object,0,1);
+        // Single consumer; deleting destructor precedes removing its queue node.
+        if (object) object->methods->destroy(object, 1);
         {
-            SceneLock lock;
+            kinoko::windows::CriticalLock lock(&state.scene_lock);
             retired_scenes.pop_front();
         }
     }

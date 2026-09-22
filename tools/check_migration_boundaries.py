@@ -56,17 +56,19 @@ def main() -> int:
             for match in CALLBACK_LITERAL.finditer(text):
                 line = text.count('\n', 0, match.start()) + 1
                 errors.append(f'{path.relative_to(ROOT)}:{line}: original-image native callback address')
-    # These settings belong ONLY to the transitional adapter; removing them
-    # changes its ABI. They are not a substitute for recovering copy operands.
+    # The transitional frame/stack adapters have been fully retired. Do not
+    # require their old compiler flags, and do not permit their reintroduction.
     cmake = (ROOT / 'CMakeLists.txt').read_text()
-    if not re.search(r'set_source_files_properties\(src/platform/legacy_frame_entry\.cpp\s+PROPERTIES COMPILE_OPTIONS "/Oy-;/GL-"\)', cmake):
-        errors.append('The isolated frame adapter lost its /Oy- /GL- ABI settings.')
+    for source in ('src/platform/legacy_frame_entry.cpp',
+                   'src/platform/legacy_frame_copy.cpp'):
+        if (ROOT / source).exists() or source in cmake:
+            errors.append('Retired stack/frame adapter returned: ' + source)
     if errors:
         print('\n'.join(errors), file=sys.stderr)
         return 1
     print(f'PASS: {scanned} source/header files; zero handwritten inline assembly/naked entries and literal native-closure addresses; original reference intact.')
     print(f'PASS: {upstream_members} historical upstream members and documented patches verified.')
-    print('NOTE: legacy_frame_copy.cpp still preserves the old operand-selection heuristic.')
+    print('PASS: retired frame/stack adapters remain absent.')
     return 0
 
 if __name__ == '__main__':

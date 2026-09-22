@@ -1,0 +1,1932 @@
+[
+  {
+    "asset": "worldmap.act",
+    "archive_offset": 58460,
+    "xor_key": 47,
+    "raw_sha256": "c5f46d5755048bc9cbee4df7a012863e36d8f9a1a30c88592fb9da12b28c8fe6",
+    "properties": {
+      "marginBottom": 0,
+      "marginLeft": 0,
+      "marginRight": 0,
+      "marginTop": 0,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "resolutionMs": 16,
+      "screenHeight": 1536,
+      "screenWidth": 2176,
+      "stName": "WorldMap",
+      "visible": 1
+    },
+    "script": {
+      "compiled": 0,
+      "filePath": "",
+      "size": 50,
+      "offset": 304,
+      "prefix_hex": "436f6d70696c6546696c652822446174",
+      "source": "CompileFile(\"Data/WorldMap/WorldMap.nut\", this);\u0000\u0000"
+    },
+    "layers": [
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 320.0,
+          "dst_y": 240.0,
+          "dst_z": 0.0,
+          "layerID": 37,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 4,
+          "stName": "black",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 0.5,
+              "cor_y": 0.5,
+              "cor_z": 0.0,
+              "cos_x": 0.5,
+              "cos_y": 0.5,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 800.0,
+              "scale.y": 600.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1032,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 14,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "crowd",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 384,
+              "mapChipLeft": -32,
+              "mapChipRight": 576,
+              "mapChipTop": 0,
+              "maxChipHeight": 96,
+              "maxChipWidth": 224,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1636,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 32,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "w4_fog1",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 384,
+              "mapChipLeft": 0,
+              "mapChipRight": 544,
+              "mapChipTop": 0,
+              "maxChipHeight": 384,
+              "maxChipWidth": 544,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 2230,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 33,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "w4_fog2",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 384,
+              "mapChipLeft": 0,
+              "mapChipRight": 544,
+              "mapChipTop": 0,
+              "maxChipHeight": 384,
+              "maxChipWidth": 544,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 2824,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 35,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "w6_fog",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 384,
+              "mapChipLeft": 0,
+              "mapChipRight": 544,
+              "mapChipTop": 0,
+              "maxChipHeight": 384,
+              "maxChipWidth": 544,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 3417,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 3,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 2,
+          "stName": "marisa",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 48.0,
+              "cor_y": 48.0,
+              "cor_z": 0.0,
+              "cos_x": 48.0,
+              "cos_y": 48.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 4093,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 38,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "marisaWalk",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 96,
+              "mapChipLeft": 0,
+              "mapChipRight": 96,
+              "mapChipTop": 0,
+              "maxChipHeight": 96,
+              "maxChipWidth": 96,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 4690,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 10,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "event",
+          "visible": 0
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2080,
+              "mapChipLeft": 64,
+              "mapChipRight": 2112,
+              "mapChipTop": 96,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 6122,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 4,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "point",
+          "visible": 0
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2080,
+              "mapChipLeft": 64,
+              "mapChipRight": 2112,
+              "mapChipTop": 96,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 8310,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 13,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "symbol",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2048,
+              "mapChipLeft": 32,
+              "mapChipRight": 2144,
+              "mapChipTop": 32,
+              "maxChipHeight": 96,
+              "maxChipWidth": 96,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 9755,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 6,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "rail",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2080,
+              "mapChipLeft": 64,
+              "mapChipRight": 2112,
+              "mapChipTop": 96,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 15626,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 9,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "rail_bg",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 896,
+              "mapChipLeft": 0,
+              "mapChipRight": 64,
+              "mapChipTop": 864,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 16232,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 34,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "w5_bg",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1632,
+              "mapChipLeft": 1632,
+              "mapChipRight": 2176,
+              "mapChipTop": 0,
+              "maxChipHeight": 384,
+              "maxChipWidth": 544,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 16848,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 7,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "bg_a",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1632,
+              "mapChipLeft": 0,
+              "mapChipRight": 2176,
+              "mapChipTop": 0,
+              "maxChipHeight": 384,
+              "maxChipWidth": 544,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 17559,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 12,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask1",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1888,
+              "mapChipLeft": 64,
+              "mapChipRight": 1920,
+              "mapChipTop": 128,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 18770,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 31,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask1b",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1472,
+              "mapChipLeft": 1280,
+              "mapChipRight": 1504,
+              "mapChipTop": 1056,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 19442,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 18,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask2",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1984,
+              "mapChipLeft": 160,
+              "mapChipRight": 2016,
+              "mapChipTop": 256,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 20641,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 24,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask3",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1984,
+              "mapChipLeft": 64,
+              "mapChipRight": 2016,
+              "mapChipTop": 192,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 21780,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 25,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask4",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2080,
+              "mapChipLeft": 256,
+              "mapChipRight": 2112,
+              "mapChipTop": 128,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 23051,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 26,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask5",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1984,
+              "mapChipLeft": 160,
+              "mapChipRight": 2016,
+              "mapChipTop": 192,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 24058,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 27,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask6",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1952,
+              "mapChipLeft": 160,
+              "mapChipRight": 1984,
+              "mapChipTop": 192,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 25221,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 28,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask7",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1856,
+              "mapChipLeft": 448,
+              "mapChipRight": 1888,
+              "mapChipTop": 128,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 26456,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 29,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask8",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1888,
+              "mapChipLeft": 1472,
+              "mapChipRight": 1920,
+              "mapChipTop": 96,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 27319,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 30,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden_mask9",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2080,
+              "mapChipLeft": 64,
+              "mapChipRight": 2112,
+              "mapChipTop": 128,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 28494,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      }
+    ]
+  },
+  {
+    "asset": "titlemenu.act",
+    "archive_offset": 26687904,
+    "xor_key": 243,
+    "raw_sha256": "bffe70b54604326aaa28e5f812248d1838b3a6520701761a035af1ae73aeba64",
+    "properties": {
+      "marginBottom": 128,
+      "marginLeft": 128,
+      "marginRight": 128,
+      "marginTop": 128,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "resolutionMs": 16,
+      "screenHeight": 480,
+      "screenWidth": 640,
+      "stName": "TitleMenu",
+      "visible": 1
+    },
+    "script": {
+      "compiled": 0,
+      "filePath": "",
+      "size": 55,
+      "offset": 305,
+      "prefix_hex": "436f6d70696c6546696c652822446174",
+      "source": "CompileFile(\"Data/System/Title/titlemenu.nut\", this);\u0000\u0000"
+    },
+    "layers": [
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 189.0,
+          "dst_y": 212.0,
+          "dst_z": 0.0,
+          "layerID": 3,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 3,
+          "stName": "cursor1",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 32.0,
+              "cor_y": 16.0,
+              "cor_z": 0.0,
+              "cos_x": 32.0,
+              "cos_y": 16.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1040,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 134.0,
+          "dst_y": 211.0,
+          "dst_z": 0.0,
+          "layerID": 9,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 3,
+          "stName": "cursor2",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 32.0,
+              "cor_y": 16.0,
+              "cor_z": 0.0,
+              "cos_x": 32.0,
+              "cos_y": 16.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1717,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 192.0,
+          "dst_y": 211.0,
+          "dst_z": 0.0,
+          "layerID": 5,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 5,
+          "stName": "menu_top",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 160.0,
+              "cor_y": 80.0,
+              "cor_z": 0.0,
+              "cos_x": 160.0,
+              "cos_y": 80.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 2395,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 192.0,
+          "dst_y": 211.0,
+          "dst_z": 0.0,
+          "layerID": 6,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 6,
+          "stName": "menu_delete",
+          "visible": 0
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 160.0,
+              "cor_y": 80.0,
+              "cor_z": 0.0,
+              "cos_x": 160.0,
+              "cos_y": 80.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 3076,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 181.0,
+          "dst_z": 0.0,
+          "layerID": 8,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 9,
+          "stName": "menu_config",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 256.0,
+              "cor_y": 128.0,
+              "cor_z": 0.0,
+              "cos_x": 256.0,
+              "cos_y": 128.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 3757,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 320.0,
+          "dst_y": 240.0,
+          "dst_z": 0.0,
+          "layerID": 10,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 13,
+          "stName": "black",
+          "visible": 0
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 0.5,
+              "cor_y": 0.5,
+              "cor_z": 0.0,
+              "cos_x": 0.5,
+              "cos_y": 0.5,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 700.0,
+              "scale.y": 500.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 4432,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 4,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 4,
+          "stName": "title_logo",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 320.0,
+              "cor_y": 112.0,
+              "cor_z": 0.0,
+              "cos_x": 320.0,
+              "cos_y": 181.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 55,
+          "offset": 5112,
+          "prefix_hex": "436f6d70696c6546696c652822446174",
+          "source": "CompileFile(\"Data/System/Title/TitleLogo.nut\", this);\u0000\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 64.0,
+          "dst_y": 432.0,
+          "dst_z": 0.0,
+          "layerID": 2,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 2,
+          "stName": "title_copyright",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0x655cd5b0",
+            "fields": {
+              "alpha": 1.0,
+              "blend": 1,
+              "colorB": 255,
+              "colorG": 255,
+              "colorR": 255,
+              "cor_x": 256.0,
+              "cor_y": 16.0,
+              "cor_z": 0.0,
+              "cos_x": 256.0,
+              "cos_y": 16.0,
+              "cos_z": 0.0,
+              "roll.x": 0.0,
+              "roll.y": 0.0,
+              "roll.z": 0.0,
+              "scale.x": 1.0,
+              "scale.y": 1.0,
+              "scale.z": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 5851,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      }
+    ]
+  },
+  {
+    "asset": "w1-c01a.act",
+    "archive_offset": 4347064,
+    "xor_key": 127,
+    "raw_sha256": "d5f14574508731d8715cb2bd065734ea503e9dbccac56180101b6a88fce680c5",
+    "properties": {
+      "marginBottom": 128,
+      "marginLeft": 128,
+      "marginRight": 128,
+      "marginTop": 128,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "resolutionMs": 16,
+      "screenHeight": 1088,
+      "screenWidth": 6720,
+      "stName": "w1-c01a",
+      "visible": 1
+    },
+    "script": {
+      "compiled": 0,
+      "filePath": "",
+      "size": 179,
+      "offset": 303,
+      "prefix_hex": "2f2f8f898afa89bb0d0a2f2f42474d0d",
+      "source": "//初期化\r\n//BGM\r\nSetBgm(\"data/bgm/st1.ogg\");\r\n//タイム\r\ntime = 400*60;\r\n\r\n//ワープポイントAの出口の設定\r\nwarp['A'] <- function()\r\n{\r\n\tSetStage(\"w1-c01b.act\");\r\n\treturn true;\r\n}\r\n\u0000"
+    },
+    "layers": [
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 1,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "event",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 6016,
+              "mapChipLeft": 160,
+              "mapChipRight": 6080,
+              "mapChipTop": 832,
+              "maxChipHeight": 64,
+              "maxChipWidth": 64,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1125,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 3,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "front",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 0,
+              "mapChipLeft": 0,
+              "mapChipRight": 0,
+              "mapChipTop": 0,
+              "maxChipHeight": -2147483648,
+              "maxChipWidth": -2147483648,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 1705,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 9,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "hidden",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 2432,
+              "mapChipLeft": 2240,
+              "mapChipRight": 2464,
+              "mapChipTop": 800,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 78,
+          "offset": 2898,
+          "prefix_hex": "2f2f208a4f9594837483408343838b93",
+          "source": "// 外部ファイル読み込み\r\nCompileFile(\"Data/Script/stage/HiddenLayer.nut\", u);\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 2,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "enemy",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 5536,
+              "mapChipLeft": 512,
+              "mapChipRight": 5568,
+              "mapChipTop": 224,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 4875,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 4,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "rail1",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 0,
+              "mapChipLeft": 0,
+              "mapChipRight": 0,
+              "mapChipTop": 0,
+              "maxChipHeight": -2147483648,
+              "maxChipWidth": -2147483648,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 5455,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 5,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "rail2",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 0,
+              "mapChipLeft": 0,
+              "mapChipRight": 0,
+              "mapChipTop": 0,
+              "maxChipHeight": -2147483648,
+              "maxChipWidth": -2147483648,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 6035,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 6,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "terrain",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 6688,
+              "mapChipLeft": 0,
+              "mapChipRight": 6720,
+              "mapChipTop": 0,
+              "maxChipHeight": 64,
+              "maxChipWidth": 64,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 17489,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 7,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "bg1",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 4672,
+              "mapChipLeft": 2240,
+              "mapChipRight": 4704,
+              "mapChipTop": 800,
+              "maxChipHeight": 32,
+              "maxChipWidth": 32,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 1,
+          "offset": 18571,
+          "prefix_hex": "00",
+          "source": "\u0000"
+        }
+      },
+      {
+        "fields": {
+          "debugOnly": 0,
+          "dst_x": 0.0,
+          "dst_y": 0.0,
+          "dst_z": 0.0,
+          "layerID": 8,
+          "ox": 0.0,
+          "oy": 0.0,
+          "oz": 0.0,
+          "parentID": -1,
+          "prev_x": 0.0,
+          "prev_y": 0.0,
+          "prev_z": 0.0,
+          "resourceID": 1,
+          "stName": "bg2",
+          "visible": 1
+        },
+        "layouts": [
+          {
+            "kind": "0xc9ca5c20",
+            "fields": {
+              "alpha": 1.0,
+              "layerType": 0,
+              "mapChipBottom": 1008,
+              "mapChipLeft": 96,
+              "mapChipRight": 20576,
+              "mapChipTop": 320,
+              "maxChipHeight": 688,
+              "maxChipWidth": 20480,
+              "scale": 1.0
+            }
+          }
+        ],
+        "script": {
+          "compiled": 0,
+          "filePath": "",
+          "size": 111,
+          "offset": 19161,
+          "prefix_hex": "66756e6374696f6e2055706461746528",
+          "source": "function Update()\r\n{\r\n\tlayer.dst_x = ::camera.left * 7 / 10 - 200;\r\n\tlayer.dst_y = ::camera.top / 2 -272;\r\n}\r\n\u0000"
+        }
+      }
+    ]
+  }
+]

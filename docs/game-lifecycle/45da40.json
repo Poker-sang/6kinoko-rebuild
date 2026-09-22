@@ -1,0 +1,1 @@
+{"addr":"0x45da40","code":"// attributes: thunk\nint sub_45DA40()\n{\n  return sub_469680();\n}","refs":[{"addr":"0x469680","name":"sub_469680"}]}

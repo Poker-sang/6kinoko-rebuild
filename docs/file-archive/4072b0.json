@@ -1,0 +1,1 @@
+{"addr":"0x4072b0","code":"int __thiscall sub_4072B0(void *this, _DWORD *a2)\n{\n  _DWORD *v2; // eax\n\n  v2 = a2; /*0x4072b3*/\n  if ( a2[5] >= 0x10u ) /*0x4072ba*/\n    v2 = (_DWORD *)*a2; /*0x4072bc*/\n  return (*(int (__thiscall **)(void *, _DWORD *))(*(_DWORD *)this + 8))(a1: this, a2: v2); /*0x4072c6*/\n}"}

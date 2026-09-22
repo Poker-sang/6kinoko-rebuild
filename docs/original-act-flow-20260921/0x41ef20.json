@@ -1,0 +1,1 @@
+{"addr":"0x41ef20","code":"int __thiscall sub_41EF20(_DWORD *this, int a2)\n{\n  if ( a2 == 0 ) /*0x41ef28*/\n    return -2147467259; /*0x41ef2a*/\n  *(this + 25) = a2; /*0x41ef33*/\n  *(this + 24) = *(_DWORD *)(a2 + 4); /*0x41ef39*/\n  return 0; /*0x41ef2f*/\n}"}

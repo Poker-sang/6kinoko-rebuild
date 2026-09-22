@@ -1,0 +1,43 @@
+{
+  "version": "R147",
+  "source_commit": "8b9312536c63af2be4a9608625cb3389e8134819",
+  "batches": [
+    "1649d83",
+    "89ec468",
+    "8b93125"
+  ],
+  "build_tree": "build-runs/render-camera-r147-quiet",
+  "runtime_directory": "runtime-builds/render-camera-r147-quiet",
+  "executable": "C:\\WorkSpace\\6kinoko-rebuild\\runtime-builds\\render-camera-r147-quiet\\kinoko_retdec_rebuild.exe",
+  "executable_size": 851456,
+  "executable_sha256": "2A4229F54B5A7F5FC9CEE532864FD1228AE3EC9420DB4296116675E7A6C1B026",
+  "configuration": "Release Win32",
+  "trace_disabled": true,
+  "configure_exit": 0,
+  "build_exit": 0,
+  "stage_exit": 0,
+  "game_executed": false,
+  "tests_executed": false,
+  "new_contracts_compiled": [
+    "kinoko_map_visible_contract",
+    "kinoko_camera_contract",
+    "kinoko_quad_submit_contract"
+  ],
+  "dat_files": [
+    {
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64",
+      "size": 163424746,
+      "name": "6kinoko_a.dat"
+    },
+    {
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2",
+      "size": 44681244,
+      "name": "6kinoko_b.dat"
+    },
+    {
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E",
+      "size": 11796163,
+      "name": "6kinoko_c.dat"
+    }
+  ]
+}

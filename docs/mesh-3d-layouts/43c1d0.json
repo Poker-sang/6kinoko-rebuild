@@ -1,0 +1,1 @@
+{"addr":"0x43c1d0","code":"int *sub_43C1D0()\n{\n  return &dword_51B9F0; /*0x43c1d5*/\n}","refs":[{"addr":"0x51b9f0","name":"dword_51B9F0"}]}

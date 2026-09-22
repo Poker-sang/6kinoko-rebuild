@@ -104,7 +104,7 @@ class GraphContract(unittest.TestCase):
         source += 'int32_t g1 = 0; // 0x501000\n'
         entries, _, _, _ = graph(source, {})
         original = source + 'int32_t g2 = 0; // 0x501020\n'
-        for literal in ('0x601040', '0x501010', '4198464', '\"0x601040\"'):
+        for literal in ('0x601040', '0x501010', str(0x601040), '\"0x601040\"'):
             with self.subTest(literal=literal):
                 ranges, hits = interior_references(source, entries, {'external.c': literal}, original)
                 self.assertEqual(len(hits), 1)

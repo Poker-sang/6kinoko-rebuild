@@ -1,0 +1,1 @@
+{"addr":"0x45d970","code":"_DWORD *__thiscall sub_45D970(_DWORD *this, char a2)\n{\n  *this = &IScene::`vftable'; /*0x45d97a*/\n  if ( (a2 & 1) != 0 ) /*0x45d980*/\n    operator delete(a1: this); /*0x45d983*/\n  return this; /*0x45d98d*/\n}","refs":[{"addr":"0x4d53d0","name":"??_7IScene@@6B@"},{"addr":"0x4ab2a6","name":"??3@YAXPAX@Z"}]}

@@ -1,0 +1,45 @@
+{
+  "version": "R141b",
+  "source_commit": "72da95edf864229debac7d6c8f0e6d4923b360df",
+  "build_tree": "build-runs/actor-manager-r141b-quiet",
+  "runtime_directory": "runtime-builds/actor-manager-r141b-quiet",
+  "configuration": "Release Win32",
+  "trace_disabled": true,
+  "configure_exit_code": 0,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "game_executed": false,
+  "tests_executed": false,
+  "dat_size_sha256_verified": true,
+  "files": [
+    {
+      "name": "kinoko_retdec_rebuild.exe",
+      "size": 854528,
+      "sha256": "7832945BAD5E85576F76A55AAC97B1CE041382D0BD42EA9AB40E4BC853A43EBC"
+    },
+    {
+      "name": "6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "name": "6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "name": "6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    }
+  ],
+  "manager_contract": "runtime-builds/actor-manager-r141b-quiet/tools/kinoko_actor_manager_contract.exe",
+  "first_attempt": {
+    "dat_size_sha256_verified": true,
+    "status": "retained; superseded for regression executable output directory only",
+    "build_tree": "build-runs/actor-manager-r141-quiet",
+    "build_exit_code": 0,
+    "source_commit": "cfcc95a40fa56262fa31af021ef4ab056849c9dd"
+  },
+  "warnings": "Existing extern-C /EHc exception and legacy/third-party conversion or unused-function warnings remain; no build errors."
+}

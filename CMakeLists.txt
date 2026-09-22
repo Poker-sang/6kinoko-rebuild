@@ -39,6 +39,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/act_array.cpp
     src/reconstructed/act_list.cpp
     src/reconstructed/act_clone.cpp
+    src/reconstructed/act_document_clone.cpp
     src/reconstructed/act_layer_clone.cpp
     src/reconstructed/actor_methods.cpp
     src/reconstructed/physical_input.cpp
@@ -47,23 +48,46 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_keys.cpp
     src/reconstructed/input_copy.cpp
     src/reconstructed/input_runtime.cpp
+    src/reconstructed/pat_animation.cpp
+    src/reconstructed/pat_frame.cpp
+    src/reconstructed/camera_runtime.cpp
+    src/reconstructed/camera_projection.cpp
+    src/reconstructed/actor_render.cpp
     src/reconstructed/actor_animation.cpp
     src/reconstructed/animation_storage.cpp
     src/reconstructed/integer_vector.cpp
     src/reconstructed/integer_map.cpp
     src/reconstructed/actor_priority.cpp
+    src/reconstructed/actor_manager.cpp
     src/reconstructed/actor_cleanup.cpp
     src/reconstructed/stage_cleanup.cpp
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
-    src/reconstructed/script_callbacks.cpp
+    src/reconstructed/renderer.cpp
+    src/reconstructed/device_runtime.cpp
+    src/reconstructed/device_initialization.cpp
+    src/reconstructed/quad_submit.cpp
+    src/reconstructed/act_render_state.cpp
+    src/reconstructed/act_layout_3d.cpp
+    src/reconstructed/mesh_model.cpp
+    src/reconstructed/act_mesh.cpp
+    src/reconstructed/render_state.cpp
     src/reconstructed/sprite.cpp
     src/reconstructed/sprite_rect.cpp
     src/reconstructed/sprite_color.cpp
+    src/reconstructed/bitmap.cpp
     src/reconstructed/texture_store.cpp
     src/reconstructed/map_containers.cpp
+    src/reconstructed/map_manager.cpp
+    src/reconstructed/map_loading.cpp
     src/reconstructed/map_copy.cpp
     src/reconstructed/map_layers.cpp
+    src/reconstructed/map_activation.cpp
+    src/reconstructed/map_collision.cpp
+    src/reconstructed/collision_manager.cpp
+    src/reconstructed/collision_queries.cpp
+    src/reconstructed/actor_motion.cpp
+    src/reconstructed/map_chip_cache.cpp
     src/reconstructed/map_layout_lifetime.cpp
     src/reconstructed/map_render.cpp)
 target_include_directories(kinoko_native_methods PUBLIC include)
@@ -118,6 +142,15 @@ add_library(kinoko_zlib STATIC
     ${KINOKO_ZLIB_DIR}/zutil.c
 )
 target_include_directories(kinoko_zlib PUBLIC ${KINOKO_ZLIB_DIR})
+
+add_library(kinoko_base_utilities STATIC
+    src/reconstructed/buffer_codec.cpp
+    src/reconstructed/process_paths.cpp
+    src/reconstructed/critical_section.cpp)
+target_include_directories(kinoko_base_utilities PUBLIC include)
+target_compile_options(kinoko_base_utilities PRIVATE /Gy)
+target_link_libraries(kinoko_base_utilities PUBLIC kinoko_zlib)
+target_link_libraries(kinoko_native_methods PUBLIC kinoko_base_utilities)
 
 add_executable(kinoko_retdec_rebuild WIN32
     src/decompiled/6kinoko_rebuilt.c
@@ -194,6 +227,7 @@ endif()
 # Runtime uses the supplied core; CallNative has one receiver-scope hook.
 # All ABI and ownership adapters live in src/squirrel/.
 add_library(kinoko_squirrel_cpp_vm STATIC
+    src/squirrel/collision_callbacks.cpp
     src/reconstructed/act_frame_update.cpp
     src/reconstructed/act_frame_render.cpp
     src/reconstructed/act_draw_storage.cpp
@@ -205,16 +239,26 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/actor_pool.cpp
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp
+    src/reconstructed/application_runtime.cpp
+    src/reconstructed/game_runtime.cpp
+    src/reconstructed/scene_operations.cpp
+    src/squirrel/game_script_api.cpp
+    src/squirrel/game_script_entries.cpp
     src/reconstructed/scene_queue.cpp
+    src/reconstructed/file_io.cpp
     src/reconstructed/archive_store.cpp
     src/reconstructed/archive_random.cpp
     src/reconstructed/render_target.cpp
     src/reconstructed/render_queue.cpp
+    src/reconstructed/string_layout_render.cpp
     src/reconstructed/string_render.cpp
     src/reconstructed/string_font.cpp
     src/reconstructed/string_text.cpp
     src/reconstructed/string_glyph_cache.cpp
     src/reconstructed/act_document.cpp
+    src/reconstructed/act_document_io.cpp
+    src/reconstructed/act_document_resources.cpp
+    src/reconstructed/act_document_association.cpp
     src/reconstructed/act_script_io.cpp
     src/reconstructed/act_texture_io.cpp
     src/reconstructed/act_map.cpp
@@ -223,8 +267,14 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/squirrel_legacy_api.cpp
     src/squirrel/squirrel_host_compat.cpp
     src/squirrel/squirrel_vm_bootstrap.cpp
+    src/squirrel/actor_initialization.cpp
+    src/reconstructed/script_callbacks.cpp
+    src/squirrel/script_callback_invocation.cpp
+    src/squirrel/actor_state.cpp
+    src/squirrel/actor_diagnostics.cpp
     src/squirrel/actor_lifecycle.cpp
     src/squirrel/squirrel_native_calls.cpp
+    src/squirrel/script_file.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
     src/squirrel/sqrat_object_bridge.cpp
@@ -347,6 +397,32 @@ set(KINOKO_REFERENCE_DIR "${CMAKE_SOURCE_DIR}/../6kinoko" CACHE PATH "Directory 
 set(KINOKO_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime-builds/default" CACHE PATH
     "Directory for built runtime executables")
 enable_testing()
+add_executable(kinoko_application_contract tests/application_contract.cpp
+    src/reconstructed/application_runtime.cpp src/reconstructed/scene_queue.cpp)
+target_include_directories(kinoko_application_contract PRIVATE include)
+target_compile_options(kinoko_application_contract PRIVATE /Gy /O2)
+target_link_options(kinoko_application_contract PRIVATE /OPT:REF /OPT:ICF)
+target_link_libraries(kinoko_application_contract PRIVATE user32 gdi32 ole32 winmm imm32)
+add_test(NAME application_contract COMMAND kinoko_application_contract)
+
+add_executable(kinoko_game_lifecycle_contract tests/game_lifecycle_contract.cpp
+    src/reconstructed/game_runtime.cpp)
+target_include_directories(kinoko_game_lifecycle_contract PRIVATE include)
+target_compile_options(kinoko_game_lifecycle_contract PRIVATE /O2)
+add_test(NAME game_lifecycle_contract COMMAND kinoko_game_lifecycle_contract)
+
+add_executable(kinoko_game_script_contract tests/game_script_contract.cpp)
+target_include_directories(kinoko_game_script_contract PRIVATE include
+    "${KINOKO_SQUIRREL2_ROOT}/include" "${KINOKO_SQUIRREL2_ROOT}/squirrel")
+target_link_libraries(kinoko_game_script_contract PRIVATE kinoko_squirrel_cpp_vm kinoko_legacy_abi)
+target_link_options(kinoko_game_script_contract PRIVATE /OPT:REF /OPT:ICF)
+add_test(NAME game_script_contract COMMAND kinoko_game_script_contract)
+
+add_executable(kinoko_scene_operations_contract tests/scene_operations_contract.cpp
+    src/reconstructed/scene_operations.cpp src/reconstructed/render_queue.cpp)
+target_include_directories(kinoko_scene_operations_contract PRIVATE include)
+target_compile_options(kinoko_scene_operations_contract PRIVATE /O2 /fp:strict)
+add_test(NAME scene_operations_contract COMMAND kinoko_scene_operations_contract)
 add_test(
     NAME archive_smoke
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
@@ -392,6 +468,8 @@ add_test(NAME texture_serialization_contract
     COMMAND kinoko_stage_contract --texture-serialization)
 add_test(NAME map_serialization_contract
     COMMAND kinoko_stage_contract --map-serialization)
+add_test(NAME map_lazy_binding_contract
+    COMMAND kinoko_stage_contract --map-lazy-binding)
 add_test(NAME dynamic_layer_contract
     COMMAND kinoko_stage_contract --dynamic-layer)
 
@@ -412,6 +490,10 @@ add_test(NAME game_math_contract COMMAND kinoko_game_math_contract)
 add_executable(kinoko_legacy_abi_contract tests/legacy_abi_contract.cpp)
 target_link_libraries(kinoko_legacy_abi_contract PRIVATE kinoko_legacy_abi)
 add_test(NAME legacy_abi_contract COMMAND kinoko_legacy_abi_contract)
+
+add_executable(kinoko_bitmap_contract tests/bitmap_contract.cpp src/reconstructed/bitmap.cpp)
+target_include_directories(kinoko_bitmap_contract PRIVATE include)
+add_test(NAME bitmap_contract COMMAND kinoko_bitmap_contract)
 
 add_executable(kinoko_texture_store_contract tests/texture_store_contract.cpp)
 target_link_libraries(kinoko_texture_store_contract PRIVATE kinoko_native_methods user32)
@@ -488,6 +570,72 @@ add_executable(kinoko_legacy_string_contract tests/legacy_string_contract.cpp)
 target_link_libraries(kinoko_legacy_string_contract PRIVATE kinoko_legacy_string)
 target_compile_options(kinoko_legacy_string_contract PRIVATE /Od /RTC1)
 add_test(NAME legacy_string_contract COMMAND kinoko_legacy_string_contract)
+
+# These scoped owners call reconstructed C++ functions through C-linkage ports.
+# /EHsc incorrectly promises that such ports cannot throw; /EHsc- retains
+# synchronous C++ unwinding without enabling asynchronous SEH recovery.
+# Apply to the production sources as well as the fault-injection test caller.
+set_source_files_properties(src/reconstructed/scene_operations.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+
+set_source_files_properties(
+    src/squirrel/game_script_api.cpp
+    src/reconstructed/act_document_io.cpp
+    src/reconstructed/stage_runtime.cpp
+    src/reconstructed/act_source.cpp
+    tests/act_document_contract.cpp
+    tests/stage_owner_contract.cpp
+    PROPERTIES COMPILE_OPTIONS "/EHsc-")
+
+add_executable(kinoko_act_layer_contract
+    tests/act_layer_contract.cpp src/reconstructed/act_layer_access.cpp)
+target_include_directories(kinoko_act_layer_contract PRIVATE include)
+target_compile_options(kinoko_act_layer_contract PRIVATE /O2)
+add_test(NAME act_layer_contract COMMAND kinoko_act_layer_contract)
+
+add_executable(kinoko_act_clock_contract tests/act_clock_contract.cpp)
+target_include_directories(kinoko_act_clock_contract PRIVATE include)
+target_compile_options(kinoko_act_clock_contract PRIVATE /O2)
+add_test(NAME act_clock_contract COMMAND kinoko_act_clock_contract)
+
+add_executable(kinoko_act_association_contract
+    tests/act_association_contract.cpp src/reconstructed/act_document_association.cpp
+    src/reconstructed/act_array.cpp)
+target_include_directories(kinoko_act_association_contract PRIVATE include)
+target_compile_options(kinoko_act_association_contract PRIVATE /O2)
+add_test(NAME act_association_contract COMMAND kinoko_act_association_contract)
+
+add_executable(kinoko_act_resource_pass_contract
+    tests/act_resource_pass_contract.cpp src/reconstructed/act_document_resources.cpp)
+target_include_directories(kinoko_act_resource_pass_contract PRIVATE include)
+target_link_libraries(kinoko_act_resource_pass_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_resource_pass_contract PRIVATE /O2)
+add_test(NAME act_resource_pass_contract COMMAND kinoko_act_resource_pass_contract)
+
+add_executable(kinoko_act_document_contract
+    tests/act_document_contract.cpp
+    src/reconstructed/act_document_io.cpp)
+target_include_directories(kinoko_act_document_contract PRIVATE include)
+target_link_libraries(kinoko_act_document_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_document_contract PRIVATE /Od /RTC1)
+add_test(NAME act_document_contract COMMAND kinoko_act_document_contract)
+add_executable(kinoko_act_document_optimized_contract
+    tests/act_document_contract.cpp src/reconstructed/act_document_io.cpp)
+target_include_directories(kinoko_act_document_optimized_contract PRIVATE include)
+target_link_libraries(kinoko_act_document_optimized_contract PRIVATE kinoko_legacy_string)
+target_compile_options(kinoko_act_document_optimized_contract PRIVATE /O2)
+add_test(NAME act_document_optimized_contract COMMAND kinoko_act_document_optimized_contract)
+
+add_executable(kinoko_stage_owner_contract
+    tests/stage_owner_contract.cpp src/reconstructed/stage_runtime.cpp
+    src/reconstructed/stage_cleanup.cpp src/reconstructed/act_source.cpp)
+target_include_directories(kinoko_stage_owner_contract PRIVATE include "${KINOKO_SQUIRREL2_ROOT}/include")
+target_compile_options(kinoko_stage_owner_contract PRIVATE /O2)
+add_test(NAME stage_owner_contract COMMAND kinoko_stage_owner_contract)
+# This is the real CFileReader + ACT payload + source/runtime/cleanup path.
+# Its generated ACT fixture needs neither DAT files nor graphics/VM startup.
+add_test(NAME act_document_lifetime_contract
+    COMMAND kinoko_stage_contract --act-document-lifetime)
+
 set_tests_properties(legacy_string_contract PROPERTIES TIMEOUT 60)
 
 add_executable(kinoko_retdec_memory_contract tests/retdec_memory_contract.cpp)
@@ -553,10 +701,70 @@ add_test(NAME boost_control_contract COMMAND kinoko_boost_control_contract)
 set_tests_properties(boost_control_contract PROPERTIES TIMEOUT 120)
 
 add_executable(kinoko_native_control_contract tests/native_control_contract.cpp)
+add_executable(kinoko_base_utilities_contract tests/base_utilities_contract.cpp)
+target_link_libraries(kinoko_base_utilities_contract PRIVATE kinoko_base_utilities)
+add_test(NAME base_utilities_contract COMMAND kinoko_base_utilities_contract)
 target_include_directories(kinoko_native_control_contract PRIVATE "${KINOKO_BOOST_ROOT}")
 target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_control)
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
+
+add_executable(kinoko_device_lifecycle_contract tests/device_lifecycle_contract.cpp
+    src/reconstructed/device_runtime.cpp src/reconstructed/render_target.cpp
+    src/reconstructed/render_state.cpp src/reconstructed/renderer.cpp)
+target_include_directories(kinoko_device_lifecycle_contract PRIVATE include)
+target_link_libraries(kinoko_device_lifecycle_contract PRIVATE user32)
+add_test(NAME device_lifecycle_contract COMMAND kinoko_device_lifecycle_contract)
+
+add_executable(kinoko_quad_submit_contract tests/quad_submit_contract.cpp
+    src/reconstructed/quad_submit.cpp src/reconstructed/render_state.cpp)
+target_include_directories(kinoko_quad_submit_contract PRIVATE include)
+add_test(NAME quad_submit_contract COMMAND kinoko_quad_submit_contract)
+
+add_executable(kinoko_camera_contract tests/camera_contract.cpp
+    src/reconstructed/camera_runtime.cpp src/reconstructed/camera_projection.cpp)
+target_include_directories(kinoko_camera_contract PRIVATE include)
+add_test(NAME camera_contract COMMAND kinoko_camera_contract)
+
+add_executable(kinoko_act_layout_render_contract tests/act_layout_render_contract.cpp
+    src/reconstructed/act_layout.cpp src/reconstructed/string_layout_render.cpp
+    src/reconstructed/act_render_state.cpp src/reconstructed/render_state.cpp)
+target_include_directories(kinoko_act_layout_render_contract PRIVATE include)
+target_link_libraries(kinoko_act_layout_render_contract PRIVATE kinoko_legacy_string user32)
+add_test(NAME act_layout_render_contract COMMAND kinoko_act_layout_render_contract)
+
+add_executable(kinoko_mesh_layout_contract tests/mesh_layout_contract.cpp
+    src/reconstructed/mesh_model.cpp src/reconstructed/act_layout_3d.cpp)
+target_include_directories(kinoko_mesh_layout_contract PRIVATE include)
+target_link_libraries(kinoko_mesh_layout_contract PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/d3dx9_33.lib")
+add_test(NAME mesh_layout_contract COMMAND kinoko_mesh_layout_contract)
+
+add_executable(kinoko_map_chip_cache_contract tests/map_chip_cache_contract.cpp
+    src/reconstructed/map_chip_cache.cpp src/reconstructed/act_map.cpp
+    src/reconstructed/map_layout_lifetime.cpp src/reconstructed/native_buffer.cpp)
+target_include_directories(kinoko_map_chip_cache_contract PRIVATE include)
+add_test(NAME map_chip_cache_contract COMMAND kinoko_map_chip_cache_contract)
+
+add_executable(kinoko_map_visible_contract tests/map_visible_contract.cpp)
+target_include_directories(kinoko_map_visible_contract PRIVATE include)
+add_test(NAME map_visible_contract COMMAND kinoko_map_visible_contract)
+
+add_executable(kinoko_actor_render_contract tests/actor_render_contract.cpp)
+target_include_directories(kinoko_actor_render_contract PRIVATE include)
+target_link_libraries(kinoko_actor_render_contract PRIVATE kinoko_native_methods)
+add_test(NAME actor_render_contract COMMAND kinoko_actor_render_contract)
+
+add_executable(kinoko_pat_animation_contract tests/pat_animation_contract.cpp)
+target_include_directories(kinoko_pat_animation_contract PRIVATE include)
+target_link_libraries(kinoko_pat_animation_contract PRIVATE kinoko_native_methods)
+add_test(NAME pat_animation_contract COMMAND kinoko_pat_animation_contract)
+
+add_executable(kinoko_actor_manager_contract tests/actor_manager_contract.cpp
+    src/reconstructed/actor_manager.cpp src/reconstructed/actor_priority.cpp
+    src/reconstructed/native_buffer.cpp)
+target_include_directories(kinoko_actor_manager_contract PRIVATE include)
+target_compile_options(kinoko_actor_manager_contract PRIVATE /Od /RTC1)
+add_test(NAME actor_manager_contract COMMAND kinoko_actor_manager_contract)
 
 add_executable(kinoko_actor_lifecycle_contract tests/actor_lifecycle_contract.cpp)
 target_include_directories(kinoko_actor_lifecycle_contract PRIVATE include "${KINOKO_BOOST_ROOT}"
@@ -567,7 +775,42 @@ target_link_options(kinoko_actor_lifecycle_contract PRIVATE /OPT:REF /OPT:ICF)
 add_test(NAME actor_lifecycle_contract COMMAND kinoko_actor_lifecycle_contract)
 set_tests_properties(actor_lifecycle_contract PROPERTIES TIMEOUT 120)
 
+
+# Compile-only handoff: execution remains user-controlled.
+add_executable(kinoko_file_archive_contract tests/file_archive_contract.cpp
+    src/reconstructed/file_io.cpp src/reconstructed/archive_store.cpp
+    src/reconstructed/archive_random.cpp)
+target_include_directories(kinoko_file_archive_contract PRIVATE include)
+target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
+add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
+
+add_executable(kinoko_map_manager_contract tests/map_manager_contract.cpp
+    src/reconstructed/map_manager.cpp src/reconstructed/map_copy.cpp
+    src/reconstructed/map_containers.cpp)
+target_include_directories(kinoko_map_manager_contract PRIVATE include)
+target_compile_options(kinoko_map_manager_contract PRIVATE /O2 /fp:strict)
+add_test(NAME map_manager_contract COMMAND kinoko_map_manager_contract)
+
+add_executable(kinoko_actor_state_contract tests/actor_state_contract.cpp src/squirrel/actor_state.cpp)
+target_include_directories(kinoko_actor_state_contract PRIVATE include)
+target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
+add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_bitmap_contract
+    kinoko_actor_state_contract
+    kinoko_map_manager_contract
+    kinoko_scene_operations_contract
+    kinoko_game_script_contract
+    kinoko_game_lifecycle_contract
+    kinoko_file_archive_contract
+    kinoko_act_layer_contract
+    kinoko_act_clock_contract
+    kinoko_act_document_optimized_contract
+    kinoko_act_resource_pass_contract
+    kinoko_act_association_contract
+    kinoko_stage_owner_contract
+    kinoko_act_document_contract
     kinoko_boost_control_contract
     kinoko_upstream_bindings_contract
     kinoko_vorbis_decoder_contract
@@ -580,6 +823,16 @@ set(KINOKO_TOOL_TARGETS
     kinoko_audio_runtime_contract
     kinoko_squirrel_c_api_contract
     kinoko_actor_lifecycle_contract
+    kinoko_actor_manager_contract kinoko_application_contract kinoko_base_utilities_contract
+    kinoko_actor_render_contract
+    kinoko_act_layout_render_contract
+    kinoko_mesh_layout_contract
+    kinoko_map_chip_cache_contract
+    kinoko_map_visible_contract
+    kinoko_camera_contract
+    kinoko_device_lifecycle_contract
+    kinoko_quad_submit_contract
+    kinoko_pat_animation_contract
     kinoko_archive_inspect kinoko_archive_smoke
     kinoko_asset_probe kinoko_dump_inspect kinoko_process_dump kinoko_stage_contract
     kinoko_legacy_abi_contract kinoko_game_math_contract
@@ -618,3 +871,5 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
         PDB_OUTPUT_DIRECTORY_${config_upper} "${KINOKO_RUNTIME_DIR}/tools"
     )
 endforeach()
+
+set_source_files_properties(src/reconstructed/map_manager.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")

@@ -1,0 +1,1 @@
+{"addr":"0x45c560","code":"int __thiscall sub_45C560(void *this, int a2, int a3)\n{\n  (*(void (__thiscall **)(void *, int, int))(*(_DWORD *)this + 12))(a1: this, a2, a3); /*0x45c576*/\n  return sub_45C6E0(); /*0x45c580*/\n}","refs":[{"addr":"0x45c6e0","name":"sub_45C6E0"}]}

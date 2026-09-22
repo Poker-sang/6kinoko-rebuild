@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/com_owner.hpp"
 
@@ -7,7 +8,6 @@
 #include <d3d9.h>
 
 extern "C" {
-extern int32_t g678;
 int32_t function_40e630(int32_t unused, const char *path, int32_t texture_out,
                       uint32_t *width, uint32_t *height);
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY] = {};
@@ -88,7 +88,7 @@ extern "C" int32_t kinoko_texture_release(int32_t handle) {
     // borrowed renderer view and remains intact throughout device unbinding.
     kinoko::ComOwner<IDirect3DBaseTexture9> texture(
         static_cast<IDirect3DBaseTexture9 *>(slot.texture));
-    auto *device = reinterpret_cast<IDirect3DDevice9 *>(g678);
+    auto *device = kinoko_graphics.device;
     // 405D60 unbinds a final reference from all eight texture stages first.
     if (device) {
         for (DWORD stage = 0; stage < 8; ++stage) {

@@ -24,16 +24,15 @@ public:
         require(SQ_SUCCEEDED(sq_newclass(vm, SQFalse)), "create actual source class");
         require(SQ_SUCCEEDED(sq_createinstance(vm, -1)), "source native instance");
         sq_setinstanceup(vm, -1, object()); instance.capture(); sq_pop(vm, 1);
-        require(retdec_sqrat_new_table(address(vm), methods.data()), "property callback table");
+        require(kinoko_sqrat_new_table((struct SQVM *)(vm), methods.data()), "property callback table");
     }
     unsigned char* object() { return native.data() + 1; } // Unaligned on purpose.
     unsigned char* aliased() { return alias.data() + 1; }
     void bind(const char* name, int32_t offset, Callback cb) {
-        require(retdec_sqrat_set_offset_closure(address(vm), methods.data(), name, offset, callback_address(cb)), "bind actual captured descriptor");
+        require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), methods.data(), name, offset, (void *)(intptr_t)(callback_address(cb))), "bind actual captured descriptor");
     }
     void bind(const char* name, int32_t offset, SQFUNCTION cb) {
-        require(retdec_sqrat_set_offset_closure(address(vm), methods.data(), name, offset,
-            address(reinterpret_cast<void*>(cb))), "bind typed SQFUNCTION without an original code address");
+        require(kinoko_sqrat_set_offset_closure((struct SQVM *)(vm), methods.data(), name, offset, (void *)(intptr_t)(address(reinterpret_cast<void*>(cb)))), "bind typed SQFUNCTION without an original code address");
     }
     void prepare(const char* name) {
         methods.push(); sq_pushstring(vm, name, -1);

@@ -1,3 +1,5 @@
+#include "kinoko/act_document_association.hpp"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -122,7 +124,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     field<int32_t>(layer + 332) = vm;
     field<uint8_t>(layer + 344) = 1;
     sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
-    if (vm && !retdec_sqrat_new_table(vm, pointer<int32_t>(layer + 316))) {
+    if (vm && !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), pointer<int32_t>(layer + 316))) {
         retdec_destroy_cact_layer(layer);
         return 0;
     }
@@ -244,7 +246,7 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
                                    int32_t version)
 {
     uint8_t has_layout;
-    uint32_t layout_type;
+    uint32_t layout_type = 0;
     int32_t layout;
 
     if (!key || version != 1 || !kinoko_act_read_key_properties(key, reader_ptr)) {
@@ -259,11 +261,17 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         return 1;
     if (!retdec_act_read_u32(reader_ptr, &layout_type) ||
         (layout_type != 0x655cd5b0u &&
-         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u)) {
+         layout_type != 0xc9ca5c20u && layout_type != 0x9e695d47u &&
+         layout_type != kinoko::mesh::layout_type())) {
         retdec_trace_i32("act:unsupported-layout", (int32_t)layout_type);
         return 0;
     }
-    if(layout_type==0x9e695d47u) {
+    if(layout_type==kinoko::mesh::layout_type()) {
+        layout=address(kinoko::mesh::create_layout());
+        if(layout && !kinoko_method_layout3d_assign(layout,nullptr,address(&reader_ptr),version)) {
+            std::free(pointer<void>(layout));layout=0;
+        }
+    } else if(layout_type==0x9e695d47u) {
         // Original Boost hash of .?AVCStringLayout@@; use the genuine native
         // reader through its recovered holder/version ABI.
         layout=address(std::calloc(1,260));
@@ -442,7 +450,7 @@ void retdec_mcd_free(struct retdec_mcd_data *data)
 int32_t retdec_act_load_mcd(int32_t resource,
                                    const char *file_name)
 {
-    int32_t reader_slot = 0;
+    KinokoArchiveReader *reader_slot = nullptr;
     struct retdec_mcd_data *data = nullptr;
     uint32_t magic;
     uint32_t version;
@@ -455,33 +463,33 @@ int32_t retdec_act_load_mcd(int32_t resource,
 
     if (resource == 0 || file_name == nullptr || *file_name == 0)
         return 0;
-    if (!function_407370(address(&reader_slot), file_name)) {
+    if (!kinoko_reader_open(&reader_slot, file_name)) {
         retdec_trace_squirrel_name("mcd:open-failed",
                                    address(file_name));
         return 0;
     }
 
-    if (!retdec_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
+    if (!kinoko_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
         magic != 0x434d4432u ||
-        !retdec_reader_read_exact(reader_slot, &version, sizeof(version)) ||
+        !kinoko_reader_read_exact(reader_slot, &version, sizeof(version)) ||
         version > 1u ||
-        !retdec_reader_read_exact(reader_slot, &payload_offset,
+        !kinoko_reader_read_exact(reader_slot, &payload_offset,
                                   sizeof(payload_offset)) ||
         (payload_offset != 0 &&
-         !retdec_reader_seek_relative(reader_slot, payload_offset)) ||
-        !retdec_reader_read_exact(reader_slot, &chip_count,
+         !kinoko_reader_seek_relative(reader_slot, payload_offset)) ||
+        !kinoko_reader_read_exact(reader_slot, &chip_count,
                                   sizeof(chip_count)) ||
-        !retdec_reader_read_exact(reader_slot, &record_size,
+        !kinoko_reader_read_exact(reader_slot, &record_size,
                                   sizeof(record_size)) ||
         chip_count > 0x10000u || record_size > 48u) {
         retdec_trace("mcd:header-failed");
-        retdec_destroy_reader(pointer<int32_t>(reader_slot));
+        kinoko_reader_close(reader_slot);
         return 0;
     }
 
     data = (struct retdec_mcd_data *)std::calloc(1u, sizeof(*data));
     if (data == nullptr) {
-        retdec_destroy_reader(pointer<int32_t>(reader_slot));
+        kinoko_reader_close(reader_slot);
         return 0;
     }
     data->chip_count = chip_count;
@@ -497,8 +505,8 @@ int32_t retdec_act_load_mcd(int32_t resource,
         uint32_t next_record;
 
         if ((record_size != 0 &&
-             !retdec_reader_read_exact(reader_slot, record, record_size)) ||
-            !retdec_reader_read_exact(reader_slot, &next_record,
+             !kinoko_reader_read_exact(reader_slot, record, record_size)) ||
+            !kinoko_reader_read_exact(reader_slot, &next_record,
                                       sizeof(next_record)))
             goto load_failed;
         data->chips[index].chip_id = retdec_mcd_u32(record);
@@ -511,7 +519,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
         }
     }
 
-    if (!retdec_reader_read_exact(reader_slot, &texture_count,
+    if (!kinoko_reader_read_exact(reader_slot, &texture_count,
                                   sizeof(texture_count)) ||
         texture_count > 0x10000u)
         goto load_failed;
@@ -529,9 +537,9 @@ int32_t retdec_act_load_mcd(int32_t resource,
         char *name;
         int32_t handle;
 
-        if (!retdec_reader_read_exact(reader_slot, &texture_id,
+        if (!kinoko_reader_read_exact(reader_slot, &texture_id,
                                       sizeof(texture_id)) ||
-            !retdec_reader_read_exact(reader_slot, &name_length,
+            !kinoko_reader_read_exact(reader_slot, &name_length,
                                       sizeof(name_length)) ||
             name_length > 0x100000u)
             goto load_failed;
@@ -539,7 +547,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
         if (name == nullptr)
             goto load_failed;
         if (name_length != 0 &&
-            !retdec_reader_read_exact(reader_slot, name, name_length)) {
+            !kinoko_reader_read_exact(reader_slot, name, name_length)) {
             std::free(name);
             goto load_failed;
         }
@@ -564,7 +572,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
             ++loaded_texture_count;
     }
 
-    retdec_destroy_reader(pointer<int32_t>(reader_slot));
+    kinoko_reader_close(reader_slot);
     field<int32_t>(resource + 64) =
         address(data);
     retdec_string_assign_cstr(
@@ -575,7 +583,7 @@ int32_t retdec_act_load_mcd(int32_t resource,
     return 1;
 
 load_failed:
-    retdec_destroy_reader(pointer<int32_t>(reader_slot));
+    kinoko_reader_close(reader_slot);
     retdec_mcd_free(data);
     retdec_trace("mcd:load-failed");
     return 0;
@@ -658,6 +666,13 @@ extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
     int32_t resource;
+    if(type==kinoko::mesh::resource_type()) {
+        auto *mesh=kinoko::mesh::create_resource();
+        if(mesh && !kinoko_method_read_mesh_resource(address(mesh),nullptr,address(&reader_ptr),1)) {
+            kinoko::mesh::clear_resource(mesh);std::free(mesh);return 0;
+        }
+        return address(mesh);
+    }
     // Original 449C50 registers the raw RTTI name in the same Boost-hashed
     // factory used by 428150. This type owns an independent property schema.
     static const char target_name[] = ".?AVCActRenderTarget@@";
@@ -719,19 +734,9 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         // Original 446A84 clears auto-size after deserializing, including an
         // absent property block. Serialized atlas regions must survive LoadTexture.
         field<uint8_t>(resource + 96) = 0;
-        kinoko_method_load_resource_texture(resource, nullptr, nullptr);
-        retdec_trace_i32("act:resource-handle", field<int32_t>(resource + 68));
-    } else {
-        const char *chip_file = retdec_std_string_data(resource + 36);
-        if (!kinoko_method_load_chip_resource(resource, nullptr, nullptr)) {
-            retdec_trace("act:chip-resource-load-failed");
-            retdec_destroy_cact_resource(resource);
-            return 0;
-        }
-        retdec_trace_squirrel_name(
-            "act:chip-resource-file", address(chip_file));
-        retdec_trace("act:chip-resource-loaded");
     }
+    // 428150 deserializes and publishes resources. Loading is the later
+    // 4289C0 virtual pass, after every resource has been parsed and bound.
     return resource;
 }
 
@@ -755,79 +760,6 @@ int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
     retdec_trace_i32("map-layout:mcd", resource != 0
                      ? field<int32_t>(resource + 64) : 0);
     return 0;
-}
-
-int32_t retdec_act_bind_layouts(int32_t act)
-{
-    int32_t layer_begin;
-    int32_t layer_end;
-    int32_t resource_begin;
-    int32_t resource_end;
-    int32_t layer_count;
-    int32_t resource_count;
-    int32_t layer_index;
-    int32_t resource_index;
-    int32_t layer;
-    int32_t resource;
-    int32_t resource_id;
-    int32_t layer_sentinel;
-    int32_t node;
-    uint32_t trace_count = 0;
-
-    if (act == 0)
-        return 0;
-    layer_begin = field<int32_t>(act + 208);
-    layer_end = field<int32_t>(act + 212);
-    resource_begin = field<int32_t>(act + 224);
-    resource_end = field<int32_t>(act + 228);
-    if (layer_end < layer_begin || resource_end < resource_begin)
-        return 0;
-    layer_count = (layer_end - layer_begin) / 4;
-    resource_count = (resource_end - resource_begin) / 4;
-
-    for (layer_index = 0; layer_index < layer_count; ++layer_index) {
-        layer = field<int32_t>(layer_begin + layer_index * 4);
-        if (layer == 0)
-            continue;
-        resource_id = field<int32_t>(layer + 0x60);
-        resource = 0;
-        for (resource_index = 0; resource_index < resource_count;
-             ++resource_index) {
-            int32_t candidate = field<int32_t>(resource_begin + resource_index * 4);
-            if (candidate != 0 &&
-                field<int32_t>(candidate + 4) == resource_id) {
-                resource = candidate;
-                break;
-            }
-        }
-        field<int32_t>(layer + 0x64) = resource;
-        layer_sentinel = field<int32_t>(layer + 0xb4);
-        if (layer_sentinel == 0)
-            continue;
-        node = field<int32_t>(layer_sentinel);
-        while (node != 0 && node != layer_sentinel) {
-            int32_t key = field<int32_t>(node + 8);
-            int32_t layout = key == 0 ? 0 :
-                field<int32_t>(key + 4);
-            if (layout != 0) {
-                if(field<int32_t>(layout)==address(g350))
-                    kinoko_method_set_string_layer(layout,nullptr,layer);
-                else if (field<int32_t>(layout) ==
-                        address(kinoko_act_host_symbols()->map_layout_vtable))
-                    retdec_c2dmaplayout_set_layer_impl(layout, layer);
-                else
-                    retdec_c2dlayout_set_layer_impl(layout, layer);
-                if (trace_count++ < 32u) {
-                    retdec_trace_i32("act:layout", layout);
-                    retdec_trace_i32("act:layout-layer", layer);
-                    retdec_trace_i32("act:layout-texture",
-                                     field<int32_t>(layout)==address(g350)?0:field<int32_t>(layout + 0x134));
-                }
-            }
-            node = field<int32_t>(node);
-        }
-    }
-    return 1;
 }
 
 int32_t retdec_act_prepare_vector(int32_t object_ptr,
@@ -867,6 +799,8 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         retdec_trace("act:layer-vector-failed");
         return 0;
     }
+    kinoko::act::DocumentLoadAssociations associations;
+    auto *document = pointer<KinokoActDocument>(this_ptr);
     layers = pointer<int32_t>(field<int32_t>(this_ptr + 208));
     for (index = 0; index < layer_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type) ||
@@ -883,6 +817,7 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         }
         layers[index] = layer;
         field<int32_t>(this_ptr + 212) += 4;
+        associations.add_layer(pointer<KinokoActLayer>(layer));
         if (index < 8) {
             retdec_trace_i32("act:layer-id",
                              field<int32_t>(layer + 0x68));
@@ -890,12 +825,15 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
                              field<int32_t>(layer + 0x60));
         }
     }
+    // 428310..428346: resolve parents before even reading resource_count.
+    associations.bind_loaded_parents(document, layer_count);
     if (!retdec_act_read_u32(reader_ptr, &resource_count) ||
         !retdec_act_prepare_vector(this_ptr, 224, 228, 232,
                                    resource_count)) {
         retdec_trace("act:resource-vector-failed");
         return 0;
     }
+    associations.begin_resources();
     resources = pointer<int32_t>(field<int32_t>(this_ptr + 224));
     for (index = 0; index < resource_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type)) {
@@ -907,6 +845,7 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
             return 0;
         resources[index] = resource;
         field<int32_t>(this_ptr + 228) += 4;
+        associations.add_resource(pointer<KinokoActResource>(resource));
         if (index < 8) {
             retdec_trace_i32("act:resource-id",
                              field<int32_t>(resource + 4));
@@ -916,9 +855,6 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     }
     retdec_trace_i32("act:loaded-layers", (int32_t)layer_count);
     retdec_trace_i32("act:loaded-resources", (int32_t)resource_count);
-    if (!retdec_act_bind_layouts(this_ptr)) {
-        retdec_trace("act:layout-bind-failed");
-        return 0;
-    }
+    associations.bind_resources(document, layer_count);
     return 1;
 }

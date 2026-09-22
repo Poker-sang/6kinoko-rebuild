@@ -1,0 +1,1 @@
+{"addr":"0x462250","code":"int __thiscall sub_462250(int *this, int a2)\n{\n  int result; // eax\n\n  result = *(this + 50); /*0x462253*/\n  if ( result != 0 ) /*0x46225b*/\n  {\n    result = 248 * a2 + *(_DWORD *)(result + 8); /*0x462269*/\n    *(this + 51) = result; /*0x46226b*/\n    *(this + 38) = result; /*0x462271*/\n  }\n  return result; /*0x462277*/\n}"}

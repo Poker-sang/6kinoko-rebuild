@@ -14,8 +14,6 @@ extern "C" {
 #endif
 
 // Original 446520/4495A0/446BD0/447050 virtual resource entries.
-int32_t __fastcall kinoko_method_read_file(int32_t receiver, void* unused_edx, int32_t bytes, int32_t size);
-int32_t __fastcall kinoko_method_read_package(int32_t receiver, void* unused_edx, int32_t bytes, int32_t size);
 int32_t __fastcall kinoko_method_register_texture_resource(int32_t receiver, void* unused_edx, int32_t vm);
 int32_t __fastcall kinoko_method_register_render_target(int32_t receiver, void* unused_edx, int32_t vm);
 int32_t __fastcall kinoko_method_load_resource_texture(int32_t receiver, void* unused_edx, const char* prefix);
@@ -93,12 +91,11 @@ int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* unused_edx, 
     float alpha);
 // function_457a10
 int32_t __fastcall kinoko_method_update_children(int32_t receiver, void* unused_edx, int32_t argument);
-// function_45d970_bridge
-int32_t __fastcall kinoko_method_destroy_actor(int32_t receiver, void* unused_edx, char flags);
+
 // function_45dbd0
 int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* unused_edx, float dx, float dy);
 // function_45eb00
-int32_t __fastcall kinoko_method_actor_destroy_state(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_actor_reset_method(int32_t receiver, void* unused_edx);
 // function_466490
 int32_t __fastcall kinoko_method_class_type(int32_t receiver, void* unused_edx);
 // function_469620

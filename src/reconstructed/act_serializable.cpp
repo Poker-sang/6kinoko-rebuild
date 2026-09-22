@@ -1,4 +1,5 @@
 #include "kinoko/act_host.h"
+#include "kinoko/act_mesh.hpp"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
@@ -14,6 +15,8 @@ extern "C" const char* kinoko_act_serialized_type_name(int32_t object) {
     if (!object) return nullptr;
     const auto table=field<int32_t>(object);
     const auto* host=kinoko_act_host_symbols();
+    if(table==address(kinoko::mesh::resource_methods())) return ".?AVCActResourceMesh@@";
+    if(table==address(kinoko::mesh::layout_methods())) return ".?AVC3DLayout@@";
     // Recovered records are not modern C++ polymorphic objects. Their explicit
     // vtable identity supplies the original dynamic type at this ABI boundary;
     // never pass their bytes to the compiler's typeid or fake __RTtypeid.

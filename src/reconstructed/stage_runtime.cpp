@@ -1,3 +1,5 @@
+#include "kinoko/game_runtime.h"
+#include "kinoko/act_document.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/stage_records.hpp"
@@ -11,17 +13,14 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern int32_t g603, g459;
+extern int32_t g603;
 extern char *g644;
-int32_t function_427530(int32_t document);
-int32_t function_428000(int32_t document, const char *file_name);
 }
 
 namespace {
 using namespace kinoko::legacy;
 using namespace kinoko::stage;
 using kinoko::act::RuntimeRecord;
-using kinoko::act::DocumentLayers;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
 
@@ -31,8 +30,7 @@ KinokoActRuntime *stage_runtime(const KinokoStageNode *node) {
 }
 
 const char *document_name(KinokoActDocument *document) {
-    const RecordView<DocumentLayers> view(document);
-    return retdec_std_string_data(address(view.bytes(&DocumentLayers::name)));
+    return kinoko_act_document_name(document);
 }
 }
 
@@ -45,7 +43,7 @@ extern "C" int32_t kinoko_stages_update() {
         retdec_trace("466050:entry");
         retdec_trace_i32("466050:g603", g603);
         retdec_trace_i32("466050:first", address(node));
-        retdec_trace_i32("466050:update-mask", g459);
+        retdec_trace_i32("466050:update-mask", kinoko_game_masks.update);
     }
     if (node == kinoko_stage_list_end()) {
         if (trace_index <= 8) retdec_trace("466050:empty");
@@ -57,7 +55,7 @@ extern "C" int32_t kinoko_stages_update() {
         if (resource) {
             const RuntimeView runtime(resource);
             if (trace_index <= 8) {
-                auto *act = pointer<KinokoActDocument>(runtime.get(&RuntimeRecord::act));
+                auto *act = runtime.get(&RuntimeRecord::active_document);
                 retdec_trace_i32("466050:resource", address(resource));
                 // Keep historical four-byte diagnostic snapshots (including
                 // padding) without confusing them with one-byte game flags.
@@ -67,7 +65,7 @@ extern "C" int32_t kinoko_stages_update() {
                 retdec_trace_i32("466050:act", address(act));
                 if (act) retdec_trace_squirrel_name("466050:act-name", address(document_name(act)));
             }
-            kinoko_act_increment_frame(address(resource), nullptr);
+            kinoko_act_increment_frame(resource, nullptr);
             result = kinoko_act_update_frame(address(resource));
             if (trace_index <= 8) retdec_trace_i32("466050:update-result", result);
         }
@@ -109,7 +107,7 @@ extern "C" int32_t kinoko_stages_draw() {
         if (!resource) continue;
         const RuntimeView runtime(resource);
         if (trace_index <= 3) {
-            auto *act = pointer<KinokoActDocument>(runtime.get(&RuntimeRecord::act));
+            auto *act = runtime.get(&RuntimeRecord::active_document);
             retdec_trace_i32("4660c0:index", index);
             retdec_trace_i32("4660c0:resource", address(resource));
             retdec_trace_i32("4660c0:active", load<int32_t>(runtime.bytes(&RuntimeRecord::stage_active)));
@@ -129,27 +127,16 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
         retdec_trace("466100:entry");
         retdec_trace_squirrel_name("466100:file", address(file_name));
     }
-    // Own the unpublished record until it is transferred to the stage list
-    // (or returned to the caller when the list is absent, as in R125).
-    Allocation<KinokoStageOwner> allocation(static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord))));
+    // 466100 owns only constructor storage during unwind, not the whole
+    // partially loaded stage. In particular it does not reject Load returning 0.
+    auto *allocation = static_cast<KinokoStageOwner *>(std::malloc(sizeof(OwnerRecord)));
     if (!allocation) return nullptr;
-    const OwnerView owner(allocation.get());
+    const OwnerView owner(allocation);
     owner.clear();
-
-    // CAct remains a legacy allocation; this batch does not reconstruct its
-    // full class or alter the pre-existing partial-load failure policy.
-    constexpr int32_t document_allocation_size = 240; // 466146: push 0F0h
-    auto *act = static_cast<KinokoActDocument *>(std::malloc(document_allocation_size));
-    if (!act) return nullptr;
-    act = pointer<KinokoActDocument>(function_427530(address(act)));
+    auto *act = kinoko_act_document_create();
     owner.set(&OwnerRecord::document, act);
-    if (!act) return nullptr;
-    if (!function_428000(address(act), file_name)) {
-        retdec_trace("466100:act-header-failed");
-        retdec_trace("466100:skip-invalid-act");
-        return nullptr;
-    }
-    retdec_trace("466100:act-header-ok");
+    kinoko_act_document_load(act, file_name);
+    kinoko_act_document_load_resources(act, ""); // 46618A, result ignored
 
     KinokoActRuntime *resource = nullptr;
     auto *holder = static_cast<KinokoActSourceHolder *>(std::malloc(sizeof(SourceHolderRecord)));
@@ -170,8 +157,8 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
         retdec_trace_i32("466100:450e30-result", result);
     }
     if (g603) {
-        const auto node = kinoko_stage_list_append(allocation.get());
+        const auto node = kinoko_stage_list_append(allocation);
         if (trace_index <= 8) retdec_trace_i32("466100:list-node", address(node));
     }
-    return allocation.release();
+    return allocation;
 }

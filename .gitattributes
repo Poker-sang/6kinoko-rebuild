@@ -10,3 +10,7 @@
 # This directory also contains live runtime code. Exclude only original
 # executable decompiler exports; keep *_rebuilt.c and other runtime sources.
 /src/decompiled/*.exe.c linguist-generated=true
+
+# Keep pinned original evidence byte-identical in Linux and Windows checkouts.
+/src/decompiled/*.exe.c text eol=lf
+/docs/decompiler-cleanup-r126/original-stage-evidence.json text eol=lf

@@ -1,3 +1,4 @@
+#include "kinoko/base_utilities.h"
 #include <windows.h>
 #include <cstdint>
 #include <cstdlib>
@@ -10,8 +11,6 @@ extern "C" {
 extern char* g644;
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
-int32_t function_404390(int32_t, int32_t, int32_t*, int32_t);
-int32_t function_404430(int32_t, int32_t, int32_t, int32_t);
 int32_t function_4722e0(int32_t*, int32_t, int32_t, int32_t);
 int32_t function_472820(int32_t*, int32_t, int32_t, int32_t);
 }
@@ -88,8 +87,8 @@ extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
 
     if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
         ok = 0;
-    function_4a94e0_this((int32_t)(intptr_t)key);
-    function_4a94e0_this((int32_t)(intptr_t)value);
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
 
     while (ok) {
         uint32_t value_type;
@@ -149,11 +148,8 @@ extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
 
             if (!retdec_table_stream_read(stream_ptr, &count,
                                           sizeof(count)) || count > 0x100000u ||
-                !function_4a92e0_this(value, (int32_t)count) ||
-                !function_4a97b0_this(
-                    (int32_t)(intptr_t)parent,
-                    (int32_t)(intptr_t)key,
-                    (int32_t)(intptr_t)value) ||
+                !(int32_t*)(intptr_t)(kinoko_sqplus_object_new_array((void *)(intptr_t)(value), (int32_t)count)) ||
+                !kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)) ||
                 !retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
@@ -162,11 +158,8 @@ extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
         } else if (value_type == OT_TABLE) {
             int32_t nested[3];
 
-            if (!function_4a91c0_this(value) ||
-                !function_4a97b0_this(
-                    (int32_t)(intptr_t)parent,
-                    (int32_t)(intptr_t)key,
-                    (int32_t)(intptr_t)value) ||
+            if (!(int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(value))) ||
+                !kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)) ||
                 !retdec_squirrel_object_copy(nested, value)) {
                 ok = 0;
             } else {
@@ -178,19 +171,16 @@ extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
 
         if (ok && value_type != OT_ARRAY &&
             value_type != OT_TABLE) {
-            if (!function_4a97b0_this(
-                    (int32_t)(intptr_t)parent,
-                    (int32_t)(intptr_t)key,
-                    (int32_t)(intptr_t)value))
+            if (!kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)))
                 ok = 0;
         }
-        function_4a9d70_this((int32_t)(intptr_t)value);
-        function_4a9d70_this((int32_t)(intptr_t)key);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
     }
 
-    function_4a9d70_this((int32_t)(intptr_t)value);
-    function_4a9d70_this((int32_t)(intptr_t)key);
-    function_4a9d70_this((int32_t)(intptr_t)parent);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)parent)));
     return ok;
 }
 
@@ -205,19 +195,18 @@ extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
 
     if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
         ok = 0;
-    function_4a94e0_this((int32_t)(intptr_t)container);
-    function_4a94e0_this((int32_t)(intptr_t)key);
-    function_4a94e0_this((int32_t)(intptr_t)value);
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)container));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
 
     if (ok && !retdec_squirrel_object_from_pair(
                    container, object_type, object_data))
         ok = 0;
-    if (ok && function_4a9c10_this((int32_t)(intptr_t)container))
+    if (ok && kinoko_sqplus_object_begin_iteration((void *)(intptr_t)((int32_t)(intptr_t)container)))
         iterator_started = 1;
 
     while (ok && iterator_started &&
-           function_4a9c60((int32_t *)(intptr_t)key,
-                           (int32_t *)(intptr_t)value)) {
+           kinoko_sqplus_object_next((int32_t *)(intptr_t)key, (int32_t *)(intptr_t)value)) {
         uint32_t value_type = (uint32_t)value[1];
         uint32_t key_type = (uint32_t)key[1];
 
@@ -262,8 +251,7 @@ extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
                 ok = 0;
         } else if (value_type == OT_ARRAY) {
             int32_t nested[3];
-            int32_t count = function_4a96d0(
-                (int32_t)(intptr_t)value);
+            int32_t count = kinoko_sqplus_object_size((void *)(intptr_t)((int32_t)(intptr_t)value));
             if (count < 0 ||
                 !retdec_table_stream_write(stream_ptr, &count,
                                             sizeof(count)) ||
@@ -281,8 +269,8 @@ extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
             }
         }
 
-        function_4a9d70_this((int32_t)(intptr_t)value);
-        function_4a9d70_this((int32_t)(intptr_t)key);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
     }
 
     if (iterator_started) {
@@ -290,12 +278,12 @@ extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
         if (ok && !retdec_table_stream_write(stream_ptr, &null_type,
                                        sizeof(null_type)))
             ok = 0;
-        function_4a9d50();
+        kinoko_sqplus_object_end_iteration();
     }
-    function_4a9d70_this((int32_t)(intptr_t)value);
-    function_4a9d70_this((int32_t)(intptr_t)key);
-    function_4a9d70_this((int32_t)(intptr_t)container);
-    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)container)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
     return ok;
 }
 
@@ -332,9 +320,7 @@ extern "C" int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
         bytes_read != encoded_size)
         goto cleanup;
 
-    stream[2] = function_404430((int32_t)(intptr_t)encoded,
-                          (int32_t)encoded_size,
-                          (int32_t)(intptr_t)decoded, 0x20000);
+    stream[2] = kinoko_decompress_buffer(encoded, (int32_t)encoded_size, decoded, 0x20000);
     retdec_trace_i32("savedata:decoded-size", stream[2]);
     if (stream[2] <= 0)
         goto cleanup;
@@ -353,7 +339,7 @@ cleanup:
         free(decoded);
     if (encoded != NULL)
         free(encoded);
-    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
     retdec_trace_i32("savedata:load-result", result);
     return result;
 }
@@ -390,9 +376,7 @@ extern "C" int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
                          table_object[2]))
         goto cleanup;
     retdec_trace_i32("savedata:raw-size", input_stream[1]);
-    encoded_size = (DWORD)function_404390(
-        (int32_t)(intptr_t)raw, input_stream[1],
-        (int32_t *)(intptr_t)encoded, 0x20000);
+    encoded_size = (DWORD)kinoko_compress_buffer(raw, input_stream[1], encoded, 0x20000);
     retdec_trace_i32("savedata:encoded-size", (int32_t)encoded_size);
     if (encoded_size == 0 || encoded_size > 0x20000)
         goto cleanup;
@@ -411,7 +395,7 @@ cleanup:
         free(encoded);
     if (raw != NULL)
         free(raw);
-    function_4a9d70_this((int32_t)(intptr_t)input_object);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
     retdec_trace_i32("savedata:save-result", result);
     return result;
 }

@@ -2,6 +2,7 @@
 // boundaries. This target compiles it once, without the generated game host.
 #include "../src/reconstructed/audio_runtime.cpp"
 #include <cstdio>
+#include <array>
 #include <vector>
 #include <type_traits>
 #include "directsound_fixture.hpp"
@@ -22,28 +23,28 @@ static_assert(std::is_nothrow_move_constructible_v<BgmTrack>);
 }
 
 extern "C" {
-int32_t g637 = 0, g765 = 1, g876 = 0, g878 = 0;
+int32_t g637 = 0, kinoko_archive_count = 1, g876 = 0, g878 = 0;
 char* g877 = nullptr;
 char g874 = 0;
 const KinokoAudioHostSymbols* kinoko_audio_host_symbols(void) {
     static const KinokoAudioHostSymbols symbols{&critical_section_identity, "test"};
     return &symbols;
 }
-int32_t function_407370(int32_t slot, const char*) {
+int32_t kinoko_reader_open(KinokoArchiveReader **slot, const char*) {
     fixture_offset = 0;
     fixture_reader[1] = 1;
     fixture_reader[3] = static_cast<int32_t>(fixture.size());
-    *kinoko::legacy::pointer<int32_t>(slot) = kinoko::legacy::address(fixture_reader);
+    *slot = reinterpret_cast<KinokoArchiveReader*>(fixture_reader);
     return 1;
 }
-int32_t function_407300(int32_t) { return 0; }
-int32_t retdec_reader_read_exact(int32_t, void* output, uint32_t size) {
+uint32_t kinoko_reader_size(KinokoArchiveReader*) { return static_cast<uint32_t>(fixture.size()); }
+int32_t kinoko_reader_read_exact(KinokoArchiveReader*, void* output, uint32_t size) {
     if (fixture_offset + size > fixture.size()) return 0;
     std::memcpy(output, fixture.data() + fixture_offset, size);
     fixture_offset += size;
     return 1;
 }
-void retdec_destroy_reader(int32_t*) { ++reader_destroys; }
+void kinoko_reader_close(KinokoArchiveReader*) { ++reader_destroys; }
 uint32_t retdec_safe_c_string_length(const char* text) { return text ? static_cast<uint32_t>(std::strlen(text)) : 0; }
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
@@ -114,7 +115,7 @@ int main() {
     g_retdec_se_entries[0].id = 123;
     g_retdec_se_entries[0].buffer.reset(&sound);
     sound.status = DSBSTATUS_PLAYING;
-    CHECK(function_470980(123) == 1);
+    CHECK(kinoko_audio_play_sound(123) == 1);
     CHECK(sound.stops == 1 && sound.plays == 1 && sound.position == 0);
     retdec_se_entries_release();
     CHECK(sound.releases == 1 && g_retdec_se_entry_count == 0);
@@ -144,15 +145,59 @@ int main() {
     CHECK(!retdec_se_parse_wave_asset("fixture.cv3", &parsed, &decoded, &decoded_size));
     CHECK(decoded == nullptr && reader_destroys == 2);
 
-    // Real Windows event/thread contracts, no audio device or original assets.
-    CHECK(function_40a3d0() != 0);
-    CHECK(g_retdec_audio_threads_initialized);
-    CHECK(function_40b3a0() == 1);
-    CHECK(!g_retdec_audio_threads_initialized && !g_retdec_audio_update_thread);
-    CHECK(!g_retdec_audio_loader_thread && !g_retdec_audio_queue_event && !g_retdec_audio_stop_event);
+    // 40A9A0 volume fades retain a silent track; 40A950 marks it for retirement.
+    Buffer fade_buffer;
+    {
+        BgmTrack track;
+        track.buffer.reset(&fade_buffer);
+        track.volume = 1;
+        retdec_bgm_begin_fade_locked(&track, 100, 0.0f, 0, false);
+        track.fade_started = 10;
+        update_track_fade(track, 110);
+        CHECK(track.buffer && track.volume == 0 && !track.retirement_requested);
+        CHECK(fade_buffer.releases == 0);
+        retdec_bgm_begin_fade_locked(&track, 100, 0.0f, 0, true);
+        track.fade_started = 10;
+        update_track_fade(track, 110);
+        CHECK(track.retirement_requested && fade_buffer.releases == 0);
+        retdec_bgm_release_state(&track);
+    }
+    CHECK(fade_buffer.releases == 1);
+
+    // Retired playback leaves the active queue before the loader frees its owner.
+    Buffer retired_buffer;
+    g_retdec_bgm_track.buffer.reset(&retired_buffer);
+    g_retdec_bgm_track.handle = first;
+    g_retdec_bgm_track.retirement_requested = true;
+    g637 = first;
+    manager.active.head->push_back(first);
+    retdec_bgm_service_all_locked();
+    CHECK(manager.active.head->empty() && manager.retired.head->size() == 1);
+    CHECK(retdec_audio_handle_lookup(&manager.handles, first) && retired_buffer.releases == 0);
+    release_retired_requests_locked();
+    CHECK(!retdec_audio_handle_lookup(&manager.handles, first));
+    CHECK(manager.retired.head->empty() && retired_buffer.releases == 1 && !g637);
+
+    // More than 32 overlapping BGM streams must not evict an unrelated owner.
+    std::array<Buffer, 34> overlapping;
+    for (auto& buffer : overlapping) {
+        g_retdec_bgm_track.buffer.reset(&buffer);
+        retdec_bgm_archive_current_track();
+    }
+    CHECK(fading_tracks.size() == overlapping.size());
+    for (auto& buffer : overlapping) CHECK(buffer.releases == 0);
+    retdec_bgm_release_all_tracks_locked();
+    for (auto& buffer : overlapping) CHECK(buffer.releases == 1);
+
+    // Real Windows event/thread contracts, compiled but not run in this batch.
+    CHECK(kinoko_audio_start_workers() != 0);
+    CHECK(audio_workers.initialized);
+    CHECK(kinoko_audio_shutdown_resources() == 1);
+    CHECK(!audio_workers.initialized && !audio_workers.update_thread);
+    CHECK(!audio_workers.loader_thread && !audio_workers.queue_event && !audio_workers.stop_event);
     CHECK(!g_retdec_audio_manager_initialized);
     retdec_audio_manager_construct();
     CHECK(g_retdec_audio_manager_initialized);
-    CHECK(function_40b3a0() == 1);
+    CHECK(kinoko_audio_shutdown_resources() == 1);
     std::puts("PASS: audio layouts, handles, FIFO, buffer ownership, native SDK calls, CV3 and worker teardown");
 }

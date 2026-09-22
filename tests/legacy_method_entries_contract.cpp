@@ -1,3 +1,5 @@
+#include "kinoko/actor_lifecycle.h"
+#include "kinoko/game_script_host.h"
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/legacy_abi.h"
 #include <array>
@@ -72,32 +74,37 @@ extern "C" int32_t function_457a10_impl(int32_t receiver, int32_t argument) {
     return record(9, {bits(receiver), bits(argument)});
 }
 
-extern "C" int32_t function_45d970_this(int32_t receiver, char flags) {
-    return record(10, {bits(receiver), bits(flags)});
-}
 
-extern "C" int32_t function_45dbd0_this(int32_t receiver, float dx, float dy) {
+
+extern "C" KinokoCollisionState *kinoko_game_collision_state(void) { return nullptr; }
+extern "C" int32_t kinoko_actor_move(KinokoCollisionState *, KinokoActor *actor, float dx, float dy) {
+    const auto receiver=(int32_t)(intptr_t)actor;
     return record(11, {bits(receiver), bits(dx), bits(dy)});
 }
 
-extern "C" int32_t function_45eb00_this(int32_t receiver) {
+extern "C" int32_t kinoko_actor_reset(KinokoActor *actor) {
+    const auto receiver=(int32_t)(intptr_t)actor;
     return record(12, {bits(receiver)});
 }
 
-extern "C" int32_t function_469620_this(int32_t receiver, int32_t argument) {
+extern "C" int32_t kinoko_actor_render_layer_update(void *layer, KinokoCamera *camera) {
+    auto receiver=(int32_t)(intptr_t)layer; auto argument=(int32_t)(intptr_t)camera;
     return record(14, {bits(receiver), bits(argument)});
 }
 
-extern "C" int32_t function_46a6f0_this(int32_t receiver, uint32_t handle) {
+extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *pool, uint32_t handle) {
+    auto receiver=(int32_t)(intptr_t)pool;
     return record(15, {bits(receiver), bits(handle)});
 }
 
-extern "C" int32_t function_46aa60_this(int32_t receiver) {
-    return record(16, {bits(receiver)});
+extern "C" KinokoActor *kinoko_actor_owner_list_acquire(KinokoActorManager *manager) {
+    const auto receiver=(int32_t)(intptr_t)manager;
+    return reinterpret_cast<KinokoActor *>(record(16, {bits(receiver)}));
 }
 
-extern "C" int32_t function_46ab10_this(int32_t receiver, int32_t output) {
-    return record(17, {bits(receiver), bits(output)});
+extern "C" KinokoActor *kinoko_actor_pool_request(KinokoActorPool *pool, uint32_t *handle) {
+    auto receiver=(int32_t)(intptr_t)pool; auto output=(int32_t)(intptr_t)handle;
+    return reinterpret_cast<KinokoActor *>(record(17, {bits(receiver), bits(output)}));
 }
 
 int main() {
@@ -155,19 +162,13 @@ int main() {
             {receiver_bits, bits(-31)})) {
             std::fprintf(stderr, "Entry contract failed: function_457a10\n"); return 1;
         }
-        if (!check(10, retdec_call_thiscall1_result(receiver,
-            reinterpret_cast<void*>(&kinoko_method_destroy_actor),
-            static_cast<int32_t>(bits(static_cast<char>(0xa5)))), {receiver_bits,
-            bits(static_cast<char>(0xa5))})) {
-            std::fprintf(stderr, "Entry contract failed: function_45d970_bridge\n"); return 1;
-        }
         if (!check(11, retdec_call_thiscall2_result(receiver,
             reinterpret_cast<void*>(&kinoko_method_actor_move), static_cast<int32_t>(bits(-3.25f)),
             static_cast<int32_t>(bits(7.75f))), {receiver_bits, bits(-3.25f), bits(7.75f)})) {
             std::fprintf(stderr, "Entry contract failed: function_45dbd0\n"); return 1;
         }
         if (!check(12, retdec_call_thiscall0_result(receiver,
-            reinterpret_cast<void*>(&kinoko_method_actor_destroy_state)), {receiver_bits})) {
+            reinterpret_cast<void*>(&kinoko_actor_reset_method)), {receiver_bits})) {
             std::fprintf(stderr, "Entry contract failed: function_45eb00\n"); return 1;
         }
         if (!check(14, retdec_call_thiscall1_result(receiver,

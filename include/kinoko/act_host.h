@@ -1,3 +1,6 @@
+#include "kinoko/script_file.h"
+#include "kinoko/file_io_legacy.h"
+#include "kinoko/graphics_device.h"
 #pragma once
 #include "kinoko/legacy_string.h"
 #include <stdint.h>
@@ -57,30 +60,20 @@ extern int32_t kinoko_act_script_extension[7];
 extern int32_t  g1224;
 extern int32_t  g483;
 extern int32_t  g484;
-extern int32_t  g678;
-extern int32_t  g765;
 extern int32_t retdec_primary_shared_state;
 extern int32_t retdec_release_watch_data[8];
 extern int32_t retdec_release_watch_count;
 
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
-int32_t function_402d40(char * a1, int32_t a2);
 float function_4040d0(long double a1);
 float function_404130(long double a1);
-int32_t function_407370(int32_t reader_slot_address, const char *file_name);
-int32_t function_41ef50(int32_t a1, int32_t a2, int32_t a3);
 int32_t function_4252e0(void);
 int32_t kinoko_sqrat_call_integer0(int32_t a1);
 int32_t kinoko_sqrat_call_integer1(int32_t a1);
-void retdec_destroy_reader(int32_t *reader);
 int32_t retdec_is_release_watch_data(int32_t data);
 int32_t retdec_layout_submit_impl(int32_t vertex_buffer,
                                           float x, float y);
 int32_t retdec_load_act_texture(const char *texture_name);
-int32_t retdec_reader_read_exact(int32_t reader_ptr, void *buffer,
-                                        uint32_t size);
-int32_t retdec_reader_seek_relative(int32_t reader_ptr,
-                                            uint32_t offset);
 int32_t retdec_set_texture_stage(int32_t stage, int32_t handle);
 __declspec(noinline) void retdec_trace_i32(const char *label,
                                                   int32_t value);

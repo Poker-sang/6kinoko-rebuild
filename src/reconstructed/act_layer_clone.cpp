@@ -1,12 +1,12 @@
 #include "kinoko/act_array.h"
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_script_text.hpp"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/upstream_bindings.hpp"
 #include <memory>
-#include <string>
 #include <unordered_set>
 
 extern "C" int32_t g664;
@@ -36,34 +36,6 @@ void assign_object(int32_t destination, int32_t source) {
     std::memcpy(pointer<void>(destination+4),pointer<void>(source+4),13);
     const auto vm=pointer<SQVM>(field<int32_t>(destination+4));
     if (vm) sqrat::sqrat_retain(vm,kinoko::legacy::load<HSQOBJECT>(pointer<void>(destination+8)));
-}
-
-void clone_script_text(int32_t destination, int32_t source) {
-    // 41EA50 calls GetText (415EA0), then SetText (415F60) after assignment.
-    // GetText's result is ignored: compiled input becomes this exact marker;
-    // SetText clears the filename and leaves the copied compiled flag intact.
-    std::string text;
-    const auto compiled=field<uint8_t>(source+101);
-    if (compiled) text="/* This script is compiled. Can't read this. Don't edit this.*/";
-    else {
-        const auto size=field<uint32_t>(source+96);
-        const auto bytes=pointer<const char>(field<int32_t>(source+92));
-        if (size>0x1000000 || (size && !bytes)) throw std::bad_alloc();
-        if (bytes && size) {
-            const auto end=static_cast<const char*>(std::memchr(bytes,0,size));
-            if (!end) throw std::bad_alloc();
-            text.assign(bytes,end);
-        }
-    }
-    kinoko::legacy::Allocation<char> buffer(static_cast<char*>(std::malloc(text.size()+1)));
-    if (!buffer) throw std::bad_alloc();
-    std::memcpy(buffer.get(),text.c_str(),text.size()+1);
-    kinoko::legacy::StringView(pointer<void>(destination+64)).assign("",0);
-    std::free(pointer<void>(field<int32_t>(destination+92)));
-    field<int32_t>(destination+92)=address(buffer.release());
-    field<uint32_t>(destination+96)=static_cast<uint32_t>(text.size()+1);
-    field<uint8_t>(destination+100)=1;
-    field<uint8_t>(destination+101)=compiled;
 }
 
 void clone_list(int32_t destination, int32_t source, int32_t offset, bool bind) {
@@ -106,9 +78,12 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         if (output.length()!=input.length()) return 0;
         field<uint16_t>(result+140)=field<uint16_t>(source+140);
         std::memcpy(pointer<void>(result+144),pointer<void>(source+144),36);
+        const kinoko::act::ScriptTextView target_script(pointer<void>(result+204));
+        const kinoko::act::ScriptTextView source_script(pointer<void>(source+204));
+        kinoko::act::assign_script_payload(target_script, source_script);
         assign_object(result+308,source+308);
         assign_object(result+328,source+328);
-        clone_script_text(result+204,source+204);
+        kinoko::act::copy_script_text(target_script, source_script);
         clone_list(result,source,180,true);
         clone_list(result,source,192,false);
         return address(owned.release());

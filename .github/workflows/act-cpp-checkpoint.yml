@@ -1,0 +1,54 @@
+name: ACT C++ checkpoint
+on:
+  push:
+    branches: [refactor/act-document-loading-20260921]
+    paths: [tools/act-cpp-step.py]
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: act-cpp-checkpoint
+  cancel-in-progress: false
+jobs:
+  checkpoint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Apply guarded reviewed patch and commit before testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '${{ github.sha }}'
+          message=$(sed -n 's/^# commit: //p' tools/act-cpp-step.py | head -1)
+          test -n "$message"
+          python tools/act-cpp-step.py
+          git diff --check
+          git rm tools/act-cpp-step.py
+          git add -A
+          git -c user.name=OpenAI -c user.email=noreply@openai.com commit -m "$message"
+          mkdir checkpoint
+          git rev-parse HEAD > checkpoint/source-commit.txt
+          git bundle create checkpoint/source.bundle HEAD
+          git push origin HEAD:refactor/act-document-loading-20260921
+      - name: Check committed source evidence and boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/check_migration_boundaries.py 2>&1 | tee checkpoint/boundaries.log
+          python -m unittest discover -s tests -p test_act_evidence.py -v 2>&1 | tee checkpoint/evidence.log
+          python -m unittest discover -s tests -p test_legacy_islands.py -v 2>&1 | tee checkpoint/islands.log
+          python -m unittest discover -s tests -p test_upstream_provenance.py -v 2>&1 | tee checkpoint/provenance.log
+      - name: Dispatch quiet build at the committed branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run windows-x86.yml --ref refactor/act-document-loading-20260921
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: act-cpp-checkpoint-${{ github.run_id }}
+          retention-days: 30
+          path: checkpoint/

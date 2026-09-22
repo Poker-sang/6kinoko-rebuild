@@ -1,3 +1,5 @@
+#include "kinoko/map_manager_records.hpp"
+#include "kinoko/camera_records.hpp"
 #include "kinoko/squirrel_binding_detail.hpp"
 #include "kinoko/script_registration.h"
 #include "kinoko/script_callbacks.h"
@@ -15,54 +17,55 @@ using namespace kinoko::script::binding;
 template<class T> int32_t entry(T target) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(target)); }
 struct Field { const char* name; int32_t offset; bool integer; };
 constexpr Field camera_fields[] = {
-    {"x", 40, false},
-    {"y", 44, false},
-    {"cx", 48, false},
-    {"cy", 52, false},
-    {"offset_x", 56, false},
-    {"offset_y", 60, false},
-    {"left", 72, false},
-    {"top", 76, false},
-    {"right", 80, false},
-    {"bottom", 84, false},
-    {"width", 64, false},
-    {"height", 68, false},
+    {"x", offsetof(kinoko::camera::Record, x), false},
+    {"y", offsetof(kinoko::camera::Record, y), false},
+    {"cx", offsetof(kinoko::camera::Record, center_x), false},
+    {"cy", offsetof(kinoko::camera::Record, center_y), false},
+    {"offset_x", offsetof(kinoko::camera::Record, offset_x), false},
+    {"offset_y", offsetof(kinoko::camera::Record, offset_y), false},
+    {"left", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, left), false},
+    {"top", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, top), false},
+    {"right", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, right), false},
+    {"bottom", offsetof(kinoko::camera::Record, bounds) + offsetof(kinoko::camera::Bounds, bottom), false},
+    {"width", offsetof(kinoko::camera::Record, width), false},
+    {"height", offsetof(kinoko::camera::Record, height), false},
 };
 constexpr Field map_fields[] = {
-    {"width", 76, true},
-    {"height", 80, true},
-    {"last_id", 56, true},
-    {"last_left", 60, false},
-    {"last_top", 64, false},
-    {"last_right", 68, false},
-    {"last_bottom", 72, false},
+    {"width", offsetof(kinoko::map::ManagerRecord, width), true},
+    {"height", offsetof(kinoko::map::ManagerRecord, height), true},
+    {"last_id", offsetof(kinoko::map::ManagerRecord, last_id), true},
+    {"last_left", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, left), false},
+    {"last_top", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, top), false},
+    {"last_right", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, right), false},
+    {"last_bottom", offsetof(kinoko::map::ManagerRecord, last_bounds) + offsetof(kinoko::camera::Bounds, bottom), false},
 };
 int32_t create_class(int32_t* output, int32_t vm, int32_t name, int32_t parent, int32_t* descriptor) {
     const auto top = sq_gettop(pointer<SQVM>(vm));
-    function_4a94e0_this(address(output));
-    if (function_4aa540(vm, address(output), descriptor, name, parent)) {
+    kinoko_sqplus_object_initialize((void *)(output));
+    if (kinoko_sqplus_create_class((struct SQVM *)(intptr_t)(vm), (void *)(output), descriptor, (const char *)(intptr_t)(name), (const char *)(intptr_t)(parent))) {
         int32_t temporary[3];
-        function_4a94e0_this(address(temporary));
+        kinoko_sqplus_object_initialize((void *)(temporary));
         ObjectView(output).push(current_vm());
-        function_4a9660_this(address(temporary), -1);
+        kinoko_sqplus_object_capture((void *)(temporary), -1);
         sq_pop(current_vm(), 1);
-        function_45f640(temporary); // Consumes its by-value object.
+        (int32_t)(intptr_t)(kinoko_sqplus_setup_hierarchy(temporary)); // Consumes its by-value object.
     }
     sq_settop(pointer<SQVM>(vm), top);
     return address(output);
 }
 void construct(int32_t state[12], const char* name, int32_t* descriptor) {
     state[0] = address(g644); state[1] = address(name); state[5] = 0;
-    function_4a94e0_this(address(state + 2));
-    function_4a91c0_this(state + 6); function_4a91c0_this(state + 9);
+    kinoko_sqplus_object_initialize((void *)(state + 2));
+    kinoko_sqplus_object_new_table(state + 6);
+    kinoko_sqplus_object_new_table(state + 9);
     int32_t temporary[3]{};
     create_class(temporary, state[0], state[1], 0, descriptor);
-    function_4a95c0_this(address(state + 2), address(temporary));
-    function_4a9d70_this(address(temporary));
+    kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
 }
 template<size_t N> void bind_fields(int32_t* object, int32_t* descriptor, const Field (&fields)[N]) {
     for (const auto& field : fields) {
-        auto bind = field.integer ? function_460920 : function_4609c0;
+        auto bind = field.integer ? kinoko_sqplus_bind_integer : kinoko_sqplus_bind_float;
         bind(object, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
 }
@@ -90,15 +93,15 @@ void camera_receiver(int32_t result[2], int32_t vm_address) {
         retdec_trace_i32("4665e0:instance-data", data_bits(instance));
     }
     int32_t object[3]{}, type = 0;
-    function_4a9540_this(address(object), instance._type, data_bits(instance));
-    function_4a9d30_this(address(object), &type);
+    kinoko_sqplus_object_construct_value((void *)(object), instance._type, data_bits(instance));
+    kinoko_sqplus_object_typetag((void *)(object), &type);
     if (type != address(kinoko_camera_binding_type())) {
         int32_t inherited[3]{};
-        function_4aa3a0_this(address(object), address(inherited), "__ot");
-        result[0] = function_4aa000_this(address(inherited), address(kinoko_camera_binding_type()));
-        function_4a9d70_this(address(inherited));
+        kinoko_sqplus_object_get_value((void *)(object), (void *)(inherited), "__ot");
+        result[0] = (int32_t)(intptr_t)(kinoko_sqplus_object_get_index_userpointer((void *)(inherited), address(kinoko_camera_binding_type())));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(inherited)));
     }
-    function_4a9d70_this(address(object));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
 }
 } // namespace
 
@@ -130,7 +133,7 @@ extern "C" int32_t function_466890(int32_t a1) {
         return sq_throwerror(pointer<SQVM>(a1), "Invalid Instance Type");
 
     // 0x4668b3: the native callback is __thiscall with three SQ arguments.
-    function_45f5e0(arguments, 0, a1);
+    (int32_t)(intptr_t)(kinoko_sqplus_argument_object(arguments, 0, (struct SQVM *)(intptr_t)(a1)));
     if (camera_native_trace_count < 16) {
         retdec_trace_i32("466890:vm", a1);
         retdec_trace_i32("466890:native-instance", native_instance);
@@ -150,9 +153,9 @@ extern "C" int32_t function_466890(int32_t a1) {
 
 extern "C" int32_t function_4669d0(void) {
     int32_t root[3]{}, state[12]{};
-    function_4a9500_this(root, function_4a8cc0());
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(root), kinoko_sqplus_root_object());
     construct(state, "Camera", kinoko_camera_binding_type());
-    function_4a95c0_this(address(g611), address(state + 2));
+    kinoko_sqplus_object_assign((void *)(g611), (const void *)(state + 2));
     auto* vm = pointer<SQVM>(state[0]);
     ObjectView(state + 2).push(vm);
     sq_pushstring(vm, "SetUpdateFunction", -1);
@@ -166,20 +169,20 @@ extern "C" int32_t function_4669d0(void) {
         retdec_trace_i32("camera-class:data", state[4]);
         retdec_trace_squirrel_table_entries("camera-class-members", load<int32_t>(state[4]+24));
     }
-    for (int offset : {9,6,2}) function_4a9d70_this(address(state + offset));
-    function_4a9d70_this(address(root));
+    for (int offset : {9,6,2}) (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + offset)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(root)));
     return 0;
 }
 extern "C" int32_t function_46fac0(void) {
     int32_t state[12]{}, layer[3]{};
     construct(state, "Map", kinoko_map_binding_type());
-    function_4a95c0_this(address(g636), address(state + 2));
+    kinoko_sqplus_object_assign((void *)(g636), (const void *)(state + 2));
     bind_fields(state + 2, kinoko_map_binding_type(), map_fields);
     // Original 46FD05 constructs this local exactly once with an explicit receiver.
-    function_4a94e0_this(address(layer));
-    function_4a9840_this(address(g636), "layer_name", address(layer));
-    function_4a9d70_this(address(layer));
-    function_4a9d70_this(address(state + 9));
-    function_4a9d70_this(address(state + 6));
-    return function_4a9d70_this(address(state + 2));
+    kinoko_sqplus_object_initialize((void *)(layer));
+    kinoko_sqplus_object_raw_set_name((void *)(g636), "layer_name", (const void *)(layer));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(layer)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 9)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 6)));
+    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + 2)));
 }

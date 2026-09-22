@@ -1,0 +1,45 @@
+{
+  "version": "R139",
+  "source_commit": "7e7bd389ccddc9bfa52e929ba8aa4440bf37fbe4",
+  "user_confirmed_baseline": "R138",
+  "build_tree": "build-runs/collision-manager-r139-quiet",
+  "configuration": "Release",
+  "platform": "Win32",
+  "disable_trace": true,
+  "build_exit_code": 0,
+  "all_targets_compiled": true,
+  "regression_sources_compiled": true,
+  "tests_executed": false,
+  "game_executed": false,
+  "dat_size_and_sha256_verified": true,
+  "build_log": "build-runs/collision-manager-r139-quiet/build.log",
+  "configure_log": "build-runs/collision-manager-r139-quiet/configure.log",
+  "staging_log": "build-runs/collision-manager-r139-quiet/stage-dat.log",
+  "files": [
+    {
+      "path": "runtime-builds/collision-manager-r139-quiet/kinoko_retdec_rebuild.exe",
+      "size": 855552,
+      "sha256": "d0530239bb749ba0f250b48540bba8f7c4217195fc574a901b33faa8ca69d70a"
+    },
+    {
+      "path": "runtime-builds/collision-manager-r139-quiet/6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "dd3aff7e3e6bf0816c3073d113c3ccb12242a67e578d012c3b87190e7e24fc64"
+    },
+    {
+      "path": "runtime-builds/collision-manager-r139-quiet/6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4d47b8e241886be4300025324ddd7d1e3c5729232ff67e011f14163db60130d2"
+    },
+    {
+      "path": "runtime-builds/collision-manager-r139-quiet/6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327f6f680d53aaa5539f45e11d33c1c6ba6b862648760725f44a380121852e"
+    },
+    {
+      "path": "runtime-builds/collision-manager-r139-quiet/tools/kinoko_stage_contract.exe",
+      "size": 1197056,
+      "sha256": "3f7e6dc8157ee6b94c8e7e1b31ba9e764bbb165234a5f228cb58ed6471a7b570"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #include "kinoko/native_buffer.h"
 #include "kinoko/map_render.h"
+#include "kinoko/map_layout_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include <array>
 #include <vector>
@@ -16,7 +17,10 @@ using kinoko::legacy::pointer;
 struct VectorView { int32_t begin,end,capacity; };
 struct Spec { int offset,width,copy_bytes; };
 constexpr std::array<Spec,10> vectors={{{264,32,32},{280,4,4},{296,4,4},
-    {332,232,232},{348,4,4},{364,12,12},{384,288,281},{404,48,48},{420,4,4},{436,4,4}}};
+    {332,232,232},{348,4,4},{364,12,12},{offsetof(kinoko::map::LayoutRecord,chip_sprites),sizeof(kinoko::map::ChipSpriteCache),281},
+    {offsetof(kinoko::map::LayoutRecord,chip_definitions),sizeof(kinoko::map::ChipDefinition),48},
+    {offsetof(kinoko::map::LayoutRecord,changed_chips),sizeof(kinoko::map::ChipDefinition*),4},
+    {offsetof(kinoko::map::LayoutRecord,chip_indices),sizeof(int32_t),4}}};
 struct Free { void operator()(void *p) const { std::free(p); } };
 using Owned=std::unique_ptr<void,Free>;
 Owned allocate(size_t size) {
@@ -47,7 +51,7 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
 
     }
     // Fourth words between vector views are untouched, as in 433780/433AE0.
-    field<uint8_t>(result+460)=1;
+    kinoko::map::LayoutView(output.get()).set(&kinoko::map::LayoutRecord::suppress_next_binding, uint8_t{1});
     try {
         for(size_t i=0;i<vectors.size();++i)
             kinoko_native_buffer_replace(result+vectors[i].offset,buffers[i].data(),static_cast<uint32_t>(buffers[i].size()*4));

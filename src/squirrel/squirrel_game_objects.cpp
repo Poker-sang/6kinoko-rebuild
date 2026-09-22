@@ -14,7 +14,7 @@ void retdec_trace_i32(const char*, int32_t);
 namespace {
 using namespace kinoko::script;
 // These are byte-copyable ABI records, not overlaid C++ objects.
-struct MemoryReader { uint32_t base; int32_t size; uint32_t cursor; };
+using MemoryReader = KinokoScriptMemoryReader;
 struct ActCallback { int32_t vm; HSQOBJECT environment; HSQOBJECT closure; };
 struct ResourceRoot { int32_t vm; HSQOBJECT root; };
 static_assert(sizeof(MemoryReader) == 12 && sizeof(ActCallback) == 20);
@@ -45,7 +45,7 @@ private:
     HSQUIRRELVM vm_; SQInteger top_;
 };
 SQInteger read_bytecode(SQUserPointer state, SQUserPointer output, SQInteger count) {
-    return function_402a50(address(state), address(output), count);
+    return kinoko_script_read_memory(state, output, count);
 }
 bool valid_class(HSQUIRRELVM vm, const int32_t* input, int32_t native, int32_t* output) {
     if (!vm || !input || !native || !output) return false;
@@ -67,18 +67,20 @@ extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
     // Original return is the pushed stack SLOT address, not the VM address.
     return kinoko_sq_get_up(id, -1);
 }
-extern "C" int32_t function_402a50(int32_t id, int32_t destination, int32_t requested) {
-    if (!id || requested <= 0) return 0;
-    auto state = read<MemoryReader>(pointer(id));
-    if (!state.base || state.size < 0 || state.cursor < state.base) return 0;
-    const auto consumed = state.cursor - state.base;
+extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
+    if (!stream || requested <= 0) return 0;
+    auto state = read<MemoryReader>(stream);
+    const auto base = reinterpret_cast<uintptr_t>(state.base);
+    const auto cursor = reinterpret_cast<uintptr_t>(state.cursor);
+    if (!base || state.size < 0 || cursor < base) return 0;
+    const auto consumed = cursor - base;
     if (consumed > static_cast<uint32_t>(state.size)) return 0;
     const auto count = std::min(static_cast<uint32_t>(requested),
-        static_cast<uint32_t>(state.size) - consumed);
+        static_cast<uint32_t>(state.size) - static_cast<uint32_t>(consumed));
     if (!count || !destination) return 0;
-    std::memcpy(pointer(destination), pointer(static_cast<int32_t>(state.cursor)), count);
+    std::memcpy(destination, state.cursor, count);
     state.cursor += count;
-    write(pointer(id), state);
+    write(stream, state);
     return static_cast<int32_t>(count);
 }
 extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* parent,
@@ -129,7 +131,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
     retdec_release_act_callback(address(destination));
     auto callback = read<ActCallback>(destination);
     int32_t pair[2]; write(pair, empty());
-    const auto found = retdec_sqrat_get(global, name, address(pair));
+    const auto found = kinoko_sqrat_get((void *)(intptr_t)(global), name, (void *)(pair));
     // Only metadata diagnostics: no additional scripted lookup or path dereference.
     retdec_trace_i32("act:copy-update-script", script);
     retdec_trace_i32("act:copy-update-result", found);
@@ -140,7 +142,7 @@ extern "C" void retdec_copy_act_callback(int32_t id, int32_t script, int32_t off
         upstream::sqrat_retain_function(vm, callback.environment, callback.closure);
         write(destination, callback);
     }
-    retdec_sqrat_release_pair(id, pair);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(id), pair);
 }
 extern "C" int32_t retdec_bind_act_resource_root(int32_t resource, int32_t id,
     const int32_t* pair) {
@@ -168,7 +170,7 @@ static int32_t execute_embedded_act_script(int32_t id, int32_t script,
     const auto size = read<int32_t>(bytes(script) + script_size_offset);
     if (!data || size < 2 || read<uint16_t>(pointer(static_cast<int32_t>(data))) != SQ_BYTECODE_STREAM_TAG)
         return 0;
-    MemoryReader reader{data, size, data};
+    MemoryReader reader{pointer<const unsigned char>(data), size, pointer<const unsigned char>(data)};
     TrimStack restore(vm);
     const auto load = sq_readclosure(vm, read_bytecode, &reader);
     retdec_trace_i32("act-script:readclosure-result", load);
@@ -195,21 +197,4 @@ extern "C" int32_t retdec_execute_act_file_bytecode(int32_t vm, int32_t script,
     // 416A8D calls the loaded closure, then 416AE8 calls LocalScript::Run on
     // that same closure. The first call's failure is not used as a branch.
     return execute_embedded_act_script(vm, script, environment, 2);
-}
-extern "C" int32_t function_45e020_this(int32_t state, int32_t temporary,
-    int32_t type, int32_t data) {
-    if (!state || !temporary) return -1;
-    const auto id = read<int32_t>(pointer(state));
-    if (!id) return -1;
-    auto vm = pointer<SQVM>(id);
-    // This state embeds TWO 12-byte SqPlus wrappers. It is NOT ActCallback.
-    sq_pushobject(vm, read<HSQOBJECT>(bytes(state) + 20));
-    sq_pushobject(vm, read<HSQOBJECT>(bytes(state) + 8));
-    sq_pushobject(vm, borrowed_value(type, data));
-    const auto result = kinoko_sq_call(id, 2, SQTrue, SQTrue);
-    if (SQ_SUCCEEDED(result)) sq_pop(vm, 2);
-    // Preserve failed-call stack state and the original embedding's current-VM
-    // destruction boundary (including its no-VM diagnostic behavior).
-    function_4a9d70_this(temporary);
-    return result;
 }

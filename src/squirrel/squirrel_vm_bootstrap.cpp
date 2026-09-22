@@ -30,9 +30,7 @@ std::list<int32_t>& owned_states() {
     static std::list<int32_t> values;
     return values;
 }
-int32_t function_address(void* value) noexcept {
-    return static_cast<int32_t>(reinterpret_cast<uintptr_t>(value));
-}
+
 }
 extern "C" void kinoko_sq_release_owned_states(void) {
     // Original CRT exit handler 4D4B30 and node destructor 4A8D60.
@@ -42,17 +40,17 @@ extern "C" void kinoko_sq_release_owned_states(void) {
     g643=0;
     for(const auto state:pending) kinoko_sq_delete_shared_state(state);
 }
-extern "C" int32_t function_4a8c50(void) {
+extern "C" int32_t kinoko_sqplus_release_vm_wrappers(void) {
     if (g645 != 0) {
-        function_4a9570_this(g645);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy(pointer<void>(g645)));
         std::free(pointer<void>(g645));
         g645 = 0;
     }
-    if (g642 == 0) function_4a9570_this(address(unk_5149EC));
+    if (g642 == 0) (int32_t)(intptr_t)(kinoko_sqplus_object_reset(unk_5149EC));
     g644 = nullptr;
     return 0;
 }
-extern "C" int32_t function_4a8c90(int32_t, const char* format, ...) {
+extern "C" int32_t kinoko_sqplus_print(struct SQVM * , const char* format, ...) {
     char message[4096]{};
     va_list arguments;
     va_start(arguments, format);
@@ -60,53 +58,56 @@ extern "C" int32_t function_4a8c90(int32_t, const char* format, ...) {
     va_end(arguments);
     return std::puts(message);
 }
-extern "C" int32_t function_4a8cc0(void) {
-    if (g645 != 0) return g645;
+extern "C" void * kinoko_sqplus_root_object(void) {
+    if (g645 != 0) return pointer<void>(g645);
     auto* vm = current_vm();
     if (!vm) return 0;
     sq_pushroottable(vm);
-    const int32_t storage = _3f__3f_2_40_YAPAXI_40_Z(12);
-    if (storage != 0) function_4a94e0_this(storage);
-    g645 = storage;
-    function_4a9660_this(storage, -1);
+    auto* storage = pointer<void>(_3f__3f_2_40_YAPAXI_40_Z(sizeof(kinoko::script::ObjectStorage)));
+    if (storage != 0) (int32_t)(intptr_t)(kinoko_sqplus_object_initialize(storage));
+    g645 = address(storage);
+    kinoko_sqplus_object_capture(storage, -1);
     sq_pop(vm, 1);
-    return g645;
+    return pointer<void>(g645);
 }
-extern "C" int32_t function_4a8db0(int32_t requested_vm) {
-    int32_t current = requested_vm;
-    if (requested_vm != 0 && address(g644) == requested_vm) return 1;
-    // Preserve the recovered boundary: the original virtual cleanup receiver
-    // is not recovered here, so do not invent a destructor/free operation.
-    if (g645 != 0) g645 = 0;
-    if (g642 == 0) function_4a9570_this(address(unk_5149EC));
+extern "C" int32_t kinoko_sqplus_select_vm(struct SQVM * requested_vm) {
+    auto* current = requested_vm;
+    if (requested_vm && current_vm() == requested_vm) return 1;
+    // 4A8DD7 destroys the cached root with deleting-destructor flag 1,
+    // while the outgoing VM is still current. This cache is allocated by
+    // kinoko_sqplus_root_object; release its external root before freeing it.
+    if (g645 != 0) {
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy(pointer<void>(g645)));
+        std::free(pointer<void>(g645));
+        g645 = 0;
+    }
+    if (g642 == 0) (int32_t)(intptr_t)(kinoko_sqplus_object_reset(unk_5149EC));
     g644 = nullptr;
-    if (requested_vm == 0) {
-        current = function_48a170(1024);
+    if (!requested_vm) {
+        current = pointer<SQVM>(function_48a170(1024));
         if (current == 0) return 0;
         try {
             auto& values=owned_states();
-            values.push_front(kinoko_sq_shared_state(current));
+            values.push_front(kinoko_sq_shared_state(address(current)));
             static const int registered=std::atexit(kinoko_sq_release_owned_states);
             (void)registered;
             g643=address(&values.front());
         } catch(...) {
-            kinoko_sq_delete_shared_state(kinoko_sq_shared_state(current));
+            kinoko_sq_delete_shared_state(kinoko_sq_shared_state(address(current)));
             return 0;
         }
-        sq_setprintfunc(kinoko_vm(current), (SQPRINTFUNCTION)kinoko_pointer(function_address(reinterpret_cast<void*>(&function_4a8c90))));
-        sq_pushroottable(kinoko_vm(current));
-        sqstd_register_iolib(kinoko_vm(current));
-        sqstd_register_bloblib(kinoko_vm(current));
-        sqstd_register_mathlib(kinoko_vm(current));
-        sqstd_register_stringlib(kinoko_vm(current));
-        sqstd_seterrorhandlers(kinoko_vm(current));
-        kinoko_sq_pop(current, 1);
+        // The legacy printer returns puts' status; Squirrel's void callback ignores it.
+        sq_setprintfunc(current, reinterpret_cast<SQPRINTFUNCTION>(&kinoko_sqplus_print));
+        sq_pushroottable(current);
+        sqstd_register_iolib(current);
+        sqstd_register_bloblib(current);
+        sqstd_register_mathlib(current);
+        sqstd_register_stringlib(current);
+        sqstd_seterrorhandlers(current);
+        kinoko_sq_pop(address(current), 1);
     }
     g642 = 0;
-    g644 = pointer<char>(current);
-    const int32_t owner_result = function_4a9e30_this(address(unk_5149EC), current);
+    g644 = reinterpret_cast<char*>(current);
+    const int32_t owner_result = (int32_t)(intptr_t)(kinoko_sqplus_object_assign_thread(unk_5149EC, current));
     return (owner_result & -256) | 1;
-}
-extern "C" int32_t function_4a90c0(int32_t* object, int32_t* klass) {
-    return function_4a90c0_this(address(object), address(klass));
 }

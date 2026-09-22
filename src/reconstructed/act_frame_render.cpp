@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_draw_records.hpp"
@@ -24,7 +25,7 @@ using namespace kinoko::act;
 using namespace kinoko::legacy;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
-using DocumentView = RecordView<DocumentLayers>;
+
 struct DrawLayoutPrefix {
     Address vtable;
     std::array<uint8_t, 304> unknown4;
@@ -107,27 +108,27 @@ int32_t prepare_sprite(int32_t item, const BlitCommand& command) {
     return 0;
 }
 void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
-    const auto act = resource.get(&RuntimeRecord::act);
-    const DocumentView document(pointer(act));
+    const auto act = resource.get(&RuntimeRecord::active_document);
+    const DocumentView document(act);
     if (actor_index <= 64) {
         retdec_trace_i32("4525d0:actor-index", actor_index);
         retdec_trace_i32("4525d0:flag-68", load<int32_t>(resource.bytes(&RuntimeRecord::hidden)));
         retdec_trace_i32("4525d0:flag-8", load<int32_t>(resource.bytes(&RuntimeRecord::stage_active)));
-        retdec_trace_i32("4525d0:field-10", resource.get(&RuntimeRecord::owned_storage));
-        retdec_trace_i32("4525d0:act", act);
+        retdec_trace_i32("4525d0:field-10", address(resource.get(&RuntimeRecord::active_holder)));
+        retdec_trace_i32("4525d0:act", address(act));
         if (act) {
-            retdec_trace_squirrel_name("4525d0:actor-name", address(retdec_std_string_data(address(document.bytes(&DocumentLayers::name)))));
-            retdec_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentLayers::visible)));
-            retdec_trace_i32("4525d0:act-begin", document.get(&DocumentLayers::layers).begin);
-            retdec_trace_i32("4525d0:act-end", document.get(&DocumentLayers::layers).end);
+            retdec_trace_squirrel_name("4525d0:actor-name", address(retdec_std_string_data(address(document.bytes(&DocumentRecord::name)))));
+            retdec_trace_i32("4525d0:act-60", load<int32_t>(document.bytes(&DocumentRecord::visible)));
+            retdec_trace_i32("4525d0:act-begin", address(document.get(&DocumentRecord::layers).begin));
+            retdec_trace_i32("4525d0:act-end", address(document.get(&DocumentRecord::layers).end));
         }
     }
     if (trace_index <= 8) {
         retdec_trace("4525d0:live-entry");
         retdec_trace_i32("4525d0:live-resource", self);
-        retdec_trace_i32("4525d0:live-act", act);
-        if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(retdec_std_string_data(address(document.bytes(&DocumentLayers::name)))));
-        retdec_trace_squirrel_name("4525d0:live-resource-name", address(retdec_std_string_data(address(resource.bytes(&RuntimeRecord::name_storage)))));
+        retdec_trace_i32("4525d0:live-act", address(act));
+        if (act) retdec_trace_squirrel_name("4525d0:live-act-name", address(retdec_std_string_data(address(document.bytes(&DocumentRecord::name)))));
+        retdec_trace_squirrel_name("4525d0:live-resource-name", address(retdec_std_string_data(address(resource.bytes(&RuntimeRecord::name)))));
     }
 }
 }
@@ -137,14 +138,14 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
     const RuntimeView resource(pointer(self));
     if (resource.get(&RuntimeRecord::hidden)) return 0;
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
-    const auto act = resource.get(&RuntimeRecord::act);
+    const auto act = resource.get(&RuntimeRecord::active_document);
     if (!resource.get(&RuntimeRecord::stage_active) || !act) return 0;
-    const DocumentView document(pointer(act));
-    if (!document.get(&DocumentLayers::visible)) return 0;
+    const DocumentView document(act);
+    if (!document.get(&DocumentRecord::visible)) return 0;
     int32_t result = 0;
-    const auto layers = document.get(&DocumentLayers::layers);
-    for (int32_t i = static_cast<int32_t>(layers.end - layers.begin) / 4 - 1; i >= 0; --i) {
-        const auto layout = function_452020(self, i);
+    const auto layers = document.get(&DocumentRecord::layers);
+    for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
+        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
         if (layout) {
             const auto update = method(layout, 7);
             if (update && retdec_call_thiscall0_result(pointer(layout), pointer(update)) < 0) result = E_FAIL;
@@ -162,7 +163,7 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
 }
 
 extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
-    auto* device = pointer<IDirect3DDevice9>(g678);
+    auto* device = kinoko_graphics.device;
     if (!self) return E_FAIL;
     const RuntimeView resource(pointer(self));
     if (resource.get(&RuntimeRecord::hidden)) return 0;
@@ -173,18 +174,18 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     DrawTarget target(resource.get(&RuntimeRecord::render_target), device);
     if (!resource.get(&RuntimeRecord::stage_active)) return 0;
-    const auto act = resource.get(&RuntimeRecord::act);
+    const auto act = resource.get(&RuntimeRecord::active_document);
     if (!act) return E_FAIL;
-    const DocumentView document(pointer(act));
-    if (!document.get(&DocumentLayers::visible)) return 0;
-    const auto layers = document.get(&DocumentLayers::layers);
-    if (!layers.begin || static_cast<int32_t>(layers.end) < static_cast<int32_t>(layers.begin)) return 0;
-    const float draw_x = x + document.get(&DocumentLayers::x);
-    const float draw_y = y + document.get(&DocumentLayers::y);
+    const DocumentView document(act);
+    if (!document.get(&DocumentRecord::visible)) return 0;
+    const auto layers = document.get(&DocumentRecord::layers);
+    if (!ordered_layers(layers)) return 0;
+    const float draw_x = x + document.get(&DocumentRecord::offset_x);
+    const float draw_y = y + document.get(&DocumentRecord::offset_y);
     DrawStates states(device);
     int32_t result = 0;
-    for (int32_t i = static_cast<int32_t>(layers.end - layers.begin) / 4 - 1; i >= 0; --i) {
-        const auto layout = function_452020(self, i);
+    for (int32_t i = layer_distance(layers) - 1; i >= 0; --i) {
+        const auto layout = address(kinoko_act_layer_layout(pointer<KinokoActRuntime>(self), i));
         if (!layout) continue;
         const auto draw = method(layout, 8);
         if (!draw) { result = E_FAIL; continue; }
@@ -198,8 +199,8 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
         }
         if (status < 0) result = status;
     }
-    if (document.get(&DocumentLayers::visible)) {
-        auto* blit_device = pointer<IDirect3DDevice9>(g678);
+    if (document.get(&DocumentRecord::visible)) {
+        auto* blit_device = kinoko_graphics.device;
         if (blit_device) {
             for (auto item = kinoko_act_sprite_span(self).begin;
                  item != kinoko_act_sprite_span(self).end; item += sizeof(BlitSprite)) {

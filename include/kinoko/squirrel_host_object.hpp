@@ -41,6 +41,7 @@ inline HSQOBJECT borrowed_value(int32_t type, int32_t data) noexcept {
 class ObjectView final {
 public:
     explicit ObjectView(void* storage) noexcept : record_(storage) {}
+    explicit ObjectView(const void* storage) noexcept : ObjectView(const_cast<void*>(storage)) {}
     explicit ObjectView(int32_t storage) noexcept : ObjectView(pointer(storage)) {}
     HSQOBJECT value() const noexcept {
         return record_.get(&ObjectStorage::value);

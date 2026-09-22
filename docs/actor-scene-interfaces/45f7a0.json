@@ -1,0 +1,1 @@
+{"addr":"0x45f7a0","code":"int __thiscall sub_45F7A0(float *this, int a2)\n{\n  return sub_4698A0(a1: (int)*(this + 60), a2: (int)*(this + 61), a3: a2, a4: this + a2 + 128); /*0x45f7d2*/\n}","refs":[{"addr":"0x4698a0","name":"sub_4698A0"}]}

@@ -1,3 +1,4 @@
+#include "kinoko/graphics_device.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/act_array.h"
@@ -15,6 +16,62 @@
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
 } } while (0)
 #define PTR(value) ((int32_t)(intptr_t)(value))
+
+/* Fixture-only reader/legacy-address conveniences; production uses typed APIs. */
+static int32_t fixture_pat_read_u8(int32_t reader, unsigned char *value)
+{
+    return retdec_reader_read_exact(reader, value, 1);
+}
+
+static int32_t fixture_pat_read_u16(int32_t reader, unsigned short *value)
+{
+    return retdec_reader_read_exact(reader, value, 2);
+}
+
+static int32_t fixture_pat_skip_bytes(int32_t reader, uint32_t size)
+{
+    unsigned char buffer[256];
+
+    while (size != 0) {
+        uint32_t chunk = size < sizeof(buffer) ? size : sizeof(buffer);
+        if (!retdec_reader_read_exact(reader, buffer, chunk))
+            return 0;
+        size -= chunk;
+    }
+    return 1;
+}
+
+static int32_t fixture_pat_read_animations(int32_t reader, int32_t manager, uint32_t resource_base) {
+    return kinoko_pat_read_animations((KinokoArchiveReader *)(intptr_t)reader,
+        (KinokoActorManager *)(intptr_t)manager,resource_base);
+}
+
+static int32_t fixture_pat_load_file(int32_t manager,const char *file_name,const char *directory) {
+    return kinoko_pat_load((KinokoActorManager *)(intptr_t)manager,file_name,directory);
+}
+
+static int32_t fixture_pat_tree_put(int32_t manager,int32_t key,int32_t value) {
+    return kinoko_animation_bind((KinokoActorManager *)(intptr_t)manager,key,(KinokoAnimation *)(intptr_t)value);
+}
+
+static int32_t fixture_pat_append_resource(int32_t manager,int32_t handle) {
+    kinoko_animation_add_texture((KinokoActorManager *)(intptr_t)manager,handle);return 1;
+}
+
+static int32_t fixture_collision_query_rect(int32_t state, int32_t layout,
+    int32_t *cached, int32_t left, int32_t top, int32_t right, int32_t bottom,
+    int32_t *count)
+{
+    return kinoko_map_collision_query((KinokoCollisionState *)(intptr_t)state,
+        (KinokoActLayout *)(intptr_t)layout, cached, left, top, right, bottom, count);
+}
+
+static int32_t fixture_collision_query_map(int32_t layout, int32_t actor,
+    int32_t layer_index, int32_t *count)
+{
+    return kinoko_collision_query_actor_map((KinokoCollisionState *)g_514300_storage,
+        (KinokoActLayout *)(intptr_t)layout, (KinokoActor *)(intptr_t)actor, layer_index, count);
+}
 
 static int draw_count;
 static int vm_failures;
@@ -116,13 +173,13 @@ static int execute_asset(int32_t vm, const int32_t *environment, const char *pat
     int32_t reader = 0, script[26] = {0};
     unsigned char *bytes;
     int result;
-    if (!function_407370(PTR(&reader), path)) return 0;
+    if (!kinoko_reader_open((KinokoArchiveReader **)&reader, path)) return 0;
     script[24] = *(int32_t *)(intptr_t)(reader + 12);
     bytes = (unsigned char *)malloc((size_t)script[24]);
     result = bytes && retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]);
     script[23] = PTR(bytes);
     if (result) result = retdec_execute_embedded_act_script(vm, PTR(script), environment);
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
     return result;
 }
@@ -210,13 +267,14 @@ static int test_pat_records(int32_t manager) {
         OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL);
     CHECK(file != INVALID_HANDLE_VALUE);
     CHECK(WriteFile(file, pat.bytes, pat.size, &written, NULL) && written == pat.size);
+    reader[0] = PTR(&kinoko_package_reader_methods);
     reader[1] = PTR(file);
     reader[3] = pat.size;
-    g765 = 1;
-    CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
+    kinoko_archive_count = 1;
+    CHECK(fixture_pat_read_animations(PTR(reader), manager, 0));
     CHECK(reader[5] == reader[3]);
     CHECK(CloseHandle(file));
-    g765 = 0;
+    kinoko_archive_count = 0;
 
     head = pat_lookup(manager, base + 2);
     CHECK(head);
@@ -247,26 +305,25 @@ static int test_pat_records(int32_t manager) {
     CHECK(blank && blank != head && *(int32_t *)(intptr_t)blank == blank);
     CHECK(*(int32_t *)(intptr_t)(blank + 4) == 0);
 
-    actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-        100, 200, -1, PTR(&g16), g483, g484, 0);
+    actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(actor);
-    function_462280_this(actor, base);
+    kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), base);
     CHECK(*(int32_t *)(intptr_t)(actor + 200) == head);
     CHECK(*(float *)(intptr_t)(actor + 440) == 93.5f);
     CHECK(*(float *)(intptr_t)(actor + 444) == 180.0f);
     CHECK(*(float *)(intptr_t)(actor + 448) == 110.5f);
     CHECK(*(float *)(intptr_t)(actor + 452) == 200.0f);
-    for (int i = 0; i < 18; ++i) retdec_actor_tick(actor);
+    for (int i = 0; i < 18; ++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
     CHECK(*(int32_t *)(intptr_t)(actor + 200) == head);
     CHECK(*(int32_t *)(intptr_t)(actor + 204) == *(int32_t *)(intptr_t)(head + 8));
     CHECK(*(int32_t *)(intptr_t)(actor + 212) == 0);
-    function_462280_this(actor, base + 5);
+    kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), base + 5);
     CHECK(*(float *)(intptr_t)(actor + 440) == 100.0f);
     CHECK(*(float *)(intptr_t)(actor + 444) == 200.0f);
     CHECK(*(float *)(intptr_t)(actor + 448) == 100.0f);
     CHECK(*(float *)(intptr_t)(actor + 452) == 200.0f);
     CHECK(*(int32_t *)(intptr_t)(actor + 388) == 0);
-    function_469700();
+    kinoko_script_clear_actors();
     return 0;
 }
 
@@ -278,19 +335,19 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
     unsigned char version;
     unsigned short textures;
     CHECK(file != INVALID_HANDLE_VALUE);
+    reader[0] = PTR(&kinoko_package_reader_methods);
     reader[1] = PTR(file);
     reader[3] = GetFileSize(file, NULL);
     ((unsigned char *)reader)[24] = (unsigned char)((offset >> 1) | 0x23);
-    g765 = 1;
-    CHECK(retdec_pat_read_u8(PTR(reader), &version) && version == 5);
-    CHECK(retdec_pat_read_u16(PTR(reader), &textures));
-    CHECK(retdec_pat_skip_bytes(PTR(reader), textures * 128u));
-    CHECK(retdec_pat_read_animations(PTR(reader), manager, 0));
+    kinoko_archive_count = 1;
+    CHECK(fixture_pat_read_u8(PTR(reader), &version) && version == 5);
+    CHECK(fixture_pat_read_u16(PTR(reader), &textures));
+    CHECK(fixture_pat_skip_bytes(PTR(reader), textures * 128u));
+    CHECK(fixture_pat_read_animations(PTR(reader), manager, 0));
     CHECK(reader[5] == reader[3]);
     CHECK(CloseHandle(file));
-    g765 = 0;
-    actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-        100, 200, -1, PTR(&g16), g483, g484, 0);
+    kinoko_archive_count = 0;
+    actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(actor);
     for (int32_t take = 0; take < 10000; ++take) {
         int32_t node = pat_lookup(manager, take);
@@ -306,7 +363,7 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
         }
         for (int direction = -1; direction <= 1; direction += 2) {
             *(float *)(intptr_t)(actor + 272) = (float)direction;
-            function_462280_this(actor, take);
+            kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), take);
             CHECK(*(int32_t *)(intptr_t)(actor + 200) == node);
             CHECK(*(int32_t *)(intptr_t)(actor + 204) == *(int32_t *)(intptr_t)(node + 8));
             CHECK(*(int32_t *)(intptr_t)(actor + 204) != 0);
@@ -317,7 +374,7 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
     printf("PAT textures=%u takes=%d unique=%d aliases=%d bytes=%d\n",
         textures, takes, unique, aliases, reader[5]);
     CHECK(takes > 0);
-    function_462280_this(actor, 0);
+    kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), 0);
     CHECK(*(float *)(intptr_t)(actor + 440) == 89.5f);
     CHECK(*(float *)(intptr_t)(actor + 444) == 170.0f);
     CHECK(*(float *)(intptr_t)(actor + 448) == 110.5f);
@@ -337,10 +394,10 @@ static int test_player_pat(int32_t manager, const char *path, uint32_t offset) {
         CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         CHECK(*(float *)(intptr_t)(actor + 304) == 21);
-        function_462280_this(actor, 0);
+        kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), 0);
         CHECK(*(float *)(intptr_t)(actor + 452) == 240);
     }
-    function_469700();
+    kinoko_script_clear_actors();
     puts("PASS: original player PAT consumed through the runtime parser");
     return 0;
 }
@@ -356,7 +413,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     struct retdec_mcd_data data = {1, &chip, 0, NULL};
     CHECK(execute_file(vm, root + 2, constant_path));
     CHECK(execute_source(vm, root + 2, "t_player <- {};"));
-    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_player");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(scripts)), "t_player");
     CHECK(execute_file(vm, scripts + 1, player_path));
     CHECK(execute_file(vm, scripts + 1, ground_path));
     /* Isolate ground input from ladder/swim and the rest of the game scene. */
@@ -396,15 +453,14 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
     *(int16_t *)(chip.bytes + 14) = 32;
     *(int16_t *)(chip.bytes + 34) = 0;
     CHECK(function_4693a0(PTR(layout)));
-    function_4aa3a0_this(PTR(root + 1), PTR(init), "InitWalkingProbe");
-    actor = function_463b40_this(manager, init[0], init[1], init[2],
-        100, 239, -1, PTR(&g16), g483, g484, 0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(init)), "InitWalkingProbe");
+    actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 239, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(actor);
     CHECK(execute_source(vm, root + 2,
         "if (typeof walkingProbe.funcUpdate != \"function\") throw \"missing walking callback\";"));
-    retdec_actor_manager_refresh(manager);
+    kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
     function_468620_this(PTR(g_514300_storage));
-    function_45ec60(actor);
+    kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
     CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
     for (int phase = 0; phase < 3; ++phase) {
         float start_x = *(float *)(intptr_t)(actor + 240);
@@ -413,10 +469,10 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         for (int frame = 0; frame < 30; ++frame) {
             float old_x = *(float *)(intptr_t)(actor + 240);
             int failures_before = vm_failures;
-            retdec_actor_tick(actor);
+            kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
             CHECK(vm_failures == failures_before);
             function_468620_this(PTR(g_514300_storage));
-            function_45ec60(actor);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
             if (*(float *)(intptr_t)(actor + 304) < 12 ||
                 *(float *)(intptr_t)(actor + 452) != 240)
                 fprintf(stderr, "walk phase=%d frame=%d x=%g -> %g bottom=%g width=%g "
@@ -439,7 +495,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         if (phase == 1) CHECK(*(float *)(intptr_t)(actor + 240) < start_x);
         if (phase == 2) CHECK(*(float *)(intptr_t)(actor + 256) == 0);
     }
-    function_469700();
+    kinoko_script_clear_actors();
     function_468950_this(PTR(g_514300_storage), manager);
     if (reference_dir != NULL) {
         int32_t act[60];
@@ -448,11 +504,11 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
         char path[MAX_PATH];
         for (char archive = 'a'; archive <= 'c'; ++archive) {
             sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", reference_dir, archive);
-            CHECK(function_410500(path));
+            CHECK(kinoko_archive_mount(path));
         }
-        CHECK(g678 == 0);
-        function_427530(PTR(act));
-        CHECK(function_428000(PTR(act), stage_path));
+        CHECK(kinoko_graphics.device == 0);
+        kinoko_act_document_initialize((KinokoActDocument *)act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)act, stage_path));
         for (int32_t entry = act[52]; entry != act[53]; entry += 4) {
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
@@ -501,12 +557,11 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             }
         }
         CHECK(found_entry);
-        actor = function_463b40_this(manager, init[0], init[1], init[2],
-            entry_x, entry_y, -1, PTR(&g16), g483, g484, 0);
+        actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, entry_x, entry_y, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(actor);
-        retdec_actor_manager_refresh(manager);
+        kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
         function_468620_this(PTR(g_514300_storage));
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         for (int direction = 1; direction >= -1; direction -= 2) {
             CHECK(execute_source(vm, root + 2, direction == 1 ? "input.x = 1;" : "input.x = -1;"));
@@ -515,9 +570,9 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 CHECK(execute_source(vm, root + 2,
                     "if (typeof walkingProbe.GetChipFlag() != \"integer\") "
                     "throw \"invalid chip flag result\";"));
-                retdec_actor_tick(actor);
+                kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
                 function_468620_this(PTR(g_514300_storage));
-                function_45ec60(actor);
+                kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
                 if (failures_before != vm_failures || *(float *)(intptr_t)(actor + 304) < 12 ||
                     *(float *)(intptr_t)(actor + 452) > 896)
                     fprintf(stderr, "actual stage dir=%d frame=%d xy=(%g,%g) free=(%g,%g) "
@@ -532,13 +587,13 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
             }
         }
-        function_469700();
+        kinoko_script_clear_actors();
         function_468950_this(PTR(g_514300_storage), manager);
         retdec_destroy_cact_object(PTR(act));
         printf("PASS: original %s terrain walking in both directions (TYPE_2HEAD)\n", stage_path);
     }
-    function_4a9d70_this(PTR(init));
-    function_4a9d70_this(PTR(scripts));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original ground scripts walking, turning and stopping on a flat floor");
     return 0;
 }
@@ -550,7 +605,7 @@ static __declspec(noinline) int32_t probe_set_step_entry(int32_t actor, int32_t 
     volatile uint32_t guards[4] = {0x12345678u, 0x87654321u, 0xa55aa55au, 0x5aa55aa5u};
     KinokoOwnedObjectWords argument;
     memcpy(&argument, (void *)(intptr_t)object, sizeof(argument));
-    function_4606d0(actor, NULL, argument);
+    kinoko_actor_set_step_method(actor, NULL, argument);
     return guards[0] == 0x12345678u && guards[1] == 0x87654321u &&
         guards[2] == 0xa55aa55au && guards[3] == 0x5aa55aa5u;
 }
@@ -559,19 +614,18 @@ static int test_actor_step(int32_t manager, int32_t vm, int32_t *root) {
     int32_t actors[3], object[3], controls[2], weak_counts[2], refs[2];
     int32_t top = function_48aa20(vm);
     for (int i = 0; i < 3; ++i) {
-        actors[i] = function_463b40_this(manager, PTR(&g16), g483, g484,
-            0, 0, -1, PTR(&g16), g483, g484, 0);
+        actors[i] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 0, 0, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(actors[i]);
     }
-    function_4a9840_this(PTR(root + 1), "stepRider", actors[0] + 44);
-    function_4a9840_this(PTR(root + 1), "stepFirst", actors[1] + 44);
-    function_4a9840_this(PTR(root + 1), "stepSecond", actors[2] + 44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "stepRider", (const void *)(intptr_t)(actors[0] + 44));
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "stepFirst", (const void *)(intptr_t)(actors[1] + 44));
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "stepSecond", (const void *)(intptr_t)(actors[2] + 44));
     for (int i = 0; i < 2; ++i) {
         controls[i] = *(int32_t *)(intptr_t)(actors[i + 1] + 28);
         weak_counts[i] = *(int32_t *)(intptr_t)(controls[i] + 8);
         refs[i] = *(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(actors[i + 1] + 52) + 4);
     }
-    function_4a9500_this(object, actors[1] + 44);
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), (const void *)(intptr_t)(actors[1] + 44));
     CHECK(probe_set_step_entry(actors[0], PTR(object)));
     CHECK(*(int32_t *)(intptr_t)(actors[0] + 32) == *(int32_t *)(intptr_t)(actors[1] + 24));
     CHECK(execute_source(vm, root + 2,
@@ -597,7 +651,7 @@ static int test_actor_step(int32_t manager, int32_t vm, int32_t *root) {
         }
         CHECK(function_48aa20(vm) == top);
     }
-    function_469700();
+    kinoko_script_clear_actors();
     CHECK(execute_source(vm, root + 2, "stepRider = null;\nstepFirst = null;\nstepSecond = null;"));
     puts("PASS: SetStep thiscall stack and 64 native bind/rebind/replace/detach cycles");
     return 0;
@@ -616,13 +670,11 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         "  SetCollisionCallbackFunction(function(other) {});\n"
         "  ::resetProbe <- this;\n"
         "}"));
-    function_4aa3a0_this(PTR(root + 1), PTR(init), "ResetInit");
-    function_4aa3a0_this(PTR(root + 1), PTR(seed), "resetSeed");
-    actor = function_463b40_this(manager, init[0], init[1], init[2],
-        100, 200, -1, seed[0], seed[1], seed[2], 0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(init)), "ResetInit");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(seed)), "resetSeed");
+    actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 200, -1, &(const KinokoOwnedObjectWords){seed[0], seed[1], seed[2]}, (const void *)(intptr_t)(0)));
     CHECK(actor);
-    parent = function_463b40_this(manager, PTR(&g16), g483, g484,
-        0, 0, -1, PTR(&g16), g483, g484, 0);
+    parent = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 0, 0, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(parent);
     parent_control = *(int32_t *)(intptr_t)(parent + 28);
     for (int round = 0; round < 32; ++round) {
@@ -633,8 +685,8 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         old_weak[0] = *(int32_t *)(intptr_t)(actor + 24);
         old_weak[1] = *(int32_t *)(intptr_t)(actor + 28);
         InterlockedIncrement((volatile LONG *)(intptr_t)(old_weak[1] + 8));
-        function_4a9500_this(parent_object, parent + 44);
-        function_4606d0_this(actor, PTR(parent_object));
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(parent_object), (const void *)(intptr_t)(parent + 44));
+        kinoko_actor_set_step_owned((KinokoActor *)(intptr_t)(actor), (KinokoOwnedObjectWords *)(intptr_t)(PTR(parent_object)));
         CHECK(execute_source(vm, root + 2,
             "oldReset <- resetProbe; oldUser <- oldReset.user; oldStep <- oldReset.step;\n"
             "resetProbe.x = 700; resetProbe.y = 800;\n"
@@ -655,8 +707,8 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(*(int32_t *)(intptr_t)(actor + 36) == 0);
         CHECK(*(int32_t *)(intptr_t)(actor + 112) == 0x08000100);
         CHECK(*(int32_t *)(intptr_t)(actor + 140) == 0x08000100);
-        retdec_actor_tick(actor);
-        CHECK(retdec_actor_manager_refresh(manager) == 2);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 2);
         CHECK(function_48aa20(vm) == stack_top);
     }
     CHECK(execute_source(vm, root + 2,
@@ -666,15 +718,15 @@ static int test_actor_reset(int32_t manager, int32_t vm, int32_t *root) {
         " if(user!=previous) throw \"Reset cleared executing instance\";\n"
         " user.afterReset <- 42;\n"
         "});"));
-    retdec_actor_tick(actor);
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
     CHECK(vm_failures==0);
     CHECK(*(int32_t *)(intptr_t)(actor+112)==0x08000100);
-    retdec_actor_tick(actor);
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
     CHECK(execute_source(vm,root+2,
         "if(resetCalls!=34 || resetTicks!=33) throw \"post-Reset callback continuation\";"));
-    function_469700();
-    function_4a9d70_this(PTR(init));
-    function_4a9d70_this(PTR(seed));
+    kinoko_script_clear_actors();
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(seed))));
     puts("PASS: Reset replays initialization and retires old references across 32 resets");
     return 0;
 }
@@ -684,15 +736,15 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short textures;
     unsigned char *bytes;
-    CHECK(g765 != 0 && g678 == 0);
-    CHECK(function_407370(PTR(&reader), "data/actor/item/item.pat"));
-    CHECK(retdec_pat_read_u8(reader, &version));
-    CHECK(retdec_pat_read_u16(reader, &textures));
-    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
-    CHECK(retdec_pat_read_animations(reader, manager, 0));
+    CHECK(kinoko_archive_count != 0 && kinoko_graphics.device == 0);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/item/item.pat"));
+    CHECK(fixture_pat_read_u8(reader, &version));
+    CHECK(fixture_pat_read_u16(reader, &textures));
+    CHECK(fixture_pat_skip_bytes(reader, textures * 128u));
+    CHECK(fixture_pat_read_animations(reader, manager, 0));
     CHECK(*(int32_t *)(intptr_t)(reader + 20) - *(int32_t *)(intptr_t)(reader + 16) ==
         *(int32_t *)(intptr_t)(reader + 12));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     reader = 0;
     CHECK(pat_lookup(manager, 1130));
     CHECK(execute_source(vm, root + 2,
@@ -706,30 +758,28 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         "}\n"
         "function PlaySE(id) { ::stoneSounds.append(id); }\n"
         "function CreateEffect(x,y,z,id) { ::stoneEffects.append(id); return {}; }"));
-    function_4aa3a0_this(PTR(root + 1), PTR(rider_init), "InitStoneRider");
-    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
-    CHECK(function_407370(PTR(&reader), "data/script/bullet.cv4"));
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(rider_init)), "InitStoneRider");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(scripts)), "t_item");
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/script/bullet.cv4"));
     script[24] = *(int32_t *)(intptr_t)(reader + 12);
     bytes = (unsigned char *)malloc((size_t)script[24]);
     CHECK(bytes);
     CHECK(retdec_reader_read_exact(reader, bytes, (uint32_t)script[24]));
     script[23] = PTR(bytes);
     CHECK(retdec_execute_embedded_act_script(vm, PTR(script), scripts + 1));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     free(bytes);
-    function_4aa3a0_this(PTR(scripts), PTR(init), "InitStone");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "InitStone");
     CHECK(init[1] == 0x08000100);
     for (int round = 0; round < 8; ++round) {
         int direction = (round & 1) ? -1 : 1;
         int32_t top = function_48aa20(vm);
         int failures = vm_failures;
-        int32_t rider = function_463b40_this(manager, rider_init[0], rider_init[1], rider_init[2],
-            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int32_t rider = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){rider_init[0], rider_init[1], rider_init[2]}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(rider);
         CHECK(execute_source(vm, root + 2, direction == 1 ?
             "player.direction = 1.0;" : "player.direction = -1.0;"));
-        int32_t stone = function_463b40_this(manager, init[0], init[1], init[2],
-            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int32_t stone = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(stone && vm_failures == failures);
         CHECK(*(float *)(intptr_t)(stone + 240) == 100.0f + 40.0f * direction);
         CHECK(*(float *)(intptr_t)(stone + 244) == 200);
@@ -738,7 +788,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(*(int32_t *)(intptr_t)(stone + 208) == 1130);
         CHECK(*(int64_t *)(intptr_t)(stone + 392) == 32);
         CHECK(*(int32_t *)(intptr_t)(stone + 236) == 0x800000);
-        function_4a9840_this(PTR(root + 1), "stoneProbe", stone + 44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "stoneProbe", (const void *)(intptr_t)(stone + 44));
         CHECK(execute_source(vm, root + 2,
             "if (player.user.stone != stoneProbe || stoneProbe.collisionGroup != GP_LIFT || "
             "stoneProbe.collisionMask != GP_TERRAIN || stoneProbe.user.time != 0) "
@@ -746,8 +796,8 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             "player.x = stoneProbe.x;\n"
             "player.y = stoneProbe.top + 2 - (player.bottom - player.y);\n"
             "player.vy = 1.0;"));
-        retdec_actor_refresh_bounds(rider);
-        CHECK(function_462ce0(stone, rider) >= 0);
+        kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(rider));
+        CHECK(kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(stone), (KinokoActor *)(intptr_t)(rider)) >= 0);
         CHECK(vm_failures == failures);
         CHECK(*(int32_t *)(intptr_t)(rider + 32) == *(int32_t *)(intptr_t)(stone + 24));
         CHECK(*(int32_t *)(intptr_t)(rider + 36) == *(int32_t *)(intptr_t)(stone + 28));
@@ -755,33 +805,33 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
             "if (!stoneProbe.user.ride || player.step != stoneProbe) "
             "throw \"original stone callback did not bind rider\";\n"
             "player.vy = 0.0; stoneProbe.vx = player.direction * 2.0;"));
-        CHECK(retdec_actor_manager_refresh(manager) == 2);
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 2);
         for (int frame = 0; frame < 8; ++frame) {
             float old_x = *(float *)(intptr_t)(rider + 240);
-            retdec_actor_tick(stone);
+            kinoko_actor_tick((KinokoActor *)(intptr_t)(stone));
             function_468620_this(PTR(g_514300_storage));
-            function_45ec60(stone);
-            function_45ec60(rider);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(stone));
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
             CHECK(vm_failures == failures);
             CHECK(*(float *)(intptr_t)(rider + 240) == old_x + direction * 2.0f);
             CHECK(*(int32_t *)(intptr_t)(rider + 36) == *(int32_t *)(intptr_t)(stone + 28));
         }
         if (round & 1) {
             CHECK(execute_source(vm, root + 2, "stoneProbe.Release();\nstoneProbe = null;"));
-            CHECK(retdec_actor_manager_refresh(manager) == 1);
+            CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 1);
             int32_t locked[2];
             kinoko_native_weak_pair_lock(rider + 32, locked);
             CHECK(locked[0] == 0 && locked[1] == 0);
-            function_45ec60(rider);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
             CHECK(*(float *)(intptr_t)(rider + 264) == 0);
             CHECK(execute_source(vm, root + 2, "player.SetStep(null);"));
         } else {
             CHECK(execute_source(vm, root + 2, "player.x = stoneProbe.right + 64;"));
-            function_45ec60(rider);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
             CHECK(*(int32_t *)(intptr_t)(rider + 36) == 0);
             CHECK(execute_source(vm, root + 2,
                 "if (player.step != null) throw \"walk-off did not detach\";"));
-            retdec_actor_tick(stone);
+            kinoko_actor_tick((KinokoActor *)(intptr_t)(stone));
             CHECK(vm_failures == failures);
             CHECK(execute_source(vm, root + 2,
                 "if (stoneProbe.user.time != 0 || stoneSounds[stoneSounds.len()-1] != 35) "
@@ -790,7 +840,7 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         }
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2, "stoneOwner <- player.user;"));
-        function_469700();
+        kinoko_script_clear_actors();
         CHECK(execute_source(vm, root + 2,
             "if (stoneOwner.stone != null || player.user != null) "
             "throw \"stone or rider retained state after clear\";"));
@@ -799,9 +849,9 @@ static int test_stone_placement(int32_t manager, int32_t vm, int32_t *root) {
         "if (stoneSounds.len() != 12 || stoneEffects.len() != 8) throw \"stone media calls\";\n"
         "foreach (id in stoneSounds) if (id != 33 && id != 35) throw \"stone sound id\";\n"
         "foreach (id in stoneEffects) if (id != 1960) throw \"stone effect id\";"));
-    function_4a9d70_this(PTR(rider_init));
-    function_4a9d70_this(PTR(init));
-    function_4a9d70_this(PTR(scripts));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original stone callbacks/PAT, eight placements/rides, walk-off and bound release");
     return 0;
 }
@@ -819,15 +869,14 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
         "function AddLife() { ::floatRewards[2]++; }\n"
         "function CreateActor(init,x,y,z,value) { ::floatNumbers.append(value); return {}; }\n"
         "function PlaySE(id) {}\nsrand(12345);"));
-    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_item");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(scripts)), "t_item");
     CHECK(execute_asset(vm, scripts + 1, "data/script/item.cv4"));
     for (int kind = 0; kind < 3; ++kind) {
-        function_4aa3a0_this(PTR(scripts), PTR(init), initializers[kind]);
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), initializers[kind]);
         CHECK(init[1] == 0x08000100);
         for (int round = 0; round < 4; ++round) {
             int init_failures = vm_failures;
-            int32_t actor = function_463b40_this(manager, init[0], init[1], init[2],
-                100, 180, -1, PTR(&g16), g483, g484, 0);
+            int32_t actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 180, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
             int homing_frames = 0, released = 0;
             float max_distance = 0;
             CHECK(actor && vm_failures == init_failures &&
@@ -838,7 +887,7 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
                 float distance = sqrtf(dx * dx + dy * dy);
                 if (distance > max_distance) max_distance = distance;
                 int failures = vm_failures;
-                retdec_actor_tick(actor);
+                kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
                 CHECK(vm_failures == failures);
                 if (*(uint8_t *)(intptr_t)(actor + 22)) {
                     CHECK(distance < 16.0f && homing_frames > 0 && max_distance > 40.0f);
@@ -850,31 +899,31 @@ static int test_floating_items(int32_t manager, int32_t vm, int32_t *root) {
                 if (fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f) {
                     if (!(vx * dx + vy * dy > 0.0f)) {
                         int32_t user[3], count[3];
-                        function_4aa3a0_this(actor + 44, PTR(user), "user");
-                        function_4aa3a0_this(PTR(user), PTR(count), "count");
+                        kinoko_sqplus_object_get_value((void *)(intptr_t)(actor + 44), (void *)(intptr_t)(PTR(user)), "user");
+                        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(user)), (void *)(intptr_t)(PTR(count)), "count");
                         fprintf(stderr, "float kind=%d round=%d frame=%d delta=(%g,%g) v=(%g,%g) count=%d\n",
                             kind, round, frame, dx, dy, vx, vy, count[2]);
-                        function_4a9d70_this(PTR(count));
-                        function_4a9d70_this(PTR(user));
+                        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(count))));
+                        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(user))));
                     }
                     CHECK(vx * dx + vy * dy > 0.0f);
                     CHECK(fabsf(sqrtf(vx * vx + vy * vy) - 12.0f) < 0.0001f);
                     ++homing_frames;
                 }
-                function_45ec60(actor);
+                kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
             }
             CHECK(released);
-            CHECK(retdec_actor_manager_refresh(manager) == 0);
+            CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 0);
             CHECK(function_48aa20(vm) == stack_top);
         }
-        function_4a9d70_this(PTR(init));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
     CHECK(execute_source(vm, root + 2,
         "if (floatRewards[0]!=4 || floatRewards[1]!=4 || floatRewards[2]!=4 || "
         "floatNumbers.len()!=12) throw \"floating reward count\";\n"
         "foreach (i,n in floatNumbers) if (n != (i<4 ? 100 : (i<8 ? 0 : 10000))) "
         "throw \"floating reward value\";"));
-    function_4a9d70_this(PTR(scripts));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original point/save/1up scripts return to player before reward/release (12 flights)");
     return 0;
 }
@@ -889,14 +938,14 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short texture_count;
     int32_t resource_base=kinoko_integer_vector_size(manager+68);
-    CHECK(function_407370(PTR(&reader),"data/actor/item/item.pat"));
-    CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&texture_count));
-    CHECK(retdec_pat_skip_bytes(reader,texture_count*128u));
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/item/item.pat"));
+    CHECK(fixture_pat_read_u8(reader,&version) && fixture_pat_read_u16(reader,&texture_count));
+    CHECK(fixture_pat_skip_bytes(reader,texture_count*128u));
     g_retdec_act_texture_slots[1].width=1024;
     g_retdec_act_texture_slots[1].height=1024;
-    for(int i=0;i<texture_count;++i) CHECK(retdec_pat_append_resource(manager,1));
-    CHECK(retdec_pat_read_animations(reader,manager,resource_base));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    for(int i=0;i<texture_count;++i) CHECK(fixture_pat_append_resource(manager,1));
+    CHECK(fixture_pat_read_animations(reader,manager,resource_base));
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     float native_camera[24]={0};
     native_camera[20]=2000;
     native_camera[21]=1200;
@@ -905,7 +954,7 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
         "map <- {height=2000,width=2000};\n"
         "camera <- {left=0.0,top=0.0,right=2000.0,bottom=1200.0};\n"
         "stageWaterLevel=10000;\n"));
-    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_item");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(scripts)), "t_item");
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
     layout[0]=PTR(&g327); layout[60]=2000; layout[61]=32;
     layout[66]=PTR(records); layout[67]=PTR(records+1);
@@ -920,10 +969,10 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
     const char *names[]={"InitStarC","InitStarD"};
     for(int kind=0;kind<6;++kind) {
         if(kind==2) {
-            function_469700();
+            kinoko_script_clear_actors();
             function_468950_this(PTR(g_514300_storage),manager);
-            function_427530(PTR(actual_map));
-            CHECK(function_428000(PTR(actual_map),"data/map/w1-c01a.act"));
+            kinoko_act_document_initialize((KinokoActDocument *)actual_map);
+            CHECK(kinoko_act_document_load((KinokoActDocument *)actual_map,"data/map/w1-c01a.act"));
             for(int32_t slot=actual_map[52];slot!=actual_map[53];slot+=4) {
                 int32_t actual_layer=*(int32_t *)(intptr_t)slot;
                 const char *name=retdec_std_string_data(actual_layer+112);
@@ -938,50 +987,47 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             sprintf_s(setup,sizeof(setup),"map.height=%d; map.width=%d;",actual_map[3],actual_map[2]);
             CHECK(execute_source(vm,root+2,setup));
         }
-        function_4aa3a0_this(PTR(scripts),PTR(init),names[kind%2]);
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), names[kind%2]);
         CHECK(init[1]==0x08000100);
         int32_t block=0, bumper=0, actor=0;
         if(kind<4) {
-            actor=function_463b40_this(manager,init[0],init[1],init[2],
-                512,kind<2 ? 160.0f : 768.0f,1,PTR(&g16),g483,g484,0);
+            actor=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 512, kind<2 ? 160.0f : 768.0f, 1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         } else {
             int32_t enemy[3], block_init[3], bumper_init[3];
             CHECK(execute_source(vm,root+2,
                 "function InitStarBumper(v) { user={type=TYPE_2HEAD,ball=null};\n"
                 " SetTake(100); callbackGroup=GP_PLAYER; ::player=this; }\n"
                 "starRewards <- 0;\nfunction AddStar() { ::starRewards++; }\n"));
-            function_4aa3a0_this(PTR(root+1),PTR(enemy),"t_enemy");
-            function_4aa3a0_this(PTR(enemy),PTR(block_init),"Init0436");
-            function_4aa3a0_this(PTR(root+1),PTR(bumper_init),"InitStarBumper");
-            bumper=function_463b40_this(manager,bumper_init[0],bumper_init[1],bumper_init[2],
-                kind==4 ? 500.0f : 524.0f,820,-1,PTR(&g16),g483,g484,0);
-            block=function_463b40_this(manager,block_init[0],block_init[1],block_init[2],
-                512,768,-1,PTR(&g16),0x05000002,0x436,0);
+            kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(enemy)), "t_enemy");
+            kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(enemy)), (void *)(intptr_t)(PTR(block_init)), "Init0436");
+            kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(bumper_init)), "InitStarBumper");
+            bumper=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){bumper_init[0], bumper_init[1], bumper_init[2]}, kind==4 ? 500.0f : 524.0f, 820, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
+            block=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){block_init[0], block_init[1], block_init[2]}, 512, 768, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x436}, (const void *)(intptr_t)(0)));
             CHECK(block && bumper && vm_failures==failures);
-            function_4a9840_this(PTR(root+1),"starBlock",block+44);
+            kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "starBlock", (const void *)(intptr_t)(block+44));
             CHECK(execute_source(vm,root+2,"starBlock.user.SetDamage(player);"));
-            retdec_actor_manager_refresh(manager);
+            kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
             for(int n=0;n<*(int32_t *)(intptr_t)(manager+116);++n) {
                 int32_t candidate=(*(int32_t **)(intptr_t)(manager+100))[n];
                 if(*(int32_t *)(intptr_t)(candidate+208)==1060) actor=candidate;
             }
             CHECK(actor);
             CHECK(execute_source(vm,root+2,"player.x=0;"));
-            retdec_actor_refresh_bounds(bumper);
-            function_4a9d70_this(PTR(enemy)); function_4a9d70_this(PTR(block_init));
-            function_4a9d70_this(PTR(bumper_init));
+            kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(bumper));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init))));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(bumper_init))));
         }
         int contacts=0, bounces=0;
         CHECK(actor && vm_failures==failures);
         CHECK(*(int32_t *)(intptr_t)(actor+208)==1060);
-        CHECK(retdec_actor_manager_refresh(manager)>0);
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager))>0);
         for(int frame=0;frame<300;++frame) {
             int grounded=*(int32_t *)(intptr_t)(actor+296);
-            retdec_actor_manager_update(manager,PTR(native_camera));
+            kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(native_camera)));
             CHECK(vm_failures==failures);
             float vy=*(float *)(intptr_t)(actor+260);
             if(grounded && vy<0) ++bounces;
-            CHECK(retdec_actor_render(actor,PTR(native_camera))==1);
+            CHECK(kinoko_actor_render((KinokoActor *)(intptr_t)(actor), (KinokoCamera *)(intptr_t)(PTR(native_camera)))==1);
             float x=*(float *)(intptr_t)(actor+240),y=*(float *)(intptr_t)(actor+244);
             if(!_finite(x) || !_finite(y) || *(uint8_t *)(intptr_t)(actor+22))
                 fprintf(stderr,"star invalid kind=%d frame=%d xy=(%g,%g) vy=%g ground=%d contacts=%d\n",
@@ -1004,21 +1050,21 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(execute_source(vm,root+2,"if(starRewards!=0) throw \"star rewarded before pickup\";"));
             *(float *)(intptr_t)(bumper+240)=*(float *)(intptr_t)(actor+240);
             *(float *)(intptr_t)(bumper+244)=*(float *)(intptr_t)(actor+244);
-            retdec_actor_refresh_bounds(bumper);
-            function_462ce0(actor,bumper);
+            kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(bumper));
+            kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(actor), (KinokoActor *)(intptr_t)(bumper));
             CHECK(vm_failures==failures && *(uint8_t *)(intptr_t)(actor+22));
             CHECK(execute_source(vm,root+2,"if(starRewards!=1) throw \"star pickup reward\";"));
         }
-        kinoko_actor_release(actor, NULL);
-        if(block) kinoko_actor_release(block, NULL);
-        if(bumper) kinoko_actor_release(bumper, NULL);
-        retdec_actor_manager_refresh(manager);
-        function_4a9d70_this(PTR(init));
+        kinoko_actor_release((KinokoActor *)(intptr_t)actor, NULL);
+        if(block) kinoko_actor_release((KinokoActor *)(intptr_t)block, NULL);
+        if(bumper) kinoko_actor_release((KinokoActor *)(intptr_t)bumper, NULL);
+        kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
-    function_469700();
+    kinoko_script_clear_actors();
     function_468950_this(PTR(g_514300_storage),manager);
     retdec_destroy_cact_object(PTR(actual_map));
-    function_4a9d70_this(PTR(scripts));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: original moving stars land, bounce and remain collectible");
     return 0;
 }
@@ -1026,21 +1072,20 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
 static int test_hidden_layer(int32_t vm, int32_t *root) {
     int32_t act[60], resource[48] = {0}, parent[2] = {g483,g484};
     int32_t hidden = 0, active = 0, layout = 0, script[3];
-    int32_t compile_target = PTR(function_471b30), stack_top = function_48aa20(vm);
+    int32_t compile_target = PTR(kinoko_script_compile_file_argument), stack_top = function_48aa20(vm);
     int failures = vm_failures;
     g874 = 1;
-    CHECK(function_415550_this(PTR(root), PTR("CompileFile"), PTR(&compile_target),
-        4, PTR(retdec_compile_file_native), 0) >= 0);
-    function_427530(PTR(act));
-    CHECK(function_428000(PTR(act), "data/map/w1-c01a.act"));
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CompileFile")), (const void *)(intptr_t)(PTR(&compile_target)), 4, (void *)(intptr_t)(PTR(retdec_compile_file_native)), 0)) >= 0);
+    kinoko_act_document_initialize((KinokoActDocument *)act);
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act, "data/map/w1-c01a.act"));
     for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
         int32_t layer = *(int32_t *)(intptr_t)slot;
         if (strcmp(retdec_std_string_data(layer + 112), "hidden") == 0) hidden = layer;
     }
     CHECK(hidden);
     CHECK(retdec_publish_cact_layer_class(vm, PTR(root)));
-    CHECK(retdec_sqrat_new_table(vm, parent));
-    CHECK(retdec_sqrat_set_pair(vm, root + 2, retdec_std_string_data(PTR(act) + 16), parent));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
+    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, retdec_std_string_data(PTR(act) + 16), parent));
     CHECK(execute_source(vm, parent, "resource <- {};"));
     resource[39] = root[2];
     resource[40] = root[3];
@@ -1057,22 +1102,22 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
         "if (u != this || typeof Init != \"function\" || typeof Update != \"function\") "
         "throw \"hidden script environment\";"));
     int32_t layout_object[3];
-    function_4aa3a0_this(PTR(script), PTR(layout_object), "layout");
-    layout = function_4a9b40_this(PTR(layout_object), 0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(script)), (void *)(intptr_t)(PTR(layout_object)), "layout");
+    layout = (int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(PTR(layout_object)), (void *)(intptr_t)(0)));
     CHECK(layout && retdec_map_chip_data(layout));
-    function_4a9d70_this(PTR(layout_object));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(layout_object))));
     CHECK(retdec_execute_act_callback(hidden + 204, 4, NULL) >= 0);
     CHECK(*(int32_t *)(intptr_t)(layout + 328) == 1);
     CHECK(execute_source(vm, root + 2,
         "player <- { left=2232.0, right=2264.0, top=800.0, bottom=832.0 };"));
-    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    for (int frame = 0; frame < 24; ++frame) CHECK(kinoko_act_layer_update((KinokoActLayer *)(intptr_t)hidden) >= 0);
     CHECK(vm_failures == failures);
     CHECK(*(float *)(intptr_t)(layout + 320) <= 0.001f);
     CHECK(execute_source(vm, root + 2, "player.left=100.0; player.right=120.0;"));
-    for (int frame = 0; frame < 24; ++frame) CHECK(function_41efb0(hidden) >= 0);
+    for (int frame = 0; frame < 24; ++frame) CHECK(kinoko_act_layer_update((KinokoActLayer *)(intptr_t)hidden) >= 0);
     CHECK(*(float *)(intptr_t)(layout + 320) >= 0.999f);
     CHECK(vm_failures == failures && function_48aa20(vm) == stack_top);
-    retdec_sqrat_release_pair(vm, parent);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), parent);
     puts("PASS: original ACT hidden-layer include, callbacks, native fade-out and fade-in");
     return 0;
 }
@@ -1080,7 +1125,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
 static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader = 0, scripts[3], init[3], actors[3];
     float saved_camera[4];
-    int32_t create_target = PTR(function_469b40);
+    int32_t create_target = PTR(kinoko_script_create_actor);
     int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
     int32_t records[1][8] = {{1, -8000, 200}};
     struct retdec_mcd_chip chip = {0};
@@ -1088,17 +1133,16 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short textures;
     int failures = vm_failures;
-    CHECK(function_415550_this(PTR(root), PTR("CreateActor"), PTR(&create_target),
-        4, PTR(function_471df0), 0) >= 0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateActor")), (const void *)(intptr_t)(PTR(&create_target)), 4, (void *)(intptr_t)(PTR(kinoko_script_create_actor_entry)), 0)) >= 0);
     {
         int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
-        CHECK(retdec_sqrat_new_table(vm,globals+2));
+        CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), globals+2));
         CHECK(function_48e520_this(globals[3],root[3]));
         CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
-        CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
-        CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
-        retdec_sqrat_release_pair(vm,callback);
-        retdec_sqrat_release_pair(vm,globals+2);
+        CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(globals)), "GetCallbackFuncTable", (void *)(intptr_t)(callback)));
+        CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "GetCallbackFuncTable", callback));
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), callback);
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), globals+2);
     }
     CHECK(execute_source(vm, root + 2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
@@ -1106,12 +1150,12 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "function PlaySE(id) {}\n PR_FRONT <- 65535;\n stageWaterLevel <- 10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
-    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
-    CHECK(retdec_pat_read_u8(reader, &version));
-    CHECK(retdec_pat_read_u16(reader, &textures));
-    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
-    CHECK(retdec_pat_read_animations(reader, manager, 0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/enemy/enemy.pat"));
+    CHECK(fixture_pat_read_u8(reader, &version));
+    CHECK(fixture_pat_read_u16(reader, &textures));
+    CHECK(fixture_pat_skip_bytes(reader, textures * 128u));
+    CHECK(fixture_pat_read_animations(reader, manager, 0));
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
     layout[66] = PTR(records); layout[67] = PTR(records + 1);
@@ -1122,12 +1166,11 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
     *(int16_t *)(chip.bytes + 12) = 16000;
     *(int16_t *)(chip.bytes + 14) = 32;
     CHECK(function_4693a0(PTR(layout)));
-    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_enemy");
-    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0107");
-    int32_t fairy = function_463b40_this(manager, init[0], init[1], init[2],
-        100,160,-1,PTR(&g16),0x05000002,0x107,0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(scripts)), "t_enemy");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "Init0107");
+    int32_t fairy = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x107}, (const void *)(intptr_t)(0)));
     CHECK(fairy && vm_failures==failures);
-    function_4a9840_this(PTR(root+1),"fairy",fairy+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "fairy", (const void *)(intptr_t)(fairy+44));
     *(int32_t *)(intptr_t)(manager+64)=-1;
     *(float *)(g_retdec_camera_state+72)=-8000;
     *(float *)(g_retdec_camera_state+76)=-2000;
@@ -1142,7 +1185,7 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "fairy.vy=0.0; fairy.user.frameCount=0;"));
     for(int round=0;round<4;++round) {
         for(int frame=0;frame<240;++frame) {
-            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
             CHECK(vm_failures==failures);
         }
         CHECK(execute_source(vm,root+2,
@@ -1158,13 +1201,13 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             char code[80]; int32_t obj[3];
             sprintf_s(code,sizeof(code),"probeBall <- fairy.user.data.ball[%d];",i);
             CHECK(execute_source(vm,root+2,code));
-            function_4aa3a0_this(PTR(root+1),PTR(obj),"probeBall");
-            int32_t ball=function_4a9b40_this(PTR(obj),0);
+            kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(obj)), "probeBall");
+            int32_t ball=(int32_t)(intptr_t)(kinoko_sqplus_object_instance((void *)(intptr_t)(PTR(obj)), (void *)(intptr_t)(0)));
             printf("ball %d/%d active=%d visible=%d release=%d xy=%g,%g callback=%x\n",round,i,
                 *(uint8_t *)(intptr_t)(ball+40),*(uint8_t *)(intptr_t)(ball+21),
                 *(uint8_t *)(intptr_t)(ball+22),*(float *)(intptr_t)(ball+240),
                 *(float *)(intptr_t)(ball+244),*(int32_t *)(intptr_t)(ball+112));
-            function_4a9d70_this(PTR(obj));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(obj))));
         }
         printf("PASS: ball generation %d\n",round); fflush(stdout);
         // Original map flags make a reset actor wait for native visibility.
@@ -1173,10 +1216,10 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
             "camera.left=-1140; camera.right=-500;"));
         *(float *)(g_retdec_camera_state+72)=-1140;
         *(float *)(g_retdec_camera_state+80)=-500;
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
         expected_vm_error=0;
         CHECK(*(int32_t *)(intptr_t)(fairy+112)==0x08000100);
-        function_4a9840_this(PTR(root+1),"fairy",fairy+44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "fairy", (const void *)(intptr_t)(fairy+44));
         CHECK(execute_source(vm,root+2,
             "if(fairy.x!=fairy.ox) throw \"reset origin\";\n"
             "camera.left=-8000; camera.right=8000;"));
@@ -1184,19 +1227,18 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         *(float *)(g_retdec_camera_state+80)=8000;
     }
     int32_t death_init[3];
-    function_4aa3a0_this(PTR(scripts),PTR(death_init),"Init0106");
-    int32_t victim=function_463b40_this(manager,death_init[0],death_init[1],death_init[2],
-        300,160,-1,PTR(&g16),0x05000002,0x106,0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(death_init)), "Init0106");
+    int32_t victim=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){death_init[0], death_init[1], death_init[2]}, 300, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x106}, (const void *)(intptr_t)(0)));
     CHECK(victim);
-    function_4a9840_this(PTR(root+1),"victim",victim+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "victim", (const void *)(intptr_t)(victim+44));
     CHECK(execute_source(vm,root+2,
         "t_item <- { InitPoint=function(v){}, Init1up=function(v){} };\n"
         "attacker <- { user={hitCount=0},callbackGroup=0 };\n"
         "t_enemy.EnemyCollision_Damage.call(victim,attacker);\n"
         "if(victim.vy!=-5 || victim.user.blowOff) throw \"ordinary death setup\";"));
     for(int frame=0;frame<90;++frame) {
-        retdec_actor_tick(victim);
-        function_45ec60(victim);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(victim));
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(victim));
         CHECK(vm_failures==failures);
         if(frame==30) CHECK(*(float *)(intptr_t)(victim+260)>0);
     }
@@ -1205,62 +1247,62 @@ static int test_enemy_reentry(int32_t manager, int32_t vm, int32_t *root) {
         "fairy.user.eventHandler.OnHitStep(attacker);\n"
         "if(fairy.vy!=-5) throw \"stomp death setup\";"));
     for(int frame=0;frame<90;++frame) {
-        retdec_actor_tick(fairy);
-        function_45ec60(fairy);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(fairy));
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(fairy));
         CHECK(vm_failures==failures);
     }
     CHECK(*(float *)(intptr_t)(fairy+244)>160);
     CHECK(*(float *)(intptr_t)(fairy+260)>0);
     puts("PASS: original collision death rises briefly then falls under gravity");
-    function_4a9d70_this(PTR(death_init));
-    function_4a9d70_this(PTR(init));
-    function_4a9d70_this(PTR(scripts));
-    function_469700();
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(death_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
+    kinoko_script_clear_actors();
     return 0;
 }
 
 static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const char *name) {
     const unsigned int rounding = kinoko_enter_game_math();
-    int32_t create_target=PTR(function_469b40), scripts[3], init[3], reader=0;
+    int32_t create_target=PTR(kinoko_script_create_actor), scripts[3], init[3], reader=0;
     function_48ab90(vm,root[2],root[3]);
     CHECK(function_4c6c20(vm)==0);
     function_48aa50(vm);
     unsigned char version; unsigned short textures;
-    CHECK(function_415550_this(PTR(root),PTR("CreateActor"),PTR(&create_target),4,PTR(function_471df0),0)>=0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateActor")), (const void *)(intptr_t)(PTR(&create_target)), 4, (void *)(intptr_t)(PTR(kinoko_script_create_actor_entry)), 0))>=0);
     int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
-    CHECK(retdec_sqrat_new_table(vm,globals+2));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), globals+2));
     CHECK(function_48e520_this(globals[3],root[3]));
     CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
-    CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
-    CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
+    CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(globals)), "GetCallbackFuncTable", (void *)(intptr_t)(callback)));
+    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "GetCallbackFuncTable", callback));
     CHECK(execute_source(vm,root+2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
         "player <- {x=0.0,y=100.0,user={hold=null,water=false}};\n"
         "stageWaterLevel <- 10000;\nupdateMask <- -1;\ncurrentTime <- 0;\nfunction PlaySE(id) {}\neffectCount <- 0;\nfunction CreateEffect(x,y,z,id) { ++::effectCount; }\n"));
     CHECK(execute_asset(vm,root+2,"data/script/enemy.cv4"));
-    CHECK(function_407370(PTR(&reader),"data/actor/enemy/enemy.pat"));
-    CHECK(retdec_pat_read_u8(reader,&version) && retdec_pat_read_u16(reader,&textures));
-    CHECK(retdec_pat_skip_bytes(reader,textures*128u));
-    CHECK(retdec_pat_read_animations(reader,manager,0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
-    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_enemy");
-    function_4aa3a0_this(PTR(scripts),PTR(init),name);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/enemy/enemy.pat"));
+    CHECK(fixture_pat_read_u8(reader,&version) && fixture_pat_read_u16(reader,&textures));
+    CHECK(fixture_pat_skip_bytes(reader,textures*128u));
+    CHECK(fixture_pat_read_animations(reader,manager,0));
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(scripts)), "t_enemy");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), name);
     CHECK(init[1]==0x08000100);
     for(int i=0;i<3;++i) {
-        int32_t actor=function_463b40_this(manager,init[0],init[1],init[2],200.0f+i*200,160,-1,PTR(&g16),0x05000002,(int32_t)strtol(name+4,NULL,16),0);
+        int32_t actor=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 200.0f+i*200, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, (int32_t)strtol(name+4,NULL,16)}, (const void *)(intptr_t)(0)));
         CHECK(actor && vm_failures==0);
         *(unsigned char *)(intptr_t)(actor+40)=1;
     }
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
     *(int32_t *)(intptr_t)(manager+64)=-1;
-    g459=-1;
+    kinoko_game_masks.update=-1;
     float camera[24]={0}; camera[18]=-8000;camera[19]=-2000;camera[20]=8000;camera[21]=2000;
     const int32_t stack_top = function_48aa20(vm);
     int peak_count = 0;
     LARGE_INTEGER frequency,start,end; QueryPerformanceFrequency(&frequency);
     for(int frame=0;frame<240;++frame) {
         QueryPerformanceCounter(&start);
-        int count=retdec_actor_manager_update(manager,PTR(camera));
+        int count=kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(camera)));
         QueryPerformanceCounter(&end);
         CHECK(vm_failures==0 && function_48aa20(vm)==stack_top);
         CHECK(count>=3 && count<=512);
@@ -1280,7 +1322,7 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
 static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader = 0, scripts[3], init[3], actors[3];
     float saved_camera[4];
-    int32_t create_target = PTR(function_469b40);
+    int32_t create_target = PTR(kinoko_script_create_actor);
     int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
     int32_t records[1][8] = {{1, -8000, 200}};
     struct retdec_mcd_chip chip = {0};
@@ -1288,17 +1330,16 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     unsigned char version;
     unsigned short textures;
     int failures = vm_failures;
-    CHECK(function_415550_this(PTR(root), PTR("CreateActor"), PTR(&create_target),
-        4, PTR(function_471df0), 0) >= 0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateActor")), (const void *)(intptr_t)(PTR(&create_target)), 4, (void *)(intptr_t)(PTR(kinoko_script_create_actor_entry)), 0)) >= 0);
     {
         int32_t globals[4]={0,vm,g483,g484}, callback[2]={g483,g484};
-        CHECK(retdec_sqrat_new_table(vm,globals+2));
+        CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), globals+2));
         CHECK(function_48e520_this(globals[3],root[3]));
         CHECK(execute_asset(vm,globals+2,"data/script/global.cv4"));
-        CHECK(retdec_sqrat_get(PTR(globals),"GetCallbackFuncTable",callback));
-        CHECK(retdec_sqrat_set_pair(vm,root+2,"GetCallbackFuncTable",callback));
-        retdec_sqrat_release_pair(vm,callback);
-        retdec_sqrat_release_pair(vm,globals+2);
+        CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(globals)), "GetCallbackFuncTable", (void *)(intptr_t)(callback)));
+        CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "GetCallbackFuncTable", callback));
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), callback);
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), globals+2);
     }
     CHECK(execute_source(vm, root + 2,
         "t_enemy <- {};\ncamera <- {left=-8000.0,right=8000.0,top=-2000.0,bottom=2000.0};\n"
@@ -1306,12 +1347,12 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         "stageWaterLevel=10000;\nupdateMask <- -1;\n"));
     CHECK(execute_asset(vm, root + 2, "data/script/enemy.cv4"));
     CHECK(vm_failures == failures);
-    CHECK(function_407370(PTR(&reader), "data/actor/enemy/enemy.pat"));
-    CHECK(retdec_pat_read_u8(reader, &version));
-    CHECK(retdec_pat_read_u16(reader, &textures));
-    CHECK(retdec_pat_skip_bytes(reader, textures * 128u));
-    CHECK(retdec_pat_read_animations(reader, manager, 0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader, "data/actor/enemy/enemy.pat"));
+    CHECK(fixture_pat_read_u8(reader, &version));
+    CHECK(fixture_pat_read_u16(reader, &textures));
+    CHECK(fixture_pat_skip_bytes(reader, textures * 128u));
+    CHECK(fixture_pat_read_animations(reader, manager, 0));
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     layout[0] = PTR(&g327); layout[60] = 16000; layout[61] = 32;
     layout[66] = PTR(records); layout[67] = PTR(records + 1);
@@ -1322,13 +1363,12 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     *(int16_t *)(chip.bytes + 12) = 16000;
     *(int16_t *)(chip.bytes + 14) = 32;
     CHECK(function_4693a0(PTR(layout)));
-    function_4aa3a0_this(PTR(root + 1), PTR(scripts), "t_enemy");
-    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0106");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(scripts)), "t_enemy");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "Init0106");
     for (int i = 0; i < 2; ++i) {
-        actors[i] = function_463b40_this(manager, init[0], init[1], init[2],
-            100.0f + 200.0f * i, 160, -1, PTR(&g16), 0x05000002, 0x106, 0);
+        actors[i] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100.0f + 200.0f * i, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x106}, (const void *)(intptr_t)(0)));
         CHECK(actors[i] && vm_failures == failures);
-        function_4a9840_this(PTR(root + 1), i ? "enemyB" : "enemyA", actors[i] + 44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), i ? "enemyB" : "enemyA", (const void *)(intptr_t)(actors[i] + 44));
     }
     CHECK(execute_source(vm, root + 2,
         "if (t_enemy.nextID!=2) throw \"enemy constructor not called\";\n"
@@ -1339,13 +1379,13 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         "if (enemyA.user.actor!=enemyA || enemyB.user.actor!=enemyB) throw \"enemy owner binding\";\n"
         "if (typeof enemyA.funcUpdate!=\"function\" || enemyA.user.takeID!=4010) "
         "throw \"enemy initialization\";"));
-    CHECK(retdec_actor_manager_refresh(manager) == 3);
+    CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 3);
     for (int frame = 0; frame < 40; ++frame) {
-        for (int i = 0; i < 2; ++i) retdec_actor_tick(actors[i]);
+        for (int i = 0; i < 2; ++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(actors[i]));
         CHECK(vm_failures == failures);
         function_468620_this(PTR(g_514300_storage));
         for (int i = 0; i < 2; ++i) {
-            function_45ec60(actors[i]);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actors[i]));
             CHECK(_finite(*(float *)(intptr_t)(actors[i] + 244)));
         }
     }
@@ -1353,17 +1393,16 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         "if (!(enemyA.x<100 && enemyB.x<300 && enemyA.hitBottom && enemyB.hitBottom)) "
         "throw \"enemy walking and landing\";\n"
         "enemyA.hitLeft=1; enemyA.xPrev=enemyA.x;"));
-    retdec_actor_tick(actors[0]);
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(actors[0]));
     CHECK(vm_failures == failures);
     CHECK(execute_source(vm, root + 2,
         "if (enemyA.direction!=1.0 || enemyA.vx<=0.0 || enemyB.direction!=-1.0) "
         "throw \"enemy wall reversal\";"));
-    function_4a9d70_this(PTR(init));
-    function_4aa3a0_this(PTR(scripts), PTR(init), "Init0101");
-    actors[2] = function_463b40_this(manager, init[0], init[1], init[2],
-        600, 160, -1, PTR(&g16), 0x05000002, 0x101, 0);
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), "Init0101");
+    actors[2] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 600, 160, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x101}, (const void *)(intptr_t)(0)));
     CHECK(actors[2] && vm_failures == failures);
-    function_4a9840_this(PTR(root+1), "enemyC", actors[2]+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "enemyC", (const void *)(intptr_t)(actors[2]+44));
     memcpy(saved_camera,g_retdec_camera_state+72,sizeof(saved_camera));
     *(float *)(g_retdec_camera_state+72)=-8000;
     *(float *)(g_retdec_camera_state+76)=-2000;
@@ -1371,7 +1410,7 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     *(float *)(g_retdec_camera_state+84)=2000;
     *(int32_t *)(intptr_t)(manager+64)=-1;
     for (int frame=0;frame<3600;++frame) {
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
         CHECK(vm_failures==failures);
         for(int i=0;i<3;++i) {
             for(int offset=240;offset<=244;offset+=4)
@@ -1387,22 +1426,22 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,
             "camera.left=-300; camera.right=1000;\n"
             "enemyA.x=4000; enemyB.x=4200; enemyC.x=4400;"));
-        for(int i=0;i<3;++i) retdec_actor_tick(actors[i]);
+        for(int i=0;i<3;++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(actors[i]));
         CHECK(vm_failures==failures);
         CHECK(execute_source(vm,root+2,
             "if(enemyA.x!=-16777215 || enemyB.x!=-16777215 || enemyC.x!=-16777215) "
             "throw \"offscreen waiting state\";\n"
             "camera.left=-10000; camera.right=-9000;"));
-        for(int i=0;i<3;++i) retdec_actor_tick(actors[i]);
+        for(int i=0;i<3;++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(actors[i]));
         CHECK(vm_failures==failures);
         const char *names[]={"enemyA","enemyB","enemyC"};
-        for(int i=0;i<3;++i) function_4a9840_this(PTR(root+1),names[i],actors[i]+44);
+        for(int i=0;i<3;++i) kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), names[i], (const void *)(intptr_t)(actors[i]+44));
         CHECK(execute_source(vm,root+2,
             "if(enemyA.x!=enemyA.ox || enemyB.x!=enemyB.ox || enemyC.x!=enemyC.ox) "
             "throw \"offscreen reset origin\";\n"
             "camera.left=-8000; camera.right=8000;"));
         for(int frame=0;frame<120;++frame)
-            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
         CHECK(vm_failures==failures);
         for(int i=0;i<3;++i) {
             CHECK(_finite(*(float *)(intptr_t)(actors[i]+244)));
@@ -1420,10 +1459,10 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
         *(float *)(intptr_t)(actors[i]+240)=-120.0f+100.0f*i;
         *(float *)(intptr_t)(actors[i]+244)=160.0f;
         *(float *)(intptr_t)(actors[i]+260)=0;
-        retdec_actor_refresh_bounds(actors[i]);
+        kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(actors[i]));
     }
     for(int frame=0;frame<600;++frame) {
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
         CHECK(vm_failures==failures);
         for(int i=0;i<3;++i) {
             float x=*(float *)(intptr_t)(actors[i]+240);
@@ -1438,10 +1477,10 @@ static int test_enemy_scripts(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(landed[0] && landed[1] && landed[2]);
     CHECK(fell[0] && fell[1] && fell[2]);
     memcpy(g_retdec_camera_state+72,saved_camera,sizeof(saved_camera));
-    function_469700();
+    kinoko_script_clear_actors();
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
-    function_4a9d70_this(PTR(init));
-    function_4a9d70_this(PTR(scripts));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(scripts))));
     puts("PASS: fairy/white kedama walking, ledge falling, collisions and 48 offscreen resets");
     return 0;
 }
@@ -1458,8 +1497,8 @@ static int test_delegate_lifetime(int32_t vm, int32_t *root) {
         "throw \"delegate isolation\";\n"
         "delegateBase.value=11;\n"
         "if (delegateA.value!=11 || delegateB.value!=11) throw \"delegate inheritance\";"));
-    CHECK(retdec_sqrat_new_table(vm, first));
-    CHECK(retdec_sqrat_new_table(vm, second));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), first));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), second));
     int32_t first_refs = *(int32_t *)(intptr_t)(first[1]+4);
     CHECK(function_48e520_this(second[1], first[1]));
     CHECK(!function_48e520_this(first[1], second[1]));
@@ -1480,8 +1519,8 @@ static int test_delegate_lifetime(int32_t vm, int32_t *root) {
         CHECK(*(int32_t *)(intptr_t)(first[1]+4)==first_refs);
         free((void *)(intptr_t)userdata);
     }
-    retdec_sqrat_release_pair(vm, first);
-    retdec_sqrat_release_pair(vm, second);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), first);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), second);
     puts("PASS: delegate isolation/cycle rejection and userdata finalization/destruction");
     return 0;
 }
@@ -1490,38 +1529,35 @@ static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
     int32_t enemy[3], item[3], block_init[3], stone_init[3], rider_init[3];
     int32_t rider, stone, block;
     int failures=vm_failures;
-    function_4aa3a0_this(PTR(root+1), PTR(enemy), "t_enemy");
-    function_4aa3a0_this(PTR(root+1), PTR(item), "t_item");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(enemy)), "t_enemy");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(item)), "t_item");
     CHECK(execute_asset(vm, enemy+1, "data/script/block.cv4"));
     CHECK(execute_asset(vm, item+1, "data/script/bullet.cv4"));
-    function_4aa3a0_this(PTR(enemy), PTR(block_init), "Init0435");
-    function_4aa3a0_this(PTR(item), PTR(stone_init), "InitStone");
-    function_4aa3a0_this(PTR(root+1), PTR(rider_init), "InitStoneRider");
-    rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
-        100,150,-1,PTR(&g16),g483,g484,0);
-    stone=function_463b40_this(manager,stone_init[0],stone_init[1],stone_init[2],
-        100,150,-1,PTR(&g16),g483,g484,0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(enemy)), (void *)(intptr_t)(PTR(block_init)), "Init0435");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(item)), (void *)(intptr_t)(PTR(stone_init)), "InitStone");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(rider_init)), "InitStoneRider");
+    rider=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){rider_init[0], rider_init[1], rider_init[2]}, 100, 150, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
+    stone=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){stone_init[0], stone_init[1], stone_init[2]}, 100, 150, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(rider && stone && vm_failures==failures);
-    function_4a9840_this(PTR(root+1), "fallingStone", stone+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "fallingStone", (const void *)(intptr_t)(stone+44));
     CHECK(execute_source(vm,root+2,
         "player.x=fallingStone.x;\n"
         "player.y=fallingStone.top+2-(player.bottom-player.y); player.vy=1.0;"));
-    retdec_actor_refresh_bounds(rider);
-    function_462ce0(stone,rider);
+    kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(rider));
+    kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(stone), (KinokoActor *)(intptr_t)(rider));
     CHECK(execute_source(vm,root+2,"player.x=fallingStone.right+64;"));
-    function_45ec60(rider);
-    retdec_actor_tick(stone);
-    block=function_463b40_this(manager,block_init[0],block_init[1],block_init[2],
-        *(float *)(intptr_t)(stone+240),240,-1,PTR(&g16),0x05000002,0x435,0);
+    kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(stone));
+    block=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){block_init[0], block_init[1], block_init[2]}, *(float *)(intptr_t)(stone+240), 240, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 0x435}, (const void *)(intptr_t)(0)));
     CHECK(block && vm_failures==failures);
-    function_4a9840_this(PTR(root+1),"stoneBlock",block+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "stoneBlock", (const void *)(intptr_t)(block+44));
     int contacted=0;
-    retdec_actor_manager_refresh(manager);
+    kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
     for(int frame=0;frame<80;++frame) {
-        retdec_actor_tick(stone);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(stone));
         function_468620_this(PTR(g_514300_storage));
-        function_45ec60(stone);
-        function_462ce0(stone,block);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(stone));
+        kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(stone), (KinokoActor *)(intptr_t)(block));
         CHECK(vm_failures==failures);
         CHECK(_finite(*(float *)(intptr_t)(stone+244)));
         if(*(uint8_t *)(intptr_t)(stone+22)) {contacted=1;break;}
@@ -1530,11 +1566,11 @@ static int test_stone_block(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(execute_source(vm,root+2,
         "if (stoneBlock.callbackMask!=0 || stoneBlock.user.SetDamage!=null || stoneBlock.user.direction!=1) "
         "throw \"stone did not activate original block callback\";"));
-    function_469700();
+    kinoko_script_clear_actors();
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
-    function_4a9d70_this(PTR(enemy)); function_4a9d70_this(PTR(item));
-    function_4a9d70_this(PTR(block_init)); function_4a9d70_this(PTR(stone_init));
-    function_4a9d70_this(PTR(rider_init));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(enemy)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(item))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(block_init)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(stone_init))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(rider_init))));
     puts("PASS: original stone ride/walk-off/fall, block callback, region query and item spawn");
     return 0;
 }
@@ -1551,8 +1587,7 @@ static int32_t capture_bgm_margin(int32_t path, int32_t a, int32_t b, int32_t c,
 static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     int32_t init[3], actor, margin_target=PTR(capture_bgm_margin);
     int failures=vm_failures, stack_top=function_48aa20(vm);
-    CHECK(function_415550_this(PTR(root), PTR("PlayBgmMargin"), PTR(&margin_target),
-        4, PTR(function_4720e0), 0)>=0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("PlayBgmMargin")), (const void *)(intptr_t)(PTR(&margin_target)), 4, (void *)(intptr_t)(PTR(function_4720e0)), 0))>=0);
     CHECK(execute_source(vm, root+2,
         "transformFaces <- 0;\n"
         "PlayerImage <- {SetFaceType=function(t){::transformFaces++;}};\n"
@@ -1560,11 +1595,10 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
         "stageBgm=\"data/bgm/st1.ogg\";\n"
         "input.x=0; input.b3=0; input.b0=0; input.b2=0;\n"
         "camera <- {left=-1000.0,right=1000.0,top=-1000.0,bottom=1000.0};"));
-    function_4aa3a0_this(PTR(root+1),PTR(init),"InitWalkingProbe");
-    actor=function_463b40_this(manager,init[0],init[1],init[2],
-        100,200,-1,PTR(&g16),g483,g484,0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(init)), "InitWalkingProbe");
+    actor=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(actor);
-    function_4a9840_this(PTR(root+1),"transformProbe",actor+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "transformProbe", (const void *)(intptr_t)(actor+44));
     CHECK(execute_source(vm,root+2,
         "transformProbe.user.beforeType <- TYPE_2HEAD;\n"
         "transformProbe.user.beforeTake <- TAKE_STAND;\n"
@@ -1577,8 +1611,8 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
             "transformProbe.user.beforeType=TYPE_2HEAD; transformProbe.user.type=TYPE_8HEAD;\n"
             "transformProbe.user.count8head=91; transformProbe.user.invincibleCount=0;\n"
             "transformProbe.user.SetTake(TAKE_STAND);"));
-        retdec_actor_tick(actor);
-        function_45ec60(actor);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(actor));
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(vm_failures==failures);
         CHECK(execute_source(vm,root+2,
             "if (transformProbe.user.type!=TYPE_2HEAD || transformProbe.user.count8head!=90 || "
@@ -1589,8 +1623,8 @@ static int test_player_form_exit(int32_t manager, int32_t vm, int32_t *root) {
     }
     CHECK(margin_calls==32 && margin_args[0]==1000 && margin_args[1]==2000 &&
         margin_args[2]==100 && margin_args[3]==1);
-    function_469700();
-    function_4a9d70_this(PTR(init));
+    kinoko_script_clear_actors();
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     puts("PASS: original eight-head expiry, SetType/SetTake and native BGM adapter (32 transitions)");
     return 0;
 }
@@ -1611,7 +1645,7 @@ static int test_array_sort(int32_t vm, int32_t *root) {
         "local expected=[-2,1,1,3,5,8];\n"
         "foreach(i,v in expected) if(sortValues[i]!=v) throw \"comparator order\";"));
     CHECK(function_48aa20(vm)==top);
-    CHECK(retdec_sqrat_set_native_closure(vm,root+2,"SortNativeCompare",PTR(sort_native_compare),NULL,0));
+    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root+2, "SortNativeCompare", (void *)(intptr_t)(PTR(sort_native_compare)), NULL, 0));
     CHECK(execute_source(vm,root+2,
         "[].sort(); [3].sort();\n"
         "sortValues.sort(SortNativeCompare);\n"
@@ -1626,7 +1660,7 @@ static int test_array_sort(int32_t vm, int32_t *root) {
         "sortObjects <- [SortValue(5),SortValue(1),SortValue(3),SortValue(1),SortValue(-2),SortValue(8)];\n"
         "sortOriginal <- clone sortObjects;\n"));
     int32_t array[3], objects[6], refs[6];
-    function_4aa3a0_this(PTR(root+1),PTR(array),"sortObjects");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(array)), "sortObjects");
     int32_t *values=*(int32_t **)(intptr_t)(array[2]+24);
     for(int i=0;i<6;++i) {
         objects[i]=values[2*i+1];
@@ -1652,7 +1686,7 @@ static int test_array_sort(int32_t vm, int32_t *root) {
     CHECK(retired_vm_stack);
     free(retired_vm_stack); retired_vm_stack=NULL;
     for(int i=0;i<6;++i) CHECK(*(int32_t *)(intptr_t)(objects[i]+4)==refs[i]);
-    function_4a9d70_this(PTR(array));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     expected_vm_error=1;
     CHECK(execute_source(vm,root+2,
         "local caught=0;\n"
@@ -1801,7 +1835,7 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
             "if(a!=sharedArgument || b!=sharedArgument) throw 31; }\n"
             "function ObjectVarargs(...) { if(vargc!=2 || vargv[0]!=sharedArgument || "
             "vargv[1]!=sharedArgument) throw 32; }"));
-        CHECK(retdec_sqrat_get(PTR(root),"sharedArgument",object));
+        CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(root)), "sharedArgument", (void *)(intptr_t)(object)));
         int32_t refs=*(int32_t *)(intptr_t)(object[1]+4);
         CHECK(execute_source(vm,root+2,"DefaultArgs();"));
         CHECK(execute_source(vm,root+2,"ObjectVarargs(sharedArgument,sharedArgument);"));
@@ -1818,7 +1852,7 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
             "function SymbolCaptured():(captureSymbol) { return captureSymbol; }\n"
             "if(OuterFactory(sharedArgument)()!=sharedArgument || SymbolCaptured()!=sharedArgument) "
             "throw \"closure capture source\";"));
-        retdec_sqrat_release_pair(vm,object);
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), object);
     }
     CHECK(execute_source(vm,root+2,
         "callableObject <- delegate { _call=function(env,a,b) { return a*10+b; } } : {};\n"
@@ -1851,18 +1885,16 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
             "function HealthyStep() { ::healthySteps++; }\n"
             "function InitErrorActor(bad) { updateGroup=1; vx=1.0; "
             "SetUpdateFunction(bad ? ::FailureStep : ::HealthyStep); }"));
-        function_4aa3a0_this(PTR(root+1), PTR(init), "InitErrorActor");
-        int32_t broken = function_463b40_this(manager, init[0],init[1],init[2],
-            100,200,-1,PTR(&g16),0x01000008,1,0);
-        int32_t healthy = function_463b40_this(manager, init[0],init[1],init[2],
-            300,200,-1,PTR(&g16),0x01000008,0,0);
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(init)), "InitErrorActor");
+        int32_t broken = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x01000008, 1}, (const void *)(intptr_t)(0)));
+        int32_t healthy = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, 300, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x01000008, 0}, (const void *)(intptr_t)(0)));
         CHECK(broken && healthy);
         *(unsigned char *)(intptr_t)(broken+40)=1;
         *(unsigned char *)(intptr_t)(healthy+40)=1;
         *(int32_t *)(intptr_t)(manager+64)=1;
         expected_vm_error=1;
         for(int frame=0;frame<64;++frame)
-            retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
         expected_vm_error=0;
         CHECK(execute_source(vm,root+2,
             "if(failedSteps!=1 || healthySteps!=64) throw \"update error counts\";"));
@@ -1873,24 +1905,24 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
             "if(failedSteps!=1 || healthySteps!=64) throw \"update error retirement\";"));
         CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
         CHECK(function_48aa20(vm)==top);
-        function_4a9840_this(PTR(root+1),"replacementProbe",healthy+44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "replacementProbe", (const void *)(intptr_t)(healthy+44));
         CHECK(execute_source(vm,root+2,
             "replacementCalls <- 0;\n"
             "function ReplacementStep() { ::replacementCalls++; }\n"
             "replacementProbe.SetUpdateFunction(function() {\n"
             "SetUpdateFunction(::ReplacementStep); throw 123; });"));
         expected_vm_error=1;
-        retdec_actor_tick(healthy);
+        kinoko_actor_tick((KinokoActor *)(intptr_t)(healthy));
         expected_vm_error=0;
-        for(int i=0;i<8;++i) retdec_actor_tick(healthy);
+        for(int i=0;i<8;++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(healthy));
         CHECK(execute_source(vm,root+2,
             "if(replacementCalls!=0) throw \"original failure retirement changed\";"));
-        function_469700();
-        function_4a9d70_this(PTR(init));
+        kinoko_script_clear_actors();
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(init))));
     }
     {
         int32_t transition[2]={g483,g484};
-        if(retdec_sqrat_get(PTR(root),"UpdateStageChange",transition)) {
+        if(kinoko_sqrat_get((void *)(intptr_t)(PTR(root)), "UpdateStageChange", (void *)(intptr_t)(transition))) {
             CHECK(execute_source(vm,root+2,
                 "reentryLoads <- 0;\nreentrySaves <- 0;\n"
                 "function DisableInput() {}\n"
@@ -1899,7 +1931,7 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
                 "stageNameNext=\"w0-s01a.act\"; stageChangeCount=0;\n"
                 "SetGlobalUpdateFunction(UpdateStageChange);"));
             for(int frame=0;frame<120;++frame)
-                CHECK(retdec_actor_step_callback(PTR(g612))>=0);
+                CHECK(kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)(PTR(g612)))>=0);
             CHECK(execute_source(vm,root+2,
                 "if(reentryLoads!=1 || reentrySaves!=1 || stageChangeCount!=-1) "
                 "throw \"repeated stage reentry\";\nSetGlobalUpdateFunction(null);"));
@@ -1907,19 +1939,19 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
                 "failedGlobalCalls <- 0;\n"
                 "function FailedGlobal() { ::failedGlobalCalls++; throw 13; }\n"
                 "SetGlobalUpdateFunction(FailedGlobal);"));
-            int32_t old_mask=g459;
-            g459=0;
+            int32_t old_mask=kinoko_game_masks.update;
+            kinoko_game_masks.update=0;
             expected_vm_error=1;
-            for(int frame=0;frame<64;++frame) function_469900();
+            for(int frame=0;frame<64;++frame) kinoko_game_update();
             expected_vm_error=0;
-            g459=old_mask;
+            kinoko_game_masks.update=old_mask;
             CHECK(execute_source(vm,root+2,
                 "if(failedGlobalCalls!=1) throw \"global error repeated\";"));
             CHECK(g612[6]==0);
             CHECK(*(int32_t *)(intptr_t)(vm+52)==base && *(int32_t *)(intptr_t)(vm+100)==frames);
             CHECK(function_48aa20(vm)==top);
         }
-        retdec_sqrat_release_pair(vm,transition);
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), transition);
     }
     puts("PASS: uncaught nested script errors restore VM frame, stack and varargs");
     return 0;
@@ -1938,8 +1970,7 @@ static int32_t relocate_vm_stack(int32_t vm) {
 }
 
 static int test_native_stack_relocation(int32_t vm, int32_t *root) {
-    CHECK(retdec_sqrat_set_native_closure(vm, root + 2, "RelocateStack",
-        PTR(relocate_vm_stack), NULL, 0));
+    CHECK(kinoko_sqrat_set_native_closure((struct SQVM *)(intptr_t)(vm), root + 2, "RelocateStack", (void *)(intptr_t)(PTR(relocate_vm_stack)), NULL, 0));
     CHECK(execute_source(vm,root+2,
         "relocationResult <- RelocateStack();\n"
         "if(relocationResult!=12345) throw \"native return used retired stack\";"));
@@ -1954,8 +1985,8 @@ static int test_branch_motion(int32_t manager) {
     const char *paths[] = {"data/map/w1-c01a.act", "data/map/w1-c01b.act", "data/map/w1-c01a.act"};
     for (int round = 0; round < 3; ++round) {
         int32_t act[60];
-        function_427530(PTR(act));
-        CHECK(function_428000(PTR(act), paths[round]));
+        kinoko_act_document_initialize((KinokoActDocument *)act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)act, paths[round]));
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
             int32_t layer = *(int32_t *)(intptr_t)slot;
@@ -1970,18 +2001,16 @@ static int test_branch_motion(int32_t manager) {
             }
         }
         for (int direction = -1; direction <= 1; direction += 2) {
-            int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-                round == 1 ? 330.0f : 3120.0f, round == 1 ? 543.0f : 895.0f,
-                (float)direction, PTR(&g16), g483, g484, 0);
+            int32_t actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, round == 1 ? 330.0f : 3120.0f, round == 1 ? 543.0f : 895.0f, (float)direction, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
             CHECK(actor);
-            function_462280_this(actor, round == 1 ? 615 : 335);
+            kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), round == 1 ? 615 : 335);
             *(int32_t *)(intptr_t)(actor + 316) = 1;
             *(float *)(intptr_t)(actor + 256) = direction * 2.5f;
             *(float *)(intptr_t)(actor + 260) = -9.0f;
-            retdec_actor_manager_refresh(manager);
+            kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
             for (int frame = 0; frame < 240; ++frame) {
                 function_468620_this(PTR(g_514300_storage));
-                function_45ec60(actor);
+                kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
                 float *y = (float *)(intptr_t)(actor + 244);
                 float *vy = (float *)(intptr_t)(actor + 260);
                 if (!_finite(*y) || !_finite(*(float *)(intptr_t)(actor + 308)))
@@ -1993,10 +2022,10 @@ static int test_branch_motion(int32_t manager) {
                 if (*(int32_t *)(intptr_t)(actor + 296) && *vy >= 0) *vy = -9;
                 else if (*vy < 9) *vy += 0.38f;
             }
-            kinoko_actor_release(actor, NULL);
-            retdec_actor_manager_refresh(manager);
+            kinoko_actor_release((KinokoActor *)(intptr_t)actor, NULL);
+            kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
         }
-        function_469700();
+        kinoko_script_clear_actors();
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         retdec_destroy_cact_object(PTR(act));
     }
@@ -2008,29 +2037,28 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     const char *paths[]={"data/map/w1-c01a.act","data/map/w1-c01b.act","data/map/w1-c01a.act"};
     int32_t map_state=PTR(g_retdec_map_manager_state);
     kinoko_initialize_render_queue();
-    function_4a94e0_this(PTR(g722));
-    function_4a95c0_this(PTR(g722),PTR(root+1));
-    CHECK(function_46f4c0_this(map_state));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g722)));
+    kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(g722)), (const void *)(intptr_t)(PTR(root+1)));
+    CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
     function_46fac0();
     function_4669d0();
     {
         int32_t class_environment[3];
         CHECK(execute_source(vm,root+2,"classFixture <- {Actor={},Camera=Camera};"));
-        function_4aa3a0_this(PTR(root+1),PTR(class_environment),"classFixture");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(class_environment)), "classFixture");
         CHECK(execute_asset(vm,class_environment+1,"data/script/class_def.cv4"));
-        function_4a9d70_this(PTR(class_environment));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(class_environment))));
     }
     function_466270();
     CHECK(execute_asset(vm,root+2,"data/script/camera.cv4"));
-    int32_t targets[]={PTR(function_469840),PTR(function_469700),PTR(function_469870),
-        PTR(function_46a1d0),PTR(retdec_create_render_layer_fixed),PTR(function_469880),PTR(function_469d10)};
+    int32_t targets[]={PTR(kinoko_script_load_map),PTR(kinoko_script_clear_actors),PTR(kinoko_script_clear_collision),
+        PTR(kinoko_script_clear_render_layers),PTR(kinoko_script_create_render_layer),PTR(kinoko_script_create_collision),PTR(kinoko_script_create_map_actors)};
     int32_t adapters[]={PTR(function_471d90),PTR(function_471bc0),PTR(function_471bc0),
         PTR(function_471bc0),PTR(function_471f10),PTR(function_471f10),PTR(function_471e50)};
     const char *names[]={"LoadMap","ClearActor","ClearCollision","ClearRenderLayer", "CreateRenderLayer",
         "CreateCollision","CreateActorFromMap"};
     for(int i=0;i<7;++i)
-        CHECK(function_415550_this(PTR(root),PTR(names[i]),PTR(targets+i),4,
-            adapters[i],0)>=0);
+        CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR(names[i])), (const void *)(intptr_t)(PTR(targets+i)), 4, (void *)(intptr_t)(adapters[i]), 0))>=0);
     CHECK(execute_source(vm,root+2,"PlayerStatus <- {time=120};"));
     CHECK(execute_source(vm,root+2,"stageName=\"previous.act\";"));
     CHECK(execute_source(vm,root+2,
@@ -2043,16 +2071,16 @@ static int test_map_transition(int32_t vm, int32_t *root) {
         fprintf(stderr,"map transition %s\n",paths[i]);
         CHECK(execute_source(vm,root+2,i==1 ? "LoadStage(\"w1-c01b.act\");" : "LoadStage(\"w1-c01a.act\");"));
         CHECK(*(int32_t *)(intptr_t)(map_state+12));
-        fprintf(stderr,"map actors=%d layers=%d\n",retdec_actor_manager_refresh(PTR(g_retdec_actor_manager_state)),kinoko_render_queue_size());
+        fprintf(stderr,"map actors=%d layers=%d\n",kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(PTR(g_retdec_actor_manager_state))),kinoko_render_queue_size());
         CHECK(execute_source(vm,root+2,
             "player <- {x=800.0,y=850.0,vx=2.5,vy=0.0,direction=1.0,hitBottom=1,\n"
             " left=792.0,right=808.0,top=818.0,bottom=850.0,take=100,\n"
             " user={hold=null,water=false,deadCount=0,take=0}};\nInitCamera(player);\n"));
         for(int frame=0;frame<180;++frame) {
             CHECK(execute_source(vm,root+2,"player.x+=2.5; player.left+=2.5; player.right+=2.5;"));
-            CHECK(kinoko_camera_update(PTR(g_retdec_camera_state), NULL)>=0);
-            retdec_actor_manager_update(PTR(g_retdec_actor_manager_state),PTR(g_retdec_camera_state));
-            CHECK(function_46f0b0(map_state)>=0);
+            CHECK(kinoko_camera_update((KinokoCamera *)g_retdec_camera_state, NULL)>=0);
+            kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(PTR(g_retdec_actor_manager_state)), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
+            CHECK(kinoko_map_manager_update((KinokoMapManager *)(intptr_t)map_state)>=0);
             int32_t manager=PTR(g_retdec_actor_manager_state);
             int32_t *actors=*(int32_t **)(intptr_t)(manager+100);
             for(int n=0;n<*(int32_t *)(intptr_t)(manager+116);++n) {
@@ -2061,7 +2089,7 @@ static int test_map_transition(int32_t vm, int32_t *root) {
                 if(animation_frame) {
                     int32_t handle=*(int32_t *)(intptr_t)(animation_frame+4);
                     *(int32_t *)(intptr_t)(animation_frame+4)=1;
-                    retdec_actor_render(actor,PTR(g_retdec_camera_state));
+                    kinoko_actor_render((KinokoActor *)(intptr_t)(actor), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
                     *(int32_t *)(intptr_t)(animation_frame+4)=handle;
                 }
                 if(!_finite(*(float *)(intptr_t)(actor+240)) || !_finite(*(float *)(intptr_t)(actor+244)) ||
@@ -2074,8 +2102,8 @@ static int test_map_transition(int32_t vm, int32_t *root) {
             }
         }
     }
-    function_469700();
-    function_469870();
+    kinoko_script_clear_actors();
+    kinoko_script_clear_collision();
     char retired_name[256];
     strcpy_s(retired_name,sizeof(retired_name),retdec_std_string_data(
         *(int32_t *)(intptr_t)(map_state+12)+16));
@@ -2086,13 +2114,13 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     *(int32_t *)(intptr_t)(runtime+60)=sprites;
     *(int32_t *)(intptr_t)(runtime+64)=sprites+2*184;
     *(int32_t *)(intptr_t)(runtime+68)=sprites+2*184;
-    CHECK(kinoko_act_end_stage(runtime, NULL)==0);
+    CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)runtime, NULL)==0);
     CHECK(*(int32_t *)(intptr_t)(runtime+64)==sprites);
     CHECK(*(int32_t *)(intptr_t)(runtime+68)==sprites+2*184);
-    function_469860();
+    kinoko_script_release_map();
     int32_t retired_environment[2]={g483,g484};
-    CHECK(!retdec_sqrat_get(PTR(root),retired_name,retired_environment));
-    function_46a1d0();
+    CHECK(!kinoko_sqrat_get((void *)(intptr_t)(PTR(root)), retired_name, (void *)(intptr_t)(retired_environment)));
+    kinoko_script_clear_render_layers();
     CHECK(kinoko_render_queue_size()==0);
     puts("PASS: first-stage passage load/release/reload, camera, actors, ACT update and draw transforms");
     return 0;
@@ -2108,7 +2136,7 @@ static int test_map_camera_fpu(void) {
     *(float *)(camera + 13) = 203.5f;
     _fxsave(before);
     for (int frame = 0; frame < 600; ++frame) {
-        function_46edc0_this(PTR(manager), camera);
+        kinoko_map_manager_prepare((KinokoMapManager *)manager, (KinokoCamera *)camera);
         _fxsave(after);
         if (before[4] != after[4])
             fprintf(stderr, "map camera leaked x87 stack at frame %d: tag %02X -> %02X\n",
@@ -2146,21 +2174,21 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
         "callbackCount <- 0;\n"
         "callbackFirst <- function() { ::callbackCount += 1; };\n"
         "callbackSecond <- function() { ::callbackCount += 10; };"));
-    function_4aa3a0_this(PTR(root + 1), PTR(first), "callbackFirst");
-    function_4aa3a0_this(PTR(root + 1), PTR(second), "callbackSecond");
-    function_4a9500_this(actor + 11, PTR(root + 1));
-    function_4a9500_this(camera, PTR(root + 1));
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(first)), "callbackFirst");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(second)), "callbackSecond");
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(actor + 11), (const void *)(intptr_t)(PTR(root + 1)));
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(camera), (const void *)(intptr_t)(PTR(root + 1)));
     for (int i = 0; i < 3; ++i) {
-        function_4a94e0_this(PTR(callbacks[i] + 1));
-        function_4a94e0_this(PTR(callbacks[i] + 4));
+        kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(callbacks[i] + 1)));
+        kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(callbacks[i] + 4)));
     }
     /* Match the existing empty-function constructor, including its zero-type
        compatibility value; this migration does not normalize it to OT_NULL. */
-    CHECK(retdec_function_45df10_impl(PTR(empty), 0) == PTR(empty));
+    CHECK((int32_t)(intptr_t)(kinoko_script_callback_construct((KinokoScriptCallback *)(intptr_t)(PTR(empty)), (const char *)(intptr_t)(0))) == PTR(empty));
     empty_type = empty[5];
     empty_value = empty[6];
-    function_4a9d70_this(PTR(empty + 4));
-    function_4a9d70_this(PTR(empty + 1));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 4))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty + 1))));
     int32_t first_refs = callback_external_refs(vm, first);
     int32_t second_refs = callback_external_refs(vm, second);
     int32_t root_refs = callback_external_refs(vm, root + 1);
@@ -2170,7 +2198,7 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
     for (int iteration = 0; iteration < 64; ++iteration) {
         int32_t *source = (iteration / 2) % 2 ? second : first;
         for (int i = 0; i < 3; ++i) {
-            function_4a9500_this(argument, PTR(source));
+            kinoko_sqplus_object_copy_construct((void *)(intptr_t)(argument), (const void *)(intptr_t)(PTR(source)));
             retdec_call_thiscall3_result(receivers[i], methods[i],
                 argument[0], argument[1], argument[2]);
             CHECK(callbacks[i][0] == vm);
@@ -2199,18 +2227,18 @@ static int test_script_callback_binding(int32_t vm, int32_t *root) {
         retdec_call_thiscall3_result(receivers[i], methods[i], PTR(&g16), g483, g484);
         CHECK(callbacks[i][5] == (i == 1 ? empty_type : g483));
         CHECK(callbacks[i][6] == (i == 1 ? empty_value : g484));
-        function_4a9d70_this(PTR(callbacks[i] + 4));
-        function_4a9d70_this(PTR(callbacks[i] + 1));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 4))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(callbacks[i] + 1))));
     }
     CHECK(callback_external_refs(vm, first) == first_refs);
     CHECK(callback_external_refs(vm, second) == second_refs);
     CHECK(callback_external_refs(vm, root + 1) == root_refs);
     CHECK(function_48aa20(vm) == stack_top);
     CHECK(retdec_call_thiscall0_result(camera, kinoko_camera_update) == g483);
-    function_4a9d70_this(PTR(camera));
-    function_4a9d70_this(PTR(actor + 11));
-    function_4a9d70_this(PTR(second));
-    function_4a9d70_this(PTR(first));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(actor + 11))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(second))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(first))));
     puts("PASS: C++ callback ABI, replacement/self-assignment, external refs, clear and Camera dispatch");
     return 0;
 }
@@ -2315,13 +2343,13 @@ static int test_shutdown_tree_cleanup(void) {
     kinoko_integer_map_put(manager[10],42,animation);manager[11]=1;
     kinoko_integer_vector_construct(PTR(manager)+68);
     for(int i=0;i<2;++i) kinoko_integer_vector_append(PTR(manager)+68,textures[i]);
-    kinoko_priority_construct(PTR(manager)+84);
+    kinoko_priority_construct((void *)(intptr_t)(PTR(manager)+84));
     int32_t absent=0,inserted[2];
-    function_463610_this(PTR(manager)+84,PTR(inserted),function_463210_this(PTR(manager)+84,PTR(&absent)),0);
+    inserted[0]=PTR(kinoko_actor_priority_insert(manager+21,(KinokoActor *)(intptr_t)absent)); inserted[1]=1;
     manager[25] = PTR(iteration); manager[26] = manager[27] = PTR(iteration + 3);
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
-        CHECK(function_464e20(PTR(manager)) == PTR(iteration));
+        CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(PTR(manager)))) == PTR(iteration));
         CHECK(kinoko_integer_map_size(manager[10])==0);
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
         CHECK(kinoko_integer_vector_size(PTR(manager)+68)==0);
@@ -2331,22 +2359,21 @@ static int test_shutdown_tree_cleanup(void) {
     kinoko_integer_vector_destroy(PTR(manager)+68);
     kinoko_animation_list_destroy(PTR(manager)+52);
     kinoko_integer_map_destroy(manager[10]);
-    kinoko_priority_destroy(PTR(manager)+84);
+    kinoko_priority_destroy((void *)(intptr_t)(PTR(manager)+84));
     {
         int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];
         const int priorities[]={7,-2,7,7};
-        kinoko_priority_construct(PTR(tree));
+        kinoko_priority_construct((void *)(intptr_t)(PTR(tree)));
         for(int i=0;i<4;++i) {
             actors[i][57]=priorities[i];int32_t actor=PTR(actors[i]);
-            nodes[i]=function_463210_this(PTR(tree),PTR(&actor));
-            function_463610_this(PTR(tree),PTR(result),nodes[i],i==3);
+            nodes[i]=PTR(kinoko_actor_priority_insert_ordered(tree,(KinokoActor *)(intptr_t)actor,i==3)); result[0]=nodes[i]; result[1]=1;
         }
-        const int order[]={1,3,0,2};int32_t node=kinoko_priority_first(PTR(tree));
-        for(int i=0;i<4;++i) { CHECK(kinoko_priority_value(node)==PTR(actors[order[i]]));node=kinoko_priority_next(PTR(tree),node); }
+        const int order[]={1,3,0,2};int32_t node=(int32_t)(intptr_t)(kinoko_actor_priority_first((void *)(intptr_t)(PTR(tree))));
+        for(int i=0;i<4;++i) { CHECK((int32_t)(intptr_t)(kinoko_actor_priority_value((void *)(intptr_t)(node)))==PTR(actors[order[i]]));node=(int32_t)(intptr_t)(kinoko_actor_priority_next((void *)(intptr_t)(PTR(tree)), (void *)(intptr_t)(node))); }
         CHECK(node==tree[1] && tree[2]==4);
-        function_463280_this(PTR(tree),PTR(result),nodes[3]);CHECK(tree[2]==3 && result[0]==nodes[0]);
-        kinoko_priority_clear(PTR(tree));CHECK(tree[2]==0 && kinoko_priority_first(PTR(tree))==tree[1]);
-        kinoko_priority_destroy(PTR(tree));
+        result[0]=PTR(kinoko_actor_priority_erase_next(tree,(void *)(intptr_t)nodes[3]));CHECK(tree[2]==3 && result[0]==nodes[0]);
+        kinoko_priority_clear((void *)(intptr_t)(PTR(tree)));CHECK(tree[2]==0 && (int32_t)(intptr_t)(kinoko_actor_priority_first((void *)(intptr_t)(PTR(tree))))==tree[1]);
+        kinoko_priority_destroy((void *)(intptr_t)(PTR(tree)));
     }
     puts("PASS: shutdown tree recursion, sentinel preservation, frame payloads and repeatable manager clear");
     return 0;
@@ -2364,43 +2391,43 @@ static int test_animation_timing(void) {
     actor[38] = actor[51] = PTR(frames);
     actor[50] = PTR(animation);
     actor[52] = 41;
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 0 && actor[54] == 1 && actor[51] == PTR(frames));
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 1 && actor[54] == 0 && actor[51] == PTR(frames + 1));
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 2 && actor[54] == 0 && actor[51] == PTR(frames + 2));
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 0 && actor[54] == 0 && actor[51] == PTR(frames));
     CHECK(actor[38] == actor[51]);
 
     *(uint8_t *)((char *)animation + 24) = 0;
     actor[53] = 2;
     actor[38] = actor[51] = PTR(frames + 2);
-    for (int i = 0; i < 3; ++i) retdec_actor_tick(PTR(actor));
+    for (int i = 0; i < 3; ++i) kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 2 && actor[54] == 0 && actor[51] == PTR(frames + 2));
     actor[54] = 17;
-    kinoko_actor_advance_animation(PTR(actor), 40);
+    kinoko_actor_advance_animation((KinokoActor *)(intptr_t)(PTR(actor)), 40);
     CHECK(actor[54] == 17 && actor[53] == 2);
     actor[51] = 0;
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[54] == 17);
     actor[51] = PTR(frames);
     actor[50] = 0;
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[54] == 18 && actor[53] == 2);
     actor[50] = PTR(animation);
     animation[3] = animation[2];
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[54] == 19 && actor[53] == 2);
 
     animation[3] = PTR(frames + 3);
     actor[54] = INT32_MAX;
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[54] == INT32_MIN && actor[53] == 2);
     actor[54] = 1;
     actor[53] = 99;
-    retdec_actor_tick(PTR(actor));
+    kinoko_actor_tick((KinokoActor *)(intptr_t)(PTR(actor)));
     CHECK(actor[53] == 100 && actor[54] == 0);
     CHECK((uint32_t)actor[51] == (uint32_t)PTR(frames) + 100u * 248u);
     CHECK(actor[38] == actor[51]);
@@ -2415,10 +2442,10 @@ static int test_actor_state_fields(void) {
     memset(actor, 0x5a, sizeof(actor));
     memcpy(expected, actor, sizeof(actor));
     memcpy(expected + 376, source, sizeof(source));
-    CHECK(kinoko_actor_set_init_data(PTR(actor), PTR(source)) == PTR(actor));
+    CHECK(kinoko_actor_set_init_data((KinokoActor *)actor, source) == (KinokoActor *)actor);
     CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
-    CHECK(kinoko_actor_set_init_data(PTR(actor), 0) == 0);
-    CHECK(kinoko_actor_set_init_data(0, PTR(source)) == 0);
+    CHECK(kinoko_actor_set_init_data((KinokoActor *)actor, 0) == 0);
+    CHECK(kinoko_actor_set_init_data(0, source) == 0);
     CHECK(memcmp(actor, expected, sizeof(actor)) == 0);
     memset(actor, 0, sizeof(actor));
     *(int32_t *)(actor + 148) = PTR(manager);
@@ -2453,7 +2480,7 @@ static int test_actor_animation_sync(int32_t vm, int32_t *root,
     for (int i = 0; i < 6; ++i) {
         *(int32_t *)(intptr_t)(source + 212) = indices[i];
         *(int32_t *)(intptr_t)(source + 216) = 100 + i;
-        function_4a9500_this(incoming, source + 44);
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(incoming), (const void *)(intptr_t)(source + 44));
         retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
             incoming[0], incoming[1], incoming[2]);
         CHECK(*(int32_t *)(intptr_t)(target + 212) == expected_indices[i]);
@@ -2466,7 +2493,7 @@ static int test_actor_animation_sync(int32_t vm, int32_t *root,
     }
     animation[3] = animation[2];
     *(int32_t *)(intptr_t)(source + 212) = 20;
-    function_4a9500_this(incoming, source + 44);
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(incoming), (const void *)(intptr_t)(source + 44));
     retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
         incoming[0], incoming[1], incoming[2]);
     CHECK(*(int32_t *)(intptr_t)(target + 212) == 0);
@@ -2474,7 +2501,7 @@ static int test_actor_animation_sync(int32_t vm, int32_t *root,
 
     *(int32_t *)(intptr_t)(target + 200) = 0;
     *(int32_t *)(intptr_t)(source + 216) = 999;
-    function_4a9500_this(incoming, source + 44);
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(incoming), (const void *)(intptr_t)(source + 44));
     retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
         incoming[0], incoming[1], incoming[2]);
     CHECK(*(int32_t *)(intptr_t)(target + 216) == 105);
@@ -2486,14 +2513,14 @@ static int test_actor_animation_sync(int32_t vm, int32_t *root,
     CHECK(*(int32_t *)(intptr_t)(target + 216) == 105);
     animation[3] = PTR(frames + sizeof(frames));
     *(int32_t *)(intptr_t)(target + 212) = 1;
-    function_4a9500_this(incoming, target + 44);
+    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(incoming), (const void *)(intptr_t)(target + 44));
     retdec_call_thiscall3_result((void *)(intptr_t)target, kinoko_actor_sync_animation,
         incoming[0], incoming[1], incoming[2]);
     CHECK(*(int32_t *)(intptr_t)(target + 212) == 1);
     CHECK(*(int32_t *)(intptr_t)(target + 204) == PTR(frames + 496));
 
-    function_4a9840_this(PTR(root + 1), "syncTarget", target + 44);
-    function_4a9840_this(PTR(root + 1), "syncSource", source + 44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "syncTarget", (const void *)(intptr_t)(target + 44));
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "syncSource", (const void *)(intptr_t)(source + 44));
     *(int32_t *)(intptr_t)(source + 212) = 2;
     CHECK(execute_source(vm, root + 2,
         "syncTarget.SyncAnimation(syncSource); delete ::syncTarget; delete ::syncSource;"));
@@ -2526,46 +2553,46 @@ static int test_act_layer_access(void) {
     head[0] = PTR(first); head[1] = PTR(second);
     first[0] = PTR(second); first[1] = PTR(head); first[2] = PTR(key);
     second[0] = PTR(head); second[1] = PTR(first); second[2] = PTR(second_key);
-    CHECK(function_452040(0, 0) == 0);
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* inactive */
+    CHECK(kinoko_act_first_key(NULL, 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* inactive */
     *((unsigned char *)runtime + 8) = 1;
     for (int i = 0; i < 1000; ++i) {
-        CHECK(function_452040(PTR(runtime), 0) == PTR(key));
-        CHECK(function_452020(PTR(runtime), 0) == PTR(layout));
+        CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == (KinokoActKey *)key);
+        CHECK(kinoko_act_layer_layout((KinokoActRuntime *)runtime, 0) == (KinokoActLayout *)layout);
     }
     CHECK(key[0] == 7 && layout[0] == 123 && first[2] == PTR(key));
-    CHECK(function_452040(PTR(runtime), -1) == 0);
-    CHECK(function_452040(PTR(runtime), 1) == 0); /* null layer */
-    CHECK(function_452040(PTR(runtime), 2) == 0); /* past end */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, -1) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 1) == 0); /* null layer */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 2) == 0); /* past end */
     layer[49] = 1;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* extra tracks */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* extra tracks */
     layer[49] = 0; layer[46] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* empty keys */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* empty keys */
     layer[46] = 2; first[2] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* null first key */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* null first key */
     first[2] = PTR(key);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output && *(int32_t *)(intptr_t)output == PTR(second_key));
     free((void *)(intptr_t)output);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 2, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 2, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0);
-    CHECK(kinoko_act_key_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)1, -1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0); /* reject index before touching invalid holder */
-    CHECK(kinoko_act_layer_holder(1, -1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_layer_holder((KinokoActSourceHolder *)1, -1, (KinokoActLayerHolder **)&output) == (KinokoActLayerHolder **)&output);
     CHECK(output == 0);
-    CHECK(kinoko_act_layer_holder(PTR(&document_holder), 0, 0) == 0);
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 0, 0) == 0);
+    CHECK(kinoko_act_layer_holder((KinokoActSourceHolder *)&document_holder, 0, 0) == 0);
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 0, 0) == 0);
     head[0] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* missing node */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* missing node */
     head[0] = PTR(first); first[0] = 0;
-    CHECK(kinoko_act_key_holder(PTR(&layer_holder), 1, PTR(&output)) == PTR(&output));
+    CHECK(kinoko_act_key_holder((KinokoActLayerHolder *)&layer_holder, 1, (KinokoActKeyHolder **)&output) == (KinokoActKeyHolder **)&output);
     CHECK(output == 0); /* broken chain guard retained */
     document[53] = document[52] - 4;
-    CHECK(function_452040(PTR(runtime), 0) == 0); /* reversed vector */
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0); /* reversed vector */
     document_holder = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0);
     runtime[4] = 0;
-    CHECK(function_452040(PTR(runtime), 0) == 0);
+    CHECK(kinoko_act_first_key((KinokoActRuntime *)runtime, 0) == 0);
     puts("PASS: ACT layer/key query bounds, borrowed records and temporary holder ownership");
     return 0;
 }
@@ -2582,15 +2609,15 @@ static int test_act_resource_methods(void) {
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_get_current_frame) == 3);
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_increment_frame) == 0);
     CHECK(words[1] == 47);
-    kinoko_act_set_current_time(address, NULL, -31);
-    CHECK(kinoko_act_get_current_frame(address, NULL) == -3);
+    kinoko_act_set_current_time((KinokoActRuntime *)(intptr_t)address, NULL, -31);
+    CHECK(kinoko_act_get_current_frame((KinokoActRuntime *)(intptr_t)address, NULL) == -3);
     words[1] = INT32_MAX - 4;
-    kinoko_act_increment_frame(address, NULL);
+    kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)address, NULL);
     CHECK(words[1] == INT32_MIN + 5);
     act[1] = 0;
-    CHECK(kinoko_act_get_current_frame(address, NULL) == 0);
+    CHECK(kinoko_act_get_current_frame((KinokoActRuntime *)(intptr_t)address, NULL) == 0);
     words[0] = 0;
-    CHECK(kinoko_act_increment_frame(address, NULL) == 0);
+    CHECK(kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)address, NULL) == 0);
     CHECK(words[1] == INT32_MIN + 5);
 
     uint32_t before = timeGetTime();
@@ -2603,15 +2630,34 @@ static int test_act_resource_methods(void) {
     InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     resource[8] = 1;
     memset(resource + 108, 0x7f, 44);
-    words[11] = 1234;
-    words[12] = 5678;
-    words[13] = 9000;
+    /* Draw storage now owns native containers, not three raw vector words.
+       Populate both through their APIs so EndStage clears real elements. */
+    int32_t texture[25] = {0};
+    texture[0] = PTR(kinoko_act_host_symbols()->texture_resource_vtable);
+    texture[17] = 7;
+    CHECK(retdec_act_bitblt_this(address, 3, 4, 32, 16,
+        PTR(texture), 0, 0, 0, 1.0f) == 0);
+    function_452c20(address + 60, 2);
+    KinokoDrawSpan commands_before = kinoko_act_command_span(address);
+    KinokoDrawSpan sprites_before = kinoko_act_sprite_span(address);
+    CHECK(commands_before.end > commands_before.begin);
+    CHECK(sprites_before.end > sprites_before.begin);
+    const int32_t commands_owner = words[11], sprites_owner = words[15];
     words[38] = 4321;
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_end_stage) == 0);
-    CHECK(resource[8] == 0 && words[12] == 1234 && words[13] == 9000);
+    KinokoDrawSpan commands_after = kinoko_act_command_span(address);
+    KinokoDrawSpan sprites_after = kinoko_act_sprite_span(address);
+    CHECK(resource[8] == 0);
+    CHECK(commands_after.end == commands_after.begin);
+    CHECK(sprites_after.end == sprites_after.begin);
+    CHECK(words[11] == commands_owner && words[15] == sprites_owner);
+    CHECK(commands_after.capacity - commands_after.begin == commands_before.capacity - commands_before.begin);
+    CHECK(sprites_after.capacity - sprites_after.begin == sprites_before.capacity - sprites_before.begin);
     for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
     CHECK(words[38] == 4321);
-    CHECK(kinoko_act_end_stage(address, NULL) == (int32_t)E_FAIL);
+    CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)address, NULL) == (int32_t)E_FAIL);
+    kinoko_act_draw_storage_destroy(address);
+    CHECK(words[11] == 0 && words[15] == 0);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");
     return 0;
@@ -2625,7 +2671,7 @@ static int test_sprite_geometry(void) {
     const float rotated_y[4] = {191.5f, 255.5f, 191.5f, 255.5f};
     void *methods[3] = {g407.e7, g407.e8, g407.e9};
     union { float f; int32_t bits; } x = {100.0f}, y = {200.0f};
-    int32_t saved_device = g678;
+    IDirect3DDevice9 *saved_device = kinoko_graphics.device;
 
     sprite.width = 32;
     sprite.height = 48;
@@ -2640,7 +2686,7 @@ static int test_sprite_geometry(void) {
         sprite.vertices[i].u = 0.125f;
         sprite.vertices[i].v = 0.75f;
     }
-    g678 = 0;
+    kinoko_graphics.device = 0;
     for (int method = 0; method < 3; ++method) {
         sprite.angle = 0;
         CHECK(retdec_call_thiscall2_result(&sprite, methods[method], x.bits, y.bits) == 0);
@@ -2662,7 +2708,7 @@ static int test_sprite_geometry(void) {
     sprite.scale_x = -2;
     kinoko_sprite_transform(&sprite, x.f, y.f);
     CHECK(sprite.vertices[0].x == 107.5f && sprite.vertices[1].x == 43.5f);
-    g678 = saved_device;
+    kinoko_graphics.device = saved_device;
     puts("PASS: C++ sprite vtable, pivot/scale/rotation and retained vertex attributes");
     return 0;
 }
@@ -2772,9 +2818,9 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
     // Only the stack owns the returned instance; all temporary external refs are gone.
     CHECK(*(int32_t *)(intptr_t)(slot[1]+4) == 1);
     CHECK(*(int32_t *)(intptr_t)(slot[1]+32) == pointer);
-    function_4a94e0_this(PTR(instance));
-    function_4a9660_this(PTR(instance), -1);
-    function_4aa3a0_this(PTR(instance), PTR(types), "__ot");
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(instance)));
+    kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
     CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 3);
     int32_t keys[] = {kinoko_native_void_type(), 100, 101};
     for(int i=0; i<3; ++i) {
@@ -2785,20 +2831,20 @@ static int test_native_instance_receivers(int32_t vm, int32_t *root) {
         CHECK(slot[1] == pointer);
         function_48aa30(vm, 2);
     }
-    function_4a9d70_this(PTR(types));
-    function_4a9d70_this(PTR(instance));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance))));
     function_48c910(vm, top);
     CHECK(native_instance_releases == 1 && native_instance_release_pointer == pointer);
     CHECK(execute_source(vm, root+2, "if(nativeConstructorCalls!=0) throw 130;\n"));
     const char *short_names[] = {"NativeEmpty", "NativeSingle"};
     for(int i=0; i<2; ++i) {
         CHECK(function_4ab170(vm, PTR(short_names[i]), pointer, 0) == 1);
-        function_4a94e0_this(PTR(instance));
-        function_4a9660_this(PTR(instance), -1);
-        function_4aa3a0_this(PTR(instance), PTR(types), "__ot");
+        kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(instance)));
+        kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(instance)), -1);
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(instance)), (void *)(intptr_t)(PTR(types)), "__ot");
         CHECK(kinoko_squirrel_object_size(PTR(types), vm) == 1);
-        function_4a9d70_this(PTR(types));
-        function_4a9d70_this(PTR(instance));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(types))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(instance))));
         function_48c910(vm, top);
     }
     puts("PASS: native instance type maps, skipped constructor, failure stack and external-reference lifetime");
@@ -2831,19 +2877,19 @@ static int test_global_callback_destructor(int32_t vm) {
         kinoko_draw_render_queue(100);
         CHECK(render_queue_visit_count==3 && render_queue_visits[0]==107 &&
               render_queue_visits[1]==103 && render_queue_visits[2]==107);
-        function_46a1d0();
+        kinoko_script_clear_render_layers();
         CHECK(kinoko_render_queue_size()==0 && a[1]==7 && b[1]==3);
     }
 
     memcpy(saved_callback, g612, sizeof(saved_callback));
     g612[0] = vm;
-    function_4a94e0_this(PTR(g612 + 1));
-    function_4a94e0_this(PTR(g612 + 4));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g612 + 1)));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g612 + 4)));
     native_instance_releases = 0;
     for(int member=0; member<2; ++member) {
         CHECK(function_4ab170(vm, PTR("NativeEmpty"), 21+member,
                              PTR(native_instance_release)) == 1);
-        function_4a9660_this(PTR(g612+1+3*member), -1);
+        kinoko_sqplus_object_capture((void *)(intptr_t)(PTR(g612+1+3*member)), -1);
         function_48c910(vm, top);
     }
     CHECK(native_instance_releases == 0);
@@ -2946,11 +2992,11 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     const int top = sq_gettop(kinoko_vm(vm));
     int32_t script[26] = {0}, environment[2] = {g483,g484}, wrapper[5] = {0};
     int32_t extension[7]; memcpy(extension, kinoko_act_script_extension, sizeof(extension));
-    int32_t old_archive = g765;
+    int32_t old_archive = kinoko_archive_count;
     CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
     retdec_string_assign_n(&g554, ".cv4", 4);
     CHECK(g555 == 4 && g556 >= 16 && strcmp(retdec_std_string_data(PTR(&g554)), ".cv4") == 0);
-    CHECK(retdec_sqrat_new_table(vm, environment));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), environment));
     wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
     wrapper[2] = environment[0]; wrapper[3] = environment[1];
     script[21] = 15;
@@ -2959,7 +3005,7 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     script[23] = PTR(_strdup(initial)); script[24] = (int32_t)strlen(initial);
     ((unsigned char*)script)[100] = 1;
     CHECK(function_415fd0(PTR(script), PTR(wrapper)) == 0);
-    g765 = 0;
+    kinoko_archive_count = 0;
     char actual[MAX_PATH], requested[MAX_PATH], command[512];
     sprintf_s(actual,sizeof(actual),"act-source-%lu.cv4",GetCurrentProcessId());
     sprintf_s(requested,sizeof(requested),"act-source-%lu.nut",GetCurrentProcessId());
@@ -2982,8 +3028,8 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     CHECK(execute_source(vm, environment, command));
     CHECK(execute_source(vm, environment,"if(CompileFile(\"missing.nut\")) throw 5;\n"));
     retdec_destroy_cact_script(PTR(script));
-    retdec_sqrat_release_pair(vm, environment);
-    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); g765 = old_archive;
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), environment);
+    memcpy(kinoko_act_script_extension, extension, sizeof(extension)); kinoko_archive_count = old_archive;
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     puts("PASS: original ACT script registration, extension rewrite, callback refresh and bytecode double execution");
     return 0;
@@ -3017,8 +3063,8 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
     // Exercise the actual four-word callback ABI and resource reader in both modes.
     const char *fixture="id,value\n,i\ncsvFile,47\n";
     const char saved_encoding=g874;
-    const int32_t saved_package=g765;
-    g765=0;
+    const int32_t saved_package=kinoko_archive_count;
+    kinoko_archive_count=0;
     for(int encoded=0;encoded<2;++encoded) {
         char path[MAX_PATH], actual[MAX_PATH];
         CHECK(GetTempFileNameA(".","csv",0,path)!=0);
@@ -3046,7 +3092,7 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         CHECK(execute_source(vm,root+2,"if(csvFile.value!=47) throw 116;\n"));
     }
     g874=saved_encoding;
-    g765=saved_package;
+    kinoko_archive_count=saved_package;
     CHECK(function_48aa20(vm)==top);
     puts("PASS: original CSV quirks, typed rows, callback ownership and plain/encrypted readers");
     return 0;
@@ -3146,7 +3192,7 @@ static int test_receiver_operations(int32_t vm, int32_t *root) {
         "function ReceiverVarargs(...) { return vargv[0.9]; }\n"
         "if(ReceiverVarargs(cloneShared)!=cloneShared) throw 88;\n"));
     int32_t array[3];
-    function_4aa3a0_this(PTR(root+1),PTR(array),"cloneArray");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(array)), "cloneArray");
     int32_t methods[2]={0,PTR(release_error_probe)};
     int32_t old[3]={PTR(methods),1,0};
     int32_t destination[2]={0x08000080,PTR(old)};
@@ -3157,7 +3203,7 @@ static int test_receiver_operations(int32_t vm, int32_t *root) {
     /* Aliased source/output must keep the original alive until copying ends. */
     CHECK(kinoko_sq_clone(vm,PTR(destination),PTR(destination)));
     function_489f30_this(PTR(destination));
-    function_4a9d70_this(PTR(array));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     expected_vm_error=1;
     int result=execute_source(vm,root+2,
         "function ReceiverBadIndex(index,...) { return vargv[index]; }\n"
@@ -3182,16 +3228,16 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     const int32_t stack_before = function_48aa20(vm);
     CHECK(execute_source(vm, root + 2,
         "entry_table <- {a=1,b=2};\nentry_array <- [1,2,3];\nentry_text <- \"entries\";\n"));
-    function_4aa3a0_this(PTR(root + 1), PTR(table), "entry_table");
-    function_4aa3a0_this(PTR(root + 1), PTR(array), "entry_array");
-    function_4aa3a0_this(PTR(root + 1), PTR(text), "entry_text");
-    CHECK(function_4a96d0(PTR(table)) == 2);
-    CHECK(function_4a96d0(PTR(array)) == 3);
-    CHECK(function_4a96d0(PTR(text)) == 7);
-    CHECK(function_4a99f0(PTR(array)) == 1);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(table)), "entry_table");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(array)), "entry_array");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(text)), "entry_text");
+    CHECK(kinoko_sqplus_object_size((void *)(intptr_t)(PTR(table))) == 2);
+    CHECK(kinoko_sqplus_object_size((void *)(intptr_t)(PTR(array))) == 3);
+    CHECK(kinoko_sqplus_object_size((void *)(intptr_t)(PTR(text))) == 7);
+    CHECK(kinoko_sqplus_object_reverse((void *)(intptr_t)(PTR(array))) == 1);
     int32_t *reversed = *(int32_t **)(intptr_t)(array[2] + 24);
     CHECK(reversed[1] == 3 && reversed[3] == 2 && reversed[5] == 1);
-    CHECK(function_4a96d0(PTR(array)) == 3);
+    CHECK(kinoko_sqplus_object_size((void *)(intptr_t)(PTR(array))) == 3);
     CHECK(function_48aa20(vm) == stack_before);
 
     int32_t methods[2] = {0, PTR(release_error_probe)};
@@ -3214,11 +3260,11 @@ static int test_recovered_object_entries(int32_t vm, int32_t *root) {
     CHECK(table[0] == PTR(&g16) && table[1] == 0x01000001 && table[2] == 0);
     int32_t *heap = malloc(3 * sizeof(int32_t));
     CHECK(heap != NULL);
-    function_4aa3a0_this(PTR(root + 1), PTR(heap), "entry_array");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(heap)), "entry_array");
     int32_t heap_address = PTR(heap);
     CHECK(retdec_call_thiscall1_result(heap, (void *)(intptr_t)g16.e0, 1) == heap_address);
-    function_4a9d70_this(PTR(array));
-    function_4a9d70_this(PTR(text));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(text))));
     CHECK(function_48aa20(vm) == stack_before);
     puts("PASS: recovered size/reverse, pair assignment/release, and virtual wrapper destruction");
     return 0;
@@ -3264,26 +3310,26 @@ static int test_global_stage_cleanup(void) {
         const int untouched[] = {9, 10, 11, 56, 72, 80, 92, 105, 106, 107, 188};
         for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
             ((unsigned char *)runtime)[untouched[u]] = 0xa5;
-        CHECK(function_44fde0(PTR(runtime), PTR(owner)) == PTR(runtime));
+        CHECK(kinoko_act_runtime_initialize((KinokoActRuntime *)runtime, (KinokoActSourceHolder *)owner) == (KinokoActRuntime *)runtime);
         for (unsigned u = 0; u < sizeof(untouched)/sizeof(untouched[0]); ++u)
             CHECK(((unsigned char *)runtime)[untouched[u]] == 0xa5);
         CHECK(runtime[0] == PTR(owner) && runtime[3] == 0 && runtime[4] == 0);
         CHECK(runtime[38] == 0 && runtime[39] == OT_NULL && runtime[40] == 0);
         CHECK(runtime[45] == 0 && runtime[46] == 15);
         CHECK(runtime[21] && runtime[22]==0 && runtime[24]==0);
-        CHECK(kinoko_act_find_first(PTR(runtime),"__kinoko_missing_find_contract__/*.none")==0);
-        CHECK(runtime[24]==0 && kinoko_act_find_name(PTR(runtime),1)==NULL);
-        CHECK(!kinoko_act_find_next(PTR(runtime),1) && !kinoko_act_find_close(PTR(runtime),1));
-        int32_t first=kinoko_act_find_first(PTR(runtime),"*");
-        int32_t second=kinoko_act_find_first(PTR(runtime),"*");
+        CHECK(kinoko_act_find_first((KinokoActRuntime *)runtime,"__kinoko_missing_find_contract__/*.none")==0);
+        CHECK(runtime[24]==0 && kinoko_act_find_name((KinokoActRuntime *)runtime,1)==NULL);
+        CHECK(!kinoko_act_find_next((KinokoActRuntime *)runtime,1) && !kinoko_act_find_close((KinokoActRuntime *)runtime,1));
+        int32_t first=kinoko_act_find_first((KinokoActRuntime *)runtime,"*");
+        int32_t second=kinoko_act_find_first((KinokoActRuntime *)runtime,"*");
         CHECK(first==1 && second==2 && runtime[22]==2);
-        CHECK(kinoko_act_find_name(PTR(runtime),first)!=NULL);
-        CHECK(kinoko_act_find_close(PTR(runtime),first) && runtime[22]==1);
-        CHECK(!kinoko_act_find_close(PTR(runtime),first));
-        CHECK(kinoko_act_find_name(PTR(runtime),first)==NULL);
-        CHECK(kinoko_act_find_first(PTR(runtime),"*")==3 && runtime[22]==2);
+        CHECK(kinoko_act_find_name((KinokoActRuntime *)runtime,first)!=NULL);
+        CHECK(kinoko_act_find_close((KinokoActRuntime *)runtime,first) && runtime[22]==1);
+        CHECK(!kinoko_act_find_close((KinokoActRuntime *)runtime,first));
+        CHECK(kinoko_act_find_name((KinokoActRuntime *)runtime,first)==NULL);
+        CHECK(kinoko_act_find_first((KinokoActRuntime *)runtime,"*")==3 && runtime[22]==2);
         /* Two open searches remain for the runtime destructor to close. */
-        runtime[3] = PTR(source); /* borrowed ACT, as current BeginStage */
+        runtime[3] = 0; /* fresh runtime has no active clone; source remains borrowed through word 0 */
         runtime[4] = PTR(malloc(24));
         kinoko_stage_list_append((KinokoStageOwner *)owner);
     }
@@ -3315,12 +3361,12 @@ static int test_global_script_cleanup(int32_t vm, int32_t *root) {
     CHECK(g645 == 0);
     for (int i = 0; i < 5; ++i) {
         memcpy(saved[i], globals[i], 12);
-        function_4a9540_this(PTR(globals[i]), root[2], root[3]);
+        kinoko_sqplus_object_construct_value((void *)(intptr_t)(PTR(globals[i])), root[2], root[3]);
     }
-    CHECK(function_4a8cc0() != 0);
-    CHECK(function_470f30() == 0 && g644 == NULL && g645 == 0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqplus_root_object()) != 0);
+    CHECK(kinoko_game_release_script_state() == 0 && g644 == NULL && g645 == 0);
     for (int i = 0; i < 5; ++i) CHECK(globals[i][1] == g483 && globals[i][2] == 0);
-    CHECK(function_470f30() == 0 && g645 == 0);
+    CHECK(kinoko_game_release_script_state() == 0 && g645 == 0);
     for (int i = 0; i < 5; ++i) memcpy(globals[i], saved[i], 12);
     g644 = (char *)(intptr_t)vm;
     CHECK(execute_source(vm, root + 2, "if(typeof this!=\"table\") throw \"root lifetime\";"));
@@ -3351,15 +3397,15 @@ static int test_generator_effects(int32_t vm, int32_t *root, const char *origina
     for (int frame = 0; frame < 5; ++frame) {
         CHECK(execute_source(vm, root + 2, "Update();"));
         int32_t list[3], steps[3];
-        function_4aa3a0_this(PTR(root+1), PTR(list), "effectList");
-        function_4aa3a0_this(PTR(root+1), PTR(steps), "effectSteps");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(list)), "effectList");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(steps)), "effectSteps");
         /* Source SQArray owns its C++ vtable; validate the public object type. */
         CHECK(list[1] == 0x08000040 && list[2] != 0);
         int32_t *array = (int32_t *)(intptr_t)list[2];
         CHECK(array[7] == (frame < 2 ? 1 : 0));
         CHECK(steps[2] == (frame < 2 ? frame + 1 : 3));
-        function_4a9d70_this(PTR(steps));
-        function_4a9d70_this(PTR(list));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(steps))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(list))));
         CHECK(function_48aa20(vm) == top);
     }
     CHECK(execute_source(vm, root + 2,
@@ -3409,10 +3455,10 @@ static ULONG WINAPI count_texture_release(IDirect3DBaseTexture9 *texture) {
 static int test_texture_lifetime(void) {
     IDirect3DBaseTexture9Vtbl vtable = {0};
     int32_t texture[2] = {0};
-    int32_t old_device = g678;
+    IDirect3DDevice9 *old_device = kinoko_graphics.device;
     vtable.Release = count_texture_release;
     texture[0] = PTR(&vtable);
-    g678 = 0;
+    kinoko_graphics.device = 0;
     for (int cycle = 0; cycle < 5000; ++cycle) {
         int32_t handle = retdec_register_act_texture(
             (IDirect3DBaseTexture9 *)texture, 256, 256);
@@ -3440,20 +3486,25 @@ static int test_texture_lifetime(void) {
         retdec_destroy_cact_resource(PTR(resource));
         CHECK(texture[1] == 5003);
         int32_t layer[88] = {0}, layout[116] = {0}, render_layer[2] = {0}, camera[24] = {0};
-        layout[78] = PTR(layer); layout[79] = 1;
+        layout[0] = PTR(&g327); layout[78] = PTR(layer); layout[79] = 1;
         render_layer[1] = PTR(layout);
-        CHECK(retdec_call_thiscall0_result(layout, kinoko_map_entry_434b40) == 0);
-        CHECK(retdec_call_thiscall4_result(layout, kinoko_map_entry_434b60, 1, 2, 3, 4) == 0);
-        CHECK(retdec_call_thiscall2_result(layout, kinoko_map_entry_434f40, 0, 0) == 0);
-        CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_entry_46eed0, PTR(camera)) == 0);
+        CHECK(retdec_call_thiscall0_result(layout, kinoko_map_update_all_entry) == 0);
+        CHECK(retdec_call_thiscall4_result(layout, kinoko_map_update_visible_entry, 1, 2, 3, 4) == 0);
+        CHECK(retdec_call_thiscall2_result(layout, kinoko_map_draw_entry, 0, 0) == 0);
+        CHECK(retdec_call_thiscall1_result(render_layer, kinoko_map_render_layer_entry, PTR(camera)) == 0);
     }
-    g678 = old_device;
+    kinoko_graphics.device = old_device;
     puts("PASS: 5000 texture load/unload cycles release COM objects and reuse handles");
     return 0;
 }
 
 static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     int32_t closure[3], actors[2];
+    /* This fixture skips game startup, but Update always visits Input first. */
+    const int32_t input = PTR(kinoko_game_objects()->input);
+    kinoko_input_devices_construct(input);
+    kinoko_input_cluster_construct(input + 196);
+    kinoko_input_keys_construct(input + 392);
     const int32_t saved_stages=g603,saved_stage_count=g604;
     kinoko_stage_list_construct();
     CHECK(execute_source(vm, root + 2,
@@ -3461,34 +3512,36 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
         "function InitMaskActor(group) { updateGroup=group; user={steps=0}; vx=1.0; "
         "callbackGroup=0; callbackMask=0; collisionMask=0; "
         "SetUpdateFunction(function() { user.steps++; }); ::maskActors.append(this); }"));
-    function_4aa3a0_this(PTR(root + 1), PTR(closure), "InitMaskActor");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(closure)), "InitMaskActor");
     for (int i = 0; i < 2; ++i) {
-        actors[i] = function_463b40_this(manager, closure[0], closure[1], closure[2],
-            10.0f, 20.0f, -1, PTR(&g16), 0x05000002, 4 << i, 0);
+        actors[i] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){closure[0], closure[1], closure[2]}, 10.0f, 20.0f, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, 4 << i}, (const void *)(intptr_t)(0)));
         CHECK(actors[i]);
         *(uint8_t *)(intptr_t)(actors[i] + 40) = 1;
     }
-    function_4a9d70_this(PTR(closure));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
     /* Exercise 469900 itself: writing only g622 used to leave manager+64=-1. */
-    g459 = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
-    for (int frame = 0; frame < 30; ++frame) function_469900();
-    CHECK(*(int32_t *)(intptr_t)(manager + 64) == g459);
+    kinoko_game_masks.update = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
+    for (int frame = 0; frame < 30; ++frame) kinoko_game_update();
+    CHECK(*(int32_t *)(intptr_t)(manager + 64) == kinoko_game_masks.update);
     CHECK(execute_source(vm, root + 2,
         "if(maskActors[0].user.steps!=30 || maskActors[1].user.steps!=0) "
         "throw \"damage update groups\";"));
     CHECK(*(float *)(intptr_t)(actors[0] + 240) == 40.0f);
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 10.0f);
-    g459 = 12; /* Restore both Actor groups without dispatching map/camera. */
-    function_469900();
+    kinoko_game_masks.update = 12; /* Restore both Actor groups without dispatching map/camera. */
+    kinoko_game_update();
     CHECK(execute_source(vm, root + 2,
         "if(maskActors[0].user.steps!=31 || maskActors[1].user.steps!=1) "
         "throw \"resume update groups\";"));
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
-    g459 = 0;
-    function_469900();
+    kinoko_game_masks.update = 0;
+    kinoko_game_update();
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
     CHECK(vm_failures == 0);
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
+    kinoko_input_keys_destroy(input + 392);
+    kinoko_input_cluster_delete(input + 196, NULL, 0);
+    kinoko_input_devices_destroy(input);
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
 }
@@ -3499,14 +3552,14 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     int32_t expected[64], expected_count = 0;
     for (char archive = 'a'; archive <= 'c'; ++archive) {
         sprintf_s(path, sizeof(path), "%s/6kinoko_%c.dat", directory, archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(execute_asset(vm, root + 2, "data/script/stage.cv4"));
     CHECK(execute_source(vm, root + 2,
         "GP_PLAYER <- 4; updateMask <- 4; tickFrames <- []; clockFrame <- 0;\n"
         "function PlaySE(id) { if(id==120) tickFrames.append(clockFrame); }\n"
         "SetSwitchBlue();"));
-    function_4aa3a0_this(PTR(root + 1), PTR(schedule), "stageSwitchCountArray");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(schedule)), "stageSwitchCountArray");
     CHECK(schedule[1] == 0x08000040);
     int32_t count = *(int32_t *)(intptr_t)(schedule[2] + 28);
     int32_t *values = *(int32_t **)(intptr_t)(schedule[2] + 24);
@@ -3523,7 +3576,7 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     CHECK(expected_count == 44);
     CHECK(execute_source(vm, root + 2,
         "for(clockFrame=0; clockFrame<900; clockFrame++) UpdateStage();"));
-    function_4aa3a0_this(PTR(root + 1), PTR(ticks), "tickFrames");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(ticks)), "tickFrames");
     CHECK(ticks[1] == 0x08000040);
     const int actual_count = *(int32_t *)(intptr_t)(ticks[2] + 28);
     int32_t *actual = *(int32_t **)(intptr_t)(ticks[2] + 24);
@@ -3537,8 +3590,8 @@ static int test_crystal_countdown(int32_t vm, int32_t *root, const char *directo
     CHECK(*(int32_t *)(intptr_t)(schedule[2] + 28) == 0);
     CHECK(execute_source(vm, root + 2,
         "if(stageSwitchCount!=0 || stageSwitchBlue!=2) throw \"switch expiration\";"));
-    function_4a9d70_this(PTR(schedule));
-    function_4a9d70_this(PTR(ticks));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(schedule))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(ticks))));
     CHECK(vm_failures == 0);
     puts("PASS: original 900-frame blue-crystal countdown consumes all 44 timestamps at the original cadence");
     return 0;
@@ -3572,7 +3625,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     CHECK(function_48aa20(vm) == top);
     CHECK(execute_source(vm, root + 2, "apiPop <- [10,20,30];"));
     int32_t array[3];
-    function_4aa3a0_this(PTR(root + 1), PTR(array), "apiPop");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(array)), "apiPop");
     function_48ab90(vm, array[1], array[2]);
     CHECK(function_48dd10(vm, -1, 0) == 0);
     CHECK(function_48aa20(vm) == top + 1);
@@ -3582,7 +3635,7 @@ static int test_array_pop_values(int32_t vm, int32_t *root) {
     int32_t value = 0;
     CHECK(function_48a7d0(vm, -1, &value) == 0 && value == 20);
     function_48c910(vm, top);
-    function_4a9d70_this(PTR(array));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(array))));
     puts("PASS: Squirrel array top/pop values, ownership, empty errors, self-reference, shrink and API push/no-push");
     return 0;
 }
@@ -3593,24 +3646,24 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     char path[MAX_PATH];
     for(char archive='a';archive<='c';++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     CHECK(kinoko_test_bgm_preserves_game_math()==0);
-    CHECK(retdec_construct_actor_manager(manager));
-    function_460e00();
+    CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
+    kinoko_actor_register_script_class();
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null; player <- null;"));
     int32_t reader=0;
     uint8_t version; uint16_t textures;
-    CHECK(function_407370(PTR(&reader),"data/actor/marisa/marisa.pat"));
-    CHECK(retdec_pat_read_u8(reader,&version));
-    CHECK(retdec_pat_read_u16(reader,&textures));
-    CHECK(retdec_pat_skip_bytes(reader,textures*128u));
-    CHECK(retdec_pat_read_animations(reader,manager,0));
-    retdec_destroy_reader((int32_t *)(intptr_t)reader);
+    CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/marisa/marisa.pat"));
+    CHECK(fixture_pat_read_u8(reader,&version));
+    CHECK(fixture_pat_read_u16(reader,&textures));
+    CHECK(fixture_pat_skip_bytes(reader,textures*128u));
+    CHECK(fixture_pat_read_animations(reader,manager,0));
+    kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
         int32_t player_scripts[3];
         CHECK(execute_source(vm,root+2,"t_player <- {};"));
-        function_4aa3a0_this(PTR(root+1),PTR(player_scripts),"t_player");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(player_scripts)), "t_player");
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ground.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_jump.cv4"));
@@ -3618,7 +3671,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
-        function_4a9d70_this(PTR(player_scripts));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts))));
         CHECK(execute_source(vm,root+2,
 
             "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
@@ -3642,8 +3695,8 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
         : "riderWater <- false; riderType <- TYPE_USA;"));
 
     int32_t act[60]={0}, moving_layer=0, moving_layout=0, vector_layout=0;
-    function_427530(PTR(act));
-    CHECK(function_428000(PTR(act),"data/map/w3-c02b.act"));
+    kinoko_act_document_initialize((KinokoActDocument *)act);
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act,"data/map/w3-c02b.act"));
     for(int32_t slot=act[52];slot!=act[53];slot+=4) {
         int32_t layer=*(int32_t *)(intptr_t)slot;
         const char *name=retdec_std_string_data(layer+112);
@@ -3658,15 +3711,15 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     }
     CHECK(moving_layer && moving_layout);
     int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
-    function_4a94e0_this(PTR(g722));
-    function_4a95c0_this(PTR(g722),PTR(root+1));
-    CHECK(function_46f4c0_this(map_state));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g722)));
+    kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(g722)), (const void *)(intptr_t)(PTR(root+1)));
+    CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
     function_46fac0();
-    CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
-    function_4a95c0_this(map_state,PTR(map_object));
-    function_4a9d70_this(PTR(map_object));
-    function_4a9bb0_this(map_state,map_state);
-    function_4a9840_this(PTR(root+1),"map",map_state);
+    CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(g636)))));
+    kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
+    kinoko_sqplus_object_set_instance((void *)(intptr_t)(map_state), (void *)(intptr_t)(map_state));
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "map", (const void *)(intptr_t)(map_state));
     CHECK(vector_layout);
     *(int32_t *)(intptr_t)(map_state+36)=PTR(&vector_layout);
     *(int32_t *)(intptr_t)(map_state+40)=PTR(&vector_layout+1);
@@ -3678,8 +3731,8 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     /* Publish the real CActLayer descriptors and invoke its captured callback. */
     int32_t resource[48]={0}, parent[2], active=0;
     CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
-    CHECK(retdec_sqrat_new_table(vm,parent));
-    CHECK(retdec_sqrat_set_pair(vm,root+2,retdec_std_string_data(PTR(act)+16),parent));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
+    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, retdec_std_string_data(PTR(act)+16), parent));
     CHECK(execute_source(vm,parent,"resource <- {};"));
     resource[39]=root[2]; resource[40]=root[3];
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
@@ -3690,20 +3743,19 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     int32_t support=function_4693a0(moving_layout);
     CHECK(support);
     int32_t init[3];
-    function_4aa3a0_this(PTR(root+1),PTR(init),"InitPlatformRider");
-    int32_t rider=function_463b40_this(manager,init[0],init[1],init[2],
-        start_x,start_y+*(float *)(intptr_t)(moving_layer+148),-1,PTR(&g16),g483,g484,0);
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(init)), "InitPlatformRider");
+    int32_t rider=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, start_x, start_y+*(float *)(intptr_t)(moving_layer+148), -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(rider);
     *(int32_t *)(intptr_t)(rider+316)=1;
     *(uint8_t *)(intptr_t)(rider+40)=1;
-    g459=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
-    retdec_actor_manager_refresh(manager);
+    kinoko_game_masks.update=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
+    kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
     function_468620_this(PTR(g_514300_storage));
-    function_45ec60(rider);
+    kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
     int failures=0, changes=0, previous_take=*(int32_t *)(intptr_t)(rider+208);
     for(int frame=0;frame<1500;++frame) {
         CHECK(retdec_execute_act_callback(moving_layer+204,24,NULL)>=0);
-        retdec_actor_manager_update(manager,0);
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(0));
         int hit=*(int32_t *)(intptr_t)(rider+296);
         int take=*(int32_t *)(intptr_t)(rider+208);
         if(take!=previous_take) ++changes;
@@ -3731,41 +3783,41 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     int32_t green_source=0;
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
-    CHECK(retdec_construct_actor_manager(manager));
-    function_460e00();
+    CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
+    kinoko_actor_register_script_class();
     CHECK(execute_source(vm,root+2,
         "if(Actor.step!=null || Actor.user!=null) throw \"Actor null class defaults\";"));
     CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
-    int32_t target=PTR(function_470fa0);
-    CHECK(function_415550_this(PTR(root),PTR("SetInitFunctionByID"),PTR(&target),4,PTR(function_471d30),0)>=0);
+    int32_t target=PTR(kinoko_script_set_init);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("SetInitFunctionByID")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471d30)), 0))>=0);
     CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
     for(int kind=0;kind<2;++kind) {
         int32_t reader=0;
         uint8_t version;
         uint16_t textures;
-        CHECK(function_407370(PTR(&reader),kind ? "data/actor/marisa/marisa.pat" : "data/actor/item/item.pat"));
-        CHECK(retdec_pat_read_u8(reader,&version));
-        CHECK(retdec_pat_read_u16(reader,&textures));
-        CHECK(retdec_pat_skip_bytes(reader,textures*128u));
-        CHECK(retdec_pat_read_animations(reader,manager,0));
-        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+        CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,kind ? "data/actor/marisa/marisa.pat" : "data/actor/item/item.pat"));
+        CHECK(fixture_pat_read_u8(reader,&version));
+        CHECK(fixture_pat_read_u16(reader,&textures));
+        CHECK(fixture_pat_skip_bytes(reader,textures*128u));
+        CHECK(fixture_pat_read_animations(reader,manager,0));
+        kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     }
     CHECK(pat_lookup(manager,1823));
     if(green) {
         int32_t map_state=PTR(g_retdec_map_manager_state), map_object[3];
-        function_4a94e0_this(PTR(g722));
-        function_4a95c0_this(PTR(g722),PTR(root+1));
-        CHECK(function_46f4c0_this(map_state));
+        kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(g722)));
+        kinoko_sqplus_object_assign((void *)(intptr_t)(PTR(g722)), (const void *)(intptr_t)(PTR(root+1)));
+        CHECK(kinoko_map_manager_construct((KinokoMapManager *)(intptr_t)map_state));
         function_46fac0();
-        CHECK(function_4a90c0_this(PTR(map_object),PTR(g636)));
-        function_4a95c0_this(map_state,PTR(map_object));
-        function_4a9d70_this(PTR(map_object));
-        function_4a9bb0_this(map_state,map_state);
-        function_4a9840_this(PTR(root+1),"map",map_state);
-        function_427530(PTR(map_act));
-        CHECK(function_428000(PTR(map_act),"data/map/w2-c05b.act"));
+        CHECK((int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(PTR(map_object)), (const void *)(intptr_t)(PTR(g636)))));
+        kinoko_sqplus_object_assign((void *)(intptr_t)(map_state), (const void *)(intptr_t)(PTR(map_object)));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(map_object))));
+        kinoko_sqplus_object_set_instance((void *)(intptr_t)(map_state), (void *)(intptr_t)(map_state));
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "map", (const void *)(intptr_t)(map_state));
+        kinoko_act_document_initialize((KinokoActDocument *)map_act);
+        CHECK(kinoko_act_document_load((KinokoActDocument *)map_act,"data/map/w2-c05b.act"));
         *(int32_t *)(intptr_t)(map_state+76)=map_act[2];
         *(int32_t *)(intptr_t)(map_state+80)=map_act[3];
         for(int32_t slot=map_act[52];slot!=map_act[53];slot+=4) {
@@ -3811,12 +3863,12 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         "callbackGroup=GP_PLAYER; collisionMask=GP_LIFT; SetStep(null); ::player=this; "
         "SetUpdateFunction(function() { vy=hitBottom ? 0.0 : 0.5; }); }"));
     int32_t scripts[3], init[3], rider_init[3];
-    function_4aa3a0_this(PTR(root+1),PTR(scripts),"t_lift");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(scripts)), "t_lift");
     CHECK(execute_asset(vm,scripts+1,"data/script/lift.cv4"));
     if(green) {
         int32_t player_scripts[3];
         CHECK(execute_source(vm,root+2,"t_player <- {};"));
-        function_4aa3a0_this(PTR(root+1),PTR(player_scripts),"t_player");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(player_scripts)), "t_player");
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ground.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_jump.cv4"));
@@ -3824,7 +3876,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_suwa.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_ufo.cv4"));
         CHECK(execute_asset(vm,player_scripts+1,"data/script/player_start.cv4"));
-        function_4a9d70_this(PTR(player_scripts));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(player_scripts))));
         CHECK(execute_source(vm,root+2,
 
             "input <- {x=0,y=0,b0=0,b1=0,b2=0,b3=0,k0=0,k1=0,k2=0,k3=0};\n"
@@ -3842,18 +3894,16 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
             "collisionGroup=GP_PLAYER; callbackGroup=GP_PLAYER; priority=PR_PLAYER; updateGroup=GP_PLAYER; "
             "funcUpdate=::t_player.Stand.bindenv(this); SetUpdateFunction(::t_player.Update); ::player=this; }"));
     }
-    function_4aa3a0_this(PTR(scripts),PTR(init),green ? "InitRail" : "Init04c7");
-    function_4aa3a0_this(PTR(root+1),PTR(rider_init),"InitPlatformRider");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(scripts)), (void *)(intptr_t)(PTR(init)), green ? "InitRail" : "Init04c7");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(rider_init)), "InitPlatformRider");
     CHECK(init[1]==0x08000100 && rider_init[1]==0x08000100);
-    int32_t platform=function_463b40_this(manager,init[0],init[1],init[2],
-        green ? green_x : 608,green ? green_y : 672,-1,PTR(&g16),0x05000002,green ? 1207 : 1223,green_source);
-    int32_t rider=function_463b40_this(manager,rider_init[0],rider_init[1],rider_init[2],
-        green ? green_x : 608,green ? green_y-8 : 664,-1,PTR(&g16),g483,g484,0);
+    int32_t platform=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){init[0], init[1], init[2]}, green ? green_x : 608, green ? green_y : 672, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, green ? 1207 : 1223}, (const void *)(intptr_t)(green_source)));
+    int32_t rider=(int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){rider_init[0], rider_init[1], rider_init[2]}, green ? green_x : 608, green ? green_y-8 : 664, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
     CHECK(platform && rider && vm_failures==0);
-    function_4a9840_this(PTR(root+1),"platformProbe",platform+44);
+    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root+1)), "platformProbe", (const void *)(intptr_t)(platform+44));
     CHECK(execute_source(vm,root+2,
         "player.y=platformProbe.top-(player.bottom-player.y); player.vy=0.5;"));
-    retdec_actor_refresh_bounds(rider);
+    kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(rider));
     *(uint8_t *)(intptr_t)(platform+40)=1;
     *(uint8_t *)(intptr_t)(rider+40)=1;
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
@@ -3861,15 +3911,15 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         for(int i=0;i<terrain_count;++i) CHECK(function_4693a0(terrain_layouts[i]));
         *(int32_t *)(intptr_t)(rider+316)=3;
     }
-    g459=-1;
+    kinoko_game_masks.update=-1;
     *(int32_t *)(intptr_t)(manager+64)=-1;
-    CHECK(function_462ce0(platform,rider)>=0);
+    CHECK(kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(platform), (KinokoActor *)(intptr_t)(rider))>=0);
     CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
     if(green) {
         for(int frame=0;frame<90;++frame) {
             const float old_platform_x=*(float *)(intptr_t)(platform+240);
             const float old_player_x=*(float *)(intptr_t)(rider+240);
-            const int active_count=retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+            const int active_count=kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
             CHECK(active_count>=2);
             printf("GREEN frame=%d platform=(%.6f,%.6f) player=(%.6f,%.6f) carry=(%.6f,%.6f) step=%08x hit=%d\n",
                 frame,*(float *)(intptr_t)(platform+240),*(float *)(intptr_t)(platform+244),
@@ -3886,7 +3936,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     }
     for(int frame=0;frame<45;++frame) {
         const float before=*(float *)(intptr_t)(platform+244);
-        CHECK(retdec_actor_manager_update(manager,PTR(g_retdec_camera_state))==2);
+        CHECK(kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)))==2);
         printf("PLATFORM frame=%d y=%.6f vy=%.6f playerBottom=%.6f parentdy=%.6f step=%08x hit=%d\n",
             frame,*(float *)(intptr_t)(platform+244),*(float *)(intptr_t)(platform+260),
             *(float *)(intptr_t)(rider+452),*(float *)(intptr_t)(rider+268),
@@ -3900,30 +3950,30 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
     const float jump_player_y=*(float *)(intptr_t)(rider+244);
     CHECK(execute_source(vm,root+2,
         "player.SetUpdateFunction(null); player.vy=-5.0;"));
-    CHECK(function_462ce0(platform,rider)>=0);
+    CHECK(kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(platform), (KinokoActor *)(intptr_t)(rider))>=0);
     CHECK(*(int32_t *)(intptr_t)(rider+36)==0);
-    retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+    kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
     CHECK(*(float *)(intptr_t)(platform+244)==jump_platform_y-2.0f);
     CHECK(*(float *)(intptr_t)(rider+244)==jump_player_y-5.0f);
     CHECK(execute_source(vm,root+2,
         "player.x=platformProbe.right+64; player.vy=0.0;"));
     for(int frame=0;frame<180;++frame)
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
     CHECK(*(float *)(intptr_t)(platform+244)==672.0f);
     CHECK(execute_source(vm,root+2,
         "player.x=platformProbe.x; player.y=platformProbe.top-(player.bottom-player.y); "
         "player.vy=0.5; player.SetUpdateFunction(function(){vy=hitBottom?0.0:0.5;});"));
-    retdec_actor_refresh_bounds(rider);
-    CHECK(function_462ce0(platform,rider)>=0);
+    kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(rider));
+    CHECK(kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(platform), (KinokoActor *)(intptr_t)(rider))>=0);
     for(int frame=0;frame<12;++frame)
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
     CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));
     CHECK(execute_source(vm,root+2,
         "player.x=platformProbe.right+64; player.SetUpdateFunction(null); player.vy=0.0;"));
-    function_45ec60(rider);
+    kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(rider));
     CHECK(*(int32_t *)(intptr_t)(rider+36)==0);
     for(int frame=0;frame<180;++frame)
-        retdec_actor_manager_update(manager,PTR(g_retdec_camera_state));
+        kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state)));
     CHECK(*(float *)(intptr_t)(platform+244)==672.0f);
     CHECK(*(float *)(intptr_t)(platform+260)==0.0f);
     CHECK(execute_source(vm,root+2,"if(player.step!=null) throw \"walk off\";"));
@@ -3958,19 +4008,19 @@ static int test_water_alpha(int32_t manager, const char *directory) {
     const char *patterns[] = { "data/map/map.pat" };
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
-    CHECK(retdec_construct_actor_manager(manager));
+    CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
     for (int p=0; p<1; ++p) {
         int32_t reader=0;
         uint8_t version;
         uint16_t textures;
-        CHECK(function_407370(PTR(&reader),patterns[p]));
-        CHECK(retdec_pat_read_u8(reader,&version));
-        CHECK(retdec_pat_read_u16(reader,&textures));
-        CHECK(retdec_pat_skip_bytes(reader,textures*128u));
-        CHECK(retdec_pat_read_animations(reader,manager,0));
-        retdec_destroy_reader((int32_t *)(intptr_t)reader);
+        CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,patterns[p]));
+        CHECK(fixture_pat_read_u8(reader,&version));
+        CHECK(fixture_pat_read_u16(reader,&textures));
+        CHECK(fixture_pat_skip_bytes(reader,textures*128u));
+        CHECK(fixture_pat_read_animations(reader,manager,0));
+        kinoko_reader_close((KinokoArchiveReader *)(intptr_t)reader);
     }
     for (int take=9700; take<=9730; take+=10) {
         int32_t animation=pat_lookup(manager,take);
@@ -3987,7 +4037,7 @@ static int test_water_alpha(int32_t manager, const char *directory) {
             ((float *)actor)[68]=-1.0f;
             actor[45]=actor[46]=actor[47]=actor[48]=255;
             *(int32_t *)(intptr_t)(frame+4)=1; /* No device: only prepare vertices. */
-            CHECK(retdec_actor_render(PTR(actor),0)==1);
+            CHECK(kinoko_actor_render((KinokoActor *)(intptr_t)(PTR(actor)), (KinokoCamera *)(intptr_t)(0))==1);
             printf("take=%d PAT=%08x rendered=%08x\n",take,expected,
                    *(uint32_t *)(intptr_t)(frame+24));
             for(int vertex=0;vertex<4;++vertex)
@@ -3996,12 +4046,12 @@ static int test_water_alpha(int32_t manager, const char *directory) {
                compound the previous frame's already-modulated color. */
             actor[45]=128;
             for(int repeat=0;repeat<3;++repeat) {
-                CHECK(retdec_actor_render(PTR(actor),0)==1);
+                CHECK(kinoko_actor_render((KinokoActor *)(intptr_t)(PTR(actor)), (KinokoCamera *)(intptr_t)(0))==1);
                 CHECK(*(uint32_t *)(intptr_t)(frame+24)==
                     (((expected>>24)*128u/255u)<<24 | (expected&0xffffffu)));
             }
             *(int32_t *)(intptr_t)(frame+244)=0;
-            CHECK(retdec_actor_render(PTR(actor),0)==1);
+            CHECK(kinoko_actor_render((KinokoActor *)(intptr_t)(PTR(actor)), (KinokoCamera *)(intptr_t)(0))==1);
             CHECK(*(uint32_t *)(intptr_t)(frame+24)==0x80ffffffu);
             *(int32_t *)(intptr_t)(frame+244)=extra;
         }
@@ -4014,11 +4064,11 @@ static int test_portrait_regions(const char *directory) {
     char path[MAX_PATH];
     for (char archive='a'; archive<='c'; ++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     int32_t act[60]={0};
-    CHECK(function_427530(PTR(act)));
-    CHECK(function_428000(PTR(act),"data/system/playerimage.act"));
+    CHECK(kinoko_act_document_initialize((KinokoActDocument *)act));
+    CHECK(kinoko_act_document_load((KinokoActDocument *)act,"data/system/playerimage.act"));
     /* Independent values from the original PlayerImage ACT, not resource order.
        Shared atlases must keep distinct crops after deserialization. */
     const char *names[]={"face_1","face_2","face_3","face_4","face_5",
@@ -4052,7 +4102,7 @@ static int test_chip_shared_ownership(void) {
     int32_t source[60]={0}, texture[2]={0};
     IDirect3DBaseTexture9Vtbl vtable={0}; vtable.Release=count_texture_release;
     texture[0]=PTR(&vtable);
-    CHECK(function_427530(PTR(source)));
+    CHECK(kinoko_act_document_initialize((KinokoActDocument *)source));
     int32_t *resource=(int32_t*)calloc(1,100);
     struct retdec_mcd_data *data=(struct retdec_mcd_data*)calloc(1,sizeof(*data));
     CHECK(resource && data);
@@ -4076,8 +4126,8 @@ static int test_chip_shared_ownership(void) {
         CHECK(strcmp(retdec_std_string_data(virtual_copy+offsets[i]),retdec_std_string_data(PTR(resource)+offsets[i]))==0);
         CHECK(retdec_std_string_data(virtual_copy+offsets[i])!=retdec_std_string_data(PTR(resource)+offsets[i]));
     }
-    int32_t first=kinoko_act_clone(PTR(source),NULL);
-    int32_t second=kinoko_act_clone(PTR(source),NULL);
+    int32_t first=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
+    int32_t second=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
     CHECK(first && second && resource[17]);
     const int32_t first_resource=**(int32_t**)(intptr_t)(first+224);
     const int32_t second_resource=**(int32_t**)(intptr_t)(second+224);
@@ -4127,12 +4177,12 @@ static int test_act_reentry(const char *directory) {
     const char *assets[]={"data/system/title/titlemenu.act","data/worldmap/worldmap.act"};
     for(char archive='a';archive<='c';++archive) {
         sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",directory,archive);
-        CHECK(function_410500(path));
+        CHECK(kinoko_archive_mount(path));
     }
     for(int asset=0;asset<2;++asset) {
         int32_t source[60]={0}, runtime[48]={0}, holder=PTR(source);
-        CHECK(function_427530(PTR(source)));
-        CHECK(function_428000(PTR(source),assets[asset]));
+        CHECK(kinoko_act_document_initialize((KinokoActDocument *)source));
+        CHECK(kinoko_act_document_load((KinokoActDocument *)source,assets[asset]));
         runtime[0]=PTR(&holder);
         for(int visit=0;visit<3;++visit) {
             CHECK(retdec_bind_act_resource_object(PTR(runtime)));
@@ -4227,9 +4277,9 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
     sq_settop(kinoko_vm(vm), top);
     CHECK(execute_source(vm, root + 2,
-        "registrationInput.x=-17; registrationInput.y=29;"
-        "registrationInput.b2=123; registrationInput.kr1=true;"
-        "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;"
+        "registrationInput.x=-17; registrationInput.y=29;\n"
+        "registrationInput.b2=123; registrationInput.kr1=true;\n"
+        "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;\n"
         "if(registrationInput.k2!=123 || !registrationInput.br1 || "
         "registrationInput.GetAssign(-1,3)!=73) throw \"Input alias/receiver\";\n"
         "registrationInput.br1=false; if(registrationInput.kr1) throw \"Input bool alias\";"));
@@ -4248,8 +4298,8 @@ static int test_physical_input(void) {
     int32_t device[42] = {0}, tracker[261] = {0}, joystick[20] = {0};
     unsigned char scans[] = {0x80, 0xff};
     unsigned char saved_keys[256];
-    char *saved_states = g783;
-    int32_t saved_count = g782;
+    KinokoControllerState *saved_states = kinoko_input_snapshot.controllers;
+    int32_t saved_count = kinoko_input_snapshot.controller_count;
     int i;
     memcpy(saved_keys, g_retdec_keyboard_state, 256);
     memset(g_retdec_keyboard_state, 0, 256);
@@ -4282,7 +4332,10 @@ static int test_physical_input(void) {
     CHECK(function_4083e0(PTR(tracker), 0xff, 1, 0, 1) == 0);
     function_408320(PTR(tracker));
     CHECK(function_4083e0(PTR(tracker), 0xff, 0, 0, 0) == 0);
-    g783 = (char*)joystick; g782 = 1; device[1] = 0; device[6] = 0;
+    kinoko_input_snapshot.controllers = (KinokoControllerState*)joystick; kinoko_input_snapshot.controller_count = 1; device[1] = 0; device[6] = 0;
+    CHECK(kinoko_input_controller_state(-1) == NULL);
+    CHECK(kinoko_input_controller_state(1) == NULL);
+    CHECK(kinoko_input_controller_state(0) == (KinokoControllerState*)joystick);
     joystick[0] = -501; joystick[1] = 501; joystick[2] = 250;
     ((unsigned char*)joystick)[48] = 1;
     function_407500(PTR(device));
@@ -4301,7 +4354,7 @@ static int test_physical_input(void) {
     CHECK(kinoko_input_keys_size(PTR(tracker))==256);
     for(i=0;i<256;++i) CHECK(kinoko_input_keys_at(PTR(tracker),i)==i);
     kinoko_input_keys_destroy(PTR(tracker));
-    g783 = saved_states; g782 = saved_count;
+    kinoko_input_snapshot.controllers = saved_states; kinoko_input_snapshot.controller_count = saved_count;
     memcpy(g_retdec_keyboard_state, saved_keys, 256);
     return 0;
 }
@@ -4317,7 +4370,7 @@ static int test_input_configuration(void) {
     manager[4]=0xfe; manager[8]=55;
     devices[0][1]=0; devices[0][9]=7;
     devices[1][1]=1; devices[1][9]=19;
-    const int old_count=g782; g782=2;
+    const int old_count=kinoko_input_snapshot.controller_count; kinoko_input_snapshot.controller_count=2;
     function_46b7c0(PTR(manager),PTR(path));
     memset(manager+4,0,68); memset(devices[0]+1,0,68); memset(devices[1]+1,0,68);
     function_46b880(PTR(manager),PTR(path));
@@ -4332,7 +4385,7 @@ static int test_input_configuration(void) {
     CHECK(function_46bc90(PTR(manager),-1,3)==0);
     g_retdec_keyboard_state[149]=0x80;
     CHECK(function_46bc90(PTR(manager),-1,3)==1 && manager[8]==149);
-    memcpy(g_retdec_keyboard_state,previous,256); g782=old_count;
+    memcpy(g_retdec_keyboard_state,previous,256); kinoko_input_snapshot.controller_count=old_count;
     kinoko_input_devices_destroy(PTR(manager));
     puts("PASS: Input config two-record format/broadcast, assignment offsets and original excluded keys");
     return 0;
@@ -4346,9 +4399,9 @@ static int test_input_copy(void) {
     kinoko_input_devices_resize(PTR(source),2);
     int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)kinoko_input_devices_begin(PTR(source));
     unsigned char keys[9]={3,7,11,19,23,29,31,37,41};
-    function_4a94e0_this(PTR(source));
-    function_4a94e0_this(PTR(target));
-    function_4a94e0_this(PTR(empty));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(source)));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(target)));
+    kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(empty)));
     source[3]=0x1111; target[3]=0x2222;
     source[49]=0x3333; target[49]=0x4444;
     memset((char*)source+16,0x17,164);
@@ -4403,9 +4456,9 @@ static int test_input_copy(void) {
         CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
         CHECK(target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==0);
     }
-    function_4a9d70_this(PTR(source));
-    function_4a9d70_this(PTR(target));
-    function_4a9d70_this(PTR(empty));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty))));
     kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
     kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
@@ -4426,16 +4479,16 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     int32_t top=function_48aa20(vm);
     CHECK(kinoko_publish_string_layout_class(vm,PTR(root),klass));
     CHECK(retdec_create_bound_instance(vm,root+2,"StringProbe",klass,PTR(object),instance));
-    retdec_sqrat_release_pair(vm,instance);
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), instance);
     CHECK(execute_source(vm,root+2,
-        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;"
-        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";"
-        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";"
-        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";"
-        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";"
-        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";"
-        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";"
-        "if(!StringProbe.Rebuild()) throw \"rebuild\";"));
+        "StringProbe.fontHeight=999; StringProbe.fontWeight=-1; StringProbe.colorR=-3; StringProbe.baseB=999;\n"
+        "if(StringProbe.fontHeight!=127 || StringProbe.fontWeight!=1 || StringProbe.colorR!=0 || StringProbe.baseB!=255) throw \"font clamp\";\n"
+        "StringProbe.charactorSpace=-2; StringProbe.lineSpace=-3; StringProbe.stFontFaceName=\"\";\n"
+        "if(StringProbe.charactorSpace!=0 || StringProbe.lineSpace!=0 || StringProbe.stFontFaceName.len()!=13) throw \"font defaults\";\n"
+        "StringProbe.stText=\"X\"; if(StringProbe.stText!=\"X\") throw \"text property\";\n"
+        "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";\n"
+        "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";\n"
+        "if(!StringProbe.Rebuild()) throw \"rebuild\";\n"));
     CHECK(object[12]==1 && retdec_std_string_data(PTR(object)+32)[0]=='A'); /* original ASCII PopFront erases zero */
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
@@ -4449,8 +4502,8 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
     CHECK(kinoko_string_replicate(PTR(copy),PTR(copy))==1 && atlas[108]==4);
     CHECK(kinoko_string_clear(PTR(copy))==1 && atlas[108]==4 && kinoko_string_queue_size(PTR(copy))==2);
     kinoko_clear_string_layout(PTR(copy));CHECK(atlas[108]==2);
-    CHECK(execute_source(vm,root+2,"delete ::StringProbe;"));
-    retdec_sqrat_release_pair(vm,klass);kinoko_clear_string_layout(PTR(object));
+    CHECK(execute_source(vm,root+2,"delete ::StringProbe;\n"));
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);kinoko_clear_string_layout(PTR(object));
     CHECK(atlas[108]==0 && function_48aa20(vm)==top);
     puts("PASS: actual Sqrat CStringLayout methods, property clamps, pending-text quirk and borrowed atlas replication");
     return 0;
@@ -4522,7 +4575,8 @@ static int test_string_glyph_cache(void) {
 static int test_map_manager_copy(void) {
     int32_t source[21]={0},target[21]={0},first,last;
     uint32_t capacity;
-    function_4a94e0_this(PTR(source)); function_4a94e0_this(PTR(target));
+    kinoko_sqplus_object_initialize(source);
+    kinoko_sqplus_object_initialize(target);
     kinoko_map_containers_construct(PTR(source));kinoko_map_containers_construct(PTR(target));
     source[3]=123; source[4]=456; source[5]=789;
     first=kinoko_map_append_render(PTR(source),222);
@@ -4559,7 +4613,7 @@ static int test_map_manager_copy(void) {
     CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),0)==0);
     CHECK(kinoko_map_event_at(PTR(target),1)==71 && kinoko_map_event_at(PTR(target),2)==71);
     kinoko_map_containers_destroy(PTR(source));kinoko_map_containers_destroy(PTR(target));
-    function_4a9d70_this(PTR(source));function_4a9d70_this(PTR(target));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));(int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
     puts("PASS: native map list/vector copies, stable render addresses, duplicates/nulls and capacity retention");
     return 0;
 }
@@ -4602,10 +4656,10 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
         "serializationSource <- {n=123,f=1.25,b=true,s=\"abc\",empty=null,"
         "nested={value=-9},a=[4,null,false,\"tail\"]};\nserializationTarget <- {};"));
     int32_t source[3], target[3], owned[3];
-    function_4aa3a0_this(PTR(root+1),PTR(source),"serializationSource");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(source)), "serializationSource");
     CHECK(retdec_squirrel_object_copy(owned,source));
     CHECK(function_472e50(PTR(path),owned[0],owned[1],owned[2]));
-    function_4aa3a0_this(PTR(root+1),PTR(target),"serializationTarget");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(target)), "serializationTarget");
     CHECK(retdec_squirrel_object_copy(owned,target));
     CHECK(function_472c90(PTR(path),owned[0],owned[1],owned[2]));
     CHECK(execute_source(vm,root+2,
@@ -4614,7 +4668,7 @@ static int test_table_serialization(int32_t vm, int32_t *root) {
         "serializationTarget.a.len()!=4 || serializationTarget.a[0]!=4 || "
         "serializationTarget.a[1]!=null || serializationTarget.a[2]!=false || "
         "serializationTarget.a[3]!=\"tail\" || (\"empty\" in serializationTarget)) throw \"save format\";"));
-    function_4a9d70_this(PTR(target)); function_4a9d70_this(PTR(source));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
     puts("PASS: original compressed table format nested arrays/tables/scalars and skipped null values");
     return 0;
 }
@@ -4632,13 +4686,13 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
         sq_settop(kinoko_vm(vm),top);
     }
     CHECK(execute_source(vm,root+2,
-        "moduleCamera.x=12.5; moduleCamera.offset_y=-3.0; moduleCamera.right=640.0;"
-        "moduleMap.width=321; moduleMap.last_id=27; moduleMap.last_bottom=123.5;"
+        "moduleCamera.x=12.5; moduleCamera.offset_y=-3.0; moduleCamera.right=640.0;\n"
+        "moduleMap.width=321; moduleMap.last_id=27; moduleMap.last_bottom=123.5;\n"
         "moduleCamera.SetUpdateFunction(function(){});"));
     CHECK(((float*)camera)[10]==12.5f && ((float*)camera)[15]==-3.0f && ((float*)camera)[20]==640.0f);
     CHECK(map[19]==321 && map[14]==27 && ((float*)map)[18]==123.5f);
     CHECK(camera[8]==0x08000100); /* Callback is retained through the real native receiver. */
-    function_4a9d70_this(PTR(camera+7)); function_4a9d70_this(PTR(camera+4));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+7)))); (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera+4))));
     CHECK(execute_source(vm,root+2,"delete moduleCamera; delete moduleMap;"));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
     puts("PASS: Camera/Map native fields and Camera SetUpdateFunction receiver ownership");
@@ -4903,7 +4957,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                     CHECK(WriteFile(file,payload,stream.size,&written,NULL) && written==stream.size);
                     CHECK(SetFilePointer(file,package?32:0,NULL,FILE_BEGIN)!=(DWORD)-1);
                     int32_t reader[7]={0};
-                    reader[0]=package?PTR(&g205):PTR(&g33); reader[1]=PTR(file);
+                    reader[0]=package?PTR(&kinoko_package_reader_methods):PTR(&kinoko_file_reader_methods); reader[1]=PTR(file);
                     reader[3]=stream.size; reader[4]=reader[5]=package?32:0;
                     ((unsigned char*)reader)[24]=package?0xa7:0;
                     int32_t actual=kinoko_act_new_timeline(); CHECK(actual);
@@ -4928,8 +4982,8 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         {
             int32_t methods[6]={0,0,0,PTR(script_io_transfer),0,PTR(script_io_seek)};
             struct script_io_stream stream={0}; stream.vtable=methods;
-            const unsigned char saved=g673; const int32_t archives=g765;
-            g673=0; g765=0;
+            const unsigned char saved=g673; const int32_t archives=kinoko_archive_count;
+            g673=0; kinoko_archive_count=0;
             CHECK(retdec_call_thiscall1_result((void*)(intptr_t)source,(void*)g252.e0,PTR(&stream)));
             char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
             CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"lyr",0,path));
@@ -4937,7 +4991,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                 FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
             CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
             CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-            int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+            int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)}, holder=PTR(reader);
             const int32_t loaded=retdec_act_make_layer(); CHECK(loaded);
             CHECK(retdec_call_thiscall2_result((void*)(intptr_t)loaded,(void*)g252.e1,PTR(&holder),1));
             CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
@@ -4952,7 +5006,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             CHECK(restored_event[0]==PTR(kinoko_act_timeline_vtable()) && restored_event[1]==17);
             CHECK(memcmp((void*)(intptr_t)restored_event[3],timeline_pairs,16)==0);
             retdec_destroy_cact_layer(loaded); free((void*)(intptr_t)loaded);
-            CHECK(CloseHandle(file)); g765=archives; g673=saved;
+            CHECK(CloseHandle(file)); kinoko_archive_count=archives; g673=saved;
         }
         for(int compiled=0;compiled<2;++compiled) {
             *(uint8_t*)(intptr_t)(source+305)=(uint8_t)compiled;
@@ -4991,9 +5045,9 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(execute_source(vm,root+2,"if(dynamicFirst.alpha!=0.375) throw \"clone altered source\";"));
     }
     CHECK(execute_source(vm,root+2,
-        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");"
-        "dynamicText.alpha=0.625; dynamicText.colorR=73;"
-        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";"
+        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");\n"
+        "dynamicText.alpha=0.625; dynamicText.colorR=73;\n"
+        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";\n"
         "if(!dynamicText.layout.PushBack(\"native text\") || dynamicText.layout.queueCount!=11) throw \"text methods\";"));
     layers=(int32_t*)(intptr_t)act[52];CHECK(act[53]-act[52]==28);
     const int32_t text_layer=layers[6],text_head=*(int32_t*)(intptr_t)(text_layer+180);
@@ -5012,7 +5066,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         "delete inactiveLayer; delete dynamicFirst; delete dynamicSecond; delete dynamicThird; delete dynamicFourth;\n"
         "delete dynamicFifth; delete dynamicSixth; delete dynamicHost; delete dynamicPlayer;"));
     for(int i=0;i<7;++i) { retdec_destroy_cact_layer(layers[i]); free((void*)(intptr_t)layers[i]); }
-    kinoko_act_array_destroy(PTR(act)+208); retdec_sqrat_release_pair(vm,player_pair);
+    kinoko_act_array_destroy(PTR(act)+208); kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
     CHECK(sq_gettop(kinoko_vm(vm))==top);
     puts("PASS: dynamic 2D ownership, Sqrat aliases, layer order, ancestor rejection and subtree swaps");
@@ -5155,7 +5209,7 @@ static int test_act_serialization(void) {
     CHECK(retdec_construct_cact_script(PTR(source+25)) && retdec_construct_cact_script(PTR(loaded+25)));
     source[1]=16; source[2]=640; source[3]=480;
     source[18]=11; source[19]=22; source[20]=33; source[21]=44; ((uint8_t*)source)[96]=1;
-    const unsigned char saved=g673; const int32_t archives=g765; g673=0; g765=0;
+    const unsigned char saved=g673; const int32_t archives=kinoko_archive_count; g673=0; kinoko_archive_count=0;
     CHECK(retdec_call_thiscall1_result(source,(void*)g285.e0,PTR(&stream)));
     char directory[MAX_PATH],path[MAX_PATH]; DWORD written=0;
     CHECK(GetTempPathA(sizeof(directory),directory) && GetTempFileNameA(directory,"act",0,path));
@@ -5163,7 +5217,7 @@ static int test_act_serialization(void) {
         FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
     CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
     CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-    int32_t reader[7]={PTR(&g33),PTR(file)},holder=PTR(reader);
+    int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)},holder=PTR(reader);
     CHECK(retdec_call_thiscall2_result(loaded,(void*)g285.e1,PTR(&holder),1));
     CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
     CHECK(loaded[1]==16 && loaded[2]==640 && loaded[3]==480);
@@ -5195,7 +5249,7 @@ static int test_act_serialization(void) {
     }
     source[52]=source[53]=source[54]=0;
     retdec_destroy_cact_object(PTR(source)); retdec_destroy_cact_object(PTR(loaded));
-    g673=saved; g765=archives;
+    g673=saved; kinoko_archive_count=archives;
     puts("PASS: CAct native reader, original margin offsets, debug-only filter and stable layer wire order");
     return 0;
 }
@@ -5229,7 +5283,7 @@ static int test_key_string_writers(void) {
     retdec_string_assign_n(string_source+1,"A\0B",3);
     retdec_string_assign_n(string_source+8,"C\0D",3);
     ((uint8_t*)string_source)[128]=1;string_source[33]=2;
-    const int32_t archives=g765; g765=0;
+    const int32_t archives=kinoko_archive_count; kinoko_archive_count=0;
     for(int kind=0;kind<2;++kind) for(int compact=0;compact<2;++compact) {
         key[1]=kind?PTR(string_source):PTR(flat);
         g673=(unsigned char)compact; stream.position=stream.size=0;
@@ -5240,7 +5294,7 @@ static int test_key_string_writers(void) {
             FILE_ATTRIBUTE_TEMPORARY|FILE_FLAG_DELETE_ON_CLOSE,NULL); CHECK(file!=INVALID_HANDLE_VALUE);
         CHECK(WriteFile(file,stream.bytes,stream.size,&written,NULL) && written==stream.size);
         CHECK(SetFilePointer(file,0,NULL,FILE_BEGIN)==0);
-        int32_t reader[7]={PTR(&g33),PTR(file)}, holder=PTR(reader);
+        int32_t reader[7]={PTR(&kinoko_file_reader_methods),PTR(file)}, holder=PTR(reader);
         int32_t* copy=(int32_t*)calloc(1,36); CHECK(copy); copy[0]=PTR(&g277); copy[7]=15;
         CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
         CHECK(copy[1] && copy[1]!=key[1]);
@@ -5254,7 +5308,7 @@ static int test_key_string_writers(void) {
         CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
         retdec_destroy_cact_key(PTR(copy)); CHECK(CloseHandle(file));
     }
-    g765=archives;
+    kinoko_archive_count=archives;
     kinoko_clear_string_layout(PTR(string_source));
     kinoko_string_destroy(PTR(key)+8);
     g673=saved;
@@ -5428,13 +5482,13 @@ static int test_original_layer_constructor(int32_t vm) {
     CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
     CHECK(layer[52] == vm && layer[57] == vm && layer[62] == vm);
     int32_t missing[2] = {g483,g484};
-    CHECK(!retdec_sqrat_get(PTR(layer)+308,"CompileFile",PTR(missing)));
-    retdec_sqrat_release_pair(vm, missing);
+    CHECK(!kinoko_sqrat_get((void *)(intptr_t)(PTR(layer)+308), "CompileFile", (void *)(intptr_t)(PTR(missing))));
+    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), missing);
     {
         int32_t parent[5]={PTR(kinoko_act_host_symbols()->sq_object_vtable),vm,g483,g484,1};
         const char text[]="registered <- thisAct.marker;\nsawLayer <- (\"layer\" in this);\n";
-        CHECK(retdec_sqrat_new_table(vm,parent+2));
-        CHECK(retdec_sqrat_set_int(vm,parent+2,"marker",73));
+        CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent+2));
+        CHECK(kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), parent+2, "marker", 73));
         layer[74]=PTR(malloc(sizeof(text))); CHECK(layer[74]);
         memcpy((void*)(intptr_t)layer[74],text,sizeof(text)); layer[76]=1; layer[75]=sizeof(text)-1;
         ((float*)layer)[36]=13.0f; ((float*)layer)[37]=17.0f;
@@ -5445,7 +5499,7 @@ static int test_original_layer_constructor(int32_t vm) {
             "if(Layer_.script.thisAct!=this || Layer_.script.layer==Layer_) throw \"layer identity\";\n"
             "if(\"filePath\" in Layer_.script) throw \"invented script field\";\n"));
         CHECK(kinoko_method_register_act_layer(PTR(layer),NULL,0,0)==(int32_t)E_FAIL);
-        retdec_sqrat_object_release(PTR(parent));
+        kinoko_sqrat_object_release((void *)(intptr_t)(PTR(parent)));
     }
     retdec_destroy_cact_layer(PTR(layer)); free(layer);
     int32_t *script = calloc(26, sizeof(int32_t));
@@ -5458,7 +5512,7 @@ static int test_original_layer_constructor(int32_t vm) {
 static int test_layout_registration_entries(int32_t vm) {
     int32_t layer[87] = {0}, layout[100] = {0}, environment[2];
     CHECK(retdec_prepare_cact_layer_objects(vm, PTR(layer), environment));
-    CHECK(retdec_sqrat_new_table(vm, layer+84));
+    CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), layer+84));
     CHECK(kinoko_method_register_layout(PTR(layout), NULL) == (int32_t)E_FAIL);
     layout[76] = PTR(layer);
     for (int map = 0; map < 2; ++map) {
@@ -5466,17 +5520,17 @@ static int test_layout_registration_entries(int32_t vm) {
         CHECK((map ? kinoko_method_register_map_layout(PTR(layout), NULL) :
             kinoko_method_register_layout(PTR(layout), NULL)) == 0);
         int32_t outer[2] = {g483,g484}, script[2] = {g483,g484};
-        CHECK(retdec_sqrat_get(PTR(layer+82), "layout", PTR(outer)));
-        CHECK(retdec_sqrat_get(PTR(layer+77), "layout", PTR(script)));
+        CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(layer+82)), "layout", (void *)(intptr_t)(PTR(outer))));
+        CHECK(kinoko_sqrat_get((void *)(intptr_t)(PTR(layer+77)), "layout", (void *)(intptr_t)(PTR(script))));
         CHECK(outer[0] == OT_INSTANCE && script[0] == OT_INSTANCE && outer[1] != script[1]);
-        CHECK(retdec_sqrat_raw_set_int(vm, environment, "registrationMarker", 1));
+        CHECK(kinoko_sqrat_raw_set_int((struct SQVM *)(intptr_t)(vm), environment, "registrationMarker", 1));
         CHECK(layer[13] == PTR(layout) + (map ? 320 : 284));
         CHECK(layer[14] == PTR(layout) + (map ? 328 : 288));
         CHECK(layer[1] == PTR(layout)+236 && layer[17] == PTR(layout)+300);
-        retdec_sqrat_release_pair(vm, outer); retdec_sqrat_release_pair(vm, script);
+        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), outer); kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), script);
     }
-    retdec_sqrat_object_release(PTR(layer+82));
-    retdec_sqrat_object_release(PTR(layer+77));
+    kinoko_sqrat_object_release((void *)(intptr_t)(PTR(layer+82)));
+    kinoko_sqrat_object_release((void *)(intptr_t)(PTR(layer+77)));
     puts("PASS: original layout registrations create distinct wrappers and exact layer aliases");
     return 0;
 }
@@ -5562,7 +5616,7 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
             "delete chipBinding; delete textureBinding; delete targetBinding; delete shared;\n"));
         resource[0] = PTR(&g365);
     }
-    int32_t old_device = g678; g678 = 0;
+    IDirect3DDevice9 *old_device = kinoko_graphics.device; kinoko_graphics.device = 0;
     resource[17] = retdec_register_act_texture((IDirect3DBaseTexture9*)texture, 64, 64);
     CHECK(execute_source(vm, root+2,"if(textureResourceA.LoadTexture(null)) throw 3;\n"));
     CHECK(resource[17] && texture[1] == 0); /* Empty name preserves ownership. */
@@ -5574,7 +5628,7 @@ static int test_texture_resource_registration(int32_t vm, int32_t *root) {
     CHECK(retdec_call_thiscall0_result(resource, (void*)g365.e11) == 1);
     CHECK(!resource[17] && texture[1] == 1);
     CHECK(kinoko_texture_release(borrowed) == 1 && texture[1] == 2);
-    g678 = old_device;
+    kinoko_graphics.device = old_device;
     CHECK(execute_source(vm, root+2,"delete textureResourceA; delete textureResourceB;\n"));
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     puts("PASS: texture resource native shared fields, original virtual ABI and reload ownership");
@@ -5592,23 +5646,52 @@ static void check_owned_exit(void) {
         abort();
     puts("PASS: CRT exit destroys owned states newest first, once each");
 }
+static int root_cache_release_count;
+static HSQUIRRELVM root_cache_release_vm;
+static int32_t root_cache_release_identity;
+static SQInteger release_cached_root_probe(SQUserPointer payload, SQInteger size) {
+    (void)payload; (void)size;
+    ++root_cache_release_count;
+    root_cache_release_vm = (HSQUIRRELVM)g644;
+    root_cache_release_identity = g645;
+    return 0;
+}
 static int test_owned_states(int at_exit) {
     CHECK(g643 == 0);
     if (at_exit) CHECK(atexit(check_owned_exit) == 0);
     for (int i = 1; i <= 2; ++i) {
-        CHECK(function_4a8db0(0) & 1);
+        CHECK(kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(0)) & 1);
         HSQUIRRELVM vm = (HSQUIRRELVM)g644;
         *(int*)sq_newuserdata(vm, sizeof(int)) = i;
         sq_setreleasehook(vm, -1, owned_release);
-        function_4a8c50();
+        kinoko_sqplus_release_vm_wrappers();
         CHECK(owned_release_count == 0 && g644 == NULL && g645 == 0);
     }
     if (at_exit) return 0;
     HSQUIRRELVM external = sq_open(64);
     const int32_t head = g643;
-    CHECK(function_4a8db0(PTR(external)) & 1);
+    CHECK(kinoko_sqplus_select_vm((struct SQVM *)(intptr_t)(PTR(external))) & 1);
     CHECK(g643 == head);
-    function_4a8c50();
+    /* Switching VM must destroy the cached external object while its VM is
+       still current. A same-VM selection must preserve that cached owner. */
+    {
+        HSQUIRRELVM next = sq_open(64);
+        void *cache = kinoko_sqplus_root_object();
+        CHECK(next && cache && PTR(cache) == g645);
+        sq_newuserdata(external, 4);
+        sq_setreleasehook(external, -1, release_cached_root_probe);
+        kinoko_sqplus_object_capture(cache, -1);
+        sq_pop(external, 1);
+        CHECK(kinoko_sqplus_select_vm(external) & 1);
+        CHECK(root_cache_release_count == 0 && PTR(cache) == g645);
+        CHECK(kinoko_sqplus_select_vm(next) & 1);
+        CHECK(root_cache_release_count == 1 && root_cache_release_vm == external);
+        CHECK(root_cache_release_identity == PTR(cache) && g645 == 0);
+        kinoko_sqplus_release_vm_wrappers();
+        sq_close(next);
+        CHECK(kinoko_sqplus_select_vm(external) & 1);
+    }
+    kinoko_sqplus_release_vm_wrappers();
     kinoko_sq_release_owned_states();
     check_owned_exit();
     kinoko_sq_release_owned_states();
@@ -5675,9 +5758,9 @@ static int test_actor_handle_lookup(void) {
     int32_t manager[20]={0}, first=0, second=0, reused=0;
     int32_t probe=PTR(&pool_actor_delete_probe), a, b;
     int32_t value=0x11223344,node;
-    CHECK(kinoko_actor_pool_construct(PTR(manager))==PTR(manager));
-    a=function_46ab10_this(PTR(manager),PTR(&first));
-    b=function_46ab10_this(PTR(manager),PTR(&second));
+    CHECK((int32_t)(intptr_t)(kinoko_actor_pool_construct((KinokoActorPool *)(intptr_t)(PTR(manager))))==PTR(manager));
+    a=(int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&first))));
+    b=(int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&second))));
     CHECK(a && b && a!=b && first==0x10000 && second==0x20001);
     CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
     CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,first)==a);
@@ -5685,14 +5768,14 @@ static int test_actor_handle_lookup(void) {
     CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20000)==0);
     CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e3,0x20002)==0);
     *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
-    function_46a6f0_this(PTR(manager),first);
-    function_46a6f0_this(PTR(manager),second);
+    kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), first);
+    kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), second);
     CHECK(pool_retire_calls==2);
     CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,first)==0);
     CHECK(kinoko_method_lookup_actor(PTR(manager),NULL,second)==0);
-    function_46a6f0_this(PTR(manager),second);CHECK(pool_retire_calls==2);
-    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==b && reused==0x30001);
-    CHECK(function_46ab10_this(PTR(manager),PTR(&reused))==a && reused==0x40000);
+    kinoko_actor_pool_retire((KinokoActorPool *)(intptr_t)(PTR(manager)), second);CHECK(pool_retire_calls==2);
+    CHECK((int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&reused))))==b && reused==0x30001);
+    CHECK((int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(manager)), (uint32_t *)(intptr_t)(PTR(&reused))))==a && reused==0x40000);
     CHECK(retdec_call_thiscall0_result(manager,(void*)g29.e4)==2);
     *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
     CHECK(retdec_call_thiscall1_result(manager,(void*)g29.e0,0)==PTR(manager));
@@ -5704,18 +5787,18 @@ static int test_actor_owner_list(void) {
     int32_t manager[4]={0}, handle=0, probe=PTR(&pool_actor_delete_probe), a, b;
     int32_t *pool=(int32_t*)calloc(1,80);
     CHECK(pool);pool_retire_calls=pool_delete_calls=0;
-    CHECK(kinoko_actor_pool_construct(PTR(pool))==PTR(pool));
+    CHECK((int32_t)(intptr_t)(kinoko_actor_pool_construct((KinokoActorPool *)(intptr_t)(PTR(pool))))==PTR(pool));
     manager[0]=PTR(&g31);manager[1]=PTR(pool);
-    kinoko_actor_owner_list_construct(PTR(manager));
-    a=function_46aa60_this(PTR(manager));b=function_46aa60_this(PTR(manager));
-    CHECK(a && b && kinoko_actor_owner_list_size(PTR(manager))==2);
+    kinoko_actor_owner_list_construct((KinokoActorManager *)(intptr_t)(PTR(manager)));
+    a=(int32_t)(intptr_t)(kinoko_actor_owner_list_acquire((KinokoActorManager *)(intptr_t)(PTR(manager))));b=(int32_t)(intptr_t)(kinoko_actor_owner_list_acquire((KinokoActorManager *)(intptr_t)(PTR(manager))));
+    CHECK(a && b && kinoko_actor_owner_list_size((KinokoActorManager *)(intptr_t)(PTR(manager)))==2);
     *(int32_t*)(intptr_t)a=PTR(&probe);*(int32_t*)(intptr_t)b=PTR(&probe);
     CHECK(*(int32_t*)(intptr_t)(a+8)==1 && *(int32_t*)(intptr_t)(b+8)==1);
     *(int32_t*)(intptr_t)(b+8)=2;
-    kinoko_actor_owner_list_clear(PTR(manager));
-    CHECK(kinoko_actor_owner_list_size(PTR(manager))==0 && pool_retire_calls==1);
+    kinoko_actor_owner_list_clear((KinokoActorManager *)(intptr_t)(PTR(manager)));
+    CHECK(kinoko_actor_owner_list_size((KinokoActorManager *)(intptr_t)(PTR(manager)))==0 && pool_retire_calls==1);
     CHECK(*(int32_t*)(intptr_t)(b+8)==1);
-    CHECK(function_46ab10_this(PTR(pool),PTR(&handle))==a);
+    CHECK((int32_t)(intptr_t)(kinoko_actor_pool_request((KinokoActorPool *)(intptr_t)(PTR(pool)), (uint32_t *)(intptr_t)(PTR(&handle))))==a);
     *(int32_t*)(intptr_t)a=PTR(&probe);
     CHECK(retdec_call_thiscall1_result(manager,(void*)g31.e0,0)==PTR(manager));
     CHECK(pool_delete_calls==2 && manager[1]==0 && manager[2]==0);
@@ -5735,7 +5818,26 @@ static int test_layout_secondary_lifetime(void) {
     return 0;
 }
 
+#include "act_document_file_contract.h"
+#include "act_virtual_clone_contract.h"
+#include "map_lazy_binding_contract.h"
+#include "collision_lifecycle_contract.h"
+
 int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--collision-lifecycle") == 0)
+        return test_collision_lifecycle();
+    if (argc == 2 && strcmp(argv[1], "--map-lazy-binding") == 0) {
+        int32_t vm = function_48a170(1024), root[5];
+        CHECK(vm);
+        g644 = (char*)(intptr_t)vm;
+        CHECK((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(intptr_t)(PTR(root)), (struct SQVM *)(intptr_t)(vm))));
+        return test_map_lazy_binding(vm,root);
+    }
+    if (argc == 2 && strcmp(argv[1], "--act-virtual-clone") == 0)
+        return test_act_virtual_clone();
+    if (argc == 2 && strcmp(argv[1], "--act-document-lifetime") == 0)
+        return test_act_document_file_lifetime();
+    CHECK(test_collision_lifecycle()==0);
     CHECK(test_layout_secondary_lifetime()==0);
     CHECK(test_actor_handle_lookup()==0);
     CHECK(test_actor_owner_list()==0);
@@ -5764,7 +5866,7 @@ int main(int argc, char **argv) {
     CHECK(test_gc_mark_link() == 0);
     int32_t vm = function_48a170(1024);
     int32_t root[5], environment[3], closure[3];
-    int32_t target = PTR(function_470fa0);
+    int32_t target = PTR(kinoko_script_set_init);
     int32_t manager = PTR(g_retdec_actor_manager_state);
     int32_t layout[100] = {0}, layer[80] = {0}, resource[20] = {0};
     int32_t act[60] = {0}, act_resource[48] = {0}, holder[1], layer_vector[1];
@@ -5782,7 +5884,7 @@ int main(int argc, char **argv) {
     g644 = (char *)(intptr_t)vm;
     CHECK(test_error_value_ownership(vm) == 0);
     CHECK(test_act_resource_methods() == 0);
-    CHECK(retdec_sqrat_root_construct(PTR(root), vm));
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(intptr_t)(PTR(root)), (struct SQVM *)(intptr_t)(vm))));
     CHECK(test_string_layout_binding(vm, root)==0);
     CHECK(test_recovered_object_entries(vm, root) == 0);
     CHECK(test_receiver_operations(vm, root) == 0);
@@ -5811,6 +5913,8 @@ int main(int argc, char **argv) {
     CHECK(test_chip_resource_registration(vm, root) == 0);
     CHECK(test_texture_resource_registration(vm, root) == 0);
     CHECK(test_chip_shared_ownership() == 0);
+    CHECK(test_act_virtual_clone() == 0);
+    CHECK(test_map_lazy_binding(vm, root) == 0);
     {
         int32_t before = function_48aa20(vm);
         CHECK(function_41eff0(0) == (int32_t)E_INVALIDARG);
@@ -5856,8 +5960,8 @@ int main(int argc, char **argv) {
     if (argc == 3 && strcmp(argv[1], "--water-alpha") == 0)
         return test_water_alpha(manager, argv[2]);
     if (argc == 2 && strcmp(argv[1], "--damage-pause") == 0) {
-        CHECK(retdec_construct_actor_manager(manager));
-        function_460e00();
+        CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
+        kinoko_actor_register_script_class();
         CHECK(execute_source(vm, root + 2, "Actor.funcUpdate <- null;"));
         return test_stage_update_mask(manager, vm, root);
     }
@@ -5878,14 +5982,13 @@ int main(int argc, char **argv) {
         char path[MAX_PATH];
         for(char archive='a';archive<='c';++archive) {
             sprintf_s(path,sizeof(path),"%s/6kinoko_%c.dat",argv[2],archive);
-            CHECK(function_410500(path));
+            CHECK(kinoko_archive_mount(path));
         }
-        CHECK(retdec_construct_actor_manager(manager));
-        function_460e00();
+        CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
+        kinoko_actor_register_script_class();
         CHECK(execute_source(vm,root+2,"Actor.funcUpdate <- null;"));
-        int32_t compile_target=PTR(function_471b30);
-        CHECK(function_415550_this(PTR(root),PTR("CompileFile"),PTR(&compile_target),
-            4,PTR(retdec_compile_file_native),0)>=0);
+        int32_t compile_target=PTR(kinoko_script_compile_file_argument);
+        CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CompileFile")), (const void *)(intptr_t)(PTR(&compile_target)), 4, (void *)(intptr_t)(PTR(retdec_compile_file_native)), 0))>=0);
         g874=1;
         CHECK(execute_asset(vm,root+2,"data/script/constant.cv4"));
         if(argc==4) return test_entity_stutter(manager,vm,root,argv[3]);
@@ -5897,14 +6000,14 @@ int main(int argc, char **argv) {
     {
         int32_t anonymous[3];
         CHECK(execute_source(vm,root+2,"anonymousError <- function() { throw 17; };"));
-        function_4aa3a0_this(PTR(root+1),PTR(anonymous),"anonymousError");
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root+1)), (void *)(intptr_t)(PTR(anonymous)), "anonymousError");
         int32_t proto=*(int32_t *)(intptr_t)(anonymous[2]+36);
         CHECK(*(int32_t *)(intptr_t)(proto+20)==g483);
         *(int32_t *)(intptr_t)(proto+24)=0;
         expected_vm_error=1;
         CHECK(!execute_source(vm,root+2,"anonymousError();"));
         expected_vm_error=0;
-        function_4a9d70_this(PTR(anonymous));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(anonymous))));
         puts("PASS: anonymous script failure diagnostics and unwind");
     }
     CHECK(test_native_stack_relocation(vm, root) == 0);
@@ -5919,8 +6022,7 @@ int main(int argc, char **argv) {
         "if (fabs(atan2(1.0,-1.0)-PI*0.75)>0.00001 || pow(2.0,3.0)!=8.0) throw \"binary math\";\n"
         "if (fabs(log(exp(2.0))-2.0)>0.00001 || fabs(log10(100.0)-2.0)>0.00001) throw \"log math\";\n"
         "if (typeof sqrt(25) != \"float\" || typeof floor(2.5) != \"float\") throw \"math type\";"));
-    CHECK(function_415550_this(PTR(root), PTR("SetInitFunctionByID"),
-        PTR(&target), 4, PTR(function_471d30), 0) >= 0);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("SetInitFunctionByID")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471d30)), 0)) >= 0);
     top = function_48aa20(vm);
     CHECK(execute_source(vm, root + 2,
         "registry <- {};\nother <- {};\nseen <- [];\n"
@@ -5932,12 +6034,12 @@ int main(int argc, char **argv) {
         "SetInitFunctionByID(0x443, null, other);\n"
         "if ((\"Init0443\" in other) || (\"Init0443\" in this)) throw \"wrong table\";"));
     CHECK(function_48aa20(vm) == top);
-    function_4aa3a0_this(PTR(root + 1), PTR(environment), "registry");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(environment)), "registry");
     /* root is Sqrat::Object [vtable, vm, type, value, owner], not SquirrelObject. */
     CHECK(environment[1] == 0x0A000020);
-    function_4aa3a0_this(PTR(environment), PTR(closure), "Init0443");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(environment)), (void *)(intptr_t)(PTR(closure)), "Init0443");
     CHECK(closure[1] == 0x08000100);
-    function_4a9d70_this(PTR(closure));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
 
     if (argc > 1) {
         CHECK(execute_file(vm, root + 2, argv[1]));
@@ -5945,8 +6047,8 @@ int main(int argc, char **argv) {
             "if (typeof Init0443 != \"function\" || typeof Init0e4c != \"function\") "
             "throw \"block initialization incomplete\";"));
     }
-    CHECK(retdec_construct_actor_manager(manager));
-    function_460e00();
+    CHECK(kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)(manager)));
+    kinoko_actor_register_script_class();
     CHECK(execute_source(vm,root+2,
         "if(Actor.step!=null || Actor.user!=null) throw \"Actor null class defaults\";"));
     CHECK(test_delegate_lifetime(vm, root)==0);
@@ -5957,6 +6059,8 @@ int main(int argc, char **argv) {
     layout[67] = PTR(records + 4);
     layout[78] = PTR(layer);
     layout[79] = PTR(resource);
+    layer[25] = PTR(resource);
+    resource[0] = PTR(&g313);
     resource[16] = PTR(&data);
     chips[0].chip_id = 0x443;
     chips[1].chip_id = 0xc8a;
@@ -5980,6 +6084,7 @@ int main(int argc, char **argv) {
     node[0] = PTR(sentinel);
     node[2] = PTR(layout_key);
     layout_key[1] = PTR(layout);
+    kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
     *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
     *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
     *(int32_t *)(g_retdec_map_manager_state + 20) = PTR(act_resource);
@@ -6030,20 +6135,23 @@ int main(int argc, char **argv) {
         *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
         puts("PASS: render layers bind live ACT layouts without undoing clone isolation");
     }
-    target = PTR(function_469d10);
-    CHECK(function_415550_this(PTR(root), PTR("CreateActorFromMap"),
-        PTR(&target), 4, PTR(function_471e50), 0) >= 0);
+    /* R136: spawn from the layer resource before any render-cache binding. */
+    layout[79] = 0;
+    target = PTR(kinoko_script_create_map_actors);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateActorFromMap")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471e50)), 0)) >= 0);
     CHECK(execute_source(vm, root + 2,
         "CreateActorFromMap(\"missing\", registry);\n"
         "CreateActorFromMap(\"en\", other);\n"
         "CreateActorFromMap(\"en\", registry);\n"));
+    CHECK(layout[79] == 0);
+    layout[79] = PTR(resource);
     created = *(int32_t *)(intptr_t)(manager + 92);
     CHECK(created == 3);
     CHECK(function_48aa20(vm) == top);
     CHECK(execute_source(vm, root + 2,
         "if (seen.len() != 3 || seen[0] != 0x443 || seen[1] != 0xc8a || "
         "seen[2] != 0xc9a) throw \"spawn order/id mismatch\";"));
-    CHECK(retdec_actor_manager_refresh(manager) == 3);
+    CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 3);
     actors = *(int32_t **)(intptr_t)(manager + 100);
     CHECK(test_actor_animation_sync(vm, root, actors[0], actors[1]) == 0);
     for (int i = 0; i < 3; ++i) {
@@ -6073,15 +6181,15 @@ int main(int argc, char **argv) {
     CHECK(function_4693a0(PTR(layout)) != 0);
     CHECK(g_514300_storage[2] - g_514300_storage[1] == 8);
     CHECK(g_514300_storage[14] - g_514300_storage[13] == 16);
-    CHECK(retdec_actor_manager_refresh(manager) == 5);
+    CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 5);
     function_468620_this(PTR(g_514300_storage));
     CHECK(function_468950_this(PTR(g_514300_storage), manager));
     CHECK(g_514300_storage[2] == g_514300_storage[1]);
     CHECK(g_514300_storage[14] == g_514300_storage[13]);
-    target = PTR(function_469dd0);
-    CHECK(function_415550_this(PTR(root), PTR("CreateEvent"),
-        PTR(&target), 4, PTR(function_471f70), 0) >= 0);
+    target = PTR(kinoko_script_create_event);
+    CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateEvent")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(function_471f70)), 0)) >= 0);
     layout[67] = PTR(records + 2);
+    layout[79] = 0;
     CHECK(execute_source(vm, root + 2,
         "events <- { bounds = [] };\n"
         "function Event(id, x1, y1, x2, y2) { bounds.append([id,x1,y1,x2,y2]); }\n"
@@ -6092,12 +6200,13 @@ int main(int argc, char **argv) {
         "events.bounds[1][2] != 400 || events.bounds[1][3] != 331 || "
         "events.bounds[1][4] != 447) throw \"event bounds/environment mismatch\";"));
     CHECK(function_48aa20(vm) == top);
+    CHECK(layout[79] == 0);
+    layout[79] = PTR(resource);
     {
         int32_t map_state = PTR(g_retdec_map_manager_state);
-        int32_t query_actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-            110, 210, -1, PTR(&g16), g483, g484, 0);
+        int32_t query_actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 110, 210, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(query_actor);
-        function_4a9840_this(PTR(root + 1), "eventProbe", query_actor + 44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "eventProbe", (const void *)(intptr_t)(query_actor + 44));
         layout[60] = 32;
         layout[61] = 48;
         CHECK(kinoko_map_event_count(map_state) == 1);
@@ -6116,7 +6225,7 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2, "eventProbe.x=331; eventProbe.GetChipID(0);"));
         CHECK(*(int32_t *)(intptr_t)(map_state + 56) == -1);
         CHECK(execute_source(vm, root + 2, "eventProbe.Release();"));
-        CHECK(retdec_actor_manager_refresh(manager) == 5);
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 5);
     }
     {
         int32_t (*many)[8] = (int32_t (*)[8])calloc(600, 32);
@@ -6127,8 +6236,8 @@ int main(int argc, char **argv) {
         }
         layout[66] = PTR(many);
         layout[67] = PTR(many + 600);
-        CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
-        CHECK(retdec_actor_manager_refresh(manager) == 605);
+        CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 605);
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2,
             "if (seen.len() != 603) throw \"lost actors in large map\";"));
@@ -6145,9 +6254,30 @@ int main(int argc, char **argv) {
         retired_layout[67] = PTR(records + 2);
         proxy = function_4693a0(PTR(retired_layout));
         CHECK(proxy != 0);
+        /* R139: front insertion keeps map/weak-parent pairs aligned. */
+        int32_t second_layout[116];
+        memcpy(second_layout, retired_layout, sizeof(second_layout));
+        int32_t first_count = (g_514300_storage[2] - g_514300_storage[1]) / 4;
+        int32_t second_proxy = function_4693a0(PTR(second_layout));
+        CHECK(second_proxy != 0);
+        CHECK((g_514300_storage[2] - g_514300_storage[1]) / 4 == first_count + 1);
+        CHECK((g_514300_storage[14] - g_514300_storage[13]) / 8 == first_count + 1);
+        CHECK((g_514300_storage[6] - g_514300_storage[5]) / 4 == first_count + 1);
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[1])[0] == PTR(second_layout));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[1])[1] == PTR(retired_layout));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[13])[0] == *(int32_t*)(intptr_t)(second_proxy+24));
+        CHECK(((int32_t*)(intptr_t)g_514300_storage[13])[2] == *(int32_t*)(intptr_t)(proxy+24));
+        CHECK(*(uint32_t*)(intptr_t)(second_proxy+232) == 0x80000000u);
+        CHECK(*(uint8_t*)(intptr_t)(second_proxy+40) == 0);
+        CHECK(*(uint8_t*)(intptr_t)(second_proxy+20) == 1);
+        CHECK(*(float*)(intptr_t)(second_proxy+440) == -65535.0f);
+        CHECK(*(float*)(intptr_t)(second_proxy+452) == 65535.0f);
+        CHECK(*(int32_t*)(intptr_t)(second_proxy+228) == -1);
+        CHECK(((float*)records[0])[3] == (float)records[0][1]);
+        CHECK(((float*)records[0])[4] == (float)records[0][2]);
         control = *(int32_t *)(intptr_t)(proxy + 28);
         CHECK(*(int32_t *)(intptr_t)(control + 4) == 1);
-        function_469700();
+        kinoko_script_clear_actors();
         CHECK(*(int32_t *)(intptr_t)(manager + 92) == 0);
         CHECK(*(int32_t *)(intptr_t)(control + 4) == 0);
         kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
@@ -6164,14 +6294,14 @@ int main(int argc, char **argv) {
             layout[66] = PTR(reused);
             layout[67] = PTR(reused + 600);
             for (int round = 0; round < 4; ++round) {
-                CHECK(function_463e60(manager, PTR(layout), PTR(environment)) == 600);
-                CHECK(retdec_actor_manager_refresh(manager) == 600);
+                CHECK(kinoko_map_create_actors((KinokoActorManager *)(intptr_t)manager, (KinokoActLayout *)layout, (const KinokoSquirrelObject *)environment) == 600);
+                CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 600);
                 CHECK(kinoko_method_actor_pool_count(pool, NULL) == pool_count);
                 kinoko_native_weak_pair_lock(g_514300_storage[13], pair);
                 CHECK(pair[0] == 0 && pair[1] == 0);
                 function_468620_this(PTR(g_514300_storage));
-                function_469700();
-                CHECK(retdec_actor_manager_refresh(manager) == 0);
+                kinoko_script_clear_actors();
+                CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 0);
                 CHECK(function_48aa20(vm) == top);
             }
             free(reused);
@@ -6184,26 +6314,34 @@ int main(int argc, char **argv) {
         "function Contact(other) { ::hits.append(user * 10 + other.user); }\n"
         "function InitContact(id) { user = id; callbackGroup = 1; callbackMask = 1; "
         "SetCollisionCallbackFunction(::Contact); ::probe.append(this); }\n"));
-    function_4aa3a0_this(PTR(root + 1), PTR(closure), "InitContact");
+    kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(closure)), "InitContact");
     {
         int32_t pair_actors[3];
         for (int i = 0; i < 3; ++i) {
-            pair_actors[i] = function_463b40_this(manager,
-                closure[0], closure[1], closure[2], 0, 0, -1,
-                PTR(&g16), 0x05000002, i + 1, 0);
+            pair_actors[i] = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){closure[0], closure[1], closure[2]}, 0, 0, -1, &(const KinokoOwnedObjectWords){PTR(&g16), 0x05000002, i + 1}, (const void *)(intptr_t)(0)));
             CHECK(pair_actors[i] != 0);
             for (int j = 0; j < 4; ++j)
                 *(float *)(intptr_t)(pair_actors[i] + 440 + j * 4) =
                     (float)(10 * i + (j >= 2 ? 10 : 0));
         }
-        CHECK(retdec_actor_manager_refresh(manager) == 3);
+        CHECK(kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager)) == 3);
         CHECK(*(int32_t *)(intptr_t)(manager + 124) != 0);
         CHECK(*(int32_t *)(intptr_t)(manager + 128) -
               *(int32_t *)(intptr_t)(manager + 124) >= 3 * 4);
-        function_462e80(manager);
+        kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)(manager));
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 4 || hits[0] != 12 || hits[1] != 21 || "
             "hits[2] != 23 || hits[3] != 32) throw \"collision pair order\";"));
+        /* R140: failure clears only the failing callback and restores the VM
+           stack before the reciprocal callback. Then restore the fixture. */
+        CHECK(execute_source(vm, root + 2,
+            "hits.clear(); probe[0].SetCollisionCallbackFunction(function(other) { throw \"collision probe\"; });"));
+        kinoko_collision_dispatch_pair((KinokoActor *)(intptr_t)(pair_actors[0]), (KinokoActor *)(intptr_t)(pair_actors[1]));
+        CHECK(function_48aa20(vm) == top);
+        CHECK(kinoko_sqplus_object_type((void *)(intptr_t)(pair_actors[0]+136)) != 0x08000100);
+        CHECK(execute_source(vm, root + 2,
+            "if (hits.len()!=1 || hits[0]!=21) throw \"reciprocal callback after failure\";\n"
+            "probe[0].SetCollisionCallbackFunction(::Contact);"));
         CHECK(execute_source(vm, root + 2,
             "hits.clear();\nprobe[1].InterrputCollisionCallback();\n"
             "if (hits.len()!=4 || hits[0]!=21 || hits[1]!=12 || hits[2]!=23 || hits[3]!=32) "
@@ -6211,12 +6349,12 @@ int main(int argc, char **argv) {
         CHECK(function_48aa20(vm) == top);
         CHECK(execute_source(vm, root + 2,
             "hits.clear();\nprobe[0].callbackMask = 0;\n"));
-        function_462e80(manager);
+        kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)(manager));
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 3 || hits[0] != 21 || hits[1] != 23 || hits[2] != 32) "
             "throw \"directional masks\";\nhits.clear();\n"));
         *(unsigned char *)(intptr_t)(pair_actors[1] + 40) = 0;
-        function_462e80(manager);
+        kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)(manager));
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 0) throw \"inactive/disjoint pair\";"));
         *(unsigned char *)(intptr_t)(pair_actors[1] + 40) = 1;
@@ -6224,7 +6362,7 @@ int main(int argc, char **argv) {
             "probe[0].callbackMask = 1;\n"
             "probe[0].SetCollisionCallbackFunction(function(other) { "
             "::hits.append(user * 10 + other.user); callbackGroup = 0; });\n"));
-        function_462e80(manager);
+        kinoko_collision_dispatch_all((KinokoActorManager *)(intptr_t)(manager));
         CHECK(execute_source(vm, root + 2,
             "if (hits.len() != 3 || hits[0] != 12 || hits[1] != 23 || hits[2] != 32) "
             "throw \"callback mask mutation\";\n"
@@ -6235,20 +6373,19 @@ int main(int argc, char **argv) {
             "probe[0].SetUpdateFunction(function() { "
             "::CreateActor(::InitChild, 100.0, 0.0, -1.0, 4); "
             "::probe[1].Release(); SetUpdateFunction(null); });\n"));
-        target = PTR(function_469b40);
-        CHECK(function_415550_this(PTR(root), PTR("CreateActor"),
-            PTR(&target), 4, PTR(function_471df0), 0) >= 0);
+        target = PTR(kinoko_script_create_actor);
+        CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("CreateActor")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(kinoko_script_create_actor_entry)), 0)) >= 0);
         *(int32_t *)(intptr_t)(manager + 64) = -1;
-        CHECK(retdec_actor_manager_update(manager, PTR(g_retdec_camera_state)) == 3);
+        CHECK(kinoko_actor_manager_update((KinokoActorManager *)(intptr_t)(manager), (KinokoCamera *)(intptr_t)(PTR(g_retdec_camera_state))) == 3);
         CHECK(execute_source(vm, root + 2,
             "if (child.x != 105.0 || childSteps != 0) throw \"post-step refresh\";"));
         CHECK(*(int32_t *)(intptr_t)(pair_actors[1] + 28) == 0);
         CHECK(function_48aa20(vm) == top);
     }
-    function_4a9d70_this(PTR(closure));
+    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(closure))));
     {
-        int32_t actor, animation[7] = {0};
-        function_469700();
+        int32_t actor, map_proxy, animation[7] = {0};
+        kinoko_script_clear_actors();
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         layout[66] = PTR(records);
         layout[67] = PTR(records + 1);
@@ -6262,9 +6399,9 @@ int main(int argc, char **argv) {
         *(int16_t *)(chips[0].bytes + 14) = 32;
         *(int16_t *)(chips[0].bytes + 34) = 0;
         *(uint32_t *)(chips[0].bytes + 16) = 0;
-        CHECK(function_4693a0(PTR(layout)));
-        actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-            50, 40, -1, PTR(&g16), g483, g484, 0);
+        map_proxy = function_4693a0(PTR(layout));
+        CHECK(map_proxy);
+        actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 50, 40, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(actor);
         *(int32_t *)(intptr_t)(actor + 316) = 1;
         *(int32_t *)(intptr_t)(actor + 200) = PTR(animation);
@@ -6276,20 +6413,23 @@ int main(int argc, char **argv) {
         position_actor(actor, 50, 40);
         *(float *)(intptr_t)(actor + 256) = 2;
         *(float *)(intptr_t)(actor + 260) = 5;
-        retdec_actor_manager_refresh(manager);
+        kinoko_actor_manager_refresh((KinokoActorManager *)(intptr_t)(manager));
         function_468620_this(PTR(g_514300_storage));
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 240) == 52);
         CHECK(*(float *)(intptr_t)(actor + 244) == 45);
         for (int i = 0; i < 12; ++i) {
             function_468620_this(PTR(g_514300_storage));
-            function_45ec60(actor);
+            kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         }
         CHECK(*(float *)(intptr_t)(actor + 244) == 100);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         CHECK(*(int32_t *)(intptr_t)(actor + 36) != 0);
+        CHECK(*(int32_t *)(intptr_t)g_514300_storage[5] == 1);
+        CHECK(*(int32_t *)(intptr_t)(actor+32) == *(int32_t *)(intptr_t)(map_proxy+24));
+        CHECK(*(int32_t *)(intptr_t)(*(int32_t *)(intptr_t)(map_proxy+28)+4) == 1);
         *(float *)(intptr_t)(actor + 260) = -6;
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 94);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
         CHECK(*(int32_t *)(intptr_t)(actor + 36) == 0);
@@ -6301,10 +6441,10 @@ int main(int argc, char **argv) {
         position_actor(actor, 94, 80);
         *(float *)(intptr_t)(actor + 256) = 12;
         *(float *)(intptr_t)(actor + 260) = 0;
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 240) == 102);
         CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
-        function_45dbd0_this(actor, 40, 0);
+        kinoko_actor_move(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor), 40, 0);
         CHECK(*(float *)(intptr_t)(actor + 240) == 102);
         CHECK(*(float *)(intptr_t)(actor + 248) == 102);
         CHECK(*(int32_t *)(intptr_t)(actor + 292) == 1);
@@ -6315,12 +6455,12 @@ int main(int argc, char **argv) {
         position_actor(actor, 50, 80);
         *(float *)(intptr_t)(actor + 256) = 0;
         *(float *)(intptr_t)(actor + 260) = -18;
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 68);
         CHECK(*(int32_t *)(intptr_t)(actor + 288) != 0);
         *(uint32_t *)(chips[0].bytes + 16) = 0x20;
         position_actor(actor, 50, 80);
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 62);
         CHECK(*(int32_t *)(intptr_t)(actor + 288) == 0);
         records[0][2] = 16;
@@ -6329,19 +6469,19 @@ int main(int argc, char **argv) {
         *(int16_t *)(chips[0].bytes + 34) = 1;
         position_actor(actor, 16, 40);
         *(float *)(intptr_t)(actor + 260) = 0;
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 32);
         CHECK(*(float *)(intptr_t)(actor + 276) == -1);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 1);
         *(int16_t *)(chips[0].bytes + 34) = 2;
         position_actor(actor, 16, 40);
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 32);
         CHECK(*(float *)(intptr_t)(actor + 276) == 1);
         *(uint8_t *)((char *)animation + 25) = 0;
         position_actor(actor, 16, 40);
         *(float *)(intptr_t)(actor + 260) = 5;
-        function_45ec60(actor);
+        kinoko_actor_update_motion(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor));
         CHECK(*(float *)(intptr_t)(actor + 244) == 45);
         CHECK(*(int32_t *)(intptr_t)(actor + 296) == 0);
         {
@@ -6357,28 +6497,43 @@ int main(int argc, char **argv) {
             }
             position_actor(actor, 96, 100);
             *(int32_t *)(intptr_t)(actor + 480) = 1;
-            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            CHECK(fixture_collision_query_map(PTR(layout), actor, 0, &count));
             found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
             CHECK(count == 2 && found[0].index == 1 && found[1].index == 2);
             count = 0;
             position_actor(actor, 16, 100);
-            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            CHECK(fixture_collision_query_map(PTR(layout), actor, 0, &count));
             found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
             CHECK(count == 1 && found[0].index == 0);
             count = 0;
             position_actor(actor, 144, 100);
-            CHECK(retdec_collision_query_map(PTR(layout), actor, 0, &count));
+            CHECK(fixture_collision_query_map(PTR(layout), actor, 0, &count));
             found = (KinokoCollisionRecord *)(intptr_t)g_514300_storage[9];
             CHECK(count == 1 && found[0].index == 2);
         }
-        function_469700();
+        {
+            /* Complete the R139 query chain with two registered layers. */
+            int32_t second_map[116];
+            memcpy(second_map, layout, sizeof(second_map));
+            CHECK(function_4693a0(PTR(second_map)));
+            *(int16_t *)(chips[0].bytes + 34) = 0;
+            position_actor(actor, 144, 100);
+            CHECK(kinoko_collision_move_actor(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor), 0.0f, 0.0f));
+            int32_t *ends = (int32_t*)(intptr_t)g_514300_storage[5];
+            KinokoCollisionRecord *found = (KinokoCollisionRecord*)(intptr_t)g_514300_storage[9];
+            CHECK(ends[0] == 1 && ends[1] == 2);
+            CHECK(found[0].index == 2 && found[1].index == 2);
+            /* Retire the borrowed stack layout before leaving this scope. */
+            kinoko_script_clear_actors();
+            CHECK(function_468950_this(PTR(g_514300_storage), manager));
+        }
+        kinoko_script_clear_actors();
         function_468950_this(PTR(g_514300_storage), manager);
     }
     if (argc > 2) {
         CHECK(execute_file(vm, root + 2, argv[2]));
-        target = PTR(function_469a20);
-        CHECK(function_415550_this(PTR(root), PTR("SetGlobalUpdateFunction"),
-            PTR(&target), 4, PTR(function_471c70), 0) >= 0);
+        target = PTR(kinoko_script_set_global_update);
+        CHECK((int32_t)(intptr_t)(kinoko_sqrat_bind_object_function((void *)(intptr_t)(PTR(root)), (const char *)(intptr_t)(PTR("SetGlobalUpdateFunction")), (const void *)(intptr_t)(PTR(&target)), 4, (void *)(intptr_t)(PTR(kinoko_script_global_update_entry)), 0)) >= 0);
         CHECK(execute_source(vm, root + 2,
             "fadeCalls <- [];\n"
             "Fader1 <- { FadeOut = function(a,b,c,d) { ::fadeCalls.append(0); }, "
@@ -6388,12 +6543,12 @@ int main(int argc, char **argv) {
             "function UpdateGlobal() {}\n"
             "stageChangeCount = 120;\nSetGlobalUpdateFunction(UpdateStageStart);\n"));
         for (int i = 0; i < 121; ++i)
-            CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+            CHECK(kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)(PTR(g612))) >= 0);
         CHECK(execute_source(vm, root + 2,
             "if (stageChangeCount != -1 || StageStart.pl.visible || updateMask != -1 || "
             "fadeCalls.len() != 2) throw \"stage start countdown stalled\";"));
         for (int i = 0; i < 16; ++i)
-            CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+            CHECK(kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)(PTR(g612))) >= 0);
         CHECK(execute_source(vm, root + 2,
             "if (stageChangeCount != -1 || fadeCalls.len() != 2) "
             "throw \"retired stage callback still running\";"));
@@ -6409,10 +6564,10 @@ int main(int argc, char **argv) {
                 "StageStart.pl = nativeStagePlayer;\nfadeCalls.clear();\n"
                 "stageChangeCount = 120;\nSetGlobalUpdateFunction(UpdateStageStart);\n"));
             for (int i = 0; i < 121; ++i)
-                CHECK(retdec_actor_step_callback(PTR(g612)) >= 0);
+                CHECK(kinoko_script_callback_invoke((KinokoScriptCallback *)(intptr_t)(PTR(g612))) >= 0);
             CHECK(*(uint8_t *)(act + 24) == 0);
             CHECK(function_48aa20(vm) == top);
-            retdec_sqrat_release_pair(vm, player_pair);
+            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
         }
     }
     {
@@ -6433,8 +6588,7 @@ int main(int argc, char **argv) {
     {
         int32_t animation[14] = {0};
         int32_t frames[62] = {0};
-        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int32_t actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         CHECK(actor);
         animation[2] = PTR(frames);
         animation[3] = PTR(frames + 62);
@@ -6444,7 +6598,7 @@ int main(int argc, char **argv) {
         animation[10] = -1;
         animation[11] = 7;
         *((uint8_t *)animation + 25) = 1;
-        CHECK(retdec_pat_tree_put(manager, 0x60000001, PTR(animation)));
+        CHECK(fixture_pat_tree_put(manager, 0x60000001, PTR(animation)));
         for (int i = 0; i < 8; ++i)
             __frontend_reg_store_fpr(i, 700.0L + i);
         CHECK(retdec_call_thiscall1_result((void *)(intptr_t)actor,
@@ -6465,18 +6619,18 @@ int main(int argc, char **argv) {
         *(float *)(intptr_t)(actor + 172) = 1.5f;
         *(float *)(intptr_t)(actor + 176) = 0.5f;
         *(float *)(intptr_t)(actor + 272) = 1.0f;
-        function_462280_this(actor, 0x60000001);
+        kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), 0x60000001);
         CHECK(*(float *)(intptr_t)(actor + 440) == 68.5f);
         CHECK(*(float *)(intptr_t)(actor + 448) == 119.5f);
         CHECK(*(int16_t *)(intptr_t)(actor + 388) == 51);
-        function_462280_this(actor, 0x60000002);
+        kinoko_actor_set_take((KinokoActor *)(intptr_t)(actor), 0x60000002);
         CHECK(*(int32_t *)(intptr_t)(actor + 200) == PTR(animation));
         CHECK(*(float *)(intptr_t)(actor + 440) == 68.5f);
         CHECK(*(int32_t *)(intptr_t)(actor + 208) == 0x60000002);
         CHECK(*(int32_t *)(intptr_t)(actor + 212) == 0);
         CHECK(*(int32_t *)(intptr_t)(actor + 216) == 0);
         *((uint8_t *)animation + 25) = 0;
-        function_4a9840_this(PTR(root + 1), "animationTakeProbe", actor + 44);
+        kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "animationTakeProbe", (const void *)(intptr_t)(actor + 44));
         CHECK(execute_source(vm, root + 2,
             "animationTakeProbe.SetTake(0x60000001); delete ::animationTakeProbe;"));
         for (int offset = 424; offset < 440; offset += 4)
@@ -6488,14 +6642,13 @@ int main(int argc, char **argv) {
         CHECK(*(float *)(intptr_t)(actor + 448) == 100);
         CHECK(*(float *)(intptr_t)(actor + 452) == 200);
         CHECK(*(int32_t *)(intptr_t)(actor + 388) == 0);
-        function_469700();
+        kinoko_script_clear_actors();
     }
     CHECK(test_pat_records(manager) == 0);
     CHECK(test_actor_step(manager, vm, root) == 0);
     CHECK(test_actor_reset(manager, vm, root) == 0);
     {
-        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int32_t actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         float dx = -40.0f, dy = 0.0f;
         int32_t dx_bits, dy_bits;
         int fault = 0;
@@ -6511,7 +6664,7 @@ int main(int argc, char **argv) {
         CHECK(*(float *)(intptr_t)(actor + 240) == 60);
         CHECK(*(float *)(intptr_t)(actor + 244) == 200);
         __try {
-            retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_method_actor_destroy_state);
+            retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_reset_method);
         } __except(EXCEPTION_EXECUTE_HANDLER) {
             fault = 1;
         }
@@ -6532,8 +6685,8 @@ int main(int argc, char **argv) {
             *(float *)(intptr_t)(actor + 260) = -4;
             *(float *)(intptr_t)(actor + 264) = 7;
             *(float *)(intptr_t)(actor + 268) = 9;
-            retdec_actor_refresh_bounds(actor);
-            function_45dbd0_this(actor, 21, -18);
+            kinoko_actor_refresh_collision_bounds((KinokoActor *)(intptr_t)(actor));
+            kinoko_actor_move(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor), 21, -18);
             CHECK(*(float *)(intptr_t)(actor + 240) == 121);
             CHECK(*(float *)(intptr_t)(actor + 244) == 182);
             CHECK(*(float *)(intptr_t)(actor + 248) == 116);
@@ -6543,24 +6696,23 @@ int main(int argc, char **argv) {
             CHECK(*(float *)(intptr_t)(actor + 264) == 7);
             CHECK(*(float *)(intptr_t)(actor + 268) == 9);
             memcpy(unchanged, (const void *)(intptr_t)actor, sizeof(unchanged));
-            function_45dbd0_this(actor, 0, 0);
+            kinoko_actor_move(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor), 0, 0);
             CHECK(memcmp(unchanged, (const void *)(intptr_t)actor, sizeof(unchanged)) == 0);
             *((uint8_t *)animation + 25) = 0;
-            function_45dbd0_this(actor, -40, 0);
+            kinoko_actor_move(kinoko_game_collision_state(), (KinokoActor *)(intptr_t)(actor), -40, 0);
             CHECK(*(float *)(intptr_t)(actor + 240) == 81);
             CHECK(*(float *)(intptr_t)(actor + 248) == 121);
         }
-        function_469700();
+        kinoko_script_clear_actors();
     }
     {
         int32_t constructed[136];
-        function_45e300_this(PTR(constructed));
+        kinoko_actor_construct((KinokoActor *)(intptr_t)(PTR(constructed)));
         CHECK(constructed[27] == PTR(&g16));
         CHECK(constructed[28] == g483 && constructed[29] == g484);
     }
     {
-        int32_t actor = function_463b40_this(manager, PTR(&g16), g483, g484,
-            100, 200, -1, PTR(&g16), g483, g484, 0);
+        int32_t actor = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 100, 200, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
         int fault = 0;
         CHECK(actor);
         __try {
@@ -6597,7 +6749,7 @@ int main(int argc, char **argv) {
             }
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
             CHECK(function_4693a0(PTR(query_layout)));
-            function_4a9840_this(PTR(root + 1), "queryProbe", actor + 44);
+            kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "queryProbe", (const void *)(intptr_t)(actor + 44));
             CHECK(execute_source(vm, root + 2,
                 "for (local i=0;i<64;i++) {\n"
                 "  if (!queryProbe.IsExistChip(80.0,180.0,96.0,212.0)) throw \"missing region\";\n"
@@ -6624,8 +6776,7 @@ int main(int argc, char **argv) {
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
             {
-                int32_t other = function_463b40_this(manager, PTR(&g16), g483, g484,
-                    200, 300, -1, PTR(&g16), g483, g484, 0);
+                int32_t other = (int32_t)(intptr_t)(kinoko_actor_manager_create((KinokoActorManager *)(intptr_t)(manager), &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, 200, 300, -1, &(const KinokoOwnedObjectWords){PTR(&g16), g483, g484}, (const void *)(intptr_t)(0)));
                 int32_t candidates[2] = {actor, other};
                 int32_t saved_begin = g_514300_storage[17], saved_count = g_514300_storage[21];
                 CHECK(other);
@@ -6646,7 +6797,7 @@ int main(int argc, char **argv) {
             CHECK(retdec_call_thiscall0_result((void *)(intptr_t)actor, kinoko_actor_get_chip_flags) == 1);
             CHECK(function_468950_this(PTR(g_514300_storage), manager));
         }
-        function_469700();
+        kinoko_script_clear_actors();
     }
     {
         int32_t source[136] = {0}, destination[136] = {0};
@@ -6662,22 +6813,22 @@ int main(int argc, char **argv) {
         source[135] = 1234567;
         destination[93] = 98765; /* original copy skips Actor+372 */
         for (int i = 0; i < 7; ++i) {
-            function_4a9500_this((int32_t*)((char*)source + offsets[i]), PTR(root + 1));
-            function_4a94e0_this(PTR((char*)destination + offsets[i]));
+            kinoko_sqplus_object_copy_construct((void *)(intptr_t)((int32_t*)((char*)source + offsets[i])), (const void *)(intptr_t)(PTR(root + 1)));
+            kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR((char*)destination + offsets[i])));
         }
-        CHECK(function_460900(PTR(destination), PTR(source)) == PTR(destination));
+        CHECK(kinoko_actor_assign_instance(PTR(destination), PTR(source)) == PTR(destination));
         CHECK(destination[135] == 1234567 && destination[93] == 98765);
         CHECK(destination[7] == source[7] && destination[9] == source[9]);
         CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
         CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
-        CHECK(function_460900(PTR(destination), PTR(destination)) == PTR(destination));
+        CHECK(kinoko_actor_assign_instance(PTR(destination), PTR(destination)) == PTR(destination));
         CHECK(((int32_t*)(intptr_t)source[7])[1] == 2);
         CHECK(((int32_t*)(intptr_t)source[7])[2] == 3);
         for (int i = 0; i < 7; ++i) {
             CHECK(memcmp((char*)destination + offsets[i] + 4,
                          (char*)source + offsets[i] + 4, 8) == 0);
-            function_4a9d70_this(PTR((char*)destination + offsets[i]));
-            function_4a9d70_this(PTR((char*)source + offsets[i]));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)destination + offsets[i]))));
+            (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR((char*)source + offsets[i]))));
         }
         kinoko_native_release_strong(destination[7]);
         kinoko_native_release_weak(destination[9]);
@@ -6689,8 +6840,8 @@ int main(int argc, char **argv) {
         CHECK(execute_source(vm, root + 2,
             "cameraProbeCount <- 0;\n"
             "function CameraProbeUpdate() { ::cameraProbeCount++; }"));
-        function_4a9500_this(camera, PTR(root + 1));
-        function_4aa3a0_this(PTR(root + 1), PTR(callback), "CameraProbeUpdate");
+        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(camera), (const void *)(intptr_t)(PTR(root + 1)));
+        kinoko_sqplus_object_get_value((void *)(intptr_t)(PTR(root + 1)), (void *)(intptr_t)(PTR(callback)), "CameraProbeUpdate");
         retdec_call_thiscall3_result(camera, kinoko_camera_set_update_callback,
             callback[0], callback[1], callback[2]);
         int32_t camera_top = function_48aa20(vm);
@@ -6698,12 +6849,12 @@ int main(int argc, char **argv) {
         CHECK(function_48aa20(vm) == camera_top);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"camera update callback skipped\";"));
-        function_4a9d70_this(PTR(camera + 7));
-        CHECK(kinoko_camera_update(PTR(camera), NULL) == g483);
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 7))));
+        CHECK(kinoko_camera_update((KinokoCamera *)camera, NULL) == g483);
         CHECK(execute_source(vm, root + 2,
             "if (cameraProbeCount != 1) throw \"empty camera callback executed\";"));
-        function_4a9d70_this(PTR(camera + 4));
-        function_4a9d70_this(PTR(camera));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera + 4))));
+        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(camera))));
     }
     if (argc > 4)
         CHECK(test_player_pat(manager, argv[3], strtoul(argv[4], NULL, 0)) == 0);
@@ -6733,8 +6884,9 @@ int main(int argc, char **argv) {
     CHECK(test_array_sort(vm, root) == 0);
     CHECK(test_standard_error_handler(vm, root) == 0);
     CHECK(vm_failures == 0);
-    CHECK(function_464e20(manager) == *(int32_t *)(intptr_t)(manager + 100));
-    CHECK(function_464e20(manager) == *(int32_t *)(intptr_t)(manager + 100));
+    CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
+    CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
+    kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }

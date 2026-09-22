@@ -35,7 +35,7 @@ void trace_value(const char* type_label, const char* data_label, ObjectView obje
 // A real Squirrel userdata payload is never null; failed conversions leave it
 // null and must leave both caller outputs untouched.
 bool get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const char* key,
-                  int32_t* output, int32_t tag_output, bool raw) {
+                  int32_t* output, void* tag_output, bool raw) {
     SQUserPointer data = nullptr, tag = nullptr;
     const bool found = upstream::sqplus_get_userdata(vm, receiver, key, &data,
         tag_output ? &tag : nullptr, raw);
@@ -44,24 +44,21 @@ bool get_userdata(HSQUIRRELVM vm, HSQOBJECT receiver, const char* key,
         std::memcpy(output, &bits, sizeof(bits));
         if (tag_output) {
             const auto tag_bits = address(tag);
-            std::memcpy(pointer(tag_output), &tag_bits, sizeof(tag_bits));
+            std::memcpy(tag_output, &tag_bits, sizeof(tag_bits));
         }
     }
     return found;
 }
 } // namespace
 
-extern "C" int32_t function_4a94e0_this(int32_t object) {
+extern "C" void * kinoko_sqplus_object_initialize(void * object) {
     if (object) ObjectView(object).initialize(kinoko_squirrel_object_vtable());
     return object;
 }
-extern "C" int32_t retdec_msvc_0_Init_locks_std__QAE_XZ5_this(int32_t object) {
-    return function_4a94e0_this(object);
-}
-extern "C" int32_t* function_4a9500_this(int32_t* object, int32_t source) {
+extern "C" void * kinoko_sqplus_object_copy_construct(void * object, const void * source) {
     retdec_trace("4a9500:this-begin");
     retdec_trace_i32("4a9500:this", address(object));
-    retdec_trace_i32("4a9500:source", source);
+    retdec_trace_i32("4a9500:source", address(source));
     if (source) trace_value("4a9500:source-type", "4a9500:source-data", ObjectView(source));
     ObjectView destination(object);
     destination.set_vtable(kinoko_squirrel_object_vtable());
@@ -69,11 +66,11 @@ extern "C" int32_t* function_4a9500_this(int32_t* object, int32_t source) {
     destination.retain(current_vm());
     return object;
 }
-extern "C" int32_t function_4a9540_this(int32_t object, int32_t type, int32_t data) {
+extern "C" void * kinoko_sqplus_object_construct_value(void * object, int32_t type, int32_t data) {
     static int trace_count;
     if (!object) return 0;
     if (trace_count < 32) {
-        retdec_trace_i32("4a9540:this", object);
+        retdec_trace_i32("4a9540:this", address(object));
         retdec_trace_i32("4a9540:arg0", type);
         retdec_trace_i32("4a9540:arg1", data);
     }
@@ -87,7 +84,7 @@ extern "C" int32_t function_4a9540_this(int32_t object, int32_t type, int32_t da
     }
     return object;
 }
-extern "C" int32_t function_4a9570_this(int32_t object) {
+extern "C" void * kinoko_sqplus_object_reset(void * object) {
     if (!object) return 0;
     ObjectView destination(object);
     retdec_trace("4a9570:begin");
@@ -99,12 +96,12 @@ extern "C" int32_t function_4a9570_this(int32_t object) {
     retdec_trace("4a9570:before-clear");
     destination.reset();
     retdec_trace("4a9570:after-clear");
-    return destination.payload_address();
+    return pointer(destination.payload_address());
 }
-extern "C" int32_t function_4a95c0_this(int32_t object, int32_t source) {
+extern "C" void * kinoko_sqplus_object_assign(void * object, const void * source) {
     retdec_trace("4a95c0:begin");
-    retdec_trace_i32("4a95c0:this", object);
-    retdec_trace_i32("4a95c0:source", source);
+    retdec_trace_i32("4a95c0:this", address(object));
+    retdec_trace_i32("4a95c0:source", address(source));
     // Snapshot before releasing the old destination, including self-assignment.
     auto incoming = ObjectView(source).value();
     upstream::sqplus_retain(current_vm(), incoming);
@@ -115,43 +112,43 @@ extern "C" int32_t function_4a95c0_this(int32_t object, int32_t source) {
     retdec_trace("4a95c0:after-copy");
     return object;
 }
-extern "C" int32_t function_4a9660_this(int32_t object, int32_t index) {
+extern "C" int32_t kinoko_sqplus_object_capture(void * object, int32_t index) {
     retdec_trace("4a9660:this-begin");
-    retdec_trace_i32("4a9660:this", object);
+    retdec_trace_i32("4a9660:this", address(object));
     retdec_trace_i32("4a9660:this-index", index);
     return object ? ObjectView(object).capture(current_vm(), index) : 0;
 }
-extern "C" int32_t function_4a9600_this(int32_t object, int32_t source) {
+extern "C" struct SQVM * kinoko_sqplus_object_append(void * object, const void * source) {
     const auto receiver = ObjectView(object).value();
-    if (receiver._type != OT_ARRAY) return 0;
+    if (receiver._type != OT_ARRAY) return nullptr;
     auto* vm = current_vm();
     upstream::sqplus_append(vm, receiver, ObjectView(source).value());
-    return address(vm); // Retained legacy return, not the upstream void result.
+    return vm; // Retained legacy return, not the upstream void result.
 }
-extern "C" int32_t* function_4a91c0_this(int32_t* object) {
-    function_4a94e0_this(address(object));
+extern "C" void * kinoko_sqplus_object_new_table(void * object) {
+    kinoko_sqplus_object_initialize(object);
     ObjectView(object).write(upstream::sqplus_new_table(current_vm()));
     return object;
 }
-extern "C" int32_t* function_4a92e0_this(int32_t* object, int32_t size) {
-    function_4a94e0_this(address(object));
+extern "C" void * kinoko_sqplus_object_new_array(void * object, int32_t size) {
+    kinoko_sqplus_object_initialize(object);
     ObjectView(object).write(upstream::sqplus_new_array(current_vm(), size));
     return object;
 }
-extern "C" int32_t function_4a96c0_this(int32_t object) {
+extern "C" int32_t kinoko_sqplus_object_is_null(void * object) {
     return ObjectView(object).value()._type == OT_NULL;
 }
-extern "C" int32_t function_4a96d0(int32_t object) {
-    return kinoko_squirrel_object_size(object, address(current_vm()));
+extern "C" int32_t kinoko_sqplus_object_size(void * object) {
+    return kinoko_squirrel_object_size(address(object), address(current_vm()));
 }
-extern "C" int32_t function_4a99f0(int32_t object) {
-    return kinoko_squirrel_object_reverse(object, address(current_vm()));
+extern "C" int32_t kinoko_sqplus_object_reverse(void * object) {
+    return kinoko_squirrel_object_reverse(address(object), address(current_vm()));
 }
-extern "C" int32_t function_4a9730_this(int32_t object, int32_t key, int32_t text) {
+extern "C" int32_t kinoko_sqplus_object_set_index_string(void * object, int32_t key, const char * text) {
     retdec_trace("4a9730:begin");
-    retdec_trace_i32("4a9730:this", object);
+    retdec_trace_i32("4a9730:this", address(object));
     retdec_trace_i32("4a9730:a2", key);
-    retdec_trace_i32("4a9730:source", text);
+    retdec_trace_i32("4a9730:source", address(text));
     // key is an SQInteger, not a pointer. The old diagnostic dereferenced it
     // even in quiet builds, making valid small integer keys crash.
     if (object) trace_value("4a9730:this-type", "4a9730:this-data", ObjectView(object));
@@ -159,69 +156,69 @@ extern "C" int32_t function_4a9730_this(int32_t object, int32_t key, int32_t tex
     const SQInteger top = sq_gettop(vm);
     retdec_trace_i32("4a9730:stack-base", top);
     const int32_t result = upstream::sqplus_set_string(vm, ObjectView(object).value(),
-        key, pointer<const char>(text));
+        key, static_cast<const char *>(text));
     retdec_trace_i32("4a9730:result", result);
     retdec_trace("4a9730:after-c910");
     return result;
 }
-extern "C" int32_t function_4a97b0_this(int32_t object, int32_t key, int32_t value) {
+extern "C" int32_t kinoko_sqplus_object_raw_set_object(void * object, const void * key, const void * value) {
     if (!object || !key || !value) return 0;
     return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
                                    ObjectView(key).value(), ObjectView(value).value());
 }
-extern "C" int32_t function_4a9840_this(int32_t object, const char* key, int32_t value) {
+extern "C" int32_t kinoko_sqplus_object_raw_set_name(void * object, const char* key, const void * value) {
     return upstream::sqplus_raw_set(current_vm(), ObjectView(object).value(),
                                    key, ObjectView(value).value());
 }
-extern "C" int32_t function_4a9950(int32_t object, int32_t key, int32_t size, int32_t tag) {
+extern "C" int32_t kinoko_sqplus_object_new_userdata(void * object, const char * key, int32_t size, void * tag) {
     auto* vm = current_vm();
     const auto top = sq_gettop(vm);
     retdec_trace("4a9950:begin");
-    retdec_trace_i32("4a9950:this", object);
-    retdec_trace_i32("4a9950:name", key);
+    retdec_trace_i32("4a9950:this", address(object));
+    retdec_trace_i32("4a9950:name", address(key));
     retdec_trace_i32("4a9950:size", size);
-    retdec_trace_i32("4a9950:aux", tag);
+    retdec_trace_i32("4a9950:aux", address(tag));
     retdec_trace_i32("4a9950:stack-before", top);
     if (object) trace_value("4a9950:this-type", "4a9950:this-data", ObjectView(object));
     const int32_t result = upstream::sqplus_new_userdata(vm, ObjectView(object).value(),
-        pointer<const char>(key), size, pointer(tag));
+        static_cast<const char *>(key), size, tag);
     retdec_trace_i32("4a9950:result", result);
     retdec_trace_i32("4a9950:stack-after", sq_gettop(vm));
     return result;
 }
-extern "C" int32_t function_4a9a30_this(int32_t object) {
+extern "C" int32_t kinoko_sqplus_object_type(void * object) {
     return object ? ObjectView(object).value()._type : 0;
 }
-extern "C" int32_t function_4a9a40_this(int32_t object, int32_t key) {
+extern "C" int32_t kinoko_sqplus_object_get_index_integer(void * object, int32_t key) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
     return upstream::sqplus_get_integer(vm, ObjectView(object).value(), key);
 }
-extern "C" int32_t function_4a9ac0_this(int32_t object, int32_t key) {
+extern "C" const char * kinoko_sqplus_object_get_index_string(void * object, int32_t key) {
+    auto* vm = current_vm();
+    if (!object || !vm) return nullptr;
+    return upstream::sqplus_get_string(vm, ObjectView(object).value(), key);
+}
+extern "C" void * kinoko_sqplus_object_get_index_userpointer(void * object, int32_t key) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
-    return address(upstream::sqplus_get_string(vm, ObjectView(object).value(), key));
+    return upstream::sqplus_get_userpointer(vm, ObjectView(object).value(), key);
 }
-extern "C" int32_t function_4aa000_this(int32_t object, int32_t key) {
-    auto* vm = current_vm();
-    if (!object || !vm) return 0;
-    return address(upstream::sqplus_get_userpointer(vm, ObjectView(object).value(), key));
-}
-extern "C" int32_t function_4a9b40_this(int32_t object, int32_t tag) {
+extern "C" void * kinoko_sqplus_object_instance(void * object, void * tag) {
     if (!object) return 0;
-    return address(upstream::sqplus_get_instance_up(current_vm(), ObjectView(object).value(), pointer(tag)));
+    return upstream::sqplus_get_instance_up(current_vm(), ObjectView(object).value(), tag);
 }
-extern "C" int32_t function_4a9bb0_this(int32_t object, int32_t native_pointer) {
+extern "C" int32_t kinoko_sqplus_object_set_instance(void * object, void * native_pointer) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
-    return upstream::sqplus_set_instance_up(vm, ObjectView(object).value(), pointer(native_pointer));
+    return upstream::sqplus_set_instance_up(vm, ObjectView(object).value(), native_pointer);
 }
-extern "C" int32_t function_4a9c10_this(int32_t object) {
+extern "C" int32_t kinoko_sqplus_object_begin_iteration(void * object) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
     return upstream::sqplus_begin_iteration(vm, ObjectView(object).value());
 }
-extern "C" int32_t function_4a9c60(int32_t* key, int32_t* value) {
+extern "C" int32_t kinoko_sqplus_object_next(int32_t* key, int32_t* value) {
     auto* vm = current_vm();
     if (SQ_FAILED(sq_next(vm, -2))) return 0;
     ObjectView(key).capture(vm, -2);
@@ -229,14 +226,14 @@ extern "C" int32_t function_4a9c60(int32_t* key, int32_t* value) {
     pop(vm, 2); // Leave container and iterator for the next call.
     return 1;
 }
-extern "C" int32_t function_4a9d50(void) { return pop(current_vm(), 2); }
-extern "C" int32_t function_4a9d30_this(int32_t object, int32_t* tag) {
+extern "C" int32_t kinoko_sqplus_object_end_iteration(void) { return pop(current_vm(), 2); }
+extern "C" int32_t kinoko_sqplus_object_typetag(void * object, int32_t* tag) {
     static int trace_count;
     if (!object || !tag) return 0;
     auto value = ObjectView(object).value();
     const bool trace = trace_count < 128 || value._type == OT_CLASS;
     if (trace) {
-        retdec_trace_i32("4a9d30:this", object);
+        retdec_trace_i32("4a9d30:this", address(object));
         trace_value("4a9d30:type", "4a9d30:data", ObjectView(object));
         retdec_trace_i32("4a9d30:out", address(tag));
     }
@@ -253,13 +250,13 @@ extern "C" int32_t function_4a9d30_this(int32_t object, int32_t* tag) {
     }
     return result;
 }
-extern "C" int32_t function_4a9d70_this(int32_t object) {
-    return kinoko_squirrel_object_destroy(object, address(current_vm()), kinoko_squirrel_object_vtable());
+extern "C" void* kinoko_sqplus_object_destroy(void * object) {
+    return (void*)(intptr_t)(kinoko_squirrel_object_destroy(address(object), address(current_vm()), kinoko_squirrel_object_vtable()));
 }
-extern "C" int32_t function_4a9e30_this(int32_t object, int32_t thread_address) {
+extern "C" void * kinoko_sqplus_object_assign_thread(void * object, struct SQVM * thread_address) {
     retdec_trace("4a9e30:begin");
-    retdec_trace_i32("4a9e30:this", object);
-    retdec_trace_i32("4a9e30:source", thread_address);
+    retdec_trace_i32("4a9e30:this", address(object));
+    retdec_trace_i32("4a9e30:source", address(thread_address));
     retdec_trace_i32("4a9e30:gvm-before", address(current_vm()));
     if (!object) return 0;
     auto* vm = current_vm();
@@ -269,7 +266,7 @@ extern "C" int32_t function_4a9e30_this(int32_t object, int32_t thread_address) 
         destination.reset();
         return object;
     }
-    auto* thread = pointer<SQVM>(thread_address);
+    auto* thread = static_cast<SQVM *>(thread_address);
     retdec_trace_i32("4a9e30:source-ref-before", thread->_uiRef);
     {
         // Replace manual +4 refcount writes/virtual Release dispatch with
@@ -296,7 +293,7 @@ extern "C" int32_t function_4a9e30_this(int32_t object, int32_t thread_address) 
     retdec_trace_i32("4a9e30:gvm-after-pop", address(current_vm()));
     return object;
 }
-extern "C" int32_t function_4a9f60(int32_t object, int32_t delegate) {
+extern "C" int32_t kinoko_sqplus_object_set_delegate(void * object, const void * delegate) {
     const auto type = ObjectView(object).value()._type;
     const auto delegate_type = ObjectView(delegate).value()._type;
     retdec_trace_i32("4a9f60:this-type", type);
@@ -308,45 +305,45 @@ extern "C" int32_t function_4a9f60(int32_t object, int32_t delegate) {
     retdec_trace_i32("4a9f60:setdelegate-result", result);
     return result;
 }
-extern "C" int32_t function_4aa080(int32_t object, int32_t key, int32_t output, int32_t tag_output) {
+extern "C" int32_t kinoko_sqplus_object_get_userdata(void * object, const char * key, void * output, void * tag_output) {
     retdec_trace("4aa080:begin");
-    retdec_trace_i32("4aa080:this", object);
-    retdec_trace_squirrel_name("4aa080:name", key);
-    retdec_trace_i32("4aa080:out", output);
-    retdec_trace_i32("4aa080:aux", tag_output);
+    retdec_trace_i32("4aa080:this", address(object));
+    retdec_trace_squirrel_name("4aa080:name", address(key));
+    retdec_trace_i32("4aa080:out", address(output));
+    retdec_trace_i32("4aa080:aux", address(tag_output));
     if (object) trace_value("4aa080:this-type", "4aa080:this-data", ObjectView(object));
     auto* vm = current_vm();
     retdec_trace_i32("4aa080:stack-before", sq_gettop(vm));
     const int32_t result = get_userdata(vm, ObjectView(object).value(),
-        pointer<const char>(key), pointer<int32_t>(output), tag_output, false);
+        static_cast<const char *>(key), static_cast<int32_t *>(output), tag_output, false);
     retdec_trace_i32("4aa080:result", result);
     retdec_trace_i32("4aa080:stack-after", sq_gettop(vm));
     return result;
 }
-extern "C" int32_t retdec_function_4aa110_this(int32_t object, const char* key, int32_t* output, int32_t tag_output) {
+extern "C" int32_t kinoko_sqplus_object_raw_get_userdata(void * object, const char* key, int32_t* output, void * tag_output) {
     auto* vm = current_vm();
     if (!object || !vm) return 0;
     return get_userdata(vm, ObjectView(object).value(), key, output, tag_output, true);
 }
-extern "C" int32_t function_4aa1a0(int32_t object, const char* key) {
+extern "C" int32_t kinoko_sqplus_object_exists(void * object, const char* key) {
     return upstream::sqplus_exists(current_vm(), ObjectView(object).value(), key);
 }
-extern "C" int32_t* function_4aa210_this(int32_t object, int32_t output) {
+extern "C" void * kinoko_sqplus_object_get_delegate(void * object, void * output) {
     ObjectView destination(output);
     destination.initialize(kinoko_squirrel_object_vtable());
     // Snapshot AFTER initialization, preserving the legacy output==receiver case.
     destination.write(upstream::sqplus_get_delegate(current_vm(), ObjectView(object).value()));
-    return pointer<int32_t>(output);
+    return output;
 }
-extern "C" int32_t* function_4aa3a0_this(int32_t object, int32_t output, const char* key) {
+extern "C" void * kinoko_sqplus_object_get_value(void * object, void * output, const char* key) {
     ObjectView destination(output);
     destination.initialize(kinoko_squirrel_object_vtable());
     destination.write(upstream::sqplus_get_value(current_vm(), ObjectView(object).value(), key));
-    return pointer<int32_t>(output);
+    return output;
 }
-extern "C" int32_t function_4a90c0_this(int32_t object, int32_t klass) {
+extern "C" void * kinoko_sqplus_object_new_instance(void * object, const void * klass) {
     if (!object) return 0;
-    function_4a94e0_this(object);
+    kinoko_sqplus_object_initialize(object);
     auto* vm = current_vm();
     if (!klass || !vm) return object;
     trace_value("4a90c0:source-type", "4a90c0:source-data", ObjectView(klass));

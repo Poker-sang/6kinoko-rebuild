@@ -1,0 +1,29 @@
+{
+  "source_commit": "e943b1a163df75a6f33ffb6cf47b5ff1bc3bd44c",
+  "build_tree": "build-runs/mcd-r151b-quiet",
+  "executable": "runtime-builds/mcd-r151b-quiet/kinoko_retdec_rebuild.exe",
+  "exe_sha256": "CC5E758F41858396991D48F0A5C59320ACAB8556FA67A01EF063BA3006F2B93A",
+  "configure_exit": 0,
+  "build_exit": 0,
+  "stage_exit": 0,
+  "game_executed": false,
+  "tests_executed": false,
+  "new_contract": "kinoko_map_chip_cache_contract (compiled only)",
+  "dat": [
+    {
+      "name": "6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "name": "6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "name": "6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    }
+  ]
+}

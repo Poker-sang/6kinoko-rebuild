@@ -30,7 +30,8 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation) {
 }
 // The VM is real. This test substitutes only the already reconstructed callback
 // clearing service; the full service is exercised by stage_native_contract.
-int32_t kinoko_actor_clear_script(int32_t actor) {
+int32_t kinoko_actor_clear_script(KinokoActor *receiver_actor) {
+    const auto actor=address(receiver_actor);
     require(ObjectView(actor + 56).value()._type == OT_NULL, "update reset before clear");
     require(ObjectView(actor + 68).value()._type == OT_NULL, "collision reset before clear");
     ++clears; return actor;
@@ -61,7 +62,7 @@ KinokoOwnedObjectWords owned(HSQUIRRELVM vm, HSQOBJECT value) {
 }
 void invoke(HSQUIRRELVM vm, int32_t actor, HSQOBJECT value) {
     const volatile uint32_t before = 0x55aa33cc, after = 0xcc33aa55;
-    reinterpret_cast<SetStep>(function_4606d0)(actor, owned(vm, value));
+    reinterpret_cast<SetStep>(kinoko_actor_set_step_method)(actor, owned(vm, value));
     require(before == 0x55aa33cc && after == 0xcc33aa55, "caller canaries");
 }
 void single_external_owner(HSQUIRRELVM vm, HSQOBJECT value) {
@@ -118,8 +119,8 @@ void lifecycle(HSQUIRRELVM vm) {
     std::array<unsigned char, 0x222> bytes; bytes.fill(0xa7);
     std::array<unsigned char, 0x220> target{};
     const auto actor = address(bytes.data() + 1), other = address(target.data());
-    require(function_45e300_this(0) == 0 && function_45e460_this(0) == 0, "null lifecycle");
-    require(function_45e300_this(actor) == actor, "construct unaligned Actor view");
+    require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(0))) == 0 && (int32_t)(intptr_t)(kinoko_actor_dispose((KinokoActor *)(intptr_t)(0))) == 0, "null lifecycle");
+    require((int32_t)(intptr_t)(kinoko_actor_construct((KinokoActor *)(intptr_t)(actor))) == actor, "construct unaligned Actor view");
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "Actor allocation boundaries");
     require(load<int32_t>(bytes.data() + 1) == kinoko_actor_vtable(), "original Actor vtable identity");
     require(load<int32_t>(bytes.data() + 9) == 1, "original Actor type");
@@ -127,6 +128,11 @@ void lifecycle(HSQUIRRELVM vm) {
         "inline collision storage pointers");
     for (auto offset : {44, 56, 68, 96, 108, 124, 136})
         require(ObjectView(actor + offset).value()._type == OT_NULL, "all seven wrappers initialized");
+    // Original 45E300 deliberately leaves non-constructor fields untouched.
+    for (auto offset : {4,20,21,23,40,148,152,240,336,372,424,540})
+        require(bytes[1+offset]==0xa7,"constructor preserves bytes reserved for Init or previous storage");
+    require(bytes[1+22]==0,"constructor clears deferred release");
+    for (int offset=340;offset<372;++offset) require(bytes[1+offset]==0,"constructor clears inline collision storage only");
     initialize_table(vm, actor);
     ControlFixture control(2, 3);
     store(target.data() + 24, int32_t{0x12348765}); store(target.data() + 28, address(control.data()));
@@ -150,9 +156,9 @@ void lifecycle(HSQUIRRELVM vm) {
     sq_newuserdata(vm, 4); sq_setreleasehook(vm, -1, release_userdata);
     ObjectView(&argument).capture(vm, -1); sq_pop(vm, 1);
     const auto released = userdata_releases;
-    require(function_4606d0_this(actor, address(&argument)) == address(&argument) + 4, "explicit SetStep return address");
+    require(kinoko_actor_set_step_owned((KinokoActor *)(intptr_t)(actor), (KinokoOwnedObjectWords *)(intptr_t)(address(&argument))) == address(&argument) + 4, "explicit SetStep return address");
     require(userdata_releases == released + 1 && argument.value._type == OT_NULL, "wrong-type owned argument released");
-    require(function_4606d0_this(0, 0) == 0, "null arguments retain old no-op");
+    require(kinoko_actor_set_step_owned((KinokoActor *)(intptr_t)(0), (KinokoOwnedObjectWords *)(intptr_t)(0)) == 0, "null arguments retain old no-op");
     set_slot(vm, "stepFixtureValue", instance.get());
     sq_pushroottable(vm); sq_pushstring(vm, "stepFixtureCall", -1); sq_newclosure(vm, script_step, 0);
     require(SQ_SUCCEEDED(sq_newslot(vm, -3, SQFalse)), "publish native callback"); sq_pop(vm, 1);
@@ -163,15 +169,15 @@ void lifecycle(HSQUIRRELVM vm) {
     sq_pop(vm, 1); erase_slot(vm, "stepFixtureCall"); erase_slot(vm, "stepFixtureValue");
     invoke(vm, actor, instance.get());
     const auto cleared = clears;
-    require(reinterpret_cast<InPlace>(function_45e460)(actor) == actor, "in-place entry returns receiver");
+    require(reinterpret_cast<InPlace>(kinoko_actor_dispose_method)(actor) == actor, "in-place entry returns receiver");
     require(clears == cleared + 1 && control[2] == 3, "destructor releases last step link");
     for (auto offset : {44, 56, 68, 96, 108, 124, 136})
         require(ObjectView(actor + offset).value()._type == OT_NULL, "all wrappers destroyed");
     require(bytes.front() == 0xa7 && bytes.back() == 0xa7, "destruction boundaries");
     auto* allocation = std::malloc(0x220); require(allocation != nullptr, "Actor allocation");
     const auto allocated_actor = address(allocation), deleted = deletes;
-    function_45e300_this(allocated_actor);
-    require(reinterpret_cast<Destroy>(function_45f0c0)(allocated_actor, 1) == allocated_actor, "deleting entry returns receiver");
+    kinoko_actor_construct((KinokoActor *)(intptr_t)(allocated_actor));
+    require(reinterpret_cast<Destroy>(kinoko_actor_delete_method)(allocated_actor, 1) == allocated_actor, "deleting entry returns receiver");
     require(deletes == deleted + 1 && deleted_address == allocated_actor, "deleting entry frees actual receiver, never g1224");
     top(vm, base, "lifecycle stack balanced");
 }

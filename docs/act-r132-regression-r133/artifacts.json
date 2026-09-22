@@ -1,0 +1,39 @@
+{
+  "version": "R133",
+  "source_commit": "24535158624e1ff683870e4c2db112fce6985006",
+  "restored_runtime_baseline": "5efa9a4ace97b158ad68128b8ce60681ee1c3fc4",
+  "build_tree": "build-runs/act-recovery-r133-quiet",
+  "configuration": "Release",
+  "platform": "Win32",
+  "disable_trace": true,
+  "build_exit_code": 0,
+  "build_log": "build-runs/act-recovery-r133-quiet/build.log",
+  "configure_log": "build-runs/act-recovery-r133-configure.log",
+  "staging_log": "build-runs/act-recovery-r133-quiet/stage-dat.log",
+  "dat_size_and_sha256_verified": true,
+  "all_targets_compiled": true,
+  "tests_executed": false,
+  "game_executed": false,
+  "files": [
+    {
+      "path": "runtime-builds\\act-recovery-r133-quiet\\kinoko_retdec_rebuild.exe",
+      "size": 861696,
+      "sha256": "8AEA09C3D344C1A5C63C1F407380EA6C4423A1475F416A57A60A87DC9E5B0431"
+    },
+    {
+      "path": "runtime-builds\\act-recovery-r133-quiet\\6kinoko_a.dat",
+      "size": 163424746,
+      "sha256": "DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64"
+    },
+    {
+      "path": "runtime-builds\\act-recovery-r133-quiet\\6kinoko_b.dat",
+      "size": 44681244,
+      "sha256": "4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2"
+    },
+    {
+      "path": "runtime-builds\\act-recovery-r133-quiet\\6kinoko_c.dat",
+      "size": 11796163,
+      "sha256": "80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E"
+    }
+  ]
+}

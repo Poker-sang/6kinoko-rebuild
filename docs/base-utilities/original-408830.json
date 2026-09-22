@@ -1,0 +1,1 @@
+{"addr":"0x408830","code":"void __thiscall sub_408830(char *this)\n{\n  *(_DWORD *)this = &Common::CCriticalSection::`vftable'; /*0x408830*/\n  DeleteCriticalSection(lpCriticalSection: (LPCRITICAL_SECTION)(this + 4)); /*0x40883a*/\n}","refs":[{"addr":"0x4eb498","name":"??_7CCriticalSection@Common@@6B@"},{"addr":"0x4d50b4","name":"DeleteCriticalSection"}]}

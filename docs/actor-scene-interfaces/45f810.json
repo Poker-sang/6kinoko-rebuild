@@ -1,0 +1,1 @@
+{"addr":"0x45f810","code":"int __thiscall sub_45F810(void *this)\n{\n  return sub_4697C0(a1: this); /*0x45f819*/\n}","refs":[{"addr":"0x4697c0","name":"sub_4697C0"}]}

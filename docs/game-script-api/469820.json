@@ -1,0 +1,1 @@
+{"addr":"0x469820","code":"BOOL __cdecl sub_469820(const CHAR *lpFileName)\n{\n  int savedregs; // [esp+0h] [ebp+0h]\n\n  return sub_466100(lpFileName, a2: savedregs) != 0; /*0x469835*/\n}","refs":[{"addr":"0x466100","name":"sub_466100"}]}

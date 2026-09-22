@@ -1,0 +1,1 @@
+{"addr":"0x4696b0","code":"int __cdecl sub_4696B0(char *FullPath)\n{\n  char Drive[260]; // [esp+4h] [ebp-108h] BYREF\n\n  sub_4086E0(FullPath, Drive, Destination: nullptr); /*0x4696d6*/\n  return sub_464F80(lpFileName: FullPath, a2: (int)Drive); /*0x4696ed*/\n}","refs":[{"addr":"0x4086e0","name":"sub_4086E0"},{"addr":"0x464f80","name":"sub_464F80"}]}
