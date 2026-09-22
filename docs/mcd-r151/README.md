@@ -74,3 +74,16 @@ cleanup without releasing resource ownership. No pass claim before execution.
   translation unit and generic Buffer name colliding with collision records.
   Both are integration-only corrections; keep all failed-attempt artifacts.
 - Next attempt uses mcd-r151b-quiet after committing those corrections.
+
+## Successful handoff (2026-09-22)
+
+Source commit: e943b1a163df75a6f33ffb6cf47b5ff1bc3bd44c.
+Fresh Win32 Release quiet build: build-runs/mcd-r151b-quiet.
+Configure and full ALL build exited 0, including map_chip_cache_contract.
+Executable: runtime-builds/mcd-r151b-quiet/kinoko_retdec_rebuild.exe.
+SHA256: CC5E758F41858396991D48F0A5C59320ACAB8556FA67A01EF063BA3006F2B93A.
+stage_dat.ps1 exited 0: all three original DAT files copied beside EXE and
+verified by size/SHA256. Logs retained in the build tree. The failed first
+attempt and all older build/runtime products remain intact.
+No game, CTest, or contract executable was run. This is compile/staging evidence,
+not a claim that gameplay or compiled contracts passed runtime validation.
