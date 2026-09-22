@@ -13,23 +13,22 @@ float function_4040d0(long double a) { return static_cast<float>(std::sin(a)); }
 static int step, bound;
 static DWORD fvf;
 static const void *submitted;
-static volatile bool valid;
+static int bind_step, format_step, draw_step, observed_stage;
+static D3DPRIMITIVETYPE observed_type;
+static UINT observed_count, observed_stride;
 extern "C" int32_t kinoko_texture_bind_stage(int32_t stage, int32_t texture) {
-    std::fprintf(stderr,"bind step=%d stage=%d\n",step,stage);
-    valid &= step++ == 0 && stage == 0;
+    bind_step = step++; observed_stage = stage;
     bound = texture;
     return E_FAIL; // Original still sets FVF and draws after a failed bind.
 }
 static HRESULT WINAPI set_fvf(IDirect3DDevice9 *, DWORD value) {
-    std::fprintf(stderr,"fvf step=%d\n",step);
-    valid &= step++ == 1;
+    format_step = step++;
     fvf = value;
     return E_FAIL;
 }
 static HRESULT WINAPI draw_up(IDirect3DDevice9 *, D3DPRIMITIVETYPE type,
     UINT count, const void *vertices, UINT stride) {
-    std::fprintf(stderr,"submit step=%d type=%d count=%u stride=%u\n",step,type,count,stride);
-    valid &= step++ == 2 && type == D3DPT_TRIANGLESTRIP && count == 2 && stride == 28;
+    draw_step = step++; observed_type = type; observed_count = count; observed_stride = stride;
     submitted = vertices;
     return S_FALSE;
 }
@@ -44,10 +43,9 @@ int main() {
     sprite.pivot_x = 99; sprite.scale_x = 7; sprite.angle = 45;
     for (auto &v : sprite.vertices) { v.z = .25f; v.rhw = 1; v.color = 0x12345678; v.u = .125f; v.v = .75f; }
     using Bounds = int32_t (__thiscall *)(KinokoSprite *, float, float, float, float);
-    valid = true;
     CHECK(reinterpret_cast<Bounds>(kinoko_sprite_draw_bounds)(&sprite, 10, 20, 5, -3) == S_FALSE);
-    std::fprintf(stderr,"draw: valid=%d step=%d bound=%d fvf=%lu submitted=%p expected=%p\n",valid,step,bound,fvf,submitted,sprite.vertices);
-    CHECK(valid && step == 3 && bound == 17 && fvf == 324 && submitted == sprite.vertices);
+    CHECK(bind_step == 0 && format_step == 1 && draw_step == 2 && step == 3 && bound == 17 && fvf == 324 && submitted == sprite.vertices);
+    CHECK(observed_stage == 0 && observed_type == D3DPT_TRIANGLESTRIP && observed_count == 2 && observed_stride == 28);
     CHECK(sprite.vertices[0].x == 9.5f && sprite.vertices[0].y == 19.5f);
     CHECK(sprite.vertices[1].x == 4.5f && sprite.vertices[1].y == 19.5f);
     CHECK(sprite.vertices[2].x == 9.5f && sprite.vertices[2].y == -3.5f);
@@ -59,7 +57,7 @@ int main() {
     for (int i = 0; i < 3; ++i) {
         step = 0;
         CHECK(methods[i](&sprite, 0, 0) == S_FALSE);
-        CHECK(valid && step == 3 && fvf == (i == 2 ? 16706u : 324u));
+        CHECK(bind_step == 0 && format_step == 1 && draw_step == 2 && step == 3 && fvf == (i == 2 ? 16706u : 324u));
     }
     std::puts("PASS: sprite thiscall bounds, retained attributes and original draw failure ordering");
 }
