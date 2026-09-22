@@ -1534,7 +1534,6 @@ float32_t function_404130(float80_t a1);
 int32_t function_4045c0(int32_t a1, int32_t a2);
 
 
-int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4);
 
 
 float80_t function_405080(float80_t a1, float80_t a2, float80_t a3);
@@ -3234,7 +3233,7 @@ struct vtable_4ed2cc_type g407 = {
     .e3 = kinoko_quad_modulate_color,
     .e4 = kinoko_sprite_set_rect_pivot,
     .e5 = kinoko_sprite_set_rect,
-    .e6 = function_404e10,
+    .e6 = kinoko_sprite_draw_bounds,
     .e7 = kinoko_sprite_draw_404770,
     .e8 = kinoko_sprite_draw_404bc0,
     .e9 = kinoko_sprite_draw_4049c0
@@ -3577,23 +3576,6 @@ int32_t function_4045c0(int32_t a1, int32_t a2) {
 // Address range: 0x404e10 - 0x404ea6
 // From class:    .?AVCSprite@@
 // Type:          virtual member function
-int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4) {
-    float32_t v1 = a1 - 0.5f; // 0x404e2b
-    int32_t v2; // 0x404e10
-    *(float32_t *)(v2 + 8) = v1;
-    float32_t v3 = a2 - 0.5f; // 0x404e34
-    *(float32_t *)(v2 + 12) = v3;
-    float32_t v4 = a3 - 0.5f; // 0x404e3e
-    *(float32_t *)(v2 + 36) = v4;
-    *(float32_t *)(v2 + 40) = v3;
-    *(float32_t *)(v2 + 64) = v1;
-    float32_t v5 = a4 - 0.5f; // 0x404e5a
-    *(float32_t *)(v2 + 68) = v5;
-    *(float32_t *)(v2 + 92) = v4;
-    *(float32_t *)(v2 + 96) = v5;
-    kinoko_texture_bind_stage(0, *(int32_t *)(v2 + 4));
-    return (int32_t)(intptr_t)kinoko_renderer.device;
-}
 
 
 // Address range: 0x405080 - 0x40513e

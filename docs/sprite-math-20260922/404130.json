@@ -1,0 +1,1 @@
+{"addr":"0x404130","code":"double __cdecl sub_404130(float a1)\n{\n  float v2; // [esp+10h] [ebp+8h]\n  float v3; // [esp+10h] [ebp+8h]\n\n  v2 = a1 * 10.0; /*0x40413f*/\n  v3 = fabs(X: v2); /*0x40414d*/\n  return flt_516BD0[(int)(v3 + 0.5) % 3600]; /*0x40417c*/\n}","refs":[{"addr":"0x4acbd9","name":"_fabs"},{"addr":"0x516bd0","name":"flt_516BD0"}]}

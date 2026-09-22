@@ -484,6 +484,10 @@ foreach(position IN ITEMS "2200,559" "2400,559" "2600,559" "2770,463")
         COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}" ${coordinates})
 endforeach()
 
+add_executable(kinoko_sprite_draw_contract tests/sprite_draw_contract.cpp src/reconstructed/sprite.cpp)
+target_include_directories(kinoko_sprite_draw_contract PRIVATE include)
+add_test(NAME sprite_draw_contract COMMAND kinoko_sprite_draw_contract)
+
 add_executable(kinoko_game_math_contract tests/game_math_contract.cpp)
 target_link_libraries(kinoko_game_math_contract PRIVATE kinoko_actor_collision)
 target_compile_options(kinoko_game_math_contract PRIVATE /fp:strict)
