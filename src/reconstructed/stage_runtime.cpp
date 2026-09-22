@@ -1,3 +1,4 @@
+#include "kinoko/game_runtime.h"
 #include "kinoko/act_document.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_cleanup.h"
@@ -12,7 +13,7 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern int32_t g603, g459;
+extern int32_t g603;
 extern char *g644;
 }
 
@@ -42,7 +43,7 @@ extern "C" int32_t kinoko_stages_update() {
         retdec_trace("466050:entry");
         retdec_trace_i32("466050:g603", g603);
         retdec_trace_i32("466050:first", address(node));
-        retdec_trace_i32("466050:update-mask", g459);
+        retdec_trace_i32("466050:update-mask", kinoko_game_masks.update);
     }
     if (node == kinoko_stage_list_end()) {
         if (trace_index <= 8) retdec_trace("466050:empty");

@@ -1,3 +1,4 @@
+#include "kinoko/game_runtime.h"
 #pragma once
 #include "kinoko/squirrel_native_calls.h"
 #include "kinoko/audio_runtime.h"
@@ -69,5 +70,5 @@ int32_t retdec_compile_file_native(int32_t vm);
 int32_t retdec_create_render_layer_fixed(int32_t name);
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
-extern int32_t g629[3], g664, g459, g460;
+extern int32_t g629[3], g664;
 }

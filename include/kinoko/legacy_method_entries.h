@@ -91,8 +91,7 @@ int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* unused_edx, 
     float alpha);
 // function_457a10
 int32_t __fastcall kinoko_method_update_children(int32_t receiver, void* unused_edx, int32_t argument);
-// function_45d970_bridge
-int32_t __fastcall kinoko_method_destroy_actor(int32_t receiver, void* unused_edx, char flags);
+
 // function_45dbd0
 int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* unused_edx, float dx, float dy);
 // function_45eb00

@@ -1,3 +1,4 @@
+#include "kinoko/game_runtime.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/timer_events.h"
 #include "kinoko/application.h"
@@ -23,9 +24,6 @@ extern "C" {
 void retdec_trace(const char*);
 int32_t function_408650(void*, HWND);
 int32_t function_412ca0(void);
-int32_t function_45da00(void);
-int32_t function_45da40(void);
-int32_t function_45da50(int32_t);
 extern int32_t g534;
 extern char g874;
 }
@@ -36,22 +34,6 @@ namespace {
 using kinoko::windows::CriticalLock;
 using kinoko::windows::HandleOwner;
 using kinoko::legacy::address;
-// The generated SceneManager implementations are cdecl ports. Adapt once at
-// the real virtual boundary; do not call a cdecl stack-argument function as thiscall.
-int32_t __fastcall manager_initialize(Manager*, void*) { return function_45da00(); }
-int32_t __fastcall manager_shutdown(Manager*, void*) { return function_45da40(); }
-int32_t __fastcall manager_update(Manager*, void*) { return 0; }
-int32_t __fastcall manager_draw(Manager*, void*) { return 1; }
-Scene* __fastcall manager_create(Manager*, void*, int32_t id) {
-    return kinoko::legacy::pointer<Scene>(function_45da50(id));
-}
-const ManagerMethods manager_methods{
-    reinterpret_cast<decltype(ManagerMethods::initialize)>(manager_initialize),
-    reinterpret_cast<decltype(ManagerMethods::shutdown)>(manager_shutdown),
-    reinterpret_cast<decltype(ManagerMethods::update)>(manager_update),
-    reinterpret_cast<decltype(ManagerMethods::draw)>(manager_draw),
-    reinterpret_cast<decltype(ManagerMethods::create_scene)>(manager_create)
-};
 struct ComScope {
     HRESULT status = CoInitialize(nullptr);
     ~ComScope() { if (SUCCEEDED(status)) CoUninitialize(); }
@@ -328,8 +310,7 @@ extern "C" int kinoko_application_run(HINSTANCE instance, int show_command) {
     ShowWindow(window, show_command); UpdateWindow(window);
     Configuration config;
     config.window = window; config.instance = instance;
-    config.manager = static_cast<Manager*>(std::malloc(sizeof(Manager)));
-    if (config.manager) config.manager->methods = &manager_methods;
+    config.manager = kinoko::game::create_manager();
     kinoko_application_open_archives();
     if (!config.manager || !initialize(config)) MessageBoxA(window, kinoko_application_error(), "Error", MB_OK);
     else message_loop();

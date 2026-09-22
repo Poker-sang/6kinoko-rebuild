@@ -1,3 +1,5 @@
+#include "kinoko/game_runtime.h"
+extern "C" { KinokoGameMasks kinoko_game_masks{}; }
 #include "kinoko/stage_cleanup.h"
 #include "kinoko/stage_runtime.h"
 #include "kinoko/stage_records.hpp"
@@ -68,7 +70,7 @@ void *operator new(std::size_t size) {
 void operator delete(void *p) noexcept { std::free(p); }
 void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
-int32_t g603 = 0, g604 = 0, g638 = 0, g639 = 0, g459 = 0;
+int32_t g603 = 0, g604 = 0, g638 = 0, g639 = 0;
 char *g644 = nullptr;
 KinokoActDocument *kinoko_act_document_create() {
     if (state.fail_document) return nullptr;

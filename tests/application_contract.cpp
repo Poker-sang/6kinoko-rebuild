@@ -1,3 +1,4 @@
+#include "kinoko/game_runtime.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/timer_events.h"
 #include "kinoko/application_runtime.hpp"
@@ -46,9 +47,6 @@ int32_t function_412ca0() { return 0; }
 HANDLE kinoko_frame_timer_register() { return nullptr; }
 void kinoko_frame_timer_wait(HANDLE) {}
 int32_t kinoko_frame_timer_unregister(HANDLE) { return 0; }
-int32_t function_45da00() { return 0; }
-int32_t function_45da40() { return 0; }
-int32_t function_45da50(int32_t) { return 0; }
 }
 namespace {
 using namespace kinoko::application;
@@ -109,3 +107,5 @@ int main() {
     DeleteCriticalSection(&g676);
     std::puts("PASS: typed application callbacks, transition IDs, deferred destruction and scene exit");
 }
+
+namespace kinoko::game { application::Manager *create_manager() { return nullptr; } }

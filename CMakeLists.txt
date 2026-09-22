@@ -229,6 +229,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/timer_events.cpp
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
+    src/reconstructed/game_runtime.cpp
     src/reconstructed/scene_queue.cpp
     src/reconstructed/file_io.cpp
     src/reconstructed/archive_store.cpp
@@ -384,6 +385,12 @@ target_compile_options(kinoko_application_contract PRIVATE /Gy /O2)
 target_link_options(kinoko_application_contract PRIVATE /OPT:REF /OPT:ICF)
 target_link_libraries(kinoko_application_contract PRIVATE user32 gdi32 ole32 winmm imm32)
 add_test(NAME application_contract COMMAND kinoko_application_contract)
+
+add_executable(kinoko_game_lifecycle_contract tests/game_lifecycle_contract.cpp
+    src/reconstructed/game_runtime.cpp)
+target_include_directories(kinoko_game_lifecycle_contract PRIVATE include)
+target_compile_options(kinoko_game_lifecycle_contract PRIVATE /O2)
+add_test(NAME game_lifecycle_contract COMMAND kinoko_game_lifecycle_contract)
 add_test(
     NAME archive_smoke
     COMMAND kinoko_archive_smoke "${KINOKO_REFERENCE_DIR}"
@@ -736,6 +743,7 @@ target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
 add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_game_lifecycle_contract
     kinoko_file_archive_contract
     kinoko_act_layer_contract
     kinoko_act_clock_contract

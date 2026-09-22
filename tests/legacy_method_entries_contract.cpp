@@ -72,9 +72,7 @@ extern "C" int32_t function_457a10_impl(int32_t receiver, int32_t argument) {
     return record(9, {bits(receiver), bits(argument)});
 }
 
-extern "C" int32_t function_45d970_this(int32_t receiver, char flags) {
-    return record(10, {bits(receiver), bits(flags)});
-}
+
 
 extern "C" int32_t function_45dbd0_this(int32_t receiver, float dx, float dy) {
     return record(11, {bits(receiver), bits(dx), bits(dy)});
@@ -154,12 +152,6 @@ int main() {
             reinterpret_cast<void*>(&kinoko_method_update_children), static_cast<int32_t>(bits(-31))),
             {receiver_bits, bits(-31)})) {
             std::fprintf(stderr, "Entry contract failed: function_457a10\n"); return 1;
-        }
-        if (!check(10, retdec_call_thiscall1_result(receiver,
-            reinterpret_cast<void*>(&kinoko_method_destroy_actor),
-            static_cast<int32_t>(bits(static_cast<char>(0xa5)))), {receiver_bits,
-            bits(static_cast<char>(0xa5))})) {
-            std::fprintf(stderr, "Entry contract failed: function_45d970_bridge\n"); return 1;
         }
         if (!check(11, retdec_call_thiscall2_result(receiver,
             reinterpret_cast<void*>(&kinoko_method_actor_move), static_cast<int32_t>(bits(-3.25f)),

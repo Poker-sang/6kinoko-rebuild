@@ -16,7 +16,6 @@ int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t o
 int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
     int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha);
 int32_t function_457a10_impl(int32_t receiver, int32_t argument);
-int32_t function_45d970_this(int32_t receiver, char flags);
 int32_t function_45dbd0_this(int32_t receiver, float dx, float dy);
 int32_t function_45eb00_this(int32_t receiver);
 int32_t function_469620_this(int32_t receiver, int32_t argument);
@@ -79,11 +78,8 @@ extern "C" int32_t __fastcall kinoko_method_update_children(int32_t receiver, vo
     return function_457a10_impl(receiver, argument);
 }
 
-// function_45d970_bridge
-extern "C" int32_t __fastcall kinoko_method_destroy_actor(int32_t receiver, void* /* unused_edx */,
-    char flags) {
-    return function_45d970_this(receiver, flags);
-}
+
+
 
 // function_45dbd0
 extern "C" int32_t __fastcall kinoko_method_actor_move(int32_t receiver, void* /* unused_edx */,

@@ -1256,7 +1256,7 @@ static int test_entity_stutter(int32_t manager, int32_t vm, int32_t *root, const
     }
     CHECK(function_468950_this(PTR(g_514300_storage),manager));
     *(int32_t *)(intptr_t)(manager+64)=-1;
-    g459=-1;
+    kinoko_game_masks.update=-1;
     float camera[24]={0}; camera[18]=-8000;camera[19]=-2000;camera[20]=8000;camera[21]=2000;
     const int32_t stack_top = function_48aa20(vm);
     int peak_count = 0;
@@ -1910,12 +1910,12 @@ static int test_vm_error_unwind(int32_t vm, int32_t *root) {
                 "failedGlobalCalls <- 0;\n"
                 "function FailedGlobal() { ::failedGlobalCalls++; throw 13; }\n"
                 "SetGlobalUpdateFunction(FailedGlobal);"));
-            int32_t old_mask=g459;
-            g459=0;
+            int32_t old_mask=kinoko_game_masks.update;
+            kinoko_game_masks.update=0;
             expected_vm_error=1;
-            for(int frame=0;frame<64;++frame) function_469900();
+            for(int frame=0;frame<64;++frame) kinoko_game_update();
             expected_vm_error=0;
-            g459=old_mask;
+            kinoko_game_masks.update=old_mask;
             CHECK(execute_source(vm,root+2,
                 "if(failedGlobalCalls!=1) throw \"global error repeated\";"));
             CHECK(g612[6]==0);
@@ -3321,9 +3321,9 @@ static int test_global_script_cleanup(int32_t vm, int32_t *root) {
         function_4a9540_this(PTR(globals[i]), root[2], root[3]);
     }
     CHECK(function_4a8cc0() != 0);
-    CHECK(function_470f30() == 0 && g644 == NULL && g645 == 0);
+    CHECK(kinoko_game_release_script_state() == 0 && g644 == NULL && g645 == 0);
     for (int i = 0; i < 5; ++i) CHECK(globals[i][1] == g483 && globals[i][2] == 0);
-    CHECK(function_470f30() == 0 && g645 == 0);
+    CHECK(kinoko_game_release_script_state() == 0 && g645 == 0);
     for (int i = 0; i < 5; ++i) memcpy(globals[i], saved[i], 12);
     g644 = (char *)(intptr_t)vm;
     CHECK(execute_source(vm, root + 2, "if(typeof this!=\"table\") throw \"root lifetime\";"));
@@ -3473,22 +3473,22 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     }
     function_4a9d70_this(PTR(closure));
     /* Exercise 469900 itself: writing only g622 used to leave manager+64=-1. */
-    g459 = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
-    for (int frame = 0; frame < 30; ++frame) function_469900();
-    CHECK(*(int32_t *)(intptr_t)(manager + 64) == g459);
+    kinoko_game_masks.update = 0x40000004; /* Original GP_ACT | GP_PLAYER damage/death mask. */
+    for (int frame = 0; frame < 30; ++frame) kinoko_game_update();
+    CHECK(*(int32_t *)(intptr_t)(manager + 64) == kinoko_game_masks.update);
     CHECK(execute_source(vm, root + 2,
         "if(maskActors[0].user.steps!=30 || maskActors[1].user.steps!=0) "
         "throw \"damage update groups\";"));
     CHECK(*(float *)(intptr_t)(actors[0] + 240) == 40.0f);
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 10.0f);
-    g459 = 12; /* Restore both Actor groups without dispatching map/camera. */
-    function_469900();
+    kinoko_game_masks.update = 12; /* Restore both Actor groups without dispatching map/camera. */
+    kinoko_game_update();
     CHECK(execute_source(vm, root + 2,
         "if(maskActors[0].user.steps!=31 || maskActors[1].user.steps!=1) "
         "throw \"resume update groups\";"));
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
-    g459 = 0;
-    function_469900();
+    kinoko_game_masks.update = 0;
+    kinoko_game_update();
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
     CHECK(vm_failures == 0);
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
@@ -3699,7 +3699,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(rider);
     *(int32_t *)(intptr_t)(rider+316)=1;
     *(uint8_t *)(intptr_t)(rider+40)=1;
-    g459=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
+    kinoko_game_masks.update=-1; *(int32_t *)(intptr_t)(manager+64)=-1;
     retdec_actor_manager_refresh(manager);
     function_468620_this(PTR(g_514300_storage));
     function_45ec60(rider);
@@ -3864,7 +3864,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         for(int i=0;i<terrain_count;++i) CHECK(function_4693a0(terrain_layouts[i]));
         *(int32_t *)(intptr_t)(rider+316)=3;
     }
-    g459=-1;
+    kinoko_game_masks.update=-1;
     *(int32_t *)(intptr_t)(manager+64)=-1;
     CHECK(function_462ce0(platform,rider)>=0);
     CHECK(*(int32_t *)(intptr_t)(rider+36)==*(int32_t *)(intptr_t)(platform+28));

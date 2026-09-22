@@ -1,3 +1,5 @@
+#include "kinoko/game_runtime.h"
+#include "kinoko/game_host.h"
 #include "kinoko/file_io_layout.h"
 #include "kinoko/file_io_legacy.h"
 #include "kinoko/direct_input.h"
@@ -237,8 +239,6 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
                                                unsigned char flags);
 void retdec_trace_hresult(const char *label, long value);
 int _vsprintf_compat(char *buffer, const char *format, va_list args);
-int32_t function_45d970_this(int32_t this_ptr, char flags);
-static int32_t function_45d9f0_this(int32_t this_ptr);
 
 
 // ---------------- Integer Types Definitions -----------------
@@ -1996,14 +1996,7 @@ int32_t function_451620(int32_t this_ptr);
 
 
 
-int32_t __stdcall function_45d960(int32_t value);
 
-int32_t function_45d9a0(void);
-int32_t function_45d9c0(void);
-int32_t function_45d9f0(int32_t *this_ptr);
-int32_t function_45da00(void);
-int32_t function_45da40(void);
-int32_t function_45da50(int32_t a1);
 
 
 int32_t function_45dbd0_this(int32_t actor, float32_t dx, float32_t dy);
@@ -2082,8 +2075,6 @@ static int32_t function_468620_this(int32_t this_ptr);
 
 static int32_t function_468950_this(int32_t this_ptr, int32_t actor_ptr);
 int32_t function_4693a0(int32_t a1);
-int32_t function_469640(void);
-int32_t function_469680(void);
 int32_t function_4696b0(int32_t a1);
 int32_t function_469700(void);
 int32_t function_469710(float32_t a1, float32_t a2);
@@ -2100,7 +2091,6 @@ int32_t function_469870(void);
 int32_t function_469880(int32_t a1);
 int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
-int32_t function_469900(void);
 
 int32_t function_469a20(int32_t a1, int32_t a2, int32_t a3,
                         int32_t a4, int32_t a5, int32_t a6);
@@ -2116,7 +2106,6 @@ int32_t function_469dd0(int32_t name,
     int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
     int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
 
-int32_t function_46a140(void);
 int32_t function_46a1d0(void);
 int32_t function_46a210(int32_t * a1);
 
@@ -2169,15 +2158,12 @@ int32_t function_470d00(int32_t a1);
 int32_t function_470df0(int32_t a1, int32_t a2);
 int32_t function_470ee0(int32_t a1);
 
-int32_t function_470f30(void);
 int32_t function_470f60(int32_t a1);
 int32_t function_470f80(int32_t dwMilliseconds);
 int32_t function_470f90(void);
 int32_t function_470fa0(int32_t id,
     int32_t closure_vtable, int32_t closure_type, int32_t closure_data,
     int32_t environment_vtable, int32_t environment_type, int32_t environment_data);
-int32_t function_471060(void);
-int32_t function_471070(void);
 int32_t function_471080(void);
 
 
@@ -2301,24 +2287,7 @@ void (*g8)(int32_t *) = (void (*)(int32_t *))0xc7c18b; // 0x45cac0
 char * g9; // 0x49f418
 char * g10; // 0x4a5e8c
 char * g11; // 0x4a8b9c
-/* The original symbols at 0x4d53d0/0x4d53ec are six-entry MSVC vftables,
-   not scalar function-pointer globals.  Logo's render method is slot 2. */
-int32_t g12[6] = {
-    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
-    (int32_t)(intptr_t)&__purecall,
-    (int32_t)(intptr_t)&__purecall,
-    (int32_t)(intptr_t)&function_43e100,
-    (int32_t)(intptr_t)&function_45d960,
-    (int32_t)(intptr_t)&function_45d960
-}; // 0x4d53d0
-int32_t g13[6] = {
-    (int32_t)(intptr_t)&kinoko_method_destroy_actor,
-    (int32_t)(intptr_t)&function_45d9a0,
-    (int32_t)(intptr_t)&function_45d9c0,
-    (int32_t)(intptr_t)&function_43e100,
-    (int32_t)(intptr_t)&function_45d960,
-    (int32_t)(intptr_t)&function_45d960
-}; // 0x4d53ec
+/* Scene virtual tables now live in game_runtime.cpp. */
  // 0x4d5448
 /* IDA shows the int and bool ClassType vtables as two adjacent function
    pointers. RetDec emitted only their first dword as g19/g21, so the
@@ -2526,8 +2495,6 @@ char * g443; // 0x4f7308
  // 0x4f7330
  // 0x4f7334
 
-int32_t g459 = -1; // 0x4fe4cc
-int32_t g460 = -1; // 0x4fe4d0
 int32_t g461 = 0; // 0x4fe594
 float32_t * g462 = (float32_t *)-0x3db40000; // 0x4fe5b8
 bool g463 = false; // 0x4fe6c8
@@ -2657,9 +2624,7 @@ int32_t g618 = 0; // 0x5143f4
 int32_t g619 = 0; // 0x5143f8
 int32_t g620 = 0; // 0x5143fc
 int32_t g621 = 0; // 0x514400
-/* Original 514420 is ActorManager(5143E0)+64, not an independent global.
-   469987 writes the frame mask here before 4641D0 filters actor update groups. */
-#define g622 (*(int32_t *)(void *)(g_retdec_actor_manager_state + 64))
+/* ActorManager update_mask now uses the typed ManagerPrefix field. */
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
 int32_t g637 = 0; // 0x5144b4
@@ -3413,7 +3378,6 @@ __declspec(align(8)) static unsigned char g_retdec_input_manager_state[0x600];
 static int g_retdec_runtime_initialized = 0;
 static int g_retdec_input_manager_initialized = 0;
 static int g_retdec_map_manager_initialized = 0;
-static int32_t g_retdec_startup_vm = 0;
 static uint32_t g_retdec_actor_init_count;
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
@@ -7993,102 +7957,31 @@ int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
 
 
 
-// Address range: 0x45d960 - 0x45d963
-int32_t __stdcall function_45d960(int32_t value) {
-    /* IDA identifies this virtual null method as __stdcall/retn 4.  The
-       argument is the scene id supplied during activation. */
-    (void)value;
-    return 0;
-}
-
-// Address range: 0x45d970 - 0x45d992
-int32_t function_45d970_this(int32_t this_ptr, char flags) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g12;
-    if ((flags & 1) != 0)
-        free((void *)(intptr_t)this_ptr);
-    return this_ptr;
-}
 
 
-// Address range: 0x45d9a0 - 0x45d9b1
-int32_t function_45d9a0(void) {
-    // 0x45d9a0
-    if (kinoko_graphics.cooperative_status == 0) {
-        // 0x45d9a9
-        function_469900();
-    }
-    // 0x45d9ae
-    return 0;
-}
-
-// Address range: 0x45d9c0 - 0x45d9eb
-int32_t function_45d9c0(void) {
-    int32_t result = function_401760(); // 0x45d9c5
-    if ((char)result == 0) {
-        // 0x45d9ce
-        return result;
-    }
-    // 0x45d9cf
-    function_401820();
-    function_46a140();
-    return function_401790() & -256 | 1;
-}
-
-// Address range: 0x45d9f0 - 0x45d9f9
-int32_t function_45d9f0(int32_t *this_ptr) {
-    return function_45d9f0_this((int32_t)(intptr_t)this_ptr);
-}
-
-static int32_t function_45d9f0_this(int32_t this_ptr) {
-    if (this_ptr == 0)
-        return 0;
-    *(int32_t *)(intptr_t)this_ptr = (int32_t)(intptr_t)&g13;
-    return this_ptr;
-}
 
 
-// Address range: 0x45da00 - 0x45da37
+
+
+
+
+
+
+
+
+
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da00(void) {
-    // 0x45da00
-    retdec_trace("45da00:enter");
-    function_4028d0(1, 0);
-    function_402970(1);
-    function_402770(1);
-    function_4026e0(1);
-    retdec_trace("45da00:before-469640");
-    int32_t scene_result = function_469640();
-    retdec_trace_i32("45da00:after-469640", scene_result);
-    return scene_result;
-}
 
-// Address range: 0x45da40 - 0x45da45
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da40(void) {
-    // 0x45da40
-    return function_469680();
-}
 
-// Address range: 0x45da50 - 0x45dabb
+
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_45da50(int32_t a1) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x45da60
-    __writefsdword(0, (int32_t)&v1);
-    int32_t allocated = _3f__3f_2_40_YAPAXI_40_Z(4);
-    if (a1 != 0 || allocated == 0) {
-        // 0x45daa8
-        __writefsdword(0, v1);
-        return 0;
-    }
-    int32_t result = function_45d9f0((int32_t *)(uintptr_t)allocated); // 0x45da92
-    __writefsdword(0, v1);
-    return result;
-}
+
 
 // Address range: 0x45dac0 - 0x45db04
 
@@ -8841,7 +8734,7 @@ static int32_t function_45ec60(int32_t actor) {
         (KinokoActor *)(intptr_t)actor);
 }
 
-uint32_t kinoko_actor_motion_update_mask(void) { return (uint32_t)function_471060(); }
+uint32_t kinoko_actor_motion_update_mask(void) { return (uint32_t)kinoko_game_masks.update; }
 
 void kinoko_actor_trace_motion(KinokoActor *receiver, int32_t phase) {
     int32_t actor = (int32_t)(intptr_t)receiver;
@@ -9399,53 +9292,9 @@ int32_t function_469620_this(int32_t this_ptr, int32_t update_arg)
 }
 
 
-// Address range: 0x469640 - 0x469678
-int32_t function_469640(void) {
-    // 0x469640
-    retdec_trace("469640:enter");
-    if (g_retdec_startup_vm == 0)
-        g_retdec_startup_vm = (int32_t)(intptr_t)g644;
-    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
-    retdec_trace("469640:audio-begin");
-    kinoko_audio_initialize_playback();
-    retdec_trace("469640:audio-done");
-    retdec_trace("469640:sqrat-begin");
-    retdec_trace("469640:before-473010");
-    function_473010();
-    retdec_trace("469640:after-473010");
-    /* Sqrat::RootTable creates the VM during this phase. Keep that newly
-       created receiver; only fall back to the saved VM if a cleanup path
-       cleared the alias without replacing it. */
-    if (g644 != NULL)
-        g_retdec_startup_vm = (int32_t)(intptr_t)g644;
-    else if (g_retdec_startup_vm != 0)
-        g644 = (char *)(intptr_t)g_retdec_startup_vm;
-    retdec_trace_i32("469640:vm-after-sqrat",
-                     (int32_t)(intptr_t)g644);
-    retdec_trace("469640:sqrat-done");
-    retdec_trace("469640:alloc-begin");
-    function_46e6f0_this((int32_t)(intptr_t)g_retdec_input_manager_state);
-    retdec_trace("469640:alloc-done");
-    retdec_trace("469640:actor-begin");
-    function_463af0_this((int32_t)(intptr_t)g_retdec_actor_manager_state);
-    retdec_trace("469640:actor-done");
-    retdec_trace("469640:global-begin");
-    function_466270();
-    retdec_trace("469640:global-done");
-    return function_402d40("data/script/boot.nut", 0);
-}
 
-// Address range: 0x469680 - 0x4696a3
-int32_t function_469680(void) {
-    // 0x469680
-    function_46f620_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state);
-    function_464e20(
-        (int32_t)(intptr_t)g_retdec_actor_manager_state);
-    function_465f70();
-    function_470890();
-    return function_470f30();
-}
+
+
 
 // Address range: 0x4696b0 - 0x4696fc
 int32_t function_4696b0(int32_t a1) {
@@ -9569,72 +9418,7 @@ int32_t function_4698a0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
 // Address range: 0x4698d0 - 0x4698f2
 
 
-// Address range: 0x469900 - 0x4699bf
-int32_t function_469900(void) {
-    int32_t v1 = __readfsdword(0); // bp-16, 0x469910
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
 
-    __writefsdword(0, (int32_t)&v1);
-    if (trace_index <= 16) {
-        retdec_trace("469900:entry");
-        retdec_trace_i32("469900:update-mask", g459);
-        retdec_trace_i32("469900:render-mask", g460);
-        retdec_trace_i32("469900:map-act",
-                         *(int32_t *)(g_retdec_map_manager_state + 12));
-        retdec_trace_i32("469900:map-resource",
-                         *(int32_t *)(g_retdec_map_manager_state + 20));
-    }
-    function_46b9a0((int32_t)(intptr_t)g_retdec_input_manager_state);
-    if (function_4a9a30_this((int32_t)(intptr_t)(g612 + 4)) ==
-        0x08000100) {
-        // 0x46994b
-        retdec_trace("stagevm:global-callback");
-        if (trace_index <= 16) {
-            retdec_trace_i32("stagevm:global-state-vm", g612[0]);
-            retdec_trace_i32("stagevm:global-env-type", g612[2]);
-            retdec_trace_i32("stagevm:global-env-data", g612[3]);
-            retdec_trace_i32("stagevm:global-func-type", g612[5]);
-            retdec_trace_i32("stagevm:global-func-data", g612[6]);
-        }
-        if (retdec_actor_step_callback((int32_t)(intptr_t)g612) < 0)
-            retdec_clear_script_callback((int32_t)(intptr_t)g612);
-    }
-    int32_t v2 = function_471060(); // 0x46995c
-    int32_t v3 = v2; // 0x469969
-    if ((v2 & 0x20000000) != 0) {
-        // 0x46996b
-        v3 = kinoko_camera_update((KinokoCamera *)g_retdec_camera_state, NULL);
-    }
-    int32_t v4 = v3; // 0x46997b
-    if ((v2 & 0x1fffffff) != 0) {
-        // 0x46997d
-        g622 = v2;
-        v4 = function_4641d0_this(
-            (int32_t)(intptr_t)g_retdec_actor_manager_state,
-            (int32_t *)g_retdec_camera_state);
-    }
-    int32_t v5 = v4; // 0x469994
-    if (v2 < 0) {
-        // 0x469996
-        if (trace_index <= 16)
-            retdec_trace("469900:map-update");
-        v5 = function_46f0b0(
-            (int32_t)(intptr_t)g_retdec_map_manager_state);
-    }
-    int32_t result = v5; // 0x4699a6
-    if ((v2 & 0x40000000) != 0) {
-        // 0x4699a8
-        if (trace_index <= 16)
-            retdec_trace("469900:global-update");
-        result = kinoko_stages_update();
-    }
-    if (trace_index <= 16)
-        retdec_trace_i32("469900:result", result);
-    // 0x4699ad
-    __writefsdword(0, v1);
-    return result;
-}
 
 
 // Address range: 0x469a20 - 0x469b21
@@ -9782,40 +9566,7 @@ int32_t function_469dd0(int32_t name,
 // Address range: 0x469ef0 - 0x46a13d
 
 
-// Address range: 0x46a140 - 0x46a1c4
-int32_t function_46a140(void) {
-    int32_t render_mask = function_471070();
-    static volatile LONG trace_count;
-    LONG trace_index = InterlockedIncrement(&trace_count);
 
-    if (trace_index == 1) {
-        retdec_trace_i32("render:g613", kinoko_render_queue_identity());
-        retdec_trace_i32("render:g613-first",
-                         kinoko_render_queue_first());
-    }
-
-    function_4028d0(1, 0);
-    function_402970(1);
-    function_402770(1);
-    function_4026e0(1);
-
-    /* Original sub_46A140 updates the active MapManager layer before it
-       walks the shared render-layer list. */
-    if (trace_index <= 3)
-        retdec_trace_i32("render:map-layer",
-                         *(int32_t *)(g_retdec_map_manager_state + 12));
-    function_46edc0_this(
-        (int32_t)(intptr_t)g_retdec_map_manager_state,
-        (int32_t *)(intptr_t)g_retdec_camera_state);
-
-    kinoko_draw_render_queue((int32_t)(intptr_t)g_retdec_camera_state);
-
-    if ((render_mask & 0x40000000) != 0) {
-        kinoko_stages_prepare_draw();
-        kinoko_stages_draw();
-    }
-    return 1;
-}
 
 // Address range: 0x46a1d0 - 0x46a20d
 int32_t function_46a1d0(void) { return kinoko_clear_render_queue(); }
@@ -10534,15 +10285,7 @@ int32_t function_470d00(int32_t a1) {
 /* function_470ee0 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 
-// Address range: 0x470f30 - 0x470f5d
-int32_t function_470f30(void) {
-    /* Each original call loads a distinct global SquirrelObject receiver. */
-    function_4a9570_this((int32_t)(intptr_t)g602);
-    function_4a9570_this((int32_t)(intptr_t)g629);
-    function_4a9570_this((int32_t)(intptr_t)g611);
-    function_4a9570_this((int32_t)(intptr_t)g636);
-    return function_402ac0();
-}
+
 
 // Address range: 0x470f60 - 0x470f78
 int32_t function_470f60(int32_t a1) {
@@ -10588,17 +10331,9 @@ int32_t function_470fa0(int32_t id,
     return result;
 }
 
-// Address range: 0x471060 - 0x471066
-int32_t function_471060(void) {
-    // 0x471060
-    return g459;
-}
 
-// Address range: 0x471070 - 0x471076
-int32_t function_471070(void) {
-    // 0x471070
-    return g460;
-}
+
+
 
 // Address range: 0x471080 - 0x471093
 int32_t function_471080(void) {
@@ -14715,3 +14450,79 @@ void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_c.dat");
     retdec_string_assign_n(&g554, ".cv4", 4);
 }
+
+/* Game lifecycle ports: borrowed global objects, no new allocation/ownership. */
+const KinokoGameObjects *kinoko_game_objects(void) {
+    static const KinokoGameObjects objects = {
+        (KinokoInputManager *)g_retdec_input_manager_state,
+        (KinokoActorManager *)g_retdec_actor_manager_state,
+        (KinokoCamera *)g_retdec_camera_state,
+        (KinokoMapManager *)g_retdec_map_manager_state
+    };
+    return &objects;
+}
+/* Existing reconstruction fallback: preserve a borrowed VM when an old cleanup
+   alias is cleared during registration. Do not create or own a second VM here. */
+static struct SQVM *game_startup_vm;
+void kinoko_game_prepare_scripts(void) {
+    if (!game_startup_vm) game_startup_vm = (struct SQVM *)g644;
+    retdec_trace_i32("469640:vm-before", (int32_t)(intptr_t)g644);
+}
+void kinoko_game_register_scripts(void) {
+    retdec_trace("469640:sqrat-begin");
+    retdec_trace("469640:before-473010");
+    function_473010();
+    retdec_trace("469640:after-473010");
+    if (g644) game_startup_vm = (struct SQVM *)g644;
+    else if (game_startup_vm) g644 = (char *)game_startup_vm;
+    retdec_trace_i32("469640:vm-after-sqrat", (int32_t)(intptr_t)g644);
+    retdec_trace("469640:sqrat-done");
+}
+int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
+    return function_46e6f0_this((int32_t)(intptr_t)input);
+}
+int32_t kinoko_game_update_input(KinokoInputManager *input) {
+    return function_46b9a0((int32_t)(intptr_t)input);
+}
+int32_t kinoko_game_load_boot_script(void) { return function_402d40("data/script/boot.nut", 0); }
+void kinoko_game_update_callback(int32_t trace_index) {
+    if (function_4a9a30_this((int32_t)(intptr_t)(g612 + 4)) ==
+        0x08000100) {
+        // 0x46994b
+        retdec_trace("stagevm:global-callback");
+        if (trace_index <= 16) {
+            retdec_trace_i32("stagevm:global-state-vm", g612[0]);
+            retdec_trace_i32("stagevm:global-env-type", g612[2]);
+            retdec_trace_i32("stagevm:global-env-data", g612[3]);
+            retdec_trace_i32("stagevm:global-func-type", g612[5]);
+            retdec_trace_i32("stagevm:global-func-data", g612[6]);
+        }
+        if (retdec_actor_step_callback((int32_t)(intptr_t)g612) < 0)
+            retdec_clear_script_callback((int32_t)(intptr_t)g612);
+    }
+}
+int32_t kinoko_game_update_map(KinokoMapManager *map) {
+    return function_46f0b0((int32_t)(intptr_t)map);
+}
+void kinoko_game_prepare_map(KinokoMapManager *map, KinokoCamera *camera) {
+    function_46edc0_this((int32_t)(intptr_t)map, (int32_t *)camera);
+}
+void kinoko_game_clear_map(KinokoMapManager *map) {
+    function_46f620_this((int32_t)(intptr_t)map);
+}
+void kinoko_game_clear_actors(KinokoActorManager *actors) {
+    kinoko_clear_actor_manager((int32_t)(intptr_t)actors);
+}
+void kinoko_game_trace_map(KinokoMapManager *map, int32_t drawing) {
+    const int32_t *legacy = (const int32_t *)map;
+    if (drawing) retdec_trace_i32("render:map-layer", legacy[3]);
+    else {
+        retdec_trace_i32("469900:map-act", legacy[3]);
+        retdec_trace_i32("469900:map-resource", legacy[5]);
+    }
+}
+void kinoko_game_release_script_reference(uint32_t index) {
+    int32_t *references[] = { g602, g629, g611, g636 };
+    if (index < 4) function_4a9570_this((int32_t)(intptr_t)references[index]);
+}
+int32_t kinoko_game_close_vm(void) { return function_402ac0(); }
