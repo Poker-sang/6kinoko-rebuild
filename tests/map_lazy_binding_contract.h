@@ -125,11 +125,11 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
                 CHECK(*(int32_t*)(intptr_t)(cloned_layer+56) == PTR(layout)+328);
                 CHECK(layout[79] == 0); /* Register does not force SetLayer. */
                 CHECK(execute_source(vm,parent,
-                    "if (mapProbe.layout == mapProbe.script.layout) throw \"shared wrapper\";"
-                    "mapProbe.alpha -= 0.25; mapProbe.blend = 1;"
-                    "if (mapProbe.layout.alpha != 0.75 || mapProbe.script.layout.alpha != 0.75) throw \"alpha alias\";"
-                    "if (mapProbe.layout.blend != 1) throw \"blend alias\";"
-                    "mapProbe.script.layout.alpha = 0.5;"
+                    "if (mapProbe.layout == mapProbe.script.layout) throw \"shared wrapper\";\n"
+                    "mapProbe.alpha -= 0.25; mapProbe.blend = 1;\n"
+                    "if (mapProbe.layout.alpha != 0.75 || mapProbe.script.layout.alpha != 0.75) throw \"alpha alias\";\n"
+                    "if (mapProbe.layout.blend != 1) throw \"blend alias\";\n"
+                    "mapProbe.script.layout.alpha = 0.5;\n"
                     "if (mapProbe.alpha != 0.5) throw \"reverse alpha alias\";"));
                 CHECK(((float*)map)[80] == 1.0f);
             } else {
