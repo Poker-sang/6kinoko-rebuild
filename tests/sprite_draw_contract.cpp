@@ -13,7 +13,7 @@ float function_4040d0(long double a) { return static_cast<float>(std::sin(a)); }
 static int step, bound;
 static DWORD fvf;
 static const void *submitted;
-static bool valid;
+static volatile bool valid;
 extern "C" int32_t kinoko_texture_bind_stage(int32_t stage, int32_t texture) {
     std::fprintf(stderr,"bind step=%d stage=%d\n",step,stage);
     valid &= step++ == 0 && stage == 0;
