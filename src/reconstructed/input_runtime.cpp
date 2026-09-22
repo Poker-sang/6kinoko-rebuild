@@ -1,3 +1,4 @@
+#include "kinoko/direct_input.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_cluster.h"
 #include <windows.h>
@@ -6,14 +7,11 @@
 #include "kinoko/legacy_abi.h"
 
 extern "C" {
-extern int32_t g782;
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
 int32_t function_408320(int32_t);
 int32_t function_4083e0(int32_t, int32_t, int32_t, int32_t, int32_t);
-int32_t function_408e60(int32_t);
-int32_t function_408e80(int32_t);
 }
 namespace {
 // Original Input record: 4-byte vtable, 68-byte assignment, 96-byte state.
@@ -66,7 +64,7 @@ extern "C" int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
         transferred == sizeof(record)) {
         memcpy((void *)(intptr_t)(this_ptr + 0x10), record, sizeof(record));
         retdec_trace("input:config-keyboard-loaded");
-        if ((int32_t)(int8_t)record[0] >= g782) {
+        if ((int32_t)(int8_t)record[0] >= kinoko_input_snapshot.controller_count) {
             memset((void *)(intptr_t)(this_ptr + 0x10), 0, sizeof(record));
             *(unsigned char *)(intptr_t)(this_ptr + 0x10) = 0xfe;
         }
@@ -77,7 +75,7 @@ extern "C" int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
                      NULL) && transferred == sizeof(record)) {
             int32_t begin = kinoko_input_devices_begin(this_ptr);
             int32_t end = kinoko_input_devices_end(this_ptr);
-            if ((int32_t)(int8_t)record[0] >= g782) {
+            if ((int32_t)(int8_t)record[0] >= kinoko_input_snapshot.controller_count) {
                 memset(record, 0, sizeof(record));
                 record[0] = 0xfe;
             }
@@ -140,7 +138,7 @@ extern "C" int32_t function_46bbe0(int32_t this_ptr, int32_t device,
     int32_t record[17];
     memcpy(record, destination, sizeof(record));
     record[field + 5] = value;
-    if ((int32_t)(int8_t)(record[0] & 0xff) >= g782) {
+    if ((int32_t)(int8_t)(record[0] & 0xff) >= kinoko_input_snapshot.controller_count) {
         memset(record, 0, sizeof(record));
         record[0] = 0xfe;
     }
@@ -156,7 +154,7 @@ extern "C" int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t fie
     if (device == -1) {
         for (int32_t scan = 0; scan < 256; ++scan) {
             /* The original excludes Kanji, Caps Lock and Kana. */
-            if (scan == 148 || scan == 58 || scan == 112 || !function_408e60(scan))
+            if (scan == 148 || scan == 58 || scan == 112 || !kinoko_input_key_down(scan))
                 continue;
             memcpy(record, (const void *)(intptr_t)(this_ptr + 16), sizeof(record));
             record[field + 1] = scan;
@@ -171,10 +169,10 @@ extern "C" int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t fie
     end = kinoko_input_devices_end(this_ptr);
     if (device >= 0 && device < (end - begin) / 168) {
         for (int32_t index = 0; index < (end - begin) / 168; ++index) {
-            int32_t state = function_408e80(index);
+            const auto* state = kinoko_input_controller_state(index);
             if (state == 0) continue;
             for (int32_t button = 0; button < 32; ++button) {
-                if (*(uint8_t *)(intptr_t)(state + 48 + button) == 0) continue;
+                if (state->buttons[button] == 0) continue;
                 memcpy(record, (const void *)(intptr_t)(begin + 4), sizeof(record));
                 record[field + 5] = button;
                 for (int32_t target = begin; target < end; target += 168)

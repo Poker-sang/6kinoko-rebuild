@@ -1,71 +1,90 @@
 #include "kinoko/timer_events.h"
-#include "kinoko/diagnostics.h"
-#include <windows.h>
+#include <mmsystem.h>
 #include <list>
 #include <algorithm>
-#include <stdexcept>
+#include <atomic>
 #include <cstdlib>
 #include <new>
-extern "C" {
-extern CRITICAL_SECTION g880;
-extern int32_t g881,g882;
-extern char g887;
-void retdec_trace_i32(const char*,int32_t);
-}
 namespace {
-std::list<HANDLE> events;
-struct Lock {
-    Lock() { EnterCriticalSection(&g880); }
-    ~Lock() { LeaveCriticalSection(&g880); }
+struct FrameTimer {
+    CRITICAL_SECTION lock{};
+    HANDLE thread{};
+    DWORD thread_id{};
+    DWORD period_ms{16};
+    DWORD extra_delay_ms{};
+    std::atomic<bool> running{false};
+    bool initialized{}, period_requested{};
+    std::list<HANDLE> events;
 };
-// Original 4129D0 stops/joins the timer before closing queued events and
-// destroying its critical section. Register before the worker is created;
-// this runs before the earlier-constructed std::list static destructor.
+FrameTimer timer;
+struct Lock {
+    Lock() { EnterCriticalSection(&timer.lock); }
+    ~Lock() { LeaveCriticalSection(&timer.lock); }
+};
+DWORD WINAPI timer_worker(void*) {
+    const HANDLE delay = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+    while (timer.running.load()) {
+        const DWORD timeout = timer.period_ms + timer.extra_delay_ms;
+        if (delay) WaitForSingleObject(delay, timeout);
+        else Sleep(timeout); // Native allocation-failure guard, avoids spinning.
+        timer.extra_delay_ms = 0;
+        Lock lock;
+        for (HANDLE event : timer.events) SetEvent(event);
+    }
+    if (delay) CloseHandle(delay);
+    return 0;
+}
 void shutdown() {
-    g887=0;
-    if(g881) {
-        const auto thread=reinterpret_cast<HANDLE>(static_cast<intptr_t>(g881));
-        SetThreadPriority(thread,THREAD_PRIORITY_TIME_CRITICAL);
-        WaitForSingleObject(thread,INFINITE);CloseHandle(thread);g881=0;g882=0;
+    if (!timer.initialized) return;
+    timer.running.store(false);
+    if (timer.thread) {
+        SetThreadPriority(timer.thread, THREAD_PRIORITY_TIME_CRITICAL);
+        WaitForSingleObject(timer.thread, INFINITE);
+        CloseHandle(timer.thread); timer.thread = nullptr;
     }
     {
         Lock lock;
-        for(HANDLE event:events) { SetEvent(event);CloseHandle(event); }
-        events.clear();
+        for (HANDLE event : timer.events) { SetEvent(event); CloseHandle(event); }
+        timer.events.clear();
     }
-    DeleteCriticalSection(&g880);
+    DeleteCriticalSection(&timer.lock);
+    if (timer.period_requested) timeEndPeriod(1);
+    timer.initialized = timer.period_requested = false;
 }
 }
-extern "C" void kinoko_initialize_timer_events(void) {
-    events.clear();
-    if(std::atexit(shutdown)!=0) throw std::bad_alloc();
+extern "C" void kinoko_frame_timer_initialize(void) {
+    if (timer.initialized) return;
+    InitializeCriticalSection(&timer.lock);
+    if (std::atexit(shutdown) != 0) { DeleteCriticalSection(&timer.lock); throw std::bad_alloc(); }
+    timer.initialized = true;
+    timer.period_requested = timeBeginPeriod(1) == TIMERR_NOERROR;
+    timer.running.store(true);
+    timer.thread = CreateThread(nullptr, 0, timer_worker, nullptr, 0, &timer.thread_id);
+    if (timer.thread) SetThreadPriority(timer.thread, THREAD_PRIORITY_TIME_CRITICAL);
 }
-extern "C" int32_t kinoko_timer_events_identity(void) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(&events)); }
-extern "C" int32_t kinoko_timer_events_first(void) {
-    return events.empty()?kinoko_timer_events_identity():static_cast<int32_t>(reinterpret_cast<intptr_t>(&events.front()));
-}
-extern "C" void kinoko_notify_timer_events(void) {
-    // Called with the timer critical section held, in original insertion order.
-    for(HANDLE event:events) SetEvent(event);
-}
-extern "C" int32_t function_412b80(int32_t) {
-    retdec_trace("412b80:begin");retdec_trace("412b80:before-lock");
+extern "C" HANDLE kinoko_frame_timer_register(void) {
+    if (!timer.initialized || !timer.thread) return nullptr;
     Lock lock;
-    retdec_trace_i32("412b80:sentinel",kinoko_timer_events_identity());
-    if(events.size()==0x3ffffffeu) throw std::length_error("list<T> too long");
-    // 412BA6 inserts a null node before 412BEF creates its auto-reset event.
-    // Even a failed CreateEvent leaves that null entry, as in the original.
-    events.push_back(nullptr);
-    events.back()=CreateEventA(nullptr,FALSE,FALSE,nullptr);
-    const auto result=static_cast<int32_t>(reinterpret_cast<intptr_t>(events.back()));
-    retdec_trace_i32("412b80:event",result);retdec_trace("412b80:done");
-    return result;
+    // 412BA6 inserts a null node before creating its auto-reset event.
+    timer.events.push_back(nullptr);
+    timer.events.back() = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+    return timer.events.back();
 }
-extern "C" int32_t function_412c10(int32_t value) {
+extern "C" int32_t kinoko_frame_timer_unregister(HANDLE event) {
+    if (!timer.initialized) return 0;
     Lock lock;
-    const auto event=reinterpret_cast<HANDLE>(static_cast<intptr_t>(value));
-    const auto found=std::find(events.begin(),events.end(),event);
-    if(found==events.end()) return 0;
-    SetEvent(*found);const BOOL closed=CloseHandle(*found);events.erase(found);
-    return closed?1:0;
+    const auto found = std::find(timer.events.begin(), timer.events.end(), event);
+    if (found == timer.events.end()) return 0;
+    SetEvent(*found);
+    const BOOL closed = CloseHandle(*found);
+    timer.events.erase(found);
+    return closed ? 1 : 0;
+}
+extern "C" void kinoko_frame_timer_wait(HANDLE event) {
+    // 40DECD: skip the wait when the registry is locked or the event is absent.
+    // The update thread owns this registration; shutdown joins it before CRT teardown.
+    if (!timer.initialized || !TryEnterCriticalSection(&timer.lock)) return;
+    const bool registered = std::find(timer.events.begin(), timer.events.end(), event) != timer.events.end();
+    LeaveCriticalSection(&timer.lock);
+    if (registered) WaitForSingleObject(event, INFINITE);
 }

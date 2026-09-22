@@ -4249,8 +4249,8 @@ static int test_physical_input(void) {
     int32_t device[42] = {0}, tracker[261] = {0}, joystick[20] = {0};
     unsigned char scans[] = {0x80, 0xff};
     unsigned char saved_keys[256];
-    char *saved_states = g783;
-    int32_t saved_count = g782;
+    KinokoControllerState *saved_states = kinoko_input_snapshot.controllers;
+    int32_t saved_count = kinoko_input_snapshot.controller_count;
     int i;
     memcpy(saved_keys, g_retdec_keyboard_state, 256);
     memset(g_retdec_keyboard_state, 0, 256);
@@ -4283,7 +4283,10 @@ static int test_physical_input(void) {
     CHECK(function_4083e0(PTR(tracker), 0xff, 1, 0, 1) == 0);
     function_408320(PTR(tracker));
     CHECK(function_4083e0(PTR(tracker), 0xff, 0, 0, 0) == 0);
-    g783 = (char*)joystick; g782 = 1; device[1] = 0; device[6] = 0;
+    kinoko_input_snapshot.controllers = (KinokoControllerState*)joystick; kinoko_input_snapshot.controller_count = 1; device[1] = 0; device[6] = 0;
+    CHECK(kinoko_input_controller_state(-1) == NULL);
+    CHECK(kinoko_input_controller_state(1) == NULL);
+    CHECK(kinoko_input_controller_state(0) == (KinokoControllerState*)joystick);
     joystick[0] = -501; joystick[1] = 501; joystick[2] = 250;
     ((unsigned char*)joystick)[48] = 1;
     function_407500(PTR(device));
@@ -4302,7 +4305,7 @@ static int test_physical_input(void) {
     CHECK(kinoko_input_keys_size(PTR(tracker))==256);
     for(i=0;i<256;++i) CHECK(kinoko_input_keys_at(PTR(tracker),i)==i);
     kinoko_input_keys_destroy(PTR(tracker));
-    g783 = saved_states; g782 = saved_count;
+    kinoko_input_snapshot.controllers = saved_states; kinoko_input_snapshot.controller_count = saved_count;
     memcpy(g_retdec_keyboard_state, saved_keys, 256);
     return 0;
 }
@@ -4318,7 +4321,7 @@ static int test_input_configuration(void) {
     manager[4]=0xfe; manager[8]=55;
     devices[0][1]=0; devices[0][9]=7;
     devices[1][1]=1; devices[1][9]=19;
-    const int old_count=g782; g782=2;
+    const int old_count=kinoko_input_snapshot.controller_count; kinoko_input_snapshot.controller_count=2;
     function_46b7c0(PTR(manager),PTR(path));
     memset(manager+4,0,68); memset(devices[0]+1,0,68); memset(devices[1]+1,0,68);
     function_46b880(PTR(manager),PTR(path));
@@ -4333,7 +4336,7 @@ static int test_input_configuration(void) {
     CHECK(function_46bc90(PTR(manager),-1,3)==0);
     g_retdec_keyboard_state[149]=0x80;
     CHECK(function_46bc90(PTR(manager),-1,3)==1 && manager[8]==149);
-    memcpy(g_retdec_keyboard_state,previous,256); g782=old_count;
+    memcpy(g_retdec_keyboard_state,previous,256); kinoko_input_snapshot.controller_count=old_count;
     kinoko_input_devices_destroy(PTR(manager));
     puts("PASS: Input config two-record format/broadcast, assignment offsets and original excluded keys");
     return 0;

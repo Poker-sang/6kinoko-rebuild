@@ -1,3 +1,4 @@
+#include "kinoko/direct_input.h"
 #include "kinoko/application.h"
 #include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
@@ -1629,18 +1630,10 @@ int32_t function_408800(char a1);
 int32_t function_408830(void);
 
 
-int32_t function_408930(HWND hwnd, HINSTANCE instance);
-int32_t function_4089c0(void);
 
-int32_t function_408b30(void);
-int32_t function_408bf0(void);
-int32_t function_408c80(void);
-int32_t function_408d00(void);
 void retdec_poll_fallback_keyboard(void);
 
 static void retdec_initialize_input_aggregate(int32_t aggregate_ptr);
-int32_t function_408e60(int32_t a1);
-int32_t function_408e80(int32_t a1);
 
 
 
@@ -1708,10 +1701,6 @@ int32_t function_4123c0(int32_t a1);
 
 
 
-int32_t function_412890(void);
-DWORD WINAPI function_412ad0(LPVOID lpThreadParameter);
-int32_t function_412b80(int32_t a1);
-int32_t function_412c10(int32_t hEvent);
 int32_t function_412ca0(void);
 
 
@@ -2789,31 +2778,11 @@ struct retdec_RTL_CRITICAL_SECTION g758 = { 0 }; // 0x51af1c
 int32_t g765 = 0; // 0x51af54
 char g766[260] = { 0 }; // 0x51af58
 char * g767; // 0x51b05c
-char * g768; // 0x51b068
-void * g769 = NULL; // 0x51b06c
-void * g770 = NULL; // 0x51b070
-void * g771 = NULL; // 0x51b074
-int32_t g772 = 0; // 0x51b078
-int32_t g773 = 0; // 0x51b07c
-int32_t g774 = 0; // 0x51b080
-char * g775; // 0x51b088
 /* RetDec typed the original 256-byte DirectInput buffer as a char pointer. */
 unsigned char g_retdec_keyboard_state[256];
 /* CInputManager::CInputManagerCluster owns a vector of unique key codes.
    Keep the vector storage separate from the manager so its pointers remain
    valid while the Squirrel object is updated. */
-char g776 = 0; // 0x51b0a5
-char g777 = 0; // 0x51b0b2
-char g778 = 0; // 0x51b0be
-char g779 = 0; // 0x51b0c0
-char g780 = 0; // 0x51b125
-char g781 = 0; // 0x51b140
-int32_t g782 = 0; // 0x51b188
-char * g783; // 0x51b18c
-char * g784; // 0x51b190
-int32_t g785 = 0; // 0x51b194
-int32_t g786 = 0; // 0x51b19c
-int32_t g787 = 0; // 0x51b1a0
 int32_t g788 = 0; // 0x51b1a4
 int32_t g789 = 0; // 0x51b1ac
 float80_t g790 = 0.0L; // 0x51b1c0
@@ -2867,13 +2836,6 @@ char * g875; // 0x51b7d1
 int32_t g876 = 0; // 0x51b8d8
 char * g877; // 0x51b8dc
 int32_t g878 = 0; // 0x51b8e0
-int32_t g879 = 0; // 0x51b8e4
-struct retdec_RTL_CRITICAL_SECTION g880 = { 0 }; // 0x51b8e8
-int32_t g881 = 0; // 0x51b900
-int32_t g882 = 0; // 0x51b904
-int32_t g883 = 0; // 0x51b908
-int32_t g884 = 0; // 0x51b90c
-char g887 = 0; // 0x51b91c
  // 0x51b924
  // 0x51b928
 int32_t g890 = 0; // 0x51b930
@@ -3562,7 +3524,7 @@ static void retdec_initialize_runtime_objects(void)
        address 0x4 on its first lookup. */
     function_4d3f50();
     kinoko_application_construct();
-    function_412890();
+    kinoko_frame_timer_initialize();
 
     /* MapManager is a CRT-constructed global in the original image.  Its
        list sentinel must exist before the first scene frame, even though the
@@ -4542,7 +4504,7 @@ void retdec_poll_fallback_keyboard(void)
     memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
     /* 408B30 uses DISCL_FOREGROUND. Keep that contract in the fallback,
        and expose the full keyboard to the original WaitAssign scan. */
-    if (g768 != NULL && GetForegroundWindow() == (HWND)g768) {
+    if (kinoko_input_window() != NULL && GetForegroundWindow() == kinoko_input_window()) {
         for (UINT virtual_key = VK_BACK; virtual_key < 256; ++virtual_key) {
             UINT scan;
             if (virtual_key == VK_SHIFT || virtual_key == VK_CONTROL || virtual_key == VK_MENU ||
@@ -4754,15 +4716,7 @@ int32_t function_408830(void) {
 
 
 // Address range: 0x408bf0 - 0x408c73
-int32_t function_408bf0(void) {
-    /* The original enumerates optional game controllers here. Keep the
-       controller list empty until its C++ container has been recovered. */
-    g782 = 0;
-    g772 = 0;
-    g773 = 0;
-    g774 = 0;
-    return 1;
-}
+
 
 // Address range: 0x408c80 - 0x408cf4
 
@@ -5444,75 +5398,10 @@ int32_t function_4123c0(int32_t a1) {
 // Address range: 0x412890 - 0x412ac5
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
-int32_t function_412890(void) {
-    HANDLE thread;
-    DWORD thread_id = 0;
 
-    /* IDA identifies this as the Common::CCriticalSection constructor. The
-       generated body below merged its destructor/error path and substituted
-       g1224 for several real globals, so keep the startup path explicit. */
-    g879 = (int32_t)(uintptr_t)&g190;
-    InitializeCriticalSection((LPCRITICAL_SECTION)&g880);
-    retdec_trace("412890:cs-ready");
-    g881 = 0;
-    g882 = 0;
-    kinoko_initialize_timer_events();
-    retdec_trace_i32("412890:sentinel",kinoko_timer_events_identity());
-    g883 = 16;
-    g884 = 0;
-    g887 = 1;
-    timeBeginPeriod(1);
-    thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)function_412ad0,
-                          NULL, 0, &thread_id);
-    g881 = (int32_t)(uintptr_t)thread;
-    g882 = (int32_t)thread_id;
-    if (thread != NULL) {
-        SetThreadPriority(thread, 15);
-    }
-    retdec_trace_i32("412890:thread", g881);
-    return (int32_t)(uintptr_t)&g879;
-
-}
 
 // Address range: 0x412ad0 - 0x412b73
-DWORD WINAPI function_412ad0(LPVOID lpThreadParameter) {
-    HANDLE event_handle;
-    static volatile LONG trace_count;
-    LONG trace_index;
 
-    (void)lpThreadParameter;
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    retdec_trace_i32("412ad0:event", (int32_t)(uintptr_t)event_handle);
-    if (event_handle == NULL) {
-        return 0;
-    }
-    while (g887 != 0) {
-        DWORD timeout = (DWORD)g883;
-        if (g884 != 0) {
-            timeout += (DWORD)g884;
-            g884 = 0;
-        }
-        WaitForSingleObject(event_handle, timeout);
-        trace_index = InterlockedIncrement(&trace_count);
-        if (trace_index <= 3) {
-            retdec_trace("412ad0:before-lock");
-        }
-        EnterCriticalSection((LPCRITICAL_SECTION)&g880);
-        if (trace_index <= 3) {
-            retdec_trace_i32("412ad0:sentinel", kinoko_timer_events_identity());
-            retdec_trace_i32("412ad0:first",
-                             kinoko_timer_events_first());
-        }
-        kinoko_notify_timer_events();
-        LeaveCriticalSection((LPCRITICAL_SECTION)&g880);
-        if (trace_index <= 3) {
-            retdec_trace("412ad0:after-lock");
-        }
-    }
-    CloseHandle(event_handle);
-    return 0;
-
-}
 
 // Address range: 0x412b80 - 0x412c08
 
@@ -10606,9 +10495,9 @@ static void retdec_initialize_input_manager_state(int32_t this_ptr) {
     memcpy((void *)(intptr_t)(this_ptr + 16), default_record,
            sizeof(default_record));
     kinoko_input_devices_construct(this_ptr);
-    kinoko_input_devices_resize(this_ptr, (uint32_t)g782);
+    kinoko_input_devices_resize(this_ptr, (uint32_t)kinoko_input_snapshot.controller_count);
     kinoko_input_cluster_construct(this_ptr + 196);
-    for (int32_t i=0; i<g782; ++i) {
+    for (int32_t i=0; i<kinoko_input_snapshot.controller_count; ++i) {
         int32_t device=kinoko_input_devices_begin(this_ptr)+168*i;
         uint32_t record[17]={0};
         record[0]=(uint8_t)i;

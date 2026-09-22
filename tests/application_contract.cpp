@@ -1,3 +1,5 @@
+#include "kinoko/direct_input.h"
+#include "kinoko/timer_events.h"
 #include "kinoko/application_runtime.hpp"
 #include "kinoko/renderer.h"
 #include "kinoko/scene_queue.h"
@@ -34,15 +36,16 @@ void kinoko_remove_device_listener(KinokoDeviceListener*) {}
 int32_t kinoko_ime_dispatch(int32_t, uint32_t, uint32_t, int32_t) { return 0; }
 unsigned long kinoko_run_game_math(unsigned long (__stdcall *)(void*), void*) noexcept(false) { return 0; }
 int32_t function_408650(void*, HWND) { return 0; }
-int32_t function_408930(HWND, HINSTANCE) { return 0; }
-int32_t function_4089c0() { return 0; }
-int32_t function_408b30() { return 0; }
-int32_t function_408bf0() { return 0; }
-int32_t function_408d00() { return 0; }
-int32_t function_408c80() { return 0; }
+int32_t kinoko_input_initialize(HWND, HINSTANCE) { return 0; }
+int32_t kinoko_input_shutdown() { return 0; }
+int32_t kinoko_input_open_keyboard() { return 0; }
+int32_t kinoko_input_open_controllers() { return 0; }
+int32_t kinoko_input_open_mouse() { return 0; }
+int32_t kinoko_input_poll() { return 0; }
 int32_t function_412ca0() { return 0; }
-int32_t function_412b80(int32_t) { return 0; }
-int32_t function_412c10(int32_t) { return 0; }
+HANDLE kinoko_frame_timer_register() { return nullptr; }
+void kinoko_frame_timer_wait(HANDLE) {}
+int32_t kinoko_frame_timer_unregister(HANDLE) { return 0; }
 int32_t function_45da00() { return 0; }
 int32_t function_45da40() { return 0; }
 int32_t function_45da50(int32_t) { return 0; }

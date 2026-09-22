@@ -1,200 +1,136 @@
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #define DIRECTINPUT_VERSION 0x0800
-#include <windows.h>
+#include "kinoko/direct_input.h"
 #include <dinput.h>
-#include <cstdint>
-#include <cstdlib>
+#include <vector>
+#include <memory>
 #include <cstring>
+#include <cstddef>
 extern "C" {
-extern char *g768, *g783, *g784;
-extern void *g769, *g770, *g771;
-extern int32_t g772,g773,g774,g782,g786,g787;
 extern unsigned char g_retdec_keyboard_state[256];
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*, int32_t);
-void retdec_trace_hresult(const char*, long);
 void retdec_poll_fallback_keyboard(void);
+KinokoInputSnapshot kinoko_input_snapshot{};
 }
-extern "C" int32_t function_408930(HWND hwnd, HINSTANCE instance) {
-    void *direct_input = NULL;
-    HRESULT hr;
-
-    (void)instance;
-    if (g769 != NULL) {
-        return 1;
+namespace {
+struct ReleaseDevice {
+    void operator()(IDirectInputDevice8A* device) const {
+        if (device) { device->Unacquire(); device->Release(); }
     }
-    g768 = (char *)hwnd;
-    retdec_trace("408930:pre-cocreate");
-    hr = (HRESULT)CoCreateInstance(
-        CLSID_DirectInput8, NULL, CLSCTX_INPROC_SERVER,
-        IID_IDirectInput8A, &direct_input);
-    retdec_trace(FAILED(hr) ? "408930:cocreate-failed" :
-                 "408930:post-cocreate");
-    if (FAILED(hr) || direct_input == NULL) {
-        g769 = NULL;
-        MessageBoxA(hwnd, "DirectInput8Create failed", "DInput-Error", MB_OK);
-        return 0;
+};
+using Device = std::unique_ptr<IDirectInputDevice8A, ReleaseDevice>;
+struct ReleaseInput { void operator()(IDirectInput8A* input) const { if(input) input->Release(); } };
+struct InputService {
+    HWND window{};
+    std::unique_ptr<IDirectInput8A, ReleaseInput> input;
+    Device keyboard, mouse;
+    std::vector<Device> controllers;
+    std::vector<KinokoControllerState> states;
+    std::vector<DWORD> axis_counts;
+};
+InputService service;
+static_assert(sizeof(KinokoControllerState) == sizeof(DIJOYSTATE));
+static_assert(offsetof(KinokoControllerState, buttons) == offsetof(DIJOYSTATE, rgbButtons));
+static_assert(sizeof(KinokoMouseState) == sizeof(DIMOUSESTATE2));
+BOOL CALLBACK configure_axis(const DIDEVICEOBJECTINSTANCEA* object, void* context) {
+    DIPROPRANGE range{};
+    range.diph = {sizeof(range), sizeof(DIPROPHEADER), object->dwType, DIPH_BYID};
+    range.lMin = -1000; range.lMax = 1000;
+    return SUCCEEDED(static_cast<IDirectInputDevice8A*>(context)->SetProperty(DIPROP_RANGE, &range.diph));
+}
+BOOL CALLBACK enumerate_controller(const DIDEVICEINSTANCEA* instance, void*) {
+    IDirectInputDevice8A* raw{};
+    if (FAILED(service.input->CreateDevice(instance->guidInstance, &raw, nullptr))) return DIENUM_STOP;
+    Device device(raw);
+    // 408EB0 deliberately ignores these setup HRESULTs; axis enumeration stops
+    // on the first failed range property. Acquisition occurs in the poll path.
+    device->SetDataFormat(&c_dfDIJoystick);
+    device->SetCooperativeLevel(service.window, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
+    DIDEVCAPS caps{}; caps.dwSize = sizeof(caps);
+    device->GetCapabilities(&caps);
+    service.axis_counts.push_back(caps.dwAxes);
+    device->EnumObjects(configure_axis, device.get(), DIDFT_AXIS);
+    service.controllers.push_back(std::move(device));
+    return DIENUM_CONTINUE;
+}
+int32_t open_device(Device& destination, REFGUID guid, const DIDATAFORMAT& format, DWORD flags, bool mouse) {
+    if (destination) return 1;
+    if (!service.input) return 0;
+    IDirectInputDevice8A* raw{};
+    if (FAILED(service.input->CreateDevice(guid, &raw, nullptr))) return 0;
+    Device device(raw);
+    if (FAILED(device->SetDataFormat(&format)) || FAILED(device->SetCooperativeLevel(service.window, flags))) return 0;
+    if (mouse) {
+        DIPROPDWORD property{};
+        property.diph = {sizeof(property), sizeof(DIPROPHEADER), 0, DIPH_DEVICE};
+        property.dwData = 1;
+        if (FAILED(device->SetProperty(DIPROP_BUFFERSIZE, &property.diph))) return 0;
     }
-    g769 = direct_input;
+    // Original ignores Acquire failure (e.g. window not foreground yet).
+    device->Acquire();
+    destination = std::move(device);
     return 1;
 }
-
-extern "C" int32_t function_4089c0(void) {
-    IDirectInputDevice8A *mouse = (IDirectInputDevice8A *)g771;
-    IDirectInputDevice8A *keyboard = (IDirectInputDevice8A *)g770;
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
-
-    if (mouse != NULL) {
-        mouse->Unacquire();
-        mouse->Release();
-        g771 = NULL;
+}
+extern "C" HWND kinoko_input_window(void) { return service.window; }
+extern "C" int32_t kinoko_input_initialize(HWND window, HINSTANCE instance) {
+    if (service.input) return 1;
+    service.window = window;
+    IDirectInput8A* input{};
+    HRESULT hr = CoCreateInstance(CLSID_DirectInput8, nullptr, CLSCTX_ALL, IID_IDirectInput8A, reinterpret_cast<void**>(&input));
+    if (SUCCEEDED(hr) && input) {
+        service.input.reset(input);
+        hr = input->Initialize(instance, DIRECTINPUT_VERSION); // 408998, previously omitted.
+        if (SUCCEEDED(hr)) return 1;
+        service.input.reset();
     }
-    if (keyboard != NULL) {
-        keyboard->Unacquire();
-        keyboard->Release();
-        g770 = NULL;
-    }
-    if (g772 != 0) {
-        free((void *)(intptr_t)g772);
-        g772 = 0;
-    }
-    g773 = 0;
-    g774 = 0;
-    g782 = 0;
-    g783 = NULL;
-    g784 = NULL;
-    g786 = 0;
-    g787 = 0;
-    if (direct_input != NULL) {
-        direct_input->Release();
-        g769 = NULL;
-    }
+    MessageBoxA(window, "DirectInput initialization failed", "DInput-Error", MB_OK);
+    return 0;
+}
+extern "C" int32_t kinoko_input_shutdown(void) {
+    service.mouse.reset(); service.keyboard.reset();
+    service.controllers.clear(); service.states.clear(); service.axis_counts.clear();
+    kinoko_input_snapshot = {};
+    service.input.reset(); service.window = nullptr;
     return 1;
 }
-
-extern "C" int32_t function_408b30(void) {
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
-    IDirectInputDevice8A *keyboard = NULL;
-    HRESULT hr;
-
-    if (g770 != NULL) {
-        return 1;
-    }
-    if (direct_input == NULL || g768 == NULL) {
-        return 0;
-    }
-    retdec_trace("408b30:pre-create-device");
-    hr = direct_input->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-    retdec_trace_hresult("408b30:create-device-hr", hr);
-    retdec_trace(FAILED(hr) ? "408b30:create-device-failed" :
-                 "408b30:create-device-ok");
-    if (FAILED(hr) || keyboard == NULL) {
-        return 0;
-    }
-    retdec_trace("408b30:pre-data-format");
-    hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
-    retdec_trace(FAILED(hr) ? "408b30:data-format-failed" :
-                 "408b30:data-format-ok");
-    if (SUCCEEDED(hr)) {
-        retdec_trace("408b30:pre-cooperative-level");
-        hr = keyboard->SetCooperativeLevel((HWND)g768, 22);
-        retdec_trace(FAILED(hr) ? "408b30:cooperative-level-failed" :
-                     "408b30:cooperative-level-ok");
-    }
-    if (SUCCEEDED(hr)) {
-        retdec_trace("408b30:pre-acquire");
-        hr = keyboard->Acquire();
-        retdec_trace(FAILED(hr) ? "408b30:acquire-failed" :
-                     "408b30:acquire-ok");
-    }
-    if (FAILED(hr)) {
-        keyboard->Release();
-        return 0;
-    }
-    g770 = keyboard;
+extern "C" int32_t kinoko_input_open_keyboard(void) {
+    return open_device(service.keyboard, GUID_SysKeyboard, c_dfDIKeyboard, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY, false);
+}
+extern "C" int32_t kinoko_input_open_mouse(void) {
+    return open_device(service.mouse, GUID_SysMouse, c_dfDIMouse2, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, true);
+}
+extern "C" int32_t kinoko_input_open_controllers(void) {
+    if (!service.input) return 1;
+    if (FAILED(service.input->EnumDevices(DI8DEVCLASS_GAMECTRL, enumerate_controller, nullptr, DIEDFL_ATTACHEDONLY))) return 0;
+    // The original publishes the low byte of the vector length (408C50).
+    const auto count = static_cast<uint8_t>(service.controllers.size());
+    service.states.resize(count);
+    kinoko_input_snapshot.controllers = service.states.data();
+    kinoko_input_snapshot.controller_count = count;
     return 1;
 }
-
-extern "C" int32_t function_408c80(void) {
-    IDirectInputDevice8A *keyboard = (IDirectInputDevice8A *)g770;
-    IDirectInputDevice8A *mouse = (IDirectInputDevice8A *)g771;
-    HRESULT hr;
-    unsigned char keyboard_state[256];
-    DIMOUSESTATE2 mouse_state;
-    static volatile LONG poll_trace_count;
-    LONG poll_index = InterlockedIncrement(&poll_trace_count);
-
-    if (poll_index <= 5)
-        retdec_trace_i32("input:poll-keyboard", (int32_t)(intptr_t)keyboard);
-
-    if (keyboard != NULL) {
-        hr = keyboard->GetDeviceState((DWORD)sizeof(keyboard_state), keyboard_state);
-        if (FAILED(hr)) {
-            keyboard->Acquire();
-            ZeroMemory(keyboard_state, sizeof(keyboard_state));
+extern "C" int32_t kinoko_input_poll(void) {
+    // 408C80 then 40DCDC: controllers, keyboard, mouse, in that order.
+    for (size_t i = 0; i < service.states.size(); ++i) {
+        auto* device = service.controllers[i].get();
+        if (FAILED(device->Poll())) device->Acquire();
+        // Original retains the preceding cache if GetDeviceState fails.
+        device->GetDeviceState(sizeof(KinokoControllerState), &service.states[i]);
+    }
+    if (service.keyboard) {
+        if (FAILED(service.keyboard->GetDeviceState(256, g_retdec_keyboard_state))) {
+            service.keyboard->Acquire();
+            std::memset(g_retdec_keyboard_state, 0, 256);
         }
-        /* The original consumers read this fixed 256-byte state area. */
-        memcpy(g_retdec_keyboard_state, keyboard_state,
-               sizeof(g_retdec_keyboard_state));
     } else {
+        // Established reconstruction fallback: foreground-only scan mapping.
         retdec_poll_fallback_keyboard();
     }
-    if (mouse != NULL) {
-        hr = mouse->GetDeviceState((DWORD)sizeof(mouse_state), &mouse_state);
-        if (FAILED(hr)) {
-            mouse->Acquire();
-            ZeroMemory(&mouse_state, sizeof(mouse_state));
-        }
-    }
+    if (service.mouse && FAILED(service.mouse->GetDeviceState(sizeof(KinokoMouseState), &kinoko_input_snapshot.mouse)))
+        service.mouse->Acquire();
     return 1;
 }
-
-extern "C" int32_t function_408d00(void) {
-    IDirectInput8A *direct_input = (IDirectInput8A *)g769;
-    IDirectInputDevice8A *mouse = NULL;
-    DIPROPDWORD buffer_property;
-    HRESULT hr;
-
-    if (g771 != NULL) {
-        return 1;
-    }
-    if (direct_input == NULL || g768 == NULL) {
-        return 0;
-    }
-    hr = direct_input->CreateDevice(GUID_SysMouse, &mouse, NULL);
-    if (FAILED(hr) || mouse == NULL) {
-        return 0;
-    }
-    hr = mouse->SetDataFormat(&c_dfDIMouse2);
-    if (SUCCEEDED(hr)) {
-        hr = mouse->SetCooperativeLevel((HWND)g768, 6);
-    }
-    ZeroMemory(&buffer_property, sizeof(buffer_property));
-    buffer_property.diph.dwSize = sizeof(buffer_property);
-    buffer_property.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-    buffer_property.diph.dwObj = 0;
-    buffer_property.diph.dwHow = DIPH_DEVICE;
-    buffer_property.dwData = 1;
-    if (SUCCEEDED(hr)) {
-        hr = mouse->SetProperty(DIPROP_BUFFERSIZE, &buffer_property.diph);
-    }
-    if (SUCCEEDED(hr)) {
-        hr = mouse->Acquire();
-    }
-    if (FAILED(hr)) {
-        mouse->Release();
-        return 0;
-    }
-    g771 = mouse;
-    return 1;
-}
-
-extern "C" int32_t function_408e60(int32_t a1) {
-    return g_retdec_keyboard_state[(unsigned char)a1] >> 7;
-}
-
-extern "C" int32_t function_408e80(int32_t a1) {
-    return a1 >= 0 && a1 < g782 && g783 != NULL
-        ? (int32_t)(intptr_t)(g783 + 80 * a1) : 0;
+extern "C" int32_t kinoko_input_key_down(int32_t scan) { return g_retdec_keyboard_state[uint8_t(scan)] >> 7; }
+extern "C" const KinokoControllerState* kinoko_input_controller_state(int32_t index) {
+    return index >= 0 && index < kinoko_input_snapshot.controller_count && kinoko_input_snapshot.controllers
+        ? &kinoko_input_snapshot.controllers[index] : nullptr;
 }

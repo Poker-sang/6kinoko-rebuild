@@ -1,0 +1,1 @@
+{"addr":"0x408e60","code":"int __thiscall sub_408E60(unsigned __int8 *this, unsigned __int8 a2)\n{\n  return *(this + a2 + 32) >> 7; /*0x408e6f*/\n}"}

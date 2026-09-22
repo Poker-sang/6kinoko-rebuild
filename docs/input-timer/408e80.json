@@ -1,0 +1,1 @@
+{"addr":"0x408e80","code":"int __thiscall sub_408E80(_DWORD *this, int a2)\n{\n  if ( a2 < 0 || a2 >= *(this + 72) ) /*0x408e90*/\n    return 0; /*0x408ea2*/\n  else\n    return *(this + 73) + 80 * a2; /*0x408e98*/\n}"}

@@ -1,0 +1,1 @@
+{"addr":"0x408b10","code":"int __usercall sub_408B10@<eax>(const CHAR *a1@<eax>)\n{\n  return MessageBoxA(hWnd: dword_51B068, lpText: a1, lpCaption: \"DInput-Error\", uType: 0); /*0x408b25*/\n}","refs":[{"addr":"0x4d51a0","name":"MessageBoxA"},{"addr":"0x51b068","name":"dword_51B068"},{"addr":"0x4eb4ec","name":"aDinputError","string":"DInput-Error"}]}

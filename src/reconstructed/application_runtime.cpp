@@ -1,3 +1,5 @@
+#include "kinoko/direct_input.h"
+#include "kinoko/timer_events.h"
 #include "kinoko/application.h"
 #include "kinoko/application_runtime.hpp"
 #include "kinoko/audio_runtime.h"
@@ -20,15 +22,7 @@
 extern "C" {
 void retdec_trace(const char*);
 int32_t function_408650(void*, HWND);
-int32_t function_408930(HWND, HINSTANCE);
-int32_t function_4089c0(void);
-int32_t function_408b30(void);
-int32_t function_408bf0(void);
-int32_t function_408d00(void);
-int32_t function_408c80(void);
 int32_t function_412ca0(void);
-int32_t function_412b80(int32_t);
-int32_t function_412c10(int32_t);
 int32_t function_45da00(void);
 int32_t function_45da40(void);
 int32_t function_45da50(int32_t);
@@ -90,17 +84,17 @@ void update_statistics() {
 }
 DWORD WINAPI game_loop(void*) {
     // This is a timer-registry borrow: unregister it, never close it separately.
-    const int32_t frame_event = function_412b80(0);
+    const HANDLE frame_event = kinoko_frame_timer_register();
     retdec_trace("game:entry");
     while (state.is_running()) {
         update_statistics();
         update_frame();
         if (!state.config.separate_draw) draw_frame();
         kinoko_math_checkpoint("render-done", 0);
-        if (frame_event) WaitForSingleObject(kinoko::legacy::pointer<void>(frame_event), INFINITE);
+        if (frame_event) kinoko_frame_timer_wait(frame_event);
         else Sleep(16); // Retained reconstruction fallback for event allocation failure.
     }
-    if (frame_event) function_412c10(frame_event);
+    if (frame_event) kinoko_frame_timer_unregister(frame_event);
     retdec_trace("game:exit");
     return 0;
 }
@@ -159,9 +153,9 @@ bool initialize(const Configuration& configuration) {
         state.renderer_initialized = true;
     }
     if (configuration.input) {
-        state.input_initialized = function_408930(configuration.window, configuration.instance) != 0;
+        state.input_initialized = kinoko_input_initialize(configuration.window, configuration.instance) != 0;
         // Preserve the existing reconstruction's missing-device degradation.
-        if (state.input_initialized) { function_408b30(); function_408bf0(); function_408d00(); }
+        if (state.input_initialized) { kinoko_input_open_keyboard(); kinoko_input_open_controllers(); kinoko_input_open_mouse(); }
     }
     if (configuration.audio) kinoko_audio_initialize_device(configuration.window, configuration.audio_options);
     if (configuration.ime) { function_412ca0(); state.ime_initialized = true; }
@@ -207,7 +201,7 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM key, LPARAM param
 }
 
 void update_frame() {
-    if (state.config.input) function_408c80();
+    if (state.config.input) kinoko_input_poll();
     kinoko_math_checkpoint("input-done", 0);
     auto* manager = state.config.manager;
     auto* transition = state.config.transition;
@@ -298,7 +292,7 @@ extern "C" void kinoko_application_shutdown() {
     }
     if (state.ime_initialized) { ImmReleaseContext(state.config.window, reinterpret_cast<HIMC>(static_cast<intptr_t>(g534))); state.ime_initialized = false; }
     kinoko_audio_shutdown_device();
-    if (state.input_initialized) { function_4089c0(); state.input_initialized = false; }
+    if (state.input_initialized) { kinoko_input_shutdown(); state.input_initialized = false; }
     if (state.renderer_initialized) {
         kinoko_renderer_before_reset(&kinoko_renderer, nullptr);
         kinoko_remove_device_listener(reinterpret_cast<KinokoDeviceListener*>(&kinoko_renderer));

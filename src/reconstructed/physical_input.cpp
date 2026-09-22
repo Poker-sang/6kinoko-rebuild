@@ -1,10 +1,9 @@
+#include "kinoko/direct_input.h"
 #include "kinoko/input_keys.h"
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
 extern unsigned char g_retdec_keyboard_state[256];
-extern int32_t g782;
-extern char* g783;
 }
 
 namespace {
@@ -47,15 +46,14 @@ extern "C" int32_t __fastcall function_407500(int32_t self) {
     auto& device = *pointer<Device>(self);
     const auto id = static_cast<int8_t>(device.id);
     if (id >= 0) {
-        if (id >= g782) return id;
-        const auto state_address = address(g783) + 80 * id;
-        if (!state_address) return id;
-        const auto* axes = pointer<int32_t>(state_address);
+        const auto* state = kinoko_input_controller_state(id);
+        if (!state) return id;
+        const auto* axes = state->axes;
         for (int axis = 0; axis < 2; ++axis)
             direction(device, axis, axes[axis] < -500 ? -1 : axes[axis] > 500 ? 1 : 0);
         for (int index = 0; index < 12; ++index)
             if (device.buttons[index] >= 0)
-                button(device, index, pointer<uint8_t>(state_address)[48 + device.buttons[index]] != 0);
+                button(device, index, state->buttons[device.buttons[index]] != 0);
         for (int axis = 0; axis < 6; ++axis)
             device.axes[axis] = static_cast<float>(static_cast<double>(axes[axis]) / 1000.0);
     } else if (id == -1) {
