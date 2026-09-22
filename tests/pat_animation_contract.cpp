@@ -73,11 +73,11 @@ int main() {
     const auto head_address=*pointer<int32_t>(kinoko_integer_map_find(lookup,20));
     CHECK(*pointer<int32_t>(kinoko_integer_map_find(lookup,10))==head_address);
     const auto head=kinoko::native::RecordView<AnimationRecord>(pointer<void>(head_address)).load();
-    CHECK(head.flags==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
+    CHECK(head.duration_total==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
     CHECK(head.next && head.previous==nullptr);
     const auto tail=kinoko::native::RecordView<AnimationRecord>(head.next).load();
     CHECK(tail.next==pointer<KinokoAnimation>(head_address) && tail.previous==tail.next);
-    const auto &first=*pointer<FrameRecord>(head.frames_begin);
+    const auto &first=*reinterpret_cast<FrameRecord *>(head.frames_begin);
     CHECK(first.texture==2 && first.duration==2 && first.owned_payload);
     CHECK(first.owned_payload->blend==1 && first.owned_payload->color==0x80402010u);
     CHECK(first.vertices[0].u==8.0f/256 && first.vertices[0].v==16.0f/128);

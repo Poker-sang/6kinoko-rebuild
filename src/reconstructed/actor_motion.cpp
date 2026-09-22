@@ -13,7 +13,7 @@ void save_previous(const ActorView &actor) {
     actor.set(&ActorRecord::previous_bounds, actor.get(&ActorRecord::world_bounds));
 }
 bool has_collision_bounds(const ActorView &actor) {
-    auto *animation = pointer(actor.get(&ActorRecord::animation));
+    auto *animation = actor.get(&ActorRecord::animation);
     return actor.get(&ActorRecord::collision_mask) && animation &&
         kinoko::native::RecordView<AnimationRecord>(animation).get(&AnimationRecord::has_bounds);
 }

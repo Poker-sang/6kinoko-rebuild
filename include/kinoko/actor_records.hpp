@@ -10,6 +10,7 @@ struct KinokoActor;
 struct KinokoActorPool;
 struct KinokoActorManager;
 struct KinokoAnimation;
+struct KinokoAnimationFrame;
 struct SQVM;
 
 namespace kinoko::actor {
@@ -45,12 +46,13 @@ struct ActorRecord {
     SQVM *collision_vm; // callback state prefix, borrowed
     ScriptStorage collision_environment, collision_function;
     Address manager;              // borrowed; manager owns the live Actor set
-    Address sprite_frame;         // borrowed from manager-owned animation frames
+    KinokoAnimationFrame *sprite_frame; // borrowed from manager-owned animation frames
     float offset_x, offset_y, rotation;
     float scale, scale_x, scale_y;
     int32_t alpha, red, green, blue, blend;
-    Address animation, current_frame; // borrowed, never freed by Actor
-    std::int32_t take, frame_index, frame_time, animation_flags;
+    KinokoAnimation *animation; // borrowed, never freed by Actor
+    KinokoAnimationFrame *current_frame;
+    std::int32_t take, frame_index, frame_time, take_duration;
     int32_t id;
     std::int32_t priority;
     std::uint32_t update_group, flags;
@@ -82,11 +84,11 @@ using native::ControlRecord;
 using native::ControlTable;
 struct AnimationRecord {
     KinokoAnimation *next, *previous; // borrowed links; owning animation list is separate
-    Address frames_begin, frames_end;
-    std::array<unsigned char, 8> unknown16;
+    KinokoAnimationFrame *frames_begin, *frames_end, *frames_capacity;
+    uint32_t unknown20;
     std::uint8_t loops, has_bounds;
     std::array<unsigned char, 2> unknown26;
-    std::int32_t left, top, right, bottom, flags;
+    std::int32_t left, top, right, bottom, duration_total;
 };
 struct FrameAppearance {
     int32_t blend;
@@ -220,8 +222,10 @@ KINOKO_ACTOR_FIELD(ActorRecord, local_bounds, 424);
 KINOKO_ACTOR_FIELD(ActorRecord, world_bounds, 440);
 KINOKO_ACTOR_FIELD(ActorRecord, chip_cache_storage, 512);
 KINOKO_ACTOR_FIELD(AnimationRecord, loops, 24);
+KINOKO_ACTOR_FIELD(AnimationRecord, frames_begin, 8);
+KINOKO_ACTOR_FIELD(AnimationRecord, frames_capacity, 16);
+KINOKO_ACTOR_FIELD(AnimationRecord, duration_total, 44);
 KINOKO_ACTOR_FIELD(AnimationRecord, left, 28);
-KINOKO_ACTOR_FIELD(AnimationRecord, flags, 44);
 KINOKO_ACTOR_FIELD(FrameRecord, duration, 240);
 KINOKO_ACTOR_FIELD(FrameRecord, owned_payload, 244);
 KINOKO_ACTOR_FIELD(ManagerPrefix, animation_lookup, 36);

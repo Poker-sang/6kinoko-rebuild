@@ -1,8 +1,8 @@
 #include "kinoko/actor_animation.h"
 #include "kinoko/actor_records.hpp"
+#include "kinoko/animation_storage.h"
 #include "kinoko/legacy_memory.hpp"
 
-extern "C" int32_t function_4706c0_this(int32_t tree, int32_t* entry, int32_t* key);
 
 namespace {
 using namespace kinoko::actor;
@@ -11,19 +11,23 @@ using kinoko::legacy::pointer;
 using kinoko::native::RecordView;
 
 int32_t frame_count(const AnimationRecord& animation) {
-    return static_cast<int32_t>(animation.frames_end - animation.frames_begin) /
+    return static_cast<int32_t>(static_cast<uint32_t>(address(animation.frames_end)) -
+        static_cast<uint32_t>(address(animation.frames_begin))) /
         static_cast<int32_t>(sizeof(FrameRecord));
 }
 int32_t increment(int32_t value) {
     return static_cast<int32_t>(static_cast<uint32_t>(value) + 1u);
 }
-AnimationRecord animation_at(Address value) {
-    return RecordView<AnimationRecord>(pointer(static_cast<int32_t>(value))).load();
+AnimationRecord animation_at(KinokoAnimation *value) {
+    return RecordView<AnimationRecord>(value).load();
 }
-Address select_frame(const ActorView& actor, const AnimationRecord& animation,
+KinokoAnimationFrame *select_frame(const ActorView& actor, const AnimationRecord& animation,
                      int32_t index) {
-    const Address frame = animation.frames_begin +
-        static_cast<uint32_t>(index) * static_cast<uint32_t>(sizeof(FrameRecord));
+    // The original SyncAnimation only upper-clamps and can publish a negative
+    // index. Keep that Win32 address arithmetic at this explicit ABI boundary.
+    auto *frame=pointer<KinokoAnimationFrame>(static_cast<int32_t>(
+        static_cast<uint32_t>(address(animation.frames_begin)) +
+        static_cast<uint32_t>(index)*static_cast<uint32_t>(sizeof(FrameRecord))));
     actor.set(&ActorRecord::current_frame, frame);
     actor.set(&ActorRecord::sprite_frame, frame);
     return frame;
@@ -79,15 +83,13 @@ extern "C" int32_t kinoko_actor_set_take(int32_t value, int32_t take) {
     actor.set(&ActorRecord::frame_index, int32_t{0});
     actor.set(&ActorRecord::frame_time, int32_t{0});
     const auto lookup = manager.view(&ManagerPrefix::animation_lookup);
-    int32_t entry = 0;
-    function_4706c0_this(address(lookup.data()), &entry, &take);
-    if (static_cast<Address>(entry) == lookup.get(&TreeIndex::head)) return entry;
-    const auto selected = *pointer<Address>(entry);
+    auto *selected=kinoko_animation_find(reinterpret_cast<KinokoActorManager *>(manager.data()),take);
+    if (!selected) return static_cast<int32_t>(lookup.get(&TreeIndex::head));
     actor.set(&ActorRecord::animation, selected);
     const auto animation = animation_at(selected);
-    actor.set(&ActorRecord::animation_flags, animation.flags);
+    actor.set(&ActorRecord::take_duration, animation.duration_total);
     update_bounds(actor, animation);
-    return static_cast<int32_t>(select_frame(actor, animation, 0));
+    return address(select_frame(actor, animation, 0));
 }
 extern "C" int32_t __fastcall kinoko_actor_set_take_method(int32_t actor, void*, int32_t take) {
     return kinoko_actor_set_take(actor, take);
@@ -100,7 +102,7 @@ extern "C" void kinoko_actor_advance_animation(int32_t value, int32_t take_befor
     if (!current || actor.get(&ActorRecord::take) != take_before_callback) return;
     const auto time = increment(actor.get(&ActorRecord::frame_time));
     actor.set(&ActorRecord::frame_time, time);
-    const RecordView<FrameRecord> frame(pointer(static_cast<int32_t>(current)));
+    const RecordView<FrameRecord> frame(current);
     const auto animation_address = actor.get(&ActorRecord::animation);
     if (time < frame.get(&FrameRecord::duration) || !animation_address) return;
     const auto animation = animation_at(animation_address);

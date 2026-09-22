@@ -21,7 +21,7 @@ int main() {
     FrameRecord frame{};frame.texture=1;
     frame.base_positions={Position3{0,0,3},Position3{8,0,3},Position3{0,4,3},Position3{8,4,3}};
     ActorRecord actor{};
-    actor.current_frame=static_cast<Address>(address(&frame));actor.sprite_frame=actor.current_frame;
+    actor.current_frame=reinterpret_cast<KinokoAnimationFrame *>(&frame);actor.sprite_frame=actor.current_frame;
     actor.active=actor.visible=1;actor.direction=-1;actor.scale=actor.scale_x=actor.scale_y=1;
     actor.x=-0.25f;actor.y=0.25f;actor.alpha=actor.red=actor.green=actor.blue=255;actor.blend=4;
     auto *receiver=reinterpret_cast<KinokoActor *>(&actor);

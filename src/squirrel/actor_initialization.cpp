@@ -77,7 +77,7 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     view.set(&ActorRecord::frame_time,int32_t{0});
     view.set(&ActorRecord::frame_index,int32_t{0});
     view.set(&ActorRecord::spawn_z,z);
-    view.set(&ActorRecord::animation_flags,int32_t{0});
+    view.set(&ActorRecord::take_duration,int32_t{0});
     view.set(&ActorRecord::collision_group,uint32_t{0});
     view.set(&ActorRecord::scale_y,1.0f);
     view.set(&ActorRecord::scale_x,1.0f);
@@ -106,8 +106,8 @@ extern "C" int32_t kinoko_actor_initialize(KinokoActor *actor,KinokoActorManager
     view.set(&ActorRecord::velocity_y,0.0f);
     view.set(&ActorRecord::collision_scan_cache,std::array<int32_t,8>{});
     view.set(&ActorRecord::chip_cache_storage,std::array<unsigned char,32>{});
-    view.set(&ActorRecord::animation,Address{0});
-    view.set(&ActorRecord::current_frame,Address{0});
+    view.set(&ActorRecord::animation,static_cast<KinokoAnimation *>(nullptr));
+    view.set(&ActorRecord::current_frame,static_cast<KinokoAnimationFrame *>(nullptr));
 
     int32_t owner_state[7]{};
     retdec_function_45df10_impl(address(owner_state),0);

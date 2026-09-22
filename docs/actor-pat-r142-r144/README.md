@@ -51,3 +51,36 @@ New PAT contract source covers exact reader consumption, nonzero resource base,
 forward alias, continuation links, signed duration, first bounds, two-axis
 rotation, resource limits and cleanup of a truncated pending animation. Existing
 stage fixtures retain their real-reader/VM integration entry points.
+
+## R144: animation and frame ownership closure
+
+Animation and frame references in ActorRecord and AnimationRecord now use real
+pointer types. Continuation next/previous links, frame begin/end/capacity and
+duration_total are named. Generic legacy integer map conversion is isolated in
+animation_storage.cpp; callers use named bind/find/adopt APIs. Actor SetTake
+still resets take/frame time before lookup, preserves the previous selection
+on a missing take, and keeps the original bounds and upper-only sync clamp.
+
+The animation list exclusively owns each animation allocation and its fixed
+frame vector; each frame exclusively owns its optional appearance. Take indices,
+aliases, continuation links and Actor fields borrow them. List-node allocation
+precedes ownership transfer so a failed insertion cannot double-release the
+PAT pending owner. Normal manager cleanup order remains textures, live actors,
+nonowning lookup, owning animations, priority/iteration state.
+
+The original +44 sum of signed frame durations is named duration_total and the
+Actor copy at +220 is take_duration. Storage clear is repeatable and retains
+the list host. Existing ABI wrappers and test fixtures remain; no frame or
+animation ownership is transferred to the script VM.
+
+## Completion and verification boundary
+
+All accepted work in these three batches is implemented: Actor drawing,
+PAT parsing/alias/link publication, frame texture/appearance transforms and
+animation/frame ownership. The generated C retains narrow adapters, diagnostics,
+and test-facing scalar reader helpers. The general D3D quad submission/device,
+map/UI rendering, and the shared archive reader remain separate dependencies.
+
+The final quiet Win32 build includes the new Actor render and PAT contracts and
+the existing stage/animation/ownership fixtures. Compilation and DAT verification
+are recorded separately from execution: **no game or automated test was run**.

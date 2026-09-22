@@ -57,10 +57,10 @@ int main() {
     std::array<FrameRecord, 2> frames{};
     frames[0].duration = 2; frames[1].duration = 3;
     AnimationRecord animation{};
-    animation.frames_begin = static_cast<Address>(address(frames.data()));
-    animation.frames_end = animation.frames_begin + sizeof(frames);
+    animation.frames_begin = reinterpret_cast<KinokoAnimationFrame *>(frames.data());
+    animation.frames_end = reinterpret_cast<KinokoAnimationFrame *>(frames.data()+frames.size());
     animation.left = 1; animation.top = 2; animation.right = 5; animation.bottom = 8;
-    animation.flags = 0x1234; animation.has_bounds = 1;
+    animation.duration_total = 0x1234; animation.has_bounds = 1;
     kinoko_integer_map_put(lookup.get(&TreeIndex::head),37,address(&animation));
     CHECK(kinoko_actor_set_take(actor_address, 37) == address(frames.data()));
     CHECK(actor.get(&ActorRecord::take) == 37);
@@ -76,7 +76,7 @@ int main() {
     CHECK(actor.get(&ActorRecord::frame_time) == 1 && actor.get(&ActorRecord::frame_index) == 0);
     kinoko_actor_advance_animation(actor_address, 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 1 && actor.get(&ActorRecord::frame_time) == 0);
-    CHECK(actor.get(&ActorRecord::sprite_frame) == animation.frames_begin + sizeof(FrameRecord));
+    CHECK(actor.get(&ActorRecord::sprite_frame) == reinterpret_cast<KinokoAnimationFrame *>(frames.data()+1));
     for (int i = 0; i < 3; ++i) kinoko_actor_advance_animation(actor_address, 37);
     CHECK(actor.get(&ActorRecord::frame_index) == 1 && actor.get(&ActorRecord::frame_time) == 0);
     animation.loops = 1;
@@ -103,7 +103,7 @@ int main() {
     source.frame_index = -1;
     kinoko_actor_sync_animation_state(actor_address, address(&source));
     CHECK(actor.get(&ActorRecord::frame_index) == -1);
-    CHECK(actor.get(&ActorRecord::current_frame) == animation.frames_begin - sizeof(FrameRecord));
+    CHECK(actor.get(&ActorRecord::current_frame) == pointer<KinokoAnimationFrame>(address(frames.data())-sizeof(FrameRecord)));
     CHECK(kinoko_actor_set_chip_flags(actor_address, nullptr, -1) == -1);
     CHECK(actor.view(&ActorRecord::initial).get(&InitialData::chip_flags) == -1);
     CHECK(kinoko_actor_set_chip_bound_type(actor_address, nullptr, 0xffff) == 0xffff);

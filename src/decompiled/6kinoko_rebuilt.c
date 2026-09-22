@@ -11562,15 +11562,10 @@ static int32_t retdec_pat_skip_bytes(int32_t reader, uint32_t size)
 }
 
 static int32_t retdec_pat_tree_put(int32_t manager,int32_t key,int32_t value) {
-    int32_t* map=(int32_t*)(intptr_t)(manager+40);
-    if(!*map) *map=kinoko_integer_map_create();
-    int32_t result=kinoko_integer_map_put(*map,key,value);
-    *(int32_t*)(intptr_t)(manager+44)=kinoko_integer_map_size(*map);
-    return result;
+    return kinoko_animation_bind((KinokoActorManager *)(intptr_t)manager,key,(KinokoAnimation *)(intptr_t)value);
 }
-
 static int32_t retdec_pat_append_resource(int32_t manager,int32_t handle) {
-    kinoko_integer_vector_append(manager+68,handle);return 1;
+    kinoko_animation_add_texture((KinokoActorManager *)(intptr_t)manager,handle);return 1;
 }
 
 /* The remaining entry points keep the legacy test/caller ABI only. */

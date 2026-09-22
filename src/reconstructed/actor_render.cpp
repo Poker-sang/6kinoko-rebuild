@@ -16,7 +16,7 @@ extern "C" int32_t kinoko_actor_render(KinokoActor *receiver,KinokoCamera *camer
     const auto trace=kinoko_actor_render_trace_begin(receiver,camera);
     if (!receiver) return 0;
     const ActorView actor(receiver);
-    auto *frame_pointer=pointer<KinokoAnimationFrame>(actor.get(&ActorRecord::current_frame));
+    auto *frame_pointer=actor.get(&ActorRecord::current_frame);
     if (!actor.get(&ActorRecord::active) || !actor.get(&ActorRecord::visible) || !frame_pointer) return 0;
     const RecordView<FrameRecord> frame(frame_pointer);
     if (!frame.get(&FrameRecord::texture)) return 0; // existing missing-texture guard

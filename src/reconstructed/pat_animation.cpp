@@ -21,7 +21,7 @@ struct CloseReader {
     void operator()(KinokoArchiveReader *reader) const { retdec_destroy_reader(reinterpret_cast<int32_t *>(reader)); }
 };
 struct DiscardAnimation {
-    void operator()(KinokoAnimation *animation) const { kinoko_animation_discard(address(animation)); }
+    void operator()(KinokoAnimation *animation) const { kinoko_animation_release(animation); }
 };
 using PendingAnimation=std::unique_ptr<KinokoAnimation,DiscardAnimation>;
 class Reader {
@@ -40,17 +40,6 @@ public:
         return true;
     }
 };
-bool publish(const ManagerView manager,int32_t take,KinokoAnimation *animation) {
-    const auto lookup=manager.view(&ManagerPrefix::animation_lookup);
-    auto head=lookup.get(&TreeIndex::head);
-    if (!head) {
-        head=static_cast<Address>(kinoko_integer_map_create());
-        lookup.set(&TreeIndex::head,head);
-    }
-    const auto result=kinoko_integer_map_put(head,take,address(animation));
-    lookup.set(&TreeIndex::count,static_cast<int32_t>(kinoko_integer_map_size(head)));
-    return result!=0;
-}
 bool read_frame(const Reader &reader,KinokoActorManager *manager,KinokoAnimation *animation,
     KinokoAnimationFrame *frame,int32_t &duration,uint32_t resource_base) {
     KinokoPatFrameFields fields{};
@@ -126,36 +115,33 @@ extern "C" int32_t kinoko_pat_read_animations(KinokoArchiveReader *stream,Kinoko
         uint16_t header0,header1;uint8_t loops;uint32_t count;
         if (!reader.read(header0) || !reader.read(header1) || !reader.read(loops) ||
             !reader.read(count) || count>4096u) return 0;
-        PendingAnimation allocation(pointer<KinokoAnimation>(kinoko_animation_create(count)));
+        PendingAnimation allocation(kinoko_animation_allocate(count));
         if (!allocation) return 0;
         const RecordView<AnimationRecord> node(allocation.get());
         node.set(&AnimationRecord::loops,loops);
-        auto *frames=pointer<FrameRecord>(node.get(&AnimationRecord::frames_begin));
+        auto *frames=reinterpret_cast<FrameRecord *>(node.get(&AnimationRecord::frames_begin));
         int32_t duration=0;
         for (uint32_t frame=0;frame<count;++frame)
             if (!read_frame(reader,receiver,allocation.get(),reinterpret_cast<KinokoAnimationFrame *>(frames+frame),duration,resource_base)) return 0;
-        node.set(&AnimationRecord::flags,duration);
+        node.set(&AnimationRecord::duration_total,duration);
         if (take==-2) {
             if (!tail) return 0;
             RecordView<AnimationRecord>(tail).set(&AnimationRecord::next,allocation.get());
             node.set(&AnimationRecord::next,head);
             node.set(&AnimationRecord::previous,tail);
         } else {
-            if (!publish(manager,take,allocation.get())) return 0;
+            if (!kinoko_animation_bind(receiver,take,allocation.get())) return 0;
             head=allocation.get();
             node.set(&AnimationRecord::next,head);
         }
         auto *adopted=allocation.get();
-        kinoko_animation_adopt(address(manager.bytes(&ManagerPrefix::animations)),address(adopted));
+        kinoko_animation_manager_adopt(receiver,adopted);
         allocation.release();tail=adopted;
     }
     // 465DA9..465E7B: reverse order is observable with chained/duplicate aliases.
     for (auto alias=aliases.rbegin();alias!=aliases.rend();++alias) {
-        const auto lookup=manager.get(&ManagerPrefix::animation_lookup).head;
-        if (!lookup) continue;
-        const auto entry=kinoko_integer_map_find(lookup,(*alias)[1]);
-        if (static_cast<Address>(entry)!=lookup &&
-            !publish(manager,(*alias)[0],pointer<KinokoAnimation>(*pointer<int32_t>(entry)))) return 0;
+        if (auto *source=kinoko_animation_find(receiver,(*alias)[1]))
+            if (!kinoko_animation_bind(receiver,(*alias)[0],source)) return 0;
     }
     retdec_trace_i32("animation:items",item_count);
     return 1;
@@ -185,7 +171,7 @@ extern "C" int32_t kinoko_pat_load(KinokoActorManager *receiver,const char *file
             char name[129]{};
             if (!reader.bytes(name,128)) return 0;
             const auto handle=load_texture(directory,name);
-            kinoko_integer_vector_append(resources,handle); // preserve missing handle slot
+            kinoko_animation_add_texture(receiver,handle); // preserve missing handle slot
         }
         if (!kinoko_pat_read_animations(owner.get(),receiver,base)) return 0;
         retdec_trace_i32("animation:header",version);
