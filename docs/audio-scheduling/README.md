@@ -57,3 +57,14 @@ deferred record cleanup and more-than-32 overlapping owner checks. Per user
 instruction, contracts and game must NOT be executed. Only compilation/linking
 and DAT staging are performed; any original-equivalence statements above are
 based on static evidence, not a gameplay or audio listening test.
+
+## R1 build handoff
+
+- Source commit: `c14c944f1d6581476961bf817ccbfe2bacf1a965`.
+- Build: `build-runs/audio-scheduling-r1-quiet`, Win32 Release, trace disabled.
+- All targets compiled and linked successfully (exit 0). Regression contracts
+  were compiled only; no game, CTest or contract executable was run.
+- EXE: `runtime-builds/audio-scheduling-r1-quiet/kinoko_retdec_rebuild.exe`.
+- SHA256: `0B0AB1E9EBD8E76D4C30FC3F71DAF0BFC4711477E6B26DC19F0D06B99E71CD40`.
+- All three DAT files were copied beside the EXE and size/SHA256 verified by
+  `stage_dat.ps1` (exit 0). All earlier runtime/build artifacts are retained.
