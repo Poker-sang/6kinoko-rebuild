@@ -34,3 +34,22 @@ registration; no speculative extra texture reload listener is introduced.
 BeginScene holds the lock only on exact D3D_OK; EndScene releases it. Present
 uses DONOTWAIT and preserves pending on failure. Existing null-device/swap-chain
 startup guards remain explicit compatibility boundaries.
+
+## R150: renderer state and render-target ownership
+
+KinokoRenderer restores the original 100-byte prefix, with 40-byte named state,
+borrowed device and typed acquired backbuffer/depth-surface references. Constructor
+and initialization now live in C++, retaining trace calls and initial clear order.
+Reset snapshots named state, clears caches, reacquires surfaces and replays only
+the original state writes; unknown words are not restored. Before-reset Release
+retains original slot bits (no invented retry or extra resource reload policy).
+Filter assembly confirms MAG/MIN/MIP all receive the selected value. Cull retains
+the original graphics-device receiver. The temporary level-zero surface is
+released after binding, and that Release result is returned, as in 401E60.
+ACT render-target creation uses a checked layout schema, preserves requested
+image dimensions even when allocation is square, and preserves its true return
+on creation failure. Listener ownership remains borrowed; sets own only nodes.
+
+Added a fake-COM contract covering reset order, duplicate listeners, reset failure,
+DEVICELOST, temporary surface release and exact reset-state writes. It is to be
+compiled only. No game, CTest, or automated test execution is authorized here.

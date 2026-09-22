@@ -1,3 +1,4 @@
+#include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/string_layout.h"
@@ -10,7 +11,6 @@
 #include <algorithm>
 #include <cstring>
 extern "C" {
-extern int32_t g702,g703,g704;
 int32_t function_4410c0(int32_t layout);
 }
 namespace {
@@ -58,14 +58,14 @@ void blend(int32_t mode) {
         device->SetRenderState(D3DRS_DESTBLEND,mode==5?D3DBLEND_ONE:D3DBLEND_ZERO);
         return;
     }
-    if(g703==mode) return;
-    auto* cached=pointer<IDirect3DDevice9>(g702);
+    if(kinoko_renderer.state.blend==mode) return;
+    auto* cached=kinoko_renderer.device;
     auto op=[&](DWORD value){cached->SetRenderState(D3DRS_BLENDOP,value);};
     auto src=[&](DWORD value){cached->SetRenderState(D3DRS_SRCBLEND,value);};
     auto dst=[&](DWORD value){cached->SetRenderState(D3DRS_DESTBLEND,value);};
     // Original 42AC20 shares the transition key with 402770. Case 32 has
     // no blend-op write here, so do not substitute that near-duplicate helper.
-    switch(8*g703+mode-1) {
+    switch(8*kinoko_renderer.state.blend+mode-1) {
     case 0:op(1);src(5);dst(6);break;
     case 1:op(1);src(5);dst(2);break;
     case 2:case 34:op(3);src(5);dst(2);break;
@@ -81,7 +81,7 @@ void blend(int32_t mode) {
     case 33:src(5);dst(2);break;
     default:break;
     }
-    g703=mode;
+    kinoko_renderer.state.blend=mode;
 }
 }
 extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* character) {
@@ -179,10 +179,10 @@ extern "C" int32_t __fastcall kinoko_method_draw_string_layout(int32_t layout,vo
     const D3DRENDERSTATETYPE states[]={D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_BLENDOP,D3DRS_ALPHABLENDENABLE};
     for(int i=0;i<4;++i) device->GetRenderState(states[i],&saved[i]);
     device->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);blend(field<int32_t>(layout+156));
-    if(g704!=2) {
-        auto* cached=pointer<IDirect3DDevice9>(g702);
+    if(kinoko_renderer.state.filter!=2) {
+        auto* cached=kinoko_renderer.device;
         for(auto type:{D3DSAMP_MAGFILTER,D3DSAMP_MINFILTER,D3DSAMP_MIPFILTER}) cached->SetSamplerState(0,type,2);
-        g704=2;
+        kinoko_renderer.state.filter=2;
     }
     const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) kinoko_quad_submit(kinoko::legacy::pointer<KinokoQuad>(glyph_at(layout,i)+20),x,y);

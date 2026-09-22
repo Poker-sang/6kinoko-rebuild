@@ -1,3 +1,6 @@
+#include "kinoko/renderer.h"
+#include "kinoko/quad_render.h"
+#include "kinoko/act_draw_records.hpp"
 #include "kinoko/graphics_lock.hpp"
 #include "kinoko/graphics_device.h"
 #include "kinoko/render_target.h"
@@ -12,10 +15,6 @@
 #include <stdexcept>
 #include "kinoko/legacy_abi.h"
 extern "C" {
-extern int32_t g702,g703,g704,g705,g706,g707,g708,g709,g710,g711,g712,g718,g721;
-extern char g713;
-int32_t function_4026e0(int32_t);
-int32_t function_402770(int32_t);
 extern int32_t g746,g747,g748,g749,g750,g751,g752,g753;
 extern CRITICAL_SECTION g676;
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
@@ -57,26 +56,29 @@ extern "C" void kinoko_initialize_texture_cache(void) {
 extern "C" int32_t kinoko_set_render_target(int32_t handle) {
     // 401E60 selects level zero, releases the temporary surface reference,
     // and restores the renderer's cached backbuffer for handle zero.
-    auto* device=pointer<IDirect3DDevice9>(g702);
+    auto* device=kinoko_renderer.device;
     if(!device) return E_FAIL;
-    if(!handle) return device->SetRenderTarget(0,pointer<IDirect3DSurface9>(g718));
+    if(!handle) return device->SetRenderTarget(0,kinoko_renderer.backbuffer);
     if(handle<0 || handle>=KINOKO_TEXTURE_CAPACITY) return E_INVALIDARG;
     auto* texture=static_cast<IDirect3DTexture9*>(kinoko_texture_slots[handle].texture);
     if(!texture) return E_INVALIDARG;
     kinoko::ComOwner<IDirect3DSurface9> surface;
     const auto status=texture->GetSurfaceLevel(0,surface.put());
     if(FAILED(status)) return status;
-    return device->SetRenderTarget(0,surface.get());
+    device->SetRenderTarget(0,surface.get());
+    return surface.detach()->Release();
 }
-extern "C" int32_t __fastcall kinoko_method_create_render_target(int32_t resource,void*,int32_t width,int32_t height) {
+extern "C" int32_t __fastcall kinoko_method_create_render_target(KinokoActResource *resource,void*,int32_t width,int32_t height) {
     // 449C10 returns true even if D3DX creation fails; never reinterpret that
     // return as handle != 0. Requested image dimensions remain unsquared.
-    field<float>(resource+80)=field<float>(resource+84)=0;
-    field<int32_t>(resource+72)=width;field<int32_t>(resource+76)=height;
-    field<float>(resource+88)=static_cast<float>(width);
-    field<float>(resource+92)=static_cast<float>(height);
-    field<uint8_t>(resource+96)=0;
-    field<int32_t>(resource+68)=create(static_cast<uint32_t>(width),static_cast<uint32_t>(height));
+    using Resource=kinoko::act::TextureResourcePrefix;
+    const kinoko::native::RecordView<Resource> view(resource);
+    view.set(&Resource::source_x,0.0f);view.set(&Resource::source_y,0.0f);
+    view.set(&Resource::width,width);view.set(&Resource::height,height);
+    view.set(&Resource::source_width,static_cast<float>(width));
+    view.set(&Resource::source_height,static_cast<float>(height));
+    view.set(&Resource::flag,uint8_t{0});
+    view.set(&Resource::texture,create(static_cast<uint32_t>(width),static_cast<uint32_t>(height)));
     return 1;
 }
 
@@ -106,39 +108,35 @@ extern "C" void kinoko_notify_device_listeners(KinokoDeviceEvent event) {
     }
 }
 
-extern "C" int32_t __fastcall kinoko_renderer_before_reset(int32_t,void*) {
-    // Original 401DA0 does not null these two borrowed cache fields.
-    pointer<IDirect3DSurface9>(g718)->Release();
-    return pointer<IDirect3DSurface9>(g721)->Release();
+extern "C" int32_t __fastcall kinoko_renderer_before_reset(KinokoRenderer *renderer,void*) {
+    // 401DA0 releases acquired references, leaving slot bits intact as original.
+    renderer->backbuffer->Release();
+    return renderer->depth_stencil->Release();
 }
-extern "C" int32_t __fastcall kinoko_renderer_after_reset(int32_t,void*) {
-    // This process has the single original renderer. Its RetDec globals are
-    // separate objects, not a contiguous CRenderer; never memcpy from &g703.
-    auto *device=pointer<IDirect3DDevice9>(g702);
+extern "C" int32_t __fastcall kinoko_renderer_after_reset(KinokoRenderer *renderer,void*) {
+    auto *device=renderer->device;
     for(DWORD stage=0;stage<8;++stage) kinoko_graphics.device->SetTexture(stage,nullptr);
     kinoko_initialize_texture_cache();
-    const int32_t saved[]={g703,g704,g705,g706,g707,g708,g709,g710,g711,g712};
-    g703=g704=g705=g706=g707=g708=g709=g710=g711=g712=0;g713=0;
-    device->GetRenderTarget(0,reinterpret_cast<IDirect3DSurface9**>(&g718));
-    device->GetDepthStencilSurface(reinterpret_cast<IDirect3DSurface9**>(&g721));
+    const KinokoRenderState saved=renderer->state;
+    renderer->state={};renderer->present_pending=0;
+    device->GetRenderTarget(0,&renderer->backbuffer);
+    device->GetDepthStencilSurface(&renderer->depth_stencil);
     const auto state=[&](D3DRENDERSTATETYPE type,DWORD value) { device->SetRenderState(type,value); };
-    const DWORD alpha=static_cast<uint32_t>(saved[6])&255u;
-    const DWORD test=(static_cast<uint32_t>(saved[6])>>8)&255u;
+    const DWORD alpha=saved.alpha_flags&255u;
+    const DWORD test=(saved.alpha_flags>>8)&255u;
     if(alpha) state(D3DRS_ALPHABLENDENABLE,alpha);
     if(test) state(D3DRS_ALPHATESTENABLE,test);
-    g709=static_cast<int32_t>(alpha|(test<<8));
+    renderer->state.alpha_flags=alpha|(test<<8);
     device->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE);
-    if(saved[7]) { state(D3DRS_ALPHAFUNC,saved[7]);g710=saved[7]; }
-    if(saved[8]) { state(D3DRS_ALPHAREF,saved[8]);g711=saved[8]; }
-    state(D3DRS_ZENABLE,static_cast<uint32_t>(saved[4])&255u);
-    state(D3DRS_ZWRITEENABLE,(static_cast<uint32_t>(saved[4])>>8)&255u);
-    g707=saved[4]&0xffff;
-    state(D3DRS_ZFUNC,saved[5]);g708=saved[5];
-    function_4026e0(saved[1]);function_402770(saved[0]);
-    if(saved[2]) {
-        if(saved[2]>=1 && saved[2]<=3) kinoko_graphics.device->SetRenderState(D3DRS_CULLMODE,saved[2]);
-        g705=saved[2];
-    }
+    if(saved.alpha_function) { state(D3DRS_ALPHAFUNC,saved.alpha_function);renderer->state.alpha_function=saved.alpha_function; }
+    if(saved.alpha_reference) { state(D3DRS_ALPHAREF,saved.alpha_reference);renderer->state.alpha_reference=saved.alpha_reference; }
+    state(D3DRS_ZENABLE,saved.depth_flags&255u);
+    state(D3DRS_ZWRITEENABLE,(saved.depth_flags>>8)&255u);
+    renderer->state.depth_flags=saved.depth_flags&0xffff;
+    state(D3DRS_ZFUNC,saved.depth_function);renderer->state.depth_function=saved.depth_function;
+    // The original process owns a single renderer; named state helpers use it.
+    kinoko_render_set_filter(saved.filter);kinoko_render_set_blend(saved.blend);
+    kinoko_render_set_cull(saved.cull);
     state(D3DRS_STENCILMASK,255);
     return device->Clear(0,nullptr,D3DCLEAR_STENCIL,0,1.0f,0);
 }

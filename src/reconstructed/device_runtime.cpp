@@ -1,9 +1,9 @@
+#include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/graphics_lock.hpp"
 #include "kinoko/render_target.h"
 #include "kinoko/diagnostics.h"
 #include <initializer_list>
-extern "C" { extern char g713; extern int32_t g714; }
 
 // 4013D0. A failed Reset skips after-reset notifications and retains the
 // failure state; the message-loop cooperative-level poll decides the next try.
@@ -69,7 +69,7 @@ extern "C" int32_t kinoko_graphics_end_scene(void) {
     return 0;
 }
 extern "C" int32_t kinoko_graphics_present(void) {
-    if (!g713 || !TryEnterCriticalSection(&g676)) return 0;
+    if (!kinoko_renderer.present_pending || !TryEnterCriticalSection(&g676)) return 0;
     auto *swap_chain=kinoko_graphics.swap_chain;
     // Retain the existing null-swap-chain startup boundary. The normal path
     // clears pending only on D3D_OK, retaining it on WASSTILLDRAWING/failure.
@@ -77,14 +77,14 @@ extern "C" int32_t kinoko_graphics_present(void) {
     if (swap_chain) status=swap_chain->Present(nullptr,nullptr,nullptr,nullptr,D3DPRESENT_DONOTWAIT);
     static volatile LONG traces;
     if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("4017b0:present-hr",status);
-    if (status==D3D_OK) g713=0;
+    if (status==D3D_OK) kinoko_renderer.present_pending=0;
     LeaveCriticalSection(&g676);
     return status==D3D_OK;
 }
 extern "C" int32_t kinoko_graphics_clear(void) {
     auto *device=kinoko_graphics.device;
     if (!device) return D3DERR_INVALIDCALL;
-    const auto status=device->Clear(0,nullptr,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,g714,1.0f,0);
+    const auto status=device->Clear(0,nullptr,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,kinoko_renderer.clear_color,1.0f,0);
     static volatile LONG traces;
     if (InterlockedIncrement(&traces)<=5) retdec_trace_hresult("401820:clear-hr",status);
     return status;

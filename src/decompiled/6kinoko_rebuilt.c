@@ -1,3 +1,4 @@
+#include "kinoko/renderer.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/quad_render.h"
 #include "kinoko/camera.h"
@@ -766,8 +767,8 @@ struct vtable_4e50e4_type {
 };
 
 struct vtable_4eb20c_type {
-    int32_t (__fastcall *e0)(int32_t, void *);
-    int32_t (__fastcall *e1)(int32_t, void *);
+    int32_t (__fastcall *e0)(KinokoRenderer *, void *);
+    int32_t (__fastcall *e1)(KinokoRenderer *, void *);
 };
 
 struct vtable_4eb330_type {
@@ -2757,26 +2758,11 @@ float32_t g671 = 0.0f; // 0x5187f0
 int32_t g672 = 0; // 0x519600
 char g673 = 0; // 0x51ac10
 char g674 = 0; // 0x51ac11
+KinokoRenderer kinoko_renderer = {0};
 KinokoGraphics kinoko_graphics = {0};
 int32_t g675 = 0; // 0x51ac18
 struct retdec_RTL_CRITICAL_SECTION g676 = { 0 }; // 0x51ac1c
-int32_t g701 = 0; // 0x51add0
-int32_t g702 = 0; // 0x51add4
-int32_t g703 = 0; // 0x51addc
-int32_t g704 = 0; // 0x51ade0
-int32_t g705 = 0; // 0x51ade4
-int32_t g706 = 0; // 0x51ade8
-int32_t g707 = 0; // 0x51adec
-int32_t g708 = 0; // 0x51adf0
-int32_t g709 = 0; // 0x51adf4
-int32_t g710 = 0; // 0x51adf8
-int32_t g711 = 0; // 0x51adfc
-int32_t g712 = 0; // 0x51ae00
-char g713 = 0; // 0x51ae06
-int32_t g714 = 0; // 0x51ae08
  // 0x51ae0c
-int32_t g718 = 0; // 0x51ae1c
-int32_t g721 = 0; // 0x51ae30
 int32_t g722[3] = { 0, 0, 0 }; // 0x51ae34
 int32_t g723 = 0; // 0x51ae40
  // 0x51ae48
@@ -3791,58 +3777,9 @@ int32_t function_401820(void) { return kinoko_graphics_clear(); }
 // From class:    .?AVCRenderer@@
 // Type:          constructor
 int32_t function_401850(void) {
-    g701=(int32_t)&g184;
-    g703=g704=g705=g706=g707=g709=g711=g712=0;
-    g708=4;g710=8;
-    kinoko_initialize_renderer_sets();
-    g702=g718=g721=0;
-    return (int32_t)&g701;
+    return (int32_t)(intptr_t)kinoko_renderer_construct(&g184);
 }
-
-
-// Address range: 0x401ae0 - 0x401b9e
-int32_t function_401ae0(void) {
-    IDirect3DDevice9 *device;
-    IDirect3DSurface9 *render_target = NULL;
-    IDirect3DSurface9 *depth_stencil = NULL;
-    HRESULT hr;
-
-    if (g702 != 0) {
-        return 0;
-    }
-    device = kinoko_graphics.device;
-    if (device == NULL) {
-        return 0;
-    }
-    g702 = (int32_t)(intptr_t)kinoko_graphics.device;
-    retdec_trace("401ae0:pre-list");
-    kinoko_add_device_listener((KinokoDeviceListener *)&g701);
-    retdec_trace("401ae0:post-list");
-    g714 = 0;
-    g713 = 0;
-    retdec_trace("401ae0:pre-clear-1");
-    hr = device->lpVtbl->Clear(device, 0, NULL, 3, 0, 1.0f, 0);
-    retdec_trace(FAILED(hr) ? "401ae0:clear-1-failed" :
-                 "401ae0:clear-1-ok");
-    hr = device->lpVtbl->SetRenderState(
-        device, (D3DRENDERSTATETYPE)58, 255);
-    retdec_trace(FAILED(hr) ? "401ae0:set-render-state-failed" :
-                 "401ae0:set-render-state-ok");
-    hr = device->lpVtbl->Clear(device, 0, NULL, 4, 0, 1.0f, 0);
-    retdec_trace(FAILED(hr) ? "401ae0:clear-2-failed" :
-                 "401ae0:clear-2-ok");
-    hr = device->lpVtbl->GetRenderTarget(
-        device, 0, &render_target);
-    g718 = (int32_t)(uintptr_t)render_target;
-    retdec_trace(FAILED(hr) ? "401ae0:get-render-target-failed" :
-                 "401ae0:get-render-target-ok");
-    hr = device->lpVtbl->GetDepthStencilSurface(
-        device, &depth_stencil);
-    g721 = (int32_t)(uintptr_t)depth_stencil;
-    retdec_trace(FAILED(hr) ? "401ae0:get-depth-stencil-failed" :
-                 "401ae0:get-depth-stencil-ok");
-    return 1;
-}
+int32_t function_401ae0(void) { return kinoko_renderer_initialize(); }
 
 // Address range: 0x401ba0 - 0x401d96
 // From class:    .?AVCRenderer@@
@@ -3896,26 +3833,7 @@ int32_t function_401ae0(void) {
 
 
 // Address range: 0x4026e0 - 0x402768
-int32_t function_4026e0(int32_t a1) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-
-    /* RetDec lost the __thiscall ECX object; g704 is this + 0x10. */
-    if (g704 == a1) {
-        return 0;
-    }
-    g704 = a1;
-    if (device == NULL || (a1 != 1 && a1 != 2)) {
-        return 0;
-    }
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)5, (DWORD)a1);
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)6, (DWORD)a1);
-    hr = device->lpVtbl->SetSamplerState(
-        device, 0, (D3DSAMPLERSTATETYPE)7, (DWORD)a1);
-    return (int32_t)hr;
-}
+int32_t function_4026e0(int32_t a1) { return kinoko_render_set_filter(a1); }
 
 // Address range: 0x402770 - 0x402873
 int32_t function_402770(int32_t result) {
@@ -3929,21 +3847,7 @@ int32_t function_4028d0(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x402970 - 0x4029af
-int32_t function_402970(int32_t a1) {
-    IDirect3DDevice9 *device = (IDirect3DDevice9 *)(uintptr_t)g702;
-    HRESULT hr = S_OK;
-
-    /* RetDec lost the __thiscall ECX object; g705 is this + 0x14. */
-    if (g705 == a1) {
-        return 0;
-    }
-    g705 = a1;
-    if (device != NULL && a1 >= 1 && a1 <= 3) {
-        hr = device->lpVtbl->SetRenderState(
-            device, (D3DRENDERSTATETYPE)22, (DWORD)a1);
-    }
-    return (int32_t)hr;
-}
+int32_t function_402970(int32_t a1) { return kinoko_render_set_cull(a1); }
 
 // Address range: 0x4029b0 - 0x4029cc
 
@@ -4275,7 +4179,7 @@ int32_t function_404e10(float32_t a1, float32_t a2, float32_t a3, float32_t a4) 
     *(float32_t *)(v2 + 92) = v4;
     *(float32_t *)(v2 + 96) = v5;
     function_405e30(*(int32_t *)(v2 + 4));
-    return g702;
+    return (int32_t)(intptr_t)kinoko_renderer.device;
 }
 
 
@@ -5498,8 +5402,8 @@ void function_40d940(int32_t *state) {
     }
     function_411f90();
     function_4089c0();
-    kinoko_renderer_before_reset((int32_t)(uintptr_t)&g701, NULL);
-    kinoko_remove_device_listener((KinokoDeviceListener *)&g701);
+    kinoko_renderer_before_reset(&kinoko_renderer, NULL);
+    kinoko_remove_device_listener((KinokoDeviceListener *)&kinoko_renderer);
     function_401600();
     CoUninitialize();
     if (g_retdec_state_cs_initialized != 0) {
@@ -5645,7 +5549,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
         }
 
         kinoko_math_checkpoint("scene-done",0);
-        g713 = 0;
+        kinoko_renderer.present_pending = 0;
         can_draw = 1;
         if (g845 == 0 && g863 != 0)
             can_draw = (unsigned char)(
@@ -5667,7 +5571,7 @@ static DWORD WINAPI retdec_game_loop_fixed(LPVOID parameter)
                         (void *)(uintptr_t)vtable[4]) & 1);
         }
         if (g845 == 0 && can_draw != 0) {
-            g713 = 1;
+            kinoko_renderer.present_pending = 1;
             g852++;
             if (g857 != 0)
                 SetEvent((HANDLE)(uintptr_t)g857);
@@ -5702,7 +5606,7 @@ static DWORD WINAPI retdec_display_loop_fixed(LPVOID parameter)
             break;
         if (g854 == 0)
             break;
-        if (g713 != 0 && function_4017b0() != 0)
+        if (kinoko_renderer.present_pending != 0 && function_4017b0() != 0)
             ++g852;
         ++frame_index;
         if (frame_index <= 3 || (frame_index & 63) == 0)

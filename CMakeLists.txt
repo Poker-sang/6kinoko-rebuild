@@ -64,6 +64,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/stage_runtime.cpp
     src/reconstructed/act_source.cpp
     src/reconstructed/script_callbacks.cpp
+    src/reconstructed/renderer.cpp
     src/reconstructed/device_runtime.cpp
     src/reconstructed/device_initialization.cpp
     src/reconstructed/quad_submit.cpp
@@ -644,6 +645,13 @@ target_link_libraries(kinoko_native_control_contract PRIVATE kinoko_native_contr
 add_test(NAME native_control_contract COMMAND kinoko_native_control_contract)
 set_tests_properties(native_control_contract PROPERTIES TIMEOUT 120)
 
+add_executable(kinoko_device_lifecycle_contract tests/device_lifecycle_contract.cpp
+    src/reconstructed/device_runtime.cpp src/reconstructed/render_target.cpp
+    src/reconstructed/render_state.cpp src/reconstructed/renderer.cpp)
+target_include_directories(kinoko_device_lifecycle_contract PRIVATE include)
+target_link_libraries(kinoko_device_lifecycle_contract PRIVATE user32)
+add_test(NAME device_lifecycle_contract COMMAND kinoko_device_lifecycle_contract)
+
 add_executable(kinoko_quad_submit_contract tests/quad_submit_contract.cpp
     src/reconstructed/quad_submit.cpp src/reconstructed/render_state.cpp)
 target_include_directories(kinoko_quad_submit_contract PRIVATE include)
@@ -708,6 +716,7 @@ set(KINOKO_TOOL_TARGETS
     kinoko_actor_render_contract
     kinoko_map_visible_contract
     kinoko_camera_contract
+    kinoko_device_lifecycle_contract
     kinoko_quad_submit_contract
     kinoko_pat_animation_contract
     kinoko_archive_inspect kinoko_archive_smoke
