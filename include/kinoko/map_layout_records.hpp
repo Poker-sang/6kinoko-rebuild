@@ -41,13 +41,13 @@ struct ChipSpriteCache {
     uint8_t valid;
     std::array<uint8_t,7> padding281;
 };
-template<class T> struct Buffer { T *begin, *end; void *storage_owner; };
-using ChipSpriteBuffer=Buffer<ChipSpriteCache>;
-using ChipDefinitionBuffer=Buffer<ChipDefinition>;
-using ChangedChipBuffer=Buffer<const ChipDefinition *>;
-using ChipIndexBuffer=Buffer<int32_t>;
-using ChipReferenceBuffer=Buffer<const ChipDefinition *>;
-using TextureReferenceBuffer=Buffer<retdec_mcd_texture *>;
+template<class T> struct MapRecordBuffer { T *begin, *end; void *storage_owner; };
+using ChipSpriteBuffer=MapRecordBuffer<ChipSpriteCache>;
+using ChipDefinitionBuffer=MapRecordBuffer<ChipDefinition>;
+using ChangedChipBuffer=MapRecordBuffer<const ChipDefinition *>;
+using ChipIndexBuffer=MapRecordBuffer<int32_t>;
+using ChipReferenceBuffer=MapRecordBuffer<const ChipDefinition *>;
+using TextureReferenceBuffer=MapRecordBuffer<retdec_mcd_texture *>;
 struct RenderLayerRecord { const void *methods; KinokoActLayout *layout; };
 struct LayoutRecord {
     const unsigned char *methods;

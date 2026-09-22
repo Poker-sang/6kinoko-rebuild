@@ -66,3 +66,11 @@ queue retention, offscreen flush, mutation-before-failure, missing-texture retry
 UV/geometry/alpha isolation during real map-update calls, independent cloned
 buffers with shared borrowed targets, preparation, signed/zero dimensions and
 cleanup without releasing resource ownership. No pass claim before execution.
+
+## Build attempts
+
+- c4b70dd: fresh build-runs/mcd-r151-quiet, runtime-builds/mcd-r151-quiet.
+  Compilation failed: missing Windows HRESULT definitions in the new cache
+  translation unit and generic Buffer name colliding with collision records.
+  Both are integration-only corrections; keep all failed-attempt artifacts.
+- Next attempt uses mcd-r151b-quiet after committing those corrections.

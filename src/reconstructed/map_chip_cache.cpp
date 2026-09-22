@@ -3,6 +3,7 @@
 #include "kinoko/act_runtime.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/texture_store.h"
+#include <windows.h>
 #include <algorithm>
 #include <cstring>
 #include <climits>
