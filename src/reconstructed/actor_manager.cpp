@@ -49,7 +49,7 @@ extern "C" KinokoActorManager *kinoko_actor_manager_construct(KinokoActorManager
     state.view(&ManagerPrefix::animation_lookup).set(&TreeIndex::head,
         static_cast<Address>(kinoko_integer_map_create()));
     kinoko_animation_list_construct(address(state.bytes(&ManagerPrefix::animations)));
-    kinoko_integer_vector_construct(address(state.bytes(&ManagerPrefix::textures)));
+    kinoko_integer_vector_construct((KinokoIntegerVector*)(state.bytes(&ManagerPrefix::textures)));
     kinoko_priority_construct(state.bytes(&ManagerPrefix::actors));
     for (int32_t i=0;i<4;++i) {
         auto *layer=static_cast<RenderLayerRecord *>(std::calloc(1,sizeof(RenderLayerRecord)));

@@ -70,7 +70,7 @@ extern "C" KinokoAnimation *kinoko_animation_find(KinokoActorManager *manager,in
     return static_cast<Address>(slot)==head?nullptr:pointer<KinokoAnimation>(*pointer<int32_t>(slot));
 }
 extern "C" void kinoko_animation_add_texture(KinokoActorManager *manager,int32_t handle) {
-    kinoko_integer_vector_append(address(ManagerView(manager).bytes(&ManagerPrefix::textures)),handle);
+    kinoko_integer_vector_append((KinokoIntegerVector*)(ManagerView(manager).bytes(&ManagerPrefix::textures)), handle);
 }
 // Legacy container entry points retain their binary integer slots.
 extern "C" void kinoko_animation_list_construct(int32_t list) {

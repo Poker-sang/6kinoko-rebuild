@@ -34,8 +34,8 @@ int32_t address(const void *value) {
 extern "C" KinokoActor **kinoko_actor_manager_clear_resources(KinokoActorManager *manager) {
     const ManagerView state(manager);
     const auto textures = state.view(&ManagerPrefix::textures);
-    const int32_t texture_slot=address(textures.data());
-    const auto* handles=pointer<int32_t>(kinoko_integer_vector_data(texture_slot));
+    auto* texture_slot=reinterpret_cast<KinokoIntegerVector*>(textures.data());
+    const auto* handles=kinoko_integer_vector_data(texture_slot);
     for(uint32_t i=0;i<kinoko_integer_vector_size(texture_slot);++i) kinoko_texture_release(handles[i]);
     kinoko_integer_vector_clear(texture_slot);
     // Actor destruction precedes releasing animations that actors only borrow.

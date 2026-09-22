@@ -1,4 +1,5 @@
 #pragma once
+#include "kinoko/integer_vector.h"
 #include "kinoko/native_record_view.hpp"
 #include "kinoko/native_control.hpp"
 #include "kinoko/sprite.h"
@@ -119,7 +120,7 @@ struct TreeIndex {
     std::int32_t count;
 };
 struct ListIndex { Address head; std::uint32_t count; };
-struct VectorIndex { Address begin, end, capacity; };
+using VectorIndex = KinokoIntegerVector;
 // Manager iteration storage is native_buffer-owned; entries borrow live Actors.
 struct ActorIterationBuffer { KinokoActor **begin, **end; void *storage_owner; };
 struct RenderLayerRecord {

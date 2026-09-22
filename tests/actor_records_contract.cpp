@@ -132,8 +132,8 @@ int main() {
     kinoko_priority_construct((void *)(intptr_t)(address(&manager.actors)));
     kinoko_animation_list_construct(address(&manager.animations));
     std::array<int32_t, 2> textures{27, 81};
-    kinoko_integer_vector_construct(address(&manager.textures));
-    for(auto handle:textures) kinoko_integer_vector_append(address(&manager.textures),handle);
+    kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
+    for(auto handle:textures) kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), handle);
     std::array<KinokoActor *, 32> iteration_storage{};
     int iteration_owner_token = 0; // cleanup retains, never dereferences the owner
     manager.iteration.begin = iteration_storage.data();
@@ -141,11 +141,11 @@ int main() {
     manager.iteration.storage_owner = &iteration_owner_token;
     CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(address(&manager)))) == address(iteration_storage.data()));
     CHECK((cleanup_order == std::vector<int32_t>{27, 81, -1}));
-    CHECK(kinoko_integer_vector_size(address(&manager.textures))==0);
+    CHECK(kinoko_integer_vector_size((KinokoIntegerVector*)(&manager.textures))==0);
     CHECK(manager.iteration.end == manager.iteration.begin && manager.iteration.storage_owner == &iteration_owner_token);
     CHECK(!manager.cleanup_pending && manager.animations.count==0);
     CHECK(kinoko_integer_map_size(manager.animation_lookup.head)==0 && manager.actors.count==0);
-    kinoko_integer_vector_destroy(address(&manager.textures));
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));
     kinoko_animation_list_destroy(address(&manager.animations));
     kinoko_integer_map_destroy(manager.animation_lookup.head);
     kinoko_priority_destroy((void *)(intptr_t)(address(&manager.actors)));

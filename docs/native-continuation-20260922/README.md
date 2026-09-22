@@ -34,3 +34,13 @@ loads. ACT, text, script properties and fixtures use the authoritative header.
 Legacy integer-layout callers convert only at their record boundary; native
 storage callers pass pointers directly. Native std::string owns characters;
 borrowed data remains invalidated by mutation. No allocation policy changes.
+
+## Batch 4: texture-handle vector ownership
+
+The 12-byte manager texture slot now contains an opaque native owner and two
+reserved words, not fake begin/end/capacity integers. Construct/append/clear /
+destroy take a typed slot; data returns a borrowed const int32_t array. PAT
+resource indexing and manager cleanup carry that pointer directly. Handles
+remain integers and the manager releases textures before clearing storage.
+Clear retains capacity; the two reserved words remain untouched. Existing PAT,
+actor record and stage ownership contracts are updated and compiled only.

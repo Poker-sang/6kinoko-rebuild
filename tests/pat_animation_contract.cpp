@@ -53,8 +53,8 @@ void retdec_trace_squirrel_name(const char *,int32_t) {}
 int main() {
     ManagerPrefix manager{};auto *receiver=reinterpret_cast<KinokoActorManager *>(&manager);
     kinoko_animation_list_construct(address(&manager.animations));
-    kinoko_integer_vector_construct(address(&manager.textures));
-    kinoko_integer_vector_append(address(&manager.textures),1);
+    kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
+    kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), 1);
     kinoko_texture_slots[1].width=64;kinoko_texture_slots[1].height=64;
     kinoko_texture_slots[2].width=256;kinoko_texture_slots[2].height=128;
     put(uint8_t{5});put(uint16_t{1});
@@ -99,6 +99,6 @@ int main() {
     CHECK(manager.animations.count==0);
     kinoko_clear_animation_list(address(&manager.animations));
     kinoko_animation_list_destroy(address(&manager.animations));
-    kinoko_integer_vector_destroy(address(&manager.textures));kinoko_integer_map_destroy(lookup);
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_integer_map_destroy(lookup);
     std::puts("PASS: PAT byte alignment, resource base, aliases, linked takes, 3-axis signs and partial ownership");
 }

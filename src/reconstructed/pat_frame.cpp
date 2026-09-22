@@ -46,9 +46,9 @@ extern "C" int32_t kinoko_pat_build_frame(KinokoActorManager *manager,KinokoAnim
     const KinokoPatFrameFields *fields,uint32_t resource_base) {
     if (!manager || !receiver || !fields) return 0;
     const ManagerView owner(manager);
-    const auto resources=address(owner.bytes(&ManagerPrefix::textures));
+    auto* resources=reinterpret_cast<KinokoIntegerVector*>(owner.bytes(&ManagerPrefix::textures));
     const auto count=kinoko_integer_vector_size(resources);
-    const auto *handles=pointer<int32_t>(kinoko_integer_vector_data(resources));
+    const auto *handles=kinoko_integer_vector_data(resources);
     int32_t handle=0;
     // Check the combined index, not each operand independently (one-past-end
     // used to pass when base+index equalled count).
