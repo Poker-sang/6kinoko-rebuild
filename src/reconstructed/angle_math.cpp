@@ -10,15 +10,7 @@ std::array<float, table_size> make_cosine_table() {
     std::array<float, table_size> values{};
     const double tenths = 10.0, pi = 3.1415926535, half_turn = 180.0;
     for (int index = 0; index < table_size; ++index) {
-        double radians;
-        // Preserve the original x87 expression and its final double store.
-        __asm {
-            fild index
-            fdiv tenths
-            fmul pi
-            fdiv half_turn
-            fstp radians
-        }
+        const double radians = static_cast<double>(index) / tenths * pi / half_turn;
         values[index] = static_cast<float>(std::cos(radians));
     }
     values[0] = 1.0f;
@@ -31,17 +23,11 @@ const auto cosine_table = make_cosine_table();
 
 float lookup(float degrees, float phase) {
     const float tenths = 10.0f;
-    float scaled;
-    // There is ONE float store after multiply/subtract in 4040D0.
-    // SSE float multiply followed by subtract would add a rounding step.
-    __asm {
-        fld degrees
-        fmul tenths
-        fsub phase
-        fstp scaled
-    }
-    // __ftol2_sse truncates after adding 0.5 in extended precision. Converting
-    // float to double here preserves that addition without a float store.
+    // 4040D0 stores only after both operations. Double intermediates avoid
+    // the extra float rounding that a float multiply/subtract would introduce.
+    // /fp:strict preserves this expression and the calling thread's mode.
+    volatile float scaled = static_cast<float>(static_cast<double>(degrees) * tenths - phase);
+    // __ftol2_sse truncates after adding 0.5, without another float store.
     const auto index = static_cast<int32_t>(std::fabs(static_cast<double>(scaled)) + 0.5);
     return cosine_table[index % table_size];
 }
