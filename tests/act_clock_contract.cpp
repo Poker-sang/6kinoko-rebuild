@@ -1,5 +1,5 @@
 // Actual typed clock/EndStage implementation with only the clock and unrelated
-// legacy container/suspend ports controlled. Raw fixtures are independent of
+// legacy container ports and virtual document callbacks controlled. Raw fixtures are independent of
 // the production schema offsets; no original game assets are synthesized.
 #include <windows.h>
 #include <mmsystem.h>
@@ -19,7 +19,16 @@ static DWORD WINAPI clock_now() { return test_clock; }
 
 namespace test {
 int32_t cleared_slot;
-int32_t suspended, resumed;
+void *source_receiver,*active_receiver;
+int callback_count;
+std::array<int,3> callbacks{};
+int32_t __fastcall suspend_document(void *document,void *) {
+    callbacks[callback_count++]=document==active_receiver?1:2;
+    return document==source_receiver?17:91;
+}
+int32_t __fastcall resume_document(void *document,void *) {
+    callbacks[callback_count++]=document==active_receiver?3:99;return 18;
+}
 int clears, command_clears;
 int32_t command_runtime;
 void put(void *p, uint32_t value) { std::memcpy(p, &value, sizeof(value)); }
@@ -29,8 +38,6 @@ extern "C" {
 void kinoko_act_commands_clear(int32_t runtime) { test::command_runtime = runtime; ++test::command_clears; }
 void retdec_trace_i32(const char *, int32_t) {}
 int32_t retdec_act_clear_layout_vector(int32_t slot) { test::cleared_slot = slot; ++test::clears; return 0; }
-int32_t retdec_act_suspend_this(int32_t p) { test::suspended = p; return 17; }
-int32_t retdec_act_resume_this(int32_t p) { test::resumed = p; return 18; }
 }
 #define CHECK(condition) do { if (!(condition)) { std::fprintf(stderr,"clock line %d: %s\n",__LINE__,#condition); return 1; } } while (0)
 static_assert(std::is_same_v<decltype(kinoko::act::RuntimeRecord::active_document), KinokoActDocument *>);
@@ -76,9 +83,18 @@ int main() {
     CHECK(kinoko_act_set_current_time(nullptr, nullptr, 55) == 0);
     CHECK(kinoko_act_get_current_time(nullptr, nullptr) == 0);
     CHECK(kinoko_act_increment_frame(nullptr, nullptr) == 0);
-    CHECK(kinoko_act_suspend(runtime, nullptr) == 17);
+    void *methods[9]{};
+    methods[7]=reinterpret_cast<void*>(suspend_document);
+    methods[8]=reinterpret_cast<void*>(resume_document);
+    void *active[1]={methods};
+    put(source,static_cast<uint32_t>(reinterpret_cast<uintptr_t>(methods)));
+    document=reinterpret_cast<KinokoActDocument*>(source);
+    source_receiver=document;active_receiver=active;
+    kinoko::legacy::store(raw+12,reinterpret_cast<KinokoActDocument*>(active));
+    CHECK(kinoko_act_suspend(runtime, nullptr) == 17 && raw[104]==1);
     CHECK(kinoko_act_resume(runtime, nullptr) == 18);
-    CHECK(suspended == kinoko::legacy::address(runtime) && resumed == suspended);
+    CHECK((callback_count==3 && callbacks==std::array<int,3>{1,2,3}));
+    CHECK(word(raw+100)==0 && raw[104]==0 && raw[105]==0xa5);
     CHECK(bytes.front() == 0xa5 && bytes.back() == 0xa5);
 
     // Real Win32 lock on aligned storage. Preserve every byte outside the

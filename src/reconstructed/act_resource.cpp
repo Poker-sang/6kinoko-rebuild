@@ -9,8 +9,6 @@
 
 extern "C" {
 void retdec_trace_i32(const char *label, int32_t value);
-int32_t retdec_act_suspend_this(int32_t resource);
-int32_t retdec_act_resume_this(int32_t resource);
 }
 
 namespace {
@@ -19,6 +17,14 @@ using kinoko::act::DocumentRecord;
 using kinoko::native::RecordView;
 using kinoko::stage::SourceHolderRecord;
 using kinoko::legacy::address;
+using DocumentControl = int32_t (__thiscall *)(KinokoActDocument *);
+struct DocumentControlMethods {
+    void *preceding[7];
+    DocumentControl suspend;
+    DocumentControl resume;
+};
+static_assert(offsetof(DocumentControlMethods, suspend) == 28);
+static_assert(offsetof(DocumentControlMethods, resume) == 32);
 
 // This view borrows the existing record; it does not construct a new object or
 // change the lifetime of the source holder, clone, VM, or critical section.
@@ -39,6 +45,24 @@ class ActResourceView {
 
 public:
     explicit ActResourceView(KinokoActRuntime *storage) : storage_(storage), record_(storage) {}
+
+    int32_t suspend() const {
+        if(!storage_) return 0;
+        record_.set(&RuntimeRecord::hidden,uint8_t{1});
+        if(auto *active=record_.get(&RuntimeRecord::active_document)) dispatch_control(active,&DocumentControlMethods::suspend);
+        // 4515C0 always visits the source after the active clone. They can be
+        // the same object; do not deduplicate or propagate the first result.
+        auto *source=source_document();
+        return source?dispatch_control(source,&DocumentControlMethods::suspend):0;
+    }
+    int32_t resume() const {
+        if(!storage_) return 0;
+        record_.set(&RuntimeRecord::wake_time,uint32_t{0});
+        record_.set(&RuntimeRecord::hidden,uint8_t{0});
+        auto *active=record_.get(&RuntimeRecord::active_document);
+        // 4515F0 resumes only the active clone. Source remains suspended.
+        return active?dispatch_control(active,&DocumentControlMethods::resume):0;
+    }
 
     int32_t set_time(int32_t time) const {
         if (storage_) record_.set(&RuntimeRecord::current_time, time);
@@ -96,6 +120,12 @@ public:
         retdec_act_clear_layout_vector(address(record_.bytes(&RuntimeRecord::draw_sprites)));
         return 0;
     }
+private:
+    static int32_t dispatch_control(KinokoActDocument *document,DocumentControl DocumentControlMethods::*slot) {
+        auto *table=RecordView<DocumentRecord>(document).get(&DocumentRecord::vtable);
+        const auto callback=kinoko::legacy::load<DocumentControlMethods>(table).*slot;
+        return callback(document);
+    }
 };
 }
 
@@ -126,10 +156,10 @@ extern "C" int32_t __fastcall kinoko_act_sleep_to(KinokoActRuntime *resource, vo
     return ActResourceView(resource).sleep_to(milliseconds);
 }
 
-// The unverified suspend/resume bodies remain explicit legacy boundaries.
+// 4515C0/4515F0: typed receivers and original document virtual callbacks.
 extern "C" int32_t __fastcall kinoko_act_suspend(KinokoActRuntime *resource, void *) {
-    return retdec_act_suspend_this(address(resource));
+    return ActResourceView(resource).suspend();
 }
 extern "C" int32_t __fastcall kinoko_act_resume(KinokoActRuntime *resource, void *) {
-    return retdec_act_resume_this(address(resource));
+    return ActResourceView(resource).resume();
 }

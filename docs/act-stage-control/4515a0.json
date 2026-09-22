@@ -1,0 +1,1 @@
+{"addr":"0x4515a0","code":"DWORD __thiscall sub_4515A0(_DWORD *this, int a2)\n{\n  DWORD result; // eax\n\n  result = a2 + timeGetTime(); /*0x4515ac*/\n  *(this + 25) = result; /*0x4515af*/\n  return result; /*0x4515b2*/\n}","refs":[{"addr":"0x4d520c","name":"__imp_timeGetTime"}]}

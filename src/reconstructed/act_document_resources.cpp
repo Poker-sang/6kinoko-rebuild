@@ -15,13 +15,14 @@ const TypeDescriptor<sizeof(".?AVCActResourceMesh@@")> mesh{{}, {}, ".?AVCActRes
 const TypeDescriptor<sizeof(".?AVCActResourceChip@@")> chip{{}, {}, ".?AVCActResourceChip@@"};
 using Query = uint8_t (__thiscall *)(ResourceRecord *, const void *, ResourceRecord **);
 using Load = uint8_t (__thiscall *)(ResourceRecord *, const char *);
+using Unload = uint8_t (__thiscall *)(ResourceRecord *);
 using Create = uint8_t (__thiscall *)(ResourceRecord *, int32_t, int32_t);
 struct ResourceMethods {
     void *write, *read;
     Query query;
     void *middle[7];
     Load load;
-    void *unload;
+    Unload unload;
     Create create;
 };
 struct ResourcePrefix { const ResourceMethods *vtable; };
@@ -30,6 +31,7 @@ using LoadDocument = uint8_t (__thiscall *)(KinokoActDocument *, const char *);
 struct DocumentMethods { void *preceding[6]; LoadDocument load_resources; };
 static_assert(offsetof(ResourceMethods, query) == 8);
 static_assert(offsetof(ResourceMethods, load) == 40);
+static_assert(offsetof(ResourceMethods, unload) == 44);
 static_assert(offsetof(ResourceMethods, create) == 48);
 static_assert(offsetof(DocumentMethods, load_resources) == 24);
 template<class Method> Method method(ResourceRecord *resource, size_t offset) {
@@ -73,4 +75,41 @@ extern "C" int32_t __fastcall kinoko_method_load_act_resources(
         cursor += sizeof(ResourceRecord *);
     }
     return result;
+}
+
+namespace {
+// 428AF0/428BD0: only a real CActResource2D unloads/reloads here. Targets,
+// Mesh and Chip are recognized but skipped, not coerced to a texture resource.
+uint8_t transition_resources(KinokoActDocument *document,bool suspend) {
+    const DocumentView view(document);
+    const auto old=view.get(&DocumentRecord::resources_suspended);
+    if(suspend ? old==1 : old==0) return 0;
+    view.set(&DocumentRecord::resources_suspended,static_cast<uint8_t>(suspend));
+    const auto *prefix=kinoko::legacy::StringView(view.bytes(&DocumentRecord::resource_path)).data();
+    uint8_t result=1;
+    auto *cursor=reinterpret_cast<const unsigned char *>(view.get(&DocumentRecord::resources).begin);
+    while(cursor!=reinterpret_cast<const unsigned char *>(view.get(&DocumentRecord::resources).end)) {
+        ResourceRecord *converted=nullptr;
+        const auto query=[cursor](const void *type,ResourceRecord **output) {
+            auto *resource=load<ResourceRecord*>(cursor);
+            return method<Query>(resource,offsetof(ResourceMethods,query))(resource,type,output);
+        };
+        if(query(&texture,&converted) && converted) {
+            // Do not short-circuit subsequent callbacks after a failure.
+            result &= suspend
+                ? method<Unload>(converted,offsetof(ResourceMethods,unload))(converted)
+                : method<Load>(converted,offsetof(ResourceMethods,load))(converted,prefix);
+        } else if(!((query(&target,&converted) && converted) ||
+                    (query(&mesh,&converted) && converted) ||
+                    (query(&chip,&converted) && converted))) result=0;
+        cursor+=sizeof(ResourceRecord*);
+    }
+    return result;
+}
+}
+extern "C" int32_t __fastcall kinoko_method_suspend_act_resources(KinokoActDocument *document,void *) {
+    return transition_resources(document,true);
+}
+extern "C" int32_t __fastcall kinoko_method_resume_act_resources(KinokoActDocument *document,void *) {
+    return transition_resources(document,false);
 }
