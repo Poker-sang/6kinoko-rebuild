@@ -8,8 +8,6 @@ using namespace kinoko::actor;
 using kinoko::legacy::address;
 namespace { std::vector<int> blends; int submissions=0; }
 extern "C" {
-float function_404130(long double degrees) { return static_cast<float>(std::cos(degrees*3.141592653589793/180.0)); }
-float function_4040d0(long double degrees) { return static_cast<float>(std::sin(degrees*3.141592653589793/180.0)); }
 int32_t kinoko_actor_render_trace_begin(KinokoActor *,KinokoCamera *) { return 1; }
 void kinoko_actor_render_trace_draw(KinokoActor *) {}
 void kinoko_actor_render_trace_end(int32_t,int32_t) {}

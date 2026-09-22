@@ -1527,8 +1527,6 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 
 
-float32_t function_4040d0(float80_t a1);
-float32_t function_404130(float80_t a1);
 
 
 int32_t function_4045c0(int32_t a1, int32_t a2);
@@ -2577,7 +2575,6 @@ char * g647; // 0x5151f9
 int32_t g664 = 0; // 0x51620c
 int32_t g666 = 0; // 0x516214
 int32_t g667 = 0; // 0x516840
-float32_t * g669 = NULL; // 0x516bd0
 int32_t g670 = 0; // 0x5179e0
 float32_t g671 = 0.0f; // 0x5187f0
 int32_t g672 = 0; // 0x519600
@@ -3540,16 +3537,8 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 
 // Address range: 0x4040d0 - 0x404124
-float32_t function_4040d0(float80_t a1) {
-    /* The original returns the sine from the 0.1-degree cosine table. */
-    return (float32_t)sin((double)a1 * 0.017453292519943295);
-}
 
 // Address range: 0x404130 - 0x40417e
-float32_t function_404130(float80_t a1) {
-    /* The original returns the cosine from the 0.1-degree cosine table. */
-    return (float32_t)cos((double)a1 * 0.017453292519943295);
-}
 
 
 // Address range: 0x404230 - 0x404267

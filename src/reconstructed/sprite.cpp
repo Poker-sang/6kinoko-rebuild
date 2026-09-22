@@ -1,3 +1,4 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/sprite.h"
@@ -6,8 +7,6 @@
 #include <d3d9.h>
 
 extern "C" {
-float function_404130(long double angle);
-float function_4040d0(long double angle);
 }
 
 static_assert(sizeof(KinokoSpriteVertex) == 28, "Original vertex stride");
@@ -28,8 +27,8 @@ extern "C" void kinoko_sprite_transform(KinokoSprite *sprite, float x, float y) 
     vertices[3].x = vertices[1].x;
 
     if (sprite->angle != 0.0f) {
-        const float cosine = function_404130(sprite->angle);
-        const float sine = function_4040d0(sprite->angle);
+        const float cosine = kinoko_cos_degrees(sprite->angle);
+        const float sine = kinoko_sin_degrees(sprite->angle);
         for (auto &vertex : vertices) {
             const float old_x = vertex.x;
             const float old_y = vertex.y;

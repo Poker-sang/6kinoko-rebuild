@@ -1,3 +1,4 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/act_layout_render.hpp"
 #include "kinoko/act_draw_records.hpp"
 #include "kinoko/map_layout_records.hpp"
@@ -13,8 +14,6 @@
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
-extern "C" float function_404130(long double);
-extern "C" float function_4040d0(long double);
 extern "C" void retdec_trace_i32(const char *,int32_t);
 float retdec_sprite_scale_about(float value,float pivot,float scale) {
     return (value-pivot)*scale+pivot;
@@ -55,8 +54,8 @@ void retdec_sprite_rotate_xy(float *x, float *y,
 
     if (angle == 0.0f || x == nullptr || y == nullptr)
         return;
-    cosine = function_404130((long double)angle);
-    sine = function_4040d0((long double)angle);
+    cosine = kinoko_cos_degrees(angle);
+    sine = kinoko_sin_degrees(angle);
     old_x = *x;
     old_y = *y;
     dx = old_x - pivot_x;
@@ -90,8 +89,8 @@ void retdec_sprite_rotate_faithful(int32_t sprite,
         }
     }
     if (angle_y != 0.0f) {
-        cosine = function_404130((long double)angle_y);
-        sine = function_4040d0((long double)angle_y);
+        cosine = kinoko_cos_degrees(angle_y);
+        sine = kinoko_sin_degrees(angle_y);
         for (index = 0; index < 4; ++index) {
             float *x = pointer<float>(sprite + x_offsets[index]);
             float *z = pointer<float>(sprite + z_offsets[index]);
@@ -104,8 +103,8 @@ void retdec_sprite_rotate_faithful(int32_t sprite,
         }
     }
     if (angle_x != 0.0f) {
-        cosine = function_404130((long double)angle_x);
-        sine = function_4040d0((long double)angle_x);
+        cosine = kinoko_cos_degrees(angle_x);
+        sine = kinoko_sin_degrees(angle_x);
         for (index = 0; index < 4; ++index) {
             float *y = pointer<float>(sprite + y_offsets[index]);
             float *z = pointer<float>(sprite + z_offsets[index]);

@@ -1,3 +1,4 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/script_file.h"
 #include "kinoko/file_io_legacy.h"
 #include "kinoko/graphics_device.h"
@@ -65,8 +66,6 @@ extern int32_t retdec_release_watch_data[8];
 extern int32_t retdec_release_watch_count;
 
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
-float function_4040d0(long double a1);
-float function_404130(long double a1);
 int32_t function_4252e0(void);
 int32_t kinoko_sqrat_call_integer0(int32_t a1);
 int32_t kinoko_sqrat_call_integer1(int32_t a1);

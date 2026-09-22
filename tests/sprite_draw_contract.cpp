@@ -7,8 +7,6 @@
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"line %d: %s\n",__LINE__,#x); return 1; } } while (0)
 extern "C" {
 KinokoGraphics kinoko_graphics{};
-float function_404130(long double a) { return static_cast<float>(std::cos(a)); }
-float function_4040d0(long double a) { return static_cast<float>(std::sin(a)); }
 }
 static int step, bound;
 static DWORD fvf;
