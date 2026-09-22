@@ -43,6 +43,7 @@ int main() {
     using Bounds = int32_t (__thiscall *)(KinokoSprite *, float, float, float, float);
     valid = true;
     CHECK(reinterpret_cast<Bounds>(kinoko_sprite_draw_bounds)(&sprite, 10, 20, 5, -3) == S_FALSE);
+    std::fprintf(stderr,"draw: valid=%d step=%d bound=%d fvf=%lu submitted=%p expected=%p\n",valid,step,bound,fvf,submitted,sprite.vertices);
     CHECK(valid && step == 3 && bound == 17 && fvf == 324 && submitted == sprite.vertices);
     CHECK(sprite.vertices[0].x == 9.5f && sprite.vertices[0].y == 19.5f);
     CHECK(sprite.vertices[1].x == 4.5f && sprite.vertices[1].y == 19.5f);
