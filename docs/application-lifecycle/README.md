@@ -84,3 +84,15 @@ R2 source `de19dc5` built the game, but the contract mock omitted the explicit
 that redeclaration. R3 matches the production declaration. Game source remains
 unchanged from R1; no game or contract was run in either unsuccessful build.
 The R1/R2 game executables are retained with their required staged DAT files.
+
+## R3 build handoff
+
+- Source commit: `942f763cc8bf1bd892ab938bf6ac732396f8760a`.
+- Build tree: `build-runs/application-lifecycle-r3-quiet`, Win32 Release, trace
+  disabled. All targets compiled and linked successfully (exit 0), including the
+  new application contract. None of the contract executables was executed.
+- EXE: `runtime-builds/application-lifecycle-r3-quiet/kinoko_retdec_rebuild.exe`.
+- SHA256: `031CB3B2236369D7404F8388B18DC2AFB99A0CC1213A6BD05782ED5D09F7C8B5`.
+- `stage_dat.ps1` copied the required three DAT files beside the EXE and verified
+  size/SHA256 (exit 0). No game or automated test execution; gameplay remains
+  unverified for this batch. All prior build and runtime folders are retained.
