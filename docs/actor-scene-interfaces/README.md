@@ -47,4 +47,18 @@ Actor 方法参数改为 `KinokoActor*`，初始化数据入口返回 Actor 指�
 相关 Actor、记录布局、脚本和 stage 检查同步适配真实指针。
 
 按用户要求只编译链接，不执行测试程序、CTest 或游戏。
-构建及 DAT 交接记录在构建完成后补充。
+
+## 本批 R1 交接
+
+- 源码提交：`1f7dafaa66e5140a0f7324b24011ad90d0bf6569`。
+- VS 2026 / Win32 / Release，`KINOKO_RETDEC_DISABLE_TRACE=ON`。
+- 全量构建退出码 0，新增及既有检查目标均编译链接成功。
+- 构建日志：`build-runs/actor-scene-r1-quiet/build.log`。
+- EXE：`runtime-builds/actor-scene-r1-quiet/kinoko_retdec_rebuild.exe`。
+- EXE SHA256：`F3B8C5FE55E3BC5D95458065448059249AAA405422FD0AAA84F90BD56A7C0EFE`。
+- stage_dat.ps1 已复制三个 DAT 到 EXE 同目录并校验大小、SHA256：
+  - a：163424746 字节，`DD3AFF7E3E6BF0816C3073D113C3CCB12242A67E578D012C3B87190E7E24FC64`。
+  - b：44681244 字节，`4D47B8E241886BE4300025324DDD7D1E3C5729232FF67E011F14163DB60130D2`。
+  - c：11796163 字节，`80327F6F680D53AAA5539F45E11D33C1C6BA6B862648760725F44A380121852E`。
+
+以上是编译链接与资源校验记录，不代表测试或游戏运行通过；后续验证由用户执行。
