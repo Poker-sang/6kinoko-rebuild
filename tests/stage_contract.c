@@ -4277,9 +4277,9 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     CHECK(SQ_SUCCEEDED(sq_newslot(kinoko_vm(vm), -3, SQFalse)));
     sq_settop(kinoko_vm(vm), top);
     CHECK(execute_source(vm, root + 2,
-        "registrationInput.x=-17; registrationInput.y=29;"
-        "registrationInput.b2=123; registrationInput.kr1=true;"
-        "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;"
+        "registrationInput.x=-17; registrationInput.y=29;\n"
+        "registrationInput.b2=123; registrationInput.kr1=true;\n"
+        "registrationInput.k5=456; registrationInput.s0=789; registrationInput.s9=987;\n"
         "if(registrationInput.k2!=123 || !registrationInput.br1 || "
         "registrationInput.GetAssign(-1,3)!=73) throw \"Input alias/receiver\";\n"
         "registrationInput.br1=false; if(registrationInput.kr1) throw \"Input bool alias\";"));
@@ -4686,8 +4686,8 @@ static int test_camera_map_bindings(int32_t vm, int32_t *root) {
         sq_settop(kinoko_vm(vm),top);
     }
     CHECK(execute_source(vm,root+2,
-        "moduleCamera.x=12.5; moduleCamera.offset_y=-3.0; moduleCamera.right=640.0;"
-        "moduleMap.width=321; moduleMap.last_id=27; moduleMap.last_bottom=123.5;"
+        "moduleCamera.x=12.5; moduleCamera.offset_y=-3.0; moduleCamera.right=640.0;\n"
+        "moduleMap.width=321; moduleMap.last_id=27; moduleMap.last_bottom=123.5;\n"
         "moduleCamera.SetUpdateFunction(function(){});"));
     CHECK(((float*)camera)[10]==12.5f && ((float*)camera)[15]==-3.0f && ((float*)camera)[20]==640.0f);
     CHECK(map[19]==321 && map[14]==27 && ((float*)map)[18]==123.5f);
@@ -5045,9 +5045,9 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(execute_source(vm,root+2,"if(dynamicFirst.alpha!=0.375) throw \"clone altered source\";"));
     }
     CHECK(execute_source(vm,root+2,
-        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");"
-        "dynamicText.alpha=0.625; dynamicText.colorR=73;"
-        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";"
+        "dynamicText <- dynamicPlayer.CreateLayerString(\"text\");\n"
+        "dynamicText.alpha=0.625; dynamicText.colorR=73;\n"
+        "if(dynamicText.layout.alpha!=0.625 || dynamicHost.text.layout.colorR!=73) throw \"text aliases\";\n"
         "if(!dynamicText.layout.PushBack(\"native text\") || dynamicText.layout.queueCount!=11) throw \"text methods\";"));
     layers=(int32_t*)(intptr_t)act[52];CHECK(act[53]-act[52]==28);
     const int32_t text_layer=layers[6],text_head=*(int32_t*)(intptr_t)(text_layer+180);
@@ -6340,7 +6340,7 @@ int main(int argc, char **argv) {
         CHECK(function_48aa20(vm) == top);
         CHECK(kinoko_sqplus_object_type((void *)(intptr_t)(pair_actors[0]+136)) != 0x08000100);
         CHECK(execute_source(vm, root + 2,
-            "if (hits.len()!=1 || hits[0]!=21) throw \"reciprocal callback after failure\";"
+            "if (hits.len()!=1 || hits[0]!=21) throw \"reciprocal callback after failure\";\n"
             "probe[0].SetCollisionCallbackFunction(::Contact);"));
         CHECK(execute_source(vm, root + 2,
             "hits.clear();\nprobe[1].InterrputCollisionCallback();\n"
