@@ -68,3 +68,13 @@ PAT, mesh and audio fixtures are updated for typed ports; legacy stage fixtures
 explicitly identify their synthetic package records. No game, CTest or contract
 executable is run, per user instructions. Each build revision is committed first
 and gets separate English build/runtime directories; all artifacts are retained.
+
+## R1 build and C header correction
+
+R1 source 493fa8b compiled/linked the new production file/archive contract and
+updated isolated ACT/PAT/mesh/audio contracts. The game and stage target failed
+because MSVC C cannot parse thiscall function-pointer declarations in the shared
+layout header. R2 keeps the method table opaque in C and exposes its full typed
+virtual methods only in C++, where dispatch is implemented. This is a header
+compatibility correction; no stream behavior change. No executable was run;
+R1 artifacts/logs remain under file-archive-r1-quiet. R1 produced no game EXE.

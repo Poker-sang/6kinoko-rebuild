@@ -1,6 +1,7 @@
 #pragma once
 #include "kinoko/file_io.h"
 /* Recovered x86 layouts shared only by legacy virtual users and fixtures. */
+#ifdef __cplusplus
 typedef struct KinokoReaderMethods {
     KinokoArchiveReader *(__thiscall *destroy)(KinokoArchiveReader *, uint8_t);
     int32_t (__thiscall *open_string)(KinokoArchiveReader *, const void *);
@@ -10,6 +11,11 @@ typedef struct KinokoReaderMethods {
     uint32_t (__thiscall *seek)(KinokoArchiveReader *, int32_t, uint32_t);
     uint32_t (__thiscall *size)(KinokoArchiveReader *);
 } KinokoReaderMethods;
+#else
+/* MSVC C cannot express thiscall. C consumers borrow table identities only;
+   all typed virtual dispatch lives in file_io.cpp. */
+typedef struct KinokoReaderMethods KinokoReaderMethods;
+#endif
 struct KinokoArchiveReader {
     const KinokoReaderMethods *methods;
     HANDLE handle;
