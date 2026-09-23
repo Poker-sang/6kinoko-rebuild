@@ -86,3 +86,8 @@ Batch 17: original 440CA0 writes a 256-byte face, paired RGB endpoints,
 font height/weight, edge, spacing and packed color into renderer fields.
 FontRendererRecord now asserts those source-backed offsets and the native
 configuration uses them, leaving unrelated runtime and padding bytes intact.
+Batch 18: original 40EC70 initializes the renderer weight, style flags,
+spacing, bitmap pointer, label length/capacity and pixel owner. Native
+construction now names these members and preserves untouched runtime and
+padding bytes. The original +352 list-size and DC/runtime zeroes remain at
+their explicit binary boundary.

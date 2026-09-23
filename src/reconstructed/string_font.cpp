@@ -126,11 +126,20 @@ void outline(int32_t r,const uint32_t* source,uint32_t* destination) {
 }
 extern "C" void kinoko_string_font_construct(int32_t r) {
     // 40EC70 initializes only these members; do not clear unrelated padding.
-    field<int32_t>(r+280)=400;field<uint16_t>(r+284)=0;field<uint8_t>(r+286)=0;
-    for(int offset:{292,296,300,304,352,384,0,4,8,324,340,344}) field<int32_t>(r+offset)=0;
-    field<int32_t>(r+288)=100000;
     const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    record.set(&Renderer::font_weight,400);
+    record.set(&Renderer::style284,uint8_t{0});
+    record.set(&Renderer::edge,uint8_t{0});
+    record.set(&Renderer::style286,uint8_t{0});
+    record.set(&Renderer::margin_left,0);
+    record.set(&Renderer::margin_top,0);
+    record.set(&Renderer::character_space,0);
+    record.set(&Renderer::line_space,0);
+    for(int offset:{352,0,4,8,324,340}) field<int32_t>(r+offset)=0;
+    record.set(&Renderer::bitmap,static_cast<void*>(nullptr));
+    record.set(&Renderer::setting288,100000);
     const kinoko::native::RecordView<kinoko::legacy::StringRecord> label(record.bytes(&Renderer::label));
+    label.set(&kinoko::legacy::StringRecord::length,uint32_t{0});
     label.set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
     label.bytes(&kinoko::legacy::StringRecord::characters)[0]=0;
     set_pixels(r,new Pixels);
