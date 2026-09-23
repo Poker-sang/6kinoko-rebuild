@@ -154,6 +154,10 @@ struct AudioWorkers {
     AudioWorkers& operator=(const AudioWorkers&) = delete;
 } audio_workers;
 float g_retdec_audio_master_volume = 1.0f;
+// The original C ABI publishes the currently selected BGM handle here. The
+// track pool owns playback resources; this slot is only its active identity.
+int32_t& active_bgm_handle() { return g637; }
+bool packed_sound_assets() { return g874 != 0; }
 void sync_audio_device_aliases() noexcept {
     // Read-only borrows for not-yet-migrated C entry points, never extra owners.
     g876 = address(g_audio_device.primary.get());
@@ -824,7 +828,7 @@ static void retdec_bgm_release_all_tracks_locked(void)
     retdec_bgm_release_state(&g_retdec_bgm_track);
     for (auto& track : fading_tracks) retdec_bgm_release_state(&track);
     fading_tracks.clear();
-    g637 = 0;
+    active_bgm_handle() = 0;
 }
 
 static void retdec_bgm_release_all_tracks(void)
@@ -922,7 +926,7 @@ static int retdec_se_replace_extension(const char *source, char *path,
     if (length + 1 > path_size)
         return 0;
     memcpy(path, source, length + 1);
-    if (g874 != 0 && length >= 4 &&
+    if (packed_sound_assets() && length >= 4 &&
         _stricmp(path + length - 4, ".wav") == 0) {
         path[length - 3] = 'c';
         path[length - 2] = 'v';
@@ -1152,8 +1156,8 @@ static void retdec_bgm_release_for_handle(uint32_t handle)
     track = retdec_bgm_find_track(handle);
     if (track != NULL) track->retirement_requested = true;
     retire_playback_request(handle);
-    if (handle == g637)
-        g637 = 0;
+    if (handle == active_bgm_handle())
+        active_bgm_handle() = 0;
 
 }
 
@@ -1301,7 +1305,7 @@ static void release_retired_requests_locked() {
             --manager.handles.live_count;
         }
         fading_tracks.remove_if([](const BgmTrack& track) { return !track.buffer; });
-        if (static_cast<uint32_t>(g637) == handle) g637 = 0;
+        if (static_cast<uint32_t>(active_bgm_handle()) == handle) active_bgm_handle() = 0;
     }
 }
 
@@ -1909,13 +1913,13 @@ int32_t kinoko_audio_play_bgm(const char* path, int32_t a2, int32_t a3, int32_t 
     std::uint32_t new_handle = 0;
 
     (void)a3;
-    if (g637 != 0)
-        fade_out_playback(manager, g637, 1000, 0, 1.0f);
+    if (active_bgm_handle() != 0)
+        fade_out_playback(manager, active_bgm_handle(), 1000, 0, 1.0f);
     allocate_playback_handle(manager, &new_handle);
-    g637 = new_handle;
+    active_bgm_handle() = new_handle;
     /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
-    prepare_playback_request(manager, g637, path, a4, 0, 1.0f);
-    schedule_playback_start(manager, g637, a2);
+    prepare_playback_request(manager, active_bgm_handle(), path, a4, 0, 1.0f);
+    schedule_playback_start(manager, active_bgm_handle(), a2);
     return 0;
 }
 
@@ -1924,26 +1928,26 @@ int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t a2, int32_t a3, i
     auto* manager = retdec_audio_manager_this();
     std::uint32_t new_handle = 0;
 
-    if (g637 != 0)
-        fade_out_playback(manager, g637, 1000, a3, 1.0f);
+    if (active_bgm_handle() != 0)
+        fade_out_playback(manager, active_bgm_handle(), 1000, a3, 1.0f);
     allocate_playback_handle(manager, &new_handle);
-    g637 = new_handle;
-    prepare_playback_request(manager, g637, path, a5, 0, 1.0f);
-    schedule_playback_start(manager, g637, a2);
+    active_bgm_handle() = new_handle;
+    prepare_playback_request(manager, active_bgm_handle(), path, a5, 0, 1.0f);
+    schedule_playback_start(manager, active_bgm_handle(), a2);
     return 0;
 }
 
 int32_t kinoko_audio_pause_bgm(void) {
-    if (g637 != 0) {
-        retdec_bgm_toggle_pause((uint32_t)g637);
+    if (active_bgm_handle() != 0) {
+        retdec_bgm_toggle_pause((uint32_t)active_bgm_handle());
     }
     return 0;
 }
 
 int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
-    if (g637 != 0) {
+    if (active_bgm_handle() != 0) {
         float target = (float)a2 / 100.0f;
-        retdec_bgm_begin_fade_for_handle((uint32_t)g637,
+        retdec_bgm_begin_fade_for_handle((uint32_t)active_bgm_handle(),
                                          a1 > 0 ? (DWORD)a1 : 0, 0,
                                          target);
     }
@@ -1951,8 +1955,8 @@ int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
 }
 
 int32_t kinoko_audio_stop_bgm(void) {
-    if (g637 != 0) {
-        uint32_t handle = (uint32_t)g637;
+    if (active_bgm_handle() != 0) {
+        uint32_t handle = (uint32_t)active_bgm_handle();
         retdec_bgm_stop_for_handle(handle);
         retdec_bgm_release_for_handle(handle);
     }
