@@ -10,6 +10,10 @@
 #include <memory>
 
 extern "C" char *g644;
+// Savedata's SqPlus references require the live primary VM at each recursive
+// container boundary, distinct from the compiled LocalScript VM.
+namespace { HSQUIRRELVM serialization_vm() { return reinterpret_cast<HSQUIRRELVM>(g644); } }
+
 extern "C" void retdec_trace(const char *);
 extern "C" void retdec_trace_i32(const char *, int32_t);
 
@@ -100,7 +104,7 @@ bool read_table(TableStream &stream, Object parent) {
     Object key, value;
     key.initialize();
     value.initialize();
-    bool ok = stream.buffer && g644;
+    bool ok = stream.buffer && serialization_vm();
     while (ok) {
         uint32_t value_type = 0, key_type = 0;
         if (!stream.read(value_type)) { ok = false; break; }
@@ -155,7 +159,7 @@ bool write_table(TableStream &stream, Object input) {
     container.initialize();
     key.initialize();
     value.initialize();
-    bool ok = stream.buffer && g644;
+    bool ok = stream.buffer && serialization_vm();
     bool iterating = false;
     if (ok) ok = container.assign(input.type(), input.data());
     if (ok && kinoko_sqplus_object_begin_iteration(container.raw())) iterating = true;
