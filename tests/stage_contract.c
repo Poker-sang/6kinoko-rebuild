@@ -4564,7 +4564,7 @@ static int test_string_glyph_cache(void) {
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
     CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
-    CHECK(function_4410c0(PTR(layout))==1);
+    CHECK(kinoko_string_rebuild_queue((KinokoStringLayout*)layout)==1);
     CHECK(kinoko_string_atlas_size(PTR(layout))==0);
     CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
     CHECK(layout[5]==0 && layout[12]==4 && memcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layout)+32)),"ABCD",5)==0);
