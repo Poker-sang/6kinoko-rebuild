@@ -2,6 +2,7 @@
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_layout_records.hpp"
 #include "kinoko/act_map_records.hpp"
+#include "kinoko/act_key_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
@@ -315,20 +316,17 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
 
 int32_t retdec_act_make_key(int32_t reader_ptr, int32_t version)
 {
-    int32_t key;
-
-    key = address(std::calloc(1u, 36u));
-    if (key == 0)
-        return 0;
-    field<int32_t>(key) = address(kinoko_act_host_symbols()->key_vtable);
-    field<int32_t>(key + 24) = 0;
-    field<int32_t>(key + 28) = 15;
-    field<uint8_t>(key + 8) = 0;
-    if (!retdec_act_load_key(key, reader_ptr, version)) {
-        retdec_destroy_cact_key(key);
-        return 0;
-    }
-    return key;
+    auto destroy = [](KinokoActKey *key) { retdec_destroy_cact_key(address(key)); };
+    std::unique_ptr<KinokoActKey, decltype(destroy)> key(
+        static_cast<KinokoActKey *>(std::calloc(1u, sizeof(kinoko::act::KeyRecord))), destroy);
+    if (!key) return 0;
+    kinoko::act::KeyView record(key.get());
+    record.set(&kinoko::act::KeyRecord::methods, kinoko_act_host_symbols()->key_vtable);
+    auto name = record.view(&kinoko::act::KeyRecord::script_name);
+    name.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+    name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+    if (!retdec_act_load_key(address(key.get()), reader_ptr, version)) return 0;
+    return address(key.release());
 }
 
 int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
