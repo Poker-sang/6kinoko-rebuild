@@ -66,3 +66,6 @@ lifecycle no longer encode these values as integers. The list owns nodes but
 not layouts, preserves append order, and reconstructs method identity on copy.
 The event vector retains capacity across clear/shorter assignment and preserves
 null/duplicate entries. Historical raw C fixtures convert at their buffer edge.
+
+Batch 6 R1 caught a missing public opaque RenderLayer declaration; retained
+the failed build and fixed the self-contained header before fresh R2.

@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "kinoko/act_types.h"
+typedef struct KinokoRenderLayer KinokoRenderLayer;
 #ifdef __cplusplus
 extern "C" {
 #endif
