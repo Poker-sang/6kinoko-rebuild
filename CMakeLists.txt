@@ -283,6 +283,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/script_file.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
+    src/squirrel/table_diagnostics.cpp
     src/squirrel/sqrat_object_bridge.cpp
     src/squirrel/native_property_bridge.cpp
     src/squirrel/squirrel_native_arguments.cpp
