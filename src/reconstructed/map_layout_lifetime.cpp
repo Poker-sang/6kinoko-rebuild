@@ -10,6 +10,7 @@
 #include <cstring>
 #include <memory>
 #include <new>
+extern "C" unsigned char g25;
 namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::address;
