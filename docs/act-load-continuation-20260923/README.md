@@ -22,3 +22,8 @@ strings before clearing displayed text. The native reader exposes actual
 pointer types and named string fields; the original virtual ABI retains a
 small conversion adapter. The key loader passes its local reader slot.
 Evidence: 43fb00.json.
+Batch 27: IDA 42C030 reads version-1 C2DLayout properties through a
+borrowed reader holder and writes byte 312 after successful values.
+The native API now takes real pointers and sets Layout2DRecord's asserted
+pivot-invalid flag; its virtual ABI adapter and parsed property order remain.
+The document factory passes its local reader slot directly. Evidence: 42c030.json.

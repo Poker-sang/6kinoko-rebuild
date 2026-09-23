@@ -1,6 +1,7 @@
 #include "kinoko/map_layout_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
+#include "kinoko/act_layout2d_io.h"
 #include "kinoko/map_chip_cache.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
@@ -236,15 +237,21 @@ extern "C" int32_t __fastcall kinoko_method_write_chip_resource(
     catch (...) { return 0; }
 }
 
-extern "C" int32_t __fastcall kinoko_method_read_layout_properties(
-    int32_t layout, void*, int32_t holder, int32_t version) {
-    if (!layout || !holder || version != 1) return 0;
+extern "C" int32_t kinoko_act_read_layout2d_properties(KinokoActLayout *layout,
+                                                        int32_t *reader_holder, int32_t version) {
+    if (!layout || !reader_holder || version != 1) return 0;
     try {
-        if (!read(layout, field<int32_t>(holder), layout_schema, false)) return 0;
+        if (!read(address(layout), *reader_holder, layout_schema, false)) return 0;
         // 42C084 invalidates transforms after reading; this is not a texture.
-        field<uint8_t>(layout+312) = 1;
+        const kinoko::native::RecordView<kinoko::act::Layout2DRecord> record(layout);
+        record.set(&kinoko::act::Layout2DRecord::pivots_initialized,uint8_t{1});
         return 1;
     } catch (...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_read_layout_properties(
+    int32_t layout, void*, int32_t holder, int32_t version) {
+    return kinoko_act_read_layout2d_properties(pointer<KinokoActLayout>(layout),
+        pointer<int32_t>(holder),version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_layout_properties(
     int32_t layout, void*, int32_t writer) {

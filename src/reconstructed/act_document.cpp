@@ -1,6 +1,7 @@
 #include "kinoko/act_document_association.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
+#include "kinoko/act_layout2d_io.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -164,7 +165,8 @@ int32_t retdec_act_make_layout(int32_t reader_ptr)
 {
     const auto layout = address(std::calloc(1u, 316u));
     if (!retdec_construct_c2dlayout(layout)) return 0;
-    if (!kinoko_method_read_layout_properties(layout, nullptr, address(&reader_ptr), 1)) {
+    if (!kinoko_act_read_layout2d_properties(pointer<KinokoActLayout>(layout),
+            &reader_ptr,1)) {
         std::free(pointer<void>(layout));
         return 0;
     }
