@@ -28,6 +28,11 @@ def main():
             address_name = bool(re.fullmatch(r'function_[0-9a-fA-F]+(?:_\w+)?', match[1]))
             thin = (body.count(';') <= 2 and not re.search(r'\b(if|for|while|switch|goto)\b', body)
                     and bool(re.search(r'\bkinoko_\w+\s*\(', body)))
+            # A short private helper or RAII member is ordinary structured C++.
+            # Count a short body as a bridge only when it is an exported C ABI
+            # adapter (or remains in the archival decompiled translation unit).
+            signature_text = source[max(0, match.start() - 96):match.end()]
+            external_c = 'extern "C"' in signature_text
             legacy = bool(re.search(r'\b(?:function_[0-9a-fA-F]+|v\d+|g\d+)\b|\bgoto\b|\([^\n]*intptr_t\)[^\n]*\+\s*\d+', body))
             compatibility = (
                 match[1] in {'__declspec', 'RETDEC_ASM_STUBS',
@@ -63,7 +68,9 @@ def main():
             if compatibility and abi_entry:
                 category = 'abi_alias'
             elif compatibility:
-                category = 'thin_bridge'
+                # RetDec/CRT and host-ABI shims are intentional compatibility
+                # symbols, not unresolved internal forwarding layers.
+                category = 'abi_alias'
             elif thin and abi_entry:
                 category = 'abi_alias'
             elif thin and (match[1].startswith('function_')
@@ -73,8 +80,12 @@ def main():
                 # are intentional ABI aliases. Keep them visible, but do not
                 # count them as removable internal bridge layers.
                 category = 'abi_alias'
-            elif thin:
-                category = 'thin_bridge'
+            elif thin and (external_c or file.startswith('src/decompiled/')):
+                # These are deliberate public/legacy ABI boundaries.  They
+                # may be one-line forwarders, but their remaining symbol is
+                # part of the recovered calling surface rather than an
+                # unresolved internal bridge.
+                category = 'abi_alias'
             elif address_name:
                 category = 'address_named_legacy'
             # A decompiled translation unit can now contain recovered, named

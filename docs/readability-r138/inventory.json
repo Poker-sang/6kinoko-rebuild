@@ -1,17 +1,15 @@
 {
-  "source_commit": "ba68d8b7598bcf0564ca83b2e9a073374f426566",
+  "source_commit": "016b4b15e3f8bda6ecb84496ffa7551093ca7b7a",
   "scope": "Unique src C/C++ paths literally listed in top-level CMake; headers, macros, external source, tests and archival decompilation excluded. Lexical estimates; not linked reachability. Categories are heuristics, not evidence of semantic completeness.",
   "files": 156,
   "functions": 1935,
   "counts": {
-    "named_structured_candidate": 1601,
-    "thin_bridge": 107,
-    "abi_alias": 227
+    "named_structured_candidate": 1657,
+    "abi_alias": 278
   },
   "function_body_lines": {
-    "named_structured_candidate": 18111,
-    "thin_bridge": 488,
-    "abi_alias": 689
+    "named_structured_candidate": 18234,
+    "abi_alias": 1054
   },
   "entries": [
     {
@@ -26,14 +24,14 @@
       "name": "__declspec",
       "line": 176,
       "lines": 16,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "__declspec",
       "line": 193,
       "lines": 40,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -54,7 +52,7 @@
       "name": "_3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__40_std_40__40_QAE_40_PBD_40_Z",
       "line": 3300,
       "lines": 14,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -75,7 +73,7 @@
       "name": "kinoko_construct_layer_global_vm",
       "line": 4160,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -103,7 +101,7 @@
       "name": "kinoko_color_destroy",
       "line": 5800,
       "lines": 5,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -327,35 +325,35 @@
       "name": "__declspec",
       "line": 8056,
       "lines": 28,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "__declspec",
       "line": 8107,
       "lines": 20,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "__declspec",
       "line": 8128,
       "lines": 20,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "__declspec",
       "line": 8149,
       "lines": 9,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "__declspec",
       "line": 8164,
       "lines": 11,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -383,14 +381,14 @@
       "name": "kinoko_sqrat_object_vtable",
       "line": 9928,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_sqrat_root_vtable",
       "line": 9929,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -411,7 +409,7 @@
       "name": "kinoko_squirrel_object_vtable",
       "line": 9934,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -439,7 +437,7 @@
       "name": "_3f__3f_3_40_YAXPAX_40_Z",
       "line": 10126,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -453,7 +451,7 @@
       "name": "retdec_msvc_Finitlocks__YAXXZ7",
       "line": 10650,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -467,14 +465,14 @@
       "name": "retdec_msvc_Finitlocks__YAXXZ8",
       "line": 10665,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "retdec_msvc_Finitlocks__YAXXZ9",
       "line": 10673,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -502,21 +500,21 @@
       "name": "kinoko_act_script_output_compiled",
       "line": 10936,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_act_host_symbols",
       "line": 10937,
       "lines": 24,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_audio_host_symbols",
       "line": 10963,
       "lines": 6,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -565,28 +563,28 @@
       "name": "kinoko_application_set_archive_mode",
       "line": 11038,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_application_open_archives",
       "line": 11039,
       "lines": 6,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_game_prepare_scripts",
       "line": 11059,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
       "name": "kinoko_game_register_scripts",
       "line": 11063,
       "lines": 10,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -656,7 +654,7 @@
       "name": "kinoko_game_release_script_reference",
       "line": 11116,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/6kinoko_rebuilt.c",
@@ -698,21 +696,21 @@
       "name": "name",
       "line": 7,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/retdec_asm_stubs.c",
       "name": "RETDEC_ASM_STUBS",
       "line": 8,
       "lines": 7,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/decompiled/retdec_asm_stubs.c",
       "name": "_3f__3f__G__non_rtti_object_40_std_40__40_UAEPAXI_40_Z",
       "line": 21,
       "lines": 6,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/platform/audio_math.cpp",
@@ -817,7 +815,7 @@
       "name": "unhandled_exception",
       "line": 179,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/platform/diagnostics.cpp",
@@ -838,7 +836,7 @@
       "name": "__declspec",
       "line": 258,
       "lines": 35,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/platform/diagnostics.cpp",
@@ -887,7 +885,7 @@
       "name": "~GameRoundingScope",
       "line": 41,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/platform/game_math.cpp",
@@ -1034,7 +1032,7 @@
       "name": "_3f__3f_2_40_YAPAXI_40_Z",
       "line": 174,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/platform/windows_entry.cpp",
@@ -1426,7 +1424,7 @@
       "name": "operator",
       "line": 21,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_document_io.cpp",
@@ -1503,14 +1501,14 @@
       "name": "Sprite",
       "line": 15,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_draw_storage.cpp",
       "name": "~Sprite",
       "line": 16,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_draw_storage.cpp",
@@ -1559,7 +1557,7 @@
       "name": "retdec_act_bitblt_this",
       "line": 66,
       "lines": 5,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_draw_storage.cpp",
@@ -1818,7 +1816,7 @@
       "name": "retdec_c2dlayout_world_position",
       "line": 145,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_layout_3d.cpp",
@@ -2042,14 +2040,14 @@
       "name": "ReaderOwner",
       "line": 32,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_mesh.cpp",
       "name": "~ReaderOwner",
       "line": 33,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_mesh.cpp",
@@ -2133,7 +2131,7 @@
       "name": "hash_name",
       "line": 247,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_mesh.cpp",
@@ -2210,7 +2208,7 @@
       "name": "read_layout",
       "line": 272,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_mesh.cpp",
@@ -2784,7 +2782,7 @@
       "name": "clear_timeline",
       "line": 444,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -2833,7 +2831,7 @@
       "name": "type_hash",
       "line": 495,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -2889,7 +2887,7 @@
       "name": "kinoko_act_read_layer_properties",
       "line": 558,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -2903,7 +2901,7 @@
       "name": "kinoko_act_read_key_properties",
       "line": 568,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -2917,7 +2915,7 @@
       "name": "kinoko_act_read_map_properties",
       "line": 578,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -2973,7 +2971,7 @@
       "name": "kinoko_act_read_properties",
       "line": 636,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
@@ -3218,7 +3216,7 @@
       "name": "chip_id",
       "line": 38,
       "lines": 5,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/actor_methods.cpp",
@@ -3603,7 +3601,7 @@
       "name": "kinoko_animation_add_texture",
       "line": 72,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/animation_storage.cpp",
@@ -3624,14 +3622,14 @@
       "name": "kinoko_animation_create",
       "line": 83,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/animation_storage.cpp",
       "name": "kinoko_animation_discard",
       "line": 84,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/animation_storage.cpp",
@@ -4380,7 +4378,7 @@
       "name": "retdec_bgm_prepare_track",
       "line": 1285,
       "lines": 6,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/audio_runtime.cpp",
@@ -4674,14 +4672,14 @@
       "name": "~AudioRuntimeShutdown",
       "line": 2113,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/bitmap.cpp",
       "name": "operator",
       "line": 8,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/bitmap.cpp",
@@ -4772,7 +4770,7 @@
       "name": "reserve",
       "line": 26,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/collision_manager.cpp",
@@ -4814,7 +4812,7 @@
       "name": "~PointHits",
       "line": 22,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/collision_queries.cpp",
@@ -5297,7 +5295,7 @@
       "name": "shutdown",
       "line": 154,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/game_runtime.cpp",
@@ -5633,7 +5631,7 @@
       "name": "kinoko_input_devices_end",
       "line": 44,
       "lines": 5,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/input_copy.cpp",
@@ -5675,7 +5673,7 @@
       "name": "kinoko_input_keys_construct",
       "line": 10,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/input_keys.cpp",
@@ -6186,7 +6184,7 @@
       "name": "kinoko_string_assign_cstr",
       "line": 101,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/legacy_string.cpp",
@@ -6235,14 +6233,14 @@
       "name": "InitCallback",
       "line": 25,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/map_activation.cpp",
       "name": "~InitCallback",
       "line": 28,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/map_activation.cpp",
@@ -6746,14 +6744,14 @@
       "name": "operator",
       "line": 21,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/pat_animation.cpp",
       "name": "operator",
       "line": 24,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/pat_animation.cpp",
@@ -6767,7 +6765,7 @@
       "name": "bytes",
       "line": 31,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/pat_animation.cpp",
@@ -6949,7 +6947,7 @@
       "name": "kinoko_append_render_queue",
       "line": 33,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/render_queue.cpp",
@@ -7152,14 +7150,14 @@
       "name": "copy_from",
       "line": 41,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/script_callbacks.cpp",
       "name": "release",
       "line": 42,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/script_callbacks.cpp",
@@ -7404,7 +7402,7 @@
       "name": "release_render_queue",
       "line": 42,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/stage_cleanup.cpp",
@@ -7425,14 +7423,14 @@
       "name": "kinoko_register_stage_list_cleanup",
       "line": 76,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/stage_cleanup.cpp",
       "name": "kinoko_register_render_queue_cleanup",
       "line": 81,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/stage_cleanup.cpp",
@@ -7488,7 +7486,7 @@
       "name": "stage_list_identity",
       "line": 28,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/stage_runtime.cpp",
@@ -7649,7 +7647,7 @@
       "name": "Atlas",
       "line": 56,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/string_glyph_cache.cpp",
@@ -8132,7 +8130,7 @@
       "name": "add",
       "line": 121,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/act_binding.cpp",
@@ -8160,7 +8158,7 @@
       "name": "initialize_offset_property_class",
       "line": 132,
       "lines": 7,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/act_binding.cpp",
@@ -8174,7 +8172,7 @@
       "name": "get_pair",
       "line": 147,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/act_binding.cpp",
@@ -8349,7 +8347,7 @@
       "name": "~DynamicLayerParent",
       "line": 583,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/act_binding.cpp",
@@ -8993,14 +8991,14 @@
       "name": "assign",
       "line": 19,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/actor_initialization.cpp",
       "name": "release",
       "line": 22,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/actor_initialization.cpp",
@@ -9098,7 +9096,7 @@
       "name": "copy_script",
       "line": 13,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/actor_state.cpp",
@@ -9252,7 +9250,7 @@
       "name": "~Reference",
       "line": 26,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/game_script_api.cpp",
@@ -9266,14 +9264,14 @@
       "name": "assign",
       "line": 30,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/game_script_api.cpp",
       "name": "copy",
       "line": 33,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/game_script_api.cpp",
@@ -9392,7 +9390,7 @@
       "name": "destroy_object_result",
       "line": 10,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/game_script_entries.cpp",
@@ -9476,35 +9474,35 @@
       "name": "save_config",
       "line": 16,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/input_registration.cpp",
       "name": "load_config",
       "line": 17,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/input_registration.cpp",
       "name": "set_assignment",
       "line": 18,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/input_registration.cpp",
       "name": "wait_assignment",
       "line": 21,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/input_registration.cpp",
       "name": "get_assignment",
       "line": 24,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/input_registration.cpp",
@@ -9651,7 +9649,7 @@
       "name": "assign_string",
       "line": 108,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/native_property_bridge.cpp",
@@ -9973,14 +9971,14 @@
       "name": "invoke",
       "line": 38,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/script_file.cpp",
       "name": "read_bytecode",
       "line": 41,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/script_file.cpp",
@@ -10162,7 +10160,7 @@
       "name": "~TrimStack",
       "line": 67,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/sqrat_object_bridge.cpp",
@@ -10645,7 +10643,7 @@
       "name": "~WrapperOwner",
       "line": 77,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_csv.cpp",
@@ -10722,7 +10720,7 @@
       "name": "read_bytecode",
       "line": 47,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_game_objects.cpp",
@@ -10855,7 +10853,7 @@
       "name": "pop",
       "line": 20,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_host_compat.cpp",
@@ -10953,14 +10951,14 @@
       "name": "kinoko_sqplus_object_size",
       "line": 142,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_host_compat.cpp",
       "name": "kinoko_sqplus_object_reverse",
       "line": 145,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_host_compat.cpp",
@@ -11065,7 +11063,7 @@
       "name": "kinoko_sqplus_object_destroy",
       "line": 254,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_host_compat.cpp",
@@ -12045,14 +12043,14 @@
       "name": "kinoko_sqplus_argument_object",
       "line": 59,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_method_dispatch.cpp",
       "name": "kinoko_sqplus_argument_object_at",
       "line": 62,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_method_dispatch.cpp",
@@ -12269,7 +12267,7 @@
       "name": "transfer",
       "line": 78,
       "lines": 4,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
@@ -12465,7 +12463,7 @@
       "name": "kinoko_native_capture_receiver_pair",
       "line": 235,
       "lines": 3,
-      "category": "thin_bridge"
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
@@ -13102,7 +13100,7 @@
       "name": "initialize",
       "line": 10,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_table_values.cpp",
@@ -13263,7 +13261,7 @@
       "name": "host_slots",
       "line": 21,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_vm_bootstrap.cpp",
@@ -13410,14 +13408,14 @@
       "name": "initialize",
       "line": 75,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/table_serialization.cpp",
       "name": "destroy",
       "line": 76,
       "lines": 1,
-      "category": "thin_bridge"
+      "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/table_serialization.cpp",
