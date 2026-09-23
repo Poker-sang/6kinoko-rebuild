@@ -61,12 +61,16 @@ bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, int32_t native,
 }
 }
 
-extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
-    if (!id || !object) return 0;
-    ObjectView(object).push(pointer<SQVM>(id));
-    // Original return is the pushed stack SLOT address, not the VM address.
-    return kinoko_sq_get_up(id, -1);
+static int32_t kinoko_push_script_object(SQVM* machine, int32_t* object) {
+    if (!machine || !object) return 0;
+    ObjectView(object).push(machine);
+    // Return the pushed stack slot address, as in the original VM ABI.
+    return kinoko_sq_get_up(address(machine), -1);
 }
+extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
+    return kinoko_push_script_object(pointer<SQVM>(id), object);
+}
+
 extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
     if (!stream || requested <= 0) return 0;
     auto state = read<MemoryReader>(stream);

@@ -325,10 +325,13 @@ int32_t register_root_class(SQVM* machine, Publish publish) {
 // Original 42B6D0 is a cdecl VM-only registration entry. The root-table
 // registry used by the active binding owns the same class/property handles;
 // do not create another decompiled map of Sqrat objects for this old caller.
-extern "C" int32_t function_42b6d0(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_c2dlayout_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         return retdec_publish_c2dlayout_class(vm, root);
     });
+}
+extern "C" int32_t function_42b6d0(int32_t vm) {
+    return kinoko_register_c2dlayout_class(pointer<SQVM>(vm));
 }
 
 int32_t retdec_cact_associate_resource(int32_t vm)
@@ -391,19 +394,25 @@ int32_t retdec_publish_cact_resource2d_class(int32_t vm, int32_t root) {
     return ok;
 }
 
-extern "C" int32_t function_446520(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_texture_resource_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         return retdec_publish_cact_resource2d_class(vm, root);
     });
 }
+extern "C" int32_t function_446520(int32_t vm) {
+    return kinoko_register_texture_resource_class(pointer<SQVM>(vm));
+}
 
-extern "C" int32_t function_4495a0(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_render_target_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {g483, g484};
         const auto ok = retdec_publish_texture_resource_class(vm, root, "CActRenderTarget", klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
+}
+extern "C" int32_t function_4495a0(int32_t vm) {
+    return kinoko_register_render_target_class(pointer<SQVM>(vm));
 }
 
 extern "C" int32_t __fastcall kinoko_method_register_texture_resource(int32_t, void *, int32_t vm) {
@@ -473,10 +482,13 @@ int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
 
 // Original VM-only CActLayer class registration (41EFF0). Game instance
 // publication still lives in its register method; only the class setup is shared.
-extern "C" int32_t function_41eff0(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_cact_layer_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         return retdec_publish_cact_layer_class(vm, root);
     });
+}
+extern "C" int32_t function_41eff0(int32_t vm) {
+    return kinoko_register_cact_layer_class(pointer<SQVM>(vm));
 }
 
 int32_t retdec_publish_acting_player_properties(int32_t vm,
@@ -1439,13 +1451,16 @@ int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
 }
 
 // 433C90: cdecl, one VM argument, HRESULT result (IDA 4341ED: retn).
-extern "C" int32_t function_433c90(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_map_layout_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {g483, g484};
         const auto ok = retdec_publish_c2dmaplayout_class(vm, root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
+}
+extern "C" int32_t function_433c90(int32_t vm) {
+    return kinoko_register_map_layout_class(pointer<SQVM>(vm));
 }
 
 int32_t retdec_resource_get_chip_info(int32_t vm) {
@@ -1518,13 +1533,16 @@ int32_t retdec_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
 
 // Reconstructed C callers use this cdecl port; the virtual slot has its own
 // ECX/stack-cleanup adapter matching original 42F350 (retn 4).
-extern "C" int32_t function_42f350(int32_t vm) {
-    return register_root_class(pointer<SQVM>(vm), [](int32_t vm, int32_t root) {
+static int32_t kinoko_register_chip_resource_class(SQVM* machine) {
+    return register_root_class(machine, [](int32_t vm, int32_t root) {
         int32_t klass[2] = {g483, g484};
         const auto ok = retdec_publish_chip_resource_class(vm, root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
     });
+}
+extern "C" int32_t function_42f350(int32_t vm) {
+    return kinoko_register_chip_resource_class(pointer<SQVM>(vm));
 }
 
 extern "C" int32_t __fastcall kinoko_method_register_chip_resource(

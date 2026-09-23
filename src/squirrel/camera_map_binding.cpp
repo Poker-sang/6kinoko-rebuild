@@ -141,7 +141,7 @@ extern "C" int32_t function_46f200(int32_t *output, int32_t vm,
 }
 
 namespace {
-int32_t call_camera_update(SQVM *vm) {
+int32_t kinoko_call_camera_update(SQVM *vm) {
     static int32_t camera_native_trace_count;
     const auto target = camera_receiver(vm);
     if (!target.instance || !target.method_slot)
@@ -166,7 +166,7 @@ int32_t call_camera_update(SQVM *vm) {
                                 arguments[0], arguments[1], arguments[2]);
     return 0;
 }
-int32_t register_camera() {
+int32_t kinoko_register_camera_binding() {
     ObjectStorage root{};
     ClassState state{};
     kinoko_sqplus_object_copy_construct(&root, kinoko_sqplus_root_object());
@@ -192,7 +192,7 @@ int32_t register_camera() {
     kinoko_sqplus_object_destroy(&root);
     return 0;
 }
-int32_t register_map() {
+int32_t kinoko_register_map_binding() {
     ClassState state{};
     ObjectStorage layer{};
     construct(state, "Map", kinoko_map_binding_type());
@@ -208,7 +208,7 @@ int32_t register_map() {
 }
 } // namespace
 extern "C" int32_t function_466890(int32_t vm) {
-    return call_camera_update(pointer<SQVM>(vm));
+    return kinoko_call_camera_update(pointer<SQVM>(vm));
 }
-extern "C" int32_t function_4669d0(void) { return register_camera(); }
-extern "C" int32_t function_46fac0(void) { return register_map(); }
+extern "C" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }
+extern "C" int32_t function_46fac0(void) { return kinoko_register_map_binding(); }

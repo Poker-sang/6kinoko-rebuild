@@ -99,7 +99,7 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
     kinoko_sqplus_object_destroy(&object);
 }
 
-int32_t register_root_bindings() {
+int32_t kinoko_register_root_bindings() {
     retdec_trace("473010:enter");
     kinoko_script_initialize_root();
     g664 = address(g644);
@@ -139,4 +139,4 @@ int32_t register_root_bindings() {
     return function_48a430(address(g644), address(&root.value));
 }
 } // namespace
-extern "C" int32_t function_473010(void) { return register_root_bindings(); }
+extern "C" int32_t function_473010(void) { return kinoko_register_root_bindings(); }
