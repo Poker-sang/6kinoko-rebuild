@@ -1,4 +1,5 @@
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_script_payload.hpp"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
@@ -90,11 +91,12 @@ extern "C" int32_t __fastcall kinoko_method_read_act_script(
     if (!transfer(reader, size) || size > 0x1000000) return 0;
     void* bytes = std::calloc(1, size ? size : 1);
     if (!bytes) return 0;
-    std::free(pointer<void>(field<int32_t>(script + 92)));
-    field<int32_t>(script + 92) = address(bytes);
-    field<uint32_t>(script + 96) = size;
+    kinoko::act::ScriptPayloadView payload(pointer<void>(script));
+    std::free(payload.get(&kinoko::act::ScriptPayloadRecord::bytes));
+    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, bytes);
+    payload.set(&kinoko::act::ScriptPayloadRecord::size, size);
     if (size && !transfer(reader, bytes, size)) return 0;
-    field<uint8_t>(script + 100) = 1;
+    payload.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{1});
     return 1;
 }
 
