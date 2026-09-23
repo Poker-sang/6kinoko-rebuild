@@ -51,6 +51,13 @@ def main():
                 or match[1].startswith('_3f__3f_'))
             if compatibility:
                 category = 'thin_bridge'
+            elif thin and (match[1].startswith('function_')
+                           or file.endswith('squirrel_legacy_api.cpp')
+                           or file.startswith('src/decompiled/')):
+                # Public address-compatible exports and archival C wrappers
+                # are intentional ABI aliases. Keep them visible, but do not
+                # count them as removable internal bridge layers.
+                category = 'abi_alias'
             elif thin:
                 category = 'thin_bridge'
             elif address_name:
