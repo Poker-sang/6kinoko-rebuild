@@ -1,4 +1,5 @@
 #include "kinoko/act_document_association.hpp"
+#include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
@@ -68,34 +69,30 @@ int32_t retdec_act_read_u32(int32_t reader_ptr, uint32_t *value)
 
 int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
 {
-    uint32_t raw_size;
-    unsigned char *raw_data;
-
     if (!kinoko_act_read_script_properties(object_ptr, reader_ptr)) {
         retdec_trace("act:script-properties-failed");
         return 0;
     }
-    if (!retdec_act_read_u32(reader_ptr, &raw_size) ||
-        raw_size > 0x1000000u) {
+    uint32_t raw_size = 0;
+    if (!retdec_act_read_u32(reader_ptr, &raw_size) || raw_size > 0x1000000u) {
         retdec_trace("act:script-size-failed");
         return 0;
     }
-    raw_data = (unsigned char *)std::malloc(raw_size == 0 ? 1u : raw_size);
-    if (raw_data == nullptr) {
+    auto raw_data = std::unique_ptr<unsigned char, decltype(&std::free)>(
+        static_cast<unsigned char *>(std::malloc(raw_size ? raw_size : 1u)), &std::free);
+    if (!raw_data) {
         retdec_trace("act:script-alloc-failed");
         return 0;
     }
-    if (raw_size != 0 && !retdec_reader_read_exact(reader_ptr, raw_data,
-                                                   raw_size)) {
-        std::free(raw_data);
+    if (raw_size && !retdec_reader_read_exact(reader_ptr, raw_data.get(), raw_size)) {
         retdec_trace("act:script-data-failed");
         return 0;
     }
-    std::free(pointer<void>(field<int32_t>(object_ptr + 92)));
-    field<int32_t>(object_ptr + 92) =
-        address(raw_data);
-    field<uint32_t>(object_ptr + 96) = raw_size;
-    field<uint8_t>(object_ptr + 100) = 1;
+    kinoko::act::ScriptPayloadView script(pointer<void>(object_ptr));
+    std::free(script.get(&kinoko::act::ScriptPayloadRecord::bytes));
+    script.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(raw_data.release()));
+    script.set(&kinoko::act::ScriptPayloadRecord::size, raw_size);
+    script.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{1});
     return 1;
 }
 
