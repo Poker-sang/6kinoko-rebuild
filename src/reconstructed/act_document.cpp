@@ -1,5 +1,6 @@
 #include "kinoko/act_document_association.hpp"
 #include "kinoko/act_script_payload.hpp"
+#include "kinoko/act_layout_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
@@ -145,18 +146,21 @@ int32_t retdec_act_make_layer(void) {
 
 int32_t retdec_construct_c2dlayout(int32_t layout) {
     if (!layout) return 0;
-    // 42B4A0: shared constructor for archive and dynamic layer creation.
-    std::memset(pointer<void>(layout), 0, 316);
-    field<int32_t>(layout) = address(kinoko_act_host_symbols()->layout_vtable);
-    field<int32_t>(layout + 4) = address(kinoko_act_host_symbols()->layout_sprite_vtable);
-    field<float>(layout + 0x104) = 1.0f;
-    field<float>(layout + 0x108) = 1.0f;
-    field<float>(layout + 0x10c) = 1.0f;
-    field<float>(layout + 0x11c) = 1.0f;
-    field<int32_t>(layout + 0x120) = 1;
-    field<int32_t>(layout + 0x124) = 255;
-    field<int32_t>(layout + 0x128) = 255;
-    field<int32_t>(layout + 0x12c) = 255;
+    // 42B4A0 initializes the layout and its embedded CSpriteEx view.
+    kinoko::native::RecordView<kinoko::act::Layout2DRecord> record(pointer<void>(layout));
+    record.clear();
+    record.set(&kinoko::act::Layout2DRecord::methods,
+        static_cast<const void *>(kinoko_act_host_symbols()->layout_vtable));
+    auto quad = record.view(&kinoko::act::Layout2DRecord::quad);
+    quad.set(&kinoko::render::QuadRecord::vtable,
+        static_cast<uint32_t>(address(kinoko_act_host_symbols()->layout_sprite_vtable)));
+    record.set(&kinoko::act::Layout2DRecord::scale,
+        kinoko::render::Position3{1.0f, 1.0f, 1.0f});
+    record.set(&kinoko::act::Layout2DRecord::alpha, 1.0f);
+    record.set(&kinoko::act::Layout2DRecord::blend, int32_t{1});
+    record.set(&kinoko::act::Layout2DRecord::red, int32_t{255});
+    record.set(&kinoko::act::Layout2DRecord::green, int32_t{255});
+    record.set(&kinoko::act::Layout2DRecord::blue, int32_t{255});
     return layout;
 }
 
