@@ -10918,6 +10918,7 @@ int32_t kinoko_csv_load_bytes(const char *path, char **bytes) {
 }
 
 /* Read-only original vtable identities for the extracted ACT subsystem. */
+int32_t kinoko_act_script_output_compiled(void) { return g673 != 0; }
 const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
 {
     static const struct KinokoActHostSymbols symbols = {

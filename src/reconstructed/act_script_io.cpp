@@ -1,4 +1,5 @@
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_host.h"
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
@@ -13,7 +14,6 @@
 #include <string>
 #include <vector>
 
-extern "C" unsigned char g673;
 namespace {
 using kinoko::legacy::address;
 using kinoko::legacy::pointer;
@@ -22,14 +22,18 @@ using kinoko::legacy::field;
 // omitted properties keep their native values, unknown/mismatched ones consume
 // their serialized values without assigning them. std::map supplies key order.
 std::map<std::string, uint32_t> script_schema{{"compiled",2}, {"filePath",3}};
+// 4175F0's stream has a vtable at +0, transfer at slot +12 and seek at +20.
+struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; };
+struct Stream { StreamMethods *methods; };
+static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
     return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
-        field<void*>(field<int32_t>(stream) + 12), address(bytes), size) & 0xff) != 0;
+        pointer<Stream>(stream)->methods->transfer, address(bytes), size) & 0xff) != 0;
 }
 template<class T> bool transfer(int32_t stream, T& value) { return transfer(stream, &value, sizeof(value)); }
 int32_t seek(int32_t writer, int32_t offset, int32_t origin) {
     return retdec_call_thiscall2_result(pointer<void>(writer),
-        field<void*>(field<int32_t>(writer) + 20), offset, origin);
+        pointer<Stream>(writer)->methods->seek, offset, origin);
 }
 bool read_string(int32_t reader, std::string& value, uint32_t maximum) {
     uint32_t length = 0;
@@ -104,8 +108,8 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
     if (!script || !writer) return 0;
     kinoko::act::ScriptPayloadView payload(pointer<void>(script));
     const auto was_compiled = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
-    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, g673);
-    uint8_t has_schema = !g673;
+    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, static_cast<uint8_t>(kinoko_act_script_output_compiled()));
+    uint8_t has_schema = !kinoko_act_script_output_compiled();
     if (!transfer(writer, has_schema)) return 0;
     if (has_schema) {
         uint32_t count = 2, boolean_type = 2, string_type = 3;
@@ -121,7 +125,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
         // 4165A3 writes the stored compiled buffer directly, without another
         // size prefix, and does not inspect that virtual write's result.
         transfer(writer, bytes, size);
-    } else if (!g673) {
+    } else if (!kinoko_act_script_output_compiled()) {
         if (!transfer(writer, size) || !transfer(writer, bytes, size)) return 0;
     } else {
         const auto start = seek(writer, 0, 1);

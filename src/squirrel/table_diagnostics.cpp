@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <intrin.h>
+#include <cstring>
 
 extern "C" void retdec_trace_i32(const char*, int32_t);
 namespace {
@@ -27,7 +28,11 @@ static_assert(offsetof(RefTable, buckets) == 16 && sizeof(RefNode) == 16);
 volatile LONG watch_events;
 uint32_t key_hash(int32_t type, int32_t data) {
     if (type == 0x08000010 && data) return static_cast<uint32_t>(pointer<StringHash>(data)->hash);
-    if (type == 0x05000004) return static_cast<uint32_t>(static_cast<int32_t>(*pointer<float>(data)));
+    if (type == 0x05000004) {
+        float value;
+        std::memcpy(&value, &data, sizeof(value));
+        return static_cast<uint32_t>(static_cast<int32_t>(value));
+    }
     if (type == 0x01000008 || type == 0x05000002) return static_cast<uint32_t>(data);
     return static_cast<uint32_t>(data) >> 3;
 }

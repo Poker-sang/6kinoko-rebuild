@@ -33,6 +33,7 @@ struct KinokoActHostSymbols {
 extern "C" {
 #endif
 const struct KinokoActHostSymbols* kinoko_act_host_symbols(void);
+int32_t kinoko_act_script_output_compiled(void);
 extern char kinoko_resource2d_class_published;
 extern int32_t kinoko_acting_player_class_pair[2];
 extern int32_t kinoko_resource2d_class_pair[2];
