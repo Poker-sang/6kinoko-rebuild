@@ -445,24 +445,6 @@ int32_t kinoko_native_one_integer(HSQUIRRELVM vm) {
     reinterpret_cast<int32_t (__cdecl *)(int32_t)>(pointer(callback))(value);
     return 0;
 }
-int32_t kinoko_native_string_object_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_string_object(target(vm), vm, 2);
-}
-int32_t kinoko_native_string_bool_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_string_bool(target(vm), vm, 2);
-}
-int32_t kinoko_native_string_two_int_truth_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_string_integer_truth(target(vm), vm, 2, false);
-}
-int32_t kinoko_native_string_three_int_truth_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_string_integer_truth(target(vm), vm, 2, true);
-}
-int32_t kinoko_native_string_callback_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_invoke_string_only_callback(target(vm), vm, 2);
-}
-int32_t kinoko_native_two_int_callback_from_stack(HSQUIRRELVM vm) {
-    return kinoko_native_invoke_two_integer_callback(target(vm), vm, 2);
-}
 } // namespace
 
 extern "C" int32_t function_470df0(int32_t vm, int32_t index) {
@@ -487,26 +469,32 @@ extern "C" int32_t function_471bc0(int32_t vm) {
     return kinoko_native_no_arguments(pointer<SQVM>(vm));
 }
 extern "C" int32_t function_471c10(int32_t vm) {
-    return kinoko_native_string_object_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_object(target(machine), machine, 2);
 }
 extern "C" int32_t function_471d90(int32_t vm) {
-    return kinoko_native_string_bool_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_bool(target(machine), machine, 2);
 }
 extern "C" int32_t function_471eb0(int32_t vm) {
     return kinoko_native_two_floats(pointer<SQVM>(vm));
 }
 extern "C" int32_t function_471f10(int32_t vm) {
-    return kinoko_native_string_callback_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_invoke_string_only_callback(target(machine), machine, 2);
 }
 extern "C" int32_t function_471fd0(int32_t vm) {
     return kinoko_native_one_integer(pointer<SQVM>(vm));
 }
 extern "C" int32_t function_472080(int32_t vm) {
-    return kinoko_native_string_two_int_truth_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_integer_truth(target(machine), machine, 2, false);
 }
 extern "C" int32_t function_4720e0(int32_t vm) {
-    return kinoko_native_string_three_int_truth_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_integer_truth(target(machine), machine, 2, true);
 }
 extern "C" int32_t function_472140(int32_t vm) {
-    return kinoko_native_two_int_callback_from_stack(pointer<SQVM>(vm));
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_invoke_two_integer_callback(target(machine), machine, 2);
 }

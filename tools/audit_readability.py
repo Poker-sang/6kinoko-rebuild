@@ -49,8 +49,23 @@ def main():
                              'kinoko_game_release_script_reference'}
                 or file.endswith('retdec_asm_stubs.c')
                 or match[1].startswith('_3f__3f_'))
-            if compatibility:
+            # These are deliberately retained ABI-facing entry points.  They
+            # adapt the original __fastcall/thiscall slots or script exports
+            # to the recovered named implementation; counting them as
+            # removable internal bridges obscures the actual cleanup target.
+            abi_entry = (
+                match[1].startswith(('kinoko_method_', 'kinoko_map_'))
+                or match[1].startswith(('kinoko_actor_', 'kinoko_script_'))
+                or match[1].endswith(('_callback', '_entry'))
+                or match[1] in {'function_41e260', 'function_41e2c0',
+                                'function_431650', 'function_445730',
+                                'function_4552e0', 'function_4555a0'})
+            if compatibility and abi_entry:
+                category = 'abi_alias'
+            elif compatibility:
                 category = 'thin_bridge'
+            elif thin and abi_entry:
+                category = 'abi_alias'
             elif thin and (match[1].startswith('function_')
                            or file.endswith('squirrel_legacy_api.cpp')
                            or file.startswith('src/decompiled/')):
