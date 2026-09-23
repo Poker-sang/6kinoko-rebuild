@@ -16,3 +16,7 @@ clears deque storage, then invokes 441250. IDA MCP database 7251442a
 confirmed the offsets and call order. Its C ABI now carries a borrowed
 KinokoStringLayout pointer and the mapped layout/glyph/atlas fields are
 accessed by named records.
+Batch 3: the glyph deque's copy, pop, clear and pending-text paths now
+use StringLayoutRecord, StringGlyphRecord and AtlasLifecycle rather than
+numeric member offsets. Borrowed atlas references still change before deque
+mutation, while copy_queue_storage retains its original no-adjust contract.

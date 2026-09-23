@@ -1,4 +1,6 @@
 #include "kinoko/string_layout.h"
+#include "kinoko/act_layout_records.hpp"
+#include "kinoko/string_atlas_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include <windows.h>
@@ -28,16 +30,24 @@ using Deque=std::deque<Glyph>;
 Deque*& storage(int32_t layout) { return field<Deque*>(layout+176); }
 Deque& queue(int32_t layout) { return *storage(layout); }
 int32_t sprite(const Deque& q,uint32_t i) { return address(q[i].bytes); }
+using Layout=kinoko::act::StringLayoutRecord;
+using GlyphRecord=kinoko::act::StringGlyphRecord;
+void adjust_atlas_reference(int32_t glyph_address,int delta) {
+    const kinoko::native::RecordView<GlyphRecord> glyph(pointer<void>(glyph_address));
+    auto* atlas=glyph.get(&GlyphRecord::atlas);
+    if(!atlas) return;
+    const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(atlas);
+    lifetime.set(&kinoko::text::AtlasLifecycle::references,
+        lifetime.get(&kinoko::text::AtlasLifecycle::references)+delta);
+}
 void references(const Deque& q,int delta) {
     for(uint32_t i=0;i<q.size();++i) {
-        const int32_t atlas=field<int32_t>(sprite(q,i)+252);
-        if(atlas) field<int32_t>(atlas+432)+=delta;
+        adjust_atlas_reference(sprite(q,i),delta);
     }
 }
 void pop(Deque& q,bool front) {
     const int32_t value=sprite(q,front?0:static_cast<uint32_t>(q.size()-1));
-    const int32_t atlas=field<int32_t>(value+252);
-    if(atlas) --field<int32_t>(atlas+432);
+    adjust_atlas_reference(value,-1);
     if(front) q.pop_front();else q.pop_back();
 }
 void assign(Deque& out,const Deque& in) { if(&out!=&in) out=in; }
@@ -46,18 +56,22 @@ void assign(Deque& out,const Deque& in) { if(&out!=&in) out=in; }
 
 extern "C" int32_t kinoko_string_push_back(int32_t object,const char* text) {
     if(!text) return 0;
-    StringView(pointer<void>(object+32)).append(text,static_cast<uint32_t>(std::strlen(text)));
+    const kinoko::native::RecordView<Layout> layout(pointer<void>(object));
+    StringView(layout.bytes(&Layout::pending)).append(text,static_cast<uint32_t>(std::strlen(text)));
     return 1;
 }
 extern "C" int32_t kinoko_string_mark_rebuild(int32_t object) {
-    field<uint8_t>(object+228)=1;
+    kinoko::native::RecordView<Layout>(pointer<void>(object)).set(&Layout::rebuild,uint8_t{1});
     return 1;
 }
 extern "C" int32_t kinoko_string_clear(int32_t object) {
-    StringView(pointer<void>(object+4)).assign("",0);
-    StringView(pointer<void>(object+32)).assign("",0);
-    field<int32_t>(object+204)=field<int32_t>(object+208)=field<int32_t>(object+212)=0;
-    field<int32_t>(object+216)=field<int32_t>(object+88);
+    const kinoko::native::RecordView<Layout> layout(pointer<void>(object));
+    StringView(layout.bytes(&Layout::text)).assign("",0);
+    StringView(layout.bytes(&Layout::pending)).assign("",0);
+    layout.set(&Layout::cursor_x,0);
+    layout.set(&Layout::cursor_y,0);
+    layout.set(&Layout::maximum_width,0);
+    layout.set(&Layout::line_height,layout.get(&Layout::font_height));
     return kinoko_string_mark_rebuild(object);
 }
 extern "C" int32_t kinoko_string_character_bytes(const char* text) {
@@ -67,7 +81,8 @@ extern "C" int32_t kinoko_string_pop(int32_t object,int32_t count,int32_t front)
     if(count<0) return 0;
     if(!count) return 1;
     auto& q=queue(object);
-    StringView pending(pointer<void>(object+32));
+    const kinoko::native::RecordView<Layout> layout(pointer<void>(object));
+    StringView pending(layout.bytes(&Layout::pending));
     if(front) while(count && !q.empty()) { pop(q,true);--count; }
     while(count && pending.length()) {
         const uint32_t size=pending.length();
