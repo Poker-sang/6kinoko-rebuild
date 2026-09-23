@@ -815,14 +815,17 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
         retdec_trace("act:cact-script-failed");
         return 0;
     }
+    kinoko::act::DocumentView view(pointer<void>(this_ptr));
+    const auto layer_slot = address(view.bytes(&kinoko::act::DocumentRecord::layers));
     if (!retdec_act_read_u32(reader_ptr, &layer_count) ||
-        !retdec_act_prepare_vector(this_ptr, 208, 212, 216, layer_count)) {
+        !kinoko_act_array_prepare(layer_slot, layer_count)) {
         retdec_trace("act:layer-vector-failed");
         return 0;
     }
     kinoko::act::DocumentLoadAssociations associations;
     auto *document = pointer<KinokoActDocument>(this_ptr);
-    layers = pointer<int32_t>(field<int32_t>(this_ptr + 208));
+    layers = reinterpret_cast<int32_t *>(
+        view.get(&kinoko::act::DocumentRecord::layers).begin);
     for (index = 0; index < layer_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type) ||
             type != 0x2618cf18u) {
