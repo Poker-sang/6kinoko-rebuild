@@ -801,7 +801,6 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     uint32_t type;
     int32_t *layers;
     int32_t *resources;
-    int32_t layer;
     int32_t resource;
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
@@ -832,21 +831,25 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
             retdec_trace_i32("act:unsupported-layer", (int32_t)type);
             return 0;
         }
-        layer = retdec_act_make_layer();
-        if (layer == 0 || !retdec_act_load_layer(layer, reader_ptr, version)) {
-            retdec_destroy_cact_layer(layer);
-            std::free(pointer<void>(layer));
+        auto *layer = pointer<KinokoActLayer>(retdec_act_make_layer());
+        if (!layer || !retdec_act_load_layer(address(layer), reader_ptr, version)) {
+            retdec_destroy_cact_layer(address(layer));
+            std::free(layer);
             retdec_trace("act:layer-load-failed");
             return 0;
         }
-        layers[index] = layer;
-        field<int32_t>(this_ptr + 212) += 4;
-        associations.add_layer(pointer<KinokoActLayer>(layer));
+        layers[index] = address(layer);
+        auto span = view.get(&kinoko::act::DocumentRecord::layers);
+        span.end = reinterpret_cast<KinokoActLayer **>(
+            reinterpret_cast<uintptr_t>(span.end) + sizeof(KinokoActLayer *));
+        view.set(&kinoko::act::DocumentRecord::layers, span);
+        associations.add_layer(layer);
         if (index < 8) {
+            kinoko::native::RecordView<kinoko::act::LayerAssociationRecord> loaded(layer);
             retdec_trace_i32("act:layer-id",
-                             field<int32_t>(layer + 0x68));
+                loaded.get(&kinoko::act::LayerAssociationRecord::layer_id));
             retdec_trace_i32("act:layer-resource",
-                             field<int32_t>(layer + 0x60));
+                loaded.get(&kinoko::act::LayerAssociationRecord::resource_id));
         }
     }
     // 428310..428346: resolve parents before even reading resource_count.
