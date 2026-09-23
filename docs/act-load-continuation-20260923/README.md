@@ -27,3 +27,8 @@ borrowed reader holder and writes byte 312 after successful values.
 The native API now takes real pointers and sets Layout2DRecord's asserted
 pivot-invalid flag; its virtual ABI adapter and parsed property order remain.
 The document factory passes its local reader slot directly. Evidence: 42c030.json.
+Batch 28: texture, render-target and chip property loaders all borrow a
+resource and the same active reader slot. The native factory now passes
+actual pointers and each reader exposes a typed boundary while the virtual
+ABI adapters retain their signatures. The distinct schemas and texture
+crop invalidation remain in their original order; no eager load is added.

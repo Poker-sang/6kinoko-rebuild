@@ -2,6 +2,7 @@
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
+#include "kinoko/act_resource_io.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -717,11 +718,12 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
         field<int32_t>(resource + 92) = 15;
         field<uint8_t>(resource + 72) = 0;
     }
+    auto* borrowed_resource=pointer<KinokoActResource>(resource);
     const auto loaded = render_target
-        ? kinoko_method_read_render_target(resource, nullptr, address(&reader_ptr), 1)
+        ? kinoko_act_read_render_target_properties(borrowed_resource, &reader_ptr, 1)
         : type == 0xfbaaf527u
-        ? kinoko_method_read_chip_resource(resource, nullptr, address(&reader_ptr), 1)
-        : kinoko_method_read_texture_resource(resource, nullptr, address(&reader_ptr), 1);
+        ? kinoko_act_read_chip_properties(borrowed_resource, &reader_ptr, 1)
+        : kinoko_act_read_texture_properties(borrowed_resource, &reader_ptr, 1);
     if (!loaded) {
         retdec_trace("act:resource-properties-failed");
         retdec_destroy_cact_resource(resource);
