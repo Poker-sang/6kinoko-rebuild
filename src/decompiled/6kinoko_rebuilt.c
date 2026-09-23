@@ -6632,6 +6632,61 @@ int32_t function_451620(int32_t this_ptr) {
 // remain explicit and reviewable.
 
 
+// IDA 457A10: node child range +156/+160 and manager virtual slot 3.
+int32_t kinoko_update_mesh_children(void* node, int32_t argument) {
+    int32_t this_ptr = (int32_t)(intptr_t)node;
+    int32_t begin;
+    int32_t end;
+    int32_t result = 0;
+
+    if (this_ptr == 0) {
+        return 0;
+    }
+    begin = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 156);
+    end = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 160);
+    if (end - begin < 4) {
+        return 0;
+    }
+
+    for (uint32_t index = 0; index < (uint32_t)((end - begin) >> 2);
+         ++index) {
+        int32_t entry = *(int32_t *)(uintptr_t)(uint32_t)(begin + 4 * index);
+        if (entry != 0) {
+            int32_t manager_object = (int32_t)(intptr_t)&g953;
+            int32_t *manager_vtable = *(int32_t **)(uintptr_t)
+                (uint32_t)manager_object;
+            int32_t handle = 0;
+
+            if (manager_vtable != NULL && manager_vtable[3] != 0) {
+                handle = retdec_call_thiscall2_result(
+                    (void *)(uintptr_t)(uint32_t)manager_object,
+                    (void *)(uintptr_t)(uint32_t)manager_vtable[3],
+                    entry, argument);
+            }
+
+            /* The original assumes a successful handle lookup.  A failed
+               lookup is possible while the rebuilt runtime is degraded, so
+               skip it instead of dereferencing the null fallback RetDec
+               emitted for this path. */
+            if (handle != 0) {
+                int32_t object = *(int32_t *)(uintptr_t)(uint32_t)handle;
+                if (object != 0) {
+                    int32_t *object_vtable = *(int32_t **)(uintptr_t)
+                        (uint32_t)object;
+                    if (object_vtable != NULL && object_vtable[0] != 0) {
+                        result = retdec_call_thiscall1_result(
+                            (void *)(uintptr_t)(uint32_t)object,
+                            (void *)(uintptr_t)(uint32_t)object_vtable[0],
+                            argument);
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+
 // Address range: 0x457a80 - 0x457ab7
 // From class:    .?AVCMeshControllerNode@@
 // Type:          virtual member function

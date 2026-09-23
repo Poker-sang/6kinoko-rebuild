@@ -73,8 +73,8 @@ extern "C" int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y
             bits(source_x), bits(source_y), bits(blend), bits(alpha)});
 }
 
-extern "C" int32_t function_457a10_impl(int32_t receiver, int32_t argument) {
-    return record(9, {bits(receiver), bits(argument)});
+extern "C" int32_t kinoko_update_mesh_children(void* node, int32_t argument) {
+    return record(9, {bits((int32_t)(intptr_t)node), bits(argument)});
 }
 
 
