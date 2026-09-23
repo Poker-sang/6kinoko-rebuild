@@ -10999,6 +10999,7 @@ int32_t *kinoko_map_binding_type(void) {
 const void *kinoko_actor_owner_methods(void) { return &g31; }
 const void *kinoko_actor_render_layer_methods(void) { return &g27; }
 const void *kinoko_actor_class_object(void) { return &g602; }
+const void *kinoko_actor_user_key(void) { return &g600; }
 struct SQVM *kinoko_actor_default_vm(void) { return (struct SQVM *)g644; }
 void kinoko_actor_motion_host(KinokoActor *actor) { kinoko_actor_update_motion(kinoko_game_collision_state(), actor); }
 int32_t kinoko_actor_render_host(KinokoActor *actor, KinokoCamera *camera) {

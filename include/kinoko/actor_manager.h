@@ -37,6 +37,7 @@ void kinoko_actor_manager_refresh_collision(void);
 const void *kinoko_actor_owner_methods(void);
 const void *kinoko_actor_render_layer_methods(void);
 const void *kinoko_actor_class_object(void);
+const void *kinoko_actor_user_key(void);
 struct SQVM *kinoko_actor_default_vm(void);
 #ifdef __cplusplus
 }
