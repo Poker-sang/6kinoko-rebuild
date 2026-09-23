@@ -34,8 +34,7 @@ extern "C" {
 #endif
 const struct KinokoActHostSymbols* kinoko_act_host_symbols(void);
 extern char  g1037;
-extern int32_t  g1049;
-extern int32_t  g1050;
+extern int32_t kinoko_acting_player_class_pair[2];
 extern int32_t kinoko_resource2d_class_pair[2];
 #define g1079 (kinoko_resource2d_class_pair[0])
 #define g1080 (kinoko_resource2d_class_pair[1])
