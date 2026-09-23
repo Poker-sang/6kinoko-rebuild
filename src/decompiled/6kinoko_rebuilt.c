@@ -2066,7 +2066,6 @@ int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 int32_t function_46fac0(void);
 int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment);
 int32_t function_470030(int32_t a1);
-int32_t function_4701b0(int32_t a1, int32_t a2);
 
 
 
@@ -11740,8 +11739,13 @@ int32_t *kinoko_camera_binding_type(void) {
     return kinoko_sqplus_game_type(1, function_466540);
 }
 
+/* SqPlus descriptors still carry integer copy callbacks; isolate that ABI. */
+static int32_t kinoko_map_copy_abi(int32_t destination, int32_t source) {
+    return (int32_t)(intptr_t)kinoko_map_manager_assign(
+        (KinokoMapManager*)(intptr_t)destination, (KinokoMapManager*)(intptr_t)source);
+}
 int32_t *kinoko_map_binding_type(void) {
-    return kinoko_sqplus_game_type(3, function_4701b0);
+    return kinoko_sqplus_game_type(3, kinoko_map_copy_abi);
 }
 
 /* Host dependencies shared with the reconstructed ActorManager. */

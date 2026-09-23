@@ -4589,7 +4589,7 @@ static int test_map_manager_copy(void) {
     kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(97));
     source[8]=1;target[8]=2;source[12]=3;target[12]=4;
     for(int i=13;i<21;++i) source[i]=100+i;
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
     CHECK(source[5]==0 && target[5]==789 && target[3]==123 && target[4]==456);
     CHECK(target[8]==2 && target[12]==4 && kinoko_map_render_count((KinokoMapManager*)(target))==2);
     CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 0))!=first);
@@ -4598,17 +4598,17 @@ static int test_map_manager_copy(void) {
     CHECK(*(int32_t*)(intptr_t)(first+4)==222 && *(int32_t*)(intptr_t)(last+4)==444);
     CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==3 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 1))==83);
     CHECK(memcmp(target+13,source+13,32)==0);
-    CHECK(function_4701b0(PTR(target),PTR(target))==PTR(target) && target[5]==789);
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)target)==PTR(target) && target[5]==789);
     CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 0))==first);
     target[5]=0; /* borrowed marker; no fabricated player destruction */
     capacity=kinoko_map_event_capacity((KinokoMapManager*)(target));
     kinoko_map_containers_clear((KinokoMapManager*)(source));kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(71));
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
     CHECK(kinoko_map_render_count((KinokoMapManager*)(target))==0);
     CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==1 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 0))==71);
     CHECK(kinoko_map_event_capacity((KinokoMapManager*)(target))==capacity);
     kinoko_map_containers_clear((KinokoMapManager*)(source));
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
     CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==0 && kinoko_map_event_capacity((KinokoMapManager*)(target))==capacity);
     kinoko_map_append_event((KinokoMapManager*)(target), 0);kinoko_map_append_event((KinokoMapManager*)(target), (KinokoActLayout*)(intptr_t)(71));
     kinoko_map_append_event((KinokoMapManager*)(target), (KinokoActLayout*)(intptr_t)(71));

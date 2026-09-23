@@ -69,3 +69,14 @@ null/duplicate entries. Historical raw C fixtures convert at their buffer edge.
 
 Batch 6 R1 caught a missing public opaque RenderLayer declaration; retained
 the failed build and fixed the self-contained header before fresh R2.
+
+## Batch 7: map copy receiver and auto_ptr transfer
+
+4701B0/470100 now converge on pointer-valued kinoko_map_manager_assign.
+SqPlus alone retains an explicit integer callback adapter. The source remains
+mutable because copying transfers its runtime: clear source first, dispose
+the old destination only when distinct, then install the saved runtime. This
+preserves self-transfer and destructor callback behavior. Source ACT/holder and
+layout values remain borrowed copies; native containers own their own storage.
+The map contract adds distinct-source transfer, disposal-before-container-copy,
+callback replacement and receiver-return assertions. Compiled only.

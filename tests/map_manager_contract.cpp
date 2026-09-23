@@ -81,9 +81,22 @@ int main() {
     // Self-transfer must neither destroy nor lose the runtime.
     bytes.manager.player = expected_player = static_cast<KinokoActRuntime *>(std::malloc(192));
     const auto count = calls.size();
-    kinoko_map_manager_assign(active, active);
+    CHECK(kinoko_map_manager_assign(active, active) == active);
     CHECK(bytes.manager.player == expected_player && calls.size() == count);
-    std::free(expected_player); bytes.manager.player = nullptr;
+    // Distinct-source auto_ptr transfer disposes the OLD destination first.
+    ManagerRecord source{};
+    auto* source_receiver = reinterpret_cast<KinokoMapManager*>(&source);
+    kinoko_map_containers_construct(source_receiver);
+    source.player = static_cast<KinokoActRuntime*>(std::malloc(192));
+    auto* transferred = source.player;
+    source.width = 901;
+    kinoko_map_append_event(source_receiver, nullptr);
+    CHECK(kinoko_map_manager_assign(active, source_receiver) == active);
+    CHECK(!source.player && bytes.manager.player == transferred);
+    CHECK(calls.size() == count + 1 && calls.back() == 2);
+    CHECK(bytes.manager.width == 901 && kinoko_map_event_count(active) == 1);
+    kinoko_map_containers_destroy(source_receiver);
+    std::free(transferred); bytes.manager.player = nullptr;
     kinoko_map_containers_destroy(active);
     return 0;
 }
