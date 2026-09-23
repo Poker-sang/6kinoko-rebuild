@@ -63,7 +63,7 @@ int32_t create_class(ObjectStorage *output, SQVM *vm, const char *name,
         ObjectView(output).push(current_vm());
         kinoko_sqplus_object_capture(&temporary, -1);
         sq_pop(current_vm(), 1);
-        kinoko_sqplus_setup_hierarchy(&temporary); // Consumes the by-value object.
+        kinoko_sqplus_setup_hierarchy(reinterpret_cast<int32_t *>(&temporary)); // Consumes the by-value object.
     }
     sq_settop(vm, top);
     return address(output);
