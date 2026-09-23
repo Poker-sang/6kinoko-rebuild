@@ -24,12 +24,17 @@ int32_t kinoko_squirrel_object_vtable(void);
 
 namespace {
 using namespace kinoko::script;
+inline int32_t& bytecode_vm_slot = g664;
+inline char*& primary_vm_slot = g644;
+inline char& compiled_assets_slot = g874;
+inline char*& debug_window_slot = g767;
+inline int32_t (&script_root_slot)[3] = g722;
 // Separate VM slots are intentional: compiled LocalScript bytecode uses the
 // Sqrat VM captured at root registration; plain scripts use SqPlus's VM.
-SQVM* bytecode_vm() { return pointer<SQVM>(g664); }
-HSQUIRRELVM primary_vm() { return reinterpret_cast<HSQUIRRELVM>(g644); }
-bool compiled_assets() { return g874 != 0; }
-HWND debug_window() { return reinterpret_cast<HWND>(g767); }
+SQVM* bytecode_vm() { return pointer<SQVM>(bytecode_vm_slot); }
+HSQUIRRELVM primary_vm() { return reinterpret_cast<HSQUIRRELVM>(primary_vm_slot); }
+bool compiled_assets() { return compiled_assets_slot != 0; }
+HWND debug_window() { return reinterpret_cast<HWND>(debug_window_slot); }
 SQRESULT invoke(HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) {
     return kinoko_sq_call(address(vm), count, result, errors);
 }
@@ -91,7 +96,7 @@ extern "C" void* kinoko_script_initialize_root() noexcept(false) {
     retdec_trace("402aa0:done");
     return result;
 }
-extern "C" void* kinoko_script_root() { return g722; }
+extern "C" void* kinoko_script_root() { return script_root_slot; }
 extern "C" int32_t kinoko_script_close_vm() {
     // 402AC0 CALL 4A8C50; 402AC5 JMP 4A8C50: two calls in the original.
     kinoko_sqplus_release_vm_wrappers();

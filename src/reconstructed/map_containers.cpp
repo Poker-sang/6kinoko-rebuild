@@ -11,6 +11,7 @@ extern "C" unsigned char g37;
 namespace kinoko::map {
 using RenderLayer = kinoko::map::RenderLayerRecord;
 static_assert(sizeof(RenderLayer) == 8);
+inline constexpr auto render_layer_vtable = &g37;
 struct Containers {
     std::list<RenderLayer> layers;
     std::vector<KinokoActLayout *> events;
@@ -38,13 +39,13 @@ extern "C" void kinoko_map_containers_assign(KinokoMapManager* destination, Kino
     // 4700B0 clears/reconstructs nodes; never reuse old node addresses or
     // copy a forged source vtable. 46F320 retains capacity on shorter copies.
     out.layers.clear();
-    for (const auto& layer : in.layers) out.layers.push_back({&g37, layer.layout});
+    for (const auto& layer : in.layers) out.layers.push_back({render_layer_vtable, layer.layout});
     out.events.assign(in.events.begin(), in.events.end());
 }
 extern "C" KinokoRenderLayer* kinoko_map_append_render(KinokoMapManager* manager, KinokoActLayout* layout) {
     auto& layers = state(manager).layers;
     if (layers.size() == 0x1ffffffeu) throw std::length_error("list<T> too long");
-    layers.push_back({&g37, layout});
+    layers.push_back({render_layer_vtable, layout});
     return reinterpret_cast<KinokoRenderLayer*>(&layers.back());
 }
 extern "C" uint32_t kinoko_map_render_count(KinokoMapManager* manager) {

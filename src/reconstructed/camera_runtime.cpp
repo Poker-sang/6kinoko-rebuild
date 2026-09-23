@@ -12,16 +12,18 @@ void retdec_trace_i32(const char *,int32_t);
 namespace {
 using namespace kinoko::camera;
 using kinoko::legacy::address;
+inline auto camera_instance_class = g611;
+inline auto camera_root_object = g722;
 }
 extern "C" int32_t kinoko_camera_initialize(KinokoCamera *camera) {
     if (!camera) return 0;
     const View state(camera);
     int32_t temporary[3]{};
-    auto* object=kinoko_sqplus_object_new_instance(temporary, g611);
+    auto* object=kinoko_sqplus_object_new_instance(temporary, camera_instance_class);
     kinoko_sqplus_object_assign((void *)(state.bytes(&Record::script_object)), object);
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
     kinoko_sqplus_object_set_instance((void *)(state.bytes(&Record::script_object)), (void *)(camera));
-    const auto result=kinoko_sqplus_object_raw_set_name((void *)(g722), "camera", (const void *)(camera));
+    const auto result=kinoko_sqplus_object_raw_set_name((void *)(camera_root_object), "camera", (const void *)(camera));
     // 466270 resets only these fields. Width/height and callback remain intact;
     // the global backing storage is already zero-initialized at process startup.
     state.set(&Record::y,0.0f);state.set(&Record::x,0.0f);

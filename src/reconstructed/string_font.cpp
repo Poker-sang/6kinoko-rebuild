@@ -23,6 +23,7 @@ HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
                                 D3DFORMAT,D3DPOOL,IDirect3DTexture9**);
 }
 namespace {
+inline char*& game_window_slot = g767;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
@@ -53,7 +54,7 @@ struct FontSession {
             record.get(&Renderer::font_weight),record.get(&Renderer::style284),
             0,0,128,4,0,2,49,reinterpret_cast<char*>(record.bytes(&Renderer::face)));
         record.set(&Renderer::font_handle,static_cast<void*>(font));
-        auto dc=GetDC(reinterpret_cast<HWND>(g767));
+        auto dc=GetDC(reinterpret_cast<HWND>(game_window_slot));
         record.set(&Renderer::device_context,static_cast<void*>(dc));
         record.set(&Renderer::previous_font,static_cast<void*>(SelectObject(dc,font)));
         TEXTMETRICA metrics{};GetTextMetricsA(dc,&metrics);
@@ -69,7 +70,7 @@ struct FontSession {
         const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
         auto dc=static_cast<HDC>(record.get(&Renderer::device_context));
         DeleteObject(SelectObject(dc,static_cast<HGDIOBJ>(record.get(&Renderer::previous_font))));
-        ReleaseDC(reinterpret_cast<HWND>(g767),dc);
+        ReleaseDC(reinterpret_cast<HWND>(game_window_slot),dc);
         record.set(&Renderer::device_context,static_cast<void*>(nullptr));
         record.set(&Renderer::font_handle,static_cast<void*>(nullptr));
         record.set(&Renderer::previous_font,static_cast<void*>(nullptr));

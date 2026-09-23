@@ -22,15 +22,15 @@ extern "C" int32_t __fastcall kinoko_sprite_set_rect_pivot(KinokoSprite* sprite,
     sprite->pivot_x = static_cast<float>(pivot_x); sprite->pivot_y = static_cast<float>(pivot_y);
     const uint32_t texture_width = texture ? kinoko_texture_slots[texture].width : 256;
     const uint32_t texture_height = texture ? kinoko_texture_slots[texture].height : 256;
-    const float u0 = static_cast<float>(static_cast<double>(x) / texture_width);
-    const float v0 = static_cast<float>(static_cast<double>(y) / texture_height);
-    const float u1 = static_cast<float>(static_cast<double>(static_cast<int32_t>(
+    const float tex_u0 = static_cast<float>(static_cast<double>(x) / texture_width);
+    const float tex_v0 = static_cast<float>(static_cast<double>(y) / texture_height);
+    const float tex_u1 = static_cast<float>(static_cast<double>(static_cast<int32_t>(
         static_cast<uint32_t>(x) + static_cast<uint32_t>(width))) / texture_width);
-    const float v1 = static_cast<float>(static_cast<double>(static_cast<int32_t>(
+    const float tex_v1 = static_cast<float>(static_cast<double>(static_cast<int32_t>(
         static_cast<uint32_t>(y) + static_cast<uint32_t>(height))) / texture_height);
     for (int i = 0; i < 4; ++i) {
         auto& vertex = sprite->vertices[i];
-        vertex.u = (i & 1) ? u1 : u0; vertex.v = (i & 2) ? v1 : v0;
+        vertex.u = (i & 1) ? tex_u1 : tex_u0; vertex.v = (i & 2) ? tex_v1 : tex_v0;
         vertex.color = 0xffffffffu; vertex.z = 0.5f; vertex.rhw = 1;
     }
     sprite->scale_x = sprite->scale_y = 1;

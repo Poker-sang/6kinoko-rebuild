@@ -125,6 +125,11 @@ SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
 int g_retdec_se_entry_count = 0;
 BgmTrack g_retdec_bgm_track;
 std::list<BgmTrack> fading_tracks;
+inline int32_t& active_bgm_slot = g637;
+inline char& packed_assets_slot = g874;
+inline int32_t& primary_device_slot = g876;
+inline char*& dsound_device_slot = g877;
+inline int32_t& listener_slot = g878;
 // Own both workers, their wake events and the lock protecting playback state.
 // Events and the lock outlive the joined workers, including partial startup.
 struct AudioWorkers {
@@ -156,13 +161,13 @@ struct AudioWorkers {
 float g_retdec_audio_master_volume = 1.0f;
 // The original C ABI publishes the currently selected BGM handle here. The
 // track pool owns playback resources; this slot is only its active identity.
-int32_t& active_bgm_handle() { return g637; }
-bool packed_sound_assets() { return g874 != 0; }
+int32_t& active_bgm_handle() { return active_bgm_slot; }
+bool packed_sound_assets() { return packed_assets_slot != 0; }
 void sync_audio_device_aliases() noexcept {
     // Read-only borrows for not-yet-migrated C entry points, never extra owners.
-    g876 = address(g_audio_device.primary.get());
-    g877 = reinterpret_cast<char*>(g_audio_device.device.get());
-    g878 = address(g_audio_device.listener.get());
+    primary_device_slot = address(g_audio_device.primary.get());
+    dsound_device_slot = reinterpret_cast<char*>(g_audio_device.device.get());
+    listener_slot = address(g_audio_device.listener.get());
 }
 DWORD WINAPI audio_update_worker(void*) { return run_audio_update_worker(); }
 DWORD WINAPI audio_loader_worker(void*) { return run_audio_loader_worker(); }

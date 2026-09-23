@@ -12,19 +12,21 @@
 
 extern "C" int32_t g23, g25;
 namespace {
+inline auto glyph_vtable = &g25;
+inline auto glyph_color_vtable = &g23;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::StringView;
 struct Glyph {
     alignas(4) unsigned char bytes[256];
-    Glyph() { field<void*>(address(bytes)+20)=&g25;field<int32_t>(address(bytes)+24)=0; }
+    Glyph() { field<void*>(address(bytes)+20)=glyph_vtable;field<int32_t>(address(bytes)+24)=0; }
     Glyph(const Glyph& other) : Glyph() { *this=other; }
     Glyph& operator=(const Glyph& other) {
         std::copy_n(other.bytes,20,bytes);
         std::copy_n(other.bytes+24,232,bytes+24);return *this;
     }
-    ~Glyph() { field<void*>(address(bytes)+20)=&g23; }
+    ~Glyph() { field<void*>(address(bytes)+20)=glyph_color_vtable; }
 };
 using Deque=std::deque<Glyph>;
 using LayoutRecord=kinoko::act::StringLayoutRecord;

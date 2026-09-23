@@ -22,7 +22,7 @@ static int page_is_readable(const MEMORY_BASIC_INFORMATION *info)
 extern "C" uint32_t retdec_safe_c_string_length(const char *source)
 {
     const unsigned char *cursor = (const unsigned char *)source;
-    const uintptr_t limit = (uintptr_t)source + 0x100000u;
+    const uintptr_t limit = static_cast<uintptr_t>(reinterpret_cast<uintptr_t>(source)) + 0x100000u;
     uint32_t length = 0;
 
     if (source == NULL) {

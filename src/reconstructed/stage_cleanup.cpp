@@ -22,12 +22,16 @@ using StageList = std::list<KinokoStageNode>;
 struct KinokoStageNode { KinokoStageOwner *owner; StageList::iterator position; };
 
 namespace {
+inline int32_t& stage_list_slot = g603;
+inline int32_t& stage_count_slot = g604;
+inline KinokoIntegerMap*& sound_lookup_slot = g638;
+inline int32_t& sound_lookup_count_slot = g639;
 // The C ABI slots are retained for original callers and contract fixtures.
 // Only this file owns the list allocation and sound lookup tree.
-int32_t& stage_list_word() { return g603; }
-int32_t& stage_list_count() { return g604; }
-KinokoIntegerMap*& sound_lookup() { return g638; }
-int32_t& sound_lookup_count() { return g639; }
+int32_t& stage_list_word() { return stage_list_slot; }
+int32_t& stage_list_count() { return stage_count_slot; }
+KinokoIntegerMap*& sound_lookup() { return sound_lookup_slot; }
+int32_t& sound_lookup_count() { return sound_lookup_count_slot; }
 using namespace kinoko::stage;
 using kinoko::native::RecordView;
 using kinoko::legacy::pointer;

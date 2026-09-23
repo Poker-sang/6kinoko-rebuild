@@ -11,19 +11,28 @@ extern char *g767;
 extern char g547, g548, g549;
 }
 namespace {
+inline int32_t& input_context_slot = g534;
+inline int32_t& default_window_slot = g535;
+inline int32_t& text_limit_slot = g545;
+inline int32_t& commit_pending_slot = g546;
+inline char& text_changed_slot = g547;
+inline char& composition_changed_slot = g548;
+inline char& enabled_slot = g549;
+inline int32_t& cursor_slot = g550;
+inline char*& game_window_slot = g767;
 // The original IME ABI exposes scalar control slots to the host. This view
 // gives those borrowed slots field names while this module owns the text,
 // composition and attribute buffers below.
 struct ImeControl {
-    int32_t& input_context() const { return g534; }
-    int32_t& default_window() const { return g535; }
-    int32_t& text_limit() const { return g545; }
-    int32_t& commit_pending() const { return g546; }
-    char& text_changed() const { return g547; }
-    char& composition_changed() const { return g548; }
-    char& enabled() const { return g549; }
-    int32_t& cursor() const { return g550; }
-    HWND game_window() const { return reinterpret_cast<HWND>(g767); }
+    int32_t& input_context() const { return input_context_slot; }
+    int32_t& default_window() const { return default_window_slot; }
+    int32_t& text_limit() const { return text_limit_slot; }
+    int32_t& commit_pending() const { return commit_pending_slot; }
+    char& text_changed() const { return text_changed_slot; }
+    char& composition_changed() const { return composition_changed_slot; }
+    char& enabled() const { return enabled_slot; }
+    int32_t& cursor() const { return cursor_slot; }
+    HWND game_window() const { return reinterpret_cast<HWND>(game_window_slot); }
 } control;
 // Original 50F6F8 text, 50FEF8 composition and 50FFF8 attributes. The
 // recovered C declarations represented these buffers as individual scalars.

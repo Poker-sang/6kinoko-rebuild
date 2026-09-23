@@ -6,11 +6,13 @@
 #include "kinoko/legacy_abi.h"
 #include <cstring>
 extern "C" {
+extern char* g644;
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_table_entries(const char*, int32_t);
 int32_t kinoko_camera_update_entry(int32_t);
 }
 namespace {
+inline char*& camera_vm_slot = g644;
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 template<class T> int32_t entry(T target) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(target)); }
@@ -68,7 +70,7 @@ int32_t create_class(ObjectStorage *output, SQVM *vm, const char *name,
     return address(output);
 }
 void construct(ClassState &state, const char *name, int32_t *descriptor) {
-    state.vm = reinterpret_cast<SQVM *>(g644);
+    state.vm = reinterpret_cast<SQVM *>(camera_vm_slot);
     state.name = name;
     state.unused20 = 0;
     kinoko_sqplus_object_initialize(&state.klass);

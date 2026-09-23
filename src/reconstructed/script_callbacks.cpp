@@ -9,6 +9,9 @@ void retdec_trace(const char *);
 void retdec_trace_i32(const char *, int32_t);
 }
 namespace {
+inline auto class_update_method = g602;
+inline auto class_update_name = g601;
+inline auto class_collision_name = g600;
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
 using CallbackView = kinoko::native::RecordView<KinokoScriptCallback>;
@@ -90,8 +93,8 @@ extern "C" int32_t kinoko_actor_clear_script(KinokoActor *actor) {
         KinokoOwnedObjectWords empty{};
         kinoko_sqplus_object_initialize((void *)(&empty));
         // 45FC7A/94 target the CLASS defaults, not the outgoing instance.
-        kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g601), (const void *)(&empty));
-        kinoko_sqplus_object_raw_set_object((void *)(g602), (const void *)(g600), (const void *)(&empty));
+        kinoko_sqplus_object_raw_set_object((void *)(class_update_method), (const void *)(class_update_name), (const void *)(&empty));
+        kinoko_sqplus_object_raw_set_object((void *)(class_update_method), (const void *)(class_collision_name), (const void *)(&empty));
         (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&empty)));
     }
     return (int32_t)(intptr_t)(kinoko_sqplus_object_reset((void *)(instance)));

@@ -9,6 +9,8 @@
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
+extern "C" int32_t g350[11];
+namespace { inline auto string_layout_vtable = &g350[0]; }
 #include "kinoko/string_layout.h"
 
 extern "C" const char* kinoko_act_serialized_type_name(int32_t object) {
@@ -30,7 +32,7 @@ extern "C" const char* kinoko_act_serialized_type_name(int32_t object) {
     if (table==address(host->chip_resource_vtable)) return ".?AVCActResourceChip@@";
     if (table==address(host->render_target_vtable)) return ".?AVCActRenderTarget@@";
     if (table==address(kinoko_act_timeline_vtable())) return ".?AVCActTimeLine@@";
-    if (table==address(&g350)) return ".?AVCStringLayout@@";
+    if (table==address(string_layout_vtable)) return ".?AVCStringLayout@@";
     return nullptr;
 }
 

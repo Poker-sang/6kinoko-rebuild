@@ -4,13 +4,16 @@
 #include <cstring>
 
 extern "C" char* g767; // Remaining game-window ABI consumers borrow this HWND.
-namespace { KinokoProcessContext context{}; }
+namespace {
+KinokoProcessContext context{};
+inline char*& game_window_handle = g767;
+}
 
 extern "C" const KinokoProcessContext* kinoko_process_context() { return &context; }
 extern "C" int32_t kinoko_process_initialize(HINSTANCE instance, HWND window) {
     context.instance = instance; // Original 51B060, previously discarded.
     context.window = window;
-    g767 = reinterpret_cast<char*>(window);
+    game_window_handle = reinterpret_cast<char*>(window);
     auto& directory = context.executable_directory;
     const DWORD length = GetModuleFileNameA(nullptr, directory, MAX_PATH);
     if (!length || length >= MAX_PATH) { directory[0] = 0; return 0; }

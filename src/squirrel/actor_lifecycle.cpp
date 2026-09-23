@@ -17,11 +17,12 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t* allocation);
 
 namespace {
 using namespace kinoko::script;
+inline char*& current_vm_storage = g644;
 static_assert(sizeof(KinokoOwnedObjectWords) == sizeof(ObjectStorage));
 static_assert(std::is_trivially_copyable_v<KinokoOwnedObjectWords>);
 static_assert(std::is_trivially_destructible_v<KinokoOwnedObjectWords>);
 
-HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); }
+HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 
 using namespace kinoko::actor;
 
