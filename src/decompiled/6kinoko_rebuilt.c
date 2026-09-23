@@ -11273,6 +11273,7 @@ void kinoko_actor_manager_refresh_collision(void) { kinoko_script_refresh_collis
 void kinoko_application_initialize_host(void) { retdec_initialize_runtime_objects(); }
 const char *kinoko_application_title(void) { return g43; }
 const char *kinoko_application_error(void) { return g42; }
+void kinoko_application_set_archive_mode(int32_t enabled) { g874 = enabled != 0; }
 void kinoko_application_open_archives(void) {
     kinoko_archive_mount("6kinoko_a.dat");
     kinoko_archive_mount("6kinoko_b.dat");

@@ -16,15 +16,12 @@
 #include "kinoko/legacy_memory.hpp"
 #include "../platform/resources/resource.h"
 #include <mmsystem.h>
-#include <imm.h>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 
 extern "C" {
 void retdec_trace(const char*);
-extern int32_t g534;
-extern char g874;
 }
 
 namespace kinoko::application {
@@ -119,7 +116,7 @@ DWORD WINAPI retire_worker(void*) {
 }
 bool initialize(const Configuration& configuration) {
     state.config = configuration;
-    g874 = configuration.archives != 0;
+    kinoko_application_set_archive_mode(configuration.archives != 0);
     state.timer_period = timeBeginPeriod(1) == TIMERR_NOERROR;
     kinoko_seed_random(timeGetTime());
     state.com_initialized = SUCCEEDED(CoInitialize(nullptr));
@@ -271,7 +268,7 @@ extern "C" void kinoko_application_shutdown() {
     if (auto* transition = state.config.transition) {
         transition->methods->shutdown(transition); std::free(transition); state.config.transition = nullptr;
     }
-    if (state.ime_initialized) { ImmReleaseContext(state.config.window, reinterpret_cast<HIMC>(static_cast<intptr_t>(g534))); state.ime_initialized = false; }
+    if (state.ime_initialized) { kinoko_ime_release(state.config.window); state.ime_initialized = false; }
     kinoko_audio_shutdown_device();
     if (state.input_initialized) { kinoko_input_shutdown(); state.input_initialized = false; }
     if (state.renderer_initialized) {

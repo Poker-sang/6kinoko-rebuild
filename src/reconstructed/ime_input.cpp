@@ -126,6 +126,9 @@ extern "C" int32_t kinoko_ime_initialize(void) {
     candidate.rcArea={0,0,bounds.right-bounds.left,bounds.bottom-bounds.top};
     return ImmSetCandidateWindow(input,&candidate);
 }
+extern "C" void kinoko_ime_release(HWND window) {
+    ImmReleaseContext(window, context());
+}
 extern "C" int32_t kinoko_ime_dispatch(int32_t window, uint32_t message,
                                       uint32_t key, int32_t parameter) {
     if (control.enabled() == 0) return false;
