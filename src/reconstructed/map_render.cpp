@@ -9,17 +9,19 @@ using Camera = kinoko::actor::CameraBoundsRecord;
 }
 
 extern "C" int32_t __fastcall kinoko_map_update_all_entry(int32_t layout, void *) {
-    return kinoko_map_update(layout, 0, 0, INT32_MAX, INT32_MAX);
+    return kinoko_map_update_visible(kinoko::legacy::pointer<KinokoActLayout>(layout),
+        0, 0, INT32_MAX, INT32_MAX);
 }
 
 extern "C" int32_t __fastcall kinoko_map_update_visible_entry(
     int32_t layout, void *, int32_t left, int32_t top, int32_t right, int32_t bottom) {
-    return kinoko_map_update(layout, left, top, right, bottom);
+    return kinoko_map_update_visible(kinoko::legacy::pointer<KinokoActLayout>(layout),
+        left, top, right, bottom);
 }
 
 extern "C" int32_t __fastcall kinoko_map_draw_entry(
     int32_t layout, void *, float x, float y) {
-    return kinoko_map_draw(layout, x, y);
+    return kinoko_map_draw_visible(kinoko::legacy::pointer<KinokoActLayout>(layout), x, y);
 }
 
 // Original 46EED0: camera rectangle (+32 right/bottom), then camera offset.
