@@ -394,7 +394,7 @@ extern "C" int32_t function_48e120_this(int32_t destination, float value) {
     return kinoko_sq_assign_float(ptr<SQObjectPtr>(destination), value);
 }
 
-static int32_t kinoko_sq_raise_object_error(SQVM* machine, const SQObjectPtr* error_value) {
+static int32_t kinoko_sq_raise_object_error(SQVM* machine, SQObjectPtr* error_value) {
     if (!machine || !error_value) return addr(machine);
     auto& value = *error_value;
     const auto result = ISREFCOUNTED(type(value)) ? addr(_refcounted(value)) : addr(machine);
