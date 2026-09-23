@@ -167,18 +167,22 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
 
 extern "C" void kinoko_clear_string_layout(int32_t layout) {
     field<void*>(layout)=&g350;
-    StringView(pointer<void>(layout+4)).assign("",0);
-    StringView(pointer<void>(layout+32)).assign("",0);
+    using Layout=kinoko::act::StringLayoutRecord;
+    using StringRecord=kinoko::legacy::StringRecord;
+    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
+    StringView(text.bytes(&Layout::text)).assign("",0);
+    StringView(text.bytes(&Layout::pending)).assign("",0);
     kinoko_string_rebuild_queue(pointer<KinokoStringLayout>(layout));
     kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
     kinoko_string_queue_destroy(layout);
     delete atlases(layout);atlases(layout)=nullptr;
-    for(int offset : {60,32,4}) {
-        StringView value(pointer<void>(layout+offset));
-        value.destroy();
-        field<uint32_t>(layout+offset+20)=15;
-        field<uint32_t>(layout+offset+16)=0;
-        field<uint8_t>(layout+offset)=0;
+    // Original 43EA10 releases face, pending and displayed text in that order.
+    for(auto member : {&Layout::face,&Layout::pending,&Layout::text}) {
+        const kinoko::native::RecordView<StringRecord> string(text.bytes(member));
+        StringView(string.data()).destroy();
+        string.set(&StringRecord::capacity,uint32_t{15});
+        string.set(&StringRecord::length,uint32_t{0});
+        string.bytes(&StringRecord::characters)[0]=0;
     }
 }
 

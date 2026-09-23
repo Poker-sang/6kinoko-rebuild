@@ -47,3 +47,8 @@ for original SHA256 2db975a4... confirms CStringLayout 43E890 initializes
 font, face, colors, spacing, alignment, metrics and layer defaults. Named
 StringLayoutRecord fields now carry those values without changing allocation
 and container construction order. Evidence: 43e890.json.
+Batch 10: IDA 43EA10 clears displayed and pending strings, rebuilds
+then prunes glyph atlases, destroys glyph/atlas containers, and destroys
+face/pending/displayed strings in order. The native destructor now uses
+StringLayoutRecord/StringRecord members for each string storage and capacity
+reset; its ownership order and public ABI remain intact. Evidence: 43ea10.json.
