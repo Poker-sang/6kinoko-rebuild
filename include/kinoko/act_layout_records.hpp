@@ -36,7 +36,10 @@ struct StringLayoutRecord {
     KinokoActLayer *layer;
     float alpha;
     int32_t blend;
-    uint8_t owned_containers[40];
+    void *atlas_owner; // native vector owner, original +160
+    uint8_t atlas_slots[12];
+    void *glyph_owner; // native deque owner, original +176
+    uint8_t glyph_slots[20];
     int32_t next_glyph_id,cursor_x,cursor_y,maximum_width,line_height,origin_x,origin_y;
     uint8_t rebuild;uint8_t padding229[3];
     uint8_t unknown232[28];
@@ -50,6 +53,7 @@ static_assert(sizeof(Layout2DRecord)==316 && offsetof(Layout2DRecord,layer)==304
 static_assert(offsetof(Layout2DRecord,rotation)==236 && offsetof(Layout2DRecord,texture)==308);
 static_assert(sizeof(Layout3DRecord)==108 && offsetof(Layout3DRecord,world)==44);
 static_assert(sizeof(StringLayoutRecord)==260 && offsetof(StringLayoutRecord,layer)==148);
+static_assert(offsetof(StringLayoutRecord,atlas_owner)==160 && offsetof(StringLayoutRecord,glyph_owner)==176);
 static_assert(offsetof(StringLayoutRecord,next_glyph_id)==200 && offsetof(StringLayoutRecord,rebuild)==228);
 static_assert(sizeof(StringGlyphRecord)==256 && offsetof(StringGlyphRecord,quad)==20);
 }

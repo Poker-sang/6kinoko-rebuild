@@ -59,7 +59,15 @@ struct Atlas {
 };
 static_assert(sizeof(Atlas)==436);
 using Atlases=std::vector<Atlas>;
-Atlases*& atlases(int32_t layout) { return field<Atlases*>(layout+160); }
+using LayoutRecord=kinoko::act::StringLayoutRecord;
+Atlases* atlases(int32_t layout) {
+    const kinoko::native::RecordView<LayoutRecord> record(pointer<void>(layout));
+    return static_cast<Atlases*>(record.get(&LayoutRecord::atlas_owner));
+}
+void set_atlases(int32_t layout,Atlases* value) {
+    const kinoko::native::RecordView<LayoutRecord> record(pointer<void>(layout));
+    record.set(&LayoutRecord::atlas_owner,static_cast<void*>(value));
+}
 
 }
 
@@ -130,7 +138,7 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
         field<uint8_t>(layout+offset)=0;
     }
     for(int offset : {160,164,168,176,180,184,188,192}) field<int32_t>(layout+offset)=0;
-    atlases(layout)=new Atlases;
+    set_atlases(layout,new Atlases);
     kinoko_string_queue_construct(layout);
     // Original CP932 face name, 13 bytes before its NUL terminator.
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
@@ -175,7 +183,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     kinoko_string_rebuild_queue(pointer<KinokoStringLayout>(layout));
     kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
     kinoko_string_queue_destroy(layout);
-    delete atlases(layout);atlases(layout)=nullptr;
+    delete atlases(layout);set_atlases(layout,nullptr);
     // Original 43EA10 releases face, pending and displayed text in that order.
     for(auto member : {&Layout::face,&Layout::pending,&Layout::text}) {
         const kinoko::native::RecordView<StringRecord> string(text.bytes(member));

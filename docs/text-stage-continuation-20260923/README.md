@@ -52,3 +52,8 @@ then prunes glyph atlases, destroys glyph/atlas containers, and destroys
 face/pending/displayed strings in order. The native destructor now uses
 StringLayoutRecord/StringRecord members for each string storage and capacity
 reset; its ownership order and public ABI remain intact. Evidence: 43ea10.json.
+Batch 11: 43E890 creates the atlas vector owner at layout +160 and 43EA10
+deletes it after glyph queue teardown. The layout schema now asserts atlas
+and glyph owner slots at +160/+176; atlas access, creation and deletion use
+the explicit owner member. Other historical vector/deque bookkeeping slots
+remain untouched at their original offsets.
