@@ -1,4 +1,4 @@
-﻿# Batch 53 - squirrel-native-dispatch-quiet
+# Batch 53 - Squirrel native callback dispatch (squirrel-native-dispatch-quiet)
 
 Source committed before build: cfdd1af92fb6e7d3a850d4d984a57e212d865d07.
 Build: build-runs/squirrel-native-dispatch-quiet.

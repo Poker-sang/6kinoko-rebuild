@@ -1,4 +1,4 @@
-﻿# Batch 54 - squirrel-root-camera-map-fix-quiet
+# Batch 54 - Camera Map and global registration (squirrel-root-camera-map-fix-quiet)
 
 Source committed before build: 35edca1432aa957b56bde26be1e048d658ef2bd6.
 Build: build-runs/squirrel-root-camera-map-fix-quiet.
