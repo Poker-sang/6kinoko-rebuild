@@ -8,6 +8,7 @@
 extern "C" {
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_table_entries(const char*, int32_t);
+int32_t kinoko_camera_update_entry(int32_t);
 }
 namespace {
 using namespace kinoko::script;
