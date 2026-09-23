@@ -801,7 +801,6 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     uint32_t type;
     int32_t *layers;
     int32_t *resources;
-    int32_t resource;
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
         return 0;
@@ -868,17 +867,21 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
             retdec_trace("act:resource-type-failed");
             return 0;
         }
-        resource = retdec_act_make_resource(reader_ptr, type);
-        if (resource == 0)
-            return 0;
-        resources[index] = resource;
-        field<int32_t>(this_ptr + 228) += 4;
-        associations.add_resource(pointer<KinokoActResource>(resource));
+        auto *resource = pointer<KinokoActResource>(retdec_act_make_resource(reader_ptr, type));
+        if (!resource) return 0;
+        resources[index] = address(resource);
+        auto span = view.get(&kinoko::act::DocumentRecord::resources);
+        span.end = reinterpret_cast<KinokoActResource **>(
+            reinterpret_cast<uintptr_t>(span.end) + sizeof(KinokoActResource *));
+        view.set(&kinoko::act::DocumentRecord::resources, span);
+        associations.add_resource(resource);
         if (index < 8) {
+            kinoko::native::RecordView<kinoko::act::ResourceIdentityRecord> identity(resource);
             retdec_trace_i32("act:resource-id",
-                             field<int32_t>(resource + 4));
+                identity.get(&kinoko::act::ResourceIdentityRecord::id));
+            // The +40 word is diagnostic only; resource subclasses differ here.
             retdec_trace_i32("act:resource-texture",
-                             field<int32_t>(resource + 40));
+                field<int32_t>(address(resource) + 40));
         }
     }
     retdec_trace_i32("act:loaded-layers", (int32_t)layer_count);
