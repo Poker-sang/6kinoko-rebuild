@@ -57,7 +57,7 @@ struct FontSession {
         record.set(&Renderer::device_context,static_cast<void*>(dc));
         record.set(&Renderer::previous_font,static_cast<void*>(SelectObject(dc,font)));
         TEXTMETRICA metrics{};GetTextMetricsA(dc,&metrics);
-        record.set(&Renderer::ascent,metrics.tmAscent);
+        record.set(&Renderer::ascent,static_cast<int32_t>(metrics.tmAscent));
         record.set(&Renderer::cursor_x,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_left));
         record.set(&Renderer::cursor_y,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_top));
         field<uint16_t>(r+364)=0;
@@ -256,3 +256,4 @@ extern "C" void kinoko_string_font_copy_pixels(int32_t out,int32_t in) {
 extern "C" void kinoko_string_font_destroy_pixels(int32_t renderer) {
     clear_pixels(renderer);delete pixels(renderer);set_pixels(renderer,nullptr);
 }
+
