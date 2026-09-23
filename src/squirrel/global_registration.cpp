@@ -102,7 +102,8 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
 int32_t kinoko_register_root_bindings() {
     retdec_trace("473010:enter");
     kinoko_script_initialize_root();
-    const int32_t vm_address = address(current_vm());
+    g664 = address(current_vm());
+    const int32_t vm_address = g664;
     RootTableStorage root{};
     root.vtable = kinoko_sqrat_object_vtable();
     root.vm = current_vm();
