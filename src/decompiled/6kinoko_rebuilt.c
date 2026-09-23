@@ -1786,9 +1786,7 @@ int32_t function_43ade0(int32_t a1);
 
 
 
-int32_t function_43c860_this(int32_t this_ptr,
-                                    int32_t source_ptr,
-                                    int32_t mode);
+/* 43C860: kinoko_act_read_layout3d_properties is implemented in native C++. */
 
 int32_t function_43cec0(void);
 

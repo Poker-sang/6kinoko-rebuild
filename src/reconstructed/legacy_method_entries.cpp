@@ -3,6 +3,8 @@
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/legacy_method_entries.h"
+#include "kinoko/act_layout3d_io.h"
+#include "kinoko/legacy_memory.hpp"
 #include <cstring>
 
 static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses");
@@ -14,7 +16,6 @@ int32_t retdec_destroy_cact_with_flags(int32_t receiver, unsigned char flags);
 int32_t retdec_c2dlayout_set_layer_impl(int32_t receiver, int32_t layer);
 int32_t retdec_c2dlayout_update_faithful_impl(int32_t receiver);
 int32_t retdec_c2dlayout_draw_impl(int32_t receiver, float x, float y);
-int32_t function_43c860_this(int32_t receiver, int32_t source, int32_t mode);
 int32_t retdec_begin_stage_this(int32_t receiver, int32_t stage);
 int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output);
 int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
@@ -54,7 +55,9 @@ extern "C" int32_t __fastcall kinoko_method_layout_draw(int32_t receiver, void* 
 // function_43c860
 extern "C" int32_t __fastcall kinoko_method_layout3d_assign(int32_t receiver, void* /* unused_edx */,
     int32_t source, int32_t mode) {
-    return function_43c860_this(receiver, source, mode);
+    return kinoko_act_read_layout3d_properties(
+        kinoko::legacy::pointer<KinokoActLayout>(receiver),
+        kinoko::legacy::pointer<int32_t>(source),mode);
 }
 
 // function_450950
