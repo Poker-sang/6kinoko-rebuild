@@ -279,7 +279,8 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         layout=address(std::calloc(1,260));
         if(layout) {
             kinoko_construct_string_layout(layout);
-            if(!kinoko_method_read_string_layout(layout,nullptr,address(&reader_ptr),version)) {
+            if(!kinoko_string_read_properties(pointer<KinokoStringLayout>(layout),
+                    &reader_ptr,version)) {
                 kinoko_clear_string_layout(layout);std::free(pointer<void>(layout));layout=0;
             }
         }

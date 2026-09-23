@@ -16,3 +16,9 @@ borrows the newly created 3D layout. It now passes a real layout pointer and
 address of that reader slot directly to the recovered 43C860 interface.
 The legacy virtual adapter stays available for original ABI callers; key
 failure cleanup and subsequent publication remain unchanged.
+Batch 26: original 43FB00 takes a borrowed CStringLayout and reader-holder
+pointer, accepts version 1, reads properties, then joins displayed/pending
+strings before clearing displayed text. The native reader exposes actual
+pointer types and named string fields; the original virtual ABI retains a
+small conversion adapter. The key loader passes its local reader slot.
+Evidence: 43fb00.json.

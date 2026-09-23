@@ -11,6 +11,7 @@
 #include "kinoko/act_host.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/string_layout.h"
+#include "kinoko/act_layout_records.hpp"
 #include <algorithm>
 #include <array>
 #include <climits>
@@ -554,19 +555,27 @@ extern "C" int32_t __fastcall kinoko_method_write_string_layout(int32_t layout,v
     try { return write(layout,writer,string_layout_schema); }
     catch (...) { return 0; }
 }
-extern "C" int32_t __fastcall kinoko_method_read_string_layout(int32_t layout,void*,int32_t holder,int32_t version) {
-    if(!layout || !holder || version!=1) return 0;
+extern "C" int32_t kinoko_string_read_properties(KinokoStringLayout *layout,
+                                                     int32_t *reader_holder,int32_t version) {
+    if(!layout || !reader_holder || version!=1) return 0;
     try {
-        if(!read(layout,field<int32_t>(holder),string_layout_schema,false)) return 0;
+        if(!read(address(layout),*reader_holder,string_layout_schema,false)) return 0;
         // 43FB75..43FBAF moves stText+stBackQueue into the pending queue,
         // then clears stText. This preserves embedded NULs (unlike rebuild).
-        kinoko::legacy::StringView text(pointer<void>(layout+4)),queue(pointer<void>(layout+32));
+        using Layout=kinoko::act::StringLayoutRecord;
+        const kinoko::native::RecordView<Layout> record(layout);
+        kinoko::legacy::StringView text(record.bytes(&Layout::text));
+        kinoko::legacy::StringView queue(record.bytes(&Layout::pending));
         std::string pending(text.data(),text.length());
         pending.append(queue.data(),queue.length());
         queue.assign(pending.data(),static_cast<uint32_t>(pending.size()));
         text.assign("",0);
         return 1;
     } catch(...) { return 0; }
+}
+extern "C" int32_t __fastcall kinoko_method_read_string_layout(int32_t layout,void*,int32_t holder,int32_t version) {
+    return kinoko_string_read_properties(pointer<KinokoStringLayout>(layout),
+        pointer<int32_t>(holder),version);
 }
 
 extern "C" int32_t kinoko_act_read_properties(int32_t act,int32_t reader) {
