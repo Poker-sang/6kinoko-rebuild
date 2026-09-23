@@ -278,8 +278,11 @@ int32_t kinoko_native_invoke_string_pair_callback(int32_t callback, HSQUIRRELVM 
     return call_pair(vm,callback,address(name),closure,environment);
 }
 } // namespace
-extern "C" int32_t function_471720(int32_t callback, int32_t id, int32_t index) {
+extern "C" int32_t kinoko_native_string_pair_callback_entry(int32_t callback, int32_t id, int32_t index) {
     return kinoko_native_invoke_string_pair_callback(callback, pointer<SQVM>(id), index);
+}
+extern "C" int32_t function_471720(int32_t callback, int32_t id, int32_t index) {
+    return kinoko_native_string_pair_callback_entry(callback, id, index);
 }
 namespace {
 int32_t kinoko_native_invoke_integer_pair_callback(HSQUIRRELVM machine) {
@@ -307,7 +310,13 @@ int32_t kinoko_native_invoke_string_object_callback(HSQUIRRELVM machine) {
 extern "C" int32_t function_471e50(int32_t id) {
     return kinoko_native_invoke_string_object_callback(pointer<SQVM>(id));
 }
-extern "C" int32_t function_471f70(int32_t id) { return function_471720(target(pointer<SQVM>(id)), id, 2); }
+extern "C" int32_t kinoko_native_create_event_callback(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return kinoko_native_string_pair_callback_entry(target(vm), id, 2);
+}
+extern "C" int32_t function_471f70(int32_t id) {
+    return kinoko_native_create_event_callback(id);
+}
 namespace {
 int32_t kinoko_native_invoke_integer_result_callback(HSQUIRRELVM machine) {
     auto vm=machine; if (!vm) return -1;

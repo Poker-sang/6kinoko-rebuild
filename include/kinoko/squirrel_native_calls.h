@@ -46,6 +46,7 @@ int32_t kinoko_native_two_integer_callback_entry(int32_t callback, int32_t vm, i
 int32_t function_471a60(int32_t callback, int32_t vm, int32_t index);
 int32_t kinoko_native_string_pair_callback_entry(int32_t callback, int32_t vm, int32_t index);
 int32_t function_471720(int32_t callback, int32_t vm, int32_t index);
+int32_t kinoko_native_create_event_callback(int32_t vm);
 int32_t function_471d30(int32_t vm);
 int32_t function_471bc0(int32_t vm);
 int32_t function_471c10(int32_t vm);

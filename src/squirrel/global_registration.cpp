@@ -30,7 +30,7 @@ const NativeMethod methods[] = {
     {"MoveActor", entry(kinoko_script_move_actors), entry(function_471eb0)},
     {"ClearCollision", entry(kinoko_script_clear_collision), entry(function_471bc0)},
     {"CreateCollision", entry(kinoko_script_create_collision), entry(function_471f10)},
-    {"CreateEvent", entry(kinoko_script_create_event), entry(function_471f70)},
+    {"CreateEvent", entry(kinoko_script_create_event), entry(kinoko_native_create_event_callback)},
     {"ClearRenderLayer", entry(kinoko_script_clear_render_layers), entry(function_471bc0)},
     {"CreateRenderLayer", entry(kinoko_script_create_render_layer), entry(function_471f10)},
     {"LoadAct", entry(kinoko_script_load_act), entry(function_471d90)},

@@ -1,19 +1,17 @@
 {
-  "source_commit": "b01365767ef5c6bc504238f9f6949a0c54bcf1e6",
+  "source_commit": "338415487fb19931bf6caf7a51a4dd4b7a029715",
   "scope": "Unique src C/C++ paths literally listed in top-level CMake; headers, macros, external source, tests and archival decompilation excluded. Lexical estimates; not linked reachability. Categories are heuristics, not evidence of semantic completeness.",
   "files": 156,
-  "functions": 1933,
+  "functions": 1935,
   "counts": {
     "named_structured_candidate": 1601,
     "thin_bridge": 107,
-    "abi_alias": 224,
-    "address_named_legacy": 1
+    "abi_alias": 227
   },
   "function_body_lines": {
     "named_structured_candidate": 18111,
     "thin_bridge": 488,
-    "abi_alias": 679,
-    "address_named_legacy": 1
+    "abi_alias": 689
   },
   "entries": [
     {
@@ -12541,211 +12539,225 @@
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471720",
+      "name": "kinoko_native_string_pair_callback_entry",
       "line": 281,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
+      "name": "function_471720",
+      "line": 284,
+      "lines": 3,
+      "category": "abi_alias"
+    },
+    {
+      "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_invoke_integer_pair_callback",
-      "line": 285,
+      "line": 288,
       "lines": 7,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471d30",
-      "line": 293,
+      "line": 296,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_invoke_string_object_callback",
-      "line": 297,
+      "line": 300,
       "lines": 9,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471e50",
-      "line": 307,
+      "line": 310,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
+      "name": "kinoko_native_create_event_callback",
+      "line": 313,
+      "lines": 4,
+      "category": "abi_alias"
+    },
+    {
+      "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471f70",
-      "line": 310,
-      "lines": 1,
-      "category": "address_named_legacy"
+      "line": 317,
+      "lines": 3,
+      "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_invoke_integer_result_callback",
-      "line": 312,
+      "line": 321,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_472030",
-      "line": 319,
+      "line": 328,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_truthy",
-      "line": 326,
+      "line": 335,
       "lines": 22,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_no_arguments",
-      "line": 349,
+      "line": 358,
       "lines": 5,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_string_object",
-      "line": 355,
+      "line": 364,
       "lines": 20,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_string_bool",
-      "line": 376,
+      "line": 385,
       "lines": 10,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_string_integer_truth",
-      "line": 387,
+      "line": 396,
       "lines": 32,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_two_floats",
-      "line": 420,
+      "line": 429,
       "lines": 14,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "kinoko_native_one_integer",
-      "line": 435,
+      "line": 444,
       "lines": 13,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_470df0",
-      "line": 450,
-      "lines": 3,
-      "category": "abi_alias"
-    },
-    {
-      "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_470ee0",
-      "line": 453,
-      "lines": 3,
-      "category": "abi_alias"
-    },
-    {
-      "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471160",
-      "line": 456,
-      "lines": 3,
-      "category": "abi_alias"
-    },
-    {
-      "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471330",
       "line": 459,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471880",
+      "name": "function_470ee0",
       "line": 462,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471960",
+      "name": "function_471160",
       "line": 465,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471bc0",
+      "name": "function_471330",
       "line": 468,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
-      "name": "function_471c10",
+      "name": "function_471880",
       "line": 471,
+      "lines": 3,
+      "category": "abi_alias"
+    },
+    {
+      "file": "src/squirrel/squirrel_native_calls.cpp",
+      "name": "function_471960",
+      "line": 474,
+      "lines": 3,
+      "category": "abi_alias"
+    },
+    {
+      "file": "src/squirrel/squirrel_native_calls.cpp",
+      "name": "function_471bc0",
+      "line": 477,
+      "lines": 3,
+      "category": "abi_alias"
+    },
+    {
+      "file": "src/squirrel/squirrel_native_calls.cpp",
+      "name": "function_471c10",
+      "line": 480,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471d90",
-      "line": 475,
+      "line": 484,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471eb0",
-      "line": 479,
+      "line": 488,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471f10",
-      "line": 482,
+      "line": 491,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_471fd0",
-      "line": 486,
+      "line": 495,
       "lines": 3,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_472080",
-      "line": 489,
+      "line": 498,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_4720e0",
-      "line": 493,
+      "line": 502,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/squirrel/squirrel_native_calls.cpp",
       "name": "function_472140",
-      "line": 497,
+      "line": 506,
       "lines": 4,
       "category": "abi_alias"
     },
