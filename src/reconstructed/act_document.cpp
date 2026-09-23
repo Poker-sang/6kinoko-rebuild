@@ -166,14 +166,13 @@ int32_t retdec_construct_c2dlayout(int32_t layout) {
 
 int32_t retdec_act_make_layout(int32_t reader_ptr)
 {
-    const auto layout = address(std::calloc(1u, 316u));
-    if (!retdec_construct_c2dlayout(layout)) return 0;
-    if (!kinoko_act_read_layout2d_properties(pointer<KinokoActLayout>(layout),
-            &reader_ptr,1)) {
-        std::free(pointer<void>(layout));
-        return 0;
-    }
-    return layout;
+    auto layout = std::unique_ptr<KinokoActLayout, decltype(&std::free)>(
+        static_cast<KinokoActLayout *>(std::calloc(1u, sizeof(kinoko::act::Layout2DRecord))),
+        &std::free);
+    if (!layout || !retdec_construct_c2dlayout(address(layout.get()))) return 0;
+    auto *reader = pointer<KinokoArchiveReader>(reader_ptr);
+    if (!kinoko_act_read_layout2d_properties(layout.get(), &reader, 1)) return 0;
+    return address(layout.release());
 }
 
 int32_t retdec_act_make_map_layout(int32_t reader_ptr)
