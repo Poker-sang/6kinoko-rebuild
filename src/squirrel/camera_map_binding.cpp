@@ -165,7 +165,7 @@ int32_t kinoko_call_camera_update(SQVM *vm) {
                                 arguments[0], arguments[1], arguments[2]);
     return 0;
 }
-int32_t kinoko_register_camera_binding() {
+int32_t register_camera_binding_impl() {
     ObjectStorage root{};
     ClassState state{};
     kinoko_sqplus_object_copy_construct(&root, kinoko_sqplus_root_object());
@@ -191,7 +191,7 @@ int32_t kinoko_register_camera_binding() {
     kinoko_sqplus_object_destroy(&root);
     return 0;
 }
-int32_t kinoko_register_map_binding() {
+int32_t register_map_binding_impl() {
     ClassState state{};
     ObjectStorage layer{};
     construct(state, "Map", kinoko_map_binding_type());
@@ -209,5 +209,7 @@ int32_t kinoko_register_map_binding() {
 extern "C" int32_t kinoko_camera_update_entry(int32_t vm) {
     return kinoko_call_camera_update(pointer<SQVM>(vm));
 }
+extern "C" int32_t kinoko_register_camera_binding(void) { return register_camera_binding_impl(); }
 extern "C" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }
+extern "C" int32_t kinoko_register_map_binding(void) { return register_map_binding_impl(); }
 extern "C" int32_t function_46fac0(void) { return kinoko_register_map_binding(); }
