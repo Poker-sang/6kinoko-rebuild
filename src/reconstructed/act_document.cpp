@@ -8,6 +8,7 @@
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
 #include "kinoko/act_resource_io.h"
+#include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_load_properties.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
@@ -466,298 +467,269 @@ void retdec_mcd_free(struct retdec_mcd_data *data)
     std::free(data);
 }
 
-int32_t retdec_act_load_mcd(int32_t resource,
-                                   const char *file_name)
-{
-    KinokoArchiveReader *reader_slot = nullptr;
-    struct retdec_mcd_data *data = nullptr;
-    uint32_t magic;
-    uint32_t version;
-    uint32_t payload_offset;
-    uint32_t chip_count;
-    uint32_t record_size;
-    uint32_t texture_count;
-    uint32_t index;
-    uint32_t loaded_texture_count = 0;
-
-    if (resource == 0 || file_name == nullptr || *file_name == 0)
-        return 0;
-    if (!kinoko_reader_open(&reader_slot, file_name)) {
-        retdec_trace_squirrel_name("mcd:open-failed",
-                                   address(file_name));
+namespace {
+// MCD buffers and acquired texture handles belong to this object until
+// publication into a chip resource. A failure releases both together.
+using MCDOwner = std::unique_ptr<retdec_mcd_data, decltype(&retdec_mcd_free)>;
+using ArchiveOwner = std::unique_ptr<KinokoArchiveReader, decltype(&kinoko_reader_close)>;
+int32_t load_chip_archive(KinokoActResource *resource, const char *file_name) {
+    if (!resource || !file_name || !*file_name) return 0;
+    KinokoArchiveReader *opened = nullptr;
+    if (!kinoko_reader_open(&opened, file_name)) {
+        retdec_trace_squirrel_name("mcd:open-failed", address(file_name));
         return 0;
     }
-
-    if (!kinoko_reader_read_exact(reader_slot, &magic, sizeof(magic)) ||
-        magic != 0x434d4432u ||
-        !kinoko_reader_read_exact(reader_slot, &version, sizeof(version)) ||
-        version > 1u ||
-        !kinoko_reader_read_exact(reader_slot, &payload_offset,
-                                  sizeof(payload_offset)) ||
-        (payload_offset != 0 &&
-         !kinoko_reader_seek_relative(reader_slot, payload_offset)) ||
-        !kinoko_reader_read_exact(reader_slot, &chip_count,
-                                  sizeof(chip_count)) ||
-        !kinoko_reader_read_exact(reader_slot, &record_size,
-                                  sizeof(record_size)) ||
+    ArchiveOwner reader(opened, &kinoko_reader_close);
+    uint32_t magic = 0, version = 0, payload_offset = 0;
+    uint32_t chip_count = 0, record_size = 0, texture_count = 0;
+    auto read_u32 = [&reader](uint32_t &value) {
+        return kinoko_reader_read_exact(reader.get(), &value, sizeof(value)) != 0;
+    };
+    if (!read_u32(magic) || magic != 0x434d4432u ||
+        !read_u32(version) || version > 1u ||
+        !read_u32(payload_offset) ||
+        (payload_offset && !kinoko_reader_seek_relative(reader.get(), payload_offset)) ||
+        !read_u32(chip_count) || !read_u32(record_size) ||
         chip_count > 0x10000u || record_size > 48u) {
         retdec_trace("mcd:header-failed");
-        kinoko_reader_close(reader_slot);
         return 0;
     }
-
-    data = (struct retdec_mcd_data *)std::calloc(1u, sizeof(*data));
-    if (data == nullptr) {
-        kinoko_reader_close(reader_slot);
-        return 0;
-    }
+    MCDOwner data(static_cast<retdec_mcd_data *>(std::calloc(1u, sizeof(retdec_mcd_data))),
+                  &retdec_mcd_free);
+    if (!data) return 0;
     data->chip_count = chip_count;
-    if (chip_count != 0) {
-        data->chips = (struct retdec_mcd_chip *)std::calloc(
-            (size_t)chip_count, sizeof(*data->chips));
-        if (data->chips == nullptr)
-            goto load_failed;
+    if (chip_count) {
+        data->chips = static_cast<retdec_mcd_chip *>(
+            std::calloc(chip_count, sizeof(retdec_mcd_chip)));
+        if (!data->chips) { retdec_trace("mcd:load-failed"); return 0; }
     }
-
-    for (index = 0; index < chip_count; ++index) {
-        unsigned char record[48] = { 0 };
-        uint32_t next_record;
-
-        if ((record_size != 0 &&
-             !kinoko_reader_read_exact(reader_slot, record, record_size)) ||
-            !kinoko_reader_read_exact(reader_slot, &next_record,
-                                      sizeof(next_record)))
-            goto load_failed;
-        data->chips[index].chip_id = retdec_mcd_u32(record);
-        std::memcpy(data->chips[index].bytes, record, sizeof(record));
-        if (data->chips[index].chip_id >= 0x8d0u &&
-            data->chips[index].chip_id <= 0x920u) {
-            retdec_trace_i32("mcd:chip-index", (int32_t)index);
-            retdec_trace_i32("mcd:chip-id",
-                             (int32_t)data->chips[index].chip_id);
+    for (uint32_t index = 0; index < chip_count; ++index) {
+        unsigned char record[48]{};
+        uint32_t next_record = 0;
+        if ((record_size && !kinoko_reader_read_exact(reader.get(), record, record_size)) ||
+            !read_u32(next_record)) {
+            retdec_trace("mcd:load-failed"); return 0;
+        }
+        auto &chip = data->chips[index];
+        chip.chip_id = retdec_mcd_u32(record);
+        std::memcpy(chip.bytes, record, sizeof(record));
+        if (chip.chip_id >= 0x8d0u && chip.chip_id <= 0x920u) {
+            retdec_trace_i32("mcd:chip-index", static_cast<int32_t>(index));
+            retdec_trace_i32("mcd:chip-id", static_cast<int32_t>(chip.chip_id));
         }
     }
-
-    if (!kinoko_reader_read_exact(reader_slot, &texture_count,
-                                  sizeof(texture_count)) ||
-        texture_count > 0x10000u)
-        goto load_failed;
+    if (!read_u32(texture_count) || texture_count > 0x10000u) {
+        retdec_trace("mcd:load-failed"); return 0;
+    }
     data->texture_count = texture_count;
-    if (texture_count != 0) {
-        data->textures = (struct retdec_mcd_texture *)std::calloc(
-            (size_t)texture_count, sizeof(*data->textures));
-        if (data->textures == nullptr)
-            goto load_failed;
+    if (texture_count) {
+        data->textures = static_cast<retdec_mcd_texture *>(
+            std::calloc(texture_count, sizeof(retdec_mcd_texture)));
+        if (!data->textures) { retdec_trace("mcd:load-failed"); return 0; }
     }
-
-    for (index = 0; index < texture_count; ++index) {
-        uint32_t texture_id;
-        uint32_t name_length;
-        char *name;
-        int32_t handle;
-
-        if (!kinoko_reader_read_exact(reader_slot, &texture_id,
-                                      sizeof(texture_id)) ||
-            !kinoko_reader_read_exact(reader_slot, &name_length,
-                                      sizeof(name_length)) ||
-            name_length > 0x100000u)
-            goto load_failed;
-        name = (char *)std::malloc((size_t)name_length + 1u);
-        if (name == nullptr)
-            goto load_failed;
-        if (name_length != 0 &&
-            !kinoko_reader_read_exact(reader_slot, name, name_length)) {
-            std::free(name);
-            goto load_failed;
+    uint32_t loaded_texture_count = 0;
+    for (uint32_t index = 0; index < texture_count; ++index) {
+        uint32_t texture_id = 0, name_length = 0;
+        if (!read_u32(texture_id) || !read_u32(name_length) || name_length > 0x100000u) {
+            retdec_trace("mcd:load-failed"); return 0;
         }
-        name[name_length] = 0;
-        handle = retdec_load_act_texture(name);
-        retdec_trace_squirrel_name("mcd:texture-name",
-                                   address(name));
-        retdec_trace_i32("mcd:texture-id", (int32_t)texture_id);
+        auto name = std::unique_ptr<char, decltype(&std::free)>(
+            static_cast<char *>(std::malloc(static_cast<size_t>(name_length) + 1u)), &std::free);
+        if (!name || (name_length &&
+            !kinoko_reader_read_exact(reader.get(), name.get(), name_length))) {
+            retdec_trace("mcd:load-failed"); return 0;
+        }
+        name.get()[name_length] = 0;
+        const int32_t handle = retdec_load_act_texture(name.get());
+        retdec_trace_squirrel_name("mcd:texture-name", address(name.get()));
+        retdec_trace_i32("mcd:texture-id", static_cast<int32_t>(texture_id));
         retdec_trace_i32("mcd:texture-handle", handle);
-        if (handle > 0 && (uint32_t)handle < KINOKO_TEXTURE_CAPACITY) {
-            retdec_trace_i32("mcd:texture-width",
-                             (int32_t)kinoko_texture_slots[
-                                 (uint32_t)handle].width);
-            retdec_trace_i32("mcd:texture-height",
-                             (int32_t)kinoko_texture_slots[
-                                 (uint32_t)handle].height);
+        if (handle > 0 && static_cast<uint32_t>(handle) < KINOKO_TEXTURE_CAPACITY) {
+            retdec_trace_i32("mcd:texture-width", kinoko_texture_slots[handle].width);
+            retdec_trace_i32("mcd:texture-height", kinoko_texture_slots[handle].height);
         }
-        std::free(name);
-        data->textures[index].texture_id = texture_id;
-        data->textures[index].handle = handle;
-        if (handle != 0)
-            ++loaded_texture_count;
+        data->textures[index] = {texture_id, handle};
+        if (handle) ++loaded_texture_count;
     }
-
-    kinoko_reader_close(reader_slot);
-    field<int32_t>(resource + 64) =
-        address(data);
-    kinoko_string_assign_cstr(
-        pointer<int32_t>(resource + 72), file_name);
-    retdec_trace_i32("mcd:chip-count", (int32_t)chip_count);
-    retdec_trace_i32("mcd:texture-count", (int32_t)texture_count);
-    retdec_trace_i32("mcd:texture-loaded", (int32_t)loaded_texture_count);
+    reader.reset(); // Original closes the stream before publishing data.
+    kinoko::act::ChipResourceFields fields(resource);
+    fields.set(&kinoko::act::ChipResourceRecord::data, data.release());
+    kinoko_string_assign_cstr(reinterpret_cast<int32_t *>(
+        fields.bytes(&kinoko::act::ChipResourceRecord::loaded_path)), file_name);
+    retdec_trace_i32("mcd:chip-count", static_cast<int32_t>(chip_count));
+    retdec_trace_i32("mcd:texture-count", static_cast<int32_t>(texture_count));
+    retdec_trace_i32("mcd:texture-loaded", static_cast<int32_t>(loaded_texture_count));
     return 1;
-
-load_failed:
-    kinoko_reader_close(reader_slot);
-    retdec_mcd_free(data);
-    retdec_trace("mcd:load-failed");
-    return 0;
+}
+} // namespace
+int32_t retdec_act_load_mcd(int32_t resource, const char *file_name) {
+    return load_chip_archive(pointer<KinokoActResource>(resource), file_name);
 }
 
-extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t resource, void *) {
+extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t receiver, void *) {
+    auto *resource = pointer<KinokoActResource>(receiver);
     if (!resource) return 0;
-    const int32_t handle = field<int32_t>(resource + 68);
-    if (!kinoko_act_release_cloned_texture(resource) && !field<uint8_t>(resource + 36) && handle)
+    kinoko::act::TextureResourceFields fields(resource);
+    const auto handle = fields.get(&kinoko::act::TextureResourceRecord::texture);
+    if (!kinoko_act_release_cloned_texture(receiver) &&
+        !fields.get(&kinoko::act::TextureResourceRecord::flag36) && handle)
         kinoko_texture_release(handle);
-    field<int32_t>(resource + 68) = 0;
+    fields.set(&kinoko::act::TextureResourceRecord::texture, int32_t{0});
     return 1;
 }
 
 extern "C" int32_t __fastcall kinoko_method_load_chip_resource(
-    int32_t resource, void*, const char* prefix) {
+    int32_t receiver, void *, const char *prefix) {
+    auto *resource = pointer<KinokoActResource>(receiver);
     if (!resource) return 0;
-    const char* name = kinoko_string_data((const void*)(intptr_t)(resource+36));
+    kinoko::act::ChipResourceFields fields(resource);
+    const char *name = kinoko_string_data(
+        fields.bytes(&kinoko::act::ChipResourceRecord::source_name));
     if (!name || !*name) return 0;
     try {
-        // 42FB4E uses an empty default prefix. Append '/' only to a nonempty
-        // prefix that lacks either accepted separator (42FC5A..42FC71).
+        // 42FB4E starts with an empty prefix; add a separator only when needed.
         std::string base(prefix ? prefix : "");
-        if (!base.empty() && base.back()!='/' && base.back()!='\\') base += '/';
+        if (!base.empty() && base.back() != '/' && base.back() != '\\') base += '/';
         const std::string path = base + name;
-        auto destroy = [](int32_t* value) { retdec_destroy_cact_resource(address(value)); };
-        std::unique_ptr<int32_t, decltype(destroy)> temporary(
-            static_cast<int32_t*>(std::calloc(1,100)), destroy);
+        auto destroy = [](KinokoActResource *value) {
+            retdec_destroy_cact_resource(address(value));
+        };
+        std::unique_ptr<KinokoActResource, decltype(destroy)> temporary(
+            static_cast<KinokoActResource *>(std::calloc(1, sizeof(kinoko::act::ChipResourceRecord))),
+            destroy);
         if (!temporary) return 0;
-        temporary.get()[0] = address(kinoko_act_host_symbols()->chip_resource_vtable);
-        temporary.get()[7] = temporary.get()[14] = temporary.get()[23] = 15;
-        // Original loads into a temporary owner and only replaces on success.
-        if (!retdec_act_load_mcd(address(temporary.get()), path.c_str())) return 0;
-        kinoko_string_assign_cstr(pointer<int32_t>(resource+72), base.c_str());
-        if (kinoko_act_release_chip_data(resource))
-            retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource+64)));
-        field<int32_t>(resource+64) = temporary.get()[16];
-        temporary.get()[16] = 0;
+        kinoko::act::ChipResourceFields scratch(temporary.get());
+        scratch.set(&kinoko::act::ChipResourceRecord::methods,
+            kinoko_act_host_symbols()->chip_resource_vtable);
+        auto base_name = scratch.view(&kinoko::act::ChipResourceRecord::name);
+        auto source_name = scratch.view(&kinoko::act::ChipResourceRecord::source_name);
+        auto loaded_path = scratch.view(&kinoko::act::ChipResourceRecord::loaded_path);
+        base_name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        source_name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        loaded_path.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        // Original loads into a temporary resource and replaces only on success.
+        if (!load_chip_archive(temporary.get(), path.c_str())) return 0;
+        kinoko_string_assign_cstr(reinterpret_cast<int32_t *>(
+            fields.bytes(&kinoko::act::ChipResourceRecord::loaded_path)), base.c_str());
+        if (kinoko_act_release_chip_data(receiver))
+            retdec_mcd_free(fields.get(&kinoko::act::ChipResourceRecord::data));
+        fields.set(&kinoko::act::ChipResourceRecord::data,
+            scratch.get(&kinoko::act::ChipResourceRecord::data));
+        scratch.set(&kinoko::act::ChipResourceRecord::data,
+            static_cast<retdec_mcd_data *>(nullptr));
         return 1;
     } catch (...) { return 0; }
 }
 
 extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
-    int32_t resource, void *, const char *prefix) {
+    int32_t receiver, void *, const char *prefix) {
+    auto *resource = pointer<KinokoActResource>(receiver);
     if (!resource) return 0;
-    const char *name = kinoko_string_data((const void*)(intptr_t)(resource + 40));
-    // 446C36 leaves the existing handle untouched for an empty texture name.
+    kinoko::act::TextureResourceFields fields(resource);
+    const char *name = kinoko_string_data(
+        fields.bytes(&kinoko::act::TextureResourceRecord::texture_name));
+    // 446C36 leaves the old handle in place for an empty texture name.
     if (!name || !*name) return 0;
     try {
         std::string path(prefix && *prefix ? prefix : "./");
         if (path.back() != '/' && path.back() != '\\') path += '/';
-        retdec_call_thiscall0(pointer<void>(resource),
-            field<void *>(field<int32_t>(resource) + 44));
-        field<uint8_t>(resource + 36) = 0;
+        retdec_call_thiscall0(resource, field<void *>(field<int32_t>(receiver) + 44));
+        fields.set(&kinoko::act::TextureResourceRecord::flag36, uint8_t{0});
         path += name;
-        // 431D80 concatenates prefix/name; 40E540 appends each suffix. The
-        // texture reader, not this resource, maps DDS/BMP/PNG requests to CV2.
+        // 431D80 joins prefix/name; 40E540 appends each suffix.
         for (const char *suffix : {".dds", ".bmp", ".png"}) {
             const auto candidate = path + suffix;
             const int32_t handle = kinoko_texture_acquire(candidate.c_str());
-            field<int32_t>(resource + 68) = handle;
+            fields.set(&kinoko::act::TextureResourceRecord::texture, handle);
             if (!handle) continue;
             const auto &slot = kinoko_texture_slots[handle];
-            field<int32_t>(resource + 72) = slot.width;
-            field<int32_t>(resource + 76) = slot.height;
-            if (field<uint8_t>(resource + 96)) {
-                field<float>(resource + 80) = 0;
-                field<float>(resource + 84) = 0;
-                field<float>(resource + 88) = static_cast<float>(slot.width);
-                field<float>(resource + 92) = static_cast<float>(slot.height);
+            fields.set(&kinoko::act::TextureResourceRecord::width,
+                       static_cast<int32_t>(slot.width));
+            fields.set(&kinoko::act::TextureResourceRecord::height,
+                       static_cast<int32_t>(slot.height));
+            if (fields.get(&kinoko::act::TextureResourceRecord::auto_size)) {
+                fields.set(&kinoko::act::TextureResourceRecord::source_x, 0.0f);
+                fields.set(&kinoko::act::TextureResourceRecord::source_y, 0.0f);
+                fields.set(&kinoko::act::TextureResourceRecord::source_width,
+                           static_cast<float>(slot.width));
+                fields.set(&kinoko::act::TextureResourceRecord::source_height,
+                           static_cast<float>(slot.height));
             }
             return 1;
         }
-    } catch (...) {
-        return 0;
-    }
+    } catch (...) { return 0; }
     return 0;
 }
 
 int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
 {
-    int32_t resource;
-    if(type==kinoko::mesh::resource_type()) {
-        auto *mesh=kinoko::mesh::create_resource();
-        if(mesh && !kinoko::mesh::read_resource_properties(mesh,&reader_ptr,1)) {
-            kinoko::mesh::clear_resource(mesh);std::free(mesh);return 0;
+    if (type == kinoko::mesh::resource_type()) {
+        auto *mesh = kinoko::mesh::create_resource();
+        if (mesh && !kinoko::mesh::read_resource_properties(mesh, &reader_ptr, 1)) {
+            kinoko::mesh::clear_resource(mesh);
+            std::free(mesh);
+            return 0;
         }
         return address(mesh);
     }
-    // Original 449C50 registers the raw RTTI name in the same Boost-hashed
-    // factory used by 428150. This type owns an independent property schema.
+    // 449C50 registers the render target's raw RTTI name in the same factory.
     static const char target_name[] = ".?AVCActRenderTarget@@";
     static const auto target_type = static_cast<uint32_t>(kinoko_boost_hash_range(
         address(target_name), address(target_name + sizeof(target_name) - 1)));
     const bool render_target = type == target_type;
     const bool texture = type == 0xc6fdb98au || render_target;
-
     if (!texture && type != 0xfbaaf527u) {
-        retdec_trace_i32("act:unsupported-resource", (int32_t)type);
+        retdec_trace_i32("act:unsupported-resource", static_cast<int32_t>(type));
         return 0;
     }
-    resource = address(std::calloc(1u, 100u));
-    if (resource == 0)
-        return 0;
-    field<int32_t>(resource) = render_target
-        ? address(kinoko_act_host_symbols()->render_target_vtable)
-        : type == 0xfbaaf527u
-        ? address(kinoko_act_host_symbols()->chip_resource_vtable)
-        : address(kinoko_act_host_symbols()->texture_resource_vtable);
-    field<int32_t>(resource + 4) = -1;
-    field<int32_t>(resource + 24) = 0;
-    field<int32_t>(resource + 28) = 15;
-    field<int32_t>(resource + 56) = 0;
-    field<int32_t>(resource + 60) = 15;
-    field<uint8_t>(resource + 8) = 0;
-    field<uint8_t>(resource + 40) = 0;
+    auto destroy = [](KinokoActResource *value) {
+        retdec_destroy_cact_resource(address(value));
+    };
+    std::unique_ptr<KinokoActResource, decltype(destroy)> resource(
+        static_cast<KinokoActResource *>(std::calloc(1, sizeof(kinoko::act::TextureResourceRecord))),
+        destroy);
+    if (!resource) return 0;
+    auto name = kinoko::act::TextureResourceFields(resource.get()).view(
+        &kinoko::act::TextureResourceRecord::name);
+    name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
     if (texture) {
-        field<int32_t>(resource + 72) = 256;
-        field<int32_t>(resource + 76) = 256;
-        field<uint8_t>(resource + 96) = 1;
+        kinoko::act::TextureResourceFields fields(resource.get());
+        fields.set(&kinoko::act::TextureResourceRecord::methods, render_target
+            ? kinoko_act_host_symbols()->render_target_vtable
+            : kinoko_act_host_symbols()->texture_resource_vtable);
+        fields.set(&kinoko::act::TextureResourceRecord::id, int32_t{-1});
+        auto image_name = fields.view(&kinoko::act::TextureResourceRecord::texture_name);
+        image_name.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        fields.set(&kinoko::act::TextureResourceRecord::width, int32_t{256});
+        fields.set(&kinoko::act::TextureResourceRecord::height, int32_t{256});
+        fields.set(&kinoko::act::TextureResourceRecord::auto_size, uint8_t{1});
     } else {
-        field<int32_t>(resource + 52) = 0;
-        field<int32_t>(resource + 56) = 15;
-        field<uint8_t>(resource + 36) = 0;
-        field<int32_t>(resource + 64) = 0;
-        field<int32_t>(resource + 68) = 0;
-        field<int32_t>(resource + 88) = 0;
-        field<int32_t>(resource + 92) = 15;
-        field<uint8_t>(resource + 72) = 0;
+        kinoko::act::ChipResourceFields fields(resource.get());
+        fields.set(&kinoko::act::ChipResourceRecord::methods,
+            kinoko_act_host_symbols()->chip_resource_vtable);
+        fields.set(&kinoko::act::ChipResourceRecord::id, int32_t{-1});
+        auto source = fields.view(&kinoko::act::ChipResourceRecord::source_name);
+        auto loaded = fields.view(&kinoko::act::ChipResourceRecord::loaded_path);
+        source.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        loaded.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+        fields.set(&kinoko::act::ChipResourceRecord::unknown60, uint32_t{15});
     }
-    auto* borrowed_resource=pointer<KinokoActResource>(resource);
     const auto loaded = render_target
-        ? kinoko_act_read_render_target_properties(borrowed_resource, &reader_ptr, 1)
-        : type == 0xfbaaf527u
-        ? kinoko_act_read_chip_properties(borrowed_resource, &reader_ptr, 1)
-        : kinoko_act_read_texture_properties(borrowed_resource, &reader_ptr, 1);
+        ? kinoko_act_read_render_target_properties(resource.get(), &reader_ptr, 1)
+        : !texture
+        ? kinoko_act_read_chip_properties(resource.get(), &reader_ptr, 1)
+        : kinoko_act_read_texture_properties(resource.get(), &reader_ptr, 1);
     if (!loaded) {
         retdec_trace("act:resource-properties-failed");
-        retdec_destroy_cact_resource(resource);
         return 0;
     }
-    if (render_target) {
-        // 428150 only constructs/deserializes the target here. D3DX creation
-        // belongs to the separate virtual Create(width,height) entry; do not
-        // load stTextureName as a file or replace the serialized crop rectangle.
-        return resource;
-    }
     if (type == 0xc6fdb98au) {
-        // Original 446A84 clears auto-size after deserializing, including an
-        // absent property block. Serialized atlas regions must survive LoadTexture.
-        field<uint8_t>(resource + 96) = 0;
+        // 446A84 clears auto-size even without a property block.
+        kinoko::act::TextureResourceFields(resource.get()).set(
+            &kinoko::act::TextureResourceRecord::auto_size, uint8_t{0});
     }
-    // 428150 deserializes and publishes resources. Loading is the later
-    // 4289C0 virtual pass, after every resource has been parsed and bound.
-    return resource;
+    // 428150 publishes the object now; 4289C0 loads actual resources later.
+    return address(resource.release());
 }
 
 int32_t retdec_c2dmaplayout_set_layer_impl(int32_t layout,
