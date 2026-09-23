@@ -92,6 +92,7 @@
 
 #include "retdec_asm_stubs.h"
 #include "kinoko/squirrel_compile_bridge.h"
+#include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/squirrel_value_bridge.h"
 #include "kinoko/actor_collision.h"
 #include "kinoko/map_collision.h"
