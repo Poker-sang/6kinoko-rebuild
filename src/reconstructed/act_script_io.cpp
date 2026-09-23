@@ -113,7 +113,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
             !write_string(writer,"filePath",8) || !transfer(writer,string_type)) return 0;
     }
     auto path = kinoko::legacy::StringView(pointer<void>(script + 64));
-    const auto compiled_flag = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
+    auto compiled_flag = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
     if (!transfer(writer, compiled_flag) || !write_string(writer, path.data(), path.length())) return 0;
     const auto bytes = payload.get(&kinoko::act::ScriptPayloadRecord::bytes);
     auto size = payload.get(&kinoko::act::ScriptPayloadRecord::size);
@@ -148,3 +148,4 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
     payload.set(&kinoko::act::ScriptPayloadRecord::compiled, was_compiled);
     return 1;
 }
+
