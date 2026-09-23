@@ -61,3 +61,8 @@ Batch 12: original 43E890/43EA10 constructs and destroys the glyph deque
 at layout +176. Native deque access now reads the asserted glyph_owner
 field and construction/destruction publishes or clears that owner pointer.
 Glyph records continue to borrow atlas pages; no refcount order changed.
+Batch 13: IDA 43EC30 copies three independent strings, style bytes
+88..127, edge byte 128, style bytes 132..159 and tail bytes 200..259,
+with padding 129..131 untouched. The clone uses named record member
+boundaries for these spans and retains its existing atlas/deque assignment
+and subsequent clearing. Evidence: 43ec30.json.

@@ -222,14 +222,16 @@ extern "C" int32_t __fastcall kinoko_method_clone_string_layout(int32_t source,v
     kinoko_construct_string_layout(out);
     // 43EC30: three independent strings, scalar style fields, atlas/deque
     // assignment, and all 60 tail bytes. Padding 129..131 remains untouched.
-    for(int offset:{4,32,60})
-        StringView(pointer<void>(out+offset)).assign(StringView(pointer<void>(source+offset)),0,UINT32_MAX);
-    std::copy_n(pointer<unsigned char>(source+88),40,pointer<unsigned char>(out+88));
-    field<uint8_t>(out+128)=field<uint8_t>(source+128);
-    std::copy_n(pointer<unsigned char>(source+132),28,pointer<unsigned char>(out+132));
+    using Layout=kinoko::act::StringLayoutRecord;
+    const kinoko::native::RecordView<Layout> target(pointer<void>(out)), origin(pointer<void>(source));
+    for(auto member : {&Layout::text,&Layout::pending,&Layout::face})
+        StringView(target.bytes(member)).assign(StringView(origin.bytes(member)),0,UINT32_MAX);
+    std::copy_n(origin.bytes(&Layout::font_height),40,target.bytes(&Layout::font_height));
+    target.set(&Layout::edge,origin.get(&Layout::edge));
+    std::copy_n(origin.bytes(&Layout::alignment),28,target.bytes(&Layout::alignment));
     *atlases(out)=*atlases(source);
     kinoko_string_copy_queue_storage(out,source);
-    std::copy_n(pointer<unsigned char>(source+200),60,pointer<unsigned char>(out+200));
+    std::copy_n(origin.bytes(&Layout::next_glyph_id),60,target.bytes(&Layout::next_glyph_id));
     // 43EB80 clears cloned atlas values (retains vector capacity, no texture
     // Release), then frees deque blocks/map while retaining its own proxy.
     atlases(out)->clear();
