@@ -1625,7 +1625,7 @@ int32_t function_4123c0(int32_t a1);
 
 
 
-int32_t function_412ca0(void);
+/* 412CA0: kinoko_ime_initialize is implemented in native C++. */
 
 
 
@@ -4256,23 +4256,7 @@ int32_t function_4123c0(int32_t a1) {
 // Address range: 0x412c10 - 0x412ca0
 
 
-// Address range: 0x412ca0 - 0x412d30
-int32_t function_412ca0(void) {
-    struct retdec_tagCANDIDATEFORM candidate = { 0 };
-    struct retdec_tagRECT rect = { 0 };
-
-    g534 = ImmGetContext((int32_t *)g767);
-    g535 = (int32_t)ImmGetDefaultIMEWnd((int32_t *)g767);
-    candidate.e0 = 0;
-    candidate.e1 = 128;
-    GetWindowRect((int32_t *)g767, &rect);
-    candidate.e3.e2 = rect.e2 - rect.e0;
-    candidate.e3.e0 = 0;
-    candidate.e3.e1 = 0;
-    candidate.e3.e3 = rect.e3 - rect.e1;
-    return ImmSetCandidateWindow(
-        g534, (struct retdec_tagCANDIDATEFORM *)&candidate);
-}
+// Address range: 0x412ca0 - 0x412d30 (native kinoko_ime_initialize)
 
 // Address range: 0x412d30 - 0x412d9c
 

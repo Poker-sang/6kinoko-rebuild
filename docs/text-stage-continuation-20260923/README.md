@@ -20,3 +20,8 @@ Batch 3: the glyph deque's copy, pop, clear and pending-text paths now
 use StringLayoutRecord, StringGlyphRecord and AtlasLifecycle rather than
 numeric member offsets. Borrowed atlas references still change before deque
 mutation, while copy_queue_storage retains its original no-adjust contract.
+Batch 4: IDA MCP 412CA0 confirms ImmGetContext/ImmGetDefaultIMEWnd
+for the original HWND and CFS_EXCLUDE (128) with a zero-origin client
+area derived from GetWindowRect. The active application call now uses
+kinoko_ime_initialize in the IME module; original context globals retain
+their binary layout and release path.

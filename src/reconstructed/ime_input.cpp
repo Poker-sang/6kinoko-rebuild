@@ -6,7 +6,8 @@
 #include <cstring>
 
 extern "C" {
-extern int32_t g534, g545, g546, g550;
+extern int32_t g534, g535, g545, g546, g550;
+extern char *g767;
 extern char g547, g548, g549;
 }
 namespace {
@@ -96,6 +97,20 @@ void commit() {
         g546 = 1;
     }
 }
+}
+// 412CA0: initialize the original window's input context and candidate area.
+extern "C" int32_t kinoko_ime_initialize(void) {
+    const auto window=reinterpret_cast<HWND>(g767);
+    const auto input=ImmGetContext(window);
+    g534=static_cast<int32_t>(reinterpret_cast<intptr_t>(input));
+    g535=static_cast<int32_t>(reinterpret_cast<intptr_t>(ImmGetDefaultIMEWnd(window)));
+    RECT bounds{};
+    GetWindowRect(window,&bounds);
+    CANDIDATEFORM candidate{};
+    candidate.dwIndex=0;
+    candidate.dwStyle=CFS_EXCLUDE;
+    candidate.rcArea={0,0,bounds.right-bounds.left,bounds.bottom-bounds.top};
+    return ImmSetCandidateWindow(input,&candidate);
 }
 extern "C" int32_t kinoko_ime_dispatch(int32_t window, uint32_t message,
                                       uint32_t key, int32_t parameter) {

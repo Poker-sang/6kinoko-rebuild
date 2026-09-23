@@ -44,7 +44,7 @@ int32_t kinoko_input_open_keyboard() { return 0; }
 int32_t kinoko_input_open_controllers() { return 0; }
 int32_t kinoko_input_open_mouse() { return 0; }
 int32_t kinoko_input_poll() { return 0; }
-int32_t function_412ca0() { return 0; }
+int32_t kinoko_ime_initialize() { return 0; }
 HANDLE kinoko_frame_timer_register() { return nullptr; }
 void kinoko_frame_timer_wait(HANDLE) {}
 int32_t kinoko_frame_timer_unregister(HANDLE) { return 0; }

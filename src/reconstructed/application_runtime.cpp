@@ -23,7 +23,6 @@
 
 extern "C" {
 void retdec_trace(const char*);
-int32_t function_412ca0(void);
 extern int32_t g534;
 extern char g874;
 }
@@ -140,7 +139,7 @@ bool initialize(const Configuration& configuration) {
         if (state.input_initialized) { kinoko_input_open_keyboard(); kinoko_input_open_controllers(); kinoko_input_open_mouse(); }
     }
     if (configuration.audio) kinoko_audio_initialize_device(configuration.window, configuration.audio_options);
-    if (configuration.ime) { function_412ca0(); state.ime_initialized = true; }
+    if (configuration.ime) { kinoko_ime_initialize(); state.ime_initialized = true; }
     state.statistics_time = timeGetTime();
     if (configuration.manager) configuration.manager->methods->initialize(configuration.manager);
     if (configuration.transition) configuration.transition->methods->initialize(configuration.transition);
