@@ -7,7 +7,7 @@
 #include <cstddef>
 extern "C" {
 extern unsigned char g_retdec_keyboard_state[256];
-void retdec_poll_fallback_keyboard(void);
+void retdec_trace_i32(const char*, int32_t);
 KinokoInputSnapshot kinoko_input_snapshot{};
 }
 namespace {
@@ -71,6 +71,45 @@ int32_t open_device(Device& destination, REFGUID guid, const DIDATAFORMAT& forma
     return 1;
 }
 }
+extern "C" void kinoko_input_poll_fallback_keyboard(void)
+{
+    static int previous_z;
+    HKL keyboard_layout = GetKeyboardLayout(0);
+
+    memset(g_retdec_keyboard_state, 0, sizeof(g_retdec_keyboard_state));
+    /* 408B30 uses DISCL_FOREGROUND. Keep that contract in the fallback,
+       and expose the full keyboard to the original WaitAssign scan. */
+    if (kinoko_input_window() != NULL && GetForegroundWindow() == kinoko_input_window()) {
+        for (UINT virtual_key = VK_BACK; virtual_key < 256; ++virtual_key) {
+            UINT scan;
+            if (virtual_key == VK_SHIFT || virtual_key == VK_CONTROL || virtual_key == VK_MENU ||
+                (GetAsyncKeyState((int)virtual_key) & 0x8000) == 0)
+                continue;
+            scan = MapVirtualKeyExW(virtual_key, MAPVK_VK_TO_VSC_EX, keyboard_layout);
+            if (scan == 0)
+                continue;
+            scan = (scan & 0xffu) | ((scan & 0xff00u) ? 0x80u : 0);
+            /* Some IME layouts omit E0 even for MAPVK_VK_TO_VSC_EX.
+               DirectInput always distinguishes these from keypad keys. */
+            switch (virtual_key) {
+            case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
+            case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
+            case VK_INSERT: case VK_DELETE: case VK_RCONTROL: case VK_RMENU:
+            case VK_DIVIDE: case VK_SNAPSHOT: case VK_LWIN: case VK_RWIN:
+            case VK_APPS:
+                scan |= 0x80u;
+                break;
+            }
+            if (virtual_key == VK_PAUSE) scan = DIK_PAUSE;
+            if (virtual_key == VK_SNAPSHOT) scan = DIK_SYSRQ;
+            g_retdec_keyboard_state[scan] = 0x80;
+        }
+    }
+    if (previous_z != (g_retdec_keyboard_state[0x2c] != 0)) {
+        previous_z = g_retdec_keyboard_state[0x2c] != 0;
+        retdec_trace_i32("input:z", previous_z);
+    }
+}
 extern "C" HWND kinoko_input_window(void) { return service.window; }
 extern "C" int32_t kinoko_input_initialize(HWND window, HINSTANCE instance) {
     if (service.input) return 1;
@@ -124,7 +163,7 @@ extern "C" int32_t kinoko_input_poll(void) {
         }
     } else {
         // Established reconstruction fallback: foreground-only scan mapping.
-        retdec_poll_fallback_keyboard();
+        kinoko_input_poll_fallback_keyboard();
     }
     if (service.mouse && FAILED(service.mouse->GetDeviceState(sizeof(KinokoMouseState), &kinoko_input_snapshot.mouse)))
         service.mouse->Acquire();
