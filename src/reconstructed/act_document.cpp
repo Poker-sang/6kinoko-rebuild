@@ -261,7 +261,7 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
 {
     uint8_t has_layout;
     uint32_t layout_type = 0;
-    int32_t layout;
+    KinokoActLayout *layout = nullptr;
 
     if (!key || version != 1 || !kinoko_act_read_key_properties_typed(pointer<KinokoActKey>(key),
             pointer<KinokoArchiveReader>(reader_ptr))) {
@@ -282,35 +282,36 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
         return 0;
     }
     if(layout_type==kinoko::mesh::layout_type()) {
-        layout=address(kinoko::mesh::create_layout());
-        if(layout && !kinoko_act_read_layout3d_properties(
-                pointer<KinokoActLayout>(layout),&reader_ptr,version)) {
-            std::free(pointer<void>(layout));layout=0;
+        layout = reinterpret_cast<KinokoActLayout *>(kinoko::mesh::create_layout());
+        if (layout && !kinoko_act_read_layout3d_properties(layout, &reader_ptr, version)) {
+            std::free(layout);
+            layout = nullptr;
         }
     } else if(layout_type==0x9e695d47u) {
         // Original Boost hash of .?AVCStringLayout@@; use the genuine native
         // reader through its recovered holder/version ABI.
-        layout=address(std::calloc(1,260));
-        if(layout) {
-            kinoko_construct_string_layout(layout);
-            if(!kinoko_string_read_properties(pointer<KinokoStringLayout>(layout),
-                    &reader_ptr,version)) {
-                kinoko_clear_string_layout(layout);std::free(pointer<void>(layout));layout=0;
+        layout = static_cast<KinokoActLayout *>(std::calloc(1, sizeof(kinoko::act::StringLayoutRecord)));
+        if (layout) {
+            kinoko_construct_string_layout(address(layout));
+            if (!kinoko_string_read_properties(reinterpret_cast<KinokoStringLayout *>(layout),
+                    &reader_ptr, version)) {
+                kinoko_clear_string_layout(address(layout));
+                std::free(layout);
+                layout = nullptr;
             }
         }
     } else if (layout_type == 0xc9ca5c20u) {
-        layout = retdec_act_make_map_layout(reader_ptr);
-        if (layout != 0 && !retdec_act_read_map_records(layout, reader_ptr)) {
-            retdec_act_free_map_records(layout);
-            std::free(pointer<void>(layout));
-            layout = 0;
+        layout = pointer<KinokoActLayout>(retdec_act_make_map_layout(reader_ptr));
+        if (layout && !retdec_act_read_map_records(address(layout), reader_ptr)) {
+            retdec_act_free_map_records(address(layout));
+            std::free(layout);
+            layout = nullptr;
         }
     } else {
-        layout = retdec_act_make_layout(reader_ptr);
+        layout = pointer<KinokoActLayout>(retdec_act_make_layout(reader_ptr));
     }
-    if (layout == 0)
-        return 0;
-    field<int32_t>(key + 4) = layout;
+    if (!layout) return 0;
+    kinoko::act::KeyView(pointer<void>(key)).set(&kinoko::act::KeyRecord::layout, layout);
     return 1;
 }
 
