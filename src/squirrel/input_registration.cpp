@@ -2,6 +2,7 @@
 #include "kinoko/script_registration.h"
 #include "script_registration_host.hpp"
 #include "kinoko/input_devices.h"
+#include "kinoko/direct_input.h"
 #include <array>
 
 namespace {
