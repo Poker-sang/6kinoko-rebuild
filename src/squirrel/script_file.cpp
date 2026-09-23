@@ -97,6 +97,7 @@ extern "C" void* kinoko_script_initialize_root() noexcept(false) {
     return result;
 }
 extern "C" void* kinoko_script_root() { return script_root_slot; }
+extern "C" int32_t kinoko_script_assets_packed() { return compiled_assets() ? 1 : 0; }
 extern "C" int32_t kinoko_script_close_vm() {
     // 402AC0 CALL 4A8C50; 402AC5 JMP 4A8C50: two calls in the original.
     kinoko_sqplus_release_vm_wrappers();

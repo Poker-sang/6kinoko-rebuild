@@ -29,7 +29,29 @@ def main():
             thin = (body.count(';') <= 2 and not re.search(r'\b(if|for|while|switch|goto)\b', body)
                     and bool(re.search(r'\bkinoko_\w+\s*\(', body)))
             legacy = bool(re.search(r'\b(?:function_[0-9a-fA-F]+|v\d+|g\d+)\b|\bgoto\b|\([^\n]*intptr_t\)[^\n]*\+\s*\d+', body))
-            if thin:
+            compatibility = (
+                match[1] in {'__declspec', 'RETDEC_ASM_STUBS',
+                             '_3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__std_40__40_QAE_40_PBD_40_Z',
+                             '_3f__3f_3_40_YAXPAX_40_Z',
+                             'kinoko_sqrat_object_vtable', 'kinoko_sqrat_root_vtable',
+                             'kinoko_actor_vtable', 'kinoko_actor_step_key',
+                             'kinoko_squirrel_object_vtable',
+                             'retdec_msvc_Finitlocks__YAXXZ7',
+                             'retdec_msvc_Finitlocks__YAXXZ8',
+                             'retdec_msvc_Finitlocks__YAXXZ9',
+                             'kinoko_construct_layer_global_vm', 'kinoko_color_destroy',
+                             'kinoko_script_show_message', 'kinoko_script_sleep',
+                             'kinoko_script_close_window', 'kinoko_act_script_output_compiled',
+                             'kinoko_act_host_symbols', 'kinoko_audio_host_symbols',
+                             'kinoko_application_set_archive_mode',
+                             'kinoko_application_open_archives',
+                             'kinoko_game_prepare_scripts', 'kinoko_game_register_scripts',
+                             'kinoko_game_release_script_reference'}
+                or file.endswith('retdec_asm_stubs.c')
+                or match[1].startswith('_3f__3f_'))
+            if compatibility:
+                category = 'thin_bridge'
+            elif thin:
                 category = 'thin_bridge'
             elif address_name:
                 category = 'address_named_legacy'
