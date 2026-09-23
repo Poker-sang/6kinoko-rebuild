@@ -63,17 +63,17 @@ extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
 
 // Use real CRT registration and callable source addresses; original absolute
 // executable addresses cannot be registered in the reconstructed process.
-extern "C" int32_t function_4d3ce0() {
+extern "C" int32_t kinoko_register_stage_list_cleanup() {
     kinoko_stage_list_construct();
     return std::atexit(release_stage_list);
 }
 
-extern "C" int32_t function_4d3e50() {
+extern "C" int32_t kinoko_register_render_queue_cleanup() {
     kinoko_initialize_render_queue();
     return std::atexit(release_render_queue);
 }
 
-extern "C" int32_t function_4d3f50() {
+extern "C" int32_t kinoko_register_sound_tree_cleanup() {
     g638=kinoko_integer_map_create();g639=0;
     return std::atexit(release_sound_tree);
 }

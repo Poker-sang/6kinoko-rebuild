@@ -2158,10 +2158,10 @@ float80_t function_4ad7f2(void);
 
 
 
-int32_t function_4d3ce0(void);
+int32_t kinoko_register_stage_list_cleanup(void);
 
-int32_t function_4d3e50(void);
-int32_t function_4d3f50(void);
+int32_t kinoko_register_render_queue_cleanup(void);
+int32_t kinoko_register_sound_tree_cleanup(void);
 
 
 
@@ -3286,12 +3286,12 @@ static void retdec_initialize_runtime_objects(void)
     function_401850();
     kinoko_initialize_texture_cache();
     kinoko_archive_initialize();
-    function_4d3ce0();
-    function_4d3e50();
+    kinoko_register_stage_list_cleanup();
+    kinoko_register_render_queue_cleanup();
     /* CRT construction creates the LoadSE lookup tree before boot.nut calls
        LoadSE.  Without this sentinel the reconstructed 470ab0 path derefs
        address 0x4 on its first lookup. */
-    function_4d3f50();
+    kinoko_register_sound_tree_cleanup();
     kinoko_application_construct();
     kinoko_frame_timer_initialize();
 

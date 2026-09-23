@@ -2860,7 +2860,7 @@ static int32_t __fastcall visit_render_queue(int32_t *object, void *unused, int3
 static int test_global_callback_destructor(int32_t vm) {
     int32_t saved_callback[7];
     const int top = function_48aa20(vm);
-    CHECK(function_4d3e50() == 0);
+    CHECK(kinoko_register_render_queue_cleanup() == 0);
     CHECK(kinoko_render_queue_size() == 0);
     CHECK(kinoko_render_queue_first() == kinoko_render_queue_identity());
     {

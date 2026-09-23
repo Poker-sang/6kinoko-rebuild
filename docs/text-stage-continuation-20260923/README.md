@@ -25,3 +25,7 @@ for the original HWND and CFS_EXCLUDE (128) with a zero-origin client
 area derived from GetWindowRect. The active application call now uses
 kinoko_ime_initialize in the IME module; original context globals retain
 their binary layout and release path.
+Batch 5: IDA MCP 4D3CE0/4D3E50/4D3F50 shows three global
+container initializers that each register a corresponding atexit cleanup.
+The existing native list, render queue and sound tree ownership remains
+unchanged; startup and contract callers now use named registration APIs.
