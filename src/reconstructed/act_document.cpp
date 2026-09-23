@@ -3,6 +3,7 @@
 #include "kinoko/act_layout_records.hpp"
 #include "kinoko/act_map_records.hpp"
 #include "kinoko/act_key_records.hpp"
+#include "kinoko/act_layer_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
@@ -336,7 +337,7 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
     uint32_t count;
     uint32_t index;
     uint32_t type;
-    int32_t key;
+    kinoko::native::RecordView<kinoko::act::LayerKeys> layer_record(pointer<void>(layer));
 
     if (!layer || version != 1 || !kinoko_act_read_layer_properties_typed(pointer<KinokoActLayer>(layer),
             pointer<KinokoArchiveReader>(reader_ptr))) {
@@ -355,24 +356,23 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
             retdec_trace_i32("act:unsupported-key", (int32_t)type);
             return 0;
         }
-        key = retdec_act_make_key(reader_ptr, version);
-        if (key == 0 || !retdec_act_append_list(layer + 0xb4, key)) {
-            retdec_destroy_cact_key(key);
+        auto *key = pointer<KinokoActKey>(retdec_act_make_key(reader_ptr, version));
+        if (!key || !retdec_act_append_list(layer + 0xb4, address(key))) {
+            retdec_destroy_cact_key(address(key));
             retdec_trace("act:layer-key-load-failed");
             return 0;
         }
         // 41F8B9 binds every newly read layout to its containing layer before
         // the next key. Resource association may happen later during ACT load.
-        const auto layout = field<int32_t>(key + 4);
-        if (layout) retdec_call_thiscall1_result(pointer<void>(layout),
-            field<void*>(field<int32_t>(layout) + 24), layer);
+        auto *layout = kinoko::act::KeyView(key).get(&kinoko::act::KeyRecord::layout);
+        if (layout) retdec_call_thiscall1_result(layout,
+            field<void*>(field<int32_t>(address(layout)) + 24), layer);
         retdec_trace_squirrel_name(
-            "act:key-script", address(kinoko_string_data((const void*)(intptr_t)(key + 8))));
-        retdec_trace_i32("act:key-layout", field<int32_t>(key + 4));
-        if (field<int32_t>(key + 4) != 0 &&
-            field<int32_t>(field<int32_t>(key + 4)) ==
+            "act:key-script", address(kinoko_string_data(kinoko::act::KeyView(key).bytes(&kinoko::act::KeyRecord::script_name))));
+        retdec_trace_i32("act:key-layout", address(layout));
+        if (layout && field<int32_t>(address(layout)) ==
                 address(kinoko_act_host_symbols()->map_layout_vtable)) {
-            int32_t key_layout = field<int32_t>(key + 4);
+            const int32_t key_layout = address(layout);
             int32_t key_begin = field<int32_t>(key_layout + 264);
             int32_t key_end = field<int32_t>(key_layout + 268);
             retdec_trace_i32("act:key-map-record-count",
@@ -380,7 +380,8 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
                                  ? (int32_t)((key_end - key_begin) / 0x20)
                                  : 0);
         }
-        ++field<int32_t>(layer + 0xb8);
+        layer_record.set(&kinoko::act::LayerKeys::key_count,
+            layer_record.get(&kinoko::act::LayerKeys::key_count) + 1);
     }
     if (!retdec_act_read_u32(reader_ptr, &count) || count > 0x10000u) {
         retdec_trace("act:layer-extra-count-failed");
