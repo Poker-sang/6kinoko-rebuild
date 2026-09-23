@@ -33,3 +33,7 @@ Batch 6: native 440910 adds a glyph to the current atlas. Its renderer
 now accesses the already verified glyph ID/borrowed atlas, atlas texture,
 last ID/reference count and layout next-ID fields via typed records. The
 original texture upload, geometry and deque insertion order is preserved.
+Batch 7: in original 440910, cursor X/Y, line height and wrap threshold
+are text-layout members, while glyph X/Y/width/height are sprite members.
+The native character path now writes these named fields in the same order,
+including tab and newline handling; atlas packing offsets remain pending.

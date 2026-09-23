@@ -58,11 +58,19 @@ void rectangle(int32_t s,int32_t handle,int32_t x,int32_t y,int32_t w,int32_t h)
 }
 extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* character) {
     const RecordView<LayoutRecord> text(pointer<void>(layout));
-    auto& cursor=field<int32_t>(layout+204);
-    if(*character=='\t') { const int32_t tab=4*field<int32_t>(layout+88);cursor+=tab-cursor%tab;return 1; }
+    int32_t cursor=text.get(&LayoutRecord::cursor_x);
+    const auto font_height=text.get(&LayoutRecord::font_height);
+    if(*character=='\t') {
+        const int32_t tab=4*font_height;
+        text.set(&LayoutRecord::cursor_x,cursor+tab-cursor%tab);
+        return 1;
+    }
     if(*character=='\n') {
-        field<int32_t>(layout+208)+=field<int32_t>(layout+216);cursor=0;
-        field<int32_t>(layout+216)=field<int32_t>(layout+88);return 1;
+        text.set(&LayoutRecord::cursor_y,
+            text.get(&LayoutRecord::cursor_y)+text.get(&LayoutRecord::line_height));
+        text.set(&LayoutRecord::cursor_x,0);
+        text.set(&LayoutRecord::line_height,font_height);
+        return 1;
     }
     for(;;) {
         if(kinoko_string_atlas_size(layout)==0) new_page(layout);
@@ -74,7 +82,7 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
             field<int32_t>(page),field<int32_t>(page+4),&width,&height);
         if(width>=field<int32_t>(page+12) || height>=field<int32_t>(page+16)) return 0;
         if(field<int32_t>(page)+width>=field<int32_t>(page+12) ||
-            (!width && field<int32_t>(page+16)-field<int32_t>(page+8)-field<int32_t>(page+4)>field<int32_t>(layout+88))) {
+            (!width && field<int32_t>(page+16)-field<int32_t>(page+8)-field<int32_t>(page+4)>font_height)) {
             field<int32_t>(page+4)+=field<int32_t>(page+8);
             field<int32_t>(page)=field<int32_t>(page+8)=0;
             continue;
@@ -86,9 +94,11 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         const int32_t glyph=kinoko_string_append_glyph(layout),s=glyph+20;
         rectangle(s,atlas.get(&AtlasRecord::texture),field<int32_t>(page),field<int32_t>(page+4),width,height);
         std::copy_n(pointer<unsigned char>(s+128),48,pointer<unsigned char>(s+176));
-        field<int32_t>(glyph)=cursor;field<int32_t>(glyph+4)=field<int32_t>(layout+208);
-        field<int32_t>(glyph+12)=width;field<int32_t>(glyph+16)=height;
         const RecordView<GlyphRecord> sprite(pointer<void>(glyph));
+        sprite.set(&GlyphRecord::x,cursor);
+        sprite.set(&GlyphRecord::y,text.get(&LayoutRecord::cursor_y));
+        sprite.set(&GlyphRecord::width,width);
+        sprite.set(&GlyphRecord::height,height);
         const auto id=text.get(&LayoutRecord::next_glyph_id);
         sprite.set(&GlyphRecord::id,id);
         atlas.set(&AtlasRecord::last_glyph_id,id);
@@ -96,11 +106,14 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         text.set(&LayoutRecord::next_glyph_id,id+1);
         field<int32_t>(page+8)=(std::max)(field<int32_t>(page+8),height);
         field<int32_t>(page)+=width;cursor+=width;
-        auto& line_height=field<int32_t>(layout+216);line_height=(std::max)(line_height,height);
-        if(field<int32_t>(layout+144)>=0 && cursor>=field<int32_t>(layout+144)) {
-            field<int32_t>(layout+208)+=line_height;cursor=0;line_height=field<int32_t>(layout+88);
+        auto line_height=(std::max)(text.get(&LayoutRecord::line_height),height);
+        if(text.get(&LayoutRecord::wrap_width)>=0 && cursor>=text.get(&LayoutRecord::wrap_width)) {
+            text.set(&LayoutRecord::cursor_y,text.get(&LayoutRecord::cursor_y)+line_height);
+            cursor=0;line_height=font_height;
         }
-        field<int32_t>(layout+212)=(std::max)(field<int32_t>(layout+212),cursor);
+        text.set(&LayoutRecord::cursor_x,cursor);
+        text.set(&LayoutRecord::line_height,line_height);
+        text.set(&LayoutRecord::maximum_width,(std::max)(text.get(&LayoutRecord::maximum_width),cursor));
         return 1;
     }
 }
