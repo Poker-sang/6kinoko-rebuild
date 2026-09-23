@@ -170,8 +170,8 @@ int32_t retdec_act_make_layout(int32_t reader_ptr)
         static_cast<KinokoActLayout *>(std::calloc(1u, sizeof(kinoko::act::Layout2DRecord))),
         &std::free);
     if (!layout || !retdec_construct_c2dlayout(address(layout.get()))) return 0;
-    auto *reader = pointer<KinokoArchiveReader>(reader_ptr);
-    if (!kinoko_act_read_layout2d_properties(layout.get(), &reader, 1)) return 0;
+    // 42C030's holder is still an integer ABI slot; the layout is borrowed.
+    if (!kinoko_act_read_layout2d_properties(layout.get(), &reader_ptr, 1)) return 0;
     return address(layout.release());
 }
 
