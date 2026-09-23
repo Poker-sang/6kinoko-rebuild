@@ -27,7 +27,15 @@ struct Glyph {
     ~Glyph() { field<void*>(address(bytes)+20)=&g23; }
 };
 using Deque=std::deque<Glyph>;
-Deque*& storage(int32_t layout) { return field<Deque*>(layout+176); }
+using LayoutRecord=kinoko::act::StringLayoutRecord;
+Deque* storage(int32_t layout) {
+    const kinoko::native::RecordView<LayoutRecord> record(pointer<void>(layout));
+    return static_cast<Deque*>(record.get(&LayoutRecord::glyph_owner));
+}
+void set_storage(int32_t layout,Deque* value) {
+    const kinoko::native::RecordView<LayoutRecord> record(pointer<void>(layout));
+    record.set(&LayoutRecord::glyph_owner,static_cast<void*>(value));
+}
 Deque& queue(int32_t layout) { return *storage(layout); }
 int32_t sprite(const Deque& q,uint32_t i) { return address(q[i].bytes); }
 using Layout=kinoko::act::StringLayoutRecord;
@@ -127,7 +135,7 @@ extern "C" void kinoko_string_drop_queue_storage(int32_t object) {
     queue(object).clear();
 }
 
-extern "C" void kinoko_string_queue_construct(int32_t object) { storage(object)=new Deque; }
-extern "C" void kinoko_string_queue_destroy(int32_t object) { delete storage(object);storage(object)=nullptr; }
+extern "C" void kinoko_string_queue_construct(int32_t object) { set_storage(object,new Deque); }
+extern "C" void kinoko_string_queue_destroy(int32_t object) { delete storage(object);set_storage(object,nullptr); }
 extern "C" uint32_t kinoko_string_queue_size(int32_t object) { return static_cast<uint32_t>(queue(object).size()); }
 extern "C" int32_t kinoko_string_queue_at(int32_t object,uint32_t index) { return address(queue(object).at(index).bytes); }

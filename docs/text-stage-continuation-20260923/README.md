@@ -57,3 +57,7 @@ deletes it after glyph queue teardown. The layout schema now asserts atlas
 and glyph owner slots at +160/+176; atlas access, creation and deletion use
 the explicit owner member. Other historical vector/deque bookkeeping slots
 remain untouched at their original offsets.
+Batch 12: original 43E890/43EA10 constructs and destroys the glyph deque
+at layout +176. Native deque access now reads the asserted glyph_owner
+field and construction/destruction publishes or clears that owner pointer.
+Glyph records continue to borrow atlas pages; no refcount order changed.
