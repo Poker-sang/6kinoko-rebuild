@@ -107,8 +107,9 @@ extern "C" int32_t function_431650(int32_t id) {
     if (!vm || sq_gettop(vm) < 1) return -1;
     return upstream::sqrat_weakref(vm);
 }
-extern "C" int32_t function_445730(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+namespace {
+int32_t invoke_integer_member(HSQUIRRELVM machine) {
+    auto vm=machine;
     if (!vm || sq_gettop(vm) < 3) return 0;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -117,9 +118,14 @@ extern "C" int32_t function_445730(int32_t id) {
     retdec_call_thiscall1(pointer(self), pointer(method), argument);
     return 0;
 }
-extern "C" int32_t function_4552e0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    retdec_trace_i32("450950:zero-wrapper-entry", id);
+} // namespace
+extern "C" int32_t function_445730(int32_t id) {
+    return invoke_integer_member(pointer<SQVM>(id));
+}
+namespace {
+int32_t invoke_nullary_member(HSQUIRRELVM machine) {
+    auto vm=machine;
+    retdec_trace_i32("450950:zero-wrapper-entry", address(machine));
     if (!vm || sq_gettop(vm) < 2) return 0;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -129,8 +135,13 @@ extern "C" int32_t function_4552e0(int32_t id) {
     retdec_call_thiscall0(pointer(self), pointer(method));
     return 0;
 }
-extern "C" int32_t function_4555a0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+} // namespace
+extern "C" int32_t function_4552e0(int32_t id) {
+    return invoke_nullary_member(pointer<SQVM>(id));
+}
+namespace {
+int32_t invoke_draw_member(HSQUIRRELVM machine) {
+    auto vm=machine;
     if (!vm || sq_gettop(vm) < 11) return -1;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -149,21 +160,35 @@ extern "C" int32_t function_4555a0(int32_t id) {
     sq_pushinteger(vm, result);
     return 1;
 }
-extern "C" int32_t function_46b490(int32_t self, int32_t callback, int32_t id, int32_t first) {
-    auto vm=pointer<SQVM>(id); const SQChar* value=nullptr;
+} // namespace
+extern "C" int32_t function_4555a0(int32_t id) {
+    return invoke_draw_member(pointer<SQVM>(id));
+}
+namespace {
+int32_t invoke_string_callback(int32_t self, int32_t callback, HSQUIRRELVM machine, int32_t first) {
+    auto vm=machine; const SQChar* value=nullptr;
     if (SQ_FAILED(string_argument(vm, first, value))) return -1;
     if (!callback) return error(vm, "Invalid native function");
     using Function=int32_t (__cdecl *)(int32_t, const SQChar*);
     reinterpret_cast<Function>(pointer(callback))(self, value);
     return 0;
 }
-extern "C" int32_t function_46b500(int32_t self, int32_t callback, int32_t id, int32_t first) {
-    auto vm=pointer<SQVM>(id); std::array<SQInteger,3> values{};
+} // namespace
+extern "C" int32_t function_46b490(int32_t self, int32_t callback, int32_t id, int32_t first) {
+    return invoke_string_callback(self, callback, pointer<SQVM>(id), first);
+}
+namespace {
+int32_t invoke_three_integer_callback(int32_t self, int32_t callback, HSQUIRRELVM machine, int32_t first) {
+    auto vm=machine; std::array<SQInteger,3> values{};
     if (SQ_FAILED(integers(vm, first, values))) return -1;
     if (!callback) return error(vm, "Invalid native function");
     using Function=int32_t (__cdecl *)(int32_t,int32_t,int32_t,int32_t);
     reinterpret_cast<Function>(pointer(callback))(self, values[0], values[1], values[2]);
     return 0;
+}
+} // namespace
+extern "C" int32_t function_46b500(int32_t self, int32_t callback, int32_t id, int32_t first) {
+    return invoke_three_integer_callback(self, callback, pointer<SQVM>(id), first);
 }
 namespace {
 int32_t call_two(int32_t self, int32_t callback, int32_t id, int32_t first, bool boolean) {
@@ -192,14 +217,20 @@ extern "C" int32_t function_46ce70(int32_t vm) { return call_binding(vm,function
 extern "C" int32_t function_46cec0(int32_t vm) { return call_binding(vm,function_46b500); }
 extern "C" int32_t function_46cf10(int32_t vm) { return call_binding(vm,function_46b610); }
 extern "C" int32_t function_46cf60(int32_t vm) { return call_binding(vm,function_46b6f0); }
-extern "C" int32_t function_4716b0(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id); const SQChar* value=nullptr;
+namespace {
+int32_t invoke_string_only_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine; const SQChar* value=nullptr;
     if (SQ_FAILED(string_argument(vm,index,value))) return -1;
     if (callback) reinterpret_cast<void (__cdecl *)(const SQChar*)>(pointer(callback))(value);
     return 0;
 }
-extern "C" int32_t function_471a60(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id);
+} // namespace
+extern "C" int32_t function_4716b0(int32_t callback,int32_t id,int32_t index) {
+    return invoke_string_only_callback(callback, pointer<SQVM>(id), index);
+}
+namespace {
+int32_t invoke_two_integer_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine;
     if (!strict_type(vm,index,OT_INTEGER) || !strict_type(vm,static_cast<int64_t>(index)+1,OT_INTEGER))
         return error(vm,argument_error);
     SQInteger first=0,second=0;
@@ -208,23 +239,38 @@ extern "C" int32_t function_471a60(int32_t callback,int32_t id,int32_t index) {
     if (callback) reinterpret_cast<void (__cdecl *)(int32_t,int32_t)>(pointer(callback))(first,second);
     return 0;
 }
-extern "C" int32_t function_471720(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id); const SQChar* name=nullptr; HSQOBJECT closure{},environment{};
+} // namespace
+extern "C" int32_t function_471a60(int32_t callback,int32_t id,int32_t index) {
+    return invoke_two_integer_callback(callback, pointer<SQVM>(id), index);
+}
+namespace {
+int32_t invoke_string_pair_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine; const SQChar* name=nullptr; HSQOBJECT closure{},environment{};
     if (!callback || !strict_type(vm,index,OT_STRING) ||
         SQ_FAILED(sq_getstring(vm,index,&name)) ||
         !pair_argument(vm,static_cast<int64_t>(index)+1,closure) ||
         !pair_argument(vm,static_cast<int64_t>(index)+2,environment)) return error(vm,argument_error);
     return call_pair(vm,callback,address(name),closure,environment);
 }
-extern "C" int32_t function_471d30(int32_t id) {
-    auto vm=pointer<SQVM>(id); const auto callback=target(vm);
+} // namespace
+extern "C" int32_t function_471720(int32_t callback,int32_t id,int32_t index) {
+    return invoke_string_pair_callback(callback, pointer<SQVM>(id), index);
+}
+namespace {
+int32_t invoke_integer_pair_callback(HSQUIRRELVM machine) {
+    auto vm=machine; const auto callback=target(vm);
     SQInteger key=0; HSQOBJECT closure{},environment{};
     if (!callback || !strict_type(vm,2,OT_INTEGER) || SQ_FAILED(sq_getinteger(vm,2,&key)) ||
         !pair_argument(vm,3,closure) || !pair_argument(vm,4,environment)) return error(vm,argument_error);
     return call_pair(vm,callback,key,closure,environment);
 }
-extern "C" int32_t function_471e50(int32_t id) {
-    auto vm=pointer<SQVM>(id); const auto callback=target(vm);
+} // namespace
+extern "C" int32_t function_471d30(int32_t id) {
+    return invoke_integer_pair_callback(pointer<SQVM>(id));
+}
+namespace {
+int32_t invoke_string_object_callback(HSQUIRRELVM machine) {
+    auto vm=machine; const auto callback=target(vm);
     const SQChar* name=nullptr; HSQOBJECT environment{};
     if (!callback || !strict_type(vm,2,OT_STRING) || SQ_FAILED(sq_getstring(vm,2,&name)) ||
         !pair_argument(vm,3,environment)) return error(vm,argument_error);
@@ -232,12 +278,21 @@ extern "C" int32_t function_471e50(int32_t id) {
     reinterpret_cast<Function>(pointer(callback))(name,transfer(vm,environment));
     return 0;
 }
+} // namespace
+extern "C" int32_t function_471e50(int32_t id) {
+    return invoke_string_object_callback(pointer<SQVM>(id));
+}
 extern "C" int32_t function_471f70(int32_t id) { return function_471720(target(pointer<SQVM>(id)),id,2); }
-extern "C" int32_t function_472030(int32_t id) {
-    auto vm=pointer<SQVM>(id); if (!vm) return -1;
+namespace {
+int32_t invoke_integer_result_callback(HSQUIRRELVM machine) {
+    auto vm=machine; if (!vm) return -1;
     const auto callback=target(vm);
     const auto result=callback ? reinterpret_cast<int32_t (__cdecl *)(void)>(pointer(callback))() : 0;
     sq_pushinteger(vm,result); return 1;
+}
+} // namespace
+extern "C" int32_t function_472030(int32_t id) {
+    return invoke_integer_result_callback(pointer<SQVM>(id));
 }
 
 namespace {
