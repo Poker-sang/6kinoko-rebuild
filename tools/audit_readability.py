@@ -33,7 +33,11 @@ def main():
                 category = 'thin_bridge'
             elif address_name:
                 category = 'address_named_legacy'
-            elif file.startswith('src/decompiled/') or legacy:
+            # A decompiled translation unit can now contain recovered, named
+            # C++ bodies alongside archival compatibility code. Classify by
+            # the actual legacy markers in the body instead of penalizing the
+            # whole file merely because its path is decompiled/.
+            elif legacy:
                 category = 'named_mixed_legacy'
             else:
                 category = 'named_structured_candidate'
