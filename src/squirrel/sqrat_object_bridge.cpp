@@ -151,6 +151,13 @@ extern "C" int32_t kinoko_sqrat_get(void * storage, const char* name, void * out
     write(out, value);
     return found;
 }
+extern "C" void kinoko_sqrat_retain_pair(struct SQVM * machine, const int32_t pair[2]) {
+    if (!machine || !pair) return;
+    // sq_addref reads the pair but does not mutate it (Squirrel 2.2.2 sqapi.cpp).
+    // Copy the byte-backed ABI record before handing it to the source VM.
+    auto value = read<HSQOBJECT>(pair);
+    sq_addref(static_cast<SQVM *>(machine), &value);
+}
 extern "C" void kinoko_sqrat_assign_pair(struct SQVM * id, int32_t* destination, const int32_t* source) {
     if (!id || !destination || !source) return;
     const auto next = read<HSQOBJECT>(source);

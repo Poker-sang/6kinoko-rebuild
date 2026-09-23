@@ -53,6 +53,42 @@ using kinoko::legacy::address;
 using kinoko::legacy::field;
 
 namespace {
+// Byte-backed views of the fields consumed by ACT publication. The source
+// records remain owned by the ACT loader; these views never copy or destroy
+// their embedded strings or pointer vectors. Offsets match 450950/450F30.
+struct ActPublicationRecord {
+    unsigned char unknown0[4];
+    int32_t resolution_ms, screen_width, screen_height;
+    unsigned char name[24];
+    unsigned char unknown40[60];
+    unsigned char script[104];
+    int32_t unknown204;
+    int32_t layer_begin, layer_end, layer_capacity, unknown220, resource_begin, resource_end;
+};
+static_assert(offsetof(ActPublicationRecord, name) == 16);
+static_assert(offsetof(ActPublicationRecord, script) == 100);
+static_assert(offsetof(ActPublicationRecord, layer_begin) == 208);
+static_assert(offsetof(ActPublicationRecord, resource_begin) == 224);
+struct ResourcePublicationRecord {
+    int32_t vtable, id;
+    unsigned char name[24];
+};
+static_assert(offsetof(ResourcePublicationRecord, name) == 8);
+struct LayerPublicationRecord {
+    unsigned char unknown0[112];
+    unsigned char name[24];
+};
+static_assert(offsetof(LayerPublicationRecord, name) == 112);
+struct ScriptPublicationRecord {
+    unsigned char unknown0[64];
+    unsigned char path[24];
+};
+static_assert(offsetof(ScriptPublicationRecord, path) == 64);
+using ActPublicationView = kinoko::native::RecordView<ActPublicationRecord>;
+using ResourcePublicationView = kinoko::native::RecordView<ResourcePublicationRecord>;
+using LayerPublicationView = kinoko::native::RecordView<LayerPublicationRecord>;
+using ScriptPublicationView = kinoko::native::RecordView<ScriptPublicationRecord>;
+
 // Typed wrapper around the existing source-backed Sqrat C boundary.
 int32_t get_pair(int32_t object, const char* name, int32_t* output) {
     return kinoko_sqrat_get((void *)(intptr_t)(object), name, (void *)(output));
@@ -104,9 +140,9 @@ int32_t retdec_publish_cact_layer_members(
     static const char *const object_names[] = {
         "script", "layout", "resource"
     };
-    int32_t empty_pair[2] = { g483, g484 };
-    int32_t table_pair[2] = { g483, g484 };
-    int32_t table_pair2[2] = { g483, g484 };
+    int32_t empty_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t table_pair2[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t null_pair[2] = { 0x01000001, 0 };
     size_t index;
 
@@ -207,9 +243,9 @@ int32_t retdec_publish_c2dlayout_properties(
     };
     static const char *const color_names[] = { "colorR", "colorG", "colorB" };
     static const int32_t color_offsets[] = { 292, 296, 300 };
-    int32_t empty_pair[2] = { g483, g484 };
-    int32_t table_pair[2] = { g483, g484 };
-    int32_t table_pair2[2] = { g483, g484 };
+    int32_t empty_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t table_pair2[2] = { static_cast<int32_t>(OT_NULL), 0 };
     size_t index;
 
     if (vm == 0 || class_pair == nullptr ||
@@ -258,9 +294,9 @@ failed:
 
 int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
 {
-    int32_t existing[2] = { g483, g484 };
-    int32_t class_pair[2] = { g483, g484 };
-    int32_t empty_pair[2] = { g483, g484 };
+    int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t empty_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t existing_result;
     int32_t base;
 
@@ -384,7 +420,7 @@ int32_t retdec_publish_texture_resource_class(int32_t vm, int32_t root,
 
 int32_t retdec_publish_cact_resource2d_class(int32_t vm, int32_t root) {
     if (!vm || !root) return 0;
-    int32_t klass[2] = { g483, g484 };
+    int32_t klass[2] = { static_cast<int32_t>(OT_NULL), 0 };
     const auto ok = retdec_publish_texture_resource_class(vm, root, "CActResource2D", klass);
     if (ok) {
         kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1079, klass);
@@ -405,7 +441,7 @@ extern "C" int32_t function_446520(int32_t vm) {
 
 static int32_t kinoko_register_render_target_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        int32_t klass[2] = {g483, g484};
+        int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = retdec_publish_texture_resource_class(vm, root, "CActRenderTarget", klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
@@ -424,10 +460,10 @@ extern "C" int32_t __fastcall kinoko_method_register_render_target(int32_t, void
 
 int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
 {
-    int32_t existing[2] = { g483, g484 };
-    int32_t class_pair[2] = { g483, g484 };
+    int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t class_wrapper[5] = { address(kinoko_act_host_symbols()->sq_object_vtable), 0,
-                                 g483, g484, 1 };
+                                 static_cast<int32_t>(OT_NULL), 0, 1 };
     int32_t method_source[2] = {
         address(kinoko_act_layer_associate_method), 0
     };
@@ -498,8 +534,8 @@ int32_t retdec_publish_acting_player_properties(int32_t vm,
         "resolutionMs", "screenWidth", "screenHeight", "stName" };
     static const int32_t offsets[] = { 8, 108, 112, 116, 120, 124, 128,
         132, 136, 140, 144, 148 };
-    int32_t get_table[2] = { g483, g484 };
-    int32_t set_table[2] = { g483, g484 };
+    int32_t get_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t set_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t ok = 0;
     if (!kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), get_table) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), set_table) ||
@@ -533,7 +569,7 @@ struct DynamicLayerLock {
 };
 struct DynamicLayerParent {
     int32_t object[5];
-    explicit DynamicLayerParent(int32_t vm) : object{kinoko_sqrat_object_vtable(),vm,g483,g484,0} {}
+    explicit DynamicLayerParent(int32_t vm) : object{kinoko_sqrat_object_vtable(),vm,static_cast<int32_t>(OT_NULL),0,0} {}
     ~DynamicLayerParent() { kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(object[1]), object+2); }
 };
 
@@ -747,9 +783,9 @@ template<bool string_layout> int32_t create_layer_native(int32_t vm) {
 int32_t retdec_publish_acting_player_class(int32_t vm,
                                                    int32_t root_object)
 {
-    int32_t existing[2] = { g483, g484 };
-    int32_t class_pair[2] = { g483, g484 };
-    int32_t class_object[4] = { 0, vm, g483, g484 };
+    int32_t existing[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t class_object[4] = { 0, vm, static_cast<int32_t>(OT_NULL), 0 };
     int32_t existing_result;
     int32_t base;
 
@@ -824,9 +860,9 @@ int32_t retdec_publish_acting_player(int32_t vm,
     int32_t base;
     int32_t result;
     int32_t instance_slot;
-    int32_t actual[2] = { g483, g484 };
+    int32_t actual[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t object_wrapper[5] = { address(kinoko_act_host_symbols()->sq_root_vtable), 0,
-                                  g483, g484, 1 };
+                                  static_cast<int32_t>(OT_NULL), 0, 1 };
 
     if (vm == 0 || act_pair == nullptr || name == nullptr || out_pair == nullptr ||
         g1049 != 0x08004000 || g1050 == 0)
@@ -837,8 +873,8 @@ int32_t retdec_publish_acting_player(int32_t vm,
     retdec_trace_i32("act:acting-resource", player_ptr);
     retdec_trace_i32("act:acting-class-type", g1049);
     retdec_trace_i32("act:acting-class-data", g1050);
-    out_pair[0] = g483;
-    out_pair[1] = g484;
+    out_pair[0] = static_cast<int32_t>(OT_NULL);
+    out_pair[1] = 0;
     base = sq_gettop(kinoko_vm(vm));
     sq_pushobject(kinoko_vm(vm), kinoko_borrowed_object(act_pair[0], act_pair[1]));
     sq_pushstring(kinoko_vm(vm), (const SQChar*)kinoko_pointer(address(name)), -1);
@@ -877,7 +913,7 @@ int32_t retdec_publish_acting_player(int32_t vm,
                          field<int32_t>(instance + 32));
     }
     sq_getstackobj(kinoko_vm(vm), -1, (HSQOBJECT*)(out_pair));
-    function_48a400(vm, address(out_pair));
+    kinoko_sqrat_retain_pair(pointer<SQVM>(vm), out_pair);
     result = sq_newslot(kinoko_vm(vm), -3, ((0) != 0));
     if (std::strcmp(name, "pl") == 0 || std::strcmp(name, "player") == 0) {
         retdec_trace_squirrel_name("act:acting-read-name",
@@ -936,7 +972,7 @@ int32_t retdec_execute_act_callback(int32_t script_ptr,
     retdec_trace_i32("act:callback-vm", vm);
     retdec_trace_i32("act:callback-type", closure_type);
     retdec_trace_i32("act:callback-data", closure_data);
-    if (vm == 0 || closure_type == g483 || closure_data == 0)
+    if (vm == 0 || closure_type == static_cast<int32_t>(OT_NULL) || closure_data == 0)
         return 0;
     if (trace_label != nullptr)
         retdec_trace(trace_label);
@@ -1006,7 +1042,7 @@ int32_t retdec_compile_act_file(int32_t vm, const char *path, const int32_t *env
 
 int32_t retdec_local_compile_file_native(int32_t vm) {
     const SQChar *path = nullptr;
-    int32_t environment[2] = {g483, g484};
+    int32_t environment[2] = {static_cast<int32_t>(OT_NULL), 0};
     if (sq_gettop(kinoko_vm(vm)) < 2 || SQ_FAILED(sq_getstring(kinoko_vm(vm), 2, &path))) return 0;
     if (sq_gettop(kinoko_vm(vm)) >= 3)
         sq_getstackobj(kinoko_vm(vm), 3, reinterpret_cast<HSQOBJECT*>(environment));
@@ -1021,9 +1057,9 @@ int32_t retdec_publish_act_script_constants(int32_t vm, const int32_t *environme
         "BLEND_MULTI", "BLEND_INVERT"
     };
     int32_t object[5] = {address(kinoko_act_host_symbols()->sq_object_vtable), vm, environment[0], environment[1], 0};
-    int32_t user[2] = {g483, g484};
+    int32_t user[2] = {static_cast<int32_t>(OT_NULL), 0};
     int32_t have_user = get_pair(address(object), "u", user);
-    int32_t needs_user = !have_user || user[0] == g483;
+    int32_t needs_user = !have_user || user[0] == static_cast<int32_t>(OT_NULL);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), user);
     /* 416056..41605F passes the same Sqrat object as source and destination. */
     if (needs_user && !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), environment, "u", environment))
@@ -1059,7 +1095,7 @@ extern "C" int32_t retdec_register_act_script(int32_t script, int32_t object) {
 int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
                                                  int32_t script_pair[2])
 {
-    int32_t table_pair[2] = { g483, g484 };
+    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t old_vm;
 
     if (vm == 0 || layer == 0 || script_pair == nullptr)
@@ -1080,7 +1116,7 @@ int32_t retdec_prepare_cact_layer_objects(int32_t vm, int32_t layer,
         return 0;
     field<int32_t>(layer + 316) = table_pair[0];
     field<int32_t>(layer + 320) = table_pair[1];
-    function_48a400(vm, layer + 316);
+    kinoko_sqrat_retain_pair(pointer<SQVM>(vm), pointer<const int32_t>(layer + 316));
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair);
     script_pair[0] = field<int32_t>(layer + 316);
     script_pair[1] = field<int32_t>(layer + 320);
@@ -1108,8 +1144,8 @@ extern "C" int32_t __fastcall kinoko_method_register_act_layer(
     const auto vm = field<int32_t>(parent + 4);
     if (!vm) return static_cast<int32_t>(E_FAIL);
     std::memcpy(pointer<void>(layer + 156), pointer<const void>(layer + 144), 12);
-    int32_t root[5] = {}, klass[2] = {g483, g484};
-    int32_t outer[2] = {g483, g484}, inner[2] = {g483, g484}, script[2] = {g483, g484};
+    int32_t root[5] = {}, klass[2] = {static_cast<int32_t>(OT_NULL), 0};
+    int32_t outer[2] = {static_cast<int32_t>(OT_NULL), 0}, inner[2] = {static_cast<int32_t>(OT_NULL), 0}, script[2] = {static_cast<int32_t>(OT_NULL), 0};
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return static_cast<int32_t>(E_FAIL);
     bool ok = retdec_publish_cact_layer_class(vm, address(root)) &&
         get_pair(address(root), "CActLayer", klass) &&
@@ -1145,8 +1181,8 @@ int32_t retdec_bind_original_layout(int32_t layout, bool map) {
     if (!layer || field<int32_t>(layer + 336) == 0x01000001) return static_cast<int32_t>(E_FAIL);
     const int32_t vm = field<int32_t>(layer + 332);
     if (!vm) return static_cast<int32_t>(E_INVALIDARG);
-    int32_t root[5] = {}, klass[2] = {g483, g484};
-    int32_t outer[2] = {g483, g484}, script[2] = {g483, g484};
+    int32_t root[5] = {}, klass[2] = {static_cast<int32_t>(OT_NULL), 0};
+    int32_t outer[2] = {static_cast<int32_t>(OT_NULL), 0}, script[2] = {static_cast<int32_t>(OT_NULL), 0};
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return static_cast<int32_t>(E_FAIL);
     const bool registered = map
         ? retdec_publish_c2dmaplayout_class(vm, address(root), klass) != 0
@@ -1192,8 +1228,8 @@ int32_t retdec_map_get_chip_layout(int32_t vm) {
     int32_t begin;
     int32_t count;
     int32_t root[5];
-    int32_t chip_class[2] = { g483, g484 };
-    int32_t instance[2] = { g483, g484 };
+    int32_t chip_class[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&layout), kinoko_pointer(0)) < 0 || layout == 0 ||
         sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&index)) < 0)
         return 0;
@@ -1376,8 +1412,8 @@ int32_t retdec_map_get_right(int32_t vm) {
 int32_t retdec_publish_map_view_class(int32_t vm, int32_t root,
     const char *name, const struct retdec_native_view_property *properties,
     int32_t property_count, int32_t is_map, int32_t out[2]) {
-    int32_t get_table[2] = { g483, g484 };
-    int32_t set_table[2] = { g483, g484 };
+    int32_t get_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t set_table[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t base = sq_gettop(kinoko_vm(vm));
     int32_t ok = 0;
     if (get_pair(root, name, out) && out[0] == 0x08004000)
@@ -1442,7 +1478,7 @@ int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
         { "f_left", 12, 1 }, { "f_top", 16, 1 }, { "layoutID", 20, 0 },
         { "visible", 24, 2 }, { "alpha", 28, 1 }
     };
-    int32_t chip_class[2] = { g483, g484 };
+    int32_t chip_class[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t ok = retdec_publish_map_view_class(vm, root, "ChipLayout",
         chip_properties, sizeof(chip_properties) / sizeof(chip_properties[0]), 0, chip_class);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), chip_class);
@@ -1453,7 +1489,7 @@ int32_t retdec_publish_c2dmaplayout_class(int32_t vm, int32_t root,
 // 433C90: cdecl, one VM argument, HRESULT result (IDA 4341ED: retn).
 static int32_t kinoko_register_map_layout_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        int32_t klass[2] = {g483, g484};
+        int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = retdec_publish_c2dmaplayout_class(vm, root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
@@ -1466,7 +1502,7 @@ extern "C" int32_t function_433c90(int32_t vm) {
 int32_t retdec_resource_get_chip_info(int32_t vm) {
     int32_t resource = 0, id = 0;
     int32_t root[5];
-    int32_t klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
+    int32_t klass[2] = { static_cast<int32_t>(OT_NULL), 0 }, instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     struct retdec_mcd_chip *chip;
     if (sq_getinstanceup(kinoko_vm(vm), 1, (SQUserPointer*)(&resource), kinoko_pointer(0)) < 0 || resource == 0 ||
         sq_getinteger(kinoko_vm(vm), 2, (SQInteger*)(&id)) < 0)
@@ -1519,7 +1555,7 @@ int32_t retdec_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
     };
     if (get_pair(root, "CActResourceChip", out) && out[0] == 0x08004000) return 1;
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), out);
-    int32_t info[2] = { g483, g484 };
+    int32_t info[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t ok;
     ok = retdec_publish_map_view_class(vm, root, "ChipInfo",
         info_properties, sizeof(info_properties) / sizeof(info_properties[0]), 0, info) &&
@@ -1535,7 +1571,7 @@ int32_t retdec_publish_chip_resource_class(int32_t vm, int32_t root, int32_t out
 // ECX/stack-cleanup adapter matching original 42F350 (retn 4).
 static int32_t kinoko_register_chip_resource_class(SQVM* machine) {
     return register_root_class(machine, [](int32_t vm, int32_t root) {
-        int32_t klass[2] = {g483, g484};
+        int32_t klass[2] = {static_cast<int32_t>(OT_NULL), 0};
         const auto ok = retdec_publish_chip_resource_class(vm, root, klass);
         kinoko_sqrat_release_pair(pointer<SQVM>(vm), klass);
         return ok;
@@ -1560,7 +1596,7 @@ int32_t retdec_get_act_resource_class(int32_t vm, int32_t resource, int32_t out[
     if (field<int32_t>(resource) != address(kinoko_act_host_symbols()->chip_resource_vtable)) {
         out[0] = g1079;
         out[1] = g1080;
-        function_48a400(vm, address(out));
+        kinoko_sqrat_retain_pair(pointer<SQVM>(vm), out);
         return out[0] == 0x08004000;
     }
     int32_t root[5] = {};
@@ -1580,7 +1616,7 @@ int32_t retdec_bind_original_resource(int32_t resource, int32_t object,
     const int32_t vm = field<int32_t>(object + 4);
     if (!vm || (raw && (!name || !*name))) return static_cast<int32_t>(E_FAIL);
     if (!name || !*name) name = kinoko_string_data((const void*)(intptr_t)(resource + 8));
-    int32_t root[5] = {}, klass[2] = { g483, g484 }, instance[2] = { g483, g484 };
+    int32_t root[5] = {}, klass[2] = { static_cast<int32_t>(OT_NULL), 0 }, instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return static_cast<int32_t>(E_FAIL);
     bool registered = get_pair(address(root), class_name, klass) && klass[0] == 0x08004000;
     if (!registered) {
@@ -1609,9 +1645,9 @@ int32_t retdec_publish_act_resource_pairs(
     int32_t vm, const int32_t layer_pair[2],
     const int32_t script_pair[2], int32_t resource)
 {
-    int32_t outer_pair[2] = { g483, g484 };
-    int32_t script_resource_pair[2] = { g483, g484 };
-    int32_t resource_class_pair[2] = { g483, g484 };
+    int32_t outer_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t script_resource_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t resource_class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t null_pair[2] = { 0x01000001, 0 };
 
     if (vm == 0 || layer_pair == nullptr || script_pair == nullptr)
@@ -1651,12 +1687,13 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
                                           int32_t resource_ptr,
                                           int32_t *active_count)
 {
-    int32_t root_object[5] = { 0, 0, g483, g484, 1 };
+    int32_t root_object[5] = { 0, 0, static_cast<int32_t>(OT_NULL), 0, 1 };
     int32_t act_root_object[5] = { address(kinoko_act_host_symbols()->sq_root_vtable), 0,
-                                   g483, g484, 1 };
-    int32_t class_pair[2] = { g483, g484 };
-    int32_t layout_class_pair[2] = { g483, g484 };
-    int32_t parent_pair[2] = { g483, g484 };
+                                   static_cast<int32_t>(OT_NULL), 0, 1 };
+    int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t layout_class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t parent_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    const ActPublicationView act_view(pointer<void>(act));
     const char *act_name;
     int32_t layer_begin;
     int32_t layer_end;
@@ -1680,7 +1717,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     /* The parent passed to sq_newslot is the ACT's published Squirrel table,
        not the native CAct allocation.  450E30 stored the root table pair on
        the resource, so resolve the ACT by its native stName here. */
-    act_name = kinoko_string_data((const void*)(intptr_t)(act + 16));
+    act_name = kinoko_string_data(act_view.bytes(&ActPublicationRecord::name));
     if (resource_ptr == 0 || act_name == nullptr || *act_name == 0 ||
         field<int32_t>(resource_ptr + 156) != 0x0A000020 ||
          field<int32_t>(resource_ptr + 160) == 0) {
@@ -1718,10 +1755,10 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         int32_t parent_object[5] = {
             address(kinoko_act_host_symbols()->sq_object_vtable), vm, parent_pair[0], parent_pair[1], 0
         };
-        int32_t resources[2] = { g483, g484 };
+        int32_t resources[2] = { static_cast<int32_t>(OT_NULL), 0 };
         int32_t resource_class[2];
-        int32_t begin = field<int32_t>(act + 224);
-        int32_t end = field<int32_t>(act + 228);
+        int32_t begin = act_view.get(&ActPublicationRecord::resource_begin);
+        int32_t end = act_view.get(&ActPublicationRecord::resource_end);
         if (!retdec_publish_cact_resource2d_class(vm, address(root_object)) ||
             !get_pair(address(parent_object), "resource", resources)) {
             kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), parent_pair);
@@ -1732,10 +1769,10 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         }
         for (int32_t slot = begin; slot != 0 && slot < end; slot += 4) {
             int32_t resource = field<int32_t>(slot);
-            int32_t value[2] = { g483, g484 };
-            const char *name = kinoko_string_data((const void*)(intptr_t)(resource + 8));
-            resource_class[0] = g483;
-            resource_class[1] = g484;
+            int32_t value[2] = { static_cast<int32_t>(OT_NULL), 0 };
+            const char *name = kinoko_string_data(ResourcePublicationView(pointer<void>(resource)).bytes(&ResourcePublicationRecord::name));
+            resource_class[0] = static_cast<int32_t>(OT_NULL);
+            resource_class[1] = 0;
             if (name != nullptr && *name != 0 &&
                 retdec_get_act_resource_class(vm, resource, resource_class) &&
                 retdec_create_bound_instance(vm, resources, name, resource_class,
@@ -1748,8 +1785,8 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), resources);
     }
 
-    layer_begin = field<int32_t>(act + 208);
-    layer_end = field<int32_t>(act + 212);
+    layer_begin = act_view.get(&ActPublicationRecord::layer_begin);
+    layer_end = act_view.get(&ActPublicationRecord::layer_end);
     if (layer_begin == 0 || layer_end < layer_begin ||
         ((layer_end - layer_begin) & 3) != 0) {
         retdec_trace("act:layer-vector-invalid");
@@ -1762,7 +1799,7 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
     layer_count = (layer_end - layer_begin) / 4;
     for (int32_t index = 0; index < layer_count; ++index) {
         int32_t layer = field<int32_t>(layer_begin + index * 4);
-        int32_t layer_pair[2] = { g483, g484 };
+        int32_t layer_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
         int32_t script_ptr;
         int32_t node;
         int32_t sentinel;
@@ -1787,10 +1824,10 @@ int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
         }
         layer_pair[0] = field<int32_t>(layer + 336);
         layer_pair[1] = field<int32_t>(layer + 340);
-        function_48a400(vm, address(layer_pair));
+        kinoko_sqrat_retain_pair(pointer<SQVM>(vm), layer_pair);
         script_ptr = layer + 204;
-        script_path = kinoko_string_data((const void*)(intptr_t)(script_ptr + 64));
-        layer_name = kinoko_string_data((const void*)(intptr_t)(layer + 112));
+        script_path = kinoko_string_data(ScriptPublicationView(pointer<void>(script_ptr)).bytes(&ScriptPublicationRecord::path));
+        layer_name = kinoko_string_data(LayerPublicationView(pointer<void>(layer)).bytes(&LayerPublicationRecord::name));
         retdec_trace_i32("act:layer-script-result", script_result >= 0);
         if (index < 96) {
             int32_t raw_data = field<int32_t>(script_ptr + 92);
@@ -1955,12 +1992,12 @@ int32_t retdec_register_runtime_act_script(int32_t vm, int32_t resource_ptr,
                                                  int32_t act)
 {
     int32_t root[5] = { 0, vm, 0, 0, 0 };
-    int32_t parent[2] = { g483, g484 }, global[2] = { g483, g484 };
+    int32_t parent[2] = { static_cast<int32_t>(OT_NULL), 0 }, global[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t object[5] = { 0, vm, 0, 0, 0 };
     int32_t script = act + 100, result = 0;
     root[2] = field<int32_t>(resource_ptr + 156);
     root[3] = field<int32_t>(resource_ptr + 160);
-    if (!get_pair(address(root), kinoko_string_data((const void*)(intptr_t)(act + 16)), parent))
+    if (!get_pair(address(root), kinoko_string_data(ActPublicationView(pointer<void>(act)).bytes(&ActPublicationRecord::name)), parent))
         goto done;
     object[2] = parent[0]; object[3] = parent[1];
     if (!get_pair(address(object), "global", global))
@@ -2016,8 +2053,8 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
             if (init_result < 0) {
                 result = init_result;
             } else {
-                int32_t layer_begin = field<int32_t>(act + 208);
-                int32_t layer_end = field<int32_t>(act + 212);
+                int32_t layer_begin = ActPublicationView(pointer<void>(act)).get(&ActPublicationRecord::layer_begin);
+                int32_t layer_end = ActPublicationView(pointer<void>(act)).get(&ActPublicationRecord::layer_end);
                 int32_t layer_index;
                 for (layer_index = 0;
                      layer_begin != 0 && layer_end >= layer_begin &&
@@ -2041,7 +2078,7 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
     {
         int32_t act = field<int32_t>(resource_ptr + 12);
         const char *act_name = act != 0
-            ? kinoko_string_data((const void*)(intptr_t)(act + 16)) : nullptr;
+            ? kinoko_string_data(ActPublicationView(pointer<void>(act)).bytes(&ActPublicationRecord::name)) : nullptr;
         retdec_trace_squirrel_name("450950:act-name",
                                    address(act_name));
         retdec_trace_i32("450950:user", resource_ptr);
@@ -2060,15 +2097,16 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
 int32_t retdec_root_table_register_resource(int32_t root_object,
                                                     int32_t resource_ptr)
 {
-    int32_t act_pair[2] = { g483, g484 };
-    int32_t global_pair[2] = { g483, g484 };
-    int32_t resource_pair[2] = { g483, g484 };
-    int32_t player_pair[2] = { g483, g484 };
+    int32_t act_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t global_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t resource_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    int32_t player_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     int32_t holder;
     int32_t act;
+    ActPublicationView act_view(nullptr);
     const char *act_name;
     const char *script_path;
-    int32_t global_object[5] = { 0, 0, g483, g484, 1 };
+    int32_t global_object[5] = { 0, 0, static_cast<int32_t>(OT_NULL), 0, 1 };
     int32_t script_ptr;
     int32_t result = 0;
     int32_t vm;
@@ -2082,22 +2120,24 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     retdec_trace_i32("450f30:resource", resource_ptr);
     retdec_trace_i32("450f30:vm", vm);
 
+    do {
     if (!retdec_bind_act_resource_root(resource_ptr, vm, pointer<const int32_t>(root_object + 8))) {
         retdec_trace("450f30:root-bind-failed");
-        goto cleanup;
+        break;
     }
     if (!retdec_publish_cact_resource2d_class(
             vm, root_object)) {
         retdec_trace("450f30:resource2d-class-failed");
-        goto cleanup;
+        break;
     }
     holder = field<int32_t>(resource_ptr);
     act = holder != 0 ? field<int32_t>(holder) : 0;
     if (act == 0)
-        goto cleanup;
-    act_name = kinoko_string_data((const void*)(intptr_t)(act + 16));
+        break;
+    act_view = ActPublicationView(pointer<void>(act));
+    act_name = kinoko_string_data(act_view.bytes(&ActPublicationRecord::name));
     if (act_name == nullptr || *act_name == 0)
-        goto cleanup;
+        break;
     /* 451022..45104A retains the registration key for 4513F0 teardown. */
     kinoko_string_assign_cstr(pointer<int32_t>(resource_ptr + 164), act_name);
     retdec_trace_squirrel_name("450f30:act-name", address(act_name));
@@ -2105,10 +2145,10 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     if (!retdec_publish_cact_layer_class(vm, root_object) ||
         !retdec_publish_acting_player_class(vm, root_object) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), act_pair) ||
-        !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), pointer<const int32_t>(root_object + 8), act_name, act_pair) ||
+        !kinoko_sqrat_set_pair(pointer<SQVM>(vm), pointer<const int32_t>(root_object + 8), act_name, act_pair) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), global_pair) ||
         !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), resource_pair))
-        goto cleanup;
+        break;
 
     if (std::strcmp(act_name, "Fader2") == 0 &&
         global_pair[0] == 0x0A000020 && global_pair[1] != 0 &&
@@ -2127,27 +2167,27 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
     }
 
     kinoko_sqrat_bind_string((struct SQVM *)(intptr_t)(vm), act_pair, "stName", act_name);
-    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "resolutionMs", field<int32_t>(act + 4));
-    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenWidth", field<int32_t>(act + 8));
-    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenHeight", field<int32_t>(act + 12));
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "resolutionMs", act_view.get(&ActPublicationRecord::resolution_ms));
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenWidth", act_view.get(&ActPublicationRecord::screen_width));
+    kinoko_sqrat_bind_int((struct SQVM *)(intptr_t)(vm), act_pair, "screenHeight", act_view.get(&ActPublicationRecord::screen_height));
     if (!kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), act_pair, "global", global_pair) ||
         !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), act_pair, "resource", resource_pair) ||
         !kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), global_pair, "thisAct", act_pair) ||
         !kinoko_sqrat_set_delegate((struct SQVM *)(intptr_t)(vm), global_pair, act_pair) ||
         !retdec_publish_act_script_constants(vm, global_pair))
-        goto cleanup;
+        break;
 
     if (!retdec_publish_acting_player(vm, act_pair, "pl", resource_ptr,
                                       player_pair))
-        goto cleanup;
+        break;
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
     if (!retdec_publish_acting_player(vm, act_pair, "player", resource_ptr,
                                       player_pair))
-        goto cleanup;
+        break;
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
 
-    script_ptr = act + 100;
-    script_path = kinoko_string_data((const void*)(intptr_t)(script_ptr + 64));
+    script_ptr = address(act_view.bytes(&ActPublicationRecord::script));
+    script_path = kinoko_string_data(ScriptPublicationView(pointer<void>(script_ptr)).bytes(&ScriptPublicationRecord::path));
     if (script_path && *script_path)
         retdec_trace_squirrel_name("450f30:script-path", address(script_path));
     global_object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
@@ -2166,15 +2206,16 @@ int32_t retdec_root_table_register_resource(int32_t root_object,
        the scene selects them and makes them cover TitleMenu. */
     retdec_trace("act:published-without-begin-stage");
     result = 1;
+    } while (false);
 
-cleanup:
-    if (player_pair[0] != g483)
+
+    if (player_pair[0] != static_cast<int32_t>(OT_NULL))
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), player_pair);
-    if (resource_pair[0] != g483)
+    if (resource_pair[0] != static_cast<int32_t>(OT_NULL))
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), resource_pair);
-    if (global_pair[0] != g483)
+    if (global_pair[0] != static_cast<int32_t>(OT_NULL))
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), global_pair);
-    if (act_pair[0] != g483)
+    if (act_pair[0] != static_cast<int32_t>(OT_NULL))
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), act_pair);
     return result;
 }
@@ -2183,7 +2224,7 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
                                                  int32_t vm,
                                                  int32_t output_ptr)
 {
-    int32_t root_object[5] = { 0, 0, g483, g484, 0 };
+    int32_t root_object[5] = { 0, 0, static_cast<int32_t>(OT_NULL), 0, 0 };
     int32_t result;
 
     if (resource_ptr == 0 || vm == 0)
@@ -2368,7 +2409,7 @@ extern "C" int32_t kinoko_publish_string_layout_class(int32_t vm,int32_t root,in
     if(get_pair(root,"CStringLayout",out) && out[0]==0x08004000) return 1;
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), out);
     const int32_t top=sq_gettop(kinoko_vm(vm));
-    int32_t setters[2]={g483,g484},getters[2]={g483,g484};
+    int32_t setters[2]={static_cast<int32_t>(OT_NULL),0},getters[2]={static_cast<int32_t>(OT_NULL),0};
     bool ok=kinoko_sqrat_new_class((struct SQVM *)(intptr_t)(vm), out) && kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), setters) && kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), getters) &&
         kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), out, setters, getters, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650)));
     struct Property { const char* name; int32_t offset,kind; bool readonly; };
@@ -2408,7 +2449,7 @@ extern "C" int32_t __fastcall kinoko_method_register_string_layout(int32_t layou
     if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
     const int32_t vm=field<int32_t>(layer+332);
     if(!vm) return E_INVALIDARG;
-    int32_t root[5]{},klass[2]={g483,g484},outer[2]={g483,g484},script[2]={g483,g484};
+    int32_t root[5]{},klass[2]={static_cast<int32_t>(OT_NULL),0},outer[2]={static_cast<int32_t>(OT_NULL),0},script[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return E_FAIL;
     const bool ok=kinoko_publish_string_layout_class(vm,address(root),klass) &&
         retdec_create_unbound_instance(vm,klass,layout,outer) &&
@@ -2446,7 +2487,7 @@ extern "C" int32_t kinoko_publish_mesh_resource_class(int32_t vm,int32_t root,in
 }
 extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void *,int32_t vm) {
     if(!vm) return E_INVALIDARG;
-    int32_t root[5]{},klass[2]={g483,g484};
+    int32_t root[5]{},klass[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return E_FAIL;
     const auto ok=kinoko_publish_mesh_resource_class(vm,address(root),klass);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), klass);kinoko_sqrat_object_release((void *)(root));
@@ -2464,7 +2505,7 @@ extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,vo
     if(!layer || field<int32_t>(layer+336)==0x01000001) return E_FAIL;
     const auto vm=field<int32_t>(layer+332);
     if(!vm) return E_INVALIDARG;
-    int32_t root[5]{},klass[2]={g483,g484},outer[2]={g483,g484},script[2]={g483,g484};
+    int32_t root[5]{},klass[2]={static_cast<int32_t>(OT_NULL),0},outer[2]={static_cast<int32_t>(OT_NULL),0},script[2]={static_cast<int32_t>(OT_NULL),0};
     if(!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root), (struct SQVM *)(intptr_t)(vm)))) return E_FAIL;
     // 43C2B0 spells the translation-Z script property "coS_z". Do not invent
     // a trans_z alias or copy the serialized trans/roll offset alias into SQ.
