@@ -8279,6 +8279,11 @@ static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
     retdec_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
 }
+const KinokoSqplusVmSlots *kinoko_sqplus_vm_slots(void) {
+    static KinokoSqplusVmSlots slots = { &g642, &g643, &g644, &g645, unk_5149EC };
+    return &slots;
+}
+
 struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size) {
     return (struct SQVM *)(intptr_t)kinoko_open_primary_script_vm(stack_size);
 }
