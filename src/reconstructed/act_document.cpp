@@ -1,5 +1,6 @@
 #include "kinoko/act_document_association.hpp"
 #include "kinoko/act_mesh.hpp"
+#include "kinoko/act_layout3d_io.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -268,7 +269,8 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
     }
     if(layout_type==kinoko::mesh::layout_type()) {
         layout=address(kinoko::mesh::create_layout());
-        if(layout && !kinoko_method_layout3d_assign(layout,nullptr,address(&reader_ptr),version)) {
+        if(layout && !kinoko_act_read_layout3d_properties(
+                pointer<KinokoActLayout>(layout),&reader_ptr,version)) {
             std::free(pointer<void>(layout));layout=0;
         }
     } else if(layout_type==0x9e695d47u) {

@@ -11,3 +11,8 @@ pointer and version 1, then delegates the property stream. The implementation
 now exposes those actual pointer types and the legacy vtable adapters convert
 only at their integer ABI boundary. Property order and schema stay unchanged.
 Evidence: 43c860.json.
+Batch 25: the native ACT key parser already owns its local reader value and
+borrows the newly created 3D layout. It now passes a real layout pointer and
+address of that reader slot directly to the recovered 43C860 interface.
+The legacy virtual adapter stays available for original ABI callers; key
+failure cleanup and subsequent publication remain unchanged.
