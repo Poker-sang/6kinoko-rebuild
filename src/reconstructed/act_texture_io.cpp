@@ -3,6 +3,7 @@
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
 #include "kinoko/act_resource_io.h"
+#include "kinoko/act_load_properties.h"
 #include "kinoko/map_chip_cache.hpp"
 #include "kinoko/native_buffer.h"
 #include "kinoko/legacy_abi.h"
@@ -541,15 +542,25 @@ extern "C" int32_t __fastcall kinoko_method_write_act_layer(int32_t layer,void*,
             field<void*>(field<int32_t>(script)),writer)&0xff)!=0;
     } catch (...) { return 0; }
 }
-extern "C" int32_t kinoko_act_read_layer_properties(int32_t layer,int32_t reader) {
+extern "C" int32_t kinoko_act_read_layer_properties_typed(KinokoActLayer *layer,
+                                                            KinokoArchiveReader *reader) {
     if (!layer || !reader) return 0;
-    try { return read(layer,reader,layer_schema,false); }
+    try { return read(address(layer),address(reader),layer_schema,false); }
+    catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_read_layer_properties(int32_t layer,int32_t reader) {
+    return kinoko_act_read_layer_properties_typed(pointer<KinokoActLayer>(layer),
+        pointer<KinokoArchiveReader>(reader));
+}
+extern "C" int32_t kinoko_act_read_key_properties_typed(KinokoActKey *key,
+                                                          KinokoArchiveReader *reader) {
+    if (!key || !reader) return 0;
+    try { return read(address(key),address(reader),key_schema,false); }
     catch (...) { return 0; }
 }
 extern "C" int32_t kinoko_act_read_key_properties(int32_t key,int32_t reader) {
-    if (!key || !reader) return 0;
-    try { return read(key,reader,key_schema,false); }
-    catch (...) { return 0; }
+    return kinoko_act_read_key_properties_typed(pointer<KinokoActKey>(key),
+        pointer<KinokoArchiveReader>(reader));
 }
 extern "C" int32_t kinoko_act_read_map_properties(int32_t layout,int32_t reader) {
     if (!layout || !reader) return 0;

@@ -3,6 +3,7 @@
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
 #include "kinoko/act_resource_io.h"
+#include "kinoko/act_load_properties.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -253,7 +254,8 @@ int32_t retdec_act_load_key(int32_t key, int32_t reader_ptr,
     uint32_t layout_type = 0;
     int32_t layout;
 
-    if (!key || version != 1 || !kinoko_act_read_key_properties(key, reader_ptr)) {
+    if (!key || version != 1 || !kinoko_act_read_key_properties_typed(pointer<KinokoActKey>(key),
+            pointer<KinokoArchiveReader>(reader_ptr))) {
         retdec_trace("act:key-properties-failed");
         return 0;
     }
@@ -329,7 +331,8 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
     uint32_t type;
     int32_t key;
 
-    if (!layer || version != 1 || !kinoko_act_read_layer_properties(layer, reader_ptr)) {
+    if (!layer || version != 1 || !kinoko_act_read_layer_properties_typed(pointer<KinokoActLayer>(layer),
+            pointer<KinokoArchiveReader>(reader_ptr))) {
         retdec_trace("act:layer-properties-failed");
         return 0;
     }

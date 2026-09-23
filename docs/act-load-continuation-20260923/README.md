@@ -37,3 +37,8 @@ Its distinct ACT schema reader now borrows that Resource and the active
 reader slot directly, with the virtual C ABI only converting at its edge.
 The factory still clears and frees the mesh on read failure, and resource
 loading remains deferred to the original resource pass.
+Batch 30: the key and layer property streams borrow newly allocated ACT
+records and the active archive reader. The document parser now calls typed
+record/reader APIs; existing integer ABI functions remain adapters for
+legacy callers. Key presence/type checks, layer key/timeline loops and
+schema ordering are unchanged.
