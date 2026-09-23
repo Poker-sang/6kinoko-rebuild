@@ -69,7 +69,7 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     }
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     if (!resource.get(&RuntimeRecord::stage_active) || !resource.get(&RuntimeRecord::active_holder)) return E_FAIL;
-    kinoko_act_commands_clear(self);
+    kinoko_act_commands_clear((KinokoActRuntime*)(intptr_t)(self));
     // 4516C4 is JNB: compare DWORDs, including uptime above 0x80000000.
     if (resource.get(&RuntimeRecord::wake_time) >= timeGetTime()) {
         if (trace_index <= 48) retdec_trace("451640:skip-time");

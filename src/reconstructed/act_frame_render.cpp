@@ -92,7 +92,7 @@ void set_blend(IDirect3DDevice9* device, int32_t blend) {
     device->SetRenderState(D3DRS_DESTBLEND, dest);
     device->SetRenderState(D3DRS_BLENDOP, op);
 }
-int32_t prepare_sprite(int32_t item, const BlitCommand& command) {
+int32_t prepare_sprite(void* item, const BlitCommand& command) {
     if (command.texture <= 0 || static_cast<uint32_t>(command.texture) >= KINOKO_TEXTURE_CAPACITY) return E_FAIL;
     const auto& texture = kinoko_texture_slots[command.texture];
     if (!texture.width || !texture.height) return E_FAIL;
@@ -102,7 +102,7 @@ int32_t prepare_sprite(int32_t item, const BlitCommand& command) {
         command.source_y, command.width, command.height);
     const uint32_t color = (static_cast<uint32_t>(command.alpha * 255.0f) << 24) | 0xffffffu;
     for (auto& vertex : sprite.vertices) vertex.color = color;
-    const RecordView<BlitSprite> target(pointer(item));
+    const RecordView<BlitSprite> target(item);
     target.set(&BlitSprite::command, command);
     target.set(&BlitSprite::sprite, sprite);
     return 0;
@@ -151,14 +151,14 @@ extern "C" int32_t kinoko_act_prepare_draw(int32_t self) {
             if (update && retdec_call_thiscall0_result(pointer(layout), pointer(update)) < 0) result = E_FAIL;
         }
     }
-    const auto commands = kinoko_act_command_span(self);
-    const auto count = static_cast<int32_t>(commands.end - commands.begin) / 36;
-    function_452c20(address(resource.bytes(&RuntimeRecord::draw_sprites)), count);
-    const auto sprites = kinoko_act_sprite_span(self);
-    if (static_cast<int32_t>(sprites.end - sprites.begin) / 184 != count) return E_OUTOFMEMORY;
+    const auto commands = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(self));
+    const auto count = commands.begin ? static_cast<int32_t>((commands.end - commands.begin) / sizeof(BlitCommand)) : 0;
+    kinoko_act_resize_sprites((KinokoActSpriteStorage*)(resource.bytes(&RuntimeRecord::draw_sprites)), count);
+    const auto sprites = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(self));
+    if ((sprites.begin ? static_cast<int32_t>((sprites.end - sprites.begin) / sizeof(BlitSprite)) : 0) != count) return E_OUTOFMEMORY;
     for (int32_t i = 0; i < count; ++i)
         if (prepare_sprite(sprites.begin + i * sizeof(BlitSprite),
-                load<BlitCommand>(pointer(commands.begin + i * sizeof(BlitCommand)))) < 0) result = E_FAIL;
+                load<BlitCommand>(commands.begin + i * sizeof(BlitCommand))) < 0) result = E_FAIL;
     return result;
 }
 
@@ -202,9 +202,9 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
     if (document.get(&DocumentRecord::visible)) {
         auto* blit_device = kinoko_graphics.device;
         if (blit_device) {
-            for (auto item = kinoko_act_sprite_span(self).begin;
-                 item != kinoko_act_sprite_span(self).end; item += sizeof(BlitSprite)) {
-                const RecordView<BlitSprite> entry(pointer(item));
+            for (auto item = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(self)).begin;
+                 item != kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(self)).end; item += sizeof(BlitSprite)) {
+                const RecordView<BlitSprite> entry(item);
                 const auto command = entry.get(&BlitSprite::command);
                 const auto sprite = address(entry.bytes(&BlitSprite::sprite));
                 set_blend(blit_device, command.blend);

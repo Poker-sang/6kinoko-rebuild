@@ -135,7 +135,7 @@ extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     std::memset(view.bytes(&RuntimeRecord::name), 0, sizeof(Address));
     view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::length, uint32_t{0});
     view.view(&RuntimeRecord::name).set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
-    kinoko_act_draw_storage_destroy(address(storage));
+    kinoko_act_draw_storage_destroy(storage);
     std::free(view.get(&RuntimeRecord::active_holder));
     view.set(&RuntimeRecord::active_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     const auto act = view.get(&RuntimeRecord::active_document);

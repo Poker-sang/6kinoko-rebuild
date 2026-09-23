@@ -2636,16 +2636,16 @@ static int test_act_resource_methods(void) {
     texture[17] = 7;
     CHECK(retdec_act_bitblt_this(address, 3, 4, 32, 16,
         PTR(texture), 0, 0, 0, 1.0f) == 0);
-    function_452c20(address + 60, 2);
-    KinokoDrawSpan commands_before = kinoko_act_command_span(address);
-    KinokoDrawSpan sprites_before = kinoko_act_sprite_span(address);
+    kinoko_act_resize_sprites((KinokoActSpriteStorage*)(intptr_t)(address + 60), 2);
+    KinokoDrawSpan commands_before = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(address));
+    KinokoDrawSpan sprites_before = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(address));
     CHECK(commands_before.end > commands_before.begin);
     CHECK(sprites_before.end > sprites_before.begin);
     const int32_t commands_owner = words[11], sprites_owner = words[15];
     words[38] = 4321;
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_end_stage) == 0);
-    KinokoDrawSpan commands_after = kinoko_act_command_span(address);
-    KinokoDrawSpan sprites_after = kinoko_act_sprite_span(address);
+    KinokoDrawSpan commands_after = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(address));
+    KinokoDrawSpan sprites_after = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(address));
     CHECK(resource[8] == 0);
     CHECK(commands_after.end == commands_after.begin);
     CHECK(sprites_after.end == sprites_after.begin);
@@ -2655,7 +2655,7 @@ static int test_act_resource_methods(void) {
     for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
     CHECK(words[38] == 4321);
     CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)address, NULL) == (int32_t)E_FAIL);
-    kinoko_act_draw_storage_destroy(address);
+    kinoko_act_draw_storage_destroy((KinokoActRuntime*)(intptr_t)(address));
     CHECK(words[11] == 0 && words[15] == 0);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");

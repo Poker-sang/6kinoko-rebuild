@@ -80,3 +80,18 @@ preserves self-transfer and destructor callback behavior. Source ACT/holder and
 layout values remain borrowed copies; native containers own their own storage.
 The map contract adds distinct-source transfer, disposal-before-container-copy,
 callback replacement and receiver-return assertions. Compiled only.
+
+## Batch 8: ACT draw owners, pointer spans and sprite assignment
+
+The runtime's two 12-byte drawing slots have typed native owners and reserved
+words. Named fields replace +44/+60 storage access. Spans carry actual borrowed
+byte pointers, including retained capacity after clear; empty preparation avoids
+null-pointer subtraction. Resize keeps the existing native capacity return and
+request bound (the original's mixed EAX is not claimed as an allocation API).
+
+455230 becomes typed kinoko_act_copy_blit_sprites. It copies command/pose/vertex
+payload while retaining destination virtual identity, and returns the output
+end pointer. Clear returns a borrowed storage marker, not live elements or
+ownership. Native append takes runtime/resource pointers; only the shared script
+callback retains an explicit integer adapter. Existing ACT frame/clock/storage
+contracts cover capacity, copy identity, alpha, ordering and cleanup; compiled only.
