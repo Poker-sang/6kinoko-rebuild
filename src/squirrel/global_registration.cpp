@@ -102,16 +102,16 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
 int32_t kinoko_register_root_bindings() {
     retdec_trace("473010:enter");
     kinoko_script_initialize_root();
-    g664 = address(g644);
+    const int32_t vm_address = address(current_vm());
     RootTableStorage root{};
     root.vtable = kinoko_sqrat_object_vtable();
-    root.vm = pointer<SQVM>(g664);
+    root.vm = current_vm();
     root.owns_value = 1;
     sq_resetobject(&root.value);
     root.vtable = kinoko_sqrat_root_vtable();
     sq_pushroottable(current_vm());
     sq_getstackobj(current_vm(), -1, &root.value);
-    function_48a400(g664, address(&root.value));
+    function_48a400(vm_address, address(&root.value));
     sq_pop(current_vm(), 1);
     kinoko_register_global_methods(address(&root));
 
@@ -132,11 +132,11 @@ int32_t kinoko_register_root_bindings() {
     }
     kinoko_actor_register_script_class();
     kinoko_register_input_class();
-    function_4669d0();
-    function_46fac0();
+    kinoko_register_camera_binding();
+    kinoko_register_map_binding();
     kinoko_script_load_file(const_cast<char *>("data/script/class_def.nut"),
                             kinoko_script_root());
-    return function_48a430(address(g644), address(&root.value));
+    return function_48a430(vm_address, address(&root.value));
 }
 } // namespace
 extern "C" int32_t function_473010(void) { return kinoko_register_root_bindings(); }
