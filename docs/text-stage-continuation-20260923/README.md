@@ -66,3 +66,9 @@ Batch 13: IDA 43EC30 copies three independent strings, style bytes
 with padding 129..131 untouched. The clone uses named record member
 boundaries for these spans and retains its existing atlas/deque assignment
 and subsequent clearing. Evidence: 43ec30.json.
+Batch 14: IDA 40ED40 destroys renderer payloads before the bitmap buffer
+at renderer +344; 445230 copies the renderer string at +368 separately
+from the first 348 bytes. The asserted 404-byte FontRendererRecord names
+the bitmap, pixel owner and label slots. Renderer assignment/destruction
+now uses those slots, retaining shallow buffer-copy and release order.
+Evidence: 40ed40.json and 445230.json.

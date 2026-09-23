@@ -5,6 +5,7 @@
 #include "kinoko/string_font.h"
 #include "kinoko/act_layout_records.hpp"
 #include "kinoko/string_atlas_records.hpp"
+#include "kinoko/string_font_renderer_records.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <climits>
@@ -28,7 +29,9 @@ void assign_renderer(int32_t out,int32_t in) {
     field<uint32_t>(out+360)=field<uint32_t>(in+360);
     field<uint8_t>(out+364)=field<uint8_t>(in+364);
     field<uint8_t>(out+365)=field<uint8_t>(in+365);
-    StringView(pointer<void>(out+368)).assign(StringView(pointer<void>(in+368)),0,UINT32_MAX);
+    using Renderer=kinoko::text::FontRendererRecord;
+    const kinoko::native::RecordView<Renderer> target(pointer<void>(out)), source(pointer<void>(in));
+    StringView(target.bytes(&Renderer::label)).assign(StringView(source.bytes(&Renderer::label)),0,UINT32_MAX);
     field<uint32_t>(out+396)=field<uint32_t>(in+396);
     field<uint32_t>(out+400)=field<uint32_t>(in+400);
 }
@@ -36,13 +39,16 @@ void assign_renderer(int32_t out,int32_t in) {
 // 40ED40 receives its renderer in ESI. The old C signature lost it entirely.
 void destroy_renderer(int32_t renderer) {
     kinoko_string_font_destroy_pixels(renderer);
-    std::free(field<void*>(renderer+344));
-    field<void*>(renderer+344)=nullptr;
-    StringView text(pointer<void>(renderer+368));
-    text.destroy();
-    field<uint32_t>(renderer+388)=15;
-    field<uint32_t>(renderer+384)=0;
-    field<uint8_t>(renderer+368)=0;
+    using Renderer=kinoko::text::FontRendererRecord;
+    using StringRecord=kinoko::legacy::StringRecord;
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+    std::free(record.get(&Renderer::bitmap));
+    record.set(&Renderer::bitmap,static_cast<void*>(nullptr));
+    const kinoko::native::RecordView<StringRecord> label(record.bytes(&Renderer::label));
+    StringView(label.data()).destroy();
+    label.set(&StringRecord::capacity,uint32_t{15});
+    label.set(&StringRecord::length,uint32_t{0});
+    label.bytes(&StringRecord::characters)[0]=0;
 }
 struct Atlas {
     alignas(4) unsigned char bytes[436];
