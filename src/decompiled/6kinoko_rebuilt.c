@@ -2294,8 +2294,8 @@ int32_t g574 = 0; // 0x513738
 int32_t g600[3] = { 0, 0, 0 }; // 0x513c40
 int32_t g601[3] = { 0, 0, 0 }; // 0x513c4c
 int32_t g602[3] = { 0, 0, 0 }; // 0x513c58
-void *kinoko_stage_list_storage = NULL; // recovered 0x513c64
-int32_t kinoko_stage_list_count = 0; // recovered 0x513c68
+int32_t g603 = 0; // 0x513c64
+int32_t g604 = 0; // 0x513c68
 int32_t g611[3] = { 0, 0, 0 }; // 0x513c88, global SquirrelObject
 /* SetGlobalUpdateFunction stores a VM pointer and two SquirrelObject values
    in this 28-byte SquirrelFunction object. */
@@ -2318,8 +2318,8 @@ int32_t g617 = 0; // 0x5143e0
 int32_t g629[3] = { 0, 0, 0 }; // 0x514484
 int32_t g636[3] = { 0, 0, 0 }; // 0x5144a8, global SquirrelObject
 int32_t g637 = 0; // 0x5144b4
-KinokoIntegerMap* kinoko_sound_lookup = NULL; // recovered 0x5144bc
-int32_t kinoko_sound_lookup_count = 0; // recovered 0x5144c0
+KinokoIntegerMap* g638 = NULL; // 0x5144bc
+int32_t g639 = 0; // 0x5144c0
 int32_t g640 = 0; // 0x5148cc
 char * g641; // 0x5148d0
 char g642 = 0; // 0x5149d4

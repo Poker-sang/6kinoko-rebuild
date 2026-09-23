@@ -12,10 +12,9 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern void *kinoko_stage_list_storage;
-extern int32_t kinoko_stage_list_count;
-extern KinokoIntegerMap* kinoko_sound_lookup;
-extern int32_t kinoko_sound_lookup_count;
+extern int32_t g603, g604;
+extern KinokoIntegerMap* g638;
+extern int32_t g639;
 int32_t kinoko_audio_shutdown_resources(void);
 }
 
@@ -23,16 +22,22 @@ using StageList = std::list<KinokoStageNode>;
 struct KinokoStageNode { KinokoStageOwner *owner; StageList::iterator position; };
 
 namespace {
+// The C ABI slots are retained for original callers and contract fixtures.
+// Only this file owns the list allocation and sound lookup tree.
+int32_t& stage_list_word() { return g603; }
+int32_t& stage_list_count() { return g604; }
+KinokoIntegerMap*& sound_lookup() { return g638; }
+int32_t& sound_lookup_count() { return g639; }
 using namespace kinoko::stage;
 using kinoko::native::RecordView;
 using kinoko::legacy::pointer;
-StageList* stages() { return static_cast<StageList*>(kinoko_stage_list_storage); }
+StageList* stages() { return kinoko::legacy::pointer<StageList>(stage_list_word()); }
 void release_stage_list() {
-    delete stages();kinoko_stage_list_storage=nullptr;kinoko_stage_list_count=0;
+    delete stages();stage_list_word()=0;stage_list_count()=0;
 }
 void release_render_queue() { kinoko_clear_render_queue(); }
 void release_sound_tree() {
-    kinoko_integer_map_destroy(kinoko_sound_lookup);kinoko_sound_lookup=nullptr;kinoko_sound_lookup_count=0;
+    kinoko_integer_map_destroy(sound_lookup());sound_lookup()=nullptr;sound_lookup_count()=0;
 }
 
 
@@ -75,7 +80,7 @@ extern "C" int32_t kinoko_register_render_queue_cleanup() {
 }
 
 extern "C" int32_t kinoko_register_sound_tree_cleanup() {
-    kinoko_sound_lookup=kinoko_integer_map_create();kinoko_sound_lookup_count=0;
+    sound_lookup()=kinoko_integer_map_create();sound_lookup_count()=0;
     return std::atexit(release_sound_tree);
 }
 
@@ -83,7 +88,7 @@ extern "C" int32_t kinoko_register_sound_tree_cleanup() {
 extern "C" int32_t kinoko_clear_global_stages() {
     if(!stages()) return 0;
     for(auto& entry:*stages()) { kinoko_stage_owner_destroy(entry.owner);entry.owner=nullptr; }
-    stages()->clear();kinoko_stage_list_count=0;return kinoko::legacy::address(kinoko_stage_list_storage);
+    stages()->clear();stage_list_count()=0;return stage_list_word();
 }
 
 // 470890: the rebuilt sound manager owns buffers in its SE pool and BGM
@@ -91,15 +96,15 @@ extern "C" int32_t kinoko_clear_global_stages() {
 // the non-owning original ID lookup tree, preserving its sentinel.
 extern "C" int32_t kinoko_clear_global_sound() {
     kinoko_audio_shutdown_resources();
-    kinoko_integer_map_clear(kinoko_sound_lookup);
-    kinoko_sound_lookup_count = 0;
+    kinoko_integer_map_clear(sound_lookup());
+    sound_lookup_count() = 0;
     return 1;
 }
 
-extern "C" void kinoko_stage_list_construct() { kinoko_stage_list_storage=new StageList;kinoko_stage_list_count=0; }
+extern "C" void kinoko_stage_list_construct() { stage_list_word()=kinoko::legacy::address(new StageList);stage_list_count()=0; }
 extern "C" void kinoko_stage_list_destroy() { release_stage_list(); }
 extern "C" KinokoStageNode *kinoko_stage_list_end() {
-    return reinterpret_cast<KinokoStageNode*>(kinoko_stage_list_storage);
+    return pointer<KinokoStageNode>(stage_list_word());
 }
 extern "C" KinokoStageNode *kinoko_stage_list_first() {
     return stages() && !stages()->empty() ? &stages()->front() : kinoko_stage_list_end();
@@ -117,13 +122,13 @@ extern "C" KinokoStageNode *kinoko_stage_list_append(KinokoStageOwner *owner) {
     auto position = std::prev(stages()->end());
     position->owner = owner;
     position->position = position;
-    kinoko_stage_list_count = static_cast<int32_t>(stages()->size());
+    stage_list_count() = static_cast<int32_t>(stages()->size());
     return &*position;
 }
 static int32_t kinoko_clear_stage_nodes() {
     if (auto* list = stages()) list->clear();
-    kinoko_stage_list_count = 0;
-    return kinoko::legacy::address(kinoko_stage_list_storage);
+    stage_list_count() = 0;
+    return stage_list_word();
 }
 extern "C" int32_t function_4d47f0() {
     return kinoko_clear_stage_nodes();
