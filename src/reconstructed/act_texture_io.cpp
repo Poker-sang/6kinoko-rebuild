@@ -12,6 +12,8 @@
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_host.h"
+#include "kinoko/graphics_device.h"
+#include "kinoko/texture_store.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/act_layout_records.hpp"
@@ -22,6 +24,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <cstring>
 
 extern "C" unsigned char g673;
 #include "kinoko/string_layout.h"
@@ -675,3 +678,22 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
     } catch (...) { return 0; }
 }
 
+
+// CActResource2D stores extensionless names. The CV2 loader returns the
+// logical handle; ownership of the D3D texture stays with the texture store.
+extern "C" int32_t retdec_load_act_texture(const char *texture_name) {
+    char path[MAX_PATH];
+    if (!texture_name || !kinoko_graphics.device) return 0;
+    const size_t length = std::strlen(texture_name);
+    if (!length || length + 5 > sizeof(path)) return 0;
+    std::memcpy(path, texture_name, length + 1);
+    const char *extension = std::strrchr(path, '.');
+    if (extension && _stricmp(extension, ".cv2") == 0) {
+        // Already normalized.
+    } else if (extension && _stricmp(extension, ".cv4") == 0) {
+        std::memcpy(path + length - 4, ".cv2", 4);
+    } else {
+        std::memcpy(path + length, ".cv2", 5);
+    }
+    return kinoko_texture_acquire(path);
+}

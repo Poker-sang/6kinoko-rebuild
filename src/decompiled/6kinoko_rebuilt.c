@@ -2490,7 +2490,7 @@ int32_t g948 = 0; // 0x51ba84
 int32_t g950 = 0; // 0x51ba8c
 int32_t g951 = 0; // 0x51ba90
 bool g952 = false; // 0x51ba9c
-int32_t g953 = 0; // 0x51baa0
+int32_t kinoko_mesh_manager_slot = 0; // recovered 0x51baa0
 int32_t g954 = 0; // 0x51baa4
 int32_t g955 = 0; // 0x51baa8
 int32_t g956 = 0; // 0x51baac
@@ -3817,30 +3817,7 @@ void retdec_poll_fallback_keyboard(void)
 /* ACT stores texture names without a file extension.  Its CActResource2D
    loader asks the asset system for the corresponding CV2 bitmap, then keeps a
    logical handle while the native D3D texture lives in the handle slot. */
-int32_t retdec_load_act_texture(const char *texture_name)
-{
-    char path[MAX_PATH];
-    const char *extension;
-    size_t length;
-
-    if (texture_name == NULL || kinoko_graphics.device == 0)
-        return 0;
-    length = strlen(texture_name);
-    if (length == 0 || length + 5 > sizeof(path))
-        return 0;
-    memcpy(path, texture_name, length + 1);
-    extension = strrchr(path, '.');
-    if (extension != NULL && _stricmp(extension, ".cv2") == 0) {
-        /* Already normalized. */
-    } else if (extension != NULL && _stricmp(extension, ".cv4") == 0) {
-        memcpy(path + length - 4, ".cv2", 4);
-    } else {
-        memcpy(path + length, ".cv2", 5);
-    }
-
-    return kinoko_texture_acquire(path);
-}
-
+/* Moved to reconstructed/act_texture_io.cpp: resource-owned texture handle. */
 // Address range: 0x40e850 - 0x40ead7
 
 
@@ -6243,59 +6220,7 @@ int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char
 
 
 // IDA 457A10: node child range +156/+160 and manager virtual slot 3.
-int32_t kinoko_update_mesh_children(void* node, int32_t argument) {
-    int32_t this_ptr = (int32_t)(intptr_t)node;
-    int32_t begin;
-    int32_t end;
-    int32_t result = 0;
-
-    if (this_ptr == 0) {
-        return 0;
-    }
-    begin = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 156);
-    end = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 160);
-    if (end - begin < 4) {
-        return 0;
-    }
-
-    for (uint32_t index = 0; index < (uint32_t)((end - begin) >> 2);
-         ++index) {
-        int32_t entry = *(int32_t *)(uintptr_t)(uint32_t)(begin + 4 * index);
-        if (entry != 0) {
-            int32_t manager_object = (int32_t)(intptr_t)&g953;
-            int32_t *manager_vtable = *(int32_t **)(uintptr_t)
-                (uint32_t)manager_object;
-            int32_t handle = 0;
-
-            if (manager_vtable != NULL && manager_vtable[3] != 0) {
-                handle = retdec_call_thiscall2_result(
-                    (void *)(uintptr_t)(uint32_t)manager_object,
-                    (void *)(uintptr_t)(uint32_t)manager_vtable[3],
-                    entry, argument);
-            }
-
-            /* The original assumes a successful handle lookup.  A failed
-               lookup is possible while the rebuilt runtime is degraded, so
-               skip it instead of dereferencing the null fallback RetDec
-               emitted for this path. */
-            if (handle != 0) {
-                int32_t object = *(int32_t *)(uintptr_t)(uint32_t)handle;
-                if (object != 0) {
-                    int32_t *object_vtable = *(int32_t **)(uintptr_t)
-                        (uint32_t)object;
-                    if (object_vtable != NULL && object_vtable[0] != 0) {
-                        result = retdec_call_thiscall1_result(
-                            (void *)(uintptr_t)(uint32_t)object,
-                            (void *)(uintptr_t)(uint32_t)object_vtable[0],
-                            argument);
-                    }
-                }
-            }
-        }
-    }
-    return result;
-}
-
+/* Moved to reconstructed/act_mesh.cpp: controller child dispatch. */
 
 // Address range: 0x457a80 - 0x457ab7
 // From class:    .?AVCMeshControllerNode@@

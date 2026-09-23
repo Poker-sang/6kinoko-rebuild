@@ -7,10 +7,13 @@
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/legacy_memory.hpp"
+#include "kinoko/native_record_view.hpp"
+#include "kinoko/legacy_abi.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/com_owner.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <map>
@@ -305,4 +308,48 @@ act::Layout3DRecord *create_layout() {
     auto *layout=static_cast<act::Layout3DRecord*>(std::calloc(1,sizeof(act::Layout3DRecord)));
     if(layout){layout->methods=layout_methods();layout->scale={1,1,1};}return layout;
 }
+}
+
+// 457A10: a controller owns its child vector, while the mesh manager owns
+// lookup handles. A handle borrows the object reached through its first word.
+extern "C" int32_t kinoko_mesh_manager_slot;
+namespace {
+struct MeshChildRange {
+    unsigned char prefix[156];
+    int32_t begin, end;
+};
+static_assert(offsetof(MeshChildRange, begin) == 156);
+static_assert(offsetof(MeshChildRange, end) == 160);
+}
+extern "C" int32_t kinoko_update_mesh_children(void *node, int32_t argument) {
+    if (!node) return 0;
+    using kinoko::legacy::address;
+    using kinoko::legacy::field;
+    using kinoko::legacy::pointer;
+    const kinoko::native::RecordView<MeshChildRange> children(node);
+    const auto begin = children.get(&MeshChildRange::begin);
+    const auto end = children.get(&MeshChildRange::end);
+    if (end - begin < static_cast<int32_t>(sizeof(int32_t))) return 0;
+
+    int32_t result = 0;
+    for (uint32_t index = 0; index < static_cast<uint32_t>((end - begin) >> 2); ++index) {
+        const auto entry = field<int32_t>(begin + static_cast<int32_t>(sizeof(int32_t) * index));
+        if (!entry) continue;
+        const auto manager = address(&kinoko_mesh_manager_slot);
+        const auto manager_methods = field<int32_t>(manager);
+        int32_t handle = 0;
+        if (manager_methods && field<int32_t>(manager_methods + 12)) {
+            handle = retdec_call_thiscall2_result(pointer<void>(manager),
+                pointer<void>(field<int32_t>(manager_methods + 12)), entry, argument);
+        }
+        if (!handle) continue;
+        const auto object = field<int32_t>(handle);
+        if (!object) continue;
+        const auto methods = field<int32_t>(object);
+        if (methods && field<int32_t>(methods)) {
+            result = retdec_call_thiscall1_result(pointer<void>(object),
+                pointer<void>(field<int32_t>(methods)), argument);
+        }
+    }
+    return result;
 }
