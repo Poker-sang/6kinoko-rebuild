@@ -309,8 +309,11 @@ extern "C" int32_t function_48dd10(int32_t vm, int32_t index, int32_t push_value
     return kinoko_sq_array_pop(::vm(vm), index, push_value);
 }
 
-extern "C" int32_t function_48bec0(int32_t a1, int32_t a2) {
-    return addr(SQUserData::Create(ptr<SQSharedState>(a1), a2));
+static SQUserData* kinoko_sq_create_user_data(SQSharedState* shared, int32_t bytes) {
+    return SQUserData::Create(shared, bytes);
+}
+extern "C" int32_t function_48bec0(int32_t shared_state, int32_t bytes) {
+    return addr(kinoko_sq_create_user_data(ptr<SQSharedState>(shared_state), bytes));
 }
 
 static int32_t kinoko_sq_register_io_library(SQVM* machine) {
@@ -348,35 +351,58 @@ extern "C" int32_t function_4c5c80(int32_t vm) {
     return kinoko_sq_install_error_handlers(::vm(vm));
 }
 
-extern "C" int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr) {
-    return ptr<SQDelegable>(this_ptr)->SetDelegate(ptr<SQTable>(delegate_ptr));
+static int32_t kinoko_sq_set_object_delegate(SQDelegable* receiver, SQTable* delegate) {
+    return receiver->SetDelegate(delegate);
+}
+extern "C" int32_t function_48e520_this(int32_t receiver, int32_t delegate) {
+    return kinoko_sq_set_object_delegate(ptr<SQDelegable>(receiver), ptr<SQTable>(delegate));
 }
 
 extern "C" int32_t function_491880_this(int32_t this_ptr, int32_t index) {
     return kinoko_sq_get_up(this_ptr, index);
 }
 
-extern "C" int32_t function_489f30_this(int32_t this_ptr) {
-    if (this_ptr) ptr<SQObjectPtr>(this_ptr)->~SQObjectPtr(); return this_ptr;
+static int32_t kinoko_sq_destroy_object(SQObjectPtr* value) {
+    if (value) value->~SQObjectPtr();
+    return addr(value);
+}
+extern "C" int32_t function_489f30_this(int32_t value) {
+    return kinoko_sq_destroy_object(ptr<SQObjectPtr>(value));
 }
 
-extern "C" int32_t function_489f50_this(int32_t this_ptr, int32_t source_ptr) {
-    *ptr<SQObjectPtr>(this_ptr) = *ptr<SQObjectPtr>(source_ptr); return this_ptr;
+static int32_t kinoko_sq_assign_object(SQObjectPtr* destination, const SQObjectPtr* source) {
+    *destination = *source;
+    return addr(destination);
+}
+extern "C" int32_t function_489f50_this(int32_t destination, int32_t source) {
+    return kinoko_sq_assign_object(ptr<SQObjectPtr>(destination), ptr<SQObjectPtr>(source));
 }
 
-extern "C" int32_t function_48e0e0_this(int32_t this_ptr, int32_t value) {
-    if (this_ptr) *ptr<SQObjectPtr>(this_ptr) = value; return this_ptr;
+static int32_t kinoko_sq_assign_integer(SQObjectPtr* destination, int32_t value) {
+    if (destination) *destination = value;
+    return addr(destination);
+}
+extern "C" int32_t function_48e0e0_this(int32_t destination, int32_t value) {
+    return kinoko_sq_assign_integer(ptr<SQObjectPtr>(destination), value);
 }
 
-extern "C" int32_t function_48e120_this(int32_t this_ptr, float value) {
-    if (this_ptr) *ptr<SQObjectPtr>(this_ptr) = value; return this_ptr;
+static int32_t kinoko_sq_assign_float(SQObjectPtr* destination, float value) {
+    if (destination) *destination = value;
+    return addr(destination);
+}
+extern "C" int32_t function_48e120_this(int32_t destination, float value) {
+    return kinoko_sq_assign_float(ptr<SQObjectPtr>(destination), value);
 }
 
-extern "C" int32_t function_499b00(int32_t this_ptr, int32_t value_ptr) {
-    if (!this_ptr || !value_ptr) return this_ptr;
-    auto& value = *ptr<SQObjectPtr>(value_ptr);
-    const auto result = ISREFCOUNTED(type(value)) ? addr(_refcounted(value)) : this_ptr;
-    vm(this_ptr)->Raise_Error(value); return result;
+static int32_t kinoko_sq_raise_object_error(SQVM* machine, const SQObjectPtr* error_value) {
+    if (!machine || !error_value) return addr(machine);
+    auto& value = *error_value;
+    const auto result = ISREFCOUNTED(type(value)) ? addr(_refcounted(value)) : addr(machine);
+    machine->Raise_Error(value);
+    return result;
+}
+extern "C" int32_t function_499b00(int32_t machine, int32_t value) {
+    return kinoko_sq_raise_object_error(vm(machine), ptr<SQObjectPtr>(value));
 }
 
 namespace {
@@ -396,7 +422,7 @@ int32_t raise_formatted_error(HSQUIRRELVM machine, const char* format, va_list a
     return SQ_OK;
 }
 } // namespace
-extern "C" int32_t function_499a20(int32_t receiver, const char *format, ...) {
+extern "C" int32_t kinoko_sq_raise_formatted_error(int32_t receiver, const char *format, ...) {
     if (!receiver || !format) return SQ_ERROR;
     va_list args; va_start(args, format);
     const int32_t result = raise_formatted_error(vm(receiver), format, args);
@@ -440,12 +466,18 @@ extern "C" void retdec_gc_finalize_collectable(int32_t object_ptr,
     kinoko_sq_finalize_object(object_ptr, object_type);
 }
 
-extern "C" void __fastcall function_48be70(int32_t object, void* unused) {
-    (void)unused; ptr<SQUserData>(object)->Finalize();
+static void kinoko_sq_finalize_userdata(SQUserData* data) {
+    data->Finalize();
 }
-
+static int32_t kinoko_sq_destroy_userdata(SQUserData* data, int32_t flags) {
+    const auto size = sizeof(SQUserData) + data->_size - 1;
+    data->~SQUserData();
+    if (flags & 1) sq_vm_free(data, size);
+    return addr(data);
+}
+extern "C" void __fastcall function_48be70(int32_t object, void* unused) {
+    kinoko_sq_finalize_userdata(ptr<SQUserData>(object));
+}
 extern "C" int32_t __fastcall function_48bf50(int32_t object, void* unused, int32_t flags) {
-    (void)unused;
-    auto* data = ptr<SQUserData>(object); const auto size = sizeof(SQUserData) + data->_size - 1;
-    data->~SQUserData(); if (flags & 1) sq_vm_free(data, size); return object;
+    return kinoko_sq_destroy_userdata(ptr<SQUserData>(object), flags);
 }

@@ -202,7 +202,7 @@ void legacy_api_contracts(HSQUIRRELVM vm) {
     sq_settop(vm, initial_top);
 
     const std::string large(8192, 'x');
-    require(SQ_SUCCEEDED(function_499a20(machine, "%s:%d", large.c_str(), 17)), "formatted error");
+    require(SQ_SUCCEEDED(kinoko_sq_raise_formatted_error(machine, "%s:%d", large.c_str(), 17)), "formatted error");
     function_48acc0(machine);
     require(SQ_SUCCEEDED(sq_getstring(vm, -1, &string)) && std::string(string) == large + ":17", "formatted error must not truncate or overrun a fixed buffer");
     function_48aa30(machine, 1);

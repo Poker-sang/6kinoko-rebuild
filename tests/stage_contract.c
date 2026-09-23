@@ -2749,7 +2749,7 @@ static int test_error_value_ownership(int32_t vm) {
     for (int i = 0; i < 128; ++i) {
         char expected[64];
         sprintf_s(expected, sizeof(expected), "ownership formatted error %d", i);
-        function_499a20(vm, "ownership formatted error %d", i);
+        kinoko_sq_raise_formatted_error(vm, "ownership formatted error %d", i);
         CHECK(error[0] == 0x08000010);
         CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
         CHECK(strcmp((char *)(intptr_t)(error[1] + 28), expected) == 0);

@@ -60,7 +60,7 @@ int32_t function_489f50_this(int32_t this_ptr, int32_t source_ptr);
 int32_t function_48e0e0_this(int32_t this_ptr, int32_t value);
 int32_t function_48e120_this(int32_t this_ptr, float value);
 int32_t function_499b00(int32_t this_ptr, int32_t value_ptr);
-int32_t function_499a20(int32_t this_ptr, const char *format, ...);
+int32_t kinoko_sq_raise_formatted_error(int32_t this_ptr, const char *format, ...);
 int32_t function_49a520_this(int32_t shared_state, int32_t vm);
 void retdec_squirrel_addref(int32_t type, int32_t data);
 void retdec_squirrel_release(int32_t type, int32_t data);
