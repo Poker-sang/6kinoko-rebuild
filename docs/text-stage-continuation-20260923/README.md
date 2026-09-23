@@ -10,3 +10,9 @@ live glyph minimum and their reference count is zero. Glyph ID and atlas
 texture/reference fields use original byte offsets with schema assertions.
 The layout receiver is a borrowed pointer; an empty glyph queue retains the
 original INT_MAX minimum.
+Batch 2: 4410C0 rebuilds the pending string from text plus pending, resets
+cursor and line metrics, decrements each borrowed glyph atlas reference,
+clears deque storage, then invokes 441250. IDA MCP database 7251442a
+confirmed the offsets and call order. Its C ABI now carries a borrowed
+KinokoStringLayout pointer and the mapped layout/glyph/atlas fields are
+accessed by named records.

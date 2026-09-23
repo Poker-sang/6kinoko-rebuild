@@ -1803,7 +1803,7 @@ int32_t function_43e100(void);
 
 
 
-int32_t function_4410c0(int32_t this_ptr);
+/* 4410C0: kinoko_string_rebuild_queue is implemented in native C++. */
 
 int32_t function_441660(void);
 

@@ -88,26 +88,36 @@ extern "C" int32_t kinoko_string_prune_atlases(KinokoStringLayout* receiver) {
 
 // 4410C0 rebuilds the pending byte string and discards glyph sprites. It does
 // not rasterize text here: later update consumes stBackQueue using CharNextA.
-extern "C" int32_t function_4410c0(int32_t layout) {
-    StringView text(pointer<void>(layout+4)), queue(pointer<void>(layout+32));
+extern "C" int32_t kinoko_string_rebuild_queue(KinokoStringLayout* receiver) {
+    const auto layout=kinoko::legacy::address(receiver);
+    const kinoko::native::RecordView<kinoko::act::StringLayoutRecord> record(receiver);
+    StringView text(record.bytes(&kinoko::act::StringLayoutRecord::text));
+    StringView queue(record.bytes(&kinoko::act::StringLayoutRecord::pending));
     std::string pending(text.data(),text.length());
     pending.append(queue.data(),queue.length());
     text.assign("",0);
     queue.assign("",0);
-    field<uint8_t>(layout+228)=1;
-    field<int32_t>(layout+204)=field<int32_t>(layout+208)=0;
-    field<int32_t>(layout+216)=field<int32_t>(layout+88);
-    field<int32_t>(layout+212)=0;
+    using Layout=kinoko::act::StringLayoutRecord;
+    record.set(&Layout::rebuild,uint8_t{1});
+    record.set(&Layout::cursor_x,0);
+    record.set(&Layout::cursor_y,0);
+    record.set(&Layout::line_height,record.get(&Layout::font_height));
+    record.set(&Layout::maximum_width,0);
     // Original passes the concatenated buffer through strlen (441160).
     queue.append(pending.c_str(),static_cast<uint32_t>(std::strlen(pending.c_str())));
     const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
         const int32_t sprite=kinoko_string_queue_at(layout,i);
-        const int32_t atlas=field<int32_t>(sprite+252);
-        if(atlas) --field<int32_t>(atlas+432);
+        const auto glyph=kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(pointer<void>(sprite));
+        auto* atlas=glyph.get(&kinoko::act::StringGlyphRecord::atlas);
+        if(atlas) {
+            const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(atlas);
+            lifetime.set(&kinoko::text::AtlasLifecycle::references,
+                lifetime.get(&kinoko::text::AtlasLifecycle::references)-1);
+        }
     }
     kinoko_string_drop_queue_storage(layout);
-    return kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
+    return kinoko_string_prune_atlases(receiver);
 }
 
 // 43E890 ends at 43EA0F. RetDec erroneously included 43EA10's destructor
@@ -140,7 +150,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     field<void*>(layout)=&g350;
     StringView(pointer<void>(layout+4)).assign("",0);
     StringView(pointer<void>(layout+32)).assign("",0);
-    function_4410c0(layout);
+    kinoko_string_rebuild_queue(pointer<KinokoStringLayout>(layout));
     kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
     kinoko_string_queue_destroy(layout);
     delete atlases(layout);atlases(layout)=nullptr;

@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cstring>
 extern "C" {
-int32_t function_4410c0(int32_t layout);
 }
 namespace {
 using kinoko::legacy::field;
