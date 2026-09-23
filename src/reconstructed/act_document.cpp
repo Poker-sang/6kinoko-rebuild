@@ -854,14 +854,15 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     }
     // 428310..428346: resolve parents before even reading resource_count.
     associations.bind_loaded_parents(document, layer_count);
+    const auto resource_slot = address(view.bytes(&kinoko::act::DocumentRecord::resources));
     if (!retdec_act_read_u32(reader_ptr, &resource_count) ||
-        !retdec_act_prepare_vector(this_ptr, 224, 228, 232,
-                                   resource_count)) {
+        !kinoko_act_array_prepare(resource_slot, resource_count)) {
         retdec_trace("act:resource-vector-failed");
         return 0;
     }
     associations.begin_resources();
-    resources = pointer<int32_t>(field<int32_t>(this_ptr + 224));
+    resources = reinterpret_cast<int32_t *>(
+        view.get(&kinoko::act::DocumentRecord::resources).begin);
     for (index = 0; index < resource_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type)) {
             retdec_trace("act:resource-type-failed");
