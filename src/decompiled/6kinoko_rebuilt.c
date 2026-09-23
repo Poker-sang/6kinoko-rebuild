@@ -8279,8 +8279,11 @@ static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
     retdec_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
 }
+struct SQVM *kinoko_script_open_primary_vm(int32_t stack_size) {
+    return (struct SQVM *)(intptr_t)kinoko_open_primary_script_vm(stack_size);
+}
 int32_t function_48a170(int32_t a1) {
-    return kinoko_open_primary_script_vm(a1);
+    return (int32_t)(intptr_t)kinoko_script_open_primary_vm(a1);
 }
 
 // Address range: 0x48a230 - 0x48a2ca
