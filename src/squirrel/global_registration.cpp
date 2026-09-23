@@ -70,48 +70,73 @@ extern "C" void kinoko_register_global_methods(int32_t root_table) {
     }
 }
 
-extern "C" int32_t function_473010(void) {
+namespace {
+// The root Sqrat wrapper is five Win32 words: vtable, VM, HSQOBJECT and flag.
+// Its HSQOBJECT is an external reference, not a SQObjectPtr placement object.
+struct RootTableStorage {
+    uint32_t vtable;
+    SQVM *vm;
+    HSQOBJECT value;
+    int32_t owns_value;
+};
+static_assert(sizeof(RootTableStorage) == 20);
+static_assert(offsetof(RootTableStorage, value) == 8);
+static_assert(offsetof(RootTableStorage, owns_value) == 16);
+
+void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
+                    const char *result_label, const char *storage_label,
+                    const char *type_label, const char *data_label,
+                    const char *present_label) {
+    kinoko_sqplus_object_copy_construct(&object, kinoko_sqplus_root_object());
+    const auto result = function_4721a0(reinterpret_cast<int32_t *>(&object),
+        storage, const_cast<char *>(name), 0);
+    const auto value = ObjectView(&object).value();
+    retdec_trace_i32(result_label, result);
+    retdec_trace_i32(storage_label, *storage);
+    retdec_trace_i32(type_label, value._type);
+    retdec_trace_i32(data_label, data_bits(value));
+    retdec_trace_i32(present_label, kinoko_sqplus_object_exists(&object, name));
+    kinoko_sqplus_object_destroy(&object);
+}
+
+int32_t register_root_bindings() {
     retdec_trace("473010:enter");
     kinoko_script_initialize_root();
     g664 = address(g644);
-    int32_t root_table[5];
-    root_table[0] = kinoko_sqrat_object_vtable();
-    root_table[1] = g664;
-    root_table[4] = 1;
-    auto* root_value = reinterpret_cast<HSQOBJECT*>(root_table + 2);
-    sq_resetobject(root_value);
-    root_table[0] = kinoko_sqrat_root_vtable();
+    RootTableStorage root{};
+    root.vtable = kinoko_sqrat_object_vtable();
+    root.vm = pointer<SQVM>(g664);
+    root.owns_value = 1;
+    sq_resetobject(&root.value);
+    root.vtable = kinoko_sqrat_root_vtable();
     sq_pushroottable(current_vm());
-    sq_getstackobj(current_vm(), -1, root_value);
-    function_48a400(g664, address(root_value));
+    sq_getstackobj(current_vm(), -1, &root.value);
+    function_48a400(g664, address(&root.value));
     sq_pop(current_vm(), 1);
-    kinoko_register_global_methods(address(root_table));
-    int32_t object[3];
-    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
-    const auto update_result = function_4721a0(object, &kinoko_game_masks.update, const_cast<char*>("updateMask"), 0);
-    retdec_trace_i32("473010:update-bind-result", update_result);
-    retdec_trace_i32("473010:update-storage", kinoko_game_masks.update);
-    retdec_trace_i32("473010:update-object-type", object[1]);
-    retdec_trace_i32("473010:update-object-data", object[2]);
-    retdec_trace_i32("473010:update-present", kinoko_sqplus_object_exists((void *)(object), "updateMask"));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
-    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
-    const auto render_result = function_4721a0(object, &kinoko_game_masks.render, const_cast<char*>("renderMask"), 0);
-    retdec_trace_i32("473010:render-bind-result", render_result);
-    retdec_trace_i32("473010:render-storage", kinoko_game_masks.render);
-    retdec_trace_i32("473010:render-object-type", object[1]);
-    retdec_trace_i32("473010:render-object-data", object[2]);
-    retdec_trace_i32("473010:render-present", kinoko_sqplus_object_exists((void *)(object), "renderMask"));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
-    for (const auto& constant : constants) {
-        kinoko_sqplus_object_copy_construct((void *)(intptr_t)(object), kinoko_sqplus_root_object());
-        function_472240(object, constant.value, const_cast<char*>(constant.name));
-        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(object)));
+    kinoko_register_global_methods(address(&root));
+
+    ObjectStorage object{};
+    bind_root_mask(object, &kinoko_game_masks.update, "updateMask",
+        "473010:update-bind-result", "473010:update-storage",
+        "473010:update-object-type", "473010:update-object-data",
+        "473010:update-present");
+    bind_root_mask(object, &kinoko_game_masks.render, "renderMask",
+        "473010:render-bind-result", "473010:render-storage",
+        "473010:render-object-type", "473010:render-object-data",
+        "473010:render-present");
+    for (const auto &constant : constants) {
+        kinoko_sqplus_object_copy_construct(&object, kinoko_sqplus_root_object());
+        function_472240(reinterpret_cast<int32_t *>(&object),
+                        constant.value, const_cast<char *>(constant.name));
+        kinoko_sqplus_object_destroy(&object);
     }
     kinoko_actor_register_script_class();
     kinoko_register_input_class();
     function_4669d0();
     function_46fac0();
-    kinoko_script_load_file(const_cast<char*>("data/script/class_def.nut"), kinoko_script_root());
-    return function_48a430(address(g644), address(root_table + 2));
+    kinoko_script_load_file(const_cast<char *>("data/script/class_def.nut"),
+                            kinoko_script_root());
+    return function_48a430(address(g644), address(&root.value));
 }
+} // namespace
+extern "C" int32_t function_473010(void) { return register_root_bindings(); }
