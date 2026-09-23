@@ -89,6 +89,55 @@ using ResourcePublicationView = kinoko::native::RecordView<ResourcePublicationRe
 using LayerPublicationView = kinoko::native::RecordView<LayerPublicationRecord>;
 using ScriptPublicationView = kinoko::native::RecordView<ScriptPublicationRecord>;
 
+// The original class property tables live in pairs of global SQObject slots.
+// Assignment adds a reference and releases the previous value. The VM owns
+// temporary handles; these slots retain the class-level setter/getter tables.
+struct PublishedPropertyTables {
+    int32_t* setters;
+    int32_t* getters;
+    bool valid() const {
+        return setters[0] == 0x0A000020 && setters[1] != 0 &&
+               getters[0] == 0x0A000020 && getters[1] != 0;
+    }
+    bool ensure(SQVM* vm) const {
+        if (valid()) return true;
+        int32_t first[2] = {static_cast<int32_t>(OT_NULL), 0};
+        int32_t second[2] = {static_cast<int32_t>(OT_NULL), 0};
+        const bool created = kinoko_sqrat_new_table(vm, first) &&
+                             kinoko_sqrat_new_table(vm, second);
+        if (created) {
+            kinoko_sqrat_assign_pair(vm, setters, first);
+            kinoko_sqrat_assign_pair(vm, getters, second);
+        }
+        kinoko_sqrat_release_pair(vm, first);
+        kinoko_sqrat_release_pair(vm, second);
+        return created;
+    }
+    void clear(SQVM* vm) const {
+        const int32_t empty[2] = {static_cast<int32_t>(OT_NULL), 0};
+        kinoko_sqrat_assign_pair(vm, setters, empty);
+        kinoko_sqrat_assign_pair(vm, getters, empty);
+    }
+    bool add(SQVM* vm, const char* name, int32_t offset, void* getter, void* setter) const {
+        return kinoko_sqrat_set_offset_closure(vm, getters, name, offset, getter) &&
+               kinoko_sqrat_set_offset_closure(vm, setters, name, offset, setter);
+    }
+};
+PublishedPropertyTables layer_property_tables() { return {&g1151, &g1153}; }
+PublishedPropertyTables layout_property_tables() { return {&g1141, &g1143}; }
+int32_t* published_layout_class() { return &g1145; }
+
+// Original 41E2C0/41E260 dispatch the native offset property accessors;
+// 431650 is the original class type callback used by both registrations.
+bool initialize_native_property_class(SQVM* vm, const int32_t* klass,
+                                      PublishedPropertyTables tables) {
+    return kinoko_sqrat_initialize_class(vm, klass, tables.setters, tables.getters,
+        reinterpret_cast<void*>(address(kinoko_sqrat_no_constructor)),
+        reinterpret_cast<void*>(address(function_41e2c0)),
+        reinterpret_cast<void*>(address(function_41e260)),
+        reinterpret_cast<void*>(address(function_431650))) != 0;
+}
+
 // Typed wrapper around the existing source-backed Sqrat C boundary.
 int32_t get_pair(int32_t object, const char* name, int32_t* output) {
     return kinoko_sqrat_get((void *)(intptr_t)(object), name, (void *)(output));
@@ -99,13 +148,9 @@ int32_t retdec_publish_cact_layer_property(
     int32_t vm, const char *name, int32_t offset,
     int32_t getter, int32_t setter)
 {
-    if (g1151 != 0x0A000020 || g1152 == 0 ||
-        g1153 != 0x0A000020 || g1154 == 0)
-        return 0;
-    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1153, name, offset, (void *)(intptr_t)(getter)) ||
-        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1151, name, offset, (void *)(intptr_t)(setter)))
-        return 0;
-    return 1;
+    const auto tables = layer_property_tables();
+    return tables.valid() && tables.add(pointer<SQVM>(vm), name, offset,
+                                        pointer<void>(getter), pointer<void>(setter));
 }
 
 int32_t retdec_publish_cact_layer_members(
@@ -140,94 +185,78 @@ int32_t retdec_publish_cact_layer_members(
     static const char *const object_names[] = {
         "script", "layout", "resource"
     };
-    int32_t empty_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t table_pair2[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t null_pair[2] = { 0x01000001, 0 };
+    const auto tables = layer_property_tables();
+    int32_t null_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
     size_t index;
 
     if (vm == 0 || class_pair == nullptr ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0)
         return 0;
+    if (!tables.ensure(pointer<SQVM>(vm))) return 0;
 
-    if (g1151 != 0x0A000020 || g1152 == 0 ||
-        g1153 != 0x0A000020 || g1154 == 0) {
-        if (!kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), table_pair) ||
-            !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), table_pair2)) {
-            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair);
-            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
-            return 0;
+    const bool published = [&]() {
+        if (!initialize_native_property_class(pointer<SQVM>(vm), class_pair, tables))
+            return false;
+
+        if (!retdec_publish_cact_layer_property(
+                vm, "stName", 0x70,
+                address(retdec_cact_layer_get_string),
+                address(retdec_cact_layer_set_string)))
+            return false;
+        for (index = 0; index < sizeof(direct_int_names) /
+                             sizeof(direct_int_names[0]); ++index) {
+            if (!retdec_publish_cact_layer_property(
+                    vm, direct_int_names[index], direct_int_offsets[index],
+                    address(retdec_cact_layer_get_int),
+                    address(retdec_cact_layer_set_int)))
+                return false;
         }
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1151, table_pair);
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1153, table_pair2);
-        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair);
-        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
-    }
-
-    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1151, (const int32_t *)&g1153, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650))))
-        goto failed;
-
-    if (!retdec_publish_cact_layer_property(
-            vm, "stName", 0x70,
-            address(retdec_cact_layer_get_string),
-            address(retdec_cact_layer_set_string)))
-        goto failed;
-    for (index = 0; index < sizeof(direct_int_names) /
-                         sizeof(direct_int_names[0]); ++index) {
         if (!retdec_publish_cact_layer_property(
-                vm, direct_int_names[index], direct_int_offsets[index],
-                address(retdec_cact_layer_get_int),
-                address(retdec_cact_layer_set_int)))
-            goto failed;
-    }
-    if (!retdec_publish_cact_layer_property(
-            vm, "visible", 0x8c,
-            address(retdec_cact_layer_get_bool),
-            address(retdec_cact_layer_set_bool)) ||
-        !retdec_publish_cact_layer_property(
-            vm, "debugOnly", 0x8d,
-            address(retdec_cact_layer_get_bool),
-            address(retdec_cact_layer_set_bool)))
-        goto failed;
-    for (index = 0; index < sizeof(direct_float_names) /
-                         sizeof(direct_float_names[0]); ++index) {
-        if (!retdec_publish_cact_layer_property(
-                vm, direct_float_names[index], direct_float_offsets[index],
-                address(retdec_cact_layer_get_float),
-                address(retdec_cact_layer_set_float)))
-            goto failed;
-    }
-    for (index = 0; index < sizeof(pointer_float_names) /
-                         sizeof(pointer_float_names[0]); ++index) {
-        if (!retdec_publish_cact_layer_property(
-                vm, pointer_float_names[index], pointer_float_offsets[index],
-                address(retdec_cact_layer_get_pointer_float),
-                address(retdec_cact_layer_set_pointer_float)))
-            goto failed;
-    }
-    for (index = 0; index < sizeof(pointer_int_names) /
-                         sizeof(pointer_int_names[0]); ++index) {
-        if (!retdec_publish_cact_layer_property(
-                vm, pointer_int_names[index], pointer_int_offsets[index],
-                address(retdec_cact_layer_get_pointer_int),
-                address(retdec_cact_layer_set_pointer_int)))
-            goto failed;
-    }
+                vm, "visible", 0x8c,
+                address(retdec_cact_layer_get_bool),
+                address(retdec_cact_layer_set_bool)) ||
+            !retdec_publish_cact_layer_property(
+                vm, "debugOnly", 0x8d,
+                address(retdec_cact_layer_get_bool),
+                address(retdec_cact_layer_set_bool)))
+            return false;
+        for (index = 0; index < sizeof(direct_float_names) /
+                             sizeof(direct_float_names[0]); ++index) {
+            if (!retdec_publish_cact_layer_property(
+                    vm, direct_float_names[index], direct_float_offsets[index],
+                    address(retdec_cact_layer_get_float),
+                    address(retdec_cact_layer_set_float)))
+                return false;
+        }
+        for (index = 0; index < sizeof(pointer_float_names) /
+                             sizeof(pointer_float_names[0]); ++index) {
+            if (!retdec_publish_cact_layer_property(
+                    vm, pointer_float_names[index], pointer_float_offsets[index],
+                    address(retdec_cact_layer_get_pointer_float),
+                    address(retdec_cact_layer_set_pointer_float)))
+                return false;
+        }
+        for (index = 0; index < sizeof(pointer_int_names) /
+                             sizeof(pointer_int_names[0]); ++index) {
+            if (!retdec_publish_cact_layer_property(
+                    vm, pointer_int_names[index], pointer_int_offsets[index],
+                    address(retdec_cact_layer_get_pointer_int),
+                    address(retdec_cact_layer_set_pointer_int)))
+                return false;
+        }
 
-    /* These are the three SQObject members installed by the original
-       TypePropertyClass<string/object> helpers.  Their values are filled on
-       each instance with the same raw/newslot distinction as the ACT path. */
-    for (index = 0; index < sizeof(object_names) / sizeof(object_names[0]);
-         ++index) {
-        if (!kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), class_pair, object_names[index], null_pair))
-            goto failed;
-    }
-    return 1;
-
-failed:
-    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1151, empty_pair);
-    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1153, empty_pair);
-    return 0;
+        /* These are the three SQObject members installed by the original
+           TypePropertyClass<string/object> helpers.  Their values are filled on
+           each instance with the same raw/newslot distinction as the ACT path. */
+        for (index = 0; index < sizeof(object_names) / sizeof(object_names[0]);
+             ++index) {
+            if (!kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), class_pair, object_names[index], null_pair))
+                return false;
+        }
+        return true;
+    }();
+    if (!published) tables.clear(pointer<SQVM>(vm));
+    return published;
 }
 
 int32_t retdec_publish_c2dlayout_properties(
@@ -243,53 +272,34 @@ int32_t retdec_publish_c2dlayout_properties(
     };
     static const char *const color_names[] = { "colorR", "colorG", "colorB" };
     static const int32_t color_offsets[] = { 292, 296, 300 };
-    int32_t empty_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t table_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t table_pair2[2] = { static_cast<int32_t>(OT_NULL), 0 };
+    const auto tables = layout_property_tables();
     size_t index;
 
     if (vm == 0 || class_pair == nullptr ||
         class_pair[0] != 0x08004000 || class_pair[1] == 0)
         return 0;
+    if (!tables.ensure(pointer<SQVM>(vm))) return 0;
 
-    if (g1141 != 0x0A000020 || g1142 == 0 ||
-        g1143 != 0x0A000020 || g1144 == 0) {
-        if (!kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), table_pair) ||
-            !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), table_pair2)) {
-            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair);
-            kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
-            return 0;
+    const bool published = [&]() {
+        if (!initialize_native_property_class(pointer<SQVM>(vm), class_pair, tables))
+            return false;
+
+        for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
+             ++index) {
+            if (!tables.add(pointer<SQVM>(vm), float_names[index], float_offsets[index], pointer<void>(address(retdec_c2dlayout_get_float)), pointer<void>(address(retdec_c2dlayout_set_float))))
+                return false;
         }
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1141, table_pair);
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1143, table_pair2);
-        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair);
-        kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), table_pair2);
-    }
-
-    if (!kinoko_sqrat_initialize_class((struct SQVM *)(intptr_t)(vm), class_pair, (const int32_t *)&g1141, (const int32_t *)&g1143, (void *)(intptr_t)(address(kinoko_sqrat_no_constructor)), (void *)(intptr_t)(address(function_41e2c0)), (void *)(intptr_t)(address(function_41e260)), (void *)(intptr_t)(address(function_431650))))
-        goto failed;
-
-    for (index = 0; index < sizeof(float_names) / sizeof(float_names[0]);
-         ++index) {
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, float_names[index], float_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_get_float))) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, float_names[index], float_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_set_float))))
-            goto failed;
-    }
-    if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, "blend", 288, (void *)(intptr_t)(address(retdec_c2dlayout_get_int))) ||
-        !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, "blend", 288, (void *)(intptr_t)(address(retdec_c2dlayout_set_int))))
-        goto failed;
-    for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
-         ++index) {
-        if (!kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1143, color_names[index], color_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_get_int))) ||
-            !kinoko_sqrat_set_offset_closure((struct SQVM *)(intptr_t)(vm), (const int32_t *)&g1141, color_names[index], color_offsets[index], (void *)(intptr_t)(address(retdec_c2dlayout_set_color))))
-            goto failed;
-    }
-    return 1;
-
-failed:
-    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1141, empty_pair);
-    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1143, empty_pair);
-    return 0;
+        if (!tables.add(pointer<SQVM>(vm), "blend", 288, pointer<void>(address(retdec_c2dlayout_get_int)), pointer<void>(address(retdec_c2dlayout_set_int))))
+            return false;
+        for (index = 0; index < sizeof(color_names) / sizeof(color_names[0]);
+             ++index) {
+            if (!tables.add(pointer<SQVM>(vm), color_names[index], color_offsets[index], pointer<void>(address(retdec_c2dlayout_get_int)), pointer<void>(address(retdec_c2dlayout_set_color))))
+                return false;
+        }
+        return true;
+    }();
+    if (!published) tables.clear(pointer<SQVM>(vm));
+    return published;
 }
 
 int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
@@ -304,12 +314,11 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         return 0;
     existing_result = get_pair(root_object, "C2DLayout", existing);
     if (existing_result && existing[0] == 0x08004000 && existing[1] != 0) {
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1145, existing);
+        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), published_layout_class(), existing);
         class_pair[0] = existing[0];
         class_pair[1] = existing[1];
         kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), existing);
-        if (g1141 == 0x0A000020 && g1142 != 0 &&
-            g1143 == 0x0A000020 && g1144 != 0)
+        if (layout_property_tables().valid())
             return 1;
         return retdec_publish_c2dlayout_properties(vm, class_pair);
     }
@@ -327,22 +336,18 @@ int32_t retdec_publish_c2dlayout_class(int32_t vm, int32_t root_object)
         return 0;
     }
 
-    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1145, class_pair);
-    if (!retdec_publish_c2dlayout_properties(vm, class_pair))
-        goto publish_failed;
-    if (!kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), pointer<const int32_t>(root_object + 8), "C2DLayout", class_pair)) {
-        kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), &g1145, empty_pair);
-        goto publish_failed;
+    kinoko_sqrat_assign_pair((struct SQVM *)(intptr_t)(vm), published_layout_class(), class_pair);
+    bool published = retdec_publish_c2dlayout_properties(vm, class_pair) != 0;
+    if (published) {
+        published = kinoko_sqrat_set_pair(pointer<SQVM>(vm),
+            pointer<const int32_t>(root_object + 8), "C2DLayout", class_pair) != 0;
+        if (!published)
+            kinoko_sqrat_assign_pair(pointer<SQVM>(vm), published_layout_class(), empty_pair);
     }
-    retdec_trace_i32("act:c2dlayout-class", class_pair[1]);
+    if (published) retdec_trace_i32("act:c2dlayout-class", class_pair[1]);
     kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), class_pair);
     kinoko_sqrat_trim_stack((struct SQVM *)(intptr_t)(vm), base);
-    return 1;
-
-publish_failed:
-    kinoko_sqrat_release_pair((struct SQVM *)(intptr_t)(vm), class_pair);
-    kinoko_sqrat_trim_stack((struct SQVM *)(intptr_t)(vm), base);
-    return 0;
+    return published;
 }
 
 namespace {
