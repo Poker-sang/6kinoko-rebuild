@@ -139,14 +139,14 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
 }
 
 int32_t retdec_act_make_layer(void) {
-    const int32_t layer = address(std::calloc(1u, 348u));
-    // The archive parser can run before VM creation; publication creates its
-    // script table once a VM is available. Original native callers pass g664.
-    if (!retdec_construct_cact_layer(layer, 0)) {
-        std::free(pointer<void>(layer));
-        return 0;
-    }
-    return layer;
+    // The 348-byte ACT layer is owned by its parent document. Its known
+    // prefix has a separate layout schema; keep the remaining bytes opaque.
+    auto layer = std::unique_ptr<KinokoActLayer, decltype(&std::free)>(
+        static_cast<KinokoActLayer *>(std::calloc(1u, 348u)), &std::free);
+    // Archive parsing precedes VM creation. Publication creates the script
+    // table later; original native callers supply g664 at construction.
+    if (!layer || !retdec_construct_cact_layer(address(layer.get()), 0)) return 0;
+    return address(layer.release());
 }
 
 int32_t retdec_construct_c2dlayout(int32_t layout) {
