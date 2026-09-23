@@ -26,7 +26,6 @@
 #include <string>
 #include <cstring>
 
-extern "C" unsigned char g673;
 #include "kinoko/string_layout.h"
 
 namespace {
@@ -120,9 +119,12 @@ uint32_t record_count(int32_t layout) {
 void replace_buffer(int32_t slot, const void* bytes, size_t size) {
     kinoko_native_buffer_replace(slot,bytes,static_cast<uint32_t>(size));
 }
+struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; };
+struct Stream { StreamMethods *methods; };
+static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
 bool transfer(int32_t stream, void* bytes, uint32_t size) {
-    return stream && (retdec_call_thiscall2_result(pointer<void>(stream),
-        field<void*>(field<int32_t>(stream)+12), address(bytes), size) & 0xff) != 0;
+    return stream && (retdec_call_thiscall2_result(pointer<Stream>(stream),
+        pointer<Stream>(stream)->methods->transfer, address(bytes), size) & 0xff) != 0;
 }
 template<class T> bool transfer(int32_t stream, T& value) {
     return transfer(stream, &value, sizeof(value));
@@ -179,7 +181,7 @@ bool read(int32_t resource, int32_t reader, Schema& schema, bool texture) {
     return true;
 }
 bool write(int32_t resource, int32_t writer, const Schema& schema) {
-    uint8_t has_schema = !g673;
+    uint8_t has_schema = !kinoko_act_script_output_compiled();
     if (!transfer(writer, has_schema)) return false;
     if (has_schema) {
         auto count = static_cast<uint32_t>(schema.size());
@@ -653,9 +655,9 @@ extern "C" int32_t __fastcall kinoko_method_write_act(int32_t act,void*,int32_t 
         if (!(retdec_call_thiscall1_result(pointer<void>(script),
             field<void*>(field<int32_t>(script)),writer)&0xff)) return 0;
         auto layers=object_vector(act+208);
-        // 4287D9/428822 omit only debugOnly==1 when g673==1. Values other
+        // 4287D9/428822 omit only debugOnly==1 when kinoko_act_script_output_compiled()!=0. Values other
         // than one are deliberately not treated as true by this filter.
-        if (g673==1) layers.erase(std::remove_if(layers.begin(),layers.end(),[](auto layer) {
+        if (kinoko_act_script_output_compiled()!=0) layers.erase(std::remove_if(layers.begin(),layers.end(),[](auto layer) {
             return layer && field<uint8_t>(layer+141)==1;
         }),layers.end());
         auto count=static_cast<uint32_t>(layers.size());
