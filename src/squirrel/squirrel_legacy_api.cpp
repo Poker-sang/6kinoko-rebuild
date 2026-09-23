@@ -28,6 +28,7 @@ int32_t addr(const void* value) noexcept {
 }
 SQVM* vm(int32_t value) noexcept { return ptr<SQVM>(value); }
 int32_t top_slot(int32_t value) { return addr(&vm(value)->GetUp(-1)); }
+int32_t top_slot(SQVM* machine) { return addr(&machine->GetUp(-1)); }
 }
 
 // No VM opcode, container, compiler, serializer or ref-table implementation
@@ -37,48 +38,81 @@ extern "C" int32_t function_48a230(int32_t a1, int32_t a2) {
     return kinoko_sq_create_thread(a1, a2);
 }
 
+static int32_t kinoko_sq_add_object_reference(SQVM* machine, int32_t a2) {
+    if (a2) sq_addref(machine, ptr<HSQOBJECT>(a2)); return a2;
+}
 extern "C" int32_t function_48a400(int32_t a1, int32_t a2) {
-    if (a2) sq_addref(vm(a1), ptr<HSQOBJECT>(a2)); return a2;
+    return kinoko_sq_add_object_reference(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_release_object_reference(SQVM* machine, int32_t a2) {
+    return a2 ? sq_release(machine, ptr<HSQOBJECT>(a2)) : SQTrue;
+}
 extern "C" int32_t function_48a430(int32_t a1, int32_t a2) {
-    return a2 ? sq_release(vm(a1), ptr<HSQOBJECT>(a2)) : SQTrue;
+    return kinoko_sq_release_object_reference(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_push_string(SQVM* machine, int32_t a2, int32_t a3) {
+    sq_pushstring(machine, ptr<const char>(a2), a3); return top_slot(machine);
+}
 extern "C" int32_t function_48a480(int32_t a1, int32_t a2, int32_t a3) {
-    sq_pushstring(vm(a1), ptr<const char>(a2), a3); return top_slot(a1);
+    return kinoko_sq_push_string(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_push_integer(SQVM* machine, int32_t a2) {
+    sq_pushinteger(machine, a2); return top_slot(machine);
+}
 extern "C" int32_t function_48a4f0(int32_t a1, int32_t a2) {
-    sq_pushinteger(vm(a1), a2); return top_slot(a1);
+    return kinoko_sq_push_integer(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_push_user_pointer(SQVM* machine, int32_t a2) {
+    sq_pushuserpointer(machine, ptr<void>(a2)); return top_slot(machine);
+}
 extern "C" int32_t function_48a5c0(int32_t a1, int32_t a2) {
-    sq_pushuserpointer(vm(a1), ptr<void>(a2)); return top_slot(a1);
+    return kinoko_sq_push_user_pointer(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_push_new_table(SQVM* machine) {
+    sq_newtable(machine); return top_slot(machine);
+}
 extern "C" int32_t function_48a600(int32_t a1) {
-    sq_newtable(vm(a1)); return top_slot(a1);
+    return kinoko_sq_push_new_table(vm(a1));
 }
 
+static int32_t kinoko_sq_push_root_table(SQVM* machine) {
+    sq_pushroottable(machine); return top_slot(machine);
+}
 extern "C" int32_t function_48a670(int32_t a1) {
-    sq_pushroottable(vm(a1)); return top_slot(a1);
+    return kinoko_sq_push_root_table(vm(a1));
 }
 
+static int32_t kinoko_sq_get_type(SQVM* machine, int32_t a2) {
+    return sq_gettype(machine, a2);
+}
 extern "C" int32_t function_48a6f0(int32_t a1, int32_t a2) {
-    return sq_gettype(vm(a1), a2);
+    return kinoko_sq_get_type(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_get_integer(SQVM* machine, int32_t a2, int32_t * a3) {
+    return sq_getinteger(machine, a2, a3);
+}
 extern "C" int32_t function_48a7d0(int32_t a1, int32_t a2, int32_t * a3) {
-    return sq_getinteger(vm(a1), a2, a3);
+    return kinoko_sq_get_integer(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_get_user_pointer(SQVM* machine, int32_t a2, int32_t * a3) {
+    return sq_getuserpointer(machine, a2, reinterpret_cast<void**>(a3));
+}
 extern "C" int32_t function_48a9e0(int32_t a1, int32_t a2, int32_t * a3) {
-    return sq_getuserpointer(vm(a1), a2, reinterpret_cast<void**>(a3));
+    return kinoko_sq_get_user_pointer(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_get_stack_top(SQVM* machine) {
+    return sq_gettop(machine);
+}
 extern "C" int32_t function_48aa20(int32_t a1) {
-    return sq_gettop(vm(a1));
+    return kinoko_sq_get_stack_top(vm(a1));
 }
 
 extern "C" int32_t function_48aa30(int32_t a1, int32_t a2) {
@@ -89,136 +123,229 @@ extern "C" int32_t function_48aa50(int32_t a1) {
     return kinoko_sq_pop(a1, 1);
 }
 
+static int32_t kinoko_sq_get_stack_object(SQVM* machine, int32_t a2, int32_t * a3) {
+    return sq_getstackobj(machine, a2, reinterpret_cast<HSQOBJECT*>(a3));
+}
 extern "C" int32_t function_48ab40(int32_t a1, int32_t a2, int32_t * a3) {
-    return sq_getstackobj(vm(a1), a2, reinterpret_cast<HSQOBJECT*>(a3));
+    return kinoko_sq_get_stack_object(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_push_raw_object(SQVM* machine, int32_t a2, int32_t a3) {
+    HSQOBJECT value; value._type = static_cast<SQObjectType>(a2); std::memcpy(&value._unVal, &a3, sizeof a3); sq_pushobject(machine, value); return top_slot(machine);
+}
 extern "C" int32_t function_48ab90(int32_t a1, int32_t a2, int32_t a3) {
-    HSQOBJECT value; value._type = static_cast<SQObjectType>(a2); std::memcpy(&value._unVal, &a3, sizeof a3); sq_pushobject(vm(a1), value); return top_slot(a1);
+    return kinoko_sq_push_raw_object(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_reset_object(HSQOBJECT* object) {
+    sq_resetobject(object); return addr(object);
+}
 extern "C" int32_t function_48abe0(int32_t result) {
-    sq_resetobject(ptr<HSQOBJECT>(result)); return result;
+    return kinoko_sq_reset_object(ptr<HSQOBJECT>(result));
 }
 
+static int32_t kinoko_sq_throw_error(SQVM* machine, char * a2) {
+    return sq_throwerror(machine, a2);
+}
 extern "C" int32_t function_48ac00(int32_t a1, char * a2) {
-    return sq_throwerror(vm(a1), a2);
+    return kinoko_sq_throw_error(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_reset_error(SQVM* machine) {
+    sq_reseterror(machine); return addr(machine);
+}
 extern "C" int32_t function_48ac70(int32_t a1) {
-    sq_reseterror(vm(a1)); return a1;
+    return kinoko_sq_reset_error(vm(a1));
 }
 
+static int32_t kinoko_sq_get_last_error(SQVM* machine) {
+    sq_getlasterror(machine); return top_slot(machine);
+}
 extern "C" int32_t function_48acc0(int32_t a1) {
-    sq_getlasterror(vm(a1)); return top_slot(a1);
+    return kinoko_sq_get_last_error(vm(a1));
 }
 
 extern "C" int32_t function_48ace0(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     return kinoko_sq_call(a1, a2, a3, a4);
 }
 
+static int32_t kinoko_sq_set_compiler_error_handler(SQVM* machine, int32_t a2) {
+    sq_setcompilererrorhandler(machine, reinterpret_cast<SQCOMPILERERROR>(ptr<void>(a2))); return addr(machine);
+}
 extern "C" int32_t function_48afa0(int32_t result, int32_t a2) {
-    sq_setcompilererrorhandler(vm(result), reinterpret_cast<SQCOMPILERERROR>(ptr<void>(a2))); return result;
+    return kinoko_sq_set_compiler_error_handler(vm(result), a2);
 }
 
+static int32_t kinoko_sq_write_closure(SQVM* machine, int32_t a2, int32_t a3) {
+    return sq_writeclosure(machine, reinterpret_cast<SQWRITEFUNC>(ptr<void>(a2)), ptr<void>(a3));
+}
 extern "C" int32_t function_48afc0(int32_t a1, int32_t a2, int32_t a3) {
-    return sq_writeclosure(vm(a1), reinterpret_cast<SQWRITEFUNC>(ptr<void>(a2)), ptr<void>(a3));
+    return kinoko_sq_write_closure(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_read_closure(SQVM* machine, int32_t a2, int32_t * a3) {
+    return sq_readclosure(machine, reinterpret_cast<SQREADFUNC>(ptr<void>(a2)), a3);
+}
 extern "C" int32_t function_48b050(int32_t a1, int32_t a2, int32_t * a3) {
-    return sq_readclosure(vm(a1), reinterpret_cast<SQREADFUNC>(ptr<void>(a2)), a3);
+    return kinoko_sq_read_closure(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_collect_garbage(SQVM* machine, int32_t a2, int32_t a3) {
+    (void)a2; (void)a3; return machine ? sq_collectgarbage(machine) : 0;
+}
 extern "C" int32_t function_48b180(int32_t a1, int32_t a2, int32_t a3) {
-    (void)a2; (void)a3; return a1 ? sq_collectgarbage(vm(a1)) : 0;
+    return kinoko_sq_collect_garbage(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_create_instance(SQVM* machine, int32_t a2) {
+    return sq_createinstance(machine, a2);
+}
 extern "C" int32_t function_48b490(int32_t a1, int32_t a2) {
-    return sq_createinstance(vm(a1), a2);
+    return kinoko_sq_create_instance(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_move_object(SQVM* machine, int32_t a2, int32_t a3) {
+    sq_move(machine, vm(a2), a3); return top_slot(machine);
+}
 extern "C" int32_t function_48b870(int32_t a1, int32_t a2, int32_t a3) {
-    sq_move(vm(a1), vm(a2), a3); return top_slot(a1);
+    return kinoko_sq_move_object(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_set_print_function(SQVM* machine, int32_t a2) {
+    sq_setprintfunc(machine, reinterpret_cast<SQPRINTFUNCTION>(ptr<void>(a2))); return addr(machine);
+}
 extern "C" int32_t function_48b8b0(int32_t result, int32_t a2) {
-    sq_setprintfunc(vm(result), reinterpret_cast<SQPRINTFUNCTION>(ptr<void>(a2))); return result;
+    return kinoko_sq_set_print_function(vm(result), a2);
 }
 
+static int32_t kinoko_sq_get_print_function(SQVM* machine) {
+    return addr(reinterpret_cast<const void*>(sq_getprintfunc(machine)));
+}
 extern "C" int32_t function_48b8d0(int32_t a1) {
-    return addr(reinterpret_cast<const void*>(sq_getprintfunc(vm(a1))));
+    return kinoko_sq_get_print_function(vm(a1));
 }
 
+static int32_t kinoko_sq_compile_lexed(SQVM* machine, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror) {
+    return sq_compile(machine, reinterpret_cast<SQLEXREADFUNC>(ptr<void>(reader)), context, ptr<const char>(name), raiseerror != 0);
+}
 extern "C" int32_t function_48c1f0(int32_t vm, int32_t reader, int32_t *context, int32_t name, int32_t raiseerror) {
-    return sq_compile(::vm(vm), reinterpret_cast<SQLEXREADFUNC>(ptr<void>(reader)), context, ptr<const char>(name), raiseerror != 0);
+    return kinoko_sq_compile_lexed(::vm(vm), reader, context, name, raiseerror);
 }
 
+static int32_t kinoko_sq_new_class(SQVM* machine, int32_t a2) {
+    return sq_newclass(machine, a2 != 0);
+}
 extern "C" int32_t function_48c350(int32_t a1, int32_t a2) {
-    return sq_newclass(vm(a1), a2 != 0);
+    return kinoko_sq_new_class(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_set_closure_name(SQVM* machine, int32_t index, int32_t name) {
+    return sq_setnativeclosurename(machine, index, ptr<const char>(name));
+}
 extern "C" int32_t function_48c580(int32_t vm, int32_t index, int32_t name) {
-    return sq_setnativeclosurename(::vm(vm), index, ptr<const char>(name));
+    return kinoko_sq_set_closure_name(::vm(vm), index, name);
 }
 
+static int32_t kinoko_sq_set_type_tag(SQVM* machine, int32_t a2, int32_t a3) {
+    return sq_settypetag(machine, a2, ptr<void>(a3));
+}
 extern "C" int32_t function_48c780(int32_t a1, int32_t a2, int32_t a3) {
-    return sq_settypetag(vm(a1), a2, ptr<void>(a3));
+    return kinoko_sq_set_type_tag(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_set_instance_pointer(SQVM* machine, int32_t a2, int32_t a3) {
+    return sq_setinstanceup(machine, a2, ptr<void>(a3));
+}
 extern "C" int32_t function_48c840(int32_t a1, int32_t a2, int32_t a3) {
-    return sq_setinstanceup(vm(a1), a2, ptr<void>(a3));
+    return kinoko_sq_set_instance_pointer(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_get_instance_pointer(SQVM* machine, int32_t a2, int32_t * a3, int32_t a4) {
+    return sq_getinstanceup(machine, a2, reinterpret_cast<void**>(a3), ptr<void>(a4));
+}
 extern "C" int32_t function_48c890(int32_t a1, int32_t a2, int32_t * a3, int32_t a4) {
-    return sq_getinstanceup(vm(a1), a2, reinterpret_cast<void**>(a3), ptr<void>(a4));
+    return kinoko_sq_get_instance_pointer(vm(a1), a2, a3, a4);
 }
 
+static int32_t kinoko_sq_set_stack_top(SQVM* machine, uint32_t a2) {
+    sq_settop(machine, static_cast<SQInteger>(a2)); return addr(machine);
+}
 extern "C" int32_t function_48c910(int32_t a1, uint32_t a2) {
-    sq_settop(vm(a1), static_cast<SQInteger>(a2)); return a1;
+    return kinoko_sq_set_stack_top(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_get_slot(SQVM* machine, int32_t a2) {
+    return sq_get(machine, a2);
+}
 extern "C" int32_t function_48ce00(int32_t a1, int32_t a2) {
-    return sq_get(vm(a1), a2);
+    return kinoko_sq_get_slot(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_raw_get_slot(SQVM* machine, int32_t a2) {
+    return sq_rawget(machine, a2);
+}
 extern "C" int32_t function_48ce70(int32_t a1, int32_t a2) {
-    return sq_rawget(vm(a1), a2);
+    return kinoko_sq_raw_get_slot(vm(a1), a2);
 }
 
+static int32_t kinoko_sq_compile_buffer(SQVM* machine, int32_t text, int32_t length, int32_t *name, int32_t raiseerror) {
+    return sq_compilebuffer(machine, ptr<const char>(text), length, reinterpret_cast<const char*>(name), raiseerror != 0);
+}
 extern "C" int32_t function_48d0b0(int32_t vm, int32_t text, int32_t length, int32_t *name, int32_t raiseerror) {
-    return sq_compilebuffer(::vm(vm), ptr<const char>(text), length, reinterpret_cast<const char*>(name), raiseerror != 0);
+    return kinoko_sq_compile_buffer(::vm(vm), text, length, name, raiseerror);
 }
 
+static int32_t kinoko_sq_new_closure(SQVM* machine, int32_t a2, int32_t a3) {
+    sq_newclosure(machine, reinterpret_cast<SQFUNCTION>(ptr<void>(a2)), a3); return top_slot(machine);
+}
 extern "C" int32_t function_48d850(int32_t a1, int32_t a2, int32_t a3) {
-    sq_newclosure(vm(a1), reinterpret_cast<SQFUNCTION>(ptr<void>(a2)), a3); return top_slot(a1);
+    return kinoko_sq_new_closure(vm(a1), a2, a3);
 }
 
+static int32_t kinoko_sq_array_pop(SQVM* machine, int32_t index, int32_t push_value) {
+    return sq_arraypop(machine, index, push_value != 0);
+}
 extern "C" int32_t function_48dd10(int32_t vm, int32_t index, int32_t push_value) {
-    return sq_arraypop(::vm(vm), index, push_value != 0);
+    return kinoko_sq_array_pop(::vm(vm), index, push_value);
 }
 
 extern "C" int32_t function_48bec0(int32_t a1, int32_t a2) {
     return addr(SQUserData::Create(ptr<SQSharedState>(a1), a2));
 }
 
+static int32_t kinoko_sq_register_io_library(SQVM* machine) {
+    return sqstd_register_iolib(machine);
+}
 extern "C" int32_t function_4c7c90(int32_t a1) {
-    return sqstd_register_iolib(vm(a1));
+    return kinoko_sq_register_io_library(vm(a1));
 }
 
+static int32_t kinoko_sq_register_blob_library(SQVM* machine) {
+    return sqstd_register_bloblib(machine);
+}
 extern "C" int32_t function_4c73a0(int32_t a1) {
-    return sqstd_register_bloblib(vm(a1));
+    return kinoko_sq_register_blob_library(vm(a1));
 }
 
+static int32_t kinoko_sq_register_math_library(SQVM* machine) {
+    return sqstd_register_mathlib(machine);
+}
 extern "C" int32_t function_4c6c20(int32_t a1) {
-    return sqstd_register_mathlib(vm(a1));
+    return kinoko_sq_register_math_library(vm(a1));
 }
 
+static int32_t kinoko_sq_register_string_library(SQVM* machine) {
+    return sqstd_register_stringlib(machine);
+}
 extern "C" int32_t function_4c6670(int32_t a1) {
-    return sqstd_register_stringlib(vm(a1));
+    return kinoko_sq_register_string_library(vm(a1));
 }
 
+static int32_t kinoko_sq_install_error_handlers(SQVM* machine) {
+    sqstd_seterrorhandlers(machine); return SQ_OK;
+}
 extern "C" int32_t function_4c5c80(int32_t vm) {
-    sqstd_seterrorhandlers(::vm(vm)); return SQ_OK;
+    return kinoko_sq_install_error_handlers(::vm(vm));
 }
 
 extern "C" int32_t function_48e520_this(int32_t this_ptr, int32_t delegate_ptr) {
