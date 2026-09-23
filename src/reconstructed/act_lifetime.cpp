@@ -65,12 +65,14 @@ int32_t retdec_construct_cact_script(int32_t this_ptr)
     field<int32_t>(this_ptr + 80) = 0;
     field<int32_t>(this_ptr + 84) = 15;
     field<unsigned char>(this_ptr + 64) = 0;
-    field<int32_t>(this_ptr + 92) = 0;
-    field<int32_t>(this_ptr + 96) = 1;
-    *(unsigned short *)(intptr_t)(this_ptr + 100) = 0;
+    kinoko::act::ScriptPayloadView payload(pointer<void>(this_ptr));
+    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(nullptr));
+    payload.set(&kinoko::act::ScriptPayloadRecord::size, uint32_t{1});
+    payload.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{0});
+    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, uint8_t{0});
 
     buffer = _3f__3f_2_40_YAPAXI_40_Z(1);
-    field<int32_t>(this_ptr + 92) = buffer;
+    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, pointer<void>(buffer));
     if (buffer != 0)
         field<unsigned char>(buffer) = 0;
     return this_ptr;
