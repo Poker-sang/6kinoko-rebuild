@@ -216,9 +216,12 @@ extern "C" int32_t kinoko_string_font_texture(int32_t r) {
         GraphicsLock lock;D3DLOCKED_RECT rect{};
         if(FAILED(value->LockRect(0,&rect,nullptr,0))) return 0;
         std::memset(rect.pBits,0,4*512*512);
-        field<void*>(r+320)=field<void*>(r+324)=rect.pBits;
-        field<int32_t>(r+328)=field<int32_t>(r+332)=512;
-        field<int32_t>(r+336)=rect.Pitch/4;
+        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        record.set(&Renderer::output,rect.pBits);
+        record.set(&Renderer::destination,rect.pBits);
+        record.set(&Renderer::bound_height,512);
+        record.set(&Renderer::bound_width,512);
+        record.set(&Renderer::stride,static_cast<int32_t>(rect.Pitch/4));
         kinoko_string_font_rasterize(r,"",nullptr,nullptr);
         value->UnlockRect(0);
     }

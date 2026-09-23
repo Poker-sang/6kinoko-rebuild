@@ -104,3 +104,7 @@ Batch 21: the font's optional edge pass uses renderer edge, temporary
 output, destination, stride and bounds. The native outline/rasterize
 functions now share the same typed runtime fields as 40F370's glyph path,
 retaining the original bitmap loop and edge-width accounting.
+Batch 22: the first 512x512 atlas texture lock publishes the renderer's
+output/destination pointers and bounds/stride before the initial empty
+rasterization. These fields now use the same asserted runtime schema as
+the glyph path; texture ownership and unlock order are unchanged.
