@@ -8,7 +8,6 @@
 #include <new>
 #include <stdexcept>
 
-extern "C" int32_t function_441250(int32_t* object);
 extern "C" int32_t g23, g25;
 namespace {
 using kinoko::legacy::field;
@@ -85,7 +84,7 @@ extern "C" int32_t kinoko_string_pop(int32_t object,int32_t count,int32_t front)
         --count;
     }
     if(!front) while(count && !q.empty()) { pop(q,false);--count; }
-    return function_441250(pointer<int32_t>(object));
+    return kinoko_string_prune_atlases(pointer<KinokoStringLayout>(object));
 }
 extern "C" int32_t kinoko_string_replicate(int32_t object,int32_t source) {
     if(!source) return 0;

@@ -1,0 +1,38 @@
+{
+  "addr": "0x4d3f50",
+  "code": "int sub_4D3F50()\n{\n  _DWORD *v0; // eax\n  _DWORD pExceptionObject[3]; // [esp+0h] [ebp-10h] BYREF\n  char *v3; // [esp+Ch] [ebp-4h] BYREF\n\n  v0 = operator new(Size: 0x18u); /*0x4d3f58*/\n  if ( v0 == nullptr ) /*0x4d3f62*/\n  {\n    v3 = nullptr; /*0x4d3fa7*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v3); /*0x4d3fae*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x4d3fbc*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x4d3fc3*/\n  }\n  dword_5144BC = v0; /*0x4d3f64*/\n  *v0 = v0; /*0x4d3f69*/\n  *((_DWORD *)dword_5144BC + 1) = dword_5144BC; /*0x4d3f70*/\n  *((_DWORD *)dword_5144BC + 2) = dword_5144BC; /*0x4d3f78*/\n  *((_BYTE *)dword_5144BC + 20) = 1; /*0x4d3f83*/\n  *((_BYTE *)dword_5144BC + 21) = 1; /*0x4d3f91*/\n  return atexit(a1: sub_4D49D0); /*0x4d3f9c*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4abd0c",
+      "name": "??0exception@std@@QAE@ABQBD@Z"
+    },
+    {
+      "addr": "0x4d5878",
+      "name": "??_7bad_alloc@std@@6B@"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f7308",
+      "name": "__TI2?AVbad_alloc@std@@"
+    },
+    {
+      "addr": "0x5144bc",
+      "name": "dword_5144BC"
+    },
+    {
+      "addr": "0x4abc6d",
+      "name": "_atexit"
+    },
+    {
+      "addr": "0x4d49d0",
+      "name": "sub_4D49D0"
+    }
+  ]
+}

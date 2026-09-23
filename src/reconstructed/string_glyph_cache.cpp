@@ -3,6 +3,8 @@
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/string_layout.h"
 #include "kinoko/string_font.h"
+#include "kinoko/act_layout_records.hpp"
+#include "kinoko/string_atlas_records.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <climits>
@@ -63,19 +65,21 @@ Atlases*& atlases(int32_t layout) { return field<Atlases*>(layout+160); }
 
 // 441250: VC8 deque<256-byte glyph sprite> has one sprite per block. Its
 // proxy/map/map-size/first/size fields start at CStringLayout+176.
-extern "C" int32_t function_441250(int32_t* object) {
-    const int32_t layout=static_cast<int32_t>(reinterpret_cast<intptr_t>(object));
+extern "C" int32_t kinoko_string_prune_atlases(KinokoStringLayout* receiver) {
+    const int32_t layout=kinoko::legacy::address(receiver);
     int32_t minimum=INT_MAX;
     const uint32_t count=kinoko_string_queue_size(layout);
     for(uint32_t i=0;i<count;++i) {
         const int32_t sprite=kinoko_string_queue_at(layout,i);
-        minimum=(std::min)(minimum,field<int32_t>(sprite+8));
+        minimum=(std::min)(minimum,kinoko::native::RecordView<kinoko::act::StringGlyphRecord>(pointer<void>(sprite)).get(&kinoko::act::StringGlyphRecord::id));
     }
     auto& pages=*atlases(layout);
     for(size_t i=0;i<pages.size();) {
         const int32_t atlas=pages[i].address();
-        if(field<int32_t>(atlas+20)>=minimum || field<int32_t>(atlas+432)>0) { ++i;continue; }
-        kinoko_texture_release(field<int32_t>(atlas+428));
+        const kinoko::native::RecordView<kinoko::text::AtlasLifecycle> lifetime(pointer<void>(atlas));
+        if(lifetime.get(&kinoko::text::AtlasLifecycle::last_glyph_id)>=minimum ||
+           lifetime.get(&kinoko::text::AtlasLifecycle::references)>0) { ++i;continue; }
+        kinoko_texture_release(lifetime.get(&kinoko::text::AtlasLifecycle::texture));
         pages.erase(pages.begin()+i);
         i=0;
     }
@@ -103,7 +107,7 @@ extern "C" int32_t function_4410c0(int32_t layout) {
         if(atlas) --field<int32_t>(atlas+432);
     }
     kinoko_string_drop_queue_storage(layout);
-    return function_441250(pointer<int32_t>(layout));
+    return kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
 }
 
 // 43E890 ends at 43EA0F. RetDec erroneously included 43EA10's destructor
@@ -137,7 +141,7 @@ extern "C" void kinoko_clear_string_layout(int32_t layout) {
     StringView(pointer<void>(layout+4)).assign("",0);
     StringView(pointer<void>(layout+32)).assign("",0);
     function_4410c0(layout);
-    function_441250(pointer<int32_t>(layout));
+    kinoko_string_prune_atlases(pointer<KinokoStringLayout>(layout));
     kinoko_string_queue_destroy(layout);
     delete atlases(layout);atlases(layout)=nullptr;
     for(int offset : {60,32,4}) {

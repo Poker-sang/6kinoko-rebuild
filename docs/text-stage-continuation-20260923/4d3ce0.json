@@ -1,0 +1,38 @@
+{
+  "addr": "0x4d3ce0",
+  "code": "int sub_4D3CE0()\n{\n  char *v0; // eax\n  _DWORD pExceptionObject[3]; // [esp+0h] [ebp-10h] BYREF\n  char *v3; // [esp+Ch] [ebp-4h] BYREF\n\n  v0 = (char *)operator new(Size: 0xCu); /*0x4d3ce8*/\n  if ( v0 == nullptr ) /*0x4d3cf2*/\n  {\n    v3 = nullptr; /*0x4d3d1b*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v3); /*0x4d3d22*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x4d3d30*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x4d3d37*/\n  }\n  dword_513C64 = v0; /*0x4d3cf4*/\n  *(_DWORD *)v0 = v0; /*0x4d3cf9*/\n  *((_DWORD *)dword_513C64 + 1) = dword_513C64; /*0x4d3d05*/\n  return atexit(a1: sub_4D47F0); /*0x4d3d10*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4abd0c",
+      "name": "??0exception@std@@QAE@ABQBD@Z"
+    },
+    {
+      "addr": "0x4d5878",
+      "name": "??_7bad_alloc@std@@6B@"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f7308",
+      "name": "__TI2?AVbad_alloc@std@@"
+    },
+    {
+      "addr": "0x513c64",
+      "name": "dword_513C64"
+    },
+    {
+      "addr": "0x4abc6d",
+      "name": "_atexit"
+    },
+    {
+      "addr": "0x4d47f0",
+      "name": "sub_4D47F0"
+    }
+  ]
+}

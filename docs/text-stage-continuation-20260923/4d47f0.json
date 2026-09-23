@@ -1,0 +1,18 @@
+{
+  "addr": "0x4d47f0",
+  "code": "void __cdecl sub_4D47F0()\n{\n  char *v0; // eax\n  char *v1; // ecx\n  char *v2; // esi\n\n  v0 = *(char **)dword_513C64; /*0x4d47f6*/\n  *(_DWORD *)dword_513C64 = dword_513C64; /*0x4d47f8*/\n  *((_DWORD *)dword_513C64 + 1) = dword_513C64; /*0x4d4800*/\n  v1 = dword_513C64; /*0x4d4803*/\n  dword_513C68 = 0; /*0x4d4809*/\n  if ( v0 != dword_513C64 ) /*0x4d4815*/\n  {\n    do /*0x4d482d*/\n    {\n      v2 = *(char **)v0; /*0x4d4818*/\n      operator delete(a1: v0); /*0x4d481b*/\n      v1 = dword_513C64; /*0x4d4820*/\n      v0 = v2; /*0x4d4829*/\n    }\n    while ( v2 != dword_513C64 ); /*0x4d482d*/\n  }\n  operator delete(a1: v1); /*0x4d4831*/\n}",
+  "refs": [
+    {
+      "addr": "0x513c64",
+      "name": "dword_513C64"
+    },
+    {
+      "addr": "0x513c68",
+      "name": "dword_513C68"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    }
+  ]
+}

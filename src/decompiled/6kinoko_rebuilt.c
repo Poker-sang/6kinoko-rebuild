@@ -1804,7 +1804,6 @@ int32_t function_43e100(void);
 
 
 int32_t function_4410c0(int32_t this_ptr);
-int32_t function_441250(int32_t * a1);
 
 int32_t function_441660(void);
 
