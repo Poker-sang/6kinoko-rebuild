@@ -11,6 +11,7 @@
 #include "stage_audio_contract.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/boost_hash.h"
+#include "kinoko/csv_bridge.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -3083,7 +3084,7 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         function_48ab90(vm,root[2],root[3]);
         function_48a480(vm,PTR(path),-1);
         function_48ab90(vm,root[2],root[3]);
-        CHECK(function_471160(PTR(function_403000),vm,2)==1);
+        CHECK(function_471160(PTR(kinoko_script_read_csv),vm,2)==1);
         int32_t *result=(int32_t *)(intptr_t)function_491880_this(vm,-1);
         CHECK(result[0]==0x01000008 && result[1]==1);
         function_48c910(vm,top);
