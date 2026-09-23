@@ -252,4 +252,3 @@ extern "C" int32_t __fastcall kinoko_method_string_layout_type(int32_t,void*) {
     return kinoko::legacy::address(&g926);
 }
 
-extern "C" const void *kinoko_string_layout_methods(void) { return g350; }

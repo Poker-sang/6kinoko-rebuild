@@ -5,7 +5,7 @@ typedef struct KinokoStringLayout KinokoStringLayout;
 extern "C" {
 #endif
 extern int32_t g350[11];
-const void *kinoko_string_layout_methods(void);
+static inline const void *kinoko_string_layout_methods(void) { return g350; }
 int32_t __fastcall kinoko_method_clone_string_layout(int32_t object, void *unused);
 int32_t __fastcall kinoko_method_destroy_string_layout(int32_t object, void *unused);
 int32_t __fastcall kinoko_method_string_layout_type(int32_t object, void *unused);
