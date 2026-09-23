@@ -36,6 +36,7 @@ const KinokoActHostSymbols *kinoko_act_host_symbols() {
     symbols.map_layout_vtable = &g327;
     symbols.map_view_vtable = &g328;
     symbols.color_vtable = &g23;
+    symbols.chip_quad_vtable = &g25;
     return &symbols;
 }
 int32_t kinoko_render_set_depth(int32_t,int32_t) { return 0; }

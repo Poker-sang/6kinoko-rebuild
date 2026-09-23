@@ -27,6 +27,7 @@ struct KinokoActHostSymbols {
     const void* sprite_vtable;
     const void* color_vtable;
     const void* render_target_vtable;
+    const void* chip_quad_vtable;
 };
 
 #ifdef __cplusplus

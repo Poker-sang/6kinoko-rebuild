@@ -10942,6 +10942,7 @@ const struct KinokoActHostSymbols* kinoko_act_host_symbols(void)
         &g407, /* sprite_vtable */
         &g23, /* color_vtable */
         &g379, /* render_target_vtable */
+        &g25, /* chip_quad_vtable */
     };
     return &symbols;
 }
