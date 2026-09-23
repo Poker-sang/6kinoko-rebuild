@@ -1,5 +1,6 @@
 // Compile-only handoff: no game or local contract execution by the agent.
 #include "kinoko/map_chip_cache.hpp"
+#include "kinoko/act_host.h"
 #include "kinoko/map_render.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/graphics_device.h"
