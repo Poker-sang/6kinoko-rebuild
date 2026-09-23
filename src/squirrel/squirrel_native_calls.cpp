@@ -101,17 +101,20 @@ int32_t kinoko_native_property_dispatch(int32_t id, bool write) {
 }
 }
 
-extern "C" int32_t function_41e260(int32_t vm) { return kinoko_native_property_dispatch(vm, false); }
-extern "C" int32_t function_41e2c0(int32_t vm) { return kinoko_native_property_dispatch(vm, true); }
+extern "C" int32_t kinoko_native_property_set_callback(int32_t vm) { return kinoko_native_property_dispatch(vm, false); }
+extern "C" int32_t function_41e260(int32_t id) { return kinoko_native_property_set_callback(id); }
+extern "C" int32_t kinoko_native_property_get_callback(int32_t vm) { return kinoko_native_property_dispatch(vm, true); }
+extern "C" int32_t function_41e2c0(int32_t id) { return kinoko_native_property_get_callback(id); }
 namespace {
 int32_t kinoko_native_weakref(HSQUIRRELVM vm) {
     if (!vm || sq_gettop(vm) < 1) return -1;
     return upstream::sqrat_weakref(vm);
 }
 }
-extern "C" int32_t function_431650(int32_t id) {
+extern "C" int32_t kinoko_native_class_weakref_callback(int32_t id) {
     return kinoko_native_weakref(pointer<SQVM>(id));
 }
+extern "C" int32_t function_431650(int32_t id) { return kinoko_native_class_weakref_callback(id); }
 namespace {
 int32_t kinoko_native_invoke_integer_member(HSQUIRRELVM machine) {
     auto vm=machine;
@@ -124,9 +127,10 @@ int32_t kinoko_native_invoke_integer_member(HSQUIRRELVM machine) {
     return 0;
 }
 } // namespace
-extern "C" int32_t function_445730(int32_t id) {
+extern "C" int32_t kinoko_native_integer_member_callback(int32_t id) {
     return kinoko_native_invoke_integer_member(pointer<SQVM>(id));
 }
+extern "C" int32_t function_445730(int32_t id) { return kinoko_native_integer_member_callback(id); }
 namespace {
 int32_t kinoko_native_invoke_nullary_member(HSQUIRRELVM machine) {
     auto vm=machine;
@@ -141,9 +145,10 @@ int32_t kinoko_native_invoke_nullary_member(HSQUIRRELVM machine) {
     return 0;
 }
 } // namespace
-extern "C" int32_t function_4552e0(int32_t id) {
+extern "C" int32_t kinoko_native_nullary_member_callback(int32_t id) {
     return kinoko_native_invoke_nullary_member(pointer<SQVM>(id));
 }
+extern "C" int32_t function_4552e0(int32_t id) { return kinoko_native_nullary_member_callback(id); }
 namespace {
 int32_t kinoko_native_invoke_draw_member(HSQUIRRELVM machine) {
     auto vm=machine;
@@ -166,9 +171,10 @@ int32_t kinoko_native_invoke_draw_member(HSQUIRRELVM machine) {
     return 1;
 }
 } // namespace
-extern "C" int32_t function_4555a0(int32_t id) {
+extern "C" int32_t kinoko_native_draw_member_callback(int32_t id) {
     return kinoko_native_invoke_draw_member(pointer<SQVM>(id));
 }
+extern "C" int32_t function_4555a0(int32_t id) { return kinoko_native_draw_member_callback(id); }
 namespace {
 int32_t kinoko_native_invoke_string_callback(int32_t self, int32_t callback, HSQUIRRELVM machine, int32_t first) {
     auto vm=machine; const SQChar* value=nullptr;

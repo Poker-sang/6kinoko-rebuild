@@ -5,9 +5,15 @@ extern "C" {
 #endif
 
 /* Legacy game callbacks; all VM objects and captures are read by source APIs. */
+int32_t kinoko_native_property_set_callback(int32_t vm);
+int32_t kinoko_native_property_get_callback(int32_t vm);
+int32_t kinoko_native_class_weakref_callback(int32_t vm);
 int32_t function_41e260(int32_t vm);
 int32_t function_41e2c0(int32_t vm);
 int32_t function_431650(int32_t vm);
+int32_t kinoko_native_integer_member_callback(int32_t vm);
+int32_t kinoko_native_nullary_member_callback(int32_t vm);
+int32_t kinoko_native_draw_member_callback(int32_t vm);
 int32_t function_445730(int32_t vm);
 int32_t function_4552e0(int32_t vm);
 int32_t function_4555a0(int32_t vm);

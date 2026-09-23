@@ -2572,7 +2572,7 @@ int32_t g1018 = 0; // 0x51bc78
  // 0x51bcb4
 
 char g1036 = 0; // 0x51bcb6
-char g1037 = 0; // 0x51bcb7
+char kinoko_resource2d_class_published = 0; // recovered 0x51bcb7
  // 0x51bcb8
 char g1039 = 0; // 0x51bcb9
 char g1040 = 0; // 0x51bcba
