@@ -31,8 +31,8 @@ void * kinoko_sqplus_object_reset(void * ) { calls.push_back(1); return (void *)
 void * kinoko_sqplus_object_assign(void * , const void * ) { return (void *)(intptr_t)(0); }
 void kinoko_act_runtime_dispose(KinokoActRuntime *player) {
     CHECK(player == expected_player);
-    CHECK(kinoko_map_render_count(address(active)) == 0);
-    CHECK(kinoko_map_event_count(address(active)) == 0);
+    CHECK(kinoko_map_render_count(active) == 0);
+    CHECK(kinoko_map_event_count(active) == 0);
     calls.push_back(2);
     // Original deletes the saved runtime, not this callback's replacement.
     ManagerView(active).set(&ManagerRecord::player, reinterpret_cast<KinokoActRuntime *>(1));
@@ -68,13 +68,13 @@ int main() {
     camera.x = 100; camera.y = 200; camera.center_x = 98.75f; camera.center_y = 203.5f;
     CHECK(kinoko_map_manager_prepare(active, reinterpret_cast<KinokoCamera *>(&camera)) == bytes.manager.source_act);
     CHECK(document->offset_x == -2 && document->offset_y == 3);
-    kinoko_map_append_render(address(active), 0);
-    kinoko_map_append_event(address(active), 0);
-    const auto capacity = kinoko_map_event_capacity(address(active));
+    kinoko_map_append_render(active, 0);
+    kinoko_map_append_event(active, 0);
+    const auto capacity = kinoko_map_event_capacity(active);
     kinoko_map_manager_clear(active);
     CHECK((calls == std::vector<int>{0,5,6,1,2,4}));
     CHECK(!bytes.manager.player && !bytes.manager.source_holder && !bytes.manager.source_act);
-    CHECK(bytes.manager.width == 777 && kinoko_map_event_capacity(address(active)) == capacity);
+    CHECK(bytes.manager.width == 777 && kinoko_map_event_capacity(active) == capacity);
     CHECK(kinoko_map_manager_update(active) == 0);
     kinoko_map_manager_clear(active);
     CHECK(calls.back() == 1);
@@ -84,6 +84,6 @@ int main() {
     kinoko_map_manager_assign(active, active);
     CHECK(bytes.manager.player == expected_player && calls.size() == count);
     std::free(expected_player); bytes.manager.player = nullptr;
-    kinoko_map_containers_destroy(address(active));
+    kinoko_map_containers_destroy(active);
     return 0;
 }

@@ -1,0 +1,14 @@
+{
+  "addr": "0x4700b0",
+  "code": "int __thiscall sub_4700B0(char ***this, int a2, int a3)\n{\n  char **v4; // ecx\n  char **v5; // eax\n  char **v6; // edi\n\n  v4 = *this; /*0x4700ba*/\n  v5 = (char **)*v4; /*0x4700bc*/\n  *v4 = (char *)v4; /*0x4700be*/\n  (*this)[1] = (char *)*this; /*0x4700c2*/\n  *(this + 1) = nullptr; /*0x4700c5*/\n  if ( v5 != *this ) /*0x4700ce*/\n  {\n    do /*0x4700e0*/\n    {\n      v6 = (char **)*v5; /*0x4700d1*/\n      operator delete(a1: v5); /*0x4700d4*/\n      v5 = v6; /*0x4700dc*/\n    }\n    while ( v6 != *this ); /*0x4700e0*/\n  }\n  return sub_46FF60(a1: **this, a2, a3, a4: a2); /*0x4700f8*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x46ff60",
+      "name": "sub_46FF60"
+    }
+  ]
+}

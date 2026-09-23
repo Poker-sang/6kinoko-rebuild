@@ -22,7 +22,7 @@ extern "C" void kinoko_map_manager_assign(KinokoMapManager *destination, KinokoM
         std::free(previous);
     }
     out.set(&ManagerRecord::player, player);
-    kinoko_map_containers_assign(address(destination), address(source));
+    kinoko_map_containers_assign(destination, source);
     out.set(&ManagerRecord::unknown52, in.get(&ManagerRecord::unknown52));
     out.set(&ManagerRecord::last_id, in.get(&ManagerRecord::last_id));
     out.set(&ManagerRecord::last_bounds, in.get(&ManagerRecord::last_bounds));

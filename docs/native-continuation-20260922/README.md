@@ -56,3 +56,13 @@ contract. SetTake's mixed integer return remains converted at that explicit
 boundary. Animation values remain integer slots at the legacy record boundary,
 not additional animation ownership. Existing alias, node-stability, missing-key
 and cleanup contracts are compiled only.
+
+## Batch 6: map layer/event ownership and borrowed records
+
+All map-container interfaces receive real manager/layout pointers. Render-list
+append/index returns stable borrowed RenderLayer pointers; event lookup returns
+borrowed ActLayout pointers. Collision queries, layer creation and manager
+lifecycle no longer encode these values as integers. The list owns nodes but
+not layouts, preserves append order, and reconstructs method identity on copy.
+The event vector retains capacity across clear/shorter assignment and preserves
+null/duplicate entries. Historical raw C fixtures convert at their buffer edge.

@@ -1,0 +1,22 @@
+{
+  "addr": "0x46f320",
+  "code": "int __thiscall sub_46F320(int this, void **a2)\n{\n  char *v4; // ecx\n  char *v5; // eax\n  void *v6; // edi\n  unsigned int v8; // edx\n  char *v9; // edi\n  size_t v10; // ebx\n  unsigned int v11; // [esp+10h] [ebp+8h]\n\n  if ( (void **)this != a2 ) /*0x46f32c*/\n  {\n    v4 = (char *)a2[1]; /*0x46f332*/\n    v5 = (char *)*a2; /*0x46f335*/\n    v6 = *(void **)this; /*0x46f33f*/\n    v11 = (v4 - (_BYTE *)*a2) >> 2; /*0x46f341*/\n    if ( v11 != 0 ) /*0x46f346*/\n    {\n      v8 = (*(_DWORD *)(this + 4) - (int)v6) >> 2; /*0x46f37f*/\n      if ( v11 <= v8 ) /*0x46f385*/\n      {\n        memcpy(a1: v6, Src: v5, Size: 4 * ((v4 - v5) >> 2)); /*0x46f393*/\n        *(_DWORD *)(this + 4) = *(_DWORD *)this + 4 * (((_BYTE *)a2[1] - (_BYTE *)*a2) >> 2); /*0x46f3a9*/\n        return this; /*0x46f3b1*/\n      }\n      if ( v11 <= (*(_DWORD *)(this + 8) - (int)v6) >> 2 ) /*0x46f3bf*/\n      {\n        v9 = &v5[4 * v8]; /*0x46f3c1*/\n        memcpy(a1: *(void **)this, Src: v5, Size: 4 * ((int)(4 * v8) >> 2)); /*0x46f3d4*/\n        v10 = 4 * (((_BYTE *)a2[1] - v9) >> 2); /*0x46f3e4*/\n        *(_DWORD *)(this + 4) = (char *)memcpy(a1: *(void **)(this + 4), Src: v9, Size: v10) + v10; /*0x46f3f8*/\n        return this; /*0x46f401*/\n      }\n      if ( v6 != nullptr ) /*0x46f408*/\n        operator delete(a1: v6); /*0x46f40b*/\n      if ( (unsigned __int8)sub_46EFD0(a1: (char *)(((_BYTE *)a2[1] - (_BYTE *)*a2) >> 2)) != 0 ) /*0x46f425*/\n        *(_DWORD *)(this + 4) = sub_46F0D0(Src: *a2, a2: (int)a2[1], a3: *(void **)this); /*0x46f438*/\n    }\n    else if ( v6 != *(void **)(this + 4) ) /*0x46f34d*/\n    {\n      *(_DWORD *)(this + 4) = v6; /*0x46f36f*/\n      return this; /*0x46f377*/\n    }\n  }\n  return this; /*0x46f374*/\n}",
+  "refs": [
+    {
+      "addr": "0x4abef0",
+      "name": "_memcpy"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x46f0d0",
+      "name": "sub_46F0D0"
+    },
+    {
+      "addr": "0x46efd0",
+      "name": "sub_46EFD0"
+    }
+  ]
+}
