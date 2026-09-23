@@ -29,3 +29,7 @@ Batch 5: IDA MCP 4D3CE0/4D3E50/4D3F50 shows three global
 container initializers that each register a corresponding atexit cleanup.
 The existing native list, render queue and sound tree ownership remains
 unchanged; startup and contract callers now use named registration APIs.
+Batch 6: native 440910 adds a glyph to the current atlas. Its renderer
+now accesses the already verified glyph ID/borrowed atlas, atlas texture,
+last ID/reference count and layout next-ID fields via typed records. The
+original texture upload, geometry and deque insertion order is preserved.
