@@ -17,7 +17,6 @@
 #include <cstdio>
 #include <cstring>
 extern "C" {
-extern char *g644;
 void retdec_trace(const char *);
 void retdec_trace_i32(const char *,int32_t);
 void retdec_trace_squirrel_name(const char *,int32_t);
@@ -77,8 +76,9 @@ extern "C" void retdec_trace_star_state(const char *phase, int32_t actor) {
         camera_bits<float>(kinoko_game_objects()->camera, &kinoko::camera::Record::bounds, offsetof(Bounds, left)),camera_bits<float>(kinoko_game_objects()->camera, &kinoko::camera::Record::bounds, offsetof(Bounds, top)),
         camera_bits<float>(kinoko_game_objects()->camera, &kinoko::camera::Record::bounds, offsetof(Bounds, right)),camera_bits<float>(kinoko_game_objects()->camera, &kinoko::camera::Record::bounds, offsetof(Bounds, bottom)));
     retdec_trace(message);
-    if(release && g644) {
-        auto *vm=reinterpret_cast<SQVM *>(g644);
+    if (release) {
+        auto* vm = kinoko_actor_default_vm();
+        if (!vm) return;
         const auto frames=vm->_callsstacksize;
         for (SQInteger i=frames-1;i>=0 && i>=frames-5;--i) {
             const auto& frame=vm->_callsstack[i];

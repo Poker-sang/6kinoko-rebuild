@@ -137,19 +137,21 @@ extern "C" int32_t kinoko_string_rebuild_queue(KinokoStringLayout* receiver) {
 // 43E890 ends at 43EA0F. RetDec erroneously included 43EA10's destructor
 // after its allocation-failure throw and lost the constructor's ECX receiver.
 extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
-    field<void*>(layout)=&g350;
-    for(int offset : {4,32,60}) {
-        field<uint32_t>(layout+offset+20)=15;
-        field<uint32_t>(layout+offset+16)=0;
-        field<uint8_t>(layout+offset)=0;
+    field<void*>(layout)=const_cast<void*>(kinoko_string_layout_methods());
+    using Layout=kinoko::act::StringLayoutRecord;
+    using StringRecord=kinoko::legacy::StringRecord;
+    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
+    for (auto member : {&Layout::text, &Layout::pending, &Layout::face}) {
+        const kinoko::native::RecordView<StringRecord> value(text.bytes(member));
+        value.set(&StringRecord::capacity, uint32_t{15});
+        value.set(&StringRecord::length, uint32_t{0});
+        value.bytes(&StringRecord::characters)[0] = 0;
     }
     for(int offset : {160,164,168,176,180,184,188,192}) field<int32_t>(layout+offset)=0;
     set_atlases(layout,new Atlases);
     kinoko_string_queue_construct(layout);
     // Original CP932 face name, 13 bytes before its NUL terminator.
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
-    using Layout=kinoko::act::StringLayoutRecord;
-    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
     StringView(text.bytes(&Layout::face)).assign(face,13);
     text.set(&Layout::alpha,1.0f);
     text.set(&Layout::layer,static_cast<KinokoActLayer*>(nullptr));
@@ -180,7 +182,7 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
 }
 
 extern "C" void kinoko_clear_string_layout(int32_t layout) {
-    field<void*>(layout)=&g350;
+    field<void*>(layout)=const_cast<void*>(kinoko_string_layout_methods());
     using Layout=kinoko::act::StringLayoutRecord;
     using StringRecord=kinoko::legacy::StringRecord;
     const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
