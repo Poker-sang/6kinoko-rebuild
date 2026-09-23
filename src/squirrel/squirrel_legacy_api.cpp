@@ -252,23 +252,29 @@ extern "C" int32_t function_499b00(int32_t this_ptr, int32_t value_ptr) {
     vm(this_ptr)->Raise_Error(value); return result;
 }
 
-extern "C" int32_t function_499a20(int32_t this_ptr, const char *format, ...) {
-    if (!this_ptr || !format) return SQ_ERROR;
-    va_list args; va_start(args, format);
+namespace {
+int32_t raise_formatted_error(HSQUIRRELVM machine, const char* format, va_list args) {
+    if (!machine || !format) return SQ_ERROR;
     va_list measure; va_copy(measure, args);
     const int size = std::vsnprintf(nullptr, 0, format, measure); va_end(measure);
-    if (size < 0) { va_end(args); return SQ_ERROR; }
+    if (size < 0) return SQ_ERROR;
     std::vector<char> text;
     try {
         text.resize(static_cast<size_t>(size) + 1);
     } catch (const std::bad_alloc&) {
-        va_end(args);
-        return sq_throwerror(vm(this_ptr), "out of memory formatting error");
+        return sq_throwerror(machine, "out of memory formatting error");
     }
     std::vsnprintf(text.data(), text.size(), format, args);
-    va_end(args);
-    sq_throwerror(vm(this_ptr), text.data());
+    sq_throwerror(machine, text.data());
     return SQ_OK;
+}
+} // namespace
+extern "C" int32_t function_499a20(int32_t receiver, const char *format, ...) {
+    if (!receiver || !format) return SQ_ERROR;
+    va_list args; va_start(args, format);
+    const int32_t result = raise_formatted_error(vm(receiver), format, args);
+    va_end(args);
+    return result;
 }
 
 extern "C" int32_t function_49a520_this(int32_t shared_state, int32_t vm) {

@@ -7120,12 +7120,13 @@ static void retdec_initialize_input_manager_state(KinokoInputManager *manager) {
 
 /* The original is CInputManager::Init and receives the global object at
    0x513CC0 in ECX.  RetDec emitted the body with that receiver missing. */
-static int32_t function_46e6f0_this(int32_t this_ptr) {
+static int32_t kinoko_initialize_input_script_instance(KinokoInputManager *manager) {
+    int32_t this_ptr = (int32_t)(intptr_t)manager;
     int32_t input_instance[3] = { 0, 0, 0 };
 
     if (this_ptr == 0)
         return 0;
-    retdec_initialize_input_manager_state((KinokoInputManager*)(intptr_t)this_ptr);
+    retdec_initialize_input_manager_state(manager);
     retdec_trace("46e6f0:begin");
     retdec_trace_i32("46e6f0:this", this_ptr);
     retdec_trace_i32("46e6f0:g644", (int32_t)(intptr_t)g644);
@@ -7147,7 +7148,9 @@ static int32_t function_46e6f0_this(int32_t this_ptr) {
     return 1;
 }
 
-
+static int32_t function_46e6f0_this(int32_t receiver) {
+    return kinoko_initialize_input_script_instance((KinokoInputManager *)(intptr_t)receiver);
+}
 
 // Address range: 0x46eda0 - 0x46eda6
 // From class:    .?AU?$ClassType@VInput@@@SqPlus@@
