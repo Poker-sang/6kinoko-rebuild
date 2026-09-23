@@ -9,6 +9,9 @@
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_script_payload.hpp"
+#include "kinoko/act_document_records.hpp"
+#include "kinoko/act_layer_records.hpp"
+#include "kinoko/act_key_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_host.h"
 #include "kinoko/diagnostics.h"
@@ -94,7 +97,7 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     std::free(payload.get(&kinoko::act::ScriptPayloadRecord::bytes));
     payload.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(nullptr));
     payload.set(&kinoko::act::ScriptPayloadRecord::size, uint32_t{0});
-    kinoko_string_destroy((void*)(intptr_t)(script_ptr + 64));
+    kinoko_string_destroy(pointer<void>(script_ptr + 64));
     field<int32_t>(script_ptr + 80) = 0;
     field<int32_t>(script_ptr + 84) = 15;
     field<unsigned char>(script_ptr + 64) = 0;
@@ -113,7 +116,7 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, vo
 namespace {
 void clear_layout(int32_t layout) {
     if (!layout) return;
-    if (field<int32_t>(layout)==address(g350)) { kinoko_clear_string_layout(layout);return; }
+    if (field<int32_t>(layout)==address(kinoko_string_layout_methods())) { kinoko_clear_string_layout(layout);return; }
     if (field<int32_t>(layout)==address(kinoko_act_host_symbols()->map_layout_vtable)) {
         kinoko_clear_map_layout(layout);
     }
@@ -125,7 +128,7 @@ void clear_key(int32_t value) {
     clear_layout(layout);
     std::free(pointer<void>(layout));
     field<int32_t>(value+4)=0;
-    kinoko_string_destroy((void*)(intptr_t)(value+8));
+    kinoko_string_destroy(kinoko::act::KeyView(pointer<void>(value)).bytes(&kinoko::act::KeyRecord::script_name));
     field<uint8_t>(value+8)=0;
     field<uint32_t>(value+24)=0;
     field<uint32_t>(value+28)=15;
@@ -172,14 +175,14 @@ void retdec_destroy_cact_layer(int32_t layer)
     if (field<unsigned char>(layer + 344) != 0) {
         int32_t vm = field<int32_t>(layer + 332);
         if (vm != 0)
-            function_48a430(vm, layer + 336);
+            kinoko_sqrat_release_pair(pointer<SQVM>(vm), pointer<int32_t>(layer + 336));
         sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 336));
         field<unsigned char>(layer + 344) = 0;
     }
     if (field<unsigned char>(layer + 324) != 0) {
         int32_t vm = field<int32_t>(layer + 312);
         if (vm != 0)
-            function_48a430(vm, layer + 316);
+            kinoko_sqrat_release_pair(pointer<SQVM>(vm), pointer<int32_t>(layer + 316));
         sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 316));
         field<unsigned char>(layer + 324) = 0;
     }
@@ -187,7 +190,7 @@ void retdec_destroy_cact_layer(int32_t layer)
     retdec_destroy_cact_list(pointer<int32_t>(layer + 180));
     retdec_destroy_cact_list(pointer<int32_t>(layer + 192));
     field<uint32_t>(layer+184)=field<uint32_t>(layer+196)=0;
-    kinoko_string_destroy((void*)(intptr_t)(layer + 112));
+    kinoko_string_destroy(kinoko::native::RecordView<kinoko::act::LayerKeys>(pointer<void>(layer)).bytes(&kinoko::act::LayerKeys::name));
     field<int32_t>(layer + 112) = 0;
     field<int32_t>(layer + 128) = 0;
     field<int32_t>(layer + 132) = 15;
@@ -205,7 +208,7 @@ static void clear_resource(int32_t resource)
         kinoko::mesh::clear_resource(pointer<kinoko::mesh::Resource>(resource));return;
     }
     // Every resource owns the base name, including long names in native clones.
-    kinoko_string_destroy((void*)(intptr_t)(resource + 8));
+    kinoko_string_destroy(pointer<void>(resource + 8));
     field<int32_t>(resource + 8) = 0;
     field<uint32_t>(resource + 24) = 0;
     field<uint32_t>(resource + 28) = 15;
@@ -214,11 +217,11 @@ static void clear_resource(int32_t resource)
         if (kinoko_act_release_chip_data(resource))
             retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource + 64)));
         field<int32_t>(resource + 64) = 0;
-        kinoko_string_destroy((void*)(intptr_t)(resource + 36));
+        kinoko_string_destroy(pointer<void>(resource + 36));
         field<int32_t>(resource + 36) = 0;
         field<int32_t>(resource + 52) = 0;
         field<int32_t>(resource + 56) = 15;
-        kinoko_string_destroy((void*)(intptr_t)(resource + 72));
+        kinoko_string_destroy(pointer<void>(resource + 72));
         field<int32_t>(resource + 72) = 0;
         field<int32_t>(resource + 88) = 0;
         field<int32_t>(resource + 92) = 15;
@@ -227,7 +230,7 @@ static void clear_resource(int32_t resource)
     if (!kinoko_act_release_cloned_texture(resource))
         kinoko_texture_release(field<int32_t>(resource + 68));
     field<int32_t>(resource + 68) = 0;
-    kinoko_string_destroy((void*)(intptr_t)(resource + 40));
+    kinoko_string_destroy(pointer<void>(resource + 40));
     field<int32_t>(resource + 40) = 0;
     field<int32_t>(resource + 56) = 0;
     field<int32_t>(resource + 60) = 15;
@@ -240,48 +243,50 @@ void retdec_destroy_cact_resource(int32_t resource) {
 
 void retdec_destroy_cact_object(int32_t object_ptr)
 {
-    int32_t begin;
-    int32_t end;
-    int32_t cursor;
+    if (!object_ptr) return;
+    const kinoko::act::DocumentView document(pointer<void>(object_ptr));
+    document.set(&kinoko::act::DocumentRecord::vtable,
+        kinoko_act_host_symbols()->act_vtable);
 
-    if (object_ptr == 0)
-        return;
-    field<int32_t>(object_ptr) = address(kinoko_act_host_symbols()->act_vtable);
-
-    begin = field<int32_t>(object_ptr + 208);
-    end = field<int32_t>(object_ptr + 212);
-    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
-         cursor += 4) {
-        int32_t layer = field<int32_t>(cursor);
-        if (layer != 0) {
+    // The document owns every layer and resource. Keep the original forward
+    // deletion order and tolerate the loader's partially formed vectors.
+    const auto layers = document.get(&kinoko::act::DocumentRecord::layers);
+    const int32_t layer_begin = address(layers.begin);
+    const int32_t layer_end = address(layers.end);
+    for (int32_t slot = layer_begin;
+         layer_begin != 0 && layer_end >= layer_begin && slot < layer_end;
+         slot += sizeof(KinokoActLayer *)) {
+        const auto layer = field<int32_t>(slot);
+        if (layer) {
             retdec_destroy_cact_layer(layer);
             std::free(pointer<void>(layer));
         }
     }
-    kinoko_act_array_destroy(object_ptr+208);
-    field<int32_t>(object_ptr + 208) = 0;
-    field<int32_t>(object_ptr + 212) = 0;
-    field<int32_t>(object_ptr + 216) = 0;
+    kinoko_act_array_destroy(address(document.bytes(&kinoko::act::DocumentRecord::layers)));
+    document.set(&kinoko::act::DocumentRecord::layers,
+        kinoko::act::DocumentPointerSpan<KinokoActLayer>{});
 
-    begin = field<int32_t>(object_ptr + 224);
-    end = field<int32_t>(object_ptr + 228);
-    for (cursor = begin; begin != 0 && end >= begin && cursor < end;
-         cursor += 4)
-        retdec_destroy_cact_resource(field<int32_t>(cursor));
-    kinoko_act_array_destroy(object_ptr+224);
-    field<int32_t>(object_ptr + 224) = 0;
-    field<int32_t>(object_ptr + 228) = 0;
-    field<int32_t>(object_ptr + 232) = 0;
+    const auto resources = document.get(&kinoko::act::DocumentRecord::resources);
+    const int32_t resource_begin = address(resources.begin);
+    const int32_t resource_end = address(resources.end);
+    for (int32_t slot = resource_begin;
+         resource_begin != 0 && resource_end >= resource_begin && slot < resource_end;
+         slot += sizeof(KinokoActResource *))
+        retdec_destroy_cact_resource(field<int32_t>(slot));
+    kinoko_act_array_destroy(address(document.bytes(&kinoko::act::DocumentRecord::resources)));
+    document.set(&kinoko::act::DocumentRecord::resources,
+        kinoko::act::DocumentPointerSpan<kinoko::act::ResourceRecord>{});
 
-    retdec_destroy_cact_script(object_ptr + 100);
-    kinoko_string_destroy((void*)(intptr_t)(object_ptr + 44));
-    field<int32_t>(object_ptr + 44) = 0;
-    field<int32_t>(object_ptr + 60) = 0;
-    field<int32_t>(object_ptr + 64) = 15;
-    kinoko_string_destroy((void*)(intptr_t)(object_ptr + 16));
-    field<int32_t>(object_ptr + 16) = 0;
-    field<int32_t>(object_ptr + 32) = 0;
-    field<int32_t>(object_ptr + 36) = 15;
+    retdec_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
+    auto clear_string = [](unsigned char* storage) {
+        kinoko_string_destroy(storage);
+        const kinoko::native::RecordView<kinoko::legacy::StringRecord> record(storage);
+        std::memset(record.bytes(&kinoko::legacy::StringRecord::characters), 0, sizeof(int32_t));
+        record.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+        record.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+    };
+    clear_string(document.bytes(&kinoko::act::DocumentRecord::resource_path));
+    clear_string(document.bytes(&kinoko::act::DocumentRecord::name));
 }
 
 int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,

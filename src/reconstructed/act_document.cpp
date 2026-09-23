@@ -119,7 +119,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
         kinoko_act_list_drop_storage(field<int32_t>(layer+180));
         kinoko_act_list_drop_storage(field<int32_t>(layer+192));
         field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
-        kinoko_string_destroy((void*)(intptr_t)(layer+112));
+        kinoko_string_destroy(kinoko::native::RecordView<kinoko::act::LayerKeys>(pointer<void>(layer)).bytes(&kinoko::act::LayerKeys::name));
         return 0;
     }
     retdec_construct_cact_script(layer + 204);
@@ -132,7 +132,7 @@ int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     field<int32_t>(layer + 332) = vm;
     field<uint8_t>(layer + 344) = 1;
     sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
-    if (vm && !kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), pointer<int32_t>(layer + 316))) {
+    if (vm && !kinoko_sqrat_new_table(pointer<SQVM>(vm), pointer<int32_t>(layer + 316))) {
         retdec_destroy_cact_layer(layer);
         return 0;
     }
@@ -348,7 +348,7 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         return 0;
     }
     retdec_trace_squirrel_name("act:layer-name",
-                               address(kinoko_string_data((const void*)(intptr_t)(layer + 112))));
+                               address(kinoko_string_data(layer_record.bytes(&kinoko::act::LayerKeys::name))));
     if (!retdec_act_read_u32(reader_ptr, &count) || count > 0x10000u) {
         retdec_trace("act:layer-key-count-failed");
         return 0;
