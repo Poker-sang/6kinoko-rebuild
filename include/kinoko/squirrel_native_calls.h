@@ -24,10 +24,10 @@ int32_t function_46b500(int32_t self, int32_t target, int32_t vm, int32_t first)
 int32_t function_46b610(int32_t self, int32_t target, int32_t vm, int32_t first);
 int32_t function_46b6f0(int32_t self, int32_t target, int32_t vm, int32_t first);
 void function_46c6b0_pair(int32_t vm, int32_t pair[2]);
-int32_t function_46ce70(int32_t vm);
-int32_t function_46cec0(int32_t vm);
-int32_t function_46cf10(int32_t vm);
-int32_t function_46cf60(int32_t vm);
+int32_t kinoko_input_save_entry(int32_t vm);
+int32_t kinoko_input_assign_entry(int32_t vm);
+int32_t kinoko_input_wait_entry(int32_t vm);
+int32_t kinoko_input_get_entry(int32_t vm);
 
 int32_t function_470df0(int32_t vm, int32_t index);
 int32_t function_470ee0(int32_t vm);

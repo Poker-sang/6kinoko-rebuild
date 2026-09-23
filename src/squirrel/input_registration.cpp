@@ -26,11 +26,11 @@ int32_t get_assignment(int32_t self, int32_t device, int32_t field) {
 }
 struct InputMethod { const char* name; int32_t target; int32_t wrapper; };
 const InputMethod methods[] = {
-    {"Save", entry(save_config), entry(function_46ce70)},
-    {"Load", entry(load_config), entry(function_46ce70)},
-    {"SetAssign", entry(set_assignment), entry(function_46cec0)},
-    {"WaitAssign", entry(wait_assignment), entry(function_46cf10)},
-    {"GetAssign", entry(get_assignment), entry(function_46cf60)},
+    {"Save", entry(save_config), entry(kinoko_input_save_entry)},
+    {"Load", entry(load_config), entry(kinoko_input_save_entry)},
+    {"SetAssign", entry(set_assignment), entry(kinoko_input_assign_entry)},
+    {"WaitAssign", entry(wait_assignment), entry(kinoko_input_wait_entry)},
+    {"GetAssign", entry(get_assignment), entry(kinoko_input_get_entry)},
 };
 struct Field { const char* name; int32_t offset; bool boolean; };
 // Original 46D950 order: s0 follows s9; button/key names intentionally alias.

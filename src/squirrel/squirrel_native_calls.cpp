@@ -228,10 +228,10 @@ void kinoko_native_capture_receiver(HSQUIRRELVM vm, int32_t* pair) {
 extern "C" void function_46c6b0_pair(int32_t id,int32_t* pair) {
     kinoko_native_capture_receiver(pointer<SQVM>(id), pair);
 }
-extern "C" int32_t function_46ce70(int32_t vm) { return kinoko_native_call_binding(vm,function_46b490); }
-extern "C" int32_t function_46cec0(int32_t vm) { return kinoko_native_call_binding(vm,function_46b500); }
-extern "C" int32_t function_46cf10(int32_t vm) { return kinoko_native_call_binding(vm,function_46b610); }
-extern "C" int32_t function_46cf60(int32_t vm) { return kinoko_native_call_binding(vm,function_46b6f0); }
+extern "C" int32_t kinoko_input_save_entry(int32_t vm) { return kinoko_native_call_binding(vm,function_46b490); }
+extern "C" int32_t kinoko_input_assign_entry(int32_t vm) { return kinoko_native_call_binding(vm,function_46b500); }
+extern "C" int32_t kinoko_input_wait_entry(int32_t vm) { return kinoko_native_call_binding(vm,function_46b610); }
+extern "C" int32_t kinoko_input_get_entry(int32_t vm) { return kinoko_native_call_binding(vm,function_46b6f0); }
 namespace {
 int32_t kinoko_native_invoke_string_only_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
     auto vm=machine; const SQChar* value=nullptr;
