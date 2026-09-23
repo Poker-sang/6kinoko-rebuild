@@ -12,6 +12,7 @@ void retdec_trace_i32(const char*, int32_t);
 
 namespace {
 using namespace kinoko::script;
+inline char& sqrat_trace_slot = g560;
 constexpr const char* argument_error = "Incorrect function argument";
 constexpr const char* conversion_error = "sq_get*() failed (type error)";
 int32_t error(HSQUIRRELVM vm, const char* message) {
@@ -94,7 +95,7 @@ int32_t kinoko_native_property_dispatch(int32_t id, bool write) {
     auto vm = pointer<SQVM>(id);
     // [instance, key, (value), captured lookup table]. Never index a short frame.
     if (!vm || sq_gettop(vm) < (write ? 4 : 3)) return error(vm, "Member Variable not found");
-    return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(g560),
+    return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(sqrat_trace_slot),
         [](HSQUIRRELVM machine, SQInteger count, SQBool result, SQBool raiseerror) -> SQRESULT {
             return kinoko_sq_call(address(machine), count, result, raiseerror);
         });

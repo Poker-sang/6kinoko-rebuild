@@ -6,6 +6,10 @@
 extern "C" void retdec_trace_i32(const char*,int32_t);
 namespace {
 using namespace kinoko::script;
+inline auto commit_actor_result = function_4029b0;
+inline int32_t destroy_object_result(void* object) {
+    return address(kinoko_sqplus_object_destroy(object));
+}
 KinokoOwnedObjectWords transfer(HSQUIRRELVM vm,const HSQOBJECT& borrowed) {
     auto value=borrowed;
     sq_addref(vm,&value);
@@ -43,7 +47,7 @@ extern "C" int32_t kinoko_script_create_actor_entry(SQVM* vm) {
     KinokoOwnedObjectWords result{kinoko_squirrel_object_vtable(),OT_NULL,0};
     using Function=KinokoOwnedObjectWords* (__cdecl *)(KinokoOwnedObjectWords*,KinokoOwnedObjectWords,float,float,float,KinokoOwnedObjectWords);
     reinterpret_cast<Function>(target)(&result,fn,x,y,z,arg);
-    function_4029b0(address(vm),reinterpret_cast<int32_t*>(&result));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(&result)));
+    commit_actor_result(address(vm),reinterpret_cast<int32_t*>(&result));
+    destroy_object_result(&result);
     return 1;
 }

@@ -74,28 +74,28 @@ void construct_input_class(int32_t state[12]) {
     state[1] = address("Input");
     kinoko_sqplus_object_initialize((void *)(state + 2));
     state[5] = 0;
-    kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 6));
-    kinoko_sqplus_object_new_table((void *)(intptr_t)(state + 9));
+    kinoko_sqplus_object_new_table(static_cast<void *>(state + 6));
+    kinoko_sqplus_object_new_table(static_cast<void *>(state + 9));
     auto* vm = current_vm();
     const auto top = sq_gettop(vm);
     int32_t temporary[3]{}, nested[3]{};
     kinoko_sqplus_object_initialize((void *)(temporary));
-    if (kinoko_sqplus_create_class((struct SQVM *)(intptr_t)(state[0]), (void *)(temporary), kinoko_input_binding_type(), (const char *)(intptr_t)(state[1]), (const char *)(intptr_t)(0))) {
+    if (kinoko_sqplus_create_class(pointer<SQVM>(state[0]), (void *)(temporary), kinoko_input_binding_type(), pointer<const char>(state[1]), nullptr)) {
         kinoko_sqplus_object_initialize((void *)(nested));
         ObjectView(temporary).push(vm);
         kinoko_sqplus_object_capture((void *)(nested), -1);
         sq_pop(vm, 1);
-        (int32_t)(intptr_t)(kinoko_sqplus_setup_hierarchy(nested));
+        address(kinoko_sqplus_setup_hierarchy(nested));
     }
     sq_settop(vm, top);
     kinoko_sqplus_object_assign((void *)(state + 2), (const void *)(temporary));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
+    address(kinoko_sqplus_object_destroy((void *)(temporary)));
 }
 } // namespace
 
 extern "C" int32_t kinoko_register_input_class(void) {
     int32_t root[3]{}, state[12]{}, temporary[3]{};
-    kinoko_sqplus_object_copy_construct((void *)(intptr_t)(root), kinoko_sqplus_root_object());
+    kinoko_sqplus_object_copy_construct(static_cast<void *>(root), kinoko_sqplus_root_object());
     construct_input_class(state);
     auto* vm = pointer<SQVM>(state[0]);
     for (const auto& method : methods) {
@@ -112,9 +112,9 @@ extern "C" int32_t kinoko_register_input_class(void) {
         bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
     kinoko_sqplus_object_assign(const_cast<void *>(kinoko_input_script_symbols()->input_class), (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input"))));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
-    for (int offset : {9, 6, 2}) (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + offset)));
-    return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(root)));
+    address(kinoko_sqplus_object_destroy((void *)(temporary)));
+    for (int offset : {9, 6, 2}) address(kinoko_sqplus_object_destroy(static_cast<void *>(state + offset)));
+    return address(kinoko_sqplus_object_destroy(static_cast<void *>(root)));
 }
 
 // Original 46E6F0 receives the 0x513CC0 CInputManager in ECX. The host
