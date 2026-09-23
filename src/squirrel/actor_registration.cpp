@@ -93,7 +93,7 @@ constexpr ActorField fields[] = {
 extern "C" int32_t kinoko_actor_register_script_class(void) {
     int32_t actor[3]{};
     kinoko_sqplus_define_actor_class(actor, "Actor", 0);
-    kinoko_sqplus_object_assign((void *)(const_cast<void *>(kinoko_actor_class_object())), (const void *)(actor));
+    kinoko_sqplus_object_assign(kinoko_actor_class_object(), (const void *)(actor));
     for (const auto& method : methods)
         kinoko_sqplus_register_actor_method(kinoko_actor_default_vm(), actor, method.name, (void *)(intptr_t)(method.target), (void *)(intptr_t)(method.wrapper), 0);
     auto* descriptor = kinoko_native_binding_type(-1);
@@ -105,12 +105,12 @@ extern "C" int32_t kinoko_actor_register_script_class(void) {
     // Construct OT_NULL explicitly; zero-filled object storage is not OT_NULL.
     int32_t null_object[3]{}, key[3]{};
     kinoko_sqplus_object_initialize((void *)(null_object));
-    kinoko_sqplus_object_assign((void *)(const_cast<void *>(kinoko_actor_step_key())), kinoko_sqplus_new_string((void *)(key), (const char *)("step")));
+    kinoko_sqplus_object_assign(reinterpret_cast<void *>(static_cast<uintptr_t>(kinoko_actor_step_key())), kinoko_sqplus_new_string((void *)(key), (const char *)("step")));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(key)));
-    kinoko_sqplus_object_assign((void *)(const_cast<void *>(kinoko_actor_user_key())), kinoko_sqplus_new_string((void *)(key), (const char *)("user")));
+    kinoko_sqplus_object_assign(kinoko_actor_user_key(), kinoko_sqplus_new_string((void *)(key), (const char *)("user")));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(key)));
-    kinoko_sqplus_object_raw_set_object((void *)(const_cast<void *>(kinoko_actor_class_object())), (const void *)(g601), (const void *)(null_object));
-    kinoko_sqplus_object_raw_set_object((void *)(const_cast<void *>(kinoko_actor_class_object())), (const void *)(g600), (const void *)(null_object));
+    kinoko_sqplus_object_raw_set_object(kinoko_actor_class_object(), reinterpret_cast<const void *>(static_cast<uintptr_t>(kinoko_actor_step_key())), (const void *)(null_object));
+    kinoko_sqplus_object_raw_set_object(kinoko_actor_class_object(), kinoko_actor_user_key(), (const void *)(null_object));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(null_object)));
     return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(actor)));
 }

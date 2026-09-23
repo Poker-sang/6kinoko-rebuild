@@ -111,7 +111,7 @@ extern "C" int32_t kinoko_register_input_class(void) {
         auto bind = field.boolean ? kinoko_sqplus_bind_boolean : kinoko_sqplus_bind_integer;
         bind(state + 2, descriptor, field.offset, const_cast<char*>(field.name), 0);
     }
-    kinoko_sqplus_object_assign(kinoko_input_script_symbols()->input_class, (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input"))));
+    kinoko_sqplus_object_assign(const_cast<void *>(kinoko_input_script_symbols()->input_class), (const void *)((int32_t*)(intptr_t)(kinoko_sqplus_object_get_value((void *)(root), (void *)(temporary), "Input"))));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(temporary)));
     for (int offset : {9, 6, 2}) (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(state + offset)));
     return (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(root)));
