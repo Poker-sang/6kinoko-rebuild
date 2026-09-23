@@ -8,6 +8,7 @@
 // Native C++ continuation of the recovered ACT path. Original function names
 // remain C ABI ports until the surrounding decompiled host is migrated.
 #include "kinoko/act_runtime.h"
+#include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_host.h"
 #include "kinoko/diagnostics.h"
@@ -87,15 +88,16 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     retdec_release_act_callback(script_ptr + 24);
     retdec_release_act_callback(script_ptr + 4);
 
-    std::free(pointer<void>(field<int32_t>(script_ptr + 92)));
-    field<int32_t>(script_ptr + 92) = 0;
-    field<int32_t>(script_ptr + 96) = 0;
+    kinoko::act::ScriptPayloadView payload(pointer<void>(script_ptr));
+    std::free(payload.get(&kinoko::act::ScriptPayloadRecord::bytes));
+    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(nullptr));
+    payload.set(&kinoko::act::ScriptPayloadRecord::size, uint32_t{0});
     kinoko_string_destroy((void*)(intptr_t)(script_ptr + 64));
     field<int32_t>(script_ptr + 80) = 0;
     field<int32_t>(script_ptr + 84) = 15;
     field<unsigned char>(script_ptr + 64) = 0;
-    field<unsigned char>(script_ptr + 100) = 0;
-    field<unsigned char>(script_ptr + 101) = 0;
+    payload.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{0});
+    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, uint8_t{0});
 }
 
 extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
