@@ -82,3 +82,7 @@ font height/weight, edge flag, and character/line spacing into the font
 renderer before texture setup. The font configuration now reads these
 named layout members and preserves the low-byte color behavior and call
 order. Evidence: 440ca0.json.
+Batch 17: original 440CA0 writes a 256-byte face, paired RGB endpoints,
+font height/weight, edge, spacing and packed color into renderer fields.
+FontRendererRecord now asserts those source-backed offsets and the native
+configuration uses them, leaving unrelated runtime and padding bytes intact.

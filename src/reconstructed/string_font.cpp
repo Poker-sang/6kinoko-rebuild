@@ -139,19 +139,22 @@ extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     // 440910/440CA0 preserve the other config bytes and set equal RGB endpoints.
     using Layout=kinoko::act::StringLayoutRecord;
     const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
-    strcpy_s(pointer<char>(r+12),256,StringView(text.bytes(&Layout::face)).data());
+    const kinoko::native::RecordView<Renderer> renderer(pointer<void>(r));
+    strcpy_s(reinterpret_cast<char*>(renderer.bytes(&Renderer::face)),256,
+        StringView(text.bytes(&Layout::face)).data());
     const uint8_t colors[]={static_cast<uint8_t>(text.get(&Layout::red)),
         static_cast<uint8_t>(text.get(&Layout::green)),
         static_cast<uint8_t>(text.get(&Layout::blue))};
+    auto* endpoints=renderer.bytes(&Renderer::colors);
     for(int channel=0;channel<3;++channel)
-        field<uint8_t>(r+268+channel*2)=field<uint8_t>(r+269+channel*2)=colors[channel];
-    field<int32_t>(r+276)=text.get(&Layout::font_height);
-    field<int32_t>(r+280)=text.get(&Layout::font_weight);
-    field<uint8_t>(r+285)=text.get(&Layout::edge);
-    field<int32_t>(r+300)=text.get(&Layout::character_space);
-    field<int32_t>(r+304)=text.get(&Layout::line_space);
-    field<uint32_t>(r+360)=(uint32_t(field<uint8_t>(r+268))<<16)|
-        (uint32_t(field<uint8_t>(r+270))<<8)|field<uint8_t>(r+272);
+        endpoints[channel*2]=endpoints[channel*2+1]=colors[channel];
+    renderer.set(&Renderer::font_height,text.get(&Layout::font_height));
+    renderer.set(&Renderer::font_weight,text.get(&Layout::font_weight));
+    renderer.set(&Renderer::edge,text.get(&Layout::edge));
+    renderer.set(&Renderer::character_space,text.get(&Layout::character_space));
+    renderer.set(&Renderer::line_space,text.get(&Layout::line_space));
+    renderer.set(&Renderer::color,(uint32_t(endpoints[0])<<16)|
+        (uint32_t(endpoints[2])<<8)|endpoints[4]);
     // 40EE30's equal-color branch leaves an existing gradient allocation alone.
     clear_pixels(r);
 }
