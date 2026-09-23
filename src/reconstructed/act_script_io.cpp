@@ -102,8 +102,9 @@ extern "C" int32_t __fastcall kinoko_method_read_act_script(
 
 extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, void*, int32_t writer) {
     if (!script || !writer) return 0;
-    const auto was_compiled = field<uint8_t>(script + 101);
-    field<uint8_t>(script + 101) = g673;
+    kinoko::act::ScriptPayloadView payload(pointer<void>(script));
+    const auto was_compiled = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
+    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, g673);
     uint8_t has_schema = !g673;
     if (!transfer(writer, has_schema)) return 0;
     if (has_schema) {
@@ -112,15 +113,16 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
             !write_string(writer,"filePath",8) || !transfer(writer,string_type)) return 0;
     }
     auto path = kinoko::legacy::StringView(pointer<void>(script + 64));
-    if (!transfer(writer, field<uint8_t>(script + 101)) || !write_string(writer, path.data(), path.length())) return 0;
-    const auto bytes = field<int32_t>(script + 92);
-    auto size = field<uint32_t>(script + 96);
+    const auto compiled_flag = payload.get(&kinoko::act::ScriptPayloadRecord::compiled);
+    if (!transfer(writer, compiled_flag) || !write_string(writer, path.data(), path.length())) return 0;
+    const auto bytes = payload.get(&kinoko::act::ScriptPayloadRecord::bytes);
+    auto size = payload.get(&kinoko::act::ScriptPayloadRecord::size);
     if (was_compiled) {
         // 4165A3 writes the stored compiled buffer directly, without another
         // size prefix, and does not inspect that virtual write's result.
-        transfer(writer, pointer<void>(bytes), size);
+        transfer(writer, bytes, size);
     } else if (!g673) {
-        if (!transfer(writer, size) || !transfer(writer, pointer<void>(bytes), size)) return 0;
+        if (!transfer(writer, size) || !transfer(writer, bytes, size)) return 0;
     } else {
         const auto start = seek(writer, 0, 1);
         uint32_t placeholder = 0;
@@ -130,7 +132,7 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
         sqstd_seterrorhandlers(vm);
         sq_setprintfunc(vm, quiet_print);
         // Original constructs std::string from a C string, excluding its NUL.
-        const auto* text = pointer<const char>(bytes);
+        const auto* text = static_cast<const char *>(bytes);
         const auto* end = text ? static_cast<const char*>(std::memchr(text, 0, size)) : nullptr;
         const auto length = end ? static_cast<size_t>(end - text) : size;
         const bool compiled = kinoko::script::upstream::sqrat_compile_and_write(
@@ -143,6 +145,6 @@ extern "C" int32_t __fastcall kinoko_method_write_act_script(int32_t script, voi
         if (!transfer(writer, length_with_prefix)) return 0;
         seek(writer, 0, 2);
     }
-    field<uint8_t>(script + 101) = was_compiled;
+    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, was_compiled);
     return 1;
 }
