@@ -48,25 +48,31 @@ struct GraphicsLock {
 struct FontSession {
     int32_t r;
     explicit FontSession(int32_t renderer):r(renderer) {
-        auto font=CreateFontA(field<int>(r+276),0,0,0,field<int>(r+280),
-            field<uint8_t>(r+284),0,0,128,4,0,2,49,pointer<char>(r+12));
-        field<HFONT>(r+4)=font;
+        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        auto font=CreateFontA(record.get(&Renderer::font_height),0,0,0,
+            record.get(&Renderer::font_weight),record.get(&Renderer::style284),
+            0,0,128,4,0,2,49,reinterpret_cast<char*>(record.bytes(&Renderer::face)));
+        record.set(&Renderer::font_handle,static_cast<void*>(font));
         auto dc=GetDC(reinterpret_cast<HWND>(g767));
-        field<HDC>(r)=dc;field<HGDIOBJ>(r+8)=SelectObject(dc,font);
+        record.set(&Renderer::device_context,static_cast<void*>(dc));
+        record.set(&Renderer::previous_font,static_cast<void*>(SelectObject(dc,font)));
         TEXTMETRICA metrics{};GetTextMetricsA(dc,&metrics);
-        field<int32_t>(r+316)=metrics.tmAscent;
-        field<int32_t>(r+308)=field<uint8_t>(r+285)+field<int32_t>(r+292);
-        field<int32_t>(r+312)=field<uint8_t>(r+285)+field<int32_t>(r+296);
+        record.set(&Renderer::ascent,metrics.tmAscent);
+        record.set(&Renderer::cursor_x,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_left));
+        record.set(&Renderer::cursor_y,int32_t(record.get(&Renderer::edge))+record.get(&Renderer::margin_top));
         field<uint16_t>(r+364)=0;
-        field<void*>(r+340)=field<void*>(r+344);
+        record.set(&Renderer::gradient,record.get(&Renderer::bitmap));
         clear_pixels(r);
     }
     ~FontSession() {
         clear_pixels(r);
-        auto dc=field<HDC>(r);
-        DeleteObject(SelectObject(dc,field<HGDIOBJ>(r+8)));
+        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        auto dc=static_cast<HDC>(record.get(&Renderer::device_context));
+        DeleteObject(SelectObject(dc,static_cast<HGDIOBJ>(record.get(&Renderer::previous_font))));
         ReleaseDC(reinterpret_cast<HWND>(g767),dc);
-        field<int32_t>(r)=field<int32_t>(r+4)=field<int32_t>(r+8)=0;
+        record.set(&Renderer::device_context,static_cast<void*>(nullptr));
+        record.set(&Renderer::font_handle,static_cast<void*>(nullptr));
+        record.set(&Renderer::previous_font,static_cast<void*>(nullptr));
     }
 };
 void glyph(int32_t r,UINT character,int32_t& width,int32_t& height) {

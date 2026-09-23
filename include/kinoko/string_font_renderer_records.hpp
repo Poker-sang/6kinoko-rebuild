@@ -7,14 +7,17 @@ namespace kinoko::text {
 // Borrowed view of the original 404-byte renderer at atlas +24. The bitmap
 // and pixel-list owner are distinct; the enclosing atlas owns this renderer.
 struct FontRendererRecord {
-    unsigned char runtime0[12];
+    void *device_context, *font_handle, *previous_font;
     char face[256];
     uint8_t colors[6];
     unsigned char reserved274[2];
     int32_t font_height, font_weight;
     uint8_t style284, edge, style286, reserved287;
     int32_t setting288, margin_left, margin_top, character_space, line_space;
-    unsigned char runtime308[36];
+    int32_t cursor_x, cursor_y, ascent;
+    void *output, *destination;
+    int32_t bound_height, bound_width, stride;
+    void *gradient;
     void *bitmap;
     void *pixel_owner;
     unsigned char state352[8];
@@ -25,6 +28,9 @@ struct FontRendererRecord {
 };
 static_assert(sizeof(FontRendererRecord)==404);
 static_assert(offsetof(FontRendererRecord,face)==12);
+static_assert(offsetof(FontRendererRecord,cursor_x)==308);
+static_assert(offsetof(FontRendererRecord,output)==320);
+static_assert(offsetof(FontRendererRecord,gradient)==340);
 static_assert(offsetof(FontRendererRecord,colors)==268);
 static_assert(offsetof(FontRendererRecord,font_height)==276);
 static_assert(offsetof(FontRendererRecord,edge)==285);

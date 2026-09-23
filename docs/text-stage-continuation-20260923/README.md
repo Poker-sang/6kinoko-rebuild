@@ -91,3 +91,8 @@ spacing, bitmap pointer, label length/capacity and pixel owner. Native
 construction now names these members and preserves untouched runtime and
 padding bytes. The original +352 list-size and DC/runtime zeroes remain at
 their explicit binary boundary.
+Batch 19: IDA 40F1C0 creates/selects a font for one glyph, publishes DC
+and previous font, computes ascent/X/Y from edge and margins, then 40F2E0
+restores the DC/font. The renderer schema now asserts runtime slots 0..8
+and 308..343; FontSession uses these named fields without changing Windows
+call order or the per-glyph pixel clear. Evidence: 40f1c0.json, 40f2e0.json.
