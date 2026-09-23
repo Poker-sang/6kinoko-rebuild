@@ -1534,7 +1534,6 @@ static int32_t function_407000_this(int32_t this_ptr, int32_t *a1);
 
 
 
-void retdec_poll_fallback_keyboard(void);
 
 
 

@@ -71,7 +71,7 @@ int32_t open_device(Device& destination, REFGUID guid, const DIDATAFORMAT& forma
     return 1;
 }
 }
-extern "C" void kinoko_input_poll_fallback_keyboard(void)
+static void poll_fallback_keyboard(void)
 {
     static int previous_z;
     HKL keyboard_layout = GetKeyboardLayout(0);
@@ -163,7 +163,7 @@ extern "C" int32_t kinoko_input_poll(void) {
         }
     } else {
         // Established reconstruction fallback: foreground-only scan mapping.
-        kinoko_input_poll_fallback_keyboard();
+        poll_fallback_keyboard();
     }
     if (service.mouse && FAILED(service.mouse->GetDeviceState(sizeof(KinokoMouseState), &kinoko_input_snapshot.mouse)))
         service.mouse->Acquire();
