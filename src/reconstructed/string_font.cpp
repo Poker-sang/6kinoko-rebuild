@@ -78,37 +78,40 @@ struct FontSession {
 void glyph(int32_t r,UINT character,int32_t& width,int32_t& height) {
     MAT2 transform{};transform.eM11.value=transform.eM22.value=1;
     GLYPHMETRICS metrics{};
-    auto dc=field<HDC>(r);
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    auto dc=static_cast<HDC>(record.get(&Renderer::device_context));
     const DWORD size=GetGlyphOutlineA(dc,character,GGO_GRAY4_BITMAP,&metrics,0,nullptr,&transform);
     if(size==GDI_ERROR) return;
     // 40F3C8 has no zero-height guard. Preserve the recovered operation rather
     // than inventing space metrics; this path still awaits user validation.
     const uint32_t pitch=(size/metrics.gmBlackBoxY)&~3u;
-    const int32_t max_x=static_cast<int32_t>(metrics.gmBlackBoxX)+metrics.gmptGlyphOrigin.x+field<int32_t>(r+308);
-    const int32_t max_y=static_cast<int32_t>(metrics.gmBlackBoxY)+field<int32_t>(r+312)+field<int32_t>(r+316)-metrics.gmptGlyphOrigin.y;
-    if(max_y>=field<int32_t>(r+328)) return;
-    if(max_x>field<int32_t>(r+332)) {
-        if(!field<uint8_t>(r+286)) return;
-        field<int32_t>(r+308)=field<int32_t>(r+292)+field<uint8_t>(r+285);
-        field<int32_t>(r+312)+=field<int32_t>(r+276)+field<int32_t>(r+304);
+    const int32_t max_x=static_cast<int32_t>(metrics.gmBlackBoxX)+metrics.gmptGlyphOrigin.x+record.get(&Renderer::cursor_x);
+    const int32_t max_y=static_cast<int32_t>(metrics.gmBlackBoxY)+record.get(&Renderer::cursor_y)+record.get(&Renderer::ascent)-metrics.gmptGlyphOrigin.y;
+    if(max_y>=record.get(&Renderer::bound_height)) return;
+    if(max_x>record.get(&Renderer::bound_width)) {
+        if(!record.get(&Renderer::style286)) return;
+        record.set(&Renderer::cursor_x,record.get(&Renderer::margin_left)+record.get(&Renderer::edge));
+        record.set(&Renderer::cursor_y,record.get(&Renderer::cursor_y)+
+            record.get(&Renderer::font_height)+record.get(&Renderer::line_space));
     }
     if(size) {
         std::vector<unsigned char> bitmap(size);
         GetGlyphOutlineA(dc,character,GGO_GRAY4_BITMAP,&metrics,size,bitmap.data(),&transform);
-        const int32_t stride=field<int32_t>(r+336);
-        auto* output=field<uint32_t*>(r+320)+metrics.gmptGlyphOrigin.x+field<int32_t>(r+308)
-            +stride*(field<int32_t>(r+312)+field<int32_t>(r+316)-metrics.gmptGlyphOrigin.y);
-        const auto* gradient=field<uint32_t*>(r+340);
-        if(gradient) gradient+=field<int32_t>(r+316)-metrics.gmptGlyphOrigin.y;
+        const int32_t stride=record.get(&Renderer::stride);
+        auto* output=static_cast<uint32_t*>(record.get(&Renderer::output))+metrics.gmptGlyphOrigin.x+record.get(&Renderer::cursor_x)
+            +stride*(record.get(&Renderer::cursor_y)+record.get(&Renderer::ascent)-metrics.gmptGlyphOrigin.y);
+        const auto* gradient=static_cast<uint32_t*>(record.get(&Renderer::gradient));
+        if(gradient) gradient+=record.get(&Renderer::ascent)-metrics.gmptGlyphOrigin.y;
         for(uint32_t y=0;y<metrics.gmBlackBoxY;++y) {
-            const uint32_t rgb=gradient?gradient[y]:field<uint32_t>(r+360);
+            const uint32_t rgb=gradient?gradient[y]:record.get(&Renderer::color);
             for(uint32_t x=0;x<metrics.gmBlackBoxX;++x)
                 output[y*stride+x]=rgb|((0x0ff00000u*bitmap[y*pitch+x])&0xff000000u);
         }
     }
     // FontSession resets accent/ruby before each single-character call, so
     // neither branch of the generic tagged renderer is reachable here.
-    field<int32_t>(r+308)+=metrics.gmCellIncX+field<int32_t>(r+300);
+    record.set(&Renderer::cursor_x,record.get(&Renderer::cursor_x)+
+        metrics.gmCellIncX+record.get(&Renderer::character_space));
     width=(std::max)(width,max_x);height=(std::max)(height,max_y);
 }
 void outline(int32_t r,const uint32_t* source,uint32_t* destination) {

@@ -96,3 +96,7 @@ and previous font, computes ascent/X/Y from edge and margins, then 40F2E0
 restores the DC/font. The renderer schema now asserts runtime slots 0..8
 and 308..343; FontSession uses these named fields without changing Windows
 call order or the per-glyph pixel clear. Evidence: 40f1c0.json, 40f2e0.json.
+Batch 20: original 40F370's glyph raster path reads DC, X/Y cursor,
+ascent, bounds/stride, output/gradient and color from renderer offsets.
+The native path now uses the asserted renderer fields, keeping its exact
+size, wrap, bitmap and alpha operations. Evidence: 40f3c8.json.
