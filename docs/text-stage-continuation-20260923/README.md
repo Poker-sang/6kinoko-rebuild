@@ -72,3 +72,8 @@ from the first 348 bytes. The asserted 404-byte FontRendererRecord names
 the bitmap, pixel owner and label slots. Renderer assignment/destruction
 now uses those slots, retaining shallow buffer-copy and release order.
 Evidence: 40ed40.json and 445230.json.
+Batch 15: original 40EC70 allocates the renderer pixel-list owner at
++348 and initializes the label record at +368/+384/+388. Original 40ED40
+releases pixel nodes, bitmap and label before deleting the list owner.
+The font module now publishes/clears the explicit pixel_owner pointer and
+initializes the named label storage. Evidence: 40ec70.json and 40ed40.json.

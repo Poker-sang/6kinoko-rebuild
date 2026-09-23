@@ -1,6 +1,7 @@
 #include "kinoko/critical_section.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/string_font.h"
+#include "kinoko/string_font_renderer_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/texture_store.h"
@@ -25,7 +26,15 @@ using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
 using Pixels=std::list<void*>;
-Pixels*& pixels(int32_t renderer) { return field<Pixels*>(renderer+348); }
+using Renderer=kinoko::text::FontRendererRecord;
+Pixels* pixels(int32_t renderer) {
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+    return static_cast<Pixels*>(record.get(&Renderer::pixel_owner));
+}
+void set_pixels(int32_t renderer,Pixels* value) {
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(renderer));
+    record.set(&Renderer::pixel_owner,static_cast<void*>(value));
+}
 void clear_pixels(int32_t r) {
     for(void* value:*pixels(r)) std::free(value);
     pixels(r)->clear();
@@ -118,8 +127,12 @@ extern "C" void kinoko_string_font_construct(int32_t r) {
     // 40EC70 initializes only these members; do not clear unrelated padding.
     field<int32_t>(r+280)=400;field<uint16_t>(r+284)=0;field<uint8_t>(r+286)=0;
     for(int offset:{292,296,300,304,352,384,0,4,8,324,340,344}) field<int32_t>(r+offset)=0;
-    field<int32_t>(r+288)=100000;field<int32_t>(r+388)=15;field<uint8_t>(r+368)=0;
-    pixels(r)=new Pixels;
+    field<int32_t>(r+288)=100000;
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    const kinoko::native::RecordView<kinoko::legacy::StringRecord> label(record.bytes(&Renderer::label));
+    label.set(&kinoko::legacy::StringRecord::capacity,uint32_t{15});
+    label.bytes(&kinoko::legacy::StringRecord::characters)[0]=0;
+    set_pixels(r,new Pixels);
 }
 extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     // 440910/440CA0 preserve the other config bytes and set equal RGB endpoints.
@@ -219,5 +232,5 @@ extern "C" void kinoko_string_font_copy_pixels(int32_t out,int32_t in) {
     *pixels(out)=*pixels(in);
 }
 extern "C" void kinoko_string_font_destroy_pixels(int32_t renderer) {
-    clear_pixels(renderer);delete pixels(renderer);pixels(renderer)=nullptr;
+    clear_pixels(renderer);delete pixels(renderer);set_pixels(renderer,nullptr);
 }
