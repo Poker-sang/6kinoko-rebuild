@@ -103,10 +103,12 @@ int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
 int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
     if (!layer) return 0;
     std::memset(pointer<void>(layer), 0, 348);
-    field<int32_t>(layer) = address(kinoko_act_host_symbols()->layer_vtable);
-    field<int32_t>(layer + 96) = -1;
-    field<int32_t>(layer + 104) = -1;
-    field<int32_t>(layer + 108) = -1;
+    kinoko::native::RecordView<kinoko::act::LayerAssociationRecord> association(pointer<void>(layer));
+    association.set(&kinoko::act::LayerAssociationRecord::vtable,
+        kinoko_act_host_symbols()->layer_vtable);
+    association.set(&kinoko::act::LayerAssociationRecord::resource_id, int32_t{-1});
+    association.set(&kinoko::act::LayerAssociationRecord::layer_id, int32_t{-1});
+    association.set(&kinoko::act::LayerAssociationRecord::parent_id, int32_t{-1});
     field<int32_t>(layer + 132) = 15;
     kinoko_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
     field<uint16_t>(layer + 140) = 1;
