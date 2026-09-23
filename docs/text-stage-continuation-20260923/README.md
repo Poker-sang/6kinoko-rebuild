@@ -100,3 +100,7 @@ Batch 20: original 40F370's glyph raster path reads DC, X/Y cursor,
 ascent, bounds/stride, output/gradient and color from renderer offsets.
 The native path now uses the asserted renderer fields, keeping its exact
 size, wrap, bitmap and alpha operations. Evidence: 40f3c8.json.
+Batch 21: the font's optional edge pass uses renderer edge, temporary
+output, destination, stride and bounds. The native outline/rasterize
+functions now share the same typed runtime fields as 40F370's glyph path,
+retaining the original bitmap loop and edge-width accounting.

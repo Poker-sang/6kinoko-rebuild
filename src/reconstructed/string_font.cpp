@@ -115,9 +115,10 @@ void glyph(int32_t r,UINT character,int32_t& width,int32_t& height) {
     width=(std::max)(width,max_x);height=(std::max)(height,max_y);
 }
 void outline(int32_t r,const uint32_t* source,uint32_t* destination) {
-    const int32_t stride=field<int32_t>(r+336);
-    for(int32_t y=1;y<field<int32_t>(r+328)-1;++y)
-        for(int32_t x=1;x<field<int32_t>(r+332)-1;++x) {
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    const int32_t stride=record.get(&Renderer::stride);
+    for(int32_t y=1;y<record.get(&Renderer::bound_height)-1;++y)
+        for(int32_t x=1;x<record.get(&Renderer::bound_width)-1;++x) {
             const int32_t i=y*stride+x;
             const uint32_t pixel=source[i],alpha=pixel>>24;
             if(alpha) {
@@ -177,11 +178,12 @@ extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     clear_pixels(r);
 }
 extern "C" void kinoko_string_font_rasterize(int32_t r,const char* character,int32_t* width,int32_t* height) {
-    const bool edge=field<uint8_t>(r+285)!=0;
+    const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+    const bool edge=record.get(&Renderer::edge)!=0;
     std::vector<uint32_t> temporary;
     if(edge) {
-        temporary.resize(size_t(field<int32_t>(r+336))*field<int32_t>(r+328));
-        field<void*>(r+320)=temporary.data();
+        temporary.resize(size_t(record.get(&Renderer::stride))*record.get(&Renderer::bound_height));
+        record.set(&Renderer::output,static_cast<void*>(temporary.data()));
     }
     int32_t w=0,h=0;
     {
@@ -196,7 +198,8 @@ extern "C" void kinoko_string_font_rasterize(int32_t r,const char* character,int
             glyph(r,code,w,h);
         }
     }
-    if(edge) outline(r,temporary.data(),field<uint32_t*>(r+324));
+    if(edge) outline(r,temporary.data(),
+        static_cast<uint32_t*>(record.get(&Renderer::destination)));
     if(width) *width=w+edge;
     if(height) *height=h+edge;
 }
