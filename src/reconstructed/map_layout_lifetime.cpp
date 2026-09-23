@@ -1,5 +1,6 @@
 #include "kinoko/native_buffer.h"
 #include "kinoko/map_render.h"
+#include "kinoko/act_host.h"
 #include "kinoko/map_layout_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include <array>
@@ -9,7 +10,6 @@
 #include <cstring>
 #include <memory>
 #include <new>
-extern "C" { extern unsigned char g327,g328,g25,g23; }
 namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::address;
@@ -31,7 +31,7 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
     // This is 433AA0's full virtual clone, not ACT activation's cache reset.
     Owned output=allocate(464);
     const auto result=address(output.get());
-    field<int32_t>(result)=address(&g327);field<int32_t>(result+4)=address(&g328);
+    field<int32_t>(result)=kinoko::legacy::address(kinoko_act_host_symbols()->map_layout_vtable);field<int32_t>(result+4)=kinoko::legacy::address(kinoko_act_host_symbols()->map_view_vtable);
     std::memcpy(pointer<void>(result+8),pointer<void>(source+8),228);
     for(auto range: {std::pair<int,int>{236,28},{312,20},{380,4},{400,4},{452,8}})
         std::memcpy(pointer<void>(result+range.first),pointer<void>(source+range.first),range.second);
@@ -63,16 +63,16 @@ extern "C" int32_t __fastcall kinoko_clone_map_layout(int32_t source,void*) {
 }
 extern "C" void kinoko_clear_map_layout(int32_t layout) {
     if(!layout) return;
-    field<int32_t>(layout)=address(&g327);field<int32_t>(layout+4)=address(&g328);
+    field<int32_t>(layout)=kinoko::legacy::address(kinoko_act_host_symbols()->map_layout_vtable);field<int32_t>(layout+4)=kinoko::legacy::address(kinoko_act_host_symbols()->map_view_vtable);
     for(auto it=vectors.rbegin();it!=vectors.rend();++it) {
         auto &view=field<VectorView>(layout+it->offset);
         // Both concrete sprite element destructors only reset IColor identity;
         // their texture handles are borrowed, so no texture retain/release.
         if(it->width==232 || it->width==288)
-            for(int32_t p=view.begin;p!=view.end;p+=it->width) field<int32_t>(p)=address(&g23);
+            for(int32_t p=view.begin;p!=view.end;p+=it->width) field<int32_t>(p)=kinoko::legacy::address(kinoko_act_host_symbols()->color_vtable);
         kinoko_native_buffer_destroy(layout+it->offset);
     }
-    field<int32_t>(layout+4)=address(&g23);
+    field<int32_t>(layout+4)=kinoko::legacy::address(kinoko_act_host_symbols()->color_vtable);
 }
 extern "C" int32_t __fastcall kinoko_delete_map_sprite(int32_t sprite,void*,int32_t flags) {
     const int32_t layout=sprite-4; // Original 43C1C0 adjusts the secondary this.
