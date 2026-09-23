@@ -18,7 +18,8 @@ struct LayerKeys {
     std::array<uint32_t, 3> previous_position;
     struct KeyNode *key_head;
     int32_t key_count;
-    std::array<uint8_t, 8> unknown188;
+    std::array<uint8_t, 4> unknown188;
+    struct KeyNode *timeline_head;
     int32_t extra_count;
     std::array<uint8_t, 28> unknown200;
     std::array<int32_t, 5> update_callback;
@@ -35,6 +36,7 @@ static_assert(offsetof(LayerKeys, position) == 144 && offsetof(LayerKeys, previo
 static_assert(offsetof(LayerKeys, update_callback) == 228);
 static_assert(offsetof(LayerKeys, key_head) == 180);
 static_assert(offsetof(LayerKeys, key_count) == 184);
+static_assert(offsetof(LayerKeys, timeline_head) == 192);
 static_assert(offsetof(LayerKeys, extra_count) == 196);
 static_assert(sizeof(KeyNode) == 12 && offsetof(KeyNode, key) == 8);
 static_assert(offsetof(LayoutKey, layout) == 4);

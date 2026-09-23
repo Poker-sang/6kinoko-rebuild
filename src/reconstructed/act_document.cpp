@@ -396,11 +396,13 @@ int32_t retdec_act_load_layer(int32_t layer, int32_t reader_ptr,
         }
         const auto timeline = kinoko_act_new_timeline();
         if (!timeline || !kinoko_act_load_timeline(timeline, reader_ptr, version) ||
-            !retdec_act_append_list(layer + 192, timeline)) {
+            !retdec_act_append_list(
+                address(layer_record.bytes(&kinoko::act::LayerKeys::timeline_head)), timeline)) {
             retdec_destroy_cact_key(timeline);
             return 0;
         }
-        ++field<int32_t>(layer + 196);
+        layer_record.set(&kinoko::act::LayerKeys::extra_count,
+            layer_record.get(&kinoko::act::LayerKeys::extra_count) + 1);
     }
     return retdec_act_load_script(layer + 0xcc, reader_ptr);
 }
