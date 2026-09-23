@@ -1820,7 +1820,7 @@ static int32_t function_466270_this(int32_t this_ptr);
 int32_t function_4664a0_this(int32_t result, int32_t a1);
 int32_t function_466540(int32_t a1, int32_t a2);
 int32_t function_466770(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_466890(int32_t a1);
+int32_t kinoko_camera_update_entry(int32_t a1);
 
 int32_t function_4669d0(void);
 
@@ -10959,6 +10959,13 @@ static int32_t kinoko_input_copy_abi(int32_t destination, int32_t source) {
     return (int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)(intptr_t)destination,
         (const KinokoInputManager*)(intptr_t)source);
 }
+const KinokoCameraMapScriptSymbols *kinoko_camera_map_script_symbols(void) {
+    static KinokoCameraMapScriptSymbols symbols;
+    symbols.camera_class = g611;
+    symbols.map_class = g636;
+    return &symbols;
+}
+
 const KinokoInputScriptSymbols *kinoko_input_script_symbols(void) {
     static KinokoInputScriptSymbols symbols;
     symbols.object_vtable = &g16;

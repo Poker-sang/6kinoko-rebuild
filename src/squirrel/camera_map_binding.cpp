@@ -6,10 +6,8 @@
 #include "kinoko/legacy_abi.h"
 #include <cstring>
 extern "C" {
-extern int32_t g611[3], g636[3];
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_table_entries(const char*, int32_t);
-int32_t function_466890(int32_t);
 }
 namespace {
 using namespace kinoko::script;
@@ -171,13 +169,13 @@ int32_t kinoko_register_camera_binding() {
     ClassState state{};
     kinoko_sqplus_object_copy_construct(&root, kinoko_sqplus_root_object());
     construct(state, "Camera", kinoko_camera_binding_type());
-    kinoko_sqplus_object_assign(g611, &state.klass);
+    kinoko_sqplus_object_assign(kinoko_camera_map_script_symbols()->camera_class, &state.klass);
     auto *vm = state.vm;
     ObjectView(&state.klass).push(vm);
     sq_pushstring(vm, "SetUpdateFunction", -1);
     const auto target = entry(kinoko_camera_set_update_callback);
     std::memcpy(sq_newuserdata(vm, sizeof(target)), &target, sizeof(target));
-    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(function_466890), 1);
+    sq_newclosure(vm, reinterpret_cast<SQFUNCTION>(kinoko_camera_update_entry), 1);
     sq_newslot(vm, -3, SQFalse); sq_pop(vm, 1);
     bind_fields(reinterpret_cast<int32_t *>(&state.klass), kinoko_camera_binding_type(), camera_fields);
     const auto value = ObjectView(&state.klass).value();
@@ -196,18 +194,18 @@ int32_t kinoko_register_map_binding() {
     ClassState state{};
     ObjectStorage layer{};
     construct(state, "Map", kinoko_map_binding_type());
-    kinoko_sqplus_object_assign(g636, &state.klass);
+    kinoko_sqplus_object_assign(kinoko_camera_map_script_symbols()->map_class, &state.klass);
     bind_fields(reinterpret_cast<int32_t *>(&state.klass), kinoko_map_binding_type(), map_fields);
     // Original 46FD05 constructs exactly one local layer_name object.
     kinoko_sqplus_object_initialize(&layer);
-    kinoko_sqplus_object_raw_set_name(g636, "layer_name", &layer);
+    kinoko_sqplus_object_raw_set_name(kinoko_camera_map_script_symbols()->map_class, "layer_name", &layer);
     kinoko_sqplus_object_destroy(&layer);
     kinoko_sqplus_object_destroy(&state.second_table);
     kinoko_sqplus_object_destroy(&state.first_table);
     return address(kinoko_sqplus_object_destroy(&state.klass));
 }
 } // namespace
-extern "C" int32_t function_466890(int32_t vm) {
+extern "C" int32_t kinoko_camera_update_entry(int32_t vm) {
     return kinoko_call_camera_update(pointer<SQVM>(vm));
 }
 extern "C" int32_t function_4669d0(void) { return kinoko_register_camera_binding(); }

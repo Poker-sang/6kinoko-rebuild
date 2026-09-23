@@ -14,6 +14,11 @@ typedef struct KinokoInputScriptSymbols {
     uint32_t manager_storage_bytes;
 } KinokoInputScriptSymbols;
 const KinokoInputScriptSymbols *kinoko_input_script_symbols(void);
+typedef struct KinokoCameraMapScriptSymbols {
+    void *camera_class;
+    void *map_class;
+} KinokoCameraMapScriptSymbols;
+const KinokoCameraMapScriptSymbols *kinoko_camera_map_script_symbols(void);
 int32_t kinoko_input_initialize_script_instance(KinokoInputManager *manager);
 int32_t *kinoko_input_binding_type(void);
 int32_t *kinoko_camera_binding_type(void);
