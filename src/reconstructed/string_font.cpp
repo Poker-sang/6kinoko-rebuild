@@ -2,6 +2,7 @@
 #include "kinoko/graphics_device.h"
 #include "kinoko/string_font.h"
 #include "kinoko/string_font_renderer_records.hpp"
+#include "kinoko/act_layout_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/texture_store.h"
@@ -136,16 +137,19 @@ extern "C" void kinoko_string_font_construct(int32_t r) {
 }
 extern "C" void kinoko_string_font_configure(int32_t r,int32_t layout) {
     // 440910/440CA0 preserve the other config bytes and set equal RGB endpoints.
-    strcpy_s(pointer<char>(r+12),256,StringView(pointer<void>(layout+60)).data());
-    for(int channel=0;channel<3;++channel) {
-        const auto value=field<uint8_t>(layout+96+channel*4);
-        field<uint8_t>(r+268+channel*2)=field<uint8_t>(r+269+channel*2)=value;
-    }
-    field<int32_t>(r+276)=field<int32_t>(layout+88);
-    field<int32_t>(r+280)=field<int32_t>(layout+92);
-    field<uint8_t>(r+285)=field<uint8_t>(layout+128);
-    field<int32_t>(r+300)=field<int32_t>(layout+120);
-    field<int32_t>(r+304)=field<int32_t>(layout+124);
+    using Layout=kinoko::act::StringLayoutRecord;
+    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
+    strcpy_s(pointer<char>(r+12),256,StringView(text.bytes(&Layout::face)).data());
+    const uint8_t colors[]={static_cast<uint8_t>(text.get(&Layout::red)),
+        static_cast<uint8_t>(text.get(&Layout::green)),
+        static_cast<uint8_t>(text.get(&Layout::blue))};
+    for(int channel=0;channel<3;++channel)
+        field<uint8_t>(r+268+channel*2)=field<uint8_t>(r+269+channel*2)=colors[channel];
+    field<int32_t>(r+276)=text.get(&Layout::font_height);
+    field<int32_t>(r+280)=text.get(&Layout::font_weight);
+    field<uint8_t>(r+285)=text.get(&Layout::edge);
+    field<int32_t>(r+300)=text.get(&Layout::character_space);
+    field<int32_t>(r+304)=text.get(&Layout::line_space);
     field<uint32_t>(r+360)=(uint32_t(field<uint8_t>(r+268))<<16)|
         (uint32_t(field<uint8_t>(r+270))<<8)|field<uint8_t>(r+272);
     // 40EE30's equal-color branch leaves an existing gradient allocation alone.

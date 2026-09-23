@@ -77,3 +77,8 @@ Batch 15: original 40EC70 allocates the renderer pixel-list owner at
 releases pixel nodes, bitmap and label before deleting the list owner.
 The font module now publishes/clears the explicit pixel_owner pointer and
 initializes the named label storage. Evidence: 40ec70.json and 40ed40.json.
+Batch 16: original 440CA0 transfers CStringLayout face, RGB low bytes,
+font height/weight, edge flag, and character/line spacing into the font
+renderer before texture setup. The font configuration now reads these
+named layout members and preserves the low-byte color behavior and call
+order. Evidence: 440ca0.json.
