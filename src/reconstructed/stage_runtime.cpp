@@ -13,7 +13,6 @@
 #include "kinoko/legacy_memory.hpp"
 
 extern "C" {
-extern int32_t g603;
 extern char *g644;
 }
 
@@ -23,6 +22,10 @@ using namespace kinoko::stage;
 using kinoko::act::RuntimeRecord;
 using kinoko::native::RecordView;
 using RuntimeView = RecordView<RuntimeRecord>;
+
+// The list's end sentinel is the list allocation itself (465F70/466050).
+// Keep the original integer return on empty or skipped passes at this boundary.
+int32_t stage_list_identity() { return address(kinoko_stage_list_end()); }
 
 KinokoActRuntime *stage_runtime(const KinokoStageNode *node) {
     const auto owner = kinoko_stage_list_value(node);
@@ -41,15 +44,15 @@ extern "C" int32_t kinoko_stages_update() {
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 8) {
         retdec_trace("466050:entry");
-        retdec_trace_i32("466050:g603", g603);
+        retdec_trace_i32("466050:g603", stage_list_identity());
         retdec_trace_i32("466050:first", address(node));
         retdec_trace_i32("466050:update-mask", kinoko_game_masks.update);
     }
     if (node == kinoko_stage_list_end()) {
         if (trace_index <= 8) retdec_trace("466050:empty");
-        return g603;
+        return stage_list_identity();
     }
-    int32_t result = g603;
+    int32_t result = stage_list_identity();
     while (node != kinoko_stage_list_end()) {
         const auto resource = stage_runtime(node);
         if (resource) {
@@ -80,11 +83,11 @@ extern "C" int32_t kinoko_stages_prepare_draw() {
     static volatile LONG trace_count;
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index == 1) {
-        retdec_trace_i32("render:g603", g603);
+        retdec_trace_i32("render:g603", stage_list_identity());
         retdec_trace_i32("render:g603-first", address(kinoko_stage_list_first()));
     }
-    if (!g603) return 0;
-    int32_t result = g603;
+    if (!stage_list_identity()) return 0;
+    int32_t result = stage_list_identity();
     for (auto node = kinoko_stage_list_first(); node != kinoko_stage_list_end(); node = kinoko_stage_list_next(node)) {
         const auto resource = stage_runtime(node);
         result = resource ? kinoko_act_prepare_draw(address(resource)) : 0;
@@ -97,11 +100,11 @@ extern "C" int32_t kinoko_stages_draw() {
     static volatile LONG trace_count;
     const auto trace_index = InterlockedIncrement(&trace_count);
     if (trace_index == 1) {
-        retdec_trace_i32("render:g603-float", g603);
+        retdec_trace_i32("render:g603-float", stage_list_identity());
         retdec_trace_i32("render:g603-float-first", address(kinoko_stage_list_first()));
     }
-    if (!g603) return 0;
-    int32_t result = g603, index = 0;
+    if (!stage_list_identity()) return 0;
+    int32_t result = stage_list_identity(), index = 0;
     for (auto node = kinoko_stage_list_first(); node != kinoko_stage_list_end(); node = kinoko_stage_list_next(node), ++index) {
         const auto resource = stage_runtime(node);
         if (!resource) continue;
@@ -156,7 +159,7 @@ extern "C" KinokoStageOwner *kinoko_stage_load(const char *file_name) {
         const auto result = retdec_root_table_construct_this(address(resource), address(g644), 0);
         retdec_trace_i32("466100:450e30-result", result);
     }
-    if (g603) {
+    if (stage_list_identity()) {
         const auto node = kinoko_stage_list_append(allocation);
         if (trace_index <= 8) retdec_trace_i32("466100:list-node", address(node));
     }

@@ -338,12 +338,11 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,v
 }
 
 
-extern "C" { extern unsigned char g23; }
 extern "C" int32_t __fastcall kinoko_delete_layout_sprite(int32_t sprite,void*,int32_t flags) {
     const int32_t layout=sprite-4;
     const auto destroy=[](int32_t object) {
         field<int32_t>(object)=address(kinoko_act_host_symbols()->layout_vtable);
-        field<int32_t>(object+4)=address(&g23);
+        field<int32_t>(object+4)=address(kinoko_act_host_symbols()->color_vtable);
     };
     // Original 42E6E0 -> 42D1C0: secondary this adjustment and array cookie.
     // C2DLayout has no owned nested buffers; its texture handle is borrowed.

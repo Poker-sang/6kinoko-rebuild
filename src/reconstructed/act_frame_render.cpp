@@ -194,7 +194,7 @@ extern "C" int32_t kinoko_act_draw(int32_t self, float x, float y) {
             retdec_trace_i32("4525d0:live-x", float_bits(draw_x));
             retdec_trace_i32("4525d0:live-y", float_bits(draw_y));
             retdec_trace_i32("4525d0:live-layout", layout);
-            retdec_trace_i32("4525d0:live-texture", load<Address>(pointer(layout))==address(g350)?0:RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
+            retdec_trace_i32("4525d0:live-texture", load<Address>(pointer(layout))==address(kinoko_string_layout_methods())?0:RecordView<DrawLayoutPrefix>(pointer(layout)).get(&DrawLayoutPrefix::texture));
             retdec_trace_i32("4525d0:live-draw-result", status);
         }
         if (status < 0) result = status;
