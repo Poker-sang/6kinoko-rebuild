@@ -6630,57 +6630,6 @@ int32_t function_451620(int32_t this_ptr) {
 // original vtable entry as a small calling-convention bridge and put the
 // recovered body in a normal C helper so the object and both virtual calls
 // remain explicit and reviewable.
-int32_t function_457a10_impl(int32_t this_ptr, int32_t argument) {
-    int32_t begin;
-    int32_t end;
-    int32_t result = 0;
-
-    if (this_ptr == 0) {
-        return 0;
-    }
-    begin = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 156);
-    end = *(int32_t *)(uintptr_t)(uint32_t)(this_ptr + 160);
-    if (end - begin < 4) {
-        return 0;
-    }
-
-    for (uint32_t index = 0; index < (uint32_t)((end - begin) >> 2);
-         ++index) {
-        int32_t entry = *(int32_t *)(uintptr_t)(uint32_t)(begin + 4 * index);
-        if (entry != 0) {
-            int32_t manager_object = (int32_t)(intptr_t)&g953;
-            int32_t *manager_vtable = *(int32_t **)(uintptr_t)
-                (uint32_t)manager_object;
-            int32_t handle = 0;
-
-            if (manager_vtable != NULL && manager_vtable[3] != 0) {
-                handle = retdec_call_thiscall2_result(
-                    (void *)(uintptr_t)(uint32_t)manager_object,
-                    (void *)(uintptr_t)(uint32_t)manager_vtable[3],
-                    entry, argument);
-            }
-
-            /* The original assumes a successful handle lookup.  A failed
-               lookup is possible while the rebuilt runtime is degraded, so
-               skip it instead of dereferencing the null fallback RetDec
-               emitted for this path. */
-            if (handle != 0) {
-                int32_t object = *(int32_t *)(uintptr_t)(uint32_t)handle;
-                if (object != 0) {
-                    int32_t *object_vtable = *(int32_t **)(uintptr_t)
-                        (uint32_t)object;
-                    if (object_vtable != NULL && object_vtable[0] != 0) {
-                        result = retdec_call_thiscall1_result(
-                            (void *)(uintptr_t)(uint32_t)object,
-                            (void *)(uintptr_t)(uint32_t)object_vtable[0],
-                            argument);
-                    }
-                }
-            }
-        }
-    }
-    return result;
-}
 
 
 // Address range: 0x457a80 - 0x457ab7
@@ -7637,7 +7586,7 @@ int32_t function_470890(void) {
 
 
 // Address range: 0x470d00 - 0x470de9
-int32_t function_470d00(int32_t a1) {
+static int32_t kinoko_install_root_integer_delegate(int32_t a1) {
     int32_t v2[3];
     int32_t v3[3];
     int32_t setdelegate_result;
@@ -7671,6 +7620,11 @@ int32_t function_470d00(int32_t a1) {
     retdec_trace_i32("470d00:exit-g582", (*kinoko_native_binding_type(0)));
     return result;
 }
+
+int32_t function_470d00(int32_t object) {
+    return kinoko_install_root_integer_delegate(object);
+}
+
 
 // Address range: 0x470df0 - 0x470ed8
 /* function_470df0 is implemented in native C++ (squirrel_native_calls.cpp). */
@@ -7814,40 +7768,28 @@ int32_t retdec_compile_file_native(int32_t vm) {
 /* function_472140 is implemented in native C++ (squirrel_native_calls.cpp). */
 
 // Address range: 0x4721a0 - 0x47223b
-int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4) {
-    int32_t v1 = (int32_t)a1;
-    int32_t v2 = (int32_t)(intptr_t)(kinoko_sqplus_create_variable((void *)(intptr_t)(v1), (const char *)(intptr_t)((int32_t)a3))); // 0x4721b0
-    retdec_trace_i32("4721a0:userdata", v2);
+// The five-word SqPlus variable record is initialized before it is published
+// in the root table.  Both address entries differ only by the value/flags.
+static int32_t kinoko_bind_root_integer(int32_t *object, int32_t value,
+                                        const char *name, int32_t flags) {
+    int32_t *slot = (int32_t *)kinoko_sqplus_create_variable(object, name);
+    int32_t metadata[5];
     int32_t *type = kinoko_native_binding_type(0);
-    int32_t v3[5];
-    retdec_trace_i32("4721a0:g582-before", (*kinoko_native_binding_type(0)));
-    kinoko_sqplus_initialize_variable(v3, (int32_t)a2, 0, 0, type, 4, a4);
-    retdec_trace_i32("4721a0:g582-after", (*kinoko_native_binding_type(0)));
-    retdec_trace_i32("4721a0:userdata-after-parse", v2);
-    retdec_trace_i32("4721a0:parsed-type", v3[0]);
-    *(int32_t *)v2 = v3[0];
-    *(int32_t *)(v2 + 4) = v3[1];
-    *(int32_t *)(v2 + 8) = v3[2];
-    *(int32_t *)(v2 + 12) = v3[3];
-    *(int32_t *)(v2 + 16) = v3[4];
-    return function_470d00(v1);
+    retdec_trace_i32("root-integer:g582-before", *type);
+    kinoko_sqplus_initialize_variable(metadata, value, 0, 0, type, 4, flags);
+    retdec_trace_i32("root-integer:g582-after", *type);
+    // The slot is a 20-byte metadata record, not a Squirrel object handle.
+    memcpy(slot, metadata, sizeof(metadata));
+    return kinoko_install_root_integer_delegate((int32_t)(intptr_t)object);
+}
+
+int32_t function_4721a0(int32_t *object, int32_t *value, char *name, int32_t flags) {
+    return kinoko_bind_root_integer(object, (int32_t)(intptr_t)value, name, flags);
 }
 
 // Address range: 0x472240 - 0x4722d9
-int32_t function_472240(int32_t * a1, int32_t a2, char * a3) {
-    int32_t v1 = (int32_t)a1;
-    int32_t v2 = (int32_t)(intptr_t)(kinoko_sqplus_create_variable((void *)(intptr_t)(v1), (const char *)(intptr_t)((int32_t)a3))); // 0x472250
-    int32_t *type = kinoko_native_binding_type(0);
-    int32_t v3[5];
-    retdec_trace_i32("472240:g582-before", (*kinoko_native_binding_type(0)));
-    kinoko_sqplus_initialize_variable(v3, a2, 0, 0, type, 4, 2);
-    retdec_trace_i32("472240:g582-after", (*kinoko_native_binding_type(0)));
-    *(int32_t *)v2 = v3[0];
-    *(int32_t *)(v2 + 4) = v3[1];
-    *(int32_t *)(v2 + 8) = v3[2];
-    *(int32_t *)(v2 + 12) = v3[3];
-    *(int32_t *)(v2 + 16) = v3[4];
-    return function_470d00(v1);
+int32_t function_472240(int32_t *object, int32_t value, char *name) {
+    return kinoko_bind_root_integer(object, value, name, 2);
 }
 
 // Address range: 0x4722e0 - 0x47281e

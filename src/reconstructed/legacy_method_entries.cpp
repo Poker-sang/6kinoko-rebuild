@@ -5,6 +5,8 @@
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/legacy_memory.hpp"
+#include "kinoko/legacy_abi.h"
+#include <cstddef>
 #include <cstring>
 
 static_assert(sizeof(void*) == sizeof(int32_t), "Original Win32 object addresses");
@@ -20,7 +22,7 @@ int32_t retdec_begin_stage_this(int32_t receiver, int32_t stage);
 int32_t retdec_root_table_construct_this(int32_t receiver, int32_t vm, int32_t output);
 int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y, int32_t width, int32_t height,
     int32_t resource, int32_t source_x, int32_t source_y, int32_t blend, float alpha);
-int32_t function_457a10_impl(int32_t receiver, int32_t argument);
+extern int32_t g953;
 
 
 
@@ -79,10 +81,46 @@ extern "C" int32_t __fastcall kinoko_method_act_bitblt(int32_t receiver, void* /
     return retdec_act_bitblt_this(receiver, x, y, width, height, resource, source_x, source_y, blend, alpha);
 }
 
+// IDA 457A10: the child pointer range is stored at +156/+160. The manager
+// at 51BAA0 resolves each child; the resolved object's first virtual method
+// receives the incoming argument. A null lookup can occur in the rebuilt
+// runtime, so retain the established guard at that boundary.
+namespace {
+struct MeshChildRange {
+    std::byte preceding[156];
+    int32_t* begin;
+    int32_t* end;
+};
+static_assert(offsetof(MeshChildRange, begin) == 156);
+static_assert(offsetof(MeshChildRange, end) == 160);
+int32_t update_mesh_children(MeshChildRange* node, int32_t argument) {
+    if (!node || !node->begin || !node->end || node->end - node->begin < 1)
+        return 0;
+    int32_t result = 0;
+    for (auto* item = node->begin; item != node->end; ++item) {
+        if (!*item) continue;
+        auto* manager = &g953;
+        auto* methods = *reinterpret_cast<int32_t**>(manager);
+        if (!methods || !methods[3]) continue;
+        const auto handle = retdec_call_thiscall2_result(manager,
+            reinterpret_cast<void*>(methods[3]), *item, argument);
+        if (!handle) continue;
+        auto* object = *kinoko::legacy::pointer<int32_t*>(handle);
+        if (!object) continue;
+        auto* object_methods = *reinterpret_cast<int32_t**>(object);
+        if (object_methods && object_methods[0]) {
+            result = retdec_call_thiscall1_result(object,
+                reinterpret_cast<void*>(object_methods[0]), argument);
+        }
+    }
+    return result;
+}
+} // namespace
+
 // function_457a10
 extern "C" int32_t __fastcall kinoko_method_update_children(int32_t receiver, void* /* unused_edx */,
     int32_t argument) {
-    return function_457a10_impl(receiver, argument);
+    return update_mesh_children(reinterpret_cast<MeshChildRange*>(receiver), argument);
 }
 
 
