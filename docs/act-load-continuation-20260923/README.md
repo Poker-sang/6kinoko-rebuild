@@ -47,3 +47,42 @@ the existing record plus active archive reader. Both native call sites now
 pass actual pointers, while old integer ABI entries delegate to them.
 Map record parsing, parent association before resource count, and the
 separate post-parse resource pass retain their prior order.
+
+## Batches 32每51 (2026-09-23)
+
+The user confirmed the batch-31 game build behaved normally before this
+sequence. That confirmation is user validation, not an agent-run smoke test.
+IDA MCP session `a86383bd` was used to check the original ACT entry points,
+including 41F800 (layer loader), 428150 (document loader) and 42B4A0
+(C2DLayout constructor). These batches keep the recovered Squirrel 2.2.2
+implementation as auxiliary context; no VM opcode implementation was changed.
+
+- 32每36: describe the CActScript payload at +92/+96/+100/+101, migrate load,
+  destroy, read, write and initialization to named fields. Read-failure and
+  write-state restoration still follow their prior behavior.
+- 37每38: initialize the C2DLayout's embedded sprite, scale and color through
+  its verified layout record, then retain typed factory ownership until return.
+- 39每41: describe the 32-byte map cell's runtime index/enabled/opacity, map
+  layout factory fields and the native-buffer-backed record span.
+- 42每43: describe the CActKey owned layout and script name, then carry the
+  decoded layout as a pointer until it is installed into the key.
+- 44每47: use typed key objects, named key/timeline list counts and layer
+  identity fields; keep new layer ownership typed until parent publication.
+- 48每51: prepare and publish document layer/resource arrays through their
+  named spans, preserving the original parent-resolution and resource-index
+  ordering before the later resource loading pass.
+
+Each numbered source commit preceded a separate quiet Win32 Release build,
+DAT staging and SHA256 verification, followed by a numbered handoff commit
+pushed to the PR branch. The initial batch-35 and batch-38 builds failed on
+C++ type checks; their artifacts were retained and corrected versions built
+in fresh directories. No game, CTest or contract executable was run by the
+agent. The last EXE is `runtime-builds/act-document-resource-publish-r51-quiet/kinoko_retdec_rebuild.exe`
+(source commit `f8142ac`, SHA256
+`9FD2D3F9CD2B158CC24A29E2B98EEEECF8810D1EC13A89B12202601AAA19B87A`).
+
+The post-batch lexical audit of 154 first-party files finds 1,815 functions:
+1,308 named structured candidates, 175 named mixed legacy, 176 thin bridges,
+and 156 address-named implementations. This is only a readability inventory;
+it does not prove runtime equivalence. The remaining clusters are largely
+in the decompiled host, Squirrel host/bindings, audio and stage/input paths.
