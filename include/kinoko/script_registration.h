@@ -1,8 +1,20 @@
 #pragma once
 #include <stdint.h>
+#include "kinoko/input_manager.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Borrowed identities in the original SqPlus host, filled by the C bridge. */
+typedef struct KinokoInputScriptSymbols {
+    const void *object_vtable;
+    int32_t null_type, null_data;
+    const void *input_class;
+    void *root;
+    void *vm;
+    uint32_t manager_storage_bytes;
+} KinokoInputScriptSymbols;
+const KinokoInputScriptSymbols *kinoko_input_script_symbols(void);
+int32_t kinoko_input_initialize_script_instance(KinokoInputManager *manager);
 int32_t *kinoko_input_binding_type(void);
 int32_t *kinoko_camera_binding_type(void);
 int32_t *kinoko_map_binding_type(void);

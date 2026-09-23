@@ -1845,7 +1845,6 @@ int32_t function_46a210(int32_t * a1);
 
 int32_t kinoko_register_input_class(void);
 
-static int32_t function_46e6f0_this(int32_t this_ptr);
 
 
 
@@ -3046,7 +3045,6 @@ int32_t D3DXMatrixTranslation(int32_t * a1, float80_t a2, float80_t a3, float80_
    containers in stable storage rather than passing an uninitialised ECX. */
 __declspec(align(8)) static unsigned char g_retdec_input_manager_state[0x600];
 static int g_retdec_runtime_initialized = 0;
-static int g_retdec_input_manager_initialized = 0;
 static int g_retdec_map_manager_initialized = 0;
 
 
@@ -6987,50 +6985,7 @@ int32_t function_46a210(int32_t * a1) {
 
 
 
-static void retdec_initialize_input_manager_state(KinokoInputManager *manager) {
-    if (g_retdec_input_manager_initialized != 0 || manager == NULL) return;
-    /* Keep the host's full 0x600-byte allocation, including its tail padding. */
-    memset(manager, 0, sizeof(g_retdec_input_manager_state));
-    /* Explicit boundary for the existing SqPlus base object layout. */
-    const int32_t script_object[3] = { (int32_t)(intptr_t)&g16, g483, g484 };
-    memcpy(manager->script_object, script_object, sizeof(script_object));
-    kinoko_input_manager_construct_devices(manager, (uint32_t)kinoko_input_snapshot.controller_count);
-    g_retdec_input_manager_initialized = 1;
-}
-
-/* The original is CInputManager::Init and receives the global object at
-   0x513CC0 in ECX.  RetDec emitted the body with that receiver missing. */
-static int32_t kinoko_initialize_input_script_instance(KinokoInputManager *manager) {
-    int32_t this_ptr = (int32_t)(intptr_t)manager;
-    int32_t input_instance[3] = { 0, 0, 0 };
-
-    if (this_ptr == 0)
-        return 0;
-    retdec_initialize_input_manager_state(manager);
-    retdec_trace("46e6f0:begin");
-    retdec_trace_i32("46e6f0:this", this_ptr);
-    retdec_trace_i32("46e6f0:g644", (int32_t)(intptr_t)g644);
-    retdec_trace_i32("46e6f0:g629-type", g629[0]);
-    retdec_trace_i32("46e6f0:g629-data", g629[1]);
-
-    /* The input class constructor stores the native class object in g629.
-       GetInstanceUp converts it to the CInputManager instance value used by
-       both the native callbacks and the global Squirrel slot. */
-    kinoko_sqplus_object_new_instance((void *)(intptr_t)((int32_t)(intptr_t)input_instance), (const void *)(intptr_t)((int32_t)(intptr_t)&g629));
-    retdec_trace_i32("46e6f0:instance-type", input_instance[1]);
-    retdec_trace_i32("46e6f0:instance-data", input_instance[2]);
-    kinoko_sqplus_object_assign((void *)(intptr_t)(this_ptr), (const void *)(intptr_t)((int32_t)(intptr_t)input_instance));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_instance)));
-
-    kinoko_sqplus_object_set_instance((void *)(intptr_t)(this_ptr), (void *)(intptr_t)(this_ptr));
-    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)((int32_t)(intptr_t)&g722), "input", (const void *)(intptr_t)(this_ptr));
-    retdec_trace("46e6f0:done");
-    return 1;
-}
-
-static int32_t function_46e6f0_this(int32_t receiver) {
-    return kinoko_initialize_input_script_instance((KinokoInputManager *)(intptr_t)receiver);
-}
+/* 46E6F0 input instance initialization: squirrel/input_registration.cpp. */
 
 // Address range: 0x46eda0 - 0x46eda6
 // From class:    .?AU?$ClassType@VInput@@@SqPlus@@
@@ -11196,6 +11151,18 @@ static int32_t kinoko_input_copy_abi(int32_t destination, int32_t source) {
     return (int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)(intptr_t)destination,
         (const KinokoInputManager*)(intptr_t)source);
 }
+const KinokoInputScriptSymbols *kinoko_input_script_symbols(void) {
+    static KinokoInputScriptSymbols symbols;
+    symbols.object_vtable = &g16;
+    symbols.null_type = g483;
+    symbols.null_data = g484;
+    symbols.input_class = g629;
+    symbols.root = g722;
+    symbols.vm = g644;
+    symbols.manager_storage_bytes = sizeof(g_retdec_input_manager_state);
+    return &symbols;
+}
+
 int32_t *kinoko_input_binding_type(void) {
     return kinoko_sqplus_game_type(2, kinoko_input_copy_abi);
 }
@@ -11265,7 +11232,7 @@ void kinoko_game_register_scripts(void) {
     retdec_trace("469640:sqrat-done");
 }
 int32_t kinoko_game_initialize_input(KinokoInputManager *input) {
-    return function_46e6f0_this((int32_t)(intptr_t)input);
+    return kinoko_input_initialize_script_instance(input);
 }
 int32_t kinoko_game_update_input(KinokoInputManager *input) {
     return kinoko_input_manager_update(input);
