@@ -30,6 +30,13 @@ retdec_mcd_texture *retdec_mcd_find_texture(retdec_mcd_data *data,uint32_t id) {
     return nullptr;
 }
 void retdec_trace_i32(const char*,int32_t) {}
+const KinokoActHostSymbols *kinoko_act_host_symbols() {
+    static KinokoActHostSymbols symbols{};
+    symbols.map_layout_vtable = &g327;
+    symbols.map_view_vtable = &g328;
+    symbols.color_vtable = &g23;
+    return &symbols;
+}
 int32_t kinoko_render_set_depth(int32_t,int32_t) { return 0; }
 int32_t kinoko_render_set_alpha(int32_t,int32_t) { return 0; }
 int32_t kinoko_render_set_blend(int32_t) { return 0; }
