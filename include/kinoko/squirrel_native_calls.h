@@ -19,10 +19,15 @@ int32_t function_4552e0(int32_t vm);
 int32_t function_4555a0(int32_t vm);
 
 /* Explicit receiver + cdecl target (not the x86 thiscall method family). */
+int32_t kinoko_native_string_callback_entry(int32_t self, int32_t target, int32_t vm, int32_t first);
 int32_t function_46b490(int32_t self, int32_t target, int32_t vm, int32_t first);
+int32_t kinoko_native_three_integer_callback_entry(int32_t self, int32_t target, int32_t vm, int32_t first);
 int32_t function_46b500(int32_t self, int32_t target, int32_t vm, int32_t first);
+int32_t kinoko_native_bool_two_integer_callback_entry(int32_t self, int32_t target, int32_t vm, int32_t first);
 int32_t function_46b610(int32_t self, int32_t target, int32_t vm, int32_t first);
+int32_t kinoko_native_integer_two_integer_callback_entry(int32_t self, int32_t target, int32_t vm, int32_t first);
 int32_t function_46b6f0(int32_t self, int32_t target, int32_t vm, int32_t first);
+void kinoko_native_capture_receiver_pair(int32_t vm, int32_t pair[2]);
 void function_46c6b0_pair(int32_t vm, int32_t pair[2]);
 int32_t kinoko_input_save_entry(int32_t vm);
 int32_t kinoko_input_assign_entry(int32_t vm);
