@@ -1,6 +1,7 @@
 #include "kinoko/act_document_association.hpp"
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_layout_records.hpp"
+#include "kinoko/act_map_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_layout3d_io.h"
 #include "kinoko/act_layout2d_io.h"
@@ -234,9 +235,10 @@ int32_t retdec_act_read_map_records(int32_t layout,
             kinoko_native_buffer_destroy(layout+264);
             return 0;
         }
-        *(uint32_t *)(void *)(record + 0x14) = index;
-        *(uint8_t *)(void *)(record + 0x18) = 1;
-        *(float *)(void *)(record + 0x1c) = 1.0f;
+        kinoko::act::MapCellView cell(record);
+        cell.set(&kinoko::act::MapCellRecord::index, index);
+        cell.set(&kinoko::act::MapCellRecord::enabled, uint8_t{1});
+        cell.set(&kinoko::act::MapCellRecord::opacity, 1.0f);
     }
     field<int32_t>(layout + 264) =
         address(records);
