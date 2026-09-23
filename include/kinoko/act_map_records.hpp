@@ -20,7 +20,10 @@ struct MapLayoutRecord {
     const void *methods, *view_methods;
     std::array<uint8_t, 232> unknown8;
     int32_t x_limit, y_limit;
-    std::array<uint8_t, 72> unknown248;
+    std::array<uint8_t, 16> unknown248;
+    MapCellRecord *records_begin, *records_end;
+    void *records_owner;
+    std::array<uint8_t, 44> unknown276;
     float alpha, secondary_alpha;
     int32_t blend;
     std::array<uint8_t, 120> unknown332;
@@ -30,6 +33,8 @@ struct MapLayoutRecord {
 using MapLayoutView = kinoko::native::RecordView<MapLayoutRecord>;
 static_assert(sizeof(MapLayoutRecord) == 464);
 static_assert(offsetof(MapLayoutRecord, x_limit) == 240);
+static_assert(offsetof(MapLayoutRecord, records_begin) == 264);
+static_assert(offsetof(MapLayoutRecord, records_owner) == 272);
 static_assert(offsetof(MapLayoutRecord, alpha) == 320);
 static_assert(offsetof(MapLayoutRecord, resource_id) == 452);
 using MapCellView = kinoko::native::RecordView<MapCellRecord>;

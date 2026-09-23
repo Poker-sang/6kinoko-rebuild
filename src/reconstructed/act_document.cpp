@@ -200,7 +200,10 @@ int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 
 void retdec_act_free_map_records(int32_t layout)
 {
-    if(layout) kinoko_native_buffer_destroy(layout+264);
+    if (layout) {
+        kinoko::act::MapLayoutView record(pointer<void>(layout));
+        kinoko_native_buffer_destroy(address(record.bytes(&kinoko::act::MapLayoutRecord::records_begin)));
+    }
 }
 
 int32_t retdec_act_read_map_records(int32_t layout,
@@ -217,21 +220,24 @@ int32_t retdec_act_read_map_records(int32_t layout,
         !retdec_act_read_u32(reader_ptr, &serialized_size) ||
         count > 0x10000u || serialized_size > 0x20u)
         return 0;
-    kinoko_native_buffer_destroy(layout+264);
+    kinoko::act::MapLayoutView map(pointer<void>(layout));
+    const auto records_slot = address(map.bytes(&kinoko::act::MapLayoutRecord::records_begin));
+    kinoko_native_buffer_destroy(records_slot);
     if (count == 0)
         return 1;
 
     if (serialized_size > 0x20u ||
         count > UINT32_MAX / 0x20u)
         return 0;
-    if(!kinoko_native_buffer_resize(layout+264,count*0x20u)) return 0;
-    records=pointer<unsigned char>(field<int32_t>(layout+264));
+    if(!kinoko_native_buffer_resize(records_slot,count*sizeof(kinoko::act::MapCellRecord))) return 0;
+    records=static_cast<unsigned char *>(map.get(&kinoko::act::MapLayoutRecord::records_begin) ?
+        static_cast<void *>(map.get(&kinoko::act::MapLayoutRecord::records_begin)) : nullptr);
     read_size = serialized_size;
     for (index = 0; index < count; ++index) {
         unsigned char *record = records + (size_t)index * 0x20u;
         if (read_size != 0 &&
             !retdec_reader_read_exact(reader_ptr, record, read_size)) {
-            kinoko_native_buffer_destroy(layout+264);
+            kinoko_native_buffer_destroy(records_slot);
             return 0;
         }
         kinoko::act::MapCellView cell(record);
@@ -239,10 +245,10 @@ int32_t retdec_act_read_map_records(int32_t layout,
         cell.set(&kinoko::act::MapCellRecord::enabled, uint8_t{1});
         cell.set(&kinoko::act::MapCellRecord::opacity, 1.0f);
     }
-    field<int32_t>(layout + 264) =
-        address(records);
-    field<int32_t>(layout + 268) =
-        address((records + (size_t)count * 0x20u));
+    map.set(&kinoko::act::MapLayoutRecord::records_begin,
+        reinterpret_cast<kinoko::act::MapCellRecord *>(records));
+    map.set(&kinoko::act::MapLayoutRecord::records_end,
+        reinterpret_cast<kinoko::act::MapCellRecord *>(records + size_t{count} * sizeof(kinoko::act::MapCellRecord)));
 
     retdec_trace_i32("act:map-record-count", (int32_t)count);
     retdec_trace_i32("act:map-record-size", (int32_t)serialized_size);
