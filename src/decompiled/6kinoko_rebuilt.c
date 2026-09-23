@@ -1479,36 +1479,8 @@ int32_t _3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__4
 
 void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1);
 
-
-int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height);
-int32_t function_4013d0(void);
-int32_t function_4014d0(void);
-int32_t function_401600(void);
-
-int32_t function_401760(void);
-int32_t function_401790(void);
-int32_t function_4017b0(void);
-int32_t function_401820(void);
 int32_t function_401850(void);
 
-int32_t function_401ae0(void);
-
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_4026e0(int32_t a1);
-int32_t function_402770(int32_t result);
-int32_t function_4028d0(int32_t a1, int32_t a2);
-
-int32_t function_402970(int32_t a1);
 void* kinoko_script_initialize_root(void);
 int32_t kinoko_script_close_vm(void);
 
@@ -1518,15 +1490,6 @@ void* kinoko_script_root(void);
 int32_t kinoko_script_load_file(const char* path, const void* environment);
 int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 
-
-
-
-
-
-
-
-
-int32_t function_4045c0(int32_t a1, int32_t a2);
 
 
 
@@ -1576,55 +1539,6 @@ void retdec_poll_fallback_keyboard(void);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_412210(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
-int32_t function_412350(int32_t a1, int32_t a2, uint32_t a3);
-int32_t function_4123a0(int32_t a1);
-int32_t function_4123c0(int32_t a1);
-
-
-
-
 /* 412CA0: kinoko_ime_initialize is implemented in native C++. */
 
 
@@ -1639,24 +1553,6 @@ int32_t function_415fd0(int32_t a1, int32_t a2);
 
 
 
-int32_t function_4173c0(void);
-
-int32_t function_417a00(int32_t a1);
-
-
-
-
-
-
-
-
-
-
-int32_t function_4190e0(int32_t a1, int32_t a2);
-
-
-
-
 
 int32_t function_41e390(int32_t a1);
 
@@ -1665,44 +1561,8 @@ int32_t function_41eff0(int32_t a1);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_424320(int32_t a1);
-
-
 int32_t function_4252e0(void);
 
-int32_t function_4258a0(void);
-
-
-
-int32_t function_426b30(void);
-
-
-
-
-
-
-
-
-
-int32_t function_428f80(void);
-
-
-
-
-
-
-int32_t function_4298d0(void);
 
 
 
@@ -1715,9 +1575,6 @@ int32_t function_42b470(void);
 
 int32_t function_42b6d0(int32_t a1);
 
-
-
-int32_t function_42c890(void);
 
 
 
@@ -1737,8 +1594,6 @@ int32_t function_42e6f0(void);
 int32_t function_42f350(int32_t a1);
 
 
-int32_t function_430540(void);
-
 
 
 
@@ -1753,34 +1608,9 @@ int32_t function_430540(void);
 
 
 int32_t function_433720(void);
-float80_t function_433730(void);
-float80_t function_433760(void);
-int32_t function_433770(float32_t a1);
+
 int32_t function_433c90(int32_t a1);
 
-
-
-
-
-int32_t function_436710(void);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_43ade0(int32_t a1);
 
 
 
@@ -1788,7 +1618,6 @@ int32_t function_43ade0(int32_t a1);
 
 /* 43C860: kinoko_act_read_layout3d_properties is implemented in native C++. */
 
-int32_t function_43cec0(void);
 
 
 
@@ -1803,7 +1632,6 @@ int32_t function_43e100(void);
 
 /* 4410C0: kinoko_string_rebuild_queue is implemented in native C++. */
 
-int32_t function_441660(void);
 
 
 
@@ -1828,7 +1656,6 @@ int32_t function_4461c0(void);
 
 int32_t function_446520(int32_t a1);
 
-int32_t function_447340(void);
 
 
 
@@ -1841,29 +1668,6 @@ int32_t function_449310(void);
 
 int32_t function_4495a0(int32_t a1);
 
-
-int32_t function_449f10(void);
-
-
-
-
-
-
-
-
-
-
-
-int32_t function_44ce70(void);
-
-
-
-
-
-
-
-
-int32_t function_44fd20(void);
 int32_t function_44fd30(char a1);
 
 
@@ -1878,8 +1682,6 @@ int32_t retdec_root_table_construct_this(int32_t resource_ptr,
                                                  int32_t vm,
                                                  int32_t output_ptr);
 
-
-int32_t function_451620(int32_t this_ptr);
 
 
 
@@ -2024,8 +1826,6 @@ int32_t function_466890(int32_t a1);
 
 int32_t function_4669d0(void);
 
-
-int32_t function_468620(void);
 static int32_t function_468620_this(int32_t this_ptr);
 
 
@@ -2061,7 +1861,7 @@ int32_t function_46f200(int32_t * a1, int32_t a2, int32_t a3, int32_t a4);
 
 
 int32_t function_46fac0(void);
-int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment);
+
 int32_t function_470030(int32_t a1);
 
 
@@ -2069,8 +1869,6 @@ int32_t function_470030(int32_t a1);
 
 int32_t function_470890(void);
 
-
-int32_t function_470d00(int32_t a1);
 int32_t function_470df0(int32_t a1, int32_t a2);
 int32_t function_470ee0(int32_t a1);
 
@@ -2146,16 +1944,6 @@ int32_t function_4ab170(int32_t a1, int32_t a2, int32_t a3, int32_t a4);
 
 
 
-float80_t function_4ad7f2(void);
-
-
-
-
-
-
-
-
-
 int32_t kinoko_register_stage_list_cleanup(void);
 
 int32_t kinoko_register_render_queue_cleanup(void);
@@ -2166,7 +1954,7 @@ int32_t kinoko_register_sound_tree_cleanup(void);
 
 int32_t function_4d47f0(void);
 int32_t function_4d4860(void);
-int32_t function_4d4930(void);
+
 
 // --------------------- Global Variables ---------------------
 
@@ -3337,20 +3125,16 @@ static void retdec_initialize_runtime_objects(void)
 // From class:    .?AVCCriticalSection@Common@@
 // Type:          constructor
 // Address range: 0x4011b0 - 0x4013c5
-int32_t function_4011b0(HWND hwnd, int32_t width, int32_t height) {
-    return kinoko_graphics_create(hwnd,width,height);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4013d0 - 0x4014c3
-int32_t function_4013d0(void) { return kinoko_graphics_reset(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4014d0 - 0x4015fb
-int32_t function_4014d0(void) { return kinoko_graphics_toggle_window(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401600 - 0x401652
-int32_t function_401600(void) {
-    return kinoko_graphics_release();
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401660 - 0x4016d7
 
@@ -3360,17 +3144,17 @@ int32_t function_401600(void) {
 
 
 // Address range: 0x401760 - 0x401790
-int32_t function_401760(void) { return kinoko_graphics_begin_scene(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401790 - 0x4017aa
-int32_t function_401790(void) { return kinoko_graphics_end_scene(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x4017b0 - 0x401814
-int32_t function_4017b0(void) { return kinoko_graphics_present(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401820 - 0x401843
-int32_t function_401820(void) { return kinoko_graphics_clear(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401850 - 0x401a2f
 // From class:    .?AVCRenderer@@
@@ -3378,7 +3162,7 @@ int32_t function_401820(void) { return kinoko_graphics_clear(); }
 int32_t function_401850(void) {
     return (int32_t)(intptr_t)kinoko_renderer_construct(&g184);
 }
-int32_t function_401ae0(void) { return kinoko_renderer_initialize(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x401ba0 - 0x401d96
 // From class:    .?AVCRenderer@@
@@ -3432,21 +3216,17 @@ int32_t function_401ae0(void) { return kinoko_renderer_initialize(); }
 
 
 // Address range: 0x4026e0 - 0x402768
-int32_t function_4026e0(int32_t a1) { return kinoko_render_set_filter(a1); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x402770 - 0x402873
-int32_t function_402770(int32_t result) {
-    return kinoko_render_set_blend(result);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4028d0 - 0x40292f
-int32_t function_4028d0(int32_t a1, int32_t a2) {
-    return kinoko_render_set_alpha(a1,a2);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x402970 - 0x4029af
-int32_t function_402970(int32_t a1) { return kinoko_render_set_cull(a1); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4029b0 - 0x4029cc
 
@@ -3517,12 +3297,7 @@ int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data
 
 
 // Address range: 0x4045c0 - 0x40460b
-int32_t function_4045c0(int32_t a1, int32_t a2) {
-    const float *first = (const float *)(intptr_t)a1;
-    const float *second = (const float *)(intptr_t)a2;
-    return second[2] >= first[0] && second[3] >= first[1] &&
-           second[0] <= first[2] && second[1] <= first[3];
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 
@@ -4193,36 +3968,19 @@ int32_t retdec_load_act_texture(const char *texture_name)
 
 
 // Address range: 0x412210 - 0x412237
-int32_t function_412210(int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
-    // 0x412210
-    return *(int32_t *)(*(int32_t *)*(int32_t *)a4 + 16);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x412240 - 0x412341
 
 
 // Address range: 0x412350 - 0x41239a
-int32_t function_412350(int32_t a1, int32_t a2, uint32_t a3) {
-    if (a3 >= 3) {
-        // 0x412364
-        return -1;
-    }
-    int32_t v1 = *(int32_t *)*(int32_t *)a1; // 0x412386
-    return *(int32_t *)(v1 + 20) == -1;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4123a0 - 0x4123bc
-int32_t function_4123a0(int32_t a1) {
-    // 0x4123a0
-    *(int32_t *)a1 = 0;
-    return 0;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4123c0 - 0x4123da
-int32_t function_4123c0(int32_t a1) {
-    // 0x4123c0
-    return *(int32_t *)*(int32_t *)a1 - *(int32_t *)(a1 + 8);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x412610 - 0x412657
@@ -4406,26 +4164,13 @@ int32_t function_415fd0(int32_t script, int32_t environment) {
 
 
 // Address range: 0x4173c0 - 0x4173c6
-int32_t function_4173c0(void) {
-    // 0x4173c0
-    return (int32_t)&g561;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4175f0 - 0x417a00
 
 
 // Address range: 0x417a00 - 0x417a26
-int32_t function_417a00(int32_t a1) {
-    // 0x417a00
-    int32_t result; // 0x417a00
-    if (result != a1) {
-        // 0x417a14
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x417a1d
-    *(int32_t *)result = a1;
-    return result;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x417a30 - 0x417c82
 
@@ -4467,18 +4212,7 @@ int32_t function_417a00(int32_t a1) {
 
 
 // Address range: 0x4190e0 - 0x419144
-int32_t function_4190e0(int32_t a1, int32_t a2) {
-    // 0x4190e0
-    int32_t result; // 0x4190e0
-    int32_t * v1 = (int32_t *)(result + 4); // 0x4190ec
-    int32_t v2 = *v1; // 0x4190ec
-    sq_pushobject(kinoko_vm(v2), kinoko_borrowed_object(result, v2));
-    sq_pushstring(kinoko_vm(*v1), (const SQChar*)kinoko_pointer(a1), -1);
-    sq_pushinteger(kinoko_vm(*v1), *(int32_t *)a2);
-    sq_newslot(kinoko_vm(*v1), -3, ((0) != 0));
-    kinoko_sq_pop(*v1, 1);
-    return result;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x419450 - 0x419510
 
@@ -4685,36 +4419,7 @@ int32_t function_41e390(int32_t storage) {
 
 
 // Address range: 0x424320 - 0x424345
-int32_t function_424320(int32_t a1) {
-    // 0x424320
-    int32_t v1; // 0x424320
-    if (v1 == a1) {
-        // 0x424343
-        int32_t result; // 0x424320
-        return result;
-    }
-    // 0x424320
-    int32_t v2; // 0x424320
-    if (v2 != 0) {
-        // 0x424334
-        *(int32_t *)v2 = *(int32_t *)a1;
-    }
-    int32_t v3 = a1 + 4; // 0x424338
-    int32_t result2 = v2 + 4; // 0x42433b
-    while (v3 != v1) {
-        int32_t v4 = result2;
-        int32_t v5 = v3;
-        if (v4 != 0) {
-            // 0x424334
-            *(int32_t *)v4 = *(int32_t *)v5;
-        }
-        // 0x424338
-        v3 = v5 + 4;
-        result2 = v4 + 4;
-    }
-    // 0x424343
-    return result2;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x424720 - 0x4247e5
 
@@ -4730,10 +4435,7 @@ int32_t function_4252e0(void) {
 
 
 // Address range: 0x4258a0 - 0x4258a6
-int32_t function_4258a0(void) {
-    // 0x4258a0
-    return (int32_t)&g563;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x426560 - 0x4265d6
 // From class:    .?AVCActKey@@
@@ -4757,10 +4459,7 @@ int32_t function_4258a0(void) {
 
 
 // Address range: 0x426b30 - 0x426b36
-int32_t function_426b30(void) {
-    // 0x426b30
-    return (int32_t)&g564;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x426d70 - 0x4271a1
 
@@ -4895,10 +4594,7 @@ int32_t function_426b30(void) {
 // 428AF0/428BD0: typed resource suspend/resume in act_document_resources.cpp.
 
 // Address range: 0x428f80 - 0x428f86
-int32_t function_428f80(void) {
-    // 0x428f80
-    return (int32_t)&g569;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x428fe0 - 0x428fec
@@ -4939,33 +4635,7 @@ int32_t function_428f80(void) {
 
 
 // Address range: 0x4298d0 - 0x429905
-int32_t function_4298d0(void) {
-    // 0x4298d0
-    int32_t v1; // 0x4298d0
-    int32_t v2 = *(int32_t *)(v1 + 4); // 0x4298d1
-    int32_t result; // 0x4298d0
-    if (v2 == 0) {
-        // 0x429903
-        return result;
-    }
-    int32_t * v3 = (int32_t *)(v2 + 4); // 0x4298de
-    int32_t v4 = *v3 - 1; // 0x4298de
-    *v3 = v4;
-    if (v4 != 0) {
-        // 0x429903
-        return result;
-    }
-    int32_t result2 = v2 + 8; // 0x4298ed
-    int32_t * v5 = (int32_t *)result2; // 0x4298f3
-    int32_t v6 = *v5 - 1; // 0x4298f3
-    *v5 = v6;
-    if (v6 != 0) {
-        // 0x429903
-        return result2;
-    }
-    // 0x4298f9
-    return *(int32_t *)(*(int32_t *)v2 + 8);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x429920 - 0x4299bc
@@ -5076,10 +4746,7 @@ int32_t function_42b470(void) {
 
 
 // Address range: 0x42c890 - 0x42c896
-int32_t function_42c890(void) {
-    // 0x42c890
-    return (int32_t)&g570;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x42cac0 - 0x42ced0
@@ -5245,10 +4912,7 @@ int32_t function_42e6f0(void) {
 
 
 // Address range: 0x430540 - 0x430546
-int32_t function_430540(void) {
-    // 0x430540
-    return (int32_t)&g568;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x4305a0 - 0x4305ac
@@ -5405,29 +5069,16 @@ int32_t function_433720(void) {
 }
 
 // Address range: 0x433730 - 0x433734
-float80_t function_433730(void) {
-    // 0x433730
-    int32_t v1; // 0x433730
-    return (float80_t)*(float32_t *)(v1 + 12);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x433740 - 0x433759
 
 
 // Address range: 0x433760 - 0x433764
-float80_t function_433760(void) {
-    // 0x433760
-    int32_t v1; // 0x433760
-    return (float80_t)*(float32_t *)(v1 + 16);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x433770 - 0x43377d
-int32_t function_433770(float32_t a1) {
-    // 0x433770
-    int32_t result; // 0x433770
-    *(float32_t *)(result + 16) = a1;
-    return result;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x433780 - 0x4338c5
 // From class:    .?AVC2DMapLayout@@
@@ -5512,10 +5163,7 @@ int32_t function_433770(float32_t a1) {
 
 
 // Address range: 0x436710 - 0x436716
-int32_t function_436710(void) {
-    // 0x436710
-    return (int32_t)&g571;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x436940 - 0x436d50
 
@@ -5794,19 +5442,7 @@ int32_t function_436710(void) {
 
 
 // Address range: 0x43ade0 - 0x43ae5d
-int32_t function_43ade0(int32_t a1) {
-    // 0x43ade0
-    int32_t v1; // bp-12, 0x43ade0
-    sq_getuserdata(kinoko_vm(a1), -1, (SQUserPointer*)(&v1), (SQUserPointer*)kinoko_pointer(0));
-    int32_t v2 = 0; // bp-8, 0x43ae0b
-    sq_getinstanceup(kinoko_vm(a1), 1, (SQUserPointer*)(&v2), kinoko_pointer(0));
-    int32_t v3; // bp-16, 0x43ade0
-    sq_getinteger(kinoko_vm(a1), 3, (SQInteger*)(&v3));
-    int32_t v4; // bp-24, 0x43ade0
-    sq_getinteger(kinoko_vm(a1), 2, (SQInteger*)(&v4));
-    sq_pushinteger(kinoko_vm(a1), v4);
-    return 1;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x43ae60 - 0x43af25
 
@@ -5899,10 +5535,7 @@ int32_t function_43ade0(int32_t a1) {
 
 
 // Address range: 0x43cec0 - 0x43cec6
-int32_t function_43cec0(void) {
-    // 0x43cec0
-    return (int32_t)&g572;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x43cf20 - 0x43cf2c
@@ -5952,10 +5585,7 @@ int32_t function_43e100(void) {
 
 
 // Address range: 0x441660 - 0x441666
-int32_t function_441660(void) {
-    // 0x441660
-    return (int32_t)&g573;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x441cb0 - 0x441de9
 // From class:    .?AV?$TUserData@VC2DLayout@@@@
@@ -6057,10 +5687,7 @@ int32_t function_4461c0(void) {
 
 
 // Address range: 0x447340 - 0x447346
-int32_t function_447340(void) {
-    // 0x447340
-    return (int32_t)&g565;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x447570 - 0x447980
 
@@ -6172,10 +5799,7 @@ int32_t function_449310(void) {
 
 
 // Address range: 0x449f10 - 0x449f16
-int32_t function_449f10(void) {
-    // 0x449f10
-    return (int32_t)&g566;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x44a170 - 0x44a580
@@ -6261,10 +5885,7 @@ int32_t function_449f10(void) {
 
 
 // Address range: 0x44ce70 - 0x44ce76
-int32_t function_44ce70(void) {
-    // 0x44ce70
-    return (int32_t)&g567;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x44d4c0 - 0x44d545
 
@@ -6286,11 +5907,7 @@ int32_t function_44ce70(void) {
 
 
 // Address range: 0x44fd20 - 0x44fd25
-int32_t function_44fd20(void) {
-    // 0x44fd20
-    int32_t result; // 0x44fd20
-    return result;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x44fd30 - 0x44fd52
 // From class:    .?AVCSprite@@
@@ -6343,9 +5960,7 @@ int32_t function_44fd30(char a1) {
 // 4515C0/4515F0: typed runtime suspend/resume in act_resource.cpp.
 
 // Address range: 0x451620 - 0x45162d
-int32_t function_451620(int32_t this_ptr) {
-    return kinoko_act_increment_frame((KinokoActRuntime *)(intptr_t)this_ptr, NULL);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 
@@ -7328,9 +6943,7 @@ int32_t function_466540(int32_t a1, int32_t a2) {
 
 
 // Address range: 0x468620 - 0x468788
-int32_t function_468620(void) {
-    return function_468620_this((int32_t)(intptr_t)g_514300_storage);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 static int32_t function_468620_this(int32_t this_ptr) {
     return (int32_t)(intptr_t)kinoko_collision_refresh((KinokoCollisionState *)(intptr_t)this_ptr);
@@ -7573,12 +7186,7 @@ int32_t function_46f140(int32_t name_ptr) {
 
 
 // Address range: 0x46fd70 - 0x46ff56
-int32_t function_46fd70(int32_t name, int32_t closure, int32_t environment) {
-    return kinoko_map_create_events((KinokoMapManager *)g_retdec_map_manager_state,
-        (struct SQVM *)g644, (const char *)(intptr_t)name,
-        (const KinokoSquirrelObject *)(intptr_t)closure,
-        (const KinokoSquirrelObject *)(intptr_t)environment);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x46ff60 - 0x470029
@@ -7676,9 +7284,7 @@ static int32_t kinoko_install_root_integer_delegate(int32_t a1) {
     return result;
 }
 
-int32_t function_470d00(int32_t object) {
-    return kinoko_install_root_integer_delegate(object);
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 
 // Address range: 0x470df0 - 0x470ed8
@@ -10871,20 +10477,7 @@ void _3f__3f_3_40_YAXPAX_40_Z(int32_t * a1) {
 
 
 // Address range: 0x4ad7f2 - 0x4ad81a
-float80_t function_4ad7f2(void) {
-    // 0x4ad7f2
-    float80_t v1; // 0x4ad7f2
-    float80_t result = roundl(v1); // 0x4ad7f4
-    __asm_wait();
-    int32_t v2; // 0x4ad7f2
-    if ((v2 & 0x4000) == 0) {
-        // 0x4ad817
-        return result;
-    }
-    // 0x4ad800
-    __asm_wait();
-    return result * (float80_t)g508;
-}
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4c4cf0 - 0x4c4d35
 
@@ -11397,7 +10990,7 @@ int32_t function_4d4860(void) {
 }
 
 // Address range: 0x4d4930 - 0x4d4978
-int32_t function_4d4930(void) { return kinoko_clear_render_queue(); }
+/* Unreachable RetDec address body removed; archival source retains original. */
 
 // Address range: 0x4d4980 - 0x4d498a
 // Demangled:     void __cdecl `dynamic atexit destructor for 'initlocks''(void)
