@@ -9,64 +9,63 @@
 
 extern "C" unsigned char g37;
 namespace kinoko::map {
-using kinoko::legacy::field;
-using kinoko::legacy::address;
 using RenderLayer = kinoko::map::RenderLayerRecord;
 static_assert(sizeof(RenderLayer) == 8);
+inline constexpr auto render_layer_vtable = &g37;
 struct Containers {
     std::list<RenderLayer> layers;
     std::vector<KinokoActLayout *> events;
 };
-ManagerView manager_view(int32_t manager) { return ManagerView(kinoko::legacy::pointer<KinokoMapManager>(manager)); }
-Containers& state(int32_t manager) { return *manager_view(manager).get(&ManagerRecord::containers); }
+ManagerView manager_view(KinokoMapManager* manager) { return ManagerView(manager); }
+Containers& state(KinokoMapManager* manager) { return *manager_view(manager).get(&ManagerRecord::containers); }
 }
 using namespace kinoko::map;
-extern "C" void kinoko_map_containers_construct(int32_t manager) {
+extern "C" void kinoko_map_containers_construct(KinokoMapManager* manager) {
     manager_view(manager).set(&ManagerRecord::containers, new Containers);
 }
-extern "C" void kinoko_map_containers_clear(int32_t manager) {
+extern "C" void kinoko_map_containers_clear(KinokoMapManager* manager) {
     auto& value = state(manager);
     value.events.clear(); // 46F620 retains vector capacity
     value.layers.clear(); // borrowed layout values are never destroyed here
 }
-extern "C" void kinoko_map_containers_destroy(int32_t manager) {
+extern "C" void kinoko_map_containers_destroy(KinokoMapManager* manager) {
     delete manager_view(manager).get(&ManagerRecord::containers);
     manager_view(manager).set(&ManagerRecord::containers, static_cast<Containers *>(nullptr));
 }
-extern "C" void kinoko_map_containers_assign(int32_t destination, int32_t source) {
+extern "C" void kinoko_map_containers_assign(KinokoMapManager* destination, KinokoMapManager* source) {
     if (destination == source) return;
     auto& out = state(destination);
     const auto& in = state(source);
     // 4700B0 clears/reconstructs nodes; never reuse old node addresses or
     // copy a forged source vtable. 46F320 retains capacity on shorter copies.
     out.layers.clear();
-    for (const auto& layer : in.layers) out.layers.push_back({&g37, layer.layout});
+    for (const auto& layer : in.layers) out.layers.push_back({render_layer_vtable, layer.layout});
     out.events.assign(in.events.begin(), in.events.end());
 }
-extern "C" int32_t kinoko_map_append_render(int32_t manager, int32_t layout) {
+extern "C" KinokoRenderLayer* kinoko_map_append_render(KinokoMapManager* manager, KinokoActLayout* layout) {
     auto& layers = state(manager).layers;
     if (layers.size() == 0x1ffffffeu) throw std::length_error("list<T> too long");
-    layers.push_back({&g37, kinoko::legacy::pointer<KinokoActLayout>(layout)});
-    return address(&layers.back());
+    layers.push_back({render_layer_vtable, layout});
+    return reinterpret_cast<KinokoRenderLayer*>(&layers.back());
 }
-extern "C" uint32_t kinoko_map_render_count(int32_t manager) {
+extern "C" uint32_t kinoko_map_render_count(KinokoMapManager* manager) {
     return static_cast<uint32_t>(state(manager).layers.size());
 }
-extern "C" int32_t kinoko_map_render_at(int32_t manager, uint32_t index) {
+extern "C" KinokoRenderLayer* kinoko_map_render_at(KinokoMapManager* manager, uint32_t index) {
     auto& layers = state(manager).layers;
     if (index >= layers.size()) return 0;
-    return address(&*std::next(layers.begin(), index));
+    return reinterpret_cast<KinokoRenderLayer*>(&*std::next(layers.begin(), index));
 }
-extern "C" void kinoko_map_append_event(int32_t manager, int32_t layout) {
-    state(manager).events.push_back(kinoko::legacy::pointer<KinokoActLayout>(layout));
+extern "C" void kinoko_map_append_event(KinokoMapManager* manager, KinokoActLayout* layout) {
+    state(manager).events.push_back(layout);
 }
-extern "C" uint32_t kinoko_map_event_count(int32_t manager) {
+extern "C" uint32_t kinoko_map_event_count(KinokoMapManager* manager) {
     return static_cast<uint32_t>(state(manager).events.size());
 }
-extern "C" int32_t kinoko_map_event_at(int32_t manager, uint32_t index) {
+extern "C" KinokoActLayout* kinoko_map_event_at(KinokoMapManager* manager, uint32_t index) {
     const auto& events = state(manager).events;
-    return index < events.size() ? address(events[index]) : 0;
+    return index < events.size() ? events[index] : nullptr;
 }
-extern "C" uint32_t kinoko_map_event_capacity(int32_t manager) {
+extern "C" uint32_t kinoko_map_event_capacity(KinokoMapManager* manager) {
     return static_cast<uint32_t>(state(manager).events.capacity());
 }

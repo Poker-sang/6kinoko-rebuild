@@ -84,7 +84,7 @@ extern "C" int32_t kinoko_actor_set_take(KinokoActor *value, int32_t take) {
     actor.set(&ActorRecord::frame_time, int32_t{0});
     const auto lookup = manager.view(&ManagerPrefix::animation_lookup);
     auto *selected=kinoko_animation_find(reinterpret_cast<KinokoActorManager *>(manager.data()),take);
-    if (!selected) return static_cast<int32_t>(lookup.get(&TreeIndex::head));
+    if (!selected) return address(lookup.get(&KinokoIntegerMapIndex::owner));
     actor.set(&ActorRecord::animation, selected);
     const auto animation = animation_at(selected);
     actor.set(&ActorRecord::take_duration, animation.duration_total);

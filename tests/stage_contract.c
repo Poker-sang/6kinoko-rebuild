@@ -11,6 +11,7 @@
 #include "stage_audio_contract.h"
 #include "kinoko/squirrel_vm_bootstrap.h"
 #include "kinoko/boost_hash.h"
+#include "kinoko/csv_bridge.h"
 
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #condition); return 1; \
@@ -225,7 +226,7 @@ static void pat_frame(struct pat_fixture *pat, int16_t duration,
 
 static int32_t pat_lookup(int32_t manager, int32_t take) {
     int32_t entry = 0;
-    function_4706c0_this(manager + 36, &entry, &take);
+    kinoko_integer_map_lookup_index((const KinokoIntegerMapIndex*)(intptr_t)(manager + 36), &entry, &take);
     return entry == *(int32_t *)(intptr_t)(manager + 40) ? 0 :
         *(int32_t *)(intptr_t)entry;
 }
@@ -513,7 +514,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
             int32_t actual_layer = *(int32_t *)(intptr_t)entry;
             int32_t sentinel = *(int32_t *)(intptr_t)(actual_layer + 180);
             printf("stage layer=%s mask=%d offset=(%g,%g)\n",
-                retdec_std_string_data(actual_layer + 112),
+                kinoko_string_data((const void*)(intptr_t)(actual_layer + 112)),
                 *(uint8_t *)(intptr_t)(actual_layer + 140),
                 *(float *)(intptr_t)(actual_layer + 144), *(float *)(intptr_t)(actual_layer + 148));
             for (int32_t item = *(int32_t *)(intptr_t)sentinel; item != sentinel;
@@ -521,7 +522,7 @@ static int test_player_walking(int32_t manager, int32_t vm, int32_t *root,
                 int32_t key = *(int32_t *)(intptr_t)(item + 8);
                 int32_t actual_layout = *(int32_t *)(intptr_t)(key + 4);
                 if (!retdec_map_chip_data(actual_layout)) continue;
-                const char *layer_name = retdec_std_string_data(actual_layer + 112);
+                const char *layer_name = kinoko_string_data((const void*)(intptr_t)(actual_layer + 112));
                 if (strncmp(layer_name, "te", 2) == 0 || strncmp(layer_name, "wa", 2) == 0)
                     CHECK(function_4693a0(actual_layout));
                 int32_t begin = *(int32_t *)(intptr_t)(actual_layout + 264);
@@ -937,7 +938,7 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
     int32_t reader=0;
     unsigned char version;
     unsigned short texture_count;
-    int32_t resource_base=kinoko_integer_vector_size(manager+68);
+    int32_t resource_base=kinoko_integer_vector_size((KinokoIntegerVector*)(intptr_t)(manager+68));
     CHECK(kinoko_reader_open((KinokoArchiveReader **)&reader,"data/actor/item/item.pat"));
     CHECK(fixture_pat_read_u8(reader,&version) && fixture_pat_read_u16(reader,&texture_count));
     CHECK(fixture_pat_skip_bytes(reader,texture_count*128u));
@@ -975,7 +976,7 @@ static int test_star_landing(int32_t manager, int32_t vm, int32_t *root) {
             CHECK(kinoko_act_document_load((KinokoActDocument *)actual_map,"data/map/w1-c01a.act"));
             for(int32_t slot=actual_map[52];slot!=actual_map[53];slot+=4) {
                 int32_t actual_layer=*(int32_t *)(intptr_t)slot;
-                const char *name=retdec_std_string_data(actual_layer+112);
+                const char *name=kinoko_string_data((const void*)(intptr_t)(actual_layer+112));
                 if(strncmp(name,"te",2) && strncmp(name,"wa",2)) continue;
                 int32_t head=*(int32_t *)(intptr_t)(actual_layer+180);
                 for(int32_t n=*(int32_t *)(intptr_t)head;n!=head;n=*(int32_t *)(intptr_t)n) {
@@ -1080,12 +1081,12 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     CHECK(kinoko_act_document_load((KinokoActDocument *)act, "data/map/w1-c01a.act"));
     for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
         int32_t layer = *(int32_t *)(intptr_t)slot;
-        if (strcmp(retdec_std_string_data(layer + 112), "hidden") == 0) hidden = layer;
+        if (strcmp(kinoko_string_data((const void*)(intptr_t)(layer + 112)), "hidden") == 0) hidden = layer;
     }
     CHECK(hidden);
     CHECK(retdec_publish_cact_layer_class(vm, PTR(root)));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
-    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, retdec_std_string_data(PTR(act) + 16), parent));
+    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, kinoko_string_data((const void*)(intptr_t)(PTR(act) + 16)), parent));
     CHECK(execute_source(vm, parent, "resource <- {};"));
     resource[39] = root[2];
     resource[40] = root[3];
@@ -1990,7 +1991,7 @@ static int test_branch_motion(int32_t manager) {
         CHECK(function_468950_this(PTR(g_514300_storage), manager));
         for (int32_t slot = act[52]; slot != act[53]; slot += 4) {
             int32_t layer = *(int32_t *)(intptr_t)slot;
-            const char *name = retdec_std_string_data(layer + 112);
+            const char *name = kinoko_string_data((const void*)(intptr_t)(layer + 112));
             if (strncmp(name,"te",2) != 0 && strncmp(name,"wa",2) != 0) continue;
             int32_t head = *(int32_t *)(intptr_t)(layer + 180);
             for (int32_t node = *(int32_t *)(intptr_t)head; node != head;
@@ -2105,10 +2106,9 @@ static int test_map_transition(int32_t vm, int32_t *root) {
     kinoko_script_clear_actors();
     kinoko_script_clear_collision();
     char retired_name[256];
-    strcpy_s(retired_name,sizeof(retired_name),retdec_std_string_data(
-        *(int32_t *)(intptr_t)(map_state+12)+16));
+    strcpy_s(retired_name,sizeof(retired_name),kinoko_string_data((const void*)(intptr_t)(*(int32_t *)(intptr_t)(map_state+12)+16)));
     int32_t runtime=*(int32_t *)(intptr_t)(map_state+20);
-    CHECK(strcmp(retdec_std_string_data(runtime+164),retired_name)==0);
+    CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(runtime+164)),retired_name)==0);
     int32_t sprites=PTR(calloc(2,184));
     CHECK(sprites);
     *(int32_t *)(intptr_t)(runtime+60)=sprites;
@@ -2307,12 +2307,12 @@ static int test_gc_mark_link(void) {
 
 static int test_shutdown_tree_cleanup(void) {
     {
-        int32_t map=kinoko_integer_map_create();
-        int32_t slot=kinoko_integer_map_put(map,-7,12);
+        KinokoIntegerMap* map=kinoko_integer_map_create();
+        int32_t* slot=kinoko_integer_map_put(map, -7, 12);
         CHECK(kinoko_integer_map_find(map,-7)==slot && *(int32_t*)(intptr_t)slot==12);
-        CHECK(kinoko_integer_map_put(map,-7,19)==slot && kinoko_integer_map_size(map)==1);
-        for(int i=0;i<256;++i) kinoko_integer_map_put(map,i,i*3);
-        CHECK(kinoko_integer_map_find(map,-8)==map && *(int32_t*)(intptr_t)slot==19);
+        CHECK(kinoko_integer_map_put(map, -7, 19)==slot && kinoko_integer_map_size(map)==1);
+        for(int i=0;i<256;++i) kinoko_integer_map_put(map, i, i*3);
+        CHECK(kinoko_integer_map_find(map,-8)==NULL && *(int32_t*)(intptr_t)slot==19);
         kinoko_integer_map_clear(map);CHECK(kinoko_integer_map_size(map)==0);
         kinoko_integer_map_destroy(map);
     }
@@ -2339,10 +2339,10 @@ static int test_shutdown_tree_cleanup(void) {
     *(int32_t *)(frames + 248 + 244) = PTR(malloc(20));
     CHECK(*(int32_t *)(frames + 244) && *(int32_t *)(frames + 492));
     /* No live Actor in this fixture; the priority node is still reclaimed. */
-    manager[10]=kinoko_integer_map_create();
-    kinoko_integer_map_put(manager[10],42,animation);manager[11]=1;
-    kinoko_integer_vector_construct(PTR(manager)+68);
-    for(int i=0;i<2;++i) kinoko_integer_vector_append(PTR(manager)+68,textures[i]);
+    manager[10]=(int32_t)(intptr_t)kinoko_integer_map_create();
+    kinoko_integer_map_put((KinokoIntegerMap*)(intptr_t)(manager[10]), 42, animation);manager[11]=1;
+    kinoko_integer_vector_construct((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
+    for(int i=0;i<2;++i) kinoko_integer_vector_append((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68), textures[i]);
     kinoko_priority_construct((void *)(intptr_t)(PTR(manager)+84));
     int32_t absent=0,inserted[2];
     inserted[0]=PTR(kinoko_actor_priority_insert(manager+21,(KinokoActor *)(intptr_t)absent)); inserted[1]=1;
@@ -2350,15 +2350,15 @@ static int test_shutdown_tree_cleanup(void) {
     manager[29] = 8; ((unsigned char *)manager)[120] = 1;
     for (int repeat = 0; repeat < 2; ++repeat) {
         CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(PTR(manager)))) == PTR(iteration));
-        CHECK(kinoko_integer_map_size(manager[10])==0);
+        CHECK(kinoko_integer_map_size((KinokoIntegerMap*)(intptr_t)(manager[10]))==0);
         CHECK(manager[11] == 0 && manager[14] == 0 && manager[23] == 0);
-        CHECK(kinoko_integer_vector_size(PTR(manager)+68)==0);
+        CHECK(kinoko_integer_vector_size((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68))==0);
         CHECK(manager[26] == PTR(iteration) && manager[27] == PTR(iteration + 3));
         CHECK(manager[29] == 0 && ((unsigned char *)manager)[120] == 0);
     }
-    kinoko_integer_vector_destroy(PTR(manager)+68);
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(intptr_t)(PTR(manager)+68));
     kinoko_animation_list_destroy(PTR(manager)+52);
-    kinoko_integer_map_destroy(manager[10]);
+    kinoko_integer_map_destroy((KinokoIntegerMap*)(intptr_t)(manager[10]));
     kinoko_priority_destroy((void *)(intptr_t)(PTR(manager)+84));
     {
         int32_t tree[3]={0},actors[4][58]={{0}},nodes[4],result[2];
@@ -2637,16 +2637,16 @@ static int test_act_resource_methods(void) {
     texture[17] = 7;
     CHECK(retdec_act_bitblt_this(address, 3, 4, 32, 16,
         PTR(texture), 0, 0, 0, 1.0f) == 0);
-    function_452c20(address + 60, 2);
-    KinokoDrawSpan commands_before = kinoko_act_command_span(address);
-    KinokoDrawSpan sprites_before = kinoko_act_sprite_span(address);
+    kinoko_act_resize_sprites((KinokoActSpriteStorage*)(intptr_t)(address + 60), 2);
+    KinokoDrawSpan commands_before = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(address));
+    KinokoDrawSpan sprites_before = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(address));
     CHECK(commands_before.end > commands_before.begin);
     CHECK(sprites_before.end > sprites_before.begin);
     const int32_t commands_owner = words[11], sprites_owner = words[15];
     words[38] = 4321;
     CHECK(retdec_call_thiscall0_result(resource, kinoko_act_end_stage) == 0);
-    KinokoDrawSpan commands_after = kinoko_act_command_span(address);
-    KinokoDrawSpan sprites_after = kinoko_act_sprite_span(address);
+    KinokoDrawSpan commands_after = kinoko_act_command_span((KinokoActRuntime*)(intptr_t)(address));
+    KinokoDrawSpan sprites_after = kinoko_act_sprite_span((KinokoActRuntime*)(intptr_t)(address));
     CHECK(resource[8] == 0);
     CHECK(commands_after.end == commands_after.begin);
     CHECK(sprites_after.end == sprites_after.begin);
@@ -2656,7 +2656,7 @@ static int test_act_resource_methods(void) {
     for (int i = 108; i < 152; ++i) CHECK(resource[i] == 0);
     CHECK(words[38] == 4321);
     CHECK(kinoko_act_end_stage((KinokoActRuntime *)(intptr_t)address, NULL) == (int32_t)E_FAIL);
-    kinoko_act_draw_storage_destroy(address);
+    kinoko_act_draw_storage_destroy((KinokoActRuntime*)(intptr_t)(address));
     CHECK(words[11] == 0 && words[15] == 0);
     DeleteCriticalSection((struct retdec_RTL_CRITICAL_SECTION *)(resource + 20));
     puts("PASS: C++ ACT clock/ABI, time wrap, deferred sleep and stage cleanup");
@@ -2750,7 +2750,7 @@ static int test_error_value_ownership(int32_t vm) {
     for (int i = 0; i < 128; ++i) {
         char expected[64];
         sprintf_s(expected, sizeof(expected), "ownership formatted error %d", i);
-        function_499a20(vm, "ownership formatted error %d", i);
+        kinoko_sq_raise_formatted_error(vm, "ownership formatted error %d", i);
         CHECK(error[0] == 0x08000010);
         CHECK(*(int32_t *)(intptr_t)(error[1] + 4) == 1);
         CHECK(strcmp((char *)(intptr_t)(error[1] + 28), expected) == 0);
@@ -2861,7 +2861,7 @@ static int32_t __fastcall visit_render_queue(int32_t *object, void *unused, int3
 static int test_global_callback_destructor(int32_t vm) {
     int32_t saved_callback[7];
     const int top = function_48aa20(vm);
-    CHECK(function_4d3e50() == 0);
+    CHECK(kinoko_register_render_queue_cleanup() == 0);
     CHECK(kinoko_render_queue_size() == 0);
     CHECK(kinoko_render_queue_first() == kinoko_render_queue_identity());
     {
@@ -2994,8 +2994,8 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
     int32_t extension[7]; memcpy(extension, kinoko_act_script_extension, sizeof(extension));
     int32_t old_archive = kinoko_archive_count;
     CHECK(g556 == 15); /* Script extension has not been configured by WinMain. */
-    retdec_string_assign_n(&g554, ".cv4", 4);
-    CHECK(g555 == 4 && g556 >= 16 && strcmp(retdec_std_string_data(PTR(&g554)), ".cv4") == 0);
+    kinoko_string_assign_n(&g554, ".cv4", 4);
+    CHECK(g555 == 4 && g556 >= 16 && strcmp(kinoko_string_data((const void*)(&g554)), ".cv4") == 0);
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), environment));
     wrapper[0] = kinoko_sqrat_object_vtable(); wrapper[1] = vm;
     wrapper[2] = environment[0]; wrapper[3] = environment[1];
@@ -3084,7 +3084,7 @@ static int test_csv_receivers(int32_t vm, int32_t *root) {
         function_48ab90(vm,root[2],root[3]);
         function_48a480(vm,PTR(path),-1);
         function_48ab90(vm,root[2],root[3]);
-        CHECK(function_471160(PTR(function_403000),vm,2)==1);
+        CHECK(function_471160(PTR(kinoko_script_read_csv),vm,2)==1);
         int32_t *result=(int32_t *)(intptr_t)function_491880_this(vm,-1);
         CHECK(result[0]==0x01000008 && result[1]==1);
         function_48c910(vm,top);
@@ -3344,9 +3344,10 @@ static int test_global_stage_cleanup(void) {
 }
 
 static int test_global_sound_cleanup(void) {
-    int32_t old_head = g638, old_size = g639;
+    KinokoIntegerMap* old_head = g638;
+    int32_t old_size = g639;
     g638=kinoko_integer_map_create();g639=1;
-    kinoko_integer_map_put(g638,1,123);
+    kinoko_integer_map_put(g638, 1, 123);
     CHECK(kinoko_test_sound_cleanup(function_470890)==0);
     CHECK(g639==0 && kinoko_integer_map_size(g638)==0);
     kinoko_integer_map_destroy(g638);
@@ -3502,9 +3503,9 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     int32_t closure[3], actors[2];
     /* This fixture skips game startup, but Update always visits Input first. */
     const int32_t input = PTR(kinoko_game_objects()->input);
-    kinoko_input_devices_construct(input);
-    kinoko_input_cluster_construct(input + 196);
-    kinoko_input_keys_construct(input + 392);
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(input));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(input + 196));
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(input + 392));
     const int32_t saved_stages=g603,saved_stage_count=g604;
     kinoko_stage_list_construct();
     CHECK(execute_source(vm, root + 2,
@@ -3539,9 +3540,9 @@ static int test_stage_update_mask(int32_t manager, int32_t vm, int32_t *root) {
     CHECK(*(float *)(intptr_t)(actors[1] + 240) == 11.0f);
     CHECK(vm_failures == 0);
     kinoko_stage_list_destroy();g603=saved_stages;g604=saved_stage_count;
-    kinoko_input_keys_destroy(input + 392);
-    kinoko_input_cluster_delete(input + 196, NULL, 0);
-    kinoko_input_devices_destroy(input);
+    kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(input + 392));
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(input + 196), NULL, 0);
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(input));
     puts("PASS: stage damage/death mask freezes enemy callbacks and motion for 30 frames; player continues; groups resume");
     return 0;
 }
@@ -3699,7 +3700,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(kinoko_act_document_load((KinokoActDocument *)act,"data/map/w3-c02b.act"));
     for(int32_t slot=act[52];slot!=act[53];slot+=4) {
         int32_t layer=*(int32_t *)(intptr_t)slot;
-        const char *name=retdec_std_string_data(layer+112);
+        const char *name=kinoko_string_data((const void*)(intptr_t)(layer+112));
         if(strcmp(name,"terrain-kabe")!=0 && strcmp(name,"vector")!=0) continue;
         int32_t head=*(int32_t *)(intptr_t)(layer+180);
         int32_t node=*(int32_t *)(intptr_t)head;
@@ -3732,7 +3733,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     int32_t resource[48]={0}, parent[2], active=0;
     CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
-    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, retdec_std_string_data(PTR(act)+16), parent));
+    CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, kinoko_string_data((const void*)(intptr_t)(PTR(act)+16)), parent));
     CHECK(execute_source(vm,parent,"resource <- {};"));
     resource[39]=root[2]; resource[40]=root[3];
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
@@ -3822,7 +3823,7 @@ static int test_platform_riding(int32_t vm, int32_t *root, int32_t manager, cons
         *(int32_t *)(intptr_t)(map_state+80)=map_act[3];
         for(int32_t slot=map_act[52];slot!=map_act[53];slot+=4) {
             int32_t layer=*(int32_t *)(intptr_t)slot;
-            const char *name=retdec_std_string_data(layer+112);
+            const char *name=kinoko_string_data((const void*)(intptr_t)(layer+112));
             int32_t head=*(int32_t *)(intptr_t)(layer+180);
             for(int32_t node=*(int32_t *)(intptr_t)head;node!=head;node=*(int32_t *)(intptr_t)node) {
                 int32_t key=*(int32_t *)(intptr_t)(node+8);
@@ -4081,12 +4082,12 @@ static int test_portrait_regions(const char *directory) {
         int32_t resource=0;
         for (int32_t entry=act[56];entry<act[57];entry+=4) {
             const int32_t candidate=*(int32_t*)(intptr_t)entry;
-            if (strcmp(retdec_std_string_data(candidate+8),names[i])==0) resource=candidate;
+            if (strcmp(kinoko_string_data((const void*)(intptr_t)(candidate+8)),names[i])==0) resource=candidate;
         }
         CHECK(resource);
         CHECK(*(int32_t*)(intptr_t)(resource+4)==ids[i]);
         sprintf_s(path,sizeof(path),"Data/System/face%d",atlas[i]);
-        CHECK(strcmp(retdec_std_string_data(resource+40),path)==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(resource+40)),path)==0);
         CHECK(*(float*)(intptr_t)(resource+80)==x[i]);
         CHECK(*(float*)(intptr_t)(resource+84)==0);
         CHECK(*(float*)(intptr_t)(resource+88)==136);
@@ -4112,9 +4113,9 @@ static int test_chip_shared_ownership(void) {
     data->textures[0].handle=kinoko_texture_register((IDirect3DBaseTexture9*)texture,64,64);
     CHECK(data->textures[0].handle);
     resource[0]=PTR(&g313); resource[7]=resource[14]=resource[23]=15;
-    retdec_string_assign_cstr(resource+2,"a long named chip resource");
-    retdec_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
-    retdec_string_assign_cstr(resource+18,"a long shared resource prefix/");
+    kinoko_string_assign_cstr(resource+2,"a long named chip resource");
+    kinoko_string_assign_cstr(resource+9,"data/very-long-chip-file.mcd");
+    kinoko_string_assign_cstr(resource+18,"a long shared resource prefix/");
     resource[16]=PTR(data);
     kinoko_act_array_append(PTR(source)+224,PTR(resource));
     int32_t virtual_copy=retdec_call_thiscall0_result(resource,(void*)g313.e9);
@@ -4123,8 +4124,8 @@ static int test_chip_shared_ownership(void) {
     CHECK(*(int32_t*)(intptr_t)(virtual_copy+68)==resource[17] && resource[17]);
     for(int i=0;i<3;++i) {
         const int offsets[]={8,36,72};
-        CHECK(strcmp(retdec_std_string_data(virtual_copy+offsets[i]),retdec_std_string_data(PTR(resource)+offsets[i]))==0);
-        CHECK(retdec_std_string_data(virtual_copy+offsets[i])!=retdec_std_string_data(PTR(resource)+offsets[i]));
+        CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(virtual_copy+offsets[i])),kinoko_string_data((const void*)(intptr_t)(PTR(resource)+offsets[i])))==0);
+        CHECK(kinoko_string_data((const void*)(intptr_t)(virtual_copy+offsets[i]))!=kinoko_string_data((const void*)(intptr_t)(PTR(resource)+offsets[i])));
     }
     int32_t first=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
     int32_t second=PTR(kinoko_act_clone((KinokoActDocument *)source,NULL));
@@ -4146,8 +4147,8 @@ static int test_chip_shared_ownership(void) {
     CHECK(resource);
     resource[0]=PTR(&g365); resource[7]=resource[15]=15;
     resource[1]=47;
-    retdec_string_assign_cstr(resource+2,"a long texture resource name");
-    retdec_string_assign_cstr(resource+10,"data/system/a-long-texture-name");
+    kinoko_string_assign_cstr(resource+2,"a long texture resource name");
+    kinoko_string_assign_cstr(resource+10,"data/system/a-long-texture-name");
     resource[17]=kinoko_texture_register((IDirect3DBaseTexture9*)texture,64,64);
     resource[18]=64; resource[19]=64;
     ((float*)resource)[20]=3.0f; ((float*)resource)[21]=7.0f;
@@ -4229,11 +4230,11 @@ static int test_act_reentry(const char *directory) {
                 CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("./"))==1);
                 CHECK(original[16] && original[16]!=previous && copy[16]==previous);
                 CHECK(((struct retdec_mcd_data*)(intptr_t)previous)->chip_count==count);
-                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                CHECK(strcmp(kinoko_string_data((const void*)(original+18)),"./")==0);
                 const int32_t refreshed=original[16];
                 CHECK(retdec_call_thiscall1_result(original,(void*)g313.e10,PTR("missing-prefix"))==0);
                 CHECK(original[16]==refreshed && copy[16]==previous);
-                CHECK(strcmp(retdec_std_string_data(PTR(original+18)),"./")==0);
+                CHECK(strcmp(kinoko_string_data((const void*)(original+18)),"./")==0);
                 ++checked;
             }
             CHECK(checked>0);
@@ -4269,7 +4270,7 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
     }
     int32_t input[384] = {0};
     input[8] = 73; /* Original GetAssign(-1,3): record +16, then (3+1)*4. */
-    function_46d950();
+    kinoko_register_input_class();
     CHECK(sq_gettop(kinoko_vm(vm)) == top);
     sq_pushroottable(kinoko_vm(vm));
     sq_pushstring(kinoko_vm(vm), "registrationInput", -1);
@@ -4311,49 +4312,49 @@ static int test_physical_input(void) {
     device[21] = 37;
     g_retdec_keyboard_state[0xcb] = g_retdec_keyboard_state[0xcd] = 0x80;
     g_retdec_keyboard_state[0xff] = 0x80;
-    CHECK(function_407500(PTR(device)) == PTR(device) + 128);
+    CHECK(kinoko_input_device_update((KinokoInputDevice*)device, NULL) == PTR(device) + 128);
     CHECK(device[18] == -1 && device[19] == 1 && device[20] == 1);
     CHECK(device[21] == 37 && ((float*)device)[36] == -1.0f);
     device[20] = INT32_MAX;
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     CHECK(device[20] == INT32_MIN);
     memset(g_retdec_keyboard_state, 0, 256);
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     CHECK(device[18] == 0 && ((unsigned char*)device)[128] == 1);
     CHECK(((unsigned char*)device)[130] == 0);
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     CHECK(((unsigned char*)device)[128] == 0);
-    kinoko_input_keys_construct(PTR(tracker));
-    for (i=0;i<2;++i) kinoko_input_keys_add(PTR(tracker),scans[i]);
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(PTR(tracker)));
+    for (i=0;i<2;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(tracker)),scans[i]);
     g_retdec_keyboard_state[0xff] = g_retdec_keyboard_state[0x9d] = 0x80;
-    CHECK(function_408320(PTR(tracker)) == 1);
+    CHECK(kinoko_input_keys_update((KinokoKeyTracker *)(intptr_t)(PTR(tracker))) == 1);
     CHECK(tracker[255] == 1 && tracker[128] == 0);
-    CHECK(function_4083e0(PTR(tracker), 0x1ff, 0, 0, 1) == 1);
-    CHECK(function_4083e0(PTR(tracker), 0xff, 1, 0, 1) == 0);
-    function_408320(PTR(tracker));
-    CHECK(function_4083e0(PTR(tracker), 0xff, 0, 0, 0) == 0);
+    CHECK(kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(PTR(tracker)), 0x1ff, 0, 0, 1) == 1);
+    CHECK(kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(PTR(tracker)), 0xff, 1, 0, 1) == 0);
+    kinoko_input_keys_update((KinokoKeyTracker *)(intptr_t)(PTR(tracker)));
+    CHECK(kinoko_input_key_pressed((KinokoKeyTracker *)(intptr_t)(PTR(tracker)), 0xff, 0, 0, 0) == 0);
     kinoko_input_snapshot.controllers = (KinokoControllerState*)joystick; kinoko_input_snapshot.controller_count = 1; device[1] = 0; device[6] = 0;
     CHECK(kinoko_input_controller_state(-1) == NULL);
     CHECK(kinoko_input_controller_state(1) == NULL);
     CHECK(kinoko_input_controller_state(0) == (KinokoControllerState*)joystick);
     joystick[0] = -501; joystick[1] = 501; joystick[2] = 250;
     ((unsigned char*)joystick)[48] = 1;
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     CHECK(device[18] == -1 && device[19] == 1 && device[20] == 1);
     CHECK(((float*)device)[38] == 0.25f && device[21] == 37);
     joystick[0] = -500; joystick[1] = 500;
     ((unsigned char*)joystick)[48] = 0;
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     CHECK(device[18] == 0 && device[19] == 0 && device[20] == 0);
     CHECK(((unsigned char*)device)[128] && ((unsigned char*)device)[129] && ((unsigned char*)device)[130]);
     device[1] = -2;
-    function_407500(PTR(device));
+    kinoko_input_device_update((KinokoInputDevice*)device, NULL);
     for (i = 18; i < 42; ++i) CHECK(device[i] == 0);
-    kinoko_input_keys_clear(PTR(tracker));
-    for(i=0;i<256;++i) { kinoko_input_keys_add(PTR(tracker),(uint8_t)i); kinoko_input_keys_add(PTR(tracker),(uint8_t)i); }
-    CHECK(kinoko_input_keys_size(PTR(tracker))==256);
-    for(i=0;i<256;++i) CHECK(kinoko_input_keys_at(PTR(tracker),i)==i);
-    kinoko_input_keys_destroy(PTR(tracker));
+    kinoko_input_keys_clear((KinokoKeyTracker *)(intptr_t)(PTR(tracker)));
+    for(i=0;i<256;++i) { kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(tracker)),(uint8_t)i); kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(tracker)),(uint8_t)i); }
+    CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(tracker)))==256);
+    for(i=0;i<256;++i) CHECK(kinoko_input_keys_at((KinokoKeyTracker *)(intptr_t)(PTR(tracker)),i)==i);
+    kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(tracker)));
     kinoko_input_snapshot.controllers = saved_states; kinoko_input_snapshot.controller_count = saved_count;
     memcpy(g_retdec_keyboard_state, saved_keys, 256);
     return 0;
@@ -4361,9 +4362,9 @@ static int test_physical_input(void) {
 
 static int test_input_configuration(void) {
     int32_t manager[384]={0};
-    kinoko_input_devices_construct(PTR(manager));
-    kinoko_input_devices_resize(PTR(manager),2);
-    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)kinoko_input_devices_begin(PTR(manager));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(manager)));
+    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(manager)),2);
+    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(manager)));
     char path[MAX_PATH]; GetModuleFileNameA(NULL,path,MAX_PATH);
     char *filename=strrchr(path,'\\'); CHECK(filename!=NULL);
     sprintf_s(filename+1,MAX_PATH-(filename+1-path),"input-contract-%lu.dat",GetCurrentProcessId());
@@ -4371,33 +4372,35 @@ static int test_input_configuration(void) {
     devices[0][1]=0; devices[0][9]=7;
     devices[1][1]=1; devices[1][9]=19;
     const int old_count=kinoko_input_snapshot.controller_count; kinoko_input_snapshot.controller_count=2;
-    function_46b7c0(PTR(manager),PTR(path));
+    kinoko_input_save_config((KinokoInputManager*)manager,path);
     memset(manager+4,0,68); memset(devices[0]+1,0,68); memset(devices[1]+1,0,68);
-    function_46b880(PTR(manager),PTR(path));
+    kinoko_input_load_config((KinokoInputManager*)manager,path);
     CHECK(manager[4]==0xfe && manager[8]==55);
     CHECK(devices[0][9]==7 && devices[1][9]==7); /* First saved device broadcasts to all. */
-    CHECK(function_46be40(PTR(manager),-1,3)==55);
-    function_46bbe0(PTR(manager),1,3,23);
-    CHECK(devices[1][9]==23 && devices[0][9]==7);
+    CHECK(kinoko_input_get_assignment((KinokoInputManager*)manager,-1,3)==55);
+    kinoko_input_set_assignment((KinokoInputManager*)manager,1,3,23);
+    CHECK(devices[0][9]==23 && devices[1][9]==7);
+    CHECK(kinoko_input_get_assignment((KinokoInputManager*)manager,1,3)==23);
+    CHECK(kinoko_input_get_assignment((KinokoInputManager*)manager,2,3)==-1);
     unsigned char previous[256]; memcpy(previous,g_retdec_keyboard_state,256);
     memset(g_retdec_keyboard_state,0,256);
     g_retdec_keyboard_state[58]=g_retdec_keyboard_state[112]=g_retdec_keyboard_state[148]=0x80;
-    CHECK(function_46bc90(PTR(manager),-1,3)==0);
+    CHECK(kinoko_input_wait_assignment((KinokoInputManager*)manager,-1,3)==0);
     g_retdec_keyboard_state[149]=0x80;
-    CHECK(function_46bc90(PTR(manager),-1,3)==1 && manager[8]==149);
+    CHECK(kinoko_input_wait_assignment((KinokoInputManager*)manager,-1,3)==1 && manager[8]==149);
     memcpy(g_retdec_keyboard_state,previous,256); kinoko_input_snapshot.controller_count=old_count;
-    kinoko_input_devices_destroy(PTR(manager));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(manager)));
     puts("PASS: Input config two-record format/broadcast, assignment offsets and original excluded keys");
     return 0;
 }
 
 static int test_input_copy(void) {
     int32_t source[378]={0}, target[378]={0}, empty[378]={0};
-    kinoko_input_devices_construct(PTR(source));
-    kinoko_input_devices_construct(PTR(target));
-    kinoko_input_devices_construct(PTR(empty));
-    kinoko_input_devices_resize(PTR(source),2);
-    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)kinoko_input_devices_begin(PTR(source));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(source)));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(target)));
+    kinoko_input_devices_construct((KinokoInputManager *)(intptr_t)(PTR(empty)));
+    kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(source)),2);
+    int32_t (*devices)[42]=(int32_t(*)[42])(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(source)));
     unsigned char keys[9]={3,7,11,19,23,29,31,37,41};
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(source)));
     kinoko_sqplus_object_initialize((void *)(intptr_t)(PTR(target)));
@@ -4406,23 +4409,23 @@ static int test_input_copy(void) {
     source[49]=0x3333; target[49]=0x4444;
     memset((char*)source+16,0x17,164);
     memset((char*)source+200,0x23,164);
-    kinoko_input_keys_construct(PTR(source)+392);
-    kinoko_input_keys_construct(PTR(target)+392);
-    kinoko_input_keys_construct(PTR(empty)+392);
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(PTR(target)+392));
+    kinoko_input_keys_construct((KinokoKeyTracker *)(intptr_t)(PTR(empty)+392));
     memset((char*)source+392,0x35,1024);
     memset((char*)source+1436,0x47,76);
-    devices[0][0]=devices[1][0]=PTR(g35);
+    devices[0][0]=devices[1][0]=PTR(&kinoko_input_device_methods);
     devices[0][1]=101; devices[1][41]=303;
     source[48]=12345; target[48]=54321; /* vector allocator byte is not copied */
-    kinoko_input_cluster_construct(PTR(source)+196);
-    kinoko_input_cluster_construct(PTR(target)+196);
-    kinoko_input_cluster_construct(PTR(empty)+196);
-    for(int i=0;i<40;++i) kinoko_input_cluster_append(PTR(source)+196,PTR(devices[i%2]));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(target)+196));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(empty)+196));
+    for(int i=0;i<40;++i) kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(source)+196),(KinokoInputDevice *)(intptr_t)(PTR(devices[i%2])));
     source[91]=0x5555; target[91]=0x6666; /* preserve iterator proxy */
-    for(int i=0;i<9;++i) kinoko_input_keys_add(PTR(source)+392,keys[i]);
+    for(int i=0;i<9;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
     source[357]=45678; target[357]=87654;
     ((char*)source)[388]=9; ((char*)source)[1432]=1; ((char*)source)[1434]=3;
-    CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)source)==PTR(target));
     CHECK(target[3]==0x2222 && target[49]==0x4444);
     CHECK(target[48]==54321 && target[91]==0x6666 && target[357]==87654);
     CHECK(memcmp((char*)target+16,(char*)source+16,164)==0);
@@ -4430,44 +4433,44 @@ static int test_input_copy(void) {
     CHECK(memcmp((char*)target+392,(char*)source+392,1024)==0);
     CHECK(memcmp((char*)target+1436,(char*)source+1436,76)==0);
     CHECK(target[45]!=source[45] && target[354]!=source[354] && target[92]!=source[92]);
-    CHECK(memcmp((void*)(intptr_t)kinoko_input_devices_begin(PTR(target)),devices,336)==0);
-    CHECK(kinoko_input_keys_size(PTR(target)+392)==9);
-    for(int i=0;i<9;++i) CHECK(kinoko_input_keys_at(PTR(target)+392,i)==keys[i]);
+    CHECK(memcmp((void*)(intptr_t)(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target))),devices,336)==0);
+    CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
+    for(int i=0;i<9;++i) CHECK(kinoko_input_keys_at((KinokoKeyTracker *)(intptr_t)(PTR(target)+392),i)==keys[i]);
     CHECK(((char*)target)[388]==9 && ((char*)target)[1432]==1 && ((char*)target)[1434]==3);
-    CHECK(kinoko_input_cluster_size(PTR(target)+196)==40);
+    CHECK(kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==40);
     for(int i=0;i<40;++i)
-        CHECK(kinoko_input_cluster_at(PTR(target)+196,i)==PTR(devices[i%2]));
+        CHECK(kinoko_input_cluster_at((KinokoInputCluster *)(intptr_t)(PTR(target)+196),i)==(KinokoInputDevice*)devices[i%2]);
     {
-        int32_t buffer=kinoko_input_devices_begin(PTR(target)), queue=target[92], byte_buffer=target[354];
-        kinoko_input_devices_resize(PTR(source),1);
-        kinoko_input_keys_clear(PTR(source)+392);
-        for(int i=0;i<4;++i) kinoko_input_keys_add(PTR(source)+392,keys[i]);
-        CHECK(kinoko_input_keys_size(PTR(target)+392)==9);
-        kinoko_input_cluster_clear(PTR(source)+196);
-        kinoko_input_cluster_append(PTR(source)+196,PTR(devices[0]));
+        int32_t buffer=(int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target))), queue=target[92], byte_buffer=target[354];
+        kinoko_input_devices_resize((KinokoInputManager *)(intptr_t)(PTR(source)),1);
+        kinoko_input_keys_clear((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
+        for(int i=0;i<4;++i) kinoko_input_keys_add((KinokoKeyTracker *)(intptr_t)(PTR(source)+392),keys[i]);
+        CHECK(kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==9);
+        kinoko_input_cluster_clear((KinokoInputCluster *)(intptr_t)(PTR(source)+196));
+        kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(source)+196),(KinokoInputDevice *)(intptr_t)(PTR(devices[0])));
         devices[0][1]=909;
-        CHECK(function_46ed80(PTR(target),PTR(source))==PTR(target));
-        CHECK(kinoko_input_devices_begin(PTR(target))==buffer && kinoko_input_devices_end(PTR(target))==buffer+168);
-        CHECK(target[92]==queue && kinoko_input_cluster_size(PTR(target)+196)==1 && target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==4);
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)source)==PTR(target));
+        CHECK((int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer && (int32_t)(intptr_t)kinoko_input_devices_end((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer+168);
+        CHECK(target[92]==queue && kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==1 && target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==4);
         CHECK(((int32_t*)(intptr_t)buffer)[1]==909);
-        CHECK(function_46ed80(PTR(target),PTR(target))==PTR(target) && kinoko_input_devices_begin(PTR(target))==buffer);
-        CHECK(function_46ed80(PTR(target),PTR(empty))==PTR(target));
-        CHECK(kinoko_input_devices_begin(PTR(target))==kinoko_input_devices_end(PTR(target)));
-        CHECK(kinoko_input_cluster_size(PTR(target)+196)==0);
-        CHECK(target[354]==byte_buffer && kinoko_input_keys_size(PTR(target)+392)==0);
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)target)==PTR(target) && (int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==buffer);
+        CHECK((int32_t)(intptr_t)kinoko_input_manager_assign((KinokoInputManager*)target,(const KinokoInputManager*)empty)==PTR(target));
+        CHECK((int32_t)(intptr_t)kinoko_input_devices_begin((KinokoInputManager *)(intptr_t)(PTR(target)))==(int32_t)(intptr_t)kinoko_input_devices_end((KinokoInputManager *)(intptr_t)(PTR(target))));
+        CHECK(kinoko_input_cluster_size((KinokoInputCluster *)(intptr_t)(PTR(target)+196))==0);
+        CHECK(target[354]==byte_buffer && kinoko_input_keys_size((KinokoKeyTracker *)(intptr_t)(PTR(target)+392))==0);
     }
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(empty))));
-    kinoko_input_cluster_delete(PTR(source)+196,NULL,0);
-    kinoko_input_cluster_delete(PTR(target)+196,NULL,0);
-    kinoko_input_cluster_delete(PTR(empty)+196,NULL,0);
-    kinoko_input_keys_destroy(PTR(source)+392);
-    kinoko_input_keys_destroy(PTR(target)+392);
-    kinoko_input_keys_destroy(PTR(empty)+392);
-    kinoko_input_devices_destroy(PTR(source));
-    kinoko_input_devices_destroy(PTR(target));
-    kinoko_input_devices_destroy(PTR(empty));
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(source)+196),NULL,0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(target)+196),NULL,0);
+    kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(empty)+196),NULL,0);
+    kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(source)+392));
+    kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(target)+392));
+    kinoko_input_keys_destroy((KinokoKeyTracker *)(intptr_t)(PTR(empty)+392));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(source)));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(target)));
+    kinoko_input_devices_destroy((KinokoInputManager *)(intptr_t)(PTR(empty)));
     puts("PASS: Input copy owns vectors and native deque while keeping shallow device pointers");
     return 0;
 }
@@ -4489,7 +4492,7 @@ static int test_string_layout_binding(int32_t vm,int32_t* root) {
         "if(!StringProbe.PushBack(\"AB\") || !StringProbe.PopFront(1) || !StringProbe.PopBack(1)) throw \"text pop\";\n"
         "if(StringProbe.GetCharacterBytes(\"a\")!=1 || StringProbe.GetCharacterBytes(null)!=0 || StringProbe.PopBack(-1)) throw \"text args\";\n"
         "if(!StringProbe.Rebuild()) throw \"rebuild\";\n"));
-    CHECK(object[12]==1 && retdec_std_string_data(PTR(object)+32)[0]=='A'); /* original ASCII PopFront erases zero */
+    CHECK(object[12]==1 && kinoko_string_data((const void*)(intptr_t)(PTR(object)+32))[0]=='A'); /* original ASCII PopFront erases zero */
     CHECK(((unsigned char*)object)[228]==1);
     int32_t atlas[109]={0};atlas[108]=2;
     for(int i=0;i<2;++i) {
@@ -4515,12 +4518,12 @@ static int test_string_layout_lifetime(void) {
     CHECK(layout[0]==PTR(&g350) && layout[6]==15 && layout[13]==15 && layout[20]>=16);
     CHECK(layout[5]==0 && layout[12]==0 && layout[19]==13);
     const unsigned char face[]={0x82,0x6c,0x82,0x72,0x20,0x83,0x53,0x83,0x56,0x83,0x62,0x83,0x4e,0};
-    CHECK(memcmp(retdec_std_string_data(PTR(layout)+60),face,sizeof(face))==0);
+    CHECK(memcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layout)+60)),face,sizeof(face))==0);
     CHECK(layout[22]==16 && layout[23]==1 && layout[31]==2 && layout[36]==-1);
     CHECK(layout[27]==255 && layout[28]==255 && layout[29]==255);
     CHECK(((float*)layout)[34]==1 && ((float*)layout)[35]==1 && ((float*)layout)[38]==1);
     CHECK(layout[44]!=0 && kinoko_string_queue_size(PTR(layout))==0);
-    retdec_string_assign_cstr(layout+1,"rendered");
+    kinoko_string_assign_cstr(layout+1,"rendered");
     kinoko_string_push_back(PTR(layout),"pending");
     layout[50]=91;layout[51]=7;layout[52]=11;layout[53]=37;
     int32_t clone=kinoko_method_clone_string_layout(PTR(layout),NULL);CHECK(clone);
@@ -4553,19 +4556,19 @@ static int test_string_glyph_cache(void) {
     atlas[(24+344)/4]=PTR(malloc(32));
     atlas[5]=4;atlas[108]=2;
     layout[6]=layout[13]=15;
-    retdec_string_assign_cstr(layout+1,"AB");
-    retdec_string_assign_cstr(layout+8,"CD");
+    kinoko_string_assign_cstr(layout+1,"AB");
+    kinoko_string_assign_cstr(layout+8,"CD");
     layout[22]=19;
     const int32_t storage=layout[44];
     for(int i=0;i<2;++i) {
         int32_t* glyph=(int32_t*)(intptr_t)kinoko_string_append_glyph(PTR(layout));
         glyph[2]=4;glyph[63]=PTR(atlas);
     }
-    CHECK(function_441250(layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
-    CHECK(function_4410c0(PTR(layout))==1);
+    CHECK(kinoko_string_prune_atlases((KinokoStringLayout*)layout)==1 && kinoko_string_atlas_size(PTR(layout))==1);
+    CHECK(kinoko_string_rebuild_queue((KinokoStringLayout*)layout)==1);
     CHECK(kinoko_string_atlas_size(PTR(layout))==0);
     CHECK(layout[44]==storage && kinoko_string_queue_size(PTR(layout))==0);
-    CHECK(layout[5]==0 && layout[12]==4 && memcmp(retdec_std_string_data(PTR(layout)+32),"ABCD",5)==0);
+    CHECK(layout[5]==0 && layout[12]==4 && memcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layout)+32)),"ABCD",5)==0);
     CHECK(((unsigned char*)layout)[228]==1 && layout[51]==0 && layout[52]==0 && layout[53]==0 && layout[54]==19);
     kinoko_clear_string_layout(PTR(layout));
     puts("PASS: native glyph deque protects live atlas; rebuild releases references/storage and preserves text order");
@@ -4577,42 +4580,42 @@ static int test_map_manager_copy(void) {
     uint32_t capacity;
     kinoko_sqplus_object_initialize(source);
     kinoko_sqplus_object_initialize(target);
-    kinoko_map_containers_construct(PTR(source));kinoko_map_containers_construct(PTR(target));
+    kinoko_map_containers_construct((KinokoMapManager*)(source));kinoko_map_containers_construct((KinokoMapManager*)(target));
     source[3]=123; source[4]=456; source[5]=789;
-    first=kinoko_map_append_render(PTR(source),222);
-    last=kinoko_map_append_render(PTR(source),444);
-    CHECK(first!=last && kinoko_map_render_at(PTR(source),0)==first);
+    first=(int32_t)(intptr_t)(kinoko_map_append_render((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(222)));
+    last=(int32_t)(intptr_t)(kinoko_map_append_render((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(444)));
+    CHECK(first!=last && (int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(source), 0))==first);
     *(int32_t*)(intptr_t)first=111;*(int32_t*)(intptr_t)last=333;
-    kinoko_map_append_event(PTR(source),71);kinoko_map_append_event(PTR(source),83);
-    kinoko_map_append_event(PTR(source),97);
+    kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(71));kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(83));
+    kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(97));
     source[8]=1;target[8]=2;source[12]=3;target[12]=4;
     for(int i=13;i<21;++i) source[i]=100+i;
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
     CHECK(source[5]==0 && target[5]==789 && target[3]==123 && target[4]==456);
-    CHECK(target[8]==2 && target[12]==4 && kinoko_map_render_count(PTR(target))==2);
-    CHECK(kinoko_map_render_at(PTR(target),0)!=first);
-    first=kinoko_map_render_at(PTR(target),0);last=kinoko_map_render_at(PTR(target),1);
+    CHECK(target[8]==2 && target[12]==4 && kinoko_map_render_count((KinokoMapManager*)(target))==2);
+    CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 0))!=first);
+    first=(int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 0));last=(int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 1));
     CHECK(*(int32_t*)(intptr_t)first==PTR(&g37) && *(int32_t*)(intptr_t)last==PTR(&g37));
     CHECK(*(int32_t*)(intptr_t)(first+4)==222 && *(int32_t*)(intptr_t)(last+4)==444);
-    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),1)==83);
+    CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==3 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 1))==83);
     CHECK(memcmp(target+13,source+13,32)==0);
-    CHECK(function_4701b0(PTR(target),PTR(target))==PTR(target) && target[5]==789);
-    CHECK(kinoko_map_render_at(PTR(target),0)==first);
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)target)==PTR(target) && target[5]==789);
+    CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(target), 0))==first);
     target[5]=0; /* borrowed marker; no fabricated player destruction */
-    capacity=kinoko_map_event_capacity(PTR(target));
-    kinoko_map_containers_clear(PTR(source));kinoko_map_append_event(PTR(source),71);
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
-    CHECK(kinoko_map_render_count(PTR(target))==0);
-    CHECK(kinoko_map_event_count(PTR(target))==1 && kinoko_map_event_at(PTR(target),0)==71);
-    CHECK(kinoko_map_event_capacity(PTR(target))==capacity);
-    kinoko_map_containers_clear(PTR(source));
-    CHECK(function_4701b0(PTR(target),PTR(source))==PTR(target));
-    CHECK(kinoko_map_event_count(PTR(target))==0 && kinoko_map_event_capacity(PTR(target))==capacity);
-    kinoko_map_append_event(PTR(target),0);kinoko_map_append_event(PTR(target),71);
-    kinoko_map_append_event(PTR(target),71);
-    CHECK(kinoko_map_event_count(PTR(target))==3 && kinoko_map_event_at(PTR(target),0)==0);
-    CHECK(kinoko_map_event_at(PTR(target),1)==71 && kinoko_map_event_at(PTR(target),2)==71);
-    kinoko_map_containers_destroy(PTR(source));kinoko_map_containers_destroy(PTR(target));
+    capacity=kinoko_map_event_capacity((KinokoMapManager*)(target));
+    kinoko_map_containers_clear((KinokoMapManager*)(source));kinoko_map_append_event((KinokoMapManager*)(source), (KinokoActLayout*)(intptr_t)(71));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
+    CHECK(kinoko_map_render_count((KinokoMapManager*)(target))==0);
+    CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==1 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 0))==71);
+    CHECK(kinoko_map_event_capacity((KinokoMapManager*)(target))==capacity);
+    kinoko_map_containers_clear((KinokoMapManager*)(source));
+    CHECK((int32_t)(intptr_t)kinoko_map_manager_assign((KinokoMapManager*)target,(KinokoMapManager*)source)==PTR(target));
+    CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==0 && kinoko_map_event_capacity((KinokoMapManager*)(target))==capacity);
+    kinoko_map_append_event((KinokoMapManager*)(target), 0);kinoko_map_append_event((KinokoMapManager*)(target), (KinokoActLayout*)(intptr_t)(71));
+    kinoko_map_append_event((KinokoMapManager*)(target), (KinokoActLayout*)(intptr_t)(71));
+    CHECK(kinoko_map_event_count((KinokoMapManager*)(target))==3 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 0))==0);
+    CHECK((int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 1))==71 && (int32_t)(intptr_t)(kinoko_map_event_at((KinokoMapManager*)(target), 2))==71);
+    kinoko_map_containers_destroy((KinokoMapManager*)(source));kinoko_map_containers_destroy((KinokoMapManager*)(target));
     (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(source))));(int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(PTR(target))));
     puts("PASS: native map list/vector copies, stable render addresses, duplicates/nulls and capacity retention");
     return 0;
@@ -4620,8 +4623,8 @@ static int test_map_manager_copy(void) {
 
 static int test_input_aggregation(void) {
     int32_t cluster[50] = {0}, devices[3][42] = {{0}};
-    kinoko_input_cluster_construct(PTR(cluster));
-    for(int i=0;i<3;++i) kinoko_input_cluster_append(PTR(cluster),PTR(devices[i]));
+    kinoko_input_cluster_construct((KinokoInputCluster *)(intptr_t)(PTR(cluster)));
+    for(int i=0;i<3;++i) kinoko_input_cluster_append((KinokoInputCluster *)(intptr_t)(PTR(cluster)),(KinokoInputDevice *)(intptr_t)(PTR(devices[i])));
     ((uint8_t*)devices[0])[4]=10; ((uint8_t*)devices[1])[4]=20; ((uint8_t*)devices[2])[4]=30;
     devices[0][18]=-5; devices[1][18]=5; devices[2][18]=3;
     devices[0][19]=2; devices[1][19]=-6;
@@ -4632,17 +4635,17 @@ static int test_input_aggregation(void) {
     ((float*)devices[0])[36]=-0.75f; ((float*)devices[1])[36]=0.75f;
     ((float*)devices[2])[41]=-0.9f;
     cluster[48]=99;
-    CHECK(function_4077c0(PTR(cluster))==3);
+    CHECK(kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(PTR(cluster)), NULL)==3);
     CHECK(cluster[18]==-5 && cluster[19]==-6 && cluster[20]==9 && cluster[31]==7);
     CHECK(((uint8_t*)cluster)[130]==0 && ((uint8_t*)cluster)[131]==1);
     CHECK(((uint8_t*)cluster)[192]==30);
     CHECK(((float*)cluster)[36]==-0.75f && ((float*)cluster)[41]==-0.9f);
-    kinoko_input_cluster_clear(PTR(cluster));
-    CHECK(function_4077c0(PTR(cluster))==PTR(cluster)+72);
+    kinoko_input_cluster_clear((KinokoInputCluster *)(intptr_t)(PTR(cluster)));
+    CHECK(kinoko_input_cluster_update((KinokoInputCluster *)(intptr_t)(PTR(cluster)), NULL)==PTR(cluster)+72);
     for(int i=18;i<42;++i) CHECK(cluster[i]==0);
     CHECK(((uint8_t*)cluster)[192]==30); /* Last device survives an empty frame. */
-    CHECK(kinoko_input_cluster_delete(PTR(cluster),NULL,0)==PTR(cluster));
-    CHECK(cluster[0]==PTR(g35) && cluster[43]==0);
+    CHECK(kinoko_input_cluster_delete((KinokoInputCluster *)(intptr_t)(PTR(cluster)),NULL,0)==(KinokoInputCluster*)cluster);
+    CHECK(cluster[0]==PTR(&kinoko_input_device_methods) && cluster[43]==0);
     puts("PASS: native InputCluster deque, signed axes, 12 buttons, release edges and device precedence");
     return 0;
 }
@@ -4825,7 +4828,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
     const int top=sq_gettop(kinoko_vm(vm));
     player[4]=PTR(&holder); player[37]=kinoko_sqrat_object_vtable(); player[38]=vm;
     player[39]=root[2]; player[40]=root[3]; player[46]=15;
-    retdec_string_assign_cstr(player+41,"dynamicHost");
+    kinoko_string_assign_cstr(player+41,"dynamicHost");
     InitializeCriticalSection((struct retdec_RTL_CRITICAL_SECTION*)(player+5));
     CHECK(execute_source(vm,root+2,"dynamicHost <- {};"));
     CHECK(retdec_publish_acting_player_class(vm,PTR(root)));
@@ -4859,7 +4862,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(*(float*)(intptr_t)(layout+260)==1.0f);
         CHECK(i ? *(int32_t*)(intptr_t)(layout+292)==17 : *(float*)(intptr_t)(layout+284)==0.375f);
         const char key_name[]="a long key name\0with embedded bytes";
-        retdec_string_assign_n((int32_t*)(intptr_t)(key+8),key_name,sizeof(key_name)-1);
+        kinoko_string_assign_n((int32_t*)(intptr_t)(key+8),key_name,sizeof(key_name)-1);
         *(uint8_t*)(intptr_t)(key+32)=0xa5;
         *(uint8_t*)(intptr_t)(layout+313)=0xa5;
         int32_t cloned=retdec_call_thiscall0_result((void*)(intptr_t)key,(void*)g277.e5);
@@ -4869,12 +4872,12 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         CHECK(memcmp((void*)(intptr_t)(copied_layout+8),(void*)(intptr_t)(layout+8),305)==0);
         CHECK(*(uint8_t*)(intptr_t)(copied_layout+313)==0 && *(uint8_t*)(intptr_t)(cloned+32)==0);
         CHECK(*(uint32_t*)(intptr_t)(cloned+24)==sizeof(key_name)-1);
-        CHECK(memcmp(retdec_std_string_data(cloned+8),key_name,sizeof(key_name)-1)==0);
-        CHECK(retdec_std_string_data(cloned+8)!=retdec_std_string_data(key+8));
-        kinoko_string_destroy(cloned+8);
+        CHECK(memcmp(kinoko_string_data((const void*)(intptr_t)(cloned+8)),key_name,sizeof(key_name)-1)==0);
+        CHECK(kinoko_string_data((const void*)(intptr_t)(cloned+8))!=kinoko_string_data((const void*)(intptr_t)(key+8)));
+        kinoko_string_destroy((void*)(intptr_t)(cloned+8));
         free((void*)(intptr_t)copied_layout); free((void*)(intptr_t)cloned);
     }
-    CHECK(strcmp(retdec_std_string_data(layers[1]+112),"a long dynamically created layer")==0);
+    CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(layers[1]+112)),"a long dynamically created layer")==0);
     CHECK(execute_source(vm,root+2,
         "if(dynamicPlayer.GetLayerOrder(dynamicFirst)!=0 || dynamicPlayer.GetLayerOrder(dynamicSecond)!=1) throw \"initial order\";\n"
         "if(dynamicPlayer.GetLayerOrder(inactiveLayer)!=-1) throw \"missing layer\";\n"
@@ -4913,7 +4916,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
         memcpy(raw,text,sizeof(text));
         *(int32_t*)(intptr_t)(source+296)=PTR(raw);
         *(uint32_t*)(intptr_t)(source+300)=sizeof(text);
-        retdec_string_assign_cstr((int32_t*)(intptr_t)(source+268),"a long original script filename.nut");
+        kinoko_string_assign_cstr((int32_t*)(intptr_t)(source+268),"a long original script filename.nut");
         const int32_t head=*(int32_t*)(intptr_t)(source+180);
         const int32_t source_key=*(int32_t*)(intptr_t)(*(int32_t*)(intptr_t)head+8);
         const int32_t event=kinoko_act_new_timeline();
@@ -4995,7 +4998,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             const int32_t loaded=retdec_act_make_layer(); CHECK(loaded);
             CHECK(retdec_call_thiscall2_result((void*)(intptr_t)loaded,(void*)g252.e1,PTR(&holder),1));
             CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
-            CHECK(strcmp(retdec_std_string_data(loaded+112),retdec_std_string_data(source+112))==0);
+            CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(loaded+112)),kinoko_string_data((const void*)(intptr_t)(source+112)))==0);
             CHECK(*(int32_t*)(intptr_t)(loaded+184)==1 && *(int32_t*)(intptr_t)(loaded+196)==1);
             int32_t key_node=**(int32_t**)(intptr_t)(loaded+180);
             int32_t loaded_key=*(int32_t*)(intptr_t)(key_node+8);
@@ -5017,7 +5020,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
             CHECK(*(int32_t*)(intptr_t)(copy+316)==*(int32_t*)(intptr_t)(source+316));
             CHECK(*(int32_t*)(intptr_t)(copy+320)==*(int32_t*)(intptr_t)(source+320));
             CHECK(*(int32_t*)(intptr_t)(copy+340)==*(int32_t*)(intptr_t)(source+340));
-            CHECK(retdec_std_string_data(copy+268)[0]==0);
+            CHECK(kinoko_string_data((const void*)(intptr_t)(copy+268))[0]==0);
             CHECK(strcmp((char*)(intptr_t)*(int32_t*)(intptr_t)(copy+296),compiled?compiled_text:text)==0);
             CHECK(*(uint32_t*)(intptr_t)(copy+300)==(compiled?sizeof(compiled_text):sizeof(text)));
             CHECK(*(uint8_t*)(intptr_t)(copy+304)==1 && *(uint8_t*)(intptr_t)(copy+305)==compiled);
@@ -5036,7 +5039,7 @@ static int test_dynamic_layer(int32_t vm, int32_t* root) {
                     const int32_t layout=*(int32_t*)(intptr_t)(copy_key+4);
                     CHECK(*(int32_t*)(intptr_t)(layout+304)==copy);
                     CHECK(*(uint32_t*)(intptr_t)(copy_key+24)==*(uint32_t*)(intptr_t)(source_key+24));
-                    CHECK(retdec_std_string_data(copy_key+8)!=retdec_std_string_data(source_key+8));
+                    CHECK(kinoko_string_data((const void*)(intptr_t)(copy_key+8))!=kinoko_string_data((const void*)(intptr_t)(source_key+8)));
                 }
             }
             retdec_destroy_cact_layer(copy); free((void*)(intptr_t)copy);
@@ -5117,8 +5120,8 @@ static int test_chip_serialization(void) {
     source[0]=loaded[0]=PTR(&g313);
     source[7]=source[14]=source[23]=loaded[7]=loaded[14]=loaded[23]=15;
     source[1]=719;
-    retdec_string_assign_cstr(source+2,"map atlas");
-    retdec_string_assign_cstr(source+9,"data/worldmap/worldmap.mcd");
+    kinoko_string_assign_cstr(source+2,"map atlas");
+    kinoko_string_assign_cstr(source+9,"data/worldmap/worldmap.mcd");
     loaded[24]=0x5a;
     const unsigned char saved=g673;
     for (int compact=0;compact<2;++compact) {
@@ -5129,8 +5132,8 @@ static int test_chip_serialization(void) {
         stream.position=0; stream.reading=1;
         CHECK(retdec_call_thiscall2_result(loaded,(void*)g313.e1,PTR(&holder),1)==1);
         CHECK(stream.position==stream.size && loaded[1]==719);
-        CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"map atlas")==0);
-        CHECK(strcmp(retdec_std_string_data(PTR(loaded+9)),"data/worldmap/worldmap.mcd")==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(loaded+2)),"map atlas")==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(loaded+9)),"data/worldmap/worldmap.mcd")==0);
         CHECK(loaded[16]==0 && loaded[17]==0 && loaded[24]==0x5a);
     }
     g673=saved;
@@ -5162,7 +5165,7 @@ static int test_serializable_lifetime(void) {
         *(uint32_t*)allocation=count;
         for(int i=0;i<count;++i) {
             int32_t* key=(int32_t*)(allocation+4+36*i); key[0]=PTR(&g277); key[7]=15;
-            retdec_string_assign_cstr(key+2,"heap callback released by native destructor");
+            kinoko_string_assign_cstr(key+2,"heap callback released by native destructor");
             key[1]=PTR(calloc(1,316)); CHECK(retdec_construct_c2dlayout(key[1]));
         }
         CHECK(retdec_call_thiscall1_result(allocation+4,(void*)g277.e4,2)==PTR(allocation));
@@ -5177,8 +5180,8 @@ static int test_serializable_lifetime(void) {
         resource[7]=15;
         if(kind==1) { resource[14]=15; resource[23]=15; }
         else resource[15]=15;
-        retdec_string_assign_cstr(resource+2,"resource heap name released in place");
-        retdec_string_assign_cstr(resource+(kind==1?9:10),"independent long backing filename");
+        kinoko_string_assign_cstr(resource+2,"resource heap name released in place");
+        kinoko_string_assign_cstr(resource+(kind==1?9:10),"independent long backing filename");
         const int32_t* table=(int32_t*)(intptr_t)resource[0];
         CHECK(retdec_call_thiscall1_result(resource,(void*)(intptr_t)table[4],0)==PTR(resource));
         CHECK(resource[6]==0 && resource[7]==15);
@@ -5278,10 +5281,10 @@ static int test_key_string_writers(void) {
     CHECK(retdec_construct_c2dlayout(PTR(flat)));
     ((float*)flat)[59]=0.625f; ((float*)flat)[71]=0.75f;
     key[1]=PTR(flat);
-    retdec_string_assign_cstr(key+2,"independently owned callback name");
+    kinoko_string_assign_cstr(key+2,"independently owned callback name");
     int32_t string_source[65]={0};kinoko_construct_string_layout(PTR(string_source));
-    retdec_string_assign_n(string_source+1,"A\0B",3);
-    retdec_string_assign_n(string_source+8,"C\0D",3);
+    kinoko_string_assign_n(string_source+1,"A\0B",3);
+    kinoko_string_assign_n(string_source+8,"C\0D",3);
     ((uint8_t*)string_source)[128]=1;string_source[33]=2;
     const int32_t archives=kinoko_archive_count; kinoko_archive_count=0;
     for(int kind=0;kind<2;++kind) for(int compact=0;compact<2;++compact) {
@@ -5298,11 +5301,11 @@ static int test_key_string_writers(void) {
         int32_t* copy=(int32_t*)calloc(1,36); CHECK(copy); copy[0]=PTR(&g277); copy[7]=15;
         CHECK(retdec_call_thiscall2_result(copy,(void*)g277.e1,PTR(&holder),1));
         CHECK(copy[1] && copy[1]!=key[1]);
-        CHECK(strcmp(retdec_std_string_data(PTR(copy+2)),retdec_std_string_data(PTR(key+2)))==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(copy+2)),kinoko_string_data((const void*)(key+2)))==0);
         if(kind) {
             int32_t* text=(int32_t*)(intptr_t)copy[1];
             CHECK(text[0]==PTR(g350) && text[5]==0 && text[12]==6);
-            CHECK(memcmp(retdec_std_string_data(copy[1]+32),"A\0BC\0D",6)==0);
+            CHECK(memcmp(kinoko_string_data((const void*)(intptr_t)(copy[1]+32)),"A\0BC\0D",6)==0);
             CHECK(((uint8_t*)text)[128]==1 && text[33]==0); /* wire bool alias, not runtime alignment */
         } else CHECK(*(float*)(intptr_t)(copy[1]+236)==0.625f && *(float*)(intptr_t)(copy[1]+284)==0.75f);
         CHECK(SetFilePointer(file,0,NULL,FILE_CURRENT)==stream.size);
@@ -5310,7 +5313,7 @@ static int test_key_string_writers(void) {
     }
     kinoko_archive_count=archives;
     kinoko_clear_string_layout(PTR(string_source));
-    kinoko_string_destroy(PTR(key)+8);
+    kinoko_string_destroy((void*)(intptr_t)(PTR(key)+8));
     g673=saved;
     puts("PASS: key presence byte and CStringLayout original bool alias serialization");
     return 0;
@@ -5375,8 +5378,8 @@ static int test_texture_serialization(int render_target) {
     source[1]=15; source[18]=source[19]=512;
     ((float*)source)[20]=273; ((float*)source)[21]=0;
     ((float*)source)[22]=136; ((float*)source)[23]=480;
-    retdec_string_assign_cstr(source+2,"face_3");
-    retdec_string_assign_cstr(source+10,"Data/System/face1");
+    kinoko_string_assign_cstr(source+2,"face_3");
+    kinoko_string_assign_cstr(source+10,"Data/System/face1");
     const unsigned char saved=g673;
     for (int compact=0;compact<2;++compact) {
         g673=(unsigned char)compact;
@@ -5389,8 +5392,8 @@ static int test_texture_serialization(int render_target) {
         CHECK(stream.position==stream.size && loaded[1]==15);
         CHECK(loaded[18]==512 && loaded[19]==512);
         CHECK(memcmp(source+20,loaded+20,16)==0 && !((unsigned char*)loaded)[96]);
-        CHECK(strcmp(retdec_std_string_data(PTR(loaded+2)),"face_3")==0);
-        CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(loaded+2)),"face_3")==0);
+        CHECK(strcmp(kinoko_string_data((const void*)(loaded+10)),"Data/System/face1")==0);
         if (render_target) {
             const char name[]=".?AVCActRenderTarget@@";
             const uint32_t type=(uint32_t)kinoko_boost_hash_range(PTR(name),PTR(name+sizeof(name)-1));
@@ -5400,7 +5403,7 @@ static int test_texture_serialization(int render_target) {
             CHECK(stream.position==stream.size && factory[1]==15);
             CHECK(factory[18]==512 && factory[19]==512 && factory[17]==0);
             CHECK(memcmp(source+20,factory+20,16)==0 && !((unsigned char*)factory)[96]);
-            CHECK(strcmp(retdec_std_string_data(PTR(factory+10)),"Data/System/face1")==0);
+            CHECK(strcmp(kinoko_string_data((const void*)(factory+10)),"Data/System/face1")==0);
             retdec_destroy_cact_resource(PTR(factory));
         }
     }
@@ -5424,7 +5427,7 @@ static int test_texture_serialization(int render_target) {
     CHECK(retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),1)==1);
     CHECK(stream.position==stream.size && loaded[1]==321 && ((float*)loaded)[20]==137);
     CHECK(((float*)loaded)[22]==136 && ((float*)loaded)[23]==480);
-    CHECK(strcmp(retdec_std_string_data(PTR(loaded+10)),"Data/System/face1")==0);
+    CHECK(strcmp(kinoko_string_data((const void*)(loaded+10)),"Data/System/face1")==0);
     CHECK(!retdec_call_thiscall2_result(loaded,vtable[1],PTR(&holder),2));
     g673=saved;
     retdec_destroy_cact_resource(PTR(source)); retdec_destroy_cact_resource(PTR(loaded));
@@ -5440,7 +5443,7 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
     CHECK(retdec_construct_cact_script(PTR(script)) && retdec_construct_cact_script(PTR(loaded)));
     free((void*)(intptr_t)script[23]); script[23]=PTR(malloc(sizeof(source))); CHECK(script[23]);
     memcpy((void*)(intptr_t)script[23],source,sizeof(source)); script[24]=sizeof(source); script[25]=1;
-    retdec_string_assign_cstr(script+16,path);
+    kinoko_string_assign_cstr(script+16,path);
     const unsigned char previous=g673; g673=0;
     CHECK(retdec_call_thiscall1_result(script,(void*)g231.e0,PTR(&stream))==1);
     CHECK(stream.bytes[0]==1 && *(uint32_t*)(stream.bytes+1)==2);
@@ -5449,7 +5452,7 @@ static int test_script_serialization(int32_t vm, int32_t* root) {
     stream.reading=1; stream.position=0;
     CHECK(retdec_call_thiscall2_result(loaded,(void*)g231.e1,PTR(&holder),1)==1);
     CHECK(stream.position==stream.size && loaded[24]==sizeof(source));
-    CHECK(strcmp(retdec_std_string_data(PTR(loaded)+64),path)==0);
+    CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(loaded)+64)),path)==0);
     CHECK(memcmp((void*)(intptr_t)loaded[23],source,sizeof(source))==0);
     CHECK(loaded[23]!=script[23] && ((unsigned char*)loaded)[100]==1);
     CHECK(kinoko_method_read_act_script(PTR(loaded),NULL,PTR(&holder),2)==0);
@@ -5478,7 +5481,7 @@ static int test_original_layer_constructor(int32_t vm) {
     const int32_t previous = g664; g664 = vm;
     CHECK(function_41e390(PTR(layer)) == PTR(layer)); g664 = previous;
     CHECK(layer[24] == -1 && layer[26] == -1 && layer[27] == -1);
-    CHECK(strcmp(retdec_std_string_data(PTR(layer)+112), "Layer_") == 0);
+    CHECK(strcmp(kinoko_string_data((const void*)(intptr_t)(PTR(layer)+112)), "Layer_") == 0);
     CHECK(layer[78] == vm && layer[79] == OT_TABLE && layer[83] == vm && layer[84] == OT_NULL);
     CHECK(layer[52] == vm && layer[57] == vm && layer[62] == vm);
     int32_t missing[2] = {g483,g484};
@@ -6084,7 +6087,7 @@ int main(int argc, char **argv) {
     node[0] = PTR(sentinel);
     node[2] = PTR(layout_key);
     layout_key[1] = PTR(layout);
-    kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
+    kinoko_map_containers_construct((KinokoMapManager*)(g_retdec_map_manager_state));
     *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
     *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
     *(int32_t *)(g_retdec_map_manager_state + 20) = PTR(act_resource);
@@ -6110,13 +6113,13 @@ int main(int argc, char **argv) {
         source_act[52] = PTR(source_layers); source_act[53] = PTR(source_layers + 1);
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(source_act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(&source_holder);
-        kinoko_map_containers_construct(PTR(g_retdec_map_manager_state));
+        kinoko_map_containers_construct((KinokoMapManager*)(g_retdec_map_manager_state));
         render = function_470030(PTR("en"));
         CHECK(render != 0 && *(int32_t *)(intptr_t)render == PTR(&g37));
         CHECK(*(int32_t *)(intptr_t)(render + 4) == PTR(layout));
         CHECK(*(int32_t *)(intptr_t)(render + 4) != PTR(source_layout));
         CHECK(function_470030(PTR("missing")) == 0);
-        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state)) == 1);
+        CHECK(kinoko_map_render_count((KinokoMapManager*)(g_retdec_map_manager_state)) == 1);
         /* A script-side mutation must be visible through the render binding,
            while the template stays independent for the next activation. */
         *(float *)((unsigned char *)layer + 148) = -172.0f;
@@ -6126,10 +6129,10 @@ int main(int argc, char **argv) {
         *(float *)((unsigned char *)layer + 148) = 0.0f;
         second = function_470030(PTR("en"));
         CHECK(second != 0 && second != render);
-        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),0)==render);
-        CHECK(kinoko_map_render_at(PTR(g_retdec_map_manager_state),1)==second);
-        CHECK(kinoko_map_render_count(PTR(g_retdec_map_manager_state))==2);
-        kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
+        CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(g_retdec_map_manager_state), 0))==render);
+        CHECK((int32_t)(intptr_t)(kinoko_map_render_at((KinokoMapManager*)(g_retdec_map_manager_state), 1))==second);
+        CHECK(kinoko_map_render_count((KinokoMapManager*)(g_retdec_map_manager_state))==2);
+        kinoko_map_containers_destroy((KinokoMapManager*)(g_retdec_map_manager_state));
         *(int32_t *)(g_retdec_map_manager_state + 12) = PTR(act);
         *(int32_t *)(g_retdec_map_manager_state + 16) = PTR(holder);
         *(int32_t *)(g_retdec_map_manager_state + 24) = saved_head;
@@ -6209,7 +6212,7 @@ int main(int argc, char **argv) {
         kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(PTR(root + 1)), "eventProbe", (const void *)(intptr_t)(query_actor + 44));
         layout[60] = 32;
         layout[61] = 48;
-        CHECK(kinoko_map_event_count(map_state) == 1);
+        CHECK(kinoko_map_event_count((KinokoMapManager*)(intptr_t)(map_state)) == 1);
         CHECK(execute_source(vm, root + 2, "eventProbe.GetChipID(0);"));
         CHECK(*(int32_t *)(intptr_t)(map_state + 56) == 0x443);
         CHECK(*(float *)(intptr_t)(map_state + 60) == 100);
@@ -6886,7 +6889,7 @@ int main(int argc, char **argv) {
     CHECK(vm_failures == 0);
     CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
     CHECK((int32_t)(intptr_t)(kinoko_actor_manager_clear_resources((KinokoActorManager *)(intptr_t)(manager))) == *(int32_t *)(intptr_t)(manager + 100));
-    kinoko_map_containers_destroy(PTR(g_retdec_map_manager_state));
+    kinoko_map_containers_destroy((KinokoMapManager*)(g_retdec_map_manager_state));
     puts("PASS: stage lifecycle, terrain motion, start visibility and animation loading/bounds");
     return 0;
 }

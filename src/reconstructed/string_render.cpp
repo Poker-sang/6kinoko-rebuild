@@ -5,6 +5,8 @@
 #include "kinoko/quad_render.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/string_font.h"
+#include "kinoko/act_layout_records.hpp"
+#include "kinoko/string_atlas_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/texture_store.h"
@@ -12,19 +14,25 @@
 #include <d3d9.h>
 #include <algorithm>
 #include <cstring>
-extern "C" {
-int32_t function_4410c0(int32_t layout);
-}
 namespace {
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
+using LayoutRecord=kinoko::act::StringLayoutRecord;
+using GlyphRecord=kinoko::act::StringGlyphRecord;
+using AtlasRecord=kinoko::text::AtlasLifecycle;
+using kinoko::native::RecordView;
 int32_t new_page(int32_t layout) {
     const int32_t page=kinoko_string_append_atlas(layout);
-    for(int offset:{0,4,8,432}) field<int32_t>(page+offset)=0;
-    field<int32_t>(page+12)=field<int32_t>(page+16)=512;
+    const RecordView<AtlasRecord> atlas(pointer<void>(page));
+    atlas.set(&AtlasRecord::cursor_x,0);
+    atlas.set(&AtlasRecord::cursor_y,0);
+    atlas.set(&AtlasRecord::row_height,0);
+    atlas.set(&AtlasRecord::references,0);
+    atlas.set(&AtlasRecord::width,512);
+    atlas.set(&AtlasRecord::height,512);
     kinoko_string_font_configure(page+24,layout);
-    field<int32_t>(page+428)=kinoko_string_font_texture(page+24);
+    atlas.set(&AtlasRecord::texture,kinoko_string_font_texture(page+24));
     return page;
 }
 // 404EE0's CSpriteEx geometry and texture coordinates. The generic RetDec
@@ -52,44 +60,70 @@ void rectangle(int32_t s,int32_t handle,int32_t x,int32_t y,int32_t w,int32_t h)
 
 }
 extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* character) {
-    auto& cursor=field<int32_t>(layout+204);
-    if(*character=='\t') { const int32_t tab=4*field<int32_t>(layout+88);cursor+=tab-cursor%tab;return 1; }
+    const RecordView<LayoutRecord> text(pointer<void>(layout));
+    int32_t cursor=text.get(&LayoutRecord::cursor_x);
+    const auto font_height=text.get(&LayoutRecord::font_height);
+    if(*character=='\t') {
+        const int32_t tab=4*font_height;
+        text.set(&LayoutRecord::cursor_x,cursor+tab-cursor%tab);
+        return 1;
+    }
     if(*character=='\n') {
-        field<int32_t>(layout+208)+=field<int32_t>(layout+216);cursor=0;
-        field<int32_t>(layout+216)=field<int32_t>(layout+88);return 1;
+        text.set(&LayoutRecord::cursor_y,
+            text.get(&LayoutRecord::cursor_y)+text.get(&LayoutRecord::line_height));
+        text.set(&LayoutRecord::cursor_x,0);
+        text.set(&LayoutRecord::line_height,font_height);
+        return 1;
     }
     for(;;) {
         if(kinoko_string_atlas_size(layout)==0) new_page(layout);
         const int32_t page=kinoko_string_atlas_at(layout,kinoko_string_atlas_size(layout)-1);
+        const RecordView<AtlasRecord> atlas(pointer<void>(page));
         kinoko_string_font_configure(page+24,layout);
         int32_t width=0,height=0;
-        kinoko_string_font_upload(page+24,field<int32_t>(page+428),character,
-            field<int32_t>(page),field<int32_t>(page+4),&width,&height);
-        if(width>=field<int32_t>(page+12) || height>=field<int32_t>(page+16)) return 0;
-        if(field<int32_t>(page)+width>=field<int32_t>(page+12) ||
-            (!width && field<int32_t>(page+16)-field<int32_t>(page+8)-field<int32_t>(page+4)>field<int32_t>(layout+88))) {
-            field<int32_t>(page+4)+=field<int32_t>(page+8);
-            field<int32_t>(page)=field<int32_t>(page+8)=0;
+        kinoko_string_font_upload(page+24,atlas.get(&AtlasRecord::texture),character,
+            atlas.get(&AtlasRecord::cursor_x),atlas.get(&AtlasRecord::cursor_y),&width,&height);
+        if(width>=atlas.get(&AtlasRecord::width) || height>=atlas.get(&AtlasRecord::height)) return 0;
+        if(atlas.get(&AtlasRecord::cursor_x)+width>=atlas.get(&AtlasRecord::width) ||
+            (!width && atlas.get(&AtlasRecord::height)-atlas.get(&AtlasRecord::row_height)-
+                atlas.get(&AtlasRecord::cursor_y)>font_height)) {
+            atlas.set(&AtlasRecord::cursor_y,
+                atlas.get(&AtlasRecord::cursor_y)+atlas.get(&AtlasRecord::row_height));
+            atlas.set(&AtlasRecord::cursor_x,0);
+            atlas.set(&AtlasRecord::row_height,0);
             continue;
         }
-        if(field<int32_t>(page+4)+height>=field<int32_t>(page+16) || !height) {new_page(layout);continue;}
+        if(atlas.get(&AtlasRecord::cursor_y)+height>=atlas.get(&AtlasRecord::height) || !height) {
+            new_page(layout);continue;
+        }
         // 440A9B-440BF4 is absent from IDA's decompilation: width/height are
         // output parameters of 405F80, not constants. Follow the assembly.
-        ++field<int32_t>(page+432);
+        atlas.set(&AtlasRecord::references,atlas.get(&AtlasRecord::references)+1);
         const int32_t glyph=kinoko_string_append_glyph(layout),s=glyph+20;
-        rectangle(s,field<int32_t>(page+428),field<int32_t>(page),field<int32_t>(page+4),width,height);
+        rectangle(s,atlas.get(&AtlasRecord::texture),atlas.get(&AtlasRecord::cursor_x),
+            atlas.get(&AtlasRecord::cursor_y),width,height);
         std::copy_n(pointer<unsigned char>(s+128),48,pointer<unsigned char>(s+176));
-        field<int32_t>(glyph)=cursor;field<int32_t>(glyph+4)=field<int32_t>(layout+208);
-        field<int32_t>(glyph+12)=width;field<int32_t>(glyph+16)=height;
-        field<int32_t>(glyph+8)=field<int32_t>(page+20)=field<int32_t>(layout+200);
-        field<int32_t>(glyph+252)=page;++field<uint32_t>(layout+200);
-        field<int32_t>(page+8)=(std::max)(field<int32_t>(page+8),height);
-        field<int32_t>(page)+=width;cursor+=width;
-        auto& line_height=field<int32_t>(layout+216);line_height=(std::max)(line_height,height);
-        if(field<int32_t>(layout+144)>=0 && cursor>=field<int32_t>(layout+144)) {
-            field<int32_t>(layout+208)+=line_height;cursor=0;line_height=field<int32_t>(layout+88);
+        const RecordView<GlyphRecord> sprite(pointer<void>(glyph));
+        sprite.set(&GlyphRecord::x,cursor);
+        sprite.set(&GlyphRecord::y,text.get(&LayoutRecord::cursor_y));
+        sprite.set(&GlyphRecord::width,width);
+        sprite.set(&GlyphRecord::height,height);
+        const auto id=text.get(&LayoutRecord::next_glyph_id);
+        sprite.set(&GlyphRecord::id,id);
+        atlas.set(&AtlasRecord::last_glyph_id,id);
+        sprite.set(&GlyphRecord::atlas,pointer<void>(page));
+        text.set(&LayoutRecord::next_glyph_id,id+1);
+        atlas.set(&AtlasRecord::row_height,(std::max)(atlas.get(&AtlasRecord::row_height),height));
+        atlas.set(&AtlasRecord::cursor_x,atlas.get(&AtlasRecord::cursor_x)+width);
+        cursor+=width;
+        auto line_height=(std::max)(text.get(&LayoutRecord::line_height),height);
+        if(text.get(&LayoutRecord::wrap_width)>=0 && cursor>=text.get(&LayoutRecord::wrap_width)) {
+            text.set(&LayoutRecord::cursor_y,text.get(&LayoutRecord::cursor_y)+line_height);
+            cursor=0;line_height=font_height;
         }
-        field<int32_t>(layout+212)=(std::max)(field<int32_t>(layout+212),cursor);
+        text.set(&LayoutRecord::cursor_x,cursor);
+        text.set(&LayoutRecord::line_height,line_height);
+        text.set(&LayoutRecord::maximum_width,(std::max)(text.get(&LayoutRecord::maximum_width),cursor));
         return 1;
     }
 }

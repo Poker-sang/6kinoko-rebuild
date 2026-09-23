@@ -1,0 +1,216 @@
+{
+  "addr": "0x4083e0",
+  "asm": {
+    "name": "sub_4083E0",
+    "start_ea": "0x4083e0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "4083e0",
+        "instruction": "push ebp",
+        "label": "sub_4083E0"
+      },
+      {
+        "addr": "4083e1",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "4083e3",
+        "instruction": "movzx eax, [ebp+arg_0]"
+      },
+      {
+        "addr": "4083e7",
+        "instruction": "cmp dword ptr [ecx+eax*4], 1"
+      },
+      {
+        "addr": "4083eb",
+        "instruction": "jz short loc_4083F3",
+        "refs": [
+          {
+            "addr": "0x4083f3",
+            "name": "loc_4083F3"
+          }
+        ]
+      },
+      {
+        "addr": "4083ed",
+        "instruction": "xor al, al",
+        "label": "loc_4083ED"
+      },
+      {
+        "addr": "4083ef",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "4083f0",
+        "instruction": "retn 10h"
+      },
+      {
+        "addr": "4083f3",
+        "instruction": "cmp [ebp+arg_4], 0",
+        "label": "loc_4083F3"
+      },
+      {
+        "addr": "4083f7",
+        "instruction": "jz short loc_408402",
+        "refs": [
+          {
+            "addr": "0x408402",
+            "name": "loc_408402"
+          }
+        ]
+      },
+      {
+        "addr": "4083f9",
+        "instruction": "cmp byte ptr [ecx+410h], 0"
+      },
+      {
+        "addr": "408400",
+        "instruction": "jz short loc_4083ED",
+        "refs": [
+          {
+            "addr": "0x4083ed",
+            "name": "loc_4083ED"
+          }
+        ]
+      },
+      {
+        "addr": "408402",
+        "instruction": "cmp [ebp+arg_8], 0",
+        "label": "loc_408402"
+      },
+      {
+        "addr": "408406",
+        "instruction": "jz short loc_408411",
+        "refs": [
+          {
+            "addr": "0x408411",
+            "name": "loc_408411"
+          }
+        ]
+      },
+      {
+        "addr": "408408",
+        "instruction": "cmp byte ptr [ecx+411h], 0"
+      },
+      {
+        "addr": "40840f",
+        "instruction": "jz short loc_4083ED",
+        "refs": [
+          {
+            "addr": "0x4083ed",
+            "name": "loc_4083ED"
+          }
+        ]
+      },
+      {
+        "addr": "408411",
+        "instruction": "cmp [ebp+arg_C], 0",
+        "label": "loc_408411"
+      },
+      {
+        "addr": "408415",
+        "instruction": "jz short loc_408420",
+        "refs": [
+          {
+            "addr": "0x408420",
+            "name": "loc_408420"
+          }
+        ]
+      },
+      {
+        "addr": "408417",
+        "instruction": "cmp byte ptr [ecx+412h], 0"
+      },
+      {
+        "addr": "40841e",
+        "instruction": "jz short loc_4083ED",
+        "refs": [
+          {
+            "addr": "0x4083ed",
+            "name": "loc_4083ED"
+          }
+        ]
+      },
+      {
+        "addr": "408420",
+        "instruction": "mov al, 1",
+        "label": "loc_408420"
+      },
+      {
+        "addr": "408422",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "408423",
+        "instruction": "retn 10h"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__saved_registers",
+        "offset": "0x0",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0x4",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_0",
+        "offset": "0x8",
+        "size": "0x1",
+        "type": "_BYTE"
+      },
+      {
+        "name": "arg_4",
+        "offset": "0xc",
+        "size": "0x1",
+        "type": "_BYTE"
+      },
+      {
+        "name": "arg_8",
+        "offset": "0x10",
+        "size": "0x1",
+        "type": "_BYTE"
+      },
+      {
+        "name": "arg_C",
+        "offset": "0x14",
+        "size": "0x1",
+        "type": "_BYTE"
+      }
+    ],
+    "return_type": "bool",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "_BYTE *"
+      },
+      {
+        "name": "arg1",
+        "type": "unsigned __int8"
+      },
+      {
+        "name": "arg2",
+        "type": "char"
+      },
+      {
+        "name": "arg3",
+        "type": "char"
+      },
+      {
+        "name": "arg4",
+        "type": "char"
+      }
+    ]
+  },
+  "instruction_count": 23,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

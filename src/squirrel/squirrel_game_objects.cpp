@@ -47,26 +47,30 @@ private:
 SQInteger read_bytecode(SQUserPointer state, SQUserPointer output, SQInteger count) {
     return kinoko_script_read_memory(state, output, count);
 }
-bool valid_class(HSQUIRRELVM vm, const int32_t* input, int32_t native, int32_t* output) {
+bool valid_class(HSQUIRRELVM vm, const int32_t* input, const void* native, int32_t* output) {
     if (!vm || !input || !native || !output) return false;
     const auto value = read<HSQOBJECT>(input);
     return value._type == OT_CLASS && data_bits(value) != 0;
 }
-bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, int32_t native,
+bool create_instance(HSQUIRRELVM vm, const HSQOBJECT& type, void* native,
                      HSQOBJECT& result) {
-    if (!upstream::sqrat_push_instance(vm, type, pointer(native))) return false;
+    if (!upstream::sqrat_push_instance(vm, type, native)) return false;
     sq_getstackobj(vm, -1, &result);
     sq_addref(vm, &result);
     return true;
 }
 }
 
-extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
-    if (!id || !object) return 0;
-    ObjectView(object).push(pointer<SQVM>(id));
-    // Original return is the pushed stack SLOT address, not the VM address.
-    return kinoko_sq_get_up(id, -1);
+static int32_t kinoko_push_script_object(SQVM* machine, int32_t* object) {
+    if (!machine || !object) return 0;
+    ObjectView(object).push(machine);
+    // Return the pushed stack slot address, as in the original VM ABI.
+    return kinoko_sq_get_up(address(machine), -1);
 }
+extern "C" int32_t function_4029b0(int32_t id, int32_t* object) {
+    return kinoko_push_script_object(pointer<SQVM>(id), object);
+}
+
 extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, int32_t requested) {
     if (!stream || requested <= 0) return 0;
     auto state = read<MemoryReader>(stream);
@@ -86,7 +90,8 @@ extern "C" int32_t kinoko_script_read_memory(void* stream, void* destination, in
 extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* parent,
     const char* name, const int32_t* type, int32_t native, int32_t* output) {
     auto vm = pointer<SQVM>(id);
-    if (!parent || !name || !valid_class(vm, type, native, output)) return 0;
+    auto* native_pointer = pointer<void>(native);
+    if (!parent || !name || !valid_class(vm, type, native_pointer, output)) return 0;
     const auto parent_value = read<HSQOBJECT>(parent);
     const auto class_value = read<HSQOBJECT>(type);
     write(output, empty());
@@ -94,7 +99,7 @@ extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* paren
     sq_pushobject(vm, parent_value);
     sq_pushstring(vm, name, -1);
     HSQOBJECT result = empty();
-    if (!create_instance(vm, class_value, native, result)) return 0;
+    if (!create_instance(vm, class_value, native_pointer, result)) return 0;
     if (SQ_FAILED(sq_newslot(vm, -3, SQFalse))) {
         sq_release(vm, &result);
         return 0;
@@ -105,12 +110,13 @@ extern "C" int32_t retdec_create_bound_instance(int32_t id, const int32_t* paren
 extern "C" int32_t retdec_create_unbound_instance(int32_t id, const int32_t* type,
     int32_t native, int32_t* output) {
     auto vm = pointer<SQVM>(id);
-    if (!valid_class(vm, type, native, output)) return 0;
+    auto* native_pointer = pointer<void>(native);
+    if (!valid_class(vm, type, native_pointer, output)) return 0;
     const auto class_value = read<HSQOBJECT>(type);
     write(output, empty());
     TrimStack restore(vm);
     HSQOBJECT result = empty();
-    if (!create_instance(vm, class_value, native, result)) return 0;
+    if (!create_instance(vm, class_value, native_pointer, result)) return 0;
     write(output, result);
     return result._type == OT_INSTANCE && data_bits(result) != 0;
 }

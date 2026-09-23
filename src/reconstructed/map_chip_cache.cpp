@@ -1,4 +1,5 @@
 #include "kinoko/map_chip_cache.hpp"
+#include "kinoko/act_host.h"
 #include "kinoko/map_render.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/native_buffer.h"
@@ -9,7 +10,6 @@
 #include <climits>
 #include <new>
 #include <vector>
-extern "C" unsigned char g25;
 namespace kinoko::map {
 namespace {
 using kinoko::legacy::address;
@@ -131,7 +131,7 @@ int32_t refresh_chip_sprite(KinokoActLayout *layout,const ChipDefinition *source
         if(!kinoko_native_buffer_resize(address(sprites.data()),size*sizeof(ChipSpriteCache))) return E_FAIL;
         auto *begin=sprites.get(&ChipSpriteBuffer::begin);
         for(uint32_t i=previous;i<size;++i) {
-            begin[i].quad.vtable=static_cast<uint32_t>(address(&g25));
+            begin[i].quad.vtable=static_cast<uint32_t>(reinterpret_cast<uintptr_t>(kinoko_act_host_symbols()->chip_quad_vtable));
             begin[i].definition={};begin[i].valid=0;
         }
         map.set(&LayoutRecord::chip_sprite_count,static_cast<int32_t>(count(sprites.load())));

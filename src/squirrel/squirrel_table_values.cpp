@@ -5,7 +5,8 @@
 extern "C" char* g644;
 namespace {
 using namespace kinoko::script;
-HSQUIRRELVM current_vm() { return reinterpret_cast<HSQUIRRELVM>(g644); }
+inline char*& current_vm_storage = g644;
+HSQUIRRELVM current_vm() { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 void initialize(int32_t* object) { ObjectView(object).initialize(kinoko_squirrel_object_vtable()); }
 }
 extern "C" int32_t retdec_squirrel_object_from_pair(int32_t* object, int32_t type, int32_t data) {

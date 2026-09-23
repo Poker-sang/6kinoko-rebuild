@@ -6,6 +6,7 @@
 #include "kinoko/diagnostics.h"
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 extern "C" {
 HRESULT WINAPI D3DXCreateTexture(IDirect3DDevice9*,UINT,UINT,UINT,DWORD,
@@ -14,29 +15,97 @@ void retdec_trace_i32(const char*,int32_t);
 }
 
 namespace {
-// Existing raw upload compatibility path. Original 4141E0 additionally decodes
-// RLE and indexed palette data; those are explicitly outside this extraction.
-void copy_surface(const KinokoBitmap& bitmap, uint32_t source_pitch, const D3DLOCKED_RECT& locked) {
-    for (uint32_t row=0; row<bitmap.height; ++row) {
-        auto* destination = static_cast<uint8_t*>(locked.pBits) + size_t(row)*locked.Pitch;
-        const auto* source = bitmap.pixels + size_t(row)*source_pitch;
-        if (bitmap.bit_depth==16) {
-            // Original raw 414482 copies pairs only, retaining an odd last
-            // pixel in the destination and stepping by the stored row width.
-            std::memcpy(destination,source,size_t(bitmap.width/2u)*4u);
-        } else if (bitmap.bit_depth==24 || bitmap.bit_depth==32) {
-            std::memcpy(destination,source,size_t(bitmap.width)*4u);
-        } else {
-            // Inherited fallback, not a recovered original palette algorithm.
-            for (uint32_t column=0; column<bitmap.width; ++column) {
-                const auto value = source[column];
-                destination[column*4u] = value;
-                destination[column*4u+1] = value;
-                destination[column*4u+2] = value;
-                destination[column*4u+3] = 0xff;
+bool copy_indexed_raw(const KinokoBitmap& bitmap, uint32_t source_pitch,
+    const D3DLOCKED_RECT& locked) {
+    if (!bitmap.palette || locked.Pitch < 0 || size_t(locked.Pitch) < size_t(bitmap.width) * 2u)
+        return false;
+    for (uint32_t row = 0; row < bitmap.height; ++row) {
+        auto* destination = static_cast<uint16_t*>(static_cast<void*>(
+            static_cast<uint8_t*>(locked.pBits) + size_t(row) * locked.Pitch));
+        const auto* source = bitmap.pixels + size_t(row) * source_pitch;
+        for (uint32_t column = 0; column < bitmap.width; ++column)
+            destination[column] = bitmap.palette[source[column]];
+    }
+    return true;
+}
+
+bool copy_raw_16(const KinokoBitmap& bitmap, uint32_t source_pitch,
+    const D3DLOCKED_RECT& locked) {
+    if (locked.Pitch < 0 || size_t(locked.Pitch) < size_t(bitmap.width) * 2u)
+        return false;
+    for (uint32_t row = 0; row < bitmap.height; ++row) {
+        auto* destination = static_cast<uint8_t*>(locked.pBits) + size_t(row) * locked.Pitch;
+        const auto* source = bitmap.pixels + size_t(row) * source_pitch;
+        // The original raw branch copies complete 32-bit pairs only.
+        std::memcpy(destination, source, size_t(bitmap.width / 2u) * 4u);
+    }
+    return true;
+}
+
+bool copy_raw_32(const KinokoBitmap& bitmap, uint32_t source_pitch,
+    const D3DLOCKED_RECT& locked) {
+    if (locked.Pitch < 0 || size_t(locked.Pitch) < size_t(bitmap.width) * 4u)
+        return false;
+    for (uint32_t row = 0; row < bitmap.height; ++row) {
+        auto* destination = static_cast<uint8_t*>(locked.pBits) + size_t(row) * locked.Pitch;
+        const auto* source = bitmap.pixels + size_t(row) * source_pitch;
+        std::memcpy(destination, source, size_t(bitmap.width) * 4u);
+    }
+    return true;
+}
+
+template <typename T, typename Convert>
+bool decode_rle(const KinokoBitmap& bitmap, const D3DLOCKED_RECT& locked, Convert convert) {
+    if (locked.Pitch < 0 || size_t(locked.Pitch) < size_t(bitmap.width) * sizeof(T))
+        return false;
+    const auto* cursor = bitmap.pixels;
+    const auto* end = bitmap.pixels + bitmap.encoded_size;
+    uint32_t run_left = 0;
+    T run_value{};
+    using Count = std::conditional_t<sizeof(T) == 4, uint32_t, uint16_t>;
+    for (uint32_t row = 0; row < bitmap.height; ++row) {
+        auto* destination = reinterpret_cast<T*>(static_cast<uint8_t*>(locked.pBits) +
+            size_t(row) * locked.Pitch);
+        uint32_t column = 0;
+        while (column < bitmap.width) {
+            if (!run_left) {
+                if (cursor + sizeof(Count) + sizeof(T) > end) return false;
+                Count count;
+                std::memcpy(&count, cursor, sizeof(count)); cursor += sizeof(count);
+                std::memcpy(&run_value, cursor, sizeof(run_value)); cursor += sizeof(run_value);
+                if (!count) return false;
+                run_left = count;
             }
+            const auto amount = (std::min)(run_left, bitmap.width - column);
+            for (uint32_t i = 0; i < amount; ++i)
+                destination[column + i] = convert(run_value);
+            column += amount;
+            run_left -= amount;
         }
     }
+    return true;
+}
+
+bool copy_surface(const KinokoBitmap& bitmap, uint32_t source_pitch, const D3DLOCKED_RECT& locked) {
+    if (bitmap.encoded_size) {
+        if (bitmap.bit_depth == 8) {
+            if (!bitmap.palette) return false;
+            return decode_rle<uint16_t>(bitmap, locked,
+                [&bitmap](uint16_t value) { return bitmap.palette[value]; });
+        }
+        if (bitmap.bit_depth == 16)
+            return decode_rle<uint16_t>(bitmap, locked, [](uint16_t value) { return value; });
+        if (bitmap.bit_depth == 24 || bitmap.bit_depth == 32)
+            return decode_rle<uint32_t>(bitmap, locked, [](uint32_t value) { return value; });
+        return false;
+    }
+    if (bitmap.bit_depth == 8)
+        return copy_indexed_raw(bitmap, source_pitch, locked);
+    if (bitmap.bit_depth == 16)
+        return copy_raw_16(bitmap, source_pitch, locked);
+    if (bitmap.bit_depth == 24 || bitmap.bit_depth == 32)
+        return copy_raw_32(bitmap, source_pitch, locked);
+    return false;
 }
 int32_t diagnostic_address(const void* value) { return static_cast<int32_t>(reinterpret_cast<intptr_t>(value)); }
 }
@@ -65,7 +134,7 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
     // required by caps. The original graphics lock encloses texture creation.
     if (kinoko_graphics.capabilities.TextureCaps & D3DPTEXTURECAPS_SQUAREONLY)
         allocation_width=allocation_height=(std::max)(allocation_width,allocation_height);
-    const auto format = bitmap.bit_depth==16 ? D3DFMT_A1R5G5B5 : D3DFMT_A8R8G8B8;
+    const auto format = bitmap.bit_depth<=16 ? D3DFMT_A1R5G5B5 : D3DFMT_A8R8G8B8;
     kinoko::ComOwner<IDirect3DTexture9> texture;
     HRESULT result;
     {
@@ -93,7 +162,10 @@ extern "C" HRESULT kinoko_texture_load_image(const char* path, IDirect3DTexture9
         texture->UnlockRect(0);
         return E_FAIL;
     }
-    copy_surface(bitmap,source_pitch,locked);
+    if (!copy_surface(bitmap,source_pitch,locked)) {
+        texture->UnlockRect(0);
+        return E_FAIL;
+    }
     retdec_trace_i32("texture:unlock-object",diagnostic_address(texture.get()));
     texture->UnlockRect(0); // existing contract returns LockRect status, not UnlockRect status
     *output=texture.detach();

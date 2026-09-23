@@ -160,7 +160,7 @@ extern "C" int32_t kinoko_pat_load(KinokoActorManager *receiver,const char *file
     const std::unique_ptr<KinokoArchiveReader,CloseReader> owner(reader_slot);
     const Reader reader(owner.get());
     const ManagerView manager(receiver);
-    const auto resources=address(manager.bytes(&ManagerPrefix::textures));
+    auto* resources=reinterpret_cast<KinokoIntegerVector*>(manager.bytes(&ManagerPrefix::textures));
     // The lambda gives one exit for the final trace, then the reader closes.
     const auto result=[&]() -> int32_t {
         uint8_t version;uint16_t count;

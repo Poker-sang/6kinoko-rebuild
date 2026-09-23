@@ -29,6 +29,8 @@ typedef struct KinokoSprite {
 extern "C" {
 #endif
 
+int32_t __fastcall kinoko_sprite_draw_bounds(KinokoSprite *sprite, void *unused,
+    float left, float top, float right, float bottom);
 void kinoko_sprite_transform(KinokoSprite *sprite, float x, float y);
 int32_t __fastcall kinoko_sprite_set_rect(KinokoSprite *sprite, void *unused,
     int32_t texture, int32_t x, int32_t y, int32_t width, int32_t height);

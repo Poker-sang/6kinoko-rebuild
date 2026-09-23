@@ -1,3 +1,4 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/pat_animation.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/integer_vector.h"
@@ -18,21 +19,21 @@ using kinoko::legacy::pointer;
 // reused decompiler temporaries: +z*sin on x/y, -x/y*sin on z.
 void rotate(std::array<Position3,4> &positions,const FrameAppearance &a,float pivot_x,float pivot_y) {
     if (a.roll_z!=0.0f) {
-        const float c=function_404130(a.roll_z),s=function_4040d0(a.roll_z);
+        const float c=kinoko_cos_degrees(a.roll_z),s=kinoko_sin_degrees(a.roll_z);
         for (auto &p:positions) {
             const float x=p.x-pivot_x,y=p.y-pivot_y;
             p.x=x*c+pivot_x-y*s;p.y=x*s+pivot_y+y*c;
         }
     }
     if (a.roll_y!=0.0f) {
-        const float c=function_404130(a.roll_y),s=function_4040d0(a.roll_y);
+        const float c=kinoko_cos_degrees(a.roll_y),s=kinoko_sin_degrees(a.roll_y);
         for (auto &p:positions) {
             const float x=p.x-pivot_x,z=p.z;
             p.x=z*s+pivot_x+x*c;p.z=z*c-x*s;
         }
     }
     if (a.roll_x!=0.0f) {
-        const float c=function_404130(a.roll_x),s=function_4040d0(a.roll_x);
+        const float c=kinoko_cos_degrees(a.roll_x),s=kinoko_sin_degrees(a.roll_x);
         for (auto &p:positions) {
             const float y=p.y-pivot_y,z=p.z;
             p.y=z*s+pivot_y+y*c;p.z=z*c-y*s;
@@ -45,9 +46,9 @@ extern "C" int32_t kinoko_pat_build_frame(KinokoActorManager *manager,KinokoAnim
     const KinokoPatFrameFields *fields,uint32_t resource_base) {
     if (!manager || !receiver || !fields) return 0;
     const ManagerView owner(manager);
-    const auto resources=address(owner.bytes(&ManagerPrefix::textures));
+    auto* resources=reinterpret_cast<KinokoIntegerVector*>(owner.bytes(&ManagerPrefix::textures));
     const auto count=kinoko_integer_vector_size(resources);
-    const auto *handles=pointer<int32_t>(kinoko_integer_vector_data(resources));
+    const auto *handles=kinoko_integer_vector_data(resources);
     int32_t handle=0;
     // Check the combined index, not each operand independently (one-past-end
     // used to pass when base+index equalled count).

@@ -1,0 +1,134 @@
+{
+  "addr": "0x4077c0",
+  "asm": {
+    "name": "sub_4077C0",
+    "start_ea": "0x4077c0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "4077c0",
+        "instruction": "push ebp",
+        "label": "sub_4077C0"
+      },
+      {
+        "addr": "4077c1",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "4077c3",
+        "instruction": "sub esp, 250h"
+      },
+      {
+        "addr": "4077c9",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "4077ca",
+        "instruction": "mov esi, ecx"
+      },
+      {
+        "addr": "4077cc",
+        "instruction": "push 60h ; '`'; Size",
+        "comments": [
+          "Size"
+        ]
+      },
+      {
+        "addr": "4077ce",
+        "instruction": "lea eax, [esi+48h]"
+      },
+      {
+        "addr": "4077d1",
+        "instruction": "push 0; Val",
+        "comments": [
+          "Val"
+        ]
+      },
+      {
+        "addr": "4077d3",
+        "instruction": "push eax; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "4077d4",
+        "instruction": "mov [ebp+var_10], esi"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "X",
+        "offset": "0x0",
+        "size": "0x8",
+        "type": "double"
+      },
+      {
+        "name": "var_250",
+        "offset": "0x14",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_244",
+        "offset": "0x20",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_238",
+        "offset": "0x2c",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_22C",
+        "offset": "0x38",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_220",
+        "offset": "0x44",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_214",
+        "offset": "0x50",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_208",
+        "offset": "0x5c",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_1FC",
+        "offset": "0x68",
+        "size": "0xc",
+        "type": "char[12]"
+      },
+      {
+        "name": "var_1F0",
+        "offset": "0x74",
+        "size": "0xc",
+        "type": "char[12]"
+      }
+    ],
+    "return_type": "char *",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "_DWORD *"
+      }
+    ]
+  },
+  "instruction_count": 951,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

@@ -1,3 +1,4 @@
+#include "kinoko/integer_map.h"
 #include "kinoko/game_runtime.h"
 extern "C" { KinokoGameMasks kinoko_game_masks{}; }
 #include "kinoko/stage_cleanup.h"
@@ -70,7 +71,8 @@ void *operator new(std::size_t size) {
 void operator delete(void *p) noexcept { std::free(p); }
 void operator delete(void *p, std::size_t) noexcept { std::free(p); }
 extern "C" {
-int32_t g603 = 0, g604 = 0, g638 = 0, g639 = 0;
+int32_t g603 = 0, g604 = 0, g639 = 0;
+KinokoIntegerMap* g638 = nullptr;
 char *g644 = nullptr;
 KinokoActDocument *kinoko_act_document_create() {
     if (state.fail_document) return nullptr;
@@ -118,9 +120,9 @@ int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *, void *) { retu
 int32_t kinoko_act_update_frame(int32_t) { return 0; }
 int32_t kinoko_act_prepare_draw(int32_t) { return 0; }
 int32_t kinoko_act_draw(int32_t, float, float) { return 0; }
-int32_t kinoko_integer_map_create() { return 0; }
-void kinoko_integer_map_destroy(int32_t) {}
-void kinoko_integer_map_clear(int32_t) {}
+KinokoIntegerMap* kinoko_integer_map_create() { return 0; }
+void kinoko_integer_map_destroy(KinokoIntegerMap*) {}
+void kinoko_integer_map_clear(KinokoIntegerMap*) {}
 void kinoko_initialize_render_queue() {}
 int32_t kinoko_clear_render_queue() { return 0; }
 int32_t kinoko_audio_shutdown_resources() { return 0; }

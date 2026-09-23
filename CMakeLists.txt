@@ -34,6 +34,8 @@ endif()
 
 
 add_library(kinoko_native_methods STATIC
+    src/reconstructed/quad_transform.cpp
+    src/reconstructed/angle_math.cpp
     src/reconstructed/act_resource.cpp
     src/reconstructed/native_buffer.cpp
     src/reconstructed/act_array.cpp
@@ -47,6 +49,7 @@ add_library(kinoko_native_methods STATIC
     src/reconstructed/input_aggregation.cpp
     src/reconstructed/input_keys.cpp
     src/reconstructed/input_copy.cpp
+    src/reconstructed/input_frame.cpp
     src/reconstructed/input_runtime.cpp
     src/reconstructed/pat_animation.cpp
     src/reconstructed/pat_frame.cpp
@@ -243,6 +246,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
     src/reconstructed/game_runtime.cpp
+    src/reconstructed/runtime_bootstrap.cpp
     src/reconstructed/scene_operations.cpp
     src/squirrel/game_script_api.cpp
     src/squirrel/game_script_entries.cpp
@@ -279,6 +283,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/squirrel/script_file.cpp
     src/squirrel/squirrel_game_objects.cpp
     src/squirrel/squirrel_table_values.cpp
+    src/squirrel/table_diagnostics.cpp
     src/squirrel/sqrat_object_bridge.cpp
     src/squirrel/native_property_bridge.cpp
     src/squirrel/squirrel_native_arguments.cpp
@@ -483,6 +488,19 @@ foreach(position IN ITEMS "2200,559" "2400,559" "2600,559" "2770,463")
     add_test(NAME moving_map_water_${position}
         COMMAND kinoko_stage_contract --moving-map-water "${KINOKO_REFERENCE_DIR}" ${coordinates})
 endforeach()
+
+add_executable(kinoko_quad_transform_contract tests/quad_transform_contract.cpp src/reconstructed/quad_transform.cpp src/reconstructed/angle_math.cpp)
+target_include_directories(kinoko_quad_transform_contract PRIVATE include)
+add_test(NAME quad_transform_contract COMMAND kinoko_quad_transform_contract)
+
+add_executable(kinoko_angle_math_contract tests/angle_math_contract.cpp src/reconstructed/angle_math.cpp)
+target_include_directories(kinoko_angle_math_contract PRIVATE include)
+target_compile_options(kinoko_angle_math_contract PRIVATE /fp:strict)
+add_test(NAME angle_math_contract COMMAND kinoko_angle_math_contract)
+
+add_executable(kinoko_sprite_draw_contract tests/sprite_draw_contract.cpp src/reconstructed/sprite.cpp src/reconstructed/angle_math.cpp)
+target_include_directories(kinoko_sprite_draw_contract PRIVATE include)
+add_test(NAME sprite_draw_contract COMMAND kinoko_sprite_draw_contract)
 
 add_executable(kinoko_game_math_contract tests/game_math_contract.cpp)
 target_link_libraries(kinoko_game_math_contract PRIVATE kinoko_actor_collision)
@@ -737,6 +755,8 @@ target_include_directories(kinoko_camera_contract PRIVATE include)
 add_test(NAME camera_contract COMMAND kinoko_camera_contract)
 
 add_executable(kinoko_act_layout_render_contract tests/act_layout_render_contract.cpp
+    src/reconstructed/quad_transform.cpp
+    src/reconstructed/angle_math.cpp
     src/reconstructed/act_layout.cpp src/reconstructed/string_layout_render.cpp
     src/reconstructed/act_render_state.cpp src/reconstructed/render_state.cpp)
 target_include_directories(kinoko_act_layout_render_contract PRIVATE include)
@@ -806,7 +826,32 @@ target_include_directories(kinoko_actor_state_contract PRIVATE include)
 target_compile_options(kinoko_actor_state_contract PRIVATE /O2)
 add_test(NAME actor_state_contract COMMAND kinoko_actor_state_contract)
 
+add_executable(kinoko_input_keys_contract tests/input_keys_contract.cpp src/reconstructed/input_keys.cpp)
+target_include_directories(kinoko_input_keys_contract PRIVATE include)
+add_test(NAME input_keys_contract COMMAND kinoko_input_keys_contract)
+
+add_executable(kinoko_input_device_contract tests/input_device_contract.cpp src/reconstructed/physical_input.cpp)
+target_include_directories(kinoko_input_device_contract PRIVATE include)
+add_test(NAME input_device_contract COMMAND kinoko_input_device_contract)
+
+add_executable(kinoko_input_cluster_contract tests/input_cluster_contract.cpp src/reconstructed/input_aggregation.cpp)
+target_include_directories(kinoko_input_cluster_contract PRIVATE include)
+add_test(NAME input_cluster_contract COMMAND kinoko_input_cluster_contract)
+
+add_executable(kinoko_input_copy_contract tests/input_copy_contract.cpp src/reconstructed/input_copy.cpp src/reconstructed/input_aggregation.cpp src/reconstructed/input_keys.cpp)
+target_include_directories(kinoko_input_copy_contract PRIVATE include)
+add_test(NAME input_copy_contract COMMAND kinoko_input_copy_contract)
+
+add_executable(kinoko_input_frame_contract tests/input_frame_contract.cpp src/reconstructed/input_frame.cpp src/reconstructed/input_copy.cpp src/reconstructed/input_aggregation.cpp src/reconstructed/input_keys.cpp)
+target_include_directories(kinoko_input_frame_contract PRIVATE include)
+add_test(NAME input_frame_contract COMMAND kinoko_input_frame_contract)
+
 set(KINOKO_TOOL_TARGETS
+    kinoko_input_frame_contract
+    kinoko_input_copy_contract
+    kinoko_input_cluster_contract
+    kinoko_input_device_contract
+    kinoko_input_keys_contract
     kinoko_texture_binding_contract
     kinoko_texture_image_contract
     kinoko_bitmap_contract
@@ -885,3 +930,6 @@ foreach(config Debug Release RelWithDebInfo MinSizeRel)
 endforeach()
 
 set_source_files_properties(src/reconstructed/map_manager.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+
+# Angle lookup must honor the caller rounding mode and original float stores.
+set_source_files_properties(src/reconstructed/angle_math.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")

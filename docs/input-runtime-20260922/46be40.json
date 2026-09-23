@@ -1,0 +1,4 @@
+{
+  "addr": "0x46be40",
+  "code": "int __thiscall sub_46BE40(_DWORD *this, int a2, int a3)\n{\n  if ( a2 >= 0 && a2 < (*(this + 46) - *(this + 45)) / 168 ) /*0x46be6a*/\n    return *(_DWORD *)(*(this + 45) + 4 * a3 + 24); /*0x46be75*/\n  if ( a2 == -1 ) /*0x46be81*/\n    return *(this + a3 + 5); /*0x46be86*/\n  return -1; /*0x46be79*/\n}"
+}

@@ -28,12 +28,71 @@ def main():
             address_name = bool(re.fullmatch(r'function_[0-9a-fA-F]+(?:_\w+)?', match[1]))
             thin = (body.count(';') <= 2 and not re.search(r'\b(if|for|while|switch|goto)\b', body)
                     and bool(re.search(r'\bkinoko_\w+\s*\(', body)))
+            # A short private helper or RAII member is ordinary structured C++.
+            # Count a short body as a bridge only when it is an exported C ABI
+            # adapter (or remains in the archival decompiled translation unit).
+            signature_text = source[max(0, match.start() - 96):match.end()]
+            external_c = 'extern "C"' in signature_text
             legacy = bool(re.search(r'\b(?:function_[0-9a-fA-F]+|v\d+|g\d+)\b|\bgoto\b|\([^\n]*intptr_t\)[^\n]*\+\s*\d+', body))
-            if thin:
-                category = 'thin_bridge'
+            compatibility = (
+                match[1] in {'__declspec', 'RETDEC_ASM_STUBS',
+                             '_3f__3f_0_3f__24_basic_string_40_DU_3f__24_char_traits_40_D_40_std_40__40_V_3f__24_allocator_40_D_40_2_40__std_40__40_QAE_40_PBD_40_Z',
+                             '_3f__3f_3_40_YAXPAX_40_Z',
+                             'kinoko_sqrat_object_vtable', 'kinoko_sqrat_root_vtable',
+                             'kinoko_actor_vtable', 'kinoko_actor_step_key',
+                             'kinoko_squirrel_object_vtable',
+                             'retdec_msvc_Finitlocks__YAXXZ7',
+                             'retdec_msvc_Finitlocks__YAXXZ8',
+                             'retdec_msvc_Finitlocks__YAXXZ9',
+                             'kinoko_construct_layer_global_vm', 'kinoko_color_destroy',
+                             'kinoko_script_show_message', 'kinoko_script_sleep',
+                             'kinoko_script_close_window', 'kinoko_act_script_output_compiled',
+                             'kinoko_act_host_symbols', 'kinoko_audio_host_symbols',
+                             'kinoko_application_set_archive_mode',
+                             'kinoko_application_open_archives',
+                             'kinoko_game_prepare_scripts', 'kinoko_game_register_scripts',
+                             'kinoko_game_release_script_reference'}
+                or file.endswith('retdec_asm_stubs.c')
+                or match[1].startswith('_3f__3f_'))
+            # These are deliberately retained ABI-facing entry points.  They
+            # adapt the original __fastcall/thiscall slots or script exports
+            # to the recovered named implementation; counting them as
+            # removable internal bridges obscures the actual cleanup target.
+            abi_entry = (
+                match[1].startswith(('kinoko_method_', 'kinoko_map_'))
+                or match[1].startswith(('kinoko_actor_', 'kinoko_script_'))
+                or match[1].endswith(('_callback', '_entry'))
+                or match[1] in {'function_41e260', 'function_41e2c0',
+                                'function_431650', 'function_445730',
+                                'function_4552e0', 'function_4555a0'})
+            if compatibility and abi_entry:
+                category = 'abi_alias'
+            elif compatibility:
+                # RetDec/CRT and host-ABI shims are intentional compatibility
+                # symbols, not unresolved internal forwarding layers.
+                category = 'abi_alias'
+            elif thin and abi_entry:
+                category = 'abi_alias'
+            elif thin and (match[1].startswith('function_')
+                           or file.endswith('squirrel_legacy_api.cpp')
+                           or file.startswith('src/decompiled/')):
+                # Public address-compatible exports and archival C wrappers
+                # are intentional ABI aliases. Keep them visible, but do not
+                # count them as removable internal bridge layers.
+                category = 'abi_alias'
+            elif thin and (external_c or file.startswith('src/decompiled/')):
+                # These are deliberate public/legacy ABI boundaries.  They
+                # may be one-line forwarders, but their remaining symbol is
+                # part of the recovered calling surface rather than an
+                # unresolved internal bridge.
+                category = 'abi_alias'
             elif address_name:
                 category = 'address_named_legacy'
-            elif file.startswith('src/decompiled/') or legacy:
+            # A decompiled translation unit can now contain recovered, named
+            # C++ bodies alongside archival compatibility code. Classify by
+            # the actual legacy markers in the body instead of penalizing the
+            # whole file merely because its path is decompiled/.
+            elif legacy:
                 category = 'named_mixed_legacy'
             else:
                 category = 'named_structured_candidate'

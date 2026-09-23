@@ -6,15 +6,20 @@
 #include <memory>
 #include <stdexcept>
 namespace kinoko::legacy {
+// Active first eight bytes when capacity selects native owned storage.
+struct StringOwnerFields { char* data; std::string* owner; };
+static_assert(sizeof(StringOwnerFields)==8 && offsetof(StringOwnerFields,owner)==4);
+
 std::string* StringView::owner() const noexcept {
     std::string* result=nullptr;
-    if(*this && is_heap()) std::memcpy(&result,static_cast<char*>(storage())+4,sizeof(result));
+    if(*this && is_heap()) result=native::RecordView<StringOwnerFields>(storage()).get(&StringOwnerFields::owner);
     return result;
 }
 void StringView::publish(std::string* value) const noexcept {
     char* bytes=value->data();
-    std::memcpy(storage(),&bytes,sizeof(bytes));
-    std::memcpy(static_cast<char*>(storage())+4,&value,sizeof(value));
+    const native::RecordView<StringOwnerFields> fields(storage());
+    fields.set(&StringOwnerFields::data,bytes);
+    fields.set(&StringOwnerFields::owner,value);
     record_.set(&StringRecord::length,static_cast<uint32_t>(value->size()));
     record_.set(&StringRecord::capacity,(std::max)(16u,static_cast<uint32_t>(value->capacity())));
 }
@@ -74,60 +79,54 @@ bool StringView::reserve(uint32_t requested,bool shrink) const {
         return requested!=0;
     } catch(...) {return false;}
 }
-uintptr_t StringView::grow(uint32_t requested,uint32_t old_length) const {
+char* StringView::grow(uint32_t requested,uint32_t old_length) const {
     if(!*this || requested==invalid_size || old_length>length()) return 0;
     try {
         auto& value=ensure_owner();value.reserve(requested);value.resize(old_length);publish(&value);
-        return reinterpret_cast<uintptr_t>(value.data());
+        return value.data();
     } catch(...) {return 0;}
 }
 } // namespace kinoko::legacy
 
 namespace {
 using kinoko::legacy::StringView;
-void* pointer(std::int32_t value) noexcept {
-    return reinterpret_cast<void*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(value)));
 }
-std::int32_t address(const void* value) noexcept {
-    return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(value));
+extern "C" const char* kinoko_string_data(const void* object) {
+    return StringView(const_cast<void*>(object)).data();
 }
-}
-extern "C" const char* retdec_std_string_data(int32_t object) {
-    return StringView(pointer(object)).data();
-}
-extern "C" int32_t retdec_string_assign_n(int32_t* object, const char* source, uint32_t size) {
+extern "C" void* kinoko_string_assign_n(void* object, const char* source, uint32_t size) {
     StringView(object).assign(source, size);
-    return address(object);
+    return object;
 }
-extern "C" int32_t retdec_string_assign_cstr(int32_t* object, const char* source) {
-    return retdec_string_assign_n(object, source, retdec_safe_c_string_length(source));
+extern "C" void* kinoko_string_assign_cstr(void* object, const char* source) {
+    return kinoko_string_assign_n(object, source, retdec_safe_c_string_length(source));
 }
-extern "C" int32_t kinoko_string_assign_substring(int32_t object, int32_t source,
+extern "C" void* kinoko_string_assign_substring(void* object, const void* source,
     uint32_t position, uint32_t size) {
     if (!object || !source) return 0;
-    StringView(pointer(object)).assign(StringView(pointer(source)), position, size);
+    StringView(object).assign(StringView(const_cast<void*>(source)), position, size);
     return object;
 }
 // Address range: 0x4038c0 - 0x4039d3
-extern "C" int32_t function_4038c0(int32_t object, const char* source, uint32_t size) {
-    StringView(pointer(object)).append(source, size);
+extern "C" void* kinoko_string_append_n(void* object, const char* source, uint32_t size) {
+    StringView(object).append(source, size);
     return object;
 }
 // Address range: 0x4039e0 - 0x403a8b
-extern "C" int32_t function_4039e0(int32_t object, uint32_t capacity, int32_t shrink) {
-    return StringView(pointer(object)).reserve(capacity, shrink != 0);
+extern "C" int32_t kinoko_string_reserve(void* object, uint32_t capacity, int32_t shrink) {
+    return StringView(object).reserve(capacity, shrink != 0);
 }
 // Address range: 0x403bf0 - 0x403cd3
-extern "C" int32_t function_403bf0(int32_t object, int32_t source, uint32_t position, uint32_t size) {
+extern "C" void* kinoko_string_append_substring(void* object, const void* source, uint32_t position, uint32_t size) {
     if (!object || !source) return 0;
-    StringView(pointer(object)).append(StringView(pointer(source)), position, size);
+    StringView(object).append(StringView(const_cast<void*>(source)), position, size);
     return object;
 }
 // Address range: 0x403ce0 - 0x403e18 (includes original cleanup 403DBC)
-extern "C" int32_t function_403ce0(int32_t object, uint32_t capacity, uint32_t old_length) {
-    return static_cast<int32_t>(StringView(pointer(object)).grow(capacity, old_length));
+extern "C" char* kinoko_string_grow(void* object, uint32_t capacity, uint32_t old_length) {
+    return StringView(object).grow(capacity, old_length);
 }
 
-extern "C" void kinoko_string_destroy(int32_t object) {
-    StringView(pointer(object)).destroy();
+extern "C" void kinoko_string_destroy(void* object) {
+    StringView(object).destroy();
 }

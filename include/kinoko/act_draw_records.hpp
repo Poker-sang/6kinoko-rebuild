@@ -2,13 +2,15 @@
 #include "kinoko/act_resource_records.hpp"
 #include "kinoko/sprite.h"
 
-namespace kinoko::act {
-struct BlitCommand {
+struct KinokoBlitCommand {
     int32_t blend;
     float alpha, x, y;
     int32_t source_x, source_y, width, height, texture;
 };
-struct BlitSprite { BlitCommand command; KinokoSprite sprite; };
+struct KinokoBlitSprite { KinokoBlitCommand command; KinokoSprite sprite; };
+namespace kinoko::act {
+using BlitCommand = KinokoBlitCommand;
+using BlitSprite = KinokoBlitSprite;
 struct TextureResourcePrefix {
     Address vtable;
     std::array<uint8_t, 64> unknown4;

@@ -1,0 +1,34 @@
+{
+  "addr": "0x412ca0",
+  "code": "BOOL sub_412CA0()\n{\n  struct tagCANDIDATEFORM Candidate; // [esp+4h] [ebp-34h] BYREF\n  struct tagRECT Rect; // [esp+24h] [ebp-14h] BYREF\n\n  dword_50F6F0 = ImmGetContext(a1: dword_51B05C); /*0x412cc3*/\n  dword_50F6F4 = (int)ImmGetDefaultIMEWnd(a1: dword_51B05C); /*0x412cd1*/\n  Candidate.dwIndex = 0; /*0x412cdd*/\n  Candidate.dwStyle = 128; /*0x412ce4*/\n  GetWindowRect(hWnd: dword_51B05C, lpRect: &Rect); /*0x412ceb*/\n  Candidate.rcArea.right = Rect.right - Rect.left; /*0x412d00*/\n  Candidate.rcArea.left = 0; /*0x412d0b*/\n  Candidate.rcArea.top = 0; /*0x412d12*/\n  Candidate.rcArea.bottom = Rect.bottom - Rect.top; /*0x412d19*/\n  return ImmSetCandidateWindow(a1: dword_50F6F0, lpCandidate: &Candidate); /*0x412d22*/\n}",
+  "refs": [
+    {
+      "addr": "0x50f6f0",
+      "name": "dword_50F6F0"
+    },
+    {
+      "addr": "0x4d501c",
+      "name": "ImmGetContext"
+    },
+    {
+      "addr": "0x51b05c",
+      "name": "dword_51B05C"
+    },
+    {
+      "addr": "0x50f6f4",
+      "name": "dword_50F6F4"
+    },
+    {
+      "addr": "0x4d502c",
+      "name": "ImmGetDefaultIMEWnd"
+    },
+    {
+      "addr": "0x4d51c0",
+      "name": "GetWindowRect"
+    },
+    {
+      "addr": "0x4d5028",
+      "name": "ImmSetCandidateWindow"
+    }
+  ]
+}

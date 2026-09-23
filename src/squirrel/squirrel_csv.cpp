@@ -12,6 +12,8 @@
 
 extern "C" {
 int32_t function_48a600(int32_t vm);
+extern char *g644, *g767;
+extern char g874;
 void*  kinoko_sqplus_object_destroy(void * object);
 int32_t kinoko_csv_load_bytes(const char *path, char **bytes);
 }
@@ -138,4 +140,13 @@ extern "C" int32_t kinoko_read_csv(int32_t vm, int32_t window, const char *path,
     if (!error) return 1;
     MessageBoxA(reinterpret_cast<HWND>(static_cast<uintptr_t>(static_cast<uint32_t>(window))), path, error, 0);
     return 0;
+}
+
+// Original 403000: ReadCSV receives the path and a by-value SqPlus object.
+// Keep the three-word object and borrowed primary VM/window at this boundary.
+extern "C" int32_t kinoko_script_read_csv(const char* path, int32_t vtable,
+    int32_t type, int32_t data) {
+    int32_t object[3] = {vtable, type, data};
+    return kinoko_read_csv(static_cast<int32_t>(reinterpret_cast<uintptr_t>(g644)),
+        static_cast<int32_t>(reinterpret_cast<uintptr_t>(g767)), path, object, g874 != 0);
 }

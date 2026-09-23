@@ -1,402 +1,334 @@
 #include "kinoko/base_utilities.h"
+#include "kinoko/squirrel_game_objects.h"
+#include "kinoko/squirrel_host_compat.h"
+#include <squirrel.h>
 #include <windows.h>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <squirrel.h>
-#include "kinoko/squirrel_game_objects.h"
-#include "kinoko/squirrel_host_compat.h"
+#include <memory>
 
-extern "C" {
-extern char* g644;
-void retdec_trace(const char*);
-void retdec_trace_i32(const char*, int32_t);
-int32_t function_4722e0(int32_t*, int32_t, int32_t, int32_t);
-int32_t function_472820(int32_t*, int32_t, int32_t, int32_t);
-}
-// Original wire format: 32-bit Squirrel tags, counted strings, one-byte bools,
-// recursive arrays/tables and an OT_NULL terminator. Arguments own references.
-// Existing stream bounds and failure behavior are retained unchanged.
-static int32_t retdec_table_stream_write(int32_t *stream, const void *data,
-                                         uint32_t size) {
-    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0) ||
-        stream[1] < 0 || stream[1] > stream[2] ||
-        size > (uint32_t)(stream[2] - stream[1]))
-        return 0;
-    if (size != 0) {
-        memcpy((void *)(intptr_t)(stream[0] + stream[1]), data, size);
-        stream[1] += (int32_t)size;
+extern "C" char *g644;
+// Savedata's SqPlus references require the live primary VM at each recursive
+// container boundary, distinct from the compiled LocalScript VM.
+namespace { HSQUIRRELVM serialization_vm() { return reinterpret_cast<HSQUIRRELVM>(g644); } }
+
+extern "C" void retdec_trace(const char *);
+extern "C" void retdec_trace_i32(const char *, int32_t);
+
+namespace kinoko::savedata {
+namespace {
+constexpr uint32_t kMaximumString = 0x1000000u;
+constexpr uint32_t kFileBufferSize = 0x20000u;
+
+// 4722E0/472820 receive the first three words of a 16-word legacy stream.
+// Keep the integer representation at that ABI; recursion uses a real pointer.
+struct TableStream {
+    unsigned char *buffer;
+    int32_t position;
+    int32_t limit;
+
+    explicit TableStream(int32_t *legacy) noexcept
+        : buffer(legacy ? reinterpret_cast<unsigned char *>(
+              static_cast<uintptr_t>(static_cast<uint32_t>(legacy[0]))) : nullptr),
+          position(legacy ? legacy[1] : 0), limit(legacy ? legacy[2] : 0) {}
+    TableStream(unsigned char *data, int32_t size) noexcept
+        : buffer(data), position(0), limit(size) {}
+    void publish(int32_t *legacy) const noexcept {
+        if (legacy) legacy[1] = position;
     }
-    return 1;
-}
-
-static int32_t retdec_table_stream_read(int32_t *stream, void *data,
-                                        uint32_t size) {
-    if (stream == NULL || stream[0] == 0 || (data == NULL && size != 0) ||
-        stream[1] < 0 || stream[1] > stream[2] ||
-        size > (uint32_t)(stream[2] - stream[1]))
-        return 0;
-    if (size != 0) {
-        memcpy(data, (const void *)(intptr_t)(stream[0] + stream[1]), size);
-        stream[1] += (int32_t)size;
+    bool transfer(void *bytes, uint32_t size, bool write) noexcept {
+        if (!buffer || (!bytes && size) || position < 0 || limit < position ||
+            size > static_cast<uint32_t>(limit - position)) return false;
+        if (size) {
+            if (write) std::memcpy(buffer + position, bytes, size);
+            else std::memcpy(bytes, buffer + position, size);
+            position += static_cast<int32_t>(size);
+        }
+        return true;
     }
-    return 1;
-}
-
-
-static int32_t retdec_table_stream_read_string(int32_t *stream,
-                                               int32_t *object) {
-    uint32_t length;
-    char *data;
-    int32_t result;
-
-    if (!retdec_table_stream_read(stream, &length, sizeof(length)) ||
-        length > 0x1000000u)
-        return 0;
-    data = (char *)malloc((size_t)length + 1);
-    if (data == NULL)
-        return 0;
-    if (!retdec_table_stream_read(stream, data, length)) {
-        free(data);
-        return 0;
+    template<class T> bool read(T &value) noexcept {
+        return transfer(&value, sizeof(value), false);
     }
-    data[length] = 0;
-    result = retdec_squirrel_object_from_string(object, data, length);
-    free(data);
-    return result;
+    template<class T> bool write(const T &value) noexcept {
+        return transfer(const_cast<T *>(&value), sizeof(value), true);
+    }
+    bool read_bytes(void *bytes, uint32_t size) noexcept {
+        return transfer(bytes, size, false);
+    }
+    bool write_bytes(const void *bytes, uint32_t size) noexcept {
+        return transfer(const_cast<void *>(bytes), size, true);
+    }
+};
+
+// SqPlus stores a vtable and an externally retained HSQOBJECT in three words.
+// The helpers below own and release that reference; nested copies hand their
+// new reference to the recursive call, as the original 4722E0/472820 do.
+struct Object {
+    std::array<int32_t, 3> words{};
+    Object() = default;
+    Object(int32_t vtable, int32_t type, int32_t data) : words{vtable, type, data} {}
+    int32_t *raw() noexcept { return words.data(); }
+    int32_t type() const noexcept { return words[1]; }
+    int32_t data() const noexcept { return words[2]; }
+    void initialize() noexcept { kinoko_sqplus_object_initialize(raw()); }
+    void destroy() noexcept { kinoko_sqplus_object_destroy(raw()); }
+    bool assign(int32_t type_tag, int32_t bits) noexcept {
+        return retdec_squirrel_object_from_pair(raw(), type_tag, bits) != 0;
+    }
+    bool copy_from(Object &source) noexcept {
+        return retdec_squirrel_object_copy(raw(), source.raw()) != 0;
+    }
+};
+static_assert(sizeof(Object) == 12);
+
+bool read_string(TableStream &stream, Object &object) {
+    uint32_t length = 0;
+    if (!stream.read(length) || length > kMaximumString) return false;
+    auto text = std::unique_ptr<char, decltype(&std::free)>(
+        static_cast<char *>(std::malloc(static_cast<size_t>(length) + 1)), &std::free);
+    if (!text || !stream.read_bytes(text.get(), length)) return false;
+    text.get()[length] = 0;
+    return retdec_squirrel_object_from_string(object.raw(), text.get(), length) != 0;
 }
 
-static int32_t retdec_table_stream_write_object_string(int32_t *stream,
-                                                       int32_t *object) {
-    const char *data;
-    uint32_t length;
-
-    if (!retdec_squirrel_object_string(object, &data))
-        return 0;
-    length = (uint32_t)strlen(data);
-    return retdec_table_stream_write(stream, &length, sizeof(length)) &&
-           retdec_table_stream_write(stream, data, length);
+bool write_string(TableStream &stream, Object &object) {
+    const char *text = nullptr;
+    if (!retdec_squirrel_object_string(object.raw(), &text)) return false;
+    const uint32_t length = static_cast<uint32_t>(std::strlen(text));
+    return stream.write(length) && stream.write_bytes(text, length);
 }
 
-extern "C" int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data) {
-    int32_t parent[3] = { object_vtable, object_type, object_data };
-    int32_t key[3];
-    int32_t value[3];
-    int32_t ok = 1;
-
-    if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
-        ok = 0;
-    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
-    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
-
+bool read_table(TableStream &stream, Object parent) {
+    Object key, value;
+    key.initialize();
+    value.initialize();
+    bool ok = stream.buffer && serialization_vm();
     while (ok) {
-        uint32_t value_type;
-        uint32_t key_type;
-
-        if (!retdec_table_stream_read(stream_ptr, &value_type,
-                                      sizeof(value_type))) {
-            ok = 0;
-            break;
-        }
-        if ((value_type & 0x7eu) == 0)
-            break;
-
-        if (!retdec_table_stream_read(stream_ptr, &key_type,
-                                      sizeof(key_type))) {
-            ok = 0;
-            break;
-        }
+        uint32_t value_type = 0, key_type = 0;
+        if (!stream.read(value_type)) { ok = false; break; }
+        if ((value_type & 0x7eu) == 0) break; // OT_NULL terminates each container.
+        if (!stream.read(key_type)) { ok = false; break; }
         if (key_type == OT_INTEGER) {
-            uint32_t raw_key;
-            if (!retdec_table_stream_read(stream_ptr, &raw_key,
-                                          sizeof(raw_key)) ||
-                !retdec_squirrel_object_from_pair(
-                    key, (int32_t)key_type, (int32_t)raw_key)) {
-                ok = 0;
-                break;
+            uint32_t raw_key = 0;
+            if (!stream.read(raw_key) || !key.assign(key_type, raw_key)) {
+                ok = false; break;
             }
         } else if (key_type == OT_STRING) {
-            if (!retdec_table_stream_read_string(stream_ptr, key)) {
-                ok = 0;
-                break;
-            }
-        } else {
-            ok = 0;
-            break;
-        }
+            if (!read_string(stream, key)) { ok = false; break; }
+        } else { ok = false; break; }
 
         if (value_type == OT_INTEGER || value_type == OT_FLOAT) {
-            uint32_t raw_value;
-            if (!retdec_table_stream_read(stream_ptr, &raw_value,
-                                          sizeof(raw_value)) ||
-                !retdec_squirrel_object_from_pair(
-                    value, (int32_t)value_type, (int32_t)raw_value))
-                ok = 0;
+            uint32_t raw_value = 0;
+            ok = stream.read(raw_value) && value.assign(value_type, raw_value);
         } else if (value_type == OT_BOOL) {
-            unsigned char bool_value;
-            if (!retdec_table_stream_read(stream_ptr, &bool_value, 1) ||
-                !retdec_squirrel_object_from_pair(
-                    value, (int32_t)value_type, (int32_t)bool_value))
-                ok = 0;
+            uint8_t boolean = 0;
+            ok = stream.read(boolean) && value.assign(value_type, boolean);
         } else if (value_type == OT_STRING) {
-            if (!retdec_table_stream_read_string(stream_ptr, value))
-                ok = 0;
-        } else if (value_type == OT_ARRAY) {
-            uint32_t count;
-            int32_t nested[3];
-
-            if (!retdec_table_stream_read(stream_ptr, &count,
-                                          sizeof(count)) || count > 0x100000u ||
-                !(int32_t*)(intptr_t)(kinoko_sqplus_object_new_array((void *)(intptr_t)(value), (int32_t)count)) ||
-                !kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)) ||
-                !retdec_squirrel_object_copy(nested, value)) {
-                ok = 0;
-            } else {
-                ok = function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
+            ok = read_string(stream, value);
+        } else if (value_type == OT_ARRAY || value_type == OT_TABLE) {
+            Object nested;
+            uint32_t count = 0;
+            if (value_type == OT_ARRAY &&
+                (!stream.read(count) || count > 0x100000u)) ok = false;
+            if (ok) {
+                void *created = value_type == OT_ARRAY
+                    ? kinoko_sqplus_object_new_array(value.raw(), static_cast<int32_t>(count))
+                    : kinoko_sqplus_object_new_table(value.raw());
+                ok = created && kinoko_sqplus_object_raw_set_object(
+                    parent.raw(), key.raw(), value.raw()) && nested.copy_from(value);
+                if (ok) ok = read_table(stream, nested);
             }
-        } else if (value_type == OT_TABLE) {
-            int32_t nested[3];
+        } else { ok = false; }
 
-            if (!(int32_t*)(intptr_t)(kinoko_sqplus_object_new_table((void *)(intptr_t)(value))) ||
-                !kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)) ||
-                !retdec_squirrel_object_copy(nested, value)) {
-                ok = 0;
-            } else {
-                ok = function_4722e0(stream_ptr, nested[0], nested[1], nested[2]);
-            }
-        } else {
-            ok = 0;
-        }
-
-        if (ok && value_type != OT_ARRAY &&
-            value_type != OT_TABLE) {
-            if (!kinoko_sqplus_object_raw_set_object((void *)(intptr_t)((int32_t)(intptr_t)parent), (const void *)(intptr_t)((int32_t)(intptr_t)key), (const void *)(intptr_t)((int32_t)(intptr_t)value)))
-                ok = 0;
-        }
-        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
-        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
+        if (ok && value_type != OT_ARRAY && value_type != OT_TABLE)
+            ok = kinoko_sqplus_object_raw_set_object(
+                parent.raw(), key.raw(), value.raw()) != 0;
+        value.destroy();
+        key.destroy();
     }
-
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)parent)));
+    value.destroy();
+    key.destroy();
+    parent.destroy();
     return ok;
 }
 
-extern "C" int32_t function_472820(int32_t *stream_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data) {
-    int32_t input_object[3] = { object_vtable, object_type, object_data };
-    int32_t container[3];
-    int32_t key[3];
-    int32_t value[3];
-    int32_t iterator_started = 0;
-    int32_t ok = 1;
+bool write_table(TableStream &stream, Object input) {
+    Object container, key, value;
+    container.initialize();
+    key.initialize();
+    value.initialize();
+    bool ok = stream.buffer && serialization_vm();
+    bool iterating = false;
+    if (ok) ok = container.assign(input.type(), input.data());
+    if (ok && kinoko_sqplus_object_begin_iteration(container.raw())) iterating = true;
 
-    if (stream_ptr == NULL || stream_ptr[0] == 0 || g644 == 0)
-        ok = 0;
-    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)container));
-    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)key));
-    kinoko_sqplus_object_initialize((void *)(intptr_t)((int32_t)(intptr_t)value));
-
-    if (ok && !retdec_squirrel_object_from_pair(
-                   container, object_type, object_data))
-        ok = 0;
-    if (ok && kinoko_sqplus_object_begin_iteration((void *)(intptr_t)((int32_t)(intptr_t)container)))
-        iterator_started = 1;
-
-    while (ok && iterator_started &&
-           kinoko_sqplus_object_next((int32_t *)(intptr_t)key, (int32_t *)(intptr_t)value)) {
-        uint32_t value_type = (uint32_t)value[1];
-        uint32_t key_type = (uint32_t)key[1];
-
-        /* Original 4728E9 skips null/non-serializable values before the tag. */
-        if ((value_type & 0x7eu) == 0)
-            continue;
-        if (!retdec_table_stream_write(stream_ptr, &value_type,
-                                       sizeof(value_type))) {
-            ok = 0;
-            break;
-        }
+    while (ok && iterating && kinoko_sqplus_object_next(key.raw(), value.raw())) {
+        const uint32_t value_type = static_cast<uint32_t>(value.type());
+        const uint32_t key_type = static_cast<uint32_t>(key.type());
+        // 4728E9 skips null and other non-serializable values before the tag.
+        if ((value_type & 0x7eu) == 0) continue;
+        if (!stream.write(value_type)) { ok = false; break; }
         if (key_type == OT_INTEGER) {
-            if (!retdec_table_stream_write(stream_ptr, &key_type,
-                                           sizeof(key_type)) ||
-                !retdec_table_stream_write(stream_ptr, &key[2],
-                                           sizeof(key[2]))) {
-                ok = 0;
-                break;
-            }
+            ok = stream.write(key_type) && stream.write(key.words[2]);
         } else if (key_type == OT_STRING) {
-            if (!retdec_table_stream_write(stream_ptr, &key_type,
-                                           sizeof(key_type)) ||
-                !retdec_table_stream_write_object_string(stream_ptr, key)) {
-                ok = 0;
-                break;
-            }
-        } else {
-            ok = 0;
-            break;
-        }
+            ok = stream.write(key_type) && write_string(stream, key);
+        } else { ok = false; }
+        if (!ok) break;
 
         if (value_type == OT_INTEGER || value_type == OT_FLOAT) {
-            if (!retdec_table_stream_write(stream_ptr, &value[2],
-                                           sizeof(value[2])))
-                ok = 0;
+            ok = stream.write(value.words[2]);
         } else if (value_type == OT_BOOL) {
-            unsigned char bool_value = (unsigned char)value[2];
-            if (!retdec_table_stream_write(stream_ptr, &bool_value, 1))
-                ok = 0;
+            const uint8_t boolean = static_cast<uint8_t>(value.data());
+            ok = stream.write(boolean);
         } else if (value_type == OT_STRING) {
-            if (!retdec_table_stream_write_object_string(stream_ptr, value))
-                ok = 0;
-        } else if (value_type == OT_ARRAY) {
-            int32_t nested[3];
-            int32_t count = kinoko_sqplus_object_size((void *)(intptr_t)((int32_t)(intptr_t)value));
-            if (count < 0 ||
-                !retdec_table_stream_write(stream_ptr, &count,
-                                            sizeof(count)) ||
-                !retdec_squirrel_object_copy(nested, value)) {
-                ok = 0;
-            } else {
-                ok = function_472820(stream_ptr, nested[0], nested[1], nested[2]);
+            ok = write_string(stream, value);
+        } else if (value_type == OT_ARRAY || value_type == OT_TABLE) {
+            Object nested;
+            if (value_type == OT_ARRAY) {
+                const int32_t count = kinoko_sqplus_object_size(value.raw());
+                ok = count >= 0 && stream.write(count);
             }
-        } else if (value_type == OT_TABLE) {
-            int32_t nested[3];
-            if (!retdec_squirrel_object_copy(nested, value)) {
-                ok = 0;
-            } else {
-                ok = function_472820(stream_ptr, nested[0], nested[1], nested[2]);
-            }
+            if (ok) ok = nested.copy_from(value) && write_table(stream, nested);
         }
-
-        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
-        (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
+        value.destroy();
+        key.destroy();
     }
-
-    if (iterator_started) {
-        uint32_t null_type = OT_NULL;
-        if (ok && !retdec_table_stream_write(stream_ptr, &null_type,
-                                       sizeof(null_type)))
-            ok = 0;
+    if (iterating) {
+        if (ok) ok = stream.write(static_cast<uint32_t>(OT_NULL));
         kinoko_sqplus_object_end_iteration();
     }
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)value)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)key)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)container)));
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
+    value.destroy();
+    key.destroy();
+    container.destroy();
+    input.destroy();
     return ok;
 }
 
-extern "C" int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data) {
-    int32_t input_object[3] = { object_vtable, object_type, object_data };
-    HANDLE file_handle = INVALID_HANDLE_VALUE;
-    unsigned char *encoded = NULL;
-    unsigned char *decoded = NULL;
-    DWORD encoded_size = 0;
-    DWORD bytes_read = 0;
-    int32_t stream[16] = { 0 };
-    int32_t table_object[3];
-    int32_t result = 0;
+struct File {
+    HANDLE handle;
+    explicit File(const char *path, DWORD access, DWORD share, DWORD disposition)
+        : handle(CreateFileA(path, access, share, nullptr, disposition,
+                             FILE_ATTRIBUTE_NORMAL, nullptr)) {}
+    ~File() { if (handle != INVALID_HANDLE_VALUE) CloseHandle(handle); }
+    explicit operator bool() const noexcept { return handle != INVALID_HANDLE_VALUE; }
+};
+using Bytes = std::unique_ptr<unsigned char, decltype(&std::free)>;
+Bytes allocate_buffer() {
+    return Bytes(static_cast<unsigned char *>(std::malloc(kFileBufferSize)), &std::free);
+}
 
+int32_t load_file(const char *path, Object input) {
     retdec_trace("savedata:load-begin");
-    retdec_trace((const char *)(intptr_t)path_ptr);
-    file_handle = CreateFileA(
-        (LPCSTR)(intptr_t)path_ptr, GENERIC_READ,
-        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-        goto cleanup;
-
-    encoded = (unsigned char *)malloc(0x20000u);
-    decoded = (unsigned char *)malloc(0x20000u);
-    if (encoded == NULL || decoded == NULL)
-        goto cleanup;
-    if (!ReadFile(file_handle, &encoded_size, sizeof(encoded_size),
-                  &bytes_read, NULL) || bytes_read != sizeof(encoded_size) ||
-        encoded_size > 0x20000u)
-        goto cleanup;
-    if (!ReadFile(file_handle, encoded, encoded_size, &bytes_read, NULL) ||
-        bytes_read != encoded_size)
-        goto cleanup;
-
-    stream[2] = kinoko_decompress_buffer(encoded, (int32_t)encoded_size, decoded, 0x20000);
-    retdec_trace_i32("savedata:decoded-size", stream[2]);
-    if (stream[2] <= 0)
-        goto cleanup;
-    stream[0] = (int32_t)(intptr_t)decoded;
-    stream[1] = 0;
-    if (!retdec_squirrel_object_from_pair(table_object, object_type,
-                                          object_data))
-        goto cleanup;
-    result = function_4722e0(stream, table_object[0], table_object[1], table_object[2]);
-    retdec_trace_i32("savedata:decoded-consumed", stream[1]);
-
-cleanup:
-    if (file_handle != INVALID_HANDLE_VALUE)
-        CloseHandle(file_handle);
-    if (decoded != NULL)
-        free(decoded);
-    if (encoded != NULL)
-        free(encoded);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
+    retdec_trace(path);
+    int32_t result = 0;
+    {
+        File file(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING);
+        if (file) {
+            auto encoded = allocate_buffer();
+            auto decoded = allocate_buffer();
+            DWORD encoded_size = 0, bytes_read = 0;
+            if (encoded && decoded &&
+                ReadFile(file.handle, &encoded_size, sizeof(encoded_size), &bytes_read, nullptr) &&
+                bytes_read == sizeof(encoded_size) && encoded_size <= kFileBufferSize &&
+                ReadFile(file.handle, encoded.get(), encoded_size, &bytes_read, nullptr) &&
+                bytes_read == encoded_size) {
+                const int32_t decoded_size = kinoko_decompress_buffer(
+                    encoded.get(), static_cast<int32_t>(encoded_size),
+                    decoded.get(), kFileBufferSize);
+                retdec_trace_i32("savedata:decoded-size", decoded_size);
+                if (decoded_size > 0) {
+                    TableStream stream(decoded.get(), decoded_size);
+                    Object table;
+                    if (table.assign(input.type(), input.data())) {
+                        result = read_table(stream, table);
+                        retdec_trace_i32("savedata:decoded-consumed", stream.position);
+                    }
+                }
+            }
+        }
+    }
+    input.destroy();
     retdec_trace_i32("savedata:load-result", result);
     return result;
 }
 
-extern "C" int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,
-                        int32_t object_type, int32_t object_data) {
-    int32_t input_object[3] = { object_vtable, object_type, object_data };
-    int32_t table_object[3];
-    int32_t input_stream[16] = { 0 };
-    unsigned char *raw = NULL;
-    unsigned char *encoded = NULL;
-    HANDLE file_handle = INVALID_HANDLE_VALUE;
-    DWORD encoded_size;
-    DWORD bytes_written;
-    int32_t result = 0;
-
+int32_t save_file(const char *path, Object input) {
     retdec_trace("savedata:save-begin");
-    retdec_trace((const char *)(intptr_t)path_ptr);
-    file_handle = CreateFileA(
-        (LPCSTR)(intptr_t)path_ptr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-        goto cleanup;
-    raw = (unsigned char *)malloc(0x20000u);
-    encoded = (unsigned char *)malloc(0x20000u);
-    if (raw == NULL || encoded == NULL)
-        goto cleanup;
-
-    input_stream[0] = (int32_t)(intptr_t)raw;
-    input_stream[1] = 0;
-    input_stream[2] = 0x20000;
-    if (!retdec_squirrel_object_from_pair(table_object, object_type, object_data) ||
-        !function_472820(input_stream, table_object[0], table_object[1],
-                         table_object[2]))
-        goto cleanup;
-    retdec_trace_i32("savedata:raw-size", input_stream[1]);
-    encoded_size = (DWORD)kinoko_compress_buffer(raw, input_stream[1], encoded, 0x20000);
-    retdec_trace_i32("savedata:encoded-size", (int32_t)encoded_size);
-    if (encoded_size == 0 || encoded_size > 0x20000)
-        goto cleanup;
-    if (!WriteFile(file_handle, &encoded_size, sizeof(encoded_size),
-                   &bytes_written, NULL) ||
-        bytes_written != sizeof(encoded_size) ||
-        !WriteFile(file_handle, encoded, encoded_size, &bytes_written, NULL) ||
-        bytes_written != encoded_size)
-        goto cleanup;
-    result = 1;
-
-cleanup:
-    if (file_handle != INVALID_HANDLE_VALUE)
-        CloseHandle(file_handle);
-    if (encoded != NULL)
-        free(encoded);
-    if (raw != NULL)
-        free(raw);
-    (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)((int32_t)(intptr_t)input_object)));
+    retdec_trace(path);
+    int32_t result = 0;
+    {
+        File file(path, GENERIC_WRITE, 0, CREATE_ALWAYS);
+        if (file) {
+            auto raw = allocate_buffer();
+            auto encoded = allocate_buffer();
+            if (raw && encoded) {
+                TableStream stream(raw.get(), kFileBufferSize);
+                Object table;
+                if (table.assign(input.type(), input.data()) && write_table(stream, table)) {
+                    retdec_trace_i32("savedata:raw-size", stream.position);
+                    const DWORD encoded_size = static_cast<DWORD>(kinoko_compress_buffer(
+                        raw.get(), stream.position, encoded.get(), kFileBufferSize));
+                    retdec_trace_i32("savedata:encoded-size", static_cast<int32_t>(encoded_size));
+                    DWORD bytes_written = 0;
+                    if (encoded_size && encoded_size <= kFileBufferSize &&
+                        WriteFile(file.handle, &encoded_size, sizeof(encoded_size), &bytes_written, nullptr) &&
+                        bytes_written == sizeof(encoded_size) &&
+                        WriteFile(file.handle, encoded.get(), encoded_size, &bytes_written, nullptr) &&
+                        bytes_written == encoded_size) result = 1;
+                }
+            }
+        }
+    }
+    input.destroy();
     retdec_trace_i32("savedata:save-result", result);
     return result;
 }
+} // namespace
+} // namespace kinoko::savedata
 
+// The original registration table still takes these four C ABI addresses.
+// All recursion, byte transfer and ownership live in named C++ routines above.
+int32_t kinoko_savedata_read_table_entry(int32_t *stream, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    kinoko::savedata::TableStream view(stream);
+    const auto result = kinoko::savedata::read_table(view, {vtable, type, data});
+    view.publish(stream);
+    return result;
+}
+extern "C" int32_t function_4722e0(int32_t *stream, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko_savedata_read_table_entry(stream, vtable, type, data);
+}
+int32_t kinoko_savedata_write_table_entry(int32_t *stream, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    kinoko::savedata::TableStream view(stream);
+    const auto result = kinoko::savedata::write_table(view, {vtable, type, data});
+    view.publish(stream);
+    return result;
+}
+extern "C" int32_t function_472820(int32_t *stream, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko_savedata_write_table_entry(stream, vtable, type, data);
+}
+int32_t kinoko_savedata_load_file_entry(int32_t path, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko::savedata::load_file(
+        reinterpret_cast<const char *>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
+        {vtable, type, data});
+}
+extern "C" int32_t function_472c90(int32_t path, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko_savedata_load_file_entry(path, vtable, type, data);
+}
+int32_t kinoko_savedata_save_file_entry(int32_t path, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko::savedata::save_file(
+        reinterpret_cast<const char *>(static_cast<uintptr_t>(static_cast<uint32_t>(path))),
+        {vtable, type, data});
+}
+extern "C" int32_t function_472e50(int32_t path, int32_t vtable,
+                                      int32_t type, int32_t data) {
+    return kinoko_savedata_save_file_entry(path, vtable, type, data);
+}

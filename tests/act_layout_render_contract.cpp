@@ -22,8 +22,6 @@ extern "C" {
 KinokoGraphics kinoko_graphics{};
 KinokoRenderer kinoko_renderer{};
 KinokoTextureSlot kinoko_texture_slots[KINOKO_TEXTURE_CAPACITY]{};
-float function_404130(long double value) { return std::cos(static_cast<float>(value)); }
-float function_4040d0(long double value) { return std::sin(static_cast<float>(value)); }
 int32_t kinoko_texture_bind_stage(int32_t,int32_t texture) { calls.push_back(500+texture);return E_FAIL; }
 int32_t kinoko_quad_submit(KinokoQuad*,float,float) { ++submitted;calls.push_back(900);return E_FAIL; }
 void retdec_trace_i32(const char*,int32_t) {}
@@ -31,7 +29,7 @@ KinokoActLayer *__fastcall kinoko_act_layer_world_position(KinokoActLayer *layer
 uint32_t kinoko_string_queue_size(int32_t) { return 1; }
 int32_t kinoko_string_queue_at(int32_t,uint32_t) { return address(&glyph); }
 int32_t kinoko_string_add_character(int32_t,const char*) { ++appended;return 1; }
-int32_t function_4410c0(int32_t) { return 0; }
+int32_t kinoko_string_rebuild_queue(KinokoStringLayout*) { return 0; }
 }
 static uint8_t __fastcall query(KinokoActResource *resource,void*,const void*,KinokoActResource **out) {
     ++queries;*out=query_ok ? resource : nullptr;return query_ok;

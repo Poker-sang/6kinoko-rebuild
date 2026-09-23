@@ -7,7 +7,6 @@
 #include <cstring>
 using kinoko::legacy::pointer;
 using kinoko::legacy::StringView;
-extern "C" int32_t function_4410c0(int32_t);
 namespace {
 using TextRecord=kinoko::act::StringLayoutRecord;
 using GlyphRecord=kinoko::act::StringGlyphRecord;
@@ -22,7 +21,7 @@ extern "C" int32_t __fastcall kinoko_method_update_string_layout(int32_t layout,
     const TextView text(pointer(layout));
     auto *layer=text.get(&TextRecord::layer);
     if(!layer) return E_FAIL;
-    if(text.get(&TextRecord::rebuild)) { function_4410c0(layout);text.set(&TextRecord::rebuild,uint8_t{0}); }
+    if(text.get(&TextRecord::rebuild)) { kinoko_string_rebuild_queue(pointer<KinokoStringLayout>(layout));text.set(&TextRecord::rebuild,uint8_t{0}); }
     StringView pending(text.bytes(&TextRecord::pending)),displayed(text.bytes(&TextRecord::text));
     // Original consumes pending multibyte characters before visibility testing.
     while(pending.length()) {

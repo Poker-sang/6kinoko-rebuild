@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 // Exercise the actual update body with a deterministic WinMM clock. Container
 // callbacks and D3D are controlled boundaries, not replacements for the loop.
 #define CINTERFACE
@@ -51,7 +52,7 @@ struct Fixture {
     }
     void count(int count) { source[53] = active[53] = address(layers + count); }
     ~Fixture() {
-        kinoko_act_draw_storage_destroy(address(runtime));
+        kinoko_act_draw_storage_destroy((KinokoActRuntime*)(runtime));
         DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(runtime + 5));
     }
 };
@@ -144,7 +145,7 @@ int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size) {
 void retdec_trace(const char*) {}
 void retdec_trace_i32(const char*, int32_t) {}
 void retdec_trace_squirrel_name(const char*, int32_t) {}
-const char* retdec_std_string_data(int32_t) { return "fixture"; }
+const char* kinoko_string_data(const void*) { return "fixture"; }
 int32_t kinoko_texture_bind_stage(int32_t stage, int32_t handle) {
     if (!stage && !handle) ++test::texture_unbinds; return 0;
 }
@@ -212,32 +213,32 @@ static int test_storage_and_draw() {
     for (int blend = 0; blend < 6; ++blend)
         CHECK(retdec_act_bitblt_this(address(fixture.runtime), 3, 4, 32, 16,
             address(texture_resource), 8, 4, blend, blend == 0 ? -1.0f : blend == 5 ? 2.0f : 0.5f) == 0);
-    const auto* commands = pointer<BlitCommand>(kinoko_act_command_span(address(fixture.runtime)).begin);
+    const auto* commands = reinterpret_cast<BlitCommand*>(kinoko_act_command_span((KinokoActRuntime*)(fixture.runtime)).begin);
     CHECK(commands[0].alpha == 0 && commands[5].alpha == 1 && commands[2].alpha == 0.5f);
     draws.clear(); draw_result = 0;
     CHECK(kinoko_act_prepare_draw(address(fixture.runtime)) == 0);
     CHECK(draws.size() == 2 && draws[0] == address(fixture.layouts[1]) && draws[1] == address(fixture.layouts[0]));
-    auto* sprites = pointer<BlitSprite>(kinoko_act_sprite_span(address(fixture.runtime)).begin);
-    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).end-kinoko_act_sprite_span(address(fixture.runtime)).begin==6*184);
+    auto* sprites = reinterpret_cast<BlitSprite*>(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin);
+    CHECK(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).end-kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin==6*184);
     CHECK(sprites[2].sprite.vertices[0].color == 0x7fffffffu);
     CHECK(sprites[2].sprite.vertices[0].u == 0.0625f && sprites[2].sprite.vertices[3].v == 0.3125f);
     CHECK(sprites[2].sprite.scale_x == 1 && sprites[2].sprite.width == 32);
     CHECK(sprites[0].sprite.vertices[0].color == 0xffffffu && sprites[5].sprite.vertices[0].color == 0xffffffffu);
-    const auto allocation = kinoko_act_sprite_span(address(fixture.runtime)).begin;
-    CHECK(function_452c20(address(fixture.runtime + 15), 3) == 6);
-    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).begin==allocation && kinoko_act_sprite_span(address(fixture.runtime)).end-allocation==3*184);
-    CHECK(function_452c20(address(fixture.runtime + 15), 6) == 6);
-    const auto saved = kinoko_act_sprite_span(address(fixture.runtime));
-    CHECK(function_452c20(address(fixture.runtime + 15), UINT32_MAX) == 0);
-    const auto after=kinoko_act_sprite_span(address(fixture.runtime));
+    const auto allocation = kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin;
+    CHECK(kinoko_act_resize_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15), 3) == 6);
+    CHECK(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).begin==allocation && kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).end-allocation==3*184);
+    CHECK(kinoko_act_resize_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15), 6) == 6);
+    const auto saved = kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime));
+    CHECK(kinoko_act_resize_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15), UINT32_MAX) == 0);
+    const auto after=kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime));
     CHECK(std::memcmp(&saved,&after,sizeof(saved))==0);
     CHECK(kinoko_act_prepare_draw(address(fixture.runtime))==0);
     BlitSprite copies[2]{};
     copies[0].sprite.vtable = &color_identity; copies[1].sprite.vtable = &target_identity;
-    CHECK(function_455230(address(sprites), address(sprites + 2), address(copies)) == address(copies + 2));
+    CHECK(kinoko_act_copy_blit_sprites((const KinokoBlitSprite*)(sprites), (const KinokoBlitSprite*)(sprites + 2), (KinokoBlitSprite*)(copies)) == copies + 2);
     CHECK(copies[0].sprite.vtable == &color_identity && copies[1].sprite.vtable == &target_identity);
     CHECK(copies[1].sprite.texture == 1 && copies[1].sprite.vertices[0].color == sprites[1].sprite.vertices[0].color);
-    CHECK(function_455230(address(sprites), address(sprites), address(copies)) == address(copies));
+    CHECK(kinoko_act_copy_blit_sprites((const KinokoBlitSprite*)(sprites), (const KinokoBlitSprite*)(sprites), (KinokoBlitSprite*)(copies)) == copies);
     kinoko_graphics.device = reinterpret_cast<IDirect3DDevice9 *>(&device); setup_device(); draws.clear(); sprite_draws = texture_unbinds = 0;
     CHECK(kinoko_act_draw(address(fixture.runtime), 100, 200) == 0);
     CHECK(draw_state_valid && restored() && draws.size() == 2 && draws[0] == address(fixture.layouts[1]));
@@ -264,8 +265,8 @@ static int test_storage_and_draw() {
     CHECK(kinoko_act_prepare_draw(address(fixture.runtime)) == 0);
     CHECK(kinoko_act_draw(address(fixture.runtime), 0, 0) == 0 && draws.empty() && sprite_draws == 0);
     fixture.active[24] = 1; draw_result = 0;
-    CHECK(retdec_act_clear_layout_vector(address(fixture.runtime + 15)) == allocation);
-    CHECK(kinoko_act_sprite_span(address(fixture.runtime)).end==allocation && kinoko_act_sprite_span(address(fixture.runtime)).capacity==saved.capacity);
+    CHECK(kinoko_act_clear_sprites((KinokoActSpriteStorage*)(fixture.runtime + 15)) == allocation);
+    CHECK(kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).end==allocation && kinoko_act_sprite_span((KinokoActRuntime*)(fixture.runtime)).capacity==saved.capacity);
     CHECK(kinoko_texture_slots[1].width == 128); // clear never owns/releases the texture
     kinoko_graphics.device = 0;
     return 0;

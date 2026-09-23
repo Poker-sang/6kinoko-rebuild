@@ -19,6 +19,7 @@ void  kinoko_sqrat_trim_stack(struct SQVM * vm, int32_t base);
 void * kinoko_sqrat_root_construct(void * object_ptr, struct SQVM * vm);
 void  kinoko_sqrat_object_release(void * object_ptr);
 int32_t  kinoko_sqrat_get(void * object_ptr, const char *name, void * out_ptr);
+void  kinoko_sqrat_retain_pair(struct SQVM * vm, const int32_t pair[2]);
 void  kinoko_sqrat_assign_pair(struct SQVM * vm, int32_t* destination, const int32_t* source);
 void  kinoko_sqrat_release_pair(struct SQVM * vm, int32_t pair[2]);
 int32_t  kinoko_sqrat_set_pair(struct SQVM * vm, const int32_t *object_pair, const char *name, const int32_t *value_pair);

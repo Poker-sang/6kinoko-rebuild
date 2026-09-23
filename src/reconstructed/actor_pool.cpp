@@ -10,6 +10,7 @@
 
 extern "C" { extern int32_t g29, g28; }
 namespace {
+inline auto actor_pool_vtable = &g28;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
@@ -111,7 +112,7 @@ extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, vo
     return static_cast<int32_t>(pool(manager).actors.size());
 }
 extern "C" int32_t __fastcall kinoko_method_actor_pool_base_delete(int32_t manager, void*, unsigned char flags) {
-    host(manager).set(&PoolHost::methods,static_cast<const void *>(&g28));
+    host(manager).set(&PoolHost::methods,static_cast<const void *>(actor_pool_vtable));
     if (flags & 1) std::free(pointer<void>(manager));
     return manager;
 }

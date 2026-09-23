@@ -1,0 +1,1 @@
+{"addr":"0x405220","code":"void __thiscall sub_405220(float *this, float a2, float a3)\n{\n  *(this + 45) = (*(this + 45) - a3) * a2 + a3; /*0x40523d*/\n  *(this + 48) = (*(this + 48) - a3) * a2 + a3; /*0x40524f*/\n  *(this + 51) = (*(this + 51) - a3) * a2 + a3; /*0x405261*/\n  *(this + 54) = a2 * (*(this + 54) - a3) + a3; /*0x405273*/\n}"}

@@ -34,8 +34,8 @@ public:
     int32_t id() { return address(storage()); }
     StringView view() { return StringView(storage()); }
     void assign(const std::string& text) {
-        require(retdec_string_assign_n(static_cast<int32_t*>(storage()), text.data(),
-            static_cast<uint32_t>(text.size())) == id(), "assign returns its receiver");
+        require(kinoko_string_assign_n(storage(), text.data(),
+            static_cast<uint32_t>(text.size())) == storage(), "assign returns its receiver");
     }
     void check(const std::string& text) {
         const auto value = view();
@@ -44,7 +44,7 @@ public:
         require(std::memcmp(value.data(), text.data(), text.size()) == 0, "logical content");
         require(value.data()[text.size()] == 0, "terminator outside logical content");
         require(bytes_.front() == 0x9d && bytes_.back() == 0x9d, "unaligned record sentinels");
-        require(retdec_std_string_data(id()) == value.data(), "shared getter selects same buffer");
+        require(kinoko_string_data(storage()) == value.data(), "shared getter selects same buffer");
     }
 };
 void growth_and_aliases() {
@@ -52,60 +52,60 @@ void growth_and_aliases() {
     const std::string first = "123456789abcdef";
     f.assign(first); f.check(first);
     require(f.view().capacity() >= 15 && f.view().data() != f.storage(), "text belongs to native string");
-    require(function_4038c0(f.id(), "g", 1) == f.id(), "append receiver");
+    require(kinoko_string_append_n(f.storage(), "g", 1) == f.storage(), "append receiver");
     auto expected = first + 'g'; f.check(expected);
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(std::string(31, 'x'));
-    function_4038c0(f.id(), "y", 1); f.check(std::string(31, 'x') + 'y');
+    kinoko_string_append_n(f.storage(), "y", 1); f.check(std::string(31, 'x') + 'y');
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(std::string(47, 'z'));
-    function_4038c0(f.id(), "y", 1); f.check(std::string(47, 'z') + 'y');
+    kinoko_string_append_n(f.storage(), "y", 1); f.check(std::string(47, 'z') + 'y');
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
     f.assign(first);
-    function_4039e0(f.id(), 15, 1); f.check(first);
+    kinoko_string_reserve(f.storage(), 15, 1); f.check(first);
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    function_403bf0(f.id(), f.id(), 0, UINT32_MAX); expected = first + first;
+    kinoko_string_append_substring(f.storage(), f.storage(), 0, UINT32_MAX); expected = first + first;
     f.check(expected); require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    function_4038c0(f.id(), f.view().data() + 5, UINT32_MAX);
+    kinoko_string_append_n(f.storage(), f.view().data() + 5, UINT32_MAX);
     expected += expected.substr(5); f.check(expected);
     const auto self = f.view().data();
-    retdec_string_assign_n(static_cast<int32_t*>(f.storage()), self + 3, 11);
+    kinoko_string_assign_n(f.storage(), self + 3, 11);
     expected = expected.substr(3, 11); f.check(expected);
-    retdec_string_assign_n(static_cast<int32_t*>(f.storage()), f.view().data(), f.view().length());
+    kinoko_string_assign_n(f.storage(), f.view().data(), f.view().length());
     f.check(expected);
     // Existing assign permits the old terminator as a one-byte source range.
-    retdec_string_assign_n(static_cast<int32_t*>(f.storage()), f.view().data() + f.view().length(), 1);
+    kinoko_string_assign_n(f.storage(), f.view().data() + f.view().length(), 1);
     f.check(std::string(1, '\0'));
     f.assign(std::string("a\0b", 3)); f.check(std::string("a\0b", 3));
-    retdec_string_assign_cstr(static_cast<int32_t*>(f.storage()), f.view().data()); f.check("a");
+    kinoko_string_assign_cstr(f.storage(), f.view().data()); f.check("a");
 }
 void reserve_and_failure_results() {
     Fixture f; f.assign(std::string(40, 'r'));
     const auto allocation = f.view().data(); const auto capacity = f.view().capacity();
-    require(function_4039e0(f.id(), 0, 0) == 0, "zero capacity returns false even on successful clear");
+    require(kinoko_string_reserve(f.storage(), 0, 0) == 0, "zero capacity returns false even on successful clear");
     f.check(""); require(f.view().data() == allocation && f.view().capacity() == capacity,
         "clear without shrink retains allocation");
     f.assign(std::string(30, 't'));
-    function_4039e0(f.id(), 20, 1); f.check(std::string(30, 't'));
+    kinoko_string_reserve(f.storage(), 20, 1); f.check(std::string(30, 't'));
     require(f.view().capacity() == capacity, "large shrink request does not truncate");
-    function_4039e0(f.id(), 8, 1); f.check(std::string(8, 't'));
+    kinoko_string_reserve(f.storage(), 8, 1); f.check(std::string(8, 't'));
     require(f.view().capacity() >= f.view().length(), "native capacity covers content");
-    require(function_4039e0(f.id(), UINT32_MAX, 1) == 0, "invalid reserve result");
-    require(function_403ce0(f.id(), UINT32_MAX, f.view().length()) == 0, "invalid grow result");
-    require(function_4038c0(f.id(), "x", UINT32_MAX) == f.id(), "overflow append returns receiver");
-    require(function_403bf0(f.id(), f.id(), 900, 1) == f.id(), "out-of-range append returns receiver");
-    require(retdec_string_assign_n(static_cast<int32_t*>(f.storage()), "x", UINT32_MAX) == f.id(),
+    require(kinoko_string_reserve(f.storage(), UINT32_MAX, 1) == 0, "invalid reserve result");
+    require(kinoko_string_grow(f.storage(), UINT32_MAX, f.view().length()) == 0, "invalid grow result");
+    require(kinoko_string_append_n(f.storage(), "x", UINT32_MAX) == f.storage(), "overflow append returns receiver");
+    require(kinoko_string_append_substring(f.storage(), f.storage(), 900, 1) == f.storage(), "out-of-range append returns receiver");
+    require(kinoko_string_assign_n(f.storage(), "x", UINT32_MAX) == f.storage(),
         "invalid assignment returns receiver");
     f.check(std::string(8, 't'));
-    require(!retdec_string_assign_n(nullptr, "x", 1), "null assignment receiver");
-    require(!retdec_std_string_data(0) && !function_4038c0(0, "x", 1), "null string view/append");
-    require(!function_4039e0(0, 10, 0) && !function_403ce0(0, 10, 0), "null reserve/grow");
-    require(!function_403bf0(f.id(), 0, 0, 1) && !function_403bf0(0, f.id(), 0, 1),
+    require(!kinoko_string_assign_n(nullptr, "x", 1), "null assignment receiver");
+    require(!kinoko_string_data(0) && !kinoko_string_append_n(0, "x", 1), "null string view/append");
+    require(!kinoko_string_reserve(0, 10, 0) && !kinoko_string_grow(0, 10, 0), "null reserve/grow");
+    require(!kinoko_string_append_substring(f.storage(), 0, 0, 1) && !kinoko_string_append_substring(0, f.storage(), 0, 1),
         "null substring endpoints");
-    retdec_string_assign_cstr(static_cast<int32_t*>(f.storage()), nullptr); f.check("");
+    kinoko_string_assign_cstr(f.storage(), nullptr); f.check("");
     // Exercise the recovered opaque return in the unusual zero-capacity case.
     StringRecord zero{};
-    require(function_403ce0(address(&zero), 0, 0) != 0, "short grow preserves nonzero opaque result");
+    require(kinoko_string_grow(&zero, 0, 0) != 0, "short grow returns a borrowed buffer");
     require(StringView(&zero).capacity() >= 16 && StringView(&zero).data()[0] == 0,
         "short grow publishes native storage");
     StringView(&zero).destroy();
@@ -121,25 +121,25 @@ void deterministic_sequences() {
         case 1: b = std::string(n, static_cast<char>(random() & 255)); right.assign(b); break;
         case 2: {
             const auto pos = random() % (b.size() + 1);
-            function_403bf0(left.id(), right.id(), static_cast<uint32_t>(pos), n);
+            kinoko_string_append_substring(left.storage(), right.storage(), static_cast<uint32_t>(pos), n);
             a += b.substr(pos, n); break;
         }
         case 3: {
             const auto pos = random() % (a.size() + 1);
             const auto suffix = a.substr(pos, n);
-            function_403bf0(left.id(), left.id(), static_cast<uint32_t>(pos), n);
+            kinoko_string_append_substring(left.storage(), left.storage(), static_cast<uint32_t>(pos), n);
             a += suffix; break;
         }
         case 4: {
             const auto pos = random() % (a.size() + 1);
             const auto count = (std::min)(static_cast<size_t>(n), a.size() - pos);
-            retdec_string_assign_n(static_cast<int32_t*>(left.storage()), left.view().data() + pos,
+            kinoko_string_assign_n(left.storage(), left.view().data() + pos,
                 static_cast<uint32_t>(count));
             a = a.substr(pos, count); break;
         }
-        case 5: function_4039e0(left.id(), 0, 0); a.clear(); break;
+        case 5: kinoko_string_reserve(left.storage(), 0, 0); a.clear(); break;
         case 6:
-            function_4039e0(left.id(), 8, 1);
+            kinoko_string_reserve(left.storage(), 8, 1);
             if (a.size() > 8) a.resize(8);
             break;
         }
@@ -153,21 +153,21 @@ void substring_assignment() {
     for (uint32_t position=0;position<=binary.size();++position) {
         for (uint32_t count : {0u,1u,15u,16u,UINT32_MAX}) {
             target.assign("previous heap allocation must stay independent");
-            require(kinoko_string_assign_substring(target.id(),source.id(),position,count)==target.id(),
+            require(kinoko_string_assign_substring(target.storage(),source.storage(),position,count)==target.storage(),
                 "substring returns explicit receiver");
             target.check(binary.substr(position,count)); source.check(binary);
             target.assign(binary);
             const auto buffer=target.view().data(); const auto capacity=target.view().capacity();
-            kinoko_string_assign_substring(target.id(),target.id(),position,count);
+            kinoko_string_assign_substring(target.storage(),target.storage(),position,count);
             target.check(binary.substr(position,count));
             require(target.view().data()==buffer && target.view().capacity()==capacity,
                 "self substring erases in place without allocation");
         }
     }
     target.assign("unchanged");
-    kinoko_string_assign_substring(target.id(),source.id(),UINT32_MAX,1);
+    kinoko_string_assign_substring(target.storage(),source.storage(),UINT32_MAX,1);
     target.check("unchanged");
-    require(!kinoko_string_assign_substring(0,source.id(),0,1),"missing receiver");
+    require(!kinoko_string_assign_substring(0,source.storage(),0,1),"missing receiver");
 }
 
 void scanner_contract() {

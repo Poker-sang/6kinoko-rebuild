@@ -1,0 +1,1 @@
+{"addr":"0x4045c0","code":"bool __cdecl sub_4045C0(float *a1, float *a2)\n{\n  return a2[2] >= (double)*a1 && a2[3] >= (double)a1[1] && *a2 <= (double)a1[2] && a2[1] <= (double)a1[3]; /*0x4045d9*/\n}"}

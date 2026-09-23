@@ -19,6 +19,7 @@ struct Resource {
 };
 static_assert(sizeof(Resource)==248 && offsetof(Resource,renders)==236);
 Resource *create_resource();
+int32_t read_resource_properties(Resource *resource,int32_t *reader_holder,int32_t version);
 void clear_resource(Resource *resource);
 uint8_t load_resource(Resource *resource,const char *prefix);
 int32_t replace_texture(Resource *resource,const char *name,KinokoActResource *texture);

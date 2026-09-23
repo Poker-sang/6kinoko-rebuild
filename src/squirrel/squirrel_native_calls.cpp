@@ -5,6 +5,12 @@
 #include "kinoko/legacy_abi.h"
 #include <array>
 
+extern "C" int32_t function_46b490(int32_t, int32_t, int32_t, int32_t);
+extern "C" int32_t function_46b500(int32_t, int32_t, int32_t, int32_t);
+extern "C" int32_t function_46b610(int32_t, int32_t, int32_t, int32_t);
+extern "C" int32_t function_46b6f0(int32_t, int32_t, int32_t, int32_t);
+extern "C" int32_t function_471720(int32_t, int32_t, int32_t);
+
 extern "C" {
 extern char g560;
 void retdec_trace_i32(const char*, int32_t);
@@ -12,6 +18,7 @@ void retdec_trace_i32(const char*, int32_t);
 
 namespace {
 using namespace kinoko::script;
+inline char& sqrat_trace_slot = g560;
 constexpr const char* argument_error = "Incorrect function argument";
 constexpr const char* conversion_error = "sq_get*() failed (type error)";
 int32_t error(HSQUIRRELVM vm, const char* message) {
@@ -81,34 +88,43 @@ int32_t call_pair(HSQUIRRELVM vm, int32_t callback, int32_t first,
     reinterpret_cast<PairCallback>(pointer(callback))(first, closure_argument, environment_argument);
     return 0;
 }
+void kinoko_native_capture_receiver(HSQUIRRELVM vm, int32_t* pair);
 using ExplicitReceiver = int32_t (*)(int32_t, int32_t, int32_t, int32_t);
-int32_t call_binding(int32_t id, ExplicitReceiver invoke) {
+int32_t kinoko_native_call_binding(int32_t id, ExplicitReceiver invoke) {
     int32_t pair[2]{};
-    function_46c6b0_pair(id, pair);
+    kinoko_native_capture_receiver(pointer<SQVM>(id), pair);
     auto vm = pointer<SQVM>(id);
     if (!pair[0] || !pair[1]) return error(vm, "Invalid Instance Type");
     return invoke(pair[0], word(pointer(pair[1])), id, 2);
 }
-int32_t property_dispatch(int32_t id, bool write) {
+int32_t kinoko_native_property_dispatch(int32_t id, bool write) {
     auto vm = pointer<SQVM>(id);
     // [instance, key, (value), captured lookup table]. Never index a short frame.
     if (!vm || sq_gettop(vm) < (write ? 4 : 3)) return error(vm, "Member Variable not found");
-    return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(g560),
+    return upstream::sqrat_property_dispatch(vm, write, static_cast<SQBool>(sqrat_trace_slot),
         [](HSQUIRRELVM machine, SQInteger count, SQBool result, SQBool raiseerror) -> SQRESULT {
             return kinoko_sq_call(address(machine), count, result, raiseerror);
         });
 }
 }
 
-extern "C" int32_t function_41e260(int32_t vm) { return property_dispatch(vm, false); }
-extern "C" int32_t function_41e2c0(int32_t vm) { return property_dispatch(vm, true); }
-extern "C" int32_t function_431650(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+extern "C" int32_t kinoko_native_property_set_callback(int32_t vm) { return kinoko_native_property_dispatch(vm, false); }
+extern "C" int32_t function_41e260(int32_t id) { return kinoko_native_property_set_callback(id); }
+extern "C" int32_t kinoko_native_property_get_callback(int32_t vm) { return kinoko_native_property_dispatch(vm, true); }
+extern "C" int32_t function_41e2c0(int32_t id) { return kinoko_native_property_get_callback(id); }
+namespace {
+int32_t kinoko_native_weakref(HSQUIRRELVM vm) {
     if (!vm || sq_gettop(vm) < 1) return -1;
     return upstream::sqrat_weakref(vm);
 }
-extern "C" int32_t function_445730(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+}
+extern "C" int32_t kinoko_native_class_weakref_callback(int32_t id) {
+    return kinoko_native_weakref(pointer<SQVM>(id));
+}
+extern "C" int32_t function_431650(int32_t id) { return kinoko_native_class_weakref_callback(id); }
+namespace {
+int32_t kinoko_native_invoke_integer_member(HSQUIRRELVM machine) {
+    auto vm=machine;
     if (!vm || sq_gettop(vm) < 3) return 0;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -117,9 +133,15 @@ extern "C" int32_t function_445730(int32_t id) {
     retdec_call_thiscall1(pointer(self), pointer(method), argument);
     return 0;
 }
-extern "C" int32_t function_4552e0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    retdec_trace_i32("450950:zero-wrapper-entry", id);
+} // namespace
+extern "C" int32_t kinoko_native_integer_member_callback(int32_t id) {
+    return kinoko_native_invoke_integer_member(pointer<SQVM>(id));
+}
+extern "C" int32_t function_445730(int32_t id) { return kinoko_native_integer_member_callback(id); }
+namespace {
+int32_t kinoko_native_invoke_nullary_member(HSQUIRRELVM machine) {
+    auto vm=machine;
+    retdec_trace_i32("450950:zero-wrapper-entry", address(machine));
     if (!vm || sq_gettop(vm) < 2) return 0;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -129,8 +151,14 @@ extern "C" int32_t function_4552e0(int32_t id) {
     retdec_call_thiscall0(pointer(self), pointer(method));
     return 0;
 }
-extern "C" int32_t function_4555a0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+} // namespace
+extern "C" int32_t kinoko_native_nullary_member_callback(int32_t id) {
+    return kinoko_native_invoke_nullary_member(pointer<SQVM>(id));
+}
+extern "C" int32_t function_4552e0(int32_t id) { return kinoko_native_nullary_member_callback(id); }
+namespace {
+int32_t kinoko_native_invoke_draw_member(HSQUIRRELVM machine) {
+    auto vm=machine;
     if (!vm || sq_gettop(vm) < 11) return -1;
     const auto method = word(capture(vm, false));
     const auto self = native_self(vm);
@@ -149,24 +177,39 @@ extern "C" int32_t function_4555a0(int32_t id) {
     sq_pushinteger(vm, result);
     return 1;
 }
-extern "C" int32_t function_46b490(int32_t self, int32_t callback, int32_t id, int32_t first) {
-    auto vm=pointer<SQVM>(id); const SQChar* value=nullptr;
+} // namespace
+extern "C" int32_t kinoko_native_draw_member_callback(int32_t id) {
+    return kinoko_native_invoke_draw_member(pointer<SQVM>(id));
+}
+extern "C" int32_t function_4555a0(int32_t id) { return kinoko_native_draw_member_callback(id); }
+namespace {
+int32_t kinoko_native_invoke_string_callback(int32_t self, int32_t callback, HSQUIRRELVM machine, int32_t first) {
+    auto vm=machine; const SQChar* value=nullptr;
     if (SQ_FAILED(string_argument(vm, first, value))) return -1;
     if (!callback) return error(vm, "Invalid native function");
     using Function=int32_t (__cdecl *)(int32_t, const SQChar*);
     reinterpret_cast<Function>(pointer(callback))(self, value);
     return 0;
 }
-extern "C" int32_t function_46b500(int32_t self, int32_t callback, int32_t id, int32_t first) {
-    auto vm=pointer<SQVM>(id); std::array<SQInteger,3> values{};
+} // namespace
+extern "C" int32_t function_46b490(int32_t self, int32_t callback, int32_t id, int32_t first) {
+    return kinoko_native_invoke_string_callback(self, callback, pointer<SQVM>(id), first);
+}
+namespace {
+int32_t kinoko_native_invoke_three_integer_callback(int32_t self, int32_t callback, HSQUIRRELVM machine, int32_t first) {
+    auto vm=machine; std::array<SQInteger,3> values{};
     if (SQ_FAILED(integers(vm, first, values))) return -1;
     if (!callback) return error(vm, "Invalid native function");
     using Function=int32_t (__cdecl *)(int32_t,int32_t,int32_t,int32_t);
     reinterpret_cast<Function>(pointer(callback))(self, values[0], values[1], values[2]);
     return 0;
 }
+} // namespace
+extern "C" int32_t function_46b500(int32_t self, int32_t callback, int32_t id, int32_t first) {
+    return kinoko_native_invoke_three_integer_callback(self, callback, pointer<SQVM>(id), first);
+}
 namespace {
-int32_t call_two(int32_t self, int32_t callback, int32_t id, int32_t first, bool boolean) {
+int32_t kinoko_native_call_two(int32_t self, int32_t callback, int32_t id, int32_t first, bool boolean) {
     auto vm=pointer<SQVM>(id); std::array<SQInteger,2> values{};
     if (SQ_FAILED(integers(vm, first, values))) return -1;
     if (!callback) return error(vm, "Invalid native function");
@@ -176,30 +219,43 @@ int32_t call_two(int32_t self, int32_t callback, int32_t id, int32_t first, bool
     return 1;
 }
 }
-extern "C" int32_t function_46b610(int32_t self,int32_t target,int32_t vm,int32_t first) {
-    return call_two(self,target,vm,first,true);
+extern "C" int32_t function_46b610(int32_t self, int32_t target, int32_t vm, int32_t first) {
+    return kinoko_native_call_two(self, target, vm, first, true);
 }
-extern "C" int32_t function_46b6f0(int32_t self,int32_t target,int32_t vm,int32_t first) {
-    return call_two(self,target,vm,first,false);
+extern "C" int32_t function_46b6f0(int32_t self, int32_t target, int32_t vm, int32_t first) {
+    return kinoko_native_call_two(self, target, vm, first, false);
 }
-extern "C" void function_46c6b0_pair(int32_t id,int32_t* pair) {
+namespace {
+void kinoko_native_capture_receiver(HSQUIRRELVM vm, int32_t* pair) {
     if (!pair) return;
-    auto vm=pointer<SQVM>(id);
     const int32_t result[2]={native_self(vm),address(capture(vm,true))};
     std::memcpy(pair,result,sizeof(result));
 }
-extern "C" int32_t function_46ce70(int32_t vm) { return call_binding(vm,function_46b490); }
-extern "C" int32_t function_46cec0(int32_t vm) { return call_binding(vm,function_46b500); }
-extern "C" int32_t function_46cf10(int32_t vm) { return call_binding(vm,function_46b610); }
-extern "C" int32_t function_46cf60(int32_t vm) { return call_binding(vm,function_46b6f0); }
-extern "C" int32_t function_4716b0(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id); const SQChar* value=nullptr;
+}
+extern "C" void kinoko_native_capture_receiver_pair(int32_t id, int32_t* pair) {
+    kinoko_native_capture_receiver(pointer<SQVM>(id), pair);
+}
+extern "C" void function_46c6b0_pair(int32_t id, int32_t* pair) {
+    kinoko_native_capture_receiver_pair(id, pair);
+}
+extern "C" int32_t kinoko_input_save_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b490); }
+extern "C" int32_t kinoko_input_assign_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b500); }
+extern "C" int32_t kinoko_input_wait_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b610); }
+extern "C" int32_t kinoko_input_get_entry(int32_t vm) { return kinoko_native_call_binding(vm, function_46b6f0); }
+namespace {
+int32_t kinoko_native_invoke_string_only_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine; const SQChar* value=nullptr;
     if (SQ_FAILED(string_argument(vm,index,value))) return -1;
     if (callback) reinterpret_cast<void (__cdecl *)(const SQChar*)>(pointer(callback))(value);
     return 0;
 }
-extern "C" int32_t function_471a60(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id);
+} // namespace
+extern "C" int32_t function_4716b0(int32_t callback, int32_t id, int32_t index) {
+    return kinoko_native_invoke_string_only_callback(callback, pointer<SQVM>(id), index);
+}
+namespace {
+int32_t kinoko_native_invoke_two_integer_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine;
     if (!strict_type(vm,index,OT_INTEGER) || !strict_type(vm,static_cast<int64_t>(index)+1,OT_INTEGER))
         return error(vm,argument_error);
     SQInteger first=0,second=0;
@@ -208,23 +264,41 @@ extern "C" int32_t function_471a60(int32_t callback,int32_t id,int32_t index) {
     if (callback) reinterpret_cast<void (__cdecl *)(int32_t,int32_t)>(pointer(callback))(first,second);
     return 0;
 }
-extern "C" int32_t function_471720(int32_t callback,int32_t id,int32_t index) {
-    auto vm=pointer<SQVM>(id); const SQChar* name=nullptr; HSQOBJECT closure{},environment{};
+} // namespace
+extern "C" int32_t function_471a60(int32_t callback, int32_t id, int32_t index) {
+    return kinoko_native_invoke_two_integer_callback(callback, pointer<SQVM>(id), index);
+}
+namespace {
+int32_t kinoko_native_invoke_string_pair_callback(int32_t callback, HSQUIRRELVM machine, int32_t index) {
+    auto vm=machine; const SQChar* name=nullptr; HSQOBJECT closure{},environment{};
     if (!callback || !strict_type(vm,index,OT_STRING) ||
         SQ_FAILED(sq_getstring(vm,index,&name)) ||
         !pair_argument(vm,static_cast<int64_t>(index)+1,closure) ||
         !pair_argument(vm,static_cast<int64_t>(index)+2,environment)) return error(vm,argument_error);
     return call_pair(vm,callback,address(name),closure,environment);
 }
-extern "C" int32_t function_471d30(int32_t id) {
-    auto vm=pointer<SQVM>(id); const auto callback=target(vm);
+} // namespace
+extern "C" int32_t kinoko_native_string_pair_callback_entry(int32_t callback, int32_t id, int32_t index) {
+    return kinoko_native_invoke_string_pair_callback(callback, pointer<SQVM>(id), index);
+}
+extern "C" int32_t function_471720(int32_t callback, int32_t id, int32_t index) {
+    return kinoko_native_string_pair_callback_entry(callback, id, index);
+}
+namespace {
+int32_t kinoko_native_invoke_integer_pair_callback(HSQUIRRELVM machine) {
+    auto vm=machine; const auto callback=target(vm);
     SQInteger key=0; HSQOBJECT closure{},environment{};
     if (!callback || !strict_type(vm,2,OT_INTEGER) || SQ_FAILED(sq_getinteger(vm,2,&key)) ||
         !pair_argument(vm,3,closure) || !pair_argument(vm,4,environment)) return error(vm,argument_error);
     return call_pair(vm,callback,key,closure,environment);
 }
-extern "C" int32_t function_471e50(int32_t id) {
-    auto vm=pointer<SQVM>(id); const auto callback=target(vm);
+} // namespace
+extern "C" int32_t function_471d30(int32_t id) {
+    return kinoko_native_invoke_integer_pair_callback(pointer<SQVM>(id));
+}
+namespace {
+int32_t kinoko_native_invoke_string_object_callback(HSQUIRRELVM machine) {
+    auto vm=machine; const auto callback=target(vm);
     const SQChar* name=nullptr; HSQOBJECT environment{};
     if (!callback || !strict_type(vm,2,OT_STRING) || SQ_FAILED(sq_getstring(vm,2,&name)) ||
         !pair_argument(vm,3,environment)) return error(vm,argument_error);
@@ -232,53 +306,68 @@ extern "C" int32_t function_471e50(int32_t id) {
     reinterpret_cast<Function>(pointer(callback))(name,transfer(vm,environment));
     return 0;
 }
-extern "C" int32_t function_471f70(int32_t id) { return function_471720(target(pointer<SQVM>(id)),id,2); }
-extern "C" int32_t function_472030(int32_t id) {
-    auto vm=pointer<SQVM>(id); if (!vm) return -1;
+} // namespace
+extern "C" int32_t function_471e50(int32_t id) {
+    return kinoko_native_invoke_string_object_callback(pointer<SQVM>(id));
+}
+extern "C" int32_t kinoko_native_create_event_callback(int32_t id) {
+    auto vm = pointer<SQVM>(id);
+    return kinoko_native_string_pair_callback_entry(target(vm), id, 2);
+}
+extern "C" int32_t function_471f70(int32_t id) {
+    return kinoko_native_create_event_callback(id);
+}
+namespace {
+int32_t kinoko_native_invoke_integer_result_callback(HSQUIRRELVM machine) {
+    auto vm=machine; if (!vm) return -1;
     const auto callback=target(vm);
     const auto result=callback ? reinterpret_cast<int32_t (__cdecl *)(void)>(pointer(callback))() : 0;
     sq_pushinteger(vm,result); return 1;
 }
+} // namespace
+extern "C" int32_t function_472030(int32_t id) {
+    return kinoko_native_invoke_integer_result_callback(pointer<SQVM>(id));
+}
 
-extern "C" int32_t function_470df0(int32_t id, int32_t index) {
-    auto vm = pointer<SQVM>(id);
+namespace {
+// 470DF0 accepts any existing Squirrel stack value. NULL is false; bool,
+// integer and float use their native conversion; other types are true.
+int32_t kinoko_native_truthy(HSQUIRRELVM vm, int32_t index) {
     if (!index_exists(vm, index)) return error(vm, argument_error);
     switch (sq_gettype(vm, index)) {
-    case OT_NULL:
-        return 0;
+    case OT_NULL: return 0;
     case OT_BOOL: {
         SQBool value = SQFalse;
-        if (SQ_FAILED(sq_getbool(vm, index, &value))) return error(vm, conversion_error);
-        return value != SQFalse;
+        return SQ_FAILED(sq_getbool(vm, index, &value))
+            ? error(vm, conversion_error) : value != SQFalse;
     }
     case OT_INTEGER: {
         SQInteger value = 0;
-        if (SQ_FAILED(sq_getinteger(vm, index, &value))) return error(vm, conversion_error);
-        return value != 0;
+        return SQ_FAILED(sq_getinteger(vm, index, &value))
+            ? error(vm, conversion_error) : value != 0;
     }
     case OT_FLOAT: {
         SQFloat value = 0;
-        if (SQ_FAILED(sq_getfloat(vm, index, &value))) return error(vm, conversion_error);
-        return value != 0;
+        return SQ_FAILED(sq_getfloat(vm, index, &value))
+            ? error(vm, conversion_error) : value != 0;
     }
-    default:
-        return 1;
+    default: return 1;
     }
 }
-extern "C" int32_t function_470ee0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+
+int32_t kinoko_native_no_arguments(HSQUIRRELVM vm) {
     const auto callback = target(vm);
     if (callback) reinterpret_cast<int32_t (__cdecl *)(void)>(pointer(callback))();
     return 0;
 }
-extern "C" int32_t function_471160(int32_t callback, int32_t id, int32_t index) {
-    auto vm = pointer<SQVM>(id);
+
+int32_t kinoko_native_string_object(int32_t callback, HSQUIRRELVM vm, int32_t index) {
     if (!strict_type(vm, index, OT_STRING)) return error(vm, argument_error);
     HSQOBJECT object{};
     if (!pair_argument(vm, static_cast<int64_t>(index) + 1, object))
         return error(vm, argument_error);
-    auto argument = transfer(vm, object);
-    const SQChar* value = nullptr;
+    auto argument = transfer(vm, object); // The callback consumes this reference.
+    const SQChar *value = nullptr;
     if (SQ_FAILED(sq_getstring(vm, index, &value))) {
         sq_release(vm, &argument.value);
         return error(vm, conversion_error);
@@ -287,123 +376,134 @@ extern "C" int32_t function_471160(int32_t callback, int32_t id, int32_t index) 
         sq_release(vm, &argument.value);
         return 0;
     }
-    using Function = int32_t (__cdecl *)(int32_t, int32_t, int32_t, int32_t);
-    const auto result = reinterpret_cast<Function>(pointer(callback))(
-        address(value), static_cast<int32_t>(argument.vtable),
-        static_cast<int32_t>(argument.value._type), data_bits(argument.value));
+    using Callback = int32_t (__cdecl *)(const SQChar *, ObjectStorage);
+    const auto result = reinterpret_cast<Callback>(pointer(callback))(value, argument);
     sq_pushbool(vm, static_cast<unsigned char>(result) != 0);
     return 1;
 }
-extern "C" int32_t function_471330(int32_t callback, int32_t id, int32_t index) {
-    auto vm = pointer<SQVM>(id);
-    const SQChar* value = nullptr;
+
+int32_t kinoko_native_string_bool(int32_t callback, HSQUIRRELVM vm, int32_t index) {
+    const SQChar *value = nullptr;
     if (SQ_FAILED(string_argument(vm, index, value))) return -1;
     if (callback) {
-        using Function = int32_t (__cdecl *)(int32_t);
-        const auto result = reinterpret_cast<Function>(pointer(callback))(address(value));
+        using Callback = int32_t (__cdecl *)(const SQChar *);
+        const auto result = reinterpret_cast<Callback>(pointer(callback))(value);
         sq_pushbool(vm, static_cast<unsigned char>(result) != 0);
     }
     return 1;
 }
-extern "C" int32_t function_471880(int32_t callback, int32_t id, int32_t index) {
-    auto vm = pointer<SQVM>(id);
-    const int64_t second_index = static_cast<int64_t>(index) + 1;
-    const int64_t third_index = static_cast<int64_t>(index) + 2;
-    const int64_t fourth_index = static_cast<int64_t>(index) + 3;
-    if (!strict_type(vm, index, OT_STRING) || !strict_type(vm, second_index, OT_INTEGER) ||
-        !strict_type(vm, third_index, OT_INTEGER) || !index_exists(vm, fourth_index))
-        return error(vm, argument_error);
-    const auto fourth = function_470df0(id, static_cast<int32_t>(fourth_index));
-    if (fourth < 0) return fourth;
-    SQInteger third = 0, second = 0;
-    const SQChar* first = nullptr;
-    if (SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(third_index), &third)) ||
-        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(second_index), &second)) ||
-        SQ_FAILED(sq_getstring(vm, index, &first))) return error(vm, conversion_error);
+
+int32_t kinoko_native_string_integer_truth(int32_t callback, HSQUIRRELVM vm,
+                                    int32_t index, bool three_integers) {
+    const int count = three_integers ? 3 : 2;
+    if (!strict_type(vm, index, OT_STRING)) return error(vm, argument_error);
+    for (int offset = 1; offset <= count; ++offset)
+        if (!strict_type(vm, static_cast<int64_t>(index) + offset, OT_INTEGER))
+            return error(vm, argument_error);
+    const auto truth_index = static_cast<int64_t>(index) + count + 1;
+    if (!index_exists(vm, truth_index)) return error(vm, argument_error);
+    const auto truth = kinoko_native_truthy(vm, static_cast<int32_t>(truth_index));
+    if (truth < 0) return truth;
+    std::array<SQInteger, 3> values{};
+    // Original 471880/471960 converts numeric arguments right-to-left.
+    for (int offset = count; offset >= 1; --offset)
+        if (SQ_FAILED(sq_getinteger(vm, index + offset, &values[offset - 1])))
+            return error(vm, conversion_error);
+    const SQChar *name = nullptr;
+    if (SQ_FAILED(sq_getstring(vm, index, &name)))
+        return error(vm, conversion_error);
     if (callback) {
-        using Function = void (__cdecl *)(int32_t, int32_t, int32_t, int32_t);
-        reinterpret_cast<Function>(pointer(callback))(address(first), second, third, fourth);
+        if (three_integers) {
+            using Callback = void (__cdecl *)(const SQChar *, int32_t, int32_t, int32_t, int32_t);
+            reinterpret_cast<Callback>(pointer(callback))(
+                name, values[0], values[1], values[2], truth);
+        } else {
+            using Callback = void (__cdecl *)(const SQChar *, int32_t, int32_t, int32_t);
+            reinterpret_cast<Callback>(pointer(callback))(
+                name, values[0], values[1], truth);
+        }
     }
     return 0;
 }
-extern "C" int32_t function_471960(int32_t callback, int32_t id, int32_t index) {
-    auto vm = pointer<SQVM>(id);
-    const int64_t second_index = static_cast<int64_t>(index) + 1;
-    const int64_t third_index = static_cast<int64_t>(index) + 2;
-    const int64_t fourth_index = static_cast<int64_t>(index) + 3;
-    const int64_t fifth_index = static_cast<int64_t>(index) + 4;
-    if (!strict_type(vm, index, OT_STRING) || !strict_type(vm, second_index, OT_INTEGER) ||
-        !strict_type(vm, third_index, OT_INTEGER) || !strict_type(vm, fourth_index, OT_INTEGER) ||
-        !index_exists(vm, fifth_index)) return error(vm, argument_error);
-    const auto fifth = function_470df0(id, static_cast<int32_t>(fifth_index));
-    if (fifth < 0) return fifth;
-    SQInteger fourth = 0, third = 0, second = 0;
-    const SQChar* first = nullptr;
-    if (SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(fourth_index), &fourth)) ||
-        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(third_index), &third)) ||
-        SQ_FAILED(sq_getinteger(vm, static_cast<SQInteger>(second_index), &second)) ||
-        SQ_FAILED(sq_getstring(vm, index, &first))) return error(vm, conversion_error);
-    if (callback) {
-        using Function = void (__cdecl *)(int32_t, int32_t, int32_t, int32_t, int32_t);
-        reinterpret_cast<Function>(pointer(callback))(address(first), second, third, fourth, fifth);
-    }
-    return 0;
-}
-extern "C" int32_t function_471bc0(int32_t id) { return function_470ee0(id); }
-extern "C" int32_t function_471c10(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_471160(target(vm), id, 2);
-}
-extern "C" int32_t function_471d90(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_471330(target(vm), id, 2);
-}
-extern "C" int32_t function_471eb0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+
+int32_t kinoko_native_two_floats(HSQUIRRELVM vm) {
     const auto callback = target(vm);
     if (!callback) return 0;
     if (!strict_type(vm, 2, OT_FLOAT) || !strict_type(vm, 3, OT_FLOAT)) {
-        error(vm, argument_error);
-        return 0;
+        error(vm, argument_error); return 0;
     }
     SQFloat first = 0, second = 0;
-    if (SQ_FAILED(sq_getfloat(vm, 2, &first)) || SQ_FAILED(sq_getfloat(vm, 3, &second))) {
-        error(vm, conversion_error);
-        return 0;
+    if (SQ_FAILED(sq_getfloat(vm, 2, &first)) ||
+        SQ_FAILED(sq_getfloat(vm, 3, &second))) {
+        error(vm, conversion_error); return 0;
     }
     reinterpret_cast<int32_t (__cdecl *)(SQFloat, SQFloat)>(pointer(callback))(first, second);
     return 0;
 }
-extern "C" int32_t function_471f10(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_4716b0(target(vm), id, 2);
-}
-extern "C" int32_t function_471fd0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
+
+int32_t kinoko_native_one_integer(HSQUIRRELVM vm) {
     const auto callback = target(vm);
     if (!callback) return 0;
     if (!strict_type(vm, 2, OT_INTEGER)) {
-        error(vm, argument_error);
-        return 0;
+        error(vm, argument_error); return 0;
     }
     SQInteger value = 0;
     if (SQ_FAILED(sq_getinteger(vm, 2, &value))) {
-        error(vm, conversion_error);
-        return 0;
+        error(vm, conversion_error); return 0;
     }
     reinterpret_cast<int32_t (__cdecl *)(int32_t)>(pointer(callback))(value);
     return 0;
 }
-extern "C" int32_t function_472080(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_471880(target(vm), id, 2);
-}
-extern "C" int32_t function_4720e0(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_471960(target(vm), id, 2);
-}
-extern "C" int32_t function_472140(int32_t id) {
-    auto vm = pointer<SQVM>(id);
-    return function_471a60(target(vm), id, 2);
-}
+} // namespace
 
+extern "C" int32_t function_470df0(int32_t vm, int32_t index) {
+    return kinoko_native_truthy(pointer<SQVM>(vm), index);
+}
+extern "C" int32_t function_470ee0(int32_t vm) {
+    return kinoko_native_no_arguments(pointer<SQVM>(vm));
+}
+extern "C" int32_t function_471160(int32_t callback, int32_t vm, int32_t index) {
+    return kinoko_native_string_object(callback, pointer<SQVM>(vm), index);
+}
+extern "C" int32_t function_471330(int32_t callback, int32_t vm, int32_t index) {
+    return kinoko_native_string_bool(callback, pointer<SQVM>(vm), index);
+}
+extern "C" int32_t function_471880(int32_t callback, int32_t vm, int32_t index) {
+    return kinoko_native_string_integer_truth(callback, pointer<SQVM>(vm), index, false);
+}
+extern "C" int32_t function_471960(int32_t callback, int32_t vm, int32_t index) {
+    return kinoko_native_string_integer_truth(callback, pointer<SQVM>(vm), index, true);
+}
+extern "C" int32_t function_471bc0(int32_t vm) {
+    return kinoko_native_no_arguments(pointer<SQVM>(vm));
+}
+extern "C" int32_t function_471c10(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_object(target(machine), machine, 2);
+}
+extern "C" int32_t function_471d90(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_bool(target(machine), machine, 2);
+}
+extern "C" int32_t function_471eb0(int32_t vm) {
+    return kinoko_native_two_floats(pointer<SQVM>(vm));
+}
+extern "C" int32_t function_471f10(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_invoke_string_only_callback(target(machine), machine, 2);
+}
+extern "C" int32_t function_471fd0(int32_t vm) {
+    return kinoko_native_one_integer(pointer<SQVM>(vm));
+}
+extern "C" int32_t function_472080(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_integer_truth(target(machine), machine, 2, false);
+}
+extern "C" int32_t function_4720e0(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_string_integer_truth(target(machine), machine, 2, true);
+}
+extern "C" int32_t function_472140(int32_t vm) {
+    auto *machine = pointer<SQVM>(vm);
+    return kinoko_native_invoke_two_integer_callback(target(machine), machine, 2);
+}

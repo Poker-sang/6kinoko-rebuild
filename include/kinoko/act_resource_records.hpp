@@ -1,6 +1,7 @@
 #pragma once
 #include "kinoko/native_record_view.hpp"
 #include "kinoko/act_types.h"
+#include "kinoko/act_frame.h"
 #include "kinoko/legacy_string.hpp"
 
 #include <array>
@@ -23,9 +24,9 @@ struct RuntimeRecord {
     KinokoActDocument *active_document; // owned clone; destructor never consults source_holder
     KinokoActSourceHolder *active_holder; // owned wrapper; borrows active_document
     CRITICAL_SECTION lock;
-    VectorStorage draw_commands;
+    KinokoActCommandStorage draw_commands;
     uint32_t unknown56;
-    VectorStorage draw_sprites;
+    KinokoActSpriteStorage draw_sprites;
     uint32_t unknown72;
     Address render_target; // borrowed CActRenderTarget, texture handle at +68
     uint32_t unknown80;

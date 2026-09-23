@@ -7,6 +7,7 @@
 
 extern "C" { extern int32_t g31; }
 namespace {
+inline auto actor_manager_vtable = &g31;
 using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
@@ -55,7 +56,7 @@ extern "C" void kinoko_actor_owner_list_clear(KinokoActorManager *manager) {
 // 46A9C0/46AAE0: base ownership destruction, not derived animation cleanup.
 extern "C" int32_t __fastcall kinoko_method_actor_owner_delete(int32_t manager_address, void*, unsigned char flags) {
     auto *manager=pointer<KinokoActorManager>(manager_address);
-    view(manager).set(&ManagerPrefix::methods,static_cast<const void *>(&g31));
+    view(manager).set(&ManagerPrefix::methods,static_cast<const void *>(actor_manager_vtable));
     kinoko_actor_owner_list_clear(manager);
     const auto pool = view(manager).get(&ManagerPrefix::pool);
     if (pool) pool_methods(pool).destroy(pool,1);

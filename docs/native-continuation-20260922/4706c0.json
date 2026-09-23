@@ -1,0 +1,4 @@
+{
+  "addr": "0x4706c0",
+  "code": "int **__thiscall sub_4706C0(int **this, int **a2, _DWORD *a3)\n{\n  int *v3; // edx\n  int *v4; // eax\n\n  v3 = *(this + 1); /*0x4706c4*/\n  v4 = (int *)v3[1]; /*0x4706c7*/\n  while ( *((_BYTE *)v4 + 21) == 0 ) /*0x4706d2*/\n  {\n    if ( v4[3] >= *a3 ) /*0x4706da*/\n    {\n      v3 = v4; /*0x4706e1*/\n      v4 = (int *)*v4; /*0x4706e3*/\n    }\n    else\n    {\n      v4 = (int *)v4[2]; /*0x4706dc*/\n    }\n  }\n  if ( v3 == *(this + 1) || *a3 < v3[3] ) /*0x4706fb*/\n  {\n    *a2 = *(this + 1); /*0x470719*/\n    return a2; /*0x470716*/\n  }\n  else\n  {\n    *a2 = v3; /*0x470705*/\n    return a2; /*0x470702*/\n  }\n}"
+}

@@ -48,15 +48,13 @@ int32_t kinoko_texture_acquire(const char *name) { ++loads;loaded_path=name;retu
 const void *kinoko_pat_frame_methods(void) { return nullptr; }
 void retdec_trace_i32(const char *,int32_t) {}
 void retdec_trace_squirrel_name(const char *,int32_t) {}
-float function_404130(long double d) { return static_cast<float>(std::cos(d*3.141592653589793/180.0)); }
-float function_4040d0(long double d) { return static_cast<float>(std::sin(d*3.141592653589793/180.0)); }
 }
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"PAT line %d: %s\n",__LINE__,#x);return 1; } } while(0)
 int main() {
     ManagerPrefix manager{};auto *receiver=reinterpret_cast<KinokoActorManager *>(&manager);
     kinoko_animation_list_construct(address(&manager.animations));
-    kinoko_integer_vector_construct(address(&manager.textures));
-    kinoko_integer_vector_append(address(&manager.textures),1);
+    kinoko_integer_vector_construct((KinokoIntegerVector*)(&manager.textures));
+    kinoko_integer_vector_append((KinokoIntegerVector*)(&manager.textures), 1);
     kinoko_texture_slots[1].width=64;kinoko_texture_slots[1].height=64;
     kinoko_texture_slots[2].width=256;kinoko_texture_slots[2].height=128;
     put(uint8_t{5});put(uint16_t{1});
@@ -70,9 +68,9 @@ int main() {
     CHECK(stream.cursor==stream.bytes.size() && closes==1 && loads==1);
     CHECK(loaded_path=="data/player\\sprite.png");
     CHECK(manager.animations.count==2 && manager.animation_lookup.count==2);
-    const auto lookup=manager.animation_lookup.head;
-    const auto head_address=*pointer<int32_t>(kinoko_integer_map_find(lookup,20));
-    CHECK(*pointer<int32_t>(kinoko_integer_map_find(lookup,10))==head_address);
+    const auto lookup=manager.animation_lookup.owner;
+    const auto head_address=*kinoko_integer_map_find(lookup,20);
+    CHECK(*kinoko_integer_map_find(lookup,10)==head_address);
     const auto head=kinoko::native::RecordView<AnimationRecord>(pointer<void>(head_address)).load();
     CHECK(head.duration_total==1 && head.left==-2 && head.bottom==8 && head.has_bounds);
     CHECK(head.next && head.previous==nullptr);
@@ -95,12 +93,12 @@ int main() {
     }
     CHECK(!kinoko_pat_read_animations(&stream,receiver,1));
     CHECK(manager.animations.count==3);
-    CHECK(kinoko_integer_map_find(lookup,40)==static_cast<int32_t>(lookup));
+    CHECK(kinoko_integer_map_find(lookup,40)==nullptr);
     kinoko_integer_map_clear(lookup);
     kinoko_clear_animation_list(address(&manager.animations));
     CHECK(manager.animations.count==0);
     kinoko_clear_animation_list(address(&manager.animations));
     kinoko_animation_list_destroy(address(&manager.animations));
-    kinoko_integer_vector_destroy(address(&manager.textures));kinoko_integer_map_destroy(lookup);
+    kinoko_integer_vector_destroy((KinokoIntegerVector*)(&manager.textures));kinoko_integer_map_destroy(lookup);
     std::puts("PASS: PAT byte alignment, resource base, aliases, linked takes, 3-axis signs and partial ownership");
 }

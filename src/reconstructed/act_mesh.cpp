@@ -1,15 +1,19 @@
 #include "kinoko/texture_store.h"
 #include "kinoko/act_mesh.hpp"
+#include "kinoko/act_layout3d_io.h"
 #include "kinoko/mesh_model.hpp"
 #include "kinoko/act_layout_3d.hpp"
 #include "kinoko/act_host.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/legacy_method_entries.h"
 #include "kinoko/legacy_memory.hpp"
+#include "kinoko/native_record_view.hpp"
+#include "kinoko/legacy_abi.h"
 #include "kinoko/boost_hash.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/com_owner.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <map>
@@ -18,7 +22,6 @@
 #include <stdexcept>
 #include <vector>
 
-extern "C" int32_t function_43c860_this(int32_t,int32_t,int32_t);
 namespace kinoko::mesh {
 namespace {
 using legacy::address;
@@ -212,7 +215,7 @@ uint8_t load_resource(Resource *resource,const char *prefix) {
         state.root->registry_index=static_cast<int32_t>(state.registry.size());
         state.registry.push_back(state.root.get());state.named[model->name]=state.root.get();
         load_materials(*state.root,path.c_str());
-        // ORIGINAL BUG FIX ¡ª explicitly authorized by user on 2026-09-22.
+        // ORIGINAL BUG FIX -- explicitly authorized by user on 2026-09-22.
         // 44CA41 used controller+20 (integer registry_index) as a model pointer.
         // Use controller+24's model instead. See ORIGINAL-BUG-FIX.md.
         collect_renders(*resource,state.root->model);
@@ -266,7 +269,7 @@ int32_t __fastcall update_layout(act::Layout3DRecord *layout,void *) {return act
 int32_t __fastcall draw_layout(act::Layout3DRecord *layout,void *,float,float) {return act::draw_layout_3d(layout);}
 void *__fastcall destroy_layout(act::Layout3DRecord *layout,void *,uint32_t flags) {if(flags&1)std::free(layout);return layout;}
 int32_t __fastcall dispose_layout(act::Layout3DRecord *layout,void *) {std::free(layout);return 0;}
-int32_t __fastcall read_layout(int32_t layout,void *,int32_t holder,int32_t version) {return function_43c860_this(layout,holder,version);}
+int32_t __fastcall read_layout(int32_t layout,void *,int32_t holder,int32_t version) {return kinoko_act_read_layout3d_properties(legacy::pointer<KinokoActLayout>(layout),legacy::pointer<int32_t>(holder),version);}
 // Named serialization supplies type hashes directly; retain usable GetType/
 // GetName metadata for legacy callers rather than a numeric-address binder.
 struct TypeInfo {const void *methods;const char *name;};
@@ -305,4 +308,48 @@ act::Layout3DRecord *create_layout() {
     auto *layout=static_cast<act::Layout3DRecord*>(std::calloc(1,sizeof(act::Layout3DRecord)));
     if(layout){layout->methods=layout_methods();layout->scale={1,1,1};}return layout;
 }
+}
+
+// 457A10: a controller owns its child vector, while the mesh manager owns
+// lookup handles. A handle borrows the object reached through its first word.
+extern "C" int32_t kinoko_mesh_manager_slot;
+namespace {
+struct MeshChildRange {
+    unsigned char prefix[156];
+    int32_t begin, end;
+};
+static_assert(offsetof(MeshChildRange, begin) == 156);
+static_assert(offsetof(MeshChildRange, end) == 160);
+}
+extern "C" int32_t kinoko_update_mesh_children(void *node, int32_t argument) {
+    if (!node) return 0;
+    using kinoko::legacy::address;
+    using kinoko::legacy::field;
+    using kinoko::legacy::pointer;
+    const kinoko::native::RecordView<MeshChildRange> children(node);
+    const auto begin = children.get(&MeshChildRange::begin);
+    const auto end = children.get(&MeshChildRange::end);
+    if (end - begin < static_cast<int32_t>(sizeof(int32_t))) return 0;
+
+    int32_t result = 0;
+    for (uint32_t index = 0; index < static_cast<uint32_t>((end - begin) >> 2); ++index) {
+        const auto entry = field<int32_t>(begin + static_cast<int32_t>(sizeof(int32_t) * index));
+        if (!entry) continue;
+        const auto manager = address(&kinoko_mesh_manager_slot);
+        const auto manager_methods = field<int32_t>(manager);
+        int32_t handle = 0;
+        if (manager_methods && field<int32_t>(manager_methods + 12)) {
+            handle = retdec_call_thiscall2_result(pointer<void>(manager),
+                pointer<void>(field<int32_t>(manager_methods + 12)), entry, argument);
+        }
+        if (!handle) continue;
+        const auto object = field<int32_t>(handle);
+        if (!object) continue;
+        const auto methods = field<int32_t>(object);
+        if (methods && field<int32_t>(methods)) {
+            result = retdec_call_thiscall1_result(pointer<void>(object),
+                pointer<void>(field<int32_t>(methods)), argument);
+        }
+    }
+    return result;
 }

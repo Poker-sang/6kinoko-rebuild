@@ -1,0 +1,22 @@
+{
+  "addr": "0x46b880",
+  "code": "HANDLE __thiscall sub_46B880(_DWORD *this, LPCSTR lpFileName)\n{\n  unsigned int v2; // ebx\n  HANDLE result; // eax\n  int v5; // esi\n  int v6; // ecx\n  void **v7; // [esp+10h] [ebp-64h] BYREF\n  HANDLE hObject; // [esp+14h] [ebp-60h]\n  int v9; // [esp+1Ch] [ebp-58h]\n  _BYTE v10[68]; // [esp+20h] [ebp-54h] BYREF\n  int v11; // [esp+70h] [ebp-4h]\n\n  v2 = 0; /*0x46b8ae*/\n  v7 = &CFileReader::`vftable'; /*0x46b8b2*/\n  v11 = 0; /*0x46b8ca*/\n  result = CreateFileA( /*0x46b8cd*/\n             lpFileName,\n             dwDesiredAccess: 1u,\n             dwShareMode: 3u,\n             lpSecurityAttributes: nullptr,\n             dwCreationDisposition: 3u,\n             dwFlagsAndAttributes: 0x80u,\n             hTemplateFile: nullptr);\n  hObject = result; /*0x46b8d3*/\n  if ( result != (HANDLE)-1 ) /*0x46b8d9*/\n  {\n    ((void (__thiscall *)(void ***, _BYTE *, int))v7[3])(a1: &v7, a2: v10, a3: 68); /*0x46b8ee*/\n    sub_4074C0(a1: v10); /*0x46b8f7*/\n    ((void (__thiscall *)(void ***, _BYTE *, int))v7[3])(a1: &v7, a2: v10, a3: 68); /*0x46b90b*/\n    if ( (*(this + 46) - *(this + 45)) / 168 != 0 ) /*0x46b92c*/\n    {\n      v9 = 0; /*0x46b92e*/\n      do /*0x46b969*/\n      {\n        sub_4074C0(a1: v10); /*0x46b93b*/\n        v5 = *(this + 45); /*0x46b940*/\n        v6 = *(this + 46); /*0x46b946*/\n        v9 += 168; /*0x46b94c*/\n        ++v2; /*0x46b964*/\n      }\n      while ( v2 < (v6 - v5) / 168 ); /*0x46b969*/\n    }\n    result = hObject; /*0x46b96b*/\n    v7 = &CFileReader::`vftable'; /*0x46b96e*/\n    if ( hObject != nullptr ) /*0x46b977*/\n      return (HANDLE)CloseHandle(hObject); /*0x46b97a*/\n  }\n  return result; /*0x46b980*/\n}",
+  "refs": [
+    {
+      "addr": "0x4d5a94",
+      "name": "??_7CFileReader@@6B@"
+    },
+    {
+      "addr": "0x4d5090",
+      "name": "CreateFileA"
+    },
+    {
+      "addr": "0x4074c0",
+      "name": "sub_4074C0"
+    },
+    {
+      "addr": "0x4d5098",
+      "name": "CloseHandle"
+    }
+  ]
+}

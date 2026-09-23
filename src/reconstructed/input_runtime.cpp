@@ -1,207 +1,141 @@
+#include "kinoko/input_keys.h"
 #include "kinoko/direct_input.h"
 #include "kinoko/input_devices.h"
 #include "kinoko/input_cluster.h"
 #include <windows.h>
 #include <cstdint>
 #include <cstring>
-#include "kinoko/legacy_abi.h"
 
 extern "C" {
 void retdec_trace(const char*);
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
-int32_t function_408320(int32_t);
-int32_t function_4083e0(int32_t, int32_t, int32_t, int32_t, int32_t);
 }
 namespace {
-// Original Input record: 4-byte vtable, 68-byte assignment, 96-byte state.
-constexpr int device_stride = 168;
-int32_t& word(int32_t base, int offset) {
-    return *reinterpret_cast<int32_t*>(static_cast<intptr_t>(base) + offset);
+// 4074C0 validates the signed low byte, not the full integer identifier.
+void apply_assignment(KinokoInputDevice& device, KinokoInputAssignment record) {
+    if (static_cast<int8_t>(record.id & 255) >= kinoko_input_snapshot.controller_count) {
+        record = {};
+        record.id = 254;
+    }
+    device.assignment = record;
 }
-uint8_t& byte(int32_t base, int offset) {
-    return *reinterpret_cast<uint8_t*>(static_cast<intptr_t>(base) + offset);
+int32_t& keyboard_field(KinokoInputAssignment& record, int32_t field) {
+    switch (field) {
+    case 0: return record.up;
+    case 1: return record.down;
+    case 2: return record.left;
+    case 3: return record.right;
+    default: return record.buttons[field - 4];
+    }
 }
-} // namespace
-
-extern "C" int32_t function_46b7c0(int32_t this_ptr, int32_t lpFileName) {
-    retdec_trace_i32("46b7c0:this", this_ptr);
-    retdec_trace_i32("46b7c0:path", lpFileName);
-    HANDLE file_handle = CreateFileA((LPCSTR)(intptr_t)lpFileName,
-                                      GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                                      FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    DWORD transferred = 0;
-    WriteFile(file_handle, (LPCVOID)(intptr_t)(this_ptr + 0x10), 0x44,
-              &transferred, NULL);
-    int32_t begin = kinoko_input_devices_begin(this_ptr);
-    int32_t end = kinoko_input_devices_end(this_ptr);
-    if (begin != end)
-        WriteFile(file_handle, (LPCVOID)(intptr_t)(begin + 4), 0x44,
-                  &transferred, NULL);
-    CloseHandle(file_handle);
-    retdec_trace_squirrel_name("input:config-saved", lpFileName);
+KinokoInputDevice* assignment_target(KinokoInputManager* manager, int32_t device) {
+    if (device == -1) return &manager->keyboard;
+    // 46BC3C / 46BE6C: device only bounds-checks; both use the FIRST record.
+    if (device >= 0 && static_cast<uint32_t>(device) < kinoko_input_devices_size(manager))
+        return kinoko_input_devices_at(manager, 0);
+    return nullptr;
+}
+class ConfigFile {
+public:
+    explicit ConfigFile(HANDLE handle): handle_(handle) {}
+    ~ConfigFile() { if (valid()) CloseHandle(handle_); }
+    ConfigFile(const ConfigFile&) = delete;
+    ConfigFile& operator=(const ConfigFile&) = delete;
+    bool valid() const { return handle_ != INVALID_HANDLE_VALUE; }
+    bool read(KinokoInputAssignment& record) {
+        DWORD count = 0;
+        return ReadFile(handle_, &record, sizeof(record), &count, nullptr) && count == sizeof(record);
+    }
+    void write(const KinokoInputAssignment& record) {
+        DWORD count = 0;
+        WriteFile(handle_, &record, sizeof(record), &count, nullptr);
+    }
+private:
+    HANDLE handle_;
+};
+int32_t diagnostic_address(const void* pointer) {
+    return static_cast<int32_t>(reinterpret_cast<intptr_t>(pointer));
+}
+}
+extern "C" int32_t kinoko_input_save_config(KinokoInputManager* manager, const char* path) {
+    retdec_trace_i32("46b7c0:this", diagnostic_address(manager));
+    retdec_trace_i32("46b7c0:path", diagnostic_address(path));
+    {
+        ConfigFile file(CreateFileA(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                                   FILE_ATTRIBUTE_NORMAL, nullptr));
+        if (!file.valid()) return 0;
+        file.write(manager->keyboard.assignment);
+        if (kinoko_input_devices_size(manager)) file.write(kinoko_input_devices_at(manager, 0)->assignment);
+    }
+    retdec_trace_squirrel_name("input:config-saved", diagnostic_address(path));
     return 0;
 }
-
-extern "C" int32_t function_46b880(int32_t this_ptr, int32_t lpFileName) {
-    retdec_trace_i32("46b880:this", this_ptr);
-    retdec_trace_i32("46b880:path", lpFileName);
-    retdec_trace_squirrel_name("input:config-load", lpFileName);
-    HANDLE file_handle = CreateFileA((LPCSTR)(intptr_t)lpFileName,
-                                      GENERIC_READ,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                      NULL, OPEN_EXISTING,
-                                      FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    unsigned char record[0x44];
-    DWORD transferred = 0;
-    if (ReadFile(file_handle, record, sizeof(record), &transferred, NULL) &&
-        transferred == sizeof(record)) {
-        memcpy((void *)(intptr_t)(this_ptr + 0x10), record, sizeof(record));
-        retdec_trace("input:config-keyboard-loaded");
-        if ((int32_t)(int8_t)record[0] >= kinoko_input_snapshot.controller_count) {
-            memset((void *)(intptr_t)(this_ptr + 0x10), 0, sizeof(record));
-            *(unsigned char *)(intptr_t)(this_ptr + 0x10) = 0xfe;
-        }
-
-        // The original reads the second record once, then broadcasts that
-        // same 0x44-byte value to every registered device record.
-        if (ReadFile(file_handle, record, sizeof(record), &transferred,
-                     NULL) && transferred == sizeof(record)) {
-            int32_t begin = kinoko_input_devices_begin(this_ptr);
-            int32_t end = kinoko_input_devices_end(this_ptr);
-            if ((int32_t)(int8_t)record[0] >= kinoko_input_snapshot.controller_count) {
-                memset(record, 0, sizeof(record));
-                record[0] = 0xfe;
-            }
-            while (begin != end) {
-                memcpy((void *)(intptr_t)(begin + 4), record,
-                       sizeof(record));
-                begin += 0xa8;
-            }
+extern "C" int32_t kinoko_input_load_config(KinokoInputManager* manager, const char* path) {
+    retdec_trace_i32("46b880:this", diagnostic_address(manager));
+    retdec_trace_i32("46b880:path", diagnostic_address(path));
+    retdec_trace_squirrel_name("input:config-load", diagnostic_address(path));
+    {
+        ConfigFile file(CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+        if (!file.valid()) return 0;
+        KinokoInputAssignment record;
+        if (file.read(record)) {
+            apply_assignment(manager->keyboard, record);
+            retdec_trace("input:config-keyboard-loaded");
+            // One saved controller record is broadcast to all registered devices.
+            if (file.read(record))
+                for (uint32_t i = 0; i < kinoko_input_devices_size(manager); ++i)
+                    apply_assignment(*kinoko_input_devices_at(manager, i), record);
         }
     }
-    CloseHandle(file_handle);
     retdec_trace("46b880:done");
     return 0;
 }
-
-extern "C" int32_t function_46b9a0(int32_t self) {
-    if (!self) return 0;
-    const int32_t begin = kinoko_input_devices_begin(self), end = kinoko_input_devices_end(self);
-    const int count = begin && end >= begin && (end-begin)%device_stride == 0
-        ? (end-begin)/device_stride : 0;
-    auto update_device = [](int32_t device) {
-        const auto* vtable = reinterpret_cast<const int32_t*>(word(device, 0));
-        if (vtable && vtable[1]) retdec_call_thiscall0(
-            reinterpret_cast<void*>(device), reinterpret_cast<void*>(vtable[1]));
-    };
-    for (int i = 0; i < count; ++i) update_device(begin + i*device_stride);
-    update_device(self + 12);
-    function_4077c0(self + 196);
-    function_408320(self + 392);
-    // Publish the same directional/button counters and release edges.
-    constexpr int copies[][2] = {{1444,276},{1436,268},{1440,272},{1456,288},
-        {1448,280},{1452,284},{1460,292},{1464,296}};
-    for (const auto& offsets : copies) word(self, offsets[0]) = word(self, offsets[1]);
-    for (int i = 0; i < 4; ++i) byte(self, 1468+i) = byte(self, 326+i);
-    word(self, 1472) = function_4083e0(self+392, 11, 0, 0, 0);
-    for (int i = 1; i < 10; ++i)
-        word(self, 1472+i*4) = function_4083e0(self+392, i+1, 0, 0, 0);
-    return word(self, 1508);
-}
-
-extern "C" int32_t function_46bbe0(int32_t this_ptr, int32_t device,
-                        int32_t field, int32_t value) {
-    if (this_ptr == 0 || field < 0 || field >= 12)
-        return 0;
-
-    int32_t begin = kinoko_input_devices_begin(this_ptr);
-    int32_t end = kinoko_input_devices_end(this_ptr);
-    int32_t count = (begin != 0 && end >= begin)
-                        ? (end - begin) / 0xa8
-                        : 0;
-    int32_t *destination = 0;
-    if (device == -1) {
-        destination = (int32_t *)(intptr_t)(this_ptr + 0x10);
-    } else if (device >= 0 && device < count) {
-        destination = (int32_t *)(intptr_t)(begin + device * 0xa8 + 4);
-    } else {
-        return 0;
-    }
-
-    int32_t record[17];
-    memcpy(record, destination, sizeof(record));
-    record[field + 5] = value;
-    if ((int32_t)(int8_t)(record[0] & 0xff) >= kinoko_input_snapshot.controller_count) {
-        memset(record, 0, sizeof(record));
-        record[0] = 0xfe;
-    }
-    memcpy(destination, record, sizeof(record));
+extern "C" int32_t kinoko_input_set_assignment(KinokoInputManager* manager, int32_t device,
+                                               int32_t field, int32_t value) {
+    if (!manager || field < 0 || field >= 12) return 0;
+    auto* target = assignment_target(manager, device);
+    if (!target) return 0;
+    auto record = target->assignment;
+    record.buttons[field] = value; // SetAssign uses buttons even for keyboard.
+    apply_assignment(*target, record);
     return 0;
 }
-
-extern "C" int32_t function_46bc90(int32_t this_ptr, int32_t device, int32_t field) {
-    int32_t record[17];
-    int32_t begin, end;
-    if (this_ptr == 0 || field < 0 || field >= 12)
-        return 0;
+extern "C" int32_t kinoko_input_wait_assignment(KinokoInputManager* manager, int32_t device, int32_t field) {
+    if (!manager || field < 0 || field >= 12) return 0;
     if (device == -1) {
         for (int32_t scan = 0; scan < 256; ++scan) {
-            /* The original excludes Kanji, Caps Lock and Kana. */
-            if (scan == 148 || scan == 58 || scan == 112 || !kinoko_input_key_down(scan))
-                continue;
-            memcpy(record, (const void *)(intptr_t)(this_ptr + 16), sizeof(record));
-            record[field + 1] = scan;
-            memcpy((void *)(intptr_t)(this_ptr + 16), record, sizeof(record));
+            if (scan == 148 || scan == 58 || scan == 112 || !kinoko_input_key_down(scan)) continue;
+            auto record = manager->keyboard.assignment;
+            keyboard_field(record, field) = scan;
+            apply_assignment(manager->keyboard, record);
             retdec_trace_i32("input:assign-keyboard-field", field);
             retdec_trace_i32("input:assign-keyboard-scan", scan);
             return 1;
         }
         return 0;
     }
-    begin = kinoko_input_devices_begin(this_ptr);
-    end = kinoko_input_devices_end(this_ptr);
-    if (device >= 0 && device < (end - begin) / 168) {
-        for (int32_t index = 0; index < (end - begin) / 168; ++index) {
-            const auto* state = kinoko_input_controller_state(index);
-            if (state == 0) continue;
-            for (int32_t button = 0; button < 32; ++button) {
-                if (state->buttons[button] == 0) continue;
-                memcpy(record, (const void *)(intptr_t)(begin + 4), sizeof(record));
-                record[field + 5] = button;
-                for (int32_t target = begin; target < end; target += 168)
-                    memcpy((void *)(intptr_t)(target + 4), record, sizeof(record));
-                return 1;
-            }
+    const auto count = kinoko_input_devices_size(manager);
+    if (device < 0 || static_cast<uint32_t>(device) >= count) return 0;
+    for (uint32_t i = 0; i < count; ++i) {
+        const auto* state = kinoko_input_controller_state(i);
+        if (!state) continue;
+        for (int32_t button = 0; button < 32; ++button) {
+            if (!state->buttons[button]) continue;
+            auto record = kinoko_input_devices_at(manager, 0)->assignment;
+            record.buttons[field] = button;
+            for (uint32_t target = 0; target < count; ++target)
+                apply_assignment(*kinoko_input_devices_at(manager, target), record);
+            return 1;
         }
     }
     return 0;
 }
-
-extern "C" int32_t function_46be40(int32_t this_ptr, int32_t device, int32_t field) {
-    if (this_ptr == 0 || field < 0 || field >= 12)
-        return -1;
-
-    int32_t begin = kinoko_input_devices_begin(this_ptr);
-    int32_t end = kinoko_input_devices_end(this_ptr);
-    int32_t count = (begin != 0 && end >= begin)
-                        ? (end - begin) / 0xa8
-                        : 0;
-    int32_t *record = 0;
-    if (device == -1) {
-        record = (int32_t *)(intptr_t)(this_ptr + 0x10);
-    } else if (device >= 0 && device < count) {
-        record = (int32_t *)(intptr_t)(begin + device * 0xa8 + 4);
-    } else {
-        return -1;
-    }
-    /* 46BE83: keyboard indexes include the four direction assignments. */
-    return record[field + (device == -1 ? 1 : 5)];
+extern "C" int32_t kinoko_input_get_assignment(KinokoInputManager* manager, int32_t device, int32_t field) {
+    if (!manager || field < 0 || field >= 12) return -1;
+    auto* target = assignment_target(manager, device);
+    if (!target) return -1;
+    return device == -1 ? keyboard_field(target->assignment, field) : target->assignment.buttons[field];
 }
 

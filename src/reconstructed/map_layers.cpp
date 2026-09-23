@@ -54,8 +54,7 @@ extern "C" KinokoRenderLayer *kinoko_map_make_render_layer(KinokoMapManager *man
     if (!layout)
         return 0;
     // std::list preserves the returned eight-byte object's address on append.
-    return kinoko::legacy::pointer<KinokoRenderLayer>(kinoko_map_append_render(
-        kinoko::legacy::address(manager), kinoko::legacy::address(layout)));
+    return kinoko_map_append_render(manager, layout);
 }
 
 namespace {

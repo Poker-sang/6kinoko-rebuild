@@ -1,9 +1,8 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/actor_render.h"
 #include "kinoko/actor_records.hpp"
 #include "kinoko/legacy_memory.hpp"
 #include <cmath>
-extern "C" float function_404130(long double);
-extern "C" float function_4040d0(long double);
 namespace {
 using namespace kinoko::actor;
 using kinoko::native::RecordView;
@@ -40,7 +39,7 @@ extern "C" int32_t kinoko_actor_render(KinokoActor *receiver,KinokoCamera *camer
     }
     const float angle=actor.get(&ActorRecord::rotation)*facing;
     if (angle!=0.0f) {
-        const float cosine=function_404130(angle),sine=function_4040d0(angle);
+        const float cosine=kinoko_cos_degrees(angle),sine=kinoko_sin_degrees(angle);
         for (auto &p:positions) {
             const float x=p.x-pivot_x,y=p.y-pivot_y;
             p.x=x*cosine+pivot_x-y*sine;

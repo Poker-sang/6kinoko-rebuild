@@ -30,7 +30,7 @@ extern "C" KinokoMapManager *kinoko_map_manager_construct(KinokoMapManager *stor
     // 46F4C0 initializes owners only; query results/dimensions survive clear.
     kinoko_sqplus_object_initialize((void *)(storage));
     manager.set(&ManagerRecord::player, static_cast<KinokoActRuntime *>(nullptr));
-    kinoko_map_containers_construct(address(storage));
+    kinoko_map_containers_construct(storage);
     manager.set(&ManagerRecord::source_act, static_cast<KinokoActDocument *>(nullptr));
     manager.set(&ManagerRecord::source_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     return storage;
@@ -39,7 +39,7 @@ extern "C" void kinoko_map_manager_clear(KinokoMapManager *storage) {
     if (!storage) return;
     const ManagerView manager(storage);
     kinoko_sqplus_object_reset((void *)(storage));
-    kinoko_map_containers_clear(address(storage));
+    kinoko_map_containers_clear(storage);
     // 46F682 saves the runtime before its destructor; delete that same pointer.
     auto *player = manager.get(&ManagerRecord::player);
     if (player) { kinoko_act_runtime_dispose(player); std::free(player); }

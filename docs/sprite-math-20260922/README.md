@@ -1,0 +1,28 @@
+# Sprite drawing and angle math recovery
+
+Original: ../6kinoko/6kinoko.exe, SHA256 2db975a408e260499d52126f25ecf2fbc529cad52d1bffc2a0b7ca2ff695f155. IDA MCP database 4f3e4dab. JSON files retain original assembly/decompilation and xrefs.
+
+E-imports: imports.json records the full IAT: window/input/font APIs, file/heap/thread APIs, Direct3D9/D3DX and COM. No static network, crypto or remote-process injection imports. LoadLibrary/GetProcAddress exist. These native rendering functions are unrelated to Squirrel; source VM behavior is unchanged.
+
+Batch 1: restore CSprite 404E10 as a typed receiver and four stack floats, retain half-pixel placement and all non-position attributes, submit the original triangle strip. Shared draw now ignores bind/FVF failure as the original does and returns the draw HRESULT. Existing missing-device diagnostic guard remains. Regression uses a mock COM table and a real thiscall invocation. Source committed before build/test; results will be appended after validation.
+
+Batch 1 validation: source f2a802a, build-runs/sprite-draw-r6-quiet, full Release build and 40/40 asset-free contracts passed. Includes the 36 currently selected CI contracts plus bitmap, texture image, texture binding and sprite draw. DAT staged and SHA256 checked. Earlier r1 caught a stale vtable declaration; r2-r5 preserved failed mock aggregate-state checks. Final mock asserts each recorded call/argument separately. No game launched.
+
+Batch 2: 404180 initializes 3600 float cosine entries using pi=3.1415926535 and explicitly replaces 0/900/1800/2700 with 1/0/-1/0. 4040D0 stores (angle*10-900) to float once; 404130 stores angle*10; both take abs, add 0.5, truncate, then remainder 3600. Named float-degree interfaces replace incorrect long-double declarations throughout Sprite, Actor, PAT and ACT. Tests now link the real math instead of idealized trig stubs. Strict C++ double intermediates retain the original float store boundaries without reintroducing inline assembly. The initial x87 implementation was removed to comply with the repository zero-handwritten-assembly invariant. The modern CRT computes cosine when generating the table; bit-for-bit comparison of its results against the original CRT has not been performed. Inputs outside the original representable table-index domain remain outside the API contract.
+
+Batch 2 validation: source c4fe751, build-runs/angle-math-r3-quiet; full Release build, 44/44 selected contracts passed, DAT copied/hash-verified. Migration-boundary check passed (738 files; 322 upstream members). A pre-existing GBK dash in act_mesh.cpp's ORIGINAL BUG FIX comment was replaced with ASCII; no mesh behavior changed.
+
+Batch 3: move ACT quad scale/rotate/translate out of integer-address wrappers and fixed offset arrays into typed QuadRecord/Position3 operations. Preserve scale pivots, full Z/Y/X rotation passes, and translation including depth. Original references: 405180/405220/4052C0, 405320, 405080 (additional IDA session 2536085b). Remove the unused damaged RetDec 405080 body after confirming that all rebuilt callers already use recovered paths; no original functionality is discarded. Actor and PAT retain their specialized transform sequences. The unused 4045C0 rectangle helper is intentionally outside this batch. New tests cover combined-axis order, negative/zero scale, pivots, z translation, and retained vertices/base positions. Add the newly validated asset-free rendering/texture contracts to push CI; keep the PR trigger disabled.
+
+Final validation / handoff
+--------------------------
+- Source commit: 5df200f (quad transform R1). Branch: codex/sprite-math-cleanup. No push performed.
+- Full Win32 Release quiet build succeeded: build-runs/quad-transform-r1-quiet. source-commit.txt records the exact code revision.
+- Current workflow regex executed locally: 45/45 asset-free CTest contracts passed. No game or DAT-dependent playthrough tests launched.
+- Migration boundaries passed: 741 source/header files, 322 historical upstream members; zero handwritten assembly/naked entries or literal native callback addresses.
+- Python suites: legacy islands 17/17; upstream provenance 5/5; ACT evidence 8/8.
+- Latest executable: runtime-builds/quad-transform-r1-quiet/kinoko_retdec_rebuild.exe
+- EXE SHA256: F0C136D3F5A543FBACCE2249109B6BEEEF213A1E17988BADA0C46E66C553B1D2
+- stage_dat.ps1 copied and hash-verified all three original DAT files beside the EXE. Game behavior remains for user validation; automated contract success is not a claim of a completed playthrough.
+- All build/test revisions and failed artifacts were retained. Earlier full builds with a generated game EXE (sprite-draw R2/R6, angle-math R2/R3) also received the checked DAT set. R3-R5 sprite builds were contract-only diagnostics.
+- Remaining precision limit: the lookup restores original quantization and cardinal overrides but uses the current CRT to generate cosine values; no original-vs-modern CRT bitwise table comparison has been claimed.

@@ -4,6 +4,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+int32_t kinoko_register_stage_list_cleanup(void);
+int32_t kinoko_register_render_queue_cleanup(void);
+int32_t kinoko_register_sound_tree_cleanup(void);
 void kinoko_stage_list_construct(void);
 void kinoko_stage_list_destroy(void);
 /* The opaque end pointer preserves the host's sentinel identity. It must

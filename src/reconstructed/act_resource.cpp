@@ -116,8 +116,8 @@ public:
         record_.set(&RuntimeRecord::stage_state, std::array<uint32_t, 11>{});
         // 450DE9 clears command elements. Word 44 is now a vector owner,
         // so changing word 48 would not clear the native container.
-        kinoko_act_commands_clear(address(storage_));
-        retdec_act_clear_layout_vector(address(record_.bytes(&RuntimeRecord::draw_sprites)));
+        kinoko_act_commands_clear(storage_);
+        kinoko_act_clear_sprites((KinokoActSpriteStorage*)(record_.bytes(&RuntimeRecord::draw_sprites)));
         return 0;
     }
 private:

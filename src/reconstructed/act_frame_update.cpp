@@ -1,3 +1,4 @@
+#include "kinoko/legacy_string.h"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_layer_access.h"
 #include "kinoko/act_layer_records.hpp"
@@ -10,7 +11,7 @@
 extern "C" {
 void retdec_trace_i32(const char*, int32_t);
 void retdec_trace_squirrel_name(const char*, int32_t);
-const char* retdec_std_string_data(int32_t);
+
 int32_t  kinoko_sqrat_invoke_callback(const void * );
 }
 
@@ -60,8 +61,7 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
         retdec_trace_i32("451640:time", self ? resource.get(&RuntimeRecord::wake_time) : 0);
         retdec_trace_i32("451640:current", self ? resource.get(&RuntimeRecord::current_time) : 0);
         retdec_trace_i32("451640:act", address(act));
-        if (act) retdec_trace_squirrel_name("451640:act-name", address(retdec_std_string_data(
-            address(DocumentView(act).bytes(&DocumentRecord::name)))));
+        if (act) retdec_trace_squirrel_name("451640:act-name", address(kinoko_string_data((const void*)(DocumentView(act).bytes(&DocumentRecord::name)))));
     }
     if (!self || resource.get(&RuntimeRecord::hidden)) {
         if (trace_index <= 48) retdec_trace("451640:skip-suspended");
@@ -69,7 +69,7 @@ extern "C" int32_t kinoko_act_update_frame(int32_t self) {
     }
     kinoko::windows::CriticalLock lock(reinterpret_cast<CRITICAL_SECTION*>(resource.bytes(&RuntimeRecord::lock)));
     if (!resource.get(&RuntimeRecord::stage_active) || !resource.get(&RuntimeRecord::active_holder)) return E_FAIL;
-    kinoko_act_commands_clear(self);
+    kinoko_act_commands_clear((KinokoActRuntime*)(intptr_t)(self));
     // 4516C4 is JNB: compare DWORDs, including uptime above 0x80000000.
     if (resource.get(&RuntimeRecord::wake_time) >= timeGetTime()) {
         if (trace_index <= 48) retdec_trace("451640:skip-time");

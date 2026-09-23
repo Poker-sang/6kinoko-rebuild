@@ -125,6 +125,11 @@ SoundEntry g_retdec_se_entries[RETDEC_SE_MAX_ENTRIES];
 int g_retdec_se_entry_count = 0;
 BgmTrack g_retdec_bgm_track;
 std::list<BgmTrack> fading_tracks;
+inline int32_t& active_bgm_slot = g637;
+inline char& packed_assets_slot = g874;
+inline int32_t& primary_device_slot = g876;
+inline char*& dsound_device_slot = g877;
+inline int32_t& listener_slot = g878;
 // Own both workers, their wake events and the lock protecting playback state.
 // Events and the lock outlive the joined workers, including partial startup.
 struct AudioWorkers {
@@ -154,11 +159,15 @@ struct AudioWorkers {
     AudioWorkers& operator=(const AudioWorkers&) = delete;
 } audio_workers;
 float g_retdec_audio_master_volume = 1.0f;
+// The original C ABI publishes the currently selected BGM handle here. The
+// track pool owns playback resources; this slot is only its active identity.
+int32_t& active_bgm_handle() { return active_bgm_slot; }
+bool packed_sound_assets() { return packed_assets_slot != 0; }
 void sync_audio_device_aliases() noexcept {
     // Read-only borrows for not-yet-migrated C entry points, never extra owners.
-    g876 = address(g_audio_device.primary.get());
-    g877 = reinterpret_cast<char*>(g_audio_device.device.get());
-    g878 = address(g_audio_device.listener.get());
+    primary_device_slot = address(g_audio_device.primary.get());
+    dsound_device_slot = reinterpret_cast<char*>(g_audio_device.device.get());
+    listener_slot = address(g_audio_device.listener.get());
 }
 DWORD WINAPI audio_update_worker(void*) { return run_audio_update_worker(); }
 DWORD WINAPI audio_loader_worker(void*) { return run_audio_loader_worker(); }
@@ -824,7 +833,7 @@ static void retdec_bgm_release_all_tracks_locked(void)
     retdec_bgm_release_state(&g_retdec_bgm_track);
     for (auto& track : fading_tracks) retdec_bgm_release_state(&track);
     fading_tracks.clear();
-    g637 = 0;
+    active_bgm_handle() = 0;
 }
 
 static void retdec_bgm_release_all_tracks(void)
@@ -856,88 +865,58 @@ static int retdec_se_parse_wave_asset(const char *path,
                                       unsigned char **samples,
                                       DWORD *sample_bytes)
 {
-    unsigned char *data = NULL;
-    DWORD size = 0;
-    size_t path_length;
-
-    if (path == NULL || format == NULL || samples == NULL ||
-        sample_bytes == NULL)
-        return 0;
-    *samples = NULL;
+    if (!path || !format || !samples || !sample_bytes) return 0;
+    *samples = nullptr;
     *sample_bytes = 0;
     ZeroMemory(format, sizeof(*format));
-    if (!retdec_read_asset_bytes(path, &data, &size))
-        return 0;
+    unsigned char *raw = nullptr;
+    DWORD size = 0;
+    if (!retdec_read_asset_bytes(path, &raw, &size)) return 0;
+    kinoko::legacy::Allocation<unsigned char> data(raw);
 
-    path_length = strlen(path);
-    if (path_length >= 4 &&
-        _stricmp(path + path_length - 4, ".cv3") == 0) {
-        DWORD payload_bytes;
-
-        /* Packed SE files are WAVEFORMATEX followed by a DWORD payload size
-           and the raw PCM.  This is the exact layout consumed by the
-           original CPackageFileReader path. */
-        if (size < 22)
-            goto failed;
-        memcpy(format, data, sizeof(*format));
-        payload_bytes = retdec_bgm_read_u32(data + 18);
-        if (payload_bytes == 0 || payload_bytes > size - 22)
-            goto failed;
-        if (format->wFormatTag != 1 || format->nChannels == 0 ||
-            format->nSamplesPerSec == 0 || format->nBlockAlign == 0 ||
-            format->wBitsPerSample == 0)
-            goto failed;
-        *samples = (unsigned char *)malloc(payload_bytes);
-        if (*samples == NULL)
-            goto failed;
-        memcpy(*samples, data + 22, payload_bytes);
+    const size_t path_length = std::strlen(path);
+    if (path_length >= 4 && _stricmp(path + path_length - 4, ".cv3") == 0) {
+        // Packed SE: WAVEFORMATEX + DWORD byte count + PCM payload.
+        if (size < 22) return 0;
+        std::memcpy(format, data.get(), sizeof(*format));
+        const DWORD payload_bytes = retdec_bgm_read_u32(data.get() + 18);
+        if (!payload_bytes || payload_bytes > size - 22 ||
+            format->wFormatTag != 1 || !format->nChannels ||
+            !format->nSamplesPerSec || !format->nBlockAlign ||
+            !format->wBitsPerSample) return 0;
+        *samples = static_cast<unsigned char *>(std::malloc(payload_bytes));
+        if (!*samples) return 0;
+        std::memcpy(*samples, data.get() + 22, payload_bytes);
         *sample_bytes = payload_bytes;
-        free(data);
         return 1;
     }
 
-    /* Loose-file mode uses the original RIFF/WAVE parser instead of the
-       packed CV3 envelope.  Accept the normal chunk ordering and ignore
-       metadata chunks between fmt and data. */
-    if (size >= 12 && memcmp(data, "RIFF", 4) == 0 &&
-        memcmp(data + 8, "WAVE", 4) == 0) {
-        DWORD offset = 12;
-        int have_format = 0;
-        while (offset <= size && size - offset >= 8) {
-            const unsigned char *chunk = data + offset;
-            DWORD chunk_bytes = retdec_bgm_read_u32(chunk + 4);
-            DWORD available = size - offset - 8;
-
-            if (chunk_bytes > available)
-                goto failed;
-            if (memcmp(chunk, "fmt ", 4) == 0 && chunk_bytes >= 16) {
-                ZeroMemory(format, sizeof(*format));
-                memcpy(format, chunk + 8,
-                       chunk_bytes >= sizeof(*format)
-                           ? sizeof(*format) : chunk_bytes);
-                have_format = format->wFormatTag == 1 &&
-                    format->nChannels != 0 &&
-                    format->nSamplesPerSec != 0 &&
-                    format->nBlockAlign != 0 &&
-                    format->wBitsPerSample != 0;
-            } else if (memcmp(chunk, "data", 4) == 0 && have_format) {
-                *samples = (unsigned char *)malloc(chunk_bytes);
-                if (*samples == NULL)
-                    goto failed;
-                memcpy(*samples, chunk + 8, chunk_bytes);
-                *sample_bytes = chunk_bytes;
-                free(data);
-                return chunk_bytes != 0;
-            }
-            offset += 8 + chunk_bytes + (chunk_bytes & 1u);
+    // Loose RIFF/WAVE allows metadata chunks between fmt and data. A malformed
+    // chunk aborts rather than looking for a later data chunk.
+    if (size < 12 || std::memcmp(data.get(), "RIFF", 4) != 0 ||
+        std::memcmp(data.get() + 8, "WAVE", 4) != 0) return 0;
+    DWORD offset = 12;
+    bool have_format = false;
+    while (offset <= size && size - offset >= 8) {
+        const unsigned char *chunk = data.get() + offset;
+        const DWORD chunk_bytes = retdec_bgm_read_u32(chunk + 4);
+        const DWORD available = size - offset - 8;
+        if (chunk_bytes > available) return 0;
+        if (std::memcmp(chunk, "fmt ", 4) == 0 && chunk_bytes >= 16) {
+            ZeroMemory(format, sizeof(*format));
+            std::memcpy(format, chunk + 8,
+                        chunk_bytes >= sizeof(*format) ? sizeof(*format) : chunk_bytes);
+            have_format = format->wFormatTag == 1 && format->nChannels &&
+                format->nSamplesPerSec && format->nBlockAlign && format->wBitsPerSample;
+        } else if (std::memcmp(chunk, "data", 4) == 0 && have_format) {
+            *samples = static_cast<unsigned char *>(std::malloc(chunk_bytes));
+            if (!*samples) return 0;
+            std::memcpy(*samples, chunk + 8, chunk_bytes);
+            *sample_bytes = chunk_bytes;
+            return chunk_bytes != 0;
         }
+        offset += 8 + chunk_bytes + (chunk_bytes & 1u);
     }
-
-failed:
-    free(*samples);
-    *samples = NULL;
-    *sample_bytes = 0;
-    free(data);
     return 0;
 }
 
@@ -952,7 +931,7 @@ static int retdec_se_replace_extension(const char *source, char *path,
     if (length + 1 > path_size)
         return 0;
     memcpy(path, source, length + 1);
-    if (g874 != 0 && length >= 4 &&
+    if (packed_sound_assets() && length >= 4 &&
         _stricmp(path + length - 4, ".wav") == 0) {
         path[length - 3] = 'c';
         path[length - 2] = 'v';
@@ -1182,8 +1161,8 @@ static void retdec_bgm_release_for_handle(uint32_t handle)
     track = retdec_bgm_find_track(handle);
     if (track != NULL) track->retirement_requested = true;
     retire_playback_request(handle);
-    if (handle == g637)
-        g637 = 0;
+    if (handle == active_bgm_handle())
+        active_bgm_handle() = 0;
 
 }
 
@@ -1331,7 +1310,7 @@ static void release_retired_requests_locked() {
             --manager.handles.live_count;
         }
         fading_tracks.remove_if([](const BgmTrack& track) { return !track.buffer; });
-        if (static_cast<uint32_t>(g637) == handle) g637 = 0;
+        if (static_cast<uint32_t>(active_bgm_handle()) == handle) active_bgm_handle() = 0;
     }
 }
 
@@ -1939,13 +1918,13 @@ int32_t kinoko_audio_play_bgm(const char* path, int32_t a2, int32_t a3, int32_t 
     std::uint32_t new_handle = 0;
 
     (void)a3;
-    if (g637 != 0)
-        fade_out_playback(manager, g637, 1000, 0, 1.0f);
+    if (active_bgm_handle() != 0)
+        fade_out_playback(manager, active_bgm_handle(), 1000, 0, 1.0f);
     allocate_playback_handle(manager, &new_handle);
-    g637 = new_handle;
+    active_bgm_handle() = new_handle;
     /* 470257 forwards arg_C, the fourth argument, as the loop flag. */
-    prepare_playback_request(manager, g637, path, a4, 0, 1.0f);
-    schedule_playback_start(manager, g637, a2);
+    prepare_playback_request(manager, active_bgm_handle(), path, a4, 0, 1.0f);
+    schedule_playback_start(manager, active_bgm_handle(), a2);
     return 0;
 }
 
@@ -1954,26 +1933,26 @@ int32_t kinoko_audio_play_bgm_margin(const char* path, int32_t a2, int32_t a3, i
     auto* manager = retdec_audio_manager_this();
     std::uint32_t new_handle = 0;
 
-    if (g637 != 0)
-        fade_out_playback(manager, g637, 1000, a3, 1.0f);
+    if (active_bgm_handle() != 0)
+        fade_out_playback(manager, active_bgm_handle(), 1000, a3, 1.0f);
     allocate_playback_handle(manager, &new_handle);
-    g637 = new_handle;
-    prepare_playback_request(manager, g637, path, a5, 0, 1.0f);
-    schedule_playback_start(manager, g637, a2);
+    active_bgm_handle() = new_handle;
+    prepare_playback_request(manager, active_bgm_handle(), path, a5, 0, 1.0f);
+    schedule_playback_start(manager, active_bgm_handle(), a2);
     return 0;
 }
 
 int32_t kinoko_audio_pause_bgm(void) {
-    if (g637 != 0) {
-        retdec_bgm_toggle_pause((uint32_t)g637);
+    if (active_bgm_handle() != 0) {
+        retdec_bgm_toggle_pause((uint32_t)active_bgm_handle());
     }
     return 0;
 }
 
 int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
-    if (g637 != 0) {
+    if (active_bgm_handle() != 0) {
         float target = (float)a2 / 100.0f;
-        retdec_bgm_begin_fade_for_handle((uint32_t)g637,
+        retdec_bgm_begin_fade_for_handle((uint32_t)active_bgm_handle(),
                                          a1 > 0 ? (DWORD)a1 : 0, 0,
                                          target);
     }
@@ -1981,8 +1960,8 @@ int32_t kinoko_audio_fade_bgm(int32_t a1, int32_t a2) {
 }
 
 int32_t kinoko_audio_stop_bgm(void) {
-    if (g637 != 0) {
-        uint32_t handle = (uint32_t)g637;
+    if (active_bgm_handle() != 0) {
+        uint32_t handle = (uint32_t)active_bgm_handle();
         retdec_bgm_stop_for_handle(handle);
         retdec_bgm_release_for_handle(handle);
     }

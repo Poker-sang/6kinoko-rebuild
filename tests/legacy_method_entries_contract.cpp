@@ -1,6 +1,7 @@
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/game_script_host.h"
 #include "kinoko/legacy_method_entries.h"
+#include "kinoko/act_layout3d_io.h"
 #include "kinoko/legacy_abi.h"
 #include <array>
 #include <cstdint>
@@ -52,8 +53,10 @@ extern "C" int32_t retdec_c2dlayout_draw_impl(int32_t receiver, float x, float y
     return record(4, {bits(receiver), bits(x), bits(y)});
 }
 
-extern "C" int32_t function_43c860_this(int32_t receiver, int32_t source, int32_t mode) {
-    return record(5, {bits(receiver), bits(source), bits(mode)});
+extern "C" int32_t kinoko_act_read_layout3d_properties(KinokoActLayout *receiver,
+                                                         int32_t *source, int32_t mode) {
+    return record(5, {static_cast<uint32_t>(reinterpret_cast<uintptr_t>(receiver)),
+        static_cast<uint32_t>(reinterpret_cast<uintptr_t>(source)), bits(mode)});
 }
 
 extern "C" int32_t retdec_begin_stage_this(int32_t receiver, int32_t stage) {
@@ -70,8 +73,8 @@ extern "C" int32_t retdec_act_bitblt_this(int32_t receiver, int32_t x, int32_t y
             bits(source_x), bits(source_y), bits(blend), bits(alpha)});
 }
 
-extern "C" int32_t function_457a10_impl(int32_t receiver, int32_t argument) {
-    return record(9, {bits(receiver), bits(argument)});
+extern "C" int32_t kinoko_update_mesh_children(void* node, int32_t argument) {
+    return record(9, {bits((int32_t)(intptr_t)node), bits(argument)});
 }
 
 

@@ -35,9 +35,9 @@ void put(void *p, uint32_t value) { std::memcpy(p, &value, sizeof(value)); }
 uint32_t word(const void *p) { uint32_t value; std::memcpy(&value, p, sizeof(value)); return value; }
 }
 extern "C" {
-void kinoko_act_commands_clear(int32_t runtime) { test::command_runtime = runtime; ++test::command_clears; }
+void kinoko_act_commands_clear(KinokoActRuntime* runtime) { test::command_runtime = kinoko::legacy::address(runtime); ++test::command_clears; }
 void retdec_trace_i32(const char *, int32_t) {}
-int32_t retdec_act_clear_layout_vector(int32_t slot) { test::cleared_slot = slot; ++test::clears; return 0; }
+unsigned char* kinoko_act_clear_sprites(KinokoActSpriteStorage* slot) { test::cleared_slot = kinoko::legacy::address(slot); ++test::clears; return 0; }
 }
 #define CHECK(condition) do { if (!(condition)) { std::fprintf(stderr,"clock line %d: %s\n",__LINE__,#condition); return 1; } } while (0)
 static_assert(std::is_same_v<decltype(kinoko::act::RuntimeRecord::active_document), KinokoActDocument *>);

@@ -92,7 +92,7 @@ extern "C" int32_t kinoko_map_create_events(KinokoMapManager *manager, SQVM *vm,
     auto *layout = kinoko_map_lookup_layout(manager, name);
     const auto function = load<ObjectStorage>(callback).value;
     const auto receiver = load<ObjectStorage>(environment).value;
-    kinoko_map_append_event(address(manager), address(layout));
+    kinoko_map_append_event(manager, layout);
     if (!layout || function._type != OT_CLOSURE) return 0;
     const int32_t count = placement_count(layout);
     int32_t completed = 0;

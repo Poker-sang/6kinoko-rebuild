@@ -15,6 +15,7 @@ void retdec_trace_squirrel_name(const char*, int32_t);
 }
 
 namespace {
+inline char& native_trace_slot = g560;
 using kinoko::script::address;
 using kinoko::script::pointer;
 using kinoko::script::data_bits;
@@ -150,6 +151,13 @@ extern "C" int32_t kinoko_sqrat_get(void * storage, const char* name, void * out
     const bool found = kinoko::script::upstream::sqrat_get(vm, object.value(), name, value);
     write(out, value);
     return found;
+}
+extern "C" void kinoko_sqrat_retain_pair(struct SQVM * machine, const int32_t pair[2]) {
+    if (!machine || !pair) return;
+    // sq_addref reads the pair but does not mutate it (Squirrel 2.2.2 sqapi.cpp).
+    // Copy the byte-backed ABI record before handing it to the source VM.
+    auto value = read<HSQOBJECT>(pair);
+    sq_addref(static_cast<SQVM *>(machine), &value);
 }
 extern "C" void kinoko_sqrat_assign_pair(struct SQVM * id, int32_t* destination, const int32_t* source) {
     if (!id || !destination || !source) return;
@@ -290,7 +298,7 @@ extern "C" int32_t kinoko_sqrat_invoke_callback(const void * storage) {
         trace_pair("415810:closure-type", "415810:closure-data", callback.closure);
     }
     kinoko::script::upstream::sqrat_execute(callback.vm, callback.environment,
-        callback.closure, g560 != 0,
+        callback.closure, native_trace_slot != 0,
         [](HSQUIRRELVM vm, SQInteger count, SQBool result, SQBool errors) -> SQRESULT {
             return kinoko_sq_call(address(vm), count, result, errors);
         });

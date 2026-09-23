@@ -17,6 +17,8 @@ static uint8_t surface[64];
 static uint8_t depth=32;
 static HRESULT create_result=S_OK, lock_result=S_OK;
 static bool invalid_surface, missing, valid=true;
+static bool encoded_mode;
+static bool supply_palette=true;
 static unsigned releases, pixel_releases, unlocks, creates;
 static UINT allocated_width, allocated_height;
 static D3DFORMAT allocated_format;
@@ -38,10 +40,26 @@ void retdec_trace_hresult(const char*,long) {}
 int32_t kinoko_bitmap_load_cv2(KinokoBitmap* bitmap,const char* path) {
     loaded_path=path;
     if (missing) return 0;
-    bitmap->width=3;bitmap->height=2;bitmap->row_width=4;bitmap->bit_depth=depth;
-    const auto bytes=depth==16?16:32;
+    bitmap->width=3;bitmap->height=2;bitmap->row_width=depth==8?3:4;bitmap->bit_depth=depth;
+    bitmap->palette=nullptr; bitmap->encoded_size=0;
+    if (depth==8 && supply_palette) {
+        static const uint16_t palette[4]={0x0011,0x0022,0x0033,0x0044};
+        bitmap->palette=palette;
+    }
+    if (encoded_mode) {
+        static const uint8_t rle16[]={2,0,1,0, 3,0,2,0, 1,0,3,0};
+        static const uint8_t rle32[]={2,0,0,0, 0x11,0x11,0x11,0x11,
+                                      4,0,0,0, 0x22,0x22,0x22,0x22};
+        const auto* payload=depth>=24?rle32:rle16;
+        const auto size=depth>=24?sizeof(rle32):sizeof(rle16);
+        bitmap->encoded_size=static_cast<uint32_t>(size);
+        bitmap->pixels=static_cast<uint8_t*>(std::malloc(size));
+        std::memcpy(bitmap->pixels,payload,size);
+        return 1;
+    }
+    const auto bytes=depth==8?8:(depth==16?16:32);
     bitmap->pixels=static_cast<uint8_t*>(std::malloc(bytes));
-    for(int i=0;i<bytes;++i) bitmap->pixels[i]=static_cast<uint8_t>(i+1);
+    for(int i=0;i<bytes;++i) bitmap->pixels[i]=depth==8 ? static_cast<uint8_t>(i&3) : static_cast<uint8_t>(i+1);
     return 1;
 }
 void kinoko_bitmap_release_pixels(KinokoBitmap* bitmap) {
@@ -61,6 +79,27 @@ int main() {
     InitializeCriticalSection(&kinoko_graphics_lock.native);
     IDirect3DDevice9 device{};kinoko_graphics.device=&device;
     IDirect3DTexture9* result=nullptr;uint32_t width=0,height=0;
+    depth=8; std::memset(surface,0xcc,sizeof(surface));
+    CHECK(kinoko_texture_load_image("indexed.bmp",&result,&width,&height)==S_OK);
+    CHECK(allocated_format==D3DFMT_A1R5G5B5 && reinterpret_cast<uint16_t*>(surface)[0]==0x0011 &&
+        reinterpret_cast<uint16_t*>(surface)[1]==0x0022 && reinterpret_cast<uint16_t*>(surface)[2]==0x0033 &&
+        reinterpret_cast<uint16_t*>(surface)[10]==0x0044);
+    result->lpVtbl->Release(result); result=nullptr;
+    supply_palette=false;
+    const auto old_unlocks_for_palette=unlocks;
+    CHECK(kinoko_texture_load_image("indexed-no-palette.bmp",&result,nullptr,nullptr)==E_FAIL);
+    CHECK(!result && unlocks==old_unlocks_for_palette+1);
+    supply_palette=true;
+    encoded_mode=true; depth=8;
+    CHECK(kinoko_texture_load_image("indexed-rle.bmp",&result,nullptr,nullptr)==S_OK);
+    CHECK(reinterpret_cast<uint16_t*>(surface)[0]==0x0022 && reinterpret_cast<uint16_t*>(surface)[1]==0x0022 &&
+        reinterpret_cast<uint16_t*>(surface)[2]==0x0033 && reinterpret_cast<uint16_t*>(surface)[10]==0x0033 &&
+        reinterpret_cast<uint16_t*>(surface)[12]==0x0044);
+    result->lpVtbl->Release(result); result=nullptr; encoded_mode=false;
+    depth=24; encoded_mode=true;
+    CHECK(kinoko_texture_load_image("rgba-rle.bmp",&result,nullptr,nullptr)==S_OK);
+    CHECK(*reinterpret_cast<uint32_t*>(surface)==0x11111111 && *reinterpret_cast<uint32_t*>(surface+8)==0x22222222);
+    result->lpVtbl->Release(result); result=nullptr; encoded_mode=false;
     for(auto bits:{16,24,32}) {
         depth=static_cast<uint8_t>(bits);std::memset(surface,0xcc,sizeof(surface));
         const auto old_releases=releases;

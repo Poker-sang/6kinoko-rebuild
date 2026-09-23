@@ -111,10 +111,10 @@ void methods(HSQUIRRELVM vm) {
     Top restore(vm);
     const auto before = native_calls;
     sq_pushroottable(vm); sq_pushstring(vm, "Host", -1); sq_newclass(vm, SQFalse);
-    register_method(vm,"name",function_46ce70,address(reinterpret_cast<void*>(set_name)));
-    register_method(vm,"three",function_46cec0,address(reinterpret_cast<void*>(set_three)));
-    register_method(vm,"truth",function_46cf10,address(reinterpret_cast<void*>(two)));
-    register_method(vm,"number",function_46cf60,address(reinterpret_cast<void*>(two)));
+    register_method(vm,"name",kinoko_input_save_entry,address(reinterpret_cast<void*>(set_name)));
+    register_method(vm,"three",kinoko_input_assign_entry,address(reinterpret_cast<void*>(set_three)));
+    register_method(vm,"truth",kinoko_input_wait_entry,address(reinterpret_cast<void*>(two)));
+    register_method(vm,"number",kinoko_input_get_entry,address(reinterpret_cast<void*>(two)));
     register_method(vm,"zero",function_4552e0,address(reinterpret_cast<void*>(zero_method)),true);
     register_method(vm,"one",function_445730,address(reinterpret_cast<void*>(one_method)),true);
     register_method(vm,"draw",function_4555a0,address(reinterpret_cast<void*>(draw_method)),true);

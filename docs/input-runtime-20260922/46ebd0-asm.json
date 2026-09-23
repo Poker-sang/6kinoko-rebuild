@@ -1,0 +1,439 @@
+{
+  "addr": "0x46ebd0",
+  "asm": {
+    "name": "sub_46EBD0",
+    "start_ea": "0x46ebd0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "46ebd0",
+        "instruction": "push ebp",
+        "label": "sub_46EBD0"
+      },
+      {
+        "addr": "46ebd1",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "46ebd3",
+        "instruction": "push ebx"
+      },
+      {
+        "addr": "46ebd4",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "46ebd5",
+        "instruction": "mov esi, [ebp+arg_0]"
+      },
+      {
+        "addr": "46ebd8",
+        "instruction": "push edi"
+      },
+      {
+        "addr": "46ebd9",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "46ebda",
+        "instruction": "mov ebx, ecx"
+      },
+      {
+        "addr": "46ebdc",
+        "instruction": "call sub_4A95C0",
+        "refs": [
+          {
+            "addr": "0x4a95c0",
+            "name": "sub_4A95C0"
+          }
+        ]
+      },
+      {
+        "addr": "46ebe1",
+        "instruction": "mov eax, [ebp+arg_0]"
+      },
+      {
+        "addr": "46ebe4",
+        "instruction": "add esi, 10h"
+      },
+      {
+        "addr": "46ebe7",
+        "instruction": "lea edi, [ebx+10h]"
+      },
+      {
+        "addr": "46ebea",
+        "instruction": "mov ecx, 11h"
+      },
+      {
+        "addr": "46ebef",
+        "instruction": "rep movsd"
+      },
+      {
+        "addr": "46ebf1",
+        "instruction": "lea esi, [eax+54h]"
+      },
+      {
+        "addr": "46ebf4",
+        "instruction": "lea edi, [ebx+54h]"
+      },
+      {
+        "addr": "46ebf7",
+        "instruction": "mov ecx, 18h"
+      },
+      {
+        "addr": "46ebfc",
+        "instruction": "add eax, 0B4h"
+      },
+      {
+        "addr": "46ec01",
+        "instruction": "rep movsd"
+      },
+      {
+        "addr": "46ec03",
+        "instruction": "push eax"
+      },
+      {
+        "addr": "46ec04",
+        "instruction": "lea ecx, [ebx+0B4h]"
+      },
+      {
+        "addr": "46ec0a",
+        "instruction": "call sub_46D750",
+        "refs": [
+          {
+            "addr": "0x46d750",
+            "name": "sub_46D750"
+          }
+        ]
+      },
+      {
+        "addr": "46ec0f",
+        "instruction": "mov eax, [ebp+arg_0]"
+      },
+      {
+        "addr": "46ec12",
+        "instruction": "lea esi, [eax+0C8h]"
+      },
+      {
+        "addr": "46ec18",
+        "instruction": "lea edi, [ebx+0C8h]"
+      },
+      {
+        "addr": "46ec1e",
+        "instruction": "mov ecx, 11h"
+      },
+      {
+        "addr": "46ec23",
+        "instruction": "rep movsd"
+      },
+      {
+        "addr": "46ec25",
+        "instruction": "lea esi, [eax+10Ch]"
+      },
+      {
+        "addr": "46ec2b",
+        "instruction": "lea edi, [ebx+10Ch]"
+      },
+      {
+        "addr": "46ec31",
+        "instruction": "mov ecx, 18h"
+      },
+      {
+        "addr": "46ec36",
+        "instruction": "add eax, 16Ch"
+      },
+      {
+        "addr": "46ec3b",
+        "instruction": "rep movsd"
+      },
+      {
+        "addr": "46ec3d",
+        "instruction": "push eax"
+      },
+      {
+        "addr": "46ec3e",
+        "instruction": "lea ecx, [ebx+16Ch]"
+      },
+      {
+        "addr": "46ec44",
+        "instruction": "call sub_46E530",
+        "refs": [
+          {
+            "addr": "0x46e530",
+            "name": "sub_46E530"
+          }
+        ]
+      },
+      {
+        "addr": "46ec49",
+        "instruction": "mov esi, [ebp+arg_0]"
+      },
+      {
+        "addr": "46ec4c",
+        "instruction": "movzx eax, byte ptr [esi+184h]"
+      },
+      {
+        "addr": "46ec53",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46ec59",
+        "instruction": "push ecx"
+      },
+      {
+        "addr": "46ec5a",
+        "instruction": "lea ecx, [ebx+188h]"
+      },
+      {
+        "addr": "46ec60",
+        "instruction": "mov [ebx+184h], al"
+      },
+      {
+        "addr": "46ec66",
+        "instruction": "call sub_46D2A0",
+        "refs": [
+          {
+            "addr": "0x46d2a0",
+            "name": "sub_46D2A0"
+          }
+        ]
+      },
+      {
+        "addr": "46ec6b",
+        "instruction": "mov edx, [esi+59Ch]"
+      },
+      {
+        "addr": "46ec71",
+        "instruction": "mov [ebx+59Ch], edx"
+      },
+      {
+        "addr": "46ec77",
+        "instruction": "mov eax, [esi+5A0h]"
+      },
+      {
+        "addr": "46ec7d",
+        "instruction": "mov [ebx+5A0h], eax"
+      },
+      {
+        "addr": "46ec83",
+        "instruction": "mov ecx, [esi+5A4h]"
+      },
+      {
+        "addr": "46ec89",
+        "instruction": "mov [ebx+5A4h], ecx"
+      },
+      {
+        "addr": "46ec8f",
+        "instruction": "mov edx, [esi+5A8h]"
+      },
+      {
+        "addr": "46ec95",
+        "instruction": "mov [ebx+5A8h], edx"
+      },
+      {
+        "addr": "46ec9b",
+        "instruction": "mov eax, [esi+5ACh]"
+      },
+      {
+        "addr": "46eca1",
+        "instruction": "mov [ebx+5ACh], eax"
+      },
+      {
+        "addr": "46eca7",
+        "instruction": "mov ecx, [esi+5B0h]"
+      },
+      {
+        "addr": "46ecad",
+        "instruction": "mov [ebx+5B0h], ecx"
+      },
+      {
+        "addr": "46ecb3",
+        "instruction": "mov edx, [esi+5B4h]"
+      },
+      {
+        "addr": "46ecb9",
+        "instruction": "mov [ebx+5B4h], edx"
+      },
+      {
+        "addr": "46ecbf",
+        "instruction": "mov eax, [esi+5B8h]"
+      },
+      {
+        "addr": "46ecc5",
+        "instruction": "mov [ebx+5B8h], eax"
+      },
+      {
+        "addr": "46eccb",
+        "instruction": "movzx ecx, byte ptr [esi+5BCh]"
+      },
+      {
+        "addr": "46ecd2",
+        "instruction": "mov [ebx+5BCh], cl"
+      },
+      {
+        "addr": "46ecd8",
+        "instruction": "mov dl, [esi+5BDh]"
+      },
+      {
+        "addr": "46ecde",
+        "instruction": "mov [ebx+5BDh], dl"
+      },
+      {
+        "addr": "46ece4",
+        "instruction": "movzx eax, byte ptr [esi+5BEh]"
+      },
+      {
+        "addr": "46eceb",
+        "instruction": "mov [ebx+5BEh], al"
+      },
+      {
+        "addr": "46ecf1",
+        "instruction": "movzx ecx, byte ptr [esi+5BFh]"
+      },
+      {
+        "addr": "46ecf8",
+        "instruction": "mov [ebx+5BFh], cl"
+      },
+      {
+        "addr": "46ecfe",
+        "instruction": "mov edx, [esi+5C0h]"
+      },
+      {
+        "addr": "46ed04",
+        "instruction": "mov [ebx+5C0h], edx"
+      },
+      {
+        "addr": "46ed0a",
+        "instruction": "mov eax, [esi+5C4h]"
+      },
+      {
+        "addr": "46ed10",
+        "instruction": "mov [ebx+5C4h], eax"
+      },
+      {
+        "addr": "46ed16",
+        "instruction": "mov ecx, [esi+5C8h]"
+      },
+      {
+        "addr": "46ed1c",
+        "instruction": "mov [ebx+5C8h], ecx"
+      },
+      {
+        "addr": "46ed22",
+        "instruction": "mov edx, [esi+5CCh]"
+      },
+      {
+        "addr": "46ed28",
+        "instruction": "mov [ebx+5CCh], edx"
+      },
+      {
+        "addr": "46ed2e",
+        "instruction": "mov eax, [esi+5D0h]"
+      },
+      {
+        "addr": "46ed34",
+        "instruction": "mov [ebx+5D0h], eax"
+      },
+      {
+        "addr": "46ed3a",
+        "instruction": "mov ecx, [esi+5D4h]"
+      },
+      {
+        "addr": "46ed40",
+        "instruction": "mov [ebx+5D4h], ecx"
+      },
+      {
+        "addr": "46ed46",
+        "instruction": "mov edx, [esi+5D8h]"
+      },
+      {
+        "addr": "46ed4c",
+        "instruction": "mov [ebx+5D8h], edx"
+      },
+      {
+        "addr": "46ed52",
+        "instruction": "mov eax, [esi+5DCh]"
+      },
+      {
+        "addr": "46ed58",
+        "instruction": "mov [ebx+5DCh], eax"
+      },
+      {
+        "addr": "46ed5e",
+        "instruction": "mov ecx, [esi+5E0h]"
+      },
+      {
+        "addr": "46ed64",
+        "instruction": "mov [ebx+5E0h], ecx"
+      },
+      {
+        "addr": "46ed6a",
+        "instruction": "mov edx, [esi+5E4h]"
+      },
+      {
+        "addr": "46ed70",
+        "instruction": "pop edi"
+      },
+      {
+        "addr": "46ed71",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "46ed72",
+        "instruction": "mov [ebx+5E4h], edx"
+      },
+      {
+        "addr": "46ed78",
+        "instruction": "mov eax, ebx"
+      },
+      {
+        "addr": "46ed7a",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "46ed7b",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "46ed7c",
+        "instruction": "retn 4"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__saved_registers",
+        "offset": "0xc",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0x10",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_0",
+        "offset": "0x14",
+        "size": "0x4",
+        "type": "_DWORD"
+      }
+    ],
+    "return_type": "int",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "int"
+      },
+      {
+        "name": "arg1",
+        "type": "int"
+      }
+    ]
+  },
+  "instruction_count": 92,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

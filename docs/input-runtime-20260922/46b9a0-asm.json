@@ -1,0 +1,721 @@
+{
+  "addr": "0x46b9a0",
+  "asm": {
+    "name": "sub_46B9A0",
+    "start_ea": "0x46b9a0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "46b9a0",
+        "instruction": "push esi",
+        "label": "sub_46B9A0"
+      },
+      {
+        "addr": "46b9a1",
+        "instruction": "mov esi, ecx"
+      },
+      {
+        "addr": "46b9a3",
+        "instruction": "mov ecx, [esi+0B8h]"
+      },
+      {
+        "addr": "46b9a9",
+        "instruction": "sub ecx, [esi+0B4h]"
+      },
+      {
+        "addr": "46b9af",
+        "instruction": "mov eax, 30C30C31h"
+      },
+      {
+        "addr": "46b9b4",
+        "instruction": "imul ecx"
+      },
+      {
+        "addr": "46b9b6",
+        "instruction": "sar edx, 5"
+      },
+      {
+        "addr": "46b9b9",
+        "instruction": "mov eax, edx"
+      },
+      {
+        "addr": "46b9bb",
+        "instruction": "push edi"
+      },
+      {
+        "addr": "46b9bc",
+        "instruction": "shr eax, 1Fh"
+      },
+      {
+        "addr": "46b9bf",
+        "instruction": "xor edi, edi"
+      },
+      {
+        "addr": "46b9c1",
+        "instruction": "add eax, edx"
+      },
+      {
+        "addr": "46b9c3",
+        "instruction": "jz short loc_46BA09",
+        "refs": [
+          {
+            "addr": "0x46ba09",
+            "name": "loc_46BA09"
+          }
+        ]
+      },
+      {
+        "addr": "46b9c5",
+        "instruction": "push ebx"
+      },
+      {
+        "addr": "46b9c6",
+        "instruction": "xor ebx, ebx"
+      },
+      {
+        "addr": "46b9c8",
+        "instruction": "jmp short loc_46B9D0",
+        "refs": [
+          {
+            "addr": "0x46b9d0",
+            "name": "loc_46B9D0"
+          }
+        ]
+      },
+      {
+        "addr": "46b9d0",
+        "instruction": "mov ecx, [esi+0B4h]",
+        "label": "loc_46B9D0"
+      },
+      {
+        "addr": "46b9d6",
+        "instruction": "mov edx, [ecx+ebx]"
+      },
+      {
+        "addr": "46b9d9",
+        "instruction": "mov eax, [edx+4]"
+      },
+      {
+        "addr": "46b9dc",
+        "instruction": "add ecx, ebx"
+      },
+      {
+        "addr": "46b9de",
+        "instruction": "call eax"
+      },
+      {
+        "addr": "46b9e0",
+        "instruction": "mov ecx, [esi+0B8h]"
+      },
+      {
+        "addr": "46b9e6",
+        "instruction": "sub ecx, [esi+0B4h]"
+      },
+      {
+        "addr": "46b9ec",
+        "instruction": "mov eax, 30C30C31h"
+      },
+      {
+        "addr": "46b9f1",
+        "instruction": "imul ecx"
+      },
+      {
+        "addr": "46b9f3",
+        "instruction": "sar edx, 5"
+      },
+      {
+        "addr": "46b9f6",
+        "instruction": "mov ecx, edx"
+      },
+      {
+        "addr": "46b9f8",
+        "instruction": "shr ecx, 1Fh"
+      },
+      {
+        "addr": "46b9fb",
+        "instruction": "inc edi"
+      },
+      {
+        "addr": "46b9fc",
+        "instruction": "add ecx, edx"
+      },
+      {
+        "addr": "46b9fe",
+        "instruction": "add ebx, 0A8h"
+      },
+      {
+        "addr": "46ba04",
+        "instruction": "cmp edi, ecx"
+      },
+      {
+        "addr": "46ba06",
+        "instruction": "jb short loc_46B9D0",
+        "refs": [
+          {
+            "addr": "0x46b9d0",
+            "name": "loc_46B9D0"
+          }
+        ]
+      },
+      {
+        "addr": "46ba08",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "46ba09",
+        "instruction": "mov edx, [esi+0Ch]",
+        "label": "loc_46BA09"
+      },
+      {
+        "addr": "46ba0c",
+        "instruction": "mov eax, [edx+4]"
+      },
+      {
+        "addr": "46ba0f",
+        "instruction": "lea ecx, [esi+0Ch]"
+      },
+      {
+        "addr": "46ba12",
+        "instruction": "call eax"
+      },
+      {
+        "addr": "46ba14",
+        "instruction": "mov edx, [esi+0C4h]"
+      },
+      {
+        "addr": "46ba1a",
+        "instruction": "mov eax, [edx+4]"
+      },
+      {
+        "addr": "46ba1d",
+        "instruction": "lea ecx, [esi+0C4h]"
+      },
+      {
+        "addr": "46ba23",
+        "instruction": "call eax"
+      },
+      {
+        "addr": "46ba25",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46ba2b",
+        "instruction": "call sub_408320",
+        "refs": [
+          {
+            "addr": "0x408320",
+            "name": "sub_408320"
+          }
+        ]
+      },
+      {
+        "addr": "46ba30",
+        "instruction": "mov eax, [esi+114h]"
+      },
+      {
+        "addr": "46ba36",
+        "instruction": "mov ecx, [esi+10Ch]"
+      },
+      {
+        "addr": "46ba3c",
+        "instruction": "mov edx, [esi+110h]"
+      },
+      {
+        "addr": "46ba42",
+        "instruction": "mov [esi+5A4h], eax"
+      },
+      {
+        "addr": "46ba48",
+        "instruction": "mov eax, [esi+120h]"
+      },
+      {
+        "addr": "46ba4e",
+        "instruction": "mov [esi+59Ch], ecx"
+      },
+      {
+        "addr": "46ba54",
+        "instruction": "mov ecx, [esi+118h]"
+      },
+      {
+        "addr": "46ba5a",
+        "instruction": "mov [esi+5A0h], edx"
+      },
+      {
+        "addr": "46ba60",
+        "instruction": "mov edx, [esi+11Ch]"
+      },
+      {
+        "addr": "46ba66",
+        "instruction": "mov [esi+5B0h], eax"
+      },
+      {
+        "addr": "46ba6c",
+        "instruction": "movzx eax, byte ptr [esi+146h]"
+      },
+      {
+        "addr": "46ba73",
+        "instruction": "mov [esi+5A8h], ecx"
+      },
+      {
+        "addr": "46ba79",
+        "instruction": "mov ecx, [esi+124h]"
+      },
+      {
+        "addr": "46ba7f",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46ba81",
+        "instruction": "mov [esi+5ACh], edx"
+      },
+      {
+        "addr": "46ba87",
+        "instruction": "mov edx, [esi+128h]"
+      },
+      {
+        "addr": "46ba8d",
+        "instruction": "mov [esi+5B4h], ecx"
+      },
+      {
+        "addr": "46ba93",
+        "instruction": "mov cl, [esi+147h]"
+      },
+      {
+        "addr": "46ba99",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46ba9b",
+        "instruction": "mov [esi+5BCh], al"
+      },
+      {
+        "addr": "46baa1",
+        "instruction": "movzx eax, byte ptr [esi+149h]"
+      },
+      {
+        "addr": "46baa8",
+        "instruction": "mov [esi+5B8h], edx"
+      },
+      {
+        "addr": "46baae",
+        "instruction": "mov dl, [esi+148h]"
+      },
+      {
+        "addr": "46bab4",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bab6",
+        "instruction": "mov [esi+5BDh], cl"
+      },
+      {
+        "addr": "46babc",
+        "instruction": "push 0Bh"
+      },
+      {
+        "addr": "46babe",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bac4",
+        "instruction": "mov [esi+5BEh], dl"
+      },
+      {
+        "addr": "46baca",
+        "instruction": "mov [esi+5BFh], al"
+      },
+      {
+        "addr": "46bad0",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bad5",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bad7",
+        "instruction": "movzx ecx, al"
+      },
+      {
+        "addr": "46bada",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46badc",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bade",
+        "instruction": "mov [esi+5C0h], ecx"
+      },
+      {
+        "addr": "46bae4",
+        "instruction": "push 2"
+      },
+      {
+        "addr": "46bae6",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46baec",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46baf1",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46baf3",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46baf5",
+        "instruction": "movzx edx, al"
+      },
+      {
+        "addr": "46baf8",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bafa",
+        "instruction": "push 3"
+      },
+      {
+        "addr": "46bafc",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb02",
+        "instruction": "mov [esi+5C4h], edx"
+      },
+      {
+        "addr": "46bb08",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb0d",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb0f",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb11",
+        "instruction": "movzx eax, al"
+      },
+      {
+        "addr": "46bb14",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb16",
+        "instruction": "push 4"
+      },
+      {
+        "addr": "46bb18",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb1e",
+        "instruction": "mov [esi+5C8h], eax"
+      },
+      {
+        "addr": "46bb24",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb29",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb2b",
+        "instruction": "movzx ecx, al"
+      },
+      {
+        "addr": "46bb2e",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb30",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb32",
+        "instruction": "mov [esi+5CCh], ecx"
+      },
+      {
+        "addr": "46bb38",
+        "instruction": "push 5"
+      },
+      {
+        "addr": "46bb3a",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb40",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb45",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb47",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb49",
+        "instruction": "movzx edx, al"
+      },
+      {
+        "addr": "46bb4c",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb4e",
+        "instruction": "push 6"
+      },
+      {
+        "addr": "46bb50",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb56",
+        "instruction": "mov [esi+5D0h], edx"
+      },
+      {
+        "addr": "46bb5c",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb61",
+        "instruction": "movzx eax, al"
+      },
+      {
+        "addr": "46bb64",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb66",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb68",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb6a",
+        "instruction": "push 7"
+      },
+      {
+        "addr": "46bb6c",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb72",
+        "instruction": "mov [esi+5D4h], eax"
+      },
+      {
+        "addr": "46bb78",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb7d",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb7f",
+        "instruction": "movzx ecx, al"
+      },
+      {
+        "addr": "46bb82",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb84",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb86",
+        "instruction": "mov [esi+5D8h], ecx"
+      },
+      {
+        "addr": "46bb8c",
+        "instruction": "push 8"
+      },
+      {
+        "addr": "46bb8e",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bb94",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bb99",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb9b",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bb9d",
+        "instruction": "movzx edx, al"
+      },
+      {
+        "addr": "46bba0",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bba2",
+        "instruction": "push 9"
+      },
+      {
+        "addr": "46bba4",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bbaa",
+        "instruction": "mov [esi+5DCh], edx"
+      },
+      {
+        "addr": "46bbb0",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bbb5",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bbb7",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bbb9",
+        "instruction": "movzx eax, al"
+      },
+      {
+        "addr": "46bbbc",
+        "instruction": "push 0"
+      },
+      {
+        "addr": "46bbbe",
+        "instruction": "push 0Ah"
+      },
+      {
+        "addr": "46bbc0",
+        "instruction": "lea ecx, [esi+188h]"
+      },
+      {
+        "addr": "46bbc6",
+        "instruction": "mov [esi+5E0h], eax"
+      },
+      {
+        "addr": "46bbcc",
+        "instruction": "call sub_4083E0",
+        "refs": [
+          {
+            "addr": "0x4083e0",
+            "name": "sub_4083E0"
+          }
+        ]
+      },
+      {
+        "addr": "46bbd1",
+        "instruction": "movzx ecx, al"
+      },
+      {
+        "addr": "46bbd4",
+        "instruction": "pop edi"
+      },
+      {
+        "addr": "46bbd5",
+        "instruction": "mov [esi+5E4h], ecx"
+      },
+      {
+        "addr": "46bbdb",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "46bbdc",
+        "instruction": "retn"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__return_address",
+        "offset": "0x8",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      }
+    ],
+    "return_type": "bool",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "int"
+      }
+    ]
+  },
+  "instruction_count": 151,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

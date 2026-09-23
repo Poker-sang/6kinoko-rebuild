@@ -1,3 +1,4 @@
+#include "kinoko/angle_math.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/graphics_device.h"
 #include "kinoko/sprite.h"
@@ -6,8 +7,6 @@
 #include <d3d9.h>
 
 extern "C" {
-float function_404130(long double angle);
-float function_4040d0(long double angle);
 }
 
 static_assert(sizeof(KinokoSpriteVertex) == 28, "Original vertex stride");
@@ -28,8 +27,8 @@ extern "C" void kinoko_sprite_transform(KinokoSprite *sprite, float x, float y) 
     vertices[3].x = vertices[1].x;
 
     if (sprite->angle != 0.0f) {
-        const float cosine = function_404130(sprite->angle);
-        const float sine = function_4040d0(sprite->angle);
+        const float cosine = kinoko_cos_degrees(sprite->angle);
+        const float sine = kinoko_sin_degrees(sprite->angle);
         for (auto &vertex : vertices) {
             const float old_x = vertex.x;
             const float old_y = vertex.y;
@@ -40,19 +39,33 @@ extern "C" void kinoko_sprite_transform(KinokoSprite *sprite, float x, float y) 
 }
 
 namespace {
-int32_t draw(KinokoSprite *sprite, float x, float y, DWORD format) {
-    if (!sprite)
-        return 0;
-    kinoko_sprite_transform(sprite, x, y);
+int32_t submit(KinokoSprite *sprite, DWORD format) {
     auto *device = kinoko_graphics.device;
     if (!device || !*reinterpret_cast<void ***>(device))
         return 0;
-    if (kinoko_texture_bind_stage(0, sprite->texture) < 0)
-        return E_FAIL;
+    // Original ignores bind/FVF failure and returns DrawPrimitiveUP HRESULT.
+    kinoko_texture_bind_stage(0, sprite->texture);
     device->SetFVF(format);
     return device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, sprite->vertices,
         sizeof(KinokoSpriteVertex));
 }
+int32_t draw(KinokoSprite *sprite, float x, float y, DWORD format) {
+    if (!sprite) return 0;
+    kinoko_sprite_transform(sprite, x, y);
+    return submit(sprite, format);
+}
+}
+
+// Original 404E10: explicit screen bounds, independent of pivot/scale/angle.
+extern "C" int32_t __fastcall kinoko_sprite_draw_bounds(
+    KinokoSprite *sprite, void *, float left, float top, float right, float bottom) {
+    if (!sprite) return 0;
+    auto &v = sprite->vertices;
+    v[0].x = v[2].x = left - 0.5f;
+    v[0].y = v[1].y = top - 0.5f;
+    v[1].x = v[3].x = right - 0.5f;
+    v[2].y = v[3].y = bottom - 0.5f;
+    return submit(sprite, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
 }
 
 // Original CSprite vtable entries at 4ED2E8/4ED2EC/4ED2F0.

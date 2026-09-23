@@ -50,9 +50,9 @@ public:
     void append(const char* source, std::uint32_t size) const;
     void append(StringView source, std::uint32_t position, std::uint32_t size) const;
     bool reserve(std::uint32_t capacity, bool shrink) const;
-    // Preserve the legacy opaque allocation-address return, including the
-    // short-storage branch. Callers must not treat this result as ownership.
-    std::uintptr_t grow(std::uint32_t capacity, std::uint32_t old_length) const;
+    // Borrowed buffer, including short storage; invalidated by mutation.
+    // Its lifetime belongs to this record's native string owner.
+    char* grow(std::uint32_t capacity, std::uint32_t old_length) const;
 private:
     std::string* owner() const noexcept;
     std::string& ensure_owner() const;

@@ -1,0 +1,194 @@
+{
+  "addr": "0x46be40",
+  "asm": {
+    "name": "sub_46BE40",
+    "start_ea": "0x46be40",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "46be40",
+        "instruction": "push ebp",
+        "label": "sub_46BE40"
+      },
+      {
+        "addr": "46be41",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "46be43",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "46be44",
+        "instruction": "mov esi, [ebp+arg_0]"
+      },
+      {
+        "addr": "46be47",
+        "instruction": "test esi, esi"
+      },
+      {
+        "addr": "46be49",
+        "instruction": "js short loc_46BE7E",
+        "refs": [
+          {
+            "addr": "0x46be7e",
+            "name": "loc_46BE7E"
+          }
+        ]
+      },
+      {
+        "addr": "46be4b",
+        "instruction": "mov edx, [ecx+0B8h]"
+      },
+      {
+        "addr": "46be51",
+        "instruction": "sub edx, [ecx+0B4h]"
+      },
+      {
+        "addr": "46be57",
+        "instruction": "mov eax, 30C30C31h"
+      },
+      {
+        "addr": "46be5c",
+        "instruction": "imul edx"
+      },
+      {
+        "addr": "46be5e",
+        "instruction": "sar edx, 5"
+      },
+      {
+        "addr": "46be61",
+        "instruction": "mov eax, edx"
+      },
+      {
+        "addr": "46be63",
+        "instruction": "shr eax, 1Fh"
+      },
+      {
+        "addr": "46be66",
+        "instruction": "add eax, edx"
+      },
+      {
+        "addr": "46be68",
+        "instruction": "cmp esi, eax"
+      },
+      {
+        "addr": "46be6a",
+        "instruction": "jge short loc_46BE7E",
+        "refs": [
+          {
+            "addr": "0x46be7e",
+            "name": "loc_46BE7E"
+          }
+        ]
+      },
+      {
+        "addr": "46be6c",
+        "instruction": "mov ecx, [ecx+0B4h]"
+      },
+      {
+        "addr": "46be72",
+        "instruction": "mov edx, [ebp+arg_4]"
+      },
+      {
+        "addr": "46be75",
+        "instruction": "mov eax, [ecx+edx*4+18h]"
+      },
+      {
+        "addr": "46be79",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "46be7a",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "46be7b",
+        "instruction": "retn 8"
+      },
+      {
+        "addr": "46be7e",
+        "instruction": "cmp esi, 0FFFFFFFFh",
+        "label": "loc_46BE7E"
+      },
+      {
+        "addr": "46be81",
+        "instruction": "jnz short loc_46BE8F",
+        "refs": [
+          {
+            "addr": "0x46be8f",
+            "name": "loc_46BE8F"
+          }
+        ]
+      },
+      {
+        "addr": "46be83",
+        "instruction": "mov eax, [ebp+arg_4]"
+      },
+      {
+        "addr": "46be86",
+        "instruction": "mov eax, [ecx+eax*4+14h]"
+      },
+      {
+        "addr": "46be8a",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "46be8b",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "46be8c",
+        "instruction": "retn 8"
+      },
+      {
+        "addr": "46be8f",
+        "instruction": "or eax, 0FFFFFFFFh",
+        "label": "loc_46BE8F"
+      },
+      {
+        "addr": "46be92",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "46be93",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "46be94",
+        "instruction": "retn 8"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__saved_registers",
+        "offset": "0x4",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0x8",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_0",
+        "offset": "0xc",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "arg_4",
+        "offset": "0x10",
+        "size": "0x4",
+        "type": "_DWORD"
+      }
+    ]
+  },
+  "instruction_count": 33,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

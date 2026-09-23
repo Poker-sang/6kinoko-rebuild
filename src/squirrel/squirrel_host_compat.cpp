@@ -15,7 +15,8 @@ void retdec_trace_squirrel_name(const char* message, int32_t name);
 
 namespace {
 using namespace kinoko::script;
-HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(g644); }
+inline char*& current_vm_storage = g644;
+HSQUIRRELVM current_vm() noexcept { return reinterpret_cast<HSQUIRRELVM>(current_vm_storage); }
 int32_t pop(HSQUIRRELVM vm, SQInteger count = 1) {
     // Keep the embedding's existing underflow guard; ownership is source Pop.
     return kinoko_sq_pop(address(vm), count);
