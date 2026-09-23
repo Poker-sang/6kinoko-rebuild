@@ -3044,66 +3044,13 @@ int32_t D3DXMatrixTranslation(int32_t * a1, float80_t a2, float80_t a3, float80_
    did not emit its constructor, so keep the receiver and its embedded
    containers in stable storage rather than passing an uninitialised ECX. */
 __declspec(align(8)) static unsigned char g_retdec_input_manager_state[0x600];
-static int g_retdec_runtime_initialized = 0;
-static int g_retdec_map_manager_initialized = 0;
 
 
 #define RETDEC_ACT_TEXTURE_SLOT_COUNT KINOKO_TEXTURE_CAPACITY
 #define g_retdec_act_texture_slots kinoko_texture_slots
 
-static void retdec_initialize_runtime_objects(void);
-// ------------------------ Functions -------------------------
+/* Replacement-entry CRT construction lives in reconstructed/game_runtime.cpp. */
 
-static void retdec_initialize_runtime_objects(void)
-{
-    if (g_retdec_runtime_initialized != 0) {
-        return;
-    }
-
-
-    // These are the constructors normally reached through the original
-    // C++ CRT initializer table. The replacement entry point does not run
-    // that table, so initialize the subsystems before loading the DATs.
-    kinoko_graphics_initialize_runtime();
-    function_401850();
-    kinoko_initialize_texture_cache();
-    kinoko_archive_initialize();
-    kinoko_register_stage_list_cleanup();
-    kinoko_register_render_queue_cleanup();
-    /* CRT construction creates the LoadSE lookup tree before boot.nut calls
-       LoadSE.  Without this sentinel the reconstructed 470ab0 path derefs
-       address 0x4 on its first lookup. */
-    kinoko_register_sound_tree_cleanup();
-    kinoko_application_construct();
-    kinoko_frame_timer_initialize();
-
-    /* MapManager is a CRT-constructed global in the original image.  Its
-       list sentinel must exist before the first scene frame, even though the
-       current map handle remains null until a real LoadMap call. */
-    if (g_retdec_map_manager_initialized == 0) {
-        if (kinoko_map_manager_construct(
-                (KinokoMapManager *)g_retdec_map_manager_state) == 0) {
-            retdec_trace("map-manager:init-failed");
-        } else {
-            g_retdec_map_manager_initialized = 1;
-            retdec_trace_i32(
-                "map-manager:sentinel",
-                (int32_t)(intptr_t)kinoko_map_manager_containers((KinokoMapManager *)g_retdec_map_manager_state));
-        }
-    }
-
-    /* This global is normally constructed by the MSVC CRT before WinMain.
-       Recreate the complete object before boot.nut can call CreateActor. */
-    if (!kinoko_actor_manager_construct((KinokoActorManager *)(intptr_t)((int32_t)(intptr_t)g_retdec_actor_manager_state))) {
-        retdec_trace("actor-manager:construct-failed");
-    }
-
-    /* RenderLayer pointers are read from the constructed ActorManager fields. */
-    g617 = (int32_t)(intptr_t)g_retdec_actor_manager_state;
-    kinoko_actor_trace_render_layers((KinokoActorManager *)g_retdec_actor_manager_state);
-
-    g_retdec_runtime_initialized = 1;
-}
 
 
 
@@ -11193,7 +11140,17 @@ void kinoko_actor_manager_refresh_collision(void) { kinoko_script_refresh_collis
 
 
 // Explicit C-host boundaries: native app code does not index RetDec globals.
-void kinoko_application_initialize_host(void) { retdec_initialize_runtime_objects(); }
+const KinokoRuntimeBootSymbols *kinoko_runtime_boot_symbols(void) {
+    static KinokoRuntimeBootSymbols symbols;
+    symbols.map = (KinokoMapManager *)g_retdec_map_manager_state;
+    symbols.actors = (KinokoActorManager *)g_retdec_actor_manager_state;
+    symbols.renderer_methods = &g184;
+    symbols.render_layer_owner_slot = &g617;
+    return &symbols;
+}
+void kinoko_application_initialize_host(void) {
+    kinoko_runtime_initialize_objects(kinoko_runtime_boot_symbols());
+}
 const char *kinoko_application_title(void) { return g43; }
 const char *kinoko_application_error(void) { return g42; }
 void kinoko_application_set_archive_mode(int32_t enabled) { g874 = enabled != 0; }

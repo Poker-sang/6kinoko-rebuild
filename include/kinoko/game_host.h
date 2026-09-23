@@ -14,6 +14,15 @@ extern "C" {
 /* Borrowed global objects. Integer conversion remains only inside these
    ports to unconverted manager / Squirrel wrapper implementations. */
 const KinokoGameObjects *kinoko_game_objects(void);
+/* Original CRT-global identities borrowed during replacement-entry startup. */
+typedef struct KinokoRuntimeBootSymbols {
+    KinokoMapManager *map;
+    KinokoActorManager *actors;
+    const void *renderer_methods;
+    int32_t *render_layer_owner_slot;
+} KinokoRuntimeBootSymbols;
+const KinokoRuntimeBootSymbols *kinoko_runtime_boot_symbols(void);
+void kinoko_runtime_initialize_objects(const KinokoRuntimeBootSymbols *symbols);
 void kinoko_game_prepare_scripts(void);
 void kinoko_game_register_scripts(void);
 int32_t kinoko_game_initialize_input(KinokoInputManager *input);
