@@ -134,15 +134,34 @@ extern "C" int32_t kinoko_construct_string_layout(int32_t layout) {
     kinoko_string_queue_construct(layout);
     // Original CP932 face name, 13 bytes before its NUL terminator.
     static const char face[]="\x82\x6c\x82\x72\x20\x83\x53\x83\x56\x83\x62\x83\x4e";
-    StringView(pointer<void>(layout+60)).assign(face,13);
-    field<float>(layout+136)=field<float>(layout+140)=field<float>(layout+152)=1.0f;
-    field<int32_t>(layout+148)=0;field<int32_t>(layout+156)=1;
-    field<int32_t>(layout+108)=field<int32_t>(layout+112)=field<int32_t>(layout+116)=255;
-    field<int32_t>(layout+88)=16;field<int32_t>(layout+92)=1;
-    for(int offset : {96,100,104,120,132,204,208,212,220,224}) field<int32_t>(layout+offset)=0;
-    field<int32_t>(layout+124)=2;field<int32_t>(layout+144)=-1;
-    field<int32_t>(layout+216)=16;
-    field<uint8_t>(layout+128)=field<uint8_t>(layout+228)=0;
+    using Layout=kinoko::act::StringLayoutRecord;
+    const kinoko::native::RecordView<Layout> text(pointer<void>(layout));
+    StringView(text.bytes(&Layout::face)).assign(face,13);
+    text.set(&Layout::alpha,1.0f);
+    text.set(&Layout::layer,static_cast<KinokoActLayer*>(nullptr));
+    text.set(&Layout::blend,1);
+    text.set(&Layout::scale_x,1.0f);
+    text.set(&Layout::scale_y,1.0f);
+    text.set(&Layout::base_red,255);
+    text.set(&Layout::base_green,255);
+    text.set(&Layout::base_blue,255);
+    text.set(&Layout::font_height,16);
+    text.set(&Layout::font_weight,1);
+    text.set(&Layout::red,0);
+    text.set(&Layout::green,0);
+    text.set(&Layout::blue,0);
+    text.set(&Layout::character_space,0);
+    text.set(&Layout::line_space,2);
+    text.set(&Layout::edge,uint8_t{0});
+    text.set(&Layout::alignment,0);
+    text.set(&Layout::wrap_width,-1);
+    text.set(&Layout::origin_x,0);
+    text.set(&Layout::origin_y,0);
+    text.set(&Layout::rebuild,uint8_t{0});
+    text.set(&Layout::cursor_y,0);
+    text.set(&Layout::cursor_x,0);
+    text.set(&Layout::line_height,16);
+    text.set(&Layout::maximum_width,0);
     return layout;
 }
 

@@ -41,3 +41,9 @@ Batch 8: original 440910 atlas packing maintains page X/Y, current row
 height and 512x512 limits at offsets 0/4/8/12/16. These fields are now
 part of the asserted AtlasLifecycle layout. Upload, row advance, and glyph
 rectangle use named fields with unchanged comparisons and update order.
+Batch 9: user confirmed the preceding batch-8 EXE worked normally; this is
+user-run validation, not an agent gameplay test. Fresh IDA MCP session b9a84557
+for original SHA256 2db975a4... confirms CStringLayout 43E890 initializes
+font, face, colors, spacing, alignment, metrics and layer defaults. Named
+StringLayoutRecord fields now carry those values without changing allocation
+and container construction order. Evidence: 43e890.json.
