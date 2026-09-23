@@ -178,25 +178,24 @@ int32_t retdec_act_make_layout(int32_t reader_ptr)
 
 int32_t retdec_act_make_map_layout(int32_t reader_ptr)
 {
-    int32_t layout;
-
-    layout = address(std::calloc(1u, 464u));
-    if (layout == 0)
-        return 0;
-    field<int32_t>(layout) = address(kinoko_act_host_symbols()->map_layout_vtable);
-    field<int32_t>(layout + 4) = address(kinoko_act_host_symbols()->map_view_vtable);
-    field<int32_t>(layout + 240) = 0x7fffffff;
-    field<int32_t>(layout + 244) = 0x7fffffff;
-    field<float>(layout + 320) = 1.0f;
-    field<float>(layout + 324) = 1.0f;
-    field<int32_t>(layout + 328) = 1;
-    field<int32_t>(layout + 452) = -1;
-    if (!kinoko_act_read_map_properties_typed(pointer<KinokoActLayout>(layout),
-            pointer<KinokoArchiveReader>(reader_ptr))) {
-        std::free(pointer<void>(layout));
-        return 0;
-    }
-    return layout;
+    auto layout = std::unique_ptr<KinokoActLayout, decltype(&std::free)>(
+        static_cast<KinokoActLayout *>(std::calloc(1u, sizeof(kinoko::act::MapLayoutRecord))),
+        &std::free);
+    if (!layout) return 0;
+    kinoko::act::MapLayoutView record(layout.get());
+    record.set(&kinoko::act::MapLayoutRecord::methods,
+        kinoko_act_host_symbols()->map_layout_vtable);
+    record.set(&kinoko::act::MapLayoutRecord::view_methods,
+        kinoko_act_host_symbols()->map_view_vtable);
+    record.set(&kinoko::act::MapLayoutRecord::x_limit, INT32_MAX);
+    record.set(&kinoko::act::MapLayoutRecord::y_limit, INT32_MAX);
+    record.set(&kinoko::act::MapLayoutRecord::alpha, 1.0f);
+    record.set(&kinoko::act::MapLayoutRecord::secondary_alpha, 1.0f);
+    record.set(&kinoko::act::MapLayoutRecord::blend, int32_t{1});
+    record.set(&kinoko::act::MapLayoutRecord::resource_id, int32_t{-1});
+    if (!kinoko_act_read_map_properties_typed(layout.get(),
+            pointer<KinokoArchiveReader>(reader_ptr))) return 0;
+    return address(layout.release());
 }
 
 void retdec_act_free_map_records(int32_t layout)
