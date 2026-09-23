@@ -672,7 +672,7 @@ int32_t retdec_act_make_resource(int32_t reader_ptr, uint32_t type)
     int32_t resource;
     if(type==kinoko::mesh::resource_type()) {
         auto *mesh=kinoko::mesh::create_resource();
-        if(mesh && !kinoko_method_read_mesh_resource(address(mesh),nullptr,address(&reader_ptr),1)) {
+        if(mesh && !kinoko::mesh::read_resource_properties(mesh,&reader_ptr,1)) {
             kinoko::mesh::clear_resource(mesh);std::free(mesh);return 0;
         }
         return address(mesh);

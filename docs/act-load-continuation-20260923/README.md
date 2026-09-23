@@ -32,3 +32,8 @@ resource and the same active reader slot. The native factory now passes
 actual pointers and each reader exposes a typed boundary while the virtual
 ABI adapters retain their signatures. The distinct schemas and texture
 crop invalidation remain in their original order; no eager load is added.
+Batch 29: mesh resource creation already returns a typed Resource owner.
+Its distinct ACT schema reader now borrows that Resource and the active
+reader slot directly, with the virtual C ABI only converting at its edge.
+The factory still clears and frees the mesh on read failure, and resource
+loading remains deferred to the original resource pass.

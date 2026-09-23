@@ -284,9 +284,15 @@ extern "C" int32_t __fastcall kinoko_method_write_layout_3d(int32_t layout,void 
     if(!layout || !writer) return 0;
     try{return write(layout,writer,layout3d_schema);}catch(...){return 0;}
 }
+namespace kinoko::mesh {
+int32_t read_resource_properties(Resource *resource,int32_t *reader_holder,int32_t version) {
+    if(!resource || !reader_holder || version!=1) return 0;
+    try{return read(address(resource),*reader_holder,mesh_schema,false);}catch(...){return 0;}
+}
+}
 extern "C" int32_t __fastcall kinoko_method_read_mesh_resource(int32_t resource,void *,int32_t holder,int32_t version) {
-    if(!resource || !holder || version!=1) return 0;
-    try{return read(resource,field<int32_t>(holder),mesh_schema,false);}catch(...){return 0;}
+    return kinoko::mesh::read_resource_properties(pointer<kinoko::mesh::Resource>(resource),
+        pointer<int32_t>(holder),version);
 }
 extern "C" int32_t __fastcall kinoko_method_write_mesh_resource(int32_t resource,void *,int32_t writer) {
     if(!resource || !writer) return 0;
