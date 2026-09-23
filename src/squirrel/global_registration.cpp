@@ -7,6 +7,10 @@
 namespace {
 using namespace kinoko::script;
 using namespace kinoko::script::binding;
+inline int32_t& primary_vm_slot = g664;
+inline auto show_call_stack_entry = function_470ee0;
+inline auto register_root_table_entry = function_48a400;
+inline auto register_root_bindings_entry = function_48a430;
 template<class Function> int32_t entry(Function function) {
     return static_cast<int32_t>(reinterpret_cast<intptr_t>(function));
 }
@@ -55,10 +59,13 @@ constexpr Constant constants[] = {
 extern "C" void kinoko_register_global_methods(int32_t root_table) {
     // Store the address directly: MSVC's generic entry deduction can lose the
     // explicit throwing C-linkage function type under /EHsc.
-    int32_t target = static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_script_show_call_stack));
-    kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("ShowCallStack"), (const void *)(&target), 4, (void *)(intptr_t)(entry(function_470ee0)), 0);
-    target = static_cast<int32_t>(reinterpret_cast<intptr_t>(&kinoko_script_compile_file_argument));
-    kinoko_sqrat_bind_object_function((void *)(intptr_t)(root_table), (const char *)("CompileFile"), (const void *)(&target), 4, (void *)(intptr_t)(entry(retdec_compile_file_native)), 0);
+    int32_t target = entry(reinterpret_cast<int32_t (__cdecl *)(void)>(
+        &kinoko_script_show_call_stack));
+    kinoko_sqrat_bind_object_function(pointer<void>(root_table), "ShowCallStack", &target, 4,
+        pointer<void>(entry(show_call_stack_entry)), 0);
+    target = entry(&kinoko_script_compile_file_argument);
+    kinoko_sqrat_bind_object_function(pointer<void>(root_table), "CompileFile", &target, 4,
+        pointer<void>(entry(retdec_compile_file_native)), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
         sq_pushroottable(vm);
@@ -102,8 +109,8 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
 int32_t kinoko_register_root_bindings() {
     retdec_trace("473010:enter");
     kinoko_script_initialize_root();
-    g664 = address(current_vm());
-    const int32_t vm_address = g664;
+    primary_vm_slot = address(current_vm());
+    const int32_t vm_address = primary_vm_slot;
     RootTableStorage root{};
     root.vtable = kinoko_sqrat_object_vtable();
     root.vm = current_vm();
@@ -112,7 +119,7 @@ int32_t kinoko_register_root_bindings() {
     root.vtable = kinoko_sqrat_root_vtable();
     sq_pushroottable(current_vm());
     sq_getstackobj(current_vm(), -1, &root.value);
-    function_48a400(vm_address, address(&root.value));
+    register_root_table_entry(vm_address, address(&root.value));
     sq_pop(current_vm(), 1);
     kinoko_register_global_methods(address(&root));
 
@@ -137,7 +144,7 @@ int32_t kinoko_register_root_bindings() {
     kinoko_register_map_binding();
     kinoko_script_load_file(const_cast<char *>("data/script/class_def.nut"),
                             kinoko_script_root());
-    return function_48a430(vm_address, address(&root.value));
+    return register_root_bindings_entry(vm_address, address(&root.value));
 }
 } // namespace
 extern "C" int32_t function_473010(void) { return kinoko_register_root_bindings(); }
