@@ -25,9 +25,12 @@ using kinoko::native::RecordView;
 int32_t new_page(int32_t layout) {
     const int32_t page=kinoko_string_append_atlas(layout);
     const RecordView<AtlasRecord> atlas(pointer<void>(page));
-    for(int offset:{0,4,8}) field<int32_t>(page+offset)=0;
+    atlas.set(&AtlasRecord::cursor_x,0);
+    atlas.set(&AtlasRecord::cursor_y,0);
+    atlas.set(&AtlasRecord::row_height,0);
     atlas.set(&AtlasRecord::references,0);
-    field<int32_t>(page+12)=field<int32_t>(page+16)=512;
+    atlas.set(&AtlasRecord::width,512);
+    atlas.set(&AtlasRecord::height,512);
     kinoko_string_font_configure(page+24,layout);
     atlas.set(&AtlasRecord::texture,kinoko_string_font_texture(page+24));
     return page;
@@ -79,20 +82,26 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         kinoko_string_font_configure(page+24,layout);
         int32_t width=0,height=0;
         kinoko_string_font_upload(page+24,atlas.get(&AtlasRecord::texture),character,
-            field<int32_t>(page),field<int32_t>(page+4),&width,&height);
-        if(width>=field<int32_t>(page+12) || height>=field<int32_t>(page+16)) return 0;
-        if(field<int32_t>(page)+width>=field<int32_t>(page+12) ||
-            (!width && field<int32_t>(page+16)-field<int32_t>(page+8)-field<int32_t>(page+4)>font_height)) {
-            field<int32_t>(page+4)+=field<int32_t>(page+8);
-            field<int32_t>(page)=field<int32_t>(page+8)=0;
+            atlas.get(&AtlasRecord::cursor_x),atlas.get(&AtlasRecord::cursor_y),&width,&height);
+        if(width>=atlas.get(&AtlasRecord::width) || height>=atlas.get(&AtlasRecord::height)) return 0;
+        if(atlas.get(&AtlasRecord::cursor_x)+width>=atlas.get(&AtlasRecord::width) ||
+            (!width && atlas.get(&AtlasRecord::height)-atlas.get(&AtlasRecord::row_height)-
+                atlas.get(&AtlasRecord::cursor_y)>font_height)) {
+            atlas.set(&AtlasRecord::cursor_y,
+                atlas.get(&AtlasRecord::cursor_y)+atlas.get(&AtlasRecord::row_height));
+            atlas.set(&AtlasRecord::cursor_x,0);
+            atlas.set(&AtlasRecord::row_height,0);
             continue;
         }
-        if(field<int32_t>(page+4)+height>=field<int32_t>(page+16) || !height) {new_page(layout);continue;}
+        if(atlas.get(&AtlasRecord::cursor_y)+height>=atlas.get(&AtlasRecord::height) || !height) {
+            new_page(layout);continue;
+        }
         // 440A9B-440BF4 is absent from IDA's decompilation: width/height are
         // output parameters of 405F80, not constants. Follow the assembly.
         atlas.set(&AtlasRecord::references,atlas.get(&AtlasRecord::references)+1);
         const int32_t glyph=kinoko_string_append_glyph(layout),s=glyph+20;
-        rectangle(s,atlas.get(&AtlasRecord::texture),field<int32_t>(page),field<int32_t>(page+4),width,height);
+        rectangle(s,atlas.get(&AtlasRecord::texture),atlas.get(&AtlasRecord::cursor_x),
+            atlas.get(&AtlasRecord::cursor_y),width,height);
         std::copy_n(pointer<unsigned char>(s+128),48,pointer<unsigned char>(s+176));
         const RecordView<GlyphRecord> sprite(pointer<void>(glyph));
         sprite.set(&GlyphRecord::x,cursor);
@@ -104,8 +113,9 @@ extern "C" int32_t kinoko_string_add_character(int32_t layout,const char* charac
         atlas.set(&AtlasRecord::last_glyph_id,id);
         sprite.set(&GlyphRecord::atlas,pointer<void>(page));
         text.set(&LayoutRecord::next_glyph_id,id+1);
-        field<int32_t>(page+8)=(std::max)(field<int32_t>(page+8),height);
-        field<int32_t>(page)+=width;cursor+=width;
+        atlas.set(&AtlasRecord::row_height,(std::max)(atlas.get(&AtlasRecord::row_height),height));
+        atlas.set(&AtlasRecord::cursor_x,atlas.get(&AtlasRecord::cursor_x)+width);
+        cursor+=width;
         auto line_height=(std::max)(text.get(&LayoutRecord::line_height),height);
         if(text.get(&LayoutRecord::wrap_width)>=0 && cursor>=text.get(&LayoutRecord::wrap_width)) {
             text.set(&LayoutRecord::cursor_y,text.get(&LayoutRecord::cursor_y)+line_height);

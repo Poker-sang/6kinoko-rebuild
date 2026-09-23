@@ -37,3 +37,7 @@ Batch 7: in original 440910, cursor X/Y, line height and wrap threshold
 are text-layout members, while glyph X/Y/width/height are sprite members.
 The native character path now writes these named fields in the same order,
 including tab and newline handling; atlas packing offsets remain pending.
+Batch 8: original 440910 atlas packing maintains page X/Y, current row
+height and 512x512 limits at offsets 0/4/8/12/16. These fields are now
+part of the asserted AtlasLifecycle layout. Upload, row advance, and glyph
+rectangle use named fields with unchanged comparisons and update order.
