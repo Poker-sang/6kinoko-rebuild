@@ -6,7 +6,7 @@
 #include "kinoko/squirrel_native_calls.h"
 #include "kinoko/audio_runtime.h"
 extern "C" {
-int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
+int32_t kinoko_script_read_csv(const char* path, int32_t vtable, int32_t type, int32_t data);
 int32_t kinoko_script_dprint_noop(void);
 int32_t kinoko_actor_register_script_class(void);
 int32_t function_4669d0(void);

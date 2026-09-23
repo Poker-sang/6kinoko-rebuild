@@ -1489,7 +1489,6 @@ int32_t kinoko_script_show_call_stack(void);
 
 void* kinoko_script_root(void);
 int32_t kinoko_script_load_file(const char* path, const void* environment);
-int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data);
 
 
 
@@ -3259,11 +3258,7 @@ int32_t function_401850(void) {
 // Address range: 0x403000 - 0x40378b
 // From class:    .?AVbad_alloc@std@@
 // Type:          constructor
-int32_t function_403000(int32_t path, int32_t vtable, int32_t type, int32_t data) {
-    int32_t object[3] = { vtable, type, data };
-    return kinoko_read_csv((int32_t)(intptr_t)g644, (int32_t)(intptr_t)g767,
-        (const char *)(intptr_t)path, object, g874 != 0);
-}
+/* ReadCSV script entry: squirrel_csv.cpp. */
 
 
 // Address range: 0x403820 - 0x40382b

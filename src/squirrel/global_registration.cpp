@@ -14,7 +14,7 @@ struct NativeMethod { const char* name; int32_t target; int32_t wrapper; };
 // Original 473010 order; targets retain their existing recovered ABI adapters.
 const NativeMethod methods[] = {
     {"PostQuitMessage", entry(function_471080), entry(function_471bc0)},
-    {"ReadCSV", entry(function_403000), entry(function_471c10)},
+    {"ReadCSV", entry(kinoko_script_read_csv), entry(function_471c10)},
     {"LoadTable", entry(function_472c90), entry(function_471c10)},
     {"SaveTable", entry(function_472e50), entry(function_471c10)},
     {"SetGlobalUpdateFunction", entry(kinoko_script_set_global_update), entry(kinoko_script_global_update_entry)},
