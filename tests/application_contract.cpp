@@ -22,6 +22,7 @@ char g874 = 0;
 void retdec_trace(const char*) {}
 void kinoko_application_initialize_host() {}
 void kinoko_application_open_archives() {}
+void kinoko_application_set_archive_mode(int32_t enabled) { g874 = enabled != 0; }
 const char* kinoko_application_title() { return "fixture"; }
 const char* kinoko_application_error() { return "fixture"; }
 void kinoko_seed_random(uint32_t) {}
@@ -45,6 +46,7 @@ int32_t kinoko_input_open_controllers() { return 0; }
 int32_t kinoko_input_open_mouse() { return 0; }
 int32_t kinoko_input_poll() { return 0; }
 int32_t kinoko_ime_initialize() { return 0; }
+void kinoko_ime_release(HWND) {}
 HANDLE kinoko_frame_timer_register() { return nullptr; }
 void kinoko_frame_timer_wait(HANDLE) {}
 int32_t kinoko_frame_timer_unregister(HANDLE) { return 0; }
