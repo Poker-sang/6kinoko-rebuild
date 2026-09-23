@@ -246,6 +246,7 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/ime_input.cpp
     src/reconstructed/application_runtime.cpp
     src/reconstructed/game_runtime.cpp
+    src/reconstructed/runtime_bootstrap.cpp
     src/reconstructed/scene_operations.cpp
     src/squirrel/game_script_api.cpp
     src/squirrel/game_script_entries.cpp
