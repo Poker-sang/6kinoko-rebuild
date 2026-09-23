@@ -1,5 +1,5 @@
 {
-  "source_commit": "422ed04b4319564a9457a5368aea3ee9489a9106",
+  "source_commit": "b01365767ef5c6bc504238f9f6949a0c54bcf1e6",
   "scope": "Unique src C/C++ paths literally listed in top-level CMake; headers, macros, external source, tests and archival decompilation excluded. Lexical estimates; not linked reachability. Categories are heuristics, not evidence of semantic completeness.",
   "files": 156,
   "functions": 1933,
