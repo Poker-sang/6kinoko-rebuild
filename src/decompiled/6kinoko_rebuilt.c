@@ -62,6 +62,7 @@
 #include "kinoko/squirrel_native_arguments.h"
 #include "kinoko/squirrel_host_compat.h"
 #include "kinoko/legacy_method_entries.h"
+#include "kinoko/legacy_abi.h"
 #include "kinoko/actor_lifecycle.h"
 #include "kinoko/squirrel_legacy_api.h"
 #include "kinoko/squirrel_source_runtime.h"
@@ -1561,7 +1562,7 @@ int32_t function_41eff0(int32_t a1);
 
 
 
-int32_t function_4252e0(void);
+int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx);
 
 
 
@@ -1571,7 +1572,7 @@ int32_t function_4252e0(void);
 
 
 
-int32_t function_42b470(void);
+int32_t *kinoko_c2d_layout_type(void);
 
 int32_t function_42b6d0(int32_t a1);
 
@@ -1587,7 +1588,7 @@ int32_t function_42b6d0(int32_t a1);
 
 
 
-int32_t function_42e6f0(void);
+int32_t *kinoko_chip_resource_type(void);
 
 
 
@@ -1607,7 +1608,7 @@ int32_t function_42f350(int32_t a1);
 
 
 
-int32_t function_433720(void);
+int32_t *kinoko_map_layout_type(void);
 
 int32_t function_433c90(int32_t a1);
 
@@ -1621,7 +1622,7 @@ int32_t function_433c90(int32_t a1);
 
 
 
-int32_t function_43e100(void);
+int32_t kinoko_script_dprint_noop(void);
 
 
 
@@ -1652,7 +1653,7 @@ int32_t function_43e100(void);
 
 
 
-int32_t function_4461c0(void);
+int32_t *kinoko_texture_resource_type(void);
 
 int32_t function_446520(int32_t a1);
 
@@ -1663,12 +1664,12 @@ int32_t function_446520(int32_t a1);
 
 
 
-int32_t function_449310(void);
+int32_t *kinoko_render_target_type(void);
 
 
 int32_t function_4495a0(int32_t a1);
 
-int32_t function_44fd30(char a1);
+int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags);
 
 
 
@@ -1992,7 +1993,7 @@ char * g11; // 0x4a8b9c
    rebuilt image previously read the next global as virtual slot 1. */
  // 0x4d55b0
  // 0x4d55c8
-int32_t g23 = 0x44fd30; // 0x4d5884
+int32_t (__fastcall *g23)(int32_t, void*, char) = kinoko_color_destroy; // 0x4d5884
 int32_t g25 = 0x44fd30; // 0x4d58ac
 int32_t g28 = (int32_t)(intptr_t)&kinoko_method_actor_pool_base_delete; // 0x4d59dc
 char * g42 = "\x8f\x89\x8a\xfa\x89\xbb\x8e\xb8\x94s"; // 0x4d5e9c
@@ -2881,7 +2882,7 @@ struct vtable_4ec358_type g299 = {
     .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_layout_properties,
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_layout,
-    .e4 = function_42b470,
+    .e4 = (int32_t (*)(void))kinoko_c2d_layout_type,
     .e5 = (int32_t (*)(void))kinoko_method_clone_c2d_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_layout_set_layer,
     .e7 = (int32_t (*)(void))kinoko_method_layout_update,
@@ -2896,7 +2897,7 @@ struct vtable_4ec548_type g313 = {
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    .e5 = function_42e6f0,
+    .e5 = (int32_t (*)(void))kinoko_chip_resource_type,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_chip_resource,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f800,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_42f6c0,
@@ -2911,7 +2912,7 @@ struct vtable_4ec79c_type g327 = {
     .e1 = (int32_t (*)(int32_t, int32_t))kinoko_method_read_map_layout,
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_layout,
-    .e4 = function_433720,
+    .e4 = (int32_t (*)(void))kinoko_map_layout_type,
     .e5 = kinoko_clone_map_layout,
     .e6 = (int32_t (*)(int32_t))kinoko_method_map_set_layer,
     .e7 = kinoko_map_update_all_entry,
@@ -2943,7 +2944,7 @@ struct vtable_4eccfc_type g365 = {
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    .e5 = function_4461c0,
+    .e5 = (int32_t (*)(void))kinoko_texture_resource_type,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_texture_resource,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_446920,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4467e0,
@@ -2963,7 +2964,7 @@ struct vtable_4ece50_type g379 = {
     .e2 = (int32_t (*)(int32_t, int32_t))kinoko_method_query_serializable,
     .e3 = (int32_t (*)(void))kinoko_method_destroy_serializable,
     .e4 = (int32_t (*)(unsigned char))kinoko_method_delete_act_resource,
-    .e5 = function_449310,
+    .e5 = (int32_t (*)(void))kinoko_render_target_type,
     .e6 = (int32_t (*)(int32_t))kinoko_method_register_render_target,
     .e7 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_4499a0,
     .e8 = (int32_t (*)(int32_t, int32_t))kinoko_method_resource_449860,
@@ -2979,7 +2980,7 @@ struct vtable_4ece50_type g379 = {
 
  // 0x4ed174
 struct vtable_4ed2cc_type g407 = {
-    .e0 = function_44fd30,
+    .e0 = (int32_t (*)(char))kinoko_color_destroy,
     .e1 = kinoko_quad_set_color,
     .e2 = kinoko_quad_set_vertex_colors,
     .e3 = kinoko_quad_modulate_color,
@@ -4133,8 +4134,11 @@ int32_t retdec_load_act_texture(const char *texture_name)
 
 
 // 415FD0's recovered explicit arguments are script and Sqrat environment.
+static int32_t kinoko_register_act_script_objects(void* script, void* environment) {
+    return retdec_register_act_script((int32_t)(intptr_t)script, (int32_t)(intptr_t)environment);
+}
 int32_t function_415fd0(int32_t script, int32_t environment) {
-    return retdec_register_act_script(script, environment);
+    return kinoko_register_act_script_objects((void *)(intptr_t)script, (void *)(intptr_t)environment);
 }
 
 // Address range: 0x416440 - 0x41650a
@@ -4270,8 +4274,11 @@ int32_t function_415fd0(int32_t script, int32_t environment) {
 
 
 // 41E390 uses ECX for storage; existing reconstructed callers already pass it.
+static int32_t kinoko_construct_layer_global_vm(void* storage) {
+    return retdec_construct_cact_layer((int32_t)(intptr_t)storage, g664);
+}
 int32_t function_41e390(int32_t storage) {
-    return retdec_construct_cact_layer(storage, g664);
+    return kinoko_construct_layer_global_vm((void *)(intptr_t)storage);
 }
 
 // Address range: 0x41ea50 - 0x41eca0
@@ -4425,11 +4432,13 @@ int32_t function_41e390(int32_t storage) {
 
 
 // Address range: 0x4252e0 - 0x4252e5
-int32_t function_4252e0(void) {
-    // 0x4252e0
-    int32_t result; // 0x4252e0
-    return result;
+// IDA 4252E0: __thiscall forwards to virtual slot +24.
+int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx) {
+    int32_t *methods = *(int32_t **)(intptr_t)receiver;
+    return retdec_call_thiscall0_result((void *)(intptr_t)receiver,
+        (void *)(intptr_t)methods[6]);
 }
+
 
 // Address range: 0x4252f0 - 0x4252f8
 
@@ -4697,8 +4706,7 @@ int32_t function_4252e0(void) {
 // Address range: 0x42b470 - 0x42b476
 // From class:    .?AVC2DLayout@@
 // Type:          virtual member function
-int32_t function_42b470(void) {
-    // 0x42b470
+int32_t *kinoko_c2d_layout_type(void) {
     return &g910;
 }
 
@@ -4834,8 +4842,7 @@ int32_t function_42b470(void) {
 // Address range: 0x42e6f0 - 0x42e6f6
 // From class:    .?AVCActResourceChip@@
 // Type:          virtual member function
-int32_t function_42e6f0(void) {
-    // 0x42e6f0
+int32_t *kinoko_chip_resource_type(void) {
     return &g914;
 }
 
@@ -5063,8 +5070,7 @@ int32_t function_42e6f0(void) {
 // Address range: 0x433720 - 0x433726
 // From class:    .?AVC2DMapLayout@@
 // Type:          virtual member function
-int32_t function_433720(void) {
-    // 0x433720
+int32_t *kinoko_map_layout_type(void) {
     return &g918;
 }
 
@@ -5549,11 +5555,8 @@ int32_t function_433720(void) {
 // Address range: 0x43e100 - 0x43e101
 // From class:    .?AVSceneManager@@
 // Type:          virtual member function
-int32_t function_43e100(void) {
-    // 0x43e100
-    int32_t result; // 0x43e100
-    return result;
-}
+int32_t kinoko_script_dprint_noop(void) { return 0; }
+
 
 // Address range: 0x43e730 - 0x43e7a9
 
@@ -5642,8 +5645,7 @@ int32_t function_43e100(void) {
 // Address range: 0x4461c0 - 0x4461c6
 // From class:    .?AVCActResource2D@@
 // Type:          virtual member function
-int32_t function_4461c0(void) {
-    // 0x4461c0
+int32_t *kinoko_texture_resource_type(void) {
     return &g930;
 }
 
@@ -5767,8 +5769,7 @@ int32_t function_4461c0(void) {
 // Address range: 0x449310 - 0x449316
 // From class:    .?AVCActRenderTarget@@
 // Type:          virtual member function
-int32_t function_449310(void) {
-    // 0x449310
+int32_t *kinoko_render_target_type(void) {
     return &g934;
 }
 
@@ -5912,16 +5913,11 @@ int32_t function_449310(void) {
 // Address range: 0x44fd30 - 0x44fd52
 // From class:    .?AVCSprite@@
 // Type:          virtual member function
-int32_t function_44fd30(char a1) {
-    // 0x44fd30
-    int32_t result; // 0x44fd30
-    *(int32_t *)result = (int32_t)&g23;
-    if ((a1 & 1) != 0) {
-        // 0x44fd42
-        _3f__3f_3_40_YAXPAX_40_Z(&g1224);
-    }
-    // 0x44fd4b
-    return result;
+// IDA 44FD30: IColor virtual destructor restores vtable, then deletes this.
+int32_t __fastcall kinoko_color_destroy(int32_t receiver, void* unused_edx, char flags) {
+    *(int32_t *)(intptr_t)receiver = (int32_t)(intptr_t)&g23;
+    if (flags & 1) _3f__3f_3_40_YAXPAX_40_Z((int32_t *)(intptr_t)receiver);
+    return receiver;
 }
 
 
@@ -6887,7 +6883,7 @@ int32_t function_465f70(void) {
 
 // Address range: 0x466270 - 0x466311
 int32_t function_466270(void) {
-    return function_466270_this((int32_t)(intptr_t)g_retdec_camera_state);
+    return kinoko_camera_initialize((KinokoCamera *)g_retdec_camera_state);
 }
 
 /* Camera global initialization with the original ECX receiver restored. */
@@ -6909,7 +6905,8 @@ int32_t function_4664a0_this(int32_t result, int32_t a1) {
 // Address range: 0x466540 - 0x466551
 int32_t function_466540(int32_t a1, int32_t a2) {
     // 0x466540
-    return function_4664a0_this(a1, a2);
+    return (int32_t)(intptr_t)kinoko_camera_copy(
+        (KinokoCamera *)(intptr_t)a1, (KinokoCamera *)(intptr_t)a2);
 }
 
 
@@ -7039,15 +7036,18 @@ int32_t function_4693a0(int32_t layout) {
 
 
 // Address range: 0x46a210 - 0x46a254
-int32_t function_46a210(int32_t * a1) {
+static int32_t kinoko_append_render_item(int32_t *item) {
     static volatile LONG trace_count;
     LONG trace_index = InterlockedIncrement(&trace_count);
     if (trace_index <= 16) {
         retdec_trace("46a210:entry");
-        retdec_trace_i32("46a210:value", a1 != NULL ? *a1 : 0);
+        retdec_trace_i32("46a210:value", item != NULL ? *item : 0);
         retdec_trace_i32("46a210:g613", kinoko_render_queue_identity());
     }
-    return a1 ? kinoko_append_render_queue(*a1) : 0;
+    return item ? kinoko_append_render_queue(*item) : 0;
+}
+int32_t function_46a210(int32_t * a1) {
+    return kinoko_append_render_item(a1);
 }
 
 /* Actor pool/owner-list implementations are in their named C++ modules.
@@ -7300,22 +7300,28 @@ static int32_t kinoko_install_root_integer_delegate(int32_t a1) {
 
 
 // Address range: 0x470f60 - 0x470f78
+static int32_t kinoko_script_show_message(const char* text) {
+    return MessageBoxA((HWND)g767, text, "Message", 0);
+}
 int32_t function_470f60(int32_t a1) {
-    // 0x470f60
-    return MessageBoxA((int32_t *)g767, (char *)a1, "Message", 0);
+    return kinoko_script_show_message((const char *)(intptr_t)a1);
 }
 
 // Address range: 0x470f80 - 0x470f8f
+static int32_t kinoko_script_sleep(DWORD milliseconds) {
+    Sleep(milliseconds);
+    return (int32_t)(intptr_t)&g1224;
+}
 int32_t function_470f80(int32_t dwMilliseconds) {
-    // 0x470f80
-    Sleep(dwMilliseconds);
-    return &g1224;
+    return kinoko_script_sleep((DWORD)dwMilliseconds);
 }
 
 // Address range: 0x470f90 - 0x470f96
+static int32_t kinoko_script_milliseconds(void) {
+    return (int32_t)timeGetTime();
+}
 int32_t function_470f90(void) {
-    // 0x470f90
-    return timeGetTime();
+    return kinoko_script_milliseconds();
 }
 
 
@@ -7325,9 +7331,11 @@ int32_t function_470f90(void) {
 
 
 // Address range: 0x471080 - 0x471093
+static int32_t kinoko_script_close_window(void) {
+    return (int32_t)SendMessageA((HWND)g767, WM_CLOSE, 0, 0);
+}
 int32_t function_471080(void) {
-    // 0x471080
-    return SendMessageA((int32_t *)g767, 16, 0, 0);
+    return kinoko_script_close_window();
 }
 
 
@@ -8625,12 +8633,15 @@ void retdec_trace_ref_watch(const char *label, int32_t shared_state,
 
 
 // Address range: 0x48a170 - 0x48a225
-int32_t function_48a170(int32_t a1) {
+static int32_t kinoko_open_primary_script_vm(int32_t stack_size) {
     kinoko_sq_set_context_exchange(retdec_exchange_source_receiver);
-    int32_t vm = kinoko_sq_open(a1);
+    int32_t vm = kinoko_sq_open(stack_size);
     retdec_active_vm = vm;
     retdec_primary_shared_state = kinoko_sq_shared_state(vm);
     return vm;
+}
+int32_t function_48a170(int32_t a1) {
+    return kinoko_open_primary_script_vm(a1);
 }
 
 // Address range: 0x48a230 - 0x48a2ca

@@ -429,7 +429,7 @@ int32_t retdec_publish_cact_layer_class(int32_t vm, int32_t root_object)
     int32_t class_wrapper[5] = { address(kinoko_act_host_symbols()->sq_object_vtable), 0,
                                  g483, g484, 1 };
     int32_t method_source[2] = {
-        address(function_4252e0), 0
+        address(kinoko_act_layer_associate_method), 0
     };
     int32_t existing_result;
     int32_t base;

@@ -34,7 +34,7 @@ const NativeMethod methods[] = {
     {"LoadSE", entry(kinoko_audio_load_sound_table), entry(function_471f10)},
     {"ReleaseMap", entry(kinoko_script_release_map), entry(function_471bc0)},
     {"MessageBox", entry(function_470f60), entry(function_471f10)},
-    {"dprint", entry(function_43e100), entry(function_471f10)},
+    {"dprint", entry(kinoko_script_dprint_noop), entry(function_471f10)},
     {"Sleep", entry(function_470f80), entry(function_471fd0)},
     {"timeGetTime", entry(function_470f90), entry(function_472030)},
     {"PlaySE", entry(kinoko_audio_play_sound), entry(function_471fd0)},

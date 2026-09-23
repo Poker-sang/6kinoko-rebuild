@@ -66,7 +66,7 @@ extern int32_t retdec_release_watch_data[8];
 extern int32_t retdec_release_watch_count;
 
 int32_t _3f__3f_2_40_YAPAXI_40_Z(int32_t size);
-int32_t function_4252e0(void);
+int32_t __fastcall kinoko_act_layer_associate_method(int32_t receiver, void* unused_edx);
 int32_t kinoko_sqrat_call_integer0(int32_t a1);
 int32_t kinoko_sqrat_call_integer1(int32_t a1);
 int32_t retdec_is_release_watch_data(int32_t data);
