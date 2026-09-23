@@ -88,7 +88,7 @@ void bind_root_mask(ObjectStorage &object, int32_t *storage, const char *name,
                     const char *type_label, const char *data_label,
                     const char *present_label) {
     kinoko_sqplus_object_copy_construct(&object, kinoko_sqplus_root_object());
-    const auto result = function_4721a0(reinterpret_cast<int32_t *>(&object),
+    const auto result = kinoko_script_bind_root_value(reinterpret_cast<int32_t *>(&object),
         storage, const_cast<char *>(name), 0);
     const auto value = ObjectView(&object).value();
     retdec_trace_i32(result_label, result);
@@ -126,7 +126,7 @@ int32_t kinoko_register_root_bindings() {
         "473010:render-present");
     for (const auto &constant : constants) {
         kinoko_sqplus_object_copy_construct(&object, kinoko_sqplus_root_object());
-        function_472240(reinterpret_cast<int32_t *>(&object),
+        kinoko_script_bind_root_integer(reinterpret_cast<int32_t *>(&object),
                         constant.value, const_cast<char *>(constant.name));
         kinoko_sqplus_object_destroy(&object);
     }

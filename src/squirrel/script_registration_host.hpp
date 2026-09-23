@@ -25,8 +25,8 @@ int32_t function_471fd0(int32_t a1);
 int32_t function_472080(int32_t a1);
 int32_t function_4720e0(int32_t a1);
 int32_t function_472140(int32_t a1);
-int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
-int32_t function_472240(int32_t * a1, int32_t a2, char * a3);
+int32_t kinoko_script_bind_root_value(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
+int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
 int32_t function_472c90(int32_t path_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
 int32_t function_472e50(int32_t path_ptr, int32_t object_vtable,

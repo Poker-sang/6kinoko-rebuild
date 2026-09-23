@@ -1893,8 +1893,8 @@ int32_t function_471fd0(int32_t a1);
 int32_t function_472080(int32_t a1);
 int32_t function_4720e0(int32_t a1);
 int32_t function_472140(int32_t a1);
-int32_t function_4721a0(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
-int32_t function_472240(int32_t * a1, int32_t a2, char * a3);
+int32_t kinoko_script_bind_root_value(int32_t * a1, int32_t * a2, char * a3, int32_t a4);
+int32_t kinoko_script_bind_root_integer(int32_t * a1, int32_t a2, char * a3);
 int32_t function_4722e0(int32_t *stream_ptr, int32_t object_vtable,
                         int32_t object_type, int32_t object_data);
 
@@ -7236,12 +7236,12 @@ static int32_t kinoko_bind_root_integer(int32_t *object, int32_t value,
     return kinoko_install_root_integer_delegate((int32_t)(intptr_t)object);
 }
 
-int32_t function_4721a0(int32_t *object, int32_t *value, char *name, int32_t flags) {
+int32_t kinoko_script_bind_root_value(int32_t *object, int32_t *value, char *name, int32_t flags) {
     return kinoko_bind_root_integer(object, (int32_t)(intptr_t)value, name, flags);
 }
 
 // Address range: 0x472240 - 0x4722d9
-int32_t function_472240(int32_t *object, int32_t value, char *name) {
+int32_t kinoko_script_bind_root_integer(int32_t *object, int32_t value, char *name) {
     return kinoko_bind_root_integer(object, value, name, 2);
 }
 
