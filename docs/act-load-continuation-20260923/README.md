@@ -42,3 +42,8 @@ records and the active archive reader. The document parser now calls typed
 record/reader APIs; existing integer ABI functions remain adapters for
 legacy callers. Key presence/type checks, layer key/timeline loops and
 schema ordering are unchanged.
+Batch 31: the map-layout and root ACT document property readers borrow
+the existing record plus active archive reader. Both native call sites now
+pass actual pointers, while old integer ABI entries delegate to them.
+Map record parsing, parent association before resource count, and the
+separate post-parse resource pass retain their prior order.

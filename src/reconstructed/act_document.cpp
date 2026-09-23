@@ -190,7 +190,8 @@ int32_t retdec_act_make_map_layout(int32_t reader_ptr)
     field<float>(layout + 324) = 1.0f;
     field<int32_t>(layout + 328) = 1;
     field<int32_t>(layout + 452) = -1;
-    if (!kinoko_act_read_map_properties(layout, reader_ptr)) {
+    if (!kinoko_act_read_map_properties_typed(pointer<KinokoActLayout>(layout),
+            pointer<KinokoArchiveReader>(reader_ptr))) {
         std::free(pointer<void>(layout));
         return 0;
     }
@@ -794,7 +795,8 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
         return 0;
-    if (!kinoko_act_read_properties(this_ptr, reader_ptr)) {
+    if (!kinoko_act_read_document_properties_typed(pointer<KinokoActDocument>(this_ptr),
+            pointer<KinokoArchiveReader>(reader_ptr))) {
         retdec_trace("act:cact-properties-failed");
         return 0;
     }

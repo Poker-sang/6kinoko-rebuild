@@ -562,10 +562,15 @@ extern "C" int32_t kinoko_act_read_key_properties(int32_t key,int32_t reader) {
     return kinoko_act_read_key_properties_typed(pointer<KinokoActKey>(key),
         pointer<KinokoArchiveReader>(reader));
 }
-extern "C" int32_t kinoko_act_read_map_properties(int32_t layout,int32_t reader) {
+extern "C" int32_t kinoko_act_read_map_properties_typed(KinokoActLayout *layout,
+                                                           KinokoArchiveReader *reader) {
     if (!layout || !reader) return 0;
-    try { return read(layout,reader,map_schema,false); }
+    try { return read(address(layout),address(reader),map_schema,false); }
     catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_read_map_properties(int32_t layout,int32_t reader) {
+    return kinoko_act_read_map_properties_typed(pointer<KinokoActLayout>(layout),
+        pointer<KinokoArchiveReader>(reader));
 }
 extern "C" int32_t __fastcall kinoko_method_read_act_layer(int32_t layer,void*,int32_t holder,int32_t version) {
     return layer && holder && version==1 ? retdec_act_load_layer(layer,field<int32_t>(holder),version) : 0;
@@ -615,10 +620,15 @@ extern "C" int32_t __fastcall kinoko_method_read_string_layout(int32_t layout,vo
         pointer<int32_t>(holder),version);
 }
 
-extern "C" int32_t kinoko_act_read_properties(int32_t act,int32_t reader) {
-    if (!act || !reader) return 0;
-    try { return read(act,reader,act_schema,false); }
+extern "C" int32_t kinoko_act_read_document_properties_typed(KinokoActDocument *document,
+                                                                KinokoArchiveReader *reader) {
+    if (!document || !reader) return 0;
+    try { return read(address(document),address(reader),act_schema,false); }
     catch (...) { return 0; }
+}
+extern "C" int32_t kinoko_act_read_properties(int32_t act,int32_t reader) {
+    return kinoko_act_read_document_properties_typed(pointer<KinokoActDocument>(act),
+        pointer<KinokoArchiveReader>(reader));
 }
 extern "C" int32_t __fastcall kinoko_method_read_act(int32_t act,void*,int32_t holder,int32_t version) {
     return act && holder && version==1 ? retdec_act_load(act,field<int32_t>(holder),version) : 0;
