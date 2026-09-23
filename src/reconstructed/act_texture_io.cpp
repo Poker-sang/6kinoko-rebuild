@@ -116,9 +116,6 @@ uint32_t record_count(int32_t layout) {
         throw std::bad_alloc();
     return (end-begin)/32;
 }
-void replace_buffer(int32_t slot, const void* bytes, size_t size) {
-    kinoko_native_buffer_replace(slot,bytes,static_cast<uint32_t>(size));
-}
 struct StreamMethods { void *destroy, *slot1, *slot2, *transfer, *slot4, *seek; };
 struct Stream { StreamMethods *methods; };
 static_assert(offsetof(StreamMethods, transfer) == 12 && offsetof(StreamMethods, seek) == 20);
@@ -327,7 +324,8 @@ extern "C" int32_t __fastcall kinoko_method_read_map_layout(
             record[7] = 0x3f800000;
             records.push_back(record);
         }
-        if (count) replace_buffer(layout+264, records.data(), records.size()*32);
+        if (count) kinoko_native_buffer_replace(layout+264, records.data(),
+            static_cast<uint32_t>(records.size()*32));
         return 1;
     } catch (...) { return 0; }
 }
@@ -386,8 +384,10 @@ extern "C" int32_t __fastcall kinoko_method_map_set_layer(
             chip_refs.push_back(chip ? address(chip->bytes) : 0);
             texture_refs.push_back(address(texture));
         }
-        replace_buffer(layout+280, chip_refs.data(), chip_refs.size()*4);
-        replace_buffer(layout+296, texture_refs.data(), texture_refs.size()*4);
+        kinoko_native_buffer_replace(layout+280, chip_refs.data(),
+            static_cast<uint32_t>(chip_refs.size()*4));
+        kinoko_native_buffer_replace(layout+296, texture_refs.data(),
+            static_cast<uint32_t>(texture_refs.size()*4));
         return 0;
     } catch (...) { return fail; }
 }
@@ -418,7 +418,8 @@ int32_t __fastcall read_timeline(int32_t timeline,void*,int32_t holder,int32_t v
         }
         // 425420 appends; preserve existing records on a repeated read. Unlike
         // the original partial append, a truncated batch leaves the vector intact.
-        if (count) replace_buffer(timeline+12,pairs.data(),pairs.size()*sizeof(TimelinePair));
+        if (count) kinoko_native_buffer_replace(timeline+12, pairs.data(),
+            static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
         return 1;
     } catch (...) { return 0; }
 }
@@ -468,7 +469,8 @@ int32_t __fastcall clone_timeline(int32_t timeline,void*) {
         const auto result=address(owner.get());
         field<int32_t>(result+4)=field<int32_t>(timeline+4);
         field<int32_t>(result+8)=field<int32_t>(timeline+8);
-        replace_buffer(result+12,pairs.data(),pairs.size()*sizeof(TimelinePair));
+        kinoko_native_buffer_replace(result+12, pairs.data(),
+            static_cast<uint32_t>(pairs.size()*sizeof(TimelinePair)));
         return address(owner.release());
     } catch (...) { return 0; }
 }

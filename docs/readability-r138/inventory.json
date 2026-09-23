@@ -1,17 +1,17 @@
 {
-  "source_commit": "a99ddfe926b958d1f1c2a5c71cfe6775071a802e",
+  "source_commit": "422ed04b4319564a9457a5368aea3ee9489a9106",
   "scope": "Unique src C/C++ paths literally listed in top-level CMake; headers, macros, external source, tests and archival decompilation excluded. Lexical estimates; not linked reachability. Categories are heuristics, not evidence of semantic completeness.",
   "files": 156,
-  "functions": 1934,
+  "functions": 1933,
   "counts": {
     "named_structured_candidate": 1601,
-    "thin_bridge": 108,
+    "thin_bridge": 107,
     "abi_alias": 224,
     "address_named_legacy": 1
   },
   "function_body_lines": {
-    "named_structured_candidate": 18106,
-    "thin_bridge": 491,
+    "named_structured_candidate": 18111,
+    "thin_bridge": 488,
     "abi_alias": 679,
     "address_named_legacy": 1
   },
@@ -2573,191 +2573,184 @@
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
-      "name": "replace_buffer",
-      "line": 119,
-      "lines": 3,
-      "category": "thin_bridge"
-    },
-    {
-      "file": "src/reconstructed/act_texture_io.cpp",
       "name": "transfer",
-      "line": 125,
+      "line": 122,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "transfer",
-      "line": 129,
+      "line": 126,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "read_string",
-      "line": 132,
+      "line": 129,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "write_string",
-      "line": 138,
+      "line": 135,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "read",
-      "line": 141,
+      "line": 138,
       "lines": 42,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "write",
-      "line": 183,
+      "line": 180,
       "lines": 23,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_texture_properties",
-      "line": 208,
+      "line": 205,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_texture_resource",
-      "line": 214,
+      "line": 211,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_texture_resource",
-      "line": 218,
+      "line": 215,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_render_target_properties",
-      "line": 225,
+      "line": 222,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_render_target",
-      "line": 231,
+      "line": 228,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_render_target",
-      "line": 235,
+      "line": 232,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_chip_properties",
-      "line": 242,
+      "line": 239,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_chip_resource",
-      "line": 248,
+      "line": 245,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_chip_resource",
-      "line": 252,
+      "line": 249,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_layout2d_properties",
-      "line": 259,
+      "line": 256,
       "lines": 11,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_layout_properties",
-      "line": 270,
+      "line": 267,
       "lines": 5,
       "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_layout_properties",
-      "line": 275,
+      "line": 272,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_layout3d_properties",
-      "line": 282,
+      "line": 279,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_layout_3d",
-      "line": 289,
+      "line": 286,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "read_resource_properties",
-      "line": 294,
+      "line": 291,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_mesh_resource",
-      "line": 299,
+      "line": 296,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_mesh_resource",
-      "line": 303,
+      "line": 300,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_map_layout",
-      "line": 308,
-      "lines": 26,
+      "line": 305,
+      "lines": 27,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_map_layout",
-      "line": 334,
+      "line": 332,
       "lines": 15,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_map_set_layer",
-      "line": 350,
-      "lines": 44,
+      "line": 348,
+      "lines": 46,
       "category": "named_structured_candidate"
     },
     {
@@ -2771,244 +2764,244 @@
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "read_timeline",
       "line": 405,
-      "lines": 20,
+      "lines": 21,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "write_timeline",
-      "line": 425,
+      "line": 426,
       "lines": 12,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "query_timeline",
-      "line": 437,
+      "line": 438,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "clear_timeline",
-      "line": 443,
+      "line": 444,
       "lines": 4,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "delete_timeline",
-      "line": 447,
+      "line": 448,
       "lines": 12,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "destroy_timeline",
-      "line": 459,
+      "line": 460,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "clone_timeline",
-      "line": 462,
-      "lines": 13,
+      "line": 463,
+      "lines": 14,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_timeline_vtable",
-      "line": 481,
+      "line": 483,
       "lines": 1,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_new_timeline",
-      "line": 482,
+      "line": 484,
       "lines": 5,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_load_timeline",
-      "line": 487,
+      "line": 489,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "type_hash",
-      "line": 493,
+      "line": 495,
       "lines": 3,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "type_hash",
-      "line": 496,
+      "line": 498,
       "lines": 1,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "TypeName",
-      "line": 499,
+      "line": 501,
       "lines": 1,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "~TypeName",
-      "line": 500,
+      "line": 502,
       "lines": 4,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "object_hash",
-      "line": 505,
+      "line": 507,
       "lines": 16,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "write_layer_list",
-      "line": 521,
+      "line": 523,
       "lines": 17,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_act_layer",
-      "line": 539,
+      "line": 541,
       "lines": 11,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_layer_properties_typed",
-      "line": 550,
+      "line": 552,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_layer_properties",
-      "line": 556,
+      "line": 558,
       "lines": 4,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_key_properties_typed",
-      "line": 560,
+      "line": 562,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_key_properties",
-      "line": 566,
+      "line": 568,
       "lines": 4,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_map_properties_typed",
-      "line": 570,
+      "line": 572,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_map_properties",
-      "line": 576,
+      "line": 578,
       "lines": 4,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_act_layer",
-      "line": 580,
+      "line": 582,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_act_key",
-      "line": 583,
+      "line": 585,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_act_key",
-      "line": 586,
+      "line": 588,
       "lines": 14,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_string_layout",
-      "line": 600,
+      "line": 602,
       "lines": 5,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_string_read_properties",
-      "line": 605,
+      "line": 607,
       "lines": 18,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_string_layout",
-      "line": 623,
+      "line": 625,
       "lines": 4,
       "category": "abi_alias"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_document_properties_typed",
-      "line": 628,
+      "line": 630,
       "lines": 6,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_act_read_properties",
-      "line": 634,
+      "line": 636,
       "lines": 4,
       "category": "thin_bridge"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_read_act",
-      "line": 638,
+      "line": 640,
       "lines": 3,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "object_vector",
-      "line": 642,
+      "line": 644,
       "lines": 7,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "kinoko_method_write_act",
-      "line": 650,
+      "line": 652,
       "lines": 32,
       "category": "named_structured_candidate"
     },
     {
       "file": "src/reconstructed/act_texture_io.cpp",
       "name": "retdec_load_act_texture",
-      "line": 686,
+      "line": 688,
       "lines": 16,
       "category": "named_structured_candidate"
     },
