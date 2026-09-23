@@ -108,3 +108,8 @@ Batch 22: the first 512x512 atlas texture lock publishes the renderer's
 output/destination pointers and bounds/stride before the initial empty
 rasterization. These fields now use the same asserted runtime schema as
 the glyph path; texture ownership and unlock order are unchanged.
+Batch 23: character upload locks a texture region and publishes temporary
+pixel buffer pointers plus remaining width/height and pitch. Typed renderer
+fields now serve this second producer of the rasterizer state, matching
+batch 22's initial-texture producer. Copy sizes, unlock and exception
+handling remain unchanged.

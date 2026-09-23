@@ -244,9 +244,12 @@ extern "C" void kinoko_string_font_upload(int32_t r,int32_t handle,const char* c
     if(FAILED(texture->LockRect(0,&rect,&region,0))) return;
     try {
         std::vector<unsigned char> pixels(size_t(description.Height-y)*rect.Pitch);
-        field<void*>(r+320)=field<void*>(r+324)=pixels.data();
-        field<int32_t>(r+328)=description.Height-y;field<int32_t>(r+332)=description.Width-x;
-        field<int32_t>(r+336)=rect.Pitch/4;
+        const kinoko::native::RecordView<Renderer> record(pointer<void>(r));
+        record.set(&Renderer::output,static_cast<void*>(pixels.data()));
+        record.set(&Renderer::destination,static_cast<void*>(pixels.data()));
+        record.set(&Renderer::bound_height,static_cast<int32_t>(description.Height-y));
+        record.set(&Renderer::bound_width,static_cast<int32_t>(description.Width-x));
+        record.set(&Renderer::stride,static_cast<int32_t>(rect.Pitch/4));
         kinoko_string_font_rasterize(r,character,width,height);
         const uint32_t bytes_per_pixel=rect.Pitch/description.Width;
         for(int32_t row=0;row<*height;++row)
