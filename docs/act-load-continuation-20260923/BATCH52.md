@@ -1,4 +1,4 @@
-﻿# Batch 52 - savedata-table-chain-quiet
+# Batch 52 - Squirrel savedata table chain (savedata-table-chain-quiet)
 
 Source committed before build: 4b12cc5fdbb972fddc0e658fe146d7b8215d90a1.
 Build: build-runs/savedata-table-chain-quiet.
