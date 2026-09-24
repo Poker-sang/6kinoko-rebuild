@@ -239,6 +239,8 @@ add_library(kinoko_squirrel_cpp_vm STATIC
     src/reconstructed/act_layer_access.cpp
     src/reconstructed/act_runtime_lifecycle.cpp
     src/reconstructed/act_lifetime.cpp
+    src/reconstructed/act_layer_lifecycle.cpp
+    src/reconstructed/act_script_lifecycle.cpp
     src/reconstructed/act_serializable.cpp
     src/reconstructed/actor_owner_list.cpp
     src/reconstructed/actor_pool.cpp
@@ -933,3 +935,13 @@ set_source_files_properties(src/reconstructed/map_manager.cpp PROPERTIES COMPILE
 
 # Angle lookup must honor the caller rounding mode and original float stores.
 set_source_files_properties(src/reconstructed/angle_math.cpp PROPERTIES COMPILE_OPTIONS "/fp:strict")
+
+# Migration contracts are compiled with every Win32 build. Execution remains
+# opt-in, separate from the existing CI asset-free test selection (AGENTS.md).
+add_executable(kinoko_act_layer_storage_contract tests/act_layer_storage_contract.cpp)
+target_include_directories(kinoko_act_layer_storage_contract PRIVATE include)
+target_compile_options(kinoko_act_layer_storage_contract PRIVATE /O2)
+option(KINOKO_REGISTER_MIGRATION_TESTS "Register opt-in migration contracts" OFF)
+if(KINOKO_REGISTER_MIGRATION_TESTS)
+    add_test(NAME act_layer_storage_contract COMMAND kinoko_act_layer_storage_contract)
+endif()

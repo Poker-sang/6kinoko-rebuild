@@ -11,7 +11,6 @@
 extern "C" { extern int32_t g29, g28; }
 namespace {
 inline auto actor_pool_vtable = &g28;
-using kinoko::legacy::field;
 using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 struct Pool {
@@ -29,11 +28,11 @@ struct PoolHost {
 };
 static_assert(sizeof(PoolHost)==80 && offsetof(PoolHost,lock)==52);
 using PoolView=kinoko::native::RecordView<PoolHost>;
-PoolView host(int32_t manager) { return PoolView(pointer<void>(manager)); }
-Pool& pool(int32_t manager) { return *host(manager).get(&PoolHost::state); }
+PoolView host(KinokoActorPool* manager) { return PoolView(manager); }
+Pool& pool(KinokoActorPool* manager) { return *host(manager).get(&PoolHost::state); }
 struct Lock {
     CRITICAL_SECTION* section;
-    explicit Lock(int32_t manager) : section(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock))) {
+    explicit Lock(KinokoActorPool* manager) : section(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock))) {
         EnterCriticalSection(section);
     }
     ~Lock() { LeaveCriticalSection(section); }
@@ -46,8 +45,8 @@ void destroy_actor(KinokoActor *actor, unsigned char flags) {
 }
 
 extern "C" KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *receiver) {
-    const auto manager=address(receiver);
-    if (!manager) return 0;
+    if (!receiver) return nullptr;
+    auto* manager = receiver;
     auto state = std::make_unique<Pool>();
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock)));
     host(manager).set(&PoolHost::methods,static_cast<const void *>(&g29));
@@ -59,7 +58,7 @@ extern "C" KinokoActorPool *kinoko_actor_pool_construct(KinokoActorPool *receive
 // reuse the most recently retired slot, updating its generation before reset.
 extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uint32_t *output) {
     if (!receiver || !output) return nullptr;
-    const auto manager=address(receiver);
+    auto* manager = receiver;
     Lock lock(manager);
     auto& state = pool(manager);
     const bool fresh = state.free_slots.empty();
@@ -83,9 +82,11 @@ extern "C" KinokoActor *kinoko_actor_pool_acquire(KinokoActorPool *receiver, uin
 }
 
 
+// Integer slots survive only at the original virtual/fastcall entry points.
 extern "C" int32_t __fastcall kinoko_method_lookup_actor(int32_t manager, void*, uint32_t handle) {
-    Lock lock(manager);
-    auto& state = pool(manager);
+    auto* receiver = pointer<KinokoActorPool>(manager);
+    Lock lock(receiver);
+    auto& state = pool(receiver);
     const uint32_t slot = handle & 0xffffu;
     if (slot >= state.generations.size() || state.generations[slot] != (handle >> 16)) return 0;
     return address(state.actors.at(slot));
@@ -93,7 +94,7 @@ extern "C" int32_t __fastcall kinoko_method_lookup_actor(int32_t manager, void*,
 
 extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t handle) {
     if (!receiver) return 0;
-    const auto manager=address(receiver);
+    auto* manager = receiver;
     Lock lock(manager);
     auto& state = pool(manager);
     const uint32_t slot = handle & 0xffffu;
@@ -109,22 +110,24 @@ extern "C" int32_t kinoko_actor_pool_retire(KinokoActorPool *receiver, uint32_t 
 
 
 extern "C" int32_t __fastcall kinoko_method_actor_pool_count(int32_t manager, void*) {
-    return static_cast<int32_t>(pool(manager).actors.size());
+    return static_cast<int32_t>(pool(pointer<KinokoActorPool>(manager)).actors.size());
 }
 extern "C" int32_t __fastcall kinoko_method_actor_pool_base_delete(int32_t manager, void*, unsigned char flags) {
-    host(manager).set(&PoolHost::methods,static_cast<const void *>(actor_pool_vtable));
-    if (flags & 1) std::free(pointer<void>(manager));
+    auto* receiver = pointer<KinokoActorPool>(manager);
+    host(receiver).set(&PoolHost::methods,static_cast<const void *>(actor_pool_vtable));
+    if (flags & 1) std::free(receiver);
     return manager;
 }
 extern "C" int32_t __fastcall kinoko_method_actor_pool_delete(int32_t manager, void*, unsigned char flags) {
-    auto* state = host(manager).get(&PoolHost::state);
+    auto* receiver = pointer<KinokoActorPool>(manager);
+    auto* state = host(receiver).get(&PoolHost::state);
     // 46A450 visits every allocated slot, including recycled ones, before
     // destroying the lock, free-list, generations, and actor-pointer vector.
     for (size_t index = 0; index < state->actors.size(); ++index)
         if (const auto actor = state->actors[index]) destroy_actor(actor, 1);
-    DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(manager).bytes(&PoolHost::lock)));
+    DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(host(receiver).bytes(&PoolHost::lock)));
     delete state;
-    host(manager).set(&PoolHost::state,static_cast<Pool *>(nullptr));
+    host(receiver).set(&PoolHost::state,static_cast<Pool *>(nullptr));
     return kinoko_method_actor_pool_base_delete(manager, nullptr, flags);
 }
 

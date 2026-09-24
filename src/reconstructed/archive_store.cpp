@@ -1,4 +1,6 @@
 #include "kinoko/file_io.h"
+#include "kinoko/compat/resource_rules.hpp"
+#include "kinoko/compat/archive_index.hpp"
 #include "kinoko/archive_random.h"
 #include <windows.h>
 #include <zlib.h>
@@ -52,9 +54,6 @@ void insert(const char *path,uint32_t archive,uint32_t offset,uint32_t size) {
     }
     chain.push_back(Entry{path,archive,offset,size});
 }
-uint32_t word(const uint8_t *p) {
-    return uint32_t(p[0])|(uint32_t(p[1])<<8)|(uint32_t(p[2])<<16)|(uint32_t(p[3])<<24);
-}
 }
 extern "C" int32_t kinoko_archive_insert(const char *path,uint32_t archive,uint32_t offset,uint32_t size) {
     if(!path) return 0;
@@ -64,35 +63,33 @@ extern "C" int32_t kinoko_archive_insert(const char *path,uint32_t archive,uint3
 extern "C" int32_t kinoko_archive_mount(const char *path) {
     if(!path) return 0;
     File file(path);if(!file.valid()) return 0;
-    uint16_t count=0;uint32_t size=0;
-    // Retain the rebuilt loader's malformed-file checks. Normal DAT loading
-    // has no artificial 64-archive or 8192-entry container limit anymore.
-    if(!file.read(&count,sizeof(count)) || !file.read(&size,sizeof(size)) || size>256u*1024u*1024u) return 0;
+    uint8_t count_bytes[2]{}, size_bytes[4]{};
+    // Preserve the two original reads and the existing malformed-file limit,
+    // but keep disk field width/endianness independent of the host layout.
+    if (!file.read(count_bytes,sizeof(count_bytes)) || !file.read(size_bytes,sizeof(size_bytes))) return 0;
+    const auto count=kinoko::compat::read_le16(count_bytes);
+    const auto size=kinoko::compat::read_le32(size_bytes);
+    if (size>kinoko::compat::maximum_runtime_index_bytes) return 0;
     std::vector<uint8_t> bytes(size);
     if(size && !file.read(bytes.data(),size)) return 0;
     file.close();
     kinoko_decode_archive_index(bytes.data(),size);
     const auto archive=static_cast<uint32_t>(archives.size());
     archives.emplace_back(path);kinoko_archive_count=static_cast<int32_t>(archives.size());
-    uint32_t cursor=0;
+    kinoko::compat::DatIndexCursor cursor(bytes.data(),size);
     for(uint32_t i=0;i<count;++i) {
-        if(size-cursor<9u) return 0;
-        const auto offset=word(bytes.data()+cursor), length=word(bytes.data()+cursor+4);
-        const auto path_size=uint32_t(bytes[cursor+8]);cursor+=9;
-        if(size-cursor<path_size) return 0;
-        std::string name(reinterpret_cast<const char*>(bytes.data()+cursor),path_size);
-        cursor+=path_size;
-        insert(name.c_str(),archive,offset,length);
+        kinoko::compat::DatIndexEntry entry{};
+        if (!cursor.next(entry)) return 0;
+        // Match the former string+c_str boundary, including embedded NUL.
+        const std::string name(entry.path);
+        insert(name.c_str(),archive,entry.offset,entry.size);
     }
     return 1;
 }
 extern "C" HANDLE kinoko_archive_open_entry(const char *path,uint32_t *offset,uint32_t *size) {
     if(!path || !offset || !size) return 0;
     *offset=*size=0;
-    // 410A07 strips exactly "./" before slash conversion, not ".\\".
-    if(path[0]=='.' && path[1]=='/') path+=2;
-    std::string normalized(path);
-    for(auto &ch:normalized) if(ch=='\\') ch='/';
+    const auto normalized=kinoko::compat::runtime_archive_lookup_path(path);
     const auto found=entries.find(path_hash(normalized));
     if(found==entries.end()) return 0;
     const auto &chain=found->second;

@@ -1,6 +1,8 @@
 #include "kinoko/map_chip_cache.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_array.hpp"
+#include "kinoko/act_layer_storage.hpp"
+#include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/string_layout.h"
 #include "kinoko/squirrel_api_types.h"
 // Native C++ continuation of the recovered ACT path. Original function names
@@ -714,8 +716,8 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     DynamicLayerParent parent(vm);
     if (!get_pair(player+148, kinoko_string_data(pointer<const void>(player + 164)), parent.object+2) ||
         parent.object[2] != 0x0a000020) return 0;
-    kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,348)));
-    if (!storage || !retdec_construct_cact_layer(address(storage.get()), vm)) return 0;
+    kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));
+    if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()), pointer<SQVM>(vm))) return 0;
     std::unique_ptr<unsigned char,DynamicLayerDelete> owned(storage.release());
     const auto layer = address(owned.get());
     kinoko::legacy::StringView(pointer<void>(layer+112)).assign(name, static_cast<uint32_t>(std::strlen(name)));

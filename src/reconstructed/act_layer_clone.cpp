@@ -1,6 +1,8 @@
 #include "kinoko/act_array.h"
 #include "kinoko/act_runtime.h"
 #include "kinoko/act_script_text.hpp"
+#include "kinoko/act_layer_storage.hpp"
+#include "kinoko/act_layer_lifecycle.h"
 #include "kinoko/legacy_abi.h"
 #include "kinoko/legacy_memory.hpp"
 #include "kinoko/legacy_method_entries.h"
@@ -20,7 +22,7 @@ namespace sqrat = kinoko::script::upstream;
 
 struct LayerDelete {
     void operator()(unsigned char* layer) const {
-        retdec_destroy_cact_layer(address(layer));
+        kinoko_act_layer_clear(reinterpret_cast<KinokoActLayer*>(layer));
         std::free(layer);
     }
 };
@@ -28,15 +30,19 @@ struct KeyDelete {
     void operator()(unsigned char* key) const { retdec_destroy_cact_key(address(key)); }
 };
 
-void assign_object(int32_t destination, int32_t source) {
-    const auto old_vm=pointer<SQVM>(field<int32_t>(destination+4));
-    const auto old_value=kinoko::legacy::load<HSQOBJECT>(pointer<void>(destination+8));
-    if (old_vm) sqrat::sqrat_destroy_object(old_vm,old_value,field<uint8_t>(destination+16)!=0);
-    // Original 41ECA0 copies VM, pair and ownership flag, retains the pair,
-    // and leaves the destination Table/Instance vtable intact.
-    std::memcpy(pointer<void>(destination+4),pointer<void>(source+4),13);
-    const auto vm=pointer<SQVM>(field<int32_t>(destination+4));
-    if (vm) sqrat::sqrat_retain(vm,kinoko::legacy::load<HSQOBJECT>(pointer<void>(destination+8)));
+void assign_object(kinoko::act::LayerObjectView destination, kinoko::act::LayerObjectView source) {
+    using kinoko::act::LayerObjectRecord;
+    const auto old_vm = destination.get(&LayerObjectRecord::vm);
+    const auto old_value = kinoko::legacy::load<HSQOBJECT>(destination.bytes(&LayerObjectRecord::value));
+    if (old_vm) sqrat::sqrat_destroy_object(old_vm, old_value,
+        destination.get(&LayerObjectRecord::owns_reference) != 0);
+    // 41ECA0 copies exactly VM, pair and ownership (13 bytes); neither
+    // destination vtable nor trailing padding participates in the copy.
+    destination.set(&LayerObjectRecord::vm, source.get(&LayerObjectRecord::vm));
+    destination.set(&LayerObjectRecord::value, source.get(&LayerObjectRecord::value));
+    destination.set(&LayerObjectRecord::owns_reference, source.get(&LayerObjectRecord::owns_reference));
+    if (auto* vm = destination.get(&LayerObjectRecord::vm))
+        sqrat::sqrat_retain(vm, kinoko::legacy::load<HSQOBJECT>(destination.bytes(&LayerObjectRecord::value)));
 }
 
 void clone_list(int32_t destination, int32_t source, int32_t offset, bool bind) {
@@ -65,28 +71,41 @@ void clone_list(int32_t destination, int32_t source, int32_t offset, bool bind) 
 extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void*) {
     if (!source) return 0;
     try {
-        kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,348)));
-        if (!storage || !retdec_construct_cact_layer(address(storage.get()),act_layer_vm_slot)) return 0;
+        kinoko::legacy::Allocation<unsigned char> storage(static_cast<unsigned char*>(std::calloc(1,sizeof(kinoko::act::LayerStorageRecord))));
+        if (!storage || !kinoko_act_layer_initialize(reinterpret_cast<KinokoActLayer*>(storage.get()),pointer<SQVM>(act_layer_vm_slot))) return 0;
         std::unique_ptr<unsigned char,LayerDelete> owned(storage.release());
         const auto result=address(owned.get());
-        std::memcpy(pointer<void>(result+4),pointer<void>(source+4),68);
-        kinoko_act_array_clone(result+72,source+72);
-        field<int32_t>(result+88)=field<int32_t>(source+88);
-        field<uint8_t>(result+92)=field<uint8_t>(source+92);
-        std::memcpy(pointer<void>(result+96),pointer<void>(source+96),16);
-        const kinoko::legacy::StringView input(pointer<void>(source+112)),output(pointer<void>(result+112));
+        using namespace kinoko::act;
+        const LayerStorageView destination(owned.get()), original(pointer<void>(source));
+        const auto target_links = destination.view(&LayerStorageRecord::association);
+        const auto source_links = original.view(&LayerStorageRecord::association);
+        target_links.set(&LayerAssociationRecord::property_aliases, source_links.get(&LayerAssociationRecord::property_aliases));
+        kinoko_act_array_clone(address(target_links.bytes(&LayerAssociationRecord::children)),
+                               address(source_links.bytes(&LayerAssociationRecord::children)));
+        target_links.set(&LayerAssociationRecord::parent, source_links.get(&LayerAssociationRecord::parent));
+        auto flags = target_links.get(&LayerAssociationRecord::flags92);
+        flags[0] = source_links.get(&LayerAssociationRecord::flags92)[0];
+        target_links.set(&LayerAssociationRecord::flags92, flags);
+        target_links.set(&LayerAssociationRecord::resource_id, source_links.get(&LayerAssociationRecord::resource_id));
+        target_links.set(&LayerAssociationRecord::resource, source_links.get(&LayerAssociationRecord::resource));
+        target_links.set(&LayerAssociationRecord::layer_id, source_links.get(&LayerAssociationRecord::layer_id));
+        target_links.set(&LayerAssociationRecord::parent_id, source_links.get(&LayerAssociationRecord::parent_id));
+        const kinoko::legacy::StringView input(original.bytes(&LayerStorageRecord::name)),
+                                         output(destination.bytes(&LayerStorageRecord::name));
         output.assign(input.data(),input.length());
         if (output.length()!=input.length()) return 0;
-        field<uint16_t>(result+140)=field<uint16_t>(source+140);
-        std::memcpy(pointer<void>(result+144),pointer<void>(source+144),36);
-        const kinoko::act::ScriptTextView target_script(pointer<void>(result+204));
-        const kinoko::act::ScriptTextView source_script(pointer<void>(source+204));
-        kinoko::act::assign_script_payload(target_script, source_script);
-        assign_object(result+308,source+308);
-        assign_object(result+328,source+328);
-        kinoko::act::copy_script_text(target_script, source_script);
-        clone_list(result,source,180,true);
-        clone_list(result,source,192,false);
+        destination.set(&LayerStorageRecord::visibility_flags, original.get(&LayerStorageRecord::visibility_flags));
+        destination.set(&LayerStorageRecord::position, original.get(&LayerStorageRecord::position));
+        destination.set(&LayerStorageRecord::unknown156, original.get(&LayerStorageRecord::unknown156));
+        destination.set(&LayerStorageRecord::previous_position, original.get(&LayerStorageRecord::previous_position));
+        const ScriptTextView target_script(destination.bytes(&LayerStorageRecord::script));
+        const ScriptTextView source_script(original.bytes(&LayerStorageRecord::script));
+        assign_script_payload(target_script, source_script);
+        assign_object(destination.view(&LayerStorageRecord::script_object), original.view(&LayerStorageRecord::script_object));
+        assign_object(destination.view(&LayerStorageRecord::layout_object), original.view(&LayerStorageRecord::layout_object));
+        copy_script_text(target_script, source_script);
+        clone_list(result,source,offsetof(LayerStorageRecord, keys),true);
+        clone_list(result,source,offsetof(LayerStorageRecord, timelines),false);
         return address(owned.release());
     } catch (...) { return 0; }
 }
