@@ -9,7 +9,11 @@ on:
       - 'include/kinoko/compat/**'
       - 'src/reconstructed/archive_store.cpp'
       - 'src/reconstructed/file_io.cpp'
-      - 'src/reconstructed/squirrel_file_loader.cpp'
+      - 'src/squirrel/script_file.cpp'
+      - 'src/reconstructed/actor_pool.cpp'
+      - 'cmake/migration-preflight/**'
+      - 'tests/migration_compat_contract.cpp'
+      - 'MIGRATION.md'
       - 'tools/migration/**'
   workflow_dispatch:
 permissions:
