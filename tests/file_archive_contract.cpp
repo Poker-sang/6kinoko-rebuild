@@ -19,8 +19,17 @@ void word(std::vector<uint8_t>& bytes,uint32_t value) {
 }
 int main() {
     kinoko_archive_initialize();
-    TempFile ordinary, dat;
+    TempFile ordinary, dat, truncated;
     KinokoArchiveReader *writer=nullptr, *plain=nullptr, *reader=nullptr;
+    const uint16_t truncated_count=1;
+    const uint32_t empty_index=0;
+    CHECK(kinoko_writer_open(&writer,truncated.path));
+    CHECK(kinoko_writer_write(writer,&truncated_count,sizeof(truncated_count)));
+    CHECK(kinoko_writer_write(writer,&empty_index,sizeof(empty_index)));
+    kinoko_reader_close(writer); writer=nullptr;
+    // 410500 registers an opened DAT before its index is parsed.
+    CHECK(!kinoko_archive_mount(truncated.path) && kinoko_archive_count==1);
+    kinoko_archive_initialize();
     CHECK(kinoko_writer_open(&writer,ordinary.path));
     CHECK(kinoko_writer_write(writer,"ABCDE",5));
     CHECK(writer->methods->transferred(writer)==5);
