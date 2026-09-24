@@ -63,6 +63,9 @@ extern "C" int32_t kinoko_archive_insert(const char *path,uint32_t archive,uint3
 extern "C" int32_t kinoko_archive_mount(const char *path) {
     if(!path) return 0;
     File file(path);if(!file.valid()) return 0;
+    // 410500 publishes the archive path before reading its header or index.
+    const auto archive=static_cast<uint32_t>(archives.size());
+    archives.emplace_back(path);kinoko_archive_count=static_cast<int32_t>(archives.size());
     uint8_t count_bytes[2]{}, size_bytes[4]{};
     // Keep disk field width/endianness independent of the host layout.
     if (!file.read(count_bytes,sizeof(count_bytes)) || !file.read(size_bytes,sizeof(size_bytes))) return 0;
@@ -72,8 +75,6 @@ extern "C" int32_t kinoko_archive_mount(const char *path) {
     if(size && !file.read(bytes.data(),size)) return 0;
     file.close();
     kinoko_decode_archive_index(bytes.data(),size);
-    const auto archive=static_cast<uint32_t>(archives.size());
-    archives.emplace_back(path);kinoko_archive_count=static_cast<int32_t>(archives.size());
     kinoko::compat::DatIndexCursor cursor(bytes.data(),size);
     for(uint32_t i=0;i<count;++i) {
         kinoko::compat::DatIndexEntry entry{};

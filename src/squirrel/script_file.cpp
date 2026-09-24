@@ -131,7 +131,10 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     if (size == UINT32_MAX) return 0;
     std::unique_ptr<unsigned char, decltype(&std::free)> bytes(
         static_cast<unsigned char*>(std::calloc(size + 1u, 1)), std::free);
-    if (!bytes || !kinoko_reader_read_exact(opened, bytes.get(), size)) return 0;
+    if (!bytes) return 0;
+    // 402D40 calls the reader's virtual Read and continues with the zeroed
+    // buffer even if fewer bytes were transferred.
+    kinoko_reader_read(opened, bytes.get(), size);
     HSQOBJECT scope;
     sq_resetobject(&scope);
     if (environment) scope = ObjectView(environment).value();

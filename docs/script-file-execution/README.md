@@ -43,10 +43,12 @@ References: supplied `../squirrel-2.2.2/SQUIRREL2/squirrel/sqapi.cpp`
 and `third_party/sqplus-20080713/sqplus/SquirrelVM.cpp` / SquirrelObject.cpp.
 
 Reconstruction safeguards, not claimed as original behavior: null/malformed path
-checks, existing empty/64 MiB/read-exact guards, reader bounds validation, null VM
-guard, bounded tag read for one-byte files, and dynamically sized call-stack
+checks, allocation-overflow guard, reader bounds validation, null VM guard,
+bounded tag read for one-byte files, and dynamically sized call-stack
 rows with empty-string fallback for absent strings. File storage is released on
 C++ exceptional exits as well as success.
+The standalone script loader now uses the original virtual reader call and
+continues after a short read, with the unread bytes initialized to zero.
 
 Validation policy: compile/link only; no game, CTest or contract executable is
 run by the agent. Added text-script contract cases cover root/custom/null

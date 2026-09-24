@@ -29,10 +29,10 @@
 就换成工具的私有 PRNG 实例。
 
 本 PR 的 `include/kinoko/compat/resource_rules.hpp` 只抽取纯规则：LE16/LE32、
-一次前缀处理、斜杠转换、payload key/XOR 和脚本选择；生产调用点已使用这些函数。
+一次前缀处理、斜杠转换、payload key/XOR 和字节码 tag 检测；生产调用点已使用这些函数。
 最终轮还抽取了 `compat/archive_index.hpp` 的 LE 索引 cursor 和共享 MT19937 解码算法。
 生产 wrapper 仍传入同一个随机引擎，不改变后续随机数状态。没有抽走 HANDLE、挂载容器、
-大小写处理或 CRC 冲突策略；损坏索引仍保持此前的部分挂载状态，不自动回滚。
+大小写处理或 CRC 冲突策略；打开 DAT 成功后立即登记归档，后续读取失败也不回滚。
 
 必须保留的当前规则：
 
@@ -54,9 +54,10 @@
 ## 3. 独立脚本、ACT 内嵌脚本、VM 与绑定
 
 独立文件入口：`src/squirrel/script_file.cpp::kinoko_script_load_file`。
-其顺序是路径选择、打开 reader、读完整文件、识别 tag，再选择 bytecode/text 执行。
-打包模式替换最后四个字节，**不是只识别 .nut 扩展名**；原有长度保护保留。
-新 helper 只负责路径和 `0xFAFA` 检测，尚未实现跨位宽的 CV4 decoder。
+其顺序是路径选择、打开 reader、按原版虚 `Read` 读取、识别 tag，再选择 bytecode/text 执行。
+打包模式在固定缓冲区替换最后四个字节，**不是只识别 .nut 扩展名**。
+少于四字节的无定义输入仍被安全拒绝；纯规则 helper 只负责 `0xFAFA` 检测，
+尚未实现跨位宽的 CV4 decoder。
 
 bytecode 使用捕获的 Sqrat VM 槽，text 使用 SqPlus 的主 VM 槽。
 bytecode 打开成功后，即使 load/run 报 VM 错误仍可能返回成功；text 的环境与异常协议不同。
