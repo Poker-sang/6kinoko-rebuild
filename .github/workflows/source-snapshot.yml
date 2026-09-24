@@ -3,7 +3,14 @@ name: Source snapshot
 on:
   push:
     branches: ['refactor/**']
-    paths: ['.github/workflows/source-snapshot.yml']
+    paths:
+      - '.github/workflows/source-snapshot.yml'
+      - 'docs/migration/**'
+      - 'include/kinoko/compat/**'
+      - 'src/reconstructed/archive_store.cpp'
+      - 'src/reconstructed/file_io.cpp'
+      - 'src/reconstructed/squirrel_file_loader.cpp'
+      - 'tools/migration/**'
   workflow_dispatch:
 permissions:
   contents: read
