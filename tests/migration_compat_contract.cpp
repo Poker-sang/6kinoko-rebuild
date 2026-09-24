@@ -1,4 +1,5 @@
 #include "kinoko/compat/resource_rules.hpp"
+#include "kinoko/compat/archive_index.hpp"
 #include <array>
 #include <cstdio>
 #include <string>
@@ -60,5 +61,35 @@ int main() {
     compat::decode_archive_payload(data.data(), 2, 0x23);
     CHECK(data == original);
     compat::decode_archive_payload(nullptr, 0, 0x23);
+    // Synthetic index bytes only; no proprietary assets and no I/O.
+    const std::uint8_t index_bytes[] = {0x78,0x56,0x34,0x12,4,0,0,0,3,'A','/','B'};
+    compat::DatIndexCursor cursor(index_bytes, sizeof(index_bytes));
+    compat::DatIndexEntry entry{};
+    CHECK(cursor.next(entry));
+    CHECK(entry.offset == 0x12345678u && entry.size == 4 && entry.path == "A/B");
+    CHECK(cursor.position() == sizeof(index_bytes));
+    CHECK(!cursor.next(entry) && entry.path == "A/B");
+    compat::DatIndexCursor truncated(index_bytes, sizeof(index_bytes)-1);
+    CHECK(!truncated.next(entry));
+    CHECK(!truncated.next(entry));
+    compat::DatIndexCursor missing(nullptr, 0);
+    CHECK(!missing.next(entry));
+    // State progression is part of the contract, including the zero-byte seed.
+    std::mt19937 shared, expected;
+    compat::decode_dat_index(nullptr, 0, shared);
+    expected.seed(6);
+    CHECK(shared() == expected());
+    std::array<std::uint8_t, 8> encoded{};
+    expected.seed(14);
+    std::uint8_t key = 0xc5, step = 0x89;
+    for (auto& byte : encoded) {
+        byte = static_cast<std::uint8_t>(expected()) ^ key;
+        key = static_cast<std::uint8_t>(key + step);
+        step = static_cast<std::uint8_t>(step + 0x49);
+    }
+    auto decoded = encoded;
+    compat::decode_dat_index(decoded.data(), static_cast<std::uint32_t>(decoded.size()), shared);
+    CHECK((decoded == std::array<std::uint8_t, 8>{}));
+    CHECK(shared() == expected());
     return 0;
 }

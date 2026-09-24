@@ -101,54 +101,6 @@ int32_t retdec_act_load_script(int32_t object_ptr, int32_t reader_ptr)
     return 1;
 }
 
-int32_t retdec_construct_cact_layer(int32_t layer, int32_t vm) {
-    if (!layer) return 0;
-    std::memset(pointer<void>(layer), 0, 348);
-    kinoko::native::RecordView<kinoko::act::LayerAssociationRecord> association(pointer<void>(layer));
-    association.set(&kinoko::act::LayerAssociationRecord::vtable,
-        kinoko_act_host_symbols()->layer_vtable);
-    association.set(&kinoko::act::LayerAssociationRecord::resource_id, int32_t{-1});
-    association.set(&kinoko::act::LayerAssociationRecord::layer_id, int32_t{-1});
-    association.set(&kinoko::act::LayerAssociationRecord::parent_id, int32_t{-1});
-    field<int32_t>(layer + 132) = 15;
-    kinoko_string_assign_cstr(pointer<int32_t>(layer + 112), "Layer_");
-    field<uint16_t>(layer + 140) = 1;
-    field<uint8_t>(layer + 92) = 1;
-    if (!retdec_act_make_list(pointer<int32_t>(layer + 180)) ||
-        !retdec_act_make_list(pointer<int32_t>(layer + 192))) {
-        kinoko_act_list_drop_storage(field<int32_t>(layer+180));
-        kinoko_act_list_drop_storage(field<int32_t>(layer+192));
-        field<int32_t>(layer + 180) = field<int32_t>(layer + 192) = 0;
-        kinoko_string_destroy(kinoko::native::RecordView<kinoko::act::LayerKeys>(pointer<void>(layer)).bytes(&kinoko::act::LayerKeys::name));
-        return 0;
-    }
-    retdec_construct_cact_script(layer + 204);
-    for (int32_t offset : {208, 228, 248}) field<int32_t>(layer + offset) = vm;
-    field<int32_t>(layer + 308) = address(kinoko_act_host_symbols()->layer_ref_vtable);
-    field<int32_t>(layer + 312) = vm;
-    field<uint8_t>(layer + 324) = 1;
-    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 316)));
-    field<int32_t>(layer + 328) = address(kinoko_act_host_symbols()->layer_layout_vtable);
-    field<int32_t>(layer + 332) = vm;
-    field<uint8_t>(layer + 344) = 1;
-    sq_resetobject(reinterpret_cast<HSQOBJECT*>(pointer<void>(layer + 336)));
-    if (vm && !kinoko_sqrat_new_table(pointer<SQVM>(vm), pointer<int32_t>(layer + 316))) {
-        retdec_destroy_cact_layer(layer);
-        return 0;
-    }
-    return layer;
-}
-
-int32_t retdec_act_make_layer(void) {
-    // The 348-byte ACT layer is owned by its parent document. Its known
-    // prefix has a separate layout schema; keep the remaining bytes opaque.
-    auto layer = std::unique_ptr<KinokoActLayer, decltype(&std::free)>(
-        static_cast<KinokoActLayer *>(std::calloc(1u, 348u)), &std::free);
-    // Archive parsing precedes VM creation. Publication creates the script
-    // table later; original native callers supply g664 at construction.
-    if (!layer || !retdec_construct_cact_layer(address(layer.get()), 0)) return 0;
-    return address(layer.release());
-}
 
 int32_t retdec_construct_c2dlayout(int32_t layout) {
     if (!layout) return 0;

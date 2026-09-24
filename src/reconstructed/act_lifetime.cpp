@@ -11,6 +11,7 @@
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_document_records.hpp"
 #include "kinoko/act_layer_records.hpp"
+#include "kinoko/act_layer_storage.hpp"
 #include "kinoko/act_key_records.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_host.h"
@@ -51,59 +52,6 @@ using kinoko::legacy::pointer;
 using kinoko::legacy::address;
 using kinoko::legacy::field;
 
-int32_t retdec_construct_cact_script(int32_t this_ptr)
-{
-    int32_t buffer;
-
-    if (this_ptr == 0)
-        return 0;
-
-    field<int32_t>(this_ptr) = address(kinoko_act_host_symbols()->script_vtable);
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 8));
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 16));
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 28));
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 36));
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 48));
-    sq_resetobject((HSQOBJECT*)kinoko_pointer(this_ptr + 56));
-    field<int32_t>(this_ptr + 80) = 0;
-    field<int32_t>(this_ptr + 84) = 15;
-    field<unsigned char>(this_ptr + 64) = 0;
-    kinoko::act::ScriptPayloadView payload(pointer<void>(this_ptr));
-    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(nullptr));
-    payload.set(&kinoko::act::ScriptPayloadRecord::size, uint32_t{1});
-    payload.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{0});
-    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, uint8_t{0});
-
-    buffer = _3f__3f_2_40_YAPAXI_40_Z(1);
-    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, pointer<void>(buffer));
-    if (buffer != 0)
-        field<unsigned char>(buffer) = 0;
-    return this_ptr;
-}
-
-void retdec_destroy_cact_script(int32_t script_ptr)
-{
-
-    if (script_ptr == 0)
-        return;
-
-    retdec_forget_act_script(script_ptr);
-    field<int32_t>(script_ptr) = address(kinoko_act_host_symbols()->script_vtable);
-    retdec_release_act_callback(script_ptr + 44);
-    retdec_release_act_callback(script_ptr + 24);
-    retdec_release_act_callback(script_ptr + 4);
-
-    kinoko::act::ScriptPayloadView payload(pointer<void>(script_ptr));
-    std::free(payload.get(&kinoko::act::ScriptPayloadRecord::bytes));
-    payload.set(&kinoko::act::ScriptPayloadRecord::bytes, static_cast<void *>(nullptr));
-    payload.set(&kinoko::act::ScriptPayloadRecord::size, uint32_t{0});
-    kinoko_string_destroy(pointer<void>(script_ptr + 64));
-    field<int32_t>(script_ptr + 80) = 0;
-    field<int32_t>(script_ptr + 84) = 15;
-    field<unsigned char>(script_ptr + 64) = 0;
-    payload.set(&kinoko::act::ScriptPayloadRecord::loaded, uint8_t{0});
-    payload.set(&kinoko::act::ScriptPayloadRecord::compiled, uint8_t{0});
-}
 
 extern "C" int32_t __fastcall kinoko_method_delete_act_script(int32_t script, void *) {
     if (script) {
@@ -166,39 +114,6 @@ void retdec_destroy_cact_list(int32_t *list_slot)
     *list_slot = 0;
 }
 
-void retdec_destroy_cact_layer(int32_t layer)
-{
-    if (layer == 0)
-        return;
-
-    field<int32_t>(layer) = address(kinoko_act_host_symbols()->layer_vtable);
-    if (field<unsigned char>(layer + 344) != 0) {
-        int32_t vm = field<int32_t>(layer + 332);
-        if (vm != 0)
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), pointer<int32_t>(layer + 336));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 336));
-        field<unsigned char>(layer + 344) = 0;
-    }
-    if (field<unsigned char>(layer + 324) != 0) {
-        int32_t vm = field<int32_t>(layer + 312);
-        if (vm != 0)
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), pointer<int32_t>(layer + 316));
-        sq_resetobject((HSQOBJECT*)kinoko_pointer(layer + 316));
-        field<unsigned char>(layer + 324) = 0;
-    }
-    retdec_destroy_cact_script(layer + 204);
-    retdec_destroy_cact_list(pointer<int32_t>(layer + 180));
-    retdec_destroy_cact_list(pointer<int32_t>(layer + 192));
-    field<uint32_t>(layer+184)=field<uint32_t>(layer+196)=0;
-    kinoko_string_destroy(kinoko::native::RecordView<kinoko::act::LayerKeys>(pointer<void>(layer)).bytes(&kinoko::act::LayerKeys::name));
-    field<int32_t>(layer + 112) = 0;
-    field<int32_t>(layer + 128) = 0;
-    field<int32_t>(layer + 132) = 15;
-    kinoko_act_array_destroy(layer+72);
-    field<int32_t>(layer + 72) = 0;
-    field<int32_t>(layer + 76) = 0;
-    field<int32_t>(layer + 80) = 0;
-}
 
 static void clear_resource(int32_t resource)
 {
@@ -331,7 +246,7 @@ extern "C" int32_t __fastcall kinoko_method_delete_act_key(int32_t object,void*,
     return delete_with_flags<clear_key>(object,36,flags);
 }
 extern "C" int32_t __fastcall kinoko_method_delete_act_layer(int32_t object,void*,unsigned char flags) {
-    return delete_with_flags<retdec_destroy_cact_layer>(object,348,flags);
+    return delete_with_flags<retdec_destroy_cact_layer>(object,sizeof(kinoko::act::LayerStorageRecord),flags);
 }
 extern "C" int32_t __fastcall kinoko_method_delete_act_resource(int32_t object,void*,unsigned char flags) {
     return delete_with_flags<clear_resource>(object,100,flags);
