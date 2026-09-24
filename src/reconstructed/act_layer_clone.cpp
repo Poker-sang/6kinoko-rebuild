@@ -83,9 +83,8 @@ extern "C" int32_t __fastcall kinoko_method_clone_act_layer(int32_t source, void
         kinoko_act_array_clone(address(target_links.bytes(&LayerAssociationRecord::children)),
                                address(source_links.bytes(&LayerAssociationRecord::children)));
         target_links.set(&LayerAssociationRecord::parent, source_links.get(&LayerAssociationRecord::parent));
-        auto flags = target_links.get(&LayerAssociationRecord::flags92);
-        flags[0] = source_links.get(&LayerAssociationRecord::flags92)[0];
-        target_links.set(&LayerAssociationRecord::flags92, flags);
+        *target_links.bytes(&LayerAssociationRecord::flags92) =
+            *source_links.bytes(&LayerAssociationRecord::flags92);
         target_links.set(&LayerAssociationRecord::resource_id, source_links.get(&LayerAssociationRecord::resource_id));
         target_links.set(&LayerAssociationRecord::resource, source_links.get(&LayerAssociationRecord::resource));
         target_links.set(&LayerAssociationRecord::layer_id, source_links.get(&LayerAssociationRecord::layer_id));

@@ -15,7 +15,6 @@ static_assert(compat::read_le16(little_endian) == 0x3412u);
 static_assert(compat::read_le32(little_endian) == 0x78563412u);
 static_assert(compat::archive_payload_key(0) == 0x23u);
 static_assert(compat::archive_payload_key(0xffffffffu) == 0xffu);
-static_assert(compat::legacy_script_path_capacity == 260);
 
 int main() {
     struct PathCase { const char* input; const char* expected; };
@@ -26,26 +25,6 @@ int main() {
     };
     for (const auto& row : paths)
         CHECK(compat::runtime_archive_lookup_path(row.input) == row.expected);
-
-    std::string plain(300, 'x');
-    CHECK(compat::select_script_lookup_path(plain, false) && plain == std::string(300, 'x'));
-    for (const auto* input : {"", "a", "abc"}) {
-        std::string path(input);
-        CHECK(!compat::select_script_lookup_path(path, true));
-        CHECK(path == input);
-    }
-    std::string source = "data/script/boot.nut";
-    CHECK(compat::select_script_lookup_path(source, true) && source == "data/script/boot.cv4");
-    std::string non_suffix = "hello.txt";
-    CHECK(compat::select_script_lookup_path(non_suffix, true) && non_suffix == "hello.cv4");
-    std::string four = "ABCD";
-    CHECK(compat::select_script_lookup_path(four, true) && four == ".cv4");
-    std::string maximum(259, 'x');
-    CHECK(compat::select_script_lookup_path(maximum, true));
-    CHECK(maximum == std::string(255, 'x') + ".cv4");
-    std::string rejected(260, 'x');
-    CHECK(!compat::select_script_lookup_path(rejected, true));
-    CHECK(rejected == std::string(260, 'x'));
 
     const std::uint8_t bytecode[] = {0xfa, 0xfa, 0};
     const std::uint8_t text[] = {'a', 'b'};

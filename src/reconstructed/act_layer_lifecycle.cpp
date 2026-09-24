@@ -17,23 +17,30 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
     using namespace kinoko::act;
     if (!layer) return nullptr;
     const LayerStorageView record(layer);
-    // Preserve this reconstruction's existing zero-fill, not a claim that the
-    // original constructor initialized every padding byte (41E390).
-    record.clear();
     const auto association = record.view(&LayerStorageRecord::association);
     association.set(&LayerAssociationRecord::vtable, kinoko_act_host_symbols()->layer_vtable);
+    association.set(&LayerAssociationRecord::children, DocumentPointerSpan<KinokoActLayer>{});
+    association.set(&LayerAssociationRecord::parent, static_cast<KinokoActLayer*>(nullptr));
     association.set(&LayerAssociationRecord::resource_id, int32_t{-1});
+    association.set(&LayerAssociationRecord::resource, static_cast<KinokoActResource*>(nullptr));
     association.set(&LayerAssociationRecord::layer_id, int32_t{-1});
     association.set(&LayerAssociationRecord::parent_id, int32_t{-1});
-    record.view(&LayerStorageRecord::name).set(&kinoko::legacy::StringRecord::capacity,
-        kinoko::legacy::StringView::inline_capacity);
+    const auto name = record.view(&LayerStorageRecord::name);
+    name.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+    name.set(&kinoko::legacy::StringRecord::capacity, kinoko::legacy::StringView::inline_capacity);
+    *name.bytes(&kinoko::legacy::StringRecord::characters) = 0;
     kinoko_string_assign_cstr(reinterpret_cast<int32_t*>(record.bytes(&LayerStorageRecord::name)), "Layer_");
     record.set(&LayerStorageRecord::visibility_flags, uint16_t{1});
-    auto flags = association.get(&LayerAssociationRecord::flags92);
-    flags[0] = 1;
-    association.set(&LayerAssociationRecord::flags92, flags);
+    *association.bytes(&LayerAssociationRecord::flags92) = 1;
+    record.set(&LayerStorageRecord::position, std::array<uint32_t, 3>{});
+    record.set(&LayerStorageRecord::unknown156, std::array<uint8_t, 12>{});
+    record.set(&LayerStorageRecord::previous_position, std::array<uint32_t, 3>{});
     const auto keys = record.view(&LayerStorageRecord::keys);
     const auto timelines = record.view(&LayerStorageRecord::timelines);
+    keys.set(&LayerListRecord::head, static_cast<KeyNode*>(nullptr));
+    keys.set(&LayerListRecord::count, int32_t{0});
+    timelines.set(&LayerListRecord::head, static_cast<KeyNode*>(nullptr));
+    timelines.set(&LayerListRecord::count, int32_t{0});
     if (!retdec_act_make_list(reinterpret_cast<int32_t*>(keys.bytes(&LayerListRecord::head))) ||
         !retdec_act_make_list(reinterpret_cast<int32_t*>(timelines.bytes(&LayerListRecord::head)))) {
         kinoko_act_list_drop_storage(address(keys.get(&LayerListRecord::head)));
@@ -65,6 +72,7 @@ extern "C" KinokoActLayer* kinoko_act_layer_initialize(KinokoActLayer* layer, SQ
         retdec_destroy_cact_layer(address(layer));
         return nullptr;
     }
+    association.set(&LayerAssociationRecord::property_aliases, std::array<unsigned char, 68>{});
     return layer;
 }
 

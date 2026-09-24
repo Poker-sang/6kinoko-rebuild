@@ -8,7 +8,6 @@
 namespace kinoko::compat {
 inline constexpr std::uint32_t dat_header_bytes = 6;
 inline constexpr std::uint32_t dat_index_entry_header_bytes = 9;
-inline constexpr std::uint32_t maximum_runtime_index_bytes = 256u * 1024u * 1024u;
 struct DatIndexEntry {
     std::uint32_t offset, size;
     std::string_view path; // borrows the caller-owned decoded index bytes

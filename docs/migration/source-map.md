@@ -86,7 +86,7 @@ ACT 内嵌脚本在 `squirrel_game_objects.cpp`，其闭包持有和环境协议
 `act_script_lifecycle.cpp`；`act_layer_storage.hpp` 的同一具名布局用于构造、清理、克隆及
 动态图层分配。旧地址入口只转接新实现，分配大小来自 schema。
 这些仍是 x86 宿主布局；key/list 的旧 ABI 和外层整数槽未全部迁移。脚本 callback 的 VM 槽和
-未知 padding 不得额外清零；图层保留的是重建基线原有的整块 zero-fill，不声称原版逐字节如此。
+未知 padding 不得额外清零；图层构造现只写入原版41E390已确认的字段及属性区。
 原版和既有恢复证据须随新仓库保存。
 
 ## 5. Actor 池、更新、碰撞与脚本引用

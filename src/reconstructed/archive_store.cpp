@@ -64,12 +64,10 @@ extern "C" int32_t kinoko_archive_mount(const char *path) {
     if(!path) return 0;
     File file(path);if(!file.valid()) return 0;
     uint8_t count_bytes[2]{}, size_bytes[4]{};
-    // Preserve the two original reads and the existing malformed-file limit,
-    // but keep disk field width/endianness independent of the host layout.
+    // Keep disk field width/endianness independent of the host layout.
     if (!file.read(count_bytes,sizeof(count_bytes)) || !file.read(size_bytes,sizeof(size_bytes))) return 0;
     const auto count=kinoko::compat::read_le16(count_bytes);
     const auto size=kinoko::compat::read_le32(size_bytes);
-    if (size>kinoko::compat::maximum_runtime_index_bytes) return 0;
     std::vector<uint8_t> bytes(size);
     if(size && !file.read(bytes.data(),size)) return 0;
     file.close();
