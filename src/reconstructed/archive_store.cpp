@@ -1,4 +1,5 @@
 #include "kinoko/file_io.h"
+#include "kinoko/compat/resource_rules.hpp"
 #include "kinoko/archive_random.h"
 #include <windows.h>
 #include <zlib.h>
@@ -52,9 +53,6 @@ void insert(const char *path,uint32_t archive,uint32_t offset,uint32_t size) {
     }
     chain.push_back(Entry{path,archive,offset,size});
 }
-uint32_t word(const uint8_t *p) {
-    return uint32_t(p[0])|(uint32_t(p[1])<<8)|(uint32_t(p[2])<<16)|(uint32_t(p[3])<<24);
-}
 }
 extern "C" int32_t kinoko_archive_insert(const char *path,uint32_t archive,uint32_t offset,uint32_t size) {
     if(!path) return 0;
@@ -77,7 +75,8 @@ extern "C" int32_t kinoko_archive_mount(const char *path) {
     uint32_t cursor=0;
     for(uint32_t i=0;i<count;++i) {
         if(size-cursor<9u) return 0;
-        const auto offset=word(bytes.data()+cursor), length=word(bytes.data()+cursor+4);
+        const auto offset=kinoko::compat::read_le32(bytes.data()+cursor);
+        const auto length=kinoko::compat::read_le32(bytes.data()+cursor+4);
         const auto path_size=uint32_t(bytes[cursor+8]);cursor+=9;
         if(size-cursor<path_size) return 0;
         std::string name(reinterpret_cast<const char*>(bytes.data()+cursor),path_size);
@@ -89,10 +88,7 @@ extern "C" int32_t kinoko_archive_mount(const char *path) {
 extern "C" HANDLE kinoko_archive_open_entry(const char *path,uint32_t *offset,uint32_t *size) {
     if(!path || !offset || !size) return 0;
     *offset=*size=0;
-    // 410A07 strips exactly "./" before slash conversion, not ".\\".
-    if(path[0]=='.' && path[1]=='/') path+=2;
-    std::string normalized(path);
-    for(auto &ch:normalized) if(ch=='\\') ch='/';
+    const auto normalized=kinoko::compat::runtime_archive_lookup_path(path);
     const auto found=entries.find(path_hash(normalized));
     if(found==entries.end()) return 0;
     const auto &chain=found->second;

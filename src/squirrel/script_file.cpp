@@ -1,4 +1,5 @@
 #include "kinoko/script_file.h"
+#include "kinoko/compat/resource_rules.hpp"
 #include "kinoko/file_io.h"
 #include "kinoko/squirrel_host_object.hpp"
 #include "kinoko/squirrel_game_objects.h"
@@ -23,6 +24,7 @@ int32_t kinoko_squirrel_object_vtable(void);
 }
 
 namespace {
+static_assert(MAX_PATH == kinoko::compat::legacy_script_path_capacity);
 using namespace kinoko::script;
 inline int32_t& bytecode_vm_slot = g664;
 inline char*& primary_vm_slot = g644;
@@ -110,11 +112,7 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     if (!path) return 0;
     retdec_trace_squirrel_name("402d40:file", address(path));
     std::string lookup(path);
-    if (compiled_assets()) {
-        // Existing reconstruction bounds checks; valid original names end .nut.
-        if (lookup.size() >= MAX_PATH || lookup.size() < 4) return 0;
-        lookup.replace(lookup.size() - 4, 4, ".cv4");
-    }
+    if (!kinoko::compat::select_script_lookup_path(lookup, compiled_assets())) return 0;
     KinokoArchiveReader* opened = nullptr;
     if (!kinoko_reader_open(&opened, lookup.c_str()) || !opened) {
         retdec_trace("402d40:reader-failed");
@@ -127,12 +125,10 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     std::unique_ptr<unsigned char, decltype(&std::free)> bytes(
         static_cast<unsigned char*>(std::calloc(size + 1u, 1)), std::free);
     if (!bytes || !kinoko_reader_read_exact(opened, bytes.get(), size)) return 0;
-    uint16_t tag = 0;
-    if (size >= sizeof(tag)) std::memcpy(&tag, bytes.get(), sizeof(tag));
     HSQOBJECT scope;
     sq_resetobject(&scope);
     if (environment) scope = ObjectView(environment).value();
-    if (tag == 0xFAFAu) {
+    if (kinoko::compat::has_squirrel_bytecode_tag(bytes.get(), size)) {
         auto vm = bytecode_vm();
         if (!vm) return 0;
         execute_bytecode(vm, bytes.get(), size, scope, environment != nullptr);

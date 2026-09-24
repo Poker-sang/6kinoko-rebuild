@@ -1,4 +1,5 @@
 #include "kinoko/file_io_layout.h"
+#include "kinoko/compat/resource_rules.hpp"
 #include "kinoko/legacy_string.hpp"
 #include <cstddef>
 #include <cstdlib>
@@ -56,7 +57,7 @@ int32_t __fastcall read_package(KinokoArchiveReader* reader, void*, void* data, 
     ReadFile(reader->handle, data, size, &reader->transferred, nullptr);
     if (!reader->transferred) return 0;
     entry.read_position += reader->transferred;
-    for (uint32_t i=0; i<size; ++i) static_cast<uint8_t*>(data)[i] ^= entry.xor_key;
+    kinoko::compat::decode_archive_payload(data, size, entry.xor_key);
     return 1;
 }
 uint32_t __fastcall seek_package(KinokoArchiveReader* reader, void*, int32_t distance, uint32_t origin) {
@@ -98,7 +99,7 @@ extern "C" int32_t kinoko_reader_open(KinokoArchiveReader** slot, const char* pa
         reader->base.methods = &kinoko_package_reader_methods;
         reader->base.handle = kinoko_archive_open_entry(path,&reader->entry_offset,&reader->entry_size);
         reader->read_position = reader->entry_offset;
-        reader->xor_key = static_cast<uint8_t>((reader->entry_offset >> 1) | 0x23u);
+        reader->xor_key = kinoko::compat::archive_payload_key(reader->entry_offset);
         *slot = &reader->base;
     } else {
         *slot = static_cast<KinokoArchiveReader*>(std::calloc(1,sizeof(KinokoArchiveReader)));
@@ -132,7 +133,7 @@ extern "C" int32_t kinoko_reader_read_exact(KinokoArchiveReader* reader, void* d
         if (entry.read_position < entry.entry_offset || entry.read_position > end || size > end-entry.read_position) return 0;
         if (!seek_absolute(reader->handle,entry.read_position)) return 0;
         if (!ReadFile(reader->handle,data,size,&count,nullptr) || count != size) return 0;
-        for (uint32_t i=0;i<size;++i) static_cast<uint8_t*>(data)[i]^=entry.xor_key;
+        kinoko::compat::decode_archive_payload(data, size, entry.xor_key);
         entry.read_position+=count;
     } else if (!ReadFile(reader->handle,data,size,&count,nullptr) || count!=size) return 0;
     reader->transferred=count; return 1;
