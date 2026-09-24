@@ -24,7 +24,6 @@ int32_t kinoko_squirrel_object_vtable(void);
 }
 
 namespace {
-static_assert(MAX_PATH == kinoko::compat::legacy_script_path_capacity);
 using namespace kinoko::script;
 inline int32_t& bytecode_vm_slot = g664;
 inline char*& primary_vm_slot = g644;
@@ -111,17 +110,25 @@ extern "C" int32_t kinoko_script_load_file(const char* path, const void* environ
     retdec_trace_i32("402d40:archives", kinoko_archive_count);
     if (!path) return 0;
     retdec_trace_squirrel_name("402d40:file", address(path));
-    std::string lookup(path);
-    if (!kinoko::compat::select_script_lookup_path(lookup, compiled_assets())) return 0;
+    const char* lookup = path;
+    char packed_lookup[MAX_PATH];
+    if (compiled_assets()) {
+        const size_t length = std::strlen(path);
+        // 402D40 writes four bytes before the start for shorter names.
+        if (length < 4 || strcpy_s(packed_lookup, sizeof(packed_lookup), path) != 0) return 0;
+        std::memcpy(packed_lookup + length - 4, ".cv4", 4);
+        lookup = packed_lookup;
+    }
     KinokoArchiveReader* opened = nullptr;
-    if (!kinoko_reader_open(&opened, lookup.c_str()) || !opened) {
+    if (!kinoko_reader_open(&opened, lookup) || !opened) {
         retdec_trace("402d40:reader-failed");
         return 0;
     }
     std::unique_ptr<KinokoArchiveReader, decltype(&kinoko_reader_close)> reader(opened, kinoko_reader_close);
     const auto size = kinoko_reader_size(opened);
     retdec_trace_i32("402d40:size", static_cast<int32_t>(size));
-    if (!size || size > 64u * 1024u * 1024u) return 0;
+    // Keep the size + 1 allocation from wrapping on malformed input.
+    if (size == UINT32_MAX) return 0;
     std::unique_ptr<unsigned char, decltype(&std::free)> bytes(
         static_cast<unsigned char*>(std::calloc(size + 1u, 1)), std::free);
     if (!bytes || !kinoko_reader_read_exact(opened, bytes.get(), size)) return 0;

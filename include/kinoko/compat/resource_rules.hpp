@@ -46,18 +46,7 @@ inline void decode_archive_payload(void* data, std::uint32_t count,
     for (std::uint32_t index = 0; index < count; ++index) bytes[index] ^= key;
 }
 
-inline constexpr std::size_t legacy_script_path_capacity = 260;
 inline constexpr std::uint16_t squirrel_bytecode_tag = 0xfafau;
-
-// 402D40 replaces the final FOUR BYTES in packed mode. It does not test for
-// a .nut suffix. These length guards already existed in the reconstruction;
-// they are not a newly inferred original-game rule. On rejection, keep path.
-inline bool select_script_lookup_path(std::string& path, bool packed) {
-    if (!packed) return true;
-    if (path.size() >= legacy_script_path_capacity || path.size() < 4) return false;
-    path.replace(path.size() - 4, 4, ".cv4");
-    return true;
-}
 
 inline bool has_squirrel_bytecode_tag(const std::uint8_t* bytes,
                                      std::size_t size) noexcept {
