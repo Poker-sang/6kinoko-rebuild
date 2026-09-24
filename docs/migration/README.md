@@ -4,6 +4,8 @@
 整理日期：2026-09-24。目标：保留原版体验，为以后**另开仓库**做 x64、跨平台、mod 准备。
 本批没有创建新仓库，也没有选择并接入新引擎。
 
+最终轮的源码、检查与合并交接见 [final-preparation.md](final-preparation.md)。
+
 ## 阅读顺序
 
 | 文档 | 用途 |
@@ -22,7 +24,8 @@
 Actor 池的 host/pool/lock 和具名入口保持 `KinokoActorPool*`，整数转换收缩到旧 ABI 入口。
 
 没有把工具 `DatArchive` 当作游戏 reader；没有新建全局 VFS/mod 回退；
-没有修改原版参考、上游源码、ACT 行为、脚本栈协议、数值规则或资源加载顺序。
+没有修改原版参考、上游源码、脚本栈协议、数值规则或资源加载顺序。
+最终轮对 ACT 的构造／清理／克隆做具名布局整理，保留基线行为；详见最终交接。
 旧 Win32 宿主布局、调用约定和未解释字段仍是迁移阻断项。
 
 ## 编译与证据
@@ -33,5 +36,6 @@ Actor 池的 host/pool/lock 和具名入口保持 `KinokoActorPool*`，整数转
 
 `.github/workflows/migration-preflight.yml` 在 Linux x64／Windows x64 编译这个小目标；
 现有 Windows x86 工作流仍负责当前游戏的构建与其原先配置的 CI 契约。
-二者结果不得互相代替。源码快照工作流保存完整 source.tar.gz、source.bundle、revision 和校验值。
+二者结果不得互相代替。schema-2 词法清单单独输出到带提交号的 CI 产物，不覆盖历史报告。
+源码快照工作流也覆盖 master，保存完整 source.tar.gz、source.bundle、revision 和校验值。
 测试执行、原 DAT 校验和游戏体验结论的具体边界见 [交接记录](HANDOFF.md)。

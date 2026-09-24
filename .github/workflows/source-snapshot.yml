@@ -2,19 +2,18 @@ name: Source snapshot
 # Preserve tracked source for reproducible native runtime validation.
 on:
   push:
-    branches: ['refactor/**']
+    branches: [master, 'refactor/**']
     paths:
-      - '.github/workflows/source-snapshot.yml'
-      - 'docs/migration/**'
-      - 'include/kinoko/compat/**'
-      - 'src/reconstructed/archive_store.cpp'
-      - 'src/reconstructed/file_io.cpp'
-      - 'src/squirrel/script_file.cpp'
-      - 'src/reconstructed/actor_pool.cpp'
-      - 'cmake/migration-preflight/**'
-      - 'tests/migration_compat_contract.cpp'
+      - '.github/workflows/**'
       - 'MIGRATION.md'
-      - 'tools/migration/**'
+      - 'AGENTS.md'
+      - 'CMakeLists.txt'
+      - 'docs/migration/**'
+      - 'src/**'
+      - 'include/**'
+      - 'cmake/**'
+      - 'tests/**'
+      - 'tools/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,7 +36,8 @@ jobs:
           git archive --format=tar.gz --output=snapshot/source.tar.gz HEAD
           git bundle create snapshot/source.bundle HEAD
           git log -30 --format='%H %s' > snapshot/COMMITS.txt
-          base=$(git merge-base origin/master HEAD)
+          base=$(python -c 'import json; print(json.load(open("docs/migration/source-map.json"))["baseline_commit"])')
+          printf '%s\n' "$base" > snapshot/COMPARISON_BASE.txt
           git diff --numstat "$base" HEAD > snapshot/DIFF_NUMSTAT.txt
           # Record inherited whitespace diagnostics without blocking archival.
           git diff --check "$base" HEAD > snapshot/DIFF_CHECK.txt || test "$?" -eq 2

@@ -5,11 +5,16 @@ on:
     paths:
       - '.github/workflows/migration-preflight.yml'
       - 'MIGRATION.md'
+      - 'CMakeLists.txt'
       - 'docs/migration/**'
       - 'tools/migration/**'
+      - 'tools/audit_readability.py'
       - 'cmake/migration-preflight/**'
-      - 'include/kinoko/compat/**'
+      - 'src/**'
+      - 'include/**'
       - 'tests/migration_compat_contract.cpp'
+      - 'tests/act_layer_storage_contract.cpp'
+      - 'tests/test_readability_inventory.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,10 +38,12 @@ jobs:
           mkdir -p "$build"
           git rev-parse HEAD > "$build/source-commit.txt"
           python tools/migration/check_source_map.py --output "$build/source-map-report.json"
-          extra=()
+          python -m py_compile tools/audit_readability.py tests/test_readability_inventory.py
+          python tools/audit_readability.py --source-ref "${{ github.sha }}" --scope project --output "$build/readability.json" > "$build/readability-summary.log"
+          extra=(-DCMAKE_BUILD_TYPE=Release)
           if [ "$RUNNER_OS" = Windows ]; then extra=(-A x64); fi
           cmake -S cmake/migration-preflight -B "$build" "${extra[@]}" \
-            -DCMAKE_BUILD_TYPE=Release -DKINOKO_MIGRATION_REGISTER_TESTS=OFF 2>&1 | tee "$build/configure.log"
+            -DKINOKO_MIGRATION_REGISTER_TESTS=OFF 2>&1 | tee "$build/configure.log"
           cmake --build "$build" --config Release --parallel 2 2>&1 | tee "$build/build.log"
           # Do not run ctest or the contract executable: execution is user-owned.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

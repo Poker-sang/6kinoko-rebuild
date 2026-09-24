@@ -61,4 +61,3 @@ void retdec_destroy_cact_script(int32_t script_ptr)
     script.set(&ScriptStorageRecord::loaded, uint8_t{0});
     script.set(&ScriptStorageRecord::compiled, uint8_t{0});
 }
-

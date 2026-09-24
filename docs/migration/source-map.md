@@ -2,6 +2,7 @@
 
 基线为 `08247b5431ff6d2459a6affe58c24f51ac90c573`，叠加本 PR 的小范围边界抽取。
 以下是人工核对后的**阅读／迁移路线**，不是自动生成的完整调用图；同一段中的文件不一定直接互相调用。
+最终轮变更与未关闭关口见 [final-preparation.md](final-preparation.md)。
 准确的可检查文件、符号、契约源码和阻断项见 [source-map.json](source-map.json)。
 
 ## 1. 启动、宿主对象、DAT 挂载、boot 脚本
@@ -29,7 +30,9 @@
 
 本 PR 的 `include/kinoko/compat/resource_rules.hpp` 只抽取纯规则：LE16/LE32、
 一次前缀处理、斜杠转换、payload key/XOR 和脚本选择；生产调用点已使用这些函数。
-没有抽走 HANDLE、挂载容器、大小写处理或 CRC 冲突策略。
+最终轮还抽取了 `compat/archive_index.hpp` 的 LE 索引 cursor 和共享 MT19937 解码算法。
+生产 wrapper 仍传入同一个随机引擎，不改变后续随机数状态。没有抽走 HANDLE、挂载容器、
+大小写处理或 CRC 冲突策略；损坏索引仍保持此前的部分挂载状态，不自动回滚。
 
 必须保留的当前规则：
 
@@ -79,10 +82,12 @@ ACT 内嵌脚本在 `squirrel_game_objects.cpp`，其闭包持有和环境协议
 检查和对象交接，不能用“应当对称”推导出相同失败处理。
 `act_document_clone.cpp`、`stage_cleanup.cpp` 和资源相关记录共同决定 clone、borrow、destroy。
 
-`act_document.cpp::retdec_construct_cact_layer` 仍有数值偏移；
-`include/kinoko/act_document_records.hpp`、layer/resource records 仍描述 x86 宿主布局。
-恢复具名字段时要同时核对构造／读取／克隆／销毁，未知 padding 不应全清零。
-本 PR 没有重新修改这些行为，原版和既有恢复证据须随新仓库保存。
+最终轮已将图层初始化／清理移到 `act_layer_lifecycle.cpp`，脚本初始化／清理移到
+`act_script_lifecycle.cpp`；`act_layer_storage.hpp` 的同一具名布局用于构造、清理、克隆及
+动态图层分配。旧地址入口只转接新实现，分配大小来自 schema。
+这些仍是 x86 宿主布局；key/list 的旧 ABI 和外层整数槽未全部迁移。脚本 callback 的 VM 槽和
+未知 padding 不得额外清零；图层保留的是重建基线原有的整块 zero-fill，不声称原版逐字节如此。
+原版和既有恢复证据须随新仓库保存。
 
 ## 5. Actor 池、更新、碰撞与脚本引用
 
@@ -144,7 +149,9 @@ mod profile 与存档迁移只是后续方案，本 PR 不改变原存档查找�
 保留 `AGENTS.md`、`CMakeLists.txt`、原版 decompile／analysis／docs、
 `third_party` 上游版本和补丁记录，以及 `tools/verify_upstream.py` 等校验入口。
 `src/decompiled/6kinoko.exe.c` 是原版证据，不等同于仍参与构建的 `6kinoko_rebuilt.c`。
-`tools/audit_readability.py` 的词法分类存在已记录漏检，不用于认证“恢复完成”。
+`tools/audit_readability.py` 的 schema-2 修复已知 pointer/noexcept 签名漏检，并独立记录
+函数外 marker、头文件和 pinned source ref。仍不是 AST，不用于认证“恢复完成”；
+历史 schema-1 报告保留，不与新口径直接比较百分比。
 
 新库的目录划分可以是 core、legacy-format、platform、tools，但这是**未来组织方案**，
 不是本 PR 已移动的文件。搬运方法及前置验收见 [HANDOFF.md](HANDOFF.md)。
