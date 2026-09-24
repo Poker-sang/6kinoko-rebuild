@@ -1,6 +1,8 @@
 # 新仓库交接入口（最终准备轮）
 
 最新的源码边界、已完成事项、验证限制和未关闭关口见 [最终准备交接](final-preparation.md)。
+PR #11 后的原版行为修正见 [原版行为修正](pr11-original-parity-20260924.md)，
+DAT 到脚本的最后一批加载链交接见 [加载链收尾](final-loading-chain-20260924.md)。
 第一批 `8c7c199a` 的完整交接记录保存在 [preparation-round-one.md](preparation-round-one.md)，
 其中的历史构建与待办不能当作最终提交状态。
 
