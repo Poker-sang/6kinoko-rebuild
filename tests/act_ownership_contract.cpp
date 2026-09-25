@@ -6,6 +6,7 @@
 #include "kinoko/act_layer_storage.hpp"
 #include "kinoko/act_resource_records.hpp"
 #include "kinoko/act_resource.h"
+#include "kinoko/act_runtime.h"
 #include "kinoko/act_key_records.hpp"
 #include "kinoko/act_array.h"
 #include "kinoko/act_list.h"

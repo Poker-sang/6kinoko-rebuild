@@ -824,7 +824,7 @@ add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
 add_executable(kinoko_map_loading_contract tests/map_loading_contract.cpp
     src/reconstructed/map_loading.cpp)
-target_include_directories(kinoko_map_loading_contract PRIVATE include)
+target_include_directories(kinoko_map_loading_contract PRIVATE include "${KINOKO_SQUIRREL2_ROOT}/include")
 target_compile_options(kinoko_map_loading_contract PRIVATE /O2 /EHsc-)
 add_test(NAME map_loading_contract COMMAND kinoko_map_loading_contract)
 
