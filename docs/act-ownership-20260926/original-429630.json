@@ -1,0 +1,26 @@
+{
+  "addr": "0x429630",
+  "code": "int __usercall sub_429630@<eax>(int a1@<esi>)\n{\n  _DWORD *v1; // eax\n  _DWORD pExceptionObject[3]; // [esp+0h] [ebp-10h] BYREF\n  char *v4; // [esp+Ch] [ebp-4h] BYREF\n\n  *(_DWORD *)(a1 + 8) = 0; /*0x429638*/\n  v1 = operator new(Size: 0x18u); /*0x42963f*/\n  if ( v1 == nullptr ) /*0x429649*/\n  {\n    v4 = nullptr; /*0x429677*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v4); /*0x42967e*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x42968c*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x429693*/\n  }\n  *(_DWORD *)(a1 + 4) = v1; /*0x42964b*/\n  *v1 = v1; /*0x42964e*/\n  *(_DWORD *)(*(_DWORD *)(a1 + 4) + 4) = *(_DWORD *)(a1 + 4); /*0x429653*/\n  *(_DWORD *)(*(_DWORD *)(a1 + 4) + 8) = *(_DWORD *)(a1 + 4); /*0x429659*/\n  *(_BYTE *)(*(_DWORD *)(a1 + 4) + 20) = 1; /*0x429661*/\n  *(_BYTE *)(*(_DWORD *)(a1 + 4) + 21) = 1; /*0x429667*/\n  return a1; /*0x42966c*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4abd0c",
+      "name": "??0exception@std@@QAE@ABQBD@Z"
+    },
+    {
+      "addr": "0x4d5878",
+      "name": "??_7bad_alloc@std@@6B@"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f7308",
+      "name": "__TI2?AVbad_alloc@std@@"
+    }
+  ]
+}

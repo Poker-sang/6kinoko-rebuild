@@ -1,0 +1,22 @@
+{
+  "addr": "0x4462c0",
+  "code": "void __thiscall sub_4462C0(void *this)\n{\n  *(_DWORD *)this = &CActResource2D::`vftable'; /*0x4462ea*/\n  if ( *((_BYTE *)this + 36) == 0 && *((_DWORD *)this + 17) != 0 ) /*0x446301*/\n    sub_405D60(a1: *((_DWORD *)this + 17)); /*0x44630c*/\n  *((_DWORD *)this + 17) = 0; /*0x446311*/\n  if ( *((_DWORD *)this + 15) >= 0x10u ) /*0x446318*/\n    operator delete(a1: *((void **)this + 10)); /*0x44631e*/\n  *((_DWORD *)this + 15) = 15; /*0x446326*/\n  *((_DWORD *)this + 14) = 0; /*0x44632d*/\n  *((_BYTE *)this + 40) = 0; /*0x446330*/\n  *(_DWORD *)this = &CActResource::`vftable'; /*0x446333*/\n  if ( *((_DWORD *)this + 7) >= 0x10u ) /*0x44633d*/\n    operator delete(a1: *((void **)this + 2)); /*0x446343*/\n  *((_DWORD *)this + 7) = 15; /*0x44634b*/\n  *((_DWORD *)this + 6) = 0; /*0x446352*/\n  *((_BYTE *)this + 8) = 0; /*0x446355*/\n}",
+  "refs": [
+    {
+      "addr": "0x4eccfc",
+      "name": "??_7CActResource2D@@6B@"
+    },
+    {
+      "addr": "0x405d60",
+      "name": "sub_405D60"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4ed324",
+      "name": "??_7CActResource@@6B@"
+    }
+  ]
+}

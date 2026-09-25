@@ -1,0 +1,18 @@
+{
+  "addr": "0x42f1b0",
+  "code": "void __thiscall sub_42F1B0(void **this)\n{\n  volatile signed __int32 *v2; // edi\n\n  *this = &CActResourceChip::`vftable'; /*0x42f1db*/\n  if ( (unsigned int)*(this + 23) >= 0x10 ) /*0x42f1ec*/\n    operator delete(a1: *(this + 18)); /*0x42f1f2*/\n  *(this + 23) = (void *)15; /*0x42f1fc*/\n  *(this + 22) = nullptr; /*0x42f203*/\n  *((_BYTE *)this + 72) = 0; /*0x42f206*/\n  v2 = (volatile signed __int32 *)*(this + 17); /*0x42f209*/\n  if ( v2 != nullptr && _InterlockedExchangeAdd(v2 + 1, 0xFFFFFFFF) == 0 ) /*0x42f21a*/\n  {\n    (*(void (__thiscall **)(volatile signed __int32 *))(*v2 + 4))(a1: v2); /*0x42f223*/\n    if ( _InterlockedExchangeAdd(v2 + 2, 0xFFFFFFFF) == 0 ) /*0x42f22f*/\n      (*(void (__thiscall **)(volatile signed __int32 *))(*v2 + 8))(a1: v2); /*0x42f238*/\n  }\n  if ( (unsigned int)*(this + 14) >= 0x10 ) /*0x42f242*/\n    operator delete(a1: *(this + 9)); /*0x42f248*/\n  *(this + 14) = (void *)15; /*0x42f250*/\n  *(this + 13) = nullptr; /*0x42f257*/\n  *((_BYTE *)this + 36) = 0; /*0x42f25a*/\n  *this = &CActResource::`vftable'; /*0x42f25d*/\n  if ( (unsigned int)*(this + 7) >= 0x10 ) /*0x42f266*/\n    operator delete(a1: *(this + 2)); /*0x42f26c*/\n  *(this + 7) = (void *)15; /*0x42f274*/\n  *(this + 6) = nullptr; /*0x42f27b*/\n  *((_BYTE *)this + 8) = 0; /*0x42f27e*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ec548",
+      "name": "??_7CActResourceChip@@6B@"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4ed324",
+      "name": "??_7CActResource@@6B@"
+    }
+  ]
+}

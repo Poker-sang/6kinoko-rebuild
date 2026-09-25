@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/legacy_string.hpp"
 #include "kinoko/act_frame.h"
 #include "kinoko/act_resource.h"
@@ -139,7 +140,7 @@ extern "C" void kinoko_act_runtime_dispose(KinokoActRuntime *storage) {
     std::free(view.get(&RuntimeRecord::active_holder));
     view.set(&RuntimeRecord::active_holder, static_cast<KinokoActSourceHolder *>(nullptr));
     const auto act = view.get(&RuntimeRecord::active_document);
-    if (act) retdec_destroy_cact_with_flags(address(act), 1);
+    kinoko::act::delete_document(act);
     view.set(&RuntimeRecord::active_document, static_cast<KinokoActDocument *>(nullptr));
     environment = kinoko::script::pair::read(object_bytes(view));
     if (vm && (sq_type(environment) & SQOBJECT_REF_COUNTED))

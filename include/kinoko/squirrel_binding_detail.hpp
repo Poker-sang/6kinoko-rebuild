@@ -51,7 +51,8 @@ public:
     Object(const Object&) = delete;
     Object& operator=(const Object&) = delete;
     ObjectView view() noexcept { return ObjectView(&storage_); }
-    int32_t location() noexcept { return address(&storage_); }
+    void *data() noexcept { return &storage_; }
+    int32_t location() noexcept { return address(data()); }
 private:
     HSQUIRRELVM vm_;
     ObjectStorage storage_{};

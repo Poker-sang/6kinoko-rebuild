@@ -1,0 +1,268 @@
+{
+  "addr": "0x417dd0",
+  "asm": {
+    "name": "sub_417DD0",
+    "start_ea": "0x417dd0",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "417dd0",
+        "instruction": "push ebp",
+        "label": "sub_417DD0"
+      },
+      {
+        "addr": "417dd1",
+        "instruction": "mov ebp, esp"
+      },
+      {
+        "addr": "417dd3",
+        "instruction": "push ebx"
+      },
+      {
+        "addr": "417dd4",
+        "instruction": "mov bl, [ebp+arg_0]"
+      },
+      {
+        "addr": "417dd7",
+        "instruction": "push esi"
+      },
+      {
+        "addr": "417dd8",
+        "instruction": "mov esi, ecx"
+      },
+      {
+        "addr": "417dda",
+        "instruction": "test bl, 2"
+      },
+      {
+        "addr": "417ddd",
+        "instruction": "jz short loc_417E0E",
+        "refs": [
+          {
+            "addr": "0x417e0e",
+            "name": "loc_417E0E"
+          }
+        ]
+      },
+      {
+        "addr": "417ddf",
+        "instruction": "mov eax, [esi-4]"
+      },
+      {
+        "addr": "417de2",
+        "instruction": "push edi"
+      },
+      {
+        "addr": "417de3",
+        "instruction": "push offset sub_427610; void (__thiscall *)(void *)",
+        "comments": [
+          "void (__thiscall *)(void *)"
+        ],
+        "refs": [
+          {
+            "addr": "0x427610",
+            "name": "sub_427610"
+          }
+        ]
+      },
+      {
+        "addr": "417de8",
+        "instruction": "lea edi, [esi-4]"
+      },
+      {
+        "addr": "417deb",
+        "instruction": "push eax; int",
+        "comments": [
+          "int"
+        ]
+      },
+      {
+        "addr": "417dec",
+        "instruction": "push 0F0h; unsigned int",
+        "comments": [
+          "unsigned int"
+        ]
+      },
+      {
+        "addr": "417df1",
+        "instruction": "push esi; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "417df2",
+        "instruction": "call ??_M@YGXPAXIHP6EX0@Z@Z; `eh vector destructor iterator'(void *,uint,int,void (*)(void *))",
+        "refs": [
+          {
+            "addr": "0x4ab399",
+            "name": "??_M@YGXPAXIHP6EX0@Z@Z"
+          }
+        ]
+      },
+      {
+        "addr": "417df7",
+        "instruction": "test bl, 1"
+      },
+      {
+        "addr": "417dfa",
+        "instruction": "jz short loc_417E05",
+        "refs": [
+          {
+            "addr": "0x417e05",
+            "name": "loc_417E05"
+          }
+        ]
+      },
+      {
+        "addr": "417dfc",
+        "instruction": "push edi; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "417dfd",
+        "instruction": "call ??_V@YAXPAX@Z; operator delete[](void *)",
+        "refs": [
+          {
+            "addr": "0x4ab330",
+            "name": "??_V@YAXPAX@Z"
+          }
+        ]
+      },
+      {
+        "addr": "417e02",
+        "instruction": "add esp, 4"
+      },
+      {
+        "addr": "417e05",
+        "instruction": "mov eax, edi",
+        "label": "loc_417E05"
+      },
+      {
+        "addr": "417e07",
+        "instruction": "pop edi"
+      },
+      {
+        "addr": "417e08",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "417e09",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "417e0a",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "417e0b",
+        "instruction": "retn 4"
+      },
+      {
+        "addr": "417e0e",
+        "instruction": "call sub_427610",
+        "label": "loc_417E0E",
+        "refs": [
+          {
+            "addr": "0x427610",
+            "name": "sub_427610"
+          }
+        ]
+      },
+      {
+        "addr": "417e13",
+        "instruction": "test bl, 1"
+      },
+      {
+        "addr": "417e16",
+        "instruction": "jz short loc_417E21",
+        "refs": [
+          {
+            "addr": "0x417e21",
+            "name": "loc_417E21"
+          }
+        ]
+      },
+      {
+        "addr": "417e18",
+        "instruction": "push esi; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "417e19",
+        "instruction": "call ??3@YAXPAX@Z; operator delete(void *)",
+        "refs": [
+          {
+            "addr": "0x4ab2a6",
+            "name": "??3@YAXPAX@Z"
+          }
+        ]
+      },
+      {
+        "addr": "417e1e",
+        "instruction": "add esp, 4"
+      },
+      {
+        "addr": "417e21",
+        "instruction": "mov eax, esi",
+        "label": "loc_417E21"
+      },
+      {
+        "addr": "417e23",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "417e24",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "417e25",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "417e26",
+        "instruction": "retn 4"
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "__saved_registers",
+        "offset": "0x8",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0xc",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_0",
+        "offset": "0x10",
+        "size": "0x1",
+        "type": "char"
+      }
+    ],
+    "return_type": "char *",
+    "arguments": [
+      {
+        "name": "this",
+        "type": "char *"
+      },
+      {
+        "name": "arg1",
+        "type": "char"
+      }
+    ]
+  },
+  "instruction_count": 38,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

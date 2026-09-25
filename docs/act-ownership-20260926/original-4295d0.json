@@ -1,0 +1,10 @@
+{
+  "addr": "0x4295d0",
+  "code": "_DWORD *__usercall sub_4295D0@<eax>(_DWORD *a1@<eax>, _DWORD *a2@<edi>)\n{\n  unsigned int v3; // eax\n  int v4; // esi\n  _DWORD *result; // eax\n\n  v3 = a2[1]; /*0x4295d3*/\n  if ( (unsigned int)a1 >= v3 || *a2 > (unsigned int)a1 ) /*0x4295de*/\n  {\n    if ( v3 == a2[2] ) /*0x429608*/\n      sub_457CA0(); /*0x42960c*/\n    result = (_DWORD *)a2[1]; /*0x429611*/\n    if ( result != nullptr ) /*0x429616*/\n      *result = *a1; /*0x42961a*/\n  }\n  else\n  {\n    v4 = ((int)a1 - *a2) >> 2; /*0x4295e2*/\n    if ( v3 == a2[2] ) /*0x4295e8*/\n      sub_457CA0(); /*0x4295ec*/\n    result = (_DWORD *)a2[1]; /*0x4295f1*/\n    if ( result != nullptr ) /*0x4295f6*/\n    {\n      *result = *(_DWORD *)(*a2 + 4 * v4); /*0x4295fd*/\n      a2[1] += 4; /*0x4295ff*/\n      return result; /*0x429604*/\n    }\n  }\n  a2[1] += 4; /*0x42961c*/\n  return result; /*0x429603*/\n}",
+  "refs": [
+    {
+      "addr": "0x457ca0",
+      "name": "sub_457CA0"
+    }
+  ]
+}

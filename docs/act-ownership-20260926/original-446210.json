@@ -1,0 +1,4 @@
+{
+  "addr": "0x446210",
+  "code": "int __thiscall sub_446210(void *this)\n{\n  int result; // eax\n\n  if ( this != nullptr ) /*0x446212*/\n    return (*(int (__thiscall **)(void *, int))(*(_DWORD *)this + 16))(a1: this, a2: 1); /*0x44621b*/\n  return result; /*0x44621d*/\n}"
+}

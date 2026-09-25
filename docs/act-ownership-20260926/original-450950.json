@@ -1,0 +1,80 @@
+{
+  "addr": "0x450950",
+  "code": "int __thiscall sub_450950(void **this, int a2)\n{\n  struct _RTL_CRITICAL_SECTION *v3; // esi\n  _DWORD *v5; // edi\n  int v6; // esi\n  int v7; // edi\n  int v8; // eax\n  int v9; // ecx\n  _DWORD *v10; // esi\n  _DWORD *v11; // eax\n  _DWORD *v12; // esi\n  int v13; // eax\n  int v14; // edx\n  int v15; // esi\n  int v16; // ecx\n  int v17; // eax\n  int v18; // edx\n  int v19; // esi\n  _DWORD **v20; // eax\n  _DWORD *v21; // edi\n  int v22; // eax\n  int v23; // eax\n  int v24; // edx\n  int v25; // esi\n  void **v26; // eax\n  void *v27; // edi\n  struct _RTL_CRITICAL_SECTION *lpCriticalSection; // [esp+20h] [ebp-64h]\n  int v29; // [esp+24h] [ebp-60h]\n  int v30; // [esp+24h] [ebp-60h]\n  void *v31; // [esp+28h] [ebp-5Ch]\n  void *v32; // [esp+2Ch] [ebp-58h]\n  _DWORD v33[2]; // [esp+30h] [ebp-54h] BYREF\n  _DWORD v34[2]; // [esp+38h] [ebp-4Ch] BYREF\n  _BYTE v35[12]; // [esp+40h] [ebp-44h] BYREF\n  void **v36; // [esp+4Ch] [ebp-38h]\n  int v37; // [esp+50h] [ebp-34h]\n  _BYTE v38[12]; // [esp+54h] [ebp-30h] BYREF\n  _BYTE v39[24]; // [esp+60h] [ebp-24h] BYREF\n  int v40; // [esp+80h] [ebp-4h]\n\n  v3 = (struct _RTL_CRITICAL_SECTION *)(this + 5); /*0x45097e*/\n  lpCriticalSection = (struct _RTL_CRITICAL_SECTION *)(this + 5); /*0x450982*/\n  EnterCriticalSection(lpCriticalSection: (LPCRITICAL_SECTION)(this + 5)); /*0x450986*/\n  v40 = 0; /*0x45098c*/\n  (*(void (__thiscall **)(_DWORD))(**(_DWORD **)*this + 32))(a1: *(_DWORD *)*this); /*0x45099d*/\n  if ( *((_BYTE *)this + 8) == 1 /*0x4509fa*/\n    || *(this + 38) == nullptr\n    || *(this + 39) == (void *)16777217\n    || (v5 = this + 41, sub_406600(a1: 0, a2: *(this + 45), a3: Source, a4: 0) == 0) )\n  {\n    LeaveCriticalSection(lpCriticalSection: v3); /*0x4509a6*/\n    return -2147467259; /*0x4509ac*/\n  }\n  else\n  {\n    sub_4153E0(a1: *(this + 39), a2: *(this + 40), a3: *(this + 38)); /*0x450a15*/\n    v34[0] = &Sqrat::Object::`vftable'; /*0x450a21*/\n    if ( v35[8] != 0 ) /*0x450a29*/\n      sub_48A430(a1: v34[1], a2: v35); /*0x450a35*/\n    if ( (unsigned int)*(this + 46) >= 0x10 ) /*0x450a41*/\n      v5 = (_DWORD *)*v5; /*0x450a43*/\n    v6 = sub_415480(Src: v5); /*0x450a56*/\n    v32 = (void *)v6; /*0x450a58*/\n    v36 = &Sqrat::Object::`vftable'; /*0x450a5c*/\n    if ( v38[8] != 0 ) /*0x450a64*/\n      sub_48A430(a1: v37, a2: v38); /*0x450a70*/\n    if ( *(_DWORD *)(*(int (__thiscall **)(int, _DWORD *))(*(_DWORD *)v6 + 8))(a1: v6, a2: v33) == 167772192 /*0x450b18*/\n      && (v29 = sub_415480(Src: \"global\"),\n          sub_4029D0(a1: v34),\n          *(_DWORD *)(*(int (__thiscall **)(int, _DWORD *))(*(_DWORD *)v29 + 8))(a1: v29, a2: v33) == 167772192)\n      && (v7 = sub_415480(Src: \"resource\"),\n          sub_4029D0(a1: v39),\n          *(_DWORD *)(*(int (__thiscall **)(int, _DWORD *))(*(_DWORD *)v7 + 8))(a1: v7, a2: v33) == 167772192) )\n    {\n      if ( a2 >= 0 ) /*0x450b23*/\n        *(this + 1) = (void *)a2; /*0x450b25*/\n      v8 = (*(int (__thiscall **)(_DWORD))(**(_DWORD **)*this + 20))(a1: *(_DWORD *)*this); /*0x450b31*/\n      v9 = (int)*(this + 3); /*0x450b33*/\n      v10 = (_DWORD *)v8; /*0x450b36*/\n      if ( v8 != v9 && v9 != 0 ) /*0x450b3e*/\n        (*(void (__thiscall **)(int, int))(*(_DWORD *)v9 + 16))(a1: v9, a2: 1); /*0x450b47*/\n      *(this + 3) = v10; /*0x450b4b*/\n      v11 = operator new(Size: 4u); /*0x450b4e*/\n      if ( v11 != nullptr ) /*0x450b58*/\n      {\n        *v11 = *(this + 3); /*0x450b5d*/\n        v12 = v11; /*0x450b5f*/\n      }\n      else\n      {\n        v12 = nullptr; /*0x450b63*/\n      }\n      if ( v12 != *(this + 4) ) /*0x450b6a*/\n        operator delete(a1: *(this + 4)); /*0x450b6d*/\n      *(this + 4) = v12; /*0x450b77*/\n      operator delete(a1: nullptr); /*0x450b7a*/\n      sub_44FF90(a1: *(this + 3)); /*0x450b87*/\n      v13 = (int)*(this + 4); /*0x450b8c*/\n      *((_BYTE *)this + 8) = 1; /*0x450b8f*/\n      v14 = *(_DWORD *)(*(_DWORD *)v13 + 228) - *(_DWORD *)(*(_DWORD *)v13 + 224); /*0x450b9b*/\n      v15 = 0; /*0x450ba1*/\n      if ( v14 >= 0 && (v14 & 0xFFFFFFFC) != 0 ) /*0x450ba3*/\n      {\n        do /*0x450bfe*/\n        {\n          if ( v15 >= 0 ) /*0x450bb5*/\n          {\n            v17 = *(_DWORD *)*(this + 4); /*0x450bbb*/\n            if ( v15 < (*(_DWORD *)(v17 + 228) - *(_DWORD *)(v17 + 224)) >> 2 ) /*0x450bce*/\n              v16 = *(_DWORD *)(*(_DWORD *)(v17 + 224) + 4 * v15); /*0x450bda*/\n            else\n              v16 = 0; /*0x450bd0*/\n          }\n          else\n          {\n            v16 = 0; /*0x450bb7*/\n          }\n          (*(void (__thiscall **)(int, int, _DWORD))(*(_DWORD *)v16 + 32))(a1: v16, a2: v7, a3: 0); /*0x450be5*/\n          ++v15; /*0x450bf8*/\n        }\n        while ( v15 < (*(_DWORD *)(*(_DWORD *)*(this + 4) + 228) - *(_DWORD *)(*(_DWORD *)*(this + 4) + 224)) >> 2 ); /*0x450bfe*/\n      }\n      v18 = *(_DWORD *)(*(_DWORD *)*(this + 4) + 212) - *(_DWORD *)(*(_DWORD *)*(this + 4) + 208); /*0x450c0b*/\n      v19 = 0; /*0x450c11*/\n      if ( v18 >= 0 && (v18 & 0xFFFFFFFC) != 0 ) /*0x450c13*/\n      {\n        do /*0x450ca0*/\n        {\n          v20 = (_DWORD **)sub_455DC0(a1: v19); /*0x450c29*/\n          v21 = *v20; /*0x450c2e*/\n          *v20 = nullptr; /*0x450c30*/\n          v33[0] = v21; /*0x450c36*/\n          LOBYTE(v40) = 1; /*0x450c3a*/\n          operator delete(a1: v31); /*0x450c44*/\n          (*(void (__thiscall **)(_DWORD, void *, int))(*(_DWORD *)*v21 + 32))(a1: *v21, a2: v32, a3: v29); /*0x450c5d*/\n          v22 = sub_452040(a1: this); /*0x450c62*/\n          if ( v22 != 0 ) /*0x450c69*/\n          {\n            v23 = *(_DWORD *)(v22 + 4); /*0x450c6b*/\n            if ( v23 != 0 ) /*0x450c70*/\n              (*(void (__thiscall **)(int))(*(_DWORD *)v23 + 36))(a1: v23); /*0x450c79*/\n          }\n          LOBYTE(v40) = 0; /*0x450c7c*/\n          operator delete(a1: v21); /*0x450c81*/\n          ++v19; /*0x450c97*/\n        }\n        while ( v19 < (*(_DWORD *)(*(_DWORD *)*(this + 4) + 212) - *(_DWORD *)(*(_DWORD *)*(this + 4) + 208)) >> 2 ); /*0x450ca0*/\n      }\n      sub_415FD0(a1: *(_DWORD *)*(this + 4) + 100, a2: v29); /*0x450cb4*/\n      if ( *(_DWORD *)(*(_DWORD *)*this + 116) != 16777217 ) /*0x450cc4*/\n        sub_415810(); /*0x450cc9*/\n      v24 = *(_DWORD *)(*(_DWORD *)*(this + 4) + 212) - *(_DWORD *)(*(_DWORD *)*(this + 4) + 208); /*0x450cd9*/\n      v25 = 0; /*0x450cdf*/\n      v30 = 0; /*0x450ce1*/\n      if ( v24 >= 0 && (v24 & 0xFFFFFFFC) != 0 ) /*0x450ce5*/\n      {\n        do /*0x450d54*/\n        {\n          v26 = (void **)sub_455DC0(a1: v25); /*0x450cf9*/\n          v27 = *v26; /*0x450cfe*/\n          *v26 = nullptr; /*0x450d00*/\n          operator delete(a1: v32); /*0x450d0b*/\n          if ( *(_DWORD *)(*(_DWORD *)v27 + 220) != 16777217 ) /*0x450d1f*/\n          {\n            sub_415810(); /*0x450d27*/\n            v25 = v30; /*0x450d2c*/\n          }\n          operator delete(a1: v27); /*0x450d31*/\n          v30 = ++v25; /*0x450d4e*/\n        }\n        while ( v25 < (*(_DWORD *)(*(_DWORD *)*(this + 4) + 212) - *(_DWORD *)(*(_DWORD *)*(this + 4) + 208)) >> 2 ); /*0x450d54*/\n      }\n      LeaveCriticalSection(lpCriticalSection); /*0x450d5b*/\n      return 0; /*0x450d61*/\n    }\n    else\n    {\n      LeaveCriticalSection(lpCriticalSection); /*0x450a94*/\n      return -2147467259; /*0x450a9a*/\n    }\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x4d50b0",
+      "name": "EnterCriticalSection"
+    },
+    {
+      "addr": "0x4d50ac",
+      "name": "LeaveCriticalSection"
+    },
+    {
+      "addr": "0x4153e0",
+      "name": "sub_4153E0"
+    },
+    {
+      "addr": "0x4d5c68",
+      "name": "??_7Object@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a430",
+      "name": "sub_48A430"
+    },
+    {
+      "addr": "0x415480",
+      "name": "sub_415480"
+    },
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x44ff90",
+      "name": "sub_44FF90"
+    },
+    {
+      "addr": "0x455dc0",
+      "name": "sub_455DC0"
+    },
+    {
+      "addr": "0x452040",
+      "name": "sub_452040"
+    },
+    {
+      "addr": "0x415fd0",
+      "name": "sub_415FD0"
+    },
+    {
+      "addr": "0x415810",
+      "name": "sub_415810"
+    },
+    {
+      "addr": "0x4ed2b4",
+      "name": "aGlobal",
+      "string": "global"
+    },
+    {
+      "addr": "0x4029d0",
+      "name": "sub_4029D0"
+    },
+    {
+      "addr": "0x4ebd9c",
+      "name": "aResource",
+      "string": "resource"
+    },
+    {
+      "addr": "0x406600",
+      "name": "sub_406600"
+    },
+    {
+      "addr": "0x4eb488",
+      "name": "Source"
+    }
+  ]
+}

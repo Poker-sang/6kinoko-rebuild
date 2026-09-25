@@ -1,0 +1,18 @@
+{
+  "addr": "0x427650",
+  "code": "void __thiscall sub_427610(char *this)\n{\n  _DWORD *i; // edi\n  _DWORD *j; // edi\n\n  *(_DWORD *)this = &CAct::`vftable'; /*0x42763b*/\n  for ( i = *((_DWORD **)this + 52); i != *((_DWORD **)this + 53); ++i ) /*0x427654*/\n  {\n    if ( *i != 0 ) /*0x42765c*/\n      (*(void (__thiscall **)(_DWORD))(*(_DWORD *)*i + 12))(a1: *i); /*0x427663*/\n  }\n  for ( j = *((_DWORD **)this + 56); j != *((_DWORD **)this + 57); ++j ) /*0x427680*/\n  {\n    if ( *j != 0 ) /*0x427686*/\n      (*(void (__thiscall **)(_DWORD))(*(_DWORD *)*j + 12))(a1: *j); /*0x42768d*/\n  }\n  if ( *((_DWORD *)this + 56) != 0 ) /*0x4276a2*/\n    operator delete(a1: *((void **)this + 56)); /*0x4276a5*/\n  *((_DWORD *)this + 56) = 0; /*0x4276ad*/\n  *((_DWORD *)this + 57) = 0; /*0x4276b3*/\n  *((_DWORD *)this + 58) = 0; /*0x4276b9*/\n  if ( *((_DWORD *)this + 52) != 0 ) /*0x4276c7*/\n    operator delete(a1: *((void **)this + 52)); /*0x4276ca*/\n  *((_DWORD *)this + 52) = 0; /*0x4276d5*/\n  *((_DWORD *)this + 53) = 0; /*0x4276db*/\n  *((_DWORD *)this + 54) = 0; /*0x4276e1*/\n  sub_415C50(a1: this + 100); /*0x4276eb*/\n  if ( *((_DWORD *)this + 16) >= 0x10u ) /*0x4276f8*/\n    operator delete(a1: *((void **)this + 11)); /*0x4276fe*/\n  *((_DWORD *)this + 16) = 15; /*0x42770b*/\n  *((_DWORD *)this + 15) = 0; /*0x42770e*/\n  *(this + 44) = 0; /*0x427715*/\n  if ( *((_DWORD *)this + 9) >= 0x10u ) /*0x42771c*/\n    operator delete(a1: *((void **)this + 4)); /*0x427722*/\n  *((_DWORD *)this + 9) = 15; /*0x42772a*/\n  *((_DWORD *)this + 8) = 0; /*0x42772d*/\n  *(this + 16) = 0; /*0x427734*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ec1d4",
+      "name": "??_7CAct@@6B@"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x415c50",
+      "name": "sub_415C50"
+    }
+  ]
+}

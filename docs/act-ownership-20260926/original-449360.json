@@ -1,0 +1,22 @@
+{
+  "addr": "0x449360",
+  "code": "void __thiscall sub_449360(_DWORD *this)\n{\n  void *v2[5]; // [esp-4h] [ebp-20h] BYREF\n  int v3; // [esp+18h] [ebp-4h]\n\n  v2[4] = this; /*0x449388*/\n  *this = &CActRenderTarget::`vftable'; /*0x44938b*/\n  v3 = 0; /*0x449391*/\n  if ( *((_BYTE *)this + 36) == 0 && *(this + 17) != 0 ) /*0x4493a2*/\n  {\n    v2[3] = v2; /*0x4493a7*/\n    sub_401E60(a1: 0); /*0x4493b0*/\n    sub_405D60(a1: *(this + 17)); /*0x4493be*/\n    *(this + 17) = 0; /*0x4493c3*/\n  }\n  v3 = -1; /*0x4493cc*/\n  sub_4462C0(this); /*0x4493d3*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ece50",
+      "name": "??_7CActRenderTarget@@6B@"
+    },
+    {
+      "addr": "0x401e60",
+      "name": "sub_401E60"
+    },
+    {
+      "addr": "0x405d60",
+      "name": "sub_405D60"
+    },
+    {
+      "addr": "0x4462c0",
+      "name": "sub_4462C0"
+    }
+  ]
+}

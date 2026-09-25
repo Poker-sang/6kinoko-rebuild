@@ -440,6 +440,7 @@ add_test(
 add_executable(kinoko_stage_contract
     tests/stage_contract.c
     tests/stage_audio_contract.cpp
+    tests/act_ownership_contract.cpp
     src/decompiled/retdec_asm_stubs.c
 )
 target_include_directories(kinoko_stage_contract PRIVATE src/decompiled
@@ -452,6 +453,7 @@ target_link_options(kinoko_stage_contract PRIVATE /OPT:REF /OPT:ICF
     "/MAP:${CMAKE_CURRENT_BINARY_DIR}/stage-contract.map")
 target_link_libraries(kinoko_stage_contract PRIVATE
     $<TARGET_PROPERTY:kinoko_retdec_rebuild,LINK_LIBRARIES>)
+add_test(NAME act_ownership_chain_contract COMMAND kinoko_stage_contract --act-ownership-chain)
 add_test(NAME stage_native_contract COMMAND kinoko_stage_contract)
 add_test(NAME squirrel_owned_state_exit_contract COMMAND kinoko_stage_contract --owned-state-exit)
 foreach(entity IN ITEMS Init0989 Init0cfb Init0d0c)
@@ -614,6 +616,10 @@ set_source_files_properties(
     src/reconstructed/act_source.cpp
     tests/act_document_contract.cpp
     tests/stage_owner_contract.cpp
+    src/reconstructed/act_document.cpp
+    src/reconstructed/act_document_clone.cpp
+    src/reconstructed/map_loading.cpp
+    src/squirrel/act_binding.cpp
     PROPERTIES COMPILE_OPTIONS "/EHsc-")
 
 add_executable(kinoko_act_layer_contract
@@ -816,6 +822,12 @@ target_include_directories(kinoko_file_archive_contract PRIVATE include)
 target_link_libraries(kinoko_file_archive_contract PRIVATE kinoko_zlib user32)
 add_test(NAME file_archive_contract COMMAND kinoko_file_archive_contract)
 
+add_executable(kinoko_map_loading_contract tests/map_loading_contract.cpp
+    src/reconstructed/map_loading.cpp)
+target_include_directories(kinoko_map_loading_contract PRIVATE include)
+target_compile_options(kinoko_map_loading_contract PRIVATE /O2 /EHsc-)
+add_test(NAME map_loading_contract COMMAND kinoko_map_loading_contract)
+
 add_executable(kinoko_map_manager_contract tests/map_manager_contract.cpp
     src/reconstructed/map_manager.cpp src/reconstructed/map_copy.cpp
     src/reconstructed/map_containers.cpp)
@@ -849,6 +861,7 @@ target_include_directories(kinoko_input_frame_contract PRIVATE include)
 add_test(NAME input_frame_contract COMMAND kinoko_input_frame_contract)
 
 set(KINOKO_TOOL_TARGETS
+    kinoko_map_loading_contract
     kinoko_input_frame_contract
     kinoko_input_copy_contract
     kinoko_input_cluster_contract

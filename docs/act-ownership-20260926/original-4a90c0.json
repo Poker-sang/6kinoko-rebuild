@@ -1,0 +1,59 @@
+{
+  "addr": "0x4a90c0",
+  "code": "int __cdecl sub_4A90C0(int a1, int a2)\n{\n  int v2; // edi\n  const char *v3; // eax\n  _DWORD pExceptionObject[5]; // [esp+Ch] [ebp-14h] BYREF\n\n  sub_4A94E0(a1); /*0x4a90fa*/\n  pExceptionObject[4] = 0; /*0x4a9105*/\n  pExceptionObject[1] = 1; /*0x4a910c*/\n  v2 = sub_48AA20(a1: dword_5149DC); /*0x4a9118*/\n  sub_48AB90(a1: dword_5149DC, a2: *(_DWORD *)(a2 + 4), a3: *(_DWORD *)(a2 + 8)); /*0x4a912b*/\n  if ( (int)sub_48B490(a1: dword_5149DC, a2: -1) < 0 ) /*0x4a9143*/\n  {\n    sub_48C910(a1: dword_5149DC, a2: v2); /*0x4a914d*/\n    sub_48ACC0(a1: dword_5149DC); /*0x4a9158*/\n    sub_48A8D0(a1: dword_5149DC, a2: -1, a3: &a2); /*0x4a916a*/\n    v3 = (const char *)a2; /*0x4a916f*/\n    if ( a2 == 0 ) /*0x4a9177*/\n      v3 = \"unknown error\"; /*0x4a9179*/\n    pExceptionObject[0] = v3; /*0x4a917e*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI1_AUSquirrelError__); /*0x4a918a*/\n  }\n  sub_4A9660(a1: -1); /*0x4a9193*/\n  sub_48AA30(a1: dword_5149DC, a2: 2); /*0x4a91a1*/\n  return a1; /*0x4a91ab*/\n}",
+  "refs": [
+    {
+      "addr": "0x4a94e0",
+      "name": "sub_4A94E0"
+    },
+    {
+      "addr": "0x48aa20",
+      "name": "sub_48AA20"
+    },
+    {
+      "addr": "0x5149dc",
+      "name": "dword_5149DC"
+    },
+    {
+      "addr": "0x48ab90",
+      "name": "sub_48AB90"
+    },
+    {
+      "addr": "0x48c910",
+      "name": "sub_48C910"
+    },
+    {
+      "addr": "0x48acc0",
+      "name": "sub_48ACC0"
+    },
+    {
+      "addr": "0x48a8d0",
+      "name": "sub_48A8D0"
+    },
+    {
+      "addr": "0x4db464",
+      "name": "aUnknownError",
+      "string": "unknown error"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f3514",
+      "name": "__TI1?AUSquirrelError@@"
+    },
+    {
+      "addr": "0x48b490",
+      "name": "sub_48B490"
+    },
+    {
+      "addr": "0x4a9660",
+      "name": "sub_4A9660"
+    },
+    {
+      "addr": "0x48aa30",
+      "name": "sub_48AA30"
+    }
+  ]
+}

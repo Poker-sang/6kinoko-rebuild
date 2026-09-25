@@ -1,3 +1,6 @@
+#include "kinoko/act_ownership.hpp"
+#include "kinoko/act_resource_records_io.hpp"
+#include "kinoko/render_target.h"
 #include "kinoko/legacy_string.h"
 #include "kinoko/native_buffer.h"
 #include "kinoko/act_array.h"
@@ -73,8 +76,7 @@ void clear_key(int32_t value) {
     if (!value) return;
     field<int32_t>(value)=address(kinoko_act_host_symbols()->key_vtable);
     const auto layout=field<int32_t>(value+4);
-    clear_layout(layout);
-    std::free(pointer<void>(layout));
+    kinoko::act::dispose_owned(pointer<KinokoActLayout>(layout));
     field<int32_t>(value+4)=0;
     kinoko_string_destroy(kinoko::act::KeyView(pointer<void>(value)).bytes(&kinoko::act::KeyRecord::script_name));
     field<uint8_t>(value+8)=0;
@@ -98,19 +100,9 @@ extern "C" int32_t __fastcall kinoko_method_destroy_layout(int32_t layout,void*)
 
 void retdec_destroy_cact_list(int32_t *list_slot)
 {
-    int32_t sentinel;
-    int32_t node;
-
-    if (list_slot == nullptr || *list_slot == 0)
-        return;
-    sentinel = *list_slot;
-    node = field<int32_t>(sentinel);
-    while (node != 0 && node != sentinel) {
-        int32_t next = field<int32_t>(node);
-        retdec_destroy_cact_key(field<int32_t>(node + 8));
-        node = next;
-    }
-    kinoko_act_list_drop_storage(sentinel);
+    if (!list_slot || !*list_slot) return;
+    kinoko_act_list_dispose_payloads(*list_slot);
+    kinoko_act_list_drop_storage(*list_slot);
     *list_slot = 0;
 }
 
@@ -122,33 +114,38 @@ static void clear_resource(int32_t resource)
     if(field<const void*>(resource)==kinoko::mesh::resource_methods()) {
         kinoko::mesh::clear_resource(pointer<kinoko::mesh::Resource>(resource));return;
     }
-    // Every resource owns the base name, including long names in native clones.
-    kinoko_string_destroy(pointer<void>(resource + 8));
-    field<int32_t>(resource + 8) = 0;
-    field<uint32_t>(resource + 24) = 0;
-    field<uint32_t>(resource + 28) = 15;
-    if (field<int32_t>(resource) ==
-            address(kinoko_act_host_symbols()->chip_resource_vtable)) {
+    using namespace kinoko::act;
+    auto clear_string = [](void *storage) {
+        kinoko::legacy::StringView(storage).destroy();
+        const kinoko::native::RecordView<kinoko::legacy::StringRecord> text(storage);
+        *text.bytes(&kinoko::legacy::StringRecord::characters) = 0;
+        text.set(&kinoko::legacy::StringRecord::length, uint32_t{0});
+        text.set(&kinoko::legacy::StringRecord::capacity, uint32_t{15});
+    };
+    if (field<const void *>(resource) == kinoko_act_host_symbols()->chip_resource_vtable) {
+        const ChipResourceFields chip(pointer<void>(resource));
+        // 42F1B0: loaded path, shared MCD, source name, then base name.
+        clear_string(chip.bytes(&ChipResourceRecord::loaded_path));
         if (kinoko_act_release_chip_data(resource))
-            retdec_mcd_free(pointer<retdec_mcd_data>(field<int32_t>(resource + 64)));
-        field<int32_t>(resource + 64) = 0;
-        kinoko_string_destroy(pointer<void>(resource + 36));
-        field<int32_t>(resource + 36) = 0;
-        field<int32_t>(resource + 52) = 0;
-        field<int32_t>(resource + 56) = 15;
-        kinoko_string_destroy(pointer<void>(resource + 72));
-        field<int32_t>(resource + 72) = 0;
-        field<int32_t>(resource + 88) = 0;
-        field<int32_t>(resource + 92) = 15;
-        return;
+            retdec_mcd_free(chip.get(&ChipResourceRecord::data));
+        chip.set(&ChipResourceRecord::data, static_cast<retdec_mcd_data *>(nullptr));
+        clear_string(chip.bytes(&ChipResourceRecord::source_name));
+        clear_string(chip.bytes(&ChipResourceRecord::name));
+    } else {
+        const TextureResourceFields texture(pointer<void>(resource));
+        const auto handle = texture.get(&TextureResourceRecord::texture);
+        const bool borrowed = texture.get(&TextureResourceRecord::borrows_texture) != 0;
+        // 449360 resets the device target before releasing an owned target.
+        if (!borrowed && handle && field<const void *>(resource) == kinoko_act_host_symbols()->render_target_vtable)
+            kinoko_set_render_target(0);
+        // Native clones retain a store reference separately from the original
+        // borrowed bit. A borrowed handle without that reference is not ours.
+        if (!kinoko_act_release_cloned_texture(resource) && !borrowed && handle)
+            kinoko_texture_release(handle);
+        texture.set(&TextureResourceRecord::texture, int32_t{0});
+        clear_string(texture.bytes(&TextureResourceRecord::texture_name));
+        clear_string(texture.bytes(&TextureResourceRecord::name));
     }
-    if (!kinoko_act_release_cloned_texture(resource))
-        kinoko_texture_release(field<int32_t>(resource + 68));
-    field<int32_t>(resource + 68) = 0;
-    kinoko_string_destroy(pointer<void>(resource + 40));
-    field<int32_t>(resource + 40) = 0;
-    field<int32_t>(resource + 56) = 0;
-    field<int32_t>(resource + 60) = 15;
 }
 
 void retdec_destroy_cact_resource(int32_t resource) {
@@ -163,34 +160,21 @@ void retdec_destroy_cact_object(int32_t object_ptr)
     document.set(&kinoko::act::DocumentRecord::vtable,
         kinoko_act_host_symbols()->act_vtable);
 
-    // The document owns every layer and resource. Keep the original forward
-    // deletion order and tolerate the loader's partially formed vectors.
-    const auto layers = document.get(&kinoko::act::DocumentRecord::layers);
-    const int32_t layer_begin = address(layers.begin);
-    const int32_t layer_end = address(layers.end);
-    for (int32_t slot = layer_begin;
-         layer_begin != 0 && layer_end >= layer_begin && slot < layer_end;
-         slot += sizeof(KinokoActLayer *)) {
-        const auto layer = field<int32_t>(slot);
-        if (layer) {
-            retdec_destroy_cact_layer(layer);
-            std::free(pointer<void>(layer));
-        }
+    using namespace kinoko::act;
+    // 427610 re-reads each end after virtual callbacks. Both payload passes
+    // precede vector destruction; resources' vector is destroyed first.
+    auto *layer = document.get(&DocumentRecord::layers).begin;
+    while (layer != document.get(&DocumentRecord::layers).end) {
+        dispose_owned(kinoko::legacy::load<KinokoActLayer *>(layer));
+        ++layer;
     }
-    kinoko_act_array_destroy(address(document.bytes(&kinoko::act::DocumentRecord::layers)));
-    document.set(&kinoko::act::DocumentRecord::layers,
-        kinoko::act::DocumentPointerSpan<KinokoActLayer>{});
-
-    const auto resources = document.get(&kinoko::act::DocumentRecord::resources);
-    const int32_t resource_begin = address(resources.begin);
-    const int32_t resource_end = address(resources.end);
-    for (int32_t slot = resource_begin;
-         resource_begin != 0 && resource_end >= resource_begin && slot < resource_end;
-         slot += sizeof(KinokoActResource *))
-        retdec_destroy_cact_resource(field<int32_t>(slot));
-    kinoko_act_array_destroy(address(document.bytes(&kinoko::act::DocumentRecord::resources)));
-    document.set(&kinoko::act::DocumentRecord::resources,
-        kinoko::act::DocumentPointerSpan<kinoko::act::ResourceRecord>{});
+    auto *resource = document.get(&DocumentRecord::resources).begin;
+    while (resource != document.get(&DocumentRecord::resources).end) {
+        dispose_owned(kinoko::legacy::load<KinokoActResource *>(resource));
+        ++resource;
+    }
+    kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::resources)));
+    kinoko_act_array_destroy(address(document.bytes(&DocumentRecord::layers)));
 
     retdec_destroy_cact_script(address(document.bytes(&kinoko::act::DocumentRecord::script)));
     auto clear_string = [](unsigned char* storage) {
@@ -211,9 +195,8 @@ int32_t retdec_destroy_cact_with_flags(int32_t object_ptr,
         return 0;
     if ((flags & 2) != 0) {
         uint32_t count = field<uint32_t>(object_ptr - 4);
-        uint32_t index;
-        for (index = 0; index < count; ++index)
-            retdec_destroy_cact_object(object_ptr + (int32_t)index * 240);
+        for (uint32_t index = count; index > 0; --index)
+            retdec_destroy_cact_object(object_ptr + (index - 1) * sizeof(kinoko::act::DocumentRecord));
         if ((flags & 1) != 0)
             std::free(pointer<void>(object_ptr - 4));
         return object_ptr - 4;

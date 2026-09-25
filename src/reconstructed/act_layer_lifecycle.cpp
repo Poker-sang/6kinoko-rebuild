@@ -98,6 +98,12 @@ extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)
     const LayerStorageView record(layer);
     const auto association = record.view(&LayerStorageRecord::association);
     association.set(&LayerAssociationRecord::vtable, kinoko_act_host_symbols()->layer_vtable);
+    // 41E5C0: owned keys/timelines go first, while both lists and VM wrappers
+    // still exist. Their node storage is released after the embedded script.
+    const auto keys = record.view(&LayerStorageRecord::keys);
+    const auto timelines = record.view(&LayerStorageRecord::timelines);
+    kinoko_act_list_dispose_payloads(address(keys.get(&LayerListRecord::head)));
+    kinoko_act_list_dispose_payloads(address(timelines.get(&LayerListRecord::head)));
     // Layout object before script object; only owned pairs are reset/released.
     for (const auto member : {&LayerStorageRecord::layout_object, &LayerStorageRecord::script_object}) {
         const auto object = record.view(member);
@@ -110,10 +116,10 @@ extern "C" void kinoko_act_layer_clear(KinokoActLayer* layer)
         object.set(&LayerObjectRecord::owns_reference, uint8_t{0});
     }
     retdec_destroy_cact_script(address(record.bytes(&LayerStorageRecord::script)));
-    const auto keys = record.view(&LayerStorageRecord::keys);
-    const auto timelines = record.view(&LayerStorageRecord::timelines);
-    retdec_destroy_cact_list(reinterpret_cast<int32_t*>(keys.bytes(&LayerListRecord::head)));
-    retdec_destroy_cact_list(reinterpret_cast<int32_t*>(timelines.bytes(&LayerListRecord::head)));
+    kinoko_act_list_drop_storage(address(timelines.get(&LayerListRecord::head)));
+    timelines.set(&LayerListRecord::head, static_cast<KeyNode *>(nullptr));
+    kinoko_act_list_drop_storage(address(keys.get(&LayerListRecord::head)));
+    keys.set(&LayerListRecord::head, static_cast<KeyNode *>(nullptr));
     keys.set(&LayerListRecord::count, int32_t{0});
     timelines.set(&LayerListRecord::count, int32_t{0});
     kinoko_string_destroy(record.bytes(&LayerStorageRecord::name));

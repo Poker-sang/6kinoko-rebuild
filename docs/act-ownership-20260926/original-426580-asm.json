@@ -1,0 +1,271 @@
+{
+  "addr": "0x426580",
+  "asm": {
+    "name": "sub_426560",
+    "start_ea": "0x426580",
+    "segment": ".text",
+    "lines": [
+      {
+        "addr": "426585",
+        "instruction": "mov esi, ecx"
+      },
+      {
+        "addr": "426587",
+        "instruction": "mov [ebp+var_10], esi"
+      },
+      {
+        "addr": "42658a",
+        "instruction": "mov dword ptr [esi], offset ??_7CActKey@@6B@; const CActKey::`vftable'",
+        "refs": [
+          {
+            "addr": "0x4ec0b0",
+            "name": "??_7CActKey@@6B@"
+          }
+        ]
+      },
+      {
+        "addr": "426590",
+        "instruction": "xor ebx, ebx"
+      },
+      {
+        "addr": "426592",
+        "instruction": "mov [ebp+var_4], ebx"
+      },
+      {
+        "addr": "426595",
+        "instruction": "mov ecx, [esi+4]"
+      },
+      {
+        "addr": "426598",
+        "instruction": "cmp ecx, ebx"
+      },
+      {
+        "addr": "42659a",
+        "instruction": "jz short loc_4265A6",
+        "refs": [
+          {
+            "addr": "0x4265a6",
+            "name": "loc_4265A6"
+          }
+        ]
+      },
+      {
+        "addr": "42659c",
+        "instruction": "mov eax, [ecx]"
+      },
+      {
+        "addr": "42659e",
+        "instruction": "mov edx, [eax+0Ch]"
+      },
+      {
+        "addr": "4265a1",
+        "instruction": "call edx"
+      },
+      {
+        "addr": "4265a3",
+        "instruction": "mov [esi+4], ebx"
+      },
+      {
+        "addr": "4265a6",
+        "instruction": "cmp dword ptr [esi+1Ch], 10h",
+        "label": "loc_4265A6"
+      },
+      {
+        "addr": "4265aa",
+        "instruction": "jb short loc_4265B8",
+        "refs": [
+          {
+            "addr": "0x4265b8",
+            "name": "loc_4265B8"
+          }
+        ]
+      },
+      {
+        "addr": "4265ac",
+        "instruction": "mov eax, [esi+8]"
+      },
+      {
+        "addr": "4265af",
+        "instruction": "push eax; void *",
+        "comments": [
+          "void *"
+        ]
+      },
+      {
+        "addr": "4265b0",
+        "instruction": "call ??3@YAXPAX@Z; operator delete(void *)",
+        "refs": [
+          {
+            "addr": "0x4ab2a6",
+            "name": "??3@YAXPAX@Z"
+          }
+        ]
+      },
+      {
+        "addr": "4265b5",
+        "instruction": "add esp, 4"
+      },
+      {
+        "addr": "4265b8",
+        "instruction": "mov dword ptr [esi+1Ch], 0Fh",
+        "label": "loc_4265B8"
+      },
+      {
+        "addr": "4265bf",
+        "instruction": "mov [esi+18h], ebx"
+      },
+      {
+        "addr": "4265c2",
+        "instruction": "mov [esi+8], bl"
+      },
+      {
+        "addr": "4265c5",
+        "instruction": "mov ecx, [ebp+var_C]"
+      },
+      {
+        "addr": "4265c8",
+        "instruction": "mov large fs:0, ecx"
+      },
+      {
+        "addr": "4265cf",
+        "instruction": "pop ecx"
+      },
+      {
+        "addr": "4265d0",
+        "instruction": "pop esi"
+      },
+      {
+        "addr": "4265d1",
+        "instruction": "pop ebx"
+      },
+      {
+        "addr": "4265d2",
+        "instruction": "mov esp, ebp"
+      },
+      {
+        "addr": "4265d4",
+        "instruction": "pop ebp"
+      },
+      {
+        "addr": "4265d5",
+        "instruction": "retn"
+      },
+      {
+        "addr": "4cfb50",
+        "instruction": "mov ecx, [ebp+var_10]",
+        "label": "loc_4CFB50"
+      },
+      {
+        "addr": "4cfb53",
+        "instruction": "add ecx, 8"
+      },
+      {
+        "addr": "4cfb56",
+        "instruction": "jmp sub_4159A0",
+        "refs": [
+          {
+            "addr": "0x4159a0",
+            "name": "sub_4159A0"
+          }
+        ]
+      },
+      {
+        "addr": "4cfb5b",
+        "instruction": "mov edx, [esp-4+arg_4]",
+        "label": "SEH_446220"
+      },
+      {
+        "addr": "4cfb5f",
+        "instruction": "lea eax, [edx+0Ch]"
+      },
+      {
+        "addr": "4cfb62",
+        "instruction": "mov ecx, [edx-10h]"
+      },
+      {
+        "addr": "4cfb65",
+        "instruction": "xor ecx, eax"
+      },
+      {
+        "addr": "4cfb67",
+        "instruction": "call sub_4AB87F",
+        "refs": [
+          {
+            "addr": "0x4ab87f",
+            "name": "sub_4AB87F"
+          }
+        ]
+      },
+      {
+        "addr": "4cfb6c",
+        "instruction": "mov eax, offset stru_4F8D88",
+        "refs": [
+          {
+            "addr": "0x4f8d88",
+            "name": "stru_4F8D88"
+          }
+        ]
+      },
+      {
+        "addr": "4cfb71",
+        "instruction": "jmp ___CxxFrameHandler3",
+        "refs": [
+          {
+            "addr": "0x4ab509",
+            "name": "___CxxFrameHandler3"
+          }
+        ]
+      }
+    ],
+    "stack_frame": [
+      {
+        "name": "var_10",
+        "offset": "0xc",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "var_C",
+        "offset": "0x10",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "var_4",
+        "offset": "0x18",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__saved_registers",
+        "offset": "0x1c",
+        "size": "0x4",
+        "type": "_DWORD"
+      },
+      {
+        "name": "__return_address",
+        "offset": "0x20",
+        "size": "0x4",
+        "type": "_UNKNOWN *"
+      },
+      {
+        "name": "arg_4",
+        "offset": "0x28",
+        "size": "0x4",
+        "type": "_DWORD"
+      }
+    ],
+    "return_type": "void",
+    "arguments": [
+      {
+        "name": "arg0",
+        "type": "void *"
+      }
+    ]
+  },
+  "instruction_count": 39,
+  "total_instructions": null,
+  "cursor": {
+    "done": true
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "addr": "0x417dd0",
+  "code": "char *__thiscall sub_417DD0(char *this, char a2)\n{\n  if ( (a2 & 2) != 0 ) /*0x417ddd*/\n  {\n    `eh vector destructor iterator'( /*0x417df2*/\n      a1: this,\n      a2: 0xF0u,\n      a3: *((_DWORD *)this - 1),\n      a4: (void (__thiscall *)(void *))sub_427610);\n    if ( (a2 & 1) != 0 ) /*0x417dfa*/\n      operator delete[](a1: this - 4); /*0x417dfd*/\n    return this - 4; /*0x417e05*/\n  }\n  else\n  {\n    sub_427610(this); /*0x417e0e*/\n    if ( (a2 & 1) != 0 ) /*0x417e16*/\n      operator delete(a1: this); /*0x417e19*/\n    return this; /*0x417e21*/\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x4ab399",
+      "name": "??_M@YGXPAXIHP6EX0@Z@Z"
+    },
+    {
+      "addr": "0x427610",
+      "name": "sub_427610"
+    },
+    {
+      "addr": "0x4ab330",
+      "name": "??_V@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    }
+  ]
+}

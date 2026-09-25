@@ -1087,7 +1087,7 @@ static int test_hidden_layer(int32_t vm, int32_t *root) {
     CHECK(retdec_publish_cact_layer_class(vm, PTR(root)));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root + 2, kinoko_string_data((const void*)(intptr_t)(PTR(act) + 16)), parent));
-    CHECK(execute_source(vm, parent, "resource <- {};"));
+    CHECK(execute_source(vm, parent, "resource <- {}; global <- {};"));
     resource[39] = root[2];
     resource[40] = root[3];
     act[52] = PTR(&hidden);
@@ -3734,7 +3734,7 @@ static int test_moving_map(int32_t vm, int32_t *root, int32_t manager, const cha
     CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
     CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
     CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, kinoko_string_data((const void*)(intptr_t)(PTR(act)+16)), parent));
-    CHECK(execute_source(vm,parent,"resource <- {};"));
+    CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
     resource[39]=root[2]; resource[40]=root[3];
     act[52]=PTR(&moving_layer); act[53]=PTR(&moving_layer+1);
     CHECK(retdec_publish_act_layers(vm,PTR(act),PTR(resource),&active));
@@ -5835,6 +5835,10 @@ int main(int argc, char **argv) {
         g644 = (char*)(intptr_t)vm;
         CHECK((int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(intptr_t)(PTR(root)), (struct SQVM *)(intptr_t)(vm))));
         return test_map_lazy_binding(vm,root);
+    }
+    if (argc == 2 && strcmp(argv[1], "--act-ownership-chain") == 0) {
+        extern int kinoko_test_act_ownership_chain(void);
+        return kinoko_test_act_ownership_chain();
     }
     if (argc == 2 && strcmp(argv[1], "--act-virtual-clone") == 0)
         return test_act_virtual_clone();

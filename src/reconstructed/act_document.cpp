@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/act_document_association.hpp"
 #include "kinoko/act_script_payload.hpp"
 #include "kinoko/act_layout_records.hpp"
@@ -524,7 +525,7 @@ extern "C" int32_t __fastcall kinoko_method_unload_resource_texture(int32_t rece
     kinoko::act::TextureResourceFields fields(resource);
     const auto handle = fields.get(&kinoko::act::TextureResourceRecord::texture);
     if (!kinoko_act_release_cloned_texture(receiver) &&
-        !fields.get(&kinoko::act::TextureResourceRecord::flag36) && handle)
+        !fields.get(&kinoko::act::TextureResourceRecord::borrows_texture) && handle)
         kinoko_texture_release(handle);
     fields.set(&kinoko::act::TextureResourceRecord::texture, int32_t{0});
     return 1;
@@ -586,7 +587,7 @@ extern "C" int32_t __fastcall kinoko_method_load_resource_texture(
         std::string path(prefix && *prefix ? prefix : "./");
         if (path.back() != '/' && path.back() != '\\') path += '/';
         retdec_call_thiscall0(resource, field<void *>(field<int32_t>(receiver) + 44));
-        fields.set(&kinoko::act::TextureResourceRecord::flag36, uint8_t{0});
+        fields.set(&kinoko::act::TextureResourceRecord::borrows_texture, uint8_t{0});
         path += name;
         // 431D80 joins prefix/name; 40E540 appends each suffix.
         for (const char *suffix : {".dds", ".bmp", ".png"}) {
@@ -723,8 +724,6 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     uint32_t resource_count;
     uint32_t index;
     uint32_t type;
-    int32_t *layers;
-    int32_t *resources;
 
     if (this_ptr == 0 || reader_ptr == 0 || version != 1)
         return 0;
@@ -740,32 +739,29 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     kinoko::act::DocumentView view(pointer<void>(this_ptr));
     const auto layer_slot = address(view.bytes(&kinoko::act::DocumentRecord::layers));
     if (!retdec_act_read_u32(reader_ptr, &layer_count) ||
-        !kinoko_act_array_prepare(layer_slot, layer_count)) {
+        layer_count > 0x10000) {
         retdec_trace("act:layer-vector-failed");
         return 0;
     }
     kinoko::act::DocumentLoadAssociations associations;
     auto *document = pointer<KinokoActDocument>(this_ptr);
-    layers = reinterpret_cast<int32_t *>(
-        view.get(&kinoko::act::DocumentRecord::layers).begin);
     for (index = 0; index < layer_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type) ||
             type != 0x2618cf18u) {
             retdec_trace_i32("act:unsupported-layer", (int32_t)type);
             return 0;
         }
-        auto *layer = pointer<KinokoActLayer>(retdec_act_make_layer());
+        std::unique_ptr<KinokoActLayer, kinoko::act::OwnedDeleter<KinokoActLayer>> pending(
+            pointer<KinokoActLayer>(retdec_act_make_layer()));
+        auto *layer = pending.get();
         if (!layer || !retdec_act_load_layer(address(layer), reader_ptr, version)) {
-            retdec_destroy_cact_layer(address(layer));
-            std::free(layer);
             retdec_trace("act:layer-load-failed");
             return 0;
         }
-        layers[index] = address(layer);
-        auto span = view.get(&kinoko::act::DocumentRecord::layers);
-        span.end = reinterpret_cast<KinokoActLayer **>(
-            reinterpret_cast<uintptr_t>(span.end) + sizeof(KinokoActLayer *));
-        view.set(&kinoko::act::DocumentRecord::layers, span);
+        // 4295D0 appends; replacing the backing span loses previously owned
+        // objects on a second load and exposes reserved slots after failure.
+        kinoko_act_array_append(layer_slot, address(layer));
+        pending.release(); // document owns it even if association insertion throws
         associations.add_layer(layer);
         if (index < 8) {
             kinoko::native::RecordView<kinoko::act::LayerAssociationRecord> loaded(layer);
@@ -779,25 +775,22 @@ int32_t retdec_act_load(int32_t this_ptr, int32_t reader_ptr,
     associations.bind_loaded_parents(document, layer_count);
     const auto resource_slot = address(view.bytes(&kinoko::act::DocumentRecord::resources));
     if (!retdec_act_read_u32(reader_ptr, &resource_count) ||
-        !kinoko_act_array_prepare(resource_slot, resource_count)) {
+        resource_count > 0x10000) {
         retdec_trace("act:resource-vector-failed");
         return 0;
     }
     associations.begin_resources();
-    resources = reinterpret_cast<int32_t *>(
-        view.get(&kinoko::act::DocumentRecord::resources).begin);
     for (index = 0; index < resource_count; ++index) {
         if (!retdec_act_read_u32(reader_ptr, &type)) {
             retdec_trace("act:resource-type-failed");
             return 0;
         }
-        auto *resource = pointer<KinokoActResource>(retdec_act_make_resource(reader_ptr, type));
+        std::unique_ptr<KinokoActResource, kinoko::act::OwnedDeleter<KinokoActResource>> pending(
+            pointer<KinokoActResource>(retdec_act_make_resource(reader_ptr, type)));
+        auto *resource = pending.get();
         if (!resource) return 0;
-        resources[index] = address(resource);
-        auto span = view.get(&kinoko::act::DocumentRecord::resources);
-        span.end = reinterpret_cast<KinokoActResource **>(
-            reinterpret_cast<uintptr_t>(span.end) + sizeof(KinokoActResource *));
-        view.set(&kinoko::act::DocumentRecord::resources, span);
+        kinoko_act_array_append(resource_slot, address(resource));
+        pending.release();
         associations.add_resource(resource);
         if (index < 8) {
             kinoko::native::RecordView<kinoko::act::ResourceIdentityRecord> identity(resource);

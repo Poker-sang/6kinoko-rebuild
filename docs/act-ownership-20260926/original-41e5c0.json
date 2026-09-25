@@ -1,0 +1,26 @@
+{
+  "addr": "0x41e5c0",
+  "code": "void __thiscall sub_41E5C0(char *this)\n{\n  _DWORD *v2; // eax\n  _DWORD *v3; // edi\n  int v4; // ecx\n  _DWORD *v5; // eax\n  _DWORD *v6; // edi\n  int v7; // ecx\n  _DWORD **v8; // ecx\n  _DWORD *v9; // eax\n  _DWORD *v10; // edi\n  _DWORD **v11; // ecx\n  _DWORD *v12; // eax\n  _DWORD *v13; // edi\n\n  *(_DWORD *)this = &CActLayer::`vftable'; /*0x41e5eb*/\n  v2 = *((_DWORD **)this + 45); /*0x41e5f8*/\n  v3 = (_DWORD *)*v2; /*0x41e5fe*/\n  if ( (_DWORD *)*v2 != v2 ) /*0x41e604*/\n  {\n    do /*0x41e61c*/\n    {\n      v4 = v3[2]; /*0x41e606*/\n      if ( v4 != 0 ) /*0x41e60b*/\n        (*(void (__thiscall **)(int))(*(_DWORD *)v4 + 12))(a1: v4); /*0x41e612*/\n      v3 = (_DWORD *)*v3; /*0x41e614*/\n    }\n    while ( v3 != *((_DWORD **)this + 45) ); /*0x41e61c*/\n  }\n  v5 = *((_DWORD **)this + 48); /*0x41e61e*/\n  v6 = (_DWORD *)*v5; /*0x41e624*/\n  if ( (_DWORD *)*v5 != v5 ) /*0x41e628*/\n  {\n    do /*0x41e646*/\n    {\n      v7 = v6[2]; /*0x41e630*/\n      if ( v7 != 0 ) /*0x41e635*/\n        (*(void (__thiscall **)(int))(*(_DWORD *)v7 + 12))(a1: v7); /*0x41e63c*/\n      v6 = (_DWORD *)*v6; /*0x41e63e*/\n    }\n    while ( v6 != *((_DWORD **)this + 48) ); /*0x41e646*/\n  }\n  *((_DWORD *)this + 82) = &Sqrat::Object::`vftable'; /*0x41e64d*/\n  if ( *(this + 344) != 0 ) /*0x41e659*/\n    sub_48A430(a1: *((_DWORD *)this + 83), a2: this + 336); /*0x41e669*/\n  *((_DWORD *)this + 77) = &Sqrat::Object::`vftable'; /*0x41e671*/\n  if ( *(this + 324) != 0 ) /*0x41e67d*/\n    sub_48A430(a1: *((_DWORD *)this + 78), a2: this + 316); /*0x41e68d*/\n  sub_415C50(a1: this + 204); /*0x41e69f*/\n  v8 = *((_DWORD ***)this + 48); /*0x41e6a4*/\n  v9 = *v8; /*0x41e6aa*/\n  *v8 = v8; /*0x41e6ac*/\n  *(_DWORD *)(*((_DWORD *)this + 48) + 4) = *((_DWORD *)this + 48); /*0x41e6b4*/\n  *((_DWORD *)this + 49) = 0; /*0x41e6b7*/\n  if ( v9 != *((_DWORD **)this + 48) ) /*0x41e6c3*/\n  {\n    do /*0x41e6d8*/\n    {\n      v10 = (_DWORD *)*v9; /*0x41e6c5*/\n      operator delete(a1: v9); /*0x41e6c8*/\n      v9 = v10; /*0x41e6d0*/\n    }\n    while ( v10 != *((_DWORD **)this + 48) ); /*0x41e6d8*/\n  }\n  operator delete(a1: *((void **)this + 48)); /*0x41e6e1*/\n  v11 = *((_DWORD ***)this + 45); /*0x41e6e6*/\n  v12 = *v11; /*0x41e6ec*/\n  *v11 = v11; /*0x41e6ee*/\n  *(_DWORD *)(*((_DWORD *)this + 45) + 4) = *((_DWORD *)this + 45); /*0x41e6f6*/\n  *((_DWORD *)this + 46) = 0; /*0x41e6fc*/\n  if ( v12 != *((_DWORD **)this + 45) ) /*0x41e708*/\n  {\n    do /*0x41e723*/\n    {\n      v13 = (_DWORD *)*v12; /*0x41e710*/\n      operator delete(a1: v12); /*0x41e713*/\n      v12 = v13; /*0x41e71b*/\n    }\n    while ( v13 != *((_DWORD **)this + 45) ); /*0x41e723*/\n  }\n  operator delete(a1: *((void **)this + 45)); /*0x41e72c*/\n  if ( *((_DWORD *)this + 33) >= 0x10u ) /*0x41e73b*/\n    operator delete(a1: *((void **)this + 28)); /*0x41e741*/\n  *((_DWORD *)this + 33) = 15; /*0x41e749*/\n  *((_DWORD *)this + 32) = 0; /*0x41e753*/\n  *(this + 112) = 0; /*0x41e759*/\n  if ( *((_DWORD *)this + 18) != 0 ) /*0x41e761*/\n    operator delete(a1: *((void **)this + 18)); /*0x41e764*/\n  *((_DWORD *)this + 18) = 0; /*0x41e76c*/\n  *((_DWORD *)this + 19) = 0; /*0x41e76f*/\n  *((_DWORD *)this + 20) = 0; /*0x41e772*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ebe68",
+      "name": "??_7CActLayer@@6B@"
+    },
+    {
+      "addr": "0x4d5c68",
+      "name": "??_7Object@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a430",
+      "name": "sub_48A430"
+    },
+    {
+      "addr": "0x415c50",
+      "name": "sub_415C50"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    }
+  ]
+}

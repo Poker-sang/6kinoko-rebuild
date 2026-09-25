@@ -1,0 +1,26 @@
+{
+  "addr": "0x420930",
+  "code": "void **__thiscall sub_420900(void **this, char a2)\n{\n  if ( (a2 & 2) != 0 ) /*0x42090e*/\n  {\n    `eh vector destructor iterator'(a1: this, a2: 0x1Cu, a3: (int)*(this - 1), a4: sub_425320); /*0x42091f*/\n    if ( (a2 & 1) != 0 ) /*0x420927*/\n      operator delete[](a1: this - 1); /*0x42092a*/\n    return this - 1; /*0x420932*/\n  }\n  else\n  {\n    *this = &CActTimeLine::`vftable'; /*0x42093b*/\n    if ( *(this + 3) != nullptr ) /*0x420948*/\n      operator delete(a1: *(this + 3)); /*0x42094b*/\n    *(this + 3) = nullptr; /*0x420953*/\n    *(this + 4) = nullptr; /*0x420956*/\n    *(this + 5) = nullptr; /*0x420959*/\n    if ( (a2 & 1) != 0 ) /*0x42095f*/\n      operator delete(a1: this); /*0x420962*/\n    return this; /*0x42096b*/\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x4ab399",
+      "name": "??_M@YGXPAXIHP6EX0@Z@Z"
+    },
+    {
+      "addr": "0x425320",
+      "name": "sub_425320"
+    },
+    {
+      "addr": "0x4ab330",
+      "name": "??_V@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4ebff0",
+      "name": "??_7CActTimeLine@@6B@"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 #include "kinoko/act_layer_access.h"
 #include "kinoko/act_layer_records.hpp"
 #include "kinoko/act_array.h"
+#include "kinoko/act_array.hpp"
+#include <algorithm>
 #include "kinoko/legacy_memory.hpp"
 
 namespace kinoko::act {
@@ -26,8 +28,18 @@ void DocumentLoadAssociations::bind_loaded_parents(KinokoActDocument *document, 
         if (parent_id < 0) continue;
         // 4296A0 is operator[]: a missing parent ID inserts a null value.
         auto *parent = layers_[parent_id];
-        // 455FD0's old-parent unlink is inapplicable to these freshly created
-        // layers (+88 was initialized to zero). Do not apply this API to clones.
+        // 455FD0 also unlinks the previous parent when reloading a document.
+        // The original resolves the first count layers, even after appending.
+        if (auto *previous = child.get(&LayerAssociationRecord::parent)) {
+            const LayerView old_parent(previous);
+            auto children = old_parent.get(&LayerAssociationRecord::children);
+            if (children.storage) {
+                auto &values = *children.storage;
+                values.erase(std::remove(values.begin(), values.end(), address(layer)), values.end());
+                children.end = children.begin + values.size();
+                old_parent.set(&LayerAssociationRecord::children, children);
+            }
+        }
         child.set(&LayerAssociationRecord::parent, static_cast<KinokoActLayer *>(nullptr));
         child.set(&LayerAssociationRecord::parent_id, int32_t{-1});
         if (parent) {
