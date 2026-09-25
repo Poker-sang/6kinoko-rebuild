@@ -147,6 +147,11 @@ bool sqplus_native_instance(HSQUIRRELVM vm, const SQChar* name, SQUserPointer na
     VmScope context(vm);
     return CreateNativeClassInstanceForHost(vm, name, native, hook, native_type) != 0;
 }
+HSQOBJECT sqplus_create_instance(HSQUIRRELVM vm, HSQOBJECT klass) {
+    VmScope context(vm); Borrowed source(klass);
+    auto result = SquirrelVM::CreateInstance(source);
+    return take(result);
+}
 bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output) {
     VmScope context(vm); Borrowed source(klass);
     const auto top = sq_gettop(vm);

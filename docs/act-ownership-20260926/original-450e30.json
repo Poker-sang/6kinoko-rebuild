@@ -1,0 +1,42 @@
+{
+  "addr": "0x450e30",
+  "code": "int __thiscall sub_450E30(void *this, void **a2, void ***a3)\n{\n  void ***v4; // ecx\n  int v6; // esi\n  void **v7; // [esp+Ch] [ebp-20h] BYREF\n  void **v8; // [esp+10h] [ebp-1Ch]\n  _BYTE v9[8]; // [esp+14h] [ebp-18h] BYREF\n  char v10; // [esp+1Ch] [ebp-10h]\n  int v11; // [esp+28h] [ebp-4h]\n\n  v8 = a2; /*0x450e67*/\n  v10 = 1; /*0x450e6a*/\n  sub_48ABE0(a1: v9); /*0x450e6e*/\n  v7 = &Sqrat::RootTable::`vftable'; /*0x450e77*/\n  sub_48A670(a1: a2); /*0x450e7e*/\n  sub_48AB40(a1: a2, a2: -1, a3: v9); /*0x450e8d*/\n  sub_48A400(a1: a2, a2: v9); /*0x450e9a*/\n  sub_48AA30(a1: a2, a2: 1); /*0x450ea2*/\n  v4 = a3; /*0x450eaa*/\n  v11 = 0; /*0x450ead*/\n  if ( a3 == nullptr ) /*0x450eb6*/\n    v4 = &v7; /*0x450eb8*/\n  if ( v4[1] == a2 ) /*0x450ebe*/\n  {\n    v6 = sub_450F30(a1: this); /*0x450eff*/\n    v7 = &Sqrat::Object::`vftable'; /*0x450f01*/\n    if ( v10 != 0 ) /*0x450f08*/\n      sub_48A430(a1: v8, a2: v9); /*0x450f12*/\n    return v6; /*0x450f1a*/\n  }\n  else\n  {\n    v7 = &Sqrat::Object::`vftable'; /*0x450ec4*/\n    if ( v10 != 0 ) /*0x450ecb*/\n      sub_48A430(a1: v8, a2: v9); /*0x450ed5*/\n    return -2147024809; /*0x450edd*/\n  }\n}",
+  "refs": [
+    {
+      "addr": "0x48abe0",
+      "name": "sub_48ABE0"
+    },
+    {
+      "addr": "0x4d5c80",
+      "name": "??_7RootTable@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a670",
+      "name": "sub_48A670"
+    },
+    {
+      "addr": "0x48ab40",
+      "name": "sub_48AB40"
+    },
+    {
+      "addr": "0x48a400",
+      "name": "sub_48A400"
+    },
+    {
+      "addr": "0x48aa30",
+      "name": "sub_48AA30"
+    },
+    {
+      "addr": "0x450f30",
+      "name": "sub_450F30"
+    },
+    {
+      "addr": "0x4d5c68",
+      "name": "??_7Object@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a430",
+      "name": "sub_48A430"
+    }
+  ]
+}

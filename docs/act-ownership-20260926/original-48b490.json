@@ -1,0 +1,18 @@
+{
+  "addr": "0x48b490",
+  "code": "int __cdecl sub_48B490(int a1, int a2)\n{\n  int v4; // [esp+4h] [ebp-8h] BYREF\n  _DWORD *v5; // [esp+8h] [ebp-4h] BYREF\n\n  v5 = nullptr; /*0x48b4a8*/\n  if ( (unsigned __int8)sub_48A0A0(a1, a2, a3: 134234112, a4: &v5) == 0 ) /*0x48b4b9*/\n    return -1; /*0x48b4bb*/\n  v5 = (_DWORD *)sub_499610(a1: v5[1]); /*0x48b4ce*/\n  v4 = 167804928; /*0x48b4d1*/\n  ++v5[1]; /*0x48b4d8*/\n  sub_491820(a1: &v4); /*0x48b4e1*/\n  if ( (v4 & 0x8000000) != 0 && v5[1]-- == 1 ) /*0x48b4f2*/\n    (*(void (__thiscall **)(_DWORD *))(*v5 + 4))(a1: v5); /*0x48b4ff*/\n  return 0; /*0x48b4be*/\n}",
+  "refs": [
+    {
+      "addr": "0x48a0a0",
+      "name": "sub_48A0A0"
+    },
+    {
+      "addr": "0x499610",
+      "name": "sub_499610"
+    },
+    {
+      "addr": "0x491820",
+      "name": "sub_491820"
+    }
+  ]
+}

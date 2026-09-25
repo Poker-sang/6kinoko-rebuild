@@ -1,3 +1,5 @@
+#include "kinoko/act_ownership.hpp"
+#include "kinoko/upstream_bindings.hpp"
 #include "kinoko/map_manager_records.hpp"
 #include "kinoko/map_layout_records.hpp"
 #include "kinoko/act_document.h"
@@ -29,18 +31,18 @@ KinokoActLayout *as_map(KinokoActLayout *layout) {
     KinokoActLayout *result = nullptr;
     return query(layout, &map_type, &result) ? result : nullptr;
 }
-bool publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_storage) {
+void publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_storage) {
     const ManagerView manager(storage);
     {
         Object instance(vm);
-        if (!ObjectView(map_class).value()._type ||
-            !(int32_t)(intptr_t)(kinoko_sqplus_object_new_instance((void *)(intptr_t)(instance.location()), (const void *)(map_class)))) return false;
-        kinoko_sqplus_object_assign((void *)(storage), (const void *)(intptr_t)(instance.location()));
+        // 4A90C0 propagates SquirrelError. It does not roll back the manager.
+        instance.view().write(upstream::sqplus_create_instance(vm, ObjectView(map_class).value()));
+        kinoko_sqplus_object_assign(storage, instance.data());
     }
     kinoko_sqplus_object_set_instance((void *)(storage), (void *)(storage));
     kinoko_sqplus_object_raw_set_name((void *)(root_storage), "map", (const void *)(storage));
     Object names(vm);
-    kinoko_sqplus_object_new_array((void *)(intptr_t)(pointer<int32_t>(names.location())), 0);
+    kinoko_sqplus_object_new_array(names.data(), 0);
     // Original re-reads the holder/count and runtime on every iteration.
     for (int32_t index = 0; index < kinoko_act_source_layer_count(manager.get(&ManagerRecord::source_holder)); ++index) {
         auto *layout = as_map(kinoko_act_layer_layout(manager.get(&ManagerRecord::player), index));
@@ -52,22 +54,22 @@ bool publish(KinokoMapManager *storage, SQVM *vm, void *map_class, void *root_st
         sq_pushstring(vm, name.data(), -1); // Empty names are also present in the original array.
         text.view().capture(vm, -1);
         sq_pop(vm, 1);
-        kinoko_sqplus_object_append((void *)(intptr_t)(names.location()), (const void *)(intptr_t)(text.location()));
+        kinoko_sqplus_object_append(names.data(), text.data());
     }
-    kinoko_sqplus_object_reverse((void *)(intptr_t)(names.location()));
-    kinoko_sqplus_object_raw_set_name((void *)(storage), "layer_name", (const void *)(intptr_t)(names.location()));
+    kinoko_sqplus_object_reverse(names.data());
+    kinoko_sqplus_object_raw_set_name((void *)(storage), "layer_name", names.data());
     Object root(vm);
-    kinoko_sqplus_object_assign((void *)(intptr_t)(root.location()), (const void *)(root_storage));
+    kinoko_sqplus_object_assign(root.data(), (const void *)(root_storage));
     Object current(vm);
     const auto *name = kinoko_act_document_name(manager.get(&ManagerRecord::source_act));
-    kinoko_sqplus_object_get_value((void *)(intptr_t)(root.location()), (void *)(intptr_t)(current.location()), name);
+    kinoko_sqplus_object_get_value(root.data(), current.data(), name);
     // 46F99A -> 46F9AF always publishes the lookup result (including null).
     // The old reconstruction indexed current_map+4 in a three-word array.
-    kinoko_sqplus_object_raw_set_name((void *)(intptr_t)(root.location()), "currentMap", (const void *)(intptr_t)(current.location()));
+    kinoko_sqplus_object_raw_set_name(root.data(), "currentMap", current.data());
     retdec_trace_squirrel_name("map:act-name", address(name));
     retdec_trace_i32("map:current-map-type", current.view().value()._type);
     retdec_trace_i32("map:current-map-data", data_bits(current.view().value()));
-    return true; // current, root, names release in the original order.
+    // current, root, names release in the original order.
 }
 }
 extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char *path,
@@ -83,10 +85,7 @@ extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char
         // No runtime or holder exists yet. Release only the failed document,
         // as 46F740 does, without resetting the script/containers a second time.
         source = manager.get(&ManagerRecord::source_act);
-        if (source) {
-            const auto *methods = kinoko::legacy::load<kinoko::stage::DocumentPrefix>(source).vtable;
-            methods->deleting_destructor(source, 1);
-        }
+        kinoko::act::delete_document(source);
         manager.set(&ManagerRecord::source_act, static_cast<KinokoActDocument *>(nullptr));
         return 0;
     }
@@ -103,22 +102,16 @@ extern "C" int32_t kinoko_map_manager_load(KinokoMapManager *storage, const char
         std::free(previous);
     }
     manager.set(&ManagerRecord::player, player);
-    // Retain existing reconstruction's failure guards at the VM boundary.
-    if (!player || retdec_root_table_construct_this(address(player), address(vm), 0) < 0) {
-        retdec_trace("map:450e30-failed");
-        kinoko_map_manager_clear(storage); return 0;
-    }
-    if (retdec_begin_stage_this(address(manager.get(&ManagerRecord::player)), 0) < 0) {
-        retdec_trace("map:450950-failed");
-        kinoko_map_manager_clear(storage); return 0;
-    }
+    // Null allocation is a retained native boundary. Negative callback results
+    // are NOT failure branches in 46F7EE/46F7F9; continue and re-read the player.
+    if (!player) { kinoko_map_manager_clear(storage); return 0; }
+    retdec_root_table_construct_this(address(player), address(vm), 0);
+    retdec_begin_stage_this(address(manager.get(&ManagerRecord::player)), 0);
     source = manager.get(&ManagerRecord::source_act);
     manager.set(&ManagerRecord::width, kinoko_act_document_screen_width(source));
     manager.set(&ManagerRecord::height, kinoko_act_document_screen_height(source));
-    if (!map_class || !root_object || !publish(storage, vm, map_class, root_object)) {
-        retdec_trace("map:instance-copy-failed");
-        kinoko_map_manager_clear(storage); return 0;
-    }
+    if (!map_class || !root_object) return 0; // invalid native caller, retain ownership
+    publish(storage, vm, map_class, root_object);
     retdec_trace_i32("map:instance", address(storage));
     retdec_trace_i32("map:act", address(source));
     retdec_trace_squirrel_name("map:path", address(path));

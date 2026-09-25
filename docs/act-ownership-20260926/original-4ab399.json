@@ -1,0 +1,4 @@
+{
+  "addr": "0x4ab399",
+  "code": "void __stdcall `eh vector destructor iterator'(char *a1, unsigned int a2, int a3, void (__thiscall *a4)(void *))\n{\n  char *i; // [esp+34h] [ebp+8h]\n\n  for ( i = &a1[a3 * a2]; --a3 >= 0; a4(a1: i) ) /*0x4ab3b2*/\n    i -= a2; /*0x4ab3be*/\n}"
+}

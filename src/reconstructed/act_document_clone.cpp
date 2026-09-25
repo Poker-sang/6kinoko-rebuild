@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/act_clone.h"
 #include "kinoko/act_document.h"
 #include "kinoko/act_document_association.hpp"
@@ -11,22 +12,9 @@ using namespace kinoko::act;
 using kinoko::legacy::address;
 using kinoko::legacy::load;
 
-struct DeleteDocument {
-    void operator()(KinokoActDocument *value) const {
-        retdec_destroy_cact_with_flags(address(value), 1);
-    }
-};
-struct DeleteResource {
-    void operator()(KinokoActResource *value) const {
-        retdec_destroy_cact_resource(address(value));
-    }
-};
-struct DeleteLayer {
-    void operator()(KinokoActLayer *value) const {
-        retdec_destroy_cact_layer(address(value));
-        std::free(value);
-    }
-};
+using DeleteDocument = DocumentDeleter;
+using DeleteResource = OwnedDeleter<KinokoActResource>;
+using DeleteLayer = OwnedDeleter<KinokoActLayer>;
 
 template<class Object, size_t Slot>
 Object *clone_virtual(Object *source) {

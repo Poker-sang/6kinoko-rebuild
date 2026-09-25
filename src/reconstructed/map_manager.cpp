@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/map_manager_records.hpp"
 #include "kinoko/map_containers.h"
 #include "kinoko/squirrel_host_compat.h"
@@ -19,8 +20,7 @@ using kinoko::legacy::address;
 void delete_source(const ManagerView& manager) {
     auto *source = manager.get(&ManagerRecord::source_act);
     if (!source) return;
-    const auto *methods = kinoko::legacy::load<kinoko::stage::DocumentPrefix>(source).vtable;
-    if (methods && methods->deleting_destructor) methods->deleting_destructor(source, 1);
+    kinoko::act::delete_document(source);
     manager.set(&ManagerRecord::source_act, static_cast<KinokoActDocument *>(nullptr));
 }
 }

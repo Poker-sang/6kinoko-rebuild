@@ -1,3 +1,9 @@
+#include "kinoko/act_ownership.hpp"
+#include "kinoko/act_document.h"
+#include "kinoko/act_layer_access.h"
+#include "kinoko/act_resource_records.hpp"
+#include "kinoko/stage_records.hpp"
+#include "kinoko/windows_owner.hpp"
 #include "kinoko/map_chip_cache.hpp"
 #include "kinoko/act_mesh.hpp"
 #include "kinoko/act_array.hpp"
@@ -1696,294 +1702,105 @@ int32_t retdec_publish_act_resource_pairs(
     return 1;
 }
 
-int32_t retdec_publish_act_layers(int32_t vm, int32_t act,
-                                          int32_t resource_ptr,
-                                          int32_t *active_count)
-{
-    int32_t root_object[5] = { 0, 0, static_cast<int32_t>(OT_NULL), 0, 1 };
-    int32_t act_root_object[5] = { address(kinoko_act_host_symbols()->sq_root_vtable), 0,
-                                   static_cast<int32_t>(OT_NULL), 0, 1 };
-    int32_t class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t layout_class_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    int32_t parent_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-    const ActPublicationView act_view(pointer<void>(act));
-    const char *act_name;
-    int32_t layer_begin;
-    int32_t layer_end;
-    int32_t layer_count;
-
-    if (active_count != nullptr)
-        *active_count = 0;
-    if (vm == 0 || act == 0 ||
-        !(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(root_object), pointer<SQVM>(vm))))
-        return 0;
-    if (!get_pair(address(root_object), "CActLayer",
-                          class_pair) ||
-        class_pair[0] != 0x08004000 || class_pair[1] == 0) {
-        retdec_trace("act:layer-class-missing");
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_object_release((void *)(root_object));
-        return 0;
+namespace {
+// Own the three temporary Sqrat references across cloning and registration,
+// as 450A56..450D61 does. Native ACTs/layers/resources remain borrowed here.
+struct StageTables {
+    SQVM *vm;
+    int32_t act[5]{}, global[5]{}, resources[5]{};
+    explicit StageTables(int32_t machine) : vm(pointer<SQVM>(machine)) {
+        for (auto *object : {act, global, resources}) {
+            object[0] = address(kinoko_act_host_symbols()->sq_object_vtable);
+            object[1] = machine; object[2] = static_cast<int32_t>(OT_NULL);
+        }
     }
-    retdec_trace_i32("act:layer-class", class_pair[1]);
-
-    /* The parent passed to sq_newslot is the ACT's published Squirrel table,
-       not the native CAct allocation.  450E30 stored the root table pair on
-       the resource, so resolve the ACT by its native stName here. */
-    act_name = kinoko_string_data(act_view.bytes(&ActPublicationRecord::name));
-    if (resource_ptr == 0 || act_name == nullptr || *act_name == 0 ||
-        field<int32_t>(resource_ptr + 156) != 0x0A000020 ||
-         field<int32_t>(resource_ptr + 160) == 0) {
-        retdec_trace("act:parent-root-invalid");
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_object_release((void *)(root_object));
-        return 0;
+    ~StageTables() {
+        for (auto *object : {resources, global, act})
+            kinoko_sqrat_release_pair(vm, object + 2);
     }
-    act_root_object[1] = vm;
-    act_root_object[2] = field<int32_t>(resource_ptr + 156);
-    act_root_object[3] = field<int32_t>(resource_ptr + 160);
-    if (!get_pair(address(act_root_object),
-                          act_name, parent_pair) ||
-                          parent_pair[0] != 0x0A000020 || parent_pair[1] == 0) {
-        retdec_trace("act:parent-table-missing");
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_object_release((void *)(root_object));
-        return 0;
+    bool resolve(int32_t resource, const char *document_name = nullptr) {
+        int32_t root[5] = {act[0], address(vm), field<int32_t>(resource + 156),
+                          field<int32_t>(resource + 160), 0};
+        const auto *name = document_name ? document_name : kinoko_string_data(pointer<void>(resource + 164));
+        return name && *name && get_pair(address(root), name, act + 2) &&
+            act[2] == static_cast<int32_t>(OT_TABLE) &&
+            get_pair(address(act), "global", global + 2) && global[2] == static_cast<int32_t>(OT_TABLE) &&
+            get_pair(address(act), "resource", resources + 2) && resources[2] == static_cast<int32_t>(OT_TABLE);
     }
-    retdec_trace_i32("act:parent-table", parent_pair[1]);
-    if (!retdec_publish_c2dlayout_class(
-            vm, address(root_object))) {
-        retdec_trace("act:c2dlayout-class-missing");
+};
+int publish_stage_objects(int32_t act, int32_t runtime, StageTables &tables, int32_t *active_count) {
+    using namespace kinoko::act;
+    const DocumentView document(pointer<void>(act));
+    if (active_count) *active_count = 0;
+    // Each virtual owns its own registration work. Ignore HRESULTs and re-read
+    // the ranges after callbacks, rather than imposing a factory/rollback path.
+    for (int32_t index = 0;; ++index) {
+        const auto range = document.get(&DocumentRecord::resources);
+        if (index >= (address(range.end) - address(range.begin)) / 4) break;
+        auto *resource = kinoko::legacy::load<KinokoActResource *>(range.begin + index);
+        const auto *methods = kinoko::legacy::load<const unsigned char *>(resource);
+        using Register = int32_t (__thiscall *)(KinokoActResource *, void *, const char *);
+        kinoko::legacy::load<Register>(methods + 32)(resource, tables.resources, nullptr);
     }
-    (void)get_pair(address(root_object), "C2DLayout",
-                           layout_class_pair);
-    retdec_trace_i32("act:layout-class-type", layout_class_pair[0]);
-    retdec_trace_i32("act:layout-class-data", layout_class_pair[1]);
-
-    /* 450950:450BB0 publishes every resource before registering layers,
-       including font atlases that have no visible layer of their own. */
-    {
-        int32_t parent_object[5] = {
-            address(kinoko_act_host_symbols()->sq_object_vtable), vm, parent_pair[0], parent_pair[1], 0
-        };
-        int32_t resources[2] = { static_cast<int32_t>(OT_NULL), 0 };
-        int32_t resource_class[2];
-        int32_t begin = act_view.get(&ActPublicationRecord::resource_begin);
-        int32_t end = act_view.get(&ActPublicationRecord::resource_end);
-        if (!retdec_publish_cact_resource2d_class(vm, address(root_object)) ||
-            !get_pair(address(parent_object), "resource", resources)) {
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), layout_class_pair);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-            kinoko_sqrat_object_release((void *)(root_object));
-            return 0;
-        }
-        for (int32_t slot = begin; slot != 0 && slot < end; slot += 4) {
-            int32_t resource = field<int32_t>(slot);
-            int32_t value[2] = { static_cast<int32_t>(OT_NULL), 0 };
-            const char *name = kinoko_string_data(ResourcePublicationView(pointer<void>(resource)).bytes(&ResourcePublicationRecord::name));
-            resource_class[0] = static_cast<int32_t>(OT_NULL);
-            resource_class[1] = 0;
-            if (name != nullptr && *name != 0 &&
-                retdec_get_act_resource_class(vm, resource, resource_class) &&
-                retdec_create_bound_instance(vm, resources, name, resource_class,
-                                               resource, value)) {
-                retdec_trace_squirrel_name("act:resource-published", address(name));
-            }
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), value);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), resource_class);
-        }
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), resources);
-    }
-
-    layer_begin = act_view.get(&ActPublicationRecord::layer_begin);
-    layer_end = act_view.get(&ActPublicationRecord::layer_end);
-    if (layer_begin == 0 || layer_end < layer_begin ||
-        ((layer_end - layer_begin) & 3) != 0) {
-        retdec_trace("act:layer-vector-invalid");
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), layout_class_pair);
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-        kinoko_sqrat_object_release((void *)(root_object));
-        return 0;
-    }
-    layer_count = (layer_end - layer_begin) / 4;
-    for (int32_t index = 0; index < layer_count; ++index) {
-        int32_t layer = field<int32_t>(layer_begin + index * 4);
-        int32_t layer_pair[2] = { static_cast<int32_t>(OT_NULL), 0 };
-        int32_t script_ptr;
-        int32_t node;
-        int32_t sentinel;
-        const char *layer_name;
-        const char *script_path;
-        int32_t layout = 0;
-        int32_t have_layout = 0;
-
-        if (layer == 0)
-            continue;
-        int32_t parent_object[5] = {
-            address(kinoko_act_host_symbols()->sq_object_vtable), vm, parent_pair[0], parent_pair[1], 0
-        };
-        const int32_t script_result = kinoko_method_register_act_layer(layer, nullptr, address(parent_object), 0);
-        if (script_result < 0) {
-            retdec_trace_i32("act:layer-publish-failed", index);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), layout_class_pair);
-            kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-            kinoko_sqrat_object_release((void *)(root_object));
-            return 0;
-        }
-        layer_pair[0] = field<int32_t>(layer + 336);
-        layer_pair[1] = field<int32_t>(layer + 340);
-        kinoko_sqrat_retain_pair(pointer<SQVM>(vm), layer_pair);
-        script_ptr = layer + 204;
-        script_path = kinoko_string_data(ScriptPublicationView(pointer<void>(script_ptr)).bytes(&ScriptPublicationRecord::path));
-        layer_name = kinoko_string_data(LayerPublicationView(pointer<void>(layer)).bytes(&LayerPublicationRecord::name));
-        retdec_trace_i32("act:layer-script-result", script_result >= 0);
-        if (index < 96) {
-            int32_t raw_data = field<int32_t>(script_ptr + 92);
-            retdec_trace_i32("act:layer-native", layer);
-            retdec_trace_squirrel_name("act:layer-name",
-                                       address(layer_name));
-            if (script_path != nullptr)
-                retdec_trace_squirrel_name("act:layer-script-path",
-                                           address(script_path));
-            retdec_trace_i32("act:layer-script-compiled",
-                             field<uint8_t>(script_ptr + 101));
-            retdec_trace_i32("act:layer-script-size",
-                             field<int32_t>(script_ptr + 96));
-            retdec_trace_i32("act:layer-script-first-word",
-                             raw_data != 0 ? field<int32_t>(raw_data) : 0);
-            retdec_trace_i32("act:layer-init-vm",
-                             field<int32_t>(layer + 208));
-            retdec_trace_i32("act:layer-init-env-type",
-                             field<int32_t>(layer + 212));
-            retdec_trace_i32("act:layer-init-env-data",
-                             field<int32_t>(layer + 216));
-            retdec_trace_i32("act:layer-init-type",
-                             field<int32_t>(layer + 220));
-            retdec_trace_i32("act:layer-init-data",
-                             field<int32_t>(layer + 224));
-            retdec_trace_i32("act:layer-update-vm",
-                             field<int32_t>(layer + 228));
-            retdec_trace_i32("act:layer-update-env-type",
-                             field<int32_t>(layer + 232));
-            retdec_trace_i32("act:layer-update-env-data",
-                             field<int32_t>(layer + 236));
-            retdec_trace_i32("act:layer-update-type",
-                             field<int32_t>(layer + 240));
-            retdec_trace_i32("act:layer-update-data",
-                             field<int32_t>(layer + 244));
-            retdec_trace_i32("act:layer-oncreate-vm",
-                             field<int32_t>(layer + 248));
-            retdec_trace_i32("act:layer-oncreate-env-type",
-                             field<int32_t>(layer + 252));
-            retdec_trace_i32("act:layer-oncreate-env-data",
-                             field<int32_t>(layer + 256));
-            retdec_trace_i32("act:layer-oncreate-type",
-                             field<int32_t>(layer + 260));
-            retdec_trace_i32("act:layer-oncreate-data",
-                             field<int32_t>(layer + 264));
-        }
-
-        sentinel = field<int32_t>(layer + 0xb4);
-        node = sentinel != 0 ? field<int32_t>(sentinel) : 0;
-        if (index < 16) {
-            retdec_trace_i32("act:publish-layer-list-sentinel", sentinel);
-            retdec_trace_i32("act:publish-layer-list-first", node);
-            retdec_trace_i32("act:publish-layer-list-count",
-                             field<int32_t>(layer + 0xb8));
-        }
-        // 450C62 -> 452040 selects only the first key of a non-timeline
-        // layer. Do not search later keys for a supported concrete type.
-        if (field<int32_t>(layer + 196) == 0 &&
-            field<int32_t>(layer + 184) != 0 && node != 0 && node != sentinel) {
-            int32_t key = field<int32_t>(node + 8);
-            int32_t candidate = key != 0
-                ? field<int32_t>(key + 4) : 0;
-            if (index < 16) {
-                retdec_trace_i32("act:publish-layer-list-node", node);
-                retdec_trace_i32("act:publish-layer-list-key", key);
-                retdec_trace_i32("act:publish-layer-list-value", candidate);
-                retdec_trace_i32("act:publish-layer-list-vtable",
-                                 candidate != 0
-                                     ? field<int32_t>(candidate) : 0);
-            }
-            layout = candidate;
-            have_layout = layout != 0;
-        }
-        if (index < 16) {
-            retdec_trace_i32("act:publish-layer-have-layout", have_layout);
-            retdec_trace_i32("act:publish-layer-layout", layout);
-        }
-        if (have_layout) {
-            // 450C79 dispatches Register, not just the two SQ wrappers.
-            // Derived registration also binds the layer's property aliases
-            // to this cloned layout (4341F0 for map alpha/blend).
-            const int32_t result = retdec_call_thiscall0_result(
-                pointer<void>(layout), field<void*>(field<int32_t>(layout) + 36));
+    for (int32_t index = 0;; ++index) {
+        const auto range = document.get(&DocumentRecord::layers);
+        if (index >= (address(range.end) - address(range.begin)) / 4) break;
+        auto *layer = kinoko::legacy::load<KinokoActLayer *>(range.begin + index);
+        const auto *methods = kinoko::legacy::load<const unsigned char *>(layer);
+        using Register = int32_t (__thiscall *)(KinokoActLayer *, void *, void *);
+        const auto status = kinoko::legacy::load<Register>(methods + 32)(layer, tables.act, tables.global);
+        retdec_trace_i32("act:layer-script-result", status >= 0);
+        const kinoko::native::RecordView<LayerKeys> keys(layer);
+        auto *head = keys.get(&LayerKeys::key_head);
+        auto *key = head && head->next != head && keys.get(&LayerKeys::key_count) &&
+            !keys.get(&LayerKeys::extra_count) ? head->next->key : nullptr;
+        auto *layout = key ? kinoko::legacy::load<LayoutKey>(key).layout : nullptr;
+        if (layout) {
+            const auto *layout_methods = kinoko::legacy::load<const unsigned char *>(layout);
+            using RegisterLayout = int32_t (__thiscall *)(KinokoActLayout *);
+            const auto result = kinoko::legacy::load<RegisterLayout>(layout_methods + 36)(layout);
             retdec_trace_i32("act:layout-register-result", result);
         }
         retdec_trace_i32("act:layer-published", index);
-        if (active_count != nullptr)
-            ++*active_count;
-        kinoko_sqrat_release_pair(pointer<SQVM>(vm), layer_pair);
+        if (active_count) ++*active_count;
     }
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), parent_pair);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), layout_class_pair);
-    kinoko_sqrat_release_pair(pointer<SQVM>(vm), class_pair);
-    kinoko_sqrat_object_release((void *)(root_object));
     return 1;
+}
+}
+int32_t retdec_publish_act_layers(int32_t vm, int32_t act, int32_t runtime, int32_t *active_count) {
+    if (active_count) *active_count = 0;
+    if (!vm || !act || !runtime) return 0;
+    StageTables tables(vm);
+    if (!tables.resolve(runtime, kinoko_act_document_name(pointer<KinokoActDocument>(act)))) return 0;
+    return publish_stage_objects(act, runtime, tables, active_count);
 }
 
 int32_t retdec_bind_act_resource_object(int32_t resource_ptr)
 {
-    int32_t holder;
-    int32_t act;
-    int32_t link;
-    int32_t old_link;
-    int32_t source;
-    int32_t previous;
-
+    using namespace kinoko::act;
     retdec_trace_i32("450950:bind-resource", resource_ptr);
-    if (resource_ptr == 0)
-        return 0;
-    holder = field<int32_t>(resource_ptr);
-    act = holder != 0 ? field<int32_t>(holder) : 0;
-    retdec_trace_i32("450950:bind-holder", holder);
-    retdec_trace_i32("450950:bind-act", act);
-    if (act == 0)
-        return 0;
-
-    source = act;
-    act = address(kinoko_act_clone(pointer<KinokoActDocument>(source), nullptr));
-    if (!act) return 0;
-    link = _3f__3f_2_40_YAPAXI_40_Z(4);
+    if (!resource_ptr) return 0;
+    const kinoko::native::RecordView<RuntimeRecord> runtime(pointer<void>(resource_ptr));
+    auto *holder = runtime.get(&RuntimeRecord::source_holder);
+    auto *source = holder ? holder->document : nullptr;
+    if (!source) return 0;
+    using Clone = KinokoActDocument *(__thiscall *)(KinokoActDocument *);
+    auto *methods = kinoko::legacy::load<const unsigned char *>(source);
+    auto *copy = kinoko::legacy::load<Clone>(methods + 20)(source);
+    if (!copy) return 0; // retained null-allocation boundary
+    auto *previous = runtime.get(&RuntimeRecord::active_document);
+    if (previous != copy) delete_document(previous);
+    runtime.set(&RuntimeRecord::active_document, copy); // 450B4B, before holder allocation
+    const int32_t link = _3f__3f_2_40_YAPAXI_40_Z(sizeof(KinokoActSourceHolder));
+    auto *new_holder = pointer<KinokoActSourceHolder>(link);
+    if (new_holder) new_holder->document = runtime.get(&RuntimeRecord::active_document);
+    auto *old_holder = runtime.get(&RuntimeRecord::active_holder);
+    if (old_holder != new_holder) std::free(old_holder);
+    runtime.set(&RuntimeRecord::active_holder, new_holder);
     retdec_trace_i32("450950:bind-new-link", link);
-    if (link == 0) {
-        retdec_destroy_cact_with_flags(act, 1);
-        return 0;
-    }
-    previous = field<int32_t>(resource_ptr + 12);
-    if (previous && previous != source)
-        retdec_destroy_cact_with_flags(previous, 1);
-    field<int32_t>(link) = act;
-    old_link = field<int32_t>(resource_ptr + 16);
-    retdec_trace_i32("450950:bind-old-link", old_link);
-    if (old_link != 0 && old_link != link) {
-        retdec_trace("450950:bind-old-link-free-before");
-        /* The generated operator-delete shim receives &g1224 at most call
-           sites because RetDec lost the original operand.  This call has a
-           recovered operand, so release the owned link directly. */
-        std::free(pointer<void>(old_link));
-        retdec_trace("450950:bind-old-link-free-after");
-    }
-
-    field<int32_t>(resource_ptr + 12) = act;
-    field<int32_t>(resource_ptr + 16) = link;
     retdec_trace("450950:bind-link-stored");
+    if (!new_holder) return 0; // new document remains runtime-owned on allocation failure
+    const int32_t act = address(runtime.get(&RuntimeRecord::active_document));
 
     /* Exact field map from the original 44FF90(resource, act) call. */
     field<int32_t>(resource_ptr + 108) = act + 72;
@@ -2036,59 +1853,43 @@ int32_t retdec_begin_stage_this(int32_t resource_ptr, int32_t stage)
     if (resource_ptr == 0)
         return result;
     critical_section = pointer<CRITICAL_SECTION>(resource_ptr + 20);
-    EnterCriticalSection(critical_section);
-
-    vm = field<int32_t>(resource_ptr + 152);
-    if (field<unsigned char>(resource_ptr + 8) == 0 &&
-        vm != 0 && field<int32_t>(resource_ptr + 156) ==
-            0x0A000020 && field<int32_t>(resource_ptr + 160) != 0 &&
-        retdec_bind_act_resource_object(resource_ptr)) {
-        if (stage >= 0)
-            field<int32_t>(resource_ptr + 4) = stage;
-        field<unsigned char>(resource_ptr + 8) = 1;
-        result = 0;
+    {
+    kinoko::windows::CriticalLock lock(critical_section);
+    const auto source_holder = field<KinokoActSourceHolder *>(resource_ptr);
+    if (source_holder && source_holder->document) {
+        auto *source = source_holder->document;
+        const auto *methods = kinoko::legacy::load<const unsigned char *>(source);
+        using Resume = int32_t (__thiscall *)(KinokoActDocument *);
+        kinoko::legacy::load<Resume>(methods + 32)(source); // 45099D, result ignored
     }
-
-    if (result == 0) {
-        int32_t act = field<int32_t>(resource_ptr + 12);
-        int32_t layer_count = 0;
-        if (act == 0 ||
-            !retdec_publish_act_layers(vm, act, resource_ptr, &layer_count)) {
-            retdec_trace("450950:layer-publish-failed");
-            result = -0x7fffbffb;
-        } else {
+    vm = field<int32_t>(resource_ptr + 152);
+    StageTables tables(vm);
+    if (field<unsigned char>(resource_ptr + 8) != 1 && vm &&
+        field<int32_t>(resource_ptr + 156) != static_cast<int32_t>(OT_NULL) && tables.resolve(resource_ptr)) {
+        if (stage >= 0) field<int32_t>(resource_ptr + 4) = stage;
+        if (retdec_bind_act_resource_object(resource_ptr)) {
+            field<unsigned char>(resource_ptr + 8) = 1;
+            result = 0;
+            const auto act = field<int32_t>(resource_ptr + 12);
+            int32_t layer_count = 0;
+            publish_stage_objects(act, resource_ptr, tables, &layer_count);
             retdec_trace_i32("450950:layer-count", layer_count);
-            /* The native order is root CActScript::Init first, followed by
-               each layer's retained Init callback in vector order. */
-            int32_t source = *field<int32_t *>(resource_ptr);
-            int32_t init_result = retdec_register_runtime_act_script(vm, resource_ptr, act)
-                ? retdec_execute_act_callback(source + 100, 4, "act:callback-init")
-                : (int32_t)E_FAIL;
-            if (init_result < 0) {
-                result = init_result;
-            } else {
-                int32_t layer_begin = ActPublicationView(pointer<void>(act)).get(&ActPublicationRecord::layer_begin);
-                int32_t layer_end = ActPublicationView(pointer<void>(act)).get(&ActPublicationRecord::layer_end);
-                int32_t layer_index;
-                for (layer_index = 0;
-                     layer_begin != 0 && layer_end >= layer_begin &&
-                     layer_index < (layer_end - layer_begin) / 4;
-                     ++layer_index) {
-                    int32_t layer = field<int32_t>(
-                        layer_begin + layer_index * 4);
-                    int32_t layer_init_result = retdec_execute_act_callback(
-                        layer != 0 ? layer + 204 : 0, 4,
-                        "act:layer-callback-init");
-                    if (layer_init_result < 0) {
-                        result = layer_init_result;
-                        break;
-                    }
-                }
-            }
+            retdec_register_act_script(act + 100, address(tables.global)); // HRESULT ignored
+            const auto source = *field<int32_t *>(resource_ptr);
+            retdec_execute_act_callback(source + 100, 4, "act:callback-init");
+            for (int32_t index = 0;; ++index) {
+                const auto active = field<int32_t>(resource_ptr + 12);
+                const ActPublicationView current(pointer<void>(active));
+                const auto begin = current.get(&ActPublicationRecord::layer_begin);
+                const auto end = current.get(&ActPublicationRecord::layer_end);
+                if (!begin || end < begin || index >= (end - begin) / 4) break;
+                const auto layer = field<int32_t>(begin + index * 4);
+                retdec_execute_act_callback(layer ? layer + 204 : 0, 4, "act:layer-callback-init");
+            } // callback failures do not roll back the active state or skip later layers
         }
     }
 
-    LeaveCriticalSection(critical_section);
+    } // release lock also on a native exception
     {
         int32_t act = field<int32_t>(resource_ptr + 12);
         const char *act_name = act != 0

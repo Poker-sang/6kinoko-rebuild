@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/integer_map.h"
 #include "kinoko/render_queue.h"
 #include "kinoko/stage_cleanup.h"
@@ -56,10 +57,7 @@ extern "C" void kinoko_stage_owner_destroy(KinokoStageOwner *storage) {
     std::free(holder);
     owner.set(&OwnerRecord::holder, static_cast<KinokoActSourceHolder *>(nullptr));
     if (source) {
-        const auto *methods = kinoko::legacy::load<DocumentPrefix>(source).vtable;
-        // Genuine thiscall virtual dispatch (465FCC); EDX is not an argument.
-        const auto destroy = kinoko::legacy::load<DocumentVirtuals>(methods).deleting_destructor;
-        destroy(source, 1);
+        kinoko::act::delete_document(source); // genuine 465FCC virtual dispatch
         owner.set(&OwnerRecord::document, static_cast<KinokoActDocument *>(nullptr));
     }
     // The source destructor is a callback and may update the owner record.

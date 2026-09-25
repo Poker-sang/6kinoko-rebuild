@@ -1,0 +1,22 @@
+{
+  "addr": "0x465f70",
+  "code": "char *sub_465F70()\n{\n  char *v0; // ecx\n  char *i; // ebx\n  _DWORD *v2; // esi\n  void *v3; // eax\n  _DWORD *v4; // edi\n  char *result; // eax\n  char *v6; // esi\n\n  v0 = dword_513C64; /*0x465f96*/\n  for ( i = *(char **)dword_513C64; i != v0; i = *(char **)i ) /*0x465fa0*/\n  {\n    v2 = *((_DWORD **)i + 2); /*0x465fa2*/\n    if ( v2 != nullptr ) /*0x465fac*/\n    {\n      v3 = (void *)v2[1]; /*0x465fae*/\n      if ( v3 != nullptr ) /*0x465fb6*/\n      {\n        operator delete(a1: v3); /*0x465fb9*/\n        v2[1] = 0; /*0x465fc1*/\n      }\n      if ( *v2 != 0 ) /*0x465fc8*/\n      {\n        (*(void (__thiscall **)(_DWORD, int))(*(_DWORD *)*v2 + 16))(a1: *v2, a2: 1); /*0x465fd1*/\n        *v2 = 0; /*0x465fd3*/\n      }\n      v4 = (_DWORD *)v2[2]; /*0x465fd5*/\n      if ( v4 != nullptr ) /*0x465fe1*/\n      {\n        sub_450020(this: v4); /*0x465fe5*/\n        operator delete(a1: v4); /*0x465feb*/\n      }\n      operator delete(a1: v2); /*0x465ff4*/\n      v0 = dword_513C64; /*0x465ff9*/\n    }\n  }\n  result = *(char **)v0; /*0x466008*/\n  *(_DWORD *)v0 = v0; /*0x46600a*/\n  *((_DWORD *)dword_513C64 + 1) = dword_513C64; /*0x466012*/\n  dword_513C68 = 0; /*0x466015*/\n  if ( result != dword_513C64 ) /*0x466025*/\n  {\n    do /*0x46603a*/\n    {\n      v6 = *(char **)result; /*0x466027*/\n      operator delete(a1: result); /*0x46602a*/\n      result = v6; /*0x466032*/\n    }\n    while ( v6 != dword_513C64 ); /*0x46603a*/\n  }\n  return result; /*0x46603c*/\n}",
+  "refs": [
+    {
+      "addr": "0x513c64",
+      "name": "dword_513C64"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x450020",
+      "name": "sub_450020"
+    },
+    {
+      "addr": "0x513c68",
+      "name": "dword_513C68"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+#include "kinoko/act_ownership.hpp"
 #include "kinoko/act_list.h"
 #include "kinoko/legacy_memory.hpp"
 #include <list>
@@ -29,3 +30,10 @@ extern "C" int32_t retdec_act_append_list(int32_t slot,int32_t value) {
     } catch(const std::bad_alloc&) { return 0; }
 }
 extern "C" void kinoko_act_list_drop_storage(int32_t head) { delete pointer<List>(head); }
+
+extern "C" void kinoko_act_list_dispose_payloads(int32_t head) {
+    if (!head) return;
+    auto *sentinel = pointer<Link>(head);
+    for (auto *node = pointer<Link>(sentinel->next); node != sentinel; node = pointer<Link>(node->next))
+        kinoko::act::dispose_owned(pointer<void>(node->value));
+}

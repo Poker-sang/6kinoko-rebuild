@@ -114,7 +114,7 @@ static int test_map_lazy_binding(int32_t vm, int32_t *root) {
             CHECK(retdec_publish_cact_layer_class(vm,PTR(root)));
             CHECK(kinoko_sqrat_new_table((struct SQVM *)(intptr_t)(vm), parent));
             CHECK(kinoko_sqrat_set_pair((struct SQVM *)(intptr_t)(vm), root+2, "RegistrationProbe", parent));
-            CHECK(execute_source(vm,parent,"resource <- {};"));
+            CHECK(execute_source(vm,parent,"resource <- {}; global <- {};"));
             runtime[39] = root[2]; runtime[40] = root[3];
             /* Original 452040 excludes layers with timeline extras. */
             if (query == 3) *(int32_t*)(intptr_t)(cloned_layer+196) = 1;

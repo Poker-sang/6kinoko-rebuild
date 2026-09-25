@@ -1,0 +1,22 @@
+{
+  "addr": "0x428bd0",
+  "code": "char __usercall sub_428BD0@<al>(int a1@<ecx>, int *a2@<esi>)\n{\n  int *v4; // eax\n  char v5; // bl\n  _DWORD *v6; // esi\n  int v7; // ecx\n  int *i; // [esp+4h] [ebp-8h]\n  int v10; // [esp+8h] [ebp-4h] BYREF\n\n  if ( *(_BYTE *)(a1 + 204) == 0 ) /*0x428be0*/\n    return 0; /*0x428be2*/\n  v4 = (int *)(a1 + 44); /*0x428bea*/\n  *(_BYTE *)(a1 + 204) = 0; /*0x428bed*/\n  v5 = 1; /*0x428bf9*/\n  if ( *(_DWORD *)(a1 + 64) >= 0x10u ) /*0x428bfb*/\n    v4 = (int *)*v4; /*0x428bfd*/\n  v6 = *(_DWORD **)(a1 + 224); /*0x428bff*/\n  for ( i = v4; v6 != *(_DWORD **)(a1 + 228); ++v6 ) /*0x428c0e*/\n  {\n    v7 = *v6; /*0x428c14*/\n    v10 = 0; /*0x428c19*/\n    if ( (*(unsigned __int8 (__thiscall **)(int, void *, int *, int *))(*(_DWORD *)v7 + 8))( /*0x428c36*/\n           a1: v7,\n           a2: &CActResource2D `RTTI Type Descriptor',\n           a3: &v10,\n           a4: a2) != 0\n      && v10 != 0 )\n    {\n      a2 = i; /*0x428c40*/\n      v5 &= (*(int (__thiscall **)(int))(*(_DWORD *)v10 + 40))(a1: v10); /*0x428c43*/\n    }\n    else\n    {\n      a2 = &v10; /*0x428c51*/\n      if ( ((*(unsigned __int8 (__thiscall **)(_DWORD, void *))(*(_DWORD *)*v6 + 8))( /*0x428c99*/\n              a1: *v6,\n              a2: &CActRenderTarget `RTTI Type Descriptor') == 0\n         || v10 == 0)\n        && ((*(unsigned __int8 (__thiscall **)(_DWORD, void *, int *))(*(_DWORD *)*v6 + 8))(\n              a1: *v6,\n              a2: &CActResourceMesh `RTTI Type Descriptor',\n              a3: &v10) == 0\n         || v10 == 0)\n        && ((*(unsigned __int8 (__thiscall **)(_DWORD, void *, int *))(*(_DWORD *)*v6 + 8))(\n              a1: *v6,\n              a2: &CActResourceChip `RTTI Type Descriptor',\n              a3: &v10) == 0\n         || v10 == 0) )\n      {\n        v5 = 0; /*0x428c9b*/\n      }\n    }\n  }\n  return v5; /*0x428be4*/\n}",
+  "refs": [
+    {
+      "addr": "0x511964",
+      "name": "??_R0?AVCActRenderTarget@@@8"
+    },
+    {
+      "addr": "0x511984",
+      "name": "??_R0?AVCActResourceMesh@@@8"
+    },
+    {
+      "addr": "0x5119a4",
+      "name": "??_R0?AVCActResourceChip@@@8"
+    },
+    {
+      "addr": "0x511944",
+      "name": "??_R0?AVCActResource2D@@@8"
+    }
+  ]
+}

@@ -84,6 +84,12 @@ static int test_act_document_file_lifetime(void) {
     CHECK(strcmp(kinoko_act_document_name(loaded), "act") == 0);
     CHECK(kinoko_act_document_screen_width(loaded) == 1280);
     CHECK(kinoko_act_document_screen_height(loaded) == 720);
+    const int32_t first_owned_layer = loaded_layers[0];
+    const int old_layer_count = (*(int32_t *)((char *)loaded + 212) - *(int32_t *)((char *)loaded + 208)) / 4;
+    CHECK(kinoko_act_document_load(loaded, valid_path));
+    loaded_layers = *(int32_t **)((char *)loaded + 208);
+    CHECK(loaded_layers[0] == first_owned_layer);
+    CHECK((*(int32_t *)((char *)loaded + 212) - *(int32_t *)((char *)loaded + 208)) / 4 == old_layer_count * 2);
     CHECK(retdec_call_thiscall1_result(loaded, (void *)g285.e4, 1));
     CHECK(act_file_deletes == 1 && !act_file_close_error);
 

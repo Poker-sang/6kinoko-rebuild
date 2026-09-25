@@ -1,0 +1,102 @@
+{
+  "addr": "0x428150",
+  "code": "char __thiscall sub_428150(_DWORD *this, int *a2, int a3)\n{\n  int v4; // ecx\n  int v5; // ecx\n  int v6; // eax\n  int v7; // ecx\n  int v8; // ecx\n  void *v9; // eax\n  int j; // esi\n  _DWORD *v11; // eax\n  int v12; // ecx\n  _DWORD *v14; // eax\n  int v15; // ebx\n  int v16; // ecx\n  int v17; // ecx\n  void *v18; // eax\n  _DWORD *v19; // edx\n  int k; // ebx\n  int *v21; // eax\n  _DWORD *v22; // ecx\n  _DWORD *v23; // esi\n  _DWORD *p_i; // eax\n  _DWORD *v25; // eax\n  int v26; // [esp+3Ch] [ebp-80h]\n  int v27; // [esp+40h] [ebp-7Ch]\n  int v28; // [esp+50h] [ebp-6Ch] BYREF\n  int v29; // [esp+54h] [ebp-68h] BYREF\n  _DWORD *v30; // [esp+58h] [ebp-64h]\n  char *v31; // [esp+5Ch] [ebp-60h] BYREF\n  _DWORD *v32; // [esp+60h] [ebp-5Ch] BYREF\n  int v33; // [esp+64h] [ebp-58h] BYREF\n  _DWORD *v34; // [esp+68h] [ebp-54h] BYREF\n  _DWORD *i; // [esp+6Ch] [ebp-50h] BYREF\n  int v36; // [esp+70h] [ebp-4Ch]\n  _DWORD *v37; // [esp+74h] [ebp-48h]\n  _DWORD pExceptionObject[3]; // [esp+80h] [ebp-3Ch] BYREF\n  int v39; // [esp+8Ch] [ebp-30h] BYREF\n  void *v40; // [esp+90h] [ebp-2Ch]\n  int v41; // [esp+9Ch] [ebp-20h] BYREF\n  void *v42; // [esp+A0h] [ebp-1Ch]\n  int v43; // [esp+A4h] [ebp-18h]\n  int v44; // [esp+B8h] [ebp-4h]\n\n  v30 = this; /*0x42817e*/\n  if ( a2 == nullptr ) /*0x428187*/\n    return 0; /*0x428187*/\n  if ( a3 != 1 ) /*0x428193*/\n    return 0; /*0x428193*/\n  v4 = *a2; /*0x42819f*/\n  HIBYTE(v28) = 1; /*0x4281a1*/\n  if ( (*(unsigned __int8 (__thiscall **)(int, char *, int))(*(_DWORD *)v4 + 12))(a1: v4, a2: (char *)&v28 + 3, a3: 1) == 0 ) /*0x4281b6*/\n    return 0; /*0x4281b6*/\n  if ( HIBYTE(v28) != 0 ) /*0x4281c1*/\n    sub_4291C0(a1: a2); /*0x4281c9*/\n  sub_44D4C0(a1: &dword_51B994, a2: this); /*0x4281d6*/\n  if ( (*(unsigned __int8 (__thiscall **)(_DWORD *, int *, int))(*(this + 25) + 4))(a1: this + 25, a2, a3: 1) == 0 ) /*0x4281ed*/\n    return 0; /*0x4281ed*/\n  v5 = *a2; /*0x4281f3*/\n  v29 = 0; /*0x4281f5*/\n  if ( (*(unsigned __int8 (__thiscall **)(int, int *, int))(*(_DWORD *)v5 + 12))(a1: v5, a2: &v29, a3: 4) == 0 ) /*0x42820d*/\n    return 0; /*0x42820d*/\n  sub_429630(); /*0x428217*/\n  v44 = 0; /*0x42821e*/\n  v6 = v29; /*0x428222*/\n  for ( i = nullptr; (int)i < v29; i = (_DWORD *)((char *)i + 1) ) /*0x42822c*/\n  {\n    v7 = *a2; /*0x428232*/\n    v34 = nullptr; /*0x428234*/\n    if ( (*(unsigned __int8 (__thiscall **)(int, _DWORD **, int))(*(_DWORD *)v7 + 12))(a1: v7, a2: &v34, a3: 4) == 0 ) /*0x428248*/\n      goto LABEL_23; /*0x428293*/\n    sub_415230(a1: v34, a2: v27); /*0x428253*/\n    v8 = *(_DWORD *)sub_41DF70(a1: v26); /*0x42825f*/\n    if ( v8 == 0 ) /*0x428263*/\n      goto LABEL_23; /*0x428293*/\n    v31 = nullptr; /*0x428269*/\n    if ( (*(unsigned __int8 (__thiscall **)(int, char **))(*(_DWORD *)v8 + 24))(a1: v8, a2: &v31) == 0 /*0x428293*/\n      || (*(unsigned __int8 (__thiscall **)(char *, int *, int))(*(_DWORD *)v31 + 4))(a1: v31, a2, a3: 1) == 0 )\n    {\n      goto LABEL_23; /*0x428293*/\n    }\n    v32 = nullptr; /*0x4282a1*/\n    if ( (*(unsigned __int8 (__thiscall **)(char *, void *, _DWORD **))(*(_DWORD *)v31 + 8))( /*0x4282b4*/\n           a1: v31,\n           a2: &CActLayer `RTTI Type Descriptor',\n           a3: &v32) != 0 )\n    {\n      sub_4295D0(); /*0x4282c4*/\n      v36 = v32[26]; /*0x4282d8*/\n      v37 = v32; /*0x4282dc*/\n      v9 = (void *)sub_42A800(); /*0x4282e0*/\n      sub_42A310(a1: (int)&v39, a2: v9); /*0x4282ed*/\n    }\n    v6 = v29; /*0x4282f8*/\n  }\n  for ( j = 0; j < v6; ++j ) /*0x42830d*/\n  {\n    if ( *(int *)(*(_DWORD *)(v30[52] + 4 * j) + 108) >= 0 ) /*0x428320*/\n    {\n      i = *(_DWORD **)(v30[52] + 4 * j); /*0x428335*/\n      v11 = (_DWORD *)sub_4296A0(); /*0x428339*/\n      sub_455FD0(a1: &i, a2: *v11); /*0x428346*/\n      v6 = v29; /*0x42834b*/\n    }\n  }\n  v12 = *a2; /*0x428354*/\n  v33 = 0; /*0x428356*/\n  if ( (*(unsigned __int8 (__thiscall **)(int, int *, int))(*(_DWORD *)v12 + 12))(a1: v12, a2: &v33, a3: 4) == 0 ) /*0x42836a*/\n  {\n    v44 = 1; /*0x42836c*/\nLABEL_22:\n    sub_429920(a1: *(_DWORD *)v40, a2: v40); /*0x428378*/\n    operator delete(a1: v40); /*0x42838e*/\n    return 0; /*0x428396*/\n  }\n  v43 = 0; /*0x4283d2*/\n  v14 = operator new(Size: 0x18u); /*0x4283d6*/\n  if ( v14 == nullptr ) /*0x4283e0*/\n  {\n    v31 = nullptr; /*0x4286ff*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v31); /*0x428703*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x428712*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x42871a*/\n  }\n  v42 = v14; /*0x4283e6*/\n  *v14 = v14; /*0x4283ea*/\n  *((_DWORD *)v42 + 1) = v42; /*0x4283f0*/\n  *((_DWORD *)v42 + 2) = v42; /*0x4283f7*/\n  *((_BYTE *)v42 + 20) = 1; /*0x4283fe*/\n  *((_BYTE *)v42 + 21) = 1; /*0x428406*/\n  v15 = 0; /*0x42840a*/\n  LOBYTE(v44) = 2; /*0x42840c*/\n  if ( v33 > 0 ) /*0x428415*/\n  {\n    while ( 1 ) /*0x42841e*/\n    {\n      v16 = *a2; /*0x42841e*/\n      i = nullptr; /*0x428422*/\n      if ( (*(unsigned __int8 (__thiscall **)(int, _DWORD **, int))(*(_DWORD *)v16 + 12))(a1: v16, a2: &i, a3: 4) == 0 ) /*0x428436*/\n      {\n        LOBYTE(v44) = 3; /*0x428541*/\n        sub_429920(a1: *(_DWORD *)v42, a2: v42); /*0x428556*/\n        operator delete(a1: v42); /*0x428560*/\n        v44 = 4; /*0x428568*/\n        sub_429920(a1: *(_DWORD *)v40, a2: v40); /*0x428580*/\n        operator delete(a1: v40); /*0x42858a*/\n        return 0; /*0x428592*/\n      }\n      if ( (dword_51BC90 & 1) == 0 ) /*0x428443*/\n      {\n        dword_51BC90 |= 1u; /*0x428445*/\n        LOBYTE(v44) = 5; /*0x42844c*/\n        sub_4152A0(); /*0x428451*/\n        atexit(a1: sub_4D41B0); /*0x42845b*/\n        LOBYTE(v44) = 2; /*0x428463*/\n      }\n      v17 = *(_DWORD *)sub_41DF70(a1: i); /*0x428477*/\n      if ( v17 == 0 ) /*0x42847b*/\n      {\n        LOBYTE(v44) = 6; /*0x428597*/\n        sub_429920(a1: *(_DWORD *)v42, a2: v42); /*0x4285ac*/\n        operator delete(a1: v42); /*0x4285b6*/\n        v44 = 7; /*0x4285be*/\n        sub_429920(a1: *(_DWORD *)v40, a2: v40); /*0x4285d6*/\n        operator delete(a1: v40); /*0x4285e0*/\n        return 0; /*0x4285e8*/\n      }\n      v32 = nullptr; /*0x428481*/\n      if ( (*(unsigned __int8 (__thiscall **)(int, _DWORD **))(*(_DWORD *)v17 + 24))(a1: v17, a2: &v32) == 0 ) /*0x428493*/\n      {\n        LOBYTE(v44) = 8; /*0x4285ed*/\n        sub_429920(a1: *(_DWORD *)v42, a2: v42); /*0x428602*/\n        operator delete(a1: v42); /*0x42860c*/\n        v44 = 9; /*0x428614*/\n        goto LABEL_22; /*0x428620*/\n      }\n      if ( (*(unsigned __int8 (__thiscall **)(_DWORD *, int *, int))(*v32 + 4))(a1: v32, a2, a3: 1) == 0 ) /*0x4284ab*/\n        break; /*0x4284ab*/\n      v34 = v32; /*0x4284c3*/\n      sub_4295D0(); /*0x4284c7*/\n      v36 = v34[1]; /*0x4284db*/\n      v37 = v34; /*0x4284df*/\n      v18 = (void *)sub_42A800(); /*0x4284e3*/\n      sub_42A310(a1: (int)&v41, a2: v18); /*0x4284f0*/\n      if ( ++v15 >= v33 ) /*0x4284fa*/\n        goto LABEL_35; /*0x4284fa*/\n    }\n    LOBYTE(v44) = 0; /*0x42862a*/\n    sub_427FA0(a1: &v41); /*0x42862f*/\nLABEL_23:\n    v44 = -1; /*0x428398*/\n    sub_427FA0(a1: &v39); /*0x4283a5*/\n    return 0; /*0x4283be*/\n  }\nLABEL_35:\n  v19 = v42; /*0x428500*/\n  for ( k = 0; k < v29; ++k ) /*0x42850a*/\n  {\n    v21 = (int *)v19[1]; /*0x42851a*/\n    v22 = *(_DWORD **)(v30[52] + 4 * k); /*0x428521*/\n    v23 = v19; /*0x428524*/\n    while ( *((_BYTE *)v21 + 21) == 0 ) /*0x428526*/\n    {\n      if ( v21[3] >= v22[24] ) /*0x428533*/\n      {\n        v23 = v21; /*0x428646*/\n        v21 = (int *)*v21; /*0x428648*/\n      }\n      else\n      {\n        v21 = (int *)v21[2]; /*0x428539*/\n      }\n    }\n    i = v23; /*0x428654*/\n    if ( v23 == v19 || v22[24] < v23[3] ) /*0x428662*/\n    {\n      v34 = v19; /*0x42866a*/\n      p_i = &v34; /*0x42866e*/\n    }\n    else\n    {\n      p_i = &i; /*0x428664*/\n    }\n    v25 = (_DWORD *)*p_i; /*0x428672*/\n    if ( v25 != v19 ) /*0x428676*/\n    {\n      (*(void (__thiscall **)(_DWORD *, _DWORD))(*v22 + 24))(a1: v22, a2: v25[4]); /*0x428681*/\n      v19 = v42; /*0x428683*/\n    }\n  }\n  LOBYTE(v44) = 10; /*0x428692*/\n  sub_429920(a1: *v19, a2: v19); /*0x4286a3*/\n  operator delete(a1: v42); /*0x4286ad*/\n  v44 = 11; /*0x4286b5*/\n  sub_429920(a1: *(_DWORD *)v40, a2: v40); /*0x4286cd*/\n  operator delete(a1: v40); /*0x4286d7*/\n  return 1; /*0x4283ac*/\n}",
+  "refs": [
+    {
+      "addr": "0x4291c0",
+      "name": "sub_4291C0"
+    },
+    {
+      "addr": "0x44d4c0",
+      "name": "sub_44D4C0"
+    },
+    {
+      "addr": "0x51b994",
+      "name": "dword_51B994"
+    },
+    {
+      "addr": "0x429630",
+      "name": "sub_429630"
+    },
+    {
+      "addr": "0x415230",
+      "name": "sub_415230"
+    },
+    {
+      "addr": "0x41df70",
+      "name": "sub_41DF70"
+    },
+    {
+      "addr": "0x4295d0",
+      "name": "sub_4295D0"
+    },
+    {
+      "addr": "0x42a800",
+      "name": "sub_42A800"
+    },
+    {
+      "addr": "0x42a310",
+      "name": "sub_42A310"
+    },
+    {
+      "addr": "0x511170",
+      "name": "??_R0?AVCActLayer@@@8"
+    },
+    {
+      "addr": "0x4296a0",
+      "name": "sub_4296A0"
+    },
+    {
+      "addr": "0x455fd0",
+      "name": "sub_455FD0"
+    },
+    {
+      "addr": "0x429920",
+      "name": "sub_429920"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x4abd0c",
+      "name": "??0exception@std@@QAE@ABQBD@Z"
+    },
+    {
+      "addr": "0x4d5878",
+      "name": "??_7bad_alloc@std@@6B@"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f7308",
+      "name": "__TI2?AVbad_alloc@std@@"
+    },
+    {
+      "addr": "0x51bc90",
+      "name": "dword_51BC90"
+    },
+    {
+      "addr": "0x4152a0",
+      "name": "sub_4152A0"
+    },
+    {
+      "addr": "0x4abc6d",
+      "name": "_atexit"
+    },
+    {
+      "addr": "0x4d41b0",
+      "name": "sub_4D41B0"
+    },
+    {
+      "addr": "0x427fa0",
+      "name": "sub_427FA0"
+    }
+  ]
+}

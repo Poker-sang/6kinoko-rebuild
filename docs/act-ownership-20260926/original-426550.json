@@ -1,0 +1,10 @@
+{
+  "addr": "0x426550",
+  "code": "void __thiscall sub_426540(_DWORD *this)\n{\n  *this = &CActKey::`vftable'; /*0x426544*/\n  *(this + 7) = 15; /*0x42654a*/\n  *(this + 6) = 0; /*0x426551*/\n  *((_BYTE *)this + 8) = 0; /*0x426554*/\n  *(this + 1) = 0; /*0x426557*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ec0b0",
+      "name": "??_7CActKey@@6B@"
+    }
+  ]
+}

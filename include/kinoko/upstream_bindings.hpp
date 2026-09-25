@@ -28,6 +28,8 @@ bool sqplus_bind_function(HSQUIRRELVM vm, SQFUNCTION function, const SQChar* nam
 void sqplus_setup_hierarchy(HSQUIRRELVM vm, HSQOBJECT owned_class);
 bool sqplus_native_instance(HSQUIRRELVM vm, const SQChar* name, SQUserPointer native,
                             SQRELEASEHOOK hook, SQUserPointer native_type);
+// Source factory: failure propagates SquirrelError; caller retains its owners.
+HSQOBJECT sqplus_create_instance(HSQUIRRELVM vm, HSQOBJECT klass);
 bool sqplus_new_instance(HSQUIRRELVM vm, HSQOBJECT klass, HSQOBJECT& output);
 HSQOBJECT sqplus_new_table(HSQUIRRELVM vm);
 HSQOBJECT sqplus_new_array(HSQUIRRELVM vm, int size);

@@ -1,3 +1,4 @@
+#include "kinoko/act_resource_records_io.hpp"
 #include "kinoko/act_clone.h"
 #include "kinoko/texture_store.h"
 #include "kinoko/act_runtime.h"
@@ -92,15 +93,16 @@ int32_t clone_resource(int32_t source, const void* vtable, bool chip) {
     copy_string(8);
     if (chip) {
         copy_string(36); copy_string(72);
-        auto& control=field<Address>(source,68);
+        const kinoko::act::ChipResourceFields input(pointer(source)), output(owned.get());
+        auto *control = input.get(&kinoko::act::ChipResourceRecord::shared_data);
         if (!control) {
-            auto* counted=up::create_callback_control(pointer(field<Address>(source,64)),dispose_chip_data);
-            if (!counted) return 0;
-            control=address(counted);
+            control = up::create_callback_control(input.get(&kinoko::act::ChipResourceRecord::data),dispose_chip_data);
+            if (!control) return 0;
+            input.set(&kinoko::act::ChipResourceRecord::shared_data, control);
         }
-        up::add_strong(static_cast<up::CountedControl*>(pointer(control)));
-        field<Address>(result,64)=field<Address>(source,64);
-        field<Address>(result,68)=control;
+        up::add_strong(control);
+        output.set(&kinoko::act::ChipResourceRecord::data, input.get(&kinoko::act::ChipResourceRecord::data));
+        output.set(&kinoko::act::ChipResourceRecord::shared_data, control);
     } else {
         copy_string(40);
         field<uint8_t>(result,36)=1; // Both original clone methods mark borrowing.
@@ -144,11 +146,11 @@ extern "C" int32_t __fastcall kinoko_method_clone_render_target(int32_t source, 
 }
 
 extern "C" int32_t kinoko_act_release_chip_data(int32_t resource) {
-    auto &control=field<Address>(static_cast<Address>(resource),68);
-    if(!control) return 1;
-    const auto saved=control;
-    control=0;
-    up::release_strong(static_cast<up::CountedControl*>(pointer(saved)));
+    const kinoko::act::ChipResourceFields fields(pointer(static_cast<Address>(resource)));
+    auto *control = fields.get(&kinoko::act::ChipResourceRecord::shared_data);
+    if (!control) return 1;
+    fields.set(&kinoko::act::ChipResourceRecord::shared_data, static_cast<up::CountedControl *>(nullptr));
+    up::release_strong(control);
     // The upstream control invokes the MCD destructor on final release.
     return 0;
 }

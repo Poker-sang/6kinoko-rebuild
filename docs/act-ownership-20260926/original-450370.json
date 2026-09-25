@@ -1,0 +1,381 @@
+{
+  "addr": "0x450370",
+  "code": "int __stdcall sub_450350(int a1)\n{\n  int v1; // ebx\n  void *v3; // eax\n  char v4[4]; // [esp+10h] [ebp-44h] BYREF\n  void **v5; // [esp+14h] [ebp-40h]\n  int v6; // [esp+18h] [ebp-3Ch]\n  __int64 v7; // [esp+1Ch] [ebp-38h] BYREF\n  char v8; // [esp+24h] [ebp-30h]\n  void **v9; // [esp+28h] [ebp-2Ch] BYREF\n  int v10; // [esp+2Ch] [ebp-28h]\n  __int64 v11; // [esp+30h] [ebp-24h] BYREF\n  char v12; // [esp+38h] [ebp-1Ch]\n  _DWORD Src[2]; // [esp+40h] [ebp-14h] BYREF\n  int v14; // [esp+50h] [ebp-4h]\n\n  v1 = a1; /*0x450378*/\n  if ( (dword_51BED4 & 1) == 0 ) /*0x450382*/\n  {\n    dword_51BED4 |= 1u; /*0x450384*/\n    sub_4530A0(); /*0x450392*/\n    atexit(a1: sub_4D4700); /*0x45039c*/\n    v14 = -1; /*0x4503a4*/\n  }\n  if ( v1 == 0 ) /*0x4503ad*/\n    return -2147024809; /*0x4503c5*/\n  if ( *(void **)sub_453240(&a1) == dword_51BCC0 ) /*0x4503dc*/\n  {\n    sub_4534F0(a1: &v9); /*0x4503e7*/\n    v9 = &Sqrat::FlexibleClass<CActPlayer,Sqrat::NoConstructor>::`vftable'; /*0x4503f1*/\n    v14 = 1; /*0x4503f4*/\n    v7 = v11; /*0x450404*/\n    *(_DWORD *)v4 = v1; /*0x450417*/\n    v6 = v10; /*0x45041d*/\n    v8 = v12; /*0x450420*/\n    sub_48A400(a1: v10, a2: &v7); /*0x450423*/\n    v5 = &Sqrat::FlexibleClass<CActPlayer,Sqrat::NoConstructor>::`vftable'; /*0x45042b*/\n    LOBYTE(v14) = 2; /*0x450432*/\n    v3 = (void *)sub_455180(a1: v4); /*0x450436*/\n    sub_454560(a1: v3); /*0x45043f*/\n    v5 = &Sqrat::Object::`vftable'; /*0x450448*/\n    if ( v8 != 0 ) /*0x45044b*/\n      sub_48A430(a1: v6, a2: &v7); /*0x450455*/\n    v14 = -1; /*0x45045d*/\n    v9 = &Sqrat::Object::`vftable'; /*0x450468*/\n    if ( v12 != 0 ) /*0x45046b*/\n      sub_48A430(a1: v10, a2: &v11); /*0x450475*/\n    if ( *(void **)sub_453240(&a1) == dword_51BCC0 ) /*0x450491*/\n      return -2147467259; /*0x4504a9*/\n    Src[0] = sub_451610; /*0x4504af*/\n    sub_453120(&a1); /*0x4504b6*/\n    sub_415550(a1: \"SetCurrentTime\", Src, Size: 4u, a4: (int)sub_455330, a5: 0); /*0x4504cf*/\n    Src[0] = sub_451620; /*0x4504d7*/\n    sub_453120(&a1); /*0x4504de*/\n    sub_415550(a1: \"IncrementFrame\", Src, Size: 4u, a4: (int)sub_445530, a5: 0); /*0x4504f7*/\n    Src[0] = sub_4A9A30; /*0x4504ff*/\n    sub_453120(&a1); /*0x450506*/\n    sub_415550(a1: \"GetCurrentTime\", Src, Size: 4u, a4: (int)sub_445530, a5: 0); /*0x45051f*/\n    Src[0] = sub_451630; /*0x450527*/\n    sub_453120(&a1); /*0x45052e*/\n    sub_415550(a1: \"GetCurrentFrame\", Src, Size: 4u, a4: (int)sub_445530, a5: 0); /*0x450547*/\n    Src[0] = sub_450950; /*0x45054f*/\n    sub_453120(&a1); /*0x450556*/\n    sub_415550(a1: \"BeginStage\", Src, Size: 4u, a4: (int)sub_455330, a5: 0); /*0x45056f*/\n    Src[0] = sub_450D80; /*0x450577*/\n    sub_453120(&a1); /*0x45057e*/\n    sub_415550(a1: \"EndStage\", Src, Size: 4u, a4: (int)sub_445530, a5: 0); /*0x450597*/\n    Src[0] = sub_4517C0; /*0x45059f*/\n    sub_453120(&a1); /*0x4505a6*/\n    sub_415550(a1: \"CreateLayer2D\", Src, Size: 4u, a4: (int)sub_455390, a5: 0); /*0x4505bf*/\n    Src[0] = sub_451B70; /*0x4505c7*/\n    sub_453120(&a1); /*0x4505ce*/\n    sub_415550(a1: \"CreateLayerString\", Src, Size: 4u, a4: (int)sub_455390, a5: 0); /*0x4505e7*/\n    Src[0] = sub_451F30; /*0x4505ef*/\n    sub_453120(&a1); /*0x4505f6*/\n    sub_415550(a1: \"GetLayerOrder\", Src, Size: 4u, a4: (int)sub_4554B0, a5: 0); /*0x45060f*/\n    Src[0] = sub_451F80; /*0x450617*/\n    sub_453120(&a1); /*0x45061e*/\n    sub_415550(a1: \"SwapLayer\", Src, Size: 4u, a4: (int)sub_455520, a5: 0); /*0x450637*/\n    Src[0] = sub_4514A0; /*0x45063f*/\n    sub_453120(&a1); /*0x450646*/\n    sub_415550(a1: \"BitBlt\", Src, Size: 4u, a4: (int)sub_4555A0, a5: 0); /*0x45065f*/\n    Src[0] = sub_452010; /*0x450667*/\n    sub_453120(&a1); /*0x45066e*/\n    sub_415550(a1: \"SetRenderTarget\", Src, Size: 4u, a4: (int)sub_4556C0, a5: 0); /*0x450687*/\n    Src[0] = sub_452150; /*0x45068f*/\n    sub_453120(&a1); /*0x450696*/\n    sub_415550(a1: \"FindFirstFile\", Src, Size: 4u, a4: (int)sub_445650, a5: 0); /*0x4506af*/\n    Src[0] = sub_452220; /*0x4506b7*/\n    sub_453120(&a1); /*0x4506be*/\n    sub_415550(a1: \"FindNextFile\", Src, Size: 4u, a4: (int)sub_4455E0, a5: 0); /*0x4506d7*/\n    Src[0] = sub_452270; /*0x4506df*/\n    sub_453120(&a1); /*0x4506e6*/\n    sub_415550(a1: \"FindClose\", Src, Size: 4u, a4: (int)sub_4455E0, a5: 0); /*0x4506ff*/\n    Src[0] = sub_4522C0; /*0x450707*/\n    sub_453120(&a1); /*0x45070e*/\n    sub_415550(a1: \"GetFindFileName\", Src, Size: 4u, a4: (int)sub_455730, a5: 0); /*0x450727*/\n    Src[0] = timeGetTime; /*0x45072f*/\n    sub_453120(&a1); /*0x450736*/\n    sub_415550(a1: \"timeGetTime\", Src, Size: 4u, a4: (int)sub_445530, a5: 0); /*0x45074f*/\n    Src[0] = sub_451590; /*0x450757*/\n    sub_453120(&a1); /*0x45075e*/\n    sub_415550(a1: \"Sleep\", Src, Size: 4u, a4: (int)sub_445730, a5: 0); /*0x450777*/\n    Src[0] = sub_4515A0; /*0x45077f*/\n    sub_453120(&a1); /*0x450786*/\n    sub_415550(a1: \"SleepTo\", Src, Size: 4u, a4: (int)sub_445730, a5: 0); /*0x45079f*/\n    Src[0] = sub_4515C0; /*0x4507a7*/\n    sub_453120(&a1); /*0x4507ae*/\n    sub_415550(a1: \"Suspend\", Src, Size: 4u, a4: (int)sub_4552E0, a5: 0); /*0x4507c7*/\n    Src[0] = sub_4515F0; /*0x4507cf*/\n    sub_453120(&a1); /*0x4507d6*/\n    sub_415550(a1: \"Resume\", Src, Size: 4u, a4: (int)sub_4552E0, a5: 0); /*0x4507ef*/\n    sub_453120(&a1); /*0x4507f7*/\n    sub_454030(); /*0x4507fe*/\n    sub_453120(&a1); /*0x45080d*/\n    sub_454110(Src: \"marginLeft\", a2: 108); /*0x450814*/\n    sub_453120(&a1); /*0x450823*/\n    sub_454110(Src: \"marginRight\", a2: 112); /*0x45082a*/\n    sub_453120(&a1); /*0x450839*/\n    sub_454110(Src: \"marginTop\", a2: 116); /*0x450840*/\n    sub_453120(&a1); /*0x45084f*/\n    sub_454110(Src: \"marginBottom\", a2: 120); /*0x450856*/\n    sub_453120(&a1); /*0x450865*/\n    sub_4541F0(Src: \"offsetX\", a2: 124); /*0x45086c*/\n    sub_453120(&a1); /*0x45087e*/\n    sub_4541F0(Src: \"offsetY\", a2: 128); /*0x450885*/\n    sub_453120(&a1); /*0x45088d*/\n    sub_4542D0(); /*0x450894*/\n    sub_453120(&a1); /*0x4508a6*/\n    sub_454110(Src: \"resolutionMs\", a2: 136); /*0x4508ad*/\n    sub_453120(&a1); /*0x4508bf*/\n    sub_454110(Src: \"screenWidth\", a2: 140); /*0x4508c6*/\n    sub_453120(&a1); /*0x4508d8*/\n    sub_454110(Src: \"screenHeight\", a2: 144); /*0x4508df*/\n    sub_453120(&a1); /*0x4508e7*/\n    sub_4543B0(); /*0x4508ee*/\n    sub_41E200(a1: v1); /*0x4508f7*/\n    v14 = 3; /*0x450901*/\n    sub_453120(&a1); /*0x450908*/\n    sub_415870(Src: \"ActingPlayer\"); /*0x450914*/\n    v9 = &Sqrat::Object::`vftable'; /*0x45091d*/\n    if ( v12 != 0 ) /*0x450924*/\n      sub_48A430(a1: v10, a2: &v11); /*0x45092e*/\n  }\n  return 0; /*0x4503b4*/\n}",
+  "refs": [
+    {
+      "addr": "0x51bed4",
+      "name": "dword_51BED4"
+    },
+    {
+      "addr": "0x4530a0",
+      "name": "sub_4530A0"
+    },
+    {
+      "addr": "0x4abc6d",
+      "name": "_atexit"
+    },
+    {
+      "addr": "0x4d4700",
+      "name": "sub_4D4700"
+    },
+    {
+      "addr": "0x4534f0",
+      "name": "sub_4534F0"
+    },
+    {
+      "addr": "0x4ed2f8",
+      "name": "??_7?$FlexibleClass@VCActPlayer@@VNoConstructor@Sqrat@@@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a400",
+      "name": "sub_48A400"
+    },
+    {
+      "addr": "0x455180",
+      "name": "sub_455180"
+    },
+    {
+      "addr": "0x454560",
+      "name": "sub_454560"
+    },
+    {
+      "addr": "0x4d5c68",
+      "name": "??_7Object@Sqrat@@6B@"
+    },
+    {
+      "addr": "0x48a430",
+      "name": "sub_48A430"
+    },
+    {
+      "addr": "0x453240",
+      "name": "sub_453240"
+    },
+    {
+      "addr": "0x51bcc0",
+      "name": "dword_51BCC0"
+    },
+    {
+      "addr": "0x451610",
+      "name": "sub_451610"
+    },
+    {
+      "addr": "0x453120",
+      "name": "sub_453120"
+    },
+    {
+      "addr": "0x415550",
+      "name": "sub_415550"
+    },
+    {
+      "addr": "0x4ed184",
+      "name": "aSetcurrenttime",
+      "string": "SetCurrentTime"
+    },
+    {
+      "addr": "0x455330",
+      "name": "sub_455330"
+    },
+    {
+      "addr": "0x451620",
+      "name": "sub_451620"
+    },
+    {
+      "addr": "0x4ed194",
+      "name": "aIncrementframe",
+      "string": "IncrementFrame"
+    },
+    {
+      "addr": "0x445530",
+      "name": "sub_445530"
+    },
+    {
+      "addr": "0x4a9a30",
+      "name": "sub_4A9A30"
+    },
+    {
+      "addr": "0x4ed1a4",
+      "name": "aGetcurrenttime",
+      "string": "GetCurrentTime"
+    },
+    {
+      "addr": "0x451630",
+      "name": "sub_451630"
+    },
+    {
+      "addr": "0x4ed1b4",
+      "name": "aGetcurrentfram",
+      "string": "GetCurrentFrame"
+    },
+    {
+      "addr": "0x450950",
+      "name": "sub_450950"
+    },
+    {
+      "addr": "0x4ed1c4",
+      "name": "aBeginstage",
+      "string": "BeginStage"
+    },
+    {
+      "addr": "0x450d80",
+      "name": "sub_450D80"
+    },
+    {
+      "addr": "0x4ed1d0",
+      "name": "aEndstage",
+      "string": "EndStage"
+    },
+    {
+      "addr": "0x4517c0",
+      "name": "sub_4517C0"
+    },
+    {
+      "addr": "0x4ed1dc",
+      "name": "aCreatelayer2d",
+      "string": "CreateLayer2D"
+    },
+    {
+      "addr": "0x455390",
+      "name": "sub_455390"
+    },
+    {
+      "addr": "0x451b70",
+      "name": "sub_451B70"
+    },
+    {
+      "addr": "0x4ed1ec",
+      "name": "aCreatelayerstr",
+      "string": "CreateLayerString"
+    },
+    {
+      "addr": "0x451f30",
+      "name": "sub_451F30"
+    },
+    {
+      "addr": "0x4ed200",
+      "name": "aGetlayerorder",
+      "string": "GetLayerOrder"
+    },
+    {
+      "addr": "0x4554b0",
+      "name": "sub_4554B0"
+    },
+    {
+      "addr": "0x451f80",
+      "name": "sub_451F80"
+    },
+    {
+      "addr": "0x4ed210",
+      "name": "aSwaplayer",
+      "string": "SwapLayer"
+    },
+    {
+      "addr": "0x455520",
+      "name": "sub_455520"
+    },
+    {
+      "addr": "0x4514a0",
+      "name": "sub_4514A0"
+    },
+    {
+      "addr": "0x4ed21c",
+      "name": "aBitblt",
+      "string": "BitBlt"
+    },
+    {
+      "addr": "0x4555a0",
+      "name": "sub_4555A0"
+    },
+    {
+      "addr": "0x452010",
+      "name": "sub_452010"
+    },
+    {
+      "addr": "0x4ed224",
+      "name": "aSetrendertarge",
+      "string": "SetRenderTarget"
+    },
+    {
+      "addr": "0x4556c0",
+      "name": "sub_4556C0"
+    },
+    {
+      "addr": "0x452150",
+      "name": "sub_452150"
+    },
+    {
+      "addr": "0x4ed234",
+      "name": "aFindfirstfile",
+      "string": "FindFirstFile"
+    },
+    {
+      "addr": "0x445650",
+      "name": "sub_445650"
+    },
+    {
+      "addr": "0x452220",
+      "name": "sub_452220"
+    },
+    {
+      "addr": "0x4ed244",
+      "name": "aFindnextfile",
+      "string": "FindNextFile"
+    },
+    {
+      "addr": "0x4455e0",
+      "name": "sub_4455E0"
+    },
+    {
+      "addr": "0x452270",
+      "name": "sub_452270"
+    },
+    {
+      "addr": "0x4ed254",
+      "name": "aFindclose",
+      "string": "FindClose"
+    },
+    {
+      "addr": "0x4522c0",
+      "name": "sub_4522C0"
+    },
+    {
+      "addr": "0x4ed260",
+      "name": "aGetfindfilenam",
+      "string": "GetFindFileName"
+    },
+    {
+      "addr": "0x455730",
+      "name": "sub_455730"
+    },
+    {
+      "addr": "0x470f90",
+      "name": "timeGetTime"
+    },
+    {
+      "addr": "0x4ed270",
+      "name": "aTimegettime",
+      "string": "timeGetTime"
+    },
+    {
+      "addr": "0x451590",
+      "name": "sub_451590"
+    },
+    {
+      "addr": "0x4ed27c",
+      "name": "aSleep",
+      "string": "Sleep"
+    },
+    {
+      "addr": "0x445730",
+      "name": "sub_445730"
+    },
+    {
+      "addr": "0x4515a0",
+      "name": "sub_4515A0"
+    },
+    {
+      "addr": "0x4ed284",
+      "name": "aSleepto",
+      "string": "SleepTo"
+    },
+    {
+      "addr": "0x4515c0",
+      "name": "sub_4515C0"
+    },
+    {
+      "addr": "0x4ed28c",
+      "name": "aSuspend",
+      "string": "Suspend"
+    },
+    {
+      "addr": "0x4552e0",
+      "name": "sub_4552E0"
+    },
+    {
+      "addr": "0x4515f0",
+      "name": "sub_4515F0"
+    },
+    {
+      "addr": "0x4ed294",
+      "name": "aResume",
+      "string": "Resume"
+    },
+    {
+      "addr": "0x454030",
+      "name": "sub_454030"
+    },
+    {
+      "addr": "0x454110",
+      "name": "sub_454110"
+    },
+    {
+      "addr": "0x4ec19c",
+      "name": "aMarginleft",
+      "string": "marginLeft"
+    },
+    {
+      "addr": "0x4ec1b4",
+      "name": "aMarginright",
+      "string": "marginRight"
+    },
+    {
+      "addr": "0x4ec1a8",
+      "name": "aMargintop",
+      "string": "marginTop"
+    },
+    {
+      "addr": "0x4ec1c0",
+      "name": "aMarginbottom",
+      "string": "marginBottom"
+    },
+    {
+      "addr": "0x4541f0",
+      "name": "sub_4541F0"
+    },
+    {
+      "addr": "0x4ec18c",
+      "name": "aOffsetx",
+      "string": "offsetX"
+    },
+    {
+      "addr": "0x4ec194",
+      "name": "aOffsety",
+      "string": "offsetY"
+    },
+    {
+      "addr": "0x4542d0",
+      "name": "sub_4542D0"
+    },
+    {
+      "addr": "0x4ec160",
+      "name": "aResolutionms",
+      "string": "resolutionMs"
+    },
+    {
+      "addr": "0x4ec170",
+      "name": "aScreenwidth",
+      "string": "screenWidth"
+    },
+    {
+      "addr": "0x4ec17c",
+      "name": "aScreenheight",
+      "string": "screenHeight"
+    },
+    {
+      "addr": "0x4543b0",
+      "name": "sub_4543B0"
+    },
+    {
+      "addr": "0x41e200",
+      "name": "sub_41E200"
+    },
+    {
+      "addr": "0x415870",
+      "name": "sub_415870"
+    },
+    {
+      "addr": "0x4ed2a4",
+      "name": "aActingplayer",
+      "string": "ActingPlayer"
+    }
+  ]
+}

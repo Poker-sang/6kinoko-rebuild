@@ -12,7 +12,8 @@ KinokoActDocument *kinoko_act_document_initialize(KinokoActDocument *document);
 KinokoActDocument *kinoko_act_document_create(void);
 /* 428000: borrow document and filename. Own the opened reader only for this
    call, including failure/unwind. A partial document remains caller-owned;
-   this interface neither destroys it nor publishes a stage/map runtime. */
+   this interface neither destroys it nor publishes a stage/map runtime.
+   Payloads append to existing owned spans; a second load is not a reset. */
 int32_t kinoko_act_document_load(KinokoActDocument *document, const char *file_name);
 /* Dispatch original slot 0x18, separately from deserialization. */
 int32_t kinoko_act_document_load_resources(KinokoActDocument *document, const char *prefix);

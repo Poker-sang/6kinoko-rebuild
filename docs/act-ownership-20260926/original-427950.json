@@ -1,0 +1,83 @@
+{
+  "addr": "0x427950",
+  "code": "int __thiscall sub_427950(int this)\n{\n  char *v2; // eax\n  int v3; // eax\n  int v4; // edi\n  _DWORD *v6; // eax\n  _DWORD *v7; // eax\n  _DWORD *v8; // eax\n  _DWORD *v9; // esi\n  unsigned int v10; // eax\n  int v11; // edi\n  _DWORD *v12; // eax\n  int *v13; // eax\n  int v14; // eax\n  void *v15; // eax\n  _DWORD *v16; // eax\n  int *v17; // esi\n  unsigned int v18; // eax\n  int v19; // edx\n  int v20; // ecx\n  int v21; // edi\n  unsigned int v22; // eax\n  unsigned int v23; // eax\n  unsigned int v24; // ecx\n  unsigned int v25; // ecx\n  _DWORD *v26; // eax\n  int v27; // ecx\n  unsigned int v28; // eax\n  unsigned int v29; // eax\n  unsigned int v30; // ecx\n  unsigned int v31; // ecx\n  int *v32; // eax\n  int v33; // eax\n  void *v34; // eax\n  int v35; // eax\n  char *v36; // esi\n  _DWORD *v37; // ebx\n  char *v38; // eax\n  char *v39; // ecx\n  char **v40; // eax\n  char *v41; // eax\n  int v42; // ecx\n  int v43; // edx\n  _DWORD *v44; // edi\n  int v45; // ecx\n  _DWORD *v46; // eax\n  bool v47; // zf\n  _DWORD *v48; // esi\n  int v49; // eax\n  int v50; // edx\n  int v51; // [esp+10h] [ebp-84h] BYREF\n  int i; // [esp+14h] [ebp-80h]\n  int v53; // [esp+18h] [ebp-7Ch]\n  int v54; // [esp+1Ch] [ebp-78h] BYREF\n  char *v55; // [esp+20h] [ebp-74h] BYREF\n  int v56; // [esp+24h] [ebp-70h]\n  char *v57; // [esp+28h] [ebp-6Ch] BYREF\n  int v58; // [esp+2Ch] [ebp-68h] BYREF\n  void *v59; // [esp+30h] [ebp-64h]\n  int v60; // [esp+34h] [ebp-60h]\n  int v61; // [esp+3Ch] [ebp-58h] BYREF\n  void *v62; // [esp+40h] [ebp-54h]\n  int v63; // [esp+44h] [ebp-50h]\n  _DWORD pExceptionObject[3]; // [esp+4Ch] [ebp-48h] BYREF\n  _DWORD v65[3]; // [esp+58h] [ebp-3Ch] BYREF\n  void *Source; // [esp+64h] [ebp-30h] BYREF\n  rsize_t DestinationSize; // [esp+74h] [ebp-20h]\n  unsigned int v68; // [esp+78h] [ebp-1Ch]\n  int v69; // [esp+90h] [ebp-4h]\n\n  v2 = (char *)operator new(Size: 0xF0u); /*0x427991*/\n  v55 = v2; /*0x427999*/\n  v69 = 0; /*0x42799f*/\n  if ( v2 != nullptr ) /*0x4279a8*/\n  {\n    sub_427530(a1: v2); /*0x4279ac*/\n    v4 = v3; /*0x4279b1*/\n    v53 = v3; /*0x4279b3*/\n  }\n  else\n  {\n    v4 = 0; /*0x4279b9*/\n    v53 = 0; /*0x4279bb*/\n  }\n  v69 = -1; /*0x4279bf*/\n  if ( v4 == 0 ) /*0x4279cc*/\n    return 0; /*0x4279ce*/\n  v63 = 0; /*0x4279f3*/\n  v6 = operator new(Size: 0x18u); /*0x4279f7*/\n  if ( v6 == nullptr ) /*0x427a01*/\n  {\n    v57 = nullptr; /*0x427f72*/\n    std::exception::exception(this: (std::exception *)v65, a2: (const char *const *)&v57); /*0x427f76*/\n    v65[0] = &std::bad_alloc::`vftable'; /*0x427f85*/\n    _CxxThrowException(pExceptionObject: v65, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x427f8d*/\n  }\n  v62 = v6; /*0x427a07*/\n  *v6 = v6; /*0x427a0b*/\n  *((_DWORD *)v62 + 1) = v62; /*0x427a11*/\n  *((_DWORD *)v62 + 2) = v62; /*0x427a18*/\n  *((_BYTE *)v62 + 20) = 1; /*0x427a1f*/\n  *((_BYTE *)v62 + 21) = 1; /*0x427a27*/\n  v69 = 1; /*0x427a2b*/\n  v60 = 0; /*0x427a38*/\n  v7 = operator new(Size: 0x18u); /*0x427a3c*/\n  if ( v7 == nullptr ) /*0x427a46*/\n  {\n    v55 = nullptr; /*0x427f49*/\n    std::exception::exception(this: (std::exception *)pExceptionObject, a2: (const char *const *)&v55); /*0x427f4d*/\n    pExceptionObject[0] = &std::bad_alloc::`vftable'; /*0x427f5c*/\n    _CxxThrowException(pExceptionObject, pThrowInfo: (_ThrowInfo *)&_TI2_AVbad_alloc_std__); /*0x427f64*/\n  }\n  v59 = v7; /*0x427a4c*/\n  *v7 = v7; /*0x427a50*/\n  *((_DWORD *)v59 + 1) = v59; /*0x427a56*/\n  *((_DWORD *)v59 + 2) = v59; /*0x427a5d*/\n  *((_BYTE *)v59 + 20) = 1; /*0x427a64*/\n  *((_BYTE *)v59 + 21) = 1; /*0x427a6c*/\n  LOBYTE(v69) = 2; /*0x427a70*/\n  *(_DWORD *)(v4 + 4) = *(_DWORD *)(this + 4); /*0x427a7b*/\n  *(_DWORD *)(v4 + 8) = *(_DWORD *)(this + 8); /*0x427a87*/\n  *(_DWORD *)(v4 + 12) = *(_DWORD *)(this + 12); /*0x427a91*/\n  sub_406CC0(a1: this + 16, a2: 0, a3: -1); /*0x427a94*/\n  *(float *)(v4 + 88) = *(float *)(this + 88); /*0x427a9c*/\n  *(float *)(v4 + 92) = *(float *)(this + 92); /*0x427aa2*/\n  *(_DWORD *)(v4 + 72) = *(_DWORD *)(this + 72); /*0x427aa8*/\n  *(_DWORD *)(v4 + 80) = *(_DWORD *)(this + 80); /*0x427aae*/\n  *(_DWORD *)(v4 + 76) = *(_DWORD *)(this + 76); /*0x427ab4*/\n  *(_DWORD *)(v4 + 84) = *(_DWORD *)(this + 84); /*0x427aba*/\n  *(_BYTE *)(v4 + 96) = *(_BYTE *)(this + 96); /*0x427ac0*/\n  v68 = 15; /*0x427ac3*/\n  DestinationSize = 0; /*0x427acb*/\n  LOBYTE(Source) = 0; /*0x427acf*/\n  LOBYTE(v69) = 3; /*0x427adc*/\n  sub_415EA0(a1: this + 100); /*0x427ae4*/\n  sub_415F60(&Source, DestinationSize: 0); /*0x427b01*/\n  v8 = *(_DWORD **)(this + 224); /*0x427b06*/\n  for ( i = (int)v8; v8 != *(_DWORD **)(this + 228); i = (int)v8 ) /*0x427b16*/\n  {\n    if ( *v8 != 0 ) /*0x427b24*/\n    {\n      v9 = (_DWORD *)(v4 + 224); /*0x427b31*/\n      v51 = (*(int (__thiscall **)(_DWORD))(*(_DWORD *)*v8 + 36))(a1: *v8); /*0x427b37*/\n      v10 = *(_DWORD *)(v4 + 228); /*0x427b3b*/\n      if ( (unsigned int)&v51 >= v10 || *v9 > (unsigned int)&v51 ) /*0x427b4e*/\n      {\n        if ( v10 == *(_DWORD *)(v4 + 232) ) /*0x427b78*/\n          sub_457CA0(); /*0x427b7c*/\n        v13 = *(int **)(v4 + 228); /*0x427b81*/\n        if ( v13 != nullptr ) /*0x427b86*/\n          *v13 = v51; /*0x427b8c*/\n      }\n      else\n      {\n        v11 = ((int)&v51 - *v9) >> 2; /*0x427b54*/\n        if ( v10 == v9[2] ) /*0x427b5a*/\n          sub_457CA0(); /*0x427b5e*/\n        v12 = (_DWORD *)v9[1]; /*0x427b68*/\n        if ( v12 != nullptr ) /*0x427b6d*/\n          *v12 = *(_DWORD *)(*v9 + 4 * v11); /*0x427b71*/\n      }\n      v14 = v51; /*0x427b8e*/\n      v9[1] += 4; /*0x427b92*/\n      v55 = *(char **)(v14 + 4); /*0x427ba1*/\n      v56 = v14; /*0x427ba5*/\n      v15 = (void *)sub_42A800(); /*0x427ba9*/\n      sub_42A310(a1: (int)&v61, a2: v15); /*0x427bb6*/\n      v4 = v53; /*0x427bbb*/\n      v8 = (_DWORD *)i; /*0x427bbf*/\n    }\n    ++v8; /*0x427bc3*/\n  }\n  v16 = *(_DWORD **)(this + 208); /*0x427bd6*/\n  for ( i = (int)v16; v16 != *(_DWORD **)(this + 212); i = (int)v16 ) /*0x427be6*/\n  {\n    if ( *v16 != 0 ) /*0x427bf4*/\n    {\n      v17 = (int *)(v4 + 208); /*0x427c01*/\n      v51 = (*(int (__thiscall **)(_DWORD))(*(_DWORD *)*v16 + 20))(a1: *v16); /*0x427c07*/\n      v18 = *(_DWORD *)(v4 + 212); /*0x427c0b*/\n      if ( (unsigned int)&v51 >= v18 || (v19 = *v17, *v17 > (unsigned int)&v51) ) /*0x427c1a*/\n      {\n        v27 = *(_DWORD *)(v4 + 216); /*0x427c7f*/\n        if ( v18 == v27 ) /*0x427c84*/\n        {\n          v28 = (int)(v18 - *v17) >> 2; /*0x427c8a*/\n          if ( v28 > 0x3FFFFFFE ) /*0x427c92*/\nLABEL_55:\n            std::_Xlength_error(a1: \"vector<T> too long\"); /*0x427d6a*/\n          v29 = v28 + 1; /*0x427c9a*/\n          v30 = (v27 - *v17) >> 2; /*0x427c9b*/\n          if ( v29 > v30 ) /*0x427ca0*/\n          {\n            if ( 0x3FFFFFFF - (v30 >> 1) >= v30 ) /*0x427caf*/\n              v31 = (v30 >> 1) + v30; /*0x427cb5*/\n            else\n              v31 = 0; /*0x427cb1*/\n            if ( v31 < v29 ) /*0x427cb9*/\n              v31 = v29; /*0x427cbb*/\n            sub_4598A0(a1: v31); /*0x427cbe*/\n          }\n        }\n        v32 = *(int **)(v4 + 212); /*0x427cc3*/\n        if ( v32 != nullptr ) /*0x427cc8*/\n          *v32 = v51; /*0x427cce*/\n      }\n      else\n      {\n        v20 = *(_DWORD *)(v4 + 216); /*0x427c1e*/\n        v21 = ((int)&v51 - v19) >> 2; /*0x427c23*/\n        v54 = v21; /*0x427c26*/\n        if ( v18 == v20 ) /*0x427c2c*/\n        {\n          v22 = (int)(v18 - v19) >> 2; /*0x427c30*/\n          if ( v22 > 0x3FFFFFFE ) /*0x427c38*/\n            goto LABEL_55; /*0x427c38*/\n          v23 = v22 + 1; /*0x427c40*/\n          v24 = (v20 - v19) >> 2; /*0x427c41*/\n          if ( v23 > v24 ) /*0x427c46*/\n          {\n            if ( 0x3FFFFFFF - (v24 >> 1) >= v24 ) /*0x427c55*/\n              v25 = (v24 >> 1) + v24; /*0x427c5b*/\n            else\n              v25 = 0; /*0x427c57*/\n            if ( v25 < v23 ) /*0x427c5f*/\n              v25 = v23; /*0x427c61*/\n            sub_4598A0(a1: v25); /*0x427c64*/\n            v21 = v54; /*0x427c69*/\n          }\n        }\n        v26 = (_DWORD *)v17[1]; /*0x427c6d*/\n        if ( v26 != nullptr ) /*0x427c77*/\n          *v26 = *(_DWORD *)(*v17 + 4 * v21); /*0x427c7b*/\n      }\n      v33 = v51; /*0x427cd0*/\n      v17[1] += 4; /*0x427cd4*/\n      v55 = *(char **)(v33 + 104); /*0x427ce3*/\n      v56 = v33; /*0x427ce7*/\n      v34 = (void *)sub_42A800(); /*0x427ceb*/\n      sub_42A310(a1: (int)&v58, a2: v34); /*0x427cf8*/\n      v4 = v53; /*0x427cfd*/\n      v16 = (_DWORD *)i; /*0x427d01*/\n    }\n    ++v16; /*0x427d05*/\n  }\n  v35 = *(_DWORD *)(v4 + 212) - *(_DWORD *)(v4 + 208); /*0x427d1e*/\n  v51 = 0; /*0x427d24*/\n  if ( v35 >= 0 && (v35 & 0xFFFFFFFC) != 0 ) /*0x427d2c*/\n  {\n    v36 = (char *)v62; /*0x427d37*/\n    do /*0x427eb1*/\n    {\n      v37 = *(_DWORD **)(*(_DWORD *)(v53 + 208) + 4 * v51); /*0x427d49*/\n      v38 = *((char **)v36 + 1); /*0x427d4c*/\n      v39 = v36; /*0x427d53*/\n      while ( v38[21] == 0 ) /*0x427d55*/\n      {\n        if ( *((_DWORD *)v38 + 3) >= v37[24] ) /*0x427d63*/\n        {\n          v39 = v38; /*0x427d74*/\n          v38 = *(char **)v38; /*0x427d76*/\n        }\n        else\n        {\n          v38 = *((char **)v38 + 2); /*0x427d65*/\n        }\n      }\n      v54 = (int)v39; /*0x427d7e*/\n      if ( v39 == v36 || v37[24] < *((_DWORD *)v39 + 3) ) /*0x427d8c*/\n      {\n        v57 = v36; /*0x427d94*/\n        v40 = &v57; /*0x427d98*/\n      }\n      else\n      {\n        v40 = (char **)&v54; /*0x427d8e*/\n      }\n      v41 = *v40; /*0x427d9c*/\n      if ( v41 != v36 ) /*0x427da0*/\n      {\n        (*(void (__thiscall **)(_DWORD *, _DWORD))(*v37 + 24))(a1: v37, a2: *((_DWORD *)v41 + 4)); /*0x427dad*/\n        v36 = (char *)v62; /*0x427daf*/\n      }\n      if ( v37[22] != 0 ) /*0x427db8*/\n      {\n        v37[22] = *(_DWORD *)sub_4296A0(); /*0x427dc8*/\n        v36 = (char *)v62; /*0x427dcb*/\n      }\n      v42 = v37[19] - v37[18]; /*0x427dd2*/\n      v43 = 0; /*0x427dd5*/\n      v54 = 0; /*0x427dd7*/\n      if ( v42 >= 0 && (v42 & 0xFFFFFFFC) != 0 ) /*0x427ddb*/\n      {\n        do /*0x427e89*/\n        {\n          v44 = v59; /*0x427df3*/\n          v45 = *(_DWORD *)(v37[18] + 4 * v43); /*0x427dfe*/\n          v46 = *((_DWORD **)v59 + 1); /*0x427e01*/\n          v47 = *((_BYTE *)v46 + 21) == 0; /*0x427e04*/\n          v48 = v59; /*0x427e08*/\n          i = (int)v59; /*0x427e0a*/\n          if ( v47 ) /*0x427e0e*/\n          {\n            do /*0x427e25*/\n            {\n              if ( v46[3] >= *(_DWORD *)(v45 + 104) ) /*0x427e16*/\n              {\n                v48 = v46; /*0x427e1d*/\n                v46 = (_DWORD *)*v46; /*0x427e1f*/\n              }\n              else\n              {\n                v46 = (_DWORD *)v46[2]; /*0x427e18*/\n              }\n            }\n            while ( *((_BYTE *)v46 + 21) == 0 ); /*0x427e25*/\n            v44 = v59; /*0x427e27*/\n            i = (int)v48; /*0x427e2b*/\n          }\n          if ( v48 == v44 || *(_DWORD *)(v45 + 104) < v48[3] ) /*0x427e39*/\n          {\n            pExceptionObject[0] = *(_DWORD *)(v45 + 104); /*0x427e46*/\n            pExceptionObject[1] = 0; /*0x427e4a*/\n            sub_42A800(); /*0x427e52*/\n            sub_42A3E0(a1: (int)&v58, a2: (int)&v55, a3: i); /*0x427e63*/\n            v48 = v55; /*0x427e68*/\n            v43 = v54; /*0x427e6c*/\n          }\n          *(_DWORD *)(v37[18] + 4 * v43++) = v48[4]; /*0x427e76*/\n          v49 = (v37[19] - v37[18]) >> 2; /*0x427e80*/\n          v54 = v43; /*0x427e83*/\n        }\n        while ( v43 < v49 ); /*0x427e89*/\n        v36 = (char *)v62; /*0x427e8f*/\n      }\n      v50 = (*(_DWORD *)(v53 + 212) - *(_DWORD *)(v53 + 208)) >> 2; /*0x427ea8*/\n      ++v51; /*0x427eab*/\n    }\n    while ( v51 < v50 ); /*0x427eb1*/\n  }\n  if ( v68 >= 0x10 ) /*0x427ebc*/\n    operator delete(a1: Source); /*0x427ec3*/\n  v68 = 15; /*0x427ecb*/\n  DestinationSize = 0; /*0x427ed3*/\n  LOBYTE(Source) = 0; /*0x427edb*/\n  LOBYTE(v69) = 4; /*0x427ee0*/\n  sub_429920(a1: *(_DWORD *)v59, a2: v59); /*0x427ef8*/\n  operator delete(a1: v59); /*0x427f02*/\n  v69 = 5; /*0x427f0a*/\n  sub_429920(a1: *(_DWORD *)v62, a2: v62); /*0x427f25*/\n  operator delete(a1: v62); /*0x427f2f*/\n  return v53; /*0x4279d0*/\n}",
+  "refs": [
+    {
+      "addr": "0x4ab3fc",
+      "name": "??2@YAPAXI@Z"
+    },
+    {
+      "addr": "0x427530",
+      "name": "sub_427530"
+    },
+    {
+      "addr": "0x4abd0c",
+      "name": "??0exception@std@@QAE@ABQBD@Z"
+    },
+    {
+      "addr": "0x4d5878",
+      "name": "??_7bad_alloc@std@@6B@"
+    },
+    {
+      "addr": "0x4aba7b",
+      "name": "__CxxThrowException@8"
+    },
+    {
+      "addr": "0x4f7308",
+      "name": "__TI2?AVbad_alloc@std@@"
+    },
+    {
+      "addr": "0x406cc0",
+      "name": "sub_406CC0"
+    },
+    {
+      "addr": "0x415ea0",
+      "name": "sub_415EA0"
+    },
+    {
+      "addr": "0x415f60",
+      "name": "sub_415F60"
+    },
+    {
+      "addr": "0x457ca0",
+      "name": "sub_457CA0"
+    },
+    {
+      "addr": "0x42a800",
+      "name": "sub_42A800"
+    },
+    {
+      "addr": "0x42a310",
+      "name": "sub_42A310"
+    },
+    {
+      "addr": "0x473e00",
+      "name": "?_Xlength_error@std@@YAXPBD@Z"
+    },
+    {
+      "addr": "0x4eb374",
+      "name": "aVectorTTooLong",
+      "string": "vector<T> too long"
+    },
+    {
+      "addr": "0x4598a0",
+      "name": "sub_4598A0"
+    },
+    {
+      "addr": "0x4296a0",
+      "name": "sub_4296A0"
+    },
+    {
+      "addr": "0x42a3e0",
+      "name": "sub_42A3E0"
+    },
+    {
+      "addr": "0x4ab2a6",
+      "name": "??3@YAXPAX@Z"
+    },
+    {
+      "addr": "0x429920",
+      "name": "sub_429920"
+    }
+  ]
+}

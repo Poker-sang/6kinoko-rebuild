@@ -121,5 +121,11 @@ int main() {
     CHECK((*clone_child.prefix.children.storage)[1] == 0);
     for (Layer *entry : {&clone_child, &clone_first, &clone_duplicate})
         for (auto byte : entry->tail) CHECK(byte == 0xa5);
+    // Rebind an existing layer; remove its old parent's borrowed edge.
+    child.prefix.parent_id = 50;
+    associations.bind_loaded_parents(act, 1);
+    CHECK(child.prefix.parent == self.get());
+    CHECK(first.prefix.children.storage->size() == 1);
+    CHECK((*first.prefix.children.storage)[0] == address(second_child.get()));
     std::puts("PASS: fresh parent resolution, first duplicate IDs, missing references, ordered virtual resource calls, untouched layout tail");
 }
