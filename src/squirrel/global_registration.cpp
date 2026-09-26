@@ -55,15 +55,15 @@ constexpr Constant constants[] = {
 };
 } // namespace
 
-extern "C" void kinoko_register_global_methods(int32_t root_table) {
+extern "C" void kinoko_register_global_methods(void* root_table) {
     // Store the address directly: MSVC's generic entry deduction can lose the
     // explicit throwing C-linkage function type under /EHsc.
     void* target = entry(reinterpret_cast<int32_t (__cdecl *)(void)>(
         &kinoko_script_show_call_stack));
-    kinoko_sqrat_bind_object_function(pointer<void>(root_table), "ShowCallStack", &target, 4,
+    kinoko_sqrat_bind_object_function(root_table, "ShowCallStack", &target, 4,
         entry(show_call_stack_entry), 0);
     target = entry(&kinoko_script_compile_file_argument);
-    kinoko_sqrat_bind_object_function(pointer<void>(root_table), "CompileFile", &target, 4,
+    kinoko_sqrat_bind_object_function(root_table, "CompileFile", &target, 4,
         entry(kinoko_compile_file_native), 0);
     for (const auto& method : methods) {
         auto* vm = current_vm();
@@ -120,7 +120,7 @@ int32_t kinoko_register_root_bindings() {
     sq_getstackobj(current_vm(), -1, &root.value);
     sq_addref(root.vm, &root.value);
     sq_pop(current_vm(), 1);
-    kinoko_register_global_methods(address(&root));
+    kinoko_register_global_methods((void*)(uintptr_t)(address(&root)));
 
     ObjectStorage object{};
     bind_root_mask(object, &kinoko_game_masks.update, "updateMask",

@@ -342,19 +342,6 @@ extern "C" void kinoko_release_squirrel_value(int32_t *value_ptr) {
     if (value_ptr) reinterpret_cast<SQObjectPtr*>(value_ptr)->Null();
 }
 
-extern "C" int32_t kinoko_gc_object_type(int32_t object_ptr) {
-    return kinoko_sq_source_object_type((SQCollectable*)(uintptr_t)(object_ptr));
-}
-
-extern "C" void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head) {
-    kinoko_sq_mark_value(reinterpret_cast<const HSQOBJECT*>(value), reinterpret_cast<SQCollectable**>(chain_head));
-}
-
-extern "C" void kinoko_gc_finalize_collectable(int32_t object_ptr,
-                                            int32_t object_type) {
-    kinoko_sq_finalize_object(ptr<SQCollectable>(object_ptr), object_type);
-}
-
 static void kinoko_sq_finalize_userdata(SQUserData* data) {
     data->Finalize();
 }

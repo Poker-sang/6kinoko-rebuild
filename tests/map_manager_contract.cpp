@@ -41,7 +41,7 @@ int32_t __fastcall kinoko_act_increment_frame(KinokoActRuntime *player, void *) 
     CHECK(player == expected_player); calls.push_back(5); return 0;
 }
 int32_t kinoko_act_update_frame(KinokoActRuntime* player) {
-    CHECK(player == address(expected_player)); calls.push_back(6); return 17;
+    CHECK(player == expected_player); calls.push_back(6); return 17;
 }
 }
 int main() {

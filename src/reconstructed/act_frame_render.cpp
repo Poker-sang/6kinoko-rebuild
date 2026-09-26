@@ -107,7 +107,7 @@ int32_t prepare_sprite(void* item, const BlitCommand& command) {
     target.set(&BlitSprite::sprite, sprite);
     return 0;
 }
-void trace_draw(int32_t self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
+void trace_draw(KinokoActRuntime* self, const RuntimeView& resource, LONG actor_index, LONG trace_index) {
     const auto act = resource.get(&RuntimeRecord::active_document);
     const DocumentView document(act);
     if (actor_index <= 64) {

@@ -212,8 +212,8 @@ static int test_storage_and_draw() {
     texture_resource[0] = address(&texture_identity); texture_resource[17] = 1;
     kinoko_texture_slots[1].width = 128; kinoko_texture_slots[1].height = 64;
     for (int blend = 0; blend < 6; ++blend)
-        CHECK(kinoko_act_bitblt_this(address(fixture.runtime), 3, 4, 32, 16,
-            address(texture_resource), 8, 4, blend, blend == 0 ? -1.0f : blend == 5 ? 2.0f : 0.5f) == 0);
+        CHECK(kinoko_act_append_blit(reinterpret_cast<KinokoActRuntime*>(fixture.runtime), 3, 4, 32, 16,
+            reinterpret_cast<KinokoActResource*>(texture_resource), 8, 4, blend, blend == 0 ? -1.0f : blend == 5 ? 2.0f : 0.5f) == 0);
     const auto* commands = reinterpret_cast<BlitCommand*>(kinoko_act_command_span((KinokoActRuntime*)(fixture.runtime)).begin);
     CHECK(commands[0].alpha == 0 && commands[5].alpha == 1 && commands[2].alpha == 0.5f);
     draws.clear(); draw_result = 0;

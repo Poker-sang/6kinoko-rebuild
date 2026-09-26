@@ -2275,7 +2275,7 @@ static int test_gc_chain_integrity(int32_t vm) {
     int32_t count = 0, found_vm = 0;
     while (current) {
         CHECK(++count < 100000);
-        CHECK(kinoko_gc_object_type(current) != 0);
+        CHECK(kinoko_sq_source_object_type((struct SQCollectable*)(uintptr_t)(current)) != 0);
         CHECK(*(int32_t *)(intptr_t)(current + 16) == previous);
         CHECK((*(uint32_t *)(intptr_t)(current + 4) & 0x80000000u) == 0);
         if (current == vm) found_vm = 1;
@@ -2321,7 +2321,7 @@ static int test_gc_mark_link(void) {
     object[5] = PTR(shared);
     shared[17] = PTR(object);
     head_storage[4] = 0x12345678;
-    kinoko_gc_mark_value(value, head_storage);
+    kinoko_sq_mark_value((const HSQOBJECT*)(uintptr_t)(value), (struct SQCollectable**)(uintptr_t)(head_storage));
     CHECK(head_storage[0] == PTR(object));
     CHECK(head_storage[4] == 0x12345678);
     CHECK(object[3] == 0 && object[4] == 0);
@@ -3062,28 +3062,26 @@ static int test_act_script_source_registration(int32_t vm, int32_t *root) {
 
 static int test_csv_receivers(int32_t vm, int32_t *root) {
     const int top=kinoko_sq_get_stack_top(((SQVM*)(uintptr_t)(uint32_t)((vm))));
-    CHECK(kinoko_csv_populate(vm,
-        "# ignored\r\nid,n,f,b,s\r\n,i,f,b,s\r\n"
+    CHECK(kinoko_csv_populate((struct SQVM*)(uintptr_t)(vm), "# ignored\r\nid,n,f,b,s\r\n,i,f,b,s\r\n"
         "csvA,-12,1.25,true,\"hello\"\r\n"
         "csvMissing,7\n"
         "csvA,19,2.5,True,replaced,ignored\n"
-        "csvUncommitted,8,3,t,end",root+2)==0);
+        "csvUncommitted,8,3,t,end", root+2)==0);
     CHECK(execute_source(vm,root+2,
         "if(csvA.n!=19 || csvA.f!=2.5 || csvA.b!=false || csvA.s!=\"replaced\") throw 110;\n"
         "if(csvMissing.n!=7 || csvMissing.f!=0.0 || csvMissing.b!=false || csvMissing.s!=\"\") throw 111;\n"
         "if(\"csvUncommitted\" in this) throw 112;\n"));
-    CHECK(kinoko_csv_populate(vm,
-        "id,a,b\n,s,s\n"
+    CHECK(kinoko_csv_populate((struct SQVM*)(uintptr_t)(vm), "id,a,b\n,s,s\n"
         "csvComma,\"left,right\"\n"
         "csvLine,\"one\r\ntwo\",ok\n"
-        "csvCarry,part#ignored\nrest,done\n",root+2)==0);
+        "csvCarry,part#ignored\nrest,done\n", root+2)==0);
     CHECK(execute_source(vm,root+2,
         "if(csvComma.a!=\"left\" || csvComma.b!=\"right\") throw 113;\n"
         "if(csvLine.a!=\"one\\r\\ntwo\" || csvLine.b!=\"ok\") throw 114;\n"
         "if(csvCarry.a!=\"partrest\" || csvCarry.b!=\"done\") throw 115;\n"));
-    CHECK(kinoko_csv_populate(vm,"id,a,b\n,i\nnever,1,2\n",root+2)==2);
+    CHECK(kinoko_csv_populate((struct SQVM*)(uintptr_t)(vm), "id,a,b\n,i\nnever,1,2\n", root+2)==2);
     int32_t null_pair[2]={kinoko_null_object_type,kinoko_null_object_value};
-    CHECK(kinoko_csv_populate(vm,"",null_pair)==1);
+    CHECK(kinoko_csv_populate((struct SQVM*)(uintptr_t)(vm), "", null_pair)==1);
 
     // Exercise the actual four-word callback ABI and resource reader in both modes.
     const char *fixture="id,value\n,i\ncsvFile,47\n";
@@ -4281,7 +4279,7 @@ static int test_script_registrations(int32_t vm, int32_t *root) {
         "LoadAct", "LoadMap", "LoadSE", "ReleaseMap", "MessageBox", "dprint", "Sleep",
         "timeGetTime", "PlaySE", "PlayBgm", "PlayBgmMargin", "FadeBgm", "StopBgm", "PauseBgm"};
     for (int repeat = 0; repeat < 2; ++repeat) {
-        kinoko_register_global_methods(PTR(root));
+        kinoko_register_global_methods((void*)(uintptr_t)(PTR(root)));
         CHECK(sq_gettop(kinoko_vm(vm)) == top);
         for (int i = 0; i < sizeof(globals)/sizeof(globals[0]); ++i) {
             sq_pushroottable(kinoko_vm(vm));

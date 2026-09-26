@@ -77,8 +77,8 @@ struct WrapperOwner {
     ~WrapperOwner() { (int32_t)(intptr_t)(kinoko_sqplus_object_destroy((void *)(intptr_t)(static_cast<int32_t>(reinterpret_cast<uintptr_t>(object))))); }
 };
 }
-extern "C" int32_t kinoko_csv_populate(int32_t address, const char *text, const int32_t object[2]) {
-    SQVM &vm = at<SQVM>(address);
+extern "C" int32_t kinoko_csv_populate(struct SQVM* address, const char *text, const int32_t object[2]) {
+    SQVM &vm = *address;
     SQObjectPtr table = *reinterpret_cast<const SQObject *>(object);
     if (type(table) != OT_TABLE) return 1;
     const auto rows = parse(text);
@@ -99,7 +99,7 @@ extern "C" int32_t kinoko_csv_populate(int32_t address, const char *text, const 
         auto key = text_cell(rows, r, 0);
         if (key.empty()) continue;
         // Keep the game's table vtable so its GC recognizes the new row.
-        sq_newtable(kinoko_vm(address));
+        sq_newtable(address);
         SQObjectPtr row = vm.GetUp(-1);
         vm.Pop();
         for (size_t c = 0; c < columns.size(); ++c) {
@@ -120,7 +120,7 @@ extern "C" int32_t kinoko_csv_populate(int32_t address, const char *text, const 
     }
     return 0;
 }
-extern "C" int32_t kinoko_read_csv(int32_t vm, int32_t window, const char *path,
+extern "C" int32_t kinoko_read_csv(struct SQVM* vm, void* window, const char *path,
     int32_t object[3], int32_t encoded) {
     WrapperOwner owner{object}; // consume the original by-value SquirrelObject
     const char *error = nullptr;
@@ -134,19 +134,18 @@ extern "C" int32_t kinoko_read_csv(int32_t vm, int32_t window, const char *path,
             std::unique_ptr<char, decltype(&std::free)> bytes(raw, &std::free);
             // The byte transform is performed by the reader bridge, which
             // knows the exact file length (including embedded zero bytes).
-            if (kinoko_csv_populate(vm, raw, object + 1) == 2) error = "SqReadCSV-DefineError";
+            if (kinoko_csv_populate((struct SQVM*)(uintptr_t)(vm), raw, object + 1) == 2) error = "SqReadCSV-DefineError";
         }
     }
     if (!error) return 1;
-    MessageBoxA(reinterpret_cast<HWND>(static_cast<uintptr_t>(static_cast<uint32_t>(window))), path, error, 0);
+    MessageBoxA(static_cast<HWND>(window), path, error, 0);
     return 0;
 }
 
 // Original 403000: ReadCSV receives the path and a by-value SqPlus object.
 // Keep the three-word object and borrowed primary VM/window at this boundary.
-extern "C" int32_t kinoko_script_read_csv(const char* path, int32_t vtable,
+extern "C" int32_t kinoko_script_read_csv(const char* path, const void* vtable,
     int32_t type, int32_t data) {
-    int32_t object[3] = {vtable, type, data};
-    return kinoko_read_csv(static_cast<int32_t>(reinterpret_cast<uintptr_t>(kinoko_primary_vm)),
-        static_cast<int32_t>(reinterpret_cast<uintptr_t>(kinoko_game_window_slot)), path, object, kinoko_packed_assets != 0);
+    int32_t object[3] = {static_cast<int32_t>(reinterpret_cast<uintptr_t>(vtable)), type, data};
+    return kinoko_read_csv((struct SQVM*)(uintptr_t)(static_cast<int32_t>(reinterpret_cast<uintptr_t>(kinoko_primary_vm))), (void*)(uintptr_t)(static_cast<int32_t>(reinterpret_cast<uintptr_t>(kinoko_game_window_slot))), path, object, kinoko_packed_assets != 0);
 }

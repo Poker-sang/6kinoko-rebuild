@@ -75,10 +75,6 @@ void kinoko_squirrel_addref(int32_t type, int32_t data);
 void kinoko_squirrel_release(int32_t type, int32_t data);
 void kinoko_squirrel_assign(int32_t *dst, const int32_t *src);
 void kinoko_release_squirrel_value(int32_t *value_ptr);
-int32_t kinoko_gc_object_type(int32_t object_ptr);
-void kinoko_gc_mark_value(const int32_t *value, int32_t *chain_head);
-void kinoko_gc_finalize_collectable(int32_t object_ptr,
-                                            int32_t object_type);
 #ifdef __cplusplus
 }
 #endif
