@@ -65,7 +65,7 @@ int main() {
     // Reset passes saved fields to the retaining Init entry, and takes the
     // priority written by Init instead of restoring the pre-reset priority.
     reset_actor=&destination; destination.spawn_x=10; destination.spawn_y=20; destination.spawn_z=-1;
-    const KinokoOwnedObjectWords callback{1,31,2},argument{1,32,3};
+    const KinokoOwnedObjectWords callback{reinterpret_cast<const void*>(1),31,2},argument{reinterpret_cast<const void*>(1),32,3};
     std::memcpy(destination.initial_function.data(),&callback,12);
     std::memcpy(destination.initial_argument.data(),&argument,12);
     events.clear(); CHECK(kinoko_actor_reset(dst)==81 && reset_priority==73);

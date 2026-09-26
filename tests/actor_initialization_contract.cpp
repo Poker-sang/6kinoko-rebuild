@@ -14,7 +14,7 @@ using namespace kinoko::actor;
 using kinoko::script::address;
 namespace {
 ActorRecord fixture_actor{};
-KinokoOwnedObjectWords klass{1,OT_CLASS,9};
+KinokoOwnedObjectWords klass{reinterpret_cast<const void*>(1),OT_CLASS,9};
 std::array<int,16> refs{};
 std::vector<int> releases,copies;
 bool factory_fails=false,call_throws=false,replace_inputs=false, copy_throws=false;
@@ -48,19 +48,19 @@ extern "C" {
 const void* kinoko_squirrel_object_vtable() { return reinterpret_cast<const void*>(1); }
 SQVM *kinoko_actor_default_vm() { return reinterpret_cast<SQVM *>(1); }
 void *kinoko_actor_class_object() { return &klass; }
-void *kinoko_sqplus_object_initialize(void *p) { write(p,{1,OT_NULL,0}); return p; }
+void *kinoko_sqplus_object_initialize(void *p) { write(p,{reinterpret_cast<const void*>(1),OT_NULL,0}); return p; }
 void *kinoko_sqplus_object_copy_construct(void *out,const void *in) {
     auto o=read(in);
     if(copy_throws && o.value==1 && copies.size()>2) throw std::runtime_error("copy");
     retain(o); write(out,o); copies.push_back(o.value); return out;
 }
 void *kinoko_sqplus_object_construct_value(void *out,int32_t type,int32_t value) {
-    write(out,{1,type,value}); retain(read(out)); return out;
+    write(out,{reinterpret_cast<const void*>(1),type,value}); retain(read(out)); return out;
 }
 void *kinoko_sqplus_object_assign(void *out,const void *in) {
     auto o=read(in); retain(o); drop(read(out)); write(out,o); return out;
 }
-void *kinoko_sqplus_object_destroy(void *p) { drop(read(p)); write(p,{1,OT_NULL,0}); return p; }
+void *kinoko_sqplus_object_destroy(void *p) { drop(read(p)); write(p,{reinterpret_cast<const void*>(1),OT_NULL,0}); return p; }
 int32_t kinoko_sqplus_object_type(void *p) { return read(p).type; }
 int32_t kinoko_sqplus_object_set_instance(void *p,void *native) { CHECK(read(p).value==3 && native==self()); return 1; }
 void* kinoko_native_control_create(void* out,void*) {
@@ -91,7 +91,7 @@ void kinoko_actor_advance_animation(KinokoActor *,int32_t take) { advanced_take=
 KinokoActor *kinoko_actor_manager_create(KinokoActorManager *,const KinokoOwnedObjectWords *,float,float,float,const KinokoOwnedObjectWords *,const void *) { return nullptr; }
 }
 int main() {
-    const KinokoOwnedObjectWords fn{1,OT_CLOSURE,1},arg{1,OT_TABLE,2};
+    const KinokoOwnedObjectWords fn{reinterpret_cast<const void*>(1),OT_CLOSURE,1},arg{reinterpret_cast<const void*>(1),OT_TABLE,2};
     for(int mode=0;mode<4;++mode) {
         clear(); refs[1]=refs[2]=1;
         write(fixture_actor.initial_function.data(),fn); write(fixture_actor.initial_argument.data(),arg);
@@ -113,7 +113,7 @@ int main() {
             if(mode==0) CHECK(fixture_actor.world_bounds.left==28 && fixture_actor.world_bounds.top==37 && fixture_actor.world_bounds.right==35 && fixture_actor.previous_y==40);
         }
     }
-    clear(); fixture_actor.take=7; write(fixture_actor.update_function.data(),{1,OT_CLOSURE,0});
+    clear(); fixture_actor.take=7; write(fixture_actor.update_function.data(),{reinterpret_cast<const void*>(1),OT_CLOSURE,0});
     kinoko_actor_tick(self()); CHECK(fixture_actor.take==99 && advanced_take==7);
     clear();
 }

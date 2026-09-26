@@ -305,9 +305,9 @@ int32_t kinoko_savedata_write_table_entry(int32_t *stream, const void* vtable,
     view.publish(stream);
     return result;
 }
-int32_t kinoko_savedata_load_file_entry(const char* path, (const void*)(uintptr_t)(const void* vtable), int32_t type, int32_t data) {
+int32_t kinoko_savedata_load_file_entry(const char* path, const void* vtable, int32_t type, int32_t data) {
     return kinoko::savedata::load_file(path, {vtable, type, data});
 }
-int32_t kinoko_savedata_save_file_entry(const char* path, (const void*)(uintptr_t)(const void* vtable), int32_t type, int32_t data) {
+int32_t kinoko_savedata_save_file_entry(const char* path, const void* vtable, int32_t type, int32_t data) {
     return kinoko::savedata::save_file(path, {vtable, type, data});
 }
