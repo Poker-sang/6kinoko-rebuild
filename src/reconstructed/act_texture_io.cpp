@@ -522,7 +522,7 @@ struct TypeName {
 };
 bool object_hash(int32_t layout,uint32_t& hash,int32_t type_slot) {
     const auto table=field<int32_t>(layout);
-    const auto* name=kinoko_act_serialized_type_name(layout);
+    const auto* name=kinoko_act_serialized_type_name((const void*)(uintptr_t)(layout));
     if (name) { hash=type_hash(name); return true; }
     // Original 426740 obtains the remaining registered types through virtual
     // GetType/GetName. Keep this boundary until their registries are migrated;

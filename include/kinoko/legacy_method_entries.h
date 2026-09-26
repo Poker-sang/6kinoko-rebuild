@@ -23,12 +23,12 @@ int32_t __fastcall kinoko_method_load_resource_texture(KinokoActResource* receiv
 int32_t __fastcall kinoko_method_unload_resource_texture(KinokoActResource* receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_load_chip_resource(KinokoActResource* receiver, void* unused_edx, const char* prefix);
 
-int32_t __fastcall kinoko_method_resource_42f6c0(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-int32_t __fastcall kinoko_method_resource_42f800(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-int32_t __fastcall kinoko_method_resource_4467e0(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-int32_t __fastcall kinoko_method_resource_446920(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-int32_t __fastcall kinoko_method_resource_449860(int32_t receiver, void* unused_edx, int32_t object, const char* name);
-int32_t __fastcall kinoko_method_resource_4499a0(int32_t receiver, void* unused_edx, int32_t object, const char* name);
+int32_t __fastcall kinoko_method_resource_42f6c0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_resource_42f800(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_resource_4467e0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_resource_446920(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_resource_449860(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
+int32_t __fastcall kinoko_method_resource_4499a0(KinokoActResource* receiver, void* unused_edx, void* object, const char* name);
 
 int32_t __fastcall kinoko_method_register_layout(KinokoActLayout* receiver, void* unused_edx);
 int32_t __fastcall kinoko_method_register_map_layout(KinokoActLayout* receiver, void* unused_edx);
@@ -51,8 +51,8 @@ int32_t __fastcall kinoko_method_read_act_layer(int32_t receiver, void* unused_e
 int32_t __fastcall kinoko_method_read_act_key(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_read_act(int32_t receiver, void* unused_edx, KinokoArchiveReader** reader_holder, int32_t version);
 int32_t __fastcall kinoko_method_write_act(int32_t receiver, void* unused_edx, KinokoArchiveReader*  writer);
-int32_t __fastcall kinoko_method_query_serializable(int32_t receiver, void* unused_edx, int32_t type, int32_t output);
-int32_t __fastcall kinoko_method_destroy_serializable(int32_t receiver, void* unused_edx);
+int32_t __fastcall kinoko_method_query_serializable(void* receiver, void* unused_edx, const void* type, void* output);
+int32_t __fastcall kinoko_method_destroy_serializable(void* receiver, void* unused_edx);
 void* __fastcall kinoko_method_delete_act_key(KinokoActKey* receiver, void* unused_edx, unsigned char flags);
 void* __fastcall kinoko_method_delete_act_layer(KinokoActLayer* receiver, void* unused_edx, unsigned char flags);
 void* __fastcall kinoko_method_delete_act_resource(KinokoActResource* receiver, void* unused_edx, unsigned char flags);

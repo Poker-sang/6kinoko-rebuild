@@ -752,7 +752,7 @@ template<bool string_layout> int32_t create_layer(int32_t player, const char* na
     field<int32_t>(layer+104) = maximum < 0 ? 1 : static_cast<int32_t>(static_cast<uint32_t>(maximum)+1);
     kinoko_act_array_append((void*)(uintptr_t)(act+208), (void*)(uintptr_t)(layer));
     owned.release(); // ACT owns the layer before either publication callback.
-    if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, layer);
+    if constexpr(string_layout) kinoko_method_set_string_layer((KinokoStringLayout*)(uintptr_t)(native_layout), nullptr, pointer<KinokoActLayer>(layer));
     else kinoko_method_layout_set_layer(native_layout, nullptr, layer);
     kinoko_method_register_act_layer((KinokoActLayer*)(uintptr_t)(layer), nullptr, (void*)(uintptr_t)(address(&parent.object)), 0);
     if constexpr(string_layout) kinoko_method_register_string_layout(native_layout,nullptr);
@@ -1619,29 +1619,34 @@ int32_t kinoko_get_act_resource_class(SQVM* vm, int32_t resource, int32_t out[2]
 // Resource Object/Table publication recovered from 4467E0/446920 and the
 // corresponding Chip/RenderTarget entries. The Sqrat wrapper remains an ABI
 // record; source ClassType::PushInstance owns the actual instance operation.
-int32_t kinoko_bind_original_resource(int32_t resource, int32_t object,
+int32_t kinoko_bind_original_resource(KinokoActResource* resource, void* object,
     const char *name, const char *class_name, bool raw) {
-    if (!resource || !object || field<int32_t>(object + 8) == 0x01000001)
+    using namespace kinoko::act;
+    if (!resource || !object) return static_cast<int32_t>(E_FAIL);
+    const LayerObjectView wrapper(object);
+    const auto* pair = reinterpret_cast<const int32_t*>(wrapper.bytes(&LayerObjectRecord::value));
+    if (pair[0] == static_cast<int32_t>(OT_NULL))
         return static_cast<int32_t>(E_FAIL);
-    SQVM* const vm = field<SQVM*>(object + 4);
+    SQVM* const vm = wrapper.get(&LayerObjectRecord::vm);
     if (!vm || (raw && (!name || !*name))) return static_cast<int32_t>(E_FAIL);
-    if (!name || !*name) name = kinoko_string_data(ResourcePublicationView(pointer<void>(resource)).bytes(&ResourcePublicationRecord::name));
+    if (!name || !*name) name = kinoko_string_data(ResourcePublicationView(resource).bytes(&ResourcePublicationRecord::name));
     kinoko::act::LayerObjectRecord root{}; int32_t  klass[2] = { static_cast<int32_t>(OT_NULL), 0 }, instance[2] = { static_cast<int32_t>(OT_NULL), 0 };
     if (!(int32_t)(intptr_t)(kinoko_sqrat_root_construct((void *)(&root), vm))) return static_cast<int32_t>(E_FAIL);
     bool registered = get_pair(address(&root), class_name, klass) && klass[0] == 0x08004000;
     if (!registered) {
         kinoko_sqrat_release_pair(vm, klass);
-        registered = kinoko_call_thiscall1_result(pointer<void>(resource),
-            field<void *>(field<int32_t>(resource) + 24), address(vm)) >= 0 &&
+        using Register = int32_t (__thiscall*)(KinokoActResource*, SQVM*);
+        const auto* methods = kinoko::legacy::load<const unsigned char*>(resource);
+        registered = kinoko::legacy::load<Register>(methods + 24)(resource, vm) >= 0 &&
             get_pair(address(&root), class_name, klass) && klass[0] == 0x08004000;
     }
     bool ok = false;
     if (registered) {
         if (raw) {
-            ok = kinoko_create_unbound_instance(vm, klass, (void*)(uintptr_t)(resource), instance) &&
-                kinoko_sqrat_raw_set_pair(vm, pointer<const int32_t>(object + 8), name, instance);
+            ok = kinoko_create_unbound_instance(vm, klass, resource, instance) &&
+                kinoko_sqrat_raw_set_pair(vm, pair, name, instance);
         } else {
-            ok = kinoko_create_bound_instance(vm, pointer<const int32_t>(object + 8), name, klass, (void*)(uintptr_t)(resource), instance);
+            ok = kinoko_create_bound_instance(vm, pair, name, klass, resource, instance);
         }
     }
     kinoko_sqrat_release_pair(vm, instance);
@@ -2035,27 +2040,27 @@ int32_t kinoko_root_table_construct_this(KinokoActRuntime* resource_ptr,
     return result;
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_42f6c0(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_42f6c0(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResourceChip", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_42f800(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_42f800(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResourceChip", true);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_4467e0(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_4467e0(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResource2D", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_446920(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_446920(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActResource2D", true);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_449860(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_449860(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActRenderTarget", false);
 }
 
-extern "C" int32_t __fastcall kinoko_method_resource_4499a0(int32_t resource, void *, int32_t object, const char *name) {
+extern "C" int32_t __fastcall kinoko_method_resource_4499a0(KinokoActResource* resource, void *, void* object, const char *name) {
     return kinoko_bind_original_resource(resource, object, name, "CActRenderTarget", true);
 }
 
@@ -2289,10 +2294,10 @@ extern "C" int32_t __fastcall kinoko_method_register_mesh_resource(int32_t,void 
     kinoko_sqrat_release_pair(vm, klass);kinoko_sqrat_object_release((void *)(&root));
     return ok?S_OK:E_FAIL;
 }
-extern "C" int32_t __fastcall kinoko_method_bind_mesh_object(int32_t resource,void *,int32_t object,const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_mesh_object(KinokoActResource* resource,void *,void* object,const char *name) {
     return kinoko_bind_original_resource(resource,object,name,"CActResourceMesh",false);
 }
-extern "C" int32_t __fastcall kinoko_method_bind_mesh_table(int32_t resource,void *,int32_t object,const char *name) {
+extern "C" int32_t __fastcall kinoko_method_bind_mesh_table(KinokoActResource* resource,void *,void* object,const char *name) {
     return kinoko_bind_original_resource(resource,object,name,"CActResourceMesh",true);
 }
 extern "C" int32_t __fastcall kinoko_method_register_layout_3d(int32_t layout,void *) {

@@ -42,7 +42,7 @@ int32_t kinoko_act_load(KinokoActDocument* this_ptr, KinokoArchiveReader* reader
 int32_t kinoko_act_load_key(KinokoActKey* key, KinokoArchiveReader* reader_ptr,
                                    int32_t version);
 int32_t kinoko_act_read_script_properties(void* script, KinokoArchiveReader* reader);
-const char* kinoko_act_serialized_type_name(int32_t object);
+const char* kinoko_act_serialized_type_name(const void* object);
 int32_t kinoko_act_load_layer(KinokoActLayer* layer, KinokoArchiveReader* reader_ptr,
                                      int32_t version);
 int32_t kinoko_act_load_mcd(KinokoActResource* resource,
